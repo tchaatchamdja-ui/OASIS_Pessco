@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Connexion</title>
+  <link rel="stylesheet" href="/shared/css/oasis-shell.css">
+  <link rel="stylesheet" href="/css/aerosup.css">
+</head>
+<body>
+  <div class="login-page">
+    <span class="login-sky-plane a">✈️</span>
+    <span class="login-sky-plane b">✈️</span>
+    <span class="login-sky-cloud a">☁️</span>
+    <span class="login-sky-cloud b">☁️</span>
+
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="oasis-logo-img" role="img" aria-label="OASIS"
+              style="height:84px;width:94px;color:var(--primary);"></span>
+      </div>
+      <div class="login-brand">OASIS</div>
+      <div class="login-tagline" data-i18n="tagline">Outil d'Administration et de Supervision Intégrée de la Sécurité</div>
+
+      <div class="login-error" id="loginError"></div>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="shell-form-group" style="margin-bottom:1rem;">
+          <label data-i18n="login_user">Email</label>
+          <input class="shell-input" type="email" id="username" required autofocus>
+        </div>
+        <div class="shell-form-group" style="margin-bottom:1.5rem;">
+          <label data-i18n="login_pass">Mot de passe</label>
+          <input class="shell-input" type="password" id="password" required>
+        </div>
+        <button type="submit" class="shell-btn shell-btn-primary" style="width:100%;justify-content:center;" data-i18n="login_btn">Se connecter</button>
+      </form>
+
+      <!-- Étape 2 : authentification multifacteur -->
+      <form id="mfaForm" autocomplete="off" style="display:none;">
+        <p class="mfa-intro">Un code de vérification à 6 chiffres vient d'être envoyé à
+          <strong id="mfaTarget"></strong>. Il est valable <span id="mfaTtl">10</span> minutes.</p>
+        <div class="shell-form-group" style="margin-bottom:1rem;">
+          <label>Code de vérification</label>
+          <input class="shell-input mfa-code" id="mfaCode" inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
+        </div>
+        <button type="submit" class="shell-btn shell-btn-primary" style="width:100%;justify-content:center;">Vérifier</button>
+        <div class="mfa-actions">
+          <select class="shell-input mfa-channel" id="mfaChannel"></select>
+          <button type="button" class="shell-btn shell-btn-sm" id="mfaResend">Renvoyer le code</button>
+        </div>
+        <button type="button" class="mfa-back" id="mfaCancel">← Revenir à la connexion</button>
+      </form>
+
+      <div class="login-footer-bar">
+        <div class="portal-theme-selector">
+          <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu"></div>
+          <div class="theme-dot" data-theme="orange-dark" onclick="applyTheme('orange-dark')" title="Orange"></div>
+          <div class="theme-dot" data-theme="violet"      onclick="applyTheme('violet')"      title="Violet"></div>
+          <div class="theme-dot" data-theme="green"       onclick="applyTheme('green')"       title="Vert"></div>
+          <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris"></div>
+        </div>
+        <div class="portal-lang-selector">
+          <button class="lang-btn" onclick="applyLang('fr')">FR</button>
+          <button class="lang-btn" onclick="applyLang('en')">EN</button>
+          <button class="lang-btn" onclick="applyLang('pt')">PT</button>
+        </div>
+      </div>
+      <div class="login-copy">© 2026 UEMOA / URSAC</div>
+    </div>
+  </div>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script>
+    applyLang(localStorage.getItem('pr_lang') || 'fr');
+
+    let loginPending = false;
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (loginPending) return;
+      loginPending = true;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      const errBox = document.getElementById('loginError');
+      errBox.style.display = 'none';
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: document.getElementById('username').value.trim(),
+          password: document.getElementById('password').value,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data.mfaRequired) { showMfaStep(data); loginPending = false; submitBtn.disabled = false; return; }
+        window.location.href = '/';
+      } else {
+        const data = await res.json().catch(() => ({}));
+        errBox.textContent = data.error === 'locked' ? t('login_err_locked')
+          : data.error === 'temp_expired' ? 'Mot de passe temporaire expiré (48 h). Contactez votre administrateur pour une réinitialisation.'
+          : t('login_err_invalid');
+        errBox.style.display = 'block';
+        loginPending = false;
+        submitBtn.disabled = false;
+      }
+    });
+
+    // ── Authentification multifacteur ──
+    let mfaState = null;
+
+    function showMfaStep(data) {
+      mfaState = { challengeId: data.challengeId, channels: data.channels || [] };
+      document.getElementById('loginForm').style.display = 'none';
+      const form = document.getElementById('mfaForm');
+      form.style.display = 'block';
+      document.getElementById('mfaTarget').textContent = data.masked || '';
+      document.getElementById('mfaTtl').textContent = Math.round((data.expiresIn || 600) / 60);
+      const sel = document.getElementById('mfaChannel');
+      sel.innerHTML = mfaState.channels
+        .map((c) => `<option value="${c.id}" ${c.id === data.channel ? 'selected' : ''}>${c.label} — ${c.masked}</option>`)
+        .join('');
+      sel.style.display = mfaState.channels.length > 1 ? '' : 'none';
+      document.getElementById('mfaCode').value = '';
+      document.getElementById('mfaCode').focus();
+    }
+
+    function resetToLogin() {
+      mfaState = null;
+      document.getElementById('mfaForm').style.display = 'none';
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('password').value = '';
+    }
+
+    document.getElementById('mfaCancel').addEventListener('click', resetToLogin);
+
+    document.getElementById('mfaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('loginError');
+      errBox.style.display = 'none';
+      const res = await fetch('/api/login/mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ challengeId: mfaState.challengeId, code: document.getElementById('mfaCode').value.trim() }),
+      });
+      if (res.ok) { window.location.href = '/'; return; }
+      const data = await res.json().catch(() => ({}));
+      errBox.textContent =
+        data.error === 'mfa_expired' ? 'Code expiré. Demandez un nouveau code.'
+        : data.error === 'mfa_too_many_attempts' ? 'Trop de tentatives. Recommencez la connexion.'
+        : `Code incorrect.${typeof data.remaining === 'number' ? ` ${data.remaining} tentative(s) restante(s).` : ''}`;
+      errBox.style.display = 'block';
+      if (data.error === 'mfa_expired' || data.error === 'mfa_too_many_attempts') resetToLogin();
+    });
+
+    document.getElementById('mfaResend').addEventListener('click', async () => {
+      const errBox = document.getElementById('loginError');
+      errBox.style.display = 'none';
+      const res = await fetch('/api/login/mfa/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          challengeId: mfaState.challengeId,
+          username: document.getElementById('username').value.trim(),
+          channel: document.getElementById('mfaChannel').value,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) showMfaStep(data);
+      else { errBox.textContent = 'Envoi impossible. Recommencez la connexion.'; errBox.style.display = 'block'; resetToLogin(); }
+    });
+  </script>
+</body>
+</html>

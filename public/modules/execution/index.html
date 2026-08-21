@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Exécution de la Surveillance</title>
+  <!-- Socle : mise en page, composants, chrome de module -->
+  <link rel="stylesheet" href="/shared/css/oasis-module.css">
+  <link rel="stylesheet" href="/shared/css/oasis-shell.css">
+  <!-- Styles propres au module (repris intégralement de PESSCO) -->
+  <link rel="stylesheet" href="/modules/execution/css/exec-styles.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; }
+  </style>
+</head>
+<body class="exec-module">
+  <div id="app"><div style="padding:2rem;text-align:center;color:#64748b;">Chargement du module…</div></div>
+
+  <script>
+    // Pont OASIS → module PESSCO « Exécution de la Surveillance ».
+    // Le module tourne en mode autonome (il rend sa propre coquille) ; le
+    // contexte utilisateur vient du socle OASIS.
+    window.EXEC_BOOT = (async function () {
+      const res = await fetch('/api/m/execution/context', { credentials: 'same-origin' });
+      if (res.status === 401) { parent.postMessage({ type: 'exec:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      const ctx = await res.json();
+      const u = ctx.user || {};
+      const execUser = {
+        id: u.username, username: u.username,
+        nom: u.nom || u.username, prenom: u.prenom || '',
+        email: u.email || u.username, role: u.role, role_m3: u.role_m3,
+        prestataire_id: u.prestataire_id || '', domaines: u.domaines || [], photo: u.photo || '',
+      };
+      localStorage.setItem('pr_user', JSON.stringify(execUser));
+      const theme = localStorage.getItem('pr_theme') || 'blue-dark';
+      const lang = localStorage.getItem('pr_lang') || 'fr';
+      document.documentElement.setAttribute('data-theme', theme);
+      return { execUser, theme, lang, ctx };
+    })();
+  </script>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/modules/execution/js/exec-boot.js"></script>
+  <script src="/modules/execution/js/exec-app.js"></script>
+  <script src="/modules/execution/js/exec-fiche.js"></script>
+  <script src="/modules/execution/js/exec-processus.js"></script>
+  <script src="/modules/execution/js/exec-etats.js"></script>
+  <script src="/modules/execution/js/exec-adapters.js"></script>
+  <script src="/modules/execution/js/exec-namespace.js"></script>
+  <script>window.OASIS_MODULE_KEY = "execution"; window.OASIS_MODULE_RIGHTS = "SURV";</script>
+  <script src="/shared/js/module-chrome.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const boot = await window.EXEC_BOOT;
+        window.EXEC_STATE.user = boot.execUser;
+        window.EXEC_STATE.theme = boot.theme;
+        window.EXEC_STATE.lang = boot.lang;
+        await execLoadData();
+        await execEtatsChargerDelais();
+        execRenderApp();
+        execNavigateTo('dashboard');
+        if (typeof execUpdateNotifBadge === 'function') execUpdateNotifBadge();
+        const notify = () => parent.postMessage({ type: 'exec:page', page: window.EXEC_STATE.currentPage }, '*');
+        notify();
+        const origNav = window.execNavigateTo;
+        window.execNavigateTo = function (p, s) { origNav(p, s); notify(); };
+      } catch (e) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>

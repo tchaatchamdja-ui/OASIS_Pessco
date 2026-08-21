@@ -1,0 +1,118 @@
+// File d'attente + envoi d'emails.
+// Envoi réel via SMTP (nodemailer) si config.smtp.enabled ; toujours journalisé dans data/emails.json.
+// En local : brancher Mailpit (SMTP :1025, UI http://localhost:8025).
+const path = require('path');
+const store = require('./store');
+
+let nodemailer = null;
+try { nodemailer = require('nodemailer'); } catch { /* fallback fichier seul */ }
+
+const APP = 'OASIS';
+const LOGIN_URL = process.env.APP_URL || 'http://localhost:4750/login.html';
+const SUPPORT = 'support@anac.bj';
+
+function loadSmtp() {
+  try {
+    const cfg = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', 'config', 'aerosup.config.json'), 'utf-8'));
+    return cfg.smtp || {};
+  } catch { return {}; }
+}
+
+let _transport = null;
+let _transportKey = '';
+function transport(smtp) {
+  if (!nodemailer || !smtp.enabled || !smtp.host) return null;
+  const key = `${smtp.host}:${smtp.port}:${smtp.user}`;
+  if (_transport && _transportKey === key) return _transport;
+  _transport = nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port || 1025,
+    secure: !!smtp.secure,
+    auth: smtp.user ? { user: smtp.user, pass: smtp.pass } : undefined,
+    tls: { rejectUnauthorized: false },
+  });
+  _transportKey = key;
+  return _transport;
+}
+
+function record(email, status, error) {
+  const box = store.load('emails', []);
+  box.push({ id: box.length + 1, ts: new Date().toISOString(), status, error: error || null, ...email });
+  store.save('emails', box.slice(-500));
+}
+
+function queue(email) {
+  const smtp = loadSmtp();
+  const tr = transport(smtp);
+  if (!tr) { record(email, 'queued'); return; }
+  tr.sendMail({ from: smtp.from || `${APP} <no-reply@localhost>`, to: email.to, subject: email.subject, text: email.body })
+    .then((info) => record({ ...email, messageId: info.messageId }, 'sent'))
+    .catch((err) => record(email, 'error', String(err && err.message || err)));
+}
+
+function accountCreated({ to, name, username, password }) {
+  queue({
+    to,
+    subject: `Bienvenue sur ${APP} - Vos identifiants de connexion`,
+    body: `Bonjour ${name},
+Votre compte a été créé avec succès. Vous pouvez désormais vous connecter à notre application en utilisant les identifiants temporaires ci-dessous :
+
+* Lien d'accès : ${LOGIN_URL}
+* Nom d'utilisateur : ${username}
+* Mot de passe temporaire : ${password}
+
+Pour des raisons de sécurité, nous vous demandons de modifier ce mot de passe dès votre première connexion.
+Si vous n'avez pas demandé la création de ce compte, veuillez ignorer cet e-mail ou contacter notre support à l'adresse ${SUPPORT}.
+À bientôt, L'équipe ${APP}`,
+  });
+}
+
+function passwordReset({ to, name, username, password }) {
+  queue({
+    to,
+    subject: `${APP} - Votre nouveau mot de passe`,
+    body: `Bonjour ${name},
+Conformément à votre demande, votre mot de passe a été réinitialisé. Voici vos nouveaux identifiants pour vous connecter en toute sécurité :
+
+* Nom d'utilisateur : ${username}
+* Nouveau mot de passe : ${password}
+
+Pour des raisons de sécurité, nous vous demandons de modifier ce mot de passe à votre prochaine connexion.
+Si vous n'êtes pas à l'origine de cette demande, veuillez vous connecter immédiatement pour changer votre mot de passe et signaler l'incident à ${SUPPORT}.
+Cordialement,
+L'équipe ${APP}`,
+  });
+}
+
+function mfaCode({ to, name, code, minutes, channel }) {
+  queue({
+    to,
+    subject: `${APP} - Code de vérification`,
+    body: `Bonjour ${name},
+Voici votre code de vérification à usage unique pour finaliser votre connexion à ${APP} :
+
+* Code : ${code}
+* Validité : ${minutes} minutes
+${channel === 'sms' ? `* Envoyé au numéro : ${to}` : ''}
+
+Ne communiquez ce code à personne. Si vous n'êtes pas à l'origine de cette connexion,
+changez immédiatement votre mot de passe et signalez l'incident à ${SUPPORT}.
+Cordialement,
+L'équipe ${APP}`,
+  });
+}
+
+// Vérifie la connexion SMTP (bouton test admin)
+async function verify() {
+  const smtp = loadSmtp();
+  const tr = transport(smtp);
+  if (!tr) return { ok: false, reason: 'smtp_disabled' };
+  try { await tr.verify(); return { ok: true, host: smtp.host, port: smtp.port }; }
+  catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
+}
+
+function list() {
+  return store.load('emails', []);
+}
+
+module.exports = { queue, accountCreated, passwordReset, mfaCode, verify, list };

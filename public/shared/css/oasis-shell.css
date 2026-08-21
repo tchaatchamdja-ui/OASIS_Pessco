@@ -1,0 +1,163 @@
+/* ═══════════════════════════════════════════════
+   OASIS — Composants « shell » du socle
+   Entête de page, boutons, champs, tableaux, badges, modales, toasts,
+   formulaires. Partagés par le portail et par tous les modules : c'est ici,
+   et nulle part ailleurs, que se définit l'apparence de ces composants.
+   ═══════════════════════════════════════════════ */
+
+/* ── Page header ── */
+.portal-page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;
+}
+.portal-page-header h2 { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+.portal-page-header h3 { font-size: 1.1rem; font-weight: 600; color: var(--primary); }
+.portal-page-actions   { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+
+/* ══════════ Composants shell ══════════ */
+.shell-card { background: var(--bg-card); border-radius: 12px; padding: 1.5rem;
+              border: 1px solid var(--border); box-shadow: var(--shadow); }
+
+.shell-btn {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.5rem 1rem; border-radius: 8px;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border: 1px solid transparent; transition: all .2s;
+}
+.shell-btn-primary  { background: var(--primary); color: #fff; border-color: var(--primary); }
+.shell-btn-primary:hover { background: var(--primary-hover); }
+.shell-btn-outline  { background: transparent; color: var(--primary); border-color: var(--primary); }
+.shell-btn-outline:hover { background: var(--primary); color: #fff; }
+/* Étape MFA de la page de connexion */
+.mfa-intro { font-size: .82rem; color: var(--text-muted); text-align: left; margin-bottom: 1rem; line-height: 1.45; }
+.mfa-code { text-align: center; letter-spacing: .5em; font-size: 1.3rem; font-weight: 700; padding-left: .5em; }
+.mfa-actions { display: flex; gap: .5rem; align-items: center; margin-top: .75rem; }
+.mfa-actions .mfa-channel { flex: 1; font-size: .78rem; }
+.mfa-back { display: block; width: 100%; margin-top: .9rem; background: none; border: none;
+            color: var(--text-muted); font-size: .78rem; cursor: pointer; }
+.mfa-back:hover { color: var(--primary); text-decoration: underline; }
+
+/* Téléphone : indicatif + numéro */
+.phone-field { display: grid; grid-template-columns: 150px 1fr; gap: .4rem; }
+.phone-field .phone-code { padding-right: .3rem; }
+@media (max-width: 520px) { .phone-field { grid-template-columns: 120px 1fr; } }
+
+.shell-btn-danger   { background: #dc2626; color: #fff; border-color: #dc2626; }
+.shell-btn-danger:hover  { background: #b91c1c; }
+.shell-btn-sm       { padding: 0.3rem 0.6rem; font-size: 0.8rem; }
+.shell-btn-icon     { background: none; border: none; cursor: pointer; color: var(--text-muted);
+                      padding: 0.25rem; border-radius: 4px; display: inline-flex; align-items: center;
+                      transition: color .2s, background .2s; }
+.shell-btn-icon:hover { color: var(--primary); background: var(--border); }
+
+.shell-input {
+    width: 100%; padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.85rem; color: var(--text); background: var(--bg-card);
+    transition: border-color .2s;
+}
+.shell-input:focus   { outline: none; border-color: var(--primary); }
+.shell-input-sm { padding: 0.25rem 0.4rem; font-size: 0.8rem; }
+.cfg-search-wrap { position: relative; display: inline-flex; align-items: center; }
+.cfg-search-wrap svg { position: absolute; left: .5rem; color: var(--text-muted); pointer-events: none; }
+.cfg-search-input { width: 230px; max-width: 40vw; padding-left: 1.9rem; font-size: .82rem; }
+.shell-input:disabled{ background: var(--bg); color: var(--text-muted); }
+
+.shell-form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.shell-form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.shell-form-group label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+
+.shell-fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin: 1rem 0; }
+.shell-fieldset legend { font-size: 0.9rem; font-weight: 700; color: var(--primary); padding: 0 0.5rem; }
+
+.shell-table-container {
+    overflow-x: auto; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--bg-card);
+}
+.shell-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.shell-table thead  { background: var(--bg); }
+.shell-table th {
+    padding: 0.7rem 0.75rem; text-align: left;
+    font-weight: 600; color: var(--text-muted); font-size: 0.78rem;
+    text-transform: uppercase; letter-spacing: 0.3px;
+    border-bottom: 2px solid var(--border); white-space: nowrap;
+}
+.shell-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.shell-table tr:last-child td { border-bottom: none; }
+.shell-table tr:hover { background: rgba(0,0,0,.02); }
+.shell-table tr.row-inactive { opacity: 0.5; }
+.shell-table .actions-cell { display: flex; gap: 0.25rem; white-space: nowrap; }
+.shell-table.shell-table-compact { font-size: 0.78rem; }
+.shell-table.shell-table-compact th { padding: 0.45rem 0.5rem; font-size: 0.7rem; }
+.shell-table.shell-table-compact td { padding: 0.4rem 0.5rem; }
+
+.shell-badge    { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+                  font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+.badge-active   { background: #dcfce7; color: #166534; }
+.badge-inactive { background: #fee2e2; color: #991b1b; }
+.badge-neutral  { background: var(--border); color: var(--text-muted); }
+
+.shell-modal-overlay {
+    position: fixed; top: var(--topbar-height, 56px);
+    left: var(--sidebar-width, 240px); right: 0; bottom: 0;
+    background: rgba(0,0,0,.5); display: flex;
+    align-items: center; justify-content: center; z-index: 10000; padding: 1rem;
+}
+body.app-sidebar-collapsed .shell-modal-overlay { left: var(--sidebar-collapsed, 60px); }
+.shell-modal {
+    background: var(--bg-card); border-radius: 16px;
+    width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    animation: modalSlide .25s ease;
+}
+.shell-modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1.5rem; height: var(--topbar-height, 56px);
+    border-bottom: 1px solid var(--border);
+    background: var(--primary); color: #fff; font-weight: 700;
+    border-radius: inherit; border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+}
+.shell-modal-header h3 { font-size: 1.1rem; font-weight: 700; }
+.shell-modal-body   { padding: 1.5rem; }
+.shell-modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem;
+                      padding: 1rem 1.5rem; border-top: 1px solid var(--border); }
+
+.shell-toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    padding: 0.75rem 1.5rem; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 600; color: #fff;
+    z-index: 11000; opacity: 0; transform: translateY(20px);
+    transition: all .3s ease; max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+}
+.shell-toast.show     { opacity: 1; transform: translateY(0); }
+.shell-toast-success  { background: #059669; }
+.shell-toast-error    { background: #dc2626; }
+.shell-toast-warning  { background: #d97706; }
+
+.shell-tabs {
+    display: flex; gap: 0.25rem;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1.5rem; overflow-x: auto;
+}
+.shell-tab-btn {
+    padding: 0.6rem 1rem; border: none; background: none;
+    color: var(--text-muted); font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    transition: all .2s; white-space: nowrap;
+}
+.shell-tab-btn:hover { color: var(--primary); }
+.shell-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* Sous-menus utilisateurs : retour à la ligne, aucune barre de défilement */
+.users-tabs { flex-wrap: wrap; overflow: visible; row-gap: .15rem; }
+.users-tabs .shell-tab-btn { display: inline-flex; align-items: center; gap: .3rem; }
+
+.loading-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 2rem auto;
+}

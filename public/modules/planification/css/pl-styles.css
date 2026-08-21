@@ -1,0 +1,1643 @@
+/* ═══════════════════════════════════════════════
+   Planification Module - Additional Styles
+   Gantt chart, Calendar, KPI cards, Workflow
+   ═══════════════════════════════════════════════ */
+
+/* ── Ephemeral toast notifications ── */
+.plan-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    max-width: 420px;
+    background: #fff;
+    color: var(--text);
+    padding: 0.85rem 1.1rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    border-left: 4px solid var(--primary);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+.plan-toast.show {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+.plan-toast-warning { border-left-color: #f59e0b; background: #fffbeb; color: #78350f; }
+.plan-toast-error   { border-left-color: #ef4444; background: #fef2f2; color: #7f1d1d; }
+.plan-toast-success { border-left-color: #10b981; background: #ecfdf5; color: #064e3b; }
+.plan-toast-info    { border-left-color: #3b82f6; background: #eff6ff; color: #1e3a8a; }
+
+/* ── KPI Grid ── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.kpi-card {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 0.6rem 0.9rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+    border-left: 4px solid var(--kpi-color, var(--primary));
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.kpi-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--kpi-color, var(--primary));
+    line-height: 1.15;
+}
+
+.kpi-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* ── Gantt Chart ── */
+.gantt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.gantt-table th, .gantt-table td {
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.25rem;
+    text-align: center;
+}
+
+.gantt-table thead th {
+    background: var(--primary);
+    color: var(--text-header, #fff);
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.gantt-label-header {
+    min-width: 120px;
+    text-align: left !important;
+    padding-left: 0.5rem !important;
+}
+
+.gantt-label {
+    text-align: left !important;
+    padding-left: 0.5rem !important;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.gantt-month {
+    min-width: 42px;
+}
+
+.gantt-cell {
+    height: 28px;
+    transition: background 0.2s;
+}
+
+.gantt-active {
+    border-radius: 3px;
+}
+
+.gantt-cell:hover {
+    opacity: 1 !important;
+    outline: 2px solid var(--primary);
+}
+
+/* ── Enhanced Gantt Chart (horizontal bars, alternating rows, month separators) ── */
+.gantt-table-enhanced {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+}
+
+.gantt-table-enhanced thead th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.gantt-table-enhanced thead th:last-child {
+    border-top-right-radius: 10px;
+}
+
+.gantt-table-enhanced .gantt-row {
+    transition: background 0.15s;
+}
+
+.gantt-table-enhanced .gantt-row:hover {
+    background: rgba(59, 130, 246, 0.06);
+}
+
+.gantt-table-enhanced .gantt-row-alt {
+    background: rgba(0, 0, 0, 0.025);
+}
+
+.gantt-table-enhanced .gantt-row-alt:hover {
+    background: rgba(59, 130, 246, 0.09);
+}
+
+/* Quarter / month separators — thicker left border */
+.gantt-table-enhanced .gantt-quarter-sep {
+    border-left: 2px solid var(--primary) !important;
+}
+
+/* Weekend shading in month view */
+.gantt-table-enhanced .gantt-weekend {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.gantt-table-enhanced .gantt-day-header {
+    min-width: 26px;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.15rem;
+}
+
+.gantt-table-enhanced .gantt-day-header.gantt-weekend {
+    background: var(--primary);
+    opacity: 0.85;
+}
+
+/* Horizontal activity bar inside merged cells */
+.gantt-bar-cell {
+    padding: 4px !important;
+    position: relative;
+}
+
+.gantt-bar {
+    height: 22px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.gantt-bar-cell:hover .gantt-bar {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+}
+
+/* Prestataire color dot on the activity label */
+.gantt-label-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Legend */
+.gantt-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+}
+
+.gantt-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--text);
+}
+
+.gantt-legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* ── Calendar ── */
+.calendar-year-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.cal-month-card {
+    background: var(--bg-card);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 0.75rem;
+    overflow: hidden;
+}
+
+.cal-month-header {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--primary);
+    text-align: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.cal-days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+}
+
+.cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    border-radius: 4px;
+    position: relative;
+    cursor: default;
+}
+
+.cal-day.empty {
+    visibility: hidden;
+}
+
+.cal-day.today {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+}
+
+.cal-day.has-activity {
+    font-weight: 600;
+}
+
+.cal-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 2px;
+}
+
+.cal-month-count {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.5rem;
+}
+
+/* ── Filter Bar — planification-scoped (avoids execution.css !important conflict) ── */
+.plan-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.plan-filter-bar .form-input,
+.plan-filter-bar .form-select {
+    flex: 1 1 140px;
+    min-width: 140px;
+    box-sizing: border-box;
+    height: 30px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+/* Search input takes extra space — flexible & grows to fill the remaining row */
+.plan-filter-bar input[type="text"].form-input {
+    flex: 3 1 180px;
+}
+
+/* Forced line break in the flex filter bar (used to split Statut + Search
+   onto a second row on the dashboard). */
+.plan-filter-bar .plan-filter-break {
+    flex-basis: 100%;
+    width: 100%;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── Detail Status Bar ── */
+.detail-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.detail-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* ── Comments ── */
+.comment-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.comment-item:last-child {
+    border-bottom: none;
+}
+
+.comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.comment-body {
+    font-size: 0.875rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* ── Buttons additional ── */
+.btn-accent {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-accent:hover {
+    opacity: 0.9;
+}
+
+.btn-success {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-success:hover {
+    background: #059669;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.btn-ghost:hover {
+    background: var(--bg);
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    cursor: pointer;
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: #fff;
+}
+
+.text-danger {
+    color: #ef4444;
+}
+
+.text-muted {
+    color: var(--text-muted);
+}
+
+/* ── Page header with actions ── */
+.page-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ── Actions cell in table ── */
+.actions-cell {
+    white-space: nowrap;
+}
+
+.actions-cell .btn-icon {
+    padding: 0.25rem;
+}
+
+/* ── Form Grid ── */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1rem;
+}
+
+.form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+/* ── Modal large ── */
+.modal-lg {
+    max-width: 700px !important;
+}
+
+/* ── Timeline / Conversation comments ── */
+.timeline-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.timeline-item:last-child {
+    border-bottom: none;
+}
+
+.timeline-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.timeline-avatar.workflow {
+    background: var(--accent, #8b5cf6);
+}
+
+.timeline-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.timeline-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    margin-bottom: 0.25rem;
+}
+
+.timeline-header strong {
+    color: var(--text);
+}
+
+.timeline-header .timeline-date {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.timeline-body {
+    font-size: 0.875rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.timeline-action-badge {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* ── Gantt Full Page ── */
+.gantt-full {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+.gantt-full .gantt-table {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.gantt-full .gantt-label-header,
+.gantt-full .gantt-label {
+    width: 22% !important;
+    min-width: 0;
+    max-width: none;
+    font-size: .76rem;
+}
+
+.gantt-full .gantt-cell {
+    height: 26px;
+    min-width: 0;
+}
+
+.gantt-bar {
+    border-radius: 4px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 4px;
+}
+
+/* ── Sub navigation for Plans ── */
+.plan-sub-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1rem;
+    background: var(--bg-card);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.plan-sub-nav-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    text-align: center;
+}
+
+.plan-sub-nav-btn:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+.plan-sub-nav-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+}
+
+/* ── Filter bar reset button (planification-scoped) ──
+   No `margin-left: auto` here: on narrow screens that would push the
+   button onto a new row by itself. Letting it flow naturally after the
+   last filter field keeps the bar compact. */
+.plan-filter-bar .btn-icon-reset {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    padding: 0;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.plan-filter-bar .btn-icon-reset svg {
+    width: 14px;
+    height: 14px;
+}
+
+.plan-filter-bar .btn-icon-reset:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+/* ── Prestataire cycle dates ── */
+.cycle-date-input {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: 0.8rem;
+}
+
+.cycle-date-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 59, 130, 246), 0.2);
+}
+
+/* ── Confirmation dialog overlay ── */
+.confirm-dialog {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.confirm-dialog p {
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+    color: var(--text);
+}
+
+.confirm-dialog .confirm-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+    .plan-filter-bar .form-input,
+    .plan-filter-bar .form-select {
+        flex-basis: 120px;
+        min-width: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .calendar-year-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .plan-filter-bar .form-input,
+    .plan-filter-bar .form-select {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 0;
+    }
+    .plan-filter-bar input[type="text"].form-input {
+        flex: 1 1 100%;
+    }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .page-actions {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .calendar-year-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Header Module Title (moved from sidebar) ── */
+.header-module-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.header-module-title svg {
+    flex-shrink: 0;
+}
+
+/* ── Activities Accordion (plan detail) ── */
+.plan-activities-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.act-acc-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-card);
+}
+
+.act-acc-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    background: var(--bg);
+    transition: background 0.2s;
+    user-select: none;
+}
+
+.act-acc-header:hover {
+    background: var(--bg-card);
+}
+
+.act-acc-chevron {
+    display: inline-flex;
+    transition: transform 0.2s;
+    transform: rotate(-90deg);
+}
+
+.act-acc-item.expanded > .act-acc-header .act-acc-chevron {
+    transform: rotate(0deg);
+}
+
+.act-acc-count {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.act-acc-body {
+    display: none;
+    padding: 0;
+}
+
+.act-acc-item.expanded > .act-acc-body {
+    display: block;
+}
+
+/* ── Read-only fields in activity form ── */
+.readonly-field {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background: var(--bg) !important;
+}
+
+/* ── Checkbox groups for multi-select ── */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    padding: 0.6rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-card);
+    max-height: 140px;
+    overflow-y: auto;
+}
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.checkbox-item input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+.checkbox-item span {
+    color: var(--text);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* ── Hidden rows (prestataires detail, activity detail) ── */
+tr.hidden { display: none; }
+.prest-detail-row td { background: var(--bg); padding: 0 !important; }
+.prest-accordion-content { padding: 0.5rem 0; }
+.prest-accordion-header {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+}
+.prest-accordion-content .data-table { font-size: 0.82rem; }
+.prest-accordion-content .data-table th { font-size: 0.72rem; text-transform: uppercase; }
+.sa-risk-table th { background: #fff !important; color: var(--text) !important; border-bottom: 2px solid var(--border); }
+
+/* Planification: no rounded corners on tables */
+.plan-activities-accordion .data-table th:first-child,
+.plan-activities-accordion .data-table th:last-child,
+.prest-accordion-content .data-table th:first-child,
+.prest-accordion-content .data-table th:last-child { border-radius: 0; }
+.activity-detail-row td { background: var(--bg); padding: 0.75rem 1rem !important; }
+.activity-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem 1.5rem;
+    font-size: 0.82rem;
+}
+.activity-detail-grid .detail-item.full-width {
+    grid-column: 1 / -1;
+}
+.activity-detail-grid .detail-item label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    display: block;
+}
+.activity-detail-grid .detail-item span {
+    color: var(--text);
+}
+
+/* ── Calendar year/month navigation ── */
+.calendar-year-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.calendar-view-toggle {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.calendar-month-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+/* ── Calendar Week View ── */
+.calendar-week-grid {
+    margin-top: 0.5rem;
+}
+
+.cal-header-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 0.25rem;
+}
+
+.cal-week-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    min-height: 80px;
+    border-bottom: 1px solid var(--border);
+}
+
+.cal-day-cell {
+    padding: 0.25rem;
+    border-right: 1px solid var(--border);
+    min-height: 70px;
+    position: relative;
+}
+
+.cal-day-cell:last-child {
+    border-right: none;
+}
+
+.cal-day-cell.empty {
+    background: var(--bg);
+    opacity: 0.5;
+}
+
+.cal-day-cell.has-activities {
+    background: var(--bg-card);
+}
+
+.cal-day-num {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.cal-activity-dot {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 2px;
+}
+
+.cal-more {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+
+/* ── Enhanced Calendar Week View (with week numbers, activity bars, alternating rows) ── */
+.calendar-week-enhanced {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg-card);
+}
+
+.calendar-week-enhanced .cal-header-row {
+    display: grid;
+    grid-template-columns: 40px repeat(7, 1fr);
+    background: var(--primary);
+    color: #fff;
+    padding: 0.5rem 0;
+    border-bottom: none;
+    margin-bottom: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.calendar-week-enhanced .cal-week-label-header {
+    font-size: 0.7rem;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.calendar-week-enhanced .cal-week-row {
+    display: grid;
+    grid-template-columns: 40px repeat(7, 1fr);
+    min-height: 85px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+
+.calendar-week-enhanced .cal-week-row:last-child {
+    border-bottom: none;
+}
+
+.calendar-week-enhanced .cal-week-row-alt {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.calendar-week-enhanced .cal-week-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(0, 0, 0, 0.03);
+    border-right: 2px solid var(--primary);
+}
+
+.calendar-week-enhanced .cal-day-cell {
+    padding: 0.35rem;
+    border-right: 1px solid var(--border);
+    min-height: 85px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.calendar-week-enhanced .cal-day-cell:last-child {
+    border-right: none;
+}
+
+.calendar-week-enhanced .cal-day-cell.cal-weekend {
+    background: rgba(0, 0, 0, 0.025);
+}
+
+.calendar-week-enhanced .cal-day-cell.empty {
+    background: rgba(0, 0, 0, 0.015);
+    opacity: 0.5;
+}
+
+.calendar-week-enhanced .cal-day-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+}
+
+/* Activity bars in week view (show responsable name) */
+.cal-activity-bar {
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.12);
+    cursor: default;
+    transition: transform 0.12s;
+}
+
+.cal-activity-bar:hover {
+    transform: translateX(2px);
+}
+
+.cal-activity-bar-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Responsive: collapse week number column on small screens ── */
+@media (max-width: 640px) {
+    .calendar-week-enhanced .cal-header-row,
+    .calendar-week-enhanced .cal-week-row {
+        grid-template-columns: 28px repeat(7, 1fr);
+    }
+    .calendar-week-enhanced .cal-week-label {
+        font-size: 0.6rem;
+    }
+    .gantt-legend {
+        font-size: 0.72rem;
+    }
+}
+
+.cal-header-cell {
+    padding: 0.25rem;
+}
+
+/* ── Responsive calendar week ── */
+@media (max-width: 768px) {
+    .cal-week-row {
+        min-height: 50px;
+    }
+    .cal-day-cell {
+        min-height: 45px;
+    }
+    .calendar-year-nav h3 {
+        font-size: 1rem;
+    }
+}
+
+/* ── Notification Bell ── */
+.plan-notif-bell {
+    position: relative;
+    cursor: pointer;
+    padding: 0.35rem;
+    display: inline-flex;
+    align-items: center;
+}
+.plan-notif-bell:hover { opacity: 0.8; }
+
+.plan-notif-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    background: #ef4444;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+}
+
+.plan-notif-panel {
+    position: fixed;
+    z-index: 9999;
+    width: 340px;
+    max-height: 420px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    animation: planNotifIn 0.2s ease;
+}
+@keyframes planNotifIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.plan-notif-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+
+.plan-notif-panel-body {
+    overflow-y: auto;
+    max-height: 350px;
+}
+
+.plan-notif-item {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    border-left: 3px solid transparent;
+    transition: background 0.15s;
+}
+.plan-notif-item:hover { background: rgba(0,0,0,0.02); }
+.plan-notif-item.info { border-left-color: #3b82f6; }
+.plan-notif-item.task { border-left-color: #8b5cf6; }
+.plan-notif-item.deadline { border-left-color: #f59e0b; }
+.plan-notif-item.overdue { border-left-color: #ef4444; }
+
+/* ── Collapsible SA/Themes in table ── */
+.sa-collapsible-toggle {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--primary);
+    font-size: 0.82rem;
+    font-weight: 500;
+    user-select: none;
+}
+.sa-collapsible-toggle:hover { text-decoration: underline; }
+.sa-collapsible-toggle .sa-chevron {
+    display: inline-flex;
+    transition: transform 0.2s;
+}
+.sa-collapsible-toggle.expanded .sa-chevron {
+    transform: rotate(90deg);
+}
+.sa-collapsible-content {
+    display: none;
+    padding: 0.25rem 0 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text);
+}
+.sa-collapsible-content.show { display: block; }
+.sa-theme-list {
+    padding-left: 1rem;
+    margin: 0.15rem 0;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    list-style: disc;
+}
+
+/* ── Plan périodique : volet des prestataires et fréquences (sous la ligne du plan) ── */
+.plan-prest-row > td { border-top: none; }
+.plan-prest-toggle {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--bg);
+    cursor: pointer;
+    color: var(--primary);
+    width: 22px;
+    height: 22px;
+    margin-right: .45rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    transition: transform .2s, background .15s, color .15s;
+}
+.plan-prest-toggle svg { width: 15px; height: 15px; display: block; }
+.plan-prest-toggle:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.plan-prest-toggle.expanded { transform: rotate(90deg); }
+.plan-prest-toggle-spacer { display: inline-block; width: 22px; margin-right: .45rem; vertical-align: middle; }
+.plan-prest-body { padding: .3rem .5rem .5rem; max-height: 42vh; overflow-y: auto; }
+.plan-prest-item {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    margin-bottom: .35rem;
+    background: var(--bg);
+    overflow: hidden;
+}
+.plan-prest-item:last-child { margin-bottom: 0; }
+.plan-prest-summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: wrap;
+    padding: .3rem .6rem;
+    font-size: .82rem;
+}
+.plan-prest-summary::-webkit-details-marker { display: none; }
+.plan-prest-summary:hover { background: var(--bg-card); }
+.plan-prest-item .data-table th,
+.plan-prest-item .data-table td { font-size: .76rem; padding: .25rem .5rem; }
+.plan-theme-table th:hover { text-decoration: underline; }
+
+.plan-prest-empty {
+    padding: .4rem .7rem;
+    font-size: .8rem;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+/* ── Formulaire en volet latéral (slicer) : sort de la droite, demi-écran ── */
+.modal-overlay.drawer-overlay {
+    display: block;
+    padding: 0;
+    animation: fadeIn .2s;
+}
+.modal.modal-drawer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    min-width: 420px;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: drawerSlide .25s ease;
+}
+.modal.modal-drawer .modal-body { flex: 1; overflow-y: auto; }
+.modal.modal-drawer .modal-footer { flex-shrink: 0; }
+@keyframes drawerSlide { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@media (max-width: 820px) { .modal.modal-drawer { width: 100%; min-width: 0; } }
+
+/* ── Nouvelle activité : sous-activités en lignes, thèmes en volet ── */
+.sa-item { border-bottom: 1px solid var(--border); }
+.sa-item:last-child { border-bottom: none; }
+.sa-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .6rem;
+    font-size: .84rem;
+}
+.sa-summary::-webkit-details-marker { display: none; }
+.sa-summary:hover { background: var(--bg); }
+.sa-chevron { display: inline-flex; color: var(--primary); transition: transform .2s; flex-shrink: 0; }
+.sa-chevron svg { width: 14px; height: 14px; display: block; }
+.sa-item[open] > .sa-summary .sa-chevron { transform: rotate(90deg); }
+.sa-item[open] > .sa-summary { background: var(--bg); font-weight: 600; }
+.sa-summary .checkbox-item { margin: 0; display: inline-flex; align-items: center; gap: .35rem; }
+.sa-count { margin-left: auto; font-size: .72rem; white-space: nowrap; }
+.sa-themes {
+    padding: .35rem .6rem .5rem 2.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+.sa-theme {
+    display: flex;
+    align-items: flex-start;
+    gap: .4rem;
+    font-size: .8rem;
+    line-height: 1.35;
+    margin: 0;
+}
+.sa-theme input { margin-top: .15rem; flex-shrink: 0; }
+
+/* En-tête de carte : titre à gauche, actions à l'extrême droite */
+.card-header-flex {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+.card-header-flex > h3 { margin: 0; }
+.card-header-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-left: auto;
+}
+
+/* Statut du plan et date de passage, à gauche du titre */
+.plan-statut-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.plan-statut-date { font-size: .76rem; color: var(--text-muted); white-space: nowrap; }
+
+/* Détail du plan : titre et informations sur une seule ligne */
+.plan-title-line {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    flex-wrap: wrap;
+    min-width: 0;
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+.plan-title-line h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text);
+    white-space: nowrap;
+}
+.plan-title-sep { color: var(--border); }
+/* En-tête du détail : titre au-dessus, séparateur, puis fil d'avancement */
+.plan-detail-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding-top: .25rem;
+    margin-bottom: .5rem;
+}
+.plan-header-top {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    padding-bottom: .45rem;
+    border-bottom: 1px solid var(--border);
+}
+.plan-header-bottom {
+    display: flex;
+    align-items: stretch;
+    gap: .75rem;
+    flex-wrap: wrap;
+    padding-top: .45rem;
+}
+.plan-header-actions {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-left: auto;
+}
+.plan-steps { margin: 0; justify-content: flex-start; }
+/* Hauteur des chevrons alignée sur celle des boutons btn-sm */
+.plan-steps .eval-step {
+    font-size: .78rem;
+    padding: .35rem .75rem .35rem 1.1rem;
+    min-height: 1.9rem;
+}
+.plan-steps .eval-step:first-child { padding-left: .85rem; }
+.page-content > .page-header h2 { line-height: 1.2; }
+
+/* Bas de page du détail : Commentaires | Historique */
+.plan-bottom-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+    align-items: start;
+}
+@media (max-width: 1000px) { .plan-bottom-split { grid-template-columns: 1fr; } }
+.plan-history { display: flex; flex-direction: column; gap: .5rem; }
+.plan-history-item {
+    border-left: 3px solid var(--primary);
+    background: var(--bg);
+    border-radius: 0 6px 6px 0;
+    padding: .4rem .6rem;
+}
+.plan-history-head {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    flex-wrap: wrap;
+    font-size: .8rem;
+}
+.plan-history-version { font-weight: 700; color: var(--primary); }
+.plan-history-date { color: var(--text-muted); }
+.plan-history-count { margin-left: auto; font-size: .74rem; }
+.plan-history-current {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0 .45rem;
+}
+.plan-history-body { font-size: .8rem; margin-top: .15rem; }
+
+/* Espace entre les boutons de la section Activités et le premier bandeau */
+.plan-activities-accordion { margin-top: .6rem; }
+
+/* Volet latéral occupant 2/3 de la largeur */
+.modal.modal-drawer.modal-drawer-2-3 { width: 66.6667%; }
+@media (max-width: 820px) { .modal.modal-drawer.modal-drawer-2-3 { width: 100%; } }
+
+/* Discussions : bulles, auteur nommé, alignement selon l'auteur */
+.disc-list { display: flex; flex-direction: column; gap: .5rem; max-height: 420px; overflow-y: auto; }
+.disc-item { display: flex; }
+.disc-item.disc-mine { justify-content: flex-end; }
+.disc-bubble {
+    max-width: 82%;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .4rem .6rem;
+    background: var(--bg);
+}
+.disc-mine .disc-bubble { background: var(--primary); border-color: var(--primary); color: #fff; }
+.disc-mine .disc-date, .disc-mine .disc-author { color: #fff; opacity: .9; }
+.disc-validation .disc-bubble {
+    background: #dc26260f;
+    border-color: #dc262655;
+    border-left: 3px solid #dc2626;
+    color: #b91c1c;
+}
+.disc-validation .disc-author { color: #b91c1c; }
+.disc-head {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    flex-wrap: wrap;
+    font-size: .74rem;
+    margin-bottom: .15rem;
+}
+.disc-author { font-size: .78rem; }
+.disc-date { color: var(--text-muted); }
+.disc-tag {
+    text-transform: uppercase;
+    font-size: .64rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0 .4rem;
+}
+.disc-body { font-size: .84rem; white-space: pre-wrap; line-height: 1.4; }
+
+/* Indicateur de commentaire de validation sur une activité */
+.act-comment-flag { color: var(--text-muted); cursor: default; }
+.act-comment-flag.has-comment { color: #dc2626; }
+
+/* Discussions : bouton d'ajout en icône, juste après le titre */
+.card-header-flex .disc-add { margin-left: .25rem; color: var(--primary); }
+.card-header-flex .disc-add:hover { color: var(--primary-dark, var(--primary)); }
+
+/* Détail d'une activité : sous-activités et thèmes sur une seule colonne */
+.act-sa-list { display: flex; flex-direction: column; gap: .45rem; }
+.act-sa-block {
+    border-left: 3px solid var(--border);
+    padding-left: .6rem;
+}
+.act-sa-name { font-weight: 600; font-size: .84rem; margin-bottom: .1rem; }
+.act-sa-block .sa-theme-list { margin: 0; padding-left: 1.1rem; font-size: .82rem; }
+
+/* Historique : liste des changements et repère de version archivée */
+.plan-history-changes { margin: 0; padding-left: 1.05rem; }
+.plan-history-changes li { margin-bottom: .1rem; }
+.plan-history-archived {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    background: #9ca3af;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0 .45rem;
+}
+/* Version d'origine d'un message du fil de discussion */
+.disc-version {
+    font-size: .66rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 .35rem;
+}
+.disc-mine .disc-version { color: #fff; border-color: rgba(255,255,255,.5); }
+
+/* Détail d'activité : sous-activités sur deux colonnes */
+.act-sa-cols {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .45rem .9rem;
+}
+@media (max-width: 780px) { .act-sa-cols { grid-template-columns: 1fr; } }
+
+/* Volet du commentaire de validation : 1/3 de l'écran, ouvert à droite */
+.modal.modal-drawer.modal-drawer-1-3 { width: 33.3333%; min-width: 320px; }
+@media (max-width: 820px) { .modal.modal-drawer.modal-drawer-1-3 { width: 100%; min-width: 0; } }
+.vc-meta { font-size: .85rem; margin-bottom: .6rem; display: flex; flex-direction: column; gap: .15rem; }
+.vc-comment {
+    border-left: 3px solid #dc2626;
+    background: #dc26260d;
+    color: #b91c1c;
+    border-radius: 0 6px 6px 0;
+    padding: .55rem .7rem;
+    font-size: .86rem;
+    white-space: pre-wrap;
+    line-height: 1.45;
+}
+
+/* Bloc de validation : commentaire général de la décision */
+.valid-comment { margin-top: .6rem; }
+.valid-comment label {
+    display: block;
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: .2rem;
+}
+.valid-comment-recap {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    padding: .4rem .6rem;
+    font-size: .85rem;
+    white-space: pre-wrap;
+}
+
+/* Gantt annuel : graduation par semaine, cellules sans texte */
+.gantt-week-cell {
+    padding: 0;
+    min-width: 0;
+    width: auto;
+    height: 18px;
+    border-right: 1px dotted var(--border);
+}
+.gantt-week-cell.gantt-month-start { border-left: 1px solid var(--border); }
+.gantt-week-cell.gantt-quarter-sep { border-left: 2px solid var(--text-muted); }
+.gantt-week-on { cursor: pointer; }
+.gantt-week-on:hover { filter: brightness(1.15); }
+.gantt-table-enhanced th.gantt-month { text-align: center; }

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Outil d'Administration et de Supervision Intégrée de la Sécurité</title>
+  <link rel="stylesheet" href="/shared/css/oasis-shell.css">
+  <link rel="stylesheet" href="/css/aerosup.css">
+</head>
+<body>
+  <div class="portal-wrapper">
+    <!-- ── Sidebar ── -->
+    <aside class="portal-sidebar">
+      <div class="portal-sidebar-brand">
+        <span class="portal-sidebar-brand-logo" id="brandLogo"></span>
+        <span class="portal-sidebar-brand-text">
+          <span class="brand-sigle">OASIS</span>
+        </span>
+      </div>
+      <nav class="portal-sidebar-nav" id="sidebarNav">
+        <button class="portal-nav-btn active" data-view="home">
+          <span class="nav-icon" data-icon="home"></span><span class="nav-label" data-i18n="nav_home">Accueil</span>
+        </button>
+        <button class="portal-nav-btn" data-view="profile">
+          <span class="nav-icon" data-icon="userCheck"></span><span class="nav-label" data-i18n="nav_profile">Profil</span>
+        </button>
+        <div class="portal-sidebar-section" data-i18n="nav_admin">Administration</div>
+        <button class="portal-nav-btn" data-view="users" data-roles="SUPERADMIN,ADMIN">
+          <span class="nav-icon" data-icon="users"></span><span class="nav-label" data-i18n="nav_users">Utilisateurs</span>
+        </button>
+        <button class="portal-nav-btn" data-view="config" data-roles="SUPERADMIN">
+          <span class="nav-icon" data-icon="settings"></span><span class="nav-label" data-i18n="nav_config">Configuration</span>
+        </button>
+        <button class="portal-nav-btn" data-view="audit" data-roles="SUPERADMIN,ADMIN">
+          <span class="nav-icon" data-icon="list"></span><span class="nav-label" data-i18n="nav_audit">Journal d'audit</span>
+        </button>
+      </nav>
+      <div class="portal-sidebar-footer">
+        <div class="portal-sidebar-logo" id="sidebarLogo" style="display:none;"></div>
+        <div class="portal-theme-selector">
+          <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu"></div>
+          <div class="theme-dot" data-theme="orange-dark" onclick="applyTheme('orange-dark')" title="Orange"></div>
+          <div class="theme-dot" data-theme="violet"      onclick="applyTheme('violet')"      title="Violet"></div>
+          <div class="theme-dot" data-theme="green"       onclick="applyTheme('green')"       title="Vert"></div>
+          <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris"></div>
+        </div>
+        <div class="portal-lang-selector">
+          <button class="lang-btn" onclick="applyLang('fr')">FR</button>
+          <button class="lang-btn" onclick="applyLang('en')">EN</button>
+          <button class="lang-btn" onclick="applyLang('pt')">PT</button>
+        </div>
+      </div>
+      <button class="portal-sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()"></button>
+    </aside>
+
+    <!-- ── Corps ── -->
+    <div class="portal-body">
+      <header class="portal-header">
+        <div class="portal-header-left">
+          <span class="portal-header-brand">
+            <span class="portal-header-brand-sigle">OASIS</span>
+            <span class="portal-header-brand-sep">|</span>
+            <span class="portal-header-brand-tagline">Outil d'Administration et de Supervision Intégrée de la Sécurité</span>
+          </span>
+        </div>
+        <div class="portal-header-right">
+          <span class="portal-header-instance" id="instanceBadge"></span>
+          <button class="portal-notif-bell" id="notifBell" title="Notifications">
+            <span data-icon="bell"></span><span class="portal-notif-badge" id="notifBadge" style="display:none;">0</span>
+          </button>
+          <div style="text-align:right;">
+            <div class="portal-user-name" id="userName"></div>
+            <div class="portal-user-role" id="userRole"></div>
+          </div>
+          <div class="portal-user-avatar" id="userAvatar"></div>
+          <button class="shell-btn shell-btn-sm shell-btn-danger" id="logoutBtn" data-i18n="logout">Déconnexion</button>
+        </div>
+      </header>
+
+      <div class="portal-notif-panel" id="notifPanel" style="display:none;"></div>
+
+      <main class="portal-main" id="mainView">
+        <div class="loading-spinner"></div>
+      </main>
+
+      <footer class="portal-footer" data-i18n="footer">© 2026 UEMOA / URSAC — OASIS · Outil d'Administration et de Supervision Intégrée de la Sécurité</footer>
+    </div>
+  </div>
+
+  <!-- Modal changement de mot de passe obligatoire -->
+  <div class="shell-modal-overlay" id="pwdModal" style="display:none; top:0; left:0;">
+    <div class="shell-modal" style="max-width:480px;">
+      <div class="shell-modal-header"><h3 data-i18n="chgpwd_title">Changement de mot de passe requis</h3></div>
+      <div class="shell-modal-body">
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1rem;" data-i18n="chgpwd_sub"></p>
+        <div class="shell-form-group" style="margin-bottom:.75rem;">
+          <label data-i18n="chgpwd_old">Mot de passe actuel</label>
+          <input class="shell-input" type="password" id="pwdOld">
+        </div>
+        <div class="shell-form-group" style="margin-bottom:.75rem;">
+          <label data-i18n="chgpwd_new">Nouveau mot de passe</label>
+          <input class="shell-input" type="password" id="pwdNew">
+        </div>
+        <div class="shell-form-group">
+          <label data-i18n="chgpwd_confirm">Confirmer le nouveau mot de passe</label>
+          <input class="shell-input" type="password" id="pwdConfirm">
+        </div>
+      </div>
+      <div class="shell-modal-footer">
+        <button class="shell-btn shell-btn-primary" id="pwdSubmit" data-i18n="chgpwd_btn">Changer le mot de passe</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/js/icons.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/modules-host.js"></script>
+</body>
+</html>

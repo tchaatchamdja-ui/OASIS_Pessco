@@ -1,0 +1,861 @@
+{
+  "organisation_levels": [
+    {
+      "id": "9a2a0332fa14",
+      "type": "Administration",
+      "ordre": 1
+    },
+    {
+      "id": "9d55f6c79f94",
+      "type": "Direction",
+      "ordre": 2
+    },
+    {
+      "id": "5cfc77c5bf4a",
+      "type": "Service",
+      "ordre": 3
+    },
+    {
+      "id": "fddf81fd7184",
+      "type": "Division",
+      "ordre": 4
+    }
+  ],
+  "organisation": [
+    {
+      "id": "3414df3bd74d",
+      "type": "Administration",
+      "sigle": "ANAC",
+      "libelle": "Agence Nationale de l'Aviation Civile",
+      "parent_id": "",
+      "ordre": 1,
+      "poste": "Directeur Général",
+      "titulaire_id": "",
+      "interim_id": "",
+      "interim_actif": false,
+      "registre": []
+    },
+    {
+      "id": "72536abbb2ab",
+      "type": "Direction",
+      "sigle": "DSV",
+      "libelle": "Direction Sécurité des Vols",
+      "parent_id": "3414df3bd74d",
+      "ordre": 2,
+      "poste": "Directeur Sécurité des Vols",
+      "titulaire_id": "",
+      "interim_actif": false,
+      "interim_id": "",
+      "registre": []
+    },
+    {
+      "id": "216762f52360",
+      "type": "Direction",
+      "sigle": "DANA",
+      "libelle": "Direction Aerodrome et Navigation Aérienne",
+      "parent_id": "3414df3bd74d",
+      "ordre": 3,
+      "interim_actif": false,
+      "interim_id": "",
+      "registre": [],
+      "poste": "Directeur Aerodrome et Navigation Aérienne",
+      "titulaire_id": ""
+    },
+    {
+      "id": "7175ac3b93bb",
+      "type": "Service",
+      "sigle": "S_AIR",
+      "libelle": "Service Navigabilité des Aéronefs",
+      "parent_id": "72536abbb2ab",
+      "ordre": 4,
+      "poste": "Chef de Service Navigabilité",
+      "titulaire_id": "",
+      "interim_id": "",
+      "interim_actif": false,
+      "registre": []
+    },
+    {
+      "id": "12496eb94431",
+      "type": "Service",
+      "sigle": "S_OPS",
+      "libelle": "Service Opérations Aérienne",
+      "parent_id": "72536abbb2ab",
+      "ordre": 5,
+      "interim_actif": false,
+      "interim_id": "",
+      "registre": []
+    }
+  ],
+  "domaines": [
+    {
+      "id": "7c77872dd24a",
+      "code": "OPS",
+      "nom": "Exploitation Aérienne",
+      "description": "Opérations de transport aérien et travail aérien",
+      "statut": "actif"
+    },
+    {
+      "id": "ae5223684e59",
+      "code": "AIR",
+      "nom": "Navigabilité des Aéronefs",
+      "description": "Navigabilité des aéronefs et organismes de maintenance",
+      "statut": "actif"
+    },
+    {
+      "id": "3a2fbd6272ee",
+      "code": "PEL",
+      "nom": "Licences du personnel",
+      "description": "Licences et qualifications du personnel aéronautique",
+      "statut": "actif"
+    },
+    {
+      "id": "88959283475c",
+      "code": "ANS",
+      "nom": "Navigation aérienne",
+      "description": "Services de la navigation aérienne",
+      "statut": "actif"
+    },
+    {
+      "id": "a6a7f6769063",
+      "code": "AGA",
+      "nom": "Aérodromes",
+      "description": "Certification et surveillance des aérodromes",
+      "statut": "actif"
+    }
+  ],
+  "secteurs": [
+    {
+      "id": "806dec33479c",
+      "code": "AMO",
+      "nom": "Organisme de Maintenance",
+      "domaine_id": "ae5223684e59",
+      "csn": 24,
+      "statut": "actif"
+    },
+    {
+      "id": "08f2e8267b80",
+      "code": "CAMO",
+      "nom": "Gestion du Maintien de la Navigabilité",
+      "domaine_id": "ae5223684e59",
+      "csn": 24,
+      "statut": "actif"
+    },
+    {
+      "id": "801b792bd963",
+      "code": "CAT",
+      "nom": "Transport Aérien commercial",
+      "domaine_id": "7c77872dd24a",
+      "csn": 12,
+      "statut": "actif"
+    },
+    {
+      "id": "2fafa8b26a68",
+      "code": "STA",
+      "nom": "Assistance en Escale",
+      "domaine_id": "7c77872dd24a",
+      "csn": 12,
+      "statut": "actif"
+    },
+    {
+      "id": "54d2bdec9d8f",
+      "code": "ATO",
+      "nom": "Oragnismes de formation",
+      "domaine_id": "3a2fbd6272ee",
+      "csn": 24,
+      "statut": "actif"
+    },
+    {
+      "id": "f27b7960e1e5",
+      "code": "MED",
+      "nom": "Medecine Aéronautique",
+      "domaine_id": "3a2fbd6272ee",
+      "csn": 12,
+      "statut": "actif"
+    },
+    {
+      "id": "835bc84b2c4b",
+      "code": "ANP",
+      "nom": "Fournisseuer de service de navigation aérienne",
+      "domaine_id": "88959283475c",
+      "csn": 36,
+      "statut": "actif"
+    },
+    {
+      "id": "40a01b02dbfb",
+      "code": "ADM",
+      "nom": "Aérodromes",
+      "domaine_id": "a6a7f6769063",
+      "csn": 48,
+      "statut": "actif"
+    }
+  ],
+  "sous_activites": [
+    {
+      "id": "108fbfe1f06e",
+      "code": "AMO_OSG",
+      "nom": "Organisation et systèmes de gestion",
+      "secteur_id": "806dec33479c"
+    },
+    {
+      "id": "5e59c8d9b32b",
+      "code": "AMO_TMA",
+      "nom": "Personnel technique",
+      "secteur_id": "806dec33479c"
+    },
+    {
+      "id": "155d16c7da04",
+      "code": "AMO_IOE",
+      "nom": "Installations, outils, équipements et matériels",
+      "secteur_id": "806dec33479c"
+    },
+    {
+      "id": "6ec9a1813f8a",
+      "code": "AMO_ETR",
+      "nom": "Exécution et enregistrement des travaux de maintenance",
+      "secteur_id": "806dec33479c"
+    },
+    {
+      "id": "791cae857067",
+      "code": "CAMO_OSG",
+      "nom": "Organisation et Systèmes de Gestion",
+      "secteur_id": "08f2e8267b80"
+    },
+    {
+      "id": "658f8ece8005",
+      "code": "CAMO_MGN",
+      "nom": "Contrôle de la maintenance et enregistrements",
+      "secteur_id": "08f2e8267b80"
+    },
+    {
+      "id": "bf2f756a1a73",
+      "code": "CAMO_CAS",
+      "nom": "Configuration d'exploitation et Approbation Spécifiques",
+      "secteur_id": "08f2e8267b80"
+    },
+    {
+      "id": "47f48c6a5224",
+      "code": "CAMO_ENG",
+      "nom": "Engineering",
+      "secteur_id": "08f2e8267b80"
+    }
+  ],
+  "themes_supervision": [
+    {
+      "id": "0a4cd352e74a",
+      "code": "AMO_OSG_T1",
+      "libelle": "Organisation et Personnel de Commandement",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "108fbfe1f06e",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "63da529a1d4c",
+      "code": "AMO_OSG_T2",
+      "libelle": "Gestion de la Sécurité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "108fbfe1f06e",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "5f62fec2cbf7",
+      "code": "AMO_OSG_T3",
+      "libelle": "Système Qualité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "108fbfe1f06e",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "515c05a9fa86",
+      "code": "AMO_TMA_T1",
+      "libelle": "Personnel de Certification et de Soutien",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "5e59c8d9b32b",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "22b66e248bba",
+      "code": "AMO_TMA_T2",
+      "libelle": "Personnel spécialisé (NDT, Soudeur...)",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "5e59c8d9b32b",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "278624955dfc",
+      "code": "AMO_TMA_T3",
+      "libelle": "Formation et Qualification et dossier du Personnel",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "5e59c8d9b32b",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "c48b50b517b3",
+      "code": "AMO_IOE_T1",
+      "libelle": "Installations de maintenance et de stockage",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "155d16c7da04",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "0ccacafafe31",
+      "code": "AMO_IOE_T2",
+      "libelle": "Equipements et Outillages",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "155d16c7da04",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "ddff8744fa0b",
+      "code": "AMO_IOE_T3",
+      "libelle": "Données techniques approuvées",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "155d16c7da04",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "b90c8ecebc7f",
+      "code": "AMO_IOE_T4",
+      "libelle": "Suivi du matériel (Entretien et Calibrage)",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "155d16c7da04",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "a5aad394d4ef",
+      "code": "AMO_ETR_T1",
+      "libelle": "Planification de la Production",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "6ec9a1813f8a",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "3f2e23d13171",
+      "code": "AMO_ETR_T2",
+      "libelle": "Exécution des travaux",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "6ec9a1813f8a",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "8633c8869276",
+      "code": "AMO_ETR_T3",
+      "libelle": "Enregistrement et Remise en service",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "6ec9a1813f8a",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "7d483a140d9c",
+      "code": "AMO_ETR_T4",
+      "libelle": "Contrôle des pièces et matériaux",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "6ec9a1813f8a",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "488eb540d2f2",
+      "code": "AMO_ETR_T5",
+      "libelle": "AD, SB et Données sur le maintien de la naviagbilité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "806dec33479c",
+      "sous_activite_id": "6ec9a1813f8a",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "9de037fe1fdc",
+      "code": "CAMO_OSG_T1",
+      "libelle": "Organisation, Responsabilités et Ressources",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "791cae857067",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "5efb62039fba",
+      "code": "CAMO_OSG_T2",
+      "libelle": "Système de gestion de la sécurité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "791cae857067",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "907dc02e6607",
+      "code": "CAMO_OSG_T3",
+      "libelle": "Système Qualité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "791cae857067",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "bc472b7f57ac",
+      "code": "CAMO_MGN_T1",
+      "libelle": "Planification de la maintenance",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "658f8ece8005",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "118b27c943a8",
+      "code": "CAMO_MGN_T2",
+      "libelle": "Compte rendu matériel, défaut reporté et maintenance différée",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "658f8ece8005",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "fd0afee8efc5",
+      "code": "CAMO_MGN_T3",
+      "libelle": "Enregistrements de maintenance",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "658f8ece8005",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "77db3fab8814",
+      "code": "CAMO_MGN_T4",
+      "libelle": "Enregistrements de maintien de navigabilité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "658f8ece8005",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "781d483df093",
+      "code": "CAMO_MGN_T5",
+      "libelle": "Communication d'information sur les difficultés en service",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "658f8ece8005",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "cac115916013",
+      "code": "CAMO_CAS_T1",
+      "libelle": "Systèmes et Equipements des aéronefs",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "bf2f756a1a73",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "539acb8479b7",
+      "code": "CAMO_CAS_T2",
+      "libelle": "Extended Diversion Time Operations (EDTO)",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "bf2f756a1a73",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "12ae1db13a06",
+      "code": "CAMO_CAS_T3",
+      "libelle": "Reduced Vertical Separation Minima (RVSM)",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "bf2f756a1a73",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "b3fd0abe6c35",
+      "code": "CAMO_CAS_T4",
+      "libelle": "Navigation basée sur les performances (PBN)",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "bf2f756a1a73",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "621b2bc3aa1b",
+      "code": "CAMO_CAS_T5",
+      "libelle": "Sacoche Electonique de bord (EFB)",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "bf2f756a1a73",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "d048fdc38f33",
+      "code": "CAMO_ENG_T1",
+      "libelle": "Données de maintenances et de maintien de navigabilité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "47f48c6a5224",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "d69d67429a4f",
+      "code": "CAMO_ENG_T2",
+      "libelle": "Modifications et réparations",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "47f48c6a5224",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "820968495c97",
+      "code": "CAMO_ENG_T3",
+      "libelle": "Consignes de navigabilité",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "47f48c6a5224",
+      "description": "",
+      "statut": "actif"
+    },
+    {
+      "id": "805493778d4d",
+      "code": "CAMO_ENG_T4",
+      "libelle": "Gestion des données de navigations",
+      "domaine_id": "ae5223684e59",
+      "secteur_id": "08f2e8267b80",
+      "sous_activite_id": "47f48c6a5224",
+      "description": "",
+      "statut": "actif"
+    }
+  ],
+  "exigences": [
+    {
+      "id": "ecaa077b0689",
+      "reference": "RAB-OPS 1.037",
+      "libelle": "Programme de prévention des accidents et de sécurité des vols",
+      "domaine_id": "OPS",
+      "secteur_id": "OPS-TAC",
+      "theme": "SGS",
+      "moyen_controle": "Examen documentaire + entretien",
+      "statut": "actif",
+      "reglement": "RAB-OPS (Exploitation)",
+      "date_adoption": "2023-06-15"
+    },
+    {
+      "id": "cfef53d772ca",
+      "reference": "RAB-145.A.30",
+      "libelle": "Exigences en matière de personnel de l'organisme de maintenance",
+      "domaine_id": "AIR",
+      "secteur_id": "AIR-OMA",
+      "theme": "Personnel",
+      "moyen_controle": "Inspection sur site",
+      "statut": "actif",
+      "reglement": "RAB-145 (Maintenance)",
+      "date_adoption": "2022-11-02"
+    }
+  ],
+  "prestataires": [
+    {
+      "id": "d82c838cb1a2",
+      "nom": "Air Bénin Express",
+      "trigramme": "ABE",
+      "domaine_id": "",
+      "secteur_id": "806dec33479c",
+      "dirigeant": "K. Adjovi",
+      "point_focal": "S. Dossou",
+      "email_prestataire": "contact@abe.bj",
+      "ref_agrement": "CTA-BJ-001",
+      "statut": "actif"
+    },
+    {
+      "id": "2c8f39b6add9",
+      "nom": "AeroMaint Cotonou",
+      "trigramme": "AMC",
+      "domaine_id": "",
+      "secteur_id": "806dec33479c",
+      "dirigeant": "F. Houngbo",
+      "point_focal": "R. Zinsou",
+      "email_prestataire": "contact@aeromaint.bj",
+      "ref_agrement": "OMA-BJ-004",
+      "statut": "actif"
+    }
+  ],
+  "inspecteurs": [
+    {
+      "id": "69d22710f404",
+      "ref_personnel": "",
+      "nom": "AHOYO",
+      "prenom": "Marcelin",
+      "numero_inspecteur": "",
+      "email": "m.ahoyo@anac.bj",
+      "telephone": "",
+      "specialite": "",
+      "est_inspecteur": "non",
+      "domaines": [],
+      "specialites": [],
+      "niveau_qualification": "",
+      "statut": "actif",
+      "user_id": "m.ahoyo@anac.bj"
+    },
+    {
+      "id": "0976782a23e1",
+      "ref_personnel": "",
+      "nom": "TCHAMDJA",
+      "prenom": "Tchaa",
+      "numero_inspecteur": "",
+      "email": "superadmin@anac.bj",
+      "telephone": "",
+      "specialite": "",
+      "est_inspecteur": "non",
+      "domaines": [],
+      "specialites": [],
+      "niveau_qualification": "",
+      "statut": "actif",
+      "user_id": "superadmin@anac.bj"
+    },
+    {
+      "id": "3163f38f5f56",
+      "ref_personnel": "",
+      "nom": "YACINTE",
+      "prenom": "Yves",
+      "numero_inspecteur": "",
+      "email": "yves@test.com",
+      "telephone": "",
+      "specialite": "",
+      "est_inspecteur": "non",
+      "domaines": [],
+      "specialites": [],
+      "niveau_qualification": "",
+      "statut": "actif",
+      "user_id": "yves@test.com"
+    },
+    {
+      "id": "a4b9dfb8f7f7",
+      "ref_personnel": "",
+      "nom": "SIMADIN",
+      "prenom": "Komi",
+      "numero_inspecteur": "",
+      "email": "simkom@aac.int",
+      "telephone": "",
+      "specialite": "",
+      "est_inspecteur": "non",
+      "domaines": [],
+      "specialites": [],
+      "niveau_qualification": "",
+      "statut": "actif",
+      "user_id": "simkom@aac.int"
+    }
+  ],
+  "types_supervision": [
+    {
+      "id": "02130721d01a",
+      "type_supervision": "Audit",
+      "description": "Évaluation systématique et documentée",
+      "duree_standard": 5,
+      "statut": "actif"
+    },
+    {
+      "id": "324068a0a1d0",
+      "type_supervision": "Inspection",
+      "description": "Vérification ciblée sur site",
+      "duree_standard": 2,
+      "statut": "actif"
+    },
+    {
+      "id": "0ee271ec316a",
+      "type_supervision": "Contrôle inopiné",
+      "description": "Vérification sans préavis",
+      "duree_standard": 1,
+      "statut": "actif"
+    },
+    {
+      "id": "cff356e1e461",
+      "type_supervision": "Suivi de PAC",
+      "description": "Vérification de la mise en œuvre des plans d'actions correctives",
+      "duree_standard": 1,
+      "statut": "actif"
+    }
+  ],
+  "modes_supervision": [
+    {
+      "id": "565db8acdec6",
+      "mode": "Sur site",
+      "description": "Activité conduite dans les locaux du prestataire",
+      "statut": "actif"
+    },
+    {
+      "id": "87db4e046dbd",
+      "mode": "Hors site",
+      "description": "Examen documentaire à distance",
+      "statut": "actif"
+    },
+    {
+      "id": "4c4cc5919dbb",
+      "mode": "Mixte",
+      "description": "Combinaison sur site et hors site",
+      "statut": "actif"
+    }
+  ],
+  "niveaux_qualifications": [
+    {
+      "id": "f5acb2b352e5",
+      "libelle": "Postulant Stagiaire",
+      "ordre": 1,
+      "statut": "actif"
+    },
+    {
+      "id": "6ea07b578e0f",
+      "libelle": "Stagiaire",
+      "ordre": 2,
+      "statut": "actif"
+    },
+    {
+      "id": "afb3d9265a32",
+      "libelle": "Titulaire",
+      "ordre": 3,
+      "statut": "actif"
+    },
+    {
+      "id": "818d7d3047fb",
+      "libelle": "Senior",
+      "ordre": 4,
+      "statut": "actif"
+    },
+    {
+      "id": "b713d41a38e9",
+      "libelle": "Principal",
+      "ordre": 5,
+      "statut": "actif"
+    }
+  ],
+  "organisation_assignments": [
+    {
+      "id": "926ae0b572f0",
+      "org_id": "7175ac3b93bb",
+      "person_id": "b4579404c214",
+      "person_type": "inspecteur"
+    },
+    {
+      "id": "850ff5a9162b",
+      "org_id": "216762f52360",
+      "person_id": "1422fb75c976",
+      "person_type": "inspecteur"
+    }
+  ],
+  "specialites_inspecteur": [
+    {
+      "id": "5c8fb2b7e985",
+      "libelle": "Exploitation technique (OPS SOL)",
+      "statut": "actif",
+      "domaines": [
+        "OPS"
+      ]
+    },
+    {
+      "id": "6cc4cf0a147a",
+      "libelle": "Navigabilité (AIR)",
+      "statut": "actif",
+      "domaines": [
+        "AIR"
+      ]
+    },
+    {
+      "id": "0114a72e32b7",
+      "libelle": "Licences du personnel (PEL)",
+      "statut": "actif",
+      "domaines": [
+        "PEL"
+      ]
+    },
+    {
+      "id": "d95d2c961cec",
+      "libelle": "Navigation aérienne (ANS)",
+      "statut": "actif",
+      "domaines": [
+        "ANS"
+      ]
+    },
+    {
+      "id": "41feb3c1b524",
+      "libelle": "Aérodromes (AGA)",
+      "statut": "actif",
+      "domaines": [
+        "AGA"
+      ]
+    },
+    {
+      "id": "6fdf1e76ea3f",
+      "libelle": "Médecine aéronautique (MED)",
+      "statut": "actif",
+      "domaines": [
+        "PEL"
+      ]
+    },
+    {
+      "id": "7a628c4185e2",
+      "libelle": "En vol (OPS VOL)",
+      "statut": "actif",
+      "domaines": [
+        "OPS"
+      ]
+    },
+    {
+      "id": "cbdadcf8f61a",
+      "libelle": "Marchandises dangereuses (MD)",
+      "statut": "actif",
+      "domaines": [
+        "OPS"
+      ]
+    },
+    {
+      "id": "e732f63f50ed",
+      "libelle": "Sécurité Cabine (CAB)",
+      "statut": "actif",
+      "domaines": [
+        "OPS"
+      ]
+    },
+    {
+      "id": "43d7d84ed2fe",
+      "libelle": "Inspection sur Air de trafic (SAFA/SANA)",
+      "statut": "actif",
+      "domaines": [
+        "OPS",
+        "AIR"
+      ]
+    }
+  ]
+}

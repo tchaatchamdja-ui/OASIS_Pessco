@@ -1,0 +1,23 @@
+# Dépendances
+node_modules/
+
+# Données d'exploitation : comptes, hachages, journal d'audit, dossiers.
+# Un jeu de référence versionné est fourni dans tests/fixtures/.
+data/
+sauvegardes/
+
+# Variables d'environnement (le modèle .env.example est versionné)
+.env
+.env.local
+
+# Sorties de travail
+audit-output/
+*.tmp
+*.log
+
+# Système
+.DS_Store
+
+# Documents de travail à la racine (sources métier, non nécessaires au code)
+/*.xlsx
+/*.docx

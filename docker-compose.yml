@@ -1,0 +1,24 @@
+# Déploiement d'une instance OASIS (un État membre).
+services:
+  oasis:
+    build: .
+    image: oasis:local
+    restart: unless-stopped
+    ports:
+      - "4750:4750"
+    environment:
+      NODE_ENV: production
+      # Décommenter derrière un proxy inverse qui termine TLS :
+      # OASIS_TRUST_PROXY: "1"
+      # Le proxy compresse déjà ? OASIS_COMPRESSION: "0"
+    volumes:
+      - oasis-data:/app/data
+      - ./config:/app/config:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4750/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  oasis-data:

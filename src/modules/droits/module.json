@@ -1,0 +1,35 @@
+{
+  "code": "DROITS",
+  "tdr": "socle",
+  "priority": 1,
+  "icon": "🔐",
+  "theme": "surveillance",
+  "name": {
+    "fr": "Gestion des Droits",
+    "en": "Rights Management",
+    "pt": "Gestão de Direitos"
+  },
+  "desc": {
+    "fr": "Privilèges par module, portées domaine/secteur et journal d'audit inaltérable.",
+    "en": "Per-module privileges, domain/sector scopes and tamper-evident audit log.",
+    "pt": "Privilégios por módulo, âmbitos domínio/setor e registo de auditoria inalterável."
+  },
+  "apiPrefixes": [
+    "/api/m/droits"
+  ],
+  "auditModule": "PLAN",
+  "rightsModule": "PLAN",
+  "front": {
+    "key": "droits",
+    "url": "/modules/droits/index.html",
+    "superMenu": true,
+    "roles": [
+      "SUPERADMIN",
+      "ADMIN"
+    ],
+    "order": 3
+  },
+  "provides": [],
+  "requires": [],
+  "portalCode": "PLAN"
+}

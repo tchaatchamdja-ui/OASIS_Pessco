@@ -1,0 +1,35 @@
+# OASIS — description du service pour Render (Infrastructure as Code).
+# Render lit ce fichier via un « Blueprint » : New → Blueprint → dépôt OASIS.
+#
+# ⚠ Plan gratuit : le disque du service est éphémère. Les données (comptes,
+# journal d'audit, dossiers) sont perdues à chaque redéploiement et à chaque
+# réveil après mise en veille. Ce déploiement vaut pour la démonstration.
+# Pour un usage réel : plan Starter + disque persistant, et OASIS_DATA_DIR
+# pointé sur le point de montage (voir DEPLOYMENT.md).
+
+services:
+  - type: web
+    name: oasis
+    runtime: node
+    plan: free
+    region: frankfurt          # le plus proche de l'Afrique de l'Ouest
+    branch: main
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Active le cookie Secure, HSTS et le cache des fichiers statiques.
+      - key: NODE_ENV
+        value: production
+      # Render place un proxy devant le service : sans cela, la limitation de
+      # débit compterait toutes les requêtes sur une seule adresse.
+      - key: OASIS_TRUST_PROXY
+        value: "1"
+      # Le proxy de Render compresse déjà : inutile de le faire deux fois.
+      - key: OASIS_COMPRESSION
+        value: "0"
+      # Mot de passe des comptes créés à chaque démarrage à froid. À saisir
+      # dans le tableau de bord Render (Environment) — il n'est pas dans le code.
+      - key: OASIS_SEED_PASSWORD
+        sync: false

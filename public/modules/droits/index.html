@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Gestion des Droits</title>
+  <link rel="stylesheet" href="/shared/css/oasis-module.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; }
+    /* Pas de débordement horizontal : seules les tables défilent, dans leur carte */
+    .app-content, .main-content, .card { min-width: 0; max-width: 100%; }
+    .dr-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .dr-table-wrap .data-table { min-width: 720px; }
+    .dr-audit-filters, .filters-bar { min-width: 0; }
+    .dr-audit-filters .form-control { min-width: 0; flex: 1 1 160px; }
+
+    .dr-priv { display: inline-block; padding: .15rem .55rem; border-radius: 20px;
+               font-size: .7rem; font-weight: 700; letter-spacing: .3px; }
+    .dr-priv-GESTIONNAIRE   { background: #1e3a8a22; color: #1e3a8a; }
+    .dr-priv-VALIDATEUR     { background: #15803d22; color: #15803d; }
+    .dr-priv-CONTRIBUTEUR   { background: #b4530922; color: #b45309; }
+    .dr-priv-LECTEUR        { background: #47556922; color: #475569; }
+    .dr-priv-AUCUN          { background: #99182022; color: #991b1b; }
+    .dr-priv-PRESTATAIRE    { background: #6d28d922; color: #6d28d9; }
+    .dr-scopes { display: flex; flex-wrap: wrap; gap: .3rem; }
+    .dr-chip { background: var(--bg); border: 1px solid var(--border); border-radius: 14px;
+               padding: .1rem .5rem; font-size: .7rem; white-space: nowrap; }
+    .dr-chip-GESTIONNAIRE { background: #1e3a8a14; border-color: #1e3a8a40; color: #1e3a8a; }
+    .dr-chip-AUCUN { background: #99182014; border-color: #99182040; color: #991b1b; }
+    .dr-chip-PRESTATAIRE { background: #6d28d914; border-color: #6d28d940; color: #6d28d9; }
+
+    /* Portée du privilège « Prestataire » : secteur d'activité puis nom */
+    .dr-modal .dr-prest-head, .dr-modal .dr-prest-row {
+      display: grid; grid-template-columns: 1fr 1fr 32px;
+      gap: .5rem; align-items: center;
+    }
+    .dr-modal .dr-prest-head { font-size: .68rem; text-transform: uppercase; letter-spacing: .4px;
+                               color: var(--text-muted); text-align: left; margin-bottom: .25rem; }
+    .dr-modal .dr-prest-row { margin-bottom: .4rem; }
+
+    /* Formulaire des privilèges : boutons et textes alignés à gauche */
+    .dr-modal .form-group { text-align: left; margin-bottom: 1.1rem; }
+    .dr-modal .form-label { display: block; text-align: left; margin-bottom: .4rem; }
+    .dr-user-line { text-align: left; font-size: .78rem; color: var(--text-muted); margin-bottom: .9rem; }
+    .dr-hint { text-align: left; font-size: .72rem; color: var(--text-muted); margin: .1rem 0 .5rem; }
+    .dr-error { text-align: left; color: #991b1b; font-size: .78rem; }
+
+    .dr-modal .dr-radio-list { display: flex; flex-direction: column; gap: .35rem; }
+    .dr-modal .dr-radio-list label.dr-radio {
+      display: grid; grid-template-columns: 18px 1fr; column-gap: .6rem;
+      align-items: start; justify-items: start; text-align: left; width: 100%;
+      margin: 0; padding: .5rem .7rem; font-weight: 400;
+      border: 1px solid var(--border); border-radius: 8px;
+      cursor: pointer; transition: border-color .15s, background .15s;
+    }
+    .dr-modal .dr-radio-list label.dr-radio:hover { background: var(--bg); }
+    .dr-modal .dr-radio-list label.dr-radio.selected {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary) 6%, transparent);
+    }
+    .dr-modal .dr-radio-list label.dr-radio input[type="radio"] {
+      width: 16px; height: 16px; margin: .18rem 0 0; justify-self: start; accent-color: var(--primary);
+    }
+    .dr-modal .dr-radio-text { display: block; text-align: left; }
+    .dr-modal .dr-radio-desc { display: block; font-size: .72rem; color: var(--text-muted); margin-top: .1rem; }
+
+    .dr-modal .dr-scope-head, .dr-modal .dr-scope-row {
+      display: grid; grid-template-columns: 1fr 1fr 170px 32px;
+      gap: .5rem; align-items: center;
+    }
+    .dr-modal .dr-scope-head { font-size: .68rem; text-transform: uppercase; letter-spacing: .4px;
+                               color: var(--text-muted); text-align: left; margin-bottom: .25rem; }
+    .dr-modal .dr-scope-row { margin-bottom: .4rem; }
+    .dr-modal .modal-body { text-align: left; }
+
+    /* Journal d'audit */
+    .dr-integrity { border-radius: 8px; padding: .55rem .8rem; font-size: .78rem;
+                    font-weight: 600; margin-bottom: .9rem; }
+    .dr-integrity.ok { background: #15803d14; border: 1px solid #15803d40; color: #15803d; }
+    .dr-integrity.ko { background: #99182014; border: 1px solid #99182055; color: #991b1b; }
+    .dr-scoped-user { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+                      background: var(--bg-card); border: 1px solid var(--border);
+                      border-radius: 8px; padding: .5rem .8rem; font-size: .8rem; margin-bottom: .8rem; }
+    .dr-audit-filters { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    .dr-audit-filters .form-control { max-width: 210px; }
+    .dr-audit-filters input[type="date"] { max-width: 150px; }
+    .dr-count { margin-left: auto; font-size: .75rem; color: var(--text-muted); }
+    .dr-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; }
+    .dr-detail { max-width: 260px; overflow-wrap: anywhere; }
+    .dr-hash { color: var(--text-muted); }
+    .dr-act { display: inline-block; padding: .1rem .5rem; border-radius: 20px;
+              font-size: .7rem; font-weight: 700; background: #47556922; color: #475569; }
+    .dr-act-CREATION      { background: #15803d22; color: #15803d; }
+    .dr-act-MODIFICATION  { background: #1d4ed822; color: #1d4ed8; }
+    .dr-act-SUPPRESSION   { background: #99182022; color: #991b1b; }
+    .dr-act-SOUMISSION    { background: #b4530922; color: #b45309; }
+    .dr-act-VALIDATION,
+    .dr-act-APPROBATION   { background: #15803d33; color: #14532d; }
+    .dr-act-REJET         { background: #b91c1c22; color: #b91c1c; }
+    .dr-act-DROITS        { background: #6d28d922; color: #6d28d9; }
+  </style>
+</head>
+<body>
+  <div id="app"><div style="padding:2rem;text-align:center;color:#64748b;">Chargement du module…</div></div>
+
+  <script>
+    window.pt = function (k) { return k; };
+    // La page sert la gestion des droits de n'importe quel module : le module
+    // géré vient de l'URL (?module=SURV), PLAN restant le cas par défaut —
+    // c'est le super-menu « Gestion des Droits » de la carte D.6.
+    (function () {
+      const m = (new URLSearchParams(location.search).get('module') || 'PLAN').toUpperCase();
+      window.DR_MODULE = m;
+      // Hors carte D.6, la page reste rattachée au module dont elle règle les
+      // droits : la barre supérieure en reprend le nom et le contexte.
+      window.OASIS_MODULE_KEY = m === 'PLAN' ? 'droits' : 'execution';
+      window.OASIS_MODULE_RIGHTS = m;
+    })();
+  </script>
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/shared/js/oasis-utils.js"></script>
+  <script src="/modules/droits/js/dr-app.js"></script>
+  <script src="/shared/js/module-chrome.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      drBoot();
+      // Retour au module dont on règle les droits (pas d'onglet de super-menu
+      // hors carte D.6).
+      if (window.DR_MODULE !== 'PLAN' && typeof oasisModuleActions === 'function') {
+        oasisModuleActions([{
+          key: 'retour',
+          label: 'Retour au module',
+          icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>',
+          onClick: () => { window.location.href = '/modules/execution/index.html'; },
+        }]);
+      }
+    });
+  </script>
+</body>
+</html>

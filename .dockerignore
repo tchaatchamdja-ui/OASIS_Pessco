@@ -1,0 +1,11 @@
+node_modules/
+data/
+audit-output/
+docs/
+tests/
+.git/
+.DS_Store
+*.log
+*.tmp
+*.xlsx
+*.docx

@@ -1,0 +1,288 @@
+/* ═══════════════════════════════════════════════
+   Module « Profils de Risques » — styles spécifiques
+   Le socle de présentation est dans /shared/css/oasis-module.css
+   ═══════════════════════════════════════════════ */
+
+/* ── Indicator Criteria Display ── */
+.indicator-item { border-bottom: 1px solid var(--border); padding: 0.5rem 0.5rem; }
+.indicator-item:last-child { border-bottom: none; }
+.indicator-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
+.indicator-header .acc-code { font-family: monospace; font-size: 0.78rem; color: var(--text-muted); min-width: 70px; flex-shrink: 0; }
+.indicator-header .acc-label { flex: 1; font-size: 0.84rem; font-weight: 500; }
+.criteria-list { margin-left: 78px; margin-top: 0.2rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.criteria-item { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.78rem; line-height: 1.4; }
+.criteria-item .criteria-label { font-weight: 600; flex-shrink: 0; min-width: 16px; }
+.criteria-item .criteria-text { flex: 1; white-space: pre-wrap; word-wrap: break-word; }
+.criteria-score-1-bad { background: #fee2e2; color: #991b1b; }
+.criteria-score-2-mid { background: #fef3c7; color: #92400e; }
+.criteria-score-3-good { background: #dcfce7; color: #166534; }
+.criteria-score-1-good { background: #dcfce7; color: #166534; }
+.criteria-score-3-bad { background: #fee2e2; color: #991b1b; }
+
+/* ── Eval Criteria in Modal ── */
+.eval-indicator { border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem; margin-bottom: 0.65rem; background: var(--bg-card); }
+.eval-indicator-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+.eval-indicator-header .ind-code { font-family: monospace; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+.eval-indicator-header .ind-label { flex: 1; font-size: 0.84rem; font-weight: 500; }
+.eval-criteria-list { margin-top: 0.3rem; display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.4rem; }
+.eval-criteria-row { display: flex; align-items: flex-start; gap: 0.4rem; padding: 0.25rem 0.5rem; border-radius: 5px; font-size: 0.76rem; line-height: 1.35; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
+.eval-criteria-row:hover { opacity: 0.85; }
+.eval-criteria-row.selected { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,54,93,0.15); font-weight: 600; }
+.eval-criteria-row .cr-score { font-weight: 700; min-width: 20px; text-align: center; flex-shrink: 0; }
+.eval-criteria-row .cr-text { flex: 1; white-space: pre-wrap; word-wrap: break-word; }
+
+/* ── Logo Upload ── */
+.logo-upload-area { display: flex; align-items: center; gap: 1rem; }
+.logo-preview {
+    width: 80px; height: 80px; border: 2px dashed var(--border); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+}
+.logo-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* ── Evaluation Scoring ── */
+.score-selector { display: flex; gap: 0.25rem; align-items: center; }
+.score-btn {
+    width: 32px; height: 32px; border-radius: 6px;
+    border: 1.5px solid var(--border); background: var(--bg-card);
+    font-weight: 700; font-size: 0.84rem; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+}
+.score-btn:hover { border-color: var(--primary); }
+.score-btn.active-1 { background: #fee2e2; border-color: #ef4444; color: #dc2626; }
+.score-btn.active-2 { background: #fef3c7; border-color: #f59e0b; color: #d97706; }
+.score-btn.active-3 { background: #dcfce7; border-color: #22c55e; color: #16a34a; }
+/* Complexité : l'échelle est inversée (1 = faible, 3 = forte), les boutons
+   reprennent donc les couleurs des critères — 1 vert, 2 jaune, 3 rouge. */
+.score-selector.inverse .score-btn.active-1 { background: #dcfce7; border-color: #22c55e; color: #16a34a; }
+.score-selector.inverse .score-btn.active-3 { background: #fee2e2; border-color: #ef4444; color: #dc2626; }
+
+/* ── Risk Matrix ── */
+.risk-matrix { border-collapse: collapse; margin: 1rem auto; }
+.risk-matrix td { width: 50px; height: 40px; text-align: center; font-weight: 700; font-size: 0.78rem; border: 1px solid #9ca3af; }
+.risk-matrix .cell-a { background: #bbf7d0; }
+.risk-matrix .cell-b { background: #fef08a; }
+.risk-matrix .cell-c { background: #fed7aa; }
+.risk-matrix .cell-d { background: #fca5a5; }
+.risk-matrix .cell-active { position: relative; }
+.risk-matrix .cell-active::after {
+    content: 'X'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.8); color: white; border-radius: 50%; width: 22px; height: 22px; margin: auto; font-size: 0.73rem;
+}
+
+/* ── Dashboard banner ── */
+.dashboard-banner {
+    background: var(--gradient); color: white; padding: 1.5rem 2rem; border-radius: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
+}
+.dashboard-banner h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem; }
+.dashboard-banner .subtitle { color: rgba(255,255,255,0.7); font-size: 0.88rem; }
+.dashboard-banner .big-number { font-size: 3rem; font-weight: 900; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+.dashboard-banner .big-label { font-size: 0.73rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.15em; }
+
+/* ── Eval Inner Tabs ── */
+.eval-inner-tabs { user-select: none; }
+.eval-tab-btn { transition: all 0.2s; }
+.eval-tab-btn:hover { background: var(--bg) !important; }
+.eval-summary-box { transition: all 0.2s; }
+.eval-summary-box:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+
+/* ──────────────────────────────────────────
+   Read-only / disabled fields — visual greying
+   Applies when an evaluation is locked (cloturee / valide / rejetee)
+   ────────────────────────────────────────── */
+input[readonly],
+textarea[readonly],
+select[disabled],
+input[disabled],
+textarea[disabled] {
+    background-color: var(--bg, #f3f4f6) !important;
+    color: var(--text-muted, #6b7280) !important;
+    border-color: var(--border, #d1d5db) !important;
+    cursor: not-allowed !important;
+    opacity: 0.85;
+}
+input[readonly]:focus,
+textarea[readonly]:focus {
+    outline: none;
+    box-shadow: none;
+}
+.score-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(70%);
+}
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ── Bandeau temporaire d'importation (icône + aperçu des changements) ── */
+.pr-import-banner {
+    position: fixed; top: 1rem; right: 1rem; z-index: 4000;
+    display: flex; align-items: flex-start; gap: .7rem;
+    max-width: 480px; padding: .85rem 1rem;
+    background: var(--bg-card, #fff); border: 1px solid var(--border, #e2e8f0);
+    border-left: 5px solid var(--primary);
+    border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.16);
+    font-size: .82rem; animation: prImportIn .28s ease;
+}
+.pr-import-banner.out { animation: prImportOut .38s ease forwards; }
+@keyframes prImportIn  { from { opacity: 0; transform: translateY(-10px) scale(.98); } }
+@keyframes prImportOut { to   { opacity: 0; transform: translateY(-10px) scale(.98); } }
+
+.pr-import-banner.success { border-left-color: #15803d; }
+.pr-import-banner.warning { border-left-color: #b45309; }
+.pr-import-banner.error   { border-left-color: #b91c1c; }
+
+.pr-import-icon { flex-shrink: 0; width: 26px; height: 26px; margin-top: .05rem; }
+.pr-import-icon svg { width: 100%; height: 100%; }
+.pr-import-banner.success .pr-import-icon { color: #15803d; }
+.pr-import-banner.warning .pr-import-icon { color: #b45309; }
+.pr-import-banner.error   .pr-import-icon { color: #b91c1c; }
+
+.pr-import-body { flex: 1; min-width: 0; }
+.pr-import-body strong { display: block; margin-bottom: .35rem; }
+.pr-import-chips { display: flex; flex-wrap: wrap; gap: .3rem; }
+.pr-chip { padding: .1rem .5rem; border-radius: 20px; font-size: .7rem; font-weight: 700; }
+.pr-chip.added   { background: #15803d22; color: #15803d; }
+.pr-chip.updated { background: #1d4ed822; color: #1d4ed8; }
+.pr-chip.same    { background: #47556922; color: #475569; }
+.pr-chip.skipped { background: #b9161622; color: #b91c1c; }
+.pr-import-line { margin-top: .35rem; font-size: .74rem; color: var(--text-muted); }
+.pr-import-errors { color: #b91c1c; }
+.pr-import-close {
+    flex-shrink: 0; background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: .85rem; line-height: 1; padding: .1rem .2rem;
+}
+.pr-import-close:hover { color: var(--text); }
+
+
+/* ── Comptes-rendus de la consolidation : bandeaux compacts repliables ── */
+.cr-item {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: .3rem;
+    background: var(--bg-card);
+    overflow: hidden;
+}
+.cr-item[open] { border-color: var(--primary); }
+.cr-summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .25rem .55rem;
+    min-height: 1.9rem;
+    font-size: .82rem;
+}
+.cr-summary::-webkit-details-marker { display: none; }
+.cr-summary:hover { background: var(--bg); }
+.cr-chevron { display: flex; color: var(--text-muted); transition: transform .2s; flex-shrink: 0; }
+.cr-item[open] .cr-chevron { transform: rotate(90deg); }
+.cr-date { font-weight: 600; white-space: nowrap; }
+.cr-tags { display: flex; gap: .3rem; flex-wrap: wrap; margin-right: auto; }
+.cr-tag {
+    font-size: .7rem;
+    padding: 0 .45rem;
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    line-height: 1.35;
+}
+.cr-tag-accent { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.cr-actions { display: flex; gap: .25rem; flex-shrink: 0; }
+.cr-actions .btn { line-height: 1.1; }
+.cr-body { padding: .5rem .75rem .65rem; border-top: 1px solid var(--border); }
+.cr-block { margin-bottom: .5rem; }
+.cr-block:last-child { margin-bottom: 0; }
+.cr-label {
+    display: block;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--text-muted);
+    margin-bottom: .15rem;
+}
+.cr-text { font-size: .84rem; white-space: pre-wrap; line-height: 1.45; }
+@media (max-width: 700px) {
+    .cr-summary { flex-wrap: wrap; }
+    .cr-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* ── Profils détaillés : aperçu (jauges à gauche, indicateurs à droite) ── */
+.apercu-tabs {
+    display: flex;
+    gap: .3rem;
+    flex-wrap: wrap;
+    margin-bottom: .6rem;
+}
+.apercu-tab {
+    padding: .3rem .8rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.apercu-tab:hover { border-color: var(--primary); }
+.apercu-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.apercu-grid3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .6rem;
+    align-items: start;
+}
+.apercu-grid3-ind { margin-bottom: .9rem; }
+.apercu-entite { min-width: 0; }
+.apercu-entite[onclick]:hover .apercu-title { color: var(--primary); }
+.apercu-title {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    flex-wrap: wrap;
+    font-size: .82rem;
+    font-weight: 700;
+    margin-bottom: .35rem;
+}
+.apercu-title { margin-bottom: .1rem; }
+.apercu-meta {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-bottom: .3rem;
+}
+.apercu-gauges { display: flex; gap: .4rem; align-items: stretch; }
+.ind-chart { padding: .5rem .6rem .35rem; }
+.ind-chart .sec-bar-row { grid-template-columns: 96px 1fr 50px; margin-bottom: .2rem; }
+.ind-chart .sec-axis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ind-chart .sec-bar-row[onclick] { cursor: pointer; }
+.ind-chart .sec-bar-row[onclick]:hover .sec-axis { color: var(--primary); }
+@media (max-width: 1000px) { .apercu-grid3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .apercu-grid3 { grid-template-columns: 1fr; } }
+
+/* Barres horizontales graduées sur 100 (taux par indicateur) */
+.sec-bar-row {
+    display: grid;
+    grid-template-columns: 74px 1fr 46px;
+    align-items: center;
+    gap: .35rem;
+    margin-bottom: .12rem;
+}
+.sec-axis { font-size: .68rem; font-weight: 600; text-align: right; }
+.sec-track {
+    position: relative;
+    display: block;
+    height: 11px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.sec-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); opacity: .8; }
+.sec-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px 0 0 2px; }
+.sec-val { font-size: .68rem; font-weight: 700; text-align: right; }

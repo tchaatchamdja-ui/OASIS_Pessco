@@ -1,0 +1,29 @@
+{
+  "code": "SURV",
+  "tdr": "D.7.1",
+  "priority": 1,
+  "icon": "🔍",
+  "theme": "surveillance",
+  "name": {
+    "fr": "Exécution de la Surveillance",
+    "en": "Surveillance Execution",
+    "pt": "Execução da Supervisão"
+  },
+  "desc": {
+    "fr": "Conduite des actes de surveillance : notifications, dossiers d'exécution, constatations (FNC/PAC) et rapports d'audit.",
+    "en": "Conduct of oversight activities: notifications, execution files, findings (FNC/CAP) and audit reports.",
+    "pt": "Condução dos atos de supervisão: notificações, processos de execução, constatações (FNC/PAC) e relatórios de auditoria."
+  },
+  "apiPrefixes": ["/api/m/execution"],
+  "auditModule": "SURV",
+  "rightsModule": "SURV",
+  "portalCode": "SURV",
+  "front": {
+    "key": "execution",
+    "url": "/modules/execution/index.html",
+    "superMenu": true,
+    "order": 1
+  },
+  "provides": [],
+  "requires": ["PLAN.plansValides"]
+}

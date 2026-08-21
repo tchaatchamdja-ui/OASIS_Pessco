@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Profils de Risque</title>
+  <!-- Charte graphique complète du module PESSCO (reprise intégrale) -->
+  <link rel="stylesheet" href="/shared/css/oasis-module.css">
+  <link rel="stylesheet" href="/modules/profil_risque/css/pr-styles.css">
+  <style>
+    /* Le module occupe toute la surface de l'iframe (shell OASIS autour) */
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="app"><div style="padding:2rem;text-align:center;color:#64748b;">Chargement du module…</div></div>
+
+  <script>
+    // ── Pont OASIS → module PESSCO ────────────────────────────────────────
+    // Le module attend un utilisateur PESSCO (rôle M1, domaines) et des
+    // données partagées. On les récupère depuis les API OASIS avant init.
+    window.PR_BOOT = (async function () {
+      const res = await fetch('/api/m/profil-risque/context', { credentials: 'same-origin' });
+      if (res.status === 401) { parent.postMessage({ type: 'pr:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      const ctx = await res.json();
+      const u = ctx.user || {};
+      const prUser = {
+        id: u.username, nom: u.nom || u.username, prenom: u.prenom || '',
+        email: u.email || u.username, role: u.role, role_m1: u.role_m1,
+        domaines: u.domaines || [], photo: u.photo || '',
+      };
+      localStorage.setItem('pr_user', JSON.stringify(prUser));
+      // Thème et langue alignés sur le portail OASIS
+      const theme = localStorage.getItem('pr_theme') || 'blue-dark';
+      const lang = localStorage.getItem('pr_lang') || 'fr';
+      document.documentElement.setAttribute('data-theme', theme);
+      // Shell factice : le module se rend complet, sans bouton « retour portail »
+      // (la navigation revient au shell OASIS via la barre supérieure).
+      window.PESSCO = null;
+      return { prUser, theme, lang, ctx };
+    })();
+
+    // Traductions du portail utilisées par le module (fallback)
+    window.pt = function (k) {
+      const M = { back_portal: 'Retour au portail', organisation: 'Organisation', parameters: 'Paramètres', add: 'Ajouter' };
+      return M[k] || k;
+    };
+  </script>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/shared/js/oasis-utils.js"></script>
+  <script src="/modules/profil_risque/js/pr-utils.js"></script>
+  <script src="/modules/profil_risque/js/pr-shell.js"></script>
+  <script src="/modules/profil_risque/js/pr-dashboard.js"></script>
+  <script src="/modules/profil_risque/js/pr-profils.js"></script>
+  <script src="/modules/profil_risque/js/pr-evaluations.js"></script>
+  <script src="/modules/profil_risque/js/pr-plans.js"></script>
+  <script src="/modules/profil_risque/js/pr-bibliotheque.js"></script>
+  <script src="/modules/profil_risque/js/pr-acces.js"></script>
+  <script src="/modules/profil_risque/js/pr-parametres.js"></script>
+  <script src="/modules/profil_risque/js/pr-namespace.js"></script>
+  <script>window.OASIS_MODULE_KEY = "risques"; window.OASIS_MODULE_RIGHTS = "PLAN";</script>
+  <script src="/shared/js/module-chrome.js"></script>
+  <script>
+    // Redirection de session : renvoyer le parent vers la page de connexion OASIS
+    (function () {
+      const origApi = window.api;
+      window.api = async function (path, options) {
+        try { return await origApi(path, options); }
+        catch (e) { throw e; }
+      };
+    })();
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const boot = await window.PR_BOOT;
+        window.APP_STATE.user = boot.prUser;
+        window.APP_STATE.theme = boot.theme;
+        window.APP_STATE.lang = boot.lang;
+        await loadAllData();
+        renderApp();
+        navigateTo('dashboard');
+        // Informer le shell OASIS de la page courante (titre en barre supérieure)
+        const notify = () => parent.postMessage({ type: 'pr:page', page: window.APP_STATE.currentPage }, '*');
+        notify();
+        const origNav = window.navigateTo;
+        window.navigateTo = function (p, s) { origNav(p, s); notify(); };
+      } catch (e) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>

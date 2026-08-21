@@ -1,0 +1,41 @@
+# Intégration continue OASIS : la suite de fumée à chaque poussée.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  verifier:
+    name: Contrôles de fumée
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vulnérabilités critiques
+        run: npm audit --omit=dev --audit-level=critical
+
+      - name: Syntaxe du serveur et des modules
+        run: |
+          for f in server.js src/*.js src/modules/*/*.js; do node --check "$f"; done
+
+      - name: Suite de fumée
+        run: npm run smoke
+
+  image:
+    name: Construction de l'image
+    runs-on: ubuntu-latest
+    needs: verifier
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construire
+        run: docker build -t oasis:${{ github.sha }} .

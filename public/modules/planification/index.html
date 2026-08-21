@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Planification de la Surveillance</title>
+  <!-- Charte graphique complète du module PESSCO (base + module) -->
+  <link rel="stylesheet" href="/shared/css/oasis-module.css">
+  <link rel="stylesheet" href="/modules/planification/css/pl-styles.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="app"><div style="padding:2rem;text-align:center;color:#64748b;">Chargement du module…</div></div>
+
+  <script>
+    // Pont OASIS → module PESSCO « Planification »
+    window.PL_BOOT = (async function () {
+      const res = await fetch('/api/m/planification/context', { credentials: 'same-origin' });
+      if (res.status === 401) { parent.postMessage({ type: 'pl:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      const ctx = await res.json();
+      const u = ctx.user || {};
+      const plUser = {
+        id: u.username, nom: u.nom || u.username, prenom: u.prenom || '',
+        email: u.email || u.username, role: u.role, role_m2: u.role_m2,
+        domaines: u.domaines || [], photo: u.photo || '',
+      };
+      localStorage.setItem('pr_user', JSON.stringify(plUser));
+      const theme = localStorage.getItem('pr_theme') || 'blue-dark';
+      const lang = localStorage.getItem('pr_lang') || 'fr';
+      document.documentElement.setAttribute('data-theme', theme);
+      window.PESSCO = null; // mode autonome : le module rend son shell complet
+      return { plUser, theme, lang, ctx };
+    })();
+
+    window.pt = function (k) {
+      const M = { back_portal: 'Retour au portail', parameters: 'Paramètres', add: 'Ajouter' };
+      return M[k] || k;
+    };
+  </script>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/shared/js/oasis-utils.js"></script>
+  <script src="/modules/planification/js/pl-i18n.js"></script>
+  <script src="/modules/planification/js/pl-shell.js"></script>
+  <script src="/modules/planification/js/pl-dashboard.js"></script>
+  <script src="/modules/planification/js/pl-prestataires.js"></script>
+  <script src="/modules/planification/js/pl-plans.js"></script>
+  <script src="/modules/planification/js/pl-calendrier.js"></script>
+  <script src="/modules/planification/js/pl-validation.js"></script>
+  <script src="/modules/planification/js/pl-crud.js"></script>
+  <script src="/modules/planification/js/pl-actions.js"></script>
+  <script src="/modules/planification/js/pl-namespace.js"></script>
+  <script>window.OASIS_MODULE_KEY = "plans"; window.OASIS_MODULE_RIGHTS = "PLAN";</script>
+  <script src="/shared/js/module-chrome.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const boot = await window.PL_BOOT;
+        window.PLAN_STATE.user = boot.plUser;
+        window.PLAN_STATE.theme = boot.theme;
+        window.PLAN_STATE.lang = boot.lang;
+        await planLoadData();
+        planRenderApp();
+        planNavigateTo('dashboard');
+        const notify = () => parent.postMessage({ type: 'pl:page', page: window.PLAN_STATE.currentPage }, '*');
+        notify();
+        const origNav = window.planNavigateTo;
+        window.planNavigateTo = function (p, s) { origNav(p, s); notify(); };
+      } catch (e) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>

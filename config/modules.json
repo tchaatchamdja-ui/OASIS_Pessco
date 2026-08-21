@@ -1,0 +1,189 @@
+[
+  {
+    "code": "PLAN",
+    "tdr": "D.6",
+    "priority": 1,
+    "icon": "🗓️",
+    "name": {
+      "fr": "Planification de la Surveillance",
+      "en": "Surveillance Planning",
+      "pt": "Planeamento da Supervisão"
+    },
+    "desc": {
+      "fr": "Surveillance basée sur les risques (RBO), cycles et programmes annuels de surveillance.",
+      "en": "Risk Based Oversight (RBO), surveillance cycles and annual programmes.",
+      "pt": "Supervisão baseada em riscos (RBO), ciclos e programas anuais de supervisão."
+    },
+    "theme": "surveillance"
+  },
+  {
+    "code": "SURV",
+    "tdr": "D.7.1",
+    "priority": 1,
+    "icon": "🔍",
+    "name": {
+      "fr": "Exécution de la Surveillance",
+      "en": "Surveillance Execution",
+      "pt": "Execução da Supervisão"
+    },
+    "desc": {
+      "fr": "Conduite des actes de surveillance : préparation, réalisation, constatations et rapports d'inspection.",
+      "en": "Conduct of oversight activities: preparation, execution, findings and inspection reports.",
+      "pt": "Condução dos atos de supervisão: preparação, realização, constatações e relatórios de inspeção."
+    },
+    "theme": "surveillance"
+  },
+  {
+    "code": "CARE",
+    "tdr": "D.7.2",
+    "priority": 1,
+    "icon": "🛠️",
+    "name": {
+      "fr": "Suivi des Carences",
+      "en": "Findings Follow-up",
+      "pt": "Acompanhamento das Constatações"
+    },
+    "desc": {
+      "fr": "Traitement des carences : plans d'actions correctives, échéances, vérification et mesures d'application.",
+      "en": "Handling of findings: corrective action plans, deadlines, verification and enforcement measures.",
+      "pt": "Tratamento das constatações: planos de ações corretivas, prazos, verificação e medidas de aplicação."
+    },
+    "theme": "surveillance"
+  },
+  {
+    "code": "SAFA",
+    "tdr": "D.8",
+    "priority": 1,
+    "icon": "✈️",
+    "name": {
+      "fr": "Inspections SAFA / SANA",
+      "en": "SAFA / SANA Ramp Inspections",
+      "pt": "Inspeções SAFA / SANA"
+    },
+    "desc": {
+      "fr": "Inspections d'aéronefs sur aire de trafic et partage des résultats entre États.",
+      "en": "Ramp inspections of aircraft and inter-State sharing of results.",
+      "pt": "Inspeções de aeronaves na placa e partilha de resultados entre Estados."
+    },
+    "theme": "surveillance"
+  },
+  {
+    "code": "REG",
+    "tdr": "D.1",
+    "priority": 2,
+    "icon": "📜",
+    "name": {
+      "fr": "Réglementation",
+      "en": "Regulation",
+      "pt": "Regulamentação"
+    },
+    "desc": {
+      "fr": "Cycle réglementaire complet : veille, élaboration, consultation, adoption, publication.",
+      "en": "Full regulatory cycle: monitoring, drafting, consultation, adoption, publication.",
+      "pt": "Ciclo regulamentar completo: vigilância, elaboração, consulta, adoção, publicação."
+    },
+    "theme": "reglementation"
+  },
+  {
+    "code": "DOC",
+    "tdr": "D.3",
+    "priority": 2,
+    "icon": "📚",
+    "name": {
+      "fr": "Documentation",
+      "en": "Documentation",
+      "pt": "Documentação"
+    },
+    "desc": {
+      "fr": "GED interne et externe : procédures, guides, checklists, diffusion versionnée.",
+      "en": "Internal & external document management: procedures, guides, checklists, versioned publication.",
+      "pt": "Gestão documental interna e externa: procedimentos, guias, checklists, difusão versionada."
+    },
+    "theme": "reglementation"
+  },
+  {
+    "code": "CERT",
+    "tdr": "D.4",
+    "priority": 3,
+    "icon": "🏅",
+    "name": {
+      "fr": "Certifications & Autorisations",
+      "en": "Certifications & Authorisations",
+      "pt": "Certificações e Autorizações"
+    },
+    "desc": {
+      "fr": "Exploitants, organismes, aéronefs, personnel aéronautique, SGS : certification et suivi.",
+      "en": "Operators, organisations, aircraft, aviation personnel, SMS: certification and follow-up.",
+      "pt": "Operadores, organismos, aeronaves, pessoal aeronáutico, SGS: certificação e acompanhamento."
+    },
+    "theme": "cert_risques"
+  },
+  {
+    "code": "RISK",
+    "tdr": "D.9",
+    "priority": 3,
+    "icon": "⚠️",
+    "name": {
+      "fr": "Gestion des Risques de Sécurité",
+      "en": "Safety Risk Management",
+      "pt": "Gestão dos Riscos de Segurança"
+    },
+    "desc": {
+      "fr": "Registre des dangers, notifications d'événements, études de sécurité, analyse des données.",
+      "en": "Hazard register, occurrence reporting, safety studies, data analysis.",
+      "pt": "Registo de perigos, notificações de eventos, estudos de segurança, análise de dados."
+    },
+    "theme": "cert_risques"
+  },
+  {
+    "code": "FORM",
+    "tdr": "D.2",
+    "priority": 4,
+    "icon": "🎓",
+    "name": {
+      "fr": "Formations et Qualifications",
+      "en": "Training & Qualifications",
+      "pt": "Formações e Qualificações"
+    },
+    "desc": {
+      "fr": "Personnel technique, programmes et plans de formation, dossiers des inspecteurs.",
+      "en": "Technical personnel, training programmes and plans, inspector records.",
+      "pt": "Pessoal técnico, programas e planos de formação, processos dos inspetores."
+    },
+    "theme": "personnel_coop"
+  },
+  {
+    "code": "COM",
+    "tdr": "D.5",
+    "priority": 4,
+    "icon": "🌍",
+    "name": {
+      "fr": "Communication États & Commission",
+      "en": "States & Commission Communication",
+      "pt": "Comunicação Estados e Comissão"
+    },
+    "desc": {
+      "fr": "Échanges institutionnels, authentification de licences et certificats, notifications.",
+      "en": "Institutional exchanges, licence and certificate authentication, notifications.",
+      "pt": "Trocas institucionais, autenticação de licenças e certificados, notificações."
+    },
+    "theme": "personnel_coop"
+  },
+  {
+    "code": "PAY",
+    "tdr": "D.10",
+    "priority": 5,
+    "icon": "💳",
+    "name": {
+      "fr": "Paiement des Actes Courants",
+      "en": "Payment of Current Acts",
+      "pt": "Pagamento de Atos Correntes"
+    },
+    "desc": {
+      "fr": "Paiement électronique des redevances, reçus et quittances, API de paiement des États.",
+      "en": "Electronic payment of fees, receipts, connection to State payment APIs.",
+      "pt": "Pagamento eletrónico de taxas, recibos, ligação às API de pagamento dos Estados."
+    },
+    "theme": "services"
+  }
+]

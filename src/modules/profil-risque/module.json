@@ -1,0 +1,33 @@
+{
+  "code": "PR",
+  "tdr": "D.6",
+  "priority": 1,
+  "icon": "📊",
+  "theme": "surveillance",
+  "name": {
+    "fr": "Profils de Risques",
+    "en": "Risk Profiles",
+    "pt": "Perfis de Risco"
+  },
+  "desc": {
+    "fr": "Évaluation des prestataires, indices de conformité, performance et complexité, cycles de surveillance.",
+    "en": "Provider assessment, conformity, performance and complexity indices, oversight cycles.",
+    "pt": "Avaliação dos prestadores, índices de conformidade, desempenho e complexidade, ciclos de supervisão."
+  },
+  "apiPrefixes": [
+    "/api/m/profil-risque"
+  ],
+  "auditModule": "PLAN",
+  "rightsModule": "PLAN",
+  "front": {
+    "key": "risques",
+    "url": "/modules/profil_risque/index.html",
+    "superMenu": true,
+    "order": 1
+  },
+  "provides": [
+    "PR.riskProfiles"
+  ],
+  "requires": [],
+  "portalCode": "PLAN"
+}

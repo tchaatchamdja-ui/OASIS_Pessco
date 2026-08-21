@@ -1,0 +1,76 @@
+{
+  "PLAN": {
+    "superadmin@anac.bj": {
+      "privilege": "GESTIONNAIRE",
+      "scopes": [],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    },
+    "m.ahoyo@anac.bj": {
+      "privilege": "LECTEUR",
+      "scopes": [
+        {
+          "domaine_id": "ae5223684e59",
+          "secteur_id": "",
+          "privilege": "CONTRIBUTEUR"
+        }
+      ],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    },
+    "inspecteur@anac.bj": {
+      "privilege": "LECTEUR",
+      "scopes": [],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    }
+  },
+  "PR": {
+    "superadmin@anac.bj": {
+      "privilege": "GESTIONNAIRE",
+      "scopes": [],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    },
+    "m.ahoyo@anac.bj": {
+      "privilege": "CONTRIBUTEUR",
+      "scopes": [],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    }
+  },
+  "SURV": {
+    "superadmin@anac.bj": {
+      "privilege": "GESTIONNAIRE",
+      "scopes": [],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    },
+    "m.ahoyo@anac.bj": {
+      "privilege": "CONTRIBUTEUR",
+      "scopes": [],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    },
+    "admin.prestataire@test.int": {
+      "privilege": "PRESTATAIRE",
+      "scopes": [
+        {
+          "prestataire_id": "d82c838cb1a2"
+        }
+      ],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    },
+    "agent.prestataire@test.int": {
+      "privilege": "PRESTATAIRE",
+      "scopes": [
+        {
+          "prestataire_id": "d82c838cb1a2"
+        }
+      ],
+      "updatedAt": "2026-08-21T19:51:14.000Z",
+      "updatedBy": "jeu-de-test"
+    }
+  }
+}

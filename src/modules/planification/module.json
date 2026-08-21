@@ -1,0 +1,38 @@
+{
+  "code": "PLAN",
+  "tdr": "D.6",
+  "priority": 1,
+  "icon": "🗓️",
+  "theme": "surveillance",
+  "name": {
+    "fr": "Plans de Surveillance",
+    "en": "Surveillance Plans",
+    "pt": "Planos de Vigilância"
+  },
+  "desc": {
+    "fr": "Surveillance basée sur les risques (RBO), cycles, plans annuels, amendements et validation.",
+    "en": "Risk Based Oversight (RBO), cycles, annual plans, amendments and validation.",
+    "pt": "Supervisão baseada em riscos (RBO), ciclos, planos anuais, emendas e validação."
+  },
+  "apiPrefixes": [
+    "/api/m/planification"
+  ],
+  "auditModule": "PLAN",
+  "rightsModule": "PLAN",
+  "front": {
+    "key": "plans",
+    "url": "/modules/planification/index.html",
+    "superMenu": true,
+    "order": 2
+  },
+  "provides": [
+    "PLAN.plansValides"
+  ],
+  "requires": [
+    "PR.riskProfiles"
+  ],
+  "portalCode": "PLAN",
+  "consumedBy": [
+    "SURV"
+  ]
+}

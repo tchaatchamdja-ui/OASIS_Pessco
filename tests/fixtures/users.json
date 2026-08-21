@@ -1,0 +1,147 @@
+[
+  {
+    "username": "superadmin@anac.bj",
+    "nom": "ADMINISTRATEUR",
+    "prenom": "Super",
+    "email": "superadmin@anac.bj",
+    "fullName": "ADMINISTRATEUR Super",
+    "role": "SUPERADMIN",
+    "salt": "c09ea458d720a6773cfcc12ee2641885",
+    "hash": "4b9186fa37af406e1fc6ea1bbcc1676f5bd396cf76edb96c84780121ebc7fe0f59fca68ef24df6d7bf9e28afdf401a376c2d25283527c06fcea38599201f3e78",
+    "active": true,
+    "locked": false,
+    "failedAttempts": 0,
+    "mustChange": false,
+    "passwordChangedAt": "2026-08-21T19:46:44.180Z",
+    "passwordHistory": [
+      "4b9186fa37af406e1fc6ea1bbcc1676f5bd396cf76edb96c84780121ebc7fe0f59fca68ef24df6d7bf9e28afdf401a376c2d25283527c06fcea38599201f3e78"
+    ],
+    "createdAt": "2026-08-21T19:46:44.180Z",
+    "createdBy": "jeu-de-test",
+    "modules": [
+      "PLAN",
+      "SURV",
+      "RISK",
+      "DROITS"
+    ]
+  },
+  {
+    "username": "admin@anac.bj",
+    "nom": "ADMIN",
+    "prenom": "AAC",
+    "email": "admin@anac.bj",
+    "fullName": "ADMIN AAC",
+    "role": "ADMIN",
+    "salt": "2071bdb965dbc72e6c50c9c09c881f6a",
+    "hash": "f2a6fa143fb65e9a8ea4b7f100d0ed5277767d1cc952f4fb02435bd4fbbaf9ca432e26b07257cf38d62d76989a94add7d1b63af2ae4401cd87a6c18f56a4a7a8",
+    "active": true,
+    "locked": false,
+    "failedAttempts": 0,
+    "mustChange": false,
+    "passwordChangedAt": "2026-08-21T19:46:44.180Z",
+    "passwordHistory": [
+      "f2a6fa143fb65e9a8ea4b7f100d0ed5277767d1cc952f4fb02435bd4fbbaf9ca432e26b07257cf38d62d76989a94add7d1b63af2ae4401cd87a6c18f56a4a7a8"
+    ],
+    "createdAt": "2026-08-21T19:46:44.180Z",
+    "createdBy": "jeu-de-test",
+    "modules": [
+      "PLAN",
+      "SURV"
+    ]
+  },
+  {
+    "username": "m.ahoyo@anac.bj",
+    "nom": "AHOYO",
+    "prenom": "Marcelin",
+    "email": "m.ahoyo@anac.bj",
+    "fullName": "AHOYO Marcelin",
+    "role": "AAC",
+    "salt": "374747f068b8cbdea2f8c22a8cee700a",
+    "hash": "79588fffed53c1534e46326069b575fe03f7bed5f485c7b0153f7139780941648ca2ee6f522e2d6ea4a8e4f8edebbce5c5a626f9aa048d82331f12a905436a1f",
+    "active": true,
+    "locked": false,
+    "failedAttempts": 0,
+    "mustChange": false,
+    "passwordChangedAt": "2026-08-21T19:46:44.180Z",
+    "passwordHistory": [
+      "79588fffed53c1534e46326069b575fe03f7bed5f485c7b0153f7139780941648ca2ee6f522e2d6ea4a8e4f8edebbce5c5a626f9aa048d82331f12a905436a1f"
+    ],
+    "createdAt": "2026-08-21T19:46:44.180Z",
+    "createdBy": "jeu-de-test",
+    "modules": [
+      "PLAN",
+      "SURV"
+    ]
+  },
+  {
+    "username": "inspecteur@anac.bj",
+    "nom": "ESSAI",
+    "prenom": "Inspecteur",
+    "email": "inspecteur@anac.bj",
+    "fullName": "ESSAI Inspecteur",
+    "role": "AAC",
+    "salt": "cfe150bd399d2f523ca9b68cabebd536",
+    "hash": "31d3ec4508bc134841f5bc770fd1853809b9e24d96fd2c10679e74d19f7112a71b1a80fd2e938992157d7a563022a1055dc0717a6cbb1986e598784d926292a6",
+    "active": true,
+    "locked": false,
+    "failedAttempts": 0,
+    "mustChange": false,
+    "passwordChangedAt": "2026-08-21T19:46:44.180Z",
+    "passwordHistory": [
+      "31d3ec4508bc134841f5bc770fd1853809b9e24d96fd2c10679e74d19f7112a71b1a80fd2e938992157d7a563022a1055dc0717a6cbb1986e598784d926292a6"
+    ],
+    "createdAt": "2026-08-21T19:46:44.180Z",
+    "createdBy": "jeu-de-test",
+    "modules": [
+      "PLAN"
+    ]
+  },
+  {
+    "username": "admin.prestataire@test.int",
+    "nom": "ESSAI",
+    "prenom": "Admin Prestataire",
+    "email": "admin.prestataire@test.int",
+    "fullName": "ESSAI Admin Prestataire",
+    "role": "ADMIN_PRESTATAIRE",
+    "prestataire_id": "d82c838cb1a2",
+    "modules": [
+      "SURV"
+    ],
+    "salt": "081705fbe66c4a7a322729897581d838",
+    "hash": "4f4c32be93e564f0301db4dbd1099a9209aa16b7e5829251ec430d93de18e79e3bade8a35304315ac3ac08f2b621ee43c9ba8e3a576b652cf911d901b3b8456a",
+    "active": true,
+    "locked": false,
+    "failedAttempts": 0,
+    "mustChange": false,
+    "passwordChangedAt": "2026-08-21T19:46:44.180Z",
+    "passwordHistory": [
+      "4f4c32be93e564f0301db4dbd1099a9209aa16b7e5829251ec430d93de18e79e3bade8a35304315ac3ac08f2b621ee43c9ba8e3a576b652cf911d901b3b8456a"
+    ],
+    "createdAt": "2026-08-21T19:46:44.180Z",
+    "createdBy": "jeu-de-test"
+  },
+  {
+    "username": "agent.prestataire@test.int",
+    "nom": "ESSAI",
+    "prenom": "Agent Prestataire",
+    "email": "agent.prestataire@test.int",
+    "fullName": "ESSAI Agent Prestataire",
+    "role": "PRESTATAIRE",
+    "prestataire_id": "d82c838cb1a2",
+    "modules": [
+      "SURV"
+    ],
+    "salt": "e1a9a648eab66fa809686563bda7d5be",
+    "hash": "5134666fe996ee36dfa895dcac89d4ca0ceb16bf47be598fa33308e8182eb9f6b577fc5fd8ca3656f2397d013728f61230d3128d32e01a7b0a798b1c9bc5dd05",
+    "active": true,
+    "locked": false,
+    "failedAttempts": 0,
+    "mustChange": false,
+    "passwordChangedAt": "2026-08-21T19:46:44.180Z",
+    "passwordHistory": [
+      "5134666fe996ee36dfa895dcac89d4ca0ceb16bf47be598fa33308e8182eb9f6b577fc5fd8ca3656f2397d013728f61230d3128d32e01a7b0a798b1c9bc5dd05"
+    ],
+    "createdAt": "2026-08-21T19:46:44.180Z",
+    "createdBy": "jeu-de-test"
+  }
+]

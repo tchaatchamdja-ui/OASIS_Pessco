@@ -6,6 +6,8 @@ const db = require('./store');
 const refModele = require('./references');
 const { valider } = require('../../valider');
 const R = require('./roles');
+const acteurs = require('./acteurs');
+const transmission = require('./transmission');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
@@ -19,6 +21,23 @@ module.exports = function register(app, deps, M) {
     const p = parId('prestataires', prestataireId) || {};
     const s = parId('secteurs', p.secteur_id) || {};
     return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '', prestataire_id: prestataireId || '' };
+  };
+
+  // Restriction par processus : l'étape n'est franchie que par les
+  // intervenants qui y sont désignés (voir acteurs.js pour les garde-fous).
+  const contexteActivite = (n) => {
+    const perim = perimetrePrestataire(n.prestataire_id);
+    return {
+      secteur_id: n.secteur_id || perim.secteur_id || '',
+      domaine_id: n.domaine_id || perim.domaine_id || '',
+      dossier: db.list('dossiers').find((d) => d.notification_id === n.id) || null,
+    };
+  };
+  const refusProcessus = (req, res, n, cle) => {
+    const motif = acteurs.refusEventuel(req.user, 'activite', contexteActivite(n), cle);
+    if (!motif) return false;
+    res.status(403).json({ error: motif });
+    return true;
   };
 
   // ══════════════════════════════════════
@@ -296,6 +315,7 @@ module.exports = function register(app, deps, M) {
     if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'brouillon') return res.status(400).json({ error: 'Seule une notification en brouillon peut être soumise' });
+    if (refusProcessus(req, res, n, 'notification:soumission')) return undefined;
     db.update('notifications', n.id, {
       statut: 'soumis', date_soumission: db.now(), validateur_id: (req.body || {}).validateur_id || '',
     });
@@ -307,6 +327,7 @@ module.exports = function register(app, deps, M) {
     if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à valider');
     if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être validée' });
+    if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
     db.update('notifications', n.id, { statut: 'valide', validateur_id: req.user.username, date_validation: db.now() });
     res.json({ status: 'ok', statut: 'valide' });
   });
@@ -316,6 +337,7 @@ module.exports = function register(app, deps, M) {
     if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à rejeter');
     if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être rejetée' });
+    if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
     db.update('notifications', n.id, { statut: 'brouillon', motif_rejet: (req.body || {}).motif || '', date_rejet: db.now() });
     res.json({ status: 'ok', statut: 'brouillon' });
   });
@@ -325,7 +347,21 @@ module.exports = function register(app, deps, M) {
     if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'valide') return res.status(400).json({ error: 'Seule une notification validée peut être envoyée' });
+    if (refusProcessus(req, res, n, 'notification:transmission')) return undefined;
     db.update('notifications', n.id, { statut: 'envoye', date_envoi: db.now(), envoye_par: req.user.username });
+    // Les comptes du prestataire à qui la réception des courriels a été
+    // confiée en sont avertis ; l'absence de destinataire n'arrête rien.
+    transmission.avertirPrestataire(n.prestataire_id, {
+      objet: `Notification d'activité ${n.reference || ''} — ${n.objet_activite || ''}`.trim(),
+      message: `Une notification d'activité de surveillance vous a été adressée.\n\n`
+        + `Référence : ${n.reference || ''}\n`
+        + `Objet : ${n.objet_activite || ''}\n`
+        + `Période annoncée : du ${n.date_activite || '—'} au ${n.date_fin_effective || '—'}\n\n`
+        + "Elle est consultable dans OASIS, menu « Notification d'activité ».",
+      origine: 'notification_envoyee',
+      reference: n.reference || '',
+      journal: { notification_id: n.id },
+    });
     res.json({ status: 'ok', statut: 'envoye' });
   });
 
@@ -383,12 +419,108 @@ module.exports = function register(app, deps, M) {
       pieces_jointes: d.pieces_jointes || [],
       date_creation: db.now(),
     });
+    // Un message de l'Autorité est signalé au prestataire ; ses propres
+    // messages n'ont pas à lui être renvoyés.
+    if (!R.estPrestataire(req.user)) {
+      transmission.avertirPrestataire(n.prestataire_id, {
+        objet: `Échange — notification ${n.reference || ''}`.trim(),
+        message: "L'Autorité vous a adressé un message au sujet de la notification "
+          + `${n.reference || ''} (${n.objet_activite || ''}).\n\n`
+          + "Il est consultable dans OASIS, formulaire d'échange de la notification.",
+        origine: 'echange_notification',
+        reference: n.reference || '',
+        journal: { notification_id: n.id },
+      });
+    }
     res.status(201).json({ status: 'ok', id: rec.id });
+  });
+
+  // ── Accusé de réception, côté prestataire ───────────────────────────
+  // Le prestataire acte qu'il a reçu la notification et se dit prêt à
+  // recevoir l'équipe aux dates et sur le périmètre annoncés. L'accusé est
+  // porté par la notification — il s'imprime au bas de la fiche — et déposé
+  // en même temps dans le fil de discussion, où l'Autorité le lira.
+  // Le fil de discussion se lit, il ne s'analyse pas : les dates y passent au
+  // format du prestataire, pas en ISO.
+  const enClair = (iso) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
+  };
+
+  app.post(`${M}/notifications/:id/accuser-reception`, requireAuth, (req, res) => {
+    const n = db.get('notifications', req.params.id);
+    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!R.estPrestataire(req.user)) {
+      return refuser(res, 'Accusé de réception réservé au prestataire notifié');
+    }
+    if (!R.accedeA(req.user, n.prestataire_id || '')) return refuser(res);
+    if (n.statut !== 'envoye') {
+      return res.status(400).json({ error: 'La notification n’est pas au stade de la réception' });
+    }
+    if (Number(n.accuse_reception) === 1) {
+      return res.status(400).json({ error: 'Réception déjà accusée' });
+    }
+    const debut = n.date_debut_effective || n.date_debut_prevue || n.date_activite || '';
+    const fin = n.date_fin_effective || n.date_fin_prevue || '';
+    const perimetre = n.perimetre_activite || n.perimetre || '';
+    const maintenant = db.now();
+    db.update('notifications', n.id, {
+      accuse_reception: 1,
+      accuse_le: maintenant,
+      accuse_par: req.user.username,
+      // Le nom est figé ici : la fiche doit rester lisible même si le compte
+      // est renommé ou désactivé plus tard.
+      accuse_par_nom: nomComplet(req.user.username) || req.user.fullName || req.user.username,
+      accuse_date_debut: debut,
+      accuse_date_fin: fin,
+      accuse_perimetre: perimetre,
+    });
+    // Le message reprend mot pour mot le libellé de l'accusé : le fil de
+    // discussion et la fiche disent la même chose.
+    db.insert('echanges', {
+      id: db.uid('ech'),
+      notification_id: n.id,
+      auteur_id: req.user.username,
+      auteur_type: 'prestataire',
+      type_message: 'accuse_reception',
+      contenu: `Nous accusons réception de la notification et sommes disposés à vous recevoir `
+        + `du ${enClair(debut)} au ${enClair(fin)} dans le cadre de la supervision `
+        + `des activités suivantes : ${perimetre}`,
+      pieces_jointes: [],
+      date_creation: maintenant,
+    });
+    res.json({ status: 'ok', accuse_le: maintenant });
   });
 
   // ══════════════════════════════════════
   //  Accord : envoyé → acté, et ouverture du dossier d'exécution
   // ══════════════════════════════════════
+  // Enregistrement de l'étape Confirmation sans la franchir : dates confirmées
+  // et périmètre validé sont sauvegardés, la notification reste « envoyée ».
+  // Les dates retenues deviennent celles de l'activité — c'est le sens même de
+  // la confirmation, et le calendrier comme les états les lisent là.
+  app.put(`${M}/notifications/:id/accord`, requireAuth, (req, res) => {
+    if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
+    const n = db.get('notifications', req.params.id);
+    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!['envoye', 'acte'].includes(n.statut)) {
+      return res.status(400).json({ error: 'La confirmation n’est pas ouverte à ce stade' });
+    }
+    const d = req.body || {};
+    const patch = { date_maj: db.now() };
+    if (d.date_debut_effective !== undefined) {
+      patch.date_debut_effective = d.date_debut_effective;
+      // La date de l'activité suit la date confirmée : sans cela, les écrans
+      // qui lisent `date_activite` continueraient d'annoncer l'ancienne.
+      patch.date_activite = d.date_debut_effective || n.date_activite || '';
+    }
+    if (d.date_fin_effective !== undefined) patch.date_fin_effective = d.date_fin_effective;
+    if (d.perimetre_valide !== undefined) patch.perimetre_valide = d.perimetre_valide;
+    db.update('notifications', n.id, patch);
+    res.json({ status: 'ok' });
+  });
+
   app.put(`${M}/notifications/:id/validate-accord`, requireAuth, (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
     const n = db.get('notifications', req.params.id);
@@ -396,6 +528,7 @@ module.exports = function register(app, deps, M) {
     const perim = perimetrePrestataire(n.prestataire_id);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
     if (n.statut !== 'envoye') return res.status(400).json({ error: "Seule une notification envoyée peut passer en 'acté'" });
+    if (refusProcessus(req, res, n, 'confirmation')) return undefined;
 
     const d = req.body || {};
     const maintenant = db.now();

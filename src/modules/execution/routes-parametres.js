@@ -7,6 +7,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
+const acteurs = require('./acteurs');
 
 // Collections servies par le CRUD générique, comme `register_crud` dans PESSCO.
 const CRUD = {
@@ -15,6 +16,8 @@ const CRUD = {
   'exec-checklist-statuts': { coll: 'checklist_statuts', prefixe: 'ecs' },
   'exec-checklist-sous-themes': { coll: 'checklist_sous_themes', prefixe: 'est' },
   'exec-checklist-responses': { coll: 'checklist_responses', prefixe: 'ecr' },
+  // Rôles tenus au sein d'une équipe d'audit / inspection.
+  'exec-roles-equipe': { coll: 'roles_equipe', prefixe: 'ere' },
 };
 
 // Comparaison tolérante aux accents et à la casse, utilisée par les imports.
@@ -550,5 +553,135 @@ module.exports = function register(app, deps, M) {
     }
     if (!u.tempPassword) return res.status(404).json({ error: 'Aucun mot de passe temporaire disponible' });
     return res.json({ temp_password: u.tempPassword });
+  });
+
+  // ══════════════════════════════════════
+  //  Processus — intervenants par secteur
+  // ══════════════════════════════════════
+  // Un processus dit, secteur par secteur, qui intervient à chaque étape ou
+  // sous-étape : responsable d'activité, validateur, gestionnaire, supérieur
+  // hiérarchique, et tout autre acteur que l'organisation juge utile. Le
+  // module n'impose pas la liste des rôles : chaque étape porte ses acteurs.
+  const peutProcessus = (req) => {
+    const reel = ((req.userReel || req.user || {}).role || '');
+    return ['SUPERADMIN', 'ADMIN'].includes(reel) || R.isAdmin(req.user, referentiels);
+  };
+
+  // Qui est attendu à une étape, pour l'afficher au fil d'avancement. Ouvert
+  // à tout compte authentifié : savoir qui doit agir n'est pas un privilège.
+  // `activite_id` ou `constatation_id` situe l'objet ; `etape` porte la clé.
+  app.get(`${M}/processus/attendus`, requireAuth, (req, res) => {
+    const q = req.query || {};
+    const cle = String(q.etape || '');
+    if (!cle) return res.status(400).json({ error: 'Étape requise' });
+    const perim = (prestataireId) => {
+      const p = (refs().prestataires || []).find((x) => x.id === prestataireId) || {};
+      const s = (refs().secteurs || []).find((x) => x.id === p.secteur_id) || {};
+      return { secteur_id: p.secteur_id || '', domaine_id: p.domaine_id || s.domaine_id || '' };
+    };
+    let type = 'activite';
+    let contexte = { secteur_id: q.secteur_id || '', domaine_id: q.domaine_id || '', dossier: null };
+    if (q.constatation_id) {
+      const c = db.get('constatations', q.constatation_id);
+      if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+      type = 'constatation';
+      const p = perim(c.prestataire_id);
+      contexte = {
+        secteur_id: p.secteur_id,
+        domaine_id: c.domaine_id || p.domaine_id,
+        dossier: c.dossier_id ? db.get('dossiers', c.dossier_id) : null,
+      };
+    } else if (q.notification_id) {
+      const n = db.get('notifications', q.notification_id);
+      if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+      const p = perim(n.prestataire_id);
+      contexte = {
+        secteur_id: n.secteur_id || p.secteur_id,
+        domaine_id: n.domaine_id || p.domaine_id,
+        dossier: db.list('dossiers').find((d) => d.notification_id === n.id) || null,
+      };
+    }
+    const a = acteurs.attendus(type, contexte, cle);
+    res.json({
+      etape: cle,
+      processus: a.processus ? { id: a.processus.id, libelle: a.processus.libelle } : null,
+      declare: a.declare,
+      lignes: a.lignes,
+      // Les comptes servent à adresser un rappel à qui a réellement la main.
+      // Réservés au côté AAC : un prestataire n'a pas à recevoir l'annuaire
+      // des adresses de l'autorité.
+      comptes: (req.user || {}).role === 'PRESTATAIRE' ? [] : a.comptes,
+      // Le demandeur peut-il agir ? La réponse sert à griser les boutons.
+      peut_agir: !acteurs.refusEventuel(req.user, type, contexte, cle),
+    });
+  });
+
+  app.get(`${M}/processus`, requireAuth, (req, res) => {
+    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    res.json(db.list('processus'));
+  });
+
+  app.post(`${M}/processus`, requireAuth, (req, res) => {
+    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    const d = req.body || {};
+    if (!String(d.libelle || '').trim()) return res.status(400).json({ error: 'Libellé requis' });
+    if (!['activite', 'constatation'].includes(d.type)) {
+      return res.status(400).json({ error: 'Type de processus inconnu' });
+    }
+    const rec = db.insert('processus', {
+      id: db.uid('proc'),
+      libelle: String(d.libelle).trim(),
+      type: d.type,
+      secteur_id: d.secteur_id || '',
+      domaine_id: d.domaine_id || '',
+      description: d.description || '',
+      // { "<etape>[:<sous-etape>]": [ { role, acteur_id, acteur_nom } ] }
+      acteurs: d.acteurs && typeof d.acteurs === 'object' ? d.acteurs : {},
+      actif: d.actif === false ? 0 : 1,
+      created_by: req.user.username,
+      date_creation: db.now(),
+    });
+    res.status(201).json(rec);
+  });
+
+  app.put(`${M}/processus/:id`, requireAuth, (req, res) => {
+    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    const d = req.body || {};
+    const patch = {};
+    ['libelle', 'type', 'secteur_id', 'domaine_id', 'description', 'acteurs', 'actif']
+      .forEach((k) => { if (d[k] !== undefined) patch[k] = d[k]; });
+    patch.date_maj = db.now();
+    const rec = db.update('processus', req.params.id, patch);
+    return rec ? res.json(rec) : res.status(404).json({ error: 'Processus non trouvé' });
+  });
+
+  app.delete(`${M}/processus/:id`, requireAuth, (req, res) => {
+    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    res.json({ status: db.remove('processus', req.params.id) ? 'ok' : 'absent' });
+  });
+
+  // Duplication : un processus déjà réglé sert de patron au suivant. Le
+  // secteur visé est repris du corps, sinon la copie reste sur le même.
+  app.post(`${M}/processus/:id/dupliquer`, requireAuth, (req, res) => {
+    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    const src = db.get('processus', req.params.id);
+    if (!src) return res.status(404).json({ error: 'Processus non trouvé' });
+    const d = req.body || {};
+    const { id: _ignore, ...base } = src;
+    const rec = db.insert('processus', {
+      ...base,
+      id: db.uid('proc'),
+      libelle: String(d.libelle || `${src.libelle} (copie)`).trim(),
+      secteur_id: d.secteur_id !== undefined ? d.secteur_id : src.secteur_id,
+      domaine_id: d.domaine_id !== undefined ? d.domaine_id : src.domaine_id,
+      // Copie profonde : sans elle, les deux processus partageraient la même
+      // table d'acteurs et se modifieraient l'un l'autre.
+      acteurs: JSON.parse(JSON.stringify(src.acteurs || {})),
+      duplique_de: src.id,
+      created_by: req.user.username,
+      date_creation: db.now(),
+      date_maj: '',
+    });
+    res.status(201).json(rec);
   });
 };

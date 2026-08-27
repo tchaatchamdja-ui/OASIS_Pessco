@@ -29,7 +29,8 @@
     "PLAN.plansValides"
   ],
   "requires": [
-    "PR.riskProfiles"
+    "PR.riskProfiles",
+    "SURV.activitesDeclenchees"
   ],
   "portalCode": "PLAN",
   "consumedBy": [

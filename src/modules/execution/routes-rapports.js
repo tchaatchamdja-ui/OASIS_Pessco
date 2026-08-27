@@ -5,10 +5,12 @@ const path = require('path');
 const crypto = require('crypto');
 const referentiels = require('../../referentiels');
 const services = require('../../services');
+const transmission = require('./transmission');
 const multipart = require('../../multipart');
 const db = require('./store');
 const refModele = require('./references');
 const R = require('./roles');
+const acteurs = require('./acteurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -45,6 +47,18 @@ module.exports = function register(app, deps, M) {
     const p = parId('prestataires', prestataireId) || {};
     const s = parId('secteurs', p.secteur_id) || {};
     return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '', prestataire_id: prestataireId || '' };
+  };
+
+  // Restriction par processus, sur les étapes décisives du rapport.
+  const refusProcessus = (req, res, r, cle) => {
+    const perim = perimetrePrestataire(r.prestataire_id);
+    const dossier = db.get('dossiers', r.dossier_id) || null;
+    const motif = acteurs.refusEventuel(req.user, 'activite', {
+      secteur_id: perim.secteur_id, domaine_id: perim.domaine_id, dossier,
+    }, cle);
+    if (!motif) return false;
+    res.status(403).json({ error: motif });
+    return true;
   };
 
   // ══════════════════════════════════════
@@ -135,6 +149,9 @@ module.exports = function register(app, deps, M) {
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference });
   });
 
+  // Signature du rapport. Aucun écran ne les appelle aujourd'hui — la
+  // transmission courante passe par /send et /transmettre — mais le circuit
+  // signé reste servi et couvert par le smoke : il attend son écran.
   app.put(`${M}/rapports/:id/sign-inspector`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
     if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
@@ -159,6 +176,7 @@ module.exports = function register(app, deps, M) {
     if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (r.statut !== 'soumis') return res.status(400).json({ error: 'Seul un rapport soumis peut être validé' });
+    if (refusProcessus(req, res, r, 'validation')) return undefined;
     const dossier = db.get('dossiers', r.dossier_id) || {};
     const refFinale = dossier.final_reference
       || refModele.suivante('rapport_final', contexteRefRapport(dossier));
@@ -204,6 +222,8 @@ module.exports = function register(app, deps, M) {
   });
 
   // Transmission : exige les deux signatures.
+  // Transmission du rapport signé : elle exige les deux signatures. Voie
+  // conservée du portage PESSCO, sans écran à ce jour.
   app.put(`${M}/rapports/:id/transmit`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
     if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
@@ -211,6 +231,7 @@ module.exports = function register(app, deps, M) {
     if (!r.signe_par_inspecteur || !r.signe_par_directeur) {
       return res.status(400).json({ error: "Le rapport doit être signé par l'inspecteur et le directeur avant transmission" });
     }
+    if (refusProcessus(req, res, r, 'transmission')) return undefined;
     db.update('rapports', r.id, { statut: 'transmis', date_transmission: db.now(), transmis_par: req.user.username });
     db.list('constatations')
       .filter((c) => c.dossier_id === r.dossier_id && c.statut === 'brouillon')
@@ -218,16 +239,60 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok', statut: 'transmis' });
   });
 
-  // Envoi simple, sans exigence de signature.
+  // Transmission simple : le rapport validé passe à « transmis » et ouvre les
+  // constatations restées en brouillon. La remise par courriel, avec ses liens
+  // de téléchargement, se fait par POST /transmettre.
   app.put(`${M}/rapports/:id/send`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
     if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
     if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (r.statut !== 'valide') return res.status(400).json({ error: 'Seul un rapport validé peut être envoyé' });
+    if (refusProcessus(req, res, r, 'transmission')) return undefined;
     const maintenant = db.now();
     db.update('rapports', r.id, { statut: 'transmis', date_transmission: maintenant, transmis_par: req.user.username });
     if (r.dossier_id) db.update('dossiers', r.dossier_id, { date_maj: maintenant });
     res.json({ status: 'ok', statut: 'transmis' });
+  });
+
+  // Transmission par courriel du rapport validé : le message ne porte que des
+  // liens, la mécanique est commune à toutes les remises (voir transmission.js).
+  // L'envoi vaut transmission — inutile de l'acter deux fois — et ouvre les
+  // constatations restées en brouillon, comme /send.
+  app.post(`${M}/rapports/:id/transmettre`, requireAuth, async (req, res) => {
+    const r = db.get('rapports', req.params.id);
+    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
+    if (!['valide', 'transmis'].includes(r.statut)) {
+      return res.status(400).json({ error: 'Seul un rapport validé peut être transmis' });
+    }
+    if (refusProcessus(req, res, r, 'transmission')) return undefined;
+
+    let remise;
+    try {
+      remise = await transmission.transmettre(req.body || {}, {
+        dossierUploads: DOSSIER_UPLOADS,
+        nomDePresentation,
+        base: r.reference || 'rapport',
+        origine: 'transmission_rapport',
+        reference: r.reference || '',
+        prestataire_id: r.prestataire_id || '',
+        journal: { rapport_id: r.id },
+      });
+    } catch (e) {
+      return transmission.repondreErreur(res, e);
+    }
+
+    const maintenant = db.now();
+    db.update('rapports', r.id, {
+      statut: 'transmis', date_transmission: maintenant,
+      transmis_par: req.user.username, transmis_a: remise.destinataires.join(', '),
+      document: remise.document, pieces_transmises: remise.jointes,
+    });
+    db.list('constatations')
+      .filter((c) => c.dossier_id === r.dossier_id && c.statut === 'brouillon')
+      .forEach((c) => db.update('constatations', c.id, { statut: 'ouvert' }));
+    if (r.dossier_id) db.update('dossiers', r.dossier_id, { date_maj: maintenant });
+    res.json({ status: 'ok', statut: 'transmis', destinataires: remise.destinataires, envoye: remise.envoye });
   });
 
   app.delete(`${M}/rapports/:id`, requireAuth, (req, res) => {
@@ -275,6 +340,9 @@ module.exports = function register(app, deps, M) {
     const dossiers = db.list('dossiers').filter(mien);
     const idsDossiers = new Set(dossiers.map((d) => d.id));
     const fnc = db.list('constatations').filter((c) => mien(c) || idsDossiers.has(c.dossier_id));
+    // Statuts sous lesquels une constatation est notifiée au prestataire.
+    const EN_VIGUEUR = ['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee'];
+    const enVigueur = (c) => EN_VIGUEUR.includes(c.statut);
     const rapports = db.list('rapports')
       .filter((r) => (!prestataire || idsDossiers.has(r.dossier_id)) && String(r.date_creation || '') >= debutAnnee);
 
@@ -292,8 +360,14 @@ module.exports = function register(app, deps, M) {
       notifications_actees: notifs.filter((n) => n.statut === 'acte').length,
       dossiers_ouverts: dossiers.filter((d) => d.statut === 'ouvert').length,
       dossiers_clotures_ytd: dossiers.filter((d) => d.statut === 'cloture' && String(d.date_fin_execution || '') >= debutAnnee).length,
-      fnc_ouvertes: fnc.filter((c) => ['ouverte', 'ouvert', 'pac_soumis', 'pac_rejetee'].includes(c.statut)).length,
-      fnc_critiques: fnc.filter((c) => c.criticite === 'critique' && c.statut !== 'soldee').length,
+      // Une constatation compte dès qu'elle est notifiée au prestataire, quelle
+      // que soit son origine — activité de surveillance ou hors activité. Un
+      // brouillon, une soumission ou un rejet n'existent pas pour lui.
+      fnc_en_vigueur: fnc.filter(enVigueur).length,
+      fnc_hors_activite: fnc.filter((c) => enVigueur(c) && !c.dossier_id).length,
+      fnc_ouvertes: fnc.filter((c) => enVigueur(c) && c.statut !== 'soldee').length,
+      fnc_critiques: fnc.filter((c) => enVigueur(c) && c.statut !== 'soldee'
+        && String(c.criticite || c.gravite || '').toLowerCase() === 'critique').length,
       fnc_soldees_ytd: fnc.filter((c) => c.statut === 'soldee' && String(c.date_solde || '') >= debutAnnee).length,
       rapports_total_ytd: rapports.length,
       rapports_transmis_ytd: rapports.filter((r) => r.statut === 'transmis').length,
@@ -303,6 +377,20 @@ module.exports = function register(app, deps, M) {
   // ══════════════════════════════════════
   //  Pièces jointes
   // ══════════════════════════════════════
+  // Nom de présentation d'une pièce : l'intitulé saisi remplace le nom
+  // d'origine. Séparateurs, caractères de contrôle et extension parasite sont
+  // écartés ; l'extension réelle du fichier est réappliquée.
+  const nomDePresentation = (propose, ext) => {
+    const base = String(propose || '')
+      .replace(/[\\/\u0000-\u001f]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(new RegExp(`${ext.replace('.', '\\.')}$`, 'i'), '')
+      .slice(0, 120)
+      .trim();
+    return `${base || 'piece-jointe'}${ext}`;
+  };
+
   app.post(`${M}/upload`, requireAuth, multipart(), (req, res) => {
     if (!R.canContribute(req.user, null, referentiels)) return refuser(res);
     const f = (req.files || {}).file;
@@ -314,7 +402,9 @@ module.exports = function register(app, deps, M) {
     const nom = `${crypto.randomBytes(6).toString('hex')}${ext}`;
     fs.writeFileSync(path.join(DOSSIER_UPLOADS, nom), f.buffer);
     res.status(201).json({
-      status: 'ok', filename: f.filename,
+      status: 'ok',
+      // Le nom d'origine ne ressort pas : c'est l'intitulé qui nomme la pièce.
+      filename: nomDePresentation((req.body || {}).nom, ext),
       path: `/api/m/execution/uploads/${nom}`, size: f.buffer.length,
     });
   });
@@ -323,6 +413,54 @@ module.exports = function register(app, deps, M) {
     const nom = path.basename(req.params.fichier);
     const chemin = path.join(DOSSIER_UPLOADS, nom);
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier non trouvé' });
+    // Ouverture dans l'onglet, sous l'intitulé de la pièce quand il est fourni.
+    const affiche = nomDePresentation(req.query.nom || nom, path.extname(nom).toLowerCase());
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(affiche)}`);
     res.sendFile(chemin);
+  });
+
+  // ── Remise d'un document bureautique composé par le front ──
+  // Le module s'affiche dans une iframe : selon le navigateur, le
+  // téléchargement d'une URL blob: y est ignoré sans le moindre message. Le
+  // front dépose donc le document composé, puis le réclame par une requête
+  // GET — le chemin qu'empruntent déjà les exports de classeurs.
+  // Le dépôt est éphémère, nominatif et à usage unique.
+  const documentsEnAttente = new Map();
+  const PEREMPTION_DOC_MS = 60 * 1000;
+  const proprietaire = (u) => String((u && (u.id || u.email)) || '');
+  const purgerDocuments = () => {
+    const maintenant = Date.now();
+    for (const [jeton, doc] of documentsEnAttente) {
+      if (doc.expire < maintenant) documentsEnAttente.delete(jeton);
+    }
+  };
+
+  app.post(`${M}/documents/word`, requireAuth, (req, res) => {
+    const contenu = String((req.body || {}).contenu || '');
+    if (!contenu) return res.status(400).json({ error: 'Document vide' });
+    purgerDocuments();
+    const jeton = crypto.randomBytes(16).toString('hex');
+    documentsEnAttente.set(jeton, {
+      contenu,
+      nom: nomDePresentation((req.body || {}).nom || 'document', '.doc'),
+      auteur: proprietaire(req.user),
+      expire: Date.now() + PEREMPTION_DOC_MS,
+    });
+    res.json({ jeton });
+  });
+
+  app.get(`${M}/documents/word/:jeton`, requireAuth, (req, res) => {
+    purgerDocuments();
+    const doc = documentsEnAttente.get(req.params.jeton);
+    if (!doc || doc.auteur !== proprietaire(req.user)) {
+      return res.status(404).json({ error: 'Document expiré' });
+    }
+    documentsEnAttente.delete(req.params.jeton);
+    // Le document part en pièce jointe, jamais rendu par le navigateur :
+    // nosniff interdit de le réinterpréter comme du HTML exécutable.
+    res.setHeader('Content-Type', 'application/msword; charset=utf-8');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(doc.nom)}`);
+    res.send(`﻿${doc.contenu}`);
   });
 };

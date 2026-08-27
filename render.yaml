@@ -13,7 +13,13 @@ services:
     runtime: node
     plan: free
     region: frankfurt          # le plus proche de l'Afrique de l'Ouest
-    branch: main
+    # Branche déployée. `main` porte le socle Phase 1 et sert de point de
+    # retour : le service suit `phase-2`, et un incident se répare en
+    # repointant cette ligne sur `main`.
+    branch: phase-2
+    # Le rendu PDF des rapports transmis passe par Chromium (puppeteer).
+    # Render vide node_modules entre les constructions mais conserve
+    # XDG_CACHE_HOME : le navigateur y est téléchargé une fois, puis réutilisé.
     buildCommand: npm ci
     startCommand: npm start
     healthCheckPath: /api/health
@@ -29,6 +35,10 @@ services:
       # Le proxy de Render compresse déjà : inutile de le faire deux fois.
       - key: OASIS_COMPRESSION
         value: "0"
+      # Chromium survit aux constructions : sans cela, il serait retéléchargé
+      # à chaque déploiement — ou introuvable au démarrage.
+      - key: PUPPETEER_CACHE_DIR
+        value: /opt/render/.cache/puppeteer
       # Mot de passe des comptes créés à chaque démarrage à froid. À saisir
       # dans le tableau de bord Render (Environment) — il n'est pas dans le code.
       - key: OASIS_SEED_PASSWORD

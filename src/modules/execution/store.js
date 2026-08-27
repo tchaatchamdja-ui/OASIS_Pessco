@@ -23,6 +23,8 @@ const COLLECTIONS = [
   'vues',               // vue active (AAC / Prestataire) par utilisateur
   'parametres',         // délais du processus et autres réglages du module
   'rappels',            // rappels adressés aux responsables d'activités
+  'processus',          // intervenants par secteur, étape par étape
+  'roles_equipe',       // rôles d'une équipe d'audit / inspection
 ];
 
 const load = () => store.load('execution', {});

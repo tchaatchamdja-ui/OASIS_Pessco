@@ -83,7 +83,7 @@ function execProcFilHtml(etapes, petit) {
       const cls = ['eval-step', 'exec-proc-step', e.done ? 'done' : '', e.current ? 'current' : '',
         e.selected ? 'selected' : '', e.disabled ? 'verrouillee' : ''].filter(Boolean).join(' ');
       const action = e.onClick && !e.disabled ? ` onclick="${e.onClick}"` : '';
-      return `<button class="${cls}"${e.disabled ? ' disabled' : ''}${action} title="${_esc(e.label)}">${_esc(e.label)}</button>`;
+      return `<button class="${cls}"${e.disabled ? ' disabled' : ''}${action} title="${_escAttr(e.label)}">${_esc(e.label)}</button>`;
     }).join('')}
   </div>`;
 }
@@ -123,7 +123,7 @@ const _execProcOrig = {
 // Le fil principal, puis l'entête de l'étape (titre, informations, sous-fil),
 // puis l'écran hébergé : sa bordure supérieure vient au contact du sous-fil.
 const execProcCoiffe = (bodyHtml) => {
-  if (!EXEC_PROC || !EXEC_PROC.actif) return bodyHtml;
+  if (!execProcCoiffeActive()) return bodyHtml;
   // Confirmation : discussions à gauche, confirmation de l'activité à droite.
   const corps = EXEC_PROC.etape === 'confirmation'
     ? `<div class="exec-proc-2col">
@@ -131,7 +131,9 @@ const execProcCoiffe = (bodyHtml) => {
          <div class="exec-proc-col exec-proc-col-accord">${execProcColonneAccord()}</div>
        </div>`
     : bodyHtml;
-  return `${execProcFilPrincipal()}${execProcEnteteEtape()}<div class="exec-proc-hote">${corps}</div>`;
+  // Le fil et l'entête de l'étape restent affichés quand le corps défile.
+  return `<div class="exec-proc-entete-collant">${execProcFilPrincipal()}${execProcEnteteEtape()}</div>`
+    + `<div class="exec-proc-hote">${corps}</div>`;
 };
 
 // Colonne droite de l'étape Confirmation : dates et périmètre retenus.
@@ -144,21 +146,47 @@ function execProcColonneAccord() {
     return `<h4 class="exec-proc-col-titre">Activité confirmée</h4>
       <div class="exec-proc-bloc">
         ${execProcLigne('Référence d’activité', _esc(n.reference_activite || ''))}
-        ${execProcLigne('Dates retenues', `${_formatDate(n.date_debut_effective)} → ${_formatDate(n.date_fin_effective)}`)}
+        ${execProcLigne('Dates confirmées', `${_formatDate(n.date_debut_effective)} → ${_formatDate(n.date_fin_effective)}`)}
         ${execProcLigne('Périmètre validé', _esc(n.perimetre_valide || ''))}
       </div>`;
   }
   return `<h4 class="exec-proc-col-titre">Confirmer l'activité</h4>
     <div class="exec-proc-bloc">
-      <label class="form-label">Date de début effective</label>
-      <input type="date" class="form-control" id="exec_proc_debut" value="${_esc((n.date_activite || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
-      <label class="form-label">Date de fin effective</label>
-      <input type="date" class="form-control" id="exec_proc_fin" value="${_esc((n.date_fin_effective || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
+      <label class="form-label">Date de début confirmée</label>
+      <input type="date" class="form-control" id="exec_proc_debut" value="${_escAttr((n.date_debut_effective || n.date_activite || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
+      <label class="form-label">Date de fin confirmée</label>
+      <input type="date" class="form-control" id="exec_proc_fin" value="${_escAttr((n.date_fin_effective || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
       <label class="form-label">Périmètre validé</label>
-      <textarea class="form-control" id="exec_proc_perimetre" rows="8" ${peut ? '' : 'disabled'}>${_esc(n.perimetre_activite || '')}</textarea>
+      <textarea class="form-control" id="exec_proc_perimetre" rows="8" ${peut ? '' : 'disabled'}>${_esc(n.perimetre_valide || n.perimetre_activite || '')}</textarea>
+      ${peut ? `<div class="exec-proc-accord-actions">
+        <button class="btn btn-outline btn-sm" onclick="execProcEnregistrerAccord()">
+          ${EXEC_ICONS.check || ''} Enregistrer
+        </button>
+      </div>` : ''}
     </div>
     `;
 }
+
+// Enregistrement sans franchir l'étape : les dates confirmées et le périmètre
+// sont retenus, l'activité les reprend, et la confirmation reste à prononcer.
+window.execProcEnregistrerAccord = async function () {
+  const val = (id) => (document.getElementById(id) || {}).value || '';
+  if (!EXEC_PROC.notif) return;
+  try {
+    await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/accord`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        date_debut_effective: val('exec_proc_debut'),
+        date_fin_effective: val('exec_proc_fin'),
+        perimetre_valide: val('exec_proc_perimetre'),
+      }),
+    });
+    _execToast('Confirmation enregistrée', 'success');
+    await execProcRecharger('confirmation');
+  } catch (e) {
+    _execToast((e && e.message) || 'Enregistrement impossible', 'error');
+  }
+};
 
 // Les écrans repris de PESSCO nomment diversement le refus (« Rejeter »,
 // « Renvoyer »). Dans le volet du processus, tous portent la même couleur.
@@ -375,15 +403,20 @@ function execProcMarquerRejets() {
 
 // Dans le processus, tout écran adopte le bandeau et la largeur du volet :
 // certains écrans repris de PESSCO s'ouvraient en tiroir étroit (échanges).
-const execProcTitreOu = (title) => (EXEC_PROC && EXEC_PROC.actif ? execProcTitre() : title);
-const execProcTailleOu = (size) => (EXEC_PROC && EXEC_PROC.actif ? 'max' : size);
+// Un écran peut demander à ne pas être coiffé par le processus : il garde son
+// bandeau, sa taille et son corps. C'est le cas du formulaire de constatation,
+// volet ancré à droite ouvert depuis le rapport.
+const execProcAutonome = () => !!(window.EXEC_STATE && EXEC_STATE.sliderAutonome);
+const execProcCoiffeActive = () => !!(EXEC_PROC && EXEC_PROC.actif) && !execProcAutonome();
+const execProcTitreOu = (title) => (execProcCoiffeActive() ? execProcTitre() : title);
+const execProcTailleOu = (size) => (execProcCoiffeActive() ? 'max' : size);
 
 // Le processus est une page, non une succession de tiroirs : le passage d'une
 // étape ou d'une sous-étape à l'autre est immédiat, sans glissement ni fondu.
 // Le volet ne se ferme, lui, que sur un menu, « Retour au portail » ou
 // « Retour à la liste d'Activité » : le voile et la croix n'y donnent plus lieu.
 function execProcFixerVolet() {
-  if (!EXEC_PROC || !EXEC_PROC.actif) return;
+  if (!execProcCoiffeActive()) return;
   const slider = document.getElementById('execSlider');
   const voile = document.getElementById('execSliderOverlay');
   if (slider) { slider.classList.add('exec-proc-instant', 'open'); }
@@ -412,17 +445,17 @@ function execProcApresRendu() {
 
 window.execShowSlider = function (title, bodyHtml, footerHtml, size) {
   const r = _execProcOrig.show(execProcTitreOu(title), execProcCoiffe(bodyHtml), footerHtml, execProcTailleOu(size));
-  execProcApresRendu();
+  if (!execProcAutonome()) execProcApresRendu();
   return r;
 };
 window.execSwitchSlider = function (title, bodyHtml, footerHtml, size) {
   const r = _execProcOrig.switch(execProcTitreOu(title), execProcCoiffe(bodyHtml), footerHtml, execProcTailleOu(size));
-  execProcApresRendu();
+  if (!execProcAutonome()) execProcApresRendu();
   return r;
 };
 window._execFadeSliderContent = function (title, bodyHtml, footerHtml, size) {
   const r = _execProcOrig.fade(execProcTitreOu(title), execProcCoiffe(bodyHtml), footerHtml, execProcTailleOu(size));
-  execProcApresRendu();
+  if (!execProcAutonome()) execProcApresRendu();
   // Le fondu du corps est posé dans une frame ultérieure : on le retire après.
   requestAnimationFrame(() => requestAnimationFrame(execProcFixerVolet));
   return r;
@@ -522,7 +555,12 @@ const execProcTitre = () => {
   const n = EXEC_PROC.notif;
   const d = EXEC_PROC.dossier;
   const refs = [n && n.reference, d && d.reference].filter(Boolean).join(' / ') || '—';
-  const statut = d ? (d.statut || '') : (n ? n.statut : 'planifie');
+  // Le statut brut du dossier reste « soumis » de la validation à la clôture :
+  // il ne dit pas où en est le circuit. Le bandeau reprend donc le statut du
+  // processus, celui-là même que porte la colonne « Statut » des listes.
+  const statut = n
+    ? execProcStatutBadge(n, d)
+    : _execStatusBadge((d && d.statut) || 'planifie');
   const bloc = (libelle, valeur) => `<span class="exec-proc-bandeau-item"><i>${_esc(libelle)}</i>${valeur}</span>`;
   return `<div class="exec-proc-bandeau">
     <button class="btn btn-outline btn-sm exec-proc-retour" onclick="execProcRetourListe()">
@@ -531,7 +569,7 @@ const execProcTitre = () => {
     ${bloc('Prestataire', `<strong>${_esc(a.prestataire_nom || '—')}</strong>`)}
     ${bloc('Objet', _esc(a.objet || a.description || '—'))}
     ${bloc('Références', `<span class="exec-proc-bandeau-ref">${_esc(refs)}</span>`)}
-    ${bloc('Statut', _execStatusBadge(statut))}
+    ${bloc('Statut', statut)}
   </div>`;
 };
 
@@ -827,9 +865,69 @@ function execProcEnteteEtape() {
       ${execProcSousFil()}
       ${execProcActionsEtape()}
     </div>
+    ${execProcAttendusHtml()}
     ${execProcInfoTransmission()}
     ${execProcBanniereRejet()}
     ${execProcBlocValidation()}`;
+}
+
+// ── Informer : qui est attendu à cette étape ────────────────────────
+// La réponse est demandée au serveur, qui seul sait résoudre un poste ou un
+// rôle d'équipe en comptes. Elle est gardée le temps de l'étape affichée.
+const EXEC_PROC_ATTENDUS = { cle: '', data: null, enCours: false };
+
+function execProcCleEtape() {
+  const sous = EXEC_PROC.sousEtape || (typeof execProcSousDefaut === 'function' ? execProcSousDefaut() : null);
+  const liste = EXEC_PROC_SOUS[EXEC_PROC.etape] || [];
+  return (sous && liste.some((s) => s.id === sous)) ? `${EXEC_PROC.etape}:${sous}` : EXEC_PROC.etape;
+}
+
+function execProcAttendusHtml() {
+  if (!EXEC_PROC.notif) return '';
+  const cle = `${EXEC_PROC.notif.id}|${execProcCleEtape()}`;
+  if (EXEC_PROC_ATTENDUS.cle !== cle) {
+    if (!EXEC_PROC_ATTENDUS.enCours) {
+      EXEC_PROC_ATTENDUS.enCours = true;
+      api(`${EXEC_MODULE_API}/processus/attendus?notification_id=${encodeURIComponent(EXEC_PROC.notif.id)}`
+        + `&etape=${encodeURIComponent(execProcCleEtape())}`)
+        .then((r) => { EXEC_PROC_ATTENDUS.cle = cle; EXEC_PROC_ATTENDUS.data = r; })
+        .catch(() => { EXEC_PROC_ATTENDUS.cle = cle; EXEC_PROC_ATTENDUS.data = null; })
+        .finally(() => { EXEC_PROC_ATTENDUS.enCours = false; execProcAppliquerAttendus(); });
+    }
+    return '';
+  }
+  const d = EXEC_PROC_ATTENDUS.data;
+  if (!d || !d.declare) return '';
+  const lignes = (d.lignes || []).map((l) => {
+    // `cible` nomme déjà la personne quand l'acteur est désigné nominativement :
+    // on ne répète les noms que s'ils apportent autre chose (poste, équipe).
+    const noms = (l.personnes || []).join(', ');
+    const repete = !noms || noms === l.cible;
+    return `<span class="exec-proc-attendu">
+      <strong>${_esc(l.role)}</strong>${l.cible ? ` — ${_esc(l.cible)}` : ''}
+      ${repete ? '' : `<em>${_esc(noms)}</em>`}
+    </span>`;
+  }).join('');
+  return `<div class="exec-proc-attendus${d.peut_agir ? '' : ' bloque'}">
+      <span class="exec-proc-attendus-titre">Intervenants attendus</span>
+      ${lignes}
+      ${d.peut_agir ? '' : '<span class="exec-proc-attendus-refus">Vous n’êtes pas désigné à cette étape.</span>'}
+    </div>`;
+}
+
+// Les actions de l'étape se grisent quand le processus ne désigne pas le
+// compte courant : le refus se lit avant le clic, pas après.
+function execProcAppliquerAttendus() {
+  const d = EXEC_PROC_ATTENDUS.data;
+  const volet = document.getElementById('execSlider');
+  if (!volet) return;
+  const bandeau = volet.querySelector('.exec-proc-attendus');
+  if (!bandeau && d && d.declare) { execProcAfficher(); return; }
+  if (!d || !d.declare || d.peut_agir) return;
+  volet.querySelectorAll('.exec-proc-actions-etape button').forEach((b) => {
+    b.disabled = true;
+    b.title = 'Étape réservée aux intervenants désignés au processus.';
+  });
 }
 
 // ══════════════════════════════════════
@@ -852,7 +950,7 @@ function execProcConfirmer({ titre, message, depuis, vers, libelle, saisie }) {
         </div>` : ''}
         ${saisie ? `<label class="form-label">${_esc(saisie.label || '')}</label>
           <textarea class="form-control exec-proc-dialogue-saisie" rows="4"
-            placeholder="${_esc(saisie.placeholder || '')}"></textarea>` : ''}
+            placeholder="${_escAttr(saisie.placeholder || '')}"></textarea>` : ''}
         <div class="exec-proc-dialogue-actions">
           <button class="btn btn-outline btn-sm" data-rep="non">Annuler</button>
           <button class="btn btn-primary btn-sm" data-rep="oui">${_esc(libelle || 'Confirmer')}</button>
@@ -1510,7 +1608,10 @@ window.execShowActiviteHistorique = function (activiteId, planId) {
 
 // Groupe « Autres Activités » : les activités déclenchées hors plan.
 function execProcGroupeHorsPlan(F) {
-  const notifs = (EXEC_STATE.data.notifications || []).filter((n) => n.hors_plan);
+  // Les activités hors plan archivées quittent la page, comme les activités
+  // d'un plan archivé : elles se consultent au menu États.
+  const notifs = (EXEC_STATE.data.notifications || [])
+    .filter((n) => n.hors_plan && Number(n.archive) !== 1);
   if (!notifs.length) return '';
   const dossiers = EXEC_STATE.data.dossiers || [];
   const secteurs = EXEC_STATE.data.secteurs || [];
@@ -1557,6 +1658,11 @@ function execProcGroupeHorsPlan(F) {
       <span style="color:#334155;font-weight:500;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.02em;">
         · hors plan de surveillance · ${lignes.length} activité(s)
       </span>
+      <span style="margin-left:auto;" onclick="event.stopPropagation();">
+        ${_execCanValidate() ? `<button class="btn btn-sm btn-outline"
+          onclick="execArchiverHorsPlan()"
+          title="${_escAttr(te('archiver_hors_plan'))}">${EXEC_ICONS.folder || ''} ${te('archiver')}</button>` : ''}
+      </span>
     </div>
     <div class="exec-accordion-body" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
       <table class="exec-data-table exec-compact-table" style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
@@ -1575,3 +1681,28 @@ function execProcGroupeHorsPlan(F) {
   </div>`;
 }
 window.execProcGroupeHorsPlan = execProcGroupeHorsPlan;
+
+// Archivage du lot « Autres Activités » : le pendant, pour les activités hors
+// plan, de l'archivage d'un plan de surveillance. Les constatations qui en
+// sont issues poursuivent leur suivi.
+window.execArchiverHorsPlan = async function () {
+  const lot = (EXEC_STATE.data.notifications || [])
+    .filter((n) => n.hors_plan && Number(n.archive) !== 1);
+  if (!lot.length) return;
+  const ok = await execProcConfirmer({
+    titre: te('archiver_hors_plan'),
+    message: te('archiver_hors_plan_message').replace('{n}', lot.length),
+    libelle: te('archiver'),
+  });
+  if (!ok) return;
+  try {
+    await api(`${EXEC_MODULE_API}/activites-en-cours/hors-plan-archiver`, {
+      method: 'PUT', body: JSON.stringify({ archive: true }),
+    });
+    await execRefreshDynamic();
+    _execToast(te('hors_plan_archive_ok'), 'success');
+    execRenderPage();
+  } catch (e) {
+    _execToast((e && e.message) || te('action_impossible'), 'error');
+  }
+};

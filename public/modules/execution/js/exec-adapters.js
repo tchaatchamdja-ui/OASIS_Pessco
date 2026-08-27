@@ -91,6 +91,26 @@ function execDessinerActions() {
     });
   }
   oasisModuleActions(actions);
+  execDessinerMention();
+}
+
+// Vue Prestataire : la barre porte le nom du prestataire dont on tient le
+// compte — c'est lui qui décide de ce que l'écran montre.
+function execNomPrestataireCourant() {
+  const u = (window.EXEC_STATE && EXEC_STATE.user) || {};
+  const enVue = execVueActive && execVueActive.vue === 'prestataire';
+  const id = (enVue && execVueActive.prestataire_id) || u.prestataire_id || '';
+  if (!id) return '';
+  const liste = (execVueActive && execVueActive.prestataires)
+    || (window.EXEC_STATE && EXEC_STATE.data && EXEC_STATE.data.prestataires) || [];
+  const p = liste.find((x) => x.id === id);
+  return p ? (p.nom || p.trigramme || '') : '';
+}
+
+function execDessinerMention() {
+  if (typeof oasisModuleMention !== 'function') return;
+  const prestataire = typeof _execIsPrestataire === 'function' && _execIsPrestataire();
+  oasisModuleMention(prestataire ? execNomPrestataireCourant() : '');
 }
 
 // L'état peut arriver avant ou après la mise en place de la barre, et le rôle

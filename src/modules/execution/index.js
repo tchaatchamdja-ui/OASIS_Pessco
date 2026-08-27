@@ -32,6 +32,17 @@ module.exports = {
     require('./routes-dossiers')(app, depsVue, M);
     require('./routes-rapports')(app, depsVue, M);
     require('./routes-etats')(app, depsVue, M);
+
+    // Une activité déclenchée ne se réécrit plus : Plans de Surveillance
+    // interroge ce service pour verrouiller, lors d'un amendement, les lignes
+    // dont le circuit a déjà commencé ici.
+    if (deps.services) {
+      deps.services.publish('SURV.activitesDeclenchees', () => db.list('notifications')
+        .map((n) => n.activite_id)
+        .filter(Boolean), {
+        description: 'Identifiants des activités pour lesquelles une notification existe',
+      });
+    }
   },
 
   seed() {

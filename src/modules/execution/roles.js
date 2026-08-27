@@ -89,6 +89,12 @@ const DROITS_PRESTATAIRE = [
     aide: 'Suivre les constatations et déposer les plans d’actions correctives.' },
   { cle: 'utilisateurs', libelle: 'Comptes de l’organisme',
     aide: 'Créer et gérer les comptes rattachés au prestataire.' },
+  // Droit distinct de la consultation : un agent peut avoir à lire les
+  // notifications dans l'application sans encombrer sa boîte, et
+  // inversement un responsable peut vouloir être averti sans y intervenir.
+  { cle: 'emails', libelle: 'Réception des courriels',
+    aide: 'Recevoir par courriel les notifications d’activité, les échanges de '
+      + 'confirmation et les rapports transmis.' },
 ];
 
 const normaliserDroits = (liste) => (Array.isArray(liste)

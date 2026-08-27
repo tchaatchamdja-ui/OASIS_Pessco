@@ -434,7 +434,7 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 }
 .portal-card {
     background: var(--bg-card); border-radius: 16px;
-    padding: 2rem 1.5rem; text-align: center; cursor: pointer;
+    padding: 0.9rem 1rem; text-align: center; cursor: pointer;
     box-shadow: var(--shadow); border: 2px solid transparent;
     transition: all .3s ease; position: relative; overflow: hidden;
 }
@@ -446,27 +446,30 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .portal-card:hover:not(.disabled) { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--module-color, var(--accent)); }
 .portal-card:hover:not(.disabled)::before { height: 6px; opacity: 1; }
 .portal-card.disabled { cursor: default; opacity: 0.55; }
-.portal-card-icon  { margin-bottom: 1rem; font-size: 2.2rem; }
-.portal-card-title { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
-.portal-card-desc  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; }
-.portal-card-badge { display: inline-block; margin-top: 0.75rem; padding: 0.2rem 0.6rem;
+.portal-card-icon  { margin-bottom: 0.5rem; font-size: 1.6rem; }
+.portal-card-title { font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+.portal-card-desc  {
+    font-size: 0.78rem; color: var(--text-muted); line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.portal-card-badge { display: inline-block; margin-top: 0.45rem; padding: 0.15rem 0.5rem;
                      background: var(--border); color: var(--text-muted); border-radius: 10px;
                      font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .portal-card-badge.prio { color: #fff; background: var(--module-color, var(--accent)); }
-.portal-card-tdr { position: absolute; top: 0.7rem; right: 0.9rem; font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+.portal-card-tdr { position: absolute; top: 0.45rem; right: 0.6rem; font-size: 0.66rem; font-weight: 700; color: var(--text-muted); }
 
 /* Entête de page et composants « shell » : voir /shared/css/oasis-shell.css
    (socle commun au portail et aux modules). */
 
-/* ── Icônes modules (conteneur rond coloré) ── */
+/* ── Icônes modules ── */
+/* Le glyphe porte seul la couleur du module : pas d'aplat derrière lui. */
 .portal-card-icon-wrap {
-    width: 56px; height: 56px; border-radius: 16px;
+    width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1rem;
-    background: color-mix(in srgb, var(--module-color, var(--accent)) 12%, transparent);
+    margin: 0 auto 0.4rem;
     color: var(--module-color, var(--accent));
 }
-.portal-card-icon-wrap svg { width: 26px; height: 26px; }
+.portal-card-icon-wrap svg { width: 30px; height: 30px; }
 
 /* ── Groupes thématiques de modules ── */
 .portal-group { margin-bottom: 2rem; }
@@ -521,7 +524,7 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     top: 0; bottom: 0; right: auto; width: 4px; height: auto;
 }
 .portal-modules.list-view .portal-card-icon-wrap {
-    width: 38px; height: 38px; border-radius: 10px; margin: 0;
+    width: 34px; height: 34px; margin: 0;
 }
 .portal-modules.list-view .portal-card-icon-wrap svg { width: 20px; height: 20px; }
 .portal-modules.list-view .portal-card-title { font-size: 0.92rem; margin-bottom: 0.1rem; }

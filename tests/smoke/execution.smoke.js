@@ -273,9 +273,15 @@ module.exports = async function executionSmoke(port) {
     const mesUsers = await srv.appel(`${M}/mes-utilisateurs`);
     verifier('« Mes utilisateurs » ouvert en vue Prestataire', mesUsers.statut === 200);
     // La page décrit les rôles et les droits qu'un organisme peut confier.
+    // Nommer les droits attendus plutôt que les compter : l'ajout d'un droit
+    // doit signaler ce qui manque, pas seulement qu'il y en a un de plus.
+    const droitsAttendus = ['notifications', 'echanges', 'rapports',
+      'constatations', 'utilisateurs', 'emails'];
+    const droitsRendus = (mesUsers.corps.droits || []).map((d) => d.cle);
     verifier('rôles et droits d’organisme décrits',
       (mesUsers.corps.roles || []).some((r) => r.cle === 'ADMIN_PRESTATAIRE')
-      && (mesUsers.corps.droits || []).length === 5);
+      && droitsAttendus.every((c) => droitsRendus.includes(c))
+      && droitsRendus.length === droitsAttendus.length);
     // Seuls les comptes du prestataire ayant accès au module y figurent.
     verifier('comptes restreints au prestataire et au module',
       (mesUsers.corps.utilisateurs || [])

@@ -165,6 +165,7 @@
 .exec-slider.slider-sm,
 .exec-slider.slider-third,
 .exec-slider.slider-two-fifths,
+.exec-slider.slider-half,
 .exec-slider.slider-md,
 .exec-slider.slider-lg,
 .exec-slider.slider-xl,
@@ -183,6 +184,8 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
 .exec-slider.slider-third { left: auto !important; width: 33.33vw !important; min-width: 340px; }
 /* Variante « 2/5 » — l'historique d'une activité, ancré à droite. */
 .exec-slider.slider-two-fifths { left: auto !important; width: 40vw !important; min-width: 380px; }
+/* Variante « moitié » — le formulaire de constatation, ancré à droite. */
+.exec-slider.slider-half { left: auto !important; width: 50vw !important; min-width: 420px; }
 .exec-slider textarea[rows="1"] { min-height: unset; }
 
 /* Dashboard situation table */
@@ -252,6 +255,650 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
 .exec-module .sg-secteur.expanded > .exec-accordion-header {
     border-radius: 8px 8px 0 0;
 }
+.exec-module .sg-domaine { margin-bottom: 0.75rem; }
+.exec-module .sg-domaine > .exec-accordion-body { padding: 0.5rem 0.6rem 0.6rem; }
+/* Le secteur est en retrait : la hiérarchie se voit avant d'être lue. */
+.exec-module .sg-secteur { margin: 0.4rem 0 0.4rem 0.75rem; }
+.exec-module .sg-secteur > .exec-accordion-body { padding: 0.45rem 0 0; }
+
+/* ── Situation Générale : bandeaux de regroupement ─────────────────────── */
+.exec-module .exec-sg-bandeau {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    cursor: pointer;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--border);
+}
+.exec-module .exec-sg-bandeau .exec-form-section-chevron {
+    display: inline-flex;
+    transition: transform 0.2s;
+    opacity: 0.55;
+}
+.exec-module .exec-sg-etiquette {
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.1rem 0.35rem;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--primary) 20%, transparent);
+    color: var(--primary);
+}
+.exec-module .exec-sg-nom { font-weight: 700; color: var(--text); }
+.exec-module .exec-sg-sous { font-size: 0.7rem; color: var(--text-muted); }
+
+/* Les mesures : une rangée de pastilles séparées d'un filet, calées à droite.
+   Libellé au-dessus, valeur en dessous — on balaye les chiffres d'un trait. */
+.exec-module .exec-sg-mesures {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg, #fff);
+}
+.exec-module .exec-sg-mesure {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1px;
+    min-width: 66px;
+    padding: 0.14rem 0.5rem;
+    border-left: 1px solid var(--border);
+}
+.exec-module .exec-sg-mesure:first-child { border-left: none; }
+.exec-module .exec-sg-mesure .lib {
+    font-size: 0.56rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    line-height: 1.1;
+    white-space: nowrap;
+}
+.exec-module .exec-sg-mesure .val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.exec-module .exec-sg-bandeau.domaine {
+    background: color-mix(in srgb, var(--primary) 12%, var(--bg));
+    border-left: 4px solid var(--primary);
+}
+.exec-module .exec-sg-bandeau.domaine .exec-sg-nom {
+    font-size: 0.92rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    color: var(--primary);
+}
+.exec-module .exec-sg-bandeau.secteur {
+    background: color-mix(in srgb, var(--primary) 7%, var(--bg));
+    border-left: 3px solid color-mix(in srgb, var(--primary) 40%, transparent);
+}
+.exec-module .exec-sg-bandeau:hover {
+    background: color-mix(in srgb, var(--primary) 18%, var(--bg));
+}
+.exec-module .exec-sg-bandeau.secteur .exec-sg-nom { font-size: 0.82rem; }
+.exec-module .exec-sg-bandeau.secteur .exec-sg-etiquette {
+    background: color-mix(in srgb, var(--text-muted) 16%, transparent);
+    color: var(--text-muted);
+}
+.exec-module .exec-sg-aucune {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* ── Situation Générale : table des prestataires ───────────────────────── */
+.exec-module .sg-table-boite {
+    overflow: auto;
+    max-height: 430px;
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    border-top: none;
+}
+.exec-module .sg-prest-table {
+    border: none;
+    border-radius: 0;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    table-layout: fixed;
+    min-width: 880px;
+}
+.exec-module .sg-prest-table col.sg-col-nom { width: 200px; }
+.exec-module .sg-prest-table col.sg-col-num { width: 62px; }
+/* En-tête sur deux étages, tenu en haut pendant le défilement. */
+.exec-module .sg-prest-table thead th { position: sticky; z-index: 2; }
+.exec-module .sg-prest-table thead tr.exec-sg-groupes th {
+    top: 0;
+    height: 24px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.63rem;
+    letter-spacing: 0.06em;
+}
+.exec-module .sg-prest-table thead tr.exec-sg-colonnes th {
+    top: 24px;
+    padding: 0.3rem 0.35rem;
+    font-size: 0.62rem;
+    text-align: center;
+    background: color-mix(in srgb, var(--primary) 85%, #000);
+}
+.exec-module .sg-prest-table th.exec-sg-col-nom { text-align: left; }
+
+/* Filets forts entre les trois blocs de colonnes. */
+.exec-module .sg-prest-table th.exec-sg-bloc { border-left: 2px solid rgba(255,255,255,0.5); }
+.exec-module .sg-prest-table td.exec-sg-bloc {
+    border-left: 2px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+}
+.exec-module .sg-prest-table td {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.78rem;
+}
+.exec-module .sg-prest-table td.num { text-align: center; font-variant-numeric: tabular-nums; }
+.exec-module .sg-prest-table td.fort { font-weight: 700; }
+.exec-module .sg-prest-table td.total {
+    font-weight: 700;
+    background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+.exec-module .sg-prest-table tbody td:first-child {
+    text-align: left;
+    font-weight: 600;
+    white-space: normal;
+    line-height: 1.25;
+}
+.exec-module .sg-prest-table tfoot td {
+    background: color-mix(in srgb, var(--primary) 10%, var(--bg));
+    border-top: 2px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+    border-bottom: none;
+    font-weight: 700;
+}
+.exec-module .sg-prest-table tfoot td:first-child { text-align: left; }
+
+.exec-module .exec-sg-vide { color: var(--text-muted); opacity: 0.5; font-weight: 500; }
+.exec-module .exec-sg-taux {
+    display: inline-block;
+    min-width: 44px;
+    padding: 0.05rem 0.35rem;
+    border-radius: 10px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+/* Archives des états : un bloc par plan de surveillance. */
+.exec-module .exec-etats-groupe { margin-top: 0.6rem; }
+.exec-module .exec-etats-groupe:first-child { margin-top: 0; }
+.exec-module .exec-etats-groupe-titre {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 0.35rem;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text);
+    background: color-mix(in srgb, var(--primary) 14%, var(--bg));
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+}
+.exec-module .exec-etats-groupe-titre { cursor: pointer; }
+.exec-module .exec-etats-groupe-chevron {
+    display: inline-flex;
+    transition: transform .2s;
+    transform: rotate(-90deg);
+    opacity: .6;
+}
+.exec-module .exec-etats-groupe-chevron svg { width: 14px; height: 14px; }
+.exec-module .exec-etats-groupe.ouvert .exec-etats-groupe-chevron { transform: none; }
+.exec-module .exec-etats-groupe-corps { display: none; }
+.exec-module .exec-etats-groupe.ouvert .exec-etats-groupe-corps { display: block; }
+.exec-module .exec-etats-groupe-date {
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: none;
+}
+.exec-module .exec-etats-desarchiver {
+    padding: .1rem .5rem;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: none;
+    white-space: nowrap;
+}
+/* Sans date affichée, c'est le bouton qui prend la place à droite. */
+.exec-module .exec-etats-groupe-titre > .exec-etats-desarchiver:not(:last-child),
+.exec-module .exec-etats-groupe-date + .exec-etats-desarchiver { margin-left: .6rem; }
+.exec-module .exec-etats-groupe-titre > .exec-etats-desarchiver:only-of-type { margin-left: auto; }
+
+/* Entête du tableau de bord : le titre à gauche, l'accès aux statistiques
+   à droite — le bouton a suivi les graphiques qu'il accompagnait. */
+.exec-module .exec-dash-entete {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* ── Répartitions (formulaire Statistiques) ────────────────────────────── */
+/* Les trois répartitions partagent la largeur à parts égales et suivent
+   celle du bandeau ; elles passent à la ligne quand la place manque. */
+.exec-module .exec-crit-grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+.exec-module .exec-crit-bloc {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 0.9rem;
+    background: var(--bg, #fff);
+}
+/* Le titre porte l'effectif à son extrémité droite : l'ordre de grandeur se
+   lit avant le détail des lignes. Même graphie que les intitulés de groupes
+   d'indicateurs, pour que les deux se lisent comme une seule série. */
+.exec-module .exec-crit-titre {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding-bottom: 0.3rem;
+    margin-bottom: 0.13rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-module .exec-crit-total {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+}
+.exec-module .exec-crit-tab {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+.exec-module .exec-crit-tab td + td { border-left: 1px solid var(--border); }
+/* Lignes resserrées d'un tiers : les trois répartitions se lisent d'un bloc. */
+.exec-module .exec-crit-tab td {
+    padding: 0.1rem 0.55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+    vertical-align: middle;
+}
+.exec-module .exec-crit-tab tbody tr:last-child td { border-bottom: none; }
+/* Ligne renvoyant à sa liste de constatations, sous les indicateurs. */
+.exec-module .exec-crit-tab tbody tr.cliquable { cursor: pointer; }
+.exec-module .exec-crit-tab tbody tr.cliquable:hover td {
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+.exec-module .exec-crit-tab tbody tr.actif td {
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.exec-module .exec-crit-tab tbody tr.actif td:first-child {
+    box-shadow: inset 3px 0 0 var(--primary);
+}
+.exec-module .exec-crit-tab .num {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    width: 52px;
+}
+.exec-module .exec-crit-tab td:first-child { width: 100px; }
+.exec-module .exec-crit-badge {
+    display: inline-block;
+    line-height: 1.3;
+    padding: 0.08rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+/* La piste reste visible même à zéro : l'absence de barre est une information. */
+.exec-module .exec-crit-piste {
+    height: 14px;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--border) 40%, transparent);
+    overflow: hidden;
+}
+.exec-module .exec-crit-barre { height: 100%; border-radius: 7px; }
+
+/* ── Suivi des Activités : diagramme de Gantt ──────────────────────────── */
+.exec-module .exec-suivi-entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+.exec-module .exec-suivi-entete h4 { margin: 0; }
+.exec-module .exec-suivi-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+.exec-module .exec-suivi-nav .btn { padding: 0.18rem 0.5rem; line-height: 1.2; }
+.exec-module .exec-suivi-jour {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text);
+    background: color-mix(in srgb, var(--primary) 10%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+    border-radius: 6px;
+    padding: 0.22rem 0.6rem;
+    margin-left: 0.25rem;
+    white-space: nowrap;
+}
+/* Le cadre du calendrier et le panneau se calent bord à bord : haut sur haut,
+   bas sur bas. Le plus court des deux s'étire, le calendrier défile dedans. */
+.exec-module .exec-suivi-corps {
+    display: flex;
+    align-items: stretch;
+    gap: 0.85rem;
+}
+.exec-module .exec-gantt-cadre {
+    flex: 1;
+    min-width: 0;
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+
+/* Une seule grille : les en-têtes et les lignes partagent les colonnes, donc
+   les barres restent alignées sur la graduation quoi qu'il arrive. */
+.exec-module .exec-gantt {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    position: relative;
+    font-size: 0.74rem;
+}
+/* La colonne des intitulés reste en place quand la piste défile : sans elle,
+   on perd de vue à quelle activité appartient la barre qu'on regarde. */
+.exec-module .exec-gantt .g-nom {
+    padding: 0.25rem 0.5rem;
+    border-right: 2px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 26px;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--bg, #fff);
+}
+.exec-module .exec-gantt .g-piste {
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    min-height: 26px;
+    box-sizing: border-box;
+}
+/* La ligne survolée passe au-dessus de tout : son infobulle déborde sur les
+   lignes suivantes et sur la colonne figée. */
+.exec-module .exec-gantt .g-piste:hover { z-index: 6; }
+.exec-module .exec-gantt .g-annee,
+.exec-module .exec-gantt .g-entete-vide,
+.exec-module .exec-gantt .g-entete {
+    background: color-mix(in srgb, var(--primary) 18%, var(--bg));
+    font-weight: 700;
+    color: var(--text);
+}
+.exec-module .exec-gantt .g-entete { display: flex; }
+.exec-module .exec-gantt .g-entete .g-cellule {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid var(--border);
+    font-size: 0.7rem;
+}
+.exec-module .exec-gantt .g-entete .g-cellule:first-child { border-left: none; }
+
+/* Graduation tenue en haut du cadre pendant le défilement vertical : sans
+   elle, on lit des barres sans savoir de quel mois il s'agit. Les hauteurs
+   sont fixées parce que la seconde rangée se cale sur la première. */
+.exec-module .exec-gantt .g-annee,
+.exec-module .exec-gantt .g-piste.g-entete {
+    position: sticky;
+    top: 0;
+    height: 24px;
+    min-height: 24px;
+    z-index: 4;
+}
+.exec-module .exec-gantt .g-entete-vide,
+.exec-module .exec-gantt .g-piste.g-entete-mois {
+    position: sticky;
+    top: 24px;
+    height: 22px;
+    min-height: 22px;
+    background: color-mix(in srgb, var(--primary) 9%, var(--bg));
+    font-weight: 600;
+    color: var(--text);
+    z-index: 4;
+}
+.exec-module .exec-gantt .g-piste.g-entete-mois .g-cellule { font-size: 0.66rem; }
+/* Les deux cellules d'angle passent devant : elles sont figées dans les deux
+   sens et croisent aussi bien la colonne des noms que la graduation. */
+.exec-module .exec-gantt .g-annee,
+.exec-module .exec-gantt .g-entete-vide { z-index: 5; }
+
+/* Ligne de regroupement : le prestataire, au-dessus de ses activités. */
+.exec-module .exec-gantt .g-groupe {
+    background: color-mix(in srgb, var(--primary) 22%, var(--bg));
+    font-weight: 700;
+    color: var(--text);
+    border-top: 2px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+.exec-module .exec-gantt .g-compte {
+    margin-left: auto;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--bg, #fff);
+    border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-radius: 8px;
+    padding: 0 0.35rem;
+}
+.exec-module .exec-gantt .g-activite {
+    color: var(--text);
+    padding-left: 1.1rem;
+    line-height: 26px;
+}
+.exec-module .exec-gantt .g-activite-txt {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+/* Une ligne sur deux se détache, comme dans les tables du module. La parité
+   est posée au rendu : nth-of-type compterait tous les div frères, noms et
+   pistes confondus, et l'alternance partirait de travers. */
+.exec-module .exec-gantt .g-paire { background: color-mix(in srgb, var(--primary) 5%, var(--bg)); }
+/* Marque des activités hors plan de surveillance. */
+.exec-module .exec-gantt .g-hp {
+    flex-shrink: 0;
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #92400e;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 3px;
+    padding: 0 0.22rem;
+    line-height: 1.35;
+}
+.exec-module .exec-gantt .g-sans { color: var(--text-muted); font-style: italic; }
+.exec-module .exec-gantt .g-vide {
+    min-height: 60px;
+    justify-content: center;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.exec-module .exec-gantt .g-barre {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 0.4rem;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    overflow: hidden;
+    z-index: 1;
+    cursor: default;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.exec-module .exec-gantt .g-barre-txt {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.exec-module .exec-gantt .g-barre.etat-termine   { background: #16a34a; }
+.exec-module .exec-gantt .g-barre.etat-en_cours  { background: #f59e0b; }
+.exec-module .exec-gantt .g-barre.etat-planifie  { background: #2563eb; }
+.exec-module .exec-gantt .g-barre.etat-en_retard { background: #dc2626; }
+.exec-module .exec-gantt .g-alerte {
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #fff;
+    color: #dc2626;
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Fiche de survol, placée par execGanttInfo() : en position fixe, elle
+   échappe au rognage du cadre à défilement. */
+.exec-module .exec-gantt .g-infobulle {
+    display: none;
+    position: fixed;
+    z-index: 60;
+    min-width: 210px;
+    background: var(--bg, #fff);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.16);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.72rem;
+    color: var(--text);
+    white-space: nowrap;
+    pointer-events: none;
+}
+.exec-module .exec-gantt .g-infobulle .t {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-module .exec-gantt .g-infobulle span { color: var(--text-muted); }
+
+/* Repères verticaux et trait du jour, tendus sur toute la hauteur.
+   Hors flux : un élément de grille occupant la colonne des pistes sur toutes
+   les lignes empêcherait le placement automatique d'y arriver, et noms et
+   barres se retrouveraient tous dans la première colonne. */
+.exec-module .exec-gantt .g-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 220px;
+    right: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+.exec-module .exec-gantt .g-trait {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+}
+.exec-module .exec-gantt .g-aujourdhui {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dc2626;
+}
+
+/* Panneau latéral : filtres puis légende. */
+.exec-module .exec-gantt-panneau {
+    flex: 0 0 178px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+.exec-module .exec-gantt-panneau .g-bloc {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+}
+.exec-module .exec-gantt-panneau .g-bloc-titre {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+.exec-module .exec-gantt-panneau .g-bloc-vide { font-size: 0.72rem; color: var(--text-muted); }
+.exec-module .exec-gantt-panneau .g-case {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+    padding: 0.16rem 0;
+    cursor: pointer;
+    line-height: 1.25;
+}
+/* Largeur imposée : la règle générale du module étire tout input à 100 %. */
+.exec-module .exec-gantt-panneau .g-case input[type="checkbox"] {
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    min-width: 0;
+    flex: 0 0 14px;
+}
+.exec-module .exec-gantt-panneau .g-puce {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+    .exec-module .exec-suivi-corps { flex-direction: column; }
+    .exec-module .exec-gantt-panneau { flex: 1 1 auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .exec-module .exec-gantt-panneau .g-bloc { flex: 1 1 160px; }
+}
+
+.exec-module .exec-sg-taux.bon    { background: #dcfce7; color: #166534; }
+.exec-module .exec-sg-taux.moyen  { background: #fef3c7; color: #92400e; }
+.exec-module .exec-sg-taux.faible { background: #fee2e2; color: #991b1b; }
 
 .exec-slider-header {
     display: flex;
@@ -632,15 +1279,6 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
     border-top-right-radius: 6px;
 }
 
-.exchange-bubble-author {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin: 0 0 0.15rem 2.4rem;
-    padding-left: 0.15rem;
-    flex-grow: 0;
-    flex-shrink: 0;
-}
 .exchange-bubble-row.self .exchange-bubble-author {
     display: none;
 }
@@ -792,53 +1430,6 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
 /* ══════════════════════════════════════════════
    6. KPI CARDS (execution variant)
    ══════════════════════════════════════════════ */
-
-.exec-kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-.exec-kpi-card {
-    background: var(--bg-card);
-    border-radius: 10px;
-    padding: 0.6rem 0.9rem;
-    box-shadow: var(--shadow);
-    text-align: center;
-    border-left: 4px solid var(--kpi-color, var(--exec-accent));
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.exec-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.exec-kpi-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--kpi-color, var(--exec-accent));
-    line-height: 1.15;
-}
-
-.exec-kpi-label {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin-top: 0.15rem;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-.exec-kpi-trend {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-    font-size: 0.75rem;
-    margin-top: 0.35rem;
-    font-weight: 600;
-}
 
 .exec-kpi-trend.up { color: #10b981; }
 .exec-kpi-trend.down { color: #ef4444; }
@@ -1129,10 +1720,6 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
 
 .exec-form-grid .full-width {
     grid-column: 1 / -1;
-}
-
-.exec-form-grid .col-3 {
-    grid-template-columns: 1fr 1fr 1fr;
 }
 
 .exec-checklist-item.done {
@@ -1548,6 +2135,402 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 }
 .exec-proc-fin.closed { background: #16653422; color: #166534; }
 
+/* Fil d'avancement du Suivi des PAC : même composant que le processus d'une
+   activité, mais purement informatif — les étapes ne se parcourent pas. */
+.exec-pac-barre { padding-bottom: .6rem; margin-bottom: .75rem; }
+.exec-pac-barre .exec-proc-fil-sm { margin-bottom: 0; }
+/* Le fil des constatations hors activités se parcourt : ses étapes sont des
+   boutons, réglés comme ceux du fil du processus. */
+button.exec-pac-step { border: none; cursor: pointer; font-family: inherit; }
+button.exec-pac-step:disabled { cursor: not-allowed; }
+button.exec-pac-step.selected:not(.current) { background: var(--primary); color: #fff; }
+button.exec-pac-step:hover:not(:disabled) { filter: brightness(1.08); }
+button.exec-pac-step.verrouillee { opacity: .5; }
+
+/* Carte d'indicateur : une seconde ligne précise la mesure (part hors
+   activité, effectif derrière un taux) sans encombrer le chiffre. */
+/* Ligne d'échéance : référence, origine, objet, puis le délai à droite. */
+.exec-alerte-ligne {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: .6rem; padding: .3rem 0;
+}
+.exec-alerte-ligne + .exec-alerte-ligne { border-top: 1px solid var(--border); }
+.exec-alerte-origine {
+    display: inline-block; margin: 0 .3rem; padding: .02rem .35rem;
+    font-size: .68rem; font-weight: 600; border-radius: 3px;
+    background: #ede9fe; color: #5b21b6;
+}
+
+/* Décisions de l'étape Validation, sur la ligne du fil : le renvoi appelle à
+   corriger, le rejet arrête le circuit. */
+.exec-cd-renvoyer { color: #f97316; border-color: #f97316; }
+.exec-cd-rejeter { color: #ef4444; border-color: #ef4444; }
+
+/* Plan d'actions : l'intitulé de l'action et sa date prévue partagent une
+   ligne, la date calée à droite. */
+.exec-pac-ligne-action {
+    display: flex; align-items: center; gap: .75rem; margin-bottom: .3rem;
+}
+.exec-pac-ligne-action > label { flex: 1 1 auto; min-width: 0; }
+.exec-pac-date-inline {
+    display: flex; align-items: center; gap: .4rem; margin-left: auto; flex: 0 0 auto;
+}
+.exec-pac-date-inline label {
+    font-size: .72rem; color: var(--text-muted); white-space: nowrap; margin: 0;
+}
+.exec-pac-date-inline input {
+    width: auto; min-width: 9.5rem; font-size: .78rem; padding: .25rem .45rem;
+}
+
+/* Amendement du plan : champ divergent de la version acceptée, drapeau rouge
+   et objet de la modification sur une seule ligne sous le champ. */
+.exec-pac-motif { display: none; align-items: center; gap: .5rem; margin-top: .35rem; }
+.exec-pac-motif.visible { display: flex; }
+.exec-pac-drapeau { display: inline-flex; color: #dc2626; flex-shrink: 0; }
+.exec-pac-motif-champ {
+    font-size: .72rem; font-weight: 600; color: #b91c1c; white-space: nowrap; flex-shrink: 0;
+}
+.exec-pac-motif-valeur { font-size: .75rem; color: var(--text); }
+.exec-pac-motif-select { flex: 0 1 22rem; min-width: 0; font-size: .76rem; padding: .25rem .4rem; }
+.exec-pac-motif-precision { flex: 1 1 10rem; min-width: 0; font-size: .76rem; padding: .25rem .4rem; }
+textarea.exec-pac-champ-amende,
+input.exec-pac-champ-amende { border-color: #dc2626; }
+/* Motif exigé et resté vide : encerclé jusqu'à ce qu'il soit renseigné. */
+.exec-pac-manquant {
+    border: 2px solid #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .18);
+    border-radius: 6px;
+}
+/* Case à cocher de l'évaluation AAC. */
+.exec-pac-case {
+    display: flex; align-items: center; gap: .45rem;
+    font-size: .78rem; font-weight: 600; color: #065f46; cursor: pointer;
+}
+.exec-pac-case input { width: auto; flex: 0 0 auto; margin: 0; }
+/* Volet « Commentaires de suivi » : fil des commentaires, puis composeur
+   réservé à l'AAC — items visés, précision, texte. */
+.exec-suivi-liste {
+    flex: 1; min-height: 6rem; max-height: 55vh; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 6px; padding: .5rem;
+}
+.exec-suivi-comm {
+    padding: .4rem .55rem; margin-bottom: .35rem; font-size: .77rem;
+    background: #e0f2fe; border-left: 3px solid #0284c7; border-radius: 4px;
+}
+.exec-suivi-comm:last-child { margin-bottom: 0; }
+.exec-suivi-comm-tete { display: flex; justify-content: space-between; gap: .5rem; }
+.exec-suivi-comm-tete span { color: var(--text-muted); font-size: .7rem; white-space: nowrap; }
+.exec-suivi-comm-items { display: flex; flex-wrap: wrap; gap: .25rem; margin: .25rem 0; }
+.exec-suivi-comm-items span {
+    font-size: .68rem; font-weight: 600; padding: .1rem .4rem; border-radius: 10px;
+    background: #0284c722; color: #075985;
+}
+/* Sous-menu « Suivi Terrain » : chaque ligne se déplie sur le détail. */
+.exec-terrain-ligne { cursor: pointer; }
+.exec-terrain-ligne:hover { background: rgba(127, 150, 180, .08); }
+.exec-terrain-chevron {
+    display: inline-flex; vertical-align: middle; margin-right: .35rem;
+    transform: rotate(-90deg); transition: transform .2s; color: var(--text-muted);
+}
+.exec-terrain-chevron.ouvert { transform: rotate(0); }
+.exec-terrain-detail > td {
+    background: var(--bg); padding: .85rem 1rem 1rem !important;
+    border-left: 3px solid var(--exec-accent, #1f6fb2);
+}
+.exec-terrain-detail-corps { display: flex; flex-direction: column; gap: .6rem; }
+.exec-terrain-grille-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+.exec-terrain-grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+@media (max-width: 1100px) {
+    .exec-terrain-grille-3, .exec-terrain-grille-2 { grid-template-columns: 1fr; }
+}
+.exec-terrain-bloc {
+    display: flex; flex-direction: column;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: .55rem .7rem .6rem; font-size: .79rem; line-height: 1.45;
+}
+.exec-terrain-bloc-titre {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-muted); padding-bottom: .3rem; margin-bottom: .4rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-terrain-bloc-titre b {
+    font-size: .66rem; padding: .05rem .35rem; border-radius: 8px;
+    background: rgba(127, 150, 180, .18); color: var(--text);
+}
+.exec-terrain-bloc-corps { flex: 1; overflow-wrap: anywhere; }
+.exec-terrain-echeance {
+    flex: 0 0 auto; text-transform: none; letter-spacing: 0; font-weight: 700; font-size: .7rem;
+    padding: .1rem .4rem; border-radius: 10px; background: #d9770622; color: #92400e;
+}
+.exec-terrain-vide { color: var(--text-muted); }
+.exec-terrain-rappel-bloc { background: var(--bg-card); }
+.exec-terrain-champs {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .3rem .9rem;
+}
+.exec-terrain-champ { display: flex; flex-direction: column; gap: .05rem; }
+.exec-terrain-champ span {
+    font-size: .65rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted);
+}
+.exec-terrain-champ strong { font-size: .79rem; font-weight: 600; }
+.exec-terrain-description {
+    margin: .5rem 0 0; padding-top: .45rem; border-top: 1px dashed var(--border);
+    font-size: .79rem;
+}
+.exec-terrain-fil { max-height: 9rem; overflow-y: auto; }
+.exec-terrain-fil .exec-suivi-comm:last-child,
+.exec-terrain-fil .exec-suivi:last-child { margin-bottom: 0; }
+
+/* Accès aux discussions depuis le bandeau du formulaire PAC, à la place de la
+   croix. Rouge dès qu'un message n'a pas été lu. */
+.exec-pac-discussions {
+    display: inline-flex; align-items: center; gap: .4rem; flex: 0 0 auto;
+    padding: .3rem .7rem; border-radius: 20px; cursor: pointer;
+    font: inherit; font-size: .78rem; font-weight: 600;
+    background: #ffffff26; color: #fff; border: 1px solid #ffffff59;
+}
+.exec-pac-discussions:hover { background: #ffffff3d; }
+.exec-pac-discussions.alerte {
+    background: #dc2626; border-color: #dc2626; color: #fff !important;
+}
+.exec-pac-discussions svg { width: 15px; height: 15px; }
+.exec-pac-discussions-pastille,
+.exec-pac-discussions-compte {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.1rem; height: 1.1rem; padding: 0 .25rem; border-radius: 10px;
+    font-size: .68rem; font-weight: 700;
+}
+.exec-pac-discussions-pastille { background: #fff; color: #dc2626; }
+.exec-pac-discussions-compte { background: #ffffff33; color: #fff; }
+
+/* Tiroir des discussions : glisse depuis la droite, sur le tiers de l'écran. */
+/* Le tiroir épouse le volet : même bord supérieur, même bord inférieur. */
+.exec-pac-tiroir {
+    position: fixed; top: var(--topbar-height, 56px); right: 0; bottom: 0;
+    width: 33.333vw; min-width: 20rem;
+    z-index: 10002; display: flex; flex-direction: column;
+    background: var(--bg-card, #fff); border-left: 1px solid var(--border);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, .18);
+    transform: translateX(100%); transition: transform .28s ease;
+}
+.exec-pac-tiroir.ouvert { transform: translateX(0); }
+.exec-pac-tiroir-tete {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    padding: .8rem 1rem; font-weight: 700; font-size: .92rem;
+    background: var(--primary, #12406b); color: #fff;
+}
+.exec-pac-tiroir-tete button {
+    border: none; background: none; color: #fff; cursor: pointer; display: inline-flex;
+}
+.exec-pac-tiroir-corps { flex: 1; overflow-y: auto; padding: .9rem 1rem; }
+.exec-pac-tiroir-corps .exchange-chat { max-height: none; }
+@media (max-width: 900px) {
+    .exec-pac-tiroir { width: 100vw; min-width: 0; }
+}
+
+/* Commentaire encore au brouillon : liseré ambre et mention. */
+.exec-suivi-comm.brouillon { background: #fffbeb; border-left-color: #d97706; }
+.exec-suivi-brouillon {
+    font-style: normal; font-size: .66rem; font-weight: 700; color: #92400e;
+    background: #d9770622; padding: .05rem .35rem; border-radius: 8px; margin-right: .3rem;
+}
+.exec-suivi-comm-tete span { display: inline-flex; align-items: center; gap: .25rem; }
+.exec-suivi-action {
+    border: none; background: none; padding: 0 .1rem; cursor: pointer; display: inline-flex;
+    color: var(--text-muted);
+}
+.exec-suivi-action:hover { color: var(--text); }
+.exec-suivi-action.exec-suivi-supprimer:hover { color: #dc2626; }
+.exec-suivi-action svg { width: 13px; height: 13px; }
+.exec-suivi-tete span { display: inline-flex; align-items: center; gap: .25rem; }
+
+.exec-suivi-composeur { margin-top: .5rem; }
+.exec-suivi-items { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; }
+.exec-suivi-puce {
+    display: inline-flex; align-items: center; gap: .3rem; cursor: pointer;
+    font-size: .72rem; padding: .15rem .45rem; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--bg);
+}
+.exec-suivi-puce input { width: auto; margin: 0; flex: 0 0 auto; }
+.exec-suivi-puce:has(input:checked) { background: #0284c722; border-color: #0284c7; color: #075985; }
+.exec-suivi-precision { flex: 1 1 8rem; min-width: 0; font-size: .74rem; padding: .2rem .4rem; }
+.exec-suivi-saisie { display: flex; gap: .35rem; align-items: flex-end; margin-top: .4rem; }
+.exec-suivi-saisie textarea { flex: 1; font-size: .76rem; padding: .3rem; }
+.exec-suivi-saisie button { flex: 0 0 auto; white-space: nowrap; }
+
+/* Commentaires généraux de suivi : une entrée par suivi, datée et signée. */
+.exec-suivis { max-height: 11rem; overflow-y: auto; }
+.exec-suivi {
+    padding: .35rem .5rem; margin-bottom: .3rem; font-size: .76rem;
+    background: #e0f2fe; border-left: 3px solid #0284c7; border-radius: 4px;
+}
+.exec-suivi-tete {
+    display: flex; justify-content: space-between; gap: .5rem; margin-bottom: .15rem;
+}
+.exec-suivi-tete span { color: var(--text-muted); font-size: .7rem; white-space: nowrap; }
+
+/* Date de dépôt d'une pièce jointe. */
+.exec-preuve-date { font-size: .7rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+
+/* Pièces jointes du plan d'actions : numéro, intitulé, fichier, commentaire. */
+.exec-preuve {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: .4rem .55rem; margin-bottom: .35rem; background: var(--bg-card);
+}
+.exec-preuve-tete { display: flex; align-items: center; gap: .5rem; }
+.exec-preuve-num {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--exec-accent, #1f6fb2); color: #fff;
+    font-size: .7rem; font-weight: 700;
+}
+.exec-preuve-intitule {
+    flex: 1; min-width: 0; font-size: .8rem; font-weight: 600;
+    overflow-wrap: anywhere;
+}
+a.exec-preuve-intitule { color: var(--exec-accent, #1f6fb2); text-decoration: none; }
+a.exec-preuve-intitule:hover { text-decoration: underline; }
+.exec-preuve-comm {
+    margin: .3rem 0 0 1.75rem; padding: .3rem .5rem; font-size: .75rem;
+    background: var(--bg); border-left: 3px solid var(--exec-accent, #1f6fb2);
+    border-radius: 4px; overflow-wrap: anywhere;
+}
+
+/* Versions antérieures du plan d'actions. Bloc et versions se replient chacun
+   pour soi : sélecteurs d'enfant direct, sans emprunter `.exec-form-section`
+   dont la règle de dépliage porte sur toute la descendance. */
+.exec-pac-versions,
+.exec-pac-version {
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.exec-pac-versions { margin-top: .6rem; }
+.exec-pac-version + .exec-pac-version { margin-top: .4rem; }
+.exec-pac-versions-bandeau {
+    display: flex; align-items: center; gap: .6rem; width: 100%;
+    padding: .5rem .75rem; cursor: pointer; text-align: left;
+    font: inherit; font-size: .8rem; font-weight: 600; color: var(--text);
+    background: var(--bg); border: none; transition: background .2s;
+}
+.exec-pac-versions-bandeau:hover { background: var(--bg-card); }
+.exec-pac-versions-pastille {
+    display: flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    background: #64748b; color: #fff; font-size: .74rem; font-weight: 700;
+}
+.exec-pac-versions-titre { flex: 1; min-width: 0; }
+.exec-pac-versions-chevron {
+    display: inline-flex; margin-left: auto; color: var(--text-muted);
+    transform: rotate(-90deg); transition: transform .2s;
+}
+.exec-pac-versions.ouvert > .exec-pac-versions-bandeau,
+.exec-pac-version.ouvert > .exec-pac-versions-bandeau {
+    border-bottom: 1px solid var(--border);
+}
+.exec-pac-versions.ouvert > .exec-pac-versions-bandeau .exec-pac-versions-chevron,
+.exec-pac-version.ouvert > .exec-pac-versions-bandeau .exec-pac-versions-chevron {
+    transform: rotate(0);
+}
+.exec-pac-versions-corps,
+.exec-pac-version-corps { display: none; padding: .6rem .75rem; font-size: .78rem; }
+.exec-pac-versions.ouvert > .exec-pac-versions-corps,
+.exec-pac-version.ouvert > .exec-pac-version-corps { display: block; }
+
+/* Formulaire PAC : le plan d'actions occupe la largeur, les commentaires de
+   suivi se rabattent sur une poignée verticale à droite. */
+/* Rappel de la constatation : le récapitulatif à gauche, le journal de ses
+   modifications à droite. */
+.exec-rappel-rangee { display: flex; align-items: stretch; gap: .6rem; }
+.exec-rappel-corps { flex: 1 1 auto; min-width: 0; }
+.exec-ajust-liste { flex: 1; max-height: 220px; overflow-y: auto; }
+/* Les mesures de l'engagement sur une même ligne : ouverture, délai,
+   criticité, échéance. */
+.exec-ajust-mesures {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: .5rem; align-items: end;
+}
+.exec-ajust-mesures .form-group { margin-bottom: 0; }
+.exec-ajust-echeance { background: var(--bg); font-weight: 700; }
+.exec-ajust-vide { color: var(--text-muted); font-size: .77rem; }
+.exec-ajust-actions { display: inline-flex; gap: .3rem; margin-left: auto; flex-shrink: 0; }
+/* Le bandeau de section est sombre : les boutons s'y détachent en négatif. */
+.exec-module .exec-form-section-header .exec-ajust-btn {
+    padding: .1rem .5rem; font-size: .7rem; font-weight: 600; white-space: nowrap;
+    background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .55);
+    color: #fff;
+}
+.exec-module .exec-form-section-header .exec-ajust-btn:hover {
+    background: #fff; color: var(--primary); border-color: #fff;
+}
+.exec-ajust-changements { display: flex; flex-direction: column; gap: .15rem; margin: .25rem 0; }
+.exec-ajust-ligne {
+    display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; font-size: .72rem;
+}
+.exec-ajust-ligne .lib { color: var(--text-muted); font-weight: 600; }
+.exec-ajust-ligne .avant { text-decoration: line-through; color: var(--text-muted); }
+.exec-ajust-ligne .apres { font-weight: 700; color: var(--text); }
+.exec-ajust-ligne svg { width: 12px; height: 12px; }
+.exec-ajust-intro { font-size: .78rem; color: var(--text-muted); margin: 0 0 .6rem; }
+
+/* Fil de discussion d'une notification : même découpe que l'étape
+   Confirmation du processus — entête en lignes, puis blocs titrés. */
+.exec-echange-entete { margin-bottom: .75rem; }
+.exec-echange-dates { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.exec-echange-dates .form-group { margin-bottom: 0; }
+.exec-echange-lecture { font-size: .72rem; font-weight: 500; color: var(--text-muted); }
+.exec-proc-accord-actions { display: flex; justify-content: flex-end; margin-top: .6rem; }
+
+/* Actions d'une notification, côté prestataire : trois boutons de même
+   gabarit, empilés dans l'ordre du parcours — discuter, accuser, consulter. */
+.exec-notif-actions { display: flex; flex-direction: column; gap: .25rem; width: 190px; }
+.exec-notif-btn {
+    width: 100%; height: 20px; padding: 0 .5rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    font: inherit; font-size: .7rem; font-weight: 600; line-height: 1;
+    border-radius: 4px; border: 1px solid transparent; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exec-notif-btn.changement { background: #f97316; border-color: #ea580c; color: #fff; }
+.exec-notif-btn.accuser { background: #16a34a; border-color: #15803d; color: #fff; }
+.exec-notif-btn.apercu { background: #fff; border-color: #94a3b8; color: #1e293b; }
+.exec-notif-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.exec-notif-btn:disabled { opacity: .5; cursor: default; }
+.exec-suivi-comm-compte {
+    font-size: .68rem; font-weight: 700; padding: 0 .35rem; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--border); color: var(--text-muted);
+}
+@media (max-width: 1100px) {
+    .exec-rappel-rangee { flex-direction: column; }
+}
+
+.exec-pac-rangee {
+    display: flex; align-items: stretch; gap: .6rem; margin-top: .6rem;
+}
+.exec-pac-col-gauche { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.exec-pac-volet {
+    display: flex; align-items: stretch; flex: 0 0 auto;
+    transition: width .25s ease; width: 2.1rem;
+}
+/* Volet ouvert : la moitié de la largeur du formulaire. */
+.exec-pac-volet.ouvert { width: 50%; }
+.exec-pac-volet-poignee {
+    flex: 0 0 2.1rem; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    padding: .5rem .2rem; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 600;
+    color: #92400e; background: #fef3c7; border: 1px solid var(--border); border-radius: 6px;
+}
+.exec-pac-volet-poignee:hover { filter: brightness(.97); }
+.exec-pac-volet-titre { writing-mode: vertical-rl; white-space: nowrap; }
+.exec-pac-volet-chevron { display: flex; transform: rotate(90deg); }
+.exec-pac-volet.ouvert .exec-pac-volet-chevron { transform: rotate(-90deg); }
+.exec-pac-volet.ouvert .exec-pac-volet-titre { display: none; }
+.exec-pac-volet-corps { display: none; flex: 1 1 auto; min-width: 0; margin-left: .5rem; }
+.exec-pac-volet.ouvert .exec-pac-volet-corps { display: flex; flex-direction: column; }
+@media (max-width: 900px) {
+    .exec-pac-rangee { flex-direction: column; }
+    .exec-pac-volet, .exec-pac-volet.ouvert { width: 100%; }
+    .exec-pac-volet-titre { writing-mode: horizontal-tb; }
+    .exec-pac-volet-poignee { flex: 0 0 auto; flex-direction: row; }
+}
+
 /* Titre de l'étape, son état, ses sous-étapes et ses actions sur une ligne.
    Les informations de l'activité ne sont pas répétées : le bandeau les porte. */
 .exec-proc-titre {
@@ -1738,6 +2721,24 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 .fiche-cartouche-titre { font-size: .78rem; color: #64748b; margin-bottom: .2rem; }
 .fiche-cartouche-espace { height: 22mm; border: 1px solid #cbd5e1; border-radius: 3px; }
 .fiche-cartouche-nom { margin-top: .3rem; font-weight: 600; font-size: .84rem; }
+/* Accusé de réception : la réponse du prestataire, encadrée de vert pour
+   la distinguer de la fiche que l'Autorité a établie. */
+.fiche-accuse {
+    margin-top: 1.4rem;
+    padding: .8rem 1rem 1rem;
+    border: 2px solid #16a34a;
+    border-radius: 8px;
+}
+.fiche-accuse h2 { color: #15803d; border-bottom-color: #16a34a; }
+.fiche-accuse-texte { margin: .4rem 0 0; line-height: 1.6; }
+.fiche-accuse-perimetre { white-space: pre-line; }
+.fiche-accuse-pied {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.25rem;
+    margin-top: .9rem; padding-top: .6rem;
+    border-top: 1px solid #16a34a55;
+    font-size: .84rem; color: #166534;
+}
+
 .fiche-pied {
     margin-top: 1.6rem; padding-top: .5rem; border-top: 1px solid #cbd5e1;
     font-size: .72rem; color: #64748b; text-align: center;
@@ -1805,6 +2806,78 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 
 /* Message d'erreur du formulaire d'activité hors plan. */
 .exec-proc-erreur { margin: .5rem 0 0; color: #b91c1c; font-size: .82rem; }
+
+/* ── Paramètres → Checklists ───────────────────────────────────────────── */
+.exec-cl-card { padding: 0; overflow: hidden; }
+.exec-cl-entete {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: .6rem;
+    padding: .6rem .8rem; border-bottom: 1px solid var(--border);
+}
+.exec-cl-titre { display: flex; align-items: center; gap: .5rem; }
+.exec-cl-titre h3 { margin: 0; font-size: .95rem; }
+.exec-cl-total {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 20px; padding: 0 .4rem; border-radius: 10px;
+    background: var(--border); color: var(--text-muted);
+    font-size: .72rem; font-weight: 700;
+}
+.exec-cl-outils { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+/* Le champ de recherche porte son icône : pas de libellé à caser. */
+.exec-cl-recherche {
+    display: flex; align-items: center; gap: .35rem;
+    border: 1px solid var(--border); border-radius: 6px; padding: 0 .5rem;
+    background: var(--bg); color: var(--text-muted); height: 30px;
+}
+.exec-cl-recherche:focus-within { border-color: var(--primary, #2563eb); }
+.exec-cl-recherche input {
+    border: none; outline: none; background: transparent; color: var(--text);
+    font-size: .8rem; width: 190px; height: 100%; padding: 0;
+}
+
+/* Largeurs imposées : sans cela, les puces de portée — insécables — prennent
+   toute la place et le nom de la checklist se replie sur trois lignes. */
+.exec-cl-table { table-layout: fixed; }
+.exec-cl-table td { vertical-align: top; }
+.exec-cl-table td:first-child { overflow-wrap: anywhere; }
+.exec-cl-ref {
+    font-family: ui-monospace, Menlo, monospace; font-weight: 600; font-size: .78rem;
+    color: var(--text-muted);
+}
+.exec-cl-nom { font-weight: 600; line-height: 1.3; }
+.exec-cl-desc {
+    margin-top: .15rem; color: var(--text-muted); font-size: .78rem; line-height: 1.35;
+}
+/* Portée : domaine, secteur et sous-activité se distinguent par la teinte,
+   pour lire d'un coup à quel niveau la checklist s'applique. */
+.exec-cl-puce {
+    display: inline-block; margin: 0 .25rem .25rem 0; padding: .1rem .4rem;
+    border-radius: 4px; font-size: .72rem; font-weight: 600; white-space: nowrap;
+    border: 1px solid transparent;
+}
+.exec-cl-puce.dom { background: rgba(37, 99, 235, .1); color: #1d4ed8; border-color: rgba(37, 99, 235, .25); }
+.exec-cl-puce.sec { background: rgba(13, 148, 136, .1); color: #0f766e; border-color: rgba(13, 148, 136, .25); }
+.exec-cl-puce.sa { background: rgba(100, 116, 139, .12); color: #475569; border-color: rgba(100, 116, 139, .25); }
+.exec-cl-partout { color: var(--text-muted); font-size: .78rem; font-style: italic; }
+.exec-cl-compte {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 22px; padding: 0 .45rem; border-radius: 11px;
+    background: rgba(37, 99, 235, .1); color: #1d4ed8;
+    font-size: .76rem; font-weight: 700;
+}
+.exec-cl-compte.vide { background: var(--border); color: var(--text-muted); }
+.exec-cl-aucune { text-align: center; color: var(--text-muted); padding: 1.4rem; font-style: italic; }
+.exec-cl-portee-actions { float: right; font-weight: 400; font-size: .72rem; }
+.exec-cl-portee-actions a { color: var(--primary); text-decoration: none; margin-left: .5rem; }
+.exec-cl-portee-actions a:hover { text-decoration: underline; }
+
+/* Note de contexte au-dessus d'un champ : d'où vient la valeur proposée. */
+.exec-proc-note {
+    margin: 0 0 .7rem; padding: .5rem .7rem;
+    background: rgba(37, 99, 235, .06);
+    border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0;
+    color: var(--text-muted); font-size: .82rem; line-height: 1.45;
+}
 
 /* Périmètre d'une activité hors plan : sous-activités et thèmes à cocher. */
 .exec-hp-perimetre {
@@ -2067,6 +3140,23 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 }
 .exec-etats-table td.exec-etats-actions { overflow: visible; }
 
+/* Mes utilisateurs : des lignes assez hautes pour leurs pastilles, un
+   courriel qui se lit d'un trait, et des colonnes qui ne se serrent plus. */
+.exec-mes-users tbody td { height: 40px; padding-top: .35rem; padding-bottom: .35rem; }
+.exec-mes-users tbody tr:hover { background: var(--bg-hover, #f8fafc); }
+.exec-mes-users tbody tr.row-inactive { opacity: .6; }
+.exec-mes-users-mail {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .76rem;
+}
+/* Le masque et l'œil tiennent sur une ligne : sinon la ligne se creusait. */
+.exec-mes-users-pw { white-space: nowrap; }
+.exec-mes-users-pw .shell-btn-icon { vertical-align: middle; margin-left: .25rem; }
+.exec-mes-users thead th {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .04em;
+}
+/* Précision sous un champ de formulaire. */
+.shell-hint { display: block; margin-top: .2rem; font-size: .72rem; color: var(--text-muted); }
+
 /* Délai restant : le retard se voit, l'échéance proche se signale. */
 .exec-delai {
     display: inline-block; font-size: .72rem; font-weight: 700; white-space: nowrap;
@@ -2079,9 +3169,31 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 
 /* Paramètres → Délais */
 .exec-delais-table td { vertical-align: middle; }
+.exec-delai-nom { font-weight: 600; line-height: 1.3; }
 .exec-delai-aide { font-size: .74rem; color: var(--text-muted); font-weight: 400; margin-top: .1rem; }
-.exec-delai-champ { display: inline-block; width: 5.5rem; margin-right: .4rem; }
+.exec-delai-champ { display: inline-block; width: 5rem; margin-right: .4rem; }
 .exec-delai-unite { font-size: .76rem; color: var(--text-muted); }
+.exec-delai-saisie { white-space: nowrap; }
+
+/* Un délai se lit comme une course entre deux repères : montrer les deux
+   bornes évite d'avoir à deviner ce que le nombre saisi compte. */
+.exec-delai-course { font-size: .76rem; line-height: 1.5; }
+.exec-delai-borne {
+    display: inline-block; padding: .08rem .35rem; border-radius: 3px;
+    background: rgba(100, 116, 139, .1); color: var(--text);
+}
+.exec-delai-fleche { color: var(--text-muted); margin: 0 .25rem; }
+.exec-delai-ou { font-size: .74rem; color: var(--text-muted); }
+
+/* Le relevé se lit par processus : un bloc, son objet, puis ses attentes. */
+.exec-delai-groupe { margin-top: 1.1rem; }
+.exec-delai-groupe:first-of-type { margin-top: .6rem; }
+.exec-delai-groupe-entete {
+    display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+    padding: 0 0 .35rem; border-bottom: 2px solid var(--primary); margin-bottom: .1rem;
+}
+.exec-delai-groupe-entete h4 { margin: 0; font-size: .88rem; color: var(--primary); }
+.exec-delai-groupe-entete span { font-size: .76rem; color: var(--text-muted); }
 
 /* Sections d'« Actions en attentes » : des volets, dépliés là où une action
    est attendue. Un compteur au-delà d'une action se signale en rouge. */
@@ -2113,9 +3225,10 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 
 /* Colonne « Consultation » : des icônes seules, centrées dans la cellule. */
 .exec-etats-actions {
-    text-align: center; white-space: nowrap;
-    display: flex; justify-content: center; align-items: center; gap: .3rem;
+    text-align: center; white-space: nowrap; vertical-align: middle;
 }
+.exec-etats-actions > * { vertical-align: middle; }
+.exec-etats-actions > * + * { margin-left: .3rem; }
 .exec-etats-actions .btn-icon-only { padding: .25rem .45rem; line-height: 0; }
 
 /* Bouton d'action de page aligné sur la hauteur des boutons du processus. */
@@ -2186,4 +3299,577 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
     outline-offset: 2px;
     position: relative;
     z-index: 1;
+}
+
+/* Boutons d'export du menu Constatations : couleur du thème. */
+.exec-export-actions { display: flex; gap: .4rem; flex-wrap: wrap; flex: 0 0 auto; }
+.exec-export-actions .btn { white-space: nowrap; }
+
+/* ── Étape « Réalisation » : sections nettes, aides discrètes ── */
+.exec-real { display: flex; flex-direction: column; gap: .6rem; }
+.exec-real .exec-form-section { margin: 0; }
+.exec-real-bandeau {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .55rem .8rem; border-radius: 8px;
+    background: var(--exec-accent-bg, rgba(31, 111, 178, .08));
+    border: 1px solid var(--border);
+}
+.exec-real-bandeau p { margin: 0; font-size: .82rem; color: var(--text); }
+
+/* Courriel de transmission : la page de l'étape porte le message qui
+   accompagne le rapport validé, joint automatiquement. */
+.exec-courriel {
+    margin-top: 1rem; padding: .9rem 1rem;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card-bg, #fff);
+}
+.exec-courriel-entete {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    padding-bottom: .6rem; margin-bottom: .8rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-courriel-entete h4 { margin: 0; font-size: .95rem; }
+.exec-courriel-etat {
+    margin-left: auto; font-size: .78rem; color: #166534;
+    background: #dcfce7; border: 1px solid #86efac;
+    border-radius: 999px; padding: .12rem .6rem;
+}
+.exec-courriel .form-group { margin-bottom: .7rem; }
+.exec-courriel-copies { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.exec-courriel-pied {
+    display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+    padding-top: .7rem; border-top: 1px solid var(--border);
+}
+.exec-courriel-note {
+    margin: 0 0 .5rem; font-size: .78rem; color: var(--text-muted);
+}
+.exec-piece {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .35rem .6rem; margin-bottom: .35rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+}
+.exec-piece-icone { display: inline-flex; color: var(--text-muted); }
+.exec-piece-nom { font-size: .83rem; font-weight: 600; }
+a.exec-piece-nom { color: var(--primary); text-decoration: none; }
+a.exec-piece-nom:hover { text-decoration: underline; }
+.exec-piece-ouvrir {
+    display: inline-flex; align-items: center; color: var(--primary);
+    text-decoration: none; padding: 0 .2rem;
+}
+.exec-piece-intitule { flex: 1; font-size: .83rem; padding: .25rem .5rem; }
+.exec-piece-mention { margin-left: auto; font-size: .75rem; color: var(--text-muted); }
+.exec-piece-retirer { margin-left: 0; color: #ef4444; }
+.exec-piece-rapport { border-style: dashed; }
+.exec-courriel-pied .btn { margin-left: auto; }
+@media (max-width: 640px) {
+    .exec-courriel-copies { grid-template-columns: 1fr; }
+}
+
+/* Type de rapport : une ligne au-dessus des sections. La saisie libre, qui
+   n'apparaît que sur « AUTRE », précède la liste et occupe le reste. */
+.exec-type-rapport {
+    display: flex; align-items: flex-end; gap: .8rem; flex-wrap: wrap;
+    padding: .7rem .9rem; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--card-bg, #fff);
+}
+.exec-type-rapport .form-group { margin: 0; }
+.exec-type-rapport .form-group:first-child { flex: 1 1 240px; }
+.exec-type-rapport .form-group:last-child { flex: 0 0 280px; }
+@media (max-width: 640px) {
+    .exec-type-rapport .form-group { flex: 1 1 100%; }
+}
+.exec-real-bandeau span { display: inline-flex; color: var(--exec-accent, #1f6fb2); }
+.exec-real-lecture {
+    margin-left: auto; font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted);
+}
+.exec-form-section-badge {
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    min-width: 1.35rem; height: 1.35rem; padding: 0 .35rem; border-radius: 10px;
+    background: rgba(127, 150, 180, .18); color: var(--text);
+    font-size: .72rem; font-weight: 700;
+}
+/* L'explication de la section vit dans son bandeau, à droite du titre. */
+.exec-form-section-aide {
+    flex: 1 1 auto; min-width: 0; margin: 0;
+    font-size: .75rem; font-weight: 400; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exec-form-section-header:has(.exec-form-section-aide) .exec-form-section-title { flex: 0 0 auto; }
+@media (max-width: 900px) { .exec-form-section-aide { display: none; } }
+.exec-real-grille-4 {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: .75rem;
+}
+.exec-real-grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (max-width: 1100px) {
+    .exec-real-grille-4 { grid-template-columns: repeat(2, 1fr); }
+    .exec-real-grille-2 { grid-template-columns: 1fr; }
+}
+.exec-real-vide { color: var(--text-muted); font-size: .83rem; margin: 0; }
+
+/* Bandeaux d'en-tête de section : couleur du thème, contenu en blanc.
+   Les sections qui portent une couleur propre en style en ligne (évaluation
+   de l'AAC, commentaires de suivi) la conservent. */
+.exec-form-section-header {
+    background: var(--primary);
+    color: #fff;
+    border-bottom-color: transparent;
+}
+.exec-form-section-header:hover { background: var(--primary-hover, var(--primary)); filter: brightness(1.06); }
+.exec-form-section-header .exec-form-section-title { color: #fff; }
+.exec-form-section-header .exec-form-section-aide { color: #ffffffc4; }
+.exec-form-section-header .exec-form-section-chevron { color: #ffffffd9; }
+.exec-form-section-header .exec-form-section-letter {
+    background: #ffffff2e; color: #fff;
+}
+.exec-form-section-header .exec-form-section-badge { background: #ffffff2e; color: #fff; }
+.exec-form-section.expanded > .exec-form-section-header { border-bottom-color: transparent; }
+
+/* Deux bandeaux portent une teinte propre — le suivi (ambre) et l'évaluation
+   de l'AAC (vert). Sur un aplat pâle, le blanc du thème est illisible : leur
+   texte reprend la couleur foncée de la teinte. */
+.exec-form-section-header.exec-teinte-ambre { background: #fef3c7; }
+.exec-form-section-header.exec-teinte-ambre:hover { background: #fde68a; filter: none; }
+.exec-form-section-header.exec-teinte-vert { background: #ecfdf5; }
+.exec-form-section-header.exec-teinte-vert:hover { background: #d1fae5; filter: none; }
+.exec-teinte-ambre .exec-form-section-title,
+.exec-teinte-ambre .exec-form-section-chevron { color: #92400e; }
+.exec-teinte-ambre .exec-form-section-aide { color: #b4530a; }
+.exec-teinte-vert .exec-form-section-title,
+.exec-teinte-vert .exec-form-section-chevron { color: #065f46; }
+.exec-teinte-vert .exec-form-section-aide { color: #047857; }
+.exec-teinte-ambre .exec-form-section-badge { background: #92400e1f; color: #92400e; }
+.exec-teinte-vert .exec-form-section-badge { background: #065f461f; color: #065f46; }
+
+/* ── Résultats du Suivi ──────────────────────────────────────────
+   La section prend la couleur de l'état de la constatation : refus, PAC
+   accepté, vérification sur le terrain, mise en oeuvre effective. Chaque
+   teinte fournit un fond de bandeau, un fond d'encadré, une bordure et une
+   couleur de texte assez foncée pour rester lisible sur son aplat. */
+.exec-resultats {
+    --teinte-bandeau: #ecfdf5;
+    --teinte-fond: #f0fdf4;
+    --teinte-bord: #d1fae5;
+    --teinte-texte: #065f46;
+    border-color: var(--teinte-bord);
+}
+.exec-resultats.teinte-refuse {
+    --teinte-bandeau: #fee2e2; --teinte-fond: #fef2f2;
+    --teinte-bord: #fecaca; --teinte-texte: #991b1b;
+}
+.exec-resultats.teinte-accepte {
+    --teinte-bandeau: #ffedd5; --teinte-fond: #fff7ed;
+    --teinte-bord: #fed7aa; --teinte-texte: #9a3412;
+}
+.exec-resultats.teinte-terrain {
+    --teinte-bandeau: #dcfce7; --teinte-fond: #f0fdf4;
+    --teinte-bord: #bbf7d0; --teinte-texte: #166534;
+}
+.exec-resultats.teinte-clos {
+    --teinte-bandeau: #047857; --teinte-fond: #ecfdf5;
+    --teinte-bord: #059669; --teinte-texte: #064e3b;
+}
+.exec-resultats > .exec-form-section-header { background: var(--teinte-bandeau); }
+.exec-resultats > .exec-form-section-header:hover { filter: brightness(.97); }
+.exec-resultats > .exec-form-section-header .exec-form-section-title,
+.exec-resultats > .exec-form-section-header .exec-form-section-chevron { color: var(--teinte-texte); }
+.exec-resultats > .exec-form-section-header .exec-form-section-letter {
+    background: var(--teinte-texte); color: #fff;
+}
+/* Clôturé : le bandeau est plein, son texte repasse en blanc. */
+.exec-resultats.teinte-clos > .exec-form-section-header .exec-form-section-title,
+.exec-resultats.teinte-clos > .exec-form-section-header .exec-form-section-chevron { color: #fff; }
+.exec-resultats.teinte-clos > .exec-form-section-header .exec-form-section-letter {
+    background: #ffffff2e; color: #fff;
+}
+.exec-resultats-bloc {
+    border: 1px solid var(--teinte-bord); border-radius: 6px;
+    padding: .55rem .65rem; background: var(--teinte-fond);
+}
+.exec-resultats-bloc-titre {
+    font-weight: 600; font-size: .8rem; margin-bottom: .4rem; color: var(--teinte-texte);
+}
+
+/* Commentaires de suivi : un fond sur deux, pour suivre l'enfilade. */
+#pac_suivi_liste .exec-suivi-comm:nth-child(even) {
+    background: #eef6ff; border-left-color: #6366f1;
+}
+#pac_suivi_liste .exec-suivi-comm:nth-child(even) .exec-suivi-comm-items span {
+    background: #6366f122; color: #3730a3;
+}
+/* Le texte garde les retours à la ligne : la numérotation reste lisible. */
+.exec-suivi-comm-texte { white-space: pre-wrap; }
+
+/* Les suivis s'empilent : seul le dernier reste ouvert, les autres se
+   consultent d'un clic sur leur en-tête. */
+.exec-suivi-comm-tete { cursor: pointer; align-items: center; }
+/* Le chevron ouvre la ligne : le titre reste calé à gauche, la date à droite. */
+.exec-suivi-comm-tete > strong { margin-right: auto; }
+.exec-suivi-comm-chevron {
+    display: inline-flex; margin-right: .3rem; color: var(--text-muted);
+    transition: transform .15s;
+}
+.exec-suivi-comm-chevron svg { width: 13px; height: 13px; }
+.exec-suivi-comm.replie .exec-suivi-comm-chevron { transform: rotate(-90deg); }
+.exec-suivi-comm.replie .exec-suivi-comm-corps { display: none; }
+.exec-suivi-comm.replie { padding-top: .3rem; padding-bottom: .3rem; }
+
+/* Un suivi transmis porte son rang ; l'auteur passe à droite, en discret. */
+.exec-suivi-auteur { font-style: normal; color: var(--text-muted); margin-right: .3rem; }
+/* Le bloc de pièces jointes ne doit pas hériter du pre-wrap du texte. */
+.exec-suivi-comm-pj { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .3rem; }
+.exec-suivi-comm-pj a {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .72rem; color: var(--primary); text-decoration: none;
+    background: #ffffffb8; border: 1px solid var(--border); border-radius: 4px; padding: .1rem .35rem;
+}
+.exec-suivi-comm-pj a:hover { text-decoration: underline; }
+
+/* Composeur : pièces déposées avant l'ajout du commentaire. */
+.exec-suivi-pj { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .35rem; }
+.exec-suivi-pj #pac_suivi_pj_liste { display: flex; flex-wrap: wrap; gap: .3rem; }
+.exec-suivi-pj-item {
+    display: inline-flex; align-items: center; gap: .25rem; font-size: .72rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: .1rem .35rem;
+}
+.exec-suivi-pj-item button {
+    border: none; background: none; cursor: pointer; color: #ef4444; padding: 0; display: inline-flex;
+}
+
+/* Évaluation encore fermée : on dit pourquoi, plutôt que de ne rien montrer. */
+.exec-suivi-attente {
+    margin: .35rem 0 0; padding: .4rem .55rem; font-size: .74rem; font-style: italic;
+    color: #92400e; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 4px;
+}
+
+/* Bandeau de dénomination posé au-dessus d'un formulaire. */
+.exec-form-titre {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .55rem .9rem; border-radius: 8px 8px 0 0;
+    background: var(--primary); color: #fff;
+}
+.exec-form-titre h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+.exec-form-titre span { display: inline-flex; }
+.exec-form-titre-ref {
+    margin-left: auto; font-size: .78rem; font-weight: 600;
+    padding: .12rem .5rem; border-radius: 10px; background: #ffffff2e;
+}
+
+/* Formulaire de constatation : tiroir superposé au rapport, ancré à droite,
+   sur la moitié de l'écran. Liseré rouge pour le distinguer de son hôte. */
+.exec-fnc-tiroir {
+    position: fixed; top: var(--topbar-height, 56px); right: 0; bottom: 0;
+    width: 50vw; min-width: 420px; z-index: 1060;
+    display: flex; flex-direction: column;
+    background: var(--bg); border-left: 3px solid #dc2626;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, .22);
+    transform: translateX(100%); transition: transform .28s ease;
+}
+.exec-fnc-tiroir.ouvert { transform: translateX(0); }
+.exec-fnc-tiroir-tete {
+    display: flex; align-items: center; gap: .6rem; flex: 0 0 auto;
+    padding: .55rem .9rem; background: #b3261e; color: #fff;
+}
+.exec-fnc-tiroir-tete .exec-proc-retour { flex: 0 0 auto; }
+.exec-fnc-tiroir-titre {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: 1rem; font-weight: 700;
+}
+.exec-fnc-tiroir-corps { flex: 1; overflow-y: auto; padding: .9rem 1rem; }
+/* Le formulaire porte déjà son bandeau : celui du tiroir suffit. */
+.exec-fnc-tiroir-corps .exec-form-titre { background: #b3261e; }
+.exec-fnc-tiroir-pied {
+    flex: 0 0 auto; display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .6rem .9rem; border-top: 1px solid var(--border); background: var(--bg-card);
+}
+@media (max-width: 900px) { .exec-fnc-tiroir { width: 100vw; min-width: 0; } }
+
+/* Sections du formulaire de constatation : bandeaux en rouge clair, pour
+   rester dans la teinte du tiroir sans en reprendre l'intensité. */
+.exec-fnc-tiroir .exec-form-section-header { background: #fdeceb; }
+.exec-fnc-tiroir .exec-form-section-header:hover { background: #fbdedc; filter: none; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-title { color: #7f1d1d; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-aide { color: #b3261ec4; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-chevron { color: #b3261e; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-letter { background: #dc2626; color: #fff; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-badge { background: #dc26262e; color: #7f1d1d; }
+.exec-fnc-tiroir .exec-form-section.expanded > .exec-form-section-header { border-bottom-color: #f5c9c6; }
+
+/* Retour au Rapport : texte et icône en blanc sur le bandeau rouge. */
+.exec-fnc-tiroir-tete .exec-proc-retour,
+.exec-fnc-tiroir-tete .exec-proc-retour:hover {
+    color: #fff; border-color: #ffffff8c; background: #ffffff1f;
+}
+.exec-fnc-tiroir-tete .exec-proc-retour svg { color: #fff; }
+
+/* Fil d'avancement et titre de l'étape : ils restent en tête quand le corps
+   du volet défile. */
+.exec-proc-entete-collant {
+    /* Le corps du volet porte 1.25rem de marge : on l'annule pour que le
+       bandeau collant occupe toute la largeur, puis on la rétablit. */
+    position: sticky; top: -1.25rem; z-index: 6;
+    background: var(--bg);
+    margin: -1.25rem -1.25rem 0; padding: 1.25rem 1.25rem 0;
+    box-shadow: 0 6px 10px -8px rgba(0, 0, 0, .35);
+}
+.exec-proc-entete-collant .exec-proc-barre { margin-bottom: .6rem; }
+/* Le fil du formulaire « hors activités » est seul dans son bandeau : la
+   marge basse le sépare de la première section. */
+.exec-proc-entete-collant > .exec-pac-barre:only-child { margin-bottom: .8rem; }
+
+/* Motif de rejet, en tête du formulaire hors activités. */
+.exec-cd-rejet {
+    margin-bottom: .6rem; padding: .6rem .8rem;
+    background: #fef2f2; border-left: 4px solid #dc2626; border-radius: 4px;
+}
+.exec-cd-rejet strong { color: #dc2626; }
+.exec-cd-rejet div { margin-top: .3rem; white-space: pre-wrap; }
+.exec-cd-renvoi { background: #fff7ed; border-left-color: #f97316; }
+.exec-cd-renvoi strong { color: #f97316; }
+.exec-cd-arret {
+    margin: .35rem 0 0; font-size: .76rem; font-style: italic; color: #7f1d1d;
+}
+
+/* Le bandeau du journal se distingue des sections du formulaire : pas de
+   lettre, moitié moins haut, et rouge — c'est un incident de parcours. */
+.exec-cd-journal > .exec-form-section-header {
+    background: #dc2626;
+    /* Moitié de la hauteur d'une section : ni lettre, ni respiration. */
+    padding: .2rem 1.15rem;
+    min-height: 28px;
+    gap: .5rem;
+}
+.exec-cd-journal > .exec-form-section-header:hover { background: #b91c1c; filter: none; }
+.exec-cd-journal > .exec-form-section-header .exec-form-section-title { font-size: .82rem; }
+.exec-cd-journal > .exec-form-section-header .exec-form-section-badge { padding: 0 .35rem; }
+
+/* Journal des renvois et rejets, à l'étape Validation. */
+.exec-cd-decision {
+    padding: .45rem .6rem; margin-bottom: .4rem; font-size: .8rem;
+    background: #fff7ed; border-left: 3px solid #f97316; border-radius: 4px;
+}
+.exec-cd-decision.rejet { background: #fef2f2; border-left-color: #dc2626; }
+.exec-cd-decision:last-child { margin-bottom: 0; }
+.exec-cd-decision-tete {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    font-size: .72rem; color: var(--text-muted); margin-bottom: .2rem;
+}
+.exec-cd-decision-type { font-weight: 700; color: #9a3412; }
+.exec-cd-decision.rejet .exec-cd-decision-type { color: #991b1b; }
+.exec-cd-decision-rang { margin-right: auto; }
+.exec-cd-decision-motif { white-space: pre-wrap; }
+.exec-proc-entete-collant .exec-proc-titre { margin-bottom: 0; padding-bottom: .5rem; }
+
+/* ── Formulaire « Statistiques détaillées » ──────────────────────
+   Deux sous-menus : les indicateurs, puis la situation générale. */
+.exec-stats-onglets {
+    display: flex; gap: .35rem; margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-stats-onglet {
+    border: none; background: none; cursor: pointer; font-family: inherit;
+    padding: .45rem .9rem; font-size: .85rem; font-weight: 600;
+    color: var(--text-muted); border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+.exec-stats-onglet:hover { color: var(--text); }
+.exec-stats-onglet.actif { color: var(--primary); border-bottom-color: var(--primary); }
+.exec-stats-entete {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: .5rem; flex-wrap: wrap; margin-bottom: .75rem;
+}
+.exec-stats-entete h4 { margin: 0; }
+
+/* Détail d'un indicateur, sous les cartes du formulaire de statistiques. */
+.exec-stats-invite {
+    margin: 0; padding: 1.25rem; text-align: center; font-size: .82rem;
+    font-style: italic; color: var(--text-muted);
+    background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;
+}
+.exec-stats-detail {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .75rem .9rem;
+}
+.exec-stats-compte {
+    display: inline-block; margin-left: .4rem; padding: .05rem .45rem;
+    font-size: .72rem; font-weight: 700; border-radius: 999px;
+    background: var(--primary); color: #fff;
+}
+
+/* ── Chronologie : curseur à deux poignées ───────────────────────
+   La piste couvre la période disponible, la plage colorée ce qui est retenu.
+   Chaque poignée porte sa date ; la graduation nomme les mois et encadre par
+   les trimestres. */
+/* Chronologie compacte : le bloc tient sur la moitié de sa hauteur d'origine
+   — réserve des bulles, piste et graduation resserrées d'autant. */
+.exec-chrono {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .35rem .9rem .25rem; margin-bottom: .75rem;
+}
+.exec-chrono-tete {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: 0;
+}
+.exec-chrono-titre {
+    font-size: .82rem; font-weight: 700; color: var(--text);
+}
+.exec-chrono-raccourcis { margin-left: auto; display: flex; gap: .25rem; }
+.exec-chrono-btn {
+    border: 1px solid var(--border); background: var(--bg); cursor: pointer;
+    font-family: inherit; font-size: .68rem; font-weight: 600; color: var(--text-muted);
+    padding: .02rem .5rem; border-radius: 999px;
+}
+.exec-chrono-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* La zone du curseur réserve la hauteur des bulles au-dessus de la piste. */
+.exec-chrono-curseur { position: relative; padding-top: 22px; }
+.exec-chrono-bulle {
+    position: absolute; top: 0; transform: translateX(-50%);
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px;
+    box-shadow: var(--shadow); padding: 0 .35rem;
+    font-size: .66rem; line-height: 1.55; color: var(--text-muted); white-space: nowrap;
+    pointer-events: none;
+}
+.exec-chrono-bulle strong { color: var(--text); font-weight: 700; }
+
+.exec-chrono-piste {
+    position: relative; height: 13px; border-radius: 999px;
+    background: var(--border);
+}
+.exec-chrono-selection {
+    position: absolute; top: 0; bottom: 0; border-radius: 999px;
+    background: var(--primary);
+}
+/* Les deux curseurs se superposent : seule leur poignée reste saisissable. */
+.exec-chrono-poignee {
+    position: absolute; left: 0; top: 0; width: 100%; height: 13px;
+    margin: 0; background: none; appearance: none; -webkit-appearance: none;
+    pointer-events: none;
+}
+.exec-chrono-poignee:focus { outline: none; }
+.exec-chrono-poignee::-webkit-slider-thumb {
+    -webkit-appearance: none; pointer-events: auto; cursor: grab;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--primary); border: 3px solid var(--bg-card);
+    box-shadow: 0 0 0 1px var(--primary), var(--shadow);
+}
+.exec-chrono-poignee::-webkit-slider-thumb:active { cursor: grabbing; }
+.exec-chrono-poignee::-moz-range-thumb {
+    pointer-events: auto; cursor: grab;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--primary); border: 3px solid var(--bg-card);
+}
+.exec-chrono-poignee::-moz-range-track { background: none; }
+
+.exec-chrono-graduation {
+    position: relative; height: 17px; margin-top: .1rem;
+    border-top: 1px solid var(--border);
+}
+.exec-chrono-trait {
+    position: absolute; top: 0; width: 1px; height: 3px; background: var(--border);
+}
+.exec-chrono-mois-nom {
+    position: absolute; top: 5px; transform: translateX(-50%);
+    font-size: .64rem; color: var(--text-muted); white-space: nowrap;
+}
+.exec-chrono-trimestre {
+    position: absolute; top: 3px; font-size: .64rem; font-weight: 700; color: var(--text);
+}
+.exec-chrono-trimestre.gauche { left: 0; }
+.exec-chrono-trimestre.droite { right: 0; }
+
+/* Cycle de surveillance du prestataire retenu, en tête de la chronologie. */
+.exec-chrono-cycle {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .02rem .5rem; border-radius: 999px;
+    font-size: .68rem; font-weight: 700;
+    background: #ede9fe; color: #5b21b6; white-space: nowrap;
+}
+
+/* Bornes saisies au clavier, sur la ligne du titre de la chronologie. */
+.exec-chrono-date {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 600; color: var(--text-muted);
+    /* Le libellé et son champ tiennent sur une ligne : « Date Début » ne se
+       coupe pas en deux quand la barre se resserre. */
+    white-space: nowrap; flex: 0 0 auto;
+}
+.exec-chrono-date input {
+    font-family: inherit; font-size: .68rem; line-height: 1.25; color: var(--text);
+    padding: .02rem .3rem; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg);
+}
+.exec-chrono-date input:focus { outline: none; border-color: var(--primary); }
+
+/* ── Menu Processus : acteurs par étape ────────────────────────────────── */
+.exec-module .pcfg-etape {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .45rem .6rem;
+    margin-bottom: .4rem;
+}
+/* Une sous-étape se rattache visuellement à l'étape qui la précède. */
+.exec-module .pcfg-etape.sous {
+    margin-left: 1.2rem;
+    border-left: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    background: color-mix(in srgb, var(--primary) 4%, var(--bg));
+}
+.exec-module .pcfg-etape-tete {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .35rem;
+}
+.exec-module .pcfg-etape-nom { font-weight: 700; font-size: .82rem; }
+.exec-module .pcfg-etape-tete .btn { margin-left: auto; font-size: .7rem; padding: .1rem .5rem; }
+.exec-module .pcfg-acteurs { display: flex; flex-direction: column; gap: .3rem; }
+.exec-module .pcfg-acteur {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: .35rem;
+    align-items: center;
+}
+.exec-module .pcfg-acteur .pcfg-role-libre { grid-column: 1 / -2; }
+.exec-module .pcfg-acteur .form-control { font-size: .78rem; padding: .15rem .35rem; }
+.exec-module .pcfg-vide { color: var(--text-muted); font-size: .76rem; }
+/* Formulaire d'un processus : l'intitulé prend la ligne, les trois autres
+   champs se partagent la suivante. */
+.exec-module .pcfg-ligne-titre { margin-bottom: .5rem; }
+.exec-module .pcfg-ligne-trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.exec-module .pcfg-label-fort {
+    font-weight: 700;
+    color: var(--text);
+}
+.exec-module .pcfg-label-fort::first-letter { text-transform: uppercase; }
+
+/* ── Intervenants attendus à l'étape (menu Processus) ──────────────────── */
+.exec-module .exec-proc-attendus {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .4rem .75rem;
+    margin: .4rem 0 .6rem;
+    padding: .35rem .6rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary);
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+    font-size: .76rem;
+}
+/* L'étape est fermée au compte courant : le bandeau le dit avant le clic. */
+.exec-module .exec-proc-attendus.bloque {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+}
+.exec-module .exec-proc-attendus-titre {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: .68rem;
+    color: var(--text-muted);
+}
+.exec-module .exec-proc-attendu { white-space: nowrap; }
+.exec-module .exec-proc-attendu em { color: var(--text-muted); font-style: italic; }
+.exec-module .exec-proc-attendus-refus {
+    margin-left: auto;
+    font-weight: 700;
+    color: #b91c1c;
 }

@@ -15,15 +15,36 @@ const { valider } = require('../../valider');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
 // disent à partir de quand une étape est en retard.
+// Relevé des points d'attente des deux processus du module : chaque clé
+// correspond à un couple « date de départ enregistrée → événement attendu ».
+// Deux attentes n'apparaissent pas ici parce que leur durée se règle ailleurs :
+// le délai de solde d'une constatation vient du paramètre « Criticité », et
+// l'échéance de chaque action du PAC est saisie action par action.
 const DELAIS_DEFAUT = {
+  // ── Processus Activité ──
   notification_avant_activite: 30,
   validation_notification: 3,
   confirmation_prestataire: 7,
+  accuse_reception: 5,
   redaction_rapport: 15,
   validation_rapport: 7,
   transmission_rapport: 5,
+  cloture_dossier: 10,
   archivage_apres_cloture: 30,
+  // ── Processus Constatation ──
+  soumission_constatation: 10,
+  validation_constatation: 5,
+  correction_constatation: 7,
+  transmission_constatation: 5,
+  // ── Plan d'actions correctives ──
+  soumission_pac: 15,
+  acceptation_pac: 7,
+  correction_pac: 10,
+  verification_cloture: 10,
+  // ── Réglages de surveillance ──
   horizon_a_declencher: 3,           // mois
+  seuil_vigilance: 15,
+  seuil_urgence: 7,
 };
 
 function delais() {
@@ -216,6 +237,64 @@ module.exports = function register(app, deps, M) {
   };
   app.put(`${A}/:id/archiver`, requireAuth, archiverActivite(true));
   app.put(`${A}/:id/desarchiver`, requireAuth, archiverActivite(false));
+
+  // Archivage groupé des activités hors plan — le pendant, pour « Autres
+  // Activités », de l'archivage d'un plan de surveillance entier. La règle
+  // « seule une activité arrêtée ou clôturée s'archive » ne s'applique pas
+  // ici : ranger le porteur range ce qu'il porte, quel qu'en soit l'état.
+  // Les constatations issues de ces activités ne sont pas touchées.
+  app.put(`${A}/hors-plan-archiver`, requireAuth, (req, res) => {
+    const archive = req.body && req.body.archive === false ? 0 : 1;
+    const lot = db.list('notifications').filter((n) => n.hors_plan);
+    if (!lot.length) return res.json({ status: 'ok', archive, nombre: 0 });
+    const refuses = lot.filter((n) => !peutAdministrer(req, n));
+    if (refuses.length) {
+      return refuser(res, 'Archivage réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
+    }
+    const maintenant = db.now();
+    const champs = {
+      archive,
+      date_archivage: archive ? maintenant : '',
+      archive_par: archive ? req.user.username : '',
+    };
+    lot.forEach((n) => {
+      db.update('notifications', n.id, champs);
+      const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+      if (dossier) db.update('dossiers', dossier.id, { ...champs, date_maj: maintenant });
+    });
+    res.json({ status: 'ok', archive, nombre: lot.length });
+  });
+
+  // ── Réinitialisation d'une activité déclenchée ──────────────────────
+  // L'activité revient à l'état « non déclenchée » : notification, dossier et
+  // échanges disparaissent, la ligne du plan redevient déclenchable. Réservé
+  // au Gestionnaire du module. Une activité qui a déjà produit des
+  // constatations ou un rapport n'est pas réinitialisable : ces pièces
+  // survivraient sans dossier, et le prestataire les a déjà reçues.
+  app.put(`${A}/:id/reinitialiser`, requireAuth, (req, res) => {
+    const n = notifDeLActivite(req.params.id);
+    if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
+    if (!R.isAdmin(req.user, referentiels)
+      || !R.canValidate(req.user, perimetreActivite(n), referentiels)) {
+      return refuser(res, 'Réinitialisation réservée au gestionnaire du module, sur sa portée');
+    }
+    const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+    if (dossier) {
+      const constats = db.list('constatations').filter((c) => c.dossier_id === dossier.id);
+      const rapports = db.list('rapports').filter((r) => r.dossier_id === dossier.id);
+      if (constats.length || rapports.length) {
+        return res.status(400).json({
+          error: `Activité non réinitialisable : ${constats.length} constatation(s) et `
+            + `${rapports.length} rapport(s) en dépendent`,
+        });
+      }
+      db.remove('dossiers', dossier.id);
+    }
+    db.removeWhere('echanges', (e) => e.notification_id === n.id);
+    db.removeWhere('rappels', (r) => r.notification_id === n.id);
+    db.remove('notifications', n.id);
+    res.json({ status: 'ok' });
+  });
 
   // Suppression définitive : le super-administrateur du portail seul en
   // répond. Tout ce qui a été produit pour l'activité disparaît avec elle.

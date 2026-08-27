@@ -590,8 +590,10 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                                         const rouge = !!cv || hasRejet;
                                         return `<button class="btn-icon act-comment-flag${rouge ? ' has-comment' : ''}" onclick="planShowValidationComment('${a.id}')" title="${tp('validation_comment')}">${PLAN_ICONS.comment}</button>`;
                                     })()}
-                                    ${canEdit ? `<button class="btn-icon" onclick="planShowActivityModal('${a.plan_id}','${a.id}')" title="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
-                                    ${canEdit ? `<button class="btn-icon text-danger" onclick="planDeleteActivity('${a.id}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}
+                                    ${(canEdit && Number(a.verrouillee) === 1)
+                                        ? `<span class="plan-act-verrou" title="${_esc(tp('activite_verrouillee'))}">${PLAN_ICONS.lock || '🔒'}</span>`
+                                        : `${canEdit ? `<button class="btn-icon" onclick="planShowActivityModal('${a.plan_id}','${a.id}')" title="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
+                                    ${canEdit ? `<button class="btn-icon text-danger" onclick="planDeleteActivity('${a.id}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}`}
                                 </td>
                             </tr>
                             <tr class="hidden activity-detail-row">

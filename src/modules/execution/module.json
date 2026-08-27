@@ -14,7 +14,9 @@
     "en": "Conduct of oversight activities: notifications, execution files, findings (FNC/CAP) and audit reports.",
     "pt": "Condução dos atos de supervisão: notificações, processos de execução, constatações (FNC/PAC) e relatórios de auditoria."
   },
-  "apiPrefixes": ["/api/m/execution"],
+  "apiPrefixes": [
+    "/api/m/execution"
+  ],
   "auditModule": "SURV",
   "rightsModule": "SURV",
   "portalCode": "SURV",
@@ -24,6 +26,10 @@
     "superMenu": true,
     "order": 1
   },
-  "provides": [],
-  "requires": ["PLAN.plansValides"]
+  "provides": [
+    "SURV.activitesDeclenchees"
+  ],
+  "requires": [
+    "PLAN.plansValides"
+  ]
 }

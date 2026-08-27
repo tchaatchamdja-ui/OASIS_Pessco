@@ -36,18 +36,43 @@ function transport(smtp) {
 }
 
 function record(email, status, error) {
+  // Le journal garde la trace des pièces jointes, jamais leur contenu :
+  // data/emails.json resterait sinon illisible et grossirait sans fin.
+  const { attachments, ...entete } = email;
+  const trace = (attachments || []).map((p) => p.filename);
   const box = store.load('emails', []);
-  box.push({ id: box.length + 1, ts: new Date().toISOString(), status, error: error || null, ...email });
+  box.push({
+    id: box.length + 1, ts: new Date().toISOString(), status, error: error || null,
+    ...entete, ...(trace.length ? { pieces_jointes: trace } : {}),
+  });
   store.save('emails', box.slice(-500));
 }
 
+// Renvoie une promesse : les envois ordinaires l'ignorent (file d'attente),
+// ceux qui engagent l'administration — la transmission d'un rapport — peuvent
+// l'attendre pour ne rien acter qui ne soit parti.
 function queue(email) {
   const smtp = loadSmtp();
   const tr = transport(smtp);
-  if (!tr) { record(email, 'queued'); return; }
-  tr.sendMail({ from: smtp.from || `${APP} <no-reply@localhost>`, to: email.to, subject: email.subject, text: email.body })
-    .then((info) => record({ ...email, messageId: info.messageId }, 'sent'))
-    .catch((err) => record(email, 'error', String(err && err.message || err)));
+  if (!tr) { record(email, 'queued'); return Promise.resolve({ status: 'queued' }); }
+  return tr.sendMail({
+    from: smtp.from || `${APP} <no-reply@localhost>`,
+    to: email.to,
+    cc: email.cc || undefined,
+    bcc: email.bcc || undefined,
+    subject: email.subject,
+    text: email.body,
+    attachments: (email.attachments || []).length ? email.attachments : undefined,
+  })
+    .then((info) => {
+      record({ ...email, messageId: info.messageId }, 'sent');
+      return { status: 'sent', messageId: info.messageId };
+    })
+    .catch((err) => {
+      const motif = String((err && err.message) || err);
+      record(email, 'error', motif);
+      return { status: 'error', error: motif };
+    });
 }
 
 function accountCreated({ to, name, username, password }) {
@@ -115,4 +140,16 @@ function list() {
   return store.load('emails', []);
 }
 
-module.exports = { queue, accountCreated, passwordReset, mfaCode, verify, list };
+// État du canal d'envoi, pour que l'appelant sache si un message peut partir.
+function etatSmtp() {
+  const smtp = loadSmtp();
+  return {
+    actif: !!(nodemailer && smtp.enabled && smtp.host),
+    host: smtp.host || '',
+    port: smtp.port || 0,
+    raison: !nodemailer ? 'nodemailer_absent'
+      : (!smtp.enabled ? 'smtp_desactive' : (!smtp.host ? 'hote_manquant' : '')),
+  };
+}
+
+module.exports = { queue, accountCreated, passwordReset, mfaCode, verify, list, etatSmtp };

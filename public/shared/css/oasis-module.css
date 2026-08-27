@@ -759,3 +759,96 @@ body.app-sidebar-collapsed .pr-slicer-overlay { left: var(--sidebar-collapsed, 6
 }
 /* Le contour ne doit pas être masqué par un conteneur qui rogne. */
 .nav-btn:focus-visible, .exec-tab:focus-visible, .shell-btn-icon:focus-visible { position: relative; z-index: 1; }
+
+/* ══════════════════════════════════════════════════════════════════
+   Cartes d'indicateurs — socle commun aux tableaux de bord
+   Intitulé en tête, mesure à gauche, figure à droite. Les groupes se
+   partagent la largeur ; les cartes gardent la même hauteur d'un groupe
+   à l'autre, deux grilles distinctes ne s'égalisant pas d'elles-mêmes.
+   ══════════════════════════════════════════════════════════════════ */
+.oasis-kpi-groupes {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;
+}
+.oasis-kpi-groupes.pleine { grid-template-columns: 1fr; }
+.oasis-kpi-groupe > h3 {
+    margin: 0 0 .5rem; font-size: .8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted);
+}
+.oasis-kpi-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem;
+}
+.oasis-kpi-grid.quatre { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.oasis-kpi-grid.cinq { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* Un groupe de cinq mesures se déploie sur toute la largeur : ses cartes
+   tiennent alors sur une seule ligne. */
+.oasis-kpi-groupes.cinq .oasis-kpi-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.oasis-kpi-card {
+    display: flex; flex-direction: column; gap: .35rem;
+    background: var(--bg-card); border-radius: 10px;
+    padding: .55rem .7rem; height: 92px; overflow: hidden;
+    box-shadow: var(--shadow); border-left: 4px solid var(--kpi-color, var(--primary));
+    transition: transform .2s, box-shadow .2s;
+}
+.oasis-kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.oasis-kpi-tete {
+    font-size: .82rem; font-weight: 700; color: var(--text); line-height: 1.15;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.oasis-kpi-corps {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .5rem; flex: 1; min-height: 0;
+}
+.oasis-kpi-mesure { min-width: 0; }
+.oasis-kpi-value {
+    font-size: calc(1.3rem + 2pt); font-weight: 700; line-height: 1.1;
+    color: var(--kpi-color, var(--primary));
+}
+.oasis-kpi-sub {
+    margin-top: .15rem; font-size: .68rem; color: var(--text-muted); line-height: 1.25;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.oasis-kpi-visuel {
+    flex: 0 0 auto; color: var(--kpi-color, var(--primary));
+    display: flex; align-items: center; justify-content: flex-end;
+}
+.oasis-kpi-fig { width: 44px; height: 44px; }
+.oasis-kpi-fig-large { width: 50px; height: 44px; }
+.oasis-kpi-fig-retard { display: flex; flex-direction: column; align-items: center; gap: .1rem; }
+.oasis-kpi-pastille {
+    font-size: .62rem; font-weight: 700; color: #fff; background: var(--kpi-color, #dc2626);
+    padding: .05rem .4rem; border-radius: 3px; white-space: nowrap;
+}
+.oasis-kpi-fig-ligne { width: 62px; height: 16px; }
+.oasis-kpi-fig-legende { font-size: .6rem; color: var(--text-muted); }
+.oasis-kpi-fig-echelle { display: flex; flex-direction: column; gap: .15rem; width: 72px; }
+.oasis-kpi-fig-barre { width: 72px; height: 14px; }
+.oasis-kpi-fig-bornes {
+    display: flex; justify-content: space-between; font-size: .58rem; color: var(--text-muted);
+}
+.oasis-kpi-fig-etapes { display: flex; flex-direction: column; gap: .12rem; }
+.oasis-kpi-etape {
+    font-size: .6rem; font-weight: 600; text-align: center; white-space: nowrap;
+    padding: .05rem .35rem; border-radius: 3px;
+    border: 1px solid var(--border); color: var(--text-muted);
+}
+.oasis-kpi-etape.actif {
+    background: var(--kpi-color, var(--primary)); border-color: transparent; color: #fff;
+}
+@media (max-width: 1250px) {
+    .oasis-kpi-groupes.cinq .oasis-kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+    .oasis-kpi-groupes { grid-template-columns: 1fr; }
+    .oasis-kpi-grid.quatre, .oasis-kpi-grid.cinq { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .oasis-kpi-groupes.cinq .oasis-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Carte servant de filtre : elle réagit au survol et se marque quand elle
+   commande ce qui est affiché en dessous. */
+.oasis-kpi-card.cliquable { cursor: pointer; }
+.oasis-kpi-card.cliquable:hover { border-left-width: 6px; }
+.oasis-kpi-card.actif {
+    border-left-width: 6px;
+    box-shadow: 0 0 0 2px var(--kpi-color, var(--primary)) inset, var(--shadow);
+}

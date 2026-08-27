@@ -9,40 +9,161 @@ const EXEC_ETATS_DELAIS_DEFAUT = {
   notification_avant_activite: 30,
   validation_notification: 3,
   confirmation_prestataire: 7,
+  accuse_reception: 5,
   redaction_rapport: 15,
   validation_rapport: 7,
   transmission_rapport: 5,
+  cloture_dossier: 10,
   archivage_apres_cloture: 30,
+  soumission_constatation: 10,
+  validation_constatation: 5,
+  correction_constatation: 7,
+  transmission_constatation: 5,
+  soumission_pac: 15,
+  acceptation_pac: 7,
+  correction_pac: 10,
+  verification_cloture: 10,
   horizon_a_declencher: 3,
+  seuil_vigilance: 15,
+  seuil_urgence: 7,
 };
 
-// Intitulés et portée de chaque délai, tels qu'ils se lisent dans Paramètres.
-const EXEC_ETATS_DELAIS_DESCRIPTION = [
-  { cle: 'notification_avant_activite', libelle: 'Notification avant l’activité',
-    aide: 'Jours avant la date de début où l’activité doit être déclenchée.', unite: 'jours' },
-  { cle: 'validation_notification', libelle: 'Validation de la notification',
-    aide: 'Jours pour valider une notification soumise.', unite: 'jours' },
-  { cle: 'confirmation_prestataire', libelle: 'Confirmation de l’activité',
-    aide: 'Jours pour confirmer l’activité après transmission au prestataire.', unite: 'jours' },
-  { cle: 'redaction_rapport', libelle: 'Soumission du projet de rapport',
-    aide: 'Jours après la fin de l’activité pour soumettre le rapport.', unite: 'jours' },
-  { cle: 'validation_rapport', libelle: 'Validation du rapport',
-    aide: 'Jours pour valider un rapport soumis.', unite: 'jours' },
-  { cle: 'transmission_rapport', libelle: 'Transmission du rapport',
-    aide: 'Jours pour transmettre au prestataire un rapport validé.', unite: 'jours' },
-  { cle: 'archivage_apres_cloture', libelle: 'Archivage du dossier clôturé',
-    aide: 'Jours après la clôture du dossier au terme desquels l’archivage est attendu.', unite: 'jours' },
-  { cle: 'horizon_a_declencher', libelle: 'Horizon « à déclencher »',
-    aide: 'Mois à venir pris en compte dans la liste des activités à déclencher.', unite: 'mois' },
+// Relevé des attentes des deux processus du module. Chaque entrée nomme le
+// point de départ (`depuis`) et l'événement attendu (`jusqua`) : c'est ce
+// couple qui rend le délai calculable, et l'écran le montre pour qu'on sache
+// exactement ce que le nombre saisi compte. `ou` dit où le retard se voit.
+const EXEC_ETATS_DELAIS_GROUPES = [
+  {
+    cle: 'activite',
+    titre: 'Processus Activité',
+    aide: 'De la préparation de la notification à l’archivage du dossier.',
+    delais: [
+      { cle: 'notification_avant_activite', libelle: 'Déclenchement de l’activité',
+        depuis: 'Date de début planifiée', jusqua: 'Notification créée',
+        aide: 'Jours avant la date de début où l’activité doit être déclenchée.',
+        unite: 'jours', ou: 'États → À déclencher' },
+      { cle: 'validation_notification', libelle: 'Validation de la notification',
+        depuis: 'Soumission de la notification', jusqua: 'Notification validée',
+        aide: 'Jours pour valider une notification soumise.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'confirmation_prestataire', libelle: 'Confirmation de l’activité',
+        depuis: 'Envoi de la notification', jusqua: 'Dates confirmées par le prestataire',
+        aide: 'Jours pour confirmer l’activité après transmission au prestataire.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'accuse_reception', libelle: 'Accusé de réception',
+        depuis: 'Envoi de la notification', jusqua: 'Réception accusée par le prestataire',
+        aide: 'Jours pour que le prestataire accuse réception de la notification.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'redaction_rapport', libelle: 'Soumission du projet de rapport',
+        depuis: 'Fin de l’activité', jusqua: 'Rapport soumis',
+        aide: 'Jours après la fin de l’activité pour soumettre le rapport.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'validation_rapport', libelle: 'Validation du rapport',
+        depuis: 'Soumission du rapport', jusqua: 'Rapport validé',
+        aide: 'Jours pour valider un rapport soumis.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'transmission_rapport', libelle: 'Transmission du rapport',
+        depuis: 'Validation du rapport', jusqua: 'Rapport transmis au prestataire',
+        aide: 'Jours pour transmettre au prestataire un rapport validé.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'cloture_dossier', libelle: 'Clôture du dossier',
+        depuis: 'Transmission du rapport', jusqua: 'Dossier clôturé',
+        aide: 'Jours après la transmission du rapport pour clôturer le dossier d’activité.',
+        unite: 'jours', ou: 'États → En cours' },
+      { cle: 'archivage_apres_cloture', libelle: 'Archivage du dossier clôturé',
+        depuis: 'Clôture du dossier', jusqua: 'Dossier archivé',
+        aide: 'Jours après la clôture du dossier au terme desquels l’archivage est attendu.',
+        unite: 'jours', ou: 'États → Clôturées' },
+    ],
+  },
+  {
+    cle: 'constatation',
+    titre: 'Processus Constatation',
+    aide: 'Circuit d’une constatation, de sa préparation à sa remise au prestataire.',
+    delais: [
+      { cle: 'soumission_constatation', libelle: 'Soumission de la constatation',
+        depuis: 'Ouverture de la constatation', jusqua: 'Constatation soumise',
+        aide: 'Jours pour soumettre à validation une constatation en préparation.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'validation_constatation', libelle: 'Validation de la constatation',
+        depuis: 'Soumission de la constatation', jusqua: 'Constatation validée, renvoyée ou rejetée',
+        aide: 'Jours pour statuer sur une constatation soumise.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'correction_constatation', libelle: 'Correction après renvoi',
+        depuis: 'Renvoi de la constatation', jusqua: 'Constatation soumise à nouveau',
+        aide: 'Jours pour corriger et resoumettre une constatation renvoyée.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'transmission_constatation', libelle: 'Transmission de la constatation',
+        depuis: 'Validation de la constatation', jusqua: 'Constatation transmise au prestataire',
+        aide: 'Jours pour transmettre au prestataire une constatation validée.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+    ],
+  },
+  {
+    cle: 'pac',
+    titre: 'Plan d’actions correctives',
+    aide: 'Réponse du prestataire à une constatation ouverte, et son solde.',
+    delais: [
+      { cle: 'soumission_pac', libelle: 'Soumission du PAC',
+        depuis: 'Transmission de la constatation', jusqua: 'PAC soumis par le prestataire',
+        aide: 'Jours laissés au prestataire pour soumettre son plan d’actions.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'acceptation_pac', libelle: 'Acceptation du PAC',
+        depuis: 'Soumission du PAC', jusqua: 'PAC accepté ou rejeté',
+        aide: 'Jours pour statuer sur un plan d’actions soumis.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'correction_pac', libelle: 'Correction du PAC rejeté',
+        depuis: 'Rejet du PAC', jusqua: 'PAC soumis à nouveau',
+        aide: 'Jours pour reprendre et resoumettre un plan d’actions rejeté.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'verification_cloture', libelle: 'Vérification et clôture',
+        depuis: 'Échéance de solde de la constatation', jusqua: 'Constatation soldée',
+        aide: 'Jours après l’échéance de solde pour vérifier les actions et clôturer.',
+        unite: 'jours', ou: 'Cloche des alertes' },
+    ],
+  },
+  {
+    cle: 'surveillance',
+    titre: 'Réglages de surveillance',
+    aide: 'Ce que les écrans montrent, et à partir de quand ils alertent.',
+    delais: [
+      { cle: 'horizon_a_declencher', libelle: 'Horizon « à déclencher »',
+        depuis: 'Aujourd’hui', jusqua: 'Dernière activité listée',
+        aide: 'Mois à venir pris en compte dans la liste des activités à déclencher.',
+        unite: 'mois', ou: 'États → À déclencher' },
+      { cle: 'seuil_vigilance', libelle: 'Seuil de vigilance',
+        depuis: 'Échéance de l’étape', jusqua: 'Badge orange',
+        aide: 'Jours restants en deçà desquels une échéance passe en vigilance.',
+        unite: 'jours', ou: 'Tous les badges de délai' },
+      { cle: 'seuil_urgence', libelle: 'Seuil d’urgence',
+        depuis: 'Échéance de l’étape', jusqua: 'Badge rouge',
+        aide: 'Jours restants en deçà desquels une échéance passe en urgence.',
+        unite: 'jours', ou: 'Tous les badges de délai' },
+    ],
+  },
 ];
+
+// Attentes du module dont la durée ne se règle pas ici : le relevé serait
+// trompeur s'il les passait sous silence.
+const EXEC_ETATS_DELAIS_AILLEURS = [
+  { libelle: 'Délai de solde d’une constatation',
+    depuis: 'Ouverture de la constatation', jusqua: 'Échéance de solde',
+    source: 'Paramètres → Criticité (colonne « Délai de clôture »)' },
+  { libelle: 'Échéance d’une action corrective',
+    depuis: 'Acceptation du PAC', jusqua: 'Action réalisée',
+    source: 'Saisie action par action dans le PAC' },
+];
+
+// Liste à plat : la lecture et l'enregistrement travaillent clé par clé.
+const EXEC_ETATS_DELAIS_DESCRIPTION = EXEC_ETATS_DELAIS_GROUPES
+  .reduce((acc, g) => acc.concat(g.delais), []);
 
 const EXEC_ETATS = { sub: 'a_declencher', delais: { ...EXEC_ETATS_DELAIS_DEFAUT }, ouvertes: {} };
 
 // Arrêter ou archiver une activité relève de l'administration du parc : les
 // rôles portail SUPERADMIN et ADMIN AAC seuls, dans leur portée (le serveur
 // vérifie le domaine et le secteur).
-const execEtatsPeutAdministrer = () => ['SUPERADMIN', 'ADMIN']
-  .includes((EXEC_STATE.user || {}).role) && _execCanValidate();
+const execEtatsPeutAdministrer = () => _execAdministreParc();
 const execEtatsEstSuperadmin = () => (EXEC_STATE.user || {}).role === 'SUPERADMIN';
 
 // ── Dates ──
@@ -69,12 +190,17 @@ const execEtatsPlus = (v, jours) => {
   return d;
 };
 
-// Badge de délai : « J-5 », « Aujourd’hui », « 3 j de retard ».
+// Badge de délai : « J-5 », « Aujourd’hui », « 3 j de retard ». Les deux
+// seuils viennent des paramètres : ce qui est urgent pour une autorité ne
+// l'est pas pour une autre.
 function execEtatsBadgeDelai(jours) {
   if (jours === null || jours === undefined) return '<span class="exec-delai">—</span>';
   if (jours < 0) return `<span class="exec-delai retard">${Math.abs(jours)} j de retard</span>`;
   if (jours === 0) return '<span class="exec-delai urgent">Aujourd’hui</span>';
-  const classe = jours <= 7 ? 'urgent' : (jours <= 15 ? 'proche' : '');
+  const D = EXEC_ETATS.delais || EXEC_ETATS_DELAIS_DEFAUT;
+  const urgence = D.seuil_urgence || EXEC_ETATS_DELAIS_DEFAUT.seuil_urgence;
+  const vigilance = D.seuil_vigilance || EXEC_ETATS_DELAIS_DEFAUT.seuil_vigilance;
+  const classe = jours <= urgence ? 'urgent' : (jours <= vigilance ? 'proche' : '');
   return `<span class="exec-delai ${classe}">J-${jours}</span>`;
 }
 
@@ -103,12 +229,14 @@ function execEtatsLignes() {
   };
 
   const lignes = [];
-  plans.forEach((plan) => {
+  const ajouterPlan = (plan, planArchive) => {
     (plan.activites || []).forEach((a) => {
       const notif = notifs.find((n) => n.activite_id === a.id) || null;
       const dossier = notif ? dossiers.find((d) => d.notification_id === notif.id) || null : null;
       lignes.push({
         planId: plan.id, activiteId: a.id, horsPlan: false,
+        planNom: plan.titre || plan.reference || '',
+        planArchive, planArchiveLe: planArchive ? (plan.archiver_le || '') : '',
         objet: a.objet || a.description || '',
         prestataire: a.prestataire_nom || '',
         debut: a.date_debut || '', fin: a.date_fin || '',
@@ -118,12 +246,18 @@ function execEtatsLignes() {
         rapports: dossier ? rapports.filter((r) => r.dossier_id === dossier.id) : [],
       });
     });
-  });
+  };
+  plans.forEach((plan) => ajouterPlan(plan, false));
+  // Les activités d'un plan archivé restent consultables : elles ne sortent
+  // des états courants que pour rejoindre l'onglet des archives.
+  (EXEC_STATE.data.plansArchivesPlanif || []).forEach((plan) => ajouterPlan(plan, true));
   // Activités hors plan : la notification en tient lieu.
   notifs.filter((n) => n.hors_plan).forEach((n) => {
     const dossier = dossiers.find((d) => d.notification_id === n.id) || null;
     lignes.push({
       planId: 'hors-plan', activiteId: n.id, horsPlan: true,
+      planNom: 'Autres Activités',
+      planArchiveLe: Number(n.archive) === 1 ? (n.date_archivage || '') : '',
       objet: n.objet_activite || '',
       prestataire: n.prestataire_nom || '',
       debut: n.date_activite || '', fin: n.date_fin_effective || '',
@@ -145,7 +279,7 @@ function execEtatsRepartir() {
   horizon.setMonth(horizon.getMonth() + (D.horizon_a_declencher || 3));
 
   const aDeclencher = lignes
-    .filter((l) => !l.notif && !l.horsPlan)
+    .filter((l) => !l.notif && !l.horsPlan && !l.planArchive)
     .filter((l) => {
       const d = execEtatsDate(l.debut);
       return d && d <= horizon;
@@ -159,11 +293,11 @@ function execEtatsRepartir() {
 
   const enCours = {
     brouillons: [], validation_notif: [], confirmation: [],
-    rapport: [], validation_rapport: [], transmission: [],
+    rapport: [], validation_rapport: [], transmission: [], cloture: [],
   };
   lignes.forEach((l) => {
     const n = l.notif;
-    if (!n) return;
+    if (!n || l.planArchive || Number(n.archive) === 1) return;
     const d = l.dossier;
     if (d && d.statut === 'cloture') return;
     const soumis = execEtatsRapportsPar(l, ['soumis']);
@@ -175,11 +309,27 @@ function execEtatsRepartir() {
     } else if (n.statut === 'soumis') {
       enCours.validation_notif.push({ ...l, jours: execEtatsJoursRestants(execEtatsPlus(n.date_soumission, D.validation_notification)) });
     } else if (n.statut === 'envoye') {
-      enCours.confirmation.push({ ...l, jours: execEtatsJoursRestants(execEtatsPlus(n.date_envoi, D.confirmation_prestataire)) });
+      // Deux attentes se superposent après l'envoi : l'accusé de réception,
+      // puis la confirmation des dates. C'est la plus proche qui commande —
+      // sinon un accusé oublié ne se verrait qu'au terme de la confirmation.
+      const echeances = [
+        execEtatsPlus(n.date_envoi, D.confirmation_prestataire),
+        Number(n.accuse_reception) === 1 ? null : execEtatsPlus(n.date_envoi, D.accuse_reception),
+      ].map(execEtatsJoursRestants).filter((j) => j !== null);
+      enCours.confirmation.push({
+        ...l,
+        jours: echeances.length ? Math.min(...echeances) : null,
+        attenteAccuse: Number(n.accuse_reception) !== 1,
+      });
     } else if (d) {
       const fin = n.date_fin_effective || l.fin;
       if (transmis.length) {
-        // Rapport transmis mais dossier encore ouvert : reste la clôture.
+        // Rapport transmis, dossier encore ouvert : reste la clôture, qui a
+        // désormais son propre délai plutôt que de disparaître des états.
+        enCours.cloture.push({
+          ...l,
+          jours: execEtatsJoursRestants(execEtatsPlus(transmis[0].date_transmission, D.cloture_dossier)),
+        });
         return;
       }
       if (valides.length) {
@@ -197,7 +347,10 @@ function execEtatsRepartir() {
 
   // Une activité est archivée dès que sa notification ou son dossier le porte :
   // un processus arrêté s'archive sans dossier clôturé.
-  const archivee = (l) => Number((l.notif || {}).archive) === 1
+  // Archiver le plan archive tout ce qu'il porte : une activité l'est aussi
+  // par son plan, même si elle n'a jamais été déclenchée.
+  const archivee = (l) => l.planArchive
+    || Number((l.notif || {}).archive) === 1
     || Number((l.dossier || {}).archive) === 1;
   const arretee = (l) => Number((l.notif || {}).arret) === 1
     || (l.dossier && l.dossier.statut === 'arrete');
@@ -219,7 +372,10 @@ function execEtatsRepartir() {
     enVie,
     enCours,
     cloturees: lignes.filter((l) => close(l) && !archivee(l)),
-    archivees: lignes.filter((l) => (close(l) || arretee(l)) && archivee(l)),
+    // Tout ce qui porte la marque d'archivage y figure, quel qu'ait été son
+    // sort : une activité rangée avec son plan — ou avec le lot « Autres
+    // Activités » — n'a pas eu à être clôturée pour l'être.
+    archivees: lignes.filter((l) => archivee(l)),
   };
 }
 
@@ -288,6 +444,7 @@ const EXEC_ETATS_SECTIONS = [
   { cle: 'rapport', titre: 'Projets de rapport en attente', echeance: 'À soumettre avant' },
   { cle: 'validation_rapport', titre: 'Rapports en attente de validation', echeance: 'À valider avant' },
   { cle: 'transmission', titre: 'Rapports validés en attente de transmission', echeance: 'À transmettre avant' },
+  { cle: 'cloture', titre: 'Dossiers en attente de clôture', echeance: 'À clôturer avant' },
 ];
 
 function execEtatsPanEn_cours(R) {
@@ -303,7 +460,7 @@ function execEtatsPanEn_cours(R) {
         <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
         <td>${execEtatsBadgeDelai(l.jours)}</td>
         <td style="text-align:center;white-space:nowrap;">
-          <button class="btn btn-sm btn-outline" onclick="execEtatsRappel('${l.planId}','${l.activiteId}','${_esc(s.titre)}')">
+          <button class="btn btn-sm btn-outline" onclick="execEtatsRappel('${l.planId}','${l.activiteId}','${_escAttr(s.titre)}')">
             ${EXEC_ICONS.bell || ''} Rappel
           </button>
         </td>
@@ -349,7 +506,7 @@ function execEtatsPanEn_vie(R) {
         <td>${_esc(n.reference || '—')}</td>
         <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
         <td>${l.arretee
-          ? `<span class="exec-statut-etape arrete" title="${_esc(n.motif_arret || '')}">Arrêté</span>`
+          ? `<span class="exec-statut-etape arrete" title="${_escAttr(n.motif_arret || '')}">Arrêté</span>`
           : etape}</td>
         <td class="exec-etats-actions">
           <button class="btn btn-sm btn-outline btn-icon-only" onclick="${execEtatsOuvrir(l)}"
@@ -390,53 +547,120 @@ function execEtatsPanEn_vie(R) {
 
 // ── Onglets 4 et 5 : clôturées, archivées ──
 function execEtatsPanClos(items, archivees) {
-  const lignes = items.map((l) => {
-    const d = l.dossier;
+  const ligneDe = (l) => {
+    // Une activité archivée par son plan peut n'avoir jamais été déclenchée :
+    // ni dossier, ni rapport, ni date de clôture à afficher.
+    const d = l.dossier || null;
     const rapport = (l.rapports || []).find((r) => r.statut === 'transmis') || (l.rapports || [])[0];
+    const dateArchivage = l.planArchive ? l.planArchiveLe : (d && d.date_archivage);
+    const dateCloture = d ? (d.date_fin_execution || d.date_maj) : '';
     return `
-      <tr class="exec-act-row" style="cursor:pointer;"
-          onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}">
+      <tr class="exec-act-row"${d ? ' style="cursor:pointer;"' : ''}
+          ${d ? `onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}"` : ''}>
         <td>${_esc(l.prestataire || '—')}</td>
         <td>${_esc(l.objet || '—')}</td>
         <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
-        <td>${_esc(d.reference || '')}</td>
+        <td>${d ? _esc(d.reference || '') : '<span style="color:var(--text-muted);">Non déclenchée</span>'}</td>
         <td>${rapport ? _esc(rapport.reference || '') : '—'}</td>
-        <td>${_formatDate(archivees ? d.date_archivage : (d.date_fin_execution || d.date_maj))}</td>
+        <td>${dateArchivage || dateCloture ? _formatDate(archivees ? dateArchivage : dateCloture) : '—'}</td>
         ${archivees ? '' : `<td>${execEtatsBadgeDelai(execEtatsJoursRestants(
-          execEtatsPlus(d.date_fin_execution || d.date_maj, EXEC_ETATS.delais.archivage_apres_cloture)))}</td>`}
+          execEtatsPlus(dateCloture, EXEC_ETATS.delais.archivage_apres_cloture)))}</td>`}
         <td class="exec-etats-actions">
-          <button class="btn btn-sm btn-outline btn-icon-only" onclick="${execEtatsOuvrir(l)}"
-            title="Consulter le dossier" aria-label="Consulter le dossier">${EXEC_ICONS.eye || ''}</button>
+          ${d ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="${execEtatsOuvrir(l)}"
+            title="Consulter le dossier" aria-label="Consulter le dossier">${EXEC_ICONS.eye || ''}</button>` : ''}
           ${rapport ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execPreviewRapport('${rapport.id}')"
             title="Rapport" aria-label="Rapport">${EXEC_ICONS.rapports || ''}</button>` : ''}
           <button class="btn btn-sm btn-outline btn-icon-only" onclick="execProcHistorique('${l.planId}','${l.activiteId}')"
             title="${te('historique')}" aria-label="${te('historique')}">${EXEC_ICONS.clock || ''}</button>
-          ${execEtatsPeutAdministrer() ? `<button class="btn btn-sm btn-icon-only ${archivees ? 'btn-outline' : 'btn-primary'}"
+          ${(execEtatsPeutAdministrer() && d && !l.planArchive) ? `<button class="btn btn-sm btn-icon-only ${archivees ? 'btn-outline' : 'btn-primary'}"
             onclick="execEtatsArchiver('${d.id}',${archivees ? 'false' : 'true'})"
             title="${archivees ? 'Désarchiver' : 'Archiver'}" aria-label="${archivees ? 'Désarchiver' : 'Archiver'}">
             ${(archivees ? EXEC_ICONS.back : EXEC_ICONS.folder) || ''}</button>` : ''}
+          ${(archivees && execEtatsPeutAdministrer() && (l.planArchive || (!d && l.notif))) ? `<button class="btn btn-sm btn-outline btn-icon-only"
+            onclick="execEtatsDesarchiverActivite('${l.activiteId}',${l.planArchive ? 'true' : 'false'})"
+            title="Désarchiver l’activité" aria-label="Désarchiver l’activité">
+            ${EXEC_ICONS.back || ''}</button>` : ''}
         </td>
       </tr>`;
-  }).join('');
+  };
+
+  const colonnes = [
+    // Huit colonnes : l'objet cède la place pour que la consultation reste
+    // visible sans faire défiler la table.
+    { titre: 'Prestataire', largeur: '150px' }, { titre: 'Objet', largeur: '190px' },
+    { titre: 'Période', largeur: '160px' }, { titre: 'Dossier', largeur: '120px' },
+    { titre: 'Rapport', largeur: '120px' },
+    { titre: archivees ? 'Archivé le' : 'Clôturé le', largeur: '95px' },
+    ...(archivees ? [] : [{ titre: 'À archiver avant', largeur: '110px' }]),
+    { titre: 'Consultation', largeur: '150px', centre: true },
+  ];
+  const intro = archivees
+    ? 'Activités archivées, une à une ou avec leur plan de surveillance. Les pièces '
+      + 'produites restent consultables ; les constatations qui en sont issues '
+      + 'poursuivent leur suivi et ne sont pas archivées.'
+    : `Dossiers clôturés non encore archivés : l'archivage est attendu dans les `
+      + `${EXEC_ETATS.delais.archivage_apres_cloture} jours suivant la clôture. `
+      + `Les constatations issues de l'activité poursuivent leur suivi et ne sont pas archivées.`;
+
+  // Les archives se lisent par plan : une activité rangée se retrouve par le
+  // plan qui la portait, « Autres Activités » tenant lieu de plan pour celles
+  // qui n'en avaient pas.
+  let corps;
+  if (archivees) {
+    const groupes = new Map();
+    items.forEach((l) => {
+      const cle = l.planId || 'hors-plan';
+      if (!groupes.has(cle)) {
+        groupes.set(cle, { nom: l.planNom || (l.horsPlan ? 'Autres Activités' : '—'), lignes: [], le: '' });
+      }
+      const g = groupes.get(cle);
+      g.lignes.push(l);
+      // Deux plans peuvent porter le même intitulé : la date d'archivage les
+      // distingue, et dit quand le lot a été rangé.
+      const le = l.planArchiveLe || (l.dossier || {}).date_archivage || '';
+      if (le && (!g.le || le > g.le)) g.le = le;
+    });
+    // « Autres Activités » ferme la marche : les plans d'abord, par nom.
+    const ordre = [...groupes.entries()].sort((a, b) => {
+      if (a[0] === 'hors-plan') return 1;
+      if (b[0] === 'hors-plan') return -1;
+      return a[1].nom.localeCompare(b[1].nom);
+    });
+    // Chaque plan se replie : les archives s'accumulent, on n'ouvre que le lot
+    // qu'on vient consulter. Le premier groupe reste déplié.
+    corps = ordre.length
+      ? ordre.map(([cle, g], i) => {
+        const parPlan = cle !== 'hors-plan' && g.lignes.some((l) => l.planArchive);
+        return `
+        <div class="exec-etats-groupe${i === 0 ? ' ouvert' : ''}">
+          <h4 class="exec-etats-groupe-titre" onclick="execEtatsGroupeToggle(this)">
+            <span class="exec-etats-groupe-chevron">${EXEC_ICONS.chevronDown || '▾'}</span>
+            ${cle === 'hors-plan' ? (EXEC_ICONS.trigger || '') : (EXEC_ICONS.plans || '')}
+            <span>${_esc(g.nom)}</span>
+            <span class="exec-etats-compte">${g.lignes.length}</span>
+            ${g.le ? `<span class="exec-etats-groupe-date">archivé le ${_formatDate(g.le)}</span>` : ''}
+            ${(parPlan && execEtatsPeutAdministrer()) ? `<button class="btn btn-sm btn-outline exec-etats-desarchiver"
+              onclick="event.stopPropagation();execEtatsDesarchiverPlan('${cle}')"
+              title="Sortir le plan et ses activités des archives">
+              ${EXEC_ICONS.back || ''} Désarchiver le plan</button>` : ''}
+          </h4>
+          <div class="exec-etats-groupe-corps">
+            ${execEtatsTableau(colonnes, g.lignes.map(ligneDe).join(''), 'Aucune activité archivée.')}
+          </div>
+        </div>`;
+      }).join('')
+      : execEtatsTableau(colonnes, '', 'Aucune activité archivée.');
+  } else {
+    corps = execEtatsTableau(colonnes, items.map(ligneDe).join(''),
+      'Aucune activité clôturée en attente d’archivage.');
+  }
+
   return `
     <div class="card">
       <h3>${archivees ? 'Activités archivées' : 'Activités clôturées'}
         <span class="exec-etats-compte">${items.length}</span></h3>
-      <p class="exec-etats-intro">${archivees
-        ? 'Dossiers clôturés puis archivés. Les pièces produites restent consultables.'
-        : `Dossiers clôturés non encore archivés : l'archivage est attendu dans les `
-          + `${EXEC_ETATS.delais.archivage_apres_cloture} jours suivant la clôture. `
-          + `Les constatations issues de l'activité poursuivent leur suivi et ne sont pas archivées.`}</p>
-      ${execEtatsTableau([
-        // Huit colonnes : l'objet cède la place pour que la consultation reste
-        // visible sans faire défiler la table.
-        { titre: 'Prestataire', largeur: '150px' }, { titre: 'Objet', largeur: '190px' },
-        { titre: 'Période', largeur: '160px' }, { titre: 'Dossier', largeur: '120px' },
-        { titre: 'Rapport', largeur: '120px' },
-        { titre: archivees ? 'Archivé le' : 'Clôturé le', largeur: '95px' },
-        ...(archivees ? [] : [{ titre: 'À archiver avant', largeur: '110px' }]),
-        { titre: 'Consultation', largeur: '150px', centre: true },
-      ], lignes, archivees ? 'Aucune activité archivée.' : 'Aucune activité clôturée en attente d’archivage.')}
+      <p class="exec-etats-intro">${intro}</p>
+      ${corps}
     </div>`;
 }
 
@@ -481,21 +705,77 @@ function execRenderEtats() {
 // ══════════════════════════════════════
 //  Actions
 // ══════════════════════════════════════
-window.execEtatsRappel = function (planId, activiteId, motif) {
+// L'étape en cours d'une ligne d'état : c'est elle qui dit qui est attendu.
+const execEtatsEtapeCourante = (l) => {
+  const n = l.notif;
+  const d = l.dossier;
+  if (!n) return 'notification:soumission';
+  if (n.statut === 'soumis') return 'notification:validation';
+  if (n.statut === 'valide') return 'notification:transmission';
+  if (n.statut === 'envoye') return 'confirmation';
+  if (!d) return 'confirmation';
+  const transmis = (l.rapports || []).some((r) => r.statut === 'transmis');
+  const valides = (l.rapports || []).some((r) => r.statut === 'valide');
+  const soumis = (l.rapports || []).some((r) => r.statut === 'soumis');
+  if (transmis) return 'transmission';
+  if (valides) return 'transmission';
+  if (soumis) return 'validation';
+  return 'realisation';
+};
+
+// Libellés des clés d'étape du menu Processus, pour le seul affichage.
+const EXEC_ETATS_ETAPE_LIBELLE = {
+  'notification:soumission': 'Notification — Soumission',
+  'notification:validation': 'Notification — Validation',
+  'notification:transmission': 'Notification — Transmission',
+  confirmation: 'Confirmation',
+  realisation: 'Réalisation',
+  validation: 'Validation du rapport',
+  transmission: 'Transmission du rapport',
+};
+
+window.execEtatsRappel = async function (planId, activiteId, motif) {
   const l = execEtatsLignes().find((x) => x.planId === planId && x.activiteId === activiteId);
   if (!l) return;
   const inspecteurs = EXEC_STATE.data.inspecteurs || [];
-  const defaut = inspecteurs.find((u) => u.id === l.responsable_id) || {};
+  // Le rappel s'adresse d'abord aux intervenants que le processus désigne
+  // pour l'étape en cours ; le responsable de l'activité ne prend le relais
+  // que si aucun processus ne s'applique. Un rappel envoyé à qui n'a pas la
+  // main ne fait pas avancer le circuit.
+  const etape = execEtatsEtapeCourante(l);
+  let attendus = [];
+  if (l.notif) {
+    try {
+      const r = await api(`${EXEC_MODULE_API}/processus/attendus`
+        + `?notification_id=${encodeURIComponent(l.notif.id)}`
+        + `&etape=${encodeURIComponent(etape)}`);
+      if (r && r.declare) {
+        const comptes = new Set(r.comptes || []);
+        // Le serveur rend `user_id || email` : on rapproche sur les deux.
+        attendus = inspecteurs.filter((u) => comptes.has(u.user_id) || comptes.has(u.email));
+      }
+    } catch (e) { /* sans processus applicable, le responsable suffit */ }
+  }
+  const vises = attendus.length ? attendus.map((u) => u.id) : [l.responsable_id];
   const options = inspecteurs.map((u) => {
     const nom = `${u.prenom || ''} ${u.nom || ''}`.trim() || u.nom || u.id;
-    return `<option value="${_esc(u.email || u.id)}" ${u.id === l.responsable_id ? 'selected' : ''}>${_esc(nom)}${u.email ? ` — ${_esc(u.email)}` : ''}</option>`;
+    const designe = attendus.some((x) => x.id === u.id);
+    return `<option value="${_escAttr(u.email || u.id)}" ${u.id === vises[0] ? 'selected' : ''}>`
+      + `${_esc(nom)}${u.email ? ` — ${_esc(u.email)}` : ''}${designe ? ' · désigné au processus' : ''}</option>`;
   }).join('');
   const texte = `Rappel : l'activité « ${l.objet} » (${l.prestataire}) prévue du `
     + `${_formatDate(l.debut)} au ${_formatDate(l.fin)} appelle une action de votre part`
     + `${motif ? ` — ${motif}` : ''}.`;
 
+  const note = attendus.length
+    ? `Étape en cours : <strong>${_esc(EXEC_ETATS_ETAPE_LIBELLE[etape] || etape)}</strong> — `
+      + `destinataire proposé d'après le processus du secteur.`
+    : `Aucun processus ne désigne d'intervenant pour cette étape : le rappel vise `
+      + `le responsable de l'activité.`;
+
   const corps = `
     <div class="exec-proc-bloc">
+      <p class="exec-proc-note">${note}</p>
       <label class="form-label">Destinataire</label>
       <select class="form-control" id="rappel_dest">
         ${options || `<option value="">— Aucun inspecteur enregistré —</option>`}
@@ -506,10 +786,13 @@ window.execEtatsRappel = function (planId, activiteId, motif) {
     </div>`;
   const pied = `
     <button class="btn btn-outline" onclick="execCloseSlider()">Annuler</button>
-    <button class="btn btn-primary" onclick="execEtatsEnvoyerRappel('${planId}','${activiteId}','${_esc(motif || '')}')">
+    <button class="btn btn-primary" onclick="execEtatsEnvoyerRappel('${planId}','${activiteId}','${_escAttr(motif || '')}')">
       ${EXEC_ICONS.send || ''} Envoyer le rappel
     </button>`;
-  execShowSlider(`${EXEC_ICONS.bell || ''} Rappel au responsable${defaut.nom ? '' : ''}`, corps, pied, 'md');
+  execShowSlider(
+    `${EXEC_ICONS.bell || ''} Rappel — ${_esc(EXEC_ETATS_ETAPE_LIBELLE[etape] || etape)}`,
+    corps, pied, 'md',
+  );
 };
 
 window.execEtatsEnvoyerRappel = async function (planId, activiteId, motif) {
@@ -607,6 +890,60 @@ window.execEtatsSupprimer = async function (notifId) {
   } catch (e) { _execToast((e && e.message) || 'Suppression impossible', 'error'); }
 };
 
+// Un lot d'archives se replie : on n'ouvre que le plan qu'on vient consulter.
+window.execEtatsGroupeToggle = function (titre) {
+  titre.closest('.exec-etats-groupe')?.classList.toggle('ouvert');
+};
+
+// Sortie des archives d'un plan entier : il redevient un plan validé et ses
+// activités reprennent leur place dans les états courants.
+window.execEtatsDesarchiverPlan = async function (planId) {
+  const ok = await execProcConfirmer({
+    titre: 'Sortir le plan des archives',
+    message: 'Le plan revient parmi les plans de surveillance validés, avec toutes ses activités. '
+      + 'Elles réapparaissent dans « Activités de Supervision » et dans les états courants.',
+    libelle: 'Désarchiver',
+  });
+  if (!ok) return;
+  try {
+    await api(`/api/m/planification/plans/${planId}/desarchiver`, { method: 'POST', body: JSON.stringify({}) });
+    await execLoadData();
+    _execToast('Plan désarchivé', 'success');
+    execRenderPage();
+  } catch (e) {
+    _execToast((e && e.message) || 'Action impossible', 'error');
+  }
+};
+
+// Désarchivage d'une activité prise isolément. Deux origines possibles, donc
+// deux chemins : archivée avec son plan, l'exception se pose sur l'activité
+// dans la Planification ; archivée seule, c'est sa notification qui porte la
+// marque et le module la lève lui-même.
+window.execEtatsDesarchiverActivite = async function (activiteId, parLePlan) {
+  const ok = await execProcConfirmer({
+    titre: 'Sortir l’activité des archives',
+    message: parLePlan
+      ? 'Le plan reste archivé ; cette activité seule revient parmi les activités en cours. '
+        + 'Elle réapparaît dans « Activités de Supervision », sous son plan d’origine.'
+      : 'L’activité revient parmi les activités en cours.',
+    libelle: 'Désarchiver',
+  });
+  if (!ok) return;
+  try {
+    if (parLePlan) {
+      await api(`/api/m/planification/activites/${activiteId}/desarchiver`, { method: 'PUT', body: JSON.stringify({}) });
+      await execLoadData();
+    } else {
+      await api(`${EXEC_MODULE_API}/activites-en-cours/${activiteId}/desarchiver`, { method: 'PUT' });
+      await execRefreshDynamic();
+    }
+    _execToast('Activité désarchivée', 'success');
+    execRenderPage();
+  } catch (e) {
+    _execToast((e && e.message) || 'Action impossible', 'error');
+  }
+};
+
 window.execEtatsArchiver = async function (dossierId, archiver) {
   const ok = await execProcConfirmer({
     titre: archiver ? 'Archiver le dossier' : 'Sortir le dossier des archives',
@@ -632,28 +969,77 @@ window.execEtatsArchiver = async function (dossierId, archiver) {
 function execRenderDelaisTab() {
   const D = EXEC_ETATS.delais;
   const modifiable = EXEC_ETATS.delaisModifiable !== false;
-  const lignes = EXEC_ETATS_DELAIS_DESCRIPTION.map((d) => `
+
+  const ligne = (d) => `
     <tr>
-      <td><strong>${_esc(d.libelle)}</strong><div class="exec-delai-aide">${_esc(d.aide)}</div></td>
-      <td style="width:150px;white-space:nowrap;">
+      <td>
+        <div class="exec-delai-nom">${_esc(d.libelle)}</div>
+        <div class="exec-delai-aide">${_esc(d.aide)}</div>
+      </td>
+      <td class="exec-delai-course">
+        <span class="exec-delai-borne">${_esc(d.depuis)}</span>
+        <span class="exec-delai-fleche">→</span>
+        <span class="exec-delai-borne">${_esc(d.jusqua)}</span>
+      </td>
+      <td class="exec-delai-saisie">
         <input type="number" min="0" max="365" class="form-control exec-delai-champ"
-          id="delai_${d.cle}" value="${D[d.cle]}" ${modifiable ? '' : 'disabled'}>
+          id="delai_${d.cle}" value="${_escAttr(D[d.cle])}" ${modifiable ? '' : 'disabled'}>
         <span class="exec-delai-unite">${_esc(d.unite)}</span>
       </td>
+      <td class="exec-delai-ou">${_esc(d.ou)}</td>
+    </tr>`;
+
+  const groupes = EXEC_ETATS_DELAIS_GROUPES.map((g) => `
+    <div class="exec-delai-groupe">
+      <div class="exec-delai-groupe-entete">
+        <h4>${_esc(g.titre)}</h4>
+        <span>${_esc(g.aide)}</span>
+      </div>
+      <table class="exec-table exec-delais-table">
+        <thead><tr>
+          <th>Attente</th>
+          <th style="width:32%;">Court de … à …</th>
+          <th style="width:140px;">Délai</th>
+          <th style="width:20%;">Signalé dans</th>
+        </tr></thead>
+        <tbody>${g.delais.map(ligne).join('')}</tbody>
+      </table>
+    </div>`).join('');
+
+  const ailleurs = EXEC_ETATS_DELAIS_AILLEURS.map((a) => `
+    <tr>
+      <td><div class="exec-delai-nom">${_esc(a.libelle)}</div></td>
+      <td class="exec-delai-course">
+        <span class="exec-delai-borne">${_esc(a.depuis)}</span>
+        <span class="exec-delai-fleche">→</span>
+        <span class="exec-delai-borne">${_esc(a.jusqua)}</span>
+      </td>
+      <td colspan="2" class="exec-delai-ou">${_esc(a.source)}</td>
     </tr>`).join('');
+
   return `
     <div class="card">
       <h3>Délais du processus</h3>
       <p class="exec-etats-intro">
-        Ces délais n'empêchent aucune action : ils déterminent à partir de quand une étape
-        est signalée en retard dans le menu « États ».
+        Relevé des attentes des processus « Activité » et « Constatation ». Chaque ligne
+        court d'une date enregistrée jusqu'à l'événement attendu. Ces délais n'empêchent
+        aucune action : ils déterminent à partir de quand une étape est signalée en retard.
       </p>
-      <table class="exec-table exec-delais-table"><tbody>${lignes}</tbody></table>
-      ${modifiable ? `<div style="margin-top:0.75rem;display:flex;gap:0.5rem;">
+      ${groupes}
+      <div class="exec-delai-groupe">
+        <div class="exec-delai-groupe-entete">
+          <h4>Réglés ailleurs</h4>
+          <span>Deux attentes du module ne se paramètrent pas sur cet écran.</span>
+        </div>
+        <table class="exec-table exec-delais-table"><tbody>${ailleurs}</tbody></table>
+      </div>
+      ${modifiable ? `<div style="margin-top:0.9rem;display:flex;gap:0.5rem;">
         <button class="btn btn-primary btn-sm" onclick="execEtatsEnregistrerDelais()">
-          ${EXEC_ICONS.clipboard || ''} Enregistrer
+          ${EXEC_ICONS.check || ''} Enregistrer
         </button>
-        <button class="btn btn-outline btn-sm" onclick="execEtatsDelaisDefaut()">Valeurs par défaut</button>
+        <button class="btn btn-outline btn-sm" onclick="execEtatsDelaisDefaut()">
+          ${EXEC_ICONS.reset || ''} Valeurs par défaut
+        </button>
       </div>` : '<p class="exec-etats-intro">Seul un administrateur du module modifie ces délais.</p>'}
     </div>`;
 }
@@ -767,7 +1153,7 @@ function execRefsLigneSegment(objet, index, s, total) {
       <select class="form-control" ${off} onchange="execRefsMajSegment('${objet}',${index},'type',this.value)">${options}</select>
       <div class="exec-ref-valeur">
         ${meta.saisie ? `<input type="text" class="form-control" maxlength="12" placeholder="Texte"
-          value="${_esc(s.valeur || '')}" ${off}
+          value="${_escAttr(s.valeur || '')}" ${off}
           oninput="execRefsSaisir('${objet}',${index},'valeur',this)">` : ''}
         ${meta.longueur ? `<input type="number" class="form-control" min="1" max="8" title="Nombre de chiffres"
           value="${Number(s.longueur) || 3}" ${off}
@@ -819,7 +1205,7 @@ function execRenderAutresParametresTab() {
               ${EXEC_ICONS.add || '+'} Ajouter un élément
             </button>
             <label class="exec-ref-sep">Séparateur
-              <input type="text" class="form-control" maxlength="3" value="${_esc(m.separateur === undefined ? '-' : m.separateur)}"
+              <input type="text" class="form-control" maxlength="3" value="${_escAttr(m.separateur === undefined ? '-' : m.separateur)}"
                 ${off} oninput="execRefsMajSeparateur('${o.cle}',this.value)">
             </label>
             <span class="exec-ref-total">${segments.length} élément${segments.length > 1 ? 's' : ''}</span>
@@ -843,7 +1229,8 @@ function execRenderAutresParametresTab() {
         ${EXEC_ICONS.clipboard || ''} Enregistrer
       </button>
       <button class="btn btn-outline btn-sm" onclick="execRefsDefaut()">Compositions par défaut</button>
-    </div>` : '<p class="exec-etats-intro">Seul un administrateur du module compose les références.</p>'}`;
+    </div>` : '<p class="exec-etats-intro">Seul un administrateur du module compose les références.</p>'}
+    ${execRenderRolesEquipeTab()}`;
 }
 
 // Saisie au fil des frappes : le modèle est mis à jour et seuls l'aperçu et

@@ -32,7 +32,7 @@ function _showNotificationPreview(data, fromForm) {
   const entete = `
     <header class="fiche-entete">
       <div class="fiche-emetteur">
-        ${aac.logo ? `<img class="fiche-logo" src="${_esc(aac.logo)}" alt="">` : ''}
+        ${aac.logo ? `<img class="fiche-logo" src="${_escAttr(aac.logo)}" alt="">` : ''}
         <div>
           <div class="fiche-etat">${_esc(aac.pays || aac.etat || '')}</div>
           <div class="fiche-aac">${_esc(aac.nom || aac.sigle || '')}</div>
@@ -116,10 +116,32 @@ function _showNotificationPreview(data, fromForm) {
         <div class="fiche-cartouche-espace"></div>
         <div class="fiche-cartouche-nom">${_fVal(data.signataire)}</div>
       </div>
-    </section>
+    </section>`;
+
+  // Le pied ferme la page : il vient après l'accusé quand il y en a un.
+  const pied = `
     <footer class="fiche-pied">
       ${_esc(aac.sigle || aac.nom || '')}${ref ? ` · ${_esc(ref)}` : ''} · Document établi par OASIS
     </footer>`;
+
+  // Accusé de réception du prestataire, en pied de fiche. Dates et périmètre
+  // sont ceux figés au moment de l'accusé : l'engagement porte sur ce qui a
+  // été lu, pas sur une version ultérieure de la notification.
+  const accuse = Number(data.accuse_reception) === 1 ? `
+    <section class="fiche-section fiche-accuse">
+      <h2>ACCUSÉ DE RÉCEPTION</h2>
+      <p class="fiche-accuse-texte">
+        Nous accusons réception de la notification et sommes disposés à vous recevoir
+        du <strong>${_fDate(data.accuse_date_debut || data.date_debut_effective || data.date_activite)}</strong>
+        au <strong>${_fDate(data.accuse_date_fin || data.date_fin_effective)}</strong>
+        dans le cadre de la supervision des activités suivantes :
+        <strong class="fiche-accuse-perimetre">${_fVal(data.accuse_perimetre || data.perimetre_activite || data.perimetre)}</strong>
+      </p>
+      <div class="fiche-accuse-pied">
+        <span>Accusé le <strong>${_fDate(String(data.accuse_le || '').slice(0, 10))}</strong></span>
+        <span>par <strong>${_fVal(data.accuse_par_nom || data.accuse_par)}</strong></span>
+      </div>
+    </section>` : '';
 
   const bodyHtml = `
     <div class="official-doc-form">
@@ -131,6 +153,8 @@ function _showNotificationPreview(data, fromForm) {
         ${programmeSection}
         ${cadre}
         ${signature}
+        ${accuse}
+        ${pied}
       </article>
     </div>`;
 
@@ -202,7 +226,7 @@ async function execPreviewRapport(rapportId) {
       <section class="exec-apercu-document">
         <h4>Prévisualisation</h4>
         ${document_
-          ? `<iframe class="exec-apercu-cadre" title="Rapport ${_esc(rapport.reference || '')}"
+          ? `<iframe class="exec-apercu-cadre" title="Rapport ${_escAttr(rapport.reference || '')}"
                srcdoc="${document_.replace(/"/g, '&quot;')}"></iframe>`
           : '<p class="exec-proc-vide">Document indisponible.</p>'}
       </section>

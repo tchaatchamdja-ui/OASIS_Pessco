@@ -1641,3 +1641,15 @@ tr.hidden { display: none; }
 .gantt-week-on { cursor: pointer; }
 .gantt-week-on:hover { filter: brightness(1.15); }
 .gantt-table-enhanced th.gantt-month { text-align: center; }
+
+/* Activité déjà déclenchée dans l'exécution : elle ne s'amende plus, le
+   cadenas prend la place des actions d'édition. */
+.plan-act-verrou {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    color: #b45309;
+    cursor: help;
+}

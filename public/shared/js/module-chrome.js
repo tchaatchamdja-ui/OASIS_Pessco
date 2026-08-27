@@ -55,6 +55,12 @@
       min-width: 0; overflow: hidden; text-overflow: ellipsis;
     }
     .oasis-sep { flex: 0 0 auto; opacity: .45; margin: 0 .15rem; }
+    /* Mention : ce sur quoi porte la session, en évidence mais non cliquable. */
+    .oasis-module-mention {
+      flex: 0 0 auto; font-size: .82rem; font-weight: 700; white-space: nowrap;
+      padding: .18rem .6rem; border-radius: 999px;
+      background: rgba(255, 255, 255, .16);
+    }
     /* Orange foncé : le retour au portail se distingue des actions du module,
        quel que soit le thème de couleur retenu. */
     .oasis-back-btn {
@@ -172,8 +178,15 @@
   // Chaque action : { key, label, icon (HTML optionnel), active, onClick }.
   let ACTIONS = [];
   let MODULE_LABEL = '';
+  // Mention portée par la barre : ce sur quoi l'utilisateur travaille — le
+  // prestataire dont il tient le compte, par exemple. Ce n'est pas une action.
+  let MENTION = '';
   window.oasisModuleActions = function (liste) {
     ACTIONS = Array.isArray(liste) ? liste : [];
+    dessinerActions();
+  };
+  window.oasisModuleMention = function (texte) {
+    MENTION = texte || '';
     dessinerActions();
   };
 
@@ -188,6 +201,18 @@
       nom.className = 'oasis-module-name';
       nom.textContent = MODULE_LABEL;
       zone.appendChild(nom);
+      if (ACTIONS.length) {
+        const sep = document.createElement('span');
+        sep.className = 'oasis-sep';
+        sep.textContent = '|';
+        zone.appendChild(sep);
+      }
+    }
+    if (MENTION) {
+      const m = document.createElement('span');
+      m.className = 'oasis-module-mention';
+      m.textContent = MENTION;
+      zone.appendChild(m);
       if (ACTIONS.length) {
         const sep = document.createElement('span');
         sep.className = 'oasis-sep';

@@ -8,6 +8,77 @@
 // ══════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════
+// ── Indicateurs du tableau de bord ───────────────────────────────
+// Deux groupes : ce que le parc représente, et ce que les évaluations en
+// disent. Les figures viennent du socle (/shared/js/oasis-kpi.js).
+function _prCartesIndicateurs(ctx) {
+    const c = ctx || {};
+    const D = c.D || {};
+    const evals = c.filteredEvals || [];
+    const risques = c.riskCounts || {};
+    const totalPrest = Number(c.totalPrest || 0);
+    const brouillons = (D.evaluations || []).filter((e) => e.statut === 'brouillon').length;
+    const couverture = totalPrest ? Math.round((evals.length / totalPrest) * 100) : 0;
+    const eleves = Number(risques.very_high || 0) + Number(risques.high || 0);
+
+    // Prestataires dont la date butoir tombe dans les trois mois.
+    const aujourdhui = new Date();
+    const limite = new Date();
+    limite.setMonth(limite.getMonth() + 3);
+    const echeances = (D.prestataires || []).filter((p) => {
+        if (!p.date_butoir) return false;
+        const d = new Date(p.date_butoir);
+        return !isNaN(d) && d >= aujourdhui && d <= limite;
+    }).length;
+
+    // Répartition des niveaux, du plus faible au plus élevé.
+    const repartition = [risques.very_low, risques.low, risques.moderate,
+        risques.high, risques.very_high].map((v) => Number(v || 0));
+    // Position du curseur sur l'échelle : part des profils à risque élevé.
+    const position = evals.length ? Math.round((eleves / evals.length) * 100) : 0;
+
+    return `
+    <div class="oasis-kpi-groupes">
+        ${oasisKpiGroupe(t('providers'), [
+            oasisKpiCarte({
+                titre: t('coverage_rate'), couleur: '#2563eb',
+                valeur: totalPrest ? `${couverture}%` : '-',
+                precision: `${evals.length} ${t('of_short')} ${totalPrest} ${t('evaluated_short')}`,
+                figure: { type: 'jauge', pct: couverture },
+            }),
+            oasisKpiCarte({
+                titre: t('due_soon'), couleur: '#dc2626', alerte: !!echeances,
+                valeur: echeances, precision: t('due_soon_hint'),
+                figure: { type: 'retard', pastille: t('deadline_short'), legende: t('due_date_short') },
+            }),
+            oasisKpiCarte({
+                titre: t('domains_sectors'), couleur: '#f59e0b',
+                valeur: c.totalDom, precision: t('scope_hint'),
+                figure: { type: 'calendrier', mois: 3 },
+            }),
+        ])}
+        ${oasisKpiGroupe(t('active_profiles'), [
+            oasisKpiCarte({
+                titre: t('validated'), couleur: '#10b981',
+                valeur: evals.length, precision: t('validated_hint'),
+                figure: { type: 'cloture', pct: couverture },
+            }),
+            oasisKpiCarte({
+                titre: t('high_risk'), couleur: '#f97316', alerte: !!eleves,
+                valeur: eleves, precision: t('high_risk_hint'),
+                figure: { type: 'echelle', position: Math.max(10, position),
+                    min: t('risk_low'), max: t('risk_high') },
+            }),
+            oasisKpiCarte({
+                titre: t('draft'), couleur: '#8b5cf6',
+                valeur: brouillons, precision: t('draft_hint'),
+                figure: { type: 'barres', valeurs: repartition },
+            }),
+        ])}
+    </div>`;
+}
+
+
 function renderDashboard() {
     const D = APP_STATE.data;
     const allValids = (D.evaluations || []).filter(e => e.statut === 'valide');
@@ -171,13 +242,7 @@ function renderDashboard() {
             Exporter PDF
         </button>
     </div>
-    <div class="stats-grid" style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:0.75rem;">
-        <div class="stat-card" style="flex:1;min-width:110px;border-left-color:#f59e0b;"><div class="stat-number" style="color:#f59e0b;">${totalDom}</div><div class="stat-label">${t('domains_sectors')}</div></div>
-        <div class="stat-card" style="flex:1;min-width:110px;border-left-color:#3b82f6;"><div class="stat-number" style="color:#3b82f6;">${totalPrest}</div><div class="stat-label">${t('providers')}</div></div>
-        <div class="stat-card" style="flex:1;min-width:110px;border-left-color:#8b5cf6;"><div class="stat-number" style="color:#8b5cf6;">${filteredEvals.length}</div><div class="stat-label">${t('active_profiles')}</div></div>
-        <div class="stat-card" style="flex:1;min-width:110px;border-left-color:#22c55e;"><div class="stat-number" style="color:#22c55e;">${filteredEvals.length}</div><div class="stat-label">${t('validated')}</div></div>
-        <div class="stat-card" style="flex:1;min-width:110px;border-left-color:#ef4444;"><div class="stat-number" style="color:#ef4444;">${(D.evaluations || []).filter(e => e.statut === 'brouillon').length}</div><div class="stat-label">${t('draft')}</div></div>
-    </div>
+    ${_prCartesIndicateurs({ totalDom, totalPrest, filteredEvals, riskCounts, D })}
     ${(() => {
         // Phase 1 widget — prestataires arrivant à la date butoir (3 mois)
         const today = new Date(); const limit = new Date(); limit.setMonth(limit.getMonth() + 3);

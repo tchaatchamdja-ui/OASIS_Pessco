@@ -15,7 +15,7 @@ const EXEC_STATE = {
     lang: 'fr',
     theme: 'blue-dark',
     currentPage: 'dashboard',
-    currentConstSub: 'list',
+    currentConstSub: 'suivi',
     sidebarCollapsed: localStorage.getItem('exec_sidebar') === 'true',
     data: {},
     filters: {
@@ -59,8 +59,66 @@ const EXEC_TR = {
         details: 'Details',
         responsable: 'Responsable',
         constatations: 'Constatations',
-        consta_sub_list: 'Constatations',
+        consta_sub_list: 'En Préparation',
         consta_sub_suivi: 'Suivi',
+        consta_sub_terrain: 'Suivi Terrain',
+        constatation_hors_activites: 'Constatation Hors Activités de Supervision',
+        cd_etape_preparation: 'Préparation',
+        realisation_intro: 'Confirmez et ajustez les informations de l\'activité menée sur le terrain, puis rédigez le rapport.',
+        real_section_cadre: 'Cadre de l\'activité',
+        redac_section_introduction: 'Introduction',
+        redac_section_synthese: 'Synthèses et Recommandations',
+        redac_section_checklists: 'Checklists et autres documents',
+        redac_section_constatations: 'Constatations',
+        redac_section_conclusion: 'Conclusions',
+        redac_section_annexes: 'Annexes',
+        constatation: 'Constatation',
+        ajouter_constatation: 'Ajouter Constatation',
+        fiches_constat: 'Fiches de constatation',
+        fiche_suivi_pac: 'Fiche de suivi du PAC',
+        a_completer_prestataire: '(à compléter par le prestataire)',
+        a_completer_aac: '(réservé à l\'AAC)',
+        retour_rapport: 'Retour au Rapport',
+        fnc_section_identification: 'Identification',
+        fnc_section_constat: 'Constat',
+        fnc_section_traitement: 'Traitement attendu',
+        fnc_section_preuves: 'Preuves',
+        fnc_aide_identification: 'Émetteur, destinataire, date et rattachement de la constatation.',
+        cd_aide_identification: 'Prestataire concerné, émetteur, destinataire, date et rattachement.',
+        fnc_aide_constat: 'Référentiels applicables et description de l\'écart.',
+        fnc_aide_traitement: 'Criticité, délai de solde et recommandation.',
+        fnc_aide_preuves: 'Éléments recueillis à l\'appui de la constatation.',
+        redac_aide_introduction: 'Cadre du rapport : objet, dates, équipe, périmètre et référentiels.',
+        redac_aide_synthese: 'Points forts, points faibles, opportunités et résumé global.',
+        redac_aide_checklists: 'Checklists renseignées et documents recueillis.',
+        redac_aide_constatations: 'Écarts relevés pendant l\'activité.',
+        redac_aide_conclusion: 'Conclusion de l\'activité de surveillance.',
+        redac_aide_annexes: 'Pièces annexées au rapport : intitulé, contenu et fichiers.',
+        real_section_equipe: 'Équipe d\'audit / inspection',
+        real_section_programme: 'Programme de travail',
+        real_section_checklists: 'Checklists à utiliser',
+        real_section_pj: 'Pièces jointes de l\'activité',
+        real_nature: 'Nature de l\'activité',
+        real_aide_equipe: 'Inspecteurs mobilisés et rôle de chacun.',
+        real_aide_programme: 'Déroulé prévisionnel : date, horaire, actions et correspondant.',
+        real_aide_checklists: 'Checklists retenues pour cette activité ; « Renseigner » ouvre la grille de saisie.',
+        real_aide_pj: 'Documents recueillis pendant l\'activité.',
+        televerser_pj: 'Téléverser des pièces jointes',
+        aucune_piece_jointe: 'Aucune pièce jointe.',
+        cd_etape_validation: 'Validation',
+        cd_etape_transmission: 'Transmission',
+        imprimer_constatation: 'Imprimer',
+        transmission_constatation: 'Transmission de la constatation au prestataire',
+        export_excel: 'Exporter Excel',
+        export_route_absente: 'Export indisponible : le serveur doit être redémarré pour charger la route d\'export.',
+        exp_annee: 'Année',
+        exp_recherche: 'Recherche',
+        edite_le: 'Édité le',
+        aucun_filtre: 'Aucun filtre',
+        visa_inspecteur: 'Visa de l\'inspecteur',
+        visa_prestataire: 'Visa du prestataire',
+        bloqueur_fenetre: 'Autorisez les fenêtres surgissantes pour produire le PDF',
+        a_verifier_terrain: 'constatation(s) à vérifier sur le terrain',
         rapports: 'Rapports',
         parametres: 'Paramètres',
         mes_taches: 'Mes Tâches',
@@ -78,6 +136,67 @@ const EXEC_TR = {
         // KPI labels
         activites_realisees: 'Activités réalisées (YTD)',
         constatations_ouvertes: 'Constatations ouvertes',
+        dont: 'dont',
+        hors_activite_court: 'hors activité',
+        situation_generale: 'Situation Générale',
+        statistiques_detaillees: 'Statistiques détaillées',
+        periode_analysee: 'Période analysée',
+        filtre_temporel: 'Filtre temporel d’inspection',
+        periode_examinee: 'Période examinée',
+        chrono_date_debut: 'Date Début', chrono_date_fin: 'Date Fin',
+        fin: 'Fin',
+        cycle_surveillance: 'Cycle de surveillance fixé dans « Plans de Surveillance »',
+        cycle_court: 'Cycle',
+        chrono_12_mois: '12 mois', chrono_6_mois: '6 mois', chrono_3_mois: '3 mois',
+        chrono_tout: 'Tout',
+        statistiques: 'Statistiques',
+        voir_statistiques: 'Voir les Statistiques',
+        indicateurs: 'Indicateurs',
+        indicateurs_conformite: 'Indicateurs de conformité',
+        detail_indicateur: 'Détail de l’indicateur',
+        aucun_indicateur: 'Choisissez un indicateur ci-dessus pour en voir le détail.',
+        stats_criticite: 'Constatations critiques & majeures',
+        stats_complementaires: 'Indicateurs complémentaires',
+        stats_critiques: 'Critiques',
+        stats_critiques_aide: 'Constatations de criticité critique',
+        stats_critiques_delai: 'Résolues à temps',
+        stats_echeance: 'Échéance',
+        stats_moyenne_mensuelle: 'Moyenne mensuelle',
+        stats_moyenne_aide: 'Critiques et majeures par mois',
+        stats_cloture_majeures: 'Clôture majeures',
+        stats_recurrentes: 'Récurrentes',
+        stats_recurrentes_aide: 'Même objet, même prestataire',
+        stats_repetition: 'Répétée', stats_isolee: 'Isolée',
+        stats_total_suivi: 'Total suivi',
+        stats_total_aide: 'Constatations transmises',
+        stats_cloture_globale: 'Clôture globale',
+        stats_hors_delai: 'Hors délais',
+        stats_hors_delai_aide: 'Non soldées, échéance passée',
+        stats_delai_moyen: 'Délai moyen',
+        stats_delai_moyen_aide: 'De l’ouverture au solde',
+        stats_rapports_aide: 'Remis aux prestataires',
+        stats_top_prestataires: 'Top 5 prestataires par nombre de constatations',
+        depasse: 'Dépassé',
+        debut: 'Début',
+        sur: 'sur',
+        realisees_court: 'réalisées',
+        cloturees_court: 'clôturées',
+        action_immediate: 'Nécessitant une action immédiate',
+        en_attente_traitement: 'En attente de traitement',
+        en_attente: 'En attente',
+        en_cours_court: 'En cours',
+        cloture_court: 'Clôturé',
+        faible: 'Faible',
+        eleve: 'Élevé',
+        act_en_retard: 'En Retard',
+        act_en_retard_aide: 'Début dépassé, non déclenchées',
+        a_planifier: 'À Planifier',
+        horizon_prochains: 'Prochains',
+        mois: 'mois',
+        taux_cloture: 'Taux de Clôture',
+        critiques: 'Critiques',
+        ouvertes: 'Ouvertes',
+        en_retard: 'en retard',
         risques_critiques: 'Risques critiques',
         dossiers_ouverts: 'Dossiers ouverts',
         notifications_envoyees: 'Notifications envoyées',
@@ -122,7 +241,7 @@ const EXEC_TR = {
         section_b_equipe_audit: 'Equipe d\'audit/inspection',
         equipe: 'Equipe',
         nature_activite: 'Nature de l\'Activite',
-        reference: 'Reference',
+        reference: 'Référence',
         date_activite: 'Date',
         lieu: 'Lieu',
         objet: 'Objet',
@@ -146,10 +265,14 @@ const EXEC_TR = {
         source_inspection: 'Inspection',
         source_autre: 'Autre',
         domaine: 'Domaine',
-        criticite: 'Criticite',
+        criticite: 'Criticité',
         critique: 'Critique',
         majeur: 'Majeur',
         mineur: 'Mineur',
+        // Les constatations portent la forme féminine ; sans ces clés, te()
+        // renvoyait « majeure » en minuscules au milieu des autres libellés.
+        majeure: 'Majeure',
+        mineure: 'Mineure',
         cas: 'Cas',
         description_constatation: 'Description de la Constatation',
         delai_solde: 'Delai de Solde (jours)',
@@ -178,15 +301,46 @@ const EXEC_TR = {
         rappel_constatation: 'Rappel de la Constatation',
         plan_actions_correctives: 'Plan d\'Actions Correctives',
         evaluation_suivi_aac: 'Évaluation et Suivi (Réservé à l\'AAC)',
-        details_suivi: 'Détails du suivi',
-        details_suivi_intro: 'Items, réponses du postulant et échanges entre l\'AAC et le postulant.',
+        details_suivi: 'Évaluations et Suivi (Réservé à l\'AAC)',
+        resultats_suivi: 'Résultats du Suivi',
+        details_suivi_intro: 'Échanges entre l\'AAC et le postulant sur chaque item du plan d\'actions.',
+        suivi_rang: 'Suivi',
+        joindre_fichier: 'Joindre un fichier',
+        suivi_attente_soumission: 'L’évaluation s’ouvrira dès que le prestataire aura soumis son plan d’actions.',
+        soumettre: 'Soumettre',
+        renvoyer: 'Renvoyer',
+        ajouter_preuves: 'Ajouter les Preuves',
+        amender_pac: 'Amender PAC',
+        choisir_mode_pac: 'Choisir d\'abord « Ajouter les Preuves » ou « Amender PAC »',
+        mode_preuves_actif: 'Dépôt des preuves de mise en oeuvre : seules les zones de preuves du plan d\'actions sont ouvertes.',
+        mode_amendement_actif: 'Amendement du plan d\'actions : tous les champs sont rouverts. À la soumission, le plan accepté sera versionné et le circuit reviendra à l\'étape « Acceptation ».',
+        mode_mixte_actif: 'Amendement du plan d\'actions et dépôt des preuves : tous les champs sont ouverts. À la soumission, l\'amendement l\'emporte — le plan accepté sera versionné, preuves comprises, et le circuit reviendra à l\'étape « Acceptation ».',
+        confirm_quitter_amendement: 'Renoncer à l\'amendement ? Le plan d\'actions revient à la version acceptée : les modifications apportées, y compris celles enregistrées en brouillon, sont abandonnées. Les preuves déposées sont conservées.',
+        plan_retabli: 'Plan d\'actions rétabli dans sa version acceptée',
+        confirm_soumettre_preuves: 'Soumettre les preuves de mise en oeuvre à l\'AAC ? Le circuit reste à l\'étape « Mise en oeuvre ».',
+        confirm_soumettre_amendement: 'Soumettre le plan d\'actions amendé ? L\'acceptation précédente est annulée : le circuit revient à l\'étape « Acceptation ».',
+        preuves_soumises: 'Preuves de mise en oeuvre soumises',
+        preuves_soumises_titre: 'Preuves de mise en oeuvre soumises',
+        pac_amende: 'Plan d\'actions amendé',
+        pac_amende_soumis: 'Plan d\'actions amendé soumis à l\'AAC',
+        versions_pac: 'Versions précédentes du plan d\'actions',
+        version_n: 'Version',
+        amende_le: 'amendé le',
+        accepter_pac: 'Accepter PAC',
+        accepter_pac_preuves: 'Accepter PAC et Preuves',
+        confirm_accepter_pac: 'Accepter le plan d\'actions correctives ? L\'étape « Acceptation » sera close et la mise en oeuvre pourra débuter.',
+        confirm_accepter_pac_preuves: 'Accepter le plan d\'actions et les preuves de mise en oeuvre ? Les étapes « Acceptation » et « Mise en oeuvre » seront closes ; la constatation se présentera à la clôture.',
+        pac_accepte_ok: 'Plan d\'actions accepté',
+        pac_preuves_acceptes: 'Plan d\'actions et preuves acceptés',
+        volet_deplier: 'Déplier les commentaires',
+        volet_replier: 'Replier les commentaires',
         item_label: 'Item',
         reponse_label: 'Réponse du postulant',
         commentaires_label: 'Commentaires',
         cause_root: 'Cause Primaire (Root cause)',
         action_curative_correction: 'Action Curative (Correction immédiate)',
         action_corrective_prevention: 'Action Corrective (Prévention de la récurrence)',
-        acceptation_propositions: 'Acceptation des propositions d\'actions',
+        acceptation_propositions: 'Acceptation du PAC',
         pac_accepte: 'Le PAC est-il accepté ?',
         date_acceptation: 'Date d\'acceptation',
         verification_mise_oeuvre: 'Vérification de la mise en oeuvre',
@@ -195,7 +349,7 @@ const EXEC_TR = {
         commentaire_efficacite: 'Commentaire sur la mise en oeuvre et l\'efficacité',
         preuves_mise_oeuvre: 'Preuves de mise en oeuvre fournies par l\'exploitant',
         cloture_fnc: 'Clôture de la Fiche de Non-Conformité',
-        mise_oeuvre_effective: 'Mise en oeuvre Effective ?',
+        mise_oeuvre_effective: 'Mise en oeuvre Effective des Actions',
         date_solde: 'Date de Solde',
         solde_par: 'Soldé par (Inspecteur)',
         oui_label: 'OUI',
@@ -214,9 +368,117 @@ const EXEC_TR = {
         constatation_soldee: 'Constatation soldée',
         cloturee_dans_delais: 'Clôturée dans les délais',
         hors_delais: 'Hors délais',
+        graph_emises: 'Constatations émises',
+        graph_criticite: 'Constatations par criticité',
+        emises_ouverte: 'Ouverte',
+        emises_cloture: 'Clôturé',
+        graph_pac_titre: 'PAC des Constatations Ouvertes',
+        voir_donnees_source: 'Voir les données source',
+        ouvrir_constatation: 'Ouvrir la constatation',
+        archiver: 'Archiver',
+        archiver_plan: 'Archiver le plan de surveillance',
+        archiver_plan_message: 'Le plan « {plan} » et ses {n} activités quittent les activités de supervision et rejoignent les activités archivées du menu États. Les constatations issues de ces activités poursuivent leur suivi et ne sont pas archivées.',
+        demander_changement: 'Demander Changement',
+        demander_changement_aide: 'Échanger avec l’AAC avant d’accuser réception',
+        accuser_reception: 'Accuser de Réception',
+        accuser_reception_aide: 'Accuser réception et confirmer les dates et le périmètre',
+        accuser_reception_message: 'Vous accusez réception de la notification et vous déclarez disposé à recevoir l’équipe du {debut} au {fin}, sur le périmètre annoncé. Le message part dans le fil d’échange et l’accusé figure au bas de la fiche.',
+        accuse_fait: 'Réception Accusée',
+        accuse_deja: 'Réception déjà accusée',
+        accuse_ok: 'Réception accusée',
+        apercu_notification: 'Aperçu de la Notification',
+        secteur_label: 'Secteur',
+        chargement: 'Chargement…',
+        acces_refuse: 'Accès refusé.',
+        processus_intro: 'Intervenants des processus, secteur par secteur.',
+        proc_nouveau: 'Nouveau processus',
+        proc_modifier: 'Modifier le processus',
+        proc_libelle: 'Intitulé',
+        proc_libelle_requis: 'L’intitulé est obligatoire.',
+        proc_type: 'Type de processus',
+        proc_type_activite: 'Processus activité',
+        proc_type_constatation: 'Processus constatation',
+        proc_tous_types: 'Tous les types',
+        proc_etapes: 'Étapes',
+        proc_acteurs: 'Acteurs',
+        proc_acteurs_par_etape: 'Acteurs par étape',
+        proc_ajouter_acteur: 'Ajouter un acteur',
+        proc_aucun_acteur: 'Aucun acteur désigné.',
+        proc_acteur_non_designe: '— Non désigné —',
+        description: 'Description',
+        item_requis: 'L’intitulé est obligatoire.',
+        enregistre: 'Enregistré',
+        supprime: 'Supprimé',
+        param_equipe: 'Équipe d’audit / inspection',
+        roles_equipe_intro: 'Rôles proposés à la composition de l’équipe, à l’étape Réalisation, et aux acteurs « équipe » des processus.',
+        roles_equipe_vide: 'Aucun rôle défini — les rôles d’origine restent proposés.',
+        role_equipe_supprimer_message: 'Le rôle « {item} » ne sera plus proposé à la composition des équipes.',
+        proc_poste_non_designe: '— Poste non désigné —',
+        proc_equipe_non_designe: '— Non désigné (toute l’équipe) —',
+        proc_role_libre: 'Intitulé du rôle',
+        proc_dupliquer: 'Dupliquer',
+        proc_dupliquer_intro: 'Le processus « {source} » sert de patron : ses étapes et ses acteurs sont recopiés.',
+        proc_duplique: 'Processus dupliqué',
+        proc_enregistre: 'Processus enregistré',
+        proc_supprimer: 'Supprimer le processus',
+        proc_supprimer_message: 'Le processus « {libelle} » et la désignation de ses acteurs sont supprimés.',
+        proc_supprime: 'Processus supprimé',
+        version: 'Version',
+        reinitialiser: 'Réinitialiser',
+        reinitialiser_activite: 'Réinitialiser l’activité comme non déclenchée',
+        reinitialiser_activite_message: 'L’activité redevient déclenchable : la notification, le dossier d’exécution et les échanges qui s’y rattachent sont supprimés. Le refus est opposé si des constatations ou un rapport en dépendent.',
+        reinitialiser_ok: 'Activité réinitialisée',
+        date_edition: 'Date d’édition',
+        ajust_prorogation: 'Prorogation',
+        ajust_criticite: 'Criticité',
+        ajust_complet: 'Modifier',
+        ajust_prorogation_aide: 'Modifier le délai de solde',
+        ajust_criticite_aide: 'Modifier le délai de solde et la criticité',
+        ajust_complet_aide: 'Modifier tous les champs du rappel de la constatation',
+        ajust_journal: 'Modification de la Constatation',
+        ajust_rang: 'Modification',
+        ajust_aucun: 'Aucune modification enregistrée.',
+        ajust_motif: 'Motif de la modification',
+        ajust_motif_aide: 'Ce motif reste attaché à la constatation.',
+        ajust_motif_requis: 'Le motif est obligatoire.',
+        ajust_mot_de_passe: 'Confirmez avec votre mot de passe',
+        ajust_mot_de_passe_requis: 'Le mot de passe est obligatoire.',
+        ajust_intro: 'La constatation est déjà notifiée au prestataire : la modification est tracée et attribuée.',
+        ajust_ok: 'Modification enregistrée',
+        appliquer: 'Appliquer',
+        plan_archive_ok: 'Plan archivé',
+        archiver_hors_plan: 'Archiver les autres activités',
+        archiver_hors_plan_message: 'Les {n} activités hors plan de surveillance quittent les activités de supervision et rejoignent les activités archivées du menu États, regroupées sous « Autres Activités ». Les constatations qui en sont issues poursuivent leur suivi et ne sont pas archivées.',
+        hors_plan_archive_ok: 'Autres activités archivées',
+        action_impossible: 'Action impossible',
+        graph_pac_non_soumis: 'PAC Non Soumis',
+        graph_pac_accepte: 'PAC Accepté',
+        graph_pac_rejete: 'PAC Rejeté',
+        gantt_titre: 'Calendrier des Activités',
+        gantt_aujourdhui: "Aujourd'hui",
+        gantt_type_audit: "Type d'activité",
+        gantt_dates: 'Dates',
+        gantt_lieu: 'Lieu',
+        gantt_sans_activite: 'Aucune activité planifiée',
+        gantt_hors_plan: 'Hors plan de surveillance',
+        gantt_origine: 'Origine',
+        gantt_debut: 'Début de la période',
+        gantt_fin: 'Fin de la période',
+        gantt_reculer: 'Reculer',
+        gantt_avancer: 'Avancer',
+        gantt_termine: 'Terminée',
+        gantt_en_cours: 'En cours',
+        gantt_planifie: 'Planifiée',
+        gantt_en_retard: 'En retard',
         confirm_renvoyer: 'Confirmer le renvoi du PAC au postulant ? Les champs du PAC seront réactivés.',
         confirm_solder: 'Confirmer la clôture de la constatation ? Tous les champs seront verrouillés.',
         motif_renvoi: 'Motif du renvoi (visible par le postulant)',
+        motif_renvoi_titre: 'Motif du renvoi',
+        historique_decisions: 'Renvois et rejets',
+        transmis_sans_courriel: 'Transmission enregistrée, mais aucun courriel n’est parti : le serveur de messagerie n’est pas configuré.',
+        aide_historique_decisions: 'Ce qui avait été demandé aux tours précédents, pour réviser les corrections apportées.',
+        motif_rejet_titre: 'Motif du rejet',
+        constatation_rejetee_arret: 'La constatation est rejetée : le circuit s’arrête ici, elle ne peut plus être modifiée.',
         brouillon_enregistre: 'Brouillon enregistré',
         fiche_constat: 'Fiche Constat',
         fiche_suivi: 'Fiche Suivi',
@@ -225,9 +487,11 @@ const EXEC_TR = {
         ref_label: 'Référence',
         domaine_label: 'Domaine',
         criticite_label: 'Criticité',
-        date_due_label: 'Due Date',
+        date_due_label: 'Date d’Échéance',
         ref_reglementaires_label: 'Référentiel(s) réglementaire(s)',
         item_cause: 'Cause Primaire',
+        suivi_choisir_item: 'Choisir d\'abord le ou les items concernés',
+        suivi_saisir_commentaire: 'Saisir le commentaire de suivi…',
         item_action_curative: 'Action Curative',
         item_date_curative: 'Date prévue (Curative)',
         item_preuves_curative: 'Preuves (Curative)',
@@ -265,6 +529,12 @@ const EXEC_TR = {
         ouvrir_dossier: 'Dossier',
         creer_fnc: 'Creer Constatation',
         suivi_pac: 'Suivi PAC',
+        pac_etape_soumission: 'Soumission',
+        pac_etape_acceptation: 'Acceptation',
+        pac_etape_mise_oeuvre: 'Mise en oeuvre',
+        pac_etape_cloture: 'Cloture',
+        pac_fil_en_cours: 'En cours',
+        pac_fil_cloture: 'Cloture',
         contacts: 'Contacts',
         renseigner: 'Renseigner l\'Activite',
         generer_rapport: 'Generer Rapport',
@@ -291,6 +561,54 @@ const EXEC_TR = {
         year: 'Annee',
         save: 'Enregistrer',
         cancel: 'Annuler',
+        ajouter: 'Ajouter',
+        supprimer: 'Supprimer',
+        preuve_dialogue_titre: 'Pièce jointe',
+        champ_amende: 'Champ amendé',
+        preuve_date: 'Date de dépôt',
+        verifier_terrain: 'À vérifier sur le terrain',
+        preuves_non_acceptables: 'Non acceptable',
+        cloturer: 'Clôturer',
+        votre_message: 'Votre message…',
+        modifier: 'Modifier',
+        non_transmis: 'Non transmis',
+        confirm_supprimer_commentaire: 'Supprimer ce commentaire ?',
+        renvoyer_mise_oeuvre: 'Renvoyer à la mise en oeuvre',
+        renvoye_mise_oeuvre: 'Renvoyé à l\'étape Mise en oeuvre',
+        confirm_annuler_saisie: 'Abandonner les saisies non enregistrées ? Le formulaire se recharge tel qu\'il est enregistré.',
+        acceptation: 'Acceptable',
+        preuves_recueillies: 'Preuves de mise en oeuvre recueillies',
+        commentaire_general_suivi: 'Commentaire général de suivi',
+        aucun_suivi: 'Aucun suivi enregistré',
+        suivi_placeholder: 'Saisir un commentaire de suivi…',
+        ajouter_suivi: 'Ajouter',
+        preuves_refusees: 'Preuves refusées',
+        preuves_refusees_titre: 'Preuves de mise en oeuvre non acceptables',
+        preuves_acceptees_ok: 'Preuves de mise en oeuvre acceptées',
+        preuves_acceptees_titre: 'Preuves de mise en oeuvre acceptées',
+        verification_terrain_annoncee: 'Une vérification sur le terrain sera effectuée avant la clôture de la constatation.',
+        confirm_accepter_preuves: 'Accepter les preuves de mise en oeuvre ? L\'étape « Mise en oeuvre » sera close et la constatation se présentera à la clôture.',
+        confirm_accepter_preuves_terrain: 'Accepter les preuves de mise en oeuvre ? L\'étape « Mise en oeuvre » sera close ; une vérification sur le terrain restera à mener avant la clôture.',
+        motif_choisir: '— Objet de la modification —',
+        motif_preciser: 'Préciser',
+        motif_manquant: 'Objet de la modification à renseigner',
+        motif_nouvelle_cause: 'Nouvelle cause (ajout à la précédente)',
+        motif_nouvelle_action: 'Nouvelle action (ajout à la précédente)',
+        motif_refonte_action: 'Refonte de l\'action (en remplacement)',
+        motif_modification_date: 'Modification de date',
+        motif_observations_aac: 'Prise en compte des observations de l\'AAC',
+        motif_correction_mineure: 'Correction mineure (typographie / fautes / clarifications)',
+        motif_autres: 'Autres',
+        date_prevue_curative: 'Date prévue — action curative',
+        date_prevue_corrective: 'Date prévue — action corrective',
+        modifier_piece: 'Modifier la pièce',
+        ouvrir_piece: 'Ouvrir la pièce jointe',
+        enregistrer: 'Enregistrer',
+        preuve_intitule: 'Intitulé de la pièce',
+        preuve_intitule_exemple: 'Ex. : attestation de formation du 12/08/2026',
+        preuve_intitule_requis: 'Intitulé obligatoire',
+        preuve_commentaire: 'Commentaire',
+        preuve_commentaire_aide: 'À l\'attention de l\'AAC (facultatif)',
         back: 'Retour',
         close: 'Fermer',
         edit: 'Modifier',
@@ -304,7 +622,6 @@ const EXEC_TR = {
         sync_excluded_intro: 'Les activites suivantes sont deja declenchees et ne sont donc pas resynchronisees depuis les plans amendes :',
         lecture_seule: 'lecture seule',
         reserve_aac: "Reserve a l'AAC",
-        apercu: 'Apercu',
         notifs_en_attente_dossier: 'Notifications envoyees (en attente de dossier)',
         loading: 'Chargement...',
         confirm: 'Confirmer',
@@ -341,7 +658,7 @@ const EXEC_TR = {
         activites_non_declenchees: 'Non Declenchees',
         activites_en_cours: 'En Cours',
         activites_cloturees: 'Cloturees',
-        taux_execution: 'Taux Execution',
+        taux_execution: 'Taux d’Exécution',
         nb_constatations: 'Constatations',
         taux_cloture_const: 'Taux Clot. Const.',
         total: 'Total',
@@ -392,8 +709,66 @@ const EXEC_TR = {
         details: 'Details',
         responsable: 'Responsible',
         constatations: 'Findings & Follow-up',
-        consta_sub_list: 'Findings',
+        consta_sub_list: 'In preparation',
         consta_sub_suivi: 'Follow-up',
+        consta_sub_terrain: 'On-site follow-up',
+        constatation_hors_activites: 'Finding Outside Surveillance Activities',
+        cd_etape_preparation: 'Preparation',
+        realisation_intro: 'Confirm and adjust the details of the on-site activity, then draft the report.',
+        real_section_cadre: 'Activity framework',
+        redac_section_introduction: 'Introduction',
+        redac_section_synthese: 'Summary and recommendations',
+        redac_section_checklists: 'Checklists and other documents',
+        redac_section_constatations: 'Findings',
+        redac_section_conclusion: 'Conclusions',
+        redac_section_annexes: 'Appendices',
+        constatation: 'Finding',
+        ajouter_constatation: 'Add finding',
+        fiches_constat: 'Finding sheets',
+        fiche_suivi_pac: 'CAP follow-up sheet',
+        a_completer_prestataire: '(to be completed by the provider)',
+        a_completer_aac: '(CAA use only)',
+        retour_rapport: 'Back to report',
+        fnc_section_identification: 'Identification',
+        fnc_section_constat: 'Finding statement',
+        fnc_section_traitement: 'Expected treatment',
+        fnc_section_preuves: 'Evidence',
+        fnc_aide_identification: 'Issuer, addressee, date and scope of the finding.',
+        cd_aide_identification: 'Provider concerned, issuer, addressee, date and scope.',
+        fnc_aide_constat: 'Applicable references and description of the gap.',
+        fnc_aide_traitement: 'Criticality, closure deadline and recommendation.',
+        fnc_aide_preuves: 'Items collected to support the finding.',
+        redac_aide_introduction: 'Report framework: purpose, dates, team, scope and references.',
+        redac_aide_synthese: 'Strengths, weaknesses, opportunities and overall summary.',
+        redac_aide_checklists: 'Completed checklists and collected documents.',
+        redac_aide_constatations: 'Findings raised during the activity.',
+        redac_aide_conclusion: 'Conclusion of the surveillance activity.',
+        redac_aide_annexes: 'Items appended to the report: title, content and files.',
+        real_section_equipe: 'Audit / inspection team',
+        real_section_programme: 'Work programme',
+        real_section_checklists: 'Checklists to use',
+        real_section_pj: 'Activity attachments',
+        real_nature: 'Nature of the activity',
+        real_aide_equipe: 'Inspectors involved and their roles.',
+        real_aide_programme: 'Planned schedule: date, time, actions and counterpart.',
+        real_aide_checklists: 'Checklists selected for this activity; "Fill in" opens the grid.',
+        real_aide_pj: 'Documents collected during the activity.',
+        televerser_pj: 'Upload attachments',
+        aucune_piece_jointe: 'No attachment.',
+        cd_etape_validation: 'Validation',
+        cd_etape_transmission: 'Transmission',
+        imprimer_constatation: 'Print',
+        transmission_constatation: 'Sending the finding to the provider',
+        export_excel: 'Export Excel',
+        export_route_absente: 'Export unavailable: restart the server to load the export route.',
+        exp_annee: 'Year',
+        exp_recherche: 'Search',
+        edite_le: 'Issued on',
+        aucun_filtre: 'No filter',
+        visa_inspecteur: 'Inspector signature',
+        visa_prestataire: 'Provider signature',
+        bloqueur_fenetre: 'Allow pop-ups to produce the PDF',
+        a_verifier_terrain: 'finding(s) to be verified on site',
         rapports: 'Reports',
         parametres: 'Settings',
         mes_taches: 'My Tasks',
@@ -410,6 +785,67 @@ const EXEC_TR = {
         ordre: 'Order',
         activites_realisees: 'Activities completed (YTD)',
         constatations_ouvertes: 'Open findings',
+        dont: 'of which',
+        hors_activite_court: 'off-activity',
+        situation_generale: 'Overall Situation',
+        statistiques_detaillees: 'Detailed statistics',
+        periode_analysee: 'Period analysed',
+        filtre_temporel: 'Inspection time filter',
+        periode_examinee: 'Period examined',
+        chrono_date_debut: 'Start date', chrono_date_fin: 'End date',
+        fin: 'End',
+        cycle_surveillance: 'Surveillance cycle set in “Surveillance Plans”',
+        cycle_court: 'Cycle',
+        chrono_12_mois: '12 months', chrono_6_mois: '6 months', chrono_3_mois: '3 months',
+        chrono_tout: 'All',
+        statistiques: 'Statistics',
+        voir_statistiques: 'View Statistics',
+        indicateurs: 'Indicators',
+        indicateurs_conformite: 'Compliance indicators',
+        detail_indicateur: 'Indicator detail',
+        aucun_indicateur: 'Pick an indicator above to see its detail.',
+        stats_criticite: 'Critical & major findings',
+        stats_complementaires: 'Further indicators',
+        stats_critiques: 'Critical',
+        stats_critiques_aide: 'Findings rated critical',
+        stats_critiques_delai: 'Resolved on time',
+        stats_echeance: 'Due date',
+        stats_moyenne_mensuelle: 'Monthly average',
+        stats_moyenne_aide: 'Critical and major per month',
+        stats_cloture_majeures: 'Major closure',
+        stats_recurrentes: 'Recurring',
+        stats_recurrentes_aide: 'Same subject, same provider',
+        stats_repetition: 'Repeated', stats_isolee: 'Isolated',
+        stats_total_suivi: 'Total tracked',
+        stats_total_aide: 'Findings sent to providers',
+        stats_cloture_globale: 'Overall closure',
+        stats_hors_delai: 'Overdue',
+        stats_hors_delai_aide: 'Unclosed, deadline passed',
+        stats_delai_moyen: 'Average time',
+        stats_delai_moyen_aide: 'From opening to closure',
+        stats_rapports_aide: 'Delivered to providers',
+        stats_top_prestataires: 'Top 5 providers by number of findings',
+        depasse: 'Overdue',
+        debut: 'Start',
+        sur: 'of',
+        realisees_court: 'completed',
+        cloturees_court: 'closed',
+        action_immediate: 'Requiring immediate action',
+        en_attente_traitement: 'Awaiting treatment',
+        en_attente: 'Pending',
+        en_cours_court: 'In progress',
+        cloture_court: 'Closed',
+        faible: 'Low',
+        eleve: 'High',
+        act_en_retard: 'Overdue',
+        act_en_retard_aide: 'Start date passed, not triggered',
+        a_planifier: 'To Schedule',
+        horizon_prochains: 'Next',
+        mois: 'months',
+        taux_cloture: 'Closure Rate',
+        critiques: 'Critical',
+        ouvertes: 'Open',
+        en_retard: 'overdue',
         risques_critiques: 'Critical risks',
         dossiers_ouverts: 'Open Dossiers',
         notifications_envoyees: 'Notifications Sent',
@@ -473,6 +909,8 @@ const EXEC_TR = {
         critique: 'Critical',
         majeur: 'Major',
         mineur: 'Minor',
+        majeure: 'Major',
+        mineure: 'Minor',
         cas: 'Case',
         description_constatation: 'Finding Description',
         delai_solde: 'Settlement Deadline',
@@ -490,15 +928,46 @@ const EXEC_TR = {
         rappel_constatation: 'Finding Recap',
         plan_actions_correctives: 'Corrective Action Plan',
         evaluation_suivi_aac: 'Evaluation and Follow-up (CAA only)',
-        details_suivi: 'Follow-up Details',
-        details_suivi_intro: 'Items, applicant responses, and exchanges between the CAA and the applicant.',
+        details_suivi: 'Assessment and follow-up (CAA only)',
+        resultats_suivi: 'Follow-up results',
+        details_suivi_intro: 'Exchanges between the CAA and the applicant on each action-plan item.',
+        suivi_rang: 'Follow-up',
+        joindre_fichier: 'Attach a file',
+        suivi_attente_soumission: 'Assessment opens once the provider has submitted the action plan.',
+        soumettre: 'Submit',
+        renvoyer: 'Return',
+        ajouter_preuves: 'Add Evidence',
+        amender_pac: 'Amend CAP',
+        choisir_mode_pac: 'First choose "Add Evidence" or "Amend CAP"',
+        mode_preuves_actif: 'Implementation evidence: only the evidence areas of the action plan are open.',
+        mode_amendement_actif: 'Action plan amendment: every field is reopened. On submission the accepted plan is versioned and the workflow returns to the Acceptance stage.',
+        mode_mixte_actif: 'Plan amendment and evidence upload: every field is open. On submission the amendment prevails — the accepted plan is versioned, evidence included, and the workflow returns to the Acceptance stage.',
+        confirm_quitter_amendement: 'Give up the amendment? The action plan returns to its accepted version: the changes made, including those saved as a draft, are discarded. Uploaded evidence is kept.',
+        plan_retabli: 'Action plan restored to its accepted version',
+        confirm_soumettre_preuves: 'Submit the implementation evidence to the CAA? The workflow stays at the Implementation stage.',
+        confirm_soumettre_amendement: 'Submit the amended action plan? The previous acceptance is cancelled and the workflow returns to the Acceptance stage.',
+        preuves_soumises: 'Implementation evidence submitted',
+        preuves_soumises_titre: 'Implementation evidence submitted',
+        pac_amende: 'Action plan amended',
+        pac_amende_soumis: 'Amended action plan submitted to the CAA',
+        versions_pac: 'Previous versions of the action plan',
+        version_n: 'Version',
+        amende_le: 'amended on',
+        accepter_pac: 'Accept CAP',
+        accepter_pac_preuves: 'Accept CAP and Evidence',
+        confirm_accepter_pac: 'Accept the corrective action plan? The Acceptance stage will close and implementation may start.',
+        confirm_accepter_pac_preuves: 'Accept the action plan and the implementation evidence? Both the Acceptance and Implementation stages will close; the finding moves to closure.',
+        pac_accepte_ok: 'Action plan accepted',
+        pac_preuves_acceptes: 'Action plan and evidence accepted',
+        volet_deplier: 'Expand comments',
+        volet_replier: 'Collapse comments',
         item_label: 'Item',
         reponse_label: 'Applicant response',
         commentaires_label: 'Comments',
         cause_root: 'Root Cause',
         action_curative_correction: 'Curative Action (Immediate correction)',
         action_corrective_prevention: 'Corrective Action (Recurrence prevention)',
-        acceptation_propositions: 'Acceptance of proposed actions',
+        acceptation_propositions: 'CAP acceptance',
         pac_accepte: 'Is the CAP accepted?',
         date_acceptation: 'Acceptance date',
         verification_mise_oeuvre: 'Implementation verification',
@@ -507,7 +976,7 @@ const EXEC_TR = {
         commentaire_efficacite: 'Comments on implementation and effectiveness',
         preuves_mise_oeuvre: 'Implementation evidence provided by the operator',
         cloture_fnc: 'Finding closure',
-        mise_oeuvre_effective: 'Effective implementation?',
+        mise_oeuvre_effective: 'Effective implementation of the actions',
         date_solde: 'Closure date',
         solde_par: 'Closed by (Inspector)',
         oui_label: 'YES',
@@ -526,9 +995,117 @@ const EXEC_TR = {
         constatation_soldee: 'Finding closed',
         cloturee_dans_delais: 'Closed on time',
         hors_delais: 'Overdue',
+        graph_emises: 'Findings issued',
+        graph_criticite: 'Findings by criticality',
+        emises_ouverte: 'Open',
+        emises_cloture: 'Closed',
+        graph_pac_titre: 'CAP of open findings',
+        voir_donnees_source: 'View source data',
+        ouvrir_constatation: 'Open the finding',
+        archiver: 'Archive',
+        archiver_plan: 'Archive the surveillance plan',
+        archiver_plan_message: 'Plan \u00ab {plan} \u00bb and its {n} activities leave the supervision activities and move to the archived activities under States. Findings raised by those activities keep their follow-up and are not archived.',
+        demander_changement: 'Request a change',
+        demander_changement_aide: 'Discuss with the CAA before acknowledging receipt',
+        accuser_reception: 'Acknowledge receipt',
+        accuser_reception_aide: 'Acknowledge receipt and confirm the dates and scope',
+        accuser_reception_message: 'You acknowledge receipt of the notification and declare yourself ready to host the team from {debut} to {fin}, on the announced scope. The message is posted in the discussion thread and the acknowledgement appears at the bottom of the form.',
+        accuse_fait: 'Receipt acknowledged',
+        accuse_deja: 'Receipt already acknowledged',
+        accuse_ok: 'Receipt acknowledged',
+        apercu_notification: 'Notification preview',
+        secteur_label: 'Sector',
+        chargement: 'Loading…',
+        acces_refuse: 'Access denied.',
+        processus_intro: 'Process actors, sector by sector.',
+        proc_nouveau: 'New process',
+        proc_modifier: 'Edit the process',
+        proc_libelle: 'Name',
+        proc_libelle_requis: 'A name is required.',
+        proc_type: 'Process type',
+        proc_type_activite: 'Activity process',
+        proc_type_constatation: 'Finding process',
+        proc_tous_types: 'All types',
+        proc_etapes: 'Steps',
+        proc_acteurs: 'Actors',
+        proc_acteurs_par_etape: 'Actors per step',
+        proc_ajouter_acteur: 'Add an actor',
+        proc_aucun_acteur: 'No actor assigned.',
+        proc_acteur_non_designe: '— Not assigned —',
+        description: 'Description',
+        item_requis: 'A name is required.',
+        enregistre: 'Saved',
+        supprime: 'Deleted',
+        param_equipe: 'Audit / inspection team',
+        roles_equipe_intro: 'Roles offered when composing the team at the Execution step, and to the team actors of processes.',
+        roles_equipe_vide: 'No role defined — the built-in roles remain available.',
+        role_equipe_supprimer_message: 'Role \u00ab {item} \u00bb will no longer be offered when composing teams.',
+        proc_poste_non_designe: '— No position selected —',
+        proc_equipe_non_designe: '— Not assigned (whole team) —',
+        proc_role_libre: 'Role name',
+        proc_dupliquer: 'Duplicate',
+        proc_dupliquer_intro: 'Process \u00ab {source} \u00bb is used as a template: its steps and actors are copied.',
+        proc_duplique: 'Process duplicated',
+        proc_enregistre: 'Process saved',
+        proc_supprimer: 'Delete the process',
+        proc_supprimer_message: 'Process \u00ab {libelle} \u00bb and its actor assignments are deleted.',
+        proc_supprime: 'Process deleted',
+        version: 'Version',
+        reinitialiser: 'Reset',
+        reinitialiser_activite: 'Reset the activity to not triggered',
+        reinitialiser_activite_message: 'The activity becomes triggerable again: the notification, the execution file and the related exchanges are deleted. The request is refused if findings or a report depend on it.',
+        reinitialiser_ok: 'Activity reset',
+        date_edition: 'Issue date',
+        ajust_prorogation: 'Extension',
+        ajust_criticite: 'Criticality',
+        ajust_complet: 'Edit',
+        ajust_prorogation_aide: 'Change the settlement deadline',
+        ajust_criticite_aide: 'Change the settlement deadline and the criticality',
+        ajust_complet_aide: 'Change every field of the finding recap',
+        ajust_journal: 'Finding changes',
+        ajust_rang: 'Change',
+        ajust_aucun: 'No change recorded.',
+        ajust_motif: 'Reason for the change',
+        ajust_motif_aide: 'This reason stays attached to the finding.',
+        ajust_motif_requis: 'A reason is required.',
+        ajust_mot_de_passe: 'Confirm with your password',
+        ajust_mot_de_passe_requis: 'The password is required.',
+        ajust_intro: 'The finding has already been notified to the provider: the change is traced and attributed.',
+        ajust_ok: 'Change recorded',
+        appliquer: 'Apply',
+        plan_archive_ok: 'Plan archived',
+        archiver_hors_plan: 'Archive the other activities',
+        archiver_hors_plan_message: 'The {n} activities outside the surveillance plan leave the supervision activities and move to the archived activities under States, grouped as \u00ab Autres Activit\u00e9s \u00bb. Findings raised by them keep their follow-up and are not archived.',
+        hors_plan_archive_ok: 'Other activities archived',
+        action_impossible: 'Action not possible',
+        graph_pac_non_soumis: 'CAP not submitted',
+        graph_pac_accepte: 'CAP accepted',
+        graph_pac_rejete: 'CAP rejected',
+        gantt_titre: 'Activity calendar',
+        gantt_aujourdhui: 'Today',
+        gantt_type_audit: 'Activity type',
+        gantt_dates: 'Dates',
+        gantt_lieu: 'Location',
+        gantt_sans_activite: 'No planned activity',
+        gantt_hors_plan: 'Outside the surveillance plan',
+        gantt_origine: 'Origin',
+        gantt_debut: 'Start of period',
+        gantt_fin: 'End of period',
+        gantt_reculer: 'Back',
+        gantt_avancer: 'Forward',
+        gantt_termine: 'Completed',
+        gantt_en_cours: 'In progress',
+        gantt_planifie: 'Planned',
+        gantt_en_retard: 'Overdue',
         confirm_renvoyer: 'Confirm returning the CAP to the applicant? CAP fields will be reactivated.',
         confirm_solder: 'Confirm closing the finding? All fields will be locked.',
         motif_renvoi: 'Reason for return (visible to applicant)',
+        motif_renvoi_titre: 'Reason for return',
+        historique_decisions: 'Returns and rejections',
+        transmis_sans_courriel: 'Transmission recorded, but no e-mail was sent: the mail server is not configured.',
+        aide_historique_decisions: 'What was asked in earlier rounds, to review the corrections made.',
+        motif_rejet_titre: 'Reason for rejection',
+        constatation_rejetee_arret: 'The finding is rejected: the workflow stops here and it can no longer be edited.',
         brouillon_enregistre: 'Draft saved',
         fiche_constat: 'Finding Sheet',
         fiche_suivi: 'Follow-up Sheet',
@@ -540,6 +1117,8 @@ const EXEC_TR = {
         date_due_label: 'Due Date',
         ref_reglementaires_label: 'Regulatory reference(s)',
         item_cause: 'Root Cause',
+        suivi_choisir_item: 'First choose the item(s) concerned',
+        suivi_saisir_commentaire: 'Enter the follow-up comment…',
         item_action_curative: 'Curative Action',
         item_date_curative: 'Planned date (Curative)',
         item_preuves_curative: 'Evidence (Curative)',
@@ -573,6 +1152,12 @@ const EXEC_TR = {
         ouvrir_dossier: 'Dossier',
         creer_fnc: 'Create Finding',
         suivi_pac: 'CAP Follow-up',
+        pac_etape_soumission: 'Submission',
+        pac_etape_acceptation: 'Acceptance',
+        pac_etape_mise_oeuvre: 'Implementation',
+        pac_etape_cloture: 'Closure',
+        pac_fil_en_cours: 'In progress',
+        pac_fil_cloture: 'Closed',
         contacts: 'Contacts',
         renseigner: 'Fill Activity',
         generer_rapport: 'Generate Report',
@@ -598,6 +1183,54 @@ const EXEC_TR = {
         year: 'Year',
         save: 'Save',
         cancel: 'Cancel',
+        ajouter: 'Add',
+        supprimer: 'Delete',
+        preuve_dialogue_titre: 'Attachment',
+        champ_amende: 'Amended field',
+        preuve_date: 'Upload date',
+        verifier_terrain: 'To be verified on site',
+        preuves_non_acceptables: 'Not acceptable',
+        cloturer: 'Close',
+        votre_message: 'Your message…',
+        modifier: 'Edit',
+        non_transmis: 'Not sent',
+        confirm_supprimer_commentaire: 'Delete this comment?',
+        renvoyer_mise_oeuvre: 'Send back to implementation',
+        renvoye_mise_oeuvre: 'Sent back to the Implementation stage',
+        confirm_annuler_saisie: 'Discard unsaved entries? The form reloads as stored.',
+        acceptation: 'Acceptable',
+        preuves_recueillies: 'Implementation evidence collected',
+        commentaire_general_suivi: 'General follow-up comment',
+        aucun_suivi: 'No follow-up recorded',
+        suivi_placeholder: 'Enter a follow-up comment…',
+        ajouter_suivi: 'Add',
+        preuves_refusees: 'Evidence rejected',
+        preuves_refusees_titre: 'Implementation evidence not acceptable',
+        preuves_acceptees_ok: 'Implementation evidence accepted',
+        preuves_acceptees_titre: 'Implementation evidence accepted',
+        verification_terrain_annoncee: 'An on-site verification will be carried out before the finding is closed.',
+        confirm_accepter_preuves: 'Accept the implementation evidence? The Implementation stage will close and the finding moves to closure.',
+        confirm_accepter_preuves_terrain: 'Accept the implementation evidence? The Implementation stage will close; an on-site verification remains to be carried out before closure.',
+        motif_choisir: '— Reason for the change —',
+        motif_preciser: 'Specify',
+        motif_manquant: 'Reason for the change is required',
+        motif_nouvelle_cause: 'New cause (added to the previous one)',
+        motif_nouvelle_action: 'New action (added to the previous one)',
+        motif_refonte_action: 'Action redesigned (replacement)',
+        motif_modification_date: 'Date change',
+        motif_observations_aac: 'Taking CAA comments into account',
+        motif_correction_mineure: 'Minor correction (typos / wording)',
+        motif_autres: 'Other',
+        date_prevue_curative: 'Planned date — immediate action',
+        date_prevue_corrective: 'Planned date — corrective action',
+        modifier_piece: 'Edit attachment',
+        ouvrir_piece: 'Open attachment',
+        enregistrer: 'Save',
+        preuve_intitule: 'Attachment title',
+        preuve_intitule_exemple: 'e.g. training certificate dated 12/08/2026',
+        preuve_intitule_requis: 'Title required',
+        preuve_commentaire: 'Comment',
+        preuve_commentaire_aide: 'For the CAA (optional)',
         back: 'Back',
         close: 'Close',
         edit: 'Edit',
@@ -611,7 +1244,6 @@ const EXEC_TR = {
         sync_excluded_intro: 'The following activities have already been triggered and will not be re-synced from the amended plans:',
         lecture_seule: 'read only',
         reserve_aac: 'Restricted to CAA',
-        apercu: 'Preview',
         notifs_en_attente_dossier: 'Sent notifications (awaiting dossier)',
         loading: 'Loading...',
         confirm: 'Confirm',
@@ -694,8 +1326,66 @@ const EXEC_TR = {
         details: 'Detalhes',
         responsable: 'Responsavel',
         constatations: 'Constatações e Acompanhamento',
-        consta_sub_list: 'Constatações',
+        consta_sub_list: 'Em preparacao',
         consta_sub_suivi: 'Acompanhamento',
+        consta_sub_terrain: 'Acompanhamento no terreno',
+        constatation_hors_activites: 'Constatacao fora das atividades de supervisao',
+        cd_etape_preparation: 'Preparacao',
+        realisation_intro: 'Confirme e ajuste as informacoes da atividade no terreno, depois redija o relatorio.',
+        real_section_cadre: 'Enquadramento da atividade',
+        redac_section_introduction: 'Introducao',
+        redac_section_synthese: 'Sinteses e recomendacoes',
+        redac_section_checklists: 'Checklists e outros documentos',
+        redac_section_constatations: 'Constatacoes',
+        redac_section_conclusion: 'Conclusoes',
+        redac_section_annexes: 'Anexos',
+        constatation: 'Constatacao',
+        ajouter_constatation: 'Adicionar constatacao',
+        fiches_constat: 'Fichas de constatacao',
+        fiche_suivi_pac: 'Ficha de acompanhamento do PAC',
+        a_completer_prestataire: '(a preencher pelo prestador)',
+        a_completer_aac: '(reservado a AAC)',
+        retour_rapport: 'Voltar ao relatorio',
+        fnc_section_identification: 'Identificacao',
+        fnc_section_constat: 'Constatacao',
+        fnc_section_traitement: 'Tratamento esperado',
+        fnc_section_preuves: 'Provas',
+        fnc_aide_identification: 'Emissor, destinatario, data e enquadramento.',
+        cd_aide_identification: 'Prestador em causa, emissor, destinatario, data e enquadramento.',
+        fnc_aide_constat: 'Referenciais aplicaveis e descricao do desvio.',
+        fnc_aide_traitement: 'Criticidade, prazo de encerramento e recomendacao.',
+        fnc_aide_preuves: 'Elementos recolhidos em apoio da constatacao.',
+        redac_aide_introduction: 'Enquadramento do relatorio: objeto, datas, equipa, ambito e referenciais.',
+        redac_aide_synthese: 'Pontos fortes, pontos fracos, oportunidades e resumo global.',
+        redac_aide_checklists: 'Checklists preenchidas e documentos recolhidos.',
+        redac_aide_constatations: 'Desvios registados durante a atividade.',
+        redac_aide_conclusion: 'Conclusao da atividade de supervisao.',
+        redac_aide_annexes: 'Pecas anexadas ao relatorio: titulo, conteudo e ficheiros.',
+        real_section_equipe: 'Equipa de auditoria / inspecao',
+        real_section_programme: 'Programa de trabalho',
+        real_section_checklists: 'Checklists a utilizar',
+        real_section_pj: 'Anexos da atividade',
+        real_nature: 'Natureza da atividade',
+        real_aide_equipe: 'Inspetores mobilizados e respetivos papeis.',
+        real_aide_programme: 'Programa previsto: data, horario, acoes e interlocutor.',
+        real_aide_checklists: 'Checklists retidas para esta atividade.',
+        real_aide_pj: 'Documentos recolhidos durante a atividade.',
+        televerser_pj: 'Carregar anexos',
+        aucune_piece_jointe: 'Sem anexos.',
+        cd_etape_validation: 'Validacao',
+        cd_etape_transmission: 'Transmissao',
+        imprimer_constatation: 'Imprimir',
+        transmission_constatation: 'Transmissao da constatacao ao prestador',
+        export_excel: 'Exportar Excel',
+        export_route_absente: 'Exportacao indisponivel: reinicie o servidor para carregar a rota de exportacao.',
+        exp_annee: 'Ano',
+        exp_recherche: 'Pesquisa',
+        edite_le: 'Emitido em',
+        aucun_filtre: 'Sem filtro',
+        visa_inspecteur: 'Visto do inspetor',
+        visa_prestataire: 'Visto do prestador',
+        bloqueur_fenetre: 'Autorize as janelas para gerar o PDF',
+        a_verifier_terrain: 'constatacao(oes) a verificar no terreno',
         rapports: 'Relatorios',
         parametres: 'Parâmetros',
         mes_taches: 'Minhas Tarefas',
@@ -712,6 +1402,67 @@ const EXEC_TR = {
         ordre: 'Ordem',
         activites_realisees: 'Atividades realizadas (YTD)',
         constatations_ouvertes: 'Constatações abertas',
+        dont: 'dos quais',
+        hors_activite_court: 'fora de atividade',
+        situation_generale: 'Situacao Geral',
+        statistiques_detaillees: 'Estatisticas detalhadas',
+        periode_analysee: 'Periodo analisado',
+        filtre_temporel: 'Filtro temporal de inspecao',
+        periode_examinee: 'Periodo examinado',
+        chrono_date_debut: 'Data de inicio', chrono_date_fin: 'Data de fim',
+        fin: 'Fim',
+        cycle_surveillance: 'Ciclo de vigilancia definido em «Planos de Vigilancia»',
+        cycle_court: 'Ciclo',
+        chrono_12_mois: '12 meses', chrono_6_mois: '6 meses', chrono_3_mois: '3 meses',
+        chrono_tout: 'Tudo',
+        statistiques: 'Estatisticas',
+        voir_statistiques: 'Ver as Estatisticas',
+        indicateurs: 'Indicadores',
+        indicateurs_conformite: 'Indicadores de conformidade',
+        detail_indicateur: 'Detalhe do indicador',
+        aucun_indicateur: 'Escolha um indicador acima para ver o detalhe.',
+        stats_criticite: 'Constatacoes criticas e maiores',
+        stats_complementaires: 'Indicadores complementares',
+        stats_critiques: 'Criticas',
+        stats_critiques_aide: 'Constatacoes de criticidade critica',
+        stats_critiques_delai: 'Resolvidas no prazo',
+        stats_echeance: 'Vencimento',
+        stats_moyenne_mensuelle: 'Media mensal',
+        stats_moyenne_aide: 'Criticas e maiores por mes',
+        stats_cloture_majeures: 'Encerramento das maiores',
+        stats_recurrentes: 'Recorrentes',
+        stats_recurrentes_aide: 'Mesmo objeto, mesmo prestador',
+        stats_repetition: 'Repetida', stats_isolee: 'Isolada',
+        stats_total_suivi: 'Total acompanhado',
+        stats_total_aide: 'Constatacoes transmitidas',
+        stats_cloture_globale: 'Encerramento global',
+        stats_hors_delai: 'Fora do prazo',
+        stats_hors_delai_aide: 'Nao encerradas, prazo ultrapassado',
+        stats_delai_moyen: 'Prazo medio',
+        stats_delai_moyen_aide: 'Da abertura ao encerramento',
+        stats_rapports_aide: 'Entregues aos prestadores',
+        stats_top_prestataires: 'Top 5 prestadores por numero de constatacoes',
+        depasse: 'Ultrapassado',
+        debut: 'Inicio',
+        sur: 'de',
+        realisees_court: 'realizadas',
+        cloturees_court: 'encerradas',
+        action_immediate: 'Exigindo acao imediata',
+        en_attente_traitement: 'A aguardar tratamento',
+        en_attente: 'Pendente',
+        en_cours_court: 'Em curso',
+        cloture_court: 'Encerrado',
+        faible: 'Baixo',
+        eleve: 'Elevado',
+        act_en_retard: 'Em atraso',
+        act_en_retard_aide: 'Inicio ultrapassado, nao desencadeadas',
+        a_planifier: 'A Planear',
+        horizon_prochains: 'Proximos',
+        mois: 'meses',
+        taux_cloture: 'Taxa de Encerramento',
+        critiques: 'Criticas',
+        ouvertes: 'Abertas',
+        en_retard: 'em atraso',
         risques_critiques: 'Riscos críticos',
         dossiers_ouverts: 'Dosses Abertos',
         notifications_envoyees: 'Notificacoes Enviadas',
@@ -775,6 +1526,8 @@ const EXEC_TR = {
         critique: 'Critico',
         majeur: 'Maior',
         mineur: 'Menor',
+        majeure: 'Maior',
+        mineure: 'Menor',
         cas: 'Caso',
         description_constatation: 'Descricao da Constatacao',
         delai_solde: 'Prazo de Encerramento',
@@ -792,15 +1545,46 @@ const EXEC_TR = {
         rappel_constatation: 'Resumo da Constatacao',
         plan_actions_correctives: 'Plano de Acoes Corretivas',
         evaluation_suivi_aac: 'Avaliacao e Acompanhamento (Reservado AAC)',
-        details_suivi: 'Detalhes do acompanhamento',
-        details_suivi_intro: 'Items, respostas do postulante e trocas entre AAC e o postulante.',
+        details_suivi: 'Avaliacoes e Acompanhamento (Reservado AAC)',
+        resultats_suivi: 'Resultados do Acompanhamento',
+        details_suivi_intro: 'Trocas entre a AAC e o postulante sobre cada item do plano de acoes.',
+        suivi_rang: 'Acompanhamento',
+        joindre_fichier: 'Anexar um ficheiro',
+        suivi_attente_soumission: 'A avaliacao abre assim que o prestador submeter o plano de acoes.',
+        soumettre: 'Submeter',
+        renvoyer: 'Devolver',
+        ajouter_preuves: 'Adicionar Provas',
+        amender_pac: 'Alterar PAC',
+        choisir_mode_pac: 'Escolha primeiro Adicionar Provas ou Alterar PAC',
+        mode_preuves_actif: 'Deposito das provas de implementacao: apenas as zonas de provas do plano estao abertas.',
+        mode_amendement_actif: 'Alteracao do plano de acoes: todos os campos foram reabertos. Na submissao, o plano aceite sera versionado e o circuito volta a etapa Aceitacao.',
+        mode_mixte_actif: 'Alteracao do plano e deposito das provas: todos os campos estao abertos. Na submissao, a alteracao prevalece — o plano aceite sera versionado, provas incluidas, e o circuito volta a etapa Aceitacao.',
+        confirm_quitter_amendement: 'Desistir da alteracao? O plano volta a versao aceite: as modificacoes, incluindo as guardadas em rascunho, sao descartadas. As provas depositadas sao mantidas.',
+        plan_retabli: 'Plano de acoes reposto na versao aceite',
+        confirm_soumettre_preuves: 'Submeter as provas de implementacao a AAC? O circuito permanece na etapa Implementacao.',
+        confirm_soumettre_amendement: 'Submeter o plano de acoes alterado? A aceitacao anterior e anulada: o circuito volta a etapa Aceitacao.',
+        preuves_soumises: 'Provas de implementacao submetidas',
+        preuves_soumises_titre: 'Provas de implementacao submetidas',
+        pac_amende: 'Plano de acoes alterado',
+        pac_amende_soumis: 'Plano de acoes alterado submetido a AAC',
+        versions_pac: 'Versoes anteriores do plano de acoes',
+        version_n: 'Versao',
+        amende_le: 'alterado em',
+        accepter_pac: 'Aceitar PAC',
+        accepter_pac_preuves: 'Aceitar PAC e Provas',
+        confirm_accepter_pac: 'Aceitar o plano de acoes corretivas? A etapa Aceitacao sera encerrada e a implementacao podera comecar.',
+        confirm_accepter_pac_preuves: 'Aceitar o plano de acoes e as provas de implementacao? As etapas Aceitacao e Implementacao serao encerradas; a constatacao passa ao encerramento.',
+        pac_accepte_ok: 'Plano de acoes aceite',
+        pac_preuves_acceptes: 'Plano de acoes e provas aceites',
+        volet_deplier: 'Expandir comentarios',
+        volet_replier: 'Recolher comentarios',
         item_label: 'Item',
         reponse_label: 'Resposta do postulante',
         commentaires_label: 'Comentarios',
         cause_root: 'Causa Primaria (Root cause)',
         action_curative_correction: 'Acao Curativa (Correcao imediata)',
         action_corrective_prevention: 'Acao Corretiva (Prevencao de recorrencia)',
-        acceptation_propositions: 'Aceitacao das propostas de acoes',
+        acceptation_propositions: 'Aceitacao do PAC',
         pac_accepte: 'O PAC e aceito?',
         date_acceptation: 'Data de aceitacao',
         verification_mise_oeuvre: 'Verificacao da implementacao',
@@ -809,7 +1593,7 @@ const EXEC_TR = {
         commentaire_efficacite: 'Comentario sobre implementacao e eficacia',
         preuves_mise_oeuvre: 'Provas de implementacao fornecidas pelo operador',
         cloture_fnc: 'Encerramento da Ficha de Nao-Conformidade',
-        mise_oeuvre_effective: 'Implementacao Efetiva?',
+        mise_oeuvre_effective: 'Implementacao Efetiva das Acoes',
         date_solde: 'Data de Encerramento',
         solde_par: 'Encerrado por (Inspetor)',
         oui_label: 'SIM',
@@ -828,9 +1612,117 @@ const EXEC_TR = {
         constatation_soldee: 'Constatação encerrada',
         cloturee_dans_delais: 'Encerrada dentro do prazo',
         hors_delais: 'Fora do prazo',
+        graph_emises: 'Constatacoes emitidas',
+        graph_criticite: 'Constatacoes por criticidade',
+        emises_ouverte: 'Aberta',
+        emises_cloture: 'Encerrada',
+        graph_pac_titre: 'PAC das constatacoes abertas',
+        voir_donnees_source: 'Ver os dados de origem',
+        ouvrir_constatation: 'Abrir a constatacao',
+        archiver: 'Arquivar',
+        archiver_plan: 'Arquivar o plano de vigilancia',
+        archiver_plan_message: 'O plano \u00ab {plan} \u00bb e as suas {n} atividades saem das atividades de supervisao e passam para as atividades arquivadas do menu Estados. As constatacoes resultantes mantem o seu seguimento e nao sao arquivadas.',
+        demander_changement: 'Pedir alteracao',
+        demander_changement_aide: 'Dialogar com a AAC antes de acusar a rececao',
+        accuser_reception: 'Acusar rececao',
+        accuser_reception_aide: 'Acusar rececao e confirmar as datas e o ambito',
+        accuser_reception_message: 'Acusa a rececao da notificacao e declara-se disposto a receber a equipa de {debut} a {fin}, no ambito anunciado. A mensagem e publicada no fio de discussao e o aviso figura no fim da ficha.',
+        accuse_fait: 'Rececao acusada',
+        accuse_deja: 'Rececao ja acusada',
+        accuse_ok: 'Rececao acusada',
+        apercu_notification: 'Pre-visualizacao da notificacao',
+        secteur_label: 'Setor',
+        chargement: 'A carregar…',
+        acces_refuse: 'Acesso recusado.',
+        processus_intro: 'Intervenientes dos processos, setor a setor.',
+        proc_nouveau: 'Novo processo',
+        proc_modifier: 'Modificar o processo',
+        proc_libelle: 'Designacao',
+        proc_libelle_requis: 'A designacao e obrigatoria.',
+        proc_type: 'Tipo de processo',
+        proc_type_activite: 'Processo atividade',
+        proc_type_constatation: 'Processo constatacao',
+        proc_tous_types: 'Todos os tipos',
+        proc_etapes: 'Etapas',
+        proc_acteurs: 'Intervenientes',
+        proc_acteurs_par_etape: 'Intervenientes por etapa',
+        proc_ajouter_acteur: 'Adicionar interveniente',
+        proc_aucun_acteur: 'Nenhum interveniente designado.',
+        proc_acteur_non_designe: '— Nao designado —',
+        description: 'Descricao',
+        item_requis: 'A designacao e obrigatoria.',
+        enregistre: 'Guardado',
+        supprime: 'Eliminado',
+        param_equipe: 'Equipa de auditoria / inspecao',
+        roles_equipe_intro: 'Papeis propostos na composicao da equipa, na etapa Realizacao, e aos intervenientes de equipa dos processos.',
+        roles_equipe_vide: 'Nenhum papel definido — os papeis de origem continuam propostos.',
+        role_equipe_supprimer_message: 'O papel \u00ab {item} \u00bb deixara de ser proposto na composicao das equipas.',
+        proc_poste_non_designe: '— Cargo nao designado —',
+        proc_equipe_non_designe: '— Nao designado (toda a equipa) —',
+        proc_role_libre: 'Designacao do papel',
+        proc_dupliquer: 'Duplicar',
+        proc_dupliquer_intro: 'O processo \u00ab {source} \u00bb serve de modelo: as suas etapas e intervenientes sao copiados.',
+        proc_duplique: 'Processo duplicado',
+        proc_enregistre: 'Processo guardado',
+        proc_supprimer: 'Eliminar o processo',
+        proc_supprimer_message: 'O processo \u00ab {libelle} \u00bb e a designacao dos seus intervenientes sao eliminados.',
+        proc_supprime: 'Processo eliminado',
+        version: 'Versao',
+        reinitialiser: 'Reiniciar',
+        reinitialiser_activite: 'Reiniciar a atividade como nao desencadeada',
+        reinitialiser_activite_message: 'A atividade volta a poder ser desencadeada: a notificacao, o processo de execucao e as trocas associadas sao eliminados. O pedido e recusado se existirem constatacoes ou relatorio dependentes.',
+        reinitialiser_ok: 'Atividade reiniciada',
+        date_edition: 'Data de emissao',
+        ajust_prorogation: 'Prorrogacao',
+        ajust_criticite: 'Criticidade',
+        ajust_complet: 'Modificar',
+        ajust_prorogation_aide: 'Alterar o prazo de encerramento',
+        ajust_criticite_aide: 'Alterar o prazo de encerramento e a criticidade',
+        ajust_complet_aide: 'Alterar todos os campos do resumo da constatacao',
+        ajust_journal: 'Alteracoes da constatacao',
+        ajust_rang: 'Alteracao',
+        ajust_aucun: 'Nenhuma alteracao registada.',
+        ajust_motif: 'Motivo da alteracao',
+        ajust_motif_aide: 'Este motivo fica associado a constatacao.',
+        ajust_motif_requis: 'O motivo e obrigatorio.',
+        ajust_mot_de_passe: 'Confirme com a sua palavra-passe',
+        ajust_mot_de_passe_requis: 'A palavra-passe e obrigatoria.',
+        ajust_intro: 'A constatacao ja foi notificada ao prestador: a alteracao e registada e atribuida.',
+        ajust_ok: 'Alteracao registada',
+        appliquer: 'Aplicar',
+        plan_archive_ok: 'Plano arquivado',
+        archiver_hors_plan: 'Arquivar as outras atividades',
+        archiver_hors_plan_message: 'As {n} atividades fora do plano de vigilancia saem das atividades de supervisao e passam para as atividades arquivadas do menu Estados, agrupadas em \u00ab Autres Activit\u00e9s \u00bb. As constatacoes resultantes mantem o seu seguimento e nao sao arquivadas.',
+        hors_plan_archive_ok: 'Outras atividades arquivadas',
+        action_impossible: 'Acao impossivel',
+        graph_pac_non_soumis: 'PAC nao submetido',
+        graph_pac_accepte: 'PAC aceite',
+        graph_pac_rejete: 'PAC rejeitado',
+        gantt_titre: 'Calendario das atividades',
+        gantt_aujourdhui: 'Hoje',
+        gantt_type_audit: 'Tipo de atividade',
+        gantt_dates: 'Datas',
+        gantt_lieu: 'Local',
+        gantt_sans_activite: 'Sem atividade planeada',
+        gantt_hors_plan: 'Fora do plano de vigilancia',
+        gantt_origine: 'Origem',
+        gantt_debut: 'Inicio do periodo',
+        gantt_fin: 'Fim do periodo',
+        gantt_reculer: 'Recuar',
+        gantt_avancer: 'Avancar',
+        gantt_termine: 'Concluida',
+        gantt_en_cours: 'Em curso',
+        gantt_planifie: 'Planeada',
+        gantt_en_retard: 'Em atraso',
         confirm_renvoyer: 'Confirmar a devolucao do PAC ao postulante? Os campos do PAC serao reativados.',
         confirm_solder: 'Confirmar o encerramento da constatacao? Todos os campos serao bloqueados.',
         motif_renvoi: 'Motivo da devolucao (visivel pelo postulante)',
+        motif_renvoi_titre: 'Motivo da devolucao',
+        historique_decisions: 'Devolucoes e rejeicoes',
+        transmis_sans_courriel: 'Transmissao registada, mas nenhum e-mail foi enviado: o servidor de correio nao esta configurado.',
+        aide_historique_decisions: 'O que foi pedido nas voltas anteriores, para rever as correcoes feitas.',
+        motif_rejet_titre: 'Motivo da rejeicao',
+        constatation_rejetee_arret: 'A constatacao foi rejeitada: o circuito para aqui e ja nao pode ser alterada.',
         brouillon_enregistre: 'Rascunho salvo',
         fiche_constat: 'Ficha de Constatação',
         fiche_suivi: 'Ficha de Acompanhamento',
@@ -842,6 +1734,8 @@ const EXEC_TR = {
         date_due_label: 'Data Limite',
         ref_reglementaires_label: 'Referencia(s) regulamentar(es)',
         item_cause: 'Causa Primaria',
+        suivi_choisir_item: 'Escolha primeiro os itens em causa',
+        suivi_saisir_commentaire: 'Escrever o comentario de acompanhamento…',
         item_action_curative: 'Acao Curativa',
         item_date_curative: 'Data prevista (Curativa)',
         item_preuves_curative: 'Provas (Curativa)',
@@ -875,6 +1769,12 @@ const EXEC_TR = {
         ouvrir_dossier: 'Dossi',
         creer_fnc: 'Criar Constatacao',
         suivi_pac: 'Acompanhamento PAC',
+        pac_etape_soumission: 'Submissao',
+        pac_etape_acceptation: 'Aceitacao',
+        pac_etape_mise_oeuvre: 'Implementacao',
+        pac_etape_cloture: 'Encerramento',
+        pac_fil_en_cours: 'Em curso',
+        pac_fil_cloture: 'Encerrado',
         contacts: 'Contatos',
         renseigner: 'Preencher Atividade',
         generer_rapport: 'Gerar Relatorio',
@@ -900,6 +1800,54 @@ const EXEC_TR = {
         year: 'Ano',
         save: 'Salvar',
         cancel: 'Cancelar',
+        ajouter: 'Adicionar',
+        supprimer: 'Eliminar',
+        preuve_dialogue_titre: 'Anexo',
+        champ_amende: 'Campo alterado',
+        preuve_date: 'Data de deposito',
+        verifier_terrain: 'A verificar no terreno',
+        preuves_non_acceptables: 'Nao aceitavel',
+        cloturer: 'Encerrar',
+        votre_message: 'A sua mensagem…',
+        modifier: 'Alterar',
+        non_transmis: 'Nao enviado',
+        confirm_supprimer_commentaire: 'Eliminar este comentario?',
+        renvoyer_mise_oeuvre: 'Devolver a implementacao',
+        renvoye_mise_oeuvre: 'Devolvido a etapa Implementacao',
+        confirm_annuler_saisie: 'Abandonar as entradas nao guardadas? O formulario recarrega como esta guardado.',
+        acceptation: 'Aceitavel',
+        preuves_recueillies: 'Provas de implementacao recolhidas',
+        commentaire_general_suivi: 'Comentario geral de acompanhamento',
+        aucun_suivi: 'Nenhum acompanhamento registado',
+        suivi_placeholder: 'Escrever um comentario de acompanhamento…',
+        ajouter_suivi: 'Adicionar',
+        preuves_refusees: 'Provas recusadas',
+        preuves_refusees_titre: 'Provas de implementacao nao aceitaveis',
+        preuves_acceptees_ok: 'Provas de implementacao aceites',
+        preuves_acceptees_titre: 'Provas de implementacao aceites',
+        verification_terrain_annoncee: 'Sera realizada uma verificacao no terreno antes do encerramento da constatacao.',
+        confirm_accepter_preuves: 'Aceitar as provas de implementacao? A etapa Implementacao sera encerrada e a constatacao passa ao encerramento.',
+        confirm_accepter_preuves_terrain: 'Aceitar as provas de implementacao? A etapa Implementacao sera encerrada; falta ainda uma verificacao no terreno antes do encerramento.',
+        motif_choisir: '— Objeto da alteracao —',
+        motif_preciser: 'Precisar',
+        motif_manquant: 'Objeto da alteracao obrigatorio',
+        motif_nouvelle_cause: 'Nova causa (acrescimo a anterior)',
+        motif_nouvelle_action: 'Nova acao (acrescimo a anterior)',
+        motif_refonte_action: 'Reformulacao da acao (substituicao)',
+        motif_modification_date: 'Alteracao de data',
+        motif_observations_aac: 'Consideracao das observacoes da AAC',
+        motif_correction_mineure: 'Correcao menor (tipografia / clareza)',
+        motif_autres: 'Outros',
+        date_prevue_curative: 'Data prevista — acao imediata',
+        date_prevue_corrective: 'Data prevista — acao corretiva',
+        modifier_piece: 'Alterar anexo',
+        ouvrir_piece: 'Abrir anexo',
+        enregistrer: 'Guardar',
+        preuve_intitule: 'Titulo do anexo',
+        preuve_intitule_exemple: 'Ex.: certificado de formacao de 12/08/2026',
+        preuve_intitule_requis: 'Titulo obrigatorio',
+        preuve_commentaire: 'Comentario',
+        preuve_commentaire_aide: 'A atencao da AAC (facultativo)',
         back: 'Voltar',
         close: 'Fechar',
         edit: 'Editar',
@@ -913,7 +1861,6 @@ const EXEC_TR = {
         sync_excluded_intro: 'As atividades seguintes ja foram desencadeadas e nao serao sincronizadas a partir dos planos alterados:',
         lecture_seule: 'somente leitura',
         reserve_aac: 'Reservado a AAC',
-        apercu: 'Pre-visualizar',
         notifs_en_attente_dossier: 'Notificacoes enviadas (aguardando dossie)',
         loading: 'Carregando...',
         confirm: 'Confirmar',
@@ -1028,6 +1975,7 @@ const EXEC_ICONS = {
     folder: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
     file: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>',
     alarm: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3L2 6"/><path d="M22 6l-3-3"/></svg>',
+    flag: '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 15V4h13l-2 4 2 4H4z"/><line x1="4" y1="4" x2="4" y2="21" fill="none"/></svg>',
     search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
     filter: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>',
     reset: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
@@ -1043,6 +1991,10 @@ const EXEC_ICONS = {
     contact: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4"/><line x1="2" y1="8" x2="4" y2="8"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="2" y1="16" x2="4" y2="16"/><circle cx="11" cy="10" r="2.5"/><path d="M7.5 17a3.5 3.5 0 0 1 7 0"/></svg>',
     // Icône « Annuler / retour brouillon » : flèche de retour en arrière
     undo: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>',
+    // Icône « Items » : liste à puces — le contenu d'une checklist.
+    list: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4.5" cy="6" r="1.3" fill="currentColor"/><circle cx="4.5" cy="12" r="1.3" fill="currentColor"/><circle cx="4.5" cy="18" r="1.3" fill="currentColor"/></svg>',
+    // Icône « Sous-thèmes » : strates empilées.
+    layers: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8 12 14 2 8 12 2"/><polyline points="2 13 12 19 22 13"/></svg>',
     // Icône « Renseigner l'activité » : formulaire avec crayon
     fillForm: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h6"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="12" y2="13"/><line x1="8" y1="17" x2="10" y2="17"/><path d="M18.5 13.5a1.6 1.6 0 0 1 2.3 2.3L16.8 19.8 14 20.5l0.7-2.8z"/></svg>'
 };
@@ -1060,6 +2012,9 @@ const EXEC_NAV = {
     etats: { labelKey: 'etats', icon: 'folder' },
     constatations: { labelKey: 'constatations', icon: 'constatations' },
     rapports: { labelKey: 'rapports', icon: 'rapports' },
+    // Réservé aux administrateurs et gestionnaires : execUpdateNavUI le retire
+    // de la barre pour les autres.
+    processus: { labelKey: 'processus', icon: 'trigger', reserve: 'admin' },
     parametres: { labelKey: 'parametres', icon: 'settings' }
 };
 
@@ -1084,6 +2039,12 @@ function _esc(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+// Valeur destinée à un attribut : `_esc` laisse passer les guillemets, qui y
+// refermeraient l'attribut. Tout texte saisi peut en contenir.
+function _escAttr(valeur) {
+    return _esc(valeur).replace(/"/g, '&quot;');
 }
 
 // URL de téléchargement d'une pièce jointe — ajoute le token (route /uploads protégée).
@@ -1113,7 +2074,7 @@ function _execCriticiteOptions(selected) {
     return crits.map(c => {
         const val = _execNorm(c.item);
         // L'alias (s'il est défini) est la valeur affichée dans la liste déroulante
-        return `<option value="${_esc(val)}" data-delai="${c.delai_cloture || ''}" ${sel === val ? 'selected' : ''}>${_esc(c.alias || c.item)}</option>`;
+        return `<option value="${_escAttr(val)}" data-delai="${c.delai_cloture || ''}" ${sel === val ? 'selected' : ''}>${_esc(c.alias || c.item)}</option>`;
     }).join('');
 }
 
@@ -1142,7 +2103,7 @@ function _execTypeCasOptions(selected, includeEmpty) {
     }
     return head + tcs.map(t => {
         const val = _execNorm(t.item);
-        return `<option value="${_esc(val)}" ${sel === val ? 'selected' : ''}>${_esc(t.item)}</option>`;
+        return `<option value="${_escAttr(val)}" ${sel === val ? 'selected' : ''}>${_esc(t.item)}</option>`;
     }).join('');
 }
 
@@ -1209,8 +2170,45 @@ function _userM3Role() {
 
 function _execCanValidate() { return ['M3_Validateur', 'M3_Administrateur'].includes(_userM3Role()); }
 function _execCanContribute() { return ['M3_Contributeur', 'M3_Validateur', 'M3_Administrateur', 'M3_Prestataire'].includes(_userM3Role()); }
-function _execIsAdmin() { return _userM3Role() === 'M3_Administrateur'; }
+// ── Les deux seules notions d'autorité du module ─────────────────────
+// Elles étaient trois, appliquées sans règle à des actions de même gravité :
+// un agent pouvait réinitialiser une activité sans pouvoir configurer un
+// processus, ou l'inverse. Deux suffisent, et elles se nomment.
+//
+//   gouverne le module  — le Gestionnaire au sens de « Gestion des Droits » :
+//     il paramètre, supprime, réinitialise, configure les processus, et sert
+//     de porte de sortie quand un processus est mal renseigné.
+//   administre le parc  — un compte portail SUPERADMIN ou ADMIN, dans sa
+//     portée de validation : il range (archivage) et arrête des circuits, sur
+//     les domaines et secteurs qui lui sont confiés. Le serveur revérifie.
+function _execGouverneModule() { return _userM3Role() === 'M3_Administrateur'; }
+function _execAdministreParc() {
+    return ['SUPERADMIN', 'ADMIN'].includes((EXEC_STATE.user || {}).role) && _execCanValidate();
+}
+// Nom historique, conservé pour les écrans repris de PESSCO.
+function _execIsAdmin() { return _execGouverneModule(); }
 function _execIsPrestataire() { return _userM3Role() === 'M3_Prestataire'; }
+
+// Prestataires auxquels un compte en mode prestataire est rattaché — `null`
+// pour tous les autres comptes, qui ne sont bornés par rien ici.
+// Un compte peut en porter plusieurs : `prestataires` prime, `prestataire_id`
+// reste la forme historique à un seul rattachement.
+function _execPrestatairesDuCompte() {
+    if (!_execIsPrestataire()) return null;
+    const u = EXEC_STATE.user || {};
+    let liste = u.prestataires;
+    if (typeof liste === 'string') { try { liste = JSON.parse(liste); } catch (e) { liste = null; } }
+    if (Array.isArray(liste) && liste.length) return liste;
+    return u.prestataire_id ? [u.prestataire_id] : [];
+}
+
+// Le filtre prestataire du compte : celui qu'il a choisi, ou tous les siens.
+function _execPortePrestataire(choisi) {
+    const miens = _execPrestatairesDuCompte();
+    if (!miens) return null;
+    if (choisi && miens.includes(choisi)) return [choisi];
+    return miens;
+}
 
 // Role distinction for the PAC follow-up workflow.
 // AAC = inspector that can validate / reject / close. Postulant = applicant filling the PAC.
@@ -1324,8 +2322,17 @@ async function execLoadData() {
         }
 
         EXEC_STATE.data.plansValidesPlanif = _buildPlansValidesFromPlanif(planifPlans, planifActs);
+        EXEC_STATE.data.plansArchivesPlanif = _buildPlansArchivesFromPlanif(planifPlans, planifActs);
+        // Cycles de surveillance : ils bornent la période d'analyse dès qu'un
+        // prestataire est retenu. La source reste « Plans de Surveillance ».
+        api('/api/m/planification/prestataires-risques')
+            .then((liste) => { EXEC_STATE.data.cyclesPrestataires = liste || []; })
+            .catch(() => { EXEC_STATE.data.cyclesPrestataires = []; });
         // Charge les checklists (mode minimal — chargement séparé, ignoré si tables vides)
         execRefreshChecklists().catch(() => {});
+        // Rôles d'équipe : ils garnissent la composition de l'équipe à
+        // l'étape Réalisation, donc dès le premier écran ouvert.
+        execChargerRolesEquipe().catch(() => {});
     } catch (e) {
         console.error('Execution data load error:', e);
     }
@@ -1347,6 +2354,9 @@ async function execRefreshDynamic() {
             api(`${EXEC_MODULE_API}/rapports`).catch(() => EXEC_STATE.data.rapports || []),
         ]);
         Object.assign(EXEC_STATE.data, { dashStats, notifications, dossiers, constatations, rapports });
+        // Les délais du processus (menu Paramètres) fondent l'horizon « à
+        // déclencher » et les retards : ils se chargent avec le reste.
+        if (typeof execEtatsChargerDelais === 'function') await execEtatsChargerDelais();
         // Keep selectedDossier in sync if open. On re-fetch le dossier *unitairement*
         // car l'endpoint /dossiers (liste) n'attache pas les sous-tableaux
         // (constatations, rapports) — sinon la section Constatations resterait obsolète.
@@ -1387,12 +2397,99 @@ function _buildPlansValidesFromPlanif(planifPlans, planifActs) {
             prestataire_code: a.prestataire_code || (pr ? pr.trigramme : '')
         });
     });
-    return plans.map(p => ({
+    const valides = plans.map(p => ({
         ...p,
         activites: byPlanId[p.id] || [],
         nb_activites: (byPlanId[p.id] || []).length
     }));
+
+    // Activités sorties des archives une à une : leur plan reste archivé, mais
+    // elles reviennent parmi les activités en cours. Le plan reparaît alors
+    // réduit à ces seules lignes — sans quoi elles n'auraient nulle part où
+    // s'afficher.
+    const rendues = {};
+    (planifActs || []).forEach(a => {
+        if (Number(a.desarchivee) !== 1 || a.plan_statut === 'valide') return;
+        const pr = prestMap[a.prestataire_id];
+        (rendues[a.plan_id] = rendues[a.plan_id] || []).push({
+            ...a,
+            prestataire_nom: a.prestataire_nom || (pr ? pr.nom : ''),
+            prestataire_code: a.prestataire_code || (pr ? pr.trigramme : ''),
+        });
+    });
+    Object.keys(rendues).forEach(pid => {
+        const p = (planifPlans || []).find(x => x.id === pid);
+        if (!p) return;
+        valides.push({
+            ...p, _planArchive: true,
+            activites: rendues[pid], nb_activites: rendues[pid].length,
+        });
+    });
+    return valides;
 }
+
+// Plans archivés : ceux qu'on a rangés délibérément. Sont écartés ceux que la
+// Planification archive d'elle-même quand une nouvelle version les remplace —
+// ils portent `remplace_par`, et leurs activités sont reprises par la version
+// suivante : les faire figurer aux archives les compterait deux fois.
+function _buildPlansArchivesFromPlanif(planifPlans, planifActs) {
+    const plans = (planifPlans || []).filter(p => p.statut === 'archive' && !p.remplace_par);
+    if (!plans.length) return [];
+    const ids = new Set(plans.map(p => p.id));
+    const prestMap = {};
+    (EXEC_STATE.data?.prestataires || window.PESSCO?.sharedData?.prestataires || []).forEach(pr => {
+        prestMap[pr.id] = pr;
+    });
+    const byPlanId = {};
+    (planifActs || []).forEach(a => {
+        if (!ids.has(a.plan_id)) return;
+        // Une activité sortie des archives isolément ne figure plus ici :
+        // elle a rejoint les activités en cours.
+        if (Number(a.desarchivee) === 1) return;
+        const pr = prestMap[a.prestataire_id];
+        (byPlanId[a.plan_id] = byPlanId[a.plan_id] || []).push({
+            ...a,
+            prestataire_nom: a.prestataire_nom || (pr ? pr.nom : ''),
+            prestataire_code: a.prestataire_code || (pr ? pr.trigramme : ''),
+        });
+    });
+    return plans
+        .map(p => ({
+            ...p,
+            activites: byPlanId[p.id] || [],
+            nb_activites: (byPlanId[p.id] || []).length,
+        }))
+        .filter(p => p.activites.length);
+}
+
+// Archivage d'un plan entier : il quitte « Activités de Supervision » avec
+// toutes ses activités, et se retrouve dans les activités archivées du menu
+// États. Les constatations issues de ces activités poursuivent leur suivi —
+// une non-conformité ne se range pas en même temps que le plan qui l'a
+// révélée.
+window.execArchiverPlan = async function (planId) {
+    const plan = (EXEC_STATE.data.plansValidesPlanif || []).find(p => p.id === planId);
+    if (!plan) return;
+    const nb = (plan.activites || []).length;
+    const ok = await execProcConfirmer({
+        titre: te('archiver_plan'),
+        message: `${te('archiver_plan_message')
+            .replace('{plan}', plan.titre || plan.reference || planId)
+            .replace('{n}', nb)}`,
+        libelle: te('archiver'),
+    });
+    if (!ok) return;
+    try {
+        await api(`/api/m/planification/plans/${planId}/archiver`, {
+            method: 'POST', body: JSON.stringify({}),
+        });
+        await execLoadData();
+        _execToast(te('plan_archive_ok'), 'success');
+        execRenderPage();
+    } catch (e) {
+        _execToast((e && e.message) || te('action_impossible'), 'error');
+    }
+};
 
 // ══════════════════════════════════════
 //  NAVIGATION
@@ -1411,7 +2508,8 @@ function execNavigateTo(page) {
     document.getElementById('execCliEditorWrap')?.remove();
     EXEC_STATE.currentPage = page;
     EXEC_STATE.selectedDossier = null;
-    if (page === 'constatations') EXEC_STATE.currentConstSub = _execIsPrestataire() ? 'suivi' : 'list';
+    // Le menu Constatations s'ouvre toujours sur « Suivi ».
+    if (page === 'constatations') EXEC_STATE.currentConstSub = 'suivi';
     execUpdateNavUI();
     execRenderPage();
     document.querySelector('.app-sidebar')?.classList.remove('mobile-open');
@@ -1442,8 +2540,17 @@ function execSetLang(lang) {
     EXEC_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
     if (window.PESSCO) window.PESSCO.lang = lang;
+    // Changer de langue n'est pas quitter le formulaire ouvert : on le rejoue
+    // dans la nouvelle langue. execNavigateTo referme le volet au passage,
+    // d'où la capture avant l'appel.
+    const rejouer = EXEC_STATE.voletRejouer;
+    const retour = EXEC_STATE.retourVolet;
     execRenderApp();
     execNavigateTo(EXEC_STATE.currentPage);
+    if (typeof rejouer === 'function') {
+        EXEC_STATE.retourVolet = retour;
+        setTimeout(rejouer, 0);
+    }
 }
 
 function execToggleSidebar() {
@@ -1514,6 +2621,7 @@ function execRenderApp() {
         }
     } else {
         for (const [key, config] of Object.entries(EXEC_NAV)) {
+            if (config.reserve === 'admin' && !_execPeutProcessus()) continue;
             navHtml += `<button class="nav-btn ${S.currentPage === key ? 'active' : ''}" data-page="${key}" onclick="execNavigateTo('${key}')" title="${te(config.labelKey)}">
                 ${EXEC_ICONS[config.icon] || ''} <span>${te(config.labelKey)}</span>
             </button>`;
@@ -1593,6 +2701,7 @@ function execRenderPage() {
         case 'constatations': content = execRenderConstatations(); break;
         case 'rapports': content = execRenderRapports(); break;
         case 'etats': content = execRenderEtats(); break;
+        case 'processus': content = execRenderProcessus(); break;
         case 'parametres': content = execRenderParametres(); break;
         case 'prestataire_home': content = execRenderPrestataireHome(); break;
         case 'prestataire_notifications': content = execRenderPrestataireNotifications(); break;
@@ -1601,6 +2710,8 @@ function execRenderPage() {
     }
     el.innerHTML = content;
     if (EXEC_STATE.currentPage === 'mes_utilisateurs') execLoadMesUtilisateurs();
+    // Le calendrier s'ouvre sur la date du jour : c'est de là qu'on regarde.
+    if (EXEC_STATE.currentPage === 'dashboard') execGanttAujourdhui();
 }
 
 function execRenderPrestataireHome() {
@@ -1629,7 +2740,8 @@ function execRenderPrestataireNotifications() {
     const scopedPid = user.prestataire_id || '';
     const all = EXEC_STATE.data.notifications || [];
     // Keep only notifications sent (envoye) for this prestataire
-    let rows = all.filter(n => n.statut === 'envoye' && (!scopedPid || n.prestataire_id === scopedPid));
+    const mesPrest = _execPrestatairesDuCompte();
+    let rows = all.filter(n => n.statut === 'envoye' && (!mesPrest || mesPrest.includes(n.prestataire_id)));
 
     if (F.annee) rows = rows.filter(n => {
         const d = n.date_edition || n.date_creation || '';
@@ -1665,25 +2777,40 @@ function execRenderPrestataireNotifications() {
                     <tr>
                         <th>${te('reference')}</th>
                         <th>${te('objet')}</th>
-                        <th>${te('date_edition') || 'Date'}</th>
+                        <th style="width:95px;">${te('date_debut')}</th>
+                        <th style="width:95px;">${te('date_fin')}</th>
+                        <th style="width:95px;">${te('date_edition') || 'Date'}</th>
                         <th>${te('status')}</th>
                         <th>${te('actions')}</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${rows.length === 0 ? `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>` :
+                    ${rows.length === 0 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>` :
                     rows.map(n => `<tr>
                         <td><strong>${_esc(n.reference || '')}</strong></td>
                         <td>${_esc((n.objet || n.objet_activite || '').substring(0, 80))}</td>
+                        <td>${_formatDate(n.date_debut_effective || n.date_debut_prevue || n.date_activite)}</td>
+                        <td>${_formatDate(n.date_fin_effective || n.date_fin_prevue)}</td>
                         <td>${_formatDate(n.date_edition || n.date_creation)}</td>
                         <td>${_execStatusBadge(n.statut)}</td>
-                        <td style="display:flex;gap:0.35rem;flex-wrap:wrap;">
-                            <button class="btn btn-sm btn-outline" onclick="execPreviewNotification('${n.id}')" title="${te('apercu') || 'Aperçu'}">
-                                ${EXEC_ICONS.eye || EXEC_ICONS.file} ${te('apercu') || 'Aperçu'}
-                            </button>
-                            <button class="btn btn-sm btn-outline" onclick="execOpenExchangeSlider('${n.id}')" title="${te('gerer_echange')}">
-                                ${EXEC_ICONS.chat}
-                            </button>
+                        <td>
+                            <div class="exec-notif-actions">
+                                <button class="exec-notif-btn changement" onclick="execOpenExchangeSlider('${n.id}')"
+                                        ${Number(n.accuse_reception) === 1 ? 'disabled' : ''}
+                                        title="${_escAttr(te('demander_changement_aide'))}">
+                                    ${te('demander_changement')}
+                                </button>
+                                <button class="exec-notif-btn accuser" onclick="execAccuserReception('${n.id}')"
+                                        ${Number(n.accuse_reception) === 1 ? 'disabled' : ''}
+                                        title="${_escAttr(Number(n.accuse_reception) === 1
+                                            ? te('accuse_deja') : te('accuser_reception_aide'))}">
+                                    ${Number(n.accuse_reception) === 1 ? te('accuse_fait') : te('accuser_reception')}
+                                </button>
+                                <button class="exec-notif-btn apercu" onclick="execPreviewNotification('${n.id}')"
+                                        title="${_escAttr(te('apercu_notification'))}">
+                                    ${te('apercu_notification')}
+                                </button>
+                            </div>
                         </td>
                     </tr>`).join('')}
                 </tbody>
@@ -1762,9 +2889,56 @@ function _getNotifAlerts() {
         }
     });
 
+    // 4. Étapes du circuit d'une constatation restées en attente au-delà du
+    //    délai paramétré. L'échéance de solde (point 3) dit quand l'action
+    //    corrective est due ; ceci dit quand le circuit lui-même s'enlise.
+    _execAlertesEtapesConstatation(constatations, today0).forEach(a => alerts.push(a));
+
     // Sort: overdue first, then by days ascending
     alerts.sort((a, b) => (a.days || 999) - (b.days || 999));
     return alerts;
+}
+
+// Chaque statut de constatation attend un geste, à partir d'une date connue.
+// La table ci-dessous nomme, pour chacun, le délai qui s'applique et la date
+// dont il court : un statut absent de la table n'attend rien de chronométré.
+const EXEC_CONSTA_ATTENTES = {
+    direct_brouillon: { delai: 'soumission_constatation', depuis: c => c.date_ouverture, quoi: 'à soumettre' },
+    direct_renvoye: { delai: 'correction_constatation', depuis: c => c.date_renvoi, quoi: 'à corriger' },
+    direct_soumis: { delai: 'validation_constatation', depuis: c => c.date_soumission_pac, quoi: 'à valider' },
+    direct_valide: { delai: 'transmission_constatation', depuis: c => c.date_validation_pac, quoi: 'à transmettre' },
+    ouvert: { delai: 'soumission_pac', depuis: c => c.date_transmission, quoi: 'PAC attendu' },
+    ouverte: { delai: 'soumission_pac', depuis: c => c.date_transmission, quoi: 'PAC attendu' },
+    pac_soumis: { delai: 'acceptation_pac', depuis: c => c.date_soumission_pac, quoi: 'PAC à examiner' },
+    pac_rejetee: { delai: 'correction_pac', depuis: c => c.date_rejet_pac, quoi: 'PAC à reprendre' },
+    pac_valide: { delai: 'verification_cloture', depuis: c => c.date_due_cloture || c.date_due, quoi: 'à vérifier et clôturer' },
+};
+
+function _execAlertesEtapesConstatation(constatations, jour) {
+    const D = (window.EXEC_ETATS && EXEC_ETATS.delais) || null;
+    if (!D) return [];
+    const alertes = [];
+    constatations.forEach(c => {
+        const attente = EXEC_CONSTA_ATTENTES[String(c.statut || '')];
+        if (!attente) return;
+        const depart = attente.depuis(c);
+        if (!depart) return;
+        const limite = new Date(String(depart).substring(0, 10));
+        if (isNaN(limite.getTime())) return;
+        limite.setDate(limite.getDate() + (D[attente.delai] || 0));
+        limite.setHours(0, 0, 0, 0);
+        const jours = Math.round((limite - jour) / 86400000);
+        // Seules les étapes déjà en retard sont remontées : la cloche signale
+        // ce qui bloque, pas tout ce qui court encore.
+        if (jours >= 0) return;
+        alertes.push({
+            type: 'overdue', severity: 'overdue', icon: EXEC_ICONS.alarm,
+            // La référence porte déjà « FNC » : la répéter alourdit la ligne.
+            label: `${_esc(c.reference || 'Constatation')} — ${attente.quoi} : ${Math.abs(jours)} j de retard`,
+            date: limite.toISOString().substring(0, 10), days: jours,
+        });
+    });
+    return alertes;
 }
 
 function execUpdateNotifBadge() {
@@ -1910,7 +3084,40 @@ function execShowSlider(title, bodyHtml, footerHtml, size) {
     });
 }
 
+// ── Provenance et rejeu du volet ─────────────────────────────────────
+// Deux besoins voisins : savoir d'où un formulaire a été ouvert, pour que son
+// bouton Retour y ramène ; et savoir le rejouer tel quel, pour qu'un
+// changement de langue ne le fasse pas disparaître.
+//   `_retourEnAttente` est posé par l'appelant juste avant l'ouverture, puis
+//   consommé par le formulaire qui s'ouvre — sinon un retour resterait armé
+//   d'une ouverture à l'autre.
+function execArmerRetour(rejouerAppelant) {
+    EXEC_STATE._retourEnAttente = rejouerAppelant || null;
+}
+
+// Consommation côté formulaire. `cle` identifie ce qui est affiché : le
+// formulaire se rappelant lui-même à chaque étape, la provenance ne doit
+// survivre que tant qu'on reste sur le même objet.
+function execPrendreRetour(cle) {
+    const attendu = EXEC_STATE._retourEnAttente;
+    EXEC_STATE._retourEnAttente = null;
+    if (attendu) EXEC_STATE.retourVolet = attendu;
+    else if (EXEC_STATE._retourCle !== cle) EXEC_STATE.retourVolet = null;
+    EXEC_STATE._retourCle = cle;
+}
+
+window.execRetourVolet = function () {
+    const retour = EXEC_STATE.retourVolet;
+    EXEC_STATE.retourVolet = null;
+    EXEC_STATE._retourCle = null;
+    execCloseSlider();
+    if (typeof retour === 'function') setTimeout(retour, 80);
+};
+
 function execCloseSlider(immediate) {
+    EXEC_STATE.voletRejouer = null;
+    document.getElementById('execPacTiroir')?.remove();
+    document.getElementById('execFncTiroir')?.remove();
     const overlay = document.getElementById('execSliderOverlay');
     const slider = document.getElementById('execSlider');
     if (overlay) {
@@ -1959,6 +3166,11 @@ function _execRenderFilterBar(onchangeFunc, opts) {
     let domaines = EXEC_STATE.data.domaines || [];
     let secteurs = EXEC_STATE.data.secteurs || [];
     let prestataires = EXEC_STATE.data.prestataires || [];
+
+    // Compte prestataire : la liste se borne aux prestataires auxquels il est
+    // rattaché. « Tous les prestataires » ne vaut donc que pour les siens.
+    const mesPrest = _execPrestatairesDuCompte();
+    if (mesPrest) prestataires = prestataires.filter(p => mesPrest.includes(p.id));
 
     // Restrict domaines (and secteurs + prestataires) to those granted to the
     // user in the Portal "Gestion des accès". user.domaines is a JSON array of
@@ -2136,7 +3348,7 @@ function _execRenderFilterBar(onchangeFunc, opts) {
             <option value="">${te('all_statuses')}</option>${statuts.map(s => `<option value="${s}" ${F.statut===s?'selected':''}>${te(s)}</option>`).join('')}</select>`);
     }
 
-    if (opts.showSearch !== false) filters.push(`<input type="text" class="form-input" id="exec-filter-search" placeholder="${te('search')}" value="${_esc(F.search)}" oninput="_pesSearchInput(this, () => { EXEC_STATE.filters.search=document.getElementById('exec-filter-search').value; ${onchangeFunc} })">`);
+    if (opts.showSearch !== false) filters.push(`<input type="text" class="form-input" id="exec-filter-search" placeholder="${te('search')}" value="${_escAttr(F.search)}" oninput="_pesSearchInput(this, () => { EXEC_STATE.filters.search=document.getElementById('exec-filter-search').value; ${onchangeFunc} })">`);
 
     const barClass = (filters.length > 0 && filters.length % 6 === 0) ? 'filter-bar filter-bar--align-reset' : 'filter-bar';
     let html = `<div class="${barClass}">`;
@@ -2150,13 +3362,17 @@ function _execRenderFilterBar(onchangeFunc, opts) {
 //  FORM SECTION ACCORDION
 // ══════════════════════════════════════
 
-function _execFormSection(letter, titleKey, bodyHtml, expanded) {
+// `badge` : compteur ou mention affichée à droite du titre ; `aide` : ligne
+// d'explication sous l'en-tête de la section.
+function _execFormSection(letter, titleKey, bodyHtml, expanded, badge, aide) {
     const exp = expanded ? ' expanded' : '';
     return `
     <div class="exec-form-section${exp}" id="exec-section-${letter}">
         <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')">
             <span class="exec-form-section-letter">${letter}</span>
             <span class="exec-form-section-title">${te(titleKey)}</span>
+            ${aide ? `<span class="exec-form-section-aide" title="${_escAttr(aide)}">${aide}</span>` : ''}
+            ${badge ? `<span class="exec-form-section-badge">${badge}</span>` : ''}
             <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
         </div>
         <div class="exec-form-section-body">${bodyHtml}</div>
@@ -2168,69 +3384,93 @@ function _execFormSection(letter, titleKey, bodyHtml, expanded) {
 // ══════════════════════════════════════
 
 
-// Donut simple. segments = [{label, value, color}]
-function _execSvgDonut(segments, opts) {
-    opts = opts || {};
-    const size = 140;
-    const r = 55;
-    const cx = size / 2;
-    const cy = size / 2;
-    const strokeW = 22;
-    const total = segments.reduce((s, x) => s + x.value, 0);
-    if (total === 0) {
-        return `<div style="padding:1rem;text-align:center;color:var(--text-muted);font-size:0.8rem;">${opts.emptyMsg || 'Aucune donnée'}</div>`;
-    }
-    const C = 2 * Math.PI * r;
-    let offset = 0;
-    const arcs = segments.map(s => {
-        const len = (s.value / total) * C;
-        const circle = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${strokeW}"
-            stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
-        offset += len;
-        return circle;
-    }).join('');
-    const centerLabel = opts.centerValue != null
-        ? `<text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text)">${opts.centerValue}</text>
-           <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${_esc(opts.centerLabel || '')}</text>`
-        : '';
-    const legend = segments.map(s =>
-        `<div style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text);">
-            <span style="width:10px;height:10px;background:${s.color};border-radius:2px;display:inline-block;flex-shrink:0;"></span>
-            <span style="flex:1;color:var(--text-muted);">${_esc(s.label)}</span>
-            <strong>${s.value}</strong>
-        </div>`
-    ).join('');
+
+// Répartition en table plutôt qu'en anneau : le volume exact se lit dans la
+// colonne, la micro-barre ne sert qu'à comparer les lignes entre elles — elle
+// est donc calée sur la plus forte, pas sur le total.
+// Le total est passé à part : certaines répartitions se recoupent (une
+// constatation hors délai est aussi une constatation ouverte), la somme des
+// lignes ne vaut donc pas toujours l'effectif.
+function _execTableauRepartition(titre, lignes, total) {
+    const rows = lignes || [];
+    const max = Math.max(1, ...rows.map(s => s.value || 0));
+    const somme = total != null ? total : rows.reduce((s, x) => s + (x.value || 0), 0);
     return `
-        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-            <svg viewBox="0 0 ${size} ${size}" style="width:${size}px;height:${size}px;flex-shrink:0;">
-                ${arcs}
-                ${centerLabel}
-            </svg>
-            <div style="flex:1;min-width:140px;display:flex;flex-direction:column;gap:0.25rem;">${legend}</div>
-        </div>`;
+    <div class="exec-crit-bloc">
+        <div class="exec-crit-titre">
+            <span>${_esc(titre)}</span>
+            <strong class="exec-crit-total">${somme}</strong>
+        </div>
+        <table class="exec-crit-tab">
+            <tbody>
+                ${rows.map(s => {
+                    // Une ligne porteuse d'une clé ouvre le détail sous les
+                    // indicateurs, comme les cartes de conformité.
+                    const actif = s.cle && s.cle === (EXEC_STATE.statsIndicateur || '');
+                    const attrs = s.cle
+                        ? ` class="cliquable${actif ? ' actif' : ''}" onclick="execStatsIndicateur('${s.cle}')"
+                            role="button" tabindex="0" title="${_escAttr(te('voir_donnees_source'))}"`
+                        : '';
+                    return `
+                <tr${attrs}>
+                    <td><span class="exec-crit-badge" style="background:${s.color};">${_esc(s.label)}</span></td>
+                    <td class="num">${s.value || 0}</td>
+                    <td>
+                        <div class="exec-crit-piste">
+                            <div class="exec-crit-barre" style="width:${Math.round(((s.value || 0) / max) * 100)}%;background:${s.color};"></div>
+                        </div>
+                    </td>
+                </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+    </div>`;
 }
 
-function execRenderDashboard() {
-    const stats = EXEC_STATE.data.dashStats || {};
+// ── Ce qu'une constatation pèse dans les indicateurs ─────────────
+// Elle compte dès qu'elle est notifiée au prestataire, quelle que soit son
+// origine : relevée pendant une activité de surveillance, ou émise hors
+// activité. Un brouillon, une soumission en cours de validation ou un rejet
+// n'existent pas pour le prestataire — ils ne pèsent pas.
+const EXEC_CONSTA_EN_VIGUEUR = new Set(['ouvert', 'ouverte', 'pac_soumis',
+    'pac_valide', 'pac_rejetee', 'soldee']);
+
+function _execConstaEnVigueur(c) {
+    return EXEC_CONSTA_EN_VIGUEUR.has(String((c || {}).statut || ''));
+}
+
+// Constatation hors activité de supervision : elle ne se rattache à aucun
+// dossier d'exécution.
+function _execConstaHorsActivite(c) {
+    return !(c || {}).dossier_id;
+}
+
+// Échéance de solde d'une constatation. `delai_solde` est un nombre de jours,
+// jamais une date : le confondre avec l'échéance faussait les alertes.
+function _execConstaEcheance(c) {
+    return (c || {}).date_due_cloture || (c || {}).date_due || '';
+}
+
+// ── Situation Générale ───────────────────────────────────────────
+// Le regroupement Domaine → Secteur → Prestataire, ses agrégats et son
+// accordéon. Le tableau de bord s'en sert pour ses cartes et ses donuts ;
+// le formulaire « Statistiques détaillées » l'affiche en propre, avec ses
+// propres filtres. Une seule fonction, donc les mêmes chiffres partout.
+function _execSituationGenerale(F) {
+    F = F || EXEC_STATE.filters || {};
+    const isPrest = _execIsPrestataire();
+    const scopedPid = (EXEC_STATE.user || {}).prestataire_id || '';
     const notifs = EXEC_STATE.data.notifications || [];
     const dossiers = EXEC_STATE.data.dossiers || [];
     let constatations = EXEC_STATE.data.constatations || [];
-    // Source des activités planifiées : identique au menu "Activités de Supervision".
     const plansValides = EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [];
-    // Statuts post-transmission — base de la table du sous-menu "Suivi".
-    const POST_TRANSMIT = new Set(['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee']);
+    const POST_TRANSMIT = EXEC_CONSTA_EN_VIGUEUR;
     const secteurs = EXEC_STATE.data.secteurs || [];
     const domaines = EXEC_STATE.data.domaines || [];
-    const F = EXEC_STATE.filters;
-    const isPrest = _execIsPrestataire();
-    const scopedPid = (EXEC_STATE.user || {}).prestataire_id || '';
-
-    // For prestataires: narrow the data to their own prestataire before any filter logic
-    if (isPrest) {
-        constatations = constatations.filter(c => c.prestataire_id === scopedPid);
-    }
-
-    // Build secteur -> domaine lookup
+    // Compte prestataire : la portée est l’ensemble de ses rattachements,
+    // resserrée sur celui qu’il a choisi au filtre.
+    const mesPrest = _execPortePrestataire(F.prestataire);
+    if (mesPrest) constatations = constatations.filter(c => mesPrest.includes(c.prestataire_id));
     const secteurToDomaine = {};
     secteurs.forEach(s => { if (s.domaine_id) secteurToDomaine[s.id] = s.domaine_id; });
 
@@ -2245,7 +3485,7 @@ function execRenderDashboard() {
     });
 
     if (isPrest) {
-        allActivities = allActivities.filter(a => a.prestataire_id === scopedPid);
+        allActivities = allActivities.filter(a => mesPrest.includes(a.prestataire_id));
     }
 
     // Apply trimestre filter
@@ -2315,19 +3555,47 @@ function execRenderDashboard() {
     const closedAct = allActivities.filter(a => a.statut === 'cloture' || a.statut === 'cloturee').length;
     const tauxClotureAct = totalAct > 0 ? Math.round((closedAct / totalAct) * 100) : 0;
 
-    const totalConst = filteredConstatations.length;
-    const closedConst = filteredConstatations.filter(c => c.statut === 'soldee').length;
+    // Les cartes portent sur les constatations en vigueur : brouillons,
+    // soumissions et rejets en étaient jusqu'ici comptés comme « ouvertes ».
+    const constEnVigueur = filteredConstatations.filter(_execConstaEnVigueur);
+    const totalConst = constEnVigueur.length;
+    const closedConst = constEnVigueur.filter(c => c.statut === 'soldee').length;
     const tauxClotureConst = totalConst > 0 ? Math.round((closedConst / totalConst) * 100) : 0;
 
-    const fncOuvertes = filteredConstatations.filter(c => c.statut !== 'soldee').length;
-    const fncCritiques = filteredConstatations.filter(c => (c.criticite || '').toLowerCase() === 'critique' && c.statut !== 'soldee').length;
+    const ouvertes = constEnVigueur.filter(c => c.statut !== 'soldee');
+    const fncOuvertes = ouvertes.length;
+    const fncCritiques = ouvertes.filter(c => (c.criticite || c.gravite || '').toLowerCase() === 'critique').length;
+    // Part des constatations émises hors activité de supervision.
+    const horsActivite = constEnVigueur.filter(_execConstaHorsActivite).length;
+    const horsActiviteOuvertes = ouvertes.filter(_execConstaHorsActivite).length;
 
-    // Alerts: FNC approaching deadline
-    const fncAlerts = constatations.filter(c => {
-        if (c.statut === 'soldee') return false;
-        const days = _daysUntil(c.delai_correction || c.date_due_cloture);
-        return days !== null && days >= 0 && days <= 15;
-    }).slice(0, 5);
+    // Échéances : les constatations déjà en retard passent devant, puis celles
+    // qui arrivent à terme sous quinze jours. Le retard était jusqu'ici exclu.
+    const fncAlerts = constEnVigueur
+        .filter(c => c.statut !== 'soldee')
+        .map(c => ({ ...c, _jours: _daysUntil(_execConstaEcheance(c)) }))
+        .filter(c => c._jours !== null && c._jours <= 15)
+        .sort((a, b) => a._jours - b._jours)
+        .slice(0, 8);
+    const fncEnRetard = fncAlerts.filter(c => c._jours < 0).length;
+    // Le retard compté sur fncAlerts s'arrête aux huit alertes affichées :
+    // pour un effectif, il faut balayer toutes les constatations ouvertes.
+    const fncHorsDelai = ouvertes.filter(c => {
+        const j = _daysUntil(_execConstaEcheance(c));
+        return j !== null && j < 0;
+    }).length;
+
+    // Où en est le plan d'actions correctives des constatations ouvertes.
+    // Le statut suffit : le PAC suit le cycle ouvert → pac_soumis → pac_valide,
+    // avec pac_rejetee en retour vers le prestataire.
+    const _st = c => (c.statut || '').toLowerCase();
+    const pacNonSoumis = ouvertes.filter(c => _st(c) === 'ouvert' || _st(c) === 'ouverte').length;
+    const pacAccepte = ouvertes.filter(c => _st(c) === 'pac_valide').length;
+    const pacRejete = ouvertes.filter(c => _st(c) === 'pac_rejetee').length;
+    // Reste les PAC soumis en attente d'examen : ils n'entrent dans aucune des
+    // trois lignes, la somme ne vaut donc pas toujours l'effectif ouvert.
+    const pacEnExamen = ouvertes.filter(c => _st(c) === 'pac_soumis').length;
+
 
     // ── Build activities table grouped by Domaine → Secteur → Prestataire ──
     // Lookup prestataire (domaine + secteur + nom) pour résoudre les éléments
@@ -2342,6 +3610,33 @@ function execRenderDashboard() {
             nom: p.nom || p.trigramme || p.id
         };
     });
+
+    // ── Activités : ce qui reste à déclencher, ce qui a pris du retard ──
+    // La répartition du menu « États » fait foi : mêmes délais, mêmes règles,
+    // mêmes chiffres d'un écran à l'autre.
+    const etats = typeof execEtatsRepartir === 'function' ? execEtatsRepartir() : null;
+    const ligneRetenue = (l) => {
+        const pId = l.prestataire_id || '';
+        if (mesPrest && !mesPrest.includes(pId)) return false;
+        if (F.prestataire && pId !== F.prestataire) return false;
+        if (F.domaine && (prestDomaineLookup[pId] || {}).domaine_id !== F.domaine) return false;
+        const debut = String(l.debut || '');
+        if (F.annee && debut.slice(0, 4) !== String(F.annee)) return false;
+        if (F.trimestre) {
+            if (debut.length < 7) return false;
+            if (String(Math.ceil(parseInt(debut.slice(5, 7)) / 3)) !== String(F.trimestre)) return false;
+        }
+        return true;
+    };
+    // Les activités qui attendent d'être déclenchées se partagent en deux :
+    // celles dont la date de début est passée — en retard — et celles qui
+    // restent à planifier dans l'horizon.
+    const attente = etats ? etats.aDeclencher.filter(ligneRetenue) : [];
+    const aujourdhuiIso = new Date().toISOString().slice(0, 10);
+    const actEnRetard = attente.filter((l) => String(l.debut || '') < aujourdhuiIso).length;
+    const aDeclencher = attente.filter((l) => String(l.debut || '') >= aujourdhuiIso);
+    const horizonMois = (typeof EXEC_ETATS !== 'undefined' && EXEC_ETATS.delais
+        && EXEC_ETATS.delais.horizon_a_declencher) || 3;
 
     // Groupement : domaineMap[dId][sId][pId] = { activities, prestataire_nom }.
     const domaineMap = {};
@@ -2372,8 +3667,8 @@ function execRenderDashboard() {
     // so we must NOT re-filter by scopedPid here (it may be empty when cached localStorage
     // didn't persist prestataire_id — we rely on server-side scoping instead).
     let closedDossiers = (dossiers || []).filter(d => d.statut === 'cloture');
-    if (isPrest && scopedPid) {
-        closedDossiers = closedDossiers.filter(d => !d.prestataire_id || d.prestataire_id === scopedPid);
+    if (mesPrest) {
+        closedDossiers = closedDossiers.filter(d => !d.prestataire_id || mesPrest.includes(d.prestataire_id));
     }
     // Cohérence avec les filtres du tableau de bord (domaine / prestataire / année / trimestre).
     if (F.prestataire) {
@@ -2489,41 +3784,79 @@ function execRenderDashboard() {
         return agg;
     };
 
-    const _thN = 'text-align:center;width:54px;';
+    // Un taux se lit d'abord à sa couleur : vert tenu, ambre à surveiller,
+    // rouge en défaut. Le même barème sert aux bandeaux et aux cellules, pour
+    // qu'un même chiffre ne change pas de sens selon l'endroit où on le lit.
+    const sgNiveau = (pct) => (pct >= 80 ? 'bon' : (pct >= 50 ? 'moyen' : 'faible'));
+    const sgTaux = (pct, base) => (base > 0
+        ? `<span class="exec-sg-taux ${sgNiveau(pct)}">${pct}%</span>`
+        : '<span class="exec-sg-vide">—</span>');
+    // Un zéro n'est pas une mesure : il s'efface pour laisser voir les autres.
+    const sgNombre = (n) => (n > 0 ? String(n) : '<span class="exec-sg-vide">0</span>');
+
+    // Largeurs déclarées ici : avec table-layout fixed, seule la première
+    // rangée compte, et elle porte les regroupements — pas les colonnes.
     const prestTableHeader = `
-        <thead><tr>
-            <th style="width:160px;">${te('provider')}</th>
-            <th style="${_thN}">Planifiées</th>
-            <th style="${_thN}">Clôturées</th>
-            <th style="${_thN}">Taux</th>
-            ${criticites.map(cr => `<th style="${_thN}">${te(cr) || cr}</th>`).join('')}
-            <th style="${_thN}">${te('total') || 'Total'}</th>
-            ${criticites.map(cr => `<th style="${_thN}">${te(cr) || cr}</th>`).join('')}
-            <th style="${_thN}">${te('total') || 'Total'}</th>
-        </tr>
-        <tr style="font-size:0.7rem;color:var(--text-muted);">
+        <colgroup>
+            <col class="sg-col-nom">
+            ${[...Array(3 + (criticites.length + 1) * 2)].map(() => '<col class="sg-col-num">').join('')}
+        </colgroup>
+        <thead>
+        <tr class="exec-sg-groupes">
             <th></th>
-            <th colspan="3" style="text-align:center;font-weight:500;">Activités</th>
-            <th colspan="4" style="text-align:center;font-weight:500;">Nb Constatations</th>
-            <th colspan="4" style="text-align:center;font-weight:500;">Taux Clôture Const.</th>
+            <th colspan="3" class="exec-sg-bloc">Activités</th>
+            <th colspan="${criticites.length + 1}" class="exec-sg-bloc">Nombre de constatations</th>
+            <th colspan="${criticites.length + 1}" class="exec-sg-bloc">Taux de clôture des constatations</th>
+        </tr>
+        <tr class="exec-sg-colonnes">
+            <th class="exec-sg-col-nom">${te('provider')}</th>
+            <th class="exec-sg-bloc">Planifiées</th>
+            <th>Clôturées</th>
+            <th>Taux</th>
+            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${te(cr) || cr}</th>`).join('')}
+            <th>${te('total') || 'Total'}</th>
+            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${te(cr) || cr}</th>`).join('')}
+            <th>${te('total') || 'Total'}</th>
         </tr></thead>`;
 
     const renderStatsCells = (s, opts) => {
-        const emphasize = opts && opts.aggregate;
-        const fw = emphasize ? 'font-weight:700;' : '';
+        const fort = (opts && opts.aggregate) ? ' fort' : '';
+        const crit = s.byCrit || s.constByCrit;
         return `
-            <td style="text-align:center;${fw}">${s.planned}</td>
-            <td style="text-align:center;${fw}">${s.closed}</td>
-            <td style="text-align:center;font-weight:600;">${s.planned > 0 ? s.execRate + '%' : '-'}</td>
-            ${criticites.map(cr => `<td style="text-align:center;${fw}">${(s.byCrit || s.constByCrit)[cr].count}</td>`).join('')}
-            <td style="text-align:center;font-weight:600;">${s.totalPConst}</td>
-            ${criticites.map(cr => {
-                const cell = (s.byCrit || s.constByCrit)[cr];
+            <td class="num${fort} exec-sg-bloc">${sgNombre(s.planned)}</td>
+            <td class="num${fort}">${sgNombre(s.closed)}</td>
+            <td class="num">${sgTaux(s.execRate, s.planned)}</td>
+            ${criticites.map((cr, i) => `<td class="num${fort}${i === 0 ? ' exec-sg-bloc' : ''}">${sgNombre(crit[cr].count)}</td>`).join('')}
+            <td class="num total">${sgNombre(s.totalPConst)}</td>
+            ${criticites.map((cr, i) => {
+                const cell = crit[cr];
                 const rate = cell.rate !== undefined ? cell.rate : (cell.count > 0 ? Math.round((cell.closed / cell.count) * 100) : 0);
-                return `<td style="text-align:center;${fw}">${cell.count > 0 ? rate + '%' : '-'}</td>`;
+                return `<td class="num${i === 0 ? ' exec-sg-bloc' : ''}">${sgTaux(rate, cell.count)}</td>`;
             }).join('')}
-            <td style="text-align:center;font-weight:600;">${s.totalPConst > 0 ? s.totalClotRate + '%' : '-'}</td>`;
+            <td class="num total">${sgTaux(s.totalClotRate, s.totalPConst)}</td>`;
     };
+
+    // Bandeau de regroupement : le nom à gauche, les mesures en pastilles
+    // calées à droite. Deux niveaux, deux graphies, pour qu'on sache sans
+    // lire si l'on est devant un domaine ou devant l'un de ses secteurs.
+    const sgMesure = (libelle, valeur) =>
+        `<span class="exec-sg-mesure"><span class="lib">${_esc(libelle)}</span><span class="val">${valeur}</span></span>`;
+
+    const sgBandeau = (niveau, nom, denombrement, agg) => `
+        <div class="exec-accordion-header exec-sg-bandeau ${niveau}"
+             onclick="this.parentElement.classList.toggle('expanded')">
+            <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown || '▾'}</span>
+            <span class="exec-sg-etiquette">${niveau === 'domaine' ? 'Domaine' : 'Secteur'}</span>
+            <span class="exec-sg-nom">${_esc(nom)}</span>
+            <span class="exec-sg-sous">${_esc(denombrement)}</span>
+            <span class="exec-sg-mesures">
+                ${sgMesure('Activités', sgNombre(agg.planned))}
+                ${sgMesure('Clôturées', sgNombre(agg.closed))}
+                ${sgMesure('Taux exé.', sgTaux(agg.execRate, agg.planned))}
+                ${sgMesure('Constat.', sgNombre(agg.totalPConst))}
+                ${sgMesure('Taux clôt.', sgTaux(agg.totalClotRate, agg.totalPConst))}
+            </span>
+        </div>`;
 
     let accordionHtml = '';
     const dKeys = Object.keys(domaineMap).sort((a, b) => (domaineNameMap[a] || a).localeCompare(domaineNameMap[b] || b));
@@ -2549,63 +3882,428 @@ function execRenderDashboard() {
 
             const rowsHtml = pKeys.map((pId, idx) => {
                 const s = secteurStatsList[idx];
-                return `<tr data-domaine="${_esc(dName)}" data-secteur="${_esc(sName)}">
+                return `<tr data-domaine="${_escAttr(dName)}" data-secteur="${_escAttr(sName)}">
                     <td>${_esc(s.prestataire_nom)}</td>
                     ${renderStatsCells(s)}
                 </tr>`;
             }).join('');
 
+            // Ligne de total : elle n'a de sens qu'à partir de deux prestataires,
+            // sinon elle répète mot pour mot la ligne au-dessus.
+            const totalHtml = pKeys.length > 1 ? `
+                <tfoot><tr>
+                    <td>Total ${_esc(sName)}</td>
+                    ${renderStatsCells(sAgg, { aggregate: true })}
+                </tr></tfoot>` : '';
+
+            // Un domaine à secteur unique n'a rien à replier : on montre la table.
             secteursHtml += `
-            <div class="sg-secteur card" style="margin:0.5rem 0;">
-                <div class="exec-accordion-header" onclick="this.parentElement.classList.toggle('expanded')"
-                     style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.5rem 0.75rem;font-weight:600;flex-wrap:wrap;background:color-mix(in srgb, var(--primary) 6%, var(--bg));border-radius:6px 6px 0 0;font-size:0.85rem;">
-                    <span class="exec-form-section-chevron" style="transition:transform 0.2s;">${EXEC_ICONS.chevronDown || '▸'}</span>
-                    <strong>${_esc(sName)}</strong>
-                    <span style="color:var(--text-muted);font-weight:500;font-size:0.76rem;display:inline-flex;flex-wrap:wrap;gap:0.5rem;">
-                        <span>· ${pKeys.length} prestataire${pKeys.length > 1 ? 's' : ''}</span>
-                        <span>· Activités: <strong style="color:var(--text);">${sAgg.planned}</strong></span>
-                        <span>· Clôt.: <strong style="color:var(--text);">${sAgg.closed}</strong></span>
-                        <span>· Taux: <strong style="color:var(--text);">${sAgg.planned > 0 ? sAgg.execRate + '%' : '-'}</strong></span>
-                        <span>· Const.: <strong style="color:var(--text);">${sAgg.totalPConst}</strong></span>
-                        <span>· Taux clôt.: <strong style="color:var(--text);">${sAgg.totalPConst > 0 ? sAgg.totalClotRate + '%' : '-'}</strong></span>
-                    </span>
-                </div>
-                <div class="exec-accordion-body" style="padding:0.5rem 0.75rem 0.75rem;">
-                    <div style="overflow-x:auto;">
-                        <table class="exec-table sg-prest-table" style="font-size:0.8rem;white-space:nowrap;width:100%;table-layout:fixed;min-width:760px;">
+            <div class="sg-secteur card${sKeys.length === 1 ? ' expanded' : ''}">
+                ${sgBandeau('secteur', sName, `${pKeys.length} prestataire${pKeys.length > 1 ? 's' : ''}`, sAgg)}
+                <div class="exec-accordion-body">
+                    <div class="sg-table-boite">
+                        <table class="exec-table sg-prest-table">
                             ${prestTableHeader}
                             <tbody>${rowsHtml}</tbody>
+                            ${totalHtml}
                         </table>
                     </div>
                 </div>
             </div>`;
         });
 
-        // Domaines repliés par défaut (évite une page longue quand il y en a beaucoup).
         accordionHtml += `
-        <div class="sg-domaine card expanded" style="margin-bottom:0.75rem;">
-            <div class="exec-accordion-header" onclick="this.parentElement.classList.toggle('expanded')"
-                 style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;font-weight:700;flex-wrap:wrap;background:color-mix(in srgb, var(--primary) 14%, var(--bg));border-radius:6px 6px 0 0;font-size:0.9rem;">
-                <span class="exec-form-section-chevron" style="transition:transform 0.2s;">${EXEC_ICONS.chevronDown || '▾'}</span>
-                <span style="color:var(--primary);font-weight:800;letter-spacing:0.03em;">${_esc(dName)}</span>
-                <span style="color:var(--text-muted);font-weight:500;font-size:0.78rem;display:inline-flex;flex-wrap:wrap;gap:0.5rem;">
-                    <span>· ${sKeys.length} secteur${sKeys.length > 1 ? 's' : ''}</span>
-                    <span>· Activités: <strong style="color:var(--text);">${dAgg.planned}</strong></span>
-                    <span>· Clôt.: <strong style="color:var(--text);">${dAgg.closed}</strong></span>
-                    <span>· Taux exé.: <strong style="color:#166534;">${dAgg.planned > 0 ? dAgg.execRate + '%' : '-'}</strong></span>
-                    <span>· Const.: <strong style="color:var(--text);">${dAgg.totalPConst}</strong></span>
-                    <span>· Taux clôt.: <strong style="color:#166534;">${dAgg.totalPConst > 0 ? dAgg.totalClotRate + '%' : '-'}</strong></span>
-                </span>
-            </div>
-            <div class="exec-accordion-body" style="padding:0.5rem 0.75rem 0.75rem;">
+        <div class="sg-domaine card expanded">
+            ${sgBandeau('domaine', dName, `${sKeys.length} secteur${sKeys.length > 1 ? 's' : ''}`, dAgg)}
+            <div class="exec-accordion-body">
                 ${secteursHtml}
             </div>
         </div>`;
     });
 
     if (!accordionHtml) {
-        accordionHtml = `<div style="padding:2rem;text-align:center;color:var(--text-muted);">${te('no_data')}</div>`;
+        accordionHtml = `<div class="exec-sg-aucune">${te('no_data')}</div>`;
     }
+
+
+    return {
+        accordionHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
+        computePrestStats, aggregate, closedDossiers, resolveDossierDomaine, resolveSecteur,
+        allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
+        // Mesures des cartes : le tableau de bord et le formulaire de
+        // statistiques les lisent d'ici, jamais recalculées à côté.
+        constEnVigueur, totalConst, closedConst, tauxClotureConst,
+        fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
+        fncAlerts, fncEnRetard, fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
+        pacNonSoumis, pacAccepte, pacRejete, pacEnExamen,
+    };
+}
+
+
+// ══════════════════════════════════════
+//  SUIVI DES ACTIVITÉS — diagramme de Gantt
+// ══════════════════════════════════════
+// Chaque activité planifiée tient une barre entre sa date de début et sa date
+// de fin. Sa couleur dit où elle en est ; et cet état ne se lit pas sur
+// l'activité elle-même — qui n'en porte pas — mais sur le dossier ouvert à son
+// déclenchement. Sans dossier, c'est la date de début qui tranche entre une
+// activité encore à venir et une activité déjà en retard.
+const EXEC_GANTT_ETATS = ['termine', 'en_cours', 'planifie', 'en_retard'];
+const EXEC_GANTT_COULEURS = {
+    termine: '#16a34a', en_cours: '#f59e0b', planifie: '#2563eb', en_retard: '#dc2626',
+};
+
+function _execGanttDate(iso) {
+    const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(iso || ''));
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+}
+
+function _execGanttEtat(act, dossier, aujourdhuiIso) {
+    if (dossier) {
+        const st = (dossier.statut || '').toLowerCase();
+        return (st === 'cloture' || st === 'cloturee') ? 'termine' : 'en_cours';
+    }
+    return String(act.date_debut || '') < aujourdhuiIso ? 'en_retard' : 'planifie';
+}
+
+function _execGanttTypeLibelle(act) {
+    if (act.type_supervision) return String(act.type_supervision);
+    const t = (EXEC_STATE.data.typesSupervision || []).find(x => x.id === act.type_supervision_id);
+    return (t && (t.type_supervision || t.libelle || t.nom)) || '—';
+}
+
+// Bornes de la piste : l'année retenue par les filtres, étendue aux mois
+// entiers si une activité déborde de part et d'autre.
+function _execGanttBornes(activites, annee) {
+    let min = new Date(annee, 0, 1);
+    let max = new Date(annee, 11, 31);
+    activites.forEach(a => {
+        const d = _execGanttDate(a.date_debut);
+        const f = _execGanttDate(a.date_fin) || d;
+        if (d && d < min) min = new Date(d.getFullYear(), d.getMonth(), 1);
+        if (f && f > max) max = new Date(f.getFullYear(), f.getMonth() + 1, 0);
+    });
+    return { min, max };
+}
+
+function _execGanttMois(min, max) {
+    const mois = [];
+    const c = new Date(min.getFullYear(), min.getMonth(), 1);
+    while (c <= max) {
+        mois.push({ annee: c.getFullYear(), mois: c.getMonth() });
+        c.setMonth(c.getMonth() + 1);
+    }
+    return mois;
+}
+
+// Prépare les lignes du diagramme à partir des activités déjà filtrées par le
+// tableau de bord : le Gantt et les cartes montrent ainsi le même périmètre.
+function _execSuiviActivitesDonnees() {
+    const activites = EXEC_STATE._ganttActivites || [];
+    const dossiers = EXEC_STATE.data.dossiers || [];
+    const prestataires = EXEC_STATE.data.prestataires || [];
+    const aujourdhuiIso = new Date().toISOString().slice(0, 10);
+
+    const dossierParActivite = {};
+    const dossierParNotif = {};
+    dossiers.forEach(d => {
+        if (d.activite_id) dossierParActivite[d.activite_id] = d;
+        if (d.notification_id) dossierParNotif[d.notification_id] = d;
+    });
+    const nomPrestataire = (id, repli) => {
+        const p = prestataires.find(x => x.id === id);
+        return (p && p.nom) || repli || '—';
+    };
+
+    const lignes = activites
+        .filter(a => a.date_debut)
+        .map(a => {
+            const dossier = dossierParActivite[a.id];
+            const debut = _execGanttDate(a.date_debut);
+            const fin = _execGanttDate(a.date_fin) || debut;
+            return {
+                act: a, dossier,
+                debut, fin: fin < debut ? debut : fin,
+                etat: _execGanttEtat(a, dossier, aujourdhuiIso),
+                type: _execGanttTypeLibelle(a),
+                horsPlan: false,
+                prestataire_id: a.prestataire_id || 'inconnu',
+                prestataire_nom: nomPrestataire(a.prestataire_id, a.prestataire_nom),
+            };
+        });
+
+    // Une activité hors plan porte ses dates sur la notification elle-même, et
+    // son dossier s'y rattache par notification_id — pas par activite_id.
+    (EXEC_STATE._ganttHorsPlan || [])
+        .filter(n => n.date_activite)
+        .forEach(n => {
+            const dossier = dossierParNotif[n.id];
+            const debut = _execGanttDate(n.date_activite);
+            const fin = _execGanttDate(n.date_fin_effective) || debut;
+            lignes.push({
+                act: {
+                    id: n.id,
+                    objet: n.objet_activite,
+                    lieu_activite: n.lieu_activite,
+                    reference: n.reference,
+                },
+                dossier,
+                debut, fin: fin < debut ? debut : fin,
+                etat: _execGanttEtat({ date_debut: n.date_activite }, dossier, aujourdhuiIso),
+                type: n.nature_activite || _execGanttTypeLibelle(n),
+                horsPlan: true,
+                prestataire_id: n.prestataire_id || 'inconnu',
+                prestataire_nom: nomPrestataire(n.prestataire_id, n.prestataire_nom),
+            });
+        });
+
+    return { lignes, aujourdhuiIso };
+}
+
+function _execSuiviActivitesHtml() {
+    const G = EXEC_STATE.gantt || (EXEC_STATE.gantt = { types: [], etats: [] });
+    const { lignes, aujourdhuiIso } = _execSuiviActivitesDonnees();
+
+    // Les listes de filtres portent sur toutes les activités, pas seulement
+    // sur celles qui restent visibles — sinon cocher une case ferait
+    // disparaître les autres cases.
+    const tousTypes = [...new Set(lignes.map(l => l.type))].sort((a, b) => a.localeCompare(b));
+
+    const visibles = lignes.filter(l =>
+        (!G.types.length || G.types.includes(l.type))
+        && (!G.etats.length || G.etats.includes(l.etat)));
+
+    const annee = EXEC_STATE.filters.annee
+        ? parseInt(EXEC_STATE.filters.annee, 10) : new Date().getFullYear();
+    const { min, max } = _execGanttBornes(visibles, annee);
+    const mois = _execGanttMois(min, max);
+    const t0 = min.getTime();
+    const etendue = Math.max(1, new Date(max.getFullYear(), max.getMonth() + 1, 0).getTime() - t0);
+    const pct = (d) => ((d.getTime() - t0) / etendue) * 100;
+
+    // Bandeau des trimestres : les mois consécutifs d'un même trimestre sont
+    // regroupés, chaque cellule pesant son nombre de mois.
+    const trimestres = [];
+    mois.forEach((m) => {
+        const t = Math.floor(m.mois / 3) + 1;
+        const dernier = trimestres[trimestres.length - 1];
+        if (dernier && dernier.annee === m.annee && dernier.t === t) dernier.n += 1;
+        else trimestres.push({ annee: m.annee, t, n: 1 });
+    });
+
+    // Regroupement par prestataire, dans l'ordre alphabétique. Tous les
+    // prestataires du périmètre figurent au calendrier, y compris ceux sans
+    // activité : leur ligne vide est une information, leur absence une
+    // ambiguïté — on ne saurait pas s'ils manquent ou s'ils n'ont rien.
+    const groupes = {};
+    (EXEC_STATE._ganttPrestataires || []).forEach(p => {
+        groupes[p.id] = { nom: p.nom, lignes: [] };
+    });
+    visibles.forEach(l => {
+        if (!groupes[l.prestataire_id]) groupes[l.prestataire_id] = { nom: l.prestataire_nom, lignes: [] };
+        groupes[l.prestataire_id].lignes.push(l);
+    });
+    const ordre = Object.keys(groupes).sort((a, b) => groupes[a].nom.localeCompare(groupes[b].nom));
+
+    const jour = (d) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    let corps = '';
+    ordre.forEach(pid => {
+        const g = groupes[pid];
+        corps += `
+        <div class="g-nom g-groupe">${_esc(g.nom)}
+            <span class="g-compte">${g.lignes.length}</span>
+        </div>
+        <div class="g-piste g-groupe"></div>`;
+        if (!g.lignes.length) {
+            corps += `<div class="g-nom g-activite g-sans">${te('gantt_sans_activite')}</div>
+                      <div class="g-piste"></div>`;
+        }
+        g.lignes.sort((a, b) => a.debut - b.debut).forEach((l, iLigne) => {
+            const paire = iLigne % 2 ? ' g-paire' : '';
+            const gauche = Math.max(0, pct(l.debut));
+            const largeur = Math.max(1.4, pct(new Date(l.fin.getTime() + 86400000)) - gauche);
+            const ref = (l.dossier && l.dossier.reference) || l.act.reference || '';
+            corps += `
+            <div class="g-nom g-activite${paire}" title="${_escAttr(l.act.objet || l.act.titre || '')}">
+                ${l.horsPlan ? `<span class="g-hp" title="${_escAttr(te('gantt_hors_plan'))}">HP</span>` : ''}
+                <span class="g-activite-txt">${_esc(l.act.objet || l.act.titre || '—')}</span>
+            </div>
+            <div class="g-piste${paire}">
+                <div class="g-barre etat-${l.etat}" style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;"
+                     onmouseenter="execGanttInfo(this, true)" onmouseleave="execGanttInfo(this, false)">
+                    <span class="g-barre-txt">${_esc(l.type)}</span>
+                    ${l.etat === 'en_retard' ? '<span class="g-alerte">!</span>' : ''}
+                </div>
+                <div class="g-infobulle">
+                    <div class="t">${_esc(l.act.objet || l.act.titre || '—')}</div>
+                    ${ref ? `<div><span>${te('reference')}</span> ${_esc(ref)}</div>` : ''}
+                    <div><span>${te('gantt_dates')}</span> ${jour(l.debut)} → ${jour(l.fin)}</div>
+                    <div><span>${te('statut')}</span> ${te('gantt_' + l.etat)}</div>
+                    <div><span>${te('gantt_type_audit')}</span> ${_esc(l.type)}</div>
+                    ${l.horsPlan ? `<div><span>${te('gantt_origine')}</span> ${te('gantt_hors_plan')}</div>` : ''}
+                    ${l.act.lieu_activite ? `<div><span>${te('gantt_lieu')}</span> ${_esc(l.act.lieu_activite)}</div>` : ''}
+                </div>
+            </div>`;
+        });
+    });
+
+    if (!corps) {
+        corps = `<div class="g-nom g-vide"></div><div class="g-piste g-vide">${te('no_data')}</div>`;
+    }
+
+    const caseFiltre = (groupe, valeur, libelle, couleur) => `
+        <label class="g-case">
+            <input type="checkbox" ${((G[groupe] || []).includes(valeur)) ? 'checked' : ''}
+                   onchange="execGanttFiltrer('${groupe}', ${JSON.stringify(valeur).replace(/"/g, '&quot;')}, this.checked)">
+            ${couleur ? `<span class="g-puce" style="background:${couleur};"></span>` : ''}
+            <span>${_esc(libelle)}</span>
+        </label>`;
+
+    const aujourdhui = _execGanttDate(aujourdhuiIso);
+    const marqueur = (aujourdhui >= min && aujourdhui <= max)
+        ? `<div class="g-aujourdhui" style="left:${pct(aujourdhui).toFixed(2)}%;"></div>` : '';
+
+    return `
+    <div class="card exec-suivi-carte" id="execSuiviActivitesRoot" style="margin-top:1.25rem;">
+        <div class="exec-suivi-entete">
+            <h4>${te('gantt_titre')}</h4>
+            <div class="exec-suivi-nav">
+                <button class="btn btn-sm btn-outline" onclick="execGanttBord(-1)" title="${_escAttr(te('gantt_debut'))}">«</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttDefiler(-1)" title="${_escAttr(te('gantt_reculer'))}">‹</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttAujourdhui()">${te('gantt_aujourdhui')}</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttDefiler(1)" title="${_escAttr(te('gantt_avancer'))}">›</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttBord(1)" title="${_escAttr(te('gantt_fin'))}">»</button>
+                <span class="exec-suivi-jour">${jour(aujourdhui)}</span>
+            </div>
+        </div>
+        <div class="exec-suivi-corps">
+            <div class="exec-gantt-cadre">
+                <div class="exec-gantt" style="min-width:${Math.max(680, mois.length * 62)}px;">
+                    <div class="g-nom g-annee">${min.getFullYear()}${max.getFullYear() !== min.getFullYear() ? ` – ${max.getFullYear()}` : ''}</div>
+                    <div class="g-piste g-entete">
+                        ${trimestres.map(t => `<div class="g-cellule" style="flex-grow:${t.n};">T${t.t}</div>`).join('')}
+                    </div>
+                    <div class="g-nom g-entete-vide"></div>
+                    <div class="g-piste g-entete g-entete-mois">
+                        ${mois.map(m => `<div class="g-cellule">${EXEC_CHRONO_MOIS[m.mois]}</div>`).join('')}
+                    </div>
+                    ${corps}
+                    <div class="g-overlay">
+                        ${mois.map((m, i) => i ? `<div class="g-trait" style="left:${((i / mois.length) * 100).toFixed(3)}%;"></div>` : '').join('')}
+                        ${marqueur}
+                    </div>
+                </div>
+            </div>
+            <aside class="exec-gantt-panneau">
+                <div class="g-bloc">
+                    <div class="g-bloc-titre">${te('gantt_type_audit')}</div>
+                    ${tousTypes.length
+                        ? tousTypes.map(t => caseFiltre('types', t, t, '')).join('')
+                        : `<div class="g-bloc-vide">${te('no_data')}</div>`}
+                </div>
+                <div class="g-bloc">
+                    <div class="g-bloc-titre">${te('statut')}</div>
+                    ${EXEC_GANTT_ETATS.map(e => caseFiltre('etats', e, te('gantt_' + e), EXEC_GANTT_COULEURS[e])).join('')}
+                </div>
+            </aside>
+        </div>
+    </div>`;
+}
+
+// ── Défilement du calendrier ────────────────────────────────────────
+// La piste est plus large que son cadre : au-delà de la barre de défilement,
+// on donne des commandes explicites, dont un retour à la date du jour.
+function _execGanttCadre() {
+    return document.querySelector('#execSuiviActivitesRoot .exec-gantt-cadre');
+}
+
+function execGanttDefiler(sens) {
+    const cadre = _execGanttCadre();
+    if (!cadre) return;
+    cadre.scrollBy({ left: sens * Math.max(120, cadre.clientWidth * 0.6), behavior: 'smooth' });
+}
+
+function execGanttBord(sens) {
+    const cadre = _execGanttCadre();
+    if (!cadre) return;
+    cadre.scrollTo({ left: sens < 0 ? 0 : cadre.scrollWidth, behavior: 'smooth' });
+}
+
+// Recentre la piste sur le trait du jour, quand il tombe dans la période.
+function execGanttAujourdhui() {
+    const cadre = _execGanttCadre();
+    const trait = cadre && cadre.querySelector('.g-aujourdhui');
+    if (!cadre) return;
+    if (!trait) { cadre.scrollTo({ left: 0, behavior: 'smooth' }); return; }
+    const piste = cadre.querySelector('.exec-gantt');
+    const x = 220 + (parseFloat(trait.style.left) / 100) * (piste.offsetWidth - 220);
+    cadre.scrollTo({ left: Math.max(0, x - cadre.clientWidth / 2), behavior: 'smooth' });
+}
+
+// La fiche de survol se place à la main, en position fixe : la piste défile
+// horizontalement, et tout ce qui reste dans ce cadre s'y trouve rogné.
+function execGanttInfo(barre, montrer) {
+    const bulle = barre.parentElement.querySelector('.g-infobulle');
+    if (!bulle) return;
+    if (!montrer) { bulle.style.display = 'none'; return; }
+    bulle.style.display = 'block';
+    const r = barre.getBoundingClientRect();
+    const b = bulle.getBoundingClientRect();
+    let x = r.left;
+    let y = r.bottom + 6;
+    if (x + b.width > window.innerWidth - 8) x = window.innerWidth - b.width - 8;
+    if (y + b.height > window.innerHeight - 8) y = r.top - b.height - 6;
+    bulle.style.left = Math.max(8, x) + 'px';
+    bulle.style.top = Math.max(8, y) + 'px';
+}
+
+// Un filtre du panneau : on ne refait que la section, pas le tableau de bord.
+function execGanttFiltrer(groupe, valeur, coche) {
+    const G = EXEC_STATE.gantt || (EXEC_STATE.gantt = { types: [], etats: [] });
+    const liste = G[groupe] || (G[groupe] = []);
+    const i = liste.indexOf(valeur);
+    if (coche && i === -1) liste.push(valeur);
+    if (!coche && i !== -1) liste.splice(i, 1);
+    const root = document.getElementById('execSuiviActivitesRoot');
+    if (root) root.outerHTML = _execSuiviActivitesHtml();
+}
+
+function execRenderDashboard() {
+    const stats = EXEC_STATE.data.dashStats || {};
+    const notifs = EXEC_STATE.data.notifications || [];
+    const dossiers = EXEC_STATE.data.dossiers || [];
+    let constatations = EXEC_STATE.data.constatations || [];
+    // Source des activités planifiées : identique au menu "Activités de Supervision".
+    const plansValides = EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [];
+    // Base commune aux cartes, aux graphiques et à la table : les
+    // constatations en vigueur (voir _execConstaEnVigueur).
+    const POST_TRANSMIT = EXEC_CONSTA_EN_VIGUEUR;
+    const secteurs = EXEC_STATE.data.secteurs || [];
+    const domaines = EXEC_STATE.data.domaines || [];
+    const F = EXEC_STATE.filters;
+    const isPrest = _execIsPrestataire();
+    const scopedPid = (EXEC_STATE.user || {}).prestataire_id || '';
+
+    // For prestataires: narrow the data to their own prestataire before any filter logic
+    if (isPrest) {
+        constatations = constatations.filter(c => _execPortePrestataire(F.prestataire).includes(c.prestataire_id));
+    }
+
+    // Build secteur -> domaine lookup
+    const secteurToDomaine = {};
+    secteurs.forEach(s => { if (s.domaine_id) secteurToDomaine[s.id] = s.domaine_id; });
+
+    const SG = _execSituationGenerale(EXEC_STATE.filters);
+    const {
+        accordionHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
+        computePrestStats, aggregate, closedDossiers, resolveDossierDomaine, resolveSecteur,
+        allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
+        totalConst, closedConst, tauxClotureConst,
+        fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
+        fncAlerts, fncEnRetard, fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
+        pacNonSoumis, pacAccepte, pacRejete, pacEnExamen,
+    } = SG;
 
     // ── Données pour les graphiques (dérivées des mêmes variables filtrées) ──
     // Barres : activités planifiées vs clôturées par domaine (sigle).
@@ -2626,104 +4324,110 @@ function execRenderDashboard() {
         return { label: domaineNameMap[dId] || dId || '—', values: [planned, closed] };
     });
 
-    // Donut : statut d'exécution des activités.
-    const actPlanOnly = Math.max(0, totalAct - closedAct);
-    const chartExecutionSegments = [
-        { label: 'Clôturées', value: closedAct, color: '#10b981' },
-        { label: 'En cours / Planifiées', value: actPlanOnly, color: '#3b82f6' }
-    ];
-
-    // Statistiques graphiques basées sur la section "Situation Générale".
+    // Agrégat des prestataires : les cartes du tableau de bord s'y adossent,
+    // comme la section "Situation Générale".
     const _sgStats = [];
     Object.keys(domaineMap).forEach(dId => Object.keys(domaineMap[dId]).forEach(sId =>
         Object.keys(domaineMap[dId][sId]).forEach(pId => _sgStats.push(computePrestStats(dId, sId, pId)))));
     const sgAgg = aggregate(_sgStats);
-    const sgExecSegments = [
-        { label: 'Clôturées',    value: sgAgg.closed, color: '#10b981' },
-        { label: 'Non clôturées', value: Math.max(0, sgAgg.planned - sgAgg.closed), color: '#3b82f6' }
-    ];
-    const sgConstStatutSegments = [
-        { label: 'Soldées',     value: sgAgg.totalPClosed, color: '#059669' },
-        { label: 'Non soldées', value: Math.max(0, sgAgg.totalPConst - sgAgg.totalPClosed), color: '#ef4444' }
-    ];
-    const sgCritSegments = [
-        { label: te('critique') || 'Critique', value: sgAgg.byCrit.critique.count, color: '#dc2626' },
-        { label: te('majeure') || 'Majeure',   value: sgAgg.byCrit.majeure.count,  color: '#f97316' },
-        { label: te('mineure') || 'Mineure',   value: sgAgg.byCrit.mineure.count,  color: '#f59e0b' }
-    ];
 
-    const chartsHtml = `
-    <div class="card" id="execDashboardChartsCard" style="margin-top:1.25rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;gap:0.5rem;flex-wrap:wrap;">
-            <h4 style="margin:0;">Statistiques graphiques</h4>
-            <button class="btn btn-primary btn-sm" onclick="execShowStatistiquesAdvanced()" title="Statistiques détaillées">
-                ${EXEC_ICONS.dashboard || ''} Statistiques
-            </button>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;">
-            <div style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;">
-                <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.4rem;color:var(--primary);">Taux d'exécution des activités</div>
-                ${_execSvgDonut(sgExecSegments, {
-                    centerValue: sgAgg.planned > 0 ? `${sgAgg.execRate}%` : '-',
-                    centerLabel: 'Clôturé',
-                    emptyMsg: te('no_data')
-                })}
-            </div>
-            <div style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;">
-                <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.4rem;color:var(--primary);">Taux de clôture des const.</div>
-                ${_execSvgDonut(sgConstStatutSegments, {
-                    centerValue: sgAgg.totalPConst > 0 ? `${sgAgg.totalClotRate}%` : '-',
-                    centerLabel: 'Soldé',
-                    emptyMsg: te('no_data')
-                })}
-            </div>
-            <div style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;">
-                <div style="font-size:0.82rem;font-weight:600;margin-bottom:0.4rem;color:var(--primary);">Constatations par criticité</div>
-                ${_execSvgDonut(sgCritSegments, {
-                    centerValue: sgAgg.totalPConst,
-                    centerLabel: 'Total',
-                    emptyMsg: te('no_data')
-                })}
-            </div>
-        </div>
-    </div>`;
+    // Le Gantt part exactement des activités retenues par les filtres du
+    // tableau de bord : on les lui dépose ici plutôt que de refaire le tri.
+    // Le regroupement Domaine→Secteur→Prestataire fournit la liste complète
+    // des prestataires du périmètre, y compris ceux sans activité planifiée.
+    EXEC_STATE._ganttActivites = allActivities;
+    const ganttPrest = [];
+    Object.keys(domaineMap).forEach(dId => Object.keys(domaineMap[dId]).forEach(sId =>
+        Object.keys(domaineMap[dId][sId]).forEach(pId => ganttPrest.push({
+            id: pId, nom: domaineMap[dId][sId][pId].prestataire_nom || pId,
+        }))));
+    EXEC_STATE._ganttPrestataires = ganttPrest;
+
+    // Les activités hors plan — section « Autres Activités » du menu Activités
+    // de Supervision — n'existent que sous forme de notification, sans ligne
+    // dans un plan validé. Elles tiennent leur place au calendrier : ce sont
+    // des activités de surveillance au même titre que les autres. Mêmes
+    // filtres que le reste du tableau de bord, appliqués sur leurs champs.
+    let ganttHorsPlan = (EXEC_STATE.data.notifications || []).filter(n => n.hors_plan);
+    if (isPrest) { const mp = _execPortePrestataire(F.prestataire); ganttHorsPlan = ganttHorsPlan.filter(n => mp.includes(n.prestataire_id)); }
+    if (F.annee) {
+        ganttHorsPlan = ganttHorsPlan.filter(n =>
+            String(n.annee || String(n.date_activite || '').slice(0, 4)) === String(F.annee));
+    }
+    if (F.domaine) ganttHorsPlan = ganttHorsPlan.filter(n => n.domaine_id === F.domaine);
+    if (F.prestataire) ganttHorsPlan = ganttHorsPlan.filter(n => n.prestataire_id === F.prestataire);
+    if (F.trimestre) {
+        ganttHorsPlan = ganttHorsPlan.filter(n => {
+            const m = String(n.date_activite || '').slice(5, 7);
+            return m && String(Math.ceil(parseInt(m, 10) / 3)) === String(F.trimestre);
+        });
+    }
+    if (F.search) {
+        const q = F.search.toLowerCase();
+        ganttHorsPlan = ganttHorsPlan.filter(n =>
+            `${n.objet_activite || ''} ${n.prestataire_nom || ''} ${n.nature_activite || ''}`
+                .toLowerCase().includes(q));
+    }
+    EXEC_STATE._ganttHorsPlan = ganttHorsPlan;
+    const suiviHtml = _execSuiviActivitesHtml();
 
     return `
     <div class="page-content">
-        <div class="page-header">
-            <h2>${te('dashboard')}</h2>
-            <p style="color:var(--text-muted)">${te('module_subtitle')}</p>
+        <div class="page-header exec-dash-entete">
+            <div>
+                <h2>${te('dashboard')}</h2>
+                <p style="color:var(--text-muted)">${te('module_subtitle')}</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="execShowStatistiquesAdvanced()" title="${_escAttr(te('voir_statistiques'))}">
+                ${EXEC_ICONS.dashboard || ''} ${te('voir_statistiques')}
+            </button>
         </div>
 
-        <div class="exec-kpi-grid">
-            <div class="exec-kpi-card" style="--kpi-color:#10b981">
-                <div class="exec-kpi-value">${stats.dossiers_clotures_ytd || 0}</div>
-                <div class="exec-kpi-label">${te('activites_realisees')}</div>
-            </div>
-            <div class="exec-kpi-card" style="--kpi-color:#ef4444">
-                <div class="exec-kpi-value">${fncOuvertes}</div>
-                <div class="exec-kpi-label">${te('constatations_ouvertes')}</div>
-            </div>
-            <div class="exec-kpi-card" style="--kpi-color:#f97316">
-                <div class="exec-kpi-value">${fncCritiques}</div>
-                <div class="exec-kpi-label">${te('risques_critiques')}</div>
-            </div>
-            <div class="exec-kpi-card" style="--kpi-color:#3b82f6">
-                <div class="exec-kpi-value">${tauxClotureAct}%</div>
-                <div class="exec-kpi-label">${te('taux_cloture_activites')}</div>
-            </div>
-            <div class="exec-kpi-card" style="--kpi-color:#8b5cf6">
-                <div class="exec-kpi-value">${tauxClotureConst}%</div>
-                <div class="exec-kpi-label">${te('taux_cloture_constatations')}</div>
-            </div>
-            <div class="exec-kpi-card" style="--kpi-color:#059669">
-                <div class="exec-kpi-value">${stats.rapports_transmis_ytd || 0}</div>
-                <div class="exec-kpi-label">${te('rapports_transmis')}</div>
-            </div>
+        <div class="oasis-kpi-groupes">
+            ${oasisKpiGroupe(te('activites'), [
+                oasisKpiCarte({
+                    titre: te('taux_execution'), couleur: '#2563eb',
+                    valeur: sgAgg.planned > 0 ? `${sgAgg.execRate}%` : '-',
+                    precision: `${sgAgg.closed} ${te('sur')} ${sgAgg.planned} ${te('realisees_court')}`,
+                    figure: { type: 'jauge', pct: sgAgg.execRate },
+                }),
+                oasisKpiCarte({
+                    titre: te('act_en_retard'), couleur: '#dc2626', alerte: !!actEnRetard,
+                    valeur: actEnRetard, precision: te('act_en_retard_aide'),
+                    figure: { type: 'retard', pastille: te('depasse'), legende: te('debut') },
+                }),
+                oasisKpiCarte({
+                    titre: te('a_planifier'), couleur: '#f59e0b',
+                    valeur: aDeclencher.length,
+                    precision: `${te('horizon_prochains')} ${horizonMois} ${te('mois')}`,
+                    figure: { type: 'calendrier', mois: horizonMois },
+                }),
+            ])}
+            ${oasisKpiGroupe(te('constatations'), [
+                oasisKpiCarte({
+                    titre: te('taux_cloture'), couleur: '#8b5cf6',
+                    valeur: totalConst > 0 ? `${tauxClotureConst}%` : '-',
+                    precision: `${closedConst}/${totalConst} ${te('cloturees_court')}`
+                        + (horsActivite ? ` · ${horsActivite} ${te('hors_activite_court')}` : ''),
+                    figure: { type: 'cloture', pct: tauxClotureConst },
+                }),
+                oasisKpiCarte({
+                    titre: te('critiques'), couleur: '#f97316', alerte: !!fncCritiques,
+                    valeur: fncCritiques, precision: te('action_immediate'),
+                    figure: { type: 'echelle', position: 92, min: te('faible'), max: te('eleve') },
+                }),
+                oasisKpiCarte({
+                    titre: te('ouvertes'), couleur: '#ef4444',
+                    valeur: fncOuvertes,
+                    precision: te('en_attente_traitement')
+                        + (horsActiviteOuvertes ? ` · ${horsActiviteOuvertes} ${te('hors_activite_court')}` : ''),
+                    figure: { type: 'etapes', liste: [te('en_attente'), te('en_cours_court'), te('cloture_court')], actif: 0 },
+                }),
+            ])}
         </div>
 
         ${_execRenderFilterBar('execRenderPage()', isPrest
-            ? { showAnnee: true, showTrimestre: true, showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showSearch: true }
+            ? { showAnnee: true, showTrimestre: true, showDomaine: false, showSecteur: false, showPrestataire: true, showStatut: false, showSearch: true }
             : { showAnnee: true, showTrimestre: true, showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showSearch: true })}
 
         ${fncAlerts.length > 0 ? `
@@ -2732,35 +4436,291 @@ function execRenderDashboard() {
                 ${EXEC_ICONS.alarm}
                 <strong style="color:#ef4444">${te('alertes')}</strong>
                 <span style="background:#ef4444;color:#fff;border-radius:10px;padding:0.05rem 0.5rem;font-size:0.74rem;font-weight:700;">${fncAlerts.length}</span>
+                ${fncEnRetard ? `<span style="background:#7f1d1d;color:#fff;border-radius:10px;padding:0.05rem 0.5rem;font-size:0.74rem;font-weight:700;">${fncEnRetard} ${te('en_retard')}</span>` : ''}
             </summary>
             <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">
-                ${fncAlerts.map(f => `<div style="padding:0.3rem 0;display:flex;justify-content:space-between;align-items:center;">
-                    <span>${_esc(f.reference || '')} - ${_esc(f.titre || f.description || '').substring(0, 60)}</span>
-                    ${_daysUntilBadge(f.delai_correction || f.date_due_cloture)}
+                ${fncAlerts.map(f => `<div class="exec-alerte-ligne">
+                    <span>
+                        <strong style="color:var(--text);">${_esc(f.reference || '')}</strong>
+                        ${_execConstaHorsActivite(f) ? `<span class="exec-alerte-origine">${te('hors_activite_court')}</span>` : ''}
+                        ${_esc(f.titre || f.description || '').substring(0, 60)}
+                    </span>
+                    ${f._jours < 0
+                        ? `<span style="color:#7f1d1d;font-weight:700;">${te('en_retard')} ${Math.abs(f._jours)} j</span>`
+                        : _daysUntilBadge(_execConstaEcheance(f))}
                 </div>`).join('')}
             </div>
         </details>` : ''}
 
-        ${chartsHtml}
+        ${suiviHtml}
 
-        <div class="card" style="margin-top:1.5rem;" id="execSituationGeneraleCard">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;gap:0.5rem;flex-wrap:wrap;">
-                <h4 style="margin:0;">Situation Générale</h4>
-                <div style="display:flex;gap:0.5rem;">
-                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('xlsx')" title="Exporter Excel">
-                        ${EXEC_ICONS.download || EXEC_ICONS.file || ''} Exporter Excel
-                    </button>
-                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('pdf')" title="Exporter PDF">
-                        ${EXEC_ICONS.pdf || EXEC_ICONS.download || ''} Exporter PDF
-                    </button>
-                </div>
+    </div>`;
+}
+
+// ── Chronologie ─────────────────────────────────────────────────
+// Un curseur à deux poignées borne la période analysée. La graduation porte
+// les mois, et les trimestres aux extrémités ; chaque poignée annonce sa date.
+// Le glissement ne recalcule rien : les indicateurs se refont au relâchement.
+const EXEC_CHRONO_MOIS = ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
+
+const _execChronoJour = (v) => {
+    // Les dates stockées ne sont pas toutes complétées à deux chiffres :
+    // « 2026-4-5 » doit se lire comme « 2026-04-05 », sans quoi la
+    // chronologie entière disparaîtrait pour une donnée mal formée.
+    const m = String(v || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (!m) return null;
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return isNaN(d.getTime()) ? null : d;
+};
+const _execChronoIso = (d) => d.toISOString().slice(0, 10);
+const _execChronoIndex = (v, min) => Math.round((_execChronoJour(v) - min) / 86400000);
+const _execChronoDate = (i, min) => _execChronoIso(new Date(min.getTime() + i * 86400000));
+
+// « 15 Juin 2026 » : la date telle que la poignée l'annonce.
+function _execChronoLisible(v) {
+    const d = _execChronoJour(v);
+    if (!d) return '';
+    return `${d.getDate()} ${EXEC_CHRONO_MOIS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// Cycle de surveillance d'un prestataire, tel que « Plans de Surveillance »
+// le fixe. Sans dates, pas de cycle : la période reste libre.
+function _execCyclePrestataire(prestataireId) {
+    if (!prestataireId) return null;
+    const c = (EXEC_STATE.data.cyclesPrestataires || [])
+        .find((x) => x.id === prestataireId);
+    if (!c || !c.debut_cycle || !c.fin_cycle) return null;
+    return { debut: String(c.debut_cycle), fin: String(c.fin_cycle), nom: c.nom || '' };
+}
+
+function _execStatsChronologie(bornes, P, cycle) {
+    const min = _execChronoJour(bornes.min);
+    const max = _execChronoJour(bornes.max);
+    if (!min || !max || max <= min) return '';
+    const total = Math.round((max - min) / 86400000);
+    const debut = P.debut || bornes.min;
+    const fin = P.fin || bornes.max;
+    const iDebut = Math.max(0, Math.min(total, _execChronoIndex(debut, min)));
+    const iFin = Math.max(iDebut, Math.min(total, _execChronoIndex(fin, min)));
+    const pct = (i) => (total ? (i / total) * 100 : 0);
+    // Une bulle centrée sur une poignée d'extrémité déborderait de la carte :
+    // sa position est retenue dans les bornes lisibles.
+    const pctBulle = (i) => Math.min(90, Math.max(10, pct(i)));
+
+    // Graduation : un trait par mois, son nom en dessous ; les trimestres
+    // des extrémités encadrent la piste.
+    const traits = [];
+    // Sur une longue période, les noms de mois se chevaucheraient : on n'en
+    // garde qu'un sur N, et l'année remplace le mois en janvier.
+    const nbMois = (max.getFullYear() - min.getFullYear()) * 12
+        + (max.getMonth() - min.getMonth()) + 1;
+    const pasLibelle = nbMois <= 8 ? 1 : (nbMois <= 16 ? 2 : 3);
+    let rangMois = -1;
+    const curseur = new Date(min.getFullYear(), min.getMonth(), 1);
+    while (curseur <= max) {
+        rangMois += 1;
+        const debutMois = curseur > min ? curseur : min;
+        const finMois = new Date(curseur.getFullYear(), curseur.getMonth() + 1, 0);
+        const milieu = new Date(Math.min(finMois.getTime(), max.getTime()));
+        const centre = (debutMois.getTime() + milieu.getTime()) / 2;
+        if (curseur > min) {
+            traits.push(`<span class="exec-chrono-trait" style="left:${pct((curseur - min) / 86400000)}%;"></span>`);
+        }
+        if (rangMois % pasLibelle === 0) {
+            const libelle = curseur.getMonth() === 0
+                ? `${EXEC_CHRONO_MOIS[0]} ${curseur.getFullYear()}`
+                : EXEC_CHRONO_MOIS[curseur.getMonth()];
+            traits.push(`<span class="exec-chrono-mois-nom" style="left:${pct((centre - min.getTime()) / 86400000)}%;">`
+                + `${libelle}</span>`);
+        }
+        curseur.setMonth(curseur.getMonth() + 1);
+    }
+    const trimestre = (d) => `T${Math.floor(d.getMonth() / 3) + 1}`;
+
+    return `
+    <div class="exec-chrono" id="execChrono"
+         data-min="${_execChronoIso(min)}" data-total="${total}">
+        <div class="exec-chrono-tete">
+            <span class="exec-chrono-titre">${te('periode_examinee')}</span>
+            <label class="exec-chrono-date">${te('chrono_date_debut')}
+                <input type="date" id="execChronoDateDebut" value="${_escAttr(debut)}"
+                       onchange="execChronoDates()">
+            </label>
+            <label class="exec-chrono-date">${te('chrono_date_fin')}
+                <input type="date" id="execChronoDateFin" value="${_escAttr(fin)}"
+                       onchange="execChronoDates()">
+            </label>
+            ${cycle ? `<span class="exec-chrono-cycle" title="${te('cycle_surveillance')}">
+                ${te('cycle_court')} ${_formatDate(cycle.debut)} → ${_formatDate(cycle.fin)}
+            </span>` : ''}
+            <span class="exec-chrono-raccourcis">
+                ${[[12, te('chrono_12_mois')], [6, te('chrono_6_mois')], [3, te('chrono_3_mois')]]
+                    .map(([n, l]) => `<button class="exec-chrono-btn" onclick="execStatsPeriodeDerniers(${n})">${l}</button>`).join('')}
+                <button class="exec-chrono-btn" onclick="execStatsPeriode('','')">${te('chrono_tout')}</button>
+            </span>
+        </div>
+
+        <div class="exec-chrono-curseur">
+            <span class="exec-chrono-bulle" id="execChronoBulleDebut" style="left:${pctBulle(iDebut)}%;">
+                <strong>${_execChronoLisible(debut)}</strong> - ${te('debut')}</span>
+            <span class="exec-chrono-bulle" id="execChronoBulleFin" style="left:${pctBulle(iFin)}%;">
+                <strong>${_execChronoLisible(fin)}</strong> - ${te('fin')}</span>
+            <div class="exec-chrono-piste">
+                <div class="exec-chrono-selection" id="execChronoSelection"
+                     style="left:${pct(iDebut)}%;right:${100 - pct(iFin)}%;"></div>
+                <input type="range" class="exec-chrono-poignee" id="execChronoDebut"
+                       min="0" max="${total}" value="${iDebut}"
+                       oninput="execChronoGlisser()" onchange="execChronoAppliquer()"
+                       aria-label="${te('debut')}">
+                <input type="range" class="exec-chrono-poignee" id="execChronoFin"
+                       min="0" max="${total}" value="${iFin}"
+                       oninput="execChronoGlisser()" onchange="execChronoAppliquer()"
+                       aria-label="${te('fin')}">
             </div>
-            <div id="execSituationGeneraleRoot">
-                ${accordionHtml}
+            <div class="exec-chrono-graduation">
+                <span class="exec-chrono-trimestre gauche">${trimestre(min)}</span>
+                <span class="exec-chrono-trimestre droite">${trimestre(max)}</span>
+                ${traits.join('')}
             </div>
         </div>
     </div>`;
 }
+
+// Glissement : seules les étiquettes et la plage colorée suivent le doigt.
+window.execChronoGlisser = function () {
+    const boite = document.getElementById('execChrono');
+    if (!boite) return;
+    const min = _execChronoJour(boite.dataset.min);
+    const total = Number(boite.dataset.total) || 1;
+    const a = document.getElementById('execChronoDebut');
+    const b = document.getElementById('execChronoFin');
+    // Les poignées ne se croisent pas : celle qu'on pousse repousse l'autre.
+    let i = Number(a.value);
+    let j = Number(b.value);
+    if (i > j) { if (document.activeElement === a) j = i; else i = j; a.value = i; b.value = j; }
+    const pct = (v) => (v / total) * 100;
+    const sel = document.getElementById('execChronoSelection');
+    if (sel) { sel.style.left = `${pct(i)}%`; sel.style.right = `${100 - pct(j)}%`; }
+    const bulle = (id, v, libelle) => {
+        const e = document.getElementById(id);
+        if (!e) return;
+        e.style.left = `${Math.min(90, Math.max(10, pct(v)))}%`;
+        e.innerHTML = `<strong>${_execChronoLisible(_execChronoDate(v, min))}</strong> - ${libelle}`;
+    };
+    bulle('execChronoBulleDebut', i, te('debut'));
+    bulle('execChronoBulleFin', j, te('fin'));
+};
+
+// Relâchement : la période est arrêtée, les indicateurs se refont.
+window.execChronoAppliquer = function () {
+    const boite = document.getElementById('execChrono');
+    if (!boite) return;
+    const min = _execChronoJour(boite.dataset.min);
+    const a = Number(document.getElementById('execChronoDebut').value);
+    const b = Number(document.getElementById('execChronoFin').value);
+    execStatsPeriode(_execChronoDate(Math.min(a, b), min), _execChronoDate(Math.max(a, b), min));
+};
+
+// Bornes saisies au clavier : elles arrêtent la période comme les poignées.
+window.execChronoDates = function () {
+    const a = document.getElementById('execChronoDateDebut');
+    const b = document.getElementById('execChronoDateFin');
+    let debut = (a && a.value) || '';
+    let fin = (b && b.value) || '';
+    if (debut && fin && debut > fin) { const t = debut; debut = fin; fin = t; }
+    execStatsPeriode(debut, fin);
+};
+
+window.execStatsPeriode = function (debut, fin) {
+    EXEC_STATE.statsPeriode = { debut, fin };
+    execShowStatistiquesAdvanced();
+};
+
+// Raccourci : les N derniers mois, à compter d'aujourd'hui.
+window.execStatsPeriodeDerniers = function (n) {
+    const fin = new Date();
+    const debut = new Date();
+    debut.setMonth(debut.getMonth() - n);
+    execStatsPeriode(_execChronoIso(debut), _execChronoIso(fin));
+};
+
+// Détail d'un indicateur de conformité : les constatations qu'il compte,
+// présentées sous les cartes, là où le classement des prestataires figurait.
+function _execStatsDetailHtml(cle, detail) {
+    if (!cle || !detail) {
+        return `<p class="exec-stats-invite">${te('aucun_indicateur')}</p>`;
+    }
+    const lignes = detail.lignes || [];
+    return `
+    <div class="exec-stats-detail">
+        <div class="exec-stats-entete">
+            <h4>${te('detail_indicateur')} — ${_esc(detail.titre)}
+                <span class="exec-stats-compte">${lignes.length}</span></h4>
+            <button class="btn btn-sm btn-outline" onclick="execStatsIndicateur('')">
+                ${EXEC_ICONS.x || ''} ${te('cancel') || 'Fermer'}
+            </button>
+        </div>
+        <table class="exec-data-table exec-compact-table" style="width:100%;font-size:0.82rem;">
+            <thead><tr>
+                <th style="width:140px;">${te('reference')}</th>
+                <th>${te('provider')}</th>
+                <th style="width:100px;">${te('criticite')}</th>
+                <th style="width:120px;">${te('statut')}</th>
+                <th style="width:110px;">${te('date_ouverture')}</th>
+                <th style="width:110px;">${te('date_due_label')}</th>
+                <th style="width:110px;">${te('date_solde')}</th>
+                <th style="width:70px;text-align:center;">${te('actions')}</th>
+            </tr></thead>
+            <tbody>
+                ${lignes.length === 0
+                    ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>`
+                    : lignes.map(c => `<tr>
+                        <td><strong>${_esc(c.reference || '')}</strong></td>
+                        <td>${_esc(c.prestataire_nom || '')}</td>
+                        <td>${_execGraviteBadge(c.criticite || c.gravite)}</td>
+                        <td>${_execStatusBadge(c.statut)}</td>
+                        <td>${_formatDate(String(c.date_ouverture || c.date_creation || '').slice(0, 10))}</td>
+                        <td>${_formatDate(String(c.date_due_cloture || '').slice(0, 10))}</td>
+                        <td>${_formatDate(String(c.date_solde || '').slice(0, 10))}</td>
+                        <td style="text-align:center;">
+                            <button class="btn btn-sm btn-outline" onclick="execOuvrirConstatation('${c.id}')"
+                                    title="${_escAttr(te('ouvrir_constatation'))}">${EXEC_ICONS.eye || EXEC_ICONS.openFolder || '→'}</button>
+                        </td>
+                    </tr>`).join('')}
+            </tbody>
+        </table>
+    </div>`;
+}
+
+// Ouvre la constatation là où elle se travaille : son suivi PAC tant qu'elle
+// est ouverte, le dossier de l'activité une fois soldée, et le processus
+// « hors activité » pour celles qui n'ont pas de dossier. Même aiguillage que
+// la table des Constatations, en un seul endroit.
+window.execOuvrirConstatation = function (fncId) {
+    const c = (EXEC_STATE.data.constatations || []).find(x => x.id === fncId);
+    if (!c) { _execToast(te('no_data') || 'Introuvable', 'info'); return; }
+    const st = c.statut || '';
+    let ouvrir;
+    if (st.startsWith('direct_')) ouvrir = () => execOpenConstatationDirecteSlider(fncId);
+    else if (st !== 'soldee' && EXEC_CONSTA_EN_VIGUEUR.has(st)) ouvrir = () => execOpenPACSlider(fncId);
+    else if (c.dossier_id) ouvrir = () => execOpenDossierSlider(c.dossier_id, 'constatations');
+    else ouvrir = () => execOpenConstatationDirecteSlider(fncId);
+    // On vient du formulaire de statistiques : son bouton Retour doit y
+    // ramener, et non refermer le volet sur le tableau de bord.
+    const revenir = EXEC_STATE.voletRejouer;
+    // Le formulaire de statistiques occupe déjà le volet : on le referme
+    // d'abord, les deux ne peuvent pas y tenir ensemble.
+    if (typeof execCloseSlider === 'function') execCloseSlider();
+    execArmerRetour(revenir);
+    setTimeout(ouvrir, 80);
+};
+
+// Choix d'un indicateur : un second clic sur la même carte referme le détail.
+window.execStatsIndicateur = function (cle) {
+    EXEC_STATE.statsIndicateur = (EXEC_STATE.statsIndicateur === cle) ? '' : cle;
+    execShowStatistiquesAdvanced();
+};
 
 // Statistiques avancées — ouvre un slider plein, basé sur les données filtrées du tableau de bord.
 function execShowStatistiquesAdvanced() {
@@ -2779,7 +4739,8 @@ function execShowStatistiquesAdvanced() {
         prestDom[p.id] = p.domaine_id || (secteurs.find(s => s.id === p.secteur_id) || {}).domaine_id || '';
     });
     let consts = EXEC_STATE.data.constatations || [];
-    if (isPrest && scopedPid) consts = consts.filter(c => c.prestataire_id === scopedPid);
+    const mesPrestStats = _execPortePrestataire(F.prestataire);
+    if (mesPrestStats) consts = consts.filter(c => mesPrestStats.includes(c.prestataire_id));
     // Filtres du tableau de bord
     if (F.prestataire) consts = consts.filter(c => c.prestataire_id === F.prestataire);
     if (F.domaine) consts = consts.filter(c => (prestDom[c.prestataire_id] || c.domaine_id) === F.domaine);
@@ -2788,7 +4749,35 @@ function execShowStatistiquesAdvanced() {
         const d = String(c.date_creation || c.date_ouverture || '');
         return d.length >= 7 && String(Math.ceil(parseInt(d.slice(5, 7)) / 3)) === String(F.trimestre);
     });
-    const POST = new Set(['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee']);
+    // Période retenue : la chronologie sous les filtres borne les données sur
+    // lesquelles les indicateurs sont calculés.
+    if (!EXEC_STATE.statsPeriode) EXEC_STATE.statsPeriode = { debut: '', fin: '' };
+    // Un prestataire retenu impose son cycle de surveillance : c'est la
+    // période sur laquelle son suivi se juge. Changer de prestataire réarme
+    // ce défaut ; un réglage manuel de la chronologie le remplace.
+    const cycle = _execCyclePrestataire(F.prestataire);
+    if (F.prestataire !== EXEC_STATE._statsPrestataireCycle) {
+        EXEC_STATE._statsPrestataireCycle = F.prestataire;
+        EXEC_STATE.statsPeriode = cycle
+            ? { debut: cycle.debut.slice(0, 10), fin: cycle.fin.slice(0, 10) }
+            : { debut: '', fin: '' };
+    }
+    const P = EXEC_STATE.statsPeriode;
+    const jourDe = (c) => String(c.date_creation || c.date_ouverture || '').slice(0, 10);
+    // Étendue offerte au curseur : ce que couvrent les données, élargi au
+    // cycle du prestataire quand il déborde.
+    const jours = consts.map(jourDe).filter(Boolean).sort();
+    // La piste couvre les données, le cycle du prestataire — et la période
+    // retenue : une date saisie au clavier hors de ces bornes doit rester
+    // atteignable par les poignées, sinon le curseur mentirait sur le filtre.
+    const bornes = {
+        min: [jours[0], cycle && cycle.debut, P.debut].filter(Boolean).sort()[0] || '',
+        max: [jours[jours.length - 1], cycle && cycle.fin, P.fin].filter(Boolean).sort().pop() || '',
+    };
+    if (P.debut) consts = consts.filter(c => jourDe(c) >= P.debut);
+    if (P.fin) consts = consts.filter(c => jourDe(c) <= P.fin);
+
+    const POST = new Set(EXEC_CONSTA_EN_VIGUEUR);
     const transmitted = consts.filter(c => POST.has(c.statut || ''));
     const crit = c => (c.criticite || c.gravite || '').toLowerCase();
 
@@ -2815,28 +4804,84 @@ function execShowStatistiquesAdvanced() {
     });
     const nbRecur = Object.values(recurMap).filter(n => n > 1).reduce((a, b) => a + b, 0);
 
-    // --- KPIs additionnels (proposés à partir des données du module) ---
-    const totalConst = transmitted.length;
-    const totalSolded = transmitted.filter(c => c.statut === 'soldee').length;
-    const tauxClotGlobal = totalConst > 0 ? Math.round((totalSolded / totalConst) * 100) + '%' : '-';
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const horsDelai = transmitted.filter(c => c.statut !== 'soldee' && c.date_due_cloture && new Date(c.date_due_cloture) < today).length;
-    const delais = transmitted
-        .filter(c => c.statut === 'soldee' && c.date_solde && (c.date_creation || c.date_ouverture))
-        .map(c => (new Date(c.date_solde) - new Date(c.date_creation || c.date_ouverture)) / 86400000);
-    const delaiMoyen = delais.length ? Math.round(delais.reduce((a, b) => a + b, 0) / delais.length) + ' j' : '-';
-    const nbRapportsTransmis = (EXEC_STATE.data.rapports || []).filter(r => r.statut === 'transmis').length;
-    // Top criticité par prestataire
-    const byPrest = {};
-    transmitted.forEach(c => {
-        const k = c.prestataire_nom || (prests.find(p => p.id === c.prestataire_id) || {}).nom || '—';
-        byPrest[k] = (byPrest[k] || 0) + 1;
-    });
-    const topPrest = Object.entries(byPrest).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
-    const kpi = (label, value, color) => `<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:0.9rem 1rem;">
-        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${label}</div>
-        <div style="font-size:1.7rem;font-weight:800;color:${color || 'var(--primary)'};margin-top:0.25rem;">${value}</div>
+    // Répartition par mois, pour la vignette de la moyenne mensuelle.
+    const parMois = {};
+    cm.forEach(c => {
+        const m = String(c.date_creation || c.date_ouverture || '').slice(0, 7);
+        if (m) parMois[m] = (parMois[m] || 0) + 1;
+    });
+    const repartitionMois = Object.keys(parMois).sort().slice(-5).map(k => parMois[k]);
+
+    // Ce que chaque indicateur recouvre : la liste qu'il compte. Cliquer la
+    // carte affiche cette liste, sous les indicateurs.
+    const indicateur = EXEC_STATE.statsIndicateur || '';
+    const recurrentes = transmitted.filter(c => {
+        const k = (c.prestataire_id || '') + '|'
+            + ((c.theme || c.titre || c.description || '').toString().toLowerCase().slice(0, 50));
+        return recurMap[k] > 1;
+    });
+    // ── Répartitions ─────────────────────────────────────────────────
+    // Trois lectures d'un même ensemble : par criticité, par avancement, puis
+    // par état du plan d'actions. Elles portent sur les données du formulaire,
+    // filtres et période compris — et chaque ligne renvoie à sa propre liste.
+    const ouvertesStats = transmitted.filter(c => c.statut !== 'soldee');
+    const soldeesStats = transmitted.filter(c => c.statut === 'soldee');
+    const horsDelaiListe = ouvertesStats.filter(c => c.date_due_cloture
+        && new Date(c.date_due_cloture) < today);
+    const stConst = c => (c.statut || '').toLowerCase();
+    const pacNonSoumisL = ouvertesStats.filter(c => ['ouvert', 'ouverte'].includes(stConst(c)));
+    const pacAccepteL = ouvertesStats.filter(c => stConst(c) === 'pac_valide');
+    const pacRejeteL = ouvertesStats.filter(c => stConst(c) === 'pac_rejetee');
+    const parCriticite = n => transmitted.filter(c => crit(c) === n);
+
+    const repCritSegments = [
+        { cle: 'rep_critique', label: te('critique'), value: parCriticite('critique').length, color: '#dc2626' },
+        { cle: 'rep_majeure',  label: te('majeure'),  value: parCriticite('majeure').length,  color: '#f97316' },
+        { cle: 'rep_mineure',  label: te('mineure'),  value: parCriticite('mineure').length,  color: '#f59e0b' },
+    ];
+    // « Hors délais » est un sous-ensemble des ouvertes : c'est l'alerte, pas
+    // une troisième catégorie — la somme des lignes ne fait pas le total.
+    const repEmisesSegments = [
+        { cle: 'emis_ouverte',     label: te('emises_ouverte'), value: ouvertesStats.length,   color: '#2563eb' },
+        { cle: 'emis_hors_delais', label: te('hors_delais'),    value: horsDelaiListe.length,  color: '#dc2626' },
+        { cle: 'emis_cloture',     label: te('emises_cloture'), value: soldeesStats.length,    color: '#16a34a' },
+    ];
+    const repPacSegments = [
+        { cle: 'pac_non_soumis', label: te('graph_pac_non_soumis'), value: pacNonSoumisL.length, color: '#dc2626' },
+        { cle: 'pac_accepte',    label: te('graph_pac_accepte'),    value: pacAccepteL.length,   color: '#16a34a' },
+        { cle: 'pac_rejete',     label: te('graph_pac_rejete'),     value: pacRejeteL.length,    color: '#f97316' },
+    ];
+
+    const DETAILS = {
+        critiques: { titre: te('stats_critiques'), lignes: criticals },
+        rep_critique: { titre: `${te('graph_criticite')} — ${te('critique')}`, lignes: parCriticite('critique') },
+        rep_majeure: { titre: `${te('graph_criticite')} — ${te('majeure')}`, lignes: parCriticite('majeure') },
+        rep_mineure: { titre: `${te('graph_criticite')} — ${te('mineure')}`, lignes: parCriticite('mineure') },
+        emis_ouverte: { titre: `${te('graph_emises')} — ${te('emises_ouverte')}`, lignes: ouvertesStats },
+        emis_hors_delais: { titre: `${te('graph_emises')} — ${te('hors_delais')}`, lignes: horsDelaiListe },
+        emis_cloture: { titre: `${te('graph_emises')} — ${te('emises_cloture')}`, lignes: soldeesStats },
+        pac_non_soumis: { titre: `${te('graph_pac_titre')} — ${te('graph_pac_non_soumis')}`, lignes: pacNonSoumisL },
+        pac_accepte: { titre: `${te('graph_pac_titre')} — ${te('graph_pac_accepte')}`, lignes: pacAccepteL },
+        pac_rejete: { titre: `${te('graph_pac_titre')} — ${te('graph_pac_rejete')}`, lignes: pacRejeteL },
+        critiques_delai: {
+            titre: te('stats_critiques_delai'),
+            lignes: criticals.filter(c => c.statut === 'soldee' && c.date_solde && c.date_due_cloture
+                && new Date(c.date_solde) <= new Date(c.date_due_cloture)),
+        },
+        crit_maj: { titre: te('stats_moyenne_mensuelle'), lignes: cm },
+        majeures: { titre: te('stats_cloture_majeures'), lignes: majeures },
+        recurrentes: { titre: te('stats_recurrentes'), lignes: recurrentes },
+    };
+    const detail = DETAILS[indicateur] || null;
+
+    // Sous-menus du formulaire : les indicateurs, puis la situation générale.
+    const onglet = EXEC_STATE.statsOnglet || 'indicateurs';
+    const sousMenus = `<div class="exec-stats-onglets">
+        ${[['indicateurs', te('indicateurs')], ['situation', te('situation_generale')]]
+            .map(([cle, libelle]) => `<button class="exec-stats-onglet${onglet === cle ? ' actif' : ''}"
+                onclick="EXEC_STATE.statsOnglet='${cle}';execShowStatistiquesAdvanced()">${_esc(libelle)}</button>`).join('')}
     </div>`;
 
     // Options du filtre propre
@@ -2867,34 +4912,82 @@ function execShowStatistiquesAdvanced() {
 
     const body = `
     <div style="padding:1rem 1.25rem;">
+        ${sousMenus}
+        ${onglet === 'situation' ? `
+        <div class="card" id="execSituationGeneraleCard">
+            <div class="exec-stats-entete">
+                <h4>${te('situation_generale')}</h4>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('xlsx')" title="Exporter Excel">
+                        ${EXEC_ICONS.download || EXEC_ICONS.file || ''} ${te('export_excel')}
+                    </button>
+                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('pdf')" title="Exporter PDF">
+                        ${EXEC_ICONS.pdf || EXEC_ICONS.download || ''} ${te('export_pdf')}
+                    </button>
+                </div>
+            </div>
+            <div id="execSituationGeneraleRoot">${_execSituationGenerale(F).accordionHtml}</div>
+        </div>` : `
         ${filterBar}
-        <h4 style="margin:0 0 0.5rem;color:#0f172a;">Constatations critiques &amp; majeures</h4>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem;margin-bottom:1.25rem;">
-            ${kpi('Constatations critiques', nbCrit, '#dc2626')}
-            ${kpi('Critiques résolues dans les délais', critResolvedInTime, '#16a34a')}
-            ${kpi('Moy. mensuelle (Crit. + Maj.)', moyMensCritMaj, '#f97316')}
-            ${kpi('Taux clôture majeures', tauxClotMaj, '#059669')}
-            ${kpi('Constatations récurrentes', nbRecur, '#7c3aed')}
+        ${_execStatsChronologie(bornes, P, cycle)}
+        <div class="oasis-kpi-groupes pleine cinq">
+            ${oasisKpiGroupe(te('indicateurs_conformite'), [
+                oasisKpiCarte({
+                    titre: te('stats_critiques'), couleur: '#dc2626', alerte: !!nbCrit,
+                    valeur: nbCrit, precision: te('stats_critiques_aide'),
+                    figure: { type: 'echelle', position: 92, min: te('faible'), max: te('eleve') },
+                    onClick: "execStatsIndicateur('critiques')", actif: indicateur === 'critiques',
+                }),
+                oasisKpiCarte({
+                    titre: te('stats_critiques_delai'), couleur: '#16a34a',
+                    valeur: critResolvedInTime,
+                    precision: `${te('sur')} ${nbCrit} ${te('critiques').toLowerCase()}`,
+                    figure: { type: 'jauge', pct: nbCrit ? Math.round((critResolvedInTime / nbCrit) * 100) : 0 },
+                    onClick: "execStatsIndicateur('critiques_delai')", actif: indicateur === 'critiques_delai',
+                }),
+                oasisKpiCarte({
+                    titre: te('stats_moyenne_mensuelle'), couleur: '#f97316',
+                    valeur: moyMensCritMaj, precision: te('stats_moyenne_aide'),
+                    figure: { type: 'barres', valeurs: repartitionMois },
+                    onClick: "execStatsIndicateur('crit_maj')", actif: indicateur === 'crit_maj',
+                }),
+                oasisKpiCarte({
+                    titre: te('stats_cloture_majeures'), couleur: '#059669',
+                    valeur: tauxClotMaj,
+                    precision: `${majSolded}/${majeures.length} ${te('cloturees_court')}`,
+                    figure: { type: 'cloture', pct: majeures.length ? Math.round((majSolded / majeures.length) * 100) : 0 },
+                    onClick: "execStatsIndicateur('majeures')", actif: indicateur === 'majeures',
+                }),
+                oasisKpiCarte({
+                    titre: te('stats_recurrentes'), couleur: '#7c3aed',
+                    valeur: nbRecur, precision: te('stats_recurrentes_aide'),
+                    figure: { type: 'etapes', liste: [te('stats_repetition'), te('stats_isolee')], actif: nbRecur ? 0 : 1 },
+                    onClick: "execStatsIndicateur('recurrentes')", actif: indicateur === 'recurrentes',
+                }),
+            ])}
         </div>
-        <h4 style="margin:0 0 0.5rem;color:#0f172a;">Indicateurs complémentaires</h4>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0.75rem;margin-bottom:1.25rem;">
-            ${kpi('Total constatations (suivi)', totalConst)}
-            ${kpi('Taux clôture global', tauxClotGlobal, '#059669')}
-            ${kpi('Hors délais (non soldées)', horsDelai, '#dc2626')}
-            ${kpi('Délai moyen de clôture', delaiMoyen, '#0284c7')}
-            ${kpi('Rapports transmis', nbRapportsTransmis, '#1d4ed8')}
+        <div class="exec-crit-grille" id="execCritGrille">
+            ${_execTableauRepartition(te('graph_criticite'), repCritSegments, transmitted.length)}
+            ${_execTableauRepartition(te('graph_emises'), repEmisesSegments, transmitted.length)}
+            ${_execTableauRepartition(te('graph_pac_titre'), repPacSegments, ouvertesStats.length)}
         </div>
-        <h4 style="margin:0 0 0.5rem;color:#0f172a;">Top 5 prestataires par nb. constatations</h4>
-        <table class="exec-data-table" style="width:100%;font-size:0.85rem;">
-            <thead><tr><th>Prestataire</th><th style="text-align:right;width:120px;">Constatations</th></tr></thead>
-            <tbody>
-                ${topPrest.length === 0 ? `<tr><td colspan="2" style="text-align:center;color:var(--text-muted);">Aucune donnée</td></tr>` :
-                  topPrest.map(([n, v]) => `<tr><td>${_esc(n)}</td><td style="text-align:right;font-weight:700;">${v}</td></tr>`).join('')}
-            </tbody>
-        </table>
+        ${_execStatsDetailHtml(indicateur, detail)}`}
     </div>`;
 
-    execShowSlider(`${EXEC_ICONS.dashboard || ''} Statistiques détaillées`, body, '', 'max');
+    // Bandeau : sortie du formulaire à gauche, avant son intitulé ; la croix
+    // de fermeture n'a plus lieu d'être.
+    const titre = `<button class="btn btn-outline btn-sm exec-proc-retour" onclick="execCloseSlider()">
+            ${EXEC_ICONS.back || ''} ${te('back')}
+        </button>${EXEC_ICONS.dashboard || ''} ${te('statistiques')}`;
+    execShowSlider(titre, body, '', 'max');
+    // Onglet, indicateur, filtres et période vivent dans EXEC_STATE : rejouer
+    // le formulaire suffit à le retrouver dans l'état où on l'a laissé.
+    EXEC_STATE.voletRejouer = () => execShowStatistiquesAdvanced();
+    // Le formulaire se rejoue à chaque onglet et à chaque indicateur : ni
+    // glissement du volet, ni fondu du corps entre deux états.
+    document.getElementById('execSlider')?.classList.add('exec-proc-instant');
+    document.getElementById('execSliderOverlay')?.classList.add('exec-proc-instant');
+    document.querySelector('#execSlider .exec-slider-close')?.remove();
 }
 
 // ══════════════════════════════════════
@@ -3126,6 +5219,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                 <span class="exec-form-section-chevron" style="transition:transform 0.2s;">${EXEC_ICONS.chevronDown}</span>
                 ${EXEC_ICONS.plans} <span>${_esc(plan.titre || plan.reference || plan.id)}</span>
                 <span style="color:#334155;font-weight:500;font-size:0.78rem;display:inline-flex;flex-wrap:wrap;gap:0.4rem;align-items:center;text-transform:uppercase;letter-spacing:0.02em;">
+                    <span>· ${te('version')}: <strong style="color:#0f172a;">${_esc(_execVersionPlan(plan))}</strong></span>
                     <span>· ${te('annee') || 'Année'}: <strong style="color:#0f172a;">${plan.annee || '-'}</strong></span>
                     <span>· ${te('domaine') || 'Domaine'}: <strong style="color:#0f172a;">${_esc(domNom)}</strong></span>
                     <span>· ${te('secteur') || 'Secteur'}: <strong style="color:#0f172a;">${_esc(secNom)}</strong></span>
@@ -3133,7 +5227,13 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                     <span>· ${te('nb_activites') || te('activites')}: <strong style="color:#0f172a;">${acts.length}</strong></span>
                     <span>· ${te('taux_cloture') || 'Taux clôturé'}: <strong style="color:#166534;">${tauxCloture}%</strong></span>
                 </span>
-                <span style="margin-left:auto;">${_execStatusBadge('valide')}</span>
+                <span style="margin-left:auto;display:inline-flex;align-items:center;gap:0.4rem;"
+                      onclick="event.stopPropagation();">
+                    ${_execStatusBadge('valide')}
+                    ${_execCanValidate() ? `<button class="btn btn-sm btn-outline"
+                        onclick="execArchiverPlan('${plan.id}')"
+                        title="${_escAttr(te('archiver_plan'))}">${EXEC_ICONS.folder || ''} ${te('archiver')}</button>` : ''}
+                </span>
             </div>
             <div class="exec-accordion-body" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
                 <table class="exec-data-table exec-compact-table" style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
@@ -3200,9 +5300,9 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                                 }
                             }
                         }
-                        // "Déclencher" action: only shown when no notification exists
-                        // yet for this activity (triggering creates the notification).
-                        const canTrigger = canContribute && !notif;
+                        // Le déclenchement se fait depuis le processus de
+                        // l'activité, ouvert au clic sur la ligne : la colonne
+                        // Actions ne le double plus.
                         return `<tr class="exec-act-row" style="cursor:pointer;" onclick="if(!event.target.closest('button'))execOpenActiviteProcessus('${plan.id}','${a.id}')" title="Ouvrir le processus de l'activité">
                             <td style="${tdColorStyle}">${_esc(a.prestataire_nom || '-')}</td>
                             <td style="${tdColorStyle}">${_esc(a.objet || a.description || '-')}</td>
@@ -3216,7 +5316,10 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                                     ? `<span class="status-badge" style="background:#3b82f615;color:#1d4ed8;border:1px solid #3b82f640;">${_esc(_dossierStepLabel(dos))}</span>`
                                     : _execStatusBadge(statut))}</td>
                             <td style="white-space:nowrap;text-align:center;">
-                                ${canTrigger ? `<button class="btn-icon" onclick="execStartNotification('${plan.id}','${a.id}')" title="${te('declencher')}">${EXEC_ICONS.send}</button>` : ''}
+                                ${(notif && _execAdministreParc()) ? `<button class="btn-icon exec-act-reinit"
+                                    onclick="execReinitialiserActivite('${a.id}')"
+                                    title="${_escAttr(te('reinitialiser_activite'))}"
+                                    aria-label="${_escAttr(te('reinitialiser_activite'))}">${EXEC_ICONS.reset || EXEC_ICONS.back || '↺'}</button>` : ''}
                                 <button class="btn-icon" onclick="execShowActiviteHistorique('${a.id}','${plan.id}')" title="${te('historique')}">${EXEC_ICONS.clock}</button>
                             </td>
                         </tr>`;
@@ -3231,6 +5334,33 @@ function _renderPlansWithActivitesAccordion(plans, F) {
 
 
 
+
+// Version du plan, telle que la Planification l'a numérotée à la validation.
+function _execVersionPlan(plan) {
+    const v = plan && (plan.version !== undefined && plan.version !== null && plan.version !== ''
+        ? plan.version : plan.version_plan);
+    return (v === undefined || v === null || v === '') ? '—' : `V${v}`;
+}
+
+// Réinitialisation d'une activité déclenchée : elle redevient déclenchable.
+// Réservé au gestionnaire du module ; le serveur refuse si des constatations
+// ou un rapport en dépendent.
+window.execReinitialiserActivite = async function (activiteId) {
+    const ok = await execProcConfirmer({
+        titre: te('reinitialiser_activite'),
+        message: te('reinitialiser_activite_message'),
+        libelle: te('reinitialiser'),
+    });
+    if (!ok) return;
+    try {
+        await api(`${EXEC_MODULE_API}/activites-en-cours/${activiteId}/reinitialiser`, { method: 'PUT' });
+        await execRefreshDynamic();
+        _execToast(te('reinitialiser_ok'), 'success');
+        execRenderPage();
+    } catch (e) {
+        _execToast((e && e.message) || te('action_impossible'), 'error');
+    }
+};
 
 async function execStartNotification(planId, activiteId) {
     const plans = EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [];
@@ -3747,26 +5877,26 @@ function execOpenNotificationForm(data) {
                 </div>
                 <div class="form-group">
                     <label>${te('fonction_responsable')}</label>
-                    <input type="text" class="form-input" id="notif_fonction_resp" value="${_esc(prest.fonction_responsable || fonctionRespVal)}">
+                    <input type="text" class="form-input" id="notif_fonction_resp" value="${_escAttr(prest.fonction_responsable || fonctionRespVal)}">
                 </div>
                 <div class="form-group">
                     <label>${te('nom_responsable')}</label>
-                    <input type="text" class="form-input" id="notif_nom_resp" value="${_esc(prest.dirigeant || data.nom_responsable || dirigeantVal)}">
+                    <input type="text" class="form-input" id="notif_nom_resp" value="${_escAttr(prest.dirigeant || data.nom_responsable || dirigeantVal)}">
                 </div>
             </div>
             <!-- Row 2: Interlocuteur (Fonction) ; Interlocuteur (Nom) ; Interlocuteur (Email) -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
                 <div class="form-group">
                     <label>${te('interlocuteur')}</label>
-                    <input type="text" class="form-input" id="notif_interlocuteur" value="${_esc(prest.interlocuteur || interlocuteurVal)}">
+                    <input type="text" class="form-input" id="notif_interlocuteur" value="${_escAttr(prest.interlocuteur || interlocuteurVal)}">
                 </div>
                 <div class="form-group">
                     <label>${te('interlocuteur_nom')}</label>
-                    <input type="text" class="form-input" id="notif_interlocuteur_nom" value="${_esc(data.interlocuteur_nom || prest.point_focal || '')}">
+                    <input type="text" class="form-input" id="notif_interlocuteur_nom" value="${_escAttr(data.interlocuteur_nom || prest.point_focal || '')}">
                 </div>
                 <div class="form-group">
                     <label>${te('interlocuteur_email')}</label>
-                    <input type="email" class="form-input" id="notif_interlocuteur_email" value="${_esc(data.interlocuteur_email || prest.email_point_focal || '')}">
+                    <input type="email" class="form-input" id="notif_interlocuteur_email" value="${_escAttr(data.interlocuteur_email || prest.email_point_focal || '')}">
                 </div>
             </div>
         `, true)}
@@ -3777,17 +5907,17 @@ function execOpenNotificationForm(data) {
                 equipe.map((m, i) => {
                     const nom = typeof m === 'string' ? m : (m.nom || '');
                     const role = typeof m === 'object' ? (m.role || '') : '';
-                    const roles = ["Chef d'équipe", "Membre d'équipe", "Stagiaire", "Formation en cours d'emploi", "Experts ou Autres"];
+                    const roles = _execRolesEquipe();
                     const inspList = _getFilteredInspecteurs();
                     return `<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;">
                     <select class="form-select equipe-nom-select" style="flex:1;">
                         <option value="">-- Inspecteur --</option>
-                        ${inspList.map(ins => `<option value="${_esc(ins.prenom + ' ' + ins.nom)}" ${nom === (ins.prenom + ' ' + ins.nom) ? 'selected' : ''}>${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
-                        ${nom && !inspList.some(ins => (ins.prenom + ' ' + ins.nom) === nom) ? `<option value="${_esc(nom)}" selected>${_esc(nom)}</option>` : ''}
+                        ${inspList.map(ins => `<option value="${_escAttr(ins.prenom + ' ' + ins.nom)}" ${nom === (ins.prenom + ' ' + ins.nom) ? 'selected' : ''}>${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
+                        ${nom && !inspList.some(ins => (ins.prenom + ' ' + ins.nom) === nom) ? `<option value="${_escAttr(nom)}" selected>${_esc(nom)}</option>` : ''}
                     </select>
                     <select class="form-select" style="flex:1;">
                         <option value="">${te('select_option')}</option>
-                        ${roles.map(r => `<option value="${_esc(r)}" ${role===r?'selected':''}>${_esc(r)}</option>`).join('')}
+                        ${roles.map(r => `<option value="${_escAttr(r)}" ${role===r?'selected':''}>${_esc(r)}</option>`).join('')}
                     </select>
                     <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
                 </div>`;
@@ -3820,7 +5950,7 @@ function execOpenNotificationForm(data) {
                 </div>
                 <div class="form-group">
                     <label>${te('lieu')}</label>
-                    <input type="text" class="form-input" id="notif_lieu" value="${_esc(lieuVal)}">
+                    <input type="text" class="form-input" id="notif_lieu" value="${_escAttr(lieuVal)}">
                 </div>
             </div>
             <!-- Row 2: Objet ; Perimetre -->
@@ -3862,9 +5992,9 @@ function execOpenNotificationForm(data) {
                     ${programme.length === 0 ? `<tr id="notif_prog_empty"><td colspan="5" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>` :
                     programme.map((p, i) => `<tr data-prog-idx="${i}">
                         <td><input type="date" class="form-input" value="${p.date || ''}" data-field="date"></td>
-                        <td><input type="text" class="form-input" value="${_esc(p.horaire || '')}" data-field="horaire" placeholder="09:00-12:00"></td>
-                        <td><input type="text" class="form-input" value="${_esc(p.actions || '')}" data-field="actions"></td>
-                        <td><input type="text" class="form-input" value="${_esc(p.correspondant || '')}" data-field="correspondant"></td>
+                        <td><input type="text" class="form-input" value="${_escAttr(p.horaire || '')}" data-field="horaire" placeholder="09:00-12:00"></td>
+                        <td><input type="text" class="form-input" value="${_escAttr(p.actions || '')}" data-field="actions"></td>
+                        <td><input type="text" class="form-input" value="${_escAttr(p.correspondant || '')}" data-field="correspondant"></td>
                         <td><button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">${EXEC_ICONS.x}</button></td>
                     </tr>`).join('')}
                 </tbody>
@@ -3878,7 +6008,7 @@ function execOpenNotificationForm(data) {
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
                 <div class="form-group">
                     <label>${te('fait_a')}</label>
-                    <input type="text" class="form-input" id="notif_fait_a" value="${_esc(data.fait_a || '')}">
+                    <input type="text" class="form-input" id="notif_fait_a" value="${_escAttr(data.fait_a || '')}">
                 </div>
                 <div class="form-group">
                     <label>${te('date_signature')}</label>
@@ -3886,7 +6016,7 @@ function execOpenNotificationForm(data) {
                 </div>
                 <div class="form-group">
                     <label>${te('signataire')}</label>
-                    <input type="text" class="form-input" id="notif_signataire" value="${_esc(data.signataire || EXEC_STATE.user?.nom || '')}">
+                    <input type="text" class="form-input" id="notif_signataire" value="${_escAttr(data.signataire || EXEC_STATE.user?.nom || '')}">
                 </div>
             </div>
         `, false)}
@@ -3934,16 +6064,16 @@ function execAddEquipeMember() {
     if (emptyMsg) emptyMsg.remove();
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;';
-    const roles = ["Chef d'équipe", "Membre d'équipe", "Stagiaire", "Formation en cours d'emploi", "Experts ou Autres"];
+    const roles = _execRolesEquipe();
     const inspList = _getFilteredInspecteurs();
     div.innerHTML = `
         <select class="form-select equipe-nom-select" style="flex:1;">
             <option value="">-- Inspecteur --</option>
-            ${inspList.map(ins => `<option value="${_esc(ins.prenom + ' ' + ins.nom)}">${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
+            ${inspList.map(ins => `<option value="${_escAttr(ins.prenom + ' ' + ins.nom)}">${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
         </select>
         <select class="form-select" style="flex:1;">
             <option value="">${te('select_option')}</option>
-            ${roles.map(r => `<option value="${_esc(r)}">${_esc(r)}</option>`).join('')}
+            ${roles.map(r => `<option value="${_escAttr(r)}">${_esc(r)}</option>`).join('')}
         </select>
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
     `;
@@ -4073,6 +6203,32 @@ function execPreviewNotificationFromForm() {
     EXEC_STATE.selectedNotification = Object.assign({}, existing, data);
     _showNotificationPreview(EXEC_STATE.selectedNotification, true);
 }
+
+// Accusé de réception : le prestataire acte la notification. Le message part
+// dans le fil d'échange et la fiche porte l'accusé en pied.
+window.execAccuserReception = async function (notifId) {
+    const n = (EXEC_STATE.data.notifications || []).find(x => x.id === notifId) || {};
+    const debut = n.date_debut_effective || n.date_debut_prevue || n.date_activite || '';
+    const fin = n.date_fin_effective || n.date_fin_prevue || '';
+    const ok = await execProcConfirmer({
+        titre: te('accuser_reception'),
+        message: te('accuser_reception_message')
+            .replace('{debut}', _formatDate(debut) || '—')
+            .replace('{fin}', _formatDate(fin) || '—'),
+        libelle: te('accuser_reception'),
+    });
+    if (!ok) return;
+    try {
+        await api(`${EXEC_MODULE_API}/notifications/${notifId}/accuser-reception`, {
+            method: 'POST', body: JSON.stringify({}),
+        });
+        await execRefreshDynamic();
+        _execToast(te('accuse_ok'), 'success');
+        execRenderPage();
+    } catch (e) {
+        _execToast((e && e.message) || te('action_impossible'), 'error');
+    }
+};
 
 async function execPreviewNotification(notifId) {
     try {
@@ -4377,16 +6533,16 @@ function execShowContacts(prestataireId) {
         <h4 style="margin-bottom:0;">${_esc(prest.nom || '')} (${_esc(prest.trigramme || '')})</h4>
         <!-- Row 1: Dirigeant ; Fonction du Responsable ; Email Prestataire -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;">
-            <div class="form-group"><label>Dirigeant</label><input type="text" class="form-input" id="contact_dirigeant" value="${_esc(prest.dirigeant || '')}"></div>
-            <div class="form-group"><label>Fonction du Responsable</label><input type="text" class="form-input" id="contact_fonction_resp" value="${_esc(prest.fonction_responsable || '')}"></div>
-            <div class="form-group"><label>Email Prestataire</label><input type="email" class="form-input" id="contact_email_prest" value="${_esc(prest.email_prestataire || '')}"></div>
+            <div class="form-group"><label>Dirigeant</label><input type="text" class="form-input" id="contact_dirigeant" value="${_escAttr(prest.dirigeant || '')}"></div>
+            <div class="form-group"><label>Fonction du Responsable</label><input type="text" class="form-input" id="contact_fonction_resp" value="${_escAttr(prest.fonction_responsable || '')}"></div>
+            <div class="form-group"><label>Email Prestataire</label><input type="email" class="form-input" id="contact_email_prest" value="${_escAttr(prest.email_prestataire || '')}"></div>
         </div>
         <!-- Row 2: Nom Point Focal ; Fonction Point Focal ; Email Point Focal ; N° Point Focal -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.75rem;">
-            <div class="form-group"><label>Nom Point Focal</label><input type="text" class="form-input" id="contact_point_focal" value="${_esc(prest.point_focal || '')}"></div>
-            <div class="form-group"><label>Fonction Point Focal</label><input type="text" class="form-input" id="contact_fonction_pf" value="${_esc(prest.fonction_point_focal || '')}"></div>
-            <div class="form-group"><label>Email Point Focal</label><input type="email" class="form-input" id="contact_email_pf" value="${_esc(prest.email_point_focal || '')}"></div>
-            <div class="form-group"><label>N° Point Focal</label><input type="text" class="form-input" id="contact_numero_pf" value="${_esc(prest.numero_point_focal || '')}"></div>
+            <div class="form-group"><label>Nom Point Focal</label><input type="text" class="form-input" id="contact_point_focal" value="${_escAttr(prest.point_focal || '')}"></div>
+            <div class="form-group"><label>Fonction Point Focal</label><input type="text" class="form-input" id="contact_fonction_pf" value="${_escAttr(prest.fonction_point_focal || '')}"></div>
+            <div class="form-group"><label>Email Point Focal</label><input type="email" class="form-input" id="contact_email_pf" value="${_escAttr(prest.email_point_focal || '')}"></div>
+            <div class="form-group"><label>N° Point Focal</label><input type="text" class="form-input" id="contact_numero_pf" value="${_escAttr(prest.numero_point_focal || '')}"></div>
         </div>
         <hr style="border:0;border-top:1px solid var(--border);margin:0.25rem 0;">
         <!-- Row 3: Contacts additionnels -->
@@ -4400,9 +6556,9 @@ function execShowContacts(prestataireId) {
                 }
                 return addContacts.map(c => `
                 <div class="contact-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;">
-                    <input type="text" class="form-input" value="${_esc(c.nom || '')}" placeholder="Nom" style="flex:1;">
-                    <input type="text" class="form-input" value="${_esc(c.tel || '')}" placeholder="Téléphone" style="flex:1;">
-                    <input type="email" class="form-input" value="${_esc(c.email || '')}" placeholder="Email" style="flex:1;">
+                    <input type="text" class="form-input" value="${_escAttr(c.nom || '')}" placeholder="Nom" style="flex:1;">
+                    <input type="text" class="form-input" value="${_escAttr(c.tel || '')}" placeholder="Téléphone" style="flex:1;">
+                    <input type="email" class="form-input" value="${_escAttr(c.email || '')}" placeholder="Email" style="flex:1;">
                     <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
                 </div>`).join('');
             })()}
@@ -4499,16 +6655,14 @@ async function execOpenExchangeSlider(notifId) {
     const accordReadOnlyAttr = isPrest ? 'disabled' : '';
 
     const bodyHtml = `
-    <div style="margin-bottom:1rem;">
-        <div style="display:flex;gap:1rem;margin-bottom:0.75rem;">
-            <div><strong>${te('reference')} :</strong> ${_esc(notif.reference || '')}</div>
-            <div><strong>${te('provider')} :</strong> ${_esc(notif.prestataire_nom || '')}</div>
-            <div>${_execStatusBadge(notif.statut)}</div>
-        </div>
-        <div style="font-size:0.85rem;color:var(--text-muted);">${_esc(notif.objet || '')}</div>
+    <div class="exec-proc-bloc exec-echange-entete">
+        ${execProcLigne(te('reference'), _esc(notif.reference || ''))}
+        ${execProcLigne(te('provider'), _esc(notif.prestataire_nom || ''))}
+        ${execProcLigne(te('objet'), _esc(notif.objet || notif.objet_activite || ''))}
+        ${execProcLigne(te('status'), _execStatusBadge(notif.statut))}
     </div>
 
-    <h4 style="margin-bottom:0.5rem;">${te('discussions')}</h4>
+    <h4 class="exec-proc-col-titre">${te('discussions')}</h4>
     <div class="exchange-chat discussions-chat" id="exec_exchange_timeline">
         ${(!echanges || echanges.length === 0) ? `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.5rem 0;">${te('no_data')}</p>` :
         echanges.map((e, idx) => {
@@ -4561,22 +6715,21 @@ async function execOpenExchangeSlider(notifId) {
     </div>
 
     ${notif.statut === 'envoye' ? `
-    <div style="margin-top:1.25rem;padding:1rem;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
-        <h4 style="margin-bottom:0.75rem;">${te('valider_accord')}${isPrest ? ` <span style="font-size:0.72rem;font-weight:500;color:var(--text-muted);">(${te('lecture_seule') || 'lecture seule'})</span>` : ''}</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+    <h4 class="exec-proc-col-titre">${te('valider_accord')}${isPrest
+        ? ` <span class="exec-echange-lecture">(${te('lecture_seule') || 'lecture seule'})</span>` : ''}</h4>
+    <div class="exec-proc-bloc">
+        <div class="exec-echange-dates">
             <div class="form-group">
-                <label>${te('date_debut')}</label>
-                <input type="date" class="form-input" id="exec_accord_debut" value="${notif.date_debut_prevue || notif.date_activite || ''}" ${accordReadOnly}>
+                <label class="form-label">${te('date_debut')}</label>
+                <input type="date" class="form-control" id="exec_accord_debut" value="${notif.date_debut_prevue || notif.date_activite || ''}" ${accordReadOnly}>
             </div>
             <div class="form-group">
-                <label>${te('date_fin')}</label>
-                <input type="date" class="form-input" id="exec_accord_fin" value="${notif.date_fin_prevue || notif.date_fin_effective || ''}" ${accordReadOnly}>
+                <label class="form-label">${te('date_fin')}</label>
+                <input type="date" class="form-control" id="exec_accord_fin" value="${notif.date_fin_prevue || notif.date_fin_effective || ''}" ${accordReadOnly}>
             </div>
         </div>
-        <div class="form-group">
-            <label>Valider ${te('perimetre')}</label>
-            <textarea class="form-input" id="exec_accord_perimetre" rows="4" style="resize:vertical;" ${accordReadOnlyAttr}>${_esc(notif.perimetre || notif.perimetre_activite || '')}</textarea>
-        </div>
+        <label class="form-label">${te('perimetre')}</label>
+        <textarea class="form-control" id="exec_accord_perimetre" rows="6" ${accordReadOnlyAttr}>${_esc(notif.perimetre || notif.perimetre_activite || '')}</textarea>
     </div>` : ''}`;
 
     const footerHtml = `
@@ -4757,7 +6910,8 @@ const REDACTION_SUBTABS = [
     { id: 'synthese', label: 'Synthèses et Recommandations' },
     { id: 'checklists', label: 'Checklist et autres doc.' },
     { id: 'constatations', label: 'Constatations' },
-    { id: 'conclusion', label: 'Conclusions et Annexes' }
+    { id: 'conclusion', label: 'Conclusions' },
+    { id: 'annexes', label: 'Annexes' },
 ];
 
 function _dossierStepLabel(dossier) {
@@ -4803,6 +6957,8 @@ function _dossierStepState(dossier, stepId) {
 }
 
 async function execOpenDossierSlider(dossierId, activeTab) {
+    // Le formulaire de constatation, s'il était ouvert, se referme avec lui.
+    document.getElementById('execFncTiroir')?.remove();
     // Guard against stale responses when clicking rapidly between dossiers
     const requestId = ++EXEC_STATE._dossierRequestId;
     let dossier;
@@ -4959,29 +7115,29 @@ function _buildStepNotification(dossier, dossierId) {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
             <div class="form-group">
                 <label>${te('provider')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.prestataire_nom || dossier.notif_prestataire_designation || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.prestataire_nom || dossier.notif_prestataire_designation || '')}" readonly style="${bg}">
             </div>
             <div class="form-group">
                 <label>${te('fonction_responsable')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_fonction_responsable || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_fonction_responsable || '')}" readonly style="${bg}">
             </div>
             <div class="form-group">
                 <label>${te('nom_responsable')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_nom_responsable || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_nom_responsable || '')}" readonly style="${bg}">
             </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
             <div class="form-group">
                 <label>${te('interlocuteur')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_interlocuteur || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_interlocuteur || '')}" readonly style="${bg}">
             </div>
             <div class="form-group">
                 <label>${te('interlocuteur_nom')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_interlocuteur_nom || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_interlocuteur_nom || '')}" readonly style="${bg}">
             </div>
             <div class="form-group">
                 <label>${te('interlocuteur_email')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_interlocuteur_email || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_interlocuteur_email || '')}" readonly style="${bg}">
             </div>
         </div>
     `, true)}
@@ -4994,7 +7150,7 @@ function _buildStepNotification(dossier, dossierId) {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
             <div class="form-group">
                 <label>${te('nature_activite')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_nature || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_nature || '')}" readonly style="${bg}">
             </div>
             <div class="form-group">
                 <label>${te('date_debut')}</label>
@@ -5006,7 +7162,7 @@ function _buildStepNotification(dossier, dossierId) {
             </div>
             <div class="form-group">
                 <label>${te('lieu')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_lieu || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_lieu || '')}" readonly style="${bg}">
             </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
@@ -5039,7 +7195,7 @@ function _buildStepNotification(dossier, dossierId) {
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
             <div class="form-group">
                 <label>${te('fait_a')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_fait_a || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_fait_a || '')}" readonly style="${bg}">
             </div>
             <div class="form-group">
                 <label>${te('date_signature')}</label>
@@ -5047,7 +7203,7 @@ function _buildStepNotification(dossier, dossierId) {
             </div>
             <div class="form-group">
                 <label>${te('signataire')}</label>
-                <input type="text" class="form-input" value="${_esc(dossier.notif_signataire || '')}" readonly style="${bg}">
+                <input type="text" class="form-input" value="${_escAttr(dossier.notif_signataire || '')}" readonly style="${bg}">
             </div>
         </div>
     `, false)}
@@ -5055,7 +7211,7 @@ function _buildStepNotification(dossier, dossierId) {
     <div style="margin-top:1rem;">
         <label style="font-weight:600;">Fiche de notification</label>
         <div style="margin-top:0.35rem;">
-            ${pdfPath ? `<a href="${_esc(_execDl(pdfPath))}" download class="btn btn-primary btn-sm" style="text-decoration:none;">${EXEC_ICONS.pdf} Exporter PDF</a>` :
+            ${pdfPath ? `<a href="${_escAttr(_execDl(pdfPath))}" download class="btn btn-primary btn-sm" style="text-decoration:none;">${EXEC_ICONS.pdf} Exporter PDF</a>` :
             `<button class="btn btn-primary btn-sm" onclick="execGenerateNotificationPdf('${dossierId}')">${EXEC_ICONS.pdf} Exporter PDF</button>`}
         </div>
     </div>`;
@@ -5092,7 +7248,7 @@ function _buildStepRealisation(dossier, dossierId) {
     if (!Array.isArray(programme)) programme = [];
 
     const inspList = typeof _getFilteredInspecteurs === 'function' ? _getFilteredInspecteurs() : [];
-    const roles = ["Chef d'équipe", "Membre d'équipe", "Stagiaire", "Formation en cours d'emploi", "Experts ou Autres"];
+    const roles = _execRolesEquipe();
 
     const equipeHtml = canEdit ? `
         <div id="realisation_equipe_container">
@@ -5103,12 +7259,12 @@ function _buildStepRealisation(dossier, dossierId) {
                 return `<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;">
                 <select class="form-select real-equipe-nom" style="flex:1;">
                     <option value="">-- Inspecteur --</option>
-                    ${inspList.map(ins => `<option value="${_esc(ins.prenom + ' ' + ins.nom)}" ${nom === (ins.prenom + ' ' + ins.nom) ? 'selected' : ''}>${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
-                    ${nom && !inspList.some(ins => (ins.prenom + ' ' + ins.nom) === nom) ? `<option value="${_esc(nom)}" selected>${_esc(nom)}</option>` : ''}
+                    ${inspList.map(ins => `<option value="${_escAttr(ins.prenom + ' ' + ins.nom)}" ${nom === (ins.prenom + ' ' + ins.nom) ? 'selected' : ''}>${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
+                    ${nom && !inspList.some(ins => (ins.prenom + ' ' + ins.nom) === nom) ? `<option value="${_escAttr(nom)}" selected>${_esc(nom)}</option>` : ''}
                 </select>
                 <select class="form-select real-equipe-role" style="flex:1;">
                     <option value="">${te('select_option')}</option>
-                    ${roles.map(r => `<option value="${_esc(r)}" ${role===r?'selected':''}>${_esc(r)}</option>`).join('')}
+                    ${roles.map(r => `<option value="${_escAttr(r)}" ${role===r?'selected':''}>${_esc(r)}</option>`).join('')}
                 </select>
                 <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
             </div>`;
@@ -5140,9 +7296,9 @@ function _buildStepRealisation(dossier, dossierId) {
                 ${programme.length === 0 ? `<tr id="real_prog_empty"><td colspan="${canEdit ? 5 : 4}" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>` :
                 programme.map((p, i) => `<tr data-prog-idx="${i}">
                     <td><input type="date" class="form-input" value="${p.date || ''}" data-field="date"${ro}></td>
-                    <td><input type="text" class="form-input" value="${_esc(p.horaire || '')}" data-field="horaire" placeholder="09:00-12:00"${ro}></td>
+                    <td><input type="text" class="form-input" value="${_escAttr(p.horaire || '')}" data-field="horaire" placeholder="09:00-12:00"${ro}></td>
                     <td><textarea class="form-input" rows="2" data-field="actions" style="resize:vertical;"${ro}>${_esc(p.actions || '')}</textarea></td>
-                    <td><input type="text" class="form-input" value="${_esc(p.correspondant || '')}" data-field="correspondant"${ro}></td>
+                    <td><input type="text" class="form-input" value="${_escAttr(p.correspondant || '')}" data-field="correspondant"${ro}></td>
                     ${canEdit ? `<td><button class="btn btn-sm btn-danger" onclick="this.closest('tr').remove()">${EXEC_ICONS.x}</button></td>` : ''}
                 </tr>`).join('')}
             </tbody>
@@ -5194,70 +7350,73 @@ function _buildStepRealisation(dossier, dossierId) {
     const vPerimetre = dossier.realisation_perimetre || dossier.notif_perimetre_valide || dossier.notif_perimetre || '';
     const vObjet = dossier.realisation_activite || dossier.notification_objet || dossier.objet_activite || '';
 
+    // Pièces jointes de l'activité
+    let pjs = [];
+    try {
+        pjs = typeof dossier.realisation_pieces_jointes === 'string'
+            ? JSON.parse(dossier.realisation_pieces_jointes || '[]')
+            : (dossier.realisation_pieces_jointes || []);
+    } catch (e) { pjs = []; }
+    if (!Array.isArray(pjs)) pjs = [];
+    const pjHtml = `<div id="realisation_pj_list">${pjs.map((pj) => _execRealisationPjRow(pj, canEdit)).join('')}</div>
+        ${canEdit ? `<div style="margin-top:0.5rem;">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('realisation_pj_input').click()">
+                ${EXEC_ICONS.upload} ${te('televerser_pj')}
+            </button>
+            <input type="file" id="realisation_pj_input" style="display:none;" multiple onchange="execUploadRealisationPj(this.files)">
+        </div>` : (pjs.length ? '' : `<p class="exec-real-vide">${te('aucune_piece_jointe')}</p>`)}`;
+
+    const compteur = (n) => `<span class="exec-real-compteur">${n}</span>`;
+
+    // Cinq sections, chacune avec sa lettre, son intitulé et son compteur :
+    // le cadre de l'activité, l'équipe, le programme, les checklists et les
+    // pièces jointes.
     return `
-    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Confirmez et ajustez les informations pour l'activité sur le terrain.</p>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1rem;">
-        <div class="form-group">
-            <label>Nature de l'activité</label>
-            <input type="text" class="form-input" id="realisation_nature" value="${_esc(vNature)}" style="${bg}"${ro}>
+    <div class="exec-real">
+        <div class="exec-real-bandeau">
+            <span>${EXEC_ICONS.info || EXEC_ICONS.alarm || ''}</span>
+            <p>${te('realisation_intro')}</p>
+            ${canEdit ? '' : `<span class="exec-real-lecture">${te('lecture_seule') || 'lecture seule'}</span>`}
         </div>
-        <div class="form-group">
-            <label>Date Début</label>
-            <input type="date" class="form-input" id="realisation_date_debut" value="${_esc(vDateDebut)}" style="${bg}"${ro}>
-        </div>
-        <div class="form-group">
-            <label>Date Fin</label>
-            <input type="date" class="form-input" id="realisation_date_fin" value="${_esc(vDateFin)}" style="${bg}"${ro}>
-        </div>
-        <div class="form-group">
-            <label>Lieu</label>
-            <input type="text" class="form-input" id="realisation_lieu" value="${_esc(vLieu)}" style="${bg}"${ro}>
-        </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 3fr;gap:1rem;margin-bottom:1rem;">
-        <div class="form-group">
-            <label>Objet</label>
-            <textarea class="form-input" id="realisation_activite" rows="3" style="resize:vertical;${bg}"${ro}>${_esc(vObjet)}</textarea>
-        </div>
-        <div class="form-group">
-            <label style="font-weight:600;">Équipe d'audit/inspection</label>
-            ${equipeHtml}
-        </div>
-    </div>
-    <div class="form-group" style="margin-bottom:1rem;">
-        <label>Périmètre</label>
-        <textarea class="form-input" id="realisation_perimetre" rows="3" style="resize:vertical;${bg}"${ro}>${_esc(vPerimetre)}</textarea>
-    </div>
-    <div class="form-group" style="margin-bottom:1rem;">
-        <label style="font-weight:600;">Programme de travail</label>
-        ${programmeHtml}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-        <div class="form-group">
-            <label style="font-weight:600;">Checklists à utiliser</label>
-            ${checklistsHtml}
-        </div>
-        <div class="form-group">
-            <label style="font-weight:600;">Pièces jointes de l'activité</label>
-            ${(() => {
-                let pjs = [];
-                try {
-                    pjs = typeof dossier.realisation_pieces_jointes === 'string'
-                        ? JSON.parse(dossier.realisation_pieces_jointes || '[]')
-                        : (dossier.realisation_pieces_jointes || []);
-                } catch (e) { pjs = []; }
-                if (!Array.isArray(pjs)) pjs = [];
-                const rowsPj = pjs.map(pj => _execRealisationPjRow(pj, canEdit)).join('');
-                return `<div id="realisation_pj_list">${rowsPj}</div>
-                ${canEdit ? `
-                <div style="margin-top:0.5rem;">
-                    <button class="btn btn-sm btn-outline" onclick="document.getElementById('realisation_pj_input').click()">
-                        ${EXEC_ICONS.upload} Téléverser des pièces jointes
-                    </button>
-                    <input type="file" id="realisation_pj_input" style="display:none;" multiple onchange="execUploadRealisationPj(this.files)">
-                </div>` : (pjs.length ? '' : '<p style="color:var(--text-muted);font-size:0.83rem;">Aucune pièce jointe.</p>')}`;
-            })()}
-        </div>
+
+        ${_execFormSection('A', 'real_section_cadre', `
+            <div class="exec-real-grille-4">
+                <div class="form-group">
+                    <label>${te('real_nature')}</label>
+                    <input type="text" class="form-input" id="realisation_nature" value="${_escAttr(vNature)}" style="${bg}"${ro}>
+                </div>
+                <div class="form-group">
+                    <label>${te('date_debut')}</label>
+                    <input type="date" class="form-input" id="realisation_date_debut" value="${_escAttr(vDateDebut)}" style="${bg}"${ro}>
+                </div>
+                <div class="form-group">
+                    <label>${te('date_fin')}</label>
+                    <input type="date" class="form-input" id="realisation_date_fin" value="${_escAttr(vDateFin)}" style="${bg}"${ro}>
+                </div>
+                <div class="form-group">
+                    <label>${te('lieu')}</label>
+                    <input type="text" class="form-input" id="realisation_lieu" value="${_escAttr(vLieu)}" style="${bg}"${ro}>
+                </div>
+            </div>
+            <div class="exec-real-grille-2">
+                <div class="form-group">
+                    <label>${te('objet')}</label>
+                    <textarea class="form-input" id="realisation_activite" rows="3" style="resize:vertical;${bg}"${ro}>${_esc(vObjet)}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>${te('perimetre')}</label>
+                    <textarea class="form-input" id="realisation_perimetre" rows="3" style="resize:vertical;${bg}"${ro}>${_esc(vPerimetre)}</textarea>
+                </div>
+            </div>
+        `, true)}
+
+        ${_execFormSection('B', 'real_section_equipe', equipeHtml, true, compteur(equipe.length), te('real_aide_equipe'))}
+
+        ${_execFormSection('C', 'real_section_programme', programmeHtml, true, compteur(programme.length), te('real_aide_programme'))}
+
+        ${_execFormSection('D', 'real_section_checklists', checklistsHtml, true, compteur(selectedChIds.length), te('real_aide_checklists'))}
+
+        ${_execFormSection('E', 'real_section_pj', pjHtml, true, compteur(pjs.length), te('real_aide_pj'))}
     </div>`;
 }
 
@@ -5268,16 +7427,16 @@ function _execRealisationPjRow(pj, canEdit) {
     const path = (pj && pj.path) || '';
     const origName = (pj && pj.orig_name) || filename;
     const dis = canEdit ? '' : ' readonly';
-    return `<div class="realisation-pj-item" data-path="${_esc(path)}" data-orig="${_esc(origName)}"
+    return `<div class="realisation-pj-item" data-path="${_escAttr(path)}" data-orig="${_escAttr(origName)}"
         style="border:1px solid var(--border);border-radius:8px;padding:0.6rem;margin-bottom:0.5rem;">
         <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.4rem;">
             ${EXEC_ICONS.file}
-            ${path ? `<a href="${_esc(_execDl(path))}" download="${_esc(origName)}" style="font-size:0.78rem;color:var(--primary);">${_esc(origName)}</a>` : `<span style="font-size:0.78rem;color:var(--text-muted);">${_esc(origName)}</span>`}
+            ${path ? `<a href="${_escAttr(_execDl(path))}" download="${_escAttr(origName)}" style="font-size:0.78rem;color:var(--primary);">${_esc(origName)}</a>` : `<span style="font-size:0.78rem;color:var(--text-muted);">${_esc(origName)}</span>`}
             ${canEdit ? `<button class="btn btn-sm btn-danger" style="margin-left:auto;" onclick="this.closest('.realisation-pj-item').remove()">${EXEC_ICONS.x}</button>` : ''}
         </div>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:0.5rem;">
-            <input type="text" class="form-input pj-nom" value="${_esc(filename)}" placeholder="Nom du fichier"${dis}>
-            <input type="text" class="form-input pj-desc" value="${_esc(description)}" placeholder="Description (optionnel)"${dis}>
+            <input type="text" class="form-input pj-nom" value="${_escAttr(filename)}" placeholder="Nom du fichier"${dis}>
+            <input type="text" class="form-input pj-desc" value="${_escAttr(description)}" placeholder="Description (optionnel)"${dis}>
         </div>
     </div>`;
 }
@@ -5356,16 +7515,79 @@ function _buildStepRedaction(dossier, dossierId, subtab) {
         </details>`;
     }
 
-    // sub-tabs bar
-    const subTabsHtml = `<div class="exec-workflow-tabs" id="dossier_redaction_subtab_bar" style="margin-bottom:1rem;flex-wrap:wrap;">
-        ${REDACTION_SUBTABS.map(s => {
-            const label = s.id === 'constatations' ? `${s.label} (${constatations.length})` : s.label;
-            return `<button class="exec-tab ${subtab === s.id ? 'active' : ''}" onclick="execSwitchRedactionSubtab('${dossierId}','${s.id}')">${_esc(label)}</button>`;
-        }).join('')}
-    </div>`;
-    const content = _buildRedactionSubtabContent(subtab, dossier, dossierId, canEdit);
-    return `${commentsPanel}${subTabsHtml}<div id="dossier_redaction_subtab_content">${content}</div>`;
+    // Les anciennes sous-étapes deviennent des sections : le rapport se lit et
+    // se saisit d'une traite, et un enregistrement les couvre toutes — l'onglet
+    // actif ne masque plus le reste.
+    const sections = REDACTION_SUBTABS.map((sub, i) => {
+        const lettre = EXEC_REDACTION_LETTRES[sub.id] || String.fromCharCode(65 + i);
+        const corps = _buildRedactionSubtabContent(sub.id, dossier, dossierId, canEdit);
+        const badge = sub.id === 'constatations' ? String(constatations.length) : '';
+        return _execFormSection(lettre, `redac_section_${sub.id}`, corps, true, badge,
+            te(`redac_aide_${sub.id}`));
+    }).join('');
+    return `${commentsPanel}<div class="exec-real" id="dossier_redaction_sections">`
+        + `${_execTypeRapportChamp(dossier, canEdit)}${sections}</div>`;
 }
+
+// ── Type de rapport ──────────────────────────────────────────────
+// L'intitulé que portera le document produit. Il précède les sections :
+// c'est la première chose à arrêter, puisqu'elle nomme tout le rapport.
+const EXEC_TYPES_RAPPORT = [
+    "RAPPORT D'AUDIT", "RAPPORT D'INSPECTION", 'RAPPORT DE SUIVI',
+    "RAPPORT D'ENQUÊTE", 'AUTRE',
+];
+
+function _execTypeRapportChamp(dossier, canEdit) {
+    const choisi = dossier.type_rapport || '';
+    const libre = dossier.type_rapport_autre || '';
+    const estAutre = choisi === 'AUTRE';
+    const ro = canEdit ? '' : ' readonly';
+    const dis = canEdit ? '' : ' disabled';
+    const roBg = canEdit ? '' : 'background:var(--bg);';
+    return `
+    <div class="exec-type-rapport">
+        <div class="form-group" id="dossier_type_rapport_autre_group" style="${estAutre ? '' : 'display:none;'}">
+            <label>Intitulé du rapport</label>
+            <input type="text" class="form-input" id="dossier_type_rapport_autre" value="${_escAttr(libre)}"
+                   placeholder="Ex. : RAPPORT DE CONTRÔLE"${ro} style="${roBg}">
+        </div>
+        <div class="form-group">
+            <label>Type de Rapport</label>
+            <select class="form-input" id="dossier_type_rapport" onchange="execTypeRapportChange()"${dis} style="${roBg}">
+                <option value="">-- Sélectionner --</option>
+                ${EXEC_TYPES_RAPPORT.map((t) => `<option value="${_escAttr(t)}"${t === choisi ? ' selected' : ''}>${_esc(t)}</option>`).join('')}
+            </select>
+        </div>
+    </div>`;
+}
+
+function execTypeRapportChange() {
+    const select = document.getElementById('dossier_type_rapport');
+    const groupe = document.getElementById('dossier_type_rapport_autre_group');
+    if (!select || !groupe) return;
+    const estAutre = select.value === 'AUTRE';
+    groupe.style.display = estAutre ? '' : 'none';
+    if (estAutre) document.getElementById('dossier_type_rapport_autre')?.focus();
+}
+
+// Intitulé porté par le document produit : le choix fait ici prime ; à défaut,
+// la nature de l'activité notifiée continue de nommer le rapport.
+function _execIntituleRapport(dossier, defaut) {
+    const choisi = String((dossier || {}).type_rapport || '').trim();
+    if (choisi === 'AUTRE') {
+        const libre = String(dossier.type_rapport_autre || '').trim();
+        if (libre) return libre.toUpperCase();
+    } else if (choisi) {
+        return choisi;
+    }
+    return defaut;
+}
+
+// Correspondance sous-étape → lettre de section, pour l'ancrage.
+const EXEC_REDACTION_LETTRES = {
+    introduction: 'A', synthese: 'B', checklists: 'C', constatations: 'D',
+    conclusion: 'E', annexes: 'F',
+};
 
 function _buildRedactionSubtabContent(tab, dossier, dossierId, canEdit) {
     return _buildDossierTabContent(tab, dossier, dossierId, canEdit, _dossierDefaults(dossier));
@@ -5417,10 +7639,17 @@ function _dossierDefaults(dossier) {
 }
 
 function _buildStepValidation(dossier, dossierId) {
-    const rapports = (dossier.rapports || []).slice().sort((a,b) => (b.version||0) - (a.version||0));
+    const toutes = (dossier.rapports || []).slice().sort((a,b) => (b.version||0) - (a.version||0));
+    // À la Transmission, l'historique des versions n'a plus cours : seule la
+    // version validée est en jeu, c'est elle qui part au prestataire.
+    const surTransmission = _execSurTransmission();
+    const rapports = surTransmission
+        ? toutes.filter(r => ['valide', 'transmis'].includes(r.statut))
+        : toutes;
     const lastRap = rapports[0];
+    const courriel = surTransmission && lastRap ? _execCourrielTransmission(dossier, lastRap) : '';
     return `
-    ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">Aucun rapport soumis pour le moment.</p>` : `
+    ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${surTransmission ? 'Aucun rapport validé pour le moment.' : 'Aucun rapport soumis pour le moment.'}</p>` : `
     <div style="overflow-x:auto;">
     <table class="exec-data-table">
         <thead><tr>
@@ -5463,7 +7692,228 @@ function _buildStepValidation(dossier, dossierId) {
             </tr>` : ''}`;}).join('')}
         </tbody>
     </table>
-    </div>`}`;
+    </div>`}
+    ${courriel}`;
+}
+
+// ── Transmission par courriel ────────────────────────────────────
+// Consulte-t-on l'étape Transmission ? Le formulaire Dossier ne connaît que
+// « Validation » : c'est le fil du processus qui distingue les deux.
+function _execSurTransmission() {
+    return typeof EXEC_PROC !== 'undefined' && !!EXEC_PROC && !!EXEC_PROC.actif
+        && EXEC_PROC.etape === 'transmission';
+}
+
+// Adresse du destinataire : celle retenue à la notification, sinon celle du
+// point focal du prestataire.
+function _execAdressePrestataire(dossier) {
+    const prest = (EXEC_STATE.data.prestataires || [])
+        .find(p => p.id === dossier.prestataire_id) || {};
+    return dossier.notif_interlocuteur_email || dossier.interlocuteur_email
+        || prest.email_point_focal || prest.email_prestataire || '';
+}
+
+function _execCourrielTransmission(dossier, rapport) {
+    const dejaTransmis = rapport.statut === 'transmis';
+    const intitule = _execIntituleRapport(dossier, 'RAPPORT DE SURVEILLANCE');
+    const objet = `${intitule} ${rapport.reference || ''} — ${dossier.prestataire_nom || ''}`.trim();
+    const message = [
+        `${dossier.notif_interlocuteur_nom ? `${dossier.notif_interlocuteur_nom},` : 'Madame, Monsieur,'}`,
+        '',
+        `Le rapport ${rapport.reference || ''} relatif à l'activité de surveillance `
+            + `« ${dossier.objet_activite || dossier.notification_objet || ''} » est mis à votre `
+            + 'disposition dans OASIS. Les liens de téléchargement figurent au bas de ce message.',
+        '',
+        'Les constatations qu\'il porte appellent, le cas échéant, un plan d\'actions correctives '
+            + 'à soumettre dans les délais indiqués.',
+        '',
+        'Nous vous prions d\'agréer nos salutations distinguées.',
+    ].join('\n');
+    const ro = dejaTransmis ? ' readonly' : '';
+
+    return `
+    <div class="exec-courriel" id="exec_courriel_transmission">
+        <div class="exec-courriel-entete">
+            <span>${EXEC_ICONS.send}</span>
+            <h4>Transmission du rapport au prestataire</h4>
+            ${dejaTransmis ? `<span class="exec-courriel-etat">Transmis le ${_formatDate(rapport.date_transmission)}${
+                rapport.transmis_a ? ` à ${_esc(rapport.transmis_a)}` : ''}</span>` : ''}
+        </div>
+        <div class="form-group">
+            <label>Destinataire</label>
+            <input type="text" class="form-input" id="courriel_destinataire"
+                   value="${_escAttr(dejaTransmis ? (rapport.transmis_a || '') : _execAdressePrestataire(dossier))}"
+                   placeholder="adresse@prestataire.bj"${ro}>
+        </div>
+        <div class="exec-courriel-copies">
+            <div class="form-group">
+                <label>Copie (Cc)</label>
+                <input type="text" class="form-input" id="courriel_copie" placeholder="Adresses séparées par des virgules"${ro}>
+            </div>
+            <div class="form-group">
+                <label>Copie cachée (Cci)</label>
+                <input type="text" class="form-input" id="courriel_copie_cachee" placeholder="Adresses séparées par des virgules"${ro}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Objet</label>
+            <input type="text" class="form-input" id="courriel_objet" value="${_escAttr(objet)}"${ro}>
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea class="form-input" id="courriel_message" rows="8" style="resize:vertical;"${ro}>${_esc(message)}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Documents transmis</label>
+            <p class="exec-courriel-note">Le message ne porte aucune pièce jointe : il annonce des liens
+               de téléchargement, que le prestataire suit depuis son compte OASIS.</p>
+            <div id="courriel_pieces">
+                <div class="exec-piece exec-piece-rapport">
+                    <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
+                    ${_execPieceLien((rapport.document || {}).path, `${rapport.reference || 'rapport'}.pdf`,
+                        `execDownloadRapport('${rapport.id}', false)`)}
+                    <span class="exec-piece-mention">Rapport validé — joint d'office</span>
+                </div>
+                ${(dejaTransmis ? (rapport.pieces_transmises || []) : []).map(f => `
+                <div class="exec-piece">
+                    <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
+                    ${_execPieceLien(f.path, f.intitule || f.filename || '')}
+                    <span class="exec-piece-mention">${_esc(f.filename || '')}</span>
+                </div>`).join('')}
+            </div>
+            ${dejaTransmis ? '' : `
+            <button class="btn btn-sm btn-outline" onclick="this.nextElementSibling.click()" style="margin-top:0.5rem;">
+                ${EXEC_ICONS.upload} Ajouter un fichier
+            </button>
+            <input type="file" style="display:none;" multiple onchange="execCourrielAjouterFichiers(this)">`}
+        </div>
+        <div class="exec-courriel-pied">
+            ${dejaTransmis ? '' : `
+            <button class="btn btn-primary btn-sm" id="courriel_envoyer"
+                    onclick="execTransmettreRapport('${rapport.id}')">
+                ${EXEC_ICONS.send} Envoyer
+            </button>`}
+        </div>
+    </div>`;
+}
+
+// Chaque document listé s'ouvre d'un clic, sous son intitulé. Tant que le
+// rapport n'est pas parti, son document n'existe pas encore sur le serveur :
+// c'est l'aperçu qui en tient lieu.
+function _execPieceLien(chemin, intitule, repli) {
+    const nom = _esc(intitule || '');
+    if (chemin) {
+        // La session suffit à autoriser la lecture : rien à porter dans l'URL.
+        const url = `${chemin}${chemin.includes('?') ? '&' : '?'}nom=${encodeURIComponent(intitule || '')}`;
+        return `<a class="exec-piece-nom" href="${_escAttr(url)}" target="_blank" rel="noopener"
+                   title="Ouvrir ${nom}">${nom}</a>`;
+    }
+    if (repli) {
+        return `<a class="exec-piece-nom" href="#" onclick="event.preventDefault();${_escAttr(repli)}"
+                   title="Aperçu du rapport">${nom}</a>`;
+    }
+    return `<span class="exec-piece-nom">${nom}</span>`;
+}
+
+// Pièces complémentaires à transmettre : le fichier est déposé dès sa
+// sélection ; l'intitulé, modifiable, est ce que le prestataire lira.
+async function execCourrielAjouterFichiers(input) {
+    const conteneur = document.getElementById('courriel_pieces');
+    if (!conteneur || !input.files || !input.files.length) return;
+    for (const fichier of [...input.files]) {
+        const formData = new FormData();
+        formData.append('file', fichier);
+        formData.append('nom', fichier.name);
+        try {
+            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('pr_token') || ''}` },
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.status !== 'ok') throw new Error(data.error || 'Téléversement refusé');
+            const ligne = document.createElement('div');
+            ligne.className = 'exec-piece';
+            ligne.dataset.path = data.path;
+            ligne.dataset.filename = data.filename;
+            ligne.innerHTML = `
+                <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
+                <input type="text" class="form-input exec-piece-intitule" value="${_escAttr(data.filename)}"
+                       placeholder="Intitulé du document">
+                <a class="exec-piece-ouvrir" href="${_escAttr(data.path)}" target="_blank" rel="noopener"
+                   title="Ouvrir le document">${EXEC_ICONS.eye || 'Ouvrir'}</a>
+                <span class="exec-piece-mention">${_esc(_execTaille(data.size))}</span>
+                <button class="btn btn-sm btn-ghost exec-piece-retirer" title="Retirer"
+                        onclick="this.closest('.exec-piece').remove()">${EXEC_ICONS.x}</button>`;
+            conteneur.appendChild(ligne);
+        } catch (e) {
+            console.error('Téléversement :', e);
+            _execToast(`${fichier.name} : ${(e && e.message) || 'téléversement impossible'}`, 'error');
+        }
+    }
+    input.value = '';
+}
+
+function _execTaille(octets) {
+    const n = Number(octets) || 0;
+    if (n < 1024) return `${n} o`;
+    if (n < 1024 * 1024) return `${Math.round(n / 1024)} Ko`;
+    return `${(n / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+function _execCourrielFichiers() {
+    return [...document.querySelectorAll('#courriel_pieces .exec-piece[data-path]')].map(l => ({
+        path: l.dataset.path,
+        filename: l.dataset.filename || '',
+        intitule: (l.querySelector('.exec-piece-intitule') || {}).value || l.dataset.filename || '',
+    }));
+}
+
+async function execTransmettreRapport(rapportId) {
+    const val = (id) => (document.getElementById(id) || {}).value || '';
+    const destinataire = val('courriel_destinataire').trim();
+    if (!destinataire) { _execToast('Indiquez au moins un destinataire', 'error'); return; }
+    const bouton = document.getElementById('courriel_envoyer');
+    if (bouton) { bouton.disabled = true; bouton.textContent = 'Envoi…'; }
+    try {
+        // Le document déposé est celui que l'aperçu produit : une seule source.
+        const html = await execDownloadRapport(rapportId, false, true);
+        if (!html) throw new Error('Rapport indisponible');
+        const rapport = ((EXEC_STATE.selectedDossier || {}).rapports || [])
+            .find(r => r.id === rapportId) || {};
+        const remise = await api(`${EXEC_MODULE_API}/rapports/${rapportId}/transmettre`, {
+            method: 'POST',
+            body: JSON.stringify({
+                destinataire,
+                copie: val('courriel_copie'),
+                copie_cachee: val('courriel_copie_cachee'),
+                objet: val('courriel_objet'),
+                message: val('courriel_message'),
+                // Le serveur rend cette mise en page en PDF : il lui faut le
+                // document tel quel, non enveloppé pour Word.
+                piece: { nom: `${rapport.reference || 'rapport'}.pdf`, contenu: html },
+                fichiers: _execCourrielFichiers(),
+            }),
+        });
+        // Sans serveur de messagerie configuré, la remise est acquise mais
+        // aucun message n'est parti : il faut le dire.
+        _execToast(remise && remise.envoye === false
+            ? te('transmis_sans_courriel')
+            : 'Rapport transmis au prestataire', remise && remise.envoye === false ? 'warning' : 'success');
+        // Le fil d'avancement lit son propre exemplaire du dossier : sans
+        // rechargement, l'étape resterait « à traiter » après l'envoi.
+        if (_execSurTransmission() && typeof execProcRecharger === 'function') {
+            await execProcRecharger('transmission');
+            return;
+        }
+        await execRefreshDynamic();
+        const d = EXEC_STATE.selectedDossier;
+        if (d) execOpenDossierSlider(d.id);
+    } catch (e) {
+        console.error('Transmission rapport :', e);
+        _execToast((e && e.message) || 'Erreur lors de la transmission', 'error');
+        if (bouton) { bouton.disabled = false; bouton.innerHTML = `${EXEC_ICONS.send} Envoyer`; }
+    }
 }
 
 function _buildDossierFooter(step, dossier, dossierId) {
@@ -5490,8 +7940,14 @@ function _buildDossierFooter(step, dossier, dossierId) {
             buttons += `<button class="btn btn-success" onclick="execValidateRapport('${lastRap.id}')">${EXEC_ICONS.check} Valider</button>`;
         }
         if (hasValidated && lastRap) {
-            buttons += `<button class="btn btn-outline" onclick="execAmendRapport('${lastRap.id}')">${EXEC_ICONS.edit} Amender</button>`;
+            // Une fois le rapport parti chez le prestataire, il n'est plus
+            // amendable : la version transmise fait foi.
             if (!hasTransmitted) {
+                buttons += `<button class="btn btn-outline" onclick="execAmendRapport('${lastRap.id}')">${EXEC_ICONS.edit} Amender</button>`;
+            }
+            // À la Transmission, l'envoi se fait depuis le formulaire de
+            // courriel : un second bouton transmettrait sans destinataire.
+            if (!hasTransmitted && !_execSurTransmission()) {
                 buttons += `<button class="btn btn-accent" onclick="execSendRapportValidated('${lastRap.id}')">${EXEC_ICONS.send} Envoyer</button>`;
             }
             // La clôture n'est offerte qu'une fois le rapport transmis.
@@ -5513,25 +7969,15 @@ function execSwitchDossierStep(dossierId, stepId) {
     _renderDossierSliderContent(dossierId);
 }
 
+// Les sous-étapes sont devenues des sections : « aller à » revient à ouvrir la
+// section visée et à l'amener sous les yeux.
 function execSwitchRedactionSubtab(dossierId, subtabId) {
     EXEC_STATE.dossierRedactionSubtab = subtabId;
-    const dossier = EXEC_STATE.selectedDossier;
-    if (!dossier) return;
-    const st = _dossierStepState(dossier, 'redaction');
-    const content = _buildRedactionSubtabContent(subtabId, dossier, dossierId, st.editable);
-    const container = document.getElementById('dossier_redaction_subtab_content');
-    if (container) {
-        container.style.animation = 'none';
-        container.offsetHeight;
-        container.style.animation = 'execFadeIn 0.3s ease';
-        container.innerHTML = content;
-    }
-    const bar = document.getElementById('dossier_redaction_subtab_bar');
-    if (bar) {
-        bar.querySelectorAll('.exec-tab').forEach(btn => {
-            btn.classList.toggle('active', (btn.getAttribute('onclick') || '').includes(`'${subtabId}'`));
-        });
-    }
+    const lettre = EXEC_REDACTION_LETTRES[subtabId];
+    const section = lettre && document.getElementById(`exec-section-${lettre}`);
+    if (!section) return;
+    section.classList.add('expanded');
+    section.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
@@ -5546,7 +7992,7 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
         <div style="display:grid;grid-template-columns:1fr 3fr;gap:1rem;margin-bottom:1rem;">
             <div class="form-group">
                 <label>Date d'exécution</label>
-                <input type="text" class="form-input" id="dossier_dates_activite" value="${_esc(dossier.dates_activite || notifDates || '')}"${ro} style="${roBg}">
+                <input type="text" class="form-input" id="dossier_dates_activite" value="${_escAttr(dossier.dates_activite || notifDates || '')}"${ro} style="${roBg}">
             </div>
             <div class="form-group">
                 <label>Objet de l'activité</label>
@@ -5632,7 +8078,7 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
         <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Autres documents</h4>
         <div id="dossier_checklists_list">
             ${(dossier.checklists || []).map(cl => `
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_esc(cl.path || '')}">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_escAttr(cl.path || '')}">
                 ${EXEC_ICONS.file} <span style="flex:1;">${_esc(cl.filename || cl)}</span>
                 ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>` : ''}
             </div>`).join('')}
@@ -5654,15 +8100,13 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                 <textarea class="form-input" id="dossier_points_faibles" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.synthese_points_faibles || '')}</textarea>
             </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-            <div class="form-group">
-                <label>${te('opportunites_amelioration')}</label>
-                <textarea class="form-input" id="dossier_opportunites" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.opportunites_amelioration || '')}</textarea>
-            </div>
-            <div class="form-group">
-                <label>${te('resume_global')}</label>
-                <textarea class="form-input" id="dossier_resume_global" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.resume_global_constatations || '')}</textarea>
-            </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+            <label>${te('opportunites_amelioration')}</label>
+            <textarea class="form-input" id="dossier_opportunites" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.opportunites_amelioration || '')}</textarea>
+        </div>
+        <div class="form-group">
+            <label>${te('resume_global')}</label>
+            <textarea class="form-input" id="dossier_resume_global" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.resume_global_constatations || '')}</textarea>
         </div>`;
     } else if (tab === 'constatations') {
         // Determine rapport validation status for the Modifier button
@@ -5673,14 +8117,14 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
         return `
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
             ${canEdit ? `
-            <button class="btn btn-sm btn-accent" onclick="execOpenFNCForm('${dossierId}')">
-                ${EXEC_ICONS.add} ${te('creer_fnc')}
+            <button class="btn btn-sm btn-danger" onclick="execOpenFNCForm('${dossierId}')">
+                ${EXEC_ICONS.add} ${te('ajouter_constatation')}
             </button>` : ''}
             ${constatations.length > 0 ? `
             <button class="btn btn-primary btn-sm" onclick="execExportConstatations('${dossierId}','xlsx')" title="Exporter Excel">
                 ${EXEC_ICONS.download || EXEC_ICONS.file} Exporter Excel
             </button>
-            <button class="btn btn-primary btn-sm" onclick="execExportConstatations('${dossierId}','pdf')" title="Exporter PDF">
+            <button class="btn btn-primary btn-sm" onclick="execFichesConstatDossier('${dossierId}')" title="Exporter PDF">
                 ${EXEC_ICONS.pdf || EXEC_ICONS.download || EXEC_ICONS.file} Exporter PDF
             </button>` : ''}
         </div>
@@ -5704,7 +8148,7 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                     const preuvesHtml = preuves.length > 0 ? preuves.map(p => {
                         const fname = typeof p === 'object' ? (p.filename || p.name || '') : p;
                         const fpath = typeof p === 'object' ? (p.path || '') : '';
-                        return fpath ? `<a href="${_esc(_execDl(fpath))}" download="${_esc(fname)}" style="display:inline-flex;align-items:center;gap:0.2rem;font-size:0.8rem;color:var(--primary);">${EXEC_ICONS.file} ${_esc(fname)}</a>` : `<span style="font-size:0.8rem;">${_esc(fname)}</span>`;
+                        return fpath ? `<a href="${_escAttr(_execDl(fpath))}" download="${_escAttr(fname)}" style="display:inline-flex;align-items:center;gap:0.2rem;font-size:0.8rem;color:var(--primary);">${EXEC_ICONS.file} ${_esc(fname)}</a>` : `<span style="font-size:0.8rem;">${_esc(fname)}</span>`;
                     }).join('<br>') : '-';
                     // Read-only when rapport validé/transmis or dossier clôturé (admin bypass)
                     const isConstReadOnly = (hasRapportValide || hasRapportTransmis || dossier.statut === 'cloture') && !isAdmin;
@@ -5758,23 +8202,23 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
         </div>`}`;
     } else if (tab === 'conclusion') {
         return `
-        <div class="form-group" style="margin-bottom:1.5rem;">
-            <label style="font-weight:600;">Conclusions</label>
+        <div class="form-group">
             <textarea class="form-input" id="dossier_conclusion" rows="5" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.conclusion || '')}</textarea>
-        </div>
-        <h4 style="margin-bottom:0.75rem;">${te('annexes')}</h4>
+        </div>`;
+    } else if (tab === 'annexes') {
+        return `
         <div id="dossier_annexes_list">
             ${(dossier.annexes || []).map((a, i) => {
                 const obj = typeof a === 'object' ? a : { intitule: '', contenu: '', filename: a };
                 return `
                 <div class="dossier-annexe-item" style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;">
                     <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
-                        <input type="text" class="form-input annexe-intitule" value="${_esc(obj.intitule || obj.filename || '')}" placeholder="Intitulé de l'annexe" style="flex:1;">
+                        <input type="text" class="form-input annexe-intitule" value="${_escAttr(obj.intitule || obj.filename || '')}" placeholder="Intitulé de l'annexe" style="flex:1;">
                         ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.closest('.dossier-annexe-item').remove()">${EXEC_ICONS.x}</button>` : ''}
                     </div>
                     <textarea class="form-input annexe-contenu" rows="3" style="resize:vertical;margin-bottom:0.5rem;" placeholder="Contenu...">${_esc(obj.contenu || '')}</textarea>
                     <div class="annexe-files" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                        ${(obj.files || []).map(f => `<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:var(--bg);border-radius:4px;font-size:0.8rem;" data-path="${_esc(f.path || '')}" data-filename="${_esc(f.filename || f)}">${EXEC_ICONS.file} ${_esc(f.filename || f)} <button class="btn btn-sm" style="padding:0;color:#ef4444;" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button></span>`).join('')}
+                        ${(obj.files || []).map(f => `<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:var(--bg);border-radius:4px;font-size:0.8rem;" data-path="${_escAttr(f.path || '')}" data-filename="${_escAttr(f.filename || f)}">${EXEC_ICONS.file} ${_esc(f.filename || f)} <button class="btn btn-sm" style="padding:0;color:#ef4444;" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button></span>`).join('')}
                     </div>
                     <div style="margin-top:0.5rem;">
                         <button class="btn btn-sm btn-outline" onclick="this.nextElementSibling.click();">${EXEC_ICONS.upload} Pièces jointes</button>
@@ -5953,16 +8397,16 @@ function execAddRealisationEquipeMember() {
     if (emptyMsg) emptyMsg.remove();
     const div = document.createElement('div');
     div.style.cssText = 'display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;';
-    const roles = ["Chef d'équipe", "Membre d'équipe", "Stagiaire", "Formation en cours d'emploi", "Experts ou Autres"];
+    const roles = _execRolesEquipe();
     const inspList = typeof _getFilteredInspecteurs === 'function' ? _getFilteredInspecteurs() : [];
     div.innerHTML = `
         <select class="form-select real-equipe-nom" style="flex:1;">
             <option value="">-- Inspecteur --</option>
-            ${inspList.map(ins => `<option value="${_esc(ins.prenom + ' ' + ins.nom)}">${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
+            ${inspList.map(ins => `<option value="${_escAttr(ins.prenom + ' ' + ins.nom)}">${_esc(ins.prenom)} ${_esc(ins.nom)}</option>`).join('')}
         </select>
         <select class="form-select real-equipe-role" style="flex:1;">
             <option value="">${te('select_option')}</option>
-            ${roles.map(r => `<option value="${_esc(r)}">${_esc(r)}</option>`).join('')}
+            ${roles.map(r => `<option value="${_escAttr(r)}">${_esc(r)}</option>`).join('')}
         </select>
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
     `;
@@ -7086,6 +9530,12 @@ async function execSaveDossier(dossierId, silent) {
     const data = {};
 
     // Introduction tab fields (IDs match the form)
+    // Type de rapport (au-dessus des sections)
+    const typeEl = document.getElementById('dossier_type_rapport');
+    const typeLibreEl = document.getElementById('dossier_type_rapport_autre');
+    if (typeEl) data.type_rapport = typeEl.value;
+    if (typeLibreEl) data.type_rapport_autre = typeLibreEl.value;
+
     const descEl = document.getElementById('dossier_description_activite');
     const objEl = document.getElementById('dossier_objet_activite');
     const datesEl = document.getElementById('dossier_dates_activite');
@@ -7184,7 +9634,7 @@ function execFncUpdateExigences(secteurId) {
     const list = document.getElementById('fnc_exig_list');
     if (!list) return;
     list.innerHTML = filtered.map(e =>
-        `<option value="${_esc(e.reference)}" title="${_esc(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
+        `<option value="${_escAttr(e.reference)}" title="${_escAttr(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
     ).join('');
 }
 
@@ -7205,6 +9655,54 @@ function execFncAddRef(raw) {
     tag.innerHTML = `${_esc(ref)}<button type="button" onclick="this.parentElement.remove()" style="border:none;background:none;cursor:pointer;color:inherit;padding:0 0 0 0.2rem;font-size:1rem;line-height:1;">&times;</button>`;
     container.insertBefore(tag, input);
 }
+
+// ══════════════════════════════════════
+//  Tiroir du formulaire de constatation
+// ══════════════════════════════════════
+// Volet à part, superposé au rapport : l'écran d'où l'on vient reste affiché
+// derrière, à gauche. Bandeau propre, liseré rouge, pied dédié.
+function _execFncTiroirAfficher(dossierId, bodyHtml, footerHtml, reference) {
+    document.getElementById('execFncTiroir')?.remove();
+    const tiroir = document.createElement('div');
+    tiroir.id = 'execFncTiroir';
+    tiroir.className = 'exec-fnc-tiroir';
+    tiroir.innerHTML = `
+        <div class="exec-fnc-tiroir-tete">
+            <button class="btn btn-outline btn-sm exec-proc-retour" onclick="execFermerFncTiroir()">
+                ${EXEC_ICONS.back || ''} ${te('retour_rapport')}
+            </button>
+            <span class="exec-fnc-tiroir-titre">${EXEC_ICONS.constatations} ${te('constatation')}</span>
+            ${reference ? `<span class="exec-form-titre-ref">${_esc(reference)}</span>` : ''}
+        </div>
+        <div class="exec-fnc-tiroir-corps">${bodyHtml}</div>
+        ${footerHtml ? `<div class="exec-slider-footer exec-fnc-tiroir-pied">${footerHtml}</div>` : ''}`;
+    document.body.appendChild(tiroir);
+    // Le tiroir commence sous la ligne de séparation du fil d'avancement.
+    // Ce fil défile avec le corps du volet : s'il est remonté hors de vue, on
+    // se rabat sur le bandeau, qui ne bouge pas. Sans ce garde-fou, le tiroir
+    // démarrait au-dessus de l'écran et sa fin restait inaccessible.
+    const hote = document.getElementById('execSlider');
+    const bandeau = hote && hote.querySelector('.exec-slider-header');
+    const fil = hote && hote.querySelector('.exec-proc-barre');
+    const plancher = bandeau ? Math.round(bandeau.getBoundingClientRect().bottom)
+        : (hote ? Math.round(hote.getBoundingClientRect().top) : 0);
+    let haut = plancher;
+    if (fil) {
+        const basFil = Math.round(fil.getBoundingClientRect().bottom);
+        // Entre le bandeau et le tiers haut de l'écran : au-delà, le fil a
+        // défilé et ne sert plus de repère.
+        if (basFil > plancher && basFil < window.innerHeight / 3) haut = basFil;
+    }
+    tiroir.style.top = `${haut}px`;
+    requestAnimationFrame(() => tiroir.classList.add('ouvert'));
+}
+
+window.execFermerFncTiroir = function () {
+    const tiroir = document.getElementById('execFncTiroir');
+    if (!tiroir) return;
+    tiroir.classList.remove('ouvert');
+    setTimeout(() => tiroir.remove(), 250);
+};
 
 function execOpenFNCForm(dossierId, existingFnc) {
     const fnc = existingFnc || {};
@@ -7237,7 +9735,7 @@ function execOpenFNCForm(dossierId, existingFnc) {
         ? allExig.filter(e => e.secteur_id === defaultSecteurId && (e.statut || 'actif') !== 'inactif')
         : allExig.filter(e => (e.statut || 'actif') !== 'inactif');
     const exigOptions = initExig.map(e =>
-        `<option value="${_esc(e.reference)}" title="${_esc(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
+        `<option value="${_escAttr(e.reference)}" title="${_escAttr(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
     ).join('');
 
     const defaultEmisPar = fnc.emis_par || relNotif.equipe_chef || EXEC_STATE.user?.nom || '';
@@ -7247,17 +9745,19 @@ function execOpenFNCForm(dossierId, existingFnc) {
     const G = 'gap:0.6rem;', MB = 'margin-bottom:0.5rem;';
 
     const bodyHtml = `
-    <div class="exec-form-sections" style="padding:0.25rem 0;">
+    <div class="exec-real">
         <input type="hidden" id="fnc_min_date" value="${minDate}">
+
+        ${_execFormSection('A', 'fnc_section_identification', `
         <!-- Row 1: Emis Par ; Adressé a ; Date d'ouverture -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
                 <label>${te('emis_par')}</label>
-                <input type="text" class="form-input" id="fnc_emis_par" value="${_esc(defaultEmisPar)}">
+                <input type="text" class="form-input" id="fnc_emis_par" value="${_escAttr(defaultEmisPar)}">
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('adresse_a')}</label>
-                <input type="text" class="form-input" id="fnc_adresse_a" value="${_esc(defaultAdresseA)}">
+                <input type="text" class="form-input" id="fnc_adresse_a" value="${_escAttr(defaultAdresseA)}">
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('date_ouverture')}</label>
@@ -7290,14 +9790,16 @@ function execOpenFNCForm(dossierId, existingFnc) {
                 </select>
             </div>
         </div>
+        `, true, '', te('fnc_aide_identification'))}
 
+        ${_execFormSection('B', 'fnc_section_constat', `
         <!-- Row 3: Réf. Réglementaires (tag-input) -->
         <div class="form-group" style="${MB}">
             <label>${te('ref_reglementaires')}</label>
             <div id="fnc_ref_tags" style="display:flex;flex-wrap:wrap;gap:0.3rem;align-items:center;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);min-height:2.2rem;cursor:text;" onclick="document.getElementById('fnc_ref_input').focus()">
                 ${(fnc.ref_reglementaires || fnc.exigence_ref || '').split(',').map(r => r.trim()).filter(Boolean).map(r => {
                     const exig = allExig.find(e => e.reference === r);
-                    return `<span class="fnc-ref-tag" data-ref="${_esc(r)}" title="${_esc(exig?.libelle||'')}" style="display:inline-flex;align-items:center;gap:0.25rem;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;white-space:nowrap;">${_esc(r)}<button type="button" onclick="this.parentElement.remove()" style="border:none;background:none;cursor:pointer;color:inherit;padding:0 0 0 0.2rem;font-size:1rem;line-height:1;">&times;</button></span>`;
+                    return `<span class="fnc-ref-tag" data-ref="${_escAttr(r)}" title="${_escAttr(exig?.libelle||'')}" style="display:inline-flex;align-items:center;gap:0.25rem;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;white-space:nowrap;">${_esc(r)}<button type="button" onclick="this.parentElement.remove()" style="border:none;background:none;cursor:pointer;color:inherit;padding:0 0 0 0.2rem;font-size:1rem;line-height:1;">&times;</button></span>`;
                 }).join('')}
                 <input type="text" id="fnc_ref_input" list="fnc_exig_list" autocomplete="off"
                     placeholder="${(fnc.ref_reglementaires||'')?'':'Ajouter une référence…'}"
@@ -7313,7 +9815,9 @@ function execOpenFNCForm(dossierId, existingFnc) {
             <label>${te('description_constatation')}</label>
             <textarea class="form-input" id="fnc_description" rows="3">${_esc(fnc.description || '')}</textarea>
         </div>
+        `, true, '', te('fnc_aide_constat'))}
 
+        ${_execFormSection('C', 'fnc_section_traitement', `
         <!-- Row 5: Criticité ; Cas ; Délai ; Date Due -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
@@ -7330,7 +9834,7 @@ function execOpenFNCForm(dossierId, existingFnc) {
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('delai_solde')}</label>
-                <input type="number" class="form-input" id="fnc_delai" min="1" value="${_esc(fnc.delai_solde || fnc.delai_correction || _execCriticiteDelai(fnc.criticite || fnc.gravite) || '30')}" onchange="execCalcDateDue()" oninput="execCalcDateDue()">
+                <input type="number" class="form-input" id="fnc_delai" min="1" value="${_escAttr(fnc.delai_solde || fnc.delai_correction || _execCriticiteDelai(fnc.criticite || fnc.gravite) || '30')}" onchange="execCalcDateDue()" oninput="execCalcDateDue()">
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('date_due')}</label>
@@ -7343,13 +9847,15 @@ function execOpenFNCForm(dossierId, existingFnc) {
             <label>${te('recommandation')}</label>
             <textarea class="form-input" id="fnc_recommandation" rows="2">${_esc(fnc.recommandation || '')}</textarea>
         </div>
+        `, true, '', te('fnc_aide_traitement'))}
 
+        ${_execFormSection('D', 'fnc_section_preuves', `
         <!-- Preuves -->
         <div class="form-group">
             <label>${te('preuves')}</label>
             <div id="fnc_preuves_list">
                 ${(fnc.preuves_constatation || []).map(p => `
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_esc(p.path || '')}">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_escAttr(p.path || '')}">
                     ${EXEC_ICONS.file} <span style="flex:1;">${_esc(p.filename || p)}</span>
                     <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
                 </div>`).join('')}
@@ -7359,16 +9865,19 @@ function execOpenFNCForm(dossierId, existingFnc) {
                 <input type="file" id="fnc_proof_input" style="display:none;" multiple onchange="execUploadFNCProof(this.files)">
             </div>
         </div>
+        `, true, '', te('fnc_aide_preuves'))}
     </div>`;
 
     const footerHtml = `
-        <button class="btn btn-outline" onclick="execOpenDossierSlider('${dossierId}','constatations')">${EXEC_ICONS.back} ${te('back')}</button>
+        <button class="btn btn-outline" onclick="execFermerFncTiroir()">${te('cancel')}</button>
         <button class="btn btn-primary" onclick="execSaveFNC('${dossierId}', '${fnc.id || ''}')">
             ${EXEC_ICONS.check} ${te('save')}
         </button>
     `;
 
-    _execFadeSliderContent(`${EXEC_ICONS.constatations} ${te('creer_fnc')}`, bodyHtml, footerHtml, 'max');
+    // Le formulaire s'ouvre dans son propre tiroir, par-dessus l'écran du
+    // rapport : celui-ci reste visible et lisible à gauche.
+    _execFncTiroirAfficher(dossierId, bodyHtml, footerHtml, fnc.reference || '');
 
     // Calculate initial date due
     setTimeout(() => execCalcDateDue(), 100);
@@ -7425,7 +9934,7 @@ async function execViewFNC(dossierId, fncId) {
             <div style="display:flex;flex-wrap:wrap;gap:0.3rem;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);min-height:2rem;">
                 ${refList.length ? refList.map(r => {
                     const exig = allExig.find(e => e.reference === r);
-                    return `<span title="${_esc(exig?.libelle||'')}" style="display:inline-flex;align-items:center;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;">${_esc(r)}</span>`;
+                    return `<span title="${_escAttr(exig?.libelle||'')}" style="display:inline-flex;align-items:center;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;">${_esc(r)}</span>`;
                 }).join('') : '<span style="color:var(--text-muted);font-style:italic;font-size:0.85rem;">—</span>'}
             </div>
         </div>
@@ -7455,7 +9964,7 @@ async function execViewFNC(dossierId, fncId) {
                     const fname = typeof p === 'object' ? (p.filename || p.name || '') : p;
                     const fpath = typeof p === 'object' ? (p.path || '') : '';
                     return fpath
-                        ? `<div style="padding:0.2rem 0;">${EXEC_ICONS.file||'📎'} <a href="${_esc(_execDl(fpath))}" download="${_esc(fname)}" style="font-size:0.85rem;color:var(--primary);">${_esc(fname)}</a></div>`
+                        ? `<div style="padding:0.2rem 0;">${EXEC_ICONS.file||'📎'} <a href="${_escAttr(_execDl(fpath))}" download="${_escAttr(fname)}" style="font-size:0.85rem;color:var(--primary);">${_esc(fname)}</a></div>`
                         : `<div style="padding:0.2rem 0;">${EXEC_ICONS.file||'📎'} <span style="font-size:0.85rem;">${_esc(fname)}</span></div>`;
                 }).join('')}
             </div>
@@ -7561,6 +10070,7 @@ async function execSaveFNC(dossierId, fncId) {
         }
         await execRefreshDynamic();
         EXEC_STATE.dossierTab = 'constatations';
+        execFermerFncTiroir();
         execOpenDossierSlider(dossierId, 'constatations');
     } catch (e) {
         console.error('Save FNC error:', e);
@@ -7901,24 +10411,49 @@ async function execArchiveDossier(dossierId) {
 // Sub-nav for Constatations
 function execRenderConstatations() {
     const isPrest = _execIsPrestataire();
-    // Prestataires n'ont pas accès au sous-menu "Constatations" (liste)
+    // Le prestataire n'a ni la liste « En Préparation » ni le « Suivi Terrain ».
     if (isPrest) EXEC_STATE.currentConstSub = 'suivi';
-    const sub = EXEC_STATE.currentConstSub || 'list';
+    const sub = EXEC_STATE.currentConstSub || 'suivi';
     const all = EXEC_STATE.data.constatations || [];
     const PRE_TRANSMIT  = new Set(['brouillon', 'direct_brouillon', 'direct_soumis', 'direct_valide', 'direct_rejete', 'direct_renvoye']);
-    const POST_TRANSMIT = new Set(['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee']);
+    const POST_TRANSMIT = new Set(EXEC_CONSTA_EN_VIGUEUR);
     const countList  = all.filter(c => PRE_TRANSMIT.has(c.statut  || '')).length;
     const countSuivi = all.filter(c => POST_TRANSMIT.has(c.statut || '')).length;
+    const countTerrain = _execConstaTerrain(all).length;
+    // Suivi d'abord, puis En Préparation, puis Suivi Terrain.
     const subNav = `
     <div class="exec-workflow-tabs" style="margin-bottom:1rem;">
-        ${isPrest ? '' : `<button class="exec-tab ${sub==='list'?'active':''}" onclick="EXEC_STATE.currentConstSub='list';execRenderPage();">
-            ${te('consta_sub_list')} <span class="exec-tab-badge">${countList}</span>
-        </button>`}
         <button class="exec-tab ${sub==='suivi'?'active':''}" onclick="EXEC_STATE.currentConstSub='suivi';execRenderPage();">
             ${te('consta_sub_suivi')} <span class="exec-tab-badge">${countSuivi}</span>
         </button>
+        ${isPrest ? '' : `<button class="exec-tab ${sub==='terrain'?'active':''}" onclick="EXEC_STATE.currentConstSub='terrain';execRenderPage();">
+            ${te('consta_sub_terrain')} <span class="exec-tab-badge">${countTerrain}</span>
+        </button>`}
+        ${isPrest ? '' : `<button class="exec-tab ${sub==='list'?'active':''}" onclick="EXEC_STATE.currentConstSub='list';execRenderPage();">
+            ${te('consta_sub_list')} <span class="exec-tab-badge">${countList}</span>
+        </button>`}
     </div>`;
+    if (sub === 'terrain') return _execRenderConstaTerrain(subNav);
     return sub === 'suivi' ? _execRenderConstaSuivi(subNav) : _execRenderConstaList(subNav);
+}
+
+// Constatations à l'étape Clôture dont la vérification sur le terrain a été
+// demandée par l'AAC, et qui ne sont pas encore soldées.
+function _execConstaTerrain(liste) {
+    return (liste || []).filter((c) => {
+        if ((c.statut || '') === 'soldee') return false;
+        let ev = c.commentaire_evaluation;
+        if (typeof ev === 'string') { try { ev = JSON.parse(ev); } catch { ev = {}; } }
+        const anac = (ev || {}).evaluation_anac || {};
+        const v = anac.verification || {};
+        if (!v.verification_terrain) return false;
+        // Étape Clôture : acceptation du plan et des preuves prononcées.
+        const accepte = (anac.acceptation || {}).accepte === 'OUI' || c.statut === 'pac_valide';
+        const preuves = v.preuves_acceptees === 'OUI'
+            || (v.isolement_realise === 'OUI' && v.risques_traites === 'OUI')
+            || (anac.cloture || {}).mise_en_oeuvre_effective === 'OUI';
+        return accepte && preuves;
+    });
 }
 
 // Shared: apply common filters to a constatation list
@@ -7938,7 +10473,7 @@ function _execApplyConstaFilters(list) {
 // Shared: render constatation table rows
 function _execRenderConstaRows(filtered) {
     const DIRECT_STATUTS = new Set(['direct_brouillon', 'direct_soumis', 'direct_valide', 'direct_rejete', 'direct_renvoye']);
-    const OPEN_STATUTS = new Set(['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee']);
+    const OPEN_STATUTS = new Set(EXEC_CONSTA_EN_VIGUEUR);
     if (!filtered.length) return `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>`;
     return filtered.map(c => {
         const domNom = (EXEC_STATE.data.domaines || []).find(d => d.id === c.domaine_id || d.code === c.domaine_id)?.nom || c.domaine_id || c.domaine || '';
@@ -7960,8 +10495,15 @@ function _execRenderConstaRows(filtered) {
         }
         const dateOuv = c.date_ouverture || (c.date_creation ? c.date_creation.slice(0, 10) : '');
         const rowId = `fnc_accordion_${c.id}`;
-        return `<tr style="cursor:pointer;" onclick="document.getElementById('${rowId}').style.display = document.getElementById('${rowId}').style.display === 'none' ? 'table-row' : 'none';">
-            <td><strong>${_esc(c.reference || '')}</strong> <span style="font-size:0.7rem;color:var(--text-muted);">${EXEC_ICONS.chevronDown}</span></td>
+        // Sous-menu « Suivi » : la ligne ouvre directement le formulaire de
+        // suivi ; ailleurs elle déplie le détail sous la ligne.
+        const ouvrePac = (EXEC_STATE.currentConstSub === 'suivi') && OPEN_STATUTS.has(c.statut || '');
+        const actionLigne = ouvrePac
+            ? `execOpenPACSlider('${c.id}')`
+            : `document.getElementById('${rowId}').style.display = document.getElementById('${rowId}').style.display === 'none' ? 'table-row' : 'none';`;
+        return `<tr style="cursor:pointer;" onclick="${actionLigne}">
+            <td><strong>${_esc(c.reference || '')}</strong>${ouvrePac ? ''
+                : ` <span style="font-size:0.7rem;color:var(--text-muted);">${EXEC_ICONS.chevronDown}</span>`}</td>
             <td>${_esc(c.prestataire_nom || '')}</td>
             <td>${_esc(domNom)}</td>
             <td>${_execGraviteBadge(c.criticite || c.gravite)}</td>
@@ -7984,7 +10526,8 @@ function _execRenderConstaRows(filtered) {
                     if (st === 'direct_rejete')
                         return `<button class="btn btn-sm btn-outline" onclick="execOpenConstatationDirecteSlider('${c.id}')" title="Consulter">${EXEC_ICONS.eye||''}</button>`;
                     if (OPEN_STATUTS.has(st))
-                        return `<button class="btn btn-sm btn-outline" onclick="execOpenPACSlider('${c.id}')" title="${te('suivi_pac')}">${EXEC_ICONS.clipboard}</button>`;
+                        return ouvrePac ? ''
+                            : `<button class="btn btn-sm btn-outline" onclick="execOpenPACSlider('${c.id}')" title="${te('suivi_pac')}">${EXEC_ICONS.clipboard}</button>`;
                     return `<button class="btn btn-sm btn-outline" onclick="execOpenDossierSlider('${c.dossier_id}','constatations')" title="${te('dossier')||'Dossier'}">${EXEC_ICONS.file}</button>`;
                 })()}
                 ${_execIsAdmin() ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.25rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete')}">${EXEC_ICONS.x}</button>` : ''}
@@ -8021,10 +10564,14 @@ function _execRenderConstaList(subNav) {
         ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true }
         : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true };
     const canCreateDirect = !isPrest && (typeof _execCanContribute === 'function' ? _execCanContribute() : true);
+    EXEC_STATE.constaExport = filtered.map((c) => c.id);
     return `<div class="page-content">
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;">
-            <h2 style="margin:0;">${te('constatations')}</h2>
+            <h2 style="margin:0;">${te('consta_sub_list')}</h2>
+            <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+            ${_execBoutonsExport()}
             ${canCreateDirect ? `<button class="btn btn-primary exec-btn-27" onclick="execOpenConstatationDirecteForm()">${EXEC_ICONS.plus || '+'} Nouvelle Constatation</button>` : ''}
+        </div>
         </div>
         ${subNav}
         ${_execRenderFilterBar('execRenderPage()', filterOpts)}
@@ -8051,16 +10598,17 @@ function _execRenderConstaSuivi(subNav) {
     const allConstatations = EXEC_STATE.data.constatations || [];
     const isPrest = _execIsPrestataire();
     // Statuts post-transmission : ouvert/ouverte (compat) + PAC + soldée
-    const POST_TRANSMIT = new Set(['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee']);
+    const POST_TRANSMIT = new Set(EXEC_CONSTA_EN_VIGUEUR);
     const base = allConstatations.filter(c => POST_TRANSMIT.has(c.statut || ''));
     const filtered = _execApplyConstaFilters(base);
     const filterOpts = isPrest
         ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true }
         : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true };
+    EXEC_STATE.constaExport = filtered.map((c) => c.id);
     return `<div class="page-content">
-        <div class="page-header">
-            <h2 style="margin:0;">${te('constatations')}</h2>
-            <p style="color:var(--text-muted);margin:0.2rem 0 0;">Tour de Controle - ${filtered.length} FNC</p>
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <h2 style="margin:0;">${te('consta_sub_suivi')}</h2>
+            ${_execBoutonsExport()}
         </div>
         ${subNav}
         ${_execRenderFilterBar('execRenderPage()', filterOpts)}
@@ -8078,6 +10626,357 @@ function _execRenderConstaSuivi(subNav) {
               <tbody>${_execRenderConstaRows(filtered)}</tbody>
             </table>
           </div>
+        </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+//  Export des constatations : classeur et document imprimable
+// ══════════════════════════════════════
+// Les deux exports portent sur la liste telle qu'elle est affichée : les
+// filtres actifs sont donc appliqués, et rappelés en tête du document.
+function _execBoutonsExport() {
+    return `<div class="exec-export-actions">
+        <button class="btn btn-sm btn-primary" onclick="execExporterConstatationsPdf()">
+            ${EXEC_ICONS.download} ${te('export_pdf')}
+        </button>
+        <button class="btn btn-sm btn-primary" onclick="execExporterConstatationsXlsx()">
+            ${EXEC_ICONS.download} ${te('export_excel')}
+        </button>
+    </div>`;
+}
+
+function _execFiltresLisibles() {
+    const F = EXEC_STATE.filters || {};
+    const nom = (coll, id) => (EXEC_STATE.data[coll] || []).find((x) => x.id === id)?.nom || id;
+    const parts = [];
+    if (F.domaine) parts.push(`${te('domaine')} : ${nom('domaines', F.domaine)}`);
+    if (F.prestataire) parts.push(`${te('provider')} : ${nom('prestataires', F.prestataire)}`);
+    if (F.annee) parts.push(`${te('exp_annee')} : ${F.annee}`);
+    if (F.trimestre) parts.push(`${te('trimestre')} : T${F.trimestre}`);
+    if (F.criticite) parts.push(`${te('criticite')} : ${F.criticite}`);
+    if (F.statut) parts.push(`${te('statut')} : ${F.statut}`);
+    if (F.search) parts.push(`${te('exp_recherche')} : « ${F.search} »`);
+    return parts.length ? parts.join('   ·   ') : (te('aucun_filtre') || 'Aucun filtre');
+}
+
+function _execTitreSousMenu() {
+    const sub = EXEC_STATE.currentConstSub || 'suivi';
+    if (sub === 'terrain') return te('consta_sub_terrain');
+    if (sub === 'suivi') return `${te('constatations')} — ${te('consta_sub_suivi')}`;
+    return `${te('constatations')} — ${te('consta_sub_list')}`;
+}
+
+function _execConstatationsExportees() {
+    const ids = EXEC_STATE.constaExport || [];
+    const par = new Map((EXEC_STATE.data.constatations || []).map((c) => [c.id, c]));
+    return ids.map((id) => par.get(id)).filter(Boolean);
+}
+
+async function execExporterConstatationsXlsx() {
+    const ids = EXEC_STATE.constaExport || [];
+    if (!ids.length) { _execToast(te('no_data'), 'warning'); return; }
+
+    // Voie normale : le navigateur télécharge lui-même la réponse, guidé par
+    // l'en-tête Content-Disposition. Aucune manipulation de blob, donc rien
+    // que le navigateur puisse écarter silencieusement.
+    const parametres = new URLSearchParams({
+        ids: ids.join(','), titre: _execTitreSousMenu(), filtres: _execFiltresLisibles(),
+    });
+    const url = `${EXEC_MODULE_API}/constatations/export-xlsx?${parametres}`;
+    if (url.length < 6000) { window.location.href = url; return; }
+
+    // Liste trop longue pour une URL : on repasse par le corps de requête.
+    try {
+        const reponse = await fetch(`${EXEC_MODULE_API}/constatations/export-xlsx`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+            body: JSON.stringify({ ids, titre: _execTitreSousMenu(), filtres: _execFiltresLisibles() }),
+        });
+        // 404 : la route d'export n'est pas montée — serveur à redémarrer.
+        if (reponse.status === 404) throw new Error(te('export_route_absente'));
+        if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+        const blob = await reponse.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `constatations-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) {
+        console.error('Export xlsx :', e);
+        _execToast((e && e.message) || 'Erreur lors de l\'export', 'error');
+    }
+}
+
+// Document imprimable : mise en page A4, un dossier par bloc, coupures
+// maîtrisées. L'impression du navigateur produit le PDF.
+function execExporterConstatationsPdf() {
+    const liste = _execConstatationsExportees();
+    if (!liste.length) { _execToast(te('no_data'), 'warning'); return; }
+    const aac = EXEC_STATE.data.aac || {};
+    const entete = `${_esc(aac.sigle || '')}${aac.nom ? ` — ${_esc(aac.nom)}` : ''}`;
+    const lieu = [aac.ville, aac.pays].filter(Boolean).map(_esc).join(', ');
+    const aujourdhui = new Date().toLocaleDateString('fr-FR');
+
+    const dossiers = liste.map((c, i) => {
+        let ev = c.commentaire_evaluation;
+        if (typeof ev === 'string') { try { ev = JSON.parse(ev); } catch { ev = {}; } }
+        ev = ev || {};
+        const anac = ev.evaluation_anac || {};
+        const verif = anac.verification || {};
+        const pac = (c.actions_correctives || [])[0] || {};
+        const dom = (EXEC_STATE.data.domaines || []).find((d) => d.id === c.domaine_id || d.code === c.domaine_id);
+        const commentaires = [
+            ...Object.entries(ev.items_comments || {}).flatMap(([cle, l]) => (l || []).map((x) => ({
+                date: x.date, auteur: x.auteur, items: [cle === 'cause_primaire' ? 'cause' : cle], texte: x.texte,
+            }))),
+            ...(ev.suivi_commentaires || []).filter((x) => x.publie),
+        ].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+        const preuves = [...(pac.curative_preuves || []), ...(pac.corrective_preuves || [])];
+
+        const champ = (l, v) => `<div><span>${l}</span><strong>${v || '—'}</strong></div>`;
+        const bloc = (t, corps) => `<section><h3>${t}</h3>${corps || '<p class="vide">—</p>'}</section>`;
+
+        return `<article class="fnc"${i ? ' style="page-break-before:always;"' : ''}>
+            <h2>${_esc(c.reference || '')} <small>${_esc(c.prestataire_nom || '')}</small></h2>
+            <div class="grille">
+                ${champ(te('domaine'), _esc(dom ? dom.nom : (c.domaine_id || '')))}
+                ${champ(te('criticite'), _esc(c.criticite || c.gravite || ''))}
+                ${champ(te('date_ouverture'), c.date_ouverture ? _formatDate(c.date_ouverture) : '')}
+                ${champ(te('delai_label'), `${_esc(c.delai_solde || '')} ${te('jours')}`)}
+                ${champ(te('ref_reglementaires_label'), _esc(c.ref_reglementaires || c.exigence_ref || ''))}
+                ${champ(te('verifier_terrain'), verif.verification_terrain ? te('oui_label') : te('non_label'))}
+            </div>
+            ${bloc(te('description_constatation'), `<p>${_esc(c.description || c.titre || '')}</p>`)}
+            ${bloc(te('cause_root'), `<p>${_esc(pac.cause_primaire || '')}</p>`)}
+            ${bloc(`${te('action_curative_correction')}${pac.curative_date_prevue ? ` — ${te('date_prevue')} : ${_formatDate(pac.curative_date_prevue)}` : ''}`,
+                `<p>${_esc(pac.action_curative || '')}</p>`)}
+            ${bloc(`${te('action_corrective_prevention')}${pac.corrective_date_prevue ? ` — ${te('date_prevue')} : ${_formatDate(pac.corrective_date_prevue)}` : ''}`,
+                `<p>${_esc(pac.actions_correctives || '')}</p>`)}
+            ${bloc(te('preuves_action'), preuves.length
+                ? `<ol>${preuves.map((p) => `<li>${_esc(p.intitule || p.filename || '')}${p.date ? ` <em>(${_formatDate(String(p.date).slice(0, 10))})</em>` : ''}${p.commentaire ? ` — ${_esc(p.commentaire)}` : ''}</li>`).join('')}</ol>` : '')}
+            ${bloc(te('details_suivi'), commentaires.length
+                ? `<table><tbody>${commentaires.map((x) => `<tr>
+                        <td class="date">${x.date ? _formatDate(String(x.date).slice(0, 10)) : ''}</td>
+                        <td class="auteur">${_esc(x.auteur || '')}</td>
+                        <td>${(x.items || []).map((k) => `<em>${_esc(k === 'autres' ? (x.precision || te('motif_autres')) : te(`item_${k}`))}</em>`).join(', ')} — ${_esc(x.texte || '')}</td>
+                    </tr>`).join('')}</tbody></table>` : '')}
+            ${bloc(te('commentaire_general_suivi'), (verif.suivis || []).length
+                ? `<table><tbody>${(verif.suivis || []).map((s) => `<tr>
+                        <td class="date">${s.date ? _formatDate(String(s.date).slice(0, 10)) : ''}</td>
+                        <td class="auteur">${_esc(s.auteur || '')}</td>
+                        <td>${_esc(s.texte || '')}</td>
+                    </tr>`).join('')}</tbody></table>` : '')}
+            <div class="visa">
+                <div><span>${te('visa_inspecteur') || 'Visa de l’inspecteur'}</span></div>
+                <div><span>${te('visa_prestataire') || 'Visa du prestataire'}</span></div>
+            </div>
+        </article>`;
+    }).join('');
+
+    const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">
+    <title>${te('consta_sub_terrain')} — ${aujourdhui}</title>
+    <style>
+      @page { size: A4; margin: 14mm 12mm 16mm; }
+      /* Sans cela, les navigateurs suppriment les aplats de couleur à
+         l'impression : bandeaux de section, pastilles, filets colorés. */
+      * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { font: 11px/1.45 "Helvetica Neue", Arial, sans-serif; color: #16202c; margin: 0; }
+      header.doc { display: flex; align-items: center; gap: 10px;
+                   border-bottom: 2px solid #12406b; padding-bottom: 6px; margin-bottom: 12px; }
+      header.doc .logo { height: 46px; width: auto; flex: 0 0 auto; }
+      header.doc .titre { flex: 1; }
+      header.doc .lieu { font-size: 9.5px; color: #5b6b7d; }
+      header.doc .sigle { font-size: 12px; font-weight: 700; color: #12406b; letter-spacing: .02em; }
+      header.doc h1 { font-size: 17px; margin: 4px 0 2px; }
+      header.doc .meta { font-size: 10px; color: #5b6b7d; }
+      article.fnc { border: 1px solid #dde4ec; border-radius: 4px; padding: 8px 10px 10px; margin-bottom: 10px; }
+      article.fnc h2 { font-size: 13px; margin: 0 0 6px; color: #12406b; border-bottom: 1px solid #dde4ec; padding-bottom: 4px; }
+      article.fnc h2 small { float: right; font-weight: 500; color: #5b6b7d; font-size: 11px; }
+      .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 12px; margin-bottom: 8px; }
+      .grille span { display: block; font-size: 8.5px; text-transform: uppercase; letter-spacing: .04em; color: #5b6b7d; }
+      .grille strong { font-size: 11px; font-weight: 600; }
+      section { margin-top: 7px; break-inside: avoid; }
+      section h3 { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #5b6b7d;
+                   margin: 0 0 3px; border-bottom: 1px dotted #dde4ec; padding-bottom: 2px; }
+      section p { margin: 0; }
+      section ol { margin: 0; padding-left: 16px; }
+      section table { width: 100%; border-collapse: collapse; }
+      section td { border-bottom: 1px solid #eef2f6; padding: 2px 4px 2px 0; vertical-align: top; }
+      td.date { width: 62px; color: #5b6b7d; white-space: nowrap; }
+      td.auteur { width: 110px; font-weight: 600; }
+      .vide { color: #98a5b3; }
+      .visa { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 12px; break-inside: avoid; }
+      .visa div { border-top: 1px solid #98a5b3; padding-top: 3px; height: 42px; }
+      .visa span { font-size: 8.5px; text-transform: uppercase; letter-spacing: .04em; color: #5b6b7d; }
+      footer.doc { position: fixed; bottom: 4mm; left: 0; right: 0; font-size: 8.5px; color: #5b6b7d;
+                   border-top: 1px solid #dde4ec; padding-top: 3px; }
+      @media print { article.fnc { border-color: #c9d3de; } }
+    </style></head><body>
+    <header class="doc">
+        ${aac.logo ? `<img class="logo" src="${aac.logo}" alt="">` : ''}
+        <div class="titre">
+            <div class="sigle">${entete}</div>
+            ${lieu ? `<div class="lieu">${lieu}</div>` : ''}
+            <h1>${te('consta_sub_terrain')}</h1>
+            <div class="meta">${_esc(_execFiltresLisibles())} &nbsp;·&nbsp; ${liste.length} ${te('a_verifier_terrain')} &nbsp;·&nbsp; ${te('edite_le')} ${aujourdhui}</div>
+        </div>
+    </header>
+    ${dossiers}
+    <footer class="doc">OASIS — ${entete} · ${te('consta_sub_terrain')} · ${aujourdhui}</footer>
+    </body></html>`;
+
+    const fenetre = window.open('', '_blank');
+    if (!fenetre) { _execToast(te('bloqueur_fenetre') || 'Autorisez les fenêtres surgissantes pour l\'export', 'warning'); return; }
+    fenetre.document.write(html);
+    fenetre.document.close();
+    fenetre.focus();
+    setTimeout(() => fenetre.print(), 350);
+}
+
+// ══════════════════════════════════════
+//  Sous-menu « Suivi Terrain »
+// ══════════════════════════════════════
+// Table des constatations à vérifier sur place, chacune dépliable sur le
+// rappel de la constatation, le plan d'actions et les commentaires.
+function _execRenderConstaTerrain(subNav) {
+    const filtered = _execApplyConstaFilters(_execConstaTerrain(EXEC_STATE.data.constatations || []));
+    const isPrest = _execIsPrestataire();
+    const filterOpts = isPrest
+        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true }
+        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true };
+    EXEC_STATE.constaExport = filtered.map((c) => c.id);
+    return `<div class="page-content">
+        <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+            <h2 style="margin:0;">${te('consta_sub_terrain')}</h2>
+            ${_execBoutonsExport()}
+        </div>
+        ${subNav}
+        ${_execRenderFilterBar('execRenderPage()', filterOpts)}
+        <div class="card">
+          <div class="exec-etats-corps" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
+            <table class="exec-data-table exec-compact-table exec-etats-table"
+                style="font-size:0.8rem;table-layout:fixed;min-width:900px;">
+              <thead><tr>
+                <th style="width:180px;">${te('ref_consta')}</th><th style="width:180px;">${te('provider')}</th>
+                <th style="width:190px;">${te('domaine')}</th><th style="width:110px;">${te('criticite')}</th>
+                <th style="width:110px;">${te('date_due')}</th>
+                <th style="width:120px;text-align:center;">${te('actions')}</th>
+              </tr></thead>
+              <tbody>${_execTerrainLignes(filtered)}</tbody>
+            </table>
+          </div>
+        </div>
+    </div>`;
+}
+
+function _execTerrainLignes(liste) {
+    if (!liste.length) {
+        return `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">${te('no_data')}</td></tr>`;
+    }
+    return liste.map((c, i) => {
+        const dom = (EXEC_STATE.data.domaines || []).find((d) => d.id === c.domaine_id || d.code === c.domaine_id);
+        let due = c.date_due_cloture;
+        if (!due || due.length < 8) {
+            const delai = parseInt(c.delai_solde || c.delai_correction || '0', 10);
+            const ouv = c.date_ouverture || c.date_creation;
+            if (delai > 0 && ouv) { const d = new Date(ouv); d.setDate(d.getDate() + delai); due = d.toISOString().slice(0, 10); }
+            else due = '';
+        }
+        return `<tr class="exec-terrain-ligne" onclick="execTerrainBasculer(${i})">
+            <td><span class="exec-terrain-chevron" id="terrain_chev_${i}">${EXEC_ICONS.chevronDown}</span><strong>${_esc(c.reference || '')}</strong></td>
+            <td>${_esc(c.prestataire_nom || '')}</td>
+            <td>${_esc(dom ? dom.nom : (c.domaine_id || ''))}</td>
+            <td>${_execGraviteBadge(c.criticite || c.gravite)}</td>
+            <td>${due ? _formatDate(due) : '-'}</td>
+            <td style="text-align:center;">
+                <button class="btn btn-sm btn-outline" title="${te('suivi_pac')}"
+                        onclick="event.stopPropagation();execOpenPACSlider('${c.id}')">${EXEC_ICONS.eye || EXEC_ICONS.file}</button>
+            </td>
+        </tr>
+        <tr class="exec-terrain-detail" id="terrain_detail_${i}" hidden>
+            <td colspan="6">${_execTerrainDetailHtml(c)}</td>
+        </tr>`;
+    }).join('');
+}
+
+window.execTerrainBasculer = function (i) {
+    const ligne = document.getElementById(`terrain_detail_${i}`);
+    const chev = document.getElementById(`terrain_chev_${i}`);
+    if (!ligne) return;
+    ligne.hidden = !ligne.hidden;
+    if (chev) chev.classList.toggle('ouvert', !ligne.hidden);
+};
+
+// Volet déroulant : rappel de la constatation, plan d'actions, commentaires.
+function _execTerrainDetailHtml(c) {
+    let ev = c.commentaire_evaluation;
+    if (typeof ev === 'string') { try { ev = JSON.parse(ev); } catch { ev = {}; } }
+    ev = ev || {};
+    const anac = ev.evaluation_anac || {};
+    const pac = (c.actions_correctives || [])[0] || {};
+    const suivis = (anac.verification || {}).suivis || [];
+    const commentaires = [
+        ...Object.entries(ev.items_comments || {}).flatMap(([cle, l]) => (l || []).map((x) => ({
+            date: x.date || '', auteur: x.auteur || '', items: [cle === 'cause_primaire' ? 'cause' : cle],
+            precision: '', texte: x.texte || '', publie: true,
+        }))),
+        ...(ev.suivi_commentaires || []).filter((x) => x.publie),
+    ].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+    const vide = `<em class="exec-terrain-vide">—</em>`;
+    // Un bloc : titre, éventuelle date d'échéance en pastille, contenu.
+    const bloc = (titre, contenu, date) => `<div class="exec-terrain-bloc">
+        <div class="exec-terrain-bloc-titre">
+            <span>${titre}</span>
+            ${date ? `<span class="exec-terrain-echeance" title="${te('date_prevue')}">${_formatDate(date)}</span>` : ''}
+        </div>
+        <div class="exec-terrain-bloc-corps">${contenu || vide}</div>
+    </div>`;
+    const champ = (libelle, valeur) => `<div class="exec-terrain-champ">
+        <span>${libelle}</span><strong>${valeur}</strong>
+    </div>`;
+
+    return `<div class="exec-terrain-detail-corps">
+        <!-- Rappel de la constatation, pleine largeur -->
+        <div class="exec-terrain-bloc exec-terrain-rappel-bloc">
+            <div class="exec-terrain-bloc-titre"><span>${te('rappel_constatation')}</span></div>
+            <div class="exec-terrain-champs">
+                ${champ(te('date_ouverture'), c.date_ouverture ? _formatDate(c.date_ouverture) : '—')}
+                ${champ(te('delai_label'), `${_esc(c.delai_solde || '—')} ${te('jours')}`)}
+                ${champ(te('date_due_label'), (() => {
+                    const delai = parseInt(c.delai_solde || '0', 10);
+                    const ouv = c.date_ouverture || (c.date_creation || '').slice(0, 10);
+                    if (c.date_due_cloture) return _formatDate(c.date_due_cloture.slice(0, 10));
+                    if (!delai || !ouv) return '—';
+                    const d = new Date(ouv); d.setDate(d.getDate() + delai);
+                    return _formatDate(d.toISOString().slice(0, 10));
+                })())}
+                ${champ(te('ref_reglementaires_label'), _esc(c.ref_reglementaires || c.exigence_ref || '—'))}
+            </div>
+            <p class="exec-terrain-description">${_esc(c.description || c.titre || '')}</p>
+        </div>
+
+        <!-- Le plan d'actions : cause, action curative, action corrective -->
+        <div class="exec-terrain-grille-3">
+            ${bloc(te('cause_root'), _esc(pac.cause_primaire || ''))}
+            ${bloc(te('action_curative_correction'), _esc(pac.action_curative || ''), pac.curative_date_prevue)}
+            ${bloc(te('action_corrective_prevention'), _esc(pac.actions_correctives || ''), pac.corrective_date_prevue)}
+        </div>
+
+        <!-- Les deux fils de commentaires -->
+        <div class="exec-terrain-grille-2">
+            ${bloc(`${te('details_suivi')}${commentaires.length ? ` <b>${commentaires.length}</b>` : ''}`,
+                commentaires.length
+                    ? `<div class="exec-terrain-fil">${commentaires.map((x) => _execCommentaireSuiviHtml(x, false)).join('')}</div>`
+                    : '')}
+            ${bloc(`${te('commentaire_general_suivi')}${suivis.length ? ` <b>${suivis.length}</b>` : ''}`,
+                suivis.length
+                    ? `<div class="exec-terrain-fil">${suivis.map((s) => _execSuiviHtml(s, false)).join('')}</div>`
+                    : '')}
         </div>
     </div>`;
 }
@@ -8126,7 +11025,7 @@ function execCdUpdateExigences(secteurId) {
     const list = document.getElementById('cd_exig_list');
     if (!list) return;
     list.innerHTML = filtered.map(e =>
-        `<option value="${_esc(e.reference)}" title="${_esc(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
+        `<option value="${_escAttr(e.reference)}" title="${_escAttr(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
     ).join('');
 }
 
@@ -8147,6 +11046,191 @@ function execCdAddRef(raw) {
     tag.style.cssText = 'display:inline-flex;align-items:center;gap:0.25rem;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;white-space:nowrap;';
     tag.innerHTML = `${_esc(ref)}<button type="button" onclick="this.parentElement.remove()" style="border:none;background:none;cursor:pointer;color:inherit;padding:0 0 0 0.2rem;font-size:1rem;line-height:1;">&times;</button>`;
     container.insertBefore(tag, input);
+}
+
+// ══════════════════════════════════════
+//  Constatation hors activités de supervision : fil d'avancement
+// ══════════════════════════════════════
+// Trois étapes : Préparation (de la création à la soumission), Validation
+// (de la soumission au prononcé) et Transmission (remise au prestataire).
+// Un rejet ou un renvoi ramène en préparation.
+const EXEC_CD_ETAPES = [
+    { id: 'preparation', cle: 'cd_etape_preparation' },
+    { id: 'validation', cle: 'cd_etape_validation' },
+    { id: 'transmission', cle: 'cd_etape_transmission' },
+];
+
+// La constatation est remise au prestataire : elle entre alors dans le suivi
+// du PAC, sous les statuts communs aux constatations d'activité.
+const EXEC_CD_TRANSMISES = ['ouvert', 'ouverte', 'pac_soumis', 'pac_valide',
+    'pac_rejetee', 'soldee'];
+function _execCdTransmise(statut) {
+    return EXEC_CD_TRANSMISES.includes(String(statut || ''));
+}
+
+function execCdEtat(statut) {
+    const st = String(statut || 'direct_brouillon');
+    // Un renvoi ramène en préparation, pour correction. Un rejet arrête le
+    // circuit : la constatation ne repart pas, elle se lit.
+    const renvoye = st === 'direct_renvoye';
+    const rejete = st === 'direct_rejete';
+    const soumis = !renvoye && ['direct_soumis', 'direct_rejete', 'direct_valide',
+        'ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee'].includes(st);
+    const valide = ['direct_valide', 'ouvert', 'ouverte', 'pac_soumis', 'pac_valide',
+        'pac_rejetee', 'soldee'].includes(st);
+    const faites = { preparation: soumis, validation: valide, transmission: _execCdTransmise(st) };
+    return {
+        faites,
+        renvoye,
+        rejete,
+        courante: rejete ? 'validation'
+            : (EXEC_CD_ETAPES.map((e) => e.id).find((id) => !faites[id]) || null),
+    };
+}
+
+// Étape consultée dans le formulaire hors activités : le fil sert à la
+// parcourir, jamais à agir — comme le fil du processus Activité.
+let EXEC_CD = { id: '', etape: '' };
+
+// Une étape n'est consultable qu'une fois atteinte.
+function execCdOuvertes(statut) {
+    const etat = execCdEtat(statut);
+    return {
+        preparation: true,
+        validation: etat.faites.preparation,
+        transmission: etat.faites.validation,
+    };
+}
+
+// Étape à consulter par défaut : celle où en est la constatation.
+function execCdEtapeDefaut(statut) {
+    return execCdEtat(statut).courante || 'transmission';
+}
+
+window.execCdConsulter = function (etape) {
+    if (!EXEC_CD.id) return;
+    execOpenConstatationDirecteSlider(EXEC_CD.id, etape);
+};
+
+// Le fil se parcourt d'une traite : ni glissement du volet, ni fondu du corps
+// entre deux étapes.
+// Décisions prises à la Validation : chaque renvoi, chaque rejet, daté,
+// signé et motivé. L'historique sert à réviser une constatation corrigée —
+// on relit ce qui avait été demandé avant de se prononcer de nouveau.
+function _execCdDecisions(c) {
+    const journal = Array.isArray(c.decisions_validation) ? c.decisions_validation : [];
+    if (journal.length) return journal;
+    // Constatations antérieures au journal : le dernier motif en tient lieu.
+    if (c.motif_renvoi) {
+        return [{ type: 'renvoi', motif: c.motif_renvoi, date: c.date_renvoi || '', auteur: '' }];
+    }
+    if (c.motif_rejet_pac) {
+        return [{ type: 'rejet', motif: c.motif_rejet_pac, date: c.date_rejet_pac || '', auteur: '' }];
+    }
+    return [];
+}
+
+// Consigne une décision sans écraser les précédentes.
+function _execCdJournaliser(c, type, motif) {
+    const user = EXEC_STATE.user || {};
+    const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim()
+        || user.email || user.username || '';
+    return [..._execCdDecisions(c), {
+        type, motif, auteur, date: new Date().toISOString(),
+    }];
+}
+
+function _execCdHistoriqueHtml(c) {
+    const journal = _execCdDecisions(c);
+    if (!journal.length) return '';
+    const lignes = journal.slice().reverse().map((d, i) => `
+        <div class="exec-cd-decision${d.type === 'rejet' ? ' rejet' : ''}">
+            <div class="exec-cd-decision-tete">
+                <span class="exec-cd-decision-type">${d.type === 'rejet' ? te('motif_rejet_titre') : te('motif_renvoi_titre')}</span>
+                <span class="exec-cd-decision-rang">${journal.length - i}/${journal.length}</span>
+                <span>${_esc(d.auteur || '')}</span>
+                <span>${d.date ? _formatDate(String(d.date).slice(0, 10)) : ''}</span>
+            </div>
+            <div class="exec-cd-decision-motif">${_esc(d.motif || '')}</div>
+        </div>`).join('');
+    // Ce bandeau n'est pas une section du formulaire : il n'en porte ni la
+    // lettre ni la hauteur. Rouge, à mi-hauteur, il signale un incident de
+    // parcours plutôt qu'une rubrique à remplir.
+    return `
+    <div class="exec-form-section expanded exec-cd-journal">
+        <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')">
+            <span class="exec-form-section-title">${te('historique_decisions')}</span>
+            <span class="exec-form-section-aide">${_esc(te('aide_historique_decisions'))}</span>
+            <span class="exec-form-section-badge">${journal.length}</span>
+            <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
+        </div>
+        <div class="exec-form-section-body">${lignes}</div>
+    </div>`;
+}
+
+// Motif d'un renvoi ou d'un rejet : c'est la première chose à lire en
+// rouvrant le circuit, il coiffe donc l'écran, quelle que soit l'étape.
+function _execCdMotifHtml(c) {
+    const st = String(c.statut || '');
+    if (st === 'direct_renvoye' && c.motif_renvoi) {
+        return `<div class="exec-cd-rejet exec-cd-renvoi">
+            <strong>${te('motif_renvoi_titre')}${c.date_renvoi ? ` — ${_formatDate(String(c.date_renvoi).slice(0, 10))}` : ''}</strong>
+            <div>${_esc(c.motif_renvoi)}</div></div>`;
+    }
+    if (st === 'direct_rejete' && c.motif_rejet_pac) {
+        return `<div class="exec-cd-rejet">
+            <strong>${te('motif_rejet_titre')}${c.date_rejet_pac ? ` — ${_formatDate(String(c.date_rejet_pac).slice(0, 10))}` : ''}</strong>
+            <div>${_esc(c.motif_rejet_pac)}</div>
+            <p class="exec-cd-arret">${te('constatation_rejetee_arret')}</p></div>`;
+    }
+    return '';
+}
+
+function _execCdCourante(fncId) {
+    return (EXEC_STATE.data.constatations || []).find((c) => c.id === fncId) || {};
+}
+
+function _execCdInstantane() {
+    document.getElementById('execSlider')?.classList.add('exec-proc-instant');
+    document.getElementById('execSliderOverlay')?.classList.add('exec-proc-instant');
+}
+
+function execCdFilHtml(statut, actionsHtml, consultee) {
+    const etat = execCdEtat(statut);
+    const ouvertes = execCdOuvertes(statut);
+    const selectionnee = consultee || execCdEtapeDefaut(statut);
+    const etapes = EXEC_CD_ETAPES.map((e) => {
+        const courante = !etat.faites[e.id] && etat.courante === e.id;
+        const cls = ['eval-step', 'exec-pac-step',
+            etat.faites[e.id] ? 'done' : '',
+            courante && ((etat.renvoye && e.id === 'preparation')
+                || (etat.rejete && e.id === 'validation')) ? 'rejected' : '',
+            courante && !((etat.renvoye && e.id === 'preparation')
+                || (etat.rejete && e.id === 'validation')) ? 'current' : '',
+            selectionnee === e.id ? 'selected' : '',
+            !ouvertes[e.id] ? 'verrouillee' : '',
+        ].filter(Boolean).join(' ');
+        const label = te(e.cle);
+        const action = ouvertes[e.id] && EXEC_CD.id ? ` onclick="execCdConsulter('${e.id}')"` : '';
+        return `<button class="${cls}" type="button"${ouvertes[e.id] ? '' : ' disabled'}${action}`
+            + ` title="${_escAttr(label)}">${_esc(label)}</button>`;
+    }).join('');
+    return `<div class="exec-proc-barre exec-pac-barre">
+        <div class="eval-steps exec-proc-fil">${etapes}</div>
+        ${actionsHtml ? `<div class="exec-proc-actions-etape">${actionsHtml}</div>` : ''}
+    </div>`;
+}
+
+// Bandeau : sortie du formulaire à gauche, avant son intitulé. La croix est
+// retirée par `_execCdInstallerBandeau`.
+function _execCdTitre(reference) {
+    return `<button class="btn btn-outline btn-sm exec-proc-retour" onclick="execRetourVolet()">
+            ${EXEC_ICONS.back || ''} ${te('back')}
+        </button>${EXEC_ICONS.constatations} ${te('constatation_hors_activites')}${reference ? ` — ${_esc(reference)}` : ''}`;
+}
+
+function _execCdRetirerCroix() {
+    document.querySelector('#execSlider .exec-slider-close')?.remove();
 }
 
 function execOpenConstatationDirecteForm(existing) {
@@ -8173,15 +11257,26 @@ function execOpenConstatationDirecteForm(existing) {
         ? allExig.filter(e => e.secteur_id === defaultSecteurId && (e.statut || 'actif') !== 'inactif')
         : allExig.filter(e => (e.statut || 'actif') !== 'inactif');
     const exigOptions = initExig.map(e =>
-        `<option value="${_esc(e.reference)}" title="${_esc(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
+        `<option value="${_escAttr(e.reference)}" title="${_escAttr(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
     ).join('');
 
     const G = 'gap:0.6rem;'; // compact gap
     const MB = 'margin-bottom:0.5rem;'; // compact margin
 
+    // Soumettre siège sur la ligne du fil, à l'extrême droite.
+    const filActions = `<button class="btn btn-primary btn-sm" onclick="execSaveConstatationDirecte('${c.id || ''}', true)">${EXEC_ICONS.send} ${te('soumettre')}</button>`;
+
+    // Le fil du formulaire navigue lui aussi, dès lors que la constatation
+    // existe : sans identifiant, il n'y a rien à consulter ailleurs.
+    EXEC_CD = { id: c.id || '', etape: 'preparation' };
+
     const body = `
-    <div class="exec-form-sections" style="padding:0.25rem 0;">
-        <!-- Row 1 : Prestataire ; Emis Par ; Adressé à ; Date d'ouverture -->
+    <div class="exec-proc-entete-collant">${execCdFilHtml(c.statut, filActions, 'preparation')}</div>
+    <div class="exec-real">
+        ${_execCdMotifHtml(c)}
+
+        ${_execFormSection('A', 'fnc_section_identification', `
+<!-- Row 1 : Prestataire ; Emis Par ; Adressé à ; Date d'ouverture -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
                 <label>${te('provider') || 'Prestataire'} *</label>
@@ -8192,15 +11287,15 @@ function execOpenConstatationDirecteForm(existing) {
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('emis_par') || 'Émis par'}</label>
-                <input type="text" class="form-input" id="cd_emis_par" value="${_esc(defaultEmisPar)}">
+                <input type="text" class="form-input" id="cd_emis_par" value="${_escAttr(defaultEmisPar)}">
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('adresse_a') || 'Adressé à'}</label>
-                <input type="text" class="form-input" id="cd_adresse_a" value="${_esc(c.adresse_a || '')}">
+                <input type="text" class="form-input" id="cd_adresse_a" value="${_escAttr(c.adresse_a || '')}">
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('date_ouverture') || "Date d'ouverture"}</label>
-                <input type="date" class="form-input" id="cd_date_ouverture" value="${_esc(defaultDateOuverture)}" onchange="execCdCalcDateDue()">
+                <input type="date" class="form-input" id="cd_date_ouverture" value="${_escAttr(defaultDateOuverture)}" onchange="execCdCalcDateDue()">
             </div>
         </div>
 
@@ -8229,14 +11324,16 @@ function execOpenConstatationDirecteForm(existing) {
                 </select>
             </div>
         </div>
+        `, true, '', te('cd_aide_identification'))}
 
-        <!-- Row 3 : Réf. Réglementaires (tag-input multi) -->
+        ${_execFormSection('B', 'fnc_section_constat', `
+<!-- Row 3 : Réf. Réglementaires (tag-input multi) -->
         <div class="form-group" style="${MB}">
             <label>${te('ref_reglementaires') || 'Réf. Réglementaires'}</label>
             <div id="cd_ref_tags" style="display:flex;flex-wrap:wrap;gap:0.3rem;align-items:center;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);min-height:2.2rem;cursor:text;" onclick="document.getElementById('cd_ref_input').focus()">
                 ${(c.ref_reglementaires || c.exigence_ref || '').split(',').map(r => r.trim()).filter(Boolean).map(r => {
                     const exig = allExig.find(e => e.reference === r);
-                    return `<span class="cd-ref-tag" data-ref="${_esc(r)}" title="${_esc(exig?.libelle || '')}" style="display:inline-flex;align-items:center;gap:0.25rem;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;white-space:nowrap;">${_esc(r)}<button type="button" onclick="this.parentElement.remove()" style="border:none;background:none;cursor:pointer;color:inherit;padding:0 0 0 0.2rem;font-size:1rem;line-height:1;">&times;</button></span>`;
+                    return `<span class="cd-ref-tag" data-ref="${_escAttr(r)}" title="${_escAttr(exig?.libelle || '')}" style="display:inline-flex;align-items:center;gap:0.25rem;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;white-space:nowrap;">${_esc(r)}<button type="button" onclick="this.parentElement.remove()" style="border:none;background:none;cursor:pointer;color:inherit;padding:0 0 0 0.2rem;font-size:1rem;line-height:1;">&times;</button></span>`;
                 }).join('')}
                 <input type="text" id="cd_ref_input" list="cd_exig_list" autocomplete="off"
                     placeholder="${(c.ref_reglementaires || '') ? '' : 'Ajouter une référence…'}"
@@ -8250,7 +11347,7 @@ function execOpenConstatationDirecteForm(existing) {
         <!-- Titre -->
         <div class="form-group" style="${MB}">
             <label>Titre</label>
-            <input type="text" class="form-input" id="cd_titre" value="${_esc(c.titre || '')}">
+            <input type="text" class="form-input" id="cd_titre" value="${_escAttr(c.titre || '')}">
         </div>
 
         <!-- Description -->
@@ -8258,8 +11355,10 @@ function execOpenConstatationDirecteForm(existing) {
             <label>Description *</label>
             <textarea class="form-input" id="cd_description" rows="3">${_esc(c.description || '')}</textarea>
         </div>
+        `, true, '', te('fnc_aide_constat'))}
 
-        <!-- Row 4 : Criticité ; Cas ; Délai ; Date Due -->
+        ${_execFormSection('C', 'fnc_section_traitement', `
+<!-- Row 4 : Criticité ; Cas ; Délai ; Date Due -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
                 <label>${te('criticite') || 'Criticité'} *</label>
@@ -8275,11 +11374,11 @@ function execOpenConstatationDirecteForm(existing) {
             </div>
             <div class="form-group" style="${MB}">
                 <label>Délai</label>
-                <input type="number" class="form-input" id="cd_delai" min="1" value="${_esc(c.delai_solde || c.delai_correction || _execCriticiteDelai(c.criticite || c.gravite) || '30')}" oninput="execCdCalcDateDue()" onchange="execCdCalcDateDue()">
+                <input type="number" class="form-input" id="cd_delai" min="1" value="${_escAttr(c.delai_solde || c.delai_correction || _execCriticiteDelai(c.criticite || c.gravite) || '30')}" oninput="execCdCalcDateDue()" onchange="execCdCalcDateDue()">
             </div>
             <div class="form-group" style="${MB}">
                 <label>${te('date_due') || 'Date Due'}</label>
-                <input type="date" class="form-input" id="cd_date_due" value="${_esc(c.date_due_cloture || c.date_due || '')}" readonly style="background:var(--bg);">
+                <input type="date" class="form-input" id="cd_date_due" value="${_escAttr(c.date_due_cloture || c.date_due || '')}" readonly style="background:var(--bg);">
             </div>
         </div>
 
@@ -8288,13 +11387,15 @@ function execOpenConstatationDirecteForm(existing) {
             <label>${te('recommandation') || 'Recommandation'}</label>
             <textarea class="form-input" id="cd_reco" rows="2">${_esc(c.recommandation || '')}</textarea>
         </div>
+        `, true, '', te('fnc_aide_traitement'))}
 
-        <!-- Preuves -->
+        ${_execFormSection('D', 'fnc_section_preuves', `
+<!-- Preuves -->
         <div class="form-group">
             <label>${te('preuves') || 'Preuves'}</label>
             <div id="cd_preuves_list">
                 ${(c.preuves_constatation || []).map(p => `
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_esc(p.path || '')}">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_escAttr(p.path || '')}">
                     ${EXEC_ICONS.file} <span style="flex:1;">${_esc(p.filename || p)}</span>
                     <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
                 </div>`).join('')}
@@ -8304,19 +11405,18 @@ function execOpenConstatationDirecteForm(existing) {
                 <input type="file" id="cd_proof_input" style="display:none;" multiple onchange="execCdUploadProof(this.files)">
             </div>
         </div>
-
-        ${c.motif_rejet_pac && (c.statut === 'direct_rejete') ? `<div style="margin-top:0.75rem;padding:0.6rem 0.8rem;background:#fef2f2;border-left:4px solid #dc2626;border-radius:4px;">
-            <strong style="color:#dc2626;">${te('motif_rejet') || 'Motif de rejet'}:</strong>
-            <div style="margin-top:0.3rem;white-space:pre-wrap;">${_esc(c.motif_rejet_pac)}</div>
-        </div>` : ''}
+        `, true, '', te('fnc_aide_preuves'))}
     </div>`;
 
+    // Barre inférieure : sortie, impression de la fiche, brouillon.
     const footer = `
         <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>
-        <button class="btn btn-primary" onclick="execSaveConstatationDirecte('${c.id || ''}', false)">Brouillon</button>
-        <button class="btn btn-primary" onclick="execSaveConstatationDirecte('${c.id || ''}', true)">${te('soumettre_validation')}</button>
+        ${c.id ? `<button class="btn btn-outline" onclick="execFicheConstatPdf('${c.id}')">${EXEC_ICONS.pdf || EXEC_ICONS.file} ${te('imprimer_constatation')}</button>` : ''}
+        <button class="btn btn-outline" onclick="execSaveConstatationDirecte('${c.id || ''}', false)">${te('sauver_brouillon')}</button>
     `;
-    execShowSlider(`Constatation Directe${c.reference ? ' — ' + _esc(c.reference) : ''}`, body, footer, 'max');
+    execShowSlider(_execCdTitre(c.reference), body, footer, 'max');
+    _execCdInstantane();
+    _execCdRetirerCroix();
     setTimeout(() => execCdCalcDateDue(), 100);
 }
 
@@ -8399,7 +11499,9 @@ async function execSaveConstatationDirecte(fncId, thenSubmit) {
         }
         await execRefreshDynamic();
         if (thenSubmit && savedId) {
-            execOpenSelectValidateurForConstatation(savedId);
+            // La constatation part à la validation sans désigner de validateur :
+            // qui en a le droit la trouve dans sa liste.
+            await execSubmitConstatationDirecteForValidation(savedId);
         } else {
             execCloseSlider();
             _execToast(te('saved') || 'Enregistré', 'success');
@@ -8411,69 +11513,12 @@ async function execSaveConstatationDirecte(fncId, thenSubmit) {
     }
 }
 
-function execOpenSelectValidateurForConstatation(fncId) {
-    // Resolve domaine (by ID and code) from constatation → prestataire → secteur
-    const fnc = (EXEC_STATE.data.constatations || []).find(c => c.id === fncId) || {};
-    const prestId = fnc.prestataire_id || '';
-    const prest = (EXEC_STATE.data.prestataires || []).find(p => p.id === prestId);
-    const secteur = (EXEC_STATE.data.secteurs || []).find(s => s.id === prest?.secteur_id);
-    const rawDomaineId = fnc.domaine_id || secteur?.domaine_id || '';
-    // Normalize: resolve both id and code of the domaine for robust matching
-    const domaine = (EXEC_STATE.data.domaines || []).find(d => d.id === rawDomaineId || d.code === rawDomaineId);
-    const domaineId   = domaine?.id   || rawDomaineId;
-    const domaineCode = domaine?.code || '';
-
-    api('/api/users').then(allUsers => {
-        const validators = (allUsers || []).filter(u => {
-            if (u.actif === 0 || u.actif === false || u.actif === '0') return false;
-            const r = (u.role_m3 || '').toString();
-            if (r !== 'M3_Validateur' && r !== 'M3_Administrateur') return false;
-            if (!domaineId && !domaineCode) return true; // pas de filtre domaine si inconnu
-            let uDoms = [];
-            try { uDoms = JSON.parse(u.domaines || '[]'); } catch(e) {}
-            if (!uDoms.length) return true; // utilisateur sans restriction de domaine
-            return uDoms.some(d => d === domaineId || d === domaineCode);
-        });
-
-        document.getElementById('exec_validateur_modal')?.remove();
-        const el = document.createElement('div');
-        el.id = 'exec_validateur_modal';
-        el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
-        el.onclick = e => { if (e.target === el) el.remove(); };
-        el.innerHTML = `
-        <div style="background:var(--bg-card,#fff);border-radius:12px;padding:1.5rem;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                <h3 style="margin:0;font-size:1rem;font-weight:700;">${te('soumettre_validation')}</h3>
-                <button onclick="document.getElementById('exec_validateur_modal').remove()" style="border:none;background:none;cursor:pointer;font-size:1.3rem;color:var(--text-muted);">&times;</button>
-            </div>
-            <div class="form-group" style="margin-bottom:1.25rem;">
-                <label style="font-size:0.85rem;font-weight:600;margin-bottom:0.4rem;display:block;">Sélectionner un validateur</label>
-                <select id="cd_validateur" class="form-select">
-                    <option value="">— Sélectionner —</option>
-                    ${validators.map(u => `<option value="${u.id}">${_esc((u.prenom||'')+' '+(u.nom||u.username||u.id))} (${_esc(u.role_m3||u.module_role_m3||'')})</option>`).join('')}
-                </select>
-                ${!validators.length ? `<p style="font-size:0.8rem;color:#ef4444;margin-top:0.4rem;">Aucun validateur disponible pour ce domaine.</p>` : ''}
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
-                <button class="btn btn-outline" onclick="document.getElementById('exec_validateur_modal').remove()">${te('cancel')||'Annuler'}</button>
-                <button class="btn btn-primary" onclick="execSubmitConstatationDirecteForValidation('${fncId}')">${EXEC_ICONS.send} ${te('soumettre_validation')}</button>
-            </div>
-        </div>`;
-        document.body.appendChild(el);
-    }).catch(() => _execToast('Erreur chargement utilisateurs', 'error'));
-}
-
+// Soumission à la validation. Aucun validateur n'est désigné : la
+// constatation entre dans la file de ceux qui ont qualité pour la prononcer.
 async function execSubmitConstatationDirecteForValidation(fncId) {
-    const validateurId = document.getElementById('cd_validateur')?.value || '';
-    if (!validateurId) { _execToast('Sélectionnez un validateur', 'warning'); return; }
     try {
-        const now = new Date().toISOString();
-        await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ statut: 'direct_soumis', valideur_pac_id: validateurId, date_soumission_pac: now, motif_rejet_pac: '' })
-        });
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}/direct-soumettre`, { method: 'PUT' });
         await execRefreshDynamic();
-        document.getElementById('exec_validateur_modal')?.remove();
         execCloseSlider();
         _execToast(te('submitted_for_validation') || 'Soumis pour validation', 'success');
         execRenderPage();
@@ -8483,14 +11528,18 @@ async function execSubmitConstatationDirecteForValidation(fncId) {
     }
 }
 
-async function execOpenConstatationDirecteSlider(fncId) {
+async function execOpenConstatationDirecteSlider(fncId, etapeVoulue) {
     let fnc;
     try { fnc = await api(`${EXEC_MODULE_API}/constatations/${fncId}`); }
     catch (e) { console.error(e); return; }
     if (!fnc) return;
+    execPrendreRetour('cd:' + fncId);
+    EXEC_STATE.voletRejouer = () => execOpenConstatationDirecteSlider(fncId, etapeVoulue);
     const me = (EXEC_STATE.user || {}).id || '';
     const isCreator = fnc.created_by === me;
-    const isValidateur = fnc.valideur_pac_id === me || _execIsAdmin();
+    // Aucun validateur n'est désigné à la soumission : la qualité pour
+    // valider suffit.
+    const isValidateur = _execCanValidate() || _execIsAdmin();
     const st = fnc.statut || '';
     const prestataires = EXEC_STATE.data.prestataires || [];
     const prestataire = prestataires.find(p => p.id === fnc.prestataire_id);
@@ -8510,103 +11559,233 @@ async function execOpenConstatationDirecteSlider(fncId) {
 
     const sourceLabels = { audit: 'Audit', inspection: 'Inspection', autre: 'Autre' };
 
+    const transmise = _execCdTransmise(st);
+    EXEC_CD = { id: fnc.id, etape: '' };
+    // L'étape demandée doit être atteinte ; sinon on retombe sur l'étape en cours.
+    const ouvertes = execCdOuvertes(st);
+    const etape = ouvertes[etapeVoulue] ? etapeVoulue : execCdEtapeDefaut(st);
+    EXEC_CD.etape = etape;
+
+    // Renvoyer, Rejeter puis Valider : les décisions de l'étape se prennent sur
+    // la ligne du fil, dans l'ordre où elles s'envisagent.
+    const filActions = (etape === 'validation' && isValidateur && st === 'direct_soumis')
+        ? `<button class="btn btn-sm btn-outline exec-cd-renvoyer" onclick="execRenvoyerConstatationModal('${fnc.id}')">${EXEC_ICONS.back || ''} Renvoyer</button>`
+        + `<button class="btn btn-sm btn-outline exec-cd-rejeter" onclick="execRejeterConstatationModal('${fnc.id}')">${EXEC_ICONS.x} Rejeter</button>`
+        + `<button class="btn btn-primary btn-sm" onclick="execValidateConstatationDirecte('${fnc.id}')">${EXEC_ICONS.check} ${te('valider') || 'Valider'}</button>`
+        : '';
+
+    // La Transmission ne rejoue pas le formulaire validé : elle ne porte que
+    // le courriel de remise.
+    const fiche = etape !== 'transmission';
+
     const body = `
-    <div style="padding:0.5rem 0.25rem;">
-        <!-- Statut -->
-        <div style="${MB}">
-            ${_execStatusBadge(st)}
-        </div>
-        <!-- Row 1 : Référence ; Prestataire ; Émis par ; Adressé à -->
+    <div class="exec-proc-entete-collant">${execCdFilHtml(st, filActions, etape)}</div>
+    <div class="exec-real">
+        ${_execCdMotifHtml(fnc)}
+        ${etape === 'validation' ? _execCdHistoriqueHtml(fnc) : ''}
+
+        ${!fiche ? '' : `
+        ${_execFormSection('A', 'fnc_section_identification', `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             ${roField(te('reference') || 'Référence', fnc.reference)}
             ${roField(te('provider') || 'Prestataire', prestataire ? prestataire.nom : fnc.prestataire_id)}
             ${roField(te('emis_par') || 'Émis par', fnc.emis_par)}
             ${roField(te('adresse_a') || 'Adressé à', fnc.adresse_a)}
         </div>
-        <!-- Row 2 : Date ouverture ; Source ; Domaine ; Secteur -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             ${roField(te('date_ouverture') || "Date d'ouverture", fnc.date_ouverture ? fnc.date_ouverture.slice(0,10) : '')}
             ${roField(te('source') || 'Source', sourceLabels[fnc.source] || fnc.source)}
             ${roField(te('domaine') || 'Domaine', dom ? (dom.code + ' — ' + dom.nom) : fnc.domaine_id)}
             ${roField('Secteur', secteur ? (secteur.code || secteur.nom) : fnc.secteur_id)}
         </div>
-        <!-- Réf. Réglementaires -->
+        `, true, '', te('cd_aide_identification'))}
+
+        ${_execFormSection('B', 'fnc_section_constat', `
         <div class="form-group" style="${MB}">
             <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('ref_reglementaires') || 'Réf. Réglementaires'}</label>
             <div style="display:flex;flex-wrap:wrap;gap:0.3rem;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);min-height:2rem;">
                 ${refList.length ? refList.map(r => {
                     const exig = allExig.find(e => e.reference === r);
-                    return `<span title="${_esc(exig?.libelle || '')}" style="display:inline-flex;align-items:center;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;">${_esc(r)}</span>`;
+                    return `<span title="${_escAttr(exig?.libelle || '')}" style="display:inline-flex;align-items:center;background:var(--exec-accent-bg,#e0e7ff);color:var(--exec-accent,#3b82f6);padding:0.15rem 0.45rem;border-radius:4px;font-size:0.78rem;font-weight:500;">${_esc(r)}</span>`;
                 }).join('') : '<span style="color:var(--text-muted);font-style:italic;font-size:0.85rem;">—</span>'}
             </div>
         </div>
-        <!-- Titre -->
         ${roField('Titre', fnc.titre)}
-        <!-- Description -->
         <div class="form-group" style="${MB}">
             <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">Description</label>
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:0.85rem;min-height:3rem;white-space:pre-wrap;">${fnc.description ? _esc(fnc.description) : '<span style="color:var(--text-muted);font-style:italic;">—</span>'}</div>
         </div>
-        <!-- Row 3 : Criticité ; Cas ; Délai ; Date Due -->
+        `, true, '', te('fnc_aide_constat'))}
+
+        ${_execFormSection('C', 'fnc_section_traitement', `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             ${roField(te('criticite') || 'Criticité', fnc.criticite)}
             ${roField(te('cas') || 'Cas', fnc.cas_type || fnc.cas)}
             ${roField('Délai', fnc.delai_solde ? fnc.delai_solde + ' jours' : '')}
             ${roField(te('date_due') || 'Date Due', fnc.date_due_cloture ? fnc.date_due_cloture.slice(0,10) : '')}
         </div>
-        <!-- Recommandation -->
         <div class="form-group" style="${MB}">
             <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('recommandation') || 'Recommandation'}</label>
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:0.85rem;min-height:2.5rem;white-space:pre-wrap;">${fnc.recommandation ? _esc(fnc.recommandation) : '<span style="color:var(--text-muted);font-style:italic;">—</span>'}</div>
         </div>
-        <!-- Preuves -->
-        ${(fnc.preuves_constatation && fnc.preuves_constatation.length) ? `
-        <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('preuves') || 'Preuves'}</label>
+        `, true, '', te('fnc_aide_traitement'))}
+
+        ${_execFormSection('D', 'fnc_section_preuves', `
+        <div class="form-group">
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;">
-                ${fnc.preuves_constatation.map(p => `<div style="display:flex;align-items:center;gap:0.4rem;padding:0.2rem 0;">${EXEC_ICONS.file || '📎'} <span style="font-size:0.85rem;">${_esc(p.filename || p)}</span></div>`).join('')}
+                ${(fnc.preuves_constatation || []).length
+                    ? fnc.preuves_constatation.map(p => `<div style="display:flex;align-items:center;gap:0.4rem;padding:0.2rem 0;">${EXEC_ICONS.file || ''} ${_execPieceLien(p.path, p.filename || p)}</div>`).join('')
+                    : '<span style="color:var(--text-muted);font-style:italic;font-size:0.85rem;">—</span>'}
             </div>
-        </div>` : ''}
-        <!-- Motif rejet / renvoi -->
-        ${st === 'direct_rejete' && fnc.motif_rejet_pac ? `<div style="margin-top:0.5rem;padding:0.6rem 0.8rem;background:#fef2f2;border-left:4px solid #dc2626;border-radius:4px;">
-            <strong style="color:#dc2626;">Motif de rejet :</strong>
-            <div style="margin-top:0.3rem;white-space:pre-wrap;font-size:0.85rem;">${_esc(fnc.motif_rejet_pac)}</div>
-        </div>` : ''}
-        ${st === 'direct_renvoye' && fnc.motif_renvoi ? `<div style="margin-top:0.5rem;padding:0.6rem 0.8rem;background:#fff7ed;border-left:4px solid #f97316;border-radius:4px;">
-            <strong style="color:#f97316;">Motif de renvoi :</strong>
-            <div style="margin-top:0.3rem;white-space:pre-wrap;font-size:0.85rem;">${_esc(fnc.motif_renvoi)}</div>
-        </div>` : ''}
+        </div>
+        `, true, String((fnc.preuves_constatation || []).length || ''), te('fnc_aide_preuves'))}
+        `}
+
+        ${etape === 'transmission' ? _execCourrielConstatation(fnc, prestataire) : ''}
     </div>`;
 
-    let footer = `<button class="btn btn-outline" onclick="execCloseSlider()">${te('close') || 'Fermer'}</button>`;
-    if (isCreator && st === 'direct_brouillon') {
+    // Barre inférieure : sortie, impression, puis les actions de l'étape.
+    let footer = `<button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>`;
+    footer += `<button class="btn btn-outline" onclick="execFicheConstatPdf('${fnc.id}')">${EXEC_ICONS.pdf || EXEC_ICONS.file} ${te('imprimer_constatation')}</button>`;
+    if (etape === 'preparation' && isCreator && ['direct_brouillon', 'direct_renvoye'].includes(st)) {
         footer += `<button class="btn btn-primary" onclick="execCloseSlider();execOpenConstatationDirecteForm(${JSON.stringify(fnc).replace(/"/g,'&quot;')})">${te('edit') || 'Modifier'}</button>`;
     }
-    if (isCreator && st === 'direct_rejete') {
-        footer += `<button class="btn btn-primary" disabled style="opacity:0.45;cursor:not-allowed;">Modifier</button>`;
-    }
-    if (isValidateur && st === 'direct_soumis') {
-        footer += `<button class="btn btn-outline" style="color:#ef4444;border-color:#ef4444;" onclick="execRejeterConstatationModal('${fnc.id}')">Rejeter</button>`;
-        footer += `<button class="btn btn-outline" style="color:#f97316;border-color:#f97316;" onclick="execRenvoyerConstatationModal('${fnc.id}')">Renvoyer</button>`;
-        footer += `<button class="btn btn-primary" onclick="execValidateConstatationDirecte('${fnc.id}')">Valider</button>`;
-    }
-    if ((isCreator || isValidateur) && st === 'direct_valide') {
-        footer += `<button class="btn btn-primary" onclick="execTransmitConstatationDirecte('${fnc.id}')">Transmettre au Prestataire</button>`;
-    }
 
-    execShowSlider(`Constatation Directe — ${_esc(fnc.reference || '')}`, body, footer, 'xxl');
+    execShowSlider(_execCdTitre(fnc.reference), body, footer, 'max');
+    _execCdInstantane();
+    _execCdRetirerCroix();
+}
+
+// ── Transmission d'une constatation hors activités de supervision ──
+// Même remise que pour un rapport d'activité : le courriel ne porte que des
+// liens, la fiche de constat et les pièces restent dans OASIS.
+function _execCourrielConstatation(fnc, prestataire) {
+    const transmise = _execCdTransmise(fnc.statut);
+    const nomPrest = (prestataire || {}).nom || fnc.prestataire_nom || '';
+    const adresse = transmise ? (fnc.transmis_a || '')
+        : ((prestataire || {}).email_point_focal || (prestataire || {}).email_prestataire || '');
+    const objet = `${te('fiche_constat')} ${fnc.reference || ''} — ${nomPrest}`.trim();
+    const message = [
+        'Madame, Monsieur,',
+        '',
+        `La constatation ${fnc.reference || ''} est mise à votre disposition dans OASIS. `
+            + 'Les liens de téléchargement figurent au bas de ce message.',
+        '',
+        'Elle appelle un plan d\'actions correctives, à soumettre dans le délai indiqué '
+            + `(${_esc(fnc.delai_solde || '—')} jours à compter de la date d'ouverture).`,
+        '',
+        'Nous vous prions d\'agréer nos salutations distinguées.',
+    ].join('\n');
+    const ro = transmise ? ' readonly' : '';
+
+    return `
+    <div class="exec-courriel" id="exec_courriel_transmission">
+        <div class="exec-courriel-entete">
+            <span>${EXEC_ICONS.send}</span>
+            <h4>${te('transmission_constatation')}</h4>
+            ${transmise ? `<span class="exec-courriel-etat">Transmise le ${_formatDate(fnc.date_transmission || fnc.date_ouverture)}${
+                fnc.transmis_a ? ` à ${_esc(fnc.transmis_a)}` : ''}</span>` : ''}
+        </div>
+        <div class="form-group">
+            <label>Destinataire</label>
+            <input type="text" class="form-input" id="courriel_destinataire" value="${_escAttr(adresse)}"
+                   placeholder="adresse@prestataire.bj"${ro}>
+        </div>
+        <div class="exec-courriel-copies">
+            <div class="form-group">
+                <label>Copie (Cc)</label>
+                <input type="text" class="form-input" id="courriel_copie" placeholder="Adresses séparées par des virgules"${ro}>
+            </div>
+            <div class="form-group">
+                <label>Copie cachée (Cci)</label>
+                <input type="text" class="form-input" id="courriel_copie_cachee" placeholder="Adresses séparées par des virgules"${ro}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Objet</label>
+            <input type="text" class="form-input" id="courriel_objet" value="${_escAttr(objet)}"${ro}>
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea class="form-input" id="courriel_message" rows="8" style="resize:vertical;"${ro}>${_esc(message)}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Documents transmis</label>
+            <p class="exec-courriel-note">Le message ne porte aucune pièce jointe : il annonce des liens
+               de téléchargement, que le prestataire suit depuis son compte OASIS.</p>
+            <div id="courriel_pieces">
+                <div class="exec-piece exec-piece-rapport">
+                    <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
+                    ${_execPieceLien((fnc.document || {}).path, `${fnc.reference || 'constatation'}.pdf`,
+                        `execFicheConstatPdf('${fnc.id}')`)}
+                    <span class="exec-piece-mention">${te('fiche_constat')} — jointe d'office</span>
+                </div>
+                ${(transmise ? (fnc.pieces_transmises || []) : []).map(f => `
+                <div class="exec-piece">
+                    <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
+                    ${_execPieceLien(f.path, f.intitule || f.filename || '')}
+                    <span class="exec-piece-mention">${_esc(f.filename || '')}</span>
+                </div>`).join('')}
+            </div>
+            ${transmise ? '' : `
+            <button class="btn btn-sm btn-outline" onclick="this.nextElementSibling.click()" style="margin-top:0.5rem;">
+                ${EXEC_ICONS.upload} Ajouter un fichier
+            </button>
+            <input type="file" style="display:none;" multiple onchange="execCourrielAjouterFichiers(this)">`}
+        </div>
+        <div class="exec-courriel-pied">
+            ${transmise ? '' : `
+            <button class="btn btn-primary btn-sm" id="courriel_envoyer"
+                    onclick="execTransmettreConstatation('${fnc.id}')">
+                ${EXEC_ICONS.send} Envoyer
+            </button>`}
+        </div>
+    </div>`;
+}
+
+async function execTransmettreConstatation(fncId) {
+    const val = (id) => (document.getElementById(id) || {}).value || '';
+    const destinataire = val('courriel_destinataire').trim();
+    if (!destinataire) { _execToast('Indiquez au moins un destinataire', 'error'); return; }
+    const bouton = document.getElementById('courriel_envoyer');
+    if (bouton) { bouton.disabled = true; bouton.textContent = 'Envoi…'; }
+    try {
+        const fnc = (EXEC_STATE.data.constatations || []).find(c => c.id === fncId) || {};
+        // Le document remis est la fiche de constat, telle qu'elle s'imprime.
+        const html = _execDocHtml(`${te('fiche_constat')} — ${fnc.reference || ''}`,
+            _execFicheConstatCorps(fnc, {}));
+        const remise = await api(`${EXEC_MODULE_API}/constatations/${fncId}/transmettre`, {
+            method: 'POST',
+            body: JSON.stringify({
+                destinataire,
+                copie: val('courriel_copie'),
+                copie_cachee: val('courriel_copie_cachee'),
+                objet: val('courriel_objet'),
+                message: val('courriel_message'),
+                piece: { nom: `${fnc.reference || 'constatation'}.pdf`, contenu: html },
+                fichiers: _execCourrielFichiers(),
+            }),
+        });
+        _execToast(remise && remise.envoye === false
+            ? te('transmis_sans_courriel')
+            : 'Constatation transmise au prestataire', remise && remise.envoye === false ? 'warning' : 'success');
+        await execRefreshDynamic();
+        execOpenConstatationDirecteSlider(fncId);
+    } catch (e) {
+        console.error('Transmission constatation :', e);
+        _execToast((e && e.message) || 'Erreur lors de la transmission', 'error');
+        if (bouton) { bouton.disabled = false; bouton.innerHTML = `${EXEC_ICONS.send} Envoyer`; }
+    }
 }
 
 async function execValidateConstatationDirecte(fncId) {
     try {
-        await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ statut: 'direct_valide', date_validation_pac: new Date().toISOString(), motif_rejet_pac: '' })
-        });
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}/direct-valider`, { method: 'PUT' });
         await execRefreshDynamic();
-        execCloseSlider();
         _execToast(te('validated') || 'Validé', 'success');
         execRenderPage();
+        // La décision prise, le formulaire se rouvre sur l'étape suivante.
+        execOpenConstatationDirecteSlider(fncId, 'transmission');
     } catch (e) {
         console.error('Validate error:', e);
         _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
@@ -8643,14 +11822,17 @@ function _execCommentModal(title, color, onConfirm) {
 function execRejeterConstatationModal(fncId) {
     _execCommentModal('Rejeter la constatation', '#dc2626', async (motif) => {
         try {
-            await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+            await api(`${EXEC_MODULE_API}/constatations/${fncId}/direct-rejeter`, {
                 method: 'PUT',
-                body: JSON.stringify({ statut: 'direct_rejete', motif_rejet_pac: motif, date_rejet_pac: new Date().toISOString() })
+                body: JSON.stringify({
+                    motif,
+                    decisions_validation: _execCdJournaliser(_execCdCourante(fncId), 'rejet', motif),
+                })
             });
             await execRefreshDynamic();
-            execCloseSlider();
             _execToast('Constatation rejetée', 'success');
             execRenderPage();
+            execOpenConstatationDirecteSlider(fncId, 'validation');
         } catch (e) { _execToast('Erreur: ' + (e?.message || ''), 'error'); }
     });
 }
@@ -8658,50 +11840,454 @@ function execRejeterConstatationModal(fncId) {
 function execRenvoyerConstatationModal(fncId) {
     _execCommentModal('Renvoyer pour correction', '#f97316', async (motif) => {
         try {
-            await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+            await api(`${EXEC_MODULE_API}/constatations/${fncId}/direct-renvoyer`, {
                 method: 'PUT',
-                body: JSON.stringify({ statut: 'direct_renvoye', motif_renvoi: motif })
+                body: JSON.stringify({
+                    motif,
+                    decisions_validation: _execCdJournaliser(_execCdCourante(fncId), 'renvoi', motif),
+                })
             });
             await execRefreshDynamic();
-            execCloseSlider();
             _execToast('Constatation renvoyée pour correction', 'success');
+            execOpenConstatationDirecteSlider(fncId, 'preparation');
             execRenderPage();
         } catch (e) { _execToast('Erreur: ' + (e?.message || ''), 'error'); }
     });
 }
 
-async function execTransmitConstatationDirecte(fncId) {
-    // Transmit to postulant: statut becomes 'ouvert' so it enters the
-    // normal PAC workflow visible to the prestataire.
-    try {
-        await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ statut: 'ouvert', date_ouverture: new Date().toISOString().slice(0, 10) })
-        });
-        await execRefreshDynamic();
-        execCloseSlider();
-        _execToast(te('transmitted_postulant') || 'Transmis au postulant', 'success');
-        execRenderPage();
-    } catch (e) {
-        console.error('Transmit error:', e);
-        _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
-    }
-}
 
 // ══════════════════════════════════════
 //  PAC FOLLOW-UP SLIDER
 // ══════════════════════════════════════
 
+// ══════════════════════════════════════
+//  Fil d'avancement du Suivi des PAC
+// ══════════════════════════════════════
+// Quatre étapes, chacune bornée par un jalon vérifiable :
+//   Soumission     transmission de la constatation → soumission du PAC par le prestataire
+//   Acceptation    soumission du PAC → acceptation du plan par l'AAC
+//   Mise en oeuvre acceptation du plan → acceptation des preuves de mise en oeuvre
+//   Clôture        l'AAC solde la constatation
+// Un PAC renvoyé au prestataire ramène le fil à l'étape Soumission.
+const EXEC_PAC_ETAPES = [
+    { id: 'soumission', cle: 'pac_etape_soumission' },
+    { id: 'acceptation', cle: 'pac_etape_acceptation' },
+    { id: 'mise_oeuvre', cle: 'pac_etape_mise_oeuvre' },
+    { id: 'cloture', cle: 'pac_etape_cloture' },
+];
+
+function execPacEtat(statut, evaluationANAC, submitInfo) {
+    const acceptation = (evaluationANAC && evaluationANAC.acceptation) || {};
+    const verification = (evaluationANAC && evaluationANAC.verification) || {};
+    const cloture = (evaluationANAC && evaluationANAC.cloture) || {};
+
+    const soldee = statut === 'soldee';
+    const rejete = statut === 'pac_rejetee';
+    // Le statut fait foi autant que la saisie : un PAC porté à « pac_valide »
+    // est accepté, même si le bloc d'évaluation a été vidé par un
+    // enregistrement antérieur. Sans cela le circuit se retrouvait bloqué,
+    // sans action ni côté AAC ni côté prestataire.
+    const valide = statut === 'pac_valide';
+    // Le PAC a été soumis au moins une fois — un renvoi annule ce jalon, le
+    // prestataire devant soumettre de nouveau.
+    const soumis = !rejete && (statut === 'pac_soumis' || valide || soldee || !!submitInfo
+        || acceptation.accepte === 'OUI');
+    const accepte = acceptation.accepte === 'OUI' || valide || soldee;
+    // Preuves de mise en oeuvre acceptées : prononcé explicite de l'AAC,
+    // isolement et risques traités, ou mise en oeuvre déclarée effective.
+    const preuvesAcceptees = verification.preuves_acceptees === 'OUI'
+        || (verification.isolement_realise === 'OUI' && verification.risques_traites === 'OUI')
+        || cloture.mise_en_oeuvre_effective === 'OUI';
+
+    const faites = {
+        soumission: soumis,
+        acceptation: accepte,
+        // Une constatation soldée a nécessairement franchi la mise en oeuvre.
+        mise_oeuvre: (accepte && preuvesAcceptees) || soldee,
+        cloture: soldee,
+    };
+    return {
+        faites,
+        soldee,
+        rejete,
+        courante: EXEC_PAC_ETAPES.map((e) => e.id).find((id) => !faites[id]) || null,
+    };
+}
+
+function execPacFilHtml(statut, evaluationANAC, submitInfo, actionsHtml) {
+    const etat = execPacEtat(statut, evaluationANAC, submitInfo);
+    const etapes = EXEC_PAC_ETAPES.map((e) => {
+        const cls = ['eval-step', 'exec-pac-step',
+            etat.faites[e.id] ? 'done' : '',
+            // Un PAC renvoyé signale le retour à l'étape Soumission en rouge.
+            !etat.faites[e.id] && etat.courante === e.id && etat.rejete && e.id === 'soumission' ? 'rejected' : '',
+            !etat.faites[e.id] && etat.courante === e.id && !(etat.rejete && e.id === 'soumission') ? 'current' : '',
+        ].filter(Boolean).join(' ');
+        const label = te(e.cle);
+        return `<div class="${cls}" title="${_escAttr(label)}">${_esc(label)}</div>`;
+    }).join('');
+    return `<div class="exec-proc-barre exec-pac-barre">
+        <div class="eval-steps exec-proc-fil">${etapes}</div>
+        ${actionsHtml ? `<div class="exec-proc-actions-etape">${actionsHtml}</div>` : ''}
+    </div>`;
+}
+
+// ══════════════════════════════════════
+//  Amendement du PAC : champs suivis et motifs
+// ══════════════════════════════════════
+// Comparés à la dernière version acceptée du plan. Toute divergence lève un
+// drapeau et réclame le motif de la modification avant toute soumission.
+const EXEC_PAC_CHAMPS_SUIVIS = [
+    { cle: 'cause_primaire', id: 'pac_cause_primaire', libelle: 'cause_root', ancre: 'pac_cause_primaire' },
+    { cle: 'action_curative', id: 'pac_action_curative', libelle: 'action_curative_correction', ancre: 'pac_action_curative' },
+    { cle: 'curative_date_prevue', id: 'pac_curative_date_prevue', libelle: 'date_prevue_curative', ancre: 'pac_action_curative' },
+    { cle: 'actions_correctives', id: 'pac_actions_correctives', libelle: 'action_corrective_prevention', ancre: 'pac_actions_correctives' },
+    { cle: 'corrective_date_prevue', id: 'pac_corrective_date_prevue', libelle: 'date_prevue_corrective', ancre: 'pac_actions_correctives' },
+];
+
+const EXEC_PAC_MOTIFS = [
+    'motif_nouvelle_cause', 'motif_nouvelle_action', 'motif_refonte_action',
+    'motif_modification_date', 'motif_observations_aac', 'motif_correction_mineure', 'motif_autres',
+];
+
+// Bloc posé sous le champ : drapeau, intitulé du champ, motif, précision.
+function _execPacMotifHtml(champ, valeurInitiale, motif, editable, modifie) {
+    const m = motif || {};
+    const autre = m.motif === 'motif_autres';
+    if (!editable) {
+        // Lecture seule (AAC, versions figées) : le motif enregistré s'affiche
+        // tel quel, précédé du drapeau.
+        if (!m.motif) return '';
+        const texte = m.motif === 'motif_autres' ? (m.precision || te('motif_autres')) : te(m.motif);
+        return `<div class="exec-pac-motif visible" data-cle="${champ.cle}">
+            <span class="exec-pac-drapeau" title="${te('champ_amende')}">${EXEC_ICONS.flag || '⚑'}</span>
+            <span class="exec-pac-motif-champ">${te(champ.libelle)}</span>
+            <span class="exec-pac-motif-valeur">${_esc(texte)}</span>
+        </div>`;
+    }
+    return `<div class="exec-pac-motif${(modifie || m.motif) ? ' visible' : ''}" id="motif_bloc_${champ.cle}" data-cle="${champ.cle}"
+                 data-initial="${_escAttr(valeurInitiale || '')}">
+        <span class="exec-pac-drapeau" title="${te('champ_amende')}">${EXEC_ICONS.flag || '⚑'}</span>
+        <span class="exec-pac-motif-champ">${te(champ.libelle)}</span>
+        <select class="form-input exec-pac-motif-select" id="motif_sel_${champ.cle}"
+                onchange="execPacMotifChange('${champ.cle}')">
+            <option value="">${te('motif_choisir')}</option>
+            ${EXEC_PAC_MOTIFS.map((k) => `<option value="${k}"${m.motif === k ? ' selected' : ''}>${te(k)}</option>`).join('')}
+        </select>
+        <input type="text" class="form-input exec-pac-motif-precision" id="motif_txt_${champ.cle}"
+               placeholder="${te('motif_preciser')}" value="${_escAttr(m.precision || '')}"${autre ? '' : ' hidden'}>
+    </div>`;
+}
+
+// Affiche ou masque le champ de précision selon le motif retenu.
+window.execPacMotifChange = function (cle) {
+    const sel = document.getElementById(`motif_sel_${cle}`);
+    const txt = document.getElementById(`motif_txt_${cle}`);
+    if (!sel || !txt) return;
+    txt.hidden = sel.value !== 'motif_autres';
+    // Le signalement rouge s'efface dès que le motif est renseigné.
+    if (sel.value) sel.classList.remove('exec-pac-manquant');
+    if (!txt.hidden) { txt.oninput = () => txt.classList.toggle('exec-pac-manquant', !txt.value.trim()); txt.focus(); }
+};
+
+// Un champ suivi vient d'être touché : le bloc de motif suit la divergence
+// avec la version acceptée, sans reconstruire le formulaire.
+window.execPacSurveillerChamp = function (cle) {
+    const champ = EXEC_PAC_CHAMPS_SUIVIS.find((c) => c.cle === cle);
+    const saisie = champ && document.getElementById(champ.id);
+    const bloc = document.getElementById(`motif_bloc_${cle}`);
+    if (!saisie || !bloc) return;
+    const modifie = String(saisie.value || '').trim() !== String(bloc.dataset.initial || '').trim();
+    bloc.classList.toggle('visible', modifie);
+    saisie.classList.toggle('exec-pac-champ-amende', modifie);
+    if (!modifie) {
+        const sel = document.getElementById(`motif_sel_${cle}`);
+        const txt = document.getElementById(`motif_txt_${cle}`);
+        if (sel) sel.value = '';
+        if (txt) { txt.value = ''; txt.hidden = true; }
+    }
+};
+
+// Motifs saisis, et champs amendés restés sans motif.
+function _execPacMotifs() {
+    const motifs = {};
+    const manquants = [];
+    EXEC_PAC_CHAMPS_SUIVIS.forEach((champ) => {
+        const bloc = document.getElementById(`motif_bloc_${champ.cle}`);
+        const saisie = document.getElementById(champ.id);
+        if (!bloc || !saisie) return;
+        if (String(saisie.value || '').trim() === String(bloc.dataset.initial || '').trim()) return;
+        const motif = (document.getElementById(`motif_sel_${champ.cle}`) || {}).value || '';
+        const precision = ((document.getElementById(`motif_txt_${champ.cle}`) || {}).value || '').trim();
+        if (!motif || (motif === 'motif_autres' && !precision)) {
+            manquants.push({ champ, motif });
+            return;
+        }
+        motifs[champ.cle] = { motif, precision: motif === 'motif_autres' ? precision : '' };
+    });
+    return { motifs, manquants };
+}
+
+// Bloc repliable des versions du PAC : le bandeau porte l'état de son bloc.
+window.execPacBlocToggle = function (bouton) {
+    const bloc = bouton && bouton.parentElement;
+    if (!bloc) return;
+    const ouvert = bloc.classList.toggle('ouvert');
+    bouton.setAttribute('aria-expanded', String(ouvert));
+};
+
+// Volet des commentaires de suivi : replié par défaut, déplié à la demande.
+window.execPacVoletToggle = function () {
+    const volet = document.getElementById('execPacVolet');
+    if (!volet) return;
+    const ouvert = volet.classList.toggle('ouvert');
+    const poignee = volet.querySelector('.exec-pac-volet-poignee');
+    if (poignee) {
+        poignee.setAttribute('aria-expanded', String(ouvert));
+        poignee.title = ouvert ? te('volet_replier') : te('volet_deplier');
+    }
+};
+
+// ══════════════════════════════════════
+//  AJUSTEMENT DU RAPPEL DE LA CONSTATATION
+// ══════════════════════════════════════
+// Revenir sur un délai, une criticité ou l'énoncé d'une constatation déjà
+// notifiée engage l'administration : réservé aux comptes SUPERADMIN et ADMIN
+// sur leur portée, confirmé par mot de passe, et tracé dans le volet de droite.
+const EXEC_AJUST_PORTEES = {
+    prorogation: { champs: ['delai_solde'], couleur: '#0284c7' },
+    criticite: { champs: ['delai_solde', 'criticite'], couleur: '#f97316' },
+    complet: {
+        champs: ['delai_solde', 'criticite', 'date_ouverture', 'description', 'ref_reglementaires'],
+        couleur: '#7c3aed',
+    },
+};
+
+function _execPeutAjuster() {
+    return ['SUPERADMIN', 'ADMIN'].includes((EXEC_STATE.user || {}).role) && _execCanValidate();
+}
+
+function _execAjustBoutons(fnc) {
+    if (!_execPeutAjuster()) return '';
+    const b = (portee, libelle) => `<button type="button" class="btn btn-sm btn-outline exec-ajust-btn"
+        onclick="event.stopPropagation();execAjustOuvrir('${fnc.id}','${portee}')"
+        title="${_escAttr(te('ajust_' + portee + '_aide'))}">${_esc(libelle)}</button>`;
+    return `<span class="exec-ajust-actions" onclick="event.stopPropagation();">
+        ${b('prorogation', te('ajust_prorogation'))}
+        ${b('criticite', te('ajust_criticite'))}
+        ${b('complet', te('ajust_complet'))}
+    </span>`;
+}
+
+// Volet de traçabilité, sur le modèle des commentaires de suivi : le dernier
+// ajustement déplié, les précédents repliés.
+function _execAjustVoletHtml(fnc) {
+    const liste = fnc.ajustements || [];
+    const cartes = liste.map((a, i) => {
+        const deplie = i === liste.length - 1;
+        const couleur = (EXEC_AJUST_PORTEES[a.portee] || {}).couleur || '#0284c7';
+        return `<div class="exec-suivi-comm exec-ajust-carte${deplie ? '' : ' replie'}"
+                     style="border-left-color:${couleur};">
+            <div class="exec-suivi-comm-tete" onclick="execSuiviCommToggle(this)">
+                <span class="exec-suivi-comm-chevron">${EXEC_ICONS.chevronDown}</span>
+                <strong>${te('ajust_rang')} ${i + 1}</strong>
+                <span>
+                    <em class="exec-suivi-auteur">${_esc(a.auteur || '')}</em>
+                    ${a.date ? _formatDate(String(a.date).slice(0, 10)) : ''}
+                </span>
+            </div>
+            <div class="exec-suivi-comm-corps">
+                <div class="exec-suivi-comm-items">
+                    <span style="background:${couleur}22;color:${couleur};">${te('ajust_' + a.portee)}</span>
+                </div>
+                <div class="exec-ajust-changements">
+                    ${(a.changements || []).map((c) => `<div class="exec-ajust-ligne">
+                        <span class="lib">${_esc(c.libelle || c.champ)}</span>
+                        <span class="avant">${_esc(c.avant || '—')}</span>
+                        ${EXEC_ICONS.next || '→'}
+                        <span class="apres">${_esc(c.apres || '—')}</span>
+                    </div>`).join('')}
+                </div>
+                <div class="exec-suivi-comm-texte">${_esc(a.motif || '')}</div>
+            </div>
+        </div>`;
+    }).join('');
+    // Volet rabattable à l'horizontale, sur le modèle des détails de suivi :
+    // replié il ne montre que sa poignée verticale.
+    return `
+    <div class="exec-pac-volet exec-rappel-volet" id="execAjustVolet">
+        <button type="button" class="exec-pac-volet-poignee" onclick="execAjustVoletToggle()"
+                title="${_escAttr(te('volet_deplier'))}" aria-expanded="false" aria-controls="execAjustVoletCorps">
+            <span class="exec-pac-volet-chevron">${EXEC_ICONS.chevronDown}</span>
+            <span class="exec-pac-volet-titre">${te('ajust_journal')}${liste.length ? ` (${liste.length})` : ''}</span>
+        </button>
+        <div class="exec-pac-volet-corps" id="execAjustVoletCorps">
+            <div class="exec-form-section expanded" style="flex:1;display:flex;flex-direction:column;">
+                <div class="exec-form-section-header exec-teinte-ambre" onclick="execAjustVoletToggle()">
+                    <span class="exec-form-section-letter" style="background:#d97706;">i</span>
+                    <span class="exec-form-section-title">${te('ajust_journal')}</span>
+                    <span class="exec-suivi-comm-compte">${liste.length}</span>
+                </div>
+                <div class="exec-form-section-body" style="flex:1;display:flex;flex-direction:column;">
+                    <div class="exec-ajust-liste">
+                        ${cartes || `<em class="exec-ajust-vide">${te('ajust_aucun')}</em>`}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+window.execAjustVoletToggle = function () {
+    const volet = document.getElementById('execAjustVolet');
+    if (!volet) return;
+    const ouvert = volet.classList.toggle('ouvert');
+    const poignee = volet.querySelector('.exec-pac-volet-poignee');
+    if (poignee) {
+        poignee.setAttribute('aria-expanded', String(ouvert));
+        poignee.title = ouvert ? te('volet_replier') : te('volet_deplier');
+    }
+};
+
+window.execAjustOuvrir = function (fncId, portee) {
+    const fnc = EXEC_STATE.selectedConstatation || {};
+    const cfg = EXEC_AJUST_PORTEES[portee];
+    if (!cfg) return;
+    const dateOuv = String(fnc.date_ouverture || fnc.date_creation || '').slice(0, 10);
+    const champ = {
+        delai_solde: `<div class="form-group">
+            <label class="form-label" for="ajust_delai_solde">${te('delai_solde')}</label>
+            <input type="number" min="1" class="form-input" id="ajust_delai_solde"
+                   value="${_escAttr(fnc.delai_solde || '')}" oninput="execAjustEcheance()">
+        </div>`,
+        criticite: `<div class="form-group">
+            <label class="form-label" for="ajust_criticite">${te('criticite_label')}</label>
+            <select class="form-select" id="ajust_criticite">
+                ${_execCriticiteOptions(fnc.criticite || fnc.gravite)}
+            </select>
+        </div>`,
+        date_ouverture: `<div class="form-group">
+            <label class="form-label" for="ajust_date_ouverture">${te('date_ouverture')}</label>
+            <input type="date" class="form-input" id="ajust_date_ouverture"
+                   value="${_escAttr(dateOuv)}" onchange="execAjustEcheance()">
+        </div>`,
+        description: `<div class="form-group">
+            <label class="form-label" for="ajust_description">${te('description_constatation')}</label>
+            <textarea class="form-input" id="ajust_description" rows="4">${_esc(fnc.description || fnc.titre || '')}</textarea>
+        </div>`,
+        ref_reglementaires: `<div class="form-group">
+            <label class="form-label" for="ajust_ref_reglementaires">${te('ref_reglementaires_label')}</label>
+            <input type="text" class="form-input" id="ajust_ref_reglementaires"
+                   value="${_escAttr(fnc.ref_reglementaires || fnc.exigence_ref || '')}">
+        </div>`,
+    };
+    // Les mesures de la constatation — date d'ouverture, délai, criticité,
+    // échéance — se lisent sur une même grille : ce sont les quatre bornes
+    // d'un même engagement, elles doivent s'aligner.
+    const mesures = ['date_ouverture', 'delai_solde', 'criticite'].filter((c) => cfg.champs.includes(c));
+    const textes = cfg.champs.filter((c) => !mesures.includes(c));
+    const corps = `
+    <div class="exec-proc-bloc exec-ajust-form" data-date-ouverture="${_escAttr(dateOuv)}">
+        <p class="exec-ajust-intro">${te('ajust_intro')}</p>
+        <div class="exec-ajust-mesures">
+            ${mesures.map((c) => champ[c] || '').join('')}
+            <div class="form-group">
+                <label class="form-label">${te('date_due_label')}</label>
+                <input type="text" class="form-input exec-ajust-echeance" id="ajust_apercu_echeance" readonly>
+            </div>
+        </div>
+        ${textes.map((c) => champ[c] || '').join('')}
+        <div class="form-group">
+            <label class="form-label" for="ajust_motif">${te('ajust_motif')}</label>
+            <textarea class="form-input" id="ajust_motif" rows="3"
+                      placeholder="${_escAttr(te('ajust_motif_aide'))}"></textarea>
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="ajust_mdp">${te('ajust_mot_de_passe')}</label>
+            <input type="password" class="form-input" id="ajust_mdp" autocomplete="current-password">
+        </div>
+        <p class="exec-proc-erreur" id="ajust_erreur"></p>
+    </div>`;
+    const pied = `
+        <button class="btn btn-outline" onclick="execAjustRetour('${fncId}')">${te('cancel') || 'Annuler'}</button>
+        <button class="btn btn-primary" onclick="execAjustAppliquer('${fncId}','${portee}')">
+            ${EXEC_ICONS.check || ''} ${te('appliquer')}
+        </button>`;
+    // Bandeau : le retour au formulaire de suivi précède l'intitulé, et la
+    // croix de fermeture n'a plus lieu d'être.
+    const titre = `<button class="btn btn-outline btn-sm exec-proc-retour" onclick="execAjustRetour('${fncId}')">
+            ${EXEC_ICONS.back || ''} ${te('back')}
+        </button>${EXEC_ICONS.edit || ''} ${te('ajust_' + portee)} — ${_esc(fnc.reference || '')}`;
+    execShowSlider(titre, corps, pied, 'third');
+    document.querySelector('#execSlider .exec-slider-close')?.remove();
+    execAjustEcheance();
+};
+
+// Retour : le formulaire de suivi d'où l'on vient reprend la main.
+window.execAjustRetour = function (fncId) {
+    execCloseSlider();
+    setTimeout(() => execOpenPACSlider(fncId), 80);
+};
+
+// Aperçu de l'échéance : elle découle du délai et de la date d'ouverture,
+// autant la montrer avant de valider.
+window.execAjustEcheance = function () {
+    const boite = document.querySelector('.exec-ajust-form');
+    const apercu = document.getElementById('ajust_apercu_echeance');
+    if (!boite || !apercu) return;
+    const delai = parseInt((document.getElementById('ajust_delai_solde') || {}).value, 10);
+    const ouv = (document.getElementById('ajust_date_ouverture') || {}).value || boite.dataset.dateOuverture;
+    if (Number.isNaN(delai) || !/^\d{4}-\d{2}-\d{2}$/.test(String(ouv || ''))) { apercu.value = '—'; return; }
+    const d = new Date(`${ouv}T00:00:00`);
+    d.setDate(d.getDate() + delai);
+    apercu.value = _formatDate(d.toISOString().slice(0, 10));
+};
+
+window.execAjustAppliquer = async function (fncId, portee) {
+    const cfg = EXEC_AJUST_PORTEES[portee];
+    const err = document.getElementById('ajust_erreur');
+    const val = (id) => (document.getElementById(id) || {}).value;
+    const motif = String(val('ajust_motif') || '').trim();
+    const mdp = String(val('ajust_mdp') || '');
+    if (!motif) { err.textContent = te('ajust_motif_requis'); return; }
+    if (!mdp) { err.textContent = te('ajust_mot_de_passe_requis'); return; }
+    const champs = {};
+    cfg.champs.forEach((c) => {
+        const v = val('ajust_' + c);
+        if (v !== undefined) champs[c] = v;
+    });
+    try {
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}/ajuster`, {
+            method: 'PUT',
+            body: JSON.stringify({ portee, champs, motif, admin_password: mdp }),
+        });
+        execCloseSlider();
+        await execRefreshDynamic();
+        _execToast(te('ajust_ok'), 'success');
+        execOpenPACSlider(fncId);
+    } catch (e) {
+        err.textContent = (e && e.message) || te('action_impossible');
+    }
+};
+
 async function execOpenPACSlider(fncId) {
     let fnc;
+    let echangesPac = [];
     try {
-        fnc = await api(`${EXEC_MODULE_API}/constatations/${fncId}`);
+        [fnc, echangesPac] = await Promise.all([
+            api(`${EXEC_MODULE_API}/constatations/${fncId}`),
+            api(`${EXEC_MODULE_API}/constatations/${fncId}/echanges`).catch(() => []),
+        ]);
     } catch (e) {
         console.error('Load constatation error:', e);
         return;
     }
     if (!fnc) return;
+    echangesPac = echangesPac || [];
     EXEC_STATE.selectedConstatation = fnc;
+    // Le formulaire se rappelle lui-même à chaque étape : la provenance ne
+    // doit se perdre que si l'on passe à une autre constatation.
+    execPrendreRetour('pac:' + fncId);
 
     // ── Role + status flags ──────────────────────────────────────────
     const isAAC = _execIsAAC();
@@ -8712,10 +12298,46 @@ async function execOpenPACSlider(fncId) {
     const isPACRejete = statut === 'pac_rejetee';
     const isOuverte = statut === 'ouvert' || statut === 'ouverte';
 
+    // ── Évaluation de l'AAC : lue tôt, le fil et les droits d'écriture en dépendent ──
+    let evalData = {};
+    if (fnc.commentaire_evaluation) {
+        if (typeof fnc.commentaire_evaluation === 'object') {
+            evalData = fnc.commentaire_evaluation;
+        } else {
+            try { evalData = JSON.parse(fnc.commentaire_evaluation); } catch (e) {
+                evalData = { legacy_comment: fnc.commentaire_evaluation };
+            }
+        }
+    }
+    const evaluationANAC = evalData.evaluation_anac || {};
+    const submitInfo = evalData.submit_info || null;
+    const etatFil = execPacEtat(statut, evaluationANAC, submitInfo);
+
+    // Étape « Mise en oeuvre », côté prestataire : deux modes d'écriture, choisis
+    // par bouton. `preuves` n'ouvre que le dépôt des preuves ; `amendement`
+    // rouvre tout le plan et remettra l'acceptation en jeu à la soumission.
+    const modePac = (EXEC_STATE.pacMode && EXEC_STATE.pacMode.fncId === fncId)
+        ? (EXEC_STATE.pacMode.modes || []) : [];
+    const enMiseEnOeuvre = isPostulant && !isSoldee && etatFil.courante === 'mise_oeuvre';
+    if (!enMiseEnOeuvre && modePac.length) EXEC_STATE.pacMode = null;
+    // Les deux modes se cumulent. À la soumission, l'amendement l'emporte :
+    // le plan repart en acceptation, preuves comprises.
+    const modes = enMiseEnOeuvre ? modePac : [];
+    const modeAmendement = modes.includes('amendement');
+    const modePreuves = modes.includes('preuves');
+    const modeSoumission = modeAmendement ? 'amendement' : (modePreuves ? 'preuves' : null);
+
     // PAC fields are filled ONLY by the postulant (applicant). AAC users always see them read-only.
-    const pacEditable = !isSoldee && isPostulant && (isOuverte || isPACRejete);
-    // AAC evaluation/closure fields editable only by AAC and not soldée.
-    const aacEditable = isAAC && !isSoldee;
+    const pacEditable = !isSoldee && isPostulant
+        && (isOuverte || isPACRejete || modeAmendement);
+    // Dépôt des preuves : ouvert aussi quand le plan est figé mais que le
+    // prestataire a demandé à joindre ses preuves de mise en oeuvre.
+    const preuvesEditable = pacEditable || modePreuves;
+    // L'évaluation n'a pas d'objet tant que le plan n'est pas soumis : les
+    // « Résultats du Suivi » et les commentaires restent en lecture seule
+    // jusqu'à l'étape Acceptation.
+    const evaluationOuverte = etatFil.faites.soumission;
+    const aacEditable = isAAC && !isSoldee && evaluationOuverte;
     // Postulant only sees the AAC evaluation section once the FNC is soldée.
     const showAACSection = isAAC || isSoldee;
 
@@ -8750,35 +12372,60 @@ async function execOpenPACSlider(fncId) {
         if (dl > 0 && dO) { const d = new Date(dO); d.setDate(d.getDate() + dl); dateDue = d.toISOString().slice(0,10); } else { dateDue = ''; }
     }
 
-    // ── Parse PAC + evaluation data ──────────────────────────────────
+    // ── Parse PAC data ───────────────────────────────────────────────
     const actions = fnc.actions_correctives || [];
     const pac = actions[0] || {};
 
-    let evalData = {};
-    if (fnc.commentaire_evaluation) {
-        if (typeof fnc.commentaire_evaluation === 'object') {
-            evalData = fnc.commentaire_evaluation;
-        } else {
-            try { evalData = JSON.parse(fnc.commentaire_evaluation); } catch(e) {
-                evalData = { legacy_comment: fnc.commentaire_evaluation };
-            }
-        }
-    }
-    const evaluationANAC = evalData.evaluation_anac || {};
     const acceptation = evaluationANAC.acceptation || {};
     const verification = evaluationANAC.verification || {};
     const cloture = evaluationANAC.cloture || {};
     const itemsComments = evalData.items_comments || {};
+    // Commentaires de suivi : le fil courant, précédé des échanges enregistrés
+    // item par item dans l'ancienne présentation en table.
+    const commentairesSuivi = [
+        // Les échanges de l'ancienne table sont réputés transmis.
+        ...Object.entries(itemsComments).flatMap(([cle, liste]) => (liste || []).map((c) => ({
+            date: c.date || '', auteur: c.auteur || '',
+            items: [cle === 'cause_primaire' ? 'cause' : cle], precision: '', texte: c.texte || '',
+            publie: true,
+        }))),
+        ...(evalData.suivi_commentaires || []),
+    ]
+        .filter((c) => c.publie || isAAC)      // le prestataire ne lit que le transmis
+        .sort((a, b) => String(a.date).localeCompare(String(b.date)));
     const rejetInfo = evalData.rejet_info || null;
-    const submitInfo = evalData.submit_info || null;
+    const preuvesInfo = evalData.preuves_info || null;
+    const preuvesRefus = evalData.preuves_refus || null;
+    const retourMiseEnOeuvre = evalData.retour_mise_oeuvre || null;
+    const versionsPac = fnc.versions_pac || [];
 
     // ── Render helpers ───────────────────────────────────────────────
+    // Motifs d'amendement : bloc sous le champ, et surveillance de la saisie.
+    // La comparaison porte sur l'empreinte du plan accepté, prise au moment de
+    // l'acceptation : un brouillon enregistré entre-temps ne fausse donc plus
+    // la détection. À défaut d'empreinte (dossiers antérieurs), le plan courant
+    // sert de référence.
+    const pacAccepte = ((fnc.pac_accepte || {}).actions_correctives || [])[0] || pac;
+    const motifsEnregistres = pac.motifs_amendement || {};
+    const motifBloc = (cle) => {
+        const champ = EXEC_PAC_CHAMPS_SUIVIS.find((c) => c.cle === cle);
+        if (!champ) return '';
+        const initiale = pacAccepte[cle] || '';
+        const modifie = String(pac[cle] || '').trim() !== String(initiale).trim();
+        return _execPacMotifHtml(champ, initiale, motifsEnregistres[cle], modeAmendement, modifie);
+    };
+    const surveille = (cle) => (modeAmendement
+        ? `oninput="execPacSurveillerChamp('${cle}')" onchange="execPacSurveillerChamp('${cle}')"` : '');
+    // Champ déjà divergent à l'ouverture (brouillon enregistré avant soumission).
+    const classeAmendee = (cle) => (modeAmendement
+        && String(pac[cle] || '').trim() !== String(pacAccepte[cle] || '').trim()
+        ? ' exec-pac-champ-amende' : '');
+
     const renderProofList = (proofs, containerId, editable) => {
         if (!proofs || !Array.isArray(proofs) || proofs.length === 0) return '';
-        return proofs.map(p => `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_esc(p.path || '')}">
-            ${EXEC_ICONS.file} <span style="flex:1;">${_esc(p.filename || p)}</span>
-            ${editable ? `<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>` : ''}
-        </div>`).join('');
+        return proofs
+            .map((p, i) => _execPreuveHtml(typeof p === 'string' ? { filename: p } : p, i + 1, editable))
+            .join('');
     };
 
     const renderUploadZone = (prefix, listId, editable) => {
@@ -8789,46 +12436,96 @@ async function execOpenPACSlider(fncId) {
         </div>`;
     };
 
-    const formatProofs = (proofs) => {
-        if (!proofs || !Array.isArray(proofs) || proofs.length === 0) return '';
-        return proofs.map(p => `<div style="display:flex;align-items:center;gap:0.35rem;margin-bottom:0.2rem;">${EXEC_ICONS.file} <span>${_esc(p.filename || p)}</span></div>`).join('');
+    // La réponse du postulant se lit dans le formulaire du PAC : la table ne
+    // porte plus que l'item et les échanges qui s'y rapportent.
+    // Plans acceptés puis amendés : conservés en version, consultables ici.
+    // Le bloc n'emprunte pas `.exec-form-section` — la règle du socle ouvre
+    // tout corps de section descendant d'une section dépliée, et ce bloc est
+    // imbriqué dans celle du plan d'actions. Classes propres, sélecteurs
+    // d'enfant direct : chaque niveau se replie pour lui-même.
+    const renderVersionsPac = () => {
+        if (!versionsPac.length) return '';
+        const ligne = (libelle, valeur) => valeur
+            ? `<div style="margin-top:0.3rem;"><span style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">${libelle}</span><div>${valeur}</div></div>`
+            : '';
+        return `<div class="exec-pac-versions">
+            <button type="button" class="exec-pac-versions-bandeau" aria-expanded="false"
+                    onclick="execPacBlocToggle(this)">
+                <span class="exec-pac-versions-pastille">${versionsPac.length}</span>
+                <span class="exec-pac-versions-titre">${te('versions_pac')}</span>
+                <span class="exec-pac-versions-chevron">${EXEC_ICONS.chevronDown}</span>
+            </button>
+            <div class="exec-pac-versions-corps">
+                ${versionsPac.map((v, i) => {
+                    const p = (v.actions_correctives || [])[0] || {};
+                    const acc = v.acceptation || {};
+                    const detail = [
+                        `${te('amende_le')} ${_formatDate((v.date || '').slice(0, 10))}`,
+                        v.auteur ? _esc(v.auteur) : '',
+                        acc.date ? `${te('date_acceptation')} ${_formatDate(acc.date)}` : '',
+                    ].filter(Boolean).join(' · ');
+                    return `<div class="exec-pac-version">
+                        <button type="button" class="exec-pac-versions-bandeau" aria-expanded="false"
+                                onclick="execPacBlocToggle(this)">
+                            <span class="exec-pac-versions-titre">${te('version_n')} ${i + 1}
+                                <span style="font-weight:normal;color:var(--text-muted);">— ${detail}</span>
+                            </span>
+                            <span class="exec-pac-versions-chevron">${EXEC_ICONS.chevronDown}</span>
+                        </button>
+                        <div class="exec-pac-version-corps">
+                            ${ligne(te('cause_root'), _esc(p.cause_primaire || ''))}
+                            ${ligne(te('action_curative_correction'), _esc(p.action_curative || ''))}
+                            ${ligne(te('action_corrective_prevention'), _esc(p.actions_correctives || ''))}
+                        </div>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>`;
     };
 
-    const renderItemRow = (itemKey, label, response) => {
-        const comments = itemsComments[itemKey] || [];
-        const hasResponse = response && response !== '-';
-        return `<tr data-item-key="${itemKey}">
-            <td style="font-weight:600;width:22%;vertical-align:top;font-size:0.78rem;">${label}</td>
-            <td style="width:33%;vertical-align:top;font-size:0.78rem;">
-                <div class="pac-item-response">${hasResponse ? response : '<em style="color:var(--text-muted);">—</em>'}</div>
-            </td>
-            <td style="width:45%;vertical-align:top;">
-                <div class="pac-item-comments" id="pac_item_comments_${itemKey}">
-                    ${comments.length === 0 ? `<em style="color:var(--text-muted);font-size:0.75rem;">${te('aucun_commentaire')}</em>` :
-                      comments.map(c => {
-                          const cRole = c.role || '';
-                          const bg = cRole === 'AAC' ? '#e0f2fe' : '#f0fdf4';
-                          const border = cRole === 'AAC' ? '#0284c7' : '#16a34a';
-                          return `<div class="pac-comment" data-auteur="${_esc(c.auteur || '')}" data-role="${_esc(cRole)}" data-date="${_esc(c.date || '')}" data-texte="${_esc(c.texte || '')}" style="padding:0.4rem 0.5rem;margin-bottom:0.3rem;background:${bg};border-left:3px solid ${border};border-radius:4px;font-size:0.75rem;">
-                              <div style="display:flex;justify-content:space-between;margin-bottom:0.15rem;">
-                                  <strong>${_esc(c.auteur || '')} <span style="font-weight:normal;color:var(--text-muted);">(${_esc(cRole)})</span></strong>
-                                  <span style="color:var(--text-muted);font-size:0.7rem;">${_formatDate(c.date || '')}</span>
-                              </div>
-                              <div>${_esc(c.texte || '')}</div>
-                          </div>`;
-                      }).join('')
-                    }
-                </div>
-                ${!isSoldee ? `<div style="display:flex;gap:0.35rem;margin-top:0.35rem;">
-                    <textarea class="form-input" id="pac_item_input_${itemKey}" rows="1" placeholder="${te('ajouter_un_commentaire')}" style="flex:1;font-size:0.75rem;padding:0.3rem;"></textarea>
-                    <button class="btn btn-sm btn-primary" onclick="execAddItemComment('${itemKey}')" style="padding:0.3rem 0.55rem;font-size:0.72rem;">${te('ajouter_commentaire')}</button>
-                </div>` : ''}
-            </td>
-        </tr>`;
-    };
+
+    // ── Actions du circuit : elles siègent sur la ligne du fil, à droite ──
+    let filActions = '';
+    if (isPostulant && (isOuverte || isPACRejete)) {
+        filActions = `<button class="btn btn-primary btn-sm" onclick="execSubmitPAC('${fncId}')">${EXEC_ICONS.send} ${te('soumettre')}</button>`;
+    } else if (isPostulant && isPACSoumis) {
+        // État désactivé : le PAC attend l'examen de l'AAC.
+        filActions = `<button class="btn btn-primary btn-sm" disabled title="${te('pac_soumis')}">${EXEC_ICONS.send} ${te('soumettre')}</button>`;
+    }
+    // Étape Mise en oeuvre, côté prestataire : joindre les preuves, rouvrir le
+    // plan, ou les deux. La soumission n'a de sens qu'un mode au moins choisi.
+    if (enMiseEnOeuvre) {
+        const btn = (mode, cle) => `<button class="btn btn-sm ${modes.includes(mode) ? 'btn-primary' : 'btn-outline'}"
+            aria-pressed="${modes.includes(mode)}" onclick="execPacModeEdition('${fncId}', '${mode}')">${te(cle)}</button>`;
+        filActions += ` ${btn('preuves', 'ajouter_preuves')}`;
+        filActions += ` ${btn('amendement', 'amender_pac')}`;
+        filActions += modeSoumission
+            ? ` <button class="btn btn-primary btn-sm" onclick="execSoumettreMiseEnOeuvre('${fncId}', '${modeSoumission}')">${EXEC_ICONS.send} ${te('soumettre')}</button>`
+            : ` <button class="btn btn-primary btn-sm" disabled title="${te('choisir_mode_pac')}">${EXEC_ICONS.send} ${te('soumettre')}</button>`;
+    }
+    if (isAAC && isPACSoumis) {
+        filActions += ` <button class="btn btn-danger btn-sm" onclick="execReturnPACtoPostulant('${fncId}')">${EXEC_ICONS.x} ${te('renvoyer')}</button>`;
+    }
+    // Étape Mise en oeuvre, côté AAC : statuer sur les preuves déposées.
+    if (isAAC && !isSoldee && etatFil.courante === 'mise_oeuvre') {
+        filActions += ` <button class="btn btn-danger btn-sm" onclick="execPreuvesNonAcceptables('${fncId}')">${EXEC_ICONS.x} ${te('preuves_non_acceptables')}</button>`;
+        filActions += ` <button class="btn btn-success btn-sm" onclick="execAccepterPreuves('${fncId}')">${EXEC_ICONS.check} ${te('acceptation')}</button>`;
+    }
+    // Étape Clôture, côté AAC : renvoyer à la mise en oeuvre, ou clôturer.
+    if (isAAC && !isSoldee && etatFil.courante === 'cloture') {
+        filActions += ` <button class="btn btn-danger btn-sm" onclick="execRenvoyerMiseEnOeuvre('${fncId}')">${EXEC_ICONS.x} ${te('renvoyer')}</button>`;
+        filActions += ` <button class="btn btn-success btn-sm" onclick="execCloseFNC('${fncId}')">${EXEC_ICONS.check} ${te('cloturer')}</button>`;
+    }
+    // Étape Acceptation, côté AAC : accepter le plan seul, ou plan et preuves.
+    // Le second jalon clôt d'un coup l'acceptation et la mise en oeuvre.
+    if (isAAC && isPACSoumis && etatFil.courante === 'acceptation') {
+        filActions += ` <button class="btn btn-success btn-sm" onclick="execAccepterPAC('${fncId}', false)">${EXEC_ICONS.check} ${te('accepter_pac')}</button>`;
+        filActions += ` <button class="btn btn-success btn-sm" onclick="execAccepterPAC('${fncId}', true)">${EXEC_ICONS.check} ${te('accepter_pac_preuves')}</button>`;
+    }
 
     // ── Body HTML — 2-column layout ──────────────────────────────────
     const bodyHtml = `
+    <div class="exec-proc-entete-collant">${execPacFilHtml(statut, evaluationANAC, submitInfo, filActions)}</div>
     ${rejetInfo ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#fef2f2;border-left:4px solid #dc2626;border-radius:6px;">
         <div style="font-weight:600;color:#991b1b;margin-bottom:0.2rem;font-size:0.85rem;">${EXEC_ICONS.x} ${te('pac_renvoye_titre')} ${rejetInfo.date ? `(${_formatDate(rejetInfo.date)})` : ''} ${rejetInfo.auteur ? `— ${_esc(rejetInfo.auteur)}` : ''}</div>
         <div style="font-size:0.8rem;color:#7f1d1d;"><strong>${te('motif')} :</strong> ${_esc(rejetInfo.motif || '')}</div>
@@ -8837,20 +12534,48 @@ async function execOpenPACSlider(fncId) {
         <div style="font-weight:600;color:#166534;margin-bottom:0.2rem;font-size:0.85rem;">${EXEC_ICONS.check} ${te('pac_soumis_titre') || 'PAC soumis pour validation'} ${submitInfo.date ? `(${_formatDate(submitInfo.date)})` : ''} ${submitInfo.auteur ? `— ${_esc(submitInfo.auteur)}` : ''}</div>
         <div style="font-size:0.8rem;color:#14532d;"><strong>${te('motif')} :</strong> ${_esc(submitInfo.motif || '')}</div>
     </div>` : ''}
+    ${preuvesInfo ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#eff6ff;border-left:4px solid #2563eb;border-radius:6px;">
+        <div style="font-weight:600;color:#1e40af;font-size:0.85rem;">${EXEC_ICONS.check} ${te('preuves_soumises_titre')} ${preuvesInfo.date ? `(${_formatDate(preuvesInfo.date)})` : ''} ${preuvesInfo.auteur ? `— ${_esc(preuvesInfo.auteur)}` : ''}</div>
+    </div>` : ''}
+    ${preuvesRefus ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#fef2f2;border-left:4px solid #dc2626;border-radius:6px;">
+        <div style="font-weight:600;color:#991b1b;margin-bottom:0.2rem;font-size:0.85rem;">${EXEC_ICONS.x} ${te('preuves_refusees_titre')} ${preuvesRefus.date ? `(${_formatDate(preuvesRefus.date)})` : ''} ${preuvesRefus.auteur ? `— ${_esc(preuvesRefus.auteur)}` : ''}</div>
+        <div style="font-size:0.8rem;color:#7f1d1d;"><strong>${te('motif')} :</strong> ${_esc(preuvesRefus.motif || '')}</div>
+    </div>` : ''}
+    ${verification.preuves_acceptees === 'OUI' ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:6px;">
+        <div style="font-weight:600;color:#166534;font-size:0.85rem;">${EXEC_ICONS.check} ${te('preuves_acceptees_titre')} ${verification.date_acceptation_preuves ? `(${_formatDate(verification.date_acceptation_preuves)})` : ''} ${verification.acceptees_par ? `— ${_esc(verification.acceptees_par)}` : ''}</div>
+    </div>` : ''}
+    ${verification.verification_terrain && !isSoldee ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#fffbeb;border-left:4px solid #d97706;border-radius:6px;">
+        <div style="font-weight:600;color:#92400e;font-size:0.85rem;">${EXEC_ICONS.alarm} ${te('verification_terrain_annoncee')}</div>
+    </div>` : ''}
+    ${retourMiseEnOeuvre ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#fef2f2;border-left:4px solid #dc2626;border-radius:6px;">
+        <div style="font-weight:600;color:#991b1b;margin-bottom:0.2rem;font-size:0.85rem;">${EXEC_ICONS.x} ${te('renvoye_mise_oeuvre')} ${retourMiseEnOeuvre.date ? `(${_formatDate(retourMiseEnOeuvre.date)})` : ''} ${retourMiseEnOeuvre.auteur ? `— ${_esc(retourMiseEnOeuvre.auteur)}` : ''}</div>
+        <div style="font-size:0.8rem;color:#7f1d1d;"><strong>${te('motif')} :</strong> ${_esc(retourMiseEnOeuvre.motif || '')}</div>
+    </div>` : ''}
+    ${modes.length ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#fffbeb;border-left:4px solid #d97706;border-radius:6px;">
+        ${modeAmendement && modePreuves
+            ? `<div style="font-weight:600;color:#92400e;font-size:0.85rem;">${te('mode_mixte_actif')}</div>`
+            : `<div style="font-weight:600;color:#92400e;font-size:0.85rem;">${modeAmendement ? te('mode_amendement_actif') : te('mode_preuves_actif')}</div>`}
+    </div>` : ''}
     ${isSoldee ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:6px;">
         <div style="font-weight:600;color:#166534;font-size:0.85rem;">${EXEC_ICONS.check} ${te('constatation_soldee') || 'Constatation soldée'}${fnc.date_solde ? ` — ${te('date_solde')} : ${_formatDate(fnc.date_solde.slice(0,10))}` : ''}</div>
     </div>` : ''}
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- ROW 1 — Rappel de la Constatation (full-width)                -->
+    <!-- Section A — Rappel de la Constatation (pleine largeur)        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div class="exec-form-section expanded">
+    <div class="exec-rappel-rangee">
+    <div class="exec-form-section expanded exec-rappel-corps">
         <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')">
-            <span class="exec-form-section-letter">1</span>
+            <span class="exec-form-section-letter">A</span>
             <span class="exec-form-section-title">${te('rappel_constatation')}</span>
+            ${_execAjustBoutons(fnc)}
             <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
         </div>
         <div class="exec-form-section-body">
-            <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:0.6rem;font-size:0.78rem;margin-bottom:0.6rem;">
+            <div style="display:grid;grid-template-columns:1.4fr 1.2fr 1fr 1fr 1fr 1fr;gap:0.6rem;font-size:0.78rem;margin-bottom:0.6rem;">
+                <div>
+                    <div style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">${te('provider')}</div>
+                    <div><strong>${_esc(prestataireName)}</strong></div>
+                </div>
                 <div>
                     <div style="color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;">${te('domaine_label')}</div>
                     <div>${_esc(domaineName)}</div>
@@ -8884,89 +12609,129 @@ async function execOpenPACSlider(fncId) {
             </div>
         </div>
     </div>
+    ${_execAjustVoletHtml(fnc)}
+    </div>
 
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- ROW 2 — PAC (left)  +  Détails du suivi (right)              -->
+    <!-- Section B — PAC (à gauche) + Commentaires de suivi (à droite) -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div style="display:grid;grid-template-columns:1.05fr 1fr;gap:0.85rem;align-items:stretch;margin-top:0.6rem;">
+    <div class="exec-pac-rangee">
 
-        <div style="display:flex;flex-direction:column;">
+        <div class="exec-pac-col-gauche">
             <!-- Section 2 : Plan d'Actions Correctives -->
             <div class="exec-form-section expanded" style="flex:1;display:flex;flex-direction:column;">
                 <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')">
-                    <span class="exec-form-section-letter">2</span>
+                    <span class="exec-form-section-letter">B</span>
                     <span class="exec-form-section-title">${te('plan_actions_correctives')}${isPACSoumis || isPACRejete || isSoldee ? ` <span style="font-weight:normal;color:var(--text-muted);font-size:0.78rem;">(Soumis par ${_esc(prestataireName)})</span>` : ''}</span>
                     <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
                 </div>
                 <div class="exec-form-section-body" style="flex:1;">
                     <div class="form-group">
-                        <label style="font-size:0.8rem;font-weight:600;">${te('cause_root')}</label>
-                        <textarea class="form-input" id="pac_cause_primaire" rows="2" ${pacRO} style="font-size:0.8rem;${lockedBg(pacEditable)}">${_esc(pac.cause_primaire || '')}</textarea>
+                        <label for="pac_cause_primaire" style="font-size:0.8rem;font-weight:600;">${te('cause_root')}</label>
+                        <textarea class="form-input${classeAmendee('cause_primaire')}" id="pac_cause_primaire" rows="2" ${pacRO} ${surveille('cause_primaire')} style="font-size:0.8rem;${lockedBg(pacEditable)}">${_esc(pac.cause_primaire || '')}</textarea>
+                        ${motifBloc('cause_primaire')}
+                    </div>
+                    <!-- La date prévue accompagne l'intitulé de l'action, à
+                         l'extrême droite de sa ligne ; les preuves occupent
+                         ensuite toute la largeur. -->
+                    <div class="form-group" style="margin-top:0.55rem;">
+                        <div class="exec-pac-ligne-action">
+                            <label for="pac_action_curative" style="font-size:0.8rem;font-weight:600;">${te('action_curative_correction')}</label>
+                            <div class="exec-pac-date-inline">
+                                <label for="pac_curative_date_prevue">${te('date_prevue')}</label>
+                                <input type="date" class="form-input${classeAmendee('curative_date_prevue')}" id="pac_curative_date_prevue" value="${_escAttr(pac.curative_date_prevue || '')}" ${pacRO} ${surveille('curative_date_prevue')} style="${lockedBg(pacEditable)}">
+                            </div>
+                        </div>
+                        <textarea class="form-input${classeAmendee('action_curative')}" id="pac_action_curative" rows="2" ${pacRO} ${surveille('action_curative')} style="font-size:0.8rem;${lockedBg(pacEditable)}">${_esc(pac.action_curative || '')}</textarea>
+                        ${motifBloc('action_curative')}
+                        ${motifBloc('curative_date_prevue')}
+                    </div>
+                    <div class="form-group" style="margin-top:0.35rem;">
+                        <label style="font-size:0.74rem;color:var(--text-muted);">${te('preuves_action')}</label>
+                        <div id="pac_curative_preuves_list">${renderProofList(pac.curative_preuves, 'pac_curative_preuves_list', preuvesEditable)}</div>
+                        ${renderUploadZone('pac_curative_preuves', 'pac_curative_preuves_list', preuvesEditable)}
                     </div>
                     <div class="form-group" style="margin-top:0.55rem;">
-                        <label style="font-size:0.8rem;font-weight:600;">${te('action_curative_correction')}</label>
-                        <textarea class="form-input" id="pac_action_curative" rows="2" ${pacRO} style="font-size:0.8rem;${lockedBg(pacEditable)}">${_esc(pac.action_curative || '')}</textarea>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.35rem;">
-                        <div class="form-group">
-                            <label style="font-size:0.74rem;color:var(--text-muted);">${te('date_prevue')}</label>
-                            <input type="date" class="form-input" id="pac_curative_date_prevue" value="${_esc(pac.curative_date_prevue || '')}" ${pacRO} style="font-size:0.8rem;${lockedBg(pacEditable)}">
+                        <div class="exec-pac-ligne-action">
+                            <label for="pac_actions_correctives" style="font-size:0.8rem;font-weight:600;">${te('action_corrective_prevention')}</label>
+                            <div class="exec-pac-date-inline">
+                                <label for="pac_corrective_date_prevue">${te('date_prevue')}</label>
+                                <input type="date" class="form-input${classeAmendee('corrective_date_prevue')}" id="pac_corrective_date_prevue" value="${_escAttr(pac.corrective_date_prevue || '')}" ${pacRO} ${surveille('corrective_date_prevue')} style="${lockedBg(pacEditable)}">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label style="font-size:0.74rem;color:var(--text-muted);">${te('preuves_action')}</label>
-                            <div id="pac_curative_preuves_list">${renderProofList(pac.curative_preuves, 'pac_curative_preuves_list', pacEditable)}</div>
-                            ${renderUploadZone('pac_curative_preuves', 'pac_curative_preuves_list', pacEditable)}
-                        </div>
+                        <textarea class="form-input${classeAmendee('actions_correctives')}" id="pac_actions_correctives" rows="2" ${pacRO} ${surveille('actions_correctives')} style="font-size:0.8rem;${lockedBg(pacEditable)}">${_esc(pac.actions_correctives || '')}</textarea>
+                        ${motifBloc('actions_correctives')}
+                        ${motifBloc('corrective_date_prevue')}
                     </div>
-                    <div class="form-group" style="margin-top:0.55rem;">
-                        <label style="font-size:0.8rem;font-weight:600;">${te('action_corrective_prevention')}</label>
-                        <textarea class="form-input" id="pac_actions_correctives" rows="2" ${pacRO} style="font-size:0.8rem;${lockedBg(pacEditable)}">${_esc(pac.actions_correctives || '')}</textarea>
+                    <div class="form-group" style="margin-top:0.35rem;">
+                        <label style="font-size:0.74rem;color:var(--text-muted);">${te('preuves_action')}</label>
+                        <div id="pac_corrective_preuves_list">${renderProofList(pac.corrective_preuves, 'pac_corrective_preuves_list', preuvesEditable)}</div>
+                        ${renderUploadZone('pac_corrective_preuves', 'pac_corrective_preuves_list', preuvesEditable)}
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.35rem;">
-                        <div class="form-group">
-                            <label style="font-size:0.74rem;color:var(--text-muted);">${te('date_prevue')}</label>
-                            <input type="date" class="form-input" id="pac_corrective_date_prevue" value="${_esc(pac.corrective_date_prevue || '')}" ${pacRO} style="font-size:0.8rem;${lockedBg(pacEditable)}">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.74rem;color:var(--text-muted);">${te('preuves_action')}</label>
-                            <div id="pac_corrective_preuves_list">${renderProofList(pac.corrective_preuves, 'pac_corrective_preuves_list', pacEditable)}</div>
-                            ${renderUploadZone('pac_corrective_preuves', 'pac_corrective_preuves_list', pacEditable)}
-                        </div>
-                    </div>
+                    ${renderVersionsPac()}
                 </div>
             </div>
 
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <!-- RIGHT — Détails du suivi                                     -->
+        <!-- RIGHT — Commentaires de suivi : volet rabattable              -->
+        <!-- Replié par défaut ; la poignée verticale l'ouvre sur la droite -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <div style="display:flex;flex-direction:column;">
-            <div class="exec-form-section expanded" style="flex:1;display:flex;flex-direction:column;">
-                <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')" style="background:#fef3c7;">
-                    <span class="exec-form-section-letter" style="background:#d97706;">i</span>
-                    <span class="exec-form-section-title">${te('details_suivi')}</span>
-                    <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
-                </div>
-                <div class="exec-form-section-body" style="flex:1;display:flex;flex-direction:column;">
-                    <p style="font-size:0.74rem;color:var(--text-muted);margin:0 0 0.5rem 0;">${te('details_suivi_intro')}</p>
-                    <div style="flex:1;overflow-x:auto;max-height:65vh;overflow-y:auto;border:1px solid var(--border);border-radius:6px;">
-                    <table class="exec-data-table" style="font-size:0.78rem;margin:0;">
-                        <thead style="position:sticky;top:0;background:var(--bg-secondary);z-index:1;">
-                            <tr>
-                                <th>${te('item_label')}</th>
-                                <th>${te('reponse_label')}</th>
-                                <th>${te('commentaires_label')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${renderItemRow('cause_primaire', te('item_cause'), _esc(pac.cause_primaire || ''))}
-                            ${renderItemRow('action_curative', te('item_action_curative'), `${_esc(pac.action_curative || '')}${pac.curative_date_prevue ? `<br><span style="font-size:0.72rem;color:var(--text-muted);">${te('date_prevue')} : ${_formatDate(pac.curative_date_prevue)}</span>` : ''}`)}
-                            ${renderItemRow('preuves_curative', te('item_preuves_curative'), formatProofs(pac.curative_preuves))}
-                            ${renderItemRow('action_corrective', te('item_action_corrective'), `${_esc(pac.actions_correctives || '')}${pac.corrective_date_prevue ? `<br><span style="font-size:0.72rem;color:var(--text-muted);">${te('date_prevue')} : ${_formatDate(pac.corrective_date_prevue)}</span>` : ''}`)}
-                            ${renderItemRow('preuves_corrective', te('item_preuves_corrective'), formatProofs(pac.corrective_preuves))}
-                        </tbody>
-                    </table>
+        <div class="exec-pac-volet" id="execPacVolet">
+            <button type="button" class="exec-pac-volet-poignee" onclick="execPacVoletToggle()"
+                    title="${te('volet_deplier')}" aria-expanded="false" aria-controls="execPacVoletCorps">
+                <span class="exec-pac-volet-chevron">${EXEC_ICONS.chevronDown}</span>
+                <span class="exec-pac-volet-titre">${te('details_suivi')}</span>
+            </button>
+            <div class="exec-pac-volet-corps" id="execPacVoletCorps">
+                <div class="exec-form-section expanded" style="flex:1;display:flex;flex-direction:column;">
+                    <div class="exec-form-section-header exec-teinte-ambre" onclick="execPacVoletToggle()">
+                        <span class="exec-form-section-letter" style="background:#d97706;">i</span>
+                        <span class="exec-form-section-title">${te('details_suivi')}</span>
+                    </div>
+                    <div class="exec-form-section-body" style="flex:1;display:flex;flex-direction:column;">
+                        <p style="font-size:0.74rem;color:var(--text-muted);margin:0 0 0.5rem 0;">${te('details_suivi_intro')}</p>
+                        <div id="pac_suivi_liste" class="exec-suivi-liste">
+                            ${commentairesSuivi.length
+                                ? (() => { let rang = 0; const dernier = commentairesSuivi.length - 1;
+                                    return commentairesSuivi
+                                        .map((c, i) => _execCommentaireSuiviHtml(c, aacEditable,
+                                            c.publie ? ++rang : 0, i === dernier))
+                                        .join(''); })()
+                                : `<em class="exec-suivi-vide" style="color:var(--text-muted);font-size:0.75rem;">${te('aucun_commentaire')}</em>`}
+                        </div>
+                        ${isAAC && !isSoldee && !evaluationOuverte ? `
+                        <p class="exec-suivi-attente">${te('suivi_attente_soumission')}</p>` : ''}
+                        ${aacEditable ? `
+                        <!-- Rédaction réservée à l'AAC : items visés, précision, texte -->
+                        <div class="exec-suivi-composeur">
+                            <div class="exec-suivi-items">
+                                ${EXEC_PAC_ITEMS_COMMENTABLES.map((it) => `<label class="exec-suivi-puce">
+                                    <input type="checkbox" value="${it}" onchange="execSuiviItemsChange(this)"> <span>${te(`item_${it}`)}</span>
+                                </label>`).join('')}
+                                <label class="exec-suivi-puce">
+                                    <input type="checkbox" value="autres" id="pac_suivi_autres" onchange="execSuiviItemsChange(this)"> <span>${te('motif_autres')}</span>
+                                </label>
+                                <input type="text" class="form-input exec-suivi-precision" id="pac_suivi_precision"
+                                       placeholder="${te('motif_preciser')}" hidden>
+                            </div>
+                            <div class="exec-suivi-saisie">
+                                <textarea class="form-input" id="pac_suivi_texte" rows="2" disabled
+                                          placeholder="${te('suivi_choisir_item')}"></textarea>
+                                <button class="btn btn-sm btn-primary" id="pac_suivi_ajouter" disabled
+                                        onclick="execAjouterCommentaireSuivi()">${te('ajouter_commentaire')}</button>
+                            </div>
+                            <!-- Pièces jointes du commentaire, déposées avant l'ajout. -->
+                            <div class="exec-suivi-pj">
+                                <div id="pac_suivi_pj_liste"></div>
+                                <button class="btn btn-sm btn-outline" onclick="this.nextElementSibling.click()">
+                                    ${EXEC_ICONS.upload} ${te('joindre_fichier')}
+                                </button>
+                                <input type="file" style="display:none;" multiple
+                                       onchange="execSuiviJoindreFichiers(this)">
+                            </div>
+                        </div>` : ''}
                     </div>
                 </div>
             </div>
@@ -8975,135 +12740,246 @@ async function execOpenPACSlider(fncId) {
 
     ${showAACSection ? `
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <!-- ROW 3 — Évaluation et Suivi (AAC) — full-width landscape     -->
+    <!-- Section C — Évaluation et Suivi (AAC), pleine largeur        -->
     <!-- ═══════════════════════════════════════════════════════════ -->
-    <div class="exec-form-section expanded" style="margin-top:0.6rem;border-color:#10b981;">
-        <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')" style="background:#ecfdf5;">
-            <span class="exec-form-section-letter" style="background:#10b981;">3</span>
-            <span class="exec-form-section-title">${te('evaluation_suivi_aac')}</span>
+    <div class="exec-form-section expanded exec-resultats" id="exec_resultats_suivi" style="margin-top:0.6rem;">
+        <div class="exec-form-section-header" onclick="this.parentElement.classList.toggle('expanded')">
+            <span class="exec-form-section-letter">C</span>
+            <span class="exec-form-section-title">${te('resultats_suivi')}</span>
             <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
         </div>
         <div class="exec-form-section-body">
-            <div style="display:grid;grid-template-columns:1fr 1.5fr 1.2fr;gap:0.85rem;align-items:start;">
+            <!-- Trois blocs de largeurs 1 / 3 / 2, de hauteurs alignées. -->
+            <div style="display:grid;grid-template-columns:1fr 3fr 2fr;gap:0.85rem;align-items:stretch;">
 
-                <!-- 3a Acceptation -->
-                <div style="border:1px solid #d1fae5;border-radius:6px;padding:0.55rem 0.65rem;background:#f0fdf4;">
-                    <div style="font-weight:600;font-size:0.8rem;margin-bottom:0.4rem;color:#065f46;">${te('acceptation_propositions')}</div>
-                    <div class="form-group">
-                        <label style="font-size:0.72rem;color:var(--text-muted);">${te('pac_accepte')}</label>
-                        <select class="form-input" id="anac_pac_accepte" ${aacDis} style="font-size:0.78rem;${lockedBg(aacEditable)}">
-                            <option value=""></option>
-                            <option value="OUI" ${acceptation.accepte === 'OUI' ? 'selected' : ''}>${te('oui_label')}</option>
-                            <option value="NON" ${acceptation.accepte === 'NON' ? 'selected' : ''}>${te('non_label')}</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-top:0.35rem;">
+                <!-- C1 Acceptation -->
+                <div class="exec-resultats-bloc">
+                    <div class="exec-resultats-bloc-titre">${te('acceptation_propositions')}</div>
+                    <label class="exec-pac-case">
+                        <input type="checkbox" id="anac_pac_accepte" onchange="execPacTeinteResultats()" ${acceptation.accepte === 'OUI' ? 'checked' : ''} ${aacDis}>
+                        <span>${te('pac_accepte')}</span>
+                    </label>
+                    <div class="form-group" style="margin-top:0.45rem;">
                         <label style="font-size:0.72rem;color:var(--text-muted);">${te('date_acceptation')}</label>
-                        <input type="date" class="form-input" id="anac_date_acceptation" value="${_esc(acceptation.date || '')}" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">
+                        <input type="date" class="form-input" id="anac_date_acceptation" value="${_escAttr(acceptation.date || '')}" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">
                     </div>
                 </div>
 
-                <!-- 3b Vérification de la mise en oeuvre -->
-                <div style="border:1px solid #d1fae5;border-radius:6px;padding:0.55rem 0.65rem;background:#f0fdf4;">
-                    <div style="font-weight:600;font-size:0.8rem;margin-bottom:0.4rem;color:#065f46;">${te('verification_mise_oeuvre')}</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-                        <div class="form-group">
-                            <label style="font-size:0.72rem;color:var(--text-muted);">${te('isolement_realise')}</label>
-                            <select class="form-input" id="anac_isolement" ${aacDis} style="font-size:0.78rem;${lockedBg(aacEditable)}">
-                                <option value=""></option>
-                                <option value="OUI" ${verification.isolement_realise === 'OUI' ? 'selected' : ''}>${te('oui_label')}</option>
-                                <option value="NON" ${verification.isolement_realise === 'NON' ? 'selected' : ''}>${te('non_label')}</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.72rem;color:var(--text-muted);">${te('risques_traites')}</label>
-                            <select class="form-input" id="anac_risques" ${aacDis} style="font-size:0.78rem;${lockedBg(aacEditable)}">
-                                <option value=""></option>
-                                <option value="OUI" ${verification.risques_traites === 'OUI' ? 'selected' : ''}>${te('oui_label')}</option>
-                                <option value="NON" ${verification.risques_traites === 'NON' ? 'selected' : ''}>${te('non_label')}</option>
-                            </select>
-                        </div>
+                <!-- C2 Commentaire général de suivi : autant d'entrées que de
+                     suivis, chacune datée et signée. -->
+                <div class="exec-resultats-bloc" style="display:flex;flex-direction:column;">
+                    <div class="exec-resultats-bloc-titre">${te('commentaire_general_suivi')}</div>
+                    <div id="anac_suivis_list" class="exec-suivis" style="flex:1;">
+                        ${(verification.suivis || []).length
+                            ? (verification.suivis || []).map((s) => _execSuiviHtml(s, aacEditable)).join('')
+                            : `<em class="exec-suivi-vide" style="color:var(--text-muted);font-size:0.75rem;">${te('aucun_suivi')}</em>`}
                     </div>
-                    <div class="form-group" style="margin-top:0.35rem;">
-                        <label style="font-size:0.72rem;color:var(--text-muted);">${te('commentaire_efficacite')}</label>
-                        <textarea class="form-input" id="anac_commentaire_efficacite" rows="2" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">${_esc(verification.commentaire_efficacite || '')}</textarea>
-                    </div>
-                    <div class="form-group" style="margin-top:0.35rem;">
-                        <label style="font-size:0.72rem;color:var(--text-muted);">${te('preuves_mise_oeuvre')}</label>
-                        <div id="anac_preuves_mise_oeuvre_list">${renderProofList(verification.preuves_mise_oeuvre, 'anac_preuves_mise_oeuvre_list', aacEditable)}</div>
-                        ${renderUploadZone('anac_preuves_mise_oeuvre', 'anac_preuves_mise_oeuvre_list', aacEditable)}
-                    </div>
+                    ${aacEditable ? `<div style="display:flex;gap:0.35rem;margin-top:0.45rem;">
+                        <textarea class="form-input" id="anac_suivi_saisie" rows="1" placeholder="${te('suivi_placeholder')}" style="flex:1;font-size:0.76rem;padding:0.3rem;"></textarea>
+                        <button class="btn btn-sm btn-primary" onclick="execAjouterSuivi()" style="padding:0.3rem 0.55rem;font-size:0.72rem;">${te('ajouter_suivi')}</button>
+                    </div>` : ''}
+                    <label class="exec-pac-case" style="margin-top:0.45rem;">
+                        <input type="checkbox" id="anac_verif_terrain" onchange="execPacTeinteResultats()" ${verification.verification_terrain ? 'checked' : ''} ${aacDis}>
+                        <span>${te('verifier_terrain')}</span>
+                    </label>
                 </div>
 
-                <!-- 3c Clôture -->
-                <div style="border:1px solid #d1fae5;border-radius:6px;padding:0.55rem 0.65rem;background:#f0fdf4;">
-                    <div style="font-weight:600;font-size:0.8rem;margin-bottom:0.4rem;color:#065f46;">${te('cloture_fnc')}</div>
-                    <div class="form-group">
-                        <label style="font-size:0.72rem;color:var(--text-muted);">${te('mise_oeuvre_effective')}</label>
-                        <select class="form-input" id="anac_mise_effective" ${aacDis} style="font-size:0.78rem;${lockedBg(aacEditable)}">
-                            <option value=""></option>
-                            <option value="OUI" ${cloture.mise_en_oeuvre_effective === 'OUI' ? 'selected' : ''}>${te('oui_label')}</option>
-                            <option value="NON" ${cloture.mise_en_oeuvre_effective === 'NON' ? 'selected' : ''}>${te('non_label')}</option>
-                        </select>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.35rem;">
+                <!-- C3 Preuves de mise en oeuvre recueillies -->
+                <div class="exec-resultats-bloc">
+                    <div class="exec-resultats-bloc-titre">${te('preuves_recueillies')}</div>
+                    <div id="anac_preuves_mise_oeuvre_list">${renderProofList(verification.preuves_mise_oeuvre, 'anac_preuves_mise_oeuvre_list', aacEditable)}</div>
+                    ${renderUploadZone('anac_preuves_mise_oeuvre', 'anac_preuves_mise_oeuvre_list', aacEditable)}
+                </div>
+
+            </div>
+
+            <!-- 3d Clôture : pleine largeur, sous les trois blocs -->
+            <div class="exec-resultats-bloc" style="margin-top:0.85rem;">
+                <div class="exec-resultats-bloc-titre">${te('cloture_fnc')}</div>
+                    <label class="exec-pac-case">
+                        <input type="checkbox" id="anac_mise_effective" onchange="execPacTeinteResultats()" ${cloture.mise_en_oeuvre_effective === 'OUI' ? 'checked' : ''} ${aacDis}>
+                        <span>${te('mise_oeuvre_effective')}</span>
+                    </label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.45rem;">
                         <div class="form-group">
                             <label style="font-size:0.72rem;color:var(--text-muted);">${te('date_solde')}</label>
-                            <input type="date" class="form-input" id="anac_date_solde" value="${_esc(cloture.date_solde || (fnc.date_solde ? fnc.date_solde.slice(0,10) : ''))}" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">
+                            <input type="date" class="form-input" id="anac_date_solde" value="${_escAttr(cloture.date_solde || (fnc.date_solde ? fnc.date_solde.slice(0,10) : ''))}" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">
                         </div>
                         <div class="form-group">
                             <label style="font-size:0.72rem;color:var(--text-muted);">${te('solde_par')}</label>
-                            <input type="text" class="form-input" id="anac_solde_par" value="${_esc(cloture.solde_par || '')}" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">
+                            <input type="text" class="form-input" id="anac_solde_par" value="${_escAttr(cloture.solde_par || '')}" ${aacRO} style="font-size:0.78rem;${lockedBg(aacEditable)}">
                         </div>
                     </div>
-                </div>
-
             </div>
         </div>
     </div>` : ''}`;
 
-    // ── Footer buttons (role-based visibility) ───────────────────────
-    let footerHtml = `<button class="btn btn-outline" onclick="execCloseSlider()">${te('close')}</button>`;
+    // ── Barre du bas ─────────────────────────────────────────────────
+    // Annuler abandonne les saisies en cours sans refermer le formulaire.
+    let footerHtml = `<button class="btn btn-outline" onclick="execAnnulerSaisiePAC('${fncId}')">${te('cancel')}</button>`;
 
     // Brouillon — visible for AAC and Postulant when not soldée
     if (!isSoldee) {
-        footerHtml += ` <button class="btn btn-outline" onclick="execSaveDraftPAC('${fncId}')">${EXEC_ICONS.edit} ${te('sauver_brouillon')}</button>`;
+        footerHtml += ` <button class="btn btn-outline" onclick="execSaveDraftPAC('${fncId}')">${te('sauver_brouillon')}</button>`;
     }
 
-    // Soumettre pour Validation — Postulant only, when ouverte/pac_rejetee
-    if (isPostulant && (isOuverte || isPACRejete)) {
-        footerHtml += ` <button class="btn btn-primary" onclick="execSubmitPAC('${fncId}')">${EXEC_ICONS.send} ${te('soumettre_validation')}</button>`;
-    } else if (isPostulant && isPACSoumis) {
-        // disabled state: shows the user the PAC is awaiting AAC review
-        footerHtml += ` <button class="btn btn-primary" disabled title="${te('pac_soumis')}">${EXEC_ICONS.send} ${te('soumettre_validation')}</button>`;
-    }
+    // Soumettre, Renvoyer, Accepter PAC, Accepter PAC et Preuves, Non
+    // acceptable, Acceptable, Clôturer : tous sur la ligne du fil.
 
-    // Renvoyer au postulant — AAC only, when pac_soumis
-    if (isAAC && isPACSoumis) {
-        footerHtml += ` <button class="btn btn-danger" onclick="execReturnPACtoPostulant('${fncId}')">${EXEC_ICONS.x} ${te('renvoyer_postulant')}</button>`;
-    }
+    // Export PDF de la fiche complète, à tout moment du circuit.
+    footerHtml += ` <button class="btn btn-primary" onclick="execExporterFncPdf('${fncId}')">${EXEC_ICONS.download} ${te('export_pdf')}</button>`;
 
-    // Solder la Constatation — AAC only, when not soldée
-    if (isAAC && !isSoldee) {
-        footerHtml += ` <button class="btn btn-success" onclick="execCloseFNC('${fncId}')">${EXEC_ICONS.check} ${te('solder_constatation')}</button>`;
-    }
-
-    // Export PDF — visible always when soldée (placeholder for now)
-    if (isSoldee) {
-        footerHtml += ` <button class="btn btn-primary" onclick="alert('Export PDF à venir')">${EXEC_ICONS.download} ${te('export_pdf')}</button>`;
-    }
-
-    execShowSlider(`${EXEC_ICONS.constatations} ${te('suivi_pac')} — ${_esc(fnc.reference || '')}`, bodyHtml, footerHtml, 'max');
+    // Bandeau : sortie du formulaire à l'extrême gauche, avant son intitulé.
+    // Retour ramène là d'où l'on vient quand une provenance a été armée, et
+    // referme simplement le volet sinon.
+    const titreHtml = `<button class="btn btn-outline btn-sm exec-proc-retour" onclick="execRetourVolet()">
+            ${EXEC_ICONS.back || ''} ${te('back')}
+        </button>${EXEC_ICONS.constatations} ${te('suivi_pac')} — ${_esc(fnc.reference || '')}`;
+    execShowSlider(titreHtml, bodyHtml, footerHtml, 'max');
+    EXEC_STATE.voletRejouer = () => execOpenPACSlider(fncId);
+    // Le formulaire se rejoue à chaque étape : pas de glissement du volet ni de
+    // fondu du corps entre deux états.
+    document.getElementById('execSlider')?.classList.add('exec-proc-instant');
+    document.getElementById('execSliderOverlay')?.classList.add('exec-proc-instant');
+    // Le bandeau porte l'accès aux discussions à la place de la croix.
+    _execPacInstallerDiscussions(fncId, echangesPac, isSoldee);
+    execPacTeinteResultats();
 }
 
 function _collectProofsFromContainer(containerId) {
     const proofs = [];
-    document.querySelectorAll(`#${containerId} > div`).forEach(div => {
-        const path = div.dataset?.path;
-        const name = div.querySelector('span')?.textContent || '';
-        if (path) proofs.push({ filename: name, path });
+    document.querySelectorAll(`#${containerId} > div`).forEach((div, i) => {
+        const d = div.dataset || {};
+        if (!d.path) return;
+        proofs.push({
+            numero: i + 1,
+            filename: d.filename || d.intitule || '',
+            path: d.path,
+            intitule: d.intitule || '',
+            commentaire: d.commentaire || '',
+            date: d.date || '',
+        });
     });
     return proofs;
+}
+
+// ── Pièces jointes : intitulé, commentaire, numérotation ─────────
+// Une pièce se lit de la même façon qu'elle vienne du serveur ou d'un dépôt
+// à l'instant : un seul gabarit, et une renumérotation après chaque retrait.
+function _execPreuveHtml(p, numero, editable) {
+    const intitule = p.intitule || p.filename || '';
+    const fichier = p.filename || '';
+    // Le fichier s'ouvre dans un onglet, servi sous l'intitulé de la pièce ;
+    // son nom d'origine ne paraît nulle part.
+    const lien = p.path
+        ? `${p.path}${p.path.includes('?') ? '&' : '?'}nom=${encodeURIComponent(intitule)}`
+        : '';
+    const date = (p.date || '').slice(0, 10);
+    return `<div class="exec-preuve" data-path="${_escAttr(p.path || '')}" data-filename="${_escAttr(fichier)}"
+                 data-intitule="${_escAttr(intitule)}" data-commentaire="${_escAttr(p.commentaire || '')}"
+                 data-date="${_escAttr(date)}">
+        <div class="exec-preuve-tete">
+            <span class="exec-preuve-num">${numero}</span>
+            ${EXEC_ICONS.file}
+            ${lien
+                ? `<a class="exec-preuve-intitule" href="${_escAttr(lien)}" target="_blank" rel="noopener"
+                       title="${te('ouvrir_piece')}">${_esc(intitule)}</a>`
+                : `<span class="exec-preuve-intitule">${_esc(intitule)}</span>`}
+            ${date ? `<span class="exec-preuve-date" title="${te('preuve_date')}">${_formatDate(date)}</span>` : ''}
+            ${editable ? `<button type="button" class="btn btn-sm btn-outline" title="${te('modifier_piece')}"
+                onclick="execPreuveModifier(this)">${EXEC_ICONS.edit}</button>
+            <button type="button" class="btn btn-sm btn-danger" title="${te('supprimer') || 'Supprimer'}"
+                onclick="execPreuveSupprimer(this)">${EXEC_ICONS.x}</button>` : ''}
+        </div>
+        <div class="exec-preuve-comm"${p.commentaire ? '' : ' hidden'}>${_esc(p.commentaire || '')}</div>
+    </div>`;
+}
+
+// Reprise de l'intitulé et du commentaire d'une pièce déjà déposée.
+window.execPreuveModifier = async function (bouton) {
+    const ligne = bouton.closest('.exec-preuve');
+    if (!ligne) return;
+    const d = ligne.dataset;
+    const saisie = await _execPreuveModal(d.intitule || d.filename || '', {
+        titre: te('modifier_piece'),
+        intitule: d.intitule || '',
+        commentaire: d.commentaire || '',
+        valider: te('enregistrer') || 'Enregistrer',
+    });
+    if (!saisie) return;
+    d.intitule = saisie.intitule;
+    d.commentaire = saisie.commentaire;
+    const titre = ligne.querySelector('.exec-preuve-intitule');
+    if (titre) {
+        titre.textContent = saisie.intitule;
+        if (titre.tagName === 'A' && d.path) {
+            titre.href = `${d.path}${d.path.includes('?') ? '&' : '?'}nom=${encodeURIComponent(saisie.intitule)}`;
+        }
+    }
+    const comm = ligne.querySelector('.exec-preuve-comm');
+    if (comm) {
+        comm.textContent = saisie.commentaire;
+        comm.hidden = !saisie.commentaire;
+    }
+};
+
+function _execRenumeroterPreuves(container) {
+    if (!container) return;
+    [...container.children].forEach((div, i) => {
+        const num = div.querySelector('.exec-preuve-num');
+        if (num) num.textContent = String(i + 1);
+    });
+}
+
+window.execPreuveSupprimer = function (bouton) {
+    const ligne = bouton.closest('.exec-preuve');
+    const container = ligne && ligne.parentElement;
+    if (ligne) ligne.remove();
+    _execRenumeroterPreuves(container);
+};
+
+// Boîte de dialogue posée avant l'envoi : intitulé de la pièce, puis
+// commentaire facultatif adressé à l'AAC. Résout à `null` si l'on renonce.
+function _execPreuveModal(nomFichier, reprise) {
+    return new Promise((resolve) => {
+        document.getElementById('exec_preuve_modal')?.remove();
+        const r = reprise || {};
+        const defaut = r.intitule !== undefined && r.intitule !== ''
+            ? r.intitule
+            : String(nomFichier || '').replace(/\.[^.]+$/, '');
+        const el = document.createElement('div');
+        el.id = 'exec_preuve_modal';
+        el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;';
+        const fermer = (valeur) => { el.remove(); resolve(valeur); };
+        el.onclick = (e) => { if (e.target === el) fermer(null); };
+        el.innerHTML = `
+        <div style="background:var(--bg-card,#fff);border-radius:12px;padding:1.5rem;width:460px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin:0 0 1rem;font-size:1rem;font-weight:700;">${r.titre || te('preuve_dialogue_titre')}</h3>
+            <div class="form-group" style="margin-bottom:0.85rem;">
+                <label for="exec_preuve_intitule" style="font-size:0.85rem;font-weight:600;margin-bottom:0.4rem;display:block;">${te('preuve_intitule')} *</label>
+                <input type="text" id="exec_preuve_intitule" class="form-input" value="${_escAttr(defaut)}" placeholder="${te('preuve_intitule_exemple')}">
+            </div>
+            <div class="form-group" style="margin-bottom:1.25rem;">
+                <label for="exec_preuve_commentaire" style="font-size:0.85rem;font-weight:600;margin-bottom:0.4rem;display:block;">${te('preuve_commentaire')}</label>
+                <textarea id="exec_preuve_commentaire" class="form-input" rows="3" style="resize:vertical;" placeholder="${te('preuve_commentaire_aide')}">${_esc(r.commentaire || '')}</textarea>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
+                <button class="btn btn-outline" id="exec_preuve_annuler">${te('cancel') || 'Annuler'}</button>
+                <button class="btn btn-primary" id="exec_preuve_ok">${r.valider || te('ajouter') || 'Ajouter'}</button>
+            </div>
+        </div>`;
+        document.body.appendChild(el);
+        const champ = el.querySelector('#exec_preuve_intitule');
+        champ.focus();
+        champ.select();
+        el.querySelector('#exec_preuve_annuler').onclick = () => fermer(null);
+        el.querySelector('#exec_preuve_ok').onclick = () => {
+            const intitule = (champ.value || '').trim();
+            if (!intitule) { _execToast(te('preuve_intitule_requis'), 'warning'); champ.focus(); return; }
+            fermer({ intitule, commentaire: (el.querySelector('#exec_preuve_commentaire').value || '').trim() });
+        };
+        champ.onkeydown = (e) => { if (e.key === 'Enter') el.querySelector('#exec_preuve_ok').click(); };
+    });
 }
 
 function execUploadPACProof(inputPrefix) {
@@ -9112,9 +12988,16 @@ function execUploadPACProof(inputPrefix) {
 
 async function execHandlePACProofUpload(files, containerId) {
     if (!files || files.length === 0) return;
+    const container = document.getElementById(containerId);
     for (const file of files) {
+        // L'intitulé est demandé avant l'envoi : renoncer n'envoie rien.
+        const saisie = await _execPreuveModal(file.name);
+        if (!saisie) continue;
         const formData = new FormData();
         formData.append('file', file);
+        // Le serveur enregistre la pièce sous cet intitulé, non sous le nom
+        // du fichier choisi sur le poste.
+        formData.append('nom', saisie.intitule);
         try {
             const res = await fetch(`${EXEC_MODULE_API}/upload`, {
                 method: 'POST',
@@ -9122,94 +13005,791 @@ async function execHandlePACProofUpload(files, containerId) {
                 body: formData
             });
             const data = await res.json();
-            if (data.status === 'ok') {
-                const container = document.getElementById(containerId);
-                if (container) {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
-                    div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
-                        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
-                    div.dataset.path = data.path;
-                    container.appendChild(div);
-                }
+            if (data.status === 'ok' && container) {
+                container.insertAdjacentHTML('beforeend', _execPreuveHtml({
+                    filename: data.filename, path: data.path,
+                    intitule: saisie.intitule, commentaire: saisie.commentaire,
+                    date: new Date().toISOString().slice(0, 10),
+                }, container.children.length + 1, true));
+                _execRenumeroterPreuves(container);
             }
         } catch (e) {
             console.error('Upload PAC proof error:', e);
+            _execToast((e && e.message) || 'Erreur lors du dépôt de la pièce', 'error');
         }
     }
 }
 
 // ── Per-item comment thread (Détails du suivi) ───────────────────
-function execAddItemComment(itemKey) {
-    const textarea = document.getElementById(`pac_item_input_${itemKey}`);
-    const texte = textarea?.value?.trim();
+
+
+// ══════════════════════════════════════
+//  Fiche complète d'une constatation, prête à imprimer
+// ══════════════════════════════════════
+// Reprend l'intégralité du dossier : identification, plan d'actions et ses
+// preuves, versions antérieures, évaluation de l'AAC, commentaires, échanges.
+// ══════════════════════════════════════
+//  Documents imprimables du module
+// ══════════════════════════════════════
+// Un seul squelette pour toutes les fiches : même en-tête d'autorité, même
+// typographie, mêmes règles de coupure. Les documents restent lisibles en
+// noir et blanc, et les aplats de couleur s'impriment (print-color-adjust).
+function _execDocStyles() {
+    return `
+      @page { size: A4; margin: 16mm 13mm 18mm; }
+      * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { font: 10.5pt/1.5 "Helvetica Neue", Arial, sans-serif; color: #16202c; margin: 0; }
+      header.doc { display: flex; align-items: center; gap: 12px;
+                   border-bottom: 2.5px solid #12406b; padding-bottom: 8px; margin-bottom: 14px; }
+      header.doc .logo { height: 52px; width: auto; flex: 0 0 auto; }
+      header.doc .ident { flex: 1; min-width: 0; }
+      header.doc .sigle { font-size: 11pt; font-weight: 700; color: #12406b; letter-spacing: .01em; }
+      header.doc .lieu { font-size: 8pt; color: #5b6b7d; }
+      header.doc h1 { font-size: 14pt; margin: 4px 0 2px; letter-spacing: .01em; }
+      header.doc .meta { font-size: 8pt; color: #5b6b7d; }
+      header.doc .cartouche { flex: 0 0 auto; text-align: right; }
+      header.doc .cartouche .ref { font: 700 11pt/1.2 ui-monospace, "SFMono-Regular", Menlo, monospace; color: #12406b; }
+      header.doc .cartouche .statut {
+          display: inline-block; margin-top: 3px; padding: 1.5px 7px; border-radius: 9px;
+          font-size: 8pt; font-weight: 700; background: #12406b14; color: #12406b;
+      }
+      .grille { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px 14px;
+                border: 1px solid #dde4ec; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; }
+      .grille > div { min-width: 0; }
+      .grille span { display: block; font-size: 7.5pt; text-transform: uppercase;
+                     letter-spacing: .05em; color: #5b6b7d; }
+      .grille strong { font-size: 10pt; font-weight: 600; overflow-wrap: anywhere; }
+      section { margin-top: 10px; break-inside: avoid; }
+      section > h2 { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .06em; color: #fff;
+                     background: #12406b; margin: 0 0 5px; padding: 3.5px 8px; border-radius: 3px;
+                     border-left: 3px solid #0b2b48; }
+      section h3 { font-size: 8pt; text-transform: uppercase; letter-spacing: .04em; color: #5b6b7d;
+                   margin: 8px 0 2px; }
+      section p, section ol, section ul { margin: 0; }
+      section ol, section ul { padding-left: 17px; }
+      section li { margin-bottom: 1.5px; }
+      table.fiche { width: 100%; border-collapse: collapse; }
+      table.fiche td { border-bottom: 1px solid #eef2f6; padding: 2.5px 6px 2.5px 0; vertical-align: top; }
+      table.fiche tr:last-child td { border-bottom: none; }
+      td.date { width: 68px; color: #5b6b7d; white-space: nowrap; }
+      td.auteur { width: 120px; font-weight: 600; }
+      .paire { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .encadre { border: 1px solid #dde4ec; border-radius: 4px; padding: 7px 9px; }
+      .texte { white-space: pre-wrap; overflow-wrap: anywhere; }
+      .vide { color: #98a5b3; }
+      .etiquette { display: inline-block; padding: 1px 6px; border-radius: 9px;
+                   font-size: 7.5pt; font-weight: 700; background: #0284c71f; color: #075985; }
+      .crit-critique, .crit-majeure { background: #dc26261f; color: #991b1b; }
+      .crit-mineure { background: #16a34a1f; color: #166534; }
+      footer.doc { position: fixed; bottom: 5mm; left: 0; right: 0; font-size: 7.5pt; color: #5b6b7d;
+                   border-top: 1px solid #dde4ec; padding-top: 3px; display: flex; justify-content: space-between; }
+      @media print {
+        section > h2 { background: #12406b !important; color: #fff !important; }
+        header.doc { border-bottom-color: #12406b !important; }
+      }`;
+}
+
+// En-tête d'autorité, commun à toutes les fiches.
+function _execDocEntete(titre, reference, statut) {
+    const aac = EXEC_STATE.data.aac || {};
+    const lieu = [aac.ville, aac.pays].filter(Boolean).map(_esc).join(', ');
+    return `<header class="doc">
+        ${aac.logo ? `<img class="logo" src="${aac.logo}" alt="">` : ''}
+        <div class="ident">
+            <div class="sigle">${_esc(aac.sigle || '')}${aac.nom ? ` — ${_esc(aac.nom)}` : ''}</div>
+            ${lieu ? `<div class="lieu">${lieu}</div>` : ''}
+            <h1>${titre}</h1>
+            <div class="meta">${te('edite_le')} ${new Date().toLocaleDateString('fr-FR')}</div>
+        </div>
+        ${reference || statut ? `<div class="cartouche">
+            ${reference ? `<div class="ref">${_esc(reference)}</div>` : ''}
+            ${statut ? `<div class="statut">${_esc(statut)}</div>` : ''}
+        </div>` : ''}
+    </header>`;
+}
+
+// Ouvre le document dans un onglet et présente la boîte d'impression.
+// Document complet, prêt à imprimer ou à rendre en PDF côté serveur.
+function _execDocHtml(titreOnglet, corps) {
+    const aac = EXEC_STATE.data.aac || {};
+    const jour = new Date().toLocaleDateString('fr-FR');
+    return `<!doctype html><html lang="fr"><head><meta charset="utf-8">
+    <title>${_esc(titreOnglet)}</title><style>${_execDocStyles()}</style></head><body>
+    ${corps}
+    <footer class="doc"><span>OASIS — ${_esc(aac.sigle || '')}</span><span>${_esc(titreOnglet)}</span><span>${jour}</span></footer>
+    </body></html>`;
+}
+
+function _execDocOuvrir(titreOnglet, corps) {
+    const html = _execDocHtml(titreOnglet, corps);
+    const fenetre = window.open('', '_blank');
+    if (!fenetre) { _execToast(te('bloqueur_fenetre'), 'warning'); return; }
+    fenetre.document.write(html);
+    fenetre.document.close();
+    fenetre.focus();
+    setTimeout(() => fenetre.print(), 400);
+}
+
+// Petites fabriques partagées par les fiches.
+const _execDocJour = (d) => (d ? _formatDate(String(d).slice(0, 10)) : '—');
+const _execDocChamp = (libelle, valeur) => `<div><span>${libelle}</span><strong>${valeur || '—'}</strong></div>`;
+const _execDocSection = (titre, corps) => `<section><h2>${titre}</h2>${corps || `<p class="vide">—</p>`}</section>`;
+const _execDocTexte = (valeur) => (String(valeur || '').trim()
+    ? `<p class="texte">${_esc(valeur)}</p>` : '<p class="vide">—</p>');
+const _execDocLignes = (lignes) => (lignes.length
+    ? `<table class="fiche"><tbody>${lignes.map((l) => `<tr>
+            <td class="date">${l[0]}</td><td class="auteur">${_esc(l[1] || '')}</td><td>${l[2]}</td>
+        </tr>`).join('')}</tbody></table>`
+    : '');
+const _execDocPreuves = (liste) => ((liste || []).length
+    ? `<ol>${(liste || []).map((p) => `<li>${_esc(p.intitule || p.filename || '')}`
+        + `${p.date ? ` <em>(${_execDocJour(p.date)})</em>` : ''}`
+        + `${p.commentaire ? ` — ${_esc(p.commentaire)}` : ''}</li>`).join('')}</ol>`
+    : '');
+
+// Évaluation d'une constatation, quelle que soit sa forme de stockage.
+function _execDocEvaluation(fnc) {
+    let ev = fnc && fnc.commentaire_evaluation;
+    if (typeof ev === 'string') { try { ev = JSON.parse(ev); } catch { ev = {}; } }
+    return ev || {};
+}
+
+// Date de solde attendue : celle enregistrée, sinon ouverture + délai.
+function _execDocDateDue(fnc) {
+    if (fnc.date_due_cloture) return String(fnc.date_due_cloture).slice(0, 10);
+    const delai = parseInt(fnc.delai_solde || fnc.delai_correction || '0', 10);
+    const ouv = fnc.date_ouverture || String(fnc.date_creation || '').slice(0, 10);
+    if (!delai || !ouv) return '';
+    const d = new Date(ouv);
+    d.setDate(d.getDate() + delai);
+    return d.toISOString().slice(0, 10);
+}
+
+// ── Fiche de constat ─────────────────────────────────────────────
+// Le constat lui-même : ce qui a été relevé, au regard de quoi, avec quelle
+// échéance de traitement. Une page par constatation.
+function _execFicheConstatCorps(fnc, dossier) {
+    const ev = _execDocEvaluation(fnc);
+    const dom = (EXEC_STATE.data.domaines || []).find((d) => d.id === fnc.domaine_id || d.code === fnc.domaine_id);
+    const sec = (EXEC_STATE.data.secteurs || []).find((x) => x.id === fnc.secteur_id);
+    const crit = String(fnc.criticite || fnc.gravite || '').toLowerCase();
+    const preuves = fnc.preuves_constatation || [];
+    return `
+    ${_execDocEntete(te('fiche_constat'), fnc.reference || '', _execStatutLisible(fnc.statut))}
+    <div class="grille">
+        ${_execDocChamp(te('provider'), _esc(fnc.prestataire_nom || (dossier || {}).prestataire_nom || ''))}
+        ${_execDocChamp(te('domaine_label'), _esc(dom ? dom.nom : (fnc.domaine_id || '')))}
+        ${_execDocChamp('Secteur', _esc(sec ? sec.nom : (fnc.secteur_id || '')))}
+        ${_execDocChamp(te('criticite_label'), `<span class="etiquette crit-${_escAttr(crit)}">${_esc(fnc.criticite || fnc.gravite || '—')}</span>`)}
+        ${_execDocChamp(te('date_ouverture'), _execDocJour(fnc.date_ouverture || fnc.date_creation))}
+        ${_execDocChamp(te('delai_label'), `${_esc(fnc.delai_solde || '—')} ${te('jours')}`)}
+        ${_execDocChamp(te('date_due_label'), _execDocJour(_execDocDateDue(fnc)))}
+        ${_execDocChamp(te('emis_par'), _esc(fnc.emis_par || ''))}
+        ${_execDocChamp(te('adresse_a'), _esc(fnc.adresse_a || ''))}
+    </div>
+    ${(dossier && (dossier.reference || dossier.notification_ref)) ? `<div class="grille">
+        ${_execDocChamp(te('dossier') || 'Dossier', _esc(dossier.reference || ''))}
+        ${_execDocChamp('Notification', _esc(dossier.notification_ref || ''))}
+        ${_execDocChamp(te('objet'), _esc(dossier.objet_activite || dossier.notification_objet || ''))}
+    </div>` : ''}
+    ${_execDocSection(te('ref_reglementaires_label'), _execDocTexte(fnc.ref_reglementaires || fnc.exigence_ref))}
+    ${_execDocSection(te('description_constatation'), _execDocTexte(fnc.description || fnc.titre))}
+    ${_execDocSection(te('recommandation'), _execDocTexte(fnc.recommandation))}
+    ${_execDocSection(te('preuves'), _execDocPreuves(preuves))}
+    ${ev.rejet_info ? _execDocSection(te('motif_rejet') || 'Motif de rejet', _execDocTexte(ev.rejet_info.motif)) : ''}`;
+}
+
+function execFicheConstatPdf(fncId) {
+    const dossier = EXEC_STATE.selectedDossier || {};
+    const fnc = (dossier.constatations || []).find((c) => c.id === fncId)
+        || (EXEC_STATE.data.constatations || []).find((c) => c.id === fncId);
+    if (!fnc) { _execToast(te('no_data'), 'warning'); return; }
+    _execDocOuvrir(`${te('fiche_constat')} — ${fnc.reference || ''}`,
+        _execFicheConstatCorps(fnc, dossier));
+}
+
+// Toutes les constatations d'un dossier, une fiche par page.
+function execFichesConstatDossier(dossierId) {
+    const dossier = EXEC_STATE.selectedDossier || {};
+    const liste = dossier.constatations || [];
+    if (!liste.length) { _execToast(te('no_data'), 'info'); return; }
+    const corps = liste.map((c, i) => `<div${i ? ' style="page-break-before:always;"' : ''}>`
+        + `${_execFicheConstatCorps(c, dossier)}</div>`).join('');
+    _execDocOuvrir(`${te('fiches_constat')} — ${dossier.reference || dossierId}`, corps);
+}
+
+// ── Fiche de suivi (plan d'actions correctives) ──────────────────
+// Le traitement de la constatation : plan retenu, preuves, évaluation de
+// l'AAC et échanges de suivi. Se lit à la suite de la fiche de constat.
+async function execExporterFncPdf(fncId) {
+    let fnc;
+    try {
+        fnc = await api(`${EXEC_MODULE_API}/constatations/${fncId}`);
+    } catch (e) {
+        console.error('Export FNC :', e);
+        _execToast((e && e.message) || 'Erreur lors de la préparation du document', 'error');
+        return;
+    }
+    if (!fnc) return;
+
+    const ev = _execDocEvaluation(fnc);
+    const anac = ev.evaluation_anac || {};
+    const acceptation = anac.acceptation || {};
+    const verif = anac.verification || {};
+    const cloture = anac.cloture || {};
+    const pac = (fnc.actions_correctives || [])[0] || {};
+    const dom = (EXEC_STATE.data.domaines || []).find((d) => d.id === fnc.domaine_id || d.code === fnc.domaine_id);
+    const crit = String(fnc.criticite || fnc.gravite || '').toLowerCase();
+
+    const commentaires = [
+        ...Object.entries(ev.items_comments || {}).flatMap(([cle, l]) => (l || []).map((x) => ({
+            date: x.date, auteur: x.auteur, items: [cle === 'cause_primaire' ? 'cause' : cle], texte: x.texte,
+        }))),
+        ...(ev.suivi_commentaires || []).filter((x) => x.publie),
+    ].sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+    const corps = `
+    ${_execDocEntete(te('fiche_suivi_pac'), fnc.reference || '', _execStatutLisible(fnc.statut))}
+    <div class="grille">
+        ${_execDocChamp(te('provider'), _esc(fnc.prestataire_nom || ''))}
+        ${_execDocChamp(te('domaine_label'), _esc(dom ? dom.nom : (fnc.domaine_id || '')))}
+        ${_execDocChamp(te('criticite_label'), `<span class="etiquette crit-${_escAttr(crit)}">${_esc(fnc.criticite || fnc.gravite || '—')}</span>`)}
+        ${_execDocChamp(te('date_ouverture'), _execDocJour(fnc.date_ouverture || fnc.date_creation))}
+        ${_execDocChamp(te('date_due_label'), _execDocJour(_execDocDateDue(fnc)))}
+        ${_execDocChamp(te('date_solde'), _execDocJour(cloture.date_solde || fnc.date_solde))}
+    </div>
+
+    ${_execDocSection(te('description_constatation'), _execDocTexte(fnc.description || fnc.titre))}
+
+    ${_execDocSection(te('plan_actions_correctives'), `
+        <h3>${te('cause_root')}</h3>${_execDocTexte(pac.cause_primaire)}
+        <h3>${te('action_curative_correction')}${pac.curative_date_prevue
+            ? ` — ${te('date_prevue')} : ${_execDocJour(pac.curative_date_prevue)}` : ''}</h3>
+        ${_execDocTexte(pac.action_curative)}
+        ${_execDocPreuves(pac.curative_preuves)}
+        <h3>${te('action_corrective_prevention')}${pac.corrective_date_prevue
+            ? ` — ${te('date_prevue')} : ${_execDocJour(pac.corrective_date_prevue)}` : ''}</h3>
+        ${_execDocTexte(pac.actions_correctives)}
+        ${_execDocPreuves(pac.corrective_preuves)}`)}
+
+    ${_execDocSection(te('evaluation_suivi_aac'), `
+        <div class="paire">
+            <div class="encadre">
+                <h3 style="margin-top:0;">${te('acceptation_propositions')}</h3>
+                <p>${te('pac_accepte')} : <strong>${acceptation.accepte === 'OUI' ? te('oui_label') : '—'}</strong>${
+                    acceptation.date ? ` · ${te('date_acceptation')} ${_execDocJour(acceptation.date)}` : ''}</p>
+                <p>${te('verifier_terrain')} : <strong>${verif.verification_terrain ? te('oui_label') : te('non_label')}</strong></p>
+                <h3>${te('preuves_recueillies')}</h3>
+                ${_execDocPreuves(verif.preuves_mise_oeuvre) || '<p class="vide">—</p>'}
+            </div>
+            <div class="encadre">
+                <h3 style="margin-top:0;">${te('cloture_fnc')}</h3>
+                <p>${te('mise_oeuvre_effective')} : <strong>${cloture.mise_en_oeuvre_effective === 'OUI' ? te('oui_label') : '—'}</strong></p>
+                <p>${te('date_solde')} : ${_execDocJour(cloture.date_solde || fnc.date_solde)}</p>
+                <p>${te('solde_par')} : ${_esc(cloture.solde_par || '—')}</p>
+            </div>
+        </div>
+        <h3>${te('commentaire_general_suivi')}</h3>
+        ${_execDocLignes((verif.suivis || []).map((x) => [_execDocJour(x.date), x.auteur, _esc(x.texte || '')]))
+            || '<p class="vide">—</p>'}`)}
+
+    ${_execDocSection(te('details_suivi'), _execDocLignes(commentaires.map((c) => [
+        _execDocJour(c.date), c.auteur,
+        `${(c.items || []).map((k) => `<span class="etiquette">${_esc(k === 'autres'
+            ? (c.precision || te('motif_autres')) : te(`item_${k}`))}</span>`).join(' ')} ${_esc(c.texte || '')}`,
+    ])))}`;
+
+    _execDocOuvrir(`${te('fiche_suivi_pac')} — ${fnc.reference || ''}`, corps);
+}
+
+// Libellé lisible d'un statut de constatation.
+function _execStatutLisible(statut) {
+    const cle = String(statut || '');
+    const libelle = te(cle);
+    return libelle && libelle !== cle ? libelle : cle;
+}
+
+// ══════════════════════════════════════
+//  Échanges AAC ↔ prestataire sur une constatation
+// ══════════════════════════════════════
+// Même présentation que la négociation de l'étape Confirmation : fil de
+// bulles, réponse en bas. Sans le volet d'accord, propre à l'activité.
+function _execEchangesPacHtml(echanges, fncId, verrouille) {
+    const moi = (EXEC_STATE.user || {}).username || '';
+    const fil = (echanges || []).map((e, i) => {
+        const aMoi = e.auteur_id && e.auteur_id === moi;
+        const suivant = echanges[i + 1];
+        const dernierDuGroupe = !(suivant && suivant.auteur_id === e.auteur_id);
+        const initiales = ((e.auteur_prenom || 'U')[0] + ((e.auteur_nom || '')[0] || '')).toUpperCase();
+        const nom = `${_esc(e.auteur_prenom || '')} ${_esc(e.auteur_nom || '')}`.trim();
+        const avatar = !aMoi
+            ? `<div class="exchange-avatar"${dernierDuGroupe ? '' : ' style="visibility:hidden;"'}>${initiales}</div>`
+            : '';
+        return `<div class="exchange-bubble-row ${aMoi ? 'self' : 'other'}">
+            ${avatar}
+            <div class="exchange-bubble">
+                <div class="exchange-bubble-body">${_esc(String(e.contenu || '').trim())}</div>
+            </div>
+        </div>
+        ${dernierDuGroupe ? `<div class="exchange-bubble-time ${aMoi ? 'self' : 'other'}">
+            <span class="exchange-bubble-auteur">${nom || (e.auteur_type === 'aac' ? te('aac_label') || 'AAC' : '—')}</span>
+            <span>${_formatDatetime(e.date_creation)}</span>
+        </div>` : ''}`;
+    }).join('');
+
+    return `<div class="exchange-chat discussions-chat" id="exec_pac_echanges">
+        ${echanges && echanges.length ? fil
+            : `<p style="color:var(--text-muted);font-size:0.85rem;text-align:center;padding:1.25rem 0;">${te('no_data')}</p>`}
+    </div>
+    ${verrouille ? '' : `<div class="exchange-reply">
+        <label>${te('repondre')}</label>
+        <div class="exchange-reply-row">
+            <textarea class="form-input" id="exec_pac_echange_msg" rows="1" placeholder="${te('votre_message')}"
+                      style="resize:none;overflow:hidden;min-height:2.2rem;line-height:1.4;"
+                      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"></textarea>
+            <button class="btn btn-primary" onclick="execEnvoyerEchangePac('${fncId}')">
+                ${EXEC_ICONS.send} ${te('envoyer')}
+            </button>
+        </div>
+    </div>`}`;
+}
+
+// Repère de lecture : dernier passage du compte dans le fil de la
+// constatation. Un message d'autrui postérieur est réputé non lu.
+function _execPacCleLecture(fncId) {
+    const u = (EXEC_STATE.user || {}).username || 'anonyme';
+    return `pac_echanges_lu_${fncId}_${u}`;
+}
+
+function _execPacNonLus(fncId, echanges) {
+    const moi = (EXEC_STATE.user || {}).username || '';
+    const repere = localStorage.getItem(_execPacCleLecture(fncId)) || '';
+    return (echanges || []).filter((e) => e.auteur_id !== moi
+        && String(e.date_creation || '') > repere).length;
+}
+
+// Bouton du bandeau + tiroir des discussions, à la place de la croix.
+function _execPacInstallerDiscussions(fncId, echanges, verrouille) {
+    const entete = document.querySelector('#execSlider .exec-slider-header');
+    if (!entete) return;
+    entete.querySelector('.exec-slider-close')?.remove();
+    entete.querySelector('.exec-pac-discussions')?.remove();
+
+    const nonLus = _execPacNonLus(fncId, echanges);
+    const bouton = document.createElement('button');
+    bouton.className = `exec-pac-discussions${nonLus ? ' alerte' : ''}`;
+    bouton.type = 'button';
+    bouton.title = te('discussions');
+    bouton.innerHTML = `${EXEC_ICONS.send} <span>${te('discussions')}</span>
+        ${nonLus ? `<span class="exec-pac-discussions-pastille">${nonLus}</span>`
+            : (echanges || []).length ? `<span class="exec-pac-discussions-compte">${echanges.length}</span>` : ''}`;
+    bouton.onclick = () => execPacDiscussionsOuvrir(fncId);
+    entete.appendChild(bouton);
+
+    // Tiroir : glisse de la droite, sur le tiers de la largeur.
+    document.getElementById('execPacTiroir')?.remove();
+    const tiroir = document.createElement('div');
+    tiroir.id = 'execPacTiroir';
+    tiroir.className = 'exec-pac-tiroir';
+    tiroir.innerHTML = `<div class="exec-pac-tiroir-tete">
+            <span>${te('discussions')}</span>
+            <button type="button" onclick="execPacDiscussionsFermer()" title="${te('close')}">${EXEC_ICONS.close}</button>
+        </div>
+        <div class="exec-pac-tiroir-corps">${_execEchangesPacHtml(echanges, fncId, verrouille)}</div>`;
+    document.body.appendChild(tiroir);
+    // Bord supérieur calé sur celui du formulaire, quelle que soit la hauteur
+    // du bandeau de l'application.
+    const volet = document.getElementById('execSlider');
+    if (volet) tiroir.style.top = `${Math.round(volet.getBoundingClientRect().top)}px`;
+}
+
+window.execPacDiscussionsOuvrir = function (fncId) {
+    const tiroir = document.getElementById('execPacTiroir');
+    if (!tiroir) return;
+    tiroir.classList.add('ouvert');
+    // Tout est lu à l'ouverture : le bouton reprend sa couleur.
+    localStorage.setItem(_execPacCleLecture(fncId), new Date().toISOString());
+    const bouton = document.querySelector('.exec-pac-discussions');
+    if (bouton) {
+        bouton.classList.remove('alerte');
+        bouton.querySelector('.exec-pac-discussions-pastille')?.classList.add('exec-pac-discussions-compte');
+        bouton.querySelector('.exec-pac-discussions-pastille')?.classList.remove('exec-pac-discussions-pastille');
+    }
+    const fil = tiroir.querySelector('.exchange-chat');
+    if (fil) fil.scrollTop = fil.scrollHeight;
+    tiroir.querySelector('#exec_pac_echange_msg')?.focus();
+};
+
+window.execPacDiscussionsFermer = function () {
+    document.getElementById('execPacTiroir')?.classList.remove('ouvert');
+};
+
+async function execEnvoyerEchangePac(fncId) {
+    const zone = document.getElementById('exec_pac_echange_msg');
+    const contenu = (zone && zone.value || '').trim();
+    if (!contenu) return;
+    try {
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}/echanges`, {
+            method: 'POST',
+            body: JSON.stringify({ contenu }),
+        });
+        zone.value = '';
+        await execOpenPACSlider(fncId);
+        execPacDiscussionsOuvrir(fncId);          // le tiroir reste ouvert
+    } catch (e) {
+        console.error('Envoi échange PAC :', e);
+        _execToast((e && e.message) || 'Erreur lors de l\'envoi du message', 'error');
+    }
+}
+
+// ══════════════════════════════════════
+//  Commentaires de suivi (volet droit du formulaire PAC)
+// ══════════════════════════════════════
+// Champs du plan pouvant faire l'objet d'un commentaire, plus « Autres ».
+// Rédaction réservée à l'AAC ; le prestataire lit.
+const EXEC_PAC_ITEMS_COMMENTABLES = [
+    'cause', 'action_curative', 'date_curative', 'preuves_curative',
+    'action_corrective', 'date_corrective', 'preuves_corrective',
+];
+
+// `modifiable` : commentaire encore au brouillon, non transmis au prestataire.
+// `rang` numérote les suivis transmis au postulant — 0 pour un brouillon,
+// qui n'en porte pas encore. `deplie` n'est vrai que pour le dernier : les
+// précédents se consultent d'un clic sur leur en-tête.
+function _execCommentaireSuiviHtml(c, modifiable, rang, deplie) {
+    const items = (c.items || []).map((k) => (k === 'autres'
+        ? (c.precision || te('motif_autres')) : te(`item_${k}`)));
+    const brouillon = !c.publie;
+    const fichiers = c.fichiers || [];
+    return `<div class="exec-suivi-comm${brouillon ? ' brouillon' : ''}${deplie ? '' : ' replie'}" data-date="${_escAttr(c.date || '')}" data-auteur="${_escAttr(c.auteur || '')}"
+                 data-items="${_escAttr((c.items || []).join(','))}" data-precision="${_escAttr(c.precision || '')}"
+                 data-texte="${_escAttr(c.texte || '')}" data-publie="${c.publie ? '1' : ''}"
+                 data-fichiers="${_escAttr(JSON.stringify(fichiers))}">
+        <div class="exec-suivi-comm-tete" onclick="execSuiviCommToggle(this)">
+            <span class="exec-suivi-comm-chevron">${EXEC_ICONS.chevronDown}</span>
+            <strong>${rang ? `${te('suivi_rang')} ${rang}` : _esc(c.auteur || '')}</strong>
+            <span>
+                ${rang ? `<em class="exec-suivi-auteur">${_esc(c.auteur || '')}</em>` : ''}
+                ${brouillon ? `<em class="exec-suivi-brouillon">${te('non_transmis')}</em>` : ''}
+                ${c.date ? _formatDate(String(c.date).slice(0, 10)) : ''}
+                ${modifiable && brouillon ? `<button type="button" class="exec-suivi-action" title="${te('modifier')}"
+                        onclick="event.stopPropagation();execModifierCommentaireSuivi(this)">${EXEC_ICONS.edit}</button>
+                    <button type="button" class="exec-suivi-action exec-suivi-supprimer" title="${te('supprimer')}"
+                        onclick="event.stopPropagation();execSupprimerCommentaireSuivi(this)">${EXEC_ICONS.x}</button>` : ''}
+            </span>
+        </div>
+        <div class="exec-suivi-comm-corps">
+            <div class="exec-suivi-comm-items">${items.map((l) => `<span>${_esc(l)}</span>`).join('')}</div>
+            <div class="exec-suivi-comm-texte">${_esc(c.texte || '')}</div>
+            ${fichiers.length ? `<div class="exec-suivi-comm-pj">${fichiers.map((f) => `
+                <a href="${_escAttr(f.path || '')}?nom=${encodeURIComponent(f.filename || '')}" target="_blank" rel="noopener">
+                    ${EXEC_ICONS.file} ${_esc(f.filename || '')}</a>`).join('')}</div>` : ''}
+        </div>
+    </div>`;
+}
+
+// Un suivi se replie et se déplie d'un clic sur son en-tête.
+window.execSuiviCommToggle = function (tete) {
+    tete.closest('.exec-suivi-comm')?.classList.toggle('replie');
+}
+
+// Reprise d'un commentaire non transmis : il repart dans le composeur.
+window.execModifierCommentaireSuivi = function (bouton) {
+    const bloc = bouton.closest('.exec-suivi-comm');
+    const composeur = document.querySelector('.exec-suivi-composeur');
+    if (!bloc || !composeur) return;
+    const items = (bloc.dataset.items || '').split(',').filter(Boolean);
+    composeur.querySelectorAll('.exec-suivi-items input').forEach((i) => {
+        i.checked = items.includes(i.value);
+    });
+    const p = document.getElementById('pac_suivi_precision');
+    if (p) p.value = bloc.dataset.precision || '';
+    const t = document.getElementById('pac_suivi_texte');
+    if (t) t.value = bloc.dataset.texte || '';
+    // Les pièces du brouillon repartent avec lui dans le composeur.
+    const pj = document.getElementById('pac_suivi_pj_liste');
+    if (pj) {
+        pj.innerHTML = '';
+        let fichiers = [];
+        try { fichiers = JSON.parse(bloc.dataset.fichiers || '[]'); } catch { fichiers = []; }
+        fichiers.forEach((f) => {
+            const ligne = document.createElement('span');
+            ligne.className = 'exec-suivi-pj-item';
+            ligne.dataset.path = f.path || '';
+            ligne.dataset.filename = f.filename || '';
+            ligne.innerHTML = `${EXEC_ICONS.file} ${_esc(f.filename || '')}
+                <button type="button" title="${te('supprimer')}"
+                        onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
+            pj.appendChild(ligne);
+        });
+    }
+    bloc.remove();
+    execSuiviItemsChange();
+    if (t) t.focus();
+};
+
+window.execSupprimerCommentaireSuivi = function (bouton) {
+    if (!confirm(te('confirm_supprimer_commentaire'))) return;
+    const liste = document.getElementById('pac_suivi_liste');
+    bouton.closest('.exec-suivi-comm')?.remove();
+    if (liste && !liste.querySelector('.exec-suivi-comm')) {
+        liste.innerHTML = `<em class="exec-suivi-vide" style="color:var(--text-muted);font-size:0.75rem;">${te('aucun_commentaire')}</em>`;
+    }
+};
+
+// Les commentaires en attente deviennent visibles du prestataire dès que
+// l'AAC rend une décision : ils ne sont alors plus modifiables.
+function _execPublierCommentairesSuivi(evalData) {
+    (evalData.suivi_commentaires || []).forEach((c) => { c.publie = true; });
+    return evalData;
+}
+
+// Le commentaire ne s'ouvre qu'une fois l'item désigné ; « Autres » réclame
+// sa précision.
+// Intitulé porté par une case du composeur.
+function _execSuiviLibelleItem(cle) {
+    return cle === 'autres' ? te('motif_autres') : te(`item_${cle}`);
+}
+
+// Les lignes inscrites par les cases se reconnaissent à leur numérotation ;
+// ce que l'AAC écrit à leur suite est du texte libre, jamais renuméroté.
+const EXEC_SUIVI_LIGNE = /^\s*\d+\.\s/;
+
+// La numérotation suit l'ordre des choix, sans trou : cocher ajoute une ligne,
+// décocher retire la sienne, et les lignes restantes se renumérotent.
+function _execSuiviRenumeroter(zone) {
+    let n = 0;
+    zone.value = zone.value.split('\n').map((ligne) => (EXEC_SUIVI_LIGNE.test(ligne)
+        ? ligne.replace(EXEC_SUIVI_LIGNE, () => `${++n}. `)
+        : ligne)).join('\n');
+}
+
+// ── Teinte des « Résultats du Suivi » ────────────────────────────
+// La couleur de la section dit où en est la constatation, d'un coup d'œil :
+//   PAC refusé                       rouge clair
+//   PAC accepté                      orange
+//   … et vérification sur le terrain vert clair
+//   … et mise en oeuvre effective    vert foncé (comme une clôture)
+function execPacTeinteResultats() {
+    const section = document.getElementById('exec_resultats_suivi');
+    if (!section) return;
+    const coche = (id) => !!document.getElementById(id)?.checked;
+    const accepte = coche('anac_pac_accepte');
+    const effective = coche('anac_mise_effective');
+    const soldee = (EXEC_STATE.selectedConstatation || {}).statut === 'soldee';
+    const etat = (!accepte && 'refuse')
+        || ((effective || soldee) && 'clos')
+        || (coche('anac_verif_terrain') && 'terrain')
+        || 'accepte';
+    section.classList.remove('teinte-refuse', 'teinte-accepte', 'teinte-terrain', 'teinte-clos');
+    section.classList.add(`teinte-${etat}`);
+}
+
+function execSuiviItemsChange(caseCochee) {
+    const composeur = document.querySelector('.exec-suivi-composeur');
+    if (!composeur) return;
+    const coches = [...composeur.querySelectorAll('.exec-suivi-items input:checked')];
+    const autres = document.getElementById('pac_suivi_autres');
+    const precision = document.getElementById('pac_suivi_precision');
+    if (precision) precision.hidden = !(autres && autres.checked);
+    const pret = coches.length > 0;
+    const texte = document.getElementById('pac_suivi_texte');
+    const bouton = document.getElementById('pac_suivi_ajouter');
+    if (texte) {
+        texte.disabled = !pret;
+        texte.placeholder = pret ? te('suivi_saisir_commentaire') : te('suivi_choisir_item');
+    }
+    if (bouton) bouton.disabled = !pret;
+
+    // L'item choisi s'inscrit dans la saisie : l'AAC n'a plus qu'à commenter.
+    if (texte && caseCochee) {
+        const libelle = _execSuiviLibelleItem(caseCochee.value);
+        if (caseCochee.checked) {
+            const fin = texte.value.replace(/\s+$/, '');
+            texte.value = `${fin}${fin ? '\n' : ''}0. ${libelle} : `;
+        } else {
+            // Décocher retire la ligne de l'item — sauf si l'AAC y a déjà écrit :
+            // ses mots priment sur la case.
+            const marque = new RegExp(`^\\s*\\d+\\.\\s*${libelle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:(.*)$`);
+            texte.value = texte.value.split('\n')
+                .filter((l) => { const m = marque.exec(l); return !m || m[1].trim(); })
+                .join('\n');
+        }
+        _execSuiviRenumeroter(texte);
+        if (caseCochee.checked) {
+            texte.focus();
+            texte.setSelectionRange(texte.value.length, texte.value.length);
+        }
+    }
+}
+
+function execAjouterCommentaireSuivi() {
+    const composeur = document.querySelector('.exec-suivi-composeur');
+    const liste = document.getElementById('pac_suivi_liste');
+    if (!composeur || !liste) return;
+    const items = [...composeur.querySelectorAll('.exec-suivi-items input:checked')].map((i) => i.value);
+    const texte = (document.getElementById('pac_suivi_texte')?.value || '').trim();
+    const precision = (document.getElementById('pac_suivi_precision')?.value || '').trim();
+    if (!items.length || !texte) return;
+    if (items.includes('autres') && !precision) {
+        _execToast(te('motif_manquant'), 'warning');
+        document.getElementById('pac_suivi_precision')?.focus();
+        return;
+    }
+    const user = EXEC_STATE.user || {};
+    const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'Utilisateur';
+    liste.querySelector('.exec-suivi-vide')?.remove();
+    liste.insertAdjacentHTML('beforeend', _execCommentaireSuiviHtml({
+        date: new Date().toISOString().slice(0, 10), auteur, items, precision, texte,
+        fichiers: _execSuiviFichiersDeposes(), publie: false,
+    }, true, 0, true));
+    liste.querySelectorAll('.exec-suivi-comm:not(:last-child)')
+        .forEach((c) => c.classList.add('replie'));
+    liste.scrollTop = liste.scrollHeight;
+    // Le composeur repart à zéro pour le commentaire suivant.
+    composeur.querySelectorAll('.exec-suivi-items input:checked').forEach((i) => { i.checked = false; });
+    const p = document.getElementById('pac_suivi_precision');
+    if (p) { p.value = ''; p.hidden = true; }
+    const t = document.getElementById('pac_suivi_texte');
+    if (t) t.value = '';
+    const pj = document.getElementById('pac_suivi_pj_liste');
+    if (pj) pj.innerHTML = '';
+    execSuiviItemsChange();
+}
+
+// Pièces déposées dans le composeur, en attente d'être portées au commentaire.
+function _execSuiviFichiersDeposes() {
+    return [...document.querySelectorAll('#pac_suivi_pj_liste [data-path]')].map((e) => ({
+        filename: e.dataset.filename || '', path: e.dataset.path || '',
+    }));
+}
+
+async function execSuiviJoindreFichiers(input) {
+    const liste = document.getElementById('pac_suivi_pj_liste');
+    if (!liste || !input.files || !input.files.length) return;
+    for (const fichier of [...input.files]) {
+        const formData = new FormData();
+        formData.append('file', fichier);
+        formData.append('nom', fichier.name);
+        try {
+            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('pr_token') || ''}` },
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.status !== 'ok') throw new Error(data.error || 'Téléversement refusé');
+            const ligne = document.createElement('span');
+            ligne.className = 'exec-suivi-pj-item';
+            ligne.dataset.path = data.path;
+            ligne.dataset.filename = data.filename;
+            ligne.innerHTML = `${EXEC_ICONS.file} ${_esc(data.filename)}
+                <button type="button" title="${te('supprimer')}"
+                        onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
+            liste.appendChild(ligne);
+        } catch (e) {
+            console.error('Pièce jointe du suivi :', e);
+            _execToast(`${fichier.name} : ${(e && e.message) || 'téléversement impossible'}`, 'error');
+        }
+    }
+    input.value = '';
+}
+
+function _collectCommentairesSuivi() {
+    const liste = document.getElementById('pac_suivi_liste');
+    if (!liste) return null;
+    return [...liste.querySelectorAll('.exec-suivi-comm')].map((d) => ({
+        date: d.dataset.date || '',
+        auteur: d.dataset.auteur || '',
+        items: (d.dataset.items || '').split(',').filter(Boolean),
+        precision: d.dataset.precision || '',
+        texte: d.dataset.texte || '',
+        fichiers: (() => { try { return JSON.parse(d.dataset.fichiers || '[]'); } catch { return []; } })(),
+        publie: !!d.dataset.publie,
+    })).filter((c) => c.texte);
+}
+
+// ── Commentaires généraux de suivi (AAC) ─────────────────────────
+// Chaque suivi porte sa date et le nom de qui l'a enregistré.
+function _execSuiviHtml(s, modifiable) {
+    return `<div class="exec-suivi" data-date="${_escAttr(s.date || '')}" data-auteur="${_escAttr(s.auteur || '')}" data-texte="${_escAttr(s.texte || '')}">
+        <div class="exec-suivi-tete">
+            <strong>${_esc(s.auteur || '')}</strong>
+            <span>
+                ${s.date ? _formatDate(String(s.date).slice(0, 10)) : ''}
+                ${modifiable ? `<button type="button" class="exec-suivi-action" title="${te('modifier')}"
+                        onclick="execModifierSuivi(this)">${EXEC_ICONS.edit}</button>
+                    <button type="button" class="exec-suivi-action exec-suivi-supprimer" title="${te('supprimer')}"
+                        onclick="execSupprimerSuivi(this)">${EXEC_ICONS.x}</button>` : ''}
+            </span>
+        </div>
+        <div>${_esc(s.texte || '')}</div>
+    </div>`;
+}
+
+// Un suivi reste amendable tant que la constatation n'est pas clôturée.
+window.execModifierSuivi = function (bouton) {
+    const bloc = bouton.closest('.exec-suivi');
+    const zone = document.getElementById('anac_suivi_saisie');
+    if (!bloc || !zone) return;
+    zone.value = bloc.dataset.texte || '';
+    bloc.remove();
+    zone.focus();
+};
+
+window.execSupprimerSuivi = function (bouton) {
+    if (!confirm(te('confirm_supprimer_commentaire'))) return;
+    const liste = document.getElementById('anac_suivis_list');
+    bouton.closest('.exec-suivi')?.remove();
+    if (liste && !liste.querySelector('.exec-suivi')) {
+        liste.innerHTML = `<em class="exec-suivi-vide" style="color:var(--text-muted);font-size:0.75rem;">${te('aucun_suivi')}</em>`;
+    }
+};
+
+function execAjouterSuivi() {
+    const zone = document.getElementById('anac_suivi_saisie');
+    const texte = (zone && zone.value || '').trim();
     if (!texte) return;
     const user = EXEC_STATE.user || {};
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'Utilisateur';
-    const role = _execIsAAC() ? 'AAC' : 'Postulant';
-    const date = new Date().toISOString().slice(0, 10);
-    const container = document.getElementById(`pac_item_comments_${itemKey}`);
-    if (!container) return;
-
-    // Drop the "no comment" placeholder if present
-    const placeholder = container.querySelector('em');
-    if (placeholder && container.children.length === 1) container.innerHTML = '';
-
-    const bg = role === 'AAC' ? '#e0f2fe' : '#f0fdf4';
-    const border = role === 'AAC' ? '#0284c7' : '#16a34a';
-    const div = document.createElement('div');
-    div.className = 'pac-comment';
-    div.style.cssText = `padding:0.4rem 0.5rem;margin-bottom:0.3rem;background:${bg};border-left:3px solid ${border};border-radius:4px;font-size:0.75rem;`;
-    div.dataset.auteur = auteur;
-    div.dataset.role = role;
-    div.dataset.date = date;
-    div.dataset.texte = texte;
-    div.innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:0.15rem;">
-        <strong>${_esc(auteur)} <span style="font-weight:normal;color:var(--text-muted);">(${role})</span></strong>
-        <span style="color:var(--text-muted);font-size:0.7rem;">${_formatDate(date)}</span>
-    </div>
-    <div>${_esc(texte)}</div>`;
-    container.appendChild(div);
-    textarea.value = '';
+    const liste = document.getElementById('anac_suivis_list');
+    if (!liste) return;
+    liste.querySelector('.exec-suivi-vide')?.remove();       // retire « aucun suivi »
+    liste.insertAdjacentHTML('beforeend', _execSuiviHtml({
+        date: new Date().toISOString().slice(0, 10), auteur, texte,
+    }, true));
+    zone.value = '';
+    liste.scrollTop = liste.scrollHeight;
 }
 
-function _collectItemsComments() {
-    const itemKeys = ['cause_primaire', 'action_curative', 'date_curative', 'preuves_curative',
-                      'action_corrective', 'date_corrective', 'preuves_corrective'];
-    const out = {};
-    itemKeys.forEach(k => {
-        const container = document.getElementById(`pac_item_comments_${k}`);
-        if (!container) return;
-        const arr = [];
-        container.querySelectorAll('.pac-comment').forEach(div => {
-            const texte = div.dataset?.texte || '';
-            if (!texte) return;
-            arr.push({
-                auteur: div.dataset?.auteur || '',
-                role: div.dataset?.role || '',
-                date: div.dataset?.date || '',
-                texte
-            });
-        });
-        if (arr.length) out[k] = arr;
-    });
-    return out;
+function _collectSuivis() {
+    const liste = document.getElementById('anac_suivis_list');
+    if (!liste) return null;
+    return [...liste.querySelectorAll('.exec-suivi')].map((d) => ({
+        date: d.dataset.date || '', auteur: d.dataset.auteur || '', texte: d.dataset.texte || '',
+    })).filter((s) => s.texte);
 }
 
 function _collectEvaluationANAC() {
+    // Ce que l'écran ne porte plus (isolement, traitement des risques, prononcé
+    // sur les preuves) reste tel qu'enregistré : la saisie ne l'efface pas.
+    const ancienne = ((EXEC_STATE.selectedConstatation?.commentaire_evaluation || {}).evaluation_anac) || {};
+    const coche = (id) => (document.getElementById(id)?.checked ? 'OUI' : '');
     return {
         acceptation: {
-            accepte: document.getElementById('anac_pac_accepte')?.value || '',
+            ...(ancienne.acceptation || {}),
+            accepte: coche('anac_pac_accepte'),
             date: document.getElementById('anac_date_acceptation')?.value || ''
         },
         verification: {
-            isolement_realise: document.getElementById('anac_isolement')?.value || '',
-            risques_traites: document.getElementById('anac_risques')?.value || '',
-            commentaire_efficacite: document.getElementById('anac_commentaire_efficacite')?.value || '',
-            preuves_mise_oeuvre: _collectProofsFromContainer('anac_preuves_mise_oeuvre_list')
+            ...(ancienne.verification || {}),
+            suivis: _collectSuivis() || (ancienne.verification || {}).suivis || [],
+            preuves_mise_oeuvre: _collectProofsFromContainer('anac_preuves_mise_oeuvre_list'),
+            verification_terrain: !!document.getElementById('anac_verif_terrain')?.checked,
         },
         cloture: {
-            mise_en_oeuvre_effective: document.getElementById('anac_mise_effective')?.value || '',
+            ...(ancienne.cloture || {}),
+            mise_en_oeuvre_effective: coche('anac_mise_effective'),
             date_solde: document.getElementById('anac_date_solde')?.value || '',
             solde_par: document.getElementById('anac_solde_par')?.value || ''
         }
@@ -9226,7 +13806,9 @@ function _collectFullEvalData() {
     }
     const out = {
         evaluation_anac: _collectEvaluationANAC(),
-        items_comments: _collectItemsComments()
+        // Le fil de commentaires reprend les échanges de l'ancienne table :
+        // ils y sont repris à l'affichage, la table n'a plus lieu d'être.
+        suivi_commentaires: _collectCommentairesSuivi() || prevObj.suivi_commentaires || [],
     };
     if (prevObj.rejet_info) out.rejet_info = prevObj.rejet_info;
     return out;
@@ -9241,9 +13823,31 @@ function _collectPACData() {
             curative_preuves: _collectProofsFromContainer('pac_curative_preuves_list'),
             actions_correctives: document.getElementById('pac_actions_correctives')?.value || '',
             corrective_date_prevue: document.getElementById('pac_corrective_date_prevue')?.value || '',
-            corrective_preuves: _collectProofsFromContainer('pac_corrective_preuves_list')
+            corrective_preuves: _collectProofsFromContainer('pac_corrective_preuves_list'),
+            // Motifs d'amendement : ceux affichés à l'écran s'ils existent —
+            // un brouillon les conserve, même incomplets —, sinon ceux déjà
+            // enregistrés avec le plan.
+            motifs_amendement: _execPacMotifsSaisis()
+                || (EXEC_STATE.selectedConstatation?.actions_correctives || [{}])[0]?.motifs_amendement || null,
         }]
     };
+}
+
+// Motifs tels qu'affichés, sans exiger qu'ils soient complets : c'est ce
+// qu'un enregistrement en brouillon doit retenir. `null` hors amendement.
+function _execPacMotifsSaisis() {
+    if (!document.getElementById(`motif_sel_${EXEC_PAC_CHAMPS_SUIVIS[0].cle}`)) return null;
+    const motifs = {};
+    EXEC_PAC_CHAMPS_SUIVIS.forEach((champ) => {
+        const sel = document.getElementById(`motif_sel_${champ.cle}`);
+        const bloc = document.getElementById(`motif_bloc_${champ.cle}`);
+        if (!sel || !bloc || !bloc.classList.contains('visible')) return;
+        const motif = sel.value || '';
+        if (!motif) return;
+        const precision = ((document.getElementById(`motif_txt_${champ.cle}`) || {}).value || '').trim();
+        motifs[champ.cle] = { motif, precision: motif === 'motif_autres' ? precision : '' };
+    });
+    return motifs;
 }
 
 // ── Brouillon: PUT without changing status ───────────────────────
@@ -9317,7 +13921,7 @@ async function execReturnPACtoPostulant(fncId) {
     if (!confirm(te('confirm_renvoyer'))) return;
     const user = EXEC_STATE.user || {};
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'AAC';
-    const evalData = _collectFullEvalData();
+    const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
     // Build motif from items that have comments
     const itemsComments = evalData.items_comments || {};
     const itemLabels = {
@@ -9360,10 +13964,297 @@ async function execReturnPACtoPostulant(fncId) {
     }
 }
 
+// ── Étape Mise en oeuvre (prestataire) ───────────────────────────
+// Choix du mode d'écriture. Un second clic sur le même bouton le referme.
+// Les deux modes se cumulent : chaque bouton ouvre ou referme le sien.
+// Renoncer à l'amendement rend le plan à sa version acceptée — y compris ce
+// qu'un enregistrement en brouillon avait déjà écrit. Les preuves déposées
+// entre-temps ne relèvent pas de l'amendement : elles sont conservées.
+async function execPacModeEdition(fncId, mode) {
+    const courants = (EXEC_STATE.pacMode && EXEC_STATE.pacMode.fncId === fncId)
+        ? (EXEC_STATE.pacMode.modes || []) : [];
+    const actif = courants.includes(mode);
+    if (!actif && mode === 'amendement') await _execPacAssurerEmpreinte(fncId);
+    if (actif && mode === 'amendement') {
+        if (!confirm(te('confirm_quitter_amendement'))) return;
+        await _execPacRetablirPlanAccepte(fncId);
+    }
+    const modes = actif ? courants.filter((m) => m !== mode) : courants.concat([mode]);
+    EXEC_STATE.pacMode = modes.length ? { fncId, modes } : null;
+    execOpenPACSlider(fncId);
+}
+
+// Empreinte du plan accepté : posée à l'acceptation depuis cette version du
+// module. Les constatations acceptées auparavant n'en ont pas — on la prend
+// alors à l'entrée en amendement, avant toute modification : le plan en base
+// est encore celui que l'AAC a accepté.
+async function _execPacAssurerEmpreinte(fncId) {
+    const fnc = EXEC_STATE.selectedConstatation || {};
+    if (fnc.id !== fncId || fnc.statut !== 'pac_valide') return;
+    if (((fnc.pac_accepte || {}).actions_correctives || []).length) return;
+    const empreinte = { date: new Date().toISOString(), actions_correctives: fnc.actions_correctives || [] };
+    try {
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ pac_accepte: empreinte }),
+        });
+        fnc.pac_accepte = empreinte;             // disponible sans attendre le rechargement
+        await execRefreshDynamic();
+    } catch (e) {
+        console.error('Empreinte du plan accepté :', e);
+    }
+}
+
+// Remet les champs amendables à leur valeur acceptée et efface les motifs.
+async function _execPacRetablirPlanAccepte(fncId) {
+    const fnc = EXEC_STATE.selectedConstatation || {};
+    const accepte = ((fnc.pac_accepte || {}).actions_correctives || [])[0];
+    if (!accepte) return;                       // aucune empreinte : rien à rendre
+    const courant = (fnc.actions_correctives || [])[0] || {};
+    const divergent = EXEC_PAC_CHAMPS_SUIVIS
+        .some((c) => String(courant[c.cle] || '').trim() !== String(accepte[c.cle] || '').trim());
+    if (!divergent && !courant.motifs_amendement) return;
+
+    // Le plan revient à l'accepté ; les pièces jointes du moment demeurent.
+    const rendu = { ...courant };
+    EXEC_PAC_CHAMPS_SUIVIS.forEach((c) => { rendu[c.cle] = accepte[c.cle] || ''; });
+    rendu.motifs_amendement = null;
+    try {
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ actions_correctives: [rendu] }),
+        });
+        _execToast(te('plan_retabli'), 'success');
+        await execRefreshDynamic();
+    } catch (e) {
+        console.error('Rétablissement du plan accepté :', e);
+        _execToast((e && e.message) || 'Erreur lors du rétablissement du plan', 'error');
+    }
+}
+
+// Soumission depuis l'étape Mise en oeuvre.
+//   preuves    : le plan reste tel quel, seules les preuves partent ; le
+//                circuit demeure à « Mise en oeuvre ».
+//   amendement : le plan est rouvert ; l'acceptation tombe et le circuit
+//                revient à « Acceptation ». L'ancien plan est versionné.
+async function execSoumettreMiseEnOeuvre(fncId, mode) {
+    const amendement = mode === 'amendement';
+
+    // Amendement : tout champ divergent de la version acceptée doit porter son
+    // motif. Sans quoi la soumission ne part pas.
+    let motifsAmendement = null;
+    if (amendement) {
+        const { motifs, manquants } = _execPacMotifs();
+        if (manquants.length) {
+            // Chaque motif absent est encerclé de rouge ; le premier reçoit le
+            // curseur.
+            document.querySelectorAll('.exec-pac-manquant')
+                .forEach((e) => e.classList.remove('exec-pac-manquant'));
+            manquants.forEach((m) => {
+                const champ = document.getElementById(m.motif === 'motif_autres'
+                    ? `motif_txt_${m.champ.cle}` : `motif_sel_${m.champ.cle}`);
+                if (champ) champ.classList.add('exec-pac-manquant');
+            });
+            const premier = manquants[0];
+            const cible = document.getElementById(premier.motif === 'motif_autres'
+                ? `motif_txt_${premier.champ.cle}` : `motif_sel_${premier.champ.cle}`);
+            if (cible) { cible.scrollIntoView({ block: 'center' }); cible.focus(); }
+            _execToast(`${te('motif_manquant')} : ${manquants.map((m) => te(m.champ.libelle)).join(', ')}`, 'warning');
+            return;
+        }
+        motifsAmendement = motifs;
+    }
+
+    if (!confirm(amendement ? te('confirm_soumettre_amendement') : te('confirm_soumettre_preuves'))) return;
+
+    const pac = _collectPACData();
+    if (amendement && pac.actions_correctives[0]) {
+        pac.actions_correctives[0].motifs_amendement = motifsAmendement;
+    }
+    const evalData = _collectFullEvalData();
+    const user = EXEC_STATE.user || {};
+    const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || '';
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+
+    try {
+        if (amendement) {
+            // L'acceptation est remise en jeu : le serveur la vide et archive
+            // le plan précédent. Le bandeau de dépôt de preuves n'a plus cours.
+            delete evalData.preuves_info;
+            delete evalData.rejet_info;
+            evalData.submit_info = { date: aujourdhui, auteur, motif: te('pac_amende') };
+            await api(`${EXEC_MODULE_API}/constatations/${fncId}/submit-pac`, {
+                method: 'PUT',
+                body: JSON.stringify({ actions_correctives: pac.actions_correctives, evaluation: evalData, amendement: true }),
+            });
+            _execToast(te('pac_amende_soumis'), 'success');
+        } else {
+            evalData.preuves_info = { date: aujourdhui, auteur };
+            // De nouvelles preuves annulent le refus précédent.
+            delete evalData.preuves_refus;
+            const anacP = evalData.evaluation_anac || (evalData.evaluation_anac = {});
+            if ((anacP.verification || {}).preuves_acceptees === 'NON') {
+                anacP.verification = { ...anacP.verification, preuves_acceptees: '' };
+            }
+            await api(`${EXEC_MODULE_API}/constatations/${fncId}/submit-preuves`, {
+                method: 'PUT',
+                body: JSON.stringify({ actions_correctives: pac.actions_correctives, evaluation: evalData }),
+            });
+            _execToast(te('preuves_soumises'), 'success');
+        }
+        EXEC_STATE.pacMode = null;
+        await execRefreshDynamic();
+        const maj = (EXEC_STATE.data.constatations || []).find((c) => c.id === fncId);
+        if (maj) EXEC_STATE.selectedConstatation = maj;
+        execOpenPACSlider(fncId);
+    } catch (e) {
+        console.error('Soumission mise en oeuvre error:', e);
+        _execToast((e && e.message) || 'Erreur lors de la soumission', 'error');
+    }
+}
+
+// ── Étape Mise en oeuvre : prononcé de l'AAC sur les preuves ─────
+// Refus : le circuit reste à la mise en oeuvre, un bandeau rouge porte le
+// motif, et le prestataire reprend la main pour déposer de nouvelles preuves.
+function execPreuvesNonAcceptables(fncId) {
+    _execCommentModal(te('preuves_non_acceptables'), '#dc2626', async (motif) => {
+        const user = EXEC_STATE.user || {};
+        const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'AAC';
+        const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
+        const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
+        anac.verification = { ...(anac.verification || {}), preuves_acceptees: 'NON' };
+        evalData.preuves_refus = { date: new Date().toISOString().slice(0, 10), auteur, motif };
+        delete evalData.preuves_info;
+        try {
+            await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ commentaire_evaluation: evalData }),
+            });
+            _execToast(te('preuves_refusees'), 'success');
+            await execRefreshDynamic();
+            execOpenPACSlider(fncId);
+        } catch (e) {
+            console.error('Refus des preuves :', e);
+            _execToast((e && e.message) || 'Erreur lors du refus des preuves', 'error');
+        }
+    });
+}
+
+// Acceptation : l'étape « Mise en oeuvre » se ferme et la clôture s'ouvre.
+// Si l'AAC a coché « À vérifier sur le terrain », un bandeau l'annonce.
+async function execAccepterPreuves(fncId) {
+    const terrain = !!document.getElementById('anac_verif_terrain')?.checked;
+    if (!confirm(terrain ? te('confirm_accepter_preuves_terrain') : te('confirm_accepter_preuves'))) return;
+    const user = EXEC_STATE.user || {};
+    const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'AAC';
+    const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
+    const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
+    anac.verification = {
+        ...(anac.verification || {}),
+        preuves_acceptees: 'OUI',
+        verification_terrain: terrain,
+        date_acceptation_preuves: new Date().toISOString().slice(0, 10),
+        acceptees_par: auteur,
+    };
+    delete evalData.preuves_refus;
+    try {
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ commentaire_evaluation: evalData }),
+        });
+        _execToast(te('preuves_acceptees_ok'), 'success');
+        await execRefreshDynamic();
+        execOpenPACSlider(fncId);
+    } catch (e) {
+        console.error('Acceptation des preuves :', e);
+        _execToast((e && e.message) || 'Erreur lors de l\'acceptation des preuves', 'error');
+    }
+}
+
+// Annuler : les saisies non enregistrées sont abandonnées et le formulaire se
+// recharge tel qu'il est en base. Il ne se referme pas.
+function execAnnulerSaisiePAC(fncId) {
+    if (!confirm(te('confirm_annuler_saisie'))) return;
+    execOpenPACSlider(fncId);
+}
+
+// Étape Clôture : l'AAC rend la main au prestataire en rouvrant la mise en
+// oeuvre — l'acceptation des preuves est retirée, le motif est consigné.
+function execRenvoyerMiseEnOeuvre(fncId) {
+    _execCommentModal(te('renvoyer_mise_oeuvre'), '#dc2626', async (motif) => {
+        const user = EXEC_STATE.user || {};
+        const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'AAC';
+        const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
+        const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
+        anac.verification = {
+            ...(anac.verification || {}),
+            preuves_acceptees: '', date_acceptation_preuves: '', acceptees_par: '',
+        };
+        anac.cloture = { ...(anac.cloture || {}), mise_en_oeuvre_effective: '' };
+        evalData.retour_mise_oeuvre = { date: new Date().toISOString().slice(0, 10), auteur, motif };
+        try {
+            await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ commentaire_evaluation: evalData }),
+            });
+            _execToast(te('renvoye_mise_oeuvre'), 'success');
+            await execRefreshDynamic();
+            execOpenPACSlider(fncId);
+        } catch (e) {
+            console.error('Renvoi à la mise en oeuvre :', e);
+            _execToast((e && e.message) || 'Erreur lors du renvoi', 'error');
+        }
+    });
+}
+
+// ── Accepter le PAC (AAC) ────────────────────────────────────────
+// `avecPreuves` = faux : seul le plan d'actions est accepté ; l'étape
+// « Mise en oeuvre » s'ouvre et attend les preuves.
+// `avecPreuves` = vrai : plan et preuves acceptés d'un même geste ; les deux
+// étapes se ferment et le circuit se présente à la clôture.
+async function execAccepterPAC(fncId, avecPreuves) {
+    const question = avecPreuves ? te('confirm_accepter_pac_preuves') : te('confirm_accepter_pac');
+    if (!confirm(question)) return;
+
+    const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
+    const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+
+    anac.acceptation = { ...(anac.acceptation || {}), accepte: 'OUI' };
+    if (!anac.acceptation.date) anac.acceptation.date = aujourdhui;
+
+    if (avecPreuves) {
+        const user = EXEC_STATE.user || {};
+        anac.verification = {
+            ...(anac.verification || {}),
+            preuves_acceptees: 'OUI',
+            date_acceptation_preuves: aujourdhui,
+            acceptees_par: `${user.prenom || ''} ${user.nom || ''}`.trim() || user.username || 'AAC',
+        };
+    }
+    // Le plan est accepté : la mention de renvoi n'a plus lieu d'être.
+    delete evalData.rejet_info;
+
+    try {
+        await api(`${EXEC_MODULE_API}/constatations/${fncId}/validate-pac`, {
+            method: 'PUT',
+            body: JSON.stringify({ evaluation: evalData }),
+        });
+        _execToast(avecPreuves ? te('pac_preuves_acceptes') : te('pac_accepte_ok'), 'success');
+        await execRefreshDynamic();
+        const maj = (EXEC_STATE.data.constatations || []).find((c) => c.id === fncId);
+        if (maj) EXEC_STATE.selectedConstatation = maj;
+        execOpenPACSlider(fncId);
+    } catch (e) {
+        console.error('Accepter PAC error:', e);
+        _execToast((e && e.message) || 'Erreur lors de l\'acceptation du PAC', 'error');
+    }
+}
+
 // ── Solder la Constatation (AAC) ─────────────────────────────────
 async function execCloseFNC(fncId) {
     if (!confirm(te('confirm_solder'))) return;
-    const evalData = _collectFullEvalData();
+    const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
     try {
         await api(`${EXEC_MODULE_API}/constatations/${fncId}/close`, {
             method: 'PUT',
@@ -9488,48 +14379,6 @@ function execRenderRapports() {
     </div>`;
 }
 
-// ── Download the rapport as a real PDF file (backend fpdf2) ─────
-async function execDownloadRapportFile(rapportId) {
-    try {
-        const token = localStorage.getItem('pr_token') || '';
-        const url = `${EXEC_MODULE_API}/rapports/${rapportId}/pdf`;
-        console.log('[PDF] Downloading from:', url);
-        const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log('[PDF] Response status:', res.status, 'Content-Type:', res.headers.get('Content-Type'));
-        if (!res.ok) {
-            let msg = `Erreur ${res.status}`;
-            try {
-                const ct = res.headers.get('Content-Type') || '';
-                if (ct.includes('application/json')) {
-                    const j = await res.json();
-                    msg = j.error || msg;
-                } else {
-                    const txt = await res.text();
-                    console.error('[PDF] Server response:', txt.slice(0, 500));
-                    msg += ' (voir console)';
-                }
-            } catch (e) { console.error('[PDF] Parse error:', e); }
-            _execToast(msg, 'error'); return;
-        }
-        const blob = await res.blob();
-        let fname = 'Rapport.pdf';
-        const cd = res.headers.get('Content-Disposition') || '';
-        const m = cd.match(/filename="?([^";]+)"?/i);
-        if (m) fname = m[1];
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl; a.download = fname;
-        document.body.appendChild(a); a.click();
-        setTimeout(() => { URL.revokeObjectURL(blobUrl); a.remove(); }, 200);
-        _execToast('PDF téléchargé', 'success');
-    } catch (e) {
-        console.error('[PDF] Download error:', e);
-        _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
-    }
-}
-
 // ── Download a transmitted report as a printable HTML file ─────
 async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
     let rapport;
@@ -9552,6 +14401,10 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
     const logoImg = aac.logo_data ? `<img src="${aac.logo_data}" style="max-height:70px;">` : '';
     const notifRef = rapport.notification_ref || dossier.notif_reference || '';
     const natureActivite = dossier.notif_nature || 'Inspection';
+    // « RAPPORT D’AUDIT » mais « RAPPORT DE SUIVI » : la liaison suit l'initiale.
+    const nature = natureActivite.toUpperCase();
+    const intituleRapport = _execIntituleRapport(dossier,
+        `RAPPORT ${/^[AEIOUYÀÂÉÈÊËÎÏÔÖÙÛÜ]/.test(nature) ? 'D’' : 'DE '}${nature}`);
     const prestNom = rapport.prestataire_nom || dossier.prestataire_nom || '';
     const prestCode = rapport.prestataire_code || dossier.prestataire_code || '';
     const refAgrement = dossier.ref_agrement || prestCode || '';
@@ -9688,7 +14541,7 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
             <div class="doc-hdr-admin">${_esc(aac.nom || '')}</div>
         </div>
         <div class="doc-hdr-right">
-            <div class="doc-hdr-title">RAPPORT D\u2019${_esc(natureActivite.toUpperCase())}</div>
+            <div class="doc-hdr-title">${_esc(intituleRapport)}</div>
             <div class="doc-hdr-ref">${_esc(rapport.reference || '')}</div>
             <div class="doc-hdr-notif">${notifRef ? 'Réf. Notification : ' + _esc(notifRef) : ''}</div>
         </div>
@@ -9774,7 +14627,7 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
     <div class="doc-hdr">
         <div class="doc-hdr-logo">${logoImg}<div class="doc-hdr-admin">${_esc(aac.nom || '')}</div></div>
         <div class="doc-hdr-right">
-            <div class="doc-hdr-title">RAPPORT D\u2019${_esc(natureActivite.toUpperCase())}</div>
+            <div class="doc-hdr-title">${_esc(intituleRapport)}</div>
             <div class="doc-hdr-ref">${_esc(rapport.reference || '')}</div>
         </div>
     </div>
@@ -10040,87 +14893,130 @@ function execExportFicheSuivi(fncId, format) {
 
 function _buildFicheHTML(aac, opts) {
     const { title, fnc, domaineName, prestName, dateDue, showSection2, showSection3, forWord } = opts;
-    const dateOuv = fnc.date_ouverture || (fnc.date_creation ? fnc.date_creation.slice(0,10) : '-');
-    const ref = fnc.reference || '-';
-    const desc = fnc.description || fnc.titre || '-';
-    const refRegl = fnc.ref_reglementaires || fnc.exigence_ref || '-';
-    const criticite = fnc.criticite || fnc.gravite || '-';
-    const delai = fnc.delai_solde || fnc.delai_correction || '-';
-    // Cellules vides : hauteur ~5 lignes (≈ 5em). Cellule simple (1 ligne) pour les dates.
-    const tallEmpty = '<td style="height:5em;">&nbsp;</td>';
-    const shortEmpty = '<td>&nbsp;</td>';
-    const printScript = forWord ? '' : `<script>window.onload=()=>{setTimeout(()=>window.print(),400)};<\/script>`;
-    return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${_esc(title)} — ${_esc(ref)}</title>
-    <style>
-        body{font-family:Arial,sans-serif;max-width:800px;margin:1.5rem auto;padding:1rem;color:#111;font-size:0.85rem;}
-        h1{font-size:1.15rem;text-align:center;margin:0.5rem 0 1rem;border-bottom:2px solid #333;padding-bottom:0.4rem;}
-        .section{margin-top:1rem;padding:0.6rem 0.8rem;border:1px solid #ccc;border-radius:6px;}
-        .section-title{font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;color:#333;border-bottom:1px solid #ddd;padding-bottom:0.25rem;}
-        .field{margin:0.35rem 0;font-size:0.82rem;}
-        .field-label{font-weight:600;color:#555;display:inline-block;min-width:160px;}
-        table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:0.5rem;}
-        th,td{border:1px solid #999;padding:0.35rem 0.5rem;text-align:left;vertical-align:top;}
-        th{background:#f3f4f6;font-weight:600;}
-        @media print{body{margin:0.5cm;}}
-    </style></head><body>
-    <h1>${_esc(title)}</h1>
+    const crit = String(fnc.criticite || fnc.gravite || '').toLowerCase();
+    // Zone à remplir à la main : quelques lignes réglées, ou une seule ligne.
+    const zone = (lignes) => `<div class="a-remplir" style="min-height:${lignes * 7}mm;"></div>`;
+    const ligne = () => `<div class="a-remplir" style="min-height:7mm;"></div>`;
+    const rubrique = (libelle, contenu) => `<div class="rubrique">
+        <div class="rubrique-titre">${libelle}</div>${contenu}</div>`;
+    const cocher = (libelle) => `<div class="case"><span class="carre"></span>${libelle}</div>`;
 
-    <div class="section">
-        <div class="section-title">1. ${te('rappel_constatation') || 'Rappel de la Constatation'}</div>
-        <div class="field"><span class="field-label">${te('reference')} :</span> ${_esc(ref)}</div>
-        <div class="field"><span class="field-label">${te('domaine_label') || 'Domaine'} :</span> ${_esc(domaineName)}</div>
-        <div class="field"><span class="field-label">${te('provider') || 'Prestataire'} :</span> ${_esc(prestName)}</div>
-        <div class="field"><span class="field-label">${te('criticite_label') || 'Criticité'} :</span> ${_esc(criticite)}</div>
-        <div class="field"><span class="field-label">${te('date_ouverture') || "Date d'ouverture"} :</span> ${dateOuv}</div>
-        <div class="field"><span class="field-label">${te('delai_label') || 'Délai'} :</span> ${_esc(delai)} ${te('jours') || 'jours'}</div>
-        <div class="field"><span class="field-label">${te('date_due_label') || 'Due Date'} :</span> ${dateDue || '-'}</div>
-        <div class="field"><span class="field-label">${te('description_constatation') || 'Description'} :</span> ${_esc(desc)}</div>
-        <div class="field"><span class="field-label">${te('ref_reglementaires_label') || 'Référentiel(s)'} :</span> ${_esc(refRegl)}</div>
+    const corps = `
+    ${_execDocEntete(title, fnc.reference || '', _execStatutLisible(fnc.statut))}
+
+    <div class="grille">
+        ${_execDocChamp(te('provider'), _esc(prestName || ''))}
+        ${_execDocChamp(te('domaine_label'), _esc(domaineName || ''))}
+        ${_execDocChamp(te('criticite_label'), `<span class="etiquette crit-${_escAttr(crit)}">${_esc(fnc.criticite || fnc.gravite || '—')}</span>`)}
+        ${_execDocChamp(te('date_ouverture'), _execDocJour(fnc.date_ouverture || fnc.date_creation))}
+        ${_execDocChamp(te('delai_label'), `${_esc(fnc.delai_solde || fnc.delai_correction || '—')} ${te('jours')}`)}
+        ${_execDocChamp(te('date_due_label'), dateDue ? _execDocJour(dateDue) : '—')}
     </div>
 
-    ${showSection2 ? `
-    <div class="section">
-        <div class="section-title">2. ${te('plan_actions_correctives') || "Plan d'Actions Correctives"}</div>
-        <table>
-            <tr><th style="width:30%;">${te('item_cause') || 'Cause Primaire'}</th>${tallEmpty}</tr>
-            <tr><th>${te('item_action_curative') || 'Action Curative'}</th>${tallEmpty}</tr>
-            <tr><th>${te('item_date_curative') || 'Date prévue (Curative)'}</th>${shortEmpty}</tr>
-            <tr><th>${te('item_preuves_curative') || 'Preuves (Curative)'}</th>${tallEmpty}</tr>
-            <tr><th>${te('item_action_corrective') || 'Action Corrective'}</th>${tallEmpty}</tr>
-            <tr><th>${te('item_date_corrective') || 'Date prévue (Corrective)'}</th>${shortEmpty}</tr>
-            <tr><th>${te('item_preuves_corrective') || 'Preuves (Corrective)'}</th>${tallEmpty}</tr>
-        </table>
-    </div>` : ''}
+    ${_execDocSection(`1. ${te('rappel_constatation')}`, `
+        <h3>${te('ref_reglementaires_label')}</h3>
+        ${_execDocTexte(fnc.ref_reglementaires || fnc.exigence_ref)}
+        <h3>${te('description_constatation')}</h3>
+        ${_execDocTexte(fnc.description || fnc.titre)}
+        ${String(fnc.recommandation || '').trim() ? `<h3>${te('recommandation')}</h3>${_execDocTexte(fnc.recommandation)}` : ''}`)}
 
-    ${showSection3 ? `
-    <div class="section">
-        <div class="section-title">3. ${te('evaluation_suivi_aac') || 'Évaluation et Suivi (AAC)'}</div>
-        <table>
-            <tr><th style="width:30%;">${te('pac_accepte') || 'PAC accepté'}</th>${shortEmpty}</tr>
-            <tr><th>${te('date_acceptation') || 'Date acceptation'}</th>${shortEmpty}</tr>
-            <tr><th>${te('isolement_realise') || 'Isolement réalisé'}</th>${shortEmpty}</tr>
-            <tr><th>${te('risques_traites') || 'Risques traités'}</th>${shortEmpty}</tr>
-            <tr><th>${te('commentaire_efficacite') || "Commentaire d'efficacité"}</th>${shortEmpty}</tr>
-            <tr><th>${te('preuves_mise_oeuvre') || 'Preuves de mise en oeuvre'}</th>${shortEmpty}</tr>
-            <tr><th>${te('mise_oeuvre_effective') || 'Mise en oeuvre effective'}</th>${shortEmpty}</tr>
-            <tr><th>${te('date_solde') || 'Date de solde'}</th>${shortEmpty}</tr>
-            <tr><th>${te('solde_par') || 'Soldé par'}</th>${shortEmpty}</tr>
-        </table>
-    </div>` : ''}
+    ${showSection2 ? _execDocSection(
+        `2. ${te('plan_actions_correctives')} <span class="mention">${te('a_completer_prestataire')}</span>`, `
+        ${rubrique(te('item_cause'), zone(3))}
+        ${rubrique(te('item_action_curative'), zone(3))}
+        <div class="paire">
+            ${rubrique(te('item_date_curative'), ligne())}
+            ${rubrique(te('item_preuves_curative'), ligne())}
+        </div>
+        ${rubrique(te('item_action_corrective'), zone(3))}
+        <div class="paire">
+            ${rubrique(te('item_date_corrective'), ligne())}
+            ${rubrique(te('item_preuves_corrective'), ligne())}
+        </div>
+        <div class="visa">
+            <div><span>${te('visa_prestataire')}</span></div>
+            <div><span>${te('date')}</span></div>
+        </div>`) : ''}
 
-    ${printScript}
+    ${showSection3 ? _execDocSection(
+        `3. ${te('evaluation_suivi_aac')}`, `
+        <div class="paire">
+            <div class="encadre">
+                <h3 style="margin-top:0;">${te('acceptation_propositions')}</h3>
+                ${cocher(te('pac_accepte'))}
+                ${rubrique(te('date_acceptation'), ligne())}
+            </div>
+            <div class="encadre">
+                <h3 style="margin-top:0;">${te('cloture_fnc')}</h3>
+                ${cocher(te('mise_oeuvre_effective'))}
+                <div class="paire">
+                    ${rubrique(te('date_solde'), ligne())}
+                    ${rubrique(te('solde_par'), ligne())}
+                </div>
+            </div>
+        </div>
+        ${rubrique(te('preuves_recueillies'), zone(2))}
+        ${cocher(te('verifier_terrain'))}
+        ${rubrique(te('commentaire_general_suivi'), zone(4))}
+        <div class="visa">
+            <div><span>${te('visa_inspecteur')}</span></div>
+            <div><span>${te('date')}</span></div>
+        </div>`) : ''}`;
+
+    const stylesFiche = `
+      .mention { text-transform: none; letter-spacing: 0; font-weight: 500; opacity: .85; }
+      .rubrique { margin-top: 6px; }
+      .rubrique-titre { font-size: 8pt; text-transform: uppercase; letter-spacing: .04em;
+                        color: #5b6b7d; margin-bottom: 2px; }
+      .a-remplir { border: 1px solid #c9d3de; border-radius: 3px; background:
+                   repeating-linear-gradient(to bottom, transparent 0 6.5mm, #eef2f6 6.5mm 6.6mm); }
+      .case { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 9.5pt; }
+      .case .carre { width: 11px; height: 11px; border: 1.2px solid #5b6b7d; border-radius: 2px; flex: 0 0 auto; }
+      .visa { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-top: 12px; break-inside: avoid; }
+      .visa div { border-top: 1px solid #98a5b3; padding-top: 3px; height: 18mm; }
+      .visa span { font-size: 7.5pt; text-transform: uppercase; letter-spacing: .04em; color: #5b6b7d; }`;
+
+    const impression = forWord ? ''
+        : `<script>window.onload=()=>{setTimeout(()=>window.print(),400)};<\/script>`;
+    const jour = new Date().toLocaleDateString('fr-FR');
+    return `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+    <title>${_esc(title)} — ${_esc(fnc.reference || '')}</title>
+    <style>${_execDocStyles()}${stylesFiche}</style></head><body>
+    ${corps}
+    <footer class="doc"><span>OASIS — ${_esc((aac || {}).sigle || '')}</span><span>${_esc(title)} · ${_esc(fnc.reference || '')}</span><span>${jour}</span></footer>
+    ${impression}
     </body></html>`;
 }
 
-// Trigger Word (.doc) download from HTML content
-function _execDownloadAsWord(html, filename) {
-    const wordHtml = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' + html.replace(/^<!DOCTYPE[^>]*>/i, '').replace(/^<html[^>]*>/i, '') ;
-    const blob = new Blob(['﻿', wordHtml], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 200);
+// ── Téléchargement d'un document Word (.doc) composé en HTML ──
+// Le module s'affiche dans une iframe, où le téléchargement d'une URL blob:
+// est ignoré sans message selon le navigateur. Le document est donc posté au
+// serveur, qui le renvoie en pièce jointe : une réponse HTTP ordinaire, que
+// tous les navigateurs enregistrent.
+// Enveloppe qui fait ouvrir un document HTML par Word.
+function _execHtmlVersWord(html) {
+    return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+        + String(html).replace(/^<!DOCTYPE[^>]*>/i, '').replace(/^<html[^>]*>/i, '');
+}
+
+async function _execDownloadAsWord(html, filename) {
+    const wordHtml = _execHtmlVersWord(html);
+    try {
+        const reponse = await fetch(`${EXEC_MODULE_API}/documents/word`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+            body: JSON.stringify({ nom: filename, contenu: wordHtml }),
+        });
+        // 404 : la route n'est pas montée — serveur à redémarrer.
+        if (reponse.status === 404) throw new Error(te('export_route_absente'));
+        if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
+        const { jeton } = await reponse.json();
+        // Réponse en pièce jointe : la page courante n'est pas quittée.
+        window.location.href = `${EXEC_MODULE_API}/documents/word/${jeton}`;
+    } catch (e) {
+        console.error('Export Word :', e);
+        _execToast((e && e.message) || 'Erreur lors du téléchargement', 'error');
+    }
 }
 
 async function execPreviewRapport(rapportId) {
@@ -10150,7 +15046,7 @@ async function execPreviewRapport(rapportId) {
                 </div>
                 <div class="doc-header-right">${_esc(rapport.reference || '')}</div>
             </div>
-            <div class="doc-title">RAPPORT DE SURVEILLANCE</div>
+            <div class="doc-title">${_esc(_execIntituleRapport(dossier, 'RAPPORT DE SURVEILLANCE'))}</div>
             <div class="doc-ref">${_esc(rapport.notification_ref || '')}</div>
 
             <div class="doc-section-title">1. INTRODUCTION</div>
@@ -10242,14 +15138,14 @@ function execRenderMesUtilisateurs() {
         return `<div class="page-content"><div class="text-center">${te('no_data')}</div></div>`;
     }
     const title = te('mes_utilisateurs') || 'Mes Utilisateurs';
-    const newLabel = 'Nouvel utilisateur';
+    const newLabel = 'Ajouter Utilisateur';
     const searchPh = 'Rechercher';
     return `
     <div class="page-content">
         <div class="portal-page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
             <h2 style="margin:0;">${_esc(title)}</h2>
             <div class="portal-page-actions" style="display:flex;gap:0.5rem;align-items:center;">
-                <input type="text" class="shell-input" id="mesUsersSearch" placeholder="${_esc(searchPh)}" oninput="_pesSearchInput(this, execRenderMesUsersTable)" style="min-width:200px;">
+                <input type="text" class="shell-input" id="mesUsersSearch" placeholder="${_escAttr(searchPh)}" oninput="_pesSearchInput(this, execRenderMesUsersTable)" style="min-width:200px;">
                 <button class="shell-btn shell-btn-primary" onclick="execOpenMesUserModal()">${EXEC_ICONS.add || '+'} ${_esc(newLabel)}</button>
             </div>
         </div>
@@ -10283,10 +15179,8 @@ function execRenderMesUsersTable() {
 
     // Intitulés de colonnes : ce que chacune contient réellement.
     const L = {
-        identifiant: 'Identifiant',
-        nom: 'Nom',
-        prenom: 'Prénom',
-        email: 'Courriel',
+        utilisateur: 'Utilisateur',
+        email: 'Courriel (identifiant)',
         motDePasse: 'Mot de passe',
         role: 'Rôle',
         droits: 'Droits confiés',
@@ -10315,35 +15209,32 @@ function execRenderMesUsersTable() {
         return d ? d.libelle : cle;
     };
 
-    el.innerHTML = `<div class="card"><div class="exec-etats-corps" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
+    el.innerHTML = `<div class="card"><div class="exec-etats-corps exec-mes-users" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
       <table class="exec-data-table exec-compact-table exec-etats-table"
-        style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
+        style="font-size:0.8rem;table-layout:fixed;min-width:900px;">
         <thead><tr>
-            <th style="width:150px;">${L.identifiant}</th>
-            <th style="width:110px;">${L.nom}</th>
-            <th style="width:110px;">${L.prenom}</th>
-            <th style="width:180px;">${L.email}</th>
-            <th style="width:110px;">${L.motDePasse}</th>
-            <th style="width:150px;">${L.role}</th>
-            <th style="width:120px;">${L.droits}</th>
-            <th style="width:80px;">${L.statut}</th>
+            <th style="width:200px;">${L.utilisateur}</th>
+            <th style="width:230px;">${L.email}</th>
+            <th style="width:120px;">${L.motDePasse}</th>
+            <th style="width:160px;">${L.role}</th>
+            <th style="width:110px;">${L.droits}</th>
+            <th style="width:90px;">${L.statut}</th>
             <th style="width:110px;text-align:center;">${L.actions}</th>
         </tr></thead>
         <tbody>${users.map(u => {
             const actif = u.actif !== false && u.actif !== 0;
             const droits = u.droits || [];
+            const nomComplet = [u.prenom, u.nom].filter(Boolean).join(' ');
             return `<tr class="${!actif ? 'row-inactive' : ''}">
-                <td><strong>${_esc(u.nom_utilisateur || u.username || '')}</strong></td>
-                <td>${_esc(u.nom || '')}</td>
-                <td>${_esc(u.prenom || '')}</td>
-                <td>${_esc(u.email || '')}</td>
-                <td>
+                <td><strong>${_esc(nomComplet || u.nom_utilisateur || u.username || '—')}</strong></td>
+                <td class="exec-mes-users-mail">${_esc(u.email || '')}</td>
+                <td class="exec-mes-users-pw">
                     <span id="mes-pw-mask-${u.id}" style="font-family:monospace;letter-spacing:2px;">••••••••</span>
                     <span id="mes-pw-clear-${u.id}" style="display:none;font-family:monospace;font-weight:600;color:var(--primary);"></span>
                     ${u.has_temp_password ? `<button class="shell-btn-icon" onclick="execRevealMesUserPassword('${u.id}')" title="${L.voir}">${EXEC_ICONS.eye}</button>` : ''}
                 </td>
                 <td><span class="shell-badge badge-active">${_esc(libelleRole(u.role))}</span></td>
-                <td title="${_esc(droits.map(libelleDroit).join(', '))}">
+                <td title="${_escAttr(droits.map(libelleDroit).join(', '))}">
                     ${droits.length === _mesDroitsCache.length
                         ? '<span class="exec-statut-etape">Tous</span>'
                         : (droits.length
@@ -10365,7 +15256,7 @@ function execRenderMesUsersTable() {
 
 function execOpenMesUserModal(userId) {
     const user = userId ? _mesUtilisateursCache.find(u => u.id === userId) : null;
-    const titre = userId ? 'Modifier l’utilisateur' : 'Nouvel utilisateur';
+    const titre = userId ? 'Modifier l’utilisateur' : 'Ajouter Utilisateur';
     const droitsCoches = user ? (user.droits || []) : _mesDroitsCache.map(d => d.cle);
     const roleCourant = (user && user.role) || 'PRESTATAIRE';
 
@@ -10376,34 +15267,30 @@ function execOpenMesUserModal(userId) {
 
     const body = `
         <div class="shell-form-row">
-            <div class="shell-form-group"><label>Identifiant</label>
-                <input id="muNomUtilisateur" class="shell-input" value="${_esc(user?.nom_utilisateur || user?.username || '')}"
-                    ${userId ? 'readonly disabled style="background:var(--surface-2,#f4f4f5);cursor:not-allowed;"' : ''}>
-            </div>
             <div class="shell-form-group"><label>Courriel</label>
-                <input id="muEmail" class="shell-input" type="email" value="${_esc(user?.email || '')}">
+                <input id="muEmail" class="shell-input" type="email" value="${_escAttr(user?.email || '')}"
+                    placeholder="prenom.nom@prestataire.bj">
+                <small class="shell-hint">Le courriel sert d’identifiant de connexion.</small>
             </div>
-        </div>
-        <div class="shell-form-row">
             <div class="shell-form-group"><label>Nom</label>
-                <input id="muNom" class="shell-input" value="${_esc(user?.nom || '')}">
-            </div>
-            <div class="shell-form-group"><label>Prénom</label>
-                <input id="muPrenom" class="shell-input" value="${_esc(user?.prenom || '')}">
+                <input id="muNom" class="shell-input" value="${_escAttr(user?.nom || '')}">
             </div>
         </div>
         <div class="shell-form-row">
+            <div class="shell-form-group"><label>Prénom</label>
+                <input id="muPrenom" class="shell-input" value="${_escAttr(user?.prenom || '')}">
+            </div>
             <div class="shell-form-group"><label>Statut</label>
                 <select id="muActif" class="shell-input">
                     <option value="true" ${user?.actif !== false && user?.actif !== 0 ? 'selected' : ''}>Actif</option>
                     <option value="false" ${user?.actif === false || user?.actif === 0 ? 'selected' : ''}>Inactif</option>
                 </select>
             </div>
-            <div class="shell-form-group"><label>Rôle</label>
-                <select id="muRole" class="shell-input">
-                    ${roles.map(r => `<option value="${r.cle}" ${r.cle === roleCourant ? 'selected' : ''}>${_esc(r.libelle)}</option>`).join('')}
-                </select>
-            </div>
+        </div>
+        <div class="shell-form-group"><label>Rôle</label>
+            <select id="muRole" class="shell-input">
+                ${roles.map(r => `<option value="${r.cle}" ${r.cle === roleCourant ? 'selected' : ''}>${_esc(r.libelle)}</option>`).join('')}
+            </select>
         </div>
         <div class="shell-form-group">
             <label>Droits confiés</label>
@@ -10437,17 +15324,23 @@ async function execToggleMesUser(userId, actif) {
 }
 
 async function execSaveMesUser(userId) {
+    const email = document.getElementById('muEmail')?.value.trim() || '';
     const data = {
-        nom_utilisateur: document.getElementById('muNomUtilisateur')?.value.trim() || '',
-        email: document.getElementById('muEmail')?.value.trim() || '',
+        // Le courriel fait l'identifiant : un seul champ, une seule vérité.
+        nom_utilisateur: email,
+        email,
         nom: document.getElementById('muNom')?.value.trim() || '',
         prenom: document.getElementById('muPrenom')?.value.trim() || '',
         actif: document.getElementById('muActif')?.value === 'true',
         role: document.getElementById('muRole')?.value || 'PRESTATAIRE',
         droits: [...document.querySelectorAll('.mu-droit:checked')].map(c => c.value),
     };
-    if (!data.nom_utilisateur || !data.email) {
+    if (!data.email) {
         shellShowToast((typeof pt === 'function' ? pt('required_field') : 'Champs obligatoires manquants'), 'error');
+        return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        shellShowToast('Courriel invalide', 'error');
         return;
     }
     try {
@@ -10577,6 +15470,126 @@ function execRenderParametres() {
     </div>`;
 }
 
+// ── Paramètre « Équipe d'audit / inspection » ────────────────────────
+// Les rôles créés ici alimentent la composition de l'équipe à l'étape
+// Réalisation, et les acteurs « équipe » du menu Processus : une seule liste,
+// tenue à un seul endroit.
+const EXEC_ROLES_EQUIPE_DEFAUT = [
+    "Chef d'équipe", "Membre d'équipe", 'Stagiaire',
+    "Formation en cours d'emploi", 'Experts ou Autres',
+];
+
+// Rôles disponibles : ceux du paramétrage, ou la liste d'origine tant que rien
+// n'a été saisi — un module fraîchement installé ne doit pas offrir un choix vide.
+function _execRolesEquipe() {
+    const liste = (EXEC_STATE.data.rolesEquipe || [])
+        .filter(r => r.actif !== 0 && r.actif !== false)
+        .sort((a, b) => (a.ordre || 0) - (b.ordre || 0))
+        .map(r => r.item || r.libelle || '')
+        .filter(Boolean);
+    return liste.length ? liste : EXEC_ROLES_EQUIPE_DEFAUT;
+}
+
+function execRenderRolesEquipeTab() {
+    const roles = (EXEC_STATE.data.rolesEquipe || [])
+        .slice().sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+    const isAdmin = _execIsAdmin();
+    const lignes = roles.length ? roles.map(r => `
+        <tr>
+            <td style="text-align:center;">${r.ordre || ''}</td>
+            <td><strong>${_esc(r.item || '')}</strong></td>
+            <td>${_esc(r.description || '')}</td>
+            <td style="text-align:right;white-space:nowrap;">
+                ${isAdmin ? `
+                    <button class="btn btn-sm btn-ghost" title="${te('modifier')}" onclick="execOpenRoleEquipeModal('${r.id}')">${EXEC_ICONS.edit}</button>
+                    <button class="btn btn-sm btn-ghost" style="color:#ef4444;" title="${te('supprimer')}" onclick="execDeleteRoleEquipe('${r.id}')">${EXEC_ICONS.delete}</button>` : ''}
+            </td>
+        </tr>`).join('')
+        : `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('roles_equipe_vide')}</td></tr>`;
+
+    return `
+    <div class="card" style="margin-top:1rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);">
+            <h3 style="margin:0;font-size:0.9rem;">${te('param_equipe')}</h3>
+            ${isAdmin ? `<button class="btn btn-sm btn-primary" onclick="execOpenRoleEquipeModal()">${EXEC_ICONS.add} ${te('ajouter')}</button>` : ''}
+        </div>
+        <p style="padding:0.5rem 0.7rem 0;font-size:0.78rem;color:var(--text-muted);margin:0;">${te('roles_equipe_intro')}</p>
+        <div style="overflow-x:auto;">
+            <table class="exec-table" style="width:100%;">
+                <thead><tr>
+                    <th style="width:70px;text-align:center;">${te('ordre')}</th>
+                    <th>${te('item')}</th>
+                    <th>${te('description')}</th>
+                    <th style="width:90px;"></th>
+                </tr></thead>
+                <tbody>${lignes}</tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+window.execOpenRoleEquipeModal = function (id) {
+    const r = (EXEC_STATE.data.rolesEquipe || []).find(x => x.id === id) || {};
+    const corps = `
+    <div class="exec-proc-bloc">
+        <label class="form-label" for="req_item">${te('item')}</label>
+        <input type="text" class="form-control" id="req_item" value="${_escAttr(r.item || '')}">
+        <label class="form-label" for="req_ordre">${te('ordre')}</label>
+        <input type="number" class="form-control" id="req_ordre" min="1" value="${_escAttr(r.ordre || ((EXEC_STATE.data.rolesEquipe || []).length + 1))}">
+        <label class="form-label" for="req_description">${te('description')}</label>
+        <textarea class="form-control" id="req_description" rows="2">${_esc(r.description || '')}</textarea>
+        <p class="exec-proc-erreur" id="req_erreur"></p>
+    </div>`;
+    const pied = `
+        <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>
+        <button class="btn btn-primary" onclick="execSaveRoleEquipe('${id || ''}')">${EXEC_ICONS.check || ''} ${te('save')}</button>`;
+    execShowSlider(`${EXEC_ICONS.add || ''} ${id ? te('modifier') : te('ajouter')} — ${te('param_equipe')}`, corps, pied, 'third');
+};
+
+window.execSaveRoleEquipe = async function (id) {
+    const val = (x) => (document.getElementById(x) || {}).value || '';
+    const err = document.getElementById('req_erreur');
+    const item = val('req_item').trim();
+    if (!item) { err.textContent = te('item_requis'); return; }
+    const corps = { item, ordre: parseInt(val('req_ordre'), 10) || 1, description: val('req_description').trim(), actif: 1 };
+    try {
+        if (id) await api(`${EXEC_MODULE_API}/exec-roles-equipe/${id}`, { method: 'PUT', body: JSON.stringify(corps) });
+        else await api(`${EXEC_MODULE_API}/exec-roles-equipe`, { method: 'POST', body: JSON.stringify(corps) });
+        execCloseSlider();
+        await execChargerRolesEquipe();
+        _execToast(te('enregistre'), 'success');
+        execRenderPage();
+    } catch (e) {
+        err.textContent = (e && e.message) || te('action_impossible');
+    }
+};
+
+window.execDeleteRoleEquipe = async function (id) {
+    const r = (EXEC_STATE.data.rolesEquipe || []).find(x => x.id === id) || {};
+    const ok = await execProcConfirmer({
+        titre: te('supprimer'),
+        message: te('role_equipe_supprimer_message').replace('{item}', r.item || ''),
+        libelle: te('supprimer'),
+    });
+    if (!ok) return;
+    try {
+        await api(`${EXEC_MODULE_API}/exec-roles-equipe/${id}`, { method: 'DELETE' });
+        await execChargerRolesEquipe();
+        _execToast(te('supprime'), 'success');
+        execRenderPage();
+    } catch (e) {
+        _execToast((e && e.message) || te('action_impossible'), 'error');
+    }
+};
+
+async function execChargerRolesEquipe() {
+    try { EXEC_STATE.data.rolesEquipe = await api(`${EXEC_MODULE_API}/exec-roles-equipe`) || []; }
+    catch (e) { EXEC_STATE.data.rolesEquipe = []; }
+}
+window.execChargerRolesEquipe = execChargerRolesEquipe;
+window.execRenderRolesEquipeTab = execRenderRolesEquipeTab;
+window._execRolesEquipe = _execRolesEquipe;
+
 function execRenderConstatationsTab() {
     const crits = EXEC_STATE.data.criticites || [];
     const tcs   = EXEC_STATE.data.typesCas || [];
@@ -10674,53 +15687,151 @@ function _execCl_data() {
     };
 }
 
+// Filtre de recherche de la liste des checklists. Conservé hors du rendu pour
+// survivre au re-rendu de la page (thème, langue, retour d'un sous-écran).
+let EXEC_CL_RECHERCHE = '';
+
+// Une ligne par checklist. La description passe sous le nom : elle se lit en
+// entier au lieu d'être tronquée à 80 caractères dans sa propre colonne, et la
+// place ainsi libérée sert à montrer la portée réelle de la checklist.
+function _execClLigne(c, D, refs, isAdmin) {
+    const _parse = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
+    const itemsCount = D.items.filter(i => i.checklist_id === c.id).length;
+    // Portée : on nomme ce qui tient, on compte le reste. Une checklist sans
+    // portée s'applique partout — le dire vaut mieux qu'un tiret.
+    const puce = (ids, source, classe) => {
+        const noms = ids.map(id => {
+            const x = source.find(s => s.id === id);
+            return x ? (x.code || x.sigle || x.nom || x.libelle || '') : '';
+        }).filter(Boolean);
+        if (!noms.length) return '';
+        const visibles = noms.slice(0, 3).map(n => `<span class="exec-cl-puce ${classe}">${_escAttr(n)}</span>`).join('');
+        const reste = noms.length - 3;
+        return visibles + (reste > 0
+            ? `<span class="exec-cl-puce ${classe}" title="${_escAttr(noms.slice(3).join(', '))}">+${reste}</span>` : '');
+    };
+    const portee = [
+        puce(_parse(c.domaines_ids), refs.domaines, 'dom'),
+        puce(_parse(c.secteurs_ids), refs.secteurs, 'sec'),
+        puce(_parse(c.sous_activites_ids), refs.sousActivites, 'sa'),
+    ].filter(Boolean).join('');
+
+    return `<tr>
+        <td><span class="exec-cl-ref">${_esc(c.reference || '—')}</span></td>
+        <td>
+            <div class="exec-cl-nom">${_esc(c.nom)}</div>
+            ${c.description ? `<div class="exec-cl-desc">${_esc(c.description)}</div>` : ''}
+        </td>
+        <td>${portee || '<span class="exec-cl-partout">Toutes portées</span>'}</td>
+        <td style="text-align:center;">
+            <span class="exec-cl-compte ${itemsCount ? '' : 'vide'}"
+                  title="${itemsCount} item${itemsCount > 1 ? 's' : ''}">${itemsCount}</span>
+        </td>
+        <td class="exec-etats-actions" style="text-align:right;white-space:nowrap;">
+            <button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistEditor('${c.id}')"
+                    title="Items de la checklist">${EXEC_ICONS.list}</button>
+            ${isAdmin ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistModal('${c.id}')"
+                    title="${_escAttr(te('modifier') || 'Modifier')}">${EXEC_ICONS.edit}</button>
+            <button class="btn btn-sm btn-outline btn-icon-only" onclick="execDeleteChecklist('${c.id}')"
+                    style="color:#dc2626;border-color:#dc2626;" title="Supprimer">${EXEC_ICONS.delete}</button>` : ''}
+        </td>
+    </tr>`;
+}
+
 function execRenderChecklistsTab() {
     const isAdmin = (EXEC_STATE.user?.role_m3 === 'M3_Administrateur');
     const D = _execCl_data();
-    const checklists = D.checklists.slice().sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const _parse = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
-    const domaines = (window.PESSCO?.sharedData?.domaines) || [];
+    const shared = window.PESSCO?.sharedData || {};
+    const refs = {
+        domaines: shared.domaines || [],
+        secteurs: shared.secteurs || [],
+        sousActivites: shared.sousActivites || [],
+    };
+    const q = _execNorm(EXEC_CL_RECHERCHE);
+    const toutes = D.checklists.slice().sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+    const checklists = q
+        ? toutes.filter(c => _execNorm(`${c.reference || ''} ${c.nom || ''} ${c.description || ''}`).includes(q))
+        : toutes;
 
-    const rowsHtml = checklists.length ? checklists.map(c => {
-        const doms = _parse(c.domaines_ids).map(id => (domaines.find(d => d.id === id)?.code || '')).filter(Boolean).join(', ') || '-';
-        const itemsCount = D.items.filter(i => i.checklist_id === c.id).length;
-        return `<tr>
-            <td><span style="font-family:ui-monospace,Menlo,monospace;font-weight:600;">${_esc2(c.reference || '-')}</span></td>
-            <td><strong>${_esc2(c.nom)}</strong></td>
-            <td>${_esc2((c.description || '').slice(0, 80))}${(c.description||'').length>80?'…':''}</td>
-            <td>${doms}</td>
-            <td style="text-align:center;">${itemsCount}</td>
-            <td style="text-align:right;white-space:nowrap;">
-                <button class="btn btn-sm btn-ghost" onclick="execOpenChecklistEditor('${c.id}')" style="display:inline-flex;align-items:center;gap:0.25rem;">${EXEC_ICONS.view || EXEC_ICONS.edit} Items</button>
-                ${isAdmin ? `<button class="btn btn-sm btn-ghost" onclick="execOpenChecklistModal('${c.id}')" style="display:inline-flex;align-items:center;gap:0.25rem;">${EXEC_ICONS.edit} Modifier</button>
-                <button class="btn btn-sm btn-ghost" onclick="execDeleteChecklist('${c.id}')" style="color:#ef4444;display:inline-flex;align-items:center;gap:0.25rem;">${EXEC_ICONS.delete} Supprimer</button>` : ''}
-            </td>
-        </tr>`;
-    }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1rem;">Aucune checklist.</td></tr>`;
+    const rowsHtml = checklists.length
+        ? checklists.map(c => _execClLigne(c, D, refs, isAdmin)).join('')
+        : `<tr><td colspan="5" class="exec-cl-aucune">
+             ${q ? `Aucune checklist ne correspond à « ${_esc(EXEC_CL_RECHERCHE)} ».`
+                 : 'Aucune checklist enregistrée.'}
+           </td></tr>`;
 
     return `
-        <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;padding:0.5rem 0.7rem;border-bottom:1px solid var(--border);">
-                <h3 style="margin:0;font-size:0.9rem;">Checklists</h3>
-                <div style="display:flex;gap:0.4rem;">
-                    ${isAdmin ? `<button class="btn btn-sm btn-outline" onclick="execOpenStatutsManager()">⚙ Statuts d'évaluation</button>` : ''}
-                    ${isAdmin ? `<button class="btn btn-sm btn-primary" onclick="execOpenChecklistModal()">${EXEC_ICONS.add} Ajouter</button>` : ''}
+        <div class="card exec-cl-card">
+            <div class="exec-cl-entete">
+                <div class="exec-cl-titre">
+                    <h3>Checklists</h3>
+                    <span class="exec-cl-total">${toutes.length}</span>
+                </div>
+                <div class="exec-cl-outils">
+                    <div class="exec-cl-recherche">
+                        ${EXEC_ICONS.search}
+                        <input type="text" id="clRecherche" placeholder="Rechercher une checklist…"
+                               value="${_escAttr(EXEC_CL_RECHERCHE)}" oninput="execClRechercher(this.value)">
+                    </div>
+                    ${isAdmin ? `<button class="btn btn-sm btn-outline" onclick="execOpenStatutsManager()"
+                            title="Statuts d'évaluation des items">${EXEC_ICONS.settings} Statuts</button>` : ''}
+                    ${isAdmin ? `<button class="btn btn-sm btn-primary" onclick="execOpenChecklistModal()">
+                            ${EXEC_ICONS.add} Ajouter</button>` : ''}
                 </div>
             </div>
             <div style="overflow-x:auto;">
-                <table class="exec-table" style="width:100%;">
+                <table class="exec-table exec-cl-table">
                     <thead><tr>
-                        <th style="width:110px;">Réf.</th>
-                        <th>Nom</th><th>Description</th><th>Domaines</th>
-                        <th style="text-align:center;width:70px;">Items</th>
-                        <th style="text-align:right;width:280px;">Actions</th>
+                        <th style="width:118px;">Réf.</th>
+                        <th style="width:36%;">Checklist</th>
+                        <th style="width:auto;">Portée</th>
+                        <th style="text-align:center;width:66px;">Items</th>
+                        <th style="text-align:right;width:126px;">Actions</th>
                     </tr></thead>
                     <tbody>${rowsHtml}</tbody>
                 </table>
             </div>
         </div>`;
 }
+
+// La recherche ne redessine que le corps du tableau : re-rendre la page
+// entière ferait perdre le curseur à chaque frappe.
+function execClRechercher(valeur) {
+    EXEC_CL_RECHERCHE = valeur || '';
+    const corps = document.querySelector('.exec-cl-table tbody');
+    if (!corps) return;
+    const isAdmin = (EXEC_STATE.user?.role_m3 === 'M3_Administrateur');
+    const D = _execCl_data();
+    const shared = window.PESSCO?.sharedData || {};
+    const refs = {
+        domaines: shared.domaines || [],
+        secteurs: shared.secteurs || [],
+        sousActivites: shared.sousActivites || [],
+    };
+    const q = _execNorm(EXEC_CL_RECHERCHE);
+    const liste = D.checklists.slice()
+        .sort((a, b) => (a.nom || '').localeCompare(b.nom || ''))
+        .filter(c => !q || _execNorm(`${c.reference || ''} ${c.nom || ''} ${c.description || ''}`).includes(q));
+    corps.innerHTML = liste.length
+        ? liste.map(c => _execClLigne(c, D, refs, isAdmin)).join('')
+        : `<tr><td colspan="5" class="exec-cl-aucune">Aucune checklist ne correspond à « ${_esc(EXEC_CL_RECHERCHE)} ».</td></tr>`;
+}
+window.execClRechercher = execClRechercher;
+
+// « Tout / Aucun » d'une grille de cases : cocher un domaine à la fois pour
+// dire « tout le domaine » est le geste le plus fréquent du paramétrage.
+function _clBoutonsPortee(classe, suite) {
+    return `<span class="exec-cl-portee-actions">
+        <a href="#" onclick="_clCocherPortee('${classe}',true,'${suite}');return false;">Tout</a>
+        <a href="#" onclick="_clCocherPortee('${classe}',false,'${suite}');return false;">Aucun</a>
+    </span>`;
+}
+
+function _clCocherPortee(classe, valeur, suite) {
+    document.querySelectorAll('.' + classe).forEach((c) => { c.checked = valeur; });
+    if (suite && typeof window[suite] === 'function') window[suite]();
+}
+window._clCocherPortee = _clCocherPortee;
 
 // ── Modal Checklist (entête) ──
 function execOpenChecklistModal(clId) {
@@ -10747,29 +15858,36 @@ function execOpenChecklistModal(clId) {
         <div class="shell-form-row" style="display:grid;grid-template-columns:140px 1fr;gap:0.6rem;">
             <div class="shell-form-group">
                 <label>Réf.</label>
-                <input id="clRef" class="shell-input" value="${(item?.reference || '').replace(/"/g, '&quot;')}" placeholder="ex. CHK-001">
+                <input id="clRef" class="shell-input" value="${_escAttr(item?.reference || '')}" placeholder="ex. CHK-001">
             </div>
             <div class="shell-form-group">
                 <label>Nom *</label>
-                <input id="clNom" class="shell-input" value="${(item?.nom || '').replace(/"/g, '&quot;')}" placeholder="Nom de la checklist">
+                <input id="clNom" class="shell-input" value="${_escAttr(item?.nom || '')}" placeholder="Nom de la checklist">
             </div>
         </div>
         <div class="shell-form-group">
             <label>Description</label>
-            <textarea id="clDesc" class="shell-input" rows="2">${item?.description || ''}</textarea>
+            <textarea id="clDesc" class="shell-input" rows="2">${_esc(item?.description || '')}</textarea>
         </div>
+        <p class="exec-proc-note" style="margin:.2rem 0 .6rem;">
+            La portée se resserre de gauche à droite : les secteurs proposés découlent des
+            domaines cochés, les sous-activités des secteurs. Ne rien cocher rend la
+            checklist applicable partout.
+        </p>
         <div class="shell-form-group">
-            <label>Domaines applicables</label>
+            <label>Domaines applicables ${_clBoutonsPortee('cl-doms-cb', '_clRefreshSecteurs')}</label>
             <div id="clDomsBox" style="${boxStyle}" onchange="_clRefreshSecteurs()">
                 ${domaines.map(d => checkbox(d.id, selDom, (d.code || d.sigle || d.nom || '?'), 'cl-doms-cb')).join('') || '<span style="color:var(--text-muted);font-size:0.75rem;">Aucun domaine</span>'}
             </div>
         </div>
         <div class="shell-form-group">
-            <label>Secteurs applicables <span id="clSecsHint" style="color:var(--text-muted);font-size:0.7rem;font-weight:400;"></span></label>
+            <label>Secteurs applicables <span id="clSecsHint" style="color:var(--text-muted);font-size:0.7rem;font-weight:400;"></span>
+                ${_clBoutonsPortee('cl-secs-cb', '_clRefreshSousActivites')}</label>
             <div id="clSecsBox" style="${boxStyle}" onchange="_clRefreshSousActivites()"></div>
         </div>
         <div class="shell-form-group">
-            <label>Sous-activités applicables <span id="clSasHint" style="color:var(--text-muted);font-size:0.7rem;font-weight:400;"></span></label>
+            <label>Sous-activités applicables <span id="clSasHint" style="color:var(--text-muted);font-size:0.7rem;font-weight:400;"></span>
+                ${_clBoutonsPortee('cl-sas-cb', '')}</label>
             <div id="clSasBox" style="${boxStyle}"></div>
         </div>
     `, `
@@ -10963,18 +16081,29 @@ function execOpenChecklistEditor(clId) {
         <div class="exec-cli-slicer-overlay" onclick="execCloseChecklistEditor()"></div>
         <aside class="exec-cli-slicer" role="dialog" aria-modal="true">
             <header class="exec-cli-slicer-header">
-                <div>
-                    <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Checklist</div>
-                    <div style="font-weight:700;font-size:1rem;">Items — ${(cl.nom || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</div>
+                <div class="exec-cli-ident">
+                    <button class="btn btn-sm btn-outline btn-icon-only" onclick="execCloseChecklistEditor()"
+                            title="Fermer">${EXEC_ICONS.back}</button>
+                    <div>
+                        <div class="exec-cli-surtitre">
+                            Checklist${cl.reference ? ` · <span class="exec-cl-ref">${_esc(cl.reference)}</span>` : ''}
+                        </div>
+                        <div class="exec-cli-titre">${_esc(cl.nom || '')}</div>
+                    </div>
+                    <span class="exec-cl-compte" id="execCliCompte"
+                          title="Items de la checklist">${D.items.filter(i => i.checklist_id === clId).length}</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
-                    <span id="execCliSaveState" style="font-size:0.75rem;color:var(--text-muted);"></span>
-                    <button class="btn btn-sm btn-outline" onclick="execChecklistExportXlsx('${clId}')" title="Exporter en Excel">📥 Exporter</button>
-                    <button class="btn btn-sm btn-outline" onclick="document.getElementById('execCliImportFile').click()" title="Importer depuis Excel">📤 Importer</button>
+                <div class="exec-cli-actions">
+                    <span id="execCliSaveState" class="exec-cli-etat"></span>
+                    <button class="btn btn-sm btn-outline btn-icon-only" onclick="execChecklistExportXlsx('${clId}')"
+                            title="Exporter la checklist en Excel">${EXEC_ICONS.download}</button>
+                    <button class="btn btn-sm btn-outline btn-icon-only" title="Importer des items depuis Excel"
+                            onclick="document.getElementById('execCliImportFile').click()">${EXEC_ICONS.upload}</button>
                     <input type="file" id="execCliImportFile" accept=".xlsx" style="display:none" onchange="execChecklistImportXlsx('${clId}', event)">
-                    <button class="btn btn-sm btn-outline" onclick="execOpenSousThemesManager('${clId}')">📑 Sous-thèmes</button>
-                    <button class="btn btn-sm btn-primary" onclick="execAddChecklistRow('${clId}')">${EXEC_ICONS.add} Ajouter une ligne</button>
-                    <button class="btn btn-sm btn-ghost" onclick="execCloseChecklistEditor()" title="Fermer">✕</button>
+                    <button class="btn btn-sm btn-outline" onclick="execOpenSousThemesManager('${clId}')"
+                            title="Gérer les sous-thèmes de cette checklist">${EXEC_ICONS.layers} Sous-thèmes</button>
+                    <button class="btn btn-sm btn-primary" onclick="execAddChecklistRow('${clId}')">
+                        ${EXEC_ICONS.add} Ajouter une ligne</button>
                 </div>
             </header>
             <div class="exec-cli-slicer-body" style="padding:0.75rem 1rem;">
@@ -10988,7 +16117,7 @@ function execOpenChecklistEditor(clId) {
                             <th style="width:170px;">Réf. Règlement</th>
                             <th style="min-width:320px;">Description</th>
                             <th style="min-width:320px;">Directives</th>
-                            <th style="width:50px;"></th>
+                            <th style="width:44px;"></th>
                         </tr></thead>
                         <tbody id="execCliItemsBody"></tbody>
                     </table>
@@ -11005,9 +16134,15 @@ function execOpenChecklistEditor(clId) {
             display:flex; flex-direction:column; animation:execCliSlideIn 0.25s ease; }
         @media (max-width: 640px) { .exec-cli-slicer-wrap { left:0; } }
         @keyframes execCliSlideIn { from { transform:translateX(40px); opacity:0; } to { transform:translateX(0); opacity:1; } }
-        .exec-cli-slicer-header { display:flex; align-items:center; justify-content:space-between; padding:0.75rem 1.25rem; border-bottom:1px solid var(--border); background:var(--bg-card); gap:0.5rem; flex-wrap:wrap; }
+        .exec-cli-slicer-header { display:flex; align-items:center; justify-content:space-between; padding:0.7rem 1.25rem; border-bottom:1px solid var(--border); background:var(--bg-card); gap:0.5rem; flex-wrap:wrap; }
+        .exec-cli-ident { display:flex; align-items:center; gap:0.6rem; min-width:0; }
+        .exec-cli-surtitre { font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.06em; }
+        .exec-cli-titre { font-weight:700; font-size:1rem; line-height:1.25; }
+        .exec-cli-actions { display:flex; align-items:center; gap:0.35rem; flex-wrap:wrap; }
+        .exec-cli-etat { font-size:0.75rem; color:var(--text-muted); min-width:0; }
         .exec-cli-slicer-body { flex:1; overflow-y:auto; padding:1rem 1.25rem; }
         .exec-cli-inline-table { width:100%; border-collapse:collapse; font-size:0.78rem; }
+        .exec-cli-inline-table tbody tr:nth-child(even) { background:rgba(100,116,139,0.045); }
         .exec-cli-inline-table thead th { background:#1a365d; color:#fff; text-align:left; padding:0.45rem 0.55rem; font-weight:600; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; position:sticky; top:0; z-index:1; }
         .exec-cli-inline-table tbody td { border-bottom:1px solid var(--border); padding:0.25rem 0.35rem; vertical-align:top; }
         .exec-cli-inline-table tbody tr:hover { background:rgba(59,130,246,0.04); }
@@ -11020,7 +16155,7 @@ function execOpenChecklistEditor(clId) {
         .exec-cli-inline-table textarea { min-height:32px; max-height:140px; line-height:1.3; }
         .exec-cli-inline-table .ord-input { width:50px; text-align:center; }
         .exec-cli-inline-table .ref-input { width:80px; }
-        .exec-cli-inline-table .row-delete { background:transparent; border:none; cursor:pointer; color:#ef4444; font-size:0.95rem; padding:0.2rem 0.4rem; border-radius:4px; }
+        .exec-cli-inline-table .row-delete { background:transparent; border:none; cursor:pointer; color:#ef4444; line-height:0; padding:0.3rem; border-radius:4px; }
         .exec-cli-inline-table .row-delete:hover { background:#fee2e2; }
         .exec-cli-empty { text-align:center; color:var(--text-muted); font-style:italic; padding:1.2rem; }
     </style>`;
@@ -11059,6 +16194,9 @@ function _execCliRenderRows(clId) {
     const sousThemes = D.sousThemes.filter(s => s.checklist_id === clId);
     const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+    // Le compteur de l'entête suit les ajouts et suppressions faits ici.
+    const compteur = document.getElementById('execCliCompte');
+    if (compteur) compteur.textContent = items.length;
     if (!items.length) {
         tbody.innerHTML = '<tr><td colspan="8" class="exec-cli-empty">Aucun item — cliquez sur « Ajouter une ligne » pour commencer.</td></tr>';
         return;
@@ -11092,7 +16230,8 @@ function _execCliRenderRows(clId) {
             <td>${_execCliRefReglementCell(it, clId)}</td>
             <td><textarea rows="3" onchange="_execCliAutosave('${it.id}','description',this.value)">${_esc2(it.description || '')}</textarea></td>
             <td><textarea rows="3" onchange="_execCliAutosave('${it.id}','directives',this.value)">${_esc2(it.directives || '')}</textarea></td>
-            <td><button class="row-delete" title="Supprimer" onclick="execDeleteChecklistItemInline('${it.id}','${clId}')">🗑</button></td>
+            <td><button class="row-delete" title="Supprimer l'item"
+                onclick="execDeleteChecklistItemInline('${it.id}','${clId}')">${EXEC_ICONS.delete}</button></td>
         </tr>`;
     }).join('');
 }
@@ -11646,11 +16785,11 @@ function execOpenCriticiteModal(critId) {
     shellShowModal(title, `
         <div class="shell-form-group">
             <label>${te('item')} *</label>
-            <input id="critItem" class="shell-input" value="${_esc(c?.item || '')}" placeholder="Critique / Majeure / Mineure">
+            <input id="critItem" class="shell-input" value="${_escAttr(c?.item || '')}" placeholder="Critique / Majeure / Mineure">
         </div>
         <div class="shell-form-group">
             <label>Alias</label>
-            <input id="critAlias" class="shell-input" value="${_esc(c?.alias || '')}" placeholder="Valeur affichée dans les listes déroulantes (ex. C / M / m)">
+            <input id="critAlias" class="shell-input" value="${_escAttr(c?.alias || '')}" placeholder="Valeur affichée dans les listes déroulantes (ex. C / M / m)">
         </div>
         <div class="shell-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
             <div class="shell-form-group">
@@ -11716,7 +16855,7 @@ function execOpenTypeCasModal(tcId) {
     shellShowModal(title, `
         <div class="shell-form-group">
             <label>${te('item')} *</label>
-            <input id="tcItem" class="shell-input" value="${_esc(t?.item || '')}" placeholder="Isolé / Récurrent">
+            <input id="tcItem" class="shell-input" value="${_escAttr(t?.item || '')}" placeholder="Isolé / Récurrent">
         </div>
         <div class="shell-form-group">
             <label>${te('description') || 'Description'}</label>

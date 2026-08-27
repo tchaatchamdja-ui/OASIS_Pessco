@@ -160,6 +160,11 @@ function register(app, deps) {
       total_plans: plans.length,
       plans_valides: plans.filter((p) => ['valide', 'approuve_dg', 'transmis'].includes(p.statut)).length,
       plans_brouillon: plans.filter((p) => !p.statut || p.statut === 'brouillon').length,
+      // Le tableau de bord distingue ce qui attend une décision de ce qui a
+      // été refusé : sans ces deux compteurs, ses cartes restaient à zéro.
+      plans_soumis: plans.filter((p) => p.statut === 'soumis').length,
+      plans_rejetes: plans.filter((p) => p.statut === 'rejete').length,
+      plans_archives: plans.filter((p) => p.statut === 'archive').length,
       total_activites: acts.length,
       activites_planifiees: acts.filter((a) => a.statut !== 'realisee').length,
       activites_realisees: acts.filter((a) => a.statut === 'realisee').length,
@@ -179,7 +184,11 @@ function register(app, deps) {
   app.get(`${M}/plans/:id`, requireAuth, (req, res) => {
     const p = list('plans').find((x) => x.id === req.params.id);
     if (!p) return res.status(404).json({ error: 'not_found' });
-    const activites = list('activites').filter((a) => a.plan_id === p.id);
+    // L'écran de détail lit ses activités ici : le verrou d'exécution doit
+    // donc y figurer, comme sur /all-activites.
+    const racines = racinesDeclenchees();
+    const activites = list('activites').filter((a) => a.plan_id === p.id)
+      .map((a) => ({ ...a, verrouillee: racines.has(racine(a)) ? 1 : 0 }));
     res.json({ ...p, activites, nb_activites: activites.length });
   });
   // ── Droits du module ──
@@ -246,8 +255,39 @@ function register(app, deps) {
   });
 
   // ── Activités d'un plan ──
+  // ── Activités verrouillées par l'exécution ──────────────────────────
+  // Une activité dont le circuit a commencé dans « Exécution de la
+  // Surveillance » ne se réécrit plus : l'amendement du plan la recopie, mais
+  // telle quelle. Le verrou suit la lignée (`parent_activite_id`), sinon une
+  // copie amendée échapperait au déclenchement de son ancêtre.
+  const activitesDeclenchees = () => new Set(
+    (services.callOr('SURV.activitesDeclenchees', []) || []),
+  );
+  // Toutes les copies d'une même activité partagent leur racine : l'amendement
+  // pose `parent_activite_id = parent_activite_id || id`. Comparer les racines
+  // verrouille donc aussi bien l'activité déclenchée que ses copies, dans un
+  // sens comme dans l'autre.
+  const racine = (act) => (act ? (act.parent_activite_id || act.id) : '');
+  const racinesDeclenchees = () => {
+    const declenchees = activitesDeclenchees();
+    if (!declenchees.size) return new Set();
+    const toutes = list('activites');
+    const racines = new Set();
+    declenchees.forEach((id) => {
+      const a = toutes.find((x) => x.id === id);
+      racines.add(a ? racine(a) : id);
+    });
+    return racines;
+  };
+  const estVerrouillee = (act) => !!act && racinesDeclenchees().has(racine(act));
+  const refusVerrou = (res) => res.status(409).json({
+    error: 'activite_declenchee',
+    message: 'Activité déjà déclenchée dans l’exécution de la surveillance : elle n’est pas amendable.',
+  });
+
   app.get(`${M}/plans/:id/activites`, requireAuth, (req, res) =>
-    res.json(list('activites').filter((a) => a.plan_id === req.params.id)));
+    res.json(list('activites').filter((a) => a.plan_id === req.params.id)
+      .map((a) => ({ ...a, verrouillee: estVerrouillee(a) ? 1 : 0 }))));
   app.post(`${M}/plans/:id/activites`, requireAuth, valider(SCHEMA_ACTIVITE), (req, res) => {
     if (!peut(req, 'CONTRIBUTEUR', planDe(req.params.id))) return refus(res);
     res.json(createIn('activites', { ...(req.body || {}), plan_id: req.params.id }));
@@ -256,22 +296,49 @@ function register(app, deps) {
   app.get(`${M}/all-activites`, requireAuth, (req, res) => {
     const plans = {};
     list('plans').forEach((p) => { plans[p.id] = p; });
+    const racines = racinesDeclenchees();
     res.json(list('activites').map((a) => ({
       ...a,
       plan_statut: plans[a.plan_id]?.statut || '',
       plan_titre: plans[a.plan_id]?.titre || '',
       plan_version: plans[a.plan_id]?.version || 1,
+      verrouillee: racines.has(racine(a)) ? 1 : 0,
     })));
   });
   app.put(`${M}/activites/:id`, requireAuth, valider(SCHEMA_ACTIVITE), (req, res) => {
     const act = list('activites').find((a) => a.id === req.params.id);
     if (!peut(req, 'CONTRIBUTEUR', act && planDe(act.plan_id))) return refus(res);
+    if (act && estVerrouillee(act)) return refusVerrou(res);
     const rec = updateIn('activites', req.params.id, req.body || {});
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   });
+  // Sortie des archives d'une activité prise isolément. Son plan reste
+  // archivé : l'exception est portée par l'activité, que « Exécution de la
+  // Surveillance » remet alors parmi les activités en cours.
+  app.put(`${M}/activites/:id/desarchiver`, requireAuth, (req, res) => {
+    const act = list('activites').find((a) => a.id === req.params.id);
+    if (!act) return res.status(404).json({ error: 'not_found' });
+    if (!peut(req, 'VALIDATEUR', planDe(act.plan_id))) return refus(res);
+    res.json(updateIn('activites', act.id, {
+      desarchivee: 1,
+      desarchiver_le: new Date().toISOString(),
+      desarchiver_par: req.user.username,
+    }));
+  });
+
+  // Retour aux archives : l'exception est levée, l'activité suit de nouveau
+  // le sort de son plan.
+  app.put(`${M}/activites/:id/rearchiver`, requireAuth, (req, res) => {
+    const act = list('activites').find((a) => a.id === req.params.id);
+    if (!act) return res.status(404).json({ error: 'not_found' });
+    if (!peut(req, 'VALIDATEUR', planDe(act.plan_id))) return refus(res);
+    res.json(updateIn('activites', act.id, { desarchivee: 0, desarchiver_le: '', desarchiver_par: '' }));
+  });
+
   app.delete(`${M}/activites/:id`, requireAuth, (req, res) => {
     const act = list('activites').find((a) => a.id === req.params.id);
     if (!peut(req, 'CONTRIBUTEUR', act && planDe(act.plan_id))) return refus(res);
+    if (act && estVerrouillee(act)) return refusVerrou(res);
     res.json({ ok: deleteIn('activites', req.params.id) });
   });
 
@@ -374,6 +441,29 @@ function register(app, deps) {
     wf(child.id, 'amender', req.user.username, { motif, source: src.id });
     audit.log(req.user.username, 'PLAN_AMENDER', { source: src.id, amendement: child.id });
     res.json({ ok: true, new_plan_id: child.id, parent_plan_id: src.id, plan: child });
+  });
+
+  // Sortie des archives : le plan revient parmi les plans validés, avec ses
+  // activités. Une version remplacée par une autre n'y a pas droit — elle a
+  // été archivée par le versionnement, pas par une décision de rangement.
+  app.post(`${M}/plans/:id/desarchiver`, requireAuth, (req, res) => {
+    const p = list('plans').find((x) => x.id === req.params.id);
+    if (!p) return res.status(404).json({ error: 'not_found' });
+    if (!peut(req, 'VALIDATEUR', p)) return refus(res);
+    if (p.statut !== 'archive') return res.status(409).json({ error: 'plan_non_archive' });
+    if (p.remplace_par) return res.status(409).json({ error: 'version_remplacee' });
+    const rec = updateIn('plans', p.id, {
+      statut: 'valide',
+      desarchiver_le: new Date().toISOString(),
+      desarchiver_par: req.user.username,
+    });
+    // Le plan revenant en entier, les exceptions posées activité par activité
+    // n'ont plus d'objet.
+    list('activites').filter((a) => a.plan_id === p.id && Number(a.desarchivee) === 1)
+      .forEach((a) => updateIn('activites', a.id, { desarchivee: 0 }));
+    wf(p.id, 'desarchiver', req.user.username, {});
+    audit.log(req.user.username, 'PLAN_DESARCHIVER', { id: p.id });
+    res.json(rec);
   });
 
   // Annuler l'amendement : la version en brouillon et ses activités sont

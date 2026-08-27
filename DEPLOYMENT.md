@@ -48,15 +48,20 @@ section `database`) : c'est un chantier de remplacement de `src/store.js`.
 
 ### 3.1 Dépôt
 
-Le code est sur GitHub, branche `main`. Chaque poussée déclenche un redéploiement
-(`autoDeploy: true`).
+Le code est sur GitHub : `tchaatchamdja-ui/OASIS`.
+
+La branche déployée est **`phase-2`** — c'est elle que `render.yaml` désigne. `main`
+porte le socle Phase 1 et sert de point de retour : en cas d'incident, repointer
+`branch:` sur `main` dans `render.yaml` ramène le service à l'état antérieur.
+
+Chaque poussée sur la branche déployée déclenche un redéploiement (`autoDeploy: true`).
 
 ### 3.2 Créer le service sur Render
 
 Le fichier `render.yaml` décrit le service ; Render le lit comme un *Blueprint*.
 
 1. [render.com](https://render.com) → se connecter avec GitHub.
-2. **New → Blueprint**, choisir le dépôt OASIS, branche `main`.
+2. **New → Blueprint**, choisir le dépôt OASIS, branche `phase-2`.
 3. Render lit `render.yaml` et propose le service `oasis` (runtime Node, plan free,
    région Frankfurt).
 4. Renseigner la seule variable laissée vide : **`OASIS_SEED_PASSWORD`** — le mot de passe
@@ -184,3 +189,5 @@ docker run -p 4750:4750 \
 | Impossible de se connecter | Mot de passe d'amorçage inconnu après un réveil | Définir `OASIS_SEED_PASSWORD`, ou lire les journaux du démarrage |
 | Données disparues | Disque éphémère du plan free | Passer au plan Starter avec un disque (§ 2) |
 | Première requête très lente | Mise en veille du plan free | Normal : environ 30 secondes de réveil |
+| « Moteur de rendu PDF indisponible sur ce serveur » | Chromium n'a pas pu démarrer : les 512 Mo du plan free ne lui suffisent pas | Le reste de l'application n'est pas touché — le rendu PDF exige le plan Starter |
+| Build long ou en échec au premier déploiement | `npm ci` télécharge Chromium (≈ 170 Mo) | Normal une seule fois : `PUPPETEER_CACHE_DIR` le conserve d'une construction à l'autre |

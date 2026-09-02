@@ -1,0 +1,1705 @@
+/* =====================================================
+   Module « Inspections d'aéronefs sur aire de trafic » — styles propres.
+   La coquille (barre latérale, barre supérieure, barre inférieure) suit la
+   charte du module « Exécution de la Surveillance » : mêmes contraintes de
+   largeur, même entête collant, même barre inférieure servie par le socle.
+   Seul l'accent change — le bleu marine de l'aviation civile.
+   ===================================================== */
+
+.ramp-module,
+.ramp-slider,
+.ramp-slider-overlay {
+    --ramp-accent: #1d4ed8;
+    --ramp-accent-light: #60a5fa;
+    --ramp-accent-dark: #1e3a8a;
+    --ramp-accent-bg: rgba(29, 78, 216, .08);
+    --ramp-accent-bg-hover: rgba(29, 78, 216, .14);
+    --exec-accent: var(--ramp-accent);
+    --exec-accent-bg: var(--ramp-accent-bg);
+    --exec-accent-bg-hover: var(--ramp-accent-bg-hover);
+}
+
+/* Palette « Corporate » : le module reprend le bleu roi de la marque plutôt
+   que son bleu marine d'origine — les deux ne se distinguaient pas. */
+[data-theme="corporate"] .ramp-module,
+[data-theme="corporate"] .ramp-slider,
+[data-theme="corporate"] .ramp-slider-overlay {
+    --ramp-accent: #1e40af;
+    --ramp-accent-light: #3b82f6;
+    --ramp-accent-dark: #1e3a8a;
+    --ramp-accent-bg: rgba(30, 64, 175, .08);
+    --ramp-accent-bg-hover: rgba(30, 64, 175, .14);
+}
+
+/* Palette « Pierre » : le bleu du module n'y a pas sa place — la structure
+   prend le taupe, l'action la terre de Sienne. */
+[data-theme="grey"] .ramp-module,
+[data-theme="grey"] .ramp-slider,
+[data-theme="grey"] .ramp-slider-overlay {
+    --ramp-accent: #78716c;
+    --ramp-accent-light: #a8a29e;
+    --ramp-accent-dark: #57534e;
+    --ramp-accent-bg: rgba(120, 113, 108, .10);
+    --ramp-accent-bg-hover: rgba(120, 113, 108, .16);
+}
+
+/* ── Coquille : mêmes contraintes que le module Exécution ──
+   La barre latérale du socle est en position fixe et .app-content la compense
+   par une marge : sans largeur explicite, la colonne de contenu déborde du
+   viewport quand la barre est dépliée. */
+.ramp-module.app-layout { overflow-x: hidden; }
+.ramp-module .app-content {
+    width: calc(100vw - var(--sidebar-width, 240px));
+    max-width: calc(100vw - var(--sidebar-width, 240px));
+    min-width: 0;
+    box-sizing: border-box;
+    height: 100vh;
+    overflow-y: auto;
+    transition: width .3s ease, max-width .3s ease, margin-left .3s ease;
+}
+.ramp-module.sidebar-collapsed .app-content {
+    width: calc(100vw - var(--sidebar-collapsed, 60px));
+    max-width: calc(100vw - var(--sidebar-collapsed, 60px));
+}
+.ramp-module .app-header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg-card);
+}
+.ramp-module .main-content {
+    max-width: 100%; width: 100%; margin: 0; min-width: 0;
+    box-sizing: border-box; overflow-x: hidden;
+}
+
+/* ── Entête de page ── */
+.ramp-page-header {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.ramp-page-header h2 { margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text); }
+.ramp-sous-titre { color: var(--text-muted); font-size: .9rem; }
+/* Entête du tableau de bord : intitulé et sous-titre empilés à gauche, le
+   bouton d'accès aux statistiques à droite. */
+.ramp-page-header > div > .ramp-sous-titre { display: block; margin-top: .1rem; }
+
+/* ── Barre de filtres ──
+   Deux rangs, et non un enroulement libre : les listes occupent une grille aux
+   colonnes égales, si bien qu'elles s'alignent quel que soit leur nombre ;
+   la recherche vient en dernier, seule sur son rang, et prend toute la largeur
+   restante — c'est elle qu'on remplit le plus souvent, et le texte saisi a
+   besoin de place là où un intitulé de liste n'en demande pas. */
+.ramp-filtres {
+    display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+    padding: .7rem .8rem; margin-bottom: 1rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+}
+/* Les champs du filtre portent le contour du thème : ils forment un ensemble,
+   distinct des champs de saisie ordinaires. */
+.ramp-filtres .ramp-select,
+.ramp-filtres .ramp-input,
+.ramp-filtres .ramp-recherche-boite,
+.ramp-filtres .btn,
+.ramp-recherche-reset { border-color: var(--primary); color: var(--primary); }
+.ramp-filtres .ramp-select:hover,
+.ramp-filtres .ramp-input:hover { border-color: var(--primary); }
+/* Les listes ne grandissent pas : toutes de même largeur, elles s'alignent
+   d'un rang à l'autre. C'est la recherche qui prend ce qui reste du dernier
+   rang — le texte saisi a besoin de place là où un intitulé n'en demande pas. */
+.ramp-filtres > .ramp-select,
+.ramp-filtres > .ramp-contenu-transparent > .ramp-select { flex: 1 1 150px; min-width: 0; }
+.ramp-filtres > .ramp-recherche-boite { flex: 1 1 200px; }
+.ramp-filtres > .btn { flex: 0 0 auto; }
+/* ── Générateur de tables ──
+   Les champs du module à gauche, la table en construction à droite : on glisse
+   de l'un à l'autre. Une donnée sans relation avec les autres se signale en
+   rouge, et l'export l'attend pour partir. */
+.ramp-gen { display: grid; grid-template-columns: 2fr 3fr; gap: 1rem; align-items: start; }
+/* Les filtres de l'export tiennent au-dessus des deux colonnes : quatre par
+   rang, à largeurs égales, et un cran plus bas que les champs ordinaires. */
+.ramp-gen-filtres {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .45rem; margin-bottom: .8rem;
+}
+/* Cinq pixels de moins que les filtres ordinaires : la barre reste compacte
+   au-dessus des deux colonnes. La règle générale vise le même poids, on la
+   double donc de la classe du conteneur. */
+.ramp-filtres.ramp-gen-filtres > .ramp-select { width: 100%; height: 29px; padding: .2rem .5rem; }
+.ramp-filtres.ramp-gen-filtres .btn,
+.ramp-filtres.ramp-gen-filtres .btn.ramp-btn-icone {
+    height: 29px; width: 29px; min-width: 29px; padding: 0; flex: 0 0 29px;
+}
+/* La dernière case porte son filtre et le bouton de remise à zéro. */
+.ramp-gen-filtres-fin { display: flex; align-items: center; gap: .35rem; min-width: 0; }
+.ramp-gen-filtres-fin .ramp-select { flex: 1; min-width: 0; height: 29px; padding: .2rem .5rem; }
+.ramp-gen-filtres .ramp-sous-titre {
+    display: flex; align-items: center; font-size: .76rem;
+}
+@media (max-width: 900px) {
+    .ramp-gen-filtres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* Les totaux demandés, sous la colonne des données disponibles. */
+.ramp-gen-totaux {
+    border: 1px solid var(--primary); border-radius: 8px;
+    padding: .55rem .8rem; margin-top: .7rem;
+}
+.ramp-gen-totaux .ramp-card-titre { margin-bottom: .2rem; }
+/* Les trois choix tiennent sur un rang sous la table à générer. */
+.ramp-gen-totaux-liste { display: flex; gap: 1rem; flex-wrap: wrap; }
+.ramp-gen-totaux .ramp-champ-case { margin: .15rem 0; font-size: .82rem; }
+.ramp-gen-poignee {
+    color: var(--text-muted); font-size: .8rem; letter-spacing: -2px;
+    cursor: grab; user-select: none;
+}
+.ramp-gen-source, .ramp-gen-cible {
+    border: 1px solid var(--primary); border-radius: 8px; padding: .7rem .85rem;
+    min-height: 320px; max-height: 60vh; overflow-y: auto;
+}
+.ramp-gen-cible { background: var(--ramp-accent-bg); }
+.ramp-gen-famille { margin-bottom: .7rem; }
+.ramp-gen-famille-titre {
+    font-size: .68rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--text-muted); margin-bottom: .25rem;
+}
+.ramp-gen-champ {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    padding: .3rem .5rem; margin-bottom: .2rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+    font-size: .82rem; cursor: grab;
+}
+.ramp-gen-champ:hover { border-color: var(--primary); }
+.ramp-gen-champ.pose { opacity: .45; }
+.ramp-gen-champ i {
+    font-style: normal; font-size: .62rem; color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 4px; padding: 0 .25rem;
+}
+.ramp-gen-pose {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    padding: .35rem .5rem; margin-bottom: .3rem;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+}
+.ramp-gen-pose-nom { flex: 1; min-width: 120px; font-size: .84rem; }
+.ramp-gen-pose.conflit { border-color: #dc2626; background: rgba(220, 38, 38, .08); }
+.ramp-gen-pose.conflit .ramp-gen-pose-nom { color: #dc2626; font-weight: 700; }
+.ramp-gen-pose-nom b {
+    display: block; font-size: .68rem; font-weight: 600; color: #dc2626;
+}
+.ramp-gen-vide { color: var(--text-muted); font-size: .84rem; padding: 1rem .2rem; }
+.ramp-gen-bas {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-top: .9rem;
+}
+@media (max-width: 900px) { .ramp-gen { grid-template-columns: 1fr; } }
+
+/* Répartitions : deux graphiques par rang, moitié-moitié ; les inspections par
+   État reprennent la pleine largeur en dessous. */
+.ramp-grille-repartitions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.2rem;
+}
+.ramp-grille-repartitions > .pleine { grid-column: 1 / -1; }
+/* Chaque graphique dans son cadre, au trait du thème. */
+.ramp-grille-repartitions > div {
+    border: 1px solid var(--primary); border-radius: 8px; padding: .7rem .85rem;
+}
+@media (max-width: 900px) { .ramp-grille-repartitions { grid-template-columns: 1fr; } }
+
+/* Barres horizontales jointives : aucune gouttière entre les lignes, la pile
+   se lit comme un seul bloc. */
+.ramp-barres-collees { display: flex; flex-direction: column; gap: 0; }
+.ramp-barre-collee {
+    display: grid; grid-template-columns: 130px 1fr 44px;
+    align-items: center; gap: .5rem; font-size: .8rem;
+}
+.ramp-barre-collee-lbl { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ramp-barre-collee-piste { display: block; height: 20px; background: var(--bg); }
+/* Dégradé : chaque barre part de la couleur de thème et s'éclaircit vers sa
+   pointe ; les barres suivantes s'éclaircissent à leur tour. */
+.ramp-barre-collee-seg {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--ramp-accent-light));
+    opacity: calc(1 - (var(--rang, 0) * .55));
+}
+.ramp-barre-collee-val { text-align: right; }
+
+/* Histogramme par État : deux barres jumelles par colonne — inspections et
+   écarts —, et la colonne entière se retire d'un clic. */
+.ramp-histo-etats {
+    display: flex; align-items: flex-end; gap: .5rem;
+    height: 190px; padding-top: .3rem; overflow-x: auto;
+}
+.ramp-histo-etat {
+    flex: 1 1 0; min-width: 44px;
+    display: flex; flex-direction: column; align-items: center; gap: .2rem;
+    height: 100%; padding: 0; border: none; background: transparent;
+    font: inherit; color: inherit; cursor: pointer;
+}
+.ramp-histo-etat-barres {
+    flex: 1; width: 100%; min-height: 0;
+    display: flex; align-items: flex-end; justify-content: center; gap: 3px;
+}
+.ramp-histo-etat-barre {
+    width: 40%; border-radius: 3px 3px 0 0; transition: height .25s ease;
+    /* La valeur se lit dans la barre, de bas en haut. */
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 3px; overflow: hidden;
+}
+.ramp-histo-etat-barre b {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-size: .62rem; font-weight: 700; color: #fff; line-height: 1;
+    text-shadow: 0 0 2px rgba(0, 0, 0, .35);
+}
+.ramp-histo-etat-barre.insp { background: var(--primary); }
+.ramp-histo-etat-barre.ecart { background: #dc2626; }
+.ramp-histo-etat-val {
+    font-size: .7rem; font-weight: 700;
+    display: flex; align-items: baseline; gap: .2rem; white-space: nowrap;
+}
+.ramp-histo-etat-val .v-insp { color: var(--primary); }
+.ramp-histo-etat-val .v-ecart { color: #dc2626; }
+.ramp-histo-etat-val i { color: var(--text-muted); font-style: normal; }
+
+/* Bande de commandes d'un graphique temporel : l'année puis les pas, tous sur
+   un rang, calés à droite. */
+.ramp-bande-temps {
+    display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
+    flex-wrap: nowrap; padding: .35rem .5rem; margin-bottom: .5rem;
+    background: var(--ramp-accent-bg); border-radius: 6px;
+}
+.ramp-bande-temps .ramp-granularites { flex-wrap: nowrap; }
+/* Même hauteur pour tout ce qui accompagne un titre de graphique : les bords
+   s'alignent, pas seulement les centres. */
+.ramp-grille-repartitions .ramp-card-titre .ramp-granularite,
+.ramp-grille-repartitions .ramp-card-titre .ramp-granularite button,
+.ramp-bande-temps .ramp-granularite,
+.ramp-bande-temps .ramp-granularite button { height: 24px; }
+.ramp-grille-repartitions .ramp-card-titre .ramp-select-annee { margin-left: .3rem; }
+
+/* L'année observée : une liste courte, à la hauteur des boutons voisins. */
+.ramp-select-annee {
+    width: 70px; flex: 0 0 70px; height: 24px; padding: 0 .3rem; font-size: .7rem;
+    border-color: var(--primary); color: var(--primary);
+}
+
+/* Pas de temps : le nom règle le pas, la flèche ouvre la liste des périodes. */
+.ramp-granularites { flex-wrap: wrap; }
+.ramp-granularite { position: relative; display: inline-flex; }
+.ramp-granularite > button:first-child { border-radius: 999px 0 0 999px; border-right: none; }
+.ramp-granularite-fleche {
+    border-radius: 0 999px 999px 0; padding: .12rem .3rem;
+    display: inline-flex; align-items: center;
+}
+.ramp-granularite-fleche svg { width: 12px; height: 12px; }
+.ramp-granularite.ouvert .ramp-granularite-fleche svg { transform: rotate(180deg); }
+.ramp-granularite .ramp-multi-panneau {
+    right: 0; left: auto; max-height: 260px; overflow-y: auto; min-width: 150px;
+}
+
+/* Titre d'un graphique : l'intitulé à gauche, ses boutons d'affichage à
+   droite, sur la même ligne. */
+.ramp-grille-repartitions .ramp-card-titre {
+    display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+}
+.ramp-grille-repartitions .ramp-card-titre .ramp-bascule { margin-left: auto; }
+.ramp-histo-etat-lbl {
+    font-size: .68rem; color: var(--text-muted); max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ramp-histo-etat:hover .ramp-histo-etat-lbl { color: var(--primary); }
+.ramp-histo-etat.exclu { opacity: .4; }
+.ramp-histo-etat.exclu .ramp-histo-etat-barre { background: var(--border); }
+
+/* Bascule d'affichage d'un graphique : deux libellés, celui en cours marqué. */
+.ramp-bascule { display: inline-flex; gap: .2rem; margin-left: .6rem; }
+.ramp-bascule button {
+    padding: .12rem .5rem; border: 1px solid var(--primary); border-radius: 999px;
+    background: var(--bg); color: var(--primary);
+    font-family: inherit; font-size: .7rem; cursor: pointer;
+}
+.ramp-bascule button.actif { background: var(--primary); color: #fff; font-weight: 700; }
+
+/* Liste à choix multiples (trimestres) : un bouton qui porte la sélection, un
+   panneau de cases par-dessus le contenu. */
+.ramp-multi { position: relative; min-width: 0; }
+.ramp-multi-bouton {
+    display: flex; align-items: center; justify-content: space-between; gap: .4rem;
+    width: 100%; height: 34px; cursor: pointer; text-align: left;
+}
+.ramp-multi-bouton > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ramp-multi.ouvert .ramp-multi-bouton svg { transform: rotate(180deg); }
+.ramp-multi-panneau {
+    position: absolute; top: calc(100% + 4px); left: 0; z-index: 90;
+    min-width: 100%; padding: .45rem;
+    display: flex; flex-direction: column; gap: .15rem;
+    background: var(--bg-card); border: 1px solid var(--primary); border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .12);
+}
+.ramp-multi-choix {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .25rem .35rem; border-radius: 6px; cursor: pointer; font-size: .84rem;
+}
+.ramp-multi-choix:hover { background: var(--ramp-accent-bg); }
+.ramp-multi-choix input { width: 15px; height: 15px; accent-color: var(--primary); }
+.ramp-multi-vider { margin-top: .25rem; }
+
+/* Barre en cinq colonnes égales (statistiques) : cinq listes au premier rang,
+   trois au second, la recherche sur les deux colonnes restantes. */
+.ramp-filtres.ramp-filtres-5 {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem;
+}
+.ramp-filtres-5 > * { min-width: 0; }
+.ramp-filtres-5 .ramp-select { width: 100%; height: 34px; }
+.ramp-filtres-fin { grid-column: span 2; display: flex; gap: .5rem; align-items: center; min-width: 0; }
+.ramp-filtres-fin .ramp-recherche-boite { flex: 1; min-width: 0; height: 34px; }
+/* Le bouton de remise à zéro s'aligne sur la hauteur des champs. */
+.ramp-filtres .btn.ramp-btn-icone,
+.ramp-filtres-fin .btn {
+    height: 34px; width: 34px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+}
+@media (max-width: 900px) {
+    .ramp-filtres.ramp-filtres-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ramp-filtres-fin { grid-column: span 2; }
+}
+/* Même hauteur pour tout le rang : listes, recherche et bouton. Sans cela,
+   trois hauteurs voisines mais inégales décalent les bords de deux ou trois
+   pixels — assez pour que la ligne paraisse bancale. */
+.ramp-filtres > .ramp-select,
+.ramp-filtres > .ramp-contenu-transparent > .ramp-select,
+.ramp-filtres > .ramp-recherche-boite,
+.ramp-filtres > .btn { height: 34px; box-sizing: border-box; }
+.ramp-filtres > .btn { display: inline-flex; align-items: center; justify-content: center; }
+/* La loupe se pose dans le champ : le libellé « Rechercher » suffit à dire
+   ce qu'on attend, l'icône dit où. */
+.ramp-recherche-boite {
+    min-width: 0;
+    display: flex; align-items: center; gap: .4rem;
+    padding: 0 .6rem; height: 32px;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text-muted);
+}
+.ramp-recherche-boite:focus-within { border-color: var(--ramp-accent); box-shadow: 0 0 0 2px var(--ramp-accent-bg); }
+.ramp-recherche-boite input {
+    flex: 1; min-width: 0; height: 100%; padding: 0;
+    border: none; outline: none; background: transparent;
+    color: var(--text); font-size: .84rem; font-family: inherit;
+}
+.ramp-input, .ramp-select {
+    padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text); font-size: .84rem;
+    font-family: inherit; width: 100%; box-sizing: border-box;
+}
+.ramp-input:focus, .ramp-select:focus {
+    outline: none; border-color: var(--ramp-accent);
+    box-shadow: 0 0 0 2px var(--ramp-accent-bg);
+}
+/* Lecture seule : le champ se voit inactif par son fond, non par une encre
+   pâle — ce qui est écrit doit rester lisible une fois la fiche figée. */
+.ramp-input:disabled, .ramp-select:disabled, .ramp-input[readonly] {
+    background: var(--bg); color: var(--text); opacity: 1; -webkit-text-fill-color: var(--text);
+}
+.ramp-input:disabled::placeholder, .ramp-input[readonly]::placeholder { color: var(--text-muted); }
+
+.ramp-actions-bar {
+    display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .9rem;
+}
+
+/* ── Bandeau de résultat ── */
+.ramp-resume {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .5rem .8rem; margin-bottom: .8rem;
+    background: var(--ramp-accent-bg); border-left: 3px solid var(--ramp-accent);
+    border-radius: 0 4px 4px 0; font-size: .84rem; color: var(--text-muted);
+}
+.ramp-resume strong { color: var(--text); }
+
+/* ── Recherche escamotable ──
+   Fermée, elle tient dans un rond bordé de la couleur du thème ; ouverte, elle
+   occupe la moitié de la largeur et laisse la place à son bouton de vidage. */
+.ramp-recherche-ronde {
+    display: flex; align-items: center; gap: .4rem;
+    flex: 0 0 auto; max-width: 100%;
+}
+/* Au repos, une pastille ovale : la loupe et le mot « Rechercher ». Le champ
+   la remplace dès qu'on clique. */
+.ramp-recherche-loupe {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    height: 34px; padding: 0 .9rem; flex: 0 0 auto;
+    border: 1px solid var(--primary); border-radius: 999px;
+    background: var(--bg); color: var(--primary); cursor: pointer;
+    font-family: inherit; font-size: .84rem; font-weight: 600;
+    transition: background .15s, color .15s;
+}
+.ramp-recherche-loupe:hover { background: var(--primary); color: #fff; }
+.ramp-recherche-mot { white-space: nowrap; }
+/* Le champ ouvert prend la place de la pastille : on ne montre pas les deux. */
+.ramp-recherche-ronde.ouverte .ramp-recherche-loupe { display: none; }
+.ramp-recherche-champ {
+    width: 0; padding: 0; border: none; background: transparent;
+    color: var(--text); font-family: inherit; font-size: .84rem;
+    opacity: 0; pointer-events: none;
+    transition: width .25s ease, padding .25s ease, opacity .2s ease;
+}
+/* Ouverte, la boîte prend la moitié du rang : le champ s'y étale, le bouton
+   de vidage tient à sa suite. */
+.ramp-recherche-ronde.ouverte { flex: 0 1 50%; width: 50%; }
+.ramp-recherche-ronde.ouverte .ramp-recherche-champ {
+    flex: 1; width: auto; min-width: 0;
+    padding: .38rem .7rem; opacity: 1; pointer-events: auto;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--bg);
+}
+.ramp-recherche-ronde.ouverte .ramp-recherche-champ:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--ramp-accent-bg);
+}
+
+/* Les deux graphes du tableau de bord partagent un rang : la répartition à
+   gauche sur deux cinquièmes, les items les plus relevés à droite sur trois.
+   Les cartes s'étirent à la même hauteur. */
+.ramp-rang-graphes {
+    display: grid; grid-template-columns: 2fr 3fr; gap: 1rem; align-items: stretch;
+}
+.ramp-rang-graphes > .ramp-card {
+    margin-bottom: 1rem; display: flex; flex-direction: column;
+    border-color: var(--primary);
+}
+@media (max-width: 1000px) { .ramp-rang-graphes { grid-template-columns: 1fr; } }
+
+/* L'anneau et sa légende : le disque à gauche, les quatre catégories à droite,
+   centrés dans la hauteur que la carte voisine impose. */
+.ramp-anneau-bloc {
+    display: flex; align-items: center; gap: .7rem; flex: 1; min-height: 0;
+}
+.ramp-anneau { width: 190px; height: 190px; flex: 0 0 auto; }
+.ramp-anneau-arc { transition: stroke-dasharray .3s ease; }
+.ramp-anneau-total {
+    text-anchor: middle; font-size: 30px; font-weight: 800; fill: var(--text);
+}
+.ramp-anneau-libelle {
+    text-anchor: middle; font-size: 11px; fill: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .05em;
+}
+.ramp-anneau-legende { flex: 1; min-width: 0; }
+/* Les lignes de légende commandent l'anneau : ce sont des boutons, sans barre
+   de progression — la part se lit sur le disque. */
+/* Les noms se serrent contre leurs chiffres, calés à droite du bloc : la
+   colonne d'intitulés ne s'étire plus dans le vide. */
+/* La légende forme un bloc : mêmes colonnes d'une ligne à l'autre, si bien que
+   les nombres et les taux s'alignent. */
+.ramp-anneau-legende { display: flex; flex-direction: column; align-items: stretch; }
+.ramp-anneau-legende .ramp-cat-ligne {
+    /* Le nom d'abord : il ne doit pas se couper. */
+    grid-template-columns: minmax(0, 1fr) 38px 46px; width: 100%; gap: .4rem;
+    width: 100%; padding: .2rem .3rem; border: none; border-radius: 6px;
+    background: transparent; color: inherit; font: inherit; text-align: left;
+    cursor: pointer; transition: background .15s, opacity .15s;
+}
+.ramp-anneau-legende .ramp-cat-ligne:hover { background: var(--ramp-accent-bg); }
+.ramp-anneau-legende .ramp-cat-ligne.masquee { opacity: .45; }
+.ramp-anneau-legende .ramp-cat-ligne.masquee .ramp-pastille { background: var(--border) !important; }
+
+/* Répartition par catégorie : quatre mesures de même nature, alignées sur une
+   grille commune pour que les barres se comparent d'un coup d'œil. */
+.ramp-cat-ligne {
+    display: grid; grid-template-columns: 150px 1fr 50px 60px;
+    align-items: center; gap: .7rem; margin-bottom: .45rem; font-size: .84rem;
+}
+.ramp-cat-nom {
+    display: flex; align-items: center; gap: .45rem; font-weight: 600;
+    /* Un intitulé de catégorie tient sur une ligne : coupé en deux, il
+       désaligne toute la légende. */
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.ramp-cat-nom .ramp-pastille { flex: 0 0 auto; }
+.ramp-cat-val { text-align: right; font-weight: 700; }
+.ramp-cat-pct { text-align: right; color: var(--text-muted); font-size: .78rem; }
+.ramp-pastille.c1 { background: #fbbf24; }
+.ramp-pastille.c2 { background: #ea580c; }
+.ramp-pastille.c3 { background: #dc2626; }
+.ramp-pastille.cg { background: #94a3b8; }
+
+/* ── Cartes d'indicateur ──
+   Le tableau de bord et les statistiques utilisent les cartes du socle
+   (`oasis-kpi.js`), comme le module « Exécution de la Surveillance ».
+   Les règles ci-dessous ne servent plus qu'à l'aperçu d'importation, où
+   quatre compteurs simples suffisent. */
+/* Colonne « Voir » : les boutons prennent la couleur du suivi de l'écart —
+   rouge tant qu'il est ouvert, ambre pendant le traitement, vert une fois
+   soldé. Le survol inverse le fond, comme partout ailleurs. */
+.ramp-suivi-ouvert .ramp-btn-icone { color: #dc2626; border-color: #dc2626; }
+.ramp-suivi-ouvert .ramp-btn-icone:hover { background: #dc2626; color: #fff; }
+.ramp-suivi-encours .ramp-btn-icone { color: #d97706; border-color: #d97706; }
+.ramp-suivi-encours .ramp-btn-icone:hover { background: #d97706; color: #fff; }
+.ramp-suivi-clos .ramp-btn-icone { color: #16a34a; border-color: #16a34a; }
+.ramp-suivi-clos .ramp-btn-icone:hover { background: #16a34a; color: #fff; }
+/* Une action déjà accomplie garde son fond plein, dans la teinte du suivi. */
+.ramp-suivi-ouvert .ramp-btn-icone.ramp-fait { background: rgba(220, 38, 38, .12); }
+.ramp-suivi-encours .ramp-btn-icone.ramp-fait { background: rgba(217, 119, 6, .14); }
+.ramp-suivi-clos .ramp-btn-icone.ramp-fait { background: rgba(22, 163, 74, .14); }
+
+/* ── Barre des États membres ──
+   Collée au bas de l'écran, sous la liste : les huit États de l'UEMOA, que
+   l'on active ou désactive d'un clic. Elle suit le pliage de la barre de
+   menu, et la page se réserve sa hauteur pour que la dernière ligne du
+   tableau ne passe pas dessous. */
+.ramp-barre-pays {
+    position: fixed; left: var(--sidebar-width, 240px); right: 0;
+    /* Juste au-dessus de la barre inférieure du socle, qui est collante et
+       passerait sinon par-dessus. */
+    bottom: var(--ramp-pied-h, 46px); z-index: 79;
+    display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+    padding: .5rem .9rem;
+    background: var(--bg-card); border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, .06);
+    transition: left .3s ease;
+}
+body.app-sidebar-collapsed .ramp-barre-pays { left: var(--sidebar-collapsed, 60px); }
+/* Dans le volet plein écran des statistiques, la barre appartient au volet :
+   celui-ci porte une transformation, qui fait de lui le repère des positions
+   fixes — les bords se comptent donc à partir de lui, non de l'écran. */
+.ramp-barre-pays.dans-volet { left: 0; right: 0; bottom: 0; z-index: 1101; }
+body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
+.ramp-barre-pays-titre {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted);
+}
+/* Les huit États se partagent la bande à parts égales : une grille, non un
+   flux, pour que la largeur d'un bouton ne dépende pas de la longueur du nom.
+   À l'étroit, la grille passe à deux rangs de quatre. */
+.ramp-barre-pays-liste {
+    display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
+    gap: .35rem; flex: 1; min-width: 0;
+}
+.ramp-pays-btn {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-align: center; padding: .3rem .4rem;
+}
+@media (max-width: 1100px) {
+    .ramp-barre-pays-liste { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) { .ramp-barre-pays-titre { display: none; } }
+.ramp-pays-btn {
+    padding: .3rem .7rem; border: 1px solid var(--primary); border-radius: 999px;
+    background: var(--bg); color: var(--text); font-size: .8rem; font-family: inherit;
+    cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.ramp-pays-btn:hover { border-color: var(--primary); color: var(--primary); }
+.ramp-pays-btn.actif {
+    background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 700;
+}
+/* La liste laisse la place à la barre : sans cela, ses dernières lignes
+   passeraient dessous. */
+.ramp-module .main-content:has(.ramp-barre-pays) {
+    padding-bottom: calc(62px + var(--ramp-pied-h, 46px));
+}
+.ramp-slider-body:has(.ramp-barre-pays) { padding-bottom: 68px; }
+@media (max-width: 900px) { .ramp-barre-pays { left: 0; } }
+
+/* Cartes des écrans de liste : les quatre tiennent sur un seul rang, quelle
+   que soit la largeur — c'est une bande de lecture, pas une grille. */
+/* Un seul groupe : il prend toute la largeur, sinon la grille des groupes le
+   confinerait à sa moitié. */
+.ramp-kpi-ligne { grid-template-columns: 1fr; }
+.ramp-kpi-ligne .oasis-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ramp-kpi-ligne .oasis-kpi-card { min-width: 0; }
+.ramp-kpi-grille {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: .8rem; margin-bottom: 1rem;
+}
+.ramp-kpi {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-left: 4px solid var(--ramp-accent); border-radius: 8px;
+    padding: .7rem .9rem;
+}
+.ramp-kpi-titre {
+    font-size: .7rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .04em;
+}
+.ramp-kpi-valeur { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-top: .15rem; }
+.ramp-kpi.cat1 { border-left-color: #d97706; }
+.ramp-kpi.cat2 { border-left-color: #ea580c; }
+.ramp-kpi.cat3 { border-left-color: #dc2626; }
+.ramp-kpi.catg { border-left-color: #64748b; }
+.ramp-kpi.items { border-left-color: #0d9488; }
+.ramp-kpi.ratio { border-left-color: #f59e0b; }
+
+/* ── Cartes ── */
+.ramp-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .9rem 1rem; margin-bottom: 1rem;
+}
+.ramp-card-titre {
+    font-size: .88rem; font-weight: 700; color: var(--text);
+    margin-bottom: .7rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+}
+.ramp-grille-2 {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem;
+}
+
+/* ── Barres empilées « top items par catégorie » ── */
+.ramp-barre-ligne { margin-bottom: .6rem; }
+.ramp-barre-entete {
+    display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: .2rem;
+}
+.ramp-barre-entete strong { font-weight: 700; }
+.ramp-barre-piste {
+    display: flex; height: 12px; border-radius: 6px; overflow: hidden;
+    background: var(--border);
+}
+.ramp-barre-seg { height: 100%; }
+.ramp-barre-seg.c1 { background: #fbbf24; }
+.ramp-barre-seg.c2 { background: #ea580c; }
+.ramp-barre-seg.c3 { background: #dc2626; }
+.ramp-barre-seg.cg { background: #94a3b8; }
+.ramp-legende {
+    display: flex; flex-wrap: wrap; gap: .9rem; justify-content: center;
+    margin-top: .7rem; font-size: .74rem; font-weight: 600; color: var(--text-muted);
+}
+.ramp-legende span { display: inline-flex; align-items: center; gap: .3rem; }
+.ramp-pastille { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Histogramme mensuel / annuel. */
+.ramp-histo { display: flex; align-items: flex-end; gap: .35rem; height: 130px; padding-top: .5rem; }
+.ramp-histo-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .25rem; min-width: 0; }
+.ramp-histo-barre { width: 100%; background: var(--ramp-accent); border-radius: 3px 3px 0 0; min-height: 2px; }
+.ramp-histo-val { font-size: .68rem; font-weight: 700; color: var(--text); }
+.ramp-histo-lbl { font-size: .66rem; color: var(--text-muted); white-space: nowrap; }
+
+/* ── Tableaux ── */
+.ramp-table { width: 100%; border-collapse: separate; border-spacing: 0;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.ramp-table th {
+    padding: .5rem .65rem; font-size: .7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .03em;
+    color: var(--text-header, #fff); background: var(--primary);
+    text-align: left; border-right: 1px solid rgba(255,255,255,.15);
+    position: sticky; top: 0; z-index: 2;
+}
+.ramp-table th.triable { cursor: pointer; user-select: none; }
+.ramp-table th.triable:hover { background: color-mix(in srgb, var(--primary) 85%, #fff); }
+.ramp-table td {
+    padding: .45rem .65rem; border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border); vertical-align: middle; font-size: .82rem;
+}
+.ramp-table tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
+.ramp-table tbody tr:hover { background: var(--ramp-accent-bg); }
+.ramp-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
+.ramp-table-wrap { overflow: auto; max-height: 62vh; border-radius: 8px; }
+.ramp-tri { opacity: .5; font-size: .7rem; margin-left: .2rem; }
+.ramp-tri.actif { opacity: 1; }
+
+/* Ligne de détail dépliée sous un exploitant, dans la situation générale. */
+.ramp-table tr.ramp-detail td { background: var(--ramp-accent-bg); font-size: .78rem; }
+
+/* Bandeau de groupe d'items : il coiffe les items qu'il réunit, et se déplie. */
+.ramp-table tr.ramp-groupe-ligne > td {
+    background: var(--ramp-accent-bg); font-size: .86rem; padding: .55rem .65rem;
+}
+.ramp-table tr.ramp-groupe-ligne:hover > td { background: var(--ramp-accent-bg-hover); }
+/* Bandeau d'un groupe d'items. Classes distinctes de celles du carnet de
+   contacts, qui pousse son compteur à droite : ici il suit l'intitulé. */
+.ramp-gi-entete { display: flex; align-items: center; gap: .55rem; }
+.ramp-gi-compte {
+    padding: 0 .45rem; border-radius: 9px;
+    background: var(--ramp-accent); color: #fff;
+    font-size: .72rem; font-weight: 700;
+}
+/* La description s'aligne sous l'intitulé, décalée de la largeur du bouton
+   et de son écart — pas d'un nombre choisi au jugé. */
+.ramp-gi-desc { margin-top: .2rem; margin-left: calc(26px + .55rem); }
+
+/* Bouton d'extension d'un groupe : une cible franche de 26 px, un chevron qui
+   pivote d'un demi-tour plutôt que deux caractères qui se substituent. */
+.ramp-extension {
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; padding: 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg-card); color: var(--ramp-accent);
+    cursor: pointer; transition: background .15s, border-color .15s, transform .2s;
+}
+.ramp-extension:hover { background: var(--ramp-accent); color: #fff; border-color: var(--ramp-accent); }
+.ramp-extension:focus-visible {
+    outline: none; border-color: var(--ramp-accent);
+    box-shadow: 0 0 0 2px var(--ramp-accent-bg);
+}
+.ramp-extension svg { transition: transform .2s ease; transform: rotate(-90deg); }
+.ramp-extension.ouvert svg { transform: rotate(0deg); }
+/* Un item se lit à son code : chasse fixe, comme dans le classeur. */
+.ramp-code { font-family: ui-monospace, Menlo, monospace; }
+.ramp-desc { color: var(--text-muted); font-size: .8rem; line-height: 1.35; }
+.ramp-depliant { cursor: pointer; user-select: none; }
+
+/* Nomenclature des aéronefs, et aéroports rangés par pays : dans les deux cas
+   le décalage aligne la ligne sur l'intitulé du bandeau, non sur son bouton. */
+.ramp-aer-decale,
+.ramp-apt-decale { padding-left: calc(.65rem + 26px + .55rem) !important; }
+/* Conteneur sans effet propre : il regroupe les listes déroulantes pour les
+   redessiner d'un bloc. `display: contents` le retire de la mise en page, si
+   bien que ses listes restent des éléments du rang de filtres — les règles de
+   largeur ci-dessus les visent d'ailleurs à travers lui. */
+.ramp-contenu-transparent { display: contents; }
+/* Table des pays : huit colonnes, dont trois de texte long. Les liens et les
+   adresses s'y coupent plutôt que d'élargir le tableau au-delà de l'écran. */
+.ramp-table-pays { table-layout: fixed; }
+.ramp-table-pays td { vertical-align: top; overflow-wrap: anywhere; }
+.ramp-table-pays .ramp-desc { font-size: .78rem; }
+.ramp-lien { color: var(--ramp-accent); text-decoration: none; overflow-wrap: anywhere; }
+.ramp-lien:hover { text-decoration: underline; }
+.ramp-emails { font-size: .78rem; line-height: 1.5; overflow-wrap: anywhere; }
+.ramp-vide { color: var(--text-muted); }
+/* Case à cocher de la colonne UEMOA, et sa jumelle du formulaire. */
+.ramp-case { width: 16px; height: 16px; accent-color: var(--ramp-accent); cursor: pointer; }
+.ramp-case:disabled { cursor: default; opacity: .5; }
+.ramp-champ-case {
+    display: flex; align-items: center; gap: .5rem;
+    margin: .2rem 0 .6rem; font-size: .86rem; cursor: pointer;
+}
+.ramp-champ-case input { width: 16px; height: 16px; accent-color: var(--ramp-accent); }
+/* ── Fiche d'inspection (POI) ── */
+/* L'en-tête d'identification : des champs de même largeur qui s'enroulent,
+   rangés par thème — le vol, l'exploitant, l'appareil. */
+.ramp-poi-grille {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: .6rem .8rem; margin-bottom: .6rem;
+}
+.ramp-poi-grille .ramp-champ { margin: 0; }
+/* Le tableau des items : cinquante-quatre lignes qu'on parcourt en cochant.
+   Les cellules restent serrées pour que le groupe tienne à l'écran. */
+.ramp-table-poi td { padding: .35rem .5rem; vertical-align: middle; }
+/* Champ de remarque : à même la ligne, sans cadre qui alourdirait la lecture
+   tant qu'on n'y écrit pas. */
+.ramp-input-plat {
+    border-color: transparent; background: transparent; padding: .25rem .4rem;
+}
+.ramp-input-plat:hover { border-color: var(--border); }
+.ramp-input-plat:focus { background: var(--bg); }
+/* La ligne d'un item porteur de constat, et le bloc de saisie qui la suit. */
+.ramp-table-poi tr.ramp-poi-ecart > td { background: rgba(220, 38, 38, .05); }
+.ramp-table-poi tr.ramp-poi-constat > td { background: rgba(220, 38, 38, .05); padding-top: 0; }
+.ramp-poi-constat-grille {
+    display: grid; grid-template-columns: 130px 150px 1fr; gap: .4rem;
+    padding-bottom: .4rem;
+}
+ /* La description occupe toute la largeur du formulaire : c'est le champ qu'on
+    remplit vraiment, les trois listes tiennent sur le rang au-dessus. */
+.ramp-poi-constat-grille > textarea,
+.ramp-poi-constat-grille > input { grid-column: 1 / -1; width: 100%; }
+.ramp-badge.attente { background: #fef3c7; color: #92400e; }
+.ramp-badge.alerte { background: #fee2e2; color: #991b1b; }
+/* ── Haut de fiche fixe ──
+   Le fil d'avancement et la bande d'identification restent visibles pendant
+   qu'on parcourt les cinquante-quatre items : c'est là qu'on lit où l'on en
+   est. Ils se collent sous l'entête du module, qui est lui-même collant. */
+.ramp-poi-haut {
+    position: sticky; top: var(--ramp-entete-h, 0px); z-index: 20;
+    background: var(--bg);
+    /* Le fond remonte sur la marge intérieure de la colonne : sans cela, le
+       contenu défilerait dans la bande claire au-dessus du bandeau. */
+    margin: -1.25rem -1.25rem .8rem; padding: 1.25rem 1.25rem 0;
+}
+/* La fiche ouverte en volet : son propre corps défile, et le fil d'avancement
+   s'y cale en haut — l'entête du volet, lui, ne défile jamais. */
+/* Pas de marge en haut du corps : le fil d'avancement vient au contact de
+   l'entête du volet, sans bande vide entre les deux. */
+/* Deux classes : la règle générale du volet, déclarée plus bas, l'emporterait
+   sinon et remettrait la marge que l'on retire ici. */
+.ramp-slider-body.ramp-slider-poi { padding: 0 1.25rem; }
+.ramp-slider-poi .ramp-poi-haut {
+    top: 0; margin: 0 -1.25rem .8rem; padding: .7rem 1.25rem .1rem;
+}
+
+/* Entête du volet : la barre pleine du socle, où les repères de la fiche
+   prennent la place du simple intitulé. */
+.ramp-poi-entete-volet { flex-wrap: wrap; }
+.ramp-poi-entete-volet .ramp-poi-bande {
+    flex: 1 1 auto; min-width: 0;
+    background: transparent; color: inherit; padding: 0; border-radius: 0;
+    font-size: .8rem;
+}
+.ramp-poi-entete-volet .ramp-poi-bande i { opacity: .7; }
+
+/* Le rang supérieur : le retour à la liste, puis la bande d'identification qui
+   prend tout ce qui reste. */
+.ramp-poi-rang {
+    display: flex; align-items: center; gap: .6rem; margin-bottom: .55rem;
+}
+.ramp-poi-rang > .btn { flex: 0 0 auto; }
+.ramp-poi-rang > .ramp-poi-bande { flex: 1 1 auto; min-width: 0; }
+
+/* Bande d'identification : les repères de la fiche sur une seule ligne, dans
+   la couleur du thème. */
+.ramp-poi-bande {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .15rem .9rem;
+    padding: .45rem .8rem; border-radius: 6px;
+    background: var(--ramp-accent); color: #fff; font-size: .76rem;
+}
+/* Chaque repère se resserre plutôt que de renvoyer la bande à la ligne :
+   l'intitulé d'un aéroport peut s'abréger, le numéro du POI non. */
+.ramp-poi-bande-bloc {
+    display: flex; align-items: baseline; gap: .3rem; min-width: 0;
+    flex: 0 1 auto; overflow: hidden;
+}
+.ramp-poi-bande i { font-style: normal; opacity: .75; font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; }
+.ramp-poi-bande b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* À l'étroit, les repères se resserrent avant de passer à la ligne. */
+@media (max-width: 1400px) {
+    .ramp-poi-bande { gap: .15rem .65rem; font-size: .72rem; padding: .4rem .65rem; }
+    .ramp-poi-bande i { font-size: .66rem; }
+}
+
+/* Barre inférieure de la fiche : l'enregistrement du brouillon, à droite.
+   Elle vient au contact du bas du volet — la marge intérieure passe dessous. */
+.ramp-poi-bas {
+    position: sticky; bottom: 0; z-index: 15;
+    display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+    padding: .6rem .9rem; margin: .5rem -1.25rem 0;
+    background: var(--bg-card); border-top: 1px solid var(--border);
+}
+
+/* Section « Identification » : quatre colonnes égales, si bien que chaque
+   champ s'aligne sur celui du rang précédent. */
+.ramp-poi-grille-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 620px) { .ramp-poi-grille-2 { grid-template-columns: 1fr; } }
+.ramp-poi-grille-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .ramp-poi-grille-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .ramp-poi-grille-4 { grid-template-columns: 1fr; } }
+/* ── Étape Validation : le soumis à gauche, les observations à droite ── */
+.ramp-poi-validation { display: flex; gap: 1rem; align-items: stretch; }
+/* Première barre de titre de la colonne : elle ouvre la rangée, sans marge
+   haute — le bandeau des commentaires se pose sur la même ligne. */
+.ramp-poi-validation-corps > .ramp-actions-bar-tete { margin-top: 0; }
+.ramp-poi-validation-corps { flex: 1 1 auto; min-width: 0; }
+
+/* Carte à bandeau : l'intitulé occupe une bande pleine, à la couleur du
+   thème, comme la bande d'identification du volet. */
+.ramp-card-bandeau { padding: 0; overflow: hidden; }
+.ramp-card-entete {
+    padding: .5rem .9rem; margin-bottom: .8rem;
+    background: var(--primary); color: var(--text-header, #fff);
+    font-size: .84rem; font-weight: 700;
+}
+.ramp-card-bandeau > *:not(.ramp-card-entete) { padding-left: .9rem; padding-right: .9rem; }
+.ramp-card-bandeau > *:last-child { padding-bottom: .9rem; }
+
+/* Panneau de commentaires : la moitié de la largeur quand il est ouvert, une
+   simple poignée quand il est replié ; il suit la hauteur de la colonne. */
+.ramp-poi-commentaires {
+    position: relative; flex: 0 0 50%; width: 50%;
+    display: flex; align-self: stretch;
+    /* Pas de fond coloré : le panneau se lit comme les cartes d'en face, et son
+       retrait bas est le leur — les deux colonnes finissent sur la même ligne. */
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 1rem;
+    /* La poignée occupe les 42 premiers pixels ; le reste laisse un filet
+       d'air entre elle et le corps blanc, comme sur la maquette. */
+    padding: 0 .5rem 0 50px; overflow: hidden;
+    transition: flex-basis .25s ease, width .25s ease;
+}
+.ramp-poi-commentaires.replie { flex: 0 0 44px; width: 44px; padding: 0; }
+/* Barre de rétraction : bande ambrée sur toute la hauteur, chevron en haut. */
+.ramp-poi-commentaires-poignee {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 42px;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 1rem;
+    border: none; border-right: 1px solid #fed7aa;
+    background: #ffedd5; color: #c2410c;
+    cursor: pointer;
+}
+.ramp-poi-commentaires-poignee:hover { background: #fed7aa; }
+/* Replié : la poignée occupe toute la bande et porte l'intitulé. */
+/* Replié : chevron et intitulé centrés sur la largeur de la bande, calés en
+   haut — la bande est haute, les centrer verticalement les perdrait au milieu. */
+.ramp-poi-commentaires-poignee.pleine {
+    position: static; width: 100%; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: .7rem;
+    padding: .8rem 0 0; border-right: none; border-radius: 10px;
+}
+.ramp-poi-commentaires .ramp-poi-commentaires-poignee svg { transform: rotate(180deg); }
+.ramp-poi-commentaires.replie .ramp-poi-commentaires-poignee svg { transform: none; }
+/* Replié, l'intitulé se lit à la verticale — il dit ce que la poignée rouvre. */
+.ramp-poi-commentaires-titre-replie {
+    writing-mode: vertical-rl; white-space: nowrap;
+    font-size: .78rem; font-weight: 700; color: #c2410c;
+}
+/* Corps blanc sous le bandeau, qui s'étire et défile s'il déborde. */
+.ramp-poi-commentaires-corps {
+    flex: 1; min-width: 0; display: flex; flex-direction: column;
+    /* Aucune marge en haut : le bandeau des commentaires s'aligne sur celui
+       de la section « Ce qui est soumis à validation ». */
+    background: var(--bg-card); margin: 0;
+    border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.ramp-poi-commentaires-bandeau {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .55rem .8rem; background: #ffedd5; color: #c2410c;
+}
+.ramp-poi-commentaires-bandeau strong { flex: 1; font-size: .92rem; }
+.ramp-poi-commentaires-pastille {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 6px;
+    background: #ea580c; color: #fff; font-weight: 800; font-style: italic;
+}
+.ramp-poi-commentaires-compte {
+    min-width: 26px; padding: .1rem .45rem; border-radius: 10px;
+    background: #fff7ed; color: #c2410c; font-size: .78rem; font-weight: 700; text-align: center;
+}
+.ramp-poi-commentaires-contenu { flex: 1; overflow-y: auto; padding: .7rem .8rem; }
+.ramp-poi-commentaire { margin-bottom: .6rem; }
+/* Champ d'observation : un tiers de moins que la hauteur par défaut, il
+   s'étire à la main si l'observation est longue. */
+.ramp-poi-commentaire textarea { height: 68px; min-height: 68px; resize: vertical; }
+.ramp-poi-commentaire-tete { display: flex; gap: .35rem; align-items: center; margin-bottom: .3rem; }
+.ramp-poi-commentaire-tete .ramp-select { flex: 1; min-width: 0; }
+.ramp-poi-commentaires-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+/* Boutons du panneau : un tiers de hauteur en moins. */
+.ramp-poi-commentaires-actions .btn {
+    height: 24px; padding: 0 .6rem; font-size: .76rem; line-height: 1;
+    display: inline-flex; align-items: center; gap: .3rem;
+}
+.ramp-poi-commentaires-actions .btn svg { width: 13px; height: 13px; }
+.ramp-poi-commentaire-lu { margin-bottom: .5rem; }
+.ramp-poi-commentaire-lu i {
+    font-style: normal; font-size: .74rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .03em; color: var(--ramp-accent);
+}
+/* Versions closes : chacune se déplie pour être relue. */
+.ramp-poi-version { border-top: 1px solid var(--border); }
+.ramp-poi-version-tete {
+    display: flex; align-items: center; gap: .45rem; width: 100%;
+    padding: .45rem 0; border: none; background: none; cursor: pointer;
+    font-family: inherit; font-size: .8rem; text-align: left; color: var(--text);
+}
+.ramp-poi-version-tete .ramp-extension { width: 20px; height: 20px; }
+.ramp-poi-version-corps { padding: .2rem 0 .5rem .3rem; }
+@media (max-width: 1100px) {
+    .ramp-poi-validation { flex-direction: column; }
+    .ramp-poi-commentaires, .ramp-poi-commentaires.replie { flex: 1 1 auto; width: 100%; }
+}
+
+/* Bandeau de renvoi : le rouge du refus, bordure comprise, et le détail de ce
+   qui est demandé — une ligne par champ, pour tenir en tête de saisie. */
+.ramp-poi-renvoi { border: 1px solid #b91c1c; }
+.ramp-poi-renvoi .ramp-card-entete {
+    display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+    background: #b91c1c; color: #fff;
+}
+.ramp-poi-renvoi-quand { font-weight: 500; font-size: .78rem; opacity: .9; }
+/* La consigne se range au bout du bandeau : elle appartient au motif. */
+.ramp-poi-renvoi-consigne {
+    margin-left: auto; font-weight: 500; font-size: .78rem; opacity: .95;
+}
+.ramp-poi-renvoi-corps { padding-bottom: .9rem; }
+.ramp-poi-renvoi-ligne { font-size: .84rem; line-height: 1.5; }
+.ramp-poi-renvoi-ligne i {
+    font-style: normal; font-weight: 700; color: #b91c1c;
+}
+
+/* Suivi d'un écart : plan d'actions correctives et preuves. */
+/* Suivi d'un écart : le constat occupe son rang, puis le plan et l'évaluation
+   se partagent le suivant — l'évaluation se repliant sur le côté —, et les
+   résultats reprennent la pleine largeur. */
+.ramp-slider-body.ramp-pac-corps { padding: 0 1.25rem; }
+/* Volet des preuves : le bouton de clôture respire autant au-dessus qu'en
+   dessous, entre l'entête du volet et le bandeau « Constat ». */
+.ramp-pac-corps > .ramp-actions-bar { margin: .9rem 0; }
+/* Les repères de l'écart tiennent sur deux colonnes, même dans la moitié
+   d'écran que ce volet occupe. */
+.ramp-pac-corps .ramp-poi-recap { grid-template-columns: 1fr 1fr; gap: .1rem 1.2rem; }
+.ramp-pac-corps .ramp-poi-recap-ligne { grid-template-columns: 96px 1fr; gap: .4rem; }
+@media (max-width: 900px) { .ramp-pac-corps .ramp-poi-recap { grid-template-columns: 1fr; } }
+/* Un texte long — description, actions engagées — occupe le rang entier :
+   coupé en colonne, il ne se lit plus. */
+.ramp-pac-corps .ramp-poi-recap-ligne.pleine { grid-column: 1 / -1; }
+/* Barre inférieure du volet des preuves : fine, et au contact du bas de
+   l'écran — le contenu ne remplit pas toujours la hauteur, la barre se pousse
+   donc au pied de la colonne. */
+.ramp-slider:not(.max) .ramp-pac-corps { display: flex; flex-direction: column; }
+.ramp-pac-corps > .ramp-poi-bas {
+    padding: .35rem .9rem; margin: .4rem -1.25rem 0; margin-top: auto;
+}
+/* Le rattachement d'une preuve se lit à côté de son intitulé. */
+.ramp-pac-preuve .ramp-badge { margin-left: .4rem; font-size: .68rem; }
+/* Le fil d'avancement du suivi se cale sous l'entête du volet, comme celui de
+   la fiche d'inspection. */
+.ramp-pac-corps .ramp-poi-haut { top: 0; margin: 0 -1.25rem .8rem; padding: .7rem 1.25rem .1rem; }
+.ramp-pac-rang { display: flex; gap: 1rem; align-items: stretch; }
+/* Le plan perd sa marge basse dans le rang : les deux cartes doivent finir
+   sur la même ligne de bordure. */
+.ramp-pac-rang > .ramp-pac-plan { flex: 1 1 0; width: auto; min-width: 0; margin-bottom: 0; }
+.ramp-pac-rang > .ramp-poi-commentaires { flex: 1 1 0; width: auto; min-width: 0; }
+/* L'ambre ne sert qu'au bandeau et à la barre de rétraction : le fond de la
+   section reste celui des cartes voisines. */
+.ramp-pac-rang > .ramp-poi-commentaires:not(.replie) {
+    background: var(--bg-card); border-color: var(--border);
+    /* La place de la poignée se prend en marge du corps, non en padding du
+       conteneur : un padding s'ajouterait à la base flex et la section
+       dépasserait sa moitié. */
+    padding: 0;
+}
+.ramp-pac-rang > .ramp-poi-commentaires .ramp-poi-commentaires-corps { margin: 0 0 0 42px; border-radius: 0 8px 8px 0; }
+.ramp-pac-rang > .ramp-poi-commentaires.replie { flex: 0 0 44px; width: 44px; }
+@media (max-width: 1100px) {
+    .ramp-pac-rang { flex-direction: column; }
+    .ramp-pac-rang > .ramp-poi-commentaires,
+    .ramp-pac-rang > .ramp-poi-commentaires.replie { flex: 1 1 auto; width: 100%; }
+}
+/* Résultats de suivi : blocs encadrés, comme au suivi des PAC. */
+/* Suivi, preuves et clôture sur un même rang : 3/8, 3/8, 1/4, tous de même
+   hauteur. La carte respire au-dessus, séparée des sections précédentes. */
+.ramp-pac-resultats-carte { margin-top: 1.4rem; }
+.ramp-pac-resultats { display: grid; grid-template-columns: 3fr 3fr 2fr; gap: .85rem; align-items: stretch; }
+.ramp-pac-resultats > .ramp-pac-bloc { display: flex; flex-direction: column; }
+.ramp-pac-bloc { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .75rem; background: var(--bg); }
+.ramp-pac-suivis { max-height: 150px; overflow-y: auto; margin-bottom: .5rem; }
+.ramp-pac-suivi-saisie { display: flex; gap: .5rem; align-items: flex-start; }
+.ramp-pac-suivi-saisie textarea { flex: 1; min-width: 0; }
+.ramp-pac-bloc-titre {
+    font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    color: var(--text-muted); margin-bottom: .4rem;
+}
+@media (max-width: 900px) { .ramp-pac-resultats { grid-template-columns: 1fr; } }
+
+/* Ligne de titre d'une action : l'intitulé à gauche, l'échéance au bout. */
+.ramp-pac-ligne {
+    display: flex; align-items: center; gap: .8rem; margin-bottom: .25rem;
+}
+.ramp-pac-ligne > label { flex: 1; min-width: 0; }
+.ramp-pac-echeance { display: flex; align-items: center; gap: .4rem; flex: 0 0 auto; }
+.ramp-pac-echeance label { margin: 0; }
+.ramp-pac-echeance .ramp-input { width: 165px; }
+.ramp-pac-preuves { margin-top: .4rem; }
+.ramp-pac-preuves > label {
+    display: block; font-size: .72rem; font-weight: 700; letter-spacing: .03em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: .25rem;
+}
+.ramp-pac-preuve {
+    display: flex; align-items: center; gap: .6rem; margin-bottom: .3rem;
+    padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); font-size: .84rem;
+}
+.ramp-pac-preuve > div:first-child { flex: 1; min-width: 0; }
+@media (max-width: 700px) { .ramp-pac-ligne { flex-wrap: wrap; } }
+
+/* Bouton d'action déjà servi : le plan est soumis, les preuves déposées. */
+.ramp-btn-icone.ramp-fait {
+    border-color: #047857; color: #047857; background: #d1fae5;
+}
+
+/* Table des écarts : la description tient le tiers de la largeur, et le
+   détail de l'item se déplie sous la ligne. */
+.ramp-ecart-desc { white-space: normal; line-height: 1.4; }
+.ramp-table tr.ramp-ecart-detail > td { background: var(--ramp-accent-bg); }
+.ramp-ecart-detail-grille {
+    display: grid; grid-template-columns: 1fr 220px; gap: .3rem 1.5rem;
+    padding: .2rem 0 .35rem; font-size: .84rem;
+}
+.ramp-ecart-detail-grille i {
+    font-style: normal; font-size: .7rem; font-weight: 700; letter-spacing: .03em;
+    text-transform: uppercase; color: var(--text-muted); display: block;
+}
+
+/* Volet repliable : son entête est un bouton, à la couleur du bandeau. */
+.ramp-poi-volet-entete {
+    display: flex; align-items: center; gap: .6rem; width: 100%;
+    border: none; cursor: pointer; font-family: inherit; text-align: left;
+}
+.ramp-poi-volet-entete .ramp-extension {
+    width: 22px; height: 22px; background: transparent; border-color: rgba(255,255,255,.5); color: #fff;
+}
+.ramp-poi-volet-entete:hover .ramp-extension { background: rgba(255,255,255,.15); }
+
+/* Communications écrites de l'étape Transmission : la lettre s'y relit d'un
+   bloc, et l'état de l'envoi se lit dans le bandeau. */
+.ramp-poi-envoi .ramp-card-entete { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.ramp-poi-envoi-etat { margin-left: auto; font-weight: 500; font-size: .78rem; opacity: .9; }
+.ramp-poi-envoi-corps { padding-bottom: .9rem; }
+.ramp-poi-lettre { font-size: .82rem; line-height: 1.5; resize: vertical; }
+/* Le constat porte quatre réglages : catégorie, référentiel, action, statut. */
+.ramp-poi-constat-grille { grid-template-columns: 130px 150px 1fr 150px; }
+
+/* Récapitulatif de validation : deux colonnes, intitulés alignés, valeurs
+   qui respirent — on le lit, on n'y saisit rien. */
+.ramp-poi-recap {
+    /* Deux colonnes seulement si la place existe : dans la moitié d'écran que
+       laisse le panneau de commentaires, une seule vaut mieux qu'une valeur
+       écrasée sur quatre lignes. */
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+    gap: .1rem 2rem; margin: 0; padding-bottom: .9rem;
+}
+.ramp-poi-recap-ligne {
+    display: grid; grid-template-columns: 110px 1fr; gap: .6rem;
+    align-items: baseline; padding: .28rem 0;
+    border-bottom: 1px solid var(--border);
+}
+.ramp-poi-recap dt {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .03em; color: var(--text-muted);
+}
+.ramp-poi-recap dd { margin: 0; font-size: .86rem; min-width: 0; }
+@media (max-width: 900px) { .ramp-poi-recap { grid-template-columns: 1fr; } }
+
+/* Équipe d'inspection : ce que le référentiel dit de chaque inspecteur retenu. */
+.ramp-poi-equipe { display: flex; flex-direction: column; gap: .35rem; margin-top: .45rem; }
+.ramp-poi-inspecteur {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); font-size: .84rem;
+}
+.ramp-poi-inspecteur > div:first-child { flex: 1; min-width: 0; }
+.ramp-poi-inspecteur .ramp-code { margin-left: .4rem; font-size: .76rem; color: var(--text-muted); }
+
+/* Champ obligatoire. */
+.ramp-requis { color: #dc2626; font-weight: 700; }
+
+/* Champ suivi d'un bouton — la liste des aéronefs et sa loupe. */
+.ramp-champ-avec-bouton { display: flex; gap: .35rem; align-items: center; }
+.ramp-champ-avec-bouton .ramp-select { flex: 1 1 auto; min-width: 0; }
+.ramp-champ-avec-bouton .btn { flex: 0 0 auto; height: 32px; }
+
+/* Volet de choix d'un aéronef : plus large qu'une modale de saisie. */
+.ramp-modal-large { max-width: 900px; width: 92vw; }
+
+/* Étape du fil : c'est un bouton, on peut la consulter. */
+button.ramp-proc-step { border: none; cursor: pointer; font-family: inherit; }
+button.ramp-proc-step.selected:not(.current):not(.rejected) { background: var(--ramp-accent); color: #fff; }
+button.ramp-proc-step:hover:not(:disabled) { filter: brightness(1.08); }
+button.ramp-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
+
+/* ── Fil d'avancement de la fiche ──
+   Même composant que le circuit des activités du module « Exécution de la
+   Surveillance » : le fil à gauche, les boutons d'étape au bout, à droite. */
+.ramp-proc-barre {
+    display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+    padding-bottom: .8rem; margin-bottom: .9rem; border-bottom: 1px solid var(--border);
+}
+.ramp-proc-barre .ramp-proc-fil { flex: 1 1 auto; min-width: 0; }
+.ramp-proc-actions {
+    display: flex; gap: .4rem; flex-wrap: wrap; margin-left: auto; flex: 0 0 auto;
+    align-items: center;
+}
+/* Renvoi : la même couleur que le refus ailleurs dans l'application. */
+.ramp-btn-renvoi { color: #b91c1c !important; border-color: #b91c1c !important; }
+.ramp-note-renvoi {
+    background: #fee2e2; border-left-color: #b91c1c; color: #7f1d1d;
+}
+
+/* Remarque et description : multilignes, elles grandissent avec le texte sans
+   déborder — au-delà, elles défilent. */
+.ramp-poi-remarque, .ramp-poi-description {
+    resize: vertical; min-height: 32px; max-height: 220px; line-height: 1.35;
+}
+.ramp-poi-remarque { overflow: hidden; }
+/* Pagination : mille désignations arrivent par pages de cinquante. */
+.ramp-pagination {
+    display: flex; align-items: center; justify-content: center; gap: .75rem;
+    margin-top: .75rem;
+}
+.ramp-pagination button[disabled] { opacity: .45; cursor: not-allowed; }
+.ramp-chevron { display: inline-block; width: 1em; color: var(--ramp-accent); font-weight: 700; }
+
+/* ── Badges ── */
+.ramp-badge {
+    display: inline-block; padding: .1rem .45rem; border-radius: 10px;
+    font-size: .72rem; font-weight: 700; white-space: nowrap;
+}
+.ramp-badge.c1 { background: #fef3c7; color: #b45309; }
+.ramp-badge.c2 { background: #ffedd5; color: #c2410c; }
+.ramp-badge.c3 { background: #fee2e2; color: #b91c1c; }
+.ramp-badge.cg { background: #f1f5f9; color: #475569; }
+.ramp-badge.items { background: #ccfbf1; color: #0f766e; }
+.ramp-badge.ecarts { background: #ffedd5; color: #c2410c; }
+.ramp-badge.zero { background: #d1fae5; color: #047857; }
+.ramp-badge.neuf { background: #d1fae5; color: #047857; }
+.ramp-badge.maj { background: #dbeafe; color: #1d4ed8; }
+.ramp-badge.doublon { background: #fee2e2; color: #b91c1c; }
+.ramp-badge.actif { background: #d1fae5; color: #047857; }
+.ramp-badge.inactif { background: #f1f5f9; color: #94a3b8; }
+
+/* ── Onglets (paramètres) ── */
+/* Les sous-menus s'enroulent plutôt que de défiler : une barre de défilement
+   cacherait des entrées, et un sous-menu qu'on ne voit pas n'existe pas. */
+/* Sous-menus : des boutons de même largeur, jamais moins de 150 px.
+   Les colonnes se partagent la largeur à parts égales et passent à la ligne
+   dès qu'elles n'y tiennent plus — aucun rang ne défile, rien n'est coupé. */
+.ramp-onglets {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 240px));
+    justify-content: start;
+    gap: .2rem; border-bottom: 2px solid var(--border); margin-bottom: 1rem;
+}
+.ramp-onglet {
+    padding: .5rem .8rem; border: none; background: none; cursor: pointer;
+    font-size: .84rem; font-weight: 600; color: var(--text-muted);
+    border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap;
+    font-family: inherit; text-align: center;
+}
+.ramp-onglet:hover { color: var(--text); }
+.ramp-onglet.actif { color: var(--ramp-accent); border-bottom-color: var(--ramp-accent); }
+
+/* ── Volet latéral ── */
+.ramp-slider-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.4);
+    z-index: 1090; opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.ramp-slider-overlay.open { opacity: 1; pointer-events: auto; }
+.ramp-slider {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(900px, 96vw); transform: translateX(100%);
+    background: var(--bg-card); box-shadow: -8px 0 30px rgba(0,0,0,.18);
+    z-index: 1100; display: flex; flex-direction: column; transition: transform .25s ease;
+}
+.ramp-slider.open { transform: translateX(0); }
+/* Redessin sur place (changement de langue) : le volet est reconstruit puis
+   rouvert dans la même trame — sans cette suspension, le navigateur en
+   rejouerait le glissement alors que rien n’entre ni ne sort. */
+.ramp-slider.ramp-sans-transition,
+.ramp-slider-overlay.ramp-sans-transition {
+    /* Les variantes .max et .gauche redéfinissent la transition plus bas :
+       la suspension doit primer sur elles. */
+    transition: none !important;
+}
+.ramp-slider.tiers { width: min(560px, 96vw); }
+/* La moitié de l'écran : assez pour lire des preuves sans masquer la liste. */
+.ramp-slider.moitie { width: 50vw; min-width: 480px; max-width: 96vw; }
+
+/* Variante « plein écran » — le formulaire Statistiques, qui a besoin de toute
+   la largeur pour son tableau de situation. Bord gauche calé sur le bord droit
+   de la barre de menu, comme dans le module Exécution : la navigation reste
+   accessible et le volet suit le pliage de la barre. */
+.ramp-slider.max {
+    top: var(--topbar-height, 56px);
+    left: var(--sidebar-width, 240px);
+    right: 0; bottom: 0;
+    width: auto; max-width: 100vw;
+    background: var(--bg);
+    transition: transform .3s cubic-bezier(.4, 0, .2, 1), left .3s ease;
+}
+body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60px); }
+/* Variante sortant de la gauche : le volet vient du côté de la barre de menu,
+   là où se trouvait l'entrée qu'il remplace. */
+/* Fermé, il se retire par la gauche : là, sa translation le fait passer
+   par-dessus la barre de menu. On le rend invisible une fois le glissement
+   fini, sinon son fond masquerait la navigation. */
+.ramp-slider.gauche {
+    transform: translateX(-100%); box-shadow: 8px 0 30px rgba(0,0,0,.18);
+    visibility: hidden;
+    transition: transform .3s cubic-bezier(.4, 0, .2, 1), left .3s ease, visibility 0s linear .3s;
+}
+.ramp-slider.gauche.sortie-droite { transform: translateX(100%); }
+.ramp-slider.gauche.open {
+    transform: translateX(0); visibility: visible;
+    transition: transform .3s cubic-bezier(.4, 0, .2, 1), left .3s ease;
+}
+@media (max-width: 900px) { .ramp-slider.max { left: 0; } }
+
+/* Le bouton de sortie précède l'intitulé : on quitte par la gauche, là où le
+   regard commence. La croix de fermeture n'a plus lieu d'être. */
+.ramp-slider-retour { margin-right: .2rem; }
+.ramp-slider-header {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .8rem 1rem; border-bottom: 1px solid var(--border);
+    background: var(--primary); color: var(--text-header, #fff);
+}
+.ramp-slider-header .btn { color: inherit; border-color: rgba(255,255,255,.4); }
+.ramp-slider-titre { font-weight: 700; font-size: 1rem; flex: 1; }
+.ramp-slider-body { flex: 1; overflow-y: auto; padding: 1rem; }
+.ramp-slider-footer {
+    display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .7rem 1rem; border-top: 1px solid var(--border); background: var(--bg);
+}
+
+/* ── Champs ── */
+.ramp-champ { margin-bottom: .8rem; }
+.ramp-champ > label {
+    display: block; font-size: .74rem; font-weight: 600; color: var(--text-muted);
+    margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .03em;
+}
+.ramp-champ textarea { resize: vertical; min-height: 60px; }
+.ramp-paire { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.ramp-erreur { color: #b91c1c; font-size: .8rem; margin: .3rem 0 0; }
+.ramp-note {
+    margin: 0 0 .8rem; padding: .5rem .7rem;
+    background: var(--ramp-accent-bg); border-left: 3px solid var(--ramp-accent);
+    border-radius: 0 4px 4px 0; color: var(--text-muted); font-size: .82rem; line-height: 1.45;
+}
+/* Note d'avertissement : ce que la page ne couvre pas se dit en rouge clair. */
+.ramp-note-rouge {
+    color: #ef4444; border-left-color: #ef4444;
+    background: rgba(239, 68, 68, .08);
+}
+
+
+/* ── Modale ── */
+.ramp-modal-fond {
+    position: fixed; inset: 0; z-index: 1200; background: rgba(15,23,42,.45);
+    display: flex; align-items: center; justify-content: center;
+}
+.ramp-modal {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    width: 480px; max-width: 92vw; box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+.ramp-modal-header {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .8rem 1rem; border-bottom: 1px solid var(--border); font-weight: 700;
+}
+.ramp-modal-body { padding: 1rem; max-height: 70vh; overflow-y: auto; }
+/* Le générateur de tables demande de la place : deux colonnes côte à côte. */
+.ramp-modal-large { width: 1100px; max-width: 94vw; }
+.ramp-modal-footer {
+    display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .7rem 1rem; border-top: 1px solid var(--border);
+}
+
+/* ── Zone de dépôt de fichier ── */
+.ramp-depot-zone {
+    border: 2px dashed var(--border); border-radius: 8px;
+    padding: 1.6rem 1rem; text-align: center; color: var(--text-muted);
+    cursor: pointer; transition: border-color .15s, background .15s;
+}
+.ramp-depot-zone:hover, .ramp-depot-zone.survol {
+    border-color: var(--ramp-accent); background: var(--ramp-accent-bg);
+}
+
+/* ── Groupe repliable (contacts par État) ── */
+.ramp-groupe { border: 1px solid var(--border); border-radius: 8px; margin-bottom: .6rem; overflow: hidden; }
+.ramp-groupe-entete {
+    display: flex; align-items: center; gap: .6rem; padding: .6rem .8rem;
+    background: var(--bg); cursor: pointer; user-select: none; font-weight: 600; font-size: .88rem;
+}
+.ramp-groupe-entete:hover { background: var(--ramp-accent-bg); }
+.ramp-groupe-compte {
+    margin-left: auto; padding: 0 .45rem; border-radius: 9px;
+    background: var(--border); color: var(--text-muted); font-size: .72rem; font-weight: 700;
+}
+
+/* ── Fiche d'inspection (aperçu imprimable) ── */
+.ramp-fiche { max-width: 900px; margin: 0 auto; }
+
+/* ── Rapport « Proof of Inspection » ──
+   Le formulaire officiel, rendu à l'écran comme il l'est sur le papier : des
+   blocs encadrés, des intitulés en petites capitales, des cases à cocher qui
+   se lisent d'un regard. Il tient sur la largeur du volet et s'imprime tel
+   quel. */
+.poi-rapport { max-width: 1000px; font-size: .8rem; }
+.poi-entete {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+    padding-bottom: .6rem; margin-bottom: .7rem; border-bottom: 2px solid var(--ramp-accent);
+}
+.poi-titre { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--ramp-accent); }
+.poi-reference { font-size: .78rem; color: var(--text-muted); }
+.poi-autorite { text-align: right; max-width: 45%; }
+.poi-autorite i { display: block; font-size: .68rem; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted); font-style: normal; font-weight: 700; }
+.poi-note-autorite { font-size: .68rem; color: var(--text-muted); font-style: italic; }
+
+.poi-bande, .poi-grille {
+    display: grid; gap: 0; border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden; margin-bottom: .7rem;
+}
+.poi-bande { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.poi-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.poi-champ {
+    padding: .35rem .5rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    min-height: 42px;
+}
+.poi-champ.large { grid-column: span 2; }
+.poi-champ > i {
+    display: block; font-style: normal; font-size: .66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted);
+}
+.poi-champ > div { font-weight: 600; color: var(--text); }
+.poi-vide { display: inline-block; min-width: 60px; border-bottom: 1px dotted var(--border); }
+.poi-case { display: inline-block; margin-right: .7rem; font-weight: 500; }
+
+.poi-table th { font-size: .7rem; }
+.poi-table td { padding: .25rem .4rem; vertical-align: top; }
+.poi-table .poi-code { font-weight: 700; font-family: ui-monospace, Menlo, monospace; }
+.poi-table .poi-centre { text-align: center; }
+.poi-table .poi-groupe td { background: var(--ramp-accent-bg); font-weight: 800; }
+.poi-table .poi-ligne-ecart { background: rgba(220, 38, 38, .06); }
+.poi-notes { font-size: .7rem; color: var(--text-muted); margin: .3rem 0 .8rem; }
+
+.poi-bloc { border: 1px solid var(--border); border-radius: 6px; padding: .4rem .55rem; margin-bottom: .6rem; }
+.poi-bloc > i {
+    display: block; font-style: normal; font-size: .66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .03em; color: var(--text-muted); margin-bottom: .25rem;
+}
+.poi-zone { min-height: 34px; white-space: pre-wrap; }
+.poi-signature { min-height: 52px; border-bottom: 1px dotted var(--border); }
+.poi-classes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem .8rem; }
+.poi-classe { display: flex; gap: .45rem; align-items: baseline; }
+.poi-classe strong { min-width: 22px; }
+.poi-classe.retenue { color: #b91c1c; font-weight: 700; }
+.poi-pied { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .6rem; }
+@media (max-width: 900px) {
+    .poi-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .poi-bande { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .poi-pied { grid-template-columns: 1fr; }
+}
+.ramp-fiche-entete {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    border-bottom: 2px solid var(--ramp-accent); padding-bottom: .8rem; margin-bottom: 1.2rem;
+}
+.ramp-fiche-titre { font-size: 1.15rem; font-weight: 800; color: var(--ramp-accent); margin: 0; }
+.ramp-fiche-soustitre { font-size: .78rem; color: var(--text-muted); }
+.ramp-fiche-cartouche {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+    padding: .8rem; margin-bottom: 1.2rem;
+}
+.ramp-fiche-cartouche .cle { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; }
+.ramp-fiche-cartouche .val { font-weight: 700; }
+.ramp-fiche-pied {
+    margin-top: 1.5rem; text-align: center; font-size: .74rem; color: var(--text-muted);
+}
+
+.ramp-vide { text-align: center; padding: 3rem 1rem; color: var(--text-muted); }
+.ramp-btn-icone { padding: .25rem .45rem; line-height: 0; }
+.ramp-cell-actions { white-space: nowrap; text-align: center; }
+
+@media print {
+    /* Le rapport s'imprime seul : la coquille du module disparaît, et les
+       conteneurs qui bornaient la hauteur à l'écran la rendent au papier —
+       sans quoi seule la première page sortait. */
+    @page { size: A4 portrait; margin: 9mm; }
+
+    .app-sidebar, .app-header, .ramp-filtres, .ramp-actions-bar,
+    .oasis-module-footer, .ramp-slider-header, .ramp-slider-footer,
+    .ramp-page-header button, .oasis-kpi-groupes, .ramp-resume,
+    .ramp-poi-haut, .ramp-poi-bas { display: none !important; }
+    .ramp-slider { position: static; width: 100%; transform: none; box-shadow: none; }
+    .ramp-slider-overlay { display: none !important; }
+
+    html, body {
+        height: auto !important; overflow: visible !important;
+        background: #fff !important; color: #000;
+    }
+    .ramp-module.app-layout { overflow: visible !important; }
+    .ramp-module .app-content,
+    .ramp-module .main-content {
+        width: auto !important; max-width: none !important;
+        height: auto !important; overflow: visible !important;
+        margin: 0 !important; padding: 0 !important;
+    }
+    .ramp-table-wrap { max-height: none !important; overflow: visible !important; }
+    .ramp-card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+
+    /* Le formulaire au format du papier : il occupe la page entière, en corps
+       réduit, et ses fonds de repérage sont conservés à l'impression. */
+    .poi-rapport {
+        max-width: none !important; width: 100% !important;
+        font-size: 7.6pt; line-height: 1.25; color: #000;
+    }
+    .poi-rapport, .poi-rapport * {
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .poi-titre { font-size: 12pt; }
+    .poi-champ { min-height: 0; padding: .12rem .25rem; }
+    .poi-champ > i, .poi-bloc > i, .poi-autorite i { font-size: 5.8pt; }
+    .poi-table th, .poi-table td { padding: .07rem .2rem; font-size: 7.2pt; }
+    .poi-table thead { display: table-header-group; }
+    .poi-table tr, .poi-classe, .poi-bloc { page-break-inside: avoid; break-inside: avoid; }
+    .poi-bande { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    .poi-grille { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    .poi-pied { grid-template-columns: 1fr 1fr 1fr !important; }
+    .poi-zone { min-height: 26px; }
+    .poi-signature { min-height: 40px; }
+    .poi-pied { page-break-inside: avoid; break-inside: avoid; }
+    .ramp-fiche-pied { font-size: 6.5pt; }
+}
+
+/* ── Droits confiés à un compte de l'organisme (vue Prestataire) ── */
+/* Ces libellés sont des phrases, non des intitulés de champ : ils gardent leur
+   casse — capitale à l'initiale, et aux sigles qui en portent une (POI). La
+   règle des étiquettes de formulaire, qui met tout en capitales, ne s'y
+   applique donc pas. */
+.ramp-droits-liste { display: flex; flex-direction: column; gap: .1rem; }
+.ramp-droits-liste .ramp-droit {
+    display: flex; align-items: flex-start; gap: .55rem;
+    padding: .35rem .5rem; border-radius: 8px; cursor: pointer;
+}
+.ramp-droits-liste .ramp-droit:hover { background: var(--ramp-accent-bg); }
+.ramp-droits-liste .ramp-droit input {
+    width: 16px; height: 16px; margin-top: .15rem;
+    accent-color: var(--ramp-accent); flex: 0 0 auto;
+}
+.ramp-droits-liste .ramp-droit > span { display: flex; flex-direction: column; min-width: 0; }
+.ramp-droits-liste .ramp-droit strong {
+    font-size: .85rem; font-weight: 600; color: var(--text);
+    text-transform: none; letter-spacing: 0;
+}
+.ramp-droits-liste .ramp-droit em {
+    font-style: normal; font-size: .76rem; color: var(--text-muted);
+    text-transform: none; letter-spacing: 0;
+}
+
+/* ── Menu « Communication » : requêtes entre États membres ── */
+/* Le volet du formulaire : deux tiers de l'écran, assez pour la liste des
+   inspections et la rédaction côte à côte. */
+.ramp-slider.deux-tiers { width: 66vw; min-width: min(560px, 96vw); max-width: 96vw; }
+/* Les trois filtres et le bouton de réinitialisation tiennent sur une ligne. */
+.ramp-filtres.ramp-com-filtres {
+    display: grid; grid-template-columns: 1fr 1fr 2fr auto; align-items: center;
+}
+.ramp-filtres.ramp-com-filtres > .ramp-select,
+.ramp-filtres.ramp-com-filtres > .ramp-input { min-width: 0; width: 100%; }
+/* États destinataires : des cases à cocher rangées en colonnes égales — plus
+   compact qu'une grille de boutons, et la liste se lit d'un trait. */
+.ramp-com-etats {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: .15rem .8rem;
+}
+.ramp-com-etat {
+    display: flex; align-items: center; gap: .45rem;
+    padding: .25rem .35rem; border-radius: 6px; cursor: pointer; font-size: .85rem;
+}
+.ramp-com-etat:hover { background: var(--ramp-accent-bg); }
+.ramp-com-etat input { width: 15px; height: 15px; accent-color: var(--ramp-accent); }
+/* Une grille d'États pour désigner les destinataires : mêmes boutons que la
+   bande du bas des listes, mais posés dans le formulaire. */
+.ramp-pays-grille {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: .4rem;
+}
+/* Le fil : une entrée par message, la plus récente en bas. */
+.ramp-suivi-liste { display: flex; flex-direction: column; gap: .6rem; }
+.ramp-suivi-entree {
+    border: 1px solid var(--border); border-left: 3px solid var(--ramp-accent);
+    border-radius: 8px; padding: .55rem .75rem; background: var(--bg-card);
+}
+.ramp-suivi-entree p { margin: .25rem 0 0; white-space: pre-wrap; font-size: .86rem; }
+.ramp-suivi-entete {
+    display: flex; align-items: baseline; gap: .5rem; justify-content: space-between;
+    font-size: .8rem;
+}
+/* Pièces jointes : une ligne cliquable par fichier, dans le fil comme dans le
+   formulaire de rédaction. */
+.ramp-preuves-liste { display: flex; flex-direction: column; gap: .25rem; margin-top: .45rem; }
+.ramp-preuve-ligne {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    border: 1px solid var(--border); border-radius: 6px; padding: .3rem .5rem;
+    font-size: .8rem; color: var(--text); background: var(--bg);
+}
+.ramp-preuve-ligne:hover { border-color: var(--ramp-accent); }
+.ramp-preuve-ligne span { display: inline-flex; align-items: center; gap: .35rem; }
+
+/* ── Partage d'une transmission ── */
+/* Le bandeau d'un volet peut porter une action à sa droite : elle ne doit pas
+   déplier le volet, elle vit donc hors du bouton d'entête. */
+.ramp-poi-volet-bandeau { display: flex; align-items: stretch; gap: .4rem; }
+.ramp-poi-volet-bandeau > .ramp-card-entete { flex: 1; min-width: 0; }
+.ramp-poi-volet-action { flex: 0 0 auto; align-self: center; margin-right: .7rem; }
+/* Un élément que la fiche ne porte pas ne se coche pas : la case reste lisible
+   mais éteinte. */
+.ramp-champ-case.ramp-case-indispo { opacity: .5; cursor: not-allowed; }
+/* Lettre partagée : le texte tel qu'il est parti, sans champ de saisie. */
+.ramp-poi-lettre-figee {
+    margin: .5rem 0 0; padding: .7rem .85rem; white-space: pre-wrap;
+    font-family: inherit; font-size: .84rem; line-height: 1.45;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+}
+/* Compteur porté par un sous-menu du menu Communication. */
+.ramp-onglet-compte {
+    display: inline-block; margin-left: .35rem; padding: 0 .4rem;
+    border-radius: 999px; background: var(--ramp-accent-bg);
+    font-size: .72rem; font-weight: 700;
+}
+
+/* ── Étape Transmission : les deux communications côte à côte ── */
+/* Elles se lisent ensemble — ce qui part à l'exploitant, ce qui part à son
+   autorité — et ne se replient plus : chacune tient sa colonne. */
+.ramp-poi-envois-rangee {
+    display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; align-items: start;
+}
+.ramp-poi-envois-rangee > .ramp-poi-envoi { margin: 0; min-width: 0; }
+/* Le bandeau n'est plus un bouton : il n'ouvre ni ne ferme rien. Les deux
+   colonnes portent le même intitulé sur une seule ligne, si bien que les
+   bandeaux gardent la même largeur et la même hauteur d'une section à l'autre. */
+.ramp-poi-envoi-titre {
+    cursor: default; flex-wrap: nowrap; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+}
+.ramp-poi-envoi-titre > span { overflow: hidden; text-overflow: ellipsis; }
+/* La mention d'envoi se lit sous le bandeau, pas dedans. */
+.ramp-poi-envoi-mention {
+    margin: 0; padding: .45rem .9rem; font-size: .78rem; color: var(--text-muted);
+    border-bottom: 1px solid var(--border); background: var(--bg);
+}
+@media (max-width: 1100px) {
+    .ramp-poi-envois-rangee { grid-template-columns: 1fr; }
+}
+
+/* ── Retour d'action ─────────────────────────────────────────────
+   Le message paraît au centre de l'écran, où se porte le regard après
+   un clic, avec l'icône et le titre de l'issue. Le fond ne capte pas les
+   clics : il n'interrompt pas le travail en cours. */
+.ramp-toast-fond {
+    position: fixed; inset: 0; z-index: 3000; display: flex;
+    align-items: center; justify-content: center; pointer-events: none;
+}
+.ramp-toast {
+    pointer-events: auto; display: flex; gap: .75rem; align-items: flex-start;
+    max-width: min(28rem, 84vw); padding: .9rem 1.1rem; border-radius: 10px;
+    /* Le fond porte lui aussi la teinte de l'issue : on la voit avant de lire. */
+    background: var(--ramp-toast-fond); color: var(--ramp-toast-encre);
+    border: 1px solid var(--ramp-toast-bord); border-left: 4px solid var(--ramp-toast-teinte);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .22);
+    animation: rampToastEntree .16s ease-out;
+}
+.ramp-toast-fond.succes {
+    --ramp-toast-teinte: #047857; --ramp-toast-fond: #ecfdf5;
+    --ramp-toast-bord: #a7f3d0; --ramp-toast-encre: #065f46;
+}
+.ramp-toast-fond.error {
+    --ramp-toast-teinte: #b91c1c; --ramp-toast-fond: #fef2f2;
+    --ramp-toast-bord: #fecaca; --ramp-toast-encre: #7f1d1d;
+}
+.ramp-toast-fond.warning {
+    --ramp-toast-teinte: #b45309; --ramp-toast-fond: #fffbeb;
+    --ramp-toast-bord: #fde68a; --ramp-toast-encre: #78350f;
+}
+.ramp-toast-icone { color: var(--ramp-toast-teinte); display: flex; padding-top: .05rem; }
+.ramp-toast-texte { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.ramp-toast-titre { font-size: .92rem; color: var(--ramp-toast-teinte); }
+.ramp-toast-message { font-size: .85rem; line-height: 1.45; word-break: break-word; }
+@keyframes rampToastEntree {
+    from { opacity: 0; transform: scale(.96); }
+    to { opacity: 1; transform: none; }
+}
+
+/* Partages déjà faits : un État par ligne, avec de quoi revenir dessus. */
+.ramp-partages-faits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
+.ramp-partage-fait {
+    display: flex; align-items: center; gap: .6rem; padding: .45rem .6rem;
+    border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
+}
+.ramp-partage-fait-texte { display: flex; flex-direction: column; gap: .1rem; flex: 1; min-width: 0; }
+.ramp-partage-fait-texte .ramp-sous-titre { font-size: .76rem; }
+
+/* Le volet plein écran porte la même barre inférieure que la page qu'il
+   remplace : elle se pose sous le corps, qui garde son défilement. */
+.ramp-slider > .oasis-module-footer { flex: 0 0 auto; }
+
+/* Bandeau du récapitulatif : l'horodatage de soumission se lit à droite. */
+.ramp-poi-recap-bandeau { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.ramp-poi-recap-soumise { font-weight: 500; font-size: .78rem; opacity: .9; }
+
+/* « Traiter Inspections » ouvre la saisie d'une fiche : orange, il se
+   distingue des deux commandes de liste qui l'accompagnent. */
+.ramp-btn-traiter {
+    background: #ea580c; border: 1px solid #ea580c; color: #fff;
+}
+.ramp-btn-traiter:hover { background: #c2410c; border-color: #c2410c; }
+
+/* Portée de la page de traitement : la phrase tient sa ligne sans pousser les
+   boutons hors du cadre. */
+.ramp-poi-portee { flex: 1 1 auto; min-width: 0; }
+
+/* Commandes d'entête : un seul bloc calé à droite, jamais réparti sur la
+   largeur par la justification de l'entête. */
+.ramp-page-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-left: auto; }
+
+/* Lettres d'une transmission partagée : bandeau cliquable, corps déplié à la
+   demande — la copie s'ouvre d'abord sur ses pièces. */
+.ramp-com-lettre-tete {
+    display: flex; align-items: center; gap: .6rem; width: 100%;
+    margin: 0; border: none; cursor: pointer; font-family: inherit; text-align: left;
+}
+.ramp-com-lettre-corps { padding: .8rem .9rem; }

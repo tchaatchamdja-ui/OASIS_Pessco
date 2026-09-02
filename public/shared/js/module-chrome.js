@@ -61,6 +61,19 @@
       padding: .18rem .6rem; border-radius: 999px;
       background: rgba(255, 255, 255, .16);
     }
+    /* Choix porté par la barre : le prestataire dont on tient le compte, par
+       exemple. Même silhouette que les boutons d'action, en liste déroulante. */
+    .oasis-super-select {
+      flex: 0 0 auto; max-width: 15rem;
+      padding: .4rem .6rem; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.14); color: inherit;
+      font-size: .82rem; font-weight: 600; cursor: pointer;
+    }
+    .oasis-super-select:hover { background: rgba(255,255,255,.24); }
+    /* Les options se rendent dans la palette du système : sans cela, sur fond
+       clair, le texte hérité de la barre resterait illisible. */
+    .oasis-super-select option { color: #1e293b; background: #fff; }
     /* Orange foncé : le retour au portail se distingue des actions du module,
        quel que soit le thème de couleur retenu. */
     .oasis-back-btn {
@@ -152,7 +165,9 @@
     .then((liste) => {
       SUPERS = Array.isArray(liste) ? liste : [];
       const courant = SUPERS.find((s) => s.key === CURRENT);
-      MODULE_LABEL = courant ? courant.label : '';
+      // Un module peut porter en barre un nom plus court que celui de son
+      // manifeste, trop long pour la place disponible.
+      MODULE_LABEL = window.OASIS_MODULE_LABEL || (courant ? courant.label : '');
       const tabs = document.querySelector('.oasis-super-tabs');
       if (tabs) tabs.innerHTML = superTabsHtml();
       dessinerActions();
@@ -177,7 +192,7 @@
   // sans réécrire la barre : le socle en garde la mise en forme et la place.
   // Chaque action : { key, label, icon (HTML optionnel), active, onClick }.
   let ACTIONS = [];
-  let MODULE_LABEL = '';
+  let MODULE_LABEL = window.OASIS_MODULE_LABEL || '';
   // Mention portée par la barre : ce sur quoi l'utilisateur travaille — le
   // prestataire dont il tient le compte, par exemple. Ce n'est pas une action.
   let MENTION = '';
@@ -221,6 +236,23 @@
       }
     }
     ACTIONS.forEach((a) => {
+      // Une action peut être un choix plutôt qu'un bouton : le module fournit
+      // ses options, la barre en garde la mise en forme.
+      if (a.type === 'select') {
+        const sel = document.createElement('select');
+        sel.className = 'oasis-super-select';
+        sel.title = a.label || '';
+        (a.options || []).forEach((o) => {
+          const opt = document.createElement('option');
+          opt.value = o.value;
+          opt.textContent = o.label;
+          if (String(o.value) === String(a.value)) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        sel.onchange = () => a.onChange(sel.value);
+        zone.appendChild(sel);
+        return;
+      }
       const btn = document.createElement('button');
       btn.className = 'oasis-super-btn' + (a.active ? ' active' : '');
       btn.title = a.label;

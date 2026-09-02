@@ -99,9 +99,17 @@
     .dr-act-REJET         { background: #b91c1c22; color: #b91c1c; }
     .dr-act-DROITS        { background: #6d28d922; color: #6d28d9; }
   </style>
+  <!-- Attente : l'aéronef en orbite autour du globe. -->
+  <link rel="stylesheet" href="/shared/css/oasis-loader.css">
+  <script src="/shared/js/oasis-loader.js"></script>
+  <!-- Retour d'action : panneau commun au portail et aux modules. -->
+  <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
+  <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <script src="/shared/js/oasis-toast.js"></script>
 </head>
 <body>
-  <div id="app"><div style="padding:2rem;text-align:center;color:#64748b;">Chargement du module…</div></div>
+  <div id="app"><div data-oasis-loader>Chargement du module…</div></div>
 
   <script>
     window.pt = function (k) { return k; };
@@ -113,7 +121,12 @@
       window.DR_MODULE = m;
       // Hors carte D.6, la page reste rattachée au module dont elle règle les
       // droits : la barre supérieure en reprend le nom et le contexte.
-      window.OASIS_MODULE_KEY = m === 'PLAN' ? 'droits' : 'execution';
+      // Chaque module géré a sa propre coquille : la barre reprend la sienne.
+      const CLES = { PLAN: 'droits', SURV: 'execution', SAFA: 'ramp' };
+      window.OASIS_MODULE_KEY = CLES[m] || 'droits';
+      // Nom court porté par la barre supérieure, quand le module en a un.
+      const NOMS = { SAFA: 'RAMP Inspections' };
+      if (NOMS[m]) window.OASIS_MODULE_LABEL = NOMS[m];
       window.OASIS_MODULE_RIGHTS = m;
     })();
   </script>
@@ -131,7 +144,10 @@
           key: 'retour',
           label: 'Retour au module',
           icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>',
-          onClick: () => { window.location.href = '/modules/execution/index.html'; },
+          onClick: () => {
+            const RETOURS = { SURV: '/modules/execution/index.html', SAFA: '/modules/ramp/index.html' };
+            window.location.href = RETOURS[window.DR_MODULE] || '/modules/execution/index.html';
+          },
         }]);
       }
     });

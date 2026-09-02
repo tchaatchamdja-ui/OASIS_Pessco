@@ -1,0 +1,410 @@
+/* OASIS — Module « Exécution de la Surveillance » — onglets de circuit, cartes d’indicateurs, tables, filtres et cloche
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ══════════════════════════════════════════════
+   5. WORKFLOW TABS
+   ══════════════════════════════════════════════ */
+
+/* Sous-menus : des boutons de même largeur, jamais moins de 150 px. Les
+   colonnes se partagent la place à parts égales et passent à la ligne dès
+   qu'elles n'y tiennent plus — aucun rang ne défile, rien n'est coupé. */
+.exec-workflow-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 240px));
+    justify-content: start;
+    gap: .2rem;
+    /* Un rang d'intitulés souligné, comme dans « RAMP Inspections » : pas de
+       carte blanche qui s'étire au-delà des sous-menus. */
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 1rem;
+}
+
+.exec-tab {
+    padding: 0.6rem 1rem;
+    margin-bottom: -2px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.exec-tab:hover { color: var(--text); }
+
+.exec-tab.active {
+    color: var(--exec-accent);
+    border-bottom-color: var(--exec-accent);
+    font-weight: 600;
+}
+
+.exec-tab-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.exec-tab.active .exec-tab-badge {
+    background: var(--exec-accent);
+    color: var(--text-header, #fff);
+}
+
+/* ══════════════════════════════════════════════
+   6. KPI CARDS (execution variant)
+   ══════════════════════════════════════════════ */
+
+.exec-kpi-trend.up { color: #10b981; }
+.exec-kpi-trend.down { color: #ef4444; }
+
+/* ══════════════════════════════════════════════
+   7. DATA TABLE (execution variant)
+   ══════════════════════════════════════════════ */
+
+.exec-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.exec-data-table th {
+    text-align: left;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+}
+.exec-table.exec-data-table th {
+    color: var(--text-header, #fff);
+}
+
+.exec-data-table td {
+    padding: 0.65rem 0.75rem;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+
+/* Table compacte — lignes de hauteur réduite */
+.exec-compact-table td,
+.exec-compact-table th {
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+
+.exec-data-table tbody tr {
+    transition: background 0.15s;
+}
+
+.exec-data-table tbody tr:hover {
+    background: var(--exec-accent-bg);
+}
+
+.exec-data-table tbody tr.selected {
+    background: var(--exec-accent-bg-hover);
+}
+
+.fnc-status-dot.open { background: #ef4444; }
+.fnc-status-dot.in-progress { background: #f59e0b; }
+.fnc-status-dot.resolved { background: #10b981; }
+.fnc-status-dot.closed { background: #6b7280; }
+
+.report-preview-toolbar .btn {
+    font-size: 0.8rem;
+}
+
+/* ══════════════════════════════════════════════
+   10. FILTER BAR (execution variant)
+   ══════════════════════════════════════════════ */
+
+.exec-filter-bar {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.exec-filter-bar .form-input,
+.exec-filter-bar .form-select {
+    min-width: 130px;
+    flex: 1;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.82rem;
+    height: 30px;
+    line-height: 1.2;
+}
+
+.exec-filter-bar .btn-icon-reset {
+    padding: 0.3rem;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    height: 30px;
+    width: 30px;
+}
+
+.exec-filter-bar .btn-icon-reset:hover {
+    background: var(--exec-accent);
+    color: var(--text-header, #fff);
+    border-color: var(--exec-accent);
+}
+
+/* ══════════════════════════════════════════════
+   10b. NOTIFICATION BELL & PANEL
+   ══════════════════════════════════════════════ */
+
+.exec-notif-bell {
+    position: relative;
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+.exec-notif-bell:hover {
+    background: var(--bg-secondary, rgba(0,0,0,0.06));
+}
+.exec-notif-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    background: #ef4444;
+    color: var(--text-header, #fff);
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.exec-notif-panel {
+    position: fixed;
+    z-index: 10000;
+    width: 380px;
+    max-height: 480px;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    overflow: hidden;
+    animation: execNotifSlide 0.2s ease-out;
+}
+@keyframes execNotifSlide {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.exec-notif-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+    font-size: 0.9rem;
+}
+.exec-notif-panel-body {
+    max-height: 400px;
+    overflow-y: auto;
+}
+.exec-notif-item {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border-light, #f3f4f6);
+    transition: background 0.15s;
+}
+.exec-notif-item:hover {
+    background: var(--bg-secondary, #f9fafb);
+}
+.exec-notif-item:last-child {
+    border-bottom: none;
+}
+.exec-notif-item-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--text-muted);
+}
+.exec-notif-item.overdue .exec-notif-item-icon {
+    color: #ef4444;
+}
+.exec-notif-item.deadline .exec-notif-item-icon {
+    color: var(--exec-accent, #2563eb);
+}
+.exec-notif-item.task .exec-notif-item-icon {
+    color: #f59e0b;
+}
+.exec-notif-item-content {
+    flex: 1;
+    min-width: 0;
+}
+.exec-notif-item-label {
+    font-size: 0.82rem;
+    line-height: 1.35;
+    color: var(--text);
+}
+.exec-notif-item-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+/* ══════════════════════════════════════════════
+   10c. FILTER BAR GRID (4 per row)
+   ══════════════════════════════════════════════ */
+
+.exec-module .filter-bar {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    position: relative;
+}
+/* Compact controls — no labels above, small padding/font, fixed height.
+   Fields are flexible: they size themselves to content and grow to fill
+   the remaining space within the bar. */
+.exec-module .filter-bar > .form-input,
+.exec-module .filter-bar > .form-select {
+    flex: 1 1 140px;
+    min-width: 120px;
+    max-width: 100%;
+    width: auto;
+    box-sizing: border-box;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.82rem;
+    height: 30px;
+    line-height: 1.2;
+}
+.exec-module .filter-bar .btn-icon-reset {
+    flex: 0 0 auto;
+    padding: 0.3rem;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    height: 30px;
+    width: 30px;
+    margin-left: auto;
+}
+.exec-module .filter-bar .btn-icon-reset:hover {
+    background: var(--exec-accent);
+    color: var(--text-header, #fff);
+    border-color: var(--exec-accent);
+}
+
+/* No longer needed with flex layout — reset button flows naturally. */
+.exec-module .filter-bar--align-reset > .btn-icon-reset {
+    position: static;
+}
+
+@media (max-width: 768px) {
+    .exec-module .filter-bar > .form-input,
+    .exec-module .filter-bar > .form-select {
+        flex: 1 1 calc(50% - 0.4rem);
+    }
+    .exec-notif-panel {
+        width: calc(100vw - 2rem);
+        right: 1rem !important;
+    }
+}
+
+.exec-progress-fill.complete {
+    background: #10b981;
+}
+
+.exec-form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.exec-checklist-item.done {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.exec-step.completed:not(:last-child)::after {
+    background: var(--exec-accent);
+}
+
+.exec-step.active .exec-step-circle {
+    background: var(--exec-accent);
+    color: var(--text-header, #fff);
+    box-shadow: 0 0 0 4px rgba(var(--exec-accent-rgb), 0.2);
+}
+
+.exec-step.completed .exec-step-circle {
+    background: var(--exec-accent);
+    color: var(--text-header, #fff);
+}
+
+.exec-step.active .exec-step-label {
+    color: var(--exec-accent);
+    font-weight: 600;
+}
+
+.exec-step.completed .exec-step-label {
+    color: var(--text);
+}
+
+.exec-actions-cell .btn-icon {
+    padding: 0.3rem;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.exec-actions-cell .btn-icon:hover {
+    background: var(--exec-accent-bg);
+    color: var(--exec-accent);
+}
+

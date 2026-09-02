@@ -801,7 +801,12 @@ if (process.env.OASIS_COMPRESSION !== '0') {
     res.setHeader('Content-Encoding', 'gzip');
     res.setHeader('Vary', 'Accept-Encoding');
     res.setHeader('ETag', `W/"${stat.size}-${Math.round(stat.mtimeMs)}-gz"`);
-    res.setHeader('Cache-Control', EN_PRODUCTION ? 'public, max-age=3600' : 'no-cache');
+    // Les pages HTML se revalident toujours : elles listent les scripts du
+    // module, et une coquille gardée en cache pendant qu'un script nouveau
+    // apparaît donne une page à moitié chargée — un menu présent dont l'écran
+    // ne s'ouvre pas.
+    const estHtml = path.extname(chemin).toLowerCase() === '.html';
+    res.setHeader('Cache-Control', EN_PRODUCTION && !estHtml ? 'public, max-age=3600' : 'no-cache');
     if (req.headers['if-none-match'] === res.getHeader('ETag')) return res.status(304).end();
     return res.end(req.method === 'HEAD' ? undefined : entree.corps);
   });
@@ -813,6 +818,13 @@ app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: EN_PRODUCTION ? '1h' : 0,
   etag: true,
   lastModified: true,
+  // Même règle que pour les fichiers compressés : la coquille HTML se
+  // revalide, le reste peut dormir en cache.
+  setHeaders: (res, chemin) => {
+    if (path.extname(chemin).toLowerCase() === '.html') {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  },
 }));
 
 const PORT = process.env.PORT || 4750;

@@ -9,7 +9,7 @@
 /* ═══════════════════════════════════════════════
    Profil de Risque - Design System v2
    Sidebar Navigation + Accordion + Filters
-   5 Themes + Full Component Library
+   3 Themes + Full Component Library
    ═══════════════════════════════════════════════ */
 
 /* ── CSS Variables / Themes ── */
@@ -30,29 +30,23 @@
     --bg-header: #1a365d;
     --gradient: linear-gradient(135deg, #1a365d 0%, #2b5797 50%, #3182ce 100%);
 }
-[data-theme="orange-dark"] {
-    --primary: #c2410c; --primary-dark: #9a3412; --primary-light: #ea580c;
-    --primary-hover: #b45309; --accent: #f97316; --bg: #fff7ed;
-    --bg-header: #7c2d12;
-    --gradient: linear-gradient(135deg, #7c2d12 0%, #c2410c 50%, #ea580c 100%);
+/* Palette « Corporate » : le bleu roi porte la marque, l'orange n'est plus
+   qu'une couleur d'action — d'où un accent distinct de la couleur primaire. */
+[data-theme="corporate"] {
+    --primary: #1e40af; --primary-dark: #1e3a8a; --primary-light: #3b82f6;
+    --primary-hover: #1d4ed8; --accent: #ea580c; --bg: #f8fafc;
+    --bg-card: #ffffff; --bg-header: #1e40af;
+    --text: #0f172a; --text-muted: #475569; --border: #e2e8f0;
+    --gradient: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
 }
-[data-theme="violet"] {
-    --primary: #7c3aed; --primary-dark: #5b21b6; --primary-light: #a78bfa;
-    --primary-hover: #6d28d9; --accent: #8b5cf6; --bg: #faf5ff;
-    --bg-header: #5b21b6;
-    --gradient: linear-gradient(135deg, #5b21b6 0%, #7c3aed 50%, #a78bfa 100%);
-}
-[data-theme="green"] {
-    --primary: #059669; --primary-dark: #047857; --primary-light: #34d399;
-    --primary-hover: #048c63; --accent: #10b981; --bg: #ecfdf5;
-    --bg-header: #047857;
-    --gradient: linear-gradient(135deg, #047857 0%, #059669 50%, #34d399 100%);
-}
+/* Palette « Pierre » : le taupe porte la structure, la terre de Sienne
+   l'action — d'où un accent nettement distinct de la couleur primaire. */
 [data-theme="grey"] {
-    --primary: #6b7280; --primary-dark: #4b5563; --primary-light: #9ca3af;
-    --primary-hover: #5a6372; --accent: #9ca3af; --bg: #F2F0F0;
-    --bg-header: #4b5563;
-    --gradient: linear-gradient(135deg, #4b5563 0%, #6b7280 50%, #9ca3af 100%);
+    --primary: #78716c; --primary-dark: #57534e; --primary-light: #a8a29e;
+    --primary-hover: #57534e; --accent: #78350f; --bg: #f5f5f4;
+    --bg-card: #ffffff; --bg-header: #78716c;
+    --text: #292524; --text-muted: #57534e; --border: #e7e5e4;
+    --gradient: linear-gradient(135deg, #57534e 0%, #78716c 50%, #a8a29e 100%);
 }
 
 /* ── Reset & Base ── */
@@ -235,10 +229,8 @@ a:hover { text-decoration: underline; }
 .theme-dot:hover { transform: scale(1.2); }
 .theme-dot.active { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
 .theme-dot[data-theme="blue-dark"] { background: #1a365d; }
-.theme-dot[data-theme="orange-dark"] { background: #c2410c; }
-.theme-dot[data-theme="violet"] { background: #7c3aed; }
-.theme-dot[data-theme="green"] { background: #059669; }
-.theme-dot[data-theme="grey"] { background: #6b7280; }
+.theme-dot[data-theme="corporate"] { background: #1e40af; }
+.theme-dot[data-theme="grey"] { background: #78716c; }
 
 .lang-selector { display: flex; gap: 0.15rem; align-items: center; }
 .lang-btn {
@@ -308,6 +300,13 @@ a:hover { text-decoration: underline; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-hover); }
+/* Palette « Corporate » : le bleu roi porte la marque, l'orange guide le clic.
+   Les boutons d'action prennent donc l'accent, la marque restant à l'entête,
+   aux onglets et aux liens. */
+[data-theme="corporate"] .btn-primary { background: var(--accent); }
+[data-theme="corporate"] .btn-primary:hover { background: #c2410c; }
+[data-theme="grey"] .btn-primary { background: var(--accent); }
+[data-theme="grey"] .btn-primary:hover { background: #92400e; }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
 .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 .btn-text { background: none; border: none; color: var(--primary); padding: 0.5rem; }
@@ -387,7 +386,12 @@ textarea { resize: vertical; min-height: 100px; }
 .data-table .row-inactive { opacity: 0.5; }
 .data-table .ref-cell { font-family: monospace; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
 .data-table .date-cell { font-size: 0.78rem; white-space: nowrap; }
-.data-table .actions-cell { white-space: nowrap; display: flex; gap: 0.15rem; align-items: center; }
+/* Cellule d'actions : elle reste une cellule de tableau. La passer en flex la
+   sort du modèle tabulaire, et ses bordures ne s'alignent plus sur celles des
+   colonnes voisines. Les boutons y sont déjà en ligne ; un petit écart entre
+   eux suffit. */
+.data-table .actions-cell { white-space: nowrap; vertical-align: middle; }
+.data-table .actions-cell > * + * { margin-left: 0.15rem; }
 .text-center { text-align: center; padding: 2rem; color: var(--text-muted); }
 
 /* ── Status Badges ── */

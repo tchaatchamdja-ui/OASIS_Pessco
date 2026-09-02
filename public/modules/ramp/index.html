@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Inspections d'aéronefs sur aire de trafic</title>
+  <!-- Socle : mise en page, composants, chrome de module -->
+  <link rel="stylesheet" href="/shared/css/oasis-module.css">
+  <link rel="stylesheet" href="/shared/css/oasis-shell.css">
+  <!-- Styles propres au module -->
+  <link rel="stylesheet" href="/modules/ramp/css/ramp-styles.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; }
+  </style>
+  <!-- Attente : l'aéronef en orbite autour du globe. -->
+  <link rel="stylesheet" href="/shared/css/oasis-loader.css">
+  <script src="/shared/js/oasis-loader.js"></script>
+  <!-- Retour d'action : panneau commun au portail et aux modules. -->
+  <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
+  <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <script src="/shared/js/oasis-toast.js"></script>
+</head>
+<body class="ramp-module">
+  <div id="app"><div data-oasis-loader>Chargement du module…</div></div>
+
+  <script>
+    // Pont OASIS → module « Inspections d'aéronefs sur aire de trafic ».
+    // Le module rend sa propre coquille ; le contexte utilisateur vient du socle.
+    window.RAMP_BOOT = (async function () {
+      const res = await fetch('/api/m/ramp/context', { credentials: 'same-origin' });
+      if (res.status === 401) { parent.postMessage({ type: 'ramp:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      const ctx = await res.json();
+      const theme = localStorage.getItem('pr_theme') || 'blue-dark';
+      const lang = localStorage.getItem('pr_lang') || 'fr';
+      document.documentElement.setAttribute('data-theme', theme);
+      return { ctx, theme, lang };
+    })();
+  </script>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <!-- Cartes d'indicateurs du socle, comme au tableau de bord d'Exécution. -->
+  <script src="/shared/js/oasis-kpi.js"></script>
+  <!-- Traductions du module : chargées avant tout ce qui les emploie. -->
+  <script src="/modules/ramp/js/ramp-i18n.js"></script>
+  <!-- Retour d'action : la notification centrée. -->
+  <script src="/modules/ramp/js/ramp-notif.js"></script>
+  <script src="/modules/ramp/js/ramp-app.js"></script>
+  <script src="/modules/ramp/js/ramp-stats.js"></script>
+  <script src="/modules/ramp/js/ramp-parametres.js"></script>
+  <script src="/modules/ramp/js/ramp-poi.js"></script>
+  <!-- Partage d'une transmission avec d'autres États membres. -->
+  <script src="/modules/ramp/js/ramp-poi-partage.js"></script>
+  <script src="/modules/ramp/js/ramp-pac.js"></script>
+  <!-- Requêtes entre États membres (vue AAC). -->
+  <script src="/modules/ramp/js/ramp-communication.js"></script>
+  <!-- Comptes de l'organisme, en vue Prestataire. -->
+  <script src="/modules/ramp/js/ramp-utilisateurs.js"></script>
+  <!-- Bascule Vue AAC / Vue Prestataire et accès à la Gestion des Droits. -->
+  <script src="/modules/ramp/js/ramp-vues.js"></script>
+  <script>
+    window.OASIS_MODULE_KEY = "ramp";
+    window.OASIS_MODULE_RIGHTS = "SAFA";
+    // Nom porté par les barres supérieures du module.
+    window.OASIS_MODULE_LABEL = "RAMP Inspections";
+  </script>
+  <script src="/shared/js/module-chrome.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const boot = await window.RAMP_BOOT;
+        // Réparation d'une coquille servie depuis le cache du navigateur.
+        // Cette page liste les scripts du module ; gardée en cache pendant
+        // qu'un écran nouveau apparaît, elle en oublie un — le menu s'affiche,
+        // l'écran ne s'ouvre pas. On vérifie donc que chaque écran est bien là,
+        // et on charge ce qui manque avant de démarrer.
+        await Promise.all([
+          ['rampRenderPoi', '/modules/ramp/js/ramp-poi.js'],
+          ['rampPoiOuvrirPartage', '/modules/ramp/js/ramp-poi-partage.js'],
+          ['rampToast', '/modules/ramp/js/ramp-notif.js'],
+          ['rampOuvrirPac', '/modules/ramp/js/ramp-pac.js'],
+          ['rampRenderParametres', '/modules/ramp/js/ramp-parametres.js'],
+          ['rampRenderStatistiques', '/modules/ramp/js/ramp-stats.js'],
+          ['rampDessinerActions', '/modules/ramp/js/ramp-vues.js'],
+          ['rampRenderMesUtilisateurs', '/modules/ramp/js/ramp-utilisateurs.js'],
+          ['rampRenderCommunication', '/modules/ramp/js/ramp-communication.js'],
+        ].filter(([fn]) => typeof window[fn] !== 'function').map(([, src]) => new Promise((ok, ko) => {
+          const el = document.createElement('script');
+          el.src = src + '?v=' + Date.now();
+          el.onload = ok;
+          el.onerror = () => ko(new Error('script manquant : ' + src));
+          document.head.appendChild(el);
+        })));
+        RAMP_STATE.user = boot.ctx.user || {};
+        RAMP_STATE.privilege = boot.ctx.privilege || '';
+        // Vue active (AAC / Prestataire) : elle commande les menus et le
+        // périmètre des données avant le premier rendu.
+        RAMP_STATE.vue = boot.ctx.vue || { vue: 'aac', disponible: false };
+        RAMP_STATE.droitsPrestataire = boot.ctx.droits_prestataire || [];
+        RAMP_STATE.adminPrestataire = !!boot.ctx.admin_prestataire;
+        RAMP_STATE.etatsInspection = boot.ctx.etats_inspection || [];
+        RAMP_STATE.etatsContact = boot.ctx.etats_contact || [];
+        RAMP_STATE.theme = boot.theme;
+        RAMP_STATE.lang = boot.lang;
+        await rampLoadData();
+        rampRenderApp();
+        rampNavigateTo('dashboard');
+        if (typeof rampDessinerActions === 'function') rampDessinerActions();
+      } catch (e) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>

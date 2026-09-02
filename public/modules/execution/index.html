@@ -8,14 +8,33 @@
   <link rel="stylesheet" href="/shared/css/oasis-module.css">
   <link rel="stylesheet" href="/shared/css/oasis-shell.css">
   <!-- Styles propres au module (repris intégralement de PESSCO) -->
-  <link rel="stylesheet" href="/modules/execution/css/exec-styles.css">
+  <!-- Styles du module, dans l'ordre de cascade. -->
+  <link rel="stylesheet" href="/modules/execution/css/exec-base.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-volets.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-tableaux.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-documents.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-composants.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-impression.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-processus.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-parametres.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-etats.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-suivi.css">
+  <link rel="stylesheet" href="/modules/execution/css/exec-constatations.css">
   <style>
     html, body { height: 100%; margin: 0; }
     #app { height: 100%; }
   </style>
+  <!-- Attente : l'aéronef en orbite autour du globe. -->
+  <link rel="stylesheet" href="/shared/css/oasis-loader.css">
+  <script src="/shared/js/oasis-loader.js"></script>
+  <!-- Retour d'action : panneau commun au portail et aux modules. -->
+  <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
+  <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <script src="/shared/js/oasis-toast.js"></script>
 </head>
 <body class="exec-module">
-  <div id="app"><div style="padding:2rem;text-align:center;color:#64748b;">Chargement du module…</div></div>
+  <div id="app"><div data-oasis-loader>Chargement du module…</div></div>
 
   <script>
     // Pont OASIS → module PESSCO « Exécution de la Surveillance ».
@@ -43,7 +62,18 @@
   <script src="/shared/js/oasis-requete.js"></script>
   <script src="/shared/js/oasis-kpi.js"></script>
   <script src="/modules/execution/js/exec-boot.js"></script>
+  <!-- Écrans du module : chargés dans cet ordre, ils partagent la même portée. -->
+  <script src="/modules/execution/js/exec-i18n.js"></script>
   <script src="/modules/execution/js/exec-app.js"></script>
+  <script src="/modules/execution/js/exec-dashboard.js"></script>
+  <script src="/modules/execution/js/exec-plans.js"></script>
+  <script src="/modules/execution/js/exec-notifications.js"></script>
+  <script src="/modules/execution/js/exec-activites.js"></script>
+  <script src="/modules/execution/js/exec-prestataires.js"></script>
+  <script src="/modules/execution/js/exec-constatations.js"></script>
+  <script src="/modules/execution/js/exec-rapports.js"></script>
+  <script src="/modules/execution/js/exec-utilisateurs.js"></script>
+  <script src="/modules/execution/js/exec-parametres.js"></script>
   <script src="/modules/execution/js/exec-fiche.js"></script>
   <script src="/modules/execution/js/exec-processus.js"></script>
   <script src="/modules/execution/js/exec-processus-config.js"></script>

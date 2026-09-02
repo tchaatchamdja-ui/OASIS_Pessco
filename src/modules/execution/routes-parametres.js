@@ -7,6 +7,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
+const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
 
 // Collections servies par le CRUD générique, comme `register_crud` dans PESSCO.
@@ -85,6 +86,11 @@ module.exports = function register(app, deps, M) {
       : '';
     if (d.vue === 'prestataire' && !prestataireId) {
       return res.status(400).json({ error: 'Aucun prestataire disponible pour la vue Prestataire' });
+    }
+    // Le prestataire choisi en barre supérieure doit exister : c'est lui qui
+    // borne les données servies.
+    if (prestataireId && !(refs().prestataires || []).some((p) => p.id === prestataireId)) {
+      return res.status(400).json({ error: 'Prestataire inconnu' });
     }
     vues.definirVue(reel.username, d.vue, prestataireId);
     res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
@@ -402,157 +408,24 @@ module.exports = function register(app, deps, M) {
   // ══════════════════════════════════════
   //  Mes utilisateurs — comptes rattachés au prestataire
   // ══════════════════════════════════════
-  // Réservé aux comptes prestataire : ils gèrent leurs propres utilisateurs,
-  // qui héritent du même rattachement.
-  // Renvoie les prestataires du périmètre ; le premier sert de rattachement
-  // par défaut aux comptes créés ici.
-  // Rôles portail qu'un compte rattaché à un prestataire peut porter.
-  const ROLES_PRESTATAIRE = [
-    { cle: 'ADMIN_PRESTATAIRE', libelle: 'Administrateur du prestataire',
-      aide: 'Gère les comptes de l’organisme et ses échanges avec l’Autorité.' },
-    { cle: 'PRESTATAIRE', libelle: 'Utilisateur du prestataire',
-      aide: 'Accède à ce que l’administrateur de l’organisme lui confie.' },
-  ];
-
-  const garde = (req, res, droit) => {
-    if (!R.estPrestataire(req.user)) {
-      res.status(403).json({ error: 'Accès réservé aux utilisateurs Prestataire' });
-      return null;
-    }
-    const miens = R.prestatairesDe(req.user);
-    if (!miens.length) {
-      res.status(400).json({ error: 'Aucun prestataire rattaché au compte' });
-      return null;
-    }
-    // Gérer les comptes de l'organisme est un droit comme un autre : il se
-    // confie, et l'administrateur du prestataire le détient d'office.
-    const moi = auth.findUser((req.userReel || req.user).username);
-    if (droit && moi && moi.role !== 'ADMIN_PRESTATAIRE' && !R.aLeDroit(moi, droit)) {
-      res.status(403).json({ error: 'Droit non confié à ce compte' });
-      return null;
-    }
-    return miens;
-  };
-
-  const cible = (username, miens) => {
-    const u = auth.findUser(username);
-    return u && miens.includes(u.prestataire_id || '') ? u : null;
-  };
-
-  // Comptes du prestataire enregistrés au portail et dont les accès aux
-  // modules comprennent celui-ci : les autres relèvent d'un autre espace.
-  const aAccesAuModule = (u) => !Array.isArray(u.modules) || u.modules.includes(R.MODULE);
-
-  app.get(`${M}/mes-utilisateurs`, requireAuth, (req, res) => {
-    const miens = garde(req, res, 'utilisateurs');
-    if (!miens) return undefined;
-    return res.json({
-      roles: ROLES_PRESTATAIRE,
-      droits: R.DROITS_PRESTATAIRE,
-      utilisateurs: auth.getUsers()
-        .filter((u) => miens.includes(u.prestataire_id || '') && aAccesAuModule(u))
-        .map((u) => ({
-          ...vueUtilisateur(u),
-          role: u.role || 'PRESTATAIRE',
-          droits: R.droitsDe(u),
-          modules: u.modules || [],
-          must_change_password: !!u.mustChange,
-          has_temp_password: !!u.tempPassword,
-          created_at: u.createdAt || '',
-          logs: (u.logs || []).slice(0, 20),
-        })),
-    });
-  });
-
-  app.post(`${M}/mes-utilisateurs`, requireAuth, (req, res) => {
-    const miens = garde(req, res, 'utilisateurs');
-    if (!miens) return undefined;
-    const d = req.body || {};
-    // Rattachement demandé s'il fait partie du périmètre, premier sinon.
-    const pid = miens.includes(d.prestataire_id) ? d.prestataire_id : miens[0];
-    const username = d.email || d.nom_utilisateur || '';
-    if (!username) return res.status(400).json({ error: 'Email requis' });
-    if (auth.findUser(username)) return res.status(409).json({ error: 'Utilisateur déjà existant' });
-    const motDePasse = auth.generatePassword(loadConfig());
-    const { salt, hash } = auth.hashPassword(motDePasse);
-    const users = auth.getUsers();
-    const role = ROLES_PRESTATAIRE.some((r) => r.cle === d.role) ? d.role : 'PRESTATAIRE';
-    users.push({
-      username, nom: d.nom || '', prenom: d.prenom || '',
-      email: d.email || username, fullName: `${d.nom || ''} ${d.prenom || ''}`.trim(),
-      role, prestataire_id: pid,
-      // Accès aux modules du portail : le compte naît dans le module courant.
-      modules: [R.MODULE],
-      droits_surv: R.normaliserDroits(d.droits) || R.DROITS_PRESTATAIRE.map((x) => x.cle),
-      salt, hash, active: d.actif !== false, locked: false, failedAttempts: 0,
-      mustChange: true, tempPassword: motDePasse,
-      passwordChangedAt: db.now(), passwordHistory: [hash],
-      createdAt: db.now(), createdBy: req.user.username,
-    });
-    auth.saveUsers(users);
-    res.status(201).json({ status: 'ok', id: username, temp_password: motDePasse });
-  });
-
-  app.put(`${M}/mes-utilisateurs/:id`, requireAuth, (req, res) => {
-    const miens = garde(req, res, 'utilisateurs');
-    if (!miens) return undefined;
-    const existant = cible(req.params.id, miens);
-    if (!existant) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors scope' });
-    const d = req.body || {};
-    const users = auth.getUsers();
-    const u = users.find((x) => x.username === req.params.id);
-    ['nom', 'prenom', 'email'].forEach((k) => { if (k in d) u[k] = d[k]; });
-    if ('actif' in d) u.active = !!d.actif;
-    u.fullName = `${u.nom || ''} ${u.prenom || ''}`.trim();
-    // Le rôle se choisit parmi ceux qu'un compte d'organisme peut porter ;
-    // les droits confiés se cochent un à un.
-    if ('role' in d && ROLES_PRESTATAIRE.some((r) => r.cle === d.role)) u.role = d.role;
-    if (!u.role) u.role = 'PRESTATAIRE';
-    if ('droits' in d) u.droits_surv = R.normaliserDroits(d.droits) || [];
-    // Invariant : le compte reste rattaché au même prestataire. Les
-    // modifications portent sur le compte portail lui-même : elles se lisent
-    // aussitôt dans la gestion des utilisateurs du portail.
-    u.prestataire_id = existant.prestataire_id;
-    auth.saveUsers(users);
-    return res.json({ status: 'ok', role: u.role, droits: R.droitsDe(u) });
-  });
-
-  app.delete(`${M}/mes-utilisateurs/:id`, requireAuth, (req, res) => {
-    const miens = garde(req, res, 'utilisateurs');
-    if (!miens) return undefined;
-    if (req.params.id === req.user.username) return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
-    if (!cible(req.params.id, miens)) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors scope' });
-    auth.saveUsers(auth.getUsers().filter((u) => u.username !== req.params.id));
-    return res.json({ status: 'ok' });
-  });
-
-  app.post(`${M}/mes-utilisateurs/:id/reset-password`, requireAuth, (req, res) => {
-    const miens = garde(req, res, 'utilisateurs');
-    if (!miens) return undefined;
-    if (!cible(req.params.id, miens)) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors scope' });
-    const motDePasse = auth.generatePassword(loadConfig());
-    const { salt, hash } = auth.hashPassword(motDePasse);
-    const users = auth.getUsers();
-    const u = users.find((x) => x.username === req.params.id);
-    Object.assign(u, { salt, hash, mustChange: true, tempPassword: motDePasse, passwordChangedAt: db.now() });
-    u.logs = [{ action: `Réinitialisation par ${req.user.fullName || req.user.username}`, date: db.now() }, ...(u.logs || [])];
-    auth.saveUsers(users);
-    return res.json({ status: 'ok', new_password: motDePasse, email: u.email || '' });
-  });
-
-  app.post(`${M}/mes-utilisateurs/:id/reveal-password`, requireAuth, (req, res) => {
-    const miens = garde(req, res, 'utilisateurs');
-    if (!miens) return undefined;
-    const u = cible(req.params.id, miens);
-    if (!u) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors scope' });
-    const motDePasse = (req.body || {}).admin_password || '';
-    if (!motDePasse) return res.status(400).json({ error: 'Mot de passe requis' });
-    // Le demandeur doit prouver son identité avant de lire un secret.
-    if (!auth.checkPasswordPublic(auth.findUser(req.user.username), motDePasse)) {
-      return res.status(403).json({ error: 'Mot de passe incorrect' });
-    }
-    if (!u.tempPassword) return res.status(404).json({ error: 'Aucun mot de passe temporaire disponible' });
-    return res.json({ temp_password: u.tempPassword });
+  // Les routes vivent dans le socle (`src/comptes_prestataire.js`), partagées
+  // avec les autres modules qui offrent cet écran. Le module n'en déclare que
+  // ses libellés, ses droits et le champ où il les range.
+  comptesPrestataire.register(app, deps, M, {
+    module: R.MODULE,
+    champDroits: 'droits_surv',
+    droits: R.DROITS_PRESTATAIRE,
+    roles: R,
+    vueUtilisateur,
+    logs: true,
+    now: db.now,
+    libelles: {
+      admin: 'Administrateur du prestataire',
+      aideAdmin: 'Gère les comptes de l’organisme et ses échanges avec l’Autorité.',
+      agent: 'Utilisateur du prestataire',
+      aideAgent: 'Accède à ce que l’administrateur de l’organisme lui confie.',
+      sansRattachement: 'Aucun prestataire rattaché au compte',
+    },
   });
 
   // ══════════════════════════════════════

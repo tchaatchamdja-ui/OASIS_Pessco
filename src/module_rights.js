@@ -22,6 +22,8 @@ const RANK = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR', 'LECTEUR', 'AUCUN'];
 // et c'est le module qui lui ouvre son propre périmètre.
 const PRIVILEGES_MODULE = {
   SURV: [...PRIVILEGES, 'PRESTATAIRE'],
+  // SAFA sert les deux mêmes publics : l'autorité, et l'exploitant inspecté.
+  SAFA: [...PRIVILEGES, 'PRESTATAIRE'],
 };
 
 // Rôles du portail concernés par la gestion des droits : les comptes humains
@@ -31,6 +33,7 @@ const PRIVILEGES_MODULE = {
 const ROLES_GERES = ['SUPERADMIN', 'ADMIN', 'AAC'];
 const ROLES_GERES_MODULE = {
   SURV: [...ROLES_GERES, 'ADMIN_PRESTATAIRE'],
+  SAFA: [...ROLES_GERES, 'ADMIN_PRESTATAIRE'],
 };
 
 const privilegesDe = (moduleCode) => PRIVILEGES_MODULE[moduleCode] || PRIVILEGES;

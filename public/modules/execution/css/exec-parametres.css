@@ -1,0 +1,305 @@
+/* OASIS — Module « Exécution de la Surveillance » — paramètres du module (checklists, franchissement d’étape, versions)
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ── Paramètres → Checklists ───────────────────────────────────────────── */
+.exec-cl-card { padding: 0; overflow: hidden; }
+.exec-cl-entete {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: .6rem;
+    padding: .6rem .8rem; border-bottom: 1px solid var(--border);
+}
+.exec-cl-titre { display: flex; align-items: center; gap: .5rem; }
+.exec-cl-titre h3 { margin: 0; font-size: .95rem; }
+.exec-cl-total {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 20px; padding: 0 .4rem; border-radius: 10px;
+    background: var(--border); color: var(--text-muted);
+    font-size: .72rem; font-weight: 700;
+}
+.exec-cl-outils { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+/* Le champ de recherche porte son icône : pas de libellé à caser. */
+.exec-cl-recherche {
+    display: flex; align-items: center; gap: .35rem;
+    border: 1px solid var(--border); border-radius: 6px; padding: 0 .5rem;
+    background: var(--bg); color: var(--text-muted); height: 30px;
+}
+.exec-cl-recherche:focus-within { border-color: var(--primary, #2563eb); }
+.exec-cl-recherche input {
+    border: none; outline: none; background: transparent; color: var(--text);
+    font-size: .8rem; width: 190px; height: 100%; padding: 0;
+}
+
+/* Largeurs imposées : sans cela, les puces de portée — insécables — prennent
+   toute la place et le nom de la checklist se replie sur trois lignes. */
+.exec-cl-table { table-layout: fixed; }
+.exec-cl-table td { vertical-align: top; }
+.exec-cl-table td:first-child { overflow-wrap: anywhere; }
+.exec-cl-ref {
+    font-family: ui-monospace, Menlo, monospace; font-weight: 600; font-size: .78rem;
+    color: var(--text-muted);
+}
+.exec-cl-nom { font-weight: 600; line-height: 1.3; }
+.exec-cl-desc {
+    margin-top: .15rem; color: var(--text-muted); font-size: .78rem; line-height: 1.35;
+}
+/* Portée : domaine, secteur et sous-activité se distinguent par la teinte,
+   pour lire d'un coup à quel niveau la checklist s'applique. */
+.exec-cl-puce {
+    display: inline-block; margin: 0 .25rem .25rem 0; padding: .1rem .4rem;
+    border-radius: 4px; font-size: .72rem; font-weight: 600; white-space: nowrap;
+    border: 1px solid transparent;
+}
+.exec-cl-puce.dom { background: rgba(37, 99, 235, .1); color: #1d4ed8; border-color: rgba(37, 99, 235, .25); }
+.exec-cl-puce.sec { background: rgba(13, 148, 136, .1); color: #0f766e; border-color: rgba(13, 148, 136, .25); }
+.exec-cl-puce.sa { background: rgba(100, 116, 139, .12); color: #475569; border-color: rgba(100, 116, 139, .25); }
+.exec-cl-partout { color: var(--text-muted); font-size: .78rem; font-style: italic; }
+.exec-cl-compte {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 22px; padding: 0 .45rem; border-radius: 11px;
+    background: rgba(37, 99, 235, .1); color: #1d4ed8;
+    font-size: .76rem; font-weight: 700;
+}
+.exec-cl-compte.vide { background: var(--border); color: var(--text-muted); }
+.exec-cl-aucune { text-align: center; color: var(--text-muted); padding: 1.4rem; font-style: italic; }
+.exec-cl-portee-actions { float: right; font-weight: 400; font-size: .72rem; }
+.exec-cl-portee-actions a { color: var(--primary); text-decoration: none; margin-left: .5rem; }
+.exec-cl-portee-actions a:hover { text-decoration: underline; }
+
+/* Note de contexte au-dessus d'un champ : d'où vient la valeur proposée. */
+.exec-proc-note {
+    margin: 0 0 .7rem; padding: .5rem .7rem;
+    background: rgba(37, 99, 235, .06);
+    border-left: 3px solid var(--primary); border-radius: 0 4px 4px 0;
+    color: var(--text-muted); font-size: .82rem; line-height: 1.45;
+}
+
+/* Périmètre d'une activité hors plan : sous-activités et thèmes à cocher. */
+.exec-hp-perimetre {
+    max-height: 240px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 6px; padding: .5rem .7rem;
+    /* Sous-activités et thèmes alignés au bord gauche de la liste. */
+    text-align: left;
+}
+.exec-hp-perimetre * { text-align: left; }
+/* Les règles de formulaire étirent tout <input> à 100 % : les cases à cocher
+   gardent leur taille propre, sinon elles repoussent le libellé vers la droite. */
+.exec-hp-perimetre input[type="checkbox"] {
+    width: auto; min-width: 0; flex: 0 0 auto; margin: 0;
+}
+.exec-hp-sa + .exec-hp-sa { margin-top: .5rem; border-top: 1px dashed var(--border); padding-top: .5rem; }
+.exec-hp-ligne {
+    display: flex; align-items: baseline; justify-content: flex-start; gap: .5rem;
+    margin: 0 0 .2rem; font-weight: 400; font-size: .82rem; cursor: pointer;
+}
+.exec-hp-ligne input { margin: 0; accent-color: var(--primary); flex: 0 0 auto; }
+/* Les libellés se replient plutôt que d'élargir la liste. */
+.exec-hp-ligne > span { min-width: 0; overflow-wrap: anywhere; }
+.exec-hp-perimetre { overflow-x: hidden; }
+/* Nom et code de la sous-activité : ils se replient sur deux lignes plutôt
+   que d'élargir la liste. */
+.exec-hp-sa-titre > span {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem;
+    min-width: 0; max-width: 100%;
+}
+.exec-hp-sa-titre > span > strong { min-width: 0; overflow-wrap: anywhere; }
+.exec-hp-sa-titre em {
+    font-style: normal; font-size: .72rem; color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+/* L'indentation des thèmes ne doit pas élargir la liste. */
+.exec-hp-themes { padding-left: 1.6rem; }
+.exec-hp-sa, .exec-hp-themes, .exec-hp-ligne { max-width: 100%; box-sizing: border-box; }
+
+/* ── Boîte de dialogue de franchissement d'étape ─────────────────────────
+   Le passage d'une étape à la suivante engage le circuit : il se confirme.
+   La boîte se pose au-dessus du volet du processus. */
+.exec-proc-dialogue-fond {
+    position: fixed; inset: 0; z-index: 2000;
+    background: rgba(15, 23, 42, .45);
+    display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.exec-proc-dialogue {
+    background: var(--bg-card, #fff); color: var(--text-main, #0f172a);
+    border-radius: 10px; border: 1px solid var(--border);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .3);
+    width: min(30rem, 100%); padding: 1.2rem 1.4rem;
+}
+.exec-proc-dialogue h4 { margin: 0 0 .5rem; font-size: 1rem; }
+.exec-proc-dialogue p { margin: 0 0 .9rem; font-size: .86rem; color: var(--text-muted); }
+.exec-proc-dialogue-fil {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    font-size: .8rem; margin-bottom: 1rem;
+}
+.exec-proc-dialogue-fil span {
+    padding: .18rem .55rem; border-radius: 999px;
+    background: var(--bg-hover, #f1f5f9); border: 1px solid var(--border);
+}
+.exec-proc-dialogue-fil .vers { background: var(--primary, #1e3a8a); color: #fff; border-color: transparent; }
+.exec-proc-dialogue-actions { display: flex; justify-content: flex-end; gap: .6rem; }
+.exec-proc-dialogue .form-label { display: block; margin-bottom: .3rem; font-size: .8rem; }
+.exec-proc-dialogue-saisie { width: 100%; margin-bottom: 1rem; resize: vertical; }
+
+/* Barre inférieure du volet : même hauteur que le chevron de rétraction de la
+   barre latérale, pour aligner les deux pieds de page. */
+.exec-slider-footer {
+    height: var(--exec-pied-hauteur, 41px);
+    min-height: var(--exec-pied-hauteur, 41px);
+    padding-top: 0; padding-bottom: 0;
+}
+
+/* ── Étape Validation : table des versions du rapport ────────────────────
+   La colonne Action porte la décision de validation : intitulé et boutons
+   centrés. Les observations du validateur se lisent d'un coup d'œil. */
+.exec-proc-hote .exec-data-table th:last-child { text-align: center; }
+.exec-proc-hote .exec-data-table td:last-child,
+.exec-proc-hote .exec-data-table td.exec-proc-td-actions {
+    justify-content: center; text-align: center;
+}
+/* Cellule d'actions : elle reste une cellule de tableau. La passer en flex la
+   sort du modèle tabulaire, et ses bordures ne s'alignent plus sur celles des
+   colonnes voisines. Les boutons y sont déjà en ligne ; un petit écart entre
+   eux suffit. */
+.exec-proc-hote .exec-data-table td.exec-proc-td-actions { vertical-align: middle; }
+.exec-proc-hote .exec-data-table td.exec-proc-td-actions > * + * { margin-left: .3rem; }
+
+/* La ligne des observations occupe toute la table : son texte reste à gauche,
+   malgré le centrage de la colonne Action. */
+.exec-proc-hote .exec-data-table td:has(> .exec-proc-commentaires) { text-align: left; }
+.exec-proc-commentaires, .exec-proc-commentaires * { text-align: left; }
+.exec-proc-commentaires {
+    background: var(--bg-hover, #f8fafc) !important;
+    border: 1px solid var(--border); border-left: 3px solid #b45309;
+    border-radius: 4px; padding: .55rem .8rem !important; margin: .35rem 0 !important;
+}
+.exec-proc-commentaires > summary {
+    list-style: none; cursor: default; font-size: .72rem !important;
+    text-transform: uppercase; letter-spacing: .04em; color: #b45309 !important;
+}
+.exec-proc-commentaires > summary::-webkit-details-marker { display: none; }
+.exec-proc-commentaires > div {
+    background: transparent !important; border: none !important; padding: .3rem 0 0 !important;
+    font-size: .84rem !important; line-height: 1.45;
+}
+
+/* ── Table des versions du rapport (Validation, Transmission) ────────────
+   Une lecture par version : la version en cours porte le regard, les
+   précédentes restent lisibles sans le disputer. */
+.exec-proc-hote .exec-proc-rapports { width: 100%; border-collapse: separate; border-spacing: 0; }
+.exec-proc-hote .exec-proc-rapports thead th {
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-muted); font-weight: 700;
+    background: var(--bg-hover, #f8fafc);
+    border-bottom: 1px solid var(--border); padding: .5rem .55rem;
+}
+.exec-proc-hote .exec-proc-rapports tbody td {
+    padding: .55rem; border-bottom: 1px solid var(--border); vertical-align: middle;
+}
+.exec-proc-hote .exec-proc-rap:hover td { background: var(--bg-hover, #f8fafc); }
+
+/* Version en cours : liseré et fond très légers, référence appuyée. */
+.exec-proc-hote .exec-proc-rap-courante td { background: #1e3a8a08; }
+.exec-proc-hote .exec-proc-rap-courante td:first-child { box-shadow: inset 3px 0 0 var(--primary, #1e3a8a); }
+.exec-proc-hote .exec-proc-rap:not(.exec-proc-rap-courante) td { color: var(--text-muted); }
+
+.exec-proc-hote .exec-proc-rap-ref {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .8rem; white-space: nowrap;
+}
+.exec-proc-version {
+    display: inline-block; min-width: 2.1rem; text-align: center;
+    padding: .1rem .45rem; border-radius: 999px; font-size: .72rem; font-weight: 700;
+    background: var(--bg-hover, #f1f5f9); border: 1px solid var(--border); color: var(--text-main);
+}
+.exec-proc-rap-courante .exec-proc-version {
+    background: var(--primary, #1e3a8a); border-color: transparent; color: #fff;
+}
+/* Le titre cède la place aux colonnes utiles ; date et actions ne se coupent
+   jamais, la table n'a plus à défiler sur un volet étroit. */
+.exec-proc-hote .exec-proc-rapports td:nth-child(3) { max-width: 18rem; }
+.exec-proc-hote .exec-proc-rapports td:nth-child(4),
+.exec-proc-hote .exec-proc-rapports td:nth-child(5) { white-space: nowrap; }
+
+.exec-proc-version-courante {
+    display: block; margin-top: .2rem; font-size: .64rem; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--primary, #1e3a8a);
+}
+
+/* ── Activités de Supervision : hauteur des bandeaux et des en-têtes ─────
+   Bandeau de groupe (plan, « Autres Activités ») et ligne d'en-tête des
+   tables : 32 px au minimum, pour une trame régulière d'un groupe à l'autre. */
+.exec-module .exec-accordion-header { min-height: 35px; box-sizing: border-box; }
+.exec-module .exec-compact-table thead th { height: 35px; }
+
+/* Statut d'une activité : l'étape du fil, et la sous-étape attendue en second
+   rang. Une activité close prend le vert des étapes franchies. */
+.exec-statut-etape {
+    display: inline-flex; align-items: baseline; gap: .3rem; white-space: nowrap;
+    padding: .12rem .5rem; border-radius: 999px; font-size: .72rem; font-weight: 700;
+    background: #b4530918; color: #b45309; border: 1px solid #b4530933;
+}
+.exec-statut-etape i { font-style: normal; font-weight: 500; opacity: .85; }
+.exec-statut-etape i::before { content: '· '; }
+.exec-statut-etape.clos { background: #16653418; color: #166534; border-color: #16653433; }
+
+/* ── Historique d'une activité : le fil du processus, daté ───────────────── */
+.exec-histo { padding: .25rem .25rem 1rem; }
+.exec-histo-entete { margin-bottom: 1.1rem; }
+.exec-histo-objet { font-size: 1rem; font-weight: 700; }
+.exec-histo-meta { font-size: .8rem; color: var(--text-muted); margin-top: .15rem; }
+
+.exec-histo-etape { position: relative; padding: 0 0 .9rem 1.5rem; }
+.exec-histo-etape::before {
+    content: ''; position: absolute; left: 6px; top: 1.35rem; bottom: 0;
+    width: 2px; background: var(--border);
+}
+.exec-histo-etape:last-of-type::before { display: none; }
+.exec-histo-etape > header { display: flex; align-items: center; gap: .5rem; }
+.exec-histo-etape > header h4 { margin: 0; font-size: .9rem; }
+.exec-histo-puce {
+    position: absolute; left: 0; top: .35rem; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--bg-card, #fff); border: 3px solid var(--border);
+}
+.exec-histo-etape.faite .exec-histo-puce { border-color: #166534; background: #166534; }
+.exec-histo-etape.courante .exec-histo-puce { border-color: #b45309; }
+.exec-histo-etape.faite > header h4 { color: #166534; }
+.exec-histo-etape.courante > header h4 { color: #b45309; }
+.exec-histo-etat {
+    font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700;
+    padding: .1rem .45rem; border-radius: 999px;
+    background: var(--bg-hover, #f1f5f9); color: var(--text-muted);
+}
+.exec-histo-etape.faite .exec-histo-etat { background: #16653418; color: #166534; }
+.exec-histo-etape.courante .exec-histo-etat { background: #b4530918; color: #b45309; }
+
+.exec-histo-sous-liste { margin-top: .45rem; display: flex; flex-direction: column; gap: .4rem; }
+.exec-histo-sous-nom {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-muted); font-weight: 700; margin-bottom: .2rem;
+}
+.exec-histo-jalon {
+    display: grid; grid-template-columns: 9.5rem 1fr auto; gap: .1rem .7rem;
+    align-items: baseline; font-size: .83rem; padding: .18rem 0;
+}
+.exec-histo-date { color: var(--text-muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.exec-histo-acteur { font-size: .78rem; color: var(--text-muted); }
+.exec-histo-detail {
+    grid-column: 2 / -1; font-size: .76rem; color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+/* Motif de rejet ou observations de renvoi : signalés. */
+.exec-histo-detail.alerte {
+    font-family: inherit; font-size: .78rem; color: #b45309;
+    background: #b4530910; border-left: 2px solid #b4530955; padding: .2rem .5rem; border-radius: 3px;
+}
+.exec-histo-attente { font-size: .78rem; color: var(--text-muted); font-style: italic; }
+.exec-histo-sous.vide { opacity: .65; }
+.exec-histo-fin {
+    margin-left: 1.5rem; font-size: .75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: #b45309;
+}
+.exec-histo-fin.clos { color: #166534; }
+@media (max-width: 720px) {
+    .exec-histo-jalon { grid-template-columns: 1fr; }
+}
+

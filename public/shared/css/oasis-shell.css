@@ -86,7 +86,12 @@
 .shell-table tr:last-child td { border-bottom: none; }
 .shell-table tr:hover { background: rgba(0,0,0,.02); }
 .shell-table tr.row-inactive { opacity: 0.5; }
-.shell-table .actions-cell { display: flex; gap: 0.25rem; white-space: nowrap; }
+/* Cellule d'actions : elle reste une cellule de tableau. La passer en flex la
+   sort du modèle tabulaire, et ses bordures ne s'alignent plus sur celles des
+   colonnes voisines. Les boutons y sont déjà en ligne ; un petit écart entre
+   eux suffit. */
+.shell-table .actions-cell { white-space: nowrap; vertical-align: middle; }
+.shell-table .actions-cell > * + * { margin-left: 0.25rem; }
 .shell-table.shell-table-compact { font-size: 0.78rem; }
 .shell-table.shell-table-compact th { padding: 0.45rem 0.5rem; font-size: 0.7rem; }
 .shell-table.shell-table-compact td { padding: 0.4rem 0.5rem; }

@@ -1,0 +1,394 @@
+/* OASIS — Module « Exécution de la Surveillance » — documents officiels (A4), accordéons de formulaire et fil de discussion
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ══════════════════════════════════════════════
+   2. OFFICIAL DOCUMENT FORM (A4 paper look)
+   ══════════════════════════════════════════════ */
+
+.official-doc-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+    background: var(--bg);
+    min-height: 100%;
+}
+
+.official-doc-page {
+    width: 21cm;
+    max-width: 100%;
+    min-height: 29.7cm;
+    background: #fff;
+    color: #1a1a1a;
+    padding: 2cm 2.5cm;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+    border-radius: 2px;
+    font-family: "Times New Roman", "Noto Serif", serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    position: relative;
+}
+
+.official-doc-page .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5cm;
+    border-bottom: 2px solid #1a1a1a;
+    padding-bottom: 0.5cm;
+}
+
+.official-doc-page .doc-header-left {
+    flex: 1;
+    font-size: 9pt;
+    line-height: 1.4;
+}
+
+.official-doc-page .doc-header-right {
+    text-align: right;
+    font-size: 9pt;
+    line-height: 1.4;
+}
+
+.official-doc-page .doc-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5cm;
+}
+
+.official-doc-page .doc-subtitle {
+    text-align: center;
+    font-weight: 600;
+    font-size: 12pt;
+    margin-bottom: 1cm;
+}
+
+.official-doc-page .doc-ref {
+    text-align: right;
+    font-size: 9pt;
+    color: #555;
+    margin-bottom: 0.75cm;
+}
+
+.official-doc-page .doc-section-title {
+    font-weight: 700;
+    font-size: 11pt;
+    text-transform: uppercase;
+    border-bottom: 1px solid #999;
+    padding-bottom: 0.15cm;
+    margin-top: 0.75cm;
+    margin-bottom: 0.4cm;
+}
+
+.official-doc-page .doc-field {
+    margin-bottom: 0.3cm;
+}
+
+.official-doc-page .doc-field-label {
+    font-weight: 700;
+    font-size: 10pt;
+}
+
+.official-doc-page .doc-field-value {
+    font-size: 10pt;
+    padding-left: 0.25cm;
+}
+
+.official-doc-page .doc-signature-block {
+    margin-top: 2cm;
+    display: flex;
+    justify-content: space-between;
+}
+
+.official-doc-page .doc-signature-area {
+    text-align: center;
+    min-width: 200px;
+}
+
+.official-doc-page .doc-signature-line {
+    border-top: 1px solid #1a1a1a;
+    margin-top: 2cm;
+    padding-top: 0.2cm;
+    font-size: 10pt;
+}
+
+/* ══════════════════════════════════════════════
+   3. FORM SECTION CARDS (Accordion A, B, C)
+   ══════════════════════════════════════════════ */
+
+.exec-form-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.exec-form-section {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--bg-card);
+    transition: box-shadow 0.2s;
+}
+
+.exec-form-section:hover {
+    box-shadow: var(--shadow);
+}
+
+.exec-form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.15rem;
+    cursor: pointer;
+    background: var(--bg);
+    transition: background 0.2s;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+}
+
+.exec-form-section-header:hover {
+    background: var(--bg-card);
+}
+
+.exec-form-section.expanded .exec-form-section-header {
+    border-bottom-color: var(--border);
+}
+
+.exec-form-section-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--exec-accent);
+    color: var(--text-header, #fff);
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.exec-form-section-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.exec-form-section-chevron {
+    display: inline-flex;
+    transition: transform 0.2s;
+    transform: rotate(-90deg);
+    color: var(--text-muted);
+}
+
+.exec-form-section.expanded .exec-form-section-chevron {
+    transform: rotate(0deg);
+}
+
+.exec-form-section-body {
+    display: none;
+    padding: 1.15rem;
+}
+
+.exec-form-section.expanded .exec-form-section-body {
+    display: block;
+}
+
+.exchange-msg.operator {
+    align-self: flex-end;
+    background: var(--exec-accent-bg);
+    border-color: rgba(var(--exec-accent-rgb), 0.2);
+    flex-direction: row-reverse;
+}
+
+.exchange-msg:not(.operator) .exchange-icon {
+    background: var(--primary);
+}
+
+.exchange-msg.operator .exchange-icon {
+    background: var(--exec-accent);
+}
+
+.exchange-attachment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.exchange-attachment:hover {
+    border-color: var(--exec-accent);
+    color: var(--exec-accent);
+}
+
+/* ── Messenger-style chat (used by Echanges slider) ── */
+.exchange-chat {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.15rem;
+    padding: 1rem 1.25rem;
+    max-height: 480px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.exchange-bubble-row {
+    display: flex;
+    align-items: flex-end;
+    flex-grow: 0;
+    flex-shrink: 0;
+    gap: 0.5rem;
+    max-width: 100%;
+    margin-top: 0.15rem;
+}
+/* Add a bit more spacing when sender changes (group break) */
+.exchange-bubble-row + .exchange-bubble-row.other,
+.exchange-bubble-row + .exchange-bubble-row.self {
+    margin-top: 0.45rem;
+}
+.exchange-bubble-row.self {
+    justify-content: flex-end;
+}
+.exchange-bubble-row.other {
+    justify-content: flex-start;
+}
+
+.exchange-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--exec-accent);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+}
+
+.exchange-bubble {
+    position: relative;
+    max-width: 68%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 18px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    flex-shrink: 1;
+}
+.exchange-bubble-row.other .exchange-bubble {
+    background: var(--exec-accent-bg);
+    color: var(--text);
+    border: 1px solid rgba(var(--exec-accent-rgb), 0.25);
+    border-top-left-radius: 6px;
+}
+.exchange-bubble-row.self .exchange-bubble {
+    background: var(--exec-accent);
+    color: #ffffff;
+    border-top-right-radius: 6px;
+}
+
+.exchange-bubble-row.self .exchange-bubble-author {
+    display: none;
+}
+
+.exchange-bubble-body {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.exchange-bubble-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+}
+.exchange-bubble-row.self .exchange-bubble-attachments .exchange-attachment {
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.35);
+    color: #ffffff;
+}
+
+.exchange-bubble-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin: 0.15rem 0.6rem 0.25rem;
+    text-align: right;
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+.exchange-bubble-row.other .exchange-bubble-time {
+    text-align: left;
+    margin-left: 2.6rem;
+}
+
+/* ----- Variante "Discussions" : bulles pilule bleu ciel façon messagerie ----- */
+.discussions-chat {
+    background: #ffffff;
+    gap: 0.35rem;
+    padding: 1rem 1.25rem;
+}
+.discussions-chat .exchange-avatar { display: none; }
+.discussions-chat .exchange-bubble-row {
+    align-items: flex-start;
+    gap: 0;
+}
+.discussions-chat .exchange-bubble {
+    display: inline-block;          /* épouse la largeur ET la hauteur du contenu */
+    width: auto;
+    max-width: 72%;
+    padding: 0.4rem 0.85rem;
+    border-radius: 18px;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    border: none !important;
+    /* IMPORTANT : on neutralise le pre-wrap hérité sur le wrapper
+       (sans ça, les \n du template littéral entre les enfants
+       deviennent des lignes visibles à cause du pre-wrap). */
+    white-space: normal;
+}
+.discussions-chat .exchange-bubble-body {
+    display: block;
+    margin: 0;
+    padding: 0;
+    font-size: 0.88rem;
+    line-height: 1.35;
+    /* Le pre-wrap n'est appliqué QUE sur le contenu réel. */
+    white-space: pre-wrap;
+}
+.discussions-chat .exchange-bubble-row.other .exchange-bubble {
+    background: #dbeafe;        /* sky-200 */
+    color: #0f172a;
+    border-top-left-radius: 18px;
+}
+.discussions-chat .exchange-bubble-row.self .exchange-bubble {
+    background: #60a5fa;        /* blue-400 */
+    color: #ffffff;
+    border-top-right-radius: 18px;
+}
+.discussions-chat .exchange-bubble-author {
+    margin-left: 0.25rem;
+}
+.discussions-chat .exchange-bubble-row.other .exchange-bubble-time {
+    margin-left: 0.25rem;
+}
+

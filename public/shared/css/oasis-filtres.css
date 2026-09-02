@@ -1,0 +1,65 @@
+/* OASIS — Barres de filtres : une bordure aux couleurs du thème.
+ *
+ * Les filtres commandent ce que l'écran montre : ils se distinguent des champs
+ * de saisie, qui portent une donnée. Toute l'application les borde de la
+ * couleur du thème actif — listes, champs de recherche et bouton de remise à
+ * zéro compris.
+ *
+ * Cette feuille se charge APRÈS celle du module : c'est elle qui tranche.
+ * Un nouvel écran n'a rien à écrire, à condition de ranger ses filtres dans
+ * l'un des conteneurs listés ici — ou d'ajouter le sien à la liste.
+ */
+
+/* Conteneurs de filtres connus, module par module. */
+.ramp-filtres, .ramp-com-filtres, .ramp-gen-filtres,
+.mes-filtres, .mes-action-bar > .mes-filtres,
+.filters-bar, .filters-row, .filter-group, .filter-actions, .filter-search,
+.plan-filter-bar, .exec-filter-bar, .filter-bar, .dr-audit-filters,
+.cfg-search-wrap {
+    --oasis-filtre-bordure: var(--primary, #1a365d);
+}
+
+/* Champs et listes d'une barre de filtres. */
+.ramp-filtres .ramp-input, .ramp-filtres .ramp-select,
+.ramp-com-filtres .ramp-input, .ramp-com-filtres .ramp-select,
+.ramp-gen-filtres .ramp-input, .ramp-gen-filtres .ramp-select,
+.mes-filtres .mes-input, .mes-filtres .mes-select,
+.filters-bar input, .filters-bar select,
+.filters-row input, .filters-row select,
+.filter-group input, .filter-group select,
+.filter-search input, .filter-search select,
+.plan-filter-bar input, .plan-filter-bar select,
+.exec-filter-bar input, .exec-filter-bar select,
+.filter-bar input, .filter-bar select, .filter-bar .form-input, .filter-bar .form-select,
+.dr-audit-filters input, .dr-audit-filters select,
+.cfg-search-wrap input {
+    border-color: var(--oasis-filtre-bordure, var(--primary, #1a365d));
+}
+
+/* Bouton de remise à zéro : même bordure, même encre — c'est un filtre, pas
+   une action sur les données. */
+.ramp-filtres .btn-outline, .ramp-com-filtres .btn-outline,
+.ramp-gen-filtres .btn-outline,
+.mes-filtres .btn-outline,
+.filters-bar .btn-outline, .filters-row .btn-outline,
+.filter-actions .btn-outline, .filter-group .btn-outline,
+.plan-filter-bar .btn-outline, .exec-filter-bar .btn-outline,
+.filter-bar .btn-outline, .filter-bar .btn-secondary,
+.dr-audit-filters .btn-outline,
+[title^="Réinitialiser les filtres"],
+[title^="Réinitialiser tous les filtres"] {
+    border-color: var(--oasis-filtre-bordure, var(--primary, #1a365d));
+    color: var(--oasis-filtre-bordure, var(--primary, #1a365d));
+}
+
+/* Au survol, la couleur se remplit : le geste est celui d'un filtre qu'on
+   relâche, il se voit. */
+.ramp-filtres .btn-outline:hover, .mes-filtres .btn-outline:hover,
+.filters-bar .btn-outline:hover, .filters-row .btn-outline:hover,
+.filter-actions .btn-outline:hover, .plan-filter-bar .btn-outline:hover,
+.filter-bar .btn-outline:hover, .filter-bar .btn-secondary:hover,
+[title^="Réinitialiser les filtres"]:hover,
+[title^="Réinitialiser tous les filtres"]:hover {
+    background: var(--oasis-filtre-bordure, var(--primary, #1a365d));
+    color: var(--text-header, #fff);
+}

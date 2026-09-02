@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════
    OASIS — PESSCO Design System — CSS Tokens
-   5 Thèmes : blue-dark (défaut), orange-dark, violet, green, grey
+   3 Thèmes : blue-dark (défaut), corporate, grey (pierre)
    ══════════════════════════════════════ */
 
 :root, [data-theme="blue-dark"] {
@@ -24,48 +24,38 @@
     --topbar-height:      56px;
 }
 
-[data-theme="orange-dark"] {
-    --primary:       #c2410c;
-    --primary-dark:  #9a3412;
-    --primary-light: #ea580c;
-    --primary-hover: #b45309;
-    --accent:        #f97316;
-    --bg:            #fff7ed;
-    --bg-header:     #7c2d12;
-    --gradient:      linear-gradient(135deg, #7c2d12 0%, #c2410c 100%);
+/* Palette « Corporate » : fond blanc bleuté, cartes blanches, texte bleu nuit,
+   bleu roi pour la marque et orange éclatant réservé à l'action. */
+[data-theme="corporate"] {
+    --primary:       #1e40af;
+    --primary-dark:  #1e3a8a;
+    --primary-light: #3b82f6;
+    --primary-hover: #1d4ed8;
+    --accent:        #ea580c;
+    --bg:            #f8fafc;
+    --bg-card:       #ffffff;
+    --bg-header:     #1e40af;
+    --text:          #0f172a;
+    --text-muted:    #475569;
+    --border:        #e2e8f0;
+    --gradient:      linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
 }
 
-[data-theme="violet"] {
-    --primary:       #6d28d9;
-    --primary-dark:  #5b21b6;
-    --primary-light: #8b5cf6;
-    --primary-hover: #7c3aed;
-    --accent:        #a78bfa;
-    --bg:            #faf5ff;
-    --bg-header:     #4c1d95;
-    --gradient:      linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
-}
-
-[data-theme="green"] {
-    --primary:       #166534;
-    --primary-dark:  #14532d;
-    --primary-light: #22c55e;
-    --primary-hover: #16a34a;
-    --accent:        #4ade80;
-    --bg:            #f0fdf4;
-    --bg-header:     #14532d;
-    --gradient:      linear-gradient(135deg, #14532d 0%, #16a34a 100%);
-}
-
+/* Palette « Pierre » : fond gris chaud, cartes blanches, texte anthracite,
+   taupe pour la structure et terre de Sienne pour l'action. */
 [data-theme="grey"] {
-    --primary:       #374151;
-    --primary-dark:  #1f2937;
-    --primary-light: #6b7280;
-    --primary-hover: #4b5563;
-    --accent:        #9ca3af;
-    --bg:            #f3f4f6;
-    --bg-header:     #1f2937;
-    --gradient:      linear-gradient(135deg, #1f2937 0%, #4b5563 100%);
+    --primary:       #78716c;
+    --primary-dark:  #57534e;
+    --primary-light: #a8a29e;
+    --primary-hover: #57534e;
+    --accent:        #78350f;
+    --bg:            #f5f5f4;
+    --bg-card:       #ffffff;
+    --bg-header:     #78716c;
+    --text:          #292524;
+    --text-muted:    #57534e;
+    --border:        #e7e5e4;
+    --gradient:      linear-gradient(135deg, #57534e 0%, #78716c 100%);
 }
 
 /* ── Reset ── */
@@ -231,10 +221,8 @@ body.app-sidebar-collapsed .portal-sidebar-logo img { max-height: 34px; }
 .theme-dot:hover { border-color: rgba(255,255,255,.6); }
 .theme-dot.active { border-color: var(--text-header, #fff); }
 .theme-dot[data-theme="blue-dark"]   { background: #1a365d; }
-.theme-dot[data-theme="orange-dark"] { background: #c2410c; }
-.theme-dot[data-theme="violet"]      { background: #6d28d9; }
-.theme-dot[data-theme="green"]       { background: #166534; }
-.theme-dot[data-theme="grey"]        { background: #374151; }
+.theme-dot[data-theme="corporate"]   { background: #1e40af; }
+.theme-dot[data-theme="grey"]        { background: #78716c; }
 
 .portal-lang-selector { display: flex; gap: 0.25rem; }
 .lang-btn {
@@ -434,7 +422,10 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 }
 .portal-card {
     background: var(--bg-card); border-radius: 16px;
-    padding: 0.9rem 1rem; text-align: center; cursor: pointer;
+    /* Cartes d'une demi-hauteur de plus : l'intitulé et le libellé respirent,
+       et la grille garde des cartes de même hauteur. */
+    padding: 1.35rem 1rem; text-align: center; cursor: pointer;
+    min-height: 12rem; display: flex; flex-direction: column; justify-content: center;
     box-shadow: var(--shadow); border: 2px solid transparent;
     transition: all .3s ease; position: relative; overflow: hidden;
 }
@@ -508,6 +499,7 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 
 .portal-modules.list-view .portal-grid { grid-template-columns: 1fr; gap: 0.5rem; }
 .portal-modules.list-view .portal-card {
+    min-height: 0; padding: 0.7rem 1rem 0.7rem 0.9rem;
     display: grid;
     grid-template-columns: 38px minmax(0, 1fr) auto auto;
     grid-template-rows: auto auto;

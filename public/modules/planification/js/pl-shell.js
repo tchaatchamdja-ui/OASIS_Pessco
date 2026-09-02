@@ -297,7 +297,7 @@ function planRenderApp() {
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">
-                    ${['blue-dark','orange-dark','violet','green','grey'].map(th =>
+                    ${['blue-dark','corporate','grey'].map(th =>
                         `<div class="theme-dot ${S.theme===th?'active':''}" data-theme="${th}" onclick="planSetTheme('${th}')" title="${th}"></div>`
                     ).join('')}
                 </div>

@@ -12,13 +12,7 @@ function formatDate(d) {
 
 // ── Toast notification ──
 function showToast(message, type = 'success') {
-    const existing = document.querySelector('.alert-floating');
-    if (existing) existing.remove();
-    const div = document.createElement('div');
-    div.className = `alert alert-${type} alert-floating`;
-    div.textContent = message;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 3000);
+    return window.oasisToast(message, type);
 }
 
 // ── SVG Icons (inline) ──

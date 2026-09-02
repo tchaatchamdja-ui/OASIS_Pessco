@@ -1,0 +1,342 @@
+/* OASIS — Module « Exécution de la Surveillance » — menu « États » : situation d’ensemble des activités
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ── Menu « États » : situation d'ensemble des activités ─────────────────── */
+.exec-etats .card { margin-bottom: .9rem; padding: 0; overflow: hidden; }
+/* Bandeau de section : couleur du thème, dans tous les sous-menus. */
+.exec-etats .card > h3 {
+    display: flex; align-items: center; gap: .5rem; margin: 0;
+    padding: .55rem .8rem; min-height: 35px; box-sizing: border-box;
+    font-size: .88rem; font-weight: 600;
+    background: var(--primary, #1e3a8a); color: var(--text-header, #fff);
+}
+.exec-etats .card > h3 .exec-etats-compte { background: rgba(255, 255, 255, .18); color: inherit; }
+.exec-etats .card > h3 .exec-etats-compte.retard { background: #fff; color: #b45309; }
+.exec-etats .card > h3 + .exec-etats-intro,
+.exec-etats .card > .exec-etats-intro { margin: .6rem .8rem; }
+/* Le corps de table porte déjà son propre retrait (comme dans la table des
+   activités) : la carte ne le double pas. */
+.exec-etats .card > .exec-etats-corps { margin: 0; }
+.exec-etats .card > .exec-etats-vide { margin: 0 .8rem .8rem; }
+.exec-etats-compte {
+    font-size: .7rem; font-weight: 700; padding: .1rem .45rem; border-radius: 999px;
+    background: var(--bg-hover, #f1f5f9); color: var(--text-muted);
+}
+.exec-etats-compte.retard { background: #b4530918; color: #b45309; }
+.exec-etats-alerte {
+    font-size: .76rem; font-weight: 700; padding: .2rem .6rem; border-radius: 999px;
+    background: #b91c1c15; color: #b91c1c; border: 1px solid #b91c1c33;
+}
+.exec-etats-intro { font-size: .78rem; color: var(--text-muted); margin: .1rem 0 .7rem; }
+.exec-etats-vide { font-size: .8rem; color: var(--text-muted); font-style: italic; padding: .4rem 0; }
+/* Format repris de la table des activités : largeurs fixes, texte tronqué
+   plutôt que colonnes déformées, en-tête de 35 px. */
+.exec-etats-table thead th { height: 35px; }
+.exec-etats-table td {
+    overflow: hidden; text-overflow: ellipsis;
+    vertical-align: middle;
+}
+.exec-etats-table td.exec-etats-actions { overflow: visible; }
+
+/* Mes utilisateurs : des lignes assez hautes pour leurs pastilles, un
+   courriel qui se lit d'un trait, et des colonnes qui ne se serrent plus. */
+.exec-mes-users tbody td { height: 40px; padding-top: .35rem; padding-bottom: .35rem; }
+.exec-mes-users tbody tr:hover { background: var(--bg-hover, #f8fafc); }
+.exec-mes-users tbody tr.row-inactive { opacity: .6; }
+.exec-mes-users-mail {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .76rem;
+}
+/* Le masque et l'œil tiennent sur une ligne : sinon la ligne se creusait. */
+.exec-mes-users-pw { white-space: nowrap; }
+.exec-mes-users-pw .shell-btn-icon { vertical-align: middle; margin-left: .25rem; }
+.exec-mes-users thead th {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .04em;
+}
+/* Précision sous un champ de formulaire. */
+.shell-hint { display: block; margin-top: .2rem; font-size: .72rem; color: var(--text-muted); }
+
+/* Délai restant : le retard se voit, l'échéance proche se signale. */
+.exec-delai {
+    display: inline-block; font-size: .72rem; font-weight: 700; white-space: nowrap;
+    padding: .12rem .5rem; border-radius: 999px;
+    background: var(--bg-hover, #f1f5f9); color: var(--text-muted);
+}
+.exec-delai.proche { background: #ea580c18; color: #ea580c; }
+.exec-delai.urgent { background: #dc262618; color: #dc2626; }
+.exec-delai.retard { background: #b91c1c; color: #fff; }
+
+/* Paramètres → Délais */
+.exec-delais-table td { vertical-align: middle; }
+.exec-delai-nom { font-weight: 600; line-height: 1.3; }
+.exec-delai-aide { font-size: .74rem; color: var(--text-muted); font-weight: 400; margin-top: .1rem; }
+.exec-delai-champ { display: inline-block; width: 5rem; margin-right: .4rem; }
+.exec-delai-unite { font-size: .76rem; color: var(--text-muted); }
+.exec-delai-saisie { white-space: nowrap; }
+
+/* Un délai se lit comme une course entre deux repères : montrer les deux
+   bornes évite d'avoir à deviner ce que le nombre saisi compte. */
+.exec-delai-course { font-size: .76rem; line-height: 1.5; }
+.exec-delai-borne {
+    display: inline-block; padding: .08rem .35rem; border-radius: 3px;
+    background: rgba(100, 116, 139, .1); color: var(--text);
+}
+.exec-delai-fleche { color: var(--text-muted); margin: 0 .25rem; }
+.exec-delai-ou { font-size: .74rem; color: var(--text-muted); }
+
+/* Le relevé se lit par processus : un bloc, son objet, puis ses attentes. */
+.exec-delai-groupe { margin-top: 1.1rem; }
+.exec-delai-groupe:first-of-type { margin-top: .6rem; }
+.exec-delai-groupe-entete {
+    display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+    padding: 0 0 .35rem; border-bottom: 2px solid var(--primary); margin-bottom: .1rem;
+}
+.exec-delai-groupe-entete h4 { margin: 0; font-size: .88rem; color: var(--primary); }
+.exec-delai-groupe-entete span { font-size: .76rem; color: var(--text-muted); }
+
+/* Sections d'« Actions en attentes » : des volets, dépliés là où une action
+   est attendue. Un compteur au-delà d'une action se signale en rouge. */
+.exec-etats-section { padding: 0; }
+.exec-etats-section > summary {
+    display: flex; align-items: center; gap: .5rem; cursor: pointer;
+    padding: .55rem .8rem; min-height: 35px; box-sizing: border-box;
+    font-size: .88rem; font-weight: 600; list-style: none; border-radius: 6px;
+    /* Bandeau à la couleur du thème. */
+    background: var(--primary, #1e3a8a); color: var(--text-header, #fff);
+}
+.exec-etats-section > summary::-webkit-details-marker { display: none; }
+.exec-etats-section[open] > summary { border-bottom: 1px solid var(--border); border-radius: 6px 6px 0 0; }
+.exec-etats-section > summary:hover { filter: brightness(1.12); }
+.exec-etats-titre { flex: 1 1 auto; min-width: 0; }
+.exec-etats-chevron { display: inline-flex; transition: transform .2s; color: inherit; opacity: .85; }
+.exec-etats-section > summary .exec-etats-compte {
+    background: rgba(255, 255, 255, .18); color: inherit;
+}
+.exec-etats-section[open] > summary .exec-etats-chevron { transform: rotate(180deg); }
+.exec-etats-compte.alerte,
+.exec-etats-section > summary .exec-etats-compte.alerte { background: #b91c1c; color: #fff; }
+.exec-etats-section > summary .exec-etats-compte.retard { background: #fff; color: #b45309; }
+
+/* Activité dont le processus est arrêté : la ligne se met en retrait. */
+.exec-etats-arretee td { opacity: .72; }
+.exec-statut-etape.arrete { background: #64748b18; color: #475569; border-color: #64748b40; }
+.exec-etats-section-corps { padding: .1rem .8rem .8rem; }
+
+/* Colonne « Consultation » : des icônes seules, centrées dans la cellule. */
+.exec-etats-actions {
+    text-align: center; white-space: nowrap; vertical-align: middle;
+}
+.exec-etats-actions > * { vertical-align: middle; }
+.exec-etats-actions > * + * { margin-left: .3rem; }
+.exec-etats-actions .btn-icon-only { padding: .25rem .45rem; line-height: 0; }
+
+/* Bouton d'action de page aligné sur la hauteur des boutons du processus. */
+.exec-btn-27 {
+    height: 27px; min-height: 27px; padding-top: 0; padding-bottom: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: .35rem; line-height: 1;
+}
+
+/* Paramètres → Autres paramètres : composition des références.
+   Une section dépliante par objet ; le bandeau, à la couleur du thème, porte
+   l'aperçu de la référence produite. */
+.exec-ref-objet > summary .exec-ref-apercu {
+    margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .78rem; background: rgba(255, 255, 255, .18);
+    padding: .12rem .55rem; border-radius: 4px; letter-spacing: .02em;
+}
+.exec-ref-corps { padding: 0 0 .2rem; }
+.exec-ref-entete {
+    display: grid; grid-template-columns: 1.6rem minmax(7rem, 12rem) minmax(0, 1fr) 6.5rem auto;
+    align-items: center; gap: .4rem; margin: 0 .8rem .3rem;
+    font-size: .68rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-muted); font-weight: 700;
+}
+.exec-ref-rang {
+    width: 1.6rem; text-align: center; font-size: .72rem; font-weight: 700;
+    color: var(--text-muted);
+}
+.exec-ref-valeur { display: flex; align-items: center; gap: .35rem; min-width: 0; }
+.exec-ref-unite { font-size: .72rem; color: var(--text-muted); }
+.exec-ref-rendu {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .76rem;
+    color: var(--text-muted); background: var(--bg-hover, #f1f5f9);
+    padding: .1rem .4rem; border-radius: 3px; text-align: center;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.exec-ref-total { margin-left: auto; font-size: .74rem; color: var(--text-muted); }
+.exec-ref-segments { display: flex; flex-direction: column; gap: .35rem; margin: 0 .8rem; }
+/* Une ligne par élément : type, valeur éventuelle, puis les commandes —
+   la grille garde l'alignement quelle que soit la largeur. */
+.exec-ref-segment {
+    display: grid; grid-template-columns: 1.6rem minmax(7rem, 12rem) minmax(0, 1fr) 6.5rem auto;
+    align-items: center; gap: .4rem;
+}
+.exec-ref-segment:hover { background: var(--bg-hover, #f8fafc); border-radius: 4px; }
+.exec-ref-valeur input[type="text"] { max-width: 11rem; }
+.exec-ref-valeur input[type="number"] { max-width: 4.5rem; }
+.exec-ref-boutons { display: flex; gap: .2rem; }
+.exec-ref-boutons .btn-icon-only { padding: .2rem .4rem; line-height: 0; }
+.exec-ref-pied { display: flex; align-items: center; gap: .8rem; margin: .7rem .8rem .8rem; flex-wrap: wrap; }
+.exec-ref-sep { display: inline-flex; align-items: center; gap: .4rem; font-size: .78rem; color: var(--text-muted); }
+.exec-ref-sep input { width: 4rem; }
+.exec-ref-actions { display: flex; gap: .5rem; margin-top: .5rem; }
+
+/* Droits confiés à un compte d'organisme (vue Prestataire → Mes utilisateurs) */
+.exec-droits-liste { display: flex; flex-direction: column; gap: .45rem; margin-top: .3rem; }
+.exec-droit { display: grid; grid-template-columns: auto 1fr; gap: .5rem; align-items: start; cursor: pointer; }
+.exec-droit input { width: auto; min-width: 0; margin-top: .2rem; }
+.exec-droit span { display: flex; flex-direction: column; line-height: 1.35; }
+.exec-droit strong { font-size: .84rem; font-weight: 600; }
+.exec-droit em { font-style: normal; font-size: .76rem; color: var(--text-muted); }
+
+/* Parcours au clavier dans le volet du processus et les tables (A11Y-02). */
+#execSlider :focus-visible,
+.exec-data-table :focus-visible,
+.eval-step:focus-visible {
+    outline: 2px solid var(--primary, #1a365d);
+    outline-offset: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Boutons d'export du menu Constatations : couleur du thème. */
+.exec-export-actions { display: flex; gap: .4rem; flex-wrap: wrap; flex: 0 0 auto; }
+.exec-export-actions .btn { white-space: nowrap; }
+
+/* ── Étape « Réalisation » : sections nettes, aides discrètes ── */
+.exec-real { display: flex; flex-direction: column; gap: .6rem; }
+.exec-real .exec-form-section { margin: 0; }
+.exec-real-bandeau {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .55rem .8rem; border-radius: 8px;
+    background: var(--exec-accent-bg, rgba(31, 111, 178, .08));
+    border: 1px solid var(--border);
+}
+.exec-real-bandeau p { margin: 0; font-size: .82rem; color: var(--text); }
+
+/* Courriel de transmission : la page de l'étape porte le message qui
+   accompagne le rapport validé, joint automatiquement. */
+.exec-courriel {
+    margin-top: 1rem; padding: .9rem 1rem;
+    border: 1px solid var(--border); border-radius: 10px;
+    background: var(--card-bg, #fff);
+}
+.exec-courriel-entete {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    padding-bottom: .6rem; margin-bottom: .8rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-courriel-entete h4 { margin: 0; font-size: .95rem; }
+.exec-courriel-etat {
+    margin-left: auto; font-size: .78rem; color: #166534;
+    background: #dcfce7; border: 1px solid #86efac;
+    border-radius: 999px; padding: .12rem .6rem;
+}
+.exec-courriel .form-group { margin-bottom: .7rem; }
+.exec-courriel-copies { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.exec-courriel-pied {
+    display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+    padding-top: .7rem; border-top: 1px solid var(--border);
+}
+.exec-courriel-note {
+    margin: 0 0 .5rem; font-size: .78rem; color: var(--text-muted);
+}
+.exec-piece {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .35rem .6rem; margin-bottom: .35rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+}
+.exec-piece-icone { display: inline-flex; color: var(--text-muted); }
+.exec-piece-nom { font-size: .83rem; font-weight: 600; }
+a.exec-piece-nom { color: var(--primary); text-decoration: none; }
+a.exec-piece-nom:hover { text-decoration: underline; }
+.exec-piece-ouvrir {
+    display: inline-flex; align-items: center; color: var(--primary);
+    text-decoration: none; padding: 0 .2rem;
+}
+.exec-piece-intitule { flex: 1; font-size: .83rem; padding: .25rem .5rem; }
+.exec-piece-mention { margin-left: auto; font-size: .75rem; color: var(--text-muted); }
+.exec-piece-retirer { margin-left: 0; color: #ef4444; }
+.exec-piece-rapport { border-style: dashed; }
+.exec-courriel-pied .btn { margin-left: auto; }
+@media (max-width: 640px) {
+    .exec-courriel-copies { grid-template-columns: 1fr; }
+}
+
+/* Type de rapport : une ligne au-dessus des sections. La saisie libre, qui
+   n'apparaît que sur « AUTRE », précède la liste et occupe le reste. */
+.exec-type-rapport {
+    display: flex; align-items: flex-end; gap: .8rem; flex-wrap: wrap;
+    padding: .7rem .9rem; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--card-bg, #fff);
+}
+.exec-type-rapport .form-group { margin: 0; }
+.exec-type-rapport .form-group:first-child { flex: 1 1 240px; }
+.exec-type-rapport .form-group:last-child { flex: 0 0 280px; }
+@media (max-width: 640px) {
+    .exec-type-rapport .form-group { flex: 1 1 100%; }
+}
+.exec-real-bandeau span { display: inline-flex; color: var(--exec-accent, #1f6fb2); }
+.exec-real-lecture {
+    margin-left: auto; font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted);
+}
+.exec-form-section-badge {
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    min-width: 1.35rem; height: 1.35rem; padding: 0 .35rem; border-radius: 10px;
+    background: rgba(127, 150, 180, .18); color: var(--text);
+    font-size: .72rem; font-weight: 700;
+}
+/* L'explication de la section vit dans son bandeau, à droite du titre. */
+.exec-form-section-aide {
+    flex: 1 1 auto; min-width: 0; margin: 0;
+    font-size: .75rem; font-weight: 400; color: var(--text-muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exec-form-section-header:has(.exec-form-section-aide) .exec-form-section-title { flex: 0 0 auto; }
+@media (max-width: 900px) { .exec-form-section-aide { display: none; } }
+.exec-real-grille-4 {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; margin-bottom: .75rem;
+}
+.exec-real-grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (max-width: 1100px) {
+    .exec-real-grille-4 { grid-template-columns: repeat(2, 1fr); }
+    .exec-real-grille-2 { grid-template-columns: 1fr; }
+}
+.exec-real-vide { color: var(--text-muted); font-size: .83rem; margin: 0; }
+
+/* Bandeaux d'en-tête de section : couleur du thème, contenu en blanc.
+   Les sections qui portent une couleur propre en style en ligne (évaluation
+   de l'AAC, commentaires de suivi) la conservent. */
+.exec-form-section-header {
+    background: var(--primary);
+    color: #fff;
+    border-bottom-color: transparent;
+}
+.exec-form-section-header:hover { background: var(--primary-hover, var(--primary)); filter: brightness(1.06); }
+.exec-form-section-header .exec-form-section-title { color: #fff; }
+.exec-form-section-header .exec-form-section-aide { color: #ffffffc4; }
+.exec-form-section-header .exec-form-section-chevron { color: #ffffffd9; }
+.exec-form-section-header .exec-form-section-letter {
+    background: #ffffff2e; color: #fff;
+}
+.exec-form-section-header .exec-form-section-badge { background: #ffffff2e; color: #fff; }
+.exec-form-section.expanded > .exec-form-section-header { border-bottom-color: transparent; }
+
+/* Deux bandeaux portent une teinte propre — le suivi (ambre) et l'évaluation
+   de l'AAC (vert). Sur un aplat pâle, le blanc du thème est illisible : leur
+   texte reprend la couleur foncée de la teinte. */
+.exec-form-section-header.exec-teinte-ambre { background: #fef3c7; }
+.exec-form-section-header.exec-teinte-ambre:hover { background: #fde68a; filter: none; }
+.exec-form-section-header.exec-teinte-vert { background: #ecfdf5; }
+.exec-form-section-header.exec-teinte-vert:hover { background: #d1fae5; filter: none; }
+.exec-teinte-ambre .exec-form-section-title,
+.exec-teinte-ambre .exec-form-section-chevron { color: #92400e; }
+.exec-teinte-ambre .exec-form-section-aide { color: #b4530a; }
+.exec-teinte-vert .exec-form-section-title,
+.exec-teinte-vert .exec-form-section-chevron { color: #065f46; }
+.exec-teinte-vert .exec-form-section-aide { color: #047857; }
+.exec-teinte-ambre .exec-form-section-badge { background: #92400e1f; color: #92400e; }
+.exec-teinte-vert .exec-form-section-badge { background: #065f461f; color: #065f46; }
+

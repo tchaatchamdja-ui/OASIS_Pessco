@@ -1,0 +1,52 @@
+/* OASIS — Retour d'action, modèle unique du portail et des modules.
+ *
+ * Le panneau paraît au centre de l'écran, là où se porte le regard après un
+ * clic, et dit l'issue avant même qu'on lise le message : icône, titre et fond
+ * à la teinte de l'issue. Repris du module « RAMP Inspections », il remplace
+ * les bandeaux propres à chaque module.
+ */
+
+.oasis-toast-fond {
+    /* Au-dessus de tout : le retour d'action doit se lire même par-dessus une
+       modale ou un volet plein écran (le plus haut de l'application est à
+       100010). */
+    position: fixed; inset: 0; z-index: 100020; display: flex;
+    align-items: center; justify-content: center; pointer-events: none;
+}
+.oasis-toast {
+    pointer-events: auto; display: flex; gap: .75rem; align-items: flex-start;
+    max-width: min(28rem, 84vw); padding: .9rem 1.1rem; border-radius: 10px;
+    background: var(--oasis-toast-fond); color: var(--oasis-toast-encre);
+    border: 1px solid var(--oasis-toast-bord);
+    border-left: 4px solid var(--oasis-toast-teinte);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, .22);
+    animation: oasisToastEntree .16s ease-out;
+}
+.oasis-toast-fond.succes {
+    --oasis-toast-teinte: #047857; --oasis-toast-fond: #ecfdf5;
+    --oasis-toast-bord: #a7f3d0; --oasis-toast-encre: #065f46;
+}
+.oasis-toast-fond.error {
+    --oasis-toast-teinte: #b91c1c; --oasis-toast-fond: #fef2f2;
+    --oasis-toast-bord: #fecaca; --oasis-toast-encre: #7f1d1d;
+}
+.oasis-toast-fond.warning {
+    --oasis-toast-teinte: #b45309; --oasis-toast-fond: #fffbeb;
+    --oasis-toast-bord: #fde68a; --oasis-toast-encre: #78350f;
+}
+.oasis-toast-fond.info {
+    --oasis-toast-teinte: #1d4ed8; --oasis-toast-fond: #eff6ff;
+    --oasis-toast-bord: #bfdbfe; --oasis-toast-encre: #1e3a8a;
+}
+.oasis-toast-icone { color: var(--oasis-toast-teinte); display: flex; padding-top: .05rem; }
+.oasis-toast-texte { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.oasis-toast-titre { font-size: .92rem; font-weight: 700; color: var(--oasis-toast-teinte); }
+.oasis-toast-message { font-size: .85rem; line-height: 1.45; word-break: break-word; }
+
+@keyframes oasisToastEntree {
+    from { opacity: 0; transform: scale(.96); }
+    to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .oasis-toast { animation: none; }
+}

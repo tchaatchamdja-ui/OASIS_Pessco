@@ -318,7 +318,11 @@ function applyLang(lang) {
 
 // ── Thème ──
 const THEME_KEY = 'pr_theme';
+// Thèmes servis par l'application. Un thème retiré peut rester enregistré dans
+// le navigateur d'un utilisateur : il se ramène alors au thème par défaut.
+const THEMES = ['blue-dark', 'corporate', 'grey'];
 function applyTheme(theme) {
+  if (!THEMES.includes(theme)) theme = THEMES[0];
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelectorAll('.theme-dot').forEach((d) => d.classList.toggle('active', d.dataset.theme === theme));
   localStorage.setItem(THEME_KEY, theme);

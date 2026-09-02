@@ -1089,7 +1089,13 @@ function prMakeGauge(label, pct, type, opts) {
     </div>`;
 }
 
-function renderStatistiques() {
+// ── Écran « Statistiques » ──
+// Un même jeu d'évaluations, regardé sous cinq angles : moyennes, tendances,
+// répartition des risques, taux par secteur ou prestataire, et analyse par
+// indicateur. Chaque angle a sa fabrique ; `renderStatistiques` les assemble.
+
+// Dernière évaluation validée par prestataire, filtrée comme le tableau de bord.
+function _prStatsPortee() {
     const D = APP_STATE.data;
     // Utilise les mêmes filtres que le tableau de bord
     const f = window._dashFilters || {};
@@ -1124,31 +1130,6 @@ function renderStatistiques() {
         else if (r.includes('Très Faible') || r.includes('Very Low')) riskCounts.very_low++;
         else if (r.includes('Faible') || r.includes('Low')) riskCounts.low++;
     });
-
-    const filtersHtml = `
-    <div class="filters-bar">
-        <div class="filters-row">
-            <div class="filter-group"><label>${t('domain')}</label>
-                <select onchange="window._profilFilters.domaine=this.value;renderPage();">
-                    <option value="">${t('all_domains')}</option>
-                    ${(D.domaines||[]).map(d => `<option value="${d.id}" ${f.domaine===d.id?'selected':''}>${d.code}</option>`).join('')}
-                </select></div>
-            <div class="filter-group"><label>${t('sector')}</label>
-                <select onchange="window._profilFilters.secteur=this.value;renderPage();">
-                    <option value="">${t('all_sectors')}</option>
-                    ${(D.secteurs||[]).map(s => `<option value="${s.id}" ${f.secteur===s.id?'selected':''}>${s.code}</option>`).join('')}
-                </select></div>
-            <div class="filter-group"><label>${t('provider')}</label>
-                <select onchange="window._profilFilters.prestataire=this.value;renderPage();">
-                    <option value="">${t('all_providers')}</option>
-                    ${(D.prestataires||[]).filter(p=>p.actif!==false).map(p => `<option value="${p.id}" ${f.prestataire===p.id?'selected':''}>${p.nom}</option>`).join('')}
-                </select></div>
-            <div class="filter-actions">
-                <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._profilFilters={domaine:'',secteur:'',prestataire:'',search:''};renderPage();">${ICONS.refresh}</button>
-            </div>
-        </div>
-    </div>`;
-
     // Compute global averages for gauges
     const avgConf = latestEvals.length ? latestEvals.reduce((s, e) => s + ((e.resultats?.global?.tauxConf || 0) * 100), 0) / latestEvals.length : 0;
     const avgPerf = latestEvals.length ? latestEvals.reduce((s, e) => s + ((e.resultats?.global?.tauxPerf || 0) * 100), 0) / latestEvals.length : 0;
@@ -1163,7 +1144,11 @@ function renderStatistiques() {
     };
 
     const makeGauge = (label, pct, id, type) => prMakeGauge(label, pct, type);
+    return { D, f, allValids, latestEvals, riskCounts, thresholds, avgConf, avgPerf, avgComp, makeGauge };
+}
 
+// Tendances : écart entre deux évaluations successives, par secteur ou prestataire.
+function _prStatsTendancesHtml(D, allValids) {
     // ── Tendances — variation entre évaluations successives ──
     // Default: delta entre les 2 dernières évaluations validées d'un même prestataire.
     // Period: si l'utilisateur fournit une période, delta = dernière - première dans la plage.
@@ -1300,7 +1285,11 @@ function renderStatistiques() {
             </div>
         </div>
     </div>`;
+    return trendChartHtml;
+}
 
+// Répartition des niveaux de risque, en barres horizontales.
+function _prStatsRisquesHtml(riskCounts) {
     // Répartition des risques - horizontal bar chart with color coding
     const riskBars = [
         { label: t('very_low'), value: riskCounts.very_low, color: '#22c55e' },
@@ -1326,7 +1315,11 @@ function renderStatistiques() {
             }).join('')}
         </div>
     </div>`;
+    return riskBarChart;
+}
 
+// Graphiques par sous-activité : ils suivent la barre sélectionnée dans « Taux ».
+function _prStatsSousActivites(D, latestEvals, thresholds) {
     // Tendances par Sous-activité — filtré par la sélection de barre du graphique « Taux »
     // dbc.mode = 'secteur' → filtre par ev.secteur_id ; 'prestataire' → filtre par ev.prestataire_id
     // Aucune sélection => aucun graphique de sous-activité affiché.
@@ -1352,8 +1345,6 @@ function renderStatistiques() {
 
     const confHigh = thresholds.conf.high;
     const confLow = thresholds.conf.low;
-
-    let saCardsHtml = '';
     // Reset SA bar charts each render so a previous selection's chart doesn't persist
     window._saBarChartsHtml = '';
     const saEntries = Object.values(saMap);
@@ -1369,16 +1360,6 @@ function renderStatistiques() {
                 ${deltaHtml}
             </div>`;
         }
-
-        saCardsHtml = saEntries.map(({ sa, confVals, compVals }) => {
-            const avgConf = confVals.length ? confVals.reduce((a, b) => a + b, 0) / confVals.length : 0;
-            const avgComp = compVals.length ? compVals.reduce((a, b) => a + b, 0) / compVals.length : 0;
-            return `<div class="card" style="padding:0.75rem;border-left:3px solid var(--primary);">
-                <strong style="font-size:0.85rem;">${sa.code}</strong> <span class="text-muted" style="font-size:0.75rem;">(${sa.nom})</span>
-                ${makeProgressBarSA('CONFORMITÉ', avgConf, avgConf >= confHigh ? '#22c55e' : avgConf >= confLow ? '#f59e0b' : '#ef4444')}
-                ${makeProgressBarSA('COMPLEXITÉ', avgComp, '#22c55e')}
-            </div>`;
-        }).join('');
 
         // Bar charts per SA
         function makeSABarChart(title, dataMap, highThreshold, lowThreshold, colorMode) {
@@ -1441,8 +1422,11 @@ function renderStatistiques() {
             ${makeSABarChart('COMPLEXITÉ', compSAData, thresholds.comp.high, thresholds.comp.low, 'comp')}
         </div>`;
     }
+    return window._saBarChartsHtml || '';
+}
 
-    // Indicateurs Analyses: Points à améliorer / Points forts
+// Analyses par indicateur : points à améliorer et points forts.
+function _prStatsIndicateursHtml(D, latestEvals) {
     let indAnalysis = '';
     // Dynamique : par défaut tous les `latestEvals` ; sinon réduit à la sélection
     // de barre du graphique « Taux » (secteur ou prestataire), puis encore réduit
@@ -1527,9 +1511,12 @@ function renderStatistiques() {
             ${buildIndCards(compScores, 'Complexité', '#ef4444')}
         </div>`;
     }
+    return indAnalysis;
+}
 
-    const saBarChartsSection = window._saBarChartsHtml || '';
-
+// Taux par secteur ou par prestataire : le graphique et ses filtres. La barre
+// choisie commande les graphiques par sous-activité et les analyses.
+function _prStatsTauxHtml(D, latestEvals, allValids) {
     // ── Bar chart: Taux par Secteur / Prestataire (filtrable) ──
     if (!window._dashBarChart) {
         window._dashBarChart = { mode: 'secteur', metric: 'conf', secteur: '', prestataire: '', selected: '' };
@@ -1634,6 +1621,18 @@ function renderStatistiques() {
             </div>
         </div>
     </div>`;
+    return { html: tauxBarChart, dbc, grpAgg };
+}
+
+function renderStatistiques() {
+    const { D, allValids, latestEvals, riskCounts, thresholds, avgConf, avgPerf, avgComp, makeGauge } = _prStatsPortee();
+    const trendChartHtml = _prStatsTendancesHtml(D, allValids);
+    const riskBarChart = _prStatsRisquesHtml(riskCounts);
+    const { html: tauxBarChart, dbc, grpAgg } = _prStatsTauxHtml(D, latestEvals, allValids);
+    // L'ordre compte : les graphiques par sous-activité lisent la sélection
+    // posée par le graphique « Taux ».
+    const saBarChartsSection = _prStatsSousActivites(D, latestEvals, thresholds);
+    const indAnalysis = _prStatsIndicateursHtml(D, latestEvals);
 
     return `<div id="statsPrintStart"></div>
     <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;align-items:stretch;">

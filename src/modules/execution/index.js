@@ -42,6 +42,26 @@ module.exports = {
         .filter(Boolean), {
         description: 'Identifiants des activités pour lesquelles une notification existe',
       });
+
+      // Les Mesures d'Application se prennent sur une constatation. Elles
+      // n'ont pas besoin du dossier entier : la référence, le prestataire, la
+      // criticité et l'échéance suffisent à les instruire.
+      deps.services.publish('SURV.constatationsOuvertes', () => db.list('constatations')
+        .filter((c) => !String(c.statut || '').startsWith('direct_'))
+        .map((c) => ({
+          id: c.id,
+          reference: c.reference || '',
+          titre: c.cas_type || c.titre || '',
+          description: c.description || '',
+          prestataire_id: c.prestataire_id || '',
+          domaine_id: c.domaine_id || '',
+          criticite: c.criticite || c.gravite || '',
+          statut: c.statut || '',
+          date_ouverture: c.date_ouverture || '',
+          date_due_cloture: c.date_due_cloture || c.date_due || '',
+        })), {
+        description: 'Constatations opposables au prestataire (hors circuit direct en cours)',
+      });
     }
   },
 

@@ -1,0 +1,193 @@
+/* OASIS — Module « Exécution de la Surveillance » — impression des documents officiels et adaptations aux petits écrans
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ══════════════════════════════════════════════
+   20. PRINT STYLES (official docs & reports)
+   ══════════════════════════════════════════════ */
+
+@media print {
+    .exec-slider-overlay,
+    .exec-slider-header,
+    .exec-slider-footer,
+    .exec-workflow-tabs,
+    .exec-filter-bar,
+    .exec-page-actions,
+    .report-preview-toolbar,
+    .btn-exec,
+    .btn-exec-outline,
+    .btn-exec-ghost {
+        display: none !important;
+    }
+
+    .exec-slider {
+        position: static;
+        transform: none;
+        width: 100%;
+        box-shadow: none;
+    }
+
+    .official-doc-page,
+    .report-preview-page {
+        box-shadow: none;
+        margin: 0;
+        padding: 1.5cm 2cm;
+        break-inside: avoid;
+    }
+
+    .report-preview-page {
+        page-break-after: always;
+    }
+
+    body {
+        background: #fff !important;
+    }
+}
+
+/* ══════════════════════════════════════════════
+   21. RESPONSIVE
+   ══════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+    .exec-slider.slider-xs { width: 40vw; }
+    .exec-slider.slider-sm { width: 50vw; }
+    .exec-slider.slider-md { width: 50vw; }
+    .exec-slider.slider-lg { width: 50vw; }
+    .exec-slider.slider-xl { width: 50vw; }
+}
+
+@media (max-width: 768px) {
+    .exec-kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .exec-filter-bar {
+        flex-direction: column;
+    }
+
+    .exec-filter-bar .form-input,
+    .exec-filter-bar .form-select {
+        width: 100%;
+    }
+
+    .exec-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exec-workflow-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .exec-tab {
+        min-width: 120px;
+        font-size: 0.8rem;
+        padding: 0.65rem 0.75rem;
+    }
+
+    /* Pleine largeur : le bord gauche revient à 0, sinon le volet déborde
+       de la largeur de la barre latérale. */
+    .exec-slider,
+    .exec-slider.slider-xs,
+    .exec-slider.slider-sm,
+    .exec-slider.slider-md,
+    .exec-slider.slider-lg,
+    .exec-slider.slider-xl,
+    .exec-slider.slider-xxl,
+    .exec-slider.slider-full,
+    .exec-slider.slider-two-fifths,
+    .exec-slider.slider-max {
+        width: 100vw !important;
+        left: 0 !important;
+    }
+
+    .official-doc-page,
+    .report-preview-page {
+        width: 100%;
+        padding: 1.5rem;
+        min-height: auto;
+    }
+
+    .official-doc-page .doc-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .official-doc-page .doc-header-right {
+        text-align: left;
+    }
+
+    .official-doc-page .doc-signature-block {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .fnc-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .exchange-msg {
+        max-width: 95%;
+    }
+
+    .exec-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .exec-page-actions {
+        width: 100%;
+    }
+
+    .exec-stepper {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .exec-step:not(:last-child)::after {
+        display: none;
+    }
+
+    .exec-detail-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .report-preview-toolbar {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 480px) {
+    .exec-kpi-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .exec-tab {
+        min-width: 100px;
+        font-size: 0.75rem;
+        padding: 0.55rem 0.5rem;
+    }
+
+    .exec-slider-header h3 {
+        font-size: 0.95rem;
+    }
+
+    .fnc-card {
+        padding: 0.85rem;
+    }
+
+    .exchange-msg {
+        max-width: 100%;
+    }
+
+    .exec-stepper {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Hide slider close X when body provides its own back button (dossier form) */
+.exec-slider[data-hide-close="1"] .exec-slider-close { display: none !important; }
+

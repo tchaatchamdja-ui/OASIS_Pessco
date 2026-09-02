@@ -12,6 +12,10 @@ const suites = [
   { nom: 'planification', port: 4793, run: require('./planification.smoke') },
   { nom: 'droits', port: 4794, run: require('./droits.smoke') },
   { nom: 'execution', port: 4795, run: require('./execution.smoke') },
+  { nom: 'mesures', port: 4796, run: require('./mesures.smoke') },
+  { nom: 'ramp', port: 4797, run: require('./ramp.smoke') },
+  // Garde-fou de taille : ne démarre aucun serveur, lit les sources.
+  { nom: 'taille', port: 0, run: require('./taille.smoke') },
 ];
 
 (async () => {

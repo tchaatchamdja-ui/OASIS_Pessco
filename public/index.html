@@ -6,6 +6,14 @@
   <title>OASIS — Outil d'Administration et de Supervision Intégrée de la Sécurité</title>
   <link rel="stylesheet" href="/shared/css/oasis-shell.css">
   <link rel="stylesheet" href="/css/aerosup.css">
+  <!-- Attente : l'aéronef en orbite autour du globe. -->
+  <link rel="stylesheet" href="/shared/css/oasis-loader.css">
+  <script src="/shared/js/oasis-loader.js"></script>
+  <!-- Retour d'action : panneau commun au portail et aux modules. -->
+  <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
+  <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <script src="/shared/js/oasis-toast.js"></script>
 </head>
 <body>
   <div class="portal-wrapper">
@@ -39,9 +47,7 @@
         <div class="portal-sidebar-logo" id="sidebarLogo" style="display:none;"></div>
         <div class="portal-theme-selector">
           <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu"></div>
-          <div class="theme-dot" data-theme="orange-dark" onclick="applyTheme('orange-dark')" title="Orange"></div>
-          <div class="theme-dot" data-theme="violet"      onclick="applyTheme('violet')"      title="Violet"></div>
-          <div class="theme-dot" data-theme="green"       onclick="applyTheme('green')"       title="Vert"></div>
+          <div class="theme-dot" data-theme="corporate"   onclick="applyTheme('corporate')"   title="Corporate"></div>
           <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris"></div>
         </div>
         <div class="portal-lang-selector">

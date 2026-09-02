@@ -54,10 +54,15 @@ const EXEC_VUES = {
 
 let execVueActive = null;
 
-async function execAppliquerVue(vue) {
-  if (!execVueActive || execVueActive.vue === vue) return;
+async function execAppliquerVue(vue, prestataireId) {
+  if (!execVueActive) return;
+  if (execVueActive.vue === vue && !prestataireId) return;
+  if (prestataireId && prestataireId === execVueActive.prestataire_id) return;
   try {
-    await api(`${EXEC_MODULE_API}/vue`, { method: 'PUT', body: JSON.stringify({ vue }) });
+    await api(`${EXEC_MODULE_API}/vue`, {
+      method: 'PUT',
+      body: JSON.stringify(prestataireId ? { vue, prestataire_id: prestataireId } : { vue }),
+    });
   } catch (e) {
     _execToast((e && e.message) || 'Bascule impossible', 'error');
     return;
@@ -81,8 +86,21 @@ function execDessinerActions() {
     Object.entries(EXEC_VUES).forEach(([key, v]) => actions.push({
       key, label: v.label, icon: v.icon,
       active: execVueActive.vue === key,
-      onClick: execAppliquerVue,
+      onClick: (k) => execAppliquerVue(k),
     }));
+    // En vue Prestataire, le compte tenu se choisit dans la barre : l'Autorité
+    // surveille plusieurs organismes et passe de l'un à l'autre.
+    if (execVueActive.vue === 'prestataire') {
+      actions.push({
+        key: 'prestataire_choix', type: 'select',
+        label: 'Prestataire dont les données sont affichées',
+        value: execVueActive.prestataire_id || '',
+        options: (execVueActive.prestataires || []).map((p) => ({
+          value: p.id, label: p.trigramme ? `${p.nom} (${p.trigramme})` : p.nom,
+        })),
+        onChange: (id) => execAppliquerVue('prestataire', id),
+      });
+    }
   }
   if (execPeutGererDroits()) {
     actions.push({
@@ -110,7 +128,10 @@ function execNomPrestataireCourant() {
 function execDessinerMention() {
   if (typeof oasisModuleMention !== 'function') return;
   const prestataire = typeof _execIsPrestataire === 'function' && _execIsPrestataire();
-  oasisModuleMention(prestataire ? execNomPrestataireCourant() : '');
+  // La liste déroulante nomme déjà le prestataire : la mention ne sert qu'aux
+  // comptes qui n'en changent pas.
+  const choixEnBarre = !!(execVueActive && execVueActive.disponible);
+  oasisModuleMention(prestataire && !choixEnBarre ? execNomPrestataireCourant() : '');
 }
 
 // L'état peut arriver avant ou après la mise en place de la barre, et le rôle

@@ -619,14 +619,16 @@
       "ref_personnel": "",
       "nom": "AHOYO",
       "prenom": "Marcelin",
-      "numero_inspecteur": "",
+      "numero_inspecteur": "INS-OPS-01",
       "email": "m.ahoyo@anac.bj",
       "telephone": "",
       "specialite": "",
-      "est_inspecteur": "non",
+      "est_inspecteur": "oui",
       "domaines": [],
-      "specialites": [],
-      "niveau_qualification": "",
+      "specialites": [
+        "43d7d84ed2fe"
+      ],
+      "niveau_qualification": "Titulaire",
       "statut": "actif",
       "user_id": "m.ahoyo@anac.bj"
     },
@@ -635,14 +637,16 @@
       "ref_personnel": "",
       "nom": "TCHAMDJA",
       "prenom": "Tchaa",
-      "numero_inspecteur": "",
+      "numero_inspecteur": "INS-AIR-02",
       "email": "superadmin@anac.bj",
       "telephone": "",
       "specialite": "",
-      "est_inspecteur": "non",
+      "est_inspecteur": "oui",
       "domaines": [],
-      "specialites": [],
-      "niveau_qualification": "",
+      "specialites": [
+        "43d7d84ed2fe"
+      ],
+      "niveau_qualification": "Senior",
       "statut": "actif",
       "user_id": "superadmin@anac.bj"
     },

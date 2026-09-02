@@ -1,0 +1,413 @@
+// Module « Mesures d'Application » — les mesures elles-mêmes.
+//
+// Circuit d'une mesure, repris de PESSCO :
+//   projet → notifiée → (en cours) → clôturée
+// La notification et la clôture relèvent du validateur ; la suppression, du
+// seul gestionnaire du module. Une mesure clôturée ne se réécrit plus.
+const path = require('path');
+const fs = require('fs');
+const crypto = require('crypto');
+const referentiels = require('../../referentiels');
+const services = require('../../services');
+const multipart = require('../../multipart');
+const db = require('./store');
+const R = require('./roles');
+
+// Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
+// pas des enregistrements.
+const DOSSIER_UPLOADS = path.join(
+  process.env.OASIS_DATA_DIR || path.join(__dirname, '..', '..', '..', 'data'),
+  'uploads', 'mesures',
+);
+const EXTENSIONS = ['.pdf', '.docx', '.xlsx', '.xls', '.png', '.jpg', '.jpeg', '.csv'];
+
+// Statuts du circuit. « annulee » clôt une mesure abandonnée sans la
+// supprimer : la trace de la décision reste.
+const STATUTS = ['projet', 'notifiee', 'en_cours', 'cloturee', 'annulee'];
+const CLOS = ['cloturee', 'annulee'];
+
+// Champs que le client peut écrire. Le statut et les dates de décision n'y
+// figurent pas : ils sont posés par les transitions, jamais par un PUT.
+const CHAMPS = [
+  'constatation_id', 'prestataire_id', 'categorie', 'type_mesure', 'objet',
+  'description', 'niveau_risque', 'date_emission', 'delai_jours', 'date_echeance',
+  'avis_commission', 'motif', 'pieces_jointes',
+  'preuves_constatation', 'preuves_cloture', 'montant_amende',
+];
+
+const LISTES = ['pieces_jointes', 'preuves_constatation', 'preuves_cloture'];
+
+module.exports = function register(app, deps, M) {
+  const { requireAuth } = deps;
+  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
+  const refs = () => referentiels.getAll();
+
+  // Les constatations viennent des modules qui les relèvent, par le bus de
+  // services : « Exécution de la Surveillance » pour les constatations de
+  // surveillance, « RAMP Inspections » pour les écarts de catégorie 3 relevés
+  // sur aire de trafic. Ce module ne lit jamais leurs données directement, et
+  // l'absence de l'un comme de l'autre ne l'empêche pas de fonctionner — la
+  // liste correspondante est alors vide.
+  const SOURCES = ['SURV.constatationsOuvertes', 'SAFA.constatationsCritiques'];
+  // S'y ajoutent celles que le module relève lui-même : tout ne vient pas d'un
+  // acte de surveillance ou d'une inspection sur aire de trafic — un
+  // signalement, un contrôle inopiné, une saisine appellent aussi une mesure.
+  const constatations = () => SOURCES
+    .flatMap((nom) => services.callOr(nom, []))
+    .filter(Boolean)
+    .concat(db.list('constatations').map((c) => ({ ...c, origine: 'CARE' })));
+
+  const perimetre = (m) => R.perimetreDuPrestataire((m || {}).prestataire_id, referentiels);
+  const peutEcrire = (req, m) => R.canContribute(req.user, perimetre(m));
+  const peutDecider = (req, m) => R.canValidate(req.user, perimetre(m));
+
+  // Une mesure sort enrichie : le nom du prestataire et la référence de la
+  // constatation liée se lisent à l'affichage, ils ne sont pas stockés.
+  const enrichir = (m) => {
+    if (!m) return m;
+    const p = (refs().prestataires || []).find((x) => x.id === m.prestataire_id) || {};
+    const c = constatations().find((x) => x.id === m.constatation_id) || {};
+    return {
+      ...m,
+      prestataire_nom: p.nom || '',
+      prestataire_trigramme: p.trigramme || '',
+      constatation_ref: c.reference || '',
+      constatation_criticite: c.criticite || '',
+    };
+  };
+
+  const normaliser = (d) => {
+    const patch = {};
+    CHAMPS.forEach((k) => {
+      if (!(k in d)) return;
+      let v = d[k];
+      if (LISTES.includes(k)) v = Array.isArray(v) ? v : [];
+      else if (k === 'delai_jours' || k === 'montant_amende') v = String(v == null ? '' : v);
+      else v = String(v == null ? '' : v);
+      patch[k] = v;
+    });
+    return patch;
+  };
+
+  // ══════════════════════════════════════
+  //  Lecture
+  // ══════════════════════════════════════
+
+  app.get(`${M}/mesures`, requireAuth, (req, res) => {
+    const q = req.query || {};
+    let liste = db.list('mesures');
+    if (q.statut) liste = liste.filter((m) => m.statut === q.statut);
+    if (q.categorie) liste = liste.filter((m) => m.categorie === q.categorie);
+    if (q.prestataire_id) liste = liste.filter((m) => m.prestataire_id === q.prestataire_id);
+    if (q.constatation_id) liste = liste.filter((m) => m.constatation_id === q.constatation_id);
+    liste = liste.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
+    res.json(liste.map(enrichir));
+  });
+
+  app.get(`${M}/mesures/:id`, requireAuth, (req, res) => {
+    const m = db.get('mesures', req.params.id);
+    if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+    res.json(enrichir(m));
+  });
+
+  // Constatations sur lesquelles une mesure peut être prise. Le module
+  // Exécution les fournit ; il en donne aussi la criticité, dont dépend
+  // l'écran « Constatations Critiques ».
+  app.get(`${M}/constatations`, requireAuth, (req, res) => {
+    const mesures = db.list('mesures');
+    const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
+    // Une infraction est close quand elle a été classée, ou quand toutes les
+    // mesures qu'elle a values sont clôturées : c'est cette date que l'écran
+    // porte en colonne « Clôture ».
+    const cloture = (c, liees) => {
+      const classee = classements.get(c.id);
+      if (classee) return classee.date_cloture || '';
+      if (!liees.length || !liees.every((m) => m.statut === 'cloturee' || m.statut === 'annulee')) return '';
+      return liees.map((m) => m.date_cloture || '').filter(Boolean).sort().pop() || '';
+    };
+    res.json(constatations().map((c) => {
+      const liees = mesures.filter((m) => m.constatation_id === c.id);
+      const classee = classements.get(c.id) || null;
+      // Statut au sens des mesures d'application : il dit où en est la
+      // carence dans ce module, et non dans celui qui l'a relevée — une
+      // constatation soldée chez le surveillant reste « à traiter » ici tant
+      // qu'aucune décision n'a été prise.
+      const closes = liees.filter((m) => CLOS.includes(m.statut)).length;
+      const statutCare = classee ? 'classee'
+        : (!liees.length ? 'a_traiter'
+          : (closes === liees.length ? 'traitee' : 'sous_mesure'));
+      return {
+        ...c,
+        mesures_liees: liees.length,
+        mesures_closes: closes,
+        classee: !!classee,
+        classement_motif: classee ? classee.motif : '',
+        date_cloture: cloture(c, liees),
+        statut: classee ? 'classee' : c.statut,
+        statut_care: statutCare,
+      };
+    }));
+  });
+
+  // Classement : l'autorité décide qu'aucune mesure ne sera prise. La décision
+  // est consignée ici, quelle que soit l'origine de l'infraction.
+  app.post(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Infraction non trouvée' });
+    if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Classement réservé au validateur');
+    if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
+      return res.status(400).json({ error: 'Une mesure a déjà été prise sur cette infraction' });
+    }
+    if (db.list('classements').some((x) => x.constatation_id === c.id)) {
+      return res.status(400).json({ error: 'Infraction déjà classée' });
+    }
+    const motif = String((req.body || {}).motif || '').trim();
+    db.insert('classements', {
+      id: db.uid('cla'),
+      constatation_id: c.id,
+      motif,
+      date_cloture: db.now().slice(0, 10),
+      classe_par: req.user.username,
+      date_creation: db.now(),
+    });
+    return res.status(201).json({ status: 'ok' });
+  });
+
+  // Le classement se retire : une décision prise par erreur ne doit pas
+  // enfermer l'infraction.
+  app.delete(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
+    const x = db.list('classements').find((c) => c.constatation_id === req.params.id);
+    if (!x) return res.status(404).json({ error: 'Infraction non classée' });
+    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Retrait réservé au gestionnaire');
+    db.remove('classements', x.id);
+    return res.json({ status: 'ok' });
+  });
+
+  // ── Constatations propres au module ──
+  // Elles n'appartiennent à aucun autre module : celui-ci les tient, et lui
+  // seul les modifie. Les constatations reçues par le bus restent en lecture.
+  const CHAMPS_CONSTAT = ['titre', 'description', 'prestataire_id', 'origine_libelle',
+    'date_ouverture', 'delai_jours', 'date_due_cloture'];
+  const texte = (v) => String(v === undefined || v === null ? '' : v).trim();
+  const constatPropre = (d) => Object.fromEntries(CHAMPS_CONSTAT.map((k) => [k, texte(d[k])]));
+
+  app.post(`${M}/constatations`, requireAuth, (req, res) => {
+    const d = req.body || {};
+    if (!peutEcrire(req, d)) return refuser(res, 'Non autorisé à ajouter une constatation');
+    const champs = constatPropre(d);
+    if (!champs.titre) return res.status(400).json({ error: 'Objet requis' });
+    const c = {
+      id: db.uid('cst'),
+      reference: db.prochaineReferenceConstat(),
+      ...champs,
+      // Ce qui est saisi ici appelle une mesure : c'est une constatation
+      // critique, comme celles que l'écran recense.
+      criticite: 'critique',
+      statut: 'ouverte',
+      date_ouverture: champs.date_ouverture || db.now().slice(0, 10),
+      created_by: req.user.username,
+      date_creation: db.now(),
+    };
+    db.insert('constatations', c);
+    return res.status(201).json({ status: 'ok', id: c.id, reference: c.reference });
+  });
+
+  app.put(`${M}/constatations/:id`, requireAuth, (req, res) => {
+    const c = db.get('constatations', req.params.id);
+    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!peutEcrire(req, c)) return refuser(res, 'Non autorisé à modifier cette constatation');
+    const champs = constatPropre({ ...c, ...(req.body || {}) });
+    if (!champs.titre) return res.status(400).json({ error: 'Objet requis' });
+    const statut = texte((req.body || {}).statut);
+    db.update('constatations', c.id, {
+      ...champs,
+      statut: ['ouverte', 'soldee'].includes(statut) ? statut : c.statut,
+      date_maj: db.now(),
+    });
+    return res.json({ status: 'ok' });
+  });
+
+  // Une constatation qui porte déjà une mesure ne se supprime pas : la mesure
+  // perdrait ce qui la motive.
+  app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
+    const c = db.get('constatations', req.params.id);
+    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Suppression réservée au gestionnaire');
+    if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
+      return res.status(400).json({ error: 'Des mesures sont rattachées à cette infraction' });
+    }
+    if (db.list('classements').some((x) => x.constatation_id === c.id)) {
+      return res.status(400).json({ error: 'Cette infraction a été classée' });
+    }
+    db.remove('constatations', c.id);
+    return res.json({ status: 'ok' });
+  });
+
+  // ══════════════════════════════════════
+  //  Écriture
+  // ══════════════════════════════════════
+
+  app.post(`${M}/mesures`, requireAuth, (req, res) => {
+    const d = req.body || {};
+    if (!peutEcrire(req, d)) return refuser(res, 'Non autorisé à créer une mesure');
+    const m = {
+      id: db.uid('mes'),
+      reference: db.prochaineReference(),
+      ...Object.fromEntries(CHAMPS.map((k) => [k, LISTES.includes(k) ? [] : ''])),
+      ...normaliser(d),
+      categorie: d.categorie || 'administrative',
+      statut: 'projet',
+      decision_par: '', date_decision: '',
+      date_notification: '', date_cloture: '',
+      created_by: req.user.username,
+      date_creation: db.now(),
+    };
+    db.insert('mesures', m);
+    res.status(201).json({ status: 'ok', id: m.id, reference: m.reference });
+  });
+
+  app.put(`${M}/mesures/:id`, requireAuth, (req, res) => {
+    const m = db.get('mesures', req.params.id);
+    if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+    if (!peutEcrire(req, m)) return refuser(res, 'Non autorisé à modifier cette mesure');
+    // Une mesure clôturée ou annulée est un acte pris : elle ne se réécrit pas.
+    if (CLOS.includes(m.statut)) {
+      return res.status(400).json({ error: 'Une mesure clôturée ou annulée ne se modifie plus' });
+    }
+    const patch = normaliser(req.body || {});
+    if (!Object.keys(patch).length) return res.json({ status: 'ok' });
+    db.update('mesures', m.id, patch);
+    res.json({ status: 'ok' });
+  });
+
+  app.delete(`${M}/mesures/:id`, requireAuth, (req, res) => {
+    if (!R.isAdmin(req.user, referentiels)) return refuser(res, "Réservé au gestionnaire du module");
+    if (!db.remove('mesures', req.params.id)) {
+      return res.status(404).json({ error: 'Mesure non trouvée' });
+    }
+    res.json({ status: 'ok' });
+  });
+
+  // ══════════════════════════════════════
+  //  Transitions du circuit
+  // ══════════════════════════════════════
+  // Chacune vérifie le statut de départ : sans cette garde, un double clic
+  // notifierait deux fois, et une mesure clôturée pourrait être « notifiée ».
+
+  const transition = (route, depuis, vers, champs) => {
+    app.post(`${M}/mesures/:id/${route}`, requireAuth, (req, res) => {
+      const m = db.get('mesures', req.params.id);
+      if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+      if (!peutDecider(req, m)) return refuser(res, 'Réservé au validateur et au gestionnaire');
+      if (!depuis.includes(m.statut)) {
+        return res.status(400).json({
+          error: `Transition impossible depuis le statut « ${m.statut} »`,
+        });
+      }
+      db.update('mesures', m.id, {
+        statut: vers,
+        ...champs(req.user.username, (req.body || {}).motif || ''),
+      });
+      res.json({ status: 'ok', statut: vers });
+    });
+  };
+
+  transition('notifier', ['projet'], 'notifiee', (user) => ({
+    date_notification: db.now(), decision_par: user, date_decision: db.now(),
+  }));
+  transition('engager', ['notifiee'], 'en_cours', () => ({}));
+  transition('cloturer', ['notifiee', 'en_cours'], 'cloturee', () => ({
+    date_cloture: db.now(),
+  }));
+  transition('annuler', ['projet', 'notifiee', 'en_cours'], 'annulee', (user, motif) => ({
+    date_cloture: db.now(), decision_par: user, motif_annulation: motif,
+  }));
+  // Rouvrir une mesure clôturée à tort : la trace de la clôture est effacée,
+  // la mesure repart au stade où elle avait été notifiée.
+  transition('rouvrir', ['cloturee'], 'en_cours', () => ({ date_cloture: '' }));
+
+  // ══════════════════════════════════════
+  //  Pièces jointes
+  // ══════════════════════════════════════
+
+  const nomDePresentation = (propose, ext) => {
+    const base = String(propose || '')
+      .replace(/[\\/ -]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(new RegExp(`${ext.replace('.', '\\.')}$`, 'i'), '')
+      .slice(0, 120)
+      .trim();
+    return `${base || 'piece-jointe'}${ext}`;
+  };
+
+  app.post(`${M}/upload`, requireAuth, multipart(), (req, res) => {
+    if (!R.canContribute(req.user, null)) return refuser(res);
+    const f = (req.files || {}).file;
+    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f.filename) return res.status(400).json({ error: 'Nom de fichier vide' });
+    const ext = path.extname(f.filename).toLowerCase();
+    if (!EXTENSIONS.includes(ext)) return res.status(400).json({ error: 'Type de fichier non autorisé' });
+    fs.mkdirSync(DOSSIER_UPLOADS, { recursive: true });
+    const nom = `${crypto.randomBytes(6).toString('hex')}${ext}`;
+    fs.writeFileSync(path.join(DOSSIER_UPLOADS, nom), f.buffer);
+    res.status(201).json({
+      status: 'ok',
+      filename: nomDePresentation((req.body || {}).nom || f.filename, ext),
+      path: `/api/m/mesures/uploads/${nom}`,
+      size: f.buffer.length,
+    });
+  });
+
+  app.get(`${M}/uploads/:fichier`, requireAuth, (req, res) => {
+    const nom = path.basename(req.params.fichier);
+    const chemin = path.join(DOSSIER_UPLOADS, nom);
+    if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier non trouvé' });
+    const affiche = nomDePresentation(req.query.nom || nom, path.extname(nom).toLowerCase());
+    res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(affiche)}`);
+    res.sendFile(chemin);
+  });
+
+  // ══════════════════════════════════════
+  //  Indicateurs par prestataire
+  // ══════════════════════════════════════
+
+  app.get(`${M}/indicateurs`, requireAuth, (req, res) => {
+    const prestataireId = String((req.query || {}).prestataire_id || '');
+    if (!prestataireId) return res.status(400).json({ error: 'prestataire_id requis' });
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+
+    const consts = constatations().filter((c) => c.prestataire_id === prestataireId);
+    const soldees = consts.filter((c) => c.statut === 'soldee');
+    const enRetard = consts.filter((c) => c.statut !== 'soldee'
+      && c.date_due_cloture && c.date_due_cloture < aujourdhui);
+
+    const parCriticite = {};
+    consts.forEach((c) => {
+      const k = c.criticite || 'mineure';
+      parCriticite[k] = (parCriticite[k] || 0) + 1;
+    });
+    const parAnnee = {};
+    consts.forEach((c) => {
+      const a = String(c.date_ouverture || '').slice(0, 4);
+      if (a) parAnnee[a] = (parAnnee[a] || 0) + 1;
+    });
+
+    const mesures = db.list('mesures').filter((m) => m.prestataire_id === prestataireId);
+    const parStatut = {};
+    STATUTS.forEach((s) => { parStatut[s] = mesures.filter((m) => m.statut === s).length; });
+
+    res.json({
+      total_constatations: consts.length,
+      soldees: soldees.length,
+      en_retard: enRetard.length,
+      taux_cloture: consts.length ? Math.round((soldees.length / consts.length) * 1000) / 10 : 0,
+      par_criticite: parCriticite,
+      par_annee: parAnnee,
+      total_mesures: mesures.length,
+      mesures_par_statut: parStatut,
+    });
+  });
+};
+
+module.exports.STATUTS = STATUTS;

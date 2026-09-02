@@ -1,0 +1,199 @@
+// Fumée — garde-fou de taille du code.
+//
+// Un fichier de dix-sept mille lignes ne s'écrit pas d'un coup : il grossit de
+// cent lignes à la fois, sans que rien ne le signale. Cette suite mesure et
+// refuse la croissance : au-delà des seuils, un fichier ou une fonction doit
+// figurer dans la liste des exceptions ci-dessous, avec sa taille constatée.
+// Dépasser cette taille fait échouer la suite ; il faut alors découper, ou
+// justifier en relevant la borne.
+//
+// Elle ne démarre pas de serveur : elle lit les sources.
+const fs = require('fs');
+const path = require('path');
+const { verifier, bilan } = require('./harness');
+
+const RACINE = path.join(__dirname, '..', '..');
+const DOSSIERS = ['public', 'src'];
+
+// Au-delà de ces seuils, l'exception doit être déclarée.
+const SEUIL_FICHIER = 2000;
+const SEUIL_FONCTION = 250;
+// Marge tolérée sur une exception avant l'échec : un fichier peut respirer,
+// pas doubler.
+const MARGE = 1.05;
+// Redéfinitions de sélecteurs CSS constatées à la mise en place du garde-fou.
+// Une règle écrite deux fois dans la même feuille en annule silencieusement une
+// autre : la suite refuse qu'il s'en ajoute, sans exiger de résoudre d'un coup
+// les vingt-cinq héritées (portail, exécution, planification, profils, RAMP).
+const DOUBLONS_CSS_TOLERES = 25;
+
+// Fichiers hérités du portage PESSCO, déjà découpés une fois. Chaque ligne est
+// une dette assumée : la valeur est la taille constatée, à ne pas dépasser.
+const FICHIERS_TOLERES = {
+  'public/modules/execution/js/exec-constatations.js': 4246,
+  'public/modules/execution/js/exec-activites.js': 3333,
+  'public/modules/profil_risque/js/pr-evaluations.js': 2703,
+  'public/js/app.js': 2615,
+  'public/modules/ramp/js/ramp-app.js': 2204,
+  'public/modules/ramp/js/ramp-poi.js': 2179,
+};
+
+// Fonctions encore trop longues, à découper au prochain passage sur l'écran.
+const FONCTIONS_TOLEREES = {
+  _execSituationGenerale: 482,
+  planRenderCalendar: 401,
+  execOpenChecklistFiller: 373,
+  execDownloadRapport: 345,
+  _prEvalCorpsHtml: 308,
+  _buildDossierTabContent: 284,
+  execShowStatistiquesAdvanced: 266,
+  renderParamIndicateurs: 263,
+  renderProfilIndividuel: 263,
+  rampRenderStatistiques: 258,
+};
+
+function sources() {
+  const liste = [];
+  const parcourir = (dossier) => {
+    fs.readdirSync(dossier, { withFileTypes: true }).forEach((e) => {
+      const p = path.join(dossier, e.name);
+      if (e.isDirectory()) { if (!/node_modules|\.git/.test(p)) parcourir(p); return; }
+      if (/\.(js|css)$/.test(e.name)) liste.push(p);
+    });
+  };
+  DOSSIERS.forEach((d) => parcourir(path.join(RACINE, d)));
+  return liste;
+}
+
+const relatif = (f) => path.relative(RACINE, f).split(path.sep).join('/');
+
+// Longueur d'une fonction déclarée en colonne 0 : de sa signature à l'accolade
+// qui la referme. Les fabriques imbriquées comptent avec elle — c'est bien la
+// taille du bloc que l'on veut mesurer.
+function fonctionsDe(fichier) {
+  const l = fs.readFileSync(fichier, 'utf8').split('\n');
+  const res = [];
+  for (let i = 0; i < l.length; i += 1) {
+    const m = l[i].match(/^(?:async\s+)?function\s+([A-Za-z0-9_$]+)/);
+    if (!m) continue;
+    let solde = 0;
+    let ouverte = false;
+    let j = i;
+    for (; j < l.length; j += 1) {
+      for (const c of l[j]) {
+        if (c === '{') { solde += 1; ouverte = true; } else if (c === '}') solde -= 1;
+      }
+      if (ouverte && solde <= 0) break;
+    }
+    res.push({ nom: m[1], lignes: j - i + 1 });
+    i = j;
+  }
+  return res;
+}
+
+module.exports = async function tailleSmoke() {
+  console.log('\n── Garde-fou : taille des fichiers et des fonctions ──');
+
+  const fichiers = sources();
+  const trop = [];
+  fichiers.forEach((f) => {
+    const n = fs.readFileSync(f, 'utf8').split('\n').length;
+    if (n <= SEUIL_FICHIER) return;
+    const budget = FICHIERS_TOLERES[relatif(f)];
+    if (budget === undefined) trop.push(`${relatif(f)} : ${n} lignes (non déclaré)`);
+    else if (n > Math.round(budget * MARGE)) trop.push(`${relatif(f)} : ${n} lignes (toléré ${budget})`);
+  });
+  verifier(`aucun fichier au-delà de ${SEUIL_FICHIER} lignes hors exceptions déclarées`,
+    trop.length === 0, trop.join(' · '));
+
+  const longues = [];
+  fichiers.filter((f) => f.endsWith('.js')).forEach((f) => {
+    fonctionsDe(f).forEach(({ nom, lignes }) => {
+      if (lignes <= SEUIL_FONCTION) return;
+      const budget = FONCTIONS_TOLEREES[nom];
+      if (budget === undefined) longues.push(`${nom} : ${lignes} lignes — ${relatif(f)}`);
+      else if (lignes > Math.round(budget * MARGE)) longues.push(`${nom} : ${lignes} lignes (toléré ${budget})`);
+    });
+  });
+  verifier(`aucune fonction au-delà de ${SEUIL_FONCTION} lignes hors exceptions déclarées`,
+    longues.length === 0, longues.join(' · '));
+
+  // Un sélecteur défini deux fois dans la même feuille, c'est une règle qui en
+  // annule une autre — la source de plusieurs corrections déjà passées ici.
+  const doublons = [];
+  fichiers.filter((f) => f.endsWith('.css')).forEach((f) => {
+    const texte = fs.readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const vus = new Map();
+    // Sélecteurs de premier niveau seulement : ceux d'une media query
+    // redéfinissent volontairement les mêmes règles.
+    let profondeur = 0;
+    let debut = 0;
+    for (let i = 0; i < texte.length; i += 1) {
+      const c = texte[i];
+      if (c === '{') {
+        if (profondeur === 0) {
+          const sel = texte.slice(debut, i).trim().replace(/\s+/g, ' ');
+          if (sel && !sel.startsWith('@')) vus.set(sel, (vus.get(sel) || 0) + 1);
+        }
+        profondeur += 1;
+      } else if (c === '}') {
+        profondeur -= 1;
+        if (profondeur === 0) debut = i + 1;
+      }
+    }
+    [...vus.entries()].filter(([, n]) => n > 1)
+      .forEach(([sel, n]) => doublons.push(`${relatif(f)} : « ${sel} » ×${n}`));
+  });
+  // Les redéfinitions existantes sont recensées : la suite refuse qu'il s'en
+  // ajoute, sans exiger de toutes les résoudre d'un coup.
+  verifier('pas de nouvelle redéfinition de sélecteur CSS',
+    doublons.length <= DOUBLONS_CSS_TOLERES, `${doublons.length} redéfinition(s) — ${doublons.slice(0, 6).join(' · ')}`);
+
+  // ── Cellules d'actions : elles restent des cellules ──
+  // Passer un « td » en flex ou en grid le sort du modèle tabulaire : sa
+  // hauteur ne suit plus celle de la ligne, et les traits de séparation ne
+  // s'alignent plus sur les colonnes voisines. Le défaut s'est présenté trois
+  // fois ; la suite le refuse désormais d'emblée. La disposition des boutons se
+  // fait dans un élément intérieur, jamais sur la cellule.
+  const cellulesEnFlex = [];
+  fichiers.filter((f) => f.endsWith('.css')).forEach((fichier) => {
+    const texte = fs.readFileSync(fichier, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const regles = texte.match(/[^{}]+\{[^{}]*\}/g) || [];
+    regles.forEach((regle) => {
+      const [selBrut, corps] = regle.split('{');
+      const sel = selBrut.trim().replace(/\s+/g, ' ');
+      if (sel.startsWith('@') || !sel) return;
+      // C'est le dernier maillon du sélecteur qui dit ce que la règle habille :
+      // « .actions-cell .btn » vise le bouton, « .actions-cell » la cellule.
+      const cible = (bout) => bout.split(/[\s>+~]+/).filter(Boolean).pop() || '';
+      const estCellule = sel.split(',').some((bout) => {
+        const dernier = cible(bout.trim());
+        return /^td([.#:[]|$)/.test(dernier)
+          || /(cell-actions|actions-cell|td-actions)$/.test(dernier.replace(/[:[].*$/, ''));
+      });
+      if (!estCellule) return;
+      if (/display:\s*(flex|inline-flex|grid|inline-grid)/.test(corps)) {
+        cellulesEnFlex.push(`${relatif(fichier)} : « ${sel} »`);
+      }
+    });
+  });
+  verifier('aucune cellule de tableau mise en flex ou en grille',
+    cellulesEnFlex.length === 0, cellulesEnFlex.join(' · '));
+
+  // ── Feuilles partagées : chaque écran les charge ──
+  // Filtres, retour d'action et attente sont réglés une fois pour toute
+  // l'application. Une page qui les oublie repart avec ses propres couleurs.
+  const PAGES = ['public/index.html', 'public/modules/ramp/index.html',
+    'public/modules/execution/index.html', 'public/modules/planification/index.html',
+    'public/modules/profil_risque/index.html', 'public/modules/mesures/index.html',
+    'public/modules/droits/index.html'];
+  const sansFiltres = PAGES.filter((rel) => {
+    const chemin = path.join(RACINE, rel);
+    if (!fs.existsSync(chemin)) return false;
+    return !fs.readFileSync(chemin, 'utf8').includes('oasis-filtres.css');
+  });
+  verifier('chaque écran charge la feuille commune des filtres',
+    sansFiltres.length === 0, sansFiltres.join(' · '));
+
+  return bilan('taille');
+};

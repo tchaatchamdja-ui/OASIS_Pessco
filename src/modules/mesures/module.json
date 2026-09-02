@@ -1,0 +1,36 @@
+{
+  "code": "CARE",
+  "tdr": "D.7.2",
+  "priority": 1,
+  "icon": "🛠️",
+  "theme": "surveillance",
+  "name": {
+    "fr": "Mesures d'Application",
+    "en": "Enforcement Measures",
+    "pt": "Medidas de Aplicação"
+  },
+  "desc": {
+    "fr": "Suite donnée aux constatations : mesures administratives, sanctions et saisines, de leur décision à leur clôture.",
+    "en": "Follow-up to findings: administrative measures, sanctions and referrals, from decision to closure.",
+    "pt": "Seguimento das constatações: medidas administrativas, sanções e ações judiciais, da decisão ao encerramento."
+  },
+  "apiPrefixes": [
+    "/api/m/mesures"
+  ],
+  "auditModule": "CARE",
+  "rightsModule": "CARE",
+  "portalCode": "CARE",
+  "front": {
+    "key": "mesures",
+    "url": "/modules/mesures/index.html",
+    "superMenu": true,
+    "order": 1
+  },
+  "provides": [
+    "CARE.mesuresParConstatation"
+  ],
+  "requires": [
+    "SURV.constatationsOuvertes",
+    "SAFA.constatationsCritiques"
+  ]
+}

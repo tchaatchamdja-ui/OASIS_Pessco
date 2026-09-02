@@ -53,14 +53,22 @@ const ICONS = {
   alertTriangle: (s) => _icon('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', s),
   graduation: (s) => _icon('<path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12.5V17c0 1.66 2.69 3 6 3s6-1.34 6-3v-4.5"/><line x1="22" y1="10" x2="22" y2="15"/>', s),
   creditCard: (s) => _icon('<rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>', s),
+  // Tracé de contrôle : la carence relevée, puis le retour à la ligne — c'est
+  // ce que suivent les mesures d'application.
+  // Aéronef en vol, vu de dessus, sa traînée derrière lui : l'inspection se
+  // fait sur l'appareil qui vient de se poser.
+  // Décollage : l'aéronef quitte la piste — silhouette du jeu Material Symbols
+  // (Apache 2.0), reprise telle quelle, piste comprise.
+  planeTrail: (s) => _icon('<path fill="currentColor" stroke="none" d="M22.07 9.64c-.21-.8-1.04-1.28-1.84-1.06L14.92 10l-6.9-6.43-1.93.51 4.14 7.17-4.97 1.33-1.97-1.54-1.45.39 2.59 4.49s7.12-1.9 16.57-4.43c.81-.23 1.28-1.05 1.07-1.85z"/><path fill="currentColor" stroke="none" d="M2.5 18.6h19v1.9h-19z"/>', s),
+  pulse: (s) => _icon('<path d="M2 10.5h4.8L10.4 2.5l4.2 16 2.6-8h4.8"/>', s),
 };
 
 // Icône par code module
 const MODULE_ICONS = {
   PLAN: 'calendar',
   SURV: 'search',
-  CARE: 'checklist',
-  SAFA: 'plane',
+  CARE: 'pulse',
+  SAFA: 'planeTrail',
   REG: 'fileText',
   DOC: 'bookOpen',
   CERT: 'award',

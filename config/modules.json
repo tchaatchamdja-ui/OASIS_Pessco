@@ -34,36 +34,36 @@
     "theme": "surveillance"
   },
   {
-    "code": "CARE",
-    "tdr": "D.7.2",
-    "priority": 1,
-    "icon": "🛠️",
-    "name": {
-      "fr": "Suivi des Carences",
-      "en": "Findings Follow-up",
-      "pt": "Acompanhamento das Constatações"
-    },
-    "desc": {
-      "fr": "Traitement des carences : plans d'actions correctives, échéances, vérification et mesures d'application.",
-      "en": "Handling of findings: corrective action plans, deadlines, verification and enforcement measures.",
-      "pt": "Tratamento das constatações: planos de ações corretivas, prazos, verificação e medidas de aplicação."
-    },
-    "theme": "surveillance"
-  },
-  {
     "code": "SAFA",
     "tdr": "D.8",
     "priority": 1,
     "icon": "✈️",
     "name": {
-      "fr": "Inspections SAFA / SANA",
-      "en": "SAFA / SANA Ramp Inspections",
-      "pt": "Inspeções SAFA / SANA"
+      "fr": "RAMP Inspections",
+      "en": "RAMP Inspections",
+      "pt": "RAMP Inspections"
     },
     "desc": {
-      "fr": "Inspections d'aéronefs sur aire de trafic et partage des résultats entre États.",
-      "en": "Ramp inspections of aircraft and inter-State sharing of results.",
-      "pt": "Inspeções de aeronaves na placa e partilha de resultados entre Estados."
+      "fr": "Inspections d'aéronefs sur aire de trafic.",
+      "en": "Ramp inspections of aircraft.",
+      "pt": "Inspeções de aeronaves na placa."
+    },
+    "theme": "surveillance"
+  },
+  {
+    "code": "CARE",
+    "tdr": "D.7.2",
+    "priority": 1,
+    "icon": "🛠️",
+    "name": {
+      "fr": "Mesures d'Application",
+      "en": "Enforcement Measures",
+      "pt": "Medidas de Aplicação"
+    },
+    "desc": {
+      "fr": "Traitement des carences : plans d'actions correctives, échéances, vérification et mesures d'application.",
+      "en": "Handling of findings: corrective action plans, deadlines, verification and enforcement measures.",
+      "pt": "Tratamento das constatações: planos de ações corretivas, prazos, verificação e medidas de aplicação."
     },
     "theme": "surveillance"
   },

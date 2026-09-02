@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Mesures d'Application</title>
+  <!-- Socle : mise en page, composants, chrome de module -->
+  <link rel="stylesheet" href="/shared/css/oasis-module.css">
+  <link rel="stylesheet" href="/shared/css/oasis-shell.css">
+  <!-- Styles propres au module -->
+  <link rel="stylesheet" href="/modules/mesures/css/mes-styles.css">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #app { height: 100%; }
+  </style>
+  <!-- Attente : l'aéronef en orbite autour du globe. -->
+  <link rel="stylesheet" href="/shared/css/oasis-loader.css">
+  <script src="/shared/js/oasis-loader.js"></script>
+  <!-- Retour d'action : panneau commun au portail et aux modules. -->
+  <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
+  <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <script src="/shared/js/oasis-toast.js"></script>
+</head>
+<body class="mes-module">
+  <div id="app"><div data-oasis-loader>Chargement du module…</div></div>
+
+  <script>
+    // Pont OASIS → module « Mesures d'Application ». Le module rend sa propre
+    // coquille ; le contexte utilisateur vient du socle.
+    window.MES_BOOT = (async function () {
+      const res = await fetch('/api/m/mesures/context', { credentials: 'same-origin' });
+      if (res.status === 401) { parent.postMessage({ type: 'mes:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      const ctx = await res.json();
+      const theme = localStorage.getItem('pr_theme') || 'blue-dark';
+      const lang = localStorage.getItem('pr_lang') || 'fr';
+      document.documentElement.setAttribute('data-theme', theme);
+      return { user: ctx.user || {}, privilege: ctx.privilege || '', theme, lang };
+    })();
+  </script>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <!-- Cartes d'indicateurs du socle, comme au tableau de bord d'Exécution. -->
+  <script src="/shared/js/oasis-kpi.js"></script>
+  <script src="/modules/mesures/js/mes-app.js"></script>
+  <script>window.OASIS_MODULE_KEY = "mesures"; window.OASIS_MODULE_RIGHTS = "CARE";</script>
+  <script src="/shared/js/module-chrome.js"></script>
+  <script>
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const boot = await window.MES_BOOT;
+        MES_STATE.user = boot.user;
+        MES_STATE.privilege = boot.privilege;
+        MES_STATE.theme = boot.theme;
+        MES_STATE.lang = boot.lang;
+        await mesLoadData();
+        mesRenderApp();
+        mesNavigateTo('dashboard');
+      } catch (e) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+      }
+    });
+  </script>
+</body>
+</html>

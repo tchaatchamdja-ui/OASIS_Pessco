@@ -652,10 +652,63 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok', statut: 'direct_soumis' });
   });
 
+  // ── Commentaires de validation ──
+  // Le valideur annote la constatation champ par champ avant de se prononcer,
+  // comme sur la fiche d'inspection du module SAFA. Les commentaires vivent
+  // par versions : celle en cours se modifie tant que la constatation est
+  // soumise ; la décision la fige, et le tour suivant en ouvre une nouvelle.
+  const versionOuverte = (c) => (c.commentaires_validation || []).find((v) => !v.close_le) || null;
+
+  app.put(`${M}/constatations/:id/commentaires-validation`, requireAuth, (req, res) => {
+    const c = db.get('constatations', req.params.id);
+    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
+      return refuser(res, 'Non autorisé à commenter cette constatation');
+    }
+    if (c.statut !== 'direct_soumis') {
+      return res.status(400).json({
+        error: 'Les commentaires ne se saisissent que sur une constatation soumise',
+      });
+    }
+    const entrees = (Array.isArray((req.body || {}).entrees) ? req.body.entrees : [])
+      .map((e) => ({ cible: String(e.cible || '').trim(), texte: String(e.texte || '').trim() }))
+      .filter((e) => e.texte);
+
+    const versions = (c.commentaires_validation || []).slice();
+    const ouverte = versionOuverte(c);
+    if (ouverte) {
+      ouverte.entrees = entrees;
+      ouverte.modifie_le = db.now();
+    } else {
+      versions.push({
+        version: versions.length + 1,
+        cree_par: req.user.username,
+        cree_le: db.now(),
+        modifie_le: db.now(),
+        entrees,
+        close_le: '', close_par: '', issue: '',
+      });
+    }
+    db.update('constatations', c.id, { commentaires_validation: versions });
+    return res.json({ status: 'ok' });
+  });
+
+  // La décision ferme la version en cours : elle devient l'archive de ce qui
+  // a été observé à ce tour.
+  function clore(c, req, issue) {
+    const versions = (c.commentaires_validation || []).slice();
+    const ouverte = versions.find((v) => !v.close_le);
+    if (!ouverte) return null;
+    ouverte.close_le = db.now();
+    ouverte.close_par = req.user.username;
+    ouverte.issue = issue;
+    return versions;
+  }
+
   // Décisions de validation : valider, renvoyer pour correction, rejeter. Le
   // motif est exigé pour les deux dernières — une décision qui arrête ou
   // renvoie un dossier doit se justifier.
-  const decision = (route, statut, champs, motifRequis) => {
+  const decision = (route, statut, champs, motifRequis, issue) => {
     app.put(`${M}/constatations/:id/${route}`, requireAuth, (req, res) => {
       const c = db.get('constatations', req.params.id);
       if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
@@ -669,23 +722,28 @@ module.exports = function register(app, deps, M) {
       const d = req.body || {};
       const motif = String(d.motif || '').trim();
       if (motifRequis && !motif) return res.status(400).json({ error: 'Motif requis' });
+      const versions = clore(c, req, issue);
       db.update('constatations', c.id, {
         statut,
         ...champs(motif, req.user.username),
         // Le journal des décisions est composé par le client, qui connaît le
         // fil affiché ; on le reprend tel quel s'il est fourni.
         ...(Array.isArray(d.decisions_validation) ? { decisions_validation: d.decisions_validation } : {}),
+        ...(versions ? { commentaires_validation: versions } : {}),
       });
       res.json({ status: 'ok', statut });
     });
   };
 
   decision('direct-valider', 'direct_valide',
-    (motif, user) => ({ date_validation_pac: db.now(), valide_par: user, motif_rejet_pac: '' }), false);
+    (motif, user) => ({ date_validation_pac: db.now(), valide_par: user, motif_rejet_pac: '' }),
+    false, 'validation');
   decision('direct-renvoyer', 'direct_renvoye',
-    (motif, user) => ({ motif_renvoi: motif, date_renvoi: db.now(), renvoye_par: user }), true);
+    (motif, user) => ({ motif_renvoi: motif, date_renvoi: db.now(), renvoye_par: user }),
+    true, 'renvoi');
   decision('direct-rejeter', 'direct_rejete',
-    (motif, user) => ({ motif_rejet_pac: motif, date_rejet_pac: db.now(), rejete_par: user }), true);
+    (motif, user) => ({ motif_rejet_pac: motif, date_rejet_pac: db.now(), rejete_par: user }),
+    true, 'rejet');
 
   app.put(`${M}/constatations/:id/submit-pac`, requireAuth, (req, res) => {
     // Déposer un plan d'actions correctives est un droit confié au compte.

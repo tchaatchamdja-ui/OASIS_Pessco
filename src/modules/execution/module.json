@@ -27,7 +27,8 @@
     "order": 1
   },
   "provides": [
-    "SURV.activitesDeclenchees"
+    "SURV.activitesDeclenchees",
+    "SURV.constatationsOuvertes"
   ],
   "requires": [
     "PLAN.plansValides"

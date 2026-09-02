@@ -1,0 +1,112 @@
+/* OASIS — Module « Exécution de la Surveillance » — constatations hors activité et commentaires de validation
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ══════════════════════════════════════════════════════════════════
+   Constatation hors activités — commentaires de validation
+   ══════════════════════════════════════════════════════════════════
+   Le valideur annote la constatation champ par champ, dans un panneau qui se
+   replie sur le côté ; ses observations sont versionnées, et la décision les
+   fige. Même dispositif que la fiche d'inspection du module SAFA. */
+.exec-cd-validation { display: flex; gap: 1rem; align-items: stretch; }
+.exec-cd-validation-corps { flex: 1 1 auto; min-width: 0; }
+
+.exec-cd-commentaires {
+    position: relative; flex: 0 0 50%; width: 50%;
+    display: flex; align-self: stretch;
+    background: #fef6e0; border: 1px solid #f2d69a; border-radius: 10px;
+    padding: 0 .5rem 0 50px; overflow: hidden;
+    transition: flex-basis .25s ease, width .25s ease;
+}
+.exec-cd-commentaires.replie { flex: 0 0 44px; width: 44px; padding: 0; }
+.exec-cd-com-poignee {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 42px;
+    display: flex; align-items: flex-start; justify-content: center; padding-top: 1rem;
+    border: none; border-right: 1px solid #f2d69a;
+    background: #fdefc8; color: #b45309; cursor: pointer;
+}
+.exec-cd-com-poignee:hover { background: #fbe3a6; }
+/* Replié : chevron et intitulé centrés sur la largeur de la bande, calés en
+   haut — la bande est haute, les centrer verticalement les perdrait au milieu. */
+.exec-cd-com-poignee.pleine {
+    position: static; width: 100%; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: .7rem;
+    padding: .8rem 0 0; border-right: none; border-radius: 10px;
+}
+.exec-cd-commentaires.replie .exec-cd-com-poignee svg { transform: rotate(180deg); }
+.exec-cd-com-titre-replie {
+    writing-mode: vertical-rl; white-space: nowrap;
+    font-size: .78rem; font-weight: 700; color: #b45309;
+}
+.exec-cd-com-panneau {
+    flex: 1; min-width: 0; display: flex; flex-direction: column;
+    background: var(--bg-card); margin: 0 0 .5rem; border-radius: 0 0 8px 8px; overflow: hidden;
+}
+.exec-cd-com-bandeau {
+    display: flex; align-items: center; gap: .7rem;
+    padding: .55rem .8rem; background: #fbe8b6; color: #92400e;
+}
+.exec-cd-com-bandeau strong { flex: 1; font-size: .92rem; }
+.exec-cd-com-pastille {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 6px;
+    background: #c2740c; color: #fff; font-weight: 800; font-style: italic;
+}
+.exec-cd-com-compte {
+    min-width: 26px; padding: .1rem .45rem; border-radius: 10px;
+    background: #fffaf0; color: #92400e; font-size: .78rem; font-weight: 700; text-align: center;
+}
+.exec-cd-com-contenu { flex: 1; overflow-y: auto; padding: .7rem .8rem; }
+.exec-cd-com-entree { margin-bottom: .6rem; }
+.exec-cd-com-entree-tete { display: flex; gap: .35rem; align-items: center; margin-bottom: .3rem; }
+.exec-cd-com-entree-tete .form-select { flex: 1; min-width: 0; }
+/* Champ d'observation : un tiers de moins que la hauteur par défaut. */
+.exec-cd-com-texte { height: 68px; min-height: 68px; resize: vertical; }
+.exec-cd-com-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+.exec-cd-com-actions .btn {
+    height: 24px; padding: 0 .6rem; font-size: .76rem; line-height: 1;
+    display: inline-flex; align-items: center; gap: .3rem;
+}
+.exec-cd-com-vide { color: var(--text-muted); font-size: .8rem; }
+.exec-cd-com-lu { margin-bottom: .5rem; font-size: .84rem; }
+.exec-cd-com-lu i {
+    font-style: normal; font-size: .74rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .03em; color: #b45309;
+}
+.exec-cd-com-version { border-top: 1px solid var(--border); }
+.exec-cd-com-version-tete {
+    display: flex; align-items: center; gap: .45rem; width: 100%;
+    padding: .45rem 0; border: none; background: none; cursor: pointer;
+    font-family: inherit; font-size: .8rem; text-align: left; color: var(--text);
+}
+.exec-cd-com-chevron { display: inline-flex; transition: transform .2s ease; transform: rotate(-90deg); }
+.exec-cd-com-chevron.ouvert { transform: none; }
+.exec-cd-com-issue {
+    padding: .05rem .4rem; border-radius: 9px; font-size: .72rem; font-weight: 700;
+    background: #d1fae5; color: #047857;
+}
+.exec-cd-com-issue.renvoi { background: #ffedd5; color: #c2410c; }
+.exec-cd-com-issue.rejet { background: #fee2e2; color: #b91c1c; }
+.exec-cd-com-quand { color: var(--text-muted); font-size: .76rem; }
+.exec-cd-com-corps { padding: .2rem 0 .5rem .3rem; }
+
+/* Motif de renvoi : bandeau rouge, une ligne par champ commenté, consigne
+   dans le bandeau. */
+.exec-cd-motif {
+    border: 1px solid #b91c1c; border-radius: 8px; overflow: hidden; margin-bottom: 1rem;
+}
+.exec-cd-motif-bandeau {
+    display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+    padding: .5rem .9rem; background: #b91c1c; color: #fff; font-size: .84rem;
+}
+.exec-cd-motif-quand { font-weight: 500; font-size: .78rem; opacity: .9; }
+.exec-cd-motif-consigne { margin-left: auto; font-weight: 500; font-size: .78rem; opacity: .95; }
+.exec-cd-motif-corps { padding: .55rem .9rem; background: var(--bg-card); }
+.exec-cd-motif-ligne { font-size: .84rem; line-height: 1.5; }
+.exec-cd-motif-ligne i { font-style: normal; font-weight: 700; color: #b91c1c; }
+
+@media (max-width: 1100px) {
+    .exec-cd-validation { flex-direction: column; }
+    .exec-cd-commentaires, .exec-cd-commentaires.replie { flex: 1 1 auto; width: 100%; }
+}
+

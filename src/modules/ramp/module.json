@@ -1,0 +1,34 @@
+{
+  "code": "SAFA",
+  "tdr": "D.8",
+  "priority": 1,
+  "icon": "✈️",
+  "theme": "surveillance",
+  "name": {
+    "fr": "RAMP Inspections",
+    "en": "RAMP Inspections",
+    "pt": "RAMP Inspections"
+  },
+  "desc": {
+    "fr": "Inspections d'aéronefs sur aire de trafic.",
+    "en": "Ramp inspections of aircraft.",
+    "pt": "Inspeções de aeronaves na placa."
+  },
+  "apiPrefixes": [
+    "/api/m/ramp"
+  ],
+  "auditModule": "SAFA",
+  "rightsModule": "SAFA",
+  "portalCode": "SAFA",
+  "front": {
+    "key": "ramp",
+    "url": "/modules/ramp/index.html",
+    "superMenu": true,
+    "order": 1
+  },
+  "provides": [
+    "SAFA.ecartsParExploitant",
+    "SAFA.constatationsCritiques"
+  ],
+  "requires": []
+}

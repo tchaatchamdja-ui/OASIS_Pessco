@@ -1,0 +1,148 @@
+// Module « Inspections d'aéronefs sur aire de trafic » (SAFA) — D.8
+//
+// Reprise intégrale de l'application RAMP (Express + Prisma/PostgreSQL + React),
+// posée sur le socle OASIS : authentification et sessions, droits par
+// domaine/secteur (espace SAFA), journal d'audit, stockage JSON.
+//
+// Ce que le socle reprend à sa charge, et que le module ne redéploie donc pas :
+//   · comptes, mots de passe, sessions et écran de connexion (RAMP portait son
+//     propre modèle `User`, son JWT et sa page de login) ;
+//   · rôles : les trois rôles RAMP se déduisent du privilège SAFA (roles.js) ;
+//   · journal d'audit : le modèle `AuditLog` de RAMP est remplacé par le
+//     journal du socle, qui trace déjà les appels aux préfixes du module ;
+//   · thème, langue et coquille de module.
+//
+// Routes groupées par objet :
+//   1. paramètres   — contexte, sept familles de paramètres, dépôts, contacts
+//   2. inspections  — inspections et écarts
+//   3. échanges     — lecture et écriture des classeurs Excel
+const auth = require('../../auth');
+const referentiels = require('../../referentiels');
+const moduleRights = require('../../module_rights');
+const db = require('./store');
+const vues = require('./vues');
+
+const M = '/api/m/ramp';
+
+module.exports = {
+  register(app, deps) {
+    // Chaque route s'authentifie par `requireAuth`, qui repose `req.user` : la
+    // vue active (AAC / Prestataire) s'applique donc juste après, sur chaque
+    // route, et non une seule fois en amont.
+    const depsVue = { ...deps, requireAuth: [deps.requireAuth, vues.middleware] };
+
+    require('./routes-parametres')(app, depsVue, M);
+    require('./routes-poi')(app, depsVue, M);
+    require('./routes-echanges')(app, depsVue, M);
+    require('./routes-inspections')(app, depsVue, M);
+    require('./routes-communication')(app, depsVue, M);
+
+    // Le poids des écarts relevés sur aire de trafic, exploitant par
+    // exploitant. Le Profil de Risque s'en saisira sans lire les données d'ici.
+    if (deps.services) {
+      deps.services.publish('SAFA.ecartsParExploitant', () => {
+        const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
+        const ponderations = {};
+        db.list('parametres')
+          .filter((p) => p.type === 'categories')
+          .forEach((p) => { ponderations[p.code] = Number(p.ponderation) || 0; });
+
+        const parExploitant = {};
+        db.list('inspections').forEach((i) => {
+          const e = i.exploitant || 'Inconnu';
+          if (!parExploitant[e]) parExploitant[e] = { inspections: 0, items: 0, ecarts: 0, score: 0 };
+          parExploitant[e].inspections += 1;
+          parExploitant[e].items += Number(i.itemsInspectes) || 0;
+        });
+        db.list('ecarts').forEach((ec) => {
+          const i = inspections.get(ec.inspection_id);
+          if (!i) return;
+          const e = i.exploitant || 'Inconnu';
+          if (!parExploitant[e]) parExploitant[e] = { inspections: 0, items: 0, ecarts: 0, score: 0 };
+          parExploitant[e].ecarts += 1;
+          parExploitant[e].score += ponderations[ec.categorie] === undefined ? 1 : ponderations[ec.categorie];
+        });
+        // Le score brut ne dit rien seul : dix écarts sur mille items pèsent
+        // moins que dix sur cent. C'est le score rapporté aux items qui compte.
+        Object.values(parExploitant).forEach((v) => {
+          v.score_normalise = v.items > 0 ? Number((v.score / v.items).toFixed(4)) : 0;
+        });
+        return parExploitant;
+      }, {
+        description: 'Écarts SAFA par exploitant : inspections, items, écarts et score normalisé',
+      });
+
+      // Un écart de catégorie 3 est un manquement grave relevé sur aire de
+      // trafic : il appelle une mesure d'application, au même titre qu'une
+      // constatation critique de la surveillance. Le module le publie sous le
+      // même contrat que « SURV.constatationsOuvertes » — les Mesures
+      // d'Application n'ont donc rien à savoir de RAMP pour l'instruire, et
+      // fonctionnent aussi bien si ce module n'est pas déployé.
+      deps.services.publish('SAFA.constatationsCritiques', () => {
+        const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
+        // Rapprochement exploitant → prestataire du référentiel : RAMP nomme
+        // l'exploitant, le référentiel l'identifie. Le nom et le trigramme
+        // servent de clés, comme pour le cloisonnement des vues.
+        const norm = (v) => String(v || '').trim().toLowerCase();
+        // Libellés des items du programme : l'objet d'un écart, c'est l'item
+        // contrôlé — son code et son intitulé, rien d'autre.
+        const items = new Map(db.list('parametres')
+          .filter((p) => p.type === 'items')
+          .map((p) => [p.code, p.label]));
+        const parCle = new Map();
+        (referentiels.getAll().prestataires || []).forEach((p) => {
+          if (p.nom) parCle.set(norm(p.nom), p.id);
+          if (p.trigramme) parCle.set(norm(p.trigramme), p.id);
+        });
+        return db.list('ecarts')
+          .filter((ec) => String(ec.categorie) === '3')
+          .map((ec) => {
+            const i = inspections.get(ec.inspection_id) || {};
+            const solde = /clôtur|cloture|soldé|solde/i.test(String(ec.suivi || ''));
+            return {
+              id: `safa:${ec.id}`,
+              reference: `${i.poi_reference || i.id || ''}${ec.itemCode ? ` · ${ec.itemCode}` : ''}`,
+              titre: [ec.itemCode, items.get(ec.itemCode)].filter(Boolean).join(' — '),
+              description: ec.description || '',
+              prestataire_id: parCle.get(norm(i.exploitant)) || '',
+              prestataire_nom: i.exploitant || '',
+              domaine_id: '',
+              // Catégorie 3 SAFA : la plus grave des trois, d'où « critique ».
+              criticite: 'critique',
+              statut: solde ? 'soldee' : 'ouverte',
+              date_ouverture: i.date || '',
+              date_due_cloture: '',
+              origine: 'SAFA',
+              inspection_id: ec.inspection_id,
+              immatriculation: i.immatriculation || '',
+              action: ec.action || '',
+            };
+          });
+      }, {
+        description: 'Écarts SAFA de catégorie 3, appelant une mesure d’application',
+      });
+    }
+  },
+
+  seed() {
+    db.seed();
+    db.seedAeronefs();
+    db.seedAeroports();
+    db.seedPays();
+    db.completerActions();
+    // Le statut « En cours » a été retiré : les données déjà saisies le
+    // portent encore, et repassent en « Ouvert ».
+    db.retirerStatutEnCours();
+    // Un module fraîchement installé n'a encore aucun droit attribué : sans
+    // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
+    // compris le super-administrateur — d'importer la première inspection et
+    // donc d'attribuer les droits depuis l'application. On ne touche qu'aux
+    // comptes SUPERADMIN, et seulement s'ils n'ont pas déjà été paramétrés.
+    auth.getUsers()
+      .filter((u) => u.role === 'SUPERADMIN' && moduleRights.getRights('SAFA', u.username).isDefault)
+      .forEach((u) => moduleRights.setRights('SAFA', u.username, {
+        privilege: 'GESTIONNAIRE', scopes: [],
+        updatedAt: new Date().toISOString(), updatedBy: 'installation',
+      }));
+  },
+};

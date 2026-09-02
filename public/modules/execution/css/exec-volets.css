@@ -1,0 +1,183 @@
+/* OASIS — Module « Exécution de la Surveillance » — volets glissants (offcanvas)
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ══════════════════════════════════════════════
+   1. SLIDER / OFFCANVAS (right panel)
+   ══════════════════════════════════════════════ */
+
+.exec-slider-overlay {
+    position: fixed;
+    top: var(--topbar-height, 56px);
+    right: 0;
+    bottom: 0;
+    /* Laisse la barre de menu cliquable (toggle pli/dépli accessible) */
+    left: var(--sidebar-width, 240px);
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, left 0.3s ease;
+}
+
+.exec-slider-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Toast notification */
+.exec-toast {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 100010;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    color: var(--text-header, #fff);
+    font-size: 0.9rem;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    opacity: 0;
+    transform: translateY(-12px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    pointer-events: none;
+}
+.exec-toast.show { opacity: 1; transform: translateY(0); }
+.exec-toast.success { background: #16a34a; }
+.exec-toast.error { background: #dc2626; }
+.exec-toast.info { background: var(--primary); }
+
+/* Fade transition for dossier tab content */
+#dossier_tab_content {
+    animation: execFadeIn 0.3s ease;
+}
+@keyframes execFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.exec-slider {
+    position: fixed;
+    top: var(--topbar-height, 56px);
+    right: 0;
+    bottom: 0;
+    left: var(--sidebar-width, 240px);
+    width: auto;
+    max-width: 100vw;
+    z-index: 1050;
+    background: var(--bg);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                left 0.3s ease;
+}
+
+.exec-slider.open {
+    transform: translateX(0);
+}
+
+/* Toutes les variantes : bord gauche calé sur le bord droit de la barre de menu.
+   La largeur s'adapte automatiquement au pliage/dépliage de la sidebar. */
+.exec-slider.slider-xs,
+.exec-slider.slider-quarter,
+.exec-slider.slider-sm,
+.exec-slider.slider-third,
+.exec-slider.slider-two-fifths,
+.exec-slider.slider-half,
+.exec-slider.slider-md,
+.exec-slider.slider-lg,
+.exec-slider.slider-xl,
+.exec-slider.slider-xxl,
+.exec-slider.slider-full,
+.exec-slider.slider-max {
+    width: auto;
+    left: var(--sidebar-width, 240px);
+}
+body.exec-sidebar-collapsed .exec-slider,
+body.exec-sidebar-collapsed .exec-slider-overlay {
+    left: var(--sidebar-collapsed, 60px);
+}
+
+/* Variante « third » (1/3 de l'écran) — drawer ancré à droite, largeur fixe */
+.exec-slider.slider-third { left: auto !important; width: 33.33vw !important; min-width: 340px; }
+/* Variante « 2/5 » — l'historique d'une activité, ancré à droite. */
+.exec-slider.slider-two-fifths { left: auto !important; width: 40vw !important; min-width: 380px; }
+/* Variante « moitié » — le formulaire de constatation, ancré à droite. */
+.exec-slider.slider-half { left: auto !important; width: 50vw !important; min-width: 420px; }
+.exec-slider textarea[rows="1"] { min-height: unset; }
+
+/* Dashboard situation table */
+.exec-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+.exec-table th {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-header, #fff);
+    background: var(--primary);
+    border-right: 1px solid rgba(255,255,255,0.15);
+}
+.exec-table thead tr:nth-child(2) th {
+    background: color-mix(in srgb, var(--primary) 85%, #000);
+    font-size: 0.7rem;
+}
+.exec-table td {
+    padding: 0.55rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    vertical-align: middle;
+}
+.exec-table tbody tr:nth-child(even) {
+    background: var(--exec-accent-bg, rgba(0,0,0,0.02));
+}
+.exec-table tbody tr:hover {
+    background: var(--exec-accent-bg-hover, rgba(0,0,0,0.04));
+}
+
+/* Contact form contrast */
+.exec-contact-form .form-input {
+    background: #fff;
+    border: 1px solid #bcc3ce;
+}
+.exec-contact-form .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 59,130,246), 0.15);
+}
+
+/* Accordion toggle for Liste des activites */
+.exec-accordion-body { display: none; }
+.expanded > .exec-accordion-body { display: block !important; }
+.expanded > .exec-accordion-header .exec-form-section-chevron { transform: rotate(180deg); }
+
+/* Situation Générale — regroupements sans bordure, présentation souple */
+.exec-module .sg-domaine,
+.exec-module .sg-secteur {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+.exec-module .sg-secteur .exec-accordion-header,
+.exec-module .sg-domaine .exec-accordion-header {
+    border-radius: 8px;
+}
+.exec-module .sg-domaine.expanded > .exec-accordion-header,
+.exec-module .sg-secteur.expanded > .exec-accordion-header {
+    border-radius: 8px 8px 0 0;
+}
+.exec-module .sg-domaine { margin-bottom: 0.75rem; }
+.exec-module .sg-domaine > .exec-accordion-body { padding: 0.5rem 0.6rem 0.6rem; }
+/* Le secteur est en retrait : la hiérarchie se voit avant d'être lue. */
+.exec-module .sg-secteur { margin: 0.4rem 0 0.4rem 0.75rem; }
+.exec-module .sg-secteur > .exec-accordion-body { padding: 0.45rem 0 0; }
+

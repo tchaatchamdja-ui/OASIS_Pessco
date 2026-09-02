@@ -1,0 +1,356 @@
+/* =====================================================
+   Module « Mesures d'Application » — styles propres.
+   La coquille (barre latérale, barre supérieure, pied) suit la charte du
+   module « Exécution de la Surveillance » : mêmes règles de largeur, même
+   entête collant, même pied. Seul l'accent change — le rouge dit la mesure
+   contraignante là où l'ambre disait l'acte de surveillance.
+   ===================================================== */
+
+.mes-module,
+.mes-slider,
+.mes-slider-overlay {
+    --mes-accent: #b91c1c;
+    --mes-accent-light: #ef4444;
+    --mes-accent-dark: #7f1d1d;
+    --mes-accent-bg: rgba(185, 28, 28, 0.08);
+    --mes-accent-bg-hover: rgba(185, 28, 28, 0.14);
+    --exec-accent: var(--mes-accent);
+    --exec-accent-bg: var(--mes-accent-bg);
+    --exec-accent-bg-hover: var(--mes-accent-bg-hover);
+}
+
+/* ── Coquille : mêmes contraintes de largeur que le module Exécution ──
+   La barre latérale du socle est en position fixe et .app-content la
+   compense par une marge : sans largeur explicite, la colonne de contenu
+   déborde du viewport quand la barre est dépliée. */
+.mes-module.app-layout { overflow-x: hidden; }
+.mes-module .app-content {
+    width: calc(100vw - var(--sidebar-width, 240px));
+    max-width: calc(100vw - var(--sidebar-width, 240px));
+    min-width: 0;
+    box-sizing: border-box;
+    height: 100vh;
+    overflow-y: auto;
+    transition: width .3s ease, max-width .3s ease, margin-left .3s ease;
+}
+.mes-module.sidebar-collapsed .app-content {
+    width: calc(100vw - var(--sidebar-collapsed, 60px));
+    max-width: calc(100vw - var(--sidebar-collapsed, 60px));
+}
+.mes-module .app-header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg-card);
+}
+.mes-module .main-content {
+    max-width: 100%; width: 100%; margin: 0; min-width: 0;
+    box-sizing: border-box; overflow-x: hidden;
+    padding-bottom: 3.5rem;
+}
+
+/* La barre inférieure vient du chrome du socle (`module-chrome.js`), comme
+   pour le module Exécution : le module n'en pose pas de second. */
+
+/* Une mesure ne se coupe pas en deux : « 100 % » doit tenir sur une ligne,
+   quitte à rétrécir. Six cartes de front laissent peu de place à chacune. */
+.mes-module .oasis-kpi-value { white-space: nowrap; }
+
+/* ── Entête de page ── */
+.mes-page-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.mes-page-header h2 { margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text); }
+.mes-page-header .mes-sous-titre { color: var(--text-muted); font-size: .9rem; }
+
+/* ── Barre d'actions et filtres ── */
+.mes-action-bar {
+    display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+    margin-bottom: .9rem;
+}
+.mes-filtres { display: flex; gap: .5rem; flex: 1; min-width: 0; flex-wrap: nowrap; }
+.mes-input, .mes-select {
+    padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg-card); color: var(--text); font-size: .85rem;
+    font-family: inherit; width: 100%; box-sizing: border-box;
+}
+.mes-input:focus, .mes-select:focus {
+    outline: none; border-color: var(--mes-accent);
+    box-shadow: 0 0 0 2px var(--mes-accent-bg);
+}
+.mes-input:disabled, .mes-select:disabled { background: var(--bg); color: var(--text-muted); }
+
+/* ── Cartes ── */
+.mes-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .9rem 1rem; margin-bottom: 1rem;
+}
+.mes-card-titre {
+    font-size: .85rem; font-weight: 700; color: var(--text);
+    margin-bottom: .6rem; padding-bottom: .4rem;
+    border-bottom: 1px solid var(--border);
+}
+.mes-grille-2 {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+}
+/* Ouverture, délai et clôture se lisent ensemble : trois champs courts, un
+   seul rang tant que la largeur le permet. */
+.mes-grille-3 {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+/* ── Lignes de statistique ── */
+.mes-stat-ligne {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .35rem 0; border-bottom: 1px solid var(--border); font-size: .85rem;
+}
+.mes-stat-ligne:last-child { border-bottom: none; }
+.mes-stat-valeur { font-weight: 700; }
+
+/* Barres « top prestataires ». */
+.mes-barre-prest {
+    display: grid; grid-template-columns: 190px 1fr 40px;
+    align-items: center; gap: .6rem; margin-bottom: .4rem; font-size: .82rem;
+}
+.mes-barre-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mes-barre-piste { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
+.mes-barre-remplie { background: var(--mes-accent); height: 100%; border-radius: 4px; }
+.mes-barre-compte { text-align: right; font-weight: 700; }
+
+/* ── Tableaux ── */
+.mes-table { width: 100%; border-collapse: separate; border-spacing: 0;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.mes-table th {
+    padding: .55rem .7rem; font-size: .72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .03em;
+    color: var(--text-header, #fff); background: var(--primary);
+    text-align: left; border-right: 1px solid rgba(255,255,255,.15);
+}
+.mes-table td {
+    padding: .5rem .7rem; border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border); vertical-align: middle; font-size: .84rem;
+}
+.mes-table tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
+.mes-table tbody tr:hover { background: var(--mes-accent-bg); }
+.mes-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
+.mes-table-wrap { overflow-x: auto; }
+
+/* ── Badges de statut et de criticité ── */
+.mes-badge {
+    display: inline-block; padding: .12rem .5rem; border-radius: 10px;
+    font-size: .72rem; font-weight: 700; white-space: nowrap;
+}
+.mes-badge.projet { background: #e2e8f0; color: #475569; }
+.mes-badge.notifiee { background: #dbeafe; color: #1d4ed8; }
+.mes-badge.en_cours { background: #fef3c7; color: #b45309; }
+.mes-badge.cloturee { background: #d1fae5; color: #047857; }
+.mes-badge.annulee { background: #f1f5f9; color: #94a3b8; }
+.mes-badge.critique { background: #fee2e2; color: #b91c1c; }
+.mes-badge.majeure { background: #ffedd5; color: #c2410c; }
+.mes-badge.mineure { background: #e0f2fe; color: #0369a1; }
+.mes-badge.retard { background: #7f1d1d; color: #fff; }
+
+/* ── Boutons d'action de ligne ── */
+/* La cellule reste une cellule : le td garde son affichage de tableau, sinon
+   ses bordures ne s'alignent plus sur celles des colonnes voisines. C'est la
+   pile intérieure qui range les actions — une par rang. */
+.mes-actions { text-align: center; vertical-align: middle; }
+.mes-actions-pile {
+    display: flex; flex-direction: column; gap: .3rem; align-items: center;
+}
+.mes-btn-icone { padding: .25rem .45rem; line-height: 0; }
+
+/* ── Volet latéral (formulaire de mesure) ──
+   Même comportement que le volet du module Exécution : superposition sombre,
+   panneau glissant à droite, entête et pied fixes. */
+.mes-slider-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.4);
+    z-index: 1090; opacity: 0; pointer-events: none; transition: opacity .2s ease;
+}
+.mes-slider-overlay.open { opacity: 1; pointer-events: auto; }
+.mes-slider {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(760px, 96vw); transform: translateX(100%);
+    background: var(--bg-card); box-shadow: -8px 0 30px rgba(0,0,0,.18);
+    z-index: 1100; display: flex; flex-direction: column;
+    transition: transform .25s ease;
+}
+.mes-slider.open { transform: translateX(0); }
+.mes-slider.tiers { width: min(560px, 96vw); }
+.mes-slider-header {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .8rem 1rem; border-bottom: 1px solid var(--border);
+    background: var(--primary); color: var(--text-header, #fff);
+}
+.mes-slider-header .btn { color: inherit; border-color: rgba(255,255,255,.4); }
+.mes-slider-titre { font-weight: 700; font-size: 1rem; }
+.mes-slider-body { flex: 1; overflow-y: auto; padding: 1rem; }
+.mes-slider-footer {
+    display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .7rem 1rem; border-top: 1px solid var(--border); background: var(--bg);
+}
+
+/* ── Champs du formulaire ── */
+.mes-champ { margin-bottom: .8rem; }
+.mes-champ > label {
+    display: block; font-size: .74rem; font-weight: 600;
+    color: var(--text-muted); margin-bottom: .2rem;
+    text-transform: uppercase; letter-spacing: .03em;
+}
+.mes-champ textarea { resize: vertical; min-height: 60px; }
+.mes-paire { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+.mes-erreur { color: #b91c1c; font-size: .8rem; margin: .3rem 0 0; }
+.mes-note {
+    margin: 0 0 .8rem; padding: .5rem .7rem;
+    background: var(--mes-accent-bg); border-left: 3px solid var(--mes-accent);
+    border-radius: 0 4px 4px 0; color: var(--text-muted);
+    font-size: .82rem; line-height: 1.45;
+}
+
+/* Pièces jointes : une ligne par pièce, l'intitulé se saisit. */
+.mes-preuve {
+    display: flex; gap: .4rem; align-items: center; margin-bottom: .3rem;
+}
+.mes-preuve input { flex: 1; }
+.mes-preuve-vide { font-size: .8rem; color: var(--text-muted); font-style: italic; }
+
+/* ── Modale (catégorie / type) ── */
+.mes-modal-fond {
+    position: fixed; inset: 0; z-index: 1200; background: rgba(15,23,42,.45);
+    display: flex; align-items: center; justify-content: center;
+}
+.mes-modal {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    width: 460px; max-width: 92vw; box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+.mes-modal-header {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .8rem 1rem; border-bottom: 1px solid var(--border); font-weight: 700;
+}
+.mes-modal-body { padding: 1rem; }
+.mes-modal-footer {
+    display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .7rem 1rem; border-top: 1px solid var(--border);
+}
+
+/* ── État vide ── */
+.mes-vide {
+    text-align: center; padding: 3rem 1rem; color: var(--text-muted);
+}
+
+/* ── Volet de saisie d'une infraction ───────────────────────────
+   La moitié de l'écran, glissé depuis la droite, bordé de rouge : ce qu'on y
+   inscrit est un manquement, la couleur le dit avant le titre. */
+.mes-volet-fond {
+    position: fixed; inset: var(--topbar-height, 48px) 0 0 0; z-index: 1190;
+    background: rgba(15, 23, 42, .45);
+    opacity: 0; transition: opacity .2s ease;
+}
+.mes-volet-fond.ouvert { opacity: 1; }
+.mes-volet {
+    /* Il commence sous la barre supérieure du module : celle-ci reste lisible,
+       et le volet ne paraît pas flotter par-dessus la coquille. */
+    position: fixed; top: var(--topbar-height, 48px); right: 0; bottom: 0; z-index: 1200;
+    width: 50vw; min-width: 380px; max-width: 96vw;
+    display: flex; flex-direction: column;
+    background: var(--bg-card);
+    border: 2px solid #dc2626;
+    box-shadow: -8px 0 30px rgba(0, 0, 0, .22);
+    transform: translateX(100%); transition: transform .25s ease;
+}
+.mes-volet.ouvert { transform: translateX(0); }
+.mes-volet-entete {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .8rem 1rem; font-weight: 700;
+    background: #dc2626; color: #fff;
+}
+.mes-volet-entete .btn { color: #fff; border-color: rgba(255, 255, 255, .6); }
+.mes-volet-corps { flex: 1; overflow-y: auto; padding: 1rem; }
+.mes-volet-pied {
+    display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .7rem 1rem; border-top: 1px solid var(--border);
+}
+@media (prefers-reduced-motion: reduce) {
+    .mes-volet, .mes-volet-fond { transition: none; }
+}
+
+/* Actions sur une infraction : la mesure se prend (rouge), le classement se
+   décide (orange). Deux gestes distincts, deux couleurs. */
+.mes-btn-mesure { background: #dc2626; border: 1px solid #dc2626; color: #fff; }
+.mes-btn-mesure:hover { background: #b91c1c; border-color: #b91c1c; }
+.mes-btn-classer { background: #ea580c; border: 1px solid #ea580c; color: #fff; }
+.mes-btn-classer:hover { background: #c2410c; border-color: #c2410c; }
+/* Boutons d'action : un tiers de hauteur en moins — ils s'alignent en rangée
+   dans une cellule de tableau, pas dans une barre d'outils. */
+.mes-actions .btn {
+    height: 22px; padding: 0 .55rem; font-size: .74rem; line-height: 1;
+    display: inline-flex; align-items: center; gap: .25rem;
+}
+.mes-actions .btn svg { width: 12px; height: 12px; }
+
+/* Modifier et Supprimer forment un couple : le rang peut passer à la ligne
+   avant eux, jamais entre eux. */
+.mes-actions-icones { display: inline-flex; gap: .3rem; align-items: center; }
+
+/* Les trois listes cadrent la vue, la recherche l'affine : elles prennent
+   moitié moins de place qu'elle, qui occupe le reste de la ligne. */
+.mes-filtres .mes-filtre-court { flex: 1 1 0; min-width: 0; }
+/* La recherche récupère la moitié rendue par chacune des trois listes. */
+.mes-filtres .mes-filtre-large { flex: 5 1 0; min-width: 0; }
+
+/* ── Répartition : camembert et lecture chiffrée ────────────────
+   Reprise du bloc « Constatations par criticité » du module « Exécution de la
+   Surveillance » : badge coloré, effectif, barre de poids. Le camembert lui
+   ajoute le total, lu d'un coup d'œil au centre. */
+.mes-repartition { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.mes-camembert {
+    position: relative; flex: 0 0 auto;
+    width: 128px; height: 128px; border-radius: 50%;
+}
+.mes-camembert.vide { background: var(--border); }
+.mes-camembert-creux {
+    position: absolute; inset: 22%; border-radius: 50%;
+    background: var(--bg-card); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: .1rem; text-align: center;
+}
+.mes-camembert-creux strong { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+.mes-camembert-creux span { font-size: .68rem; color: var(--text-muted); }
+/* La table occupe la moitié de la hauteur offerte : les lignes respirent sans
+   s'étirer sur toute la carte. */
+.mes-repartition-tab { flex: 1 1 220px; height: 50%; border-collapse: collapse; font-size: .8rem; }
+.mes-repartition-tab td { padding: .1rem .55rem; border-bottom: 1px solid var(--border); }
+.mes-repartition-tab td + td { border-left: 1px solid var(--border); }
+.mes-repartition-tab tbody tr:last-child td { border-bottom: none; }
+.mes-repartition-tab td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+.mes-repartition-badge {
+    display: inline-block; padding: .05rem .5rem; border-radius: 999px;
+    color: #fff; font-size: .72rem; font-weight: 700; white-space: nowrap;
+}
+.mes-repartition-piste {
+    width: 100%; min-width: 70px; height: 7px; border-radius: 999px; background: var(--bg);
+}
+.mes-repartition-barre { height: 100%; border-radius: 999px; }
+
+/* Une part cliquable commande le graphique voisin : elle se signale au survol
+   et reste marquée tant qu'elle tient. */
+.mes-repartition-tab tbody tr.cliquable { cursor: pointer; }
+.mes-repartition-tab tbody tr.cliquable:hover td {
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+.mes-repartition-tab tbody tr.actif td {
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+/* Les lignes occupent la hauteur de leur carte : la répartition ne laisse pas
+   un vide sous elle quand la carte voisine est plus haute. Sans camembert,
+   elles s'étirent ; avec lui, le disque reste centré. */
+.mes-card:has(> .mes-repartition) { display: flex; flex-direction: column; }
+.mes-card > .mes-repartition { flex: 1 1 auto; }
+.mes-card > .mes-repartition:not(:has(.mes-camembert)) { align-items: stretch; }
+
+/* Statut d'une carence dans ce module : une pastille pleine, distincte des
+   badges d'état repris des modules d'origine. */
+.mes-badge-care {
+    display: inline-block; padding: .1rem .5rem; border-radius: 999px;
+    color: #fff; font-size: .72rem; font-weight: 700; white-space: nowrap;
+}

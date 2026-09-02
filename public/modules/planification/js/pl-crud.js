@@ -638,18 +638,7 @@ async function planImportRisks(planId) {
 
 // Ephemeral toast for planification module (5-second default)
 function planShowEphemeralToast(message, type = 'info', duration = 5000) {
-    // Remove any existing planification toast
-    document.querySelectorAll('.plan-toast').forEach(t => t.remove());
-    const div = document.createElement('div');
-    div.className = `plan-toast plan-toast-${type}`;
-    div.textContent = message;
-    document.body.appendChild(div);
-    // Force reflow then animate in
-    requestAnimationFrame(() => div.classList.add('show'));
-    setTimeout(() => {
-        div.classList.remove('show');
-        setTimeout(() => div.remove(), 300);
-    }, duration);
+    return window.oasisToast(message, type, duration);
 }
 
 async function planSyncRisks(planId) {

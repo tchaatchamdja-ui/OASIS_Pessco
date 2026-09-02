@@ -86,12 +86,7 @@ function shellCloseModal() {
 }
 
 function shellShowToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `shell-toast shell-toast-${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 4000);
+    return window.oasisToast(message, type);
 }
 
 // ── Libellés fournis par le portail PESSCO ──

@@ -6,6 +6,9 @@
   <title>OASIS — Connexion</title>
   <link rel="stylesheet" href="/shared/css/oasis-shell.css">
   <link rel="stylesheet" href="/css/aerosup.css">
+  <!-- Retour d'action : panneau commun au portail et aux modules. -->
+  <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <script src="/shared/js/oasis-toast.js"></script>
 </head>
 <body>
   <div class="login-page">
@@ -56,9 +59,7 @@
       <div class="login-footer-bar">
         <div class="portal-theme-selector">
           <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu"></div>
-          <div class="theme-dot" data-theme="orange-dark" onclick="applyTheme('orange-dark')" title="Orange"></div>
-          <div class="theme-dot" data-theme="violet"      onclick="applyTheme('violet')"      title="Violet"></div>
-          <div class="theme-dot" data-theme="green"       onclick="applyTheme('green')"       title="Vert"></div>
+          <div class="theme-dot" data-theme="corporate"   onclick="applyTheme('corporate')"   title="Corporate"></div>
           <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris"></div>
         </div>
         <div class="portal-lang-selector">
@@ -67,7 +68,8 @@
           <button class="lang-btn" onclick="applyLang('pt')">PT</button>
         </div>
       </div>
-      <div class="login-copy">© 2026 UEMOA / URSAC</div>
+      <!-- Même mention qu'au portail et dans les modules, traduite avec la page. -->
+      <div class="login-copy" data-i18n="footer">© 2026 UEMOA / URSAC — OASIS · Outil d'Administration et de Supervision Intégrée de la Sécurité</div>
     </div>
   </div>
 

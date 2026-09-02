@@ -72,6 +72,14 @@ window.setModulesView = function (mode) {
   });
 };
 const PRIO_COLORS = { 1: '#2563eb', 2: '#0891b2', 3: '#f59e0b', 4: '#10b981', 5: '#8b5cf6' };
+// Teinte propre à un module, quand son thème en réunit plusieurs : les quatre
+// cartes de « Surveillance et inspections » ne se ressemblent plus.
+const COULEURS_MODULE = {
+  PLAN: '#0059ff',
+  SURV: '#ed580e',
+  SAFA: '#ff9500',
+  CARE: '#ff0000',
+};
 const LEVEL_COLORS = ['#2563eb', '#0891b2', '#f59e0b', '#10b981', '#8b5cf6'];
 const THEMES_ORDER = [
   { code: 'surveillance', icon: 'search' },
@@ -298,16 +306,9 @@ window.filterScope = function (inp) {
   });
 };
 
-function showToast(message, type = 'success', duration = 3000) {
-  const toast = document.createElement('div');
-  toast.className = `shell-toast shell-toast-${type}`;
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, duration);
+// Retour d'action : le panneau du socle, commun au portail et aux modules.
+function showToast(message, type = 'success', duration = 4000) {
+  return window.oasisToast(message, type, duration);
 }
 
 function fmtDate(iso) {
@@ -328,37 +329,39 @@ async function renderHome() {
   const stats = await statsRes.json();
   const modules = await modulesRes.json();
 
+  // Chaque module d'un même thème porte sa propre teinte : les quatre cartes
+  // de « Surveillance et inspections » se distinguent au premier regard.
   const card = (m) => {
-    const color = PRIO_COLORS[m.priority] || '#64748b';
+    const color = COULEURS_MODULE[m.code] || PRIO_COLORS[m.priority] || '#64748b';
     const name = m.name[CURRENT_LANG] || m.name.fr;
     const desc = m.desc[CURRENT_LANG] || m.desc.fr;
-    const statusBadge = m.enabled
-      ? `<span class="shell-badge badge-active">${esc(t('mod_enabled'))}</span>`
-      : `<span class="shell-badge badge-neutral">${esc(t('mod_planned'))}</span>`;
+    // La carte ne porte plus ni priorité ni état d'activation : ce sont des
+    // informations de feuille de route, pas d'usage.
     return `
-    <div class="portal-card ${m.enabled ? '' : 'disabled'}" style="--module-color:${color};" data-module="${esc(m.code)}" data-enabled="${m.enabled}">
+    <div class="portal-card" style="--module-color:${color};" data-module="${esc(m.code)}" data-enabled="true">
       <span class="portal-card-tdr">${esc(m.tdr)}</span>
       <div class="portal-card-icon-wrap">${moduleIcon(m.code, 26)}</div>
       <div class="portal-card-title">${esc(name)}</div>
       <div class="portal-card-desc">${esc(desc)}</div>
-      <div>
-        <span class="portal-card-badge prio">${esc(t('mod_prio'))} ${m.priority}</span>
-        ${statusBadge}
-      </div>
     </div>`;
   };
 
+  // L'ordre des cartes est celui de config/modules.json : la feuille de route
+  // range les modules dans l'ordre où ils s'enchaînent métier. Trier sur le
+  // numéro de TdR le défaisait — D.8 y passait après D.7.2.
+  const rang = new Map(modules.map((m, i) => [m.code, i]));
   const groups = THEMES_ORDER.map((th) => {
     const mods = modules
-      .filter((m) => m.theme === th.code)
-      .sort((a, b) => a.priority - b.priority || a.tdr.localeCompare(b.tdr));
+      // Un module non activé n'a rien à montrer : sa carte ne s'affiche pas.
+      .filter((m) => m.theme === th.code && m.enabled)
+      .sort((a, b) => rang.get(a.code) - rang.get(b.code));
     if (!mods.length) return '';
     return `
     <div class="portal-group">
       <div class="portal-group-header">
         <span class="group-icon">${icon(th.icon, 18)}</span>
         ${esc(t('theme_' + th.code))}
-        <span class="group-count">${mods.filter((m) => m.enabled).length} / ${mods.length}</span>
+        <span class="group-count">${mods.length}</span>
       </div>
       <div class="portal-grid">${mods.map(card).join('')}</div>
     </div>`;

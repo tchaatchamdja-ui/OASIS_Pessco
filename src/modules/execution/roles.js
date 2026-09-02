@@ -60,9 +60,11 @@ const canValidate = (user, cible, referentiels) => !estPrestataire(user)
 // Une cible sans prestataire désigné (téléversement, réponse de checklist)
 // n'est pas rattachable : elle reste ouverte.
 // Droit confié au compte courant (`req.user` porte le nom d'utilisateur).
-const compteA = (user, cle, auth) => {
+const compteA = (user, cle, auth, userReel) => {
   if (!estPrestataire(user)) return true;
-  const compte = auth.findUser(user.username);
+  const compte = auth.findUser(((userReel || user) || {}).username);
+  // L'administrateur de l'organisme gère les comptes de l'organisme d'office.
+  if (compte && compte.role === 'ADMIN_PRESTATAIRE' && cle === 'utilisateurs') return true;
   return aLeDroit(compte, cle);
 };
 

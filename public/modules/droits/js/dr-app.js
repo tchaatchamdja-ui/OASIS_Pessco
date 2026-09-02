@@ -48,6 +48,7 @@ const drPrest = (id) => {
 const DR_MODULE_LABELS = {
   PLAN: 'Planification de la Surveillance',
   SURV: 'Exécution de la Surveillance',
+  SAFA: 'RAMP Inspections',
 };
 const drModuleLabel = () => DR_MODULE_LABELS[DR.module] || DR.module;
 
@@ -59,6 +60,22 @@ const DR_PRIV_DESC = {
   AUCUN: "Aucun accès aux données de ce domaine ou de ce secteur.",
   PRESTATAIRE: "Vue Prestataire : accès aux seules données des prestataires retenus en portée.",
 };
+
+// Les échelons sont les mêmes partout ; ce qu'ils ouvrent dépend du module.
+// Sur les inspections d'aéronefs sur aire de trafic, le privilège reconstitue
+// les trois rôles de SAFA : Administrateur, Coordonnateur Régional,
+// Coordonnateur National.
+const DR_PRIV_DESC_MODULE = {
+  SAFA: {
+    GESTIONNAIRE: "Administrateur : paramètre le module, importe, supprime, sans limite d’État.",
+    VALIDATEUR: "Coordonnateur Régional : consulte les inspections de tous les États, sans importer.",
+    CONTRIBUTEUR: "Coordonnateur National : importe et instruit les inspections des États de sa portée.",
+    LECTEUR: "Consultation seule des inspections et des écarts.",
+    AUCUN: "Aucun accès aux données de cet État.",
+    PRESTATAIRE: "Vue Prestataire : l’exploitant ne voit que les inspections et les écarts qui le concernent.",
+  },
+};
+const drPrivDesc = (p) => ((DR_PRIV_DESC_MODULE[DR.module] || {})[p] || DR_PRIV_DESC[p] || '');
 
 async function drBoot() {
   try {
@@ -109,7 +126,7 @@ function drShell(content) {
       </nav>
       <div class="sidebar-footer">
         <div class="theme-selector sidebar-theme-selector">
-          ${['blue-dark', 'orange-dark', 'violet', 'green', 'grey'].map((th) =>
+          ${['blue-dark', 'corporate', 'grey'].map((th) =>
             `<div class="theme-dot ${DR.theme === th ? 'active' : ''}" data-theme="${th}" onclick="drSetTheme('${th}')" title="${th}"></div>`).join('')}
         </div>
         <div class="lang-selector sidebar-lang-selector">
@@ -418,7 +435,7 @@ function drRenderModal() {
       <input type="radio" name="drPriv" value="${p}" ${d.privilege === p ? 'checked' : ''} onchange="drSetPrivilege('${p}')">
       <span class="dr-radio-text">
         <strong>${drCap(p)}${p === DR.defaultPrivilege ? ' <em style="font-weight:400;font-size:.7rem;">— par défaut</em>' : ''}</strong>
-        <span class="dr-radio-desc">${DR_PRIV_DESC[p] || ''}</span>
+        <span class="dr-radio-desc">${drPrivDesc(p)}</span>
       </span>
     </label>`).join('');
 

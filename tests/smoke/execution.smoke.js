@@ -174,6 +174,57 @@ module.exports = async function executionSmoke(port) {
       const revenu = (await srv.appel(`${M}/dossiers`)).corps.find((d) => d.id === dossierId) || {};
       verifier('dossier revenu parmi les clôturés', !Number(revenu.archive));
 
+      // ── Constatation hors activités : commentaires de validation ──
+      // Le valideur annote champ par champ ; la décision fige la version,
+      // et le motif du renvoi en découle.
+      const directe = await P(`${M}/constatations`, {
+        direct: true,
+        prestataire_id: ((await srv.appel('/api/referentiels/prestataires')).corps || [])[0].id,
+        domaine_id: 'AIR', criticite: 'majeur',
+        titre: 'Écart hors activité', description: 'Relevé lors d’une visite inopinée.',
+      });
+      verifier('constatation hors activité créée',
+        directe.statut === 201 && directe.corps.statut === 'direct_brouillon',
+        JSON.stringify(directe.corps).slice(0, 120));
+      verifier('commentaires refusés avant soumission',
+        (await PUT(`${M}/constatations/${directe.corps.id}/commentaires-validation`, {
+          entrees: [{ cible: 'titre', texte: 'Préciser' }],
+        })).statut === 400);
+      verifier('constatation soumise',
+        (await PUT(`${M}/constatations/${directe.corps.id}/direct-soumettre`)).statut === 200);
+      verifier('commentaires de validation enregistrés',
+        (await PUT(`${M}/constatations/${directe.corps.id}/commentaires-validation`, {
+          entrees: [
+            { cible: 'description', texte: 'Détailler les faits constatés' },
+            { cible: 'general', texte: 'Joindre la preuve photographique' },
+            { cible: 'titre', texte: '  ' },
+          ],
+        })).statut === 200);
+      const avecCom = await srv.appel(`${M}/constatations/${directe.corps.id}`);
+      verifier('une version ouverte, entrées vides écartées',
+        (avecCom.corps.commentaires_validation || []).length === 1
+        && avecCom.corps.commentaires_validation[0].entrees.length === 2
+        && !avecCom.corps.commentaires_validation[0].close_le);
+      verifier('renvoi motivé par les commentaires',
+        (await PUT(`${M}/constatations/${directe.corps.id}/direct-renvoyer`, {
+          motif: 'Description : Détailler les faits constatés ; Commentaire général : Joindre la preuve photographique',
+        })).statut === 200);
+      const apresRenvoi = await srv.appel(`${M}/constatations/${directe.corps.id}`);
+      verifier('le renvoi fige la version',
+        apresRenvoi.corps.commentaires_validation[0].issue === 'renvoi'
+        && !!apresRenvoi.corps.commentaires_validation[0].close_le
+        && apresRenvoi.corps.statut === 'direct_renvoye');
+      await PUT(`${M}/constatations/${directe.corps.id}/direct-soumettre`);
+      await PUT(`${M}/constatations/${directe.corps.id}/commentaires-validation`, {
+        entrees: [{ cible: 'general', texte: 'Deuxième lecture : conforme' }],
+      });
+      verifier('validation ferme la seconde version',
+        (await PUT(`${M}/constatations/${directe.corps.id}/direct-valider`)).statut === 200);
+      const apresValidation = await srv.appel(`${M}/constatations/${directe.corps.id}`);
+      verifier('deux versions conservées, la dernière validée',
+        apresValidation.corps.commentaires_validation.length === 2
+        && apresValidation.corps.commentaires_validation[1].issue === 'validation');
+
       const stats = await srv.appel(`${M}/dashboard-stats`);
       verifier('tableau de bord alimenté',
         stats.statut === 200 && stats.corps.notifications_actees >= 1 && stats.corps.rapports_transmis_ytd >= 1);

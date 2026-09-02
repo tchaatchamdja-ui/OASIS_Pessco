@@ -1,0 +1,440 @@
+/* OASIS — Module « Exécution de la Surveillance » — réalisation, résultats du suivi, statistiques et chronologie
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ── Résultats du Suivi ──────────────────────────────────────────
+   La section prend la couleur de l'état de la constatation : refus, PAC
+   accepté, vérification sur le terrain, mise en oeuvre effective. Chaque
+   teinte fournit un fond de bandeau, un fond d'encadré, une bordure et une
+   couleur de texte assez foncée pour rester lisible sur son aplat. */
+.exec-resultats {
+    --teinte-bandeau: #ecfdf5;
+    --teinte-fond: #f0fdf4;
+    --teinte-bord: #d1fae5;
+    --teinte-texte: #065f46;
+    border-color: var(--teinte-bord);
+}
+.exec-resultats.teinte-refuse {
+    --teinte-bandeau: #fee2e2; --teinte-fond: #fef2f2;
+    --teinte-bord: #fecaca; --teinte-texte: #991b1b;
+}
+.exec-resultats.teinte-accepte {
+    --teinte-bandeau: #ffedd5; --teinte-fond: #fff7ed;
+    --teinte-bord: #fed7aa; --teinte-texte: #9a3412;
+}
+.exec-resultats.teinte-terrain {
+    --teinte-bandeau: #dcfce7; --teinte-fond: #f0fdf4;
+    --teinte-bord: #bbf7d0; --teinte-texte: #166534;
+}
+.exec-resultats.teinte-clos {
+    --teinte-bandeau: #047857; --teinte-fond: #ecfdf5;
+    --teinte-bord: #059669; --teinte-texte: #064e3b;
+}
+.exec-resultats > .exec-form-section-header { background: var(--teinte-bandeau); }
+.exec-resultats > .exec-form-section-header:hover { filter: brightness(.97); }
+.exec-resultats > .exec-form-section-header .exec-form-section-title,
+.exec-resultats > .exec-form-section-header .exec-form-section-chevron { color: var(--teinte-texte); }
+.exec-resultats > .exec-form-section-header .exec-form-section-letter {
+    background: var(--teinte-texte); color: #fff;
+}
+/* Clôturé : le bandeau est plein, son texte repasse en blanc. */
+.exec-resultats.teinte-clos > .exec-form-section-header .exec-form-section-title,
+.exec-resultats.teinte-clos > .exec-form-section-header .exec-form-section-chevron { color: #fff; }
+.exec-resultats.teinte-clos > .exec-form-section-header .exec-form-section-letter {
+    background: #ffffff2e; color: #fff;
+}
+.exec-resultats-bloc {
+    border: 1px solid var(--teinte-bord); border-radius: 6px;
+    padding: .55rem .65rem; background: var(--teinte-fond);
+}
+.exec-resultats-bloc-titre {
+    font-weight: 600; font-size: .8rem; margin-bottom: .4rem; color: var(--teinte-texte);
+}
+
+/* Commentaires de suivi : un fond sur deux, pour suivre l'enfilade. */
+#pac_suivi_liste .exec-suivi-comm:nth-child(even) {
+    background: #eef6ff; border-left-color: #6366f1;
+}
+#pac_suivi_liste .exec-suivi-comm:nth-child(even) .exec-suivi-comm-items span {
+    background: #6366f122; color: #3730a3;
+}
+/* Le texte garde les retours à la ligne : la numérotation reste lisible. */
+.exec-suivi-comm-texte { white-space: pre-wrap; }
+
+/* Les suivis s'empilent : seul le dernier reste ouvert, les autres se
+   consultent d'un clic sur leur en-tête. */
+.exec-suivi-comm-tete { cursor: pointer; align-items: center; }
+/* Le chevron ouvre la ligne : le titre reste calé à gauche, la date à droite. */
+.exec-suivi-comm-tete > strong { margin-right: auto; }
+.exec-suivi-comm-chevron {
+    display: inline-flex; margin-right: .3rem; color: var(--text-muted);
+    transition: transform .15s;
+}
+.exec-suivi-comm-chevron svg { width: 13px; height: 13px; }
+.exec-suivi-comm.replie .exec-suivi-comm-chevron { transform: rotate(-90deg); }
+.exec-suivi-comm.replie .exec-suivi-comm-corps { display: none; }
+.exec-suivi-comm.replie { padding-top: .3rem; padding-bottom: .3rem; }
+
+/* Un suivi transmis porte son rang ; l'auteur passe à droite, en discret. */
+.exec-suivi-auteur { font-style: normal; color: var(--text-muted); margin-right: .3rem; }
+/* Le bloc de pièces jointes ne doit pas hériter du pre-wrap du texte. */
+.exec-suivi-comm-pj { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .3rem; }
+.exec-suivi-comm-pj a {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .72rem; color: var(--primary); text-decoration: none;
+    background: #ffffffb8; border: 1px solid var(--border); border-radius: 4px; padding: .1rem .35rem;
+}
+.exec-suivi-comm-pj a:hover { text-decoration: underline; }
+
+/* Composeur : pièces déposées avant l'ajout du commentaire. */
+.exec-suivi-pj { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; margin-top: .35rem; }
+.exec-suivi-pj #pac_suivi_pj_liste { display: flex; flex-wrap: wrap; gap: .3rem; }
+.exec-suivi-pj-item {
+    display: inline-flex; align-items: center; gap: .25rem; font-size: .72rem;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: .1rem .35rem;
+}
+.exec-suivi-pj-item button {
+    border: none; background: none; cursor: pointer; color: #ef4444; padding: 0; display: inline-flex;
+}
+
+/* Évaluation encore fermée : on dit pourquoi, plutôt que de ne rien montrer. */
+.exec-suivi-attente {
+    margin: .35rem 0 0; padding: .4rem .55rem; font-size: .74rem; font-style: italic;
+    color: #92400e; background: #fffbeb; border: 1px dashed #fcd34d; border-radius: 4px;
+}
+
+/* Bandeau de dénomination posé au-dessus d'un formulaire. */
+.exec-form-titre {
+    display: flex; align-items: center; gap: .55rem;
+    padding: .55rem .9rem; border-radius: 8px 8px 0 0;
+    background: var(--primary); color: #fff;
+}
+.exec-form-titre h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+.exec-form-titre span { display: inline-flex; }
+.exec-form-titre-ref {
+    margin-left: auto; font-size: .78rem; font-weight: 600;
+    padding: .12rem .5rem; border-radius: 10px; background: #ffffff2e;
+}
+
+/* Formulaire de constatation : tiroir superposé au rapport, ancré à droite,
+   sur la moitié de l'écran. Liseré rouge pour le distinguer de son hôte. */
+.exec-fnc-tiroir {
+    position: fixed; top: var(--topbar-height, 56px); right: 0; bottom: 0;
+    width: 50vw; min-width: 420px; z-index: 1060;
+    display: flex; flex-direction: column;
+    background: var(--bg); border-left: 3px solid #dc2626;
+    box-shadow: -12px 0 40px rgba(0, 0, 0, .22);
+    transform: translateX(100%); transition: transform .28s ease;
+}
+.exec-fnc-tiroir.ouvert { transform: translateX(0); }
+.exec-fnc-tiroir-tete {
+    display: flex; align-items: center; gap: .6rem; flex: 0 0 auto;
+    padding: .55rem .9rem; background: #b3261e; color: #fff;
+}
+.exec-fnc-tiroir-tete .exec-proc-retour { flex: 0 0 auto; }
+.exec-fnc-tiroir-titre {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-size: 1rem; font-weight: 700;
+}
+.exec-fnc-tiroir-corps { flex: 1; overflow-y: auto; padding: .9rem 1rem; }
+/* Le formulaire porte déjà son bandeau : celui du tiroir suffit. */
+.exec-fnc-tiroir-corps .exec-form-titre { background: #b3261e; }
+.exec-fnc-tiroir-pied {
+    flex: 0 0 auto; display: flex; justify-content: flex-end; gap: .5rem;
+    padding: .6rem .9rem; border-top: 1px solid var(--border); background: var(--bg-card);
+}
+@media (max-width: 900px) { .exec-fnc-tiroir { width: 100vw; min-width: 0; } }
+
+/* Sections du formulaire de constatation : bandeaux en rouge clair, pour
+   rester dans la teinte du tiroir sans en reprendre l'intensité. */
+.exec-fnc-tiroir .exec-form-section-header { background: #fdeceb; }
+.exec-fnc-tiroir .exec-form-section-header:hover { background: #fbdedc; filter: none; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-title { color: #7f1d1d; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-aide { color: #b3261ec4; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-chevron { color: #b3261e; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-letter { background: #dc2626; color: #fff; }
+.exec-fnc-tiroir .exec-form-section-header .exec-form-section-badge { background: #dc26262e; color: #7f1d1d; }
+.exec-fnc-tiroir .exec-form-section.expanded > .exec-form-section-header { border-bottom-color: #f5c9c6; }
+
+/* Retour au Rapport : texte et icône en blanc sur le bandeau rouge. */
+.exec-fnc-tiroir-tete .exec-proc-retour,
+.exec-fnc-tiroir-tete .exec-proc-retour:hover {
+    color: #fff; border-color: #ffffff8c; background: #ffffff1f;
+}
+.exec-fnc-tiroir-tete .exec-proc-retour svg { color: #fff; }
+
+/* Fil d'avancement et titre de l'étape : ils restent en tête quand le corps
+   du volet défile. */
+.exec-proc-entete-collant {
+    /* Le corps du volet porte 1.25rem de marge : on l'annule pour que le
+       bandeau collant occupe toute la largeur, puis on la rétablit. */
+    position: sticky; top: -1.25rem; z-index: 6;
+    background: var(--bg);
+    margin: -1.25rem -1.25rem 0; padding: 1.25rem 1.25rem 0;
+    box-shadow: 0 6px 10px -8px rgba(0, 0, 0, .35);
+}
+.exec-proc-entete-collant .exec-proc-barre { margin-bottom: .6rem; }
+/* Le fil du formulaire « hors activités » est seul dans son bandeau : la
+   marge basse le sépare de la première section. */
+.exec-proc-entete-collant > .exec-pac-barre:only-child { margin-bottom: .8rem; }
+
+/* Motif de rejet, en tête du formulaire hors activités. */
+.exec-cd-rejet {
+    margin-bottom: .6rem; padding: .6rem .8rem;
+    background: #fef2f2; border-left: 4px solid #dc2626; border-radius: 4px;
+}
+.exec-cd-rejet strong { color: #dc2626; }
+.exec-cd-rejet div { margin-top: .3rem; white-space: pre-wrap; }
+.exec-cd-renvoi { background: #fff7ed; border-left-color: #f97316; }
+.exec-cd-renvoi strong { color: #f97316; }
+.exec-cd-arret {
+    margin: .35rem 0 0; font-size: .76rem; font-style: italic; color: #7f1d1d;
+}
+
+/* Le bandeau du journal se distingue des sections du formulaire : pas de
+   lettre, moitié moins haut, et rouge — c'est un incident de parcours. */
+.exec-cd-journal > .exec-form-section-header {
+    background: #dc2626;
+    /* Moitié de la hauteur d'une section : ni lettre, ni respiration. */
+    padding: .2rem 1.15rem;
+    min-height: 28px;
+    gap: .5rem;
+}
+.exec-cd-journal > .exec-form-section-header:hover { background: #b91c1c; filter: none; }
+.exec-cd-journal > .exec-form-section-header .exec-form-section-title { font-size: .82rem; }
+.exec-cd-journal > .exec-form-section-header .exec-form-section-badge { padding: 0 .35rem; }
+
+/* Journal des renvois et rejets, à l'étape Validation. */
+.exec-cd-decision {
+    padding: .45rem .6rem; margin-bottom: .4rem; font-size: .8rem;
+    background: #fff7ed; border-left: 3px solid #f97316; border-radius: 4px;
+}
+.exec-cd-decision.rejet { background: #fef2f2; border-left-color: #dc2626; }
+.exec-cd-decision:last-child { margin-bottom: 0; }
+.exec-cd-decision-tete {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    font-size: .72rem; color: var(--text-muted); margin-bottom: .2rem;
+}
+.exec-cd-decision-type { font-weight: 700; color: #9a3412; }
+.exec-cd-decision.rejet .exec-cd-decision-type { color: #991b1b; }
+.exec-cd-decision-rang { margin-right: auto; }
+.exec-cd-decision-motif { white-space: pre-wrap; }
+.exec-proc-entete-collant .exec-proc-titre { margin-bottom: 0; padding-bottom: .5rem; }
+
+/* ── Formulaire « Statistiques détaillées » ──────────────────────
+   Deux sous-menus : les indicateurs, puis la situation générale. */
+/* Même règle que les autres sous-menus : largeurs égales, 150 px au moins. */
+.exec-stats-onglets {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 240px));
+    justify-content: start; gap: .35rem; margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-stats-onglet {
+    border: none; background: none; cursor: pointer; font-family: inherit;
+    padding: .45rem .9rem; font-size: .85rem; font-weight: 600;
+    color: var(--text-muted); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; text-align: center;
+}
+.exec-stats-onglet:hover { color: var(--text); }
+.exec-stats-onglet.actif { color: var(--primary); border-bottom-color: var(--primary); }
+.exec-stats-entete {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: .5rem; flex-wrap: wrap; margin-bottom: .75rem;
+}
+.exec-stats-entete h4 { margin: 0; }
+
+/* Détail d'un indicateur, sous les cartes du formulaire de statistiques. */
+.exec-stats-invite {
+    margin: 0; padding: 1.25rem; text-align: center; font-size: .82rem;
+    font-style: italic; color: var(--text-muted);
+    background: var(--bg); border: 1px dashed var(--border); border-radius: 8px;
+}
+.exec-stats-detail {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .75rem .9rem;
+}
+.exec-stats-compte {
+    display: inline-block; margin-left: .4rem; padding: .05rem .45rem;
+    font-size: .72rem; font-weight: 700; border-radius: 999px;
+    background: var(--primary); color: #fff;
+}
+
+/* ── Chronologie : curseur à deux poignées ───────────────────────
+   La piste couvre la période disponible, la plage colorée ce qui est retenu.
+   Chaque poignée porte sa date ; la graduation nomme les mois et encadre par
+   les trimestres. */
+/* Chronologie compacte : le bloc tient sur la moitié de sa hauteur d'origine
+   — réserve des bulles, piste et graduation resserrées d'autant. */
+.exec-chrono {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .35rem .9rem .25rem; margin-bottom: .75rem;
+}
+.exec-chrono-tete {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: 0;
+}
+.exec-chrono-titre {
+    font-size: .82rem; font-weight: 700; color: var(--text);
+}
+.exec-chrono-raccourcis { margin-left: auto; display: flex; gap: .25rem; }
+.exec-chrono-btn {
+    border: 1px solid var(--border); background: var(--bg); cursor: pointer;
+    font-family: inherit; font-size: .68rem; font-weight: 600; color: var(--text-muted);
+    padding: .02rem .5rem; border-radius: 999px;
+}
+.exec-chrono-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* La zone du curseur réserve la hauteur des bulles au-dessus de la piste. */
+.exec-chrono-curseur { position: relative; padding-top: 22px; }
+.exec-chrono-bulle {
+    position: absolute; top: 0; transform: translateX(-50%);
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 5px;
+    box-shadow: var(--shadow); padding: 0 .35rem;
+    font-size: .66rem; line-height: 1.55; color: var(--text-muted); white-space: nowrap;
+    pointer-events: none;
+}
+.exec-chrono-bulle strong { color: var(--text); font-weight: 700; }
+
+.exec-chrono-piste {
+    position: relative; height: 13px; border-radius: 999px;
+    background: var(--border);
+}
+.exec-chrono-selection {
+    position: absolute; top: 0; bottom: 0; border-radius: 999px;
+    background: var(--primary);
+}
+/* Les deux curseurs se superposent : seule leur poignée reste saisissable. */
+.exec-chrono-poignee {
+    position: absolute; left: 0; top: 0; width: 100%; height: 13px;
+    margin: 0; background: none; appearance: none; -webkit-appearance: none;
+    pointer-events: none;
+}
+.exec-chrono-poignee:focus { outline: none; }
+.exec-chrono-poignee::-webkit-slider-thumb {
+    -webkit-appearance: none; pointer-events: auto; cursor: grab;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--primary); border: 3px solid var(--bg-card);
+    box-shadow: 0 0 0 1px var(--primary), var(--shadow);
+}
+.exec-chrono-poignee::-webkit-slider-thumb:active { cursor: grabbing; }
+.exec-chrono-poignee::-moz-range-thumb {
+    pointer-events: auto; cursor: grab;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: var(--primary); border: 3px solid var(--bg-card);
+}
+.exec-chrono-poignee::-moz-range-track { background: none; }
+
+.exec-chrono-graduation {
+    position: relative; height: 17px; margin-top: .1rem;
+    border-top: 1px solid var(--border);
+}
+.exec-chrono-trait {
+    position: absolute; top: 0; width: 1px; height: 3px; background: var(--border);
+}
+.exec-chrono-mois-nom {
+    position: absolute; top: 5px; transform: translateX(-50%);
+    font-size: .64rem; color: var(--text-muted); white-space: nowrap;
+}
+.exec-chrono-trimestre {
+    position: absolute; top: 3px; font-size: .64rem; font-weight: 700; color: var(--text);
+}
+.exec-chrono-trimestre.gauche { left: 0; }
+.exec-chrono-trimestre.droite { right: 0; }
+
+/* Cycle de surveillance du prestataire retenu, en tête de la chronologie. */
+.exec-chrono-cycle {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .02rem .5rem; border-radius: 999px;
+    font-size: .68rem; font-weight: 700;
+    background: #ede9fe; color: #5b21b6; white-space: nowrap;
+}
+
+/* Bornes saisies au clavier, sur la ligne du titre de la chronologie. */
+.exec-chrono-date {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 600; color: var(--text-muted);
+    /* Le libellé et son champ tiennent sur une ligne : « Date Début » ne se
+       coupe pas en deux quand la barre se resserre. */
+    white-space: nowrap; flex: 0 0 auto;
+}
+.exec-chrono-date input {
+    font-family: inherit; font-size: .68rem; line-height: 1.25; color: var(--text);
+    padding: .02rem .3rem; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg);
+}
+.exec-chrono-date input:focus { outline: none; border-color: var(--primary); }
+
+/* ── Menu Processus : acteurs par étape ────────────────────────────────── */
+.exec-module .pcfg-etape {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: .45rem .6rem;
+    margin-bottom: .4rem;
+}
+/* Une sous-étape se rattache visuellement à l'étape qui la précède. */
+.exec-module .pcfg-etape.sous {
+    margin-left: 1.2rem;
+    border-left: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    background: color-mix(in srgb, var(--primary) 4%, var(--bg));
+}
+.exec-module .pcfg-etape-tete {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .35rem;
+}
+.exec-module .pcfg-etape-nom { font-weight: 700; font-size: .82rem; }
+.exec-module .pcfg-etape-tete .btn { margin-left: auto; font-size: .7rem; padding: .1rem .5rem; }
+.exec-module .pcfg-acteurs { display: flex; flex-direction: column; gap: .3rem; }
+.exec-module .pcfg-acteur {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: .35rem;
+    align-items: center;
+}
+.exec-module .pcfg-acteur .pcfg-role-libre { grid-column: 1 / -2; }
+.exec-module .pcfg-acteur .form-control { font-size: .78rem; padding: .15rem .35rem; }
+.exec-module .pcfg-vide { color: var(--text-muted); font-size: .76rem; }
+/* Formulaire d'un processus : l'intitulé prend la ligne, les trois autres
+   champs se partagent la suivante. */
+.exec-module .pcfg-ligne-titre { margin-bottom: .5rem; }
+.exec-module .pcfg-ligne-trois { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.exec-module .pcfg-label-fort {
+    font-weight: 700;
+    color: var(--text);
+}
+.exec-module .pcfg-label-fort::first-letter { text-transform: uppercase; }
+
+/* ── Intervenants attendus à l'étape (menu Processus) ──────────────────── */
+.exec-module .exec-proc-attendus {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .4rem .75rem;
+    margin: .4rem 0 .6rem;
+    padding: .35rem .6rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary);
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg));
+    font-size: .76rem;
+}
+/* L'étape est fermée au compte courant : le bandeau le dit avant le clic. */
+.exec-module .exec-proc-attendus.bloque {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+}
+.exec-module .exec-proc-attendus-titre {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-size: .68rem;
+    color: var(--text-muted);
+}
+.exec-module .exec-proc-attendu { white-space: nowrap; }
+.exec-module .exec-proc-attendu em { color: var(--text-muted); font-style: italic; }
+.exec-module .exec-proc-attendus-refus {
+    margin-left: auto;
+    font-weight: 700;
+    color: #b91c1c;
+}
+
+

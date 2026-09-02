@@ -1,0 +1,88 @@
+/* OASIS — Module « Exécution de la Surveillance » — accent du module et réglages généraux
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* =====================================================
+   Execution Module - Additional Styles
+   Sliders, Official Docs, FNC Cards, Workflows, Reports
+   Module accent: amber/orange #d97706
+   ===================================================== */
+
+/* ── Module accent override ──
+   Defined on .exec-module AND on .exec-slider/.exec-slider-overlay because
+   sliders are appended directly to <body> (outside .exec-module), so without
+   this duplication CSS variables would be undefined inside the slider. */
+.exec-module,
+.exec-slider,
+.exec-slider-overlay {
+    --exec-accent: #d97706;
+    --exec-accent-light: #fbbf24;
+    --exec-accent-dark: #b45309;
+    --exec-accent-bg: rgba(217, 119, 6, 0.08);
+    --exec-accent-bg-hover: rgba(217, 119, 6, 0.14);
+    --exec-accent-rgb: 217, 119, 6;
+}
+
+/* Execution module uses the full available width of the screen (overrides the
+   default 1400px max-width of .main-content) so tables and dashboards don't
+   leave empty gutters on wide displays.
+
+   IMPORTANT: the portal sidebar is position:fixed and .app-content uses
+   margin-left to offset the sidebar. Without an explicit width constraint,
+   .app-content ends up wider than the viewport (overflow to the right) when
+   the sidebar is expanded. We force the content column to the remaining
+   space so nothing escapes the viewport. */
+.exec-module.app-layout {
+    overflow-x: hidden;
+}
+.exec-module .app-content {
+    width: calc(100vw - var(--sidebar-width, 240px));
+    max-width: calc(100vw - var(--sidebar-width, 240px));
+    min-width: 0;
+    box-sizing: border-box;
+    height: 100vh;
+    overflow-y: auto;
+    transition: width 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
+}
+.exec-module .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-card);
+}
+.exec-module.sidebar-collapsed .app-content {
+    width: calc(100vw - var(--sidebar-collapsed, 60px));
+    max-width: calc(100vw - var(--sidebar-collapsed, 60px));
+}
+.exec-module .main-content {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+.exec-module .page-content {
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.exec-module .page-content > .card,
+.exec-module .page-content > .filter-bar {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+}
+/* Prevent wide tables (e.g. Situation Générale) from forcing horizontal
+   overflow of the page itself — they get their own horizontal scrollbar. */
+.exec-module .page-content .card > div[style*="overflow-x"] {
+    max-width: 100%;
+}
+@media (max-width: 768px) {
+    .exec-module .app-content {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+

@@ -1,0 +1,853 @@
+/* OASIS — Module « Exécution de la Surveillance » — processus d’une activité : étapes, circuit et volets
+   Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
+   déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
+
+/* ─── Workflow Stepper (horizontal, numbered circles) ─── */
+.exec-wf-stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin: 0.5rem 0 1.5rem;
+    padding: 0 1rem;
+    position: relative;
+    gap: 0;
+}
+.exec-wf-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font: inherit;
+}
+.exec-wf-step:disabled { cursor: not-allowed; }
+.exec-wf-step .wf-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    background: #fff;
+    border: 2px solid #cbd5e1;
+    color: #94a3b8;
+    z-index: 2;
+    transition: all 0.25s ease;
+}
+.exec-wf-step.completed .wf-circle {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: var(--text-header, #fff);
+}
+.exec-wf-step.active .wf-circle {
+    background: #fff;
+    border-color: #2563eb;
+    color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+.exec-wf-step.locked .wf-circle {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #94a3b8;
+}
+.exec-wf-step .wf-label {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+    text-align: center;
+    color: #64748b;
+    max-width: 140px;
+    line-height: 1.2;
+}
+.exec-wf-step.active .wf-label { color: #2563eb; font-weight: 600; }
+.exec-wf-step.completed .wf-label { color: #334155; }
+/* Connector line */
+.exec-wf-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    width: 100%;
+    height: 2px;
+    background: #cbd5e1;
+    z-index: 1;
+}
+.exec-wf-step.completed:not(:last-child)::after { background: #2563eb; }
+
+/* Rédaction sub-tabs spacing */
+#dossier_redaction_subtab_bar { gap: 0.5rem; }
+#dossier_redaction_subtab_bar .exec-tab { white-space: nowrap; }
+
+/* Dossier slider: expand header h3 to flex row across width */
+.exec-slider[data-hide-close="1"] .exec-slider-header { padding: 0.5rem 0.75rem; }
+.exec-slider[data-hide-close="1"] .exec-slider-header h3 {
+    flex: 1;
+    font-weight: 400;
+    font-size: 0.9rem;
+    margin: 0;
+    display: flex;
+}
+/* Compact stepper */
+.exec-wf-stepper { margin: 0.25rem 0 0.75rem; padding: 0 0.5rem; }
+.exec-wf-step .wf-circle { width: 34px; height: 34px; font-size: 0.9rem; }
+.exec-wf-step .wf-label { margin-top: 0.25rem; font-size: 0.75rem; }
+.exec-wf-step:not(:last-child)::after { top: 17px; }
+
+/* ── Processus d'une activité (volet ouvert depuis Activités de Supervision) ──
+   Le fil d'avancement reprend le composant partagé `.eval-steps` du socle ;
+   seuls le comportement de bouton et l'état verrouillé sont ajoutés ici. */
+.exec-proc-barre {
+    display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+    padding-bottom: .8rem; margin-bottom: .9rem; border-bottom: 1px solid var(--border);
+}
+.exec-proc-barre .exec-proc-fil { flex: 1 1 auto; min-width: 0; }
+button.exec-proc-step { border: none; cursor: pointer; font-family: inherit; }
+/* Étape consultée : couleur du thème. Celle où en est le circuit reste
+   orange (règle `.eval-step.current` du socle), même si on la consulte. */
+button.exec-proc-step.selected:not(.current) { background: var(--primary); color: #fff; }
+button.exec-proc-step:hover:not(:disabled) { filter: brightness(1.08); }
+button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
+.exec-proc-fil-sm .eval-step { font-size: .72rem; padding: .22rem .6rem .22rem .95rem; }
+/* Le sous-fil vient au contact de l'écran de l'étape : la bordure supérieure
+   du formulaire prolonge la ligne inférieure des sous-étapes. */
+.exec-proc-fil-sm { margin-bottom: 0; }
+.exec-proc-actions-etape { display: flex; gap: .4rem; flex-wrap: wrap; margin-left: auto; flex: 0 0 auto; }
+/* Refus : même couleur dans tout le volet, quel que soit le libellé. */
+.exec-btn-rejet, #execSlider button.exec-btn-rejet {
+    background: #b91c1c !important; border-color: #b91c1c !important; color: #fff !important;
+}
+.exec-btn-rejet:hover:not(:disabled) { filter: brightness(1.1); }
+
+/* Sous-étape Transmission : mention de l'envoi, au-dessus de la fiche. */
+.exec-proc-transmission {
+    display: flex; align-items: center; gap: 1.6rem; flex-wrap: wrap;
+    margin-top: .7rem; padding: .5rem .85rem; font-size: .82rem;
+    background: #16653414; border: 1px solid #16653440; border-radius: 6px;
+}
+.exec-proc-transmission i { font-style: normal; color: var(--text-muted); }
+
+/* Observations du validateur, vues par l'initiateur à la sous-étape Soumission. */
+.exec-proc-rejet {
+    display: flex; flex-direction: column; gap: .2rem;
+    margin-top: .7rem; padding: .6rem .85rem;
+    background: #b91c1c14; border: 1px solid #b91c1c55; border-left: 4px solid #b91c1c;
+    border-radius: 6px; color: #b91c1c;
+}
+.exec-proc-rejet-titre { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+.exec-proc-rejet-motif { font-size: .86rem; color: var(--text); white-space: pre-wrap; }
+
+/* Sous-étape « Validation » : observations à l'attention de l'initiateur. */
+.exec-proc-validation { margin-top: .7rem; }
+.exec-proc-validation .form-label { display: block; margin-bottom: .25rem; }
+.exec-proc-validation textarea { width: 100%; resize: vertical; }
+
+/* Formulaire de notification dans le volet : présentation resserrée, pour
+   garder l'ensemble des rubriques sous les yeux. */
+.exec-proc-hote .exec-form-section { margin-bottom: .6rem; }
+.exec-proc-hote .exec-form-section-body { padding: .6rem .8rem; }
+.exec-proc-hote .exec-form-grid { gap: .55rem .9rem; }
+.exec-proc-hote .form-group { margin-bottom: .45rem; }
+.exec-proc-hote .form-group > label,
+.exec-proc-hote .form-label { margin-bottom: .15rem; font-size: .78rem; }
+.exec-proc-hote .form-input,
+.exec-proc-hote .form-control,
+.exec-proc-hote select.form-input { padding: .3rem .5rem; font-size: .82rem; }
+.exec-proc-hote textarea.form-input { min-height: 2.2rem; }
+/* Les grilles de champs du formulaire sont posées en style en ligne : on
+   resserre l'écart et l'entête des rubriques. */
+.exec-proc-hote .exec-form-section-body > div[style*="grid"] { gap: .55rem .9rem !important; }
+.exec-proc-hote .exec-form-section-header { padding: .5rem .8rem; }
+.exec-proc-hote .exec-form-section-body { padding: .5rem .8rem .2rem; }
+.exec-proc-hote .exec-form-sections { gap: .5rem; }
+/* Formulaire consulté en lecture seule. */
+.exec-proc-hote.exec-proc-lecture { opacity: .92; }
+.exec-proc-hote.exec-proc-lecture input:disabled,
+.exec-proc-hote.exec-proc-lecture select:disabled,
+.exec-proc-hote.exec-proc-lecture textarea:disabled {
+    background: var(--bg); color: var(--text); cursor: default;
+}
+.exec-proc-hote { border-top: 1px solid var(--border); padding-top: .9rem; margin-top: .55rem; }
+.exec-proc-fin {
+    display: inline-flex; align-items: center; flex: 0 0 auto;
+    padding: .3rem .7rem; border-radius: 20px; font-size: .72rem; font-weight: 700;
+    background: #47556922; color: #475569;
+}
+.exec-proc-fin.closed { background: #16653422; color: #166534; }
+
+/* Fil d'avancement du Suivi des PAC : même composant que le processus d'une
+   activité, mais purement informatif — les étapes ne se parcourent pas. */
+.exec-pac-barre { padding-bottom: .6rem; margin-bottom: .75rem; }
+.exec-pac-barre .exec-proc-fil-sm { margin-bottom: 0; }
+/* Le fil des constatations hors activités se parcourt : ses étapes sont des
+   boutons, réglés comme ceux du fil du processus. */
+button.exec-pac-step { border: none; cursor: pointer; font-family: inherit; }
+button.exec-pac-step:disabled { cursor: not-allowed; }
+button.exec-pac-step.selected:not(.current) { background: var(--primary); color: #fff; }
+button.exec-pac-step:hover:not(:disabled) { filter: brightness(1.08); }
+button.exec-pac-step.verrouillee { opacity: .5; }
+
+/* Carte d'indicateur : une seconde ligne précise la mesure (part hors
+   activité, effectif derrière un taux) sans encombrer le chiffre. */
+/* Ligne d'échéance : référence, origine, objet, puis le délai à droite. */
+.exec-alerte-ligne {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: .6rem; padding: .3rem 0;
+}
+.exec-alerte-ligne + .exec-alerte-ligne { border-top: 1px solid var(--border); }
+.exec-alerte-origine {
+    display: inline-block; margin: 0 .3rem; padding: .02rem .35rem;
+    font-size: .68rem; font-weight: 600; border-radius: 3px;
+    background: #ede9fe; color: #5b21b6;
+}
+
+/* Décisions de l'étape Validation, sur la ligne du fil : le renvoi appelle à
+   corriger, le rejet arrête le circuit. */
+.exec-cd-renvoyer { color: #f97316; border-color: #f97316; }
+.exec-cd-rejeter { color: #ef4444; border-color: #ef4444; }
+
+/* Plan d'actions : l'intitulé de l'action et sa date prévue partagent une
+   ligne, la date calée à droite. */
+.exec-pac-ligne-action {
+    display: flex; align-items: center; gap: .75rem; margin-bottom: .3rem;
+}
+.exec-pac-ligne-action > label { flex: 1 1 auto; min-width: 0; }
+.exec-pac-date-inline {
+    display: flex; align-items: center; gap: .4rem; margin-left: auto; flex: 0 0 auto;
+}
+.exec-pac-date-inline label {
+    font-size: .72rem; color: var(--text-muted); white-space: nowrap; margin: 0;
+}
+.exec-pac-date-inline input {
+    width: auto; min-width: 9.5rem; font-size: .78rem; padding: .25rem .45rem;
+}
+
+/* Amendement du plan : champ divergent de la version acceptée, drapeau rouge
+   et objet de la modification sur une seule ligne sous le champ. */
+.exec-pac-motif { display: none; align-items: center; gap: .5rem; margin-top: .35rem; }
+.exec-pac-motif.visible { display: flex; }
+.exec-pac-drapeau { display: inline-flex; color: #dc2626; flex-shrink: 0; }
+.exec-pac-motif-champ {
+    font-size: .72rem; font-weight: 600; color: #b91c1c; white-space: nowrap; flex-shrink: 0;
+}
+.exec-pac-motif-valeur { font-size: .75rem; color: var(--text); }
+.exec-pac-motif-select { flex: 0 1 22rem; min-width: 0; font-size: .76rem; padding: .25rem .4rem; }
+.exec-pac-motif-precision { flex: 1 1 10rem; min-width: 0; font-size: .76rem; padding: .25rem .4rem; }
+textarea.exec-pac-champ-amende,
+input.exec-pac-champ-amende { border-color: #dc2626; }
+/* Motif exigé et resté vide : encerclé jusqu'à ce qu'il soit renseigné. */
+.exec-pac-manquant {
+    border: 2px solid #dc2626 !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, .18);
+    border-radius: 6px;
+}
+/* Case à cocher de l'évaluation AAC. */
+.exec-pac-case {
+    display: flex; align-items: center; gap: .45rem;
+    font-size: .78rem; font-weight: 600; color: #065f46; cursor: pointer;
+}
+.exec-pac-case input { width: auto; flex: 0 0 auto; margin: 0; }
+/* Volet « Commentaires de suivi » : fil des commentaires, puis composeur
+   réservé à l'AAC — items visés, précision, texte. */
+.exec-suivi-liste {
+    flex: 1; min-height: 6rem; max-height: 55vh; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 6px; padding: .5rem;
+}
+.exec-suivi-comm {
+    padding: .4rem .55rem; margin-bottom: .35rem; font-size: .77rem;
+    background: #e0f2fe; border-left: 3px solid #0284c7; border-radius: 4px;
+}
+.exec-suivi-comm:last-child { margin-bottom: 0; }
+.exec-suivi-comm-tete { display: flex; justify-content: space-between; gap: .5rem; }
+.exec-suivi-comm-tete span { color: var(--text-muted); font-size: .7rem; white-space: nowrap; }
+.exec-suivi-comm-items { display: flex; flex-wrap: wrap; gap: .25rem; margin: .25rem 0; }
+.exec-suivi-comm-items span {
+    font-size: .68rem; font-weight: 600; padding: .1rem .4rem; border-radius: 10px;
+    background: #0284c722; color: #075985;
+}
+/* Sous-menu « Suivi Terrain » : chaque ligne se déplie sur le détail. */
+.exec-terrain-ligne { cursor: pointer; }
+.exec-terrain-ligne:hover { background: rgba(127, 150, 180, .08); }
+.exec-terrain-chevron {
+    display: inline-flex; vertical-align: middle; margin-right: .35rem;
+    transform: rotate(-90deg); transition: transform .2s; color: var(--text-muted);
+}
+.exec-terrain-chevron.ouvert { transform: rotate(0); }
+.exec-terrain-detail > td {
+    background: var(--bg); padding: .85rem 1rem 1rem !important;
+    border-left: 3px solid var(--exec-accent, #1f6fb2);
+}
+.exec-terrain-detail-corps { display: flex; flex-direction: column; gap: .6rem; }
+.exec-terrain-grille-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+.exec-terrain-grille-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+@media (max-width: 1100px) {
+    .exec-terrain-grille-3, .exec-terrain-grille-2 { grid-template-columns: 1fr; }
+}
+.exec-terrain-bloc {
+    display: flex; flex-direction: column;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+    padding: .55rem .7rem .6rem; font-size: .79rem; line-height: 1.45;
+}
+.exec-terrain-bloc-titre {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-muted); padding-bottom: .3rem; margin-bottom: .4rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-terrain-bloc-titre b {
+    font-size: .66rem; padding: .05rem .35rem; border-radius: 8px;
+    background: rgba(127, 150, 180, .18); color: var(--text);
+}
+.exec-terrain-bloc-corps { flex: 1; overflow-wrap: anywhere; }
+.exec-terrain-echeance {
+    flex: 0 0 auto; text-transform: none; letter-spacing: 0; font-weight: 700; font-size: .7rem;
+    padding: .1rem .4rem; border-radius: 10px; background: #d9770622; color: #92400e;
+}
+.exec-terrain-vide { color: var(--text-muted); }
+.exec-terrain-rappel-bloc { background: var(--bg-card); }
+.exec-terrain-champs {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: .3rem .9rem;
+}
+.exec-terrain-champ { display: flex; flex-direction: column; gap: .05rem; }
+.exec-terrain-champ span {
+    font-size: .65rem; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted);
+}
+.exec-terrain-champ strong { font-size: .79rem; font-weight: 600; }
+.exec-terrain-description {
+    margin: .5rem 0 0; padding-top: .45rem; border-top: 1px dashed var(--border);
+    font-size: .79rem;
+}
+.exec-terrain-fil { max-height: 9rem; overflow-y: auto; }
+.exec-terrain-fil .exec-suivi-comm:last-child,
+.exec-terrain-fil .exec-suivi:last-child { margin-bottom: 0; }
+
+/* Accès aux discussions depuis le bandeau du formulaire PAC, à la place de la
+   croix. Rouge dès qu'un message n'a pas été lu. */
+.exec-pac-discussions {
+    display: inline-flex; align-items: center; gap: .4rem; flex: 0 0 auto;
+    padding: .3rem .7rem; border-radius: 20px; cursor: pointer;
+    font: inherit; font-size: .78rem; font-weight: 600;
+    background: #ffffff26; color: #fff; border: 1px solid #ffffff59;
+}
+.exec-pac-discussions:hover { background: #ffffff3d; }
+.exec-pac-discussions.alerte {
+    background: #dc2626; border-color: #dc2626; color: #fff !important;
+}
+.exec-pac-discussions svg { width: 15px; height: 15px; }
+.exec-pac-discussions-pastille,
+.exec-pac-discussions-compte {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.1rem; height: 1.1rem; padding: 0 .25rem; border-radius: 10px;
+    font-size: .68rem; font-weight: 700;
+}
+.exec-pac-discussions-pastille { background: #fff; color: #dc2626; }
+.exec-pac-discussions-compte { background: #ffffff33; color: #fff; }
+
+/* Tiroir des discussions : glisse depuis la droite, sur le tiers de l'écran. */
+/* Le tiroir épouse le volet : même bord supérieur, même bord inférieur. */
+.exec-pac-tiroir {
+    position: fixed; top: var(--topbar-height, 56px); right: 0; bottom: 0;
+    width: 33.333vw; min-width: 20rem;
+    z-index: 10002; display: flex; flex-direction: column;
+    background: var(--bg-card, #fff); border-left: 1px solid var(--border);
+    box-shadow: -12px 0 40px rgba(0, 0, 0, .18);
+    transform: translateX(100%); transition: transform .28s ease;
+}
+.exec-pac-tiroir.ouvert { transform: translateX(0); }
+.exec-pac-tiroir-tete {
+    display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    padding: .8rem 1rem; font-weight: 700; font-size: .92rem;
+    background: var(--primary, #12406b); color: #fff;
+}
+.exec-pac-tiroir-tete button {
+    border: none; background: none; color: #fff; cursor: pointer; display: inline-flex;
+}
+.exec-pac-tiroir-corps { flex: 1; overflow-y: auto; padding: .9rem 1rem; }
+.exec-pac-tiroir-corps .exchange-chat { max-height: none; }
+@media (max-width: 900px) {
+    .exec-pac-tiroir { width: 100vw; min-width: 0; }
+}
+
+/* Commentaire encore au brouillon : liseré ambre et mention. */
+.exec-suivi-comm.brouillon { background: #fffbeb; border-left-color: #d97706; }
+.exec-suivi-brouillon {
+    font-style: normal; font-size: .66rem; font-weight: 700; color: #92400e;
+    background: #d9770622; padding: .05rem .35rem; border-radius: 8px; margin-right: .3rem;
+}
+.exec-suivi-comm-tete span { display: inline-flex; align-items: center; gap: .25rem; }
+.exec-suivi-action {
+    border: none; background: none; padding: 0 .1rem; cursor: pointer; display: inline-flex;
+    color: var(--text-muted);
+}
+.exec-suivi-action:hover { color: var(--text); }
+.exec-suivi-action.exec-suivi-supprimer:hover { color: #dc2626; }
+.exec-suivi-action svg { width: 13px; height: 13px; }
+.exec-suivi-tete span { display: inline-flex; align-items: center; gap: .25rem; }
+
+.exec-suivi-composeur { margin-top: .5rem; }
+.exec-suivi-items { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .5rem; }
+.exec-suivi-puce {
+    display: inline-flex; align-items: center; gap: .3rem; cursor: pointer;
+    font-size: .72rem; padding: .15rem .45rem; border: 1px solid var(--border);
+    border-radius: 12px; background: var(--bg);
+}
+.exec-suivi-puce input { width: auto; margin: 0; flex: 0 0 auto; }
+.exec-suivi-puce:has(input:checked) { background: #0284c722; border-color: #0284c7; color: #075985; }
+.exec-suivi-precision { flex: 1 1 8rem; min-width: 0; font-size: .74rem; padding: .2rem .4rem; }
+.exec-suivi-saisie { display: flex; gap: .35rem; align-items: flex-end; margin-top: .4rem; }
+.exec-suivi-saisie textarea { flex: 1; font-size: .76rem; padding: .3rem; }
+.exec-suivi-saisie button { flex: 0 0 auto; white-space: nowrap; }
+
+/* Commentaires généraux de suivi : une entrée par suivi, datée et signée. */
+.exec-suivis { max-height: 11rem; overflow-y: auto; }
+.exec-suivi {
+    padding: .35rem .5rem; margin-bottom: .3rem; font-size: .76rem;
+    background: #e0f2fe; border-left: 3px solid #0284c7; border-radius: 4px;
+}
+.exec-suivi-tete {
+    display: flex; justify-content: space-between; gap: .5rem; margin-bottom: .15rem;
+}
+.exec-suivi-tete span { color: var(--text-muted); font-size: .7rem; white-space: nowrap; }
+
+/* Date de dépôt d'une pièce jointe. */
+.exec-preuve-date { font-size: .7rem; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; }
+
+/* Pièces jointes du plan d'actions : numéro, intitulé, fichier, commentaire. */
+.exec-preuve {
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: .4rem .55rem; margin-bottom: .35rem; background: var(--bg-card);
+}
+.exec-preuve-tete { display: flex; align-items: center; gap: .5rem; }
+.exec-preuve-num {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--exec-accent, #1f6fb2); color: #fff;
+    font-size: .7rem; font-weight: 700;
+}
+.exec-preuve-intitule {
+    flex: 1; min-width: 0; font-size: .8rem; font-weight: 600;
+    overflow-wrap: anywhere;
+}
+a.exec-preuve-intitule { color: var(--exec-accent, #1f6fb2); text-decoration: none; }
+a.exec-preuve-intitule:hover { text-decoration: underline; }
+.exec-preuve-comm {
+    margin: .3rem 0 0 1.75rem; padding: .3rem .5rem; font-size: .75rem;
+    background: var(--bg); border-left: 3px solid var(--exec-accent, #1f6fb2);
+    border-radius: 4px; overflow-wrap: anywhere;
+}
+
+/* Versions antérieures du plan d'actions. Bloc et versions se replient chacun
+   pour soi : sélecteurs d'enfant direct, sans emprunter `.exec-form-section`
+   dont la règle de dépliage porte sur toute la descendance. */
+.exec-pac-versions,
+.exec-pac-version {
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.exec-pac-versions { margin-top: .6rem; }
+.exec-pac-version + .exec-pac-version { margin-top: .4rem; }
+.exec-pac-versions-bandeau {
+    display: flex; align-items: center; gap: .6rem; width: 100%;
+    padding: .5rem .75rem; cursor: pointer; text-align: left;
+    font: inherit; font-size: .8rem; font-weight: 600; color: var(--text);
+    background: var(--bg); border: none; transition: background .2s;
+}
+.exec-pac-versions-bandeau:hover { background: var(--bg-card); }
+.exec-pac-versions-pastille {
+    display: flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    background: #64748b; color: #fff; font-size: .74rem; font-weight: 700;
+}
+.exec-pac-versions-titre { flex: 1; min-width: 0; }
+.exec-pac-versions-chevron {
+    display: inline-flex; margin-left: auto; color: var(--text-muted);
+    transform: rotate(-90deg); transition: transform .2s;
+}
+.exec-pac-versions.ouvert > .exec-pac-versions-bandeau,
+.exec-pac-version.ouvert > .exec-pac-versions-bandeau {
+    border-bottom: 1px solid var(--border);
+}
+.exec-pac-versions.ouvert > .exec-pac-versions-bandeau .exec-pac-versions-chevron,
+.exec-pac-version.ouvert > .exec-pac-versions-bandeau .exec-pac-versions-chevron {
+    transform: rotate(0);
+}
+.exec-pac-versions-corps,
+.exec-pac-version-corps { display: none; padding: .6rem .75rem; font-size: .78rem; }
+.exec-pac-versions.ouvert > .exec-pac-versions-corps,
+.exec-pac-version.ouvert > .exec-pac-version-corps { display: block; }
+
+/* Formulaire PAC : le plan d'actions occupe la largeur, les commentaires de
+   suivi se rabattent sur une poignée verticale à droite. */
+/* Rappel de la constatation : le récapitulatif à gauche, le journal de ses
+   modifications à droite. */
+.exec-rappel-rangee { display: flex; align-items: stretch; gap: .6rem; }
+.exec-rappel-corps { flex: 1 1 auto; min-width: 0; }
+.exec-ajust-liste { flex: 1; max-height: 220px; overflow-y: auto; }
+/* Les mesures de l'engagement sur une même ligne : ouverture, délai,
+   criticité, échéance. */
+.exec-ajust-mesures {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: .5rem; align-items: end;
+}
+.exec-ajust-mesures .form-group { margin-bottom: 0; }
+.exec-ajust-echeance { background: var(--bg); font-weight: 700; }
+.exec-ajust-vide { color: var(--text-muted); font-size: .77rem; }
+.exec-ajust-actions { display: inline-flex; gap: .3rem; margin-left: auto; flex-shrink: 0; }
+/* Le bandeau de section est sombre : les boutons s'y détachent en négatif. */
+.exec-module .exec-form-section-header .exec-ajust-btn {
+    padding: .1rem .5rem; font-size: .7rem; font-weight: 600; white-space: nowrap;
+    background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .55);
+    color: #fff;
+}
+.exec-module .exec-form-section-header .exec-ajust-btn:hover {
+    background: #fff; color: var(--primary); border-color: #fff;
+}
+.exec-ajust-changements { display: flex; flex-direction: column; gap: .15rem; margin: .25rem 0; }
+.exec-ajust-ligne {
+    display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; font-size: .72rem;
+}
+.exec-ajust-ligne .lib { color: var(--text-muted); font-weight: 600; }
+.exec-ajust-ligne .avant { text-decoration: line-through; color: var(--text-muted); }
+.exec-ajust-ligne .apres { font-weight: 700; color: var(--text); }
+.exec-ajust-ligne svg { width: 12px; height: 12px; }
+.exec-ajust-intro { font-size: .78rem; color: var(--text-muted); margin: 0 0 .6rem; }
+
+/* Fil de discussion d'une notification : même découpe que l'étape
+   Confirmation du processus — entête en lignes, puis blocs titrés. */
+.exec-echange-entete { margin-bottom: .75rem; }
+.exec-echange-dates { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.exec-echange-dates .form-group { margin-bottom: 0; }
+.exec-echange-lecture { font-size: .72rem; font-weight: 500; color: var(--text-muted); }
+.exec-proc-accord-actions { display: flex; justify-content: flex-end; margin-top: .6rem; }
+
+/* Actions d'une notification, côté prestataire : trois boutons de même
+   gabarit, empilés dans l'ordre du parcours — discuter, accuser, consulter. */
+.exec-notif-actions { display: flex; flex-direction: column; gap: .25rem; width: 190px; }
+.exec-notif-btn {
+    width: 100%; height: 20px; padding: 0 .5rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    font: inherit; font-size: .7rem; font-weight: 600; line-height: 1;
+    border-radius: 4px; border: 1px solid transparent; cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.exec-notif-btn.changement { background: #f97316; border-color: #ea580c; color: #fff; }
+.exec-notif-btn.accuser { background: #16a34a; border-color: #15803d; color: #fff; }
+.exec-notif-btn.apercu { background: #fff; border-color: #94a3b8; color: #1e293b; }
+.exec-notif-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.exec-notif-btn:disabled { opacity: .5; cursor: default; }
+.exec-suivi-comm-compte {
+    font-size: .68rem; font-weight: 700; padding: 0 .35rem; border-radius: 8px;
+    background: var(--bg); border: 1px solid var(--border); color: var(--text-muted);
+}
+@media (max-width: 1100px) {
+    .exec-rappel-rangee { flex-direction: column; }
+}
+
+.exec-pac-rangee {
+    display: flex; align-items: stretch; gap: .6rem; margin-top: .6rem;
+}
+.exec-pac-col-gauche { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; }
+.exec-pac-volet {
+    display: flex; align-items: stretch; flex: 0 0 auto;
+    transition: width .25s ease; width: 2.1rem;
+}
+/* Volet ouvert : la moitié de la largeur du formulaire. */
+.exec-pac-volet.ouvert { width: 50%; }
+.exec-pac-volet-poignee {
+    flex: 0 0 2.1rem; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    padding: .5rem .2rem; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 600;
+    color: #92400e; background: #fef3c7; border: 1px solid var(--border); border-radius: 6px;
+}
+.exec-pac-volet-poignee:hover { filter: brightness(.97); }
+.exec-pac-volet-titre { writing-mode: vertical-rl; white-space: nowrap; }
+.exec-pac-volet-chevron { display: flex; transform: rotate(90deg); }
+.exec-pac-volet.ouvert .exec-pac-volet-chevron { transform: rotate(-90deg); }
+.exec-pac-volet.ouvert .exec-pac-volet-titre { display: none; }
+.exec-pac-volet-corps { display: none; flex: 1 1 auto; min-width: 0; margin-left: .5rem; }
+.exec-pac-volet.ouvert .exec-pac-volet-corps { display: flex; flex-direction: column; }
+@media (max-width: 900px) {
+    .exec-pac-rangee { flex-direction: column; }
+    .exec-pac-volet, .exec-pac-volet.ouvert { width: 100%; }
+    .exec-pac-volet-titre { writing-mode: horizontal-tb; }
+    .exec-pac-volet-poignee { flex: 0 0 auto; flex-direction: row; }
+}
+
+/* Titre de l'étape, son état, ses sous-étapes et ses actions sur une ligne.
+   Les informations de l'activité ne sont pas répétées : le bandeau les porte. */
+.exec-proc-titre {
+    /* Une seule ligne : titre, fil des sous-étapes, puis l'action de fin
+       d'étape à l'extrême droite. Le fil défile plutôt que de la rompre. */
+    display: flex; align-items: center; gap: .6rem; flex-wrap: nowrap;
+    margin-bottom: 0;
+}
+.exec-proc-titre #dossier_redaction_subtab_bar {
+    /* Les onglets défilent horizontalement plutôt que de passer à la ligne. */
+    flex: 1 1 auto; min-width: 0; flex-wrap: nowrap !important;
+}
+.exec-proc-titre h4, .exec-proc-titre .exec-proc-etat { flex: 0 0 auto; }
+.exec-proc-titre h4 { margin: 0; }
+.exec-proc-titre .exec-proc-fil-sm { flex: 0 1 auto; min-width: 0; margin-left: .4rem; }
+.exec-proc-etat {
+    padding: .15rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700;
+    background: #b4530922; color: #b45309;
+}
+.exec-proc-etat.fait { background: #16653422; color: #166534; }
+/* Bandeau du volet : prestataire, objet, références, statut — à toutes les étapes. */
+.exec-proc-bandeau {
+    /* Une seule ligne : le bouton de sortie reste au bout du bandeau, les
+       libellés se tronquent plutôt que de repousser le fil d'avancement. */
+    display: flex; align-items: center; gap: 1.4rem; flex-wrap: nowrap;
+    font-size: .82rem; font-weight: 400; min-width: 0; width: 100%;
+}
+.exec-proc-bandeau-item { display: inline-flex; align-items: baseline; gap: .35rem; min-width: 0; }
+.exec-proc-bandeau-item i { font-style: normal; opacity: .7; }
+.exec-proc-bandeau-item > strong,
+.exec-proc-bandeau-item { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.exec-proc-bandeau-ref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
+/* Le titre du volet est une boîte flexible sans plancher : sans cela, le
+   bandeau du processus l'élargit au-delà de l'en-tête. */
+#execSlider .exec-slider-header h3:has(.exec-proc-bandeau) { min-width: 0; overflow: hidden; }
+/* Sortie du processus : bouton à l'extrême gauche du bandeau. */
+.exec-proc-retour { margin-right: .4rem; flex: 0 0 auto; white-space: nowrap; }
+
+/* Le processus se parcourt d'une traite : ni glissement du volet, ni fondu du
+   corps entre deux étapes. Les styles en ligne posés par le portage PESSCO
+   sont neutralisés ici. */
+#execSlider.exec-proc-instant,
+#execSlider.exec-proc-instant .exec-slider-body,
+#execSliderOverlay.exec-proc-instant {
+    transition: none !important; animation: none !important;
+}
+/* L'écran des échanges rappelle référence, prestataire et statut : le bandeau
+   les porte déjà, ce rappel est masqué dans le volet du processus. */
+.exec-proc-hote .exec-proc-col > div:first-child:has(+ h4),
+.exec-proc-hote > div:first-child:has(+ h4) { display: none; }
+
+/* Le volet des échanges porte son propre bloc d'accord : dans le processus,
+   c'est la colonne de droite qui l'assure. */
+.exec-proc-col:not(.exec-proc-col-accord) :is(div):has(> #exec_accord_debut),
+.exec-proc-col:not(.exec-proc-col-accord) > div:has(#exec_accord_debut) { display: none; }
+#execSlider:has(.exec-proc-2col) .exec-slider-footer button[onclick*="execValidateAccord"] { display: none; }
+
+/* Étape Confirmation : discussions à gauche, confirmation de l'activité à droite. */
+.exec-proc-2col {
+    display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr);
+    gap: 1.4rem; align-items: start;
+}
+.exec-proc-col { min-width: 0; }
+.exec-proc-col-accord {
+    border-left: 1px solid var(--border); padding-left: 1.4rem;
+}
+.exec-proc-col-titre { margin: 0 0 .7rem; font-size: .95rem; }
+.exec-proc-col-accord .form-label { display: block; margin: .6rem 0 .25rem; }
+.exec-proc-col-accord textarea { resize: vertical; }
+@media (max-width: 1100px) {
+    .exec-proc-2col { grid-template-columns: 1fr; }
+    .exec-proc-col-accord { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 1rem; }
+}
+
+.exec-proc-bloc {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: .8rem 1rem; margin-bottom: 1rem;
+}
+.exec-proc-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; }
+.exec-proc-ligne {
+    display: flex; justify-content: space-between; gap: 1rem;
+    padding: .3rem 0; font-size: .85rem;
+}
+.exec-proc-ligne span { color: var(--text-muted); }
+.exec-proc-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.exec-proc-vide { color: var(--text-muted); text-align: center; padding: 2rem 0; }
+
+/* Écran embarqué dans le volet du processus : son propre fil d'étapes ferait
+   double emploi avec le fil principal. Les sous-onglets de rédaction, eux,
+   reprennent l'allure du fil d'avancement. */
+.exec-proc-hote #dossier_step_bar { display: none; }
+.exec-proc-titre #dossier_redaction_subtab_bar,
+.exec-proc-hote #dossier_redaction_subtab_bar {
+    display: flex; align-items: stretch; gap: 3px; flex-wrap: nowrap;
+    overflow-x: auto; border: none; padding: 0;
+}
+.exec-proc-titre #dossier_redaction_subtab_bar .exec-tab,
+.exec-proc-hote #dossier_redaction_subtab_bar .exec-tab {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: .25rem .65rem .25rem 1rem; margin-left: -.5rem; border: none; border-radius: 0;
+    font-size: .74rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+    background: #e2e8f0; color: #64748b;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%, 10px 50%);
+}
+.exec-proc-titre #dossier_redaction_subtab_bar .exec-tab:first-child,
+.exec-proc-hote #dossier_redaction_subtab_bar .exec-tab:first-child {
+    margin-left: 0; padding-left: .8rem;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+}
+.exec-proc-titre #dossier_redaction_subtab_bar .exec-tab:last-child,
+.exec-proc-hote #dossier_redaction_subtab_bar .exec-tab:last-child {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 10px 50%);
+}
+.exec-proc-titre #dossier_redaction_subtab_bar .exec-tab.active,
+.exec-proc-hote #dossier_redaction_subtab_bar .exec-tab.active { background: var(--primary); color: #fff; }
+/* Dans la ligne de titre, la barre se resserre et défile si nécessaire. */
+.exec-proc-titre #dossier_redaction_subtab_bar { flex: 0 1 auto; min-width: 0; margin-left: .4rem; }
+
+/* ── Fiche officielle de notification (aperçu et impression) ── */
+.fiche-notification {
+    font-family: "Calibri", "Segoe UI", Arial, sans-serif;
+    font-size: .88rem; color: #111; line-height: 1.45;
+    background: #fff; max-width: 210mm; margin: 0 auto; padding: 16mm 15mm;
+}
+.fiche-entete {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem;
+    padding-bottom: .7rem; border-bottom: 2px solid #1a365d;
+}
+.fiche-emetteur { display: flex; align-items: center; gap: .8rem; min-width: 0; }
+.fiche-logo { height: 52px; width: auto; object-fit: contain; }
+.fiche-etat { font-size: .72rem; text-transform: uppercase; letter-spacing: .09em; color: #64748b; }
+.fiche-aac { font-weight: 700; font-size: .98rem; color: #1a365d; }
+.fiche-sigle { font-size: .76rem; color: #64748b; }
+.fiche-identite { text-align: right; font-size: .78rem; }
+.fiche-ref { display: flex; gap: .5rem; justify-content: flex-end; }
+.fiche-ref span { color: #64748b; }
+.fiche-ref strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.fiche-titre {
+    margin: 1.1rem 0 .8rem; text-align: center;
+    font-size: 1.12rem; font-weight: 700; letter-spacing: .01em;
+    text-transform: uppercase; color: #1a365d;
+}
+.fiche-destinataire {
+    display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap;
+    padding: .5rem .8rem; margin-bottom: 1.2rem;
+    background: #f1f5f9; border-left: 3px solid #1a365d;
+}
+.fiche-destinataire span { font-size: .76rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; }
+.fiche-destinataire strong { font-size: .95rem; }
+
+.fiche-section { margin-bottom: 1.05rem; break-inside: avoid; }
+.fiche-section h2 {
+    display: flex; align-items: center; gap: .5rem; margin: 0 0 .45rem;
+    font-size: .84rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    color: #1a365d; border-bottom: 1px solid #cbd5e1; padding-bottom: .2rem;
+}
+.fiche-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.25rem; height: 1.25rem; border-radius: 50%; flex: 0 0 auto;
+    background: #1a365d; color: #fff; font-size: .7rem;
+}
+.fiche-sous-titre { margin: .6rem 0 .3rem; font-weight: 600; font-size: .82rem; color: #334155; }
+
+.fiche-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.fiche-table th, .fiche-table td { padding: .28rem .1rem; vertical-align: top; text-align: left; }
+.fiche-table > tbody > tr > th, .fiche-table > tr > th {
+    width: 38%; font-weight: 600; color: #334155;
+}
+.fiche-table.fiche-grille { border: 1px solid #94a3b8; }
+.fiche-table.fiche-grille th, .fiche-table.fiche-grille td {
+    border: 1px solid #cbd5e1; padding: .3rem .5rem;
+}
+.fiche-table.fiche-grille thead th {
+    background: #e2e8f0; font-size: .78rem; text-transform: uppercase; letter-spacing: .03em;
+}
+.fiche-table.fiche-grille tbody tr:nth-child(even) { background: #f8fafc; }
+.fiche-liste { margin: .2rem 0 0 1.1rem; padding: 0; }
+.fiche-liste li { margin-bottom: .18rem; }
+.fiche-vide { margin: .2rem 0; color: #94a3b8; font-style: italic; }
+
+.fiche-signature {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem;
+    margin-top: 1.8rem; break-inside: avoid;
+}
+.fiche-lieu { font-size: .85rem; padding-top: .4rem; }
+.fiche-cartouche { width: 58mm; text-align: center; }
+.fiche-cartouche-titre { font-size: .78rem; color: #64748b; margin-bottom: .2rem; }
+.fiche-cartouche-espace { height: 22mm; border: 1px solid #cbd5e1; border-radius: 3px; }
+.fiche-cartouche-nom { margin-top: .3rem; font-weight: 600; font-size: .84rem; }
+/* Accusé de réception : la réponse du prestataire, encadrée de vert pour
+   la distinguer de la fiche que l'Autorité a établie. */
+.fiche-accuse {
+    margin-top: 1.4rem;
+    padding: .8rem 1rem 1rem;
+    border: 2px solid #16a34a;
+    border-radius: 8px;
+}
+.fiche-accuse h2 { color: #15803d; border-bottom-color: #16a34a; }
+.fiche-accuse-texte { margin: .4rem 0 0; line-height: 1.6; }
+.fiche-accuse-perimetre { white-space: pre-line; }
+.fiche-accuse-pied {
+    display: flex; flex-wrap: wrap; gap: .5rem 1.25rem;
+    margin-top: .9rem; padding-top: .6rem;
+    border-top: 1px solid #16a34a55;
+    font-size: .84rem; color: #166534;
+}
+
+.fiche-pied {
+    margin-top: 1.6rem; padding-top: .5rem; border-top: 1px solid #cbd5e1;
+    font-size: .72rem; color: #64748b; text-align: center;
+}
+
+@media print {
+    .fiche-notification { padding: 0; max-width: none; }
+    .fiche-section, .fiche-signature { break-inside: avoid; }
+    .fiche-entete { border-bottom-color: #000; }
+    .fiche-titre, .fiche-aac, .fiche-section h2 { color: #000; }
+    .fiche-num { background: #000; }
+}
+
+/* ── Aperçu d'un rapport : commentaires (1/4) et document final (3/4) ── */
+.exec-apercu-rapport {
+    display: grid; grid-template-columns: minmax(220px, 1fr) 3fr;
+    gap: 1.2rem; align-items: start;
+}
+.exec-apercu-rapport h4 { margin: 0 0 .5rem; }
+.exec-apercu-commentaires { position: sticky; top: 0; min-width: 0; }
+.exec-apercu-commentaires textarea { width: 100%; resize: vertical; }
+.exec-apercu-commentaires .btn { margin-top: .5rem; }
+.exec-apercu-meta {
+    display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+    font-size: .8rem; color: var(--text-muted); margin: 0 0 .5rem;
+}
+.exec-apercu-document { min-width: 0; border-left: 1px solid var(--border); padding-left: 1.2rem; }
+.exec-apercu-cadre {
+    width: 100%; height: 78vh; border: 1px solid var(--border);
+    border-radius: 4px; background: #fff;
+}
+@media (max-width: 1100px) {
+    .exec-apercu-rapport { grid-template-columns: 1fr; }
+    .exec-apercu-document { border-left: none; padding-left: 0; }
+}
+
+/* ── Hauteur commune des boutons dans le volet du processus ──
+   Tous les boutons s'alignent sur celui du pied de formulaire (« Brouillon »).
+   Les chevrons des fils d'avancement gardent leur gabarit propre, ainsi que
+   la croix de fermeture du volet, carrée. */
+#execSlider .btn:not(.eval-step):not(.exec-wf-step):not(.exec-tab) {
+    height: 27px; min-height: 27px;
+    padding-top: 0; padding-bottom: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    line-height: 1;
+}
+#execSlider .btn:not(.eval-step):not(.exec-wf-step):not(.exec-tab) svg {
+    width: 14px; height: 14px; flex: 0 0 auto;
+}
+
+/* Zone de réponse des échanges : saisie et bouton d'envoi sur la même ligne. */
+.exchange-reply { margin-top: 1rem; }
+.exchange-reply > label { display: block; font-weight: 600; font-size: .85rem; margin-bottom: .25rem; }
+.exchange-reply-row { display: flex; align-items: flex-end; gap: .5rem; }
+.exchange-reply-row textarea { flex: 1 1 auto; min-width: 0; }
+.exchange-reply-row .btn { flex: 0 0 auto; }
+
+/* Discussions : le nom complet de l'auteur accompagne l'horodatage, sous le
+   message, du côté de la bulle. */
+.exchange-bubble-time { display: flex; gap: .4rem; align-items: baseline; }
+.exchange-bubble-time.self { justify-content: flex-end; }
+.exchange-bubble-time.other { justify-content: flex-start; }
+.exchange-bubble-auteur { font-weight: 600; }
+.exchange-bubble-auteur::after { content: "·"; margin-left: .4rem; font-weight: 400; opacity: .6; }
+
+/* Message d'erreur du formulaire d'activité hors plan. */
+.exec-proc-erreur { margin: .5rem 0 0; color: #b91c1c; font-size: .82rem; }
+

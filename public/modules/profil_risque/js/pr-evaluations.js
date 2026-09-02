@@ -891,11 +891,17 @@ function evalUserLabel(uid) {
     return full || u.fullName || u.nom_utilisateur || u.email || uid;
 }
 
-function openEvalDetail(evalId) {
+// ── Fiche d'une évaluation ──
+// L'écran le plus dense du module : on sépare ce qui se calcule (les droits de
+// l'utilisateur, les indicateurs, les totaux) de ce qui s'écrit (le corps de la
+// fiche, puis sa barre d'actions). Les deux fabriques reçoivent le contexte.
+
+// Contexte de la fiche : évaluation, portée de l'utilisateur, indicateurs et totaux.
+// Renvoie `null` quand l'évaluation n'existe pas.
+function _prEvalContexte(evalId) {
     const D = APP_STATE.data;
     const ev = (D.evaluations || []).find(e => e.id === evalId);
-    if (!ev) return;
-    APP_STATE.currentEvalId = evalId;
+    if (!ev) return null;
     const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
     const sect = ((D._rawSecteurs || D.secteurs) || []).find(s => s.id === ev.secteur_id);
     // Use the raw (unfiltered) sub-activity list so designated evaluators outside
@@ -1090,6 +1096,29 @@ function openEvalDetail(evalId) {
     const maxComp = compTotal * 3;
 
     // Export/Import toolbar (réunions are now dedicated tabs after Complexité)
+    return {
+        // Fabriques internes : elles ferment sur l'évaluation et servent au corps.
+        renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus,
+        evalId, D, ev, prest, sect, sas, indices, canEditDomain,
+        _consolKey, _consolLockKey, _consolActive, _consolLocked, isReadonly,
+        currentUserId, isValidator, isDesignated, isDraftMode, g,
+        confInds, perfInds, allCompInds, confCount, _srcPerf, _srcComp,
+        perfCount, compCount, confTotal, perfTotal, compTotal, allThreeScored,
+        sumConf, sumPerf, sumComp, maxConf, maxPerf, maxComp,
+    };
+}
+
+// Corps de la fiche : barre d'outils, rappel d'un renvoi, entête et onglets.
+function _prEvalCorpsHtml(c) {
+    const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
+    const {
+        D, ev, prest, sect, sas, indices,
+        isReadonly, currentUserId, isValidator, isDraftMode, g, confInds,
+        perfInds, confCount, perfCount, compCount, confTotal, perfTotal,
+        compTotal, sumConf, sumPerf, sumComp, maxConf, maxPerf,
+        maxComp, evalId,
+    } = c;
+
     let toolbarHtml = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;">
         ${renderEvalProcessSteps(ev)}
         <span style="margin-left:auto;"></span>
@@ -1386,6 +1415,16 @@ function openEvalDetail(evalId) {
     }
 
     bodyHtml += '</div>';
+    return bodyHtml;
+}
+
+// Barre d'actions : enregistrement, soumission et décisions du circuit.
+function _prEvalPiedHtml(c) {
+    const { _escapeHtml } = c;
+    const {
+        ev, prest, isReadonly, currentUserId, isValidator, isDraftMode,
+        allThreeScored, evalId,
+    } = c;
 
     // Smaller buttons in the footer (reduced ~1/4)
     const _bs = 'style="padding:0.28rem 0.85rem;font-size:0.82rem;"';
@@ -1424,9 +1463,18 @@ function openEvalDetail(evalId) {
         }
     }
 
-    openSlicer(`${t('eval_indicators')} - ${prest?.nom || ''}`, bodyHtml, footerHtml);
+    return footerHtml;
+}
 
-    // After the slicer is rendered, trigger any pending tab loader (Phase 3 / 5)
+function openEvalDetail(evalId) {
+    const c = _prEvalContexte(evalId);
+    if (!c) return;
+    APP_STATE.currentEvalId = evalId;
+    const bodyHtml = _prEvalCorpsHtml(c);
+    const footerHtml = _prEvalPiedHtml(c);
+    openSlicer(`${t('eval_indicators')} - ${c.prest?.nom || ''}`, bodyHtml, footerHtml);
+
+    // Une fois le volet rendu, on lance le chargement d'onglet en attente.
     const pending = window._evalPendingLoader;
     if (pending) {
         setTimeout(() => {

@@ -5,5 +5,6 @@
  */
 
 function rampToast(message, type) {
+    if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
     return window.oasisToast(message, type);
 }

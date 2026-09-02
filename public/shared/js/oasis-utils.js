@@ -12,6 +12,7 @@ function formatDate(d) {
 
 // ── Toast notification ──
 function showToast(message, type = 'success') {
+    if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
     return window.oasisToast(message, type);
 }
 

@@ -61,12 +61,19 @@ module.exports = function register(app, deps, M) {
   const peutEcrire = (req, m) => R.canContribute(req.user, perimetre(m));
   const peutDecider = (req, m) => R.canValidate(req.user, perimetre(m));
 
+  // Index des constatations, construit une fois par requête. Le rebâtir pour
+  // chaque mesure ferait reparcourir tous les écarts du module RAMP autant de
+  // fois qu'il y a de mesures.
+  const indexConstatations = () => new Map(constatations().map((c) => [c.id, c]));
+
   // Une mesure sort enrichie : le nom du prestataire et la référence de la
   // constatation liée se lisent à l'affichage, ils ne sont pas stockés.
-  const enrichir = (m) => {
+  // `index` est l'index des constatations ; sans lui, il est construit ici —
+  // ce qui ne vaut que pour une mesure isolée.
+  const enrichir = (m, index) => {
     if (!m) return m;
     const p = (refs().prestataires || []).find((x) => x.id === m.prestataire_id) || {};
-    const c = constatations().find((x) => x.id === m.constatation_id) || {};
+    const c = (index || indexConstatations()).get(m.constatation_id) || {};
     return {
       ...m,
       prestataire_nom: p.nom || '',
@@ -101,7 +108,8 @@ module.exports = function register(app, deps, M) {
     if (q.prestataire_id) liste = liste.filter((m) => m.prestataire_id === q.prestataire_id);
     if (q.constatation_id) liste = liste.filter((m) => m.constatation_id === q.constatation_id);
     liste = liste.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
-    res.json(liste.map(enrichir));
+    const index = indexConstatations();
+    res.json(liste.map((m) => enrichir(m, index)));
   });
 
   app.get(`${M}/mesures/:id`, requireAuth, (req, res) => {

@@ -49,9 +49,17 @@
   document.addEventListener('DOMContentLoaded', () => {
     balayer();
     // Les écrans se redessinent : un disque d'attente peut apparaître bien
-    // après le chargement de la page.
-    new MutationObserver(() => balayer()).observe(
-      document.body, { childList: true, subtree: true },
-    );
+    // après le chargement de la page. On n'examine que les nœuds ajoutés, et
+    // une seule fois par trame — un module qui redessine sa page à chaque
+    // frappe produit des dizaines de mutations pour un seul rendu.
+    let prevu = false;
+    const observateur = new MutationObserver((mutations) => {
+      if (prevu) return;
+      const ajouts = mutations.some((m) => m.addedNodes.length);
+      if (!ajouts) return;
+      prevu = true;
+      requestAnimationFrame(() => { prevu = false; balayer(); });
+    });
+    observateur.observe(document.body, { childList: true, subtree: true });
   });
 }());

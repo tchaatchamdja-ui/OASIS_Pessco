@@ -155,6 +155,10 @@ module.exports = async function tailleSmoke() {
   // s'alignent plus sur les colonnes voisines. Le défaut s'est présenté trois
   // fois ; la suite le refuse désormais d'emblée. La disposition des boutons se
   // fait dans un élément intérieur, jamais sur la cellule.
+  // Classes qui habillent une cellule de tableau sans le dire dans leur nom.
+  // Chaque entrée est un « td » : la règle vaut donc pour elle aussi.
+  const CLASSES_CELLULES = new Set(['.mes-actions', '.ramp-cell-actions', '.exec-actions-cell']);
+
   const cellulesEnFlex = [];
   fichiers.filter((f) => f.endsWith('.css')).forEach((fichier) => {
     const texte = fs.readFileSync(fichier, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -167,9 +171,13 @@ module.exports = async function tailleSmoke() {
       // « .actions-cell .btn » vise le bouton, « .actions-cell » la cellule.
       const cible = (bout) => bout.split(/[\s>+~]+/).filter(Boolean).pop() || '';
       const estCellule = sel.split(',').some((bout) => {
-        const dernier = cible(bout.trim());
-        return /^td([.#:[]|$)/.test(dernier)
-          || /(cell-actions|actions-cell|td-actions)$/.test(dernier.replace(/[:[].*$/, ''));
+        const dernier = cible(bout.trim()).replace(/[:[].*$/, '');
+        // « td », et toute classe qui nomme une cellule d'actions — quel que
+        // soit l'ordre des mots : actions-cell, cell-actions, td-actions, ou
+        // simplement « …-actions » comme .mes-actions, qui porte une cellule.
+        return /^td([.#]|$)/.test(dernier)
+          || /(^|-)(cell-actions|actions-cell|td-actions)$/.test(dernier)
+          || CLASSES_CELLULES.has(dernier);
       });
       if (!estCellule) return;
       if (/display:\s*(flex|inline-flex|grid|inline-grid)/.test(corps)) {

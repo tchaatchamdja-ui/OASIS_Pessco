@@ -211,6 +211,7 @@ function mesBadgeCriticite(v) {
 }
 
 function mesToast(message, type) {
+    if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
     return window.oasisToast(message, type);
 }
 
@@ -316,6 +317,42 @@ function mesRenderApp() {
     <div class="mes-slider" id="mesSlider"></div>
     <div id="mesModalRoot"></div>
     <div id="mesVoletRoot"></div>`;
+}
+
+// ── Filtres ──
+// Un filtre retenu redessine l'écran ; la recherche, elle, ne redessine que le
+// corps du tableau — re-rendre la page entière ferait perdre le curseur à
+// chaque frappe.
+function mesSetFiltre(cle, valeur) {
+    MES_STATE.filtres[cle] = valeur;
+    mesRenderPage();
+}
+
+function mesRechercher(cle, valeur) {
+    MES_STATE.filtres[cle] = valeur;
+    const corps = document.querySelector('[data-corps]');
+    if (!corps) { mesRenderPage(); return; }
+    corps.innerHTML = corps.dataset.corps === 'mesures'
+        ? mesLignesMesures() : mesLignesCritiques();
+}
+
+// Remises à zéro, écran par écran : chacun ne relâche que ses propres filtres.
+function mesResetFiltresDashboard() {
+    const F = MES_STATE.filtres;
+    F.db_prest = ''; F.db_cat = ''; F.db_type = ''; F.db_statut = ''; F.db_echeance = '';
+    mesRenderPage();
+}
+
+function mesResetFiltresMesures() {
+    const F = MES_STATE.filtres;
+    F.mes_categorie = ''; F.mes_statut = ''; F.mes_prest = ''; F.mes_recherche = '';
+    mesRenderPage();
+}
+
+function mesResetFiltresCritiques() {
+    const F = MES_STATE.filtres;
+    F.crit_origine = ''; F.crit_statut = ''; F.crit_prest = ''; F.crit_recherche = '';
+    mesRenderPage();
 }
 
 function mesNavigateTo(page) {
@@ -1307,6 +1344,7 @@ Object.assign(window, {
     mesApi, mesLoadData, mesRenderApp, mesRenderPage, mesNavigateTo,
     mesToggleSidebar, mesSetTheme, mesSetLang, mesRetourPortail, mesDeconnexion,
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
+    mesResetFiltresMesures, mesResetFiltresCritiques,
     mesOuvrirMesure, mesFermerSlider, mesAfficherSlider, mesEnregistrerMesure,
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,

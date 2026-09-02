@@ -369,9 +369,19 @@ module.exports = function register(app, deps, M) {
       return res.status(400).json({ error: 'Seule une fiche validée se partage' });
     }
     const d = req.body || {};
-    const etats = (Array.isArray(d.etats) ? d.etats : [])
+    const demandes = (Array.isArray(d.etats) ? d.etats : [])
       .map(texte).filter((e) => etatsUemoa().includes(e));
-    if (!etats.length) return res.status(400).json({ error: 'Au moins un État destinataire' });
+    if (!demandes.length) return res.status(400).json({ error: 'Au moins un État destinataire' });
+    // Un État qui tient déjà une copie de cette fiche n'en reçoit pas une
+    // seconde : il aurait deux entrées identiques à consulter, et deux
+    // rappels à faire pour s'en défaire.
+    const dejaServis = new Set(db.list('partages')
+      .filter((pa) => pa.poi_id === p.id)
+      .flatMap((pa) => pa.etats || []));
+    const etats = demandes.filter((e) => !dejaServis.has(e));
+    if (!etats.length) {
+      return res.status(400).json({ error: 'Ces États ont déjà reçu cette transmission' });
+    }
 
     const el = d.elements || {};
     const veut = { exploitant: !!el.exploitant, autorite: !!el.autorite, pieces: !!el.pieces };

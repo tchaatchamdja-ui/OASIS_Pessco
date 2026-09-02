@@ -307,7 +307,10 @@ window.filterScope = function (inp) {
 };
 
 // Retour d'action : le panneau du socle, commun au portail et aux modules.
+// Si la feuille commune n'est pas chargée, le message part en console plutôt
+// que d'interrompre le geste qui l'a produit.
 function showToast(message, type = 'success', duration = 4000) {
+  if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
   return window.oasisToast(message, type, duration);
 }
 

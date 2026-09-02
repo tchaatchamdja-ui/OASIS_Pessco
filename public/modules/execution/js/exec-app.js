@@ -1138,6 +1138,7 @@ function _execFadeSliderContent(title, bodyHtml, footerHtml, size) {
 }
 
 function _execToast(message, type) {
+    if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
     return window.oasisToast(message, type);
 }
 

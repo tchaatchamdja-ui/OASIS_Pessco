@@ -2198,5 +2198,5 @@ Object.assign(window, {
     rampPoiCommentaireChamp, rampPoiRedessinerCommentaires, rampEnregistrerCommentaires,
     rampPoiClasseAutomatique, rampPoiEquipe, rampPoiAjouterInspecteur,
     rampPoiRetirerInspecteur, rampPoiRedessinerEquipe, rampVoletPoi, rampPoiVue, rampPoiVoirEtape, rampPoiBande, rampPoiVueSaisie,
-    rampPoiVueValidation, rampPoiVueTransmission, rampPoiOuvrirPartage, rampPoiPartager,
+    rampPoiVueValidation, rampPoiVueTransmission,
 });

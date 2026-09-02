@@ -638,6 +638,7 @@ async function planImportRisks(planId) {
 
 // Ephemeral toast for planification module (5-second default)
 function planShowEphemeralToast(message, type = 'info', duration = 5000) {
+    if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
     return window.oasisToast(message, type, duration);
 }
 

@@ -833,6 +833,11 @@ module.exports = async function rampSmoke(port) {
         (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {
           method: 'POST', body: JSON.stringify({ etats: [], elements: { autorite: true } }),
         })).statut === 400);
+      // Un État déjà servi ne reçoit pas une seconde copie de la même fiche.
+      verifier('second partage au même État refusé',
+        (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {
+          method: 'POST', body: JSON.stringify({ etats: ['Togo'], elements: { autorite: true } }),
+        })).statut === 400);
       verifier('partage sans élément refusé',
         (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {
           method: 'POST', body: JSON.stringify({ etats: ['Togo'], elements: {} }),

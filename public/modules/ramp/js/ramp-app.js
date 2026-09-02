@@ -2275,7 +2275,7 @@ Object.assign(window, {
     rampApi, _rEsc, _rAttr, _rNorm,
     rampLoadData, rampRecharger, rampRenderApp, rampRenderPage, rampNavigateTo,
     rampToggleSidebar, rampSetTheme, rampSetLang, rampRafraichir, rampConserverModale, rampSaisiesEnCours, rampRetourPortail, rampDeconnexion,
-    rampParseDate, rampDate, rampISO, rampToast,
+    rampParseDate, rampDate, rampISO,
     rampFamille, rampFamilleActive, rampPonderations, rampLibelleItem, rampGroupeDeLItem, rampEstClos,
     _rArg, rampBasculerEcart, rampTeinteSuivi, rampMesurerEntete, rampMesurerPied, rampRemonter, rampVueCourante, rampCorpsDeLaPage, rampRole, rampEstAdmin, rampEstRegional, rampPeutContribuer, rampPeutImporter,
     rampFiltrer, rampSetFiltre, rampResetFiltres, rampChercher, rampBarreFiltres,

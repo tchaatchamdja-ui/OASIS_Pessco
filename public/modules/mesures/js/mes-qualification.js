@@ -283,9 +283,9 @@ function mesSectionMesuresArretees() {
                     </div>
                 </div>` : ''}
                 <div class="mes-champ" style="margin-bottom:0;">
-                    <label>Commentaire</label>
+                    <label>Description de la sanction</label>
                     <textarea class="mes-input" data-champ="commentaire" rows="3" ${off}
-                              placeholder="Ce qui motive la mesure">${_mesEsc(m.commentaire || '')}</textarea>
+                              placeholder="Ce que la sanction impose au prestataire">${_mesEsc(m.commentaire || '')}</textarea>
                 </div>
             </div>
         </div>`;
@@ -498,6 +498,12 @@ async function mesQualTeleverser(fichiers) {
 // pas.
 function mesActionsQualification() {
     const q = mesQualification();
+    // L'étape est franchie : ses trois issues ne se rejouent pas. On la
+    // consulte, et le badge dit ce qui a été décidé.
+    const rangEtape = MES_ETAPES.findIndex((e) => e.cle === 'qualification');
+    if (mesRangAtteint() > rangEtape) {
+        return '<span class="mes-badge cloturee">Qualification validée</span>';
+    }
     if (!mesPeutDecider()) return '';
     const bouton = (actif, classe, aide, geste, libelle) => `<button class="btn btn-sm ${classe}"
         ${actif ? '' : 'disabled'} title="${_mesAttr(aide)}"

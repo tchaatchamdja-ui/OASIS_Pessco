@@ -589,6 +589,12 @@ module.exports = function register(app, deps, M) {
         statut: 'projet',
         decision_par: '', date_decision: '',
         date_notification: '', date_cloture: '',
+        // Portée de la sanction, telle que l'instance l'a arrêtée : le registre
+        // des mesures la montre, et le suivi s'y adosse.
+        date_sanction: m.date_sanction || '',
+        portee: m.portee || '',
+        duree_valeur: m.duree_valeur || 0,
+        duree_unite: m.duree_unite || '',
         // Trace de l'origine : une mesure née ici ne se recrée pas si la
         // validation est rejouée.
         issue_de: 'qualification',

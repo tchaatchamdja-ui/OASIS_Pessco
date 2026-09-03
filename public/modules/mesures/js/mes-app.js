@@ -691,42 +691,72 @@ function mesMesuresFiltrees() {
     });
 }
 
+// La table du menu « Mesures » montre ce que l'instance décisionnelle a arrêté
+// à l'étape « Qualification et Mesures » : la sanction, sa portée, son terme.
+// Une seule action pour l'instant — ouvrir le suivi de la mesure.
 function mesLignesMesures() {
     const liste = mesMesuresFiltrees();
     if (!liste.length) {
-        return `<tr><td colspan="7" class="mes-table-vide">Aucune mesure ne correspond.</td></tr>`;
+        return `<tr><td colspan="9" class="mes-table-vide">Aucune mesure ne correspond.</td></tr>`;
     }
     return liste.map((m) => {
         const retard = mesEnRetard(m);
+        const portee = m.portee === 'illimitee'
+            ? '<span class="mes-badge annulee">Illimitée</span>'
+            : (m.portee === 'temporelle'
+                ? `<span class="mes-badge en_cours">Temporelle</span>${m.duree_valeur
+                    ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(
+                        `${m.duree_valeur} ${m.duree_unite || 'jours'}`)}</div>` : ''}`
+                : '<span class="mes-preuve-vide">—</span>');
         return `<tr>
             <td><strong>${_mesEsc(m.reference)}</strong>${m.constatation_ref
                 ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(m.constatation_ref)}</div>` : ''}</td>
-            <td>${_mesEsc(mesLibelleCategorie(m.categorie))}</td>
-            <td>${_mesEsc(mesLibelleType(m.type_mesure))}${m.objet
-                ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(m.objet)}</div>` : ''}</td>
             <td>${_mesEsc(m.prestataire_nom || '—')}</td>
+            <td>${_mesEsc(mesLibelleCategorie(m.categorie))}</td>
+            <td>${_mesEsc(mesLibelleType(m.type_mesure))}${m.description || m.objet
+                // La description de la sanction dit ce qu'elle impose : elle
+                // passe devant l'objet, qui redit la carence déjà nommée par sa
+                // référence en première colonne.
+                ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(m.description || m.objet)}</div>` : ''}</td>
+            <td>${m.date_sanction ? mesDate(m.date_sanction) : mesDate(m.date_emission)}</td>
+            <td>${portee}</td>
             <td>${retard
                 ? `<span class="mes-badge retard">${mesDate(m.date_echeance)}</span>`
                 : mesDate(m.date_echeance)}</td>
             <td>${mesBadgeStatut(m.statut)}</td>
             <td class="mes-actions">
-                <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesOuvrirMesure('${m.id}')"
-                        title="${MES_CLOS.includes(m.statut) ? 'Consulter' : 'Modifier'}">${MES_ICONS.edit}</button>
-                ${m.statut === 'projet' && mesPeutDecider()
-                    ? `<button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesTransition('${m.id}','notifier')"
-                               title="Notifier au prestataire">${MES_ICONS.send}</button>` : ''}
-                ${['notifiee', 'en_cours'].includes(m.statut) && mesPeutDecider()
-                    ? `<button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesTransition('${m.id}','cloturer')"
-                               title="Clôturer">${MES_ICONS.check}</button>` : ''}
-                ${m.statut === 'cloturee' && mesPeutDecider()
-                    ? `<button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesTransition('${m.id}','rouvrir')"
-                               title="Rouvrir">${MES_ICONS.undo}</button>` : ''}
-                ${mesEstAdmin()
-                    ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                               onclick="mesSupprimerMesure('${m.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+                <div class="mes-actions-pile">
+                    <button class="btn btn-sm mes-btn-mesure" onclick="mesFaireLeSuivi('${m.id}')"
+                            title="Ouvre le traitement de la carence à l’étape « Suivi des Mesures »">
+                        ${MES_ICONS.check} Faire le suivi</button>
+                </div>
             </td>
         </tr>`;
     }).join('');
+}
+
+// « Faire le suivi » rouvre le traitement de la carence dont la mesure est
+// issue, à l'étape du suivi : la mesure ne se suit pas seule, elle se suit
+// dans le dossier qui l'a value.
+async function mesFaireLeSuivi(id) {
+    const m = (MES_STATE.data.mesures || []).find((x) => x.id === id);
+    if (!m) return;
+    if (!m.constatation_id) {
+        mesToast('Cette mesure n’est rattachée à aucune carence', 'error');
+        return;
+    }
+    const c = (MES_STATE.data.constatations || []).find((x) => x.id === m.constatation_id);
+    if (!c) {
+        mesToast('Carence introuvable', 'error');
+        return;
+    }
+    MES_STATE.carenceEnCours = c;
+    MES_STATE.mesureEnCours = null;
+    try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`); }
+    catch (e) { mesToast(e.message || 'Traitement illisible', 'error'); return; }
+    // On ouvre là où le suivi se fait, quelle que soit l'étape atteinte.
+    MES_STATE.etapeVue = 'suivi';
+    mesAfficherSlider();
 }
 
 function mesRenderMesures() {
@@ -761,12 +791,14 @@ function mesRenderMesures() {
             <table class="mes-table">
                 <thead><tr>
                     <th style="width:130px;">Référence</th>
-                    <th style="width:160px;">Catégorie</th>
+                    <th style="width:170px;">Prestataire</th>
+                    <th style="width:150px;">Catégorie</th>
                     <th>Type et objet</th>
-                    <th style="width:180px;">Prestataire</th>
+                    <th style="width:110px;">Date de sanction</th>
+                    <th style="width:130px;">Portée</th>
                     <th style="width:110px;">Échéance</th>
                     <th style="width:100px;">Statut</th>
-                    <th style="width:170px;text-align:center;">Actions</th>
+                    <th style="width:150px;text-align:center;">Actions</th>
                 </tr></thead>
                 <tbody data-corps="mesures">${mesLignesMesures()}</tbody>
             </table>
@@ -1641,7 +1673,7 @@ Object.assign(window, {
     mesToggleSidebar, mesSetTheme, mesSetLang, mesRetourPortail, mesDeconnexion,
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
     mesResetFiltresMesures, mesResetFiltresCritiques,
-    mesOuvrirMesure, mesFermerSlider, mesAfficherSlider, mesEnregistrerMesure,
+    mesOuvrirMesure, mesFermerSlider, mesAfficherSlider, mesEnregistrerMesure, mesFaireLeSuivi,
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,
     mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation,

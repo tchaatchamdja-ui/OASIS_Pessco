@@ -235,22 +235,35 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 .mes-proc-barre .mes-proc-fil {
     display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
     width: max-content; max-width: 100%;
-    flex: 0 1 auto; min-width: 0; gap: 0;
+    flex: 0 1 auto; min-width: 0;
+    /* Le liseré clair qui sépare deux chevrons vient de cet écart : la pointe
+       de l'un entre dans l'encoche du suivant, et les 3 px laissent passer le
+       fond entre les deux. Le mettre à zéro les collait en un seul bloc. */
+    gap: 3px;
     /* Les chevrons suivants débordent de 8 px sur leur voisin de gauche pour
        s'emboîter ; le premier n'a personne à sa gauche. On lui rend ces 8 px
        ici, sans quoi il serait plus étroit que les trois autres. */
     padding-left: 8px;
 }
 .mes-proc-barre .mes-proc-step:first-child { margin-left: -8px; }
+/* Une étape est un bouton : sans cette remise à zéro, le navigateur lui pose
+   sa bordure par défaut — « 2px outset » noire sur l'étape courante, grise sur
+   les autres — qui cerne le chevron et en alourdit la pointe. */
+.mes-proc-barre .mes-proc-step {
+    border: 0; font-family: inherit; font-size: .78rem; font-weight: 600;
+    cursor: pointer;
+}
+.mes-proc-barre .mes-proc-step:hover:not(:disabled) { filter: brightness(1.08); }
 .mes-proc-actions {
     display: flex; gap: .4rem; flex-wrap: wrap; margin-left: auto; flex: 0 0 auto;
     align-items: center;
 }
 /* Une étape que le traitement n'a pas atteinte reste inerte : rien à y voir. */
-.mes-proc-step.verrouillee { opacity: .5; cursor: default; }
-/* L'étape regardée se marque à l'intérieur du chevron : un contour
-   rectangulaire en aurait cassé la pointe. */
-.mes-proc-step.selected { box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .35); }
+.mes-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
+/* L'étape regardée ne se marque que si elle n'est pas déjà l'étape courante,
+   que sa couleur distingue : un trait de plus sous le chevron alourdissait le
+   fil sans rien apprendre. */
+.mes-proc-step.selected:not(.current) { box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .35); }
 
 /* ── Sections d'une étape ── */
 .mes-section {

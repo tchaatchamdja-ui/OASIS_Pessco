@@ -271,7 +271,8 @@ function rampPacHtml() {
     <div class="ramp-poi-haut">${rampPacFil()}</div>
 
     <div class="ramp-card ramp-card-bandeau">
-        <div class="ramp-card-entete">${rt('pac_constat')}</div>
+        <div class="ramp-card-entete">
+            <span class="ramp-card-lettre">A</span>${rt('pac_constat')}</div>
         <dl class="ramp-poi-recap">
             ${rampPacReperes(true)}
             <div class="ramp-poi-recap-ligne" style="grid-column:1/-1;"><dt>Description</dt>
@@ -282,7 +283,7 @@ function rampPacHtml() {
     <div class="ramp-pac-rang">
     <div class="ramp-card ramp-card-bandeau ramp-pac-plan">
         <div class="ramp-card-entete">
-            ${rt('pac_actions')}
+            <span class="ramp-card-lettre">B</span>${rt('pac_actions')}
             ${soumis ? `<span class="ramp-poi-envoi-etat">Soumis ${_rEsc(
                 rampHorodatage(pac.soumis_le))} par ${_rEsc(pac.soumis_par || '—')}</span>` : ''}
         </div>
@@ -459,7 +460,7 @@ function rampPacResultatsHtml() {
     return `
     <div class="ramp-card ramp-card-bandeau ramp-pac-resultats-carte">
         <div class="ramp-card-entete">
-            ${rt('pac_resultats')}
+            <span class="ramp-card-lettre">C</span>${rt('pac_resultats')}
             ${ev.cloture.effective === 'OUI' || ev.cloture.date_solde ? `<span class="ramp-poi-envoi-etat">
                 Écart soldé${ev.cloture.date_solde ? ` le ${_rEsc(rampDate(ev.cloture.date_solde))}` : ''}</span>` : ''}
         </div>

@@ -872,9 +872,18 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
    thème, comme la bande d'identification du volet. */
 .ramp-card-bandeau { padding: 0; overflow: hidden; }
 .ramp-card-entete {
+    display: flex; align-items: center; gap: .7rem;
     padding: .5rem .9rem; margin-bottom: .8rem;
     background: var(--primary); color: var(--text-header, #fff);
     font-size: .84rem; font-weight: 700;
+}
+/* Lettre d'ordre du bloc, comme les sections du formulaire de notification du
+   module « Exécution de la Surveillance » : elle situe la section dans le
+   formulaire avant même qu'on en lise le titre. */
+.ramp-card-lettre {
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;
+    background: rgba(255, 255, 255, .22); font-size: .8rem; font-weight: 700;
 }
 .ramp-card-bandeau > *:not(.ramp-card-entete) { padding-left: .9rem; padding-right: .9rem; }
 .ramp-card-bandeau > *:last-child { padding-bottom: .9rem; }
@@ -1047,13 +1056,24 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-pac-resultats-carte { margin-top: 1.4rem; }
 .ramp-pac-resultats { display: grid; grid-template-columns: 3fr 3fr 2fr; gap: .85rem; align-items: stretch; }
 .ramp-pac-resultats > .ramp-pac-bloc { display: flex; flex-direction: column; }
-.ramp-pac-bloc { border: 1px solid var(--border); border-radius: 8px; padding: .6rem .75rem; background: var(--bg); }
+/* Bloc de formulaire présenté en carte, comme les sections du formulaire de
+   notification de « Exécution de la Surveillance » : un cadre sur fond de
+   carte, un bandeau de titre aux couleurs du module, et une ombre au survol.
+   Le titre est posé par `.ramp-pac-bloc-titre`, qui déborde volontairement du
+   rembourrage pour occuper toute la largeur du bandeau. */
+.ramp-pac-bloc {
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 0 .75rem .6rem; background: var(--bg-card);
+    overflow: hidden; transition: box-shadow .2s;
+}
+.ramp-pac-bloc:hover { box-shadow: var(--shadow); }
 .ramp-pac-suivis { max-height: 150px; overflow-y: auto; margin-bottom: .5rem; }
 .ramp-pac-suivi-saisie { display: flex; gap: .5rem; align-items: flex-start; }
 .ramp-pac-suivi-saisie textarea { flex: 1; min-width: 0; }
 .ramp-pac-bloc-titre {
-    font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
-    color: var(--text-muted); margin-bottom: .4rem;
+    margin: 0 -.75rem .6rem; padding: .55rem .85rem;
+    background: var(--primary); color: var(--text-header, #fff);
+    font-size: .88rem; font-weight: 600;
 }
 @media (max-width: 900px) { .ramp-pac-resultats { grid-template-columns: 1fr; } }
 
@@ -1307,9 +1327,13 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
 
 /* ── Champs ── */
 .ramp-champ { margin-bottom: .8rem; }
+/* Intitulés de champ comme ceux du formulaire de notification du module
+   « Exécution de la Surveillance » : en toutes lettres et dans la couleur du
+   texte. Les petites capitales grises se confondaient avec les valeurs
+   qu'elles annoncent. */
 .ramp-champ > label {
-    display: block; font-size: .74rem; font-weight: 600; color: var(--text-muted);
-    margin-bottom: .2rem; text-transform: uppercase; letter-spacing: .03em;
+    display: block; font-size: .84rem; font-weight: 600; color: var(--text);
+    margin-bottom: .3rem;
 }
 .ramp-champ textarea { resize: vertical; min-height: 60px; }
 .ramp-paire { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
@@ -1357,16 +1381,23 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
     border-color: var(--ramp-accent); background: var(--ramp-accent-bg);
 }
 
-/* ── Groupe repliable (contacts par État) ── */
-.ramp-groupe { border: 1px solid var(--border); border-radius: 8px; margin-bottom: .6rem; overflow: hidden; }
-.ramp-groupe-entete {
-    display: flex; align-items: center; gap: .6rem; padding: .6rem .8rem;
-    background: var(--bg); cursor: pointer; user-select: none; font-weight: 600; font-size: .88rem;
+/* ── Groupe repliable (contacts par État) ──
+   Même carte que les blocs de formulaire : bandeau aux couleurs du module,
+   compteur détaché en clair sur le bandeau. */
+.ramp-groupe {
+    border: 1px solid var(--border); border-radius: 10px; margin-bottom: .6rem;
+    overflow: hidden; background: var(--bg-card); transition: box-shadow .2s;
 }
-.ramp-groupe-entete:hover { background: var(--ramp-accent-bg); }
+.ramp-groupe:hover { box-shadow: var(--shadow); }
+.ramp-groupe-entete {
+    display: flex; align-items: center; gap: .6rem; padding: .55rem .85rem;
+    background: var(--primary); color: var(--text-header, #fff);
+    cursor: pointer; user-select: none; font-weight: 600; font-size: .88rem;
+}
+.ramp-groupe-entete:hover { filter: brightness(1.06); }
 .ramp-groupe-compte {
     margin-left: auto; padding: 0 .45rem; border-radius: 9px;
-    background: var(--border); color: var(--text-muted); font-size: .72rem; font-weight: 700;
+    background: rgba(255, 255, 255, .25); color: #fff; font-size: .72rem; font-weight: 700;
 }
 
 /* ── Fiche d'inspection (aperçu imprimable) ── */

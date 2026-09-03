@@ -251,6 +251,7 @@ async function mesRechargerMesures() {
 }
 
 const mesTypesInvestigation = () => ((MES_STATE.data.parametres || {}).types_investigation) || [];
+const mesComites = () => ((MES_STATE.data.parametres || {}).comites) || [];
 
 async function mesRechargerParametres() {
     MES_STATE.data.parametres = await mesApi('/parametres')
@@ -962,17 +963,29 @@ function mesRenderParametres() {
         </td></tr>`).join('')
         || `<tr><td colspan="2" class="mes-table-vide">Aucun type d'investigation.</td></tr>`;
 
+    const lignesCom = mesComites().map((c) => `<tr>
+        <td><strong>${_mesEsc(c.libelle)}</strong>
+            <div style="font-size:.72rem;color:var(--text-muted);font-family:ui-monospace,Menlo,monospace;">${_mesEsc(c.code)}</div></td>
+        <td class="mes-actions">
+            ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
+                onclick="mesOuvrirComite('${c.id}')" title="Modifier">${MES_ICONS.edit}</button>` : ''}
+            ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
+                onclick="mesSupprimerComite('${c.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+        </td></tr>`).join('')
+        || `<tr><td colspan="2" class="mes-table-vide">Aucun comité décisionnel.</td></tr>`;
+
     return `
     <div class="mes-page-header">
         <h2>Paramètres</h2>
-        <span class="mes-sous-titre">Catégories, types de mesure et types d'investigation</span>
+        <span class="mes-sous-titre">Catégories, types de mesure, types d'investigation et comités décisionnels</span>
     </div>
     <p class="mes-note">
-        Ces deux listes peuplent le formulaire de mesure : une mesure porte une catégorie,
-        et un type rattaché à cette catégorie. Le code technique ne change pas avec le
-        libellé — renommer un type ne détache pas les mesures déjà prises.
+        Ces quatre listes peuplent les formulaires du module : une mesure porte une catégorie
+        et un type rattaché à cette catégorie ; une investigation porte son type ; un comité
+        décisionnel siège pour qualifier une carence et arrêter la sanction. Le code technique
+        ne change pas avec le libellé — renommer n'orpheline pas ce qui a déjà été enregistré.
     </p>
-    <div class="mes-grille-2">
+    <div class="mes-grille-parametres">
         <div class="mes-card" style="padding:0;">
             <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
                 <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Catégories</div>
@@ -1003,6 +1016,16 @@ function mesRenderParametres() {
                 <tbody>${lignesInv}</tbody>
             </table></div>
         </div>
+        <div class="mes-card" style="padding:0;">
+            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Comités décisionnels</div>
+                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirComite()">${MES_ICONS.add} Ajouter</button>` : ''}
+            </div>
+            <div class="mes-table-wrap"><table class="mes-table">
+                <thead><tr><th>Libellé</th><th style="width:110px;">Actions</th></tr></thead>
+                <tbody>${lignesCom}</tbody>
+            </table></div>
+        </div>
     </div>`;
 }
 
@@ -1027,6 +1050,7 @@ function mesFermerModal() {
     MES_STATE.categorieEnCours = null;
     MES_STATE.typeEnCours = null;
     MES_STATE.typeInvestigationEnCours = null;
+    MES_STATE.comiteEnCours = null;
     MES_STATE.constatEnCours = null;
     const el = document.getElementById('mesModalRoot');
     if (el) el.innerHTML = '';
@@ -1038,6 +1062,33 @@ function mesAfficherModal() {
     const c = MES_STATE.categorieEnCours;
     const t = MES_STATE.typeEnCours;
     const ti = MES_STATE.typeInvestigationEnCours;
+    const co = MES_STATE.comiteEnCours;
+    if (co) {
+        el.innerHTML = `
+        <div class="mes-modal-fond" onclick="mesFermerModal()">
+            <div class="mes-modal" onclick="event.stopPropagation();">
+                <div class="mes-modal-header">
+                    <span style="flex:1;">${co.id ? 'Modifier le comité' : 'Nouveau comité décisionnel'}</span>
+                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
+                </div>
+                <div class="mes-modal-body">
+                    <div class="mes-champ">
+                        <label>Nom du comité</label>
+                        <input class="mes-input" id="mesCoLib" value="${_mesAttr(co.libelle || '')}"
+                               placeholder="ex. Comité des sanctions">
+                    </div>
+                    <p class="mes-preuve-vide">Ce comité siégera pour qualifier une carence
+                       et arrêter la sanction.</p>
+                    <p class="mes-erreur" id="mesCoErreur"></p>
+                </div>
+                <div class="mes-modal-footer">
+                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">Annuler</button>
+                    <button class="btn btn-primary btn-sm" onclick="mesEnregistrerComite()">${MES_ICONS.check} Enregistrer</button>
+                </div>
+            </div>
+        </div>`;
+        return;
+    }
     if (ti) {
         el.innerHTML = `
         <div class="mes-modal-fond" onclick="mesFermerModal()">
@@ -1117,6 +1168,36 @@ function mesAfficherModal() {
             </div>
         </div>`;
     }
+}
+
+function mesOuvrirComite(id) {
+    MES_STATE.comiteEnCours = id ? { ...(mesComites().find((c) => c.id === id) || {}) } : {};
+    mesAfficherModal();
+}
+
+async function mesEnregistrerComite() {
+    const c = MES_STATE.comiteEnCours || {};
+    const libelle = (document.getElementById('mesCoLib') || {}).value || '';
+    const err = document.getElementById('mesCoErreur');
+    if (!libelle.trim()) { err.textContent = 'Nom requis'; return; }
+    try {
+        if (c.id) await mesApi(`/parametres/comites/${c.id}`, { method: 'PUT', body: JSON.stringify({ libelle }) });
+        else await mesApi('/parametres/comites', { method: 'POST', body: JSON.stringify({ libelle }) });
+        mesFermerModal();
+        await mesRechargerParametres();
+        mesToast('Comité enregistré');
+    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+}
+
+async function mesSupprimerComite(id) {
+    const c = mesComites().find((x) => x.id === id);
+    if (!c) return;
+    if (!confirm(`Supprimer le comité « ${c.libelle} » ?`)) return;
+    try {
+        await mesApi(`/parametres/comites/${id}`, { method: 'DELETE' });
+        await mesRechargerParametres();
+        mesToast('Comité supprimé');
+    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
 }
 
 function mesOuvrirTypeInvestigation(id) {
@@ -1551,6 +1632,7 @@ Object.assign(window, {
     mesSupprimerCategorie, mesSupprimerType,
     mesTypesInvestigation, mesOuvrirTypeInvestigation,
     mesEnregistrerTypeInvestigation, mesSupprimerTypeInvestigation,
+    mesComites, mesOuvrirComite, mesEnregistrerComite, mesSupprimerComite,
 });
 
 // ══════════════════════════════════════

@@ -23,8 +23,11 @@ const store = require('../../store');
 // une visite, un entretien, l'examen d'enregistrements. La liste est
 // paramétrable au menu du module ; les trois valeurs d'origine couvrent les
 // moyens ordinaires d'une investigation.
+// « comites » : les comités décisionnels qui siègent pour qualifier une
+// carence et arrêter la sanction. La liste se tient au menu Paramètres ; elle
+// part vide, chaque autorité nommant les siens.
 const COLLECTIONS = ['mesures', 'categories', 'types', 'constatations', 'classements',
-  'traitements', 'types_investigation'];
+  'traitements', 'types_investigation', 'comites'];
 
 const TYPES_INVESTIGATION_DEFAUT = [
   ['inspection_terrain', 'Inspection / Observations sur le terrain'],

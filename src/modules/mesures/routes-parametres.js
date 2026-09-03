@@ -75,9 +75,52 @@ module.exports = function register(app, deps, M) {
       categories: ordonner(db.list('categories')),
       types: ordonner(db.list('types')),
       types_investigation: ordonner(db.list('types_investigation')),
+      comites: ordonner(db.list('comites')),
       modifiable: editeur(req),
       supprimable: admin(req),
     });
+  });
+
+  // ── Comités décisionnels ──
+  // Les instances qui siègent pour qualifier une carence et arrêter la
+  // sanction. Une simple liste de noms : le comité retenu sera porté par la
+  // mesure, à l'étape « Qualification et Mesures ».
+  app.post(`${M}/parametres/comites`, requireAuth, (req, res) => {
+    if (!editeur(req)) return refuser(res);
+    const libelle = String((req.body || {}).libelle || '').trim();
+    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    const code = codeDepuisLibelle(libelle);
+    if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
+    if (db.list('comites').some((c) => c.code === code)) {
+      return res.status(400).json({ error: 'Un comité porte déjà ce libellé' });
+    }
+    const c = { id: db.uid('mco'), code, libelle, ordre: db.list('comites').length };
+    db.insert('comites', c);
+    return res.status(201).json({ status: 'ok', id: c.id, code: c.code });
+  });
+
+  app.put(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
+    if (!editeur(req)) return refuser(res);
+    const c = db.get('comites', req.params.id);
+    if (!c) return res.status(404).json({ error: 'Comité non trouvé' });
+    const libelle = String((req.body || {}).libelle || '').trim();
+    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    // Le code ne suit pas le libellé : une décision déjà rendue le porte.
+    db.update('comites', c.id, { libelle });
+    return res.json({ status: 'ok' });
+  });
+
+  app.delete(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
+    if (!admin(req)) return refuser(res, 'Suppression réservée au gestionnaire');
+    const c = db.get('comites', req.params.id);
+    if (!c) return res.status(404).json({ error: 'Comité non trouvé' });
+    // Un comité qui a siégé ne se retire pas : la mesure perdrait l'instance
+    // qui l'a décidée.
+    if (db.list('mesures').some((m) => m.comite_code === c.code)) {
+      return res.status(400).json({ error: 'Ce comité a déjà siégé sur une mesure' });
+    }
+    db.remove('comites', c.id);
+    return res.json({ status: 'ok' });
   });
 
   // ── Types d'investigation ──

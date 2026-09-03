@@ -28,7 +28,8 @@
   },
   "provides": [
     "SURV.activitesDeclenchees",
-    "SURV.constatationsOuvertes"
+    "SURV.constatationsOuvertes",
+    "SURV.pacDeConstatation"
   ],
   "requires": [
     "PLAN.plansValides"

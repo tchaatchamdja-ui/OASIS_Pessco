@@ -121,6 +121,40 @@ module.exports = {
       }, {
         description: 'Écarts SAFA de catégorie 3, appelant une mesure d’application',
       });
+
+      // Plan d'actions correctives déposé sur un écart, publié sous le même
+      // contrat que celui de « Exécution de la Surveillance ». Les clés sont
+      // celles des carences servies plus haut — « safa:<écart> » — pour que le
+      // consommateur rapproche l'un de l'autre sans rien savoir d'ici.
+      deps.services.publish('SAFA.pacDeConstatation', () => {
+        const parConstatation = {};
+        db.list('ecarts').forEach((ec) => {
+          const pac = ec.pac || {};
+          const preuves = (ec.preuves || []).map((p) => ({
+            intitule: p.intitule || p.nom_origine || '',
+            depose_le: p.depose_le || '',
+            commentaire: p.commentaire || '',
+            action: p.action || '',
+          }));
+          if (!pac.soumis_le && !preuves.length && !pac.cause_primaire) return;
+          parConstatation[`safa:${ec.id}`] = {
+            cause_primaire: pac.cause_primaire || '',
+            action_curative: pac.action_curative || '',
+            curative_date_prevue: pac.curative_date_prevue || '',
+            actions_correctives: pac.actions_correctives || '',
+            corrective_date_prevue: pac.corrective_date_prevue || '',
+            statut: ec.suivi || '',
+            date_soumission: pac.soumis_le || '',
+            date_validation: pac.cloture_le || '',
+            motif_rejet: pac.motif_rejet || '',
+            preuves,
+          };
+        });
+        return parConstatation;
+      }, {
+        description: 'Plan d’actions correctives déposé sur un écart, par carence',
+        retour: '{ "safa:<ecart_id>": { cause_primaire, action_curative, actions_correctives, statut, preuves[] } }',
+      });
     }
   },
 

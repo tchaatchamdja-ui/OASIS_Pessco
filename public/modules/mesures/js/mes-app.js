@@ -28,6 +28,11 @@ const MES_STATE = {
         crit_statut: '', crit_prest: '', crit_origine: '', crit_recherche: '',
     },
     mesureEnCours: null,
+    // Carence dont le traitement est ouvert, et son fil d'avancement.
+    carenceEnCours: null,
+    traitement: null,
+    // Étape du fil que l'on regarde ; l'étape atteinte vient du traitement.
+    etapeVue: '',
     categorieEnCours: null,
     typeEnCours: null,
     sliderOpen: false,
@@ -266,7 +271,7 @@ function mesRenderApp() {
     const S = MES_STATE;
     // Ce qui est saisi dans un volet ouvert n'existe que dans le DOM : on le
     // relève avant de réécrire `#app`, sinon il partirait avec.
-    if (S.sliderOpen) S.mesureEnCours = { ...(S.mesureEnCours || {}), ...mesCollecterFormulaire() };
+    if (S.sliderOpen) { S.mesureEnCours = { ...(S.mesureEnCours || {}), ...mesCollecterFormulaire() }; mesMajTraitement(); }
     if (S.constatEnCours) S.constatEnCours = { ...S.constatEnCours, ...mesCollecterConstat() };
     document.body.classList.toggle('app-sidebar-collapsed', !!S.sidebarCollapsed);
     const u = S.user || {};
@@ -893,7 +898,7 @@ function mesRenderCritiques() {
     </div>`;
 }
 
-function mesMesureDepuisConstatation(constatationId) {
+async function mesMesureDepuisConstatation(constatationId) {
     const c = MES_STATE.data.constatations.find((x) => x.id === constatationId);
     if (!c) return;
     const premiere = mesCategories()[0] || {};
@@ -903,6 +908,12 @@ function mesMesureDepuisConstatation(constatationId) {
         prestataire_id: c.prestataire_id || '',
         objet: c.titre || c.reference || '',
     };
+    MES_STATE.carenceEnCours = c;
+    MES_STATE.etapeVue = '';
+    // Le plan d'actions vient du module qui a relevé la carence : il arrive
+    // avec le traitement, en une seule demande.
+    try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`); }
+    catch (e) { MES_STATE.traitement = null; mesToast(e.message || 'Traitement illisible', 'error'); }
     mesAfficherSlider();
 }
 
@@ -1111,6 +1122,285 @@ async function mesSupprimerType(id) {
 }
 
 // ══════════════════════════════════════
+//  Fil d'avancement du traitement d'une carence
+// ══════════════════════════════════════
+//
+// Quatre étapes. Seule « Suite à donner » est instruite : elle va du
+// déclenchement du traitement à la décision. Les trois suivantes sont
+// déclarées pour que le fil se lise en entier ; elles seront construites plus
+// tard, et le disent plutôt que de faire croire à un écran vide.
+const MES_ETAPES = [
+    { cle: 'suite', libelle: 'Suite à donner' },
+    { cle: 'investigations', libelle: 'Investigations', aVenir: true },
+    { cle: 'qualification', libelle: 'Qualification et Mesures', aVenir: true },
+    { cle: 'suivi', libelle: 'Suivi des Mesures', aVenir: true },
+];
+
+// Les trois suites possibles. Classer clôt le traitement ici — la carence
+// reste suivie par le plan d'actions de son module d'origine ; les deux autres
+// poussent le fil d'un cran.
+const MES_DECISIONS = [
+    { cle: 'classer', libelle: 'Classer', classe: 'mes-btn-classer',
+      aide: 'Aucune mesure d’application ne sera prise.' },
+    { cle: 'investiguer', libelle: 'Investiguer', classe: 'btn-outline',
+      aide: 'Le traitement passe à l’étape « Investigations ».' },
+    { cle: 'mesures', libelle: 'Prendre des mesures', classe: 'mes-btn-mesure',
+      aide: 'Le traitement passe à l’étape « Qualification et Mesures ».' },
+];
+
+// Étape où le traitement en est. L'étape *regardée* peut être antérieure : on
+// consulte ce qu'une étape franchie porte sans revenir en arrière.
+const mesEtapeAtteinte = () => (MES_STATE.traitement || {}).etape || 'suite';
+const mesRangAtteint = () => Math.max(0, MES_ETAPES.findIndex((e) => e.cle === mesEtapeAtteinte()));
+const mesEtapeCourante = () => MES_STATE.etapeVue || mesEtapeAtteinte();
+
+function mesVoirEtape(cle) {
+    const rang = MES_ETAPES.findIndex((e) => e.cle === cle);
+    if (rang < 0 || rang > mesRangAtteint()) return;
+    mesMajTraitement();
+    MES_STATE.etapeVue = cle;
+    mesAfficherSlider({ anime: false });
+}
+
+// Ce que chaque étape dit du traitement : où il en est, et de quand.
+function mesEtapeInfo(cle) {
+    const t = MES_STATE.traitement || {};
+    if (cle === 'suite') {
+        if (!t.decision) return 'Instruction en cours : plan d’actions, informations, puis décision';
+        const d = MES_DECISIONS.find((x) => x.cle === t.decision) || {};
+        return `Décidé le ${mesDate(t.decide_le)} — ${d.libelle || t.decision}`;
+    }
+    return 'Étape à construire ultérieurement';
+}
+
+// Barre du fil : les chevrons à gauche, les actions de l'étape à droite.
+function mesFilAvancement() {
+    const vue = mesEtapeCourante();
+    const rang = MES_ETAPES.findIndex((e) => e.cle === mesEtapeAtteinte());
+    const atteint = mesRangAtteint();
+    const etapes = MES_ETAPES.map((e, i) => {
+        const classe = i < rang ? 'done' : (i === rang ? 'current' : '');
+        const atteinte = i <= atteint;
+        return `<button type="button"
+                    class="eval-step mes-proc-step ${classe}${vue === e.cle ? ' selected' : ''}${
+                        atteinte ? '' : ' verrouillee'}"
+                    ${atteinte ? '' : 'disabled'}
+                    title="${_mesAttr(mesEtapeInfo(e.cle))}"
+                    onclick="mesVoirEtape('${_mesAttr(e.cle)}')">${_mesEsc(e.libelle)}</button>`;
+    }).join('');
+    return `
+    <div class="mes-proc-barre">
+        <div class="eval-steps mes-proc-fil">${etapes}</div>
+        <div class="mes-proc-actions">${mesActionsEtape()}</div>
+    </div>`;
+}
+
+// Actions de l'étape regardée. Sur « Suite à donner » : enregistrer ce qui a
+// été recueilli, et arrêter la suite — les trois décisions possibles.
+function mesActionsEtape() {
+    if (mesEtapeCourante() !== 'suite') return '';
+    const t = MES_STATE.traitement || {};
+    if (t.decision) {
+        const d = MES_DECISIONS.find((x) => x.cle === t.decision) || {};
+        return `<span class="mes-badge cloturee">${_mesEsc(d.libelle || t.decision)}</span>`;
+    }
+    const boutons = [];
+    if (mesPeutEcrire()) {
+        boutons.push(`<button class="btn btn-outline btn-sm" onclick="mesEnregistrerTraitement()"
+            title="Conserver les informations recueillies">${MES_ICONS.check} Enregistrer</button>`);
+    }
+    if (mesPeutDecider()) {
+        MES_DECISIONS.forEach((d) => boutons.push(`<button class="btn btn-sm ${d.classe}"
+            title="${_mesAttr(d.aide)}"
+            onclick="mesPrendreDecision('${d.cle}')">${_mesEsc(d.libelle)}</button>`));
+    }
+    return boutons.join('');
+}
+
+const mesSection = (titre, corps) => `<div class="mes-section">
+    <h4>${_mesEsc(titre)}</h4><div class="mes-section-corps">${corps}</div></div>`;
+
+// Section 1 — le plan d'actions soumis par le prestataire, tel que le module
+// qui a relevé la carence le publie. Rien n'y est modifiable : c'est la pièce
+// du dossier, pas une saisie.
+function mesSectionPac() {
+    const pac = (MES_STATE.traitement || {}).pac;
+    if (!pac) {
+        return mesSection('Plan d’action soumis',
+            '<p class="mes-preuve-vide">Aucun plan d’actions n’a été soumis pour cette carence.</p>');
+    }
+    const ligne = (t, v) => `<div class="mes-pac-ligne"><dt>${_mesEsc(t)}</dt>
+        <dd>${v ? _mesEsc(v) : '<span class="mes-preuve-vide">—</span>'}</dd></div>`;
+    const preuves = (pac.preuves || []).map((p) => `<div class="mes-pac-ligne">
+        <dt>${_mesEsc(p.action === 'curative' ? 'Preuve · action curative'
+            : (p.action === 'corrective' ? 'Preuve · action corrective' : 'Preuve'))}</dt>
+        <dd>${_mesEsc(p.intitule || '—')}${p.depose_le ? ` · ${_mesEsc(mesDate(p.depose_le))}` : ''}
+            ${p.commentaire ? `<br><span class="mes-preuve-vide">${_mesEsc(p.commentaire)}</span>` : ''}</dd>
+    </div>`).join('');
+    return mesSection('Plan d’action soumis', `<dl style="margin:0;">
+        ${ligne('Cause primaire', pac.cause_primaire)}
+        ${ligne('Action curative', pac.action_curative)}
+        ${ligne('Date prévue (curative)', mesDate(pac.curative_date_prevue))}
+        ${ligne('Actions correctives', pac.actions_correctives)}
+        ${ligne('Date prévue (corrective)', mesDate(pac.corrective_date_prevue))}
+        ${ligne('Statut chez le module d’origine', pac.statut)}
+        ${ligne('Soumis le', mesDate(pac.date_soumission))}
+        ${pac.motif_rejet ? ligne('Motif de rejet', pac.motif_rejet) : ''}
+        ${preuves || '<div class="mes-pac-ligne"><dt>Preuves</dt><dd><span class="mes-preuve-vide">Aucune preuve déposée.</span></dd></div>'}
+    </dl>`);
+}
+
+// Section 2 — ce que l'autorité a recueilli en plus du plan d'actions.
+function mesSectionInformations() {
+    const t = MES_STATE.traitement || {};
+    const off = mesPeutEcrire() ? '' : 'disabled';
+    const pieces = (t.pieces || []).map((p, i) => `
+        <div class="mes-preuve" data-genre="traitement" data-chemin="${_mesAttr(p.path || '')}">
+            <input class="mes-input" value="${_mesAttr(p.nom || '')}"
+                   placeholder="Intitulé de la pièce" ${off}>
+            ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
+                href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
+                title="Ouvrir">${MES_ICONS.download}</a>` : ''}
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                onclick="mesRetirerPieceTraitement(${i})">${MES_ICONS.x}</button>`}
+        </div>`).join('');
+    return mesSection('Informations additionnelles', `
+        <div class="mes-champ">
+            <label>Informations complémentaires recueillies sur la constatation</label>
+            <textarea class="mes-input" id="mesTrtInfos" rows="4" ${off}
+                      placeholder="Ce que l’instruction a établi en plus du plan d’actions">${_mesEsc(t.informations || '')}</textarea>
+        </div>
+        <div class="mes-champ">
+            <label>Pièces jointes</label>
+            <div id="mesTrtPieces">${pieces || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+            ${off ? '' : `<input type="file" id="mesTrtFichier" multiple style="display:none;"
+                    onchange="mesTeleverserPieceTraitement(this.files)">
+                <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
+                        onclick="document.getElementById('mesTrtFichier').click()">
+                    ${MES_ICONS.add} Ajouter une pièce</button>`}
+        </div>`);
+}
+
+// Section 3 — la décision sur la suite à donner. Elle engage l'autorité : elle
+// relève du validateur, et se lit après coup pour tous les autres.
+function mesSectionDecision() {
+    const t = MES_STATE.traitement || {};
+    const prise = !!t.decision;
+    const decideur = mesPeutDecider();
+    const choisie = MES_DECISIONS.find((d) => d.cle === t.decision);
+
+    if (prise) {
+        const rappel = t.decision === 'classer'
+            ? `<p class="mes-note">Aucune mesure d’application n’est prise. Le suivi se poursuit
+               par le plan d’actions correctives soumis dans le module d’origine (Exécution de la
+               Surveillance ou RAMP Inspections) — c’est là qu’il se solde.</p>`
+            : '';
+        return mesSection('Décision', `
+            <p><strong>${_mesEsc(choisie ? choisie.libelle : t.decision)}</strong>
+               ${t.decide_le ? `· ${_mesEsc(mesDate(t.decide_le))}` : ''}
+               ${t.decide_par ? `· ${_mesEsc(t.decide_par)}` : ''}</p>
+            ${t.decision_motif ? `<p class="mes-pac-ligne" style="display:block;">${_mesEsc(t.decision_motif)}</p>` : ''}
+            ${rappel}`);
+    }
+    if (!decideur) {
+        return mesSection('Décision',
+            '<p class="mes-preuve-vide">Aucune décision n’a encore été prise. Elle relève du validateur.</p>');
+    }
+    // Les trois suites sont portées par la barre du fil, en haut à droite :
+    // ce sont les actions de l'étape. Ne reste ici que ce qui les motive.
+    return mesSection('Décision', `
+        <div class="mes-champ">
+            <label>Décision sur la suite à donner à la carence</label>
+            <textarea class="mes-input" id="mesTrtMotif" rows="3"
+                      placeholder="Ce qui motive la suite retenue"></textarea>
+        </div>
+        <ul class="mes-decision-aide">
+            ${MES_DECISIONS.map((d) => `<li><strong>${_mesEsc(d.libelle)}</strong> — ${_mesEsc(d.aide)}</li>`).join('')}
+        </ul>
+        <p class="mes-preuve-vide">La suite retenue se choisit en haut à droite, sur la ligne du fil
+           d’avancement.</p>`);
+}
+
+// Les pièces et le texte saisis vivent dans le DOM tant qu'ils ne sont pas
+// enregistrés : on les relève avant tout redessin, comme pour la mesure.
+function mesCollecterTraitement() {
+    const infos = document.getElementById('mesTrtInfos');
+    if (!infos) return null;
+    return {
+        informations: infos.value,
+        pieces: [...document.querySelectorAll('#mesTrtPieces .mes-preuve')].map((r) => ({
+            nom: (r.querySelector('input') || {}).value || '',
+            path: r.dataset.chemin || '',
+        })),
+    };
+}
+
+const mesMajTraitement = () => {
+    const saisi = mesCollecterTraitement();
+    if (saisi) MES_STATE.traitement = { ...(MES_STATE.traitement || {}), ...saisi };
+};
+
+function mesRetirerPieceTraitement(i) {
+    mesMajTraitement();
+    const t = MES_STATE.traitement || {};
+    t.pieces = (t.pieces || []).filter((_, k) => k !== i);
+    mesAfficherSlider({ anime: false });
+}
+
+async function mesTeleverserPieceTraitement(fichiers) {
+    if (!fichiers || !fichiers.length) return;
+    mesMajTraitement();
+    const t = MES_STATE.traitement || {};
+    t.pieces = t.pieces || [];
+    for (const f of fichiers) {
+        try {
+            const corps = new FormData();
+            corps.append('file', f);
+            const r = await mesApi('/upload', { method: 'POST', body: corps });
+            t.pieces.push({ nom: r.filename, path: r.path, size: r.size });
+        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+    }
+    mesAfficherSlider({ anime: false });
+}
+
+async function mesEnregistrerTraitement(silencieux) {
+    const c = MES_STATE.carenceEnCours;
+    if (!c) return false;
+    mesMajTraitement();
+    const t = MES_STATE.traitement || {};
+    try {
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`, {
+            method: 'PUT',
+            body: JSON.stringify({ informations: t.informations || '', pieces: t.pieces || [] }),
+        });
+        if (!silencieux) mesToast('Informations enregistrées');
+        return true;
+    } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); return false; }
+}
+
+async function mesPrendreDecision(decision) {
+    const c = MES_STATE.carenceEnCours;
+    if (!c) return;
+    const choisie = MES_DECISIONS.find((d) => d.cle === decision) || {};
+    if (!confirm(`${choisie.libelle} ?\n${choisie.aide || ''}`)) return;
+    // Ce qui a été saisi part avec la décision : elle s'appuie dessus.
+    if (!await mesEnregistrerTraitement(true)) return;
+    const motif = (document.getElementById('mesTrtMotif') || {}).value || '';
+    try {
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/decision`, {
+            method: 'POST', body: JSON.stringify({ decision, motif }),
+        });
+        MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+        MES_STATE.data.constatations = await mesApi('/constatations');
+        // La vue suit l'étape que la décision vient de faire atteindre.
+        MES_STATE.etapeVue = '';
+        mesToast(`Décision enregistrée : ${choisie.libelle}`);
+        mesAfficherSlider({ anime: false });
+        if (MES_STATE.currentPage === 'critiques') mesRenderPage();
+    } catch (e) { mesToast(e.message || 'Décision impossible', 'error'); }
+}
+
+// ══════════════════════════════════════
 //  Formulaire de mesure (volet latéral)
 // ══════════════════════════════════════
 
@@ -1127,6 +1417,9 @@ async function mesOuvrirMesure(id) {
 
 function mesFermerSlider() {
     MES_STATE.mesureEnCours = null;
+    MES_STATE.carenceEnCours = null;
+    MES_STATE.traitement = null;
+    MES_STATE.etapeVue = '';
     MES_STATE.sliderOpen = false;
     document.getElementById('mesSlider')?.classList.remove('open');
     document.getElementById('mesSliderOverlay')?.classList.remove('open');
@@ -1196,6 +1489,15 @@ function mesFormulaireMesure() {
                     ${MES_ICONS.add} Ajouter une pièce</button>`}`);
     };
 
+    // Les champs de la mesure sont la matière de l'étape « Qualification et
+    // Mesures ». Ouvert depuis une carence, le volet suit son fil : tant que la
+    // suite à donner n'est pas décidée, ce sont les trois sections de la
+    // première étape qui s'affichent.
+    const surCarence = !!MES_STATE.carenceEnCours;
+    const etape = surCarence ? mesEtapeCourante() : 'qualification';
+    const champsMesure = etape === 'qualification';
+    const aVenir = etape === 'investigations' || etape === 'suivi';
+
     return `
     <div class="mes-slider-header">
         <button class="btn btn-outline btn-sm mes-btn-retour" onclick="mesFermerSlider()"
@@ -1205,8 +1507,16 @@ function mesFormulaireMesure() {
         </span>
         ${m.statut ? mesBadgeStatut(m.statut) : ''}
     </div>
+    ${surCarence ? mesFilAvancement() : ''}
     <div class="mes-slider-body">
         ${clos ? '<p class="mes-note">Mesure clôturée ou annulée : elle se consulte, elle ne se modifie plus.</p>' : ''}
+        ${etape === 'suite' ? `
+            ${mesSectionPac()}
+            ${mesSectionInformations()}
+            ${mesSectionDecision()}` : ''}
+        ${aVenir ? `<p class="mes-note">Étape « ${_mesEsc((MES_ETAPES.find((e) => e.cle === etape) || {}).libelle || '')} » :
+            elle sera construite ultérieurement.</p>` : ''}
+        ${!champsMesure ? '' : `
         <div class="mes-paire">
             ${champ('Catégorie', `<select class="mes-select" id="mesf_categorie" ${off} onchange="mesFormCategorie(this.value)">
                 ${mesCategories().map((c) => opt(c.code, c.libelle, cat)).join('')}</select>`)}
@@ -1251,10 +1561,10 @@ function mesFormulaireMesure() {
         ${!nouvelle ? `<p class="mes-preuve-vide">
             ${m.date_notification ? `Notifiée le ${mesDate(m.date_notification)}. ` : ''}
             ${m.date_cloture ? `Clôturée le ${mesDate(m.date_cloture)}.` : ''}
-        </p>` : ''}
+        </p>` : ''}`}
         <p class="mes-erreur" id="mesFormErreur"></p>
     </div>
-    ${ro ? '' : `<div class="mes-slider-footer">
+    ${ro || !champsMesure ? '' : `<div class="mes-slider-footer">
         <button class="btn btn-outline btn-sm" onclick="mesFermerSlider()">Annuler</button>
         <button class="btn btn-primary btn-sm" onclick="mesEnregistrerMesure()">${MES_ICONS.check} Enregistrer</button>
     </div>`}`;
@@ -1418,6 +1728,8 @@ Object.assign(window, {
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,
     mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation,
+    mesTeleverserPieceTraitement, mesRetirerPieceTraitement,
+    mesEnregistrerTraitement, mesPrendreDecision, mesVoirEtape,
     mesOuvrirCategorie, mesOuvrirType, mesFermerModal,
     mesEnregistrerCategorie, mesEnregistrerType,
     mesSupprimerCategorie, mesSupprimerType,

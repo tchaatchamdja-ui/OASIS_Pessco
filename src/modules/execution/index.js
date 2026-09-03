@@ -62,6 +62,43 @@ module.exports = {
         })), {
         description: 'Constatations opposables au prestataire (hors circuit direct en cours)',
       });
+
+      // Plan d'actions correctives soumis par le prestataire. Les Mesures
+      // d'Application en ont besoin pour décider de la suite à donner : on ne
+      // classe pas une carence sans avoir lu ce que l'organisme propose. Le
+      // contrat est le même que celui de « RAMP Inspections » — le
+      // consommateur n'a donc pas à savoir d'où vient la carence.
+      deps.services.publish('SURV.pacDeConstatation', () => {
+        const parConstatation = {};
+        db.list('constatations').forEach((c) => {
+          const pac = (c.actions_correctives || [])[0];
+          if (!pac) return;
+          const preuve = (p) => ({
+            intitule: p.intitule || p.filename || p.nom_origine || '',
+            depose_le: p.date || p.depose_le || '',
+            commentaire: p.commentaire || '',
+          });
+          parConstatation[c.id] = {
+            cause_primaire: pac.cause_primaire || '',
+            action_curative: pac.action_curative || '',
+            curative_date_prevue: pac.curative_date_prevue || '',
+            actions_correctives: pac.actions_correctives || '',
+            corrective_date_prevue: pac.corrective_date_prevue || '',
+            statut: c.statut || '',
+            date_soumission: c.date_soumission_pac || '',
+            date_validation: c.date_validation_pac || '',
+            motif_rejet: c.motif_rejet_pac || '',
+            preuves: [
+              ...(pac.curative_preuves || []).map((p) => ({ ...preuve(p), action: 'curative' })),
+              ...(pac.corrective_preuves || []).map((p) => ({ ...preuve(p), action: 'corrective' })),
+            ],
+          };
+        });
+        return parConstatation;
+      }, {
+        description: 'Plan d’actions correctives soumis, par constatation',
+        retour: '{ <constatation_id>: { cause_primaire, action_curative, actions_correctives, statut, preuves[] } }',
+      });
     }
   },
 

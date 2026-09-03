@@ -86,6 +86,7 @@ module.exports = function register(app, deps, M) {
   // Une pièce jointe désigne un fichier que ce module a reçu : son chemin est
   // celui que /upload a rendu, et rien d'autre. Sans ce contrôle, un « path »
   // choisi par l'appelant devenait le lien qu'un autre agent allait suivre.
+  const texte = (v) => String(v === undefined || v === null ? '' : v).trim();
   const CHEMIN_PIECE = /^\/api\/m\/mesures\/uploads\/[A-Za-z0-9._-]+$/;
   const piece = (p) => {
     const o = p && typeof p === 'object' ? p : {};
@@ -202,6 +203,123 @@ module.exports = function register(app, deps, M) {
     return res.status(201).json({ status: 'ok' });
   });
 
+  // ══════════════════════════════════════
+  //  Traitement d'une carence — fil d'avancement
+  // ══════════════════════════════════════
+  //
+  // Quatre étapes : « Suite à donner », puis Investigations, Qualification et
+  // Mesures, et Suivi des Mesures. Seule la première est instruite ici ; les
+  // trois suivantes sont déclarées pour que le fil se lise en entier.
+  const ETAPES = ['suite', 'investigations', 'qualification', 'suivi'];
+
+  // La décision commande l'étape atteinte : classer clôt le fil, investiguer
+  // et prendre des mesures le poussent d'un cran.
+  const ETAPE_APRES_DECISION = {
+    classer: 'suite',
+    investiguer: 'investigations',
+    mesures: 'qualification',
+  };
+  const DECISIONS = Object.keys(ETAPE_APRES_DECISION);
+
+  // Le plan d'actions correctives vient du module qui a relevé la carence,
+  // par le bus. Aucun des deux producteurs n'est requis : sans eux, la section
+  // se présente vide plutôt que de faire échouer l'écran.
+  const SOURCES_PAC = ['SURV.pacDeConstatation', 'SAFA.pacDeConstatation'];
+  const pacDe = (id) => SOURCES_PAC
+    .map((nom) => services.callOr(nom, {}))
+    .map((tout) => (tout || {})[id])
+    .find(Boolean) || null;
+
+  const traitementDe = (id) => db.list('traitements').find((t) => t.constatation_id === id) || null;
+
+  // Le traitement sort avec le plan d'actions qui l'a motivé : l'écran les lit
+  // ensemble, il n'a pas à les demander séparément.
+  app.get(`${M}/constatations/:id/traitement`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!R.canRead(req.user, perimetre(c))) return refuser(res);
+    const t = traitementDe(c.id);
+    res.json({
+      constatation_id: c.id,
+      etape: (t && t.etape) || 'suite',
+      informations: (t && t.informations) || '',
+      pieces: (t && t.pieces) || [],
+      decision: (t && t.decision) || '',
+      decision_motif: (t && t.decision_motif) || '',
+      decide_le: (t && t.decide_le) || '',
+      decide_par: (t && t.decide_par) || '',
+      pac: pacDe(c.id),
+      etapes: ETAPES,
+    });
+  });
+
+  // Informations recueillies et pièces jointes : de la contribution. La
+  // décision, elle, engage l'autorité — elle relève du validateur et passe par
+  // sa propre route.
+  app.put(`${M}/constatations/:id/traitement`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!peutEcrire(req, c)) return refuser(res);
+    const d = req.body || {};
+    const patch = {
+      informations: texte(d.informations),
+      pieces: Array.isArray(d.pieces) ? d.pieces.map(piece).filter((p) => p.nom || p.path) : [],
+    };
+    const t = traitementDe(c.id);
+    if (t) db.update('traitements', t.id, patch);
+    else {
+      db.insert('traitements', {
+        id: db.uid('trt'), constatation_id: c.id, etape: 'suite',
+        decision: '', decision_motif: '', date_creation: db.now(), ...patch,
+      });
+    }
+    return res.json({ status: 'ok' });
+  });
+
+  app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Décision réservée au validateur');
+    const d = req.body || {};
+    const decision = texte(d.decision);
+    if (!DECISIONS.includes(decision)) {
+      return res.status(400).json({ error: 'Décision inconnue', attendu: DECISIONS });
+    }
+    const motif = texte(d.motif);
+    // Classer, c'est décider qu'aucune mesure d'application ne sera prise : la
+    // carence reste suivie par le plan d'actions de son module d'origine. La
+    // décision et le classement sont une seule et même chose, consignés
+    // ensemble pour que l'écran « Carences » les voie tous deux.
+    if (decision === 'classer') {
+      if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
+        return res.status(400).json({ error: 'Une mesure a déjà été prise sur cette carence' });
+      }
+      if (!db.list('classements').some((x) => x.constatation_id === c.id)) {
+        db.insert('classements', {
+          id: db.uid('cla'), constatation_id: c.id, motif,
+          date_cloture: db.now().slice(0, 10),
+          classe_par: req.user.username, date_creation: db.now(),
+        });
+      }
+    }
+    const patch = {
+      decision,
+      decision_motif: motif,
+      etape: ETAPE_APRES_DECISION[decision],
+      decide_le: db.now(),
+      decide_par: req.user.username,
+    };
+    const t = traitementDe(c.id);
+    if (t) db.update('traitements', t.id, patch);
+    else {
+      db.insert('traitements', {
+        id: db.uid('trt'), constatation_id: c.id, informations: '', pieces: [],
+        date_creation: db.now(), ...patch,
+      });
+    }
+    return res.status(201).json({ status: 'ok', etape: patch.etape });
+  });
+
   // Le classement se retire : une décision prise par erreur ne doit pas
   // enfermer l'infraction.
   app.delete(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
@@ -217,7 +335,6 @@ module.exports = function register(app, deps, M) {
   // seul les modifie. Les constatations reçues par le bus restent en lecture.
   const CHAMPS_CONSTAT = ['titre', 'description', 'prestataire_id', 'origine_libelle',
     'date_ouverture', 'delai_jours', 'date_due_cloture'];
-  const texte = (v) => String(v === undefined || v === null ? '' : v).trim();
   const constatPropre = (d) => Object.fromEntries(CHAMPS_CONSTAT.map((k) => [k, texte(d[k])]));
 
   app.post(`${M}/constatations`, requireAuth, (req, res) => {

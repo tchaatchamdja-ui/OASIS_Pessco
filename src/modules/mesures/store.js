@@ -15,7 +15,11 @@ const store = require('../../store');
 // « classements » : la décision de ne donner aucune suite à une infraction.
 // Elle est prise ici, y compris sur une infraction reçue d'un autre module —
 // dont les données ne sont jamais modifiées.
-const COLLECTIONS = ['mesures', 'categories', 'types', 'constatations', 'classements'];
+// « traitements » : le fil d'avancement d'une carence — ce que l'autorité a
+// recueilli en plus du plan d'actions, et la décision sur la suite à donner.
+// Un enregistrement par carence, quelle que soit son origine ; les données du
+// module producteur ne sont jamais touchées.
+const COLLECTIONS = ['mesures', 'categories', 'types', 'constatations', 'classements', 'traitements'];
 
 // Catégories et types livrés d'origine : ce sont les valeurs du formulaire
 // « Nouvelle mesure » de PESSCO. Elles restent modifiables au menu Paramètres.

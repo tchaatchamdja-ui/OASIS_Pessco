@@ -28,7 +28,8 @@
   },
   "provides": [
     "SAFA.ecartsParExploitant",
-    "SAFA.constatationsCritiques"
+    "SAFA.constatationsCritiques",
+    "SAFA.pacDeConstatation"
   ],
   "requires": []
 }

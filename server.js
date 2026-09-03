@@ -179,7 +179,7 @@ function parseCookies(req) {
 
 function requireAuth(req, res, next) {
   const cfg = loadConfig();
-  const token = parseCookies(req).aerosup_session;
+  const token = parseCookies(req).oasis_session;
   const session = auth.getSession(token, cfg);
   if (!session) return res.status(401).json({ error: 'unauthenticated' });
   const user = auth.findUser(session.username);
@@ -223,7 +223,7 @@ app.get('/api/health', (req, res) => {
 function setSessionCookie(res, token) {
   // Secure hors développement : le jeton ne doit pas circuler en clair.
   const secure = EN_PRODUCTION ? '; Secure' : '';
-  res.setHeader('Set-Cookie', `aerosup_session=${token}; HttpOnly; SameSite=Lax; Path=/${secure}`);
+  res.setHeader('Set-Cookie', `oasis_session=${token}; HttpOnly; SameSite=Lax; Path=/${secure}`);
 }
 
 app.post('/api/login', limiterAuth, (req, res) => {
@@ -278,7 +278,7 @@ app.post('/api/login/mfa/resend', limiterAuth, (req, res) => {
 app.post('/api/logout', requireAuth, (req, res) => {
   audit.log(req.user.username, 'LOGOUT', {});
   auth.destroySession(req.token);
-  res.setHeader('Set-Cookie', 'aerosup_session=; HttpOnly; Path=/; Max-Age=0');
+  res.setHeader('Set-Cookie', 'oasis_session=; HttpOnly; Path=/; Max-Age=0');
   res.json({ ok: true });
 });
 

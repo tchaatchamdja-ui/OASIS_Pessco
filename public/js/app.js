@@ -172,7 +172,7 @@ let CURRENT_VIEW = 'home';
 let REFS = {};
 let CFG_SUB = 'organisation';
 let CFG_COLLAPSED = false;
-let NOTIF_LAST_SEEN = parseInt(localStorage.getItem('aerosup_notif_seen') || '0', 10);
+let NOTIF_LAST_SEEN = parseInt(localStorage.getItem('oasis_notif_seen') || '0', 10);
 
 async function api(path, options) {
   // En-tête d'origine applicative : un formulaire d'un autre site ne peut pas
@@ -2580,7 +2580,7 @@ document.getElementById('notifBell').addEventListener('click', async () => {
   panel.style.display = 'block';
   if (notifs.length) {
     NOTIF_LAST_SEEN = Math.max(...notifs.map((n) => n.id));
-    localStorage.setItem('aerosup_notif_seen', String(NOTIF_LAST_SEEN));
+    localStorage.setItem('oasis_notif_seen', String(NOTIF_LAST_SEEN));
     document.getElementById('notifBadge').style.display = 'none';
   }
 });

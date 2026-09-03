@@ -37,7 +37,7 @@
     "postgres": {
       "host": "localhost",
       "port": 5432,
-      "database": "aerosup",
+      "database": "oasis",
       "schema": "aac_bj",
       "ssl": true
     }

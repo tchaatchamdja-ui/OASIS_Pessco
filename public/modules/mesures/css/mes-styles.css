@@ -222,28 +222,55 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
     padding: .6rem 1rem; border-bottom: 1px solid var(--border);
     background: var(--bg);
 }
-.mes-proc-barre .mes-proc-fil { flex: 1 1 auto; min-width: 0; }
+/* Le fil occupe la largeur laissée par les actions, et ses quatre étapes s'y
+   partagent la place à parts égales : des chevrons qui se suivent, comme dans
+   le processus d'inspection, et non quatre pastilles serrées à gauche. */
+.mes-proc-barre .mes-proc-fil { flex: 1 1 auto; min-width: 0; gap: 0; }
+.mes-proc-barre .mes-proc-step { flex: 1 1 0; min-width: 0; }
 .mes-proc-actions {
     display: flex; gap: .4rem; flex-wrap: wrap; margin-left: auto; flex: 0 0 auto;
     align-items: center;
 }
 /* Une étape que le traitement n'a pas atteinte reste inerte : rien à y voir. */
 .mes-proc-step.verrouillee { opacity: .5; cursor: default; }
-.mes-proc-step.selected { outline: 2px solid var(--primary); outline-offset: 1px; }
+/* L'étape regardée se marque à l'intérieur du chevron : un contour
+   rectangulaire en aurait cassé la pointe. */
+.mes-proc-step.selected { box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .35); }
 
 /* ── Sections d'une étape ── */
-.mes-section { border: 1px solid var(--border); border-radius: 10px; margin-bottom: .9rem; }
+.mes-section {
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: .9rem; overflow: hidden;
+}
+/* Bandeau aux couleurs du thème : chaque section s'annonce comme l'entête du
+   volet, dont elle reprend le fond. */
 .mes-section > h4 {
     margin: 0; padding: .55rem .8rem; font-size: .85rem;
-    border-bottom: 1px solid var(--border); background: var(--bg);
-    border-radius: 10px 10px 0 0;
+    background: var(--primary); color: var(--text-header, #fff);
 }
 .mes-section-corps { padding: .8rem; }
 .mes-pac-ligne { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: .5rem; padding: .3rem 0; }
 .mes-pac-ligne dt { font-size: .78rem; color: var(--text-muted); }
 .mes-pac-ligne dd { margin: 0; font-size: .85rem; white-space: pre-wrap; }
+/* Le plan d'actions se lit en deux colonnes : ce qui a été promis à gauche,
+   ce qui le prouve à droite. Sous 900 px elles se remettent l'une sous l'autre.  */
+.mes-deux-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
+.mes-deux-colonnes > section { min-width: 0; }
+.mes-colonne-titre {
+    font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--text-muted); margin-bottom: .35rem;
+}
+@media (max-width: 900px) { .mes-deux-colonnes { grid-template-columns: minmax(0, 1fr); } }
 .mes-decision-aide { margin: 0 0 .5rem 1.1rem; padding: 0; font-size: .8rem; color: var(--text-muted); }
 .mes-decision-aide li { margin-bottom: .2rem; }
+/* Les deux suites qui engagent une action portent leur couleur : le classement
+   clôt sans suite — vert —, l'investigation ouvre un délai — orange. */
+.mes-btn-classer-vert {
+    background: #16a34a !important; border-color: #16a34a !important; color: #fff !important;
+}
+.mes-btn-investiguer {
+    background: #f59e0b !important; border-color: #f59e0b !important; color: #fff !important;
+}
 .mes-slider-footer {
     display: flex; justify-content: flex-end; gap: .5rem;
     padding: .7rem 1rem; border-top: 1px solid var(--border); background: var(--bg);

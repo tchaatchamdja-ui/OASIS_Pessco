@@ -250,6 +250,8 @@ async function mesRechargerMesures() {
     mesRenderPage();
 }
 
+const mesTypesInvestigation = () => ((MES_STATE.data.parametres || {}).types_investigation) || [];
+
 async function mesRechargerParametres() {
     MES_STATE.data.parametres = await mesApi('/parametres')
         .catch(() => MES_STATE.data.parametres);
@@ -949,10 +951,21 @@ function mesRenderParametres() {
         </td></tr>`).join('')
         || `<tr><td colspan="3" class="mes-table-vide">Aucun type.</td></tr>`;
 
+    const lignesInv = mesTypesInvestigation().map((t) => `<tr>
+        <td><strong>${_mesEsc(t.libelle)}</strong>
+            <div style="font-size:.72rem;color:var(--text-muted);font-family:ui-monospace,Menlo,monospace;">${_mesEsc(t.code)}</div></td>
+        <td class="mes-actions">
+            ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
+                onclick="mesOuvrirTypeInvestigation('${t.id}')" title="Modifier">${MES_ICONS.edit}</button>` : ''}
+            ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
+                onclick="mesSupprimerTypeInvestigation('${t.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+        </td></tr>`).join('')
+        || `<tr><td colspan="2" class="mes-table-vide">Aucun type d'investigation.</td></tr>`;
+
     return `
     <div class="mes-page-header">
         <h2>Paramètres</h2>
-        <span class="mes-sous-titre">Catégories et types de mesure d'application</span>
+        <span class="mes-sous-titre">Catégories, types de mesure et types d'investigation</span>
     </div>
     <p class="mes-note">
         Ces deux listes peuplent le formulaire de mesure : une mesure porte une catégorie,
@@ -980,6 +993,16 @@ function mesRenderParametres() {
                 <tbody>${lignesType}</tbody>
             </table></div>
         </div>
+        <div class="mes-card" style="padding:0;">
+            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Types d'investigation</div>
+                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirTypeInvestigation()">${MES_ICONS.add} Ajouter</button>` : ''}
+            </div>
+            <div class="mes-table-wrap"><table class="mes-table">
+                <thead><tr><th>Libellé</th><th style="width:110px;">Actions</th></tr></thead>
+                <tbody>${lignesInv}</tbody>
+            </table></div>
+        </div>
     </div>`;
 }
 
@@ -1003,6 +1026,7 @@ function mesOuvrirType(id) {
 function mesFermerModal() {
     MES_STATE.categorieEnCours = null;
     MES_STATE.typeEnCours = null;
+    MES_STATE.typeInvestigationEnCours = null;
     MES_STATE.constatEnCours = null;
     const el = document.getElementById('mesModalRoot');
     if (el) el.innerHTML = '';
@@ -1013,6 +1037,31 @@ function mesAfficherModal() {
     if (!el) return;
     const c = MES_STATE.categorieEnCours;
     const t = MES_STATE.typeEnCours;
+    const ti = MES_STATE.typeInvestigationEnCours;
+    if (ti) {
+        el.innerHTML = `
+        <div class="mes-modal-fond" onclick="mesFermerModal()">
+            <div class="mes-modal" onclick="event.stopPropagation();">
+                <div class="mes-modal-header">
+                    <span style="flex:1;">${ti.id ? 'Modifier le type d’investigation' : 'Nouveau type d’investigation'}</span>
+                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
+                </div>
+                <div class="mes-modal-body">
+                    <div class="mes-champ">
+                        <label>Libellé du type d’investigation</label>
+                        <input class="mes-input" id="mesTiLib" value="${_mesAttr(ti.libelle || '')}"
+                               placeholder="ex. Analyse des enregistrements">
+                    </div>
+                    <p class="mes-erreur" id="mesTiErreur"></p>
+                </div>
+                <div class="mes-modal-footer">
+                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">Annuler</button>
+                    <button class="btn btn-primary btn-sm" onclick="mesEnregistrerTypeInvestigation()">${MES_ICONS.check} Enregistrer</button>
+                </div>
+            </div>
+        </div>`;
+        return;
+    }
     if (c) {
         el.innerHTML = `
         <div class="mes-modal-fond" onclick="mesFermerModal()">
@@ -1068,6 +1117,37 @@ function mesAfficherModal() {
             </div>
         </div>`;
     }
+}
+
+function mesOuvrirTypeInvestigation(id) {
+    MES_STATE.typeInvestigationEnCours = id
+        ? { ...(mesTypesInvestigation().find((t) => t.id === id) || {}) } : {};
+    mesAfficherModal();
+}
+
+async function mesEnregistrerTypeInvestigation() {
+    const t = MES_STATE.typeInvestigationEnCours || {};
+    const libelle = (document.getElementById('mesTiLib') || {}).value || '';
+    const err = document.getElementById('mesTiErreur');
+    if (!libelle.trim()) { err.textContent = 'Libellé requis'; return; }
+    try {
+        if (t.id) await mesApi(`/parametres/types-investigation/${t.id}`, { method: 'PUT', body: JSON.stringify({ libelle }) });
+        else await mesApi('/parametres/types-investigation', { method: 'POST', body: JSON.stringify({ libelle }) });
+        mesFermerModal();
+        await mesRechargerParametres();
+        mesToast('Type d’investigation enregistré');
+    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+}
+
+async function mesSupprimerTypeInvestigation(id) {
+    const t = mesTypesInvestigation().find((x) => x.id === id);
+    if (!t) return;
+    if (!confirm(`Supprimer le type « ${t.libelle} » ?`)) return;
+    try {
+        await mesApi(`/parametres/types-investigation/${id}`, { method: 'DELETE' });
+        await mesRechargerParametres();
+        mesToast('Type supprimé');
+    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
 }
 
 async function mesEnregistrerCategorie() {
@@ -1231,7 +1311,7 @@ function mesFormulaireMesure() {
     const surCarence = !!MES_STATE.carenceEnCours;
     const etape = surCarence ? mesEtapeCourante() : 'qualification';
     const champsMesure = etape === 'qualification';
-    const aVenir = etape === 'investigations' || etape === 'suivi';
+    const aVenir = etape === 'suivi';
 
     return `
     <div class="mes-slider-header">
@@ -1250,6 +1330,11 @@ function mesFormulaireMesure() {
             ${mesSectionPac()}
             ${mesSectionInformations()}
             ${mesSectionDecision()}` : ''}
+        ${etape === 'investigations' ? `
+            ${mesSectionEquipe()}
+            ${mesSectionTravaux()}
+            ${mesSectionAutresElements()}
+            ${mesSectionRapport()}` : ''}
         ${aVenir ? `<p class="mes-note">Étape « ${_mesEsc((MES_ETAPES.find((e) => e.cle === etape) || {}).libelle || '')} » :
             elle sera construite ultérieurement.</p>` : ''}
         ${!champsMesure ? '' : `
@@ -1464,6 +1549,8 @@ Object.assign(window, {
     mesOuvrirCategorie, mesOuvrirType, mesFermerModal,
     mesEnregistrerCategorie, mesEnregistrerType,
     mesSupprimerCategorie, mesSupprimerType,
+    mesTypesInvestigation, mesOuvrirTypeInvestigation,
+    mesEnregistrerTypeInvestigation, mesSupprimerTypeInvestigation,
 });
 
 // ══════════════════════════════════════

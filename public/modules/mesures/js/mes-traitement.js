@@ -1,6 +1,7 @@
 /* OASIS / Mesures d'Application — traitement d'une carence.
  *
- * Le fil d'avancement et les trois sections de l'étape « Suite à donner ».
+ * Le fil d'avancement, les sections de l'étape « Suite à donner » et celles de
+ * l'étape « Investigations ».
  * Séparé de mes-app.js, qui portait déjà la coquille, les cinq écrans et le
  * formulaire de mesure : le fichier passait les 2000 lignes que le garde-fou
  * du smoke refuse.
@@ -13,13 +14,14 @@
 //  Fil d'avancement du traitement d'une carence
 // ══════════════════════════════════════
 //
-// Quatre étapes. Seule « Suite à donner » est instruite : elle va du
-// déclenchement du traitement à la décision. Les trois suivantes sont
-// déclarées pour que le fil se lise en entier ; elles seront construites plus
-// tard, et le disent plutôt que de faire croire à un écran vide.
+// Quatre étapes. « Suite à donner » va du déclenchement du traitement à la
+// décision ; « Investigations » rassemble les preuves qui établissent les
+// faits. Les deux dernières sont déclarées pour que le fil se lise en entier ;
+// elles seront construites plus tard, et le disent plutôt que de faire croire
+// à un écran vide.
 const MES_ETAPES = [
     { cle: 'suite', libelle: 'Suite à donner' },
-    { cle: 'investigations', libelle: 'Investigations', aVenir: true },
+    { cle: 'investigations', libelle: 'Investigations' },
     { cle: 'qualification', libelle: 'Qualification et Mesures', aVenir: true },
     { cle: 'suivi', libelle: 'Suivi des Mesures', aVenir: true },
 ];
@@ -73,6 +75,12 @@ function mesEtapeInfo(cle) {
         if (!t.decision) return 'Instruction en cours : plan d’actions, informations, puis décision';
         const d = MES_DECISIONS.find((x) => x.cle === t.decision) || {};
         return `Décidé le ${mesDate(t.decide_le)} — ${d.libelle || t.decision}`;
+    }
+    if (cle === 'investigations') {
+        const inv = (t.investigation || {});
+        const n = (inv.travaux || []).length;
+        if (!n && !(inv.equipe || []).length) return 'Investigation à ouvrir';
+        return `${(inv.equipe || []).length} enquêteur(s) · ${n} investigation(s) consignée(s)`;
     }
     return 'Étape à construire ultérieurement';
 }
@@ -291,11 +299,256 @@ function mesBarreInferieure(ro, champsMesure, etape) {
             <button class="btn btn-primary btn-sm" onclick="mesEnregistrerMesure()">${MES_ICONS.check} Enregistrer</button>
         </div>`;
     }
-    if (etape !== 'suite' || !mesPeutEcrire()) return '';
+    if (!mesPeutEcrire() || !['suite', 'investigations'].includes(etape)) return '';
+    // Chaque étape enregistre ce qui lui est propre : les informations
+    // recueillies pour la suite à donner, les actes d'enquête pour l'autre.
+    const geste = etape === 'investigations' ? 'mesEnregistrerInvestigation()' : 'mesEnregistrerTraitement()';
     return `<div class="mes-slider-footer">
-        <button class="btn btn-primary btn-sm" onclick="mesEnregistrerTraitement()"
+        <button class="btn btn-primary btn-sm" onclick="${geste}"
                 title="Conserver les informations recueillies">${MES_ICONS.check} Enregistrer</button>
     </div>`;
+}
+
+// ══════════════════════════════════════
+//  Étape « Investigations »
+// ══════════════════════════════════════
+//
+// Rassembler les preuves matérielles et documentaires — témoignages, dossiers,
+// relevés — pour établir les faits. Quatre sections : qui a enquêté, ce qui a
+// été fait, ce qui a été collecté par ailleurs, et le rapport qui en tire
+// l'analyse et les recommandations.
+
+const mesInvestigation = () => (MES_STATE.traitement || {}).investigation
+    || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' };
+
+// Liste de pièces, réutilisée par les trois endroits qui en portent : un
+// travail d'investigation, les autres éléments collectés, et le formulaire de
+// l'étape précédente.
+function mesPiecesHtml(cle, liste, off) {
+    const lignes = (liste || []).map((p, i) => `
+        <div class="mes-preuve" data-chemin="${_mesAttr(p.path || '')}">
+            <input class="mes-input" value="${_mesAttr(p.nom || '')}"
+                   placeholder="Intitulé de la pièce" ${off}>
+            ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
+                href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
+                title="Ouvrir">${MES_ICONS.download}</a>` : ''}
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                onclick="mesInvRetirerPiece('${cle}',${i})">${MES_ICONS.x}</button>`}
+        </div>`).join('');
+    return `<div id="mesInvPieces_${cle}">${lignes || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+        ${off ? '' : `<input type="file" id="mesInvFichier_${cle}" multiple style="display:none;"
+                onchange="mesInvTeleverser('${cle}', this.files)">
+            <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
+                    onclick="document.getElementById('mesInvFichier_${cle}').click()">
+                ${MES_ICONS.add} Ajouter une pièce</button>`}`;
+}
+
+// Section A — qui a mené l'investigation.
+function mesSectionEquipe() {
+    const inv = mesInvestigation();
+    const off = mesPeutEcrire() ? '' : 'disabled';
+    const lignes = (inv.equipe || []).map((p, i) => `
+        <tr data-rang="${i}">
+            <td><input class="mes-input" data-champ="nom" value="${_mesAttr(p.nom || '')}" ${off}></td>
+            <td><input class="mes-input" data-champ="prenom" value="${_mesAttr(p.prenom || '')}" ${off}></td>
+            <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
+            <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
+            <td class="mes-actions">${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
+                title="Retirer" onclick="mesInvRetirerEnqueteur(${i})">${MES_ICONS.x}</button>`}</td>
+        </tr>`).join('');
+    return mesSection('A', 'Équipe d’investigation', `
+        <div class="mes-table-wrap">
+            <table class="mes-table" id="mesInvEquipe">
+                <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Contact</th><th></th></tr></thead>
+                <tbody>${lignes || `<tr><td colspan="5" class="mes-preuve-vide">
+                    Aucun enquêteur désigné</td></tr>`}</tbody>
+            </table>
+        </div>
+        ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.5rem;"
+            onclick="mesInvAjouterEnqueteur()">${MES_ICONS.add} Ajouter un enquêteur</button>`}`);
+}
+
+// Section B — les travaux menés, autant de blocs que de besoin. Le type choisi
+// tient lieu de titre du bloc.
+function mesSectionTravaux() {
+    const inv = mesInvestigation();
+    const off = mesPeutEcrire() ? '' : 'disabled';
+    const types = mesTypesInvestigation();
+    const blocs = (inv.travaux || []).map((t, i) => {
+        const titre = (types.find((x) => x.code === t.type) || {}).libelle || 'Investigation';
+        return `<div class="mes-bloc" data-rang="${i}">
+            <div class="mes-bloc-entete">
+                <span class="mes-bloc-titre">${_mesEsc(titre)}</span>
+                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer ce bloc"
+                    onclick="mesInvRetirerTravail(${i})">${MES_ICONS.x}</button>`}
+            </div>
+            <div class="mes-bloc-corps">
+                <div class="mes-champ">
+                    <label>Type d’investigation</label>
+                    <select class="mes-select" data-champ="type" ${off} onchange="mesInvMajTitre(${i}, this.value)">
+                        <option value="">—</option>
+                        ${types.map((x) => `<option value="${_mesAttr(x.code)}"
+                            ${t.type === x.code ? 'selected' : ''}>${_mesEsc(x.libelle)}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="mes-champ">
+                    <label>Résultats</label>
+                    <textarea class="mes-input" data-champ="resultats" rows="4" ${off}
+                              placeholder="Ce que l’investigation a établi">${_mesEsc(t.resultats || '')}</textarea>
+                </div>
+                <div class="mes-champ">
+                    <label>Éléments de preuve</label>
+                    ${mesPiecesHtml(`travail${i}`, t.pieces, off)}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    return mesSection('B', 'Investigations réalisées', `
+        <div id="mesInvTravaux">${blocs || '<p class="mes-preuve-vide">Aucune investigation consignée</p>'}</div>
+        ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.5rem;"
+            onclick="mesInvAjouterTravail()">${MES_ICONS.add} Ajouter une investigation</button>`}
+        ${types.length ? '' : `<p class="mes-note">Aucun type d’investigation n’est paramétré.
+            Le menu Paramètres du module en tient la liste.</p>`}`);
+}
+
+// Section C — ce qui a été recueilli hors des travaux ci-dessus.
+function mesSectionAutresElements() {
+    const inv = mesInvestigation();
+    const off = mesPeutEcrire() ? '' : 'disabled';
+    return mesSection('C', 'Autres éléments collectés', `<div class="mes-deux-colonnes">
+        <div class="mes-champ">
+            <label>Éléments recueillis</label>
+            <textarea class="mes-input" id="mesInvAutres" rows="6" ${off}
+                      placeholder="Témoignages, dossiers, relevés obtenus par ailleurs">${_mesEsc(inv.autres_texte || '')}</textarea>
+        </div>
+        <div class="mes-champ">
+            <label>Pièces jointes</label>
+            ${mesPiecesHtml('autres', inv.autres_pieces, off)}
+        </div>
+    </div>`);
+}
+
+// Section D — le rapport sur le cas.
+function mesSectionRapport() {
+    const inv = mesInvestigation();
+    const off = mesPeutEcrire() ? '' : 'disabled';
+    return mesSection('D', 'Résultat de l’investigation', `
+        <div class="mes-champ">
+            <label>Rapport sur le cas</label>
+            <textarea class="mes-input" id="mesInvRapport" rows="10" ${off}
+                      placeholder="Synthèse des faits établis, analyse de la législation applicable, et recommandations"
+                      >${_mesEsc(inv.rapport || '')}</textarea>
+        </div>`);
+}
+
+// La saisie vit dans le DOM tant qu'elle n'est pas enregistrée : on la relève
+// avant tout redessin, comme pour la mesure et le traitement.
+function mesCollecterInvestigation() {
+    const t = document.getElementById('mesInvRapport');
+    if (!t) return null;
+    const pieces = (cle) => [...document.querySelectorAll(`#mesInvPieces_${cle} .mes-preuve`)]
+        .map((r) => ({ nom: (r.querySelector('input') || {}).value || '', path: r.dataset.chemin || '' }));
+    const val = (racine, champ) => ((racine.querySelector(`[data-champ="${champ}"]`) || {}).value || '');
+    return {
+        equipe: [...document.querySelectorAll('#mesInvEquipe tbody tr[data-rang]')].map((tr) => ({
+            nom: val(tr, 'nom'), prenom: val(tr, 'prenom'),
+            email: val(tr, 'email'), contact: val(tr, 'contact'),
+        })),
+        travaux: [...document.querySelectorAll('#mesInvTravaux .mes-bloc')].map((b, i) => ({
+            type: val(b, 'type'), resultats: val(b, 'resultats'), pieces: pieces(`travail${i}`),
+        })),
+        autres_texte: (document.getElementById('mesInvAutres') || {}).value || '',
+        autres_pieces: pieces('autres'),
+        rapport: t.value,
+    };
+}
+
+const mesMajInvestigation = () => {
+    const saisi = mesCollecterInvestigation();
+    if (saisi) MES_STATE.traitement = { ...(MES_STATE.traitement || {}), investigation: saisi };
+};
+
+const mesRedessinerInvestigation = () => mesAfficherSlider({ anime: false });
+
+function mesInvAjouterEnqueteur() {
+    mesMajInvestigation();
+    mesInvestigation().equipe.push({ nom: '', prenom: '', email: '', contact: '' });
+    mesRedessinerInvestigation();
+}
+function mesInvRetirerEnqueteur(i) {
+    mesMajInvestigation();
+    const inv = mesInvestigation();
+    inv.equipe = inv.equipe.filter((_, k) => k !== i);
+    MES_STATE.traitement.investigation = inv;
+    mesRedessinerInvestigation();
+}
+function mesInvAjouterTravail() {
+    mesMajInvestigation();
+    const types = mesTypesInvestigation();
+    mesInvestigation().travaux.push({ type: (types[0] || {}).code || '', resultats: '', pieces: [] });
+    mesRedessinerInvestigation();
+}
+function mesInvRetirerTravail(i) {
+    mesMajInvestigation();
+    const inv = mesInvestigation();
+    inv.travaux = inv.travaux.filter((_, k) => k !== i);
+    MES_STATE.traitement.investigation = inv;
+    mesRedessinerInvestigation();
+}
+// Le titre du bloc suit le type retenu : il se met à jour sans redessiner tout
+// le volet, pour ne pas interrompre la saisie en cours dans le bloc voisin.
+function mesInvMajTitre(i, code) {
+    const bloc = document.querySelectorAll('#mesInvTravaux .mes-bloc')[i];
+    const titre = bloc && bloc.querySelector('.mes-bloc-titre');
+    if (!titre) return;
+    const t = mesTypesInvestigation().find((x) => x.code === code);
+    titre.textContent = (t && t.libelle) || 'Investigation';
+}
+
+function mesInvRetirerPiece(cle, i) {
+    mesMajInvestigation();
+    const inv = mesInvestigation();
+    if (cle === 'autres') inv.autres_pieces = inv.autres_pieces.filter((_, k) => k !== i);
+    else {
+        const rang = Number(String(cle).replace('travail', ''));
+        const t = inv.travaux[rang];
+        if (t) t.pieces = (t.pieces || []).filter((_, k) => k !== i);
+    }
+    MES_STATE.traitement.investigation = inv;
+    mesRedessinerInvestigation();
+}
+
+async function mesInvTeleverser(cle, fichiers) {
+    if (!fichiers || !fichiers.length) return;
+    mesMajInvestigation();
+    const inv = mesInvestigation();
+    const cible = cle === 'autres' ? inv
+        : inv.travaux[Number(String(cle).replace('travail', ''))];
+    if (!cible) return;
+    const clef = cle === 'autres' ? 'autres_pieces' : 'pieces';
+    cible[clef] = cible[clef] || [];
+    for (const f of fichiers) {
+        try {
+            const corps = new FormData();
+            corps.append('file', f);
+            const r = await mesApi('/upload', { method: 'POST', body: corps });
+            cible[clef].push({ nom: r.filename, path: r.path, size: r.size });
+        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+    }
+    MES_STATE.traitement.investigation = inv;
+    mesRedessinerInvestigation();
+}
+
+async function mesEnregistrerInvestigation() {
+    const c = MES_STATE.carenceEnCours;
+    if (!c) return;
+    mesMajInvestigation();
+    try {
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/investigation`, {
+            method: 'PUT', body: JSON.stringify(mesInvestigation()),
+        });
+        mesToast('Investigation enregistrée');
+    } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); }
 }
 
 // Les pièces et le texte saisis vivent dans le DOM tant qu'ils ne sont pas
@@ -385,4 +638,8 @@ Object.assign(window, {
     mesVoirEtape, mesFilAvancement, mesBarreInferieure,
     mesTeleverserPieceTraitement, mesRetirerPieceTraitement,
     mesEnregistrerTraitement, mesPrendreDecision,
+    mesSectionEquipe, mesSectionTravaux, mesSectionAutresElements, mesSectionRapport,
+    mesInvAjouterEnqueteur, mesInvRetirerEnqueteur,
+    mesInvAjouterTravail, mesInvRetirerTravail, mesInvMajTitre,
+    mesInvTeleverser, mesInvRetirerPiece, mesEnregistrerInvestigation,
 });

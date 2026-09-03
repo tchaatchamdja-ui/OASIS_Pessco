@@ -74,9 +74,52 @@ module.exports = function register(app, deps, M) {
     res.json({
       categories: ordonner(db.list('categories')),
       types: ordonner(db.list('types')),
+      types_investigation: ordonner(db.list('types_investigation')),
       modifiable: editeur(req),
       supprimable: admin(req),
     });
+  });
+
+  // ── Types d'investigation ──
+  // Ce que l'équipe a fait pour établir les faits. Liste plate : un type ne
+  // dépend d'aucune catégorie, contrairement aux types de mesure.
+  app.post(`${M}/parametres/types-investigation`, requireAuth, (req, res) => {
+    if (!editeur(req)) return refuser(res);
+    const libelle = String((req.body || {}).libelle || '').trim();
+    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    const code = codeDepuisLibelle(libelle);
+    if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
+    if (db.list('types_investigation').some((t) => t.code === code)) {
+      return res.status(400).json({ error: 'Un type porte déjà ce libellé' });
+    }
+    const t = { id: db.uid('mti'), code, libelle, ordre: db.list('types_investigation').length };
+    db.insert('types_investigation', t);
+    return res.status(201).json({ status: 'ok', id: t.id, code: t.code });
+  });
+
+  app.put(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
+    if (!editeur(req)) return refuser(res);
+    const t = db.get('types_investigation', req.params.id);
+    if (!t) return res.status(404).json({ error: 'Type non trouvé' });
+    const libelle = String((req.body || {}).libelle || '').trim();
+    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    // Le code ne suit pas le libellé : les investigations déjà consignées le
+    // portent, et un renommage ne doit pas les détacher de leur type.
+    db.update('types_investigation', t.id, { libelle });
+    return res.json({ status: 'ok' });
+  });
+
+  app.delete(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
+    if (!admin(req)) return refuser(res, 'Suppression réservée au gestionnaire');
+    const t = db.get('types_investigation', req.params.id);
+    if (!t) return res.status(404).json({ error: 'Type non trouvé' });
+    // Un type déjà employé par une investigation ne se retire pas : le travail
+    // consigné perdrait son intitulé.
+    const employe = db.list('traitements').some((x) => ((x.investigation || {}).travaux || [])
+      .some((w) => w.type === t.code));
+    if (employe) return res.status(400).json({ error: 'Ce type est employé par une investigation' });
+    db.remove('types_investigation', t.id);
+    return res.json({ status: 'ok' });
   });
 
   app.post(`${M}/parametres/categories`, requireAuth, (req, res) => {

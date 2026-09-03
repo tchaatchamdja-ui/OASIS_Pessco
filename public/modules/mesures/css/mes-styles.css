@@ -310,6 +310,21 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
     letter-spacing: .04em; color: var(--text-muted); margin-bottom: .35rem;
 }
 @media (max-width: 900px) { .mes-deux-colonnes { grid-template-columns: minmax(0, 1fr); } }
+/* ── Bloc d'investigation ──
+   Un bloc par acte d'enquête, autant que l'équipe en ajoute. Le type retenu
+   tient lieu de titre : il dit d'un regard ce que le bloc rapporte. */
+.mes-bloc {
+    border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: .7rem; overflow: hidden; background: var(--bg-card);
+}
+.mes-bloc-entete {
+    display: flex; align-items: center; gap: .6rem;
+    padding: .45rem .7rem; background: var(--bg);
+    border-bottom: 1px solid var(--border);
+}
+.mes-bloc-titre { flex: 1; font-weight: 600; font-size: .84rem; color: var(--text); }
+.mes-bloc-corps { padding: .8rem; }
+.mes-bloc-corps .mes-champ:last-child { margin-bottom: 0; }
 .mes-decision-aide { margin: 0 0 .5rem 1.1rem; padding: 0; font-size: .8rem; color: var(--text-muted); }
 .mes-decision-aide li { margin-bottom: .2rem; }
 /* Les deux suites qui engagent une action portent leur couleur : le classement

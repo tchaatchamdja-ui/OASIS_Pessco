@@ -19,7 +19,18 @@ const store = require('../../store');
 // recueilli en plus du plan d'actions, et la décision sur la suite à donner.
 // Un enregistrement par carence, quelle que soit son origine ; les données du
 // module producteur ne sont jamais touchées.
-const COLLECTIONS = ['mesures', 'categories', 'types', 'constatations', 'classements', 'traitements'];
+// « types_investigation » : ce que l'équipe a fait pour établir les faits —
+// une visite, un entretien, l'examen d'enregistrements. La liste est
+// paramétrable au menu du module ; les trois valeurs d'origine couvrent les
+// moyens ordinaires d'une investigation.
+const COLLECTIONS = ['mesures', 'categories', 'types', 'constatations', 'classements',
+  'traitements', 'types_investigation'];
+
+const TYPES_INVESTIGATION_DEFAUT = [
+  ['inspection_terrain', 'Inspection / Observations sur le terrain'],
+  ['entretien', 'Entretien'],
+  ['analyse_enregistrements', 'Analyse des enregistrements'],
+];
 
 // Catégories et types livrés d'origine : ce sont les valeurs du formulaire
 // « Nouvelle mesure » de PESSCO. Elles restent modifiables au menu Paramètres.
@@ -65,7 +76,21 @@ function seed() {
   vide.types = TYPES_DEFAUT.map(([cat, code, libelle], i) => ({
     id: `mty_${code}`, categorie_code: cat, code, libelle, ordre: i,
   }));
+  vide.types_investigation = TYPES_INVESTIGATION_DEFAUT.map(([code, libelle], i) => ({
+    id: `mti_${code}`, code, libelle, ordre: i,
+  }));
   save({ ...vide, createdAt: now() });
+}
+
+// Les instances déjà installées n'ont pas la liste : on l'amorce au démarrage
+// plutôt que d'ouvrir un écran de paramétrage vide.
+function seedTypesInvestigation() {
+  const d = load();
+  if (!d || (d.types_investigation || []).length) return;
+  d.types_investigation = TYPES_INVESTIGATION_DEFAUT.map(([code, libelle], i) => ({
+    id: `mti_${code}`, code, libelle, ordre: i,
+  }));
+  save(d);
 }
 
 function get(coll, id) {
@@ -132,7 +157,7 @@ function prochaineReferenceConstat() {
 }
 
 module.exports = {
-  COLLECTIONS, CATEGORIES_DEFAUT, TYPES_DEFAUT,
-  seed, list, get, insert, update, remove, uid, now,
+  COLLECTIONS, CATEGORIES_DEFAUT, TYPES_DEFAUT, TYPES_INVESTIGATION_DEFAUT,
+  seed, seedTypesInvestigation, list, get, insert, update, remove, uid, now,
   prochaineReference, prochaineReferenceConstat,
 };

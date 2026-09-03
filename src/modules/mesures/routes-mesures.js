@@ -248,6 +248,8 @@ module.exports = function register(app, deps, M) {
       decision_motif: (t && t.decision_motif) || '',
       decide_le: (t && t.decide_le) || '',
       decide_par: (t && t.decide_par) || '',
+      investigation: (t && t.investigation)
+        || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' },
       pac: pacDe(c.id),
       etapes: ETAPES,
     });
@@ -273,6 +275,43 @@ module.exports = function register(app, deps, M) {
         decision: '', decision_motif: '', date_creation: db.now(), ...patch,
       });
     }
+    return res.json({ status: 'ok' });
+  });
+
+  // ── Investigation ──
+  // Rassembler les preuves matérielles et documentaires pour établir les faits :
+  // qui a mené l'investigation, ce qui a été fait et trouvé, ce qui a été
+  // collecté par ailleurs, et le rapport qui en tire l'analyse.
+  const CHAMPS_ENQUETEUR = ['nom', 'prenom', 'email', 'contact'];
+  const enqueteur = (p) => Object.fromEntries(CHAMPS_ENQUETEUR.map((k) => [k, texte((p || {})[k])]));
+
+  const travail = (t) => ({
+    type: texte((t || {}).type),
+    resultats: texte((t || {}).resultats),
+    pieces: Array.isArray((t || {}).pieces) ? (t || {}).pieces.map(piece).filter((p) => p.nom || p.path) : [],
+  });
+
+  const investigation = (d) => ({
+    equipe: Array.isArray(d.equipe)
+      ? d.equipe.map(enqueteur).filter((p) => p.nom || p.prenom || p.email || p.contact) : [],
+    travaux: Array.isArray(d.travaux) ? d.travaux.map(travail).filter((t) => t.type || t.resultats || t.pieces.length) : [],
+    autres_texte: texte(d.autres_texte),
+    autres_pieces: Array.isArray(d.autres_pieces)
+      ? d.autres_pieces.map(piece).filter((p) => p.nom || p.path) : [],
+    rapport: texte(d.rapport),
+  });
+
+  app.put(`${M}/constatations/:id/investigation`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!peutEcrire(req, c)) return refuser(res);
+    const t = traitementDe(c.id);
+    // L'investigation ne s'ouvre qu'une fois la suite décidée : on ne consigne
+    // pas des actes d'enquête sur une carence dont le sort n'est pas tranché.
+    if (!t || t.decision !== 'investiguer') {
+      return res.status(409).json({ error: 'La carence n’est pas à l’étape Investigations' });
+    }
+    db.update('traitements', t.id, { investigation: investigation(req.body || {}) });
     return res.json({ status: 'ok' });
   });
 

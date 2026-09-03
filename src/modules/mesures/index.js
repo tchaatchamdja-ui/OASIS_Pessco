@@ -42,6 +42,9 @@ module.exports = {
 
   seed() {
     db.seed();
+    // Instance déjà installée : la liste des types d'investigation n'existait
+    // pas encore, on l'amorce plutôt que d'ouvrir un paramétrage vide.
+    db.seedTypesInvestigation();
     // Un module fraîchement installé n'a encore aucun droit attribué : sans
     // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
     // compris le super-administrateur — de prendre la première mesure et donc

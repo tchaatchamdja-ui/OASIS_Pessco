@@ -50,9 +50,13 @@ section `database`) : c'est un chantier de remplacement de `src/store.js`.
 
 Le code est sur GitHub : `tchaatchamdja-ui/OASIS`.
 
-La branche déployée est **`phase-2`** — c'est elle que `render.yaml` désigne. `main`
-porte le socle Phase 1 et sert de point de retour : en cas d'incident, repointer
-`branch:` sur `main` dans `render.yaml` ramène le service à l'état antérieur.
+La branche déployée est **`main`** — c'est elle que `render.yaml` désigne. Le dépôt
+n'a plus qu'une branche : les travaux de la Phase 2, longtemps portés par
+`phase-2`, l'ont rejointe.
+
+Le point de retour vers le socle Phase 1 est le tag **`phase-1`**. En cas
+d'incident, `branch: phase-1` dans `render.yaml` ramène le service à cet état ;
+un tag n'avance pas, la reprise est donc stable.
 
 Chaque poussée sur la branche déployée déclenche un redéploiement (`autoDeploy: true`).
 
@@ -61,7 +65,7 @@ Chaque poussée sur la branche déployée déclenche un redéploiement (`autoDep
 Le fichier `render.yaml` décrit le service ; Render le lit comme un *Blueprint*.
 
 1. [render.com](https://render.com) → se connecter avec GitHub.
-2. **New → Blueprint**, choisir le dépôt OASIS, branche `phase-2`.
+2. **New → Blueprint**, choisir le dépôt OASIS, branche `main`.
 3. Render lit `render.yaml` et propose le service `oasis` (runtime Node, plan free,
    région Frankfurt).
 4. Renseigner la seule variable laissée vide : **`OASIS_SEED_PASSWORD`** — le mot de passe

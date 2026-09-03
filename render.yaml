@@ -13,10 +13,10 @@ services:
     runtime: node
     plan: free
     region: frankfurt          # le plus proche de l'Afrique de l'Ouest
-    # Branche déployée. `main` porte le socle Phase 1 et sert de point de
-    # retour : le service suit `phase-2`, et un incident se répare en
-    # repointant cette ligne sur `main`.
-    branch: phase-2
+    # Branche déployée. Les travaux de la Phase 2 ont rejoint `main`, qui porte
+    # désormais l'application entière ; le point de retour vers le socle Phase 1
+    # est le tag `phase-1`, qu'une ligne `branch: phase-1` ramènerait en service.
+    branch: main
     # Le rendu PDF des rapports transmis passe par Chromium (puppeteer).
     # Render vide node_modules entre les constructions mais conserve
     # XDG_CACHE_HOME : le navigateur y est téléchargé une fois, puis réutilisé.

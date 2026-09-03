@@ -183,6 +183,9 @@
 }
 body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 .mes-slider.open { transform: translateX(0); }
+/* Volet remonté après un redessin de la coquille : il se pose à sa place sans
+   rejouer son glissement — il était déjà ouvert. */
+.mes-sans-glissement { transition: none !important; }
 .mes-slider-header {
     display: flex; align-items: center; gap: .6rem;
     padding: .8rem 1rem; border-bottom: 1px solid var(--border);

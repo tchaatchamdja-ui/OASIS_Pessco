@@ -255,8 +255,19 @@ async function mesRechargerParametres() {
 //  Coquille — barre latérale, barre supérieure, pied
 // ══════════════════════════════════════
 
+// Chevron du bouton de repli : il montre le geste suivant, pas l'état courant.
+function mesChevronRepli() {
+    return MES_STATE.sidebarCollapsed
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>'
+        : MES_ICONS.chevron;
+}
+
 function mesRenderApp() {
     const S = MES_STATE;
+    // Ce qui est saisi dans un volet ouvert n'existe que dans le DOM : on le
+    // relève avant de réécrire `#app`, sinon il partirait avec.
+    if (S.sliderOpen) S.mesureEnCours = { ...(S.mesureEnCours || {}), ...mesCollecterFormulaire() };
+    if (S.constatEnCours) S.constatEnCours = { ...S.constatEnCours, ...mesCollecterConstat() };
     document.body.classList.toggle('app-sidebar-collapsed', !!S.sidebarCollapsed);
     const u = S.user || {};
     const initiales = ((u.prenom || u.nom || 'U')[0] + ((u.nom || '')[1] || '')).toUpperCase();
@@ -291,11 +302,7 @@ function mesRenderApp() {
                                  onclick="mesSetLang('${l.toLowerCase()}')">${l}</button>`).join('')}
                 </div>
             </div>
-            <button class="sidebar-toggle" onclick="mesToggleSidebar()">
-                ${S.sidebarCollapsed
-                    ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg>'
-                    : MES_ICONS.chevron}
-            </button>
+            <button class="sidebar-toggle" onclick="mesToggleSidebar()">${mesChevronRepli()}</button>
         </aside>
         <div class="sidebar-backdrop" onclick="mesToggleSidebar()"></div>
         <div class="app-content">
@@ -323,6 +330,12 @@ function mesRenderApp() {
     <div class="mes-slider" id="mesSlider"></div>
     <div id="mesModalRoot"></div>
     <div id="mesVoletRoot"></div>`;
+
+    // Les volets sont remontés dans l'état où on les avait laissés, sans
+    // rejouer leur glissement — un volet déjà ouvert n'a pas à s'ouvrir une
+    // seconde fois.
+    if (S.sliderOpen) mesAfficherSlider({ anime: false });
+    if (S.constatEnCours) mesAfficherVolet({ anime: false });
 }
 
 // ── Filtres ──
@@ -383,24 +396,40 @@ function mesRenderPage() {
     el.innerHTML = corps;
 }
 
+// Replier la barre, changer de thème ou de langue ne redessine plus la
+// coquille entière : `mesRenderApp` réécrit tout `#app`, volets compris, et
+// une saisie en cours partait avec eux. Chacune de ces trois commandes ne
+// touche désormais que ce qui la concerne.
 function mesToggleSidebar() {
-    MES_STATE.sidebarCollapsed = !MES_STATE.sidebarCollapsed;
-    localStorage.setItem('mes_sidebar', String(MES_STATE.sidebarCollapsed));
-    mesRenderApp();
-    mesRenderPage();
+    const S = MES_STATE;
+    S.sidebarCollapsed = !S.sidebarCollapsed;
+    localStorage.setItem('mes_sidebar', String(S.sidebarCollapsed));
+    document.body.classList.toggle('app-sidebar-collapsed', !!S.sidebarCollapsed);
+    // `.mes-module` habille aussi le body : c'est « .app-layout » qu'il faut
+    // viser, sinon la classe se pose sur le body et la colonne de contenu ne
+    // reprend jamais la largeur libérée par la barre.
+    document.querySelector('.app-layout')?.classList.toggle('sidebar-collapsed', !!S.sidebarCollapsed);
+    document.querySelector('.app-sidebar')?.classList.toggle('collapsed', !!S.sidebarCollapsed);
+    // La flèche du bouton indique le geste suivant : elle seule change de sens.
+    const bouton = document.querySelector('.sidebar-toggle');
+    if (bouton) bouton.innerHTML = mesChevronRepli();
 }
 
 function mesSetTheme(theme) {
     MES_STATE.theme = theme;
     localStorage.setItem('pr_theme', theme);
+    // Les couleurs sont des variables CSS : poser l'attribut suffit.
     document.documentElement.setAttribute('data-theme', theme);
-    mesRenderApp();
-    mesRenderPage();
+    document.querySelectorAll('.theme-dot').forEach((d) => {
+        d.classList.toggle('active', d.dataset.theme === theme);
+    });
 }
 
 function mesSetLang(lang) {
     MES_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
+    // Les libellés changent : la coquille doit être redessinée. Les volets
+    // ouverts sont alors remontés tels quels, saisie comprise.
     mesRenderApp();
     mesRenderPage();
 }
@@ -1103,12 +1132,30 @@ function mesFermerSlider() {
     document.getElementById('mesSliderOverlay')?.classList.remove('open');
 }
 
-function mesAfficherSlider() {
+// `anime: false` remonte un volet déjà ouvert après un redessin de la coquille :
+// il se pose à sa place sans rejouer son glissement.
+//
+// L'ordre compte. On coupe la transition, on pose la classe d'ouverture, puis
+// une lecture forcée acquiert la position finale avant de rendre la transition.
+// Figer après coup ne servait à rien : la position d'arrivée était déjà connue,
+// et le glissement se rejouait.
+const mesFiger = (el) => el && el.classList.add('mes-sans-glissement');
+function mesDegeler(el) {
+    if (!el) return;
+    void el.offsetWidth;
+    el.classList.remove('mes-sans-glissement');
+}
+
+function mesAfficherSlider(o) {
     const el = document.getElementById('mesSlider');
     if (!el) return;
     el.innerHTML = mesFormulaireMesure();
+    const fond = document.getElementById('mesSliderOverlay');
+    const sansAnimation = !!(o && o.anime === false);
+    if (sansAnimation) { mesFiger(el); mesFiger(fond); }
     el.classList.add('open');
-    document.getElementById('mesSliderOverlay')?.classList.add('open');
+    fond?.classList.add('open');
+    if (sansAnimation) { mesDegeler(el); mesDegeler(fond); }
     MES_STATE.sliderOpen = true;
 }
 
@@ -1215,6 +1262,22 @@ function mesFormulaireMesure() {
 
 // Relit le formulaire sans le redessiner : les changements de catégorie, de
 // type et de prestataire doivent conserver ce qui a déjà été saisi.
+// Saisie en cours du volet « carence », relevée dans le DOM — même lecture que
+// l'enregistrement, pour que rien ne se perde quand la coquille est redessinée.
+function mesCollecterConstat() {
+    const v = (id) => (document.getElementById(id) || {}).value;
+    if (document.getElementById('mesConstTitre') === null) return {};
+    return {
+        titre: v('mesConstTitre'),
+        description: v('mesConstDesc'),
+        prestataire_id: v('mesConstPrest'),
+        origine_libelle: v('mesConstSource'),
+        delai_jours: v('mesConstDelai'),
+        date_ouverture: v('mesConstOuverture'),
+        date_due_cloture: v('mesConstEcheance'),
+    };
+}
+
 function mesCollecterFormulaire() {
     const v = (id) => (document.getElementById(id) || {}).value || '';
     if (!document.getElementById('mesf_categorie')) return {};
@@ -1376,15 +1439,23 @@ function mesOuvrirConstat(id) {
 
 // Volet de saisie : la moitié de l'écran, bordé de rouge — c'est une
 // carence qu'on inscrit, la couleur le dit avant le titre.
-function mesAfficherVolet() {
+function mesAfficherVolet(o) {
     const el = document.getElementById('mesVoletRoot');
     if (!el) return;
     const k = MES_STATE.constatEnCours;
     if (!k) { el.innerHTML = ''; return; }
     el.innerHTML = mesConstatFormulaire(k);
+    const volet = el.querySelector('.mes-volet');
+    const fond = el.querySelector('.mes-volet-fond');
+    if (o && o.anime === false) {
+        mesFiger(volet); mesFiger(fond);
+        volet?.classList.add('ouvert'); fond?.classList.add('ouvert');
+        mesDegeler(volet); mesDegeler(fond);
+        return;
+    }
     requestAnimationFrame(() => {
-        el.querySelector('.mes-volet')?.classList.add('ouvert');
-        el.querySelector('.mes-volet-fond')?.classList.add('ouvert');
+        volet?.classList.add('ouvert');
+        fond?.classList.add('ouvert');
     });
 }
 

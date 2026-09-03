@@ -255,7 +255,9 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 }
 .portal-header-brand-sep { color: var(--border); }
 .portal-header-brand-tagline { font-size: 0.8rem; color: var(--text-muted); font-style: italic; }
-.portal-header-right { display: flex; align-items: center; gap: 0.9rem; }
+.portal-header-right { display: flex; align-items: center; gap: 0.9rem; min-width: 0; }
+.portal-header-identite { text-align: right; min-width: 0; }
+.portal-header-identite .portal-user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .portal-header-instance {
     font-size: 0.75rem; font-weight: 700; color: var(--primary);
     background: var(--bg); border: 1px solid var(--border);
@@ -860,6 +862,20 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     .shell-modal-overlay { left: 0; }
     .shell-form-row { grid-template-columns: 1fr; }
 }
+/* La barre supérieure réclame 502 px pour tenir sur une ligne : en deçà, elle
+   élargissait la page entière — 502 px de document pour 375 px de fenêtre, et
+   tout le portail décalé vers la droite. Les écarts se resserrent, et le nom en
+   clair s'efface : le sigle de l'avatar et la barre latérale le redisent tous
+   les deux. Le seuil est à 640 px, au-dessus des 545 px que réclamait encore la
+   barre non resserrée. */
+@media (max-width: 640px) {
+    .portal-header { padding: 0 0.75rem; gap: 0.5rem; }
+    .portal-header-right { gap: 0.5rem; }
+    .portal-header-identite { display: none; }
+}
+/* Sur les écrans les plus étroits (320 px), le sigle de la barre supérieure
+   part à son tour : le bloc titre le reprend juste en dessous, en grand. */
+@media (max-width: 400px) { .portal-header-left { display: none; } }
 @media (max-width: 480px) { .portal-grid { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {

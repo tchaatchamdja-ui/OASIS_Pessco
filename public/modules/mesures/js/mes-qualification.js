@@ -264,13 +264,22 @@ function mesSectionMesuresArretees() {
                 ${temporelle ? `<div class="mes-paire">
                     <div class="mes-champ">
                         <label>Durée de la sanction</label>
-                        <input class="mes-input" data-champ="duree" value="${_mesAttr(m.duree || '')}" ${off}
-                               placeholder="ex. 3 mois">
+                        <div class="mes-duree">
+                            <input type="number" min="0" class="mes-input" data-champ="duree_valeur"
+                                   value="${_mesAttr(m.duree_valeur || '')}" ${off}
+                                   oninput="mesQualDureeVersTerme(${i})">
+                            <select class="mes-select" data-champ="duree_unite" ${off}
+                                    onchange="mesQualDureeVersTerme(${i})">
+                                ${['jours', 'mois'].map((u) => `<option value="${u}"
+                                    ${(m.duree_unite || 'jours') === u ? 'selected' : ''}>${u}</option>`).join('')}
+                            </select>
+                        </div>
                     </div>
                     <div class="mes-champ">
                         <label>Date de fin de sanction</label>
                         <input type="date" class="mes-input" data-champ="date_fin"
-                               value="${_mesAttr(m.date_fin || '')}" ${off}>
+                               value="${_mesAttr(m.date_fin || '')}" ${off}
+                               onchange="mesQualTermeVersDuree(${i})">
                     </div>
                 </div>` : ''}
                 <div class="mes-champ" style="margin-bottom:0;">
@@ -340,7 +349,8 @@ function mesCollecterQualification() {
                 categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
                 date_sanction: val(b, 'date_sanction'), portee,
                 // Durée et terme n'ont de sens que pour une sanction temporelle.
-                duree: portee === 'temporelle' ? val(b, 'duree') : '',
+                duree_valeur: portee === 'temporelle' ? Number(val(b, 'duree_valeur')) || 0 : 0,
+                duree_unite: portee === 'temporelle' ? (val(b, 'duree_unite') || 'jours') : '',
                 date_fin: portee === 'temporelle' ? val(b, 'date_fin') : '',
                 commentaire: val(b, 'commentaire'),
             };
@@ -374,8 +384,67 @@ const mesQualAjouterReunion = () => mesQualModifier((q) => q.reunions.push({ dat
 const mesQualRetirerReunion = (i) => mesQualModifier((q) => { q.reunions = q.reunions.filter((_, k) => k !== i); });
 const mesQualAjouterMesure = () => mesQualModifier((q) => q.mesures.push({
     categorie: (mesCategories()[0] || {}).code || '', type_mesure: '',
-    date_sanction: '', portee: '', duree: '', date_fin: '', commentaire: '',
+    date_sanction: '', portee: '', duree_valeur: '', duree_unite: 'jours',
+    date_fin: '', commentaire: '',
 }));
+
+// ── Durée et terme : chacun se déduit de l'autre ──
+// La date de sanction sert d'ancre. Poser la durée fixe le terme ; poser le
+// terme donne la durée. Les deux champs restent d'accord sans que l'agent ait
+// à faire le calcul.
+function mesAjouterDuree(depart, valeur, unite) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(depart || '') || !valeur) return '';
+    const d = new Date(`${depart}T00:00:00Z`);
+    if (Number.isNaN(d.getTime())) return '';
+    if (unite === 'mois') {
+        const jour = d.getUTCDate();
+        d.setUTCDate(1);
+        d.setUTCMonth(d.getUTCMonth() + valeur);
+        // Trois mois après le 31 janvier tombent au 30 avril : on ne déborde
+        // pas sur le mois suivant.
+        const dernier = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+        d.setUTCDate(Math.min(jour, dernier));
+    } else {
+        d.setUTCDate(d.getUTCDate() + valeur);
+    }
+    return d.toISOString().slice(0, 10);
+}
+
+const mesBloc = (i) => document.querySelectorAll('#mesQualMesures .mes-bloc')[i];
+const mesChampBloc = (i, champ) => (mesBloc(i) || document).querySelector(`[data-champ="${champ}"]`);
+
+// La durée vient d'être saisie : le terme suit.
+function mesQualDureeVersTerme(i) {
+    const depart = (mesChampBloc(i, 'date_sanction') || {}).value || '';
+    const valeur = Number((mesChampBloc(i, 'duree_valeur') || {}).value) || 0;
+    const unite = (mesChampBloc(i, 'duree_unite') || {}).value || 'jours';
+    const fin = mesChampBloc(i, 'date_fin');
+    if (!fin) return;
+    if (!depart) {
+        mesToast('Renseignez d’abord la date de sanction', 'warning');
+        return;
+    }
+    fin.value = mesAjouterDuree(depart, valeur, unite);
+}
+
+// Le terme vient d'être posé : la durée s'en déduit, dans l'unité retenue.
+function mesQualTermeVersDuree(i) {
+    const depart = (mesChampBloc(i, 'date_sanction') || {}).value || '';
+    const fin = (mesChampBloc(i, 'date_fin') || {}).value || '';
+    const champ = mesChampBloc(i, 'duree_valeur');
+    const unite = (mesChampBloc(i, 'duree_unite') || {}).value || 'jours';
+    if (!champ || !depart || !fin) return;
+    const d1 = new Date(`${depart}T00:00:00Z`);
+    const d2 = new Date(`${fin}T00:00:00Z`);
+    if (Number.isNaN(d1.getTime()) || Number.isNaN(d2.getTime()) || d2 < d1) { champ.value = ''; return; }
+    if (unite === 'mois') {
+        let mois = (d2.getUTCFullYear() - d1.getUTCFullYear()) * 12 + (d2.getUTCMonth() - d1.getUTCMonth());
+        if (d2.getUTCDate() < d1.getUTCDate()) mois -= 1;
+        champ.value = String(Math.max(0, mois));
+    } else {
+        champ.value = String(Math.round((d2 - d1) / 86400000));
+    }
+}
 
 // Cocher une portée décoche l'autre ; décocher celle qui l'était laisse la
 // portée indéterminée.
@@ -501,6 +570,7 @@ Object.assign(window, {
     mesQualAjouterMembre, mesQualRetirerMembre,
     mesQualAjouterReunion, mesQualRetirerReunion,
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
+    mesQualDureeVersTerme, mesQualTermeVersDuree, mesAjouterDuree,
     mesQualBasculerInfraction, mesQualBasculerNonInfraction, mesQualBasculerRenvoi,
     mesActionsQualification, mesQualRenvoyer, mesQualClasser, mesQualSuivi,
     mesQualTeleverser, mesQualRetirerPiece,

@@ -392,6 +392,26 @@ module.exports = function register(app, deps, M) {
     resultat: texte((r || {}).resultat),
   });
   const PORTEES = ['temporelle', 'illimitee'];
+  const UNITES = ['jours', 'mois'];
+
+  // Terme d'une sanction temporelle : la date de sanction augmentée de sa
+  // durée. Le calendrier fait le reste — trois mois après le 31 janvier
+  // tombent au 30 avril, et non au 31.
+  const ajouter = (depart, valeur, unite) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(depart) || !valeur) return '';
+    const d = new Date(`${depart}T00:00:00Z`);
+    if (Number.isNaN(d.getTime())) return '';
+    if (unite === 'mois') {
+      const jour = d.getUTCDate();
+      d.setUTCDate(1);
+      d.setUTCMonth(d.getUTCMonth() + valeur);
+      const dernier = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+      d.setUTCDate(Math.min(jour, dernier));
+    } else {
+      d.setUTCDate(d.getUTCDate() + valeur);
+    }
+    return d.toISOString().slice(0, 10);
+  };
   const mesureArretee = (m) => {
     const o = m || {};
     const portee = PORTEES.includes(texte(o.portee)) ? texte(o.portee) : '';
@@ -402,7 +422,9 @@ module.exports = function register(app, deps, M) {
       portee,
       // Une sanction sans terme n'a ni durée ni date de fin : les garder
       // laisserait croire qu'elle en a une.
-      duree: portee === 'temporelle' ? texte(o.duree) : '',
+      duree_valeur: portee === 'temporelle' ? Math.max(0, Math.round(Number(o.duree_valeur) || 0)) : 0,
+      duree_unite: portee === 'temporelle' && UNITES.includes(texte(o.duree_unite))
+        ? texte(o.duree_unite) : (portee === 'temporelle' ? 'jours' : ''),
       date_fin: portee === 'temporelle' ? texte(o.date_fin).slice(0, 10) : '',
       commentaire: texte(o.commentaire),
     };
@@ -438,6 +460,10 @@ module.exports = function register(app, deps, M) {
       circonstances: constituee ? texte(d.circonstances) : '',
       mesures: constituee && Array.isArray(d.mesures)
         ? d.mesures.map(mesureArretee)
+          .map((m) => (m.portee === 'temporelle' && m.duree_valeur && !m.date_fin
+            // Le terme se déduit de la durée quand le client ne l'a pas posé :
+            // les deux doivent s'accorder, quel qu'ait été le champ saisi.
+            ? { ...m, date_fin: ajouter(m.date_sanction, m.duree_valeur, m.duree_unite) } : m))
           .filter((m) => m.categorie || m.type_mesure || m.commentaire || m.date_sanction) : [],
       pieces: Array.isArray(d.pieces) ? d.pieces.map(piece).filter((p) => p.nom || p.path) : [],
     };
@@ -534,10 +560,49 @@ module.exports = function register(app, deps, M) {
     if (!q.infraction_constituee) {
       return res.status(409).json({ error: 'Le suivi ne s’ouvre que sur une infraction constituée' });
     }
+    // Les mesures arrêtées par l'instance entrent au registre des mesures :
+    // c'est là qu'elles se notifient, se suivent et se clôturent. Elles y
+    // arrivent en projet, comme toute mesure nouvelle.
+    const dejaCreees = new Set(db.list('mesures')
+      .filter((m) => m.constatation_id === ctx.c.id && m.issue_de === 'qualification')
+      .map((m) => m.qualification_rang));
+    const creees = [];
+    (q.mesures || []).forEach((m, rang) => {
+      if (dejaCreees.has(rang)) return;
+      const nouvelle = {
+        id: db.uid('mes'),
+        reference: db.prochaineReference(),
+        ...Object.fromEntries(CHAMPS.map((k) => [k, LISTES.includes(k) ? [] : ''])),
+        constatation_id: ctx.c.id,
+        prestataire_id: ctx.c.prestataire_id || '',
+        categorie: m.categorie || 'administrative',
+        type_mesure: m.type_mesure || '',
+        objet: ctx.c.titre || ctx.c.reference || '',
+        description: m.commentaire || '',
+        date_emission: m.date_sanction || '',
+        date_echeance: m.date_fin || '',
+        delai_jours: m.portee === 'temporelle' && m.duree_unite === 'jours'
+          ? String(m.duree_valeur || '') : '',
+        motif: q.nature || '',
+        avis_commission: (q.caracterisation || ''),
+        pieces_jointes: (q.pieces || []).map(piece),
+        statut: 'projet',
+        decision_par: '', date_decision: '',
+        date_notification: '', date_cloture: '',
+        // Trace de l'origine : une mesure née ici ne se recrée pas si la
+        // validation est rejouée.
+        issue_de: 'qualification',
+        qualification_rang: rang,
+        created_by: req.user.username,
+        date_creation: db.now(),
+      };
+      db.insert('mesures', nouvelle);
+      creees.push(nouvelle.reference);
+    });
     db.update('traitements', ctx.t.id, {
       etape: 'suivi', qualifie_le: db.now(), qualifie_par: req.user.username,
     });
-    return res.status(201).json({ status: 'ok', etape: 'suivi' });
+    return res.status(201).json({ status: 'ok', etape: 'suivi', mesures: creees });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

@@ -34,7 +34,7 @@ const TEMP_PWD_TTL_MS = 48 * 60 * 60 * 1000; // 48h
 
 // Répertoire de configuration : surchargeable (tests de fumée, instances multiples).
 const CONFIG_DIR = process.env.OASIS_CONFIG_DIR || path.join(__dirname, 'config');
-const CONFIG_PATH = path.join(CONFIG_DIR, 'aerosup.config.json');
+const CONFIG_PATH = path.join(CONFIG_DIR, 'oasis.config.json');
 const MODULES_PATH = path.join(CONFIG_DIR, 'modules.json');
 
 function loadConfig() {

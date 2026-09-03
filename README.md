@@ -41,7 +41,7 @@ OASIS_SEED_PASSWORD='UnMotDePasse!2026' npm start
 OASIS/
 ├── server.js               # API Express (auth, users, audit, config, modules)
 ├── config/
-│   ├── aerosup.config.json # Configuration de l'instance (sécurité, BDD, réplication)
+│   ├── oasis.config.json # Configuration de l'instance (sécurité, BDD, réplication)
 │   └── modules.json        # Registre des 10 modules métiers (D.1–D.10)
 ├── src/
 │   ├── store.js            # Persistance (JSON — production : PostgreSQL 16)

@@ -13,7 +13,11 @@ const SUPPORT = 'support@anac.bj';
 
 function loadSmtp() {
   try {
-    const cfg = JSON.parse(require('fs').readFileSync(path.join(__dirname, '..', 'config', 'aerosup.config.json'), 'utf-8'));
+    // Même répertoire que le serveur, surcharge comprise : sans cela une
+    // instance lancée sur une autre configuration (fumée, instance parallèle)
+    // lisait tout de même les réglages SMTP du dépôt.
+    const dir = process.env.OASIS_CONFIG_DIR || path.join(__dirname, '..', 'config');
+    const cfg = JSON.parse(require('fs').readFileSync(path.join(dir, 'oasis.config.json'), 'utf-8'));
     return cfg.smtp || {};
   } catch { return {}; }
 }

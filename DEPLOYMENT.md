@@ -39,7 +39,7 @@ Ce déploiement vaut donc pour la **démonstration**, pas pour l'exploitation.
 3. Ajouter la variable **`OASIS_DATA_DIR=/var/data`**.
 4. Redéployer. Les données survivent alors aux redéploiements.
 
-À plus long terme, la configuration prévoit PostgreSQL (`config/aerosup.config.json`,
+À plus long terme, la configuration prévoit PostgreSQL (`config/oasis.config.json`,
 section `database`) : c'est un chantier de remplacement de `src/store.js`.
 
 ---

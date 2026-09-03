@@ -119,8 +119,21 @@ function mesActionsEtape() {
     return boutons.join('');
 }
 
-const mesSection = (titre, corps) => `<div class="mes-section">
-    <h4>${_mesEsc(titre)}</h4><div class="mes-section-corps">${corps}</div></div>`;
+// Section repliable, sur le modèle du formulaire de notification du module
+// « Exécution de la Surveillance » : une carte par section, sa lettre d'ordre,
+// son titre et son chevron. Tout est déplié à l'ouverture — on vient lire le
+// dossier, pas le chercher.
+const MES_CHEVRON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" '
+    + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<polyline points="6 9 12 15 18 9"/></svg>';
+
+const mesSection = (lettre, titre, corps) => `<div class="mes-section ouverte">
+    <div class="mes-section-entete" onclick="this.parentElement.classList.toggle('ouverte')">
+        <span class="mes-section-lettre">${_mesEsc(lettre)}</span>
+        <span class="mes-section-titre">${_mesEsc(titre)}</span>
+        <span class="mes-section-chevron">${MES_CHEVRON}</span>
+    </div>
+    <div class="mes-section-corps">${corps}</div></div>`;
 
 const mesLigneFiche = (t, v) => `<div class="mes-pac-ligne"><dt>${_mesEsc(t)}</dt>
     <dd>${v ? _mesEsc(v) : '<span class="mes-preuve-vide">—</span>'}</dd></div>`;
@@ -136,7 +149,7 @@ function mesSectionCarence() {
     // Deux colonnes pour les repères, qui tiennent sur une ligne chacun. La
     // description, elle, court sur toute la largeur : la serrer sur une demie
     // la rendait illisible.
-    return mesSection('Carence', `
+    return mesSection('A', 'Carence', `
         <div class="mes-deux-colonnes">
             <dl style="margin:0;">
                 ${mesLigneFiche('Référence', c.reference)}
@@ -160,7 +173,7 @@ function mesSectionCarence() {
 function mesSectionPac() {
     const pac = (MES_STATE.traitement || {}).pac;
     if (!pac) {
-        return mesSection('Plan d’action soumis',
+        return mesSection('B', 'Plan d’action soumis',
             '<p class="mes-preuve-vide">Aucun plan d’actions n’a été soumis pour cette carence.</p>');
     }
     const ligne = mesLigneFiche;
@@ -172,7 +185,7 @@ function mesSectionPac() {
         <dd>${_mesEsc(p.intitule || '—')}${p.depose_le ? ` · ${_mesEsc(mesDate(p.depose_le))}` : ''}
             ${p.commentaire ? `<br><span class="mes-preuve-vide">${_mesEsc(p.commentaire)}</span>` : ''}</dd>
     </div>`).join('');
-    return mesSection('Plan d’action soumis', `<div class="mes-deux-colonnes">
+    return mesSection('B', 'Plan d’action soumis', `<div class="mes-deux-colonnes">
         <section>
             <div class="mes-colonne-titre">Plan soumis</div>
             <dl style="margin:0;">
@@ -211,7 +224,7 @@ function mesSectionInformations() {
         </div>`).join('');
     // Même partage que le plan d'actions : ce qui est établi à gauche, ce qui
     // l'appuie à droite.
-    return mesSection('Informations additionnelles', `<div class="mes-deux-colonnes">
+    return mesSection('C', 'Informations additionnelles', `<div class="mes-deux-colonnes">
         <div class="mes-champ">
             <label>Informations complémentaires recueillies sur la constatation</label>
             <textarea class="mes-input" id="mesTrtInfos" rows="6" ${off}
@@ -243,7 +256,7 @@ function mesSectionDecision() {
                par le plan d’actions correctives soumis dans le module d’origine (Exécution de la
                Surveillance ou RAMP Inspections) — c’est là qu’il se solde.</p>`
             : '';
-        return mesSection('Justifications de la décision', `
+        return mesSection('D', 'Justifications de la décision', `
             <p><strong>${_mesEsc(choisie ? choisie.libelle : t.decision)}</strong>
                ${t.decide_le ? `· ${_mesEsc(mesDate(t.decide_le))}` : ''}
                ${t.decide_par ? `· ${_mesEsc(t.decide_par)}` : ''}</p>
@@ -251,12 +264,12 @@ function mesSectionDecision() {
             ${rappel}`);
     }
     if (!decideur) {
-        return mesSection('Justifications de la décision',
+        return mesSection('D', 'Justifications de la décision',
             '<p class="mes-preuve-vide">Aucune décision n’a encore été prise. Elle relève du validateur.</p>');
     }
     // Les trois suites sont portées par la barre du fil, en haut à droite :
     // ce sont les actions de l'étape. Ne reste ici que ce qui les motive.
-    return mesSection('Justifications de la décision', `
+    return mesSection('D', 'Justifications de la décision', `
         <div class="mes-champ">
             <textarea class="mes-input" id="mesTrtMotif" rows="3"
                       placeholder="Ce qui motive la suite retenue"></textarea>

@@ -265,21 +265,42 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
    fil sans rien apprendre. */
 .mes-proc-step.selected:not(.current) { box-shadow: inset 0 -3px 0 rgba(15, 23, 42, .35); }
 
-/* ── Sections d'une étape ── */
+/* ── Sections d'une étape ──
+   Cartes repliables, sur le modèle du formulaire de notification du module
+   « Exécution de la Surveillance » : lettre d'ordre, titre, chevron, et un
+   corps qui se replie d'un clic sur l'entête. Le bandeau garde la couleur du
+   thème ; la pastille de la lettre s'y détache en clair. */
 .mes-section {
     border: 1px solid var(--border); border-radius: 10px;
-    margin-bottom: .9rem; overflow: hidden;
+    margin-bottom: .75rem; overflow: hidden;
+    background: var(--bg-card); transition: box-shadow .2s;
 }
-/* Bandeau aux couleurs du thème : chaque section s'annonce comme l'entête du
-   volet, dont elle reprend le fond. */
-.mes-section > h4 {
-    margin: 0; padding: .55rem .8rem; font-size: .85rem;
+.mes-section:hover { box-shadow: var(--shadow); }
+.mes-section-entete {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .6rem .9rem; cursor: pointer; user-select: none;
     background: var(--primary); color: var(--text-header, #fff);
 }
-.mes-section-corps { padding: .8rem; }
-.mes-pac-ligne { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: .5rem; padding: .3rem 0; }
-.mes-pac-ligne dt { font-size: .78rem; color: var(--text-muted); }
-.mes-pac-ligne dd { margin: 0; font-size: .85rem; white-space: pre-wrap; }
+.mes-section-lettre {
+    display: flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+    background: rgba(255, 255, 255, .22); font-weight: 700; font-size: .82rem;
+}
+.mes-section-titre { flex: 1; font-weight: 600; font-size: .88rem; }
+.mes-section-chevron { display: inline-flex; transition: transform .2s; transform: rotate(-90deg); }
+.mes-section.ouverte .mes-section-chevron { transform: rotate(0deg); }
+.mes-section-corps { display: none; padding: 1rem; }
+.mes-section.ouverte .mes-section-corps { display: block; }
+/* Repères en lecture seule : intitulé à gauche, valeur à droite, une ligne
+   d'appui légère entre chaque — la même lisibilité que les récapitulatifs du
+   module Exécution. */
+.mes-pac-ligne {
+    display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: .5rem;
+    padding: .4rem 0; border-bottom: 1px solid var(--border);
+}
+.mes-pac-ligne:last-child { border-bottom: 0; }
+.mes-pac-ligne dt { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+.mes-pac-ligne dd { margin: 0; font-size: .85rem; color: var(--text); white-space: pre-wrap; }
 /* Le plan d'actions se lit en deux colonnes : ce qui a été promis à gauche,
    ce qui le prouve à droite. Sous 900 px elles se remettent l'une sous l'autre.  */
 .mes-deux-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
@@ -306,10 +327,12 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 
 /* ── Champs du formulaire ── */
 .mes-champ { margin-bottom: .8rem; }
+/* Intitulés de champ comme ceux du module Exécution : lisibles, en toutes
+   lettres, dans la couleur du texte — les petites capitales grises se
+   confondaient avec les valeurs qu'elles annoncent. */
 .mes-champ > label {
-    display: block; font-size: .74rem; font-weight: 600;
-    color: var(--text-muted); margin-bottom: .2rem;
-    text-transform: uppercase; letter-spacing: .03em;
+    display: block; font-size: .84rem; font-weight: 600;
+    color: var(--text); margin-bottom: .3rem;
 }
 .mes-champ textarea { resize: vertical; min-height: 60px; }
 .mes-paire { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }

@@ -150,9 +150,14 @@
    impose. Un « min-width » sur l'entête ne suffisait pas — en disposition
    automatique le navigateur ne le tient pas — d'où la largeur en pourcentage. */
 .mes-cell-mesure { min-width: 0; }
-.mes-cell-categorie { font-size: .78rem; color: var(--text-muted); }
-.mes-cell-type { font-weight: 600; }
-.mes-cell-description { font-size: .78rem; color: var(--text-muted); margin-top: .1rem; }
+/* La catégorie ouvre la cellule, en gras et d'un point au-dessus du type ; le
+   type suit à la taille des autres colonnes, sans graisse ; la description
+   ferme en italique, à la même taille que le type. */
+.mes-cell-categorie { font-size: .923rem; font-weight: 700; color: var(--text); }
+.mes-cell-type { font-size: .84rem; font-weight: 400; color: var(--text); }
+.mes-cell-description {
+    font-size: .84rem; font-style: italic; color: var(--text-muted); margin-top: .1rem;
+}
 /* Ce que le statut appelle comme suite, sous son badge. */
 .mes-cell-suite { font-size: .72rem; color: var(--text-muted); margin-top: .15rem; }
 

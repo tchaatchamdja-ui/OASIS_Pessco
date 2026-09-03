@@ -80,10 +80,29 @@ module.exports = {
       // fonctionnent aussi bien si ce module n'est pas déployé.
       deps.services.publish('SAFA.constatationsCritiques', () => {
         const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
-        // Rapprochement exploitant → prestataire du référentiel : RAMP nomme
-        // l'exploitant, le référentiel l'identifie. Le nom et le trigramme
-        // servent de clés, comme pour le cloisonnement des vues.
-        const norm = (v) => String(v || '').trim().toLowerCase();
+        // Rapprochement de l'exploitant, en deux temps.
+        //
+        // 1. La liste des exploitants du module le nomme, dit son pays et son
+        //    appartenance à l'UEMOA. Une inspection ne garde que le libellé
+        //    saisi ; c'est cette liste qui en donne la forme canonique.
+        // 2. Le référentiel du portail l'identifie — mais seulement s'il est
+        //    prestataire de l'État : la plupart des exploitants contrôlés sur
+        //    aire de trafic sont étrangers et n'y figurent pas. Le consommateur
+        //    reçoit donc toujours le nom, et l'identifiant quand il existe.
+        //
+        // La clé de rapprochement ignore la casse, les accents et la
+        // ponctuation : « Air Côte d'Ivoire » et « Air Cote d Ivoire »
+        // désignent le même exploitant.
+        const norm = (v) => String(v || '')
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, ' ')
+          .trim();
+
+        const parExploitant = new Map();
+        db.list('parametres')
+          .filter((p) => p.type === 'exploitants' && p.label)
+          .forEach((p) => parExploitant.set(norm(p.label), p));
         // Libellés des items du programme : l'objet d'un écart, c'est l'item
         // contrôlé — son code et son intitulé, rien d'autre.
         const items = new Map(db.list('parametres')
@@ -99,13 +118,19 @@ module.exports = {
           .map((ec) => {
             const i = inspections.get(ec.inspection_id) || {};
             const solde = /clôtur|cloture|soldé|solde/i.test(String(ec.suivi || ''));
+            const exploitant = parExploitant.get(norm(i.exploitant)) || {};
             return {
               id: `safa:${ec.id}`,
               reference: `${i.poi_reference || i.id || ''}${ec.itemCode ? ` · ${ec.itemCode}` : ''}`,
               titre: [ec.itemCode, items.get(ec.itemCode)].filter(Boolean).join(' — '),
               description: ec.description || '',
               prestataire_id: parCle.get(norm(i.exploitant)) || '',
-              prestataire_nom: i.exploitant || '',
+              // Le libellé de la liste des exploitants fait foi : deux
+              // orthographes d'un même exploitant se rejoignent sous un seul
+              // nom. À défaut, celui que l'inspection a saisi.
+              prestataire_nom: exploitant.label || i.exploitant || '',
+              exploitant_pays: exploitant.pays || '',
+              exploitant_uemoa: !!exploitant.uemoa,
               domaine_id: '',
               // Catégorie 3 SAFA : la plus grave des trois, d'où « critique ».
               criticite: 'critique',

@@ -210,24 +210,45 @@ const mesDate = (v) => (v ? String(v).slice(0, 10).split('-').reverse().join('/'
 const MES_CLOS = ['cloturee', 'annulee'];
 const mesEnRetard = (m) => !!m.date_echeance && m.date_echeance < mesJour() && !MES_CLOS.includes(m.statut);
 
-// Ce que le statut d'une mesure dit de la suite : à qui la main, et depuis
-// quand. Le badge seul laissait deviner ce que « Projet » ou « En cours »
-// appelait comme geste.
-const MES_STATUT_SUITE = {
-    projet: 'Arrêtée, reste à notifier',
-    notifiee: 'Notifiée au prestataire',
-    en_cours: 'En cours d’exécution',
-    cloturee: 'Exécutée et close',
-    annulee: 'Abandonnée sans suite',
+// Statut de suivi d'une mesure : où en est le plan d'action que le prestataire
+// doit conduire. Les statuts du circuit interne — projet, notifiée, en cours —
+// disaient ce que l'Autorité en avait fait, non ce que la mesure était devenue
+// chez celui qu'elle vise. C'est ce dernier état que la table porte.
+//
+// L'étape « Suivi des Mesures » les posera ; tant qu'elle n'existe pas, une
+// mesure arrêtée attend l'ouverture de son suivi, et le dit.
+const MES_SUIVI = {
+    a_ouvrir: { libelle: 'Suivi à ouvrir', classe: 'projet',
+        aide: 'La mesure est arrêtée ; le plan d’action reste à demander.' },
+    attendu: { libelle: 'Plan attendu', classe: 'notifiee',
+        aide: 'La mesure est notifiée ; le plan d’action n’est pas encore déposé.' },
+    en_cours: { libelle: 'Plan en cours', classe: 'en_cours',
+        aide: 'Le plan d’action est déposé et son exécution se poursuit.' },
+    solde: { libelle: 'Soldé', classe: 'cloturee',
+        aide: 'Le plan d’action a été exécuté et le suivi est clos.' },
+    sans_suite: { libelle: 'Sans suite', classe: 'annulee',
+        aide: 'La mesure a été abandonnée : aucun plan d’action n’est attendu.' },
 };
 
+// Tant que le suivi n'est pas ouvert, l'état se déduit du circuit de la
+// mesure — une mesure annulée ne sera jamais suivie, une mesure clôturée l'a
+// été. Dès que l'étape « Suivi des Mesures » écrira `suivi_statut`, c'est lui
+// qui fera foi.
+function mesStatutSuivi(m) {
+    if (MES_SUIVI[m.suivi_statut]) return m.suivi_statut;
+    if (m.statut === 'annulee') return 'sans_suite';
+    if (m.statut === 'cloturee') return 'solde';
+    if (m.statut === 'en_cours') return 'en_cours';
+    if (m.statut === 'notifiee') return 'attendu';
+    return 'a_ouvrir';
+}
+
 function mesStatutMesure(m) {
-    const suite = MES_STATUT_SUITE[m.statut] || '';
-    const quand = m.statut === 'cloturee' ? m.date_cloture
-        : (m.statut === 'notifiee' ? m.date_notification : '');
-    return `${mesBadgeStatut(m.statut)}
-        ${suite ? `<div class="mes-cell-suite">${_mesEsc(suite)}${quand
-            ? ` · ${_mesEsc(mesDate(quand))}` : ''}</div>` : ''}`;
+    const cle = mesStatutSuivi(m);
+    const e = MES_SUIVI[cle];
+    const quand = cle === 'solde' ? m.date_cloture : (cle === 'attendu' ? m.date_notification : '');
+    return `<span class="mes-badge ${e.classe}" title="${_mesAttr(e.aide)}">${_mesEsc(e.libelle)}</span>
+        ${quand ? `<div class="mes-cell-suite">${_mesEsc(mesDate(quand))}</div>` : ''}`;
 }
 
 function mesBadgeStatut(statut) {
@@ -704,7 +725,7 @@ function mesMesuresFiltrees() {
     const q = _mesNorm(F.mes_recherche);
     return MES_STATE.data.mesures.filter((m) => {
         if (F.mes_categorie && m.categorie !== F.mes_categorie) return false;
-        if (F.mes_statut && m.statut !== F.mes_statut) return false;
+        if (F.mes_statut && mesStatutSuivi(m) !== F.mes_statut) return false;
         if (F.mes_prest && m.prestataire_id !== F.mes_prest) return false;
         if (!q) return true;
         return _mesNorm(`${m.reference} ${m.objet} ${m.description} ${m.prestataire_nom} ${mesLibelleType(m.type_mesure)}`).includes(q);
@@ -796,8 +817,8 @@ function mesRenderMesures() {
                 ${mesCategories().map((c) => opt(c.code, c.libelle, F.mes_categorie)).join('')}
             </select>
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('mes_statut',this.value)">
-                <option value="">Tous statuts</option>
-                ${Object.entries(MES_STATUTS).map(([v, l]) => opt(v, l, F.mes_statut)).join('')}
+                <option value="">Tous suivis</option>
+                ${Object.entries(MES_SUIVI).map(([v, e]) => opt(v, e.libelle, F.mes_statut)).join('')}
             </select>
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('mes_prest',this.value)">
                 <option value="">Tous prestataires</option>
@@ -819,7 +840,7 @@ function mesRenderMesures() {
                     <th style="width:105px;">Date de sanction</th>
                     <th style="width:120px;">Portée</th>
                     <th style="width:105px;">Échéance</th>
-                    <th style="width:150px;">Statut</th>
+                    <th style="width:140px;">Statut de suivi</th>
                     <th style="width:140px;text-align:center;">Actions</th>
                 </tr></thead>
                 <tbody data-corps="mesures">${mesLignesMesures()}</tbody>
@@ -1696,7 +1717,7 @@ Object.assign(window, {
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
     mesResetFiltresMesures, mesResetFiltresCritiques,
     mesOuvrirMesure, mesFermerSlider, mesAfficherSlider, mesEnregistrerMesure, mesFaireLeSuivi,
-    mesStatutMesure,
+    mesStatutMesure, mesStatutSuivi, MES_SUIVI,
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,
     mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation,

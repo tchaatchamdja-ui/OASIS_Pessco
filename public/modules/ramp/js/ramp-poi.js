@@ -657,7 +657,7 @@ function rampPoiEntete() {
     // colonne par colonne, ce que des grilles séparées ne garantissaient pas.
     return `
     <div class="ramp-card">
-        <div class="ramp-card-titre">Identification</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>Identification</div>
         <div class="ramp-poi-grille ramp-poi-grille-4">
             ${champ('date', 'Date', 'type="date"', true)}
             ${champ('heure_debut', 'Heure de début', 'type="time"')}
@@ -1585,18 +1585,18 @@ function rampPoiVueSaisie() {
     return `
     <div id="rampPoiEntete">${rampPoiEntete()}</div>
 
-    <div class="ramp-actions-bar">
-        <strong style="font-size:.9rem;">Items du programme SAFA</strong>
-        <span style="flex:1;"></span>
-        <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(true)">Tout déplier</button>
-        <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(false)">Tout replier</button>
-    </div>
     <div class="ramp-card" style="padding:0;">
+        <div class="ramp-card-bande ramp-card-bande-nue">
+            <span class="ramp-card-lettre">B</span>Items du programme SAFA
+            <span style="flex:1;"></span>
+            <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(true)">Tout déplier</button>
+            <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(false)">Tout replier</button>
+        </div>
         <div class="ramp-table-wrap" id="rampPoiItems">${rampPoiItems()}</div>
     </div>
 
     <div class="ramp-card">
-        <div class="ramp-card-titre">Classe d’action et suivi</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">C</span>Classe d’action et suivi</div>
         <div class="ramp-poi-grille">
             <div class="ramp-champ">
                 <label>Classe d’action</label>

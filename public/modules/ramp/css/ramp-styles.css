@@ -629,6 +629,25 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     margin-bottom: .7rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; gap: .6rem;
 }
+/* Bande de section dans une carte rembourrée. `.ramp-card-entete` suppose une
+   carte sans rembourrage (`.ramp-card-bandeau`) ; celle-ci ressort du
+   rembourrage de `.ramp-card` pour occuper toute sa largeur. Réservée aux
+   formulaires : les tableaux de bord gardent le titre souligné, plus léger. */
+.ramp-card-bande {
+    display: flex; align-items: center; gap: .7rem;
+    margin: -.9rem -1rem .8rem; padding: .5rem .9rem;
+    border-radius: 8px 8px 0 0;
+    background: var(--primary); color: var(--text-header, #fff);
+    font-size: .88rem; font-weight: 600;
+}
+.ramp-card-bande .ramp-sous-titre { color: inherit; opacity: .85; }
+/* Dans une carte déjà sans rembourrage, la bande n'a rien à rattraper. */
+.ramp-card-bande-nue { margin: 0 0 .8rem; }
+/* Les boutons portés par une bande se lisent sur son fond plein. */
+.ramp-card-bande .btn {
+    color: inherit; border-color: rgba(255, 255, 255, .45); background: transparent;
+}
+.ramp-card-bande .btn:hover { background: rgba(255, 255, 255, .15); }
 .ramp-grille-2 {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem;
 }

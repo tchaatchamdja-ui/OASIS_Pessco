@@ -624,7 +624,7 @@ function rampPreuvesHtml() {
             ${RAMP_ICONS.check} ${rt('pac_cloturer')}</button>` : ''}
     </div>
     <div class="ramp-card ramp-card-bandeau">
-        <div class="ramp-card-entete">${rt('pac_constat')}</div>
+        <div class="ramp-card-entete"><span class="ramp-card-lettre">A</span>${rt('pac_constat')}</div>
         <dl class="ramp-poi-recap">
             ${rampPacReperes(false)}
             ${rappel(rt('c_description'), e.description)}
@@ -633,7 +633,7 @@ function rampPreuvesHtml() {
         </dl>
     </div>
     <div class="ramp-card ramp-card-bandeau">
-        <div class="ramp-card-entete">${rt('pr_deposees')}</div>
+        <div class="ramp-card-entete"><span class="ramp-card-lettre">B</span>${rt('pr_deposees')}</div>
         <div class="ramp-poi-envoi-corps">
             ${rampToutesPreuves(modifiable)}
             <div class="ramp-champ" style="margin-top:.9rem;">

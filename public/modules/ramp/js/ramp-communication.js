@@ -291,7 +291,7 @@ function rampComPartageHtml(pa) {
     return `
     <p class="ramp-note">${rt('par_lecture_seule')}</p>
     <div class="ramp-card">
-        <div class="ramp-card-titre">${rt('par_inspection')}</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('par_inspection')}</div>
         <div class="ramp-poi-recap">
             ${ligne('c_poi', o.poi_reference)}
             ${ligne('c_date', o.date ? rampDate(o.date) : '')}
@@ -306,7 +306,7 @@ function rampComPartageHtml(pa) {
 
     ${(pa.pieces || []).length ? `
     <div class="ramp-card">
-        <div class="ramp-card-titre">${rt('par_pieces_jointes')}</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">B</span>${rt('par_pieces_jointes')}</div>
         <div class="ramp-preuves-liste">
             ${pa.pieces.map((p) => `<a class="ramp-preuve-ligne" style="text-decoration:none;"
                 href="${RAMP_API}/partages/${encodeURIComponent(pa.id)}/pieces/${encodeURIComponent(p.id)}/fichier">
@@ -479,7 +479,7 @@ function rampComFormulaireHtml() {
 
     return `
     <div class="ramp-card">
-        <div class="ramp-card-titre">${rt('com_designer')}</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('com_designer')}</div>
         <p class="ramp-sous-titre">${rt('com_designer_aide')}</p>
         <div class="ramp-filtres">
             <select class="ramp-select" onchange="rampComCible('annee', this.value)">
@@ -545,7 +545,7 @@ function rampComFormulaireHtml() {
     </div>
 
     <div class="ramp-card">
-        <div class="ramp-card-titre">${rt('com_destinataires')}</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">B</span>${rt('com_destinataires')}</div>
         <p class="ramp-sous-titre">${rt('com_destinataires_aide')}</p>
         <div class="ramp-com-etats">
             ${rampComEtats().map((e) => `<label class="ramp-com-etat">
@@ -641,8 +641,8 @@ function rampComFilHtml(r) {
 
     return `
     <div class="ramp-card">
-        <div class="ramp-card-titre">
-            ${rt('com_requete')}
+        <div class="ramp-card-bande">
+            <span class="ramp-card-lettre">A</span>${rt('com_requete')}
             <span class="ramp-badge ${close ? 'zero' : 'ecarts'}">${close ? rt('com_close') : rt('com_ouverte')}</span>
         </div>
         <div class="ramp-poi-recap">
@@ -660,7 +660,7 @@ function rampComFilHtml(r) {
     </div>
 
     <div class="ramp-card">
-        <div class="ramp-card-titre">${rt('com_fil')}</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">B</span>${rt('com_fil')}</div>
         <div class="ramp-suivi-liste">
             <div class="ramp-suivi-entree">
                 <div class="ramp-suivi-entete">

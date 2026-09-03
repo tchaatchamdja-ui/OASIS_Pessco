@@ -274,7 +274,11 @@ function mesRenderApp() {
     const S = MES_STATE;
     // Ce qui est saisi dans un volet ouvert n'existe que dans le DOM : on le
     // relève avant de réécrire `#app`, sinon il partirait avec.
-    if (S.sliderOpen) { S.mesureEnCours = { ...(S.mesureEnCours || {}), ...mesCollecterFormulaire() }; mesMajTraitement(); }
+    if (S.sliderOpen) {
+        S.mesureEnCours = { ...(S.mesureEnCours || {}), ...mesCollecterFormulaire() };
+        mesMajTraitement();
+        if (typeof mesMajQualification === 'function') mesMajQualification();
+    }
     if (S.constatEnCours) S.constatEnCours = { ...S.constatEnCours, ...mesCollecterConstat() };
     document.body.classList.toggle('app-sidebar-collapsed', !!S.sidebarCollapsed);
     const u = S.user || {};
@@ -1391,7 +1395,10 @@ function mesFormulaireMesure() {
     // première étape qui s'affichent.
     const surCarence = !!MES_STATE.carenceEnCours;
     const etape = surCarence ? mesEtapeCourante() : 'qualification';
-    const champsMesure = etape === 'qualification';
+    // L'étape « Qualification et Mesures » a ses propres sections ; les champs
+    // du formulaire de mesure ne servent plus qu'au volet ouvert depuis le
+    // menu Mesures, hors de tout fil.
+    const champsMesure = !surCarence;
     const aVenir = etape === 'suivi';
 
     return `
@@ -1411,6 +1418,12 @@ function mesFormulaireMesure() {
             ${mesSectionPac()}
             ${mesSectionInformations()}
             ${mesSectionDecision()}` : ''}
+        ${etape === 'qualification' ? `
+            ${mesSectionCarence()}
+            ${mesSectionRapportInvestigation()}
+            ${mesSectionInstance()}
+            ${mesSectionQualification()}
+            ${mesSectionMesuresArretees()}` : ''}
         ${etape === 'investigations' ? `
             ${mesSectionEquipe()}
             ${mesSectionTravaux()}
@@ -1440,12 +1453,8 @@ function mesFormulaireMesure() {
         </div>
         ${champ('Objet', `<input class="mes-input" id="mesf_objet" value="${_mesAttr(m.objet || '')}" ${off}>`)}
         ${champ('Description', `<textarea class="mes-input" id="mesf_description" rows="3" ${off}>${_mesEsc(m.description || '')}</textarea>`)}
-        <div class="mes-paire">
-            ${champ('Niveau de risque', `<select class="mes-select" id="mesf_risque" ${off}>
-                ${['', 'faible', 'modéré', 'élevé'].map((r) => opt(r, r || '—', m.niveau_risque)).join('')}</select>`)}
-            ${champ('Délai (jours)', `<input type="number" min="0" class="mes-input" id="mesf_delai"
-                value="${_mesAttr(m.delai_jours || '')}" ${off} oninput="mesFormDelai()">`)}
-        </div>
+        ${champ('Délai (jours)', `<input type="number" min="0" class="mes-input" id="mesf_delai"
+            value="${_mesAttr(m.delai_jours || '')}" ${off} oninput="mesFormDelai()">`)}
         <div class="mes-paire">
             ${champ("Date d'émission", `<input type="date" class="mes-input" id="mesf_emission"
                 value="${_mesAttr(String(m.date_emission || '').slice(0, 10))}" ${off} onchange="mesFormDelai()">`)}
@@ -1499,7 +1508,6 @@ function mesCollecterFormulaire() {
         constatation_id: v('mesf_constatation'),
         objet: v('mesf_objet'),
         description: v('mesf_description'),
-        niveau_risque: v('mesf_risque'),
         delai_jours: v('mesf_delai'),
         date_emission: v('mesf_emission'),
         date_echeance: v('mesf_echeance'),

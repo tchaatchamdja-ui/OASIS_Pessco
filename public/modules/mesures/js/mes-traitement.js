@@ -302,11 +302,12 @@ function mesBarreInferieure(ro, champsMesure, etape) {
             <button class="btn btn-primary btn-sm" onclick="mesEnregistrerMesure()">${MES_ICONS.check} Enregistrer</button>
         </div>`;
     }
-    if (!mesPeutEcrire() || !['suite', 'investigations'].includes(etape)) return '';
+    if (!mesPeutEcrire() || !['suite', 'investigations', 'qualification'].includes(etape)) return '';
     if (etape === 'investigations' && mesInvSoumise()) return '';
     // Chaque étape enregistre ce qui lui est propre : les informations
-    // recueillies pour la suite à donner, les actes d'enquête pour l'autre.
-    const geste = etape === 'investigations' ? 'mesEnregistrerInvestigation()' : 'mesEnregistrerTraitement()';
+    // recueillies pour la suite à donner, les actes d'enquête, la qualification.
+    const geste = { investigations: 'mesEnregistrerInvestigation()', qualification: 'mesEnregistrerQualification()' }[etape]
+        || 'mesEnregistrerTraitement()';
     return `<div class="mes-slider-footer">
         <button class="btn btn-primary btn-sm" onclick="${geste}"
                 title="Conserver les informations recueillies">${MES_ICONS.check} Enregistrer</button>

@@ -10,6 +10,8 @@ const crypto = require('crypto');
 const referentiels = require('../../referentiels');
 const services = require('../../services');
 const multipart = require('../../multipart');
+const pdf = require('../../pdf');
+const rapport = require('./rapport-investigation');
 const db = require('./store');
 const R = require('./roles');
 
@@ -30,7 +32,7 @@ const CLOS = ['cloturee', 'annulee'];
 // figurent pas : ils sont posés par les transitions, jamais par un PUT.
 const CHAMPS = [
   'constatation_id', 'prestataire_id', 'categorie', 'type_mesure', 'objet',
-  'description', 'niveau_risque', 'date_emission', 'delai_jours', 'date_echeance',
+  'description', 'date_emission', 'delai_jours', 'date_echeance',
   'avis_commission', 'motif', 'pieces_jointes',
   'preuves_constatation', 'preuves_cloture', 'montant_amende',
 ];
@@ -250,6 +252,11 @@ module.exports = function register(app, deps, M) {
       decide_par: (t && t.decide_par) || '',
       investigation: (t && t.investigation)
         || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' },
+      qualification: (t && t.qualification) || {
+        comite_code: '', membres: [], sessions: [], reunions: [],
+        infraction_constituee: false, nature: '', caracterisation: '', circonstances: '',
+        mesures: [], pieces: [],
+      },
       pac: pacDe(c.id),
       etapes: ETAPES,
     });
@@ -338,6 +345,93 @@ module.exports = function register(app, deps, M) {
       investigation: { ...inv, soumise_le: db.now(), soumise_par: req.user.username },
     });
     return res.status(201).json({ status: 'ok', etape: 'qualification' });
+  });
+
+  // Rapport d'investigation en PDF : l'instance décisionnelle reçoit
+  // l'investigation entière sous une forme qui se transmet et s'archive. Le
+  // document est composé à la demande — rien n'est stocké, il suit toujours
+  // l'état de l'investigation.
+  app.get(`${M}/constatations/:id/rapport-investigation.pdf`, requireAuth, async (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!R.canRead(req.user, perimetre(c))) return refuser(res);
+    const t = traitementDe(c.id);
+    if (!t || !t.investigation) return res.status(404).json({ error: 'Aucune investigation' });
+    if (!pdf.disponible()) {
+      return res.status(503).json({ error: 'Moteur de rendu PDF indisponible sur ce serveur' });
+    }
+    const types = new Map(db.list('types_investigation').map((x) => [x.code, x.libelle]));
+    const cfg = deps.loadConfig ? deps.loadConfig() : {};
+    try {
+      const octets = await pdf.depuisHtml(rapport.html({
+        carence: c,
+        traitement: t,
+        aac: (cfg && cfg.aac) || {},
+        libelleType: (code) => types.get(code) || code,
+      }));
+      const nom = `rapport-investigation-${String(c.reference || c.id).replace(/[^\w.-]+/g, '_')}.pdf`;
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(nom)}`);
+      // `page.pdf()` rend un Uint8Array : sans cette conversion, Express le
+      // sérialise en JSON et le fichier reçu n'est pas un PDF.
+      return res.send(Buffer.from(octets));
+    } catch (e) {
+      return res.status(500).json({ error: e.message || 'Rendu du rapport impossible' });
+    }
+  });
+
+  // ── Qualification et mesures ──
+  // L'instance décisionnelle qualifie la carence — l'infraction est constituée
+  // ou non — et arrête, le cas échéant, les mesures d'application.
+  const membre = (p) => Object.fromEntries(CHAMPS_ENQUETEUR.map((k) => [k, texte((p || {})[k])]));
+  const seance = (s) => ({ date: texte((s || {}).date).slice(0, 10), objet: texte((s || {}).objet) });
+  const reunion = (r) => ({
+    date: texte((r || {}).date).slice(0, 10),
+    objet: texte((r || {}).objet),
+    resultat: texte((r || {}).resultat),
+  });
+  const mesureArretee = (m) => ({
+    categorie: texte((m || {}).categorie),
+    type_mesure: texte((m || {}).type_mesure),
+    commentaire: texte((m || {}).commentaire),
+  });
+
+  const qualification = (d) => {
+    const constituee = d.infraction_constituee === true || d.infraction_constituee === 'true';
+    return {
+      comite_code: texte(d.comite_code),
+      membres: Array.isArray(d.membres)
+        ? d.membres.map(membre).filter((p) => p.nom || p.prenom || p.email || p.contact) : [],
+      sessions: Array.isArray(d.sessions) ? d.sessions.map(seance).filter((s) => s.date || s.objet) : [],
+      reunions: Array.isArray(d.reunions)
+        ? d.reunions.map(reunion).filter((r) => r.date || r.objet || r.resultat) : [],
+      infraction_constituee: constituee,
+      // Les trois qualifications ne valent que si l'infraction est constituée :
+      // les conserver sur un dossier classé laisserait croire le contraire.
+      nature: constituee ? texte(d.nature) : '',
+      caracterisation: constituee ? texte(d.caracterisation) : '',
+      circonstances: constituee ? texte(d.circonstances) : '',
+      mesures: constituee && Array.isArray(d.mesures)
+        ? d.mesures.map(mesureArretee).filter((m) => m.categorie || m.type_mesure || m.commentaire) : [],
+      pieces: Array.isArray(d.pieces) ? d.pieces.map(piece).filter((p) => p.nom || p.path) : [],
+    };
+  };
+
+  app.put(`${M}/constatations/:id/qualification`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!peutEcrire(req, c)) return refuser(res);
+    const t = traitementDe(c.id);
+    if (!t || t.etape !== 'qualification') {
+      return res.status(409).json({ error: 'La carence n’est pas à l’étape Qualification et Mesures' });
+    }
+    const q = qualification(req.body || {});
+    // Le comité retenu doit exister : la mesure qui en découlera le portera.
+    if (q.comite_code && !db.list('comites').some((x) => x.code === q.comite_code)) {
+      return res.status(400).json({ error: 'Comité décisionnel inconnu' });
+    }
+    db.update('traitements', t.id, { qualification: q });
+    return res.json({ status: 'ok' });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

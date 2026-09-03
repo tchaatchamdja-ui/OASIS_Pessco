@@ -11,7 +11,7 @@
  */
 
 const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
-    comite_code: '', membres: [], sessions: [],
+    comite_code: '', membres: [], reunions: [],
     infraction_constituee: false, infraction_non_constituee: false,
     nature: '', caracterisation: '', circonstances: '',
     mesures: [], pieces: [],
@@ -74,15 +74,6 @@ function mesSectionInstance() {
                 title="Retirer" onclick="mesQualRetirerMembre(${i})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
 
-    const sessions = (q.sessions || []).map((s, i) => `
-        <tr data-rang="${i}">
-            <td><input type="date" class="mes-input" data-champ="date" value="${_mesAttr(s.date || '')}" ${off}></td>
-            <td><input class="mes-input" data-champ="objet" value="${_mesAttr(s.objet || '')}"
-                       placeholder="Objet de la réunion" ${off}></td>
-            <td class="mes-actions">${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="Retirer" onclick="mesQualRetirerSession(${i})">${MES_ICONS.x}</button>`}</td>
-        </tr>`).join('');
-
     return mesSection('C', 'Instance décisionnelle', `
         <div class="mes-champ">
             <label>Nom de l’instance</label>
@@ -94,10 +85,10 @@ function mesSectionInstance() {
             ${comites.length ? '' : `<p class="mes-note">Aucun comité décisionnel n’est paramétré.
                 Le menu Paramètres du module en tient la liste.</p>`}
         </div>
-        <div class="mes-champ">
+        <div class="mes-champ" style="margin-bottom:0;">
             <label>Membres de l’instance</label>
             <div class="mes-table-wrap">
-                <table class="mes-table" id="mesQualMembres">
+                <table class="mes-table mes-table-claire" id="mesQualMembres">
                     <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Contact</th><th></th></tr></thead>
                     <tbody>${membres || `<tr><td colspan="5" class="mes-preuve-vide">
                         Aucun membre désigné</td></tr>`}</tbody>
@@ -105,18 +96,6 @@ function mesSectionInstance() {
             </div>
             ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.4rem;"
                 onclick="mesQualAjouterMembre()">${MES_ICONS.add} Ajouter un membre</button>`}
-        </div>
-        <div class="mes-champ" style="margin-bottom:0;">
-            <label>Dates de session</label>
-            <div class="mes-table-wrap">
-                <table class="mes-table" id="mesQualSessions">
-                    <thead><tr><th style="width:170px;">Date</th><th>Objet de la réunion</th><th></th></tr></thead>
-                    <tbody>${sessions || `<tr><td colspan="3" class="mes-preuve-vide">
-                        Aucune session enregistrée</td></tr>`}</tbody>
-                </table>
-            </div>
-            ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.4rem;"
-                onclick="mesQualAjouterSession()">${MES_ICONS.add} Ajouter une date</button>`}
         </div>`);
 }
 
@@ -128,10 +107,48 @@ function mesSectionQualification() {
 
     const nonConstituee = !!q.infraction_non_constituee;
 
+    // Les réunions de l'instance : ce que chaque séance a produit. Autant de
+    // blocs que de séances tenues.
+    const reunions = (q.reunions || []).map((r, i) => `
+        <div class="mes-bloc" data-rang="${i}">
+            <div class="mes-bloc-entete">
+                <span class="mes-bloc-titre">${r.date ? _mesEsc(mesDate(r.date)) : 'Réunion'}${
+                    r.objet ? ` — ${_mesEsc(r.objet)}` : ''}</span>
+                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer cette réunion"
+                    onclick="mesQualRetirerReunion(${i})">${MES_ICONS.x}</button>`}
+            </div>
+            <div class="mes-bloc-corps">
+                <div class="mes-paire">
+                    <div class="mes-champ">
+                        <label>Date de la réunion</label>
+                        <input type="date" class="mes-input" data-champ="date" value="${_mesAttr(r.date || '')}" ${off}>
+                    </div>
+                    <div class="mes-champ">
+                        <label>Objet</label>
+                        <input class="mes-input" data-champ="objet" value="${_mesAttr(r.objet || '')}"
+                               placeholder="Objet de la réunion tenue" ${off}>
+                    </div>
+                </div>
+                <div class="mes-champ" style="margin-bottom:0;">
+                    <label>Résultat de la réunion</label>
+                    <textarea class="mes-input" data-champ="resultat" rows="3" ${off}
+                              placeholder="Ce que la réunion a établi">${_mesEsc(r.resultat || '')}</textarea>
+                </div>
+            </div>
+        </div>`).join('');
+
     // Les deux cases disent la même décision par ses deux faces : cocher l'une
     // décoche l'autre. Tant qu'aucune n'est cochée, la qualification n'est pas
     // arrêtée.
     return mesSection('D', 'Qualification de l’infraction', `
+        <div id="mesQualReunions">${reunions
+            || '<p class="mes-preuve-vide">Aucune réunion consignée</p>'}</div>
+        ${off ? '' : `<div class="mes-actions-rang" style="margin-bottom:.9rem;">
+            <button class="btn btn-outline btn-sm" onclick="mesQualAjouterReunion()">
+                ${MES_ICONS.add} Ajouter une réunion</button>
+            <button class="btn btn-outline btn-sm" onclick="mesEnregistrerQualification()">
+                ${MES_ICONS.check} Enregistrer</button>
+        </div>`}
         <div class="mes-cases-exclusives">
             <label class="mes-case">
                 <input type="checkbox" id="mesQualConstituee" ${constituee ? 'checked' : ''} ${off}
@@ -180,6 +197,10 @@ function mesSectionMesuresArretees() {
     const blocs = (q.mesures || []).map((m, i) => {
         const libelleCat = (cats.find((c) => c.code === m.categorie) || {}).libelle || 'Mesure';
         const types = mesTypesDe(m.categorie);
+        // Une sanction court sur une durée ou sans terme : les deux cases
+        // disent la même portée par ses deux faces, elles s'excluent.
+        const temporelle = m.portee === 'temporelle';
+        const illimitee = m.portee === 'illimitee';
         return `<div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(libelleCat)}</span>
@@ -206,6 +227,40 @@ function mesSectionMesuresArretees() {
                         </select>
                     </div>
                 </div>
+                <div class="mes-paire">
+                    <div class="mes-champ">
+                        <label>Date de sanction</label>
+                        <input type="date" class="mes-input" data-champ="date_sanction"
+                               value="${_mesAttr(m.date_sanction || '')}" ${off}>
+                    </div>
+                    <div class="mes-champ">
+                        <label>Portée</label>
+                        <div class="mes-cases-exclusives" style="padding-top:.35rem;">
+                            <label class="mes-case">
+                                <input type="checkbox" data-champ="temporelle" ${temporelle ? 'checked' : ''} ${off}
+                                       onchange="mesQualPorteeMesure(${i}, 'temporelle', this.checked)">
+                                <span>Temporelle</span>
+                            </label>
+                            <label class="mes-case">
+                                <input type="checkbox" data-champ="illimitee" ${illimitee ? 'checked' : ''} ${off}
+                                       onchange="mesQualPorteeMesure(${i}, 'illimitee', this.checked)">
+                                <span>Illimitée</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                ${temporelle ? `<div class="mes-paire">
+                    <div class="mes-champ">
+                        <label>Durée de la sanction</label>
+                        <input class="mes-input" data-champ="duree" value="${_mesAttr(m.duree || '')}" ${off}
+                               placeholder="ex. 3 mois">
+                    </div>
+                    <div class="mes-champ">
+                        <label>Date de fin de sanction</label>
+                        <input type="date" class="mes-input" data-champ="date_fin"
+                               value="${_mesAttr(m.date_fin || '')}" ${off}>
+                    </div>
+                </div>` : ''}
                 <div class="mes-champ" style="margin-bottom:0;">
                     <label>Commentaire</label>
                     <textarea class="mes-input" data-champ="commentaire" rows="3" ${off}
@@ -256,18 +311,26 @@ function mesCollecterQualification() {
             nom: val(tr, 'nom'), prenom: val(tr, 'prenom'),
             email: val(tr, 'email'), contact: val(tr, 'contact'),
         })),
-        sessions: lignes('#mesQualSessions tbody tr[data-rang]').map((tr) => ({
-            date: val(tr, 'date'), objet: val(tr, 'objet'),
+        reunions: lignes('#mesQualReunions .mes-bloc').map((b) => ({
+            date: val(b, 'date'), objet: val(b, 'objet'), resultat: val(b, 'resultat'),
         })),
         infraction_constituee: !!(coche && coche.checked),
         infraction_non_constituee: !!(document.getElementById('mesQualNonConstituee') || {}).checked,
         nature: txt('mesQualNature'),
         caracterisation: txt('mesQualCaracterisation'),
         circonstances: txt('mesQualCirconstances'),
-        mesures: lignes('#mesQualMesures .mes-bloc').map((b) => ({
-            categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
-            commentaire: val(b, 'commentaire'),
-        })),
+        mesures: lignes('#mesQualMesures .mes-bloc').map((b) => {
+            const coche = (champ) => !!(b.querySelector(`[data-champ="${champ}"]`) || {}).checked;
+            const portee = coche('temporelle') ? 'temporelle' : (coche('illimitee') ? 'illimitee' : '');
+            return {
+                categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
+                date_sanction: val(b, 'date_sanction'), portee,
+                // Durée et terme n'ont de sens que pour une sanction temporelle.
+                duree: portee === 'temporelle' ? val(b, 'duree') : '',
+                date_fin: portee === 'temporelle' ? val(b, 'date_fin') : '',
+                commentaire: val(b, 'commentaire'),
+            };
+        }),
         pieces: lignes('#mesQualPieces .mes-preuve').map((r) => ({
             nom: (r.querySelector('input') || {}).value || '', path: r.dataset.chemin || '',
         })),
@@ -293,11 +356,18 @@ function mesQualModifier(action) {
 
 const mesQualAjouterMembre = () => mesQualModifier((q) => q.membres.push({ nom: '', prenom: '', email: '', contact: '' }));
 const mesQualRetirerMembre = (i) => mesQualModifier((q) => { q.membres = q.membres.filter((_, k) => k !== i); });
-const mesQualAjouterSession = () => mesQualModifier((q) => q.sessions.push({ date: '', objet: '' }));
-const mesQualRetirerSession = (i) => mesQualModifier((q) => { q.sessions = q.sessions.filter((_, k) => k !== i); });
+const mesQualAjouterReunion = () => mesQualModifier((q) => q.reunions.push({ date: '', objet: '', resultat: '' }));
+const mesQualRetirerReunion = (i) => mesQualModifier((q) => { q.reunions = q.reunions.filter((_, k) => k !== i); });
 const mesQualAjouterMesure = () => mesQualModifier((q) => q.mesures.push({
-    categorie: (mesCategories()[0] || {}).code || '', type_mesure: '', commentaire: '',
+    categorie: (mesCategories()[0] || {}).code || '', type_mesure: '',
+    date_sanction: '', portee: '', duree: '', date_fin: '', commentaire: '',
 }));
+
+// Cocher une portée décoche l'autre ; décocher celle qui l'était laisse la
+// portée indéterminée.
+const mesQualPorteeMesure = (i, portee, coche) => mesQualModifier((q) => {
+    if (q.mesures[i]) q.mesures[i].portee = coche ? portee : '';
+});
 const mesQualRetirerMesure = (i) => mesQualModifier((q) => { q.mesures = q.mesures.filter((_, k) => k !== i); });
 const mesQualRetirerPiece = (i) => mesQualModifier((q) => { q.pieces = q.pieces.filter((_, k) => k !== i); });
 
@@ -350,8 +420,8 @@ Object.assign(window, {
     mesQualification, mesSectionRapportInvestigation, mesSectionInstance,
     mesSectionQualification, mesSectionMesuresArretees,
     mesQualAjouterMembre, mesQualRetirerMembre,
-    mesQualAjouterSession, mesQualRetirerSession,
-    mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure,
+    mesQualAjouterReunion, mesQualRetirerReunion,
+    mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
     mesQualBasculerInfraction, mesQualBasculerNonInfraction,
     mesQualTeleverser, mesQualRetirerPiece,
     mesMajQualification, mesEnregistrerQualification,

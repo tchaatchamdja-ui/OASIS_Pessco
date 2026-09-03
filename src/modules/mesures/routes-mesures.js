@@ -253,7 +253,7 @@ module.exports = function register(app, deps, M) {
       investigation: (t && t.investigation)
         || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' },
       qualification: (t && t.qualification) || {
-        comite_code: '', membres: [], sessions: [],
+        comite_code: '', membres: [], reunions: [],
         infraction_constituee: false, infraction_non_constituee: false,
         nature: '', caracterisation: '', circonstances: '',
         mesures: [], pieces: [],
@@ -385,12 +385,27 @@ module.exports = function register(app, deps, M) {
   // L'instance décisionnelle qualifie la carence — l'infraction est constituée
   // ou non — et arrête, le cas échéant, les mesures d'application.
   const membre = (p) => Object.fromEntries(CHAMPS_ENQUETEUR.map((k) => [k, texte((p || {})[k])]));
-  const seance = (s) => ({ date: texte((s || {}).date).slice(0, 10), objet: texte((s || {}).objet) });
-  const mesureArretee = (m) => ({
-    categorie: texte((m || {}).categorie),
-    type_mesure: texte((m || {}).type_mesure),
-    commentaire: texte((m || {}).commentaire),
+  const reunion = (r) => ({
+    date: texte((r || {}).date).slice(0, 10),
+    objet: texte((r || {}).objet),
+    resultat: texte((r || {}).resultat),
   });
+  const PORTEES = ['temporelle', 'illimitee'];
+  const mesureArretee = (m) => {
+    const o = m || {};
+    const portee = PORTEES.includes(texte(o.portee)) ? texte(o.portee) : '';
+    return {
+      categorie: texte(o.categorie),
+      type_mesure: texte(o.type_mesure),
+      date_sanction: texte(o.date_sanction).slice(0, 10),
+      portee,
+      // Une sanction sans terme n'a ni durée ni date de fin : les garder
+      // laisserait croire qu'elle en a une.
+      duree: portee === 'temporelle' ? texte(o.duree) : '',
+      date_fin: portee === 'temporelle' ? texte(o.date_fin).slice(0, 10) : '',
+      commentaire: texte(o.commentaire),
+    };
+  };
 
   const vrai = (v) => v === true || v === 'true';
 
@@ -404,7 +419,8 @@ module.exports = function register(app, deps, M) {
       comite_code: texte(d.comite_code),
       membres: Array.isArray(d.membres)
         ? d.membres.map(membre).filter((p) => p.nom || p.prenom || p.email || p.contact) : [],
-      sessions: Array.isArray(d.sessions) ? d.sessions.map(seance).filter((s) => s.date || s.objet) : [],
+      reunions: Array.isArray(d.reunions)
+        ? d.reunions.map(reunion).filter((r) => r.date || r.objet || r.resultat) : [],
       infraction_constituee: constituee,
       infraction_non_constituee: nonConstituee,
       // Les trois qualifications ne valent que si l'infraction est constituée :
@@ -413,7 +429,8 @@ module.exports = function register(app, deps, M) {
       caracterisation: constituee ? texte(d.caracterisation) : '',
       circonstances: constituee ? texte(d.circonstances) : '',
       mesures: constituee && Array.isArray(d.mesures)
-        ? d.mesures.map(mesureArretee).filter((m) => m.categorie || m.type_mesure || m.commentaire) : [],
+        ? d.mesures.map(mesureArretee)
+          .filter((m) => m.categorie || m.type_mesure || m.commentaire || m.date_sanction) : [],
       pieces: Array.isArray(d.pieces) ? d.pieces.map(piece).filter((p) => p.nom || p.path) : [],
     };
   };

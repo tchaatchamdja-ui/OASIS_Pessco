@@ -347,6 +347,12 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 /* Les deux faces d'une même décision, côte à côte : cocher l'une décoche
    l'autre, et les voir ensemble le fait comprendre avant tout essai. */
 .mes-cases-exclusives { display: flex; gap: 1.6rem; flex-wrap: wrap; }
+/* Table dont l'entête reprend le bandeau clair des blocs, plutôt que le fond
+   de thème des tables d'écran : elle vit dans une section, pas dans une page. */
+.mes-table-claire th {
+    background: var(--bg); color: var(--text);
+    border-right-color: var(--border); border-bottom: 1px solid var(--border);
+}
 .mes-decision-aide { margin: 0 0 .5rem 1.1rem; padding: 0; font-size: .8rem; color: var(--text-muted); }
 .mes-decision-aide li { margin-bottom: .2rem; }
 /* Les deux suites qui engagent une action portent leur couleur : le classement

@@ -445,7 +445,7 @@ function mesActionsQualification() {
         bouton(!!q.infraction_constituee, 'mes-btn-mesure',
             'Passe le traitement à l’étape « Suivi des Mesures ». '
             + 'Cochez « Infraction constituée » pour l’activer.',
-            'mesQualSuivi()', 'Suivi'),
+            'mesQualSuivi()', 'Valider'),
     ].join('');
 }
 

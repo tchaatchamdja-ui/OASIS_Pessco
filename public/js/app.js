@@ -349,11 +349,10 @@ async function renderHome() {
     const color = COULEURS_MODULE[m.code] || PRIO_COLORS[m.priority] || '#64748b';
     const name = m.name[CURRENT_LANG] || m.name.fr;
     const desc = m.desc[CURRENT_LANG] || m.desc.fr;
-    // La carte ne porte plus ni priorité ni état d'activation : ce sont des
-    // informations de feuille de route, pas d'usage.
+    // La carte ne porte ni priorité, ni état d'activation, ni point du TdR :
+    // ce sont des informations de feuille de route, pas d'usage.
     return `
     <div class="portal-card" style="--module-color:${color};" data-module="${esc(m.code)}" data-enabled="true">
-      <span class="portal-card-tdr">${esc(m.tdr)}</span>
       <div class="portal-card-icon-wrap">${moduleIcon(m.code, 26)}</div>
       <div class="portal-card-title">${esc(name)}</div>
       <div class="portal-card-desc">${esc(desc)}</div>

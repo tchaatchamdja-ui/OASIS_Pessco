@@ -428,6 +428,9 @@ function mesResetFiltresCritiques() {
 }
 
 function mesNavigateTo(page) {
+    // Changer d'écran referme le volet : il appartient à la page qu'on quitte,
+    // et le laisser ouvert par-dessus la suivante n'aurait pas de sens.
+    if (MES_STATE.sliderOpen) mesFermerSlider();
     MES_STATE.currentPage = page;
     mesRenderApp();
     mesRenderPage();

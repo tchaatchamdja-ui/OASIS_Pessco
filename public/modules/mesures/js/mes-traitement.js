@@ -307,6 +307,8 @@ function mesBarreInferieure(ro, champsMesure, etape) {
     }
     if (!mesPeutEcrire() || !['suite', 'investigations', 'qualification'].includes(etape)) return '';
     if (etape === 'investigations' && mesInvSoumise()) return '';
+    // Une qualification close ne s'enregistre plus : elle se consulte.
+    if (etape === 'qualification' && typeof mesQualClose === 'function' && mesQualClose()) return '';
     // Chaque étape enregistre ce qui lui est propre : les informations
     // recueillies pour la suite à donner, les actes d'enquête, la qualification.
     const geste = { investigations: 'mesEnregistrerInvestigation()', qualification: 'mesEnregistrerQualification()' }[etape]

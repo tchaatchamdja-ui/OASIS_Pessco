@@ -18,7 +18,20 @@ const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
     mesures: [], pieces: [],
 };
 
-const mesQualModifiable = () => mesPeutEcrire();
+// L'étape ne se saisit que tant qu'elle est ouverte. Classée, renvoyée ou
+// validée, elle est close : les champs passent en lecture et les trois issues
+// ne se rejouent pas. Le rang dit tout — le fil a reculé après un renvoi,
+// avancé après une validation ; seule l'étape courante reste modifiable.
+const mesQualClose = () => {
+    const t = MES_STATE.traitement || {};
+    if (t.classe_le) return 'classée';
+    const rang = MES_ETAPES.findIndex((e) => e.cle === 'qualification');
+    if (mesRangAtteint() > rang) return 'validée';
+    if (mesRangAtteint() < rang) return 'renvoyée';
+    return '';
+};
+
+const mesQualModifiable = () => mesPeutEcrire() && !mesQualClose();
 
 // ── Section B — le rapport d'investigation ──
 // Il est repris tel que l'investigation l'a laissé, et le PDF donne
@@ -498,11 +511,11 @@ async function mesQualTeleverser(fichiers) {
 // pas.
 function mesActionsQualification() {
     const q = mesQualification();
-    // L'étape est franchie : ses trois issues ne se rejouent pas. On la
-    // consulte, et le badge dit ce qui a été décidé.
-    const rangEtape = MES_ETAPES.findIndex((e) => e.cle === 'qualification');
-    if (mesRangAtteint() > rangEtape) {
-        return '<span class="mes-badge cloturee">Qualification validée</span>';
+    // L'étape est close : ses trois issues ne se rejouent pas. On la consulte,
+    // et le badge dit ce qui en a été fait.
+    const close = mesQualClose();
+    if (close) {
+        return `<span class="mes-badge cloturee">Qualification ${_mesEsc(close)}</span>`;
     }
     if (!mesPeutDecider()) return '';
     const bouton = (actif, classe, aide, geste, libelle) => `<button class="btn btn-sm ${classe}"
@@ -577,6 +590,7 @@ Object.assign(window, {
     mesQualAjouterReunion, mesQualRetirerReunion,
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
     mesQualDureeVersTerme, mesQualTermeVersDuree, mesAjouterDuree,
+    mesQualClose, mesQualModifiable,
     mesQualBasculerInfraction, mesQualBasculerNonInfraction, mesQualBasculerRenvoi,
     mesActionsQualification, mesQualRenvoyer, mesQualClasser, mesQualSuivi,
     mesQualTeleverser, mesQualRetirerPiece,

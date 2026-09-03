@@ -254,6 +254,12 @@ module.exports = function register(app, deps, M) {
       decision_motif: (t && t.decision_motif) || '',
       decide_le: (t && t.decide_le) || '',
       decide_par: (t && t.decide_par) || '',
+      // Classement prononcé à la qualification : il clôt l'étape, qui passe
+      // alors en lecture. Sans ces deux champs, l'écran ne pouvait pas le voir.
+      classe_le: (t && t.classe_le) || '',
+      classe_par: (t && t.classe_par) || '',
+      qualifie_le: (t && t.qualifie_le) || '',
+      qualifie_par: (t && t.qualifie_par) || '',
       investigation: (t && t.investigation)
         || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' },
       qualification: (t && t.qualification) || {

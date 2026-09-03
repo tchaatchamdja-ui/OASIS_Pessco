@@ -81,8 +81,11 @@ const COULEURS_MODULE = {
   CARE: '#ff0000',
 };
 const LEVEL_COLORS = ['#2563eb', '#0891b2', '#f59e0b', '#10b981', '#8b5cf6'];
+// `icon` est facultatif : un thème qui n'en déclare pas voit son titre commencer
+// au premier mot. La surveillance continue s'en passe — son intitulé porte déjà
+// son sigle, et la loupe n'y ajoutait rien.
 const THEMES_ORDER = [
-  { code: 'surveillance', icon: 'search' },
+  { code: 'surveillance' },
   { code: 'reglementation', icon: 'fileText' },
   { code: 'cert_risques', icon: 'award' },
   { code: 'personnel_coop', icon: 'users' },
@@ -370,7 +373,7 @@ async function renderHome() {
     return `
     <div class="portal-group">
       <div class="portal-group-header">
-        <span class="group-icon">${icon(th.icon, 18)}</span>
+        ${th.icon ? `<span class="group-icon">${icon(th.icon, 18)}</span>` : ''}
         ${esc(t('theme_' + th.code))}
         <span class="group-count">${mods.length}</span>
       </div>

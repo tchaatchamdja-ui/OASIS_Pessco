@@ -786,7 +786,7 @@ function mesLignesCritiques() {
               <div class="mes-actions-pile">
                 ${mesPeutEcrire() && !c.classee
                     ? `<button class="btn btn-sm mes-btn-mesure" onclick="mesMesureDepuisConstatation('${c.id}')">
-                           ${MES_ICONS.add} Mesure</button>` : ''}
+                           ${MES_ICONS.add} Traiter</button>` : ''}
                 ${mesPeutDecider() && !c.classee && !c.mesures_liees
                     ? `<button class="btn btn-sm mes-btn-classer" onclick="mesClasserCarence('${c.id}')"
                                title="Aucune suite ne sera donnée">${MES_ICONS.check} Classer</button>` : ''}
@@ -1151,10 +1151,10 @@ function mesFormulaireMesure() {
 
     return `
     <div class="mes-slider-header">
-        <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerSlider()"
-                title="Retour">${MES_ICONS.back}</button>
+        <button class="btn btn-outline btn-sm mes-btn-retour" onclick="mesFermerSlider()"
+                title="Retour">${MES_ICONS.back} Retour</button>
         <span class="mes-slider-titre">
-            ${nouvelle ? 'Nouvelle mesure' : `Mesure ${_mesEsc(m.reference || '')}`}
+            ${nouvelle ? 'Traitement d’une carence' : `Traitement ${_mesEsc(m.reference || '')}`}
         </span>
         ${m.statut ? mesBadgeStatut(m.statut) : ''}
     </div>

@@ -169,21 +169,33 @@
     z-index: 1090; opacity: 0; pointer-events: none; transition: opacity .2s ease;
 }
 .mes-slider-overlay.open { opacity: 1; pointer-events: auto; }
+/* Volet de traitement : il va du bord droit de l'écran jusqu'au bord droit de
+   la barre latérale, et suit celle-ci quand elle se replie. Le repli est porté
+   par « body » — le volet vit hors de la coquille, il ne peut pas le lire sur
+   « .app-layout ». Le glissement de la barre dure 0.3s : la transition du bord
+   gauche s'aligne dessus, sans quoi le volet sauterait. */
 .mes-slider {
     position: fixed; top: 0; right: 0; bottom: 0;
-    width: min(760px, 96vw); transform: translateX(100%);
+    left: var(--sidebar-width, 240px); transform: translateX(100%);
     background: var(--bg-card); box-shadow: -8px 0 30px rgba(0,0,0,.18);
     z-index: 1100; display: flex; flex-direction: column;
-    transition: transform .25s ease;
+    transition: transform .25s ease, left .3s ease;
 }
+body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 .mes-slider.open { transform: translateX(0); }
-.mes-slider.tiers { width: min(560px, 96vw); }
 .mes-slider-header {
     display: flex; align-items: center; gap: .6rem;
     padding: .8rem 1rem; border-bottom: 1px solid var(--border);
     background: var(--primary); color: var(--text-header, #fff);
 }
 .mes-slider-header .btn { color: inherit; border-color: rgba(255,255,255,.4); }
+/* Le retour porte son nom : une flèche seule laissait deviner. Il reste dans
+   l'en-tête, donc offert aussi quand la mesure est close et que la barre
+   d'actions — où vit « Annuler » — ne s'affiche pas. */
+.mes-slider-header .mes-btn-retour {
+    display: inline-flex; align-items: center; gap: .35rem;
+    flex-shrink: 0; white-space: nowrap;
+}
 .mes-slider-titre { font-weight: 700; font-size: 1rem; }
 .mes-slider-body { flex: 1; overflow-y: auto; padding: 1rem; }
 .mes-slider-footer {

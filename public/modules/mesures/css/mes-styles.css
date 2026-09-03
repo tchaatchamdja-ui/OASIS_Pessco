@@ -169,7 +169,8 @@
    le chevron, une pastille de thème ou une langue atterrissait sur le voile,
    dont le clic referme le volet. La barre reste donc utilisable, volet ouvert. */
 .mes-slider-overlay {
-    position: fixed; top: var(--topbar-height, 48px); right: 0; bottom: 0;
+    position: fixed; top: var(--topbar-height, 48px); right: 0;
+    bottom: var(--mes-pied, 44px);
     left: var(--sidebar-width, 240px);
     background: rgba(15,23,42,.4);
     z-index: 1090; opacity: 0; pointer-events: none;
@@ -183,9 +184,13 @@ body.app-sidebar-collapsed .mes-slider-overlay { left: var(--sidebar-collapsed, 
    « .app-layout ». Le glissement de la barre dure 0.3s : la transition du bord
    gauche s'aligne dessus, sans quoi le volet sauterait. */
 .mes-slider {
-    /* Il commence sous la barre supérieure : sa bordure haute épouse la
-       bordure basse de celle-ci, qui reste lisible au-dessus. */
-    position: fixed; top: var(--topbar-height, 48px); right: 0; bottom: 0;
+    /* Il commence sous la barre supérieure et s'arrête au-dessus de la barre
+       inférieure : les deux restent lisibles, et le pied du volet — qui porte
+       « Enregistrer » — vient se coller juste au-dessus du bandeau UEMOA.
+       `--mes-pied` est posé à l'ouverture, d'après la hauteur réelle du
+       bandeau ; la valeur de repli sert le temps de la première mesure. */
+    position: fixed; top: var(--topbar-height, 48px); right: 0;
+    bottom: var(--mes-pied, 44px);
     left: var(--sidebar-width, 240px); transform: translateX(100%);
     background: var(--bg-card); box-shadow: -8px 0 30px rgba(0,0,0,.18);
     z-index: 1100; display: flex; flex-direction: column;
@@ -222,11 +227,21 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
     padding: .6rem 1rem; border-bottom: 1px solid var(--border);
     background: var(--bg);
 }
-/* Le fil occupe la largeur laissée par les actions, et ses quatre étapes s'y
-   partagent la place à parts égales : des chevrons qui se suivent, comme dans
-   le processus d'inspection, et non quatre pastilles serrées à gauche. */
-.mes-proc-barre .mes-proc-fil { flex: 1 1 auto; min-width: 0; gap: 0; }
-.mes-proc-barre .mes-proc-step { flex: 1 1 0; min-width: 0; }
+/* Fil au format du processus d'inspection : les chevrons se suivent sans
+   s'étirer sur toute la barre. Ils prennent tous la largeur du libellé le plus
+   long — la grille en `max-content` avec des colonnes `1fr` les égalise sur le
+   plus large, au lieu de laisser « Suivi des Mesures » plus étroit que
+   « Qualification et Mesures ». */
+.mes-proc-barre .mes-proc-fil {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    width: max-content; max-width: 100%;
+    flex: 0 1 auto; min-width: 0; gap: 0;
+    /* Les chevrons suivants débordent de 8 px sur leur voisin de gauche pour
+       s'emboîter ; le premier n'a personne à sa gauche. On lui rend ces 8 px
+       ici, sans quoi il serait plus étroit que les trois autres. */
+    padding-left: 8px;
+}
+.mes-proc-barre .mes-proc-step:first-child { margin-left: -8px; }
 .mes-proc-actions {
     display: flex; gap: .4rem; flex-wrap: wrap; margin-left: auto; flex: 0 0 auto;
     align-items: center;

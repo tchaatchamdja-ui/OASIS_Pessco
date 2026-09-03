@@ -133,17 +133,25 @@ function mesSectionCarence() {
     const prest = (MES_STATE.data.prestataires || []).find((p) => p.id === c.prestataire_id);
     const source = c.origine === 'CARE' ? (c.origine_libelle || 'Relevée par le module')
         : (c.origine === 'SAFA' ? 'RAMP Inspections' : 'Exécution de la Surveillance');
-    return mesSection('Carence', `<dl style="margin:0;">
-        ${mesLigneFiche('Référence', c.reference)}
-        ${mesLigneFiche('Objet', c.titre)}
-        ${mesLigneFiche('Description', c.description)}
-        ${mesLigneFiche('Prestataire', (prest && prest.nom) || c.prestataire_nom)}
-        ${mesLigneFiche('Source', source)}
-        ${mesLigneFiche('Criticité', c.criticite)}
-        ${mesLigneFiche('Ouverture', mesDate(c.date_ouverture))}
-        ${mesLigneFiche('Échéance', mesDate(c.date_due_cloture))}
-        ${mesLigneFiche('Statut (module d’origine)', mesStatutOrigine(c.statut))}
-    </dl>`);
+    // Deux colonnes pour les repères, qui tiennent sur une ligne chacun. La
+    // description, elle, court sur toute la largeur : la serrer sur une demie
+    // la rendait illisible.
+    return mesSection('Carence', `
+        <div class="mes-deux-colonnes">
+            <dl style="margin:0;">
+                ${mesLigneFiche('Référence', c.reference)}
+                ${mesLigneFiche('Objet', c.titre)}
+                ${mesLigneFiche('Prestataire', (prest && prest.nom) || c.prestataire_nom)}
+                ${mesLigneFiche('Source', source)}
+            </dl>
+            <dl style="margin:0;">
+                ${mesLigneFiche('Criticité', c.criticite)}
+                ${mesLigneFiche('Ouverture', mesDate(c.date_ouverture))}
+                ${mesLigneFiche('Échéance', mesDate(c.date_due_cloture))}
+                ${mesLigneFiche('Statut (module d’origine)', mesStatutOrigine(c.statut))}
+            </dl>
+        </div>
+        <dl style="margin:.4rem 0 0;">${mesLigneFiche('Description', c.description)}</dl>`);
 }
 
 // Section 1 — le plan d'actions soumis par le prestataire, tel que le module
@@ -201,10 +209,12 @@ function mesSectionInformations() {
             ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
                 onclick="mesRetirerPieceTraitement(${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
-    return mesSection('Informations additionnelles', `
+    // Même partage que le plan d'actions : ce qui est établi à gauche, ce qui
+    // l'appuie à droite.
+    return mesSection('Informations additionnelles', `<div class="mes-deux-colonnes">
         <div class="mes-champ">
             <label>Informations complémentaires recueillies sur la constatation</label>
-            <textarea class="mes-input" id="mesTrtInfos" rows="4" ${off}
+            <textarea class="mes-input" id="mesTrtInfos" rows="6" ${off}
                       placeholder="Ce que l’instruction a établi en plus du plan d’actions">${_mesEsc(t.informations || '')}</textarea>
         </div>
         <div class="mes-champ">
@@ -215,7 +225,8 @@ function mesSectionInformations() {
                 <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                         onclick="document.getElementById('mesTrtFichier').click()">
                     ${MES_ICONS.add} Ajouter une pièce</button>`}
-        </div>`);
+        </div>
+    </div>`);
 }
 
 // Section 3 — la décision sur la suite à donner. Elle engage l'autorité : elle

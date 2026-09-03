@@ -1160,9 +1160,23 @@ function mesDegeler(el) {
     el.classList.remove('mes-sans-glissement');
 }
 
+// Hauteur réelle du bandeau UEMOA, relevée sur la page : le volet s'arrête
+// juste au-dessus. La mesurer vaut mieux que la deviner — le bandeau grandit
+// d'une ligne dès que la fenêtre se resserre.
+function mesMesurerPied() {
+    const pied = document.querySelector('.oasis-module-footer');
+    const h = pied ? Math.round(pied.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty('--mes-pied', `${h || 44}px`);
+}
+
+// Le bandeau passe sur deux lignes quand la fenêtre se resserre : le volet
+// suit, sinon il le recouvrirait de nouveau.
+window.addEventListener('resize', () => { if (MES_STATE.sliderOpen) mesMesurerPied(); });
+
 function mesAfficherSlider(o) {
     const el = document.getElementById('mesSlider');
     if (!el) return;
+    mesMesurerPied();
     el.innerHTML = mesFormulaireMesure();
     const fond = document.getElementById('mesSliderOverlay');
     const sansAnimation = !!(o && o.anime === false);

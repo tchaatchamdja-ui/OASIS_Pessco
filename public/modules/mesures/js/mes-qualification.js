@@ -13,6 +13,7 @@
 const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
     comite_code: '', membres: [], reunions: [],
     infraction_constituee: false, infraction_non_constituee: false,
+    renvoi_demande: false, renvoi_motif: '',
     nature: '', caracterisation: '', circonstances: '',
     mesures: [], pieces: [],
 };
@@ -106,6 +107,7 @@ function mesSectionQualification() {
     const constituee = !!q.infraction_constituee;
 
     const nonConstituee = !!q.infraction_non_constituee;
+    const renvoi = !!q.renvoi_demande;
 
     // Les réunions de l'instance : ce que chaque séance a produit. Autant de
     // blocs que de séances tenues.
@@ -160,7 +162,17 @@ function mesSectionQualification() {
                        onchange="mesQualBasculerNonInfraction(this.checked)">
                 <span>Infraction non constituée</span>
             </label>
+            <label class="mes-case">
+                <input type="checkbox" id="mesQualRenvoi" ${renvoi ? 'checked' : ''} ${off}
+                       onchange="mesQualBasculerRenvoi(this.checked)">
+                <span>Renvoyer pour des investigations complémentaires</span>
+            </label>
         </div>
+        ${renvoi ? `<div class="mes-champ" style="margin-top:.6rem;margin-bottom:0;">
+            <label>Investigations complémentaires demandées</label>
+            <textarea class="mes-input" id="mesQualRenvoiMotif" rows="4" ${off}
+                      placeholder="Ce que l’instance attend de l’équipe d’investigation">${_mesEsc(q.renvoi_motif || '')}</textarea>
+        </div>` : ''}
         ${constituee ? `
         <div class="mes-champ" style="margin-top:.6rem;">
             <label>Nature de l’infraction</label>
@@ -316,6 +328,8 @@ function mesCollecterQualification() {
         })),
         infraction_constituee: !!(coche && coche.checked),
         infraction_non_constituee: !!(document.getElementById('mesQualNonConstituee') || {}).checked,
+        renvoi_demande: !!(document.getElementById('mesQualRenvoi') || {}).checked,
+        renvoi_motif: (document.getElementById('mesQualRenvoiMotif') || {}).value || '',
         nature: txt('mesQualNature'),
         caracterisation: txt('mesQualCaracterisation'),
         circonstances: txt('mesQualCirconstances'),
@@ -373,13 +387,18 @@ const mesQualRetirerPiece = (i) => mesQualModifier((q) => { q.pieces = q.pieces.
 
 // Cocher « Infraction constituée » ouvre les trois champs de qualification et
 // la section des mesures ; la décocher les referme.
+// Les trois faces d'une même décision : cocher l'une décoche les deux autres.
 const mesQualBasculerInfraction = (coche) => mesQualModifier((q) => {
     q.infraction_constituee = !!coche;
-    if (coche) q.infraction_non_constituee = false;
+    if (coche) { q.infraction_non_constituee = false; q.renvoi_demande = false; }
 });
 const mesQualBasculerNonInfraction = (coche) => mesQualModifier((q) => {
     q.infraction_non_constituee = !!coche;
-    if (coche) q.infraction_constituee = false;
+    if (coche) { q.infraction_constituee = false; q.renvoi_demande = false; }
+});
+const mesQualBasculerRenvoi = (coche) => mesQualModifier((q) => {
+    q.renvoi_demande = !!coche;
+    if (coche) { q.infraction_constituee = false; q.infraction_non_constituee = false; }
 });
 
 // Changer de catégorie vide le type : les types sont propres à leur catégorie.
@@ -404,6 +423,66 @@ async function mesQualTeleverser(fichiers) {
     mesQualRedessiner();
 }
 
+// Actions de l'étape, à l'extrême droite du fil. Chacune n'est offerte que si
+// la case qui la justifie est cochée : on ne renvoie pas sans l'avoir demandé,
+// on ne classe pas une infraction constituée, on ne suit pas ce qui ne l'est
+// pas.
+function mesActionsQualification() {
+    const q = mesQualification();
+    if (!mesPeutDecider()) return '';
+    const bouton = (actif, classe, aide, geste, libelle) => `<button class="btn btn-sm ${classe}"
+        ${actif ? '' : 'disabled'} title="${_mesAttr(aide)}"
+        onclick="${geste}">${_mesEsc(libelle)}</button>`;
+    return [
+        bouton(!!q.renvoi_demande, 'mes-btn-investiguer',
+            'Renvoie la carence à l’étape Investigations pour un complément d’enquête. '
+            + 'Cochez « Renvoyer pour des investigations complémentaires » pour l’activer.',
+            'mesQualRenvoyer()', 'Renvoyer'),
+        bouton(!!q.infraction_non_constituee, 'mes-btn-classer-vert',
+            'Classe la carence : aucune mesure ne sera prise. '
+            + 'Cochez « Infraction non constituée » pour l’activer.',
+            'mesQualClasser()', 'Classer'),
+        bouton(!!q.infraction_constituee, 'mes-btn-mesure',
+            'Passe le traitement à l’étape « Suivi des Mesures ». '
+            + 'Cochez « Infraction constituée » pour l’activer.',
+            'mesQualSuivi()', 'Suivi'),
+    ].join('');
+}
+
+// Les trois issues enregistrent d'abord ce qui est saisi : la décision s'appuie
+// dessus, et le serveur relit la qualification pour vérifier la case cochée.
+async function mesQualIssue(chemin, question, fait) {
+    const c = MES_STATE.carenceEnCours;
+    if (!c) return;
+    if (!confirm(question)) return;
+    mesMajQualification();
+    try {
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/qualification`, {
+            method: 'PUT', body: JSON.stringify(mesQualification()),
+        });
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/qualification/${chemin}`, { method: 'POST' });
+        MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+        MES_STATE.etapeVue = '';
+        MES_STATE.data.constatations = await mesApi('/constatations');
+        mesToast(fait);
+        mesAfficherSlider({ anime: false });
+        if (MES_STATE.currentPage === 'critiques') mesRenderPage();
+    } catch (e) { mesToast(e.message || 'Opération impossible', 'error'); }
+}
+
+const mesQualRenvoyer = () => mesQualIssue('renvoyer',
+    'Renvoyer la carence pour des investigations complémentaires ?\n'
+    + 'L’étape Investigations se rouvre et l’équipe y lira ce qui lui est demandé.',
+    'Carence renvoyée en investigation');
+
+const mesQualClasser = () => mesQualIssue('classer',
+    'Classer la carence ?\nL’infraction n’étant pas constituée, aucune mesure ne sera prise.',
+    'Carence classée');
+
+const mesQualSuivi = () => mesQualIssue('suivi',
+    'Passer au suivi des mesures ?',
+    'Traitement passé au suivi des mesures');
+
 async function mesEnregistrerQualification() {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
@@ -422,7 +501,8 @@ Object.assign(window, {
     mesQualAjouterMembre, mesQualRetirerMembre,
     mesQualAjouterReunion, mesQualRetirerReunion,
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
-    mesQualBasculerInfraction, mesQualBasculerNonInfraction,
+    mesQualBasculerInfraction, mesQualBasculerNonInfraction, mesQualBasculerRenvoi,
+    mesActionsQualification, mesQualRenvoyer, mesQualClasser, mesQualSuivi,
     mesQualTeleverser, mesQualRetirerPiece,
     mesMajQualification, mesEnregistrerQualification,
 });

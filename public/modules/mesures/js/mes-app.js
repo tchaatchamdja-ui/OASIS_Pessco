@@ -1434,6 +1434,7 @@ function mesFormulaireMesure() {
             ${mesSectionQualification()}
             ${mesSectionMesuresArretees()}` : ''}
         ${etape === 'investigations' ? `
+            ${mesRenvoisInvestigation()}
             ${mesSectionEquipe()}
             ${mesSectionTravaux()}
             ${mesSectionAutresElements()}

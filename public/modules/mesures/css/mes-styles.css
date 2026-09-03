@@ -347,6 +347,11 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 /* Les deux faces d'une même décision, côte à côte : cocher l'une décoche
    l'autre, et les voir ensemble le fait comprendre avant tout essai. */
 .mes-cases-exclusives { display: flex; gap: 1.6rem; flex-wrap: wrap; }
+/* Un renvoi est une demande faite à l'équipe : il se voit avant les sections,
+   dans la couleur qui dit ailleurs le refus. */
+.mes-note-renvoi {
+    background: #fef3c7; border-left-color: #d97706; color: #78350f;
+}
 /* Table dont l'entête reprend le bandeau clair des blocs, plutôt que le fond
    de thème des tables d'écran : elle vit dans une section, pas dans une page. */
 .mes-table-claire th {

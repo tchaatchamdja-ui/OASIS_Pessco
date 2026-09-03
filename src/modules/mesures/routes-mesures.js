@@ -255,6 +255,7 @@ module.exports = function register(app, deps, M) {
       qualification: (t && t.qualification) || {
         comite_code: '', membres: [], reunions: [],
         infraction_constituee: false, infraction_non_constituee: false,
+        renvoi_demande: false, renvoi_motif: '',
         nature: '', caracterisation: '', circonstances: '',
         mesures: [], pieces: [],
       },
@@ -413,8 +414,13 @@ module.exports = function register(app, deps, M) {
     // Les deux faces d'une même décision : elles ne se cochent pas ensemble.
     // « Constituée » l'emporte si les deux arrivent — c'est la seule des deux
     // qui ouvre des champs, et la laisser gagner ne perd aucune saisie.
+    // Trois faces d'une même décision — l'infraction est constituée, elle ne
+    // l'est pas, ou l'instance veut en savoir plus avant de trancher. Elles
+    // s'excluent ; la première l'emporte si plusieurs arrivent ensemble, car
+    // c'est la seule qui ouvre des champs.
     const constituee = vrai(d.infraction_constituee);
     const nonConstituee = !constituee && vrai(d.infraction_non_constituee);
+    const renvoi = !constituee && !nonConstituee && vrai(d.renvoi_demande);
     return {
       comite_code: texte(d.comite_code),
       membres: Array.isArray(d.membres)
@@ -423,6 +429,8 @@ module.exports = function register(app, deps, M) {
         ? d.reunions.map(reunion).filter((r) => r.date || r.objet || r.resultat) : [],
       infraction_constituee: constituee,
       infraction_non_constituee: nonConstituee,
+      renvoi_demande: renvoi,
+      renvoi_motif: renvoi ? texte(d.renvoi_motif) : '',
       // Les trois qualifications ne valent que si l'infraction est constituée :
       // les conserver sur un dossier classé laisserait croire le contraire.
       nature: constituee ? texte(d.nature) : '',
@@ -450,6 +458,86 @@ module.exports = function register(app, deps, M) {
     }
     db.update('traitements', t.id, { qualification: q });
     return res.json({ status: 'ok' });
+  });
+
+  // ── Issues de l'étape « Qualification et Mesures » ──
+  // Trois sorties : renvoyer pour complément d'enquête, classer faute
+  // d'infraction, ou passer au suivi des mesures. Chacune fait avancer — ou
+  // reculer — le fil : elles relèvent du validateur, comme les décisions.
+  const carenceAQualifier = (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) { res.status(404).json({ error: 'Carence non trouvée' }); return null; }
+    if (!R.canValidate(req.user, perimetre(c))) { refuser(res, 'Décision réservée au validateur'); return null; }
+    const t = traitementDe(c.id);
+    if (!t || t.etape !== 'qualification') {
+      res.status(409).json({ error: 'La carence n’est pas à l’étape Qualification et Mesures' });
+      return null;
+    }
+    return { c, t };
+  };
+
+  // Renvoi : l'instance veut un complément d'enquête. Le fil recule d'une
+  // étape, l'investigation redevient modifiable, et le motif du renvoi s'y
+  // affiche — l'équipe doit savoir ce qui lui est demandé.
+  app.post(`${M}/constatations/:id/qualification/renvoyer`, requireAuth, (req, res) => {
+    const ctx = carenceAQualifier(req, res);
+    if (!ctx) return undefined;
+    const q = ctx.t.qualification || {};
+    if (!q.renvoi_demande) {
+      return res.status(409).json({ error: 'Le renvoi n’a pas été demandé par l’instance' });
+    }
+    const inv = ctx.t.investigation || {};
+    const renvois = (inv.renvois || []).concat([{
+      motif: q.renvoi_motif || '',
+      renvoye_le: db.now(),
+      renvoye_par: req.user.username,
+    }]);
+    db.update('traitements', ctx.t.id, {
+      etape: 'investigations',
+      // L'investigation se rouvre : la marque de soumission tombe.
+      investigation: { ...inv, soumise_le: '', soumise_par: '', renvois },
+      qualification: { ...q, renvoi_demande: false, renvoi_motif: '' },
+    });
+    return res.status(201).json({ status: 'ok', etape: 'investigations' });
+  });
+
+  // Classement : l'infraction n'est pas constituée, aucune mesure ne sera
+  // prise. La carence est close ici, comme au classement de la suite à donner.
+  app.post(`${M}/constatations/:id/qualification/classer`, requireAuth, (req, res) => {
+    const ctx = carenceAQualifier(req, res);
+    if (!ctx) return undefined;
+    const q = ctx.t.qualification || {};
+    if (!q.infraction_non_constituee) {
+      return res.status(409).json({ error: 'L’infraction n’a pas été déclarée non constituée' });
+    }
+    if (db.list('mesures').some((m) => m.constatation_id === ctx.c.id)) {
+      return res.status(400).json({ error: 'Une mesure a déjà été prise sur cette carence' });
+    }
+    if (!db.list('classements').some((x) => x.constatation_id === ctx.c.id)) {
+      db.insert('classements', {
+        id: db.uid('cla'), constatation_id: ctx.c.id,
+        motif: texte(req.body && req.body.motif) || 'Infraction non constituée',
+        date_cloture: db.now().slice(0, 10),
+        classe_par: req.user.username, date_creation: db.now(),
+      });
+    }
+    db.update('traitements', ctx.t.id, {
+      classe_le: db.now(), classe_par: req.user.username,
+    });
+    return res.status(201).json({ status: 'ok' });
+  });
+
+  app.post(`${M}/constatations/:id/qualification/suivi`, requireAuth, (req, res) => {
+    const ctx = carenceAQualifier(req, res);
+    if (!ctx) return undefined;
+    const q = ctx.t.qualification || {};
+    if (!q.infraction_constituee) {
+      return res.status(409).json({ error: 'Le suivi ne s’ouvre que sur une infraction constituée' });
+    }
+    db.update('traitements', ctx.t.id, {
+      etape: 'suivi', qualifie_le: db.now(), qualifie_par: req.user.username,
+    });
+    return res.status(201).json({ status: 'ok', etape: 'suivi' });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

@@ -113,6 +113,9 @@ function mesFilAvancement() {
 function mesActionsEtape() {
     const etape = mesEtapeCourante();
     if (etape === 'investigations') return mesActionsInvestigation();
+    if (etape === 'qualification') {
+        return typeof mesActionsQualification === 'function' ? mesActionsQualification() : '';
+    }
     if (etape !== 'suite') return '';
     const t = MES_STATE.traitement || {};
     if (t.decision) {
@@ -351,6 +354,19 @@ function mesPiecesHtml(cle, liste, off) {
             <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                     onclick="document.getElementById('mesInvFichier_${cle}').click()">
                 ${MES_ICONS.add} Ajouter une pièce</button>`}`;
+}
+
+// Ce que l'instance décisionnelle a demandé en renvoyant la carence. L'équipe
+// doit le lire avant de reprendre : c'est la commande qui lui est faite.
+function mesRenvoisInvestigation() {
+    const renvois = (mesInvestigation().renvois || []);
+    if (!renvois.length) return '';
+    return renvois.slice().reverse().map((r) => `
+        <div class="mes-note mes-note-renvoi">
+            <strong>Renvoyée pour investigations complémentaires</strong>
+            — ${_mesEsc(mesDate(r.renvoye_le))}${r.renvoye_par ? ` · ${_mesEsc(r.renvoye_par)}` : ''}
+            ${r.motif ? `<div style="margin-top:.3rem;white-space:pre-wrap;">${_mesEsc(r.motif)}</div>` : ''}
+        </div>`).join('');
 }
 
 // Section A — qui a mené l'investigation.
@@ -688,5 +704,5 @@ Object.assign(window, {
     mesInvAjouterEnqueteur, mesInvRetirerEnqueteur,
     mesInvAjouterTravail, mesInvRetirerTravail, mesInvMajTitre,
     mesInvTeleverser, mesInvRetirerPiece, mesEnregistrerInvestigation,
-    mesActionsInvestigation, mesSoumettreInvestigation,
+    mesActionsInvestigation, mesSoumettreInvestigation, mesRenvoisInvestigation,
 });

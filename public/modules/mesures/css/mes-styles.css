@@ -143,6 +143,18 @@
 .mes-table tbody tr:hover { background: var(--mes-accent-bg); }
 .mes-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
 .mes-table-wrap { overflow-x: auto; }
+/* Colonne « Catégorie / Type / Description » : trois lignes qui se lisent de
+   la plus générale à la plus précise. Elle garde le quart de la table — c'est
+   elle qui dit ce que la mesure impose. */
+/* Le quart de la table lui revient : c'est la colonne qui dit ce que la mesure
+   impose. Un « min-width » sur l'entête ne suffisait pas — en disposition
+   automatique le navigateur ne le tient pas — d'où la largeur en pourcentage. */
+.mes-cell-mesure { min-width: 0; }
+.mes-cell-categorie { font-size: .78rem; color: var(--text-muted); }
+.mes-cell-type { font-weight: 600; }
+.mes-cell-description { font-size: .78rem; color: var(--text-muted); margin-top: .1rem; }
+/* Ce que le statut appelle comme suite, sous son badge. */
+.mes-cell-suite { font-size: .72rem; color: var(--text-muted); margin-top: .15rem; }
 
 /* ── Badges de statut et de criticité ── */
 .mes-badge {

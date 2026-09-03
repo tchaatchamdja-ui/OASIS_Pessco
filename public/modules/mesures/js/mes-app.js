@@ -210,6 +210,26 @@ const mesDate = (v) => (v ? String(v).slice(0, 10).split('-').reverse().join('/'
 const MES_CLOS = ['cloturee', 'annulee'];
 const mesEnRetard = (m) => !!m.date_echeance && m.date_echeance < mesJour() && !MES_CLOS.includes(m.statut);
 
+// Ce que le statut d'une mesure dit de la suite : à qui la main, et depuis
+// quand. Le badge seul laissait deviner ce que « Projet » ou « En cours »
+// appelait comme geste.
+const MES_STATUT_SUITE = {
+    projet: 'Arrêtée, reste à notifier',
+    notifiee: 'Notifiée au prestataire',
+    en_cours: 'En cours d’exécution',
+    cloturee: 'Exécutée et close',
+    annulee: 'Abandonnée sans suite',
+};
+
+function mesStatutMesure(m) {
+    const suite = MES_STATUT_SUITE[m.statut] || '';
+    const quand = m.statut === 'cloturee' ? m.date_cloture
+        : (m.statut === 'notifiee' ? m.date_notification : '');
+    return `${mesBadgeStatut(m.statut)}
+        ${suite ? `<div class="mes-cell-suite">${_mesEsc(suite)}${quand
+            ? ` · ${_mesEsc(mesDate(quand))}` : ''}</div>` : ''}`;
+}
+
 function mesBadgeStatut(statut) {
     return `<span class="mes-badge ${_mesAttr(statut)}">${_mesEsc(MES_STATUTS[statut] || statut)}</span>`;
 }
@@ -697,7 +717,7 @@ function mesMesuresFiltrees() {
 function mesLignesMesures() {
     const liste = mesMesuresFiltrees();
     if (!liste.length) {
-        return `<tr><td colspan="9" class="mes-table-vide">Aucune mesure ne correspond.</td></tr>`;
+        return `<tr><td colspan="8" class="mes-table-vide">Aucune mesure ne correspond.</td></tr>`;
     }
     return liste.map((m) => {
         const retard = mesEnRetard(m);
@@ -712,18 +732,21 @@ function mesLignesMesures() {
             <td><strong>${_mesEsc(m.reference)}</strong>${m.constatation_ref
                 ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(m.constatation_ref)}</div>` : ''}</td>
             <td>${_mesEsc(m.prestataire_nom || '—')}</td>
-            <td>${_mesEsc(mesLibelleCategorie(m.categorie))}</td>
-            <td>${_mesEsc(mesLibelleType(m.type_mesure))}${m.description || m.objet
-                // La description de la sanction dit ce qu'elle impose : elle
-                // passe devant l'objet, qui redit la carence déjà nommée par sa
-                // référence en première colonne.
-                ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(m.description || m.objet)}</div>` : ''}</td>
+            <td class="mes-cell-mesure">
+                <div class="mes-cell-categorie">${_mesEsc(mesLibelleCategorie(m.categorie))}</div>
+                <div class="mes-cell-type">${_mesEsc(mesLibelleType(m.type_mesure) || '—')}</div>
+                ${m.description || m.objet
+                    // La description de la sanction dit ce qu'elle impose ;
+                    // l'objet ne sert que si elle manque, la carence étant déjà
+                    // nommée par sa référence en première colonne.
+                    ? `<div class="mes-cell-description">${_mesEsc(m.description || m.objet)}</div>` : ''}
+            </td>
             <td>${m.date_sanction ? mesDate(m.date_sanction) : mesDate(m.date_emission)}</td>
             <td>${portee}</td>
             <td>${retard
                 ? `<span class="mes-badge retard">${mesDate(m.date_echeance)}</span>`
                 : mesDate(m.date_echeance)}</td>
-            <td>${mesBadgeStatut(m.statut)}</td>
+            <td>${mesStatutMesure(m)}</td>
             <td class="mes-actions">
                 <div class="mes-actions-pile">
                     <button class="btn btn-sm mes-btn-mesure" onclick="mesFaireLeSuivi('${m.id}')"
@@ -790,15 +813,14 @@ function mesRenderMesures() {
         <div class="mes-table-wrap">
             <table class="mes-table">
                 <thead><tr>
-                    <th style="width:130px;">Référence</th>
-                    <th style="width:170px;">Prestataire</th>
-                    <th style="width:150px;">Catégorie</th>
-                    <th>Type et objet</th>
-                    <th style="width:110px;">Date de sanction</th>
-                    <th style="width:130px;">Portée</th>
-                    <th style="width:110px;">Échéance</th>
-                    <th style="width:100px;">Statut</th>
-                    <th style="width:150px;text-align:center;">Actions</th>
+                    <th style="width:120px;">Référence</th>
+                    <th style="width:150px;">Prestataire</th>
+                    <th style="width:28%;">Catégorie / Type / Description</th>
+                    <th style="width:105px;">Date de sanction</th>
+                    <th style="width:120px;">Portée</th>
+                    <th style="width:105px;">Échéance</th>
+                    <th style="width:150px;">Statut</th>
+                    <th style="width:140px;text-align:center;">Actions</th>
                 </tr></thead>
                 <tbody data-corps="mesures">${mesLignesMesures()}</tbody>
             </table>
@@ -1674,6 +1696,7 @@ Object.assign(window, {
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
     mesResetFiltresMesures, mesResetFiltresCritiques,
     mesOuvrirMesure, mesFermerSlider, mesAfficherSlider, mesEnregistrerMesure, mesFaireLeSuivi,
+    mesStatutMesure,
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,
     mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation,

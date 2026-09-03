@@ -78,7 +78,11 @@ module.exports = function register(app, deps, M) {
     const c = (index || indexConstatations()).get(m.constatation_id) || {};
     return {
       ...m,
-      prestataire_nom: p.nom || '',
+      // Le référentiel nomme le prestataire quand la mesure l'identifie. Une
+      // carence venue de « RAMP Inspections » nomme parfois l'exploitant sans
+      // le rattacher au référentiel : le nom retenu à la carence prend alors
+      // le relais, plutôt que de laisser la colonne vide.
+      prestataire_nom: p.nom || m.prestataire_nom || c.prestataire_nom || '',
       prestataire_trigramme: p.trigramme || '',
       constatation_ref: c.reference || '',
       constatation_criticite: c.criticite || '',
@@ -575,6 +579,9 @@ module.exports = function register(app, deps, M) {
         ...Object.fromEntries(CHAMPS.map((k) => [k, LISTES.includes(k) ? [] : ''])),
         constatation_id: ctx.c.id,
         prestataire_id: ctx.c.prestataire_id || '',
+        // Nom porté par la carence : il sert quand l'exploitant n'est pas
+        // rattaché au référentiel.
+        prestataire_nom: ctx.c.prestataire_nom || '',
         categorie: m.categorie || 'administrative',
         type_mesure: m.type_mesure || '',
         objet: ctx.c.titre || ctx.c.reference || '',

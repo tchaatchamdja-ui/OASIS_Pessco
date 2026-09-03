@@ -311,8 +311,33 @@ module.exports = function register(app, deps, M) {
     if (!t || t.decision !== 'investiguer') {
       return res.status(409).json({ error: 'La carence n’est pas à l’étape Investigations' });
     }
+    // Une investigation soumise est close : elle se consulte, elle ne se
+    // réécrit plus.
+    const avant = t.investigation || {};
+    if (avant.soumise_le) return res.status(409).json({ error: 'Investigation soumise : elle ne se modifie plus' });
     db.update('traitements', t.id, { investigation: investigation(req.body || {}) });
     return res.json({ status: 'ok' });
+  });
+
+  // Soumettre l'investigation : elle est close, ses éléments ne se réécrivent
+  // plus, et le traitement passe à « Qualification et Mesures ». Comme la
+  // décision qui l'avait ouverte, ce geste fait avancer le fil : il relève du
+  // validateur.
+  app.post(`${M}/constatations/:id/investigation/soumettre`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Soumission réservée au validateur');
+    const t = traitementDe(c.id);
+    if (!t || t.decision !== 'investiguer' || t.etape !== 'investigations') {
+      return res.status(409).json({ error: 'La carence n’est pas à l’étape Investigations' });
+    }
+    const inv = t.investigation || {};
+    if (inv.soumise_le) return res.status(409).json({ error: 'Investigation déjà soumise' });
+    db.update('traitements', t.id, {
+      etape: 'qualification',
+      investigation: { ...inv, soumise_le: db.now(), soumise_par: req.user.username },
+    });
+    return res.status(201).json({ status: 'ok', etape: 'qualification' });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

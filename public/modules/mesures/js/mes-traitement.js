@@ -79,6 +79,7 @@ function mesEtapeInfo(cle) {
     if (cle === 'investigations') {
         const inv = (t.investigation || {});
         const n = (inv.travaux || []).length;
+        if (inv.soumise_le) return `Soumise le ${mesDate(inv.soumise_le)}${inv.soumise_par ? ` par ${inv.soumise_par}` : ''}`;
         if (!n && !(inv.equipe || []).length) return 'Investigation à ouvrir';
         return `${(inv.equipe || []).length} enquêteur(s) · ${n} investigation(s) consignée(s)`;
     }
@@ -110,7 +111,9 @@ function mesFilAvancement() {
 // Actions de l'étape regardée. Sur « Suite à donner » : enregistrer ce qui a
 // été recueilli, et arrêter la suite — les trois décisions possibles.
 function mesActionsEtape() {
-    if (mesEtapeCourante() !== 'suite') return '';
+    const etape = mesEtapeCourante();
+    if (etape === 'investigations') return mesActionsInvestigation();
+    if (etape !== 'suite') return '';
     const t = MES_STATE.traitement || {};
     if (t.decision) {
         const d = MES_DECISIONS.find((x) => x.cle === t.decision) || {};
@@ -300,6 +303,7 @@ function mesBarreInferieure(ro, champsMesure, etape) {
         </div>`;
     }
     if (!mesPeutEcrire() || !['suite', 'investigations'].includes(etape)) return '';
+    if (etape === 'investigations' && mesInvSoumise()) return '';
     // Chaque étape enregistre ce qui lui est propre : les informations
     // recueillies pour la suite à donner, les actes d'enquête pour l'autre.
     const geste = etape === 'investigations' ? 'mesEnregistrerInvestigation()' : 'mesEnregistrerTraitement()';
@@ -320,6 +324,11 @@ function mesBarreInferieure(ro, champsMesure, etape) {
 
 const mesInvestigation = () => (MES_STATE.traitement || {}).investigation
     || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' };
+
+// Une investigation soumise est close : tous ses champs passent en lecture,
+// et rien ne s'y ajoute plus.
+const mesInvSoumise = () => !!mesInvestigation().soumise_le;
+const mesInvModifiable = () => mesPeutEcrire() && !mesInvSoumise();
 
 // Liste de pièces, réutilisée par les trois endroits qui en portent : un
 // travail d'investigation, les autres éléments collectés, et le formulaire de
@@ -346,7 +355,7 @@ function mesPiecesHtml(cle, liste, off) {
 // Section A — qui a mené l'investigation.
 function mesSectionEquipe() {
     const inv = mesInvestigation();
-    const off = mesPeutEcrire() ? '' : 'disabled';
+    const off = mesInvModifiable() ? '' : 'disabled';
     const lignes = (inv.equipe || []).map((p, i) => `
         <tr data-rang="${i}">
             <td><input class="mes-input" data-champ="nom" value="${_mesAttr(p.nom || '')}" ${off}></td>
@@ -372,7 +381,7 @@ function mesSectionEquipe() {
 // tient lieu de titre du bloc.
 function mesSectionTravaux() {
     const inv = mesInvestigation();
-    const off = mesPeutEcrire() ? '' : 'disabled';
+    const off = mesInvModifiable() ? '' : 'disabled';
     const types = mesTypesInvestigation();
     const blocs = (inv.travaux || []).map((t, i) => {
         const titre = (types.find((x) => x.code === t.type) || {}).libelle || 'Investigation';
@@ -414,7 +423,7 @@ function mesSectionTravaux() {
 // Section C — ce qui a été recueilli hors des travaux ci-dessus.
 function mesSectionAutresElements() {
     const inv = mesInvestigation();
-    const off = mesPeutEcrire() ? '' : 'disabled';
+    const off = mesInvModifiable() ? '' : 'disabled';
     return mesSection('C', 'Autres éléments collectés', `<div class="mes-deux-colonnes">
         <div class="mes-champ">
             <label>Éléments recueillis</label>
@@ -431,7 +440,7 @@ function mesSectionAutresElements() {
 // Section D — le rapport sur le cas.
 function mesSectionRapport() {
     const inv = mesInvestigation();
-    const off = mesPeutEcrire() ? '' : 'disabled';
+    const off = mesInvModifiable() ? '' : 'disabled';
     return mesSection('D', 'Résultat de l’investigation', `
         <div class="mes-champ">
             <label>Rapport sur le cas</label>
@@ -539,6 +548,42 @@ async function mesInvTeleverser(cle, fichiers) {
     mesRedessinerInvestigation();
 }
 
+// Actions de l'étape « Investigations », à l'extrême droite du fil : soumettre
+// clôt l'enquête et pousse le traitement à l'étape suivante.
+function mesActionsInvestigation() {
+    const inv = mesInvestigation();
+    if (inv.soumise_le) {
+        return `<span class="mes-badge cloturee"
+            title="${_mesAttr(`Soumise le ${mesDate(inv.soumise_le)}${
+                inv.soumise_par ? ` par ${inv.soumise_par}` : ''}`)}">Investigation soumise</span>`;
+    }
+    if (!mesPeutDecider()) return '';
+    return `<button class="btn btn-sm mes-btn-mesure"
+        title="Clôt l’investigation et passe à « Qualification et Mesures ». Les éléments consignés ne se modifieront plus."
+        onclick="mesSoumettreInvestigation()">${MES_ICONS.check} Soumettre</button>`;
+}
+
+async function mesSoumettreInvestigation() {
+    const c = MES_STATE.carenceEnCours;
+    if (!c) return;
+    if (!confirm('Soumettre l’investigation ?\nElle sera close, ses éléments ne se modifieront plus, '
+        + 'et le traitement passera à « Qualification et Mesures ».')) return;
+    // Ce qui est saisi part avant la soumission : elle le fige.
+    mesMajInvestigation();
+    try {
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/investigation`, {
+            method: 'PUT', body: JSON.stringify(mesInvestigation()),
+        });
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/investigation/soumettre`, { method: 'POST' });
+        MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+        MES_STATE.etapeVue = '';
+        MES_STATE.data.constatations = await mesApi('/constatations');
+        mesToast('Investigation soumise');
+        mesAfficherSlider({ anime: false });
+        if (MES_STATE.currentPage === 'critiques') mesRenderPage();
+    } catch (e) { mesToast(e.message || 'Soumission impossible', 'error'); }
+}
+
 async function mesEnregistrerInvestigation() {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
@@ -642,4 +687,5 @@ Object.assign(window, {
     mesInvAjouterEnqueteur, mesInvRetirerEnqueteur,
     mesInvAjouterTravail, mesInvRetirerTravail, mesInvMajTitre,
     mesInvTeleverser, mesInvRetirerPiece, mesEnregistrerInvestigation,
+    mesActionsInvestigation, mesSoumettreInvestigation,
 });

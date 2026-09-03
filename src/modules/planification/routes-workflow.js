@@ -149,18 +149,25 @@ module.exports = function register(app, deps, M) {
     return res.json({ ok: true, parent_plan_id: child.parent_plan_id });
   });
 
-  app.get(`${M}/plans/:id/workflow`, requireAuth, (req, res) =>
+  // Le circuit, les versions et le fil de discussion suivent le sort du plan :
+  // les lire suppose d'avoir accès au plan, y écrire suppose d'y contribuer.
+  // Ces quatre routes n'opposaient aucun refus — n'importe quelle session
+  // écrivait dans le fil d'un plan et en effaçait les avis.
+  const lecturePlan = (req, res, next) => (D.peutLire(req, D.planDe(req.params.id)) ? next() : D.refus(res));
+  const ecriturePlan = (req, res, next) => (D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id)) ? next() : D.refus(res));
+
+  app.get(`${M}/plans/:id/workflow`, requireAuth, lecturePlan, (req, res) =>
     res.json(db.list('workflow').filter((w) => w.plan_id === req.params.id)
       .map((w) => ({ ...w, user_display_name: nomComplet(w.user) }))));
 
   // ── Versions & commentaires ──
-  app.get(`${M}/plans/:id/versions`, requireAuth, (req, res) =>
+  app.get(`${M}/plans/:id/versions`, requireAuth, lecturePlan, (req, res) =>
     res.json(db.list('versions').filter((v) => v.plan_id === req.params.id)));
 
-  app.post(`${M}/plans/:id/versions`, requireAuth, (req, res) =>
+  app.post(`${M}/plans/:id/versions`, requireAuth, ecriturePlan, (req, res) =>
     res.json(db.createIn('versions', { ...(req.body || {}), plan_id: req.params.id, auteur: req.user.username })));
 
-  app.get(`${M}/plans/:id/commentaires`, requireAuth, (req, res) => {
+  app.get(`${M}/plans/:id/commentaires`, requireAuth, lecturePlan, (req, res) => {
     // Le fil reprend toutes les versions du plan, depuis la première.
     const chaine = D.familleDuPlan(req.params.id);
     const versions = {};
@@ -179,9 +186,17 @@ module.exports = function register(app, deps, M) {
     res.json([...commentaires, ...decisions].sort((a, b) => String(tri(a)).localeCompare(String(tri(b)))));
   });
 
-  app.post(`${M}/plans/:id/commentaires`, requireAuth, (req, res) =>
+  app.post(`${M}/plans/:id/commentaires`, requireAuth, ecriturePlan, (req, res) =>
     res.json(db.createIn('commentaires', { ...(req.body || {}), plan_id: req.params.id, auteur: req.user.username })));
 
-  app.delete(`${M}/commentaires/:id`, requireAuth, (req, res) =>
-    res.json({ ok: db.deleteIn('commentaires', req.params.id) }));
+  // Retirer un avis du fil : son auteur, ou le Gestionnaire du plan. Un
+  // contributeur voisin n'efface pas la remarque d'un autre.
+  app.delete(`${M}/commentaires/:id`, requireAuth, (req, res) => {
+    const c = db.list('commentaires').find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'not_found' });
+    const plan = D.planDe(c.plan_id);
+    const sien = (c.auteur || c.user_id) === req.user.username;
+    if (!D.peut(req, sien ? 'CONTRIBUTEUR' : 'GESTIONNAIRE', plan)) return D.refus(res);
+    return res.json({ ok: db.deleteIn('commentaires', req.params.id) });
+  });
 };

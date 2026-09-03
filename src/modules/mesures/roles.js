@@ -47,11 +47,24 @@ function perimetreDuPrestataire(prestataireId, referentiels) {
   return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '' };
 }
 
-const canValidate = (user, cible) => peut(user, 'VALIDATEUR', cible && cible.domaine_id, cible && cible.secteur_id);
-const canContribute = (user, cible) => peut(user, 'CONTRIBUTEUR', cible && cible.domaine_id, cible && cible.secteur_id);
+// Les mesures d'application sont l'affaire de l'Autorité : le module n'a pas
+// d'écran côté organisme, et ses données — suspensions, amendes, saisines de
+// tous les prestataires — n'ont pas à lui être servies. Le socle rend
+// « Lecteur » par défaut, ce qui, sans cette garde, ouvrait le module à
+// quiconque possède une session.
+const estPrestataire = (user) => !!user
+  && ['PRESTATAIRE', 'ADMIN_PRESTATAIRE'].includes(user.role);
+
+const canRead = (user, cible) => !!user && !estPrestataire(user)
+  && privilege(user, cible && cible.domaine_id, cible && cible.secteur_id) !== 'AUCUN';
+
+const canValidate = (user, cible) => !estPrestataire(user)
+  && peut(user, 'VALIDATEUR', cible && cible.domaine_id, cible && cible.secteur_id);
+const canContribute = (user, cible) => !estPrestataire(user)
+  && peut(user, 'CONTRIBUTEUR', cible && cible.domaine_id, cible && cible.secteur_id);
 const isAdmin = (user, referentiels) => meilleurPrivilege(user, referentiels) === 'GESTIONNAIRE';
 
 module.exports = {
   MODULE, privilege, meilleurPrivilege, roleM4,
-  canValidate, canContribute, isAdmin, perimetreDuPrestataire,
+  canValidate, canContribute, canRead, estPrestataire, isAdmin, perimetreDuPrestataire,
 };

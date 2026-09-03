@@ -10,7 +10,10 @@ const moduleRights = require('../../module_rights');
 const MODULE = 'SURV';
 
 // Un prestataire (rôle portail PRESTATAIRE) ne voit que ses propres dossiers.
-const estPrestataire = (user) => user && user.role === 'PRESTATAIRE';
+// L'administrateur d'un organisme est un compte d'organisme : il ne voit que
+// son prestataire, comme les autres.
+const estPrestataire = (user) => !!user
+  && ['PRESTATAIRE', 'ADMIN_PRESTATAIRE'].includes(user.role);
 
 function privilege(user, domaineId, secteurId) {
   if (!user) return '';

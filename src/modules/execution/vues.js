@@ -14,7 +14,10 @@ const socle = vuesSocle.creer({
   rolesBascule: ['SUPERADMIN'],
   // Le module raisonne directement sur `prestataire_id` : aucune clé de
   // rapprochement supplémentaire n'est nécessaire.
-  rolesPrestataire: ['PRESTATAIRE'],
+  // Les deux rôles d'organisme, comme dans le socle : un administrateur de
+  // prestataire reste un prestataire. L'omettre le faisait passer à travers
+  // tous les cloisonnements du module.
+  rolesPrestataire: vuesSocle.ROLES_PRESTATAIRE,
 });
 
 module.exports = socle;

@@ -4,6 +4,7 @@
 const referentiels = require('../../referentiels');
 const services = require('../../services');
 const moduleRights = require('../../module_rights');
+const { ROLES_PRESTATAIRE } = require('../../vues_prestataire');
 const db = require('./store');
 
 // Rôle module M2 dérivé du rôle portail
@@ -84,10 +85,28 @@ function plansValides(filtre) {
 // Le privilège de « Gestion des Droits » (module PLAN) gouverne l'écriture,
 // avec ses portées par domaine et secteur. Les deux super-menus partagent
 // le même espace de privilèges.
-const peut = (req, privilege, plan) => moduleRights.can(
+
+// La planification est l'affaire de l'Autorité : le module n'a pas d'écran
+// côté organisme, et le programme annuel — qui sera inspecté, quand, sur quel
+// site — n'a pas à être servi à l'un des inspectés. Le socle accorde
+// « Lecteur » par défaut à tout compte : sans cette garde, une session
+// prestataire lisait le plan national et les dates de visite de ses
+// concurrents.
+const estPrestataire = (user) => !!user && ROLES_PRESTATAIRE.includes(user.role);
+
+const peut = (req, privilege, plan) => !estPrestataire(req.user) && moduleRights.can(
   'PLAN', req.user.username, privilege,
   (plan && plan.domaine_id) || '', (plan && plan.secteur_id) || '',
 );
+
+// Lecture : tout privilège convient, sauf « Aucun » posé sur la portée — et
+// sauf un compte rattaché à un organisme surveillé.
+const peutLire = (req, plan) => !!req.user && !estPrestataire(req.user)
+  && moduleRights.effectivePrivilege(
+    'PLAN', req.user.username,
+    (plan && plan.domaine_id) || '', (plan && plan.secteur_id) || '',
+  ) !== 'AUCUN';
+
 const refus = (res) => res.status(403).json({ error: 'privilege_insuffisant' });
 const planDe = (id) => db.list('plans').find((x) => x.id === id) || null;
 
@@ -238,7 +257,7 @@ const SCHEMA_ACTIVITE = {
 
 module.exports = {
   roleM2, riskProfiles, plansValides, STATUTS_EN_VIGUEUR,
-  peut, refus, planDe,
+  peut, peutLire, estPrestataire, refus, planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,
   wf, nomComplet, familleDuPlan, profilsDuPlan, ecartsRisques,
   SCHEMA_PLAN, SCHEMA_ACTIVITE,

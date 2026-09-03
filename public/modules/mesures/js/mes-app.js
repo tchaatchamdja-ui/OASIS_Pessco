@@ -61,6 +61,12 @@ function _mesEsc(v) {
 }
 const _mesAttr = (v) => _mesEsc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+// Chemin d'une pièce jointe servie par ce module. Échapper l'attribut ne suffit
+// pas : « javascript:… » y tiendrait sans guillemet. Seul le chemin que
+// /upload rend devient un lien.
+const _mesChemin = (v) => (/^\/api\/m\/mesures\/uploads\/[A-Za-z0-9._-]+$/.test(String(v || ''))
+    ? String(v) : '');
+
 // Comparaison tolérante aux accents et à la casse, pour les recherches.
 const _mesNorm = (v) => String(v == null ? '' : v)
     .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -1129,8 +1135,8 @@ function mesFormulaireMesure() {
             <div class="mes-preuve" data-genre="${genre}" data-chemin="${_mesAttr(p.path || '')}">
                 <input class="mes-input" value="${_mesAttr(p.nom || p.filename || '')}"
                        placeholder="Intitulé de la pièce" ${off}>
-                ${p.path ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
-                    href="${_mesAttr(p.path)}?nom=${encodeURIComponent(p.nom || '')}" title="Ouvrir">${MES_ICONS.download}</a>` : ''}
+                ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
+                    href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}" title="Ouvrir">${MES_ICONS.download}</a>` : ''}
                 ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
                     onclick="mesRetirerPreuve('${genre}',${i})">${MES_ICONS.x}</button>`}
             </div>`).join('');

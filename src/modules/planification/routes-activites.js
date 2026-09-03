@@ -8,21 +8,25 @@ const D = require('./domaine');
 module.exports = function register(app, deps, M) {
   const { requireAuth } = deps;
 
-  app.get(`${M}/plans/:id/activites`, requireAuth, (req, res) =>
-    res.json(db.list('activites').filter((a) => a.plan_id === req.params.id)
-      .map((a) => ({ ...a, verrouillee: D.estVerrouillee(a) ? 1 : 0 }))));
+  app.get(`${M}/plans/:id/activites`, requireAuth, (req, res) => {
+    const plan = D.planDe(req.params.id);
+    if (!D.peutLire(req, plan)) return D.refus(res);
+    return res.json(db.list('activites').filter((a) => a.plan_id === req.params.id)
+      .map((a) => ({ ...a, verrouillee: D.estVerrouillee(a) ? 1 : 0 })));
+  });
 
   app.post(`${M}/plans/:id/activites`, requireAuth, valider(D.SCHEMA_ACTIVITE), (req, res) => {
     if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
-    return res.json(db.createIn('activites', { ...(req.body || {}), plan_id: req.params.id }));
+    return res.json(db.createIn('activites', { ...req.valide, plan_id: req.params.id }));
   });
 
   // Statut et version du plan portés par chaque activité (vue Calendrier)
   app.get(`${M}/all-activites`, requireAuth, (req, res) => {
+    if (!D.peutLire(req)) return D.refus(res);
     const plans = {};
     db.list('plans').forEach((p) => { plans[p.id] = p; });
     const racines = D.racinesDeclenchees();
-    res.json(db.list('activites').map((a) => ({
+    return res.json(db.list('activites').filter((a) => D.peutLire(req, plans[a.plan_id])).map((a) => ({
       ...a,
       plan_statut: (plans[a.plan_id] || {}).statut || '',
       plan_titre: (plans[a.plan_id] || {}).titre || '',
@@ -35,7 +39,7 @@ module.exports = function register(app, deps, M) {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
     if (act && D.estVerrouillee(act)) return D.refusVerrou(res);
-    const rec = db.updateIn('activites', req.params.id, req.body || {});
+    const rec = db.updateIn('activites', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   });
 

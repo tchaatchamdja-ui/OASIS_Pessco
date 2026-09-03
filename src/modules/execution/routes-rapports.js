@@ -261,7 +261,11 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/rapports/:id/transmettre`, requireAuth, async (req, res) => {
     const r = db.get('rapports', req.params.id);
     if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
-    if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
+    // La transmission part du serveur de messagerie de l'Autorité et fige le
+    // document officiel : elle appartient au valideur, jamais à l'organisme
+    // surveillé — pour qui « contribuer » ne veut dire que « être concerné ».
+    if (R.estPrestataire(req.user)) return refuser(res, "Transmission réservée à l'Autorité");
+    if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (!['valide', 'transmis'].includes(r.statut)) {
       return res.status(400).json({ error: 'Seul un rapport validé peut être transmis' });
     }

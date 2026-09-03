@@ -128,15 +128,22 @@ function importerFeuille(d, { coll, sheet, scope }, ws, stats, errors) {
 module.exports = function register(app, deps, M) {
   const { requireAuth, audit } = deps;
 
-  app.get(`${M}/indicateurs/export`, requireAuth, (req, res) => {
+  // Mêmes gardes que le reste du module : un classeur n'est pas une porte
+  // dérobée sur les notes ni sur la bibliothèque d'indicateurs.
+  const lecture = (req, res, next) => (D.peutLire(req) ? next() : D.refus(res));
+  const gerer = (req, res, next) => (D.peut(req, 'GESTIONNAIRE') ? next() : D.refus(res));
+  const portee = (ev) => ({ domaine_id: (ev && ev.domaine_id) || '', secteur_id: (ev && ev.secteur_id) || '' });
+
+  app.get(`${M}/indicateurs/export`, requireAuth, lecture, (req, res) => {
     sendWorkbook(res, indicateursWorkbook(true), 'indicateurs.xlsx');
   });
 
-  app.get(`${M}/indicateurs/template`, requireAuth, (req, res) => {
+  app.get(`${M}/indicateurs/template`, requireAuth, lecture, (req, res) => {
     sendWorkbook(res, indicateursWorkbook(false), 'modele_indicateurs.xlsx');
   });
 
-  app.post(`${M}/indicateurs/import`, requireAuth, (req, res) => {
+  // Un classeur d'indicateurs réécrit la bibliothèque entière : Gestionnaire.
+  app.post(`${M}/indicateurs/import`, requireAuth, gerer, (req, res) => {
     const { wb, error } = readUpload(req);
     if (error) return res.status(400).json({ error });
     const d = db.load();
@@ -163,6 +170,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/evaluations/:id/export-excel`, requireAuth, (req, res) => {
     const ev = db.getColl('evaluations').find((x) => x.id === req.params.id);
     if (!ev) return res.status(404).json({ error: 'not_found' });
+    if (!D.peutLire(req, portee(ev))) return D.refus(res);
     const sas = D.sharedSousActivites().filter((s) => s.secteur_id === ev.secteur_id);
     const wb = XLSX.utils.book_new();
 
@@ -196,6 +204,7 @@ module.exports = function register(app, deps, M) {
     const d = db.load();
     const ev = (d.evaluations || []).find((x) => x.id === req.params.id);
     if (!ev) return res.status(404).json({ error: 'not_found' });
+    if (!D.peut(req, 'CONTRIBUTEUR', portee(ev))) return D.refus(res);
     if (['valide', 'soumis_directeur'].includes(ev.statut)) return res.status(409).json({ error: 'evaluation_verrouillee' });
 
     let updated = 0;

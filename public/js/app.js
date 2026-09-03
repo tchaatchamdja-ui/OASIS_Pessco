@@ -187,6 +187,14 @@ async function api(path, options) {
   return res;
 }
 
+// Valeur passée en argument d'un gestionnaire inline. `esc` seul ne suffit
+// pas : il laisse passer le guillemet une fois l'entité redécodée, et une
+// valeur importée d'un classeur peut refermer l'attribut pour en ouvrir un
+// autre. On sérialise en littéral JavaScript, puis on échappe pour l'attribut.
+function escArg(v) {
+  return esc(JSON.stringify(String(v ?? '')));
+}
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -1210,8 +1218,7 @@ function cfgSectionExigences() {
       const items = groups[key];
       const collapsed = !EXIG_OPEN.has(key || '__none__');
       const dateAdoption = (items.find((x) => x.date_adoption) || {}).date_adoption || '';
-      const keyJs = (key || '').replace(/'/g, "\\'");
-      const rows = items
+          const rows = items
         .map(
           (e) => `
         <tr>
@@ -1227,12 +1234,12 @@ function cfgSectionExigences() {
         .join('');
       return `
       <div class="exig-group ${collapsed ? 'collapsed' : ''}">
-        <div class="exig-banner" onclick="toggleExigGroup('${keyJs}')">
+        <div class="exig-banner" onclick="toggleExigGroup(${escArg(key)})">
           <span class="exig-banner-title"><span class="exig-chevron">${icon('chevronRight', 15)}</span>${esc(key || tr('Sans règlement'))} <span class="shell-badge" style="background:rgba(255,255,255,.2);color:#fff;">${items.length}</span></span>
           <span class="exig-banner-right" onclick="event.stopPropagation()">
             <span class="exig-banner-date">${dateAdoption ? `${tr("Date d'adoption")} : ${esc(fmtDay(dateAdoption))}` : ''}</span>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm('${keyJs}')" title="Modifier règlement / date">${icon('edit', 15)}</button>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,'${keyJs}','${esc(dateAdoption)}')" title="Ajouter une exigence">${icon('plus', 15)}</button>
+            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${escArg(key)})" title="Modifier règlement / date">${icon('edit', 15)}</button>
+            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})" title="Ajouter une exigence">${icon('plus', 15)}</button>
           </span>
         </div>
         <div class="exig-body">
@@ -1283,7 +1290,7 @@ window.openExigDrawer = function (id, presetReglement, presetDate, newGroup) {
     </div>
     <div class="exig-drawer-footer">
       <button class="shell-btn shell-btn-outline" onclick="closeExigDrawer()">${esc(t('cancel'))}</button>
-      <button class="shell-btn shell-btn-primary" onclick="saveExigDrawer('${id || ''}', ${showRegFields}, '${esc((reglement || '').replace(/'/g, "\\'"))}', '${esc(date || '')}')">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
+      <button class="shell-btn shell-btn-primary" onclick="saveExigDrawer(${escArg(id || '')}, ${showRegFields}, ${escArg(reglement || '')}, ${escArg(date || '')})">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
     </div>
   </div>`;
 };
@@ -1326,7 +1333,7 @@ window.openReglementForm = function (reglement) {
       </div>
       <div class="shell-modal-footer">
         <button class="shell-btn shell-btn-outline" onclick="closeExigDrawer()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="saveReglement('${reglement.replace(/'/g, "\\'")}')">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
+        <button class="shell-btn shell-btn-primary" onclick="saveReglement(${escArg(reglement)})">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
       </div>
     </div>
   </div>`;

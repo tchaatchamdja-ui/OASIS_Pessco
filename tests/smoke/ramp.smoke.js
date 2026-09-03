@@ -833,6 +833,17 @@ module.exports = async function rampSmoke(port) {
         (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {
           method: 'POST', body: JSON.stringify({ etats: [], elements: { autorite: true } }),
         })).statut === 400);
+      // On n'écrit pas au nom d'un État qu'on ne représente pas : une
+      // correspondance officielle engage l'autorité qui la signe.
+      verifier('requête au nom d’un État inconnu refusée',
+        (await srv.appel(`${M}/requetes`, {
+          method: 'POST',
+          body: JSON.stringify({
+            objet: 'Usurpation', message: 'Test',
+            etats_destinataires: ['Togo'], etat_emetteur: 'Atlantide',
+          }),
+        })).statut === 403);
+
       // Un État déjà servi ne reçoit pas une seconde copie de la même fiche.
       verifier('second partage au même État refusé',
         (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {

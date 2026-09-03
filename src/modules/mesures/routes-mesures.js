@@ -83,12 +83,26 @@ module.exports = function register(app, deps, M) {
     };
   };
 
+  // Une pièce jointe désigne un fichier que ce module a reçu : son chemin est
+  // celui que /upload a rendu, et rien d'autre. Sans ce contrôle, un « path »
+  // choisi par l'appelant devenait le lien qu'un autre agent allait suivre.
+  const CHEMIN_PIECE = /^\/api\/m\/mesures\/uploads\/[A-Za-z0-9._-]+$/;
+  const piece = (p) => {
+    const o = p && typeof p === 'object' ? p : {};
+    const chemin = String(o.path || '');
+    return {
+      nom: String(o.nom || o.filename || ''),
+      path: CHEMIN_PIECE.test(chemin) ? chemin : '',
+      size: Number(o.size) || 0,
+    };
+  };
+
   const normaliser = (d) => {
     const patch = {};
     CHAMPS.forEach((k) => {
       if (!(k in d)) return;
       let v = d[k];
-      if (LISTES.includes(k)) v = Array.isArray(v) ? v : [];
+      if (LISTES.includes(k)) v = (Array.isArray(v) ? v : []).map(piece);
       else if (k === 'delai_jours' || k === 'montant_amende') v = String(v == null ? '' : v);
       else v = String(v == null ? '' : v);
       patch[k] = v;
@@ -100,13 +114,18 @@ module.exports = function register(app, deps, M) {
   //  Lecture
   // ══════════════════════════════════════
 
+  // Une mesure ne se lit que par un compte de l'Autorité, et dans sa portée.
+  const lisible = (req, m) => R.canRead(req.user, perimetre(m));
+
   app.get(`${M}/mesures`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
     const q = req.query || {};
     let liste = db.list('mesures');
     if (q.statut) liste = liste.filter((m) => m.statut === q.statut);
     if (q.categorie) liste = liste.filter((m) => m.categorie === q.categorie);
     if (q.prestataire_id) liste = liste.filter((m) => m.prestataire_id === q.prestataire_id);
     if (q.constatation_id) liste = liste.filter((m) => m.constatation_id === q.constatation_id);
+    liste = liste.filter((m) => lisible(req, m));
     liste = liste.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
     const index = indexConstatations();
     res.json(liste.map((m) => enrichir(m, index)));
@@ -115,6 +134,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/mesures/:id`, requireAuth, (req, res) => {
     const m = db.get('mesures', req.params.id);
     if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+    if (!lisible(req, m)) return refuser(res);
     res.json(enrichir(m));
   });
 
@@ -122,6 +142,7 @@ module.exports = function register(app, deps, M) {
   // Exécution les fournit ; il en donne aussi la criticité, dont dépend
   // l'écran « Constatations Critiques ».
   app.get(`${M}/constatations`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
     const mesures = db.list('mesures');
     const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
     // Une infraction est close quand elle a été classée, ou quand toutes les
@@ -368,6 +389,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.get(`${M}/uploads/:fichier`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
     const nom = path.basename(req.params.fichier);
     const chemin = path.join(DOSSIER_UPLOADS, nom);
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier non trouvé' });
@@ -381,6 +403,7 @@ module.exports = function register(app, deps, M) {
   // ══════════════════════════════════════
 
   app.get(`${M}/indicateurs`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
     const prestataireId = String((req.query || {}).prestataire_id || '');
     if (!prestataireId) return res.status(400).json({ error: 'prestataire_id requis' });
     const aujourdhui = new Date().toISOString().slice(0, 10);

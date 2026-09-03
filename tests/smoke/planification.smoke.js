@@ -130,6 +130,35 @@ module.exports = async function planificationSmoke(port) {
     verifier('validation refusée', lecteur.validation === 403, `statut ${lecteur.validation}`);
     verifier('consultation des plans autorisée', lecteur.lecture === 200, `statut ${lecteur.lecture}`);
 
+    // ── Le PUT générique ne décide pas du sort du plan ──
+    // Il n'avait pas de schéma : un Contributeur y posait `statut: valide` et
+    // son plan entrait en vigueur — servi à « Exécution de la Surveillance »
+    // sans qu'aucun validateur ne l'ait vu.
+    const brouillon = await P('/api/m/planification/plans', { titre: 'Garde-fou PUT', annee: 2032, type: 'periodique' });
+    const force = await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ titre: 'Garde-fou PUT', statut: 'valide', version: 9, valider_par: 'usurpe' }),
+    });
+    verifier('le PUT générique ne pose pas le statut',
+      force.statut === 200 && force.corps.statut === 'brouillon' && force.corps.version !== 9,
+      `statut ${force.corps && force.corps.statut} · version ${force.corps && force.corps.version}`);
+    verifier('le plan forcé n’entre pas en vigueur',
+      !((await srv.appel('/api/shared/surveillance-plans')).corps || []).some((p) => p.id === brouillon.corps.id));
+
+    // Le fil de discussion suit le sort du plan : le lire suppose d'y avoir
+    // accès, y écrire suppose d'y contribuer. Ces routes n'opposaient aucun
+    // refus — toute session écrivait dans le fil et en effaçait les avis.
+    const avis = await P(`/api/m/planification/plans/${brouillon.corps.id}/commentaires`, { texte: 'Avis du gestionnaire' });
+    await srv.connexion('m.ahoyo@anac.bj');
+    const ecrit = await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}/commentaires`, {
+      method: 'POST', body: JSON.stringify({ texte: 'intrus' }),
+    });
+    const efface = await srv.appel(`/api/m/planification/commentaires/${avis.corps.id}`, { method: 'DELETE' });
+    verifier('écriture dans le fil refusée au lecteur', ecrit.statut === 403, `statut ${ecrit.statut}`);
+    verifier('effacement d’un avis refusé au lecteur', efface.statut === 403, `statut ${efface.statut}`);
+    await srv.connexion();
+    await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}`, { method: 'DELETE' });
+
     const suppr = await srv.appel(`/api/m/planification/plans/${id}`, { method: 'DELETE' });
     verifier('suppression du plan de test', suppr.statut === 200);
   } finally {

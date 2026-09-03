@@ -979,13 +979,23 @@ function rampPaysResultats() {
 
     // Le site s'ouvre dans un nouvel onglet ; le module vit dans un cadre, et
     // `noopener` évite que la page ouverte ne reprenne la main dessus.
-    const lienSite = (p) => (p.site
-        ? `<a href="${_rAttr(p.site)}" target="_blank" rel="noopener noreferrer"
-              class="ramp-lien">${_rEsc(p.site.replace(/^https?:\/\//, ''))}</a>`
-        : '<span class="ramp-vide">—</span>');
+    // Seuls http et https deviennent des liens : un « javascript: » saisi au
+    // paramétrage s'exécuterait dans la session de qui le clique.
+    const lienSite = (p) => {
+        const url = /^https?:\/\//i.test(String(p.site || '')) ? String(p.site) : '';
+        if (url) {
+            return `<a href="${_rAttr(url)}" target="_blank" rel="noopener noreferrer"
+                       class="ramp-lien">${_rEsc(url.replace(/^https?:\/\//, ''))}</a>`;
+        }
+        return p.site ? `<span>${_rEsc(p.site)}</span>` : '<span class="ramp-vide">—</span>';
+    };
 
+    // Même règle pour une adresse : le schéma est posé par nous, la valeur ne
+    // sert qu'à le compléter.
     const emails = (p) => ((p.emails || []).length
-        ? p.emails.map((e) => `<a href="mailto:${_rAttr(e)}" class="ramp-lien">${_rEsc(e)}</a>`).join('<br>')
+        ? p.emails.map((e) => (/^[^\s@]+@[^\s@]+$/.test(String(e || ''))
+            ? `<a href="mailto:${_rAttr(e)}" class="ramp-lien">${_rEsc(e)}</a>`
+            : `<span>${_rEsc(e)}</span>`)).join('<br>')
         : '<span class="ramp-vide">—</span>');
 
     const ligne = (p) => `<tr ${p.actif === false ? 'style="opacity:.55;"' : ''}>

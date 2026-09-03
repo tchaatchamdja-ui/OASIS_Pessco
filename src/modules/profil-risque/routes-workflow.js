@@ -1,6 +1,5 @@
 // Module « Profils de Risque » — circuit d'une évaluation (repris de PESSCO) :
 // soumission au directeur, décision, et lancement d'un nouveau cycle.
-const moduleRights = require('../../module_rights');
 const db = require('./store');
 const D = require('./domaine');
 
@@ -19,9 +18,16 @@ const DECISION_STATUT = {
 module.exports = function register(app, deps, M) {
   const { requireAuth, audit } = deps;
 
+  // Soumettre relève de l'évaluateur, décider du directeur. Ni l'une ni
+  // l'autre de ces deux routes ne vérifiait quoi que ce soit : une session
+  // quelconque rendait la décision du directeur sur n'importe quelle
+  // évaluation, et « valider » suffisait à en faire le profil en vigueur.
+  const portee = (ev) => ({ domaine_id: (ev && ev.domaine_id) || '', secteur_id: (ev && ev.secteur_id) || '' });
+
   app.post(`${M}/evaluations/:id/soumettre-directeur`, requireAuth, (req, res) => {
     const cur = db.getColl('evaluations').find((x) => x.id === req.params.id);
     if (!cur) return res.status(404).json({ error: 'not_found' });
+    if (!D.peut(req, 'CONTRIBUTEUR', portee(cur))) return D.refus(res);
     const now = new Date().toISOString();
     const rec = db.updateIn('evaluations', req.params.id, {
       statut: 'soumis_directeur', soumis_le: now, soumis_par: req.user.username,
@@ -41,6 +47,7 @@ module.exports = function register(app, deps, M) {
 
     const cur = db.getColl('evaluations').find((x) => x.id === req.params.id);
     if (!cur) return res.status(404).json({ error: 'not_found' });
+    if (!D.peut(req, 'VALIDATEUR', portee(cur))) return D.refus(res);
     const now = new Date().toISOString();
     // Chaque décision lance l'étape suivante du fil d'avancement.
     const ETAPE_DECISION = {
@@ -74,9 +81,7 @@ module.exports = function register(app, deps, M) {
     const src = db.getColl('evaluations').find((x) => x.id === req.params.id);
     if (!src) return res.status(404).json({ error: 'not_found' });
     // Réservé aux Gestionnaire / Validateur couvrant le domaine et le secteur
-    if (!moduleRights.can('PLAN', req.user.username, 'VALIDATEUR', src.domaine_id || '', src.secteur_id || '')) {
-      return res.status(403).json({ error: 'privilege_insuffisant' });
-    }
+    if (!D.peut(req, 'VALIDATEUR', portee(src))) return D.refus(res);
     if (src.reevalue_le) return res.status(409).json({ error: 'reevaluation_deja_lancee' });
     // L'évaluation validée reste en place : elle demeure le profil de risque en
     // vigueur tant que la nouvelle n'est pas validée. On la marque seulement

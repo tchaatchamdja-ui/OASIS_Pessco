@@ -149,7 +149,18 @@ module.exports = function register(app, deps, M) {
     if (!message) return res.status(400).json({ error: 'Message requis' });
     if (!destinataires.length) return res.status(400).json({ error: 'Au moins un État destinataire' });
 
-    const emetteur = texte(d.etat_emetteur) || mesEtats(req)[0] || '';
+    // L'État émetteur n'est pas déclaratif : une correspondance officielle
+    // engage l'autorité qui la signe. Un compte borné écrit au nom de ses
+    // États ; un gestionnaire ou un coordonnateur régional, au nom de l'un des
+    // États membres.
+    const demande = texte(d.etat_emetteur);
+    const miens = mesEtats(req);
+    const autorises = miens.length ? miens : etatsUemoa();
+    if (demande && !autorises.includes(demande)) {
+      return refuser(res, `Vous n'écrivez pas au nom de « ${demande} »`);
+    }
+    const emetteur = demande || miens[0] || '';
+    if (!emetteur) return res.status(400).json({ error: 'État émetteur indéterminé' });
     const rec = {
       id: db.uid('req'),
       objet,
@@ -365,6 +376,13 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user) && !admin(req)) return refuser(res, 'Non autorisé à partager');
     const p = db.get('poi', req.params.id);
     if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    // Même garde que partout ailleurs sur un POI : on ne met à disposition que
+    // ce qu'on a le droit de lire. Sans elle, le partage rendait lisible la
+    // fiche d'un autre État — copies des lettres et pièces comprises.
+    const etatFiche = (p.entete || {}).etat_inspection || '';
+    if (!R.couvreEtat(req.user, referentiels, etatFiche)) {
+      return refuser(res, `Formulaire hors de votre périmètre (${etatFiche})`);
+    }
     if (p.statut !== 'validee') {
       return res.status(400).json({ error: 'Seule une fiche validée se partage' });
     }

@@ -521,13 +521,34 @@ module.exports = function register(app, deps, M) {
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference, statut: rec.statut });
   });
 
+  // Une constatation notifiée engage le prestataire : ses termes ne se
+  // réécrivent plus au fil de l'eau. Avant, elle est en cours de rédaction.
+  const STATUTS_OPPOSABLES = ['ouvert', 'ouverte', 'pac_soumis', 'pac_valide',
+    'pac_rejetee', 'soldee'];
+
   app.put(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
+    // Champs sur lesquels la constatation engage le prestataire une fois
+    // notifiée : ils relèvent alors de /ajuster, jamais de ce PUT.
+    const CHAMPS_OPPOSABLES = ['delai_solde', 'criticite', 'date_ouverture',
+      'description', 'titre', 'ref_reglementaires', 'domaine_id', 'date_due_cloture'];
+    // Ce que l'organisme surveillé n'écrit pas : qui notifie, à qui, et sur
+    // quel prestataire porte la constatation.
+    const CHAMPS_AAC = ['emis_par', 'adresse_a', 'prestataire_id', 'source', 'direct'];
+    // Le statut ne se pose pas à la main : les routes de transition le font,
+    // avec leurs gardes propres (submit, validate, close, renvoyer, rejeter).
+    const CHAMPS_INTERDITS = ['id', 'reference', 'statut', 'date_solde', 'ajustements',
+      'transmis_le', 'transmis_par', 'transmis_a'];
+    const estPrest = R.estPrestataire(req.user);
+    const opposable = STATUTS_OPPOSABLES.includes(c.statut);
     const patch = {};
     Object.entries(req.body || {}).forEach(([k, v]) => {
-      if (!['id', 'reference', 'direct'].includes(k)) patch[k] = v;
+      if (CHAMPS_INTERDITS.includes(k)) return;
+      if (estPrest && CHAMPS_AAC.includes(k)) return;
+      if (opposable && CHAMPS_OPPOSABLES.includes(k)) return;
+      patch[k] = v;
     });
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
     // Le prestataire n'a pas le bloc d'évaluation à l'écran : ce qu'il renvoie
@@ -855,7 +876,9 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/constatations/:id/transmettre`, requireAuth, async (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
-    if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
+    // Même règle que pour un rapport : c'est l'Autorité qui notifie.
+    if (R.estPrestataire(req.user)) return refuser(res, "Transmission réservée à l'Autorité");
+    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut !== 'direct_valide') {
       return res.status(400).json({ error: 'Seule une constatation validée peut être transmise' });
     }

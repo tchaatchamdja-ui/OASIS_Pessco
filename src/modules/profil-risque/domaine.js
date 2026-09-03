@@ -2,7 +2,40 @@
 // données du portail projetées pour le front, rôle du module, profils publiés
 // et fil d'avancement d'une évaluation.
 const referentiels = require('../../referentiels');
+const moduleRights = require('../../module_rights');
+const { ROLES_PRESTATAIRE } = require('../../vues_prestataire');
 const db = require('./store');
+
+// ── Droits du module ──
+// Les profils de risque partagent l'espace de privilèges de la Planification
+// (`rightsModule: "PLAN"` dans les deux manifestes) : une même personne y tient
+// le même rôle. Le module est celui de l'Autorité — noter un organisme n'est
+// pas l'affaire de l'organisme noté ; le socle accordant « Lecteur » à tout
+// compte, la garde doit être explicite.
+const RIGHTS = 'PLAN';
+
+const estPrestataire = (user) => !!user && ROLES_PRESTATAIRE.includes(user.role);
+
+const peut = (req, privilege, cible) => !estPrestataire(req.user) && moduleRights.can(
+  RIGHTS, req.user.username, privilege,
+  (cible && cible.domaine_id) || '', (cible && cible.secteur_id) || '',
+);
+
+const peutLire = (req, cible) => !!req.user && !estPrestataire(req.user)
+  && moduleRights.effectivePrivilege(
+    RIGHTS, req.user.username,
+    (cible && cible.domaine_id) || '', (cible && cible.secteur_id) || '',
+  ) !== 'AUCUN';
+
+const refus = (res) => res.status(403).json({ error: 'privilege_insuffisant' });
+
+// Statuts qui relèvent d'une décision, non d'une saisie. Le front valide une
+// évaluation par un PUT direct (et non par `decision-directeur`) : la garde ne
+// peut donc pas interdire `statut` sur le PUT — elle exige le Validateur dès
+// que la valeur posée en fait partie.
+const STATUTS_DECIDES = [
+  'soumis_directeur', 'acceptee', 'cloturee', 'valide', 'rejetee', 'renvoyee',
+];
 
 // ── Données partagées : mappées depuis les référentiels du portail ──
 const sharedDomaines = () => (referentiels.getAll().domaines || []).map((x) => ({
@@ -110,4 +143,5 @@ function stampNotationEtapes(rec) {
 module.exports = {
   sharedDomaines, sharedSecteurs, sharedSousActivites, sharedPrestataires, sharedIndices,
   roleM1, riskProfiles, etapesWith, toutesNotesSoumises, stampNotationEtapes,
+  RIGHTS, estPrestataire, peut, peutLire, refus, STATUTS_DECIDES,
 };

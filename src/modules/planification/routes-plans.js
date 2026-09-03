@@ -8,17 +8,23 @@ const D = require('./domaine');
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
 
+  // Garde de lecture : les données de surveillance du module ne sortent pas
+  // vers un compte sans privilège, ni vers un organisme surveillé. Les
+  // référentiels du portail (inspecteurs, types, thèmes…) restent ouverts :
+  // ce sont des nomenclatures, servies aussi aux fronts des autres modules.
+  const lecture = (req, res, next) => (D.peutLire(req) ? next() : D.refus(res));
+
   // ── Référentiels partagés attendus par le module ──
   app.get('/api/inspecteurs', requireAuth, (req, res) => res.json(referentiels.getAll().inspecteurs || []));
   app.get('/api/types-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().types_supervision || []));
   app.get('/api/modes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().modes_supervision || []));
   app.get('/api/themes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().themes_supervision || []));
   app.get('/api/exigences', requireAuth, (req, res) => res.json(referentiels.getAll().exigences || []));
-  app.get('/api/shared/risk-profiles', requireAuth, (req, res) => res.json(D.riskProfiles()));
+  app.get('/api/shared/risk-profiles', requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
   // Même contrat, exposé en HTTP pour les fronts des autres modules
-  app.get('/api/shared/surveillance-plans', requireAuth, (req, res) => res.json(D.plansValides(req.query)));
-  app.get(`${M}/plans-valides`, requireAuth, (req, res) => res.json(D.plansValides(req.query)));
-  app.get(`${M}/risk-profiles`, requireAuth, (req, res) => res.json(D.riskProfiles()));
+  app.get('/api/shared/surveillance-plans', requireAuth, lecture, (req, res) => res.json(D.plansValides(req.query)));
+  app.get(`${M}/plans-valides`, requireAuth, lecture, (req, res) => res.json(D.plansValides(req.query)));
+  app.get(`${M}/risk-profiles`, requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
 
   // Contexte du module (utilisateur + rôle M2)
   app.get(`${M}/context`, requireAuth, (req, res) => {
@@ -38,7 +44,7 @@ module.exports = function register(app, deps, M) {
   });
 
   // ── Statistiques ──
-  app.get(`${M}/stats`, requireAuth, (req, res) => {
+  app.get(`${M}/stats`, requireAuth, lecture, (req, res) => {
     const plans = db.list('plans');
     const acts = db.list('activites');
     res.json({
@@ -60,9 +66,11 @@ module.exports = function register(app, deps, M) {
   // ── Plans ──
   // Les plans sont renvoyés avec leur nombre d'activités, et le détail avec
   // ses activités : le client les lit directement sur l'objet plan.
-  app.get(`${M}/plans`, requireAuth, (req, res) => {
+  app.get(`${M}/plans`, requireAuth, lecture, (req, res) => {
     const acts = db.list('activites');
-    res.json(db.list('plans').map((p) => ({
+    // Un privilège posé à « Aucun » sur un domaine ferme aussi la liste :
+    // sinon le plan y figurait, seul son détail était refusé.
+    res.json(db.list('plans').filter((p) => D.peutLire(req, p)).map((p) => ({
       ...p, nb_activites: acts.filter((a) => a.plan_id === p.id).length,
     })));
   });
@@ -70,6 +78,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/plans/:id`, requireAuth, (req, res) => {
     const p = db.list('plans').find((x) => x.id === req.params.id);
     if (!p) return res.status(404).json({ error: 'not_found' });
+    if (!D.peutLire(req, p)) return D.refus(res);
     // L'écran de détail lit ses activités ici : le verrou d'exécution doit
     // donc y figurer, comme sur /all-activites.
     const racines = D.racinesDeclenchees();
@@ -78,16 +87,23 @@ module.exports = function register(app, deps, M) {
     return res.json({ ...p, activites, nb_activites: activites.length });
   });
 
+  // Le corps validé — et lui seul — entre en base : `req.body` y faisait entrer
+  // tout le reste, à commencer par `statut`, qui n'appartient qu'au circuit.
   app.post(`${M}/plans`, requireAuth, valider(D.SCHEMA_PLAN), (req, res) => {
-    if (!D.peut(req, 'CONTRIBUTEUR', req.body || {})) return D.refus(res);
-    const rec = db.createIn('plans', { statut: 'brouillon', ...(req.body || {}), created_by: req.user.username });
+    if (!D.peut(req, 'CONTRIBUTEUR', req.valide)) return D.refus(res);
+    const rec = db.createIn('plans', { ...req.valide, statut: 'brouillon', created_by: req.user.username });
     audit.log(req.user.username, 'PLAN_CREE', { id: rec.id });
     return res.json(rec);
   });
 
-  app.put(`${M}/plans/:id`, requireAuth, (req, res) => {
+  // Modifier un plan, ce n'est pas décider de son sort : le statut, la version
+  // et les traces de décision restent aux routes du circuit, qui exigent un
+  // Validateur. Sans le schéma, un Contributeur posait ici `statut: valide` et
+  // son plan entrait en vigueur — servi à « Exécution de la Surveillance »
+  // sans qu'aucun validateur ne l'ait vu.
+  app.put(`${M}/plans/:id`, requireAuth, valider(D.SCHEMA_PLAN), (req, res) => {
     if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
-    const rec = db.updateIn('plans', req.params.id, req.body || {});
+    const rec = db.updateIn('plans', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   });
 

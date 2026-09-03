@@ -18,17 +18,30 @@ const CRUD = {
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
 
+  // Gardes du module. Les nomenclatures du portail (domaines, secteurs,
+  // sous-activités, prestataires) restent ouvertes : elles décrivent
+  // l'organisation du pays, sont servies aux fronts des autres modules, et ne
+  // disent rien de la surveillance. Tout le reste — notes, évaluations,
+  // barèmes, bibliothèque — appartient à l'Autorité.
+  const lecture = (req, res, next) => (D.peutLire(req) ? next() : D.refus(res));
+  const contribuer = (req, res, next) => (D.peut(req, 'CONTRIBUTEUR') ? next() : D.refus(res));
+  const gerer = (req, res, next) => (D.peut(req, 'GESTIONNAIRE') ? next() : D.refus(res));
+
   // ── Données partagées attendues par le front PESSCO ──
   app.get('/api/domaines', requireAuth, (req, res) => res.json(D.sharedDomaines()));
   app.get('/api/secteurs', requireAuth, (req, res) => res.json(D.sharedSecteurs()));
   app.get('/api/sous-activites', requireAuth, (req, res) => res.json(D.sharedSousActivites()));
   app.get('/api/prestataires', requireAuth, (req, res) => res.json(D.sharedPrestataires()));
-  app.get('/api/indices', requireAuth, (req, res) => res.json(D.sharedIndices()));
+  app.get('/api/indices', requireAuth, lecture, (req, res) => res.json(D.sharedIndices()));
 
-  app.put('/api/indices', requireAuth, (req, res) => {
+  // Les indices commandent le calcul de tous les profils de risque : les
+  // réécrire, c'est refaire le barème de la surveillance. Réservé au
+  // Gestionnaire — la route n'opposait jusqu'ici aucun refus.
+  app.put('/api/indices', requireAuth, gerer, (req, res) => {
     const d = db.load();
     d.indices = Array.isArray(req.body) ? req.body : (req.body && req.body.indices) || d.indices;
     db.save(d);
+    audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: (d.indices || []).length });
     res.json({ ok: true, indices: d.indices });
   });
 
@@ -43,9 +56,9 @@ module.exports = function register(app, deps, M) {
   const MAX_DOC_BYTES = 3_500_000; // marge sous la limite express.json (5 Mo)
   const publicDoc = ({ contenu, ...d }) => ({ ...d, taille: d.taille || 0 });
 
-  app.get('/api/documents', requireAuth, (req, res) => res.json(db.getColl('documents').map(publicDoc)));
+  app.get('/api/documents', requireAuth, lecture, (req, res) => res.json(db.getColl('documents').map(publicDoc)));
 
-  app.post('/api/documents', requireAuth, (req, res) => {
+  app.post('/api/documents', requireAuth, contribuer, (req, res) => {
     const { nom, type, mime, fileB64 } = req.body || {};
     if (!nom) return res.status(400).json({ error: 'nom_requis' });
     const contenu = String(fileB64 || '').split(',').pop();
@@ -60,7 +73,7 @@ module.exports = function register(app, deps, M) {
     return res.json(publicDoc(rec));
   });
 
-  app.get('/api/documents/:id/download', requireAuth, (req, res) => {
+  app.get('/api/documents/:id/download', requireAuth, lecture, (req, res) => {
     const doc = db.getColl('documents').find((d) => d.id === req.params.id);
     if (!doc || !doc.contenu) return res.status(404).json({ error: 'not_found' });
     const buf = Buffer.from(doc.contenu, 'base64');
@@ -69,7 +82,9 @@ module.exports = function register(app, deps, M) {
     return res.send(buf);
   });
 
-  app.delete('/api/documents/:id', requireAuth, (req, res) => {
+  // Retirer une pièce de la bibliothèque est définitif : réservé au
+  // Gestionnaire. Toute session pouvait jusqu'ici vider la bibliothèque.
+  app.delete('/api/documents/:id', requireAuth, gerer, (req, res) => {
     const ok = db.deleteIn('documents', req.params.id);
     if (ok) audit.log(req.user.username, 'PR_DOCUMENT_SUPPRIME', { id: req.params.id });
     res.json({ ok });
@@ -85,34 +100,48 @@ module.exports = function register(app, deps, M) {
   });
 
   // ── Collections du module (CRUD générique) ──
+  // Le périmètre d'un enregistrement est celui de son domaine et de son
+  // secteur ; les collections qui n'en portent pas relèvent du privilège
+  // général. Une évaluation lue, écrite ou supprimée reste dans les portées
+  // du compte.
+  const portee = (r) => ({ domaine_id: (r && r.domaine_id) || '', secteur_id: (r && r.secteur_id) || '' });
+
   Object.entries(CRUD).forEach(([route, coll]) => {
-    app.get(`${M}/${route}`, requireAuth, (req, res) => {
-      let rows = db.getColl(coll);
+    app.get(`${M}/${route}`, requireAuth, lecture, (req, res) => {
+      let rows = db.getColl(coll).filter((r) => D.peutLire(req, portee(r)));
       if (req.query.eval_id) rows = rows.filter((r) => r.eval_id === req.query.eval_id);
       if (req.query.prestataire_id) rows = rows.filter((r) => r.prestataire_id === req.query.prestataire_id);
       res.json(rows);
     });
 
-    app.get(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.get(`${M}/${route}/:id`, requireAuth, lecture, (req, res) => {
       const r = db.getColl(coll).find((x) => x.id === req.params.id);
-      return r ? res.json(r) : res.status(404).json({ error: 'not_found' });
+      if (!r) return res.status(404).json({ error: 'not_found' });
+      return D.peutLire(req, portee(r)) ? res.json(r) : D.refus(res);
     });
 
     app.post(`${M}/${route}`, requireAuth, (req, res) => {
-      // Création d'évaluation : réservée aux Gestionnaire / Validateur, et
-      // limitée aux domaines-secteurs couverts par leurs privilèges.
-      if (coll === 'evaluations') {
-        const { secteur_id: sec, domaine_id: dom } = req.body || {};
-        if (!moduleRights.can('PLAN', req.user.username, 'VALIDATEUR', dom || '', sec || '')) {
-          return res.status(403).json({ error: 'privilege_insuffisant' });
-        }
-      }
+      // Créer une évaluation engage la notation d'un organisme : Validateur.
+      // Les autres collections — indicateurs, comptes rendus de réunion —
+      // relèvent de la contribution, mais aucune n'était gardée.
+      const requis = coll === 'evaluations' ? 'VALIDATEUR' : 'CONTRIBUTEUR';
+      if (!D.peut(req, requis, portee(req.body))) return D.refus(res);
       const rec = db.createIn(coll, { ...(req.body || {}), created_by: req.user.username });
       audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
       return res.json(rec);
     });
 
     app.put(`${M}/${route}/:id`, requireAuth, (req, res) => {
+      const avant = db.getColl(coll).find((x) => x.id === req.params.id);
+      if (!avant) return res.status(404).json({ error: 'not_found' });
+      // Le statut d'une évaluation dit une décision — acceptation, clôture,
+      // validation, rejet. La poser demande un Validateur ; la route ne
+      // demandait rien, et un compte quelconque validait le profil de risque
+      // d'un organisme, profil aussitôt servi à la Planification.
+      const statut = req.body && req.body.statut;
+      const decide = coll === 'evaluations' && statut && statut !== avant.statut
+        && D.STATUTS_DECIDES.includes(statut);
+      if (!D.peut(req, decide ? 'VALIDATEUR' : 'CONTRIBUTEUR', portee(avant))) return D.refus(res);
       let rec = db.updateIn(coll, req.params.id, req.body || {});
       if (!rec) return res.status(404).json({ error: 'not_found' });
       // Les deux premières étapes du fil d'avancement ne passent pas par une
@@ -126,13 +155,17 @@ module.exports = function register(app, deps, M) {
       // Supprimer une réévaluation libère l'évaluation d'origine : sans cela
       // elle resterait marquée « réévaluation en cours » sans cycle suivant.
       let parentId = null;
+      const cible = db.getColl(coll).find((x) => x.id === req.params.id);
+      if (!cible) return res.status(404).json({ error: 'not_found' });
       if (coll === 'evaluations') {
-        const src = db.getColl('evaluations').find((x) => x.id === req.params.id);
-        if (!src) return res.status(404).json({ error: 'not_found' });
         // Suppression réservée au Gestionnaire du domaine/secteur du prestataire
-        const priv = moduleRights.effectivePrivilege('PLAN', req.user.username, src.domaine_id || '', src.secteur_id || '');
-        if (priv !== 'GESTIONNAIRE') return res.status(403).json({ error: 'privilege_insuffisant' });
-        parentId = src.parent_id;
+        const priv = moduleRights.effectivePrivilege(D.RIGHTS, req.user.username, cible.domaine_id || '', cible.secteur_id || '');
+        if (D.estPrestataire(req.user) || priv !== 'GESTIONNAIRE') return D.refus(res);
+        parentId = cible.parent_id;
+      // Les autres collections tenaient la porte ouverte : un indicateur du
+      // barème s'y supprimait sans le moindre privilège.
+      } else if (!D.peut(req, 'GESTIONNAIRE', portee(cible))) {
+        return D.refus(res);
       }
       if (!db.deleteIn(coll, req.params.id)) return res.status(404).json({ error: 'not_found' });
       if (parentId) db.updateIn('evaluations', parentId, { reevalue_le: '', reevalue_par: '', enfant_id: '' });

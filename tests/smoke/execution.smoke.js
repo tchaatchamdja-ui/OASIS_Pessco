@@ -225,7 +225,15 @@ module.exports = async function executionSmoke(port) {
         apresValidation.corps.commentaires_validation.length === 2
         && apresValidation.corps.commentaires_validation[1].issue === 'validation');
 
-      const stats = await srv.appel(`${M}/dashboard-stats`);
+      // Le PUT générique sert la rédaction : il ne pose ni le statut ni les
+    // termes opposables d'une constatation notifiée — ceux-là relèvent des
+    // routes de transition et de /ajuster, avec mot de passe et motif.
+    await PUT(`${M}/constatations/${directe.corps.id}`, { statut: 'soldee', criticite: 'mineure' });
+    const apresPut = await srv.appel(`${M}/constatations/${directe.corps.id}`);
+    verifier('le PUT générique ne pose pas le statut',
+      apresPut.corps.statut !== 'soldee', apresPut.corps.statut);
+
+    const stats = await srv.appel(`${M}/dashboard-stats`);
       verifier('tableau de bord alimenté',
         stats.statut === 200 && stats.corps.notifications_actees >= 1 && stats.corps.rapports_transmis_ytd >= 1);
 

@@ -164,10 +164,18 @@
 /* ── Volet latéral (formulaire de mesure) ──
    Même comportement que le volet du module Exécution : superposition sombre,
    panneau glissant à droite, entête et pied fixes. */
+/* Le voile s'arrête au bord droit de la barre latérale. Posé sur « inset: 0 »,
+   il la recouvrait : elle disparaissait sous l'ombre, et surtout tout clic sur
+   le chevron, une pastille de thème ou une langue atterrissait sur le voile,
+   dont le clic referme le volet. La barre reste donc utilisable, volet ouvert. */
 .mes-slider-overlay {
-    position: fixed; inset: 0; background: rgba(15,23,42,.4);
-    z-index: 1090; opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    position: fixed; top: 0; right: 0; bottom: 0;
+    left: var(--sidebar-width, 240px);
+    background: rgba(15,23,42,.4);
+    z-index: 1090; opacity: 0; pointer-events: none;
+    transition: opacity .2s ease, left .3s ease;
 }
+body.app-sidebar-collapsed .mes-slider-overlay { left: var(--sidebar-collapsed, 60px); }
 .mes-slider-overlay.open { opacity: 1; pointer-events: auto; }
 /* Volet de traitement : il va du bord droit de l'écran jusqu'au bord droit de
    la barre latérale, et suit celle-ci quand elle se replie. Le repli est porté
@@ -257,11 +265,15 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 /* ── Volet de saisie d'une infraction ───────────────────────────
    La moitié de l'écran, glissé depuis la droite, bordé de rouge : ce qu'on y
    inscrit est un manquement, la couleur le dit avant le titre. */
+/* Même règle que pour le voile du volet de traitement : il s'arrête au bord
+   droit de la barre latérale, qui reste ainsi visible et cliquable. */
 .mes-volet-fond {
-    position: fixed; inset: var(--topbar-height, 48px) 0 0 0; z-index: 1190;
+    position: fixed; top: var(--topbar-height, 48px); right: 0; bottom: 0;
+    left: var(--sidebar-width, 240px); z-index: 1190;
     background: rgba(15, 23, 42, .45);
-    opacity: 0; transition: opacity .2s ease;
+    opacity: 0; transition: opacity .2s ease, left .3s ease;
 }
+body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px); }
 .mes-volet-fond.ouvert { opacity: 1; }
 .mes-volet {
     /* Il commence sous la barre supérieure du module : celle-ci reste lisible,

@@ -11,8 +11,9 @@
  */
 
 const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
-    comite_code: '', membres: [], sessions: [], reunions: [],
-    infraction_constituee: false, nature: '', caracterisation: '', circonstances: '',
+    comite_code: '', membres: [], sessions: [],
+    infraction_constituee: false, infraction_non_constituee: false,
+    nature: '', caracterisation: '', circonstances: '',
     mesures: [], pieces: [],
 };
 
@@ -22,8 +23,23 @@ const mesQualModifiable = () => mesPeutEcrire();
 // Il est repris tel que l'investigation l'a laissé, et le PDF donne
 // l'investigation entière : équipe, travaux, éléments collectés, synthèse.
 function mesSectionRapportInvestigation() {
-    const inv = (MES_STATE.traitement || {}).investigation || {};
+    const t = MES_STATE.traitement || {};
+    const inv = t.investigation || {};
     const c = MES_STATE.carenceEnCours || {};
+    // La suite à donner peut mener droit ici : « Prendre des mesures » saute
+    // l'investigation. La section le dit plutôt que d'offrir un rapport vide
+    // et un PDF qui n'a rien à rendre.
+    const menee = !!(inv.soumise_le || inv.rapport
+        || (inv.travaux || []).length || (inv.equipe || []).length);
+    if (!menee) {
+        return mesSection('B', 'Rapport d’investigation', `
+            <p class="mes-preuve-vide">Aucune investigation n’a été menée sur cette carence :
+               la suite à donner est passée directement à la qualification.</p>
+            ${t.decision_motif ? `<div class="mes-champ" style="margin-top:.6rem;margin-bottom:0;">
+                <label>Motif de la décision</label>
+                <div class="mes-lecture">${_mesEsc(t.decision_motif)}</div>
+            </div>` : ''}`);
+    }
     const lien = `${MES_API}/constatations/${encodeURIComponent(c.id || '')}/rapport-investigation.pdf`;
     return mesSection('B', 'Rapport d’investigation', `
         <div class="mes-champ">
@@ -110,48 +126,24 @@ function mesSectionQualification() {
     const off = mesQualModifiable() ? '' : 'disabled';
     const constituee = !!q.infraction_constituee;
 
-    const reunions = (q.reunions || []).map((r, i) => `
-        <div class="mes-bloc" data-rang="${i}">
-            <div class="mes-bloc-entete">
-                <span class="mes-bloc-titre">${r.date ? _mesEsc(mesDate(r.date)) : 'Réunion'}${
-                    r.objet ? ` — ${_mesEsc(r.objet)}` : ''}</span>
-                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer ce bloc"
-                    onclick="mesQualRetirerReunion(${i})">${MES_ICONS.x}</button>`}
-            </div>
-            <div class="mes-bloc-corps">
-                <div class="mes-paire">
-                    <div class="mes-champ">
-                        <label>Date de la réunion</label>
-                        <input type="date" class="mes-input" data-champ="date" value="${_mesAttr(r.date || '')}" ${off}>
-                    </div>
-                    <div class="mes-champ">
-                        <label>Objet</label>
-                        <input class="mes-input" data-champ="objet" value="${_mesAttr(r.objet || '')}"
-                               placeholder="Objet de la réunion tenue" ${off}>
-                    </div>
-                </div>
-                <div class="mes-champ" style="margin-bottom:0;">
-                    <label>Résultat de la réunion</label>
-                    <textarea class="mes-input" data-champ="resultat" rows="3" ${off}
-                              placeholder="Ce que la réunion a établi">${_mesEsc(r.resultat || '')}</textarea>
-                </div>
-            </div>
-        </div>`).join('');
+    const nonConstituee = !!q.infraction_non_constituee;
 
+    // Les deux cases disent la même décision par ses deux faces : cocher l'une
+    // décoche l'autre. Tant qu'aucune n'est cochée, la qualification n'est pas
+    // arrêtée.
     return mesSection('D', 'Qualification de l’infraction', `
-        <div id="mesQualReunions">${reunions
-            || '<p class="mes-preuve-vide">Aucune réunion consignée</p>'}</div>
-        ${off ? '' : `<div class="mes-actions-rang">
-            <button class="btn btn-outline btn-sm" onclick="mesQualAjouterReunion()">
-                ${MES_ICONS.add} Ajouter une réunion</button>
-            <button class="btn btn-outline btn-sm" onclick="mesEnregistrerQualification()">
-                ${MES_ICONS.check} Enregistrer</button>
-        </div>`}
-        <label class="mes-case" style="margin-top:.9rem;">
-            <input type="checkbox" id="mesQualConstituee" ${constituee ? 'checked' : ''} ${off}
-                   onchange="mesQualBasculerInfraction(this.checked)">
-            <span>Infraction constituée</span>
-        </label>
+        <div class="mes-cases-exclusives">
+            <label class="mes-case">
+                <input type="checkbox" id="mesQualConstituee" ${constituee ? 'checked' : ''} ${off}
+                       onchange="mesQualBasculerInfraction(this.checked)">
+                <span>Infraction constituée</span>
+            </label>
+            <label class="mes-case">
+                <input type="checkbox" id="mesQualNonConstituee" ${nonConstituee ? 'checked' : ''} ${off}
+                       onchange="mesQualBasculerNonInfraction(this.checked)">
+                <span>Infraction non constituée</span>
+            </label>
+        </div>
         ${constituee ? `
         <div class="mes-champ" style="margin-top:.6rem;">
             <label>Nature de l’infraction</label>
@@ -267,10 +259,8 @@ function mesCollecterQualification() {
         sessions: lignes('#mesQualSessions tbody tr[data-rang]').map((tr) => ({
             date: val(tr, 'date'), objet: val(tr, 'objet'),
         })),
-        reunions: lignes('#mesQualReunions .mes-bloc').map((b) => ({
-            date: val(b, 'date'), objet: val(b, 'objet'), resultat: val(b, 'resultat'),
-        })),
         infraction_constituee: !!(coche && coche.checked),
+        infraction_non_constituee: !!(document.getElementById('mesQualNonConstituee') || {}).checked,
         nature: txt('mesQualNature'),
         caracterisation: txt('mesQualCaracterisation'),
         circonstances: txt('mesQualCirconstances'),
@@ -305,8 +295,6 @@ const mesQualAjouterMembre = () => mesQualModifier((q) => q.membres.push({ nom: 
 const mesQualRetirerMembre = (i) => mesQualModifier((q) => { q.membres = q.membres.filter((_, k) => k !== i); });
 const mesQualAjouterSession = () => mesQualModifier((q) => q.sessions.push({ date: '', objet: '' }));
 const mesQualRetirerSession = (i) => mesQualModifier((q) => { q.sessions = q.sessions.filter((_, k) => k !== i); });
-const mesQualAjouterReunion = () => mesQualModifier((q) => q.reunions.push({ date: '', objet: '', resultat: '' }));
-const mesQualRetirerReunion = (i) => mesQualModifier((q) => { q.reunions = q.reunions.filter((_, k) => k !== i); });
 const mesQualAjouterMesure = () => mesQualModifier((q) => q.mesures.push({
     categorie: (mesCategories()[0] || {}).code || '', type_mesure: '', commentaire: '',
 }));
@@ -315,7 +303,14 @@ const mesQualRetirerPiece = (i) => mesQualModifier((q) => { q.pieces = q.pieces.
 
 // Cocher « Infraction constituée » ouvre les trois champs de qualification et
 // la section des mesures ; la décocher les referme.
-const mesQualBasculerInfraction = (coche) => mesQualModifier((q) => { q.infraction_constituee = !!coche; });
+const mesQualBasculerInfraction = (coche) => mesQualModifier((q) => {
+    q.infraction_constituee = !!coche;
+    if (coche) q.infraction_non_constituee = false;
+});
+const mesQualBasculerNonInfraction = (coche) => mesQualModifier((q) => {
+    q.infraction_non_constituee = !!coche;
+    if (coche) q.infraction_constituee = false;
+});
 
 // Changer de catégorie vide le type : les types sont propres à leur catégorie.
 const mesQualCategorieMesure = (i, code) => mesQualModifier((q) => {
@@ -356,8 +351,8 @@ Object.assign(window, {
     mesSectionQualification, mesSectionMesuresArretees,
     mesQualAjouterMembre, mesQualRetirerMembre,
     mesQualAjouterSession, mesQualRetirerSession,
-    mesQualAjouterReunion, mesQualRetirerReunion,
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure,
-    mesQualBasculerInfraction, mesQualTeleverser, mesQualRetirerPiece,
+    mesQualBasculerInfraction, mesQualBasculerNonInfraction,
+    mesQualTeleverser, mesQualRetirerPiece,
     mesMajQualification, mesEnregistrerQualification,
 });

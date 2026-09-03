@@ -344,6 +344,9 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 .mes-case input { width: 16px; height: 16px; accent-color: var(--mes-accent); }
 /* Deux gestes au bas d'une section : ajouter un bloc, enregistrer la section. */
 .mes-actions-rang { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .4rem; }
+/* Les deux faces d'une même décision, côte à côte : cocher l'une décoche
+   l'autre, et les voir ensemble le fait comprendre avant tout essai. */
+.mes-cases-exclusives { display: flex; gap: 1.6rem; flex-wrap: wrap; }
 .mes-decision-aide { margin: 0 0 .5rem 1.1rem; padding: 0; font-size: .8rem; color: var(--text-muted); }
 .mes-decision-aide li { margin-bottom: .2rem; }
 /* Les deux suites qui engagent une action portent leur couleur : le classement

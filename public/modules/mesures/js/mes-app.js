@@ -1342,7 +1342,16 @@ function mesAfficherSlider(o) {
     const el = document.getElementById('mesSlider');
     if (!el) return;
     mesMesurerPied();
+    // Ajouter une ligne ou cocher une case redessine le volet entier : sans
+    // cela, la page remontait en haut à chaque geste et il fallait redescendre
+    // à l'endroit où l'on travaillait. La position de lecture est reprise.
+    const corpsAvant = el.querySelector('.mes-slider-body');
+    const defilement = corpsAvant ? corpsAvant.scrollTop : 0;
     el.innerHTML = mesFormulaireMesure();
+    if (defilement) {
+        const corps = el.querySelector('.mes-slider-body');
+        if (corps) corps.scrollTop = defilement;
+    }
     const fond = document.getElementById('mesSliderOverlay');
     const sansAnimation = !!(o && o.anime === false);
     if (sansAnimation) { mesFiger(el); mesFiger(fond); }

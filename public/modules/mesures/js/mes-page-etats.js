@@ -92,13 +92,13 @@ function mesEtatsTableau(colonnes, lignes, vide) {
     </div>`;
 }
 
-const mesEtatsCarte = (titre, compte, alerte, intro, corps) => `
+// Le panneau n'a plus de bandeau de titre : il répétait le sous-menu qui le
+// surmonte. Reste ce que le sous-menu ne dit pas — ce que le panneau contient,
+// et le nombre de dossiers en retard, glissé au fil du texte.
+const mesEtatsCarte = (alerte, intro, corps) => `
     <div class="mes-card mes-etats-carte">
-        <h3>${_mesEsc(titre)}
-            <span class="mes-etats-compte${compte > 1 ? ' alerte' : ''}">${compte}</span>
-            ${alerte ? `<span class="mes-etats-compte retard">${alerte}</span>` : ''}
-        </h3>
-        <p class="mes-etats-intro">${intro}</p>
+        <p class="mes-etats-intro">${intro}${
+        alerte ? ` <span class="mes-etats-compte retard">${_mesEsc(alerte)}</span>` : ''}</p>
         ${corps}
     </div>`;
 
@@ -130,8 +130,7 @@ function mesEtatsPanATraiter(R) {
         <td>${_mesEsc(mesDate(c.date_due_cloture))}</td>
         <td style="text-align:center;">${mesEtatsDelai(c.reste)}</td>`)).join('');
     const retard = R.aTraiter.filter((c) => c.retard).length;
-    return mesEtatsCarte('Carences à traiter', R.aTraiter.length,
-        retard ? `${retard} en retard` : '',
+    return mesEtatsCarte(retard ? `${retard} en retard` : '',
         'Carences reçues des modules de surveillance ou relevées ici, sur lesquelles aucune '
         + 'suite n’a encore été arrêtée. Ouvrir le dossier déclenche leur traitement.',
         mesEtatsTableau([
@@ -186,7 +185,7 @@ function mesEtatsPanCloturees(R) {
         <td>${_mesEsc(mesDate(c.date_ouverture))}</td>
         <td>${_mesEsc(mesDate(c.traitement_cloture_le || c.date_cloture))}</td>
         <td style="text-align:center;">${c.mesures_liees || 0}</td>`)).join('');
-    return mesEtatsCarte('Carences clôturées', R.cloturees.length, '',
+    return mesEtatsCarte('',
         'Carences dont le traitement est clos : les mesures ont été arrêtées et aucune '
         + 'n’appelle plus de suivi. Le dossier se consulte, il ne se réécrit plus.',
         mesEtatsTableau([
@@ -206,7 +205,7 @@ function mesEtatsPanClassees(R) {
         <td>${_mesEsc(mesDate(c.date_cloture))}</td>
         <td>${c.classement_motif
         ? _mesEsc(c.classement_motif) : '<span class="mes-preuve-vide">—</span>'}</td>`)).join('');
-    return mesEtatsCarte('Carences classées', R.classees.length, '',
+    return mesEtatsCarte('',
         'Carences closes sans mesure d’application : l’autorité a jugé qu’aucune suite '
         + 'n’était à leur donner, ou l’instance que l’infraction n’était pas constituée.',
         mesEtatsTableau([

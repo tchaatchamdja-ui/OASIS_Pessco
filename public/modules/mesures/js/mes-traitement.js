@@ -127,7 +127,7 @@ function mesEtatEtape() {
     const url = `${MES_API}/constatations/${encodeURIComponent(c.id)}/etapes/${etape}.pdf`;
     return `<a class="btn btn-sm mes-btn-export" download href="${_mesAttr(url)}"
         title="${_mesAttr(`Télécharge l’étape « ${libelle} » en PDF, avec tous ses éléments`)}"
-        >${typeof MES_ICONES_ETAT === 'object' ? MES_ICONES_ETAT.pdf : ''} PDF</a>`;
+        >${typeof MES_ICONES_ETAT === 'object' ? MES_ICONES_ETAT.pdf : ''} Exporter PDF</a>`;
 }
 
 // Actions de l'étape regardée. Sur « Suite à donner » : enregistrer ce qui a

@@ -72,9 +72,9 @@ function mesBoutonsExport(base) {
         href="${_mesAttr(mesUrlExport(base, format))}"
         title="${_mesAttr(aide)}">${icone} ${libelle}</a>`;
     return `<div class="mes-exports">
-        ${lien('xlsx', MES_ICONES_ETAT.excel, 'Excel',
+        ${lien('xlsx', MES_ICONES_ETAT.excel, 'Exporter Excel',
             'Classeur Excel des lignes affichées, filtres compris')}
-        ${lien('pdf', MES_ICONES_ETAT.pdf, 'PDF',
+        ${lien('pdf', MES_ICONES_ETAT.pdf, 'Exporter PDF',
             'Document PDF des lignes affichées, filtres compris')}
     </div>`;
 }

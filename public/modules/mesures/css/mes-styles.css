@@ -150,14 +150,12 @@
    impose. Un « min-width » sur l'entête ne suffisait pas — en disposition
    automatique le navigateur ne le tient pas — d'où la largeur en pourcentage. */
 .mes-cell-mesure { min-width: 0; }
-/* La catégorie ouvre la cellule, en gras et d'un point au-dessus du type ; le
-   type suit à la taille des autres colonnes, sans graisse ; la description
-   ferme en italique, à la même taille que le type. */
-.mes-cell-categorie { font-size: .923rem; font-weight: 700; color: var(--text); }
+/* La catégorie ouvre la cellule, en gras, à la taille des autres colonnes ; le
+   type suit sans graisse, et la description s'accroche derrière lui, sur la
+   même ligne — elle précise ce type, elle ne s'en détache pas. */
+.mes-cell-categorie { font-size: .84rem; font-weight: 700; color: var(--text); }
 .mes-cell-type { font-size: .84rem; font-weight: 400; color: var(--text); }
-.mes-cell-description {
-    font-size: .84rem; font-style: italic; color: var(--text-muted); margin-top: .1rem;
-}
+.mes-cell-description { color: var(--text-muted); }
 /* Ce que le statut appelle comme suite, sous son badge. */
 .mes-cell-suite { font-size: .72rem; color: var(--text-muted); margin-top: .15rem; }
 
@@ -192,6 +190,13 @@
     white-space: normal; text-align: center; line-height: 1.2; width: 100%;
 }
 .mes-btn-icone { padding: .25rem .45rem; line-height: 0; }
+/* Le suivi et la suppression se tiennent côte à côte : la pile étire ses
+   boutons sur toute la largeur, ce qui donnerait à une icône seule la taille
+   d'un libellé. */
+.mes-actions-duo {
+    display: flex; gap: .3rem; align-items: stretch; justify-content: center;
+}
+.mes-actions-duo .mes-btn-icone { width: auto; flex: 0 0 auto; }
 
 /* ── Volet latéral (formulaire de mesure) ──
    Même comportement que le volet du module Exécution : superposition sombre,

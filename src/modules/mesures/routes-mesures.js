@@ -782,7 +782,10 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/mesures/:id`, requireAuth, (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, "Réservé au gestionnaire du module");
+    // Une mesure efface une sanction prononcée et le suivi qui l'accompagne :
+    // le geste est réservé au compte qui administre l'application, non au
+    // gestionnaire du module.
+    if (req.user.role !== 'SUPERADMIN') return refuser(res, "Réservé au SuperAdmin");
     if (!db.remove('mesures', req.params.id)) {
       return res.status(404).json({ error: 'Mesure non trouvée' });
     }

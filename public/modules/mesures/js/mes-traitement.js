@@ -225,7 +225,7 @@ function mesSectionPac() {
 // Section 2 — ce que l'autorité a recueilli en plus du plan d'actions.
 function mesSectionInformations() {
     const t = MES_STATE.traitement || {};
-    const off = mesPeutEcrire() ? '' : 'disabled';
+    const off = mesTraitementModifiable() ? '' : 'disabled';
     const pieces = (t.pieces || []).map((p, i) => `
         <div class="mes-preuve" data-genre="traitement" data-chemin="${_mesAttr(p.path || '')}">
             <input class="mes-input" value="${_mesAttr(p.nom || '')}"
@@ -305,7 +305,7 @@ function mesBarreInferieure(ro, champsMesure, etape) {
             <button class="btn btn-primary btn-sm" onclick="mesEnregistrerMesure()">${MES_ICONS.check} Enregistrer</button>
         </div>`;
     }
-    if (!mesPeutEcrire() || !['suite', 'investigations', 'qualification'].includes(etape)) return '';
+    if (!mesTraitementModifiable() || !['suite', 'investigations', 'qualification'].includes(etape)) return '';
     if (etape === 'investigations' && mesInvSoumise()) return '';
     // Une qualification close ne s'enregistre plus : elle se consulte.
     if (etape === 'qualification' && typeof mesQualClose === 'function' && mesQualClose()) return '';
@@ -334,7 +334,17 @@ const mesInvestigation = () => (MES_STATE.traitement || {}).investigation
 // Une investigation soumise est close : tous ses champs passent en lecture,
 // et rien ne s'y ajoute plus.
 const mesInvSoumise = () => !!mesInvestigation().soumise_le;
-const mesInvModifiable = () => mesPeutEcrire() && !mesInvSoumise();
+
+// Un traitement clos ne se réécrit plus, à aucune de ses étapes : la carence a
+// été classée. Le dossier se consulte.
+const mesTraitementClos = () => {
+    const c = MES_STATE.carenceEnCours || {};
+    const t = MES_STATE.traitement || {};
+    return !!(c.classee || t.classe_le);
+};
+const mesTraitementModifiable = () => mesPeutEcrire() && !mesTraitementClos();
+
+const mesInvModifiable = () => mesTraitementModifiable() && !mesInvSoumise();
 
 // Liste de pièces, réutilisée par les trois endroits qui en portent : un
 // travail d'investigation, les autres éléments collectés, et le formulaire de
@@ -576,7 +586,7 @@ function mesActionsInvestigation() {
             title="${_mesAttr(`Soumise le ${mesDate(inv.soumise_le)}${
                 inv.soumise_par ? ` par ${inv.soumise_par}` : ''}`)}">Investigation soumise</span>`;
     }
-    if (!mesPeutDecider()) return '';
+    if (!mesPeutDecider() || mesTraitementClos()) return '';
     return `<button class="btn btn-sm mes-btn-mesure"
         title="Clôt l’investigation et passe à « Qualification et Mesures ». Les éléments consignés ne se modifieront plus."
         onclick="mesSoumettreInvestigation()">${MES_ICONS.check} Soumettre</button>`;
@@ -707,4 +717,5 @@ Object.assign(window, {
     mesInvAjouterTravail, mesInvRetirerTravail, mesInvMajTitre,
     mesInvTeleverser, mesInvRetirerPiece, mesEnregistrerInvestigation,
     mesActionsInvestigation, mesSoumettreInvestigation, mesRenvoisInvestigation,
+    mesTraitementClos, mesTraitementModifiable,
 });

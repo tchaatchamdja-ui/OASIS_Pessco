@@ -152,6 +152,9 @@ module.exports = function register(app, deps, M) {
     if (!R.canRead(req.user, null)) return refuser(res);
     const mesures = db.list('mesures');
     const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
+    // Étape du traitement, servie avec la carence : l'écran y lit le libellé
+    // de son bouton d'action, sans interroger chaque dossier un à un.
+    const traitements = new Map(db.list('traitements').map((x) => [x.constatation_id, x]));
     // Une infraction est close quand elle a été classée, ou quand toutes les
     // mesures qu'elle a values sont clôturées : c'est cette date que l'écran
     // porte en colonne « Clôture ».
@@ -178,6 +181,8 @@ module.exports = function register(app, deps, M) {
         mesures_closes: closes,
         classee: !!classee,
         classement_motif: classee ? classee.motif : '',
+        traitement_etape: (traitements.get(c.id) || {}).etape || '',
+        traitement_decision: (traitements.get(c.id) || {}).decision || '',
         date_cloture: cloture(c, liees),
         statut: classee ? 'classee' : c.statut,
         statut_care: statutCare,

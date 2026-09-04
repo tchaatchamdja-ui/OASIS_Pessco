@@ -856,6 +856,30 @@ function mesRenderMesures() {
 //  Page 3 — Carences
 // ══════════════════════════════════════
 
+// Le bouton d'action dit où en est le traitement, plutôt que d'inviter
+// indistinctement à « traiter » un dossier déjà bien avancé. Une carence
+// classée s'ouvre aussi : son dossier se consulte, il ne se modifie plus.
+const MES_LIBELLE_ETAPE = {
+    suite: 'Traiter',
+    investigations: 'Investigations',
+    qualification: 'Qualification et Mesures',
+    suivi: 'Traitement clôturé',
+};
+
+function mesBoutonTraitement(c) {
+    const etape = c.traitement_etape || 'suite';
+    const clos = etape === 'suivi' || c.classee;
+    const libelle = c.classee ? 'Traitement clôturé' : (MES_LIBELLE_ETAPE[etape] || 'Traiter');
+    // Un dossier clos se consulte : le bouton reste, sans l'accent de l'action.
+    const classe = clos ? 'btn-outline' : 'mes-btn-mesure';
+    const icone = clos ? MES_ICONS.edit : MES_ICONS.add;
+    if (!mesPeutEcrire() && !clos) return '';
+    return `<button class="btn btn-sm ${classe}"
+        title="${_mesAttr(clos ? 'Consulter le dossier de traitement'
+            : `Poursuivre le traitement — étape « ${MES_LIBELLE_ETAPE[etape] || 'Suite à donner'} »`)}"
+        onclick="mesMesureDepuisConstatation('${c.id}')">${icone} ${_mesEsc(libelle)}</button>`;
+}
+
 function mesCritiquesFiltrees() {
     const F = MES_STATE.filtres;
     const q = _mesNorm(F.crit_recherche);
@@ -903,12 +927,7 @@ function mesLignesCritiques() {
                 ? `<span class="mes-badge cloturee">${mesDate(c.date_cloture)}</span>` : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
-                ${mesPeutEcrire() && !c.classee
-                    ? `<button class="btn btn-sm mes-btn-mesure" onclick="mesMesureDepuisConstatation('${c.id}')">
-                           ${MES_ICONS.add} Traiter</button>` : ''}
-                ${mesPeutDecider() && !c.classee && !c.mesures_liees
-                    ? `<button class="btn btn-sm mes-btn-classer" onclick="mesClasserCarence('${c.id}')"
-                               title="Aucune suite ne sera donnée">${MES_ICONS.check} Classer</button>` : ''}
+                ${mesBoutonTraitement(c)}
                 ${c.classee
                     ? `<span class="mes-badge cloturee" title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
                 ${c.origine === 'CARE' && mesPeutEcrire() ? `<span class="mes-actions-icones">
@@ -1723,7 +1742,7 @@ Object.assign(window, {
     mesStatutMesure, mesStatutSuivi, MES_SUIVI,
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,
-    mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation,
+    mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
     mesOuvrirCategorie, mesOuvrirType, mesFermerModal,
     mesEnregistrerCategorie, mesEnregistrerType,
     mesSupprimerCategorie, mesSupprimerType,
@@ -1867,19 +1886,6 @@ async function mesSupprimerConstat(id) {
 
 // Classer : l'autorité décide qu'aucune suite ne sera donnée. La carence
 // reste inscrite — c'est la décision qui la clôt, non son effacement.
-async function mesClasserCarence(id) {
-    const c = MES_STATE.data.constatations.find((x) => x.id === id) || {};
-    const motif = prompt(`Classer la carence ${c.reference || ''} sans suite.\nMotif :`, '');
-    if (motif === null) return;
-    try {
-        await mesApi(`/constatations/${id}/classer`, {
-            method: 'POST', body: JSON.stringify({ motif: motif.trim() }),
-        });
-        MES_STATE.data.constatations = await mesApi('/constatations');
-        mesRenderPage();
-        mesToast('Carence classée sans suite');
-    } catch (e) { mesToast(e.message || 'Classement impossible', 'error'); }
-}
 
 // Délai et échéance disent la même chose de deux façons : renseigner l'un
 // remplit l'autre, à partir de la date d'ouverture. La dernière saisie

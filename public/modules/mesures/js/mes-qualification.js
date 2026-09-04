@@ -23,15 +23,14 @@ const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
 // ne se rejouent pas. Le rang dit tout — le fil a reculé après un renvoi,
 // avancé après une validation ; seule l'étape courante reste modifiable.
 const mesQualClose = () => {
-    const t = MES_STATE.traitement || {};
-    if (t.classe_le) return 'classée';
+    if (mesTraitementClos()) return 'classée';
     const rang = MES_ETAPES.findIndex((e) => e.cle === 'qualification');
     if (mesRangAtteint() > rang) return 'validée';
     if (mesRangAtteint() < rang) return 'renvoyée';
     return '';
 };
 
-const mesQualModifiable = () => mesPeutEcrire() && !mesQualClose();
+const mesQualModifiable = () => mesTraitementModifiable() && !mesQualClose();
 
 // ── Section B — le rapport d'investigation ──
 // Il est repris tel que l'investigation l'a laissé, et le PDF donne

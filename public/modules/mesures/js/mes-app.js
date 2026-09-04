@@ -989,12 +989,12 @@ function mesRenderCritiques() {
                 <thead><tr>
                     <th style="width:150px;">Référence</th>
                     <th>Objet / Description</th>
-                    <th style="width:180px;">Prestataire</th>
+                    <th style="width:120px;">Prestataire</th>
                     <th style="width:110px;">Ouverture</th>
                     <th style="width:110px;">Échéance</th>
                     <th style="width:130px;">Statut</th>
                     <th style="width:110px;">Clôture</th>
-                    <th style="width:130px;text-align:center;">Actions</th>
+                    <th style="width:105px;text-align:center;">Actions</th>
                 </tr></thead>
                 <tbody data-corps="critiques">${mesLignesCritiques()}</tbody>
             </table>

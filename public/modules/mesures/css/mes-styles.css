@@ -184,6 +184,13 @@
 .mes-actions-pile {
     display: flex; flex-direction: column; gap: .3rem; align-items: center;
 }
+/* Le libellé d'un bouton d'action peut se replier : « Qualification et
+   Mesures » tenait la colonne à sa largeur, quelle que soit celle demandée —
+   en disposition automatique, une colonne ne descend pas sous le contenu le
+   plus large qu'elle ne peut pas couper. */
+.mes-actions-pile .btn {
+    white-space: normal; text-align: center; line-height: 1.2; width: 100%;
+}
 .mes-btn-icone { padding: .25rem .45rem; line-height: 0; }
 
 /* ── Volet latéral (formulaire de mesure) ──

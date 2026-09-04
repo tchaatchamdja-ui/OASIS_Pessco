@@ -817,7 +817,7 @@ function mesLignesMesures() {
                                 ? 'Le suivi de cette mesure est terminé : le dossier se consulte.'
                                 : 'Ouvre le traitement de la carence à l’étape « Suivi des Mesures »')}">
                         ${MES_ICONS.check} ${suiviClos ? 'Consulté' : 'Suivi'}</button>
-                    ${mesEstSuperAdmin() ? `<button class="btn btn-outline btn-sm mes-btn-icone"
+                    ${mesEstSuperAdmin() ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger"
                         title="Supprimer définitivement cette mesure"
                         onclick="mesSupprimerMesure('${m.id}')">${MES_ICONS.delete}</button>` : ''}
                 </div>
@@ -1023,8 +1023,7 @@ function mesLignesCritiques() {
                     <button class="btn btn-outline btn-sm mes-btn-icone" title="Modifier"
                             onclick="mesOuvrirConstat('${c.id}')">${MES_ICONS.edit}</button>
                     ${mesEstAdmin() && !c.mesures_liees && !c.classee
-                        ? `<button class="btn btn-outline btn-sm mes-btn-icone" title="Supprimer"
-                                   style="color:#dc2626;border-color:#dc2626;"
+                        ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger" title="Supprimer"
                                    onclick="mesSupprimerConstat('${c.id}')">${MES_ICONS.delete}</button>` : ''}
                 </span>` : ''}
               </div>

@@ -822,6 +822,22 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
     display: inline-flex; align-items: center; justify-content: center; gap: .25rem;
 }
 .mes-actions .btn svg { width: 12px; height: 12px; }
+/* Les boutons blancs de la colonne prennent la bordure du thème : la bordure
+   grise les faisait passer pour désactivés à côté du bouton d'étape, qui est
+   plein. La suppression garde le rouge qu'elle se pose elle-même — c'est le
+   seul geste de la colonne qui ne se rattrape pas. */
+.mes-actions .btn-outline {
+    border-color: var(--primary); color: var(--primary);
+}
+.mes-actions .btn-outline:hover {
+    background: var(--mes-accent-bg); border-color: var(--primary);
+}
+/* Sauf la suppression : elle garde le rouge, seul geste de la colonne qui ne
+   se rattrape pas. */
+.mes-actions .btn-outline.mes-btn-danger,
+.mes-actions .btn-outline.mes-btn-danger:hover {
+    border-color: #dc2626; color: #dc2626;
+}
 
 /* Modifier et Supprimer forment un couple : le rang peut passer à la ligne
    avant eux, jamais entre eux. */
@@ -853,8 +869,15 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
 /* La table occupe la moitié de la hauteur offerte : les lignes respirent sans
    s'étirer sur toute la carte. */
 .mes-repartition-tab { flex: 1 1 220px; height: 50%; border-collapse: collapse; font-size: .8rem; }
-.mes-repartition-tab td { padding: .1rem .55rem; border-bottom: 1px solid var(--border); }
-.mes-repartition-tab td + td { border-left: 1px solid var(--border); }
+/* Les filets du graphique prennent une teinte du thème : la grille grise
+   n'appartenait à rien. */
+.mes-repartition-tab td {
+    padding: .1rem .55rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+}
+.mes-repartition-tab td + td {
+    border-left: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+}
 .mes-repartition-tab tbody tr:last-child td { border-bottom: none; }
 .mes-repartition-tab td.num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
 .mes-repartition-badge {
@@ -878,7 +901,10 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
 /* Les lignes occupent la hauteur de leur carte : la répartition ne laisse pas
    un vide sous elle quand la carte voisine est plus haute. Sans camembert,
    elles s'étirent ; avec lui, le disque reste centré. */
-.mes-card:has(> .mes-repartition) { display: flex; flex-direction: column; }
+/* La carte d'un graphique se cerne en outre de la couleur du thème. */
+.mes-card:has(> .mes-repartition) {
+    display: flex; flex-direction: column; border-color: var(--primary);
+}
 .mes-card > .mes-repartition { flex: 1 1 auto; }
 .mes-card > .mes-repartition:not(:has(.mes-camembert)) { align-items: stretch; }
 

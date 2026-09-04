@@ -262,6 +262,27 @@
 .mes-etats-actions { overflow: visible; white-space: nowrap; }
 .mes-etats-actions .btn + .btn { margin-left: .25rem; }
 
+/* Le menu Mesures ouvert sur une seule carence le dit, et se relâche d'un
+   clic : sans cette mention, la table paraîtrait incomplète sans raison. */
+.mes-filtre-carence {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .2rem .3rem .2rem .6rem; border-radius: 999px;
+    background: var(--mes-accent-bg); color: var(--primary);
+    font-size: .76rem; font-weight: 600; white-space: nowrap;
+}
+.btn-nu {
+    appearance: none; background: none; border: 0; padding: 0; margin: 0;
+    cursor: pointer; color: inherit; display: inline-flex; line-height: 0;
+}
+.btn-nu svg { width: 13px; height: 13px; }
+/* Barre d'action fermant le corps d'un volet : une seule action, à droite.
+   Distincte de « .mes-volet-pied », qui a ses propres retraits — deux noms
+   proches auraient signifié deux choses. */
+.mes-volet-actions {
+    display: flex; justify-content: flex-end;
+    margin-top: .9rem; padding-top: .8rem; border-top: 1px solid var(--border);
+}
+
 /* Les deux états d'une liste, à droite de son titre. */
 .mes-page-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .mes-exports { display: inline-flex; gap: .35rem; }
@@ -406,19 +427,29 @@
     display: flex; gap: .3rem; align-items: stretch; justify-content: center;
 }
 .mes-actions-duo .mes-btn-icone { width: auto; flex: 0 0 auto; }
-/* Colonne d'actions d'une carence : le bouton d'étape et la mention qui le
-   suit d'un côté, la pile d'icônes de l'autre. La mention se centre sur le
-   bouton — la centrer sur la cellule la décalait, le bouton étant lui-même
-   poussé à gauche par les icônes. */
-.mes-actions-rangee { display: flex; gap: .3rem; align-items: flex-start; justify-content: center; }
-.mes-actions-colonne {
-    display: flex; flex-direction: column; align-items: center; gap: .2rem; min-width: 0;
+/* Colonne d'actions d'une carence, en deux colonnes et deux rangs :
+     [ bouton d'étape        ] [ historique ]
+     [ mention sous le bouton ] [ mesures    ]
+   La grille fait deux choses qu'un simple alignement ne faisait pas. La mention
+   se centre sur le bouton, et non sur la cellule — le bouton étant poussé à
+   gauche par les icônes, la centrer sur la cellule la décalait. Et l'historique
+   prend la hauteur de son rang, donc celle du bouton, au lieu de rester un
+   carré de 22 px à côté d'un bloc de deux lignes. */
+.mes-actions-grille {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: .2rem .3rem; align-items: stretch; justify-content: center;
 }
-.mes-actions-colonne .btn { width: 100%; }
-.mes-actions-icones-col {
-    display: flex; flex-direction: column; gap: .25rem; flex: 0 0 auto;
+.mes-actions-case-bouton { display: flex; }
+.mes-actions-case-bouton .btn { width: 100%; }
+.mes-actions-case-icone-haut { display: flex; }
+.mes-actions-case-icone-haut .btn { height: 100%; width: auto; }
+.mes-actions-case-mention {
+    display: flex; flex-direction: column; align-items: center; gap: .2rem;
 }
-.mes-actions-icones-col .mes-btn-icone { width: auto; }
+/* Le second rang ne s'étire pas sur la hauteur de la mention : une icône y
+   garde sa taille. */
+.mes-actions-case-icone-bas { display: flex; align-items: flex-start; }
+.mes-actions-case-icone-bas .btn { width: auto; }
 
 /* ── Volet latéral (formulaire de mesure) ──
    Même comportement que le volet du module Exécution : superposition sombre,

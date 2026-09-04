@@ -243,6 +243,8 @@ module.exports = function register(app, deps, M) {
         if (q.prestataire && m.prestataire_id !== q.prestataire) return false;
         // Le statut de suivi se déduit comme à l'écran quand il n'est pas posé.
         if (q.suivi && suiviCourant(m) !== q.suivi) return false;
+        // Filtre posé depuis le menu Carences : les mesures d'un seul dossier.
+        if (q.carence && m.constatation_id !== q.carence) return false;
         if (!cherche) return true;
         return `${m.reference} ${m.objet} ${m.description} ${m.prestataire_nom}`
           .toLowerCase().includes(cherche);
@@ -253,7 +255,9 @@ module.exports = function register(app, deps, M) {
       attendu: 'Plan attendu', en_cours: 'En cours de mise en œuvre', solde: 'Soldé',
       sans_suite: 'Sans suite', sans_objet: 'Suivi sans objet', recours: 'Recours',
     };
+    const refCarence = (id) => (constatations().find((c) => c.id === id) || {}).reference || '';
     const criteres = criteresLisibles([
+      ['Carence', refCarence(q.carence)],
       ['Catégorie', libelle('categories', q.categorie) || q.categorie || ''],
       ['Statut de suivi', SUIVIS[q.suivi] || ''],
       ['Prestataire', nomPrestataire(q.prestataire)],

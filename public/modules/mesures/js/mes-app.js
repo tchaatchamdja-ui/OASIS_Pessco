@@ -24,7 +24,7 @@ const MES_STATE = {
     },
     filtres: {
         db_prest: '', db_cat: '', db_type: '', db_statut: '', db_echeance: '',
-        mes_categorie: '', mes_statut: '', mes_prest: '', mes_recherche: '',
+        mes_categorie: '', mes_statut: '', mes_prest: '', mes_recherche: '', mes_carence: '',
         crit_statut: '', crit_prest: '', crit_origine: '', crit_recherche: '',
     },
     mesureEnCours: null,
@@ -435,6 +435,7 @@ function mesResetFiltresDashboard() {
 function mesResetFiltresMesures() {
     const F = MES_STATE.filtres;
     F.mes_categorie = ''; F.mes_statut = ''; F.mes_prest = ''; F.mes_recherche = '';
+    F.mes_carence = '';
     mesRenderPage();
 }
 
@@ -741,6 +742,17 @@ function mesRenderDashboard() {
 //  Page 2 — Mesures
 // ══════════════════════════════════════
 
+// Le menu Mesures peut être ouvert sur les seules mesures d'une carence : la
+// mention le dit, faute de quoi la table paraîtrait incomplète sans raison.
+function mesFiltreCarence() {
+    const id = MES_STATE.filtres.mes_carence;
+    if (!id) return '';
+    const c = (MES_STATE.data.constatations || []).find((x) => x.id === id) || {};
+    return `<span class="mes-filtre-carence">Carence ${_mesEsc(c.reference || id)}
+        <button class="btn-nu" title="Retirer ce filtre"
+                onclick="mesSetFiltre('mes_carence','')">${MES_ICONS.x}</button></span>`;
+}
+
 function mesMesuresFiltrees() {
     const F = MES_STATE.filtres;
     const q = _mesNorm(F.mes_recherche);
@@ -748,6 +760,8 @@ function mesMesuresFiltrees() {
         if (F.mes_categorie && m.categorie !== F.mes_categorie) return false;
         if (F.mes_statut && mesStatutSuivi(m) !== F.mes_statut) return false;
         if (F.mes_prest && m.prestataire_id !== F.mes_prest) return false;
+        // Filtre posé depuis le menu Carences : les mesures d'un seul dossier.
+        if (F.mes_carence && m.constatation_id !== F.mes_carence) return false;
         if (!q) return true;
         return _mesNorm(`${m.reference} ${m.objet} ${m.description} ${m.prestataire_nom} ${mesLibelleType(m.type_mesure)}`).includes(q);
     });
@@ -812,6 +826,16 @@ function mesLignesMesures() {
     }).join('');
 }
 
+// Ouvre le menu « Mesures » sur les seules mesures d'une carence. Le volet qui
+// les résume se ferme : c'est la table qui prend le relais.
+function mesOuvrirTableMesures(constatationId) {
+    if (typeof mesFermerHistorique === 'function') mesFermerHistorique();
+    const F = MES_STATE.filtres;
+    F.mes_carence = constatationId;
+    F.mes_categorie = ''; F.mes_statut = ''; F.mes_prest = ''; F.mes_recherche = '';
+    mesNavigateTo('mesures');
+}
+
 // « Faire le suivi » rouvre le traitement de la carence dont la mesure est
 // issue, à l'étape du suivi : la mesure ne se suit pas seule, elle se suit
 // dans le dossier qui l'a value.
@@ -860,6 +884,7 @@ function mesRenderMesures() {
             </select>
             <input class="mes-input mes-filtre-large" type="text" placeholder="Rechercher…" value="${_mesAttr(F.mes_recherche)}"
                    oninput="mesRechercher('mes_recherche', this.value)">
+            ${mesFiltreCarence()}
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresMesures()"
                     title="Réinitialiser les filtres">${MES_ICONS.reset}</button>
         </div>
@@ -975,22 +1000,25 @@ function mesLignesCritiques() {
             <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
-                <div class="mes-actions-rangee">
-                  <span class="mes-actions-colonne">
-                    ${mesBoutonTraitement(c)}
-                    ${mesEtatSousMesure(c)}
-                  </span>
-                  <span class="mes-actions-icones-col">
+                <div class="mes-actions-grille">
+                  <span class="mes-actions-case-bouton">${mesBoutonTraitement(c)}</span>
+                  <span class="mes-actions-case-icone-haut">
                     <button class="btn btn-outline btn-sm mes-btn-icone"
                             title="Historique du traitement"
                             onclick="mesHistorique('${c.id}')">${MES_ICONES_ETAT.clock}</button>
+                  </span>
+                  <span class="mes-actions-case-mention">
+                    ${mesEtatSousMesure(c)}
+                    ${c.classee
+                        ? `<span class="mes-badge cloturee"
+                                 title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
+                  </span>
+                  <span class="mes-actions-case-icone-bas">
                     ${c.mesures_liees ? `<button class="btn btn-outline btn-sm mes-btn-icone"
                             title="Voir les ${c.mesures_liees} mesure(s) prise(s) sur cette carence"
                             onclick="mesMesuresDeCarence('${c.id}')">${MES_ICONS.shield}</button>` : ''}
                   </span>
                 </div>
-                ${c.classee
-                    ? `<span class="mes-badge cloturee" title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
                 ${c.origine === 'CARE' && mesPeutEcrire() ? `<span class="mes-actions-icones">
                     <button class="btn btn-outline btn-sm mes-btn-icone" title="Modifier"
                             onclick="mesOuvrirConstat('${c.id}')">${MES_ICONS.edit}</button>
@@ -1444,6 +1472,7 @@ Object.assign(window, {
     mesTeleverserPreuve, mesRetirerPreuve,
     mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
     mesTypesInvestigation, mesComites, mesRechargerParametres, mesEtatSousMesure,
+    mesFiltreCarence, mesOuvrirTableMesures,
 });
 
 // ══════════════════════════════════════

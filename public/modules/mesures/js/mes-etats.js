@@ -45,6 +45,7 @@ const mesParametresMesures = () => {
     return new URLSearchParams(Object.entries({
         categorie: F.mes_categorie || '', suivi: F.mes_statut || '',
         prestataire: F.mes_prest || '', recherche: F.mes_recherche || '',
+        carence: F.mes_carence || '',
     }).filter((x) => x[1])).toString();
 };
 
@@ -316,9 +317,6 @@ function mesMesuresDeCarence(constatationId) {
                     <label>Commentaire de suivi</label>
                     <div class="mes-lecture">${_mesEsc(m.suivi_commentaire)}</div>
                 </div>` : ''}
-                <button class="btn btn-outline btn-sm" style="margin-top:.6rem;"
-                        onclick="mesFermerHistorique();mesFaireLeSuivi('${m.id}')">
-                    ${MES_ICONS.check} Ouvrir le suivi</button>
             </div>
         </div>`;
     }).join('');
@@ -340,6 +338,11 @@ function mesMesuresDeCarence(constatationId) {
     c.prestataire_nom ? ` · ${_mesEsc(c.prestataire_nom)}` : ''} · ${liees.length} mesure(s)</div>
                 </div>
                 ${blocs || '<p class="mes-preuve-vide">Aucune mesure n’est rattachée à cette carence.</p>'}
+                ${liees.length ? `<div class="mes-volet-actions">
+                    <button class="btn btn-primary btn-sm"
+                            onclick="mesOuvrirTableMesures('${c.id}')">
+                        ${MES_ICONS.shield} Ouvrir la table des Mesures</button>
+                </div>` : ''}
             </div>
         </div>
     </div>`;

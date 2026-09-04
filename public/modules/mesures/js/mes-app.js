@@ -901,15 +901,15 @@ function mesBoutonTraitement(c) {
 
 // Un traitement conclu par des mesures reste ouvert tant que leur mise en œuvre
 // se suit ; il est clos quand l'instance a jugé qu'aucune ne l'appelait. Le
-// bouton dit la même chose des deux — « Traitement clôturé » — d'où cette
-// mention au-dessus de lui.
+// bouton dit la même chose des deux — « Traitement clôturé » — d'où ce badge
+// sous lui, de la même facture que « Classée ».
 function mesEtatSousMesure(c) {
     if (c.classee || c.traitement_etape !== 'suivi') return '';
     return c.traitement_clos
-        ? '<span class="mes-etat-dossier" title="Les mesures sont arrêtées et aucune '
+        ? '<span class="mes-badge cloturee" title="Les mesures sont arrêtées et aucune '
             + 'n’appelle le suivi de sa mise en œuvre.">Clôturée</span>'
-        : '<span class="mes-etat-dossier" title="Les mesures sont arrêtées ; '
-            + 'la mise en œuvre reste à suivre.">Sous suivi</span>';
+        : '<span class="mes-badge en_cours" title="Les mesures sont arrêtées ; '
+            + 'la mise en œuvre reste à suivre.">Sous Suivi</span>';
 }
 
 function mesCritiquesFiltrees() {
@@ -961,8 +961,8 @@ function mesLignesCritiques() {
             <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
-                ${mesEtatSousMesure(c)}
                 ${mesBoutonTraitement(c)}
+                ${mesEtatSousMesure(c)}
                 ${c.classee
                     ? `<span class="mes-badge cloturee" title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
                 ${c.origine === 'CARE' && mesPeutEcrire() ? `<span class="mes-actions-icones">

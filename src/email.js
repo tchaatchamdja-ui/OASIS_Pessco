@@ -8,7 +8,15 @@ let nodemailer = null;
 try { nodemailer = require('nodemailer'); } catch { /* fallback fichier seul */ }
 
 const APP = 'OASIS';
-const LOGIN_URL = process.env.APP_URL || 'http://localhost:4750/login.html';
+// Lien de connexion porté par les courriels. En hébergement, l'adresse
+// publique du service fait foi : Render la pose dans RENDER_EXTERNAL_URL, ce
+// qui évite d'avoir à la recopier à la main — sans quoi les destinataires
+// recevraient un lien vers « localhost ». APP_URL reste prioritaire, pour un
+// domaine propre ou un proxy devant le service.
+const RACINE_PUBLIQUE = process.env.RENDER_EXTERNAL_URL
+  ? `${String(process.env.RENDER_EXTERNAL_URL).replace(/\/+$/, '')}/login.html`
+  : 'http://localhost:4750/login.html';
+const LOGIN_URL = process.env.APP_URL || RACINE_PUBLIQUE;
 const SUPPORT = 'support@anac.bj';
 
 function loadSmtp() {

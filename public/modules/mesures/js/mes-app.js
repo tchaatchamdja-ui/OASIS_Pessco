@@ -161,9 +161,13 @@ const MES_STATUT_CARE = {
     classee: { libelle: 'Classée', couleur: '#7c3aed' },
 };
 
+// Dans la table, le statut se lit en toutes lettres, sans pastille colorée :
+// une colonne de pilules pleines attire l'œil plus que ce qu'elle apprend. Les
+// couleurs restent au tableau de bord, où elles distinguent les parts d'un
+// graphique.
 const mesBadgeStatutCare = (cle) => {
     const st = MES_STATUT_CARE[cle] || MES_STATUT_CARE.a_traiter;
-    return `<span class="mes-badge-care" style="background:${st.couleur};">${st.libelle}</span>`;
+    return `<span class="mes-statut-care">${_mesEsc(st.libelle)}</span>`;
 };
 
 const MES_STATUTS = {
@@ -922,7 +926,7 @@ function mesLignesCritiques() {
             <td>${retard
                 ? `<span class="mes-badge retard">${mesDate(c.date_due_cloture)}</span>`
                 : mesDate(c.date_due_cloture)}</td>
-            <td>${mesBadgeStatutCare(c.statut_care)}</td>
+            <td class="mes-cell-statut">${mesBadgeStatutCare(c.statut_care)}</td>
             <td>${c.date_cloture
                 ? `<span class="mes-badge cloturee">${mesDate(c.date_cloture)}</span>` : '—'}</td>
             <td class="mes-actions">
@@ -992,7 +996,7 @@ function mesRenderCritiques() {
                     <th style="width:120px;">Prestataire</th>
                     <th style="width:110px;">Ouverture</th>
                     <th style="width:110px;">Échéance</th>
-                    <th style="width:130px;">Statut</th>
+                    <th style="width:130px;text-align:center;">Statut</th>
                     <th style="width:110px;">Clôture</th>
                     <th style="width:105px;text-align:center;">Actions</th>
                 </tr></thead>

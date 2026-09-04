@@ -562,9 +562,9 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
 .mes-card > .mes-repartition { flex: 1 1 auto; }
 .mes-card > .mes-repartition:not(:has(.mes-camembert)) { align-items: stretch; }
 
-/* Statut d'une carence dans ce module : une pastille pleine, distincte des
-   badges d'état repris des modules d'origine. */
-.mes-badge-care {
-    display: inline-block; padding: .1rem .5rem; border-radius: 999px;
-    color: #fff; font-size: .72rem; font-weight: 700; white-space: nowrap;
-}
+/* Statut d'une carence dans ce module : il se lit en toutes lettres, centré
+   dans sa colonne. La pastille pleine qu'il portait pesait plus que son sens ;
+   ses couleurs servent encore au tableau de bord, où elles distinguent les
+   parts d'un graphique. */
+.mes-statut-care { font-weight: 600; white-space: nowrap; }
+.mes-cell-statut { text-align: center; }

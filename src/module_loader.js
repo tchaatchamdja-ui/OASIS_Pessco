@@ -146,4 +146,4 @@ function superMenus(montes) {
     }));
 }
 
-module.exports = { discover, mount, seedAll, catalogue, superMenus, cartesPortail, MODULES_DIR };
+module.exports = { mount, seedAll, catalogue, superMenus, cartesPortail };

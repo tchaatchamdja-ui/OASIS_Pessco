@@ -47,31 +47,10 @@
    reprennent donc les couleurs des critères — 1 vert, 2 jaune, 3 rouge. */
 .score-selector.inverse .score-btn.active-1 { background: #dcfce7; border-color: #22c55e; color: #16a34a; }
 .score-selector.inverse .score-btn.active-3 { background: #fee2e2; border-color: #ef4444; color: #dc2626; }
-
-/* ── Risk Matrix ── */
-.risk-matrix { border-collapse: collapse; margin: 1rem auto; }
-.risk-matrix td { width: 50px; height: 40px; text-align: center; font-weight: 700; font-size: 0.78rem; border: 1px solid #9ca3af; }
 .risk-matrix .cell-a { background: #bbf7d0; }
-.risk-matrix .cell-b { background: #fef08a; }
 .risk-matrix .cell-c { background: #fed7aa; }
 .risk-matrix .cell-d { background: #fca5a5; }
-.risk-matrix .cell-active { position: relative; }
-.risk-matrix .cell-active::after {
-    content: 'X'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    background: rgba(0,0,0,0.8); color: white; border-radius: 50%; width: 22px; height: 22px; margin: auto; font-size: 0.73rem;
-}
-
-/* ── Dashboard banner ── */
-.dashboard-banner {
-    background: var(--gradient); color: white; padding: 1.5rem 2rem; border-radius: 12px;
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1.5rem; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
-}
-.dashboard-banner h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem; }
 .dashboard-banner .subtitle { color: rgba(255,255,255,0.7); font-size: 0.88rem; }
-.dashboard-banner .big-number { font-size: 3rem; font-weight: 900; text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-.dashboard-banner .big-label { font-size: 0.73rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.15em; }
-
 /* ── Eval Inner Tabs ── */
 .eval-inner-tabs { user-select: none; }
 .eval-tab-btn { transition: all 0.2s; }

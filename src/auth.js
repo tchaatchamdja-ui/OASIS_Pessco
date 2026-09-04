@@ -235,7 +235,6 @@ module.exports = {
   hashPassword,
   checkPasswordPublic,
   generatePassword,
-  passwordPolicyErrors,
   getUsers,
   saveUsers,
   findUser,
@@ -246,5 +245,5 @@ module.exports = {
   destroySession,
   login,
   changePassword,
-  notify,
+  notify
 };

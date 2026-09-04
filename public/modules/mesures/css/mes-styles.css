@@ -115,17 +115,6 @@
 }
 .mes-stat-ligne:last-child { border-bottom: none; }
 .mes-stat-valeur { font-weight: 700; }
-
-/* Barres « top prestataires ». */
-.mes-barre-prest {
-    display: grid; grid-template-columns: 190px 1fr 40px;
-    align-items: center; gap: .6rem; margin-bottom: .4rem; font-size: .82rem;
-}
-.mes-barre-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mes-barre-piste { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
-.mes-barre-remplie { background: var(--mes-accent); height: 100%; border-radius: 4px; }
-.mes-barre-compte { text-align: right; font-weight: 700; }
-
 /* ── Tableaux ── */
 .mes-table { width: 100%; border-collapse: separate; border-spacing: 0;
     border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -727,12 +716,6 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
     display: flex; justify-content: flex-end; gap: .5rem;
     padding: .7rem 1rem; border-top: 1px solid var(--border);
 }
-
-/* ── État vide ── */
-.mes-vide {
-    text-align: center; padding: 3rem 1rem; color: var(--text-muted);
-}
-
 /* ── Volet de saisie d'une infraction ───────────────────────────
    La moitié de l'écran, glissé depuis la droite, bordé de rouge : ce qu'on y
    inscrit est un manquement, la couleur le dit avant le titre. */

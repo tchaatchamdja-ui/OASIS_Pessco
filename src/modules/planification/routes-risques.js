@@ -122,17 +122,4 @@ module.exports = function register(app, deps, M) {
     audit.log(req.user.username, 'PLAN_SYNC_RISQUES', { plan: cible.id, created, updated, amended });
     return res.json({ ok: true, created, updated, amended, target_plan_id: cible.id });
   });
-
-  app.post(`${M}/plans/:id/import-risques`, requireAuth, (req, res) => {
-    if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
-    let created = 0;
-    D.riskProfiles().forEach((p) => {
-      db.createIn('activites', {
-        plan_id: req.params.id, prestataire_id: p.prestataire_id, secteur_id: p.secteur_id,
-        domaine_id: p.domaine_id, niveau_risque: p.niveau, statut: 'planifiee',
-      });
-      created += 1;
-    });
-    return res.json({ ok: true, created });
-  });
 };

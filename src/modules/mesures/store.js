@@ -160,7 +160,6 @@ function prochaineReferenceConstat() {
 }
 
 module.exports = {
-  COLLECTIONS, CATEGORIES_DEFAUT, TYPES_DEFAUT, TYPES_INVESTIGATION_DEFAUT,
-  seed, seedTypesInvestigation, list, get, insert, update, remove, uid, now,
-  prochaineReference, prochaineReferenceConstat,
+  COLLECTIONS, CATEGORIES_DEFAUT, seed, seedTypesInvestigation, list, get, insert, update, remove, uid, now,
+  prochaineReference, prochaineReferenceConstat
 };

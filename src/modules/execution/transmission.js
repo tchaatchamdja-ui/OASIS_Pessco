@@ -190,6 +190,5 @@ Accès à l'application : ${racineApp()}/login.html`,
 }
 
 module.exports = {
-  transmettre, repondreErreur, ErreurTransmission, avertirPrestataire, adressesDuPrestataire,
-  racineApp, lienDe, nomDePresentation, DOSSIER_UPLOADS,
+  transmettre, repondreErreur, avertirPrestataire, nomDePresentation, DOSSIER_UPLOADS
 };

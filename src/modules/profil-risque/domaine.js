@@ -142,6 +142,6 @@ function stampNotationEtapes(rec) {
 
 module.exports = {
   sharedDomaines, sharedSecteurs, sharedSousActivites, sharedPrestataires, sharedIndices,
-  roleM1, riskProfiles, etapesWith, toutesNotesSoumises, stampNotationEtapes,
-  RIGHTS, estPrestataire, peut, peutLire, refus, STATUTS_DECIDES,
+  roleM1, riskProfiles, etapesWith, stampNotationEtapes,
+  RIGHTS, estPrestataire, peut, peutLire, refus, STATUTS_DECIDES
 };

@@ -296,7 +296,5 @@ function register(app, deps) {
 }
 
 module.exports = {
-  register, can, getRights, setRights, effectivePrivilege, prestatairesDuScope,
-  PRIVILEGES, SCOPE_PRIVILEGES, DEFAULT_PRIVILEGE,
-  PRIVILEGES_MODULE, ROLES_GERES, ROLES_GERES_MODULE, privilegesDe, rolesGeresDe,
-};
+  register, can, getRights, setRights, effectivePrivilege, prestatairesDuScope
+  };

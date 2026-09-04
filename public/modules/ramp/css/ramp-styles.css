@@ -254,14 +254,6 @@
 .ramp-histo-etat-val .v-insp { color: var(--primary); }
 .ramp-histo-etat-val .v-ecart { color: #dc2626; }
 .ramp-histo-etat-val i { color: var(--text-muted); font-style: normal; }
-
-/* Bande de commandes d'un graphique temporel : l'année puis les pas, tous sur
-   un rang, calés à droite. */
-.ramp-bande-temps {
-    display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
-    flex-wrap: nowrap; padding: .35rem .5rem; margin-bottom: .5rem;
-    background: var(--ramp-accent-bg); border-radius: 6px;
-}
 .ramp-bande-temps .ramp-granularites { flex-wrap: nowrap; }
 /* Même hauteur pour tout ce qui accompagne un titre de graphique : les bords
    s'alignent, pas seulement les centres. */
@@ -399,16 +391,6 @@
 .ramp-actions-bar {
     display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .9rem;
 }
-
-/* ── Bandeau de résultat ── */
-.ramp-resume {
-    display: flex; align-items: center; gap: .5rem;
-    padding: .5rem .8rem; margin-bottom: .8rem;
-    background: var(--ramp-accent-bg); border-left: 3px solid var(--ramp-accent);
-    border-radius: 0 4px 4px 0; font-size: .84rem; color: var(--text-muted);
-}
-.ramp-resume strong { color: var(--text); }
-
 /* ── Recherche escamotable ──
    Fermée, elle tient dans un rond bordé de la couleur du thème ; ouverte, elle
    occupe la moitié de la largeur et laisse la place à son bouton de vidage. */
@@ -1675,24 +1657,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
 @media (max-width: 1100px) {
     .ramp-poi-envois-rangee { grid-template-columns: 1fr; }
 }
-
-/* ── Retour d'action ─────────────────────────────────────────────
-   Le message paraît au centre de l'écran, où se porte le regard après
-   un clic, avec l'icône et le titre de l'issue. Le fond ne capte pas les
-   clics : il n'interrompt pas le travail en cours. */
-.ramp-toast-fond {
-    position: fixed; inset: 0; z-index: 3000; display: flex;
-    align-items: center; justify-content: center; pointer-events: none;
-}
-.ramp-toast {
-    pointer-events: auto; display: flex; gap: .75rem; align-items: flex-start;
-    max-width: min(28rem, 84vw); padding: .9rem 1.1rem; border-radius: 10px;
-    /* Le fond porte lui aussi la teinte de l'issue : on la voit avant de lire. */
-    background: var(--ramp-toast-fond); color: var(--ramp-toast-encre);
-    border: 1px solid var(--ramp-toast-bord); border-left: 4px solid var(--ramp-toast-teinte);
-    box-shadow: 0 12px 32px rgba(15, 23, 42, .22);
-    animation: rampToastEntree .16s ease-out;
-}
 .ramp-toast-fond.succes {
     --ramp-toast-teinte: #047857; --ramp-toast-fond: #ecfdf5;
     --ramp-toast-bord: #a7f3d0; --ramp-toast-encre: #065f46;
@@ -1705,10 +1669,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
     --ramp-toast-teinte: #b45309; --ramp-toast-fond: #fffbeb;
     --ramp-toast-bord: #fde68a; --ramp-toast-encre: #78350f;
 }
-.ramp-toast-icone { color: var(--ramp-toast-teinte); display: flex; padding-top: .05rem; }
-.ramp-toast-texte { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
-.ramp-toast-titre { font-size: .92rem; color: var(--ramp-toast-teinte); }
-.ramp-toast-message { font-size: .85rem; line-height: 1.45; word-break: break-word; }
 @keyframes rampToastEntree {
     from { opacity: 0; transform: scale(.96); }
     to { opacity: 1; transform: none; }

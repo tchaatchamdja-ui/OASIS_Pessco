@@ -115,4 +115,4 @@ function resend(challengeId, user, channelId) {
   return createChallenge(user, channelId);
 }
 
-module.exports = { createChallenge, verifyChallenge, resend, channelsFor, TTL_MINUTES, MAX_ATTEMPTS };
+module.exports = { createChallenge, verifyChallenge, resend };

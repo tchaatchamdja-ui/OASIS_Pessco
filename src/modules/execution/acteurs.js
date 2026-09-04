@@ -138,4 +138,4 @@ function refusEventuel(user, type, contexte, cle) {
   return `Étape réservée aux intervenants désignés au processus : ${qui}`;
 }
 
-module.exports = { processusDe, entreesDe, attendus, refusEventuel, LIBELLES_ROLE };
+module.exports = { attendus, refusEventuel };

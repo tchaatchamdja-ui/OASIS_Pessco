@@ -259,6 +259,6 @@ module.exports = {
   roleM2, riskProfiles, plansValides, STATUTS_EN_VIGUEUR,
   peut, peutLire, estPrestataire, refus, planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,
-  wf, nomComplet, familleDuPlan, profilsDuPlan, ecartsRisques,
-  SCHEMA_PLAN, SCHEMA_ACTIVITE,
+  wf, nomComplet, familleDuPlan, ecartsRisques,
+  SCHEMA_PLAN, SCHEMA_ACTIVITE
 };

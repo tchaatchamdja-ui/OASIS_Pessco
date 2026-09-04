@@ -380,42 +380,13 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 }
 .tb-tower-beacon { animation: towerBeacon 1.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tb-tower-beacon { animation: none; } }
-
-/* ── Bandeau accueil / motifs aviation ── */
-.portal-hero {
-    position: relative; overflow: hidden;
-    background: var(--gradient); color: #fff;
-    border-radius: 16px; padding: 2rem;
-    margin-bottom: 1.5rem;
-}
-.portal-hero.portal-hero-compact { padding: 1rem 2rem; }
-.portal-hero-compact .portal-brand-sigle { font-size: clamp(1.6rem, 3.2vw, 2.4rem); }
-.portal-brand-sigle {
-    font-family: "Brush Script MT", "Segoe Script", "Lucida Handwriting", "Monotype Corsiva", "Apple Chancery", cursive;
-    font-size: clamp(2.5rem, 5vw, 4rem);
-    font-weight: 700; font-style: italic;
-}
-.portal-brand-tagline { font-size: clamp(1rem, 1.6vw, 1.3rem); font-style: italic; font-weight: 600; opacity: .9; }
-.portal-hero-sub { font-size: 0.85rem; opacity: .75; margin-top: 0.5rem; }
-.hero-plane, .hero-heli, .hero-tower {
-    position: absolute; pointer-events: none; opacity: .35; font-size: 1.6rem;
-}
 .hero-plane.p1 { top: 12%;  animation: planeFlyLeft  38s linear infinite; }
 .hero-plane.p2 { top: 55%;  animation: planeFlyRight 46s linear infinite; animation-delay: -18s; }
-.hero-heli     { top: 30%;  animation: heliDriftLeft 56s linear infinite; animation-delay: -30s; font-size: 1.3rem; }
-.hero-tower    { bottom: 8%; right: 2rem; font-size: 2rem; animation: towerBeacon 1.6s ease-in-out infinite; }
-
-/* ── Stats ── */
-.portal-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .stat-card {
     background: var(--bg-card); border: 1px solid var(--border);
     border-radius: 12px; padding: 1rem 1.25rem; box-shadow: var(--shadow);
     display: flex; align-items: center; gap: 0.9rem;
 }
-.stat-icon { font-size: 1.6rem; }
-.stat-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); line-height: 1.1; }
-.stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
-
 /* ── Cards modules ── */
 .portal-grid {
     display: grid;
@@ -719,17 +690,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .org-interim-on { color: #d97706; }
 .org-titulaire-off { text-decoration: line-through; opacity: .6; }
 .pers-circuit-interim { background: #fef3c7; color: #92400e; border-radius: 6px; padding: 0 .3rem; font-weight: 700; font-size: .62rem; text-transform: uppercase; }
-
-/* ── Module Planification : super-menus ── */
-.plan-super-bar { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
-.plan-super-btn {
-    display: inline-flex; align-items: center; gap: .45rem;
-    padding: .6rem 1.1rem; border-radius: 10px;
-    border: 1px solid var(--border); background: var(--bg-card);
-    color: var(--text-muted); font-size: .9rem; font-weight: 700; cursor: pointer;
-    transition: all .2s;
-}
-.plan-super-btn:hover { border-color: var(--primary); color: var(--primary); }
 .plan-super-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: var(--shadow); }
 
 /* Calendrier annuel */
@@ -889,14 +849,6 @@ body.module-fullscreen .portal-header,
 body.module-fullscreen .portal-footer { display: none; }
 body.module-fullscreen .portal-body { margin-left: 0 !important; }
 body.module-fullscreen .portal-main { max-width: none; padding: 0; }
-/* Bouton « Retour au portail » dans la barre des super-menus */
-.plan-back-portal {
-    display: inline-flex; align-items: center; gap: .35rem;
-    padding: .45rem .8rem; margin-right: .75rem;
-    background: var(--primary); color: #fff; border: none; border-radius: 8px;
-    font-size: .82rem; font-weight: 600; cursor: pointer;
-}
-.plan-back-portal:hover { background: var(--primary-hover); }
 /* Iframe du module « Profils de Risque » (reprise intégrale PESSCO) */
 .pr-frame {
     width: 100%; border: 0; display: block;

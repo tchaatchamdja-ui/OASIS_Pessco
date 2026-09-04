@@ -442,10 +442,9 @@ function removeInspection(id) {
 }
 
 module.exports = {
-  COLLECTIONS, FAMILLES, ETATS_INSPECTION, ETATS_CONTACT, ITEMS_SAFA, codeDeGroupe,
-  CATEGORIES_DEFAUT, ACTIONS_DEFAUT,
-  seed, reprendreGroupes, list, get, insert, insertMany, update, remove, removeInspection,
+  COLLECTIONS, FAMILLES, ETATS_INSPECTION, ETATS_CONTACT, codeDeGroupe,
+  CATEGORIES_DEFAUT, seed, list, get, insert, insertMany, update, remove, removeInspection,
   uid, now, load, save,
   seedAeronefs, aeronefs, getAeronef, insertAeronef, updateAeronef, removeAeronef,
-  seedAeroports, seedPays, completerActions, retirerStatutEnCours, prochaineReferencePoi,
+  seedAeroports, seedPays, completerActions, retirerStatutEnCours, prochaineReferencePoi
 };

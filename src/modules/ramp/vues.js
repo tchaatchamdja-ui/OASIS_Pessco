@@ -70,5 +70,5 @@ const filtrerInspections = (req, liste) => {
 
 module.exports = {
   ...socle,
-  perimetre, voitExploitant, filtrerInspections, exploitantsDuPerimetre, norm,
+  perimetre, voitExploitant, filtrerInspections, norm
 };

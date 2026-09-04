@@ -1,38 +1,9 @@
-/* ═══════════════════════════════════════════════
-   Planification Module - Additional Styles
-   Gantt chart, Calendar, KPI cards, Workflow
-   ═══════════════════════════════════════════════ */
 
-/* ── Ephemeral toast notifications ── */
-.plan-toast {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    max-width: 420px;
-    background: #fff;
-    color: var(--text);
-    padding: 0.85rem 1.1rem;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-    border-left: 4px solid var(--primary);
-    font-size: 0.9rem;
-    line-height: 1.35;
-    z-index: 10000;
-    opacity: 0;
-    transform: translateX(20px);
-    transition: opacity 0.25s ease, transform 0.25s ease;
-    pointer-events: none;
-}
 .plan-toast.show {
     opacity: 1;
     transform: translateX(0);
     pointer-events: auto;
 }
-.plan-toast-warning { border-left-color: #f59e0b; background: #fffbeb; color: #78350f; }
-.plan-toast-error   { border-left-color: #ef4444; background: #fef2f2; color: #7f1d1d; }
-.plan-toast-success { border-left-color: #10b981; background: #ecfdf5; color: #064e3b; }
-.plan-toast-info    { border-left-color: #3b82f6; background: #eff6ff; color: #1e3a8a; }
-
 /* ── KPI Grid ── */
 .kpi-grid {
     display: grid;
@@ -62,15 +33,6 @@
     color: var(--kpi-color, var(--primary));
     line-height: 1.15;
 }
-
-.kpi-label {
-    font-size: 0.78rem;
-    color: var(--text-muted);
-    margin-top: 0.15rem;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
 /* ── Gantt Chart ── */
 .gantt-table {
     width: 100%;
@@ -115,11 +77,6 @@
     height: 28px;
     transition: background 0.2s;
 }
-
-.gantt-active {
-    border-radius: 3px;
-}
-
 .gantt-cell:hover {
     opacity: 1 !important;
     outline: 2px solid var(--primary);
@@ -253,41 +210,6 @@
     gap: 1rem;
     margin-top: 1rem;
 }
-
-.cal-month-card {
-    background: var(--bg-card);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    padding: 0.75rem;
-    overflow: hidden;
-}
-
-.cal-month-header {
-    font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--primary);
-    text-align: center;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid var(--primary);
-    margin-bottom: 0.5rem;
-}
-
-.cal-weekdays {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    text-align: center;
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 0.25rem;
-}
-
-.cal-days-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-}
-
 .cal-day {
     aspect-ratio: 1;
     display: flex;
@@ -313,24 +235,6 @@
 .cal-day.has-activity {
     font-weight: 600;
 }
-
-.cal-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    position: absolute;
-    bottom: 2px;
-}
-
-.cal-month-count {
-    text-align: center;
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--border);
-    margin-top: 0.5rem;
-}
-
 /* ── Filter Bar — planification-scoped (avoids execution.css !important conflict) ── */
 .plan-filter-bar {
     display: flex;
@@ -369,48 +273,6 @@
     margin: 0;
     padding: 0;
 }
-
-/* ── Detail Status Bar ── */
-.detail-status-bar {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    padding: 0.75rem 1rem;
-    background: var(--bg-card);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
-
-.detail-meta {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-/* ── Comments ── */
-.comment-item {
-    padding: 0.75rem;
-    border-bottom: 1px solid var(--border);
-}
-
-.comment-item:last-child {
-    border-bottom: none;
-}
-
-.comment-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
-}
-
-.comment-body {
-    font-size: 0.875rem;
-    color: var(--text);
-    line-height: 1.5;
-}
-
 /* ── Buttons additional ── */
 .btn-accent {
     background: var(--accent);
@@ -519,79 +381,9 @@
 .modal-lg {
     max-width: 700px !important;
 }
-
-/* ── Timeline / Conversation comments ── */
-.timeline-container {
-    max-height: 500px;
-    overflow-y: auto;
-    padding: 0.5rem;
-}
-
-.timeline-item {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.timeline-item:last-child {
-    border-bottom: none;
-}
-
-.timeline-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
 .timeline-avatar.workflow {
     background: var(--accent, #8b5cf6);
 }
-
-.timeline-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.timeline-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    margin-bottom: 0.25rem;
-}
-
-.timeline-header strong {
-    color: var(--text);
-}
-
-.timeline-header .timeline-date {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-}
-
-.timeline-body {
-    font-size: 0.875rem;
-    color: var(--text);
-    line-height: 1.5;
-}
-
-.timeline-action-badge {
-    display: inline-block;
-    padding: 0.1rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
 /* ── Gantt Full Page ── */
 .gantt-full {
     overflow-x: hidden;
@@ -632,37 +424,6 @@
     text-overflow: ellipsis;
     padding: 0 4px;
 }
-
-/* ── Sub navigation for Plans ── */
-.plan-sub-nav {
-    display: flex;
-    gap: 0;
-    margin-bottom: 1rem;
-    background: var(--bg-card);
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-}
-
-.plan-sub-nav-btn {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    border: none;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 0.85rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    border-bottom: 3px solid transparent;
-    text-align: center;
-}
-
-.plan-sub-nav-btn:hover {
-    background: var(--bg);
-    color: var(--text);
-}
-
 .plan-sub-nav-btn.active {
     color: var(--primary);
     border-bottom-color: var(--primary);
@@ -716,25 +477,6 @@
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 59, 130, 246), 0.2);
 }
-
-/* ── Confirmation dialog overlay ── */
-.confirm-dialog {
-    padding: 1.5rem;
-    text-align: center;
-}
-
-.confirm-dialog p {
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
-    color: var(--text);
-}
-
-.confirm-dialog .confirm-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-}
-
 /* ── Responsive ── */
 @media (max-width: 1100px) {
     .plan-filter-bar .form-input,
@@ -852,19 +594,6 @@
     opacity: 0.7;
     cursor: not-allowed;
     background: var(--bg) !important;
-}
-
-/* ── Checkbox groups for multi-select ── */
-.checkbox-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem 1rem;
-    padding: 0.6rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-card);
-    max-height: 140px;
-    overflow-y: auto;
 }
 .checkbox-item {
     display: flex;
@@ -1225,31 +954,12 @@ tr.hidden { display: none; }
 .plan-notif-item.task { border-left-color: #8b5cf6; }
 .plan-notif-item.deadline { border-left-color: #f59e0b; }
 .plan-notif-item.overdue { border-left-color: #ef4444; }
-
-/* ── Collapsible SA/Themes in table ── */
-.sa-collapsible-toggle {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: var(--primary);
-    font-size: 0.82rem;
-    font-weight: 500;
-    user-select: none;
-}
-.sa-collapsible-toggle:hover { text-decoration: underline; }
 .sa-collapsible-toggle .sa-chevron {
     display: inline-flex;
     transition: transform 0.2s;
 }
 .sa-collapsible-toggle.expanded .sa-chevron {
     transform: rotate(90deg);
-}
-.sa-collapsible-content {
-    display: none;
-    padding: 0.25rem 0 0.25rem 0.5rem;
-    font-size: 0.8rem;
-    color: var(--text);
 }
 .sa-collapsible-content.show { display: block; }
 .sa-theme-list {

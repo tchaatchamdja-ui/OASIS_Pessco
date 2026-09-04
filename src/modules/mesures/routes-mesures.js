@@ -334,6 +334,10 @@ module.exports = function register(app, deps, M) {
         // Le dossier a-t-il été déclaré clos faute de suivi à conduire ? La
         // colonne « Actions » y distingue « Sous suivi » de « Clôturée ».
         traitement_clos: !!(traitements.get(c.id) || {}).cloture_le,
+        // Date de cette clôture : le menu États la porte en colonne. La date de
+        // clôture calculée plus haut suit les mesures, qui peuvent rester
+        // ouvertes alors même que le dossier est clos.
+        traitement_cloture_le: (traitements.get(c.id) || {}).cloture_le || '',
         date_cloture: cloture(c, liees),
         statut: classee ? 'classee' : c.statut,
         statut_care: statutCare,

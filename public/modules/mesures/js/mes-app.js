@@ -115,6 +115,9 @@ const MES_NAV = {
     // La carence précède la mesure : on la constate, puis on la sanctionne.
     critiques: { label: 'Carences', icon: 'warning' },
     mesures: { label: 'Mesures', icon: 'shield' },
+    // Les états ferment la marche : on y va pour savoir quoi faire ensuite,
+    // non pour saisir — c'est la lecture d'ensemble des deux listes qui précèdent.
+    etats: { label: 'États', icon: 'chart' },
     parametres: { label: 'Paramètres', icon: 'settings' },
 };
 
@@ -458,6 +461,7 @@ function mesRenderPage() {
     switch (MES_STATE.currentPage) {
         case 'mesures': corps = mesRenderMesures(); break;
         case 'critiques': corps = mesRenderCritiques(); break;
+        case 'etats': corps = mesRenderEtats(); break;
         case 'parametres': corps = mesRenderParametres(); break;
         default: corps = mesRenderDashboard();
     }

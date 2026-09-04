@@ -186,7 +186,13 @@
 /* Les deux états d'une liste, à droite de son titre. */
 .mes-page-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .mes-exports { display: inline-flex; gap: .35rem; }
-.mes-btn-export { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
+/* Les deux états portent la couleur du thème : ce sont des actions de
+   l'application, non des retraits. */
+.mes-btn-export {
+    display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
+    background: var(--primary); border: 1px solid var(--primary); color: #fff;
+}
+.mes-btn-export:hover { background: var(--primary-dark, var(--primary)); filter: brightness(1.12); }
 
 /* ── Historique d'un traitement : le fil du dossier, daté ── */
 /* Deux classes plutôt qu'une : `.mes-modal-fond` centre ses modales et se

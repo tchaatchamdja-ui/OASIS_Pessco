@@ -2103,9 +2103,9 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
                 </div>
                 <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
                     <span id="execChkFillerSaveState" style="font-size:0.75rem;color:var(--text-muted);"></span>
-                    <button class="btn btn-sm btn-outline" onclick="execChkFillExportPdf('${dossierId}','${checklistId}')" title="Exporter en PDF">📄 PDF</button>
-                    <button class="btn btn-sm btn-outline" onclick="execChkFillExportXlsx('${dossierId}','${checklistId}')" title="Exporter en Excel">📥 Excel</button>
-                    <button class="btn btn-sm btn-outline" onclick="document.getElementById('execChkFillImportFile').click()" title="Importer depuis Excel">📤 Importer</button>
+                    <button class="btn btn-sm btn-primary" onclick="execChkFillExportPdf('${dossierId}','${checklistId}')" title="Exporter PDF">${EXEC_ICONS.pdf || ''} Exporter PDF</button>
+                    <button class="btn btn-sm btn-primary" onclick="execChkFillExportXlsx('${dossierId}','${checklistId}')" title="Exporter Excel">${EXEC_ICONS.download || ''} Exporter Excel</button>
+                    <button class="btn btn-sm btn-primary" onclick="document.getElementById('execChkFillImportFile').click()" title="Importer">${EXEC_ICONS.upload || ''} Importer</button>
                     <input type="file" id="execChkFillImportFile" accept=".xlsx" style="display:none" onchange="execChkFillImportXlsx('${dossierId}','${checklistId}',event)">
                     <button class="btn btn-sm btn-ghost" onclick="execCloseChecklistFiller('${dossierId}')" title="Fermer">✕</button>
                 </div>

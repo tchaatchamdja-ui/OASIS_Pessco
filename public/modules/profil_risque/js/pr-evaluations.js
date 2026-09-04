@@ -1124,7 +1124,7 @@ function _prEvalCorpsHtml(c) {
         <span style="margin-left:auto;"></span>
         <button class="btn btn-primary btn-sm" onclick="exportEvalExcel('${evalId}')" title="Exporter Excel">${ICONS.file_excel} Exporter Excel</button>
         <button class="btn btn-primary btn-sm" onclick="exportEvalPDF('${evalId}')" title="Exporter PDF">${ICONS.download} Exporter PDF</button>
-        <button class="btn btn-primary btn-sm" onclick="document.getElementById('evalImportFile').click();" title="Importer Excel">${ICONS.upload} Importer Excel</button>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('evalImportFile').click();" title="Importer">${ICONS.upload} Importer</button>
         <input type="file" id="evalImportFile" accept=".xlsx,.xls" style="display:none" onchange="importEvalExcel(event,'${evalId}','conformite')">
         <button class="btn btn-primary btn-sm btn-icon-only" onclick="expandCollapseAll('evalModalBody',true)" title="${t('expand_all')}" aria-label="${t('expand_all')}">${ICON_EXPAND}</button>
         <button class="btn btn-primary btn-sm btn-icon-only" onclick="expandCollapseAll('evalModalBody',false)" title="${t('collapse_all')}" aria-label="${t('collapse_all')}">${ICON_COLLAPSE}</button>
@@ -1546,7 +1546,7 @@ async function _loadReunionEvalTab(evalId) {
                     </span>
                     <span class="cr-actions">
                         ${isLocked ? '' : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','${m.id}')">Modifier</button>`}
-                        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();event.preventDefault();exportReunionPdf('${m.id}','${evalId}')">${ICONS.download} PDF</button>
+                        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();exportReunionPdf('${m.id}','${evalId}')">${ICONS.download} Exporter PDF</button>
                     </span>
                 </summary>
                 <div class="cr-body">

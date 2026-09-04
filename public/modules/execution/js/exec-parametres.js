@@ -1230,8 +1230,8 @@ function execOpenSousThemesManager(clId) {
 
     shellShowModal('Sous-thèmes — ' + (cl?.nom || ''), `
         <div style="display:flex;gap:0.4rem;justify-content:flex-end;margin-bottom:0.5rem;flex-wrap:wrap;">
-            <button class="btn btn-sm btn-outline" onclick="execSousThemesExportXlsx('${clId}')" title="Exporter en Excel">📥 Exporter</button>
-            <button class="btn btn-sm btn-outline" onclick="document.getElementById('execSousThemesImportFile').click()" title="Importer depuis Excel">📤 Importer</button>
+            <button class="btn btn-sm btn-primary" onclick="execSousThemesExportXlsx('${clId}')" title="Exporter Excel">${EXEC_ICONS.download || ''} Exporter Excel</button>
+            <button class="btn btn-sm btn-primary" onclick="document.getElementById('execSousThemesImportFile').click()" title="Importer">${EXEC_ICONS.upload || ''} Importer</button>
             <input type="file" id="execSousThemesImportFile" accept=".xlsx" style="display:none" onchange="execSousThemesImportXlsx('${clId}',event)">
             <button class="btn btn-sm btn-primary" onclick="execOpenSousThemeModal('${clId}')">${EXEC_ICONS.add} Ajouter</button>
         </div>

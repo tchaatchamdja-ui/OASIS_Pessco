@@ -1066,8 +1066,8 @@ function rampRenderStatistiques() {
                 <tbody>${lignesSituation}</tbody>
             </table>
         </div>`,
-        `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();rampExporterSituation()">
-            ${RAMP_ICONS.download} Excel</button>`)}
+        `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();rampExporterSituation()">
+            ${RAMP_ICONS.download} Exporter Excel</button>`)}
 
     ${bloc('repartitions', rt('stats_repartitions'), `
         <div class="ramp-grille-repartitions">

@@ -209,9 +209,9 @@ function searchInputHtml(ph) {
 function exportBar(coll, title, pdfFn) {
   const pdf = pdfFn || `exportPdf('${esc(title)}')`;
   return `
-    <button class="shell-btn shell-btn-outline shell-btn-sm" onclick="${pdf}" title="Exporter PDF">${icon('fileText', 13)} PDF</button>
-    <a class="shell-btn shell-btn-outline shell-btn-sm" href="/api/referentiels/${coll}/export" title="Exporter Excel">${icon('download', 13)} Excel</a>
-    <button class="shell-btn shell-btn-outline shell-btn-sm" onclick="openImportModal('${coll}','${esc(title)}')" title="Importer Excel">${icon('layers', 13)} Importer</button>`;
+    <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="${pdf}" title="Exporter PDF">${icon('fileText', 13)} Exporter PDF</button>
+    <a class="shell-btn shell-btn-primary shell-btn-sm" href="/api/referentiels/${coll}/export" title="Exporter Excel">${icon('download', 13)} Exporter Excel</a>
+    <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openImportModal('${coll}','${esc(title)}')" title="Importer">${icon('layers', 13)} Importer</button>`;
 }
 
 function pdfWindow(title, bodyHtml) {

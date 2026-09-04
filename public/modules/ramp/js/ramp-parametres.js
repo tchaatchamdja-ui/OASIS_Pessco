@@ -367,8 +367,8 @@ function rampRenderContacts() {
         plutôt qu’il ne se supprime.
     </p>
     <div class="ramp-actions-bar">
-        <button class="btn btn-outline btn-sm" onclick="rampExporterContacts()">
-            ${RAMP_ICONS.download} Exporter en Excel</button>
+        <button class="btn btn-primary btn-sm" onclick="rampExporterContacts()">
+            ${RAMP_ICONS.download} Exporter Excel</button>
         <span style="flex:1;"></span>
         <button class="btn btn-primary btn-sm" onclick="rampOuvrirContact()">
             ${RAMP_ICONS.add} Ajouter un contact</button>
@@ -656,7 +656,7 @@ function rampRenderParametres() {
                 ${liste.length} ${rtn(liste.length, 'p_element', 'p_elements')}${inactifs
                     ? ` · ${inactifs} ${rt('p_inactif')}${inactifs > 1 ? 's' : ''}` : ''}
             </span>
-            <button class="btn btn-outline btn-sm" onclick="rampExporterParametres('${cle}')">
+            <button class="btn btn-primary btn-sm" onclick="rampExporterParametres('${cle}')">
                 ${RAMP_ICONS.download} ${rt('exporter_excel')}</button>
             <span style="flex:1;"></span>
             ${modifiable ? `

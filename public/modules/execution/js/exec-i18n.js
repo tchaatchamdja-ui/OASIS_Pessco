@@ -597,7 +597,7 @@ const EXEC_TR = {
         select_option: '-- Selectionner --',
         logout: 'Deconnexion',
         reset_filters: 'Reinitialiser les filtres',
-        export_pdf: 'Export PDF',
+        export_pdf: 'Exporter PDF',
         download_pdf: 'Telecharger PDF',
         telecharger: 'Telecharger',
         rapports_closed_intro: 'Rapports clôturés accessibles au téléchargement.',

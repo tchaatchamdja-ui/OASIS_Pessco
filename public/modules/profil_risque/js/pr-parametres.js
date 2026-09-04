@@ -487,7 +487,7 @@ function renderParamIndicateurs() {
         <div class="flex gap-1">
             <button class="btn btn-primary btn-sm" onclick="printPage('printStart_indicateurs')">${ICONS.print} ${t('print')}</button>
             <button class="btn btn-primary btn-sm" onclick="exportIndicateursExcel()" title="Exporter Excel">${ICONS.file_excel} Exporter Excel</button>
-            <button class="btn btn-primary btn-sm" onclick="document.getElementById('indImportFile').click();" title="Importer Excel">${ICONS.upload} Importer Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('indImportFile').click();" title="Importer">${ICONS.upload} Importer</button>
             <input type="file" id="indImportFile" accept=".xlsx,.xls" style="display:none" onchange="importIndicateursExcel(event)">
             ${isAdmin ? `
                 <button class="btn btn-primary btn-sm" onclick="openEntityModal('indicateurs_conf')">${ICONS.plus} ${t('conformity')}</button>

@@ -122,6 +122,9 @@ function mesActionsEtape() {
     if (etape === 'qualification') {
         return typeof mesActionsQualification === 'function' ? mesActionsQualification() : '';
     }
+    if (etape === 'suivi') {
+        return typeof mesActionsSuivi === 'function' ? mesActionsSuivi() : '';
+    }
     if (etape !== 'suite') return '';
     const t = MES_STATE.traitement || {};
     if (t.decision) {

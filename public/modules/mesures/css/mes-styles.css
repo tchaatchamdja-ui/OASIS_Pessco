@@ -371,6 +371,25 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 .mes-bloc-titre { flex: 1; font-weight: 600; font-size: .84rem; color: var(--text); }
 .mes-bloc-corps { padding: .8rem; }
 .mes-bloc-corps .mes-champ:last-child { margin-bottom: 0; }
+/* Un bloc trop long se lit par parties : la bande sépare l'objet du recours de
+   son examen, sans ouvrir une section de plus au fil du formulaire. */
+.mes-bloc-bande {
+    margin: 1rem -.8rem .7rem; padding: .35rem .8rem;
+    background: var(--mes-accent-bg); border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-size: .74rem; font-weight: 700; letter-spacing: .03em;
+    text-transform: uppercase; color: var(--text-muted);
+}
+/* La version qu'un recours a fait tomber : une trace, repliée par défaut. */
+.mes-version {
+    margin: 0 0 .7rem; padding: .45rem .6rem;
+    border: 1px dashed var(--border); border-radius: 6px;
+    background: rgba(0,0,0,.02);
+}
+.mes-version > summary {
+    cursor: pointer; font-size: .78rem; font-weight: 600; color: var(--text-muted);
+}
+.mes-version[open] > summary { margin-bottom: .2rem; }
 /* Texte repris d'une étape précédente : il se lit, il ne se saisit pas. Le
    cadre léger le distingue d'un champ sans le faire passer pour désactivé. */
 .mes-lecture {

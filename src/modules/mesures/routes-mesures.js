@@ -442,6 +442,30 @@ module.exports = function register(app, deps, M) {
     }
     return d.toISOString().slice(0, 10);
   };
+  // Ce qu'un recours porte : l'objet de la contestation d'un côté, son examen
+  // par l'instance de l'autre. Trois décisions le closent — maintenir la
+  // mesure, la modifier, ou l'annuler.
+  const DECISIONS_RECOURS = ['maintenir', 'modifier', 'annuler'];
+  const recoursVide = () => ({
+    intente_texte: '', pieces: [],
+    instance_code: '', membres: [], commentaire: '',
+    decision: '', decision_pieces: [],
+  });
+  const recoursDe = (r) => {
+    const o = r && typeof r === 'object' ? r : {};
+    return {
+      intente_texte: texte(o.intente_texte),
+      pieces: Array.isArray(o.pieces) ? o.pieces.map(piece).filter((p) => p.nom || p.path) : [],
+      instance_code: texte(o.instance_code),
+      membres: Array.isArray(o.membres)
+        ? o.membres.map(membre).filter((p) => p.nom || p.prenom || p.email || p.contact) : [],
+      commentaire: texte(o.commentaire),
+      decision: DECISIONS_RECOURS.includes(texte(o.decision)) ? texte(o.decision) : '',
+      decision_pieces: Array.isArray(o.decision_pieces)
+        ? o.decision_pieces.map(piece).filter((p) => p.nom || p.path) : [],
+    };
+  };
+
   const mesureArretee = (m) => {
     const o = m || {};
     const portee = PORTEES.includes(texte(o.portee)) ? texte(o.portee) : '';
@@ -462,7 +486,36 @@ module.exports = function register(app, deps, M) {
       // réponse commande l'issue de l'étape : sans aucun suivi attendu, le
       // dossier se clôt ici plutôt que de passer à l'étape « Suivi ».
       suivi_requis: o.suivi_requis === true || o.suivi_requis === 'true',
+      // Recours : présent seulement sur une mesure contestée. Le sort de la
+      // mesure — modifiée, annulée — et la version qu'elle avait avant sont
+      // posés par le serveur seul : `recoursApplique` les tient à partir de
+      // l'enregistrement, non du corps de la requête.
+      recours_intente: o.recours_intente === true || o.recours_intente === 'true',
+      recours: (o.recours_intente === true || o.recours_intente === 'true')
+        ? recoursDe(o.recours) : null,
     };
+  };
+
+  // Ce que la décision de recours fait de la mesure. La version précédente est
+  // prise sur l'enregistrement au moment où l'instance décide de modifier : un
+  // client ne peut ni la forger, ni la faire disparaître.
+  const CHAMPS_ARRETES = ['categorie', 'type_mesure', 'date_sanction', 'portee',
+    'duree_valeur', 'duree_unite', 'date_fin', 'commentaire', 'suivi_requis'];
+  const recoursApplique = (neuve, ancienne) => {
+    const avant = ancienne || {};
+    if (!neuve.recours_intente) {
+      return { ...neuve, statut_recours: '', version_precedente: null };
+    }
+    const decision = (neuve.recours || {}).decision || '';
+    if (decision === 'annuler') {
+      return { ...neuve, statut_recours: 'annulee', version_precedente: avant.version_precedente || null };
+    }
+    if (decision === 'modifier') {
+      const version = avant.version_precedente
+        || Object.fromEntries(CHAMPS_ARRETES.map((k) => [k, avant[k]]));
+      return { ...neuve, statut_recours: 'modifiee', version_precedente: version };
+    }
+    return { ...neuve, statut_recours: '', version_precedente: avant.version_precedente || null };
   };
 
   const vrai = (v) => v === true || v === 'true';
@@ -517,6 +570,11 @@ module.exports = function register(app, deps, M) {
     if (q.comite_code && !db.list('comites').some((x) => x.code === q.comite_code)) {
       return res.status(400).json({ error: 'Comité décisionnel inconnu' });
     }
+    // Une décision de recours change le sort de la mesure : elle est modifiée
+    // — et l'on garde ce qu'elle était — ou annulée. Le rang fait le lien avec
+    // ce qui était enregistré ; le corps de la requête n'y touche pas.
+    const avant = ((t.qualification || {}).mesures) || [];
+    q.mesures = q.mesures.map((m, rang) => recoursApplique(m, avant[rang]));
     db.update('traitements', t.id, { qualification: q });
     return res.json({ status: 'ok' });
   });
@@ -594,9 +652,43 @@ module.exports = function register(app, deps, M) {
   // la mise en œuvre n'appelait pas de suivi : leur suivi est sans objet, et le
   // registre ne doit pas réclamer un plan d'action que nul n'attend.
   const creerLesMesures = (ctx, q, auteur) => {
-    const dejaCreees = new Set(db.list('mesures')
-      .filter((m) => m.constatation_id === ctx.c.id && m.issue_de === 'qualification')
-      .map((m) => m.qualification_rang));
+    const nees = db.list('mesures')
+      .filter((m) => m.constatation_id === ctx.c.id && m.issue_de === 'qualification');
+    const dejaCreees = new Set(nees.map((m) => m.qualification_rang));
+    // Une mesure déjà au registre dont le recours vient d'être tranché suit la
+    // décision de l'instance : annulée, elle sort du suivi ; modifiée, elle
+    // reprend les termes que l'instance vient d'arrêter. Dans les deux cas la
+    // contestation est close, et le suivi peut reprendre son cours.
+    nees.forEach((existante) => {
+      const arretee = (q.mesures || [])[existante.qualification_rang];
+      if (!arretee || !arretee.recours_intente) return;
+      const decision = (arretee.recours || {}).decision || '';
+      if (!decision) return;
+      if (decision === 'annuler') {
+        db.update('mesures', existante.id, {
+          statut: 'annulee', suivi_statut: 'sans_suite', recours_intente: false,
+          date_cloture: db.now().slice(0, 10),
+        });
+        return;
+      }
+      const commun = { recours_intente: false, suivi_statut: '' };
+      if (decision === 'maintenir') { db.update('mesures', existante.id, commun); return; }
+      db.update('mesures', existante.id, {
+        ...commun,
+        categorie: arretee.categorie || 'administrative',
+        type_mesure: arretee.type_mesure || '',
+        description: arretee.commentaire || '',
+        date_emission: arretee.date_sanction || '',
+        date_echeance: arretee.date_fin || '',
+        date_sanction: arretee.date_sanction || '',
+        date_fin_sanction: arretee.date_fin || '',
+        portee: arretee.portee || '',
+        duree_valeur: arretee.duree_valeur || 0,
+        duree_unite: arretee.duree_unite || '',
+        delai_jours: arretee.portee === 'temporelle' && arretee.duree_unite === 'jours'
+          ? String(arretee.duree_valeur || '') : '',
+      });
+    });
     const creees = [];
     (q.mesures || []).forEach((m, rang) => {
       if (dejaCreees.has(rang)) return;
@@ -697,7 +789,7 @@ module.exports = function register(app, deps, M) {
   // Le suivi ne recopie pas les mesures : il les écrit là où elles vivent, au
   // registre. Ce que l'étape lui ajoute — commentaire de suivi, statut, pièces
   // — s'inscrit sur la mesure elle-même, et le menu Mesures le lit aussitôt.
-  const SUIVI_STATUTS = ['a_ouvrir', 'attendu', 'en_cours', 'solde', 'sans_suite', 'sans_objet'];
+  const SUIVI_STATUTS = ['attendu', 'en_cours', 'solde', 'sans_suite', 'sans_objet', 'recours'];
 
   app.put(`${M}/constatations/:id/suivi`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
@@ -721,8 +813,13 @@ module.exports = function register(app, deps, M) {
     (Array.isArray(d.mesures) ? d.mesures : []).forEach((o) => {
       const id = texte(o && o.id);
       if (!siennes.has(id)) return;
-      const statut = SUIVI_STATUTS.includes(texte(o.suivi_statut)) ? texte(o.suivi_statut) : '';
+      const recours = o.recours_intente === true || o.recours_intente === 'true';
+      // Un recours suspend le suivi : le statut ne se choisit plus, il est
+      // « Recours » tant que l'instance ne l'a pas examiné.
+      const choisi = SUIVI_STATUTS.includes(texte(o.suivi_statut)) ? texte(o.suivi_statut) : '';
+      const statut = recours ? 'recours' : (choisi === 'recours' ? '' : choisi);
       db.update('mesures', id, {
+        recours_intente: recours,
         suivi_statut: statut,
         suivi_commentaire: texte(o.suivi_commentaire),
         suivi_pieces: (Array.isArray(o.suivi_pieces) ? o.suivi_pieces : []).map(piece),
@@ -739,6 +836,72 @@ module.exports = function register(app, deps, M) {
       },
     });
     return res.json({ status: 'ok', mesures: majes.length });
+  });
+
+  // Contexte commun aux deux issues du suivi : elles engagent l'autorité, donc
+  // relèvent du validateur, et ne valent que sur un dossier ouvert.
+  const carenceEnSuivi = (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) { res.status(404).json({ error: 'Carence non trouvée' }); return null; }
+    if (!R.canValidate(req.user, perimetre(c))) { refuser(res, 'Décision réservée au validateur'); return null; }
+    const t = traitementDe(c.id);
+    if (!t || t.etape !== 'suivi') {
+      res.status(409).json({ error: 'La carence n’est pas à l’étape Suivi des Mesures' });
+      return null;
+    }
+    if (t.classe_le || t.cloture_le) {
+      res.status(409).json({ error: 'Le traitement est déjà clos' });
+      return null;
+    }
+    return { c, t };
+  };
+
+  // Clôture de la carence : le suivi est terminé. Un recours en cours l'en
+  // empêche — le dossier ne se ferme pas sur une contestation non tranchée.
+  app.post(`${M}/constatations/:id/suivi/cloturer`, requireAuth, (req, res) => {
+    const ctx = carenceEnSuivi(req, res);
+    if (!ctx) return undefined;
+    const contestees = db.list('mesures')
+      .filter((m) => m.constatation_id === ctx.c.id && m.recours_intente);
+    if (contestees.length) {
+      return res.status(409).json({
+        error: 'Un recours est en cours d’examen : la carence ne se clôture pas',
+      });
+    }
+    db.update('traitements', ctx.t.id, {
+      cloture_le: db.now(), cloture_par: req.user.username,
+    });
+    return res.status(201).json({ status: 'ok', clos: true });
+  });
+
+  // Action de recours : le prestataire conteste une ou plusieurs mesures. Le
+  // fil recule à la qualification, où l'instance examinera chaque recours.
+  // Chaque mesure contestée porte sa marque sur la mesure arrêtée qui lui
+  // correspond — c'est là que la section « Recours » ira la lire.
+  app.post(`${M}/constatations/:id/suivi/recours`, requireAuth, (req, res) => {
+    const ctx = carenceEnSuivi(req, res);
+    if (!ctx) return undefined;
+    const contestees = db.list('mesures')
+      .filter((m) => m.constatation_id === ctx.c.id && m.recours_intente);
+    if (!contestees.length) {
+      return res.status(409).json({ error: 'Aucune mesure n’est contestée' });
+    }
+    const rangs = new Set(contestees
+      .filter((m) => m.issue_de === 'qualification')
+      .map((m) => m.qualification_rang));
+    const q = ctx.t.qualification || {};
+    const mesures = (q.mesures || []).map((m, rang) => (rangs.has(rang)
+      ? { ...m, recours_intente: true, recours: m.recours || recoursVide() }
+      : m));
+    db.update('traitements', ctx.t.id, {
+      etape: 'qualification',
+      qualification: { ...q, mesures },
+      // Le dossier repart de la qualification : la trace de la validation
+      // précédente reste, mais l'étape se rouvre.
+      recours_ouvert_le: db.now(),
+      recours_ouvert_par: req.user.username,
+    });
+    return res.status(201).json({ status: 'ok', etape: 'qualification', mesures: contestees.length });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

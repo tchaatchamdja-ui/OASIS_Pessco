@@ -100,8 +100,16 @@ function mesBlocSuiviMesure(m, i) {
                     >${_mesEsc(m.suivi_commentaire || '')}</textarea>
             </div>
             <div class="mes-champ">
-                <label>Statut de suivi</label>
-                <select class="mes-select" data-champ="suivi_statut" ${off}
+                <div class="mes-champ-entete">
+                    <label>Statut de suivi</label>
+                    <label class="mes-case">
+                        <input type="checkbox" data-champ="recours_intente" ${off}
+                               ${m.recours_intente ? 'checked' : ''}
+                               onchange="mesSuiviRecours(${i}, this.checked)">
+                        <span>Recours intenté par le prestataire</span>
+                    </label>
+                </div>
+                <select class="mes-select" data-champ="suivi_statut" ${off || (m.recours_intente ? 'disabled' : '')}
                         onchange="mesSuiviStatut(${i}, this.value)">
                     ${Object.entries(MES_SUIVI).map(([cle, e]) => `<option value="${_mesAttr(cle)}"
                         ${statut === cle ? 'selected' : ''}>${_mesEsc(e.libelle)}</option>`).join('')}
@@ -151,6 +159,7 @@ function mesCollecterSuivi() {
         id: bloc.dataset.mesure || '',
         suivi_commentaire: val(bloc, 'suivi_commentaire'),
         suivi_statut: val(bloc, 'suivi_statut'),
+        recours_intente: !!(bloc.querySelector('[data-champ="recours_intente"]') || {}).checked,
         suivi_pieces: [...bloc.querySelectorAll('.mes-suivi-pieces .mes-preuve')].map((r) => ({
             nom: (r.querySelector('input') || {}).value || '', path: r.dataset.chemin || '',
         })),
@@ -187,6 +196,18 @@ function mesSuiviModifier(action) {
 // Changer le statut redessine : l'aide qui l'accompagne doit suivre le choix.
 const mesSuiviStatut = (i, valeur) => mesSuiviModifier((mesures) => {
     if (mesures[i]) mesures[i] = { ...mesures[i], suivi_statut: valeur };
+});
+
+// Un recours suspend le suivi : le statut passe à « Recours » et cesse de se
+// choisir, tant que l'instance ne l'a pas examiné. Le décocher rend la main.
+const mesSuiviRecours = (i, coche) => mesSuiviModifier((mesures) => {
+    if (!mesures[i]) return;
+    mesures[i] = {
+        ...mesures[i],
+        recours_intente: !!coche,
+        suivi_statut: coche ? 'recours'
+            : (mesures[i].suivi_statut === 'recours' ? '' : mesures[i].suivi_statut),
+    };
 });
 
 const mesSuiviRetirerPiece = (i, k) => mesSuiviModifier((mesures) => {
@@ -235,8 +256,68 @@ async function mesEnregistrerSuivi() {
     } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); }
 }
 
+// Actions de l'étape, à l'extrême droite du fil. Clôturer ferme le dossier ;
+// l'action de recours le fait reculer à la qualification, où l'instance
+// examinera ce que le prestataire conteste.
+function mesActionsSuivi() {
+    if (mesSuiviClos()) {
+        return `<span class="mes-badge cloturee">Traitement clôturé</span>`;
+    }
+    if (!mesPeutDecider()) return '';
+    const recours = mesSuiviMesures().filter((m) => m.recours_intente).length;
+    const bouton = (actif, classe, aide, geste, libelle) => `<button class="btn btn-sm ${classe}"
+        ${actif ? '' : 'disabled'} title="${_mesAttr(aide)}"
+        onclick="${geste}">${_mesEsc(libelle)}</button>`;
+    return [
+        bouton(!!recours, 'mes-btn-investiguer',
+            recours ? `${recours} mesure(s) contestée(s) : le traitement revient à l’étape
+                « Qualification et Mesures » pour examen du recours.`
+                : 'Cochez « Recours intenté par le prestataire » sur au moins une mesure.',
+            'mesSuiviActionRecours()', 'Action de Recours'),
+        bouton(!recours, 'mes-btn-mesure',
+            recours ? 'Un recours est en cours d’examen : le dossier ne se clôt pas.'
+                : 'Clôt la carence : le suivi des mesures est terminé.',
+            'mesSuiviCloturer()', 'Clôturer'),
+    ].join('');
+}
+
+// Les deux issues enregistrent d'abord ce qui est saisi : le serveur relit le
+// suivi pour vérifier qu'un recours a bien été coché.
+async function mesSuiviIssue(chemin, question, fait) {
+    const c = MES_STATE.carenceEnCours;
+    if (!c) return;
+    if (!confirm(question)) return;
+    mesMajSuivi();
+    const corps = mesCollecterSuivi();
+    try {
+        if (corps) {
+            await mesApi(`/constatations/${encodeURIComponent(c.id)}/suivi`, {
+                method: 'PUT', body: JSON.stringify(corps),
+            });
+        }
+        await mesApi(`/constatations/${encodeURIComponent(c.id)}/suivi/${chemin}`, { method: 'POST' });
+        MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+        MES_STATE.etapeVue = '';
+        await mesRechargerMesures();
+        MES_STATE.data.constatations = await mesApi('/constatations');
+        mesToast(fait);
+        mesSuiviRedessiner();
+        if (MES_STATE.currentPage === 'critiques') mesRenderPage();
+    } catch (e) { mesToast(e.message || 'Opération impossible', 'error'); }
+}
+
+const mesSuiviCloturer = () => mesSuiviIssue('cloturer',
+    'Clôturer la carence ?\nLe suivi des mesures est terminé et le dossier se ferme.',
+    'Carence clôturée');
+
+const mesSuiviActionRecours = () => mesSuiviIssue('recours',
+    'Ouvrir l’examen du recours ?\nLe traitement revient à l’étape « Qualification et '
+    + 'Mesures », où une section « Recours » recueille ce que le prestataire conteste.',
+    'Recours ouvert : le dossier revient à la qualification');
+
 Object.assign(window, {
     mesSuivi, mesSuiviMesures, mesSuiviClos, mesSuiviModifiable,
+    mesActionsSuivi, mesSuiviRecours, mesSuiviCloturer, mesSuiviActionRecours,
     mesSectionSuiviMesures, mesSectionPlanAction,
     mesCollecterSuivi, mesMajSuivi, mesSuiviStatut,
     mesSuiviTeleverser, mesSuiviRetirerPiece, mesEnregistrerSuivi,

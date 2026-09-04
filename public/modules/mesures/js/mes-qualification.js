@@ -211,6 +211,26 @@ function mesSectionQualification() {
 // ── Section E — les mesures arrêtées ──
 // Elle ne s'ouvre que si l'infraction est constituée : sans infraction, il n'y
 // a pas de mesure d'application à prendre.
+// Ce que la mesure était avant que le recours ne la fasse modifier. Repliée
+// par défaut : c'est une trace, pas une saisie.
+function mesQualVersionPrecedente(m) {
+    const v = m.version_precedente || {};
+    const portee = { temporelle: 'Limitée dans le temps', illimitee: 'Illimitée', sans_objet: 'Sans objet' }[v.portee] || '—';
+    const duree = v.portee === 'temporelle' && v.duree_valeur
+        ? `${v.duree_valeur} ${v.duree_unite || 'jours'}` : '';
+    return `<details class="mes-version">
+        <summary>Version précédente de la mesure</summary>
+        <dl style="margin:.4rem 0 0;">
+            ${mesLigneFiche('Catégorie', mesLibelleCategorie(v.categorie))}
+            ${mesLigneFiche('Type', mesLibelleType(v.type_mesure))}
+            ${mesLigneFiche('Date de sanction', v.date_sanction ? mesDate(v.date_sanction) : '')}
+            ${mesLigneFiche('Portée', duree ? `${portee} · ${duree}` : portee)}
+            ${mesLigneFiche('Date de fin de sanction', v.date_fin ? mesDate(v.date_fin) : '')}
+            ${mesLigneFiche('Description de la sanction', v.commentaire)}
+        </dl>
+    </details>`;
+}
+
 function mesSectionMesuresArretees() {
     const q = mesQualification();
     if (!q.infraction_constituee) {
@@ -230,17 +250,26 @@ function mesSectionMesuresArretees() {
         const temporelle = m.portee === 'temporelle';
         const illimitee = m.portee === 'illimitee';
         const sansObjet = m.portee === 'sans_objet';
+        // Une mesure annulée sur recours ne se réécrit plus ; une mesure
+        // modifiée rouvre ses champs, et garde sous elle, repliée, la version
+        // que le recours a fait tomber.
+        const annulee = m.statut_recours === 'annulee';
+        const modifiee = m.statut_recours === 'modifiee';
+        const offBloc = annulee ? 'disabled' : off;
         return `<div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(libelleCat)}</span>
-                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer cette mesure"
+                ${annulee ? '<span class="mes-badge annulee">Annulée</span>' : ''}
+                ${modifiee ? '<span class="mes-badge notifiee">Modifiée</span>' : ''}
+                ${offBloc ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer cette mesure"
                     onclick="mesQualRetirerMesure(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
+                ${modifiee ? mesQualVersionPrecedente(m) : ''}
                 <div class="mes-paire">
                     <div class="mes-champ">
                         <label>Catégorie de mesure</label>
-                        <select class="mes-select" data-champ="categorie" ${off}
+                        <select class="mes-select" data-champ="categorie" ${offBloc}
                                 onchange="mesQualCategorieMesure(${i}, this.value)">
                             <option value="">—</option>
                             ${cats.map((c) => `<option value="${_mesAttr(c.code)}"
@@ -249,7 +278,7 @@ function mesSectionMesuresArretees() {
                     </div>
                     <div class="mes-champ">
                         <label>Type de mesure</label>
-                        <select class="mes-select" data-champ="type_mesure" ${off}>
+                        <select class="mes-select" data-champ="type_mesure" ${offBloc}>
                             <option value="">—</option>
                             ${types.map((t) => `<option value="${_mesAttr(t.code)}"
                                 ${m.type_mesure === t.code ? 'selected' : ''}>${_mesEsc(t.libelle)}</option>`).join('')}
@@ -260,23 +289,23 @@ function mesSectionMesuresArretees() {
                     <div class="mes-champ">
                         <label>Date de sanction</label>
                         <input type="date" class="mes-input" data-champ="date_sanction"
-                               value="${_mesAttr(m.date_sanction || '')}" ${off}>
+                               value="${_mesAttr(m.date_sanction || '')}" ${offBloc}>
                     </div>
                     <div class="mes-champ">
                         <label>Portée</label>
                         <div class="mes-cases-exclusives" style="padding-top:.35rem;">
                             <label class="mes-case">
-                                <input type="checkbox" data-champ="temporelle" ${temporelle ? 'checked' : ''} ${off}
+                                <input type="checkbox" data-champ="temporelle" ${temporelle ? 'checked' : ''} ${offBloc}
                                        onchange="mesQualPorteeMesure(${i}, 'temporelle', this.checked)">
                                 <span>Limitée dans le temps</span>
                             </label>
                             <label class="mes-case">
-                                <input type="checkbox" data-champ="illimitee" ${illimitee ? 'checked' : ''} ${off}
+                                <input type="checkbox" data-champ="illimitee" ${illimitee ? 'checked' : ''} ${offBloc}
                                        onchange="mesQualPorteeMesure(${i}, 'illimitee', this.checked)">
                                 <span>Illimitée</span>
                             </label>
                             <label class="mes-case">
-                                <input type="checkbox" data-champ="sans_objet" ${sansObjet ? 'checked' : ''} ${off}
+                                <input type="checkbox" data-champ="sans_objet" ${sansObjet ? 'checked' : ''} ${offBloc}
                                        onchange="mesQualPorteeMesure(${i}, 'sans_objet', this.checked)">
                                 <span>Sans objet</span>
                             </label>
@@ -288,9 +317,9 @@ function mesSectionMesuresArretees() {
                         <label>Durée de la sanction</label>
                         <div class="mes-duree">
                             <input type="number" min="0" class="mes-input" data-champ="duree_valeur"
-                                   value="${_mesAttr(m.duree_valeur || '')}" ${off}
+                                   value="${_mesAttr(m.duree_valeur || '')}" ${offBloc}
                                    oninput="mesQualDureeVersTerme(${i})">
-                            <select class="mes-select" data-champ="duree_unite" ${off}
+                            <select class="mes-select" data-champ="duree_unite" ${offBloc}
                                     onchange="mesQualDureeVersTerme(${i})">
                                 ${['jours', 'mois'].map((u) => `<option value="${u}"
                                     ${(m.duree_unite || 'jours') === u ? 'selected' : ''}>${u}</option>`).join('')}
@@ -300,7 +329,7 @@ function mesSectionMesuresArretees() {
                     <div class="mes-champ">
                         <label>Date de fin de sanction</label>
                         <input type="date" class="mes-input" data-champ="date_fin"
-                               value="${_mesAttr(m.date_fin || '')}" ${off}
+                               value="${_mesAttr(m.date_fin || '')}" ${offBloc}
                                onchange="mesQualTermeVersDuree(${i})">
                     </div>
                 </div>` : ''}
@@ -308,13 +337,13 @@ function mesSectionMesuresArretees() {
                     <div class="mes-champ-entete">
                         <label>Description de la sanction</label>
                         <label class="mes-case">
-                            <input type="checkbox" data-champ="suivi_requis" ${off}
+                            <input type="checkbox" data-champ="suivi_requis" ${offBloc}
                                    ${m.suivi_requis ? 'checked' : ''}
                                    onchange="mesQualSuiviRequis(${i}, this.checked)">
                             <span>Suivi de la mise en œuvre requise</span>
                         </label>
                     </div>
-                    <textarea class="mes-input" data-champ="commentaire" rows="3" ${off}
+                    <textarea class="mes-input" data-champ="commentaire" rows="3" ${offBloc}
                               placeholder="Ce que la sanction impose au prestataire">${_mesEsc(m.commentaire || '')}</textarea>
                 </div>
             </div>
@@ -350,11 +379,229 @@ function mesSectionMesuresArretees() {
 //  Saisie : relevé, ajouts, retraits
 // ══════════════════════════════════════
 
+// ── Section F — l'examen des recours ──
+// Une carence revenue du suivi porte les mesures que le prestataire conteste.
+// Chacune ouvre un bloc : ce qu'elle impose, ce que le recours lui oppose, et
+// ce que l'instance en décide.
+const MES_DECISIONS_RECOURS = {
+    maintenir: 'Maintenir la mesure',
+    modifier: 'Modifier la mesure',
+    annuler: 'Annuler la mesure',
+};
+
+function mesBlocRecours(m, i) {
+    const off = mesQualModifiable() ? '' : 'disabled';
+    const ro = !!off;
+    const r = m.recours || {};
+    const comites = mesComites();
+    const fichiers = (genre, liste) => `
+        <div class="mes-recours-pieces" data-genre="${genre}">${
+            (liste || []).map((pj, k) => `
+            <div class="mes-preuve" data-chemin="${_mesAttr(pj.path || '')}">
+                <input class="mes-input" value="${_mesAttr(pj.nom || '')}"
+                       placeholder="Intitulé de la pièce" ${off}>
+                ${_mesChemin(pj.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
+                    href="${_mesAttr(_mesChemin(pj.path))}?nom=${encodeURIComponent(pj.nom || '')}"
+                    title="Ouvrir">${MES_ICONS.download}</a>` : ''}
+                ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                    onclick="mesRecoursRetirerPiece(${i}, '${genre}', ${k})">${MES_ICONS.x}</button>`}
+            </div>`).join('') || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+        ${ro ? '' : `<input type="file" id="mesRecoursFichier_${i}_${genre}" multiple style="display:none;"
+                onchange="mesRecoursTeleverser(${i}, '${genre}', this.files)">
+            <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
+                    onclick="document.getElementById('mesRecoursFichier_${i}_${genre}').click()">
+                ${MES_ICONS.add} Ajouter une pièce</button>`}`;
+
+    const membres = (r.membres || []).map((p, k) => `
+        <tr data-rang="${k}">
+            <td><input class="mes-input" data-champ="nom" value="${_mesAttr(p.nom || '')}" ${off}></td>
+            <td><input class="mes-input" data-champ="prenom" value="${_mesAttr(p.prenom || '')}" ${off}></td>
+            <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
+            <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
+            <td class="mes-actions">${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
+                title="Retirer" onclick="mesRecoursRetirerMembre(${i}, ${k})">${MES_ICONS.x}</button>`}</td>
+        </tr>`).join('');
+
+    return `<div class="mes-bloc" data-rang="${i}">
+        <div class="mes-bloc-entete">
+            <span class="mes-bloc-titre">${_mesEsc(mesLibelleCategorie(m.categorie) || 'Mesure')}</span>
+            ${m.statut_recours === 'annulee' ? '<span class="mes-badge annulee">Annulée</span>' : ''}
+            ${m.statut_recours === 'modifiee' ? '<span class="mes-badge notifiee">Modifiée</span>' : ''}
+        </div>
+        <div class="mes-bloc-corps">
+            <div class="mes-paire">
+                <div class="mes-champ">
+                    <label>Catégorie de mesure</label>
+                    <div class="mes-lecture">${_mesEsc(mesLibelleCategorie(m.categorie) || '—')}</div>
+                </div>
+                <div class="mes-champ">
+                    <label>Type de mesure</label>
+                    <div class="mes-lecture">${_mesEsc(mesLibelleType(m.type_mesure) || '—')}</div>
+                </div>
+            </div>
+            <div class="mes-champ">
+                <label>Description de la sanction</label>
+                <div class="mes-lecture">${m.commentaire ? _mesEsc(m.commentaire)
+                    : '<span class="mes-preuve-vide">—</span>'}</div>
+            </div>
+            <div class="mes-trois">
+                <div class="mes-champ">
+                    <label>Date de sanction</label>
+                    <div class="mes-lecture">${_mesEsc(mesDate(m.date_sanction))}</div>
+                </div>
+                <div class="mes-champ">
+                    <label>Échéance</label>
+                    <div class="mes-lecture">${_mesEsc(mesDate(m.date_fin))}</div>
+                </div>
+                <div class="mes-champ">
+                    <label>Date de fin de sanction</label>
+                    <div class="mes-lecture">${_mesEsc(mesDate(m.date_fin))}</div>
+                </div>
+            </div>
+
+            <div class="mes-bloc-bande">Objet du recours</div>
+            <div class="mes-champ">
+                <label>Recours intenté</label>
+                <textarea class="mes-input" data-champ="intente_texte" rows="3" ${off}
+                          placeholder="Ce que le prestataire conteste, et sur quel fondement"
+                    >${_mesEsc(r.intente_texte || '')}</textarea>
+            </div>
+            <div class="mes-champ">
+                <label>Pièces jointes du recours</label>
+                ${fichiers('recours', r.pieces)}
+            </div>
+
+            <div class="mes-bloc-bande">Examen du recours</div>
+            <div class="mes-champ">
+                <label>Instance d’examen du recours</label>
+                <select class="mes-select" data-champ="instance_code" ${off}>
+                    <option value="">—</option>
+                    ${comites.map((c) => `<option value="${_mesAttr(c.code)}"
+                        ${r.instance_code === c.code ? 'selected' : ''}>${_mesEsc(c.libelle)}</option>`).join('')}
+                </select>
+            </div>
+            <div class="mes-champ">
+                <label>Membres de l’équipe du recours</label>
+                <div class="mes-table-wrap">
+                    <table class="mes-table mes-table-claire mes-recours-membres">
+                        <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Contact</th><th></th></tr></thead>
+                        <tbody>${membres || `<tr><td colspan="5" class="mes-preuve-vide">
+                            Aucun membre désigné</td></tr>`}</tbody>
+                    </table>
+                </div>
+                ${ro ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.4rem;"
+                    onclick="mesRecoursAjouterMembre(${i})">${MES_ICONS.add} Ajouter un membre</button>`}
+            </div>
+            <div class="mes-champ">
+                <label>Commentaire sur le recours</label>
+                <textarea class="mes-input" data-champ="commentaire" rows="3" ${off}
+                          placeholder="Ce que l’examen a établi">${_mesEsc(r.commentaire || '')}</textarea>
+            </div>
+            <div class="mes-champ">
+                <label>Décision suite au recours</label>
+                <select class="mes-select" data-champ="decision" ${off}
+                        onchange="mesRecoursDecision(${i}, this.value)">
+                    <option value="">—</option>
+                    ${Object.entries(MES_DECISIONS_RECOURS).map(([cle, lib]) => `<option value="${cle}"
+                        ${r.decision === cle ? 'selected' : ''}>${_mesEsc(lib)}</option>`).join('')}
+                </select>
+                ${r.decision === 'modifier' ? `<p class="mes-note">La mesure est marquée « Modifiée » à
+                    la section « Mesures d’application » : ses champs y sont rouverts, et la version
+                    d’avant s’y consulte, repliée.</p>` : ''}
+                ${r.decision === 'annuler' ? `<p class="mes-note">La mesure est marquée « Annulée » à la
+                    section « Mesures d’application » : elle ne se réécrit plus, et sortira du suivi
+                    à la validation.</p>` : ''}
+            </div>
+            <div class="mes-champ" style="margin-bottom:0;">
+                <label>Pièces jointes de la décision</label>
+                ${fichiers('decision', r.decision_pieces)}
+            </div>
+        </div>
+    </div>`;
+}
+
+function mesSectionRecours() {
+    const q = mesQualification();
+    const contestees = (q.mesures || [])
+        .map((m, i) => ({ m, i })).filter((x) => x.m.recours_intente);
+    if (!contestees.length) return '';
+    return mesSection('F', 'Recours', `
+        <p class="mes-note">Le prestataire conteste ${contestees.length} mesure(s). L’instance
+           examine chaque recours et en décide : maintenir, modifier ou annuler la mesure.</p>
+        <div id="mesRecoursBlocs">${contestees.map((x) => mesBlocRecours(x.m, x.i)).join('')}</div>`);
+}
+
+// La saisie des recours se relève avec le reste, et se recolle aux mesures par
+// leur rang : la section F ne connaît pas d'autre clé.
+function mesCollecterRecours() {
+    const racine = document.getElementById('mesRecoursBlocs');
+    if (!racine) return new Map();
+    const val = (b, champ) => ((b.querySelector(`[data-champ="${champ}"]`) || {}).value || '').trim();
+    const pieces = (b, genre) => [...b.querySelectorAll(`.mes-recours-pieces[data-genre="${genre}"] .mes-preuve`)]
+        .map((r) => ({ nom: (r.querySelector('input') || {}).value || '', path: r.dataset.chemin || '' }));
+    return new Map([...racine.querySelectorAll('.mes-bloc')].map((b) => [Number(b.dataset.rang), {
+        intente_texte: val(b, 'intente_texte'),
+        pieces: pieces(b, 'recours'),
+        instance_code: val(b, 'instance_code'),
+        membres: [...b.querySelectorAll('.mes-recours-membres tbody tr[data-rang]')].map((tr) => ({
+            nom: val(tr, 'nom'), prenom: val(tr, 'prenom'),
+            email: val(tr, 'email'), contact: val(tr, 'contact'),
+        })),
+        commentaire: val(b, 'commentaire'),
+        decision: val(b, 'decision'),
+        decision_pieces: pieces(b, 'decision'),
+    }]));
+}
+
+const mesRecoursModifier = (i, action) => mesQualModifier((q) => {
+    const m = q.mesures[i];
+    if (!m) return;
+    m.recours = m.recours || {};
+    action(m.recours);
+});
+
+const mesRecoursAjouterMembre = (i) => mesRecoursModifier(i, (r) => {
+    r.membres = (r.membres || []).concat([{ nom: '', prenom: '', email: '', contact: '' }]);
+});
+const mesRecoursRetirerMembre = (i, k) => mesRecoursModifier(i, (r) => {
+    r.membres = (r.membres || []).filter((_, n) => n !== k);
+});
+const mesRecoursRetirerPiece = (i, genre, k) => mesRecoursModifier(i, (r) => {
+    const cle = genre === 'decision' ? 'decision_pieces' : 'pieces';
+    r[cle] = (r[cle] || []).filter((_, n) => n !== k);
+});
+// La décision redessine : elle change ce que le bloc de mesure laisse écrire,
+// et l'aide qui l'accompagne.
+const mesRecoursDecision = (i, valeur) => mesRecoursModifier(i, (r) => { r.decision = valeur; });
+
+async function mesRecoursTeleverser(i, genre, fichiers) {
+    if (!fichiers || !fichiers.length) return;
+    mesMajQualification();
+    const q = mesQualification();
+    const m = q.mesures[i];
+    if (!m) return;
+    m.recours = m.recours || {};
+    const cle = genre === 'decision' ? 'decision_pieces' : 'pieces';
+    m.recours[cle] = m.recours[cle] || [];
+    for (const f of fichiers) {
+        try {
+            const corps = new FormData();
+            corps.append('file', f);
+            const rep = await mesApi('/upload', { method: 'POST', body: corps });
+            m.recours[cle].push({ nom: rep.filename, path: rep.path, size: rep.size });
+        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+    }
+    MES_STATE.traitement.qualification = q;
+    mesQualRedessiner();
+}
+
 function mesCollecterQualification() {
     if (!document.getElementById('mesQualComite')) return null;
     const val = (racine, champ) => ((racine.querySelector(`[data-champ="${champ}"]`) || {}).value || '');
     const lignes = (sel) => [...document.querySelectorAll(sel)];
     const coche = document.getElementById('mesQualConstituee');
+    const recours = mesCollecterRecours();
+    const etat = ((MES_STATE.traitement || {}).qualification || {}).mesures || [];
     const txt = (id) => (document.getElementById(id) || {}).value || '';
     return {
         comite_code: (document.getElementById('mesQualComite') || {}).value || '',
@@ -372,7 +619,7 @@ function mesCollecterQualification() {
         nature: txt('mesQualNature'),
         caracterisation: txt('mesQualCaracterisation'),
         circonstances: txt('mesQualCirconstances'),
-        mesures: lignes('#mesQualMesures .mes-bloc').map((b) => {
+        mesures: lignes('#mesQualMesures .mes-bloc').map((b, rang) => {
             const coche = (champ) => !!(b.querySelector(`[data-champ="${champ}"]`) || {}).checked;
             const portee = coche('temporelle') ? 'temporelle'
                 : (coche('illimitee') ? 'illimitee' : (coche('sans_objet') ? 'sans_objet' : ''));
@@ -380,6 +627,13 @@ function mesCollecterQualification() {
                 categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
                 date_sanction: val(b, 'date_sanction'), portee,
                 suivi_requis: coche('suivi_requis'),
+                // Le recours vit à la section F, et se recolle ici par le rang.
+                recours_intente: !!recours.get(rang),
+                recours: recours.get(rang) || null,
+                // Marques posées par le serveur : elles font l'aller-retour
+                // sans être relues du corps de la requête.
+                statut_recours: (etat[rang] || {}).statut_recours || '',
+                version_precedente: (etat[rang] || {}).version_precedente || null,
                 // Durée et terme n'ont de sens que pour une sanction temporelle.
                 duree_valeur: portee === 'temporelle' ? Number(val(b, 'duree_valeur')) || 0 : 0,
                 duree_unite: portee === 'temporelle' ? (val(b, 'duree_unite') || 'jours') : '',
@@ -638,6 +892,9 @@ Object.assign(window, {
     mesQualAjouterReunion, mesQualRetirerReunion,
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
     mesQualSuiviRequis, mesQualCloturer,
+    mesSectionRecours, mesQualVersionPrecedente, mesCollecterRecours,
+    mesRecoursAjouterMembre, mesRecoursRetirerMembre, mesRecoursRetirerPiece,
+    mesRecoursDecision, mesRecoursTeleverser,
     mesQualDureeVersTerme, mesQualTermeVersDuree, mesAjouterDuree,
     mesQualClose, mesQualModifiable,
     mesQualBasculerInfraction, mesQualBasculerNonInfraction, mesQualBasculerRenvoi,

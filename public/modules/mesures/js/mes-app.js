@@ -226,11 +226,9 @@ const mesEnRetard = (m) => !!m.date_echeance && m.date_echeance < mesJour() && !
 // L'étape « Suivi des Mesures » les posera ; tant qu'elle n'existe pas, une
 // mesure arrêtée attend l'ouverture de son suivi, et le dit.
 const MES_SUIVI = {
-    a_ouvrir: { libelle: 'Suivi à ouvrir', classe: 'projet',
-        aide: 'La mesure est arrêtée ; le plan d’action reste à demander.' },
     attendu: { libelle: 'Plan attendu', classe: 'notifiee',
-        aide: 'La mesure est notifiée ; le plan d’action n’est pas encore déposé.' },
-    en_cours: { libelle: 'Plan en cours', classe: 'en_cours',
+        aide: 'La mesure est arrêtée ; le plan d’action n’est pas encore déposé.' },
+    en_cours: { libelle: 'En cours de mise en œuvre', classe: 'en_cours',
         aide: 'Le plan d’action est déposé et son exécution se poursuit.' },
     solde: { libelle: 'Soldé', classe: 'cloturee',
         aide: 'Le plan d’action a été exécuté et le suivi est clos.' },
@@ -239,6 +237,9 @@ const MES_SUIVI = {
     sans_objet: { libelle: 'Suivi sans objet', classe: 'cloturee',
         aide: 'L’instance a arrêté que la nature de cette mesure n’appelle pas '
             + 'le suivi de sa mise en œuvre.' },
+    recours: { libelle: 'Recours', classe: 'majeure',
+        aide: 'Le prestataire a formé un recours contre cette mesure : '
+            + 'son suivi est suspendu tant que l’instance ne l’a pas examiné.' },
 };
 
 // Tant que le suivi n'est pas ouvert, l'état se déduit du circuit de la
@@ -247,11 +248,12 @@ const MES_SUIVI = {
 // qui fera foi.
 function mesStatutSuivi(m) {
     if (MES_SUIVI[m.suivi_statut]) return m.suivi_statut;
+    // Un recours prime : il suspend le suivi, quel que soit l'état du circuit.
+    if (m.recours_intente) return 'recours';
     if (m.statut === 'annulee') return 'sans_suite';
     if (m.statut === 'cloturee') return 'solde';
     if (m.statut === 'en_cours') return 'en_cours';
-    if (m.statut === 'notifiee') return 'attendu';
-    return 'a_ouvrir';
+    return 'attendu';
 }
 
 function mesStatutMesure(m) {
@@ -1202,7 +1204,8 @@ function mesFormulaireMesure() {
             ${mesSectionRapportInvestigation()}
             ${mesSectionInstance()}
             ${mesSectionQualification()}
-            ${mesSectionMesuresArretees()}` : ''}
+            ${mesSectionMesuresArretees()}
+            ${mesSectionRecours()}` : ''}
         ${etape === 'investigations' ? `
             ${mesRenvoisInvestigation()}
             ${mesSectionEquipe()}

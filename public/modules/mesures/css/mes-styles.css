@@ -567,4 +567,7 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
    ses couleurs servent encore au tableau de bord, où elles distinguent les
    parts d'un graphique. */
 .mes-statut-care { font-weight: 600; white-space: nowrap; }
+/* Échéance dépassée : la date se colore, sans pastille. Le retard doit se voir
+   — il appelle un geste — mais une pilule pleine par ligne noyait la table. */
+.mes-date-retard { color: #b91c1c; font-weight: 700; white-space: nowrap; }
 .mes-cell-statut { text-align: center; }

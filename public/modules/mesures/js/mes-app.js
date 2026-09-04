@@ -772,7 +772,7 @@ function mesLignesMesures() {
             <td>${m.date_sanction ? mesDate(m.date_sanction) : mesDate(m.date_emission)}</td>
             <td>${portee}</td>
             <td>${retard
-                ? `<span class="mes-badge retard">${mesDate(m.date_echeance)}</span>`
+                ? `<span class="mes-date-retard" title="Échéance dépassée">${mesDate(m.date_echeance)}</span>`
                 : mesDate(m.date_echeance)}</td>
             <td>${mesStatutMesure(m)}</td>
             <td class="mes-actions">
@@ -924,11 +924,13 @@ function mesLignesCritiques() {
             <td>${_mesEsc(p.nom || c.prestataire_nom || '—')}</td>
             <td>${mesDate(c.date_ouverture)}</td>
             <td>${retard
-                ? `<span class="mes-badge retard">${mesDate(c.date_due_cloture)}</span>`
+                // Une échéance dépassée reste signalée — c'est une information,
+                // non une décoration — mais par la seule couleur du texte : la
+                // pastille pleine pesait plus que ce qu'elle disait.
+                ? `<span class="mes-date-retard" title="Échéance dépassée">${mesDate(c.date_due_cloture)}</span>`
                 : mesDate(c.date_due_cloture)}</td>
             <td class="mes-cell-statut">${mesBadgeStatutCare(c.statut_care)}</td>
-            <td>${c.date_cloture
-                ? `<span class="mes-badge cloturee">${mesDate(c.date_cloture)}</span>` : '—'}</td>
+            <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
                 ${mesBoutonTraitement(c)}

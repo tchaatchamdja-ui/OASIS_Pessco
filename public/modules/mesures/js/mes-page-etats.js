@@ -29,17 +29,13 @@ const MES_ETATS_ETAPES = [
       aide: 'Les mesures sont arrêtées ; leur mise en œuvre se suit.' },
 ];
 
-// Un suivi qui ne court plus : la mesure ne compte ni parmi les retards, ni
-// parmi ce qui reste à suivre.
-const MES_ETATS_SUIVI_CLOS = ['solde', 'sans_suite', 'sans_objet'];
-
 // ── Répartition ──
-// Une seule lecture des données pour les cinq sous-menus : chaque carence et
-// chaque mesure tombe dans un seul seau, et les comptes s'en déduisent.
+// Une seule lecture des carences pour les quatre sous-menus : chacune tombe
+// dans un seul seau, et les comptes s'en déduisent. Les mesures se suivent au
+// menu qui porte leur nom ; les états ne parlent que du dossier.
 function mesEtatsRepartir() {
     const jour = mesJour();
     const carences = MES_STATE.data.constatations || [];
-    const mesures = MES_STATE.data.mesures || [];
 
     const enRetard = (c) => !!c.date_due_cloture && c.date_due_cloture < jour;
     const jours = (echeance) => {
@@ -60,17 +56,12 @@ function mesEtatsRepartir() {
         && !(c.traitement_etape === 'suite' && !c.traitement_decision));
     const cloturees = ouvertes.filter((c) => c.traitement_clos);
 
-    const aSuivre = mesures.filter((m) => !MES_ETATS_SUIVI_CLOS.includes(mesStatutSuivi(m)));
-    const soldees = mesures.filter((m) => MES_ETATS_SUIVI_CLOS.includes(mesStatutSuivi(m)));
-
     return {
         jours,
         aTraiter: aTraiter.map((c) => ({ ...c, retard: enRetard(c), reste: jours(c.date_due_cloture) })),
         enCours: enCours.map((c) => ({ ...c, retard: enRetard(c), reste: jours(c.date_due_cloture) })),
-        aSuivre: aSuivre.map((m) => ({ ...m, reste: jours(m.date_echeance) })),
         cloturees,
         classees,
-        soldees,
     };
 }
 
@@ -188,64 +179,14 @@ function mesEtatsPanEnCours(R) {
     }).join('');
 }
 
-// ── Sous-menu 3 : mesures à suivre, une section par statut de suivi ──
-function mesEtatsPanASuivre(R) {
-    const statuts = Object.keys(MES_SUIVI).filter((s) => !MES_ETATS_SUIVI_CLOS.includes(s));
-    return statuts.map((cle) => {
-        const e = MES_SUIVI[cle];
-        const items = R.aSuivre.filter((m) => mesStatutSuivi(m) === cle);
-        const retard = items.filter((m) => m.reste !== null && m.reste < 0).length;
-        const lignes = items.map((m) => `
-            <tr class="mes-etats-ligne" onclick="if(!event.target.closest('button'))mesFaireLeSuivi('${m.id}')">
-                <td><strong>${_mesEsc(m.reference || '—')}</strong>
-                    ${m.constatation_ref ? `<div class="mes-sous-titre">${_mesEsc(m.constatation_ref)}</div>` : ''}</td>
-                <td>${_mesEsc(m.prestataire_nom || '—')}</td>
-                <td class="mes-cell-mesure">
-                    <div class="mes-cell-categorie">${_mesEsc(mesLibelleCategorie(m.categorie))}</div>
-                    <div class="mes-cell-type">${_mesEsc(mesLibelleType(m.type_mesure) || '—')}${
-    m.description ? ` : <span class="mes-cell-description">${_mesEsc(m.description)}</span>` : ''}</div>
-                </td>
-                <td>${_mesEsc(mesDate(m.date_sanction || m.date_emission))}</td>
-                <td>${_mesEsc(mesDate(m.date_echeance))}</td>
-                <td style="text-align:center;">${mesEtatsDelai(m.reste)}</td>
-                <td class="mes-actions mes-etats-actions">
-                    <button class="btn btn-outline btn-sm mes-btn-icone" title="Ouvrir le suivi de la mesure"
-                            onclick="mesFaireLeSuivi('${m.id}')">${MES_ICONS.edit}</button>
-                </td>
-            </tr>`).join('');
-        const ouvert = MES_ETATS.ouvertes[cle] !== undefined
-            ? MES_ETATS.ouvertes[cle] : items.length > 0;
-        return `
-            <details class="mes-card mes-etats-section" ${ouvert ? 'open' : ''}
-                     ontoggle="MES_ETATS.ouvertes['${cle}']=this.open;">
-                <summary>
-                    <span class="mes-etats-chevron">${MES_ICONS.chevron}</span>
-                    <span class="mes-etats-titre">${_mesEsc(e.libelle)}</span>
-                    <span class="mes-etats-compte${items.length > 1 ? ' alerte' : ''}">${items.length}</span>
-                    ${retard ? `<span class="mes-etats-compte retard">${retard} en retard</span>` : ''}
-                </summary>
-                <div class="mes-etats-section-corps">
-                    <p class="mes-etats-intro">${_mesEsc(e.aide)}</p>
-                    ${mesEtatsTableau([
-        { titre: 'Référence', largeur: '140px' }, { titre: 'Prestataire', largeur: '160px' },
-        { titre: 'Catégorie / Type / Description', largeur: '26%' },
-        { titre: 'Date de sanction', largeur: '110px' }, { titre: 'Échéance', largeur: '110px' },
-        { titre: 'Délai', largeur: '120px', centre: true },
-        { titre: 'Actions', largeur: '90px', centre: true },
-    ], lignes, 'Aucune mesure à ce statut.')}
-                </div>
-            </details>`;
-    }).join('');
-}
-
-// ── Sous-menu 4 : dossiers clôturés ──
+// ── Sous-menu 3 : carences clôturées ──
 function mesEtatsPanCloturees(R) {
     const lignes = R.cloturees.map((c) => mesEtatsLigneCarence(c, `
         ${mesEtatsReperes(c)}
         <td>${_mesEsc(mesDate(c.date_ouverture))}</td>
         <td>${_mesEsc(mesDate(c.traitement_cloture_le || c.date_cloture))}</td>
         <td style="text-align:center;">${c.mesures_liees || 0}</td>`)).join('');
-    return mesEtatsCarte('Dossiers clôturés', R.cloturees.length, '',
+    return mesEtatsCarte('Carences clôturées', R.cloturees.length, '',
         'Carences dont le traitement est clos : les mesures ont été arrêtées et aucune '
         + 'n’appelle plus de suivi. Le dossier se consulte, il ne se réécrit plus.',
         mesEtatsTableau([
@@ -254,10 +195,10 @@ function mesEtatsPanCloturees(R) {
             { titre: 'Clôture', largeur: '110px' },
             { titre: 'Mesures', largeur: '90px', centre: true },
             { titre: 'Actions', largeur: '100px', centre: true },
-        ], lignes, 'Aucun dossier clôturé.'));
+        ], lignes, 'Aucune carence clôturée.'));
 }
 
-// ── Sous-menu 5 : carences classées ──
+// ── Sous-menu 4 : carences classées ──
 function mesEtatsPanClassees(R) {
     const lignes = R.classees.map((c) => mesEtatsLigneCarence(c, `
         ${mesEtatsReperes(c)}
@@ -280,14 +221,12 @@ function mesEtatsPanClassees(R) {
 function mesRenderEtats() {
     const R = mesEtatsRepartir();
     const retards = R.aTraiter.filter((c) => c.retard).length
-        + R.enCours.filter((c) => c.retard).length
-        + R.aSuivre.filter((m) => m.reste !== null && m.reste < 0).length;
+        + R.enCours.filter((c) => c.retard).length;
 
     const onglets = [
         { cle: 'a_traiter', titre: 'Carences à traiter', compte: R.aTraiter.length },
         { cle: 'en_cours', titre: 'Traitements en cours', compte: R.enCours.length },
-        { cle: 'a_suivre', titre: 'Mesures à suivre', compte: R.aSuivre.length },
-        { cle: 'cloturees', titre: 'Dossiers clôturés', compte: R.cloturees.length },
+        { cle: 'cloturees', titre: 'Carences clôturées', compte: R.cloturees.length },
         { cle: 'classees', titre: 'Carences classées', compte: R.classees.length },
     ];
     const barre = `<div class="mes-sous-onglets mes-onglets-rang" role="tablist">
@@ -302,7 +241,6 @@ function mesRenderEtats() {
 
     const corps = {
         en_cours: () => mesEtatsPanEnCours(R),
-        a_suivre: () => mesEtatsPanASuivre(R),
         cloturees: () => mesEtatsPanCloturees(R),
         classees: () => mesEtatsPanClassees(R),
     }[MES_ETATS.sub] || (() => mesEtatsPanATraiter(R));

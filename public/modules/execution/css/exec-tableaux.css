@@ -238,8 +238,10 @@
     gap: 1rem;
     align-items: stretch;
 }
+/* Le cadre d'un graphique porte la couleur du thème, comme dans RAMP et les
+   Mesures d'Application : un graphique se reconnaît à son trait. */
 .exec-module .exec-crit-bloc {
-    border: 1px solid var(--border);
+    border: 1px solid var(--primary);
     border-radius: 10px;
     padding: 0.85rem 0.9rem;
     background: var(--bg, #fff);
@@ -272,11 +274,13 @@
     border-collapse: collapse;
     font-size: 0.8rem;
 }
-.exec-module .exec-crit-tab td + td { border-left: 1px solid var(--border); }
+.exec-module .exec-crit-tab td + td {
+    border-left: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+}
 /* Lignes resserrées d'un tiers : les trois répartitions se lisent d'un bloc. */
 .exec-module .exec-crit-tab td {
     padding: 0.1rem 0.55rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
     vertical-align: middle;
 }
 .exec-module .exec-crit-tab tbody tr:last-child td { border-bottom: none; }

@@ -190,6 +190,20 @@
     white-space: normal; text-align: center; line-height: 1.2; width: 100%;
 }
 .mes-btn-icone { padding: .25rem .45rem; line-height: 0; }
+/* Le libellé d'un champ et la case qui en commande la portée tiennent une
+   même ligne : la case qualifie ce champ, elle ne s'en éloigne pas. */
+.mes-champ-entete {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: .8rem; flex-wrap: wrap;
+}
+.mes-champ-entete > label:first-child { margin-bottom: 0; }
+.mes-champ-entete .mes-case { margin-bottom: 0; font-weight: 400; }
+/* Où en est un dossier conclu par des mesures, au-dessus de son bouton : le
+   bouton dit l'étape atteinte, cette mention dit ce qu'il en advient. */
+.mes-etat-dossier {
+    font-size: .7rem; font-weight: 600; letter-spacing: .02em;
+    color: var(--text-muted); text-transform: uppercase;
+}
 /* Le suivi et la suppression se tiennent côte à côte : la pile étire ses
    boutons sur toute la largeur, ce qui donnerait à une icône seule la taille
    d'un libellé. */

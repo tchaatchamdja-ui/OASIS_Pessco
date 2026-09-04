@@ -25,6 +25,9 @@ const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
 const mesQualClose = () => {
     if (mesTraitementClos()) return 'classée';
     const rang = MES_ETAPES.findIndex((e) => e.cle === 'qualification');
+    // Clôturée : les mesures sont arrêtées, aucune n'appelait de suivi, et le
+    // dossier s'est fermé ici même plutôt que de passer à l'étape suivante.
+    if ((MES_STATE.traitement || {}).cloture_le) return 'clôturée';
     if (mesRangAtteint() > rang) return 'validée';
     if (mesRangAtteint() < rang) return 'renvoyée';
     return '';
@@ -302,7 +305,15 @@ function mesSectionMesuresArretees() {
                     </div>
                 </div>` : ''}
                 <div class="mes-champ" style="margin-bottom:0;">
-                    <label>Description de la sanction</label>
+                    <div class="mes-champ-entete">
+                        <label>Description de la sanction</label>
+                        <label class="mes-case">
+                            <input type="checkbox" data-champ="suivi_requis" ${off}
+                                   ${m.suivi_requis ? 'checked' : ''}
+                                   onchange="mesQualSuiviRequis(${i}, this.checked)">
+                            <span>Suivi de la mise en œuvre requise</span>
+                        </label>
+                    </div>
                     <textarea class="mes-input" data-champ="commentaire" rows="3" ${off}
                               placeholder="Ce que la sanction impose au prestataire">${_mesEsc(m.commentaire || '')}</textarea>
                 </div>
@@ -368,6 +379,7 @@ function mesCollecterQualification() {
             return {
                 categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
                 date_sanction: val(b, 'date_sanction'), portee,
+                suivi_requis: coche('suivi_requis'),
                 // Durée et terme n'ont de sens que pour une sanction temporelle.
                 duree_valeur: portee === 'temporelle' ? Number(val(b, 'duree_valeur')) || 0 : 0,
                 duree_unite: portee === 'temporelle' ? (val(b, 'duree_unite') || 'jours') : '',
@@ -405,7 +417,10 @@ const mesQualRetirerReunion = (i) => mesQualModifier((q) => { q.reunions = q.reu
 const mesQualAjouterMesure = () => mesQualModifier((q) => q.mesures.push({
     categorie: (mesCategories()[0] || {}).code || '', type_mesure: '',
     date_sanction: '', portee: '', duree_valeur: '', duree_unite: 'jours',
-    date_fin: '', commentaire: '',
+    // Le suivi est attendu par défaut : c'est en le décochant que l'instance
+    // déclare qu'une mesure n'appelle pas de suivi de mise en œuvre, non en
+    // omettant de le cocher.
+    date_fin: '', commentaire: '', suivi_requis: true,
 }));
 
 // ── Durée et terme : chacun se déduit de l'autre ──
@@ -471,6 +486,11 @@ function mesQualTermeVersDuree(i) {
 const mesQualPorteeMesure = (i, portee, coche) => mesQualModifier((q) => {
     if (q.mesures[i]) q.mesures[i].portee = coche ? portee : '';
 });
+// Le suivi requis commande le bouton « Clôturer » : la bascule redessine
+// l'étape pour que le bandeau d'actions suive la case.
+const mesQualSuiviRequis = (i, coche) => mesQualModifier((q) => {
+    if (q.mesures[i]) q.mesures[i].suivi_requis = !!coche;
+});
 const mesQualRetirerMesure = (i) => mesQualModifier((q) => { q.mesures = q.mesures.filter((_, k) => k !== i); });
 const mesQualRetirerPiece = (i) => mesQualModifier((q) => { q.pieces = q.pieces.filter((_, k) => k !== i); });
 
@@ -525,6 +545,8 @@ function mesActionsQualification() {
         return `<span class="mes-badge cloturee">Qualification ${_mesEsc(close)}</span>`;
     }
     if (!mesPeutDecider()) return '';
+    const mesures = q.mesures || [];
+    const suiviAttendu = mesures.some((m) => m.suivi_requis);
     const bouton = (actif, classe, aide, geste, libelle) => `<button class="btn btn-sm ${classe}"
         ${actif ? '' : 'disabled'} title="${_mesAttr(aide)}"
         onclick="${geste}">${_mesEsc(libelle)}</button>`;
@@ -541,6 +563,20 @@ function mesActionsQualification() {
             'Passe le traitement à l’étape « Suivi des Mesures ». '
             + 'Cochez « Infraction constituée » pour l’activer.',
             'mesQualSuivi()', 'Valider'),
+        // Clôture directe : elle ne s'offre que si aucune des mesures arrêtées
+        // n'appelle le suivi de sa mise en œuvre. Une seule qui le demande, et
+        // le dossier doit passer par l'étape de suivi.
+        bouton(!!q.infraction_constituee && !!mesures.length && !suiviAttendu, 'btn-outline',
+            !q.infraction_constituee
+                ? 'Cochez « Infraction constituée » pour l’activer.'
+                : (!mesures.length
+                    ? 'Aucune mesure n’a été arrêtée : il n’y a rien à clôturer.'
+                    : (suiviAttendu
+                        ? 'Une mesure au moins requiert le suivi de sa mise en œuvre : '
+                          + 'décochez « Suivi de la mise en œuvre requise », ou passez par « Valider ».'
+                        : 'Clôt le traitement : les mesures sont arrêtées et aucune '
+                          + 'n’appelle le suivi de sa mise en œuvre.')),
+            'mesQualCloturer()', 'Clôturer'),
     ].join('');
 }
 
@@ -578,6 +614,11 @@ const mesQualSuivi = () => mesQualIssue('suivi',
     'Passer au suivi des mesures ?',
     'Traitement passé au suivi des mesures');
 
+const mesQualCloturer = () => mesQualIssue('cloturer',
+    'Clôturer le traitement ?\nLes mesures arrêtées entrent au registre et le '
+    + 'dossier se ferme : aucune ne requiert le suivi de sa mise en œuvre.',
+    'Traitement clôturé');
+
 async function mesEnregistrerQualification() {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
@@ -596,6 +637,7 @@ Object.assign(window, {
     mesQualAjouterMembre, mesQualRetirerMembre,
     mesQualAjouterReunion, mesQualRetirerReunion,
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
+    mesQualSuiviRequis, mesQualCloturer,
     mesQualDureeVersTerme, mesQualTermeVersDuree, mesAjouterDuree,
     mesQualClose, mesQualModifiable,
     mesQualBasculerInfraction, mesQualBasculerNonInfraction, mesQualBasculerRenvoi,

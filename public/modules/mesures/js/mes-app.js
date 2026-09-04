@@ -236,6 +236,9 @@ const MES_SUIVI = {
         aide: 'Le plan d’action a été exécuté et le suivi est clos.' },
     sans_suite: { libelle: 'Sans suite', classe: 'annulee',
         aide: 'La mesure a été abandonnée : aucun plan d’action n’est attendu.' },
+    sans_objet: { libelle: 'Suivi sans objet', classe: 'cloturee',
+        aide: 'L’instance a arrêté que la nature de cette mesure n’appelle pas '
+            + 'le suivi de sa mise en œuvre.' },
 };
 
 // Tant que le suivi n'est pas ouvert, l'état se déduit du circuit de la
@@ -874,7 +877,7 @@ function mesRenderMesures() {
 // indistinctement à « traiter » un dossier déjà bien avancé. Une carence
 // classée s'ouvre aussi : son dossier se consulte, il ne se modifie plus.
 const MES_LIBELLE_ETAPE = {
-    suite: 'Traiter',
+    suite: 'Déclencher Traitement',
     investigations: 'Investigations',
     qualification: 'Qualification et Mesures',
     suivi: 'Traitement clôturé',
@@ -883,7 +886,8 @@ const MES_LIBELLE_ETAPE = {
 function mesBoutonTraitement(c) {
     const etape = c.traitement_etape || 'suite';
     const clos = etape === 'suivi' || c.classee;
-    const libelle = c.classee ? 'Traitement clôturé' : (MES_LIBELLE_ETAPE[etape] || 'Traiter');
+    const libelle = c.classee ? 'Traitement clôturé'
+        : (MES_LIBELLE_ETAPE[etape] || MES_LIBELLE_ETAPE.suite);
     // Un dossier clos se consulte : le bouton reste, sans l'accent de l'action.
     const classe = clos ? 'btn-outline' : 'mes-btn-mesure';
     if (!mesPeutEcrire() && !clos) return '';
@@ -893,6 +897,19 @@ function mesBoutonTraitement(c) {
         title="${_mesAttr(clos ? 'Consulter le dossier de traitement'
             : `Poursuivre le traitement — étape « ${MES_LIBELLE_ETAPE[etape] || 'Suite à donner'} »`)}"
         onclick="mesMesureDepuisConstatation('${c.id}')">${_mesEsc(libelle)}</button>`;
+}
+
+// Un traitement conclu par des mesures reste ouvert tant que leur mise en œuvre
+// se suit ; il est clos quand l'instance a jugé qu'aucune ne l'appelait. Le
+// bouton dit la même chose des deux — « Traitement clôturé » — d'où cette
+// mention au-dessus de lui.
+function mesEtatSousMesure(c) {
+    if (c.classee || c.traitement_etape !== 'suivi') return '';
+    return c.traitement_clos
+        ? '<span class="mes-etat-dossier" title="Les mesures sont arrêtées et aucune '
+            + 'n’appelle le suivi de sa mise en œuvre.">Clôturée</span>'
+        : '<span class="mes-etat-dossier" title="Les mesures sont arrêtées ; '
+            + 'la mise en œuvre reste à suivre.">Sous suivi</span>';
 }
 
 function mesCritiquesFiltrees() {
@@ -944,6 +961,7 @@ function mesLignesCritiques() {
             <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
+                ${mesEtatSousMesure(c)}
                 ${mesBoutonTraitement(c)}
                 ${c.classee
                     ? `<span class="mes-badge cloturee" title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
@@ -1398,7 +1416,7 @@ Object.assign(window, {
     mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
     mesTeleverserPreuve, mesRetirerPreuve,
     mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
-    mesTypesInvestigation, mesComites, mesRechargerParametres,
+    mesTypesInvestigation, mesComites, mesRechargerParametres, mesEtatSousMesure,
 });
 
 // ══════════════════════════════════════

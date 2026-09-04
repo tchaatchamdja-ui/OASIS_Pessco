@@ -183,6 +183,9 @@ module.exports = function register(app, deps, M) {
         classement_motif: classee ? classee.motif : '',
         traitement_etape: (traitements.get(c.id) || {}).etape || '',
         traitement_decision: (traitements.get(c.id) || {}).decision || '',
+        // Le dossier a-t-il été déclaré clos faute de suivi à conduire ? La
+        // colonne « Actions » y distingue « Sous suivi » de « Clôturée ».
+        traitement_clos: !!(traitements.get(c.id) || {}).cloture_le,
         date_cloture: cloture(c, liees),
         statut: classee ? 'classee' : c.statut,
         statut_care: statutCare,
@@ -265,6 +268,10 @@ module.exports = function register(app, deps, M) {
       classe_par: (t && t.classe_par) || '',
       qualifie_le: (t && t.qualifie_le) || '',
       qualifie_par: (t && t.qualifie_par) || '',
+      // Clôture prononcée à la qualification : les mesures sont arrêtées mais
+      // aucune n'appelle de suivi. Le dossier est clos, l'écran le lit ici.
+      cloture_le: (t && t.cloture_le) || '',
+      cloture_par: (t && t.cloture_par) || '',
       investigation: (t && t.investigation)
         || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' },
       qualification: (t && t.qualification) || {
@@ -444,6 +451,11 @@ module.exports = function register(app, deps, M) {
         ? texte(o.duree_unite) : (portee === 'temporelle' ? 'jours' : ''),
       date_fin: portee === 'temporelle' ? texte(o.date_fin).slice(0, 10) : '',
       commentaire: texte(o.commentaire),
+      // Une mesure appelle-t-elle le suivi de sa mise en œuvre ? Un plan
+      // d'action se suit ; un avertissement, une amende acquittée, non. La
+      // réponse commande l'issue de l'étape : sans aucun suivi attendu, le
+      // dossier se clôt ici plutôt que de passer à l'étape « Suivi ».
+      suivi_requis: o.suivi_requis === true || o.suivi_requis === 'true',
     };
   };
 
@@ -570,16 +582,12 @@ module.exports = function register(app, deps, M) {
     return res.status(201).json({ status: 'ok' });
   });
 
-  app.post(`${M}/constatations/:id/qualification/suivi`, requireAuth, (req, res) => {
-    const ctx = carenceAQualifier(req, res);
-    if (!ctx) return undefined;
-    const q = ctx.t.qualification || {};
-    if (!q.infraction_constituee) {
-      return res.status(409).json({ error: 'Le suivi ne s’ouvre que sur une infraction constituée' });
-    }
-    // Les mesures arrêtées par l'instance entrent au registre des mesures :
-    // c'est là qu'elles se notifient, se suivent et se clôturent. Elles y
-    // arrivent en projet, comme toute mesure nouvelle.
+  // Les mesures arrêtées par l'instance entrent au registre des mesures : c'est
+  // là qu'elles se notifient, se suivent et se clôturent. Elles y arrivent en
+  // projet, comme toute mesure nouvelle — sauf celles dont l'instance a dit que
+  // la mise en œuvre n'appelait pas de suivi : leur suivi est sans objet, et le
+  // registre ne doit pas réclamer un plan d'action que nul n'attend.
+  const creerLesMesures = (ctx, q, auteur) => {
     const dejaCreees = new Set(db.list('mesures')
       .filter((m) => m.constatation_id === ctx.c.id && m.issue_de === 'qualification')
       .map((m) => m.qualification_rang));
@@ -607,6 +615,7 @@ module.exports = function register(app, deps, M) {
         avis_commission: (q.caracterisation || ''),
         pieces_jointes: (q.pieces || []).map(piece),
         statut: 'projet',
+        suivi_statut: m.suivi_requis ? '' : 'sans_objet',
         decision_par: '', date_decision: '',
         date_notification: '', date_cloture: '',
         // Portée de la sanction, telle que l'instance l'a arrêtée : le registre
@@ -619,16 +628,57 @@ module.exports = function register(app, deps, M) {
         // validation est rejouée.
         issue_de: 'qualification',
         qualification_rang: rang,
-        created_by: req.user.username,
+        created_by: auteur,
         date_creation: db.now(),
       };
       db.insert('mesures', nouvelle);
       creees.push(nouvelle.reference);
     });
+    return creees;
+  };
+
+  app.post(`${M}/constatations/:id/qualification/suivi`, requireAuth, (req, res) => {
+    const ctx = carenceAQualifier(req, res);
+    if (!ctx) return undefined;
+    const q = ctx.t.qualification || {};
+    if (!q.infraction_constituee) {
+      return res.status(409).json({ error: 'Le suivi ne s’ouvre que sur une infraction constituée' });
+    }
+    const creees = creerLesMesures(ctx, q, req.user.username);
     db.update('traitements', ctx.t.id, {
       etape: 'suivi', qualifie_le: db.now(), qualifie_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok', etape: 'suivi', mesures: creees });
+  });
+
+  // Clôture directe : les mesures sont arrêtées, mais aucune n'appelle le suivi
+  // de sa mise en œuvre. Le dossier passe à la dernière étape et s'y ferme, sans
+  // ouvrir un suivi que rien n'alimenterait.
+  app.post(`${M}/constatations/:id/qualification/cloturer`, requireAuth, (req, res) => {
+    const ctx = carenceAQualifier(req, res);
+    if (!ctx) return undefined;
+    const q = ctx.t.qualification || {};
+    if (!q.infraction_constituee) {
+      return res.status(409).json({ error: 'La clôture ne vaut que sur une infraction constituée' });
+    }
+    const mesures = q.mesures || [];
+    if (!mesures.length) {
+      return res.status(409).json({ error: 'Aucune mesure n’a été arrêtée' });
+    }
+    if (mesures.some((m) => m.suivi_requis)) {
+      return res.status(409).json({
+        error: 'Une mesure au moins requiert le suivi de sa mise en œuvre',
+      });
+    }
+    const creees = creerLesMesures(ctx, q, req.user.username);
+    db.update('traitements', ctx.t.id, {
+      etape: 'suivi',
+      qualifie_le: ctx.t.qualifie_le || db.now(),
+      qualifie_par: ctx.t.qualifie_par || req.user.username,
+      cloture_le: db.now(),
+      cloture_par: req.user.username,
+    });
+    return res.status(201).json({ status: 'ok', etape: 'suivi', clos: true, mesures: creees });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

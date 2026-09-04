@@ -20,6 +20,31 @@
     margin-bottom: 1rem;
 }
 
+/* Rang serré — menu « États ». Les colonnes du rang valaient 240 px quand le
+   plus long des intitulés en demande moins : les plus courts flottaient au
+   milieu de leur case. Le rang garde sa largeur — c'est lui qui porte le filet
+   — et cède la grille à une bande intérieure dimensionnée sur son contenu :
+   des colonnes égales entre elles y valent le plus large des intitulés, sans
+   un pixel de plus. */
+.exec-workflow-tabs.exec-tabs-serrees { display: block; }
+.exec-tabs-rang {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    width: max-content;
+    gap: .2rem;
+}
+/* Sous 900 px, cinq intitulés d'un tenant ne tiennent plus : le rang reprend
+   le pli des autres écrans plutôt que de déborder. */
+@media (max-width: 900px) {
+    .exec-tabs-rang {
+        width: auto;
+        grid-auto-flow: row;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 240px));
+        justify-content: start;
+    }
+}
+
 .exec-tab {
     padding: 0.6rem 1rem;
     margin-bottom: -2px;

@@ -678,11 +678,13 @@ function execRenderEtats() {
     { cle: 'cloturees', titre: 'Activités clôturées', compte: R.cloturees.length },
     { cle: 'archivees', titre: 'Activités archivées', compte: R.archivees.length },
   ];
-  const barre = `<div class="exec-workflow-tabs">${onglets.map((o) => `
+  const barre = `<div class="exec-workflow-tabs exec-tabs-serrees">
+    <div class="exec-tabs-rang">${onglets.map((o) => `
     <button class="exec-tab ${EXEC_ETATS.sub === o.cle ? 'active' : ''}"
       onclick="EXEC_ETATS.sub='${o.cle}';execRenderPage();">
       ${_esc(o.titre)} <span class="exec-tab-badge">${o.compte}</span>
-    </button>`).join('')}</div>`;
+    </button>`).join('')}</div>
+  </div>`;
 
   let corps = '';
   if (EXEC_ETATS.sub === 'en_vie') corps = execEtatsPanEn_vie(R);

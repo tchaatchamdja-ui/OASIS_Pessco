@@ -424,6 +424,13 @@ body.app-sidebar-collapsed .mes-slider { left: var(--sidebar-collapsed, 60px); }
 }
 .mes-champ textarea { resize: vertical; min-height: 60px; }
 .mes-paire { display: grid; grid-template-columns: 1fr 1fr; gap: .7rem; }
+/* Trois dates de même nature — sanction, échéance, terme — se lisent d'un
+   coup d'œil quand elles tiennent une ligne. Sous 640 px elles s'empilent :
+   trois colonnes de dates n'y tiendraient plus. */
+.mes-trois { display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem; }
+@media (max-width: 640px) {
+    .mes-trois { grid-template-columns: 1fr; }
+}
 .mes-erreur { color: #b91c1c; font-size: .8rem; margin: .3rem 0 0; }
 .mes-note {
     margin: 0 0 .8rem; padding: .5rem .7rem;

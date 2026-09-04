@@ -281,6 +281,12 @@ module.exports = function register(app, deps, M) {
         nature: '', caracterisation: '', circonstances: '',
         mesures: [], pieces: [],
       },
+      // Suivi des mesures : le commentaire général de l'étape, et les mesures
+      // au registre — c'est sur elles que porte le suivi, non sur une copie.
+      suivi: (t && t.suivi) || { commentaire_general: '' },
+      mesures: db.list('mesures')
+        .filter((m) => m.constatation_id === c.id)
+        .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || ''))),
       pac: pacDe(c.id),
       etapes: ETAPES,
     });
@@ -609,6 +615,10 @@ module.exports = function register(app, deps, M) {
         description: m.commentaire || '',
         date_emission: m.date_sanction || '',
         date_echeance: m.date_fin || '',
+        // Le terme de la sanction, distinct de l'échéance : l'un dit jusqu'à
+        // quand la sanction court, l'autre pour quand la mesure est due. Ils
+        // partent égaux, ils ne le restent pas — une échéance se reporte.
+        date_fin_sanction: m.date_fin || '',
         delai_jours: m.portee === 'temporelle' && m.duree_unite === 'jours'
           ? String(m.duree_valeur || '') : '',
         motif: q.nature || '',
@@ -679,6 +689,56 @@ module.exports = function register(app, deps, M) {
       cloture_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok', etape: 'suivi', clos: true, mesures: creees });
+  });
+
+  // ══════════════════════════════════════
+  //  Étape « Suivi des Mesures »
+  // ══════════════════════════════════════
+  // Le suivi ne recopie pas les mesures : il les écrit là où elles vivent, au
+  // registre. Ce que l'étape lui ajoute — commentaire de suivi, statut, pièces
+  // — s'inscrit sur la mesure elle-même, et le menu Mesures le lit aussitôt.
+  const SUIVI_STATUTS = ['a_ouvrir', 'attendu', 'en_cours', 'solde', 'sans_suite', 'sans_objet'];
+
+  app.put(`${M}/constatations/:id/suivi`, requireAuth, (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!peutEcrire(req, c)) return refuser(res);
+    const t = traitementDe(c.id);
+    if (!t || t.etape !== 'suivi') {
+      return res.status(409).json({ error: 'La carence n’est pas à l’étape Suivi des Mesures' });
+    }
+    // Un dossier clos — classé, ou clôturé faute de suivi à conduire — ne se
+    // réécrit plus : l'étape se consulte.
+    if (t.classe_le || t.cloture_le) {
+      return res.status(409).json({ error: 'Le traitement est clos : le suivi ne se modifie plus' });
+    }
+    const d = req.body || {};
+    // Seules les mesures nées de cette carence sont touchées : un identifiant
+    // venu d'ailleurs ne doit pas ouvrir le registre entier.
+    const siennes = new Set(db.list('mesures')
+      .filter((m) => m.constatation_id === c.id).map((m) => m.id));
+    const majes = [];
+    (Array.isArray(d.mesures) ? d.mesures : []).forEach((o) => {
+      const id = texte(o && o.id);
+      if (!siennes.has(id)) return;
+      const statut = SUIVI_STATUTS.includes(texte(o.suivi_statut)) ? texte(o.suivi_statut) : '';
+      db.update('mesures', id, {
+        suivi_statut: statut,
+        suivi_commentaire: texte(o.suivi_commentaire),
+        suivi_pieces: (Array.isArray(o.suivi_pieces) ? o.suivi_pieces : []).map(piece),
+        suivi_maj_le: db.now(),
+        suivi_maj_par: req.user.username,
+      });
+      majes.push(id);
+    });
+    db.update('traitements', t.id, {
+      suivi: {
+        commentaire_general: texte(d.commentaire_general),
+        maj_le: db.now(),
+        maj_par: req.user.username,
+      },
+    });
+    return res.json({ status: 'ok', mesures: majes.length });
   });
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {

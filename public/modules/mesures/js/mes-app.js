@@ -1178,7 +1178,7 @@ function mesFormulaireMesure() {
     // du formulaire de mesure ne servent plus qu'au volet ouvert depuis le
     // menu Mesures, hors de tout fil.
     const champsMesure = !surCarence;
-    const aVenir = etape === 'suivi';
+    const aVenir = false;
 
     return `
     <div class="mes-slider-header">
@@ -1209,6 +1209,9 @@ function mesFormulaireMesure() {
             ${mesSectionTravaux()}
             ${mesSectionAutresElements()}
             ${mesSectionRapport()}` : ''}
+        ${etape === 'suivi' ? `
+            ${mesSectionSuiviMesures()}
+            ${mesSectionPlanAction()}` : ''}
         ${aVenir ? `<p class="mes-note">Étape « ${_mesEsc((MES_ETAPES.find((e) => e.cle === etape) || {}).libelle || '')} » :
             elle sera construite ultérieurement.</p>` : ''}
         ${!champsMesure ? '' : `

@@ -16,14 +16,13 @@
 //
 // Quatre étapes. « Suite à donner » va du déclenchement du traitement à la
 // décision ; « Investigations » rassemble les preuves qui établissent les
-// faits. Les deux dernières sont déclarées pour que le fil se lise en entier ;
-// elles seront construites plus tard, et le disent plutôt que de faire croire
-// à un écran vide.
+// faits ; « Qualification et Mesures » dit si l'infraction est constituée et
+// arrête les sanctions ; « Suivi des Mesures » en suit la mise en œuvre.
 const MES_ETAPES = [
     { cle: 'suite', libelle: 'Suite à donner' },
     { cle: 'investigations', libelle: 'Investigations' },
-    { cle: 'qualification', libelle: 'Qualification et Mesures', aVenir: true },
-    { cle: 'suivi', libelle: 'Suivi des Mesures', aVenir: true },
+    { cle: 'qualification', libelle: 'Qualification et Mesures' },
+    { cle: 'suivi', libelle: 'Suivi des Mesures' },
 ];
 
 // Les trois suites possibles. Classer clôt le traitement ici — la carence
@@ -83,7 +82,14 @@ function mesEtapeInfo(cle) {
         if (!n && !(inv.equipe || []).length) return 'Investigation à ouvrir';
         return `${(inv.equipe || []).length} enquêteur(s) · ${n} investigation(s) consignée(s)`;
     }
-    return 'Étape à construire ultérieurement';
+    if (cle === 'suivi') {
+        if (t.cloture_le) return `Traitement clôturé le ${mesDate(t.cloture_le)}`;
+        const liste = t.mesures || [];
+        if (!liste.length) return 'Aucune mesure à suivre';
+        const soldees = liste.filter((m) => (m.suivi_statut || mesStatutSuivi(m)) === 'solde').length;
+        return `${soldees} mesure(s) soldée(s) sur ${liste.length}`;
+    }
+    return 'Étape à venir';
 }
 
 // Barre du fil : les chevrons à gauche, les actions de l'étape à droite.
@@ -305,14 +311,21 @@ function mesBarreInferieure(ro, champsMesure, etape) {
             <button class="btn btn-primary btn-sm" onclick="mesEnregistrerMesure()">${MES_ICONS.check} Enregistrer</button>
         </div>`;
     }
-    if (!mesTraitementModifiable() || !['suite', 'investigations', 'qualification'].includes(etape)) return '';
+    if (!mesTraitementModifiable()
+        || !['suite', 'investigations', 'qualification', 'suivi'].includes(etape)) return '';
+    // Un suivi clos — dossier classé, ou clôturé faute de suivi à conduire —
+    // ne s'enregistre plus : il se consulte.
+    if (etape === 'suivi' && typeof mesSuiviClos === 'function' && mesSuiviClos()) return '';
     if (etape === 'investigations' && mesInvSoumise()) return '';
     // Une qualification close ne s'enregistre plus : elle se consulte.
     if (etape === 'qualification' && typeof mesQualClose === 'function' && mesQualClose()) return '';
     // Chaque étape enregistre ce qui lui est propre : les informations
     // recueillies pour la suite à donner, les actes d'enquête, la qualification.
-    const geste = { investigations: 'mesEnregistrerInvestigation()', qualification: 'mesEnregistrerQualification()' }[etape]
-        || 'mesEnregistrerTraitement()';
+    const geste = {
+        investigations: 'mesEnregistrerInvestigation()',
+        qualification: 'mesEnregistrerQualification()',
+        suivi: 'mesEnregistrerSuivi()',
+    }[etape] || 'mesEnregistrerTraitement()';
     return `<div class="mes-slider-footer">
         <button class="btn btn-primary btn-sm" onclick="${geste}"
                 title="Conserver les informations recueillies">${MES_ICONS.check} Enregistrer</button>

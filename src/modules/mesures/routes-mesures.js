@@ -406,7 +406,9 @@ module.exports = function register(app, deps, M) {
     objet: texte((r || {}).objet),
     resultat: texte((r || {}).resultat),
   });
-  const PORTEES = ['temporelle', 'illimitee'];
+  // « sans_objet » : une mesure qui ne court pas — un avertissement est
+  // prononcé, il ne dure pas. Ni durée ni terme ne s'y attachent.
+  const PORTEES = ['temporelle', 'illimitee', 'sans_objet'];
   const UNITES = ['jours', 'mois'];
 
   // Terme d'une sanction temporelle : la date de sanction augmentée de sa

@@ -751,8 +751,10 @@ function mesLignesMesures() {
         const retard = mesEnRetard(m);
         const portee = m.portee === 'illimitee'
             ? '<span class="mes-badge annulee">Illimitée</span>'
-            : (m.portee === 'temporelle'
-                ? `<span class="mes-badge en_cours">Temporelle</span>${m.duree_valeur
+            : (m.portee === 'sans_objet'
+                ? '<span class="mes-badge">Sans objet</span>'
+                : m.portee === 'temporelle'
+                ? `<span class="mes-badge en_cours">Limitée dans le temps</span>${m.duree_valeur
                     ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(
                         `${m.duree_valeur} ${m.duree_unite || 'jours'}`)}</div>` : ''}`
                 : '<span class="mes-preuve-vide">—</span>');

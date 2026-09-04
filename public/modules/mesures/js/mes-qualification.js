@@ -221,10 +221,12 @@ function mesSectionMesuresArretees() {
     const blocs = (q.mesures || []).map((m, i) => {
         const libelleCat = (cats.find((c) => c.code === m.categorie) || {}).libelle || 'Mesure';
         const types = mesTypesDe(m.categorie);
-        // Une sanction court sur une durée ou sans terme : les deux cases
-        // disent la même portée par ses deux faces, elles s'excluent.
+        // Une sanction court sur une durée, sans terme, ou hors du temps —
+        // un avertissement ne dure pas, il est prononcé. Les trois cases
+        // disent la même portée par ses trois faces, elles s'excluent.
         const temporelle = m.portee === 'temporelle';
         const illimitee = m.portee === 'illimitee';
+        const sansObjet = m.portee === 'sans_objet';
         return `<div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(libelleCat)}</span>
@@ -263,12 +265,17 @@ function mesSectionMesuresArretees() {
                             <label class="mes-case">
                                 <input type="checkbox" data-champ="temporelle" ${temporelle ? 'checked' : ''} ${off}
                                        onchange="mesQualPorteeMesure(${i}, 'temporelle', this.checked)">
-                                <span>Temporelle</span>
+                                <span>Limitée dans le temps</span>
                             </label>
                             <label class="mes-case">
                                 <input type="checkbox" data-champ="illimitee" ${illimitee ? 'checked' : ''} ${off}
                                        onchange="mesQualPorteeMesure(${i}, 'illimitee', this.checked)">
                                 <span>Illimitée</span>
+                            </label>
+                            <label class="mes-case">
+                                <input type="checkbox" data-champ="sans_objet" ${sansObjet ? 'checked' : ''} ${off}
+                                       onchange="mesQualPorteeMesure(${i}, 'sans_objet', this.checked)">
+                                <span>Sans objet</span>
                             </label>
                         </div>
                     </div>
@@ -356,7 +363,8 @@ function mesCollecterQualification() {
         circonstances: txt('mesQualCirconstances'),
         mesures: lignes('#mesQualMesures .mes-bloc').map((b) => {
             const coche = (champ) => !!(b.querySelector(`[data-champ="${champ}"]`) || {}).checked;
-            const portee = coche('temporelle') ? 'temporelle' : (coche('illimitee') ? 'illimitee' : '');
+            const portee = coche('temporelle') ? 'temporelle'
+                : (coche('illimitee') ? 'illimitee' : (coche('sans_objet') ? 'sans_objet' : ''));
             return {
                 categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
                 date_sanction: val(b, 'date_sanction'), portee,

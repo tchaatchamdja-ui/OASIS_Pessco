@@ -861,7 +861,7 @@ function mesRenderMesures() {
     </div>
     <div class="mes-card" style="padding:0;">
         <div class="mes-table-wrap">
-            <table class="mes-table">
+            <table class="mes-table mes-table-plate">
                 <thead><tr>
                     <th style="width:120px;">Référence</th>
                     <th style="width:150px;">Prestataire</th>

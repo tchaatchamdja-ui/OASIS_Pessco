@@ -143,13 +143,13 @@
 .mes-table tbody tr:hover { background: var(--mes-accent-bg); }
 .mes-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
 .mes-table-wrap { overflow-x: auto; }
-/* Variante « plate », celle des activités de supervision : l'entête ne pèse
-   plus d'un bandeau plein, les lignes ne se séparent que d'un filet, et rien
-   n'alterne — c'est le contenu qui doit ressortir, non la grille. */
+/* Variante « plate », celle des activités de supervision : les lignes ne se
+   séparent que d'un filet et rien n'alterne — c'est le contenu qui doit
+   ressortir, non la grille. L'entête garde en revanche son bandeau au thème :
+   il ancre la table dans la couleur de l'application. */
 .mes-table-plate { border: 0; border-radius: 0; }
 .mes-table-plate th {
-    background: transparent; color: var(--text-muted);
-    border-right: 0; border-bottom: 2px solid var(--border);
+    border-right: 0; border-bottom: 0;
     font-size: .75rem; letter-spacing: .05em; padding: .65rem .75rem; white-space: nowrap;
 }
 .mes-table-plate td {

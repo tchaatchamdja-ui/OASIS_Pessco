@@ -275,6 +275,10 @@ module.exports = function register(app, deps, M) {
   // l'écran « Constatations Critiques ».
   const listeCarences = () => {
     const mesures = db.list('mesures');
+    // Le nom du prestataire est résolu ici, une fois pour toutes : l'écran le
+    // reconstituait de son côté, l'état exporté ne le pouvait pas — la colonne
+    // y restait vide alors que l'écran la remplissait.
+    const parId = new Map((refs().prestataires || []).map((p) => [p.id, p.nom]));
     const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
     // Étape du traitement, servie avec la carence : l'écran y lit le libellé
     // de son bouton d'action, sans interroger chaque dossier un à un.
@@ -301,6 +305,7 @@ module.exports = function register(app, deps, M) {
           : (closes === liees.length ? 'traitee' : 'sous_mesure'));
       return {
         ...c,
+        prestataire_nom: parId.get(c.prestataire_id) || c.prestataire_nom || '',
         mesures_liees: liees.length,
         mesures_closes: closes,
         classee: !!classee,

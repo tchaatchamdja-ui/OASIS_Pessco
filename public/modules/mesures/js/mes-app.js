@@ -758,6 +758,9 @@ function mesLignesMesures() {
     }
     return liste.map((m) => {
         const retard = mesEnRetard(m);
+        // Un suivi soldé, sans suite ou sans objet n'appelle plus de geste :
+        // le bouton reste, pour ouvrir le dossier, mais cesse d'inviter.
+        const suiviClos = ['solde', 'sans_suite', 'sans_objet'].includes(mesStatutSuivi(m));
         const portee = m.portee === 'illimitee'
             ? '<span class="mes-badge annulee">Illimitée</span>'
             : (m.portee === 'sans_objet'
@@ -789,9 +792,12 @@ function mesLignesMesures() {
             <td>${mesStatutMesure(m)}</td>
             <td class="mes-actions">
                 <div class="mes-actions-duo">
-                    <button class="btn btn-sm mes-btn-mesure" onclick="mesFaireLeSuivi('${m.id}')"
-                            title="Ouvre le traitement de la carence à l’étape « Suivi des Mesures »">
-                        ${MES_ICONS.check} Suivi</button>
+                    <button class="btn btn-sm ${suiviClos ? 'mes-btn-consulter' : 'mes-btn-mesure'}"
+                            onclick="mesFaireLeSuivi('${m.id}')"
+                            title="${_mesAttr(suiviClos
+                                ? 'Le suivi de cette mesure est terminé : le dossier se consulte.'
+                                : 'Ouvre le traitement de la carence à l’étape « Suivi des Mesures »')}">
+                        ${MES_ICONS.check} ${suiviClos ? 'Consulté' : 'Suivi'}</button>
                     ${mesEstSuperAdmin() ? `<button class="btn btn-outline btn-sm mes-btn-icone"
                         title="Supprimer définitivement cette mesure"
                         onclick="mesSupprimerMesure('${m.id}')">${MES_ICONS.delete}</button>` : ''}

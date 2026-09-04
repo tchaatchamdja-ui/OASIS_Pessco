@@ -836,10 +836,10 @@ function mesActionsQualification() {
 
 // Les trois issues enregistrent d'abord ce qui est saisi : la décision s'appuie
 // dessus, et le serveur relit la qualification pour vérifier la case cochée.
-async function mesQualIssue(chemin, question, fait) {
+async function mesQualIssue(chemin, confirmation, fait) {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
-    if (!confirm(question)) return;
+    if (!await mesConfirmerEtape(confirmation)) return;
     mesMajQualification();
     try {
         await mesApi(`/constatations/${encodeURIComponent(c.id)}/qualification`, {
@@ -855,23 +855,50 @@ async function mesQualIssue(chemin, question, fait) {
     } catch (e) { mesToast(e.message || 'Opération impossible', 'error'); }
 }
 
-const mesQualRenvoyer = () => mesQualIssue('renvoyer',
-    'Renvoyer la carence pour des investigations complémentaires ?\n'
-    + 'L’étape Investigations se rouvre et l’équipe y lira ce qui lui est demandé.',
-    'Carence renvoyée en investigation');
+const mesQualRenvoyer = () => mesQualIssue('renvoyer', {
+    titre: 'Renvoyer pour investigations complémentaires',
+    depuis: 'qualification', vers: 'investigations',
+    consequence: 'Le fil recule d’une étape : l’équipe d’investigation reprend le dossier.',
+    points: [
+        'L’étape Investigations se rouvre et redevient modifiable.',
+        'Le motif du renvoi y sera lisible par l’équipe.',
+    ],
+    aveu: 'Je confirme le renvoi en investigation.',
+    libelle: 'Renvoyer', classe: 'mes-btn-investiguer',
+}, 'Carence renvoyée en investigation');
 
-const mesQualClasser = () => mesQualIssue('classer',
-    'Classer la carence ?\nL’infraction n’étant pas constituée, aucune mesure ne sera prise.',
-    'Carence classée');
+const mesQualClasser = () => mesQualIssue('classer', {
+    titre: 'Classer la carence',
+    depuis: 'qualification', vers: '',
+    consequence: 'L’infraction n’étant pas constituée, aucune mesure ne sera prise.',
+    points: ['Le dossier est clos : toutes ses étapes passent en consultation.'],
+    aveu: 'Je confirme que l’infraction n’est pas constituée.',
+    libelle: 'Classer', classe: 'mes-btn-classer-vert',
+}, 'Carence classée');
 
-const mesQualSuivi = () => mesQualIssue('suivi',
-    'Passer au suivi des mesures ?',
-    'Traitement passé au suivi des mesures');
+const mesQualSuivi = () => mesQualIssue('suivi', {
+    titre: 'Valider la qualification',
+    depuis: 'qualification', vers: 'suivi',
+    consequence: 'Les mesures arrêtées entrent au registre, où leur mise en œuvre se suivra.',
+    points: [
+        'Chaque mesure y paraît avec sa portée et son échéance.',
+        'L’étape de qualification ne se réécrira plus.',
+    ],
+    aveu: 'Je confirme les mesures arrêtées.',
+    libelle: 'Valider', classe: 'mes-btn-mesure',
+}, 'Traitement passé au suivi des mesures');
 
-const mesQualCloturer = () => mesQualIssue('cloturer',
-    'Clôturer le traitement ?\nLes mesures arrêtées entrent au registre et le '
-    + 'dossier se ferme : aucune ne requiert le suivi de sa mise en œuvre.',
-    'Traitement clôturé');
+const mesQualCloturer = () => mesQualIssue('cloturer', {
+    titre: 'Clôturer le traitement',
+    depuis: 'qualification', vers: '',
+    consequence: 'Les mesures arrêtées entrent au registre et le dossier se ferme.',
+    points: [
+        'Aucune des mesures n’appelle le suivi de sa mise en œuvre.',
+        'Le dossier est clos : il ne se réécrira plus.',
+    ],
+    aveu: 'Je confirme qu’aucun suivi n’est à conduire.',
+    libelle: 'Clôturer', classe: 'btn-outline',
+}, 'Traitement clôturé');
 
 async function mesEnregistrerQualification() {
     const c = MES_STATE.carenceEnCours;

@@ -608,11 +608,91 @@ function mesActionsInvestigation() {
         onclick="mesSoumettreInvestigation()">${MES_ICONS.check} Soumettre</button>`;
 }
 
+// ══════════════════════════════════════
+//  Formulaire de confirmation d'un passage d'étape
+// ══════════════════════════════════════
+//
+// Une étape franchie ne se rejoue pas : l'investigation se fige, la
+// qualification se clôt, les mesures entrent au registre. Le geste demande
+// donc d'être voulu, non seulement cliqué — d'où un formulaire plutôt qu'une
+// alerte du navigateur : il nomme l'étape quittée et celle atteinte, dit ce
+// que l'action entraîne, et n'ouvre son bouton qu'une fois la case cochée.
+
+let MES_CONFIRMATION = null;
+
+function mesConfirmerEtape(o) {
+    const el = document.getElementById('mesModalRoot');
+    if (!el) return Promise.resolve(false);
+    return new Promise((resolve) => {
+        MES_CONFIRMATION = resolve;
+        const libelleEtape = (cle) => (MES_ETAPES.find((e) => e.cle === cle) || {}).libelle || '';
+        const depuis = libelleEtape(o.depuis || mesEtapeCourante());
+        const vers = o.vers ? libelleEtape(o.vers) : '';
+        el.innerHTML = `
+        <div class="mes-modal-fond mes-confirm-fond" onclick="mesConfirmationRepondre(false)">
+            <div class="mes-modal" onclick="event.stopPropagation();">
+                <div class="mes-modal-header">
+                    <span style="flex:1;">${_mesEsc(o.titre || 'Confirmer l’action')}</span>
+                    <button class="btn btn-outline btn-sm mes-btn-icone"
+                            onclick="mesConfirmationRepondre(false)">${MES_ICONS.close}</button>
+                </div>
+                <div class="mes-modal-body">
+                    <div class="mes-confirm-fil">
+                        <span class="mes-confirm-etape">${_mesEsc(depuis)}</span>
+                        <span class="mes-confirm-fleche">→</span>
+                        <span class="mes-confirm-etape cible">${_mesEsc(vers || 'Dossier clos')}</span>
+                    </div>
+                    <p class="mes-confirm-texte">${_mesEsc(o.consequence || '')}</p>
+                    ${(o.points || []).length ? `<ul class="mes-confirm-points">${
+                        o.points.map((p) => `<li>${_mesEsc(p)}</li>`).join('')}</ul>` : ''}
+                    <label class="mes-case mes-confirm-case">
+                        <input type="checkbox" id="mesConfirmCase"
+                               onchange="mesConfirmationCocher(this.checked)">
+                        <span>${_mesEsc(o.aveu || 'Je confirme cette action.')}</span>
+                    </label>
+                </div>
+                <div class="mes-modal-footer">
+                    <button class="btn btn-outline btn-sm"
+                            onclick="mesConfirmationRepondre(false)">Annuler</button>
+                    <button class="btn btn-sm ${_mesAttr(o.classe || 'btn-primary')}"
+                            id="mesConfirmValider" disabled
+                            onclick="mesConfirmationRepondre(true)">${MES_ICONS.check} ${
+                        _mesEsc(o.libelle || 'Confirmer')}</button>
+                </div>
+            </div>
+        </div>`;
+        const cases = document.getElementById('mesConfirmCase');
+        if (cases) cases.focus();
+    });
+}
+
+function mesConfirmationCocher(coche) {
+    const b = document.getElementById('mesConfirmValider');
+    if (b) b.disabled = !coche;
+}
+
+function mesConfirmationRepondre(ok) {
+    const el = document.getElementById('mesModalRoot');
+    if (el) el.innerHTML = '';
+    const resoudre = MES_CONFIRMATION;
+    MES_CONFIRMATION = null;
+    if (resoudre) resoudre(!!ok);
+}
+
 async function mesSoumettreInvestigation() {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
-    if (!confirm('Soumettre l’investigation ?\nElle sera close, ses éléments ne se modifieront plus, '
-        + 'et le traitement passera à « Qualification et Mesures ».')) return;
+    if (!await mesConfirmerEtape({
+        titre: 'Soumettre l’investigation',
+        depuis: 'investigations', vers: 'qualification',
+        consequence: 'L’investigation est close et transmise à l’instance décisionnelle.',
+        points: [
+            'Les éléments consignés — équipe, travaux, pièces, rapport — ne se modifieront plus.',
+            'Seul un renvoi de l’instance pourra rouvrir cette étape.',
+        ],
+        aveu: 'Je confirme que l’investigation est complète.',
+        libelle: 'Soumettre', classe: 'mes-btn-mesure',
+    })) return;
     // Ce qui est saisi part avant la soumission : elle le fige.
     mesMajInvestigation();
     try {
@@ -702,7 +782,17 @@ async function mesPrendreDecision(decision) {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
     const choisie = MES_DECISIONS.find((d) => d.cle === decision) || {};
-    if (!confirm(`${choisie.libelle} ?\n${choisie.aide || ''}`)) return;
+    if (!await mesConfirmerEtape({
+        titre: choisie.libelle,
+        depuis: 'suite',
+        vers: { investiguer: 'investigations', mesures: 'qualification' }[decision] || '',
+        consequence: choisie.aide || '',
+        points: decision === 'classer'
+            ? ['La carence est close ici : aucune mesure d’application ne sera prise.']
+            : ['La suite à donner ne se rejoue pas : l’étape atteinte prend le relais.'],
+        aveu: 'Je confirme cette décision.',
+        libelle: choisie.libelle, classe: choisie.classe || 'btn-primary',
+    })) return;
     // Ce qui a été saisi part avec la décision : elle s'appuie dessus.
     if (!await mesEnregistrerTraitement(true)) return;
     const motif = (document.getElementById('mesTrtMotif') || {}).value || '';
@@ -726,6 +816,7 @@ async function mesPrendreDecision(decision) {
 Object.assign(window, {
     MES_ETAPES, MES_DECISIONS,
     mesVoirEtape, mesFilAvancement, mesBarreInferieure,
+    mesConfirmerEtape, mesConfirmationCocher, mesConfirmationRepondre,
     mesTeleverserPieceTraitement, mesRetirerPieceTraitement,
     mesEnregistrerTraitement, mesPrendreDecision,
     mesSectionEquipe, mesSectionTravaux, mesSectionAutresElements, mesSectionRapport,

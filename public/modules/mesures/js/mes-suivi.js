@@ -283,10 +283,10 @@ function mesActionsSuivi() {
 
 // Les deux issues enregistrent d'abord ce qui est saisi : le serveur relit le
 // suivi pour vérifier qu'un recours a bien été coché.
-async function mesSuiviIssue(chemin, question, fait) {
+async function mesSuiviIssue(chemin, confirmation, fait) {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
-    if (!confirm(question)) return;
+    if (!await mesConfirmerEtape(confirmation)) return;
     mesMajSuivi();
     const corps = mesCollecterSuivi();
     try {
@@ -306,14 +306,29 @@ async function mesSuiviIssue(chemin, question, fait) {
     } catch (e) { mesToast(e.message || 'Opération impossible', 'error'); }
 }
 
-const mesSuiviCloturer = () => mesSuiviIssue('cloturer',
-    'Clôturer la carence ?\nLe suivi des mesures est terminé et le dossier se ferme.',
-    'Carence clôturée');
+const mesSuiviCloturer = () => mesSuiviIssue('cloturer', {
+    titre: 'Clôturer la carence',
+    depuis: 'suivi', vers: '',
+    consequence: 'Le suivi des mesures est terminé et le dossier se ferme.',
+    points: [
+        'Aucun recours n’est pendant sur les mesures de cette carence.',
+        'Le dossier est clos : il ne se réécrira plus.',
+    ],
+    aveu: 'Je confirme que le suivi est terminé.',
+    libelle: 'Clôturer', classe: 'mes-btn-mesure',
+}, 'Carence clôturée');
 
-const mesSuiviActionRecours = () => mesSuiviIssue('recours',
-    'Ouvrir l’examen du recours ?\nLe traitement revient à l’étape « Qualification et '
-    + 'Mesures », où une section « Recours » recueille ce que le prestataire conteste.',
-    'Recours ouvert : le dossier revient à la qualification');
+const mesSuiviActionRecours = () => mesSuiviIssue('recours', {
+    titre: 'Ouvrir l’examen du recours',
+    depuis: 'suivi', vers: 'qualification',
+    consequence: 'Le fil recule à la qualification, où l’instance examinera la contestation.',
+    points: [
+        'Une section « Recours » y ouvre un bloc par mesure contestée.',
+        'Le suivi des mesures contestées reste suspendu jusqu’à la décision.',
+    ],
+    aveu: 'Je confirme qu’un recours a été formé.',
+    libelle: 'Ouvrir le recours', classe: 'mes-btn-investiguer',
+}, 'Recours ouvert : le dossier revient à la qualification');
 
 Object.assign(window, {
     mesSuivi, mesSuiviMesures, mesSuiviClos, mesSuiviModifiable,

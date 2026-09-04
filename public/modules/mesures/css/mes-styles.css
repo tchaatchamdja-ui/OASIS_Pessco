@@ -533,6 +533,40 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
    décide (orange). Deux gestes distincts, deux couleurs. */
 .mes-btn-mesure { background: #dc2626; border: 1px solid #dc2626; color: #fff; }
 .mes-btn-mesure:hover { background: #b91c1c; border-color: #b91c1c; }
+/* Formulaire de confirmation d'un passage d'étape. Il passe au-dessus du volet
+   de traitement, d'où il est appelé — la pile ordinaire des modales s'arrête
+   au même rang que lui. */
+.mes-confirm-fond { z-index: 1300; }
+/* L'étape quittée et celle atteinte, de part et d'autre d'une flèche : la
+   confirmation dit d'abord où le dossier va. */
+.mes-confirm-fil {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    margin-bottom: .7rem;
+}
+.mes-confirm-etape {
+    padding: .2rem .6rem; border-radius: 10px; font-size: .76rem; font-weight: 600;
+    background: var(--mes-accent-bg); color: var(--text);
+}
+.mes-confirm-etape.cible { background: var(--primary); color: #fff; }
+.mes-confirm-fleche { color: var(--text-muted); font-weight: 700; }
+.mes-confirm-texte { margin: 0 0 .5rem; font-size: .86rem; color: var(--text); }
+.mes-confirm-points {
+    margin: 0 0 .8rem; padding-left: 1.1rem;
+    font-size: .8rem; color: var(--text-muted);
+}
+.mes-confirm-points li { margin-bottom: .2rem; }
+/* La case rend le geste voulu : un bouton seul se clique par réflexe. */
+.mes-confirm-case {
+    padding: .5rem .6rem; border: 1px solid var(--border); border-radius: 6px;
+    background: rgba(0,0,0,.02);
+}
+
+/* Le dossier d'une mesure dont le suivi est terminé s'ouvre encore, mais le
+   bouton n'appelle plus l'action : fond blanc, bordure au thème. */
+.mes-btn-consulter {
+    background: #fff; border: 1px solid var(--primary); color: var(--primary);
+}
+.mes-btn-consulter:hover { background: var(--mes-accent-bg); }
 .mes-btn-classer { background: #ea580c; border: 1px solid #ea580c; color: #fff; }
 .mes-btn-classer:hover { background: #c2410c; border-color: #c2410c; }
 /* Boutons d'action : un tiers de hauteur en moins — ils s'alignent en rangée

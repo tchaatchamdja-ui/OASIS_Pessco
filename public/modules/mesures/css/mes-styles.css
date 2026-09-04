@@ -496,10 +496,12 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
 .mes-btn-classer { background: #ea580c; border: 1px solid #ea580c; color: #fff; }
 .mes-btn-classer:hover { background: #c2410c; border-color: #c2410c; }
 /* Boutons d'action : un tiers de hauteur en moins — ils s'alignent en rangée
-   dans une cellule de tableau, pas dans une barre d'outils. */
+   dans une cellule de tableau, pas dans une barre d'outils. La hauteur est un
+   plancher, non une contrainte : un libellé qui se replie sur deux lignes fait
+   grandir le bouton au lieu d'en déborder. */
 .mes-actions .btn {
-    height: 22px; padding: 0 .55rem; font-size: .74rem; line-height: 1;
-    display: inline-flex; align-items: center; gap: .25rem;
+    min-height: 22px; padding: .2rem .55rem; font-size: .74rem; line-height: 1.25;
+    display: inline-flex; align-items: center; justify-content: center; gap: .25rem;
 }
 .mes-actions .btn svg { width: 12px; height: 12px; }
 

@@ -876,12 +876,13 @@ function mesBoutonTraitement(c) {
     const libelle = c.classee ? 'Traitement clôturé' : (MES_LIBELLE_ETAPE[etape] || 'Traiter');
     // Un dossier clos se consulte : le bouton reste, sans l'accent de l'action.
     const classe = clos ? 'btn-outline' : 'mes-btn-mesure';
-    const icone = clos ? MES_ICONS.edit : MES_ICONS.add;
     if (!mesPeutEcrire() && !clos) return '';
+    // Pas d'icône : le libellé porte seul le sens, et se centre dans le bouton
+    // qu'il tienne sur une ligne ou deux.
     return `<button class="btn btn-sm ${classe}"
         title="${_mesAttr(clos ? 'Consulter le dossier de traitement'
             : `Poursuivre le traitement — étape « ${MES_LIBELLE_ETAPE[etape] || 'Suite à donner'} »`)}"
-        onclick="mesMesureDepuisConstatation('${c.id}')">${icone} ${_mesEsc(libelle)}</button>`;
+        onclick="mesMesureDepuisConstatation('${c.id}')">${_mesEsc(libelle)}</button>`;
 }
 
 function mesCritiquesFiltrees() {

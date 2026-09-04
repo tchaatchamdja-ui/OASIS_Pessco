@@ -168,12 +168,6 @@ function _userM2Role() {
     return (PLAN_STATE.access && PLAN_STATE.access.hasAccess === false) ? 'Aucun accès' : '';
 }
 
-// Un plan est dans le périmètre si l'utilisateur détient un privilège sur son
-// secteur (les portées « Aucun » excluent explicitement).
-function _planDansPerimetre(plan) {
-    const p = _privOn(plan && plan.secteur_id);
-    return !!p && p !== 'AUCUN';
-}
 
 // Rôle portail : réservé aux actes du directeur général (approbation,
 // transmission). Le libellé peut être le rôle portail brut (SUPERADMIN) ou
@@ -183,16 +177,12 @@ function _isAdmin() {
     const m2 = PLAN_STATE.user?.role_m2 || '';
     return ['SUPERADMIN', 'ADMIN', 'Administrateur'].includes(r) || m2 === 'M2_Administrateur';
 }
-function _isGestionnaire(secteurId) { return _privOn(secteurId) === 'GESTIONNAIRE'; }
-function _isValidateur(secteurId) { return PL_VALIDE.includes(_privOn(secteurId)); }
-function _isContributeur(secteurId) { return PL_CONTRIB.includes(_privOn(secteurId)); }
 function _canValidate(secteurId) {
     return secteurId ? PL_VALIDE.includes(_privOn(secteurId)) : PL_VALIDE.includes(_meilleurPriv());
 }
 function _canContribute(secteurId) {
     return secteurId ? PL_CONTRIB.includes(_privOn(secteurId)) : PL_CONTRIB.includes(_meilleurPriv());
 }
-function _isConsultation() { return !_canContribute(); }
 
 // ══════════════════════════════════════
 //  NAVIGATION

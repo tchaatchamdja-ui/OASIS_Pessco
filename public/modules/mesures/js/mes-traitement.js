@@ -323,13 +323,7 @@ function mesSectionDecision() {
 // Barre inférieure du volet. Elle porte l'enregistrement, à droite, quelle que
 // soit l'étape : sans elle, l'étape « Suite à donner » n'avait aucun pied et le
 // volet se terminait sur le vide.
-function mesBarreInferieure(ro, champsMesure, etape) {
-    if (champsMesure) {
-        return ro ? '' : `<div class="mes-slider-footer">
-            <button class="btn btn-outline btn-sm" onclick="mesFermerSlider()">Annuler</button>
-            <button class="btn btn-primary btn-sm" onclick="mesEnregistrerMesure()">${MES_ICONS.check} Enregistrer</button>
-        </div>`;
-    }
+function mesBarreInferieure(ro, etape) {
     if (!mesTraitementModifiable()
         || !['suite', 'investigations', 'qualification', 'suivi'].includes(etape)) return '';
     // Un suivi clos — dossier classé, ou clôturé faute de suivi à conduire —

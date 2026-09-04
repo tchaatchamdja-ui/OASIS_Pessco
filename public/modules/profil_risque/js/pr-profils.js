@@ -834,27 +834,6 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
         </div>`;
     }
 
-    // Mini bar chart: distribution of scores (1/2/3) for an indicator across all latest evals of the secteur
-    function distChart(allScores, type) {
-        const counts = { 1: 0, 2: 0, 3: 0 };
-        allScores.forEach(s => { if (counts[s] !== undefined) counts[s]++; });
-        const total = counts[1] + counts[2] + counts[3];
-        if (!total) return `<div style="font-size:0.65rem;color:var(--text-muted);text-align:center;padding:0.4rem;font-style:italic;">Pas de données comparatives</div>`;
-        const isComp = (type === 'comp');
-        const colors = isComp ? { 1:'#22c55e', 2:'#f59e0b', 3:'#ef4444' } : { 1:'#ef4444', 2:'#f59e0b', 3:'#22c55e' };
-        const maxPct = Math.max(counts[1], counts[2], counts[3]) / total * 100;
-        return `<div style="display:flex;gap:0.18rem;align-items:flex-end;height:34px;margin-top:0.25rem;">
-            ${[1,2,3].map(n => {
-                const pct = counts[n] / total * 100;
-                const h = (pct / Math.max(1, maxPct)) * 30;
-                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;">
-                    <div style="font-size:0.6rem;font-weight:700;color:#444;line-height:1;">${pct.toFixed(0)}%</div>
-                    <div style="width:100%;height:${h}px;background:${colors[n]};border-radius:2px 2px 0 0;margin-top:0.1rem;"></div>
-                    <div style="font-size:0.6rem;color:#666;margin-top:0.1rem;">${n}</div>
-                </div>`;
-            }).join('')}
-        </div>`;
-    }
 
     // Previous validated evaluation of the SAME prestataire, used for trend arrows
     const myEvalsSorted = allValids
@@ -1349,17 +1328,6 @@ function _prStatsSousActivites(D, latestEvals, thresholds) {
     window._saBarChartsHtml = '';
     const saEntries = Object.values(saMap);
     if (saEntries.length) {
-        function makeProgressBarSA(label, pct, color, delta) {
-            const deltaHtml = delta !== undefined ? `<span style="font-size:0.7rem;color:${delta >= 0 ? '#22c55e' : '#ef4444'};margin-left:0.5rem;">${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta).toFixed(2)}</span>` : '';
-            return `<div style="display:flex;align-items:center;gap:0.5rem;margin:0.25rem 0;">
-                <span style="min-width:90px;font-size:0.7rem;font-weight:700;color:${color};">${label}</span>
-                <div style="flex:1;background:#f3f4f6;border-radius:10px;height:10px;overflow:hidden;">
-                    <div style="width:${Math.min(100, pct)}%;background:${color};height:100%;border-radius:10px;"></div>
-                </div>
-                <span style="font-size:0.7rem;font-weight:600;min-width:35px;">${pct.toFixed(0)}%</span>
-                ${deltaHtml}
-            </div>`;
-        }
 
         // Bar charts per SA
         function makeSABarChart(title, dataMap, highThreshold, lowThreshold, colorMode) {
@@ -1690,42 +1658,4 @@ function printPage(startId) {
     printWin.onload = () => { printWin.print(); };
 }
 
-async function exportProfilsPDF() {
-    const f = window._profilFilters;
-    const params = new URLSearchParams();
-    if (f.domaine) params.set('domaine', f.domaine);
-    if (f.secteur) params.set('secteur', f.secteur);
-    if (f.prestataire) params.set('prestataire', f.prestataire);
-    if (f.search) params.set('search', f.search);
-    try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`${MODULE_API}/profils/export-pdf?${params}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'profils_risque.pdf';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    } catch (e) { showToast(e.message, 'error'); }
-}
 
-async function exportProfilsWord() {
-    const f = window._profilFilters;
-    const params = new URLSearchParams();
-    if (f.domaine) params.set('domaine', f.domaine);
-    if (f.secteur) params.set('secteur', f.secteur);
-    if (f.prestataire) params.set('prestataire', f.prestataire);
-    if (f.search) params.set('search', f.search);
-    try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`${MODULE_API}/profils/export-word?${params}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'profils_risque.docx';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    } catch (e) { showToast(e.message, 'error'); }
-}

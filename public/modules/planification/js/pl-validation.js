@@ -114,43 +114,6 @@ function _computePlanDiff(currentPlan, overrideParentId) {
     return { added, removed, modified, totalCount: added.length + removed.length + modified.length };
 }
 
-function _renderActivityDetailSummary(a) {
-    // Concise read-only view of an activity for added/removed cases
-    const prest = (PLAN_STATE.data.prestataires || []).find(p => p.id === a.prestataire_id);
-    const sect  = (PLAN_STATE.data.secteurs || []).find(s => s.id === a.secteur_id);
-    const resp  = (PLAN_STATE.data.inspecteurs || []).find(i => i.id === a.responsable_id);
-    const mode  = (PLAN_STATE.data.modesSupervision || []).find(m => m.id === a.mode_supervision_id);
-    const typeS = (PLAN_STATE.data.typesSupervision || []).find(t => t.id === a.type_supervision_id);
-    const sa    = _normalizeList(a.sous_activite_ids).map(id => {
-        const x = (PLAN_STATE.data.sousActivites || []).find(s => s.id === id);
-        return x ? `${x.code} - ${x.nom}` : id;
-    }).join(', ') || '—';
-    const themes = _normalizeList(a.themes_couverts).map(id => {
-        const x = (PLAN_STATE.data.themesSupervision || []).find(t => t.id === id);
-        return x ? x.libelle : id;
-    }).join(', ') || '—';
-    const row = (label, value) => `<tr><td style="padding:0.25rem 0.5rem;color:var(--text-muted);width:30%;">${label}</td><td style="padding:0.25rem 0.5rem;">${value || '—'}</td></tr>`;
-    return `<table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
-        ${row(tp('description_activite'), _esc(a.description_activite || ''))}
-        ${row(tp('provider'), prest ? _esc(prest.nom) : '—')}
-        ${row(tp('sector'), sect ? _esc(sect.code + ' - ' + sect.nom) : '—')}
-        ${row(tp('sub_activity'), _esc(sa))}
-        ${row(tp('themes_couverts'), _esc(themes))}
-        ${row(tp('mode_supervision') || 'Mode', mode ? _esc(mode.mode || mode.libelle || '') : '—')}
-        ${row(tp('type_supervision') || 'Type', typeS ? _esc(typeS.type_supervision || typeS.libelle || '') : '—')}
-        ${row(tp('responsable_activite') || 'Responsable', resp ? _esc(((resp.nom || '') + ' ' + (resp.prenom || '')).trim()) : '—')}
-        ${row(tp('lieu_activite') || 'Lieu', _esc(a.lieu_activite || ''))}
-        ${row(tp('start_date'), (a.date_debut || '').substring(0, 10) || '—')}
-        ${row(tp('end_date'), (a.date_fin || '').substring(0, 10) || '—')}
-        ${row(tp('nombre_inspecteurs'), a.nombre_inspecteurs || '—')}
-        ${row(tp('priority'), _esc(a.priorite || ''))}
-        ${row(tp('risk_label'), _esc(a.risk_label || ''))}
-        ${row(tp('frequency'), a.frequence || '—')}
-        ${row(tp('intensity'), _esc(a.intensite || ''))}
-        ${row(tp('cycle'), a.cycle_mois || '—')}
-        ${row(tp('notes'), _esc(a.notes || ''))}
-    </table>`;
-}
 
 function _renderPlanDiffBody(diff, planId) {
     if (!diff || diff.totalCount === 0) {

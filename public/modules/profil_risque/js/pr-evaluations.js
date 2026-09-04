@@ -769,20 +769,6 @@ function exportEvalReport(evalId, format) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-// Helper to compute global taux
-function calculateTauxGlobal(ev, type, inds, sas) {
-    if (type === 'conf') {
-        let total = 0, count = 0;
-        sas.forEach(sa => {
-            inds.forEach(ind => {
-                const key = `${sa.id}_${ind.id}`;
-                if (ev.notes_conf?.[key]) { total += ev.notes_conf[key]; count++; }
-            });
-        });
-        return count > 0 ? (total / (count * 3)) : 0;
-    }
-    return 0;
-}
 
 async function openNewEvalModal() {
     const D = APP_STATE.data;
@@ -2058,69 +2044,8 @@ async function saveEvalScores(evalId) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function validateEval(evalId) {
-    if (!confirm(t('confirm_action'))) return;
-    await saveEvalScores(evalId);
-    try {
-        await api(`${MODULE_API}/evaluations/${evalId}`, {
-            method: 'PUT',
-            body: JSON.stringify({ statut: 'valide', validateur_id: APP_STATE.user.id, date_validation: new Date().toISOString() })
-        });
-        closeSlicer();
-        await loadAllData();
-        renderPage();
-        showToast(t('validated') + ' !', 'success');
-    } catch (e) { showToast(e.message, 'error'); }
-}
 
-// ── Phase 5 — Réunion avec le prestataire (Chap. 4 §4.2.2.g) ──
-async function openReunionPrestForm(evalId, prestId) {
-    const D = APP_STATE.data;
-    const prest = (D.prestataires || []).find(p => p.id === prestId) || {};
-    let existing = [];
-    try { existing = await api(`${MODULE_API}/eval-reunions-prest?eval_id=${evalId}`); } catch (e) {}
-    const cur = existing[0] || { eval_id: evalId, prestataire_id: prestId };
-    const today = new Date().toISOString().slice(0, 10);
-    const body = `
-        <div class="form-group"><label>Date de réunion</label>
-            <input type="date" id="rpDate" value="${cur.date || today}"></div>
-        <div class="form-group"><label>Participants AAC (un par ligne)</label>
-            <textarea id="rpAac" rows="2" style="width:100%;">${(cur.participants_aac || []).join('\n')}</textarea></div>
-        <div class="form-group"><label>Participants prestataire (un par ligne)</label>
-            <textarea id="rpPrest" rows="2" style="width:100%;">${(cur.participants_prestataire || []).join('\n')}</textarea></div>
-        <div class="form-group"><label>Résumé des échanges</label>
-            <textarea id="rpResume" rows="4" style="width:100%;">${cur.resume_echanges || ''}</textarea></div>
-        <div class="form-group"><label>Recommandations</label>
-            <textarea id="rpReco" rows="3" style="width:100%;">${cur.recommandations || ''}</textarea></div>
-        <div class="form-group"><label>Signature AAC (nom du représentant)</label>
-            <input id="rpSigAac" value="${cur.signature_aac || ''}"></div>
-        <div class="form-group"><label>Signature prestataire (nom du représentant)</label>
-            <input id="rpSigPrest" value="${cur.signature_prestataire || ''}"></div>`;
-    const footer = `
-        <button class="btn btn-outline" onclick="closeModal()">${t('cancel')}</button>
-        <button class="btn btn-primary" onclick="saveReunionPrest('${evalId}','${prestId}','${cur.id || ''}')">${ICONS.check} Enregistrer</button>`;
-    showModal(`Réunion avec ${prest.nom || 'prestataire'} (§4.2.2.g)`, body, footer, 'modal-lg');
-}
 
-async function saveReunionPrest(evalId, prestId, rid) {
-    const data = {
-        eval_id: evalId, prestataire_id: prestId,
-        date: document.getElementById('rpDate').value,
-        participants_aac: document.getElementById('rpAac').value.split('\n').map(s => s.trim()).filter(Boolean),
-        participants_prestataire: document.getElementById('rpPrest').value.split('\n').map(s => s.trim()).filter(Boolean),
-        resume_echanges: document.getElementById('rpResume').value,
-        recommandations: document.getElementById('rpReco').value,
-        signature_aac: document.getElementById('rpSigAac').value,
-        signature_prestataire: document.getElementById('rpSigPrest').value,
-        statut: 'finalise'
-    };
-    try {
-        if (rid) await api(`${MODULE_API}/eval-reunions-prest/${rid}`, { method: 'PUT', body: JSON.stringify(data) });
-        else await api(`${MODULE_API}/eval-reunions-prest`, { method: 'POST', body: JSON.stringify(data) });
-        closeModal();
-        showToast('Réunion prestataire enregistrée');
-    } catch (e) { showToast(e.message, 'error'); }
-}
 
 // ── Phase 3 — Réunions des évaluateurs (Chap. 4 §4.2.2.e) ──
 async function openReunionEvaluateursList(evalId) {
@@ -2181,36 +2106,6 @@ async function saveReunionEval(evalId, rid) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-// In-tab editing for réunion évaluateurs (renders form INLINE in the tab, not in a modal)
-async function reunionEvalEditInTab(evalId, rid) {
-    const target = document.getElementById('reunionEvalContent');
-    if (!target) return;
-    let cur = { eval_id: evalId };
-    if (rid) {
-        try {
-            const all = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`);
-            cur = (all || []).find(r => r.id === rid) || cur;
-        } catch (e) {}
-    }
-    const today = new Date().toISOString().slice(0, 10);
-    const escVal = s => String(s || '').replace(/"/g, '&quot;');
-    const escTxt = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    target.innerHTML = `
-        <div style="border:1px solid var(--border);border-radius:6px;padding:0.75rem 1rem;background:var(--bg-card);">
-            <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.6rem;">${rid ? 'Modifier la réunion' : 'Nouvelle réunion évaluateurs'}</div>
-            <div class="form-group"><label>Date</label><input type="date" id="reDate" value="${escVal(cur.date || today)}"></div>
-            <div class="form-group"><label>Participants (un par ligne)</label>
-                <textarea id="reParts" rows="3" style="width:100%;">${escTxt((cur.participants || []).join('\n'))}</textarea></div>
-            <div class="form-group"><label>Ordre du jour</label>
-                <textarea id="reOdj" rows="2" style="width:100%;">${escTxt(cur.ordre_du_jour || '')}</textarea></div>
-            <div class="form-group"><label>Compte rendu</label>
-                <textarea id="reCr" rows="5" style="width:100%;">${escTxt(cur.compte_rendu || '')}</textarea></div>
-            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-                <button class="btn btn-outline" onclick="_loadReunionEvalTab('${evalId}')">${t('cancel')}</button>
-                <button class="btn btn-primary" onclick="reunionEvalSaveFromTab('${evalId}','${rid || ''}')">${ICONS.check} Enregistrer</button>
-            </div>
-        </div>`;
-}
 
 // Compte-rendu de réunion en PDF. Aucun endpoint serveur ne génère de PDF :
 // le document est composé ici puis remis à la fenêtre d'impression du
@@ -2411,15 +2306,6 @@ async function reunionPrestSaveFromTab(evalId, prestId) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-// Cross-module navigation: switch to Module Planification (M2) for a given prestataire
-function navigateToPlanFromEval(prestId) {
-    if (window.PESSCO && typeof window.PESSCO.openModule === 'function') {
-        try { localStorage.setItem('pr_plan_target_prestataire', prestId); } catch(e){}
-        window.PESSCO.openModule('planification');
-    } else {
-        showToast('Module Planification non disponible depuis cet écran. Allez à l\'accueil → Module Planification.', 'info');
-    }
-}
 
 function _genEsc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -2629,34 +2515,6 @@ async function deleteEval(evalId) {
     } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function duplicateEval(evalId) {
-    const src = (APP_STATE.data.evaluations || []).find(e => e.id === evalId);
-    if (!src) { showToast('Évaluation introuvable', 'error'); return; }
-    if (!confirm('Dupliquer cette évaluation comme brouillon ?')) return;
-    try {
-        // Build a new draft from the source — keep notes & generalites, clear validation/results
-        const payload = {
-            prestataire_id: src.prestataire_id,
-            secteur_id: src.secteur_id,
-            domaine_id: src.domaine_id || '',
-            statut: 'brouillon',
-            notes_conf: src.notes_conf || {},
-            notes_perf: src.notes_perf || {},
-            notes_comp: src.notes_comp || {},
-            generalites: src.generalites || {},
-            resultats: {},
-            validateur_id: '',
-            date_validation: ''
-        };
-        await api(`${MODULE_API}/evaluations`, { method: 'POST', body: JSON.stringify(payload) });
-        await loadAllData();
-        // Switch the user to "Évaluations en cours" so they see the new draft right away
-        APP_STATE.currentPage = 'evaluations';
-        APP_STATE.currentSub = 'eval_indicateurs';
-        renderPage();
-        showToast('Évaluation dupliquée en brouillon');
-    } catch (e) { showToast(e.message, 'error'); }
-}
 
 // ── Evaluation Export/Import ──
 async function exportEvalExcel(evalId) {

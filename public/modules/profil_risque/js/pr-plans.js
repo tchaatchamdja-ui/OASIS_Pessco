@@ -119,22 +119,3 @@ function renderPlans() {
     <div id="plansContainer">${rows}</div>`;
 }
 
-async function exportPlansPDF() {
-    const f = window._planFilters;
-    const params = new URLSearchParams();
-    if (f.domaine) params.set('domaine', f.domaine);
-    if (f.secteur) params.set('secteur', f.secteur);
-    if (f.prestataire) params.set('prestataire', f.prestataire);
-    if (f.search) params.set('search', f.search);
-    try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`${MODULE_API}/plans/export-pdf?${params}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'plans_surveillance.pdf';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    } catch (e) { showToast(e.message, 'error'); }
-}

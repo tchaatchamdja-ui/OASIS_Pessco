@@ -481,7 +481,6 @@ body.app-sidebar-collapsed .modal-overlay { left: var(--sidebar-collapsed, 60px)
 .accordion-header.expanded .chevron { transform: rotate(90deg); }
 .accordion-header .acc-title { flex: 1; }
 .accordion-header .acc-count { font-size: 0.72rem; color: var(--text-muted); font-weight: 400; }
-.accordion-header .acc-actions { display: flex; gap: 0.15rem; }
 
 .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.2s; padding: 0 0.85rem; }
 .accordion-body.expanded { max-height: 5000px; padding: 0.5rem 0.85rem 0.75rem; }
@@ -492,11 +491,6 @@ body.app-sidebar-collapsed .modal-overlay { left: var(--sidebar-collapsed, 60px)
 .acc-level-1 > .accordion-header .acc-count { color: rgba(255,255,255,0.7); }
 .acc-level-2 > .accordion-header { background: rgba(0,0,0,0.03); margin-left: 0; font-size: 0.84rem; color: var(--primary); }
 .acc-level-3 > .accordion-header { font-weight: 500; font-size: 0.82rem; margin-left: 0; }
-.acc-level-4 { padding: 0.35rem 0.5rem; font-size: 0.82rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
-.acc-level-4:last-child { border-bottom: none; }
-.acc-level-4 .acc-code { font-family: monospace; font-size: 0.78rem; color: var(--text-muted); min-width: 70px; }
-.acc-level-4 .acc-label { flex: 1; }
-.acc-level-4 .acc-criteria { font-size: 0.72rem; color: var(--text-muted); max-width: 250px; }
 
 /* ── Extra-large modal ── */
 .modal-xl { max-width: 900px; }

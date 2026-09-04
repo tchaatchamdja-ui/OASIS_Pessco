@@ -207,10 +207,6 @@ const mesLibelleType = (code) => {
     return t ? t.libelle : (code || '—');
 };
 
-// Une amende se reconnaît à son code ou à son libellé : le paramétrage étant
-// libre, on ne peut pas s'en tenir à une liste figée de codes.
-const mesEstAmende = (code) => !!code && /amende/i.test(`${code} ${mesLibelleType(code)}`);
-
 // ══════════════════════════════════════
 //  Dates et badges
 // ══════════════════════════════════════
@@ -267,17 +263,6 @@ function mesStatutMesure(m) {
         ${quand ? `<div class="mes-cell-suite">${_mesEsc(mesDate(quand))}</div>` : ''}`;
 }
 
-function mesBadgeStatut(statut) {
-    return `<span class="mes-badge ${_mesAttr(statut)}">${_mesEsc(MES_STATUTS[statut] || statut)}</span>`;
-}
-
-function mesBadgeCriticite(v) {
-    const n = _mesNorm(v);
-    const cls = n.startsWith('crit') ? 'critique' : (n.startsWith('maj') ? 'majeure' : 'mineure');
-    const lib = v ? String(v).charAt(0).toUpperCase() + String(v).slice(1) : '—';
-    return `<span class="mes-badge ${cls}">${_mesEsc(lib)}</span>`;
-}
-
 function mesToast(message, type) {
     if (typeof window.oasisToast !== 'function') { console.warn('[toast]', type, message); return null; }
     return window.oasisToast(message, type);
@@ -332,7 +317,6 @@ function mesRenderApp() {
     // Ce qui est saisi dans un volet ouvert n'existe que dans le DOM : on le
     // relève avant de réécrire `#app`, sinon il partirait avec.
     if (S.sliderOpen) {
-        S.mesureEnCours = { ...(S.mesureEnCours || {}), ...mesCollecterFormulaire() };
         mesMajTraitement();
         if (typeof mesMajQualification === 'function') mesMajQualification();
     }
@@ -1112,21 +1096,6 @@ async function mesMesureDepuisConstatation(constatationId) {
     mesAfficherSlider();
 }
 
-// ══════════════════════════════════════
-//  Formulaire de mesure (volet latéral)
-// ══════════════════════════════════════
-
-async function mesOuvrirMesure(id) {
-    if (id) {
-        try { MES_STATE.mesureEnCours = await mesApi(`/mesures/${id}`); }
-        catch (e) { mesToast(e.message || 'Mesure introuvable', 'error'); return; }
-    } else {
-        const premiere = mesCategories()[0] || {};
-        MES_STATE.mesureEnCours = { categorie: premiere.code || '' };
-    }
-    mesAfficherSlider();
-}
-
 function mesFermerSlider() {
     MES_STATE.mesureEnCours = null;
     MES_STATE.carenceEnCours = null;
@@ -1187,65 +1156,26 @@ function mesAfficherSlider(o) {
     MES_STATE.sliderOpen = true;
 }
 
+// Volet du traitement d'une carence. Il n'affiche que les sections de l'étape
+// regardée : le formulaire de mesure autonome qu'il portait jadis n'avait plus
+// de porte d'entrée depuis que la mesure se décide à la qualification.
 function mesFormulaireMesure() {
     const m = MES_STATE.mesureEnCours || {};
-    const nouvelle = !m.id;
     const clos = MES_CLOS.includes(m.statut);
     // Une mesure clôturée ou annulée se consulte, elle ne se réécrit plus.
     const ro = clos || !mesPeutEcrire();
-    const off = ro ? 'disabled' : '';
-    const cat = m.categorie || (mesCategories()[0] || {}).code || '';
 
-    const opt = (v, l, cur) => `<option value="${_mesAttr(v)}" ${cur === v ? 'selected' : ''}>${_mesEsc(l)}</option>`;
-    const champ = (label, inner) => `<div class="mes-champ"><label>${_mesEsc(label)}</label>${inner}</div>`;
-
-    // Les constatations proposées sont celles du prestataire retenu : lier une
-    // mesure à la constatation d'un autre organisme n'aurait pas de sens.
-    const consts = MES_STATE.data.constatations
-        .filter((c) => !m.prestataire_id || c.prestataire_id === m.prestataire_id);
-
-    const preuves = (genre, label) => {
-        const liste = Array.isArray(m[`preuves_${genre}`]) ? m[`preuves_${genre}`] : [];
-        const lignes = liste.map((p, i) => `
-            <div class="mes-preuve" data-genre="${genre}" data-chemin="${_mesAttr(p.path || '')}">
-                <input class="mes-input" value="${_mesAttr(p.nom || p.filename || '')}"
-                       placeholder="Intitulé de la pièce" ${off}>
-                ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
-                    href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}" title="Ouvrir">${MES_ICONS.download}</a>` : ''}
-                ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
-                    onclick="mesRetirerPreuve('${genre}',${i})">${MES_ICONS.x}</button>`}
-            </div>`).join('');
-        return champ(label, `
-            <div>${lignes || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
-            ${ro ? '' : `<input type="file" id="mesFichier_${genre}" multiple style="display:none;"
-                    onchange="mesTeleverserPreuve('${genre}', this.files)">
-                <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
-                        onclick="document.getElementById('mesFichier_${genre}').click()">
-                    ${MES_ICONS.add} Ajouter une pièce</button>`}`);
-    };
-
-    // Les champs de la mesure sont la matière de l'étape « Qualification et
-    // Mesures ». Ouvert depuis une carence, le volet suit son fil : tant que la
-    // suite à donner n'est pas décidée, ce sont les trois sections de la
-    // première étape qui s'affichent.
-    const surCarence = !!MES_STATE.carenceEnCours;
-    const etape = surCarence ? mesEtapeCourante() : 'qualification';
-    // L'étape « Qualification et Mesures » a ses propres sections ; les champs
-    // du formulaire de mesure ne servent plus qu'au volet ouvert depuis le
-    // menu Mesures, hors de tout fil.
-    const champsMesure = !surCarence;
-    const aVenir = false;
+    // Le volet suit le fil de la carence : tant que la suite à donner n'est
+    // pas décidée, ce sont les sections de la première étape qui s'affichent.
+    const etape = mesEtapeCourante();
 
     return `
     <div class="mes-slider-header">
         <button class="btn btn-outline btn-sm mes-btn-retour" onclick="mesFermerSlider()"
                 title="Retour">${MES_ICONS.back} Retour</button>
-        <span class="mes-slider-titre">
-            ${nouvelle ? 'Traitement d’une carence' : `Traitement ${_mesEsc(m.reference || '')}`}
-        </span>
-        ${m.statut ? mesBadgeStatut(m.statut) : ''}
+        <span class="mes-slider-titre">Traitement d’une carence</span>
     </div>
-    ${surCarence ? mesFilAvancement() : ''}
+    ${mesFilAvancement()}
     <div class="mes-slider-body">
         ${clos ? '<p class="mes-note">Mesure clôturée ou annulée : elle se consulte, elle ne se modifie plus.</p>' : ''}
         ${etape === 'suite' ? `
@@ -1263,57 +1193,11 @@ function mesFormulaireMesure() {
         ${etape === 'suivi' ? `
             ${mesSectionSuiviMesures()}
             ${mesSectionPlanAction()}` : ''}
-        ${aVenir ? `<p class="mes-note">Étape « ${_mesEsc((MES_ETAPES.find((e) => e.cle === etape) || {}).libelle || '')} » :
-            elle sera construite ultérieurement.</p>` : ''}
-        ${!champsMesure ? '' : `
-        <div class="mes-paire">
-            ${champ('Catégorie', `<select class="mes-select" id="mesf_categorie" ${off} onchange="mesFormCategorie(this.value)">
-                ${mesCategories().map((c) => opt(c.code, c.libelle, cat)).join('')}</select>`)}
-            ${champ('Type de mesure', `<select class="mes-select" id="mesf_type" ${off} onchange="mesFormType(this.value)">
-                <option value="">—</option>
-                ${mesTypesDe(cat).map((t) => opt(t.code, t.libelle, m.type_mesure)).join('')}</select>`)}
-        </div>
-        ${mesEstAmende(m.type_mesure)
-            ? champ("Montant de l'amende (F CFA)",
-                `<input type="number" min="0" class="mes-input" id="mesf_montant"
-                        value="${_mesAttr(m.montant_amende || '')}" ${off} placeholder="ex. 500000">`) : ''}
-        <div class="mes-paire">
-            ${champ('Prestataire', `<select class="mes-select" id="mesf_prestataire" ${off} onchange="mesFormPrestataire(this.value)">
-                <option value="">—</option>
-                ${MES_STATE.data.prestataires.map((p) => opt(p.id, p.nom, m.prestataire_id)).join('')}</select>`)}
-            ${champ('Constatation liée', `<select class="mes-select" id="mesf_constatation" ${off}>
-                <option value="">— Aucune —</option>
-                ${consts.map((c) => opt(c.id, `${c.reference}${c.titre ? ` · ${c.titre}` : ''}`, m.constatation_id)).join('')}</select>`)}
-        </div>
-        ${champ('Objet', `<input class="mes-input" id="mesf_objet" value="${_mesAttr(m.objet || '')}" ${off}>`)}
-        ${champ('Description', `<textarea class="mes-input" id="mesf_description" rows="3" ${off}>${_mesEsc(m.description || '')}</textarea>`)}
-        ${champ('Délai (jours)', `<input type="number" min="0" class="mes-input" id="mesf_delai"
-            value="${_mesAttr(m.delai_jours || '')}" ${off} oninput="mesFormDelai()">`)}
-        <div class="mes-paire">
-            ${champ("Date d'émission", `<input type="date" class="mes-input" id="mesf_emission"
-                value="${_mesAttr(String(m.date_emission || '').slice(0, 10))}" ${off} onchange="mesFormDelai()">`)}
-            ${champ("Date d'échéance", `<input type="date" class="mes-input" id="mesf_echeance"
-                value="${_mesAttr(String(m.date_echeance || '').slice(0, 10))}" ${off}>`)}
-        </div>
-        <div class="mes-paire">
-            ${preuves('constatation', 'Pièces à l’appui')}
-            ${preuves('cloture', 'Pièces de clôture')}
-        </div>
-        ${champ('Avis de la Commission administrative',
-            `<textarea class="mes-input" id="mesf_avis" rows="2" ${off}>${_mesEsc(m.avis_commission || '')}</textarea>`)}
-        ${champ('Motif et considérants',
-            `<textarea class="mes-input" id="mesf_motif" rows="2" ${off}>${_mesEsc(m.motif || '')}</textarea>`)}
-        ${!nouvelle ? `<p class="mes-preuve-vide">
-            ${m.date_notification ? `Notifiée le ${mesDate(m.date_notification)}. ` : ''}
-            ${m.date_cloture ? `Clôturée le ${mesDate(m.date_cloture)}.` : ''}
-        </p>` : ''}`}
         <p class="mes-erreur" id="mesFormErreur"></p>
     </div>
-    ${mesBarreInferieure(ro, champsMesure, etape)}`;
+    ${mesBarreInferieure(ro, etape)}`;
 }
 
-// Relit le formulaire sans le redessiner : les changements de catégorie, de
-// type et de prestataire doivent conserver ce qui a déjà été saisi.
 // Saisie en cours du volet « carence », relevée dans le DOM — même lecture que
 // l'enregistrement, pour que rien ne se perde quand la coquille est redessinée.
 function mesCollecterConstat() {
@@ -1328,119 +1212,6 @@ function mesCollecterConstat() {
         date_ouverture: v('mesConstOuverture'),
         date_due_cloture: v('mesConstEcheance'),
     };
-}
-
-function mesCollecterFormulaire() {
-    const v = (id) => (document.getElementById(id) || {}).value || '';
-    if (!document.getElementById('mesf_categorie')) return {};
-    const preuves = (genre) => [...document.querySelectorAll(`.mes-preuve[data-genre="${genre}"]`)]
-        .map((r) => ({ nom: (r.querySelector('input')?.value || '').trim(), path: r.dataset.chemin || '' }));
-    return {
-        categorie: v('mesf_categorie'),
-        type_mesure: v('mesf_type'),
-        prestataire_id: v('mesf_prestataire'),
-        constatation_id: v('mesf_constatation'),
-        objet: v('mesf_objet'),
-        description: v('mesf_description'),
-        delai_jours: v('mesf_delai'),
-        date_emission: v('mesf_emission'),
-        date_echeance: v('mesf_echeance'),
-        avis_commission: v('mesf_avis'),
-        motif: v('mesf_motif'),
-        montant_amende: v('mesf_montant'),
-        preuves_constatation: preuves('constatation'),
-        preuves_cloture: preuves('cloture'),
-    };
-}
-
-const mesMajFormulaire = (patch) => {
-    MES_STATE.mesureEnCours = { ...(MES_STATE.mesureEnCours || {}), ...mesCollecterFormulaire(), ...patch };
-    mesAfficherSlider();
-};
-
-// Changer de catégorie vide le type : les types sont propres à leur catégorie.
-const mesFormCategorie = (v) => mesMajFormulaire({ categorie: v, type_mesure: '' });
-const mesFormType = (v) => mesMajFormulaire({ type_mesure: v });
-// Le champ « Constatation liée » dépend du prestataire — la sélection tombe.
-const mesFormPrestataire = (v) => mesMajFormulaire({ prestataire_id: v, constatation_id: '' });
-
-// L'échéance se déduit de la date d'émission et du délai : la saisir deux fois
-// ouvre la porte à l'incohérence.
-function mesFormDelai() {
-    const emission = (document.getElementById('mesf_emission') || {}).value || '';
-    const delai = parseInt((document.getElementById('mesf_delai') || {}).value, 10);
-    const champ = document.getElementById('mesf_echeance');
-    if (!champ || !emission || !Number.isFinite(delai)) return;
-    const d = new Date(emission);
-    if (Number.isNaN(d.getTime())) return;
-    d.setDate(d.getDate() + delai);
-    champ.value = d.toISOString().slice(0, 10);
-}
-
-async function mesTeleverserPreuve(genre, fichiers) {
-    if (!fichiers || !fichiers.length) return;
-    const courant = { ...(MES_STATE.mesureEnCours || {}), ...mesCollecterFormulaire() };
-    const cle = `preuves_${genre}`;
-    courant[cle] = Array.isArray(courant[cle]) ? courant[cle] : [];
-    for (const f of fichiers) {
-        const fd = new FormData();
-        fd.append('file', f);
-        try {
-            const r = await fetch(`${MES_API}/upload`, { method: 'POST', credentials: 'same-origin', body: fd });
-            const d = await r.json();
-            if (r.ok && d.status === 'ok') courant[cle].push({ nom: d.filename, path: d.path });
-            else mesToast(d.error || 'Téléversement refusé', 'error');
-        } catch (e) { mesToast(e.message || 'Téléversement impossible', 'error'); }
-    }
-    MES_STATE.mesureEnCours = courant;
-    mesAfficherSlider();
-}
-
-function mesRetirerPreuve(genre, index) {
-    const courant = { ...(MES_STATE.mesureEnCours || {}), ...mesCollecterFormulaire() };
-    const cle = `preuves_${genre}`;
-    if (Array.isArray(courant[cle])) courant[cle].splice(index, 1);
-    MES_STATE.mesureEnCours = courant;
-    mesAfficherSlider();
-}
-
-async function mesEnregistrerMesure() {
-    const m = MES_STATE.mesureEnCours || {};
-    const data = mesCollecterFormulaire();
-    const err = document.getElementById('mesFormErreur');
-    if (!data.categorie) { err.textContent = 'Catégorie requise'; return; }
-    if (!data.type_mesure) { err.textContent = 'Type de mesure requis'; return; }
-    if (!data.prestataire_id) { err.textContent = 'Prestataire requis'; return; }
-    if (!data.objet.trim()) { err.textContent = "Objet requis"; return; }
-    try {
-        if (m.id) await mesApi(`/mesures/${m.id}`, { method: 'PUT', body: JSON.stringify(data) });
-        else await mesApi('/mesures', { method: 'POST', body: JSON.stringify(data) });
-        mesFermerSlider();
-        await mesRechargerMesures();
-        mesToast('Mesure enregistrée');
-    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
-}
-
-// ══════════════════════════════════════
-//  Transitions du circuit
-// ══════════════════════════════════════
-
-const MES_TRANSITIONS = {
-    notifier: { question: 'Notifier cette mesure au prestataire ?', fait: 'Mesure notifiée' },
-    engager: { question: 'Engager la mise en œuvre de cette mesure ?', fait: 'Mesure engagée' },
-    cloturer: { question: 'Clôturer cette mesure ?', fait: 'Mesure clôturée' },
-    annuler: { question: 'Annuler cette mesure ? La trace de la décision reste.', fait: 'Mesure annulée' },
-    rouvrir: { question: 'Rouvrir cette mesure clôturée ?', fait: 'Mesure rouverte' },
-};
-
-async function mesTransition(id, action) {
-    const t = MES_TRANSITIONS[action];
-    if (!t || !confirm(t.question)) return;
-    try {
-        await mesApi(`/mesures/${id}/${action}`, { method: 'POST', body: JSON.stringify({}) });
-        await mesRechargerMesures();
-        mesToast(t.fait);
-    } catch (e) { mesToast(e.message || 'Action impossible', 'error'); }
 }
 
 async function mesSupprimerMesure(id) {
@@ -1465,11 +1236,9 @@ Object.assign(window, {
     mesToggleSidebar, mesSetTheme, mesSetLang, mesRetourPortail, mesDeconnexion,
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
     mesResetFiltresMesures, mesResetFiltresCritiques,
-    mesOuvrirMesure, mesFermerSlider, mesAfficherSlider, mesEnregistrerMesure, mesFaireLeSuivi,
+    mesFermerSlider, mesAfficherSlider, mesFaireLeSuivi,
     mesStatutMesure, mesStatutSuivi, MES_SUIVI,
-    mesFormCategorie, mesFormType, mesFormPrestataire, mesFormDelai,
-    mesTeleverserPreuve, mesRetirerPreuve,
-    mesTransition, mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
+    mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
     mesTypesInvestigation, mesComites, mesRechargerParametres, mesEtatSousMesure,
     mesFiltreCarence, mesOuvrirTableMesures,
 });

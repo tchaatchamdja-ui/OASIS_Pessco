@@ -419,22 +419,6 @@ async function planDeleteComment(comId, planId) {
 //  VERSION / WORKFLOW HISTORY MODALS
 // ══════════════════════════════════════
 
-async function planShowVersionHistory(planId) {
-    try {
-        const versions = await api(`${PLAN_MODULE_API}/plans/${planId}/versions`);
-        const body = versions.length ? `
-        <table class="data-table">
-            <thead><tr><th>${tp('version')}</th><th>Modifié par</th><th>Date</th><th>${tp('reason')}</th></tr></thead>
-            <tbody>${versions.map(v => `<tr>
-                <td>v${v.version}</td><td>${_esc(v.modifie_par)}</td>
-                <td>${(v.date_modification || '').substring(0, 16)}</td><td>${_esc(v.motif)}</td>
-            </tr>`).join('')}</tbody>
-        </table>` : `<p>${tp('no_data')}</p>`;
-        planShowModal(tp('version_history'), body);
-    } catch (e) {
-        alert(e.message);
-    }
-}
 
 async function planShowWorkflowHistory(planId) {
     try {
@@ -550,12 +534,6 @@ function _prestataireColor(prestataireId) {
     return _prestataireColorCache[prestataireId];
 }
 
-function _priorityBadge(priority) {
-    const colors = { haute: '#ef4444', normale: '#3b82f6', basse: '#6b7280' };
-    const color = colors[priority] || '#6b7280';
-    const label = tp('priority_' + (priority || 'normale'));
-    return `<span class="status-badge" style="background:${color}15;color:${color};border:1px solid ${color}40;">${label}</span>`;
-}
 
 // ══════════════════════════════════════
 //  NOTIFICATION BELL

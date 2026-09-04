@@ -142,18 +142,7 @@ function _getRecentPlans(plans) {
     return recents('valide', 5);
 }
 
-function _getUserDomaines() {
-    const raw = PLAN_STATE.user?.domaines || '[]';
-    try {
-        return typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
-    } catch { return []; }
-}
 
-function _planMatchesDomaine(plan, userDomaines) {
-    if (!userDomaines.length) return true;
-    if (!plan.domaine_id) return true;
-    return userDomaines.includes(plan.domaine_id);
-}
 
 function _applyPlanFilters(plans) {
     const F = PLAN_STATE.filters;

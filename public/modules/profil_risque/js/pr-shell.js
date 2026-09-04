@@ -66,9 +66,6 @@ function prMeilleurPriv() {
 function prCanValidate(secteurId) {
     return PR_PRIV_VALIDE.includes(secteurId ? prPrivilegeOn(secteurId) : prMeilleurPriv());
 }
-function prCanContribute(secteurId) {
-    return PR_PRIV_CONTRIB.includes(secteurId ? prPrivilegeOn(secteurId) : prMeilleurPriv());
-}
 // Libellé affiché dans la barre supérieure : le privilège du module.
 function prPrivilegeLabel() {
     const p = prMeilleurPriv();
@@ -505,19 +502,3 @@ function expandCollapseAll(containerId, expand) {
     });
 }
 
-// Generic PDF export for filtered page content
-async function exportPagePDF(endpoint, filters, filename) {
-    const params = new URLSearchParams();
-    Object.entries(filters || {}).forEach(([k, v]) => { if (v) params.set(k, v); });
-    try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`${endpoint}?${params}`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename || 'export.pdf';
-        a.click();
-        URL.revokeObjectURL(a.href);
-    } catch (e) { showToast(e.message, 'error'); }
-}

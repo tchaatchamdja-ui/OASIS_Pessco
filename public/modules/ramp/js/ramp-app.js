@@ -316,7 +316,6 @@ const RAMP_MOIS_COURT = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin',
 // ══════════════════════════════════════
 
 const rampFamille = (nom) => ((RAMP_STATE.data.parametres.familles || {})[nom] || []);
-const rampFamilleActive = (nom) => rampFamille(nom).filter((p) => p.actif !== false);
 
 // Pondération d'une catégorie : elle donne son poids à un écart dans le score
 // d'un exploitant. Une catégorie inconnue pèse 1 — c'est la règle de RAMP.
@@ -415,12 +414,6 @@ function rampAnnees() {
 const rampValeurs = (champ) => [...new Set(RAMP_STATE.data.inspections
     .map((i) => i[champ]).filter(Boolean))].sort();
 
-function rampValeursEcart(champ) {
-    const v = new Set();
-    RAMP_STATE.data.inspections.forEach((i) => (i.anomalies || [])
-        .forEach((a) => { if (a[champ]) v.add(a[champ]); }));
-    return [...v].sort();
-}
 
 function rampFiltrer() { return rampFiltrerAvec(RAMP_STATE.filtres); }
 
@@ -2276,11 +2269,10 @@ Object.assign(window, {
     rampLoadData, rampRecharger, rampRenderApp, rampRenderPage, rampNavigateTo,
     rampToggleSidebar, rampSetTheme, rampSetLang, rampRafraichir, rampConserverModale, rampSaisiesEnCours, rampRetourPortail, rampDeconnexion,
     rampParseDate, rampDate, rampISO,
-    rampFamille, rampFamilleActive, rampPonderations, rampLibelleItem, rampGroupeDeLItem, rampEstClos,
+    rampFamille, rampPonderations, rampLibelleItem, rampGroupeDeLItem, rampEstClos,
     _rArg, rampBasculerEcart, rampTeinteSuivi, rampMesurerEntete, rampMesurerPied, rampRemonter, rampVueCourante, rampCorpsDeLaPage, rampRole, rampEstAdmin, rampEstRegional, rampPeutContribuer, rampPeutImporter,
     rampFiltrer, rampSetFiltre, rampResetFiltres, rampChercher, rampBarreFiltres,
-    rampAnnees, rampValeurs, rampValeursEcart,
-    rampTrier, rampAppliquerTri, rampTh, rampBadgeCat, rampResumeHtml,
+    rampAnnees, rampValeurs, rampTrier, rampAppliquerTri, rampTh, rampBadgeCat, rampResumeHtml,
     rampRenderDashboard, rampRenderEtats, rampRenderPageEcarts, rampOuvrirImportation,
     rampCartesInspections, rampCartesEcarts, rampAnneauCategories, RAMP_COULEURS_CAT,
     rampBasculerCategorie, rampRechercheRonde, RAMP_RECHERCHE_ECARTS,

@@ -417,10 +417,6 @@ function getSecurityIndex(idc, idp, isGlobal) {
     return { val, desc: entry.desc, isIncoherent: false };
 }
 
-// Backward compat wrapper
-function getSafetyMatrixResult(idc, idp) {
-    return getSecurityIndex(idc, idp, true);
-}
 
 /**
  * Determine Risk Index from complexity index + security index.
@@ -481,10 +477,6 @@ function getRiskIndex(complexityIndex, securityVal, isGlobal) {
     }
 }
 
-// Backward compat wrapper
-function getGlobalRiskIndex(safetyIndex, complexityIndex) {
-    return getRiskIndex(complexityIndex, safetyIndex, true);
-}
 
 /**
  * Get CSS badge class from risk label or index label

@@ -9,15 +9,6 @@
 //  PARAMETRES (placeholder)
 // ══════════════════════════════════════
 
-function planRenderParametres() {
-    return `
-    <div class="page-content">
-        <div class="page-header"><h2>${tp('parametres')}</h2></div>
-        <div class="card"><div class="card-body"><p style="color:var(--text-muted);padding:2rem;text-align:center;">
-            Les paramètres de ce module sont gérés dans la Configuration du portail.
-        </p></div></div>
-    </div>`;
-}
 
 // ══════════════════════════════════════
 //  CRUD OPERATIONS
@@ -619,22 +610,6 @@ function _collectActivityForm() {
 //  IMPORT / SYNC RISK PROFILES
 // ══════════════════════════════════════
 
-async function planImportRisks(planId) {
-    if (!confirm(tp('import_desc'))) return;
-    try {
-        const result = await api(`${PLAN_MODULE_API}/plans/${planId}/import-risques`, { method: 'POST' });
-        alert(tp('import_success', result.imported, result.activities_created));
-        await planLoadData();
-        await planOpenDetail(planId);
-    } catch (e) {
-        // Duplicate import → ephemeral 5s notification, do not block with alert
-        if (/déjà.*import|already.*import|Importation interrompue/i.test(e.message)) {
-            planShowEphemeralToast(e.message, 'warning', 5000);
-        } else {
-            alert(e.message);
-        }
-    }
-}
 
 // Ephemeral toast for planification module (5-second default)
 function planShowEphemeralToast(message, type = 'info', duration = 5000) {
@@ -642,26 +617,6 @@ function planShowEphemeralToast(message, type = 'info', duration = 5000) {
     return window.oasisToast(message, type, duration);
 }
 
-async function planSyncRisks(planId) {
-    try {
-        const result = await api(`${PLAN_MODULE_API}/plans/${planId}/sync-risques`);
-        if (result.has_changes) {
-            const changes = result.changes || [];
-            let msg = tp('sync_changes', changes.length) + '\n\n';
-            changes.forEach(c => {
-                const prest = (PLAN_STATE.data.prestataires || []).find(p => p.id === c.prestataire_id);
-                msg += `- ${prest ? prest.nom : c.prestataire_id}: ${c.type}`;
-                if (c.avant) msg += ` (${c.avant.risk_label} → ${c.apres.risk_label})`;
-                msg += '\n';
-            });
-            alert(msg);
-        } else {
-            alert(tp('sync_no_changes'));
-        }
-    } catch (e) {
-        alert(e.message);
-    }
-}
 
 async function planSyncRisksSelective(planId) {
     try {

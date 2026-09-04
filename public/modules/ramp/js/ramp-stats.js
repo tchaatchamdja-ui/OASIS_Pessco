@@ -311,7 +311,6 @@ function rampPeriodesDisponibles(inspections, pas) {
 }
 
 const rampPasCourant = () => RAMP_STATE.tempsPas || 'mois';
-const rampPeriodesRetenues = () => (RAMP_STATE.tempsSelection || {})[rampPasCourant()] || [];
 
 function rampSerieTempsBoutons() {
     const serie = RAMP_STATE.tempsSerie || 'toutes';
@@ -937,19 +936,6 @@ function rampRenderStatistiques() {
             ${RAMP_BLOCS[cle] ? `<div style="padding:0 1rem 1rem;">${corps}</div>` : ''}
         </div>`;
 
-    const listeSimple = (entrees, vide) => {
-        const tri = entrees.filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-        if (!tri.length) return `<div class="ramp-vide">${_rEsc(vide)}</div>`;
-        const max = Math.max(...tri.map((e) => e[1]));
-        return tri.map(([lbl, n]) => `
-            <div class="ramp-barre-ligne">
-                <div class="ramp-barre-entete"><span>${_rEsc(lbl)}</span><strong>${n}</strong></div>
-                <div class="ramp-barre-piste">
-                    <div class="ramp-barre-seg" style="width:${(n / max) * 100}%;background:var(--ramp-accent);"></div>
-                </div>
-            </div>`).join('');
-    };
-
 
     // ── Situation générale ──
     const cel = (v, style) => `<td style="text-align:center;${style || ''}">${_rEsc(v)}</td>`;
@@ -1431,7 +1417,7 @@ Object.assign(window, {
     rampBarresCollees, rampStatsAeronefMode, RAMP_PALETTE_STATS,
     rampBarresEtats, rampBasculerEtatGraphe, rampSerieEtats, rampSerieEtatsBoutons,
     RAMP_GRANULARITES, rampPeriodeDe, rampPeriodesDisponibles, rampPasCourant,
-    rampPeriodesRetenues, rampSerieTempsBoutons, rampGranulariteBoutons, rampBarresTemps,
+    rampSerieTempsBoutons, rampGranulariteBoutons, rampBarresTemps,
     rampSerieTemps, rampPasTemps, rampMenuTemps, rampBasculerPeriode, rampViderPeriodes,
     rampAnneeTemps, rampChoisirAnneeTemps, rampAnneeTempsBoutons, rampAnnuelPeriodes,
     rampCinqDernieresAnnees,

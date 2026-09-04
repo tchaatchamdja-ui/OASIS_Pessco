@@ -122,10 +122,6 @@
         gap: 1.5rem;
     }
 
-    .fnc-card-grid {
-        grid-template-columns: 1fr;
-    }
-
     .exchange-msg {
         max-width: 95%;
     }
@@ -142,10 +138,6 @@
     .exec-stepper {
         flex-wrap: wrap;
         gap: 0.5rem;
-    }
-
-    .exec-step:not(:last-child)::after {
-        display: none;
     }
 
     .exec-detail-bar {
@@ -172,10 +164,6 @@
 
     .exec-slider-header h3 {
         font-size: 0.95rem;
-    }
-
-    .fnc-card {
-        padding: 0.85rem;
     }
 
     .exchange-msg {

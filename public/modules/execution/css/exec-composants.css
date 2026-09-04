@@ -391,30 +391,6 @@
     text-decoration: line-through;
 }
 
-.exec-step.completed:not(:last-child)::after {
-    background: var(--exec-accent);
-}
-
-.exec-step.active .exec-step-circle {
-    background: var(--exec-accent);
-    color: var(--text-header, #fff);
-    box-shadow: 0 0 0 4px rgba(var(--exec-accent-rgb), 0.2);
-}
-
-.exec-step.completed .exec-step-circle {
-    background: var(--exec-accent);
-    color: var(--text-header, #fff);
-}
-
-.exec-step.active .exec-step-label {
-    color: var(--exec-accent);
-    font-weight: 600;
-}
-
-.exec-step.completed .exec-step-label {
-    color: var(--text);
-}
-
 .exec-actions-cell .btn-icon {
     padding: 0.3rem;
     border-radius: 6px;

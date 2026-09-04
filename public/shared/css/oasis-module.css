@@ -529,8 +529,6 @@ body.app-sidebar-collapsed .modal-overlay { left: var(--sidebar-collapsed, 60px)
     .page-header { flex-direction: column; align-items: stretch; }
     .data-table { font-size: 0.78rem; }
     .data-table th, .data-table td { padding: 0.35rem 0.45rem; }
-    .chart-wrapper { height: 220px; }
-    .chart-wrapper-tall { height: 300px; }
     .dashboard-banner { flex-direction: column; text-align: center; gap: 1rem; }
     .sub-nav { overflow-x: auto; flex-wrap: nowrap; }
     .sub-nav-btn { white-space: nowrap; flex-shrink: 0; }

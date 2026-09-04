@@ -143,6 +143,118 @@
 .mes-table tbody tr:hover { background: var(--mes-accent-bg); }
 .mes-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
 .mes-table-wrap { overflow-x: auto; }
+/* Variante « plate », celle des activités de supervision : l'entête ne pèse
+   plus d'un bandeau plein, les lignes ne se séparent que d'un filet, et rien
+   n'alterne — c'est le contenu qui doit ressortir, non la grille. */
+.mes-table-plate { border: 0; border-radius: 0; }
+.mes-table-plate th {
+    background: transparent; color: var(--text-muted);
+    border-right: 0; border-bottom: 2px solid var(--border);
+    font-size: .75rem; letter-spacing: .05em; padding: .65rem .75rem; white-space: nowrap;
+}
+.mes-table-plate td {
+    border-right: 0; border-bottom: 1px solid var(--border);
+    padding: .45rem .75rem; font-size: .85rem;
+}
+.mes-table-plate tbody tr:nth-child(even) { background: transparent; }
+.mes-table-plate tbody tr { transition: background .15s; }
+.mes-table-plate tbody tr:hover { background: var(--mes-accent-bg); }
+
+/* Sous-onglets d'une étape : trois volets pour six sections. Ils se posent
+   sous le fil d'avancement, dont ils reprennent la logique — on ne voit qu'un
+   volet à la fois — sans en reprendre la forme : le fil dit où va le dossier,
+   les onglets où va le regard. */
+.mes-sous-onglets {
+    display: flex; gap: .2rem; flex-wrap: wrap;
+    border-bottom: 2px solid var(--border); margin-bottom: .9rem;
+}
+.mes-sous-onglet {
+    appearance: none; background: transparent; border: 0; cursor: pointer;
+    padding: .5rem .85rem; margin-bottom: -2px;
+    border-bottom: 2px solid transparent;
+    font-size: .82rem; font-weight: 600; color: var(--text-muted);
+    font-family: inherit;
+}
+.mes-sous-onglet:hover { color: var(--text); background: var(--mes-accent-bg); }
+.mes-sous-onglet.actif { color: var(--primary); border-bottom-color: var(--primary); }
+.mes-sous-onglet-compte {
+    display: inline-block; min-width: 1.1rem; padding: 0 .3rem;
+    border-radius: 999px; background: #fef3c7; color: #b45309;
+    font-size: .68rem; font-weight: 700; text-align: center;
+}
+
+/* Les deux états d'une liste, à droite de son titre. */
+.mes-page-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.mes-exports { display: inline-flex; gap: .35rem; }
+.mes-btn-export { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap; }
+
+/* ── Historique d'un traitement : le fil du dossier, daté ── */
+/* Deux classes plutôt qu'une : `.mes-modal-fond` centre ses modales et se
+   déclare plus bas dans la feuille — à égalité de spécificité, elle
+   l'emporterait sur un sélecteur simple. */
+.mes-modal-fond.mes-histo-fond {
+    z-index: 1250; display: flex; align-items: stretch; justify-content: flex-end; padding: 0;
+}
+.mes-volet-histo {
+    width: min(560px, 100%); height: 100%; background: var(--bg-card, #fff);
+    display: flex; flex-direction: column; box-shadow: -8px 0 24px rgba(15,23,42,.18);
+}
+.mes-volet-histo .mes-modal-body { overflow-y: auto; flex: 1; }
+.mes-histo-entete { margin-bottom: 1.1rem; }
+.mes-histo-objet { font-size: 1rem; font-weight: 700; }
+.mes-histo-meta { font-size: .8rem; color: var(--text-muted); margin-top: .15rem; }
+.mes-histo-etape { position: relative; padding: 0 0 .9rem 1.5rem; }
+.mes-histo-etape::before {
+    content: ''; position: absolute; left: 6px; top: 1.35rem; bottom: 0;
+    width: 2px; background: var(--border);
+}
+.mes-histo-etape:last-of-type::before { display: none; }
+.mes-histo-etape > header { display: flex; align-items: center; gap: .5rem; }
+.mes-histo-etape > header h4 { margin: 0; font-size: .9rem; }
+.mes-histo-puce {
+    position: absolute; left: 0; top: .35rem; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--bg-card, #fff); border: 3px solid var(--border);
+}
+.mes-histo-etape.faite .mes-histo-puce { border-color: #166534; background: #166534; }
+.mes-histo-etape.courante .mes-histo-puce { border-color: #b45309; }
+.mes-histo-etape.faite > header h4 { color: #166534; }
+.mes-histo-etape.courante > header h4 { color: #b45309; }
+.mes-histo-etat {
+    font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700;
+    padding: .1rem .45rem; border-radius: 999px;
+    background: var(--bg-hover, #f1f5f9); color: var(--text-muted);
+}
+.mes-histo-etape.faite .mes-histo-etat { background: #16653418; color: #166534; }
+.mes-histo-etape.courante .mes-histo-etat { background: #b4530918; color: #b45309; }
+.mes-histo-sous-liste { margin-top: .45rem; display: flex; flex-direction: column; gap: .4rem; }
+.mes-histo-sous-nom {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-muted); font-weight: 700; margin-bottom: .2rem;
+}
+.mes-histo-jalon {
+    display: grid; grid-template-columns: 8.5rem 1fr auto; gap: .1rem .7rem;
+    align-items: baseline; font-size: .83rem; padding: .18rem 0;
+}
+.mes-histo-date { color: var(--text-muted); font-size: .78rem; font-variant-numeric: tabular-nums; }
+.mes-histo-acteur { font-size: .78rem; color: var(--text-muted); }
+.mes-histo-detail {
+    grid-column: 2 / -1; font-size: .76rem; color: var(--text-muted);
+}
+/* Motif de renvoi : signalé. */
+.mes-histo-detail.alerte {
+    font-size: .78rem; color: #b45309; background: #b4530910;
+    border-left: 2px solid #b4530955; padding: .2rem .5rem; border-radius: 3px;
+}
+.mes-histo-attente { font-size: .78rem; color: var(--text-muted); font-style: italic; }
+.mes-histo-sous.vide { opacity: .65; }
+.mes-histo-fin {
+    margin-left: 1.5rem; font-size: .75rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: #b45309;
+}
+.mes-histo-fin.clos { color: #166534; }
+@media (max-width: 720px) {
+    .mes-histo-jalon { grid-template-columns: 1fr; }
+}
 /* Colonne « Catégorie / Type / Description » : trois lignes qui se lisent de
    la plus générale à la plus précise. Elle garde le quart de la table — c'est
    elle qui dit ce que la mesure impose. */

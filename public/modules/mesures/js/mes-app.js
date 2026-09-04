@@ -837,6 +837,7 @@ function mesRenderMesures() {
     return `
     <div class="mes-page-header">
         <h2>Mesures</h2>
+        ${mesBoutonsExport('mesures', 'mesParametresMesures')}
     </div>
     <div class="mes-action-bar">
         <div class="mes-filtres">
@@ -969,7 +970,12 @@ function mesLignesCritiques() {
             <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
-                ${mesBoutonTraitement(c)}
+                <span class="mes-actions-duo">
+                    ${mesBoutonTraitement(c)}
+                    <button class="btn btn-outline btn-sm mes-btn-icone"
+                            title="Historique du traitement"
+                            onclick="mesHistorique('${c.id}')">${MES_ICONES_ETAT.clock}</button>
+                </span>
                 ${mesEtatSousMesure(c)}
                 ${c.classee
                     ? `<span class="mes-badge cloturee" title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
@@ -993,9 +999,12 @@ function mesRenderCritiques() {
     return `
     <div class="mes-page-header">
         <h2>Carences</h2>
-        ${mesPeutEcrire()
-            ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirConstat()">
-                   ${MES_ICONS.add} Ajouter une Carence</button>` : ''}
+        <div class="mes-page-actions">
+            ${mesPeutEcrire()
+                ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirConstat()">
+                       ${MES_ICONS.add} Ajouter une Carence</button>` : ''}
+            ${mesBoutonsExport('constatations', 'mesParametresCarences')}
+        </div>
     </div>
     <div class="mes-action-bar">
         <div class="mes-filtres">
@@ -1028,7 +1037,7 @@ function mesRenderCritiques() {
 
     <div class="mes-card" style="padding:0;">
         <div class="mes-table-wrap">
-            <table class="mes-table">
+            <table class="mes-table mes-table-plate">
                 <thead><tr>
                     <th style="width:150px;">Référence</th>
                     <th>Objet / Description</th>
@@ -1037,7 +1046,7 @@ function mesRenderCritiques() {
                     <th style="width:110px;">Échéance</th>
                     <th style="width:130px;text-align:center;">Statut</th>
                     <th style="width:110px;">Clôture</th>
-                    <th style="width:105px;text-align:center;">Actions</th>
+                    <th style="width:135px;text-align:center;">Actions</th>
                 </tr></thead>
                 <tbody data-corps="critiques">${mesLignesCritiques()}</tbody>
             </table>
@@ -1205,13 +1214,7 @@ function mesFormulaireMesure() {
             ${mesSectionPac()}
             ${mesSectionInformations()}
             ${mesSectionDecision()}` : ''}
-        ${etape === 'qualification' ? `
-            ${mesSectionCarence()}
-            ${mesSectionRapportInvestigation()}
-            ${mesSectionInstance()}
-            ${mesSectionQualification()}
-            ${mesSectionMesuresArretees()}
-            ${mesSectionRecours()}` : ''}
+        ${etape === 'qualification' ? mesQualCorps() : ''}
         ${etape === 'investigations' ? `
             ${mesRenvoisInvestigation()}
             ${mesSectionEquipe()}

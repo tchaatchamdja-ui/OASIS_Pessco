@@ -12,6 +12,7 @@ const services = require('../../services');
 const multipart = require('../../multipart');
 const pdf = require('../../pdf');
 const rapport = require('./rapport-investigation');
+const exports_ = require('./exports');
 const db = require('./store');
 const R = require('./roles');
 
@@ -138,6 +139,130 @@ module.exports = function register(app, deps, M) {
     res.json(liste.map((m) => enrichir(m, index)));
   });
 
+  // ══════════════════════════════════════
+  //  États exportables
+  // ══════════════════════════════════════
+  // Le classeur part tout de suite ; le PDF passe par le moteur de rendu, qui
+  // peut manquer sur un hébergement contraint — le message le dit alors, plutôt
+  // qu'une erreur nue.
+  const envoyerClasseur = (res, buf, nom) => {
+    res.setHeader('Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
+    return res.send(buf);
+  };
+  const envoyerPdf = async (res, html, nom) => {
+    try {
+      // page.pdf() rend un Uint8Array : sans Buffer.from, Express le
+      // sérialiserait en JSON.
+      const octets = await pdf.depuisHtml(html);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${nom}"`);
+      return res.send(Buffer.from(octets));
+    } catch (e) {
+      return res.status(503).json({ error: String((e && e.message) || e) });
+    }
+  };
+  const jour = () => db.now().slice(0, 10);
+
+  // Les états reprennent les critères de l'écran : exporter ce que l'on voit,
+  // non la totalité de la base.
+  const criteresLisibles = (paires) => paires.filter((x) => x[1])
+    .map((x) => `${x[0]} : ${x[1]}`).join(' · ');
+
+  const carencesFiltrees = (req) => {
+    const q = req.query || {};
+    const nomPrestataire = (id) => ((refs().prestataires || []).find((p) => p.id === id) || {}).nom || '';
+    const cherche = String(q.recherche || '').trim().toLowerCase();
+    const liste = listeCarences().filter((c) => {
+      if (q.origine && (c.origine || 'SURV') !== q.origine) return false;
+      if (q.statut && (c.statut_care || 'a_traiter') !== q.statut) return false;
+      if (q.prestataire && c.prestataire_id !== q.prestataire) return false;
+      if (!cherche) return true;
+      return `${c.reference} ${c.titre} ${c.description} ${c.prestataire_nom}`
+        .toLowerCase().includes(cherche);
+    });
+    const criteres = criteresLisibles([
+      ['Origine', q.origine ? ({ SURV: 'Exécution de la Surveillance', SAFA: 'RAMP Inspections', CARE: 'Relevée ici' }[q.origine] || q.origine) : ''],
+      ['Statut', q.statut || ''],
+      ['Prestataire', nomPrestataire(q.prestataire)],
+      ['Recherche', String(q.recherche || '').trim()],
+    ]);
+    return { liste, criteres };
+  };
+
+  app.get(`${M}/constatations/export.xlsx`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
+    const { liste } = carencesFiltrees(req);
+    return envoyerClasseur(res, exports_.classeurCarences(liste), `carences-${jour()}.xlsx`);
+  });
+
+  app.get(`${M}/constatations/export.pdf`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
+    const { liste, criteres } = carencesFiltrees(req);
+    return envoyerPdf(res, exports_.htmlCarences(liste, criteres), `carences-${jour()}.pdf`);
+  });
+
+  // Statut de suivi effectif d'une mesure — le même calcul qu'à l'écran.
+  const suiviCourant = (m) => {
+    const connus = ['attendu', 'en_cours', 'solde', 'sans_suite', 'sans_objet', 'recours'];
+    if (connus.includes(m.suivi_statut)) return m.suivi_statut;
+    if (m.recours_intente) return 'recours';
+    if (m.statut === 'annulee') return 'sans_suite';
+    if (m.statut === 'cloturee') return 'solde';
+    if (m.statut === 'en_cours') return 'en_cours';
+    return 'attendu';
+  };
+
+  const mesuresFiltrees = (req) => {
+    const q = req.query || {};
+    const index = indexConstatations();
+    const nomPrestataire = (id) => ((refs().prestataires || []).find((p) => p.id === id) || {}).nom || '';
+    const cherche = String(q.recherche || '').trim().toLowerCase();
+    const liste = db.list('mesures')
+      .filter((m) => lisible(req, m))
+      .map((m) => enrichir(m, index))
+      .filter((m) => {
+        if (q.categorie && m.categorie !== q.categorie) return false;
+        if (q.prestataire && m.prestataire_id !== q.prestataire) return false;
+        // Le statut de suivi se déduit comme à l'écran quand il n'est pas posé.
+        if (q.suivi && suiviCourant(m) !== q.suivi) return false;
+        if (!cherche) return true;
+        return `${m.reference} ${m.objet} ${m.description} ${m.prestataire_nom}`
+          .toLowerCase().includes(cherche);
+      })
+      .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || '')));
+    const libelle = (coll, code) => (db.list(coll).find((x) => x.code === code) || {}).libelle || '';
+    const SUIVIS = {
+      attendu: 'Plan attendu', en_cours: 'En cours de mise en œuvre', solde: 'Soldé',
+      sans_suite: 'Sans suite', sans_objet: 'Suivi sans objet', recours: 'Recours',
+    };
+    const criteres = criteresLisibles([
+      ['Catégorie', libelle('categories', q.categorie) || q.categorie || ''],
+      ['Statut de suivi', SUIVIS[q.suivi] || ''],
+      ['Prestataire', nomPrestataire(q.prestataire)],
+      ['Recherche', String(q.recherche || '').trim()],
+    ]);
+    return {
+      liste,
+      criteres,
+      cat: (code) => libelle('categories', code) || String(code || ''),
+      typ: (code) => libelle('types', code) || String(code || ''),
+    };
+  };
+
+  app.get(`${M}/mesures/export.xlsx`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
+    const { liste, cat, typ } = mesuresFiltrees(req);
+    return envoyerClasseur(res, exports_.classeurMesures(liste, cat, typ), `mesures-${jour()}.xlsx`);
+  });
+
+  app.get(`${M}/mesures/export.pdf`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
+    const { liste, criteres, cat, typ } = mesuresFiltrees(req);
+    return envoyerPdf(res, exports_.htmlMesures(liste, criteres, cat, typ), `mesures-${jour()}.pdf`);
+  });
+
   app.get(`${M}/mesures/:id`, requireAuth, (req, res) => {
     const m = db.get('mesures', req.params.id);
     if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
@@ -148,8 +273,7 @@ module.exports = function register(app, deps, M) {
   // Constatations sur lesquelles une mesure peut être prise. Le module
   // Exécution les fournit ; il en donne aussi la criticité, dont dépend
   // l'écran « Constatations Critiques ».
-  app.get(`${M}/constatations`, requireAuth, (req, res) => {
-    if (!R.canRead(req.user, null)) return refuser(res);
+  const listeCarences = () => {
     const mesures = db.list('mesures');
     const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
     // Étape du traitement, servie avec la carence : l'écran y lit le libellé
@@ -164,7 +288,7 @@ module.exports = function register(app, deps, M) {
       if (!liees.length || !liees.every((m) => m.statut === 'cloturee' || m.statut === 'annulee')) return '';
       return liees.map((m) => m.date_cloture || '').filter(Boolean).sort().pop() || '';
     };
-    res.json(constatations().map((c) => {
+    return constatations().map((c) => {
       const liees = mesures.filter((m) => m.constatation_id === c.id);
       const classee = classements.get(c.id) || null;
       // Statut au sens des mesures d'application : il dit où en est la
@@ -190,7 +314,12 @@ module.exports = function register(app, deps, M) {
         statut: classee ? 'classee' : c.statut,
         statut_care: statutCare,
       };
-    }));
+    });
+  };
+
+  app.get(`${M}/constatations`, requireAuth, (req, res) => {
+    if (!R.canRead(req.user, null)) return refuser(res);
+    return res.json(listeCarences());
   });
 
   // Classement : l'autorité décide qu'aucune mesure ne sera prise. La décision

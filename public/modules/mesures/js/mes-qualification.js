@@ -35,6 +35,56 @@ const mesQualClose = () => {
 
 const mesQualModifiable = () => mesTraitementModifiable() && !mesQualClose();
 
+// L'étape porte six sections : la carence, le rapport d'investigation,
+// l'instance, la qualification, les mesures et — le cas échéant — les recours.
+// Les dérouler d'un seul tenant fait un formulaire qu'on parcourt sans le
+// voir. Trois volets les regroupent selon ce qu'on vient y faire : juger,
+// sanctionner, ou examiner une contestation.
+const MES_QUAL_VOLETS = [
+    { cle: 'infraction', libelle: 'Qualification de l’infraction' },
+    { cle: 'mesures', libelle: 'Mesures d’application' },
+    { cle: 'recours', libelle: 'Recours' },
+];
+
+// Y a-t-il des recours à examiner ? Le volet ne s'offre que dans ce cas : un
+// onglet vide invite à un travail qui n'existe pas.
+const mesQualARecours = () => (mesQualification().mesures || []).some((m) => m.recours_intente);
+
+const mesQualVolet = () => {
+    const vu = MES_STATE.qualVolet || 'infraction';
+    return vu === 'recours' && !mesQualARecours() ? 'infraction' : vu;
+};
+
+// Changer de volet relève d'abord la saisie en cours : passer aux mesures ne
+// doit pas perdre ce qui vient d'être tapé à la qualification.
+function mesQualVoirVolet(cle) {
+    mesMajQualification();
+    MES_STATE.qualVolet = cle;
+    mesQualRedessiner();
+}
+
+function mesQualOnglets() {
+    const vu = mesQualVolet();
+    const visibles = MES_QUAL_VOLETS.filter((v) => v.cle !== 'recours' || mesQualARecours());
+    return `<div class="mes-sous-onglets" role="tablist">${visibles.map((v) => `
+        <button type="button" role="tab" class="mes-sous-onglet${vu === v.cle ? ' actif' : ''}"
+                aria-selected="${vu === v.cle}"
+                onclick="mesQualVoirVolet('${_mesAttr(v.cle)}')">${_mesEsc(v.libelle)}${
+            v.cle === 'recours' ? ` <span class="mes-sous-onglet-compte">${
+                (mesQualification().mesures || []).filter((m) => m.recours_intente).length
+            }</span>` : ''}</button>`).join('')}</div>`;
+}
+
+// Le corps de l'étape : les onglets, puis les sections du volet regardé.
+function mesQualCorps() {
+    const vu = mesQualVolet();
+    const sections = vu === 'mesures' ? mesSectionMesuresArretees()
+        : (vu === 'recours' ? mesSectionRecours()
+            : [mesSectionCarence(), mesSectionRapportInvestigation(),
+                mesSectionInstance(), mesSectionQualification()].join(''));
+    return `${mesQualOnglets()}<div class="mes-sous-volet">${sections}</div>`;
+}
+
 // ── Section B — le rapport d'investigation ──
 // Il est repris tel que l'investigation l'a laissé, et le PDF donne
 // l'investigation entière : équipe, travaux, éléments collectés, synthèse.
@@ -596,13 +646,61 @@ async function mesRecoursTeleverser(i, genre, fichiers) {
 }
 
 function mesCollecterQualification() {
-    if (!document.getElementById('mesQualComite')) return null;
+    // L'étape se lit par volets : celui qui n'est pas affiché n'a pas de champs
+    // dans le document. Ce qu'il porte est repris de l'état plutôt que remis à
+    // zéro — changer d'onglet ne doit rien effacer.
+    const etatQ = mesQualification();
+    const surInfraction = !!document.getElementById('mesQualComite');
+    const surMesures = !!document.getElementById('mesQualMesures');
+    const surRecours = !!document.getElementById('mesRecoursBlocs');
+    if (!surInfraction && !surMesures && !surRecours) return null;
+
     const val = (racine, champ) => ((racine.querySelector(`[data-champ="${champ}"]`) || {}).value || '');
     const lignes = (sel) => [...document.querySelectorAll(sel)];
-    const coche = document.getElementById('mesQualConstituee');
-    const recours = mesCollecterRecours();
-    const etat = ((MES_STATE.traitement || {}).qualification || {}).mesures || [];
     const txt = (id) => (document.getElementById(id) || {}).value || '';
+    const etat = etatQ.mesures || [];
+    const recours = surRecours ? mesCollecterRecours() : null;
+
+    // Le recours d'une mesure : relevé du volet qui l'affiche, conservé sinon.
+    const recoursDe = (m, rang) => (recours
+        ? { recours_intente: !!recours.get(rang), recours: recours.get(rang) || null }
+        : { recours_intente: !!m.recours_intente, recours: m.recours || null });
+
+    const mesures = surMesures
+        ? lignes('#mesQualMesures .mes-bloc').map((b, rang) => {
+            const coche = (champ) => !!(b.querySelector(`[data-champ="${champ}"]`) || {}).checked;
+            const portee = coche('temporelle') ? 'temporelle'
+                : (coche('illimitee') ? 'illimitee' : (coche('sans_objet') ? 'sans_objet' : ''));
+            const avant = etat[rang] || {};
+            return {
+                categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
+                date_sanction: val(b, 'date_sanction'), portee,
+                suivi_requis: coche('suivi_requis'),
+                ...recoursDe(avant, rang),
+                // Marques posées par le serveur : elles font l'aller-retour
+                // sans être relues du corps de la requête.
+                statut_recours: avant.statut_recours || '',
+                version_precedente: avant.version_precedente || null,
+                // Durée et terme n'ont de sens que pour une sanction temporelle.
+                duree_valeur: portee === 'temporelle' ? Number(val(b, 'duree_valeur')) || 0 : 0,
+                duree_unite: portee === 'temporelle' ? (val(b, 'duree_unite') || 'jours') : '',
+                date_fin: portee === 'temporelle' ? val(b, 'date_fin') : '',
+                commentaire: val(b, 'commentaire'),
+            };
+        })
+        : etat.map((m, rang) => ({ ...m, ...recoursDe(m, rang) }));
+
+    const pieces = surMesures
+        ? lignes('#mesQualPieces .mes-preuve').map((r) => ({
+            nom: (r.querySelector('input') || {}).value || '', path: r.dataset.chemin || '',
+        }))
+        : (etatQ.pieces || []);
+
+    // Hors du volet « Qualification de l'infraction », l'instance et la
+    // qualification restent celles de l'état.
+    if (!surInfraction) return { ...etatQ, mesures, pieces };
+
+    const coche = document.getElementById('mesQualConstituee');
     return {
         comite_code: (document.getElementById('mesQualComite') || {}).value || '',
         membres: lignes('#mesQualMembres tbody tr[data-rang]').map((tr) => ({
@@ -619,31 +717,8 @@ function mesCollecterQualification() {
         nature: txt('mesQualNature'),
         caracterisation: txt('mesQualCaracterisation'),
         circonstances: txt('mesQualCirconstances'),
-        mesures: lignes('#mesQualMesures .mes-bloc').map((b, rang) => {
-            const coche = (champ) => !!(b.querySelector(`[data-champ="${champ}"]`) || {}).checked;
-            const portee = coche('temporelle') ? 'temporelle'
-                : (coche('illimitee') ? 'illimitee' : (coche('sans_objet') ? 'sans_objet' : ''));
-            return {
-                categorie: val(b, 'categorie'), type_mesure: val(b, 'type_mesure'),
-                date_sanction: val(b, 'date_sanction'), portee,
-                suivi_requis: coche('suivi_requis'),
-                // Le recours vit à la section F, et se recolle ici par le rang.
-                recours_intente: !!recours.get(rang),
-                recours: recours.get(rang) || null,
-                // Marques posées par le serveur : elles font l'aller-retour
-                // sans être relues du corps de la requête.
-                statut_recours: (etat[rang] || {}).statut_recours || '',
-                version_precedente: (etat[rang] || {}).version_precedente || null,
-                // Durée et terme n'ont de sens que pour une sanction temporelle.
-                duree_valeur: portee === 'temporelle' ? Number(val(b, 'duree_valeur')) || 0 : 0,
-                duree_unite: portee === 'temporelle' ? (val(b, 'duree_unite') || 'jours') : '',
-                date_fin: portee === 'temporelle' ? val(b, 'date_fin') : '',
-                commentaire: val(b, 'commentaire'),
-            };
-        }),
-        pieces: lignes('#mesQualPieces .mes-preuve').map((r) => ({
-            nom: (r.querySelector('input') || {}).value || '', path: r.dataset.chemin || '',
-        })),
+        mesures,
+        pieces,
     };
 }
 
@@ -920,6 +995,8 @@ Object.assign(window, {
     mesQualAjouterMesure, mesQualRetirerMesure, mesQualCategorieMesure, mesQualPorteeMesure,
     mesQualSuiviRequis, mesQualCloturer,
     mesSectionRecours, mesQualVersionPrecedente, mesCollecterRecours,
+    MES_QUAL_VOLETS, mesQualVolet, mesQualVoirVolet, mesQualOnglets, mesQualCorps,
+    mesQualARecours,
     mesRecoursAjouterMembre, mesRecoursRetirerMembre, mesRecoursRetirerPiece,
     mesRecoursDecision, mesRecoursTeleverser,
     mesQualDureeVersTerme, mesQualTermeVersDuree, mesAjouterDuree,

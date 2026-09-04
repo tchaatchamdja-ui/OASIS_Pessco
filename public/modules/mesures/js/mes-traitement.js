@@ -110,8 +110,24 @@ function mesFilAvancement() {
     return `
     <div class="mes-proc-barre">
         <div class="eval-steps mes-proc-fil">${etapes}</div>
-        <div class="mes-proc-actions">${mesActionsEtape()}</div>
+        <div class="mes-proc-actions">${mesEtatEtape()}${mesActionsEtape()}</div>
     </div>`;
+}
+
+// L'état de l'étape regardée, en PDF. Un vrai lien, comme ceux des listes : un
+// enregistrement lancé par script serait écarté sans bruit une fois l'attente
+// du serveur passée, et le rendu d'un document prend quelques secondes.
+// Il précède les actions : il se consulte à tout moment, y compris sur une
+// étape close, quand les actions ne s'offrent plus.
+function mesEtatEtape() {
+    const c = MES_STATE.carenceEnCours;
+    if (!c || !MES_STATE.traitement) return '';
+    const etape = mesEtapeCourante();
+    const libelle = (MES_ETAPES.find((e) => e.cle === etape) || {}).libelle || '';
+    const url = `${MES_API}/constatations/${encodeURIComponent(c.id)}/etapes/${etape}.pdf`;
+    return `<a class="btn btn-sm mes-btn-export" download href="${_mesAttr(url)}"
+        title="${_mesAttr(`Télécharge l’étape « ${libelle} » en PDF, avec tous ses éléments`)}"
+        >${typeof MES_ICONES_ETAT === 'object' ? MES_ICONES_ETAT.pdf : ''} PDF</a>`;
 }
 
 // Actions de l'étape regardée. Sur « Suite à donner » : enregistrer ce qui a
@@ -815,7 +831,7 @@ async function mesPrendreDecision(decision) {
 // le poser dans mes-app.js, chargé avant, l'aurait fait échouer au chargement.
 Object.assign(window, {
     MES_ETAPES, MES_DECISIONS,
-    mesVoirEtape, mesFilAvancement, mesBarreInferieure,
+    mesVoirEtape, mesFilAvancement, mesBarreInferieure, mesEtatEtape,
     mesConfirmerEtape, mesConfirmationCocher, mesConfirmationRepondre,
     mesTeleverserPieceTraitement, mesRetirerPieceTraitement,
     mesEnregistrerTraitement, mesPrendreDecision,

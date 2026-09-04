@@ -13,6 +13,7 @@ const multipart = require('../../multipart');
 const pdf = require('../../pdf');
 const rapport = require('./rapport-investigation');
 const exports_ = require('./exports');
+const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
 
@@ -288,11 +289,14 @@ module.exports = function register(app, deps, M) {
   // Constatations sur lesquelles une mesure peut être prise. Le module
   // Exécution les fournit ; il en donne aussi la criticité, dont dépend
   // l'écran « Constatations Critiques ».
+  // Une carence désigne son prestataire par son identifiant : le nom se lit au
+  // référentiel. L'écran le reconstituait de son côté, ce que ni l'état exporté
+  // ni le document d'étape ne pouvaient faire — d'où cette résolution commune.
+  const nomPrestataire = (id) => ((refs().prestataires || [])
+    .find((p) => p.id === id) || {}).nom || '';
+
   const listeCarences = () => {
     const mesures = db.list('mesures');
-    // Le nom du prestataire est résolu ici, une fois pour toutes : l'écran le
-    // reconstituait de son côté, l'état exporté ne le pouvait pas — la colonne
-    // y restait vide alors que l'écran la remplissait.
     const parId = new Map((refs().prestataires || []).map((p) => [p.id, p.nom]));
     const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
     // Étape du traitement, servie avec la carence : l'écran y lit le libellé
@@ -557,6 +561,41 @@ module.exports = function register(app, deps, M) {
     } catch (e) {
       return res.status(500).json({ error: e.message || 'Rendu du rapport impossible' });
     }
+  });
+
+  // Chaque étape du fil se transmet et s'archive telle qu'elle a été
+  // renseignée. Le document est composé à la demande : rien n'est stocké, il
+  // suit toujours l'état du dossier.
+  app.get(`${M}/constatations/:id/etapes/:cle.pdf`, requireAuth, async (req, res) => {
+    const c = constatations().find((x) => x.id === req.params.id);
+    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!R.canRead(req.user, perimetre(c))) return refuser(res);
+    const cle = String(req.params.cle || '');
+    if (!etapePdf.ETAPES[cle]) return res.status(404).json({ error: 'Étape inconnue' });
+    const t = traitementDe(c.id);
+    if (!t) return res.status(404).json({ error: 'Aucun traitement ouvert sur cette carence' });
+    const libelle = (coll, code) => (db.list(coll).find((x) => x.code === code) || {}).libelle
+      || String(code || '');
+    const cfg = deps.loadConfig ? deps.loadConfig() : {};
+    const html = etapePdf.html({
+      etape: cle,
+      carence: { ...c, prestataire_nom: nomPrestataire(c.prestataire_id) || c.prestataire_nom || '' },
+      traitement: t,
+      mesures: db.list('mesures')
+        .filter((m) => m.constatation_id === c.id)
+        .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || ''))),
+      pac: pacDe(c.id),
+      aac: (cfg && cfg.aac) || {},
+      // Les types d'investigation et de mesure ne partagent pas leur registre :
+      // l'étape dit lequel elle nomme.
+      libelleType: cle === 'investigations'
+        ? (code) => libelle('types_investigation', code)
+        : (code) => libelle('types', code),
+      libelleCategorie: (code) => libelle('categories', code),
+      libelleComite: (code) => libelle('comites', code),
+    });
+    const nom = `${cle}-${String(c.reference || c.id).replace(/[^\w.-]+/g, '_')}.pdf`;
+    return envoyerPdf(res, html, nom);
   });
 
   // ── Qualification et mesures ──

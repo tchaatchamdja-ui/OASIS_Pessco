@@ -406,6 +406,19 @@
     display: flex; gap: .3rem; align-items: stretch; justify-content: center;
 }
 .mes-actions-duo .mes-btn-icone { width: auto; flex: 0 0 auto; }
+/* Colonne d'actions d'une carence : le bouton d'étape et la mention qui le
+   suit d'un côté, la pile d'icônes de l'autre. La mention se centre sur le
+   bouton — la centrer sur la cellule la décalait, le bouton étant lui-même
+   poussé à gauche par les icônes. */
+.mes-actions-rangee { display: flex; gap: .3rem; align-items: flex-start; justify-content: center; }
+.mes-actions-colonne {
+    display: flex; flex-direction: column; align-items: center; gap: .2rem; min-width: 0;
+}
+.mes-actions-colonne .btn { width: 100%; }
+.mes-actions-icones-col {
+    display: flex; flex-direction: column; gap: .25rem; flex: 0 0 auto;
+}
+.mes-actions-icones-col .mes-btn-icone { width: auto; }
 
 /* ── Volet latéral (formulaire de mesure) ──
    Même comportement que le volet du module Exécution : superposition sombre,

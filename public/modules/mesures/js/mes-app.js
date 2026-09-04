@@ -975,13 +975,20 @@ function mesLignesCritiques() {
             <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
             <td class="mes-actions">
               <div class="mes-actions-pile">
-                <span class="mes-actions-duo">
+                <div class="mes-actions-rangee">
+                  <span class="mes-actions-colonne">
                     ${mesBoutonTraitement(c)}
+                    ${mesEtatSousMesure(c)}
+                  </span>
+                  <span class="mes-actions-icones-col">
                     <button class="btn btn-outline btn-sm mes-btn-icone"
                             title="Historique du traitement"
                             onclick="mesHistorique('${c.id}')">${MES_ICONES_ETAT.clock}</button>
-                </span>
-                ${mesEtatSousMesure(c)}
+                    ${c.mesures_liees ? `<button class="btn btn-outline btn-sm mes-btn-icone"
+                            title="Voir les ${c.mesures_liees} mesure(s) prise(s) sur cette carence"
+                            onclick="mesMesuresDeCarence('${c.id}')">${MES_ICONS.shield}</button>` : ''}
+                  </span>
+                </div>
                 ${c.classee
                     ? `<span class="mes-badge cloturee" title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
                 ${c.origine === 'CARE' && mesPeutEcrire() ? `<span class="mes-actions-icones">

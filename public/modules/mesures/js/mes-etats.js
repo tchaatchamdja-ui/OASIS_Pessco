@@ -269,8 +269,84 @@ function mesFermerHistorique() {
     if (el) el.innerHTML = '';
 }
 
+// ══════════════════════════════════════
+//  Mesures prises sur une carence
+// ══════════════════════════════════════
+// Le menu Carences dit combien de mesures une carence a values ; il ne disait
+// pas lesquelles. Ce volet les montre là où la question se pose, sans quitter
+// la liste ni ouvrir le dossier de traitement.
+
+function mesMesuresDeCarence(constatationId) {
+    const c = (MES_STATE.data.constatations || []).find((x) => x.id === constatationId);
+    if (!c) return;
+    const liees = (MES_STATE.data.mesures || [])
+        .filter((m) => m.constatation_id === constatationId)
+        .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || '')));
+
+    const portee = (m) => {
+        const nom = { temporelle: 'Limitée dans le temps', illimitee: 'Illimitée', sans_objet: 'Sans objet' }[m.portee];
+        if (!nom) return '';
+        const duree = m.portee === 'temporelle' && m.duree_valeur
+            ? ` · ${m.duree_valeur} ${m.duree_unite || 'jours'}` : '';
+        return `${nom}${duree}`;
+    };
+
+    const blocs = liees.map((m) => {
+        const suivi = MES_SUIVI[mesStatutSuivi(m)] || {};
+        return `<div class="mes-bloc">
+            <div class="mes-bloc-entete">
+                <span class="mes-bloc-titre">${_mesEsc(m.reference || 'Mesure')}</span>
+                <span class="mes-badge ${_mesAttr(suivi.classe || '')}"
+                      title="${_mesAttr(suivi.aide || '')}">${_mesEsc(suivi.libelle || '—')}</span>
+            </div>
+            <div class="mes-bloc-corps">
+                <dl style="margin:0;">
+                    ${mesLigneFiche('Catégorie', mesLibelleCategorie(m.categorie))}
+                    ${mesLigneFiche('Type', mesLibelleType(m.type_mesure))}
+                    ${mesLigneFiche('Date de sanction', mesDate(m.date_sanction || m.date_emission))}
+                    ${mesLigneFiche('Portée', portee(m))}
+                    ${mesLigneFiche('Échéance', mesDate(m.date_echeance))}
+                </dl>
+                <div class="mes-champ" style="margin:.5rem 0 0;">
+                    <label>Description de la sanction</label>
+                    <div class="mes-lecture">${m.description ? _mesEsc(m.description)
+            : '<span class="mes-preuve-vide">—</span>'}</div>
+                </div>
+                ${m.suivi_commentaire ? `<div class="mes-champ" style="margin:.5rem 0 0;">
+                    <label>Commentaire de suivi</label>
+                    <div class="mes-lecture">${_mesEsc(m.suivi_commentaire)}</div>
+                </div>` : ''}
+                <button class="btn btn-outline btn-sm" style="margin-top:.6rem;"
+                        onclick="mesFermerHistorique();mesFaireLeSuivi('${m.id}')">
+                    ${MES_ICONS.check} Ouvrir le suivi</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    const el = document.getElementById('mesModalRoot');
+    if (!el) return;
+    el.innerHTML = `
+    <div class="mes-modal-fond mes-histo-fond" onclick="mesFermerHistorique()">
+        <div class="mes-volet-histo" onclick="event.stopPropagation();">
+            <div class="mes-modal-header">
+                <span style="flex:1;">${MES_ICONS.shield} Mesures prises sur cette carence</span>
+                <button class="btn btn-outline btn-sm mes-btn-icone"
+                        onclick="mesFermerHistorique()">${MES_ICONS.close}</button>
+            </div>
+            <div class="mes-modal-body">
+                <div class="mes-histo-entete">
+                    <div class="mes-histo-objet">${_mesEsc(c.titre || c.reference || '—')}</div>
+                    <div class="mes-histo-meta">${_mesEsc(c.reference || '')}${
+    c.prestataire_nom ? ` · ${_mesEsc(c.prestataire_nom)}` : ''} · ${liees.length} mesure(s)</div>
+                </div>
+                ${blocs || '<p class="mes-preuve-vide">Aucune mesure n’est rattachée à cette carence.</p>'}
+            </div>
+        </div>
+    </div>`;
+}
+
 Object.assign(window, {
     MES_ICONES_ETAT, MES_EXPORTS, mesBoutonsExport, mesUrlExport, mesMajLiensExport,
     mesParametresCarences, mesParametresMesures,
-    mesHistorique, mesFermerHistorique, mesHistoriqueEtapes,
+    mesHistorique, mesFermerHistorique, mesHistoriqueEtapes, mesMesuresDeCarence,
 });

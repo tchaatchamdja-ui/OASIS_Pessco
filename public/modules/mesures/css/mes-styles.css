@@ -188,9 +188,12 @@
 .mes-exports { display: inline-flex; gap: .35rem; }
 /* Les deux états portent la couleur du thème : ce sont des actions de
    l'application, non des retraits. */
+/* Ce sont des liens : sans hauteur de ligne imposée, ils dépassent de deux
+   pixels le bouton qui les jouxte. */
 .mes-btn-export {
     display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
     background: var(--primary); border: 1px solid var(--primary); color: #fff;
+    line-height: 1.2; text-decoration: none;
 }
 .mes-btn-export:hover { background: var(--primary-dark, var(--primary)); filter: brightness(1.12); }
 

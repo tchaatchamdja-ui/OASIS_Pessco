@@ -157,10 +157,25 @@ module.exports = function register(app, deps, M) {
       // sérialiserait en JSON.
       const octets = await pdf.depuisHtml(html);
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${nom}"`);
+      res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
       return res.send(Buffer.from(octets));
     } catch (e) {
-      return res.status(503).json({ error: String((e && e.message) || e) });
+      // L'état se demande par un lien : le navigateur affichera ce que la
+      // route rend. Un objet JSON y serait illisible — d'où cette page.
+      const motif = String((e && e.message) || e)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      res.status(503).type('html');
+      return res.send(`<!doctype html><html lang="fr"><head><meta charset="utf-8">
+        <title>État indisponible</title><style>
+          body { font-family: system-ui, sans-serif; margin: 3rem auto; max-width: 34rem;
+                 color: #0f172a; line-height: 1.5; }
+          h1 { font-size: 1.1rem; } code { background: #f1f5f9; padding: .1rem .3rem; }
+        </style></head><body>
+        <h1>L’état PDF n’a pas pu être produit</h1>
+        <p>Le moteur de rendu a refusé la demande :</p>
+        <p><code>${motif}</code></p>
+        <p>L’export Excel du même écran reste disponible.</p>
+        </body></html>`);
     }
   };
   const jour = () => db.now().slice(0, 10);

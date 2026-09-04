@@ -48,49 +48,43 @@ const mesParametresMesures = () => {
     }).filter((x) => x[1])).toString();
 };
 
-// Deux boutons de même facture : le classeur pour retraiter, le document pour
-// transmettre. Ils portent leur format en toutes lettres — une icône seule
-// laisse deviner lequel est lequel.
-function mesBoutonsExport(base, parametres) {
+// Deux liens de même facture : le classeur pour retraiter, le document pour
+// transmettre. Ce sont de vrais liens, non des téléchargements lancés par
+// script : un navigateur écarte sans bruit un enregistrement dont le geste de
+// l'utilisateur n'est plus « frais », et l'attente du serveur suffit à
+// l'épuiser — le rendu d'un PDF prend quelques secondes. Un lien n'a pas cette
+// fragilité, et la réponse porte « Content-Disposition: attachment », qui dit
+// au navigateur d'enregistrer plutôt que d'ouvrir.
+const MES_EXPORTS = {
+    constatations: 'mesParametresCarences',
+    mesures: 'mesParametresMesures',
+};
+
+function mesUrlExport(base, format) {
+    const fabrique = window[MES_EXPORTS[base]];
+    const requete = typeof fabrique === 'function' ? fabrique() : '';
+    return `${MES_API}/${base}/export.${format}${requete ? `?${requete}` : ''}`;
+}
+
+function mesBoutonsExport(base) {
+    const lien = (format, icone, libelle, aide) => `<a class="btn btn-sm mes-btn-export" download
+        data-export="${_mesAttr(base)}" data-format="${format}"
+        href="${_mesAttr(mesUrlExport(base, format))}"
+        title="${_mesAttr(aide)}">${icone} ${libelle}</a>`;
     return `<div class="mes-exports">
-        <button class="btn btn-outline btn-sm mes-btn-export"
-                title="Classeur Excel des lignes affichées, filtres compris"
-                onclick="mesExporter('${_mesAttr(base)}', 'xlsx', ${parametres})">
-            ${MES_ICONES_ETAT.excel} Excel</button>
-        <button class="btn btn-outline btn-sm mes-btn-export"
-                title="Document PDF des lignes affichées, filtres compris"
-                onclick="mesExporter('${_mesAttr(base)}', 'pdf', ${parametres})">
-            ${MES_ICONES_ETAT.pdf} PDF</button>
+        ${lien('xlsx', MES_ICONES_ETAT.excel, 'Excel',
+            'Classeur Excel des lignes affichées, filtres compris')}
+        ${lien('pdf', MES_ICONES_ETAT.pdf, 'PDF',
+            'Document PDF des lignes affichées, filtres compris')}
     </div>`;
 }
 
-// Le classeur passe par un blob : l'attribut `download` d'un lien ne suffit
-// pas dans l'iframe du portail, et la requête doit porter la session.
-async function mesExporter(base, format, parametres) {
-    const requete = typeof parametres === 'function' ? parametres() : (parametres || '');
-    const url = `${MES_API}/${base}/export.${format}${requete ? `?${requete}` : ''}`;
-    try {
-        const r = await fetch(url, { credentials: 'same-origin' });
-        if (!r.ok) {
-            let motif = `Export impossible (${r.status})`;
-            try { motif = (await r.json()).error || motif; } catch { /* réponse non JSON */ }
-            throw new Error(motif);
-        }
-        const blob = await r.blob();
-        const lien = document.createElement('a');
-        lien.href = URL.createObjectURL(blob);
-        lien.download = (r.headers.get('Content-Disposition') || '')
-            .split('filename=').pop().replace(/"/g, '').trim()
-            || `export.${format}`;
-        document.body.appendChild(lien);
-        lien.click();
-        lien.remove();
-        // Le navigateur a besoin du lien le temps du téléchargement.
-        setTimeout(() => URL.revokeObjectURL(lien.href), 30000);
-        mesToast(format === 'pdf' ? 'Document PDF téléchargé' : 'Classeur Excel téléchargé');
-    } catch (e) {
-        mesToast(e.message || 'Export impossible', 'error');
-    }
+// La recherche ne redessine que le corps de la table : sans cela, l'adresse
+// des liens resterait celle d'avant la frappe.
+function mesMajLiensExport() {
+    document.querySelectorAll('a[data-export]').forEach((a) => {
+        a.href = mesUrlExport(a.dataset.export, a.dataset.format);
+    });
 }
 
 // ══════════════════════════════════════
@@ -276,7 +270,7 @@ function mesFermerHistorique() {
 }
 
 Object.assign(window, {
-    MES_ICONES_ETAT, mesBoutonsExport, mesExporter,
+    MES_ICONES_ETAT, MES_EXPORTS, mesBoutonsExport, mesUrlExport, mesMajLiensExport,
     mesParametresCarences, mesParametresMesures,
     mesHistorique, mesFermerHistorique, mesHistoriqueEtapes,
 });

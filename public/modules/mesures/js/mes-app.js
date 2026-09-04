@@ -419,6 +419,7 @@ function mesRechercher(cle, valeur) {
     if (!corps) { mesRenderPage(); return; }
     corps.innerHTML = corps.dataset.corps === 'mesures'
         ? mesLignesMesures() : mesLignesCritiques();
+    if (typeof mesMajLiensExport === 'function') mesMajLiensExport();
 }
 
 // Remises à zéro, écran par écran : chacun ne relâche que ses propres filtres.
@@ -837,7 +838,7 @@ function mesRenderMesures() {
     return `
     <div class="mes-page-header">
         <h2>Mesures</h2>
-        ${mesBoutonsExport('mesures', 'mesParametresMesures')}
+        ${mesBoutonsExport('mesures')}
     </div>
     <div class="mes-action-bar">
         <div class="mes-filtres">
@@ -1003,7 +1004,7 @@ function mesRenderCritiques() {
             ${mesPeutEcrire()
                 ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirConstat()">
                        ${MES_ICONS.add} Ajouter une Carence</button>` : ''}
-            ${mesBoutonsExport('constatations', 'mesParametresCarences')}
+            ${mesBoutonsExport('constatations')}
         </div>
     </div>
     <div class="mes-action-bar">

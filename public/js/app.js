@@ -330,8 +330,15 @@ function majBandeauInstance() {
   if (!zone) return;
   const vue = ME.instance_vue || {};
   if (!vue.disponible || !(vue.instances || []).length) {
+    // L'instance du compte, non celle installée ici : le super-administrateur
+    // national du Togo travaille au Togo, quel que soit l'État sur lequel le
+    // déploiement a été posé. Le bigramme suit l'AAC de cette instance ; une
+    // instance qu'on n'a pas encore renseignée n'en a pas, et le nom suffit.
+    const etat = vue.courante || ME.instance.etat;
+    const code = (ME.aac && ME.aac.bigramme)
+      || (etat === ME.instance.etat ? ME.instance.codeEtat : '');
     zone.className = 'portal-header-instance';
-    zone.textContent = `${ME.instance.etat} (${ME.instance.codeEtat})`;
+    zone.textContent = code ? `${etat} (${code})` : etat;
     return;
   }
   const options = [{ valeur: '', libelle: PORTAIL_VUE_REGIONALE }]
@@ -489,6 +496,17 @@ const USER_TABS = [
   { id: 'INDEPENDANT', label: 'Utilisateurs Indépendants', icon: 'userPlus' },
 ];
 const PRESTA_TABS = ['ADMIN_PRESTATAIRE', 'PRESTATAIRE'];
+
+// ── Deux portées de super-administration ──
+// Le régional administre toutes les instances et passe de l'une à l'autre en
+// barre supérieure ; le national n'administre que la sienne. Un compte dont la
+// portée n'est pas déclarée est régional — c'est ce qu'étaient tous les
+// super-administrateurs avant que la distinction n'existe.
+const PORTEE_LABELS = { regionale: 'SuperAdmin régional', nationale: 'SuperAdmin national' };
+const porteeDe = (u) => (String((u || {}).portee || '') === 'nationale' ? 'nationale' : 'regionale');
+// Qui peut désigner la portée d'un autre : le régional seul.
+const jeSuisRegional = () => ME.user.role === 'SUPERADMIN'
+  && porteeDe(ME.user) === 'regionale';
 let USER_TAB = 'SUPERADMIN';
 let USER_COLLAPSED = false;
 
@@ -557,11 +575,18 @@ async function renderUsers() {
           ? `<td><select class="shell-input shell-input-sm" data-presta="${esc(u.username)}"><option value="">—</option>${prestataires.map((p) => `<option value="${esc(p.id)}" ${u.prestataire_id === p.id ? 'selected' : ''}>${esc(p.nom)}</option>`).join('')}</select></td>`
           : `<td>${esc(prestaName(u.prestataire_id)) || '<span style="color:var(--text-muted);">—</span>'}</td>`;
       }
+      // L'onglet SuperAdmin dit la portée de chacun, et l'instance qu'un
+      // national administre : c'est ce qui les distingue.
+      const porteeCell = USER_TAB === 'SUPERADMIN'
+        ? `<td><span class="shell-badge ${porteeDe(u) === 'regionale' ? 'badge-active' : 'badge-neutral'}">${esc(PORTEE_LABELS[porteeDe(u)])}</span>${
+          porteeDe(u) === 'nationale' ? `<div style="font-size:.72rem;color:var(--text-muted);margin-top:.15rem;">${esc(u.instance || ME.instance.etat)}</div>` : ''}</td>`
+        : '';
       return `
       <tr class="${u.active ? '' : 'row-inactive'}">
         <td>${esc(nm.nom)}</td>
         <td>${esc(nm.prenom) || '<span style="color:var(--text-muted);">—</span>'}</td>
         <td><strong>${esc(u.email || u.username)}</strong></td>
+        ${porteeCell}
         ${prestaCell}
         <td>${modCell}</td>
         <td>${badges.join(' ')}</td>
@@ -591,10 +616,10 @@ async function renderUsers() {
         <div class="shell-table-container">
           <table class="shell-table">
             <thead><tr>
-              <th>Nom</th><th>Prénoms</th><th>Email (identifiant)</th>${isPresta ? '<th>Prestataire</th>' : ''}<th>Accès aux Modules</th>
+              <th>Nom</th><th>Prénoms</th><th>Email (identifiant)</th>${USER_TAB === 'SUPERADMIN' ? '<th>Portée</th>' : ''}${isPresta ? '<th>Prestataire</th>' : ''}<th>Accès aux Modules</th>
               <th>${esc(t('users_col_status'))}</th><th>${esc(t('users_col_created'))}</th><th>${esc(t('users_col_actions'))}</th>
             </tr></thead>
-            <tbody>${rows || `<tr><td colspan="${isPresta ? 8 : 7}" style="color:var(--text-muted);">Aucun utilisateur dans cette catégorie.</td></tr>`}</tbody>
+            <tbody>${rows || `<tr><td colspan="${7 + (isPresta ? 1 : 0) + (USER_TAB === 'SUPERADMIN' ? 1 : 0)}" style="color:var(--text-muted);">Aucun utilisateur dans cette catégorie.</td></tr>`}</tbody>
           </table>
         </div>
       </div>
@@ -686,6 +711,7 @@ function showEditUserModal(u) {
             <select class="shell-input" id="euRole">${USER_TABS.map((tb) => `<option value="${tb.id}" ${userRole(u) === tb.id ? 'selected' : ''}>${esc(tb.label)}</option>`).join('')}</select>
           </div>
         </div>
+        ${porteeFieldsHtml('eu', u)}
         <div class="shell-form-group" style="margin-bottom:.5rem;">
           <label>Email (identifiant de connexion)</label>
           <input class="shell-input" type="email" id="euEmail" value="${esc(u.email || u.username)}">
@@ -701,6 +727,7 @@ function showEditUserModal(u) {
       </div>
     </div>
   </div>`;
+  brancherPortee('eu', document.getElementById('euRole'));
   const orig = (u.email || u.username);
   document.getElementById('euEmail').addEventListener('input', (e) => {
     document.getElementById('euAdminPwdWrap').style.display = e.target.value.trim().toLowerCase() !== orig ? 'block' : 'none';
@@ -714,6 +741,8 @@ window.submitEditUser = async function (username) {
     prenom: document.getElementById('euPrenom').value.trim(),
     telephone: phoneFieldValue('euTel'),
     role: document.getElementById('euRole').value,
+    portee: document.getElementById('euPortee') ? document.getElementById('euPortee').value : '',
+    instance: document.getElementById('euInstance') ? document.getElementById('euInstance').value : '',
     email: document.getElementById('euEmail').value.trim(),
     adminPassword: document.getElementById('euAdminPwd') ? document.getElementById('euAdminPwd').value : '',
   };
@@ -732,6 +761,48 @@ window.submitEditUser = async function (username) {
 };
 
 window.closeUserModal = function () { document.getElementById('userModalRoot').innerHTML = ''; };
+
+// Bloc « portée de super-administration », commun aux deux formulaires. Il ne
+// s'affiche qu'au régional — lui seul désigne les autres — et seulement quand
+// le rôle retenu est SuperAdmin. L'instance n'est demandée que pour un
+// national : le régional les administre toutes.
+function porteeFieldsHtml(prefixe, u) {
+  if (!jeSuisRegional()) return '';
+  const p = porteeDe(u);
+  const inst = (u && u.instance) || (ME.instance_vue || {}).courante || ME.instance.etat;
+  const listeInst = ((ME.instance_vue || {}).instances) || [];
+  return `
+  <div id="${prefixe}PorteeWrap" style="display:none;">
+    <div class="shell-form-group" style="margin-bottom:1rem;">
+      <label>Portée de la super-administration</label>
+      <select class="shell-input" id="${prefixe}Portee">
+        <option value="regionale" ${p === 'regionale' ? 'selected' : ''}>SuperAdmin régional — administre toutes les instances</option>
+        <option value="nationale" ${p === 'nationale' ? 'selected' : ''}>SuperAdmin national — administre une seule instance</option>
+      </select>
+    </div>
+    <div class="shell-form-group" id="${prefixe}InstanceWrap" style="margin-bottom:1rem;">
+      <label>Instance administrée</label>
+      <select class="shell-input" id="${prefixe}Instance">
+        ${listeInst.map((e) => `<option value="${esc(e)}" ${e === inst ? 'selected' : ''}>${esc(e)}</option>`).join('')}
+      </select>
+    </div>
+  </div>`;
+}
+
+// Le bloc suit le rôle choisi, et l'instance ne se demande qu'au national.
+function brancherPortee(prefixe, selectRole) {
+  const wrap = document.getElementById(`${prefixe}PorteeWrap`);
+  if (!wrap) return;
+  const sel = document.getElementById(`${prefixe}Portee`);
+  const instWrap = document.getElementById(`${prefixe}InstanceWrap`);
+  const majAffichage = () => {
+    wrap.style.display = selectRole.value === 'SUPERADMIN' ? '' : 'none';
+    instWrap.style.display = sel.value === 'nationale' ? '' : 'none';
+  };
+  selectRole.addEventListener('change', majAffichage);
+  sel.addEventListener('change', majAffichage);
+  majAffichage();
+}
 
 function showNewUserModal() {
   const root = document.getElementById('userModalRoot');
@@ -754,6 +825,7 @@ function showNewUserModal() {
             ${USER_TABS.map((tb) => `<option value="${tb.id}" ${tb.id === USER_TAB ? 'selected' : ''}>${esc(tb.label)}</option>`).join('')}
           </select>
         </div>
+        ${porteeFieldsHtml('nu', null)}
         <div class="shell-form-group" id="nuPrestaWrap" style="margin-bottom:1rem;${PRESTA_TABS.includes(USER_TAB) ? '' : 'display:none;'}">
           <label>Prestataire de provenance</label>
           <select class="shell-input" id="nuPresta"><option value="">—</option>${(REFS.prestataires || []).map((p) => `<option value="${esc(p.id)}">${esc(p.nom)}</option>`).join('')}</select>
@@ -777,6 +849,7 @@ function showNewUserModal() {
   document.getElementById('nuRole').addEventListener('change', (e) => {
     document.getElementById('nuPrestaWrap').style.display = PRESTA_TABS.includes(e.target.value) ? '' : 'none';
   });
+  brancherPortee('nu', document.getElementById('nuRole'));
   document.getElementById('createUser').addEventListener('click', async () => {
     const res = await api('/api/users', {
       method: 'POST',
@@ -786,6 +859,8 @@ function showNewUserModal() {
         prenom: document.getElementById('nuPrenom').value.trim(),
         email: document.getElementById('nuEmail').value.trim(),
         role: document.getElementById('nuRole').value,
+        portee: document.getElementById('nuPortee') ? document.getElementById('nuPortee').value : '',
+        instance: document.getElementById('nuInstance') ? document.getElementById('nuInstance').value : '',
         prestataire_id: document.getElementById('nuPresta').value,
         modules: [...document.querySelectorAll('#userModalRoot [data-newmod]:checked')].map((c) => c.dataset.newmod),
       }),

@@ -107,8 +107,8 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/instance`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
-    if (reel.role !== 'SUPERADMIN') {
-      return refuser(res, 'Choix de l’instance réservé au super-administrateur');
+    if (!instances.estRegional(reel)) {
+      return refuser(res, 'Choix de l’instance réservé au super-administrateur régional');
     }
     const demandee = texte((req.body || {}).instance);
     if (demandee && !instances.liste(loadConfig).includes(demandee)) {

@@ -291,7 +291,8 @@ app.get('/api/me', requireAuth, (req, res) => {
     // Instance regardée : le bandeau du portail en fait une liste déroulante.
     instance_vue: instances.etat(req.user, loadConfig),
     platform: req.cfg.platform,
-    aac: { sigle: aac.sigle || '', nom: aac.nom || '', logo: aac.logo || '' },
+    // Le bigramme sert au bandeau, qui nomme l'instance du compte.
+    aac: { sigle: aac.sigle || '', nom: aac.nom || '', bigramme: aac.bigramme || '', logo: aac.logo || '' },
   });
 });
 
@@ -303,6 +304,9 @@ app.get('/api/me', requireAuth, (req, res) => {
 app.get('/api/instance', requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
 
 app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  // Seul le super-administrateur régional change d'instance : le national
+  // n'administre que la sienne.
+  if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
   // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce que
   // les écrans serviront, il ne s'invente pas.
   const demandee = String((req.body || {}).instance || '').trim();
@@ -393,6 +397,33 @@ app.get('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res
   res.json(instances.filtrer(auth.getUsers(), retenue, loadConfig).map(auth.publicUser));
 });
 
+// Un compte ne s'administre que depuis son instance. Le super-administrateur
+// régional passe partout — c'est sa fonction ; les autres, y compris le
+// national et l'administrateur AAC, ne touchent qu'aux comptes de la leur. La
+// liste était déjà cloisonnée ; sans cette garde, un identifiant connu suffisait
+// à contourner le cloisonnement.
+function memeInstance(req, cible) {
+  if (instances.estRegional(req.user)) return true;
+  return instances.de(cible, loadConfig) === instances.courante(req.user, loadConfig);
+}
+
+// Instance à laquelle rattacher un compte : celle que le créateur regarde, ou
+// celle qu'un super-administrateur régional désigne expressément.
+function instanceVoulue(req) {
+  const demandee = String((req.body || {}).instance || '').trim();
+  if (demandee && instances.estRegional(req.user)
+      && instances.liste(loadConfig).includes(demandee)) return demandee;
+  return instances.courante(req.user, loadConfig);
+}
+
+// Portée d'un super-administrateur. Seul un régional en désigne un autre :
+// sans cette garde, un national se donnerait le dispositif entier.
+function porteeVoulue(req) {
+  const demandee = String((req.body || {}).portee || '').trim();
+  if (!instances.estRegional(req.user)) return 'nationale';
+  return instances.PORTEES.includes(demandee) ? demandee : 'nationale';
+}
+
 app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider({
   email: { type: 'texte', requis: true, max: 160 },
   nom: { type: 'texte', requis: true, max: 80 },
@@ -400,6 +431,10 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
   role: { type: 'texte', requis: true, max: 24 },
   modules: { type: 'liste', max: 20 },
   prestataire_id: { type: 'texte', max: 40 },
+  // Portée d'un super-administrateur, et instance qu'il administre. Le second
+  // n'est accepté que d'un régional : lui seul voit au-delà de la sienne.
+  portee: { type: 'texte', max: 12 },
+  instance: { type: 'texte', max: 60 },
 }), (req, res) => {
   const { nom, prenom, role, modules } = req.body || {};
   const username = String(req.body.email || '').trim().toLowerCase();
@@ -418,7 +453,11 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
     fullName: `${nom} ${prenom || ''}`.trim(),
     role,
     // L'AAC qui ouvre le compte le tient : c'est dans sa liste qu'il figurera.
-    instance: instances.courante(req.user, loadConfig),
+    // Un super-administrateur régional peut en désigner une autre — c'est ainsi
+    // qu'on nomme le super-administrateur national d'un État.
+    instance: instanceVoulue(req),
+    // Portée de super-administration ; sans objet pour les autres rôles.
+    ...(role === 'SUPERADMIN' ? { portee: porteeVoulue(req) } : {}),
     modules: Array.isArray(modules) ? modules : [],
     prestataire_id: String(req.body.prestataire_id || ''),
     salt,
@@ -444,6 +483,9 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
   const users = auth.getUsers();
   const user = users.find((u) => u.username === req.params.username);
   if (!user) return res.status(404).json({ error: 'not_found' });
+  // Hors de son instance, le compte est aussi introuvable qu'inexistant : le
+  // dire autrement révélerait qui existe ailleurs.
+  if (!memeInstance(req, user)) return res.status(404).json({ error: 'not_found' });
   const { action } = req.body || {};
   if (action === 'unlock') {
     user.locked = false;
@@ -493,8 +535,22 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
     for (const k of ['nom', 'prenom', 'telephone', 'fonction']) if (typeof b[k] === 'string') user[k] = b[k];
     if (typeof b.prestataire_id === 'string') user.prestataire_id = b.prestataire_id;
     if (auth.ROLES.includes(b.role)) user.role = b.role;
+    // Portée de super-administration et instance rattachée : seul un régional
+    // les désigne, et un compte qui n'est plus super-administrateur n'en garde
+    // pas la trace.
+    if (instances.estRegional(req.user)) {
+      if (user.role === 'SUPERADMIN' && instances.PORTEES.includes(String(b.portee || ''))) {
+        user.portee = String(b.portee);
+      } else if (user.role !== 'SUPERADMIN') {
+        delete user.portee;
+      }
+      const inst = String(b.instance || '').trim();
+      if (inst && instances.liste(loadConfig).includes(inst)) user.instance = inst;
+    }
     user.fullName = `${user.nom || ''} ${user.prenom || ''}`.trim() || user.fullName;
-    audit.log(req.user.username, 'UTILISATEUR_MODIFIE', { cible: user.username });
+    audit.log(req.user.username, 'UTILISATEUR_MODIFIE', {
+      cible: user.username, portee: user.portee || '', instance: user.instance || '',
+    });
   } else {
     return res.status(400).json({ error: 'invalid_action' });
   }
@@ -505,7 +561,7 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
 // Générer un équivalent dans la Liste du personnel de l'Administration (référentiel inspecteurs)
 app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
   const user = auth.findUser(req.params.username);
-  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (!user || !memeInstance(req, user)) return res.status(404).json({ error: 'not_found' });
   const em = (user.email || user.username).toLowerCase();
   const existing = (referentiels.getAll().inspecteurs || []).find((p) => (p.email || '').toLowerCase() === em);
   if (existing) return res.status(409).json({ error: 'exists' });

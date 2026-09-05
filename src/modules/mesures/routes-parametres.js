@@ -59,8 +59,8 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/instance`, requireAuth, (req, res) => res.json(etatInstances(req)));
 
   app.put(`${M}/instance`, requireAuth, (req, res) => {
-    if (req.user.role !== 'SUPERADMIN') {
-      return refuser(res, 'Choix de l’instance réservé au super-administrateur');
+    if (!instances.estRegional(req.user)) {
+      return refuser(res, 'Choix de l’instance réservé au super-administrateur régional');
     }
     // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
     // que les écrans serviront, il ne s'invente pas.

@@ -58,12 +58,34 @@ function choisie(username, loadConfig) {
   return String(tous[username] || '');
 }
 
-// Instance sous laquelle une requête travaille. Seul le super-administrateur
-// change de poste ; pour tout autre compte c'est l'instance locale, sans
-// exception — le choix ne lui est pas offert, il ne saurait donc l'avoir fait,
-// quoi qu'un enregistrement resté là raconte.
-const courante = (user, loadConfig) => (!user || user.role !== 'SUPERADMIN'
-  ? locale(loadConfig) : choisie(user.username, loadConfig));
+// ── Deux portées de super-administration ──
+// Le super-administrateur régional administre le dispositif entier : c'est lui
+// qui prend le poste d'une instance en barre supérieure, ou les regarde toutes.
+// Le super-administrateur national n'administre que la sienne — celle de son
+// compte — et n'a donc aucun choix à faire : la barre se contente de la nommer.
+//
+// Un compte dont la portée n'est pas déclarée est régional. C'est ce qu'était
+// tout super-administrateur avant que la distinction n'existe ; le rendre
+// national d'office enfermerait le seul compte capable de désigner les autres.
+const PORTEES = ['regionale', 'nationale'];
+
+const portee = (user) => (String((user || {}).portee || '') === 'nationale'
+  ? 'nationale' : 'regionale');
+
+const estSuperadmin = (user) => !!user && user.role === 'SUPERADMIN';
+
+// Qui peut changer d'instance, et lui seul.
+const estRegional = (user) => estSuperadmin(user) && portee(user) === 'regionale';
+
+// Instance sous laquelle une requête travaille.
+//   — super-administrateur régional : celle qu'il a prise en barre supérieure,
+//     à défaut l'instance installée ici ; vide, c'est la vue régionale ;
+//   — tout autre compte, super-administrateur national compris : celle de son
+//     propre compte. Le choix ne lui est pas offert, il ne saurait donc l'avoir
+//     fait, quoi qu'un enregistrement resté là raconte.
+const courante = (user, loadConfig) => (estRegional(user)
+  ? choisie(user.username, loadConfig)
+  : (String((user || {}).instance || '') || locale(loadConfig)));
 
 function definir(username, valeur) {
   const v = String(valeur || '');
@@ -179,16 +201,20 @@ function visibles(rangs, coll, user, loadConfig) {
 // Ce que la barre supérieure a besoin de savoir. Les instances ne sont servies
 // qu'à qui peut en changer : les autres comptes lisent la leur.
 const etat = (user, loadConfig) => {
-  const superadmin = !!user && user.role === 'SUPERADMIN';
+  const regional = estRegional(user);
   return {
-    disponible: superadmin,
+    disponible: regional,
+    // Portée du compte, pour que l'écran des utilisateurs la montre et que la
+    // barre sache s'il y a un choix à offrir.
+    portee: estSuperadmin(user) ? portee(user) : '',
     locale: locale(loadConfig),
     courante: courante(user, loadConfig),
-    instances: superadmin ? liste(loadConfig) : [],
+    instances: regional ? liste(loadConfig) : [],
   };
 };
 
 module.exports = {
   locale, liste, courante, definir, de, filtrer, refs, visibles, etat,
   aac, aacDe, definirAac, CHAMPS_AAC,
+  PORTEES, portee, estSuperadmin, estRegional,
 };

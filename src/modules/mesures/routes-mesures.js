@@ -16,7 +16,7 @@ const exports_ = require('./exports');
 const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
-const instances = require('./instances');
+const instances = require('../../instances');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.

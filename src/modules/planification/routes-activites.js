@@ -4,9 +4,15 @@
 const { valider } = require('../../valider');
 const db = require('./store');
 const D = require('./domaine');
+const instances = require('../../instances');
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
+
+  // Instance regardée : le calendrier ne montre que les activités de
+  // l'instance dont on tient le poste ; en vue régionale, toutes.
+  const parInstance = (req, rangs) => instances.filtrer(rangs,
+    instances.courante(req.user, loadConfig), loadConfig);
 
   app.get(`${M}/plans/:id/activites`, requireAuth, (req, res) => {
     const plan = D.planDe(req.params.id);
@@ -16,8 +22,12 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/plans/:id/activites`, requireAuth, valider(D.SCHEMA_ACTIVITE), (req, res) => {
-    if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
-    return res.json(db.createIn('activites', { ...req.valide, plan_id: req.params.id }));
+    const plan = D.planDe(req.params.id);
+    if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
+    // L'activité appartient à l'instance de son plan.
+    return res.json(db.createIn('activites', {
+      ...req.valide, plan_id: req.params.id, instance: instances.de(plan, loadConfig),
+    }));
   });
 
   // Statut et version du plan portés par chaque activité (vue Calendrier)
@@ -26,7 +36,7 @@ module.exports = function register(app, deps, M) {
     const plans = {};
     db.list('plans').forEach((p) => { plans[p.id] = p; });
     const racines = D.racinesDeclenchees();
-    return res.json(db.list('activites').filter((a) => D.peutLire(req, plans[a.plan_id])).map((a) => ({
+    return res.json(parInstance(req, db.list('activites')).filter((a) => D.peutLire(req, plans[a.plan_id])).map((a) => ({
       ...a,
       plan_statut: (plans[a.plan_id] || {}).statut || '',
       plan_titre: (plans[a.plan_id] || {}).titre || '',

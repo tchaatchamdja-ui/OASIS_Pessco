@@ -50,6 +50,9 @@ module.exports = {
         .filter((c) => !String(c.statut || '').startsWith('direct_'))
         .map((c) => ({
           id: c.id,
+          // L'instance qui a relevé la carence : les Mesures d'Application la
+          // rangent sous la même, plutôt que de la donner à la leur.
+          instance: c.instance || '',
           reference: c.reference || '',
           titre: c.cas_type || c.titre || '',
           description: c.description || '',

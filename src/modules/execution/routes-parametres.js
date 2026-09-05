@@ -7,6 +7,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
+const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
 
@@ -64,15 +65,40 @@ module.exports = function register(app, deps, M) {
     };
   };
 
+  // ── Instance regardée ──
+  // L'application tourne pour une AAC ; ses écrans ne servent que ses
+  // dossiers. Le super-administrateur prend en barre supérieure le poste d'une
+  // autre instance, ou les regarde toutes — la vue régionale. Le choix suit le
+  // compte réellement connecté, non celui que la vue Prestataire simule.
+  const etatInstances = (req) => instances.etat(req.userReel || req.user, loadConfig);
+
   app.get(`${M}/context`, requireAuth, (req, res) => {
     res.json({
       user: vueUtilisateur(req.user),
       privilege: R.meilleurPrivilege(req.user, referentiels),
       vue: etatVue(req),
+      instance: etatInstances(req),
     });
   });
 
   app.get(`${M}/moi`, requireAuth, (req, res) => res.json(vueUtilisateur(req.user)));
+
+  app.get(`${M}/instance`, requireAuth, (req, res) => res.json(etatInstances(req)));
+
+  app.put(`${M}/instance`, requireAuth, (req, res) => {
+    const reel = req.userReel || req.user;
+    if (reel.role !== 'SUPERADMIN') {
+      return refuser(res, 'Choix de l’instance réservé au super-administrateur');
+    }
+    // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
+    // que les écrans serviront, il ne s'invente pas.
+    const demandee = String((req.body || {}).instance || '').trim();
+    if (demandee && !instances.liste(loadConfig).includes(demandee)) {
+      return res.status(400).json({ error: 'Instance inconnue' });
+    }
+    instances.definir(reel.username, demandee);
+    return res.json({ status: 'ok', instance: demandee });
+  });
 
   app.get(`${M}/vue`, requireAuth, (req, res) => res.json(etatVue(req)));
 

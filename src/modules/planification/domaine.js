@@ -64,6 +64,9 @@ function plansValides(filtre) {
         }));
       return {
         id: p.id,
+        // L'instance qui a programmé le plan : « Exécution de la Surveillance »
+        // ne déclenche que les activités de l'instance dont elle tient le poste.
+        instance: p.instance || '',
         titre: p.titre || '',
         annee: p.annee || null,
         type: p.type || '',

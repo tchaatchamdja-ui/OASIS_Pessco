@@ -8,6 +8,7 @@ const { valider } = require('../../valider');
 const R = require('./roles');
 const acteurs = require('./acteurs');
 const transmission = require('./transmission');
+const instances = require('../../instances');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
@@ -15,6 +16,11 @@ module.exports = function register(app, deps, M) {
   const refs = () => referentiels.getAll();
   const parId = (coll, id) => (refs()[coll] || []).find((x) => x.id === id) || null;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Non autorisé' });
+
+  // Instance regardée : les listes ne servent que ses activités. Le choix suit
+  // le compte réellement connecté, non celui que la vue Prestataire simule.
+  const instanceCourante = (req) => instances.courante(req.userReel || req.user, loadConfig);
+  const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   // Domaine et secteur d'un prestataire : base des portées de droits.
   const perimetrePrestataire = (prestataireId) => {
@@ -57,7 +63,10 @@ module.exports = function register(app, deps, M) {
     const prestataires = refs().prestataires || [];
     const types = refs().types_supervision || [];
 
-    const plans = services.callOr('PLAN.plansValides', []);
+    // Les plans viennent de « Planification » avec l'instance qui les a
+    // programmés : on ne déclenche que ceux de l'instance dont on tient le
+    // poste. En vue régionale, tous.
+    const plans = parInstance(req, services.callOr('PLAN.plansValides', []));
     const resultat = [];
     for (const p of plans) {
       let acts = (p.activites || []).map((a) => {
@@ -141,7 +150,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.get(`${M}/notifications`, requireAuth, (req, res) => {
-    let rows = db.list('notifications');
+    let rows = parInstance(req, db.list('notifications'));
     // Un prestataire ne voit que ses notifications, une fois envoyées.
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
@@ -244,6 +253,10 @@ module.exports = function register(app, deps, M) {
       id: db.uid('notif'),
       // Composition définie dans Paramètres → Autres paramètres.
       reference: refModele.suivante('notification', contexteReference(d)),
+      // L'instance sous laquelle l'activité est notifiée : c'est elle qui la
+      // verra ensuite, ainsi que le dossier et les constatations qui en
+      // naîtront.
+      instance: instanceCourante(req),
       activite_id: d.activite_id || '',
       plan_id: d.plan_id || '',
       prestataire_id: d.prestataire_id || '',

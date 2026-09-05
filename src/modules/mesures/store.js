@@ -26,10 +26,8 @@ const store = require('../../store');
 // « comites » : les comités décisionnels qui siègent pour qualifier une
 // carence et arrêter la sanction. La liste se tient au menu Paramètres ; elle
 // part vide, chaque autorité nommant les siens.
-// « vues » : ce que chaque compte a retenu en barre supérieure — l'instance
-// dont il tient le poste, ou la vue régionale. Un enregistrement par compte.
 const COLLECTIONS = ['mesures', 'categories', 'types', 'constatations', 'classements',
-  'traitements', 'types_investigation', 'comites', 'vues'];
+  'traitements', 'types_investigation', 'comites'];
 
 const TYPES_INVESTIGATION_DEFAUT = [
   ['inspection_terrain', 'Inspection / Observations sur le terrain'],

@@ -104,6 +104,8 @@ module.exports = function register(app, deps, M) {
         const pr = prestataires.find((x) => x.id === c.prestataire_id) || {};
         db.createIn('activites', {
           plan_id: cible.id, prestataire_id: c.prestataire_id,
+          // Née d'un plan, elle appartient à l'instance de ce plan.
+          instance: cible.instance || '',
           secteur_id: pr.secteur_id || '', domaine_id: pr.domaine_id || '',
           objet: `Surveillance ${pr.trigramme || pr.nom || ''}`.trim(),
           titre: `Surveillance ${pr.trigramme || pr.nom || ''}`.trim(),

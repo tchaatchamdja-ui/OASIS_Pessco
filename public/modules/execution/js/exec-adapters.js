@@ -72,6 +72,32 @@ async function execAppliquerVue(vue, prestataireId) {
   window.location.reload();
 }
 
+// ── Instance regardée ──
+// L'application tourne pour une AAC, et ses écrans ne servaient que ses
+// dossiers sans jamais le dire. La liste déroulante les nomme : le
+// super-administrateur y prend l'instance d'un État membre, ou les regarde
+// toutes — la vue régionale. Le cloisonnement n'est pas un habillage : c'est
+// le serveur qui écarte des listes ce qui n'appartient pas à l'instance.
+let execInstanceActive = null;
+
+const EXEC_VUE_REGIONALE = 'Vue régionale (toutes les instances)';
+
+async function execAppliquerInstance(valeur) {
+  if (!execInstanceActive || !execInstanceActive.disponible) return;
+  if ((execInstanceActive.courante || '') === (valeur || '')) return;
+  try {
+    await api(`${EXEC_MODULE_API}/instance`, {
+      method: 'PUT', body: JSON.stringify({ instance: valeur }),
+    });
+  } catch (e) {
+    _execToast((e && e.message) || 'Changement d’instance impossible', 'error');
+    return;
+  }
+  // L'instance commande le périmètre de tous les écrans : on recharge le
+  // module plutôt que de rafraîchir liste après liste.
+  window.location.reload();
+}
+
 // ── Gestion des droits du module ──
 // Même écran que pour la carte D.6, appliqué à l'espace SURV. Réservé aux
 // administrateurs du portail, comme le super-menu « Gestion des Droits ».
@@ -102,6 +128,16 @@ function execDessinerActions() {
       });
     }
   }
+  if (execInstanceActive && execInstanceActive.disponible
+      && (execInstanceActive.instances || []).length) {
+    actions.push({
+      key: 'instance', type: 'select', label: 'Instance regardée',
+      value: execInstanceActive.courante || '',
+      options: [{ value: '', label: EXEC_VUE_REGIONALE }]
+        .concat(execInstanceActive.instances.map((e) => ({ value: e, label: e }))),
+      onChange: (v) => execAppliquerInstance(v),
+    });
+  }
   if (execPeutGererDroits()) {
     actions.push({
       key: 'droits', label: 'Gestion des Droits', icon: EXEC_DROITS_ICON,
@@ -131,7 +167,12 @@ function execDessinerMention() {
   // La liste déroulante nomme déjà le prestataire : la mention ne sert qu'aux
   // comptes qui n'en changent pas.
   const choixEnBarre = !!(execVueActive && execVueActive.disponible);
-  oasisModuleMention(prestataire && !choixEnBarre ? execNomPrestataireCourant() : '');
+  if (prestataire && !choixEnBarre) { oasisModuleMention(execNomPrestataireCourant()); return; }
+  // Hors vue Prestataire, la barre nomme l'instance à qui n'en change pas :
+  // la liste déroulante le fait pour les autres.
+  const instanceEnBarre = !!(execInstanceActive && execInstanceActive.disponible);
+  oasisModuleMention(!instanceEnBarre && execInstanceActive
+    ? (execInstanceActive.locale || '') : '');
 }
 
 // L'état peut arriver avant ou après la mise en place de la barre, et le rôle
@@ -139,6 +180,9 @@ function execDessinerMention() {
 // étape, l'opération étant idempotente.
 api(`${EXEC_MODULE_API}/vue`)
   .then((etat) => { execVueActive = etat; execDessinerActions(); })
+  .catch(() => {});
+api(`${EXEC_MODULE_API}/instance`)
+  .then((etat) => { execInstanceActive = etat; execDessinerActions(); })
   .catch(() => {});
 window.addEventListener('DOMContentLoaded', () => {
   execDessinerActions();

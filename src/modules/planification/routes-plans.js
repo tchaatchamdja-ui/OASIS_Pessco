@@ -4,9 +4,18 @@ const referentiels = require('../../referentiels');
 const { valider } = require('../../valider');
 const db = require('./store');
 const D = require('./domaine');
+const instances = require('../../instances');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
+
+  // ── Instance regardée ──
+  // Chaque AAC tient son instance ; les plans et les activités qu'elle a
+  // programmés ne sont servis qu'à elle. Le super-administrateur prend en
+  // barre supérieure le poste d'une autre, ou les regarde toutes — la vue
+  // régionale, où l'instance retenue est vide et rien n'est écarté.
+  const instanceCourante = (req) => instances.courante(req.user, loadConfig);
+  const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   // Garde de lecture : les données de surveillance du module ne sortent pas
   // vers un compte sans privilège, ni vers un organisme surveillé. Les
@@ -21,9 +30,13 @@ module.exports = function register(app, deps, M) {
   app.get('/api/themes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().themes_supervision || []));
   app.get('/api/exigences', requireAuth, (req, res) => res.json(referentiels.getAll().exigences || []));
   app.get('/api/shared/risk-profiles', requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
-  // Même contrat, exposé en HTTP pour les fronts des autres modules
-  app.get('/api/shared/surveillance-plans', requireAuth, lecture, (req, res) => res.json(D.plansValides(req.query)));
-  app.get(`${M}/plans-valides`, requireAuth, lecture, (req, res) => res.json(D.plansValides(req.query)));
+  // Même contrat, exposé en HTTP pour les fronts des autres modules. Un front
+  // demande ce que son compte a le droit de voir : l'instance regardée borne
+  // donc la réponse, ici comme sur les autres listes.
+  app.get('/api/shared/surveillance-plans', requireAuth, lecture,
+    (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
+  app.get(`${M}/plans-valides`, requireAuth, lecture,
+    (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
   app.get(`${M}/risk-profiles`, requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
 
   // Contexte du module (utilisateur + rôle M2)
@@ -40,13 +53,31 @@ module.exports = function register(app, deps, M) {
       },
       aac: cfg.aac || {},
       instance: cfg.instance,
+      // Instance regardée : la barre supérieure en fait une liste déroulante.
+      instance_vue: instances.etat(req.user, loadConfig),
     });
+  });
+
+  app.get(`${M}/instance`, requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
+
+  app.put(`${M}/instance`, requireAuth, (req, res) => {
+    if (req.user.role !== 'SUPERADMIN') {
+      return res.status(403).json({ error: 'Choix de l’instance réservé au super-administrateur' });
+    }
+    // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
+    // que les écrans serviront, il ne s'invente pas.
+    const demandee = String((req.body || {}).instance || '').trim();
+    if (demandee && !instances.liste(loadConfig).includes(demandee)) {
+      return res.status(400).json({ error: 'Instance inconnue' });
+    }
+    instances.definir(req.user.username, demandee);
+    return res.json({ status: 'ok', instance: demandee });
   });
 
   // ── Statistiques ──
   app.get(`${M}/stats`, requireAuth, lecture, (req, res) => {
-    const plans = db.list('plans');
-    const acts = db.list('activites');
+    const plans = parInstance(req, db.list('plans'));
+    const acts = parInstance(req, db.list('activites'));
     res.json({
       total_plans: plans.length,
       plans_valides: plans.filter((p) => D.STATUTS_EN_VIGUEUR.includes(p.statut)).length,
@@ -70,7 +101,7 @@ module.exports = function register(app, deps, M) {
     const acts = db.list('activites');
     // Un privilège posé à « Aucun » sur un domaine ferme aussi la liste :
     // sinon le plan y figurait, seul son détail était refusé.
-    res.json(db.list('plans').filter((p) => D.peutLire(req, p)).map((p) => ({
+    res.json(parInstance(req, db.list('plans')).filter((p) => D.peutLire(req, p)).map((p) => ({
       ...p, nb_activites: acts.filter((a) => a.plan_id === p.id).length,
     })));
   });
@@ -91,7 +122,12 @@ module.exports = function register(app, deps, M) {
   // tout le reste, à commencer par `statut`, qui n'appartient qu'au circuit.
   app.post(`${M}/plans`, requireAuth, valider(D.SCHEMA_PLAN), (req, res) => {
     if (!D.peut(req, 'CONTRIBUTEUR', req.valide)) return D.refus(res);
-    const rec = db.createIn('plans', { ...req.valide, statut: 'brouillon', created_by: req.user.username });
+    // Le plan appartient à l'instance sous laquelle il est ouvert : c'est elle
+    // qui le verra, et « Exécution de la Surveillance » avec elle.
+    const rec = db.createIn('plans', {
+      ...req.valide, statut: 'brouillon', instance: instanceCourante(req),
+      created_by: req.user.username,
+    });
     audit.log(req.user.username, 'PLAN_CREE', { id: rec.id });
     return res.json(rec);
   });

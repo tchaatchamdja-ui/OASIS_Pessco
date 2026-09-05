@@ -7,7 +7,7 @@ const referentiels = require('../../referentiels');
 const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
-const instances = require('./instances');
+const instances = require('../../instances');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -46,15 +46,7 @@ module.exports = function register(app, deps, M) {
   // ne montrent que ses dossiers. Le super-administrateur prend en barre
   // supérieure le poste d'une autre instance, ou les regarde toutes — la vue
   // régionale. Les autres comptes n'ont que la leur, et la barre la nomme.
-  const etatInstances = (req) => {
-    const superadmin = req.user.role === 'SUPERADMIN';
-    return {
-      disponible: superadmin,
-      locale: instances.locale(loadConfig),
-      courante: instances.courante(req.user, loadConfig),
-      instances: superadmin ? instances.liste(loadConfig) : [],
-    };
-  };
+  const etatInstances = (req) => instances.etat(req.user, loadConfig);
 
   app.get(`${M}/context`, requireAuth, (req, res) => {
     res.json({

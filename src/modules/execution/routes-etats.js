@@ -11,6 +11,7 @@ const email = require('../../email');
 const db = require('./store');
 const R = require('./roles');
 const refModele = require('./references');
+const instances = require('../../instances');
 const { valider } = require('../../valider');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
@@ -53,8 +54,14 @@ function delais() {
 }
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
+
+  // Un geste groupé ne sort pas de l'instance regardée : archiver « toutes les
+  // activités hors plan » depuis le poste d'un État ne range pas celles des
+  // autres. Le choix suit le compte réellement connecté.
+  const parInstance = (req, rangs) => instances.filtrer(rangs,
+    instances.courante(req.userReel || req.user, loadConfig), loadConfig);
   const admin = (req) => R.isAdmin(req.user, referentiels);
 
   // Arrêter ou archiver une activité relève de l'administration : les rôles
@@ -245,7 +252,7 @@ module.exports = function register(app, deps, M) {
   // Les constatations issues de ces activités ne sont pas touchées.
   app.put(`${A}/hors-plan-archiver`, requireAuth, (req, res) => {
     const archive = req.body && req.body.archive === false ? 0 : 1;
-    const lot = db.list('notifications').filter((n) => n.hors_plan);
+    const lot = parInstance(req, db.list('notifications')).filter((n) => n.hors_plan);
     if (!lot.length) return res.json({ status: 'ok', archive, nombre: 0 });
     const refuses = lot.filter((n) => !peutAdministrer(req, n));
     if (refuses.length) {

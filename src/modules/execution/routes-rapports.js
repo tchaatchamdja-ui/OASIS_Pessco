@@ -11,6 +11,7 @@ const db = require('./store');
 const refModele = require('./references');
 const R = require('./roles');
 const acteurs = require('./acteurs');
+const instances = require('../../instances');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -24,6 +25,11 @@ module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
 
   const refs = () => referentiels.getAll();
+
+  // Instance regardée : les listes et le tableau de bord ne comptent que ses
+  // dossiers. Le choix suit le compte réellement connecté.
+  const instanceCourante = (req) => instances.courante(req.userReel || req.user, loadConfig);
+  const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   // Éléments de composition des références, tirés du dossier ou du rapport.
   const contexteRefRapport = (d) => {
@@ -98,7 +104,7 @@ module.exports = function register(app, deps, M) {
     const miens = R.prestatairesDe(req.user);
     if (prestataire && !miens.length) return res.json([]);
 
-    let rows = db.list('rapports').map(enrichirRapport);
+    let rows = parInstance(req, db.list('rapports')).map(enrichirRapport);
     if (prestataire) {
       rows = rows.filter((r) => miens.includes(r.dossier_prestataire_id) && r.statut === 'transmis');
     } else {
@@ -136,6 +142,8 @@ module.exports = function register(app, deps, M) {
       id: db.uid('rpt'),
       reference: refModele.suivante('rapport', contexteRefRapport(req.body || {})),
       dossier_id: dossier.id,
+      // Le rapport appartient à l'instance de son dossier.
+      instance: instances.de(dossier, loadConfig),
       notification_id: dossier.notification_id || '',
       prestataire_id: dossier.prestataire_id || '',
       contenu: JSON.stringify({
@@ -340,18 +348,21 @@ module.exports = function register(app, deps, M) {
     if (prestataire && !miens.length) return res.json({});
     const mien = (r) => !prestataire || miens.includes(r.prestataire_id);
 
-    const notifs = db.list('notifications').filter((n) => mien(n) && String(n.date_creation || '') >= debutAnnee);
-    const dossiers = db.list('dossiers').filter(mien);
+    const notifs = parInstance(req, db.list('notifications'))
+      .filter((n) => mien(n) && String(n.date_creation || '') >= debutAnnee);
+    const dossiers = parInstance(req, db.list('dossiers')).filter(mien);
     const idsDossiers = new Set(dossiers.map((d) => d.id));
-    const fnc = db.list('constatations').filter((c) => mien(c) || idsDossiers.has(c.dossier_id));
+    const fnc = parInstance(req, db.list('constatations'))
+      .filter((c) => mien(c) || idsDossiers.has(c.dossier_id));
     // Statuts sous lesquels une constatation est notifiée au prestataire.
     const EN_VIGUEUR = ['ouvert', 'ouverte', 'pac_soumis', 'pac_valide', 'pac_rejetee', 'soldee'];
     const enVigueur = (c) => EN_VIGUEUR.includes(c.statut);
-    const rapports = db.list('rapports')
+    const rapports = parInstance(req, db.list('rapports'))
       .filter((r) => (!prestataire || idsDossiers.has(r.dossier_id)) && String(r.date_creation || '') >= debutAnnee);
 
-    // Activités planifiées : le module Planification reste la source.
-    const plans = services.callOr('PLAN.plansValides', []);
+    // Activités planifiées : le module Planification reste la source, et les
+    // plans y portent l'instance qui les a programmés.
+    const plans = parInstance(req, services.callOr('PLAN.plansValides', []));
     let activites = [];
     plans.forEach((p) => { activites = activites.concat((p.activites || []).map((a) => ({ ...a, annee: p.annee }))); });
     if (prestataire) activites = activites.filter((a) => miens.includes(a.prestataire_id));

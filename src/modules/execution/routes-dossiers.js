@@ -7,6 +7,7 @@ const refModele = require('./references');
 const R = require('./roles');
 const acteurs = require('./acteurs');
 const transmission = require('./transmission');
+const instances = require('../../instances');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
@@ -14,6 +15,14 @@ module.exports = function register(app, deps, M) {
   const refs = () => referentiels.getAll();
   const parId = (coll, id) => (refs()[coll] || []).find((x) => x.id === id) || null;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Non autorisé' });
+
+  // ── Instance regardée ──
+  // Chaque AAC tient son instance ; les listes ne servent que ses dossiers.
+  // Le choix suit le compte réellement connecté, non celui que la vue
+  // Prestataire simule. Vue régionale : l'instance retenue est vide, et rien
+  // n'est écarté.
+  const instanceCourante = (req) => instances.courante(req.userReel || req.user, loadConfig);
+  const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   const perimetrePrestataire = (prestataireId) => {
     const p = parId('prestataires', prestataireId) || {};
@@ -72,7 +81,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.get(`${M}/dossiers`, requireAuth, (req, res) => {
-    let rows = db.list('dossiers');
+    let rows = parInstance(req, db.list('dossiers'));
     // Un prestataire ne voit que ses dossiers, une fois clôturés.
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
@@ -141,6 +150,8 @@ module.exports = function register(app, deps, M) {
       id: db.uid('dossier'),
       reference: refModele.suivante('dossier', contexteRefDossier(d)),
       notification_id: n.id,
+      // Le dossier appartient à l'instance qui a notifié l'activité.
+      instance: instances.de(n, loadConfig),
       activite_id: n.activite_id || '',
       plan_id: n.plan_id || '',
       prestataire_id: n.prestataire_id || '',
@@ -302,7 +313,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.get(`${M}/constatations`, requireAuth, (req, res) => {
-    let rows = db.list('constatations');
+    let rows = parInstance(req, db.list('constatations'));
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
       if (!miens.length) return res.json([]);
@@ -343,7 +354,7 @@ module.exports = function register(app, deps, M) {
           titre: req.query.titre, filtres: req.query.filtres }
       : (req.body || {});
     const demandes = Array.isArray(d.ids) ? d.ids : [];
-    let rows = db.list('constatations').filter((c) => demandes.includes(c.id));
+    let rows = parInstance(req, db.list('constatations')).filter((c) => demandes.includes(c.id));
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
       rows = rows.filter((c) => miens.includes(c.prestataire_id));
@@ -498,6 +509,9 @@ module.exports = function register(app, deps, M) {
         domaine: codeDomaine(domaine) + (direct ? '-DIR' : ''),
       }),
       dossier_id: d.dossier_id || '',
+      // Une constatation appartient à l'instance de son dossier ; relevée
+      // directement, à celle d'où elle est relevée.
+      instance: dossier ? instances.de(dossier, loadConfig) : instanceCourante(req),
       domaine_id: domaine,
       prestataire_id: prestataireId,
       emis_par: d.emis_par || '',

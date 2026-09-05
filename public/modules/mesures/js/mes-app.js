@@ -14,6 +14,9 @@ const MES_API = '/api/m/mesures';
 const MES_STATE = {
     user: null,
     privilege: '',
+    // Instance regardée, servie par le contexte : { disponible, locale,
+    // courante, instances }. La barre supérieure en fait une liste déroulante.
+    instances: {},
     currentPage: 'dashboard',
     sidebarCollapsed: localStorage.getItem('mes_sidebar') === 'true',
     theme: 'blue-dark',

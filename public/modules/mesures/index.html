@@ -35,7 +35,12 @@
       const theme = localStorage.getItem('pr_theme') || 'blue-dark';
       const lang = localStorage.getItem('pr_lang') || 'fr';
       document.documentElement.setAttribute('data-theme', theme);
-      return { user: ctx.user || {}, privilege: ctx.privilege || '', theme, lang };
+      return {
+        user: ctx.user || {}, privilege: ctx.privilege || '',
+        // Instance regardée : la barre supérieure en fait une liste déroulante.
+        instances: ctx.instance || {},
+        theme, lang,
+      };
     })();
   </script>
 
@@ -43,6 +48,7 @@
   <!-- Cartes d'indicateurs du socle, comme au tableau de bord d'Exécution. -->
   <script src="/shared/js/oasis-kpi.js"></script>
   <script src="/modules/mesures/js/mes-app.js"></script>
+  <script src="/modules/mesures/js/mes-instances.js"></script>
   <script src="/modules/mesures/js/mes-parametres.js"></script>
   <script src="/modules/mesures/js/mes-traitement.js"></script>
   <script src="/modules/mesures/js/mes-qualification.js"></script>
@@ -57,11 +63,13 @@
         const boot = await window.MES_BOOT;
         MES_STATE.user = boot.user;
         MES_STATE.privilege = boot.privilege;
+        MES_STATE.instances = boot.instances;
         MES_STATE.theme = boot.theme;
         MES_STATE.lang = boot.lang;
         await mesLoadData();
         mesRenderApp();
         mesNavigateTo('dashboard');
+        mesDessinerActions();
       } catch (e) {
         document.getElementById('app').innerHTML =
           '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';

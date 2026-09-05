@@ -16,6 +16,7 @@ const exports_ = require('./exports');
 const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
+const instances = require('./instances');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -42,9 +43,16 @@ const CHAMPS = [
 const LISTES = ['pieces_jointes', 'preuves_constatation', 'preuves_cloture'];
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const refs = () => referentiels.getAll();
+
+  // ── Instance regardée ──
+  // Chaque AAC tient son instance ; les listes ne servent que ses dossiers.
+  // Le super-administrateur peut prendre le poste d'une autre, ou demander la
+  // vue régionale — l'instance retenue est alors vide, et rien n'est écarté.
+  const instanceCourante = (req) => instances.courante(req.user, loadConfig);
+  const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   // Les constatations viennent des modules qui les relèvent, par le bus de
   // services : « Exécution de la Surveillance » pour les constatations de
@@ -134,7 +142,7 @@ module.exports = function register(app, deps, M) {
     if (q.categorie) liste = liste.filter((m) => m.categorie === q.categorie);
     if (q.prestataire_id) liste = liste.filter((m) => m.prestataire_id === q.prestataire_id);
     if (q.constatation_id) liste = liste.filter((m) => m.constatation_id === q.constatation_id);
-    liste = liste.filter((m) => lisible(req, m));
+    liste = parInstance(req, liste).filter((m) => lisible(req, m));
     liste = liste.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
     const index = indexConstatations();
     res.json(liste.map((m) => enrichir(m, index)));
@@ -190,7 +198,7 @@ module.exports = function register(app, deps, M) {
     const q = req.query || {};
     const nomPrestataire = (id) => ((refs().prestataires || []).find((p) => p.id === id) || {}).nom || '';
     const cherche = String(q.recherche || '').trim().toLowerCase();
-    const liste = listeCarences().filter((c) => {
+    const liste = parInstance(req, listeCarences()).filter((c) => {
       if (q.origine && (c.origine || 'SURV') !== q.origine) return false;
       if (q.statut && (c.statut_care || 'a_traiter') !== q.statut) return false;
       if (q.prestataire && c.prestataire_id !== q.prestataire) return false;
@@ -235,7 +243,7 @@ module.exports = function register(app, deps, M) {
     const index = indexConstatations();
     const nomPrestataire = (id) => ((refs().prestataires || []).find((p) => p.id === id) || {}).nom || '';
     const cherche = String(q.recherche || '').trim().toLowerCase();
-    const liste = db.list('mesures')
+    const liste = parInstance(req, db.list('mesures'))
       .filter((m) => lisible(req, m))
       .map((m) => enrichir(m, index))
       .filter((m) => {
@@ -351,7 +359,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/constatations`, requireAuth, (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
-    return res.json(listeCarences());
+    return res.json(parInstance(req, listeCarences()));
   });
 
   // Classement : l'autorité décide qu'aucune mesure ne sera prise. La décision
@@ -893,6 +901,8 @@ module.exports = function register(app, deps, M) {
         reference: db.prochaineReference(),
         ...Object.fromEntries(CHAMPS.map((k) => [k, LISTES.includes(k) ? [] : ''])),
         constatation_id: ctx.c.id,
+        // La mesure appartient à l'instance qui a ouvert la carence.
+        instance: instances.de(ctx.c, loadConfig),
         prestataire_id: ctx.c.prestataire_id || '',
         // Nom porté par la carence : il sert quand l'exploitant n'est pas
         // rattaché au référentiel.
@@ -1175,6 +1185,9 @@ module.exports = function register(app, deps, M) {
       criticite: 'critique',
       statut: 'ouverte',
       date_ouverture: champs.date_ouverture || db.now().slice(0, 10),
+      // L'instance sous laquelle la carence est ouverte : c'est elle qui la
+      // verra ensuite dans ses listes.
+      instance: instanceCourante(req),
       created_by: req.user.username,
       date_creation: db.now(),
     };
@@ -1220,11 +1233,15 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/mesures`, requireAuth, (req, res) => {
     const d = req.body || {};
     if (!peutEcrire(req, d)) return refuser(res, 'Non autorisé à créer une mesure');
+    // Une mesure suit la carence qu'elle sanctionne : elle appartient à
+    // l'instance qui a ouvert le dossier, non à celle d'où on la saisit.
+    const carence = indexConstatations().get(texte(d.constatation_id));
     const m = {
       id: db.uid('mes'),
       reference: db.prochaineReference(),
       ...Object.fromEntries(CHAMPS.map((k) => [k, LISTES.includes(k) ? [] : ''])),
       ...normaliser(d),
+      instance: carence ? instances.de(carence, loadConfig) : instanceCourante(req),
       categorie: d.categorie || 'administrative',
       statut: 'projet',
       decision_par: '', date_decision: '',
@@ -1352,7 +1369,8 @@ module.exports = function register(app, deps, M) {
     if (!prestataireId) return res.status(400).json({ error: 'prestataire_id requis' });
     const aujourdhui = new Date().toISOString().slice(0, 10);
 
-    const consts = constatations().filter((c) => c.prestataire_id === prestataireId);
+    const consts = parInstance(req, constatations())
+      .filter((c) => c.prestataire_id === prestataireId);
     const soldees = consts.filter((c) => c.statut === 'soldee');
     const enRetard = consts.filter((c) => c.statut !== 'soldee'
       && c.date_due_cloture && c.date_due_cloture < aujourdhui);
@@ -1368,7 +1386,8 @@ module.exports = function register(app, deps, M) {
       if (a) parAnnee[a] = (parAnnee[a] || 0) + 1;
     });
 
-    const mesures = db.list('mesures').filter((m) => m.prestataire_id === prestataireId);
+    const mesures = parInstance(req, db.list('mesures'))
+      .filter((m) => m.prestataire_id === prestataireId);
     const parStatut = {};
     STATUTS.forEach((s) => { parStatut[s] = mesures.filter((m) => m.statut === s).length; });
 

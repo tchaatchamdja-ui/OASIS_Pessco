@@ -10,6 +10,16 @@
     "etat": "Bénin",
     "codeEtat": "BJ",
     "type": "AAC",
+    "etatsMembres": [
+      "Bénin",
+      "Burkina Faso",
+      "Côte d'Ivoire",
+      "Guinée-Bissau",
+      "Mali",
+      "Niger",
+      "Sénégal",
+      "Togo"
+    ],
     "defaultLang": "fr",
     "langs": [
       "fr",

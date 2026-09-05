@@ -7,6 +7,7 @@ const referentiels = require('../../referentiels');
 const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
+const instances = require('./instances');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -18,7 +19,7 @@ const codeDepuisLibelle = (libelle) => String(libelle || '')
   .slice(0, 40);
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const admin = (req) => R.isAdmin(req.user, referentiels);
   // Le paramétrage se tient à jour au fil des décisions : un contributeur y
@@ -40,11 +41,43 @@ module.exports = function register(app, deps, M) {
     };
   };
 
+  // ── Instance regardée ──
+  // L'application tourne pour une AAC ; les menus « Carences » et « Mesures »
+  // ne montrent que ses dossiers. Le super-administrateur prend en barre
+  // supérieure le poste d'une autre instance, ou les regarde toutes — la vue
+  // régionale. Les autres comptes n'ont que la leur, et la barre la nomme.
+  const etatInstances = (req) => {
+    const superadmin = req.user.role === 'SUPERADMIN';
+    return {
+      disponible: superadmin,
+      locale: instances.locale(loadConfig),
+      courante: instances.courante(req.user, loadConfig),
+      instances: superadmin ? instances.liste(loadConfig) : [],
+    };
+  };
+
   app.get(`${M}/context`, requireAuth, (req, res) => {
     res.json({
       user: vueUtilisateur(req.user),
       privilege: R.meilleurPrivilege(req.user, referentiels),
+      instance: etatInstances(req),
     });
+  });
+
+  app.get(`${M}/instance`, requireAuth, (req, res) => res.json(etatInstances(req)));
+
+  app.put(`${M}/instance`, requireAuth, (req, res) => {
+    if (req.user.role !== 'SUPERADMIN') {
+      return refuser(res, 'Choix de l’instance réservé au super-administrateur');
+    }
+    // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
+    // que les écrans serviront, il ne s'invente pas.
+    const demandee = String((req.body || {}).instance || '').trim();
+    if (demandee && !instances.liste(loadConfig).includes(demandee)) {
+      return res.status(400).json({ error: 'Instance inconnue' });
+    }
+    instances.definir(req.user.username, demandee);
+    return res.json({ status: 'ok', instance: demandee });
   });
 
   app.get(`${M}/moi`, requireAuth, (req, res) => res.json(vueUtilisateur(req.user)));

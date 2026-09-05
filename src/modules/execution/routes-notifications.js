@@ -189,9 +189,10 @@ module.exports = function register(app, deps, M) {
 
   // Éléments dont se compose une référence : État, domaine, secteur,
   // prestataire, année. Ils sont lus une fois, à la création.
-  const contexteReference = (d) => {
+  const contexteReference = (req, d) => {
     const tous = refs();
-    const aac = (loadConfig().aac) || {};
+    // L'État qui ouvre la référence est celui de l'instance regardée.
+    const aac = instances.aac(req.userReel || req.user, loadConfig);
     const perim = perimetrePrestataire(d.prestataire_id) || {};
     const secteur = (tous.secteurs || []).find((x) => x.id === (d.secteur_id || perim.secteur_id)) || {};
     const domaine = (tous.domaines || []).find((x) => x.id === (d.domaine_id || perim.domaine_id || secteur.domaine_id)) || {};
@@ -252,7 +253,7 @@ module.exports = function register(app, deps, M) {
     const rec = db.insert('notifications', {
       id: db.uid('notif'),
       // Composition définie dans Paramètres → Autres paramètres.
-      reference: refModele.suivante('notification', contexteReference(d)),
+      reference: refModele.suivante('notification', contexteReference(req, d)),
       // L'instance sous laquelle l'activité est notifiée : c'est elle qui la
       // verra ensuite, ainsi que le dossier et les constatations qui en
       // naîtront.
@@ -547,7 +548,7 @@ module.exports = function register(app, deps, M) {
     const maintenant = db.now();
 
     // Référence d'activité : composition définie dans les paramètres.
-    const refActivite = refModele.suivante('activite', contexteReference({
+    const refActivite = refModele.suivante('activite', contexteReference(req, {
       prestataire_id: n.prestataire_id, secteur_id: n.secteur_id, domaine_id: perim.domaine_id,
       annee: n.annee || new Date().getFullYear(),
     }));
@@ -566,7 +567,7 @@ module.exports = function register(app, deps, M) {
     // Ouverture automatique du dossier : l'étape « réalisation » démarre.
     const dossier = db.insert('dossiers', {
       id: db.uid('dossier'),
-      reference: refModele.suivante('dossier', contexteReference(n)),
+      reference: refModele.suivante('dossier', contexteReference(req, n)),
       notification_id: n.id,
       activite_id: n.activite_id || '',
       plan_id: n.plan_id || '',

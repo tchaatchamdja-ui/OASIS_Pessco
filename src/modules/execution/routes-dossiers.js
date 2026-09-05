@@ -52,9 +52,9 @@ module.exports = function register(app, deps, M) {
     const dom = (referentiels.getAll().domaines || []).find((x) => x.id === id);
     return String((dom && dom.code) || id || '').toUpperCase();
   };
-  const contexteRefDossier = (d) => {
+  const contexteRefDossier = (req, d) => {
     const tous = referentiels.getAll();
-    const aac = (typeof loadConfig === 'function' ? (loadConfig().aac || {}) : {});
+    const aac = instances.aac(req.userReel || req.user, loadConfig);
     const prest = (tous.prestataires || []).find((x) => x.id === d.prestataire_id) || {};
     const secteur = (tous.secteurs || []).find((x) => x.id === (d.secteur_id || prest.secteur_id)) || {};
     const dom = (tous.domaines || []).find((x) => x.id === (d.domaine_id || prest.domaine_id || secteur.domaine_id)) || {};
@@ -148,7 +148,7 @@ module.exports = function register(app, deps, M) {
     const maintenant = db.now();
     const rec = db.insert('dossiers', {
       id: db.uid('dossier'),
-      reference: refModele.suivante('dossier', contexteRefDossier(d)),
+      reference: refModele.suivante('dossier', contexteRefDossier(req, d)),
       notification_id: n.id,
       // Le dossier appartient à l'instance qui a notifié l'activité.
       instance: instances.de(n, loadConfig),
@@ -202,7 +202,7 @@ module.exports = function register(app, deps, M) {
     const maintenant = db.now();
     let baseRef = d.base_reference || '';
     if (!baseRef) {
-      baseRef = refModele.suivante('rapport', contexteRefDossier(d));
+      baseRef = refModele.suivante('rapport', contexteRefDossier(req, d));
       db.update('dossiers', d.id, { base_reference: baseRef });
     }
     const versions = db.list('rapports').filter((r) => r.dossier_id === d.id).map((r) => Number(r.version) || 0);
@@ -411,7 +411,7 @@ module.exports = function register(app, deps, M) {
       ];
     });
 
-    const aac = (typeof loadConfig === 'function' ? (loadConfig().aac || {}) : {});
+    const aac = instances.aac(req.userReel || req.user, loadConfig);
     const titre = `${aac.sigle || 'AAC'} — ${d.titre || 'Constatations'}`;
     const sousTitre = [d.filtres || '', `Édité le ${new Date().toLocaleDateString('fr-FR')}`, `${rows.length} constatation(s)`]
       .filter(Boolean).join('   ·   ');
@@ -505,7 +505,7 @@ module.exports = function register(app, deps, M) {
     const rec = db.insert('constatations', {
       id: db.uid('fnc'),
       reference: refModele.suivante('constatation', {
-        ...contexteRefDossier({ prestataire_id: prestataireId, secteur_id: (dossier || {}).secteur_id }),
+        ...contexteRefDossier(req, { prestataire_id: prestataireId, secteur_id: (dossier || {}).secteur_id }),
         domaine: codeDomaine(domaine) + (direct ? '-DIR' : ''),
       }),
       dossier_id: d.dossier_id || '',

@@ -128,7 +128,8 @@ module.exports = function register(app, deps, M) {
     res.json(instances.filtrer(auth.getUsers(), retenue, loadConfig).map(vueUtilisateur));
   });
 
-  app.get(`${M}/aac`, requireAuth, (req, res) => res.json(loadConfig().aac || {}));
+  app.get(`${M}/aac`, requireAuth,
+    (req, res) => res.json(instances.aac(req.userReel || req.user, loadConfig)));
 
   // ══════════════════════════════════════
   //  Niveaux de constatation (criticités) et types de cas

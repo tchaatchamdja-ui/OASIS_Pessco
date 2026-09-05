@@ -26,9 +26,12 @@ module.exports = function register(app, deps, M) {
   // ── Référentiels partagés attendus par le module ──
   app.get('/api/inspecteurs', requireAuth,
     (req, res) => res.json(instances.refs(req.user, loadConfig).inspecteurs || []));
-  app.get('/api/types-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().types_supervision || []));
-  app.get('/api/modes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().modes_supervision || []));
-  app.get('/api/themes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().themes_supervision || []));
+  app.get('/api/types-supervision', requireAuth,
+    (req, res) => res.json(instances.refs(req.user, loadConfig).types_supervision || []));
+  app.get('/api/modes-supervision', requireAuth,
+    (req, res) => res.json(instances.refs(req.user, loadConfig).modes_supervision || []));
+  app.get('/api/themes-supervision', requireAuth,
+    (req, res) => res.json(instances.refs(req.user, loadConfig).themes_supervision || []));
   app.get('/api/exigences', requireAuth,
     (req, res) => res.json(instances.refs(req.user, loadConfig).exigences || []));
   app.get('/api/shared/risk-profiles', requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
@@ -53,7 +56,7 @@ module.exports = function register(app, deps, M) {
         nom: u.nom || u.username,
         prenom: u.prenom || '',
       },
-      aac: cfg.aac || {},
+      aac: instances.aac(req.user, loadConfig),
       instance: cfg.instance,
       // Instance regardée : la barre supérieure en fait une liste déroulante.
       instance_vue: instances.etat(req.user, loadConfig),

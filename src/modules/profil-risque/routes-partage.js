@@ -29,9 +29,14 @@ module.exports = function register(app, deps, M) {
   const gerer = (req, res, next) => (D.peut(req, 'GESTIONNAIRE') ? next() : D.refus(res));
 
   // ── Données partagées attendues par le front PESSCO ──
-  app.get('/api/domaines', requireAuth, (req, res) => res.json(D.sharedDomaines()));
-  app.get('/api/secteurs', requireAuth, (req, res) => res.json(D.sharedSecteurs()));
-  app.get('/api/sous-activites', requireAuth, (req, res) => res.json(D.sharedSousActivites()));
+  // Taxinomie commune, mais chaque élément peut n'être offert qu'à certaines
+  // instances : ce qui n'est pas offert ici n'apparaît dans aucun filtre.
+  app.get('/api/domaines', requireAuth,
+    (req, res) => res.json(instances.visibles(D.sharedDomaines(), 'domaines', req.user, loadConfig)));
+  app.get('/api/secteurs', requireAuth,
+    (req, res) => res.json(instances.visibles(D.sharedSecteurs(), 'secteurs', req.user, loadConfig)));
+  app.get('/api/sous-activites', requireAuth,
+    (req, res) => res.json(instances.visibles(D.sharedSousActivites(), 'sous_activites', req.user, loadConfig)));
   // Les organismes appartiennent à l'AAC qui les surveille : la liste suit
   // l'instance regardée, à la différence de la taxinomie au-dessus.
   app.get('/api/prestataires', requireAuth, (req, res) => res.json(
@@ -50,7 +55,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.get('/api/aac', requireAuth, (req, res) => {
-    const cfg = loadConfig();
+    const cfg = { aac: instances.aac(req.user, loadConfig) };
     res.json({ ...(cfg.aac || {}), logo_data: (cfg.aac && cfg.aac.logo) || '' });
   });
 
@@ -183,7 +188,7 @@ module.exports = function register(app, deps, M) {
     const cfg = loadConfig();
     res.json({
       user: { ...auth.publicUser(req.user), role: D.roleM1(req.user), role_m1: `M1_${D.roleM1(req.user)}` },
-      aac: cfg.aac || {},
+      aac: instances.aac(req.user, loadConfig),
       instance: cfg.instance,
       shared: {
         domaines: D.sharedDomaines(), secteurs: D.sharedSecteurs(),

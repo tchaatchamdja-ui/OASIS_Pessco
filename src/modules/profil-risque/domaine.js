@@ -40,14 +40,18 @@ const STATUTS_DECIDES = [
 // ── Données partagées : mappées depuis les référentiels du portail ──
 const sharedDomaines = () => (referentiels.getAll().domaines || []).map((x) => ({
   id: x.id, code: x.code, nom: x.nom, description: x.description || '', actif: x.statut !== 'inactif',
+  // Instances qui voient l'élément ; vide, il se voit partout.
+  visibilite: x.visibilite || [],
 }));
 
 const sharedSecteurs = () => (referentiels.getAll().secteurs || []).map((x) => ({
   id: x.id, code: x.code, nom: x.nom, domaine_id: x.domaine_id, csn: x.csn || 24, actif: x.statut !== 'inactif',
+  visibilite: x.visibilite || [],
 }));
 
 const sharedSousActivites = () => (referentiels.getAll().sous_activites || []).map((x) => ({
   id: x.id, code: x.code, nom: x.nom, secteur_id: x.secteur_id,
+  visibilite: x.visibilite || [],
 }));
 
 const sharedPrestataires = () => (referentiels.getAll().prestataires || []).map((x) => ({

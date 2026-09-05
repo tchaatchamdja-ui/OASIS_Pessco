@@ -23,21 +23,73 @@ const COLLECTIONS = [
 
 // ── Ce qui appartient à une instance, et ce qui reste commun ──
 //
-// Chaque AAC surveille ses propres organismes avec ses propres inspecteurs,
-// depuis sa propre organisation et sous sa propre réglementation : ces
-// quatre-là sont à elle, et un État n'a pas à voir les prestataires d'un
-// autre. La taxinomie de la surveillance — domaines, secteurs, sous-activités,
-// thèmes — et les nomenclatures — types et modes de supervision, niveaux de
-// qualification, spécialités — sont harmonisées à l'échelle de l'Union et
-// restent communes : sans elles, deux États ne pourraient plus comparer un
-// plan, un écart ni un profil de risque, ce qui est l'objet même du
-// dispositif régional.
-const COLLECTIONS_INSTANCE = ['prestataires', 'inspecteurs', 'organisation',
-  'organisation_assignments', 'exigences'];
+// Presque tout appartient à l'AAC : elle surveille ses propres organismes avec
+// ses propres inspecteurs, depuis sa propre organisation — ses niveaux
+// hiérarchiques et ses entités —, sous sa propre réglementation, et règle
+// elle-même ses nomenclatures : types et modes de supervision, niveaux de
+// qualification, spécialités. Un État n'a rien à voir de tout cela chez un
+// autre.
+const COLLECTIONS_INSTANCE = ['prestataires', 'inspecteurs',
+  'organisation_levels', 'organisation', 'organisation_assignments', 'exigences',
+  'types_supervision', 'modes_supervision', 'niveaux_qualifications',
+  'specialites_inspecteur'];
+
+// Reste commune la taxinomie de la surveillance — domaines, secteurs,
+// sous-activités, thèmes. Elle est harmonisée à l'échelle de l'Union : sans
+// elle, deux États ne pourraient plus comparer un plan, un écart ni un profil
+// de risque, ce qui est l'objet même du dispositif régional.
+//
+// Commune de structure, mais pas nécessairement offerte partout : chaque
+// élément porte la liste des instances qui le voient. Vide — le cas par
+// défaut —, il est visible de toutes ; renseignée, il disparaît des filtres et
+// des modules des autres, sans être supprimé pour autant.
+const COLLECTIONS_VISIBILITE = ['domaines', 'secteurs', 'sous_activites',
+  'themes_supervision'];
+
+// Une instance voit l'élément si nul ne l'a restreint, ou s'il la nomme. En
+// vue régionale — instance vide — tout se voit : c'est le dispositif entier
+// que l'on regarde.
+const visiblePar = (record, instance) => {
+  if (!instance) return true;
+  const v = (record || {}).visibilite;
+  return !Array.isArray(v) || !v.length || v.includes(instance);
+};
+
+// Rattachements de la taxinomie : un secteur tient d'un domaine, une
+// sous-activité d'un secteur, un thème des trois.
+const PARENTS_VISIBILITE = {
+  domaines: [],
+  secteurs: [['domaines', 'domaine_id']],
+  sous_activites: [['secteurs', 'secteur_id']],
+  themes_supervision: [['domaines', 'domaine_id'], ['secteurs', 'secteur_id'],
+    ['sous_activites', 'sous_activite_id']],
+};
+
+// Identifiants qu'une instance voit, collection par collection. La restriction
+// se transmet aux rattachements : un secteur dont le domaine n'est pas offert
+// ne l'est pas davantage, sinon un filtre proposerait un secteur sans son
+// domaine et un thème sans son secteur.
+function idsVisibles(instance) {
+  const data = getAll();
+  const vus = {};
+  COLLECTIONS_VISIBILITE.forEach((coll) => {
+    const parents = PARENTS_VISIBILITE[coll] || [];
+    vus[coll] = new Set((data[coll] || [])
+      .filter((r) => visiblePar(r, instance)
+        && parents.every(([pc, fk]) => !r[fk] || vus[pc].has(r[fk])))
+      .map((r) => r.id));
+  });
+  return vus;
+}
 
 function uid() {
   return crypto.randomBytes(6).toString('hex');
 }
+
+// Liste d'instances telle qu'on l'enregistre : des noms, sans doublon ni vide.
+// Une liste vide vaut « visible de toutes ».
+const listeInstances = (v) => [...new Set((Array.isArray(v) ? v : [])
+  .map((x) => String(x == null ? '' : x).trim()).filter(Boolean))];
 
 function seedReferentiels() {
   const existing = store.load('referentiels', null);
@@ -147,6 +199,8 @@ function createItem(collection, item, instance) {
   // collections communes n'en portent pas — elles appartiennent à l'Union.
   if (COLLECTIONS_INSTANCE.includes(collection)) record.instance = String(instance || '');
   else delete record.instance;
+  if (COLLECTIONS_VISIBILITE.includes(collection)) record.visibilite = listeInstances(record.visibilite);
+  else delete record.visibilite;
   if (CODE_KEYED.includes(collection)) record.code = normCode(record.code);
   data[collection] = data[collection] || [];
   data[collection].push(record);
@@ -165,7 +219,13 @@ function updateItem(collection, id, patch) {
     if (findByCode(collection, patch.code, id, data)) return { error: 'duplicate_code' };
     patch = { ...patch, code: normCode(patch.code) };
   }
-  list[idx] = { ...list[idx], ...patch, id };
+  const suite = { ...list[idx], ...patch, id };
+  // Restreindre la visibilité d'un élément commun, ou la rouvrir : la liste
+  // est toujours normalisée, jamais laissée à ce que le client a envoyé.
+  if (COLLECTIONS_VISIBILITE.includes(collection) && patch.visibilite !== undefined) {
+    suite.visibilite = listeInstances(patch.visibilite);
+  }
+  list[idx] = suite;
   store.save('referentiels', data);
   return list[idx];
 }
@@ -248,7 +308,8 @@ function duplicateCodes() {
 }
 
 module.exports = {
-  COLLECTIONS, COLLECTIONS_INSTANCE, CODE_KEYED, seedReferentiels, getAll,
+  COLLECTIONS, COLLECTIONS_INSTANCE, COLLECTIONS_VISIBILITE, visiblePar, idsVisibles,
+  CODE_KEYED, seedReferentiels, getAll,
   createItem, updateItem, deleteItem,
   orphans, findByCode, normCode, duplicateCodes,
 };

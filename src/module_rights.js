@@ -134,7 +134,7 @@ function register(app, deps) {
     const cfg = loadConfig();
     res.json({
       user: auth.publicUser(req.user),
-      aac: cfg.aac || {},
+      aac: instances.aac(req.user, loadConfig),
       instance: cfg.instance,
       privileges: privilegesDe(String(req.query.module || '').toUpperCase()),
       scopePrivileges: SCOPE_PRIVILEGES,

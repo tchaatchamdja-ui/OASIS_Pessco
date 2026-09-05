@@ -32,9 +32,9 @@ module.exports = function register(app, deps, M) {
   const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   // Éléments de composition des références, tirés du dossier ou du rapport.
-  const contexteRefRapport = (d) => {
+  const contexteRefRapport = (req, d) => {
     const tous = refs();
-    const aac = (typeof loadConfig === 'function' ? (loadConfig().aac || {}) : {});
+    const aac = instances.aac(req.userReel || req.user, loadConfig);
     const prest = (tous.prestataires || []).find((x) => x.id === d.prestataire_id) || {};
     const secteur = (tous.secteurs || []).find((x) => x.id === (d.secteur_id || prest.secteur_id)) || {};
     const dom = (tous.domaines || []).find((x) => x.id === (d.domaine_id || prest.domaine_id || secteur.domaine_id)) || {};
@@ -140,7 +140,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user, perimetrePrestataire(dossier.prestataire_id), referentiels)) return refuser(res);
     const rec = db.insert('rapports', {
       id: db.uid('rpt'),
-      reference: refModele.suivante('rapport', contexteRefRapport(req.body || {})),
+      reference: refModele.suivante('rapport', contexteRefRapport(req, req.body || {})),
       dossier_id: dossier.id,
       // Le rapport appartient à l'instance de son dossier.
       instance: instances.de(dossier, loadConfig),
@@ -187,7 +187,7 @@ module.exports = function register(app, deps, M) {
     if (refusProcessus(req, res, r, 'validation')) return undefined;
     const dossier = db.get('dossiers', r.dossier_id) || {};
     const refFinale = dossier.final_reference
-      || refModele.suivante('rapport_final', contexteRefRapport(dossier));
+      || refModele.suivante('rapport_final', contexteRefRapport(req, dossier));
     // La date et l'auteur de la validation nourrissent l'historique de l'activité.
     db.update('rapports', r.id, {
       statut: 'valide', reference: refFinale,

@@ -565,7 +565,8 @@ module.exports = function register(app, deps, M) {
       const octets = await pdf.depuisHtml(rapport.html({
         carence: c,
         traitement: t,
-        aac: (cfg && cfg.aac) || {},
+        // Le rapport est signé par l'AAC de l'instance qui tient la carence.
+        aac: instances.aacDe(instances.de(c, loadConfig), loadConfig),
         libelleType: (code) => types.get(code) || code,
       }));
       const nom = `rapport-investigation-${String(c.reference || c.id).replace(/[^\w.-]+/g, '_')}.pdf`;
@@ -601,7 +602,7 @@ module.exports = function register(app, deps, M) {
         .filter((m) => m.constatation_id === c.id)
         .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || ''))),
       pac: pacDe(c.id),
-      aac: (cfg && cfg.aac) || {},
+      aac: instances.aacDe(instances.de(c, loadConfig), loadConfig),
       // Les types d'investigation et de mesure ne partagent pas leur registre :
       // l'étape dit lequel elle nomme.
       libelleType: cle === 'investigations'

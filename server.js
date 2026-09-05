@@ -284,7 +284,7 @@ app.post('/api/logout', requireAuth, (req, res) => {
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
-  const aac = req.cfg.aac || {};
+  const aac = instances.aac(req.user, loadConfig);
   res.json({
     user: auth.publicUser(req.user),
     instance: req.cfg.instance,
@@ -549,19 +549,43 @@ app.post('/api/notifications', requireAuth, (req, res) => {
 
 // ── Configuration (SUPERADMIN) ──
 app.get('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
-  res.json(loadConfig());
+  const cfg = loadConfig();
+  const retenue = instances.courante(req.user, loadConfig);
+  // « Détails sur l'Administration » : celle de l'instance regardée, non celle
+  // du fichier de configuration — qui n'est que l'identité installée ici.
+  res.json({
+    ...cfg,
+    aac: instances.aac(req.user, loadConfig),
+    instance: { ...cfg.instance, etat: retenue || cfg.instance.etat },
+    instance_locale: instances.locale(loadConfig),
+    instance_vue: instances.etat(req.user, loadConfig),
+  });
 });
 
 app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
   const cfg = loadConfig();
   const { instance, security, replication, aac } = req.body || {};
-  if (aac) {
+  // « Détails sur l'Administration » : chaque État a la sienne. Celle de
+  // l'instance installée ici reste au fichier de configuration, avec le reste
+  // de son paramétrage ; celle des autres est tenue dans le magasin du socle.
+  const retenue = instances.courante(req.user, loadConfig);
+  const ailleurs = !!retenue && retenue !== instances.locale(loadConfig);
+  if (aac && ailleurs) {
+    instances.definirAac(retenue, aac);
+  } else if (aac) {
     cfg.aac = cfg.aac || {};
-    for (const key of ['nom', 'sigle', 'etat', 'bigramme', 'pays', 'ville', 'adresse1', 'adresse2', 'emailAdmin', 'logo']) {
+    for (const key of instances.CHAMPS_AAC) {
       if (typeof aac[key] === 'string') cfg.aac[key] = aac[key];
     }
   }
-  if (instance) Object.assign(cfg.instance, { etat: instance.etat, codeEtat: instance.codeEtat, defaultLang: instance.defaultLang });
+  // Le bloc « instance » nomme l'État installé ici : au poste d'un autre, on
+  // ne le réécrit pas — sinon régler l'identité du Togo déplacerait le
+  // déploiement tout entier.
+  if (instance && !ailleurs) {
+    Object.assign(cfg.instance, {
+      etat: instance.etat, codeEtat: instance.codeEtat, defaultLang: instance.defaultLang,
+    });
+  }
   if (security) {
     for (const key of ['passwordMinLength', 'passwordMaxAgeDays', 'maxFailedAttempts', 'sessionTimeoutMinutes', 'passwordHistoryCount']) {
       const n = parseInt(security[key], 10);
@@ -576,9 +600,9 @@ app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
     if (replication.centralUrl) cfg.replication.centralUrl = String(replication.centralUrl);
   }
   saveConfig(cfg);
-  audit.log(req.user.username, 'CONFIGURATION_MODIFIEE', {});
+  audit.log(req.user.username, 'CONFIGURATION_MODIFIEE', { instance: retenue || '(régionale)' });
   auth.notify(`Configuration modifiée par ${req.user.username}.`, 'info');
-  res.json({ ok: true, config: cfg });
+  res.json({ ok: true, config: { ...cfg, aac: instances.aac(req.user, loadConfig) } });
 });
 
 // ── Référentiels du portail (Configuration PESSCO) ──

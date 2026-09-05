@@ -1061,6 +1061,29 @@ function refLabel(coll, id, field) {
   return rec ? rec[field] : id || '—';
 }
 const STATUT_FIELD = { k: 'statut', l: 'Statut', type: 'select', options: () => [{ v: 'actif', t: 'Actif' }, { v: 'inactif', t: 'Inactif' }] };
+
+// ── Visibilité par instance ──
+// La taxinomie de la surveillance est commune à l'Union, mais tout n'est pas
+// offert partout : un domaine, un secteur, une sous-activité ou un thème peut
+// n'être proposé qu'à certains États. Rien de coché vaut « toutes les
+// instances » — c'est le cas par défaut, et le plus fréquent.
+//
+// Le champ n'a de sens que pour qui dispose de la liste des instances, c'est-
+// à-dire le super-administrateur de l'Union : ailleurs, il ne s'affiche pas.
+const instanceOptions = () => (((ME.instance_vue || {}).instances) || [])
+  .map((e) => ({ v: e, t: e }));
+
+const VISIBILITE_FIELD = {
+  k: 'visibilite',
+  l: 'Visible par les instances',
+  type: 'multiselect',
+  options: instanceOptions,
+  only: () => instanceOptions().length > 0,
+  resolve: (v) => (Array.isArray(v) && v.length ? v.join(', ') : 'Toutes'),
+};
+
+// Champs d'un schéma que le compte courant doit voir.
+const champsVisibles = (schema) => (schema.fields || []).filter((f) => !f.only || f.only());
 function personnelOptions() {
   return (REFS.inspecteurs || []).map((p) => ({ v: p.id, t: `${p.nom || ''} ${p.prenom || ''}`.trim() || p.numero_inspecteur || p.id }));
 }
@@ -1092,7 +1115,7 @@ const REF_SCHEMAS = {
   },
   domaines: {
     title: 'Domaines',
-    fields: [{ k: 'code', l: 'Code' }, { k: 'nom', l: 'Nom' }, { k: 'description', l: 'Description' }, STATUT_FIELD],
+    fields: [{ k: 'code', l: 'Code' }, { k: 'nom', l: 'Nom' }, { k: 'description', l: 'Description' }, STATUT_FIELD, VISIBILITE_FIELD],
   },
   secteurs: {
     title: 'Secteurs',
@@ -1102,6 +1125,7 @@ const REF_SCHEMAS = {
       { k: 'domaine_id', l: 'Domaine', type: 'select', options: domaineOptions, resolve: (v) => refLabel('domaines', v, 'code') },
       { k: 'csn', l: 'Cycle (mois)', type: 'number' },
       STATUT_FIELD,
+      VISIBILITE_FIELD,
     ],
   },
   sous_activites: {
@@ -1110,6 +1134,7 @@ const REF_SCHEMAS = {
       { k: 'code', l: 'Code' },
       { k: 'nom', l: 'Nom' },
       { k: 'secteur_id', l: 'Secteur', type: 'select', options: secteurOptions, resolve: (v) => refLabel('secteurs', v, 'code') },
+      VISIBILITE_FIELD,
     ],
   },
   themes_supervision: {
@@ -1122,6 +1147,7 @@ const REF_SCHEMAS = {
       { k: 'sous_activite_id', l: 'Sous-activité', type: 'select', allowEmpty: true, options: () => (REFS.sous_activites || []).map((x) => ({ v: x.id, t: `${x.code} — ${x.nom}` })), resolve: (v) => (v ? refLabel('sous_activites', v, 'code') : '—') },
       { k: 'description', l: 'Description' },
       STATUT_FIELD,
+      VISIBILITE_FIELD,
     ],
   },
   exigences: {
@@ -1218,7 +1244,7 @@ function refTable(coll) {
     .map(
       (r) => `
     <tr>
-      ${schema.fields.map((f) => `<td>${fieldValue(f, r)}</td>`).join('')}
+      ${champsVisibles(schema).map((f) => `<td>${fieldValue(f, r)}</td>`).join('')}
       <td class="actions-cell">
         <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}">${icon('edit', 15)}</button>
         <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
@@ -1236,8 +1262,8 @@ function refTable(coll) {
   </div>
   <div class="shell-table-container">
     <table class="shell-table shell-table-compact">
-      <thead><tr>${schema.fields.map((f) => `<th>${esc(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="${schema.fields.length + 1}" style="color:var(--text-muted);">Aucun élément.</td></tr>`}</tbody>
+      <thead><tr>${champsVisibles(schema).map((f) => `<th>${esc(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="${champsVisibles(schema).length + 1}" style="color:var(--text-muted);">Aucun élément.</td></tr>`}</tbody>
     </table>
   </div>`;
 }
@@ -1508,7 +1534,7 @@ window.openRefModal = function (coll, id, defaultsJson) {
   const aacRef = (CURRENT_CFG && CURRENT_CFG.aac) || {};
   const orgIsTop = isOrg && record.type === orgTop;
   window.__ORG_AUTO = { top: orgTop, sigle: aacRef.sigle || '', nom: aacRef.nom || '' };
-  const inputs = schema.fields
+  const inputs = champsVisibles(schema)
     .map((f) => {
       const val = record[f.k] ?? '';
       const wrapCls = f.inspectorOnly ? 'shell-form-group insp-only' : 'shell-form-group';

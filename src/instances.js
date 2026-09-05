@@ -109,7 +109,71 @@ function refs(user, loadConfig) {
   referentiels.COLLECTIONS_INSTANCE.forEach((c) => {
     vue[c] = filtrer(tout[c] || [], retenue, loadConfig);
   });
+  // La taxinomie est commune, mais chaque élément peut n'être offert qu'à
+  // certaines instances : ce qui ne l'est pas ici disparaît des listes, donc
+  // des filtres et des écrans des modules. La restriction suit les
+  // rattachements — un secteur ne survit pas à son domaine.
+  const vus = referentiels.idsVisibles(retenue);
+  referentiels.COLLECTIONS_VISIBILITE.forEach((c) => {
+    vue[c] = (tout[c] || []).filter((r) => vus[c].has(r.id));
+  });
   return vue;
+}
+
+// ── Identité de l'autorité, par instance ──
+// « Détails sur l'Administration » : le nom de l'AAC, son sigle, son bigramme,
+// sa ville, ses adresses, son logo. Chaque État a la sienne, et elle se lit
+// partout — en-tête des rapports, composition des références, bandeau des
+// modules.
+//
+// Le fichier de configuration porte celle de l'instance installée ici ; les
+// autres sont tenues dans le magasin du socle. Une instance qu'on n'a pas
+// encore renseignée se présente vide, sous le seul nom de son État : lui
+// prêter l'identité de l'AAC voisine ferait signer ses rapports par une
+// autorité qui n'en est pas l'auteur.
+const CHAMPS_AAC = ['nom', 'sigle', 'etat', 'bigramme', 'pays', 'ville',
+  'adresse1', 'adresse2', 'emailAdmin', 'logo'];
+
+const identites = () => (store.load('instances', {}) || {}).aac || {};
+
+function aacDe(instance, loadConfig) {
+  const cfg = config(loadConfig);
+  const propre = identites()[instance] || null;
+  // Vue régionale, ou instance installée ici : l'AAC du fichier de
+  // configuration, complétée de ce qui a pu être saisi depuis.
+  if (!instance || instance === locale(loadConfig)) {
+    return { ...(cfg.aac || {}), ...(propre || {}) };
+  }
+  return propre ? { ...propre } : { etat: instance };
+}
+
+const aac = (user, loadConfig) => aacDe(courante(user, loadConfig), loadConfig);
+
+// Enregistre l'identité d'une instance autre que celle installée ici. Celle de
+// l'instance locale reste au fichier de configuration, avec le reste de son
+// paramétrage.
+function definirAac(instance, patch) {
+  const tout = store.load('instances', {}) || {};
+  const avant = (tout.aac || {})[instance] || {};
+  const suite = { ...avant };
+  CHAMPS_AAC.forEach((k) => { if (typeof patch[k] === 'string') suite[k] = patch[k]; });
+  suite.etat = suite.etat || instance;
+  store.save('instances', {
+    ...tout,
+    aac: { ...(tout.aac || {}), [instance]: suite },
+    date_maj: new Date().toISOString(),
+  });
+  return suite;
+}
+
+// Éléments d'une collection de la taxinomie que l'instance regardée voit. À
+// employer quand la liste a déjà été mise en forme et ne peut plus passer par
+// `refs` ; le rapprochement se fait sur l'identifiant.
+function visibles(rangs, coll, user, loadConfig) {
+  const retenue = courante(user, loadConfig);
+  if (!retenue) return rangs;
+  const vus = referentiels.idsVisibles(retenue)[coll];
+  return vus ? rangs.filter((r) => vus.has(r.id)) : rangs;
 }
 
 // Ce que la barre supérieure a besoin de savoir. Les instances ne sont servies
@@ -124,4 +188,7 @@ const etat = (user, loadConfig) => {
   };
 };
 
-module.exports = { locale, liste, courante, definir, de, filtrer, refs, etat };
+module.exports = {
+  locale, liste, courante, definir, de, filtrer, refs, visibles, etat,
+  aac, aacDe, definirAac, CHAMPS_AAC,
+};

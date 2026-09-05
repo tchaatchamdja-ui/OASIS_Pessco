@@ -5,6 +5,7 @@
 // exploitant, et RAMP ne l'a jamais désigné autrement que par son nom — c'est
 // donc ce nom, ou son trigramme, qui rapproche les deux répertoires.
 const referentiels = require('../../referentiels');
+const instances = require('../../instances');
 const vuesSocle = require('../../vues_prestataire');
 const db = require('./store');
 const { MODULE } = require('./roles');
@@ -61,11 +62,16 @@ const voitExploitant = (req, exploitant) => {
   return !cles || cles.has(norm(exploitant));
 };
 
-// Inspections visibles de la requête courante.
-const filtrerInspections = (req, liste) => {
+// Inspections visibles de la requête courante — deux cloisonnements
+// successifs, qui ne disent pas la même chose : l'instance dit quelle AAC
+// tient l'inspection, le périmètre quel exploitant le compte a le droit de
+// voir. Un compte prestataire subit les deux.
+const filtrerInspections = (req, liste, loadConfig) => {
+  const retenues = instances.filtrer(liste,
+    instances.courante(req.userReel || req.user, loadConfig), loadConfig);
   const cles = perimetre(req);
-  if (!cles) return liste;
-  return liste.filter((i) => cles.has(norm(i.exploitant)));
+  if (!cles) return retenues;
+  return retenues.filter((i) => cles.has(norm(i.exploitant)));
 };
 
 module.exports = {

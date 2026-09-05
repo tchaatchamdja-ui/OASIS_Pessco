@@ -26,6 +26,7 @@ const courriel = require('../../email');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
+const instances = require('../../instances');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -69,7 +70,11 @@ const CHAMPS_ENTETE = ['date', 'heure_debut', 'heure_fin', 'place', 'etat_inspec
   'configuration'];
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
+
+  // Instance regardée : une fiche d'inspection appartient à l'AAC qui l'a
+  // ouverte, comme l'inspection qui en naîtra.
+  const instanceCourante = (req) => instances.courante(req.userReel || req.user, loadConfig);
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const texte = (v) => String(v == null ? '' : v).trim();
   const admin = (req) => R.isAdmin(req.user, referentiels);
@@ -273,7 +278,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.get(`${M}/poi`, requireAuth, (req, res) => {
-    const liste = db.list('poi')
+    const liste = instances.filtrer(db.list('poi'), instanceCourante(req), loadConfig)
       .filter((p) => dansPerimetre(req, p))
       .sort((a, b) => String(b.cree_le || '').localeCompare(String(a.cree_le || '')));
     res.json({ poi: liste.map(resume), peut_saisir: R.canContribute(req.user) });
@@ -372,6 +377,7 @@ module.exports = function register(app, deps, M) {
     const p = {
       id: db.uid('poi'),
       reference: db.prochaineReferencePoi(),
+      instance: instanceCourante(req),
       statut: 'brouillon',
       ...corps,
       cree_par: req.user.username,

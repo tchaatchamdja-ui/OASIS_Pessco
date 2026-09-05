@@ -43,20 +43,21 @@ function creer(o) {
 
   const peutBasculer = (user) => !!user && rolesBascule.includes(user.role);
 
-  // `etat_aac` : en vue AAC, l'État dont on tient le poste. Vide, le compte
-  // travaille avec ses propres rattachements.
+  // L'État dont on tient le poste ne se règle plus ici : c'est l'instance
+  // regardée, commune au portail et aux six modules (`src/instances.js`). Deux
+  // mécanismes concurrents laissaient un module sur un État et son voisin sur
+  // un autre.
   function vueDe(username) {
     const rec = db.get('vues', username);
-    if (!rec || !VUES.includes(rec.vue)) return { vue: 'aac', prestataire_id: '', etat_aac: '' };
-    return { vue: rec.vue, prestataire_id: rec.prestataire_id || '', etat_aac: rec.etat_aac || '' };
+    if (!rec || !VUES.includes(rec.vue)) return { vue: 'aac', prestataire_id: '' };
+    return { vue: rec.vue, prestataire_id: rec.prestataire_id || '' };
   }
 
-  function definirVue(username, vue, prestataireId, etatAac) {
+  function definirVue(username, vue, prestataireId) {
     const rec = {
       id: username,
       vue: VUES.includes(vue) ? vue : 'aac',
       prestataire_id: prestataireId || '',
-      etat_aac: etatAac || '',
       date_maj: db.now(),
     };
     if (db.get('vues', username)) db.update('vues', username, rec);
@@ -101,11 +102,7 @@ function creer(o) {
 
     if (!peutBasculer(req.user)) return next();
     const active = vueDe(req.user.username);
-    if (active.vue !== 'prestataire') {
-      // Vue AAC d'un État donné : le compte travaille comme son autorité.
-      if (active.etat_aac) req.etatAac = active.etat_aac;
-      return next();
-    }
+    if (active.vue !== 'prestataire') return next();
     const prestataireId = active.prestataire_id || prestataireParDefaut();
     if (!prestataireId) return next();
     enPrestataire(req, [prestataireId], 'bascule');

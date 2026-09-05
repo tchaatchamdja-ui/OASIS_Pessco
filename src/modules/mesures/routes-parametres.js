@@ -76,7 +76,8 @@ module.exports = function register(app, deps, M) {
 
   // Référentiels dont le module a besoin, servis en un seul appel.
   app.get(`${M}/referentiels`, requireAuth, (req, res) => {
-    const refs = referentiels.getAll();
+    // Vue de l'instance regardée : ses organismes, la taxinomie commune.
+    const refs = instances.refs(req.user, loadConfig);
     res.json({
       prestataires: (refs.prestataires || []).map((p) => ({
         id: p.id, nom: p.nom, trigramme: p.trigramme,

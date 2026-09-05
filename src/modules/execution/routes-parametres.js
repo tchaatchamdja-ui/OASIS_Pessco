@@ -61,7 +61,8 @@ module.exports = function register(app, deps, M) {
       disponible: true,
       vue: active.vue,
       prestataire_id: active.prestataire_id || vues.prestataireParDefaut(),
-      prestataires: (refs().prestataires || []).map((p) => ({ id: p.id, nom: p.nom, trigramme: p.trigramme })),
+      prestataires: (instances.refs(req.userReel || req.user, loadConfig).prestataires || [])
+        .map((p) => ({ id: p.id, nom: p.nom, trigramme: p.trigramme })),
     };
   };
 
@@ -123,7 +124,8 @@ module.exports = function register(app, deps, M) {
   });
 
   app.get(`${M}/utilisateurs`, requireAuth, (req, res) => {
-    res.json(auth.getUsers().map(vueUtilisateur));
+    const retenue = instances.courante(req.userReel || req.user, loadConfig);
+    res.json(instances.filtrer(auth.getUsers(), retenue, loadConfig).map(vueUtilisateur));
   });
 
   app.get(`${M}/aac`, requireAuth, (req, res) => res.json(loadConfig().aac || {}));

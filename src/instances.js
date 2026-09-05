@@ -24,6 +24,7 @@
 // qui ait jamais écrit dans ces fichiers de données — les écrans montrent donc
 // exactement ce qu'ils montraient.
 const store = require('./store');
+const referentiels = require('./referentiels');
 
 // États membres de l'UEMOA, à défaut de liste au fichier de configuration.
 const ETATS_UEMOA = ['Bénin', 'Burkina Faso', "Côte d'Ivoire", 'Guinée-Bissau',
@@ -80,8 +81,36 @@ const de = (x, loadConfig) => String((x || {}).instance || '') || locale(loadCon
 
 // Le tri appliqué aux listes. En vue régionale — instance retenue vide — rien
 // n'est écarté : c'est tout le dispositif que l'on regarde.
-const filtrer = (rangs, retenue, loadConfig) => (!retenue ? rangs
-  : rangs.filter((x) => de(x, loadConfig) === retenue));
+//
+// L'instance locale est lue une seule fois : `de` la relirait pour chaque
+// rang, et la lire, c'est relire le fichier de configuration — un import de
+// mille inspections en aurait fait mille lectures.
+function filtrer(rangs, retenue, loadConfig) {
+  if (!retenue) return rangs;
+  const ici = locale(loadConfig);
+  return rangs.filter((x) => (String((x || {}).instance || '') || ici) === retenue);
+}
+
+// ── Le référentiel tel qu'une instance le voit ──
+// Ses collections propres — prestataires, inspecteurs, organisation,
+// exigences — resserrées sur elle ; les collections communes intactes. C'est
+// ce qui fait la différence entre une instance simulée et une vraie : le
+// Togo n'a pas les organismes du Bénin dans ses listes déroulantes.
+//
+// À employer partout où une liste est servie à un écran. Les recherches par
+// identifiant continuent de passer par `referentiels.getAll()` : un
+// identifiant n'appartient qu'à une instance, le retrouver ne franchit
+// aucune frontière.
+function refs(user, loadConfig) {
+  const tout = referentiels.getAll();
+  const retenue = courante(user, loadConfig);
+  if (!retenue) return tout;
+  const vue = { ...tout };
+  referentiels.COLLECTIONS_INSTANCE.forEach((c) => {
+    vue[c] = filtrer(tout[c] || [], retenue, loadConfig);
+  });
+  return vue;
+}
 
 // Ce que la barre supérieure a besoin de savoir. Les instances ne sont servies
 // qu'à qui peut en changer : les autres comptes lisent la leur.
@@ -95,4 +124,4 @@ const etat = (user, loadConfig) => {
   };
 };
 
-module.exports = { locale, liste, courante, definir, de, filtrer, etat };
+module.exports = { locale, liste, courante, definir, de, filtrer, refs, etat };

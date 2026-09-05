@@ -21,6 +21,20 @@ const COLLECTIONS = [
   'organisation_assignments',
 ];
 
+// ── Ce qui appartient à une instance, et ce qui reste commun ──
+//
+// Chaque AAC surveille ses propres organismes avec ses propres inspecteurs,
+// depuis sa propre organisation et sous sa propre réglementation : ces
+// quatre-là sont à elle, et un État n'a pas à voir les prestataires d'un
+// autre. La taxinomie de la surveillance — domaines, secteurs, sous-activités,
+// thèmes — et les nomenclatures — types et modes de supervision, niveaux de
+// qualification, spécialités — sont harmonisées à l'échelle de l'Union et
+// restent communes : sans elles, deux États ne pourraient plus comparer un
+// plan, un écart ni un profil de risque, ce qui est l'objet même du
+// dispositif régional.
+const COLLECTIONS_INSTANCE = ['prestataires', 'inspecteurs', 'organisation',
+  'organisation_assignments', 'exigences'];
+
 function uid() {
   return crypto.randomBytes(6).toString('hex');
 }
@@ -121,7 +135,7 @@ function findByCode(collection, code, exceptId, data) {
   return list.find((r) => normCode(r.code) === c && r.id !== exceptId) || null;
 }
 
-function createItem(collection, item) {
+function createItem(collection, item, instance) {
   if (!COLLECTIONS.includes(collection)) return null;
   const data = getAll();
   if (CODE_KEYED.includes(collection)) {
@@ -129,6 +143,10 @@ function createItem(collection, item) {
     if (findByCode(collection, item.code, null, data)) return { error: 'duplicate_code' };
   }
   const record = { id: uid(), ...item };
+  // L'instance qui l'inscrit le tient : elle seule le verra ensuite. Les
+  // collections communes n'en portent pas — elles appartiennent à l'Union.
+  if (COLLECTIONS_INSTANCE.includes(collection)) record.instance = String(instance || '');
+  else delete record.instance;
   if (CODE_KEYED.includes(collection)) record.code = normCode(record.code);
   data[collection] = data[collection] || [];
   data[collection].push(record);
@@ -230,6 +248,7 @@ function duplicateCodes() {
 }
 
 module.exports = {
-  COLLECTIONS, CODE_KEYED, seedReferentiels, getAll, createItem, updateItem, deleteItem,
+  COLLECTIONS, COLLECTIONS_INSTANCE, CODE_KEYED, seedReferentiels, getAll,
+  createItem, updateItem, deleteItem,
   orphans, findByCode, normCode, duplicateCodes,
 };

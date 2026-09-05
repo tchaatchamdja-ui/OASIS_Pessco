@@ -911,28 +911,31 @@ module.exports = async function rampSmoke(port) {
     // Une inspection d'un autre exploitant : elle doit disparaître de la vue.
     const horsPerimetre = (listeAac.find((i) => i.exploitant !== prestataire.nom) || {}).id;
 
-    // Poste d'AAC tenu : le super-administrateur passe sur l'écran d'un État
+    // Instance regardée : le poste d'AAC tenu vient du socle, commun au portail
+    // et aux six modules. Le super-administrateur passe sur l'écran d'un État
     // membre, et ne voit alors que ce que cet État voit.
-    verifier('postes d’AAC proposés au super-administrateur',
-      (vueDepart.corps.etats_aac || []).length === 8, String((vueDepart.corps.etats_aac || []).length));
-    verifier('poste d’AAC pris',
-      (await srv.appel(`${M}/vue`, {
-        method: 'PUT', body: JSON.stringify({ vue: 'aac', etat_aac: 'Niger' }),
-      })).corps.etat_aac === 'Niger');
+    const instDepart = await srv.appel(`${M}/instance`);
+    verifier('instances proposées au super-administrateur',
+      (instDepart.corps.instances || []).length === 8,
+      String((instDepart.corps.instances || []).length));
+    verifier('instance prise',
+      (await srv.appel(`${M}/instance`, {
+        method: 'PUT', body: JSON.stringify({ instance: 'Niger' }),
+      })).corps.instance === 'Niger');
     const auNiger = await srv.appel(`${M}/requetes`);
     verifier('au poste du Niger, seules ses requêtes',
       (auNiger.corps.mes_etats || []).join() === 'Niger'
       && (auNiger.corps.requetes || []).every((r) => r.etat_emetteur === 'Niger'
         || (r.etats_destinataires || []).includes('Niger')),
       JSON.stringify(auNiger.corps.mes_etats));
-    verifier('État hors UEMOA refusé',
-      (await srv.appel(`${M}/vue`, {
-        method: 'PUT', body: JSON.stringify({ vue: 'aac', etat_aac: 'France' }),
+    verifier('instance inconnue refusée',
+      (await srv.appel(`${M}/instance`, {
+        method: 'PUT', body: JSON.stringify({ instance: 'France' }),
       })).statut === 400);
     verifier('retour à la vue régionale',
-      (await srv.appel(`${M}/vue`, {
-        method: 'PUT', body: JSON.stringify({ vue: 'aac', etat_aac: '' }),
-      })).corps.etat_aac === '');
+      (await srv.appel(`${M}/instance`, {
+        method: 'PUT', body: JSON.stringify({ instance: '' }),
+      })).corps.instance === '');
 
     const bascule = await srv.appel(`${M}/vue`, {
       method: 'PUT', body: JSON.stringify({ vue: 'prestataire' }),

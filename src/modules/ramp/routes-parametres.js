@@ -9,6 +9,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
+const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
@@ -52,20 +53,11 @@ module.exports = function register(app, deps, M) {
     // compte prestataire doit lire à qui il appartient dès la barre.
     const nomPrestataire = (ids) => (referentiels.getAll().prestataires || [])
       .filter((p) => (ids || []).includes(p.id)).map((p) => p.nom).join(', ');
-    // Les États membres de l'UEMOA, tels que le paramétrage « Pays » les
-    // déclare : c'est parmi eux que le super-administrateur choisit le poste
-    // d'AAC dont il veut voir l'écran.
-    const membresUemoa = db.list('pays').filter((p) => p.uemoa && p.actif !== false)
-      .map((p) => p.nom).sort((a, b) => a.localeCompare(b, 'fr'));
-    const superadmin = reel.role === 'SUPERADMIN';
     const base = {
       vue: perimetre ? 'prestataire' : 'aac',
       origine: perimetre ? perimetre.origine : '',
       exploitants: perimetre ? perimetre.exploitants : [],
       prestataire_nom: perimetre ? nomPrestataire(perimetre.prestataires) : '',
-      // Poste d'AAC tenu : réservé au super-administrateur.
-      etat_aac: superadmin ? (vues.vueDe(reel.username).etat_aac || '') : '',
-      etats_aac: superadmin ? (membresUemoa.length ? membresUemoa : db.ETATS_INSPECTION) : [],
     };
     // Bascule et gestion des droits : réservées à l'Autorité, quel que soit
     // l'écran regardé. Le rôle qui compte est celui du compte connecté, non
@@ -92,6 +84,9 @@ module.exports = function register(app, deps, M) {
       etats_inspection: db.ETATS_INSPECTION,
       etats_contact: db.ETATS_CONTACT,
       vue: etatVue(req),
+      // Instance regardée : la même que celle du portail et des autres
+      // modules — la barre supérieure en fait une liste déroulante.
+      instance: instances.etat(req.userReel || req.user, loadConfig),
       // Ce que l'organisme a confié au compte : les écrans de la vue
       // Prestataire s'y règlent.
       droits_prestataire: R.estPrestataire(req.user)
@@ -103,6 +98,25 @@ module.exports = function register(app, deps, M) {
   });
 
   app.get(`${M}/moi`, requireAuth, (req, res) => res.json(vueUtilisateur(req.user)));
+
+  // ── Instance regardée ──
+  // Le poste d'AAC tenu, autrefois propre à ce module, est devenu le choix
+  // commun du socle : le prendre ici le prend partout.
+  app.get(`${M}/instance`, requireAuth,
+    (req, res) => res.json(instances.etat(req.userReel || req.user, loadConfig)));
+
+  app.put(`${M}/instance`, requireAuth, (req, res) => {
+    const reel = req.userReel || req.user;
+    if (reel.role !== 'SUPERADMIN') {
+      return refuser(res, 'Choix de l’instance réservé au super-administrateur');
+    }
+    const demandee = texte((req.body || {}).instance);
+    if (demandee && !instances.liste(loadConfig).includes(demandee)) {
+      return res.status(400).json({ error: 'Instance inconnue' });
+    }
+    instances.definir(reel.username, demandee);
+    return res.json({ status: 'ok', instance: demandee });
+  });
 
   app.get(`${M}/vue`, requireAuth, (req, res) => res.json(etatVue(req)));
 
@@ -122,21 +136,8 @@ module.exports = function register(app, deps, M) {
     if (prestataireId && !(referentiels.getAll().prestataires || []).some((p) => p.id === prestataireId)) {
       return res.status(400).json({ error: 'Prestataire inconnu' });
     }
-    // Poste d'AAC : seul le super-administrateur en change, et seulement pour
-    // un État membre. Passer en vue Prestataire le libère.
-    const membres = db.list('pays').filter((p) => p.uemoa && p.actif !== false).map((p) => p.nom);
-    const connus = membres.length ? membres : db.ETATS_INSPECTION;
-    let etatAac = '';
-    if (d.vue === 'aac' && reel.role === 'SUPERADMIN') {
-      const demande = d.etat_aac === undefined
-        ? vues.vueDe(reel.username).etat_aac : texte(d.etat_aac);
-      if (demande && !connus.includes(demande)) {
-        return res.status(400).json({ error: 'État membre inconnu' });
-      }
-      etatAac = demande;
-    }
-    vues.definirVue(reel.username, d.vue, prestataireId, etatAac);
-    return res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId, etat_aac: etatAac });
+    vues.definirVue(reel.username, d.vue, prestataireId);
+    return res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
   });
 
   // ══════════════════════════════════════

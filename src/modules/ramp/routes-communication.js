@@ -13,6 +13,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const referentiels = require('../../referentiels');
+const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
@@ -28,7 +29,7 @@ const EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg', '.webp', '.heic',
 const TAILLE_MAX = 25 * 1024 * 1024;
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const texte = (v) => String(v == null ? '' : v).trim();
   const admin = (req) => R.isAdmin(req.user, referentiels);
@@ -42,11 +43,22 @@ module.exports = function register(app, deps, M) {
   // États que le compte représente. Un administrateur ou un coordonnateur
   // régional n'est borné par aucun : il voit tout le trafic.
   //
-  // Sauf s'il tient le poste d'une AAC : le super-administrateur qui choisit un
-  // État en barre supérieure travaille alors comme cette autorité — il n'écrit
-  // et ne lit que ce que cet État écrirait et lirait.
-  const mesEtats = (req) => (req.etatAac ? [req.etatAac] : R.etatsDe(req.user, referentiels));
-  const voitTout = (req) => !req.etatAac
+  // Sauf s'il tient le poste d'une AAC : le super-administrateur qui choisit
+  // une instance en barre supérieure travaille alors comme cette autorité — il
+  // n'écrit et ne lit que ce que cet État écrirait et lirait. Ce poste vient
+  // désormais du socle, commun au portail et aux six modules.
+  //
+  // Elle ne borne que le super-administrateur de l'Union, seul à pouvoir en
+  // changer. Les autres comptes gardent la règle du module : un coordonnateur
+  // régional voit tout le trafic, un coordonnateur national celui de ses
+  // États. Les leur borner à l'instance locale leur retirerait la vue
+  // d'ensemble qui fait leur fonction.
+  const posteTenu = (req) => {
+    const reel = req.userReel || req.user;
+    return reel.role === 'SUPERADMIN' ? instances.courante(reel, loadConfig) : '';
+  };
+  const mesEtats = (req) => (posteTenu(req) ? [posteTenu(req)] : R.etatsDe(req.user, referentiels));
+  const voitTout = (req) => !posteTenu(req)
     && (admin(req) || !mesEtats(req).length
       || R.roleRamp(req.user, referentiels) === 'Coordonnateur Régional');
 
@@ -60,7 +72,7 @@ module.exports = function register(app, deps, M) {
     const etats = mesEtats(req);
     const parLesEtats = etats.includes(r.etat_emetteur)
       || (r.etats_destinataires || []).some((e) => etats.includes(e));
-    if (req.etatAac) return parLesEtats;
+    if (posteTenu(req)) return parLesEtats;
     return voitTout(req) || r.cree_par === req.user.username || parLesEtats;
   };
 
@@ -300,10 +312,16 @@ module.exports = function register(app, deps, M) {
   // Un partage se lit par les États auxquels il est adressé, par celui qui l'a
   // fait, et par le gestionnaire du module.
   const partageVisible = (req, pa) => {
-    const parLesEtats = (pa.etats || []).some((e) => mesEtats(req).includes(e));
+    const etats = mesEtats(req);
+    // Une mise à disposition se lit chez ses destinataires comme chez l'État
+    // qui l'a faite : à son propre poste, on doit revoir ce qu'on a partagé.
+    // Une requête portait déjà son émetteur ; un partage ne nommait que ses
+    // destinataires, et l'État émetteur perdait sa copie de vue.
+    const parLesEtats = (pa.etats || []).some((e) => etats.includes(e))
+      || etats.includes(pa.partage_etat);
     // Même règle que pour les requêtes : au poste d'une AAC, seuls les États
     // comptent.
-    if (req.etatAac) return parLesEtats;
+    if (posteTenu(req)) return parLesEtats;
     return voitTout(req) || pa.partage_par === req.user.username || parLesEtats;
   };
 

@@ -97,6 +97,7 @@
         // Vue active (AAC / Prestataire) : elle commande les menus et le
         // périmètre des données avant le premier rendu.
         RAMP_STATE.vue = boot.ctx.vue || { vue: 'aac', disponible: false };
+        RAMP_STATE.instance = boot.ctx.instance || {};
         RAMP_STATE.droitsPrestataire = boot.ctx.droits_prestataire || [];
         RAMP_STATE.adminPrestataire = !!boot.ctx.admin_prestataire;
         RAMP_STATE.etatsInspection = boot.ctx.etats_inspection || [];

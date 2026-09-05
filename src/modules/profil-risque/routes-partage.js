@@ -1,6 +1,7 @@
 // Module « Profils de Risque » — données partagées du portail, bibliothèque
 // documentaire, contexte et collections du module (CRUD générique).
 const moduleRights = require('../../module_rights');
+const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
 
@@ -31,7 +32,10 @@ module.exports = function register(app, deps, M) {
   app.get('/api/domaines', requireAuth, (req, res) => res.json(D.sharedDomaines()));
   app.get('/api/secteurs', requireAuth, (req, res) => res.json(D.sharedSecteurs()));
   app.get('/api/sous-activites', requireAuth, (req, res) => res.json(D.sharedSousActivites()));
-  app.get('/api/prestataires', requireAuth, (req, res) => res.json(D.sharedPrestataires()));
+  // Les organismes appartiennent à l'AAC qui les surveille : la liste suit
+  // l'instance regardée, à la différence de la taxinomie au-dessus.
+  app.get('/api/prestataires', requireAuth, (req, res) => res.json(
+    instances.filtrer(D.sharedPrestataires(), instances.courante(req.user, loadConfig), loadConfig)));
   app.get('/api/indices', requireAuth, lecture, (req, res) => res.json(D.sharedIndices()));
 
   // Les indices commandent le calcul de tous les profils de risque : les

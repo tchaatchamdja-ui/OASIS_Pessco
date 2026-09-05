@@ -45,14 +45,16 @@ async function rampAppliquerVue(vue, prestataireId) {
     window.location.reload();
 }
 
-// Poste d'AAC tenu par le super-administrateur : il travaille alors comme
-// l'autorité de cet État — ce qu'il lit et écrit dans « Communication » est ce
-// que cette AAC lirait et écrirait.
-async function rampAppliquerEtatAac(etatAac) {
-    const etat = RAMP_STATE.vue || {};
-    if ((etat.etat_aac || '') === (etatAac || '')) return;
+// Instance regardée : l'État dont le super-administrateur tient le poste. Le
+// choix est celui du socle, commun au portail et aux six modules — le prendre
+// ici le prend partout, et ce module ne sert plus que les inspections, les
+// fiches et les échanges de cette AAC.
+async function rampAppliquerInstance(valeur) {
+    const etat = RAMP_STATE.instance || {};
+    if (!etat.disponible) return;
+    if ((etat.courante || '') === (valeur || '')) return;
     try {
-        await rampApi('/vue', { method: 'PUT', body: JSON.stringify({ vue: 'aac', etat_aac: etatAac }) });
+        await rampApi('/instance', { method: 'PUT', body: JSON.stringify({ instance: valeur }) });
     } catch (e) {
         rampToast((e && e.message) || rt('m_bascule_impossible'), 'error');
         return;
@@ -81,17 +83,6 @@ function rampDessinerActions() {
             active: etat.vue === cle,
             onClick: (k) => rampAppliquerVue(k),
         }));
-        // En vue AAC, le super-administrateur peut prendre le poste d'une AAC
-        // membre : la liste n'est servie qu'à lui.
-        if (etat.vue === 'aac' && (etat.etats_aac || []).length) {
-            actions.push({
-                key: 'etat_aac', type: 'select', label: rt('vue_etat_aac'),
-                value: etat.etat_aac || '',
-                options: [{ value: '', label: rt('vue_aac_regionale') }]
-                    .concat(etat.etats_aac.map((e) => ({ value: e, label: e }))),
-                onChange: (e) => rampAppliquerEtatAac(e),
-            });
-        }
         // En vue Prestataire, le compte tenu se choisit dans la barre : une
         // AAC surveille plusieurs exploitants et passe de l'un à l'autre.
         if (etat.vue === 'prestataire') {
@@ -104,6 +95,18 @@ function rampDessinerActions() {
                 onChange: (id) => rampAppliquerVue('prestataire', id),
             });
         }
+    }
+    // Instance regardée — servie au seul super-administrateur, et à la même
+    // place que dans les autres modules.
+    const inst = RAMP_STATE.instance || {};
+    if (inst.disponible && (inst.instances || []).length) {
+        actions.push({
+            key: 'instance', type: 'select', label: rt('vue_instance'),
+            value: inst.courante || '',
+            options: [{ value: '', label: rt('vue_instance_regionale') }]
+                .concat(inst.instances.map((e) => ({ value: e, label: e }))),
+            onChange: (v) => rampAppliquerInstance(v),
+        });
     }
     if (rampPeutGererDroits()) {
         actions.push({

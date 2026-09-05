@@ -24,11 +24,13 @@ module.exports = function register(app, deps, M) {
   const lecture = (req, res, next) => (D.peutLire(req) ? next() : D.refus(res));
 
   // ── Référentiels partagés attendus par le module ──
-  app.get('/api/inspecteurs', requireAuth, (req, res) => res.json(referentiels.getAll().inspecteurs || []));
+  app.get('/api/inspecteurs', requireAuth,
+    (req, res) => res.json(instances.refs(req.user, loadConfig).inspecteurs || []));
   app.get('/api/types-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().types_supervision || []));
   app.get('/api/modes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().modes_supervision || []));
   app.get('/api/themes-supervision', requireAuth, (req, res) => res.json(referentiels.getAll().themes_supervision || []));
-  app.get('/api/exigences', requireAuth, (req, res) => res.json(referentiels.getAll().exigences || []));
+  app.get('/api/exigences', requireAuth,
+    (req, res) => res.json(instances.refs(req.user, loadConfig).exigences || []));
   app.get('/api/shared/risk-profiles', requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
   // Même contrat, exposé en HTTP pour les fronts des autres modules. Un front
   // demande ce que son compte a le droit de voir : l'instance regardée borne
@@ -90,7 +92,7 @@ module.exports = function register(app, deps, M) {
       total_activites: acts.length,
       activites_planifiees: acts.filter((a) => a.statut !== 'realisee').length,
       activites_realisees: acts.filter((a) => a.statut === 'realisee').length,
-      prestataires: (referentiels.getAll().prestataires || []).length,
+      prestataires: (instances.refs(req.user, loadConfig).prestataires || []).length,
     });
   });
 

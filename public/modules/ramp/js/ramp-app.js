@@ -22,6 +22,9 @@ const RAMP_STATE = {
     // Vue active du module : « aac » ou « prestataire ». Le serveur la pose au
     // contexte ; elle commande les menus, les boutons et le périmètre affiché.
     vue: { vue: 'aac', disponible: false, prestataire_id: '', prestataires: [], exploitants: [] },
+    // Instance regardée, servie par le contexte : { disponible, locale,
+    // courante, instances }. Commune au portail et aux six modules.
+    instance: {},
     // Ce que l'organisme a confié au compte, en vue Prestataire.
     droitsPrestataire: [],
     adminPrestataire: false,

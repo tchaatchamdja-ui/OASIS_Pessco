@@ -9,6 +9,7 @@
 const store = require('./store');
 const referentiels = require('./referentiels');
 const moduleAudit = require('./module_audit');
+const instances = require('./instances');
 
 const PRIVILEGES = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR', 'LECTEUR'];
 const SCOPE_PRIVILEGES = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR', 'LECTEUR', 'AUCUN'];
@@ -231,8 +232,10 @@ function register(app, deps) {
   // Utilisateurs ayant le module dans « Accès aux modules »
   app.get(`${R}/:module/users`, requireAuth, canManage, (req, res) => {
     const code = req.params.module.toUpperCase();
-    const users = auth
-      .getUsers()
+    // Une AAC règle les droits de ses propres comptes : la liste suit
+    // l'instance regardée, comme celle du portail.
+    const users = instances
+      .filtrer(auth.getUsers(), instances.courante(req.user, loadConfig), loadConfig)
       .filter((u) => rolesGeresDe(code).includes(u.role))
       .filter((u) => Array.isArray(u.modules) && u.modules.includes(code))
       .map((u) => {

@@ -10,6 +10,7 @@ const { valider } = require('./src/valider');
 const auth = require('./src/auth');
 const email = require('./src/email');
 const referentiels = require('./src/referentiels');
+const instances = require('./src/instances');
 const moduleAudit = require('./src/module_audit');
 const moduleLoader = require('./src/module_loader');
 const services = require('./src/services');
@@ -287,9 +288,30 @@ app.get('/api/me', requireAuth, (req, res) => {
   res.json({
     user: auth.publicUser(req.user),
     instance: req.cfg.instance,
+    // Instance regardée : le bandeau du portail en fait une liste déroulante.
+    instance_vue: instances.etat(req.user, loadConfig),
     platform: req.cfg.platform,
     aac: { sigle: aac.sigle || '', nom: aac.nom || '', logo: aac.logo || '' },
   });
+});
+
+// ── Instance regardée ──
+// OASIS s'installe une fois par État. Le super-administrateur de l'Union prend
+// ici le poste de l'une d'elles, ou les regarde toutes — la vue régionale. Le
+// choix vaut pour le portail et pour les six modules à la fois : il est rangé
+// dans le socle, non dans le magasin de l'un d'eux.
+app.get('/api/instance', requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
+
+app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce que
+  // les écrans serviront, il ne s'invente pas.
+  const demandee = String((req.body || {}).instance || '').trim();
+  if (demandee && !instances.liste(loadConfig).includes(demandee)) {
+    return res.status(400).json({ error: 'instance_inconnue' });
+  }
+  instances.definir(req.user.username, demandee);
+  audit.log(req.user.username, 'INSTANCE_CHANGEE', { instance: demandee || '(régionale)' });
+  return res.json({ ok: true, instance: demandee });
 });
 
 // ── Profil personnel ──
@@ -363,8 +385,12 @@ app.put('/api/modules/:code', requireAuth, requireRole('SUPERADMIN'), (req, res)
 });
 
 // ── Utilisateurs (ADMIN et SUPERADMIN) ──
+// Un compte appartient à l'AAC qui l'a ouvert : la liste ne montre que ceux de
+// l'instance regardée. La connexion, elle, n'est jamais bornée — un agent
+// togolais s'authentifie quel que soit le poste tenu ici.
 app.get('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  res.json(auth.getUsers().map(auth.publicUser));
+  const retenue = instances.courante(req.user, loadConfig);
+  res.json(instances.filtrer(auth.getUsers(), retenue, loadConfig).map(auth.publicUser));
 });
 
 app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider({
@@ -391,6 +417,8 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
     email: username,
     fullName: `${nom} ${prenom || ''}`.trim(),
     role,
+    // L'AAC qui ouvre le compte le tient : c'est dans sa liste qu'il figurera.
+    instance: instances.courante(req.user, loadConfig),
     modules: Array.isArray(modules) ? modules : [],
     prestataire_id: String(req.body.prestataire_id || ''),
     salt,
@@ -485,7 +513,7 @@ app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADM
     ref_personnel: '', nom: user.nom || '', prenom: user.prenom || '', numero_inspecteur: '',
     email: user.email || user.username, telephone: user.telephone || '', specialite: '',
     est_inspecteur: 'non', domaines: [], specialites: [], niveau_qualification: '', statut: 'actif', user_id: user.username,
-  });
+  }, instances.de(user, loadConfig));
   audit.log(req.user.username, 'PERSONNEL_GENERE', { cible: user.username });
   res.json({ ok: true, record: rec });
 });
@@ -554,12 +582,16 @@ app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
 });
 
 // ── Référentiels du portail (Configuration PESSCO) ──
+// Servis dans la vue de l'instance regardée : ses organismes, ses inspecteurs,
+// son organisation et sa réglementation ; la taxinomie et les nomenclatures,
+// communes à l'Union, restent entières.
 app.get('/api/referentiels', requireAuth, (req, res) => {
-  res.json(referentiels.getAll());
+  res.json(instances.refs(req.user, loadConfig));
 });
 
 app.post('/api/referentiels/:coll', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  const record = referentiels.createItem(req.params.coll, req.body || {});
+  const record = referentiels.createItem(req.params.coll, req.body || {},
+    instances.courante(req.user, loadConfig));
   if (!record) return res.status(404).json({ error: 'unknown_collection' });
   if (record.error) return res.status(409).json({ error: record.error });
   audit.log(req.user.username, 'REFERENTIEL_AJOUT', { collection: req.params.coll, id: record.id });
@@ -595,7 +627,7 @@ app.post('/api/referentiels/orphans/purge', requireAuth, requireRole('SUPERADMIN
 // référentiel pour un besoin ciblé. Déclarée après /orphans, qui est une
 // route fixe et doit rester prioritaire.
 app.get('/api/referentiels/:coll', requireAuth, (req, res) => {
-  const all = referentiels.getAll();
+  const all = instances.refs(req.user, loadConfig);
   if (!Object.prototype.hasOwnProperty.call(all, req.params.coll)) {
     return res.status(404).json({ error: 'unknown_collection' });
   }
@@ -725,7 +757,7 @@ app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN'
         else updated[coll] = (updated[coll] || 0) + 1;
         return;
       }
-      const r = referentiels.createItem(coll, item);
+      const r = referentiels.createItem(coll, item, instances.courante(req.user, loadConfig));
       if (r && r.error) errors.push(`${SHEET_NAME[coll] || coll} ligne ${n + 2} : ${r.error === 'code_required' ? 'code manquant' : r.error}`);
       else added[coll] = (added[coll] || 0) + 1;
     });

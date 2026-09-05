@@ -264,6 +264,15 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     padding: 0.25rem 0.6rem; border-radius: 20px;
 }
 
+/* La même pastille, devenue liste déroulante pour qui change d'instance : le
+   choix se lit comme la mention qu'il remplace, sans cadre supplémentaire. */
+.portal-header-instance-choix { padding: 0; }
+.portal-header-instance-choix select {
+    font: inherit; color: inherit; font-weight: 700;
+    background: transparent; border: none; cursor: pointer;
+    padding: 0.25rem 0.6rem; border-radius: 20px; max-width: 16rem;
+}
+
 .portal-notif-bell {
     position: relative; cursor: pointer; padding: 0.4rem;
     border-radius: 8px; display: flex; align-items: center;

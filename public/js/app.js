@@ -317,6 +317,50 @@ window.filterScope = function (inp) {
   });
 };
 
+// ── Instance regardée ──
+// OASIS s'installe une fois par État : le bandeau nomme celle dont on tient le
+// poste. Le super-administrateur de l'Union en change ici, et le choix vaut
+// aussitôt pour le portail comme pour les six modules — organismes,
+// inspecteurs, comptes, plans, dossiers et carences suivent. Les autres
+// comptes lisent la leur, sans en changer.
+const PORTAIL_VUE_REGIONALE = 'Vue régionale (toutes les instances)';
+
+function majBandeauInstance() {
+  const zone = document.getElementById('instanceBadge');
+  if (!zone) return;
+  const vue = ME.instance_vue || {};
+  if (!vue.disponible || !(vue.instances || []).length) {
+    zone.className = 'portal-header-instance';
+    zone.textContent = `${ME.instance.etat} (${ME.instance.codeEtat})`;
+    return;
+  }
+  const options = [{ valeur: '', libelle: PORTAIL_VUE_REGIONALE }]
+    .concat(vue.instances.map((e) => ({ valeur: e, libelle: e })));
+  zone.className = 'portal-header-instance portal-header-instance-choix';
+  zone.innerHTML = `<select id="instanceSelect" title="Instance regardée"
+      aria-label="Instance regardée">${options.map((o) =>
+    `<option value="${esc(o.valeur)}"${o.valeur === (vue.courante || '') ? ' selected' : ''}>${esc(o.libelle)}</option>`).join('')}</select>`;
+  document.getElementById('instanceSelect').onchange = (e) => changerInstance(e.target.value);
+}
+
+async function changerInstance(valeur) {
+  const vue = ME.instance_vue || {};
+  if ((vue.courante || '') === (valeur || '')) return;
+  const res = await api('/api/instance', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ instance: valeur }),
+  });
+  if (!res.ok) {
+    showToast('Changement d’instance impossible', 'error');
+    majBandeauInstance();
+    return;
+  }
+  // L'instance commande le périmètre de tous les écrans : on recharge le
+  // portail plutôt que de rafraîchir liste après liste.
+  window.location.reload();
+}
+
 // Retour d'action : le panneau du socle, commun au portail et aux modules.
 // Si la feuille commune n'est pas chargée, le message part en console plutôt
 // que d'interrompre le geste qui l'a produit.
@@ -2442,7 +2486,7 @@ async function loadMe() {
     avatarEl.classList.remove('has-photo');
     avatarEl.textContent = (ME.user.fullName || ME.user.username).split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   }
-  document.getElementById('instanceBadge').textContent = `${ME.instance.etat} (${ME.instance.codeEtat})`;
+  majBandeauInstance();
   const logoEl = document.getElementById('sidebarLogo');
   const logo = ME.aac && ME.aac.logo;
   if (logo) {

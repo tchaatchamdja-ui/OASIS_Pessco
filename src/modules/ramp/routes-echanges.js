@@ -73,7 +73,7 @@ function dateISO(v) {
 }
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth } = deps;
+  const { requireAuth, loadConfig } = deps;
   const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const texte = (v) => String(v == null ? '' : v).trim();
 
@@ -318,7 +318,7 @@ module.exports = function register(app, deps, M) {
       if (!ecartsDe.has(e.inspection_id)) ecartsDe.set(e.inspection_id, []);
       ecartsDe.get(e.inspection_id).push(e);
     });
-    const retenues = vues.filtrerInspections(req, db.list('inspections')).filter((i) => {
+    const retenues = vues.filtrerInspections(req, db.list('inspections'), loadConfig).filter((i) => {
       const ecarts = ecartsDe.get(i.id) || [];
       if (F.annee && String(i.date || '').slice(0, 4) !== String(F.annee)) return false;
       // Le trimestre arrive seul ou en liste ; une liste vide ne filtre rien.

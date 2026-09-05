@@ -52,6 +52,9 @@ const sharedSousActivites = () => (referentiels.getAll().sous_activites || []).m
 
 const sharedPrestataires = () => (referentiels.getAll().prestataires || []).map((x) => ({
   id: x.id, nom: x.nom, trigramme: x.trigramme || '', domaine_id: x.domaine_id || '', secteur_id: x.secteur_id || '',
+  // L'AAC qui surveille l'organisme : la route la lit pour ne servir que les
+  // siens. Sans ce champ, tous seraient rendus à l'instance locale.
+  instance: x.instance || '',
   dirigeant: x.dirigeant || '', point_focal: x.point_focal || '', email_prestataire: x.email_prestataire || '',
   ref_agrement: x.ref_agrement || '', actif: x.statut !== 'inactif', statut: x.statut || 'actif',
   debut_cycle: x.debut_cycle || '', fin_cycle: x.fin_cycle || '', date_init_surveillance: x.date_init_surveillance || '',

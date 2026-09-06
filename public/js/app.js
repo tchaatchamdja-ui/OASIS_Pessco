@@ -416,14 +416,27 @@ async function renderHome() {
 
   // Chaque module d'un même thème porte sa propre teinte : les quatre cartes
   // de « Surveillance et inspections » se distinguent au premier regard.
+  // Modules ouverts au compte, tels que « Accès aux modules » les déclare. Une
+  // liste jamais renseignée les ouvre tous : c'était l'état de l'application
+  // avant que ce champ n'existe, et le super-administrateur y a toujours accès
+  // — c'est lui qui coche les cases.
+  const mesModules = Array.isArray(ME.user.modules) ? ME.user.modules : null;
+  const ouvert = (code) => ME.user.role === 'SUPERADMIN' || !mesModules
+    || mesModules.includes(code);
+
   const card = (m) => {
     const color = COULEURS_MODULE[m.code] || PRIO_COLORS[m.priority] || '#64748b';
     const name = m.name[CURRENT_LANG] || m.name.fr;
     const desc = m.desc[CURRENT_LANG] || m.desc.fr;
+    // Un module fermé au compte se voit, éteint : il dit ce que l'application
+    // fait, sans laisser croire qu'un clic l'ouvrira.
+    const accessible = ouvert(m.code);
     // La carte ne porte ni priorité, ni état d'activation, ni point du TdR :
     // ce sont des informations de feuille de route, pas d'usage.
     return `
-    <div class="portal-card" style="--module-color:${color};" data-module="${esc(m.code)}" data-enabled="true">
+    <div class="portal-card${accessible ? '' : ' portal-card-ferme'}" style="--module-color:${color};"
+         data-module="${esc(m.code)}" data-enabled="${accessible ? 'true' : 'false'}"
+         ${accessible ? '' : 'title="Ce module ne vous est pas ouvert — voir « Accès aux modules »." aria-disabled="true"'}>
       <div class="portal-card-icon-wrap">${moduleIcon(m.code, 26)}</div>
       <div class="portal-card-title">${esc(name)}</div>
       <div class="portal-card-desc">${esc(desc)}</div>
@@ -494,6 +507,11 @@ async function renderHome() {
       cardEl.addEventListener('click', async () => {
       const enabled = cardEl.dataset.enabled === 'true';
       const code = cardEl.dataset.module;
+      // Carte éteinte : le clic ne mène nulle part, il dit pourquoi.
+      if (!enabled) {
+        showToast('Ce module ne vous est pas ouvert — voir « Accès aux modules ».', 'error');
+        return;
+      }
       // Le registre des modules peut ne pas avoir encore été chargé (session
       // ouverte après le script) : on le redemande avant de renoncer.
       if (enabled && !VIEWS[`mod_${code}`] && typeof moduleHostRegisterViews === 'function') {

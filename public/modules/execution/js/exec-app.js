@@ -348,18 +348,10 @@ async function _execHydrateUser() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.PESSCO) {
-        EXEC_STATE.user = JSON.parse(localStorage.getItem('pr_user') || 'null');
-        if (!EXEC_STATE.user) { window.location.href = '/login'; return; }
-        document.documentElement.setAttribute('data-theme', EXEC_STATE.theme);
-        _execHydrateUser().then(() => execLoadData()).then(() => {
-            execRenderApp();
-            execNavigateTo('dashboard');
-            execUpdateNotifBadge();
-        });
-    }
-});
+// Le module ne se monte qu'une fois, depuis index.html, qui attend le contexte
+// du serveur. Ce second démarrage montait l'écran sur le seul compte gardé en
+// mémoire du navigateur : il s'ouvrait donc à un compte dont le contexte
+// venait d'être refusé.
 
 // ══════════════════════════════════════
 //  DATA LOADING

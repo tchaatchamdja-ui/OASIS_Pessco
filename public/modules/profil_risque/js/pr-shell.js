@@ -96,19 +96,10 @@ window.initProfilRisqueModule = function() {
     });
 };
 
-// Auto-init if loaded standalone (not via shell)
-document.addEventListener('DOMContentLoaded', () => {
-    // Only auto-init if shell is NOT present (standalone mode)
-    if (!window.PESSCO) {
-        APP_STATE.user = JSON.parse(localStorage.getItem('pr_user') || 'null');
-        if (!APP_STATE.user) { window.location.href = '/login'; return; }
-        document.documentElement.setAttribute('data-theme', APP_STATE.theme);
-        loadAllData().then(() => {
-            renderApp();
-            navigateTo('dashboard');
-        });
-    }
-});
+// Le module ne se monte qu'une fois, depuis index.html, qui attend le contexte
+// du serveur. Ce second démarrage montait l'écran sur le seul compte gardé en
+// mémoire du navigateur : il s'ouvrait donc à un compte dont le contexte
+// venait d'être refusé.
 
 // ── Data Loading ──
 async function loadAllData() {

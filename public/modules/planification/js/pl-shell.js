@@ -74,17 +74,11 @@ window.initPlanificationModule = function() {
     });
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-    if (!window.PESSCO) {
-        PLAN_STATE.user = JSON.parse(localStorage.getItem('pr_user') || 'null');
-        if (!PLAN_STATE.user) { window.location.href = '/login'; return; }
-        document.documentElement.setAttribute('data-theme', PLAN_STATE.theme);
-        planLoadData().then(() => {
-            planRenderApp();
-            planNavigateTo('dashboard');
-        });
-    }
-});
+// Le module ne se monte qu'une fois, depuis index.html, qui attend le contexte
+// du serveur. Ce second démarrage montait l'écran sur le seul compte gardé en
+// mémoire du navigateur : il s'ouvrait donc à un compte dont le contexte
+// venait d'être refusé, la page d'accueil s'affichant sous un boot en échec.
+// `initPlanificationModule` reste pour le mode hébergé (PESSCO).
 
 // ── Data Loading ──
 async function planLoadData() {

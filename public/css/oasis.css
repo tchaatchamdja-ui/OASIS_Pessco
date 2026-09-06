@@ -411,6 +411,11 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     box-shadow: var(--shadow); border: 2px solid transparent;
     transition: all .3s ease; position: relative; overflow: hidden;
 }
+/* Module fermé au compte : la carte reste en place — l'application se lit
+   entière — mais éteinte, et le curseur ne promet rien. */
+.portal-card-ferme { opacity: .45; cursor: not-allowed; filter: grayscale(1); }
+.portal-card-ferme:hover { transform: none; box-shadow: var(--shadow); border-color: transparent; }
+
 .portal-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0;
     height: 4px; background: var(--module-color, var(--accent)); opacity: 0.7;

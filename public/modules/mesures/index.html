@@ -31,7 +31,11 @@
     window.MES_BOOT = (async function () {
       const res = await fetch('/api/m/mesures/context', { credentials: 'same-origin' });
       if (res.status === 401) { parent.postMessage({ type: 'mes:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      // Module fermé au compte : la page ne se monte pas. Sans ce contrôle
+      // elle s'ouvrait sur une coquille vide, où chaque geste échouait sans
+      // qu'on sache pourquoi.
       const ctx = await res.json();
+      if (res.status === 403) throw new Error(ctx.error || 'Ce module ne vous est pas ouvert.');
       const theme = localStorage.getItem('pr_theme') || 'blue-dark';
       const lang = localStorage.getItem('pr_lang') || 'fr';
       document.documentElement.setAttribute('data-theme', theme);

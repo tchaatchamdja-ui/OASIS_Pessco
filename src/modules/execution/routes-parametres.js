@@ -74,7 +74,11 @@ module.exports = function register(app, deps, M) {
   const etatInstances = (req) => instances.etat(req.userReel || req.user, loadConfig);
 
   app.get(`${M}/context`, requireAuth, (req, res) => {
-    res.json({
+    const reel = req.userReel || req.user;
+    if (!moduleRights.accesAuModule(R.MODULE, reel.username)) {
+      return refuser(res, 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».');
+    }
+    return res.json({
       user: vueUtilisateur(req.user),
       privilege: R.meilleurPrivilege(req.user, referentiels),
       vue: etatVue(req),

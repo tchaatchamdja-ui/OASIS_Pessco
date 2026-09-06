@@ -10,6 +10,7 @@ const store = require('./store');
 const referentiels = require('./referentiels');
 const moduleAudit = require('./module_audit');
 const instances = require('./instances');
+const auth = require('./auth');
 
 const PRIVILEGES = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR', 'LECTEUR'];
 const SCOPE_PRIVILEGES = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR', 'LECTEUR', 'AUCUN'];
@@ -43,6 +44,10 @@ const rolesGeresDe = (moduleCode) => ROLES_GERES_MODULE[moduleCode] || ROLES_GER
 const load = () => store.load('module_rights', {});
 const save = (d) => store.save('module_rights', d);
 
+// Privilège enregistré, tel qu'il est écrit. C'est ce que l'écran « Gestion
+// des Droits » montre — il doit dire ce qui est posé, même sur un compte qui
+// n'a pas accès au module. Les gardes de données passent par
+// `effectivePrivilege` et `can`, qui tiennent compte de l'accès.
 function getRights(moduleCode, username) {
   const rec = (load()[moduleCode] || {})[username];
   if (!rec) return { privilege: DEFAULT_PRIVILEGE, scopes: [], isDefault: true };
@@ -65,11 +70,30 @@ function domaineOfSecteur(secteurId) {
   return s ? s.domaine_id || '' : '';
 }
 
+// ── « Accès aux modules » : la première porte ──
+// Le champ `user.modules` du portail dit à quels modules un compte a accès.
+// Il ne commandait que les cartes du portail : les routes, elles, ne
+// regardaient que le privilège, et un privilège resté d'un ancien rôle
+// rouvrait un module qu'on croyait fermé. Il borne désormais l'accès réel.
+//
+// Deux exceptions, l'une par convention, l'autre par nécessité : un compte
+// dont la liste n'a jamais été renseignée les garde tous — c'était l'état de
+// l'application avant que ce champ n'existe ; et le super-administrateur, qui
+// coche ces cases, ne peut pas s'enfermer dehors.
+function accesAuModule(moduleCode, username) {
+  const u = auth.findUser(username);
+  if (!u) return false;
+  if (u.role === 'SUPERADMIN') return true;
+  if (!Array.isArray(u.modules)) return true;
+  return u.modules.includes(moduleCode);
+}
+
 // Privilège effectif : la portée la plus spécifique l'emporte
 // (domaine + secteur > secteur seul > domaine seul > privilège général).
 // Le domaine manquant est déduit du secteur, sinon une portée par domaine
 // resterait sans effet quand l'appelant ne transmet que le secteur.
 function effectivePrivilege(moduleCode, username, domaineId, secteurId) {
+  if (!accesAuModule(moduleCode, username)) return 'AUCUN';
   const r = getRights(moduleCode, username);
   const dom = domaineId || domaineOfSecteur(secteurId);
   if (!dom && !secteurId) return r.privilege;
@@ -86,6 +110,7 @@ function effectivePrivilege(moduleCode, username, domaineId, secteurId) {
 }
 
 function can(moduleCode, username, privilege, domaineId, secteurId) {
+  if (!accesAuModule(moduleCode, username)) return false;
   const eff = effectivePrivilege(moduleCode, username, domaineId, secteurId);
   if (eff === 'AUCUN') return false;
   const need = RANK.indexOf(privilege);
@@ -307,5 +332,6 @@ function register(app, deps) {
 }
 
 module.exports = {
+  accesAuModule,
   register, can, getRights, setRights, effectivePrivilege, prestatairesDuScope
   };

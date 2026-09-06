@@ -49,7 +49,12 @@ module.exports = function register(app, deps, M) {
   const etatInstances = (req) => instances.etat(req.user, loadConfig);
 
   app.get(`${M}/context`, requireAuth, (req, res) => {
-    res.json({
+    // Sans accès au module, l'écran ne s'ouvre pas : il s'ouvrait vide, et
+    // laissait croire à une panne plutôt qu'à un refus.
+    if (!moduleRights.accesAuModule(R.MODULE, req.user.username)) {
+      return refuser(res, 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».');
+    }
+    return res.json({
       user: vueUtilisateur(req.user),
       privilege: R.meilleurPrivilege(req.user, referentiels),
       instance: etatInstances(req),

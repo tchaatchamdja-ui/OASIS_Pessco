@@ -17,6 +17,9 @@ function privilege(user, domaineId, secteurId) {
 // Meilleur privilège détenu, toutes portées confondues.
 function meilleurPrivilege(user, referentiels) {
   if (!user) return '';
+  // Sans accès au module, aucun privilège à annoncer : le privilège
+  // enregistré peut survivre à un rôle qu'on a retiré.
+  if (!moduleRights.accesAuModule(MODULE, user.username)) return '';
   const base = moduleRights.getRights(MODULE, user.username);
   const secteurs = (referentiels.getAll().secteurs || [])
     .map((s) => moduleRights.effectivePrivilege(MODULE, user.username, s.domaine_id || '', s.id));

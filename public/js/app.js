@@ -1230,7 +1230,7 @@ function refTable(coll, premier) {
     )
     .join('');
   return `
-  <div class="portal-page-header cfg-entete-empile ${premier ? 'cfg-entete-premier' : ''}" style="margin-top:1.25rem;">
+  <div class="portal-page-header cfg-entete-empile ${premier ? 'cfg-entete-premier' : 'cfg-entete-suivant'}">
     <h3>${esc(tr(schema.title))}</h3>
     <div class="portal-page-actions">
       ${coll === 'prestataires' ? searchInputHtml('Rechercher un prestataire...') + exportBar('prestataires', tr('Prestataires de services')) : ''}

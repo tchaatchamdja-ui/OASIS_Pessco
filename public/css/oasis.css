@@ -686,6 +686,9 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .cfg-entete-empile { flex-direction: column; align-items: flex-start; }
 .cfg-entete-empile .portal-page-actions { width: 100%; }
 .cfg-entete-premier { margin-top: 0; }
+/* Les tables qui suivent sur le même écran gardent leur respiration. La marge
+   était posée en style direct, qui l'emportait sur la remise à zéro. */
+.cfg-entete-suivant { margin-top: 1.25rem; }
 
 /* ── Circuit de validation (Personnel AAC) ── */
 .pers-toggle { transition: transform .2s; }

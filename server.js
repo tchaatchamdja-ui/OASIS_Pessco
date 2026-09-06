@@ -1,4 +1,4 @@
-// OASIS — Outil d'Administration et de Supervision Intégrée de la Sécurité (UEMOA/URSAC)
+// OASIS — Outils d'Administration et de Supervision Intégrée de la Sécurité (UEMOA/URSAC)
 // Socle technique transverse (Phase 1) : authentification, utilisateurs, audit,
 // configuration, notifications, registre des modules à intégrer.
 const express = require('express');

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
-  "description": "OASIS — Outil d'Administration et de Supervision Intégrée de la Sécurité (UEMOA/URSAC). Socle technique transverse (Phase 1).",
+  "description": "OASIS — Outils d'Administration et de Supervision Intégrée de la Sécurité (UEMOA/URSAC). Socle technique transverse (Phase 1).",
   "main": "server.js",
   "engines": {
     "node": ">=20.0.0"

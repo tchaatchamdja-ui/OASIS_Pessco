@@ -7,7 +7,7 @@
 const XLSX = require('xlsx-js-style');
 
 const AUTORITE = 'UEMOA / URSAC — OASIS';
-const SOUS_TITRE = 'Outil d’Administration et de Supervision Intégrée de la Sécurité';
+const SOUS_TITRE = 'Outils d’Administration et de Supervision Intégrée de la Sécurité';
 
 const texte = (v) => String(v === undefined || v === null ? '' : v);
 const date = (v) => {

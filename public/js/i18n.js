@@ -1,7 +1,7 @@
 // OASIS — i18n FR / EN / PT (TDR §F.7)
 const I18N = {
   fr: {
-    tagline: "Outil d'Administration et de Supervision Intégrée de la Sécurité",
+    tagline: "Outils d'Administration et de Supervision Intégrée de la Sécurité",
     login_title: 'Connexion à la plateforme',
     login_user: 'Identifiant',
     login_pass: 'Mot de passe',
@@ -95,10 +95,10 @@ const I18N = {
     logout: 'Déconnexion',
     notif_title: 'Notifications',
     notif_empty: 'Aucune notification.',
-    footer: '© 2026 UEMOA / URSAC — OASIS · Outil d\'Administration et de Supervision Intégrée de la Sécurité',
+    footer: '© 2026 UEMOA / URSAC — OASIS · Outils d\'Administration et de Supervision Intégrée de la Sécurité',
   },
   en: {
-    tagline: 'Integrated Safety Administration and Oversight Tool',
+    tagline: 'Integrated Safety Administration and Oversight Tools',
     login_title: 'Sign in to the platform',
     login_user: 'Username',
     login_pass: 'Password',
@@ -195,7 +195,7 @@ const I18N = {
     footer: '© 2026 UEMOA / URSAC — OASIS · Integrated Safety Oversight Platform',
   },
   pt: {
-    tagline: 'Ferramenta Integrada de Administração e Supervisão da Segurança',
+    tagline: 'Ferramentas Integradas de Administração e Supervisão da Segurança',
     login_title: 'Iniciar sessão na plataforma',
     login_user: 'Identificador',
     login_pass: 'Palavra-passe',

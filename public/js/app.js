@@ -5,7 +5,7 @@ const OASIS_LOGO_IMG = '<span class="oasis-logo-img" role="img" aria-label="OASI
 
 // Nom complet : les majuscules formant le sigle OASIS sont légèrement agrandies.
 const OASIS_FULLNAME_HTML =
-  '<span class="sigle-cap">O</span>util d\'<span class="sigle-cap">A</span>dministration' +
+  '<span class="sigle-cap">O</span>utils d\'<span class="sigle-cap">A</span>dministration' +
   ' et de <span class="sigle-cap">S</span>upervision' +
   ' <span class="sigle-cap">I</span>ntégrée de la <span class="sigle-cap">S</span>écurité';
 

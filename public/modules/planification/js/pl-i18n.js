@@ -31,6 +31,12 @@ const PLAN_STATE = {
     }
 };
 
+// Un `const` de premier niveau vit dans la portée du script, non sur `window` :
+// `window.PLAN_STATE` restait indéfini, et le démarrage de la page échouait
+// dessus. « Exécution de la Surveillance » et « Profils de Risque » exposent
+// déjà le leur ; celui-ci le fait aussi.
+window.PLAN_STATE = PLAN_STATE;
+
 // ══════════════════════════════════════
 //  TRANSLATIONS
 // ══════════════════════════════════════

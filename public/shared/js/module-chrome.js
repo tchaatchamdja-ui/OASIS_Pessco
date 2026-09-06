@@ -339,7 +339,7 @@
       const f = document.createElement('footer');
       f.className = 'oasis-module-footer';
       f.textContent =
-        '© 2026 UEMOA / URSAC — OASIS · Outil d\'Administration et de Supervision Intégrée de la Sécurité';
+        '© 2026 UEMOA / URSAC — OASIS · Outils d\'Administration et de Supervision Intégrée de la Sécurité';
       content.appendChild(f);
     }
   }

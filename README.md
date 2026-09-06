@@ -1,4 +1,4 @@
-# OASIS — Outil d'Administration et de Supervision Intégrée de la Sécurité
+# OASIS — Outils d'Administration et de Supervision Intégrée de la Sécurité
 
 Socle technique transverse (**Phase 1**) de l'outil intégré de supervision de la sécurité de l'aviation civile — UEMOA / URSAC.
 

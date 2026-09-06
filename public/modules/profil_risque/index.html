@@ -70,6 +70,7 @@
   <script src="/modules/profil_risque/js/pr-bibliotheque.js"></script>
   <script src="/modules/profil_risque/js/pr-parametres.js"></script>
   <script src="/modules/profil_risque/js/pr-namespace.js"></script>
+  <script src="/modules/profil_risque/js/pr-instances.js"></script>
   <script>window.OASIS_MODULE_KEY = "risques"; window.OASIS_MODULE_RIGHTS = "PLAN";</script>
   <script src="/shared/js/module-chrome.js"></script>
   <script>
@@ -88,9 +89,12 @@
         window.APP_STATE.user = boot.prUser;
         window.APP_STATE.theme = boot.theme;
         window.APP_STATE.lang = boot.lang;
+        // Instance regardée : la barre supérieure en fait une liste déroulante.
+        window.APP_STATE.instances = boot.ctx.instance_vue || {};
         await loadAllData();
         renderApp();
         navigateTo('dashboard');
+        prDessinerActions();
         // Informer le shell OASIS de la page courante (titre en barre supérieure)
         const notify = () => parent.postMessage({ type: 'pr:page', page: window.APP_STATE.currentPage }, '*');
         notify();

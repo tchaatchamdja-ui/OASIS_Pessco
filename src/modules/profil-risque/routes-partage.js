@@ -16,8 +16,22 @@ const CRUD = {
   'eval-reunions-prest': 'eval_reunions_prest',
 };
 
+// Ce qui appartient à une AAC : la notation d'un organisme, ses plans de
+// vérification et les comptes rendus des réunions qui l'ont arrêtée. Le barème
+// — indicateurs et indices — reste commun : c'est la règle du calcul, non son
+// résultat, et l'écrire pour un État l'écrirait pour tous.
+const COLLECTIONS_INSTANCE = ['evaluations', 'plans', 'eval_reunions', 'eval_reunions_prest'];
+
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
+
+  // ── Instance regardée ──
+  // Chaque AAC tient son instance ; les évaluations qu'elle a conduites ne sont
+  // servies qu'à elle. Le super-administrateur régional prend en barre
+  // supérieure le poste d'une autre, ou les regarde toutes — la vue régionale,
+  // où l'instance retenue est vide et rien n'est écarté.
+  const instanceCourante = (req) => instances.courante(req.user, loadConfig);
+  const parInstance = (req, rangs) => instances.filtrer(rangs, instanceCourante(req), loadConfig);
 
   // Gardes du module. Les nomenclatures du portail (domaines, secteurs,
   // sous-activités, prestataires) restent ouvertes : elles décrivent
@@ -40,7 +54,7 @@ module.exports = function register(app, deps, M) {
   // Les organismes appartiennent à l'AAC qui les surveille : la liste suit
   // l'instance regardée, à la différence de la taxinomie au-dessus.
   app.get('/api/prestataires', requireAuth, (req, res) => res.json(
-    instances.filtrer(D.sharedPrestataires(), instances.courante(req.user, loadConfig), loadConfig)));
+    parInstance(req, D.sharedPrestataires())));
   app.get('/api/indices', requireAuth, lecture, (req, res) => res.json(D.sharedIndices()));
 
   // Les indices commandent le calcul de tous les profils de risque : les
@@ -118,6 +132,7 @@ module.exports = function register(app, deps, M) {
   Object.entries(CRUD).forEach(([route, coll]) => {
     app.get(`${M}/${route}`, requireAuth, lecture, (req, res) => {
       let rows = db.getColl(coll).filter((r) => D.peutLire(req, portee(r)));
+      if (COLLECTIONS_INSTANCE.includes(coll)) rows = parInstance(req, rows);
       if (req.query.eval_id) rows = rows.filter((r) => r.eval_id === req.query.eval_id);
       if (req.query.prestataire_id) rows = rows.filter((r) => r.prestataire_id === req.query.prestataire_id);
       res.json(rows);
@@ -135,7 +150,11 @@ module.exports = function register(app, deps, M) {
       // relèvent de la contribution, mais aucune n'était gardée.
       const requis = coll === 'evaluations' ? 'VALIDATEUR' : 'CONTRIBUTEUR';
       if (!D.peut(req, requis, portee(req.body))) return D.refus(res);
-      const rec = db.createIn(coll, { ...(req.body || {}), created_by: req.user.username });
+      // L'enregistrement appartient à l'instance sous laquelle il est ouvert :
+      // c'est elle qui le reverra. En vue régionale, l'instance retenue est
+      // vide et le champ retombe sur l'instance locale, comme partout.
+      const marque = COLLECTIONS_INSTANCE.includes(coll) ? { instance: instanceCourante(req) } : {};
+      const rec = db.createIn(coll, { ...(req.body || {}), ...marque, created_by: req.user.username });
       audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
       return res.json(rec);
     });
@@ -195,11 +214,35 @@ module.exports = function register(app, deps, M) {
       user: { ...auth.publicUser(req.user), role: D.roleM1(req.user), role_m1: `M1_${D.roleM1(req.user)}` },
       aac: instances.aac(req.user, loadConfig),
       instance: cfg.instance,
+      // Instance regardée : la barre supérieure en fait une liste déroulante.
+      instance_vue: instances.etat(req.user, loadConfig),
+      // Le contexte sert les mêmes listes que les routes dédiées : sans le
+      // filtre, il rendait la taxinomie masquée et les organismes des autres
+      // États — le front lit celles-ci en priorité, et n'appelle les routes
+      // que faute de contexte.
       shared: {
-        domaines: D.sharedDomaines(), secteurs: D.sharedSecteurs(),
-        sousActivites: D.sharedSousActivites(), prestataires: D.sharedPrestataires(),
+        domaines: instances.visibles(D.sharedDomaines(), 'domaines', req.user, loadConfig),
+        secteurs: instances.visibles(D.sharedSecteurs(), 'secteurs', req.user, loadConfig),
+        sousActivites: instances.visibles(D.sharedSousActivites(), 'sous_activites', req.user, loadConfig),
+        prestataires: parInstance(req, D.sharedPrestataires()),
         indices: D.sharedIndices(),
       },
     });
+  });
+
+  app.get(`${M}/instance`, requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
+
+  app.put(`${M}/instance`, requireAuth, (req, res) => {
+    if (!instances.estRegional(req.user)) {
+      return res.status(403).json({ error: 'Choix de l’instance réservé au super-administrateur régional' });
+    }
+    // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
+    // que les écrans serviront, il ne s'invente pas.
+    const demandee = String((req.body || {}).instance || '').trim();
+    if (demandee && !instances.liste(loadConfig).includes(demandee)) {
+      return res.status(400).json({ error: 'Instance inconnue' });
+    }
+    instances.definir(req.user.username, demandee);
+    return res.json({ status: 'ok', instance: demandee });
   });
 };

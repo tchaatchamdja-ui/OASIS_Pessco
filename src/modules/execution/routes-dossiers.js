@@ -81,6 +81,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.get(`${M}/dossiers`, requireAuth, (req, res) => {
+    if (!R.canRead(req.userReel || req.user)) return refuser(res);
     let rows = parInstance(req, db.list('dossiers'));
     // Un prestataire ne voit que ses dossiers, une fois clôturés.
     if (R.estPrestataire(req.user)) {
@@ -313,6 +314,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.get(`${M}/constatations`, requireAuth, (req, res) => {
+    if (!R.canRead(req.userReel || req.user)) return refuser(res);
     let rows = parInstance(req, db.list('constatations'));
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);

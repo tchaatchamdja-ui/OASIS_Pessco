@@ -150,6 +150,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.get(`${M}/notifications`, requireAuth, (req, res) => {
+    if (!R.canRead(req.userReel || req.user)) return refuser(res);
     let rows = parInstance(req, db.list('notifications'));
     // Un prestataire ne voit que ses notifications, une fois envoyées.
     if (R.estPrestataire(req.user)) {

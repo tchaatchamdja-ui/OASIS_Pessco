@@ -185,6 +185,11 @@ module.exports = function register(app, deps, M) {
 
   // ── Contexte agrégé (chargement initial rapide) ──
   app.get(`${M}/context`, requireAuth, (req, res) => {
+    // Les profils de risque partagent la carte et l'espace de droits de la
+    // Planification : c'est la même case d'« Accès aux modules » qui les ouvre.
+    if (!moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
+      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».' });
+    }
     const cfg = loadConfig();
     res.json({
       user: { ...auth.publicUser(req.user), role: D.roleM1(req.user), role_m1: `M1_${D.roleM1(req.user)}` },

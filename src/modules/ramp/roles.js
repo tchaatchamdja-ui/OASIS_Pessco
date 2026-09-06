@@ -51,6 +51,11 @@ function roleRamp(user, referentiels) {
 
 const peut = (user, requis) => moduleRights.can(MODULE, user.username, requis, '', '');
 
+// Lire le module suppose d'y avoir accès. L'exploitant inspecté en lit ce qui
+// le concerne — la vue Prestataire le borne ensuite à ses propres inspections.
+const canRead = (user) => !!user
+  && (estPrestataire(user) || moduleRights.accesAuModule(MODULE, user.username));
+
 const canContribute = (user) => !estPrestataire(user) && peut(user, 'CONTRIBUTEUR');
 const canValidate = (user) => !estPrestataire(user) && peut(user, 'VALIDATEUR');
 const isAdmin = (user, referentiels) => !estPrestataire(user)
@@ -136,5 +141,5 @@ const prestatairesDe = (user) => {
 module.exports = {
   MODULE, privilege, meilleurPrivilege, roleRamp, estPrestataire,
   DROITS_PRESTATAIRE, normaliserDroits, droitsDe, aLeDroit, compteA, prestatairesDe,
-  canContribute, canValidate, isAdmin, etatsDe, couvreEtat,
+  canRead, canContribute, canValidate, isAdmin, etatsDe, couvreEtat,
 };

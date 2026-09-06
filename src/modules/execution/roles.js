@@ -78,6 +78,11 @@ const canContribute = (user, cible, referentiels) => (estPrestataire(user)
   ? (!cible || !cible.prestataire_id || accedeA(user, cible.prestataire_id))
   : peut(user, 'CONTRIBUTEUR', cible && cible.domaine_id, cible && cible.secteur_id));
 
+// Lire le module suppose d'y avoir accès. Un compte prestataire en lit ce qui
+// le concerne — les routes le bornent ensuite à ses propres dossiers.
+const canRead = (user) => !!user
+  && (estPrestataire(user) || moduleRights.accesAuModule(MODULE, user.username));
+
 const isAdmin = (user, referentiels) => !estPrestataire(user)
   && meilleurPrivilege(user, referentiels) === 'GESTIONNAIRE';
 
@@ -119,7 +124,7 @@ const droitsDe = (compte) => {
 const aLeDroit = (compte, cle) => droitsDe(compte).includes(cle);
 
 module.exports = {
-  MODULE, estPrestataire, privilege, meilleurPrivilege, roleM3,
+  MODULE, estPrestataire, canRead, privilege, meilleurPrivilege, roleM3,
   prestatairesDe, accedeA, canValidate, canContribute, isAdmin,
   DROITS_PRESTATAIRE, droitsDe, aLeDroit, normaliserDroits, compteA,
 };

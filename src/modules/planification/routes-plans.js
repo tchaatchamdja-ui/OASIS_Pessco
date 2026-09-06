@@ -1,6 +1,7 @@
 // Module « Planification de la Surveillance » — référentiels partagés,
 // contexte, statistiques et plans.
 const referentiels = require('../../referentiels');
+const moduleRights = require('../../module_rights');
 const { valider } = require('../../valider');
 const db = require('./store');
 const D = require('./domaine');
@@ -46,6 +47,11 @@ module.exports = function register(app, deps, M) {
 
   // Contexte du module (utilisateur + rôle M2)
   app.get(`${M}/context`, requireAuth, (req, res) => {
+    // Sans accès au module, l'écran ne s'ouvre pas : il se montait sur une
+    // coquille vide où chaque geste échouait sans qu'on sache pourquoi.
+    if (!moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
+      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».' });
+    }
     const cfg = loadConfig();
     const u = auth.publicUser(req.user);
     res.json({

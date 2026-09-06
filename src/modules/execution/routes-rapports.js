@@ -104,6 +104,7 @@ module.exports = function register(app, deps, M) {
     const miens = R.prestatairesDe(req.user);
     if (prestataire && !miens.length) return res.json([]);
 
+    if (!R.canRead(req.userReel || req.user)) return refuser(res);
     let rows = parInstance(req, db.list('rapports')).map(enrichirRapport);
     if (prestataire) {
       rows = rows.filter((r) => miens.includes(r.dossier_prestataire_id) && r.statut === 'transmis');

@@ -28,7 +28,9 @@
     window.PL_BOOT = (async function () {
       const res = await fetch('/api/m/planification/context', { credentials: 'same-origin' });
       if (res.status === 401) { parent.postMessage({ type: 'pl:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      // Module fermé au compte : la page ne se monte pas.
       const ctx = await res.json();
+      if (res.status === 403) throw new Error(ctx.error || 'Ce module ne vous est pas ouvert.');
       const u = ctx.user || {};
       const plUser = {
         id: u.username, nom: u.nom || u.username, prenom: u.prenom || '',

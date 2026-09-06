@@ -2,16 +2,25 @@
 // prestataires et synchronisation des profils de risque vers le plan.
 const referentiels = require('../../referentiels');
 const moduleRights = require('../../module_rights');
+const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
 
 module.exports = function register(app, deps, M) {
-  const { requireAuth, audit } = deps;
+  const { requireAuth, loadConfig, audit } = deps;
+
+  // Les profils de risque arrivent du module voisin par le bus, qui ignore le
+  // compte : l'instance se pose ici. Ceux d'un plan sont ceux de son instance
+  // à lui — un plan validé au Togo ne se compare pas aux notations du Bénin.
+  const profilsVus = (req) => instances.filtrer(
+    D.riskProfiles(), instances.courante(req.user, loadConfig), loadConfig);
+  const profilsDuPlan = (plan) => instances.filtrer(
+    D.riskProfiles(), instances.de(plan, loadConfig), loadConfig);
 
   // ── Cycles de surveillance des prestataires ──
   app.get(`${M}/prestataires-risques`, requireAuth, (req, res) => {
-    const profs = D.riskProfiles();
-    const prest = referentiels.getAll().prestataires || [];
+    const profs = profilsVus(req);
+    const prest = instances.refs(req.user, loadConfig).prestataires || [];
     // Un prestataire n'apparaît que s'il a un profil de risque validé :
     // la page « Profils de risque » reflète ainsi « Synthèses Profils ».
     res.json(prest.map((p) => {
@@ -66,7 +75,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/plans/:id/sync-risques`, requireAuth, (req, res) => {
     const plan = db.list('plans').find((x) => x.id === req.params.id);
     if (!plan) return res.status(404).json({ error: 'not_found' });
-    const changes = D.ecartsRisques(plan);
+    const changes = D.ecartsRisques(plan, profilsDuPlan(plan));
     return res.json({ has_changes: changes.length > 0, changes });
   });
 
@@ -92,7 +101,8 @@ module.exports = function register(app, deps, M) {
     if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
     const ids = (req.body && (req.body.prestataire_ids || req.body.items)) || [];
     const retenus = new Set(ids.map((x) => (typeof x === 'string' ? x : x.prestataire_id)));
-    const changes = D.ecartsRisques(plan).filter((c) => retenus.has(c.prestataire_id));
+    const changes = D.ecartsRisques(plan, profilsDuPlan(plan))
+      .filter((c) => retenus.has(c.prestataire_id));
 
     const { cible, amended } = cibleDeSynchro(plan, req.user.username);
     const prestataires = referentiels.getAll().prestataires || [];

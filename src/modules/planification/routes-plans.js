@@ -35,7 +35,10 @@ module.exports = function register(app, deps, M) {
     (req, res) => res.json(instances.refs(req.user, loadConfig).themes_supervision || []));
   app.get('/api/exigences', requireAuth,
     (req, res) => res.json(instances.refs(req.user, loadConfig).exigences || []));
-  app.get('/api/shared/risk-profiles', requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
+  // Les profils de risque viennent du module voisin par le bus : le bus ignore
+  // qui l'interroge, l'instance regardée se pose donc ici, comme sur les plans.
+  app.get('/api/shared/risk-profiles', requireAuth, lecture,
+    (req, res) => res.json(parInstance(req, D.riskProfiles())));
   // Même contrat, exposé en HTTP pour les fronts des autres modules. Un front
   // demande ce que son compte a le droit de voir : l'instance regardée borne
   // donc la réponse, ici comme sur les autres listes.
@@ -43,7 +46,8 @@ module.exports = function register(app, deps, M) {
     (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
   app.get(`${M}/plans-valides`, requireAuth, lecture,
     (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
-  app.get(`${M}/risk-profiles`, requireAuth, lecture, (req, res) => res.json(D.riskProfiles()));
+  app.get(`${M}/risk-profiles`, requireAuth, lecture,
+    (req, res) => res.json(parInstance(req, D.riskProfiles())));
 
   // Contexte du module (utilisateur + rôle M2)
   app.get(`${M}/context`, requireAuth, (req, res) => {

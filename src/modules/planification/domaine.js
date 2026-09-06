@@ -194,9 +194,11 @@ const familleDuPlan = (planId) => {
 };
 
 // Profils concernés par un plan : ceux de son secteur / domaine, sinon tous.
-const profilsDuPlan = (plan) => {
+// `profils` — déjà resserrés sur l'instance du plan par la route appelante —
+// évite qu'un plan se compare aux notations d'un autre État ; à défaut, tous.
+const profilsDuPlan = (plan, profils) => {
   const secteurs = referentiels.getAll().secteurs || [];
-  return riskProfiles().filter((p) => {
+  return (profils || riskProfiles()).filter((p) => {
     if (plan.secteur_id) return p.secteur_id === plan.secteur_id;
     if (plan.domaine_id) {
       const sec = secteurs.find((s) => s.id === p.secteur_id);
@@ -207,9 +209,9 @@ const profilsDuPlan = (plan) => {
 };
 
 // Écarts entre le plan et les profils de risque en vigueur.
-const ecartsRisques = (plan) => {
+const ecartsRisques = (plan, profils) => {
   const acts = db.list('activites').filter((a) => a.plan_id === plan.id);
-  return profilsDuPlan(plan).map((p) => {
+  return profilsDuPlan(plan, profils).map((p) => {
     const mesActs = acts.filter((a) => a.prestataire_id === p.prestataire_id);
     const courant = { risk_label: p.niveau || '', csrbo: p.csrbo || null };
     if (!mesActs.length) {

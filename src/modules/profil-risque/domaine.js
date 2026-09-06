@@ -78,6 +78,10 @@ function roleM1(user) {
 // modules (Planification…). Même source que la page « Synthèses Profils » : la
 // dernière évaluation validée de chaque prestataire, avec les résultats
 // consolidés (niveau de risque, matrice, intensité, CSRBO, détail).
+//
+// Chaque profil porte l'instance de l'évaluation dont il est tiré : le bus ne
+// connaît pas le compte qui l'interroge, c'est donc au consommateur d'écarter
+// ce qui n'appartient pas à l'instance qu'il regarde — comme pour toute liste.
 function riskProfiles() {
   const evals = (db.getColl('evaluations') || []).filter((e) => e.statut === 'valide');
   const dateOf = (e) => e.date_validation || e.decide_le || e.updatedAt || e.createdAt || '';
@@ -97,6 +101,7 @@ function riskProfiles() {
     const csn = Number(g.csn || (sec && sec.csn) || 24);
     return {
       id: e.id,
+      instance: e.instance || '',
       prestataire_id: e.prestataire_id,
       secteur_id: e.secteur_id,
       domaine_id: e.domaine_id || (sec && sec.domaine_id) || '',

@@ -20,7 +20,7 @@ function register(app, deps) {
   services.publish('PR.riskProfiles', D.riskProfiles, {
     module: 'PR',
     description: 'Dernier profil de risque validé par prestataire',
-    retour: '[{ prestataire_id, secteur_id, domaine_id, niveau, matrice, intensite, csn, csrbo, frequence, resultats, date_validation, cycle }]',
+    retour: '[{ instance, prestataire_id, secteur_id, domaine_id, niveau, matrice, intensite, csn, csrbo, frequence, resultats, date_validation, cycle }]',
   });
 
   require('./routes-partage')(app, deps, M);

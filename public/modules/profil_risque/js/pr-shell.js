@@ -421,7 +421,18 @@ function closeModal() {
 
 // ── Slicer (right drawer) helpers ──
 function openSlicer(title, bodyHtml, footerHtml = '', opts = {}) {
-    closeSlicer();
+    // Le volet se reconstruit à chaque rendu : changement d'onglet,
+    // enregistrement, décision du circuit. Rejouer le glissement à chacun
+    // faisait sortir le panneau pour le faire aussitôt revenir — l'écran
+    // tressautait à la moindre action. Le glissement n'appartient qu'à la
+    // première ouverture ; un volet déjà présent est remplacé en place.
+    const ouvert = document.getElementById('prSlicer');
+    if (ouvert) {
+        ouvert.remove();
+        document.getElementById('prSlicerOverlay')?.remove();
+    } else {
+        closeSlicer();
+    }
     const overlay = document.createElement('div');
     overlay.id = 'prSlicerOverlay';
     overlay.className = 'pr-slicer-overlay';
@@ -444,13 +455,21 @@ function openSlicer(title, bodyHtml, footerHtml = '', opts = {}) {
         <div class="pr-slicer-body">${bodyHtml}</div>
         ${footerHtml ? `<div class="pr-slicer-footer">${footerHtml}</div>` : ''}`;
 
-    document.body.appendChild(overlay);
-    document.body.appendChild(slicer);
-    // Trigger open animation
-    requestAnimationFrame(() => {
+    // Remplacement : le panneau est posé déjà ouvert. Une transition ne part
+    // pas du premier rendu d'un élément, rien ne glisse donc.
+    if (ouvert) {
         overlay.classList.add('open');
         slicer.classList.add('open');
-    });
+    }
+    document.body.appendChild(overlay);
+    document.body.appendChild(slicer);
+    // Première ouverture : le volet entre par la droite.
+    if (!ouvert) {
+        requestAnimationFrame(() => {
+            overlay.classList.add('open');
+            slicer.classList.add('open');
+        });
+    }
     // Activate auto-grow on any textarea marked .auto-grow inside the slicer.
     setTimeout(() => {
         slicer.querySelectorAll('textarea.auto-grow').forEach(ta => {

@@ -584,10 +584,6 @@ function mesRenderDashboard() {
     const tauxCloture = liste.length ? Math.round((clos / liste.length) * 100) : 0;
     const visees = new Set(liste.map((m) => m.prestataire_id).filter(Boolean)).size;
     const volumeStatut = Object.keys(MES_STATUTS).map((s) => compte(s));
-    // Le retard se situe sur l'échelle : au-delà d'un quart des mesures en
-    // souffrance, l'aiguille est au rouge.
-    const positionRetard = liste.length
-        ? Math.min(100, Math.round((enRetard / liste.length) * 400)) : 0;
 
     // ── Côté constatations ──
     // C'est l'écart relevé qui appelle la mesure : le tableau de bord montre
@@ -596,9 +592,12 @@ function mesRenderDashboard() {
     const constatations = MES_STATE.data.constatations || [];
     const constPortee = F.db_prest
         ? constatations.filter((c) => c.prestataire_id === F.db_prest) : constatations;
-    const soldees = constPortee.filter((c) => c.statut === 'soldee').length;
-    const tauxSolde = constPortee.length ? Math.round((soldees / constPortee.length) * 100) : 0;
-    const critiques = constPortee.filter((c) => _mesNorm(c.criticite).startsWith('crit')).length;
+    // Ce que le module en a fait, et non l'état que la carence porte chez celui
+    // qui l'a relevée : une constatation soldée chez le surveillant reste à
+    // traiter ici tant qu'aucune décision n'a été prise. La carte disait « 0
+    // soldée » sur trente-deux carences dont huit sont pourtant réglées.
+    const reglees = constPortee.filter((c) => c.classee || c.traitement_clos).length;
+    const tauxRegle = constPortee.length ? Math.round((reglees / constPortee.length) * 100) : 0;
     const classees = constPortee.filter((c) => c.classee).length;
     const partClassees = constPortee.length ? Math.round((classees / constPortee.length) * 100) : 0;
 
@@ -627,11 +626,19 @@ function mesRenderDashboard() {
         color: st.couleur,
     }));
     const parStatutConstat = carencesStatut.length
-        ? mesRepartition(segmentsStatutConstat, { camembert: true })
+        ? mesRepartition(segmentsStatutConstat, { camembert: true, unite: 'carence' })
         : '<div class="mes-preuve-vide">Aucune carence</div>';
-    // Constatations critiques encore sans mesure : c'est ce qui reste à faire.
-    const critiquesSansMesure = constPortee
-        .filter((c) => _mesNorm(c.criticite).startsWith('crit') && !c.mesures_liees).length;
+    // Carences dont le traitement n'est pas ouvert : c'est ce qui reste à faire,
+    // et c'est ce que la colonne « Statut » du menu Carences appelle « À
+    // traiter ». La carte comptait les carences sans mesure — elle rangeait
+    // donc là un dossier en cours d'investigation, et en sortait un dossier
+    // clos dont une sanction courait encore.
+    const aTraiter = constPortee
+        .filter((c) => (c.statut_care || 'a_traiter') === 'a_traiter').length;
+    // Part de ce qui reste à faire, sur l'échelle de la carte : au-delà du
+    // quart, l'aiguille est au rouge.
+    const positionATraiter = constPortee.length
+        ? Math.min(100, Math.round((aTraiter / constPortee.length) * 400)) : 0;
 
     const cartes = `
     <div class="oasis-kpi-groupes">
@@ -659,14 +666,14 @@ function mesRenderDashboard() {
             oasisKpiCarte({
                 titre: 'Constatations', couleur: '#ea580c',
                 valeur: constPortee.length,
-                precision: `${soldees} soldée${soldees > 1 ? 's' : ''} · ${tauxSolde} %`,
-                figure: { type: 'jauge', pct: tauxSolde },
+                precision: `${reglees} réglée${reglees > 1 ? 's' : ''} · ${tauxRegle} %`,
+                figure: { type: 'jauge', pct: tauxRegle },
             }),
             oasisKpiCarte({
-                titre: 'À traiter', couleur: '#dc2626', alerte: !!critiquesSansMesure,
-                valeur: critiquesSansMesure,
-                precision: `sur ${critiques} constatation${critiques > 1 ? 's' : ''} critique${critiques > 1 ? 's' : ''}`,
-                figure: { type: 'echelle', position: positionRetard, min: 'Maîtrisé', max: 'À traiter' },
+                titre: 'À traiter', couleur: '#dc2626', alerte: !!aTraiter,
+                valeur: aTraiter,
+                precision: `sur ${constPortee.length} carence${constPortee.length > 1 ? 's' : ''}`,
+                figure: { type: 'echelle', position: positionATraiter, min: 'Maîtrisé', max: 'À traiter' },
             }),
             // Classée : l'autorité a décidé qu'aucune mesure ne serait prise.
             oasisKpiCarte({
@@ -1406,6 +1413,10 @@ function mesRepartition(segments, options) {
     const action = o.action || '';
     const retenue = o.retenue || '';
     const infobulle = o.infobulle || 'Filtrer';
+    // Ce que le creux du camembert compte : des mesures par défaut, mais la
+    // répartition des carences en compte d'autres — elle annonçait « 32
+    // mesures » sur trente-deux carences.
+    const unite = o.unite || 'mesure';
     const parts = (segments || []).filter((s) => s && s.value > 0);
     const total = (segments || []).reduce((n, s) => n + (s.value || 0), 0);
     const max = Math.max(1, ...(segments || []).map((s) => s.value || 0));
@@ -1422,7 +1433,7 @@ function mesRepartition(segments, options) {
         ? `<div class="mes-camembert" style="background:conic-gradient(${tranches.join(', ')});">
                <div class="mes-camembert-creux">
                    <strong>${total}</strong>
-                   <span>mesure${total > 1 ? 's' : ''}</span>
+                   <span>${_mesEsc(unite)}${total > 1 ? 's' : ''}</span>
                </div>
            </div>`
         : '<div class="mes-camembert vide"><div class="mes-camembert-creux"><strong>0</strong></div></div>');

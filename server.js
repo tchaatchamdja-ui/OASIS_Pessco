@@ -923,6 +923,11 @@ MODULES_MONTES = moduleLoader.mount(
 );
 
 // ── Frontend ──
+// Session expirée : les modules renvoient le navigateur sur « /login », que
+// rien ne servait — l'écran devenait un « Cannot GET /login » d'Express, là où
+// l'on attendait la page de connexion. Une redirection y mène.
+app.get(['/login', '/login/'], (req, res) => res.redirect('/login.html'));
+
 // ── Fichiers statiques compressés (PERF-01) ──
 // express.static sert en flux : le middleware de compression, qui enveloppe
 // res.send, ne le voit pas. Les fichiers texte sont donc compressés ici, une

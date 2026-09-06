@@ -163,23 +163,24 @@ const MES_STATUTS_CONSTAT = {
 // Les statuts d'une carence suivent le fil du traitement, dans les mêmes
 // termes que la colonne « Actions » : ce que le bouton annonce, la colonne
 // « Statut » le dit. Ils se lisent dans l'ordre du circuit.
+// `couleur` sert aux parts du tableau de bord, `classe` à la pastille de la
+// colonne « Statut » — de la même facture que celles de la colonne « Actions ».
 const MES_STATUT_CARE = {
-    a_traiter: { libelle: 'À traiter', couleur: '#dc2626' },
-    investigations: { libelle: 'En investigation', couleur: '#ea580c' },
-    qualification: { libelle: 'En qualification', couleur: '#d97706' },
-    sous_suivi: { libelle: 'Sous suivi', couleur: '#0891b2' },
-    traitee: { libelle: 'Traitée', couleur: '#059669' },
-    cloturee: { libelle: 'Clôturée', couleur: '#475569' },
-    classee: { libelle: 'Classée', couleur: '#7c3aed' },
+    a_traiter: { libelle: 'À traiter', couleur: '#dc2626', classe: 'st-a-traiter' },
+    investigations: { libelle: 'En investigation', couleur: '#ea580c', classe: 'st-investigations' },
+    qualification: { libelle: 'En qualification', couleur: '#d97706', classe: 'st-qualification' },
+    sous_suivi: { libelle: 'Sous suivi', couleur: '#0891b2', classe: 'st-sous-suivi' },
+    traitee: { libelle: 'Traitée', couleur: '#059669', classe: 'st-traitee' },
+    cloturee: { libelle: 'Clôturée', couleur: '#475569', classe: 'st-cloturee' },
+    classee: { libelle: 'Classée', couleur: '#7c3aed', classe: 'st-classee' },
 };
 
-// Dans la table, le statut se lit en toutes lettres, sans pastille colorée :
-// une colonne de pilules pleines attire l'œil plus que ce qu'elle apprend. Les
-// couleurs restent au tableau de bord, où elles distinguent les parts d'un
-// graphique.
+// Le statut se lit en pastille, comme les mentions de la colonne « Actions » :
+// les deux colonnes disent la même chose du même dossier, elles le disent de
+// la même façon.
 const mesBadgeStatutCare = (cle) => {
     const st = MES_STATUT_CARE[cle] || MES_STATUT_CARE.a_traiter;
-    return `<span class="mes-statut-care">${_mesEsc(st.libelle)}</span>`;
+    return `<span class="mes-badge ${st.classe}">${_mesEsc(st.libelle)}</span>`;
 };
 
 const MES_STATUTS = {

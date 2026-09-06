@@ -895,7 +895,16 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
    dans sa colonne. La pastille pleine qu'il portait pesait plus que son sens ;
    ses couleurs servent encore au tableau de bord, où elles distinguent les
    parts d'un graphique. */
-.mes-statut-care { font-weight: 600; white-space: nowrap; }
+/* Statut d'une carence : une pastille par étape du traitement, de la teinte
+   la plus vive au repos le plus sourd — du geste qui reste à faire au dossier
+   refermé. */
+.mes-badge.st-a-traiter { background: #fee2e2; color: #b91c1c; }
+.mes-badge.st-investigations { background: #ffedd5; color: #c2410c; }
+.mes-badge.st-qualification { background: #fef3c7; color: #b45309; }
+.mes-badge.st-sous-suivi { background: #cffafe; color: #0e7490; }
+.mes-badge.st-traitee { background: #d1fae5; color: #047857; }
+.mes-badge.st-cloturee { background: #e2e8f0; color: #475569; }
+.mes-badge.st-classee { background: #ede9fe; color: #6d28d9; }
 /* Échéance dépassée : la date se colore, sans pastille. Le retard doit se voir
    — il appelle un geste — mais une pilule pleine par ligne noyait la table. */
 .mes-date-retard { color: #b91c1c; font-weight: 700; white-space: nowrap; }

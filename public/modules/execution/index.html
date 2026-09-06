@@ -47,7 +47,7 @@
       // elle s'ouvrait sur une coquille vide, où chaque geste échouait sans
       // qu'on sache pourquoi.
       const ctx = await res.json();
-      if (res.status === 403) throw new Error(ctx.error || 'Ce module ne vous est pas ouvert.');
+      if (res.status === 403) throw new Error(ctx.error || 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.');
       const u = ctx.user || {};
       const execUser = {
         id: u.username, username: u.username,

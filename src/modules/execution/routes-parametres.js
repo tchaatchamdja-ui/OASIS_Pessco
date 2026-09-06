@@ -76,7 +76,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/context`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
     if (!moduleRights.accesAuModule(R.MODULE, reel.username)) {
-      return refuser(res, 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».');
+      return refuser(res, 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.');
     }
     return res.json({
       user: vueUtilisateur(req.user),

@@ -52,7 +52,7 @@ module.exports = function register(app, deps, M) {
     // Sans accès au module, l'écran ne s'ouvre pas : il s'ouvrait vide, et
     // laissait croire à une panne plutôt qu'à un refus.
     if (!moduleRights.accesAuModule(R.MODULE, req.user.username)) {
-      return refuser(res, 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».');
+      return refuser(res, 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.');
     }
     return res.json({
       user: vueUtilisateur(req.user),

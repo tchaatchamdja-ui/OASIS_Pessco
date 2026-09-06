@@ -188,7 +188,7 @@ module.exports = function register(app, deps, M) {
     // Les profils de risque partagent la carte et l'espace de droits de la
     // Planification : c'est la même case d'« Accès aux modules » qui les ouvre.
     if (!moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
-      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».' });
+      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.' });
     }
     const cfg = loadConfig();
     res.json({

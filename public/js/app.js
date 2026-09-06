@@ -436,7 +436,7 @@ async function renderHome() {
     return `
     <div class="portal-card${accessible ? '' : ' portal-card-ferme'}" style="--module-color:${color};"
          data-module="${esc(m.code)}" data-enabled="${accessible ? 'true' : 'false'}"
-         ${accessible ? '' : 'title="Ce module ne vous est pas ouvert — voir « Accès aux modules »." aria-disabled="true"'}>
+         ${accessible ? '' : 'title="Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur." aria-disabled="true"'}>
       <div class="portal-card-icon-wrap">${moduleIcon(m.code, 26)}</div>
       <div class="portal-card-title">${esc(name)}</div>
       <div class="portal-card-desc">${esc(desc)}</div>
@@ -509,7 +509,7 @@ async function renderHome() {
       const code = cardEl.dataset.module;
       // Carte éteinte : le clic ne mène nulle part, il dit pourquoi.
       if (!enabled) {
-        showToast('Ce module ne vous est pas ouvert — voir « Accès aux modules ».', 'error');
+        showToast('Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.', 'error');
         return;
       }
       // Le registre des modules peut ne pas avoir encore été chargé (session

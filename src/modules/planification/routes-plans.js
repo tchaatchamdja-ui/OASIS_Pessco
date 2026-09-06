@@ -50,7 +50,7 @@ module.exports = function register(app, deps, M) {
     // Sans accès au module, l'écran ne s'ouvre pas : il se montait sur une
     // coquille vide où chaque geste échouait sans qu'on sache pourquoi.
     if (!moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
-      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert — voir « Accès aux modules ».' });
+      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.' });
     }
     const cfg = loadConfig();
     const u = auth.publicUser(req.user);

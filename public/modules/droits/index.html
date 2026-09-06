@@ -145,8 +145,14 @@
           label: 'Retour au module',
           icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>',
           onClick: () => {
-            const RETOURS = { SURV: '/modules/execution/index.html', SAFA: '/modules/ramp/index.html' };
-            window.location.href = RETOURS[window.DR_MODULE] || '/modules/execution/index.html';
+            // Un module oublié ici renvoyait chez son voisin : le repli ramène
+            // au portail, qui ne se trompe pas de destination.
+            const RETOURS = {
+              SURV: '/modules/execution/index.html',
+              SAFA: '/modules/ramp/index.html',
+              CARE: '/modules/mesures/index.html',
+            };
+            window.location.href = RETOURS[window.DR_MODULE] || '/index.html';
           },
         }]);
       }

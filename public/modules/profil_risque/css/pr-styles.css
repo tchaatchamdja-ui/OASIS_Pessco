@@ -257,3 +257,88 @@ button:disabled {
 .sec-grid { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); opacity: .8; }
 .sec-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px 0 0 2px; }
 .sec-val { font-size: .68rem; font-weight: 700; text-align: right; }
+
+/* ── Formulaire d'évaluation : onglet « Généralités » ──
+   Sept champs libres qui se suivaient sans relief. Ils se rangent en trois
+   sections encadrées — le cadre, les participants, l'analyse — et leur mise en
+   forme quitte les attributs `style` pour vivre ici. */
+.pr-gen { display: flex; flex-direction: column; gap: 1rem; padding: 0.25rem 0 0.5rem; }
+
+.pr-gen-bloc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.9rem 1rem 1rem;
+}
+.pr-gen-bloc > h4 {
+    margin: 0 0 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--primary);
+}
+
+/* Deux champs de même nature côte à côte ; l'un sous l'autre à l'étroit. */
+.pr-gen-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1rem; }
+@media (max-width: 900px) { .pr-gen-duo { grid-template-columns: 1fr; } }
+
+.pr-gen-champ { margin-bottom: 0.85rem; text-align: left; }
+.pr-gen-champ:last-child { margin-bottom: 0; }
+.pr-gen-champ > label {
+    display: block; margin-bottom: 0.3rem;
+    font-size: 0.85rem; font-weight: 600; color: var(--text);
+}
+.pr-gen-champ textarea {
+    width: 100%; min-height: 4.5rem; resize: vertical;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text);
+    font-family: inherit; font-size: 0.9rem; line-height: 1.45;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pr-gen-champ textarea:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.pr-gen-champ textarea[readonly] { background: var(--bg); opacity: 0.85; cursor: default; }
+
+.pr-gen-aide { color: var(--text-muted); font-size: 0.78rem; font-weight: 400; }
+.pr-gen-nb { display: flex; align-items: center; gap: 0.6rem; }
+.pr-gen-nb input {
+    width: 80px; padding: 0.35rem 0.5rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); color: var(--text);
+    font-family: inherit; font-size: 0.9rem;
+}
+
+/* Évaluateurs éligibles : quatre colonnes de cases à cocher. */
+.pr-gen-designes {
+    list-style: none; margin: 0; padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border); border-radius: 6px;
+    background: var(--bg); max-height: 260px; overflow-y: auto;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.3rem 0.75rem;
+}
+@media (max-width: 1100px) { .pr-gen-designes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pr-gen-designes li {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin: 0; padding: 0.15rem 0; min-width: 0;
+}
+.pr-gen-designes input[type="checkbox"] { margin: 0; width: auto; flex-shrink: 0; }
+.pr-gen-designes label {
+    display: inline; margin: 0; flex: 1; cursor: pointer;
+    font-size: 0.85rem; font-weight: 400;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pr-gen-designes .pr-gen-vide {
+    grid-column: 1 / -1; color: var(--text-muted); font-size: 0.85rem;
+}
+
+.pr-gen-jetons { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.pr-gen-jeton {
+    display: inline-block; padding: 0.15rem 0.55rem;
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--bg); font-size: 0.8rem;
+}

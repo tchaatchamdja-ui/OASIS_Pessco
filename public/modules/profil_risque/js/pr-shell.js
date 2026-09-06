@@ -430,9 +430,15 @@ function openSlicer(title, bodyHtml, footerHtml = '', opts = {}) {
     const slicer = document.createElement('div');
     slicer.id = 'prSlicer';
     slicer.className = 'pr-slicer' + (opts.drawer ? ' pr-slicer-drawer' : '');
+    // `opts.retour` : un panneau assez vaste pour qu'on y perde le fil — le
+    // formulaire d'évaluation en est un — porte son retour en tête de bandeau,
+    // avant le titre. La croix reste à droite : elle ferme, elle ne revient pas.
+    const retour = opts.retour
+        ? `<button class="pr-slicer-back" onclick="closeSlicer()">${ICONS.back}<span>${t('back')}</span></button>`
+        : '';
     slicer.innerHTML = `
         <div class="pr-slicer-header">
-            <h3>${title}</h3>
+            <div class="pr-slicer-titre">${retour}<h3>${title}</h3></div>
             <button class="pr-slicer-close" onclick="closeSlicer()">${ICONS.close}</button>
         </div>
         <div class="pr-slicer-body">${bodyHtml}</div>

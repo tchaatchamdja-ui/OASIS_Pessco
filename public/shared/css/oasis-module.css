@@ -588,6 +588,17 @@ body.app-sidebar-collapsed .pr-slicer-overlay { left: var(--sidebar-collapsed, 6
     display: flex; align-items: center; gap: 0.5rem;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+/* Retour, en tête de bandeau : il précède le titre, comme la barre supérieure
+   du module place le sien avant le nom de l'écran. */
+.pr-slicer-titre { display: flex; align-items: center; gap: 0.9rem; min-width: 0; }
+.pr-slicer-back {
+    display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;
+    padding: 0.3rem 0.7rem; border: 1px solid rgba(255,255,255,0.45);
+    border-radius: 6px; background: rgba(255,255,255,0.12);
+    font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+.pr-slicer-back:hover { background: rgba(255,255,255,0.25); border-color: #fff; }
 .pr-slicer-close {
     border: none; background: none; cursor: pointer; padding: 0.35rem;
     border-radius: 6px; color: var(--text-muted); transition: all 0.2s;

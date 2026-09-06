@@ -1196,11 +1196,13 @@ function _prEvalCorpsHtml(c) {
     // Render content based on active tab
     if (activeTab === 'generalites') {
         const gen = ev.generalites || {};
+        // Chaque champ est une pièce du rapport : son libellé au-dessus, sa
+        // saisie en dessous, la mise en forme dans la feuille du module.
         const fld = (id, key, labelKey, defaultValue) =>
-            `<div class="form-group" style="margin-bottom:0.85rem;">
-                <label style="font-weight:600;display:block;margin-bottom:0.25rem;">${t(labelKey)}</label>
-                <textarea id="${id}" class="auto-grow eval-gen-field" rows="4" data-key="${key}" ${isReadonly ? 'readonly' : ''}
-                    style="width:100%;resize:vertical;min-height:4.5rem;padding:0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:0.9rem;line-height:1.45;">${gen[key] || defaultValue || ''}</textarea>
+            `<div class="pr-gen-champ">
+                <label for="${id}">${t(labelKey)}</label>
+                <textarea id="${id}" class="auto-grow eval-gen-field" rows="4" data-key="${key}"
+                    ${isReadonly ? 'readonly' : ''}>${gen[key] || defaultValue || ''}</textarea>
             </div>`;
 
         // Designated evaluators selector — editable only by Validateur/Administrateur.
@@ -1237,30 +1239,32 @@ function _prEvalCorpsHtml(c) {
         })();
         let evalSelector = '';
         if (isValidator && !isReadonly) {
-            evalSelector = `<div class="form-group" style="margin-bottom:0.6rem;text-align:left;">
-                <label style="font-weight:600;display:block;margin-bottom:0.35rem;text-align:left;">Nombre minimal d'évaluateurs requis</label>
-                <input type="number" id="evalNbMin" min="0" max="20" value="${nbMin}" style="width:80px;padding:0.35rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);font-family:inherit;font-size:0.9rem;">
-                <span style="color:var(--text-muted);font-size:0.78rem;margin-left:0.5rem;">(0 = pas de minimum imposé)</span>
+            evalSelector = `<div class="pr-gen-champ pr-gen-champ-court">
+                <label for="evalNbMin">Nombre minimal d'évaluateurs requis</label>
+                <div class="pr-gen-nb">
+                    <input type="number" id="evalNbMin" min="0" max="20" value="${nbMin}">
+                    <span class="pr-gen-aide">0 = pas de minimum imposé</span>
+                </div>
             </div>
-            <div class="form-group" style="margin-bottom:0.85rem;text-align:left;">
-                <label style="font-weight:600;display:block;margin-bottom:0.35rem;text-align:left;">Évaluateurs désignés (Performance &amp; Complexité) ${countBadge}</label>
-                <ul id="evalDesignesBox" style="list-style:none;margin:0;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:6px;max-height:260px;overflow-y:auto;background:var(--bg-card);text-align:left;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.3rem 0.75rem;">
+            <div class="pr-gen-champ">
+                <label>Évaluateurs désignés <span class="pr-gen-aide">(Performance &amp; Complexité)</span> ${countBadge}</label>
+                <ul id="evalDesignesBox" class="pr-gen-designes">
                     ${eligibleUsers.length ? eligibleUsers.map(u => `
-                        <li style="display:flex;flex-wrap:nowrap;justify-content:flex-start;align-items:center;gap:0.5rem;padding:0.15rem 0;margin:0;text-align:left;min-width:0;">
-                            <input type="checkbox" class="eval-designe-cb" id="cb_eval_${u.id}" data-uid="${u.id}" ${designated.includes(u.id) ? 'checked' : ''} style="margin:0;flex-shrink:0;width:auto;">
-                            <label for="cb_eval_${u.id}" title="${_escapeHtml(u.privilege || '')}" style="display:inline;margin:0;font-size:0.85rem;font-weight:400;cursor:pointer;flex:1;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_escapeHtml(userName(u))}</label>
+                        <li>
+                            <input type="checkbox" class="eval-designe-cb" id="cb_eval_${u.id}" data-uid="${u.id}" ${designated.includes(u.id) ? 'checked' : ''}>
+                            <label for="cb_eval_${u.id}" title="${_escapeHtml(u.privilege || '')}">${_escapeHtml(userName(u))}</label>
                         </li>`).join('')
-                        : `<li style="color:var(--text-muted);font-size:0.85rem;text-align:left;list-style:none;grid-column:1 / -1;">${eligibleLoading ? 'Chargement des évaluateurs éligibles…' : 'Aucun utilisateur éligible : aucun privilège Contributeur, Validateur ou Administrateur ne couvre ce domaine et ce secteur.'}</li>`}
+                        : `<li class="pr-gen-vide">${eligibleLoading ? 'Chargement des évaluateurs éligibles…' : 'Aucun utilisateur éligible : aucun privilège Contributeur, Validateur ou Administrateur ne couvre ce domaine et ce secteur.'}</li>`}
                 </ul>
             </div>`;
         } else if (designated.length) {
             const items = designated.map(uid => {
                 const u = evalUserById(uid) || { id: uid };
-                return `<span style="display:inline-block;background:var(--bg);border-radius:4px;padding:0.15rem 0.5rem;margin:0.15rem;font-size:0.8rem;">${_escapeHtml(userName(u))}</span>`;
+                return `<span class="pr-gen-jeton">${_escapeHtml(userName(u))}</span>`;
             }).join('');
-            evalSelector = `<div class="form-group" style="margin-bottom:0.85rem;">
-                <label style="font-weight:600;display:block;margin-bottom:0.25rem;">Évaluateurs désignés ${countBadge}</label>
-                <div>${items}</div>
+            evalSelector = `<div class="pr-gen-champ">
+                <label>Évaluateurs désignés ${countBadge}</label>
+                <div class="pr-gen-jetons">${items}</div>
             </div>`;
         }
 
@@ -1270,19 +1274,28 @@ function _prEvalCorpsHtml(c) {
             return u ? ' - ' + userName(u) : '';
         }).filter(Boolean).join('\n');
 
-        bodyHtml += `<div style="padding:0.5rem 0.25rem;">
-            ${evalSelector}
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        // Les sept champs libres du rapport se lisaient à la file, sans rien
+        // qui dise à quoi chacun sert. Ils se rangent en trois temps : le cadre
+        // posé, les personnes qui y prennent part, puis ce que l'évaluation en
+        // conclut.
+        const bloc = (titreKey, contenu) => `<section class="pr-gen-bloc">
+            <h4>${t(titreKey)}</h4>
+            ${contenu}
+        </section>`;
+
+        bodyHtml += `<div class="pr-gen">
+            ${bloc('gen_sec_cadre', `<div class="pr-gen-duo">
                 ${fld('genIntroduction', 'introduction', 'gen_introduction')}
                 ${fld('genSources', 'sources', 'gen_sources')}
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            </div>`)}
+            ${bloc('gen_sec_participants', `${evalSelector}
+            <div class="pr-gen-duo">
                 ${fld('genEvaluateurs', 'evaluateurs', 'gen_evaluateurs', designatedDefaultList)}
                 ${fld('genParties', 'parties', 'gen_parties')}
-            </div>
-            ${fld('genResume', 'resume', 'gen_resume')}
+            </div>`)}
+            ${bloc('gen_sec_analyse', `${fld('genResume', 'resume', 'gen_resume')}
             ${fld('genActions', 'actions', 'gen_actions')}
-            ${fld('genConclusion', 'conclusion', 'gen_conclusion')}
+            ${fld('genConclusion', 'conclusion', 'gen_conclusion')}`)}
         </div>`;
     } else if (activeTab === 'conformite') {
         const indicators = confInds;
@@ -1458,7 +1471,7 @@ function openEvalDetail(evalId) {
     APP_STATE.currentEvalId = evalId;
     const bodyHtml = _prEvalCorpsHtml(c);
     const footerHtml = _prEvalPiedHtml(c);
-    openSlicer(`${t('eval_indicators')} - ${c.prest?.nom || ''}`, bodyHtml, footerHtml);
+    openSlicer(`${t('eval_indicators')} - ${c.prest?.nom || ''}`, bodyHtml, footerHtml, { retour: true });
 
     // Une fois le volet rendu, on lance le chargement d'onglet en attente.
     const pending = window._evalPendingLoader;

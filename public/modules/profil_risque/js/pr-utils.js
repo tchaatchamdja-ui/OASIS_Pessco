@@ -105,6 +105,10 @@ const TRANSLATIONS = {
     gen_sources:'Sources de données pour les évaluations',
     gen_actions:"Actions d'améliorations proposées suite aux échanges avec les prestataires",
     gen_conclusion:'Conclusion',
+    back:'Retour',
+    gen_sec_cadre:"Cadre de l'évaluation",
+    gen_sec_participants:'Participants',
+    gen_sec_analyse:'Analyse et suites',
     eval_tab_conf:'Conformité', eval_tab_perf:'Performance', eval_tab_comp:'Complexité',
     validate_all_required:'Les évaluations doivent être enregistrées pour les 3 indicateurs avant validation.',
     sub_activity:'Sous-activité'
@@ -199,6 +203,10 @@ const TRANSLATIONS = {
     gen_sources:'Data Sources for Evaluations',
     gen_actions:'Improvement Actions Proposed After Provider Discussions',
     gen_conclusion:'Conclusion',
+    back:'Back',
+    gen_sec_cadre:'Evaluation Framework',
+    gen_sec_participants:'Participants',
+    gen_sec_analyse:'Analysis and Follow-up',
     eval_tab_conf:'Conformity', eval_tab_perf:'Performance', eval_tab_comp:'Complexity',
     validate_all_required:'Evaluations must be recorded for all 3 indicators before validation.',
     sub_activity:'Sub-activity'
@@ -292,6 +300,10 @@ const TRANSLATIONS = {
     gen_sources:'Fontes de dados das avaliações',
     gen_actions:'Ações de melhoria propostas após discussões com os prestadores',
     gen_conclusion:'Conclusão',
+    back:'Voltar',
+    gen_sec_cadre:'Enquadramento da avaliação',
+    gen_sec_participants:'Participantes',
+    gen_sec_analyse:'Análise e seguimento',
     eval_tab_conf:'Conformidade', eval_tab_perf:'Desempenho', eval_tab_comp:'Complexidade',
     validate_all_required:'As avaliações devem ser registadas para os 3 indicadores antes da validação.',
     sub_activity:'Sub-atividade'

@@ -43,6 +43,12 @@ const locale = (loadConfig) => String((config(loadConfig).instance || {}).etat |
 const ajoutees = () => ((store.load('instances', {}) || {}).ajoutees || [])
   .map((e) => String(e || '').trim()).filter(Boolean);
 
+// Instances retirées du dispositif. Le fichier de configuration déclare les
+// États membres à l'installation et le socle ne le réécrit pas : supprimer une
+// instance déclarée, c'est la retenir ici.
+const retirees = () => ((store.load('instances', {}) || {}).retirees || [])
+  .map((e) => String(e || '').trim()).filter(Boolean);
+
 // Instances connues : celles que la configuration déclare — à défaut les États
 // membres —, celles ouvertes depuis, et l'instance locale, qui en fait
 // toujours partie, fût-elle absente des deux.
@@ -51,9 +57,35 @@ function liste(loadConfig) {
   const declarees = Array.isArray(inst.etatsMembres) ? inst.etatsMembres : ETATS_UEMOA;
   const noms = declarees.map((e) => String(e || '').trim()).filter(Boolean)
     .concat(ajoutees());
+  const hors = new Set(retirees());
   const ici = locale(loadConfig);
-  if (ici && !noms.includes(ici)) noms.push(ici);
-  return [...new Set(noms)].sort((a, b) => a.localeCompare(b, 'fr'));
+  const restantes = noms.filter((n) => !hors.has(n));
+  // L'instance installée ici ne se retire pas : le déploiement tourne pour elle.
+  if (ici && !restantes.includes(ici)) restantes.push(ici);
+  return [...new Set(restantes)].sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+// Instances mises en sommeil. Une instance désactivée reste dans le
+// dispositif — ses données ne sont pas touchées — mais elle ne se prend plus
+// en barre supérieure, et ses comptes ne se connectent plus. C'est le geste
+// réversible ; la suppression, elle, ne l'est pas.
+const desactivees = () => ((store.load('instances', {}) || {}).desactivees || [])
+  .map((e) => String(e || '').trim()).filter(Boolean);
+
+const estActive = (nom) => !desactivees().includes(String(nom || '').trim());
+
+// L'instance installée ici ne se désactive ni ne se supprime : le déploiement
+// tourne pour elle, et la fermer fermerait l'application sur elle-même.
+function basculerActivite(nom, loadConfig) {
+  const n = String(nom || '').trim();
+  if (!n || !liste(loadConfig).includes(n)) return { error: 'instance_inconnue' };
+  if (n === locale(loadConfig)) return { error: 'instance_locale' };
+  const tout = store.load('instances', {}) || {};
+  const off = new Set(tout.desactivees || []);
+  const active = off.has(n);
+  if (active) off.delete(n); else off.add(n);
+  store.save('instances', { ...tout, desactivees: [...off], date_maj: new Date().toISOString() });
+  return { instance: n, active };
 }
 
 // Ouvre une instance. Elle part vide : ni organismes, ni inspecteurs, ni
@@ -222,6 +254,54 @@ function visibles(rangs, coll, user, loadConfig) {
   return vus ? rangs.filter((r) => vus.has(r.id)) : rangs;
 }
 
+// ── Ce qu'une instance porte ──
+// Référentiels et comptes se comptent ici ; les modules comptent eux-mêmes ce
+// qu'ils tiennent et le publient au bus. Le socle ne lit pas leurs données —
+// il leur demande.
+function volume(nom, deps, loadConfig) {
+  const n = String(nom || '').trim();
+  const ici = locale(loadConfig);
+  // Un enregistrement sans champ `instance` revient à l'instance locale : il
+  // compte pour elle, sans quoi elle paraîtrait vide et supprimable.
+  const sien = (r) => (String((r || {}).instance || '') || ici) === n;
+  const tout = referentiels.getAll();
+  let compte = 0;
+  referentiels.COLLECTIONS_INSTANCE.forEach((c) => {
+    compte += (tout[c] || []).filter(sien).length;
+  });
+  compte += ((deps && deps.utilisateurs) || []).filter(sien).length;
+  ((deps && deps.services) ? deps.services.list() : [])
+    .filter((s) => /\.volumeParInstance$/.test(s.nom || ''))
+    .forEach((s) => {
+      const par = deps.services.callOr(s.nom, {}) || {};
+      // Les modules comptent par valeur portée : la clé vide est la locale.
+      compte += Number(par[n] || 0) + (n === ici ? Number(par[''] || 0) : 0);
+    });
+  return compte;
+}
+
+// Supprimer une instance : seulement si rien ne s'y rattache. Les données
+// d'une instance ne se déplacent pas ; les effacer avec elle ferait
+// disparaître des dossiers de surveillance sans trace.
+function supprimer(nom, loadConfig, deps) {
+  const n = String(nom || '').trim();
+  if (!n || !liste(loadConfig).includes(n)) return { error: 'instance_inconnue' };
+  if (n === locale(loadConfig)) return { error: 'instance_locale' };
+  const porte = volume(n, deps, loadConfig);
+  if (porte) return { error: 'instance_non_vide', donnees: porte };
+  const tout = store.load('instances', {}) || {};
+  store.save('instances', {
+    ...tout,
+    ajoutees: (tout.ajoutees || []).filter((e) => e !== n),
+    retirees: [...new Set([...(tout.retirees || []), n])],
+    desactivees: (tout.desactivees || []).filter((e) => e !== n),
+    aac: Object.fromEntries(Object.entries(tout.aac || {}).filter(([k]) => k !== n)),
+    choix: Object.fromEntries(Object.entries(tout.choix || {}).map(([k, v]) => [k, v === n ? '' : v])),
+    date_maj: new Date().toISOString(),
+  });
+  return { instance: n };
+}
+
 // Ce que la barre supérieure a besoin de savoir. Les instances ne sont servies
 // qu'à qui peut en changer : les autres comptes lisent la leur.
 const etat = (user, loadConfig) => {
@@ -233,12 +313,13 @@ const etat = (user, loadConfig) => {
     portee: estSuperadmin(user) ? portee(user) : '',
     locale: locale(loadConfig),
     courante: courante(user, loadConfig),
-    instances: regional ? liste(loadConfig) : [],
+    instances: regional ? liste(loadConfig).filter(estActive) : [],
   };
 };
 
 module.exports = {
   locale, liste, courante, definir, de, filtrer, refs, visibles, etat,
-  aac, aacDe, definirAac, CHAMPS_AAC, ouvrir,
+  aac, aacDe, definirAac, CHAMPS_AAC,
+  ouvrir, supprimer, basculerActivite, estActive, desactivees, volume,
   PORTEES, portee, estSuperadmin, estRegional,
 };

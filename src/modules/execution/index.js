@@ -37,6 +37,19 @@ module.exports = {
     // interroge ce service pour verrouiller, lors d'un amendement, les lignes
     // dont le circuit a déjà commencé ici.
     if (deps.services) {
+      // Ce que le module tient par instance : le portail s'en sert pour
+      // savoir si une instance peut être supprimée sans rien perdre.
+      deps.services.publish('SURV.volumeParInstance', () => {
+        const parInstance = {};
+        ['notifications', 'dossiers', 'constatations', 'rapports'].forEach((coll) => {
+          db.list(coll).forEach((r) => {
+            const i = r.instance || '';
+            parInstance[i] = (parInstance[i] || 0) + 1;
+          });
+        });
+        return parInstance;
+      }, { description: 'Nombre d’enregistrements du module, par instance' });
+
       deps.services.publish('SURV.activitesDeclenchees', () => db.list('notifications')
         .map((n) => n.activite_id)
         .filter(Boolean), {

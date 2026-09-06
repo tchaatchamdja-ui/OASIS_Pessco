@@ -27,6 +27,17 @@ module.exports = {
     // Combien de mesures pèsent sur une constatation : le module Exécution
     // l'affiche en regard de chaque constatation, sans lire les données d'ici.
     if (deps.services) {
+      deps.services.publish('CARE.volumeParInstance', () => {
+        const parInstance = {};
+        ['mesures', 'constatations', 'traitements'].forEach((coll) => {
+          db.list(coll).forEach((r) => {
+            const i = r.instance || '';
+            parInstance[i] = (parInstance[i] || 0) + 1;
+          });
+        });
+        return parInstance;
+      }, { description: 'Nombre d’enregistrements du module, par instance' });
+
       deps.services.publish('CARE.mesuresParConstatation', () => {
         const parId = {};
         db.list('mesures').forEach((m) => {

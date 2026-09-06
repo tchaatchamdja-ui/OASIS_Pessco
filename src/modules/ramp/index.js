@@ -40,6 +40,17 @@ module.exports = {
     // Le poids des écarts relevés sur aire de trafic, exploitant par
     // exploitant. Le Profil de Risque s'en saisira sans lire les données d'ici.
     if (deps.services) {
+      deps.services.publish('SAFA.volumeParInstance', () => {
+        const parInstance = {};
+        ['inspections', 'poi'].forEach((coll) => {
+          db.list(coll).forEach((r) => {
+            const i = r.instance || '';
+            parInstance[i] = (parInstance[i] || 0) + 1;
+          });
+        });
+        return parInstance;
+      }, { description: 'Nombre d’enregistrements du module, par instance' });
+
       deps.services.publish('SAFA.ecartsParExploitant', () => {
         const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
         const ponderations = {};

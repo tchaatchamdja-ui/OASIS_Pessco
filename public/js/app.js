@@ -317,83 +317,6 @@ window.filterScope = function (inp) {
   });
 };
 
-// ── Instance regardée ──
-// OASIS s'installe une fois par État : le bandeau nomme celle dont on tient le
-// poste. Le super-administrateur de l'Union en change ici, et le choix vaut
-// aussitôt pour le portail comme pour les six modules — organismes,
-// inspecteurs, comptes, plans, dossiers et carences suivent. Les autres
-// comptes lisent la leur, sans en changer.
-const PORTAIL_VUE_REGIONALE = 'Vue régionale (toutes les instances)';
-
-function majBandeauInstance() {
-  const zone = document.getElementById('instanceBadge');
-  if (!zone) return;
-  const vue = ME.instance_vue || {};
-  if (!vue.disponible || !(vue.instances || []).length) {
-    // L'instance du compte, non celle installée ici : le super-administrateur
-    // national du Togo travaille au Togo, quel que soit l'État sur lequel le
-    // déploiement a été posé. Le bigramme suit l'AAC de cette instance ; une
-    // instance qu'on n'a pas encore renseignée n'en a pas, et le nom suffit.
-    const etat = vue.courante || ME.instance.etat;
-    const code = (ME.aac && ME.aac.bigramme)
-      || (etat === ME.instance.etat ? ME.instance.codeEtat : '');
-    zone.className = 'portal-header-instance';
-    zone.textContent = code ? `${etat} (${code})` : etat;
-    return;
-  }
-  const options = [{ valeur: '', libelle: PORTAIL_VUE_REGIONALE }]
-    .concat(vue.instances.map((e) => ({ valeur: e, libelle: e })))
-    // Ouvrir une instance depuis la liste elle-même : c'est là qu'on constate
-    // qu'elle manque.
-    .concat([{ valeur: '__nouvelle__', libelle: '＋ Nouvelle instance…' }]);
-  zone.className = 'portal-header-instance portal-header-instance-choix';
-  zone.innerHTML = `<select id="instanceSelect" title="Instance regardée"
-      aria-label="Instance regardée">${options.map((o) =>
-    `<option value="${esc(o.valeur)}"${o.valeur === (vue.courante || '') ? ' selected' : ''}>${esc(o.libelle)}</option>`).join('')}</select>`;
-  document.getElementById('instanceSelect').onchange = (e) => changerInstance(e.target.value);
-}
-
-async function changerInstance(valeur) {
-  const vue = ME.instance_vue || {};
-  if (valeur === '__nouvelle__') return ouvrirInstance();
-  if ((vue.courante || '') === (valeur || '')) return;
-  const res = await api('/api/instance', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ instance: valeur }),
-  });
-  if (!res.ok) {
-    showToast('Changement d’instance impossible', 'error');
-    majBandeauInstance();
-    return;
-  }
-  // L'instance commande le périmètre de tous les écrans : on recharge le
-  // portail plutôt que de rafraîchir liste après liste.
-  window.location.reload();
-}
-
-// Une instance nouvelle part vide : ni organismes, ni inspecteurs, ni
-// nomenclatures. Son super-administrateur national la garnira.
-async function ouvrirInstance() {
-  const nom = (window.prompt('Nom de la nouvelle instance (l’État) :') || '').trim();
-  majBandeauInstance();
-  if (!nom) return;
-  const res = await api('/api/instances', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nom }),
-  });
-  const d = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    showToast(d.error === 'instance_existe' ? 'Cette instance existe déjà.'
-      : d.error === 'portee_nationale' ? 'Réservé au SuperAdmin régional.'
-      : 'Nom d’instance invalide.', 'error');
-    return;
-  }
-  ME.instance_vue = { ...(ME.instance_vue || {}), instances: d.instances };
-  majBandeauInstance();
-  showToast(`Instance « ${nom} » ouverte — elle part vide.`, 'success');
-}
 
 // Retour d'action : le panneau du socle, commun au portail et aux modules.
 // Si la feuille commune n'est pas chargée, le message part en console plutôt
@@ -524,16 +447,7 @@ const USER_TABS = [
 ];
 const PRESTA_TABS = ['ADMIN_PRESTATAIRE', 'PRESTATAIRE'];
 
-// ── Deux portées de super-administration ──
-// Le régional administre toutes les instances et passe de l'une à l'autre en
-// barre supérieure ; le national n'administre que la sienne. Un compte dont la
-// portée n'est pas déclarée est régional — c'est ce qu'étaient tous les
-// super-administrateurs avant que la distinction n'existe.
-const PORTEE_LABELS = { regionale: 'SuperAdmin régional', nationale: 'SuperAdmin national' };
-const porteeDe = (u) => (String((u || {}).portee || '') === 'nationale' ? 'nationale' : 'regionale');
-// Qui peut désigner la portée d'un autre : le régional seul.
-const jeSuisRegional = () => ME.user.role === 'SUPERADMIN'
-  && porteeDe(ME.user) === 'regionale';
+
 let USER_TAB = 'SUPERADMIN';
 let USER_COLLAPSED = false;
 
@@ -789,47 +703,6 @@ window.submitEditUser = async function (username) {
 
 window.closeUserModal = function () { document.getElementById('userModalRoot').innerHTML = ''; };
 
-// Bloc « portée de super-administration », commun aux deux formulaires. Il ne
-// s'affiche qu'au régional — lui seul désigne les autres — et seulement quand
-// le rôle retenu est SuperAdmin. L'instance n'est demandée que pour un
-// national : le régional les administre toutes.
-function porteeFieldsHtml(prefixe, u) {
-  if (!jeSuisRegional()) return '';
-  const p = porteeDe(u);
-  const inst = (u && u.instance) || (ME.instance_vue || {}).courante || ME.instance.etat;
-  const listeInst = ((ME.instance_vue || {}).instances) || [];
-  return `
-  <div id="${prefixe}PorteeWrap" style="display:none;">
-    <div class="shell-form-group" style="margin-bottom:1rem;">
-      <label>Portée de la super-administration</label>
-      <select class="shell-input" id="${prefixe}Portee">
-        <option value="regionale" ${p === 'regionale' ? 'selected' : ''}>SuperAdmin régional — administre toutes les instances</option>
-        <option value="nationale" ${p === 'nationale' ? 'selected' : ''}>SuperAdmin national — administre une seule instance</option>
-      </select>
-    </div>
-    <div class="shell-form-group" id="${prefixe}InstanceWrap" style="margin-bottom:1rem;">
-      <label>Instance administrée</label>
-      <select class="shell-input" id="${prefixe}Instance">
-        ${listeInst.map((e) => `<option value="${esc(e)}" ${e === inst ? 'selected' : ''}>${esc(e)}</option>`).join('')}
-      </select>
-    </div>
-  </div>`;
-}
-
-// Le bloc suit le rôle choisi, et l'instance ne se demande qu'au national.
-function brancherPortee(prefixe, selectRole) {
-  const wrap = document.getElementById(`${prefixe}PorteeWrap`);
-  if (!wrap) return;
-  const sel = document.getElementById(`${prefixe}Portee`);
-  const instWrap = document.getElementById(`${prefixe}InstanceWrap`);
-  const majAffichage = () => {
-    wrap.style.display = selectRole.value === 'SUPERADMIN' ? '' : 'none';
-    instWrap.style.display = sel.value === 'nationale' ? '' : 'none';
-  };
-  selectRole.addEventListener('change', majAffichage);
-  sel.addEventListener('change', majAffichage);
-  majAffichage();
-}
 
 function showNewUserModal() {
   const root = document.getElementById('userModalRoot');
@@ -1146,10 +1019,12 @@ const CFG_TABS = [
   { id: 'inspecteurs', labelKey: 'cfg_inspecteurs', icon: 'userCheck' },
   { id: 'autres', labelKey: 'cfg_autres', icon: 'sliders' },
   { section: 'cfg_sec_plateforme' },
+  { id: 'instances', labelKey: 'Instances', icon: 'globe', regionalOnly: true },
   { id: 'securite', labelKey: 'cfg_security', icon: 'shield' },
   { id: 'modules', labelKey: 'cfg_modules', icon: 'grid' },
   { id: 'systeme', labelKey: 'cfg_systeme', icon: 'database' },
 ];
+
 
 // ── Schémas des référentiels (CRUD générique) ──
 function domaineOptions() {
@@ -2512,6 +2387,7 @@ async function renderConfig() {
   CURRENT_CFG = cfg;
   const modules = await modulesRes.json();
   if (!Object.keys(REFS).length) await loadRefs();
+  if (CFG_SUB === 'instances' && jeSuisRegional()) await cfgChargerInstances();
   normalizeOrgTopLevel(cfg);
 
   let content = '';
@@ -2527,10 +2403,11 @@ async function renderConfig() {
     case 'securite': content = cfgSectionSecurite(cfg); break;
     case 'modules': content = cfgSectionModules(modules); break;
     case 'systeme': content = cfgSectionSysteme(cfg); break;
+    case 'instances': content = cfgSectionInstances(); break;
     default: content = cfgSectionAAC(cfg) + refTable('organisation_levels') + refTable('organisation');
   }
 
-  const sidebarItems = CFG_TABS.map((tab) => {
+  const sidebarItems = CFG_TABS.filter((tab) => !tab.regionalOnly || jeSuisRegional()).map((tab) => {
     if (tab.section) return `<div class="cfg-sidebar-section">${esc(t(tab.section))}</div>`;
     return `
     <button class="cfg-sidebar-item ${CFG_SUB === tab.id ? 'active' : ''}" onclick="cfgNavigate('${tab.id}')" title="${esc(t(tab.labelKey))}">

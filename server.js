@@ -232,8 +232,14 @@ app.post('/api/login', limiterAuth, (req, res) => {
   const { username, password, channel } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'invalid' });
   const mfaOn = !!(cfg.security && cfg.security.mfaEnabled);
+  // Une instance désactivée ne laisse plus entrer les siens. Le contrôle est
+  // ici, après l'authentification : refuser avant dirait qui existe.
+  const compte = auth.findUser(String(username).trim().toLowerCase());
   const result = auth.login(String(username).trim().toLowerCase(), String(password), cfg, { noSession: mfaOn });
   if (!result.ok) return res.status(401).json({ error: result.error });
+  if (compte && !instances.estActive(instances.courante(compte, loadConfig))) {
+    return res.status(403).json({ error: 'instance_desactivee' });
+  }
 
   if (result.pending) {
     const ch = mfa.createChallenge(result.account, channel);
@@ -303,6 +309,39 @@ app.get('/api/me', requireAuth, (req, res) => {
 // dans le socle, non dans le magasin de l'un d'eux.
 app.get('/api/instance', requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
 
+// Ce que chaque instance porte, et son état. Le comptage passe par le bus :
+// les modules disent eux-mêmes ce qu'ils tiennent.
+const depsInstances = () => ({ services, utilisateurs: auth.getUsers() });
+
+app.get('/api/instances', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
+  const ici = instances.locale(loadConfig);
+  const d = depsInstances();
+  res.json(instances.liste(loadConfig).map((nom) => ({
+    nom,
+    locale: nom === ici,
+    active: instances.estActive(nom),
+    donnees: instances.volume(nom, d, loadConfig),
+    aac: instances.aacDe(nom, loadConfig).sigle || '',
+  })));
+});
+
+app.put('/api/instances/:nom/activite', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
+  const r = instances.basculerActivite(req.params.nom, loadConfig);
+  if (r.error) return res.status(400).json(r);
+  audit.log(req.user.username, r.active ? 'INSTANCE_ACTIVEE' : 'INSTANCE_DESACTIVEE', { instance: r.instance });
+  return res.json({ ok: true, ...r });
+});
+
+app.delete('/api/instances/:nom', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
+  const r = instances.supprimer(req.params.nom, loadConfig, depsInstances());
+  if (r.error) return res.status(400).json(r);
+  audit.log(req.user.username, 'INSTANCE_SUPPRIMEE', { instance: r.instance });
+  return res.json({ ok: true, ...r });
+});
+
 // Ouvrir une instance : le dispositif s'étend sans toucher au fichier de
 // configuration. Réservé au régional, seul à voir au-delà de la sienne.
 app.post('/api/instances', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
@@ -322,6 +361,9 @@ app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
   const demandee = String((req.body || {}).instance || '').trim();
   if (demandee && !instances.liste(loadConfig).includes(demandee)) {
     return res.status(400).json({ error: 'instance_inconnue' });
+  }
+  if (demandee && !instances.estActive(demandee)) {
+    return res.status(400).json({ error: 'instance_desactivee' });
   }
   instances.definir(req.user.username, demandee);
   audit.log(req.user.username, 'INSTANCE_CHANGEE', { instance: demandee || '(régionale)' });

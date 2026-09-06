@@ -18,6 +18,17 @@ const M = '/api/m/planification';
 
 function register(app, deps) {
   // Contrat exposé aux autres modules (Exécution de la Surveillance…)
+  services.publish('PLAN.volumeParInstance', () => {
+    const parInstance = {};
+    ['plans', 'activites'].forEach((coll) => {
+      db.list(coll).forEach((r) => {
+        const i = r.instance || '';
+        parInstance[i] = (parInstance[i] || 0) + 1;
+      });
+    });
+    return parInstance;
+  }, { description: 'Nombre d’enregistrements du module, par instance' });
+
   services.publish('PLAN.plansValides', D.plansValides, {
     module: 'PLAN',
     description: 'Plans de surveillance en vigueur (validés, approuvés DG, transmis) et leurs activités',

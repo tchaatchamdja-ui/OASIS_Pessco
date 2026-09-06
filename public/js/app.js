@@ -202,8 +202,78 @@ function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// ── Recherche des écrans du portail ──
+// Le geste est celui du menu « Inspections » de RAMP : au repos une pastille
+// qui dit « Rechercher », et le champ la remplace au clic, en s'étirant sur
+// tout ce que la ligne laisse jusqu'au premier bouton. Il se referme s'il
+// repart vide — le rang retrouve alors sa place.
+const PORTAIL_RECHERCHE = { ouverte: false, valeur: '' };
+
 function searchInputHtml(ph) {
-  return `<div class="cfg-search-wrap">${icon('search', 14)}<input class="shell-input cfg-search-input" type="search" placeholder="${esc(ph || 'Rechercher...')}" oninput="filterScope(this)"></div>`;
+  const ouverte = PORTAIL_RECHERCHE.ouverte || !!PORTAIL_RECHERCHE.valeur;
+  const libelle = esc(ph || 'Rechercher...');
+  return `
+    <div class="cfg-search-wrap${ouverte ? ' ouverte' : ''}" id="portailRecherche">
+      <button class="cfg-search-loupe" type="button" title="${libelle}" aria-label="${libelle}"
+              onclick="portailOuvrirRecherche()">${icon('search', 14)}<span>Rechercher</span></button>
+      <input class="cfg-search-input" type="search" placeholder="${libelle}" aria-label="${libelle}"
+             value="${esc(PORTAIL_RECHERCHE.valeur)}"
+             oninput="portailChercher(this)" onblur="portailFermerRechercheSiVide()">
+      ${ouverte ? `<button class="shell-btn-icon cfg-search-reset" type="button" title="Vider la recherche"
+              onmousedown="event.preventDefault()" onclick="portailViderRecherche()">${icon('x', 14)}</button>` : ''}
+    </div>`;
+}
+
+// Le champ remplace la pastille sans redessiner l'écran : re-rendre ferait
+// perdre le focus, et le filtrage travaille déjà sur le DOM en place.
+window.portailOuvrirRecherche = function () {
+  PORTAIL_RECHERCHE.ouverte = true;
+  const boite = document.getElementById('portailRecherche');
+  if (!boite) return;
+  boite.classList.add('ouverte');
+  // Le bouton de vidage n'existe qu'ouverte : il est posé ici plutôt que
+  // d'attendre un redessin, qui ferait perdre le focus.
+  if (!boite.querySelector('.cfg-search-reset')) {
+    const reset = document.createElement('button');
+    reset.className = 'shell-btn-icon cfg-search-reset';
+    reset.type = 'button';
+    reset.title = 'Vider la recherche';
+    reset.innerHTML = icon('x', 14);
+    reset.onmousedown = (e) => e.preventDefault();
+    reset.onclick = portailViderRecherche;
+    boite.appendChild(reset);
+  }
+  const champ = boite.querySelector('.cfg-search-input');
+  if (champ) champ.focus();
+};
+
+window.portailChercher = function (inp) {
+  PORTAIL_RECHERCHE.valeur = inp.value;
+  filterScope(inp);
+};
+
+window.portailViderRecherche = function () {
+  PORTAIL_RECHERCHE.valeur = '';
+  PORTAIL_RECHERCHE.ouverte = false;
+  const boite = document.getElementById('portailRecherche');
+  if (!boite) return;
+  const champ = boite.querySelector('.cfg-search-input');
+  if (champ) { champ.value = ''; filterScope(champ); }
+  boite.classList.remove('ouverte');
+  const reset = boite.querySelector('.cfg-search-reset');
+  if (reset) reset.remove();
+};
+
+window.portailFermerRechercheSiVide = function () {
+  if (PORTAIL_RECHERCHE.valeur) return;
+  portailViderRecherche();
+};
+
+// Changer d'écran ou de sous-menu remet la recherche au repos : elle ne porte
+// que sur ce qu'on regarde.
+function portailReinitialiserRecherche() {
+  PORTAIL_RECHERCHE.ouverte = false;
+  PORTAIL_RECHERCHE.valeur = '';
 }
 
 function exportBar(coll, title, pdfFn) {
@@ -453,6 +523,7 @@ let USER_COLLAPSED = false;
 
 window.setUserTab = function (id) {
   USER_TAB = id;
+  portailReinitialiserRecherche();
   renderUsers();
 };
 
@@ -2355,6 +2426,7 @@ window.saveSysteme = async function () {
 
 window.cfgNavigate = function (sub) {
   CFG_SUB = sub;
+  portailReinitialiserRecherche();
   renderConfig();
 };
 
@@ -2451,6 +2523,7 @@ const VIEWS = { home: renderHome, profile: renderProfile, users: renderUsers, au
 
 function navigate(view) {
   CURRENT_VIEW = view;
+  portailReinitialiserRecherche();
   // Sortie d'un module plein écran : restaure la sidebar et la tagline du portail
   if (!String(view).startsWith('mod_') && typeof planSetModuleChrome === 'function') planSetModuleChrome(false);
   document.querySelectorAll('.portal-nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.view === view));

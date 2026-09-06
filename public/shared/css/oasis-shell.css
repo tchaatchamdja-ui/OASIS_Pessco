@@ -58,9 +58,44 @@
 }
 .shell-input:focus   { outline: none; border-color: var(--primary); }
 .shell-input-sm { padding: 0.25rem 0.4rem; font-size: 0.8rem; }
-.cfg-search-wrap { position: relative; display: inline-flex; align-items: center; }
-.cfg-search-wrap svg { position: absolute; left: .5rem; color: var(--text-muted); pointer-events: none; }
-.cfg-search-input { width: 230px; max-width: 40vw; padding-left: 1.9rem; font-size: .82rem; }
+/* Recherche du portail — même geste que « RAMP Inspections » : une pastille au
+   repos, un champ qui s'étire sur tout ce que la ligne laisse dès qu'on clique.
+   Le rang n'est encombré que le temps d'une recherche. */
+.cfg-search-wrap { display: flex; align-items: center; gap: .4rem; flex: 0 0 auto; min-width: 0; }
+.cfg-search-loupe {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    height: 34px; padding: 0 .9rem; flex: 0 0 auto;
+    border: 1px solid var(--primary); border-radius: 999px;
+    background: var(--bg-card); color: var(--primary); cursor: pointer;
+    font-family: inherit; font-size: .82rem; font-weight: 600; white-space: nowrap;
+    transition: background .15s, color .15s;
+}
+.cfg-search-loupe:hover { background: var(--primary); color: #fff; }
+.cfg-search-wrap.ouverte .cfg-search-loupe { display: none; }
+.cfg-search-input {
+    width: 0; padding: 0; border: none; background: transparent; min-width: 0;
+    color: var(--text); font-family: inherit; font-size: .82rem;
+    opacity: 0; pointer-events: none;
+    transition: width .25s ease, padding .25s ease, opacity .2s ease;
+}
+/* Ouverte, la boîte prend le rang jusqu'au premier bouton. */
+.cfg-search-wrap.ouverte { flex: 1 1 auto; }
+.cfg-search-wrap.ouverte .cfg-search-input {
+    flex: 1; width: auto; height: 34px;
+    padding: 0 .8rem; opacity: 1; pointer-events: auto;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card);
+}
+.cfg-search-wrap.ouverte .cfg-search-input:focus {
+    outline: none; border-color: var(--primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+.cfg-search-reset {
+    flex: 0 0 auto; height: 34px; width: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--primary); border-radius: 999px;
+    background: var(--bg-card); color: var(--primary); cursor: pointer;
+}
+.cfg-search-reset:hover { background: var(--primary); color: #fff; }
 .shell-input:disabled{ background: var(--bg); color: var(--text-muted); }
 
 .shell-form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }

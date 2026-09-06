@@ -331,9 +331,28 @@ module.exports = function register(app, deps, M) {
       // constatation soldée chez le surveillant reste « à traiter » ici tant
       // qu'aucune décision n'a été prise.
       const closes = liees.filter((m) => CLOS.includes(m.statut)).length;
-      const statutCare = classee ? 'classee'
-        : (!liees.length ? 'a_traiter'
-          : (closes === liees.length ? 'traitee' : 'sous_mesure'));
+      const t = traitements.get(c.id) || null;
+      // Le statut dit où en est le dossier, dans les mêmes termes que la
+      // colonne « Actions ». Il se lisait au seul décompte des mesures : une
+      // carence en cours d'investigation restait « à traiter » alors que son
+      // bouton annonçait « Investigations », et un dossier déclaré clos
+      // paraissait « sous mesure » tant qu'une sanction courait encore.
+      const statutDuTraitement = () => {
+        if (!t || !t.etape || t.etape === 'suite') {
+          // Une mesure peut être prise hors du fil de traitement : la carence
+          // n'est plus « à traiter », elle suit ses mesures.
+          if (!liees.length) return 'a_traiter';
+          return closes === liees.length ? 'traitee' : 'sous_suivi';
+        }
+        if (t.etape === 'investigations') return 'investigations';
+        if (t.etape === 'qualification') return 'qualification';
+        // Étape « Suivi des Mesures » : clos par décision, soldé quand toutes
+        // les mesures le sont, sous suivi tant qu'il en reste une à conduire.
+        if (t.cloture_le) return 'cloturee';
+        if (liees.length && closes === liees.length) return 'traitee';
+        return 'sous_suivi';
+      };
+      const statutCare = classee ? 'classee' : statutDuTraitement();
       return {
         ...c,
         prestataire_nom: parId.get(c.prestataire_id) || c.prestataire_nom || '',
@@ -341,15 +360,15 @@ module.exports = function register(app, deps, M) {
         mesures_closes: closes,
         classee: !!classee,
         classement_motif: classee ? classee.motif : '',
-        traitement_etape: (traitements.get(c.id) || {}).etape || '',
-        traitement_decision: (traitements.get(c.id) || {}).decision || '',
+        traitement_etape: (t || {}).etape || '',
+        traitement_decision: (t || {}).decision || '',
         // Le dossier a-t-il été déclaré clos faute de suivi à conduire ? La
         // colonne « Actions » y distingue « Sous suivi » de « Clôturée ».
-        traitement_clos: !!(traitements.get(c.id) || {}).cloture_le,
+        traitement_clos: !!(t || {}).cloture_le,
         // Date de cette clôture : le menu États la porte en colonne. La date de
         // clôture calculée plus haut suit les mesures, qui peuvent rester
         // ouvertes alors même que le dossier est clos.
-        traitement_cloture_le: (traitements.get(c.id) || {}).cloture_le || '',
+        traitement_cloture_le: (t || {}).cloture_le || '',
         date_cloture: cloture(c, liees),
         statut: classee ? 'classee' : c.statut,
         statut_care: statutCare,

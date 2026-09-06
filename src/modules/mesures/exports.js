@@ -149,8 +149,13 @@ const ORIGINES = {
   CARE: 'Relevée ici',
 };
 const STATUTS_CARE = {
-  a_traiter: 'À traiter', sous_mesure: 'Sous mesure',
-  traitee: 'Traitée', classee: 'Classée',
+  a_traiter: 'À traiter',
+  investigations: 'En investigation',
+  qualification: 'En qualification',
+  sous_suivi: 'Sous suivi',
+  traitee: 'Traitée',
+  cloturee: 'Clôturée',
+  classee: 'Classée',
 };
 
 const ligneCarence = (c) => [

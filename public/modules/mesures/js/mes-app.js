@@ -160,10 +160,16 @@ const MES_STATUTS_CONSTAT = {
 // en a fait, indépendamment de l'état qu'elle porte dans celui qui l'a
 // relevée. Une constatation soldée chez le surveillant reste « à traiter »
 // ici tant qu'aucune décision n'a été prise.
+// Les statuts d'une carence suivent le fil du traitement, dans les mêmes
+// termes que la colonne « Actions » : ce que le bouton annonce, la colonne
+// « Statut » le dit. Ils se lisent dans l'ordre du circuit.
 const MES_STATUT_CARE = {
     a_traiter: { libelle: 'À traiter', couleur: '#dc2626' },
-    sous_mesure: { libelle: 'Sous mesure', couleur: '#d97706' },
+    investigations: { libelle: 'En investigation', couleur: '#ea580c' },
+    qualification: { libelle: 'En qualification', couleur: '#d97706' },
+    sous_suivi: { libelle: 'Sous suivi', couleur: '#0891b2' },
     traitee: { libelle: 'Traitée', couleur: '#059669' },
+    cloturee: { libelle: 'Clôturée', couleur: '#475569' },
     classee: { libelle: 'Classée', couleur: '#7c3aed' },
 };
 
@@ -906,13 +912,16 @@ const MES_LIBELLE_ETAPE = {
     suite: 'Déclencher Traitement',
     investigations: 'Investigations',
     qualification: 'Qualification et Mesures',
-    suivi: 'Traitement clôturé',
+    suivi: 'Suivi des Mesures',
 };
 
 function mesBoutonTraitement(c) {
     const etape = c.traitement_etape || 'suite';
-    const clos = etape === 'suivi' || c.classee;
-    const libelle = c.classee ? 'Traitement clôturé'
+    // Le dossier est clos quand il a été déclaré tel, ou quand la carence a été
+    // classée. Atteindre l'étape « Suivi des Mesures » ne le clôt pas : le
+    // bouton l'annonçait pourtant, quand le badge sous lui disait « Sous Suivi ».
+    const clos = c.classee || (etape === 'suivi' && c.traitement_clos);
+    const libelle = clos ? 'Traitement clôturé'
         : (MES_LIBELLE_ETAPE[etape] || MES_LIBELLE_ETAPE.suite);
     // Un dossier clos se consulte : le bouton reste, sans l'accent de l'action.
     const classe = clos ? 'btn-outline' : 'mes-btn-mesure';

@@ -199,9 +199,12 @@ module.exports = async function mesuresSmoke(port) {
       body: JSON.stringify({ constatation_id: propre.corps.id, objet: 'Avertissement' }),
     });
     verifier('mesure prise sur une constatation propre', mesureLiee.statut === 201);
-    verifier('une mesure en cours place la carence sous mesure',
+    // Le statut d'une carence suit le fil du traitement, dans les mêmes termes
+    // que la colonne « Actions ». Une mesure prise hors de ce fil la place
+    // néanmoins sous suivi : elle n'est plus à traiter.
+    verifier('une mesure en cours place la carence sous suivi',
       (((await srv.appel(`${M}/constatations`)).corps || [])
-        .find((c) => c.id === propre.corps.id) || {}).statut_care === 'sous_mesure');
+        .find((c) => c.id === propre.corps.id) || {}).statut_care === 'sous_suivi');
     verifier('suppression refusée tant qu’une mesure est rattachée',
       (await srv.appel(`${M}/constatations/${propre.corps.id}`, { method: 'DELETE' })).statut === 400);
     await srv.appel(`${M}/mesures/${mesureLiee.corps.id}`, { method: 'DELETE' });

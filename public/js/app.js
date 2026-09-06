@@ -1250,7 +1250,6 @@ const REF_SCHEMAS = {
     fields: [
       { k: 'type_supervision', l: 'Type' },
       { k: 'description', l: 'Description' },
-      { k: 'duree_standard', l: 'Durée standard (j)', type: 'number' },
       STATUT_FIELD,
     ],
   },
@@ -1861,10 +1860,10 @@ function cfgSectionDomaines() {
 
   return `
   <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${tr('Domaines / Secteurs / Sous-activités / Thèmes')}</h3>
+    <h3>${tr('Domaines | Secteurs | Sous-activités | Thèmes')}</h3>
     <div class="portal-page-actions">
       ${searchInputHtml('Rechercher un domaine / secteur...')}
-      ${exportBar('activites', tr('Domaines / Secteurs / Sous-activités / Thèmes'), 'exportPdfActivites()')}
+      ${exportBar('activites', tr('Domaines | Secteurs | Sous-activités | Thèmes'), 'exportPdfActivites()')}
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('domaines')">${icon('plus', 13)} Domaine</button>
     </div>
   </div>

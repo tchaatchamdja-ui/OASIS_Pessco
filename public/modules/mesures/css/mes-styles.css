@@ -431,10 +431,13 @@
 .mes-actions-case-bouton { display: flex; }
 .mes-actions-case-bouton .btn { width: 100%; }
 .mes-actions-secondaires { display: flex; gap: .25rem; }
-/* Chacun la moitié du rang, qu'ils soient deux ou un seul : l'historique ne
-   s'étale pas sur toute la largeur quand aucune mesure n'a été prise. */
+/* Les accès secondaires — historique, mesures prises, et pour une carence
+   relevée ici la modification et la suppression — tiennent un seul rang et se
+   partagent la largeur : deux boutons prennent chacun la moitié, quatre le
+   quart. Ils sont plus bas que le geste principal, aux deux tiers de sa
+   hauteur : ce sont des accès, pas l'action de la ligne. */
 .mes-actions-secondaires .btn {
-    flex: 0 0 calc(50% - .125rem); min-width: 0; height: 30px; padding: 0;
+    flex: 1 1 0; min-width: 0; height: 20px; padding: 0;
     display: inline-flex; align-items: center; justify-content: center;
 }
 
@@ -822,7 +825,6 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
 
 /* Modifier et Supprimer forment un couple : le rang peut passer à la ligne
    avant eux, jamais entre eux. */
-.mes-actions-icones { display: inline-flex; gap: .3rem; align-items: center; }
 
 /* Les trois listes cadrent la vue, la recherche l'affine : elles prennent
    moitié moins de place qu'elle, qui occupe le reste de la ligne. */

@@ -993,15 +993,15 @@ function mesLignesCritiques() {
                     ${c.mesures_liees ? `<button class="btn btn-outline btn-sm mes-btn-icone"
                             title="Voir les ${c.mesures_liees} mesure(s) prise(s) sur cette carence"
                             onclick="mesMesuresDeCarence('${c.id}')">${MES_ICONS.shield}</button>` : ''}
-                  </span>
-                </div>
-                ${c.origine === 'CARE' && mesPeutEcrire() ? `<span class="mes-actions-icones">
+                    ${c.origine === 'CARE' && mesPeutEcrire() ? `
                     <button class="btn btn-outline btn-sm mes-btn-icone" title="Modifier"
-                            onclick="mesOuvrirConstat('${c.id}')">${MES_ICONS.edit}</button>
-                    ${mesEstAdmin() && !c.mesures_liees && !c.classee
+                            onclick="mesOuvrirConstat('${c.id}')">${MES_ICONS.edit}</button>` : ''}
+                    ${c.origine === 'CARE' && mesPeutEcrire() && mesEstAdmin()
+                        && !c.mesures_liees && !c.classee
                         ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger" title="Supprimer"
                                    onclick="mesSupprimerConstat('${c.id}')">${MES_ICONS.delete}</button>` : ''}
-                </span>` : ''}
+                  </span>
+                </div>
               </div>
             </td>
         </tr>`;

@@ -424,21 +424,19 @@
    gauche par les icônes, la centrer sur la cellule la décalait. Et l'historique
    prend la hauteur de son rang, donc celle du bouton, au lieu de rester un
    carré de 22 px à côté d'un bloc de deux lignes. */
-.mes-actions-grille {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto;
-    gap: .2rem .3rem; align-items: stretch; justify-content: center;
-}
+/* La cellule d'actions se lit de haut en bas : le geste principal en pleine
+   largeur, puis les deux accès secondaires côte à côte sous lui, de même
+   taille. Les mentions ont disparu — elles répétaient la colonne « Statut ». */
+.mes-actions-grille { display: flex; flex-direction: column; gap: .25rem; }
 .mes-actions-case-bouton { display: flex; }
 .mes-actions-case-bouton .btn { width: 100%; }
-.mes-actions-case-icone-haut { display: flex; }
-.mes-actions-case-icone-haut .btn { height: 100%; width: auto; }
-.mes-actions-case-mention {
-    display: flex; flex-direction: column; align-items: center; gap: .2rem;
+.mes-actions-secondaires { display: flex; gap: .25rem; }
+/* Chacun la moitié du rang, qu'ils soient deux ou un seul : l'historique ne
+   s'étale pas sur toute la largeur quand aucune mesure n'a été prise. */
+.mes-actions-secondaires .btn {
+    flex: 0 0 calc(50% - .125rem); min-width: 0; height: 30px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
 }
-/* Le second rang ne s'étire pas sur la hauteur de la mention : une icône y
-   garde sa taille. */
-.mes-actions-case-icone-bas { display: flex; align-items: flex-start; }
-.mes-actions-case-icone-bas .btn { width: auto; }
 
 /* ── Volet latéral (formulaire de mesure) ──
    Même comportement que le volet du module Exécution : superposition sombre,
@@ -900,11 +898,11 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
    refermé. */
 .mes-badge.st-a-traiter { background: #fee2e2; color: #b91c1c; }
 .mes-badge.st-investigations { background: #ffedd5; color: #c2410c; }
-.mes-badge.st-qualification { background: #fef3c7; color: #b45309; }
+.mes-badge.st-qualification { background: #fef9c3; color: #a16207; }
 .mes-badge.st-sous-suivi { background: #cffafe; color: #0e7490; }
-.mes-badge.st-traitee { background: #d1fae5; color: #047857; }
-.mes-badge.st-cloturee { background: #e2e8f0; color: #475569; }
-.mes-badge.st-classee { background: #ede9fe; color: #6d28d9; }
+.mes-badge.st-traitee { background: #dcfce7; color: #16a34a; }
+.mes-badge.st-cloturee { background: #bbf7d0; color: #14532d; }
+.mes-badge.st-classee { background: #e2e8f0; color: #475569; }
 /* Échéance dépassée : la date se colore, sans pastille. Le retard doit se voir
    — il appelle un geste — mais une pilule pleine par ligne noyait la table. */
 .mes-date-retard { color: #b91c1c; font-weight: 700; white-space: nowrap; }

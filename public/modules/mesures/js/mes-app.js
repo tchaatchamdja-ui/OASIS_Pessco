@@ -935,19 +935,6 @@ function mesBoutonTraitement(c) {
         onclick="mesMesureDepuisConstatation('${c.id}')">${_mesEsc(libelle)}</button>`;
 }
 
-// Un traitement conclu par des mesures reste ouvert tant que leur mise en œuvre
-// se suit ; il est clos quand l'instance a jugé qu'aucune ne l'appelait. Le
-// bouton dit la même chose des deux — « Traitement clôturé » — d'où ce badge
-// sous lui, de la même facture que « Classée ».
-function mesEtatSousMesure(c) {
-    if (c.classee || c.traitement_etape !== 'suivi') return '';
-    return c.traitement_clos
-        ? '<span class="mes-badge cloturee" title="Les mesures sont arrêtées et aucune '
-            + 'n’appelle le suivi de sa mise en œuvre.">Clôturée</span>'
-        : '<span class="mes-badge en_cours" title="Les mesures sont arrêtées ; '
-            + 'la mise en œuvre reste à suivre.">Sous Suivi</span>';
-}
-
 function mesCritiquesFiltrees() {
     const F = MES_STATE.filtres;
     const q = _mesNorm(F.crit_recherche);
@@ -999,18 +986,10 @@ function mesLignesCritiques() {
               <div class="mes-actions-pile">
                 <div class="mes-actions-grille">
                   <span class="mes-actions-case-bouton">${mesBoutonTraitement(c)}</span>
-                  <span class="mes-actions-case-icone-haut">
+                  <span class="mes-actions-secondaires">
                     <button class="btn btn-outline btn-sm mes-btn-icone"
                             title="Historique du traitement"
                             onclick="mesHistorique('${c.id}')">${MES_ICONES_ETAT.clock}</button>
-                  </span>
-                  <span class="mes-actions-case-mention">
-                    ${mesEtatSousMesure(c)}
-                    ${c.classee
-                        ? `<span class="mes-badge cloturee"
-                                 title="${_mesAttr(c.classement_motif || '')}">Classée</span>` : ''}
-                  </span>
-                  <span class="mes-actions-case-icone-bas">
                     ${c.mesures_liees ? `<button class="btn btn-outline btn-sm mes-btn-icone"
                             title="Voir les ${c.mesures_liees} mesure(s) prise(s) sur cette carence"
                             onclick="mesMesuresDeCarence('${c.id}')">${MES_ICONS.shield}</button>` : ''}
@@ -1252,7 +1231,7 @@ Object.assign(window, {
     mesFermerSlider, mesAfficherSlider, mesFaireLeSuivi,
     mesStatutMesure, mesStatutSuivi, MES_SUIVI,
     mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
-    mesTypesInvestigation, mesComites, mesRechargerParametres, mesEtatSousMesure,
+    mesTypesInvestigation, mesComites, mesRechargerParametres,
     mesFiltreCarence, mesOuvrirTableMesures,
 });
 

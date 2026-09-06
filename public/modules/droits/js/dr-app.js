@@ -49,6 +49,7 @@ const DR_MODULE_LABELS = {
   PLAN: 'Planification de la Surveillance',
   SURV: 'Exécution de la Surveillance',
   SAFA: 'RAMP Inspections',
+  CARE: 'Mesures d’Application',
 };
 const drModuleLabel = () => DR_MODULE_LABELS[DR.module] || DR.module;
 
@@ -66,6 +67,16 @@ const DR_PRIV_DESC = {
 // les trois rôles de SAFA : Administrateur, Coordonnateur Régional,
 // Coordonnateur National.
 const DR_PRIV_DESC_MODULE = {
+  // Sur les mesures d'application, l'échelon dit qui décide : prendre une
+  // sanction n'est pas la prononcer, et classer une carence sans suite est
+  // une décision à part entière.
+  CARE: {
+    GESTIONNAIRE: "Paramètre le module, supprime, et dispose des droits les plus étendus.",
+    VALIDATEUR: "Notifie et clôture les mesures, classe une carence sans suite.",
+    CONTRIBUTEUR: "Relève les carences, instruit le traitement et rédige les mesures.",
+    LECTEUR: "Consultation seule des carences et des mesures.",
+    AUCUN: "Aucun accès aux carences et aux mesures de ce domaine ou de ce secteur.",
+  },
   SAFA: {
     GESTIONNAIRE: "Administrateur : paramètre le module, importe, supprime, sans limite d’État.",
     VALIDATEUR: "Coordonnateur Régional : consulte les inspections de tous les États, sans importer.",
@@ -79,7 +90,15 @@ const drPrivDesc = (p) => ((DR_PRIV_DESC_MODULE[DR.module] || {})[p] || DR_PRIV_
 
 async function drBoot() {
   try {
-    const ctx = await drApi(`/context?module=${DR.module}`);
+    // Un compte d'organisme n'a rien à régler ici : le serveur le refuse, et
+    // l'écran le dit plutôt que de rester vide.
+    const ctx = await drApi(`/context?module=${DR.module}`).catch((e) => {
+      if (String(e && e.message).includes('reserve_autorite')) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;color:#991b1b;">Gestion des Droits : réservée aux comptes de l’Autorité.</div>';
+      }
+      throw e;
+    });
     DR.user = ctx.user;
     DR.privileges = ctx.privileges;
     DR.scopePrivileges = ctx.scopePrivileges;

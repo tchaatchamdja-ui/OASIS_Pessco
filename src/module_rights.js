@@ -129,8 +129,16 @@ function register(app, deps) {
   const R = '/api/m/droits';
   const canManage = requireRole('SUPERADMIN', 'ADMIN');
 
+  // La gestion des droits est l'affaire de l'Autorité : régler qui peut quoi
+  // dans un module n'appartient pas à l'organisme surveillé. Le contexte
+  // lui-même le lui refuse, faute de quoi l'écran s'ouvrirait sur une page
+  // vide plutôt que sur un refus clair.
+  const ROLES_ORGANISME = ['PRESTATAIRE', 'ADMIN_PRESTATAIRE'];
+  const refuserOrganisme = (req, res, next) => (ROLES_ORGANISME.includes((req.user || {}).role)
+    ? res.status(403).json({ error: 'reserve_autorite' }) : next());
+
   // `module` permet d'obtenir la liste de privilèges propre au module géré.
-  app.get(`${R}/context`, requireAuth, (req, res) => {
+  app.get(`${R}/context`, requireAuth, refuserOrganisme, (req, res) => {
     const cfg = loadConfig();
     res.json({
       user: auth.publicUser(req.user),

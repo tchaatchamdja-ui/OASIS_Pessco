@@ -122,10 +122,10 @@
       // Hors carte D.6, la page reste rattachée au module dont elle règle les
       // droits : la barre supérieure en reprend le nom et le contexte.
       // Chaque module géré a sa propre coquille : la barre reprend la sienne.
-      const CLES = { PLAN: 'droits', SURV: 'execution', SAFA: 'ramp' };
+      const CLES = { PLAN: 'droits', SURV: 'execution', SAFA: 'ramp', CARE: 'mesures' };
       window.OASIS_MODULE_KEY = CLES[m] || 'droits';
       // Nom court porté par la barre supérieure, quand le module en a un.
-      const NOMS = { SAFA: 'RAMP Inspections' };
+      const NOMS = { SAFA: 'RAMP Inspections', CARE: 'Mesures d’Application' };
       if (NOMS[m]) window.OASIS_MODULE_LABEL = NOMS[m];
       window.OASIS_MODULE_RIGHTS = m;
     })();

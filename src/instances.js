@@ -169,6 +169,21 @@ function filtrer(rangs, retenue, loadConfig) {
   return rangs.filter((x) => (String((x || {}).instance || '') || ici) === retenue);
 }
 
+// Les comptes d'une instance, tels qu'un écran d'administration les montre.
+// Un compte ordinaire appartient à l'AAC qui l'a ouvert ; le
+// super-administrateur régional, lui, n'appartient à aucune en particulier :
+// il les administre toutes. Il figure donc dans la liste de chacune, et non
+// dans la seule vue régionale — d'où il était, sinon, le seul à se voir.
+//
+// `estRegional` est appelé par rang, mais ne lit que le compte lui-même :
+// aucune lecture de fichier ne s'y cache.
+function utilisateursDe(users, retenue, loadConfig) {
+  if (!retenue) return users;
+  const ici = locale(loadConfig);
+  return users.filter((u) => estRegional(u)
+    || (String((u || {}).instance || '') || ici) === retenue);
+}
+
 // ── Le référentiel tel qu'une instance le voit ──
 // Ses collections propres — prestataires, inspecteurs, organisation,
 // exigences — resserrées sur elle ; les collections communes intactes. C'est
@@ -318,7 +333,7 @@ const etat = (user, loadConfig) => {
 };
 
 module.exports = {
-  locale, liste, courante, definir, de, filtrer, refs, visibles, etat,
+  locale, liste, courante, definir, de, filtrer, utilisateursDe, refs, visibles, etat,
   aac, aacDe, definirAac, CHAMPS_AAC,
   ouvrir, supprimer, basculerActivite, estActive, desactivees, volume,
   PORTEES, portee, estSuperadmin, estRegional,

@@ -442,11 +442,12 @@ app.put('/api/modules/:code', requireAuth, requireRole('SUPERADMIN'), (req, res)
 
 // ── Utilisateurs (ADMIN et SUPERADMIN) ──
 // Un compte appartient à l'AAC qui l'a ouvert : la liste ne montre que ceux de
-// l'instance regardée. La connexion, elle, n'est jamais bornée — un agent
+// l'instance regardée, et les super-administrateurs régionaux, qui les
+// administrent toutes. La connexion, elle, n'est jamais bornée — un agent
 // togolais s'authentifie quel que soit le poste tenu ici.
 app.get('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
   const retenue = instances.courante(req.user, loadConfig);
-  res.json(instances.filtrer(auth.getUsers(), retenue, loadConfig).map(auth.publicUser));
+  res.json(instances.utilisateursDe(auth.getUsers(), retenue, loadConfig).map(auth.publicUser));
 });
 
 // Un compte ne s'administre que depuis son instance. Le super-administrateur

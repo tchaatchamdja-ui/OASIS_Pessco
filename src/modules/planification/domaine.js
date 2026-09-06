@@ -97,8 +97,15 @@ function plansValides(filtre) {
 // concurrents.
 const estPrestataire = (user) => !!user && ROLES_PRESTATAIRE.includes(user.role);
 
+// Espace de privilèges du module, et case correspondante d'« Accès aux
+// modules ». Le nom était écrit en clair à chaque appel : la garde du contexte
+// le demandait sous `D.RIGHTS`, qui n'existait pas — elle comparait donc
+// `undefined` à la liste des modules ouverts, et refusait le module à tout
+// compte qui n'est pas super-administrateur.
+const RIGHTS = 'PLAN';
+
 const peut = (req, privilege, plan) => !estPrestataire(req.user) && moduleRights.can(
-  'PLAN', req.user.username, privilege,
+  RIGHTS, req.user.username, privilege,
   (plan && plan.domaine_id) || '', (plan && plan.secteur_id) || '',
 );
 
@@ -106,7 +113,7 @@ const peut = (req, privilege, plan) => !estPrestataire(req.user) && moduleRights
 // sauf un compte rattaché à un organisme surveillé.
 const peutLire = (req, plan) => !!req.user && !estPrestataire(req.user)
   && moduleRights.effectivePrivilege(
-    'PLAN', req.user.username,
+    RIGHTS, req.user.username,
     (plan && plan.domaine_id) || '', (plan && plan.secteur_id) || '',
   ) !== 'AUCUN';
 
@@ -261,6 +268,7 @@ const SCHEMA_ACTIVITE = {
 };
 
 module.exports = {
+  RIGHTS,
   roleM2, riskProfiles, plansValides, STATUTS_EN_VIGUEUR,
   peut, peutLire, estPrestataire, refus, planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,

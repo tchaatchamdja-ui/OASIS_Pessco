@@ -206,7 +206,9 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/context`, requireAuth, (req, res) => {
     // Les profils de risque partagent la carte et l'espace de droits de la
     // Planification : c'est la même case d'« Accès aux modules » qui les ouvre.
-    if (!moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
+    // Noter un organisme n'est pas l'affaire de l'organisme noté : son compte
+    // n'ouvre pas l'écran, quand bien même la case serait cochée.
+    if (D.estPrestataire(req.user) || !moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
       return res.status(403).json({ error: 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.' });
     }
     const cfg = loadConfig();

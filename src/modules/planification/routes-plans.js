@@ -52,8 +52,11 @@ module.exports = function register(app, deps, M) {
   // Contexte du module (utilisateur + rôle M2)
   app.get(`${M}/context`, requireAuth, (req, res) => {
     // Sans accès au module, l'écran ne s'ouvre pas : il se montait sur une
-    // coquille vide où chaque geste échouait sans qu'on sache pourquoi.
-    if (!moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
+    // coquille vide où chaque geste échouait sans qu'on sache pourquoi. Un
+    // compte d'organisme surveillé est dans ce cas même la case cochée : le
+    // module n'a pas d'écran de son côté, et toutes ses listes lui sont
+    // refusées.
+    if (D.estPrestataire(req.user) || !moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
       return res.status(403).json({ error: 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.' });
     }
     const cfg = loadConfig();

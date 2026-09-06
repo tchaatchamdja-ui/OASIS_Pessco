@@ -679,6 +679,14 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .pf-compact .aac-info-table td { padding: .3rem .8rem; }
 .pf-section-disabled { opacity: .6; }
 
+/* ── En-tête d'écran de configuration ──
+   Le titre garde sa ligne, les actions passent dessous : sur les écrans dont
+   l'intitulé est court, tout tenait sur un rang et le titre se décalait de la
+   barre latérale des sous-menus. En pile, il s'aligne sur elle. */
+.cfg-entete-empile { flex-direction: column; align-items: flex-start; }
+.cfg-entete-empile .portal-page-actions { width: 100%; }
+.cfg-entete-premier { margin-top: 0; }
+
 /* ── Circuit de validation (Personnel AAC) ── */
 .pers-toggle { transition: transform .2s; }
 .pers-circuit { display: flex; flex-direction: row; flex-wrap: wrap; gap: .5rem; align-items: flex-start; }

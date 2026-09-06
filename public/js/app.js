@@ -1215,7 +1215,7 @@ function fieldValue(field, record) {
   return esc(raw ?? '—');
 }
 
-function refTable(coll) {
+function refTable(coll, premier) {
   const schema = REF_SCHEMAS[coll];
   const rows = (REFS[coll] || [])
     .map(
@@ -1230,7 +1230,7 @@ function refTable(coll) {
     )
     .join('');
   return `
-  <div class="portal-page-header" style="margin-top:1.25rem;">
+  <div class="portal-page-header cfg-entete-empile ${premier ? 'cfg-entete-premier' : ''}" style="margin-top:1.25rem;">
     <h3>${esc(tr(schema.title))}</h3>
     <div class="portal-page-actions">
       ${coll === 'prestataires' ? searchInputHtml('Rechercher un prestataire...') + exportBar('prestataires', tr('Prestataires de services')) : ''}
@@ -1303,7 +1303,7 @@ function cfgSectionExigences() {
     })
     .join('');
   return `
-  <div class="portal-page-header" style="margin-top:1.25rem;">
+  <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
     <h3>${esc(tr('Liste des exigences'))}</h3>
     <div class="portal-page-actions">
       ${searchInputHtml('Rechercher une exigence / règlement...')}
@@ -1482,7 +1482,7 @@ function cfgSectionPersonnel() {
     })
     .join('');
   return `
-  <div class="portal-page-header" style="margin-top:1.25rem;">
+  <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
     <h3>${esc(tr(schema.title))}</h3>
     <div class="portal-page-actions">
       ${searchInputHtml('Rechercher un membre du personnel...')}
@@ -1789,7 +1789,7 @@ function cfgSectionDomaines() {
     : '';
 
   return `
-  <div class="portal-page-header">
+  <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
     <h3>${tr('Domaines / Secteurs / Sous-activités / Thèmes')}</h3>
     <div class="portal-page-actions">
       ${searchInputHtml('Rechercher un domaine / secteur...')}
@@ -2397,9 +2397,9 @@ async function renderConfig() {
     case 'domaines': content = cfgSectionDomaines(); break;
     case 'themes': CFG_SUB = 'domaines'; content = cfgSectionDomaines(); break;
     case 'exigences': content = cfgSectionExigences(); break;
-    case 'prestataires': content = refTable('prestataires'); break;
+    case 'prestataires': content = refTable('prestataires', true); break;
     case 'inspecteurs': content = cfgSectionPersonnel(); break;
-    case 'autres': content = refTable('types_supervision') + refTable('modes_supervision') + refTable('niveaux_qualifications') + refTable('specialites_inspecteur'); break;
+    case 'autres': content = refTable('types_supervision', true) + refTable('modes_supervision') + refTable('niveaux_qualifications') + refTable('specialites_inspecteur'); break;
     case 'securite': content = cfgSectionSecurite(cfg); break;
     case 'modules': content = cfgSectionModules(modules); break;
     case 'systeme': content = cfgSectionSysteme(cfg); break;

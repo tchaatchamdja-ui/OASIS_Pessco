@@ -36,15 +36,39 @@ const config = (loadConfig) => (typeof loadConfig === 'function' ? (loadConfig()
 // n'est alors cloisonné, et les écrans se comportent comme avant.
 const locale = (loadConfig) => String((config(loadConfig).instance || {}).etat || '').trim();
 
-// Instances connues : celles que la configuration déclare, à défaut les États
-// membres. L'instance locale en fait toujours partie, fût-elle absente.
+// Instances ouvertes après coup par le super-administrateur régional. Le
+// fichier de configuration déclare les États membres à l'installation ; le
+// dispositif s'étend ensuite sans y toucher — une AAC qui rejoint l'Union,
+// une instance d'essai.
+const ajoutees = () => ((store.load('instances', {}) || {}).ajoutees || [])
+  .map((e) => String(e || '').trim()).filter(Boolean);
+
+// Instances connues : celles que la configuration déclare — à défaut les États
+// membres —, celles ouvertes depuis, et l'instance locale, qui en fait
+// toujours partie, fût-elle absente des deux.
 function liste(loadConfig) {
   const inst = config(loadConfig).instance || {};
   const declarees = Array.isArray(inst.etatsMembres) ? inst.etatsMembres : ETATS_UEMOA;
-  const noms = declarees.map((e) => String(e || '').trim()).filter(Boolean);
+  const noms = declarees.map((e) => String(e || '').trim()).filter(Boolean)
+    .concat(ajoutees());
   const ici = locale(loadConfig);
   if (ici && !noms.includes(ici)) noms.push(ici);
   return [...new Set(noms)].sort((a, b) => a.localeCompare(b, 'fr'));
+}
+
+// Ouvre une instance. Elle part vide : ni organismes, ni inspecteurs, ni
+// nomenclatures — c'est son super-administrateur national qui la garnira.
+function ouvrir(nom, loadConfig) {
+  const n = String(nom || '').trim();
+  if (!n || n.length > 60) return { error: 'nom_invalide' };
+  if (liste(loadConfig).includes(n)) return { error: 'instance_existe' };
+  const tout = store.load('instances', {}) || {};
+  store.save('instances', {
+    ...tout,
+    ajoutees: [...(tout.ajoutees || []), n],
+    date_maj: new Date().toISOString(),
+  });
+  return { instance: n };
 }
 
 const choix = () => (store.load('instances', {}) || {}).choix || {};
@@ -215,6 +239,6 @@ const etat = (user, loadConfig) => {
 
 module.exports = {
   locale, liste, courante, definir, de, filtrer, refs, visibles, etat,
-  aac, aacDe, definirAac, CHAMPS_AAC,
+  aac, aacDe, definirAac, CHAMPS_AAC, ouvrir,
   PORTEES, portee, estSuperadmin, estRegional,
 };

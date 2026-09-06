@@ -303,6 +303,16 @@ app.get('/api/me', requireAuth, (req, res) => {
 // dans le socle, non dans le magasin de l'un d'eux.
 app.get('/api/instance', requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
 
+// Ouvrir une instance : le dispositif s'étend sans toucher au fichier de
+// configuration. Réservé au régional, seul à voir au-delà de la sienne.
+app.post('/api/instances', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
+  const r = instances.ouvrir((req.body || {}).nom, loadConfig);
+  if (r.error) return res.status(400).json(r);
+  audit.log(req.user.username, 'INSTANCE_OUVERTE', { instance: r.instance });
+  return res.json({ ok: true, instance: r.instance, instances: instances.liste(loadConfig) });
+});
+
 app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
   // Seul le super-administrateur régional change d'instance : le national
   // n'administre que la sienne.

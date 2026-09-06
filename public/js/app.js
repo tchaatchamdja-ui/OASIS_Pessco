@@ -342,7 +342,10 @@ function majBandeauInstance() {
     return;
   }
   const options = [{ valeur: '', libelle: PORTAIL_VUE_REGIONALE }]
-    .concat(vue.instances.map((e) => ({ valeur: e, libelle: e })));
+    .concat(vue.instances.map((e) => ({ valeur: e, libelle: e })))
+    // Ouvrir une instance depuis la liste elle-même : c'est là qu'on constate
+    // qu'elle manque.
+    .concat([{ valeur: '__nouvelle__', libelle: '＋ Nouvelle instance…' }]);
   zone.className = 'portal-header-instance portal-header-instance-choix';
   zone.innerHTML = `<select id="instanceSelect" title="Instance regardée"
       aria-label="Instance regardée">${options.map((o) =>
@@ -352,6 +355,7 @@ function majBandeauInstance() {
 
 async function changerInstance(valeur) {
   const vue = ME.instance_vue || {};
+  if (valeur === '__nouvelle__') return ouvrirInstance();
   if ((vue.courante || '') === (valeur || '')) return;
   const res = await api('/api/instance', {
     method: 'PUT',
@@ -366,6 +370,29 @@ async function changerInstance(valeur) {
   // L'instance commande le périmètre de tous les écrans : on recharge le
   // portail plutôt que de rafraîchir liste après liste.
   window.location.reload();
+}
+
+// Une instance nouvelle part vide : ni organismes, ni inspecteurs, ni
+// nomenclatures. Son super-administrateur national la garnira.
+async function ouvrirInstance() {
+  const nom = (window.prompt('Nom de la nouvelle instance (l’État) :') || '').trim();
+  majBandeauInstance();
+  if (!nom) return;
+  const res = await api('/api/instances', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nom }),
+  });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    showToast(d.error === 'instance_existe' ? 'Cette instance existe déjà.'
+      : d.error === 'portee_nationale' ? 'Réservé au SuperAdmin régional.'
+      : 'Nom d’instance invalide.', 'error');
+    return;
+  }
+  ME.instance_vue = { ...(ME.instance_vue || {}), instances: d.instances };
+  majBandeauInstance();
+  showToast(`Instance « ${nom} » ouverte — elle part vide.`, 'success');
 }
 
 // Retour d'action : le panneau du socle, commun au portail et aux modules.

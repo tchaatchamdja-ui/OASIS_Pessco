@@ -1624,10 +1624,6 @@ tr.hidden { display: none; }
 
 
 
-/* Piste tenant tout entière dans son cadre : les commandes de défilement
-   n'auraient rien à faire défiler et s'effacent. Le renvoi vers le menu
-   « Calendrier » et la date du jour, eux, restent. */
-.pl-cal-nav.pl-cal-nav-fixe .pl-cal-cmd { display: none; }
 
 /* ── Débordement horizontal ──
    La colonne de contenu est un élément de flex : sans `min-width: 0`, elle
@@ -1658,3 +1654,7 @@ tr.hidden { display: none; }
 
 /* Barre qui ouvre le mois d'un clic : le curseur le dit. */
 .pl-gantt .g-barre[onclick] { cursor: pointer; }
+
+/* Vue resserrée : une ligne par organisme, une sur deux détachée comme dans
+   les tables du module. */
+.pl-gantt .g-groupe.g-alt { background: color-mix(in srgb, var(--primary) 12%, var(--bg)); }

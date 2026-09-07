@@ -181,16 +181,18 @@ function _planCalendrierHtml(activites, options) {
     };
 
     let corps = '';
-    ordre.forEach(pid => {
+    ordre.forEach((pid, iGroupe) => {
         const g = groupes[pid];
         const rangees = g.lignes.sort((a, b) => a.debut - b.debut);
 
         // Vue resserrée : une seule ligne par organisme, toutes ses périodes
-        // dessus. Les infobulles disent laquelle est laquelle.
+        // dessus. Les infobulles disent laquelle est laquelle. Une ligne sur
+        // deux se détache, comme dans les tables du module.
         if (o.compact) {
+            const alt = iGroupe % 2 ? ' g-alt' : '';
             corps += `
-        <div class="g-nom g-groupe">${_esc(g.nom)}<span class="g-compte">${rangees.length}</span></div>
-        <div class="g-piste g-groupe g-piste-multi">${rangees.map(barre).join('')}</div>`;
+        <div class="g-nom g-groupe${alt}">${_esc(g.nom)}<span class="g-compte">${rangees.length}</span></div>
+        <div class="g-piste g-groupe${alt}">${rangees.map(barre).join('')}</div>`;
             return;
         }
 
@@ -218,21 +220,17 @@ function _planCalendrierHtml(activites, options) {
     const marqueur = (aujourdhui >= min && aujourdhui <= max)
         ? `<div class="g-aujourdhui" style="left:${pct(aujourdhui).toFixed(2)}%;"></div>` : '';
 
-    // Le fragment est inséré par l'appelant : on regarde au tour suivant si la
-    // piste déborde, pour montrer ou effacer les commandes de défilement.
-    setTimeout(_planCalMajNav, 0);
-
     return `
     <div class="card pl-cal-carte" style="margin-top:1rem;">
         <div class="pl-cal-entete">
             <h4>${_esc(o.titre || tp('cal_titre'))}</h4>
             <div class="pl-cal-nav">
                 ${o.voirDetail ? `<button class="btn btn-sm btn-primary" onclick="planOuvrirCalendrier()">${tp('cal_voir_detail')}</button>` : ''}
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(-1, this)" title="${_escAttr(tp('cal_debut'))}">«</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(-1, this)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalAujourdhui(this)">${tp('cal_aujourdhui')}</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(1, this)" title="${_escAttr(tp('cal_avancer'))}">›</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(1, this)" title="${_escAttr(tp('cal_fin'))}">»</button>
+                <button class="btn btn-sm btn-outline" onclick="planCalAnnee(-1)" title="${_escAttr(tp('cal_annee_precedente'))}">«</button>
+                <button class="btn btn-sm btn-outline" onclick="planCalDefiler(-1, this)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
+                <button class="btn btn-sm btn-outline" onclick="planCalAujourdhui(this)">${tp('cal_aujourdhui')}</button>
+                <button class="btn btn-sm btn-outline" onclick="planCalDefiler(1, this)" title="${_escAttr(tp('cal_avancer'))}">›</button>
+                <button class="btn btn-sm btn-outline" onclick="planCalAnnee(1)" title="${_escAttr(tp('cal_annee_suivante'))}">»</button>
                 <span class="pl-cal-jour">${jour(aujourdhui)}</span>
             </div>
         </div>
@@ -258,19 +256,20 @@ function _planCalendrierHtml(activites, options) {
     </div>`;
 }
 
-// ── Commandes de défilement ──
-// Elles n'ont de sens que si la piste déborde de son cadre : sur un écran
-// large, l'année tient tout entière et les cinq boutons ne feraient rien. On
-// les efface alors, en gardant la date du jour.
-function _planCalMajNav() {
-    document.querySelectorAll('.pl-cal-carte').forEach((carte) => {
-        const cadre = carte.querySelector('.pl-gantt-cadre');
-        const nav = carte.querySelector('.pl-cal-nav');
-        if (!cadre || !nav) return;
-        nav.classList.toggle('pl-cal-nav-fixe', cadre.scrollWidth - cadre.clientWidth < 4);
-    });
-}
-window.addEventListener('resize', _planCalMajNav);
+// ── Année regardée ──
+// Les doubles chevrons changent d'année. Le tableau de bord la tient dans son
+// filtre, l'écran « Calendrier » dans sa propre navigation : on suit celui des
+// deux qui est ouvert. « Aujourd'hui » y ramène l'année en cours.
+window.planCalAnnee = function (pas) {
+    if (PLAN_STATE.calendrierVolet) {
+        PLAN_STATE.calendarYear = (PLAN_STATE.calendarYear || new Date().getFullYear()) + pas;
+        if (PLAN_STATE.calFilters) PLAN_STATE.calFilters.annee = String(PLAN_STATE.calendarYear);
+    } else {
+        const actuelle = parseInt(PLAN_STATE.filters.annee, 10) || new Date().getFullYear();
+        PLAN_STATE.filters.annee = String(actuelle + pas);
+    }
+    planRenderPage();
+};
 
 // ── Défilement ──
 // La piste est plus large que son cadre : au-delà de la barre de défilement,
@@ -293,6 +292,20 @@ window.planCalBord = function (sens, bouton) {
 };
 
 window.planCalAujourdhui = function (bouton) {
+    const cetteAnnee = String(new Date().getFullYear());
+    const regardee = PLAN_STATE.calendrierVolet
+        ? String(PLAN_STATE.calendarYear || cetteAnnee) : String(PLAN_STATE.filters.annee || cetteAnnee);
+    if (regardee !== cetteAnnee) {
+        if (PLAN_STATE.calendrierVolet) {
+            PLAN_STATE.calendarYear = Number(cetteAnnee);
+            if (PLAN_STATE.calFilters) PLAN_STATE.calFilters.annee = cetteAnnee;
+        } else {
+            PLAN_STATE.filters.annee = cetteAnnee;
+        }
+        planRenderPage();
+        setTimeout(() => window.planCalAujourdhui(), 60);
+        return;
+    }
     const cadre = _planCalCadre(bouton);
     if (!cadre) return;
     const trait = cadre.querySelector('.g-aujourdhui');

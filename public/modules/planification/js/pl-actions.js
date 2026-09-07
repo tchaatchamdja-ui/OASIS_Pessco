@@ -478,6 +478,14 @@ function _esc(str) {
     return div.innerHTML;
 }
 
+// Interpolation dans un attribut : les guillemets doivent partir aussi, ce que
+// `_esc` ne fait pas — il passe par innerHTML, qui les laisse tels quels.
+function _escAttr(str) {
+    return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function _statusBadge(status) {
     const color = _statusColor(status);
     const label = tp(status) || status;

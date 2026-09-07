@@ -1399,3 +1399,267 @@ tr.hidden { display: none; }
        d'Amendement », le plus long, se couperait. */
     .pl-kpi-ligne .oasis-kpi-tete { font-size: 0.76rem; }
 }
+
+/* ── Calendrier des activités du tableau de bord ──
+   Repris du « Calendrier des Activités » de « Exécution de la Surveillance »,
+   porté ici sous ses propres classes : le module ne charge pas la feuille de
+   l'autre, et les deux calendriers restent libres d'évoluer séparément. */
+.pl-cal-entete {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+}
+.pl-cal-entete h4 { margin: 0; }
+.pl-cal-nav { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.pl-cal-nav .btn { padding: 0.18rem 0.5rem; line-height: 1.2; }
+.pl-cal-jour {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text);
+    background: color-mix(in srgb, var(--primary) 10%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+    border-radius: 6px;
+    padding: 0.22rem 0.6rem;
+    margin-left: 0.25rem;
+    white-space: nowrap;
+}
+/* Le cadre du calendrier et le panneau se calent bord à bord : le plus court
+   des deux s'étire, le calendrier défile dedans. */
+.pl-cal-corps { display: flex; align-items: stretch; gap: 0.85rem; }
+.pl-gantt-cadre {
+    flex: 1;
+    min-width: 0;
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+/* Une seule grille : en-têtes et lignes partagent les colonnes, donc les
+   barres restent alignées sur la graduation quoi qu'il arrive. */
+.pl-gantt {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    position: relative;
+    font-size: 0.74rem;
+}
+/* La colonne des intitulés reste en place quand la piste défile. */
+.pl-gantt .g-nom {
+    padding: 0.25rem 0.5rem;
+    border-right: 2px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 26px;
+    box-sizing: border-box;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--bg-card, #fff);
+}
+.pl-gantt .g-piste {
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    min-height: 26px;
+    box-sizing: border-box;
+}
+/* La ligne survolée passe au-dessus de tout : son infobulle déborde sur les
+   lignes suivantes et sur la colonne figée. */
+.pl-gantt .g-piste:hover { z-index: 6; }
+.pl-gantt .g-annee,
+.pl-gantt .g-entete-vide,
+.pl-gantt .g-entete {
+    background: color-mix(in srgb, var(--primary) 18%, var(--bg));
+    font-weight: 700;
+    color: var(--text);
+}
+.pl-gantt .g-entete { display: flex; }
+.pl-gantt .g-entete .g-cellule {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 1px solid var(--border);
+    font-size: 0.7rem;
+}
+.pl-gantt .g-entete .g-cellule:first-child { border-left: none; }
+/* Graduation tenue en haut du cadre pendant le défilement vertical. */
+.pl-gantt .g-annee,
+.pl-gantt .g-piste.g-entete {
+    position: sticky;
+    top: 0;
+    height: 24px;
+    min-height: 24px;
+    z-index: 4;
+}
+.pl-gantt .g-entete-vide,
+.pl-gantt .g-piste.g-entete-mois {
+    position: sticky;
+    top: 24px;
+    height: 22px;
+    min-height: 22px;
+    background: color-mix(in srgb, var(--primary) 9%, var(--bg));
+    font-weight: 600;
+    color: var(--text);
+    z-index: 4;
+}
+.pl-gantt .g-piste.g-entete-mois .g-cellule { font-size: 0.66rem; }
+/* Les deux cellules d'angle sont figées dans les deux sens : elles passent
+   devant la colonne des noms comme devant la graduation. */
+.pl-gantt .g-annee,
+.pl-gantt .g-entete-vide { z-index: 5; }
+
+/* Ligne de regroupement : l'organisme, au-dessus de ses activités. */
+.pl-gantt .g-groupe {
+    background: color-mix(in srgb, var(--primary) 22%, var(--bg));
+    font-weight: 700;
+    color: var(--text);
+    border-top: 2px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+.pl-gantt .g-compte {
+    margin-left: auto;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--bg-card, #fff);
+    border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-radius: 8px;
+    padding: 0 0.35rem;
+}
+.pl-gantt .g-activite { color: var(--text); padding-left: 1.1rem; line-height: 26px; }
+.pl-gantt .g-activite-txt {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+/* Une ligne sur deux se détache. La parité est posée au rendu : nth-of-type
+   compterait noms et pistes confondus, et l'alternance partirait de travers. */
+.pl-gantt .g-paire { background: color-mix(in srgb, var(--primary) 5%, var(--bg)); }
+.pl-gantt .g-sans { color: var(--text-muted); font-style: italic; }
+.pl-gantt .g-vide {
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.pl-gantt .g-barre {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 0.4rem;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 600;
+    overflow: hidden;
+    z-index: 1;
+    cursor: default;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.pl-gantt .g-barre-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-gantt .g-barre.etat-planifie  { background: #2563eb; }
+.pl-gantt .g-barre.etat-en_cours  { background: #f59e0b; }
+.pl-gantt .g-barre.etat-en_retard { background: #dc2626; }
+.pl-gantt .g-alerte {
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #fff;
+    color: #dc2626;
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Fiche de survol, placée par planCalInfo() : en position fixe, elle échappe
+   au rognage du cadre à défilement. */
+.pl-gantt .g-infobulle {
+    display: none;
+    position: fixed;
+    z-index: 60;
+    min-width: 210px;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.16);
+    padding: 0.5rem 0.6rem;
+    font-size: 0.72rem;
+    color: var(--text);
+    white-space: nowrap;
+    pointer-events: none;
+}
+.pl-gantt .g-infobulle .t {
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid var(--border);
+}
+.pl-gantt .g-infobulle span { color: var(--text-muted); }
+
+/* Repères verticaux et trait du jour, tendus sur toute la hauteur. Hors flux :
+   un élément de grille couvrant toutes les lignes empêcherait le placement
+   automatique d'y arriver. */
+.pl-gantt .g-overlay {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 220px;
+    right: 0;
+    z-index: 2;
+    pointer-events: none;
+}
+.pl-gantt .g-trait { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
+.pl-gantt .g-aujourdhui { position: absolute; top: 0; bottom: 0; width: 2px; background: #dc2626; }
+
+/* Panneau latéral : filtres et légende. */
+.pl-gantt-panneau { flex: 0 0 178px; display: flex; flex-direction: column; gap: 0.6rem; }
+.pl-gantt-panneau .g-bloc {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+}
+.pl-gantt-panneau .g-bloc-titre {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+.pl-gantt-panneau .g-bloc-vide { font-size: 0.72rem; color: var(--text-muted); }
+.pl-gantt-panneau .g-case {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.74rem;
+    padding: 0.16rem 0;
+    cursor: pointer;
+    line-height: 1.25;
+}
+/* Largeur imposée : la règle générale du module étire tout input à 100 %. */
+.pl-gantt-panneau .g-case input[type="checkbox"] {
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    min-width: 0;
+    flex: 0 0 14px;
+}
+.pl-gantt-panneau .g-puce { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
+
+@media (max-width: 900px) {
+    .pl-cal-corps { flex-direction: column; }
+    .pl-gantt-panneau { flex: 1 1 auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
+    .pl-gantt-panneau .g-bloc { flex: 1 1 160px; }
+}

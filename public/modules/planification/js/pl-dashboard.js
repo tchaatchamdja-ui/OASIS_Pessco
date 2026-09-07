@@ -109,7 +109,19 @@ function planRenderDashboard() {
         </div>
 
         ${_planListeDeLaCarte(plans)}
+
+        ${_planCalendrierHtml(_planActivitesDuBord())}
     </div>`;
+}
+
+// Activités que le tableau de bord regarde : celles qui restent à réaliser
+// dans les plans en vigueur, filtres de la barre appliqués. Les cartes, la
+// liste et le calendrier partagent ce périmètre.
+function _planActivitesDuBord() {
+    const plans = PLAN_STATE.data.plans || [];
+    const enVigueur = _applyRoleFilter(_applyPlanFilters(plans))
+        .filter(p => PL_STATUTS_EN_VIGUEUR.includes(p.statut));
+    return _planActivitesARealiser(enVigueur);
 }
 
 // ── Détail de la carte choisie ──
@@ -134,8 +146,8 @@ function _planListeDeLaCarte(plans) {
     };
 
     let corps = '';
-    if (cle === 'activites') corps = _planTableActivites(_planActivitesARealiser(enVigueur));
-    else if (cle === 'prestataires') corps = _planTablePrestataires(_planActivitesARealiser(enVigueur));
+    if (cle === 'activites') corps = _planTableActivites(_planActivitesDuBord());
+    else if (cle === 'prestataires') corps = _planTablePrestataires(_planActivitesDuBord());
     else {
         const listes = {
             valides: enVigueur,

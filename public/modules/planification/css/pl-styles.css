@@ -1654,3 +1654,6 @@ tr.hidden { display: none; }
     padding: 0 0.28rem;
     line-height: 1.5;
 }
+
+/* Barre qui ouvre le mois d'un clic : le curseur le dit. */
+.pl-gantt .g-barre[onclick] { cursor: pointer; }

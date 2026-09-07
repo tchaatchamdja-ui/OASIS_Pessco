@@ -116,11 +116,17 @@ function _planCalPrestataires() {
     });
 }
 
-function _planCalendrierHtml(activites) {
+// Le même calendrier sert le tableau de bord et le menu « Calendrier ». Les
+// options disent ce qui les sépare : l'année de référence, le titre, les
+// organismes attendus en ligne, la couleur d'une barre et ce qu'un clic
+// déclenche. Le reste — colonne figée, trimestres, mois, barres, trait du
+// jour, infobulle — est commun.
+function _planCalendrierHtml(activites, options) {
+    const o = options || {};
     const { lignes: visibles, aujourdhui } = _planCalLignes(activites);
 
-    const annee = PLAN_STATE.filters.annee
-        ? parseInt(PLAN_STATE.filters.annee, 10) : new Date().getFullYear();
+    const annee = o.annee || (PLAN_STATE.filters.annee
+        ? parseInt(PLAN_STATE.filters.annee, 10) : new Date().getFullYear());
     const { min, max } = _planCalBornes(visibles, annee);
     const mois = _planCalListeMois(min, max);
     const t0 = min.getTime();
@@ -138,7 +144,7 @@ function _planCalendrierHtml(activites) {
     });
 
     const groupes = {};
-    _planCalPrestataires().forEach(p => { groupes[p.id] = { nom: p.nom, lignes: [] }; });
+    (o.prestataires || _planCalPrestataires()).forEach(p => { groupes[p.id] = { nom: p.nom, lignes: [] }; });
     visibles.forEach(l => {
         if (!groupes[l.prestataire_id]) groupes[l.prestataire_id] = { nom: l.prestataire_nom, lignes: [] };
         groupes[l.prestataire_id].lignes.push(l);
@@ -168,7 +174,9 @@ function _planCalendrierHtml(activites) {
                 ${l.trigramme ? `<span class="g-resp" title="${_escAttr(l.responsable)}">${_esc(l.trigramme)}</span>` : ''}
             </div>
             <div class="g-piste${paire}">
-                <div class="g-barre etat-${l.etat}" style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;"
+                <div class="g-barre etat-${l.etat}"
+                     style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;${o.couleur ? `background:${o.couleur(l)};` : ''}"
+                     ${o.clic ? `onclick="${_escAttr(o.clic(l))}"` : ''}
                      onmouseenter="planCalInfo(this, true)" onmouseleave="planCalInfo(this, false)">
                     <span class="g-barre-txt">${_esc(l.type)}</span>
                     ${l.etat === 'en_retard' ? '<span class="g-alerte">!</span>' : ''}
@@ -198,7 +206,7 @@ function _planCalendrierHtml(activites) {
     return `
     <div class="card pl-cal-carte" id="planCalendrierRoot" style="margin-top:1rem;">
         <div class="pl-cal-entete">
-            <h4>${tp('cal_titre')}</h4>
+            <h4>${_esc(o.titre || tp('cal_titre'))}</h4>
             <div class="pl-cal-nav">
                 <button class="btn btn-sm btn-outline" onclick="planCalBord(-1)" title="${_escAttr(tp('cal_debut'))}">«</button>
                 <button class="btn btn-sm btn-outline" onclick="planCalDefiler(-1)" title="${_escAttr(tp('cal_reculer'))}">‹</button>

@@ -22,7 +22,6 @@ function planRenderCalendar() {
     const year = PLAN_STATE.calendarYear;
     const view = PLAN_STATE.calendarView;
     const plans = PLAN_STATE.data.plans || [];
-    const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
     const fullMonths = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
     // Reference data maps
@@ -333,48 +332,17 @@ function planRenderCalendar() {
     const amendedParentIds = new Set(validatedPlans.filter(p => p.parent_plan_id).map(p => p.parent_plan_id));
     const ganttActivities = allActivities.filter(a => !amendedParentIds.has(a.plan_id));
 
-    // Graduation hebdomadaire : chaque mois est découpé en 4 semaines
-    // (1-7, 8-14, 15-21, 22-fin). Seules les semaines d'exécution sont
-    // colorées ; les cellules ne portent aucun texte.
-    const SEMAINES = [[1, 7], [8, 14], [15, 21], [22, 31]];
-    const semaineCouverte = (mois, borne, debut, fin) => {
-        if (!debut) return false;
-        const dernier = new Date(year, mois, 0).getDate();
-        const d1 = new Date(year, mois - 1, borne[0]);
-        const d2 = new Date(year, mois - 1, Math.min(borne[1], dernier));
-        return debut <= d2 && fin >= d1;
-    };
-
-    let ganttRows = '';
-    for (const [idx, a] of ganttActivities.entries()) {
-        const barColor = _prestataireColor(a.prestataire_id);
-        const prestNom = _esc(prestMap[a.prestataire_id] || '');
-        const prestTrig = _esc(prestTrigMap[a.prestataire_id] || '');
-        const objet = _esc(a.objet || a.titre || '');
-        const label = prestNom ? `${prestNom} / ${objet}` : objet;
-        const courtLabel = prestTrig ? `${prestTrig} / ${objet}` : objet;
-        const shortLabel = courtLabel.length > 35 ? courtLabel.substring(0, 35) + '…' : courtLabel;
-        const respName = inspMap[a.responsable_id] || '';
-
-        const debut = a.date_debut ? new Date(a.date_debut.substring(0, 10)) : null;
-        const fin = a.date_fin ? new Date(a.date_fin.substring(0, 10)) : debut;
-        const infobulle = `${label}${respName ? ' — ' + _esc(respName) : ''} — ${(a.date_debut || '').substring(0, 10)} → ${(a.date_fin || '').substring(0, 10)}`;
-
-        let cells = '';
-        for (let m = 1; m <= 12; m++) {
-            SEMAINES.forEach((borne, w) => {
-                const actif = semaineCouverte(m, borne, debut, fin);
-                const classes = ['gantt-cell', 'gantt-week-cell'];
-                if (w === 0) classes.push('gantt-month-start');
-                if (m === 4 || m === 7 || m === 10) { if (w === 0) classes.push('gantt-quarter-sep'); }
-                if (actif) classes.push('gantt-week-on');
-                cells += `<td class="${classes.join(' ')}"${actif
-                    ? ` style="background:${barColor};" title="${infobulle}" onclick="PLAN_STATE.calendarMonth=${m - 1};PLAN_STATE.calendarView='month';planRenderPage();"`
-                    : ''}></td>`;
-            });
-        }
-        ganttRows += `<tr class="gantt-row ${idx % 2 === 1 ? 'gantt-row-alt' : ''}"><td class="gantt-label" title="${label}"><span class="gantt-label-dot" style="background:${barColor}"></span>${shortLabel}</td>${cells}</tr>`;
-    }
+    // Le diagramme reprend la présentation du « Calendrier des Activités » du
+    // tableau de bord — colonne figée, trimestres, mois, barres proportionnelles,
+    // trait du jour — et garde ce qui lui appartient : l'année choisie ici, ses
+    // propres filtres, la teinte par organisme et le clic qui ouvre le mois.
+    const ganttHtml = _planCalendrierHtml(ganttActivities, {
+        annee: year,
+        titre: `${tp('gantt_diagram')} - ${year}`,
+        prestataires: filteredPrest,
+        couleur: (l) => _prestataireColor(l.act.prestataire_id),
+        clic: (l) => `PLAN_STATE.calendarMonth=${l.debut.getMonth()};PLAN_STATE.calendarView='month';planRenderPage();`,
+    });
 
     return `
     <div class="page-content" style="max-width:100%;min-width:0;overflow-x:hidden;">
@@ -395,18 +363,6 @@ function planRenderCalendar() {
             <div class="card-body" style="overflow-x:auto;min-width:0;">${calendarContent}</div>
         </div>
 
-        <div class="card" style="margin-top:1rem;">
-            <div class="card-header"><h3>${tp('gantt_diagram')} - ${year}</h3></div>
-            <div class="card-body gantt-full" style="overflow-x:auto;">
-                ${ganttRows ? `
-                <table class="gantt-table gantt-table-enhanced">
-                    <thead><tr>
-                        <th class="gantt-label-header">${tp('activities')}</th>
-                        ${months.map((m, i) => `<th class="gantt-month${i === 3 || i === 6 || i === 9 ? ' gantt-quarter-sep' : ''}" colspan="4" style="cursor:pointer;" onclick="PLAN_STATE.calendarMonth=${i};PLAN_STATE.calendarView='month';planRenderPage();" title="Voir ${fullMonths[i]}">${m}</th>`).join('')}
-                    </tr></thead>
-                    <tbody>${ganttRows}</tbody>
-                </table>` : `<p class="text-center" style="padding:2rem;color:var(--text-muted);">${tp('no_data')}</p>`}
-            </div>
-        </div>
+        ${ganttHtml}
     </div>`;
 }

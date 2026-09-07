@@ -8,34 +8,90 @@
 // ══════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════
+
+// ── Niveau de risque d'un profil ─────────────────────────────────
+// Il se lit sur la case de la matrice (« 3C »), non sur le libellé : celui-ci
+// est enregistré dans la langue du moment, et le test portait sur « Très
+// élevé » quand le libellé écrit est « Très Élevé » — tout profil du niveau le
+// plus haut était donc compté parmi les « élevés ». Le libellé ne sert plus
+// que de recours pour les enregistrements sans case.
+const PR_NIVEAU_DE_CASE = {
+    '1A': 'very_low',
+    '2A': 'low', '1B': 'low',
+    '3A': 'moderate', '2B': 'moderate', '1C': 'moderate',
+    '3B': 'high', '2C': 'high', '1D': 'high',
+    '3C': 'very_high', '2D': 'very_high', '3D': 'very_high',
+};
+
+function prNiveauRisque(ev) {
+    const g = ((ev || {}).resultats || {}).global || {};
+    const parCase = PR_NIVEAU_DE_CASE[String((g.globalRisk || {}).label || '').toUpperCase()];
+    if (parCase) return parCase;
+    const r = String((g.globalRisk || {}).risk || '');
+    if (/tr[eè]s\s*[ée]lev|very\s*high|muito\s*elevad/i.test(r)) return 'very_high';
+    if (/[ée]lev|high|elevad/i.test(r)) return 'high';
+    if (/mod[ée]r|moderate|moderad/i.test(r)) return 'moderate';
+    if (/tr[eè]s\s*faible|very\s*low|muito\s*baix/i.test(r)) return 'very_low';
+    if (/faible|low|baix/i.test(r)) return 'low';
+    return '';
+}
+
+function prCompterRisques(evals) {
+    const c = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
+    (evals || []).forEach((ev) => { const n = prNiveauRisque(ev); if (n) c[n] += 1; });
+    return c;
+}
+
+// ── Fin du cycle de surveillance d'un profil ─────────────────────
+// La date portée par l'évaluation, à défaut le début du cycle — ou la
+// validation — augmenté du CSRBO. Le tableau de bord lisait jusqu'ici une
+// `date_butoir` du prestataire que rien n'écrit : la carte « Échéances
+// Proches » et le bandeau qui la double restaient à zéro quoi qu'il arrive.
+function prFinDeCycle(ev) {
+    const e = ev || {};
+    if (e.date_fin_cycle) {
+        const f = new Date(e.date_fin_cycle);
+        if (!isNaN(f)) return f;
+    }
+    const depart = e.date_debut_cycle || e.date_validation;
+    const csrbo = Number(((e.resultats || {}).global || {}).csrbo || 0);
+    if (!depart || !csrbo) return null;
+    const d = new Date(depart);
+    if (isNaN(d)) return null;
+    d.setMonth(d.getMonth() + csrbo);
+    return d;
+}
+
+// Profils en vigueur dont le cycle s'achève dans les `mois` à venir.
+function prEcheancesProches(evals, mois) {
+    const aujourdhui = new Date();
+    const limite = new Date();
+    limite.setMonth(limite.getMonth() + (mois || 3));
+    return (evals || []).filter((ev) => {
+        const f = prFinDeCycle(ev);
+        return f && f >= aujourdhui && f <= limite;
+    });
+}
+
 // ── Indicateurs du tableau de bord ───────────────────────────────
 // Deux groupes : ce que le parc représente, et ce que les évaluations en
 // disent. Les figures viennent du socle (/shared/js/oasis-kpi.js).
 function _prCartesIndicateurs(ctx) {
     const c = ctx || {};
-    const D = c.D || {};
     const evals = c.filteredEvals || [];
     const risques = c.riskCounts || {};
     const totalPrest = Number(c.totalPrest || 0);
-    const brouillons = (D.evaluations || []).filter((e) => e.statut === 'brouillon').length;
+    const brouillons = Number(c.brouillons || 0);
     const couverture = totalPrest ? Math.round((evals.length / totalPrest) * 100) : 0;
-    const eleves = Number(risques.very_high || 0) + Number(risques.high || 0);
-
-    // Prestataires dont la date butoir tombe dans les trois mois.
-    const aujourdhui = new Date();
-    const limite = new Date();
-    limite.setMonth(limite.getMonth() + 3);
-    const echeances = (D.prestataires || []).filter((p) => {
-        if (!p.date_butoir) return false;
-        const d = new Date(p.date_butoir);
-        return !isNaN(d) && d >= aujourdhui && d <= limite;
-    }).length;
+    const eleves = Number(risques.high || 0);
+    const tresEleves = Number(risques.very_high || 0);
+    const echeances = prEcheancesProches(evals, 3).length;
 
     // Répartition des niveaux, du plus faible au plus élevé.
     const repartition = [risques.very_low, risques.low, risques.moderate,
         risques.high, risques.very_high].map((v) => Number(v || 0));
-    // Position du curseur sur l'échelle : part des profils à risque élevé.
-    const position = evals.length ? Math.round((eleves / evals.length) * 100) : 0;
+    // Position du curseur sur l'échelle : part des profils du niveau montré.
+    const part = (n) => (evals.length ? Math.round((n / evals.length) * 100) : 0);
 
     return `
     <div class="oasis-kpi-groupes">
@@ -51,11 +107,6 @@ function _prCartesIndicateurs(ctx) {
                 valeur: echeances, precision: t('due_soon_hint'),
                 figure: { type: 'retard', pastille: t('deadline_short'), legende: t('due_date_short') },
             }),
-            oasisKpiCarte({
-                titre: t('domains_sectors'), couleur: '#f59e0b',
-                valeur: c.totalDom, precision: t('scope_hint'),
-                figure: { type: 'calendrier', mois: 3 },
-            }),
         ])}
         ${oasisKpiGroupe(t('active_profiles'), [
             oasisKpiCarte({
@@ -66,7 +117,13 @@ function _prCartesIndicateurs(ctx) {
             oasisKpiCarte({
                 titre: t('high_risk'), couleur: '#f97316', alerte: !!eleves,
                 valeur: eleves, precision: t('high_risk_hint'),
-                figure: { type: 'echelle', position: Math.max(10, position),
+                figure: { type: 'echelle', position: Math.max(10, part(eleves)),
+                    min: t('risk_low'), max: t('risk_high') },
+            }),
+            oasisKpiCarte({
+                titre: t('very_high_risk'), couleur: '#dc2626', alerte: !!tresEleves,
+                valeur: tresEleves, precision: t('very_high_risk_hint'),
+                figure: { type: 'echelle', position: Math.max(10, part(tresEleves)),
                     min: t('risk_low'), max: t('risk_high') },
             }),
             oasisKpiCarte({
@@ -89,36 +146,28 @@ function renderDashboard() {
         if (!latestMap[k] || new Date(ev.date_validation || ev.date) > new Date(latestMap[k].date_validation || latestMap[k].date)) latestMap[k] = ev;
     });
     const validEvals = Object.values(latestMap);
-    const totalPrest = (D.prestataires || []).filter(p => p.actif !== false && p.actif !== 0).length;
-    const totalDom = (D.domaines || []).filter(d => d.actif !== false && d.actif !== 0).length;
 
-    let riskCounts = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
-    // Performance Sécurité counts: A=Élevée, B=Moyen, C=Faible, D=Très Faible
-    let perfSecCounts = { A: 0, B: 0, C: 0, D: 0 };
-    // Matrix: complexité (1-3) vs sécurité (A-D) positions for each eval
-    let matrixPositions = {};
-    validEvals.forEach(ev => {
-        const r = ev.resultats?.global?.globalRisk?.risk || '';
-        if (r.includes('Très élevé') || r.includes('Very High')) riskCounts.very_high++;
-        else if (r.includes('Élevé') || r.includes('High')) riskCounts.high++;
-        else if (r.includes('Modéré') || r.includes('Moderate')) riskCounts.moderate++;
-        else if (r.includes('Très Faible') || r.includes('Very Low')) riskCounts.very_low++;
-        else if (r.includes('Faible') || r.includes('Low')) riskCounts.low++;
+    // Performance Sécurité : A=Élevée, B=Moyen, C=Faible, D=Très Faible, et
+    // place de chaque profil dans la matrice complexité (1-3) × sécurité (A-D).
+    // Le même décompte servait deux fois, écrit deux fois : filtres posés ou
+    // non, c'est désormais le même passage.
+    const _agreger = (liste) => {
+        const perf = { A: 0, B: 0, C: 0, D: 0 };
+        const positions = {};
+        (liste || []).forEach(ev => {
+            const safety = String(ev.resultats?.global?.ids_g || ev.resultats?.global?.safetyIndex?.val || '').toUpperCase();
+            if (perf[safety] !== undefined) perf[safety]++;
+            const ide = ev.resultats?.global?.ide_g || 1;
+            const compLevel = ide >= 3 ? 3 : ide >= 2 ? 2 : 1;
+            const key = `${compLevel}${safety || 'D'}`;
+            const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
+            if (!positions[key]) positions[key] = [];
+            positions[key].push(prest?.trigramme || prest?.nom?.substring(0, 3) || '?');
+        });
+        return { riskCounts: prCompterRisques(liste), perfSecCounts: perf, matrixPositions: positions };
+    };
 
-        const safety = String(ev.resultats?.global?.ids_g || ev.resultats?.global?.safetyIndex?.val || '').toUpperCase();
-        if (safety === 'A') perfSecCounts.A++;
-        else if (safety === 'B') perfSecCounts.B++;
-        else if (safety === 'C') perfSecCounts.C++;
-        else if (safety === 'D') perfSecCounts.D++;
-
-        const ide = ev.resultats?.global?.ide_g || 1;
-        const compLevel = ide >= 3 ? 3 : ide >= 2 ? 2 : 1;
-        const safetyLetter = safety || 'D';
-        const key = `${compLevel}${safetyLetter}`;
-        const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
-        if (!matrixPositions[key]) matrixPositions[key] = [];
-        matrixPositions[key].push(prest?.trigramme || prest?.nom?.substring(0, 3) || '?');
-    });
+    let { riskCounts, perfSecCounts, matrixPositions } = _agreger(validEvals);
 
     // Matrix cell colors (risk gradient)
     const mColors = {
@@ -150,18 +199,25 @@ function renderDashboard() {
     const evaluatedPrestIds = new Set(allValids.map(e => e.prestataire_id));
     const dashPrestList = (D.prestataires || []).filter(p => p.actif !== false && p.actif !== 0 && evaluatedPrestIds.has(p.id));
 
-    // Set of validated evaluations that have been REPLACED by a later re-evaluation
-    // (i.e. their id appears as parent_eval_id of any other evaluation, validated or not).
-    const replacedIds = new Set(
-        (D.evaluations || [])
-            .map(e => e.parent_eval_id)
-            .filter(pid => pid)
-    );
+    // Un prestataire relève d'un domaine et d'un secteur : les filtres du
+    // tableau de bord le retiennent ou l'écartent, lui comme ses profils.
+    const _prestPasse = (p) => {
+        const sect = (D.secteurs || []).find(s => s.id === p.secteur_id);
+        const dom = sect ? (D.domaines || []).find(d => d.id === sect.domaine_id) : null;
+        if (df.domaine && (dom?.id || p.domaine_id) !== df.domaine) return false;
+        if (df.secteur && p.secteur_id !== df.secteur) return false;
+        if (df.prestataire && p.id !== df.prestataire) return false;
+        return true;
+    };
+    // Parc de référence du taux de couverture : les prestataires actifs que les
+    // filtres retiennent. Le dénominateur restait celui du parc entier, si bien
+    // qu'un filtre sur un seul organisme évalué affichait « 1 sur 4 — 25 % ».
+    const totalPrest = (D.prestataires || [])
+        .filter(p => p.actif !== false && p.actif !== 0 && _prestPasse(p)).length;
 
     // Filter validEvals by dashboard filters
     let filteredEvals = validEvals;
-    // Total validated evaluations EXCLUDING those that have been replaced — used for the "Validé" card
-    let filteredValidAll = allValids.filter(e => !replacedIds.has(e.id));
+    let brouillons = (D.evaluations || []).filter(e => e.statut === 'brouillon');
     if (df.domaine || df.secteur || df.prestataire) {
         const _passes = (ev) => {
             const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
@@ -173,31 +229,10 @@ function renderDashboard() {
             return true;
         };
         filteredEvals = validEvals.filter(_passes);
-        filteredValidAll = allValids.filter(e => !replacedIds.has(e.id) && _passes(e));
-        // Recount risk and perf with filtered evals
-        riskCounts = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
-        perfSecCounts = { A: 0, B: 0, C: 0, D: 0 };
-        matrixPositions = {};
-        filteredEvals.forEach(ev => {
-            const r = ev.resultats?.global?.globalRisk?.risk || '';
-            if (r.includes('Très élevé') || r.includes('Very High')) riskCounts.very_high++;
-            else if (r.includes('Élevé') || r.includes('High')) riskCounts.high++;
-            else if (r.includes('Modéré') || r.includes('Moderate')) riskCounts.moderate++;
-            else if (r.includes('Très Faible') || r.includes('Very Low')) riskCounts.very_low++;
-            else if (r.includes('Faible') || r.includes('Low')) riskCounts.low++;
-            const safety = String(ev.resultats?.global?.ids_g || ev.resultats?.global?.safetyIndex?.val || '').toUpperCase();
-            if (safety === 'A') perfSecCounts.A++;
-            else if (safety === 'B') perfSecCounts.B++;
-            else if (safety === 'C') perfSecCounts.C++;
-            else if (safety === 'D') perfSecCounts.D++;
-            const ide = ev.resultats?.global?.ide_g || 1;
-            const compLevel = ide >= 3 ? 3 : ide >= 2 ? 2 : 1;
-            const safetyLetter = safety || 'D';
-            const key = `${compLevel}${safetyLetter}`;
-            const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
-            if (!matrixPositions[key]) matrixPositions[key] = [];
-            matrixPositions[key].push(prest?.trigramme || prest?.nom?.substring(0, 3) || '?');
-        });
+        // La carte « Brouillon » comptait les évaluations en préparation de
+        // tout le parc, filtres posés ou non : elle seule ne les suivait pas.
+        brouillons = brouillons.filter(_passes);
+        ({ riskCounts, perfSecCounts, matrixPositions } = _agreger(filteredEvals));
         // Rebuild matrix
         matrixHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,50px);gap:2px;font-size:0.75rem;">
             ${[3,2,1].map(comp => `
@@ -242,20 +277,19 @@ function renderDashboard() {
             Exporter PDF
         </button>
     </div>
-    ${_prCartesIndicateurs({ totalDom, totalPrest, filteredEvals, riskCounts, D })}
+    ${_prCartesIndicateurs({ totalPrest, filteredEvals, riskCounts, brouillons: brouillons.length, D })}
     ${(() => {
-        // Phase 1 widget — prestataires arrivant à la date butoir (3 mois)
-        const today = new Date(); const limit = new Date(); limit.setMonth(limit.getMonth() + 3);
-        const upcoming = (D.prestataires || []).filter(p => {
-            if (!p.date_butoir) return false;
-            const d = new Date(p.date_butoir);
-            return !isNaN(d) && d >= today && d <= limit;
-        });
+        // Prestataires dont le cycle de surveillance s'achève dans les trois
+        // mois — la même règle que la carte « Échéances Proches », qu'il double.
+        const upcoming = prEcheancesProches(filteredEvals, 3);
         if (!upcoming.length) return '';
+        const _esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const nom = (ev) => _esc((D.prestataires || []).find(p => p.id === ev.prestataire_id)?.nom || '?');
+        const fin = (ev) => prFinDeCycle(ev).toISOString().slice(0, 10);
         return `<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:0.6rem 0.85rem;margin-bottom:0.75rem;">
             <div style="font-weight:700;color:#92400e;font-size:0.88rem;margin-bottom:0.3rem;">⚠ ${upcoming.length} prestataire(s) à évaluer dans les 3 mois (Chap. 4 §4.2.2.b)</div>
             <div style="display:flex;flex-wrap:wrap;gap:0.4rem;font-size:0.8rem;">
-                ${upcoming.map(p => `<span style="background:#fff;border:1px solid #fde68a;border-radius:4px;padding:0.15rem 0.5rem;">${p.nom} <span style="color:#92400e;">— ${p.date_butoir}</span></span>`).join('')}
+                ${upcoming.map(ev => `<span style="background:#fff;border:1px solid #fde68a;border-radius:4px;padding:0.15rem 0.5rem;">${nom(ev)} <span style="color:#92400e;">— ${fin(ev)}</span></span>`).join('')}
             </div>
         </div>`;
     })()}

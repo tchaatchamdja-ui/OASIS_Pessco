@@ -15,25 +15,27 @@
 function _planCartesIndicateurs(stats) {
     const s = stats || {};
     const n = (v) => Number(v || 0);
-    const total = n(s.total_plans);
     const valides = n(s.plans_valides);
     const soumis = n(s.plans_soumis);
     const brouillons = n(s.plans_brouillon);
     const rejetes = n(s.plans_rejetes);
+    const amendes = n(s.plans_en_amendement);
+    // Un plan archivé est une version remplacée : la compter au dénominateur
+    // faisait baisser le taux à chaque amendement validé — cinq versions d'un
+    // même plan, dont quatre archivées, donnaient « 20 % ». Le taux ne regarde
+    // que les plans encore en lice.
+    const total = Math.max(0, n(s.total_plans) - n(s.plans_archives));
     const tauxValidation = total ? Math.round((valides / total) * 100) : 0;
 
-    const actTotal = n(s.total_activites);
-    const realisees = n(s.activites_realisees);
     const planifiees = n(s.activites_planifiees);
-    const tauxRealisation = actTotal ? Math.round((realisees / actTotal) * 100) : 0;
 
     return `
-    <div class="oasis-kpi-groupes">
+    <div class="oasis-kpi-groupes pl-kpi-ligne">
         ${oasisKpiGroupe(tp('groupe_plans'), [
             oasisKpiCarte({
                 titre: tp('taux_validation'), couleur: '#10b981',
                 valeur: total ? `${tauxValidation}%` : '-',
-                precision: `${valides} ${tp('sur_court')} ${total} ${tp('plans_minuscule')}`,
+                precision: `${valides} ${tp('sur_court')} ${total} ${tp('plans_non_archives')}`,
                 figure: { type: 'jauge', pct: tauxValidation },
             }),
             oasisKpiCarte({
@@ -43,18 +45,17 @@ function _planCartesIndicateurs(stats) {
                     liste: [tp('plans_brouillon'), tp('plans_soumis'), tp('plans_valides')], actif: 1 },
             }),
             oasisKpiCarte({
+                titre: tp('carte_amendement'), couleur: '#0891b2', alerte: !!amendes,
+                valeur: amendes, precision: tp('versions_en_circuit'),
+                figure: { type: 'barres', valeurs: [valides, amendes] },
+            }),
+            oasisKpiCarte({
                 titre: tp('plans_brouillon'), couleur: '#f59e0b',
                 valeur: brouillons, precision: tp('en_preparation'),
                 figure: { type: 'barres', valeurs: [brouillons, soumis, valides, rejetes] },
             }),
         ])}
         ${oasisKpiGroupe(tp('activites_titre'), [
-            oasisKpiCarte({
-                titre: tp('taux_realisation'), couleur: '#2563eb',
-                valeur: actTotal ? `${tauxRealisation}%` : '-',
-                precision: `${realisees} ${tp('sur_court')} ${actTotal} ${tp('realisees_minuscule')}`,
-                figure: { type: 'jauge', pct: tauxRealisation },
-            }),
             oasisKpiCarte({
                 titre: tp('a_realiser'), couleur: '#f97316',
                 valeur: planifiees, precision: tp('inscrites_aux_plans'),

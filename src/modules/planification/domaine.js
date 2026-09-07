@@ -29,6 +29,19 @@ function riskProfiles() {
 // remplacées (archivées) en sont exclus.
 const STATUTS_EN_VIGUEUR = ['valide', 'approuve_dg', 'transmis'];
 
+// Amender un plan en vigueur ouvre une version suivante, qui chemine dans le
+// circuit tant qu'elle n'est pas validée à son tour : ces statuts-là sont ceux
+// d'un amendement en cours. Le plan d'origine reste la référence entre-temps.
+const STATUTS_AMENDEMENT = ['brouillon', 'soumis', 'en_revue', 'rejete'];
+
+// Plans en vigueur dont une version suivante chemine encore.
+function plansEnAmendement(plans) {
+  const parents = new Set((plans || [])
+    .filter((p) => p.parent_plan_id && STATUTS_AMENDEMENT.includes(p.statut))
+    .map((p) => p.parent_plan_id));
+  return (plans || []).filter((p) => STATUTS_EN_VIGUEUR.includes(p.statut) && parents.has(p.id));
+}
+
 function plansValides(filtre) {
   const f = filtre || {};
   const acts = db.list('activites');
@@ -270,6 +283,7 @@ const SCHEMA_ACTIVITE = {
 module.exports = {
   RIGHTS,
   roleM2, riskProfiles, plansValides, STATUTS_EN_VIGUEUR,
+  STATUTS_AMENDEMENT, plansEnAmendement,
   peut, peutLire, estPrestataire, refus, planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,
   wf, nomComplet, familleDuPlan, ecartsRisques,

@@ -87,7 +87,7 @@ module.exports = function register(app, deps, M) {
       return res.status(409).json({ error: 'plan_non_amendable', statut: src.statut });
     }
     const enCours = db.list('plans').find((p) => p.parent_plan_id === src.id
-      && ['brouillon', 'soumis', 'en_revue', 'rejete'].includes(p.statut));
+      && D.STATUTS_AMENDEMENT.includes(p.statut));
     if (enCours) return res.json({ ok: true, new_plan_id: enCours.id, deja_en_cours: true });
 
     const motif = (req.body && req.body.motif) || '';

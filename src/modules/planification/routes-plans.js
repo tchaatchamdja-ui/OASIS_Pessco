@@ -105,6 +105,9 @@ module.exports = function register(app, deps, M) {
       plans_soumis: plans.filter((p) => p.statut === 'soumis').length,
       plans_rejetes: plans.filter((p) => p.statut === 'rejete').length,
       plans_archives: plans.filter((p) => p.statut === 'archive').length,
+      // Plans en vigueur dont une version suivante chemine encore : le tableau
+      // de bord en fait une carte.
+      plans_en_amendement: D.plansEnAmendement(plans).length,
       total_activites: acts.length,
       activites_planifiees: acts.filter((a) => a.statut !== 'realisee').length,
       activites_realisees: acts.filter((a) => a.statut === 'realisee').length,

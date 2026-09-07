@@ -1363,3 +1363,22 @@ tr.hidden { display: none; }
     color: #b45309;
     cursor: help;
 }
+
+/* ── Tableau de bord : les six cartes sur une seule ligne ──
+   Deux groupes titrés — quatre cartes pour les plans, deux pour les activités.
+   Leurs parts suivent ce compte et les écarts sont les mêmes de part et
+   d'autre, si bien que les six cartes gardent la même largeur. En dessous de
+   1200 px, la ligne unique serrerait les libellés : les groupes reprennent
+   alors la disposition commune. */
+@media (min-width: 1200px) {
+    .oasis-kpi-groupes.pl-kpi-ligne { grid-template-columns: 4fr 2fr; gap: 0.75rem; }
+    .pl-kpi-ligne > .oasis-kpi-groupe:first-child .oasis-kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .pl-kpi-ligne > .oasis-kpi-groupe:last-child .oasis-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    /* Six cartes de front laissent peu de place aux intitulés : « En cours
+       d'Amendement », le plus long, se couperait. */
+    .pl-kpi-ligne .oasis-kpi-tete { font-size: 0.76rem; }
+}

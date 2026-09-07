@@ -1426,9 +1426,8 @@ tr.hidden { display: none; }
     margin-left: 0.25rem;
     white-space: nowrap;
 }
-/* Le cadre du calendrier et le panneau se calent bord à bord : le plus court
-   des deux s'étire, le calendrier défile dedans. */
-.pl-cal-corps { display: flex; align-items: stretch; gap: 0.85rem; }
+/* Le calendrier occupe toute la largeur de la carte et défile dans son cadre. */
+.pl-cal-corps { display: block; }
 .pl-gantt-cadre {
     flex: 1;
     min-width: 0;
@@ -1623,43 +1622,8 @@ tr.hidden { display: none; }
 .pl-gantt .g-trait { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
 .pl-gantt .g-aujourdhui { position: absolute; top: 0; bottom: 0; width: 2px; background: #dc2626; }
 
-/* Panneau latéral : filtres et légende. */
-.pl-gantt-panneau { flex: 0 0 178px; display: flex; flex-direction: column; gap: 0.6rem; }
-.pl-gantt-panneau .g-bloc {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.5rem 0.6rem;
-}
-.pl-gantt-panneau .g-bloc-titre {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 0.4rem;
-}
-.pl-gantt-panneau .g-bloc-vide { font-size: 0.72rem; color: var(--text-muted); }
-.pl-gantt-panneau .g-case {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.74rem;
-    padding: 0.16rem 0;
-    cursor: pointer;
-    line-height: 1.25;
-}
-/* Largeur imposée : la règle générale du module étire tout input à 100 %. */
-.pl-gantt-panneau .g-case input[type="checkbox"] {
-    margin: 0;
-    width: 14px;
-    height: 14px;
-    min-width: 0;
-    flex: 0 0 14px;
-}
-.pl-gantt-panneau .g-puce { width: 11px; height: 11px; border-radius: 3px; flex-shrink: 0; }
 
-@media (max-width: 900px) {
-    .pl-cal-corps { flex-direction: column; }
-    .pl-gantt-panneau { flex: 1 1 auto; width: 100%; flex-direction: row; flex-wrap: wrap; }
-    .pl-gantt-panneau .g-bloc { flex: 1 1 160px; }
-}
+
+/* Piste tenant tout entière dans son cadre : les commandes de défilement
+   n'auraient rien à faire défiler, seule la date du jour reste. */
+.pl-cal-nav.pl-cal-nav-fixe .btn { display: none; }

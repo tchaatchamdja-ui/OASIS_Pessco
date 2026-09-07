@@ -9,11 +9,17 @@
 const PLAN_CAL_MOIS = ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
     'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
 
+// Largeur d'un mois. Une piste au plus juste tenait dans son cadre : rien ne
+// dépassait, et les commandes de défilement n'avaient rien à faire défiler.
+// À 130 px, l'année demande plus de place que n'en offre l'écran : la piste
+// défile pour de bon, et les barres de quelques jours cessent d'être des
+// traits. Le cadre reste maître — si tout tient, les commandes s'effacent.
+const PLAN_CAL_LARGEUR_MOIS = 130;
+
 // Une activité qui reste à réaliser est à venir, en cours, ou en retard : sa
 // fin est passée et rien n'est venu la clore. Le module ne tient pas la
-// réalisation — c'est « Exécution de la Surveillance » qui la constate.
-const PLAN_CAL_ETATS = ['planifie', 'en_cours', 'en_retard'];
-const PLAN_CAL_COULEURS = { planifie: '#2563eb', en_cours: '#f59e0b', en_retard: '#dc2626' };
+// réalisation — c'est « Exécution de la Surveillance » qui la constate. La
+// couleur de la barre suit cet état, dans la feuille du module.
 
 function _planCalDate(iso) {
     const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(iso || ''));
@@ -96,15 +102,7 @@ function _planCalPrestataires() {
 }
 
 function _planCalendrierHtml(activites) {
-    const C = PLAN_STATE.calendrier || (PLAN_STATE.calendrier = { types: [], etats: [] });
-    const { lignes, aujourdhui } = _planCalLignes(activites);
-
-    // Les listes de filtres portent sur toutes les activités, pas seulement
-    // sur celles qui restent visibles — sinon cocher une case ferait
-    // disparaître les autres cases.
-    const tousTypes = [...new Set(lignes.map(l => l.type))].sort((a, b) => a.localeCompare(b));
-    const visibles = lignes.filter(l => (!C.types.length || C.types.includes(l.type))
-        && (!C.etats.length || C.etats.includes(l.etat)));
+    const { lignes: visibles, aujourdhui } = _planCalLignes(activites);
 
     const annee = PLAN_STATE.filters.annee
         ? parseInt(PLAN_STATE.filters.annee, 10) : new Date().getFullYear();
@@ -173,16 +171,12 @@ function _planCalendrierHtml(activites) {
 
     if (!corps) corps = `<div class="g-nom g-vide"></div><div class="g-piste g-vide">${tp('no_data')}</div>`;
 
-    const caseFiltre = (groupe, valeur, libelle, couleur) => `
-        <label class="g-case">
-            <input type="checkbox" ${((C[groupe] || []).includes(valeur)) ? 'checked' : ''}
-                   onchange="planCalFiltrer('${groupe}', ${_escAttr(JSON.stringify(valeur))}, this.checked)">
-            ${couleur ? `<span class="g-puce" style="background:${couleur};"></span>` : ''}
-            <span>${_esc(libelle)}</span>
-        </label>`;
-
     const marqueur = (aujourdhui >= min && aujourdhui <= max)
         ? `<div class="g-aujourdhui" style="left:${pct(aujourdhui).toFixed(2)}%;"></div>` : '';
+
+    // Le fragment est inséré par l'appelant : on regarde au tour suivant si la
+    // piste déborde, pour montrer ou effacer les commandes de défilement.
+    setTimeout(_planCalMajNav, 0);
 
     return `
     <div class="card pl-cal-carte" id="planCalendrierRoot" style="margin-top:1rem;">
@@ -199,7 +193,7 @@ function _planCalendrierHtml(activites) {
         </div>
         <div class="pl-cal-corps">
             <div class="pl-gantt-cadre">
-                <div class="pl-gantt" style="min-width:${Math.max(680, mois.length * 62)}px;">
+                <div class="pl-gantt" style="min-width:${220 + mois.length * PLAN_CAL_LARGEUR_MOIS}px;">
                     <div class="g-nom g-annee">${min.getFullYear()}${max.getFullYear() !== min.getFullYear() ? ` – ${max.getFullYear()}` : ''}</div>
                     <div class="g-piste g-entete">
                         ${trimestres.map(t => `<div class="g-cellule" style="flex-grow:${t.n};">T${t.t}</div>`).join('')}
@@ -215,21 +209,21 @@ function _planCalendrierHtml(activites) {
                     </div>
                 </div>
             </div>
-            <aside class="pl-gantt-panneau">
-                <div class="g-bloc">
-                    <div class="g-bloc-titre">${tp('type_supervision')}</div>
-                    ${tousTypes.length
-                        ? tousTypes.map(t => caseFiltre('types', t, t, '')).join('')
-                        : `<div class="g-bloc-vide">${tp('no_data')}</div>`}
-                </div>
-                <div class="g-bloc">
-                    <div class="g-bloc-titre">${tp('status')}</div>
-                    ${PLAN_CAL_ETATS.map(e => caseFiltre('etats', e, tp('cal_' + e), PLAN_CAL_COULEURS[e])).join('')}
-                </div>
-            </aside>
         </div>
     </div>`;
 }
+
+// ── Commandes de défilement ──
+// Elles n'ont de sens que si la piste déborde de son cadre : sur un écran
+// large, l'année tient tout entière et les cinq boutons ne feraient rien. On
+// les efface alors, en gardant la date du jour.
+function _planCalMajNav() {
+    const cadre = _planCalCadre();
+    const nav = document.querySelector('#planCalendrierRoot .pl-cal-nav');
+    if (!cadre || !nav) return;
+    nav.classList.toggle('pl-cal-nav-fixe', cadre.scrollWidth - cadre.clientWidth < 4);
+}
+window.addEventListener('resize', _planCalMajNav);
 
 // ── Défilement ──
 // La piste est plus large que son cadre : au-delà de la barre de défilement,
@@ -275,15 +269,4 @@ window.planCalInfo = function (barre, montrer) {
     if (y + b.height > window.innerHeight - 8) y = r.top - b.height - 6;
     bulle.style.left = Math.max(8, x) + 'px';
     bulle.style.top = Math.max(8, y) + 'px';
-};
-
-// Un filtre du panneau : on ne refait que le calendrier, pas le tableau de bord.
-window.planCalFiltrer = function (groupe, valeur, coche) {
-    const C = PLAN_STATE.calendrier || (PLAN_STATE.calendrier = { types: [], etats: [] });
-    const liste = C[groupe] || (C[groupe] = []);
-    const i = liste.indexOf(valeur);
-    if (coche && i === -1) liste.push(valeur);
-    if (!coche && i !== -1) liste.splice(i, 1);
-    const root = document.getElementById('planCalendrierRoot');
-    if (root) root.outerHTML = _planCalendrierHtml(_planActivitesDuBord());
 };

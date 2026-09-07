@@ -94,7 +94,7 @@ function _prCartesIndicateurs(ctx) {
     const part = (n) => (evals.length ? Math.round((n / evals.length) * 100) : 0);
 
     return `
-    <div class="oasis-kpi-groupes">
+    <div class="oasis-kpi-groupes pr-kpi-ligne">
         ${oasisKpiGroupe(t('providers'), [
             oasisKpiCarte({
                 titre: t('coverage_rate'), couleur: '#2563eb',

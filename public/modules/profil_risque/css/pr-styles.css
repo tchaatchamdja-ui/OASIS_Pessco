@@ -342,3 +342,22 @@ button:disabled {
     border: 1px solid var(--border); border-radius: 12px;
     background: var(--bg); font-size: 0.8rem;
 }
+
+/* ── Tableau de bord : les six cartes sur une seule ligne ──
+   Deux groupes titrés — deux cartes pour les prestataires, quatre pour les
+   profils. Leurs parts suivent ce compte et les écarts sont les mêmes de part
+   et d'autre, si bien que les six cartes gardent la même largeur. En dessous
+   de 1200 px, la ligne unique serrerait les libellés : les groupes reprennent
+   alors la disposition commune. */
+@media (min-width: 1200px) {
+    .oasis-kpi-groupes.pr-kpi-ligne { grid-template-columns: 2fr 4fr; gap: 0.75rem; }
+    .pr-kpi-ligne > .oasis-kpi-groupe:first-child .oasis-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .pr-kpi-ligne > .oasis-kpi-groupe:last-child .oasis-kpi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    /* Six cartes de front laissent peu de place aux intitulés : « Risques Très
+       Élevés », le plus long, se coupait. Une pointe de moins le fait tenir. */
+    .pr-kpi-ligne .oasis-kpi-tete { font-size: 0.76rem; }
+}

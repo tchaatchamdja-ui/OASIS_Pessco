@@ -1447,7 +1447,7 @@ tr.hidden { display: none; }
 /* La colonne des intitulés reste en place quand la piste défile. */
 .pl-gantt .g-nom {
     padding: 0.25rem 0.5rem;
-    border-right: 2px solid color-mix(in srgb, var(--primary) 35%, var(--border));
+    border-right: 2px solid color-mix(in srgb, var(--primary) 20%, var(--border));
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -1471,7 +1471,7 @@ tr.hidden { display: none; }
 .pl-gantt .g-annee,
 .pl-gantt .g-entete-vide,
 .pl-gantt .g-entete {
-    background: color-mix(in srgb, var(--primary) 18%, var(--bg));
+    background: color-mix(in srgb, var(--primary) 10%, var(--bg));
     font-weight: 700;
     color: var(--text);
 }
@@ -1500,7 +1500,7 @@ tr.hidden { display: none; }
     top: 24px;
     height: 22px;
     min-height: 22px;
-    background: color-mix(in srgb, var(--primary) 9%, var(--bg));
+    background: color-mix(in srgb, var(--primary) 5%, var(--bg));
     font-weight: 600;
     color: var(--text);
     z-index: 4;
@@ -1513,10 +1513,10 @@ tr.hidden { display: none; }
 
 /* Ligne de regroupement : l'organisme, au-dessus de ses activités. */
 .pl-gantt .g-groupe {
-    background: color-mix(in srgb, var(--primary) 22%, var(--bg));
+    background: color-mix(in srgb, var(--primary) 8%, var(--bg));
     font-weight: 700;
     color: var(--text);
-    border-top: 2px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+    border-top: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border));
 }
 .pl-gantt .g-compte {
     margin-left: auto;
@@ -1657,4 +1657,4 @@ tr.hidden { display: none; }
 
 /* Vue resserrée : une ligne par organisme, une sur deux détachée comme dans
    les tables du module. */
-.pl-gantt .g-groupe.g-alt { background: color-mix(in srgb, var(--primary) 12%, var(--bg)); }
+.pl-gantt .g-groupe.g-alt { background: color-mix(in srgb, var(--primary) 3%, var(--bg)); }

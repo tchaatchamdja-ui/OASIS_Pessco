@@ -188,7 +188,11 @@ function _canContribute(secteurId) {
 // ══════════════════════════════════════
 
 function planNavigateTo(page, sub = '') {
-    // Ferme tout modal/slider ouvert avant changement de page
+    // Ferme tout modal/slider ouvert avant changement de page. Le volet du
+    // calendrier se retire aussi de l'état : sans cela, le rendu qui suit le
+    // reconstruisait aussitôt, et un clic dans la barre latérale ne le fermait
+    // qu'en apparence.
+    PLAN_STATE.calendrierVolet = false;
     document.querySelectorAll('.modal-overlay, .pr-slicer, .pr-slicer-overlay').forEach(el => el.remove());
     PLAN_STATE.currentPage = page;
     PLAN_STATE.currentSub = sub;

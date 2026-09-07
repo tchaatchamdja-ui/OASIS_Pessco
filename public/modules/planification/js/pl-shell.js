@@ -133,6 +133,12 @@ async function planLoadData() {
 const PL_VALIDE = ['GESTIONNAIRE', 'VALIDATEUR'];
 const PL_CONTRIB = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR'];
 
+// Statuts d'un plan, tels que le serveur les compte : en vigueur — validé,
+// approuvé DG, transmis, à l'exclusion des versions archivées — et en circuit,
+// ceux d'un amendement qui n'est pas encore validé.
+const PL_STATUTS_EN_VIGUEUR = ['valide', 'approuve_dg', 'transmis'];
+const PL_STATUTS_AMENDEMENT = ['brouillon', 'soumis', 'en_revue', 'rejete'];
+
 function _access() {
     return PLAN_STATE.access || { hasAccess: false, privilege: '', secteurs: {} };
 }
@@ -402,10 +408,24 @@ function _renderFilterBar(onchangeFunc, opts = {}) {
     const plans = PLAN_STATE.data.plans || [];
     const years = [...new Set(plans.map(p => p.annee))].sort((a, b) => b - a);
 
-    let filteredSecteurs = secteurs;
-    if (F.domaine) filteredSecteurs = secteurs.filter(s => s.domaine_id === F.domaine);
-    let filteredSA = sousActivites;
-    if (F.secteur) filteredSA = sousActivites.filter(sa => sa.secteur_id === F.secteur);
+    // ── Filtres en cascade ──
+    // Chaque liste ne propose que ce qui relève des choix déjà faits : les
+    // secteurs d'un domaine, les organismes et les sous-activités d'un secteur,
+    // les thèmes d'une sous-activité. À défaut de choix plus fin, on remonte
+    // d'un cran — un domaine sans secteur retenu offre tout ce qu'il contient.
+    const secteursDuDomaine = new Set(secteurs.filter(s => s.domaine_id === F.domaine).map(s => s.id));
+    const dansLePerimetre = (secteurId, domaineId) => {
+        if (F.secteur) return secteurId === F.secteur;
+        if (F.domaine) return secteursDuDomaine.has(secteurId) || domaineId === F.domaine;
+        return true;
+    };
+
+    const filteredSecteurs = F.domaine ? secteurs.filter(s => s.domaine_id === F.domaine) : secteurs;
+    const filteredSA = sousActivites.filter(sa => dansLePerimetre(sa.secteur_id, sa.domaine_id));
+    const filteredPrestataires = prestataires.filter(p => dansLePerimetre(p.secteur_id, p.domaine_id));
+    const filteredThemes = themes.filter(th => (F.sousActivite
+        ? th.sous_activite_id === F.sousActivite
+        : dansLePerimetre(th.secteur_id, th.domaine_id)));
 
     // Collect filter HTML first so we can count filters and decide whether the
     // reset button would end up alone on a new row in a 5-per-row grid.
@@ -420,20 +440,22 @@ function _renderFilterBar(onchangeFunc, opts = {}) {
     if (opts.showSecteur !== false) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}">
         <option value="">${tp('all_sectors')}</option>${filteredSecteurs.map(s => `<option value="${s.id}" ${F.secteur===s.id?'selected':''}>${s.code} - ${_esc(s.nom)}</option>`).join('')}</select>`);
 
-    if (opts.showPrestataire) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}">
-        <option value="">${tp('all_providers')}</option>${prestataires.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}</select>`);
+    // Sur le tableau de bord, l'organisme rejoint la seconde ligne, devant le
+    // statut ; ailleurs il suit le secteur.
+    const selectPrestataire = () => `<select class="form-select" onchange="PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}">
+        <option value="">${tp('all_providers')}</option>${filteredPrestataires.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}</select>`;
 
-    if (opts.showSousActivite) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.sousActivite=this.value;${onchangeFunc}">
+    if (opts.showPrestataire && !opts.deuxLignes) filters.push(selectPrestataire());
+
+    if (opts.showSousActivite) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}">
         <option value="">${tp('all_sub_activities')}</option>${filteredSA.map(sa => `<option value="${sa.id}" ${F.sousActivite===sa.id?'selected':''}>${sa.code} - ${_esc(sa.nom)}</option>`).join('')}</select>`);
 
     if (opts.showTheme) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.theme=this.value;${onchangeFunc}">
-        <option value="">${tp('all_themes')}</option>${themes.map(t => `<option value="${t.id}" ${F.theme===t.id?'selected':''}>${_esc(t.libelle)}</option>`).join('')}</select>`);
+        <option value="">${tp('all_themes')}</option>${filteredThemes.map(t => `<option value="${t.id}" ${F.theme===t.id?'selected':''}>${_esc(t.libelle)}</option>`).join('')}</select>`);
 
     if (opts.showStatut) {
-        // Optionally force the Statut + Search pair onto a new line.
-        if (opts.newLineBeforeStatut) {
-            filters.push('<div class="plan-filter-break" aria-hidden="true"></div>');
-        }
+        // Seconde ligne : l'organisme, puis le statut.
+        if (opts.deuxLignes && opts.showPrestataire) filters.push(selectPrestataire());
         filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.statut=this.value;${onchangeFunc}">
         <option value="">${tp('all_statuses')}</option>
         <option value="brouillon" ${F.statut==='brouillon'?'selected':''}>${tp('brouillon')}</option>
@@ -447,11 +469,18 @@ function _renderFilterBar(onchangeFunc, opts = {}) {
     if (opts.showYear && !opts.showYearFirst) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.annee=this.value;${onchangeFunc}">
         <option value="">${tp('all_years')}</option>${years.map(y => `<option value="${y}" ${F.annee==y?'selected':''}>${y}</option>`).join('')}</select>`);
 
-    if (opts.showSearch !== false) filters.push(`<input type="text" class="form-input" id="plan-filter-search" placeholder="${tp('search')}" value="${_esc(F.search)}" oninput="_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeFunc} })">`);
+    const recherche = opts.showSearch === false ? ''
+        : `<input type="text" class="form-input" id="plan-filter-search" placeholder="${tp('search')}" value="${_esc(F.search)}" oninput="_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeFunc} })">`;
+    const reinitialiser = `<button class="btn-icon-reset" onclick="planResetFilters()" title="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>`;
 
-    let html = `<div class="plan-filter-bar">`;
-    html += filters.join('');
-    html += `<button class="btn-icon-reset" onclick="planResetFilters()" title="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>`;
-    html += '</div>';
-    return html;
+    // Deux lignes : cinq champs de même largeur en haut, l'organisme et le
+    // statut à la même largeur en bas, la recherche et le bouton de remise à
+    // zéro occupant le reste de la ligne.
+    if (opts.deuxLignes) {
+        return `<div class="plan-filter-bar plan-filter-grille">${filters.join('')}
+            <div class="plan-filter-fin">${recherche}${reinitialiser}</div>
+        </div>`;
+    }
+
+    return `<div class="plan-filter-bar">${filters.join('')}${recherche}${reinitialiser}</div>`;
 }

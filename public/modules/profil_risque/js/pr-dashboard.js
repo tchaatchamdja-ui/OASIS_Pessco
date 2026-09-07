@@ -271,7 +271,7 @@ function renderDashboard() {
 
     return `
     <div class="page-header" id="dashPrintStart" style="margin-bottom:1rem;">
-        <div><h2 style="margin:0;">${t('dashboard')}</h2><p style="margin:0.2rem 0 0;color:var(--text-muted);font-size:0.88rem;">${t('dashboard_subtitle')}</p></div>
+        <div><h2 style="margin:0;">${t('dashboard')}</h2></div>
         <button class="btn btn-primary btn-sm" onclick="printPage('dashPrintStart')" style="display:inline-flex;align-items:center;gap:0.4rem;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             Exporter PDF

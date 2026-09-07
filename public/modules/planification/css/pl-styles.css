@@ -264,14 +264,31 @@
     flex: 3 1 180px;
 }
 
-/* Forced line break in the flex filter bar (used to split Statut + Search
-   onto a second row on the dashboard). */
-.plan-filter-bar .plan-filter-break {
-    flex-basis: 100%;
-    width: 100%;
-    height: 0;
-    margin: 0;
-    padding: 0;
+/* Barre de filtres en deux lignes (tableau de bord) : cinq champs de même
+   largeur en haut ; en bas l'organisme et le statut à cette même largeur, la
+   recherche et la remise à zéro occupant le reste. */
+.plan-filter-bar.plan-filter-grille {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
+}
+.plan-filter-grille .form-select,
+.plan-filter-grille .form-input { min-width: 0; }
+.plan-filter-grille .plan-filter-fin {
+    grid-column: span 3;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+}
+.plan-filter-grille .plan-filter-fin .form-input { flex: 1 1 auto; }
+@media (max-width: 1100px) {
+    .plan-filter-bar.plan-filter-grille { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .plan-filter-grille .plan-filter-fin { grid-column: span 3; }
+}
+@media (max-width: 700px) {
+    .plan-filter-bar.plan-filter-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .plan-filter-grille .plan-filter-fin { grid-column: span 2; }
 }
 /* ── Buttons additional ── */
 .btn-accent {

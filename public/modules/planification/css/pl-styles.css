@@ -1625,8 +1625,9 @@ tr.hidden { display: none; }
 
 
 /* Piste tenant tout entière dans son cadre : les commandes de défilement
-   n'auraient rien à faire défiler, seule la date du jour reste. */
-.pl-cal-nav.pl-cal-nav-fixe .btn { display: none; }
+   n'auraient rien à faire défiler et s'effacent. Le renvoi vers le menu
+   « Calendrier » et la date du jour, eux, restent. */
+.pl-cal-nav.pl-cal-nav-fixe .pl-cal-cmd { display: none; }
 
 /* ── Débordement horizontal ──
    La colonne de contenu est un élément de flex : sans `min-width: 0`, elle

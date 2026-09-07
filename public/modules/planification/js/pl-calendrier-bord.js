@@ -208,11 +208,12 @@ function _planCalendrierHtml(activites, options) {
         <div class="pl-cal-entete">
             <h4>${_esc(o.titre || tp('cal_titre'))}</h4>
             <div class="pl-cal-nav">
-                <button class="btn btn-sm btn-outline" onclick="planCalBord(-1)" title="${_escAttr(tp('cal_debut'))}">«</button>
-                <button class="btn btn-sm btn-outline" onclick="planCalDefiler(-1)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
-                <button class="btn btn-sm btn-outline" onclick="planCalAujourdhui()">${tp('cal_aujourdhui')}</button>
-                <button class="btn btn-sm btn-outline" onclick="planCalDefiler(1)" title="${_escAttr(tp('cal_avancer'))}">›</button>
-                <button class="btn btn-sm btn-outline" onclick="planCalBord(1)" title="${_escAttr(tp('cal_fin'))}">»</button>
+                ${o.voirDetail ? `<button class="btn btn-sm btn-primary" onclick="planNavigateTo('calendrier')">${tp('cal_voir_detail')}</button>` : ''}
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(-1)" title="${_escAttr(tp('cal_debut'))}">«</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(-1)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalAujourdhui()">${tp('cal_aujourdhui')}</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(1)" title="${_escAttr(tp('cal_avancer'))}">›</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(1)" title="${_escAttr(tp('cal_fin'))}">»</button>
                 <span class="pl-cal-jour">${jour(aujourdhui)}</span>
             </div>
         </div>

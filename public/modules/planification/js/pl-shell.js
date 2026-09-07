@@ -219,6 +219,9 @@ function planUpdateNavUI() {
 }
 
 function planSetTheme(theme) {
+    // Changer de thème ou de langue, c'est reprendre l'écran de fond : le
+    // volet du calendrier se referme, comme au moindre pas dans le menu.
+    planFermerCalendrier();
     PLAN_STATE.theme = theme;
     localStorage.setItem('pr_theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
@@ -226,6 +229,7 @@ function planSetTheme(theme) {
 }
 
 function planSetLang(lang) {
+    planFermerCalendrier();
     PLAN_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
     if (window.PESSCO) window.PESSCO.lang = lang;

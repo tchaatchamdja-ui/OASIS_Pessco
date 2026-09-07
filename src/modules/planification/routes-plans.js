@@ -96,6 +96,9 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/stats`, requireAuth, lecture, (req, res) => {
     const plans = parInstance(req, db.list('plans'));
     const acts = parInstance(req, db.list('activites'));
+    // Les plans que la surveillance suit : validés, approuvés ou transmis. Une
+    // version archivée n'en fait pas partie, elle a été remplacée.
+    const enVigueur = new Set(plans.filter((p) => D.STATUTS_EN_VIGUEUR.includes(p.statut)).map((p) => p.id));
     res.json({
       total_plans: plans.length,
       plans_valides: plans.filter((p) => D.STATUTS_EN_VIGUEUR.includes(p.statut)).length,
@@ -109,9 +112,19 @@ module.exports = function register(app, deps, M) {
       // de bord en fait une carte.
       plans_en_amendement: D.plansEnAmendement(plans).length,
       total_activites: acts.length,
-      activites_planifiees: acts.filter((a) => a.statut !== 'realisee').length,
+      // Ce qui reste à réaliser ne se compte que dans les plans en vigueur :
+      // une activité d'un brouillon n'est encore inscrite nulle part, et celle
+      // d'une version archivée a été remplacée. Le tableau de bord l'annonçait
+      // déjà ainsi — « inscrites aux plans validés » — en comptant pourtant
+      // toutes les activités du magasin.
+      activites_planifiees: acts.filter((a) => a.statut !== 'realisee' && enVigueur.has(a.plan_id)).length,
       activites_realisees: acts.filter((a) => a.statut === 'realisee').length,
-      prestataires: (instances.refs(req.user, loadConfig).prestataires || []).length,
+      // « Couverts par un plan » : les organismes qu'une activité d'un plan en
+      // vigueur désigne, et non tout le parc de l'instance — la carte comptait
+      // le référentiel entier, plan ou pas.
+      prestataires: new Set(acts
+        .filter((a) => enVigueur.has(a.plan_id) && a.prestataire_id)
+        .map((a) => a.prestataire_id)).size,
     });
   });
 

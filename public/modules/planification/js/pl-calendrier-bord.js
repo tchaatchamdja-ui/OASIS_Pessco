@@ -9,12 +9,12 @@
 const PLAN_CAL_MOIS = ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
     'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
 
-// Largeur d'un mois. Une piste au plus juste tenait dans son cadre : rien ne
-// dépassait, et les commandes de défilement n'avaient rien à faire défiler.
-// À 130 px, l'année demande plus de place que n'en offre l'écran : la piste
-// défile pour de bon, et les barres de quelques jours cessent d'être des
-// traits. Le cadre reste maître — si tout tient, les commandes s'effacent.
-const PLAN_CAL_LARGEUR_MOIS = 130;
+// Largeur plancher d'un mois. La piste s'étire sur toute la largeur du cadre :
+// les douze mois d'une année s'y lisent d'un coup, sans barre de défilement.
+// Le plancher ne joue que sur une fenêtre étroite, ou lorsqu'une activité
+// déborde de l'année et allonge la période — les commandes de défilement
+// reparaissent alors, et s'effacent le reste du temps.
+const PLAN_CAL_LARGEUR_MOIS = 46;
 
 // Une activité qui reste à réaliser est à venir, en cours, ou en retard : sa
 // fin est passée et rien n'est venu la clore. Le module ne tient pas la

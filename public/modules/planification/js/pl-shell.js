@@ -51,7 +51,6 @@ const PLAN_NAV = {
     dashboard: { labelKey: 'dashboard', icon: 'dashboard' },
     prestataires: { labelKey: 'profils_de_risques', icon: 'risk_profile' },
     plans: { labelKey: 'nav_plans', icon: 'plans' },
-    calendrier: { labelKey: 'calendrier', icon: 'gantt' },
     workflow: { labelKey: 'workflow', icon: 'workflow' },
     historique: { labelKey: 'historique', icon: 'history' },
     // Paramètres removed - managed from portal Configuration
@@ -355,7 +354,6 @@ function planRenderPage() {
         case 'plans': content = planRenderPlans(); break;
         case 'plan-detail': content = planRenderPlanDetail(); break;
         case 'prestataires': content = planRenderPrestataires(); break;
-        case 'calendrier': content = planRenderCalendar(); break;
         case 'workflow': content = planRenderWorkflow(); break;
         case 'historique': content = planRenderHistory(); break;
         default: content = `<div class="text-center">${tp('no_data')}</div>`;
@@ -367,8 +365,69 @@ function planRenderPage() {
         setTimeout(() => planLoadComments(PLAN_STATE.selectedPlan.id), 100);
     }
 
+    // Le volet du calendrier se refait avec la page : ses commandes appellent
+    // `planRenderPage()` comme les autres écrans.
+    if (PLAN_STATE.calendrierVolet) _planDessinerVoletCalendrier();
+
     // Update notification badge
     planUpdateNotifBadge();
+}
+
+// ══════════════════════════════════════
+//  VOLET « CALENDRIER »
+// ══════════════════════════════════════
+// L'écran ne figure plus dans la barre latérale : il s'ouvre depuis le
+// calendrier du tableau de bord et sort de la droite, comme les volets du
+// module « Profils de Risque ». Le bouton « Retour » précède son titre et
+// ramène à ce qu'on regardait.
+window.planOuvrirCalendrier = function () {
+    PLAN_STATE.calendrierVolet = true;
+    _planDessinerVoletCalendrier(true);
+};
+
+window.planFermerCalendrier = function () {
+    PLAN_STATE.calendrierVolet = false;
+    const volet = document.getElementById('planVolet');
+    const fond = document.getElementById('planVoletFond');
+    if (!volet) return;
+    volet.classList.remove('open');
+    if (fond) fond.classList.remove('open');
+    setTimeout(() => { volet.remove(); if (fond) fond.remove(); }, 350);
+};
+
+function _planDessinerVoletCalendrier(ouverture) {
+    const corps = planRenderCalendar();
+    const existant = document.getElementById('planVolet');
+    // Rendu suivant : on remplace le contenu sans rejouer le glissement.
+    if (existant && !ouverture) {
+        existant.querySelector('.pr-slicer-body').innerHTML = corps;
+        return;
+    }
+    if (existant) existant.remove();
+    const fondExistant = document.getElementById('planVoletFond');
+    if (fondExistant) fondExistant.remove();
+
+    const fond = document.createElement('div');
+    fond.id = 'planVoletFond';
+    fond.className = 'pr-slicer-overlay';
+    fond.addEventListener('click', planFermerCalendrier);
+
+    const volet = document.createElement('div');
+    volet.id = 'planVolet';
+    volet.className = 'pr-slicer';
+    volet.innerHTML = `
+        <div class="pr-slicer-header">
+            <div class="pr-slicer-titre">
+                <button class="pr-slicer-back" onclick="planFermerCalendrier()">${PLAN_ICONS.back}<span>${tp('back')}</span></button>
+                <h3>${tp('calendrier')}</h3>
+            </div>
+            <button class="pr-slicer-close" onclick="planFermerCalendrier()">${PLAN_ICONS.close}</button>
+        </div>
+        <div class="pr-slicer-body">${corps}</div>`;
+
+    document.body.appendChild(fond);
+    document.body.appendChild(volet);
+    requestAnimationFrame(() => { fond.classList.add('open'); volet.classList.add('open'); });
 }
 
 // ── Modal helper ──

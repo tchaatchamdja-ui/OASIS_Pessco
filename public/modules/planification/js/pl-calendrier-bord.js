@@ -204,16 +204,16 @@ function _planCalendrierHtml(activites, options) {
     setTimeout(_planCalMajNav, 0);
 
     return `
-    <div class="card pl-cal-carte" id="planCalendrierRoot" style="margin-top:1rem;">
+    <div class="card pl-cal-carte" style="margin-top:1rem;">
         <div class="pl-cal-entete">
             <h4>${_esc(o.titre || tp('cal_titre'))}</h4>
             <div class="pl-cal-nav">
-                ${o.voirDetail ? `<button class="btn btn-sm btn-primary" onclick="planNavigateTo('calendrier')">${tp('cal_voir_detail')}</button>` : ''}
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(-1)" title="${_escAttr(tp('cal_debut'))}">«</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(-1)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalAujourdhui()">${tp('cal_aujourdhui')}</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(1)" title="${_escAttr(tp('cal_avancer'))}">›</button>
-                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(1)" title="${_escAttr(tp('cal_fin'))}">»</button>
+                ${o.voirDetail ? `<button class="btn btn-sm btn-primary" onclick="planOuvrirCalendrier()">${tp('cal_voir_detail')}</button>` : ''}
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(-1, this)" title="${_escAttr(tp('cal_debut'))}">«</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(-1, this)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalAujourdhui(this)">${tp('cal_aujourdhui')}</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalDefiler(1, this)" title="${_escAttr(tp('cal_avancer'))}">›</button>
+                <button class="btn btn-sm btn-outline pl-cal-cmd" onclick="planCalBord(1, this)" title="${_escAttr(tp('cal_fin'))}">»</button>
                 <span class="pl-cal-jour">${jour(aujourdhui)}</span>
             </div>
         </div>
@@ -244,34 +244,37 @@ function _planCalendrierHtml(activites, options) {
 // large, l'année tient tout entière et les cinq boutons ne feraient rien. On
 // les efface alors, en gardant la date du jour.
 function _planCalMajNav() {
-    const cadre = _planCalCadre();
-    const nav = document.querySelector('#planCalendrierRoot .pl-cal-nav');
-    if (!cadre || !nav) return;
-    nav.classList.toggle('pl-cal-nav-fixe', cadre.scrollWidth - cadre.clientWidth < 4);
+    document.querySelectorAll('.pl-cal-carte').forEach((carte) => {
+        const cadre = carte.querySelector('.pl-gantt-cadre');
+        const nav = carte.querySelector('.pl-cal-nav');
+        if (!cadre || !nav) return;
+        nav.classList.toggle('pl-cal-nav-fixe', cadre.scrollWidth - cadre.clientWidth < 4);
+    });
 }
 window.addEventListener('resize', _planCalMajNav);
 
 // ── Défilement ──
 // La piste est plus large que son cadre : au-delà de la barre de défilement,
 // on donne des commandes explicites, dont un retour à la date du jour.
-function _planCalCadre() {
-    return document.querySelector('#planCalendrierRoot .pl-gantt-cadre');
+function _planCalCadre(bouton) {
+    const carte = bouton ? bouton.closest('.pl-cal-carte') : document.querySelector('.pl-cal-carte');
+    return carte ? carte.querySelector('.pl-gantt-cadre') : null;
 }
 
-window.planCalDefiler = function (sens) {
-    const cadre = _planCalCadre();
+window.planCalDefiler = function (sens, bouton) {
+    const cadre = _planCalCadre(bouton);
     if (!cadre) return;
     cadre.scrollBy({ left: sens * Math.max(120, cadre.clientWidth * 0.6), behavior: 'smooth' });
 };
 
-window.planCalBord = function (sens) {
-    const cadre = _planCalCadre();
+window.planCalBord = function (sens, bouton) {
+    const cadre = _planCalCadre(bouton);
     if (!cadre) return;
     cadre.scrollTo({ left: sens < 0 ? 0 : cadre.scrollWidth, behavior: 'smooth' });
 };
 
-window.planCalAujourdhui = function () {
-    const cadre = _planCalCadre();
+window.planCalAujourdhui = function (bouton) {
+    const cadre = _planCalCadre(bouton);
     if (!cadre) return;
     const trait = cadre.querySelector('.g-aujourdhui');
     if (!trait) { cadre.scrollTo({ left: 0, behavior: 'smooth' }); return; }

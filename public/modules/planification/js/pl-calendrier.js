@@ -346,10 +346,6 @@ function planRenderCalendar() {
 
     return `
     <div class="page-content" style="max-width:100%;min-width:0;overflow-x:hidden;">
-        <div class="page-header">
-            <h2>${tp('calendrier')}</h2>
-        </div>
-
         ${calFilterBar}
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">

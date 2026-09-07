@@ -1627,3 +1627,30 @@ tr.hidden { display: none; }
 /* Piste tenant tout entière dans son cadre : les commandes de défilement
    n'auraient rien à faire défiler, seule la date du jour reste. */
 .pl-cal-nav.pl-cal-nav-fixe .btn { display: none; }
+
+/* ── Débordement horizontal ──
+   La colonne de contenu est un élément de flex : sans `min-width: 0`, elle
+   refuse de descendre sous la largeur intrinsèque de ce qu'elle porte. Un
+   calendrier large ou une table à douze colonnes poussait donc toute la page
+   vers la droite, barre latérale ouverte, au lieu de défiler dans son propre
+   cadre. Les blocs larges — table, calendrier — s'en chargent ci-dessous. */
+.app-content, .main-content { min-width: 0; }
+.page-content { min-width: 0; max-width: 100%; }
+/* Une table plus large que la page défile dans sa carte, pas avec la page. */
+.page-content .card-body { overflow-x: auto; }
+
+/* Responsable de l'activité, à droite de son intitulé : le trigramme suffit
+   dans une colonne étroite, le nom complet reste en infobulle. */
+.pl-gantt .g-resp {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, var(--bg));
+    border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+    border-radius: 4px;
+    padding: 0 0.28rem;
+    line-height: 1.5;
+}

@@ -32,6 +32,18 @@ function _planCalEtat(debut, fin, aujourdhui) {
     return 'planifie';
 }
 
+// Trigramme d'un inspecteur, comme le menu « Calendrier » le forme : le sien
+// s'il en porte un, sinon l'initiale du prénom et les deux premières lettres
+// du nom.
+function _planCalTrigramme(insp) {
+    if (!insp) return '';
+    if (insp.trigramme) return String(insp.trigramme).toUpperCase();
+    const p = (insp.prenom || '').trim();
+    const n = (insp.nom || '').trim();
+    return (((p[0] || '') + (n.slice(0, 2) || '')).toUpperCase())
+        || (insp.numero_inspecteur || '').slice(0, 3).toUpperCase();
+}
+
 function _planCalType(act) {
     const t = (PLAN_STATE.data.typesSupervision || []).find(x => x.id === act.type_supervision_id);
     return (t && (t.type_supervision || t.libelle || t.nom)) || '—';
@@ -74,10 +86,13 @@ function _planCalLignes(activites) {
             const finBrute = _planCalDate(a.date_fin) || debut;
             const fin = finBrute < debut ? debut : finBrute;
             const p = prestataires.find(x => x.id === a.prestataire_id);
+            const insp = (PLAN_STATE.data.inspecteurs || []).find(x => x.id === a.responsable_id);
             return {
                 act: a, debut, fin,
                 etat: _planCalEtat(debut, fin, aujourdhui),
                 type: _planCalType(a),
+                responsable: insp ? `${insp.nom || ''} ${insp.prenom || ''}`.trim() : '',
+                trigramme: _planCalTrigramme(insp),
                 plan: (plans.find(x => x.id === a.plan_id) || {}).titre || '',
                 prestataire_id: a.prestataire_id || 'inconnu',
                 prestataire_nom: (p && p.nom) || tp('provider'),
@@ -150,6 +165,7 @@ function _planCalendrierHtml(activites) {
             corps += `
             <div class="g-nom g-activite${paire}" title="${_escAttr(objet)}">
                 <span class="g-activite-txt">${_esc(objet)}</span>
+                ${l.trigramme ? `<span class="g-resp" title="${_escAttr(l.responsable)}">${_esc(l.trigramme)}</span>` : ''}
             </div>
             <div class="g-piste${paire}">
                 <div class="g-barre etat-${l.etat}" style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;"
@@ -162,6 +178,7 @@ function _planCalendrierHtml(activites) {
                     <div><span>${tp('cal_dates')}</span> ${jour(l.debut)} → ${jour(l.fin)}</div>
                     <div><span>${tp('status')}</span> ${tp('cal_' + l.etat)}</div>
                     <div><span>${tp('type_supervision')}</span> ${_esc(l.type)}</div>
+                    ${l.responsable ? `<div><span>${tp('responsable_activite')}</span> ${_esc(l.responsable)}</div>` : ''}
                     ${l.plan ? `<div><span>${tp('plan_title')}</span> ${_esc(l.plan)}</div>` : ''}
                     ${l.act.lieu_activite ? `<div><span>${tp('lieu_activite')}</span> ${_esc(l.act.lieu_activite)}</div>` : ''}
                 </div>

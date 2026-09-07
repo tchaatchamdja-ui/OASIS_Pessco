@@ -110,7 +110,7 @@ function planRenderDashboard() {
 
         ${_planListeDeLaCarte(plans)}
 
-        ${_planCalendrierHtml(_planActivitesDuBord(), { voirDetail: true })}
+        ${_planCalendrierHtml(_planActivitesDuBord(), { voirDetail: true, compact: true })}
     </div>`;
 }
 

@@ -153,32 +153,20 @@ function _planCalendrierHtml(activites, options) {
 
     const jour = (d) => `${d.getDate()} ${PLAN_CAL_MOIS[d.getMonth()]} ${d.getFullYear()}`;
 
-    let corps = '';
-    ordre.forEach(pid => {
-        const g = groupes[pid];
-        corps += `
-        <div class="g-nom g-groupe">${_esc(g.nom)}<span class="g-compte">${g.lignes.length}</span></div>
-        <div class="g-piste g-groupe"></div>`;
-        if (!g.lignes.length) {
-            corps += `<div class="g-nom g-activite g-sans">${tp('cal_sans_activite')}</div>
-                      <div class="g-piste"></div>`;
-        }
-        g.lignes.sort((a, b) => a.debut - b.debut).forEach((l, iLigne) => {
-            const paire = iLigne % 2 ? ' g-paire' : '';
-            const gauche = Math.max(0, pct(l.debut));
-            const largeur = Math.max(1.4, pct(new Date(l.fin.getTime() + 86400000)) - gauche);
-            const objet = l.act.objet || l.act.titre || '—';
-            corps += `
-            <div class="g-nom g-activite${paire}" title="${_escAttr(objet)}">
-                <span class="g-activite-txt">${_esc(objet)}</span>
-                ${l.trigramme ? `<span class="g-resp" title="${_escAttr(l.responsable)}">${_esc(l.trigramme)}</span>` : ''}
-            </div>
-            <div class="g-piste${paire}">
+    // Une barre et sa fiche de survol. `compact` les pose toutes sur la ligne de
+    // l'organisme : le libellé de l'activité n'ayant plus de colonne à lui, la
+    // barre porte le trigramme du responsable à côté du type.
+    const barre = (l) => {
+        const gauche = Math.max(0, pct(l.debut));
+        const largeur = Math.max(1.4, pct(new Date(l.fin.getTime() + 86400000)) - gauche);
+        const objet = l.act.objet || l.act.titre || '—';
+        const texte = o.compact && l.trigramme ? `${l.type} · ${l.trigramme}` : l.type;
+        return `
                 <div class="g-barre etat-${l.etat}"
                      style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;${o.couleur ? `background:${o.couleur(l)};` : ''}"
                      ${o.clic ? `onclick="${_escAttr(o.clic(l))}"` : ''}
                      onmouseenter="planCalInfo(this, true)" onmouseleave="planCalInfo(this, false)">
-                    <span class="g-barre-txt">${_esc(l.type)}</span>
+                    <span class="g-barre-txt">${_esc(texte)}</span>
                     ${l.etat === 'en_retard' ? '<span class="g-alerte">!</span>' : ''}
                 </div>
                 <div class="g-infobulle">
@@ -189,8 +177,39 @@ function _planCalendrierHtml(activites, options) {
                     ${l.responsable ? `<div><span>${tp('responsable_activite')}</span> ${_esc(l.responsable)}</div>` : ''}
                     ${l.plan ? `<div><span>${tp('plan_title')}</span> ${_esc(l.plan)}</div>` : ''}
                     ${l.act.lieu_activite ? `<div><span>${tp('lieu_activite')}</span> ${_esc(l.act.lieu_activite)}</div>` : ''}
-                </div>
-            </div>`;
+                </div>`;
+    };
+
+    let corps = '';
+    ordre.forEach(pid => {
+        const g = groupes[pid];
+        const rangees = g.lignes.sort((a, b) => a.debut - b.debut);
+
+        // Vue resserrée : une seule ligne par organisme, toutes ses périodes
+        // dessus. Les infobulles disent laquelle est laquelle.
+        if (o.compact) {
+            corps += `
+        <div class="g-nom g-groupe">${_esc(g.nom)}<span class="g-compte">${rangees.length}</span></div>
+        <div class="g-piste g-groupe g-piste-multi">${rangees.map(barre).join('')}</div>`;
+            return;
+        }
+
+        corps += `
+        <div class="g-nom g-groupe">${_esc(g.nom)}<span class="g-compte">${rangees.length}</span></div>
+        <div class="g-piste g-groupe"></div>`;
+        if (!rangees.length) {
+            corps += `<div class="g-nom g-activite g-sans">${tp('cal_sans_activite')}</div>
+                      <div class="g-piste"></div>`;
+        }
+        rangees.forEach((l, iLigne) => {
+            const paire = iLigne % 2 ? ' g-paire' : '';
+            const objet = l.act.objet || l.act.titre || '—';
+            corps += `
+            <div class="g-nom g-activite${paire}" title="${_escAttr(objet)}">
+                <span class="g-activite-txt">${_esc(objet)}</span>
+                ${l.trigramme ? `<span class="g-resp" title="${_escAttr(l.responsable)}">${_esc(l.trigramme)}</span>` : ''}
+            </div>
+            <div class="g-piste${paire}">${barre(l)}</div>`;
         });
     });
 

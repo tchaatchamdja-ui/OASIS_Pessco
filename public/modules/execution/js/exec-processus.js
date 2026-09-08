@@ -1727,8 +1727,6 @@ function execProcGroupeHorsPlan(F) {
   const notifs = (EXEC_STATE.data.notifications || [])
     .filter((n) => n.hors_plan && Number(n.archive) !== 1);
   const dossiers = EXEC_STATE.data.dossiers || [];
-  const secteurs = EXEC_STATE.data.secteurs || [];
-  const domaines = EXEC_STATE.data.domaines || [];
 
   let lignes = notifs;
   if (F && F.annee) lignes = lignes.filter((n) => String(n.annee) === String(F.annee));
@@ -1740,10 +1738,11 @@ function execProcGroupeHorsPlan(F) {
       .toLowerCase().includes(q));
   }
 
-  const nom = (liste, id, champ) => {
-    const x = liste.find((y) => y.id === id);
-    return x ? (x[champ] || x.nom || '') : '';
-  };
+  // Responsable de l'activité : l'inspecteur désigné au déclenchement.
+  const respMap = {};
+  (EXEC_STATE.data.inspecteurs || []).forEach((i) => {
+    respMap[i.id] = `${i.prenom || ''} ${i.nom || ''}`.trim();
+  });
 
   const corps = lignes.length ? lignes.map((n) => {
     const dos = dossiers.find((d) => d.notification_id === n.id);
@@ -1754,14 +1753,15 @@ function execProcGroupeHorsPlan(F) {
       <td>${_esc(n.objet_activite || '')}</td>
       <td>${_formatDate(n.date_activite)}</td>
       <td>${_formatDate(n.date_fin_effective)}</td>
-      <td>${_esc(nom(domaines, n.domaine_id, 'code'))} · ${_esc(nom(secteurs, n.secteur_id, 'code'))}</td>
+      <td>${_esc(respMap[n.responsable_id] || '-')}</td>
+      <td>${typeof execAvancementBadge === 'function' ? execAvancementBadge(n, dos) : ''}</td>
       <td>${execProcStatutBadge(n, dos)}</td>
       <td style="white-space:nowrap;text-align:center;">
         ${_execHpBoutonModifier(n)}
         <button class="btn-icon" onclick="execProcHistorique('hors-plan','${n.id}')" title="${te('historique')}">${EXEC_ICONS.clock}</button>
       </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>`;
+  }).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>`;
 
   // Bandeau à deux lignes, comme celui d'un plan : le titre et les commandes
   // en tête, le décompte du périmètre en dessous.
@@ -1796,9 +1796,10 @@ function execProcGroupeHorsPlan(F) {
           <th style="width:300px;">${te('objet')}</th>
           <th style="width:95px;">${te('date_debut')}</th>
           <th style="width:95px;">${te('date_fin')}</th>
-          <th style="width:150px;">Domaine · Secteur</th>
-          <th style="width:110px;">${te('status')}</th>
-          <th style="width:80px;text-align:center;">${te('actions')}</th>
+          <th style="width:150px;">${te('responsable')}</th>
+          <th style="width:110px;">${te('avancement')}</th>
+          <th style="width:110px;">${te('etape')}</th>
+          <th style="width:110px;text-align:center;">${te('actions')}</th>
         </tr></thead>
         <tbody>${corps}</tbody>
       </table>

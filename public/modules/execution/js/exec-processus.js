@@ -1222,7 +1222,8 @@ window.execProcNouvelleActivite = function (notifId) {
       <div class="exec-proc-grille exec-hp-grille">
         <div>
           <label class="form-label">Année ${req}</label>
-          <input type="number" class="form-control" id="hp_annee" value="${annee}" min="2000" max="2100">
+          <input type="number" class="form-control" id="hp_annee" value="${annee}" min="2000" max="2100"
+                 oninput="execProcHpBornerDates()">
         </div>
         <div>
           <label class="form-label">Domaine ${req}</label>
@@ -1265,7 +1266,7 @@ window.execProcNouvelleActivite = function (notifId) {
         </div>
         <div>
           <label class="form-label">Date de début</label>
-          <input type="date" class="form-control" id="hp_debut">
+          <input type="date" class="form-control" id="hp_debut" onchange="execProcHpBornerDates()">
         </div>
         <div>
           <label class="form-label">Date de fin</label>
@@ -1317,6 +1318,33 @@ window.execProcNouvelleActivite = function (notifId) {
   if (n) execProcHpRemplir(n);
 };
 
+// Bornes des deux dates : le début tombe dans l'année déclarée, la fin ne
+// précède pas le début. Les bornes se posent sur les champs eux-mêmes — le
+// calendrier n'ouvre alors que sur ce qui est acceptable — et se vérifient
+// à l'enregistrement, la saisie au clavier ne les respectant pas.
+window.execProcHpBornerDates = function () {
+  const annee = ((document.getElementById('hp_annee') || {}).value || '').trim();
+  const debut = document.getElementById('hp_debut');
+  const fin = document.getElementById('hp_fin');
+  if (debut) {
+    debut.min = /^\d{4}$/.test(annee) ? `${annee}-01-01` : '';
+    debut.max = /^\d{4}$/.test(annee) ? `${annee}-12-31` : '';
+  }
+  if (fin) fin.min = (debut && debut.value) || '';
+};
+
+// Contrôle des deux règles, à l'enregistrement. Rend le message à afficher,
+// ou une chaîne vide si les dates se tiennent.
+function execProcHpErreurDates(annee, debut, fin) {
+  if (debut && annee && debut.slice(0, 4) !== String(annee)) {
+    return `La date de début doit être dans l’année ${annee}.`;
+  }
+  if (debut && fin && fin < debut) {
+    return 'La date de fin doit être postérieure ou égale à la date de début.';
+  }
+  return '';
+}
+
 // Reprise d'une activité hors plan : les listes en cascade se garnissent dans
 // l'ordre — domaine, puis secteur, puis prestataire et périmètre — chacune
 // n'ayant d'options qu'une fois la précédente choisie.
@@ -1338,6 +1366,7 @@ function execProcHpRemplir(n) {
   poser('hp_responsable', n.responsable_id);
   poser('hp_nb_inspecteurs', n.nombre_inspecteurs);
   poser('hp_objet', n.objet_activite);
+  execProcHpBornerDates();
   execProcHpCocherPerimetre(n.perimetre_activite || '');
 }
 
@@ -1470,6 +1499,8 @@ window.execProcCreerHorsPlan = async function (notifId) {
     erreur.textContent = `À renseigner : ${manquants.map(([, l]) => l).join(', ')}.`;
     return;
   }
+  const maldatee = execProcHpErreurDates(val('hp_annee'), val('hp_debut'), val('hp_fin'));
+  if (maldatee) { erreur.textContent = maldatee; return; }
   const corps = {
     hors_plan: true,
     annee: val('hp_annee'),

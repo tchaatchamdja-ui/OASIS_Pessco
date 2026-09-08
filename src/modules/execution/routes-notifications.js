@@ -253,10 +253,28 @@ module.exports = function register(app, deps, M) {
     annee: { type: 'entier', min: 2000, max: 2100 },
   };
 
+  // Dates d'une activité hors plan : elle porte elle-même son année, et ses
+  // deux dates s'y rangent — le début dans l'année déclarée, la fin jamais
+  // avant le début. Le formulaire pose déjà les bornes ; la règle tient ici
+  // aussi, la saisie au clavier passant outre.
+  const refusDates = (res, annee, debut, fin) => {
+    if (debut && annee && String(debut).slice(0, 4) !== String(annee)) {
+      res.status(400).json({ error: `La date de début doit être dans l’année ${annee}.` });
+      return true;
+    }
+    if (debut && fin && String(fin) < String(debut)) {
+      res.status(400).json({ error: 'La date de fin doit être postérieure ou égale à la date de début.' });
+      return true;
+    }
+    return false;
+  };
+
   app.post(`${M}/notifications`, requireAuth, valider(SCHEMA_NOTIFICATION), (req, res) => {
     const d = req.body || {};
     const perim = perimetrePrestataire(d.prestataire_id);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
+    if (d.hors_plan && refusDates(res, d.annee,
+      d.date_debut_prevue || d.date_activite, d.date_fin_prevue || d.date_fin_effective)) return undefined;
     const rec = db.insert('notifications', {
       id: db.uid('notif'),
       // Composition définie dans Paramètres → Autres paramètres.
@@ -330,6 +348,10 @@ module.exports = function register(app, deps, M) {
       if (!FIGES.includes(cle)) patch[cle] = v;
     });
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
+    // La mise à jour ne doit pas défaire ce que la création a exigé : les
+    // dates se relisent sur la notification telle qu'elle sera.
+    const apres = { ...n, ...patch };
+    if (n.hors_plan && refusDates(res, apres.annee, apres.date_activite, apres.date_fin_effective)) return undefined;
     db.update('notifications', req.params.id, patch);
     res.json({ status: 'ok' });
   });

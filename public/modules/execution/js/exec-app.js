@@ -748,6 +748,26 @@ function execLogout() {
     window.location.href = '/login';
 }
 
+// ── Champ de recherche des barres de filtres ──
+// Le re-rendu est différé de 300 ms, puis le focus et la position du curseur
+// sont rendus au champ, que le rendu a recréé. La fonction vient du socle
+// (`/shared/js/oasis-utils.js`), que ce module ne charge pas — il tient ses
+// propres helpers — et son absence faisait échouer le `oninput` sans bruit :
+// la recherche ne filtrait rien, dans toutes les barres du module.
+let _execRechercheTimer = null;
+function _pesSearchInput(input, apply) {
+    const id = input.id;
+    const pos = input.selectionStart;
+    clearTimeout(_execRechercheTimer);
+    _execRechercheTimer = setTimeout(() => {
+        apply();
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.focus();
+        try { el.setSelectionRange(pos, pos); } catch (e) { /* champ non textuel */ }
+    }, 300);
+}
+
 function execResetFilters() {
     EXEC_STATE.filters = { domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: '', trimestre: '', criticite: '', type_supervision: '', mode_supervision: '', avancement: '' };
     execRenderPage();

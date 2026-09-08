@@ -123,6 +123,58 @@ function execExportPlansPdf() {
 }
 
 // Single unified view: one accordion per validated plan; body shows its
+// ── Années couvertes par les plans ──
+// Le choix de l'année tient dans une rangée de boutons posée devant les plans,
+// plutôt que dans la barre de filtres : elle ne propose que les années qu'un
+// plan couvre effectivement, et se lit d'un coup d'œil.
+function _execBoutonsAnnees(plans, F) {
+    const annees = [...new Set((plans || []).map(p => p.annee).filter(Boolean).map(String))]
+        .sort((a, b) => Number(b) - Number(a));
+    if (!annees.length) return '';
+    const retenue = String((F && F.annee) || '');
+    return `
+    <div class="exec-annees">
+        <button class="exec-annee${retenue ? '' : ' actif'}"
+                onclick="EXEC_STATE.filters.annee='';execRenderPage();">${te('all_years')}</button>
+        ${annees.map(a => `<button class="exec-annee${retenue === a ? ' actif' : ''}"
+                onclick="EXEC_STATE.filters.annee='${a}';execRenderPage();">${a}</button>`).join('')}
+    </div>`;
+}
+
+// Activités d'un plan que les filtres retiennent. La recherche porte sur les
+// activités autant que sur les plans : un plan dont le titre répond garde
+// toutes ses lignes, sinon seules celles qui répondent restent — elle ne
+// retenait jusqu'ici que le plan, et l'écran montrait toutes ses activités
+// quel que soit le mot saisi.
+function _execActivitesRetenues(plan, F, notifDe, secteurToDomaine) {
+    let acts = (plan.activites || []).map(a => ({
+        ...a,
+        _domaine_id: a.domaine_id || secteurToDomaine[a.secteur_id] || '',
+    }));
+    if (!F) return acts;
+    if (F.domaine) acts = acts.filter(a => a._domaine_id === F.domaine);
+    if (F.prestataire) acts = acts.filter(a => a.prestataire_id === F.prestataire);
+    if (F.type_supervision) acts = acts.filter(a => a.type_supervision_id === F.type_supervision);
+    if (F.mode_supervision) acts = acts.filter(a => a.mode_supervision_id === F.mode_supervision);
+    if (F.search) {
+        const s = F.search.toLowerCase();
+        const planRepond = (plan.titre || '').toLowerCase().includes(s)
+            || String(plan.annee || '').includes(s);
+        if (!planRepond) {
+            acts = acts.filter(a => `${a.objet || ''} ${a.description || ''} ${a.prestataire_nom || ''}`
+                .toLowerCase().includes(s));
+        }
+    }
+    if (F.avancement) {
+        acts = acts.filter(a => {
+            const n = notifDe(a);
+            const dos = n ? (EXEC_STATE.data.dossiers || []).find(d => d.notification_id === n.id) : null;
+            return execAvancement(n, dos) === F.avancement;
+        });
+    }
+    return acts;
+}
+
 // activities with realization status + Processus/Historique icon actions.
 function _renderPlansWithActivitesAccordion(plans, F) {
     const notifs = EXEC_STATE.data.notifications || [];
@@ -137,20 +189,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
     });
     const notifDe = (a) => notifByActId[a.id] || notifByActId[execRacineActivite(a)] || null;
 
-    // ── Années couvertes par les plans ──
-    // Le choix de l'année quitte la barre de filtres pour une rangée de
-    // boutons posée devant les plans : elle ne propose que les années qu'un
-    // plan couvre effectivement, et se lit d'un coup d'œil.
-    const anneesCouvertes = [...new Set((plans || []).map(p => p.annee).filter(Boolean).map(String))]
-        .sort((a, b) => Number(b) - Number(a));
-    const anneeRetenue = String((F && F.annee) || '');
-    const boutonsAnnees = anneesCouvertes.length ? `
-    <div class="exec-annees">
-        <button class="exec-annee${anneeRetenue ? '' : ' actif'}"
-                onclick="EXEC_STATE.filters.annee='';execRenderPage();">${te('all_years')}</button>
-        ${anneesCouvertes.map(a => `<button class="exec-annee${anneeRetenue === a ? ' actif' : ''}"
-                onclick="EXEC_STATE.filters.annee='${a}';execRenderPage();">${a}</button>`).join('')}
-    </div>` : '';
+    const boutonsAnnees = _execBoutonsAnnees(plans, F);
 
     // Apply top-level filters on plans (year + title search)
     let filteredPlans = plans;
@@ -170,24 +209,10 @@ function _renderPlansWithActivitesAccordion(plans, F) {
     const secteurToDomaine = {};
     secteurs.forEach(s => { secteurToDomaine[s.id] = s.domaine_id; });
 
-    const planActsFiltered = filteredPlans.map(p => {
-        let acts = (p.activites || []).map(a => ({
-            ...a,
-            _domaine_id: a.domaine_id || secteurToDomaine[a.secteur_id] || ''
-        }));
-        if (F && F.domaine) acts = acts.filter(a => a._domaine_id === F.domaine);
-        if (F && F.prestataire) acts = acts.filter(a => a.prestataire_id === F.prestataire);
-        if (F && F.type_supervision) acts = acts.filter(a => a.type_supervision_id === F.type_supervision);
-        if (F && F.mode_supervision) acts = acts.filter(a => a.mode_supervision_id === F.mode_supervision);
-        if (F && F.avancement) {
-            acts = acts.filter(a => {
-                const n = notifDe(a);
-                const dos = n ? (EXEC_STATE.data.dossiers || []).find(d => d.notification_id === n.id) : null;
-                return execAvancement(n, dos) === F.avancement;
-            });
-        }
-        return { plan: p, acts };
-    });
+    const planActsFiltered = filteredPlans.map(p => ({
+        plan: p,
+        acts: _execActivitesRetenues(p, F, notifDe, secteurToDomaine),
+    }));
     // Keep all validated plans — if activity-level filters are set we still
     // show the plan accordion with zero activities so the user can see that
     // no activities match. Only hide plans when no activity-level filter is

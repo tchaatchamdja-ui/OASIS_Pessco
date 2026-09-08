@@ -562,25 +562,48 @@ function _buildPlansValidesFromPlanif(planifPlans, planifActs) {
     return valides;
 }
 
-// Plans archivés : ceux qu'on a rangés délibérément. Une version retirée par la
-// version suivante n'en est pas : « Planification » lui donne son propre statut
-// — `remplace` — et ses activités sont reprises par la version suivante. Les
-// données antérieures portent encore `archive` et `remplace_par` : on les
-// écarte de même.
+// Racine d'un plan : le premier de sa lignée de versions. Toutes les versions
+// d'un même plan la partagent, quelle qu'ait été leur fin.
+function _execRacinePlan(plan, parId, vus) {
+    const seen = vus || new Set();
+    let courant = plan;
+    while (courant && courant.parent_plan_id && !seen.has(courant.id)) {
+        seen.add(courant.id);
+        const parent = parId[courant.parent_plan_id];
+        if (!parent) break;
+        courant = parent;
+    }
+    return courant ? courant.id : (plan && plan.id) || '';
+}
+
+// Plans archivés : ceux qu'on a rangés délibérément, et dont aucune version
+// suivante n'est en vigueur. Une version plus ancienne d'un plan en cours n'a
+// rien à faire ici : le suivi des versions appartient à « Planification », et
+// le processus d'une activité déjà déclenchée se retrouve sur la version en
+// vigueur, qui l'a reprise. Sont donc écartées les versions retirées — statut
+// « remplace », ou `remplace_par` pour les données antérieures — et toute
+// version archivée dont la lignée compte un plan en vigueur.
 function _buildPlansArchivesFromPlanif(planifPlans, planifActs) {
-    const plans = (planifPlans || []).filter(p => p.statut === 'archive' && !p.remplace_par);
+    const parId = {};
+    (planifPlans || []).forEach(p => { parId[p.id] = p; });
+    const racinesEnVigueur = new Set();
+    (planifPlans || []).forEach(p => {
+        if (p.statut === 'valide') racinesEnVigueur.add(_execRacinePlan(p, parId));
+    });
+    const plans = (planifPlans || []).filter(p => p.statut === 'archive' && !p.remplace_par
+        && !racinesEnVigueur.has(_execRacinePlan(p, parId)));
     if (!plans.length) return [];
     const ids = new Set(plans.map(p => p.id));
     const prestMap = {};
     (EXEC_STATE.data?.prestataires || window.PESSCO?.sharedData?.prestataires || []).forEach(pr => {
         prestMap[pr.id] = pr;
     });
-    // Lignées portées par une version en vigueur : une activité sortie des
-    // archives dont la lignée y figure déjà reste rangée ici, faute de quoi
-    // elle ne se consulterait plus nulle part.
-    const racinesEnVigueur = new Set();
+    // Lignées d'activités portées par une version en vigueur : une activité
+    // sortie des archives dont la lignée y figure déjà reste rangée ici, faute
+    // de quoi elle ne se consulterait plus nulle part.
+    const racinesActivitesEnVigueur = new Set();
     (planifActs || []).forEach(a => {
-        if (a.plan_statut === 'valide') racinesEnVigueur.add(a.parent_activite_id || a.id);
+        if (a.plan_statut === 'valide') racinesActivitesEnVigueur.add(a.parent_activite_id || a.id);
     });
     const byPlanId = {};
     (planifActs || []).forEach(a => {
@@ -589,7 +612,7 @@ function _buildPlansArchivesFromPlanif(planifPlans, planifActs) {
         // elle a rejoint les activités en cours — à moins que la version en
         // vigueur ne porte déjà sa lignée, auquel cas elle n'en est jamais
         // ressortie.
-        if (Number(a.desarchivee) === 1 && !racinesEnVigueur.has(a.parent_activite_id || a.id)) return;
+        if (Number(a.desarchivee) === 1 && !racinesActivitesEnVigueur.has(a.parent_activite_id || a.id)) return;
         const pr = prestMap[a.prestataire_id];
         (byPlanId[a.plan_id] = byPlanId[a.plan_id] || []).push({
             ...a,

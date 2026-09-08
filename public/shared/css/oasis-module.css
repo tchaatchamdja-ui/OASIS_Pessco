@@ -289,6 +289,11 @@ a:hover { text-decoration: underline; }
 [data-theme="corporate"] .btn-primary:hover { background: #c2410c; }
 [data-theme="grey"] .btn-primary { background: var(--accent); }
 [data-theme="grey"] .btn-primary:hover { background: #92400e; }
+/* Accent : la seconde couleur du thème, pour l'action qui ouvre un geste — une
+   nouvelle activité, un envoi. La classe s'employait sans être définie ici :
+   ces boutons restaient blancs, hors du thème. */
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { filter: brightness(0.92); }
 .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
 .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 .btn-danger { background: #dc2626; color: white; }

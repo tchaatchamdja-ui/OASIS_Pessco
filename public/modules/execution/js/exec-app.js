@@ -530,9 +530,20 @@ function _buildPlansValidesFromPlanif(planifPlans, planifActs) {
     // elles reviennent parmi les activités en cours. Le plan reparaît alors
     // réduit à ces seules lignes — sans quoi elles n'auraient nulle part où
     // s'afficher.
+    //
+    // Sauf si la version en vigueur porte déjà la même activité : une lignée
+    // reprise par un amendement s'y trouve à jour, et la ressortir des archives
+    // faisait paraître deux versions du même plan sur l'écran des activités,
+    // avec deux fois la même ligne. L'activité reste alors aux archives, où
+    // elle se consulte.
+    const racinesEnVigueur = new Set();
+    valides.forEach(p => (p.activites || []).forEach(a => {
+        racinesEnVigueur.add(a.parent_activite_id || a.id);
+    }));
     const rendues = {};
     (planifActs || []).forEach(a => {
         if (Number(a.desarchivee) !== 1 || a.plan_statut === 'valide') return;
+        if (racinesEnVigueur.has(a.parent_activite_id || a.id)) return;
         const pr = prestMap[a.prestataire_id];
         (rendues[a.plan_id] = rendues[a.plan_id] || []).push({
             ...a,
@@ -563,12 +574,21 @@ function _buildPlansArchivesFromPlanif(planifPlans, planifActs) {
     (EXEC_STATE.data?.prestataires || window.PESSCO?.sharedData?.prestataires || []).forEach(pr => {
         prestMap[pr.id] = pr;
     });
+    // Lignées portées par une version en vigueur : une activité sortie des
+    // archives dont la lignée y figure déjà reste rangée ici, faute de quoi
+    // elle ne se consulterait plus nulle part.
+    const racinesEnVigueur = new Set();
+    (planifActs || []).forEach(a => {
+        if (a.plan_statut === 'valide') racinesEnVigueur.add(a.parent_activite_id || a.id);
+    });
     const byPlanId = {};
     (planifActs || []).forEach(a => {
         if (!ids.has(a.plan_id)) return;
         // Une activité sortie des archives isolément ne figure plus ici :
-        // elle a rejoint les activités en cours.
-        if (Number(a.desarchivee) === 1) return;
+        // elle a rejoint les activités en cours — à moins que la version en
+        // vigueur ne porte déjà sa lignée, auquel cas elle n'en est jamais
+        // ressortie.
+        if (Number(a.desarchivee) === 1 && !racinesEnVigueur.has(a.parent_activite_id || a.id)) return;
         const pr = prestMap[a.prestataire_id];
         (byPlanId[a.plan_id] = byPlanId[a.plan_id] || []).push({
             ...a,

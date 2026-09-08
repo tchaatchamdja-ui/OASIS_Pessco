@@ -308,6 +308,10 @@ a:hover { text-decoration: underline; }
     transition: all 0.2s;
 }
 .btn-icon:hover { background: var(--bg); color: var(--primary); }
+/* Un bouton d'icône fermé : il reste lisible, et dit par son curseur qu'il
+   n'attend pas de clic — sans quoi le survol continuait de l'annoncer actif. */
+.btn-icon:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-icon:disabled:hover { background: transparent; color: var(--text-muted); }
 .btn-icon.danger:hover { background: #fee2e2; color: #dc2626; }
 .btn-icon.success { color: #16a34a; }
 .btn-icon.success:hover { background: #dcfce7; }

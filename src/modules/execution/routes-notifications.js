@@ -220,6 +220,12 @@ module.exports = function register(app, deps, M) {
     objet_activite: { type: 'texte', max: 300 },
     type_supervision: { type: 'texte', max: 80 },
     type_supervision_id: { type: 'texte', max: 40 },
+    // Mode, responsable et effectif : une activité hors plan les déclare
+    // elle-même, là où une activité planifiée les tient de son plan.
+    mode_supervision: { type: 'texte', max: 80 },
+    mode_supervision_id: { type: 'texte', max: 40 },
+    responsable_id: { type: 'texte', max: 40 },
+    nombre_inspecteurs: { type: 'entier', min: 1, max: 99 },
     nature_activite: { type: 'texte', max: 80 },
     date_debut_prevue: { type: 'date' },
     date_fin_prevue: { type: 'date' },
@@ -265,6 +271,10 @@ module.exports = function register(app, deps, M) {
       objet_activite: d.objet || d.objet_activite || '',
       nature_activite: d.type_supervision || d.nature_activite || '',
       type_supervision_id: d.type_supervision_id || '',
+      mode_supervision_id: d.mode_supervision_id || '',
+      mode_supervision: d.mode_supervision || '',
+      responsable_id: d.responsable_id || '',
+      nombre_inspecteurs: d.nombre_inspecteurs || '',
       date_activite: d.date_debut_prevue || d.date_activite || '',
       date_fin_effective: d.date_fin_prevue || d.date_fin_effective || '',
       lieu_activite: d.lieu || d.lieu_activite || '',

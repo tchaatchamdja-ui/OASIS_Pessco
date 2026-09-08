@@ -769,6 +769,9 @@
 }
 .exec-module .exec-plan-entete-infos strong { color: var(--text); }
 .exec-module .exec-plan-entete-infos .exec-plan-taux { color: #166534; }
+/* Hors plan de surveillance : le même bandeau, dans le jaune qui distingue
+   ces activités de celles qu'un plan porte. */
+.exec-module .exec-plan-entete-hp { background: #fef3c7; }
 
 /* ── Années couvertes par les plans ──
    Une rangée de boutons devant les plans, à la place du choix d'année dans la

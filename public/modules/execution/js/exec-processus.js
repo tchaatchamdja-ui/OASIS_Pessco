@@ -1202,10 +1202,13 @@ if (typeof _execProcAmender === 'function') {
 // inopinée, suite d'événement, demande extérieure. Elle est portée par la
 // notification seule, qui déclare alors son année, son domaine et son secteur.
 
-// Formulaire de déclenchement.
-window.execProcNouvelleActivite = function () {
+// Formulaire de déclenchement, qui sert aussi à reprendre une activité hors
+// plan tant que sa notification est en brouillon : les mêmes champs, remplis
+// de ce qui a été saisi, et l'enregistrement en place du déclenchement.
+window.execProcNouvelleActivite = function (notifId) {
   const D = EXEC_STATE.data || {};
-  const annee = new Date().getFullYear();
+  const n = notifId ? (D.notifications || []).find((x) => x.id === notifId) : null;
+  const annee = (n && n.annee) || new Date().getFullYear();
   const options = (liste, libelle) => (liste || [])
     .map((x) => `<option value="${x.id}">${_esc(libelle(x))}</option>`).join('');
 
@@ -1243,12 +1246,35 @@ window.execProcNouvelleActivite = function () {
           </select>
         </div>
         <div>
+          <label class="form-label">Mode de supervision</label>
+          <select class="form-control" id="hp_mode">
+            <option value="">— Choisir —</option>
+            ${(D.modesSupervision || []).map((m) => `<option value="${m.id}">${_esc(m.mode || m.libelle || m.nom || '')}</option>`).join('')}
+          </select>
+        </div>
+        <div>
           <label class="form-label">Date de début</label>
           <input type="date" class="form-control" id="hp_debut">
         </div>
         <div>
           <label class="form-label">Date de fin</label>
           <input type="date" class="form-control" id="hp_fin">
+        </div>
+        <div>
+          <label class="form-label">Lieu de l'activité</label>
+          <input type="text" class="form-control" id="hp_lieu" placeholder="Lieu de l'activité">
+        </div>
+        <div>
+          <label class="form-label">Responsable de l'activité</label>
+          <select class="form-control" id="hp_responsable">
+            <option value="">— Choisir —</option>
+            ${options((D.inspecteurs || []).filter((i) => i.statut !== 'inactif'),
+              (i) => `${i.prenom || ''} ${i.nom || ''}`.trim())}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Nombre d'inspecteurs</label>
+          <input type="number" class="form-control" id="hp_nb_inspecteurs" min="1" max="99">
         </div>
       </div>
       <label class="form-label">Objet de l'activité *</label>
@@ -1262,10 +1288,60 @@ window.execProcNouvelleActivite = function () {
 
   const pied = `
     <button class="btn btn-outline" onclick="execCloseSlider()">Annuler</button>
-    <button class="btn btn-primary" onclick="execProcCreerHorsPlan()">${EXEC_ICONS.send || ''} Déclencher</button>`;
+    <button class="btn btn-primary" onclick="execProcCreerHorsPlan(${n ? `'${n.id}'` : ''})">
+      ${(n ? EXEC_ICONS.check : EXEC_ICONS.send) || ''} ${n ? 'Enregistrer' : 'Déclencher'}</button>`;
 
-  execShowSlider('Nouvelle activité hors plan', corps, pied, 'md');
+  execShowSlider(n ? 'Modifier l’activité hors plan' : 'Nouvelle activité hors plan', corps, pied, 'md');
+  if (n) execProcHpRemplir(n);
 };
+
+// Reprise d'une activité hors plan : les listes en cascade se garnissent dans
+// l'ordre — domaine, puis secteur, puis prestataire et périmètre — chacune
+// n'ayant d'options qu'une fois la précédente choisie.
+function execProcHpRemplir(n) {
+  const poser = (id, valeur) => {
+    const el = document.getElementById(id);
+    if (el) el.value = valeur == null ? '' : String(valeur);
+  };
+  poser('hp_domaine', n.domaine_id);
+  execProcHpSecteurs();
+  poser('hp_secteur', n.secteur_id);
+  execProcHpPrestataires();
+  poser('hp_prestataire', n.prestataire_id);
+  poser('hp_type', n.type_supervision_id);
+  poser('hp_mode', n.mode_supervision_id);
+  poser('hp_debut', n.date_activite);
+  poser('hp_fin', n.date_fin_effective);
+  poser('hp_lieu', n.lieu_activite);
+  poser('hp_responsable', n.responsable_id);
+  poser('hp_nb_inspecteurs', n.nombre_inspecteurs);
+  poser('hp_objet', n.objet_activite);
+  execProcHpCocherPerimetre(n.perimetre_activite || '');
+}
+
+// Le périmètre est enregistré en texte : on recoche ce qu'il nomme, ligne à
+// ligne, en comparant les libellés affichés — le texte ne porte pas les
+// identifiants.
+function execProcHpCocherPerimetre(texte) {
+  const lignes = String(texte).split('\n').map((l) => l.replace(/^-\s*/, '').trim()).filter(Boolean);
+  if (!lignes.length) return;
+  const noms = new Map();
+  lignes.forEach((l) => {
+    const m = /^(.*?)\s*\((.*)\)\s*$/.exec(l);
+    noms.set((m ? m[1] : l).trim(), m ? m[2].split(';').map((t) => t.trim()) : []);
+  });
+  document.querySelectorAll('.exec-hp-sa').forEach((bloc) => {
+    const nom = (bloc.querySelector('strong') || {}).textContent || '';
+    if (!noms.has(nom.trim())) return;
+    const themes = noms.get(nom.trim());
+    const casesa = bloc.querySelector('.hp-sa');
+    if (casesa) casesa.checked = true;
+    bloc.querySelectorAll('.hp-theme').forEach((t) => {
+      const libelle = (t.parentElement.querySelector('span') || {}).textContent || '';
+      if (!themes.length || themes.includes(libelle.trim())) t.checked = true;
+    });
+  });
+}
 
 // Les listes se filtrent en cascade : domaine → secteur → prestataire.
 window.execProcHpSecteurs = function () {
@@ -1355,7 +1431,15 @@ function execProcHpTypeLibelle() {
   return t ? (t.type_supervision || t.libelle || t.nom || '') : '';
 }
 
-window.execProcCreerHorsPlan = async function () {
+// Libellé du mode de supervision retenu, comme pour le type : la notification
+// garde l'identifiant et le libellé, ce dernier étant celui qui s'affiche.
+function execProcHpModeLibelle() {
+  const id = (document.getElementById('hp_mode') || {}).value || '';
+  const m = (EXEC_STATE.data.modesSupervision || []).find((x) => x.id === id);
+  return m ? (m.mode || m.libelle || m.nom || '') : '';
+}
+
+window.execProcCreerHorsPlan = async function (notifId) {
   const val = (id) => ((document.getElementById(id) || {}).value || '').trim();
   const erreur = document.getElementById('hp_erreur');
   const manquants = [['hp_annee', 'Année'], ['hp_domaine', 'Domaine'], ['hp_secteur', 'Secteur'],
@@ -1364,31 +1448,48 @@ window.execProcCreerHorsPlan = async function () {
     erreur.textContent = `À renseigner : ${manquants.map(([, l]) => l).join(', ')}.`;
     return;
   }
+  const corps = {
+    hors_plan: true,
+    annee: val('hp_annee'),
+    domaine_id: val('hp_domaine'),
+    secteur_id: val('hp_secteur'),
+    prestataire_id: val('hp_prestataire'),
+    // Le type vient du référentiel du portail : on garde l'identifiant et
+    // le libellé, ce dernier étant celui qu'affichent fiches et rapports.
+    type_supervision_id: val('hp_type'),
+    type_supervision: execProcHpTypeLibelle(),
+    mode_supervision_id: val('hp_mode'),
+    mode_supervision: execProcHpModeLibelle(),
+    lieu: val('hp_lieu'),
+    responsable_id: val('hp_responsable'),
+    nombre_inspecteurs: val('hp_nb_inspecteurs'),
+    objet: val('hp_objet'),
+    perimetre: execProcHpPerimetreTexte(),
+    date_debut_prevue: val('hp_debut'),
+    date_fin_prevue: val('hp_fin'),
+  };
   try {
+    if (notifId) {
+      // La route de mise à jour traduit elle-même les noms du formulaire
+      // (objet, lieu, périmètre, dates) vers ceux du modèle.
+      await api(`${EXEC_MODULE_API}/notifications/${notifId}`, {
+        method: 'PUT', body: JSON.stringify(corps),
+      });
+      _execToast('Activité modifiée', 'success');
+      await execRefreshDynamic();
+      execCloseSlider();
+      if (EXEC_STATE.currentPage === 'plan_surveillance') execRenderPage();
+      return;
+    }
     const r = await api(`${EXEC_MODULE_API}/notifications`, {
-      method: 'POST',
-      body: JSON.stringify({
-        hors_plan: true,
-        annee: val('hp_annee'),
-        domaine_id: val('hp_domaine'),
-        secteur_id: val('hp_secteur'),
-        prestataire_id: val('hp_prestataire'),
-        // Le type vient du référentiel du portail : on garde l'identifiant et
-        // le libellé, ce dernier étant celui qu'affichent fiches et rapports.
-        type_supervision_id: val('hp_type'),
-        type_supervision: execProcHpTypeLibelle(),
-        objet: val('hp_objet'),
-        perimetre: execProcHpPerimetreTexte(),
-        date_debut_prevue: val('hp_debut'),
-        date_fin_prevue: val('hp_fin'),
-      }),
+      method: 'POST', body: JSON.stringify(corps),
     });
     _execToast(`Activité déclenchée — ${r.reference || ''}`, 'success');
     await execRefreshDynamic();
     if (EXEC_STATE.currentPage === 'plan_surveillance') execRenderPage();
     execOpenActiviteProcessus('hors-plan', r.id);
   } catch (e) {
-    erreur.textContent = (e && e.message) || 'Déclenchement impossible';
+    erreur.textContent = (e && e.message) || (notifId ? 'Enregistrement impossible' : 'Déclenchement impossible');
   }
 };
 
@@ -1606,13 +1707,25 @@ window.execShowActiviteHistorique = function (activiteId, planId) {
   return window.execProcHistorique(planId, activiteId);
 };
 
-// Groupe « Autres Activités » : les activités déclenchées hors plan.
+// Reprise d'une activité hors plan : tant que sa notification n'est pas partie
+// — elle est encore en brouillon — les renseignements de déclenchement se
+// corrigent. Passée la soumission, le circuit est engagé et le bouton se ferme.
+function _execHpBoutonModifier(n) {
+  if (!_execCanContribute()) return '';
+  const ouvert = !n.statut || n.statut === 'brouillon';
+  return `<button class="btn-icon" ${ouvert ? '' : 'disabled'}
+    ${ouvert ? `onclick="execProcNouvelleActivite('${n.id}')"` : ''}
+    title="${_escAttr(ouvert ? te('edit') : te('hp_modif_fermee'))}">${EXEC_ICONS.edit}</button>`;
+}
+
+// Groupe « Activités Hors Plans de Surveillance » : les activités déclenchées
+// hors plan. La section reste à sa place sous les plans même vide — son
+// absence laisserait croire que le module ne les accueille pas.
 function execProcGroupeHorsPlan(F) {
   // Les activités hors plan archivées quittent la page, comme les activités
   // d'un plan archivé : elles se consultent au menu États.
   const notifs = (EXEC_STATE.data.notifications || [])
     .filter((n) => n.hors_plan && Number(n.archive) !== 1);
-  if (!notifs.length) return '';
   const dossiers = EXEC_STATE.data.dossiers || [];
   const secteurs = EXEC_STATE.data.secteurs || [];
   const domaines = EXEC_STATE.data.domaines || [];
@@ -1644,25 +1757,37 @@ function execProcGroupeHorsPlan(F) {
       <td>${_esc(nom(domaines, n.domaine_id, 'code'))} · ${_esc(nom(secteurs, n.secteur_id, 'code'))}</td>
       <td>${execProcStatutBadge(n, dos)}</td>
       <td style="white-space:nowrap;text-align:center;">
+        ${_execHpBoutonModifier(n)}
         <button class="btn-icon" onclick="execProcHistorique('hors-plan','${n.id}')" title="${te('historique')}">${EXEC_ICONS.clock}</button>
       </td>
     </tr>`;
   }).join('') : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>`;
 
+  // Bandeau à deux lignes, comme celui d'un plan : le titre et les commandes
+  // en tête, le décompte du périmètre en dessous.
+  const nbPrest = new Set(lignes.map((n) => n.prestataire_id).filter(Boolean)).size;
+  const realisees = lignes.filter((n) => execAvancement(n,
+    dossiers.find((d) => d.notification_id === n.id) || null) === 'realisee').length;
+  const taux = lignes.length ? Math.round((realisees / lignes.length) * 100) : 0;
+
   return `
   <div class="card expanded" style="margin-bottom:0.75rem;">
-    <div class="exec-accordion-header" onclick="this.parentElement.classList.toggle('expanded')"
-         style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.35rem 0.6rem;font-weight:600;flex-wrap:wrap;background:#fef3c7;border-radius:6px 6px 0 0;font-size:0.85rem;">
-      <span class="exec-form-section-chevron" style="transition:transform 0.2s;">${EXEC_ICONS.chevronDown}</span>
-      ${EXEC_ICONS.trigger || ''} <span>Autres Activités</span>
-      <span style="color:#334155;font-weight:500;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.02em;">
-        · hors plan de surveillance · ${lignes.length} activité(s)
-      </span>
-      <span style="margin-left:auto;" onclick="event.stopPropagation();">
-        ${_execCanValidate() ? `<button class="btn btn-sm btn-outline"
-          onclick="execArchiverHorsPlan()"
-          title="${_escAttr(te('archiver_hors_plan'))}">${EXEC_ICONS.folder || ''} ${te('archiver')}</button>` : ''}
-      </span>
+    <div class="exec-accordion-header exec-plan-entete exec-plan-entete-hp"
+         onclick="this.parentElement.classList.toggle('expanded')">
+      <div class="exec-plan-entete-titre">
+        <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
+        ${EXEC_ICONS.trigger || ''} <span>${te('activites_hors_plan')}</span>
+        <span class="exec-plan-entete-actions" onclick="event.stopPropagation();">
+          ${_execCanValidate() && lignes.length ? `<button class="btn btn-sm btn-outline"
+            onclick="execArchiverHorsPlan()"
+            title="${_escAttr(te('archiver_hors_plan'))}">${EXEC_ICONS.folder || ''} ${te('archiver')}</button>` : ''}
+        </span>
+      </div>
+      <div class="exec-plan-entete-infos">
+        <span>${te('nb_prestataires')}: <strong>${nbPrest}</strong></span>
+        <span>${te('nb_activites') || te('activites')}: <strong>${lignes.length}</strong></span>
+        <span>${te('taux_realisation')}: <strong class="exec-plan-taux">${taux}%</strong></span>
+      </div>
     </div>
     <div class="exec-accordion-body" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
       <table class="exec-data-table exec-compact-table" style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">

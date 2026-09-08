@@ -1270,7 +1270,7 @@ window.execProcNouvelleActivite = function (notifId) {
         </div>
         <div>
           <label class="form-label">Date de fin</label>
-          <input type="date" class="form-control" id="hp_fin">
+          <input type="date" class="form-control" id="hp_fin" onchange="execProcHpBornerDates()">
         </div>
         <div>
           <label class="form-label">Responsable de l'activité</label>
@@ -1331,18 +1331,40 @@ window.execProcHpBornerDates = function () {
     debut.max = /^\d{4}$/.test(annee) ? `${annee}-12-31` : '';
   }
   if (fin) fin.min = (debut && debut.value) || '';
+  // La bordure rouge suit la correction : elle s'efface dès que les règles
+  // sont tenues, et ne s'allume pas d'elle-même avant un enregistrement — on
+  // ne signale pas une faute à qui est encore en train de saisir.
+  if (!document.querySelector('#execSlider .exec-champ-invalide')) return;
+  const ctrl = execProcHpControleDates();
+  execProcHpMarquerDates(ctrl.champs);
+  const erreur = document.getElementById('hp_erreur');
+  if (erreur && !ctrl.message) erreur.textContent = '';
 };
 
-// Contrôle des deux règles, à l'enregistrement. Rend le message à afficher,
-// ou une chaîne vide si les dates se tiennent.
-function execProcHpErreurDates(annee, debut, fin) {
-  if (debut && annee && debut.slice(0, 4) !== String(annee)) {
-    return `La date de début doit être dans l’année ${annee}.`;
+// Contrôle des deux règles : le message à dire, et les champs qu'il désigne.
+function execProcHpControleDates() {
+  const val = (id) => ((document.getElementById(id) || {}).value || '').trim();
+  const annee = val('hp_annee');
+  const debut = val('hp_debut');
+  const fin = val('hp_fin');
+  if (debut && annee && debut.slice(0, 4) !== annee) {
+    return { message: `La date de début doit être dans l’année ${annee}.`, champs: ['hp_annee', 'hp_debut'] };
   }
   if (debut && fin && fin < debut) {
-    return 'La date de fin doit être postérieure ou égale à la date de début.';
+    return {
+      message: 'La date de fin doit être postérieure ou égale à la date de début.',
+      champs: ['hp_debut', 'hp_fin'],
+    };
   }
-  return '';
+  return { message: '', champs: [] };
+}
+
+// Les champs fautifs prennent la bordure rouge, les autres la rendent.
+function execProcHpMarquerDates(champs) {
+  ['hp_annee', 'hp_debut', 'hp_fin'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('exec-champ-invalide', champs.indexOf(id) !== -1);
+  });
 }
 
 // Reprise d'une activité hors plan : les listes en cascade se garnissent dans
@@ -1499,8 +1521,17 @@ window.execProcCreerHorsPlan = async function (notifId) {
     erreur.textContent = `À renseigner : ${manquants.map(([, l]) => l).join(', ')}.`;
     return;
   }
-  const maldatee = execProcHpErreurDates(val('hp_annee'), val('hp_debut'), val('hp_fin'));
-  if (maldatee) { erreur.textContent = maldatee; return; }
+  // Règles de dates : la faute se dit en clair, à l'écran et par un retour
+  // flottant, et se montre sur les champs qu'elle concerne.
+  const dates = execProcHpControleDates();
+  execProcHpMarquerDates(dates.champs);
+  if (dates.message) {
+    erreur.textContent = dates.message;
+    _execToast(dates.message, 'warning');
+    const premier = document.getElementById(dates.champs[dates.champs.length - 1]);
+    if (premier) premier.focus();
+    return;
+  }
   const corps = {
     hors_plan: true,
     annee: val('hp_annee'),

@@ -83,6 +83,14 @@
     border-bottom: 1px solid var(--border);
 }
 .exec-hp-req { color: #dc2626; font-weight: 700; }
+/* Champ refusé par une règle : la bordure reste rouge jusqu'à correction. */
+input.exec-champ-invalide,
+select.exec-champ-invalide,
+input.exec-champ-invalide:focus,
+select.exec-champ-invalide:focus {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px #dc26261f;
+}
 /* Deux colonnes dès la largeur du volet : la grille commune demande 200 px par
    champ, et les onze champs s'empilaient alors sur une seule colonne. */
 .exec-proc-grille.exec-hp-grille { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }

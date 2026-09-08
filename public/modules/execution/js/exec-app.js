@@ -20,7 +20,7 @@ const EXEC_STATE = {
     data: {},
     filters: {
         domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: String(new Date().getFullYear()), trimestre: '', criticite: '',
-        type_supervision: '', mode_supervision: ''
+        type_supervision: '', mode_supervision: '', avancement: ''
     },
     // Plan surveillance tabs
     planTab: 'plan', // plan | liste_activites
@@ -749,7 +749,7 @@ function execLogout() {
 }
 
 function execResetFilters() {
-    EXEC_STATE.filters = { domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: '', trimestre: '', criticite: '', type_supervision: '', mode_supervision: '' };
+    EXEC_STATE.filters = { domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: '', trimestre: '', criticite: '', type_supervision: '', mode_supervision: '', avancement: '' };
     execRenderPage();
 }
 
@@ -1498,6 +1498,15 @@ function _execRenderFilterBar(onchangeFunc, opts) {
         filters.push(`<select class="form-select" onchange="EXEC_STATE.filters.mode_supervision=this.value;${onchangeFunc}">
             <option value="">${te('all_modes_supervision') || 'Tous les modes'}</option>
             ${modesSup.map(m => `<option value="${m.id}" ${F.mode_supervision===m.id?'selected':''}>${_esc(m.mode || m.libelle || m.nom || m.id)}</option>`).join('')}
+        </select>`);
+    }
+
+    // Avancement : les quatre niveaux du module, là où le statut du circuit
+    // demandait de connaître les étapes une à une.
+    if (opts.showAvancement) {
+        filters.push(`<select class="form-select" onchange="EXEC_STATE.filters.avancement=this.value;${onchangeFunc}">
+            <option value="">${te('tous_avancements')}</option>
+            ${EXEC_AVANCEMENTS.map(n => `<option value="${n}" ${F.avancement === n ? 'selected' : ''}>${te('avancement_' + n)}</option>`).join('')}
         </select>`);
     }
 

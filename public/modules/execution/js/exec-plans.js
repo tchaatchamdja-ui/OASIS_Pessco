@@ -33,9 +33,9 @@ function execRenderPlans() {
         </div>
 
         ${_execRenderFilterBar('execRenderPage()', {
-            showDomaine: true, showSecteur: false, showPrestataire: true, showAnnee: true,
+            showDomaine: true, showSecteur: false, showPrestataire: true, showAnnee: false,
             showTypeSupervision: true, showModeSupervision: true,
-            showStatut: true, statutOptions: ['planifie','notifie','declenche','cloture']
+            showAvancement: true
         })}
 
         <div id="execPlansExportRoot">
@@ -137,6 +137,21 @@ function _renderPlansWithActivitesAccordion(plans, F) {
     });
     const notifDe = (a) => notifByActId[a.id] || notifByActId[execRacineActivite(a)] || null;
 
+    // ── Années couvertes par les plans ──
+    // Le choix de l'année quitte la barre de filtres pour une rangée de
+    // boutons posée devant les plans : elle ne propose que les années qu'un
+    // plan couvre effectivement, et se lit d'un coup d'œil.
+    const anneesCouvertes = [...new Set((plans || []).map(p => p.annee).filter(Boolean).map(String))]
+        .sort((a, b) => Number(b) - Number(a));
+    const anneeRetenue = String((F && F.annee) || '');
+    const boutonsAnnees = anneesCouvertes.length ? `
+    <div class="exec-annees">
+        <button class="exec-annee${anneeRetenue ? '' : ' actif'}"
+                onclick="EXEC_STATE.filters.annee='';execRenderPage();">${te('all_years')}</button>
+        ${anneesCouvertes.map(a => `<button class="exec-annee${anneeRetenue === a ? ' actif' : ''}"
+                onclick="EXEC_STATE.filters.annee='${a}';execRenderPage();">${a}</button>`).join('')}
+    </div>` : '';
+
     // Apply top-level filters on plans (year + title search)
     let filteredPlans = plans;
     if (F && F.annee) filteredPlans = filteredPlans.filter(p => String(p.annee) === String(F.annee));
@@ -164,16 +179,11 @@ function _renderPlansWithActivitesAccordion(plans, F) {
         if (F && F.prestataire) acts = acts.filter(a => a.prestataire_id === F.prestataire);
         if (F && F.type_supervision) acts = acts.filter(a => a.type_supervision_id === F.type_supervision);
         if (F && F.mode_supervision) acts = acts.filter(a => a.mode_supervision_id === F.mode_supervision);
-        if (F && F.statut) {
+        if (F && F.avancement) {
             acts = acts.filter(a => {
                 const n = notifDe(a);
                 const dos = n ? (EXEC_STATE.data.dossiers || []).find(d => d.notification_id === n.id) : null;
-                let effective;
-                if (dos && dos.statut === 'cloture') effective = 'cloture';
-                else if (n && n.statut === 'acte') effective = 'declenche';
-                else if (n) effective = 'notifie';
-                else effective = 'planifie';
-                return effective === F.statut;
+                return execAvancement(n, dos) === F.avancement;
             });
         }
         return { plan: p, acts };
@@ -182,13 +192,13 @@ function _renderPlansWithActivitesAccordion(plans, F) {
     // show the plan accordion with zero activities so the user can see that
     // no activities match. Only hide plans when no activity-level filter is
     // set AND the plan genuinely has zero activities (edge case).
-    const hasActFilter = !!(F && (F.domaine || F.prestataire || F.type_supervision || F.mode_supervision || F.statut));
+    const hasActFilter = !!(F && (F.domaine || F.prestataire || F.type_supervision || F.mode_supervision || F.avancement));
     const visiblePlans = hasActFilter
         ? planActsFiltered
         : planActsFiltered.filter(x => x.acts.length > 0 || true);
 
     if (visiblePlans.length === 0) {
-        return `<div class="card"><p style="color:var(--text-muted);text-align:center;padding:2rem;">${te('no_data')}</p></div>`;
+        return `${boutonsAnnees}<div class="card"><p style="color:var(--text-muted);text-align:center;padding:2rem;">${te('no_data')}</p></div>`;
     }
 
     // Build a map responsable_id -> "Prenom Nom" from the loaded inspecteurs.
@@ -220,7 +230,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
     const dossierByNotif = {};
     dossiers.forEach(d => { if (d.notification_id) dossierByNotif[d.notification_id] = d; });
 
-    let html = '';
+    let html = boutonsAnnees;
     visiblePlans.forEach(({ plan, acts }) => {
         const nbPrest = [...new Set(acts.map(a => a.prestataire_id))].length;
         // Taux de réalisation : part des activités dont le rapport a été
@@ -268,7 +278,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                         <th style="width:95px;">${te('date_fin')}</th>
                         <th style="width:150px;">${te('responsable')}</th>
                         <th style="width:110px;">${te('avancement')}</th>
-                        <th style="width:110px;">${te('status')}</th>
+                        <th style="width:110px;">${te('etape')}</th>
                         <th style="width:110px;text-align:center;">${te('actions')}</th>
                     </tr></thead>
                     <tbody>

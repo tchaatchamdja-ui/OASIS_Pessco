@@ -78,6 +78,33 @@ function _execConstaEcheance(c) {
     return (c || {}).date_due_cloture || (c || {}).date_due || '';
 }
 
+// ── Avancement d'une activité, par lignée ──
+// Une activité est réalisée quand son rapport a été transmis — le dernier des
+// quatre niveaux. Le tableau de bord comptait jusqu'ici les dossiers clôturés
+// du prestataire sans regarder à quelle activité ils se rattachaient : un
+// dossier hors périmètre gonflait le taux, qui pouvait dépasser 100 %.
+// La notification se cherche par la lignée de l'activité : déclenchée sous une
+// version du plan puis recopiée par un amendement, elle garde son processus.
+function _execAvancementParActivite(dossiers) {
+    const notifParActivite = {};
+    (EXEC_STATE.data.notifications || []).forEach((n) => {
+        if (!n.activite_id) return;
+        notifParActivite[n.activite_id] = n;
+        const racine = execRacineActivite(n.activite_id);
+        if (racine && !notifParActivite[racine]) notifParActivite[racine] = n;
+    });
+    const dossierParNotif = {};
+    (dossiers || []).forEach((d) => { if (d.notification_id) dossierParNotif[d.notification_id] = d; });
+
+    const notifDe = (a) => notifParActivite[(a || {}).id] || notifParActivite[execRacineActivite(a)] || null;
+    const dossierDe = (a) => { const n = notifDe(a); return n ? dossierParNotif[n.id] || null : null; };
+    return {
+        notifParActivite, dossierParNotif, notifDe, dossierDe,
+        niveau: (a) => execAvancement(notifDe(a), dossierDe(a)),
+        activiteRealisee: (a) => execAvancement(notifDe(a), dossierDe(a)) === 'realisee',
+    };
+}
+
 // ── Situation Générale ───────────────────────────────────────────
 // Le regroupement Domaine → Secteur → Prestataire, ses agrégats et son
 // accordéon. Le tableau de bord s'en sert pour ses cartes et ses donuts ;
@@ -317,26 +344,7 @@ function _execSituationGenerale(F) {
         });
     }
 
-    // ── Activité réalisée ──
-    // Une activité est réalisée quand son rapport a été transmis — le dernier
-    // des quatre niveaux d'avancement. Le tableau de bord comptait jusqu'ici
-    // les dossiers clôturés du prestataire, sans regarder à quelle activité ils
-    // se rattachaient : un dossier hors périmètre — activité hors plan, version
-    // archivée du plan, autre domaine — gonflait le taux, qui pouvait dépasser
-    // 100 %, et une activité recopiée par un amendement se lisait à la fois
-    // « réalisée » par sa version précédente et « à planifier » par la nouvelle.
-    const notifParActivite = {};
-    (EXEC_STATE.data.notifications || []).forEach((n) => {
-        if (n.activite_id) notifParActivite[n.activite_id] = n;
-    });
-    const dossierParNotif = {};
-    (dossiers || []).forEach((d) => { if (d.notification_id) dossierParNotif[d.notification_id] = d; });
-    // Réalisée : la classification globale de l'avancement fait foi — le
-    // rapport de l'activité a été transmis à l'organisme.
-    const activiteRealisee = (a) => {
-        const n = notifParActivite[(a || {}).id];
-        return !!n && execAvancement(n, dossierParNotif[n.id]) === 'realisee';
-    };
+    const { activiteRealisee } = _execAvancementParActivite(dossiers);
 
     // Build a set of transmitted rapport dossier_ids — a constatation is considered
     // "transmise au postulant" when a rapport covering its dossier has been transmitted.
@@ -656,16 +664,10 @@ function _execSuiviActivitesDonnees() {
     const aujourdhuiIso = new Date().toISOString().slice(0, 10);
 
     const dossierParActivite = {};
-    const dossierParNotif = {};
-    dossiers.forEach(d => {
-        if (d.activite_id) dossierParActivite[d.activite_id] = d;
-        if (d.notification_id) dossierParNotif[d.notification_id] = d;
-    });
-    // L'avancement se lit sur la notification autant que sur le dossier.
-    const notifParActivite = {};
-    (EXEC_STATE.data.notifications || []).forEach((n) => {
-        if (n.activite_id) notifParActivite[n.activite_id] = n;
-    });
+    dossiers.forEach(d => { if (d.activite_id) dossierParActivite[d.activite_id] = d; });
+    // L'avancement se lit sur la notification autant que sur le dossier, et se
+    // cherche par la lignée de l'activité.
+    const { notifDe } = _execAvancementParActivite(dossiers);
     const nomPrestataire = (id, repli) => {
         const p = prestataires.find(x => x.id === id);
         return (p && p.nom) || repli || '—';
@@ -680,7 +682,7 @@ function _execSuiviActivitesDonnees() {
             return {
                 act: a, dossier,
                 debut, fin: fin < debut ? debut : fin,
-                etat: _execGanttEtat(a, dossier, aujourdhuiIso, notifParActivite[a.id]),
+                etat: _execGanttEtat(a, dossier, aujourdhuiIso, notifDe(a)),
                 type: _execGanttTypeLibelle(a),
                 horsPlan: false,
                 prestataire_id: a.prestataire_id || 'inconnu',

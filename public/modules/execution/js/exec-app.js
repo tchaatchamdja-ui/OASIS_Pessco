@@ -412,6 +412,16 @@ async function execLoadData() {
 
         EXEC_STATE.data.plansValidesPlanif = _buildPlansValidesFromPlanif(planifPlans, planifActs);
         EXEC_STATE.data.plansArchivesPlanif = _buildPlansArchivesFromPlanif(planifPlans, planifActs);
+        // Lignée des activités : amender un plan recopie ses activités dans la
+        // version suivante, la copie portant la racine de l'originale. Une
+        // activité déjà déclenchée ne s'amende pas — sa copie est donc la même
+        // activité, et le processus ouvert sur la version précédente lui
+        // appartient. La table dit, pour chaque identifiant connu, la racine de
+        // sa lignée ; les écrans y résolvent notification et dossier.
+        EXEC_STATE.data.racineActivite = {};
+        (planifActs || []).forEach((a) => {
+            if (a && a.id) EXEC_STATE.data.racineActivite[a.id] = a.parent_activite_id || a.id;
+        });
         // Cycles de surveillance : ils bornent la période d'analyse dès qu'un
         // prestataire est retenu. La source reste « Plans de Surveillance ».
         api('/api/m/planification/prestataires-risques')
@@ -425,6 +435,30 @@ async function execLoadData() {
     } catch (e) {
         console.error('Execution data load error:', e);
     }
+}
+
+// ── Lignée d'une activité ──
+// `racine` : l'identifiant partagé par toutes les copies d'une même activité au
+// fil des versions du plan. Une notification ouverte sur une version archivée
+// suit sa lignée : la version suivante retrouve son processus, déjà avancé,
+// plutôt que de le rouvrir à zéro.
+function execRacineActivite(activite) {
+    const a = activite || {};
+    const id = typeof a === 'string' ? a : a.id;
+    const table = (EXEC_STATE.data && EXEC_STATE.data.racineActivite) || {};
+    return (typeof a === 'object' && a.parent_activite_id) || table[id] || id || '';
+}
+
+function execNotifDeActivite(activite, notifications) {
+    const racine = execRacineActivite(activite);
+    if (!racine) return null;
+    const liste = notifications || (EXEC_STATE.data && EXEC_STATE.data.notifications) || [];
+    // La notification de la copie courante prime ; à défaut, celle qu'une
+    // version précédente de la même activité a ouverte.
+    const id = (typeof activite === 'object' ? activite.id : activite) || '';
+    return liste.find((n) => n.activite_id === id)
+        || liste.find((n) => execRacineActivite(n.activite_id) === racine)
+        || null;
 }
 
 /**

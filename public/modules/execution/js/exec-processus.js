@@ -503,7 +503,7 @@ async function execProcCharger(activiteId, notifId) {
   const notifs = EXEC_STATE.data.notifications || [];
   const notif = notifId
     ? notifs.find((n) => n.id === notifId) || null
-    : notifs.find((n) => n.activite_id === activiteId) || null;
+    : execNotifDeActivite(activiteId, notifs);
   let dossier = null;
   if (notif) {
     const entete = (EXEC_STATE.data.dossiers || []).find((d) => d.notification_id === notif.id);
@@ -1546,7 +1546,7 @@ window.execProcHistorique = function (planId, activiteId) {
   const notifs = EXEC_STATE.data.notifications || [];
   const notif = horsPlan
     ? notifs.find((n) => n.id === activiteId) || null
-    : notifs.find((n) => n.activite_id === activiteId) || null;
+    : execNotifDeActivite(activiteId, notifs);
   const dossier = notif ? (EXEC_STATE.data.dossiers || []).find((d) => d.notification_id === notif.id) : null;
   const rapports = dossier
     ? (EXEC_STATE.data.rapports || []).filter((r) => r.dossier_id === dossier.id) : [];

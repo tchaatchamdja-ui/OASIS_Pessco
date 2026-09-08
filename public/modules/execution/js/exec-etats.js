@@ -231,7 +231,9 @@ function execEtatsLignes() {
   const lignes = [];
   const ajouterPlan = (plan, planArchive) => {
     (plan.activites || []).forEach((a) => {
-      const notif = notifs.find((n) => n.activite_id === a.id) || null;
+      // La lignée fait foi : une activité déclenchée sous une version
+      // précédente du plan garde son processus dans celle qui la reprend.
+      const notif = execNotifDeActivite(a, notifs);
       const dossier = notif ? dossiers.find((d) => d.notification_id === notif.id) || null : null;
       lignes.push({
         planId: plan.id, activiteId: a.id, horsPlan: false,

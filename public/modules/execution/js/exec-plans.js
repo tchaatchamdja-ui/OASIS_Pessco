@@ -126,8 +126,16 @@ function execExportPlansPdf() {
 // activities with realization status + Processus/Historique icon actions.
 function _renderPlansWithActivitesAccordion(plans, F) {
     const notifs = EXEC_STATE.data.notifications || [];
+    // Index par lignée : une activité déclenchée sous une version précédente du
+    // plan garde son processus dans la version qui la reprend.
     const notifByActId = {};
-    notifs.forEach(n => { if (n.activite_id) notifByActId[n.activite_id] = n; });
+    notifs.forEach(n => {
+        if (!n.activite_id) return;
+        notifByActId[n.activite_id] = n;
+        const racine = execRacineActivite(n.activite_id);
+        if (racine && !notifByActId[racine]) notifByActId[racine] = n;
+    });
+    const notifDe = (a) => notifByActId[a.id] || notifByActId[execRacineActivite(a)] || null;
 
     // Apply top-level filters on plans (year + title search)
     let filteredPlans = plans;
@@ -158,7 +166,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
         if (F && F.mode_supervision) acts = acts.filter(a => a.mode_supervision_id === F.mode_supervision);
         if (F && F.statut) {
             acts = acts.filter(a => {
-                const n = notifByActId[a.id];
+                const n = notifDe(a);
                 const dos = n ? (EXEC_STATE.data.dossiers || []).find(d => d.notification_id === n.id) : null;
                 let effective;
                 if (dos && dos.statut === 'cloture') effective = 'cloture';
@@ -220,7 +228,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
         // actée y comptait jusqu'ici : c'est pourtant la confirmation des dates,
         // au début de la réalisation, non sa fin.
         const closedCount = acts.reduce((n, a) => {
-            const notif = notifByActId[a.id];
+            const notif = notifDe(a);
             const dos = notif ? dossierByNotif[notif.id] : null;
             return execAvancement(notif, dos) === 'realisee' ? n + 1 : n;
         }, 0);
@@ -266,7 +274,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                     <tbody>
                     ${acts.length === 0 ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>` :
                     acts.map(a => {
-                        const notif = notifByActId[a.id];
+                        const notif = notifDe(a);
                         const statut = notif ? notif.statut : 'planifie';
                         const dos = notif ? dossierByNotif[notif.id] : null;
                         const isCloture = (dos && dos.statut === 'cloture') || statut === 'acte';

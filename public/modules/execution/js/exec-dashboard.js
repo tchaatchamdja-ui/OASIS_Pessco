@@ -317,6 +317,29 @@ function _execSituationGenerale(F) {
         });
     }
 
+    // ── Activité réalisée ──
+    // La règle est celle du menu « Activités de Supervision » : une activité
+    // est réalisée quand sa notification est actée, ou quand le dossier ouvert
+    // sur cette notification est clôturé. Le tableau de bord comptait jusqu'ici
+    // les dossiers clôturés du prestataire, sans regarder à quelle activité ils
+    // se rattachaient : un dossier hors périmètre — activité hors plan, version
+    // archivée du plan, autre domaine — gonflait le taux, qui pouvait dépasser
+    // 100 %, et une activité recopiée par un amendement se lisait à la fois
+    // « réalisée » par sa version précédente et « à planifier » par la nouvelle.
+    const notifParActivite = {};
+    (EXEC_STATE.data.notifications || []).forEach((n) => {
+        if (n.activite_id) notifParActivite[n.activite_id] = n;
+    });
+    const dossierParNotif = {};
+    (dossiers || []).forEach((d) => { if (d.notification_id) dossierParNotif[d.notification_id] = d; });
+    const activiteRealisee = (a) => {
+        const n = notifParActivite[(a || {}).id];
+        if (!n) return false;
+        if (n.statut === 'acte') return true;
+        const d = dossierParNotif[n.id];
+        return !!(d && d.statut === 'cloture');
+    };
+
     // Build a set of transmitted rapport dossier_ids — a constatation is considered
     // "transmise au postulant" when a rapport covering its dossier has been transmitted.
     const transmittedDossierIds = new Set(
@@ -363,8 +386,9 @@ function _execSituationGenerale(F) {
         const entry = domaineMap[dId][sId][pId];
         // Activités planifiées : liste "Activités de Supervision" du prestataire.
         const planned = entry.activities.length;
-        // Activités clôturées : dossiers clôturés du prestataire (sous-menu "Dossiers Clôturés").
-        const closed = closedDossiers.filter(d => d.prestataire_id === pId).length;
+        // Activités réalisées : parmi ces mêmes activités, celles dont la
+        // notification est actée ou le dossier clôturé.
+        const closed = entry.activities.filter(activiteRealisee).length;
         const execRate = planned > 0 ? Math.round((closed / planned) * 100) : 0;
 
         // Constatations : décompte par criticité depuis la table du sous-menu "Suivi".
@@ -555,7 +579,7 @@ function _execSituationGenerale(F) {
 
     return {
         accordionHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
-        computePrestStats, aggregate, closedDossiers, resolveDossierDomaine, resolveSecteur,
+        computePrestStats, aggregate, closedDossiers, activiteRealisee, resolveDossierDomaine, resolveSecteur,
         allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
         // Mesures des cartes : le tableau de bord et le formulaire de
         // statistiques les lisent d'ici, jamais recalculées à côté.
@@ -924,7 +948,7 @@ function execRenderDashboard() {
     const SG = _execSituationGenerale(EXEC_STATE.filters);
     const {
         accordionHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
-        computePrestStats, aggregate, closedDossiers, resolveDossierDomaine, resolveSecteur,
+        computePrestStats, aggregate, closedDossiers, activiteRealisee, resolveDossierDomaine, resolveSecteur,
         allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
         totalConst, closedConst, tauxClotureConst,
         fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
@@ -941,11 +965,7 @@ function execRenderDashboard() {
         Object.keys(domaineMap[dId]).forEach(sId => {
             Object.keys(domaineMap[dId][sId]).forEach(pId => {
                 planned += domaineMap[dId][sId][pId].activities.length;
-                closed += closedDossiers.filter(d => {
-                    const ddId = resolveDossierDomaine(d);
-                    const dsId = resolveSecteur(d, d.prestataire_id);
-                    return d.prestataire_id === pId && ddId === dId && dsId === sId;
-                }).length;
+                closed += domaineMap[dId][sId][pId].activities.filter(activiteRealisee).length;
             });
         });
         return { label: domaineNameMap[dId] || dId || '—', values: [planned, closed] };
@@ -1044,11 +1064,20 @@ function execRenderDashboard() {
                     figure: { type: 'echelle', position: 92, min: te('faible'), max: te('eleve') },
                 }),
                 oasisKpiCarte({
+                    // « En attente de traitement » laissait croire que rien n'y
+                    // avait bougé : la carte compte toutes les constatations
+                    // notifiées et non soldées, plan d'actions correctives en
+                    // cours d'examen ou déjà validé compris. Les trois mentions
+                    // disent où elles en sont, sans en mettre aucune en avant.
                     titre: te('ouvertes'), couleur: '#ef4444',
                     valeur: fncOuvertes,
-                    precision: te('en_attente_traitement')
+                    precision: te('non_soldees')
                         + (horsActiviteOuvertes ? ` · ${horsActiviteOuvertes} ${te('hors_activite_court')}` : ''),
-                    figure: { type: 'etapes', liste: [te('en_attente'), te('en_cours_court'), te('cloture_court')], actif: 0 },
+                    figure: { type: 'etapes', actif: -1, liste: [
+                        `${pacNonSoumis + pacRejete} ${te('pac_a_soumettre')}`,
+                        `${pacEnExamen} ${te('pac_en_examen')}`,
+                        `${pacAccepte} ${te('pac_en_cours')}`,
+                    ] },
                 }),
             ])}
         </div>

@@ -318,9 +318,8 @@ function _execSituationGenerale(F) {
     }
 
     // ── Activité réalisée ──
-    // La règle est celle du menu « Activités de Supervision » : une activité
-    // est réalisée quand sa notification est actée, ou quand le dossier ouvert
-    // sur cette notification est clôturé. Le tableau de bord comptait jusqu'ici
+    // Une activité est réalisée quand son rapport a été transmis — le dernier
+    // des quatre niveaux d'avancement. Le tableau de bord comptait jusqu'ici
     // les dossiers clôturés du prestataire, sans regarder à quelle activité ils
     // se rattachaient : un dossier hors périmètre — activité hors plan, version
     // archivée du plan, autre domaine — gonflait le taux, qui pouvait dépasser
@@ -332,12 +331,11 @@ function _execSituationGenerale(F) {
     });
     const dossierParNotif = {};
     (dossiers || []).forEach((d) => { if (d.notification_id) dossierParNotif[d.notification_id] = d; });
+    // Réalisée : la classification globale de l'avancement fait foi — le
+    // rapport de l'activité a été transmis à l'organisme.
     const activiteRealisee = (a) => {
         const n = notifParActivite[(a || {}).id];
-        if (!n) return false;
-        if (n.statut === 'acte') return true;
-        const d = dossierParNotif[n.id];
-        return !!(d && d.statut === 'cloture');
+        return !!n && execAvancement(n, dossierParNotif[n.id]) === 'realisee';
     };
 
     // Build a set of transmitted rapport dossier_ids — a constatation is considered
@@ -609,11 +607,13 @@ function _execGanttDate(iso) {
     return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
 }
 
-function _execGanttEtat(act, dossier, aujourdhuiIso) {
-    if (dossier) {
-        const st = (dossier.statut || '').toLowerCase();
-        return (st === 'cloture' || st === 'cloturee') ? 'termine' : 'en_cours';
-    }
+// La couleur d'une barre suit les quatre niveaux d'avancement : réalisée quand
+// le rapport est transmis, en cours du déclenchement à cette transmission, et
+// planifiée tant que rien n'est déclenché — en retard si son début est passé.
+function _execGanttEtat(act, dossier, aujourdhuiIso, notif) {
+    const niveau = execAvancement(notif, dossier);
+    if (niveau === 'realisee') return 'termine';
+    if (niveau !== 'non_initiee') return 'en_cours';
     return String(act.date_debut || '') < aujourdhuiIso ? 'en_retard' : 'planifie';
 }
 
@@ -661,6 +661,11 @@ function _execSuiviActivitesDonnees() {
         if (d.activite_id) dossierParActivite[d.activite_id] = d;
         if (d.notification_id) dossierParNotif[d.notification_id] = d;
     });
+    // L'avancement se lit sur la notification autant que sur le dossier.
+    const notifParActivite = {};
+    (EXEC_STATE.data.notifications || []).forEach((n) => {
+        if (n.activite_id) notifParActivite[n.activite_id] = n;
+    });
     const nomPrestataire = (id, repli) => {
         const p = prestataires.find(x => x.id === id);
         return (p && p.nom) || repli || '—';
@@ -675,7 +680,7 @@ function _execSuiviActivitesDonnees() {
             return {
                 act: a, dossier,
                 debut, fin: fin < debut ? debut : fin,
-                etat: _execGanttEtat(a, dossier, aujourdhuiIso),
+                etat: _execGanttEtat(a, dossier, aujourdhuiIso, notifParActivite[a.id]),
                 type: _execGanttTypeLibelle(a),
                 horsPlan: false,
                 prestataire_id: a.prestataire_id || 'inconnu',
@@ -700,7 +705,7 @@ function _execSuiviActivitesDonnees() {
                 },
                 dossier,
                 debut, fin: fin < debut ? debut : fin,
-                etat: _execGanttEtat({ date_debut: n.date_activite }, dossier, aujourdhuiIso),
+                etat: _execGanttEtat({ date_debut: n.date_activite }, dossier, aujourdhuiIso, n),
                 type: n.nature_activite || _execGanttTypeLibelle(n),
                 horsPlan: true,
                 prestataire_id: n.prestataire_id || 'inconnu',

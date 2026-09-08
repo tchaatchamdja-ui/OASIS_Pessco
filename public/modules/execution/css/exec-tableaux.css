@@ -719,3 +719,15 @@
     line-height: 1;
 }
 
+
+/* Niveau d'avancement d'une activité : une pastille dans la couleur du niveau,
+   à côté de l'étape en cours du processus. */
+.exec-module .exec-avancement {
+    display: inline-block;
+    padding: 0.08rem 0.42rem;
+    border: 1px solid;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+}

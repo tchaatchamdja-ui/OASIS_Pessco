@@ -215,14 +215,14 @@ function _renderPlansWithActivitesAccordion(plans, F) {
     let html = '';
     visiblePlans.forEach(({ plan, acts }) => {
         const nbPrest = [...new Set(acts.map(a => a.prestataire_id))].length;
-        // Taux de clôture : ratio d'activités dont la notif est "acte" OU le dossier "cloture"
+        // Taux de réalisation : part des activités dont le rapport a été
+        // transmis — le dernier des quatre niveaux d'avancement. La notification
+        // actée y comptait jusqu'ici : c'est pourtant la confirmation des dates,
+        // au début de la réalisation, non sa fin.
         const closedCount = acts.reduce((n, a) => {
             const notif = notifByActId[a.id];
-            if (!notif) return n;
-            if (notif.statut === 'acte') return n + 1;
-            const dos = dossierByNotif[notif.id];
-            if (dos && dos.statut === 'cloture') return n + 1;
-            return n;
+            const dos = notif ? dossierByNotif[notif.id] : null;
+            return execAvancement(notif, dos) === 'realisee' ? n + 1 : n;
         }, 0);
         const tauxCloture = acts.length > 0 ? Math.round((closedCount / acts.length) * 100) : 0;
         const domNom = plan.domaine_id && domMap[plan.domaine_id] ? (domMap[plan.domaine_id].code || domMap[plan.domaine_id].sigle || domMap[plan.domaine_id].nom) : '-';
@@ -241,7 +241,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                     <span>· ${te('secteur') || 'Secteur'}: <strong style="color:#0f172a;">${_esc(secNom)}</strong></span>
                     <span>· ${te('nb_prestataires')}: <strong style="color:#0f172a;">${nbPrest}</strong></span>
                     <span>· ${te('nb_activites') || te('activites')}: <strong style="color:#0f172a;">${acts.length}</strong></span>
-                    <span>· ${te('taux_cloture') || 'Taux clôturé'}: <strong style="color:#166534;">${tauxCloture}%</strong></span>
+                    <span>· ${te('taux_realisation')}: <strong style="color:#166534;">${tauxCloture}%</strong></span>
                 </span>
                 <span style="margin-left:auto;display:inline-flex;align-items:center;gap:0.4rem;"
                       onclick="event.stopPropagation();">
@@ -259,11 +259,12 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                         <th style="width:95px;">${te('date_debut')}</th>
                         <th style="width:95px;">${te('date_fin')}</th>
                         <th style="width:150px;">${te('responsable')}</th>
+                        <th style="width:110px;">${te('avancement')}</th>
                         <th style="width:110px;">${te('status')}</th>
                         <th style="width:110px;text-align:center;">${te('actions')}</th>
                     </tr></thead>
                     <tbody>
-                    ${acts.length === 0 ? `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>` :
+                    ${acts.length === 0 ? `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>` :
                     acts.map(a => {
                         const notif = notifByActId[a.id];
                         const statut = notif ? notif.statut : 'planifie';
@@ -325,6 +326,10 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                             <td style="${tdColorStyle}">${_formatDate(a.date_debut)}</td>
                             <td style="${tdColorStyle}">${_formatDate(a.date_fin)}</td>
                             <td style="${tdColorStyle}">${resp}</td>
+                            <td>${typeof execAvancementBadge === 'function'
+                                // Niveau d'avancement global : non initiée, initiée,
+                                // en réalisation, réalisée.
+                                ? execAvancementBadge(notif, dos) : ''}</td>
                             <td>${typeof execProcStatutBadge === 'function'
                                 // Statut exprimé dans les termes du fil d'avancement du processus.
                                 ? execProcStatutBadge(notif, dos)

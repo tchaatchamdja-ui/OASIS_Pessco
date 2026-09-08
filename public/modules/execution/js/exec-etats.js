@@ -271,6 +271,39 @@ function execEtatsLignes() {
 
 const execEtatsRapportsPar = (l, statuts) => (l.rapports || []).filter((r) => statuts.includes(r.statut));
 
+// ── Avancement global d'une activité ──
+// Le fil du processus compte une dizaine d'étapes ; quatre niveaux suffisent à
+// dire où en est une activité, et ce sont eux que lisent le tableau de bord,
+// la table des activités et le calendrier :
+//   — « Non Initiée » tant que rien n'est déclenché ;
+//   — « Initiée » du déclenchement à la confirmation des dates ;
+//   — « En Réalisation » de la confirmation à la validation du rapport ;
+//   — « Réalisée » dès la transmission du rapport.
+const EXEC_AVANCEMENTS = ['non_initiee', 'initiee', 'en_realisation', 'realisee'];
+const EXEC_AVANCEMENT_COULEURS = {
+  non_initiee: '#64748b', initiee: '#2563eb', en_realisation: '#f59e0b', realisee: '#16a34a',
+};
+
+function execAvancement(notif, dossier) {
+  if (!notif) return 'non_initiee';
+  const d = dossier || null;
+  const rapports = d
+    ? (d.rapports || (EXEC_STATE.data.rapports || []).filter((r) => r.dossier_id === d.id))
+    : [];
+  if (rapports.some((r) => r.statut === 'transmis')) return 'realisee';
+  // La confirmation des dates par l'organisme acte la notification : c'est
+  // elle qui ouvre la réalisation.
+  if (notif.statut === 'acte') return 'en_realisation';
+  return 'initiee';
+}
+
+window.execAvancementBadge = function (notif, dossier) {
+  const cle = execAvancement(notif, dossier);
+  const couleur = EXEC_AVANCEMENT_COULEURS[cle];
+  return `<span class="exec-avancement" style="color:${couleur};border-color:${couleur}55;background:${couleur}14;">${
+    _esc(te('avancement_' + cle))}</span>`;
+};
+
 // ── Répartition des lignes par état ──
 function execEtatsRepartir() {
   const D = EXEC_ETATS.delais;

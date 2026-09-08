@@ -239,25 +239,25 @@ function _renderPlansWithActivitesAccordion(plans, F) {
         const expanded = ' expanded';
         html += `
         <div class="card${expanded}" style="margin-bottom:0.75rem;">
-            <div class="exec-accordion-header" onclick="this.parentElement.classList.toggle('expanded')" style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.35rem 0.6rem;font-weight:600;flex-wrap:wrap;background:#e0f2fe;border-radius:6px 6px 0 0;font-size:0.85rem;">
-                <span class="exec-form-section-chevron" style="transition:transform 0.2s;">${EXEC_ICONS.chevronDown}</span>
-                ${EXEC_ICONS.plans} <span>${_esc(plan.titre || plan.reference || plan.id)}</span>
-                <span style="color:#334155;font-weight:500;font-size:0.78rem;display:inline-flex;flex-wrap:wrap;gap:0.4rem;align-items:center;text-transform:uppercase;letter-spacing:0.02em;">
-                    <span>· ${te('version')}: <strong style="color:#0f172a;">${_esc(_execVersionPlan(plan))}</strong></span>
-                    <span>· ${te('annee') || 'Année'}: <strong style="color:#0f172a;">${plan.annee || '-'}</strong></span>
-                    <span>· ${te('domaine') || 'Domaine'}: <strong style="color:#0f172a;">${_esc(domNom)}</strong></span>
-                    <span>· ${te('secteur') || 'Secteur'}: <strong style="color:#0f172a;">${_esc(secNom)}</strong></span>
-                    <span>· ${te('nb_prestataires')}: <strong style="color:#0f172a;">${nbPrest}</strong></span>
-                    <span>· ${te('nb_activites') || te('activites')}: <strong style="color:#0f172a;">${acts.length}</strong></span>
-                    <span>· ${te('taux_realisation')}: <strong style="color:#166534;">${tauxCloture}%</strong></span>
-                </span>
-                <span style="margin-left:auto;display:inline-flex;align-items:center;gap:0.4rem;"
-                      onclick="event.stopPropagation();">
-                    ${_execStatusBadge('valide')}
-                    ${_execCanValidate() ? `<button class="btn btn-sm btn-outline"
-                        onclick="execArchiverPlan('${plan.id}')"
-                        title="${_escAttr(te('archiver_plan'))}">${EXEC_ICONS.folder || ''} ${te('archiver')}</button>` : ''}
-                </span>
+            <div class="exec-accordion-header exec-plan-entete" onclick="this.parentElement.classList.toggle('expanded')">
+                <div class="exec-plan-entete-titre">
+                    <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown}</span>
+                    ${EXEC_ICONS.plans} <span>${_esc(plan.titre || plan.reference || plan.id)}</span>
+                    <span class="exec-plan-entete-actions" onclick="event.stopPropagation();">
+                        ${_execCanValidate() ? `<button class="btn btn-sm btn-outline"
+                            onclick="execArchiverPlan('${plan.id}')"
+                            title="${_escAttr(te('archiver_plan'))}">${EXEC_ICONS.folder || ''} ${te('archiver')}</button>` : ''}
+                    </span>
+                </div>
+                <div class="exec-plan-entete-infos">
+                    <span>${te('version')}: <strong>${_esc(_execVersionPlan(plan))}</strong></span>
+                    <span>${te('annee') || 'Année'}: <strong>${plan.annee || '-'}</strong></span>
+                    <span>${te('domaine') || 'Domaine'}: <strong>${_esc(domNom)}</strong></span>
+                    <span>${te('secteur') || 'Secteur'}: <strong>${_esc(secNom)}</strong></span>
+                    <span>${te('nb_prestataires')}: <strong>${nbPrest}</strong></span>
+                    <span>${te('nb_activites') || te('activites')}: <strong>${acts.length}</strong></span>
+                    <span>${te('taux_realisation')}: <strong class="exec-plan-taux">${tauxCloture}%</strong></span>
+                </div>
             </div>
             <div class="exec-accordion-body" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
                 <table class="exec-data-table exec-compact-table" style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">

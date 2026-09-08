@@ -731,3 +731,39 @@
     font-weight: 700;
     white-space: nowrap;
 }
+
+/* ── Bandeau d'un plan ──
+   Le titre et l'action d'archivage sur la première ligne, les renseignements
+   du plan sur la seconde : ils s'y lisent d'un trait, sans s'enrouler autour
+   du titre. Le statut n'y figure plus — cette page ne montre que les plans en
+   vigueur, l'écrire à chaque bandeau n'apprenait rien. */
+.exec-module .exec-plan-entete {
+    display: block;
+    padding: 0.4rem 0.6rem;
+    background: color-mix(in srgb, var(--primary) 10%, var(--bg-card));
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.exec-module .exec-plan-entete-titre {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.exec-module .exec-plan-entete-titre .exec-form-section-chevron { transition: transform 0.2s; }
+.exec-module .exec-plan-entete-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; }
+.exec-module .exec-plan-entete-infos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.9rem;
+    margin-top: 0.25rem;
+    padding-left: 1.9rem;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+.exec-module .exec-plan-entete-infos strong { color: var(--text); }
+.exec-module .exec-plan-entete-infos .exec-plan-taux { color: #166534; }

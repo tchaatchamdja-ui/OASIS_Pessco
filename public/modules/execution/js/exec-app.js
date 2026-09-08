@@ -562,10 +562,11 @@ function _buildPlansValidesFromPlanif(planifPlans, planifActs) {
     return valides;
 }
 
-// Plans archivés : ceux qu'on a rangés délibérément. Sont écartés ceux que la
-// Planification archive d'elle-même quand une nouvelle version les remplace —
-// ils portent `remplace_par`, et leurs activités sont reprises par la version
-// suivante : les faire figurer aux archives les compterait deux fois.
+// Plans archivés : ceux qu'on a rangés délibérément. Une version retirée par la
+// version suivante n'en est pas : « Planification » lui donne son propre statut
+// — `remplace` — et ses activités sont reprises par la version suivante. Les
+// données antérieures portent encore `archive` et `remplace_par` : on les
+// écarte de même.
 function _buildPlansArchivesFromPlanif(planifPlans, planifActs) {
     const plans = (planifPlans || []).filter(p => p.statut === 'archive' && !p.remplace_par);
     if (!plans.length) return [];

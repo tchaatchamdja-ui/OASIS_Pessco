@@ -93,7 +93,7 @@ function planPrestThemesPanel(plan) {
         if (!raw) return [];
         try { return typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return []; }
     };
-    const planValide = ['valide', 'approuve_dg', 'transmis', 'archive'].includes(plan.statut);
+    const planValide = ['valide', 'approuve_dg', 'transmis', 'archive', 'remplace'].includes(plan.statut);
     const couleurPlanifie = planValide ? '#15803d' : '#ea580c';
 
     const cartes = prestataires.map(p => {

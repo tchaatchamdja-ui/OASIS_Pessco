@@ -11,7 +11,9 @@
 
 function planRenderPlans() {
     // All plans regardless of status, except archived plans which are hidden from this page.
-    let plans = (PLAN_STATE.data.plans || []).filter(p => p.statut !== 'archive');
+    // Les versions retirées par une version suivante ne figurent pas davantage
+    // ici que les plans rangés à leur terme : la lignée les montre.
+    let plans = (PLAN_STATE.data.plans || []).filter(p => !['archive', 'remplace'].includes(p.statut));
     plans = _applyPlanFilters(plans);
     plans = _applyRoleFilter(plans);
 
@@ -229,7 +231,7 @@ const PLAN_STEPS = [
 // Index de l'étape en cours. 2 : toutes les étapes franchies.
 function _planCurrentStep(plan) {
     const st = plan.statut || 'brouillon';
-    if (['valide', 'approuve_dg', 'transmis', 'archive'].includes(st)) return 2;
+    if (['valide', 'approuve_dg', 'transmis', 'archive', 'remplace'].includes(st)) return 2;
     if (['soumis', 'en_revue'].includes(st)) return 1;
     return 0;
 }
@@ -395,14 +397,14 @@ function _renderPlanHistorique(plan) {
     while (descendants.length < 50) {
         const enfants = tous.filter(p => p.parent_plan_id === noeud.id && !vus.has(p.id));
         if (!enfants.length) break;
-        const suite = enfants.find(p => ['valide', 'approuve_dg', 'transmis', 'archive'].includes(p.statut)) || enfants[0];
+        const suite = enfants.find(p => ['valide', 'approuve_dg', 'transmis', 'remplace', 'archive'].includes(p.statut)) || enfants[0];
         vus.add(suite.id);
         descendants.push(suite);
         noeud = suite;
     }
     const famille = [...ascendants, plan, ...descendants];
 
-    const VALIDES = ['valide', 'approuve_dg', 'transmis', 'archive'];
+    const VALIDES = ['valide', 'approuve_dg', 'transmis', 'archive', 'remplace'];
     const acts = PLAN_STATE.data.allActivites || [];
     const nbActs = (id) => acts.filter(a => a.plan_id === id).length;
     const versions = famille.filter(p => VALIDES.includes(p.statut))
@@ -424,7 +426,8 @@ function _renderPlanHistorique(plan) {
                 <span class="plan-history-date">${date}</span>
                 <span class="text-muted plan-history-count">${n} ${tp('activities').toLowerCase()}</span>
                 ${v.id === plan.id ? `<span class="plan-history-current">${tp('history_current')}</span>` : ''}
-                ${v.statut === 'archive' ? `<span class="plan-history-archived">${tp('archive')}</span>` : ''}
+                ${['archive', 'remplace'].includes(v.statut)
+                    ? `<span class="plan-history-archived">${tp(v.statut)}</span>` : ''}
             </div>
             <div class="plan-history-body">${chgs.length
                 ? `<ul class="plan-history-changes">${chgs.map(c => `<li>${c}</li>`).join('')}</ul>`

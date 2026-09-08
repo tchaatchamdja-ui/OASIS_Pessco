@@ -27,18 +27,23 @@ module.exports = function register(app, deps, M) {
     return p ? p.commentaire_rejet : undefined;
   };
 
-  // Une version validée remplace la précédente, qui passe aux archives.
-  const archiverAncetres = (rec, username) => {
+  // Une version validée remplace la précédente, qui se retire. Elle n'est pas
+  // archivée : on range aux archives un plan arrivé à son terme, et confondre
+  // les deux sorts faisait passer chaque amendement pour une fin de plan.
+  // La version retirée garde sa place dans la lignée — versions, historique,
+  // processus déjà menés — mais ne figure plus ni parmi les plans en vigueur
+  // ni parmi les archives.
+  const retirerAncetres = (rec, username) => {
     let ancetre = db.list('plans').find((p) => p.id === rec.parent_plan_id);
     const vus = new Set();
     while (ancetre && !vus.has(ancetre.id)) {
       vus.add(ancetre.id);
       if (D.STATUTS_EN_VIGUEUR.includes(ancetre.statut)) {
         db.updateIn('plans', ancetre.id, {
-          statut: 'archive', archiver_le: new Date().toISOString(),
-          archiver_par: username, remplace_par: rec.id,
+          statut: D.STATUT_REMPLACE, remplace_le: new Date().toISOString(),
+          remplace_par_qui: username, remplace_par: rec.id,
         });
-        D.wf(ancetre.id, 'archiver', username,
+        D.wf(ancetre.id, 'remplacer', username,
           { commentaire: `Remplacé par la version ${rec.version || ''}`.trim() });
       }
       ancetre = ancetre.parent_plan_id
@@ -68,7 +73,7 @@ module.exports = function register(app, deps, M) {
           || (c.activity_objet && (a.objet || a.titre) === c.activity_objet && a.plan_id === rec.id));
         if (act) db.updateIn('activites', act.id, { commentaire_validation: c.commentaire });
       });
-      if (route === 'valider' && rec.parent_plan_id) archiverAncetres(rec, req.user.username);
+      if (route === 'valider' && rec.parent_plan_id) retirerAncetres(rec, req.user.username);
       D.wf(rec.id, route, req.user.username, { motif: body.motif || '', commentaire });
       audit.log(req.user.username, `PLAN_${route.toUpperCase().replace(/-/g, '_')}`, { id: rec.id });
       return res.json(rec);

@@ -108,6 +108,9 @@ module.exports = function register(app, deps, M) {
       plans_soumis: plans.filter((p) => p.statut === 'soumis').length,
       plans_rejetes: plans.filter((p) => p.statut === 'rejete').length,
       plans_archives: plans.filter((p) => p.statut === 'archive').length,
+      // Versions retirées par une version suivante : hors jeu, sans être des
+      // plans rangés à leur terme.
+      plans_remplaces: plans.filter((p) => p.statut === D.STATUT_REMPLACE).length,
       // Plans en vigueur dont une version suivante chemine encore : le tableau
       // de bord en fait une carte.
       plans_en_amendement: D.plansEnAmendement(plans).length,

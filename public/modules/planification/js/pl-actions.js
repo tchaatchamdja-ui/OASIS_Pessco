@@ -495,7 +495,7 @@ function _statusBadge(status) {
 function _statusColor(status) {
     const colors = {
         brouillon: '#f59e0b', soumis: '#3b82f6', en_revue: '#8b5cf6',
-        valide: '#10b981', rejete: '#ef4444', rejete_clos: '#991b1b', en_cours_amendement: '#f97316', archive: '#9ca3af',
+        valide: '#10b981', rejete: '#ef4444', rejete_clos: '#991b1b', en_cours_amendement: '#f97316', archive: '#9ca3af', remplace: '#94a3b8',
         planifie: '#6366f1', en_cours: '#f59e0b', termine: '#10b981', annule: '#6b7280',
         creation: '#6366f1', soumission: '#3b82f6', validation: '#10b981',
         rejet: '#ef4444', amendement: '#f59e0b'

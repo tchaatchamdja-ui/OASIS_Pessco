@@ -32,11 +32,11 @@ function _planCartesIndicateurs(stats) {
     const brouillons = n(s.plans_brouillon);
     const rejetes = n(s.plans_rejetes);
     const amendes = n(s.plans_en_amendement);
-    // Un plan archivé est une version remplacée : la compter au dénominateur
-    // faisait baisser le taux à chaque amendement validé — cinq versions d'un
-    // même plan, dont quatre archivées, donnaient « 20 % ». Le taux ne regarde
-    // que les plans encore en lice.
-    const total = Math.max(0, n(s.total_plans) - n(s.plans_archives));
+    // Ni les plans rangés à leur terme, ni les versions retirées par une
+    // version suivante : les compter au dénominateur faisait baisser le taux à
+    // chaque amendement validé — cinq versions d'un même plan, dont quatre
+    // retirées, donnaient « 20 % ». Le taux ne regarde que les plans en lice.
+    const total = Math.max(0, n(s.total_plans) - n(s.plans_archives) - n(s.plans_remplaces));
     const tauxValidation = total ? Math.round((valides / total) * 100) : 0;
 
     const planifiees = n(s.activites_planifiees);

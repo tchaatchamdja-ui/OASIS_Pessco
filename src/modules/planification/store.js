@@ -10,8 +10,21 @@ const save = (d) => store.save('planification', d);
 const list = (coll) => load()[coll] || [];
 
 function seed() {
-  if (store.load('planification', null)) return;
+  if (store.load('planification', null)) { retirerLesVersionsRemplacees(); return; }
   save({ plans: [], activites: [], workflow: [], versions: [], commentaires: [], cycles: [] });
+}
+
+// Une version remplacée par la suivante était rangée aux archives, avec les
+// plans qu'on y range à leur terme : deux sorts distincts sous un même statut.
+// Elle porte désormais le sien — « remplace » —, et les données déjà en place
+// le reprennent au démarrage.
+function retirerLesVersionsRemplacees() {
+  const d = load();
+  let touche = 0;
+  (d.plans || []).forEach((p) => {
+    if (p.statut === 'archive' && p.remplace_par) { p.statut = 'remplace'; touche += 1; }
+  });
+  if (touche) save(d);
 }
 
 function createIn(coll, item) {

@@ -34,6 +34,10 @@ const STATUTS_EN_VIGUEUR = ['valide', 'approuve_dg', 'transmis'];
 // d'un amendement en cours. Le plan d'origine reste la référence entre-temps.
 const STATUTS_AMENDEMENT = ['brouillon', 'soumis', 'en_revue', 'rejete'];
 
+// Version remplacée par la suivante. Elle se retire : ni en vigueur, ni aux
+// archives — celles-ci ne reçoivent que les plans rangés à leur terme.
+const STATUT_REMPLACE = 'remplace';
+
 // Plans en vigueur dont une version suivante chemine encore.
 function plansEnAmendement(plans) {
   const parents = new Set((plans || [])
@@ -204,7 +208,7 @@ const familleDuPlan = (planId) => {
     const enfants = tous.filter((p) => p.parent_plan_id === noeud.id && !vus.has(p.id));
     if (!enfants.length) break;
     // Une seule lignée : on suit la version retenue (validée ou archivée)
-    const suite = enfants.find((p) => ['valide', 'approuve_dg', 'transmis', 'archive'].includes(p.statut))
+    const suite = enfants.find((p) => [...STATUTS_EN_VIGUEUR, 'archive', STATUT_REMPLACE].includes(p.statut))
       || enfants[0];
     vus.add(suite.id);
     descendants.push(suite);
@@ -283,7 +287,7 @@ const SCHEMA_ACTIVITE = {
 module.exports = {
   RIGHTS,
   roleM2, riskProfiles, plansValides, STATUTS_EN_VIGUEUR,
-  STATUTS_AMENDEMENT, plansEnAmendement,
+  STATUTS_AMENDEMENT, STATUT_REMPLACE, plansEnAmendement,
   peut, peutLire, estPrestataire, refus, planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,
   wf, nomComplet, familleDuPlan, ecartsRisques,

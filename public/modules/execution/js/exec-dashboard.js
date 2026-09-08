@@ -223,17 +223,7 @@ function _execSituationGenerale(F) {
     const horsActivite = constEnVigueur.filter(_execConstaHorsActivite).length;
     const horsActiviteOuvertes = ouvertes.filter(_execConstaHorsActivite).length;
 
-    // Échéances : les constatations déjà en retard passent devant, puis celles
-    // qui arrivent à terme sous quinze jours. Le retard était jusqu'ici exclu.
-    const fncAlerts = constEnVigueur
-        .filter(c => c.statut !== 'soldee')
-        .map(c => ({ ...c, _jours: _daysUntil(_execConstaEcheance(c)) }))
-        .filter(c => c._jours !== null && c._jours <= 15)
-        .sort((a, b) => a._jours - b._jours)
-        .slice(0, 8);
-    const fncEnRetard = fncAlerts.filter(c => c._jours < 0).length;
-    // Le retard compté sur fncAlerts s'arrête aux huit alertes affichées :
-    // pour un effectif, il faut balayer toutes les constatations ouvertes.
+    // Constatations dont le délai de traitement est dépassé.
     const fncHorsDelai = ouvertes.filter(c => {
         const j = _daysUntil(_execConstaEcheance(c));
         return j !== null && j < 0;
@@ -591,7 +581,7 @@ function _execSituationGenerale(F) {
         // statistiques les lisent d'ici, jamais recalculées à côté.
         constEnVigueur, totalConst, closedConst, tauxClotureConst,
         fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
-        fncAlerts, fncEnRetard, fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
+        fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
         pacNonSoumis, pacAccepte, pacRejete, pacEnExamen,
     };
 }
@@ -601,14 +591,19 @@ function _execSituationGenerale(F) {
 //  SUIVI DES ACTIVITÉS — diagramme de Gantt
 // ══════════════════════════════════════
 // Chaque activité planifiée tient une barre entre sa date de début et sa date
-// de fin. Sa couleur dit où elle en est ; et cet état ne se lit pas sur
-// l'activité elle-même — qui n'en porte pas — mais sur le dossier ouvert à son
-// déclenchement. Sans dossier, c'est la date de début qui tranche entre une
-// activité encore à venir et une activité déjà en retard.
-const EXEC_GANTT_ETATS = ['termine', 'en_cours', 'planifie', 'en_retard'];
-const EXEC_GANTT_COULEURS = {
-    termine: '#16a34a', en_cours: '#f59e0b', planifie: '#2563eb', en_retard: '#dc2626',
-};
+// de fin. Sa couleur dit son niveau d'avancement — les quatre niveaux communs
+// au module — et une pastille d'alerte signale le retard, qui se lit sur la
+// date de début et non sur l'avancement.
+
+// Filtres du panneau du calendrier : type d'activité, avancement et mode de
+// supervision. Le retard n'y figure pas, il n'est pas un niveau.
+function _execGanttFiltres() {
+    const G = EXEC_STATE.gantt || (EXEC_STATE.gantt = {});
+    if (!G.types) G.types = [];
+    if (!G.avancements) G.avancements = [];
+    if (!G.modes) G.modes = [];
+    return G;
+}
 
 function _execGanttDate(iso) {
     const m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(String(iso || ''));
@@ -667,10 +662,17 @@ function _execSuiviActivitesDonnees() {
     dossiers.forEach(d => { if (d.activite_id) dossierParActivite[d.activite_id] = d; });
     // L'avancement se lit sur la notification autant que sur le dossier, et se
     // cherche par la lignée de l'activité.
-    const { notifDe } = _execAvancementParActivite(dossiers);
+    const { notifDe, dossierParNotif } = _execAvancementParActivite(dossiers);
     const nomPrestataire = (id, repli) => {
         const p = prestataires.find(x => x.id === id);
         return (p && p.nom) || repli || '—';
+    };
+    // Le mode de supervision se filtre au panneau : la ligne porte son
+    // identifiant, et le libellé du référentiel pour l'affichage.
+    const modes = EXEC_STATE.data.modesSupervision || [];
+    const libelleMode = (id) => {
+        const m = modes.find(x => x.id === id);
+        return (m && (m.mode || m.libelle || m.nom)) || (id ? String(id) : te('sans_mode'));
     };
 
     const lignes = activites
@@ -679,10 +681,13 @@ function _execSuiviActivitesDonnees() {
             const dossier = dossierParActivite[a.id];
             const debut = _execGanttDate(a.date_debut);
             const fin = _execGanttDate(a.date_fin) || debut;
+            const notif = notifDe(a);
             return {
                 act: a, dossier,
                 debut, fin: fin < debut ? debut : fin,
-                etat: _execGanttEtat(a, dossier, aujourdhuiIso, notifDe(a)),
+                etat: _execGanttEtat(a, dossier, aujourdhuiIso, notif),
+                niveau: execAvancement(notif, dossier || (notif ? dossierParNotif[notif.id] : null)),
+                mode: libelleMode(a.mode_supervision_id),
                 type: _execGanttTypeLibelle(a),
                 horsPlan: false,
                 prestataire_id: a.prestataire_id || 'inconnu',
@@ -708,6 +713,8 @@ function _execSuiviActivitesDonnees() {
                 dossier,
                 debut, fin: fin < debut ? debut : fin,
                 etat: _execGanttEtat({ date_debut: n.date_activite }, dossier, aujourdhuiIso, n),
+                niveau: execAvancement(n, dossier),
+                mode: libelleMode(n.mode_supervision_id),
                 type: n.nature_activite || _execGanttTypeLibelle(n),
                 horsPlan: true,
                 prestataire_id: n.prestataire_id || 'inconnu',
@@ -719,17 +726,19 @@ function _execSuiviActivitesDonnees() {
 }
 
 function _execSuiviActivitesHtml() {
-    const G = EXEC_STATE.gantt || (EXEC_STATE.gantt = { types: [], etats: [] });
+    const G = _execGanttFiltres();
     const { lignes, aujourdhuiIso } = _execSuiviActivitesDonnees();
 
     // Les listes de filtres portent sur toutes les activités, pas seulement
     // sur celles qui restent visibles — sinon cocher une case ferait
     // disparaître les autres cases.
     const tousTypes = [...new Set(lignes.map(l => l.type))].sort((a, b) => a.localeCompare(b));
+    const tousModes = [...new Set(lignes.map(l => l.mode))].sort((a, b) => a.localeCompare(b));
 
     const visibles = lignes.filter(l =>
         (!G.types.length || G.types.includes(l.type))
-        && (!G.etats.length || G.etats.includes(l.etat)));
+        && (!G.avancements.length || G.avancements.includes(l.niveau))
+        && (!G.modes.length || G.modes.includes(l.mode)));
 
     const annee = EXEC_STATE.filters.annee
         ? parseInt(EXEC_STATE.filters.annee, 10) : new Date().getFullYear();
@@ -788,7 +797,7 @@ function _execSuiviActivitesHtml() {
                 <span class="g-activite-txt">${_esc(l.act.objet || l.act.titre || '—')}</span>
             </div>
             <div class="g-piste${paire}">
-                <div class="g-barre etat-${l.etat}" style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;"
+                <div class="g-barre avc-${l.niveau}" style="left:${gauche.toFixed(2)}%;width:${Math.min(largeur, 100 - gauche).toFixed(2)}%;"
                      onmouseenter="execGanttInfo(this, true)" onmouseleave="execGanttInfo(this, false)">
                     <span class="g-barre-txt">${_esc(l.type)}</span>
                     ${l.etat === 'en_retard' ? '<span class="g-alerte">!</span>' : ''}
@@ -797,8 +806,9 @@ function _execSuiviActivitesHtml() {
                     <div class="t">${_esc(l.act.objet || l.act.titre || '—')}</div>
                     ${ref ? `<div><span>${te('reference')}</span> ${_esc(ref)}</div>` : ''}
                     <div><span>${te('gantt_dates')}</span> ${jour(l.debut)} → ${jour(l.fin)}</div>
-                    <div><span>${te('statut')}</span> ${te('gantt_' + l.etat)}</div>
+                    <div><span>${te('avancement')}</span> ${te('avancement_' + l.niveau)}${l.etat === 'en_retard' ? ` — ${te('gantt_en_retard')}` : ''}</div>
                     <div><span>${te('gantt_type_audit')}</span> ${_esc(l.type)}</div>
+                    <div><span>${te('mode_supervision')}</span> ${_esc(l.mode)}</div>
                     ${l.horsPlan ? `<div><span>${te('gantt_origine')}</span> ${te('gantt_hors_plan')}</div>` : ''}
                     ${l.act.lieu_activite ? `<div><span>${te('gantt_lieu')}</span> ${_esc(l.act.lieu_activite)}</div>` : ''}
                 </div>
@@ -861,8 +871,15 @@ function _execSuiviActivitesHtml() {
                         : `<div class="g-bloc-vide">${te('no_data')}</div>`}
                 </div>
                 <div class="g-bloc">
-                    <div class="g-bloc-titre">${te('statut')}</div>
-                    ${EXEC_GANTT_ETATS.map(e => caseFiltre('etats', e, te('gantt_' + e), EXEC_GANTT_COULEURS[e])).join('')}
+                    <div class="g-bloc-titre">${te('avancement')}</div>
+                    ${EXEC_AVANCEMENTS.map(n => caseFiltre('avancements', n, te('avancement_' + n),
+                        EXEC_AVANCEMENT_COULEURS[n])).join('')}
+                </div>
+                <div class="g-bloc">
+                    <div class="g-bloc-titre">${te('mode_supervision')}</div>
+                    ${tousModes.length
+                        ? tousModes.map(m => caseFiltre('modes', m, m, '')).join('')
+                        : `<div class="g-bloc-vide">${te('no_data')}</div>`}
                 </div>
             </aside>
         </div>
@@ -918,7 +935,7 @@ function execGanttInfo(barre, montrer) {
 
 // Un filtre du panneau : on ne refait que la section, pas le tableau de bord.
 function execGanttFiltrer(groupe, valeur, coche) {
-    const G = EXEC_STATE.gantt || (EXEC_STATE.gantt = { types: [], etats: [] });
+    const G = _execGanttFiltres();
     const liste = G[groupe] || (G[groupe] = []);
     const i = liste.indexOf(valeur);
     if (coche && i === -1) liste.push(valeur);
@@ -959,7 +976,7 @@ function execRenderDashboard() {
         allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
         totalConst, closedConst, tauxClotureConst,
         fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
-        fncAlerts, fncEnRetard, fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
+        fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
         pacNonSoumis, pacAccepte, pacRejete, pacEnExamen,
     } = SG;
 
@@ -1090,30 +1107,10 @@ function execRenderDashboard() {
         </div>
 
         ${_execRenderFilterBar('execRenderPage()', isPrest
-            ? { showAnnee: true, showTrimestre: true, showDomaine: false, showSecteur: false, showPrestataire: true, showStatut: false, showSearch: true }
-            : { showAnnee: true, showTrimestre: true, showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showSearch: true })}
+            ? { showAnnee: false, showTrimestre: false, showDomaine: false, showSecteur: false, showPrestataire: true, showStatut: false, showSearch: true }
+            : { showAnnee: false, showTrimestre: false, showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showSearch: true })}
 
-        ${fncAlerts.length > 0 ? `
-        <details class="card" style="border-left:4px solid #ef4444;margin-bottom:1.25rem;">
-            <summary style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;list-style:none;">
-                ${EXEC_ICONS.alarm}
-                <strong style="color:#ef4444">${te('alertes')}</strong>
-                <span style="background:#ef4444;color:#fff;border-radius:10px;padding:0.05rem 0.5rem;font-size:0.74rem;font-weight:700;">${fncAlerts.length}</span>
-                ${fncEnRetard ? `<span style="background:#7f1d1d;color:#fff;border-radius:10px;padding:0.05rem 0.5rem;font-size:0.74rem;font-weight:700;">${fncEnRetard} ${te('en_retard')}</span>` : ''}
-            </summary>
-            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">
-                ${fncAlerts.map(f => `<div class="exec-alerte-ligne">
-                    <span>
-                        <strong style="color:var(--text);">${_esc(f.reference || '')}</strong>
-                        ${_execConstaHorsActivite(f) ? `<span class="exec-alerte-origine">${te('hors_activite_court')}</span>` : ''}
-                        ${_esc(f.titre || f.description || '').substring(0, 60)}
-                    </span>
-                    ${f._jours < 0
-                        ? `<span style="color:#7f1d1d;font-weight:700;">${te('en_retard')} ${Math.abs(f._jours)} j</span>`
-                        : _daysUntilBadge(_execConstaEcheance(f))}
-                </div>`).join('')}
-            </div>
-        </details>` : ''}
+        ${_execBoutonsAnnees(EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [], F)}
 
         ${suiviHtml}
 

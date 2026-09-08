@@ -518,10 +518,12 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.exec-module .exec-gantt .g-barre.etat-termine   { background: #16a34a; }
-.exec-module .exec-gantt .g-barre.etat-en_cours  { background: #f59e0b; }
-.exec-module .exec-gantt .g-barre.etat-planifie  { background: #2563eb; }
-.exec-module .exec-gantt .g-barre.etat-en_retard { background: #dc2626; }
+/* La barre porte les quatre niveaux d'avancement ; le retard reste dit par la
+   pastille d'alerte, il ne change pas la couleur du niveau. */
+.exec-module .exec-gantt .g-barre.avc-non_initiee   { background: #64748b; }
+.exec-module .exec-gantt .g-barre.avc-initiee       { background: #2563eb; }
+.exec-module .exec-gantt .g-barre.avc-en_realisation { background: #f59e0b; }
+.exec-module .exec-gantt .g-barre.avc-realisee      { background: #16a34a; }
 .exec-module .exec-gantt .g-alerte {
     margin-left: auto;
     flex-shrink: 0;

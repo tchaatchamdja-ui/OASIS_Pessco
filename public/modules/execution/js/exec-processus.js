@@ -1212,34 +1212,45 @@ window.execProcNouvelleActivite = function (notifId) {
   const options = (liste, libelle) => (liste || [])
     .map((x) => `<option value="${x.id}">${_esc(libelle(x))}</option>`).join('');
 
+  // Trois blocs : qui est surveillé, comment l'activité est programmée, et ce
+  // qu'elle couvre. Le formulaire alignait ses onze champs d'un seul tenant,
+  // où l'obligatoire et le facultatif se mêlaient.
+  const req = '<span class="exec-hp-req">*</span>';
   const corps = `
     <div class="exec-proc-bloc">
-      <div class="exec-proc-grille">
+      <div class="exec-hp-bloc-titre">Organisme surveillé</div>
+      <div class="exec-proc-grille exec-hp-grille">
         <div>
-          <label class="form-label">Année *</label>
+          <label class="form-label">Année ${req}</label>
           <input type="number" class="form-control" id="hp_annee" value="${annee}" min="2000" max="2100">
         </div>
         <div>
-          <label class="form-label">Domaine *</label>
+          <label class="form-label">Domaine ${req}</label>
           <select class="form-control" id="hp_domaine" onchange="execProcHpSecteurs()">
             <option value="">— Choisir —</option>
             ${options(D.domaines, (d) => (d.code ? `${d.code} — ${d.nom}` : d.nom))}
           </select>
         </div>
         <div>
-          <label class="form-label">Secteur d'activité *</label>
+          <label class="form-label">Secteur d'activité ${req}</label>
           <select class="form-control" id="hp_secteur" onchange="execProcHpPrestataires()">
             <option value="">— Choisir un domaine —</option>
           </select>
         </div>
         <div>
-          <label class="form-label">Prestataire *</label>
+          <label class="form-label">Prestataire ${req}</label>
           <select class="form-control" id="hp_prestataire">
             <option value="">— Choisir un secteur —</option>
           </select>
         </div>
+      </div>
+    </div>
+
+    <div class="exec-proc-bloc">
+      <div class="exec-hp-bloc-titre">Programmation</div>
+      <div class="exec-proc-grille exec-hp-grille">
         <div>
-          <label class="form-label">Types de supervision</label>
+          <label class="form-label">Type de supervision</label>
           <select class="form-control" id="hp_type">
             <option value="">— Choisir —</option>
             ${(D.typesSupervision || []).map((t) => `<option value="${t.id}">${_esc(t.type_supervision || t.libelle || t.nom || '')}</option>`).join('')}
@@ -1261,10 +1272,6 @@ window.execProcNouvelleActivite = function (notifId) {
           <input type="date" class="form-control" id="hp_fin">
         </div>
         <div>
-          <label class="form-label">Lieu de l'activité</label>
-          <input type="text" class="form-control" id="hp_lieu" placeholder="Lieu de l'activité">
-        </div>
-        <div>
           <label class="form-label">Responsable de l'activité</label>
           <select class="form-control" id="hp_responsable">
             <option value="">— Choisir —</option>
@@ -1274,24 +1281,39 @@ window.execProcNouvelleActivite = function (notifId) {
         </div>
         <div>
           <label class="form-label">Nombre d'inspecteurs</label>
-          <input type="number" class="form-control" id="hp_nb_inspecteurs" min="1" max="99">
+          <input type="number" class="form-control" id="hp_nb_inspecteurs" min="1" max="99" placeholder="1">
+        </div>
+        <div class="exec-hp-pleine">
+          <label class="form-label">Lieu de l'activité</label>
+          <input type="text" class="form-control" id="hp_lieu" placeholder="Lieu de l'activité">
         </div>
       </div>
-      <label class="form-label">Objet de l'activité *</label>
+    </div>
+
+    <div class="exec-proc-bloc">
+      <div class="exec-hp-bloc-titre">Objet et périmètre</div>
+      <label class="form-label">Objet de l'activité ${req}</label>
       <input type="text" class="form-control" id="hp_objet" placeholder="Objet de la surveillance">
       <label class="form-label">Périmètre — sous-activités et thèmes de supervision</label>
       <div class="exec-hp-perimetre" id="hp_perimetre_liste">
         <p class="exec-proc-vide">Choisissez d'abord un secteur d'activité.</p>
       </div>
-      <p class="exec-proc-erreur" id="hp_erreur"></p>
-    </div>`;
+    </div>
+    <p class="exec-proc-erreur" id="hp_erreur"></p>`;
 
   const pied = `
     <button class="btn btn-outline" onclick="execCloseSlider()">Annuler</button>
     <button class="btn btn-primary" onclick="execProcCreerHorsPlan(${n ? `'${n.id}'` : ''})">
       ${(n ? EXEC_ICONS.check : EXEC_ICONS.send) || ''} ${n ? 'Enregistrer' : 'Déclencher'}</button>`;
 
-  execShowSlider(n ? 'Modifier l’activité hors plan' : 'Nouvelle activité hors plan', corps, pied, 'md');
+  // Retour en tête du volet, devant le nom du formulaire : le geste de sortie
+  // se prend là où le regard commence, sans chercher la croix ni le pied.
+  const titre = `
+    <button class="exec-slider-retour" onclick="execCloseSlider()">
+      ${EXEC_ICONS.back || ''} Retour
+    </button>
+    <span>${n ? 'Modifier l’activité hors plan' : 'Nouvelle activité hors plan'}</span>`;
+  execShowSlider(titre, corps, pied, 'md');
   if (n) execProcHpRemplir(n);
 };
 

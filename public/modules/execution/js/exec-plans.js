@@ -128,7 +128,13 @@ function execExportPlansPdf() {
 // plutôt que dans la barre de filtres : elle ne propose que les années qu'un
 // plan couvre effectivement, et se lit d'un coup d'œil.
 function _execBoutonsAnnees(plans, F) {
-    const annees = [...new Set((plans || []).map(p => p.annee).filter(Boolean).map(String))]
+    // Les années couvertes, plans et hors plan confondus : une activité hors
+    // plan porte elle-même son année, et sans elle son bouton manquait — la
+    // section restait inaccessible dès que son année n'était celle d'aucun plan.
+    const horsPlan = (EXEC_STATE.data.notifications || [])
+        .filter(n => n.hors_plan && Number(n.archive) !== 1).map(n => n.annee);
+    const annees = [...new Set([...(plans || []).map(p => p.annee), ...horsPlan]
+        .filter(Boolean).map(String))]
         .sort((a, b) => Number(b) - Number(a));
     if (!annees.length) return '';
     const retenue = String((F && F.annee) || '');

@@ -74,6 +74,33 @@
     color: var(--text-muted); font-size: .82rem; line-height: 1.45;
 }
 
+/* Formulaire d'une activité hors plan : trois blocs titrés, et l'obligatoire
+   marqué d'une étoile qui se voit. */
+.exec-hp-bloc-titre {
+    font-size: .78rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--primary);
+    padding-bottom: .35rem; margin-bottom: .7rem;
+    border-bottom: 1px solid var(--border);
+}
+.exec-hp-req { color: #dc2626; font-weight: 700; }
+/* Deux colonnes dès la largeur du volet : la grille commune demande 200 px par
+   champ, et les onze champs s'empilaient alors sur une seule colonne. */
+.exec-proc-grille.exec-hp-grille { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+/* Un champ qui prend toute la largeur de la grille, quel qu'en soit le nombre
+   de colonnes. */
+.exec-hp-pleine { grid-column: 1 / -1; }
+
+/* Retour en tête du volet : le bandeau est plein, le bouton s'y détache d'un
+   fond translucide plutôt que d'une couleur qui jurerait. */
+.exec-slider-retour {
+    display: inline-flex; align-items: center; gap: .35rem;
+    padding: .25rem .65rem; margin-right: .2rem;
+    border: 1px solid #ffffff59; border-radius: 6px;
+    background: #ffffff24; cursor: pointer;
+    font-size: .8rem; font-weight: 600; font-family: inherit;
+}
+.exec-slider-retour:hover { background: #ffffff3d; }
+
 /* Périmètre d'une activité hors plan : sous-activités et thèmes à cocher. */
 .exec-hp-perimetre {
     max-height: 240px; overflow-y: auto;

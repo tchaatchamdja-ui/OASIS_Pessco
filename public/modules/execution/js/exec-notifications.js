@@ -462,6 +462,9 @@ function execOpenNotificationForm(data) {
     `;
 
     execShowSlider(`${EXEC_ICONS.trigger} Notification`, bodyHtml, footerHtml, 'max');
+    // Règles communes des dates : le début dans l'année déclarée quand
+    // l'activité en porte une, la fin jamais avant le début.
+    oasisDatesLier({ annee: (data && data.annee) || '', debut: 'notif_date_debut', fin: 'notif_date_fin' });
 }
 
 function _getFilteredInspecteurs() {
@@ -586,6 +589,8 @@ function _collectNotificationForm() {
 }
 
 async function execSaveNotificationDraft() {
+    if (!oasisDatesValider({ annee: (EXEC_STATE.selectedNotification || {}).annee || '',
+        debut: 'notif_date_debut', fin: 'notif_date_fin' })) return;
     const data = _collectNotificationForm();
     const existing = EXEC_STATE.selectedNotification;
     try {
@@ -1166,6 +1171,8 @@ async function execOpenExchangeSlider(notifId) {
     `;
 
     execShowSlider(`${EXEC_ICONS.chat} ${te('gerer_echange')}`, bodyHtml, footerHtml, 'third');
+    // Dates de l'accord : la fin ne précède pas le début.
+    oasisDatesLier({ debut: 'exec_accord_debut', fin: 'exec_accord_fin' });
     // Scroll the chat container to the latest message (WhatsApp-like behaviour)
     setTimeout(() => {
         const tl = document.getElementById('exec_exchange_timeline');
@@ -1188,6 +1195,7 @@ async function execSendExchangeMessage(notifId) {
 }
 
 async function execValidateAccord(notifId) {
+    if (!oasisDatesValider({ debut: 'exec_accord_debut', fin: 'exec_accord_fin' })) return;
     const dateDebut = document.getElementById('exec_accord_debut')?.value || '';
     const dateFin = document.getElementById('exec_accord_fin')?.value || '';
     const perimetre = document.getElementById('exec_accord_perimetre')?.value || '';
@@ -1211,10 +1219,12 @@ function execToggleEnvoiPanel(notifId, btn) {
     const open = panel.style.display === 'none';
     panel.style.display = open ? '' : 'none';
     if (btn) btn.classList.toggle('active', open);
+    if (open) oasisDatesLier({ debut: 'exec_row_debut_' + notifId, fin: 'exec_row_fin_' + notifId });
 }
 
 // Validation de l'accord directement depuis la ligne (mêmes effets que « Valider l'Accord »).
 async function execValidateAccordRow(notifId) {
+    if (!oasisDatesValider({ debut: 'exec_row_debut_' + notifId, fin: 'exec_row_fin_' + notifId })) return;
     const dateDebut = document.getElementById('exec_row_debut_' + notifId)?.value || '';
     const dateFin = document.getElementById('exec_row_fin_' + notifId)?.value || '';
     const perimetre = document.getElementById('exec_row_perimetre_' + notifId)?.value || '';

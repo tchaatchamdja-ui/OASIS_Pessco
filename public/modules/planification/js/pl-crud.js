@@ -439,6 +439,11 @@ function planShowActivityModal(planId, actId = '') {
 
     planShowModal(actId ? tp('edit') : tp('new_activity'), body, footer, 'modal-drawer modal-drawer-2-3');
 
+    // Règles communes des dates : une activité commence dans l'année de son
+    // plan — elle n'a pas de champ Année, c'est le plan qui la déclare — et
+    // ne se termine pas avant d'avoir commencé.
+    oasisDatesLier(_planDatesActivite());
+
     // ── Dynamic: SA/Themes table (columns = sous-activités) ──
     const secteurSelect = document.getElementById('actSecteur');
     const _renderSAThemesTable = () => {
@@ -533,6 +538,7 @@ function planShowActivityModal(planId, actId = '') {
 }
 
 async function planCreateActivity(planId) {
+    if (!oasisDatesValider(_planDatesActivite())) return;
     const data = _collectActivityForm();
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/activites`, { method: 'POST', body: JSON.stringify(data) });
@@ -547,6 +553,7 @@ async function planCreateActivity(planId) {
 }
 
 async function planUpdateActivity(actId) {
+    if (!oasisDatesValider(_planDatesActivite())) return;
     const data = _collectActivityForm();
     try {
         await api(`${PLAN_MODULE_API}/activites/${actId}`, { method: 'PUT', body: JSON.stringify(data) });
@@ -569,6 +576,14 @@ async function planDeleteActivity(actId) {
     } catch (e) {
         alert(e.message);
     }
+}
+
+// L'année déclarée d'une activité est celle de son plan.
+function _planDatesActivite() {
+    return {
+        annee: (PLAN_STATE.selectedPlan || {}).annee || '',
+        debut: 'actDebut', fin: 'actFin',
+    };
 }
 
 function _collectActivityForm() {

@@ -546,13 +546,13 @@ function renderEvalResults() {
                 <label style="display:flex;align-items:center;gap:0.3rem;color:var(--text-muted);white-space:nowrap;">
                     <span style="white-space:nowrap;">Début Cycle :</span>
                     <input type="date" value="${debut}" ${dInputAttrs}
-                        onchange="updateCycleDate('${ev.id}','debut',this.value,${csrbo || 0})"
+                        onchange="updateCycleDate('${ev.id}','debut',this.value,${csrbo || 0},this)"
                         style="${dInputStyle}">
                 </label>
                 <label style="display:flex;align-items:center;gap:0.3rem;color:var(--text-muted);white-space:nowrap;">
                     <span style="white-space:nowrap;">Fin Cycle :</span>
                     <input type="date" value="${fin}" ${dInputAttrs}
-                        onchange="updateCycleDate('${ev.id}','fin',this.value,${csrbo || 0})"
+                        onchange="updateCycleDate('${ev.id}','fin',this.value,${csrbo || 0},this)"
                         style="${dInputStyle}">
                 </label>
                 ${prCanReevaluer(ev)
@@ -2457,9 +2457,17 @@ async function decisionDirecteur(evalId, decision) {
 
 // Update Début/Fin Cycle on a validated evaluation. When Début changes, Fin is
 // auto-recalculated as Début + csrbo months (admin/validateur may override Fin manually).
-async function updateCycleDate(evalId, kind, value, csrbo) {
+async function updateCycleDate(evalId, kind, value, csrbo, champ) {
     const ev = APP_STATE.data.evaluations.find(e => e.id === evalId);
     if (!ev) return;
+    // Règle commune : le cycle ne se ferme pas avant de s'ouvrir. Les deux
+    // champs se saisissent côte à côte, sans identifiant — on les prend là.
+    const bande = champ && champ.closest ? champ.closest('div') : null;
+    const dates = bande ? [...bande.querySelectorAll('input[type="date"]')] : [];
+    if (dates.length === 2 && !oasisDatesValider({ debut: dates[0], fin: dates[1] })) {
+        renderPage();
+        return;
+    }
     if (!prCanValidate(ev.secteur_id)) {
         showToast('Seuls les privilèges Validateur ou Gestionnaire peuvent modifier les dates de cycle.', 'error');
         renderPage();

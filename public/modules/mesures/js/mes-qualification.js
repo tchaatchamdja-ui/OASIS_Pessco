@@ -339,7 +339,8 @@ function mesSectionMesuresArretees() {
                     <div class="mes-champ">
                         <label>Date de sanction</label>
                         <input type="date" class="mes-input" data-champ="date_sanction"
-                               value="${_mesAttr(m.date_sanction || '')}" ${offBloc}>
+                               value="${_mesAttr(m.date_sanction || '')}" ${offBloc}
+                               onchange="oasisDatesBorner(mesDatesSanction(${i}))">
                     </div>
                     <div class="mes-champ">
                         <label>Portée</label>
@@ -791,8 +792,20 @@ function mesQualDureeVersTerme(i) {
     fin.value = mesAjouterDuree(depart, valeur, unite);
 }
 
+// Les deux dates d'une sanction : celle qui la prononce et celle qui la lève.
+const mesDatesSanction = (i) => ({
+    debut: mesChampBloc(i, 'date_sanction'), fin: mesChampBloc(i, 'date_fin'),
+});
+
 // Le terme vient d'être posé : la durée s'en déduit, dans l'unité retenue.
+// Une sanction ne se lève pas avant d'être prononcée — la règle commune le dit
+// et marque les champs ; la durée reste alors vide.
 function mesQualTermeVersDuree(i) {
+    if (!oasisDatesValider(mesDatesSanction(i))) {
+        const champVide = mesChampBloc(i, 'duree_valeur');
+        if (champVide) champVide.value = '';
+        return;
+    }
     const depart = (mesChampBloc(i, 'date_sanction') || {}).value || '';
     const fin = (mesChampBloc(i, 'date_fin') || {}).value || '';
     const champ = mesChampBloc(i, 'duree_valeur');

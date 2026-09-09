@@ -592,11 +592,13 @@ function _buildStepRealisation(dossier, dossierId) {
                 </div>
                 <div class="form-group">
                     <label>${te('date_debut')}</label>
-                    <input type="date" class="form-input" id="realisation_date_debut" value="${_escAttr(vDateDebut)}" style="${bg}"${ro}>
+                    <input type="date" class="form-input" id="realisation_date_debut" value="${_escAttr(vDateDebut)}" style="${bg}"${ro}
+                           onchange="oasisDatesBorner({ debut: 'realisation_date_debut', fin: 'realisation_date_fin' })">
                 </div>
                 <div class="form-group">
                     <label>${te('date_fin')}</label>
-                    <input type="date" class="form-input" id="realisation_date_fin" value="${_escAttr(vDateFin)}" style="${bg}"${ro}>
+                    <input type="date" class="form-input" id="realisation_date_fin" value="${_escAttr(vDateFin)}" style="${bg}"${ro}
+                           onchange="oasisDatesBorner({ debut: 'realisation_date_debut', fin: 'realisation_date_fin' })">
                 </div>
                 <div class="form-group">
                     <label>${te('lieu')}</label>
@@ -1635,6 +1637,8 @@ function execAddRealisationProgrammeLine() {
 }
 
 async function execSaveRealisation(dossierId) {
+    // Règle commune : l'exécution ne se termine pas avant d'avoir commencé.
+    if (!oasisDatesValider({ debut: 'realisation_date_debut', fin: 'realisation_date_fin' })) return;
     const act = document.getElementById('realisation_activite');
     const payload = {};
     // Collect structured equipe

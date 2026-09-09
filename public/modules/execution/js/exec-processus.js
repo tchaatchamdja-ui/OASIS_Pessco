@@ -153,9 +153,9 @@ function execProcColonneAccord() {
   return `<h4 class="exec-proc-col-titre">Confirmer l'activité</h4>
     <div class="exec-proc-bloc">
       <label class="form-label">Date de début confirmée</label>
-      <input type="date" class="form-control" id="exec_proc_debut" value="${_escAttr((n.date_debut_effective || n.date_activite || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
+      <input type="date" class="form-control" onchange="oasisDatesBorner(EXEC_PROC_DATES)" id="exec_proc_debut" value="${_escAttr((n.date_debut_effective || n.date_activite || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
       <label class="form-label">Date de fin confirmée</label>
-      <input type="date" class="form-control" id="exec_proc_fin" value="${_escAttr((n.date_fin_effective || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
+      <input type="date" class="form-control" onchange="oasisDatesBorner(EXEC_PROC_DATES)" id="exec_proc_fin" value="${_escAttr((n.date_fin_effective || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
       <label class="form-label">Périmètre validé</label>
       <textarea class="form-control" id="exec_proc_perimetre" rows="8" ${peut ? '' : 'disabled'}>${_esc(n.perimetre_valide || n.perimetre_activite || '')}</textarea>
       ${peut ? `<div class="exec-proc-accord-actions">
@@ -172,6 +172,7 @@ function execProcColonneAccord() {
 window.execProcEnregistrerAccord = async function () {
   const val = (id) => (document.getElementById(id) || {}).value || '';
   if (!EXEC_PROC.notif) return;
+  if (!oasisDatesValider(EXEC_PROC_DATES)) return;
   try {
     await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/accord`, {
       method: 'PUT',
@@ -1112,6 +1113,7 @@ window.execProcRejeter = async function () {
 
 window.execProcValiderAccord = async function () {
   const val = (id) => (document.getElementById(id) || {}).value || '';
+  if (!oasisDatesValider(EXEC_PROC_DATES)) return;
   const ok = await execProcConfirmer({
     titre: 'Confirmer l’activité',
     message: 'Les dates et le périmètre retenus sont arrêtés, le dossier d’exécution est ouvert.',
@@ -1316,56 +1318,20 @@ window.execProcNouvelleActivite = function (notifId) {
     <span>${n ? 'Modifier l’activité hors plan' : 'Nouvelle activité hors plan'}</span>`;
   execShowSlider(titre, corps, pied, 'md');
   if (n) execProcHpRemplir(n);
+  oasisDatesLier(EXEC_HP_DATES);
 };
 
 // Bornes des deux dates : le début tombe dans l'année déclarée, la fin ne
 // précède pas le début. Les bornes se posent sur les champs eux-mêmes — le
 // calendrier n'ouvre alors que sur ce qui est acceptable — et se vérifient
 // à l'enregistrement, la saisie au clavier ne les respectant pas.
-window.execProcHpBornerDates = function () {
-  const annee = ((document.getElementById('hp_annee') || {}).value || '').trim();
-  const debut = document.getElementById('hp_debut');
-  const fin = document.getElementById('hp_fin');
-  if (debut) {
-    debut.min = /^\d{4}$/.test(annee) ? `${annee}-01-01` : '';
-    debut.max = /^\d{4}$/.test(annee) ? `${annee}-12-31` : '';
-  }
-  if (fin) fin.min = (debut && debut.value) || '';
-  // La bordure rouge suit la correction : elle s'efface dès que les règles
-  // sont tenues, et ne s'allume pas d'elle-même avant un enregistrement — on
-  // ne signale pas une faute à qui est encore en train de saisir.
-  if (!document.querySelector('#execSlider .exec-champ-invalide')) return;
-  const ctrl = execProcHpControleDates();
-  execProcHpMarquerDates(ctrl.champs);
-  const erreur = document.getElementById('hp_erreur');
-  if (erreur && !ctrl.message) erreur.textContent = '';
-};
-
-// Contrôle des deux règles : le message à dire, et les champs qu'il désigne.
-function execProcHpControleDates() {
-  const val = (id) => ((document.getElementById(id) || {}).value || '').trim();
-  const annee = val('hp_annee');
-  const debut = val('hp_debut');
-  const fin = val('hp_fin');
-  if (debut && annee && debut.slice(0, 4) !== annee) {
-    return { message: `La date de début doit être dans l’année ${annee}.`, champs: ['hp_annee', 'hp_debut'] };
-  }
-  if (debut && fin && fin < debut) {
-    return {
-      message: 'La date de fin doit être postérieure ou égale à la date de début.',
-      champs: ['hp_debut', 'hp_fin'],
-    };
-  }
-  return { message: '', champs: [] };
-}
-
-// Les champs fautifs prennent la bordure rouge, les autres la rendent.
-function execProcHpMarquerDates(champs) {
-  ['hp_annee', 'hp_debut', 'hp_fin'].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('exec-champ-invalide', champs.indexOf(id) !== -1);
-  });
-}
+// Les deux règles de dates viennent du socle : le début dans l'année déclarée,
+// la fin jamais avant le début. Le formulaire n'en tient que le branchement.
+const EXEC_HP_DATES = { annee: 'hp_annee', debut: 'hp_debut', fin: 'hp_fin' };
+// Les dates confirmées de l'étape « Confirmation » suivent la seconde règle :
+// l'activité ne se termine pas avant d'avoir commencé.
+const EXEC_PROC_DATES = { debut: 'exec_proc_debut', fin: 'exec_proc_fin' };
+window.execProcHpBornerDates = function () { oasisDatesBorner(EXEC_HP_DATES); };
 
 // Reprise d'une activité hors plan : les listes en cascade se garnissent dans
 // l'ordre — domaine, puis secteur, puis prestataire et périmètre — chacune
@@ -1521,17 +1487,11 @@ window.execProcCreerHorsPlan = async function (notifId) {
     erreur.textContent = `À renseigner : ${manquants.map(([, l]) => l).join(', ')}.`;
     return;
   }
-  // Règles de dates : la faute se dit en clair, à l'écran et par un retour
-  // flottant, et se montre sur les champs qu'elle concerne.
-  const dates = execProcHpControleDates();
-  execProcHpMarquerDates(dates.champs);
-  if (dates.message) {
-    erreur.textContent = dates.message;
-    _execToast(dates.message, 'warning');
-    const premier = document.getElementById(dates.champs[dates.champs.length - 1]);
-    if (premier) premier.focus();
-    return;
-  }
+  // Règles de dates : la faute se dit par le panneau flottant et se montre sur
+  // les champs qu'elle concerne ; le pied du formulaire la reprend en clair.
+  const dates = oasisDatesControler(EXEC_HP_DATES);
+  if (!oasisDatesValider(EXEC_HP_DATES)) { erreur.textContent = dates.message; return; }
+  erreur.textContent = '';
   const corps = {
     hors_plan: true,
     annee: val('hp_annee'),

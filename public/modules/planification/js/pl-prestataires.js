@@ -70,10 +70,10 @@ function planRenderPrestataires() {
                                 <td>${p.csrbo || '-'} mois</td>
                                 <td>${_esc(p.intensite || '-')}</td>
                                 <td>${canEditCycles ?
-                                    `<input type="date" class="cycle-date-input" value="${p.debut_cycle || ''}" onchange="planUpdateCycleDate('${p.id}','debut_cycle',this.value)">` :
+                                    `<input type="date" class="cycle-date-input" value="${p.debut_cycle || ''}" onchange="planUpdateCycleDate('${p.id}','debut_cycle',this.value,this)">` :
                                     (p.debut_cycle || '-')}</td>
                                 <td>${canEditCycles ?
-                                    `<input type="date" class="cycle-date-input" value="${p.fin_cycle || ''}" onchange="planUpdateCycleDate('${p.id}','fin_cycle',this.value)">` :
+                                    `<input type="date" class="cycle-date-input" value="${p.fin_cycle || ''}" onchange="planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)">` :
                                     (p.fin_cycle || '-')}</td>
                                 <td>${(rpByPrestId.get(p.id)?.date_validation || p.evaluation_date || '').substring(0, 10)}</td>
                                 <td><button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}">${PLAN_ICONS.chevron}</button></td>
@@ -142,7 +142,12 @@ function _parseSADetails(prest) {
     return saDetails;
 }
 
-async function planUpdateCycleDate(prestId, field, value) {
+async function planUpdateCycleDate(prestId, field, value, champ) {
+    // Saisie en ligne : les deux dates du cycle sont les deux champs de la
+    // ligne, sans identifiant — le contrôle les y prend.
+    const ligne = champ && champ.closest ? champ.closest('tr') : null;
+    const dates = ligne ? [...ligne.querySelectorAll('.cycle-date-input')] : [];
+    if (dates.length === 2 && !oasisDatesValider({ debut: dates[0], fin: dates[1] })) return;
     try {
         const prest = (PLAN_STATE.data.prestataireRisques || []).find(p => p.id === prestId);
         const data = {
@@ -240,6 +245,8 @@ function planShowAddRiskProfileModal() {
         <button class="btn btn-primary" onclick="planSaveRiskProfile()">${tp('save')}</button>`;
 
     planShowModal(tp('add_risk_profile'), body, footer, 'modal-lg');
+    // Le cycle ne se ferme pas avant de s'ouvrir.
+    oasisDatesLier({ debut: 'rpDebutCycle', fin: 'rpFinCycle' });
 }
 
 function planRPFillDefaults() {
@@ -285,6 +292,7 @@ function planRPRenderSARows() {
 }
 
 async function planSaveRiskProfile() {
+    if (!oasisDatesValider({ debut: 'rpDebutCycle', fin: 'rpFinCycle' })) return;
     const pid = document.getElementById('rpPrestataire')?.value || '';
     const secteurId = document.getElementById('rpSecteur')?.value || '';
     const riskLabel = document.getElementById('rpRiskLabel')?.value || '';

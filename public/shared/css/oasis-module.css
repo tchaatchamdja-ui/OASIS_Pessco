@@ -307,6 +307,18 @@ a:hover { text-decoration: underline; }
     display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
     transition: all 0.2s;
 }
+/* Champ refusé par une règle de saisie : la bordure reste rouge jusqu'à
+   correction. Chaque module habille ses champs à sa façon — l'écart passe
+   donc en force, sans quoi il se perdrait selon l'écran. */
+input.oasis-champ-invalide,
+select.oasis-champ-invalide,
+textarea.oasis-champ-invalide,
+input.oasis-champ-invalide:focus,
+select.oasis-champ-invalide:focus,
+textarea.oasis-champ-invalide:focus {
+    border-color: #dc2626 !important;
+    box-shadow: 0 0 0 3px #dc26261f !important;
+}
 .btn-icon:hover { background: var(--bg); color: var(--primary); }
 /* Un bouton d'icône fermé : il reste lisible, et dit par son curseur qu'il
    n'attend pas de clic — sans quoi le survol continuait de l'annoncer actif. */

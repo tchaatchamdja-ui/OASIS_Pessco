@@ -21,9 +21,29 @@ module.exports = function register(app, deps, M) {
       .map((a) => ({ ...a, verrouillee: D.estVerrouillee(a) ? 1 : 0 })));
   });
 
+  // Les deux règles communes aux dates : une activité commence dans l'année de
+  // son plan — c'est le plan qui la déclare — et ne se termine pas avant
+  // d'avoir commencé. Les formulaires les posent déjà ; la saisie au clavier
+  // passe outre les bornes d'un champ de date, la règle tient donc ici aussi.
+  const refusDates = (res, plan, a) => {
+    const annee = plan && plan.annee ? String(plan.annee) : '';
+    const debut = String(a.date_debut || '');
+    const fin = String(a.date_fin || '');
+    if (debut && annee && debut.slice(0, 4) !== annee) {
+      res.status(400).json({ error: `La date de début doit être dans l’année ${annee}.` });
+      return true;
+    }
+    if (debut && fin && fin < debut) {
+      res.status(400).json({ error: 'La date de fin doit être postérieure ou égale à la date de début.' });
+      return true;
+    }
+    return false;
+  };
+
   app.post(`${M}/plans/:id/activites`, requireAuth, valider(D.SCHEMA_ACTIVITE), (req, res) => {
     const plan = D.planDe(req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
+    if (refusDates(res, plan, req.valide)) return undefined;
     // L'activité appartient à l'instance de son plan.
     return res.json(db.createIn('activites', {
       ...req.valide, plan_id: req.params.id, instance: instances.de(plan, loadConfig),
@@ -49,6 +69,7 @@ module.exports = function register(app, deps, M) {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
     if (act && D.estVerrouillee(act)) return D.refusVerrou(res);
+    if (refusDates(res, act && D.planDe(act.plan_id), { ...act, ...req.valide })) return undefined;
     const rec = db.updateIn('activites', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   });

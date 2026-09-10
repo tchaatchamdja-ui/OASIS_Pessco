@@ -177,7 +177,7 @@ function mesHistoriqueEtapes(t, mesures) {
                     nom: 'Mesures au registre',
                     jalons: (mesures || []).map((m) => j(m.date_creation,
                         `${m.reference} — ${mesLibelleCategorie(m.categorie)}`, m.created_by,
-                        (MES_SUIVI[mesStatutSuivi(m)] || {}).libelle)).filter(Boolean),
+                        mesLibelleSuivi(mesStatutSuivi(m)))).filter(Boolean),
                 },
                 {
                     nom: 'Clôture',
@@ -293,12 +293,14 @@ function mesMesuresDeCarence(constatationId) {
     };
 
     const blocs = liees.map((m) => {
-        const suivi = MES_SUIVI[mesStatutSuivi(m)] || {};
+        const cleSuivi = mesStatutSuivi(m);
+        const suivi = MES_SUIVI[cleSuivi] || {};
         return `<div class="mes-bloc">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(m.reference || 'Mesure')}</span>
                 <span class="mes-badge ${_mesAttr(suivi.classe || '')}"
-                      title="${_mesAttr(suivi.aide || '')}">${_mesEsc(suivi.libelle || '—')}</span>
+                      title="${_mesAttr(MES_SUIVI[cleSuivi] ? mesAideSuivi(cleSuivi) : '')}">${
+                          _mesEsc(MES_SUIVI[cleSuivi] ? mesLibelleSuivi(cleSuivi) : '—')}</span>
             </div>
             <div class="mes-bloc-corps">
                 <dl style="margin:0;">

@@ -114,7 +114,7 @@ function mesBlocSuiviMesure(m, i) {
                     ${Object.entries(MES_SUIVI).map(([cle, e]) => `<option value="${_mesAttr(cle)}"
                         ${statut === cle ? 'selected' : ''}>${_mesEsc(e.libelle)}</option>`).join('')}
                 </select>
-                <p class="mes-note">${_mesEsc((MES_SUIVI[statut] || {}).aide || '')}</p>
+                <p class="mes-note">${_mesEsc(MES_SUIVI[statut] ? mesAideSuivi(statut) : '')}</p>
             </div>
             <div class="mes-champ" style="margin-bottom:0;">
                 <label>Pièces jointes</label>

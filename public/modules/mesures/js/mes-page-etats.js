@@ -118,7 +118,7 @@ const mesEtatsLigneCarence = (c, colonnes) => `
 
 const mesEtatsReperes = (c) => `
     <td><strong>${_mesEsc(c.reference || '—')}</strong>
-        <div class="mes-sous-titre">${_mesEsc(MES_ORIGINES[c.origine] || c.origine || '')}</div></td>
+        <div class="mes-sous-titre">${_mesEsc(c.origine ? mesOrigine(c.origine) : '')}</div></td>
     <td>${_mesEsc(c.titre || '—')}</td>
     <td>${_mesEsc(c.prestataire_nom || '—')}</td>`;
 

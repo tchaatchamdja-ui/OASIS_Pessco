@@ -51,7 +51,7 @@ async function mesApi(chemin, options) {
     if (r.status === 401) {
         // Session perdue : le socle ramène la fenêtre entière à la connexion.
         oasisSessionPerdue();
-        throw new Error('Session expirée');
+        throw new Error(mt('session_expiree'));
     }
     if (!r.ok) {
         const err = await r.json().catch(() => ({ error: r.statusText }));
@@ -119,25 +119,25 @@ const MES_ICONS = {
 // retenu au filtre. Un écran de moins, et la mesure au même endroit que le
 // reste du pilotage.
 const MES_NAV = {
-    dashboard: { label: 'Tableau de Bord', icon: 'dashboard' },
+    dashboard: { cle: 'nav_dashboard', icon: 'dashboard' },
     // La carence précède la mesure : on la constate, puis on la sanctionne.
-    critiques: { label: 'Carences', icon: 'warning' },
-    mesures: { label: 'Mesures', icon: 'shield' },
+    critiques: { cle: 'nav_carences', icon: 'warning' },
+    mesures: { cle: 'nav_mesures', icon: 'shield' },
     // Les états ferment la marche : on y va pour savoir quoi faire ensuite,
     // non pour saisir — c'est la lecture d'ensemble des deux listes qui précèdent.
-    etats: { label: 'États', icon: 'chart' },
-    parametres: { label: 'Paramètres', icon: 'settings' },
+    etats: { cle: 'nav_etats', icon: 'chart' },
+    parametres: { cle: 'nav_parametres', icon: 'settings' },
 };
+// Le libellé d'une page se lit dans la langue retenue, au moment de l'afficher.
+const mesNavLabel = (page) => mt((MES_NAV[page] || {}).cle || page);
 
 // D'où vient la carence : chaque module la relève à sa façon, l'écran les
 // réunit sous les mêmes intitulés.
-const MES_ORIGINES = {
-    SURV: 'Exécution de la Surveillance',
-    SAFA: 'RAMP Inspections',
-    CARE: 'Relevée ici',
-};
+// Les trois provenances d'une carence, et les cinq statuts du circuit d'une
+// mesure : la clé demeure, le libellé se lit dans la langue retenue.
+const MES_CLES_ORIGINE = ['SURV', 'SAFA', 'CARE'];
+const mesOrigine = (code) => mt(`origine_${code}`);
 
-// Statuts que portent les carences reçues ou relevées.
 // Teintes des catégories de mesure : la gravité se lit à la couleur — l'orange
 // clair de la mesure administrative, l'orange franc de la sanction, le rouge du
 // pénal. Une
@@ -156,10 +156,6 @@ const MES_COULEUR_PAR_CODE = {
     penale: '#dc2626',
 };
 
-const MES_STATUTS_CONSTAT = {
-    ouverte: 'Ouverte', soldee: 'Soldée', classee: 'Classée',
-    en_cours: 'En cours', close: 'Close',
-};
 
 // Statut d'une carence au sens des mesures d'application : ce que ce module
 // en a fait, indépendamment de l'état qu'elle porte dans celui qui l'a
@@ -171,27 +167,26 @@ const MES_STATUTS_CONSTAT = {
 // `couleur` sert aux parts du tableau de bord, `classe` à la pastille de la
 // colonne « Statut » — de la même facture que celles de la colonne « Actions ».
 const MES_STATUT_CARE = {
-    a_traiter: { libelle: 'À traiter', couleur: '#dc2626', classe: 'st-a-traiter' },
-    investigations: { libelle: 'En investigation', couleur: '#ea580c', classe: 'st-investigations' },
-    qualification: { libelle: 'En qualification', couleur: '#d97706', classe: 'st-qualification' },
-    sous_suivi: { libelle: 'Sous suivi', couleur: '#0891b2', classe: 'st-sous-suivi' },
-    traitee: { libelle: 'Traitée', couleur: '#059669', classe: 'st-traitee' },
-    cloturee: { libelle: 'Clôturée', couleur: '#475569', classe: 'st-cloturee' },
-    classee: { libelle: 'Classée', couleur: '#7c3aed', classe: 'st-classee' },
+    a_traiter: { cle: 'care_a_traiter', couleur: '#dc2626', classe: 'st-a-traiter' },
+    investigations: { cle: 'care_investigations', couleur: '#ea580c', classe: 'st-investigations' },
+    qualification: { cle: 'care_qualification', couleur: '#d97706', classe: 'st-qualification' },
+    sous_suivi: { cle: 'care_sous_suivi', couleur: '#0891b2', classe: 'st-sous-suivi' },
+    traitee: { cle: 'care_traitee', couleur: '#059669', classe: 'st-traitee' },
+    cloturee: { cle: 'care_cloturee', couleur: '#475569', classe: 'st-cloturee' },
+    classee: { cle: 'care_classee', couleur: '#7c3aed', classe: 'st-classee' },
 };
+const mesLibelleCare = (cle) => mt((MES_STATUT_CARE[cle] || MES_STATUT_CARE.a_traiter).cle);
 
 // Le statut se lit en pastille, comme les mentions de la colonne « Actions » :
 // les deux colonnes disent la même chose du même dossier, elles le disent de
 // la même façon.
 const mesBadgeStatutCare = (cle) => {
     const st = MES_STATUT_CARE[cle] || MES_STATUT_CARE.a_traiter;
-    return `<span class="mes-badge ${st.classe}">${_mesEsc(st.libelle)}</span>`;
+    return `<span class="mes-badge ${st.classe}">${_mesEsc(mt(st.cle))}</span>`;
 };
 
-const MES_STATUTS = {
-    projet: 'Projet', notifiee: 'Notifiée', en_cours: 'En cours',
-    cloturee: 'Clôturée', annulee: 'Annulée',
-};
+const MES_CLES_STATUT = ['projet', 'notifiee', 'en_cours', 'cloturee', 'annulee'];
+const mesLibelleStatut = (cle) => mt(`mes_${cle}`);
 
 // ══════════════════════════════════════
 //  Droits
@@ -239,22 +234,18 @@ const mesEnRetard = (m) => !!m.date_echeance && m.date_echeance < mesJour() && !
 //
 // L'étape « Suivi des Mesures » les posera ; tant qu'elle n'existe pas, une
 // mesure arrêtée attend l'ouverture de son suivi, et le dit.
+// Les six états du suivi : la table ne retient que la classe d'affichage, le
+// libellé et l'explication viennent du répertoire de traduction.
 const MES_SUIVI = {
-    attendu: { libelle: 'Plan attendu', classe: 'notifiee',
-        aide: 'La mesure est arrêtée ; le plan d’action n’est pas encore déposé.' },
-    en_cours: { libelle: 'En cours de mise en œuvre', classe: 'en_cours',
-        aide: 'Le plan d’action est déposé et son exécution se poursuit.' },
-    solde: { libelle: 'Soldé', classe: 'cloturee',
-        aide: 'Le plan d’action a été exécuté et le suivi est clos.' },
-    sans_suite: { libelle: 'Sans suite', classe: 'annulee',
-        aide: 'La mesure a été abandonnée : aucun plan d’action n’est attendu.' },
-    sans_objet: { libelle: 'Suivi sans objet', classe: 'cloturee',
-        aide: 'L’instance a arrêté que la nature de cette mesure n’appelle pas '
-            + 'le suivi de sa mise en œuvre.' },
-    recours: { libelle: 'Recours', classe: 'majeure',
-        aide: 'Le prestataire a formé un recours contre cette mesure : '
-            + 'son suivi est suspendu tant que l’instance ne l’a pas examiné.' },
+    attendu: { classe: 'notifiee' },
+    en_cours: { classe: 'en_cours' },
+    solde: { classe: 'cloturee' },
+    sans_suite: { classe: 'annulee' },
+    sans_objet: { classe: 'cloturee' },
+    recours: { classe: 'majeure' },
 };
+const mesLibelleSuivi = (cle) => mt(`suivi_${cle}`);
+const mesAideSuivi = (cle) => mt(`suivi_${cle}_aide`);
 
 // Tant que le suivi n'est pas ouvert, l'état se déduit du circuit de la
 // mesure — une mesure annulée ne sera jamais suivie, une mesure clôturée l'a
@@ -274,7 +265,7 @@ function mesStatutMesure(m) {
     const cle = mesStatutSuivi(m);
     const e = MES_SUIVI[cle];
     const quand = cle === 'solde' ? m.date_cloture : (cle === 'attendu' ? m.date_notification : '');
-    return `<span class="mes-badge ${e.classe}" title="${_mesAttr(e.aide)}">${_mesEsc(e.libelle)}</span>
+    return `<span class="mes-badge ${e.classe}" title="${_mesAttr(mesAideSuivi(cle))}">${_mesEsc(mesLibelleSuivi(cle))}</span>
         ${quand ? `<div class="mes-cell-suite">${_mesEsc(mesDate(quand))}</div>` : ''}`;
 }
 
@@ -342,19 +333,19 @@ function mesRenderApp() {
 
     const nav = Object.entries(MES_NAV).map(([cle, cfg]) => `
         <button class="nav-btn ${S.currentPage === cle ? 'active' : ''}" data-page="${cle}"
-                onclick="mesNavigateTo('${cle}')" title="${_mesAttr(cfg.label)}">
-            ${MES_ICONS[cfg.icon] || ''} <span>${_mesEsc(cfg.label)}</span>
+                onclick="mesNavigateTo('${cle}')" title="${_mesAttr(mt(cfg.cle))}">
+            ${MES_ICONS[cfg.icon] || ''} <span>${_mesEsc(mt(cfg.cle))}</span>
         </button>`).join('');
 
-    const titrePage = (MES_NAV[S.currentPage] || {}).label || '';
-    const titre = titrePage ? `Mesures d'Application / ${titrePage}` : "Mesures d'Application";
+    const titrePage = MES_NAV[S.currentPage] ? mesNavLabel(S.currentPage) : '';
+    const titre = titrePage ? mt('module_titre_page', titrePage) : mt('module_titre');
 
     document.getElementById('app').innerHTML = `
     <div class="app-layout mes-module ${S.sidebarCollapsed ? 'sidebar-collapsed' : ''}">
         <aside class="app-sidebar ${S.sidebarCollapsed ? 'collapsed' : ''}">
             <div class="sidebar-header">
-                <button class="btn-back-portal" onclick="mesRetourPortail()" title="Retour au portail">
-                    ${MES_ICONS.back} <span class="back-portal-label">Retour au portail</span>
+                <button class="btn-back-portal" onclick="mesRetourPortail()" title="${_mesAttr(mt('retour_portail'))}">
+                    ${MES_ICONS.back} <span class="back-portal-label">${_mesEsc(mt('retour_portail'))}</span>
                 </button>
             </div>
             <nav class="sidebar-nav">${nav}</nav>
@@ -588,7 +579,7 @@ function mesRenderDashboard() {
     const clos = liste.filter((m) => MES_CLOS.includes(m.statut)).length;
     const tauxCloture = liste.length ? Math.round((clos / liste.length) * 100) : 0;
     const visees = new Set(liste.map((m) => m.prestataire_id).filter(Boolean)).size;
-    const volumeStatut = Object.keys(MES_STATUTS).map((s) => compte(s));
+    const volumeStatut = MES_CLES_STATUT.map((s) => compte(s));
 
     // ── Côté constatations ──
     // C'est l'écart relevé qui appelle la mesure : le tableau de bord montre
@@ -606,9 +597,9 @@ function mesRenderDashboard() {
     const classees = constPortee.filter((c) => c.classee).length;
     const partClassees = constPortee.length ? Math.round((classees / constPortee.length) * 100) : 0;
 
-    const segmentsSource = Object.entries(MES_ORIGINES).map(([cle, libelle]) => ({
+    const segmentsSource = MES_CLES_ORIGINE.map((cle) => ({
         cle,
-        label: libelle,
+        label: mesOrigine(cle),
         value: constPortee.filter((c) => (c.origine || 'SURV') === cle).length,
         color: MES_COULEUR_PAR_SOURCE[cle],
     }));
@@ -647,44 +638,44 @@ function mesRenderDashboard() {
 
     const cartes = `
     <div class="oasis-kpi-groupes">
-        ${oasisKpiGroupe("Mesures d'application", [
+        ${oasisKpiGroupe(mt('grp_mesures'), [
             oasisKpiCarte({
-                titre: 'Mesures prises', couleur: '#b91c1c',
+                titre: mt('kpi_mesures_prises'), couleur: '#b91c1c',
                 valeur: liste.length,
-                precision: `${visees} prestataire${visees > 1 ? 's' : ''} visé${visees > 1 ? 's' : ''}`,
+                precision: mt('kpi_visees', visees),
                 figure: { type: 'barres', valeurs: volumeStatut },
             }),
             oasisKpiCarte({
-                titre: 'Échéance dépassée', couleur: '#dc2626', alerte: !!enRetard,
+                titre: mt('kpi_echeance_depassee'), couleur: '#dc2626', alerte: !!enRetard,
                 valeur: enRetard,
-                precision: proche ? `${proche} à échéance sous 30 j` : 'aucune à échéance proche',
-                figure: { type: 'retard', pastille: 'Dépassée', legende: 'Émission' },
+                precision: proche ? mt('kpi_proche', proche) : mt('kpi_aucune_proche'),
+                figure: { type: 'retard', pastille: mt('kpi_depassee'), legende: mt('kpi_emission') },
             }),
             oasisKpiCarte({
-                titre: 'Taux de clôture', couleur: '#059669',
+                titre: mt('kpi_taux_cloture'), couleur: '#059669',
                 valeur: `${tauxCloture} %`,
-                precision: `${clos} clôturée${clos > 1 ? 's' : ''} sur ${liste.length}`,
+                precision: mt('kpi_cloturees_sur', clos, liste.length),
                 figure: { type: 'cloture', pct: tauxCloture },
             }),
         ])}
-        ${oasisKpiGroupe('Carences Graves Suivies', [
+        ${oasisKpiGroupe(mt('grp_carences'), [
             oasisKpiCarte({
-                titre: 'Constatations', couleur: '#ea580c',
+                titre: mt('kpi_constatations'), couleur: '#ea580c',
                 valeur: constPortee.length,
-                precision: `${reglees} réglée${reglees > 1 ? 's' : ''} · ${tauxRegle} %`,
+                precision: mt('kpi_reglees', reglees, tauxRegle),
                 figure: { type: 'jauge', pct: tauxRegle },
             }),
             oasisKpiCarte({
-                titre: 'À traiter', couleur: '#dc2626', alerte: !!aTraiter,
+                titre: mt('kpi_a_traiter'), couleur: '#dc2626', alerte: !!aTraiter,
                 valeur: aTraiter,
-                precision: `sur ${constPortee.length} carence${constPortee.length > 1 ? 's' : ''}`,
-                figure: { type: 'echelle', position: positionATraiter, min: 'Maîtrisé', max: 'À traiter' },
+                precision: mt('kpi_sur_carences', constPortee.length),
+                figure: { type: 'echelle', position: positionATraiter, min: mt('kpi_maitrise'), max: mt('kpi_a_traiter') },
             }),
             // Classée : l'autorité a décidé qu'aucune mesure ne serait prise.
             oasisKpiCarte({
-                titre: 'Classées', couleur: '#7c3aed',
+                titre: mt('kpi_classees'), couleur: '#7c3aed',
                 valeur: classees,
-                precision: `sur ${constPortee.length} carence${constPortee.length > 1 ? 's' : ''}`,
+                precision: mt('kpi_sur_carences', constPortee.length),
                 figure: { type: 'jauge', pct: partClassees },
             }),
         ])}
@@ -692,53 +683,53 @@ function mesRenderDashboard() {
 
     return `
     <div class="mes-page-header">
-        <h2>Tableau de Bord</h2>
+        <h2>${mt('nav_dashboard')}</h2>
     </div>
     <div class="mes-action-bar">
         <div class="mes-filtres">
             <select class="mes-select" onchange="mesSetFiltre('db_prest',this.value)">
-                <option value="">Tous prestataires</option>
+                <option value="">${mt('tous_prestataires')}</option>
                 ${MES_STATE.data.prestataires.map((p) => opt(p.id, p.nom, F.db_prest)).join('')}
             </select>
             <select class="mes-select" onchange="mesSetFiltre('db_cat',this.value)">
-                <option value="">Toutes catégories</option>
+                <option value="">${mt('toutes_categories')}</option>
                 ${mesCategories().map((c) => opt(c.code, c.libelle, F.db_cat)).join('')}
             </select>
             <select class="mes-select" onchange="mesSetFiltre('db_type',this.value)">
-                <option value="">Tous types</option>
+                <option value="">${mt('tous_types')}</option>
                 ${mesTypes().map((t) => opt(t.code, t.libelle, F.db_type)).join('')}
             </select>
             <select class="mes-select" onchange="mesSetFiltre('db_statut',this.value)">
-                <option value="">Tous statuts</option>
-                ${Object.entries(MES_STATUTS).map(([v, l]) => opt(v, l, F.db_statut)).join('')}
+                <option value="">${mt('tous_statuts')}</option>
+                ${MES_CLES_STATUT.map((v) => opt(v, mesLibelleStatut(v), F.db_statut)).join('')}
             </select>
             <select class="mes-select" onchange="mesSetFiltre('db_echeance',this.value)">
-                <option value="">Toutes échéances</option>
-                ${opt('retard', 'Échéance dépassée', F.db_echeance)}
-                ${opt('proche', 'Échéance ≤ 30 j', F.db_echeance)}
-                ${opt('sans', 'Sans échéance', F.db_echeance)}
+                <option value="">${mt('toutes_echeances')}</option>
+                ${opt('retard', mt('ech_retard'), F.db_echeance)}
+                ${opt('proche', mt('ech_proche'), F.db_echeance)}
+                ${opt('sans', mt('ech_sans'), F.db_echeance)}
             </select>
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresDashboard()"
-                    title="Réinitialiser les filtres">${MES_ICONS.reset}</button>
+                    title="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
         </div>
     </div>
     ${cartes}
     <div class="mes-grille-2">
         <div class="mes-card">
-            <div class="mes-card-titre">Par catégorie</div>${parCategorie}
+            <div class="mes-card-titre">${mt('par_categorie')}</div>${parCategorie}
         </div>
         <div class="mes-card">
-            <div class="mes-card-titre">Par source de carence</div>${parSource}
+            <div class="mes-card-titre">${mt('par_source')}</div>${parSource}
         </div>
     </div>
     <div class="mes-grille-2">
         <div class="mes-card">
-            <div class="mes-card-titre">Par type de mesure${catRetenue
+            <div class="mes-card-titre">${mt('par_type_mesure')}${catRetenue
                 ? ` — ${_mesEsc(mesLibelleCategorie(catRetenue))}` : ''}</div>${parType}
         </div>
         <div class="mes-card">
-            <div class="mes-card-titre">Par statut de carence${sourceRetenue
-                ? ` — ${_mesEsc(MES_ORIGINES[sourceRetenue] || sourceRetenue)}` : ''}</div>${parStatutConstat}
+            <div class="mes-card-titre">${mt('par_statut_carence')}${sourceRetenue
+                ? ` — ${_mesEsc(mesOrigine(sourceRetenue))}` : ''}</div>${parStatutConstat}
         </div>
     </div>
     `;
@@ -754,8 +745,8 @@ function mesFiltreCarence() {
     const id = MES_STATE.filtres.mes_carence;
     if (!id) return '';
     const c = (MES_STATE.data.constatations || []).find((x) => x.id === id) || {};
-    return `<span class="mes-filtre-carence">Carence ${_mesEsc(c.reference || id)}
-        <button class="btn-nu" title="Retirer ce filtre"
+    return `<span class="mes-filtre-carence">${_mesEsc(mt('carence_ref', c.reference || id))}
+        <button class="btn-nu" title="${_mesAttr(mt('retirer_filtre'))}"
                 onclick="mesSetFiltre('mes_carence','')">${MES_ICONS.x}</button></span>`;
 }
 
@@ -779,7 +770,7 @@ function mesMesuresFiltrees() {
 function mesLignesMesures() {
     const liste = mesMesuresFiltrees();
     if (!liste.length) {
-        return `<tr><td colspan="8" class="mes-table-vide">Aucune mesure ne correspond.</td></tr>`;
+        return `<tr><td colspan="8" class="mes-table-vide">${mt('aucune_mesure_corresp')}</td></tr>`;
     }
     return liste.map((m) => {
         const retard = mesEnRetard(m);
@@ -787,11 +778,11 @@ function mesLignesMesures() {
         // le bouton reste, pour ouvrir le dossier, mais cesse d'inviter.
         const suiviClos = ['solde', 'sans_suite', 'sans_objet'].includes(mesStatutSuivi(m));
         const portee = m.portee === 'illimitee'
-            ? '<span class="mes-badge annulee">Illimitée</span>'
+            ? `<span class="mes-badge annulee">${mt('illimitee')}</span>`
             : (m.portee === 'sans_objet'
-                ? '<span class="mes-badge">Sans objet</span>'
+                ? `<span class="mes-badge">${mt('sans_objet')}</span>`
                 : m.portee === 'temporelle'
-                ? `<span class="mes-badge en_cours">Limitée dans le temps</span>${m.duree_valeur
+                ? `<span class="mes-badge en_cours">${mt('limitee_temps')}</span>${m.duree_valeur
                     ? `<div style="font-size:.75rem;color:var(--text-muted);">${_mesEsc(
                         `${m.duree_valeur} ${m.duree_unite || 'jours'}`)}</div>` : ''}`
                 : '<span class="mes-preuve-vide">—</span>');
@@ -812,19 +803,17 @@ function mesLignesMesures() {
             <td>${m.date_sanction ? mesDate(m.date_sanction) : mesDate(m.date_emission)}</td>
             <td>${portee}</td>
             <td>${retard
-                ? `<span class="mes-date-retard" title="Échéance dépassée">${mesDate(m.date_echeance)}</span>`
+                ? `<span class="mes-date-retard" title="${_mesAttr(mt('echeance_depassee'))}">${mesDate(m.date_echeance)}</span>`
                 : mesDate(m.date_echeance)}</td>
             <td>${mesStatutMesure(m)}</td>
             <td class="mes-actions">
                 <div class="mes-actions-duo">
                     <button class="btn btn-sm ${suiviClos ? 'mes-btn-consulter' : 'mes-btn-mesure'}"
                             onclick="mesFaireLeSuivi('${m.id}')"
-                            title="${_mesAttr(suiviClos
-                                ? 'Le suivi de cette mesure est terminé : le dossier se consulte.'
-                                : 'Ouvre le traitement de la carence à l’étape « Suivi des Mesures »')}">
-                        ${MES_ICONS.check} ${suiviClos ? 'Consulté' : 'Suivi'}</button>
+                            title="${_mesAttr(suiviClos ? mt('suivi_termine_consulte') : mt('ouvre_suivi'))}">
+                        ${MES_ICONS.check} ${suiviClos ? mt('consulte') : mt('suivi')}</button>
                     ${mesEstSuperAdmin() ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger"
-                        title="Supprimer définitivement cette mesure"
+                        title="${_mesAttr(mt('supprimer_mesure'))}"
                         onclick="mesSupprimerMesure('${m.id}')">${MES_ICONS.delete}</button>` : ''}
                 </div>
             </td>
@@ -849,18 +838,18 @@ async function mesFaireLeSuivi(id) {
     const m = (MES_STATE.data.mesures || []).find((x) => x.id === id);
     if (!m) return;
     if (!m.constatation_id) {
-        mesToast('Cette mesure n’est rattachée à aucune carence', 'error');
+        mesToast(mt('mesure_sans_carence'), 'error');
         return;
     }
     const c = (MES_STATE.data.constatations || []).find((x) => x.id === m.constatation_id);
     if (!c) {
-        mesToast('Carence introuvable', 'error');
+        mesToast(mt('carence_introuvable'), 'error');
         return;
     }
     MES_STATE.carenceEnCours = c;
     MES_STATE.mesureEnCours = null;
     try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`); }
-    catch (e) { mesToast(e.message || 'Traitement illisible', 'error'); return; }
+    catch (e) { mesToast(e.message || mt('traitement_illisible'), 'error'); return; }
     // On ouvre là où le suivi se fait, quelle que soit l'étape atteinte.
     MES_STATE.etapeVue = 'suivi';
     mesAfficherSlider();
@@ -871,42 +860,42 @@ function mesRenderMesures() {
     const opt = (v, l, cur) => `<option value="${_mesAttr(v)}" ${cur === v ? 'selected' : ''}>${_mesEsc(l)}</option>`;
     return `
     <div class="mes-page-header">
-        <h2>Mesures</h2>
+        <h2>${mt('nav_mesures')}</h2>
         ${mesBoutonsExport('mesures')}
     </div>
     <div class="mes-action-bar">
         <div class="mes-filtres">
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('mes_categorie',this.value)">
-                <option value="">Toutes catégories</option>
+                <option value="">${mt('toutes_categories')}</option>
                 ${mesCategories().map((c) => opt(c.code, c.libelle, F.mes_categorie)).join('')}
             </select>
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('mes_statut',this.value)">
-                <option value="">Tous suivis</option>
-                ${Object.entries(MES_SUIVI).map(([v, e]) => opt(v, e.libelle, F.mes_statut)).join('')}
+                <option value="">${mt('tous_suivis')}</option>
+                ${Object.keys(MES_SUIVI).map((v) => opt(v, mt(`suivi_${v}`), F.mes_statut)).join('')}
             </select>
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('mes_prest',this.value)">
-                <option value="">Tous prestataires</option>
+                <option value="">${mt('tous_prestataires')}</option>
                 ${MES_STATE.data.prestataires.map((p) => opt(p.id, p.nom, F.mes_prest)).join('')}
             </select>
-            <input class="mes-input mes-filtre-large" type="text" placeholder="Rechercher…" value="${_mesAttr(F.mes_recherche)}"
+            <input class="mes-input mes-filtre-large" type="text" placeholder="${_mesAttr(mt('rechercher'))}" value="${_mesAttr(F.mes_recherche)}"
                    oninput="mesRechercher('mes_recherche', this.value)">
             ${mesFiltreCarence()}
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresMesures()"
-                    title="Réinitialiser les filtres">${MES_ICONS.reset}</button>
+                    title="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
         </div>
     </div>
     <div class="mes-card" style="padding:0;">
         <div class="mes-table-wrap">
             <table class="mes-table mes-table-plate">
                 <thead><tr>
-                    <th style="width:120px;">Référence</th>
-                    <th style="width:150px;">Prestataire</th>
-                    <th style="width:28%;">Catégorie / Type / Description</th>
-                    <th style="width:105px;">Date de sanction</th>
-                    <th style="width:120px;">Portée</th>
-                    <th style="width:105px;">Échéance</th>
-                    <th style="width:140px;">Statut de suivi</th>
-                    <th style="width:140px;text-align:center;">Actions</th>
+                    <th style="width:120px;">${mt('col_reference')}</th>
+                    <th style="width:150px;">${mt('col_prestataire')}</th>
+                    <th style="width:28%;">${mt('col_cat_type_desc')}</th>
+                    <th style="width:105px;">${mt('col_date_sanction')}</th>
+                    <th style="width:120px;">${mt('col_portee')}</th>
+                    <th style="width:105px;">${mt('col_echeance')}</th>
+                    <th style="width:140px;">${mt('col_statut_suivi')}</th>
+                    <th style="width:140px;text-align:center;">${mt('col_actions')}</th>
                 </tr></thead>
                 <tbody data-corps="mesures">${mesLignesMesures()}</tbody>
             </table>
@@ -922,11 +911,13 @@ function mesRenderMesures() {
 // indistinctement à « traiter » un dossier déjà bien avancé. Une carence
 // classée s'ouvre aussi : son dossier se consulte, il ne se modifie plus.
 const MES_LIBELLE_ETAPE = {
-    suite: 'Déclencher Traitement',
-    investigations: 'Investigations',
-    qualification: 'Qualification et Mesures',
-    suivi: 'Suivi des Mesures',
+    suite: 'etape_suite',
+    investigations: 'etape_investigations',
+    qualification: 'etape_qualification',
+    suivi: 'etape_suivi',
 };
+// La table ne retient que la clé : l'étape se nomme dans la langue retenue.
+const mesLibelleEtape = (etape) => mt(MES_LIBELLE_ETAPE[etape] || MES_LIBELLE_ETAPE.suite);
 
 function mesBoutonTraitement(c) {
     const etape = c.traitement_etape || 'suite';
@@ -934,16 +925,15 @@ function mesBoutonTraitement(c) {
     // classée. Atteindre l'étape « Suivi des Mesures » ne le clôt pas : le
     // bouton l'annonçait pourtant, quand le badge sous lui disait « Sous Suivi ».
     const clos = c.classee || (etape === 'suivi' && c.traitement_clos);
-    const libelle = clos ? 'Traitement clôturé'
-        : (MES_LIBELLE_ETAPE[etape] || MES_LIBELLE_ETAPE.suite);
+    const libelle = clos ? mt('traitement_cloture') : mesLibelleEtape(etape);
     // Un dossier clos se consulte : le bouton reste, sans l'accent de l'action.
     const classe = clos ? 'btn-outline' : 'mes-btn-mesure';
     if (!mesPeutEcrire() && !clos) return '';
     // Pas d'icône : le libellé porte seul le sens, et se centre dans le bouton
     // qu'il tienne sur une ligne ou deux.
     return `<button class="btn btn-sm ${classe}"
-        title="${_mesAttr(clos ? 'Consulter le dossier de traitement'
-            : `Poursuivre le traitement — étape « ${MES_LIBELLE_ETAPE[etape] || 'Suite à donner'} »`)}"
+        title="${_mesAttr(clos ? mt('consulter_dossier')
+            : mt('poursuivre_traitement', mesLibelleEtape(etape)))}"
         onclick="mesMesureDepuisConstatation('${c.id}')">${_mesEsc(libelle)}</button>`;
 }
 
@@ -965,7 +955,7 @@ function mesCritiquesFiltrees() {
 function mesLignesCritiques() {
     const liste = mesCritiquesFiltrees();
     if (!liste.length) {
-        return `<tr><td colspan="8" class="mes-table-vide">Aucune carence.</td></tr>`;
+        return `<tr><td colspan="8" class="mes-table-vide">${mt('aucune_carence_point')}</td></tr>`;
     }
     const prests = MES_STATE.data.prestataires;
     const aujourdhui = mesJour();
@@ -975,9 +965,9 @@ function mesLignesCritiques() {
         return `<tr>
             <td><strong>${_mesEsc(c.reference)}</strong>
                 ${c.origine === 'SAFA'
-                    ? '<div class="mes-sous-titre">RAMP · catégorie 3</div>' : ''}
+                    ? `<div class="mes-sous-titre">${mt('ramp_cat3')}</div>` : ''}
                 ${c.origine === 'CARE'
-                    ? `<div class="mes-sous-titre">Relevée ici${c.origine_libelle
+                    ? `<div class="mes-sous-titre">${mt('origine_CARE')}${c.origine_libelle
                         ? ` · ${_mesEsc(c.origine_libelle)}` : ''}</div>` : ''}</td>
             <td>
                 <strong>${_mesEsc(c.titre || '—')}</strong>
@@ -990,7 +980,7 @@ function mesLignesCritiques() {
                 // Une échéance dépassée reste signalée — c'est une information,
                 // non une décoration — mais par la seule couleur du texte : la
                 // pastille pleine pesait plus que ce qu'elle disait.
-                ? `<span class="mes-date-retard" title="Échéance dépassée">${mesDate(c.date_due_cloture)}</span>`
+                ? `<span class="mes-date-retard" title="${_mesAttr(mt('echeance_depassee'))}">${mesDate(c.date_due_cloture)}</span>`
                 : mesDate(c.date_due_cloture)}</td>
             <td class="mes-cell-statut">${mesBadgeStatutCare(c.statut_care)}</td>
             <td>${c.date_cloture ? mesDate(c.date_cloture) : '—'}</td>
@@ -1000,17 +990,17 @@ function mesLignesCritiques() {
                   <span class="mes-actions-case-bouton">${mesBoutonTraitement(c)}</span>
                   <span class="mes-actions-secondaires">
                     <button class="btn btn-outline btn-sm mes-btn-icone"
-                            title="Historique du traitement"
+                            title="${_mesAttr(mt('historique_traitement'))}"
                             onclick="mesHistorique('${c.id}')">${MES_ICONES_ETAT.clock}</button>
                     ${c.mesures_liees ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                            title="Voir les ${c.mesures_liees} mesure(s) prise(s) sur cette carence"
+                            title="${_mesAttr(mt('voir_mesures_liees', c.mesures_liees))}"
                             onclick="mesMesuresDeCarence('${c.id}')">${MES_ICONS.shield}</button>` : ''}
                     ${c.origine === 'CARE' && mesPeutEcrire() ? `
-                    <button class="btn btn-outline btn-sm mes-btn-icone" title="Modifier"
+                    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('modifier'))}"
                             onclick="mesOuvrirConstat('${c.id}')">${MES_ICONS.edit}</button>` : ''}
                     ${c.origine === 'CARE' && mesPeutEcrire() && mesEstAdmin()
                         && !c.mesures_liees && !c.classee
-                        ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger" title="Supprimer"
+                        ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger" title="${_mesAttr(mt('supprimer'))}"
                                    onclick="mesSupprimerConstat('${c.id}')">${MES_ICONS.delete}</button>` : ''}
                   </span>
                 </div>
@@ -1025,55 +1015,51 @@ function mesRenderCritiques() {
     const opt = (v, l, cur) => `<option value="${_mesAttr(v)}" ${cur === v ? 'selected' : ''}>${_mesEsc(l)}</option>`;
     return `
     <div class="mes-page-header">
-        <h2>Carences</h2>
+        <h2>${mt('nav_carences')}</h2>
         <div class="mes-page-actions">
             ${mesPeutEcrire()
                 ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirConstat()">
-                       ${MES_ICONS.add} Ajouter une Carence</button>` : ''}
+                       ${MES_ICONS.add} ${mt('ajouter_carence')}</button>` : ''}
             ${mesBoutonsExport('constatations')}
         </div>
     </div>
     <div class="mes-action-bar">
         <div class="mes-filtres">
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('crit_origine',this.value)">
-                <option value="">Toutes origines</option>
-                ${Object.entries(MES_ORIGINES)
+                <option value="">${mt('toutes_origines')}</option>
+                ${MES_CLES_ORIGINE.map((cle) => [cle, mesOrigine(cle)])
                     .map(([cle, lib]) => opt(cle, lib, F.crit_origine)).join('')}
             </select>
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('crit_statut',this.value)">
-                <option value="">Tous statuts</option>
-                ${Object.entries(MES_STATUT_CARE)
-                    .map(([cle, st]) => opt(cle, st.libelle, F.crit_statut)).join('')}
+                <option value="">${mt('tous_statuts')}</option>
+                ${Object.keys(MES_STATUT_CARE)
+                    .map((cle) => opt(cle, mesLibelleCare(cle), F.crit_statut)).join('')}
             </select>
             <select class="mes-select mes-filtre-court" onchange="mesSetFiltre('crit_prest',this.value)">
-                <option value="">Tous prestataires</option>
+                <option value="">${mt('tous_prestataires')}</option>
                 ${MES_STATE.data.prestataires.map((p) => opt(p.id, p.nom, F.crit_prest)).join('')}
             </select>
-            <input class="mes-input mes-filtre-large" type="text" placeholder="Rechercher…"
+            <input class="mes-input mes-filtre-large" type="text" placeholder="${_mesAttr(mt('rechercher'))}"
                    value="${_mesAttr(F.crit_recherche)}"
                    oninput="mesRechercher('crit_recherche', this.value)">
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresCritiques()"
-                    title="Réinitialiser les filtres">${MES_ICONS.reset}</button>
+                    title="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
         </div>
     </div>
-    <p class="mes-note">
-        Les carences proviennent du module « Exécution de la Surveillance », des écarts de
-        catégorie 3 relevés par « RAMP Inspections », et de celles relevées ici. Prendre une
-        mesure ouvre le formulaire déjà rattaché à la carence et à son prestataire.
-    </p>
+    <p class="mes-note">${mt('note_carences')}</p>
 
     <div class="mes-card" style="padding:0;">
         <div class="mes-table-wrap">
             <table class="mes-table mes-table-plate">
                 <thead><tr>
-                    <th style="width:150px;">Référence</th>
-                    <th>Objet / Description</th>
-                    <th style="width:120px;">Prestataire</th>
-                    <th style="width:110px;">Ouverture</th>
-                    <th style="width:110px;">Échéance</th>
-                    <th style="width:130px;text-align:center;">Statut</th>
-                    <th style="width:110px;">Clôture</th>
-                    <th style="width:135px;text-align:center;">Actions</th>
+                    <th style="width:150px;">${mt('col_reference')}</th>
+                    <th>${mt('col_objet_desc')}</th>
+                    <th style="width:120px;">${mt('col_prestataire')}</th>
+                    <th style="width:110px;">${mt('col_ouverture')}</th>
+                    <th style="width:110px;">${mt('col_echeance')}</th>
+                    <th style="width:130px;text-align:center;">${mt('col_statut')}</th>
+                    <th style="width:110px;">${mt('col_cloture')}</th>
+                    <th style="width:135px;text-align:center;">${mt('col_actions')}</th>
                 </tr></thead>
                 <tbody data-corps="critiques">${mesLignesCritiques()}</tbody>
             </table>
@@ -1096,7 +1082,7 @@ async function mesMesureDepuisConstatation(constatationId) {
     // Le plan d'actions vient du module qui a relevé la carence : il arrive
     // avec le traitement, en une seule demande.
     try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`); }
-    catch (e) { MES_STATE.traitement = null; mesToast(e.message || 'Traitement illisible', 'error'); }
+    catch (e) { MES_STATE.traitement = null; mesToast(e.message || mt('traitement_illisible'), 'error'); }
     mesAfficherSlider();
 }
 
@@ -1176,12 +1162,12 @@ function mesFormulaireMesure() {
     return `
     <div class="mes-slider-header">
         <button class="btn btn-outline btn-sm mes-btn-retour" onclick="mesFermerSlider()"
-                title="Retour">${MES_ICONS.back} Retour</button>
-        <span class="mes-slider-titre">Traitement d’une carence</span>
+                title="${_mesAttr(mt('retour'))}">${MES_ICONS.back} ${mt('retour')}</button>
+        <span class="mes-slider-titre">${mt('traitement_carence')}</span>
     </div>
     ${mesFilAvancement()}
     <div class="mes-slider-body">
-        ${clos ? '<p class="mes-note">Mesure clôturée ou annulée : elle se consulte, elle ne se modifie plus.</p>' : ''}
+        ${clos ? `<p class="mes-note">${mt('mesure_close_consulte')}</p>` : ''}
         ${etape === 'suite' ? `
             ${mesSectionCarence()}
             ${mesSectionPac()}
@@ -1220,12 +1206,12 @@ function mesCollecterConstat() {
 
 async function mesSupprimerMesure(id) {
     const m = MES_STATE.data.mesures.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer définitivement la mesure ${m.reference || ''} ?`)) return;
+    if (!confirm(mt('confirmer_suppr_mesure', m.reference || ''))) return;
     try {
         await mesApi(`/mesures/${id}`, { method: 'DELETE' });
         await mesRechargerMesures();
-        mesToast('Mesure supprimée');
-    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
+        mesToast(mt('mesure_supprimee'));
+    } catch (e) { mesToast(e.message || mt('suppression_impossible'), 'error'); }
 }
 
 // ══════════════════════════════════════
@@ -1235,13 +1221,14 @@ async function mesSupprimerMesure(id) {
 // dans l'iframe, une déclaration `const` de haut niveau n'y figure pas.
 
 Object.assign(window, {
-    MES_STATE, MES_API, MES_ICONS, MES_NAV, MES_STATUTS,
+    MES_STATE, MES_API, MES_ICONS, MES_NAV, MES_CLES_STATUT, mesLibelleStatut, mesOrigine,
     mesApi, mesLoadData, mesRenderApp, mesRenderPage, mesNavigateTo,
     mesToggleSidebar, mesSetTheme, mesSetLang, mesRetourPortail, mesDeconnexion,
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
     mesResetFiltresMesures, mesResetFiltresCritiques,
     mesFermerSlider, mesAfficherSlider, mesFaireLeSuivi,
-    mesStatutMesure, mesStatutSuivi, MES_SUIVI,
+    mesStatutMesure, mesStatutSuivi, MES_SUIVI, mt, mesLibelleCare, mesLibelleEtape,
+    mesLibelleSuivi, mesAideSuivi,
     mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
     mesTypesInvestigation, mesComites, mesRechargerParametres,
     mesFiltreCarence, mesOuvrirTableMesures,
@@ -1297,46 +1284,43 @@ function mesConstatFormulaire(k) {
         </div>`;
     return `
     <div class="mes-volet-fond" onclick="mesFermerVolet()"></div>
-    <div class="mes-volet" role="dialog" aria-label="Carence">
+    <div class="mes-volet" role="dialog" aria-label="${_mesAttr(mt('carence'))}">
         <div class="mes-volet-entete">
-            <span style="flex:1;">${k.id ? 'Modifier la carence' : 'Nouvelle carence'}</span>
+            <span style="flex:1;">${k.id ? mt('modifier_carence') : mt('nouvelle_carence')}</span>
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerVolet()">${MES_ICONS.close}</button>
         </div>
         <div class="mes-volet-corps">
-            <p class="mes-note">
-                Une carence saisie ici ne provient d'aucun autre module : elle appelle une
-                mesure au même titre que les écarts critiques reçus.
-            </p>
-            ${champ('mesConstTitre', 'Objet', k.titre, 'placeholder="ex. Défaut de suivi de navigabilité"')}
+            <p class="mes-note">${mt('note_carence_saisie')}</p>
+            ${champ('mesConstTitre', mt('objet'), k.titre, `placeholder="${_mesAttr(mt('objet_exemple'))}"`)}
             <div class="mes-champ">
-                <label>Description</label>
+                <label>${mt('description')}</label>
                 <textarea class="mes-input" id="mesConstDesc" rows="5"
-                          placeholder="Ce qui a été constaté">${_mesEsc(k.description || '')}</textarea>
+                          placeholder="${_mesAttr(mt('description_exemple'))}">${_mesEsc(k.description || '')}</textarea>
             </div>
             <div class="mes-champ">
-                <label>Prestataire</label>
+                <label>${mt('prestataire')}</label>
                 <select class="mes-select" id="mesConstPrest">
                     <option value="">—</option>
                     ${MES_STATE.data.prestataires.map((p) => `<option value="${_mesAttr(p.id)}"
                         ${k.prestataire_id === p.id ? 'selected' : ''}>${_mesEsc(p.nom)}</option>`).join('')}
                 </select>
             </div>
-            ${champ('mesConstSource', 'Origine du constat', k.origine_libelle,
-                'placeholder="ex. Signalement, contrôle inopiné, saisine"')}
+            ${champ('mesConstSource', mt('origine_constat'), k.origine_libelle,
+                `placeholder="${_mesAttr(mt('origine_exemple'))}"`)}
             <div class="mes-grille-3">
-                ${champ('mesConstOuverture', 'Ouverture', k.date_ouverture,
+                ${champ('mesConstOuverture', mt('ouverture'), k.date_ouverture,
                     'type="date" oninput="mesConstatDelai(\'ouverture\')"')}
-                ${champ('mesConstDelai', 'Délai (jours)', k.delai_jours,
-                    'type="number" min="0" placeholder="ex. 30" oninput="mesConstatDelai(\'delai\')"')}
-                ${champ('mesConstEcheance', 'Clôture', k.date_due_cloture,
+                ${champ('mesConstDelai', mt('delai_jours'), k.delai_jours,
+                    `type="number" min="0" placeholder="${_mesAttr(mt('delai_exemple'))}" oninput="mesConstatDelai('delai')"`)}
+                ${champ('mesConstEcheance', mt('cloture'), k.date_due_cloture,
                     'type="date" oninput="mesConstatDelai(\'echeance\')"')}
             </div>
             <p class="mes-erreur" id="mesConstErreur"></p>
         </div>
         <div class="mes-volet-pied">
-            <button class="btn btn-outline btn-sm" onclick="mesFermerVolet()">Annuler</button>
+            <button class="btn btn-outline btn-sm" onclick="mesFermerVolet()">${mt('annuler')}</button>
             <button class="btn btn-primary btn-sm" onclick="mesEnregistrerConstat()">
-                ${MES_ICONS.check} Enregistrer</button>
+                ${MES_ICONS.check} ${mt('enregistrer')}</button>
         </div>
     </div>`;
 }
@@ -1354,7 +1338,7 @@ async function mesEnregistrerConstat() {
         date_ouverture: val('mesConstOuverture'),
         date_due_cloture: val('mesConstEcheance'),
     };
-    if (!corps.titre) { if (err) err.textContent = 'Objet requis'; return; }
+    if (!corps.titre) { if (err) err.textContent = mt('objet_requis'); return; }
     try {
         await mesApi(k.id ? `/constatations/${k.id}` : '/constatations', {
             method: k.id ? 'PUT' : 'POST',
@@ -1363,21 +1347,21 @@ async function mesEnregistrerConstat() {
         mesFermerVolet();
         MES_STATE.data.constatations = await mesApi('/constatations');
         mesRenderPage();
-        mesToast(k.id ? 'Carence modifiée' : 'Carence ajoutée');
+        mesToast(k.id ? mt('carence_modifiee') : mt('carence_ajoutee'));
     } catch (e) {
-        if (err) err.textContent = e.message || 'Enregistrement impossible';
+        if (err) err.textContent = e.message || mt('enregistrement_impossible');
     }
 }
 
 async function mesSupprimerConstat(id) {
     const c = MES_STATE.data.constatations.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer la carence ${c.reference || ''} ?`)) return;
+    if (!confirm(mt('confirmer_suppr_carence', c.reference || ''))) return;
     try {
         await mesApi(`/constatations/${id}`, { method: 'DELETE' });
         MES_STATE.data.constatations = await mesApi('/constatations');
         mesRenderPage();
-        mesToast('Carence supprimée');
-    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
+        mesToast(mt('carence_supprimee'));
+    } catch (e) { mesToast(e.message || mt('suppression_impossible'), 'error'); }
 }
 
 // Classer : l'autorité décide qu'aucune suite ne sera donnée. La carence
@@ -1417,7 +1401,7 @@ function mesRepartition(segments, options) {
     // Une part cliquable commande un autre graphique : l'appelant dit lequel.
     const action = o.action || '';
     const retenue = o.retenue || '';
-    const infobulle = o.infobulle || 'Filtrer';
+    const infobulle = o.infobulle || mt('filtrer');
     // Ce que le creux du camembert compte : des mesures par défaut, mais la
     // répartition des carences en compte d'autres — elle annonçait « 32
     // mesures » sur trente-deux carences.

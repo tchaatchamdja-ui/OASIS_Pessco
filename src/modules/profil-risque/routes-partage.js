@@ -4,6 +4,7 @@ const moduleRights = require('../../module_rights');
 const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
+const { enregistrement } = require('../../valider');
 
 // Collections du module servies par le CRUD générique.
 const CRUD = {
@@ -144,7 +145,11 @@ module.exports = function register(app, deps, M) {
       return D.peutLire(req, portee(r)) ? res.json(r) : D.refus(res);
     });
 
-    app.post(`${M}/${route}`, requireAuth, (req, res) => {
+    // Ces collections n'ont pas de forme arrêtée — le barème suit ce que
+    // l'administrateur y met — mais un enregistrement se borne : le socle
+    // refuse ce qui n'en est pas un et retire les champs que le serveur seul
+    // écrit, à commencer par l'identifiant.
+    app.post(`${M}/${route}`, requireAuth, enregistrement(), (req, res) => {
       // Créer une évaluation engage la notation d'un organisme : Validateur.
       // Les autres collections — indicateurs, comptes rendus de réunion —
       // relèvent de la contribution, mais aucune n'était gardée.
@@ -154,12 +159,12 @@ module.exports = function register(app, deps, M) {
       // c'est elle qui le reverra. En vue régionale, l'instance retenue est
       // vide et le champ retombe sur l'instance locale, comme partout.
       const marque = COLLECTIONS_INSTANCE.includes(coll) ? { instance: instanceCourante(req) } : {};
-      const rec = db.createIn(coll, { ...(req.body || {}), ...marque, created_by: req.user.username });
+      const rec = db.createIn(coll, { ...req.valide, ...marque, created_by: req.user.username });
       audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
       return res.json(rec);
     });
 
-    app.put(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), (req, res) => {
       const avant = db.getColl(coll).find((x) => x.id === req.params.id);
       if (!avant) return res.status(404).json({ error: 'not_found' });
       // Le statut d'une évaluation dit une décision — acceptation, clôture,
@@ -170,7 +175,7 @@ module.exports = function register(app, deps, M) {
       const decide = coll === 'evaluations' && statut && statut !== avant.statut
         && D.STATUTS_DECIDES.includes(statut);
       if (!D.peut(req, decide ? 'VALIDATEUR' : 'CONTRIBUTEUR', portee(avant))) return D.refus(res);
-      let rec = db.updateIn(coll, req.params.id, req.body || {});
+      let rec = db.updateIn(coll, req.params.id, req.valide);
       if (!rec) return res.status(404).json({ error: 'not_found' });
       // Les deux premières étapes du fil d'avancement ne passent pas par une
       // route dédiée : elles se déduisent de l'état de l'évaluation.

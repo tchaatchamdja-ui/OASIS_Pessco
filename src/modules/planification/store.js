@@ -29,7 +29,10 @@ function retirerLesVersionsRemplacees() {
 
 function createIn(coll, item) {
   const d = load();
-  const rec = { id: uid(), createdAt: new Date().toISOString(), ...item };
+  // L'identifiant est posé par le magasin, jamais par l'appelant : placé
+  // avant l'enregistrement, un `id` venu du client l'écrasait — il pouvait
+  // ainsi choisir sous quelle clé sa création allait vivre.
+  const rec = { createdAt: new Date().toISOString(), ...item, id: uid() };
   d[coll] = d[coll] || [];
   d[coll].push(rec);
   save(d);

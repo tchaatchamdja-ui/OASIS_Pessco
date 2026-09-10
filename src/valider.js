@@ -92,4 +92,66 @@ function valider(schema) {
   };
 }
 
-module.exports = { valider, TYPES };
+// ── Enregistrement de forme libre, mais borné ──────────────────────────
+// Certaines collections n'ont pas de forme arrêtée : les réponses d'une
+// checklist portent une clé par champ paramétré, le barème des indicateurs
+// suit ce que l'administrateur y a mis. On ne peut pas les décrire champ par
+// champ — on peut refuser ce qui n'est pas un enregistrement : trop de champs,
+// un nom de champ qui n'en est pas un, une valeur démesurée, une profondeur
+// sans fin. Et retirer ce que le serveur seul écrit : sans quoi le client
+// choisissait son identifiant et signait à la place d'un autre.
+const RESERVES = ['id', 'instance', 'created_by', 'createdAt', 'updatedAt', 'auteur'];
+
+const MAX_CHAMPS = 100;
+const MAX_TEXTE = 20000;
+const MAX_LISTE = 500;
+const NOM_CHAMP = /^[A-Za-z0-9_.-]{1,64}$/;
+
+// Une valeur acceptable : un scalaire, ou une liste / un objet de scalaires
+// jusqu'à la profondeur donnée.
+function valeurBornee(v, profondeur) {
+  if (v === null) return true;
+  const t = typeof v;
+  if (t === 'boolean') return true;
+  if (t === 'number') return Number.isFinite(v);
+  if (t === 'string') return v.length <= MAX_TEXTE;
+  if (profondeur <= 0) return false;
+  if (Array.isArray(v)) {
+    return v.length <= MAX_LISTE && v.every((x) => valeurBornee(x, profondeur - 1));
+  }
+  if (t === 'object') {
+    const cles = Object.keys(v);
+    return cles.length <= MAX_CHAMPS
+      && cles.every((k) => NOM_CHAMP.test(k) && valeurBornee(v[k], profondeur - 1));
+  }
+  return false;
+}
+
+// `reserves` : les champs que le serveur pose lui-même, retirés du corps sans
+// que la requête soit refusée — le client les envoie souvent par recopie de
+// l'enregistrement qu'il vient de lire.
+function enregistrement(options) {
+  const o = options || {};
+  const reserves = o.reserves || RESERVES;
+  const profondeur = o.profondeur === undefined ? 3 : o.profondeur;
+  return (req, res, next) => {
+    const recu = req.body || {};
+    if (!recu || typeof recu !== 'object' || Array.isArray(recu)) {
+      return res.status(400).json({ error: 'corps_invalide' });
+    }
+    const cles = Object.keys(recu).filter((k) => !reserves.includes(k));
+    if (cles.length > MAX_CHAMPS) {
+      return res.status(400).json({ error: 'corps_invalide', motif: 'trop_de_champs' });
+    }
+    const invalides = cles.filter((k) => !NOM_CHAMP.test(k) || !valeurBornee(recu[k], profondeur));
+    if (invalides.length) {
+      return res.status(400).json({ error: 'corps_invalide', invalides });
+    }
+    const propre = {};
+    cles.forEach((k) => { propre[k] = recu[k]; });
+    req.valide = propre;
+    return next();
+  };
+}
+
+module.exports = { valider, enregistrement, TYPES };

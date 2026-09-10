@@ -5,6 +5,7 @@ const moduleRights = require('../../module_rights');
 const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
+const { valider } = require('../../valider');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, audit } = deps;
@@ -63,13 +64,25 @@ module.exports = function register(app, deps, M) {
     const d = db.load();
     d.cycles = d.cycles || [];
     const i = d.cycles.findIndex((c) => c.prestataire_id === req.params.id);
-    const rec = { prestataire_id: req.params.id, ...(req.body || {}), updatedAt: new Date().toISOString() };
+    // Une date effacée arrive vide, et le schéma tient le vide pour une
+    // absence : on la reprend telle quelle, sans quoi un cycle ne pourrait
+    // plus se vider — l'ancienne date lui survivrait.
+    const dates = {};
+    ['debut_cycle', 'fin_cycle'].forEach((k) => {
+      if (req.valide[k] !== undefined) dates[k] = req.valide[k];
+      else if (k in (req.body || {})) dates[k] = '';
+    });
+    const rec = { prestataire_id: req.params.id, ...dates, updatedAt: new Date().toISOString() };
     if (i >= 0) d.cycles[i] = { ...d.cycles[i], ...rec }; else d.cycles.push({ id: db.uid(), ...rec });
     db.save(d);
     return res.json({ ok: true });
   };
-  app.post(`${M}/prestataires/:id/cycle`, requireAuth, majCycle);
-  app.put(`${M}/prestataires/:id/cycle`, requireAuth, majCycle);
+  // Un cycle, ce sont deux dates. Le corps entrait ici tel quel : le
+  // prestataire, l'identifiant du rang et sa date de mise à jour s'y
+  // réécrivaient depuis le client.
+  const SCHEMA_CYCLE = { debut_cycle: { type: 'date' }, fin_cycle: { type: 'date' } };
+  app.post(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE), majCycle);
+  app.put(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE), majCycle);
 
   // ── Synchronisation des risques → plan ──
   app.get(`${M}/plans/:id/sync-risques`, requireAuth, (req, res) => {

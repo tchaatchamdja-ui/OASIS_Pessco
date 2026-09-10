@@ -8,6 +8,7 @@ const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
+const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
 
@@ -193,24 +194,26 @@ module.exports = function register(app, deps, M) {
       res.json(rec);
     });
 
-    app.post(`${M}/${route}`, requireAuth, (req, res) => {
+    // Une réponse de checklist porte une clé par champ paramétré : sa forme
+    // n'est pas connue d'avance et ne peut pas se décrire champ par champ. Le
+    // socle la borne tout de même — nombre de champs, taille des valeurs — et
+    // retire ce que le serveur seul écrit, dont l'identifiant : le client le
+    // choisissait, et pouvait ainsi écrire sous la clé d'un autre.
+    app.post(`${M}/${route}`, requireAuth, enregistrement(), (req, res) => {
       // Les réponses de checklist sont saisies par les inspecteurs ; les
       // autres collections relèvent du paramétrage, donc de l'administrateur.
       const ouvert = coll === 'checklist_responses';
       if (!ouvert && !admin(req)) return refuser(res);
       if (ouvert && !R.canContribute(req.user, null, referentiels)) return refuser(res);
-      const d = { ...(req.body || {}) };
-      const id = d.id || db.uid(prefixe);
-      res.status(201).json({ status: 'ok', id: db.insert(coll, { ...d, id }).id });
+      const id = db.uid(prefixe);
+      res.status(201).json({ status: 'ok', id: db.insert(coll, { ...req.valide, id }).id });
     });
 
-    app.put(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), (req, res) => {
       const ouvert = coll === 'checklist_responses';
       if (!ouvert && !admin(req)) return refuser(res);
       if (ouvert && !R.canContribute(req.user, null, referentiels)) return refuser(res);
-      const d = { ...(req.body || {}) };
-      delete d.id;
-      if (!db.update(coll, req.params.id, d)) return res.status(404).json({ error: 'Non trouvé' });
+      if (!db.update(coll, req.params.id, req.valide)) return res.status(404).json({ error: 'Non trouvé' });
       res.json({ status: 'ok' });
     });
 

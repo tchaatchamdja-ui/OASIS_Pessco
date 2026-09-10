@@ -3,6 +3,7 @@
 // amendement (nouvelle version), désarchivage, versions et commentaires.
 const db = require('./store');
 const D = require('./domaine');
+const { valider } = require('../../valider');
 
 // Une transition = un statut. Soumettre relève du contributeur ; décider
 // (valider, rejeter, archiver, approuver, transmettre) relève du validateur.
@@ -169,8 +170,16 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/plans/:id/versions`, requireAuth, lecturePlan, (req, res) =>
     res.json(db.list('versions').filter((v) => v.plan_id === req.params.id)));
 
-  app.post(`${M}/plans/:id/versions`, requireAuth, ecriturePlan, (req, res) =>
-    res.json(db.createIn('versions', { ...(req.body || {}), plan_id: req.params.id, auteur: req.user.username })));
+  // Ce qu'une version consignée retient : son numéro, ce qui l'a motivée, et
+  // le commentaire du rédacteur. Le plan et l'auteur viennent de la requête.
+  const SCHEMA_VERSION = {
+    version: { type: 'texte', max: 20 },
+    motif: { type: 'texte', max: 500 },
+    commentaire: { type: 'texte', max: 4000 },
+  };
+
+  app.post(`${M}/plans/:id/versions`, requireAuth, ecriturePlan, valider(SCHEMA_VERSION), (req, res) =>
+    res.json(db.createIn('versions', { ...req.valide, plan_id: req.params.id, auteur: req.user.username })));
 
   app.get(`${M}/plans/:id/commentaires`, requireAuth, lecturePlan, (req, res) => {
     // Le fil reprend toutes les versions du plan, depuis la première.
@@ -191,8 +200,14 @@ module.exports = function register(app, deps, M) {
     res.json([...commentaires, ...decisions].sort((a, b) => String(tri(a)).localeCompare(String(tri(b)))));
   });
 
-  app.post(`${M}/plans/:id/commentaires`, requireAuth, ecriturePlan, (req, res) =>
-    res.json(db.createIn('commentaires', { ...(req.body || {}), plan_id: req.params.id, auteur: req.user.username })));
+  // Un avis au fil de discussion, et rien d'autre : le plan vient du chemin,
+  // l'auteur de la session, la date du magasin. Le corps n'apportait aucune
+  // borne — ni sur la taille de l'avis, ni sur les champs qui l'accompagnaient.
+  app.post(`${M}/plans/:id/commentaires`, requireAuth, ecriturePlan,
+    valider({ contenu: { type: 'texte', requis: true, max: 4000 } }), (req, res) =>
+      res.json(db.createIn('commentaires', {
+        ...req.valide, plan_id: req.params.id, auteur: req.user.username,
+      })));
 
   // Retirer un avis du fil : son auteur, ou le Gestionnaire du plan. Un
   // contributeur voisin n'efface pas la remarque d'un autre.

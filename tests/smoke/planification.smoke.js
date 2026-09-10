@@ -148,10 +148,12 @@ module.exports = async function planificationSmoke(port) {
     // Le fil de discussion suit le sort du plan : le lire suppose d'y avoir
     // accès, y écrire suppose d'y contribuer. Ces routes n'opposaient aucun
     // refus — toute session écrivait dans le fil et en effaçait les avis.
-    const avis = await P(`/api/m/planification/plans/${brouillon.corps.id}/commentaires`, { texte: 'Avis du gestionnaire' });
+    // Le fil retient `contenu` : c'est ce champ que l'écran affiche, et le
+    // seul que la route accepte désormais.
+    const avis = await P(`/api/m/planification/plans/${brouillon.corps.id}/commentaires`, { contenu: 'Avis du gestionnaire' });
     await srv.connexion('m.ahoyo@anac.bj');
     const ecrit = await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}/commentaires`, {
-      method: 'POST', body: JSON.stringify({ texte: 'intrus' }),
+      method: 'POST', body: JSON.stringify({ contenu: 'intrus' }),
     });
     const efface = await srv.appel(`/api/m/planification/commentaires/${avis.corps.id}`, { method: 'DELETE' });
     verifier('écriture dans le fil refusée au lecteur', ecrit.statut === 403, `statut ${ecrit.statut}`);

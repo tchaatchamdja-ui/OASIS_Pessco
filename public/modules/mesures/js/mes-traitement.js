@@ -18,37 +18,36 @@
 // décision ; « Investigations » rassemble les preuves qui établissent les
 // faits ; « Qualification et Mesures » dit si l'infraction est constituée et
 // arrête les sanctions ; « Suivi des Mesures » en suit la mise en œuvre.
+// Les quatre étapes ne retiennent que leur clé : le nom se lit dans la langue
+// retenue, au moment de l'afficher.
 const MES_ETAPES = [
-    { cle: 'suite', libelle: 'Suite à donner' },
-    { cle: 'investigations', libelle: 'Investigations' },
-    { cle: 'qualification', libelle: 'Qualification et Mesures' },
-    { cle: 'suivi', libelle: 'Suivi des Mesures' },
+    { cle: 'suite' }, { cle: 'investigations' }, { cle: 'qualification' }, { cle: 'suivi' },
 ];
+const mesNomEtape = (cle) => mt(`fil_${cle}`);
 
 // Les trois suites possibles. Classer clôt le traitement ici — la carence
 // reste suivie par le plan d'actions de son module d'origine ; les deux autres
 // poussent le fil d'un cran.
 const MES_DECISIONS = [
-    { cle: 'classer', libelle: 'Classer', classe: 'mes-btn-classer-vert',
-      aide: 'Aucune mesure d’application ne sera prise.' },
-    { cle: 'investiguer', libelle: 'Investiguer', classe: 'mes-btn-investiguer',
-      aide: 'Le traitement passe à l’étape « Investigations ».' },
-    { cle: 'mesures', libelle: 'Prendre des mesures', classe: 'mes-btn-mesure',
-      aide: 'Le traitement passe à l’étape « Qualification et Mesures ».' },
+    { cle: 'classer', classe: 'mes-btn-classer-vert' },
+    { cle: 'investiguer', classe: 'mes-btn-investiguer' },
+    { cle: 'mesures', classe: 'mes-btn-mesure' },
 ];
+const mesNomDecision = (cle) => mt(`suite_${cle}`);
+const mesAideDecision = (cle) => mt(`suite_${cle}_aide`);
 
 // Les statuts du module d'origine sont des codes de circuit : on les rend
 // lisibles ici plutôt que de servir « pac_soumis » à l'agent qui décide.
 const MES_STATUTS_ORIGINE = {
-    ouverte: 'Ouverte', ouvert: 'Ouverte',
-    pac_soumis: 'PAC soumis', pac_valide: 'PAC validé', pac_rejetee: 'PAC rejeté',
-    soldee: 'Soldée', cloturee: 'Clôturée',
-    en_cours: 'En cours', brouillon: 'Brouillon',
+    ouverte: 'orig_ouverte', ouvert: 'orig_ouverte',
+    pac_soumis: 'orig_pac_soumis', pac_valide: 'orig_pac_valide', pac_rejetee: 'orig_pac_rejetee',
+    soldee: 'orig_soldee', cloturee: 'orig_cloturee',
+    en_cours: 'orig_en_cours', brouillon: 'orig_brouillon',
 };
 const mesStatutOrigine = (v) => {
     const code = String(v || '').trim();
     if (!code) return '';
-    if (MES_STATUTS_ORIGINE[code]) return MES_STATUTS_ORIGINE[code];
+    if (MES_STATUTS_ORIGINE[code]) return mt(MES_STATUTS_ORIGINE[code]);
     // Un code inconnu se lit quand même : les tirets bas deviennent des espaces.
     return code.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 };
@@ -71,25 +70,29 @@ function mesVoirEtape(cle) {
 function mesEtapeInfo(cle) {
     const t = MES_STATE.traitement || {};
     if (cle === 'suite') {
-        if (!t.decision) return 'Instruction en cours : plan d’actions, informations, puis décision';
-        const d = MES_DECISIONS.find((x) => x.cle === t.decision) || {};
-        return `Décidé le ${mesDate(t.decide_le)} — ${d.libelle || t.decision}`;
+        if (!t.decision) return mt('fil_instruction');
+        const d = MES_DECISIONS.find((x) => x.cle === t.decision);
+        return mt('fil_decide_le', mesDate(t.decide_le), d ? mesNomDecision(d.cle) : t.decision);
     }
     if (cle === 'investigations') {
         const inv = (t.investigation || {});
         const n = (inv.travaux || []).length;
-        if (inv.soumise_le) return `Soumise le ${mesDate(inv.soumise_le)}${inv.soumise_par ? ` par ${inv.soumise_par}` : ''}`;
-        if (!n && !(inv.equipe || []).length) return 'Investigation à ouvrir';
-        return `${(inv.equipe || []).length} enquêteur(s) · ${n} investigation(s) consignée(s)`;
+        if (inv.soumise_le) {
+            return inv.soumise_par
+                ? mt('fil_soumise_par', mesDate(inv.soumise_le), inv.soumise_par)
+                : mt('fil_soumise_le', mesDate(inv.soumise_le));
+        }
+        if (!n && !(inv.equipe || []).length) return mt('fil_inv_a_ouvrir');
+        return mt('fil_enqueteurs', (inv.equipe || []).length, n);
     }
     if (cle === 'suivi') {
-        if (t.cloture_le) return `Traitement clôturé le ${mesDate(t.cloture_le)}`;
+        if (t.cloture_le) return mt('fil_cloture_le', mesDate(t.cloture_le));
         const liste = t.mesures || [];
-        if (!liste.length) return 'Aucune mesure à suivre';
+        if (!liste.length) return mt('fil_aucune_a_suivre');
         const soldees = liste.filter((m) => (m.suivi_statut || mesStatutSuivi(m)) === 'solde').length;
-        return `${soldees} mesure(s) soldée(s) sur ${liste.length}`;
+        return mt('fil_soldees', soldees, liste.length);
     }
-    return 'Étape à venir';
+    return mt('fil_a_venir');
 }
 
 // Barre du fil : les chevrons à gauche, les actions de l'étape à droite.
@@ -105,7 +108,7 @@ function mesFilAvancement() {
                         atteinte ? '' : ' verrouillee'}"
                     ${atteinte ? '' : 'disabled'}
                     title="${_mesAttr(mesEtapeInfo(e.cle))}"
-                    onclick="mesVoirEtape('${_mesAttr(e.cle)}')">${_mesEsc(e.libelle)}</button>`;
+                    onclick="mesVoirEtape('${_mesAttr(e.cle)}')">${_mesEsc(mesNomEtape(e.cle))}</button>`;
     }).join('');
     return `
     <div class="mes-proc-barre">
@@ -123,11 +126,11 @@ function mesEtatEtape() {
     const c = MES_STATE.carenceEnCours;
     if (!c || !MES_STATE.traitement) return '';
     const etape = mesEtapeCourante();
-    const libelle = (MES_ETAPES.find((e) => e.cle === etape) || {}).libelle || '';
+    const libelle = MES_ETAPES.some((e) => e.cle === etape) ? mesNomEtape(etape) : '';
     const url = `${MES_API}/constatations/${encodeURIComponent(c.id)}/etapes/${etape}.pdf`;
     return `<a class="btn btn-sm mes-btn-export" download href="${_mesAttr(url)}"
-        title="${_mesAttr(`Télécharge l’étape « ${libelle} » en PDF, avec tous ses éléments`)}"
-        >${typeof MES_ICONES_ETAT === 'object' ? MES_ICONES_ETAT.pdf : ''} Exporter PDF</a>`;
+        title="${_mesAttr(mt('telecharger_etape', libelle))}"
+        >${typeof MES_ICONES_ETAT === 'object' ? MES_ICONES_ETAT.pdf : ''} ${mt('exporter_pdf')}</a>`;
 }
 
 // Actions de l'étape regardée. Sur « Suite à donner » : enregistrer ce qui a
@@ -144,16 +147,16 @@ function mesActionsEtape() {
     if (etape !== 'suite') return '';
     const t = MES_STATE.traitement || {};
     if (t.decision) {
-        const d = MES_DECISIONS.find((x) => x.cle === t.decision) || {};
-        return `<span class="mes-badge cloturee">${_mesEsc(d.libelle || t.decision)}</span>`;
+        const d = MES_DECISIONS.find((x) => x.cle === t.decision);
+        return `<span class="mes-badge cloturee">${_mesEsc(d ? mesNomDecision(d.cle) : t.decision)}</span>`;
     }
     // « Enregistrer » vit dans la barre inférieure : la barre du fil ne porte
     // que les décisions, qui font avancer le traitement.
     const boutons = [];
     if (mesPeutDecider()) {
         MES_DECISIONS.forEach((d) => boutons.push(`<button class="btn btn-sm ${d.classe}"
-            title="${_mesAttr(d.aide)}"
-            onclick="mesPrendreDecision('${d.cle}')">${_mesEsc(d.libelle)}</button>`));
+            title="${_mesAttr(mesAideDecision(d.cle))}"
+            onclick="mesPrendreDecision('${d.cle}')">${_mesEsc(mesNomDecision(d.cle))}</button>`));
     }
     return boutons.join('');
 }
@@ -183,27 +186,27 @@ function mesSectionCarence() {
     const c = MES_STATE.carenceEnCours;
     if (!c) return '';
     const prest = (MES_STATE.data.prestataires || []).find((p) => p.id === c.prestataire_id);
-    const source = c.origine === 'CARE' ? (c.origine_libelle || 'Relevée par le module')
-        : (c.origine === 'SAFA' ? 'RAMP Inspections' : 'Exécution de la Surveillance');
+    const source = c.origine === 'CARE' ? (c.origine_libelle || mt('relevee_par'))
+        : mesOrigine(c.origine === 'SAFA' ? 'SAFA' : 'SURV');
     // Deux colonnes pour les repères, qui tiennent sur une ligne chacun. La
     // description, elle, court sur toute la largeur : la serrer sur une demie
     // la rendait illisible.
-    return mesSection('A', 'Carence', `
+    return mesSection('A', mt('sec_carence'), `
         <div class="mes-deux-colonnes">
             <dl style="margin:0;">
-                ${mesLigneFiche('Référence', c.reference)}
-                ${mesLigneFiche('Objet', c.titre)}
-                ${mesLigneFiche('Prestataire', (prest && prest.nom) || c.prestataire_nom)}
-                ${mesLigneFiche('Source', source)}
+                ${mesLigneFiche(mt('fiche_reference'), c.reference)}
+                ${mesLigneFiche(mt('fiche_objet'), c.titre)}
+                ${mesLigneFiche(mt('fiche_prestataire'), (prest && prest.nom) || c.prestataire_nom)}
+                ${mesLigneFiche(mt('fiche_source'), source)}
             </dl>
             <dl style="margin:0;">
-                ${mesLigneFiche('Criticité', c.criticite)}
-                ${mesLigneFiche('Ouverture', mesDate(c.date_ouverture))}
-                ${mesLigneFiche('Échéance', mesDate(c.date_due_cloture))}
-                ${mesLigneFiche('Statut (module d’origine)', mesStatutOrigine(c.statut))}
+                ${mesLigneFiche(mt('fiche_criticite'), c.criticite)}
+                ${mesLigneFiche(mt('fiche_ouverture'), mesDate(c.date_ouverture))}
+                ${mesLigneFiche(mt('fiche_echeance'), mesDate(c.date_due_cloture))}
+                ${mesLigneFiche(mt('fiche_statut_origine'), mesStatutOrigine(c.statut))}
             </dl>
         </div>
-        <dl style="margin:.4rem 0 0;">${mesLigneFiche('Description', c.description)}</dl>`);
+        <dl style="margin:.4rem 0 0;">${mesLigneFiche(mt('fiche_description'), c.description)}</dl>`);
 }
 
 // Section 1 — le plan d'actions soumis par le prestataire, tel que le module
@@ -212,36 +215,36 @@ function mesSectionCarence() {
 function mesSectionPac() {
     const pac = (MES_STATE.traitement || {}).pac;
     if (!pac) {
-        return mesSection('B', 'Plan d’action soumis',
-            '<p class="mes-preuve-vide">Aucun plan d’actions n’a été soumis pour cette carence.</p>');
+        return mesSection('B', mt('sec_pac'),
+            `<p class="mes-preuve-vide">${mt('pac_aucun')}</p>`);
     }
     const ligne = mesLigneFiche;
     // Deux colonnes : à gauche ce que l'organisme s'engage à faire, à droite ce
     // qu'il en produit comme preuve.
     const preuves = (pac.preuves || []).map((p) => `<div class="mes-pac-ligne">
-        <dt>${_mesEsc(p.action === 'curative' ? 'Action curative'
-            : (p.action === 'corrective' ? 'Action corrective' : 'Preuve'))}</dt>
+        <dt>${_mesEsc(p.action === 'curative' ? mt('pac_curative')
+            : (p.action === 'corrective' ? mt('pac_corrective_une') : mt('pac_preuve')))}</dt>
         <dd>${_mesEsc(p.intitule || '—')}${p.depose_le ? ` · ${_mesEsc(mesDate(p.depose_le))}` : ''}
             ${p.commentaire ? `<br><span class="mes-preuve-vide">${_mesEsc(p.commentaire)}</span>` : ''}</dd>
     </div>`).join('');
-    return mesSection('B', 'Plan d’action soumis', `<div class="mes-deux-colonnes">
+    return mesSection('B', mt('sec_pac'), `<div class="mes-deux-colonnes">
         <section>
-            <div class="mes-colonne-titre">Plan soumis</div>
+            <div class="mes-colonne-titre">${mt('pac_soumis_col')}</div>
             <dl style="margin:0;">
-                ${ligne('Cause primaire', pac.cause_primaire)}
-                ${ligne('Action curative', pac.action_curative)}
-                ${ligne('Date prévue (curative)', mesDate(pac.curative_date_prevue))}
-                ${ligne('Actions correctives', pac.actions_correctives)}
-                ${ligne('Date prévue (corrective)', mesDate(pac.corrective_date_prevue))}
-                ${ligne('Statut (module d’origine)', mesStatutOrigine(pac.statut))}
-                ${ligne('Soumis le', mesDate(pac.date_soumission))}
-                ${pac.motif_rejet ? ligne('Motif de rejet', pac.motif_rejet) : ''}
+                ${ligne(mt('pac_cause'), pac.cause_primaire)}
+                ${ligne(mt('pac_curative'), pac.action_curative)}
+                ${ligne(mt('pac_curative_date'), mesDate(pac.curative_date_prevue))}
+                ${ligne(mt('pac_corrective'), pac.actions_correctives)}
+                ${ligne(mt('pac_corrective_date'), mesDate(pac.corrective_date_prevue))}
+                ${ligne(mt('fiche_statut_origine'), mesStatutOrigine(pac.statut))}
+                ${ligne(mt('pac_soumis_le'), mesDate(pac.date_soumission))}
+                ${pac.motif_rejet ? ligne(mt('pac_motif_rejet'), pac.motif_rejet) : ''}
             </dl>
         </section>
         <section>
-            <div class="mes-colonne-titre">Preuves soumises</div>
+            <div class="mes-colonne-titre">${mt('pac_preuves')}</div>
             <dl style="margin:0;">
-                ${preuves || '<p class="mes-preuve-vide">Aucune preuve déposée.</p>'}
+                ${preuves || `<p class="mes-preuve-vide">${mt('aucune_preuve')}</p>`}
             </dl>
         </section>
     </div>`);
@@ -254,29 +257,29 @@ function mesSectionInformations() {
     const pieces = (t.pieces || []).map((p, i) => `
         <div class="mes-preuve" data-genre="traitement" data-chemin="${_mesAttr(p.path || '')}">
             <input class="mes-input" value="${_mesAttr(p.nom || '')}"
-                   placeholder="Intitulé de la pièce" ${off}>
+                   placeholder="${_mesAttr(mt('intitule_piece'))}" ${off}>
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
-                title="Ouvrir">${MES_ICONS.download}</a>` : ''}
-            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
                 onclick="mesRetirerPieceTraitement(${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
     // Même partage que le plan d'actions : ce qui est établi à gauche, ce qui
     // l'appuie à droite.
-    return mesSection('C', 'Informations additionnelles', `<div class="mes-deux-colonnes">
+    return mesSection('C', mt('sec_informations'), `<div class="mes-deux-colonnes">
         <div class="mes-champ">
-            <label>Informations complémentaires recueillies sur la constatation</label>
+            <label>${mt('infos_label')}</label>
             <textarea class="mes-input" id="mesTrtInfos" rows="6" ${off}
-                      placeholder="Ce que l’instruction a établi en plus du plan d’actions">${_mesEsc(t.informations || '')}</textarea>
+                      placeholder="${_mesAttr(mt('infos_exemple'))}">${_mesEsc(t.informations || '')}</textarea>
         </div>
         <div class="mes-champ">
-            <label>Pièces jointes</label>
-            <div id="mesTrtPieces">${pieces || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+            <label>${mt('pieces_jointes')}</label>
+            <div id="mesTrtPieces">${pieces || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
             ${off ? '' : `<input type="file" id="mesTrtFichier" multiple style="display:none;"
                     onchange="mesTeleverserPieceTraitement(this.files)">
                 <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                         onclick="document.getElementById('mesTrtFichier').click()">
-                    ${MES_ICONS.add} Ajouter une pièce</button>`}
+                    ${MES_ICONS.add} ${mt('ajouter_piece')}</button>`}
         </div>
     </div>`);
 }
@@ -291,33 +294,31 @@ function mesSectionDecision() {
 
     if (prise) {
         const rappel = t.decision === 'classer'
-            ? `<p class="mes-note">Aucune mesure d’application n’est prise. Le suivi se poursuit
-               par le plan d’actions correctives soumis dans le module d’origine (Exécution de la
-               Surveillance ou RAMP Inspections) — c’est là qu’il se solde.</p>`
+            ? `<p class="mes-note">${mt('classer_rappel')}</p>`
             : '';
-        return mesSection('D', 'Justifications de la décision', `
-            <p><strong>${_mesEsc(choisie ? choisie.libelle : t.decision)}</strong>
+        return mesSection('D', mt('sec_decision'), `
+            <p><strong>${_mesEsc(choisie ? mesNomDecision(choisie.cle) : t.decision)}</strong>
                ${t.decide_le ? `· ${_mesEsc(mesDate(t.decide_le))}` : ''}
                ${t.decide_par ? `· ${_mesEsc(t.decide_par)}` : ''}</p>
             ${t.decision_motif ? `<p class="mes-pac-ligne" style="display:block;">${_mesEsc(t.decision_motif)}</p>` : ''}
             ${rappel}`);
     }
     if (!decideur) {
-        return mesSection('D', 'Justifications de la décision',
-            '<p class="mes-preuve-vide">Aucune décision n’a encore été prise. Elle relève du validateur.</p>');
+        return mesSection('D', mt('sec_decision'),
+            `<p class="mes-preuve-vide">${mt('decision_aucune')}</p>`);
     }
     // Les trois suites sont portées par la barre du fil, en haut à droite :
     // ce sont les actions de l'étape. Ne reste ici que ce qui les motive.
-    return mesSection('D', 'Justifications de la décision', `
+    return mesSection('D', mt('sec_decision'), `
         <div class="mes-champ">
             <textarea class="mes-input" id="mesTrtMotif" rows="3"
-                      placeholder="Ce qui motive la suite retenue"></textarea>
+                      placeholder="${_mesAttr(mt('decision_motif_exemple'))}"></textarea>
         </div>
         <ul class="mes-decision-aide">
-            ${MES_DECISIONS.map((d) => `<li><strong>${_mesEsc(d.libelle)}</strong> — ${_mesEsc(d.aide)}</li>`).join('')}
+            ${MES_DECISIONS.map((d) => `<li><strong>${_mesEsc(mesNomDecision(d.cle))}</strong> — ${
+                _mesEsc(mesAideDecision(d.cle))}</li>`).join('')}
         </ul>
-        <p class="mes-preuve-vide">La suite retenue se choisit en haut à droite, sur la ligne du fil
-           d’avancement.</p>`);
+        <p class="mes-preuve-vide">${mt('suite_en_haut')}</p>`);
 }
 
 // Barre inférieure du volet. Elle porte l'enregistrement, à droite, quelle que
@@ -341,7 +342,7 @@ function mesBarreInferieure(ro, etape) {
     }[etape] || 'mesEnregistrerTraitement()';
     return `<div class="mes-slider-footer">
         <button class="btn btn-primary btn-sm" onclick="${geste}"
-                title="Conserver les informations recueillies">${MES_ICONS.check} Enregistrer</button>
+                title="${_mesAttr(mt('conserver_infos'))}">${MES_ICONS.check} ${mt('enregistrer')}</button>
     </div>`;
 }
 
@@ -379,19 +380,19 @@ function mesPiecesHtml(cle, liste, off) {
     const lignes = (liste || []).map((p, i) => `
         <div class="mes-preuve" data-chemin="${_mesAttr(p.path || '')}">
             <input class="mes-input" value="${_mesAttr(p.nom || '')}"
-                   placeholder="Intitulé de la pièce" ${off}>
+                   placeholder="${_mesAttr(mt('intitule_piece'))}" ${off}>
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
-                title="Ouvrir">${MES_ICONS.download}</a>` : ''}
-            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
                 onclick="mesInvRetirerPiece('${cle}',${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
-    return `<div id="mesInvPieces_${cle}">${lignes || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+    return `<div id="mesInvPieces_${cle}">${lignes || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
         ${off ? '' : `<input type="file" id="mesInvFichier_${cle}" multiple style="display:none;"
                 onchange="mesInvTeleverser('${cle}', this.files)">
             <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                     onclick="document.getElementById('mesInvFichier_${cle}').click()">
-                ${MES_ICONS.add} Ajouter une pièce</button>`}`;
+                ${MES_ICONS.add} ${mt('ajouter_piece')}</button>`}`;
 }
 
 // Ce que l'instance décisionnelle a demandé en renvoyant la carence. L'équipe
@@ -401,7 +402,7 @@ function mesRenvoisInvestigation() {
     if (!renvois.length) return '';
     return renvois.slice().reverse().map((r) => `
         <div class="mes-note mes-note-renvoi">
-            <strong>Renvoyée pour investigations complémentaires</strong>
+            <strong>${mt('renvoyee_complement')}</strong>
             — ${_mesEsc(mesDate(r.renvoye_le))}${r.renvoye_par ? ` · ${_mesEsc(r.renvoye_par)}` : ''}
             ${r.motif ? `<div style="margin-top:.3rem;white-space:pre-wrap;">${_mesEsc(r.motif)}</div>` : ''}
         </div>`).join('');
@@ -418,18 +419,19 @@ function mesSectionEquipe() {
             <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
             <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
             <td class="mes-actions">${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="Retirer" onclick="mesInvRetirerEnqueteur(${i})">${MES_ICONS.x}</button>`}</td>
+                title="${_mesAttr(mt('retirer'))}" onclick="mesInvRetirerEnqueteur(${i})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
-    return mesSection('A', 'Équipe d’investigation', `
+    return mesSection('A', mt('sec_equipe'), `
         <div class="mes-table-wrap">
             <table class="mes-table" id="mesInvEquipe">
-                <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Contact</th><th></th></tr></thead>
-                <tbody>${lignes || `<tr><td colspan="5" class="mes-preuve-vide">
-                    Aucun enquêteur désigné</td></tr>`}</tbody>
+                <thead><tr><th>${mt('col_nom')}</th><th>${mt('col_prenom')}</th><th>${
+                    mt('col_email')}</th><th>${mt('col_contact')}</th><th></th></tr></thead>
+                <tbody>${lignes || `<tr><td colspan="5" class="mes-preuve-vide">${
+                    mt('aucun_enqueteur')}</td></tr>`}</tbody>
             </table>
         </div>
         ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.5rem;"
-            onclick="mesInvAjouterEnqueteur()">${MES_ICONS.add} Ajouter un enquêteur</button>`}`);
+            onclick="mesInvAjouterEnqueteur()">${MES_ICONS.add} ${mt('ajouter_enqueteur')}</button>`}`);
 }
 
 // Section B — les travaux menés, autant de blocs que de besoin. Le type choisi
@@ -439,16 +441,16 @@ function mesSectionTravaux() {
     const off = mesInvModifiable() ? '' : 'disabled';
     const types = mesTypesInvestigation();
     const blocs = (inv.travaux || []).map((t, i) => {
-        const titre = (types.find((x) => x.code === t.type) || {}).libelle || 'Investigation';
+        const titre = (types.find((x) => x.code === t.type) || {}).libelle || mt('investigation');
         return `<div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(titre)}</span>
-                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer ce bloc"
+                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_bloc'))}"
                     onclick="mesInvRetirerTravail(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
                 <div class="mes-champ">
-                    <label>Type d’investigation</label>
+                    <label>${mt('type_investigation')}</label>
                     <select class="mes-select" data-champ="type" ${off} onchange="mesInvMajTitre(${i}, this.value)">
                         <option value="">—</option>
                         ${types.map((x) => `<option value="${_mesAttr(x.code)}"
@@ -456,37 +458,36 @@ function mesSectionTravaux() {
                     </select>
                 </div>
                 <div class="mes-champ">
-                    <label>Résultats</label>
+                    <label>${mt('resultats')}</label>
                     <textarea class="mes-input" data-champ="resultats" rows="4" ${off}
-                              placeholder="Ce que l’investigation a établi">${_mesEsc(t.resultats || '')}</textarea>
+                              placeholder="${_mesAttr(mt('resultat_exemple'))}">${_mesEsc(t.resultats || '')}</textarea>
                 </div>
                 <div class="mes-champ">
-                    <label>Éléments de preuve</label>
+                    <label>${mt('elements_preuve')}</label>
                     ${mesPiecesHtml(`travail${i}`, t.pieces, off)}
                 </div>
             </div>
         </div>`;
     }).join('');
-    return mesSection('B', 'Investigations réalisées', `
-        <div id="mesInvTravaux">${blocs || '<p class="mes-preuve-vide">Aucune investigation consignée</p>'}</div>
+    return mesSection('B', mt('sec_investigations'), `
+        <div id="mesInvTravaux">${blocs || `<p class="mes-preuve-vide">${mt('aucune_investigation')}</p>`}</div>
         ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.5rem;"
-            onclick="mesInvAjouterTravail()">${MES_ICONS.add} Ajouter une investigation</button>`}
-        ${types.length ? '' : `<p class="mes-note">Aucun type d’investigation n’est paramétré.
-            Le menu Paramètres du module en tient la liste.</p>`}`);
+            onclick="mesInvAjouterTravail()">${MES_ICONS.add} ${mt('ajouter_investigation')}</button>`}
+        ${types.length ? '' : `<p class="mes-note">${mt('aucun_type_inv_param')}</p>`}`);
 }
 
 // Section C — ce qui a été recueilli hors des travaux ci-dessus.
 function mesSectionAutresElements() {
     const inv = mesInvestigation();
     const off = mesInvModifiable() ? '' : 'disabled';
-    return mesSection('C', 'Autres éléments collectés', `<div class="mes-deux-colonnes">
+    return mesSection('C', mt('sec_autres'), `<div class="mes-deux-colonnes">
         <div class="mes-champ">
-            <label>Éléments recueillis</label>
+            <label>${mt('elements_recueillis')}</label>
             <textarea class="mes-input" id="mesInvAutres" rows="6" ${off}
-                      placeholder="Témoignages, dossiers, relevés obtenus par ailleurs">${_mesEsc(inv.autres_texte || '')}</textarea>
+                      placeholder="${_mesAttr(mt('autres_exemple'))}">${_mesEsc(inv.autres_texte || '')}</textarea>
         </div>
         <div class="mes-champ">
-            <label>Pièces jointes</label>
+            <label>${mt('pieces_jointes')}</label>
             ${mesPiecesHtml('autres', inv.autres_pieces, off)}
         </div>
     </div>`);
@@ -496,11 +497,11 @@ function mesSectionAutresElements() {
 function mesSectionRapport() {
     const inv = mesInvestigation();
     const off = mesInvModifiable() ? '' : 'disabled';
-    return mesSection('D', 'Résultat de l’investigation', `
+    return mesSection('D', mt('sec_rapport'), `
         <div class="mes-champ">
-            <label>Rapport sur le cas</label>
+            <label>${mt('rapport_cas')}</label>
             <textarea class="mes-input" id="mesInvRapport" rows="10" ${off}
-                      placeholder="Synthèse des faits établis, analyse de la législation applicable, et recommandations"
+                      placeholder="${_mesAttr(mt('rapport_exemple'))}"
                       >${_mesEsc(inv.rapport || '')}</textarea>
         </div>`);
 }
@@ -566,7 +567,7 @@ function mesInvMajTitre(i, code) {
     const titre = bloc && bloc.querySelector('.mes-bloc-titre');
     if (!titre) return;
     const t = mesTypesInvestigation().find((x) => x.code === code);
-    titre.textContent = (t && t.libelle) || 'Investigation';
+    titre.textContent = (t && t.libelle) || mt('investigation');
 }
 
 function mesInvRetirerPiece(cle, i) {
@@ -597,7 +598,7 @@ async function mesInvTeleverser(cle, fichiers) {
             corps.append('file', f);
             const r = await mesApi('/upload', { method: 'POST', body: corps });
             cible[clef].push({ nom: r.filename, path: r.path, size: r.size });
-        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+        } catch (e) { mesToast(e.message || mt('depot_impossible'), 'error'); }
     }
     MES_STATE.traitement.investigation = inv;
     mesRedessinerInvestigation();
@@ -609,13 +610,14 @@ function mesActionsInvestigation() {
     const inv = mesInvestigation();
     if (inv.soumise_le) {
         return `<span class="mes-badge cloturee"
-            title="${_mesAttr(`Soumise le ${mesDate(inv.soumise_le)}${
-                inv.soumise_par ? ` par ${inv.soumise_par}` : ''}`)}">Investigation soumise</span>`;
+            title="${_mesAttr(inv.soumise_par
+                ? mt('fil_soumise_par', mesDate(inv.soumise_le), inv.soumise_par)
+                : mt('fil_soumise_le', mesDate(inv.soumise_le)))}">${mt('investigation_soumise')}</span>`;
     }
     if (!mesPeutDecider() || mesTraitementClos()) return '';
     return `<button class="btn btn-sm mes-btn-mesure"
-        title="Clôt l’investigation et passe à « Qualification et Mesures ». Les éléments consignés ne se modifieront plus."
-        onclick="mesSoumettreInvestigation()">${MES_ICONS.check} Soumettre</button>`;
+        title="${_mesAttr(mt('clore_investigation'))}"
+        onclick="mesSoumettreInvestigation()">${MES_ICONS.check} ${mt('soumettre')}</button>`;
 }
 
 // ══════════════════════════════════════
@@ -635,14 +637,14 @@ function mesConfirmerEtape(o) {
     if (!el) return Promise.resolve(false);
     return new Promise((resolve) => {
         MES_CONFIRMATION = resolve;
-        const libelleEtape = (cle) => (MES_ETAPES.find((e) => e.cle === cle) || {}).libelle || '';
+        const libelleEtape = (cle) => (MES_ETAPES.some((e) => e.cle === cle) ? mesNomEtape(cle) : '');
         const depuis = libelleEtape(o.depuis || mesEtapeCourante());
         const vers = o.vers ? libelleEtape(o.vers) : '';
         el.innerHTML = `
         <div class="mes-modal-fond mes-confirm-fond" onclick="mesConfirmationRepondre(false)">
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
-                    <span style="flex:1;">${_mesEsc(o.titre || 'Confirmer l’action')}</span>
+                    <span style="flex:1;">${_mesEsc(o.titre || mt('confirmer_action'))}</span>
                     <button class="btn btn-outline btn-sm mes-btn-icone"
                             onclick="mesConfirmationRepondre(false)">${MES_ICONS.close}</button>
                 </div>
@@ -650,7 +652,7 @@ function mesConfirmerEtape(o) {
                     <div class="mes-confirm-fil">
                         <span class="mes-confirm-etape">${_mesEsc(depuis)}</span>
                         <span class="mes-confirm-fleche">→</span>
-                        <span class="mes-confirm-etape cible">${_mesEsc(vers || 'Dossier clos')}</span>
+                        <span class="mes-confirm-etape cible">${_mesEsc(vers || mt('dossier_clos'))}</span>
                     </div>
                     <p class="mes-confirm-texte">${_mesEsc(o.consequence || '')}</p>
                     ${(o.points || []).length ? `<ul class="mes-confirm-points">${
@@ -658,16 +660,16 @@ function mesConfirmerEtape(o) {
                     <label class="mes-case mes-confirm-case">
                         <input type="checkbox" id="mesConfirmCase"
                                onchange="mesConfirmationCocher(this.checked)">
-                        <span>${_mesEsc(o.aveu || 'Je confirme cette action.')}</span>
+                        <span>${_mesEsc(o.aveu || mt('aveu_action'))}</span>
                     </label>
                 </div>
                 <div class="mes-modal-footer">
                     <button class="btn btn-outline btn-sm"
-                            onclick="mesConfirmationRepondre(false)">Annuler</button>
+                            onclick="mesConfirmationRepondre(false)">${mt('annuler')}</button>
                     <button class="btn btn-sm ${_mesAttr(o.classe || 'btn-primary')}"
                             id="mesConfirmValider" disabled
                             onclick="mesConfirmationRepondre(true)">${MES_ICONS.check} ${
-                        _mesEsc(o.libelle || 'Confirmer')}</button>
+                        _mesEsc(o.libelle || mt('confirmer'))}</button>
                 </div>
             </div>
         </div>`;
@@ -693,15 +695,12 @@ async function mesSoumettreInvestigation() {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
     if (!await mesConfirmerEtape({
-        titre: 'Soumettre l’investigation',
+        titre: mt('soumettre_investigation'),
         depuis: 'investigations', vers: 'qualification',
-        consequence: 'L’investigation est close et transmise à l’instance décisionnelle.',
-        points: [
-            'Les éléments consignés — équipe, travaux, pièces, rapport — ne se modifieront plus.',
-            'Seul un renvoi de l’instance pourra rouvrir cette étape.',
-        ],
-        aveu: 'Je confirme que l’investigation est complète.',
-        libelle: 'Soumettre', classe: 'mes-btn-mesure',
+        consequence: mt('inv_consequence'),
+        points: [mt('inv_detail1'), mt('inv_detail2')],
+        aveu: mt('aveu_investigation'),
+        libelle: mt('soumettre'), classe: 'mes-btn-mesure',
     })) return;
     // Ce qui est saisi part avant la soumission : elle le fige.
     mesMajInvestigation();
@@ -713,10 +712,10 @@ async function mesSoumettreInvestigation() {
         MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`);
         MES_STATE.etapeVue = '';
         MES_STATE.data.constatations = await mesApi('/constatations');
-        mesToast('Investigation soumise');
+        mesToast(mt('investigation_soumise'));
         mesAfficherSlider({ anime: false });
         if (MES_STATE.currentPage === 'critiques') mesRenderPage();
-    } catch (e) { mesToast(e.message || 'Soumission impossible', 'error'); }
+    } catch (e) { mesToast(e.message || mt('soumission_impossible'), 'error'); }
 }
 
 async function mesEnregistrerInvestigation() {
@@ -727,8 +726,8 @@ async function mesEnregistrerInvestigation() {
         await mesApi(`/constatations/${encodeURIComponent(c.id)}/investigation`, {
             method: 'PUT', body: JSON.stringify(mesInvestigation()),
         });
-        mesToast('Investigation enregistrée');
-    } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); }
+        mesToast(mt('investigation_enregistree'));
+    } catch (e) { mesToast(e.message || mt('enregistrement_impossible'), 'error'); }
 }
 
 // Les pièces et le texte saisis vivent dans le DOM tant qu'ils ne sont pas
@@ -768,7 +767,7 @@ async function mesTeleverserPieceTraitement(fichiers) {
             corps.append('file', f);
             const r = await mesApi('/upload', { method: 'POST', body: corps });
             t.pieces.push({ nom: r.filename, path: r.path, size: r.size });
-        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+        } catch (e) { mesToast(e.message || mt('depot_impossible'), 'error'); }
     }
     mesAfficherSlider({ anime: false });
 }
@@ -783,25 +782,24 @@ async function mesEnregistrerTraitement(silencieux) {
             method: 'PUT',
             body: JSON.stringify({ informations: t.informations || '', pieces: t.pieces || [] }),
         });
-        if (!silencieux) mesToast('Informations enregistrées');
+        if (!silencieux) mesToast(mt('informations_enregistrees'));
         return true;
-    } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); return false; }
+    } catch (e) { mesToast(e.message || mt('enregistrement_impossible'), 'error'); return false; }
 }
 
 async function mesPrendreDecision(decision) {
     const c = MES_STATE.carenceEnCours;
     if (!c) return;
     const choisie = MES_DECISIONS.find((d) => d.cle === decision) || {};
+    const nomDecision = choisie.cle ? mesNomDecision(choisie.cle) : decision;
     if (!await mesConfirmerEtape({
-        titre: choisie.libelle,
+        titre: nomDecision,
         depuis: 'suite',
         vers: { investiguer: 'investigations', mesures: 'qualification' }[decision] || '',
-        consequence: choisie.aide || '',
-        points: decision === 'classer'
-            ? ['La carence est close ici : aucune mesure d’application ne sera prise.']
-            : ['La suite à donner ne se rejoue pas : l’étape atteinte prend le relais.'],
-        aveu: 'Je confirme cette décision.',
-        libelle: choisie.libelle, classe: choisie.classe || 'btn-primary',
+        consequence: choisie.cle ? mesAideDecision(choisie.cle) : '',
+        points: [decision === 'classer' ? mt('classer_consequence') : mt('suite_consequence')],
+        aveu: mt('aveu_decision'),
+        libelle: nomDecision, classe: choisie.classe || 'btn-primary',
     })) return;
     // Ce qui a été saisi part avec la décision : elle s'appuie dessus.
     if (!await mesEnregistrerTraitement(true)) return;
@@ -814,17 +812,17 @@ async function mesPrendreDecision(decision) {
         MES_STATE.data.constatations = await mesApi('/constatations');
         // La vue suit l'étape que la décision vient de faire atteindre.
         MES_STATE.etapeVue = '';
-        mesToast(`Décision enregistrée : ${choisie.libelle}`);
+        mesToast(mt('decision_enregistree', nomDecision));
         mesAfficherSlider({ anime: false });
         if (MES_STATE.currentPage === 'critiques') mesRenderPage();
-    } catch (e) { mesToast(e.message || 'Décision impossible', 'error'); }
+    } catch (e) { mesToast(e.message || mt('decision_impossible'), 'error'); }
 }
 
 // Les gestionnaires posés dans le balisage sont appelés depuis la page : ils
 // doivent être joignables globalement. L'export vit ici, avec ce qu'il nomme —
 // le poser dans mes-app.js, chargé avant, l'aurait fait échouer au chargement.
 Object.assign(window, {
-    MES_ETAPES, MES_DECISIONS,
+    MES_ETAPES, MES_DECISIONS, mesNomEtape, mesNomDecision, mesAideDecision,
     mesVoirEtape, mesFilAvancement, mesBarreInferieure, mesEtatEtape,
     mesConfirmerEtape, mesConfirmationCocher, mesConfirmationRepondre,
     mesTeleverserPieceTraitement, mesRetirerPieceTraitement,

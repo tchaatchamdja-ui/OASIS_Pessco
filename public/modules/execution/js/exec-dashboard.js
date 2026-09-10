@@ -628,12 +628,17 @@ function _execGanttTypeLibelle(act) {
 
 // Bornes de la piste : l'année retenue par les filtres, étendue aux mois
 // entiers si une activité déborde de part et d'autre.
-function _execGanttBornes(activites, annee) {
+// Le calendrier couvre l'année retenue, et s'étend à toute activité qui la
+// déborde : sans année choisie, il s'ouvre donc sur l'ensemble des années
+// couvertes. Il lisait `date_debut` et `date_fin` sur des lignes qui ne les
+// portent plus — leurs dates y sont déjà converties — et restait par là même
+// collé sur douze mois, quoi qu'on lui donnât.
+function _execGanttBornes(lignes, annee) {
     let min = new Date(annee, 0, 1);
     let max = new Date(annee, 11, 31);
-    activites.forEach(a => {
-        const d = _execGanttDate(a.date_debut);
-        const f = _execGanttDate(a.date_fin) || d;
+    lignes.forEach((l) => {
+        const d = l.debut;
+        const f = l.fin || d;
         if (d && d < min) min = new Date(d.getFullYear(), d.getMonth(), 1);
         if (f && f > max) max = new Date(f.getFullYear(), f.getMonth() + 1, 0);
     });
@@ -832,16 +837,25 @@ function _execSuiviActivitesHtml() {
     const marqueur = (aujourdhui >= min && aujourdhui <= max)
         ? `<div class="g-aujourdhui" style="left:${pct(aujourdhui).toFixed(2)}%;"></div>` : '';
 
+    // Le cadre n'est pas encore dans la page : l'état des commandes se pose au
+    // tour suivant, que la carte vienne du tableau de bord ou d'un filtre.
+    setTimeout(execGanttNavEtat, 0);
+
     return `
     <div class="card exec-suivi-carte" id="execSuiviActivitesRoot" style="margin-top:1.25rem;">
         <div class="exec-suivi-entete">
             <h4>${te('gantt_titre')}</h4>
             <div class="exec-suivi-nav">
-                <button class="btn btn-sm btn-outline" onclick="execGanttBord(-1)" title="${_escAttr(te('gantt_debut'))}">«</button>
-                <button class="btn btn-sm btn-outline" onclick="execGanttDefiler(-1)" title="${_escAttr(te('gantt_reculer'))}">‹</button>
-                <button class="btn btn-sm btn-outline" onclick="execGanttAujourdhui()">${te('gantt_aujourdhui')}</button>
-                <button class="btn btn-sm btn-outline" onclick="execGanttDefiler(1)" title="${_escAttr(te('gantt_avancer'))}">›</button>
-                <button class="btn btn-sm btn-outline" onclick="execGanttBord(1)" title="${_escAttr(te('gantt_fin'))}">»</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttBord(-1)"
+                        data-titre="${_escAttr(te('gantt_debut'))}" title="${_escAttr(te('gantt_debut'))}">«</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttDefiler(-1)"
+                        data-titre="${_escAttr(te('gantt_reculer'))}" title="${_escAttr(te('gantt_reculer'))}">‹</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttAujourdhui()"
+                        data-titre="${_escAttr(te('gantt_aujourdhui'))}">${te('gantt_aujourdhui')}</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttDefiler(1)"
+                        data-titre="${_escAttr(te('gantt_avancer'))}" title="${_escAttr(te('gantt_avancer'))}">›</button>
+                <button class="btn btn-sm btn-outline" onclick="execGanttBord(1)"
+                        data-titre="${_escAttr(te('gantt_fin'))}" title="${_escAttr(te('gantt_fin'))}">»</button>
                 <span class="exec-suivi-jour">${jour(aujourdhui)}</span>
             </div>
         </div>
@@ -891,6 +905,27 @@ function _execSuiviActivitesHtml() {
 // on donne des commandes explicites, dont un retour à la date du jour.
 function _execGanttCadre() {
     return document.querySelector('#execSuiviActivitesRoot .exec-gantt-cadre');
+}
+
+// Les commandes ne valent que si la piste déborde de son cadre : sur un large
+// écran, une piste qui tient tout entière ne bougeait pas d'un clic, et les
+// boutons passaient pour cassés. Ils se ferment alors, et disent pourquoi.
+function execGanttNavEtat() {
+    const cadre = _execGanttCadre();
+    if (!cadre) return;
+    const defilable = cadre.scrollWidth > cadre.clientWidth + 1;
+    document.querySelectorAll('#execSuiviActivitesRoot .exec-suivi-nav .btn').forEach((b) => {
+        b.disabled = !defilable;
+        if (!defilable) b.title = te('gantt_tout_visible');
+        else if (b.dataset.titre) b.title = b.dataset.titre;
+    });
+}
+
+// La largeur du cadre change avec la fenêtre, le pliage de la barre de menu ou
+// l'ouverture d'un volet : l'état des commandes suit.
+if (typeof window !== 'undefined' && !window._execGanttNavObserve) {
+    window._execGanttNavObserve = true;
+    window.addEventListener('resize', () => execGanttNavEtat());
 }
 
 function execGanttDefiler(sens) {

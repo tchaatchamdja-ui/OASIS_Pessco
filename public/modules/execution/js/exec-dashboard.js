@@ -229,17 +229,6 @@ function _execSituationGenerale(F) {
         return j !== null && j < 0;
     }).length;
 
-    // Où en est le plan d'actions correctives des constatations ouvertes.
-    // Le statut suffit : le PAC suit le cycle ouvert → pac_soumis → pac_valide,
-    // avec pac_rejetee en retour vers le prestataire.
-    const _st = c => (c.statut || '').toLowerCase();
-    const pacNonSoumis = ouvertes.filter(c => _st(c) === 'ouvert' || _st(c) === 'ouverte').length;
-    const pacAccepte = ouvertes.filter(c => _st(c) === 'pac_valide').length;
-    const pacRejete = ouvertes.filter(c => _st(c) === 'pac_rejetee').length;
-    // Reste les PAC soumis en attente d'examen : ils n'entrent dans aucune des
-    // trois lignes, la somme ne vaut donc pas toujours l'effectif ouvert.
-    const pacEnExamen = ouvertes.filter(c => _st(c) === 'pac_soumis').length;
-
 
     // ── Build activities table grouped by Domaine → Secteur → Prestataire ──
     // Lookup prestataire (domaine + secteur + nom) pour résoudre les éléments
@@ -582,7 +571,6 @@ function _execSituationGenerale(F) {
         constEnVigueur, totalConst, closedConst, tauxClotureConst,
         fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
         fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
-        pacNonSoumis, pacAccepte, pacRejete, pacEnExamen,
     };
 }
 
@@ -1012,7 +1000,6 @@ function execRenderDashboard() {
         totalConst, closedConst, tauxClotureConst,
         fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
         fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
-        pacNonSoumis, pacAccepte, pacRejete, pacEnExamen,
     } = SG;
 
     // ── Données pour les graphiques (dérivées des mêmes variables filtrées) ──
@@ -1126,17 +1113,12 @@ function execRenderDashboard() {
                     // « En attente de traitement » laissait croire que rien n'y
                     // avait bougé : la carte compte toutes les constatations
                     // notifiées et non soldées, plan d'actions correctives en
-                    // cours d'examen ou déjà validé compris. Les trois mentions
-                    // disent où elles en sont, sans en mettre aucune en avant.
+                    // cours d'examen ou déjà validé compris. Où en est chaque
+                    // plan d'actions se lit au menu Constatations, non ici.
                     titre: te('ouvertes'), couleur: '#ef4444',
                     valeur: fncOuvertes,
                     precision: te('non_soldees')
                         + (horsActiviteOuvertes ? ` · ${horsActiviteOuvertes} ${te('hors_activite_court')}` : ''),
-                    figure: { type: 'etapes', actif: -1, liste: [
-                        `${pacNonSoumis + pacRejete} ${te('pac_a_soumettre')}`,
-                        `${pacEnExamen} ${te('pac_en_examen')}`,
-                        `${pacAccepte} ${te('pac_en_cours')}`,
-                    ] },
                 }),
             ])}
         </div>

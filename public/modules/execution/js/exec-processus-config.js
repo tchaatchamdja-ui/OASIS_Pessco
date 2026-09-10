@@ -157,7 +157,6 @@ function execRenderProcessus() {
     <div class="page-header exec-dash-entete">
       <div>
         <h2>${te('processus')}</h2>
-        <p style="color:var(--text-muted)">${te('processus_intro')}</p>
       </div>
       <button class="btn btn-primary btn-sm" onclick="execProcCfgEditer('')">
         ${EXEC_ICONS.add || ''} ${te('proc_nouveau')}

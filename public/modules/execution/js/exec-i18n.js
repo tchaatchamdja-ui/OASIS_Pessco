@@ -13,7 +13,6 @@
 const EXEC_TR = {
     fr: {
         module_title: 'Exécution de la Surveillance et Suivi',
-        module_subtitle: 'Gestion de l\'execution des activites de surveillance',
         dashboard: 'Tableau de Bord',
         plan_surveillance: 'Activites de Supervision',
         etats: 'Etats',
@@ -367,7 +366,6 @@ const EXEC_TR = {
         secteur_label: 'Secteur',
         chargement: 'Chargement…',
         acces_refuse: 'Accès refusé.',
-        processus_intro: 'Intervenants des processus, secteur par secteur.',
         proc_nouveau: 'Nouveau processus',
         proc_modifier: 'Modifier le processus',
         proc_libelle: 'Intitulé',
@@ -674,7 +672,6 @@ const EXEC_TR = {
     },
     en: {
         module_title: 'Surveillance Execution',
-        module_subtitle: 'Surveillance activity execution management',
         dashboard: 'Dashboard',
         plan_surveillance: 'Supervision Activities',
         etats: 'Status',
@@ -1005,7 +1002,6 @@ const EXEC_TR = {
         secteur_label: 'Sector',
         chargement: 'Loading…',
         acces_refuse: 'Access denied.',
-        processus_intro: 'Process actors, sector by sector.',
         proc_nouveau: 'New process',
         proc_modifier: 'Edit the process',
         proc_libelle: 'Name',
@@ -1302,7 +1298,6 @@ const EXEC_TR = {
     },
     pt: {
         module_title: 'Execucao da Vigilancia',
-        module_subtitle: 'Gestao da execucao das atividades de vigilancia',
         dashboard: 'Painel',
         plan_surveillance: 'Atividades de Supervisao',
         etats: 'Estados',
@@ -1633,7 +1628,6 @@ const EXEC_TR = {
         secteur_label: 'Setor',
         chargement: 'A carregar…',
         acces_refuse: 'Acesso recusado.',
-        processus_intro: 'Intervenientes dos processos, setor a setor.',
         proc_nouveau: 'Novo processo',
         proc_modifier: 'Modificar o processo',
         proc_libelle: 'Designacao',

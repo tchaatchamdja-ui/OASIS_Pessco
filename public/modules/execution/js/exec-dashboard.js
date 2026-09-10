@@ -1082,7 +1082,6 @@ function execRenderDashboard() {
         <div class="page-header exec-dash-entete">
             <div>
                 <h2>${te('dashboard')}</h2>
-                <p style="color:var(--text-muted)">${te('module_subtitle')}</p>
             </div>
             <button class="btn btn-primary btn-sm" onclick="execShowStatistiquesAdvanced()" title="${_escAttr(te('voir_statistiques'))}">
                 ${EXEC_ICONS.dashboard || ''} ${te('voir_statistiques')}

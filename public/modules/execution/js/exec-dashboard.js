@@ -362,8 +362,20 @@ function _execSituationGenerale(F) {
     const secteurNameMap = {};
     secteurs.forEach(s => { secteurNameMap[s.id] = s.code || s.nom || s.id; });
 
-    // Criticite levels for columns — values MUST match DB storage (see FNC form).
-    const criticites = ['critique', 'majeure', 'mineure'];
+    // Colonnes de criticité : le référentiel du module en décide — il se règle
+    // au menu Paramètres. Les trois niveaux étaient écrits en dur : une
+    // quatrième criticité aurait compté au total sans colonne où se lire. Les
+    // clés restent celles enregistrées sur une constatation, en minuscules.
+    const critRef = (EXEC_STATE.data.criticites || [])
+        .filter(c => (c.statut || 'actif') !== 'inactif')
+        .sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+    const critLibelle = {};
+    critRef.forEach((c) => {
+        const cle = String(c.item || c.alias || c.libelle || c.nom || '').toLowerCase();
+        if (cle) critLibelle[cle] = c.item || c.alias || c.libelle || c.nom;
+    });
+    const criticites = Object.keys(critLibelle).length
+        ? Object.keys(critLibelle) : ['critique', 'majeure', 'mineure'];
 
     // ── Accordion Domaine → Secteur → table prestataires ────────────────
     // Helper : stats par prestataire (activités + constatations par criticité).
@@ -371,8 +383,9 @@ function _execSituationGenerale(F) {
         const entry = domaineMap[dId][sId][pId];
         // Activités planifiées : liste "Activités de Supervision" du prestataire.
         const planned = entry.activities.length;
-        // Activités réalisées : parmi ces mêmes activités, celles dont la
-        // notification est actée ou le dossier clôturé.
+        // Activités réalisées : parmi ces mêmes activités, celles dont le
+        // rapport a été transmis — le quatrième niveau d'avancement, celui
+        // que le tableau de bord et les tables du module emploient partout.
         const closed = entry.activities.filter(activiteRealisee).length;
         const execRate = planned > 0 ? Math.round((closed / planned) * 100) : 0;
 
@@ -449,9 +462,9 @@ function _execSituationGenerale(F) {
             <th class="exec-sg-bloc">Planifiées</th>
             <th>Clôturées</th>
             <th>Taux</th>
-            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${te(cr) || cr}</th>`).join('')}
+            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`).join('')}
             <th>${te('total') || 'Total'}</th>
-            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${te(cr) || cr}</th>`).join('')}
+            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`).join('')}
             <th>${te('total') || 'Total'}</th>
         </tr></thead>`;
 

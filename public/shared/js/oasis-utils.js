@@ -73,9 +73,7 @@ async function api(path, options = {}) {
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(path, { ...options, headers: { ...headers, ...options.headers } });
     if (res.status === 401) {
-        localStorage.removeItem('pr_token');
-        localStorage.removeItem('pr_user');
-        window.location.href = '/login';
+        oasisSessionPerdue();
         throw new Error('Session expirée');
     }
     const data = await res.json();

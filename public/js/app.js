@@ -184,7 +184,7 @@ async function api(path, options) {
   o.headers = { ...(o.headers || {}), 'X-OASIS-Request': '1' };
   const res = await fetch(path, o);
   if (res.status === 401) {
-    window.location.href = '/login.html';
+    oasisSessionPerdue();
     throw new Error('unauthenticated');
   }
   return res;

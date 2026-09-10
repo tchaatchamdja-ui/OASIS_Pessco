@@ -7,6 +7,27 @@
    À charger en tête de chaque page, avant les scripts applicatifs.
    ─────────────────────────────────────────────────────────────────────── */
 (function marquerRequetes() {
+  // ── Session perdue ──
+  // Un 401 dit que la session n'est plus : la page ne peut rien en tirer, il
+  // faut revenir à la connexion. Chaque client HTTP le traitait à sa façon —
+  // deux modules ne le traitaient pas du tout et restaient figés sur une
+  // erreur nue. Le retour se fait ici, une fois pour tous.
+  //
+  // Un module vit en cadre dans le portail : `window.location` y ouvrirait la
+  // page de connexion dans le cadre, entourée de la coquille du portail. C'est
+  // la fenêtre entière qui doit y revenir.
+  window.oasisSessionPerdue = function oasisSessionPerdue() {
+    if (window.__oasisSessionPerdue) return;
+    window.__oasisSessionPerdue = true;
+    try {
+      localStorage.removeItem('pr_user');
+      localStorage.removeItem('pr_token');
+    } catch (e) { /* stockage fermé : la session tombe quand même */ }
+    const cible = '/login.html';
+    try { (window.top || window).location.href = cible; }
+    catch (e) { window.location.href = cible; }
+  };
+
   if (window.__oasisRequeteMarquee) return;
   window.__oasisRequeteMarquee = true;
 

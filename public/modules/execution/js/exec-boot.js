@@ -48,9 +48,11 @@ async function api(path, options = {}) {
     if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
     const res = await fetch(path, { ...options, headers, credentials: 'same-origin' });
     if (res.status === 401) {
-        localStorage.removeItem('pr_user');
-        window.location.href = '/login';
-        throw new Error('Non autorisé');
+        // Session perdue : le socle ramène la fenêtre entière à la connexion.
+        // Le module vit en cadre — s'y rendre lui-même y aurait ouvert la page
+        // de connexion, entourée de la coquille du portail.
+        oasisSessionPerdue();
+        throw new Error('Session expirée');
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));

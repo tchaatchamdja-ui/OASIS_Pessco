@@ -48,6 +48,11 @@ const MES_STATE = {
 async function mesApi(chemin, options) {
     const o = { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...(options || {}) };
     const r = await fetch(MES_API + chemin, o);
+    if (r.status === 401) {
+        // Session perdue : le socle ramène la fenêtre entière à la connexion.
+        oasisSessionPerdue();
+        throw new Error('Session expirée');
+    }
     if (!r.ok) {
         const err = await r.json().catch(() => ({ error: r.statusText }));
         throw new Error(err.error || r.statusText);

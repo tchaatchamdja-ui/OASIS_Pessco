@@ -494,9 +494,13 @@ function mesSetLang(lang) {
     MES_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
     // Les libellés changent : la coquille doit être redessinée. Les volets
-    // ouverts sont alors remontés tels quels, saisie comprise.
+    // ouverts sont alors remontés tels quels, saisie comprise. Les commandes
+    // posées dans la barre supérieure — instance regardée, gestion des droits —
+    // vivent hors de la coquille : elles se redessinent à part, sans quoi elles
+    // gardaient la langue d'avant.
     mesRenderApp();
     mesRenderPage();
+    if (typeof mesDessinerActions === 'function') mesDessinerActions();
 }
 
 function mesRetourPortail() {

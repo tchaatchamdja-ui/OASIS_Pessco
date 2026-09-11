@@ -3504,8 +3504,8 @@ window.execModifierCommentaireSuivi = function (bouton) {
     if (t) t.focus();
 };
 
-window.execSupprimerCommentaireSuivi = function (bouton) {
-    if (!confirm(te('confirm_supprimer_commentaire'))) return;
+window.execSupprimerCommentaireSuivi = async function (bouton) {
+    if (!await oasisConfirmer(te('confirm_supprimer_commentaire'))) return;
     const liste = document.getElementById('pac_suivi_liste');
     bouton.closest('.exec-suivi-comm')?.remove();
     if (liste && !liste.querySelector('.exec-suivi-comm')) {
@@ -3713,8 +3713,8 @@ window.execModifierSuivi = function (bouton) {
     zone.focus();
 };
 
-window.execSupprimerSuivi = function (bouton) {
-    if (!confirm(te('confirm_supprimer_commentaire'))) return;
+window.execSupprimerSuivi = async function (bouton) {
+    if (!await oasisConfirmer(te('confirm_supprimer_commentaire'))) return;
     const liste = document.getElementById('anac_suivis_list');
     bouton.closest('.exec-suivi')?.remove();
     if (liste && !liste.querySelector('.exec-suivi')) {
@@ -3894,7 +3894,7 @@ async function execSubmitPAC(fncId) {
 
 // ── Renvoyer au postulant (AAC) ──────────────────────────────────
 async function execReturnPACtoPostulant(fncId) {
-    if (!confirm(te('confirm_renvoyer'))) return;
+    if (!await oasisConfirmer(te('confirm_renvoyer'))) return;
     const user = EXEC_STATE.user || {};
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'AAC';
     const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
@@ -3952,7 +3952,7 @@ async function execPacModeEdition(fncId, mode) {
     const actif = courants.includes(mode);
     if (!actif && mode === 'amendement') await _execPacAssurerEmpreinte(fncId);
     if (actif && mode === 'amendement') {
-        if (!confirm(te('confirm_quitter_amendement'))) return;
+        if (!await oasisConfirmer(te('confirm_quitter_amendement'))) return;
         await _execPacRetablirPlanAccepte(fncId);
     }
     const modes = actif ? courants.filter((m) => m !== mode) : courants.concat([mode]);
@@ -4041,7 +4041,7 @@ async function execSoumettreMiseEnOeuvre(fncId, mode) {
         motifsAmendement = motifs;
     }
 
-    if (!confirm(amendement ? te('confirm_soumettre_amendement') : te('confirm_soumettre_preuves'))) return;
+    if (!await oasisConfirmer(amendement ? te('confirm_soumettre_amendement') : te('confirm_soumettre_preuves'))) return;
 
     const pac = _collectPACData();
     if (amendement && pac.actions_correctives[0]) {
@@ -4120,7 +4120,7 @@ function execPreuvesNonAcceptables(fncId) {
 // Si l'AAC a coché « À vérifier sur le terrain », un bandeau l'annonce.
 async function execAccepterPreuves(fncId) {
     const terrain = !!document.getElementById('anac_verif_terrain')?.checked;
-    if (!confirm(terrain ? te('confirm_accepter_preuves_terrain') : te('confirm_accepter_preuves'))) return;
+    if (!await oasisConfirmer(terrain ? te('confirm_accepter_preuves_terrain') : te('confirm_accepter_preuves'))) return;
     const user = EXEC_STATE.user || {};
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'AAC';
     const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
@@ -4149,8 +4149,8 @@ async function execAccepterPreuves(fncId) {
 
 // Annuler : les saisies non enregistrées sont abandonnées et le formulaire se
 // recharge tel qu'il est en base. Il ne se referme pas.
-function execAnnulerSaisiePAC(fncId) {
-    if (!confirm(te('confirm_annuler_saisie'))) return;
+async function execAnnulerSaisiePAC(fncId) {
+    if (!await oasisConfirmer(te('confirm_annuler_saisie'))) return;
     execOpenPACSlider(fncId);
 }
 
@@ -4190,7 +4190,7 @@ function execRenvoyerMiseEnOeuvre(fncId) {
 // étapes se ferment et le circuit se présente à la clôture.
 async function execAccepterPAC(fncId, avecPreuves) {
     const question = avecPreuves ? te('confirm_accepter_pac_preuves') : te('confirm_accepter_pac');
-    if (!confirm(question)) return;
+    if (!await oasisConfirmer(question)) return;
 
     const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
     const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
@@ -4229,7 +4229,7 @@ async function execAccepterPAC(fncId, avecPreuves) {
 
 // ── Solder la Constatation (AAC) ─────────────────────────────────
 async function execCloseFNC(fncId) {
-    if (!confirm(te('confirm_solder'))) return;
+    if (!await oasisConfirmer(te('confirm_solder'))) return;
     const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
     try {
         await api(`${EXEC_MODULE_API}/constatations/${fncId}/close`, {

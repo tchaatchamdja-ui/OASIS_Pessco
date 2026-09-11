@@ -43,6 +43,34 @@
 .oasis-toast-titre { font-size: .92rem; font-weight: 700; color: var(--oasis-toast-teinte); }
 .oasis-toast-message { font-size: .85rem; line-height: 1.45; word-break: break-word; }
 
+/* ── Confirmation ──
+   La question se pose au centre, par-dessus modales et volets (100010), mais
+   sous le retour d'action (100020) qui peut la suivre. Le bouton qui engage
+   prend la teinte du thème — le rouge quand le geste ne se rattrape pas. */
+.oasis-confirm-fond {
+    position: fixed; inset: 0; z-index: 100015; display: flex;
+    align-items: center; justify-content: center; padding: 1rem;
+    background: rgba(15, 23, 42, .45);
+}
+.oasis-confirm {
+    width: min(26rem, 92vw); padding: 1.1rem 1.2rem 1rem; border-radius: 10px;
+    background: var(--bg-card, #fff); color: var(--text, #0f172a);
+    border: 1px solid var(--border, #e2e8f0);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .3);
+    animation: oasisToastEntree .16s ease-out;
+}
+.oasis-confirm-titre { display: block; font-size: .95rem; font-weight: 700; margin-bottom: .45rem; }
+.oasis-confirm-message { margin: 0 0 1rem; font-size: .88rem; line-height: 1.5; white-space: pre-line; }
+.oasis-confirm-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+.oasis-confirm-actions button {
+    padding: .45rem .9rem; border-radius: 6px; font: inherit; font-size: .84rem;
+    font-weight: 600; cursor: pointer; border: 1px solid var(--border, #cbd5e1);
+}
+.oasis-confirm-non { background: transparent; color: var(--text, #0f172a); }
+.oasis-confirm-oui { background: var(--primary, #1a365d); border-color: var(--primary, #1a365d); color: #fff; }
+.oasis-confirm-fond.danger .oasis-confirm-oui { background: #b91c1c; border-color: #b91c1c; }
+.oasis-confirm-actions button:focus-visible { outline: 2px solid var(--primary, #1a365d); outline-offset: 2px; }
+
 @keyframes oasisToastEntree {
     from { opacity: 0; transform: scale(.96); }
     to   { opacity: 1; transform: none; }

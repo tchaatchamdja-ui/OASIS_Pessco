@@ -34,7 +34,7 @@ async function planConfirmSubmit(planId) {
         await planLoadData();
         await planOpenDetail(planId);
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -119,7 +119,7 @@ async function planApplyDecision() {
         await planLoadData();
         planRenderPage();
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -132,22 +132,22 @@ async function planApprouverDG(planId) {
             method: 'POST', body: JSON.stringify({ commentaire, lettre_transmission: lettre })
         });
         await planLoadData(); await planOpenDetail(planId);
-        alert('Plan approuvé par le DG');
-    } catch (e) { alert(e.message); }
+        oasisToast('Plan approuvé par le DG', 'success');
+    } catch (e) { oasisToast(e.message, 'error'); }
 }
 
 async function planTransmettre(planId) {
-    if (!confirm('Marquer ce plan comme transmis au prestataire ?\nLa lettre de transmission doit avoir été enregistrée.')) return;
+    if (!await oasisConfirmer('Marquer ce plan comme transmis au prestataire ?\nLa lettre de transmission doit avoir été enregistrée.')) return;
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/transmettre`, { method: 'POST' });
         await planLoadData(); await planOpenDetail(planId);
-        alert('Plan transmis au prestataire');
-    } catch (e) { alert(e.message); }
+        oasisToast('Plan transmis au prestataire', 'success');
+    } catch (e) { oasisToast(e.message, 'error'); }
 }
 
 async function planAmend(planId) {
     // Confirmation dialog
-    if (!confirm(tp('confirm_amend'))) return;
+    if (!await oasisConfirmer(tp('confirm_amend'))) return;
     const motif = prompt(tp('reason') + ':');
     if (motif === null) return;
     try {
@@ -162,12 +162,12 @@ async function planAmend(planId) {
             await planOpenDetail(planId);
         }
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
 async function planCancelAmendment(planId) {
-    if (!confirm(tp('confirm_cancel_amend'))) return;
+    if (!await oasisConfirmer(tp('confirm_cancel_amend'))) return;
     const comment = prompt(tp('comment') + ':');
     if (comment === null) return;
     try {
@@ -183,7 +183,7 @@ async function planCancelAmendment(planId) {
             planRenderPage();
         }
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -215,7 +215,7 @@ function planExportPDF(planId) {
     const plan = (PLAN_STATE.selectedPlan && PLAN_STATE.selectedPlan.id === planId)
         ? PLAN_STATE.selectedPlan
         : (PLAN_STATE.data.plans || []).find(p => p.id === planId);
-    if (!plan) { alert(tp('no_data')); return; }
+    if (!plan) { oasisToast(tp('no_data'), 'warning'); return; }
     const activites = plan.activites
         || (PLAN_STATE.data.allActivites || []).filter(a => a.plan_id === planId);
     const aac = PLAN_STATE.data.aac || {};
@@ -325,7 +325,7 @@ function planExportPDF(planId) {
 </body></html>`;
 
     const w = window.open('', '_blank');
-    if (!w) { alert(tp('popup_blocked')); return; }
+    if (!w) { oasisToast(tp('popup_blocked'), 'warning'); return; }
     w.document.write(html);
     w.document.close();
     w.focus();
@@ -401,17 +401,17 @@ async function planCreateComment(planId) {
         planCloseModal();
         planLoadComments(planId);
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
 async function planDeleteComment(comId, planId) {
-    if (!confirm(tp('confirm_delete'))) return;
+    if (!await oasisConfirmer(tp('confirm_delete'))) return;
     try {
         await api(`${PLAN_MODULE_API}/commentaires/${comId}`, { method: 'DELETE' });
         planLoadComments(planId);
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -434,7 +434,7 @@ async function planShowWorkflowHistory(planId) {
         </table>` : `<p>${tp('no_data')}</p>`;
         planShowModal(tp('workflow_history'), body);
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 

@@ -61,4 +61,70 @@
   }
 
   window.oasisToast = oasisToast;
+
+  // ── Confirmation ──
+  // La boîte du navigateur (`confirm`) figeait la page entière, ne suivait ni
+  // la charte ni la langue retenue, et disait « OK » à une suppression
+  // définitive. Celle-ci en tient la place : même question, deux boutons
+  // nommés, le geste destructeur en rouge. Échap ou un clic à côté répondent
+  // non ; Entrée répond oui.
+  //
+  //   if (!await oasisConfirmer('Supprimer cette carence ?')) return;
+  //   oasisConfirmer(message, { titre, libelle, libelleAnnuler, danger })
+  //
+  // `danger` se déduit du message quand il n'est pas donné : supprimer,
+  // retirer, annuler, réinitialiser disent un geste qu'on ne rattrape pas.
+  const BOUTONS = {
+    fr: { oui: 'Confirmer', non: 'Annuler', titre: 'Confirmation' },
+    en: { oui: 'Confirm', non: 'Cancel', titre: 'Confirmation' },
+    pt: { oui: 'Confirmar', non: 'Cancelar', titre: 'Confirmacao' },
+  };
+  const DESTRUCTEUR = /supprim|effac|retir|annul|réinitialis|reinitialis|définitiv|delete|remove|eliminar/i;
+
+  function oasisConfirmer(message, options) {
+    const o = options || {};
+    const l = BOUTONS[langue()] || BOUTONS.fr;
+    const danger = o.danger === undefined ? DESTRUCTEUR.test(String(message)) : !!o.danger;
+    // Une seule question à la fois : une nouvelle remplace la précédente, qui
+    // se résout alors par la négative.
+    document.querySelectorAll('.oasis-confirm-fond').forEach((v) => v._repondre && v._repondre(false));
+    return new Promise((resolve) => {
+      const fond = document.createElement('div');
+      fond.className = `oasis-confirm-fond${danger ? ' danger' : ''}`;
+      fond.innerHTML = `
+        <div class="oasis-confirm" role="alertdialog" aria-modal="true">
+          <strong class="oasis-confirm-titre"></strong>
+          <p class="oasis-confirm-message"></p>
+          <div class="oasis-confirm-actions">
+            <button type="button" class="oasis-confirm-non"></button>
+            <button type="button" class="oasis-confirm-oui"></button>
+          </div>
+        </div>`;
+      fond.querySelector('.oasis-confirm-titre').textContent = o.titre || l.titre;
+      fond.querySelector('.oasis-confirm-message').textContent = String(message == null ? '' : message);
+      fond.querySelector('.oasis-confirm-non').textContent = o.libelleAnnuler || l.non;
+      fond.querySelector('.oasis-confirm-oui').textContent = o.libelle || l.oui;
+
+      const avant = document.activeElement;
+      const clavier = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); repondre(false); }
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); repondre(true); }
+      };
+      function repondre(oui) {
+        document.removeEventListener('keydown', clavier, true);
+        fond.remove();
+        if (avant && avant.focus) { try { avant.focus(); } catch (e) { /* élément disparu */ } }
+        resolve(!!oui);
+      }
+      fond._repondre = repondre;
+      fond.addEventListener('click', (e) => { if (e.target === fond) repondre(false); });
+      fond.querySelector('.oasis-confirm-non').addEventListener('click', () => repondre(false));
+      fond.querySelector('.oasis-confirm-oui').addEventListener('click', () => repondre(true));
+      document.addEventListener('keydown', clavier, true);
+      document.body.appendChild(fond);
+      fond.querySelector('.oasis-confirm-oui').focus();
+    });
+  }
+
+  window.oasisConfirmer = oasisConfirmer;
 }());

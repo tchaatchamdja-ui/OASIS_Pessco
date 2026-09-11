@@ -975,14 +975,16 @@ function execProcConfirmer({ titre, message, depuis, vers, libelle, saisie }) {
 
 const execProcLibelleEtape = (id) => (EXEC_PROC_ETAPES.find((e) => e.id === id) || {}).label || id;
 
-// Les écrans repris de PESSCO posent leur propre `confirm()` natif : la boîte
-// du processus l'a déjà remplacé, on ne demande pas deux fois.
+// Les écrans repris de PESSCO posent leur propre confirmation : la boîte du
+// processus l'a déjà posée, on ne demande pas deux fois. Ils passent par la
+// boîte du socle, `oasisConfirmer` — c'est elle qui répond oui le temps de
+// l'action, non plus le `confirm()` du navigateur qu'ils n'appellent plus.
 async function execProcSansConfirm(fn, reponsePrompt) {
-  const confirmOrig = window.confirm;
+  const confirmerOrig = window.oasisConfirmer;
   const promptOrig = window.prompt;
-  window.confirm = () => true;
+  window.oasisConfirmer = async () => true;
   if (reponsePrompt !== undefined) window.prompt = () => reponsePrompt;
-  try { return await fn(); } finally { window.confirm = confirmOrig; window.prompt = promptOrig; }
+  try { return await fn(); } finally { window.oasisConfirmer = confirmerOrig; window.prompt = promptOrig; }
 }
 
 // ══════════════════════════════════════

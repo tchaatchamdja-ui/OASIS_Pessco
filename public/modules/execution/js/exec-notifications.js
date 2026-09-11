@@ -607,7 +607,7 @@ async function execSaveNotificationDraft() {
         execRenderPage();
     } catch (e) {
         console.error('Save notification error:', e);
-        alert('Erreur lors de la sauvegarde.');
+        oasisToast('Erreur lors de la sauvegarde.', 'error');
     }
 }
 
@@ -824,7 +824,7 @@ async function execSubmitNotificationForValidation() {
             execRenderPage();
         } catch (e) {
             console.error('Submit notification error:', e);
-            alert('Erreur lors de la soumission.');
+            oasisToast('Erreur lors de la soumission.', 'error');
         }
     });
 }
@@ -878,7 +878,7 @@ async function execSubmitBrouillon(notifId) {
             if (typeof showNotification === 'function') showNotification(te('notification_submitted') || 'Notification soumise', 'success');
         } catch (e) {
             console.error('Submit brouillon error:', e);
-            alert(e.message || 'Erreur lors de la soumission');
+            oasisToast(e.message || 'Erreur lors de la soumission', 'error');
         }
     });
 }
@@ -912,20 +912,20 @@ function _showValidatorPicker(onConfirm) {
         overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
         document.getElementById('validator_picker_confirm').onclick = () => {
             const sel = document.getElementById('validator_picker_select')?.value || '';
-            if (!sel) { alert('Veuillez sélectionner un validateur'); return; }
+            if (!sel) { oasisToast('Veuillez sélectionner un validateur', 'warning'); return; }
             overlay.remove();
             onConfirm(sel);
         };
-    }).catch(() => {
+    }).catch(async () => {
         // Fallback: submit without validator
-        if (confirm(te('confirm_submit') || 'Soumettre cette notification pour validation ?')) {
+        if (await oasisConfirmer(te('confirm_submit') || 'Soumettre cette notification pour validation ?')) {
             onConfirm('');
         }
     });
 }
 
 async function execDeleteBrouillon(notifId) {
-    if (!confirm('Supprimer ce brouillon ? L\'activité sera de nouveau disponible dans "A Notifier".')) return;
+    if (!await oasisConfirmer('Supprimer ce brouillon ? L\'activité sera de nouveau disponible dans "A Notifier".')) return;
     try {
         await api(`${EXEC_MODULE_API}/notifications/${notifId}`, { method: 'DELETE' });
         await execRefreshDynamic();
@@ -934,7 +934,7 @@ async function execDeleteBrouillon(notifId) {
         if (typeof showNotification === 'function') showNotification('Brouillon supprimé', 'success');
     } catch (e) {
         console.error('Delete brouillon error:', e);
-        alert(e.message || 'Erreur lors de la suppression');
+        oasisToast(e.message || 'Erreur lors de la suppression', 'error');
     }
 }
 
@@ -952,7 +952,7 @@ async function execCancelNotification(notifId, fromTab) {
         if (typeof showNotification === 'function') showNotification('Notification annulée', 'success');
     } catch (e) {
         console.error('Cancel notification error:', e);
-        alert(e.message || 'Erreur lors de l\'annulation');
+        oasisToast(e.message || 'Erreur lors de l\'annulation', 'error');
     }
 }
 
@@ -1060,7 +1060,7 @@ async function execSaveContactChanges(prestataireId) {
         if (typeof showNotification === 'function') showNotification('Contacts mis à jour', 'success');
     } catch (e) {
         console.error('Save contacts error:', e);
-        alert(e.message || 'Erreur');
+        oasisToast(e.message || 'Erreur', 'error');
     }
 }
 
@@ -1079,7 +1079,7 @@ async function execOpenExchangeSlider(notifId) {
         console.error('Load exchange error:', e);
         return;
     }
-    if (!notif) { alert('Notification non trouvée'); return; }
+    if (!notif) { oasisToast('Notification non trouvée', 'error'); return; }
     echanges = echanges || [];
     EXEC_STATE.selectedNotification = notif;
 

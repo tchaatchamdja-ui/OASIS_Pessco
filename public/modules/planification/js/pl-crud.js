@@ -210,7 +210,7 @@ async function planCreatePlan() {
         await planLoadData();
         planNavigateTo('plans');
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -279,29 +279,29 @@ async function planUpdatePlan(planId) {
             planRenderPage();
         }
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
 async function planDeletePlan(planId) {
-    if (!confirm(tp('confirm_delete'))) return;
+    if (!await oasisConfirmer(tp('confirm_delete'))) return;
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}`, { method: 'DELETE' });
         await planLoadData();
         planNavigateTo('plans');
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
 async function planArchivePlan(planId) {
-    if (!confirm(tp('confirm_archive'))) return;
+    if (!await oasisConfirmer(tp('confirm_archive'))) return;
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/archiver`, { method: 'POST' });
         await planLoadData();
         planRenderPage();
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -548,7 +548,7 @@ async function planCreateActivity(planId) {
         PLAN_STATE._keepPrefill = true;
         await planOpenDetail(planId);
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -562,19 +562,19 @@ async function planUpdateActivity(actId) {
             await planOpenDetail(PLAN_STATE.selectedPlan.id);
         }
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
 async function planDeleteActivity(actId) {
-    if (!confirm(tp('confirm_delete'))) return;
+    if (!await oasisConfirmer(tp('confirm_delete'))) return;
     try {
         await api(`${PLAN_MODULE_API}/activites/${actId}`, { method: 'DELETE' });
         if (PLAN_STATE.selectedPlan) {
             await planOpenDetail(PLAN_STATE.selectedPlan.id);
         }
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -710,7 +710,7 @@ async function planSyncRisksSelective(planId) {
         planShowModal(tp('sync_select_changes'), body, footer, 'modal-lg');
 
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -740,6 +740,6 @@ async function planApplySyncSelection(planId) {
             await planOpenDetail(planId);
         }
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }

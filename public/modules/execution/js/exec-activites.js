@@ -1553,7 +1553,7 @@ async function execUploadAnnexeFile(input) {
 }
 
 async function execSubmitDossier(dossierId) {
-    if (!confirm('Soumettre ce rapport pour validation ?')) return;
+    if (!await oasisConfirmer('Soumettre ce rapport pour validation ?')) return;
     // Save first, also clear observations
     await execSaveDossier(dossierId, true);
     try {
@@ -1674,7 +1674,7 @@ async function execSaveRealisation(dossierId) {
 }
 
 async function execCloseRealisation(dossierId) {
-    if (!confirm('Clôturer l\'exécution sur le terrain ? La rédaction du rapport sera activée.')) return;
+    if (!await oasisConfirmer('Clôturer l\'exécution sur le terrain ? La rédaction du rapport sera activée.')) return;
     await execSaveRealisation(dossierId);
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/close-realisation`, { method: 'PUT' });
@@ -1788,7 +1788,7 @@ async function execSaveChecklistsPicker(dossierId, returnTab) {
 
 // Retire une checklist de la sélection du dossier (depuis la section déployée).
 async function execRemoveDossierChecklist(dossierId, checklistId) {
-    if (!confirm('Retirer cette checklist de la sélection ?')) return;
+    if (!await oasisConfirmer('Retirer cette checklist de la sélection ?')) return;
     const dossier = (EXEC_STATE.data.dossiers || []).find(d => d.id === dossierId)
         || EXEC_STATE.selectedDossier || {};
     const _parse = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
@@ -2203,7 +2203,7 @@ async function execSetDossierChecklistValidee(dossierId, checklistId, validee) {
     let ids = _parse(dossier.checklists_validees);
     if (validee) { if (!ids.includes(checklistId)) ids.push(checklistId); }
     else { ids = ids.filter(id => id !== checklistId); }
-    if (validee && !confirm('Confirmer que cette checklist a été vérifiée et validée ?')) return;
+    if (validee && !await oasisConfirmer('Confirmer que cette checklist a été vérifiée et validée ?')) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, {
             method: 'PUT', body: JSON.stringify({ checklists_validees: JSON.stringify(ids) })
@@ -2262,7 +2262,7 @@ async function execChkFillGenConstatation(dossierId, itemId) {
     // Observation terrain saisie pour cet item (état courant du DOM)
     const obsEl = document.querySelector(`#execChkFillerGroups .exec-chk-fill-obs[data-item="${itemId}"]`);
     const observation = obsEl ? obsEl.value : '';
-    if (!confirm('Générer une constatation (brouillon) pour cet item non satisfaisant ?')) return;
+    if (!await oasisConfirmer('Générer une constatation (brouillon) pour cet item non satisfaisant ?')) return;
     try {
         const _ds = _execResolveDossierDomSec(dossier);
         const payload = {
@@ -2636,7 +2636,7 @@ async function _execChkFillAutosave(dossierId, checklistId, itemId, field, value
 }
 
 async function execValidateRapport(rapportId) {
-    if (!confirm('Valider ce rapport ? Un numéro de rapport final sera généré.')) return;
+    if (!await oasisConfirmer('Valider ce rapport ? Un numéro de rapport final sera généré.')) return;
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/validate`, { method: 'PUT' });
         await execRefreshDynamic();
@@ -2667,7 +2667,7 @@ async function execAmendRapport(rapportId) {
 }
 
 async function execSendRapportValidated(rapportId) {
-    if (!confirm('Envoyer ce rapport à l\'organisme ?')) return;
+    if (!await oasisConfirmer('Envoyer ce rapport à l\'organisme ?')) return;
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/send`, { method: 'PUT' });
         await execRefreshDynamic();
@@ -2706,7 +2706,7 @@ async function execGenerateNotificationPdf(dossierId) {
 }
 
 async function execReturnDossier(dossierId) {
-    if (!confirm('Confirmer le renvoi du dossier pour correction ?')) return;
+    if (!await oasisConfirmer('Confirmer le renvoi du dossier pour correction ?')) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/return`, {
             method: 'PUT',
@@ -2811,7 +2811,7 @@ async function execSaveDossier(dossierId, silent) {
 }
 
 async function execCloseDossier(dossierId) {
-    if (!confirm('Cloturer ce dossier ?')) return;
+    if (!await oasisConfirmer('Cloturer ce dossier ?')) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/close`, { method: 'PUT' });
         await execRefreshDynamic();
@@ -3201,7 +3201,7 @@ function execValidateDateOuverture() {
     if (!dateInput || !minDateInput) return;
     const minDate = minDateInput.value;
     if (minDate && dateInput.value && dateInput.value < minDate) {
-        alert(`La date d'ouverture ne peut pas être antérieure au début de l'activité (${minDate}).`);
+        oasisToast(`La date d'ouverture ne peut pas être antérieure au début de l'activité (${minDate}).`, 'warning');
         dateInput.value = minDate;
     }
     execCalcDateDue();
@@ -3292,7 +3292,7 @@ async function execSaveFNC(dossierId, fncId) {
 // ══════════════════════════════════════
 
 async function execDeleteConstatation(fncId) {
-    if (!confirm(te('confirm_delete_constatation'))) return;
+    if (!await oasisConfirmer(te('confirm_delete_constatation'))) return;
     try {
         await api(`${EXEC_MODULE_API}/constatations/${fncId}`, { method: 'DELETE' });
         await execRefreshDynamic();
@@ -3306,20 +3306,20 @@ async function execDeleteConstatation(fncId) {
         }
     } catch (e) {
         console.error('Delete constatation error:', e);
-        alert('Erreur lors de la suppression.');
+        oasisToast('Erreur lors de la suppression.', 'error');
     }
 }
 
 
 async function execDeleteDossier(dossierId) {
-    if (!confirm(te('confirm_delete_activite'))) return;
+    if (!await oasisConfirmer(te('confirm_delete_activite'))) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'DELETE' });
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {
         console.error('Delete dossier error:', e);
-        alert('Erreur lors de la suppression.');
+        oasisToast('Erreur lors de la suppression.', 'error');
     }
 }
 
@@ -3330,7 +3330,7 @@ async function execSendRapport(rapportId) {
         execRenderPage();
     } catch (e) {
         console.error('Send rapport error:', e);
-        alert('Erreur lors de l\'envoi.');
+        oasisToast('Erreur lors de l\'envoi.', 'error');
     }
 }
 

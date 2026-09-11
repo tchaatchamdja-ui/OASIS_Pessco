@@ -190,7 +190,7 @@ window.basculerInstance = async function (nom) {
 };
 
 window.supprimerInstance = async function (nom) {
-  if (!confirm(`Supprimer l’instance « ${nom} » ? Cette action est sans retour.`)) return;
+  if (!await oasisConfirmer(`Supprimer l’instance « ${nom} » ? Cette action est sans retour.`)) return;
   const res = await api(`/api/instances/${encodeURIComponent(nom)}`, { method: 'DELETE' });
   const d = await res.json().catch(() => ({}));
   if (!res.ok) {

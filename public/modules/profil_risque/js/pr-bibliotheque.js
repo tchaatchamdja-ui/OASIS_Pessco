@@ -105,7 +105,7 @@ async function uploadDocWithFile() {
 }
 
 async function deleteDoc(id) {
-    if (!confirm(t('confirm_delete'))) return;
+    if (!await oasisConfirmer(t('confirm_delete'))) return;
     try { await api(`/api/documents/${id}`, { method: 'DELETE' }); await loadAllData(); renderPage(); } catch (e) { showToast(e.message, 'error'); }
 }
 

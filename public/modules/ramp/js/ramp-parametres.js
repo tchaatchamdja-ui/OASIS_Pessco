@@ -257,7 +257,7 @@ async function rampEnregistrerDepot() {
 
 async function rampSupprimerDepot(id) {
     const d = RAMP_STATE.data.depots.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer le dépôt « ${d.nom} » et son fichier ?`)) return;
+    if (!await oasisConfirmer(`Supprimer le dépôt « ${d.nom} » et son fichier ?`)) return;
     try {
         await rampApi(`/depots/${id}`, { method: 'DELETE' });
         await rampChargerDepots();
@@ -454,7 +454,7 @@ async function rampBasculerContact(id) {
 
 async function rampSupprimerContact(id) {
     const c = RAMP_STATE.data.contacts.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer définitivement ${c.prenom} ${c.nom} ?`)) return;
+    if (!await oasisConfirmer(`Supprimer définitivement ${c.prenom} ${c.nom} ?`)) return;
     try {
         await rampApi(`/contacts/${id}`, { method: 'DELETE' });
         await rampChargerContacts();
@@ -897,7 +897,7 @@ async function rampSupprimerParam(id) {
     // cherche donc dans toutes, non dans la seule famille de l'onglet.
     const p = Object.values(RAMP_STATE.data.parametres.familles || {})
         .flat().find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer « ${p.label} » ?`)) return;
+    if (!await oasisConfirmer(`Supprimer « ${p.label} » ?`)) return;
     try {
         await rampApi(`/parametres/${id}`, { method: 'DELETE' });
         RAMP_STATE.data.parametres = await rampApi('/parametres');
@@ -1193,7 +1193,7 @@ async function rampBasculerPays(id) {
 
 async function rampSupprimerPays(id) {
     const p = RAMP_STATE.pays.liste.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer « ${p.nom} » ?`)) return;
+    if (!await oasisConfirmer(`Supprimer « ${p.nom} » ?`)) return;
     try {
         await rampApi(`/pays/${id}`, { method: 'DELETE' });
         await rampChargerPays();
@@ -1507,7 +1507,7 @@ async function rampBasculerAeroport(id) {
 
 async function rampSupprimerAeroport(id) {
     const a = RAMP_STATE.aeroports.liste.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer « ${a.nom} » ?`)) return;
+    if (!await oasisConfirmer(`Supprimer « ${a.nom} » ?`)) return;
     try {
         await rampApi(`/aeroports/${id}`, { method: 'DELETE' });
         await rampChargerAeroports();
@@ -1834,7 +1834,7 @@ async function rampBasculerAeronef(id) {
 async function rampSupprimerAeronef(id) {
     const r = RAMP_STATE.aeronefs.resultat || { lignes: [] };
     const a = r.lignes.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer « ${a.designation} — ${a.modele} » ?`)) return;
+    if (!await oasisConfirmer(`Supprimer « ${a.designation} — ${a.modele} » ?`)) return;
     try {
         await rampApi(`/aeronefs/${id}`, { method: 'DELETE' });
         await rampChargerAeronefs();

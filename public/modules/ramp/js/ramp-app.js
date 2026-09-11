@@ -1681,7 +1681,7 @@ function rampRenderInspections() {
 async function rampSupprimerInspection(id) {
     const i = RAMP_STATE.data.inspections.find((x) => x.id === id) || {};
     const n = (i.anomalies || []).length;
-    if (!confirm(`Supprimer l'inspection du ${rampDate(i.date)} (${i.exploitant || '—'}) `
+    if (!await oasisConfirmer(`Supprimer l'inspection du ${rampDate(i.date)} (${i.exploitant || '—'}) `
         + `et ses ${n} écart(s) ?`)) return;
     try {
         await rampApi(`/inspections/${id}`, { method: 'DELETE' });

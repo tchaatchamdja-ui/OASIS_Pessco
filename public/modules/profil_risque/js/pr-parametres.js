@@ -630,7 +630,7 @@ async function saveEntity(collection, itemId) {
 }
 
 async function deleteEntity(collection, itemId) {
-    if (!confirm(t('confirm_delete'))) return;
+    if (!await oasisConfirmer(t('confirm_delete'))) return;
     const apiMap = { domaines:'/api/domaines', secteurs:'/api/secteurs', sous_activites:'/api/sous-activites',
         indicateurs_conf:`${MODULE_API}/indicateurs-conf`, indicateurs_perf:`${MODULE_API}/indicateurs-perf`,
         indicateurs_complex:`${MODULE_API}/indicateurs-complex`, prestataires:'/api/prestataires' };

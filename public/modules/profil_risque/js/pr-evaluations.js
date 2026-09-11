@@ -1665,10 +1665,10 @@ function _renderConsolidationTable(cumulative, currentChanges, roundsCount) {
     </div>`;
 }
 
-function startConsolidation(evalId) {
+async function startConsolidation(evalId) {
     const ev = APP_STATE.data.evaluations.find(e => e.id === evalId);
     if (!ev) return;
-    if (!confirm("Démarrer la consolidation ?\nLes notes des indicateurs (Conformité, Performance, Complexité) deviendront éditables pour permettre les modifications. Le suivi s'arrête à l'enregistrement de la réunion.")) return;
+    if (!await oasisConfirmer("Démarrer la consolidation ?\nLes notes des indicateurs (Conformité, Performance, Complexité) deviendront éditables pour permettre les modifications. Le suivi s'arrête à l'enregistrement de la réunion.")) return;
     const snap = {
         notes_conf: { ...(ev.notes_conf || {}) },
         notes_perf: { ...(ev.notes_perf || {}) },
@@ -2375,7 +2375,7 @@ async function soumettreMesNotes(evalId) {
         showToast(`Impossible de soumettre : ${perfMissing.length} indicateur(s) Performance et ${compMissing.length} indicateur(s) Complexité non notés.`, 'error');
         return;
     }
-    if (!confirm('Soumettre vos notes au validateur ? Elles deviendront visibles et ne pourront plus être modifiées.')) return;
+    if (!await oasisConfirmer('Soumettre vos notes au validateur ? Elles deviendront visibles et ne pourront plus être modifiées.')) return;
 
     // Promote draft → published for this user, then clear the draft slot
     if (!ev.notes_per_evaluator || typeof ev.notes_per_evaluator !== 'object') ev.notes_per_evaluator = {};
@@ -2405,7 +2405,7 @@ async function soumettreMesNotes(evalId) {
 
 // ── Phase 4 — Workflow validation directeur (4.2.2.f) ──
 async function soumettreDirecteur(evalId) {
-    if (!confirm('Soumettre cette évaluation à la validation ?')) return;
+    if (!await oasisConfirmer('Soumettre cette évaluation à la validation ?')) return;
     try {
         await _persistPendingComments(evalId);
         await saveEvalScores(evalId);
@@ -2433,9 +2433,9 @@ async function decisionDirecteur(evalId, decision) {
         cloturer: 'Réunion prestataire clôturée — vous pouvez valider'
     };
     const requiresMotif = (decision === 'renvoyer' || decision === 'rejeter');
-    if (requiresMotif && decision === 'rejeter' && !confirm('Rejeter cette évaluation arrête le processus. Confirmer ?')) return;
-    if (requiresMotif && decision === 'renvoyer' && !confirm('Renvoyer pour prise en compte des observations ?')) return;
-    if (decision === 'cloturer' && !confirm('Clôturer la réunion prestataire ? Cela verrouille tous les onglets en lecture seule jusqu\'à la validation finale.')) return;
+    if (requiresMotif && decision === 'rejeter' && !await oasisConfirmer('Rejeter cette évaluation arrête le processus. Confirmer ?')) return;
+    if (requiresMotif && decision === 'renvoyer' && !await oasisConfirmer('Renvoyer pour prise en compte des observations ?')) return;
+    if (decision === 'cloturer' && !await oasisConfirmer('Clôturer la réunion prestataire ? Cela verrouille tous les onglets en lecture seule jusqu\'à la validation finale.')) return;
     const commentaire = (requiresMotif || decision !== 'accepter') ? (prompt(promptByDecision[decision]) || '') : '';
     if (requiresMotif && !commentaire.trim()) {
         showToast('Motif requis pour ' + decision, 'error'); return;
@@ -2526,7 +2526,7 @@ async function deleteEval(evalId) {
         showToast('Suppression réservée au privilège Gestionnaire couvrant ce domaine et ce secteur.', 'error');
         return;
     }
-    if (!confirm(t('confirm_delete'))) return;
+    if (!await oasisConfirmer(t('confirm_delete'))) return;
     try {
         await api(`${MODULE_API}/evaluations/${evalId}`, { method: 'DELETE' });
         await loadAllData();

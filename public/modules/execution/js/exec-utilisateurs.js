@@ -250,7 +250,7 @@ async function execSaveMesUser(userId) {
 }
 
 async function execResetMesUserPw(userId) {
-    if (!confirm((typeof pt === 'function' ? pt('confirm_action') : 'Confirmer ?'))) return;
+    if (!await oasisConfirmer((typeof pt === 'function' ? pt('confirm_action') : 'Confirmer ?'))) return;
     try {
         const res = await api(`${EXEC_MODULE_API}/mes-utilisateurs/${userId}/reset-password`, { method: 'POST' });
         shellShowToast(`${(typeof pt === 'function' ? pt('password_gen') : 'Mot de passe')}: ${res.new_password}`, 'warning');

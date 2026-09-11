@@ -723,7 +723,7 @@ async function rampComRepondre() {
 
 async function rampComCloturer() {
     const r = RAMP_COM.ouverte;
-    if (!confirm(rt('com_confirmer_cloture'))) return;
+    if (!await oasisConfirmer(rt('com_confirmer_cloture'))) return;
     try {
         await rampApi(`/requetes/${encodeURIComponent(r.id)}/cloturer`, { method: 'POST', body: '{}' });
         await rampComOuvrir(r.id);

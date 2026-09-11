@@ -1912,7 +1912,7 @@ async function rampEnregistrerPiece() {
 async function rampSupprimerPiece(id) {
     const p = RAMP_STATE.poiEnCours || {};
     const pj = (p.pieces || []).find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer la pièce « ${pj.intitule || ''} » ?`)) return;
+    if (!await oasisConfirmer(`Supprimer la pièce « ${pj.intitule || ''} » ?`)) return;
     try {
         await rampApi(`/poi/${p.id}/pieces/${id}`, { method: 'DELETE' });
         await rampRechargerPieces();
@@ -1940,7 +1940,7 @@ async function rampRechargerPieces() {
 
 async function rampSoumettrePoi() {
     const p = RAMP_STATE.poiEnCours;
-    if (!confirm('Soumettre cette fiche pour validation ? Elle ne sera plus modifiable tant qu’elle n’est pas renvoyée.')) return;
+    if (!await oasisConfirmer('Soumettre cette fiche pour validation ? Elle ne sera plus modifiable tant qu’elle n’est pas renvoyée.')) return;
     if (!await rampEnregistrerPoi(true)) return;
     try {
         await rampApi(`/poi/${p.id}/soumettre`, { method: 'POST', body: '{}' });
@@ -2153,7 +2153,7 @@ async function rampConfirmerValidation() {
 
 async function rampSupprimerPoi(id) {
     const p = RAMP_STATE.poi.liste.find((x) => x.id === id) || {};
-    if (!confirm(`Supprimer la fiche ${p.reference || ''} ?`)) return;
+    if (!await oasisConfirmer(`Supprimer la fiche ${p.reference || ''} ?`)) return;
     try {
         await rampApi(`/poi/${id}`, { method: 'DELETE' });
         if ((RAMP_STATE.poiEnCours || {}).id === id) RAMP_STATE.poiEnCours = null;

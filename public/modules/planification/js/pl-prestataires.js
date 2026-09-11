@@ -173,7 +173,7 @@ async function planUpdateCycleDate(prestId, field, value, champ) {
         }
         planRenderPage();
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -303,7 +303,7 @@ async function planSaveRiskProfile() {
     const evalDate = document.getElementById('rpEvalDate')?.value || new Date().toISOString().substring(0, 10);
 
     if (!pid || !secteurId || !riskLabel || !intensite) {
-        alert(tp('required_fields') || 'Champs obligatoires manquants');
+        oasisToast(tp('required_fields') || 'Champs obligatoires manquants', 'warning');
         return;
     }
 
@@ -346,7 +346,7 @@ async function planSaveRiskProfile() {
         await planLoadData();
         planRenderPage();
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 
@@ -363,9 +363,9 @@ async function planSyncPrestatairesRisques() {
         PLAN_STATE.data.riskProfiles = freshProfiles;
         planRenderPage();
         if (typeof showToast === 'function') showToast(tp('sync_success'), 'success');
-        else alert(tp('sync_success'));
+        else oasisToast(tp('sync_success'), 'success');
     } catch (e) {
-        alert(e.message);
+        oasisToast(e.message, 'error');
     }
 }
 

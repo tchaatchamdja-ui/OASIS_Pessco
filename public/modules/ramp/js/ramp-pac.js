@@ -774,7 +774,7 @@ async function rampEnvoyerPreuve() {
 async function rampSupprimerPreuve(id) {
     const e = RAMP_STATE.pacEnCours;
     const pj = (e.preuves || []).find((x) => x.id === id) || {};
-    if (!confirm(`Retirer la preuve « ${pj.intitule || ''} » ?`)) return;
+    if (!await oasisConfirmer(`Retirer la preuve « ${pj.intitule || ''} » ?`)) return;
     try {
         await rampApi(`/ecarts/${e.id}/preuves/${id}`, { method: 'DELETE' });
         await rampLoadData();

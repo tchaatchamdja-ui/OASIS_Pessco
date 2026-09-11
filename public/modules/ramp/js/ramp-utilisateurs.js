@@ -239,7 +239,7 @@ async function rampBasculerCompte(id, actif) {
 }
 
 async function rampReinitialiserMotDePasse(id) {
-    if (!confirm(rt('u_confirmer_reinit'))) return;
+    if (!await oasisConfirmer(rt('u_confirmer_reinit'))) return;
     try {
         const r = await rampApi(`/mes-utilisateurs/${encodeURIComponent(id)}/reset-password`, { method: 'POST' });
         rampToast(`${rt('u_mot_de_passe')} : ${r.new_password}`, 'warning');

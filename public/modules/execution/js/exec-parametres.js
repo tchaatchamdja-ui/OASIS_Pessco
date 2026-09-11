@@ -547,7 +547,7 @@ async function execSaveChecklist(clId) {
 }
 
 async function execDeleteChecklist(clId) {
-    if (!confirm('Supprimer cette checklist et tous ses items ?')) return;
+    if (!await oasisConfirmer('Supprimer cette checklist et tous ses items ?')) return;
     try {
         // Cascade : supprime items + sous-thèmes liés
         const D = _execCl_data();
@@ -633,7 +633,7 @@ async function execSaveStatut(sId) {
 }
 
 async function execDeleteStatut(sId) {
-    if (!confirm('Supprimer ce statut ?')) return;
+    if (!await oasisConfirmer('Supprimer ce statut ?')) return;
     try {
         await api('/api/exec-checklist-statuts/' + sId, { method: 'DELETE' });
         await execRefreshChecklists();
@@ -842,7 +842,7 @@ async function execChecklistExportXlsx(clId) {
 async function execChecklistImportXlsx(clId, ev) {
     const file = ev?.target?.files?.[0];
     if (!file) return;
-    const replace = confirm('Mode « Remplacer » :\n- OK = supprime tous les items existants avant l\'import.\n- Annuler = ajoute les lignes du fichier aux items existants.');
+    const replace = await oasisConfirmer('Les lignes du fichier remplacent-elles les items existants, ou s\'y ajoutent-elles ?\n« Remplacer » supprime d\'abord tous les items de la checklist.', { titre: 'Import des items', libelle: 'Remplacer', libelleAnnuler: 'Ajouter', danger: true });
     const mode = replace ? 'replace' : 'append';
     const token = localStorage.getItem('pr_token');
     const fd = new FormData();
@@ -995,7 +995,7 @@ async function execAddChecklistRow(clId) {
 
 // Suppression d'une ligne depuis la table inline (re-rend la table en place)
 async function execDeleteChecklistItemInline(itId, clId) {
-    if (!confirm('Supprimer cette ligne ?')) return;
+    if (!await oasisConfirmer('Supprimer cette ligne ?')) return;
     try {
         await api('/api/exec-checklist-items/' + itId, { method: 'DELETE' });
         await execRefreshChecklists();
@@ -1174,7 +1174,7 @@ async function execSaveSousTheme(clId, stId) {
 }
 
 async function execDeleteSousTheme(stId, clId) {
-    if (!confirm('Supprimer ce sous-thème ?')) return;
+    if (!await oasisConfirmer('Supprimer ce sous-thème ?')) return;
     try {
         await api('/api/exec-checklist-sous-themes/' + stId, { method: 'DELETE' });
         await execRefreshChecklists();
@@ -1258,7 +1258,7 @@ async function execSaveCriticite(critId) {
 }
 
 async function execDeleteCriticite(critId) {
-    if (!confirm(te('confirm_delete') || 'Confirmer la suppression ?')) return;
+    if (!await oasisConfirmer(te('confirm_delete') || 'Confirmer la suppression ?')) return;
     try {
         await api(`${EXEC_MODULE_API}/criticites/${critId}`, { method: 'DELETE' });
         await execRefreshDynamic();
@@ -1316,7 +1316,7 @@ async function execSaveTypeCas(tcId) {
 }
 
 async function execDeleteTypeCas(tcId) {
-    if (!confirm(te('confirm_delete') || 'Confirmer la suppression ?')) return;
+    if (!await oasisConfirmer(te('confirm_delete') || 'Confirmer la suppression ?')) return;
     try {
         await api(`${EXEC_MODULE_API}/types-cas/${tcId}`, { method: 'DELETE' });
         await execRefreshDynamic();

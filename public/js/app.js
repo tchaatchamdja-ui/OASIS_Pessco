@@ -660,7 +660,7 @@ async function renderUsers() {
     btn.addEventListener('click', async () => {
       const action = btn.dataset.action;
       const username = btn.dataset.user;
-      if (action === 'reset-password' && !confirm('Générer un nouveau mot de passe temporaire et l\'envoyer par email à l\'utilisateur ?')) return;
+      if (action === 'reset-password' && !await oasisConfirmer('Générer un nouveau mot de passe temporaire et l\'envoyer par email à l\'utilisateur ?')) return;
       const res = await api(`/api/users/${encodeURIComponent(username)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -881,8 +881,8 @@ window.uploadProfilePhoto = function (inputEl) {
   reader.readAsDataURL(file);
 };
 
-window.removeProfilePhoto = function () {
-  if (!confirm('Supprimer la photo de profil ?')) return;
+window.removeProfilePhoto = async function () {
+  if (!await oasisConfirmer('Supprimer la photo de profil ?')) return;
   saveProfile({ photo: '' });
 };
 
@@ -1744,7 +1744,7 @@ window.saveRef = async function (coll, id) {
 };
 
 window.deleteRef = async function (coll, id) {
-  if (!confirm(t('confirm_delete'))) return;
+  if (!await oasisConfirmer(t('confirm_delete'))) return;
   const res = await api(`/api/referentiels/${coll}/${id}`, { method: 'DELETE' });
   if (res.ok) {
     await loadRefs();
@@ -2010,8 +2010,8 @@ window.uploadAacLogo = function (inputEl) {
   reader.readAsDataURL(file);
 };
 
-window.removeAacLogo = function () {
-  if (!confirm('Supprimer le logo ?')) return;
+window.removeAacLogo = async function () {
+  if (!await oasisConfirmer('Supprimer le logo ?')) return;
   saveAacLogo('');
 };
 

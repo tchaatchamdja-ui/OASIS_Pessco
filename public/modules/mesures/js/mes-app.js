@@ -1197,7 +1197,7 @@ function mesCollecterConstat() {
 
 async function mesSupprimerMesure(id) {
     const m = MES_STATE.data.mesures.find((x) => x.id === id) || {};
-    if (!confirm(mt('confirmer_suppr_mesure', m.reference || ''))) return;
+    if (!await oasisConfirmer(mt('confirmer_suppr_mesure', m.reference || ''))) return;
     try {
         await mesApi(`/mesures/${id}`, { method: 'DELETE' });
         await mesRechargerMesures();
@@ -1346,7 +1346,7 @@ async function mesEnregistrerConstat() {
 
 async function mesSupprimerConstat(id) {
     const c = MES_STATE.data.constatations.find((x) => x.id === id) || {};
-    if (!confirm(mt('confirmer_suppr_carence', c.reference || ''))) return;
+    if (!await oasisConfirmer(mt('confirmer_suppr_carence', c.reference || ''))) return;
     try {
         await mesApi(`/constatations/${id}`, { method: 'DELETE' });
         MES_STATE.data.constatations = await mesApi('/constatations');

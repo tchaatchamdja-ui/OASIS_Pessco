@@ -27,20 +27,13 @@ const MARGE = 1.05;
 // les vingt-cinq héritées (portail, exécution, planification, profils, RAMP).
 const DOUBLONS_CSS_TOLERES = 25;
 
-// Fichiers hérités du portage PESSCO, déjà découpés une fois. Chaque ligne est
-// une dette assumée : la valeur est la taille constatée, à ne pas dépasser.
-const FICHIERS_TOLERES = {
-  'public/modules/execution/js/exec-constatations.js': 4246,
-  'public/modules/execution/js/exec-activites.js': 3333,
-  'public/modules/profil_risque/js/pr-evaluations.js': 2703,
-  'public/js/app.js': 2615,
-  'public/modules/ramp/js/ramp-app.js': 2204,
-  'public/modules/ramp/js/ramp-poi.js': 2179,
-};
+// Aucun fichier ne franchit plus le seuil : les six qui le dépassaient ont été
+// découpés en morceaux consécutifs, chargés dans le même ordre. Une exception
+// se déclarerait ici, avec la taille constatée à ne pas dépasser.
+const FICHIERS_TOLERES = {};
 
 // Fonctions encore trop longues, à découper au prochain passage sur l'écran.
 const FONCTIONS_TOLEREES = {
-  _execSituationGenerale: 482,
   planRenderCalendar: 401,
   execOpenChecklistFiller: 373,
   execDownloadRapport: 345,
@@ -48,8 +41,6 @@ const FONCTIONS_TOLEREES = {
   _buildDossierTabContent: 284,
   execShowStatistiquesAdvanced: 266,
   renderParamIndicateurs: 263,
-  renderProfilIndividuel: 263,
-  rampRenderStatistiques: 258,
 };
 
 function sources() {

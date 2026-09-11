@@ -520,36 +520,34 @@ function _exportTablePDF(title, headers, rows, filename, aac) {
     w.document.close();
 }
 
-// ── Export "Situation Générale" du tableau de bord (xlsx / pdf) ────────
-// Lit les accordéons Domaine/Secteur rendus dans le DOM pour exporter
-// exactement ce que voit l'utilisateur (y compris les filtres actifs).
+// ── Export "Situation Générale" (xlsx / pdf) ────────
+// Relit la table rendue dans le DOM pour exporter exactement ce que voit
+// l'utilisateur, filtres compris : une ligne par prestataire, précédée de son
+// domaine et de son secteur. Les sous-totaux, qui se recalculent, n'y sont
+// pas. Les intitulés suivent les colonnes affichées : les criticités viennent
+// du référentiel, et n'étaient pas toujours les trois écrites ici en dur.
 function execExportSituationGenerale(format) {
     const root = document.getElementById('execSituationGeneraleRoot');
-    if (!root) { _execToast(te('no_data'), 'info'); return; }
+    const table = root && root.querySelector('table.sg-prest-table');
+    if (!table) { _execToast(te('no_data'), 'info'); return; }
 
-    const criticites = ['critique', 'majeure', 'mineure'];
+    const colonnes = Array.from(table.querySelectorAll('thead tr.exec-sg-colonnes th'))
+        .map(th => th.textContent.trim());
+    const n = (colonnes.length - 6) / 2;   // le nom, trois colonnes d'activités, deux totaux
+    const crit = colonnes.slice(4, 4 + n);
+    const act = te('sg_activites'), nb = te('sg_nb_constatations'), tx = te('sg_taux_cloture');
     const flatHeaders = [
-        te('domaine'),
-        te('secteur'),
-        te('provider'),
-        'Activités Planifiées',
-        'Activités Clôturées',
-        'Taux Exécution',
-        ...criticites.map(cr => `Constats ${te(cr) || cr}`),
-        'Constats Total',
-        ...criticites.map(cr => `Taux Clôture ${te(cr) || cr}`),
-        'Taux Clôture Total',
+        te('domaine'), te('secteur'), te('provider'),
+        `${act} — ${colonnes[1]}`, `${act} — ${colonnes[2]}`, `${act} — ${colonnes[3]}`,
+        ...crit.map(c => `${nb} — ${c}`), `${nb} — ${colonnes[4 + n]}`,
+        ...crit.map(c => `${tx} — ${c}`), `${tx} — ${colonnes[colonnes.length - 1]}`,
     ];
 
-    // Chaque ligne prestataire porte data-domaine / data-secteur sur le <tr>.
-    const rows = [];
-    root.querySelectorAll('table.sg-prest-table tbody tr').forEach(tr => {
-        const d = tr.getAttribute('data-domaine') || '';
-        const s = tr.getAttribute('data-secteur') || '';
-        const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
-        if (cells.length === 1 && tr.querySelector('td[colspan]')) return;
-        rows.push([d, s, ...cells]);
-    });
+    const rows = Array.from(table.querySelectorAll('tbody tr.sg-ligne-prest')).map(tr => [
+        tr.getAttribute('data-domaine') || '',
+        tr.getAttribute('data-secteur') || '',
+        ...Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim()),
+    ]);
 
     if (!rows.length) { _execToast(te('no_data'), 'info'); return; }
 

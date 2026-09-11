@@ -773,5 +773,13 @@ EXEC_TR.en = {
         generated_on: 'Generated on',
         annee: 'Year',
         secteur: 'Sector',
-        dossier_inopine_cree: 'Unannounced file created'
+        dossier_inopine_cree: 'Unannounced file created',
+        sg_colonne_nom: 'Domain / Sector / Provider',
+        sg_activites: 'Activities',
+        sg_nb_constatations: 'Number of findings',
+        sg_taux_cloture: 'Findings closure rate',
+        sg_planifiees: 'Planned',
+        sg_cloturees: 'Closed',
+        sg_taux: 'Rate',
+        total_general: 'Grand total'
 };

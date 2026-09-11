@@ -106,29 +106,59 @@ function _execAvancementParActivite(dossiers) {
 }
 
 // ── Situation Générale ───────────────────────────────────────────
-// Le regroupement Domaine → Secteur → Prestataire, ses agrégats et son
-// accordéon. Le tableau de bord s'en sert pour ses cartes et ses donuts ;
+// Le regroupement Domaine → Secteur → Prestataire, ses agrégats et sa
+// table à sous-totaux. Le tableau de bord s'en sert pour ses cartes et ses donuts ;
 // le formulaire « Statistiques détaillées » l'affiche en propre, avec ses
 // propres filtres. Une seule fonction, donc les mêmes chiffres partout.
 function _execSituationGenerale(F) {
     F = F || EXEC_STATE.filters || {};
-    const isPrest = _execIsPrestataire();
-    const scopedPid = (EXEC_STATE.user || {}).prestataire_id || '';
-    const notifs = EXEC_STATE.data.notifications || [];
-    const dossiers = EXEC_STATE.data.dossiers || [];
-    let constatations = EXEC_STATE.data.constatations || [];
-    const plansValides = EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [];
-    const POST_TRANSMIT = EXEC_CONSTA_EN_VIGUEUR;
     const secteurs = EXEC_STATE.data.secteurs || [];
     const domaines = EXEC_STATE.data.domaines || [];
+    const dossiers = EXEC_STATE.data.dossiers || [];
     // Compte prestataire : la portée est l’ensemble de ses rattachements,
     // resserrée sur celui qu’il a choisi au filtre.
     const mesPrest = _execPortePrestataire(F.prestataire);
+    let constatations = EXEC_STATE.data.constatations || [];
     if (mesPrest) constatations = constatations.filter(c => mesPrest.includes(c.prestataire_id));
     const secteurToDomaine = {};
     secteurs.forEach(s => { if (s.domaine_id) secteurToDomaine[s.id] = s.domaine_id; });
 
-    // Collect all activities from validated plans with filtering
+    const allActivities = _execSgActivites(F, secteurToDomaine, _execIsPrestataire(), mesPrest);
+    const filteredConstatations = _execSgConstatations(F, constatations);
+    const indicateurs = _execSgIndicateurs(allActivities, filteredConstatations);
+    const prestDomaineLookup = _execSgRattachements(secteurs);
+    const aTraiter = _execSgADeclencher(F, mesPrest, prestDomaineLookup);
+    const closedDossiers = _execSgDossiersClos(F, dossiers, mesPrest, prestDomaineLookup);
+    const { activiteRealisee } = _execAvancementParActivite(dossiers);
+    const { domaineMap, resolveSecteur, resolveDossierDomaine } = _execSgRegrouper(
+        allActivities, closedDossiers, filteredConstatations, prestDomaineLookup, secteurToDomaine);
+
+    // Libellés : domaines affichés par sigle/code, secteurs par code/nom.
+    const domaineNameMap = {};
+    domaines.forEach(d => { domaineNameMap[d.id] = d.code || d.sigle || d.nom || d.id; });
+    const secteurNameMap = {};
+    secteurs.forEach(s => { secteurNameMap[s.id] = s.code || s.nom || s.id; });
+
+    const { criticites, critLibelle } = _execSgCriticites();
+    const { computePrestStats, aggregate } = _execSgCalculs(
+        domaineMap, filteredConstatations, activiteRealisee, criticites);
+    const tableHtml = _execSgTableHtml({
+        domaineMap, domaineNameMap, secteurNameMap, criticites, critLibelle, computePrestStats, aggregate,
+    });
+
+    return {
+        tableHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
+        computePrestStats, aggregate, closedDossiers, activiteRealisee, resolveDossierDomaine, resolveSecteur,
+        allActivities, filteredConstatations,
+        // Mesures des cartes : le tableau de bord et le formulaire de
+        // statistiques les lisent d'ici, jamais recalculées à côté.
+        ...indicateurs, ...aTraiter,
+    };
+}
+
+// Activités des plans validés que les filtres retiennent.
+function _execSgActivites(F, secteurToDomaine, isPrest, mesPrest) {
+    const plansValides = EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [];
     let allActivities = [];
     plansValides.forEach(p => {
         if (F.annee && String(p.annee) !== String(F.annee)) return;
@@ -172,8 +202,11 @@ function _execSituationGenerale(F) {
             (a.type_supervision || '').toLowerCase().includes(s)
         );
     }
+    return allActivities;
+}
 
-    // Filter constatations by same criteria
+// Constatations que les mêmes filtres retiennent.
+function _execSgConstatations(F, constatations) {
     let filteredConstatations = [...constatations];
     if (F.annee) {
         filteredConstatations = filteredConstatations.filter(c => {
@@ -203,8 +236,12 @@ function _execSituationGenerale(F) {
             (c.prestataire_nom || '').toLowerCase().includes(cs)
         );
     }
+    return filteredConstatations;
+}
 
-    // Compute KPIs
+// Mesures des cartes : activités clôturées, constatations en vigueur,
+// ouvertes, critiques, émises hors activité, hors délai.
+function _execSgIndicateurs(allActivities, filteredConstatations) {
     const totalAct = allActivities.length;
     const closedAct = allActivities.filter(a => a.statut === 'cloture' || a.statut === 'cloturee').length;
     const tauxClotureAct = totalAct > 0 ? Math.round((closedAct / totalAct) * 100) : 0;
@@ -229,13 +266,19 @@ function _execSituationGenerale(F) {
         return j !== null && j < 0;
     }).length;
 
+    return {
+        totalAct, closedAct, tauxClotureAct,
+        constEnVigueur, totalConst, closedConst, tauxClotureConst,
+        fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes, fncHorsDelai,
+    };
+}
 
-    // ── Build activities table grouped by Domaine → Secteur → Prestataire ──
-    // Lookup prestataire (domaine + secteur + nom) pour résoudre les éléments
-    // qui ne portent pas directement ces infos (dossiers/constatations cloturés).
-    const prestList = EXEC_STATE.data.prestataires || [];
+// Rattachement de chaque prestataire (domaine + secteur + nom), pour résoudre
+// les éléments qui ne portent pas directement ces infos (dossiers et
+// constatations clôturés).
+function _execSgRattachements(secteurs) {
     const prestDomaineLookup = {};
-    prestList.forEach(p => {
+    (EXEC_STATE.data.prestataires || []).forEach(p => {
         const sec = secteurs.find(s => s.id === p.secteur_id);
         prestDomaineLookup[p.id] = {
             domaine_id: p.domaine_id || (sec ? sec.domaine_id : ''),
@@ -243,10 +286,13 @@ function _execSituationGenerale(F) {
             nom: p.nom || p.trigramme || p.id
         };
     });
+    return prestDomaineLookup;
+}
 
-    // ── Activités : ce qui reste à déclencher, ce qui a pris du retard ──
-    // La répartition du menu « États » fait foi : mêmes délais, mêmes règles,
-    // mêmes chiffres d'un écran à l'autre.
+// ── Activités : ce qui reste à déclencher, ce qui a pris du retard ──
+// La répartition du menu « États » fait foi : mêmes délais, mêmes règles,
+// mêmes chiffres d'un écran à l'autre.
+function _execSgADeclencher(F, mesPrest, prestDomaineLookup) {
     const etats = typeof execEtatsRepartir === 'function' ? execEtatsRepartir() : null;
     const ligneRetenue = (l) => {
         const pId = l.prestataire_id || '';
@@ -270,35 +316,14 @@ function _execSituationGenerale(F) {
     const aDeclencher = attente.filter((l) => String(l.debut || '') >= aujourdhuiIso);
     const horizonMois = (typeof EXEC_ETATS !== 'undefined' && EXEC_ETATS.delais
         && EXEC_ETATS.delais.horizon_a_declencher) || 3;
+    return { aDeclencher, actEnRetard, horizonMois };
+}
 
-    // Groupement : domaineMap[dId][sId][pId] = { activities, prestataire_nom }.
-    const domaineMap = {};
-    const resolveSecteur = (obj, fallbackPid) => {
-        if (obj && obj.secteur_id) return obj.secteur_id;
-        const info = prestDomaineLookup[fallbackPid] || {};
-        return info.secteur_id || 'unknown';
-    };
-    const ensureEntry = (dId, sId, pId, pNom) => {
-        if (!domaineMap[dId]) domaineMap[dId] = {};
-        if (!domaineMap[dId][sId]) domaineMap[dId][sId] = {};
-        if (!domaineMap[dId][sId][pId]) domaineMap[dId][sId][pId] = { activities: [], prestataire_nom: pNom || pId };
-    };
-    // Regroupement prestataire-centré : chaque prestataire apparaît dans un seul
-    // groupe Domaine→Secteur (déduit de son rattachement), ce qui garantit que
-    // les décomptes correspondent aux listes des menus dédiés.
-    allActivities.forEach(a => {
-        const pId = a.prestataire_id || 'unknown';
-        const pInfo = prestDomaineLookup[pId] || {};
-        const dId = pInfo.domaine_id || a.domaine_id_resolved || 'unknown';
-        const sId = pInfo.secteur_id || resolveSecteur(a, pId);
-        ensureEntry(dId, sId, pId, a.prestataire_nom);
-        domaineMap[dId][sId][pId].activities.push(a);
-    });
-
-    // Closed execution dossiers — the authoritative "activité réalisée clôturée" counter.
-    // NB: backend already scopes /dossiers for M3_Prestataire (only closed + own prestataire),
-    // so we must NOT re-filter by scopedPid here (it may be empty when cached localStorage
-    // didn't persist prestataire_id — we rely on server-side scoping instead).
+// Closed execution dossiers — the authoritative "activité réalisée clôturée" counter.
+// NB: backend already scopes /dossiers for M3_Prestataire (only closed + own prestataire),
+// so we must NOT re-filter by scopedPid here (it may be empty when cached localStorage
+// didn't persist prestataire_id — we rely on server-side scoping instead).
+function _execSgDossiersClos(F, dossiers, mesPrest, prestDomaineLookup) {
     let closedDossiers = (dossiers || []).filter(d => d.statut === 'cloture');
     if (mesPrest) {
         closedDossiers = closedDossiers.filter(d => !d.prestataire_id || mesPrest.includes(d.prestataire_id));
@@ -322,17 +347,33 @@ function _execSituationGenerale(F) {
             return String(Math.ceil(parseInt(dt.slice(5, 7)) / 3)) === String(F.trimestre);
         });
     }
+    return closedDossiers;
+}
 
-    const { activiteRealisee } = _execAvancementParActivite(dossiers);
-
-    // Build a set of transmitted rapport dossier_ids — a constatation is considered
-    // "transmise au postulant" when a rapport covering its dossier has been transmitted.
-    const transmittedDossierIds = new Set(
-        (EXEC_STATE.data.rapports || [])
-            .filter(r => r.statut === 'transmis')
-            .map(r => r.dossier_id)
-            .filter(Boolean)
-    );
+// Groupement : domaineMap[dId][sId][pId] = { activities, prestataire_nom }.
+// Regroupement prestataire-centré : chaque prestataire apparaît dans un seul
+// groupe Domaine→Secteur (déduit de son rattachement), ce qui garantit que
+// les décomptes correspondent aux listes des menus dédiés.
+function _execSgRegrouper(allActivities, closedDossiers, filteredConstatations, prestDomaineLookup, secteurToDomaine) {
+    const domaineMap = {};
+    const resolveSecteur = (obj, fallbackPid) => {
+        if (obj && obj.secteur_id) return obj.secteur_id;
+        const info = prestDomaineLookup[fallbackPid] || {};
+        return info.secteur_id || 'unknown';
+    };
+    const ensureEntry = (dId, sId, pId, pNom) => {
+        if (!domaineMap[dId]) domaineMap[dId] = {};
+        if (!domaineMap[dId][sId]) domaineMap[dId][sId] = {};
+        if (!domaineMap[dId][sId][pId]) domaineMap[dId][sId][pId] = { activities: [], prestataire_nom: pNom || pId };
+    };
+    allActivities.forEach(a => {
+        const pId = a.prestataire_id || 'unknown';
+        const pInfo = prestDomaineLookup[pId] || {};
+        const dId = pInfo.domaine_id || a.domaine_id_resolved || 'unknown';
+        const sId = pInfo.secteur_id || resolveSecteur(a, pId);
+        ensureEntry(dId, sId, pId, a.prestataire_nom);
+        domaineMap[dId][sId][pId].activities.push(a);
+    });
 
     const resolveDossierDomaine = (d) => {
         const pInfo = prestDomaineLookup[d.prestataire_id] || {};
@@ -348,24 +389,21 @@ function _execSituationGenerale(F) {
         const sId = pInfo.secteur_id || resolveSecteur(d, pId);
         ensureEntry(dId, sId, pId, d.prestataire_nom || pInfo.nom);
     });
-    filteredConstatations.filter(c => POST_TRANSMIT.has(c.statut || '')).forEach(c => {
+    filteredConstatations.filter(c => EXEC_CONSTA_EN_VIGUEUR.has(c.statut || '')).forEach(c => {
         const pInfo = prestDomaineLookup[c.prestataire_id] || {};
         const pId = c.prestataire_id || 'unknown';
         const dId = pInfo.domaine_id || c.domaine_id || secteurToDomaine[c.secteur_id] || 'unknown';
         const sId = pInfo.secteur_id || resolveSecteur(c, pId);
         ensureEntry(dId, sId, pId, c.prestataire_nom || pInfo.nom);
     });
+    return { domaineMap, resolveSecteur, resolveDossierDomaine };
+}
 
-    // Libellés : domaines affichés par sigle/code, secteurs par code/nom.
-    const domaineNameMap = {};
-    domaines.forEach(d => { domaineNameMap[d.id] = d.code || d.sigle || d.nom || d.id; });
-    const secteurNameMap = {};
-    secteurs.forEach(s => { secteurNameMap[s.id] = s.code || s.nom || s.id; });
-
-    // Colonnes de criticité : le référentiel du module en décide — il se règle
-    // au menu Paramètres. Les trois niveaux étaient écrits en dur : une
-    // quatrième criticité aurait compté au total sans colonne où se lire. Les
-    // clés restent celles enregistrées sur une constatation, en minuscules.
+// Colonnes de criticité : le référentiel du module en décide — il se règle
+// au menu Paramètres. Les trois niveaux étaient écrits en dur : une
+// quatrième criticité aurait compté au total sans colonne où se lire. Les
+// clés restent celles enregistrées sur une constatation, en minuscules.
+function _execSgCriticites() {
     const critRef = (EXEC_STATE.data.criticites || [])
         .filter(c => (c.statut || 'actif') !== 'inactif')
         .sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
@@ -376,9 +414,12 @@ function _execSituationGenerale(F) {
     });
     const criticites = Object.keys(critLibelle).length
         ? Object.keys(critLibelle) : ['critique', 'majeure', 'mineure'];
+    return { criticites, critLibelle };
+}
 
-    // ── Accordion Domaine → Secteur → table prestataires ────────────────
-    // Helper : stats par prestataire (activités + constatations par criticité).
+// Stats par prestataire (activités + constatations par criticité), et leur
+// agrégat en totaux de secteur, de domaine ou d'ensemble.
+function _execSgCalculs(domaineMap, filteredConstatations, activiteRealisee, criticites) {
     const computePrestStats = (dId, sId, pId) => {
         const entry = domaineMap[dId][sId][pId];
         // Activités planifiées : liste "Activités de Supervision" du prestataire.
@@ -391,7 +432,7 @@ function _execSituationGenerale(F) {
 
         // Constatations : décompte par criticité depuis la table du sous-menu "Suivi".
         const pConsts = filteredConstatations.filter(c =>
-            c.prestataire_id === pId && POST_TRANSMIT.has(c.statut || ''));
+            c.prestataire_id === pId && EXEC_CONSTA_EN_VIGUEUR.has(c.statut || ''));
         const totalPConst = pConsts.length;
         const totalPClosed = pConsts.filter(c => c.statut === 'soldee').length;
         const constByCrit = {};
@@ -412,7 +453,6 @@ function _execSituationGenerale(F) {
         };
     };
 
-    // Helper : agrège un tableau de stats prestataires en totaux domaine/secteur.
     const aggregate = (statsList) => {
         const agg = { planned: 0, closed: 0, totalPConst: 0, totalPClosed: 0 };
         const byCrit = {};
@@ -432,20 +472,47 @@ function _execSituationGenerale(F) {
         agg.byCrit = byCrit;
         return agg;
     };
+    return { computePrestStats, aggregate };
+}
+
+// ── La table : une seule, à sous-totaux ──
+// Le domaine, puis chacun de ses secteurs, puis leurs prestataires : les
+// lignes de sous-total restent visibles, rien n'est à déplier. Les lignes de
+// prestataire portent data-domaine / data-secteur, que l'export relit.
+function _execSgTableHtml(sg) {
+    const { domaineMap, domaineNameMap, secteurNameMap, criticites, critLibelle, computePrestStats, aggregate } = sg;
 
     // Un taux se lit d'abord à sa couleur : vert tenu, ambre à surveiller,
-    // rouge en défaut. Le même barème sert aux bandeaux et aux cellules, pour
-    // qu'un même chiffre ne change pas de sens selon l'endroit où on le lit.
-    const sgNiveau = (pct) => (pct >= 80 ? 'bon' : (pct >= 50 ? 'moyen' : 'faible'));
-    const sgTaux = (pct, base) => (base > 0
-        ? `<span class="exec-sg-taux ${sgNiveau(pct)}">${pct}%</span>`
+    // rouge en défaut. Le même barème sert à toutes les lignes, pour qu'un
+    // même chiffre ne change pas de sens selon l'endroit où on le lit.
+    const niveau = (pct) => (pct >= 80 ? 'bon' : (pct >= 50 ? 'moyen' : 'faible'));
+    const taux = (pct, base) => (base > 0
+        ? `<span class="exec-sg-taux ${niveau(pct)}">${pct}%</span>`
         : '<span class="exec-sg-vide">—</span>');
     // Un zéro n'est pas une mesure : il s'efface pour laisser voir les autres.
-    const sgNombre = (n) => (n > 0 ? String(n) : '<span class="exec-sg-vide">0</span>');
+    const nombre = (n) => (n > 0 ? String(n) : '<span class="exec-sg-vide">0</span>');
+    const critEntete = (cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`;
+
+    const cellules = (s, fort) => {
+        const f = fort ? ' fort' : '';
+        const crit = s.byCrit || s.constByCrit;
+        return `
+            <td class="num${f} exec-sg-bloc">${nombre(s.planned)}</td>
+            <td class="num${f}">${nombre(s.closed)}</td>
+            <td class="num">${taux(s.execRate, s.planned)}</td>
+            ${criticites.map((cr, i) => `<td class="num${f}${i === 0 ? ' exec-sg-bloc' : ''}">${nombre(crit[cr].count)}</td>`).join('')}
+            <td class="num total">${nombre(s.totalPConst)}</td>
+            ${criticites.map((cr, i) => {
+                const cell = crit[cr];
+                const rate = cell.rate !== undefined ? cell.rate : (cell.count > 0 ? Math.round((cell.closed / cell.count) * 100) : 0);
+                return `<td class="num${i === 0 ? ' exec-sg-bloc' : ''}">${taux(rate, cell.count)}</td>`;
+            }).join('')}
+            <td class="num total">${taux(s.totalClotRate, s.totalPConst)}</td>`;
+    };
 
     // Largeurs déclarées ici : avec table-layout fixed, seule la première
     // rangée compte, et elle porte les regroupements — pas les colonnes.
-    const prestTableHeader = `
+    const entete = `
         <colgroup>
             <col class="sg-col-nom">
             ${[...Array(3 + (criticites.length + 1) * 2)].map(() => '<col class="sg-col-num">').join('')}
@@ -453,138 +520,50 @@ function _execSituationGenerale(F) {
         <thead>
         <tr class="exec-sg-groupes">
             <th></th>
-            <th colspan="3" class="exec-sg-bloc">Activités</th>
-            <th colspan="${criticites.length + 1}" class="exec-sg-bloc">Nombre de constatations</th>
-            <th colspan="${criticites.length + 1}" class="exec-sg-bloc">Taux de clôture des constatations</th>
+            <th colspan="3" class="exec-sg-bloc">${te('sg_activites')}</th>
+            <th colspan="${criticites.length + 1}" class="exec-sg-bloc">${te('sg_nb_constatations')}</th>
+            <th colspan="${criticites.length + 1}" class="exec-sg-bloc">${te('sg_taux_cloture')}</th>
         </tr>
         <tr class="exec-sg-colonnes">
-            <th class="exec-sg-col-nom">${te('provider')}</th>
-            <th class="exec-sg-bloc">Planifiées</th>
-            <th>Clôturées</th>
-            <th>Taux</th>
-            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`).join('')}
+            <th class="exec-sg-col-nom">${te('sg_colonne_nom')}</th>
+            <th class="exec-sg-bloc">${te('sg_planifiees')}</th>
+            <th>${te('sg_cloturees')}</th>
+            <th>${te('sg_taux')}</th>
+            ${criticites.map(critEntete).join('')}
             <th>${te('total')}</th>
-            ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`).join('')}
+            ${criticites.map(critEntete).join('')}
             <th>${te('total')}</th>
         </tr></thead>`;
 
-    const renderStatsCells = (s, opts) => {
-        const fort = (opts && opts.aggregate) ? ' fort' : '';
-        const crit = s.byCrit || s.constByCrit;
-        return `
-            <td class="num${fort} exec-sg-bloc">${sgNombre(s.planned)}</td>
-            <td class="num${fort}">${sgNombre(s.closed)}</td>
-            <td class="num">${sgTaux(s.execRate, s.planned)}</td>
-            ${criticites.map((cr, i) => `<td class="num${fort}${i === 0 ? ' exec-sg-bloc' : ''}">${sgNombre(crit[cr].count)}</td>`).join('')}
-            <td class="num total">${sgNombre(s.totalPConst)}</td>
-            ${criticites.map((cr, i) => {
-                const cell = crit[cr];
-                const rate = cell.rate !== undefined ? cell.rate : (cell.count > 0 ? Math.round((cell.closed / cell.count) * 100) : 0);
-                return `<td class="num${i === 0 ? ' exec-sg-bloc' : ''}">${sgTaux(rate, cell.count)}</td>`;
-            }).join('')}
-            <td class="num total">${sgTaux(s.totalClotRate, s.totalPConst)}</td>`;
-    };
-
-    // Bandeau de regroupement : le nom à gauche, les mesures en pastilles
-    // calées à droite. Deux niveaux, deux graphies, pour qu'on sache sans
-    // lire si l'on est devant un domaine ou devant l'un de ses secteurs.
-    const sgMesure = (libelle, valeur) =>
-        `<span class="exec-sg-mesure"><span class="lib">${_esc(libelle)}</span><span class="val">${valeur}</span></span>`;
-
-    const sgBandeau = (niveau, nom, denombrement, agg) => `
-        <div class="exec-accordion-header exec-sg-bandeau ${niveau}"
-             onclick="this.parentElement.classList.toggle('expanded')">
-            <span class="exec-form-section-chevron">${EXEC_ICONS.chevronDown || '▾'}</span>
-            <span class="exec-sg-etiquette">${niveau === 'domaine' ? 'Domaine' : 'Secteur'}</span>
-            <span class="exec-sg-nom">${_esc(nom)}</span>
-            <span class="exec-sg-sous">${_esc(denombrement)}</span>
-            <span class="exec-sg-mesures">
-                ${sgMesure('Activités', sgNombre(agg.planned))}
-                ${sgMesure('Clôturées', sgNombre(agg.closed))}
-                ${sgMesure('Taux exé.', sgTaux(agg.execRate, agg.planned))}
-                ${sgMesure('Constat.', sgNombre(agg.totalPConst))}
-                ${sgMesure('Taux clôt.', sgTaux(agg.totalClotRate, agg.totalPConst))}
-            </span>
-        </div>`;
-
-    let accordionHtml = '';
-    const dKeys = Object.keys(domaineMap).sort((a, b) => (domaineNameMap[a] || a).localeCompare(domaineNameMap[b] || b));
-
-    dKeys.forEach(dId => {
+    const trier = (cles, noms) => cles.sort((a, b) => (noms[a] || a).localeCompare(noms[b] || b));
+    const tous = [];
+    let corps = '';
+    trier(Object.keys(domaineMap), domaineNameMap).forEach(dId => {
         const dName = domaineNameMap[dId] || dId || '—';
-        const secteurEntries = domaineMap[dId];
-        const sKeys = Object.keys(secteurEntries).sort((a, b) => (secteurNameMap[a] || a).localeCompare(secteurNameMap[b] || b));
-
-        // Aggrégat domaine = tous les prestataires de tous les secteurs du domaine.
-        const domaineStats = [];
-        sKeys.forEach(sId => {
-            Object.keys(secteurEntries[sId]).forEach(pId => domaineStats.push(computePrestStats(dId, sId, pId)));
+        const secteursDuDomaine = trier(Object.keys(domaineMap[dId]), secteurNameMap).map(sId => ({
+            sName: secteurNameMap[sId] || sId || '—',
+            stats: Object.keys(domaineMap[dId][sId]).map(pId => computePrestStats(dId, sId, pId))
+                .sort((a, b) => String(a.prestataire_nom).localeCompare(String(b.prestataire_nom))),
+        }));
+        const duDomaine = secteursDuDomaine.flatMap(x => x.stats);
+        tous.push(...duDomaine);
+        corps += `<tr class="sg-ligne-domaine"><td>${_esc(dName)}</td>${cellules(aggregate(duDomaine), true)}</tr>`;
+        secteursDuDomaine.forEach(({ sName, stats }) => {
+            corps += `<tr class="sg-ligne-secteur"><td>${_esc(sName)}</td>${cellules(aggregate(stats), true)}</tr>`;
+            corps += stats.map(s => `<tr class="sg-ligne-prest" data-domaine="${_escAttr(dName)}" data-secteur="${_escAttr(sName)}">
+                    <td>${_esc(s.prestataire_nom)}</td>${cellules(s)}</tr>`).join('');
         });
-        const dAgg = aggregate(domaineStats);
-
-        let secteursHtml = '';
-        sKeys.forEach(sId => {
-            const sName = secteurNameMap[sId] || sId || '—';
-            const pKeys = Object.keys(secteurEntries[sId]);
-            const secteurStatsList = pKeys.map(pId => computePrestStats(dId, sId, pId));
-            const sAgg = aggregate(secteurStatsList);
-
-            const rowsHtml = pKeys.map((pId, idx) => {
-                const s = secteurStatsList[idx];
-                return `<tr data-domaine="${_escAttr(dName)}" data-secteur="${_escAttr(sName)}">
-                    <td>${_esc(s.prestataire_nom)}</td>
-                    ${renderStatsCells(s)}
-                </tr>`;
-            }).join('');
-
-            // Ligne de total : elle n'a de sens qu'à partir de deux prestataires,
-            // sinon elle répète mot pour mot la ligne au-dessus.
-            const totalHtml = pKeys.length > 1 ? `
-                <tfoot><tr>
-                    <td>Total ${_esc(sName)}</td>
-                    ${renderStatsCells(sAgg, { aggregate: true })}
-                </tr></tfoot>` : '';
-
-            // Un domaine à secteur unique n'a rien à replier : on montre la table.
-            secteursHtml += `
-            <div class="sg-secteur card${sKeys.length === 1 ? ' expanded' : ''}">
-                ${sgBandeau('secteur', sName, `${pKeys.length} prestataire${pKeys.length > 1 ? 's' : ''}`, sAgg)}
-                <div class="exec-accordion-body">
-                    <div class="sg-table-boite">
-                        <table class="exec-table sg-prest-table">
-                            ${prestTableHeader}
-                            <tbody>${rowsHtml}</tbody>
-                            ${totalHtml}
-                        </table>
-                    </div>
-                </div>
-            </div>`;
-        });
-
-        accordionHtml += `
-        <div class="sg-domaine card expanded">
-            ${sgBandeau('domaine', dName, `${sKeys.length} secteur${sKeys.length > 1 ? 's' : ''}`, dAgg)}
-            <div class="exec-accordion-body">
-                ${secteursHtml}
-            </div>
-        </div>`;
     });
+    if (!corps) return `<div class="exec-sg-aucune">${te('no_data')}</div>`;
 
-    if (!accordionHtml) {
-        accordionHtml = `<div class="exec-sg-aucune">${te('no_data')}</div>`;
-    }
-
-
-    return {
-        accordionHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
-        computePrestStats, aggregate, closedDossiers, activiteRealisee, resolveDossierDomaine, resolveSecteur,
-        allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
-        // Mesures des cartes : le tableau de bord et le formulaire de
-        // statistiques les lisent d'ici, jamais recalculées à côté.
-        constEnVigueur, totalConst, closedConst, tauxClotureConst,
-        fncOuvertes, fncCritiques, horsActivite, horsActiviteOuvertes,
-        fncHorsDelai, aDeclencher, actEnRetard, horizonMois,
-    };
+    return `
+    <div class="sg-table-boite">
+        <table class="exec-table sg-prest-table">
+            ${entete}
+            <tbody>${corps}</tbody>
+            <tfoot><tr><td>${te('total_general')}</td>${cellules(aggregate(tous), true)}</tr></tfoot>
+        </table>
+    </div>`;
 }
 
 
@@ -1007,7 +986,7 @@ function execRenderDashboard() {
 
     const SG = _execSituationGenerale(EXEC_STATE.filters);
     const {
-        accordionHtml, domaineMap, domaineNameMap, secteurNameMap, criticites,
+        domaineMap, domaineNameMap, secteurNameMap, criticites,
         computePrestStats, aggregate, closedDossiers, activiteRealisee, resolveDossierDomaine, resolveSecteur,
         allActivities, filteredConstatations, totalAct, closedAct, tauxClotureAct,
         totalConst, closedConst, tauxClotureConst,
@@ -1615,7 +1594,7 @@ function execShowStatistiquesAdvanced() {
                     </button>
                 </div>
             </div>
-            <div id="execSituationGeneraleRoot">${_execSituationGenerale(F).accordionHtml}</div>
+            <div id="execSituationGeneraleRoot">${_execSituationGenerale(F).tableHtml}</div>
         </div>` : `
         ${filterBar}
         ${_execStatsChronologie(bornes, P, cycle)}

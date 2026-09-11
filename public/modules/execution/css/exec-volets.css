@@ -112,25 +112,4 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
 .expanded > .exec-accordion-body { display: block !important; }
 .expanded > .exec-accordion-header .exec-form-section-chevron { transform: rotate(180deg); }
 
-/* Situation Générale — regroupements sans bordure, présentation souple */
-.exec-module .sg-domaine,
-.exec-module .sg-secteur {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-}
-.exec-module .sg-secteur .exec-accordion-header,
-.exec-module .sg-domaine .exec-accordion-header {
-    border-radius: 8px;
-}
-.exec-module .sg-domaine.expanded > .exec-accordion-header,
-.exec-module .sg-secteur.expanded > .exec-accordion-header {
-    border-radius: 8px 8px 0 0;
-}
-.exec-module .sg-domaine { margin-bottom: 0.75rem; }
-.exec-module .sg-domaine > .exec-accordion-body { padding: 0.5rem 0.6rem 0.6rem; }
-/* Le secteur est en retrait : la hiérarchie se voit avant d'être lue. */
-.exec-module .sg-secteur { margin: 0.4rem 0 0.4rem 0.75rem; }
-.exec-module .sg-secteur > .exec-accordion-body { padding: 0.45rem 0 0; }
 

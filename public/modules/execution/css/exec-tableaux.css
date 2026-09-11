@@ -2,109 +2,39 @@
    Issu du découpage de exec-styles.css : les feuilles se chargent dans l'ordre
    déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
 
-/* ── Situation Générale : bandeaux de regroupement ─────────────────────── */
-.exec-module .exec-sg-bandeau {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    cursor: pointer;
-    padding: 0.35rem 0.6rem;
-    border: 1px solid var(--border);
-}
-.exec-module .exec-sg-bandeau .exec-form-section-chevron {
-    display: inline-flex;
-    transition: transform 0.2s;
-    opacity: 0.55;
-}
-.exec-module .exec-sg-etiquette {
-    font-size: 0.58rem;
+/* ── Situation Générale : une table plate, sous-totaux en ligne ─────────
+   Le domaine, puis chacun de ses secteurs, puis leurs prestataires : les
+   lignes de sous-total restent visibles, rien n'est à déplier. Deux teintes
+   et deux retraits disent le niveau sans qu'il faille lire une étiquette. */
+.exec-module .sg-prest-table tr.sg-ligne-domaine > td {
+    background: color-mix(in srgb, var(--primary) 14%, var(--bg-card));
+    border-top: 2px solid color-mix(in srgb, var(--primary) 45%, var(--border));
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.1rem 0.35rem;
-    border-radius: 3px;
-    background: color-mix(in srgb, var(--primary) 20%, transparent);
+}
+.exec-module .sg-prest-table tr.sg-ligne-domaine > td:first-child {
     color: var(--primary);
-}
-.exec-module .exec-sg-nom { font-weight: 700; color: var(--text); }
-.exec-module .exec-sg-sous { font-size: 0.7rem; color: var(--text-muted); }
-
-/* Les mesures : une rangée de pastilles séparées d'un filet, calées à droite.
-   Libellé au-dessus, valeur en dessous — on balaye les chiffres d'un trait. */
-.exec-module .exec-sg-mesures {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: stretch;
-    flex-wrap: wrap;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    background: var(--bg, #fff);
-}
-.exec-module .exec-sg-mesure {
-    display: inline-flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1px;
-    min-width: 66px;
-    padding: 0.14rem 0.5rem;
-    border-left: 1px solid var(--border);
-}
-.exec-module .exec-sg-mesure:first-child { border-left: none; }
-.exec-module .exec-sg-mesure .lib {
-    font-size: 0.56rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    line-height: 1.1;
-    white-space: nowrap;
-}
-.exec-module .exec-sg-mesure .val {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text);
-    line-height: 1.2;
-    font-variant-numeric: tabular-nums;
-}
-
-.exec-module .exec-sg-bandeau.domaine {
-    background: color-mix(in srgb, var(--primary) 12%, var(--bg));
-    border-left: 4px solid var(--primary);
-}
-.exec-module .exec-sg-bandeau.domaine .exec-sg-nom {
-    font-size: 0.92rem;
     font-weight: 800;
+    text-transform: uppercase;
     letter-spacing: 0.03em;
-    color: var(--primary);
 }
-.exec-module .exec-sg-bandeau.secteur {
-    background: color-mix(in srgb, var(--primary) 7%, var(--bg));
-    border-left: 3px solid color-mix(in srgb, var(--primary) 40%, transparent);
+.exec-module .sg-prest-table tr.sg-ligne-secteur > td {
+    background: color-mix(in srgb, var(--primary) 6%, var(--bg-card));
+    font-weight: 700;
 }
-.exec-module .exec-sg-bandeau:hover {
-    background: color-mix(in srgb, var(--primary) 18%, var(--bg));
-}
-.exec-module .exec-sg-bandeau.secteur .exec-sg-nom { font-size: 0.82rem; }
-.exec-module .exec-sg-bandeau.secteur .exec-sg-etiquette {
-    background: color-mix(in srgb, var(--text-muted) 16%, transparent);
-    color: var(--text-muted);
-}
+.exec-module .sg-prest-table tr.sg-ligne-secteur > td:first-child { padding-left: 1.1rem; }
+.exec-module .sg-prest-table tr.sg-ligne-prest > td:first-child { padding-left: 2rem; font-weight: 500; }
 .exec-module .exec-sg-aucune {
     padding: 2rem;
     text-align: center;
     color: var(--text-muted);
 }
 
-/* ── Situation Générale : table des prestataires ───────────────────────── */
+/* ── Situation Générale : la table ─────────────────────────────────────── */
 .exec-module .sg-table-boite {
     overflow: auto;
-    max-height: 430px;
+    max-height: 70vh;
     border: 1px solid var(--border);
-    border-radius: 0 0 8px 8px;
-    border-top: none;
+    border-radius: 8px;
 }
 .exec-module .sg-prest-table {
     border: none;

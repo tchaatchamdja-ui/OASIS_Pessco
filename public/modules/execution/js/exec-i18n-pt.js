@@ -773,5 +773,13 @@ EXEC_TR.pt = {
         generated_on: 'Gerado em',
         annee: 'Ano',
         secteur: 'Setor',
-        dossier_inopine_cree: 'Processo inopinado criado'
+        dossier_inopine_cree: 'Processo inopinado criado',
+        sg_colonne_nom: 'Dominio / Setor / Prestador',
+        sg_activites: 'Atividades',
+        sg_nb_constatations: 'Numero de constatacoes',
+        sg_taux_cloture: 'Taxa de encerramento das constatacoes',
+        sg_planifiees: 'Planeadas',
+        sg_cloturees: 'Encerradas',
+        sg_taux: 'Taxa',
+        total_general: 'Total geral'
 };

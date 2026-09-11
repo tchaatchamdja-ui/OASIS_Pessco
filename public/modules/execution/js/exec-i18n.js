@@ -797,7 +797,15 @@ const EXEC_TR = {
         generated_on: 'Généré le',
         annee: 'Année',
         secteur: 'Secteur',
-        dossier_inopine_cree: 'Dossier inopiné créé'
+        dossier_inopine_cree: 'Dossier inopiné créé',
+        sg_colonne_nom: 'Domaine / Secteur / Prestataire',
+        sg_activites: 'Activités',
+        sg_nb_constatations: 'Nombre de constatations',
+        sg_taux_cloture: 'Taux de clôture des constatations',
+        sg_planifiees: 'Planifiées',
+        sg_cloturees: 'Clôturées',
+        sg_taux: 'Taux',
+        total_general: 'Total général'
     },
 };
 

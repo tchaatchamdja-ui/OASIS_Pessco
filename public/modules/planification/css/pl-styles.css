@@ -235,18 +235,8 @@
 .cal-day.has-activity {
     font-weight: 600;
 }
-/* ── Filter Bar — planification-scoped (avoids execution.css !important conflict) ── */
-.plan-filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    align-items: center;
-    margin-bottom: 0.6rem;
-    padding: 0.4rem 0.6rem;
-    background: var(--bg-card);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
+/* ── Barre de filtres — son cadre vient du socle (oasis-module.css) ; restent
+   ici la taille de ses champs et la variante en deux lignes. ── */
 
 .plan-filter-bar .form-input,
 .plan-filter-bar .form-select {

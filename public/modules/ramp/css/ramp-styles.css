@@ -86,12 +86,9 @@
    colonnes égales, si bien qu'elles s'alignent quel que soit leur nombre ;
    la recherche vient en dernier, seule sur son rang, et prend toute la largeur
    restante — c'est elle qu'on remplit le plus souvent, et le texte saisi a
-   besoin de place là où un intitulé de liste n'en demande pas. */
-.ramp-filtres {
-    display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
-    padding: .7rem .8rem; margin-bottom: 1rem;
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
-}
+   besoin de place là où un intitulé de liste n'en demande pas.
+   Le cadre de la barre vient du socle (oasis-module.css), commun à SURV et
+   à la Planification. */
 /* Les champs du filtre portent le contour du thème : ils forment un ensemble,
    distinct des champs de saisie ordinaires. */
 .ramp-filtres .ramp-select,

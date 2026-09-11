@@ -227,9 +227,9 @@ function _planCalendrierHtml(activites, options) {
             <div class="pl-cal-nav">
                 ${o.voirDetail ? `<button class="btn btn-sm btn-primary" onclick="planOuvrirCalendrier()">${tp('cal_voir_detail')}</button>` : ''}
                 <button class="btn btn-sm btn-outline" onclick="planCalAnnee(-1)" title="${_escAttr(tp('cal_annee_precedente'))}">«</button>
-                <button class="btn btn-sm btn-outline" onclick="planCalDefiler(-1, this)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
+                <button class="btn btn-sm btn-outline" data-defil data-titre="${_escAttr(tp('cal_reculer'))}" onclick="planCalDefiler(-1, this)" title="${_escAttr(tp('cal_reculer'))}">‹</button>
                 <button class="btn btn-sm btn-outline" onclick="planCalAujourdhui(this)">${tp('cal_aujourdhui')}</button>
-                <button class="btn btn-sm btn-outline" onclick="planCalDefiler(1, this)" title="${_escAttr(tp('cal_avancer'))}">›</button>
+                <button class="btn btn-sm btn-outline" data-defil data-titre="${_escAttr(tp('cal_avancer'))}" onclick="planCalDefiler(1, this)" title="${_escAttr(tp('cal_avancer'))}">›</button>
                 <button class="btn btn-sm btn-outline" onclick="planCalAnnee(1)" title="${_escAttr(tp('cal_annee_suivante'))}">»</button>
                 <span class="pl-cal-jour">${jour(aujourdhui)}</span>
             </div>
@@ -284,6 +284,27 @@ window.planCalDefiler = function (sens, bouton) {
     if (!cadre) return;
     cadre.scrollBy({ left: sens * Math.max(120, cadre.clientWidth * 0.6), behavior: 'smooth' });
 };
+
+// Les flèches n'ont d'effet que si la piste déborde de son cadre — les douze
+// mois d'une année y tiennent le plus souvent. Elles se grisent alors, et leur
+// infobulle dit pourquoi : le clic restait sinon sans réponse.
+window.planCalNavEtat = function () {
+    document.querySelectorAll('.pl-cal-carte').forEach((carte) => {
+        const cadre = carte.querySelector('.pl-gantt-cadre');
+        if (!cadre) return;
+        const defilable = cadre.scrollWidth > cadre.clientWidth + 1;
+        carte.querySelectorAll('.pl-cal-nav [data-defil]').forEach((b) => {
+            b.disabled = !defilable;
+            b.title = defilable ? b.dataset.titre : tp('cal_tout_visible');
+        });
+    });
+};
+
+// La largeur du cadre suit celle de la fenêtre : l'état des flèches aussi.
+if (!window._planCalNavObserve) {
+    window._planCalNavObserve = true;
+    window.addEventListener('resize', () => window.planCalNavEtat());
+}
 
 window.planCalBord = function (sens, bouton) {
     const cadre = _planCalCadre(bouton);

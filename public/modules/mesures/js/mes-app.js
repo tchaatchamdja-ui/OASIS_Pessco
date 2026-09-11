@@ -539,9 +539,9 @@ function mesRenderDashboard() {
     const parCategorie = mesCategories().length
         ? mesRepartition(segmentsCategorie, {
             camembert: false, action: 'mesGrapheCategorie',
-            retenue: MES_STATE.categorieGraphe || '', infobulle: 'Filtrer les types de mesure',
+            retenue: MES_STATE.categorieGraphe || '', infobulle: mt('infobulle_filtrer_types'),
         })
-        : '<div class="mes-preuve-vide">Aucune catégorie paramétrée</div>';
+        : `<div class="mes-preuve-vide">${mt('aucune_categorie_param')}</div>`;
 
     // Les types affichés suivent la catégorie retenue au graphique voisin :
     // cliquer sur « Sanction administrative » ne montre plus que ses types.
@@ -556,7 +556,7 @@ function mesRenderDashboard() {
         }));
     const parType = segmentsType.length
         ? mesRepartition(segmentsType, { camembert: true })
-        : '<div class="mes-preuve-vide">Aucune donnée</div>';
+        : `<div class="mes-preuve-vide">${mt('aucune_donnee')}</div>`;
 
 
     const opt = (v, l, cur) => `<option value="${_mesAttr(v)}" ${cur === v ? 'selected' : ''}>${_mesEsc(l)}</option>`;
@@ -597,9 +597,9 @@ function mesRenderDashboard() {
     const parSource = constPortee.length
         ? mesRepartition(segmentsSource, {
             camembert: false, action: 'mesGrapheSource',
-            retenue: MES_STATE.sourceGraphe || '', infobulle: 'Filtrer les statuts de carence',
+            retenue: MES_STATE.sourceGraphe || '', infobulle: mt('infobulle_filtrer_statuts'),
         })
-        : '<div class="mes-preuve-vide">Aucune carence</div>';
+        : `<div class="mes-preuve-vide">${mt('aucune_carence')}</div>`;
 
     // Le graphique dit ce que la colonne « Statut » du menu Carences affiche :
     // l'état de la carence dans ce module, non celui qu'elle porte ailleurs.
@@ -614,7 +614,7 @@ function mesRenderDashboard() {
     }));
     const parStatutConstat = carencesStatut.length
         ? mesRepartition(segmentsStatutConstat, { camembert: true, unite: 'carence' })
-        : '<div class="mes-preuve-vide">Aucune carence</div>';
+        : `<div class="mes-preuve-vide">${mt('aucune_carence')}</div>`;
     // Carences dont le traitement n'est pas ouvert : c'est ce qui reste à faire,
     // et c'est ce que la colonne « Statut » du menu Carences appelle « À
     // traiter ». La carte comptait les carences sans mesure — elle rangeait

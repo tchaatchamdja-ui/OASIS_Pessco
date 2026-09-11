@@ -124,20 +124,9 @@
 }
 
 /* ══════════════════════════════════════════════
-   10. FILTER BAR (execution variant)
+   10. FILTER BAR — le cadre vient du socle (oasis-module.css) ;
+   restent la taille des champs et le bouton de remise à zéro.
    ══════════════════════════════════════════════ */
-
-.exec-filter-bar {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 0.6rem;
-    padding: 0.4rem 0.6rem;
-    background: var(--bg-card);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
 
 .exec-filter-bar .form-input,
 .exec-filter-bar .form-select {

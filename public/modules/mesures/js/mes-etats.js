@@ -336,9 +336,9 @@ function mesMesuresDeCarence(constatationId) {
                 <div class="mes-histo-entete">
                     <div class="mes-histo-objet">${_mesEsc(c.titre || c.reference || '—')}</div>
                     <div class="mes-histo-meta">${_mesEsc(c.reference || '')}${
-    c.prestataire_nom ? ` · ${_mesEsc(c.prestataire_nom)}` : ''} · ${liees.length} mesure(s)</div>
+    c.prestataire_nom ? ` · ${_mesEsc(c.prestataire_nom)}` : ''} · ${liees.length} ${mt('mesures_n')}</div>
                 </div>
-                ${blocs || '<p class="mes-preuve-vide">Aucune mesure n’est rattachée à cette carence.</p>'}
+                ${blocs || `<p class="mes-preuve-vide">${mt('aucune_mesure_rattachee')}</p>`}
                 ${liees.length ? `<div class="mes-volet-actions">
                     <button class="btn btn-primary btn-sm"
                             onclick="mesOuvrirTableMesures('${c.id}')">

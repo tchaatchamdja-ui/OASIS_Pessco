@@ -164,7 +164,7 @@ function _meilleurPriv() {
 function _userM2Role() {
     const p = _meilleurPriv();
     if (p) return p.charAt(0) + p.slice(1).toLowerCase();
-    return (PLAN_STATE.access && PLAN_STATE.access.hasAccess === false) ? 'Aucun accès' : '';
+    return (PLAN_STATE.access && PLAN_STATE.access.hasAccess === false) ? tp('no_access') : '';
 }
 
 
@@ -375,6 +375,9 @@ function planRenderPage() {
     // `planRenderPage()` comme les autres écrans.
     if (PLAN_STATE.calendrierVolet) _planDessinerVoletCalendrier();
 
+    // Les flèches du calendrier se règlent sur la largeur une fois la page posée.
+    setTimeout(() => window.planCalNavEtat && window.planCalNavEtat(), 0);
+
     // Update notification badge
     planUpdateNotifBadge();
 }
@@ -389,6 +392,7 @@ function planRenderPage() {
 window.planOuvrirCalendrier = function () {
     PLAN_STATE.calendrierVolet = true;
     _planDessinerVoletCalendrier(true);
+    setTimeout(() => window.planCalNavEtat && window.planCalNavEtat(), 0);
 };
 
 window.planFermerCalendrier = function () {

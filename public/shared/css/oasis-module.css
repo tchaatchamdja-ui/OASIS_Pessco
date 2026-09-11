@@ -452,6 +452,15 @@ body.app-sidebar-collapsed .modal-overlay { left: var(--sidebar-collapsed, 60px)
     background: var(--bg-card); border-radius: 8px;
     padding: 0.4rem 0.6rem; box-shadow: var(--shadow); margin-bottom: 0.6rem;
 }
+/* Barres de filtres des modules : le même cadre que `.filters-bar`, des champs
+   en ligne qui passent à la ligne. Chaque module garde la taille de ses
+   champs et ses variantes en grille ; cette feuille se chargeant la première,
+   leurs règles d'impression et d'écran étroit continuent de l'emporter. */
+.plan-filter-bar, .exec-filter-bar, .ramp-filtres {
+    display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center;
+    background: var(--bg-card); border-radius: 8px;
+    padding: 0.4rem 0.6rem; box-shadow: var(--shadow); margin-bottom: 0.6rem;
+}
 .filters-row { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
 .filter-group { flex: 1; min-width: 120px; }
 /* Hide filter labels visually but keep them for screen readers (accessibility) */

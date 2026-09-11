@@ -45,7 +45,7 @@ module.exports = function register(app, deps, M) {
     if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
     if (refusDates(res, plan, req.valide)) return undefined;
     // L'activité appartient à l'instance de son plan.
-    return res.json(db.createIn('activites', {
+    return res.json(db.insert('activites', {
       ...req.valide, plan_id: req.params.id, instance: instances.de(plan, loadConfig),
     }));
   });
@@ -70,7 +70,7 @@ module.exports = function register(app, deps, M) {
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
     if (act && D.estVerrouillee(act)) return D.refusVerrou(res);
     if (refusDates(res, act && D.planDe(act.plan_id), { ...act, ...req.valide })) return undefined;
-    const rec = db.updateIn('activites', req.params.id, req.valide);
+    const rec = db.update('activites', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   });
 
@@ -81,7 +81,7 @@ module.exports = function register(app, deps, M) {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!act) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'VALIDATEUR', D.planDe(act.plan_id))) return D.refus(res);
-    return res.json(db.updateIn('activites', act.id, {
+    return res.json(db.update('activites', act.id, {
       desarchivee: 1,
       desarchiver_le: new Date().toISOString(),
       desarchiver_par: req.user.username,
@@ -94,13 +94,13 @@ module.exports = function register(app, deps, M) {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!act) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'VALIDATEUR', D.planDe(act.plan_id))) return D.refus(res);
-    return res.json(db.updateIn('activites', act.id, { desarchivee: 0, desarchiver_le: '', desarchiver_par: '' }));
+    return res.json(db.update('activites', act.id, { desarchivee: 0, desarchiver_le: '', desarchiver_par: '' }));
   });
 
   app.delete(`${M}/activites/:id`, requireAuth, (req, res) => {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
     if (act && D.estVerrouillee(act)) return D.refusVerrou(res);
-    return res.json({ ok: db.deleteIn('activites', req.params.id) });
+    return res.json({ ok: db.remove('activites', req.params.id) });
   });
 };

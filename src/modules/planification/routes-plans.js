@@ -161,7 +161,7 @@ module.exports = function register(app, deps, M) {
     if (!D.peut(req, 'CONTRIBUTEUR', req.valide)) return D.refus(res);
     // Le plan appartient à l'instance sous laquelle il est ouvert : c'est elle
     // qui le verra, et « Exécution de la Surveillance » avec elle.
-    const rec = db.createIn('plans', {
+    const rec = db.insert('plans', {
       ...req.valide, statut: 'brouillon', instance: instanceCourante(req),
       created_by: req.user.username,
     });
@@ -176,13 +176,13 @@ module.exports = function register(app, deps, M) {
   // sans qu'aucun validateur ne l'ait vu.
   app.put(`${M}/plans/:id`, requireAuth, valider(D.SCHEMA_PLAN), (req, res) => {
     if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
-    const rec = db.updateIn('plans', req.params.id, req.valide);
+    const rec = db.update('plans', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   });
 
   app.delete(`${M}/plans/:id`, requireAuth, (req, res) => {
     if (!D.peut(req, 'GESTIONNAIRE', D.planDe(req.params.id))) return D.refus(res);
-    if (!db.deleteIn('plans', req.params.id)) return res.status(404).json({ error: 'not_found' });
+    if (!db.remove('plans', req.params.id)) return res.status(404).json({ error: 'not_found' });
     const d = db.load();
     d.activites = (d.activites || []).filter((a) => a.plan_id !== req.params.id);
     db.save(d);

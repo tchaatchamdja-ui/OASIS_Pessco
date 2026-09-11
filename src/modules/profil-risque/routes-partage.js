@@ -89,7 +89,7 @@ module.exports = function register(app, deps, M) {
     if (!contenu) return res.status(400).json({ error: 'fichier_requis' });
     const taille = Math.round((contenu.length * 3) / 4);
     if (taille > MAX_DOC_BYTES) return res.status(413).json({ error: 'fichier_trop_volumineux', maxMo: 3.5 });
-    const rec = db.createIn('documents', {
+    const rec = db.insert('documents', {
       nom, type: type || '', mime: mime || 'application/octet-stream', taille, contenu,
       date_upload: new Date().toISOString(), uploade_par: req.user.username,
     });
@@ -109,7 +109,7 @@ module.exports = function register(app, deps, M) {
   // Retirer une pièce de la bibliothèque est définitif : réservé au
   // Gestionnaire. Toute session pouvait jusqu'ici vider la bibliothèque.
   app.delete('/api/documents/:id', requireAuth, gerer, (req, res) => {
-    const ok = db.deleteIn('documents', req.params.id);
+    const ok = db.remove('documents', req.params.id);
     if (ok) audit.log(req.user.username, 'PR_DOCUMENT_SUPPRIME', { id: req.params.id });
     res.json({ ok });
   });
@@ -159,7 +159,7 @@ module.exports = function register(app, deps, M) {
       // c'est elle qui le reverra. En vue régionale, l'instance retenue est
       // vide et le champ retombe sur l'instance locale, comme partout.
       const marque = COLLECTIONS_INSTANCE.includes(coll) ? { instance: instanceCourante(req) } : {};
-      const rec = db.createIn(coll, { ...req.valide, ...marque, created_by: req.user.username });
+      const rec = db.insert(coll, { ...req.valide, ...marque, created_by: req.user.username });
       audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
       return res.json(rec);
     });
@@ -175,7 +175,7 @@ module.exports = function register(app, deps, M) {
       const decide = coll === 'evaluations' && statut && statut !== avant.statut
         && D.STATUTS_DECIDES.includes(statut);
       if (!D.peut(req, decide ? 'VALIDATEUR' : 'CONTRIBUTEUR', portee(avant))) return D.refus(res);
-      let rec = db.updateIn(coll, req.params.id, req.valide);
+      let rec = db.update(coll, req.params.id, req.valide);
       if (!rec) return res.status(404).json({ error: 'not_found' });
       // Les deux premières étapes du fil d'avancement ne passent pas par une
       // route dédiée : elles se déduisent de l'état de l'évaluation.
@@ -200,8 +200,8 @@ module.exports = function register(app, deps, M) {
       } else if (!D.peut(req, 'GESTIONNAIRE', portee(cible))) {
         return D.refus(res);
       }
-      if (!db.deleteIn(coll, req.params.id)) return res.status(404).json({ error: 'not_found' });
-      if (parentId) db.updateIn('evaluations', parentId, { reevalue_le: '', reevalue_par: '', enfant_id: '' });
+      if (!db.remove(coll, req.params.id)) return res.status(404).json({ error: 'not_found' });
+      if (parentId) db.update('evaluations', parentId, { reevalue_le: '', reevalue_par: '', enfant_id: '' });
       audit.log(req.user.username, 'PR_DELETE', { coll, id: req.params.id, parent_libere: parentId || null });
       return res.json({ ok: true });
     });

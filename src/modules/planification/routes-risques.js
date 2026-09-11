@@ -97,13 +97,13 @@ module.exports = function register(app, deps, M) {
   const cibleDeSynchro = (plan, username) => {
     if (!D.STATUTS_EN_VIGUEUR.includes(plan.statut)) return { cible: plan, amended: false };
     const { id: _old, ...base } = plan;
-    const cible = db.createIn('plans', {
+    const cible = db.insert('plans', {
       ...base, statut: 'brouillon', version: (plan.version || 1) + 1,
       parent_plan_id: plan.id, createdAt: new Date().toISOString(), created_by: username,
     });
     db.list('activites').filter((a) => a.plan_id === plan.id).forEach((a) => {
       const { id: _aid, ...ab } = a;
-      db.createIn('activites', { ...ab, plan_id: cible.id, parent_activite_id: a.parent_activite_id || a.id });
+      db.insert('activites', { ...ab, plan_id: cible.id, parent_activite_id: a.parent_activite_id || a.id });
     });
     return { cible, amended: true };
   };
@@ -125,7 +125,7 @@ module.exports = function register(app, deps, M) {
       const acts = db.list('activites').filter((a) => a.plan_id === cible.id && a.prestataire_id === c.prestataire_id);
       if (!acts.length) {
         const pr = prestataires.find((x) => x.id === c.prestataire_id) || {};
-        db.createIn('activites', {
+        db.insert('activites', {
           plan_id: cible.id, prestataire_id: c.prestataire_id,
           // Née d'un plan, elle appartient à l'instance de ce plan.
           instance: cible.instance || '',
@@ -138,7 +138,7 @@ module.exports = function register(app, deps, M) {
         created += 1;
       } else {
         acts.forEach((a) => {
-          db.updateIn('activites', a.id, { risk_label: c.apres.risk_label, cycle_mois: c.apres.csrbo });
+          db.update('activites', a.id, { risk_label: c.apres.risk_label, cycle_mois: c.apres.csrbo });
           updated += 1;
         });
       }

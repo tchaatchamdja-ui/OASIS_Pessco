@@ -1,33 +1,11 @@
 // Module « Profils de Risque » — règles du métier partagées par les routes :
-// données du portail projetées pour le front, rôle du module, profils publiés
-// et fil d'avancement d'une évaluation.
+// données du portail projetées pour le front, profils publiés et fil
+// d'avancement d'une évaluation. Les droits vivent dans roles.js, comme dans
+// les autres modules ; ils sont repris ici pour que les routes n'aient qu'une
+// porte d'entrée.
 const referentiels = require('../../referentiels');
-const moduleRights = require('../../module_rights');
-const { ROLES_PRESTATAIRE } = require('../../vues_prestataire');
+const roles = require('./roles');
 const db = require('./store');
-
-// ── Droits du module ──
-// Les profils de risque partagent l'espace de privilèges de la Planification
-// (`rightsModule: "PLAN"` dans les deux manifestes) : une même personne y tient
-// le même rôle. Le module est celui de l'Autorité — noter un organisme n'est
-// pas l'affaire de l'organisme noté ; le socle accordant « Lecteur » à tout
-// compte, la garde doit être explicite.
-const RIGHTS = 'PLAN';
-
-const estPrestataire = (user) => !!user && ROLES_PRESTATAIRE.includes(user.role);
-
-const peut = (req, privilege, cible) => !estPrestataire(req.user) && moduleRights.can(
-  RIGHTS, req.user.username, privilege,
-  (cible && cible.domaine_id) || '', (cible && cible.secteur_id) || '',
-);
-
-const peutLire = (req, cible) => !!req.user && !estPrestataire(req.user)
-  && moduleRights.effectivePrivilege(
-    RIGHTS, req.user.username,
-    (cible && cible.domaine_id) || '', (cible && cible.secteur_id) || '',
-  ) !== 'AUCUN';
-
-const refus = (res) => res.status(403).json({ error: 'privilege_insuffisant' });
 
 // Statuts qui relèvent d'une décision, non d'une saisie. Le front valide une
 // évaluation par un PUT direct (et non par `decision-directeur`) : la garde ne
@@ -65,14 +43,6 @@ const sharedPrestataires = () => (referentiels.getAll().prestataires || []).map(
 }));
 
 const sharedIndices = () => db.list('indices');
-
-// Rôle module (M1) dérivé du rôle portail OASIS
-function roleM1(user) {
-  if (!user) return 'Consultation';
-  if (user.role === 'SUPERADMIN' || user.role === 'ADMIN') return 'Administrateur';
-  if (user.role === 'AAC' || user.role === 'INSPECTEUR') return 'Evaluateur';
-  return 'Consultation';
-}
 
 // Service publié : profils de risque en vigueur, consommés par les autres
 // modules (Planification…). Même source que la page « Synthèses Profils » : la
@@ -149,11 +119,11 @@ function stampNotationEtapes(rec) {
   // La validation finale passe par un PUT direct, pas par decision-directeur.
   if (rec.statut === 'valide' && !e.validee) { e.validee = rec.date_validation || now; touched = true; }
   if (rec.statut === 'rejetee' && !e.rejetee) { e.rejetee = now; touched = true; }
-  return touched ? (db.updateIn('evaluations', rec.id, { etapes: e }) || rec) : rec;
+  return touched ? (db.update('evaluations', rec.id, { etapes: e }) || rec) : rec;
 }
 
 module.exports = {
+  ...roles,
   sharedDomaines, sharedSecteurs, sharedSousActivites, sharedPrestataires, sharedIndices,
-  roleM1, riskProfiles, etapesWith, stampNotationEtapes,
-  RIGHTS, estPrestataire, peut, peutLire, refus, STATUTS_DECIDES
+  riskProfiles, etapesWith, stampNotationEtapes, STATUTS_DECIDES
 };

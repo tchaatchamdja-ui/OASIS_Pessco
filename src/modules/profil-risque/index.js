@@ -33,8 +33,8 @@ module.exports = {
   seed: db.seed,
   COLLECTIONS: db.COLLECTIONS,
   getColl: db.getColl,
-  createIn: db.createIn,
-  updateIn: db.updateIn,
-  deleteIn: db.deleteIn,
+  insert: db.insert,
+  update: db.update,
+  remove: db.remove,
   riskProfiles: D.riskProfiles,
 };

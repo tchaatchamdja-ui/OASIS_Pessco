@@ -27,7 +27,14 @@ function retirerLesVersionsRemplacees() {
   if (touche) save(d);
 }
 
-function createIn(coll, item) {
+// Vocabulaire commun aux magasins des modules : list, get, insert, update,
+// remove. Ici l'identifiant est toujours tiré par le magasin — les autres
+// modules le tirent eux-mêmes, avec un préfixe parlant, avant d'insérer.
+function get(coll, id) {
+  return list(coll).find((r) => r.id === id) || null;
+}
+
+function insert(coll, item) {
   const d = load();
   // L'identifiant est posé par le magasin, jamais par l'appelant : placé
   // avant l'enregistrement, un `id` venu du client l'écrasait — il pouvait
@@ -39,7 +46,7 @@ function createIn(coll, item) {
   return rec;
 }
 
-function updateIn(coll, id, patch) {
+function update(coll, id, patch) {
   const d = load();
   const arr = d[coll] || [];
   const i = arr.findIndex((r) => r.id === id);
@@ -49,7 +56,7 @@ function updateIn(coll, id, patch) {
   return arr[i];
 }
 
-function deleteIn(coll, id) {
+function remove(coll, id) {
   const d = load();
   const arr = d[coll] || [];
   const i = arr.findIndex((r) => r.id === id);
@@ -59,4 +66,4 @@ function deleteIn(coll, id) {
   return true;
 }
 
-module.exports = { uid, load, save, list, seed, createIn, updateIn, deleteIn };
+module.exports = { uid, load, save, list, get, seed, insert, update, remove };

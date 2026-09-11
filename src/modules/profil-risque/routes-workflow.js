@@ -29,7 +29,7 @@ module.exports = function register(app, deps, M) {
     if (!cur) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'CONTRIBUTEUR', portee(cur))) return D.refus(res);
     const now = new Date().toISOString();
-    const rec = db.updateIn('evaluations', req.params.id, {
+    const rec = db.update('evaluations', req.params.id, {
       statut: 'soumis_directeur', soumis_le: now, soumis_par: req.user.username,
       etapes: D.etapesWith(cur, { soumission: (cur.etapes || {}).soumission || now, acceptation: now }),
     });
@@ -71,7 +71,7 @@ module.exports = function register(app, deps, M) {
     // Renvoi : l'évaluation redevient modifiable par les évaluateurs
     if (decision === 'renvoyer') { patch.soumis_le = ''; patch.decide_le = ''; }
 
-    const rec = db.updateIn('evaluations', req.params.id, patch);
+    const rec = db.update('evaluations', req.params.id, patch);
     if (!rec) return res.status(404).json({ error: 'not_found' });
     audit.log(req.user.username, 'PR_DECISION_DIRECTEUR', { id: rec.id, decision, statut });
     return res.json(rec);
@@ -87,9 +87,9 @@ module.exports = function register(app, deps, M) {
     // vigueur tant que la nouvelle n'est pas validée. On la marque seulement
     // comme réévaluée pour tracer le lien avec le nouveau cycle.
     // `id` retiré avant copie : le laisser à undefined écrasait l'identifiant
-    // généré par createIn et rendait la nouvelle évaluation inexploitable.
+    // généré par insert et rendait la nouvelle évaluation inexploitable.
     const { id: _srcId, ...srcData } = src;
-    const clone = db.createIn('evaluations', {
+    const clone = db.insert('evaluations', {
       ...srcData, statut: 'brouillon', parent_id: src.id,
       cycle: (src.cycle || 1) + 1, createdAt: new Date().toISOString(), created_by: req.user.username,
       // Le nouveau cycle repart d'un circuit vierge
@@ -97,7 +97,7 @@ module.exports = function register(app, deps, M) {
       decision_directeur: '', motif_decision: '', commentaire_directeur: '',
       date_revue_directeur: '', date_validation: '', etapes: {},
     });
-    db.updateIn('evaluations', src.id, {
+    db.update('evaluations', src.id, {
       reevalue_le: new Date().toISOString(), reevalue_par: req.user.username, enfant_id: clone.id,
     });
     audit.log(req.user.username, 'PR_REEVALUATION', { source: src.id, nouvelle: clone.id });

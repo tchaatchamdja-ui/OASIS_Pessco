@@ -40,7 +40,7 @@ module.exports = function register(app, deps, M) {
     while (ancetre && !vus.has(ancetre.id)) {
       vus.add(ancetre.id);
       if (D.STATUTS_EN_VIGUEUR.includes(ancetre.statut)) {
-        db.updateIn('plans', ancetre.id, {
+        db.update('plans', ancetre.id, {
           statut: D.STATUT_REMPLACE, remplace_le: new Date().toISOString(),
           remplace_par_qui: username, remplace_par: rec.id,
         });
@@ -58,7 +58,7 @@ module.exports = function register(app, deps, M) {
       if (!D.peut(req, requis, D.planDe(req.params.id))) return D.refus(res);
       const body = req.body || {};
       const commentaire = body.commentaire || body.motif || '';
-      const rec = db.updateIn('plans', req.params.id, {
+      const rec = db.update('plans', req.params.id, {
         statut,
         [`${route.replace(/-/g, '_')}_le`]: new Date().toISOString(),
         [`${route.replace(/-/g, '_')}_par`]: req.user.username,
@@ -72,7 +72,7 @@ module.exports = function register(app, deps, M) {
       (body.activity_comments || []).forEach((c) => {
         const act = db.list('activites').find((a) => a.id === c.activity_id
           || (c.activity_objet && (a.objet || a.titre) === c.activity_objet && a.plan_id === rec.id));
-        if (act) db.updateIn('activites', act.id, { commentaire_validation: c.commentaire });
+        if (act) db.update('activites', act.id, { commentaire_validation: c.commentaire });
       });
       if (route === 'valider' && rec.parent_plan_id) retirerAncetres(rec, req.user.username);
       D.wf(rec.id, route, req.user.username, { motif: body.motif || '', commentaire });
@@ -98,7 +98,7 @@ module.exports = function register(app, deps, M) {
 
     const motif = (req.body && req.body.motif) || '';
     const { id: _old, ...base } = src;
-    const child = db.createIn('plans', {
+    const child = db.insert('plans', {
       ...base, statut: 'brouillon', version: (src.version || 1) + 1,
       parent_plan_id: src.id, motif_amendement: motif,
       createdAt: new Date().toISOString(), created_by: req.user.username,
@@ -108,7 +108,7 @@ module.exports = function register(app, deps, M) {
     // copies dans les versions suivantes (comparaison des amendements).
     db.list('activites').filter((a) => a.plan_id === src.id).forEach((a) => {
       const { id: _aid, ...ab } = a;
-      db.createIn('activites', { ...ab, plan_id: child.id, parent_activite_id: a.parent_activite_id || a.id });
+      db.insert('activites', { ...ab, plan_id: child.id, parent_activite_id: a.parent_activite_id || a.id });
     });
     D.wf(child.id, 'amender', req.user.username, { motif, source: src.id });
     audit.log(req.user.username, 'PLAN_AMENDER', { source: src.id, amendement: child.id });
@@ -124,7 +124,7 @@ module.exports = function register(app, deps, M) {
     if (!D.peut(req, 'VALIDATEUR', p)) return D.refus(res);
     if (p.statut !== 'archive') return res.status(409).json({ error: 'plan_non_archive' });
     if (p.remplace_par) return res.status(409).json({ error: 'version_remplacee' });
-    const rec = db.updateIn('plans', p.id, {
+    const rec = db.update('plans', p.id, {
       statut: 'valide',
       desarchiver_le: new Date().toISOString(),
       desarchiver_par: req.user.username,
@@ -132,7 +132,7 @@ module.exports = function register(app, deps, M) {
     // Le plan revenant en entier, les exceptions posées activité par activité
     // n'ont plus d'objet.
     db.list('activites').filter((a) => a.plan_id === p.id && Number(a.desarchivee) === 1)
-      .forEach((a) => db.updateIn('activites', a.id, { desarchivee: 0 }));
+      .forEach((a) => db.update('activites', a.id, { desarchivee: 0 }));
     D.wf(p.id, 'desarchiver', req.user.username, {});
     audit.log(req.user.username, 'PLAN_DESARCHIVER', { id: p.id });
     return res.json(rec);
@@ -179,7 +179,7 @@ module.exports = function register(app, deps, M) {
   };
 
   app.post(`${M}/plans/:id/versions`, requireAuth, ecriturePlan, valider(SCHEMA_VERSION), (req, res) =>
-    res.json(db.createIn('versions', { ...req.valide, plan_id: req.params.id, auteur: req.user.username })));
+    res.json(db.insert('versions', { ...req.valide, plan_id: req.params.id, auteur: req.user.username })));
 
   app.get(`${M}/plans/:id/commentaires`, requireAuth, lecturePlan, (req, res) => {
     // Le fil reprend toutes les versions du plan, depuis la première.
@@ -205,7 +205,7 @@ module.exports = function register(app, deps, M) {
   // borne — ni sur la taille de l'avis, ni sur les champs qui l'accompagnaient.
   app.post(`${M}/plans/:id/commentaires`, requireAuth, ecriturePlan,
     valider({ contenu: { type: 'texte', requis: true, max: 4000 } }), (req, res) =>
-      res.json(db.createIn('commentaires', {
+      res.json(db.insert('commentaires', {
         ...req.valide, plan_id: req.params.id, auteur: req.user.username,
       })));
 
@@ -217,6 +217,6 @@ module.exports = function register(app, deps, M) {
     const plan = D.planDe(c.plan_id);
     const sien = (c.auteur || c.user_id) === req.user.username;
     if (!D.peut(req, sien ? 'CONTRIBUTEUR' : 'GESTIONNAIRE', plan)) return D.refus(res);
-    return res.json({ ok: db.deleteIn('commentaires', req.params.id) });
+    return res.json({ ok: db.remove('commentaires', req.params.id) });
   });
 };

@@ -19,14 +19,10 @@ const MES_ETATS = { sub: 'a_traiter', ouvertes: {} };
 // Les quatre étapes du traitement, dans l'ordre du fil. Le sous-menu
 // « Traitements en cours » ouvre une section par étape.
 const MES_ETATS_ETAPES = [
-    { cle: 'suite', titre: 'Suite à donner',
-      aide: 'Le traitement est déclenché ; la suite à donner n’est pas arrêtée.' },
-    { cle: 'investigations', titre: 'Investigations',
-      aide: 'L’enquête est ouverte ; son rapport n’est pas soumis à l’instance.' },
-    { cle: 'qualification', titre: 'Qualification et Mesures',
-      aide: 'L’instance siège ; l’infraction n’est pas encore qualifiée.' },
-    { cle: 'suivi', titre: 'Suivi des Mesures',
-      aide: 'Les mesures sont arrêtées ; leur mise en œuvre se suit.' },
+    { cle: 'suite', aide: 'e_suite_aide' },
+    { cle: 'investigations', aide: 'e_inv_aide' },
+    { cle: 'qualification', aide: 'e_qual_aide' },
+    { cle: 'suivi', aide: 'e_suivi_aide' },
 ];
 
 // ── Répartition ──
@@ -105,9 +101,9 @@ const mesEtatsCarte = (alerte, intro, corps) => `
 // Les deux gestes que toute ligne offre : ouvrir le dossier, lire son
 // histoire. Le reste dépend du sous-menu.
 const mesEtatsActions = (id) => `
-    <button class="btn btn-outline btn-sm mes-btn-icone" title="Ouvrir le traitement"
+    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('ouvrir_traitement'))}"
             onclick="mesMesureDepuisConstatation('${id}')">${MES_ICONS.edit}</button>
-    <button class="btn btn-outline btn-sm mes-btn-icone" title="Historique du traitement"
+    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('historique_traitement'))}"
             onclick="mesHistorique('${id}')">${MES_ICONES_ETAT.clock}</button>`;
 
 const mesEtatsLigneCarence = (c, colonnes) => `
@@ -130,16 +126,14 @@ function mesEtatsPanATraiter(R) {
         <td>${_mesEsc(mesDate(c.date_due_cloture))}</td>
         <td style="text-align:center;">${mesEtatsDelai(c.reste)}</td>`)).join('');
     const retard = R.aTraiter.filter((c) => c.retard).length;
-    return mesEtatsCarte(retard ? `${retard} en retard` : '',
-        'Carences reçues des modules de surveillance ou relevées ici, sur lesquelles aucune '
-        + 'suite n’a encore été arrêtée. Ouvrir le dossier déclenche leur traitement.',
+    return mesEtatsCarte(retard ? mt('e_en_retard', retard) : '', mt('e_intro_a_traiter'),
         mesEtatsTableau([
-            { titre: 'Référence', largeur: '150px' }, { titre: 'Objet', largeur: '280px' },
-            { titre: 'Prestataire', largeur: '160px' }, { titre: 'Ouverture', largeur: '110px' },
-            { titre: 'Échéance', largeur: '110px' },
-            { titre: 'Délai', largeur: '120px', centre: true },
-            { titre: 'Actions', largeur: '100px', centre: true },
-        ], lignes, 'Aucune carence n’attend de suite à donner.'));
+            { titre: mt('col_reference'), largeur: '150px' }, { titre: mt('objet'), largeur: '280px' },
+            { titre: mt('col_prestataire'), largeur: '160px' }, { titre: mt('col_ouverture'), largeur: '110px' },
+            { titre: mt('col_echeance'), largeur: '110px' },
+            { titre: mt('col_delai'), largeur: '120px', centre: true },
+            { titre: mt('col_actions'), largeur: '100px', centre: true },
+        ], lignes, mt('e_vide_a_traiter')));
 }
 
 // ── Sous-menu 2 : traitements en cours, une section par étape ──
@@ -160,19 +154,19 @@ function mesEtatsPanEnCours(R) {
                      ontoggle="MES_ETATS.ouvertes['${e.cle}']=this.open;">
                 <summary>
                     <span class="mes-etats-chevron">${MES_ICONS.chevron}</span>
-                    <span class="mes-etats-titre">${_mesEsc(e.titre)}</span>
+                    <span class="mes-etats-titre">${_mesEsc(mesNomEtape(e.cle))}</span>
                     <span class="mes-etats-compte${items.length > 1 ? ' alerte' : ''}">${items.length}</span>
-                    ${retard ? `<span class="mes-etats-compte retard">${retard} en retard</span>` : ''}
+                    ${retard ? `<span class="mes-etats-compte retard">${_mesEsc(mt('e_en_retard', retard))}</span>` : ''}
                 </summary>
                 <div class="mes-etats-section-corps">
-                    <p class="mes-etats-intro">${_mesEsc(e.aide)}</p>
+                    <p class="mes-etats-intro">${_mesEsc(mt(e.aide))}</p>
                     ${mesEtatsTableau([
-        { titre: 'Référence', largeur: '150px' }, { titre: 'Objet', largeur: '280px' },
-        { titre: 'Prestataire', largeur: '160px' }, { titre: 'Échéance', largeur: '110px' },
-        { titre: 'Délai', largeur: '120px', centre: true },
-        { titre: 'Statut', largeur: '130px', centre: true },
-        { titre: 'Actions', largeur: '100px', centre: true },
-    ], lignes, 'Aucun dossier à cette étape.')}
+        { titre: mt('col_reference'), largeur: '150px' }, { titre: mt('objet'), largeur: '280px' },
+        { titre: mt('col_prestataire'), largeur: '160px' }, { titre: mt('col_echeance'), largeur: '110px' },
+        { titre: mt('col_delai'), largeur: '120px', centre: true },
+        { titre: mt('col_statut'), largeur: '130px', centre: true },
+        { titre: mt('col_actions'), largeur: '100px', centre: true },
+    ], lignes, mt('e_vide_etape'))}
                 </div>
             </details>`;
     }).join('');
@@ -185,16 +179,14 @@ function mesEtatsPanCloturees(R) {
         <td>${_mesEsc(mesDate(c.date_ouverture))}</td>
         <td>${_mesEsc(mesDate(c.traitement_cloture_le || c.date_cloture))}</td>
         <td style="text-align:center;">${c.mesures_liees || 0}</td>`)).join('');
-    return mesEtatsCarte('',
-        'Carences dont le traitement est clos : les mesures ont été arrêtées et aucune '
-        + 'n’appelle plus de suivi. Le dossier se consulte, il ne se réécrit plus.',
+    return mesEtatsCarte('', mt('e_intro_cloturees'),
         mesEtatsTableau([
-            { titre: 'Référence', largeur: '150px' }, { titre: 'Objet', largeur: '280px' },
-            { titre: 'Prestataire', largeur: '160px' }, { titre: 'Ouverture', largeur: '110px' },
-            { titre: 'Clôture', largeur: '110px' },
-            { titre: 'Mesures', largeur: '90px', centre: true },
-            { titre: 'Actions', largeur: '100px', centre: true },
-        ], lignes, 'Aucune carence clôturée.'));
+            { titre: mt('col_reference'), largeur: '150px' }, { titre: mt('objet'), largeur: '280px' },
+            { titre: mt('col_prestataire'), largeur: '160px' }, { titre: mt('col_ouverture'), largeur: '110px' },
+            { titre: mt('col_cloture'), largeur: '110px' },
+            { titre: mt('col_mesures'), largeur: '90px', centre: true },
+            { titre: mt('col_actions'), largeur: '100px', centre: true },
+        ], lignes, mt('e_vide_cloturees')));
 }
 
 // ── Sous-menu 4 : carences classées ──
@@ -205,15 +197,13 @@ function mesEtatsPanClassees(R) {
         <td>${_mesEsc(mesDate(c.date_cloture))}</td>
         <td>${c.classement_motif
         ? _mesEsc(c.classement_motif) : '<span class="mes-preuve-vide">—</span>'}</td>`)).join('');
-    return mesEtatsCarte('',
-        'Carences closes sans mesure d’application : l’autorité a jugé qu’aucune suite '
-        + 'n’était à leur donner, ou l’instance que l’infraction n’était pas constituée.',
+    return mesEtatsCarte('', mt('e_intro_classees'),
         mesEtatsTableau([
-            { titre: 'Référence', largeur: '150px' }, { titre: 'Objet', largeur: '260px' },
-            { titre: 'Prestataire', largeur: '150px' }, { titre: 'Ouverture', largeur: '110px' },
-            { titre: 'Classement', largeur: '110px' }, { titre: 'Motif', largeur: '240px' },
-            { titre: 'Actions', largeur: '100px', centre: true },
-        ], lignes, 'Aucune carence classée.'));
+            { titre: mt('col_reference'), largeur: '150px' }, { titre: mt('objet'), largeur: '260px' },
+            { titre: mt('col_prestataire'), largeur: '150px' }, { titre: mt('col_ouverture'), largeur: '110px' },
+            { titre: mt('col_classement'), largeur: '110px' }, { titre: mt('col_motif'), largeur: '240px' },
+            { titre: mt('col_actions'), largeur: '100px', centre: true },
+        ], lignes, mt('e_vide_classees')));
 }
 
 // ── L'écran ──
@@ -223,10 +213,10 @@ function mesRenderEtats() {
         + R.enCours.filter((c) => c.retard).length;
 
     const onglets = [
-        { cle: 'a_traiter', titre: 'Carences à traiter', compte: R.aTraiter.length },
-        { cle: 'en_cours', titre: 'Traitements en cours', compte: R.enCours.length },
-        { cle: 'cloturees', titre: 'Carences clôturées', compte: R.cloturees.length },
-        { cle: 'classees', titre: 'Carences classées', compte: R.classees.length },
+        { cle: 'a_traiter', titre: mt('e_onglet_a_traiter'), compte: R.aTraiter.length },
+        { cle: 'en_cours', titre: mt('e_onglet_en_cours'), compte: R.enCours.length },
+        { cle: 'cloturees', titre: mt('e_onglet_cloturees'), compte: R.cloturees.length },
+        { cle: 'classees', titre: mt('e_onglet_classees'), compte: R.classees.length },
     ];
     const barre = `<div class="mes-sous-onglets mes-onglets-rang" role="tablist">
         <div class="mes-onglets-bande">${onglets.map((o) => `
@@ -246,15 +236,10 @@ function mesRenderEtats() {
 
     return `
     <div class="mes-page-header">
-        <h2>États</h2>
-        ${retards ? `<span class="mes-etats-alerte">${retards} échéance${
-        retards > 1 ? 's' : ''} dépassée${retards > 1 ? 's' : ''}</span>` : ''}
+        <h2>${mt('nav_etats')}</h2>
+        ${retards ? `<span class="mes-etats-alerte">${_mesEsc(mt('e_retards', retards))}</span>` : ''}
     </div>
-    <p class="mes-note">
-        Situation d’ensemble du module : ce qui attend une suite, ce qui est en cours de
-        traitement, ce dont la mise en œuvre se suit, et ce qui est clos. Une ligne s’ouvre
-        sur son dossier.
-    </p>
+    <p class="mes-note">${mt('e_note')}</p>
     ${barre}
     <div class="mes-etats">${corps()}</div>`;
 }

@@ -13,7 +13,7 @@
  * l'instance retenue.
  */
 
-const MES_VUE_REGIONALE = 'Vue régionale (toutes les instances)';
+const mesVueRegionale = () => mt('vue_regionale');
 
 async function mesAppliquerInstance(valeur) {
     const etat = MES_STATE.instances || {};
@@ -22,7 +22,7 @@ async function mesAppliquerInstance(valeur) {
     try {
         await mesApi('/instance', { method: 'PUT', body: JSON.stringify({ instance: valeur }) });
     } catch (e) {
-        mesToast((e && e.message) || 'Changement d’instance impossible', 'error');
+        mesToast((e && e.message) || mt('instance_impossible'), 'error');
         return;
     }
     // L'instance commande le périmètre de tous les écrans : on recharge le
@@ -45,16 +45,16 @@ function mesDessinerActions() {
     const actions = [];
     if (etat.disponible && (etat.instances || []).length) {
         actions.push({
-            key: 'instance', type: 'select', label: 'Instance regardée',
+            key: 'instance', type: 'select', label: mt('instance_regardee'),
             value: etat.courante || '',
-            options: [{ value: '', label: MES_VUE_REGIONALE }]
+            options: [{ value: '', label: mesVueRegionale() }]
                 .concat(etat.instances.map((e) => ({ value: e, label: e }))),
             onChange: (v) => mesAppliquerInstance(v),
         });
     }
     if (mesPeutGererDroits()) {
         actions.push({
-            key: 'droits', label: 'Gestion des Droits', icon: MES_DROITS_ICON,
+            key: 'droits', label: mt('gestion_droits'), icon: MES_DROITS_ICON,
             onClick: () => { window.location.href = '/modules/droits/index.html?module=CARE'; },
         });
     }

@@ -73,10 +73,8 @@ function mesBoutonsExport(base) {
         href="${_mesAttr(mesUrlExport(base, format))}"
         title="${_mesAttr(aide)}">${icone} ${libelle}</a>`;
     return `<div class="mes-exports">
-        ${lien('xlsx', MES_ICONES_ETAT.excel, 'Exporter Excel',
-            'Classeur Excel des lignes affichées, filtres compris')}
-        ${lien('pdf', MES_ICONES_ETAT.pdf, 'Exporter PDF',
-            'Document PDF des lignes affichées, filtres compris')}
+        ${lien('xlsx', MES_ICONES_ETAT.excel, mt('exporter_excel'), mt('excel_aide'))}
+        ${lien('pdf', MES_ICONES_ETAT.pdf, mt('exporter_pdf'), mt('pdf_aide'))}
     </div>`;
 }
 
@@ -103,87 +101,88 @@ function mesHistoriqueEtapes(t, mesures) {
     } : null);
     const inv = t.investigation || {};
     const q = t.qualification || {};
-    const dec = { classer: 'Classer', investiguer: 'Investiguer', mesures: 'Prendre des mesures' };
+    const dec = (cle) => (MES_DECISIONS.some((d) => d.cle === cle) ? mesNomDecision(cle) : cle);
 
     return [
         {
-            id: 'suite', titre: 'Suite à donner',
+            id: 'suite', titre: mt('fil_suite'),
             sous: [{
-                nom: 'Instruction et décision',
+                nom: mt('h_instruction'),
                 jalons: [
-                    j(t.date_creation, 'Traitement déclenché', t.created_by),
-                    t.decide_le && j(t.decide_le, `Décision : ${dec[t.decision] || t.decision}`,
+                    j(t.date_creation, mt('h_traitement_declenche'), t.created_by),
+                    t.decide_le && j(t.decide_le, mt('h_decision', dec(t.decision)),
                         t.decide_par, t.decision_motif),
                 ].filter(Boolean),
             }],
         },
         {
-            id: 'investigations', titre: 'Investigations',
+            id: 'investigations', titre: mt('fil_investigations'),
             sous: [
                 {
-                    nom: 'Conduite de l’enquête',
+                    nom: mt('h_conduite_enquete'),
                     jalons: [
                         (inv.equipe || []).length
-                            && j(inv.soumise_le || t.decide_le, `${inv.equipe.length} enquêteur(s) désigné(s)`, ''),
+                            && j(inv.soumise_le || t.decide_le, mt('h_enqueteurs', inv.equipe.length), ''),
                         (inv.travaux || []).length
-                            && j(inv.soumise_le || t.decide_le, `${inv.travaux.length} investigation(s) consignée(s)`, ''),
-                        inv.soumise_le && j(inv.soumise_le, 'Investigation soumise', inv.soumise_par),
+                            && j(inv.soumise_le || t.decide_le, mt('h_investigations', inv.travaux.length), ''),
+                        inv.soumise_le && j(inv.soumise_le, mt('investigation_soumise'), inv.soumise_par),
                     ].filter(Boolean),
                 },
                 {
-                    nom: 'Renvois de l’instance',
+                    nom: mt('h_renvois'),
                     jalons: (inv.renvois || []).map((r) => j(r.renvoye_le,
-                        'Renvoyée pour complément d’enquête', r.renvoye_par, r.motif, true)).filter(Boolean),
+                        mt('h_renvoyee'), r.renvoye_par, r.motif, true)).filter(Boolean),
                 },
             ],
         },
         {
-            id: 'qualification', titre: 'Qualification et Mesures',
+            id: 'qualification', titre: mt('fil_qualification'),
             sous: [
                 {
-                    nom: 'Instance décisionnelle',
+                    nom: mt('sec_instance'),
                     jalons: [
                         (q.membres || []).length && j(t.qualifie_le || inv.soumise_le,
-                            `${q.membres.length} membre(s) siégeant`, ''),
-                        ...(q.reunions || []).map((r) => j(r.date, `Réunion — ${r.objet || 'séance'}`,
+                            mt('h_membres', q.membres.length), ''),
+                        ...(q.reunions || []).map((r) => j(r.date, mt('h_reunion', r.objet || mt('q_seance')),
                             '', r.resultat)),
                     ].filter(Boolean),
                 },
                 {
-                    nom: 'Qualification',
+                    nom: mt('fil_qualification'),
                     jalons: [
-                        q.infraction_constituee && j(t.qualifie_le, 'Infraction constituée', t.qualifie_par, q.nature),
-                        q.infraction_non_constituee && j(t.classe_le, 'Infraction non constituée', t.classe_par),
-                        t.classe_le && j(t.classe_le, 'Carence classée sans suite', t.classe_par),
-                        t.qualifie_le && j(t.qualifie_le, 'Qualification validée', t.qualifie_par),
+                        q.infraction_constituee && j(t.qualifie_le, mt('h_infraction_constituee'), t.qualifie_par, q.nature),
+                        q.infraction_non_constituee && j(t.classe_le, mt('h_infraction_non_constituee'), t.classe_par),
+                        t.classe_le && j(t.classe_le, mt('h_carence_classee'), t.classe_par),
+                        t.qualifie_le && j(t.qualifie_le, mt('h_qualification_validee'), t.qualifie_par),
                     ].filter(Boolean),
                 },
                 {
-                    nom: 'Recours',
+                    nom: mt('onglet_recours'),
                     jalons: [
-                        t.recours_ouvert_le && j(t.recours_ouvert_le, 'Examen de recours ouvert', t.recours_ouvert_par),
+                        t.recours_ouvert_le && j(t.recours_ouvert_le, mt('h_recours_ouvert'), t.recours_ouvert_par),
                         ...(q.mesures || []).filter((m) => m.recours_intente && (m.recours || {}).decision)
                             .map((m) => j(t.recours_ouvert_le,
-                                `Recours — ${({ maintenir: 'mesure maintenue', modifier: 'mesure modifiée', annuler: 'mesure annulée' })[m.recours.decision]}`,
+                                mt('h_recours_decision', mt({ maintenir: 'h_mesure_maintenue',
+                                    modifier: 'h_mesure_modifiee', annuler: 'h_mesure_annulee' }[m.recours.decision])),
                                 '', m.recours.commentaire)),
                     ].filter(Boolean),
                 },
             ],
         },
         {
-            id: 'suivi', titre: 'Suivi des Mesures',
+            id: 'suivi', titre: mt('fil_suivi'),
             sous: [
                 {
-                    nom: 'Mesures au registre',
+                    nom: mt('h_mesures_registre'),
                     jalons: (mesures || []).map((m) => j(m.date_creation,
                         `${m.reference} — ${mesLibelleCategorie(m.categorie)}`, m.created_by,
                         mesLibelleSuivi(mesStatutSuivi(m)))).filter(Boolean),
                 },
                 {
-                    nom: 'Clôture',
+                    nom: mt('h_cloture'),
                     jalons: [
-                        (t.suivi || {}).maj_le && j(t.suivi.maj_le, 'Suivi mis à jour', t.suivi.maj_par),
-                        t.cloture_le && j(t.cloture_le, 'Traitement clôturé', t.cloture_par),
+                        (t.suivi || {}).maj_le && j(t.suivi.maj_le, mt('h_suivi_maj'), t.suivi.maj_par),
+                        t.cloture_le && j(t.cloture_le, mt('traitement_cloture'), t.cloture_par),
                     ].filter(Boolean),
                 },
             ],
@@ -197,7 +196,7 @@ async function mesHistorique(constatationId) {
     let t = {};
     try {
         t = await mesApi(`/constatations/${encodeURIComponent(constatationId)}/traitement`);
-    } catch (e) { mesToast(e.message || 'Historique indisponible', 'error'); return; }
+    } catch (e) { mesToast(e.message || mt('h_indisponible'), 'error'); return; }
 
     const atteinte = MES_HISTO_ETAPES.indexOf(t.etape || 'suite');
     const clos = !!(t.classe_le || t.cloture_le);
@@ -224,14 +223,14 @@ async function mesHistorique(constatationId) {
                         ${x.acteur ? `<span class="mes-histo-acteur">${_mesEsc(x.acteur)}</span>` : ''}
                         ${x.detail ? `<span class="mes-histo-detail${
                             x.alerte ? ' alerte' : ''}">${_mesEsc(x.detail)}</span>` : ''}
-                    </div>`).join('') : '<div class="mes-histo-attente">En attente</div>'}
+                    </div>`).join('') : `<div class="mes-histo-attente">${mt('h_en_attente')}</div>`}
             </div>`).join('');
         return `
             <section class="${classe}">
                 <header>
                     <span class="mes-histo-puce"></span>
                     <h4>${_mesEsc(e.titre)}</h4>
-                    <span class="mes-histo-etat">${faite ? 'Franchie' : (courante ? 'En cours' : 'À venir')}</span>
+                    <span class="mes-histo-etat">${faite ? mt('h_franchie') : (courante ? mt('h_en_cours') : mt('h_a_venir'))}</span>
                 </header>
                 <div class="mes-histo-sous-liste">${sous}</div>
             </section>`;
@@ -244,7 +243,7 @@ async function mesHistorique(constatationId) {
     <div class="mes-modal-fond mes-histo-fond" onclick="mesFermerHistorique()">
         <div class="mes-volet-histo" onclick="event.stopPropagation();">
             <div class="mes-modal-header">
-                <span style="flex:1;">${MES_ICONES_ETAT.clock} Historique du traitement</span>
+                <span style="flex:1;">${MES_ICONES_ETAT.clock} ${mt('historique_traitement')}</span>
                 <button class="btn btn-outline btn-sm mes-btn-icone"
                         onclick="mesFermerHistorique()">${MES_ICONS.close}</button>
             </div>
@@ -257,7 +256,7 @@ async function mesHistorique(constatationId) {
                     </div>
                     ${corps}
                     <div class="mes-histo-fin ${clos ? 'clos' : ''}">${
-                        clos ? 'Traitement clos' : 'Traitement en cours'}</div>
+                        clos ? mt('h_traitement_clos') : mt('h_traitement_en_cours')}</div>
                 </div>
             </div>
         </div>
@@ -285,7 +284,7 @@ function mesMesuresDeCarence(constatationId) {
         .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || '')));
 
     const portee = (m) => {
-        const nom = { temporelle: 'Limitée dans le temps', illimitee: 'Illimitée', sans_objet: 'Sans objet' }[m.portee];
+        const nom = { temporelle: mt('limitee_temps'), illimitee: mt('illimitee'), sans_objet: mt('sans_objet') }[m.portee];
         if (!nom) return '';
         const duree = m.portee === 'temporelle' && m.duree_valeur
             ? ` · ${m.duree_valeur} ${m.duree_unite || 'jours'}` : '';
@@ -297,26 +296,26 @@ function mesMesuresDeCarence(constatationId) {
         const suivi = MES_SUIVI[cleSuivi] || {};
         return `<div class="mes-bloc">
             <div class="mes-bloc-entete">
-                <span class="mes-bloc-titre">${_mesEsc(m.reference || 'Mesure')}</span>
+                <span class="mes-bloc-titre">${_mesEsc(m.reference || mt('mesure'))}</span>
                 <span class="mes-badge ${_mesAttr(suivi.classe || '')}"
                       title="${_mesAttr(MES_SUIVI[cleSuivi] ? mesAideSuivi(cleSuivi) : '')}">${
                           _mesEsc(MES_SUIVI[cleSuivi] ? mesLibelleSuivi(cleSuivi) : '—')}</span>
             </div>
             <div class="mes-bloc-corps">
                 <dl style="margin:0;">
-                    ${mesLigneFiche('Catégorie', mesLibelleCategorie(m.categorie))}
-                    ${mesLigneFiche('Type', mesLibelleType(m.type_mesure))}
-                    ${mesLigneFiche('Date de sanction', mesDate(m.date_sanction || m.date_emission))}
-                    ${mesLigneFiche('Portée', portee(m))}
-                    ${mesLigneFiche('Échéance', mesDate(m.date_echeance))}
+                    ${mesLigneFiche(mt('fiche_categorie'), mesLibelleCategorie(m.categorie))}
+                    ${mesLigneFiche(mt('fiche_type'), mesLibelleType(m.type_mesure))}
+                    ${mesLigneFiche(mt('fiche_date_sanction'), mesDate(m.date_sanction || m.date_emission))}
+                    ${mesLigneFiche(mt('fiche_portee'), portee(m))}
+                    ${mesLigneFiche(mt('col_echeance'), mesDate(m.date_echeance))}
                 </dl>
                 <div class="mes-champ" style="margin:.5rem 0 0;">
-                    <label>Description de la sanction</label>
+                    <label>${mt('fiche_desc_sanction')}</label>
                     <div class="mes-lecture">${m.description ? _mesEsc(m.description)
             : '<span class="mes-preuve-vide">—</span>'}</div>
                 </div>
                 ${m.suivi_commentaire ? `<div class="mes-champ" style="margin:.5rem 0 0;">
-                    <label>Commentaire de suivi</label>
+                    <label>${mt('commentaire_suivi')}</label>
                     <div class="mes-lecture">${_mesEsc(m.suivi_commentaire)}</div>
                 </div>` : ''}
             </div>

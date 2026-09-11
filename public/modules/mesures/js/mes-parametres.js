@@ -21,49 +21,49 @@ function mesRenderParametres() {
         <td style="text-align:center;">${mesTypesDe(c.code).length}</td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirCategorie('${c.id}')" title="Modifier">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirCategorie('${c.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerCategorie('${c.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerCategorie('${c.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
-        || `<tr><td colspan="3" class="mes-table-vide">Aucune catégorie.</td></tr>`;
+        || `<tr><td colspan="3" class="mes-table-vide">${mt('aucune_categorie')}</td></tr>`;
 
     const lignesType = mesTypes().map((t) => `<tr>
         <td>${_mesEsc(mesLibelleCategorie(t.categorie_code))}</td>
         <td><strong>${_mesEsc(t.libelle)}</strong></td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirType('${t.id}')" title="Modifier">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirType('${t.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerType('${t.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerType('${t.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
-        || `<tr><td colspan="3" class="mes-table-vide">Aucun type.</td></tr>`;
+        || `<tr><td colspan="3" class="mes-table-vide">${mt('aucun_type')}</td></tr>`;
 
     const lignesInv = mesTypesInvestigation().map((t) => `<tr>
         <td><strong>${_mesEsc(t.libelle)}</strong>
             <div style="font-size:.72rem;color:var(--text-muted);font-family:ui-monospace,Menlo,monospace;">${_mesEsc(t.code)}</div></td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirTypeInvestigation('${t.id}')" title="Modifier">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirTypeInvestigation('${t.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerTypeInvestigation('${t.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerTypeInvestigation('${t.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
-        || `<tr><td colspan="2" class="mes-table-vide">Aucun type d'investigation.</td></tr>`;
+        || `<tr><td colspan="2" class="mes-table-vide">${mt('aucun_type_inv')}</td></tr>`;
 
     const lignesCom = mesComites().map((c) => `<tr>
         <td><strong>${_mesEsc(c.libelle)}</strong>
             <div style="font-size:.72rem;color:var(--text-muted);font-family:ui-monospace,Menlo,monospace;">${_mesEsc(c.code)}</div></td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirComite('${c.id}')" title="Modifier">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirComite('${c.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerComite('${c.id}')" title="Supprimer">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerComite('${c.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
-        || `<tr><td colspan="2" class="mes-table-vide">Aucun comité décisionnel.</td></tr>`;
+        || `<tr><td colspan="2" class="mes-table-vide">${mt('aucun_comite')}</td></tr>`;
 
     return `
     <div class="mes-page-header">
-        <h2>Paramètres</h2>
-        <span class="mes-sous-titre">Catégories, types de mesure, types d'investigation et comités décisionnels</span>
+        <h2>${mt('nav_parametres')}</h2>
+        <span class="mes-sous-titre">${mt('par_sous_titre')}</span>
     </div>
     <p class="mes-note">
         Ces quatre listes peuplent les formulaires du module : une mesure porte une catégorie
@@ -74,41 +74,43 @@ function mesRenderParametres() {
     <div class="mes-grille-parametres">
         <div class="mes-card" style="padding:0;">
             <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Catégories</div>
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_categories')}</div>
                 ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirCategorie()">${MES_ICONS.add} Ajouter</button>` : ''}
             </div>
             <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th>Libellé</th><th style="width:70px;text-align:center;">Types</th><th style="width:110px;">Actions</th></tr></thead>
+                <thead><tr><th>${mt('col_libelle')}</th><th style="width:70px;text-align:center;">${
+                    mt('col_types')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
                 <tbody>${lignesCat}</tbody>
             </table></div>
         </div>
         <div class="mes-card" style="padding:0;">
             <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Types de mesure</div>
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_types_mesure')}</div>
                 ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirType()">${MES_ICONS.add} Ajouter</button>` : ''}
             </div>
             <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th style="width:170px;">Catégorie</th><th>Libellé</th><th style="width:110px;">Actions</th></tr></thead>
+                <thead><tr><th style="width:170px;">${mt('fiche_categorie')}</th><th>${
+                    mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
                 <tbody>${lignesType}</tbody>
             </table></div>
         </div>
         <div class="mes-card" style="padding:0;">
             <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Types d'investigation</div>
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_types_inv')}</div>
                 ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirTypeInvestigation()">${MES_ICONS.add} Ajouter</button>` : ''}
             </div>
             <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th>Libellé</th><th style="width:110px;">Actions</th></tr></thead>
+                <thead><tr><th>${mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
                 <tbody>${lignesInv}</tbody>
             </table></div>
         </div>
         <div class="mes-card" style="padding:0;">
             <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">Comités décisionnels</div>
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_comites')}</div>
                 ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirComite()">${MES_ICONS.add} Ajouter</button>` : ''}
             </div>
             <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th>Libellé</th><th style="width:110px;">Actions</th></tr></thead>
+                <thead><tr><th>${mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
                 <tbody>${lignesCom}</tbody>
             </table></div>
         </div>
@@ -125,7 +127,7 @@ function mesOuvrirCategorie(id) {
 
 function mesOuvrirType(id) {
     if (!id && !mesCategories().length) {
-        mesToast("Créez d'abord une catégorie.", 'error');
+        mesToast(mt('creez_categorie'), 'error');
         return;
     }
     MES_STATE.typeEnCours = id ? { ...(mesTypes().find((t) => t.id === id) || {}) } : {};
@@ -154,21 +156,21 @@ function mesAfficherModal() {
         <div class="mes-modal-fond" onclick="mesFermerModal()">
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
-                    <span style="flex:1;">${co.id ? 'Modifier le comité' : 'Nouveau comité décisionnel'}</span>
+                    <span style="flex:1;">${co.id ? mt('modifier_comite') : mt('nouveau_comite')}</span>
                     <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
-                        <label>Nom du comité</label>
+                        <label>${mt('nom_comite')}</label>
                         <input class="mes-input" id="mesCoLib" value="${_mesAttr(co.libelle || '')}"
-                               placeholder="ex. Comité des sanctions">
+                               placeholder="${_mesAttr(mt('comite_exemple'))}">
                     </div>
                     <p class="mes-preuve-vide">Ce comité siégera pour qualifier une carence
                        et arrêter la sanction.</p>
                     <p class="mes-erreur" id="mesCoErreur"></p>
                 </div>
                 <div class="mes-modal-footer">
-                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">Annuler</button>
+                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">${mt('annuler')}</button>
                     <button class="btn btn-primary btn-sm" onclick="mesEnregistrerComite()">${MES_ICONS.check} Enregistrer</button>
                 </div>
             </div>
@@ -180,19 +182,19 @@ function mesAfficherModal() {
         <div class="mes-modal-fond" onclick="mesFermerModal()">
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
-                    <span style="flex:1;">${ti.id ? 'Modifier le type d’investigation' : 'Nouveau type d’investigation'}</span>
+                    <span style="flex:1;">${ti.id ? mt('modifier_type_inv') : mt('nouveau_type_inv')}</span>
                     <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
-                        <label>Libellé du type d’investigation</label>
+                        <label>${mt('libelle_type_inv')}</label>
                         <input class="mes-input" id="mesTiLib" value="${_mesAttr(ti.libelle || '')}"
-                               placeholder="ex. Analyse des enregistrements">
+                               placeholder="${_mesAttr(mt('type_inv_exemple'))}">
                     </div>
                     <p class="mes-erreur" id="mesTiErreur"></p>
                 </div>
                 <div class="mes-modal-footer">
-                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">Annuler</button>
+                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">${mt('annuler')}</button>
                     <button class="btn btn-primary btn-sm" onclick="mesEnregistrerTypeInvestigation()">${MES_ICONS.check} Enregistrer</button>
                 </div>
             </div>
@@ -204,19 +206,19 @@ function mesAfficherModal() {
         <div class="mes-modal-fond" onclick="mesFermerModal()">
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
-                    <span style="flex:1;">${c.id ? 'Modifier la catégorie' : 'Nouvelle catégorie'}</span>
+                    <span style="flex:1;">${c.id ? mt('modifier_categorie') : mt('nouvelle_categorie')}</span>
                     <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
-                        <label>Libellé de la catégorie</label>
+                        <label>${mt('libelle_categorie')}</label>
                         <input class="mes-input" id="mesCatLib" value="${_mesAttr(c.libelle || '')}"
                                placeholder="ex. Mesure administrative">
                     </div>
                     <p class="mes-erreur" id="mesCatErreur"></p>
                 </div>
                 <div class="mes-modal-footer">
-                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">Annuler</button>
+                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">${mt('annuler')}</button>
                     <button class="btn btn-primary btn-sm" onclick="mesEnregistrerCategorie()">${MES_ICONS.check} Enregistrer</button>
                 </div>
             </div>
@@ -228,12 +230,12 @@ function mesAfficherModal() {
         <div class="mes-modal-fond" onclick="mesFermerModal()">
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
-                    <span style="flex:1;">${t.id ? 'Modifier le type' : 'Nouveau type de mesure'}</span>
+                    <span style="flex:1;">${t.id ? mt('modifier_type') : mt('nouveau_type')}</span>
                     <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
-                        <label>Catégorie de rattachement</label>
+                        <label>${mt('categorie_rattachement')}</label>
                         <select class="mes-select" id="mesTypeCat">
                             <option value="">—</option>
                             ${mesCategories().map((x) => `<option value="${_mesAttr(x.code)}"
@@ -241,14 +243,14 @@ function mesAfficherModal() {
                         </select>
                     </div>
                     <div class="mes-champ">
-                        <label>Libellé du type</label>
+                        <label>${mt('libelle_type')}</label>
                         <input class="mes-input" id="mesTypeLib" value="${_mesAttr(t.libelle || '')}"
                                placeholder="ex. Avertissement">
                     </div>
                     <p class="mes-erreur" id="mesTypeErreur"></p>
                 </div>
                 <div class="mes-modal-footer">
-                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">Annuler</button>
+                    <button class="btn btn-outline btn-sm" onclick="mesFermerModal()">${mt('annuler')}</button>
                     <button class="btn btn-primary btn-sm" onclick="mesEnregistrerType()">${MES_ICONS.check} Enregistrer</button>
                 </div>
             </div>
@@ -265,14 +267,14 @@ async function mesEnregistrerComite() {
     const c = MES_STATE.comiteEnCours || {};
     const libelle = (document.getElementById('mesCoLib') || {}).value || '';
     const err = document.getElementById('mesCoErreur');
-    if (!libelle.trim()) { err.textContent = 'Nom requis'; return; }
+    if (!libelle.trim()) { err.textContent = mt('nom_requis'); return; }
     try {
         if (c.id) await mesApi(`/parametres/comites/${c.id}`, { method: 'PUT', body: JSON.stringify({ libelle }) });
         else await mesApi('/parametres/comites', { method: 'POST', body: JSON.stringify({ libelle }) });
         mesFermerModal();
         await mesRechargerParametres();
-        mesToast('Comité enregistré');
-    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+        mesToast(mt('comite_enregistre'));
+    } catch (e) { err.textContent = e.message || mt('enregistrement_impossible'); }
 }
 
 async function mesSupprimerComite(id) {
@@ -282,8 +284,8 @@ async function mesSupprimerComite(id) {
     try {
         await mesApi(`/parametres/comites/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
-        mesToast('Comité supprimé');
-    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
+        mesToast(mt('comite_supprime'));
+    } catch (e) { mesToast(e.message || mt('suppression_impossible'), 'error'); }
 }
 
 function mesOuvrirTypeInvestigation(id) {
@@ -296,14 +298,14 @@ async function mesEnregistrerTypeInvestigation() {
     const t = MES_STATE.typeInvestigationEnCours || {};
     const libelle = (document.getElementById('mesTiLib') || {}).value || '';
     const err = document.getElementById('mesTiErreur');
-    if (!libelle.trim()) { err.textContent = 'Libellé requis'; return; }
+    if (!libelle.trim()) { err.textContent = mt('libelle_requis'); return; }
     try {
         if (t.id) await mesApi(`/parametres/types-investigation/${t.id}`, { method: 'PUT', body: JSON.stringify({ libelle }) });
         else await mesApi('/parametres/types-investigation', { method: 'POST', body: JSON.stringify({ libelle }) });
         mesFermerModal();
         await mesRechargerParametres();
-        mesToast('Type d’investigation enregistré');
-    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+        mesToast(mt('type_inv_enregistre'));
+    } catch (e) { err.textContent = e.message || mt('enregistrement_impossible'); }
 }
 
 async function mesSupprimerTypeInvestigation(id) {
@@ -313,22 +315,22 @@ async function mesSupprimerTypeInvestigation(id) {
     try {
         await mesApi(`/parametres/types-investigation/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
-        mesToast('Type supprimé');
-    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
+        mesToast(mt('type_supprime'));
+    } catch (e) { mesToast(e.message || mt('suppression_impossible'), 'error'); }
 }
 
 async function mesEnregistrerCategorie() {
     const c = MES_STATE.categorieEnCours || {};
     const libelle = (document.getElementById('mesCatLib') || {}).value || '';
     const err = document.getElementById('mesCatErreur');
-    if (!libelle.trim()) { err.textContent = 'Libellé requis'; return; }
+    if (!libelle.trim()) { err.textContent = mt('libelle_requis'); return; }
     try {
         if (c.id) await mesApi(`/parametres/categories/${c.id}`, { method: 'PUT', body: JSON.stringify({ libelle }) });
         else await mesApi('/parametres/categories', { method: 'POST', body: JSON.stringify({ libelle }) });
         mesFermerModal();
         await mesRechargerParametres();
-        mesToast('Catégorie enregistrée');
-    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+        mesToast(mt('categorie_enregistree'));
+    } catch (e) { err.textContent = e.message || mt('enregistrement_impossible'); }
 }
 
 async function mesEnregistrerType() {
@@ -336,16 +338,16 @@ async function mesEnregistrerType() {
     const libelle = (document.getElementById('mesTypeLib') || {}).value || '';
     const categorie = (document.getElementById('mesTypeCat') || {}).value || '';
     const err = document.getElementById('mesTypeErreur');
-    if (!categorie) { err.textContent = 'Catégorie requise'; return; }
-    if (!libelle.trim()) { err.textContent = 'Libellé requis'; return; }
+    if (!categorie) { err.textContent = mt('categorie_requise'); return; }
+    if (!libelle.trim()) { err.textContent = mt('libelle_requis'); return; }
     const corps = JSON.stringify({ libelle, categorie_code: categorie });
     try {
         if (t.id) await mesApi(`/parametres/types/${t.id}`, { method: 'PUT', body: corps });
         else await mesApi('/parametres/types', { method: 'POST', body: corps });
         mesFermerModal();
         await mesRechargerParametres();
-        mesToast('Type enregistré');
-    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+        mesToast(mt('type_enregistre'));
+    } catch (e) { err.textContent = e.message || mt('enregistrement_impossible'); }
 }
 
 async function mesSupprimerCategorie(id) {
@@ -354,8 +356,8 @@ async function mesSupprimerCategorie(id) {
     try {
         await mesApi(`/parametres/categories/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
-        mesToast('Catégorie supprimée');
-    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
+        mesToast(mt('categorie_supprimee'));
+    } catch (e) { mesToast(e.message || mt('suppression_impossible'), 'error'); }
 }
 
 async function mesSupprimerType(id) {
@@ -364,8 +366,8 @@ async function mesSupprimerType(id) {
     try {
         await mesApi(`/parametres/types/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
-        mesToast('Type supprimé');
-    } catch (e) { mesToast(e.message || 'Suppression impossible', 'error'); }
+        mesToast(mt('type_supprime'));
+    } catch (e) { mesToast(e.message || mt('suppression_impossible'), 'error'); }
 }
 
 // Les gestionnaires `onclick` du balisage cherchent ces fonctions sur

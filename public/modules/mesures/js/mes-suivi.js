@@ -28,14 +28,14 @@ const mesSuiviModifiable = () => mesPeutEcrire() && !mesSuiviClos();
 function mesSectionSuiviMesures() {
     const c = MES_STATE.carenceEnCours || {};
     const q = (MES_STATE.traitement || {}).qualification || {};
-    return mesSection('A', 'Mesures', `
+    return mesSection('A', mt('nav_mesures'), `
         <div class="mes-champ">
-            <label>Description de la carence</label>
+            <label>${mt('description_carence')}</label>
             <div class="mes-lecture">${c.description ? _mesEsc(c.description)
                 : '<span class="mes-preuve-vide">—</span>'}</div>
         </div>
         <div class="mes-champ" style="margin-bottom:0;">
-            <label>Nature de l’infraction</label>
+            <label>${mt('nature_infraction')}</label>
             <div class="mes-lecture">${q.nature ? _mesEsc(q.nature)
                 : '<span class="mes-preuve-vide">—</span>'}</div>
         </div>`);
@@ -51,80 +51,80 @@ function mesBlocSuiviMesure(m, i) {
     const pieces = (Array.isArray(m.suivi_pieces) ? m.suivi_pieces : []).map((p, k) => `
         <div class="mes-preuve" data-chemin="${_mesAttr(p.path || '')}">
             <input class="mes-input" value="${_mesAttr(p.nom || '')}"
-                   placeholder="Intitulé de la pièce" ${off}>
+                   placeholder="${_mesAttr(mt('intitule_piece'))}" ${off}>
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
-                title="Ouvrir">${MES_ICONS.download}</a>` : ''}
-            ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
+            ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
                 onclick="mesSuiviRetirerPiece(${i}, ${k})">${MES_ICONS.x}</button>`}
         </div>`).join('');
 
     return `<div class="mes-bloc" data-rang="${i}" data-mesure="${_mesAttr(m.id || '')}">
         <div class="mes-bloc-entete">
-            <span class="mes-bloc-titre">${_mesEsc(m.reference || 'Mesure')}</span>
+            <span class="mes-bloc-titre">${_mesEsc(m.reference || mt('mesure'))}</span>
         </div>
         <div class="mes-bloc-corps">
             <div class="mes-paire">
                 <div class="mes-champ">
-                    <label>Catégorie de mesure</label>
+                    <label>${mt('categorie_mesure')}</label>
                     <div class="mes-lecture">${_mesEsc(mesLibelleCategorie(m.categorie) || '—')}</div>
                 </div>
                 <div class="mes-champ">
-                    <label>Type de mesure</label>
+                    <label>${mt('type_mesure')}</label>
                     <div class="mes-lecture">${_mesEsc(mesLibelleType(m.type_mesure) || '—')}</div>
                 </div>
             </div>
             <div class="mes-champ">
-                <label>Description de la sanction</label>
+                <label>${mt('fiche_desc_sanction')}</label>
                 <div class="mes-lecture">${m.description ? _mesEsc(m.description)
                     : '<span class="mes-preuve-vide">—</span>'}</div>
             </div>
             <div class="mes-trois">
                 <div class="mes-champ">
-                    <label>Date de sanction</label>
+                    <label>${mt('fiche_date_sanction')}</label>
                     <div class="mes-lecture">${_mesEsc(mesDate(m.date_sanction || m.date_emission))}</div>
                 </div>
                 <div class="mes-champ">
-                    <label>Échéance</label>
+                    <label>${mt('col_echeance')}</label>
                     <div class="mes-lecture">${_mesEsc(mesDate(m.date_echeance))}</div>
                 </div>
                 <div class="mes-champ">
-                    <label>Date de fin de sanction</label>
+                    <label>${mt('fiche_date_fin')}</label>
                     <div class="mes-lecture">${_mesEsc(mesDate(m.date_fin_sanction))}</div>
                 </div>
             </div>
             <div class="mes-champ">
-                <label>Commentaire de suivi</label>
+                <label>${mt('commentaire_suivi')}</label>
                 <textarea class="mes-input" data-champ="suivi_commentaire" rows="3" ${off}
-                          placeholder="Ce que le prestataire en a fait, et ce qui reste dû"
+                          placeholder="${_mesAttr(mt('commentaire_suivi_exemple'))}"
                     >${_mesEsc(m.suivi_commentaire || '')}</textarea>
             </div>
             <div class="mes-champ">
                 <div class="mes-champ-entete">
-                    <label>Statut de suivi</label>
+                    <label>${mt('col_statut_suivi')}</label>
                     <label class="mes-case">
                         <input type="checkbox" data-champ="recours_intente" ${off}
                                ${m.recours_intente ? 'checked' : ''}
                                onchange="mesSuiviRecours(${i}, this.checked)">
-                        <span>Recours intenté par le prestataire</span>
+                        <span>${mt('recours_intente_par')}</span>
                     </label>
                 </div>
                 <select class="mes-select" data-champ="suivi_statut" ${off || (m.recours_intente ? 'disabled' : '')}
                         onchange="mesSuiviStatut(${i}, this.value)">
-                    ${Object.entries(MES_SUIVI).map(([cle, e]) => `<option value="${_mesAttr(cle)}"
-                        ${statut === cle ? 'selected' : ''}>${_mesEsc(e.libelle)}</option>`).join('')}
+                    ${Object.keys(MES_SUIVI).map((cle) => `<option value="${_mesAttr(cle)}"
+                        ${statut === cle ? 'selected' : ''}>${_mesEsc(mesLibelleSuivi(cle))}</option>`).join('')}
                 </select>
                 <p class="mes-note">${_mesEsc(MES_SUIVI[statut] ? mesAideSuivi(statut) : '')}</p>
             </div>
             <div class="mes-champ" style="margin-bottom:0;">
-                <label>Pièces jointes</label>
+                <label>${mt('pieces_jointes')}</label>
                 <div class="mes-suivi-pieces">${pieces
-                    || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+                    || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
                 ${ro ? '' : `<input type="file" id="mesSuiviFichier_${i}" multiple style="display:none;"
                         onchange="mesSuiviTeleverser(${i}, this.files)">
                     <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                             onclick="document.getElementById('mesSuiviFichier_${i}').click()">
-                        ${MES_ICONS.add} Ajouter une pièce</button>`}
+                        ${MES_ICONS.add} ${mt('ajouter_piece')}</button>`}
             </div>
         </div>
     </div>`;
@@ -134,13 +134,12 @@ function mesSectionPlanAction() {
     const off = mesSuiviModifiable() ? '' : 'disabled';
     const mesures = mesSuiviMesures();
     const blocs = mesures.map(mesBlocSuiviMesure).join('');
-    return mesSection('B', 'Plan d’action', `
-        <div id="mesSuiviMesures">${blocs || `<p class="mes-preuve-vide">Aucune mesure n’est
-            rattachée à cette carence : l’étape de qualification n’en a arrêté aucune.</p>`}</div>
+    return mesSection('B', mt('sec_plan_action'), `
+        <div id="mesSuiviMesures">${blocs || `<p class="mes-preuve-vide">${mt('aucune_mesure_rattachee')}</p>`}</div>
         <div class="mes-champ" style="margin-top:.9rem;margin-bottom:0;">
-            <label>Commentaire général</label>
+            <label>${mt('commentaire_general')}</label>
             <textarea class="mes-input" id="mesSuiviCommentaire" rows="4" ${off}
-                      placeholder="Tout autre commentaire de suivi, qui ne porte sur aucune mesure en particulier"
+                      placeholder="${_mesAttr(mt('commentaire_general_exemple'))}"
                 >${_mesEsc(mesSuivi().commentaire_general || '')}</textarea>
         </div>`);
 }
@@ -229,7 +228,7 @@ async function mesSuiviTeleverser(i, fichiers) {
             corps.append('file', f);
             const r = await mesApi('/upload', { method: 'POST', body: corps });
             pieces.push({ nom: r.filename, path: r.path, size: r.size });
-        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+        } catch (e) { mesToast(e.message || mt('depot_impossible'), 'error'); }
     }
     mesures[i] = { ...mesures[i], suivi_pieces: pieces };
     MES_STATE.traitement = { ...t, mesures };
@@ -251,9 +250,9 @@ async function mesEnregistrerSuivi() {
         MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`);
         await mesRechargerMesures();
         MES_STATE.data.constatations = await mesApi('/constatations');
-        mesToast('Suivi enregistré');
+        mesToast(mt('suivi_enregistre'));
         mesSuiviRedessiner();
-    } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); }
+    } catch (e) { mesToast(e.message || mt('enregistrement_impossible'), 'error'); }
 }
 
 // Actions de l'étape, à l'extrême droite du fil. Clôturer ferme le dossier ;
@@ -261,7 +260,7 @@ async function mesEnregistrerSuivi() {
 // examinera ce que le prestataire conteste.
 function mesActionsSuivi() {
     if (mesSuiviClos()) {
-        return `<span class="mes-badge cloturee">Traitement clôturé</span>`;
+        return `<span class="mes-badge cloturee">${mt('traitement_cloture')}</span>`;
     }
     if (!mesPeutDecider()) return '';
     const recours = mesSuiviMesures().filter((m) => m.recours_intente).length;
@@ -270,14 +269,11 @@ function mesActionsSuivi() {
         onclick="${geste}">${_mesEsc(libelle)}</button>`;
     return [
         bouton(!!recours, 'mes-btn-investiguer',
-            recours ? `${recours} mesure(s) contestée(s) : le traitement revient à l’étape
-                « Qualification et Mesures » pour examen du recours.`
-                : 'Cochez « Recours intenté par le prestataire » sur au moins une mesure.',
-            'mesSuiviActionRecours()', 'Action de Recours'),
+            recours ? mt('s_contestees', recours) : mt('s_cocher_recours'),
+            'mesSuiviActionRecours()', mt('s_action_recours')),
         bouton(!recours, 'mes-btn-mesure',
-            recours ? 'Un recours est en cours d’examen : le dossier ne se clôt pas.'
-                : 'Clôt la carence : le suivi des mesures est terminé.',
-            'mesSuiviCloturer()', 'Clôturer'),
+            recours ? mt('s_recours_en_cours') : mt('s_aide_cloturer'),
+            'mesSuiviCloturer()', mt('cloturer')),
     ].join('');
 }
 
@@ -303,32 +299,26 @@ async function mesSuiviIssue(chemin, confirmation, fait) {
         mesToast(fait);
         mesSuiviRedessiner();
         if (MES_STATE.currentPage === 'critiques') mesRenderPage();
-    } catch (e) { mesToast(e.message || 'Opération impossible', 'error'); }
+    } catch (e) { mesToast(e.message || mt('operation_impossible'), 'error'); }
 }
 
 const mesSuiviCloturer = () => mesSuiviIssue('cloturer', {
-    titre: 'Clôturer la carence',
+    titre: mt('s_titre_cloturer'),
     depuis: 'suivi', vers: '',
-    consequence: 'Le suivi des mesures est terminé et le dossier se ferme.',
-    points: [
-        'Aucun recours n’est pendant sur les mesures de cette carence.',
-        'Le dossier est clos : il ne se réécrira plus.',
-    ],
-    aveu: 'Je confirme que le suivi est terminé.',
-    libelle: 'Clôturer', classe: 'mes-btn-mesure',
-}, 'Carence clôturée');
+    consequence: mt('s_cons_cloturer'),
+    points: [mt('s_pt_cloturer1'), mt('s_pt_cloturer2')],
+    aveu: mt('s_aveu_cloturer'),
+    libelle: mt('cloturer'), classe: 'mes-btn-mesure',
+}, mt('s_toast_cloturer'));
 
 const mesSuiviActionRecours = () => mesSuiviIssue('recours', {
-    titre: 'Ouvrir l’examen du recours',
+    titre: mt('s_titre_recours'),
     depuis: 'suivi', vers: 'qualification',
-    consequence: 'Le fil recule à la qualification, où l’instance examinera la contestation.',
-    points: [
-        'Une section « Recours » y ouvre un bloc par mesure contestée.',
-        'Le suivi des mesures contestées reste suspendu jusqu’à la décision.',
-    ],
-    aveu: 'Je confirme qu’un recours a été formé.',
-    libelle: 'Ouvrir le recours', classe: 'mes-btn-investiguer',
-}, 'Recours ouvert : le dossier revient à la qualification');
+    consequence: mt('s_cons_recours'),
+    points: [mt('s_pt_recours1'), mt('s_pt_recours2')],
+    aveu: mt('s_aveu_recours'),
+    libelle: mt('s_libelle_recours'), classe: 'mes-btn-investiguer',
+}, mt('s_toast_recours'));
 
 Object.assign(window, {
     mesSuivi, mesSuiviMesures, mesSuiviClos, mesSuiviModifiable,

@@ -23,13 +23,13 @@ const mesQualification = () => (MES_STATE.traitement || {}).qualification || {
 // ne se rejouent pas. Le rang dit tout — le fil a reculé après un renvoi,
 // avancé après une validation ; seule l'étape courante reste modifiable.
 const mesQualClose = () => {
-    if (mesTraitementClos()) return 'classée';
+    if (mesTraitementClos()) return mt('q_classee');
     const rang = MES_ETAPES.findIndex((e) => e.cle === 'qualification');
     // Clôturée : les mesures sont arrêtées, aucune n'appelait de suivi, et le
     // dossier s'est fermé ici même plutôt que de passer à l'étape suivante.
-    if ((MES_STATE.traitement || {}).cloture_le) return 'clôturée';
-    if (mesRangAtteint() > rang) return 'validée';
-    if (mesRangAtteint() < rang) return 'renvoyée';
+    if ((MES_STATE.traitement || {}).cloture_le) return mt('q_cloturee');
+    if (mesRangAtteint() > rang) return mt('q_validee');
+    if (mesRangAtteint() < rang) return mt('q_renvoyee');
     return '';
 };
 
@@ -41,10 +41,9 @@ const mesQualModifiable = () => mesTraitementModifiable() && !mesQualClose();
 // voir. Trois volets les regroupent selon ce qu'on vient y faire : juger,
 // sanctionner, ou examiner une contestation.
 const MES_QUAL_VOLETS = [
-    { cle: 'infraction', libelle: 'Qualification de l’infraction' },
-    { cle: 'mesures', libelle: 'Mesures d’application' },
-    { cle: 'recours', libelle: 'Recours' },
+    { cle: 'infraction' }, { cle: 'mesures' }, { cle: 'recours' },
 ];
+const mesNomVolet = (cle) => mt(`onglet_${cle}`);
 
 // Y a-t-il des recours à examiner ? Le volet ne s'offre que dans ce cas : un
 // onglet vide invite à un travail qui n'existe pas.
@@ -69,7 +68,7 @@ function mesQualOnglets() {
     return `<div class="mes-sous-onglets" role="tablist">${visibles.map((v) => `
         <button type="button" role="tab" class="mes-sous-onglet${vu === v.cle ? ' actif' : ''}"
                 aria-selected="${vu === v.cle}"
-                onclick="mesQualVoirVolet('${_mesAttr(v.cle)}')">${_mesEsc(v.libelle)}${
+                onclick="mesQualVoirVolet('${_mesAttr(v.cle)}')">${_mesEsc(mesNomVolet(v.cle))}${
             v.cle === 'recours' ? ` <span class="mes-sous-onglet-compte">${
                 (mesQualification().mesures || []).filter((m) => m.recours_intente).length
             }</span>` : ''}</button>`).join('')}</div>`;
@@ -98,30 +97,28 @@ function mesSectionRapportInvestigation() {
     const menee = !!(inv.soumise_le || inv.rapport
         || (inv.travaux || []).length || (inv.equipe || []).length);
     if (!menee) {
-        return mesSection('B', 'Rapport d’investigation', `
-            <p class="mes-preuve-vide">Aucune investigation n’a été menée sur cette carence :
-               la suite à donner est passée directement à la qualification.</p>
+        return mesSection('B', mt('sec_rapport_inv'), `
+            <p class="mes-preuve-vide">${mt('aucune_inv_menee')}</p>
             ${t.decision_motif ? `<div class="mes-champ" style="margin-top:.6rem;margin-bottom:0;">
-                <label>Motif de la décision</label>
+                <label>${mt('motif_decision')}</label>
                 <div class="mes-lecture">${_mesEsc(t.decision_motif)}</div>
             </div>` : ''}`);
     }
     const lien = `${MES_API}/constatations/${encodeURIComponent(c.id || '')}/rapport-investigation.pdf`;
-    return mesSection('B', 'Rapport d’investigation', `
+    return mesSection('B', mt('sec_rapport_inv'), `
         <div class="mes-champ">
-            <label>Résultat de l’investigation</label>
+            <label>${mt('resultat_investigation')}</label>
             <div class="mes-lecture">${inv.rapport ? _mesEsc(inv.rapport)
-                : '<span class="mes-preuve-vide">Aucun rapport de synthèse n’a été rédigé.</span>'}</div>
+                : `<span class="mes-preuve-vide">${mt('aucun_rapport')}</span>`}</div>
         </div>
         <div class="mes-pac-ligne">
-            <dt>Investigation soumise</dt>
+            <dt>${mt('investigation_soumise')}</dt>
             <dd>${inv.soumise_le ? `${_mesEsc(mesDate(inv.soumise_le))}${inv.soumise_par
                 ? ` · ${_mesEsc(inv.soumise_par)}` : ''}` : '<span class="mes-preuve-vide">—</span>'}</dd>
         </div>
         <a class="btn btn-outline btn-sm" style="margin-top:.6rem;" target="_blank" rel="noopener"
-           href="${_mesAttr(lien)}">${MES_ICONS.download} Rapport d’investigation (PDF)</a>
-        <p class="mes-preuve-vide" style="margin-top:.3rem;">Le document reprend l’investigation
-           entière : équipe, travaux menés, éléments collectés et synthèse.</p>`);
+           href="${_mesAttr(lien)}">${MES_ICONS.download} ${mt('rapport_inv_pdf')}</a>
+        <p class="mes-preuve-vide" style="margin-top:.3rem;">${mt('rapport_inv_pdf_aide')}</p>`);
 }
 
 // ── Section C — l'instance décisionnelle ──
@@ -137,31 +134,31 @@ function mesSectionInstance() {
             <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
             <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
             <td class="mes-actions">${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="Retirer" onclick="mesQualRetirerMembre(${i})">${MES_ICONS.x}</button>`}</td>
+                title="${_mesAttr(mt('retirer'))}" onclick="mesQualRetirerMembre(${i})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
 
-    return mesSection('C', 'Instance décisionnelle', `
+    return mesSection('C', mt('sec_instance'), `
         <div class="mes-champ">
-            <label>Nom de l’instance</label>
+            <label>${mt('nom_instance')}</label>
             <select class="mes-select" id="mesQualComite" ${off}>
                 <option value="">—</option>
                 ${comites.map((c) => `<option value="${_mesAttr(c.code)}"
                     ${q.comite_code === c.code ? 'selected' : ''}>${_mesEsc(c.libelle)}</option>`).join('')}
             </select>
-            ${comites.length ? '' : `<p class="mes-note">Aucun comité décisionnel n’est paramétré.
-                Le menu Paramètres du module en tient la liste.</p>`}
+            ${comites.length ? '' : `<p class="mes-note">${mt('aucun_comite_param')}</p>`}
         </div>
         <div class="mes-champ" style="margin-bottom:0;">
-            <label>Membres de l’instance</label>
+            <label>${mt('membres_instance')}</label>
             <div class="mes-table-wrap">
                 <table class="mes-table mes-table-claire" id="mesQualMembres">
-                    <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Contact</th><th></th></tr></thead>
-                    <tbody>${membres || `<tr><td colspan="5" class="mes-preuve-vide">
-                        Aucun membre désigné</td></tr>`}</tbody>
+                    <thead><tr><th>${mt('col_nom')}</th><th>${mt('col_prenom')}</th><th>${
+                        mt('col_email')}</th><th>${mt('col_contact')}</th><th></th></tr></thead>
+                    <tbody>${membres || `<tr><td colspan="5" class="mes-preuve-vide">${
+                        mt('aucun_membre')}</td></tr>`}</tbody>
                 </table>
             </div>
             ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.4rem;"
-                onclick="mesQualAjouterMembre()">${MES_ICONS.add} Ajouter un membre</button>`}
+                onclick="mesQualAjouterMembre()">${MES_ICONS.add} ${mt('ajouter_membre')}</button>`}
         </div>`);
 }
 
@@ -179,27 +176,27 @@ function mesSectionQualification() {
     const reunions = (q.reunions || []).map((r, i) => `
         <div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
-                <span class="mes-bloc-titre">${r.date ? _mesEsc(mesDate(r.date)) : 'Réunion'}${
+                <span class="mes-bloc-titre">${r.date ? _mesEsc(mesDate(r.date)) : mt('reunion')}${
                     r.objet ? ` — ${_mesEsc(r.objet)}` : ''}</span>
-                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer cette réunion"
+                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_reunion'))}"
                     onclick="mesQualRetirerReunion(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
                 <div class="mes-paire">
                     <div class="mes-champ">
-                        <label>Date de la réunion</label>
+                        <label>${mt('date_reunion')}</label>
                         <input type="date" class="mes-input" data-champ="date" value="${_mesAttr(r.date || '')}" ${off}>
                     </div>
                     <div class="mes-champ">
-                        <label>Objet</label>
+                        <label>${mt('objet')}</label>
                         <input class="mes-input" data-champ="objet" value="${_mesAttr(r.objet || '')}"
-                               placeholder="Objet de la réunion tenue" ${off}>
+                               placeholder="${_mesAttr(mt('objet_reunion_exemple'))}" ${off}>
                     </div>
                 </div>
                 <div class="mes-champ" style="margin-bottom:0;">
-                    <label>Résultat de la réunion</label>
+                    <label>${mt('resultat_reunion')}</label>
                     <textarea class="mes-input" data-champ="resultat" rows="3" ${off}
-                              placeholder="Ce que la réunion a établi">${_mesEsc(r.resultat || '')}</textarea>
+                              placeholder="${_mesAttr(mt('resultat_reunion_exemple'))}">${_mesEsc(r.resultat || '')}</textarea>
                 </div>
             </div>
         </div>`).join('');
@@ -207,53 +204,53 @@ function mesSectionQualification() {
     // Les deux cases disent la même décision par ses deux faces : cocher l'une
     // décoche l'autre. Tant qu'aucune n'est cochée, la qualification n'est pas
     // arrêtée.
-    return mesSection('D', 'Qualification de l’infraction', `
+    return mesSection('D', mt('onglet_infraction'), `
         <div id="mesQualReunions">${reunions
-            || '<p class="mes-preuve-vide">Aucune réunion consignée</p>'}</div>
+            || `<p class="mes-preuve-vide">${mt('aucune_reunion')}</p>`}</div>
         ${off ? '' : `<div class="mes-actions-rang" style="margin-bottom:.9rem;">
             <button class="btn btn-outline btn-sm" onclick="mesQualAjouterReunion()">
-                ${MES_ICONS.add} Ajouter une réunion</button>
+                ${MES_ICONS.add} ${mt('ajouter_reunion')}</button>
             <button class="btn btn-outline btn-sm" onclick="mesEnregistrerQualification()">
-                ${MES_ICONS.check} Enregistrer</button>
+                ${MES_ICONS.check} ${mt('enregistrer')}</button>
         </div>`}
         <div class="mes-cases-exclusives">
             <label class="mes-case">
                 <input type="checkbox" id="mesQualConstituee" ${constituee ? 'checked' : ''} ${off}
                        onchange="mesQualBasculerInfraction(this.checked)">
-                <span>Infraction constituée</span>
+                <span>${mt('infraction_constituee')}</span>
             </label>
             <label class="mes-case">
                 <input type="checkbox" id="mesQualNonConstituee" ${nonConstituee ? 'checked' : ''} ${off}
                        onchange="mesQualBasculerNonInfraction(this.checked)">
-                <span>Infraction non constituée</span>
+                <span>${mt('infraction_non_constituee')}</span>
             </label>
             <label class="mes-case">
                 <input type="checkbox" id="mesQualRenvoi" ${renvoi ? 'checked' : ''} ${off}
                        onchange="mesQualBasculerRenvoi(this.checked)">
-                <span>Renvoyer pour des investigations complémentaires</span>
+                <span>${mt('renvoyer_complement')}</span>
             </label>
         </div>
         ${renvoi ? `<div class="mes-champ" style="margin-top:.6rem;margin-bottom:0;">
-            <label>Investigations complémentaires demandées</label>
+            <label>${mt('inv_complementaires')}</label>
             <textarea class="mes-input" id="mesQualRenvoiMotif" rows="4" ${off}
-                      placeholder="Ce que l’instance attend de l’équipe d’investigation">${_mesEsc(q.renvoi_motif || '')}</textarea>
+                      placeholder="${_mesAttr(mt('inv_complementaires_exemple'))}">${_mesEsc(q.renvoi_motif || '')}</textarea>
         </div>` : ''}
         ${constituee ? `
         <div class="mes-champ" style="margin-top:.6rem;">
-            <label>Nature de l’infraction</label>
+            <label>${mt('nature_infraction')}</label>
             <input class="mes-input" id="mesQualNature" value="${_mesAttr(q.nature || '')}" ${off}
-                   placeholder="Ce qui est reproché">
+                   placeholder="${_mesAttr(mt('nature_exemple'))}">
         </div>
         <div class="mes-deux-colonnes">
             <div class="mes-champ">
-                <label>Caractérisation de l’infraction</label>
+                <label>${mt('caracterisation')}</label>
                 <textarea class="mes-input" id="mesQualCaracterisation" rows="5" ${off}
-                          placeholder="Les éléments qui la constituent">${_mesEsc(q.caracterisation || '')}</textarea>
+                          placeholder="${_mesAttr(mt('caracterisation_exemple'))}">${_mesEsc(q.caracterisation || '')}</textarea>
             </div>
             <div class="mes-champ">
-                <label>Circonstances atténuantes</label>
+                <label>${mt('circonstances')}</label>
                 <textarea class="mes-input" id="mesQualCirconstances" rows="5" ${off}
-                          placeholder="Ce qui en atténue la portée">${_mesEsc(q.circonstances || '')}</textarea>
+                          placeholder="${_mesAttr(mt('circonstances_exemple'))}">${_mesEsc(q.circonstances || '')}</textarea>
             </div>
         </div>` : ''}`);
 }
@@ -265,18 +262,18 @@ function mesSectionQualification() {
 // par défaut : c'est une trace, pas une saisie.
 function mesQualVersionPrecedente(m) {
     const v = m.version_precedente || {};
-    const portee = { temporelle: 'Limitée dans le temps', illimitee: 'Illimitée', sans_objet: 'Sans objet' }[v.portee] || '—';
+    const portee = { temporelle: mt('limitee_temps'), illimitee: mt('illimitee'), sans_objet: mt('sans_objet') }[v.portee] || '—';
     const duree = v.portee === 'temporelle' && v.duree_valeur
         ? `${v.duree_valeur} ${v.duree_unite || 'jours'}` : '';
     return `<details class="mes-version">
-        <summary>Version précédente de la mesure</summary>
+        <summary>${mt('version_precedente')}</summary>
         <dl style="margin:.4rem 0 0;">
-            ${mesLigneFiche('Catégorie', mesLibelleCategorie(v.categorie))}
-            ${mesLigneFiche('Type', mesLibelleType(v.type_mesure))}
-            ${mesLigneFiche('Date de sanction', v.date_sanction ? mesDate(v.date_sanction) : '')}
-            ${mesLigneFiche('Portée', duree ? `${portee} · ${duree}` : portee)}
-            ${mesLigneFiche('Date de fin de sanction', v.date_fin ? mesDate(v.date_fin) : '')}
-            ${mesLigneFiche('Description de la sanction', v.commentaire)}
+            ${mesLigneFiche(mt('fiche_categorie'), mesLibelleCategorie(v.categorie))}
+            ${mesLigneFiche(mt('fiche_type'), mesLibelleType(v.type_mesure))}
+            ${mesLigneFiche(mt('fiche_date_sanction'), v.date_sanction ? mesDate(v.date_sanction) : '')}
+            ${mesLigneFiche(mt('fiche_portee'), duree ? `${portee} · ${duree}` : portee)}
+            ${mesLigneFiche(mt('fiche_date_fin'), v.date_fin ? mesDate(v.date_fin) : '')}
+            ${mesLigneFiche(mt('fiche_desc_sanction'), v.commentaire)}
         </dl>
     </details>`;
 }
@@ -284,15 +281,14 @@ function mesQualVersionPrecedente(m) {
 function mesSectionMesuresArretees() {
     const q = mesQualification();
     if (!q.infraction_constituee) {
-        return mesSection('E', 'Mesures d’application',
-            `<p class="mes-preuve-vide">Aucune mesure ne se prend tant que l’infraction n’est pas
-             constituée. Cochez « Infraction constituée » à la section précédente.</p>`);
+        return mesSection('E', mt('onglet_mesures'),
+            `<p class="mes-preuve-vide">${mt('aucune_mesure_sans_infraction')}</p>`);
     }
     const off = mesQualModifiable() ? '' : 'disabled';
     const cats = mesCategories();
 
     const blocs = (q.mesures || []).map((m, i) => {
-        const libelleCat = (cats.find((c) => c.code === m.categorie) || {}).libelle || 'Mesure';
+        const libelleCat = (cats.find((c) => c.code === m.categorie) || {}).libelle || mt('mesure');
         const types = mesTypesDe(m.categorie);
         // Une sanction court sur une durée, sans terme, ou hors du temps —
         // un avertissement ne dure pas, il est prononcé. Les trois cases
@@ -309,16 +305,16 @@ function mesSectionMesuresArretees() {
         return `<div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(libelleCat)}</span>
-                ${annulee ? '<span class="mes-badge annulee">Annulée</span>' : ''}
-                ${modifiee ? '<span class="mes-badge notifiee">Modifiée</span>' : ''}
-                ${offBloc ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer cette mesure"
+                ${annulee ? `<span class="mes-badge annulee">${mt('st_annulee')}</span>` : ''}
+                ${modifiee ? `<span class="mes-badge notifiee">${mt('st_modifiee')}</span>` : ''}
+                ${offBloc ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_mesure'))}"
                     onclick="mesQualRetirerMesure(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
                 ${modifiee ? mesQualVersionPrecedente(m) : ''}
                 <div class="mes-paire">
                     <div class="mes-champ">
-                        <label>Catégorie de mesure</label>
+                        <label>${mt('categorie_mesure')}</label>
                         <select class="mes-select" data-champ="categorie" ${offBloc}
                                 onchange="mesQualCategorieMesure(${i}, this.value)">
                             <option value="">—</option>
@@ -327,7 +323,7 @@ function mesSectionMesuresArretees() {
                         </select>
                     </div>
                     <div class="mes-champ">
-                        <label>Type de mesure</label>
+                        <label>${mt('type_mesure')}</label>
                         <select class="mes-select" data-champ="type_mesure" ${offBloc}>
                             <option value="">—</option>
                             ${types.map((t) => `<option value="${_mesAttr(t.code)}"
@@ -337,35 +333,35 @@ function mesSectionMesuresArretees() {
                 </div>
                 <div class="mes-paire">
                     <div class="mes-champ">
-                        <label>Date de sanction</label>
+                        <label>${mt('fiche_date_sanction')}</label>
                         <input type="date" class="mes-input" data-champ="date_sanction"
                                value="${_mesAttr(m.date_sanction || '')}" ${offBloc}
                                onchange="oasisDatesBorner(mesDatesSanction(${i}))">
                     </div>
                     <div class="mes-champ">
-                        <label>Portée</label>
+                        <label>${mt('fiche_portee')}</label>
                         <div class="mes-cases-exclusives" style="padding-top:.35rem;">
                             <label class="mes-case">
                                 <input type="checkbox" data-champ="temporelle" ${temporelle ? 'checked' : ''} ${offBloc}
                                        onchange="mesQualPorteeMesure(${i}, 'temporelle', this.checked)">
-                                <span>Limitée dans le temps</span>
+                                <span>${mt('limitee_temps')}</span>
                             </label>
                             <label class="mes-case">
                                 <input type="checkbox" data-champ="illimitee" ${illimitee ? 'checked' : ''} ${offBloc}
                                        onchange="mesQualPorteeMesure(${i}, 'illimitee', this.checked)">
-                                <span>Illimitée</span>
+                                <span>${mt('illimitee')}</span>
                             </label>
                             <label class="mes-case">
                                 <input type="checkbox" data-champ="sans_objet" ${sansObjet ? 'checked' : ''} ${offBloc}
                                        onchange="mesQualPorteeMesure(${i}, 'sans_objet', this.checked)">
-                                <span>Sans objet</span>
+                                <span>${mt('sans_objet')}</span>
                             </label>
                         </div>
                     </div>
                 </div>
                 ${temporelle ? `<div class="mes-paire">
                     <div class="mes-champ">
-                        <label>Durée de la sanction</label>
+                        <label>${mt('duree_sanction')}</label>
                         <div class="mes-duree">
                             <input type="number" min="0" class="mes-input" data-champ="duree_valeur"
                                    value="${_mesAttr(m.duree_valeur || '')}" ${offBloc}
@@ -378,7 +374,7 @@ function mesSectionMesuresArretees() {
                         </div>
                     </div>
                     <div class="mes-champ">
-                        <label>Date de fin de sanction</label>
+                        <label>${mt('fiche_date_fin')}</label>
                         <input type="date" class="mes-input" data-champ="date_fin"
                                value="${_mesAttr(m.date_fin || '')}" ${offBloc}
                                onchange="mesQualTermeVersDuree(${i})">
@@ -386,16 +382,16 @@ function mesSectionMesuresArretees() {
                 </div>` : ''}
                 <div class="mes-champ" style="margin-bottom:0;">
                     <div class="mes-champ-entete">
-                        <label>Description de la sanction</label>
+                        <label>${mt('fiche_desc_sanction')}</label>
                         <label class="mes-case">
                             <input type="checkbox" data-champ="suivi_requis" ${offBloc}
                                    ${m.suivi_requis ? 'checked' : ''}
                                    onchange="mesQualSuiviRequis(${i}, this.checked)">
-                            <span>Suivi de la mise en œuvre requise</span>
+                            <span>${mt('suivi_requis')}</span>
                         </label>
                     </div>
                     <textarea class="mes-input" data-champ="commentaire" rows="3" ${offBloc}
-                              placeholder="Ce que la sanction impose au prestataire">${_mesEsc(m.commentaire || '')}</textarea>
+                              placeholder="${_mesAttr(mt('desc_sanction_exemple'))}">${_mesEsc(m.commentaire || '')}</textarea>
                 </div>
             </div>
         </div>`;
@@ -403,26 +399,26 @@ function mesSectionMesuresArretees() {
 
     const pieces = (q.pieces || []).map((p, i) => `
         <div class="mes-preuve" data-chemin="${_mesAttr(p.path || '')}">
-            <input class="mes-input" value="${_mesAttr(p.nom || '')}" placeholder="Intitulé de la pièce" ${off}>
+            <input class="mes-input" value="${_mesAttr(p.nom || '')}" placeholder="${_mesAttr(mt('intitule_piece'))}" ${off}>
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
-                title="Ouvrir">${MES_ICONS.download}</a>` : ''}
-            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
                 onclick="mesQualRetirerPiece(${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
 
-    return mesSection('E', 'Mesures d’application', `
-        <div id="mesQualMesures">${blocs || '<p class="mes-preuve-vide">Aucune mesure arrêtée</p>'}</div>
+    return mesSection('E', mt('onglet_mesures'), `
+        <div id="mesQualMesures">${blocs || `<p class="mes-preuve-vide">${mt('aucune_mesure_arretee')}</p>`}</div>
         ${off ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.4rem;"
-            onclick="mesQualAjouterMesure()">${MES_ICONS.add} Ajouter une mesure</button>`}
+            onclick="mesQualAjouterMesure()">${MES_ICONS.add} ${mt('ajouter_mesure')}</button>`}
         <div class="mes-champ" style="margin-top:.9rem;margin-bottom:0;">
-            <label>Décision de l’instance</label>
-            <div id="mesQualPieces">${pieces || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+            <label>${mt('decision_instance')}</label>
+            <div id="mesQualPieces">${pieces || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
             ${off ? '' : `<input type="file" id="mesQualFichier" multiple style="display:none;"
                     onchange="mesQualTeleverser(this.files)">
                 <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                         onclick="document.getElementById('mesQualFichier').click()">
-                    ${MES_ICONS.add} Ajouter une pièce</button>`}
+                    ${MES_ICONS.add} ${mt('ajouter_piece')}</button>`}
         </div>`);
 }
 
@@ -435,9 +431,7 @@ function mesSectionMesuresArretees() {
 // Chacune ouvre un bloc : ce qu'elle impose, ce que le recours lui oppose, et
 // ce que l'instance en décide.
 const MES_DECISIONS_RECOURS = {
-    maintenir: 'Maintenir la mesure',
-    modifier: 'Modifier la mesure',
-    annuler: 'Annuler la mesure',
+    maintenir: 'rec_maintenir', modifier: 'rec_modifier', annuler: 'rec_annuler',
 };
 
 function mesBlocRecours(m, i) {
@@ -450,18 +444,18 @@ function mesBlocRecours(m, i) {
             (liste || []).map((pj, k) => `
             <div class="mes-preuve" data-chemin="${_mesAttr(pj.path || '')}">
                 <input class="mes-input" value="${_mesAttr(pj.nom || '')}"
-                       placeholder="Intitulé de la pièce" ${off}>
+                       placeholder="${_mesAttr(mt('intitule_piece'))}" ${off}>
                 ${_mesChemin(pj.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                     href="${_mesAttr(_mesChemin(pj.path))}?nom=${encodeURIComponent(pj.nom || '')}"
-                    title="Ouvrir">${MES_ICONS.download}</a>` : ''}
-                ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="Retirer"
+                    title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
+                ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
                     onclick="mesRecoursRetirerPiece(${i}, '${genre}', ${k})">${MES_ICONS.x}</button>`}
-            </div>`).join('') || '<div class="mes-preuve-vide">Aucune pièce</div>'}</div>
+            </div>`).join('') || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
         ${ro ? '' : `<input type="file" id="mesRecoursFichier_${i}_${genre}" multiple style="display:none;"
                 onchange="mesRecoursTeleverser(${i}, '${genre}', this.files)">
             <button class="btn btn-outline btn-sm" style="margin-top:.3rem;"
                     onclick="document.getElementById('mesRecoursFichier_${i}_${genre}').click()">
-                ${MES_ICONS.add} Ajouter une pièce</button>`}`;
+                ${MES_ICONS.add} ${mt('ajouter_piece')}</button>`}`;
 
     const membres = (r.membres || []).map((p, k) => `
         <tr data-rang="${k}">
@@ -470,61 +464,61 @@ function mesBlocRecours(m, i) {
             <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
             <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
             <td class="mes-actions">${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="Retirer" onclick="mesRecoursRetirerMembre(${i}, ${k})">${MES_ICONS.x}</button>`}</td>
+                title="${_mesAttr(mt('retirer'))}" onclick="mesRecoursRetirerMembre(${i}, ${k})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
 
     return `<div class="mes-bloc" data-rang="${i}">
         <div class="mes-bloc-entete">
-            <span class="mes-bloc-titre">${_mesEsc(mesLibelleCategorie(m.categorie) || 'Mesure')}</span>
-            ${m.statut_recours === 'annulee' ? '<span class="mes-badge annulee">Annulée</span>' : ''}
-            ${m.statut_recours === 'modifiee' ? '<span class="mes-badge notifiee">Modifiée</span>' : ''}
+            <span class="mes-bloc-titre">${_mesEsc(mesLibelleCategorie(m.categorie) || mt('mesure'))}</span>
+            ${m.statut_recours === 'annulee' ? `<span class="mes-badge annulee">${mt('st_annulee')}</span>` : ''}
+            ${m.statut_recours === 'modifiee' ? `<span class="mes-badge notifiee">${mt('st_modifiee')}</span>` : ''}
         </div>
         <div class="mes-bloc-corps">
             <div class="mes-paire">
                 <div class="mes-champ">
-                    <label>Catégorie de mesure</label>
+                    <label>${mt('categorie_mesure')}</label>
                     <div class="mes-lecture">${_mesEsc(mesLibelleCategorie(m.categorie) || '—')}</div>
                 </div>
                 <div class="mes-champ">
-                    <label>Type de mesure</label>
+                    <label>${mt('type_mesure')}</label>
                     <div class="mes-lecture">${_mesEsc(mesLibelleType(m.type_mesure) || '—')}</div>
                 </div>
             </div>
             <div class="mes-champ">
-                <label>Description de la sanction</label>
+                <label>${mt('fiche_desc_sanction')}</label>
                 <div class="mes-lecture">${m.commentaire ? _mesEsc(m.commentaire)
                     : '<span class="mes-preuve-vide">—</span>'}</div>
             </div>
             <div class="mes-trois">
                 <div class="mes-champ">
-                    <label>Date de sanction</label>
+                    <label>${mt('fiche_date_sanction')}</label>
                     <div class="mes-lecture">${_mesEsc(mesDate(m.date_sanction))}</div>
                 </div>
                 <div class="mes-champ">
-                    <label>Échéance</label>
+                    <label>${mt('col_echeance')}</label>
                     <div class="mes-lecture">${_mesEsc(mesDate(m.date_fin))}</div>
                 </div>
                 <div class="mes-champ">
-                    <label>Date de fin de sanction</label>
+                    <label>${mt('fiche_date_fin')}</label>
                     <div class="mes-lecture">${_mesEsc(mesDate(m.date_fin))}</div>
                 </div>
             </div>
 
-            <div class="mes-bloc-bande">Objet du recours</div>
+            <div class="mes-bloc-bande">${mt('objet_recours')}</div>
             <div class="mes-champ">
-                <label>Recours intenté</label>
+                <label>${mt('recours_intente')}</label>
                 <textarea class="mes-input" data-champ="intente_texte" rows="3" ${off}
-                          placeholder="Ce que le prestataire conteste, et sur quel fondement"
+                          placeholder="${_mesAttr(mt('recours_exemple'))}"
                     >${_mesEsc(r.intente_texte || '')}</textarea>
             </div>
             <div class="mes-champ">
-                <label>Pièces jointes du recours</label>
+                <label>${mt('pieces_recours')}</label>
                 ${fichiers('recours', r.pieces)}
             </div>
 
-            <div class="mes-bloc-bande">Examen du recours</div>
+            <div class="mes-bloc-bande">${mt('examen_recours')}</div>
             <div class="mes-champ">
-                <label>Instance d’examen du recours</label>
+                <label>${mt('instance_recours')}</label>
                 <select class="mes-select" data-champ="instance_code" ${off}>
                     <option value="">—</option>
                     ${comites.map((c) => `<option value="${_mesAttr(c.code)}"
@@ -532,39 +526,36 @@ function mesBlocRecours(m, i) {
                 </select>
             </div>
             <div class="mes-champ">
-                <label>Membres de l’équipe du recours</label>
+                <label>${mt('membres_recours')}</label>
                 <div class="mes-table-wrap">
                     <table class="mes-table mes-table-claire mes-recours-membres">
-                        <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Contact</th><th></th></tr></thead>
-                        <tbody>${membres || `<tr><td colspan="5" class="mes-preuve-vide">
-                            Aucun membre désigné</td></tr>`}</tbody>
+                        <thead><tr><th>${mt('col_nom')}</th><th>${mt('col_prenom')}</th><th>${
+                            mt('col_email')}</th><th>${mt('col_contact')}</th><th></th></tr></thead>
+                        <tbody>${membres || `<tr><td colspan="5" class="mes-preuve-vide">${
+                            mt('aucun_membre')}</td></tr>`}</tbody>
                     </table>
                 </div>
                 ${ro ? '' : `<button class="btn btn-outline btn-sm" style="margin-top:.4rem;"
-                    onclick="mesRecoursAjouterMembre(${i})">${MES_ICONS.add} Ajouter un membre</button>`}
+                    onclick="mesRecoursAjouterMembre(${i})">${MES_ICONS.add} ${mt('ajouter_membre')}</button>`}
             </div>
             <div class="mes-champ">
-                <label>Commentaire sur le recours</label>
+                <label>${mt('commentaire_recours')}</label>
                 <textarea class="mes-input" data-champ="commentaire" rows="3" ${off}
-                          placeholder="Ce que l’examen a établi">${_mesEsc(r.commentaire || '')}</textarea>
+                          placeholder="${_mesAttr(mt('commentaire_recours_exemple'))}">${_mesEsc(r.commentaire || '')}</textarea>
             </div>
             <div class="mes-champ">
-                <label>Décision suite au recours</label>
+                <label>${mt('decision_recours')}</label>
                 <select class="mes-select" data-champ="decision" ${off}
                         onchange="mesRecoursDecision(${i}, this.value)">
                     <option value="">—</option>
-                    ${Object.entries(MES_DECISIONS_RECOURS).map(([cle, lib]) => `<option value="${cle}"
-                        ${r.decision === cle ? 'selected' : ''}>${_mesEsc(lib)}</option>`).join('')}
+                    ${Object.entries(MES_DECISIONS_RECOURS).map(([cle, clef]) => `<option value="${cle}"
+                        ${r.decision === cle ? 'selected' : ''}>${_mesEsc(mt(clef))}</option>`).join('')}
                 </select>
-                ${r.decision === 'modifier' ? `<p class="mes-note">La mesure est marquée « Modifiée » à
-                    la section « Mesures d’application » : ses champs y sont rouverts, et la version
-                    d’avant s’y consulte, repliée.</p>` : ''}
-                ${r.decision === 'annuler' ? `<p class="mes-note">La mesure est marquée « Annulée » à la
-                    section « Mesures d’application » : elle ne se réécrit plus, et sortira du suivi
-                    à la validation.</p>` : ''}
+                ${r.decision === 'modifier' ? `<p class="mes-note">${mt('rec_note_modifier')}</p>` : ''}
+                ${r.decision === 'annuler' ? `<p class="mes-note">${mt('rec_note_annuler')}</p>` : ''}
             </div>
             <div class="mes-champ" style="margin-bottom:0;">
-                <label>Pièces jointes de la décision</label>
+                <label>${mt('pieces_decision')}</label>
                 ${fichiers('decision', r.decision_pieces)}
             </div>
         </div>
@@ -576,7 +567,7 @@ function mesSectionRecours() {
     const contestees = (q.mesures || [])
         .map((m, i) => ({ m, i })).filter((x) => x.m.recours_intente);
     if (!contestees.length) return '';
-    return mesSection('F', 'Recours', `
+    return mesSection('F', mt('onglet_recours'), `
         <p class="mes-note">Le prestataire conteste ${contestees.length} mesure(s). L’instance
            examine chaque recours et en décide : maintenir, modifier ou annuler la mesure.</p>
         <div id="mesRecoursBlocs">${contestees.map((x) => mesBlocRecours(x.m, x.i)).join('')}</div>`);
@@ -640,7 +631,7 @@ async function mesRecoursTeleverser(i, genre, fichiers) {
             corps.append('file', f);
             const rep = await mesApi('/upload', { method: 'POST', body: corps });
             m.recours[cle].push({ nom: rep.filename, path: rep.path, size: rep.size });
-        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+        } catch (e) { mesToast(e.message || mt('depot_impossible'), 'error'); }
     }
     MES_STATE.traitement.qualification = q;
     mesQualRedessiner();
@@ -786,7 +777,7 @@ function mesQualDureeVersTerme(i) {
     const fin = mesChampBloc(i, 'date_fin');
     if (!fin) return;
     if (!depart) {
-        mesToast('Renseignez d’abord la date de sanction', 'warning');
+        mesToast(mt('date_sanction_dabord'), 'warning');
         return;
     }
     fin.value = mesAjouterDuree(depart, valeur, unite);
@@ -868,7 +859,7 @@ async function mesQualTeleverser(fichiers) {
             corps.append('file', f);
             const r = await mesApi('/upload', { method: 'POST', body: corps });
             q.pieces.push({ nom: r.filename, path: r.path, size: r.size });
-        } catch (e) { mesToast(e.message || 'Dépôt impossible', 'error'); }
+        } catch (e) { mesToast(e.message || mt('depot_impossible'), 'error'); }
     }
     MES_STATE.traitement.qualification = q;
     mesQualRedessiner();
@@ -884,7 +875,7 @@ function mesActionsQualification() {
     // et le badge dit ce qui en a été fait.
     const close = mesQualClose();
     if (close) {
-        return `<span class="mes-badge cloturee">Qualification ${_mesEsc(close)}</span>`;
+        return `<span class="mes-badge cloturee">${_mesEsc(mt('q_badge_close', close))}</span>`;
     }
     if (!mesPeutDecider()) return '';
     const mesures = q.mesures || [];
@@ -894,31 +885,21 @@ function mesActionsQualification() {
         onclick="${geste}">${_mesEsc(libelle)}</button>`;
     return [
         bouton(!!q.renvoi_demande, 'mes-btn-investiguer',
-            'Renvoie la carence à l’étape Investigations pour un complément d’enquête. '
-            + 'Cochez « Renvoyer pour des investigations complémentaires » pour l’activer.',
-            'mesQualRenvoyer()', 'Renvoyer'),
+            mt('q_aide_renvoyer'), 'mesQualRenvoyer()', mt('renvoyer')),
         bouton(!!q.infraction_non_constituee, 'mes-btn-classer-vert',
-            'Classe la carence : aucune mesure ne sera prise. '
-            + 'Cochez « Infraction non constituée » pour l’activer.',
-            'mesQualClasser()', 'Classer'),
+            mt('q_aide_classer'), 'mesQualClasser()', mt('classer')),
         bouton(!!q.infraction_constituee, 'mes-btn-mesure',
-            'Passe le traitement à l’étape « Suivi des Mesures ». '
-            + 'Cochez « Infraction constituée » pour l’activer.',
-            'mesQualSuivi()', 'Valider'),
+            mt('q_aide_valider'), 'mesQualSuivi()', mt('valider')),
         // Clôture directe : elle ne s'offre que si aucune des mesures arrêtées
         // n'appelle le suivi de sa mise en œuvre. Une seule qui le demande, et
         // le dossier doit passer par l'étape de suivi.
         bouton(!!q.infraction_constituee && !!mesures.length && !suiviAttendu, 'btn-outline',
             !q.infraction_constituee
-                ? 'Cochez « Infraction constituée » pour l’activer.'
+                ? mt('q_cocher_constituee')
                 : (!mesures.length
-                    ? 'Aucune mesure n’a été arrêtée : il n’y a rien à clôturer.'
-                    : (suiviAttendu
-                        ? 'Une mesure au moins requiert le suivi de sa mise en œuvre : '
-                          + 'décochez « Suivi de la mise en œuvre requise », ou passez par « Valider ».'
-                        : 'Clôt le traitement : les mesures sont arrêtées et aucune '
-                          + 'n’appelle le suivi de sa mise en œuvre.')),
-            'mesQualCloturer()', 'Clôturer'),
+                    ? mt('q_rien_a_cloturer')
+                    : (suiviAttendu ? mt('q_suivi_requis') : mt('q_aide_cloturer'))),
+            'mesQualCloturer()', mt('cloturer')),
     ].join('');
 }
 
@@ -940,53 +921,44 @@ async function mesQualIssue(chemin, confirmation, fait) {
         mesToast(fait);
         mesAfficherSlider({ anime: false });
         if (MES_STATE.currentPage === 'critiques') mesRenderPage();
-    } catch (e) { mesToast(e.message || 'Opération impossible', 'error'); }
+    } catch (e) { mesToast(e.message || mt('operation_impossible'), 'error'); }
 }
 
 const mesQualRenvoyer = () => mesQualIssue('renvoyer', {
-    titre: 'Renvoyer pour investigations complémentaires',
+    titre: mt('q_titre_renvoyer'),
     depuis: 'qualification', vers: 'investigations',
-    consequence: 'Le fil recule d’une étape : l’équipe d’investigation reprend le dossier.',
-    points: [
-        'L’étape Investigations se rouvre et redevient modifiable.',
-        'Le motif du renvoi y sera lisible par l’équipe.',
-    ],
-    aveu: 'Je confirme le renvoi en investigation.',
-    libelle: 'Renvoyer', classe: 'mes-btn-investiguer',
-}, 'Carence renvoyée en investigation');
+    consequence: mt('q_cons_renvoyer'),
+    points: [mt('q_pt_renvoyer1'), mt('q_pt_renvoyer2')],
+    aveu: mt('q_aveu_renvoyer'),
+    libelle: mt('renvoyer'), classe: 'mes-btn-investiguer',
+}, mt('q_toast_renvoyer'));
 
 const mesQualClasser = () => mesQualIssue('classer', {
-    titre: 'Classer la carence',
+    titre: mt('q_titre_classer'),
     depuis: 'qualification', vers: '',
-    consequence: 'L’infraction n’étant pas constituée, aucune mesure ne sera prise.',
-    points: ['Le dossier est clos : toutes ses étapes passent en consultation.'],
-    aveu: 'Je confirme que l’infraction n’est pas constituée.',
-    libelle: 'Classer', classe: 'mes-btn-classer-vert',
-}, 'Carence classée');
+    consequence: mt('q_cons_classer'),
+    points: [mt('q_pt_classer')],
+    aveu: mt('q_aveu_classer'),
+    libelle: mt('classer'), classe: 'mes-btn-classer-vert',
+}, mt('q_toast_classer'));
 
 const mesQualSuivi = () => mesQualIssue('suivi', {
-    titre: 'Valider la qualification',
+    titre: mt('q_titre_valider'),
     depuis: 'qualification', vers: 'suivi',
-    consequence: 'Les mesures arrêtées entrent au registre, où leur mise en œuvre se suivra.',
-    points: [
-        'Chaque mesure y paraît avec sa portée et son échéance.',
-        'L’étape de qualification ne se réécrira plus.',
-    ],
-    aveu: 'Je confirme les mesures arrêtées.',
-    libelle: 'Valider', classe: 'mes-btn-mesure',
-}, 'Traitement passé au suivi des mesures');
+    consequence: mt('q_cons_valider'),
+    points: [mt('q_pt_valider1'), mt('q_pt_valider2')],
+    aveu: mt('q_aveu_valider'),
+    libelle: mt('valider'), classe: 'mes-btn-mesure',
+}, mt('q_toast_valider'));
 
 const mesQualCloturer = () => mesQualIssue('cloturer', {
-    titre: 'Clôturer le traitement',
+    titre: mt('q_titre_cloturer'),
     depuis: 'qualification', vers: '',
-    consequence: 'Les mesures arrêtées entrent au registre et le dossier se ferme.',
-    points: [
-        'Aucune des mesures n’appelle le suivi de sa mise en œuvre.',
-        'Le dossier est clos : il ne se réécrira plus.',
-    ],
-    aveu: 'Je confirme qu’aucun suivi n’est à conduire.',
-    libelle: 'Clôturer', classe: 'btn-outline',
-}, 'Traitement clôturé');
+    consequence: mt('q_cons_cloturer'),
+    points: [mt('q_pt_cloturer1'), mt('q_pt_cloturer2')],
+    aveu: mt('q_aveu_cloturer'),
+    libelle: mt('cloturer'), classe: 'btn-outline',
+}, mt('q_toast_cloturer'));
 
 async function mesEnregistrerQualification() {
     const c = MES_STATE.carenceEnCours;
@@ -996,8 +968,8 @@ async function mesEnregistrerQualification() {
         await mesApi(`/constatations/${encodeURIComponent(c.id)}/qualification`, {
             method: 'PUT', body: JSON.stringify(mesQualification()),
         });
-        mesToast('Qualification enregistrée');
-    } catch (e) { mesToast(e.message || 'Enregistrement impossible', 'error'); }
+        mesToast(mt('qualification_enregistree'));
+    } catch (e) { mesToast(e.message || mt('enregistrement_impossible'), 'error'); }
 }
 
 Object.assign(window, {

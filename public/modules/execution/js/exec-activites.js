@@ -2650,7 +2650,8 @@ async function execValidateRapport(rapportId) {
 }
 
 async function execAmendRapport(rapportId) {
-    const observations = prompt('Observations pour l\'amendement (points à corriger) :');
+    const observations = await oasisSaisir('Observations pour l’amendement — les points à corriger',
+        { titre: 'Amender le rapport', libelle: 'Renvoyer en rédaction' });
     if (observations === null) return;
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/amend`, {

@@ -127,4 +127,73 @@
   }
 
   window.oasisConfirmer = oasisConfirmer;
+
+  // ── Saisie ──
+  // Le pendant de `prompt()` : un motif, une observation, un commentaire. La
+  // boîte du navigateur n'offrait qu'une ligne pour un texte qui en demande
+  // souvent plusieurs. Rend le texte saisi, ou `null` si l'on renonce.
+  //
+  //   const motif = await oasisSaisir('Motif du rejet', { requis: true });
+  //   oasisSaisir(message, { titre, valeur, libelle, libelleAnnuler, requis })
+  //
+  // `requis` tient le bouton fermé tant que le champ est vide : un motif
+  // obligatoire ne part plus en blanc pour être refusé ensuite.
+  const SAISIE = {
+    fr: { oui: 'Valider', non: 'Annuler', titre: 'Saisie' },
+    en: { oui: 'Submit', non: 'Cancel', titre: 'Input' },
+    pt: { oui: 'Validar', non: 'Cancelar', titre: 'Introducao' },
+  };
+
+  function oasisSaisir(message, options) {
+    const o = options || {};
+    const l = SAISIE[langue()] || SAISIE.fr;
+    document.querySelectorAll('.oasis-confirm-fond').forEach((v) => v._repondre && v._repondre(null));
+    return new Promise((resolve) => {
+      const fond = document.createElement('div');
+      fond.className = 'oasis-confirm-fond';
+      fond.innerHTML = `
+        <div class="oasis-confirm oasis-saisie" role="dialog" aria-modal="true">
+          <strong class="oasis-confirm-titre"></strong>
+          <label class="oasis-confirm-message"></label>
+          <textarea class="oasis-saisie-champ" rows="4"></textarea>
+          <div class="oasis-confirm-actions">
+            <button type="button" class="oasis-confirm-non"></button>
+            <button type="button" class="oasis-confirm-oui"></button>
+          </div>
+        </div>`;
+      const champ = fond.querySelector('.oasis-saisie-champ');
+      const oui = fond.querySelector('.oasis-confirm-oui');
+      fond.querySelector('.oasis-confirm-titre').textContent = o.titre || l.titre;
+      fond.querySelector('.oasis-confirm-message').textContent = String(message == null ? '' : message);
+      fond.querySelector('.oasis-confirm-non').textContent = o.libelleAnnuler || l.non;
+      oui.textContent = o.libelle || l.oui;
+      champ.value = o.valeur == null ? '' : String(o.valeur);
+      const ajuster = () => { oui.disabled = !!o.requis && !champ.value.trim(); };
+      champ.addEventListener('input', ajuster);
+      ajuster();
+
+      const avant = document.activeElement;
+      // Entrée seule passe à la ligne dans un texte ; Ctrl/⌘ + Entrée valide.
+      const clavier = (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); repondre(null); }
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !oui.disabled) { e.preventDefault(); repondre(champ.value); }
+      };
+      function repondre(valeur) {
+        document.removeEventListener('keydown', clavier, true);
+        fond.remove();
+        if (avant && avant.focus) { try { avant.focus(); } catch (e) { /* élément disparu */ } }
+        resolve(valeur);
+      }
+      fond._repondre = repondre;
+      fond.addEventListener('click', (e) => { if (e.target === fond) repondre(null); });
+      fond.querySelector('.oasis-confirm-non').addEventListener('click', () => repondre(null));
+      oui.addEventListener('click', () => { if (!oui.disabled) repondre(champ.value); });
+      document.addEventListener('keydown', clavier, true);
+      document.body.appendChild(fond);
+      champ.focus();
+      champ.setSelectionRange(champ.value.length, champ.value.length);
+    });
+  }
+
+  window.oasisSaisir = oasisSaisir;
 }());

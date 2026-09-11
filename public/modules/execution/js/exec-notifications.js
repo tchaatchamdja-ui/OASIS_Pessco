@@ -841,7 +841,7 @@ async function execValidateNotification(notifId) {
 }
 
 async function execRejectNotification(notifId) {
-    const motif = prompt('Motif du rejet :');
+    const motif = await oasisSaisir('Motif du rejet', { titre: 'Rejeter la notification', libelle: 'Rejeter' });
     if (motif === null) return;
     try {
         await api(`${EXEC_MODULE_API}/notifications/${notifId}/reject`, { method: 'PUT', body: JSON.stringify({ motif }) });
@@ -939,7 +939,7 @@ async function execDeleteBrouillon(notifId) {
 }
 
 async function execCancelNotification(notifId, fromTab) {
-    const motif = prompt('Motif de l\'annulation :');
+    const motif = await oasisSaisir('Motif de l’annulation', { titre: 'Annuler la notification', libelle: 'Annuler la notification', libelleAnnuler: 'Revenir' });
     if (motif === null) return;
     try {
         await api(`${EXEC_MODULE_API}/notifications/${notifId}/cancel`, {

@@ -981,10 +981,12 @@ const execProcLibelleEtape = (id) => (EXEC_PROC_ETAPES.find((e) => e.id === id) 
 // l'action, non plus le `confirm()` du navigateur qu'ils n'appellent plus.
 async function execProcSansConfirm(fn, reponsePrompt) {
   const confirmerOrig = window.oasisConfirmer;
-  const promptOrig = window.prompt;
+  const saisirOrig = window.oasisSaisir;
   window.oasisConfirmer = async () => true;
-  if (reponsePrompt !== undefined) window.prompt = () => reponsePrompt;
-  try { return await fn(); } finally { window.oasisConfirmer = confirmerOrig; window.prompt = promptOrig; }
+  // Une réponse déjà recueillie par le volet — les observations d'un
+  // amendement — tient lieu de saisie : l'écran repris ne la redemande pas.
+  if (reponsePrompt !== undefined) window.oasisSaisir = async () => reponsePrompt;
+  try { return await fn(); } finally { window.oasisConfirmer = confirmerOrig; window.oasisSaisir = saisirOrig; }
 }
 
 // ══════════════════════════════════════

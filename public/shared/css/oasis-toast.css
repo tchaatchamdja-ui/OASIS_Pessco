@@ -70,6 +70,18 @@
 .oasis-confirm-oui { background: var(--primary, #1a365d); border-color: var(--primary, #1a365d); color: #fff; }
 .oasis-confirm-fond.danger .oasis-confirm-oui { background: #b91c1c; border-color: #b91c1c; }
 .oasis-confirm-actions button:focus-visible { outline: 2px solid var(--primary, #1a365d); outline-offset: 2px; }
+.oasis-confirm-actions button:disabled { opacity: .5; cursor: not-allowed; }
+/* Saisie : la question en libellé, un champ de plusieurs lignes dessous. */
+.oasis-saisie { width: min(32rem, 92vw); }
+.oasis-saisie .oasis-confirm-message { display: block; margin-bottom: .5rem; }
+.oasis-saisie-champ {
+    display: block; width: 100%; box-sizing: border-box; margin: 0 0 1rem;
+    padding: .5rem .6rem; border-radius: 6px; resize: vertical; min-height: 5rem;
+    font: inherit; font-size: .86rem; line-height: 1.45;
+    color: var(--text, #0f172a); background: var(--bg, #fff);
+    border: 1px solid var(--border, #cbd5e1);
+}
+.oasis-saisie-champ:focus { outline: 2px solid var(--primary, #1a365d); outline-offset: 1px; border-color: transparent; }
 
 @keyframes oasisToastEntree {
     from { opacity: 0; transform: scale(.96); }

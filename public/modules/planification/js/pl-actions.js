@@ -125,8 +125,12 @@ async function planApplyDecision() {
 
 // Phase 7 — Approbation DG + transmission (Chap. 4 §4.2.3.e-f)
 async function planApprouverDG(planId) {
-    const commentaire = prompt('Commentaire d\'approbation (facultatif) :') || '';
-    const lettre = prompt('Lettre de transmission au prestataire (texte) :') || '';
+    // Les deux champs sont facultatifs et n'ont jamais suspendu l'approbation :
+    // les boutons le disent, plutôt qu'un « Annuler » qui approuvait quand même.
+    const commentaire = (await oasisSaisir('Commentaire d’approbation (facultatif)',
+        { titre: 'Approbation du DG', libelle: 'Suivant', libelleAnnuler: 'Sans commentaire' })) || '';
+    const lettre = (await oasisSaisir('Lettre de transmission au prestataire',
+        { titre: 'Approbation du DG', libelle: 'Approuver', libelleAnnuler: 'Sans lettre' })) || '';
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/approuver-dg`, {
             method: 'POST', body: JSON.stringify({ commentaire, lettre_transmission: lettre })
@@ -148,7 +152,7 @@ async function planTransmettre(planId) {
 async function planAmend(planId) {
     // Confirmation dialog
     if (!await oasisConfirmer(tp('confirm_amend'))) return;
-    const motif = prompt(tp('reason') + ':');
+    const motif = await oasisSaisir(tp('reason'));
     if (motif === null) return;
     try {
         const result = await api(`${PLAN_MODULE_API}/plans/${planId}/amender`, {
@@ -168,7 +172,7 @@ async function planAmend(planId) {
 
 async function planCancelAmendment(planId) {
     if (!await oasisConfirmer(tp('confirm_cancel_amend'))) return;
-    const comment = prompt(tp('comment') + ':');
+    const comment = await oasisSaisir(tp('comment'));
     if (comment === null) return;
     try {
         const result = await api(`${PLAN_MODULE_API}/plans/${planId}/annuler-amendement`, {

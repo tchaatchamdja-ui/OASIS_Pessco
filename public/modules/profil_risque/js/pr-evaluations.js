@@ -2436,7 +2436,8 @@ async function decisionDirecteur(evalId, decision) {
     if (requiresMotif && decision === 'rejeter' && !await oasisConfirmer('Rejeter cette évaluation arrête le processus. Confirmer ?')) return;
     if (requiresMotif && decision === 'renvoyer' && !await oasisConfirmer('Renvoyer pour prise en compte des observations ?')) return;
     if (decision === 'cloturer' && !await oasisConfirmer('Clôturer la réunion prestataire ? Cela verrouille tous les onglets en lecture seule jusqu\'à la validation finale.')) return;
-    const commentaire = (requiresMotif || decision !== 'accepter') ? (prompt(promptByDecision[decision]) || '') : '';
+    const commentaire = (requiresMotif || decision !== 'accepter')
+        ? ((await oasisSaisir(promptByDecision[decision], { requis: requiresMotif })) || '') : '';
     if (requiresMotif && !commentaire.trim()) {
         showToast('Motif requis pour ' + decision, 'error'); return;
     }
@@ -2502,7 +2503,7 @@ async function updateCycleDate(evalId, kind, value, csrbo, champ) {
 
 // ── Phase 8 — Réévaluation (4.3) ──
 async function reevaluerEval(evalId) {
-    const motif = prompt('Motif de la réévaluation :', 'Fin de cycle');
+    const motif = await oasisSaisir('Motif de la réévaluation', { titre: 'Réévaluer', valeur: 'Fin de cycle' });
     if (!motif) return;
     try {
         const res = await api(`${MODULE_API}/evaluations/${evalId}/reevaluer`, {

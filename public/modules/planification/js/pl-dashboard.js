@@ -193,7 +193,7 @@ function _planTablePlans(liste) {
             <td>${_planTypeBadge(p.type)}</td>
             <td>${_statusBadge(p.statut)}</td>
             <td>${p.nb_activites || 0}</td>
-            <td><button class="btn-icon" onclick="planOpenDetail('${p.id}')" title="${tp('eye')}">${PLAN_ICONS.eye}</button></td>
+            <td><button class="btn-icon" onclick="planOpenDetail('${p.id}')" title="${tp('details')}">${PLAN_ICONS.eye}</button></td>
         </tr>`).join('')}</tbody>
     </table>`;
 }

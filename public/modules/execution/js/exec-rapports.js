@@ -65,7 +65,7 @@ function execRenderRapports() {
     <div class="page-content">
         <div class="page-header">
             <h2>${te('rapports')}</h2>
-            <p style="color:var(--text-muted);">${te('rapports_closed_intro') || 'Rapports clôturés accessibles au téléchargement.'}</p>
+            <p style="color:var(--text-muted);">${te('rapports_closed_intro')}</p>
         </div>
 
         ${_execRenderFilterBar('execRenderPage()', filterOpts)}
@@ -79,8 +79,8 @@ function execRenderRapports() {
                         <th style="width:150px;">${te('ref_rapport')}</th>
                         <th style="width:320px;">${te('titre_rapport')} & ${te('provider')}</th>
                         <th style="width:170px;">${te('domaine')}</th>
-                        <th style="width:130px;">${te('date_transmission') || 'Date de Transmission'}</th>
-                        <th style="width:120px;">${te('statut') || 'Statut'}</th>
+                        <th style="width:130px;">${te('date_transmission')}</th>
+                        <th style="width:120px;">${te('statut')}</th>
                         <th style="width:130px;text-align:center;">${te('actions')}</th>
                     </tr>
                 </thead>
@@ -461,7 +461,7 @@ window.addEventListener('load', () => { setTimeout(() => { try { window.focus();
     if (retournerHtml) return html;
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); }
-    _execToast(te('telecharger') || 'Téléchargement lancé', 'success');
+    _execToast(te('telecharger'), 'success');
     return html;
 }
 
@@ -498,7 +498,7 @@ function _exportTableXLSX(title, headers, rows, filename) {
     const a = document.createElement('a');
     a.href = url; a.download = `${filename}.xlsx`; a.click();
     URL.revokeObjectURL(url);
-    _execToast(te('telecharger') || 'Téléchargement lancé', 'success');
+    _execToast(te('telecharger'), 'success');
 }
 
 function _exportTablePDF(title, headers, rows, filename, aac) {
@@ -529,9 +529,9 @@ function execExportSituationGenerale(format) {
 
     const criticites = ['critique', 'majeure', 'mineure'];
     const flatHeaders = [
-        te('domaine') || 'Domaine',
-        te('secteur') || 'Secteur',
-        te('provider') || 'Prestataire',
+        te('domaine'),
+        te('secteur'),
+        te('provider'),
         'Activités Planifiées',
         'Activités Clôturées',
         'Taux Exécution',
@@ -580,7 +580,7 @@ function _execToggleFiches(fncId) {
 // ── Helper: résout les métadonnées communes pour Fiche Constat / Fiche Suivi ──
 function _execResolveFicheCtx(fncId) {
     const fnc = (EXEC_STATE.data.constatations || []).find(c => c.id === fncId);
-    if (!fnc) { _execToast('Constatation non trouvée', 'error'); return null; }
+    if (!fnc) { _execToast(te('constat_introuvable'), 'error'); return null; }
     const aac = EXEC_STATE.data.aac || {};
     const domaines = EXEC_STATE.data.domaines || [];
     const domaineObj = domaines.find(d => d.id === fnc.domaine_id || d.code === fnc.domaine_id);
@@ -603,7 +603,7 @@ function execExportFicheConstat(fncId, format) {
     const ctx = _execResolveFicheCtx(fncId); if (!ctx) return;
     const fmt = format || 'pdf';
     const html = _buildFicheHTML(ctx.aac, {
-        title: te('fiche_constat') || 'Fiche Constat',
+        title: te('fiche_constat'),
         fnc: ctx.fnc, domaineName: ctx.domaineName, prestName: ctx.prestName, dateDue: ctx.dateDue,
         showSection2: true, showSection3: false, forWord: fmt === 'word'
     });
@@ -619,7 +619,7 @@ function execExportFicheSuivi(fncId, format) {
     const ctx = _execResolveFicheCtx(fncId); if (!ctx) return;
     const fmt = format || 'pdf';
     const html = _buildFicheHTML(ctx.aac, {
-        title: te('fiche_suivi') || 'Fiche Suivi',
+        title: te('fiche_suivi'),
         fnc: ctx.fnc, domaineName: ctx.domaineName, prestName: ctx.prestName, dateDue: ctx.dateDue,
         showSection2: false, showSection3: true, forWord: fmt === 'word'
     });
@@ -849,10 +849,10 @@ async function execSaveApercuComments(rapportId) {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/apercu-comments`, {
             method: 'PUT', body: JSON.stringify({ commentaires: ta.value })
         });
-        _execToast('Observations enregistrées', 'success');
+        _execToast(te('observations_enregistrees'), 'success');
     } catch (e) {
         console.error('Save apercu error:', e);
-        _execToast('Erreur lors de l\'enregistrement', 'error');
+        _execToast(te('err_enregistrement'), 'error');
     }
 }
 

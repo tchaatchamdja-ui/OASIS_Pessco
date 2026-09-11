@@ -136,7 +136,7 @@ async function planApprouverDG(planId) {
             method: 'POST', body: JSON.stringify({ commentaire, lettre_transmission: lettre })
         });
         await planLoadData(); await planOpenDetail(planId);
-        oasisToast('Plan approuvé par le DG', 'success');
+        oasisToast(tp('plan_approuve_dg_ok'), 'success');
     } catch (e) { oasisToast(e.message, 'error'); }
 }
 
@@ -145,7 +145,7 @@ async function planTransmettre(planId) {
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/transmettre`, { method: 'POST' });
         await planLoadData(); await planOpenDetail(planId);
-        oasisToast('Plan transmis au prestataire', 'success');
+        oasisToast(tp('plan_transmis_ok'), 'success');
     } catch (e) { oasisToast(e.message, 'error'); }
 }
 
@@ -209,7 +209,7 @@ function planShowValidationComment(actId) {
         ${texte
             ? `<div class="vc-comment">${_esc(texte)}</div>`
             : `<p class="text-center" style="padding:1rem;color:var(--text-muted);font-style:italic;">${tp('no_validation_comment')}</p>`}`;
-    const footer = `<button class="btn btn-ghost" onclick="planCloseModal()">${tp('close') || 'Fermer'}</button>`;
+    const footer = `<button class="btn btn-ghost" onclick="planCloseModal()">${tp('close')}</button>`;
     planShowModal(tp('validation_comment'), body, footer, 'modal-drawer modal-drawer-1-3');
 }
 

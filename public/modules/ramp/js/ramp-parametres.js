@@ -251,7 +251,7 @@ async function rampEnregistrerDepot() {
         }
         rampFermerModal();
         await rampChargerDepots();
-        rampToast('Dépôt enregistré');
+        rampToast(rt('depot_enregistre'));
     } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
@@ -261,7 +261,7 @@ async function rampSupprimerDepot(id) {
     try {
         await rampApi(`/depots/${id}`, { method: 'DELETE' });
         await rampChargerDepots();
-        rampToast('Dépôt supprimé');
+        rampToast(rt('depot_supprime'));
     } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
@@ -441,7 +441,7 @@ async function rampEnregistrerContact() {
         RAMP_STATE.groupesOuverts[corps.etat] = true;
         rampFermerModal();
         await rampChargerContacts();
-        rampToast('Contact enregistré');
+        rampToast(rt('contact_enregistre'));
     } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
@@ -458,7 +458,7 @@ async function rampSupprimerContact(id) {
     try {
         await rampApi(`/contacts/${id}`, { method: 'DELETE' });
         await rampChargerContacts();
-        rampToast('Contact supprimé');
+        rampToast(rt('contact_supprime'));
     } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
@@ -854,7 +854,7 @@ async function rampEnregistrerGroupe() {
         rampFermerModal();
         RAMP_STATE.data.parametres = await rampApi('/parametres');
         rampRenderPage();
-        rampToast('Groupe enregistré');
+        rampToast(rt('groupe_enregistre'));
     } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
@@ -1166,7 +1166,7 @@ async function rampEnregistrerPays() {
         else await rampApi('/pays', { method: 'POST', body: JSON.stringify(corps) });
         rampFermerModal();
         await rampChargerPays();
-        rampToast('Pays enregistré');
+        rampToast(rt('pays_enregistre'));
     } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
@@ -1197,7 +1197,7 @@ async function rampSupprimerPays(id) {
     try {
         await rampApi(`/pays/${id}`, { method: 'DELETE' });
         await rampChargerPays();
-        rampToast('Pays supprimé');
+        rampToast(rt('pays_supprime'));
     } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
@@ -1494,7 +1494,7 @@ async function rampEnregistrerAeroport() {
         // Le pays touché reste déplié : l'agent voit ce qu'il vient d'écrire.
         delete RAMP_STATE.aeroports.replies[corps.pays.trim()];
         await rampChargerAeroports();
-        rampToast('Aéroport enregistré');
+        rampToast(rt('aeroport_enregistre'));
     } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
@@ -1511,7 +1511,7 @@ async function rampSupprimerAeroport(id) {
     try {
         await rampApi(`/aeroports/${id}`, { method: 'DELETE' });
         await rampChargerAeroports();
-        rampToast('Aéroport supprimé');
+        rampToast(rt('aeroport_supprime'));
     } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
@@ -1820,7 +1820,7 @@ async function rampEnregistrerAeronef() {
         // La désignation touchée s'ouvre : l'agent voit ce qu'il vient d'écrire.
         RAMP_STATE.aeronefs.ouverts[corps.designation.trim().toUpperCase()] = true;
         await rampChargerAeronefs();
-        rampToast('Aéronef enregistré');
+        rampToast(rt('aeronef_enregistre'));
     } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
@@ -1838,7 +1838,7 @@ async function rampSupprimerAeronef(id) {
     try {
         await rampApi(`/aeronefs/${id}`, { method: 'DELETE' });
         await rampChargerAeronefs();
-        rampToast('Aéronef supprimé');
+        rampToast(rt('aeronef_supprime'));
     } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 

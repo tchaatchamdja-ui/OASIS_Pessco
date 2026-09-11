@@ -31,7 +31,7 @@ const rampPacSoumis = (e) => !!((e || {}).pac || {}).soumis_le;
 
 function rampOuvrirPac(id) {
     RAMP_STATE.pacEnCours = rampEcartDe(id);
-    if (!RAMP_STATE.pacEnCours) { rampToast('Écart introuvable', 'error'); return; }
+    if (!RAMP_STATE.pacEnCours) { rampToast(rt('ecart_introuvable'), 'error'); return; }
     rampVoletPac();
 }
 
@@ -239,7 +239,7 @@ async function rampPacRenvoyer() {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast('Plan renvoyé pour reprise');
+        rampToast(rt('plan_renvoye_reprise'));
     } catch (x) { rampToast(x.message || 'Renvoi impossible', 'error'); }
 }
 
@@ -255,7 +255,7 @@ async function rampPacCloturer() {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast('Écart clôturé');
+        rampToast(rt('ecart_cloture'));
     } catch (x) { rampToast(x.message || 'Clôture impossible', 'error'); }
 }
 
@@ -505,7 +505,7 @@ async function rampPacEvaluer(patch) {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast('Évaluation enregistrée');
+        rampToast(rt('evaluation_enregistree'));
     } catch (x) { rampToast(x.message || 'Enregistrement impossible', 'error'); }
 }
 
@@ -521,7 +521,7 @@ function rampPacEditerSuivi(id) {
 async function rampPacEnregistrerSuivi(id) {
     const e = RAMP_STATE.pacEnCours;
     const texte = ((document.getElementById('rampPacSuiviEdition') || {}).value || '').trim();
-    if (!texte) { rampToast('Commentaire vide', 'error'); return; }
+    if (!texte) { rampToast(rt('commentaire_vide'), 'error'); return; }
     try {
         await rampApi(`/ecarts/${e.id}/evaluation/suivi/${id}`, {
             method: 'PUT', body: JSON.stringify({ texte }),
@@ -530,7 +530,7 @@ async function rampPacEnregistrerSuivi(id) {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast('Suivi modifié');
+        rampToast(rt('suivi_modifie'));
     } catch (x) { rampToast(x.message || 'Modification impossible', 'error'); }
 }
 
@@ -542,7 +542,7 @@ async function rampPacSupprimerSuivi(id) {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast('Suivi retiré');
+        rampToast(rt('suivi_retire'));
     } catch (x) { rampToast(x.message || 'Suppression impossible', 'error'); }
 }
 
@@ -567,7 +567,7 @@ async function rampPacAjouterSuivi(cible) {
     const e = RAMP_STATE.pacEnCours;
     const champ = document.getElementById(cible || 'rampPacSuiviTexte');
     const texte = (champ || {}).value || '';
-    if (!texte.trim()) { rampToast('Commentaire vide', 'error'); return; }
+    if (!texte.trim()) { rampToast(rt('commentaire_vide'), 'error'); return; }
     try {
         await rampApi(`/ecarts/${e.id}/evaluation/suivi`, {
             method: 'POST', body: JSON.stringify({ texte }),
@@ -575,7 +575,7 @@ async function rampPacAjouterSuivi(cible) {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast('Suivi consigné');
+        rampToast(rt('suivi_consigne'));
     } catch (x) { rampToast(x.message || 'Enregistrement impossible', 'error'); }
 }
 
@@ -587,7 +587,7 @@ async function rampPacAjouterSuivi(cible) {
 
 function rampOuvrirPreuves(id) {
     RAMP_STATE.pacEnCours = rampEcartDe(id);
-    if (!RAMP_STATE.pacEnCours) { rampToast('Écart introuvable', 'error'); return; }
+    if (!RAMP_STATE.pacEnCours) { rampToast(rt('ecart_introuvable'), 'error'); return; }
     rampVoletPreuves();
 }
 
@@ -766,7 +766,7 @@ async function rampEnvoyerPreuve() {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         if (RAMP_STATE.voletRejouer) RAMP_STATE.voletRejouer();
-        rampToast('Preuve déposée');
+        rampToast(rt('preuve_deposee'));
     } catch (x) { err.textContent = x.message || 'Dépôt impossible'; }
 }
 
@@ -779,7 +779,7 @@ async function rampSupprimerPreuve(id) {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         if (RAMP_STATE.voletRejouer) RAMP_STATE.voletRejouer();
-        rampToast('Preuve retirée');
+        rampToast(rt('preuve_retiree'));
     } catch (x) { rampToast(x.message || 'Suppression impossible', 'error'); }
 }
 

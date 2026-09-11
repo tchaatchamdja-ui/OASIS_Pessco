@@ -276,11 +276,11 @@ async function execArchiveDossier(dossierId) {
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'PUT', body: JSON.stringify({ statut: 'archive' }) });
         await execRefreshDynamic();
-        _execToast('Dossier archivé avec succès', 'success');
+        _execToast(te('dossier_archive_ok'), 'success');
         execRenderPage();
     } catch (e) {
         console.error('Archive dossier error:', e);
-        _execToast('Erreur lors de l\'archivage', 'error');
+        _execToast(te('err_archivage'), 'error');
     }
 }
 

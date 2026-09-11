@@ -607,7 +607,7 @@ async function execSaveNotificationDraft() {
         execRenderPage();
     } catch (e) {
         console.error('Save notification error:', e);
-        oasisToast('Erreur lors de la sauvegarde.', 'error');
+        oasisToast(te('err_sauvegarde'), 'error');
     }
 }
 
@@ -824,7 +824,7 @@ async function execSubmitNotificationForValidation() {
             execRenderPage();
         } catch (e) {
             console.error('Submit notification error:', e);
-            oasisToast('Erreur lors de la soumission.', 'error');
+            oasisToast(te('err_soumission'), 'error');
         }
     });
 }
@@ -875,7 +875,7 @@ async function execSubmitBrouillon(notifId) {
             await execRefreshDynamic();
             EXEC_STATE.triggerTab = 'soumis';
             execRenderPage();
-            if (typeof showNotification === 'function') showNotification(te('notification_submitted') || 'Notification soumise', 'success');
+            if (typeof showNotification === 'function') showNotification(te('notification_submitted'), 'success');
         } catch (e) {
             console.error('Submit brouillon error:', e);
             oasisToast(e.message || 'Erreur lors de la soumission', 'error');
@@ -912,13 +912,13 @@ function _showValidatorPicker(onConfirm) {
         overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
         document.getElementById('validator_picker_confirm').onclick = () => {
             const sel = document.getElementById('validator_picker_select')?.value || '';
-            if (!sel) { oasisToast('Veuillez sélectionner un validateur', 'warning'); return; }
+            if (!sel) { oasisToast(te('selectionner_validateur'), 'warning'); return; }
             overlay.remove();
             onConfirm(sel);
         };
     }).catch(async () => {
         // Fallback: submit without validator
-        if (await oasisConfirmer(te('confirm_submit') || 'Soumettre cette notification pour validation ?')) {
+        if (await oasisConfirmer(te('confirm_submit'))) {
             onConfirm('');
         }
     });
@@ -980,7 +980,7 @@ function execShowContacts(prestataireId) {
         </div>
         <hr style="border:0;border-top:1px solid var(--border);margin:0.25rem 0;">
         <!-- Row 3: Contacts additionnels -->
-        <h4 style="margin-bottom:0;">${te('contacts')} ${te('additional') || 'supplémentaires'}</h4>
+        <h4 style="margin-bottom:0;">${te('contacts_supplementaires')}</h4>
         <div id="contacts_additional_container">
             ${(() => {
                 let addContacts = prest.contacts_additionnels || '[]';
@@ -1004,7 +1004,7 @@ function execShowContacts(prestataireId) {
     const footerHtml = `
         <button class="btn btn-outline" onclick="execCloseSlider()">${te('close')}</button>
         <button class="btn btn-primary" onclick="execSaveContactChanges('${prestataireId}')">
-            ${EXEC_ICONS.check} ${te('save') || 'Enregistrer'}
+            ${EXEC_ICONS.check} ${te('save')}
         </button>`;
     execShowSlider(`${EXEC_ICONS.prestataires} ${te('contacts')}`, bodyHtml, footerHtml, 'xl');
 }
@@ -1079,7 +1079,7 @@ async function execOpenExchangeSlider(notifId) {
         console.error('Load exchange error:', e);
         return;
     }
-    if (!notif) { oasisToast('Notification non trouvée', 'error'); return; }
+    if (!notif) { oasisToast(te('notification_introuvable'), 'error'); return; }
     echanges = echanges || [];
     EXEC_STATE.selectedNotification = notif;
 
@@ -1150,7 +1150,7 @@ async function execOpenExchangeSlider(notifId) {
 
     ${notif.statut === 'envoye' ? `
     <h4 class="exec-proc-col-titre">${te('valider_accord')}${isPrest
-        ? ` <span class="exec-echange-lecture">(${te('lecture_seule') || 'lecture seule'})</span>` : ''}</h4>
+        ? ` <span class="exec-echange-lecture">(${te('lecture_seule')})</span>` : ''}</h4>
     <div class="exec-proc-bloc">
         <div class="exec-echange-dates">
             <div class="form-group">

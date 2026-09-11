@@ -241,7 +241,7 @@ window.execProcCfgEditer = function (id) {
   <p class="exec-proc-erreur" id="pcfg_erreur"></p>`;
 
   const pied = `
-    <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>
+    <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel')}</button>
     ${courant.id ? `<button class="btn btn-outline" onclick="execProcCfgDupliquer('${courant.id}')">
       ${EXEC_ICONS.file || ''} ${te('proc_dupliquer')}</button>` : ''}
     <button class="btn btn-primary" onclick="execProcCfgEnregistrer()">
@@ -424,7 +424,7 @@ window.execProcCfgDupliquer = async function (id) {
     <p class="exec-proc-erreur" id="pcfg_dup_erreur"></p>
   </div>`;
   const pied = `
-    <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>
+    <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel')}</button>
     <button class="btn btn-primary" onclick="execProcCfgDupliquerValider('${id}')">
       ${EXEC_ICONS.file || ''} ${te('proc_dupliquer')}
     </button>`;

@@ -92,8 +92,8 @@ function _execRenderConstaRows(filtered) {
         if (isSoldee && dateSolde && dueDate) {
             const diffDays = Math.round((new Date(dateSolde) - new Date(dueDate)) / 86400000);
             delaiInfo = diffDays <= 0
-                ? `<span style="color:#16a34a;font-weight:600;">${te('cloturee_dans_delais') || 'Clôturée dans les délais'}</span>`
-                : `<span style="color:#dc2626;font-weight:600;">${te('hors_delais') || 'Hors délais'} (+${diffDays} ${te('jours') || 'jours'})</span>`;
+                ? `<span style="color:#16a34a;font-weight:600;">${te('cloturee_dans_delais')}</span>`
+                : `<span style="color:#dc2626;font-weight:600;">${te('hors_delais')} (+${diffDays} ${te('jours')})</span>`;
         }
         const dateOuv = c.date_ouverture || (c.date_creation ? c.date_creation.slice(0, 10) : '');
         const rowId = `fnc_accordion_${c.id}`;
@@ -118,7 +118,7 @@ function _execRenderConstaRows(filtered) {
                     const meId = (EXEC_STATE.user || {}).id || '';
                     const isVal = c.valideur_pac_id === meId || _execCanValidate();
                     if (st === 'direct_brouillon' || st === 'direct_renvoye')
-                        return `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteFormById('${c.id}')" title="${te('modifier_fnc')||'Modifier'}">${EXEC_ICONS.edit||''}</button>`;
+                        return `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteFormById('${c.id}')" title="${te('modifier_fnc')}">${EXEC_ICONS.edit||''}</button>`;
                     if (st === 'direct_soumis')
                         return isVal
                             ? `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteSlider('${c.id}')" title="Valider">${EXEC_ICONS.check||''}</button>`
@@ -130,7 +130,7 @@ function _execRenderConstaRows(filtered) {
                     if (OPEN_STATUTS.has(st))
                         return ouvrePac ? ''
                             : `<button class="btn btn-sm btn-outline" onclick="execOpenPACSlider('${c.id}')" title="${te('suivi_pac')}">${EXEC_ICONS.clipboard}</button>`;
-                    return `<button class="btn btn-sm btn-outline" onclick="execOpenDossierSlider('${c.dossier_id}','constatations')" title="${te('dossier')||'Dossier'}">${EXEC_ICONS.file}</button>`;
+                    return `<button class="btn btn-sm btn-outline" onclick="execOpenDossierSlider('${c.dossier_id}','constatations')" title="${te('dossier')}">${EXEC_ICONS.file}</button>`;
                 })()}
                 ${_execIsAdmin() ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.25rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete')}">${EXEC_ICONS.x}</button>` : ''}
             </td>
@@ -138,11 +138,11 @@ function _execRenderConstaRows(filtered) {
         <tr id="${rowId}" style="display:none;">
             <td colspan="8" style="padding:0.6rem 1rem;background:var(--bg);border-top:none;">
                 <div style="display:grid;gap:0.5rem;font-size:0.8rem;">
-                    <div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('description_constatation') || 'Description'}</span>
+                    <div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('description_constatation')}</span>
                     <p style="margin:0.2rem 0 0;">${_esc(c.description || c.titre || '-')}</p></div>
                     <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;">
                         <div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('date_ouverture') || "Date d'ouverture"}</span><div>${dateOuv ? _formatDate(dateOuv) : '-'}</div></div>
-                        <div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('date_due_label') || 'Due Date'}</span><div style="color:#dc2626;font-weight:600;">${dueDate ? _formatDate(dueDate) : '-'}</div></div>
+                        <div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('date_due_label')}</span><div style="color:#dc2626;font-weight:600;">${dueDate ? _formatDate(dueDate) : '-'}</div></div>
                         ${isSoldee ? `<div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('date_solde')}</span><div style="color:#16a34a;font-weight:600;">${dateSolde ? _formatDate(dateSolde) : '-'}</div></div>` : ''}
                         ${delaiInfo ? `<div>${delaiInfo}</div>` : ''}
                     </div>
@@ -259,7 +259,7 @@ function _execFiltresLisibles() {
     if (F.criticite) parts.push(`${te('criticite')} : ${F.criticite}`);
     if (F.statut) parts.push(`${te('statut')} : ${F.statut}`);
     if (F.search) parts.push(`${te('exp_recherche')} : « ${F.search} »`);
-    return parts.length ? parts.join('   ·   ') : (te('aucun_filtre') || 'Aucun filtre');
+    return parts.length ? parts.join('   ·   ') : (te('aucun_filtre'));
 }
 
 function _execTitreSousMenu() {
@@ -373,8 +373,8 @@ function execExporterConstatationsPdf() {
                         <td>${_esc(s.texte || '')}</td>
                     </tr>`).join('')}</tbody></table>` : '')}
             <div class="visa">
-                <div><span>${te('visa_inspecteur') || 'Visa de l’inspecteur'}</span></div>
-                <div><span>${te('visa_prestataire') || 'Visa du prestataire'}</span></div>
+                <div><span>${te('visa_inspecteur')}</span></div>
+                <div><span>${te('visa_prestataire')}</span></div>
             </div>
         </article>`;
     }).join('');
@@ -432,7 +432,7 @@ function execExporterConstatationsPdf() {
     </body></html>`;
 
     const fenetre = window.open('', '_blank');
-    if (!fenetre) { _execToast(te('bloqueur_fenetre') || 'Autorisez les fenêtres surgissantes pour l\'export', 'warning'); return; }
+    if (!fenetre) { _execToast(te('bloqueur_fenetre'), 'warning'); return; }
     fenetre.document.write(html);
     fenetre.document.close();
     fenetre.focus();
@@ -595,7 +595,7 @@ function _execTerrainDetailHtml(c) {
 async function execOpenConstatationDirecteFormById(fncId) {
     let fnc;
     try { fnc = await api(`${EXEC_MODULE_API}/constatations/${fncId}`); }
-    catch (e) { console.error(e); _execToast('Erreur chargement', 'error'); return; }
+    catch (e) { console.error(e); _execToast(te('err_chargement'), 'error'); return; }
     execOpenConstatationDirecteForm(fnc);
 }
 
@@ -785,25 +785,25 @@ let EXEC_CD_COM = { id: '', saisie: [], replie: false, versionsOuvertes: {} };
 // ou la constatation dans son ensemble.
 function execCdCibles() {
     return [
-        { groupe: te('general') || 'Général', options: [['general', 'Commentaire général']] },
+        { groupe: te('general'), options: [['general', 'Commentaire général']] },
         { groupe: 'A — Identification', options: [
-            ['prestataire', te('provider') || 'Prestataire'],
-            ['emis_par', te('emis_par') || 'Émis par'],
-            ['adresse_a', te('adresse_a') || 'Adressé à'],
+            ['prestataire', te('provider')],
+            ['emis_par', te('emis_par')],
+            ['adresse_a', te('adresse_a')],
             ['date_ouverture', te('date_ouverture') || "Date d'ouverture"],
-            ['source', te('source') || 'Source'],
-            ['domaine', te('domaine') || 'Domaine'],
+            ['source', te('source')],
+            ['domaine', te('domaine')],
             ['secteur', 'Secteur'],
         ] },
         { groupe: 'B — Constat', options: [
-            ['ref_reglementaires', te('ref_reglementaires') || 'Réf. réglementaires'],
+            ['ref_reglementaires', te('ref_reglementaires')],
             ['titre', 'Titre'],
             ['description', 'Description'],
         ] },
         { groupe: 'C — Traitement', options: [
-            ['criticite', te('criticite') || 'Criticité'],
+            ['criticite', te('criticite')],
             ['date_due', te('date_due') || "Date d'échéance"],
-            ['pieces', te('pieces_jointes') || 'Pièces jointes'],
+            ['pieces', te('pieces_jointes')],
         ] },
     ];
 }
@@ -847,8 +847,7 @@ function execCdCommentairesHtml(c, modifiable) {
         return `<button class="exec-cd-com-poignee pleine" type="button"
                 title="Déplier" onclick="execCdBasculerCommentaires()">
             ${EXEC_ICONS.chevronLeft || EXEC_ICONS.back || '‹'}
-            <span class="exec-cd-com-titre-replie">${te('commentaires_validation')
-                || 'Commentaires de validation'}${nombre ? ` (${nombre})` : ''}</span>
+            <span class="exec-cd-com-titre-replie">${te('commentaires_validation')}${nombre ? ` (${nombre})` : ''}</span>
         </button>`;
     }
 
@@ -896,7 +895,7 @@ function execCdCommentairesHtml(c, modifiable) {
     <div class="exec-cd-com-panneau">
         <div class="exec-cd-com-bandeau">
             <span class="exec-cd-com-pastille">i</span>
-            <strong>${te('commentaires_validation') || 'Commentaires de validation'}</strong>
+            <strong>${te('commentaires_validation')}</strong>
             <span class="exec-cd-com-compte">${nombre}</span>
         </div>
         <div class="exec-cd-com-contenu">
@@ -972,10 +971,10 @@ async function execCdEnregistrerCommentaires(silencieux) {
         await execRefreshDynamic();
         EXEC_CD_COM.saisie = entrees.slice();
         execCdRedessinerCommentaires();
-        if (!silencieux) _execToast('Commentaires enregistrés', 'success');
+        if (!silencieux) _execToast(te('commentaires_enregistres'), 'success');
         return true;
     } catch (e) {
-        _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
+        _execToast(te('erreur_x', (e && e.message) || ''), 'error');
         return false;
     }
 }
@@ -1134,18 +1133,18 @@ function execOpenConstatationDirecteForm(existing) {
 <!-- Row 1 : Prestataire ; Emis Par ; Adressé à ; Date d'ouverture -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
-                <label>${te('provider') || 'Prestataire'} *</label>
+                <label>${te('provider')} *</label>
                 <select class="form-select" id="cd_prestataire" onchange="execCdOnPrestataireChange()">
-                    <option value="">${te('select_option') || 'Sélectionner'}</option>
+                    <option value="">${te('select_option')}</option>
                     ${prestataires.map(p => `<option value="${p.id}" ${c.prestataire_id===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group" style="${MB}">
-                <label>${te('emis_par') || 'Émis par'}</label>
+                <label>${te('emis_par')}</label>
                 <input type="text" class="form-input" id="cd_emis_par" value="${_escAttr(defaultEmisPar)}">
             </div>
             <div class="form-group" style="${MB}">
-                <label>${te('adresse_a') || 'Adressé à'}</label>
+                <label>${te('adresse_a')}</label>
                 <input type="text" class="form-input" id="cd_adresse_a" value="${_escAttr(c.adresse_a || '')}">
             </div>
             <div class="form-group" style="${MB}">
@@ -1157,24 +1156,24 @@ function execOpenConstatationDirecteForm(existing) {
         <!-- Row 2 : Source ; Domaine ; Secteur -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
-                <label>${te('source') || 'Source'}</label>
+                <label>${te('source')}</label>
                 <select class="form-select" id="cd_source">
-                    <option value="audit" ${defaultSource === 'audit' ? 'selected' : ''}>${te('source_audit') || 'Audit'}</option>
-                    <option value="inspection" ${defaultSource === 'inspection' ? 'selected' : ''}>${te('source_inspection') || 'Inspection'}</option>
-                    <option value="autre" ${defaultSource === 'autre' ? 'selected' : ''}>${te('source_autre') || 'Autre'}</option>
+                    <option value="audit" ${defaultSource === 'audit' ? 'selected' : ''}>${te('source_audit')}</option>
+                    <option value="inspection" ${defaultSource === 'inspection' ? 'selected' : ''}>${te('source_inspection')}</option>
+                    <option value="autre" ${defaultSource === 'autre' ? 'selected' : ''}>${te('source_autre')}</option>
                 </select>
             </div>
             <div class="form-group" style="${MB}">
-                <label>${te('domaine') || 'Domaine'} *</label>
+                <label>${te('domaine')} *</label>
                 <select class="form-select" id="cd_domaine">
-                    <option value="">${te('select_option') || 'Sélectionner'}</option>
+                    <option value="">${te('select_option')}</option>
                     ${domaines.map(d => `<option value="${d.id}" ${defaultDomaineId===d.id?'selected':''}>${d.code} - ${_esc(d.nom)}</option>`).join('')}
                 </select>
             </div>
             <div class="form-group" style="${MB}">
                 <label>Secteur</label>
                 <select class="form-select" id="cd_secteur" onchange="execCdOnSecteurChange()">
-                    <option value="">${te('select_option') || 'Sélectionner'}</option>
+                    <option value="">${te('select_option')}</option>
                     ${secteurs.map(s => `<option value="${s.id}" ${defaultSecteurId===s.id?'selected':''}>${_esc(s.code || s.nom)}</option>`).join('')}
                 </select>
             </div>
@@ -1184,7 +1183,7 @@ function execOpenConstatationDirecteForm(existing) {
         ${_execFormSection('B', 'fnc_section_constat', `
 <!-- Row 3 : Réf. Réglementaires (tag-input multi) -->
         <div class="form-group" style="${MB}">
-            <label>${te('ref_reglementaires') || 'Réf. Réglementaires'}</label>
+            <label>${te('ref_reglementaires')}</label>
             <div id="cd_ref_tags" style="display:flex;flex-wrap:wrap;gap:0.3rem;align-items:center;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);min-height:2.2rem;cursor:text;" onclick="document.getElementById('cd_ref_input').focus()">
                 ${(c.ref_reglementaires || c.exigence_ref || '').split(',').map(r => r.trim()).filter(Boolean).map(r => {
                     const exig = allExig.find(e => e.reference === r);
@@ -1216,13 +1215,13 @@ function execOpenConstatationDirecteForm(existing) {
 <!-- Row 4 : Criticité ; Cas ; Délai ; Date Due -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             <div class="form-group" style="${MB}">
-                <label>${te('criticite') || 'Criticité'} *</label>
+                <label>${te('criticite')} *</label>
                 <select class="form-select" id="cd_criticite" onchange="execApplyCriticiteDelai('cd_criticite','cd_delai','execCdCalcDateDue')">
                     ${_execCriticiteOptions(c.criticite || c.gravite)}
                 </select>
             </div>
             <div class="form-group" style="${MB}">
-                <label>${te('cas') || 'Cas'}</label>
+                <label>${te('cas')}</label>
                 <select class="form-select" id="cd_cas">
                     ${_execTypeCasOptions(c.cas_type || c.cas, true)}
                 </select>
@@ -1232,14 +1231,14 @@ function execOpenConstatationDirecteForm(existing) {
                 <input type="number" class="form-input" id="cd_delai" min="1" value="${_escAttr(c.delai_solde || c.delai_correction || _execCriticiteDelai(c.criticite || c.gravite) || '30')}" oninput="execCdCalcDateDue()" onchange="execCdCalcDateDue()">
             </div>
             <div class="form-group" style="${MB}">
-                <label>${te('date_due') || 'Date Due'}</label>
+                <label>${te('date_due')}</label>
                 <input type="date" class="form-input" id="cd_date_due" value="${_escAttr(c.date_due_cloture || c.date_due || '')}" readonly style="background:var(--bg);">
             </div>
         </div>
 
         <!-- Recommandation -->
         <div class="form-group" style="${MB}">
-            <label>${te('recommandation') || 'Recommandation'}</label>
+            <label>${te('recommandation')}</label>
             <textarea class="form-input" id="cd_reco" rows="2">${_esc(c.recommandation || '')}</textarea>
         </div>
         `, true, '', te('fnc_aide_traitement'))}
@@ -1247,7 +1246,7 @@ function execOpenConstatationDirecteForm(existing) {
         ${_execFormSection('D', 'fnc_section_preuves', `
 <!-- Preuves -->
         <div class="form-group">
-            <label>${te('preuves') || 'Preuves'}</label>
+            <label>${te('preuves')}</label>
             <div id="cd_preuves_list">
                 ${(c.preuves_constatation || []).map(p => `
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_escAttr(p.path || '')}">
@@ -1256,7 +1255,7 @@ function execOpenConstatationDirecteForm(existing) {
                 </div>`).join('')}
             </div>
             <div style="margin-top:0.5rem;padding:1.25rem;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" onclick="document.getElementById('cd_proof_input').click()">
-                ${EXEC_ICONS.upload || '↑'} ${te('upload_zone') || 'Glisser ou cliquer pour téléverser'}
+                ${EXEC_ICONS.upload || '↑'} ${te('upload_zone')}
                 <input type="file" id="cd_proof_input" style="display:none;" multiple onchange="execCdUploadProof(this.files)">
             </div>
         </div>
@@ -1265,7 +1264,7 @@ function execOpenConstatationDirecteForm(existing) {
 
     // Barre inférieure : sortie, impression de la fiche, brouillon.
     const footer = `
-        <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>
+        <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel')}</button>
         ${c.id ? `<button class="btn btn-outline" onclick="execFicheConstatPdf('${c.id}')">${EXEC_ICONS.pdf || EXEC_ICONS.file} ${te('imprimer_constatation')}</button>` : ''}
         <button class="btn btn-outline" onclick="execSaveConstatationDirecte('${c.id || ''}', false)">${te('sauver_brouillon')}</button>
     `;
@@ -1341,7 +1340,7 @@ async function execSaveConstatationDirecte(fncId, thenSubmit) {
         direct: true
     };
     if (!payload.prestataire_id || !payload.domaine_id || !payload.description) {
-        _execToast(te('fill_required') || 'Remplir les champs obligatoires', 'warning');
+        _execToast(te('fill_required'), 'warning');
         return;
     }
     try {
@@ -1359,12 +1358,12 @@ async function execSaveConstatationDirecte(fncId, thenSubmit) {
             await execSubmitConstatationDirecteForValidation(savedId);
         } else {
             execCloseSlider();
-            _execToast(te('saved') || 'Enregistré', 'success');
+            _execToast(te('saved'), 'success');
             execRenderPage();
         }
     } catch (e) {
         console.error('Save constatation directe error:', e);
-        _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
+        _execToast(te('erreur_x', (e && e.message) || ''), 'error');
     }
 }
 
@@ -1375,11 +1374,11 @@ async function execSubmitConstatationDirecteForValidation(fncId) {
         await api(`${EXEC_MODULE_API}/constatations/${fncId}/direct-soumettre`, { method: 'PUT' });
         await execRefreshDynamic();
         execCloseSlider();
-        _execToast(te('submitted_for_validation') || 'Soumis pour validation', 'success');
+        _execToast(te('submitted_for_validation'), 'success');
         execRenderPage();
     } catch (e) {
         console.error('Submit constatation directe error:', e);
-        _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
+        _execToast(te('erreur_x', (e && e.message) || ''), 'error');
     }
 }
 
@@ -1426,7 +1425,7 @@ async function execOpenConstatationDirecteSlider(fncId, etapeVoulue) {
     const filActions = (etape === 'validation' && isValidateur && st === 'direct_soumis')
         ? `<button class="btn btn-sm btn-outline exec-cd-renvoyer" onclick="execRenvoyerConstatationModal('${fnc.id}')">${EXEC_ICONS.back || ''} Renvoyer</button>`
         + `<button class="btn btn-sm btn-outline exec-cd-rejeter" onclick="execRejeterConstatationModal('${fnc.id}')">${EXEC_ICONS.x} Rejeter</button>`
-        + `<button class="btn btn-primary btn-sm" onclick="execValidateConstatationDirecte('${fnc.id}')">${EXEC_ICONS.check} ${te('valider') || 'Valider'}</button>`
+        + `<button class="btn btn-primary btn-sm" onclick="execValidateConstatationDirecte('${fnc.id}')">${EXEC_ICONS.check} ${te('valider')}</button>`
         : '';
 
     // La Transmission ne rejoue pas le formulaire validé : elle ne porte que
@@ -1452,22 +1451,22 @@ async function execOpenConstatationDirecteSlider(fncId, etapeVoulue) {
         ${!fiche ? '' : `
         ${_execFormSection('A', 'fnc_section_identification', `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
-            ${roField(te('reference') || 'Référence', fnc.reference)}
-            ${roField(te('provider') || 'Prestataire', prestataire ? prestataire.nom : fnc.prestataire_id)}
-            ${roField(te('emis_par') || 'Émis par', fnc.emis_par)}
-            ${roField(te('adresse_a') || 'Adressé à', fnc.adresse_a)}
+            ${roField(te('reference'), fnc.reference)}
+            ${roField(te('provider'), prestataire ? prestataire.nom : fnc.prestataire_id)}
+            ${roField(te('emis_par'), fnc.emis_par)}
+            ${roField(te('adresse_a'), fnc.adresse_a)}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
             ${roField(te('date_ouverture') || "Date d'ouverture", fnc.date_ouverture ? fnc.date_ouverture.slice(0,10) : '')}
-            ${roField(te('source') || 'Source', sourceLabels[fnc.source] || fnc.source)}
-            ${roField(te('domaine') || 'Domaine', dom ? (dom.code + ' — ' + dom.nom) : fnc.domaine_id)}
+            ${roField(te('source'), sourceLabels[fnc.source] || fnc.source)}
+            ${roField(te('domaine'), dom ? (dom.code + ' — ' + dom.nom) : fnc.domaine_id)}
             ${roField('Secteur', secteur ? (secteur.code || secteur.nom) : fnc.secteur_id)}
         </div>
         `, true, '', te('cd_aide_identification'))}
 
         ${_execFormSection('B', 'fnc_section_constat', `
         <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('ref_reglementaires') || 'Réf. Réglementaires'}</label>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('ref_reglementaires')}</label>
             <div style="display:flex;flex-wrap:wrap;gap:0.3rem;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);min-height:2rem;">
                 ${refList.length ? refList.map(r => {
                     const exig = allExig.find(e => e.reference === r);
@@ -1484,13 +1483,13 @@ async function execOpenConstatationDirecteSlider(fncId, etapeVoulue) {
 
         ${_execFormSection('C', 'fnc_section_traitement', `
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
-            ${roField(te('criticite') || 'Criticité', fnc.criticite)}
-            ${roField(te('cas') || 'Cas', fnc.cas_type || fnc.cas)}
+            ${roField(te('criticite'), fnc.criticite)}
+            ${roField(te('cas'), fnc.cas_type || fnc.cas)}
             ${roField('Délai', fnc.delai_solde ? fnc.delai_solde + ' jours' : '')}
-            ${roField(te('date_due') || 'Date Due', fnc.date_due_cloture ? fnc.date_due_cloture.slice(0,10) : '')}
+            ${roField(te('date_due'), fnc.date_due_cloture ? fnc.date_due_cloture.slice(0,10) : '')}
         </div>
         <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('recommandation') || 'Recommandation'}</label>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('recommandation')}</label>
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:0.85rem;min-height:2.5rem;white-space:pre-wrap;">${fnc.recommandation ? _esc(fnc.recommandation) : '<span style="color:var(--text-muted);font-style:italic;">—</span>'}</div>
         </div>
         `, true, '', te('fnc_aide_traitement'))}
@@ -1513,10 +1512,10 @@ async function execOpenConstatationDirecteSlider(fncId, etapeVoulue) {
     </div>`;
 
     // Barre inférieure : sortie, impression, puis les actions de l'étape.
-    let footer = `<button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>`;
+    let footer = `<button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel')}</button>`;
     footer += `<button class="btn btn-outline" onclick="execFicheConstatPdf('${fnc.id}')">${EXEC_ICONS.pdf || EXEC_ICONS.file} ${te('imprimer_constatation')}</button>`;
     if (etape === 'preparation' && isCreator && ['direct_brouillon', 'direct_renvoye'].includes(st)) {
-        footer += `<button class="btn btn-primary" onclick="execCloseSlider();execOpenConstatationDirecteForm(${JSON.stringify(fnc).replace(/"/g,'&quot;')})">${te('edit') || 'Modifier'}</button>`;
+        footer += `<button class="btn btn-primary" onclick="execCloseSlider();execOpenConstatationDirecteForm(${JSON.stringify(fnc).replace(/"/g,'&quot;')})">${te('edit')}</button>`;
     }
 
     execShowSlider(_execCdTitre(fnc.reference), body, footer, 'max');
@@ -1614,7 +1613,7 @@ function _execCourrielConstatation(fnc, prestataire) {
 async function execTransmettreConstatation(fncId) {
     const val = (id) => (document.getElementById(id) || {}).value || '';
     const destinataire = val('courriel_destinataire').trim();
-    if (!destinataire) { _execToast('Indiquez au moins un destinataire', 'error'); return; }
+    if (!destinataire) { _execToast(te('indiquez_destinataire'), 'error'); return; }
     const bouton = document.getElementById('courriel_envoyer');
     if (bouton) { bouton.disabled = true; bouton.textContent = 'Envoi…'; }
     try {
@@ -1650,13 +1649,13 @@ async function execValidateConstatationDirecte(fncId) {
     try {
         await api(`${EXEC_MODULE_API}/constatations/${fncId}/direct-valider`, { method: 'PUT' });
         await execRefreshDynamic();
-        _execToast(te('validated') || 'Validé', 'success');
+        _execToast(te('validated'), 'success');
         execRenderPage();
         // La décision prise, le formulaire se rouvre sur l'étape suivante.
         execOpenConstatationDirecteSlider(fncId, 'transmission');
     } catch (e) {
         console.error('Validate error:', e);
-        _execToast('Erreur: ' + ((e && e.message) || ''), 'error');
+        _execToast(te('erreur_x', (e && e.message) || ''), 'error');
     }
 }
 
@@ -1681,7 +1680,7 @@ function _execCommentModal(title, color, onConfirm) {
     document.body.appendChild(el);
     el.querySelector('#exec_comment_confirm').onclick = () => {
         const txt = (document.getElementById('exec_comment_text')?.value || '').trim();
-        if (!txt) { _execToast('Commentaire obligatoire', 'warning'); return; }
+        if (!txt) { _execToast(te('commentaire_obligatoire'), 'warning'); return; }
         el.remove();
         onConfirm(txt);
     };
@@ -1718,7 +1717,7 @@ function _execConfirmModal(titre, corpsHtml, verbe, couleur, action) {
         <h3 style="margin:0 0 .8rem;font-size:1rem;font-weight:700;color:${couleur};">${_esc(titre)}</h3>
         <div style="margin-bottom:1rem;max-height:40vh;overflow:auto;">${corpsHtml}</div>
         <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
-            <button class="btn btn-outline" onclick="document.getElementById('${id}').remove()">${te('cancel') || 'Annuler'}</button>
+            <button class="btn btn-outline" onclick="document.getElementById('${id}').remove()">${te('cancel')}</button>
             <button class="btn" style="background:${couleur};color:#fff;border:none;" id="exec_confirm_ok">${_esc(verbe)}</button>
         </div>
     </div>`;
@@ -1742,10 +1741,10 @@ function execRenvoyerConstatationModal(fncId) {
                 })
             });
             await execRefreshDynamic();
-            _execToast('Constatation renvoyée pour correction', 'success');
+            _execToast(te('constat_renvoye'), 'success');
             execOpenConstatationDirecteSlider(fncId, 'preparation');
             execRenderPage();
-        } catch (e) { _execToast('Erreur: ' + (e?.message || ''), 'error'); }
+        } catch (e) { _execToast(te('erreur_x', e?.message || ''), 'error'); }
     });
 }
 
@@ -1762,10 +1761,10 @@ function execRejeterConstatationModal(fncId) {
                 })
             });
             await execRefreshDynamic();
-            _execToast('Constatation rejetée', 'success');
+            _execToast(te('constat_rejete'), 'success');
             execRenderPage();
             execOpenConstatationDirecteSlider(fncId, 'validation');
-        } catch (e) { _execToast('Erreur: ' + (e?.message || ''), 'error'); }
+        } catch (e) { _execToast(te('erreur_x', e?.message || ''), 'error'); }
     });
 }
 
@@ -2123,7 +2122,7 @@ window.execAjustOuvrir = function (fncId, portee) {
         <p class="exec-proc-erreur" id="ajust_erreur"></p>
     </div>`;
     const pied = `
-        <button class="btn btn-outline" onclick="execAjustRetour('${fncId}')">${te('cancel') || 'Annuler'}</button>
+        <button class="btn btn-outline" onclick="execAjustRetour('${fncId}')">${te('cancel')}</button>
         <button class="btn btn-primary" onclick="execAjustAppliquer('${fncId}','${portee}')">
             ${EXEC_ICONS.check || ''} ${te('appliquer')}
         </button>`;
@@ -2450,7 +2449,7 @@ function _execPacBandeauxHtml(c) {
         <div style="font-size:0.8rem;color:#7f1d1d;"><strong>${te('motif')} :</strong> ${_esc(rejetInfo.motif || '')}</div>
     </div>` : ''}
     ${submitInfo ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:6px;">
-        <div style="font-weight:600;color:#166534;margin-bottom:0.2rem;font-size:0.85rem;">${EXEC_ICONS.check} ${te('pac_soumis_titre') || 'PAC soumis pour validation'} ${submitInfo.date ? `(${_formatDate(submitInfo.date)})` : ''} ${submitInfo.auteur ? `— ${_esc(submitInfo.auteur)}` : ''}</div>
+        <div style="font-weight:600;color:#166534;margin-bottom:0.2rem;font-size:0.85rem;">${EXEC_ICONS.check} ${te('pac_soumis_titre')} ${submitInfo.date ? `(${_formatDate(submitInfo.date)})` : ''} ${submitInfo.auteur ? `— ${_esc(submitInfo.auteur)}` : ''}</div>
         <div style="font-size:0.8rem;color:#14532d;"><strong>${te('motif')} :</strong> ${_esc(submitInfo.motif || '')}</div>
     </div>` : ''}
     ${preuvesInfo ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#eff6ff;border-left:4px solid #2563eb;border-radius:6px;">
@@ -2476,7 +2475,7 @@ function _execPacBandeauxHtml(c) {
             : `<div style="font-weight:600;color:#92400e;font-size:0.85rem;">${modeAmendement ? te('mode_amendement_actif') : te('mode_preuves_actif')}</div>`}
     </div>` : ''}
     ${isSoldee ? `<div style="margin-bottom:0.75rem;padding:0.6rem 0.9rem;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:6px;">
-        <div style="font-weight:600;color:#166534;font-size:0.85rem;">${EXEC_ICONS.check} ${te('constatation_soldee') || 'Constatation soldée'}${fnc.date_solde ? ` — ${te('date_solde')} : ${_formatDate(fnc.date_solde.slice(0,10))}` : ''}</div>
+        <div style="font-weight:600;color:#166534;font-size:0.85rem;">${EXEC_ICONS.check} ${te('constatation_soldee')}${fnc.date_solde ? ` — ${te('date_solde')} : ${_formatDate(fnc.date_solde.slice(0,10))}` : ''}</div>
     </div>` : ''}`;
 }
 
@@ -2863,7 +2862,7 @@ function _execPreuveHtml(p, numero, editable) {
             ${date ? `<span class="exec-preuve-date" title="${te('preuve_date')}">${_formatDate(date)}</span>` : ''}
             ${editable ? `<button type="button" class="btn btn-sm btn-outline" title="${te('modifier_piece')}"
                 onclick="execPreuveModifier(this)">${EXEC_ICONS.edit}</button>
-            <button type="button" class="btn btn-sm btn-danger" title="${te('supprimer') || 'Supprimer'}"
+            <button type="button" class="btn btn-sm btn-danger" title="${te('supprimer')}"
                 onclick="execPreuveSupprimer(this)">${EXEC_ICONS.x}</button>` : ''}
         </div>
         <div class="exec-preuve-comm"${p.commentaire ? '' : ' hidden'}>${_esc(p.commentaire || '')}</div>
@@ -2879,7 +2878,7 @@ window.execPreuveModifier = async function (bouton) {
         titre: te('modifier_piece'),
         intitule: d.intitule || '',
         commentaire: d.commentaire || '',
-        valider: te('enregistrer') || 'Enregistrer',
+        valider: te('enregistrer'),
     });
     if (!saisie) return;
     d.intitule = saisie.intitule;
@@ -2939,8 +2938,8 @@ function _execPreuveModal(nomFichier, reprise) {
                 <textarea id="exec_preuve_commentaire" class="form-input" rows="3" style="resize:vertical;" placeholder="${te('preuve_commentaire_aide')}">${_esc(r.commentaire || '')}</textarea>
             </div>
             <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
-                <button class="btn btn-outline" id="exec_preuve_annuler">${te('cancel') || 'Annuler'}</button>
-                <button class="btn btn-primary" id="exec_preuve_ok">${r.valider || te('ajouter') || 'Ajouter'}</button>
+                <button class="btn btn-outline" id="exec_preuve_annuler">${te('cancel')}</button>
+                <button class="btn btn-primary" id="exec_preuve_ok">${r.valider || te('ajouter')}</button>
             </div>
         </div>`;
         document.body.appendChild(el);
@@ -3163,7 +3162,7 @@ function _execFicheConstatCorps(fnc, dossier) {
         ${_execDocChamp(te('adresse_a'), _esc(fnc.adresse_a || ''))}
     </div>
     ${(dossier && (dossier.reference || dossier.notification_ref)) ? `<div class="grille">
-        ${_execDocChamp(te('dossier') || 'Dossier', _esc(dossier.reference || ''))}
+        ${_execDocChamp(te('dossier'), _esc(dossier.reference || ''))}
         ${_execDocChamp('Notification', _esc(dossier.notification_ref || ''))}
         ${_execDocChamp(te('objet'), _esc(dossier.objet_activite || dossier.notification_objet || ''))}
     </div>` : ''}
@@ -3171,7 +3170,7 @@ function _execFicheConstatCorps(fnc, dossier) {
     ${_execDocSection(te('description_constatation'), _execDocTexte(fnc.description || fnc.titre))}
     ${_execDocSection(te('recommandation'), _execDocTexte(fnc.recommandation))}
     ${_execDocSection(te('preuves'), _execDocPreuves(preuves))}
-    ${ev.rejet_info ? _execDocSection(te('motif_rejet') || 'Motif de rejet', _execDocTexte(ev.rejet_info.motif)) : ''}`;
+    ${ev.rejet_info ? _execDocSection(te('motif_rejet'), _execDocTexte(ev.rejet_info.motif)) : ''}`;
 }
 
 function execFicheConstatPdf(fncId) {
@@ -3307,7 +3306,7 @@ function _execEchangesPacHtml(echanges, fncId, verrouille) {
             </div>
         </div>
         ${dernierDuGroupe ? `<div class="exchange-bubble-time ${aMoi ? 'self' : 'other'}">
-            <span class="exchange-bubble-auteur">${nom || (e.auteur_type === 'aac' ? te('aac_label') || 'AAC' : '—')}</span>
+            <span class="exchange-bubble-auteur">${nom || (e.auteur_type === 'aac' ? te('aac_label') : '—')}</span>
             <span>${_formatDatetime(e.date_creation)}</span>
         </div>` : ''}`;
     }).join('');
@@ -3664,7 +3663,7 @@ async function execSuiviJoindreFichiers(input) {
             liste.appendChild(ligne);
         } catch (e) {
             console.error('Pièce jointe du suivi :', e);
-            _execToast(`${fichier.name} : ${(e && e.message) || 'téléversement impossible'}`, 'error');
+            _execToast(`${fichier.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
         }
     }
     input.value = '';
@@ -3872,7 +3871,7 @@ async function execSubmitPAC(fncId) {
     evalData.submit_info = {
         date: new Date().toISOString().slice(0, 10),
         auteur,
-        motif: modifiedFields.length > 0 ? modifiedFields.join(', ') : te('aucune_modification') || 'Aucune modification'
+        motif: modifiedFields.length > 0 ? modifiedFields.join(', ') : te('aucune_modification')
     };
     // Clear any previous rejet_info since postulant is resubmitting
     delete evalData.rejet_info;

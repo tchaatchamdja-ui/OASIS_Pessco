@@ -300,7 +300,7 @@ function rampNouveauPoi() {
 // formulaire n'y est pas forcément encore chargé.
 async function rampAjouterInspection() {
     if (!RAMP_STATE.poi.contexte) await rampChargerPoi();
-    if (!RAMP_STATE.poi.peutSaisir) { rampToast('Saisie non autorisée', 'error'); return; }
+    if (!RAMP_STATE.poi.peutSaisir) { rampToast(rt('saisie_non_autorisee'), 'error'); return; }
     rampNouveauPoi();
 }
 
@@ -1263,7 +1263,7 @@ async function rampEnregistrerCommentaires(silencieux) {
         p.commentaires_modifiables = frais.commentaires_modifiables;
         RAMP_STATE.poiCommentairesSaisie = entrees.slice();
         rampPoiRedessinerCommentaires();
-        if (!silencieux) rampToast('Commentaires enregistrés');
+        if (!silencieux) rampToast(rt('commentaires_enregistres'));
     } catch (e) { rampToast(e.message || 'Enregistrement impossible', 'error'); }
 }
 
@@ -1497,7 +1497,7 @@ async function rampEnvoyerCommunication(cible) {
             r.envoye ? 'success' : 'warning');
         // Les deux communications parties, la fiche est transmise d'elle-même.
         if (r.transmise && !dejaTransmise) {
-            setTimeout(() => rampToast('Les deux communications sont parties : fiche transmise'), 1200);
+            setTimeout(() => rampToast(rt('communications_parties')), 1200);
         }
     } catch (e) { rampToast(e.message || 'Envoi impossible', 'error'); }
 }
@@ -1916,7 +1916,7 @@ async function rampSupprimerPiece(id) {
     try {
         await rampApi(`/poi/${p.id}/pieces/${id}`, { method: 'DELETE' });
         await rampRechargerPieces();
-        rampToast('Pièce supprimée');
+        rampToast(rt('piece_supprimee'));
     } catch (e) { rampToast(e.message || 'Suppression impossible', 'error'); }
 }
 
@@ -1946,7 +1946,7 @@ async function rampSoumettrePoi() {
         await rampApi(`/poi/${p.id}/soumettre`, { method: 'POST', body: '{}' });
         await rampChargerPoi();
         await rampOuvrirPoi(p.id);
-        rampToast('Fiche soumise pour validation');
+        rampToast(rt('fiche_soumise'));
     } catch (e) { rampToast(e.message || 'Soumission impossible', 'error'); }
 }
 
@@ -1998,7 +1998,7 @@ async function rampConfirmerRenvoi() {
         rampFermerModal();
         await rampChargerPoi();
         await rampOuvrirPoi(p.id);
-        rampToast('Fiche renvoyée à l’inspecteur');
+        rampToast(rt('fiche_renvoyee'));
     } catch (e) { rampToast(e.message || 'Renvoi impossible', 'error'); }
 }
 
@@ -2091,7 +2091,7 @@ async function rampEnregistrerPoi(silencieux) {
             p.reference = r.reference;
         }
         await rampChargerPoi();
-        if (!silencieux) rampToast(`Brouillon enregistré — ${p.reference}`);
+        if (!silencieux) rampToast(rt('brouillon_enregistre_ref', p.reference));
         return true;
     } catch (e) {
         rampToast(e.message || 'Enregistrement impossible', 'error');
@@ -2157,7 +2157,7 @@ async function rampSupprimerPoi(id) {
         await rampApi(`/poi/${id}`, { method: 'DELETE' });
         if ((RAMP_STATE.poiEnCours || {}).id === id) RAMP_STATE.poiEnCours = null;
         await rampChargerPoi();
-        rampToast('Fiche supprimée');
+        rampToast(rt('fiche_supprimee'));
     } catch (e) { rampToast(e.message || 'Suppression impossible', 'error'); }
 }
 

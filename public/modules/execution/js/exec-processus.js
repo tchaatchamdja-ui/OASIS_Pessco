@@ -182,7 +182,7 @@ window.execProcEnregistrerAccord = async function () {
         perimetre_valide: val('exec_proc_perimetre'),
       }),
     });
-    _execToast('Confirmation enregistrée', 'success');
+    _execToast(te('confirmation_enregistree'), 'success');
     await execProcRecharger('confirmation');
   } catch (e) {
     _execToast((e && e.message) || 'Enregistrement impossible', 'error');
@@ -1072,7 +1072,7 @@ window.execProcRenvoyerSoumission = async function () {
     await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/cancel`, {
       method: 'PUT', body: JSON.stringify({ motif: motif || 'Corrections complémentaires demandées' }),
     });
-    _execToast('Notification renvoyée à la soumission', 'success');
+    _execToast(te('notif_renvoyee_soumission'), 'success');
     EXEC_PROC.sousEtape = null;
     await execProcRecharger('notification');
   } catch (e) {
@@ -1086,7 +1086,7 @@ window.execProcImprimerFiche = function () {
   const fiche = document.querySelector('.exec-proc-hote');
   if (!fiche) return;
   const f = window.open('', '_blank', 'width=900,height=1000');
-  if (!f) { _execToast('Le popup est bloqué par le navigateur', 'error'); return; }
+  if (!f) { _execToast(te('popup_bloque'), 'error'); return; }
   f.document.open();
   f.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
     <title>Fiche de notification</title>
@@ -1105,7 +1105,7 @@ window.execProcRejeter = async function () {
     await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/reject`, {
       method: 'PUT', body: JSON.stringify({ motif }),
     });
-    _execToast('Notification renvoyée à l’initiateur', 'success');
+    _execToast(te('notif_renvoyee_initiateur'), 'success');
     EXEC_PROC.sousEtape = null;
     EXEC_PROC.observations = '';
     EXEC_PROC.editionAutorisee = false;
@@ -1134,7 +1134,7 @@ window.execProcValiderAccord = async function () {
         perimetre_valide: val('exec_proc_perimetre'),
       }),
     });
-    _execToast('Activité confirmée — dossier ouvert', 'success');
+    _execToast(te('activite_confirmee'), 'success');
     EXEC_PROC.sousEtape = null;
     await execProcRecharger('realisation');
   } catch (e) {
@@ -1523,7 +1523,7 @@ window.execProcCreerHorsPlan = async function (notifId) {
       await api(`${EXEC_MODULE_API}/notifications/${notifId}`, {
         method: 'PUT', body: JSON.stringify(corps),
       });
-      _execToast('Activité modifiée', 'success');
+      _execToast(te('activite_modifiee'), 'success');
       await execRefreshDynamic();
       execCloseSlider();
       if (EXEC_STATE.currentPage === 'plan_surveillance') execRenderPage();
@@ -1532,7 +1532,7 @@ window.execProcCreerHorsPlan = async function (notifId) {
     const r = await api(`${EXEC_MODULE_API}/notifications`, {
       method: 'POST', body: JSON.stringify(corps),
     });
-    _execToast(`Activité déclenchée — ${r.reference || ''}`, 'success');
+    _execToast(te('activite_declenchee', r.reference || ''), 'success');
     await execRefreshDynamic();
     if (EXEC_STATE.currentPage === 'plan_surveillance') execRenderPage();
     execOpenActiviteProcessus('hors-plan', r.id);

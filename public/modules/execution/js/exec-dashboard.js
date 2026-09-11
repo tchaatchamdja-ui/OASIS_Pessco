@@ -463,9 +463,9 @@ function _execSituationGenerale(F) {
             <th>Clôturées</th>
             <th>Taux</th>
             ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`).join('')}
-            <th>${te('total') || 'Total'}</th>
+            <th>${te('total')}</th>
             ${criticites.map((cr, i) => `<th${i === 0 ? ' class="exec-sg-bloc"' : ''}>${_esc(critLibelle[cr] || te(cr) || cr)}</th>`).join('')}
-            <th>${te('total') || 'Total'}</th>
+            <th>${te('total')}</th>
         </tr></thead>`;
 
     const renderStatsCells = (s, opts) => {
@@ -1347,7 +1347,7 @@ function _execStatsDetailHtml(cle, detail) {
             <h4>${te('detail_indicateur')} — ${_esc(detail.titre)}
                 <span class="exec-stats-compte">${lignes.length}</span></h4>
             <button class="btn btn-sm btn-outline" onclick="execStatsIndicateur('')">
-                ${EXEC_ICONS.x || ''} ${te('cancel') || 'Fermer'}
+                ${EXEC_ICONS.x || ''} ${te('cancel')}
             </button>
         </div>
         <table class="exec-data-table exec-compact-table" style="width:100%;font-size:0.82rem;">
@@ -1388,7 +1388,7 @@ function _execStatsDetailHtml(cle, detail) {
 // la table des Constatations, en un seul endroit.
 window.execOuvrirConstatation = function (fncId) {
     const c = (EXEC_STATE.data.constatations || []).find(x => x.id === fncId);
-    if (!c) { _execToast(te('no_data') || 'Introuvable', 'info'); return; }
+    if (!c) { _execToast(te('no_data'), 'info'); return; }
     const st = c.statut || '';
     let ouvrir;
     if (st.startsWith('direct_')) ouvrir = () => execOpenConstatationDirecteSlider(fncId);

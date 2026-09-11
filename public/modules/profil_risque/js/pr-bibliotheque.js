@@ -46,7 +46,7 @@ function handleDocFileSelected(event) {
     const file = event.target.files[0];
     if (!file) return;
     if (file.size > DOC_MAX_BYTES) {
-        showToast(`« ${file.name} » fait ${(file.size / 1048576).toFixed(1)} Mo : maximum ${(DOC_MAX_BYTES / 1048576).toFixed(1)} Mo.`, 'error');
+        showToast(t('file_too_large', file.name, (file.size / 1048576).toFixed(1), (DOC_MAX_BYTES / 1048576).toFixed(1)), 'error');
         event.target.value = '';
         return;
     }
@@ -67,7 +67,7 @@ async function uploadDocWithFile() {
     const nom = document.getElementById('docName').value.trim();
     const type = document.getElementById('docType').value.trim();
     const file = window._pendingDocFile;
-    if (!nom) { showToast('Nom requis', 'error'); return; }
+    if (!nom) { showToast(t('name_required'), 'error'); return; }
     if (!file) { showToast(t('no_file_selected'), 'error'); return; }
     const btn = document.querySelector('.modal-footer .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Téléversement…'; }
@@ -97,7 +97,7 @@ async function uploadDocWithFile() {
         closeModal();
         await loadAllData();
         renderPage();
-        showToast(`« ${nom} » téléversé`);
+        showToast(t('file_uploaded', nom));
     } catch (e) {
         if (btn) { btn.disabled = false; btn.textContent = t('save'); }
         showToast(e.message, 'error');

@@ -381,31 +381,31 @@ function planShowActivityModal(planId, actId = '') {
             <label>${tp('sub_activity')} / ${tp('themes_couverts')}</label>
             <div id="actSAThemesTableWrap" style="max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;">
             </div>
-            <small class="form-hint" id="actSAHint">${tp('select_sector_first') || 'Sélectionnez un secteur d\'abord'}</small>
+            <small class="form-hint" id="actSAHint">${tp('select_sector_first')}</small>
             <div id="actSousActiviteGroup" style="display:none;"></div>
             <div id="actThemesGroup" style="display:none;"></div>
             <small class="form-hint" id="actThemeHint" style="display:none;"></small>
         </div>
         <div class="form-group">
-            <label>${tp('mode_supervision') || 'Mode de supervision'}</label>
+            <label>${tp('mode_supervision')}</label>
             <select class="form-select" id="actModeSupervision">
                 <option value="">${tp('select_option')}</option>
                 ${modesSupervision.map(m => `<option value="${m.id}" ${act?.mode_supervision_id === m.id ? 'selected' : ''}>${_esc(m.mode || m.libelle || m.nom || m.code || '')}</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
-            <label>${tp('type_supervision') || 'Type de supervision'}</label>
+            <label>${tp('type_supervision')}</label>
             <select class="form-select" id="actTypeSupervision">
                 <option value="">${tp('select_option')}</option>
                 ${typesSupervision.map(t => `<option value="${t.id}" ${act?.type_supervision_id === t.id ? 'selected' : ''}>${_esc(t.type_supervision || t.libelle || t.nom || t.code || '')}</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
-            <label>${tp('lieu_activite') || 'Lieu de l\'Activité'}</label>
+            <label>${tp('lieu_activite')}</label>
             <input type="text" class="form-input" id="actLieu" value="${act ? _esc(act.lieu_activite || '') : ''}">
         </div>
         <div class="form-group">
-            <label>${tp('responsable_activite') || 'Responsable de l\'Activité'}</label>
+            <label>${tp('responsable_activite')}</label>
             <select class="form-select" id="actResponsable">
                 <option value="">${tp('select_option')}</option>
                 ${inspecteurs.map(i => { const label = ((i.nom || '') + ' ' + (i.prenom || '')).trim() || i.nom_complet || i.email || ''; return `<option value="${i.id}" ${act?.responsable_id === i.id ? 'selected' : ''}>${_esc(label)}</option>`; }).join('')}

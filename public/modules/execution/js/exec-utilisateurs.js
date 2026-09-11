@@ -23,7 +23,7 @@ function execRenderMesUtilisateurs() {
     if (!_execIsPrestataire()) {
         return `<div class="page-content"><div class="text-center">${te('no_data')}</div></div>`;
     }
-    const title = te('mes_utilisateurs') || 'Mes Utilisateurs';
+    const title = te('mes_utilisateurs');
     const newLabel = 'Ajouter Utilisateur';
     const searchPh = 'Rechercher';
     return `

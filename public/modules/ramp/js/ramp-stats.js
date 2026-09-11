@@ -1387,7 +1387,7 @@ function rampAnnulerImport() {
 async function rampConfirmerImport() {
     const aImporter = RAMP_STATE.importPrevisu
         .filter((l) => l.sort !== 'doublon' && !l.hors_perimetre);
-    if (!aImporter.length) { rampToast('Rien à importer', 'error'); return; }
+    if (!aImporter.length) { rampToast(rt('rien_a_importer'), 'error'); return; }
     try {
         const r = await rampApi('/inspections/import', {
             method: 'POST', body: JSON.stringify({ data: aImporter }),

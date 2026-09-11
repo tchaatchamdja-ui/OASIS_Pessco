@@ -581,7 +581,7 @@ function _buildStepRealisation(dossier, dossierId) {
         <div class="exec-real-bandeau">
             <span>${EXEC_ICONS.info || EXEC_ICONS.alarm || ''}</span>
             <p>${te('realisation_intro')}</p>
-            ${canEdit ? '' : `<span class="exec-real-lecture">${te('lecture_seule') || 'lecture seule'}</span>`}
+            ${canEdit ? '' : `<span class="exec-real-lecture">${te('lecture_seule')}</span>`}
         </div>
 
         ${_execFormSection('A', 'real_section_cadre', `
@@ -696,10 +696,10 @@ async function execSaveRedactionPj(dossierId) {
             EXEC_STATE.selectedDossier.realisation_pieces_jointes = JSON.stringify(pjs);
         }
         await execRefreshDynamic();
-        _execToast('Pièces jointes enregistrées', 'success');
+        _execToast(te('pj_enregistrees'), 'success');
     } catch (e) {
         console.error('Save redaction PJ error:', e);
-        _execToast('Erreur lors de l\'enregistrement', 'error');
+        _execToast(te('err_enregistrement'), 'error');
     }
 }
 
@@ -1055,7 +1055,7 @@ async function execCourrielAjouterFichiers(input) {
             conteneur.appendChild(ligne);
         } catch (e) {
             console.error('Téléversement :', e);
-            _execToast(`${fichier.name} : ${(e && e.message) || 'téléversement impossible'}`, 'error');
+            _execToast(`${fichier.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
         }
     }
     input.value = '';
@@ -1079,7 +1079,7 @@ function _execCourrielFichiers() {
 async function execTransmettreRapport(rapportId) {
     const val = (id) => (document.getElementById(id) || {}).value || '';
     const destinataire = val('courriel_destinataire').trim();
-    if (!destinataire) { _execToast('Indiquez au moins un destinataire', 'error'); return; }
+    if (!destinataire) { _execToast(te('indiquez_destinataire'), 'error'); return; }
     const bouton = document.getElementById('courriel_envoyer');
     if (bouton) { bouton.disabled = true; bouton.textContent = 'Envoi…'; }
     try {
@@ -1361,9 +1361,9 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                     const isConstReadOnly = (hasRapportValide || hasRapportTransmis || dossier.statut === 'cloture') && !isAdmin;
                     let modifierBtn = '';
                     if (isConstReadOnly) {
-                        modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execViewFNC('${dossierId}','${c.id}')" title="${te('consulter')||'Consulter'}">${EXEC_ICONS.eye||'👁'}</button>`;
+                        modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execViewFNC('${dossierId}','${c.id}')" title="${te('consulter')}">${EXEC_ICONS.eye||'👁'}</button>`;
                     } else {
-                        modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execEditFNC('${dossierId}','${c.id}')" title="${te('modifier_fnc')||'Modifier'}">${EXEC_ICONS.edit}</button>`;
+                        modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execEditFNC('${dossierId}','${c.id}')" title="${te('modifier_fnc')}">${EXEC_ICONS.edit}</button>`;
                     }
                     const autoGenFlag = c.checklist_item_id
                         ? ` <span title="Cette constatation a été générée automatiquement à partir d'une checklist. Une revue de la constatation est nécessaire ainsi que sa validation." style="cursor:help;color:#f59e0b;font-size:0.95rem;">&#9888;</span>`
@@ -1382,7 +1382,7 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                         <button class="btn btn-sm btn-outline" id="fiches_btn_${c.id}" style="padding:0.2rem 0.4rem;" onclick="_execToggleFiches('${c.id}')" title="Fiches">
                             ${EXEC_ICONS.file}<span class="caret" style="display:inline-block;transition:transform 0.15s;">▸</span>
                         </button>
-                        ${(!isConstReadOnly || isAdmin) ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.2rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete') || 'Supprimer'}">${EXEC_ICONS.x || '✕'}</button>` : ''}
+                        ${(!isConstReadOnly || isAdmin) ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.2rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete')}">${EXEC_ICONS.x || '✕'}</button>` : ''}
                     </td>
                 </tr>
                 <tr id="fiches_row_${c.id}" style="display:none;">
@@ -1390,16 +1390,16 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
                             <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-right:0.4rem;">Fiches :</span>
                             <button class="btn btn-sm btn-outline" onclick="execExportFicheConstat('${c.id}','pdf')">
-                                ${EXEC_ICONS.pdf||EXEC_ICONS.file} ${te('fiche_constat')||'Fiche Constat'} (PDF)
+                                ${EXEC_ICONS.pdf||EXEC_ICONS.file} ${te('fiche_constat')} (PDF)
                             </button>
                             <button class="btn btn-sm btn-outline" onclick="execExportFicheConstat('${c.id}','word')">
-                                ${EXEC_ICONS.file} ${te('fiche_constat')||'Fiche Constat'} (Word)
+                                ${EXEC_ICONS.file} ${te('fiche_constat')} (Word)
                             </button>
                             <button class="btn btn-sm btn-outline" onclick="execExportFicheSuivi('${c.id}','pdf')">
-                                ${EXEC_ICONS.pdf||EXEC_ICONS.clipboard} ${te('fiche_suivi')||'Fiche Suivi'} (PDF)
+                                ${EXEC_ICONS.pdf||EXEC_ICONS.clipboard} ${te('fiche_suivi')} (PDF)
                             </button>
                             <button class="btn btn-sm btn-outline" onclick="execExportFicheSuivi('${c.id}','word')">
-                                ${EXEC_ICONS.clipboard} ${te('fiche_suivi')||'Fiche Suivi'} (Word)
+                                ${EXEC_ICONS.clipboard} ${te('fiche_suivi')} (Word)
                             </button>
                         </div>
                     </td>
@@ -1562,13 +1562,13 @@ async function execSubmitDossier(dossierId) {
         });
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/submit`, { method: 'PUT' });
         await execRefreshDynamic();
-        _execToast('Rapport soumis avec succès', 'success');
+        _execToast(te('rapport_soumis_ok'), 'success');
         // Reload dossier and navigate to validation step
         EXEC_STATE.dossierStep = 'validation';
         execOpenDossierSlider(dossierId);
     } catch (e) {
         console.error('Submit dossier error:', e);
-        _execToast('Erreur lors de la soumission', 'error');
+        _execToast(te('err_soumission'), 'error');
     }
 }
 
@@ -1666,10 +1666,10 @@ async function execSaveRealisation(dossierId) {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'PUT', body: JSON.stringify(payload) });
         Object.assign(EXEC_STATE.selectedDossier || {}, payload);
         await execRefreshDynamic();
-        _execToast('Informations enregistrées', 'success');
+        _execToast(te('infos_enregistrees'), 'success');
     } catch (e) {
         console.error('Save realisation error:', e);
-        _execToast('Erreur lors de l\'enregistrement', 'error');
+        _execToast(te('err_enregistrement'), 'error');
     }
 }
 
@@ -1679,12 +1679,12 @@ async function execCloseRealisation(dossierId) {
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/close-realisation`, { method: 'PUT' });
         await execRefreshDynamic();
-        _execToast('Exécution sur le terrain clôturée', 'success');
+        _execToast(te('terrain_cloture'), 'success');
         EXEC_STATE.dossierStep = 'redaction';
         execOpenDossierSlider(dossierId);
     } catch (e) {
         console.error('Close realisation error:', e);
-        _execToast('Erreur lors de la clôture', 'error');
+        _execToast(te('err_cloture'), 'error');
     }
 }
 
@@ -1701,7 +1701,7 @@ async function _execSetDossierChecklists(dossierId, ids, returnTab) {
         }
         await execRefreshDynamic();
         execOpenDossierSlider(dossierId, returnTab || 'realisation');
-    } catch (e) { _execToast('Erreur enregistrement sélection', 'error'); }
+    } catch (e) { _execToast(te('err_selection'), 'error'); }
 }
 
 // Ouvre une modale listant les checklists applicables au secteur de l'activité.
@@ -1804,7 +1804,7 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
     }
     const cl = (EXEC_STATE.data.checklists || []).find(c => c.id === checklistId);
     if (!cl) {
-        _execToast('Checklist introuvable (id : ' + checklistId + ')', 'error');
+        _execToast(te('checklist_introuvable_id', checklistId), 'error');
         console.error('Checklist not found', checklistId, EXEC_STATE.data.checklists);
         return;
     }
@@ -2220,7 +2220,7 @@ async function execSetDossierChecklistValidee(dossierId, checklistId, validee) {
         }
         _execToast(validee ? 'Checklist marquée comme validée.' : 'Validation annulée.', 'success');
     } catch (e) {
-        _execToast('Erreur : ' + (e.message || e), 'error');
+        _execToast(te('erreur_x', e.message || e), 'error');
     }
 }
 
@@ -2244,7 +2244,7 @@ function _execResolveDossierDomSec(dossier) {
 // Génère une constatation brouillon à partir d'un item « non satisfaisant » de la checklist.
 async function execChkFillGenConstatation(dossierId, itemId) {
     const item = (EXEC_STATE.data.checklistItems || []).find(i => i.id === itemId);
-    if (!item) { _execToast('Item introuvable', 'error'); return; }
+    if (!item) { _execToast(te('item_introuvable'), 'error'); return; }
     const dossier = (EXEC_STATE.data.dossiers || []).find(d => d.id === dossierId)
         || EXEC_STATE.selectedDossier || {};
     // Réf. réglementaires : résout les ids d'exigences en texte lisible
@@ -2290,9 +2290,9 @@ async function execChkFillGenConstatation(dossierId, itemId) {
         _execChkFillSyncGenButtons(dossierId);
         // Marque qu'une constatation a été générée → le dossier sera rafraîchi à la fermeture du filler
         window._execChkFillerConstatGenerated = true;
-        _execToast(`Constatation brouillon créée (${res.reference || ''}). Visible dans l'onglet Constatations du dossier.`, 'success');
+        _execToast(te('constat_brouillon_cree', res.reference || ''), 'success');
     } catch (e) {
-        _execToast('Création de la constatation échouée : ' + (e.message || e), 'error');
+        _execToast(te('constat_creation_echouee', e.message || e), 'error');
     }
 }
 
@@ -2485,7 +2485,7 @@ async function execChkFillExportXlsx(dossierId, checklistId) {
         a.download = `checklist_renseignee_${(cl?.nom || 'export').replace(/[^\w\-]/g, '_').slice(0, 60)}.xlsx`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) { _execToast('Export Excel échoué : ' + (e.message || e), 'error'); }
+    } catch (e) { _execToast(te('export_excel_echoue', e.message || e), 'error'); }
 }
 
 async function execChkFillImportXlsx(dossierId, checklistId, ev) {
@@ -2500,11 +2500,11 @@ async function execChkFillImportXlsx(dossierId, checklistId, ev) {
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
-        _execToast(`Import OK : ${j.imported} réponse(s) mise(s) à jour.`, 'success');
+        _execToast(te('import_ok_reponses', j.imported), 'success');
         // Recharge le filler pour refléter les réponses importées
         execOpenChecklistFiller(dossierId, checklistId);
     } catch (e) {
-        _execToast('Import échoué : ' + (e.message || e), 'error');
+        _execToast(te('import_echoue', e.message || e), 'error');
     } finally {
         if (ev?.target) ev.target.value = '';
     }
@@ -2513,7 +2513,7 @@ async function execChkFillImportXlsx(dossierId, checklistId, ev) {
 // Export PDF : fenêtre d'impression dédiée (l'utilisateur choisit « Enregistrer en PDF »).
 function execChkFillExportPdf(dossierId, checklistId) {
     const cl = (EXEC_STATE.data.checklists || []).find(c => c.id === checklistId);
-    if (!cl) { _execToast('Checklist introuvable', 'error'); return; }
+    if (!cl) { _execToast(te('checklist_introuvable'), 'error'); return; }
     const items = (EXEC_STATE.data.checklistItems || [])
         .filter(i => i.checklist_id === checklistId)
         .slice().sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
@@ -2536,7 +2536,7 @@ function execChkFillExportPdf(dossierId, checklistId) {
     });
     const today = new Date().toISOString().slice(0, 10);
     const w = window.open('', '_blank');
-    if (!w) { _execToast('Veuillez autoriser les pop-ups pour l\'export PDF.', 'error'); return; }
+    if (!w) { _execToast(te('autoriser_popups'), 'error'); return; }
     const exigencesAll = (window.PESSCO?.sharedData?.exigences) || [];
     const _regDisplay = raw => {
         const s = String(raw || '').trim();
@@ -2640,12 +2640,12 @@ async function execValidateRapport(rapportId) {
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/validate`, { method: 'PUT' });
         await execRefreshDynamic();
-        _execToast('Rapport validé', 'success');
+        _execToast(te('rapport_valide_ok'), 'success');
         const d = EXEC_STATE.selectedDossier;
         if (d) execOpenDossierSlider(d.id);
     } catch (e) {
         console.error('Validate rapport error:', e);
-        _execToast('Erreur lors de la validation', 'error');
+        _execToast(te('err_validation'), 'error');
     }
 }
 
@@ -2658,12 +2658,12 @@ async function execAmendRapport(rapportId) {
             method: 'PUT', body: JSON.stringify({ observations })
         });
         await execRefreshDynamic();
-        _execToast('Rapport renvoyé en brouillon pour amendement', 'success');
+        _execToast(te('rapport_renvoye_amendement'), 'success');
         const d = EXEC_STATE.selectedDossier;
         if (d) { EXEC_STATE.dossierStep = 'redaction'; execOpenDossierSlider(d.id); }
     } catch (e) {
         console.error('Amend rapport error:', e);
-        _execToast('Erreur lors de l\'amendement', 'error');
+        _execToast(te('err_amendement'), 'error');
     }
 }
 
@@ -2672,12 +2672,12 @@ async function execSendRapportValidated(rapportId) {
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/send`, { method: 'PUT' });
         await execRefreshDynamic();
-        _execToast('Rapport envoyé', 'success');
+        _execToast(te('rapport_envoye'), 'success');
         const d = EXEC_STATE.selectedDossier;
         if (d) execOpenDossierSlider(d.id);
     } catch (e) {
         console.error('Send rapport error:', e);
-        _execToast('Erreur lors de l\'envoi', 'error');
+        _execToast(te('err_envoi'), 'error');
     }
 }
 
@@ -2695,11 +2695,11 @@ async function execGenerateNotificationPdf(dossierId) {
             a.download = `notification_${dossier.notification_ref || dossier.notification_id}.pdf`;
             a.click();
         } else {
-            _execToast('PDF non disponible', 'info');
+            _execToast(te('pdf_indisponible'), 'info');
         }
     } catch (e) {
         // Fallback: open the notification preview for printing
-        _execToast('Utilisez Ctrl+P pour imprimer depuis l\'aperçu', 'info');
+        _execToast(te('imprimer_ctrl_p'), 'info');
         if (dossier.notification_id) {
             execPreviewNotification(dossier.notification_id);
         }
@@ -2714,11 +2714,11 @@ async function execReturnDossier(dossierId) {
             body: JSON.stringify({ observations: '' })
         });
         await execRefreshDynamic();
-        _execToast('Dossier renvoyé pour correction', 'success');
+        _execToast(te('dossier_renvoye'), 'success');
         execOpenDossierSlider(dossierId);
     } catch (e) {
         console.error('Return dossier error:', e);
-        _execToast('Erreur lors du renvoi', 'error');
+        _execToast(te('err_renvoi'), 'error');
     }
 }
 
@@ -2803,11 +2803,11 @@ async function execSaveDossier(dossierId, silent) {
         }
         await execRefreshDynamic();
         if (!silent) {
-            _execToast('Brouillon enregistré avec succès', 'success');
+            _execToast(te('brouillon_enregistre_ok'), 'success');
         }
     } catch (e) {
         console.error('Save dossier error:', e);
-        if (!silent) _execToast('Erreur lors de la sauvegarde', 'error');
+        if (!silent) _execToast(te('err_sauvegarde'), 'error');
     }
 }
 
@@ -2816,12 +2816,12 @@ async function execCloseDossier(dossierId) {
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/close`, { method: 'PUT' });
         await execRefreshDynamic();
-        _execToast('Dossier clôturé avec succès', 'success');
+        _execToast(te('dossier_cloture_ok'), 'success');
         execCloseSlider();
         execRenderPage();
     } catch (e) {
         console.error('Close dossier error:', e);
-        _execToast('Erreur lors de la clôture', 'error');
+        _execToast(te('err_cloture'), 'error');
     }
 }
 
@@ -3105,7 +3105,7 @@ async function execEditFNC(dossierId, fncId) {
 async function execViewFNC(dossierId, fncId) {
     let fnc;
     try { fnc = await api(`${EXEC_MODULE_API}/constatations/${fncId}`); }
-    catch (e) { console.error(e); _execToast('Erreur chargement', 'error'); return; }
+    catch (e) { console.error(e); _execToast(te('err_chargement'), 'error'); return; }
     if (!fnc) return;
 
     const domaines = EXEC_STATE.data.domaines || [];
@@ -3128,19 +3128,19 @@ async function execViewFNC(dossierId, fncId) {
         <div style="${MB}">${_execStatusBadge(fnc.statut)}</div>
         <!-- Row 1 : Émis par ; Adressé à ; Date d'ouverture -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;${G}${MB}">
-            ${roField(te('emis_par') || 'Émis par', fnc.emis_par)}
-            ${roField(te('adresse_a') || 'Adressé à', fnc.adresse_a)}
+            ${roField(te('emis_par'), fnc.emis_par)}
+            ${roField(te('adresse_a'), fnc.adresse_a)}
             ${roField(te('date_ouverture') || "Date d'ouverture", fnc.date_ouverture ? fnc.date_ouverture.slice(0,10) : '')}
         </div>
         <!-- Row 2 : Source ; Domaine ; Secteur -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;${G}${MB}">
-            ${roField(te('source') || 'Source', sourceLabels[fnc.source] || fnc.source)}
-            ${roField(te('domaine') || 'Domaine', dom ? (dom.code + ' — ' + dom.nom) : fnc.domaine_id)}
+            ${roField(te('source'), sourceLabels[fnc.source] || fnc.source)}
+            ${roField(te('domaine'), dom ? (dom.code + ' — ' + dom.nom) : fnc.domaine_id)}
             ${roField('Secteur', secteur ? (secteur.code || secteur.nom) : fnc.secteur_id)}
         </div>
         <!-- Réf. Réglementaires -->
         <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('ref_reglementaires') || 'Réf. Réglementaires'}</label>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('ref_reglementaires')}</label>
             <div style="display:flex;flex-wrap:wrap;gap:0.3rem;padding:0.3rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);min-height:2rem;">
                 ${refList.length ? refList.map(r => {
                     const exig = allExig.find(e => e.reference === r);
@@ -3150,25 +3150,25 @@ async function execViewFNC(dossierId, fncId) {
         </div>
         <!-- Description -->
         <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('description_constatation') || 'Description'}</label>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('description_constatation')}</label>
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:0.85rem;min-height:3rem;white-space:pre-wrap;">${fnc.description ? _esc(fnc.description) : '<span style="color:var(--text-muted);font-style:italic;">—</span>'}</div>
         </div>
         <!-- Row 3 : Criticité ; Cas ; Délai ; Date Due -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;${G}${MB}">
-            ${roField(te('criticite') || 'Criticité', fnc.criticite || fnc.gravite)}
-            ${roField(te('cas') || 'Cas', fnc.cas_type || fnc.cas)}
-            ${roField(te('delai_solde') || 'Délai', fnc.delai_solde ? fnc.delai_solde + ' jours' : '')}
-            ${roField(te('date_due') || 'Date Due', fnc.date_due_cloture ? fnc.date_due_cloture.slice(0,10) : (fnc.date_due ? fnc.date_due.slice(0,10) : ''))}
+            ${roField(te('criticite'), fnc.criticite || fnc.gravite)}
+            ${roField(te('cas'), fnc.cas_type || fnc.cas)}
+            ${roField(te('delai_solde'), fnc.delai_solde ? fnc.delai_solde + ' jours' : '')}
+            ${roField(te('date_due'), fnc.date_due_cloture ? fnc.date_due_cloture.slice(0,10) : (fnc.date_due ? fnc.date_due.slice(0,10) : ''))}
         </div>
         <!-- Recommandation -->
         <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('recommandation') || 'Recommandation'}</label>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('recommandation')}</label>
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:0.85rem;min-height:2.5rem;white-space:pre-wrap;">${fnc.recommandation ? _esc(fnc.recommandation) : '<span style="color:var(--text-muted);font-style:italic;">—</span>'}</div>
         </div>
         <!-- Preuves -->
         ${(fnc.preuves_constatation && fnc.preuves_constatation.length) ? `
         <div class="form-group" style="${MB}">
-            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('preuves') || 'Preuves'}</label>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:block;">${te('preuves')}</label>
             <div style="padding:0.4rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;">
                 ${fnc.preuves_constatation.map(p => {
                     const fname = typeof p === 'object' ? (p.filename || p.name || '') : p;
@@ -3181,8 +3181,8 @@ async function execViewFNC(dossierId, fncId) {
         </div>` : ''}
     </div>`;
 
-    const footer = `<button class="btn btn-outline" onclick="execOpenDossierSlider('${dossierId}','constatations')">${EXEC_ICONS.back||''} ${te('back')||'Retour'}</button>`;
-    _execFadeSliderContent(`${EXEC_ICONS.constatations||''} ${te('constatation')||'Constatation'} — ${_esc(fnc.reference||'')}`, body, footer, 'max');
+    const footer = `<button class="btn btn-outline" onclick="execOpenDossierSlider('${dossierId}','constatations')">${EXEC_ICONS.back||''} ${te('back')}</button>`;
+    _execFadeSliderContent(`${EXEC_ICONS.constatations||''} ${te('constatation')} — ${_esc(fnc.reference||'')}`, body, footer, 'max');
 }
 
 function execCalcDateDue() {
@@ -3202,7 +3202,7 @@ function execValidateDateOuverture() {
     if (!dateInput || !minDateInput) return;
     const minDate = minDateInput.value;
     if (minDate && dateInput.value && dateInput.value < minDate) {
-        oasisToast(`La date d'ouverture ne peut pas être antérieure au début de l'activité (${minDate}).`, 'warning');
+        oasisToast(te('date_ouverture_anterieure', minDate), 'warning');
         dateInput.value = minDate;
     }
     execCalcDateDue();
@@ -3273,10 +3273,10 @@ async function execSaveFNC(dossierId, fncId) {
     try {
         if (fncId) {
             await api(`${EXEC_MODULE_API}/constatations/${fncId}`, { method: 'PUT', body: JSON.stringify(data) });
-            _execToast('Constatation modifiée avec succès', 'success');
+            _execToast(te('constat_modifie_ok'), 'success');
         } else {
             await api(`${EXEC_MODULE_API}/constatations`, { method: 'POST', body: JSON.stringify(data) });
-            _execToast('Constatation créée avec succès', 'success');
+            _execToast(te('constat_cree_ok'), 'success');
         }
         await execRefreshDynamic();
         EXEC_STATE.dossierTab = 'constatations';
@@ -3284,7 +3284,7 @@ async function execSaveFNC(dossierId, fncId) {
         execOpenDossierSlider(dossierId, 'constatations');
     } catch (e) {
         console.error('Save FNC error:', e);
-        _execToast('Erreur lors de la sauvegarde de la constatation', 'error');
+        _execToast(te('err_sauvegarde_constat'), 'error');
     }
 }
 
@@ -3307,7 +3307,7 @@ async function execDeleteConstatation(fncId) {
         }
     } catch (e) {
         console.error('Delete constatation error:', e);
-        oasisToast('Erreur lors de la suppression.', 'error');
+        oasisToast(te('err_suppression'), 'error');
     }
 }
 
@@ -3320,7 +3320,7 @@ async function execDeleteDossier(dossierId) {
         execRenderPage();
     } catch (e) {
         console.error('Delete dossier error:', e);
-        oasisToast('Erreur lors de la suppression.', 'error');
+        oasisToast(te('err_suppression'), 'error');
     }
 }
 
@@ -3331,7 +3331,7 @@ async function execSendRapport(rapportId) {
         execRenderPage();
     } catch (e) {
         console.error('Send rapport error:', e);
-        oasisToast('Erreur lors de l\'envoi.', 'error');
+        oasisToast(te('err_envoi'), 'error');
     }
 }
 

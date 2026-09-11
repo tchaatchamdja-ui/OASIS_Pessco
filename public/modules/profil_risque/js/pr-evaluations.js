@@ -539,7 +539,7 @@ function renderEvalResults() {
                 <button class="btn-icon" onclick="exportEvalReport('${ev.id}','word')" title="Exporter Word">${ICONS.word}</button>
                 <button class="btn-icon" onclick="exportEvalReport('${ev.id}','pdf')" title="Exporter PDF">${ICONS.download}</button>
                 ${prCanSupprimerEval(ev) ? `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}">${ICONS.trash}</button>` : ''}
-                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('synthesis') || 'Synthèse'}">${ICONS.chevron}</button>
+                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('synthesis')}">${ICONS.chevron}</button>
             </div>
             ${reminderBanner}
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.4rem;padding-top:0.4rem;border-top:1px dashed var(--border);font-size:0.78rem;align-items:center;">
@@ -744,7 +744,7 @@ function buildEvalReportHtml(ev) {
 
 function exportEvalReport(evalId, format) {
     const ev = (APP_STATE.data.evaluations || []).find(e => e.id === evalId);
-    if (!ev) { showToast('Évaluation introuvable', 'error'); return; }
+    if (!ev) { showToast(t('eval_not_found'), 'error'); return; }
     const prest = (APP_STATE.data.prestataires || []).find(p => p.id === ev.prestataire_id) || {};
     const base = `rapport_evaluation_${(prest.trigramme || prest.nom || 'prestataire').replace(/[^\w-]+/g, '_')}`;
     const html = buildEvalReportHtml(ev);
@@ -756,11 +756,11 @@ function exportEvalReport(evalId, format) {
             a.download = `${base}.doc`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-            showToast('Rapport Word téléchargé');
+            showToast(t('word_downloaded'));
             return;
         }
         const w = window.open('', '_blank');
-        if (!w) { showToast('Autorisez les fenêtres surgissantes pour générer le PDF.', 'error'); return; }
+        if (!w) { showToast(t('allow_popups_pdf'), 'error'); return; }
         w.document.write(html);
         w.document.close();
         w.focus();
@@ -772,7 +772,7 @@ function exportEvalReport(evalId, format) {
 async function openNewEvalModal() {
     const D = APP_STATE.data;
     if (!prCanCreateEval()) {
-        showToast('Création réservée aux privilèges Gestionnaire ou Validateur.', 'error');
+        showToast(t('create_reserved'), 'error');
         return;
     }
     // Seuls les prestataires des secteurs couverts par le privilège sont proposés
@@ -814,7 +814,7 @@ async function openNewEvalModal() {
 async function createEval() {
     const prestId = document.getElementById('evalPrestId').value;
     const sectId = document.getElementById('evalSectId').value;
-    if (!prestId || !sectId) { showToast('Selectionnez un prestataire et un secteur', 'error'); return; }
+    if (!prestId || !sectId) { showToast(t('select_provider_sector'), 'error'); return; }
     const prest = APP_STATE.data.prestataires.find(p => p.id === prestId);
     try {
         await api(`${MODULE_API}/evaluations`, {
@@ -1682,7 +1682,7 @@ async function startConsolidation(evalId) {
     } catch (e) {}
     // Re-render the slicer so isReadonly is recomputed (indicators become editable)
     openEvalDetail(evalId);
-    showToast('Consolidation activée — vous pouvez modifier les notes');
+    showToast(t('consolidation_on'));
 }
 
 // Phase 5 — réunion prestataire : single record, form intégré directement (§4.2.2.g)
@@ -2114,7 +2114,7 @@ async function saveReunionEval(evalId, rid) {
         if (rid) await api(`${MODULE_API}/eval-reunions/${rid}`, { method: 'PUT', body: JSON.stringify(data) });
         else await api(`${MODULE_API}/eval-reunions`, { method: 'POST', body: JSON.stringify(data) });
         closeModal();
-        showToast('Réunion enregistrée');
+        showToast(t('meeting_saved'));
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2126,18 +2126,18 @@ async function exportReunionPdf(rid, evalId) {
     try {
         const m = await api(`${MODULE_API}/eval-reunions/${rid}`);
         _printCompteRendu(m, evalId || m.eval_id, 'Compte-rendu de réunion de consolidation');
-    } catch (e) { showToast('Export impossible : ' + e.message, 'error'); }
+    } catch (e) { showToast(t('export_failed', e.message), 'error'); }
 }
 
 async function exportReunionPrestPdf(rid, evalId) {
     try {
         const m = await api(`${MODULE_API}/eval-reunions-prest/${rid}`);
         _printCompteRendu(m, evalId || m.eval_id, 'Compte-rendu de réunion prestataire');
-    } catch (e) { showToast('Export impossible : ' + e.message, 'error'); }
+    } catch (e) { showToast(t('export_failed', e.message), 'error'); }
 }
 
 function _printCompteRendu(m, evalId, titre) {
-    if (!m || !m.id) { showToast('Compte-rendu introuvable', 'error'); return; }
+    if (!m || !m.id) { showToast(t('minutes_not_found'), 'error'); return; }
     const D = APP_STATE.data;
     const ev = (D.evaluations || []).find(e => e.id === evalId) || {};
     const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id) || {};
@@ -2196,7 +2196,7 @@ function _printCompteRendu(m, evalId, titre) {
 </body></html>`;
 
     const w = window.open('', '_blank');
-    if (!w) { showToast('Autorisez les fenêtres surgissantes pour générer le PDF.', 'error'); return; }
+    if (!w) { showToast(t('allow_popups_pdf'), 'error'); return; }
     w.document.write(html);
     w.document.close();
     w.focus();
@@ -2313,7 +2313,7 @@ async function reunionPrestSaveFromTab(evalId, prestId) {
         else await api(`${MODULE_API}/eval-reunions-prest`, { method: 'POST', body: JSON.stringify(data) });
         // Reload the list inline (no slicer re-render, no "Chargement..." stuck)
         await _loadReunionPrestTab(evalId, prestId);
-        showToast('Réunion prestataire enregistrée');
+        showToast(t('provider_meeting_saved'));
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2359,7 +2359,7 @@ async function soumettreMesNotes(evalId) {
     const uid = APP_STATE.user?.id;
     if (!uid) return;
     if (!(ev.evaluateurs_designes || []).includes(uid)) {
-        showToast('Vous n\'êtes pas évaluateur désigné pour cette évaluation.', 'error');
+        showToast(t('not_designated'), 'error');
         return;
     }
     // Verify completeness on the draft (Perf + Comp for this user)
@@ -2372,7 +2372,7 @@ async function soumettreMesNotes(evalId) {
     const perfMissing = perfInds.filter(ind => !(draftPerf[ind.id] > 0));
     const compMissing = compInds.filter(ind => !(draftComp[ind.id] > 0));
     if (perfMissing.length || compMissing.length) {
-        showToast(`Impossible de soumettre : ${perfMissing.length} indicateur(s) Performance et ${compMissing.length} indicateur(s) Complexité non notés.`, 'error');
+        showToast(t('submit_missing_scores', perfMissing.length, compMissing.length), 'error');
         return;
     }
     if (!await oasisConfirmer('Soumettre vos notes au validateur ? Elles deviendront visibles et ne pourront plus être modifiées.')) return;
@@ -2394,12 +2394,12 @@ async function soumettreMesNotes(evalId) {
                 notes_per_evaluator_draft: ev.notes_per_evaluator_draft || {}
             })
         });
-        showToast('Vos notes ont été soumises au validateur.', 'success');
+        showToast(t('scores_submitted'), 'success');
         await loadAllData();
         renderPage();
         openEvalDetail(evalId);
     } catch (e) {
-        showToast('Erreur lors de la soumission : ' + (e.message || e), 'error');
+        showToast(t('submit_error', e.message || e), 'error');
     }
 }
 
@@ -2411,7 +2411,7 @@ async function soumettreDirecteur(evalId) {
         await saveEvalScores(evalId);
         await api(`${MODULE_API}/evaluations/${evalId}/soumettre-directeur`, { method: 'POST' });
         await loadAllData(); renderPage();
-        showToast('Soumis à la validation');
+        showToast(t('submitted_validation'));
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -2439,7 +2439,7 @@ async function decisionDirecteur(evalId, decision) {
     const commentaire = (requiresMotif || decision !== 'accepter')
         ? ((await oasisSaisir(promptByDecision[decision], { requis: requiresMotif })) || '') : '';
     if (requiresMotif && !commentaire.trim()) {
-        showToast('Motif requis pour ' + decision, 'error'); return;
+        showToast(t('reason_required_for', decision), 'error'); return;
     }
     try {
         await api(`${MODULE_API}/evaluations/${evalId}/decision-directeur`, {
@@ -2469,7 +2469,7 @@ async function updateCycleDate(evalId, kind, value, csrbo, champ) {
         return;
     }
     if (!prCanValidate(ev.secteur_id)) {
-        showToast('Seuls les privilèges Validateur ou Gestionnaire peuvent modifier les dates de cycle.', 'error');
+        showToast(t('cycle_dates_reserved'), 'error');
         renderPage();
         return;
     }
@@ -2497,7 +2497,7 @@ async function updateCycleDate(evalId, kind, value, csrbo, champ) {
         Object.assign(ev, payload);
         renderPage();
     } catch (e) {
-        showToast('Erreur lors de l\'enregistrement des dates : ' + (e.message || e), 'error');
+        showToast(t('dates_save_error', e.message || e), 'error');
     }
 }
 
@@ -2513,7 +2513,7 @@ async function reevaluerEval(evalId) {
         APP_STATE.currentPage = 'evaluations';
         APP_STATE.currentSub = 'eval_indicateurs';
         renderPage();
-        showToast('Nouvelle révision créée en brouillon — l\'évaluation validée reste disponible');
+        showToast(t('new_revision'));
     } catch (e) {
         showToast(e.message === 'privilege_insuffisant'
             ? 'Réévaluation réservée aux privilèges Gestionnaire et Validateur couvrant ce domaine et ce secteur.'
@@ -2524,7 +2524,7 @@ async function reevaluerEval(evalId) {
 async function deleteEval(evalId) {
     const _ev = (APP_STATE.data.evaluations || []).find(e => e.id === evalId);
     if (_ev && !prCanSupprimerEval(_ev)) {
-        showToast('Suppression réservée au privilège Gestionnaire couvrant ce domaine et ce secteur.', 'error');
+        showToast(t('delete_reserved'), 'error');
         return;
     }
     if (!await oasisConfirmer(t('confirm_delete'))) return;
@@ -2576,6 +2576,6 @@ async function importEvalExcel(event, evalId, type) {
         closeModal();
         await loadAllData();
         renderPage();
-        showToast(`Import : ${d.updated || 0} note(s) reprise(s)`, 'success');
+        showToast(t('import_scores', d.updated || 0), 'success');
     } catch (e) { showToast(e.message, 'error'); }
 }

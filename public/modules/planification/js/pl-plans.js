@@ -333,7 +333,7 @@ function planRenderPlanDetail() {
                 <div class="plan-header-actions">
                     <button class="btn btn-outline btn-sm"
                             onclick="${canSync ? `planSyncRisksSelective('${plan.id}')` : 'void(0)'}"
-                            ${canSync ? '' : 'disabled title="' + (tp('sync_disabled_for_ponctuel') || 'Synchronisation indisponible pour les plans Ponctuels/Spéciaux') + '"'}>
+                            ${canSync ? '' : 'disabled title="' + (tp('sync_disabled_for_ponctuel')) + '"'}>
                         ${PLAN_ICONS.sync} ${tp('sync_risks')}
                     </button>
                     <button class="btn btn-primary btn-sm" onclick="planExportPDF('${plan.id}')" title="Exporter PDF">${PLAN_ICONS.pdf} Exporter PDF</button>

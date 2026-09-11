@@ -55,7 +55,7 @@ function execRenderPlans() {
 function execExportPlansPdf() {
     try {
         const root = document.getElementById('execPlansExportRoot');
-        if (!root) { _execToast('Rien à exporter', 'warning'); return; }
+        if (!root) { _execToast(te('rien_a_exporter'), 'warning'); return; }
 
         // Build a standalone HTML document containing a print-friendly copy.
         // We expand all accordions and hide action buttons.
@@ -77,7 +77,7 @@ function execExportPlansPdf() {
 
         const now = new Date();
         const ts = now.toLocaleString('fr-FR');
-        const title = (te('plan_surveillance') || 'Plans de surveillance') + ' — ' + ts;
+        const title = (te('plan_surveillance')) + ' — ' + ts;
 
         const style = `
             @page { size: A4 landscape; margin: 12mm; }
@@ -99,12 +99,12 @@ function execExportPlansPdf() {
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${_esc(title)}</title><style>${style}</style></head>
         <body>
             <h1>${_esc(title)}</h1>
-            <div class="meta">${_esc(te('generated_on') || 'Généré le')} ${_esc(ts)}</div>
+            <div class="meta">${_esc(te('generated_on'))} ${_esc(ts)}</div>
             ${clone.innerHTML}
         </body></html>`;
 
         const w = window.open('', '_blank', 'width=1100,height=800');
-        if (!w) { _execToast('Le popup est bloqué par le navigateur', 'error'); return; }
+        if (!w) { _execToast(te('popup_bloque'), 'error'); return; }
         w.document.open();
         w.document.write(html);
         w.document.close();
@@ -118,7 +118,7 @@ function execExportPlansPdf() {
         }, 600);
     } catch (e) {
         console.error('execExportPlansPdf error:', e);
-        _execToast('Erreur lors de l\'export PDF', 'error');
+        _execToast(te('err_export_pdf'), 'error');
     }
 }
 
@@ -292,9 +292,9 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                 </div>
                 <div class="exec-plan-entete-infos">
                     <span>${te('version')}: <strong>${_esc(_execVersionPlan(plan))}</strong></span>
-                    <span>${te('annee') || 'Année'}: <strong>${plan.annee || '-'}</strong></span>
-                    <span>${te('domaine') || 'Domaine'}: <strong>${_esc(domNom)}</strong></span>
-                    <span>${te('secteur') || 'Secteur'}: <strong>${_esc(secNom)}</strong></span>
+                    <span>${te('annee')}: <strong>${plan.annee || '-'}</strong></span>
+                    <span>${te('domaine')}: <strong>${_esc(domNom)}</strong></span>
+                    <span>${te('secteur')}: <strong>${_esc(secNom)}</strong></span>
                     <span>${te('nb_prestataires')}: <strong>${nbPrest}</strong></span>
                     <span>${te('nb_activites') || te('activites')}: <strong>${acts.length}</strong></span>
                     <span>${te('taux_realisation')}: <strong class="exec-plan-taux">${tauxCloture}%</strong></span>
@@ -512,12 +512,12 @@ async function execStartNotification(planId, activiteId) {
                 body: JSON.stringify({ notification_id: notif.id })
             });
             await execRefreshDynamic();
-            _execToast(te('dossier_inopine_cree') || 'Dossier inopiné créé', 'success');
+            _execToast(te('dossier_inopine_cree'), 'success');
             execRenderPage();
             if (dossier && dossier.id) execOpenDossierSlider(dossier.id, 'realisation');
         } catch (e) {
             console.error('execStartNotification inopine error:', e);
-            _execToast('Erreur lors du déclenchement inopiné: ' + ((e && e.message) || ''), 'error');
+            _execToast(te('err_declenchement_inopine', (e && e.message) || ''), 'error');
         }
         return;
     }

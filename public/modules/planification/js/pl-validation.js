@@ -23,12 +23,12 @@ const _PLAN_DIFF_FIELDS = [
     { key: 'cycle_mois',            label: () => tp('cycle') },
     { key: 'nombre_inspecteurs',    label: () => tp('nombre_inspecteurs') },
     { key: 'notes',                 label: () => tp('notes') },
-    { key: 'lieu_activite',         label: () => tp('lieu_activite') || 'Lieu' },
+    { key: 'lieu_activite',         label: () => tp('lieu_activite') },
     { key: 'prestataire_id',        label: () => tp('provider'),          resolve: (id) => { const p = (PLAN_STATE.data.prestataires || []).find(x => x.id === id); return p ? p.nom : (id || ''); } },
     { key: 'secteur_id',            label: () => tp('sector'),            resolve: (id) => { const s = (PLAN_STATE.data.secteurs || []).find(x => x.id === id); return s ? `${s.code} - ${s.nom}` : (id || ''); } },
-    { key: 'mode_supervision_id',   label: () => tp('mode_supervision') || 'Mode supervision', resolve: (id) => { const m = (PLAN_STATE.data.modesSupervision || []).find(x => x.id === id); return m ? (m.mode || m.libelle || '') : (id || ''); } },
-    { key: 'type_supervision_id',   label: () => tp('type_supervision') || 'Type supervision', resolve: (id) => { const t = (PLAN_STATE.data.typesSupervision || []).find(x => x.id === id); return t ? (t.type_supervision || t.libelle || '') : (id || ''); } },
-    { key: 'responsable_id',        label: () => tp('responsable_activite') || 'Responsable', resolve: (id) => { const i = (PLAN_STATE.data.inspecteurs || []).find(x => x.id === id); return i ? ((i.nom || '') + ' ' + (i.prenom || '')).trim() : (id || ''); } },
+    { key: 'mode_supervision_id',   label: () => tp('mode_supervision'), resolve: (id) => { const m = (PLAN_STATE.data.modesSupervision || []).find(x => x.id === id); return m ? (m.mode || m.libelle || '') : (id || ''); } },
+    { key: 'type_supervision_id',   label: () => tp('type_supervision'), resolve: (id) => { const t = (PLAN_STATE.data.typesSupervision || []).find(x => x.id === id); return t ? (t.type_supervision || t.libelle || '') : (id || ''); } },
+    { key: 'responsable_id',        label: () => tp('responsable_activite'), resolve: (id) => { const i = (PLAN_STATE.data.inspecteurs || []).find(x => x.id === id); return i ? ((i.nom || '') + ' ' + (i.prenom || '')).trim() : (id || ''); } },
     { key: 'sous_activite_ids',     label: () => tp('sub_activity'),      isList: true, resolve: (id) => { const s = (PLAN_STATE.data.sousActivites || []).find(x => x.id === id); return s ? `${s.code} - ${s.nom}` : (id || ''); } },
     { key: 'themes_couverts',       label: () => tp('themes_couverts'),   isList: true, resolve: (id) => { const t = (PLAN_STATE.data.themesSupervision || []).find(x => x.id === id); return t ? t.libelle : (id || ''); } },
 ];
@@ -151,17 +151,17 @@ function _renderPlanDiffBody(diff, planId) {
                 ${field(tp('provider'), prestStr)}
                 ${field(tp('objet'), objetStr)}
                 ${field(tp('sector'), sectStr)}
-                ${field((tp('mode_supervision') || 'Mode de Supervision') + ' / ' + (tp('type_supervision') || 'Type de Supervision'), modeStr + ' / ' + typeStr)}
+                ${field((tp('mode_supervision')) + ' / ' + (tp('type_supervision')), modeStr + ' / ' + typeStr)}
                 ${field(tp('responsable_activite') || "Responsable de l'Activité", respStr)}
             </div>
             <div style="margin:0.25rem 0 0.3rem 0;color:var(--danger,#ef4444);font-size:0.85rem;font-weight:700;">
-                ${m.changes.length} ${m.changes.length > 1 ? (tp('fields') || 'champs') : (tp('field') || 'champ')} ${tp('modif_modified') ? '— ' + tp('modif_modified').toLowerCase() : 'modifié(s)'}
+                ${m.changes.length} ${m.changes.length > 1 ? (tp('fields')) : (tp('field'))} ${tp('modif_modified') ? '— ' + tp('modif_modified').toLowerCase() : 'modifié(s)'}
             </div>
             <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
                 <thead><tr>
-                    <th style="text-align:left;padding:0.2rem 0.5rem;border-bottom:1px solid var(--border);width:25%;color:var(--text-muted);font-weight:600;">${tp('field') || 'Champ'}</th>
-                    <th style="text-align:left;padding:0.2rem 0.5rem;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">${tp('old_value') || 'Ancienne valeur'}</th>
-                    <th style="text-align:left;padding:0.2rem 0.5rem;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">${tp('new_value') || 'Nouvelle valeur'}</th>
+                    <th style="text-align:left;padding:0.2rem 0.5rem;border-bottom:1px solid var(--border);width:25%;color:var(--text-muted);font-weight:600;">${tp('field')}</th>
+                    <th style="text-align:left;padding:0.2rem 0.5rem;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">${tp('old_value')}</th>
+                    <th style="text-align:left;padding:0.2rem 0.5rem;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">${tp('new_value')}</th>
                 </tr></thead>
                 <tbody>
                     ${m.changes.map(c => `<tr>
@@ -174,7 +174,7 @@ function _renderPlanDiffBody(diff, planId) {
             ${_canValidate() ? `
             <div style="margin-top:0.5rem;">
                 <label style="display:block;color:var(--text-muted);font-size:0.8rem;font-weight:600;margin-bottom:0.2rem;">
-                    ${tp('validator_comment') || 'Commentaire du validateur'}
+                    ${tp('validator_comment')}
                 </label>
                 <textarea
                     class="form-input validator-activity-comment"
@@ -182,7 +182,7 @@ function _renderPlanDiffBody(diff, planId) {
                     data-activity-id="${m.activity.id}"
                     data-activity-objet="${_esc(m.activity.objet || m.activity.titre || '')}"
                     rows="2"
-                    placeholder="${tp('validator_comment_placeholder') || 'Commentaire sur cette modification…'}"
+                    placeholder="${tp('validator_comment_placeholder')}"
                     style="width:100%;font-size:0.85rem;"
                     onclick="event.stopPropagation();"></textarea>
             </div>` : ''}
@@ -219,13 +219,13 @@ function _renderPlanDiffBody(diff, planId) {
         rows.push(`
         <li style="margin-bottom:0.75rem;padding:0.6rem 0.75rem;border:1px solid var(--success,#10b981);border-radius:6px;background:rgba(16,185,129,0.06);">
             <div style="margin:0 0 0.4rem 0;color:var(--success,#10b981);font-size:0.85rem;font-weight:700;">
-                + ${tp('modif_added_label_full') || 'Nouvelle activité ajoutée'}
+                + ${tp('modif_added_label_full')}
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:0.25rem 0;margin-bottom:0.4rem;">
                 ${field(tp('provider'), prestStr)}
                 ${field(tp('objet'), objetStr)}
                 ${field(tp('sector'), sectStr)}
-                ${field((tp('mode_supervision') || 'Mode de Supervision') + ' / ' + (tp('type_supervision') || 'Type de Supervision'), modeStr + ' / ' + typeStr)}
+                ${field((tp('mode_supervision')) + ' / ' + (tp('type_supervision')), modeStr + ' / ' + typeStr)}
                 ${field(tp('responsable_activite') || "Responsable de l'Activité", respStr)}
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:0.25rem 0;margin-bottom:0.4rem;">
@@ -234,7 +234,7 @@ function _renderPlanDiffBody(diff, planId) {
                 ${field(tp('themes_couverts'), _esc(themesList))}
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:0.25rem 0;margin-bottom:0.4rem;">
-                ${field(tp('lieu_activite') || 'Lieu', _esc(a.lieu_activite || '') || '—')}
+                ${field(tp('lieu_activite'), _esc(a.lieu_activite || '') || '—')}
                 ${field(tp('start_date'), (a.date_debut || '').substring(0, 10) || '—')}
                 ${field(tp('end_date'), (a.date_fin || '').substring(0, 10) || '—')}
                 ${field(tp('nombre_inspecteurs'), a.nombre_inspecteurs || '—')}
@@ -248,7 +248,7 @@ function _renderPlanDiffBody(diff, planId) {
             ${_canValidate() ? `
             <div style="margin-top:0.5rem;">
                 <label style="display:block;color:var(--text-muted);font-size:0.8rem;font-weight:600;margin-bottom:0.2rem;">
-                    ${tp('validator_comment') || 'Commentaire du validateur'}
+                    ${tp('validator_comment')}
                 </label>
                 <textarea
                     class="form-input validator-activity-comment"
@@ -256,7 +256,7 @@ function _renderPlanDiffBody(diff, planId) {
                     data-activity-id="${a.id}"
                     data-activity-objet="${_esc(a.objet || a.titre || '')}"
                     rows="2"
-                    placeholder="${tp('validator_comment_placeholder') || 'Commentaire sur cette modification…'}"
+                    placeholder="${tp('validator_comment_placeholder')}"
                     style="width:100%;font-size:0.85rem;"
                     onclick="event.stopPropagation();"></textarea>
             </div>` : ''}
@@ -268,7 +268,7 @@ function _renderPlanDiffBody(diff, planId) {
         rows.push(`
         <li style="margin-bottom:0.4rem;padding:0.4rem 0.5rem;border-bottom:1px solid var(--border);">
             <strong style="text-decoration:line-through;color:var(--text-muted);">${_esc(a.objet || a.titre || '')}</strong>
-            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:0.5rem;">[${tp('modif_removed_label') || 'supprimée'}]</span>
+            <span style="color:var(--text-muted);font-size:0.8rem;margin-left:0.5rem;">[${tp('modif_removed_label')}]</span>
         </li>`);
     });
 
@@ -298,7 +298,7 @@ function _renderPlanDiffAccordion(plan) {
 
     const badge = isAmendment
         ? `<span class="badge badge-warning" style="margin-left:0.5rem;">${tp('amendement')}</span>
-           <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.85rem;">${(tp('modif_count') || '{0} modification(s)').replace('{0}', diff ? diff.totalCount : 0)}</span>`
+           <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.85rem;">${(tp('modif_count')).replace('{0}', diff ? diff.totalCount : 0)}</span>`
         : `<span class="badge badge-info" style="margin-left:0.5rem;">${tp('initial_version')}</span>
            <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.85rem;">${plan.nb_activites || 0} ${tp('activities')}</span>`;
 
@@ -433,7 +433,7 @@ function planRenderHistory() {
                         </td>
                         <td>${_statusBadge(v.statut)}</td>
                         <td>${(v.date_validation || v.date_creation || '').substring(0, 10) || '-'}</td>
-                        <td>${isAmend ? `<span style="color:var(--warning);">${tp('amendement')} — ${(tp('modif_count') || '{0} modification(s)').replace('{0}', modifCount)}</span>` : `<span style="color:var(--text-muted);">${tp('initial_version')}</span>`}</td>
+                        <td>${isAmend ? `<span style="color:var(--warning);">${tp('amendement')} — ${(tp('modif_count')).replace('{0}', modifCount)}</span>` : `<span style="color:var(--text-muted);">${tp('initial_version')}</span>`}</td>
                         <td>
                             <button class="btn btn-primary btn-sm" onclick="planExportPDF('${v.id}')" title="${tp('download_pdf')}">
                                 ${PLAN_ICONS.pdf} v${v.version || 1}

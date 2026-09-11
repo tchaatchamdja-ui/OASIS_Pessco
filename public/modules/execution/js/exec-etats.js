@@ -844,7 +844,7 @@ window.execEtatsEnvoyerRappel = async function (planId, activiteId, motif) {
       }),
     });
     execCloseSlider();
-    _execToast(`Rappel envoyé à ${r.destinataire}`, 'success');
+    _execToast(te('rappel_envoye', r.destinataire), 'success');
   } catch (e) {
     erreur.textContent = (e && e.message) || 'Envoi impossible';
   }
@@ -864,7 +864,7 @@ window.execEtatsArreter = async function (notifId) {
       method: 'PUT', body: JSON.stringify({ motif }),
     });
     await execRefreshDynamic();
-    _execToast('Processus arrêté', 'success');
+    _execToast(te('processus_arrete'), 'success');
     execRenderPage();
   } catch (e) { _execToast((e && e.message) || 'Arrêt impossible', 'error'); }
 };
@@ -879,7 +879,7 @@ window.execEtatsReprendre = async function (notifId) {
   try {
     await api(`${EXEC_MODULE_API}/activites-en-cours/${notifId}/reprendre`, { method: 'PUT' });
     await execRefreshDynamic();
-    _execToast('Processus repris', 'success');
+    _execToast(te('processus_repris'), 'success');
     execRenderPage();
   } catch (e) { _execToast((e && e.message) || 'Reprise impossible', 'error'); }
 };
@@ -914,13 +914,13 @@ window.execEtatsSupprimer = async function (notifId) {
   });
   if (saisi === false) return;
   if (String(saisi).trim() !== String(n.reference || '').trim()) {
-    _execToast('Référence non conforme : suppression abandonnée', 'error');
+    _execToast(te('reference_non_conforme'), 'error');
     return;
   }
   try {
     await api(`${EXEC_MODULE_API}/activites-en-cours/${notifId}`, { method: 'DELETE' });
     await execRefreshDynamic();
-    _execToast('Activité supprimée', 'success');
+    _execToast(te('activite_supprimee'), 'success');
     execRenderPage();
   } catch (e) { _execToast((e && e.message) || 'Suppression impossible', 'error'); }
 };
@@ -943,7 +943,7 @@ window.execEtatsDesarchiverPlan = async function (planId) {
   try {
     await api(`/api/m/planification/plans/${planId}/desarchiver`, { method: 'POST', body: JSON.stringify({}) });
     await execLoadData();
-    _execToast('Plan désarchivé', 'success');
+    _execToast(te('plan_desarchive'), 'success');
     execRenderPage();
   } catch (e) {
     _execToast((e && e.message) || 'Action impossible', 'error');
@@ -972,7 +972,7 @@ window.execEtatsDesarchiverActivite = async function (activiteId, parLePlan) {
       await api(`${EXEC_MODULE_API}/activites-en-cours/${activiteId}/desarchiver`, { method: 'PUT' });
       await execRefreshDynamic();
     }
-    _execToast('Activité désarchivée', 'success');
+    _execToast(te('activite_desarchivee'), 'success');
     execRenderPage();
   } catch (e) {
     _execToast((e && e.message) || 'Action impossible', 'error');
@@ -1097,7 +1097,7 @@ window.execEtatsEnregistrerDelais = async function () {
       method: 'PUT', body: JSON.stringify({ valeurs }),
     });
     EXEC_ETATS.delais = { ...EXEC_ETATS_DELAIS_DEFAUT, ...(r.valeurs || {}) };
-    _execToast('Délais enregistrés', 'success');
+    _execToast(te('delais_enregistres'), 'success');
   } catch (e) {
     _execToast((e && e.message) || 'Enregistrement impossible', 'error');
   }
@@ -1347,7 +1347,7 @@ window.execRefsEnregistrer = async function () {
       method: 'PUT', body: JSON.stringify({ modeles: EXEC_REFS.modeles }),
     });
     EXEC_REFS.modeles = r.modeles || EXEC_REFS.modeles;
-    _execToast('Composition des références enregistrée', 'success');
+    _execToast(te('composition_refs_enregistree'), 'success');
     execRenderPage();
   } catch (e) {
     _execToast((e && e.message) || 'Enregistrement impossible', 'error');

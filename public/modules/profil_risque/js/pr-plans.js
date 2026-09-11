@@ -61,7 +61,7 @@ function renderPlans() {
         </div>
     </div>`;
 
-    const pageTitle = t('surveillance_freq') || 'Fréquences de surveillance';
+    const pageTitle = t('surveillance_freq');
 
     if (!filtered.length) {
         return `<div class="page-header" id="printStart_plans"><h2>${pageTitle}</h2>

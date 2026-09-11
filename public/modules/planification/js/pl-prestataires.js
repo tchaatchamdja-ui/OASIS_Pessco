@@ -235,7 +235,7 @@ function planShowAddRiskProfileModal() {
         <div class="form-group full-width">
             <label>${tp('sub_activity')}</label>
             <div id="rpSARowsWrap" style="border:1px solid var(--border);border-radius:6px;padding:0.5rem;background:var(--bg);">
-                <p class="text-muted" style="margin:0;font-size:0.85rem;">${tp('select_sector_first') || 'Sélectionnez un secteur d\'abord'}</p>
+                <p class="text-muted" style="margin:0;font-size:0.85rem;">${tp('select_sector_first')}</p>
             </div>
         </div>
     </div>`;
@@ -265,7 +265,7 @@ function planRPRenderSARows() {
     if (!wrap) return;
     const sas = (PLAN_STATE.data.sousActivites || []).filter(sa => sa.secteur_id === secteurId);
     if (!secteurId) {
-        wrap.innerHTML = `<p class="text-muted" style="margin:0;font-size:0.85rem;">${tp('select_sector_first') || 'Sélectionnez un secteur d\'abord'}</p>`;
+        wrap.innerHTML = `<p class="text-muted" style="margin:0;font-size:0.85rem;">${tp('select_sector_first')}</p>`;
         return;
     }
     if (!sas.length) {
@@ -303,7 +303,7 @@ async function planSaveRiskProfile() {
     const evalDate = document.getElementById('rpEvalDate')?.value || new Date().toISOString().substring(0, 10);
 
     if (!pid || !secteurId || !riskLabel || !intensite) {
-        oasisToast(tp('required_fields') || 'Champs obligatoires manquants', 'warning');
+        oasisToast(tp('required_fields'), 'warning');
         return;
     }
 

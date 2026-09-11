@@ -122,7 +122,7 @@ window.execOpenRoleEquipeModal = function (id) {
         <p class="exec-proc-erreur" id="req_erreur"></p>
     </div>`;
     const pied = `
-        <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel') || 'Annuler'}</button>
+        <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel')}</button>
         <button class="btn btn-primary" onclick="execSaveRoleEquipe('${id || ''}')">${EXEC_ICONS.check || ''} ${te('save')}</button>`;
     execShowSlider(`${EXEC_ICONS.add || ''} ${id ? te('modifier') : te('ajouter')} — ${te('param_equipe')}`, corps, pied, 'third');
 };
@@ -188,11 +188,11 @@ function execRenderConstatationsTab() {
                 <td><strong>${_esc(c.item)}</strong></td>
                 <td>${c.alias ? _esc(c.alias) : '<span style="color:var(--text-muted);">—</span>'}</td>
                 <td style="text-align:center;">${c.niveau}</td>
-                <td style="text-align:center;">${c.delai_cloture} ${te('days') || 'jours'}</td>
+                <td style="text-align:center;">${c.delai_cloture} ${te('days')}</td>
                 <td style="text-align:right;white-space:nowrap;">
                     ${isAdmin ? `
-                        <button class="btn btn-sm btn-ghost" title="${te('edit') || 'Modifier'}" onclick="execOpenCriticiteModal('${c.id}')">${EXEC_ICONS.edit}</button>
-                        <button class="btn btn-sm btn-ghost" title="${te('delete') || 'Supprimer'}" onclick="execDeleteCriticite('${c.id}')" style="color:#ef4444;">${EXEC_ICONS.delete}</button>
+                        <button class="btn btn-sm btn-ghost" title="${te('edit')}" onclick="execOpenCriticiteModal('${c.id}')">${EXEC_ICONS.edit}</button>
+                        <button class="btn btn-sm btn-ghost" title="${te('delete')}" onclick="execDeleteCriticite('${c.id}')" style="color:#ef4444;">${EXEC_ICONS.delete}</button>
                     ` : ''}
                 </td>
             </tr>`).join('')
@@ -206,8 +206,8 @@ function execRenderConstatationsTab() {
                 <td>${_esc(t.description || '')}</td>
                 <td style="text-align:right;white-space:nowrap;">
                     ${isAdmin ? `
-                        <button class="btn btn-sm btn-ghost" title="${te('edit') || 'Modifier'}" onclick="execOpenTypeCasModal('${t.id}')">${EXEC_ICONS.edit}</button>
-                        <button class="btn btn-sm btn-ghost" title="${te('delete') || 'Supprimer'}" onclick="execDeleteTypeCas('${t.id}')" style="color:#ef4444;">${EXEC_ICONS.delete}</button>
+                        <button class="btn btn-sm btn-ghost" title="${te('edit')}" onclick="execOpenTypeCasModal('${t.id}')">${EXEC_ICONS.edit}</button>
+                        <button class="btn btn-sm btn-ghost" title="${te('delete')}" onclick="execDeleteTypeCas('${t.id}')" style="color:#ef4444;">${EXEC_ICONS.delete}</button>
                     ` : ''}
                 </td>
             </tr>`).join('')
@@ -245,7 +245,7 @@ function execRenderConstatationsTab() {
                     <thead>
                         <tr>
                             <th>${te('item')}</th>
-                            <th>${te('description') || 'Description'}</th>
+                            <th>${te('description')}</th>
                             <th style="text-align:right;width:90px;"></th>
                         </tr>
                     </thead>
@@ -312,7 +312,7 @@ function _execClLigne(c, D, refs, isAdmin) {
             <button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistEditor('${c.id}')"
                     title="Items de la checklist">${EXEC_ICONS.list}</button>
             ${isAdmin ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistModal('${c.id}')"
-                    title="${_escAttr(te('modifier') || 'Modifier')}">${EXEC_ICONS.edit}</button>
+                    title="${_escAttr(te('modifier'))}">${EXEC_ICONS.edit}</button>
             <button class="btn btn-sm btn-outline btn-icon-only" onclick="execDeleteChecklist('${c.id}')"
                     style="color:#dc2626;border-color:#dc2626;" title="Supprimer">${EXEC_ICONS.delete}</button>` : ''}
         </td>
@@ -1226,8 +1226,8 @@ function execOpenCriticiteModal(critId) {
             <input id="critOrdre" type="number" class="shell-input" value="${c?.ordre ?? 0}" min="0">
         </div>
     `, `
-        <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">${te('cancel') || 'Annuler'}</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveCriticite('${critId || ''}')">${te('save') || 'Enregistrer'}</button>
+        <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">${te('cancel')}</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveCriticite('${critId || ''}')">${te('save')}</button>
     `);
 }
 
@@ -1240,7 +1240,7 @@ async function execSaveCriticite(critId) {
         ordre: parseInt(document.getElementById('critOrdre')?.value || '0', 10) || 0
     };
     if (!data.item) {
-        shellShowToast(te('required_field') || 'Champ requis', 'error');
+        shellShowToast(te('required_field'), 'error');
         return;
     }
     try {
@@ -1258,7 +1258,7 @@ async function execSaveCriticite(critId) {
 }
 
 async function execDeleteCriticite(critId) {
-    if (!await oasisConfirmer(te('confirm_delete') || 'Confirmer la suppression ?')) return;
+    if (!await oasisConfirmer(te('confirm_delete'))) return;
     try {
         await api(`${EXEC_MODULE_API}/criticites/${critId}`, { method: 'DELETE' });
         await execRefreshDynamic();
@@ -1278,7 +1278,7 @@ function execOpenTypeCasModal(tcId) {
             <input id="tcItem" class="shell-input" value="${_escAttr(t?.item || '')}" placeholder="Isolé / Récurrent">
         </div>
         <div class="shell-form-group">
-            <label>${te('description') || 'Description'}</label>
+            <label>${te('description')}</label>
             <textarea id="tcDesc" class="shell-input" rows="2">${_esc(t?.description || '')}</textarea>
         </div>
         <div class="shell-form-group">
@@ -1286,8 +1286,8 @@ function execOpenTypeCasModal(tcId) {
             <input id="tcOrdre" type="number" class="shell-input" value="${t?.ordre ?? 0}" min="0">
         </div>
     `, `
-        <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">${te('cancel') || 'Annuler'}</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveTypeCas('${tcId || ''}')">${te('save') || 'Enregistrer'}</button>
+        <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">${te('cancel')}</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveTypeCas('${tcId || ''}')">${te('save')}</button>
     `);
 }
 
@@ -1298,7 +1298,7 @@ async function execSaveTypeCas(tcId) {
         ordre: parseInt(document.getElementById('tcOrdre')?.value || '0', 10) || 0
     };
     if (!data.item) {
-        shellShowToast(te('required_field') || 'Champ requis', 'error');
+        shellShowToast(te('required_field'), 'error');
         return;
     }
     try {
@@ -1316,7 +1316,7 @@ async function execSaveTypeCas(tcId) {
 }
 
 async function execDeleteTypeCas(tcId) {
-    if (!await oasisConfirmer(te('confirm_delete') || 'Confirmer la suppression ?')) return;
+    if (!await oasisConfirmer(te('confirm_delete'))) return;
     try {
         await api(`${EXEC_MODULE_API}/types-cas/${tcId}`, { method: 'DELETE' });
         await execRefreshDynamic();

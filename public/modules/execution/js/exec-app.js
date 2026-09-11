@@ -187,7 +187,7 @@ function _execCriticiteDelai(criticiteValue) {
 function _execTypeCasOptions(selected, includeEmpty) {
     const tcs = EXEC_STATE.data.typesCas || [];
     const sel = _execNorm(selected);
-    const head = includeEmpty !== false ? `<option value="">${te('select_option') || 'Sélectionner'}</option>` : '';
+    const head = includeEmpty !== false ? `<option value="">${te('select_option')}</option>` : '';
     if (!tcs.length) {
         return head + ['isole', 'recurrent'].map(v =>
             `<option value="${v}" ${sel === v ? 'selected' : ''}>${v.charAt(0).toUpperCase() + v.slice(1)}</option>`
@@ -935,7 +935,7 @@ function execRenderPrestataireNotifications() {
     <div class="page-content">
         <div class="page-header">
             <h2>${te('notification_activite') || "Notification d'activité"}</h2>
-            <p style="color:var(--text-muted);">${rows.length} ${te('notifications') || 'notification(s)'}</p>
+            <p style="color:var(--text-muted);">${rows.length} ${te('notifications')}</p>
         </div>
 
         ${_execRenderFilterBar('execRenderPage()', { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showSearch: true })}
@@ -948,7 +948,7 @@ function execRenderPrestataireNotifications() {
                         <th>${te('objet')}</th>
                         <th style="width:95px;">${te('date_debut')}</th>
                         <th style="width:95px;">${te('date_fin')}</th>
-                        <th style="width:95px;">${te('date_edition') || 'Date'}</th>
+                        <th style="width:95px;">${te('date_edition')}</th>
                         <th>${te('status')}</th>
                         <th>${te('actions')}</th>
                     </tr>
@@ -1477,12 +1477,12 @@ function _execRenderFilterBar(onchangeFunc, opts) {
     if (opts.showCriticite) {
         // Values must match what is stored in the DB (see FNC form): mineure/majeure/critique
         const crits = [
-            { value: 'critique', label: te('critique') || 'Critique' },
-            { value: 'majeure',  label: te('majeur')  || 'Majeure'  },
-            { value: 'mineure',  label: te('mineur')  || 'Mineure'  }
+            { value: 'critique', label: te('critique') },
+            { value: 'majeure',  label: te('majeur')  },
+            { value: 'mineure',  label: te('mineur')  }
         ];
         filters.push(`<select class="form-select" onchange="EXEC_STATE.filters.criticite=this.value;${onchangeFunc}">
-            <option value="">${te('all_criticalities') || 'Toutes les criticités'}</option>
+            <option value="">${te('all_criticalities')}</option>
             ${crits.map(c => `<option value="${c.value}" ${F.criticite===c.value?'selected':''}>${c.label}</option>`).join('')}
         </select>`);
     }
@@ -1490,7 +1490,7 @@ function _execRenderFilterBar(onchangeFunc, opts) {
     if (opts.showTypeSupervision) {
         const typesSup = EXEC_STATE.data.typesSupervision || [];
         filters.push(`<select class="form-select" onchange="EXEC_STATE.filters.type_supervision=this.value;${onchangeFunc}">
-            <option value="">${te('all_types_supervision') || 'Tous les types'}</option>
+            <option value="">${te('all_types_supervision')}</option>
             ${typesSup.map(t => `<option value="${t.id}" ${F.type_supervision===t.id?'selected':''}>${_esc(t.type_supervision || t.libelle || t.nom || t.id)}</option>`).join('')}
         </select>`);
     }
@@ -1498,7 +1498,7 @@ function _execRenderFilterBar(onchangeFunc, opts) {
     if (opts.showModeSupervision) {
         const modesSup = EXEC_STATE.data.modesSupervision || [];
         filters.push(`<select class="form-select" onchange="EXEC_STATE.filters.mode_supervision=this.value;${onchangeFunc}">
-            <option value="">${te('all_modes_supervision') || 'Tous les modes'}</option>
+            <option value="">${te('all_modes_supervision')}</option>
             ${modesSup.map(m => `<option value="${m.id}" ${F.mode_supervision===m.id?'selected':''}>${_esc(m.mode || m.libelle || m.nom || m.id)}</option>`).join('')}
         </select>`);
     }

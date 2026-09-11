@@ -99,50 +99,15 @@
 .exec-kpi-trend.down { color: #ef4444; }
 
 /* ══════════════════════════════════════════════
-   7. DATA TABLE (execution variant)
+   7. DATA TABLE — l'habillage vient du socle (oasis-module.css) ;
+   restent la variante compacte et la ligne retenue.
    ══════════════════════════════════════════════ */
-
-.exec-data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-}
-
-.exec-data-table th {
-    text-align: left;
-    padding: 0.65rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-    border-bottom: 2px solid var(--border);
-    white-space: nowrap;
-}
-.exec-table.exec-data-table th {
-    color: var(--text-header, #fff);
-}
-
-.exec-data-table td {
-    padding: 0.65rem 0.75rem;
-    color: var(--text);
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-}
 
 /* Table compacte — lignes de hauteur réduite */
 .exec-compact-table td,
 .exec-compact-table th {
     padding-top: 0.3rem;
     padding-bottom: 0.3rem;
-}
-
-.exec-data-table tbody tr {
-    transition: background 0.15s;
-}
-
-.exec-data-table tbody tr:hover {
-    background: var(--exec-accent-bg);
 }
 
 .exec-data-table tbody tr.selected {

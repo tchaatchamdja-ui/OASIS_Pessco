@@ -63,3 +63,19 @@
     background: var(--oasis-filtre-bordure, var(--primary, #1a365d));
     color: var(--text-header, #fff);
 }
+
+/* ── Boutons d'années ──
+   Une rangée devant la barre de filtres, à la place d'une liste d'années : les
+   années couvertes s'y lisent d'un coup. Commune à « Exécution de la
+   Surveillance » et à la Planification. */
+.oasis-annees { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.6rem; }
+.oasis-annees .oasis-annee {
+    padding: 0.28rem 0.85rem; border: 1px solid var(--border); border-radius: 16px;
+    background: var(--bg-card); color: var(--text);
+    font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.oasis-annees .oasis-annee:hover { border-color: var(--primary); color: var(--primary); }
+.oasis-annees .oasis-annee.actif {
+    background: var(--primary); border-color: var(--primary); color: var(--text-header, #fff);
+}

@@ -90,40 +90,11 @@ body.exec-sidebar-collapsed .exec-slider-overlay {
 .exec-slider.slider-half { left: auto !important; width: 50vw !important; min-width: 420px; }
 .exec-slider textarea[rows="1"] { min-height: unset; }
 
-/* Dashboard situation table */
-.exec-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-}
-.exec-table th {
-    padding: 0.6rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    color: var(--text-header, #fff);
-    background: var(--primary);
-    border-right: 1px solid rgba(255,255,255,0.15);
-}
+/* Dashboard situation table — l'habillage vient du socle ; la seconde ligne
+   d'entête, celle des sous-colonnes d'un groupe, se fonce d'un cran. */
 .exec-table thead tr:nth-child(2) th {
     background: color-mix(in srgb, var(--primary) 85%, #000);
     font-size: 0.7rem;
-}
-.exec-table td {
-    padding: 0.55rem 0.75rem;
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    vertical-align: middle;
-}
-.exec-table tbody tr:nth-child(even) {
-    background: var(--exec-accent-bg, rgba(0,0,0,0.02));
-}
-.exec-table tbody tr:hover {
-    background: var(--exec-accent-bg-hover, rgba(0,0,0,0.04));
 }
 
 /* Contact form contrast */

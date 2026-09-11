@@ -115,39 +115,10 @@
 }
 .mes-stat-ligne:last-child { border-bottom: none; }
 .mes-stat-valeur { font-weight: 700; }
-/* ── Tableaux ── */
-.mes-table { width: 100%; border-collapse: separate; border-spacing: 0;
-    border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.mes-table th {
-    padding: .55rem .7rem; font-size: .72rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .03em;
-    color: var(--text-header, #fff); background: var(--primary);
-    text-align: left; border-right: 1px solid rgba(255,255,255,.15);
-}
-.mes-table td {
-    padding: .5rem .7rem; border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border); vertical-align: middle; font-size: .84rem;
-}
-.mes-table tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
-.mes-table tbody tr:hover { background: var(--mes-accent-bg); }
-.mes-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
+/* ── Tableaux ──
+   L'habillage vient du socle (oasis-module.css) : bandeau d'entête au thème,
+   filets horizontaux, une ligne sur deux teintée. */
 .mes-table-wrap { overflow-x: auto; }
-/* Variante « plate », celle des activités de supervision : les lignes ne se
-   séparent que d'un filet et rien n'alterne — c'est le contenu qui doit
-   ressortir, non la grille. L'entête garde en revanche son bandeau au thème :
-   il ancre la table dans la couleur de l'application. */
-.mes-table-plate { border: 0; border-radius: 0; }
-.mes-table-plate th {
-    border-right: 0; border-bottom: 0;
-    font-size: .75rem; letter-spacing: .05em; padding: .65rem .75rem; white-space: nowrap;
-}
-.mes-table-plate td {
-    border-right: 0; border-bottom: 1px solid var(--border);
-    padding: .45rem .75rem; font-size: .85rem;
-}
-.mes-table-plate tbody tr:nth-child(even) { background: transparent; }
-.mes-table-plate tbody tr { transition: background .15s; }
-.mes-table-plate tbody tr:hover { background: var(--mes-accent-bg); }
 
 /* Sous-onglets d'une étape : trois volets pour six sections. Ils se posent
    sous le fil d'avancement, dont ils reprennent la logique — on ne voit qu'un

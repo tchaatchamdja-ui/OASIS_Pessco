@@ -772,30 +772,3 @@
 /* Hors plan de surveillance : le même bandeau, dans le jaune qui distingue
    ces activités de celles qu'un plan porte. */
 .exec-module .exec-plan-entete-hp { background: #fef3c7; }
-
-/* ── Années couvertes par les plans ──
-   Une rangée de boutons devant les plans, à la place du choix d'année dans la
-   barre de filtres : les années qu'un plan couvre s'y lisent d'un coup. */
-.exec-module .exec-annees {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-bottom: 0.6rem;
-}
-.exec-module .exec-annee {
-    padding: 0.28rem 0.85rem;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    background: var(--bg-card);
-    color: var(--text);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-}
-.exec-module .exec-annee:hover { border-color: var(--primary); color: var(--primary); }
-.exec-module .exec-annee.actif {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: #fff;
-}

@@ -663,25 +663,12 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-histo-val { font-size: .68rem; font-weight: 700; color: var(--text); }
 .ramp-histo-lbl { font-size: .66rem; color: var(--text-muted); white-space: nowrap; }
 
-/* ── Tableaux ── */
-.ramp-table { width: 100%; border-collapse: separate; border-spacing: 0;
-    border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.ramp-table th {
-    padding: .5rem .65rem; font-size: .7rem; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .03em;
-    color: var(--text-header, #fff); background: var(--primary);
-    text-align: left; border-right: 1px solid rgba(255,255,255,.15);
-    position: sticky; top: 0; z-index: 2;
-}
+/* ── Tableaux ──
+   L'habillage vient du socle (oasis-module.css). RAMP y ajoute l'entête qui
+   reste visible quand la liste défile, et le tri au clic. */
+.ramp-table th { position: sticky; top: 0; z-index: 2; }
 .ramp-table th.triable { cursor: pointer; user-select: none; }
 .ramp-table th.triable:hover { background: color-mix(in srgb, var(--primary) 85%, #fff); }
-.ramp-table td {
-    padding: .45rem .65rem; border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border); vertical-align: middle; font-size: .82rem;
-}
-.ramp-table tbody tr:nth-child(even) { background: rgba(0,0,0,.02); }
-.ramp-table tbody tr:hover { background: var(--ramp-accent-bg); }
-.ramp-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
 .ramp-table-wrap { overflow: auto; max-height: 62vh; border-radius: 8px; }
 .ramp-tri { opacity: .5; font-size: .7rem; margin-left: .2rem; }
 .ramp-tri.actif { opacity: 1; }

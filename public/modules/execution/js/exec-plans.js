@@ -139,10 +139,10 @@ function _execBoutonsAnnees(plans, F) {
     if (!annees.length) return '';
     const retenue = String((F && F.annee) || '');
     return `
-    <div class="exec-annees">
-        <button class="exec-annee${retenue ? '' : ' actif'}"
+    <div class="oasis-annees">
+        <button type="button" class="oasis-annee${retenue ? '' : ' actif'}"
                 onclick="EXEC_STATE.filters.annee='';execRenderPage();">${te('all_years')}</button>
-        ${annees.map(a => `<button class="exec-annee${retenue === a ? ' actif' : ''}"
+        ${annees.map(a => `<button type="button" class="oasis-annee${retenue === a ? ' actif' : ''}"
                 onclick="EXEC_STATE.filters.annee='${a}';execRenderPage();">${a}</button>`).join('')}
     </div>`;
 }

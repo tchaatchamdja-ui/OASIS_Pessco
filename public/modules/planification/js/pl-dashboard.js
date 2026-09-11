@@ -105,7 +105,7 @@ function planRenderDashboard() {
         ${_planCartesIndicateurs(stats)}
 
         <div style="margin-top:1rem;">
-            ${_renderFilterBar('planRenderPage()', { showYear: true, showYearFirst: true, showPrestataire: true, showSousActivite: true, showTheme: true, showStatut: true, deuxLignes: true })}
+            ${_renderFilterBar('planRenderPage()', { showYear: true, showPrestataire: true, showSousActivite: true, showTheme: true, showStatut: true, deuxLignes: true })}
         </div>
 
         ${_planListeDeLaCarte(plans)}

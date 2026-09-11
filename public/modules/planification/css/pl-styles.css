@@ -264,18 +264,19 @@
     flex: 3 1 180px;
 }
 
-/* Barre de filtres en deux lignes (tableau de bord) : cinq champs de même
-   largeur en haut ; en bas l'organisme et le statut à cette même largeur, la
-   recherche et la remise à zéro occupant le reste. */
+/* Barre de filtres en deux lignes (tableau de bord) : quatre champs de même
+   largeur en haut — l'année est passée aux boutons qui la précèdent — ; en bas
+   l'organisme et le statut à cette même largeur, la recherche et la remise à
+   zéro occupant le reste. */
 .plan-filter-bar.plan-filter-grille {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: center;
 }
 .plan-filter-grille .form-select,
 .plan-filter-grille .form-input { min-width: 0; }
 .plan-filter-grille .plan-filter-fin {
-    grid-column: span 3;
+    grid-column: span 2;
     display: flex;
     align-items: center;
     gap: 0.4rem;

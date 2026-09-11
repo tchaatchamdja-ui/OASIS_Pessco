@@ -496,9 +496,6 @@ function _renderFilterBar(onchangeFunc, opts = {}) {
     // reset button would end up alone on a new row in a 5-per-row grid.
     const filters = [];
 
-    if (opts.showYearFirst && opts.showYear) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.annee=this.value;${onchangeFunc}">
-        <option value="">${tp('all_years')}</option>${years.map(y => `<option value="${y}" ${F.annee==y?'selected':''}>${y}</option>`).join('')}</select>`);
-
     if (opts.showDomaine !== false) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}">
         <option value="">${tp('all_domains')}</option>${domaines.map(d => `<option value="${d.id}" ${F.domaine===d.id?'selected':''}>${d.code} - ${_esc(d.nom)}</option>`).join('')}</select>`);
 
@@ -531,21 +528,39 @@ function _renderFilterBar(onchangeFunc, opts = {}) {
         </select>`);
     }
 
-    if (opts.showYear && !opts.showYearFirst) filters.push(`<select class="form-select" onchange="PLAN_STATE.filters.annee=this.value;${onchangeFunc}">
-        <option value="">${tp('all_years')}</option>${years.map(y => `<option value="${y}" ${F.annee==y?'selected':''}>${y}</option>`).join('')}</select>`);
-
     const recherche = opts.showSearch === false ? ''
         : `<input type="text" class="form-input" id="plan-filter-search" placeholder="${tp('search')}" value="${_esc(F.search)}" oninput="_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeFunc} })">`;
     const reinitialiser = `<button class="btn-icon-reset" onclick="planResetFilters()" title="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>`;
 
-    // Deux lignes : cinq champs de même largeur en haut, l'organisme et le
+    // L'année ne se choisit plus dans la barre : une rangée de boutons la
+    // précède, comme dans « Exécution de la Surveillance ».
+    const boutonsAnnees = opts.showYear
+        ? _planBoutonsAnnees(years, F.annee, (a) => `PLAN_STATE.filters.annee='${a}';${onchangeFunc}`)
+        : '';
+
+    // Deux lignes : quatre champs de même largeur en haut, l'organisme et le
     // statut à la même largeur en bas, la recherche et le bouton de remise à
     // zéro occupant le reste de la ligne.
     if (opts.deuxLignes) {
-        return `<div class="plan-filter-bar plan-filter-grille">${filters.join('')}
+        return `${boutonsAnnees}<div class="plan-filter-bar plan-filter-grille">${filters.join('')}
             <div class="plan-filter-fin">${recherche}${reinitialiser}</div>
         </div>`;
     }
 
-    return `<div class="plan-filter-bar">${filters.join('')}${recherche}${reinitialiser}</div>`;
+    return `${boutonsAnnees}<div class="plan-filter-bar">${filters.join('')}${recherche}${reinitialiser}</div>`;
+}
+
+// ── Années des plans ──
+// Une rangée de boutons devant la barre de filtres : seules y figurent les
+// années qu'un plan couvre — et celle retenue, même sans plan, pour que le
+// choix en cours se voie toujours. `geste(a)` rend le code du clic.
+function _planBoutonsAnnees(annees, retenue, geste) {
+    const r = String(retenue || '');
+    const liste = [...new Set([...(annees || []), r].filter(Boolean).map(String))]
+        .sort((a, b) => Number(b) - Number(a));
+    if (!liste.length) return '';
+    return `<div class="oasis-annees">
+        <button type="button" class="oasis-annee${r ? '' : ' actif'}" onclick="${geste('')}">${tp('all_years')}</button>
+        ${liste.map(a => `<button type="button" class="oasis-annee${r === a ? ' actif' : ''}" onclick="${geste(a)}">${a}</button>`).join('')}
+    </div>`;
 }

@@ -363,19 +363,38 @@ textarea { resize: vertical; min-height: 100px; }
 .stat-card.total .stat-number { color: var(--primary); }
 .stat-card.total .stat-label { color: var(--text-muted); }
 
-/* ── Tables ── */
+/* ── Tables ──
+   Un seul habillage pour toute l'application : l'entête en bandeau à la
+   couleur du thème, des filets horizontaux seulement, une ligne sur deux
+   teintée. Chaque module le reçoit sous le nom de classe qu'il employait
+   (.exec-data-table, .exec-table, .ramp-table, .mes-table) et n'y ajoute que
+   ce qui lui est propre — une entête collante, une ligne dépliée. */
 .table-container { background: var(--bg-card); border-radius: 10px; box-shadow: var(--shadow); overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; }
-.data-table th {
-    background: var(--primary); color: white; padding: 0.6rem 0.7rem; text-align: left;
-    font-size: 0.78rem; font-weight: 600; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.025em;
+.exec-data-table, .exec-table, .ramp-table, .mes-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.data-table th, .exec-data-table th, .exec-table th, .ramp-table th, .mes-table th {
+    background: var(--primary); color: var(--text-header, #fff); padding: 0.6rem 0.7rem; text-align: left;
+    font-size: 0.75rem; font-weight: 600; white-space: nowrap; text-transform: uppercase; letter-spacing: 0.03em;
 }
 .data-table th:first-child { border-radius: 10px 0 0 0; }
 .data-table th:last-child { border-radius: 0 10px 0 0; }
 .data-table th.sortable { cursor: pointer; user-select: none; }
 .data-table th.sortable:hover { background: var(--primary-hover); }
-.data-table td { padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); font-size: 0.84rem; word-wrap: break-word; }
-.data-table tr:hover td { background: rgba(0,0,0,0.02); }
+.data-table td, .exec-data-table td, .exec-table td, .ramp-table td, .mes-table td {
+    padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--border); font-size: 0.84rem;
+    vertical-align: middle; word-wrap: break-word;
+}
+/* Lignes alternées et survol, posés sans poids de sélecteur (`:where`) : une
+   ligne qui porte sa propre couleur — retenue, dépliée, en écart — la garde
+   sans avoir à surenchérir. */
+:where(.data-table, .exec-data-table, .exec-table, .ramp-table, .mes-table) > tbody > tr:where(:nth-child(even)) {
+    background: color-mix(in srgb, var(--primary) 4%, transparent);
+}
+:where(.data-table, .exec-data-table, .exec-table, .ramp-table, .mes-table) > tbody > tr:where(:hover) {
+    background: color-mix(in srgb, var(--primary) 9%, transparent);
+}
+/* Ligne « rien à afficher » d'une table. */
+.ramp-table-vide, .mes-table-vide { text-align: center; color: var(--text-muted); padding: 1.6rem; font-style: italic; }
 .data-table .row-inactive { opacity: 0.5; }
 .data-table .ref-cell { font-family: monospace; font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
 .data-table .date-cell { font-size: 0.78rem; white-space: nowrap; }
@@ -548,8 +567,10 @@ body.app-sidebar-collapsed .modal-overlay { left: var(--sidebar-collapsed, 60px)
     .login-container { padding: 1rem; }
     .modal { max-width: 100%; border-radius: 10px; }
     .page-header { flex-direction: column; align-items: stretch; }
-    .data-table { font-size: 0.78rem; }
-    .data-table th, .data-table td { padding: 0.35rem 0.45rem; }
+    .data-table, .exec-data-table, .exec-table, .ramp-table, .mes-table { font-size: 0.78rem; }
+    .data-table th, .data-table td, .exec-data-table th, .exec-data-table td,
+    .exec-table th, .exec-table td, .ramp-table th, .ramp-table td,
+    .mes-table th, .mes-table td { padding: 0.35rem 0.45rem; }
     .dashboard-banner { flex-direction: column; text-align: center; gap: 1rem; }
     .sub-nav { overflow-x: auto; flex-wrap: nowrap; }
     .sub-nav-btn { white-space: nowrap; flex-shrink: 0; }
@@ -670,7 +691,9 @@ body.app-sidebar-collapsed .pr-slicer-overlay { left: var(--sidebar-collapsed, 6
     .app-content { margin-left: 0 !important; }
     .main-content { padding: 0; max-width: 100%; }
     .card { box-shadow: none; border: 1px solid #ddd; }
-    .data-table th { background: #f3f4f6 !important; color: #1f2937 !important; -webkit-print-color-adjust: exact; }
+    .data-table th, .exec-data-table th, .exec-table th, .ramp-table th, .mes-table th {
+        background: #f3f4f6 !important; color: #1f2937 !important; -webkit-print-color-adjust: exact;
+    }
 }
 
 /* Boutons réduits à leur icône (tout déplier / tout replier) */

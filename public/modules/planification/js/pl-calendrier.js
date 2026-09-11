@@ -69,8 +69,9 @@ function planRenderCalendar() {
     // Collect available years from plans
     const availYears = [...new Set(plans.map(p => p.annee))].sort((a, b) => b - a);
 
-    // Build calendar filter bar HTML
-    const calFilterBar = `<div class="plan-filter-bar">
+    // Barre de filtres du calendrier, précédée des boutons d'années
+    const choixAnnee = (a) => `PLAN_STATE.calFilters.annee='${a}';${a ? `PLAN_STATE.calendarYear=${a};` : ''}planRenderPage();`;
+    const calFilterBar = `${_planBoutonsAnnees(availYears, CF.annee, choixAnnee)}<div class="plan-filter-bar">
         <select class="form-select" onchange="PLAN_STATE.calFilters.domaine=this.value;PLAN_STATE.calFilters.secteur='';PLAN_STATE.calFilters.prestataire='';planRenderPage();">
             <option value="">${tp('all_domains')}</option>
             ${domaines.map(d => `<option value="${d.id}" ${CF.domaine===d.id?'selected':''}>${d.code} - ${_esc(d.nom)}</option>`).join('')}
@@ -82,10 +83,6 @@ function planRenderCalendar() {
         <select class="form-select" onchange="PLAN_STATE.calFilters.prestataire=this.value;planRenderPage();">
             <option value="">${tp('all_providers')}</option>
             ${filteredPrest.map(p => `<option value="${p.id}" ${CF.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
-        </select>
-        <select class="form-select" onchange="PLAN_STATE.calFilters.annee=this.value;if(this.value)PLAN_STATE.calendarYear=parseInt(this.value);planRenderPage();">
-            <option value="">${tp('all_years')}</option>
-            ${availYears.map(y => `<option value="${y}" ${CF.annee==y?'selected':''}>${y}</option>`).join('')}
         </select>
         <select class="form-select" onchange="PLAN_STATE.calFilters.trimestre=this.value;planRenderPage();">
             <option value="">${tp('all_quarters')}</option>

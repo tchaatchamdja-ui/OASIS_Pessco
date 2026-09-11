@@ -198,9 +198,8 @@ function escArg(v) {
   return esc(JSON.stringify(String(v ?? '')));
 }
 
-function esc(s) {
-  return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
+// L'échappement vient du socle (oasis-commun.js), comme dans chaque module.
+function esc(s) { return oasisEsc(s); }
 
 // ── Recherche des écrans du portail ──
 // Le geste est celui du menu « Inspections » de RAMP : au repos une pastille

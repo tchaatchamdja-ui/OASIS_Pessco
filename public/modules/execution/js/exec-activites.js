@@ -1722,7 +1722,7 @@ function execOpenChecklistsPicker(dossierId, returnTab) {
         })
         : allChecklists;
     const current = new Set(_parse(dossier.realisation_checklists));
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
 
     const list = filtered.length
         ? filtered.map(c => `<label class="exec-chk-pick-row">
@@ -1837,7 +1837,7 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
     const allThemes = (window.PESSCO?.sharedData?.themesSupervision) || [];
     const themeLbl = id => allThemes.find(t => t.id === id)?.libelle || '-';
     const sousThLbl = id => sousThemes.find(s => s.id === id)?.libelle || '-';
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
 
     document.getElementById('execChkFillerWrap')?.remove();
 
@@ -2524,7 +2524,7 @@ function execChkFillExportPdf(dossierId, checklistId) {
     const sousThLbl = id => sousThemes.find(s => s.id === id)?.libelle || '-';
     const stLbl = id => statuts.find(s => s.id === id)?.libelle || 'Non Évalué';
     const stCol = id => statuts.find(s => s.id === id)?.couleur || '#9ca3af';
-    const _e = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _e = oasisEsc;
     // Lit les statuts/observations directement depuis le DOM du filler (état courant)
     const respByItem = {};
     document.querySelectorAll('#execChkFillerGroups tr[data-item-id]').forEach(tr => {

@@ -45,20 +45,10 @@ const MES_STATE = {
 //  Requêtes
 // ══════════════════════════════════════
 
-async function mesApi(chemin, options) {
-    const o = { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...(options || {}) };
-    const r = await fetch(MES_API + chemin, o);
-    if (r.status === 401) {
-        // Session perdue : le socle ramène la fenêtre entière à la connexion.
-        oasisSessionPerdue();
-        throw new Error(mt('session_expiree'));
-    }
-    if (!r.ok) {
-        const err = await r.json().catch(() => ({ error: r.statusText }));
-        throw new Error(err.error || r.statusText);
-    }
-    return r.status === 204 ? null : r.json();
-}
+// Le client vient du socle (oasis-commun.js). Il imposait ici un type JSON
+// jusque sur les dépôts de fichiers : le corps partait sans sa frontière
+// multipart, et le serveur répondait « Aucun fichier fourni ».
+function mesApi(chemin, options) { return oasisJson(MES_API + chemin, options); }
 
 // ══════════════════════════════════════
 //  Échappement
@@ -66,13 +56,10 @@ async function mesApi(chemin, options) {
 // `_mesEsc` protège le texte ; `_mesAttr` protège une valeur d'attribut, où
 // un guillemet refermerait l'attribut. Tout libellé saisi peut en contenir.
 
-function _mesEsc(v) {
-    if (v === null || v === undefined || v === '') return '';
-    const d = document.createElement('div');
-    d.textContent = String(v);
-    return d.innerHTML;
-}
-const _mesAttr = (v) => _mesEsc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+// L'échappement vient du socle (oasis-commun.js) : un seul barème pour tous
+// les modules. Le nom demeure, les gabarits n'ont rien à changer.
+function _mesEsc(v) { return oasisEsc(v); }
+const _mesAttr = (v) => oasisEsc(v);
 
 // Chemin d'une pièce jointe servie par ce module. Échapper l'attribut ne suffit
 // pas : « javascript:… » y tiendrait sans guillemet. Seul le chemin que
@@ -408,6 +395,11 @@ function mesSetFiltre(cle, valeur) {
 
 function mesRechercher(cle, valeur) {
     MES_STATE.filtres[cle] = valeur;
+    // La table se redessine une fois la frappe arrêtée, non à chaque touche.
+    oasisSaisieDifferee(`mes_${cle}`, () => mesRechercherMaintenant());
+}
+
+function mesRechercherMaintenant() {
     const corps = document.querySelector('[data-corps]');
     if (!corps) { mesRenderPage(); return; }
     corps.innerHTML = corps.dataset.corps === 'mesures'
@@ -482,12 +474,7 @@ function mesToggleSidebar() {
 
 function mesSetTheme(theme) {
     MES_STATE.theme = theme;
-    localStorage.setItem('pr_theme', theme);
-    // Les couleurs sont des variables CSS : poser l'attribut suffit.
-    document.documentElement.setAttribute('data-theme', theme);
-    document.querySelectorAll('.theme-dot').forEach((d) => {
-        d.classList.toggle('active', d.dataset.theme === theme);
-    });
+    oasisAppliquerTheme(theme);
 }
 
 function mesSetLang(lang) {

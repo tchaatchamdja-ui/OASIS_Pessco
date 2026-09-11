@@ -773,7 +773,7 @@ function _execCliRenderRows(clId) {
         ? allThemes.filter(t => !t.sous_activite_id || saIds.includes(t.sous_activite_id))
         : allThemes;
     const sousThemes = D.sousThemes.filter(s => s.checklist_id === clId);
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
 
     // Le compteur de l'entête suit les ajouts et suppressions faits ici.
     const compteur = document.getElementById('execCliCompte');
@@ -899,7 +899,7 @@ function _execCliExigencesForChecklist(clId) {
 }
 
 function _execCliRefReglementCell(it, clId) {
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
     const parsed = _execCliParseReglement(it.ref_reglement);
     const exigencesAll = (window.PESSCO?.sharedData?.exigences) || [];
     const labels = parsed.isList
@@ -927,7 +927,7 @@ function execOpenRefReglementPicker(itId, clId) {
     const selected = new Set(parsed.list);
     const exigences = _execCliExigencesForChecklist(clId).slice().sort((a, b) =>
         (a.reference || '').localeCompare(b.reference || ''));
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
     const list = exigences.length
         ? exigences.map(e => `<label style="display:flex;align-items:flex-start;gap:0.4rem;padding:0.25rem 0.35rem;border-bottom:1px solid var(--border);font-size:0.78rem;cursor:pointer;">
               <input type="checkbox" class="exg-cb" value="${e.id}" ${selected.has(e.id) ? 'checked' : ''}>
@@ -1055,7 +1055,7 @@ function execOpenSousThemesManager(clId) {
         : allThemes;
     const sousThemes = D.sousThemes.filter(s => s.checklist_id === clId).slice().sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
     const themeLabel = id => themes.find(t => t.id === id)?.libelle || (allThemes.find(t => t.id === id)?.libelle || '-');
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
 
     const rowsHtml = sousThemes.length ? sousThemes.map(s => `<tr>
         <td>${_esc2(themeLabel(s.theme_id))}</td>
@@ -1135,7 +1135,7 @@ function execOpenSousThemeModal(clId, stId) {
     const themes = saIds.length
         ? allThemes.filter(t => !t.sous_activite_id || saIds.includes(t.sous_activite_id))
         : allThemes;
-    const _esc2 = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc2 = oasisEsc;
     shellShowModal((item ? 'Modifier' : 'Ajouter') + ' — Sous-thème', `
         <div class="shell-form-group">
             <label>Thème *</label>

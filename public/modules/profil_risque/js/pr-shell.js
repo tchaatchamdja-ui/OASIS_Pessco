@@ -187,11 +187,7 @@ function updateNavUI() {
 // ── Theme & Language ──
 function setTheme(theme) {
     APP_STATE.theme = theme;
-    localStorage.setItem('pr_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    document.querySelectorAll('.theme-dot').forEach(d => {
-        d.classList.toggle('active', d.dataset.theme === theme);
-    });
+    oasisAppliquerTheme(theme);
 }
 
 function setLang(lang) {

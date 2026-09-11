@@ -33,8 +33,8 @@ const DR_ICONS = {
 };
 
 const drApi = (p, o) => api('/api/m/droits' + p, o);
-const drEsc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+// L'échappement vient du socle (oasis-commun.js).
+const drEsc = (s) => oasisEsc(s);
 const drDom = (id) => (DR.domaines.find((d) => d.id === id) || {}).nom || id || '—';
 const drSec = (id) => (DR.secteurs.find((s) => s.id === id) || {}).nom || '';
 const drPrest = (id) => {
@@ -146,9 +146,7 @@ function drShell(content) {
 // Thème, langue et rétraction : même comportement que le super-menu Profils de Risques
 window.drSetTheme = function (th) {
   DR.theme = th;
-  localStorage.setItem('pr_theme', th);
-  document.documentElement.setAttribute('data-theme', th);
-  document.querySelectorAll('.theme-dot').forEach((d) => d.classList.toggle('active', d.dataset.theme === th));
+  oasisAppliquerTheme(th);
 };
 
 window.drSetLang = function (lang) {

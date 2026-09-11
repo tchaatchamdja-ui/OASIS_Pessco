@@ -161,20 +161,8 @@ const RAMP_STATE = {
 //  Requêtes
 // ══════════════════════════════════════
 
-async function rampApi(chemin, options) {
-    const o = { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...(options || {}) };
-    const r = await fetch(RAMP_API + chemin, o);
-    if (r.status === 401) {
-        // Session perdue : le socle ramène la fenêtre entière à la connexion.
-        oasisSessionPerdue();
-        throw new Error('Session expirée');
-    }
-    if (!r.ok) {
-        const err = await r.json().catch(() => ({ error: r.statusText }));
-        throw new Error(err.error || r.statusText);
-    }
-    return r.status === 204 ? null : r.json();
-}
+// Le client vient du socle (oasis-commun.js), comme celui des Mesures.
+function rampApi(chemin, options) { return oasisJson(RAMP_API + chemin, options); }
 
 // ══════════════════════════════════════
 //  Échappement
@@ -183,13 +171,10 @@ async function rampApi(chemin, options) {
 // guillemet refermerait l'attribut. Les données viennent d'un classeur Excel
 // dont personne ne maîtrise le contenu.
 
-function _rEsc(v) {
-    if (v === null || v === undefined || v === '') return '';
-    const d = document.createElement('div');
-    d.textContent = String(v);
-    return d.innerHTML;
-}
-const _rAttr = (v) => _rEsc(v).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+// L'échappement vient du socle (oasis-commun.js) : un seul barème pour tous
+// les modules. Le nom demeure, les gabarits n'ont rien à changer.
+function _rEsc(v) { return oasisEsc(v); }
+const _rAttr = (v) => oasisEsc(v);
 // Valeur passée en argument d'un `onclick`. `_rAttr` seul ne suffit pas : il
 // rend l'apostrophe en `&#39;`, que l'analyseur HTML redonne telle quelle au
 // code — « Côte d'Ivoire » refermait donc la chaîne JavaScript et le clic ne
@@ -662,6 +647,12 @@ function rampViderRecherche() {
 // entière ferait perdre le curseur à chaque frappe.
 function rampChercher(valeur) {
     RAMP_STATE.filtres.recherche = valeur;
+    // La liste se redessine une fois la frappe arrêtée, non à chaque touche :
+    // sur le tableau de bord, c'est la page entière qui se refait.
+    oasisSaisieDifferee('ramp_recherche', () => rampChercherMaintenant());
+}
+
+function rampChercherMaintenant() {
     const corps = document.querySelector('[data-corps]');
     // Là où un tableau est affiché, seul son corps se redessine.
     if (corps && ['inspections', 'ecarts'].includes(corps.dataset.corps)) {
@@ -1192,10 +1183,7 @@ function rampRafraichir() {
 // pastille active change.
 function rampSetTheme(theme) {
     RAMP_STATE.theme = theme;
-    localStorage.setItem('pr_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    document.querySelectorAll('.theme-dot').forEach((d) =>
-        d.classList.toggle('active', d.dataset.theme === theme));
+    oasisAppliquerTheme(theme);
 }
 
 // La langue, elle, change les textes : le redessin est nécessaire, mais il ne

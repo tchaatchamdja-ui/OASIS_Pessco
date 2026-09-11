@@ -471,20 +471,13 @@ function _parseActivityCommentsFromText(text) {
 //  HELPERS
 // ══════════════════════════════════════
 
-function _esc(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
+// L'échappement vient du socle (oasis-commun.js) : un seul barème pour tous
+// les modules. Le nom demeure, les gabarits n'ont rien à changer.
+function _esc(v) { return oasisEsc(v); }
 
 // Interpolation dans un attribut : les guillemets doivent partir aussi, ce que
 // `_esc` ne fait pas — il passe par innerHTML, qui les laisse tels quels.
-function _escAttr(str) {
-    return String(str == null ? '' : str)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
+function _escAttr(v) { return oasisEsc(v); }
 
 function _statusBadge(status) {
     const color = _statusColor(status);

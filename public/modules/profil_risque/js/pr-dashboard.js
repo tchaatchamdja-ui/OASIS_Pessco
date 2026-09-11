@@ -283,7 +283,7 @@ function renderDashboard() {
         // mois — la même règle que la carte « Échéances Proches », qu'il double.
         const upcoming = prEcheancesProches(filteredEvals, 3);
         if (!upcoming.length) return '';
-        const _esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const _esc = oasisEsc;
         const nom = (ev) => _esc((D.prestataires || []).find(p => p.id === ev.prestataire_id)?.nom || '?');
         const fin = (ev) => prFinDeCycle(ev).toISOString().slice(0, 10);
         return `<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:0.6rem 0.85rem;margin-bottom:0.75rem;">

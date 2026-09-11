@@ -585,8 +585,7 @@ function renderEvalResults() {
 function buildEvalReportHtml(ev) {
     const D = APP_STATE.data;
     const aac = D.aac || {};
-    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const esc = oasisEsc;
     // Texte libre : conserve les retours à la ligne, « - » si vide
     const txt = s => (String(s == null ? '' : s).trim() ? esc(s).replace(/\n/g, '<br>') : '-');
 
@@ -1037,7 +1036,7 @@ function _prEvalContexte(evalId) {
             ${commentBlock}
         </div>`;
     }
-    function _escapeHtml(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function _escapeHtml(s) { return oasisEsc(s); }
 
     // Phase 2 — Compile per-evaluator scores for an indicator (4.2.2.d)
     function compileIndicatorStatus(slot, indKey) {
@@ -1497,7 +1496,7 @@ async function _loadReunionEvalTab(evalId) {
         const allMeetings = rows || [];
         const today = new Date().toISOString().slice(0, 10);
         const escVal = s => String(s || '').replace(/"/g, '&quot;');
-        const escTxt = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const escTxt = oasisEsc;
 
         // 1 consolidation per meeting record (no cross-meeting aggregation)
         // Used by the consolidation section header to know if at least 1 meeting exists (for re-submit button)
@@ -1622,7 +1621,7 @@ function _renderConsolidationTable(cumulative, currentChanges, roundsCount) {
     if (!cumulative.length && !currentChanges.length) {
         return '<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">Aucun changement de note enregistré. Cliquez sur le bouton pour démarrer une consolidation.</div>';
     }
-    const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const esc = oasisEsc;
     // Tag the current (in-progress) changes with the next round index
     const nextRound = (roundsCount || 0) + 1;
     const inProgress = currentChanges.map(c => ({ ...c, round: nextRound, in_progress: true }));
@@ -1698,7 +1697,7 @@ async function _loadReunionPrestTab(evalId, prestId) {
         const cur = (rows && rows[0]) || { eval_id: evalId, prestataire_id: prestId };
         const today = new Date().toISOString().slice(0, 10);
         const escVal = s => String(s || '').replace(/"/g, '&quot;');
-        const escTxt = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const escTxt = oasisEsc;
         const evNow = APP_STATE.data.evaluations.find(e => e.id === evalId);
         // Lock all form fields and hide write buttons when eval reached a terminal/locked state
         const isLocked = !!evNow && ['valide', 'cloturee', 'rejetee'].includes(evNow.statut);
@@ -2144,8 +2143,7 @@ function _printCompteRendu(m, evalId, titre) {
     const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id) || {};
     const sect = ((D._rawSecteurs || D.secteurs) || []).find(s => s.id === ev.secteur_id) || {};
     const aac = D.aac || {};
-    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const esc = oasisEsc;
     const txt = s => (String(s == null ? '' : s).trim() ? esc(s).replace(/\n/g, '<br>') : '-');
 
     const parts = Array.isArray(m.participants) ? m.participants : [];
@@ -2218,7 +2216,7 @@ async function reunionEvalEditInline(evalId, rid) {
     }
     const today = new Date().toISOString().slice(0, 10);
     const escVal = s => String(s || '').replace(/"/g, '&quot;');
-    const escTxt = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const escTxt = oasisEsc;
     inner.innerHTML = `
         <div style="border:1px solid var(--border);border-radius:6px;padding:0.6rem 0.85rem;background:var(--bg-card);">
             <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.4rem;">${rid ? 'Modifier la réunion' : 'Nouvelle réunion'}</div>
@@ -2320,7 +2318,8 @@ async function reunionPrestSaveFromTab(evalId, prestId) {
 }
 
 
-function _genEsc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// L'échappement vient du socle (oasis-commun.js).
+function _genEsc(s) { return oasisEsc(s); }
 
 // Helper — capture any pending indicator comments from the DOM and persist them BEFORE a workflow
 // transition (Soumettre / Accepter / Renvoyer / Rejeter / Cloturer / Valider). This prevents loss

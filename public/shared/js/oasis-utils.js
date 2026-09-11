@@ -52,19 +52,8 @@ const ICONS = {
 
 // Champs de recherche des barres de filtres : re-rendu différé (300 ms) puis
 // restauration du focus et de la position du curseur, l'input étant recréé.
-let _pesSearchTimer = null;
-function _pesSearchInput(input, apply) {
-    const id = input.id;
-    const pos = input.selectionStart;
-    clearTimeout(_pesSearchTimer);
-    _pesSearchTimer = setTimeout(() => {
-        apply();
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.focus();
-        try { el.setSelectionRange(pos, pos); } catch (e) { /* input non textuel */ }
-    }, 300);
-}
+// L'anti-rebond vient du socle (oasis-commun.js).
+function _pesSearchInput(input, apply) { oasisSaisieDifferee(input, apply); }
 
 // ── API helper ──
 async function api(path, options = {}) {
@@ -82,7 +71,4 @@ async function api(path, options = {}) {
 }
 
 // Échappement HTML des valeurs insérées dans les gabarits.
-function escapeHtml(s) {
-    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
+function escapeHtml(s) { return oasisEsc(s); }

@@ -131,18 +131,13 @@ const EXEC_NAV_PRESTATAIRE = {
 //  HELPERS
 // ══════════════════════════════════════
 
-function _esc(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
+// L'échappement vient du socle (oasis-commun.js) : un seul barème pour tous
+// les modules. Le nom demeure, les gabarits n'ont rien à changer.
+function _esc(v) { return oasisEsc(v); }
 
 // Valeur destinée à un attribut : `_esc` laisse passer les guillemets, qui y
 // refermeraient l'attribut. Tout texte saisi peut en contenir.
-function _escAttr(valeur) {
-    return _esc(valeur).replace(/"/g, '&quot;');
-}
+function _escAttr(v) { return oasisEsc(v); }
 
 // URL de téléchargement d'une pièce jointe — ajoute le token (route /uploads protégée).
 function _execDl(p) {
@@ -698,9 +693,7 @@ function execUpdateNavUI() {
 
 function execSetTheme(theme) {
     EXEC_STATE.theme = theme;
-    localStorage.setItem('pr_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === theme));
+    oasisAppliquerTheme(theme);
 }
 
 function execSetLang(lang) {
@@ -754,19 +747,8 @@ function execLogout() {
 // (`/shared/js/oasis-utils.js`), que ce module ne charge pas — il tient ses
 // propres helpers — et son absence faisait échouer le `oninput` sans bruit :
 // la recherche ne filtrait rien, dans toutes les barres du module.
-let _execRechercheTimer = null;
-function _pesSearchInput(input, apply) {
-    const id = input.id;
-    const pos = input.selectionStart;
-    clearTimeout(_execRechercheTimer);
-    _execRechercheTimer = setTimeout(() => {
-        apply();
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.focus();
-        try { el.setSelectionRange(pos, pos); } catch (e) { /* champ non textuel */ }
-    }, 300);
-}
+// L'anti-rebond vient du socle (oasis-commun.js).
+function _pesSearchInput(input, apply) { oasisSaisieDifferee(input, apply); }
 
 function execResetFilters() {
     EXEC_STATE.filters = { domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: '', trimestre: '', criticite: '', type_supervision: '', mode_supervision: '', avancement: '' };

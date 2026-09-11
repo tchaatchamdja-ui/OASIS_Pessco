@@ -306,7 +306,7 @@ function openIndividualIndicator(evalId, type, indId, saId) {
     const criteriaHtml = critRows.length ? `<div style="margin-top:0.5rem;">${critRows.join('')}</div>` : '';
 
     // Distribution bar
-    const _esc = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc = oasisEsc;
     const distHtml = totalPeers ? `<div style="margin-top:0.3rem;">
         ${[1,2,3].map(n => {
             const pct = totalPeers ? (dist[n]/totalPeers*100) : 0;
@@ -474,7 +474,7 @@ function openIndividualGroup(evalId, type, saId) {
         </div>`;
     }
 
-    const _esc = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const _esc = oasisEsc;
 
     // List of indicators with their note (compact)
     function _pillCompact(score) {
@@ -910,7 +910,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
     // Label clamp 2 lignes max via CSS line-clamp
     const _lblStyle = 'font-size:0.7rem;color:var(--text-muted);line-height:1.2;min-height:1.7em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;';
     const _gridStyle = 'display:grid;grid-template-columns:repeat(auto-fill, minmax(max(160px, calc(20% - 0.4rem)), 1fr));gap:0.5rem;';
-    function _escAttr(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function _escAttr(s) { return oasisEsc(s); }
     function makeIndCard(ind, score, prevScore, type, color, saId) {
         const _saAttr = saId ? `,'${saId}'` : ",''";
         return `<div class="card" style="padding:0.55rem 0.7rem;display:flex;flex-direction:column;height:100%;cursor:pointer;" onclick="openIndividualIndicator('${ev.id}','${type}','${ind.id}'${_saAttr})" title="Cliquer pour afficher les détails et la situation par rapport aux autres prestataires du secteur">

@@ -223,9 +223,7 @@ function planSetTheme(theme) {
     // volet du calendrier se referme, comme au moindre pas dans le menu.
     planFermerCalendrier();
     PLAN_STATE.theme = theme;
-    localStorage.setItem('pr_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === theme));
+    oasisAppliquerTheme(theme);
 }
 
 function planSetLang(lang) {

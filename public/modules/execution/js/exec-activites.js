@@ -528,7 +528,7 @@ function _buildStepRealisation(dossier, dossierId) {
     if (!Array.isArray(selectedChIds)) selectedChIds = [];
 
     const selectedHtml = selectedChIds.length === 0
-        ? `<p style="color:var(--text-muted);font-size:0.83rem;margin:0;">Aucune checklist sélectionnée — utilisez le bouton ci-dessous pour en ajouter.</p>`
+        ? `<p style="color:var(--text-muted);font-size:0.83rem;margin:0;">${te('aucune_checklist_selectionnee')}</p>`
         : selectedChIds.map(id => {
             const c = allChecklists.find(x => x.id === id);
             if (!c) return '';
@@ -856,7 +856,7 @@ function _buildStepValidation(dossier, dossierId) {
     const lastRap = rapports[0];
     const courriel = surTransmission && lastRap ? _execCourrielTransmission(dossier, lastRap) : '';
     return `
-    ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${surTransmission ? 'Aucun rapport validé pour le moment.' : 'Aucun rapport soumis pour le moment.'}</p>` : `
+    ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${te(surTransmission ? 'aucun_rapport_valide' : 'aucun_rapport_soumis')}</p>` : `
     <div style="overflow-x:auto;">
     <table class="exec-data-table">
         <thead><tr>
@@ -1252,7 +1252,7 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                         : `<button class="btn btn-sm btn-primary" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',true)">✓ Checklist Validée</button>`) : ''}
                 </div>`;
             }).filter(Boolean).join('')
-            : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">Aucune checklist sélectionnée à l'étape Réalisation.</p>`;
+            : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_checklist_realisation')}</p>`;
 
         // ── Section Pièces jointes de l'activité (issues de l'étape Réalisation) ──
         let realPjs = [];
@@ -1270,7 +1270,7 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
                 <button class="btn btn-sm btn-primary" onclick="execSaveRedactionPj('${dossierId}')">${EXEC_ICONS.check} Enregistrer</button>
                 <input type="file" id="realisation_pj_input" style="display:none;" multiple onchange="execUploadRealisationPj(this.files)">
             </div>`
-            : (realPjs.length ? '' : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">Aucune pièce jointe ajoutée à l'étape Réalisation.</p>`)}`;
+            : (realPjs.length ? '' : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_pj_realisation')}</p>`)}`;
 
         return `
         <div style="margin-bottom:1.25rem;">
@@ -1732,11 +1732,11 @@ function execOpenChecklistsPicker(dossierId, returnTab) {
                 ${c.description ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.1rem;">${_esc2(c.description.slice(0, 120))}${c.description.length>120?'…':''}</div>` : ''}
             </span>
         </label>`).join('')
-        : `<div style="padding:1rem;text-align:center;color:var(--text-muted);font-style:italic;">Aucune checklist applicable${secteurId ? ' au secteur de cette activité' : ''}.</div>`;
+        : `<div style="padding:1rem;text-align:center;color:var(--text-muted);font-style:italic;">${te(secteurId ? 'aucune_checklist_secteur' : 'aucune_checklist_applicable')}</div>`;
 
     const hint = secteurId
         ? `Checklists filtrées par le secteur de l'activité (${filtered.length} disponible${filtered.length>1?'s':''}).`
-        : `Aucun secteur identifié — toutes les checklists sont listées.`;
+        : te('aucun_secteur_identifie');
 
     shellShowModal('Sélectionner les checklists à utiliser', `
         <style>
@@ -2578,7 +2578,7 @@ function execChkFillExportPdf(dossierId, checklistId) {
         <div class="meta">Checklist renseignée (brouillon) — ${items.length} item(s) — Édité le ${today}</div>
         <table>
             <thead><tr><th>Réf. Item</th><th>Réf. Règlement</th><th>Thème / Sous-thème</th><th>Description</th><th>Directives</th><th>Statut</th><th>Observations</th></tr></thead>
-            <tbody>${rows || '<tr><td colspan="7">Aucun item.</td></tr>'}</tbody>
+            <tbody>${rows || `<tr><td colspan="7">${te('aucun_item')}</td></tr>`}</tbody>
         </table>
         <script>window.onload=function(){setTimeout(function(){window.print();},200);};</script>
     </body></html>`);
@@ -2684,7 +2684,7 @@ async function execSendRapportValidated(rapportId) {
 async function execGenerateNotificationPdf(dossierId) {
     const dossier = EXEC_STATE.selectedDossier;
     if (!dossier || !dossier.notification_id) {
-        _execToast('Aucune notification liée à ce dossier', 'error');
+        _execToast(te('aucune_notification_dossier'), 'error');
         return;
     }
     try {
@@ -2791,7 +2791,7 @@ async function execSaveDossier(dossierId, silent) {
 
     // Skip if no data to save
     if (Object.keys(data).length === 0) {
-        if (!silent) _execToast('Aucun champ à enregistrer', 'info');
+        if (!silent) _execToast(te('aucun_champ_a_enregistrer'), 'info');
         return;
     }
 

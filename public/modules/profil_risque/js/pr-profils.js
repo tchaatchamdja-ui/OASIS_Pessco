@@ -318,7 +318,7 @@ function openIndividualIndicator(evalId, type, indId, saId) {
                 <span style="min-width:65px;text-align:right;font-size:0.72rem;color:#555;">${dist[n]} (${pct.toFixed(0)}%)</span>
             </div>`;
         }).join('')}
-    </div>` : `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">Aucun prestataire pair évalué sur cet indicateur.</div>`;
+    </div>` : `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">${t('no_peer_indicator')}</div>`;
 
     // Peer list (sorted by score)
     const myPrest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
@@ -520,7 +520,7 @@ function openIndividualGroup(evalId, type, saId) {
         </div>
         <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">La barre <span style="color:#1d4ed8;font-weight:700;">bleue</span> représente la tranche du prestataire courant.</div>`;
     } else {
-        distHtml = `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">Aucun prestataire pair évalué sur ce groupe.</div>`;
+        distHtml = `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">${t('no_peer_group')}</div>`;
     }
 
     // Peer list
@@ -939,7 +939,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
     }
     function _sectorAcc(idPrefix, sectorTitle, color, bodyHtml, totalCount) {
         const aId = `${idPrefix}_sect`;
-        const inner = bodyHtml || `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">Aucun indicateur.</div>`;
+        const inner = bodyHtml || `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">${t('no_indicator')}</div>`;
         return `<div class="accordion-item" style="margin-bottom:0.5rem;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);">
             <div class="accordion-header expanded" data-acc-id="${aId}" onclick="toggleAccordion('${aId}')" style="padding:0.55rem 0.85rem;border-left:4px solid ${color};">
                 <span class="chevron expanded">${ICONS.chevron}</span>

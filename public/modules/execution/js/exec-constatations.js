@@ -887,7 +887,7 @@ function execCdCommentairesHtml(c, modifiable) {
             </button>
             ${ouvert ? `<div class="exec-cd-com-corps">
                 ${(v.entrees || []).length ? v.entrees.map(lu).join('')
-                    : '<div class="exec-cd-com-vide">Aucun commentaire à cette version.</div>'}
+                    : `<div class="exec-cd-com-vide">${te('aucun_commentaire_version')}</div>`}
             </div>` : ''}
         </div>`;
     };
@@ -911,7 +911,7 @@ function execCdCommentairesHtml(c, modifiable) {
 `
             : `${courante && (courante.entrees || []).length
                 ? `<div class="exec-cd-com-corps">${courante.entrees.map(lu).join('')}</div>`
-                : '<div class="exec-cd-com-vide">Aucun commentaire en cours.</div>'}`}
+                : `<div class="exec-cd-com-vide">${te('aucun_commentaire_en_cours')}</div>`}`}
             ${versions.filter((v) => v.close_le).length ? `
                 <div class="exec-cd-com-vide" style="margin:.6rem 0 .2rem;">Versions précédentes</div>
                 ${versions.filter((v) => v.close_le).map(close).join('')}` : ''}
@@ -1699,8 +1699,7 @@ function execCdDecisionModal(titre, couleur, verbe, action) {
             ${entrees.map((x) => `<div class="exec-cd-motif-ligne">
                 <i>${_esc(execCdLibelleCible(x.cible))}</i> : ${_esc(x.texte)}</div>`).join('')}
         </div>`
-        : `<p style="color:#b91c1c;font-size:.84rem;margin:0;">Aucun commentaire enregistré :
-           le postulant ne saura pas ce qui est attendu.</p>`}`;
+        : `<p style="color:#b91c1c;font-size:.84rem;margin:0;">${te('renvoi_sans_commentaire_postulant')}</p>`}`;
     _execConfirmModal(titre, corps, verbe, couleur, action);
 }
 

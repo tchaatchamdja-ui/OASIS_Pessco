@@ -1410,7 +1410,7 @@ window.execProcHpPerimetre = function () {
   const sousActs = (EXEC_STATE.data.sousActivites || []).filter((sa) => sa.secteur_id === secteur);
   const themes = EXEC_STATE.data.themesSupervision || [];
   if (!sousActs.length) {
-    hote.innerHTML = '<p class="exec-proc-vide">Aucune sous-activité configurée pour ce secteur.</p>';
+    hote.innerHTML = `<p class="exec-proc-vide">${te('aucune_sa_configuree')}</p>`;
     return;
   }
   hote.innerHTML = sousActs.map((sa) => {
@@ -1427,7 +1427,7 @@ window.execProcHpPerimetre = function () {
                  onchange="execProcHpCocherTheme(this)">
           <span>${_esc(t.libelle || t.nom || t.code || '')}</span>
         </label>`).join('')}
-      </div>` : '<p class="exec-proc-vide" style="margin-left:1.6rem;">Aucun thème configuré.</p>'}
+      </div>` : `<p class="exec-proc-vide" style="margin-left:1.6rem;">${te('aucun_theme_configure')}</p>`}
     </div>`;
   }).join('');
 };

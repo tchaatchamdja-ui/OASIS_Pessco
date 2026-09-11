@@ -196,7 +196,7 @@ function execRenderConstatationsTab() {
                     ` : ''}
                 </td>
             </tr>`).join('')
-        : `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data') || 'Aucune donnée'}</td></tr>`;
+        : `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>`;
 
     // ── Table 2 : Types de cas
     const tcRows = tcs.length
@@ -211,7 +211,7 @@ function execRenderConstatationsTab() {
                     ` : ''}
                 </td>
             </tr>`).join('')
-        : `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data') || 'Aucune donnée'}</td></tr>`;
+        : `<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>`;
 
     return `
         <div class="card" style="margin-bottom:1rem;">
@@ -337,8 +337,8 @@ function execRenderChecklistsTab() {
     const rowsHtml = checklists.length
         ? checklists.map(c => _execClLigne(c, D, refs, isAdmin)).join('')
         : `<tr><td colspan="5" class="exec-cl-aucune">
-             ${q ? `Aucune checklist ne correspond à « ${_esc(EXEC_CL_RECHERCHE)} ».`
-                 : 'Aucune checklist enregistrée.'}
+             ${q ? te('aucune_checklist_recherche', _esc(EXEC_CL_RECHERCHE))
+                 : te('aucune_checklist_enregistree')}
            </td></tr>`;
 
     return `
@@ -395,7 +395,7 @@ function execClRechercher(valeur) {
         .filter(c => !q || _execNorm(`${c.reference || ''} ${c.nom || ''} ${c.description || ''}`).includes(q));
     corps.innerHTML = liste.length
         ? liste.map(c => _execClLigne(c, D, refs, isAdmin)).join('')
-        : `<tr><td colspan="5" class="exec-cl-aucune">Aucune checklist ne correspond à « ${_esc(EXEC_CL_RECHERCHE)} ».</td></tr>`;
+        : `<tr><td colspan="5" class="exec-cl-aucune">${te('aucune_checklist_recherche', _esc(EXEC_CL_RECHERCHE))}</td></tr>`;
 }
 window.execClRechercher = execClRechercher;
 
@@ -403,8 +403,8 @@ window.execClRechercher = execClRechercher;
 // dire « tout le domaine » est le geste le plus fréquent du paramétrage.
 function _clBoutonsPortee(classe, suite) {
     return `<span class="exec-cl-portee-actions">
-        <a href="#" onclick="_clCocherPortee('${classe}',true,'${suite}');return false;">Tout</a>
-        <a href="#" onclick="_clCocherPortee('${classe}',false,'${suite}');return false;">Aucun</a>
+        <a href="#" onclick="_clCocherPortee('${classe}',true,'${suite}');return false;">${te('cocher_tout')}</a>
+        <a href="#" onclick="_clCocherPortee('${classe}',false,'${suite}');return false;">${te('cocher_aucun')}</a>
     </span>`;
 }
 
@@ -458,7 +458,7 @@ function execOpenChecklistModal(clId) {
         <div class="shell-form-group">
             <label>Domaines applicables ${_clBoutonsPortee('cl-doms-cb', '_clRefreshSecteurs')}</label>
             <div id="clDomsBox" style="${boxStyle}" onchange="_clRefreshSecteurs()">
-                ${domaines.map(d => checkbox(d.id, selDom, (d.code || d.sigle || d.nom || '?'), 'cl-doms-cb')).join('') || '<span style="color:var(--text-muted);font-size:0.75rem;">Aucun domaine</span>'}
+                ${domaines.map(d => checkbox(d.id, selDom, (d.code || d.sigle || d.nom || '?'), 'cl-doms-cb')).join('') || `<span style="color:var(--text-muted);font-size:0.75rem;">${te('aucun_domaine')}</span>`}
             </div>
         </div>
         <div class="shell-form-group">
@@ -499,7 +499,7 @@ function _clRefreshSecteurs() {
             <input type="checkbox" class="cl-secs-cb" value="${s.id}" ${checkedSec.has(s.id)?'checked':''}>
             <span>${s.code || s.sigle || s.nom || '?'}</span>
         </label>`).join('')
-        : `<span style="color:var(--text-muted);font-size:0.75rem;grid-column:1/-1;">${selDom.length?'Aucun secteur pour les domaines sélectionnés':'Sélectionnez un domaine'}</span>`;
+        : `<span style="color:var(--text-muted);font-size:0.75rem;grid-column:1/-1;">${te(selDom.length ? 'aucun_secteur_domaines' : 'selectionnez_domaine')}</span>`;
     const hint = document.getElementById('clSecsHint');
     if (hint) hint.textContent = selDom.length ? `(${filtered.length} disponible${filtered.length>1?'s':''})` : '';
     _clRefreshSousActivites();
@@ -521,7 +521,7 @@ function _clRefreshSousActivites() {
             <input type="checkbox" class="cl-sas-cb" value="${sa.id}" ${checkedSa.has(sa.id)?'checked':''}>
             <span>${sa.code || sa.sigle || sa.nom || '?'}</span>
         </label>`).join('')
-        : `<span style="color:var(--text-muted);font-size:0.75rem;grid-column:1/-1;">${selSec.length?'Aucune sous-activité pour les secteurs sélectionnés':'Sélectionnez un secteur'}</span>`;
+        : `<span style="color:var(--text-muted);font-size:0.75rem;grid-column:1/-1;">${te(selSec.length ? 'aucune_sa_secteurs' : 'selectionnez_secteur')}</span>`;
     const hint = document.getElementById('clSasHint');
     if (hint) hint.textContent = selSec.length ? `(${filtered.length} disponible${filtered.length>1?'s':''})` : '';
 }
@@ -574,7 +574,7 @@ function execOpenStatutsManager() {
             <button class="btn btn-sm btn-ghost" onclick="execOpenStatutModal('${s.id}')">${EXEC_ICONS.edit}</button>
             <button class="btn btn-sm btn-ghost" onclick="execDeleteStatut('${s.id}')" style="color:#ef4444;">${EXEC_ICONS.delete}</button>
         </td>
-    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:0.6rem;">Aucun statut défini.</td></tr>';
+    </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:0.6rem;">${te('aucun_statut')}</td></tr>`;
     shellShowModal("Statuts d'évaluation des questions", `
         <div style="margin-bottom:0.5rem;text-align:right;">
             <button class="btn btn-sm btn-primary" onclick="execOpenStatutModal()">${EXEC_ICONS.add} Ajouter un statut</button>
@@ -779,7 +779,7 @@ function _execCliRenderRows(clId) {
     const compteur = document.getElementById('execCliCompte');
     if (compteur) compteur.textContent = items.length;
     if (!items.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="exec-cli-empty">Aucun item — cliquez sur « Ajouter une ligne » pour commencer.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="8" class="exec-cli-empty">${te('aucun_item_ajouter')}</td></tr>`;
         return;
     }
     // Construit un sigle (initiales) à partir du libellé d'un thème, pour ne pas
@@ -912,7 +912,7 @@ function _execCliRefReglementCell(it, clId) {
         ? `<div style="display:flex;flex-direction:column;gap:0.1rem;font-size:0.72rem;line-height:1.25;max-height:60px;overflow:auto;">
               ${labels.map(l => `<span>• ${_esc2(l)}</span>`).join('')}
            </div>`
-        : `<span style="color:var(--text-muted);font-style:italic;font-size:0.72rem;">Aucune disposition</span>`;
+        : `<span style="color:var(--text-muted);font-style:italic;font-size:0.72rem;">${te('aucune_disposition')}</span>`;
     return `<div style="display:flex;flex-direction:column;gap:0.2rem;">
         ${preview}
         <button class="btn btn-sm btn-ghost" style="padding:0.15rem 0.4rem;font-size:0.7rem;align-self:flex-start;" onclick="execOpenRefReglementPicker('${it.id}','${clId}')">✎ Choisir</button>
@@ -933,7 +933,7 @@ function execOpenRefReglementPicker(itId, clId) {
               <input type="checkbox" class="exg-cb" value="${e.id}" ${selected.has(e.id) ? 'checked' : ''}>
               <span><strong>${_esc2(e.reference || '')}</strong>${e.libelle ? ' — ' + _esc2(e.libelle) : ''}${e.theme ? `<span style="color:var(--text-muted);font-size:0.72rem;"> [${_esc2(e.theme)}]</span>` : ''}</span>
           </label>`).join('')
-        : '<div style="padding:1rem;text-align:center;color:var(--text-muted);font-style:italic;">Aucune exigence applicable aux domaines/secteurs/sous-activités de cette checklist.</div>';
+        : `<div style="padding:1rem;text-align:center;color:var(--text-muted);font-style:italic;">${te('aucune_exigence')}</div>`;
 
     // Champ libre legacy proposé en complément si l'utilisateur souhaite saisir du texte libre.
     const legacyText = parsed.isList ? '' : parsed.text;
@@ -1065,7 +1065,7 @@ function execOpenSousThemesManager(clId) {
             <button class="btn btn-sm btn-ghost" onclick="execOpenSousThemeModal('${clId}','${s.id}')">${EXEC_ICONS.edit}</button>
             <button class="btn btn-sm btn-ghost" onclick="execDeleteSousTheme('${s.id}','${clId}')" style="color:#ef4444;">${EXEC_ICONS.delete}</button>
         </td>
-    </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:0.8rem;">Aucun sous-thème.</td></tr>';
+    </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:0.8rem;">${te('aucun_sous_theme')}</td></tr>`;
 
     shellShowModal('Sous-thèmes — ' + (cl?.nom || ''), `
         <div style="display:flex;gap:0.4rem;justify-content:flex-end;margin-bottom:0.5rem;flex-wrap:wrap;">

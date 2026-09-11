@@ -441,7 +441,7 @@ function rampBarresTemps(inspections, ecarts, mode, options) {
 
     const lignes = [...parPeriode.entries()].sort((a, b) => a[0].localeCompare(b[0]));
     if (!lignes.length) {
-        return `<div class="ramp-vide">Aucune donnée${annee ? ` en ${annee}` : ''}</div>`;
+        return `<div class="ramp-vide">${annee ? rt('aucune_donnee_en', annee) : rt('aucune_donnee')}</div>`;
     }
 
     const totalI = lignes.reduce((t, [, v]) => t + v.i, 0);
@@ -1000,7 +1000,7 @@ function rampRenderStatistiques() {
                 titre: 'Items inspectés', couleur: '#0d9488', valeur: items,
                 precision: inspections.length
                     ? `${Math.round(items / inspections.length)} par inspection`
-                    : 'Aucune inspection',
+                    : rt('aucune_inspection'),
                 figure: { type: 'jauge', pct: couverture },
             }),
             oasisKpiCarte({

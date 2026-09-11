@@ -68,7 +68,7 @@ async function uploadDocWithFile() {
     const type = document.getElementById('docType').value.trim();
     const file = window._pendingDocFile;
     if (!nom) { showToast('Nom requis', 'error'); return; }
-    if (!file) { showToast('Aucun fichier sélectionné', 'error'); return; }
+    if (!file) { showToast(t('no_file_selected'), 'error'); return; }
     const btn = document.querySelector('.modal-footer .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Téléversement…'; }
     try {

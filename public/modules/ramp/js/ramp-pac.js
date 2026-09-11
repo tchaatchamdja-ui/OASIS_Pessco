@@ -96,7 +96,7 @@ function rampPacPreuves(action, modifiable, sansLabel) {
     return `
     <div class="ramp-pac-preuves" id="rampPacPreuves_${action}">
         ${sansLabel ? '' : '<label>Preuves de l’action</label>'}
-        ${lignes || '<p class="ramp-sous-titre" style="margin:.2rem 0;">Aucune preuve déposée.</p>'}
+        ${lignes || `<p class="ramp-sous-titre" style="margin:.2rem 0;">${rt('aucune_preuve_deposee')}</p>`}
         ${modifiable ? `<button class="btn btn-outline btn-sm" style="margin-top:.35rem;"
                 onclick="rampOuvrirDepotPreuve(${_rArg(action)})">
             ${RAMP_ICONS.add} Ajouter une preuve</button>` : ''}
@@ -185,8 +185,7 @@ function rampPacModalRenvoi() {
                         <i>${_rEsc(rampHorodatage(x.date))} · ${_rEsc(x.auteur || '—')}</i>
                         <div class="ramp-desc">${_rEsc(x.texte)}</div>
                     </div>`).join('')}</div>`
-                    : `<p class="ramp-erreur">Aucun commentaire de suivi : rien n’indiquera ce qui
-                       est attendu. Ajoutez-en avant de renvoyer, ou confirmez tout de même.</p>`}
+                    : `<p class="ramp-erreur">${rt('renvoi_sans_suivi')}</p>`}
             </div>
             <div class="ramp-modal-footer">
                 <button class="btn btn-outline btn-sm" onclick="rampFermerModal()">Annuler</button>
@@ -426,7 +425,7 @@ function rampPacEvaluationHtml() {
                                 onclick="rampPacSupprimerSuivi(${_rArg(x.id)})">Retirer</button>
                     </div>` : ''}`}
                 </div>`).join('')
-                : '<p class="ramp-sous-titre">Aucun suivi consigné.</p>'}
+                : `<p class="ramp-sous-titre">${rt('aucun_suivi_consigne')}</p>`}
             ${peut ? `
             <div class="ramp-champ" style="margin-top:.5rem;">
                 <textarea class="ramp-input" id="rampPacSuiviTexte" rows="2"

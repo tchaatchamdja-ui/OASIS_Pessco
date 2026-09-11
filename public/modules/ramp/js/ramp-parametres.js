@@ -63,7 +63,7 @@ function rampDepotFacette(cle, valeurDe) {
 
 function rampLignesDepots() {
     const liste = rampDepotsFiltres(RAMP_STATE.filtres);
-    if (!liste.length) return '<tr><td colspan="7" class="ramp-table-vide">Aucun dépôt.</td></tr>';
+    if (!liste.length) return `<tr><td colspan="7" class="ramp-table-vide">${rt('aucun_depot')}</td></tr>`;
     return liste.map((d) => `<tr>
         <td><strong>${_rEsc(d.nom)}</strong>
             <div style="font-size:.72rem;color:var(--text-muted);">${_rEsc(d.nom_origine || '')}</div></td>
@@ -296,7 +296,7 @@ function rampGroupesContacts() {
         parEtat[e].push(c);
     });
     const etats = Object.keys(parEtat).sort((a, b) => a.localeCompare(b, 'fr'));
-    if (!etats.length) return '<div class="ramp-vide">Aucun contact enregistré.</div>';
+    if (!etats.length) return `<div class="ramp-vide">${rt('aucun_contact')}</div>`;
 
     return etats.map((etat) => {
         // Absent de la liste = déplié ; seul un repli explicite le ferme.
@@ -971,7 +971,7 @@ function rampPaysResultats() {
     const S = RAMP_STATE.pays;
     if (!S.liste.length) {
         return `<div class="ramp-card"><p class="ramp-table-vide">${
-            S.chargement ? 'Chargement des pays…' : 'Aucun pays.'}</p></div>`;
+            rt(S.chargement ? 'chargement_pays' : 'aucun_pays')}</p></div>`;
     }
     const modifiable = S.modifiable;
     const liste = rampPaysFiltrer();
@@ -1028,7 +1028,7 @@ function rampPaysResultats() {
 
     const corps = liste.length
         ? liste.map(ligne).join('')
-        : '<tr><td colspan="8" class="ramp-table-vide">Aucun pays ne répond à ces critères.</td></tr>';
+        : `<tr><td colspan="8" class="ramp-table-vide">${rt('aucun_pays_criteres')}</td></tr>`;
 
     return `
     <div class="ramp-actions-bar">
@@ -1301,7 +1301,7 @@ function rampAptResultats() {
     const S = RAMP_STATE.aeroports;
     if (!S.liste.length) {
         return `<div class="ramp-card"><p class="ramp-table-vide">${
-            S.chargement ? 'Chargement des aéroports…' : 'Aucun aéroport.'}</p></div>`;
+            rt(S.chargement ? 'chargement_aeroports' : 'aucun_aeroport')}</p></div>`;
     }
     const modifiable = S.modifiable;
     const liste = rampAptFiltrer();
@@ -1366,7 +1366,7 @@ function rampAptResultats() {
 
     const corps = groupes.length
         ? groupes.map((g) => bandeau(g.pays, g.plateformes)).join('')
-        : '<tr><td colspan="4" class="ramp-table-vide">Aucun aéroport ne répond à ces critères.</td></tr>';
+        : `<tr><td colspan="4" class="ramp-table-vide">${rt('aucun_aeroport_criteres')}</td></tr>`;
     const inactifs = liste.filter((a) => a.actif === false).length;
 
     return `
@@ -1678,7 +1678,7 @@ function rampAerResultats() {
 
     const corps = groupes.length
         ? groupes.map((g) => bandeau(g.designation, g.variantes)).join('')
-        : '<tr><td colspan="4" class="ramp-table-vide">Aucun aéronef ne répond à ces critères.</td></tr>';
+        : `<tr><td colspan="4" class="ramp-table-vide">${rt('aucun_aeronef_criteres')}</td></tr>`;
 
     const pagination = r.pages > 1 ? `
         <div class="ramp-pagination">

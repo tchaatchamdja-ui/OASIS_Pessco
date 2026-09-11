@@ -579,7 +579,7 @@ function rampPoiItems() {
     let corps = ctx.groupes.map((g) => bandeau(g, parGroupe.get(g.code) || [])).join('');
     if (orphelins.length) corps += bandeau({ code: '__sans__', label: 'Sans groupe' }, orphelins);
     if (!ctx.items.length) {
-        corps = '<tr><td colspan="5" class="ramp-table-vide">Aucun item au paramétrage.</td></tr>';
+        corps = `<tr><td colspan="5" class="ramp-table-vide">${rt('aucun_item_parametrage')}</td></tr>`;
     }
 
     return `
@@ -802,7 +802,7 @@ function rampPoiActions() {
     if (p.statut === 'validee' && peutSaisir) {
         const communiquee = (p.communications || []).some((c) => c.envoye);
         b.push(`<button class="btn btn-outline btn-sm" ${communiquee ? '' : 'disabled'}
-                title="${_rAttr(communiquee ? '' : 'Aucune notification envoyée')}"
+                title="${_rAttr(communiquee ? '' : rt('aucune_notification_envoyee'))}"
                 onclick="rampPoiOuvrirPartage()">
             ${RAMP_ICONS.upload} ${rt('par_partager')}</button>`);
     }
@@ -971,7 +971,7 @@ function rampPoiVueValidation() {
                     <td>${_rEsc(i.ecart.suivi || '—')}</td>
                     <td class="ramp-desc">${_rEsc(i.ecart.description)}</td>
                 </tr>`).join('')
-                    : '<tr><td colspan="6" class="ramp-table-vide">Aucun écart relevé.</td></tr>'}</tbody>
+                    : `<tr><td colspan="6" class="ramp-table-vide">${rt('aucun_ecart_releve')}</td></tr>`}</tbody>
             </table>
         </div>
     </div>
@@ -995,7 +995,7 @@ function rampPoiVueValidation() {
                     <td style="text-align:center;">${i.controle ? 'Oui' : 'Non'}</td>
                     <td class="ramp-desc">${_rEsc(i.remarque)}</td>
                 </tr>`).join('')
-                    : '<tr><td colspan="4" class="ramp-table-vide">Aucune remarque hors constat.</td></tr>'}</tbody>
+                    : `<tr><td colspan="4" class="ramp-table-vide">${rt('aucune_remarque')}</td></tr>`}</tbody>
             </table>
         </div>
     </div>
@@ -1038,7 +1038,7 @@ function rampPoiMotifRenvoi() {
             ${dernier && (dernier.entrees || []).length
                 ? dernier.entrees.map(entree).join('')
                 : `<p class="ramp-sous-titre">${p.motif_renvoi
-                    ? _rEsc(p.motif_renvoi) : 'Aucun commentaire n’accompagne ce renvoi.'}</p>`}
+                    ? _rEsc(p.motif_renvoi) : rt('renvoi_sans_motif')}</p>`}
             ${anciens.length ? `
                 <div class="ramp-sous-titre" style="margin:.6rem 0 .2rem;">Renvois précédents</div>
                 ${anciens.map((v) => {
@@ -1054,7 +1054,7 @@ function rampPoiMotifRenvoi() {
                         </button>
                         ${ouvert ? `<div class="ramp-poi-version-corps">
                             ${(v.entrees || []).length ? v.entrees.map(entree).join('')
-                                : '<p class="ramp-sous-titre">Aucun commentaire.</p>'}
+                                : `<p class="ramp-sous-titre">${rt('aucun_commentaire')}</p>`}
                         </div>` : ''}
                     </div>`;
                 }).join('')}` : ''}
@@ -1173,7 +1173,7 @@ function rampPoiCommentaires() {
                         <i>${_rEsc(rampPoiLibelleCible(c.cible))}</i>
                         <div class="ramp-desc">${_rEsc(c.texte)}</div>
                     </div>`).join('')
-                    : '<p class="ramp-sous-titre">Aucun commentaire à cette version.</p>'}
+                    : `<p class="ramp-sous-titre">${rt('aucun_commentaire_version')}</p>`}
             </div>` : ''}
         </div>`;
     };
@@ -1200,7 +1200,7 @@ function rampPoiCommentaires() {
                         <i>${_rEsc(rampPoiLibelleCible(c.cible))}</i>
                         <div class="ramp-desc">${_rEsc(c.texte)}</div>
                     </div>`).join('')}
-            </div>` : '<p class="ramp-sous-titre">Aucun commentaire en cours.</p>'}`}
+            </div>` : `<p class="ramp-sous-titre">${rt('aucun_commentaire_en_cours')}</p>`}`}
         ${versions.filter((v) => v.close_le).length ? `
             <div class="ramp-poi-versions">
                 <div class="ramp-sous-titre" style="margin:.6rem 0 .3rem;">Versions précédentes</div>
@@ -1685,7 +1685,7 @@ function rampSelecteurAeronefLignes() {
     const S = RAMP_STATE.selecteurAeronef || {};
     if (S.chargement && !S.resultat) return '<p class="ramp-table-vide">Chargement…</p>';
     const r = S.resultat || { lignes: [], total: 0 };
-    if (!r.lignes.length) return '<p class="ramp-table-vide">Aucun aéronef ne correspond.</p>';
+    if (!r.lignes.length) return `<p class="ramp-table-vide">${rt('aucun_aeronef')}</p>`;
     // Les lignes arrivent triées par désignation : on affiche le code une fois,
     // suivi de ses variantes, comme à l'écran des paramètres.
     return `
@@ -1806,7 +1806,7 @@ function rampPoiPieces() {
                 </tr></thead>
                 <tbody>${pieces.length ? pieces.map(ligne).join('')
                     : `<tr><td colspan="4" class="ramp-table-vide">
-                        ${modifiable ? 'Aucune preuve attachée pour l’instant.' : 'Aucune pièce jointe.'}
+                        ${rt(modifiable ? 'aucune_preuve_attachee' : 'aucune_piece_jointe')}
                        </td></tr>`}</tbody>
             </table>
         </div>
@@ -1977,8 +1977,7 @@ function rampRenvoyerPoi() {
                             <div class="ramp-desc">${_rEsc(c.texte)}</div>
                         </div>`).join('')}
                 </div>`
-                : `<p class="ramp-erreur">Aucun commentaire enregistré : l’inspecteur ne saura pas
-                   ce qui est attendu. Ajoutez-en avant de renvoyer, ou confirmez tout de même.</p>`}
+                : `<p class="ramp-erreur">${rt('renvoi_sans_commentaire_inspecteur')}</p>`}
             </div>
             <div class="ramp-modal-footer">
                 <button class="btn btn-outline btn-sm" onclick="rampFermerModal()">Annuler</button>
@@ -2013,7 +2012,7 @@ function rampPoiEquipe() {
     const fige = rampPoiFige();
     if (!equipe.length) {
         return `<p class="ramp-sous-titre" style="margin:.35rem 0 0;">
-            ${fige ? 'Aucun inspecteur désigné.' : 'Aucun inspecteur désigné pour l’instant.'}</p>`;
+            ${rt(fige ? 'aucun_inspecteur' : 'aucun_inspecteur_encore')}</p>`;
     }
     return `<div class="ramp-poi-equipe">${equipe.map((m) => `
         <div class="ramp-poi-inspecteur">

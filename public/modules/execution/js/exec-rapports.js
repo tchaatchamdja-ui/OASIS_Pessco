@@ -331,7 +331,7 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
 
     <!-- 3. LISTE DES CONSTATATIONS -->
     <div class="sec-title">LISTE DES CONSTATATIONS</div>
-    ${constatations.length === 0 ? '<p>Aucune constatation.</p>' : `
+    ${constatations.length === 0 ? `<p>${te('aucune_constatation')}</p>` : `
     <table class="data-tbl">
         <thead><tr><th>Réf</th><th>Criticité</th><th>Description</th><th>Statut</th></tr></thead>
         <tbody>${constatations.map(c => `<tr>
@@ -525,7 +525,7 @@ function _exportTablePDF(title, headers, rows, filename, aac) {
 // exactement ce que voit l'utilisateur (y compris les filtres actifs).
 function execExportSituationGenerale(format) {
     const root = document.getElementById('execSituationGeneraleRoot');
-    if (!root) { _execToast(te('no_data') || 'Aucune donnée', 'info'); return; }
+    if (!root) { _execToast(te('no_data'), 'info'); return; }
 
     const criticites = ['critique', 'majeure', 'mineure'];
     const flatHeaders = [
@@ -551,7 +551,7 @@ function execExportSituationGenerale(format) {
         rows.push([d, s, ...cells]);
     });
 
-    if (!rows.length) { _execToast(te('no_data') || 'Aucune donnée', 'info'); return; }
+    if (!rows.length) { _execToast(te('no_data'), 'info'); return; }
 
     const now = new Date();
     const stamp = now.toISOString().slice(0, 10);

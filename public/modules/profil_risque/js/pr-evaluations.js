@@ -630,7 +630,7 @@ function buildEvalReportHtml(ev) {
       <thead><tr>${headers.map((h, i) => `<th${widths && widths[i] ? ` style="width:${widths[i]}"` : ''}>${esc(h)}</th>`).join('')}</tr></thead>
       <tbody>${rows.length
         ? rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')
-        : `<tr><td colspan="${headers.length}" class="rep-empty">Aucune donnée</td></tr>`}</tbody>
+        : `<tr><td colspan="${headers.length}" class="rep-empty">${t('no_data')}</td></tr>`}</tbody>
     </table>`;
 
     // 4.3 / 5 — synthèse et périodicité par sous-activité
@@ -782,7 +782,7 @@ async function openNewEvalModal() {
         .filter(p => allowed.has(p.secteur_id));
     const secteurs = (D.secteurs || []).filter(s => allowed.has(s.id));
     if (!prestataires.length) {
-        showToast('Aucun prestataire dans les domaines et secteurs couverts par vos privilèges.', 'warning');
+        showToast(t('no_provider_in_scope'), 'warning');
         return;
     }
 
@@ -1253,7 +1253,7 @@ function _prEvalCorpsHtml(c) {
                             <input type="checkbox" class="eval-designe-cb" id="cb_eval_${u.id}" data-uid="${u.id}" ${designated.includes(u.id) ? 'checked' : ''}>
                             <label for="cb_eval_${u.id}" title="${_escapeHtml(u.privilege || '')}">${_escapeHtml(userName(u))}</label>
                         </li>`).join('')
-                        : `<li class="pr-gen-vide">${eligibleLoading ? 'Chargement des évaluateurs éligibles…' : 'Aucun utilisateur éligible : aucun privilège Contributeur, Validateur ou Administrateur ne couvre ce domaine et ce secteur.'}</li>`}
+                        : `<li class="pr-gen-vide">${t(eligibleLoading ? 'loading_eligible' : 'no_eligible_user')}</li>`}
                 </ul>
             </div>`;
         } else if (designated.length) {
@@ -1522,7 +1522,7 @@ async function _loadReunionEvalTab(evalId) {
                 ${snap
                     ? (currentChanges.length
                         ? _renderConsolidationTable([], currentChanges, 0)
-                        : '<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">Aucun changement depuis le démarrage. Allez sur Conformité / Performance / Complexité pour modifier les notes.</div>')
+                        : `<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">${t('no_change_since_start')}</div>`)
                     : '<div style="color:var(--text-muted);font-size:0.8rem;">Cliquez pour permettre la modification des notes. Une consolidation indépendante est rattachée à chaque compte-rendu de réunion enregistré.</div>'}
             </div>
         </details>`;
@@ -1550,11 +1550,11 @@ async function _loadReunionEvalTab(evalId) {
                 <div class="cr-body">
                     ${m.ordre_du_jour ? `<div class="cr-block"><span class="cr-label">Ordre du jour</span><div class="cr-text">${escTxt(m.ordre_du_jour)}</div></div>` : ''}
                     ${Array.isArray(m.participants) && m.participants.length ? `<div class="cr-block"><span class="cr-label">Participants</span><div class="cr-text">${escTxt(m.participants.join(', '))}</div></div>` : ''}
-                    <div class="cr-block"><span class="cr-label">Compte rendu</span><div class="cr-text">${m.compte_rendu ? escTxt(m.compte_rendu) : '<em style="color:var(--text-muted);">Aucun compte rendu saisi</em>'}</div></div>
+                    <div class="cr-block"><span class="cr-label">Compte rendu</span><div class="cr-text">${m.compte_rendu ? escTxt(m.compte_rendu) : `<em style="color:var(--text-muted);">${t('no_minutes')}</em>`}</div></div>
                     ${mChanges.length ? `<div class="cr-block"><span class="cr-label">Consolidation associée</span>${_renderConsolidationTable(mChanges, [], 0)}</div>` : ''}
                 </div>
             </details>`;
-        }).join('') : '<div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">Aucune réunion enregistrée</div>';
+        }).join('') : `<div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">${t('no_meeting')}</div>`;
 
         const showResubmit = (cur.__anyMeeting && ev && ev.statut !== 'valide' && ev.statut !== 'rejetee' && !isLocked);
         const formHtml = `<details open style="border:1px solid var(--border);border-radius:6px;margin-bottom:0.75rem;background:var(--bg-card);">
@@ -1619,7 +1619,7 @@ function _renderConsolidationTable(cumulative, currentChanges, roundsCount) {
     cumulative = Array.isArray(cumulative) ? cumulative : [];
     currentChanges = Array.isArray(currentChanges) ? currentChanges : [];
     if (!cumulative.length && !currentChanges.length) {
-        return '<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">Aucun changement de note enregistré. Cliquez sur le bouton pour démarrer une consolidation.</div>';
+        return `<div style="color:var(--text-muted);font-size:0.8rem;font-style:italic;">${t('no_score_change')}</div>`;
     }
     const esc = oasisEsc;
     // Tag the current (in-progress) changes with the next round index
@@ -2071,7 +2071,7 @@ async function openReunionEvaluateursList(evalId) {
             </div>
             <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">Participants : ${(r.participants || []).length}</div>
             ${r.compte_rendu ? `<div style="font-size:0.82rem;margin-top:0.3rem;white-space:pre-wrap;">${_genEsc(r.compte_rendu)}</div>` : ''}
-        </div>`).join('') : '<div class="text-muted" style="padding:1rem;text-align:center;">Aucune réunion enregistrée</div>';
+        </div>`).join('') : `<div class="text-muted" style="padding:1rem;text-align:center;">${t('no_meeting')}</div>`;
     const body = `${list}
         <hr style="margin:1rem 0;">
         <button class="btn btn-primary" onclick="openReunionEvaluateursForm('${evalId}','')">+ Nouvelle réunion</button>`;
@@ -2157,7 +2157,7 @@ function _printCompteRendu(m, evalId, titre) {
           <td>${esc(c.sa_code || '-')}</td><td>${esc(c.ind_code || '-')}</td><td>${esc(c.ind_label || '-')}</td>
           <td>${esc(c.type || '-')}</td><td>${esc(c.old || '-')}</td><td>${esc(c.new || '-')}</td></tr>`).join('')}
         </tbody>
-      </table>` : '<div class="rep-field">Aucun changement de note rattaché à cette réunion.</div>';
+      </table>` : `<div class="rep-field">${t('no_score_change_meeting')}</div>`;
 
     const html = `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <title>${esc(titre)} — ${esc(prest.nom || '')}</title>

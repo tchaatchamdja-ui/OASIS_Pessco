@@ -1417,7 +1417,7 @@ function rampRenderDashboard() {
                 </tr></thead>
                 <tbody>
                     ${triExp.length === 0
-                        ? '<tr><td colspan="7" class="ramp-table-vide">Aucun écart constaté</td></tr>'
+                        ? `<tr><td colspan="7" class="ramp-table-vide">${rt('aucun_ecart_constate')}</td></tr>`
                         : triExp.map((e) => `<tr>
                             <td><strong>${_rEsc(e.nom)}</strong></td>
                             <td style="text-align:center;">${e.items}</td>

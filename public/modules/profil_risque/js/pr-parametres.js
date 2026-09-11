@@ -40,7 +40,7 @@ function renderParamCapacite() {
     return `<div class="page-header"><h2>Capacité des inspecteurs</h2></div>
     <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Charge de chaque inspecteur — nombre d'évaluations où il est désigné. 🟢 ≤2  🟡 3-4  🔴 ≥5</p>
     <table class="data-table"><thead><tr><th></th><th>Inspecteur</th><th>Rôle M1</th><th>Domaines</th><th style="text-align:right;">Évaluations actives</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" class="text-center">Aucun inspecteur recensé</td></tr>'}</tbody></table>`;
+    <tbody>${rows || `<tr><td colspan="5" class="text-center">${t('no_inspector')}</td></tr>`}</tbody></table>`;
 }
 
 // Phase 10 — Archives (Chap. 4 §4.5) : conservation 5 ans après fin de cycle
@@ -63,7 +63,7 @@ function renderParamArchives() {
     return `<div class="page-header"><h2>Archives — politique de rétention</h2></div>
     <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Les rapports d'évaluation, les plans et les comptes-rendus sont conservés au moins 5 ans après la fin du cycle de surveillance.</p>
     <table class="data-table"><thead><tr><th>Prestataire</th><th>Secteur</th><th>Date validation</th><th>Conservation jusqu'au</th><th>Statut</th></tr></thead>
-    <tbody>${rows || '<tr><td colspan="5" class="text-center">Aucune évaluation validée</td></tr>'}</tbody></table>`;
+    <tbody>${rows || `<tr><td colspan="5" class="text-center">${t('no_validated_eval')}</td></tr>`}</tbody></table>`;
 }
 
 // ── Indices & Seuils ──

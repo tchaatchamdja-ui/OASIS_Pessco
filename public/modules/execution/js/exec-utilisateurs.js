@@ -82,7 +82,7 @@ function execRenderMesUsersTable() {
     };
 
     if (!users.length) {
-        el.innerHTML = `<div class="text-center" style="padding:2rem;color:var(--text-muted);">${te('no_data') || 'Aucun utilisateur'}</div>`;
+        el.innerHTML = `<div class="text-center" style="padding:2rem;color:var(--text-muted);">${te('aucun_utilisateur')}</div>`;
         return;
     }
 
@@ -122,10 +122,10 @@ function execRenderMesUsersTable() {
                 <td><span class="shell-badge badge-active">${_esc(libelleRole(u.role))}</span></td>
                 <td title="${_escAttr(droits.map(libelleDroit).join(', '))}">
                     ${droits.length === _mesDroitsCache.length
-                        ? '<span class="exec-statut-etape">Tous</span>'
+                        ? `<span class="exec-statut-etape">${te('droits_tous')}</span>`
                         : (droits.length
-                            ? `<span class="exec-statut-etape">${droits.length} sur ${_mesDroitsCache.length}</span>`
-                            : '<span class="exec-statut-etape arrete">Aucun</span>')}
+                            ? `<span class="exec-statut-etape">${te('droits_n_sur', droits.length, _mesDroitsCache.length)}</span>`
+                            : `<span class="exec-statut-etape arrete">${te('droits_aucun')}</span>`)}
                 </td>
                 <td><span class="shell-badge ${actif ? 'badge-active' : 'badge-inactive'}">${actif ? L.actif : L.inactif}</span></td>
                 <td class="exec-etats-actions">

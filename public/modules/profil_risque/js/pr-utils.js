@@ -112,7 +112,22 @@ const TRANSLATIONS = {
     gen_sec_analyse:'Analyse et suites',
     eval_tab_conf:'Conformité', eval_tab_perf:'Performance', eval_tab_comp:'Complexité',
     validate_all_required:'Les évaluations doivent être enregistrées pour les 3 indicateurs avant validation.',
-    sub_activity:'Sous-activité'
+    sub_activity:'Sous-activité',
+    no_file_selected:'Aucun fichier sélectionné',
+    no_provider_in_scope:'Aucun prestataire dans les domaines et secteurs couverts par vos privilèges.',
+    loading_eligible:'Chargement des évaluateurs éligibles…',
+    no_eligible_user:'Aucun utilisateur éligible : aucun privilège Contributeur, Validateur ou Administrateur ne couvre ce domaine et ce secteur.',
+    no_change_since_start:'Aucun changement depuis le démarrage. Allez sur Conformité / Performance / Complexité pour modifier les notes.',
+    no_minutes:'Aucun compte rendu saisi',
+    no_meeting:'Aucune réunion enregistrée',
+    no_score_change:'Aucun changement de note enregistré. Cliquez sur le bouton pour démarrer une consolidation.',
+    no_score_change_meeting:'Aucun changement de note rattaché à cette réunion.',
+    no_inspector:'Aucun inspecteur recensé',
+    no_validated_eval:'Aucune évaluation validée',
+    no_peer_indicator:'Aucun prestataire pair évalué sur cet indicateur.',
+    no_peer_group:'Aucun prestataire pair évalué sur ce groupe.',
+    no_indicator:'Aucun indicateur.',
+    no_access:'Aucun accès'
   },
   en: {
     login_title:'Risk Profile', login_subtitle:'Surveillance', login_username:'Username/Email',
@@ -211,7 +226,22 @@ const TRANSLATIONS = {
     gen_sec_analyse:'Analysis and Follow-up',
     eval_tab_conf:'Conformity', eval_tab_perf:'Performance', eval_tab_comp:'Complexity',
     validate_all_required:'Evaluations must be recorded for all 3 indicators before validation.',
-    sub_activity:'Sub-activity'
+    sub_activity:'Sub-activity',
+    no_file_selected:'No file selected',
+    no_provider_in_scope:'No provider in the domains and sectors covered by your privileges.',
+    loading_eligible:'Loading eligible assessors…',
+    no_eligible_user:'No eligible user: no Contributor, Validator or Administrator privilege covers this domain and sector.',
+    no_change_since_start:'No change since the start. Go to Conformity / Performance / Complexity to change the scores.',
+    no_minutes:'No minutes entered',
+    no_meeting:'No meeting recorded',
+    no_score_change:'No score change recorded. Click the button to start a consolidation.',
+    no_score_change_meeting:'No score change linked to this meeting.',
+    no_inspector:'No inspector listed',
+    no_validated_eval:'No validated assessment',
+    no_peer_indicator:'No peer provider assessed on this indicator.',
+    no_peer_group:'No peer provider assessed on this group.',
+    no_indicator:'No indicator.',
+    no_access:'No access'
   },
   pt: {
     login_title:'Perfil de Risco', login_subtitle:'Vigilância', login_username:'Utilizador/Email',
@@ -309,7 +339,22 @@ const TRANSLATIONS = {
     gen_sec_analyse:'Análise e seguimento',
     eval_tab_conf:'Conformidade', eval_tab_perf:'Desempenho', eval_tab_comp:'Complexidade',
     validate_all_required:'As avaliações devem ser registadas para os 3 indicadores antes da validação.',
-    sub_activity:'Sub-atividade'
+    sub_activity:'Sub-atividade',
+    no_file_selected:'Nenhum ficheiro selecionado',
+    no_provider_in_scope:'Nenhum prestador nos domínios e setores cobertos pelos seus privilégios.',
+    loading_eligible:'A carregar os avaliadores elegíveis…',
+    no_eligible_user:'Nenhum utilizador elegível: nenhum privilégio de Contribuidor, Validador ou Administrador cobre este domínio e este setor.',
+    no_change_since_start:'Nenhuma alteração desde o início. Vá a Conformidade / Desempenho / Complexidade para modificar as notas.',
+    no_minutes:'Nenhuma ata registada',
+    no_meeting:'Nenhuma reunião registada',
+    no_score_change:'Nenhuma alteração de nota registada. Clique no botão para iniciar uma consolidação.',
+    no_score_change_meeting:'Nenhuma alteração de nota associada a esta reunião.',
+    no_inspector:'Nenhum inspetor recenseado',
+    no_validated_eval:'Nenhuma avaliação validada',
+    no_peer_indicator:'Nenhum prestador par avaliado neste indicador.',
+    no_peer_group:'Nenhum prestador par avaliado neste grupo.',
+    no_indicator:'Nenhum indicador.',
+    no_access:'Sem acesso'
   }
 };
 

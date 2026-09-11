@@ -70,7 +70,7 @@ function prCanValidate(secteurId) {
 function prPrivilegeLabel() {
     const p = prMeilleurPriv();
     if (p) return p.charAt(0) + p.slice(1).toLowerCase();
-    return APP_STATE.access && APP_STATE.access.hasAccess === false ? 'Aucun accès' : '';
+    return APP_STATE.access && APP_STATE.access.hasAccess === false ? t('no_access') : '';
 }
 
 function getM1Role() {

@@ -467,7 +467,7 @@ function execEtatsPanA_declencher(R) {
         { titre: 'Début', largeur: '95px' }, { titre: 'À notifier avant', largeur: '110px' },
         { titre: 'Délai', largeur: '110px' }, { titre: 'Responsable', largeur: '150px' },
         { titre: 'Action', largeur: '95px', centre: true },
-      ], lignes, 'Aucune activité à déclencher sur la période.')}
+      ], lignes, te('etats_vide_a_declencher'))}
     </div>`;
 }
 
@@ -576,7 +576,7 @@ function execEtatsPanEn_vie(R) {
         { titre: 'Référence', largeur: '140px' }, { titre: 'Période', largeur: '170px' },
         { titre: 'Étape', largeur: '150px' },
         { titre: 'Consultation', largeur: '170px', centre: true },
-      ], lignes, 'Aucune activité en cours.')}
+      ], lignes, te('etats_vide_en_cours'))}
     </div>`;
 }
 
@@ -680,14 +680,14 @@ function execEtatsPanClos(items, archivees) {
               ${EXEC_ICONS.back || ''} Désarchiver le plan</button>` : ''}
           </h4>
           <div class="exec-etats-groupe-corps">
-            ${execEtatsTableau(colonnes, g.lignes.map(ligneDe).join(''), 'Aucune activité archivée.')}
+            ${execEtatsTableau(colonnes, g.lignes.map(ligneDe).join(''), te('etats_vide_archivees'))}
           </div>
         </div>`;
       }).join('')
-      : execEtatsTableau(colonnes, '', 'Aucune activité archivée.');
+      : execEtatsTableau(colonnes, '', te('etats_vide_archivees'));
   } else {
     corps = execEtatsTableau(colonnes, items.map(ligneDe).join(''),
-      'Aucune activité clôturée en attente d’archivage.');
+      te('etats_vide_a_archiver'));
   }
 
   return `
@@ -805,10 +805,8 @@ window.execEtatsRappel = async function (planId, activiteId, motif) {
     + `${motif ? ` — ${motif}` : ''}.`;
 
   const note = attendus.length
-    ? `Étape en cours : <strong>${_esc(EXEC_ETATS_ETAPE_LIBELLE[etape] || etape)}</strong> — `
-      + `destinataire proposé d'après le processus du secteur.`
-    : `Aucun processus ne désigne d'intervenant pour cette étape : le rappel vise `
-      + `le responsable de l'activité.`;
+    ? te('rappel_etape_en_cours', `<strong>${_esc(EXEC_ETATS_ETAPE_LIBELLE[etape] || etape)}</strong>`)
+    : te('rappel_sans_processus');
 
   const corps = `
     <div class="exec-proc-bloc">

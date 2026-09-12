@@ -1728,8 +1728,8 @@ async function reevaluerEval(evalId) {
         showToast(t('new_revision'));
     } catch (e) {
         showToast(e.message === 'privilege_insuffisant'
-            ? 'Réévaluation réservée aux privilèges Gestionnaire et Validateur couvrant ce domaine et ce secteur.'
-            : (e.message === 'reevaluation_deja_lancee' ? 'Une réévaluation est déjà en cours pour ce prestataire.' : e.message), 'error');
+            ? t('reevaluation_privilege')
+            : (e.message === 'reevaluation_deja_lancee' ? t('reevaluation_en_cours') : e.message), 'error');
     }
 }
 

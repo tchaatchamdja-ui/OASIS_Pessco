@@ -127,10 +127,10 @@ async function planApplyDecision() {
 async function planApprouverDG(planId) {
     // Les deux champs sont facultatifs et n'ont jamais suspendu l'approbation :
     // les boutons le disent, plutôt qu'un « Annuler » qui approuvait quand même.
-    const commentaire = (await oasisSaisir('Commentaire d’approbation (facultatif)',
-        { titre: 'Approbation du DG', libelle: 'Suivant', libelleAnnuler: 'Sans commentaire' })) || '';
-    const lettre = (await oasisSaisir('Lettre de transmission au prestataire',
-        { titre: 'Approbation du DG', libelle: 'Approuver', libelleAnnuler: 'Sans lettre' })) || '';
+    const commentaire = (await oasisSaisir(tp('commentaire_approbation_dg'),
+        { titre: tp('approbation_dg_titre'), libelle: tp('suivant'), libelleAnnuler: tp('sans_commentaire') })) || '';
+    const lettre = (await oasisSaisir(tp('lettre_transmission_prestataire'),
+        { titre: tp('approbation_dg_titre'), libelle: tp('approuver'), libelleAnnuler: tp('sans_lettre') })) || '';
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/approuver-dg`, {
             method: 'POST', body: JSON.stringify({ commentaire, lettre_transmission: lettre })

@@ -43,6 +43,13 @@ window.PLAN_STATE = PLAN_STATE;
 
 const PLAN_TR = {
     fr: {
+        commentaire_approbation_dg: "Commentaire d’approbation (facultatif)",
+        approbation_dg_titre: "Approbation du DG",
+        suivant: "Suivant",
+        sans_commentaire: "Sans commentaire",
+        lettre_transmission_prestataire: "Lettre de transmission au prestataire",
+        approuver: "Approuver",
+        sans_lettre: "Sans lettre",
         confirmer_plan_transmis: "Marquer ce plan comme transmis au prestataire ?\nLa lettre de transmission doit avoir été enregistrée.",
         module_title: 'Planification de la Surveillance',
         module_subtitle: 'Gestion des plans de surveillance',
@@ -335,6 +342,13 @@ const PLAN_TR = {
         close: 'Fermer'
     },
     en: {
+        commentaire_approbation_dg: "Approval comment (optional)",
+        approbation_dg_titre: "Director General approval",
+        suivant: "Next",
+        sans_commentaire: "No comment",
+        lettre_transmission_prestataire: "Covering letter to the provider",
+        approuver: "Approve",
+        sans_lettre: "No letter",
         confirmer_plan_transmis: "Mark this plan as sent to the provider?\nThe covering letter must already be recorded.",
         module_title: 'Surveillance Planning',
         module_subtitle: 'Surveillance plan management',
@@ -627,6 +641,13 @@ const PLAN_TR = {
         close: 'Close'
     },
     pt: {
+        commentaire_approbation_dg: "Comentário de aprovação (facultativo)",
+        approbation_dg_titre: "Aprovação do Diretor-Geral",
+        suivant: "Seguinte",
+        sans_commentaire: "Sem comentário",
+        lettre_transmission_prestataire: "Carta de transmissão ao prestador",
+        approuver: "Aprovar",
+        sans_lettre: "Sem carta",
         confirmer_plan_transmis: "Marcar este plano como transmitido ao prestador?\nA carta de transmissão deve ter sido registada.",
         module_title: 'Planejamento da Vigilância',
         module_subtitle: 'Gestão dos planos de vigilância',

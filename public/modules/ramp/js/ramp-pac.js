@@ -767,7 +767,7 @@ async function rampEnvoyerPreuve() {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         if (RAMP_STATE.voletRejouer) RAMP_STATE.voletRejouer();
         rampToast(rt('preuve_deposee'));
-    } catch (x) { err.textContent = x.message || 'Dépôt impossible'; }
+    } catch (x) { err.textContent = x.message || rt('m_depot_impossible'); }
 }
 
 async function rampSupprimerPreuve(id) {

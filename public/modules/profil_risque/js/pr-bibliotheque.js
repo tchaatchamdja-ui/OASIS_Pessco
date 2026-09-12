@@ -70,7 +70,7 @@ async function uploadDocWithFile() {
     if (!nom) { showToast(t('name_required'), 'error'); return; }
     if (!file) { showToast(t('no_file_selected'), 'error'); return; }
     const btn = document.querySelector('.modal-footer .btn-primary');
-    if (btn) { btn.disabled = true; btn.textContent = 'Téléversement…'; }
+    if (btn) { btn.disabled = true; btn.textContent = t('televersement_en_cours'); }
     try {
         // Le serveur reçoit du JSON : le fichier est transmis en base64.
         const fileB64 = await fileToBase64(file);

@@ -4,6 +4,9 @@
 
 const TRANSLATIONS = {
   fr: {
+    televersement_en_cours: "Téléversement…",
+    reevaluation_privilege: "Réévaluation réservée aux privilèges Gestionnaire et Validateur couvrant ce domaine et ce secteur.",
+    reevaluation_en_cours: "Une réévaluation est déjà en cours pour ce prestataire.",
     confirmer_consolidation: "Démarrer la consolidation ?\nLes notes des indicateurs (Conformité, Performance, Complexité) deviendront éditables pour permettre les modifications. Le suivi s'arrête à l'enregistrement de la réunion.",
     reunion_enregistree_verrou: "Réunion enregistrée — indicateurs verrouillés en lecture seule",
     reunion_enregistree: "Réunion enregistrée",
@@ -253,6 +256,9 @@ const TRANSLATIONS = {
     perf_summary_peers:'Synthèse Performance et comparaison aux pairs',
 },
   en: {
+    televersement_en_cours: "Uploading…",
+    reevaluation_privilege: "Re-assessment is reserved for Manager and Approver privileges covering this domain and sector.",
+    reevaluation_en_cours: "A re-assessment is already under way for this provider.",
     confirmer_consolidation: "Start consolidation?\nThe indicator scores (Compliance, Performance, Complexity) become editable so they can be changed. Monitoring stops once the meeting is recorded.",
     reunion_enregistree_verrou: "Meeting recorded — indicators locked read-only",
     reunion_enregistree: "Meeting recorded",
@@ -490,6 +496,9 @@ const TRANSLATIONS = {
     perf_summary_peers:'Performance summary and comparison with peers',
 },
   pt: {
+    televersement_en_cours: "A carregar…",
+    reevaluation_privilege: "A reavaliação está reservada aos privilégios de Gestor e Validador que cubram este domínio e setor.",
+    reevaluation_en_cours: "Já está em curso uma reavaliação para este prestador.",
     confirmer_consolidation: "Iniciar a consolidação?\nAs notas dos indicadores (Conformidade, Desempenho, Complexidade) passam a ser editáveis para permitir alterações. O acompanhamento termina com o registo da reunião.",
     reunion_enregistree_verrou: "Reunião registada — indicadores bloqueados em leitura",
     reunion_enregistree: "Reunião registada",

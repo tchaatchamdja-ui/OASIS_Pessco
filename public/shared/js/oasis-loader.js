@@ -6,6 +6,24 @@
  * cours de route.
  */
 (function () {
+  // Le module s'annonce avant d'avoir chargé ses propres traductions : les
+  // deux textes de l'attente vivent donc ici, dans les trois langues. La
+  // langue est celle que le portail a retenue.
+  const LEGENDES = {
+    'Chargement du module…': { en: 'Loading the module…', pt: 'A carregar o módulo…' },
+    'Chargement…': { en: 'Loading…', pt: 'A carregar…' },
+    // Le deux-points prend une espace avant en français, jamais en anglais :
+    // la ponctuation appartient au texte, pas au code qui l'assemble.
+    'Module indisponible : ': { en: 'Module unavailable: ', pt: 'Módulo indisponível: ' },
+  };
+  function langue() {
+    try { return (localStorage.getItem('pr_lang') || 'fr').slice(0, 2); } catch (e) { return 'fr'; }
+  }
+  function traduire(texte) {
+    const e = LEGENDES[texte];
+    return (e && e[langue()]) || texte;
+  }
+
   const SVG = `
     <svg class="oasis-loader" viewBox="0 0 120 120" role="img" aria-label="Chargement">
       <ellipse class="oasis-loader-orbite" cx="60" cy="60" rx="48" ry="30"></ellipse>
@@ -33,7 +51,7 @@
   // zéro à chaque passage de l'observateur.
   function poser(el) {
     if (!el || el.querySelector('.oasis-loader')) return;
-    const legende = el.hasAttribute('data-oasis-loader') ? el.textContent.trim() : '';
+    const legende = el.hasAttribute('data-oasis-loader') ? traduire(el.textContent.trim()) : '';
     el.innerHTML = oasisLoaderHtml(legende);
     if (legende) el.removeAttribute('data-oasis-loader');
   }
@@ -43,8 +61,17 @@
       .forEach(poser);
   }
 
+  // Un module qui ne démarre pas le dit de la même façon partout, et dans la
+  // langue retenue : le message était recopié dans chacune des pages.
+  function oasisModuleIndisponible(cause) {
+    const detail = (cause && cause.message) ? cause.message : String(cause == null ? '' : cause);
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    return `<div style="padding:2rem;color:#991b1b;">${traduire('Module indisponible : ')}${esc(detail)}</div>`;
+  }
+
   window.oasisLoaderHtml = oasisLoaderHtml;
   window.oasisLoaderPoser = balayer;
+  window.oasisModuleIndisponible = oasisModuleIndisponible;
 
   document.addEventListener('DOMContentLoaded', () => {
     balayer();

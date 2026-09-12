@@ -118,7 +118,7 @@
         if (typeof rampDessinerActions === 'function') rampDessinerActions();
       } catch (e) {
         document.getElementById('app').innerHTML =
-          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+          oasisModuleIndisponible(e);
       }
     });
   </script>

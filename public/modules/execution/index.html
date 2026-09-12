@@ -112,7 +112,7 @@
         window.execNavigateTo = function (p, s) { origNav(p, s); notify(); };
       } catch (e) {
         document.getElementById('app').innerHTML =
-          '<div style="padding:2rem;color:#991b1b;">Module indisponible : ' + (e && e.message ? e.message : e) + '</div>';
+          oasisModuleIndisponible(e);
       }
     });
   </script>

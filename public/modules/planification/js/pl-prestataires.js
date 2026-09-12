@@ -210,7 +210,7 @@ function planShowAddRiskProfileModal() {
         </div>
         <div class="form-group">
             <label>${tp('risk_label')} *</label>
-            <input type="text" class="form-input" id="rpRiskLabel" placeholder="ex: Élevé">
+            <input type="text" class="form-input" id="rpRiskLabel" placeholder="${tp('ex_niveau_risque')}">
         </div>
         <div class="form-group">
             <label>${tp('csrbo')} (${tp('months_unit')}) *</label>

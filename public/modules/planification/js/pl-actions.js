@@ -429,7 +429,7 @@ async function planShowWorkflowHistory(planId) {
         const wfs = await api(`${PLAN_MODULE_API}/plans/${planId}/workflow`);
         const body = wfs.length ? `
         <table class="data-table">
-            <thead><tr><th>Action</th><th>Utilisateur</th><th>${tp('version')}</th><th>Date</th><th>${tp('comment')}</th></tr></thead>
+            <thead><tr><th>${tp('action')}</th><th>${tp('utilisateur')}</th><th>${tp('version')}</th><th>${tp('date')}</th><th>${tp('comment')}</th></tr></thead>
             <tbody>${wfs.map(w => `<tr>
                 <td>${_statusBadge(w.action)}</td><td>${_esc(w.user_id)}</td>
                 <td>v${w.version || '-'}</td>

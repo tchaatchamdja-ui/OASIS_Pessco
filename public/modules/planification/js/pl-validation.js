@@ -292,7 +292,7 @@ function _renderPlanDiffAccordion(plan) {
             actionsHtml += ` <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();planApprouverDG('${plan.id}')">📑 Approuver DG</button>`;
         }
         if (plan.statut === 'approuve_dg') {
-            actionsHtml += ` <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();planTransmettre('${plan.id}')">📤 Transmettre au prestataire</button>`;
+            actionsHtml += ` <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();planTransmettre('${plan.id}')">${tp('transmettre_prestataire')}</button>`;
         }
     }
 

@@ -27,14 +27,14 @@ function porteeFieldsHtml(prefixe, u) {
   return `
   <div id="${prefixe}PorteeWrap" style="display:none;">
     <div class="shell-form-group" style="margin-bottom:1rem;">
-      <label>Portée de la super-administration</label>
+      <label>${t('portee_super_admin')}</label>
       <select class="shell-input" id="${prefixe}Portee">
-        <option value="regionale" ${p === 'regionale' ? 'selected' : ''}>SuperAdmin régional — administre toutes les instances</option>
-        <option value="nationale" ${p === 'nationale' ? 'selected' : ''}>SuperAdmin national — administre une seule instance</option>
+        <option value="regionale" ${p === 'regionale' ? 'selected' : ''}>${t('superadmin_regional')}</option>
+        <option value="nationale" ${p === 'nationale' ? 'selected' : ''}>${t('superadmin_national')}</option>
       </select>
     </div>
     <div class="shell-form-group" id="${prefixe}InstanceWrap" style="margin-bottom:1rem;">
-      <label>Instance administrée</label>
+      <label>${t('instance_administree')}</label>
       <select class="shell-input" id="${prefixe}Instance">
         ${listeInst.map((e) => `<option value="${esc(e)}" ${e === inst ? 'selected' : ''}>${esc(e)}</option>`).join('')}
       </select>
@@ -87,8 +87,8 @@ function majBandeauInstance() {
     // qu'elle manque.
     .concat([{ valeur: '__nouvelle__', libelle: '＋ Nouvelle instance…' }]);
   zone.className = 'portal-header-instance portal-header-instance-choix';
-  zone.innerHTML = `<select id="instanceSelect" title="Instance regardée"
-      aria-label="Instance regardée">${options.map((o) =>
+  zone.innerHTML = `<select id="instanceSelect" title="${t('instance_regardee')}"
+      aria-label="${t('instance_regardee')}">${options.map((o) =>
     `<option value="${esc(o.valeur)}"${o.valeur === (vue.courante || '') ? ' selected' : ''}>${esc(o.libelle)}</option>`).join('')}</select>`;
   document.getElementById('instanceSelect').onchange = (e) => changerInstance(e.target.value);
 }
@@ -151,10 +151,10 @@ async function cfgChargerInstances() {
 function cfgSectionInstances() {
   const rows = CFG_INSTANCES.map((i) => `
     <tr class="${i.active ? '' : 'row-inactive'}">
-      <td><strong>${esc(i.nom)}</strong>${i.locale ? ' <span class="shell-badge badge-neutral">installée ici</span>' : ''}</td>
+      <td><strong>${esc(i.nom)}</strong>${i.locale ? ' <span class="shell-badge badge-neutral">' + t('installee_ici') + '</span>' : ''}</td>
       <td>${esc(i.aac) || '<span style="color:var(--text-muted);">—</span>'}</td>
       <td>${i.donnees ? `${i.donnees} enregistrement(s)` : '<span style="color:var(--text-muted);">vide</span>'}</td>
-      <td>${i.active ? '<span class="shell-badge badge-active">Active</span>' : '<span class="shell-badge badge-inactive">Désactivée</span>'}</td>
+      <td>${i.active ? '<span class="shell-badge badge-active">Active</span>' : '<span class="shell-badge badge-inactive">' + t('desactivee') + '</span>'}</td>
       <td class="actions-cell">
         ${i.locale ? '<span style="color:var(--text-muted);font-size:.75rem;">—</span>' : `
         <button class="shell-btn-icon" onclick="basculerInstance(${escArg(i.nom)})" title="${i.active ? 'Désactiver' : 'Réactiver'}">${icon('power', 15)}</button>
@@ -174,7 +174,7 @@ function cfgSectionInstances() {
   </p>
   <div class="shell-table-container">
     <table class="shell-table shell-table-compact">
-      <thead><tr><th>Instance</th><th>AAC</th><th>Données</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th>Instance</th><th>AAC</th><th>${t('donnees_col')}</th><th>${t('users_col_status')}</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   </div>`;

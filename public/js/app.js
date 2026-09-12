@@ -218,7 +218,7 @@ function searchInputHtml(ph) {
       <input class="cfg-search-input" type="search" placeholder="${libelle}" aria-label="${libelle}"
              value="${esc(PORTAIL_RECHERCHE.valeur)}"
              oninput="portailChercher(this)" onblur="portailFermerRechercheSiVide()">
-      ${ouverte ? `<button class="shell-btn-icon cfg-search-reset" type="button" title="Vider la recherche"
+      ${ouverte ? `<button class="shell-btn-icon cfg-search-reset" type="button" title="${t('vider_recherche')}"
               onmousedown="event.preventDefault()" onclick="portailViderRecherche()">${icon('x', 14)}</button>` : ''}
     </div>`;
 }
@@ -325,7 +325,7 @@ window.openImportModal = function (coll, title) {
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem;">1. Téléchargez le modèle, renseignez-le, puis importez-le (.xlsx).</p>
         <a class="shell-btn shell-btn-outline" href="/api/referentiels/${coll}/template" style="margin-bottom:1rem;">${icon('download', 14)} Télécharger le modèle (.xlsx)</a>
         <div class="shell-form-group">
-          <label>Fichier renseigné (.xlsx)</label>
+          <label>${t('fichier_renseigne')}</label>
           <input class="shell-input" type="file" id="importFile" accept=".xlsx">
         </div>
         <div id="importResult" style="font-size:.8rem;margin-top:.6rem;"></div>
@@ -435,7 +435,7 @@ async function renderHome() {
     return `
     <div class="portal-card${accessible ? '' : ' portal-card-ferme'}" style="--module-color:${color};"
          data-module="${esc(m.code)}" data-enabled="${accessible ? 'true' : 'false'}"
-         ${accessible ? '' : 'title="Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur." aria-disabled="true"'}>
+         ${accessible ? '' : 'title="' + t('module_non_ouvert') + '" aria-disabled="true"'}>
       <div class="portal-card-icon-wrap">${moduleIcon(m.code, 26)}</div>
       <div class="portal-card-title">${esc(name)}</div>
       <div class="portal-card-desc">${esc(desc)}</div>
@@ -593,11 +593,11 @@ async function renderUsers() {
         const already = (REFS.inspecteurs || []).some((p) => (p.email || '').toLowerCase() === (u.email || u.username).toLowerCase());
         actions.push(`<button class="shell-btn-icon" data-topersonnel="${esc(u.username)}" title="${already ? 'Déjà dans le Personnel AAC' : 'Générer dans le Personnel AAC'}" ${already ? 'disabled style="opacity:.4;cursor:default;"' : ''}>${icon('userPlus', 15)}</button>`);
       }
-      if (isSuper) actions.push(`<button class="shell-btn-icon" data-edit="${esc(u.username)}" title="Modifier">${icon('edit', 15)}</button>`);
+      if (isSuper) actions.push(`<button class="shell-btn-icon" data-edit="${esc(u.username)}" title="${t('edit')}">${icon('edit', 15)}</button>`);
       if (u.locked) actions.push(`<button class="shell-btn-icon" data-action="unlock" data-user="${esc(u.username)}" title="${esc(t('action_unlock'))}">${icon('unlock', 15)}</button>`);
       const canToggle = u.username !== ME.user.username && !(ME.user.role === 'ADMIN' && (u.role === 'ADMIN' || u.role === 'SUPERADMIN'));
-      if (canToggle) actions.push(`<button class="shell-btn-icon" data-action="toggle-active" data-user="${esc(u.username)}" title="Activer/Désactiver">${icon('power', 15)}</button>`);
-      actions.push(`<button class="shell-btn-icon" data-action="reset-password" data-user="${esc(u.username)}" title="Réinitialiser le mot de passe">${icon('key', 15)}</button>`);
+      if (canToggle) actions.push(`<button class="shell-btn-icon" data-action="toggle-active" data-user="${esc(u.username)}" title="${t('action_toggle')}">${icon('power', 15)}</button>`);
+      actions.push(`<button class="shell-btn-icon" data-action="reset-password" data-user="${esc(u.username)}" title="${t('reinitialiser_mdp')}">${icon('key', 15)}</button>`);
       let prestaCell = '';
       if (isPresta) {
         prestaCell = isSuper
@@ -645,10 +645,10 @@ async function renderUsers() {
         <div class="shell-table-container">
           <table class="shell-table">
             <thead><tr>
-              <th>Nom</th><th>Prénoms</th><th>Email (identifiant)</th>${USER_TAB === 'SUPERADMIN' ? '<th>Portée</th>' : ''}${isPresta ? '<th>Prestataire</th>' : ''}<th>Accès aux Modules</th>
+              <th>${t('col_nom')}</th><th>${t('col_prenoms')}</th><th>Email (identifiant)</th>${USER_TAB === 'SUPERADMIN' ? '<th>' + t('col_portee') + '</th>' : ''}${isPresta ? '<th>' + t('col_prestataire') + '</th>' : ''}<th>${t('col_acces_modules')}</th>
               <th>${esc(t('users_col_status'))}</th><th>${esc(t('users_col_created'))}</th><th>${esc(t('users_col_actions'))}</th>
             </tr></thead>
-            <tbody>${rows || `<tr><td colspan="${7 + (isPresta ? 1 : 0) + (USER_TAB === 'SUPERADMIN' ? 1 : 0)}" style="color:var(--text-muted);">Aucun utilisateur dans cette catégorie.</td></tr>`}</tbody>
+            <tbody>${rows || `<tr><td colspan="${7 + (isPresta ? 1 : 0) + (USER_TAB === 'SUPERADMIN' ? 1 : 0)}" style="color:var(--text-muted);">${t('aucun_utilisateur_categorie')}</td></tr>`}</tbody>
           </table>
         </div>
       </div>
@@ -728,25 +728,25 @@ function showEditUserModal(u) {
   root.innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:560px;">
-      <div class="shell-modal-header"><h3>Modifier l'utilisateur</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${t('modifier_utilisateur')}</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-form-row">
-          <div class="shell-form-group"><label>Nom</label><input class="shell-input" id="euNom" value="${esc(nm.nom)}"></div>
-          <div class="shell-form-group"><label>Prénoms</label><input class="shell-input" id="euPrenom" value="${esc(nm.prenom)}"></div>
+          <div class="shell-form-group"><label>${t('col_nom')}</label><input class="shell-input" id="euNom" value="${esc(nm.nom)}"></div>
+          <div class="shell-form-group"><label>${t('col_prenoms')}</label><input class="shell-input" id="euPrenom" value="${esc(nm.prenom)}"></div>
         </div>
         <div class="shell-form-row">
           ${phoneFieldHtml('euTel', u.telephone)}
-          <div class="shell-form-group"><label>Rôle</label>
+          <div class="shell-form-group"><label>${t('users_col_role')}</label>
             <select class="shell-input" id="euRole">${USER_TABS.map((tb) => `<option value="${tb.id}" ${userRole(u) === tb.id ? 'selected' : ''}>${esc(tb.label)}</option>`).join('')}</select>
           </div>
         </div>
         ${porteeFieldsHtml('eu', u)}
         <div class="shell-form-group" style="margin-bottom:.5rem;">
-          <label>Email (identifiant de connexion)</label>
+          <label>${t('email_identifiant')}</label>
           <input class="shell-input" type="email" id="euEmail" value="${esc(u.email || u.username)}">
         </div>
         <div class="shell-form-group" id="euAdminPwdWrap" style="display:none;">
-          <label style="color:#dc2626;">Confirmez avec VOTRE mot de passe SuperAdmin (modification de l'identifiant)</label>
+          <label style="color:#dc2626;">${t('confirmer_superadmin')}</label>
           <input class="shell-input" type="password" id="euAdminPwd">
         </div>
       </div>
@@ -800,12 +800,12 @@ function showNewUserModal() {
       <div class="shell-modal-header"><h3>${esc(t('users_new'))}</h3><button class="shell-btn-icon" id="closeModal" style="color:#fff;">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-form-row">
-          <div class="shell-form-group"><label>Nom</label><input class="shell-input" id="nuNom"></div>
-          <div class="shell-form-group"><label>Prénoms</label><input class="shell-input" id="nuPrenom"></div>
+          <div class="shell-form-group"><label>${t('col_nom')}</label><input class="shell-input" id="nuNom"></div>
+          <div class="shell-form-group"><label>${t('col_prenoms')}</label><input class="shell-input" id="nuPrenom"></div>
         </div>
         <div class="shell-form-group" style="margin-bottom:1rem;">
-          <label>Email — sert d'identifiant de connexion</label>
-          <input class="shell-input" type="email" id="nuEmail" placeholder="prenom.nom@anac.bj">
+          <label>${t('email_sert_identifiant')}</label>
+          <input class="shell-input" type="email" id="nuEmail" placeholder="${t('ex_courriel_aac')}">
         </div>
         <div class="shell-form-group" style="margin-bottom:1rem;">
           <label>${esc(t('users_col_role'))}</label>
@@ -815,12 +815,12 @@ function showNewUserModal() {
         </div>
         ${porteeFieldsHtml('nu', null)}
         <div class="shell-form-group" id="nuPrestaWrap" style="margin-bottom:1rem;${PRESTA_TABS.includes(USER_TAB) ? '' : 'display:none;'}">
-          <label>Prestataire de provenance</label>
+          <label>${t('prestataire_provenance')}</label>
           <select class="shell-input" id="nuPresta"><option value="">—</option>${(REFS.prestataires || []).map((p) => `<option value="${esc(p.id)}">${esc(p.nom)}</option>`).join('')}</select>
         </div>
         ${ME.user.role === 'SUPERADMIN' ? `
         <div class="shell-form-group" style="margin-bottom:.5rem;">
-          <label>Accès aux modules</label>
+          <label>${t('acces_modules')}</label>
           <div class="multi-check">${ALL_MODULES.map((m) => `<label class="multi-check-item"><input type="checkbox" data-newmod="${m.code}"> ${m.icon} ${esc(m.name.fr || m.code)}</label>`).join('')}</div>
         </div>` : ''}
         <p style="font-size:.75rem;color:var(--text-muted);">Le mot de passe temporaire est généré automatiquement et envoyé par email à l'utilisateur. Valable 48 h ; à changer à la première connexion.</p>
@@ -965,7 +965,7 @@ async function renderProfile() {
           <label class="shell-btn shell-btn-outline aac-logo-iconbtn" title="${u.photo ? 'Changer la photo' : 'Ajouter une photo'}">${cameraIcon()}
             <input type="file" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)">
           </label>
-          ${u.photo ? `<button class="shell-btn shell-btn-danger aac-logo-iconbtn" onclick="removeProfilePhoto()" title="Supprimer la photo">${icon('trash', 15)}</button>` : ''}
+          ${u.photo ? `<button class="shell-btn shell-btn-danger aac-logo-iconbtn" onclick="removeProfilePhoto()" title="${t('supprimer_photo')}">${icon('trash', 15)}</button>` : ''}
         </div>
         <div class="pf-name">${esc(nm.nom)} ${esc(nm.prenom)}</div>
         <div class="pf-role">${esc(ROLE_LABELS[u.role] || u.role)}</div>
@@ -975,8 +975,8 @@ async function renderProfile() {
         <div class="shell-card">
           <div class="portal-page-header"><h3>Informations personnelles</h3></div>
           <div class="shell-form-row">
-            <div class="shell-form-group"><label>Nom</label><input class="shell-input" id="pfNom" value="${esc(nm.nom)}"></div>
-            <div class="shell-form-group"><label>Prénoms</label><input class="shell-input" id="pfPrenom" value="${esc(nm.prenom)}"></div>
+            <div class="shell-form-group"><label>${t('col_nom')}</label><input class="shell-input" id="pfNom" value="${esc(nm.nom)}"></div>
+            <div class="shell-form-group"><label>${t('col_prenoms')}</label><input class="shell-input" id="pfPrenom" value="${esc(nm.prenom)}"></div>
           </div>
           <div class="shell-form-row">
             ${phoneFieldHtml('pfTel', u.telephone)}
@@ -988,7 +988,7 @@ async function renderProfile() {
         </div>
 
         <div class="shell-card">
-          <div class="portal-page-header"><h3>Détails du compte</h3></div>
+          <div class="portal-page-header"><h3>${t('details_compte')}</h3></div>
           <div class="shell-table-container">
             <table class="shell-table shell-table-compact aac-info-table"><tbody>${infoRows}</tbody></table>
           </div>
@@ -1011,11 +1011,11 @@ async function renderProfile() {
         <div class="shell-card">
           <div class="portal-page-header"><h3>${icon('lock', 15)} Modifier mon mot de passe</h3></div>
           <div class="shell-form-row">
-            <div class="shell-form-group"><label>Mot de passe actuel</label><input class="shell-input" type="password" id="pfOld" autocomplete="current-password"></div>
-            <div class="shell-form-group"><label>Nouveau mot de passe</label><input class="shell-input" type="password" id="pfNew" autocomplete="new-password"></div>
+            <div class="shell-form-group"><label>${t('chgpwd_old')}</label><input class="shell-input" type="password" id="pfOld" autocomplete="current-password"></div>
+            <div class="shell-form-group"><label>${t('chgpwd_new')}</label><input class="shell-input" type="password" id="pfNew" autocomplete="new-password"></div>
           </div>
           <div class="shell-form-row">
-            <div class="shell-form-group"><label>Confirmer le nouveau mot de passe</label><input class="shell-input" type="password" id="pfConfirm" autocomplete="new-password"></div>
+            <div class="shell-form-group"><label>${t('chgpwd_confirm')}</label><input class="shell-input" type="password" id="pfConfirm" autocomplete="new-password"></div>
             <div class="shell-form-group" style="align-self:end;"><button class="shell-btn shell-btn-primary shell-btn-sm" onclick="submitProfilePassword()">${icon('key', 13)} Changer le mot de passe</button></div>
           </div>
           <p style="font-size:.72rem;color:var(--text-muted);">12 caractères min. (majuscules, minuscules, chiffres, caractères spéciaux), sans réutilisation.</p>
@@ -1031,7 +1031,7 @@ function pfExtraSection(key, title, hint, enabled, fields) {
   return `
     <div class="shell-card ${enabled ? '' : 'pf-section-disabled'}">
       <div class="portal-page-header"><h3>${esc(title)} <span style="font-size:.72rem;font-weight:400;color:var(--text-muted);">${esc(hint)}</span></h3></div>
-      ${enabled ? '' : '<p style="font-size:.75rem;color:var(--text-muted);">Section réservée à ce type d\'utilisateur.</p>'}
+      ${enabled ? '' : '<p style="font-size:.75rem;color:var(--text-muted);">' + t('section_reservee') + '</p>'}
       <div class="shell-form-row">${inputs}</div>
       ${enabled ? `<div style="display:flex;justify-content:flex-end;"><button class="shell-btn shell-btn-primary shell-btn-sm" onclick="saveProfileExtra('${key}')">${icon('save', 13)} Enregistrer</button></div>` : ''}
     </div>`;

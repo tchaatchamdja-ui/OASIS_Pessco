@@ -238,7 +238,7 @@ function refTable(coll, premier) {
   <div class="shell-table-container">
     <table class="shell-table shell-table-compact">
       <thead><tr>${champsVisibles(schema).map((f) => `<th>${esc(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="${champsVisibles(schema).length + 1}" style="color:var(--text-muted);">Aucun élément.</td></tr>`}</tbody>
+      <tbody>${rows || `<tr><td colspan="${champsVisibles(schema).length + 1}" style="color:var(--text-muted);">${t('aucun_element')}</td></tr>`}</tbody>
     </table>
   </div>`;
 }
@@ -285,8 +285,8 @@ function cfgSectionExigences() {
           <span class="exig-banner-title"><span class="exig-chevron">${icon('chevronRight', 15)}</span>${esc(key || tr('Sans règlement'))} <span class="shell-badge" style="background:rgba(255,255,255,.2);color:#fff;">${items.length}</span></span>
           <span class="exig-banner-right" onclick="event.stopPropagation()">
             <span class="exig-banner-date">${dateAdoption ? `${tr("Date d'adoption")} : ${esc(fmtDay(dateAdoption))}` : ''}</span>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${escArg(key)})" title="Modifier règlement / date">${icon('edit', 15)}</button>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})" title="Ajouter une exigence">${icon('plus', 15)}</button>
+            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${escArg(key)})" title="${t('modifier_reglement')}">${icon('edit', 15)}</button>
+            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})" title="${t('ajouter_exigence')}">${icon('plus', 15)}</button>
           </span>
         </div>
         <div class="exig-body">
@@ -422,7 +422,7 @@ function orgChainFor(personId) {
 }
 
 function circuitHtml(chain) {
-  if (!chain) return '<span style="color:var(--text-muted);font-size:.8rem;">Non rattaché à l\'organigramme.</span>';
+  if (!chain) return '<span style="color:var(--text-muted);font-size:.8rem;">' + t('non_rattache_organigramme') + '</span>';
   return `<div class="pers-circuit">${chain
     .map((n, i) => {
       const color = LEVEL_COLORS[Math.min(i, LEVEL_COLORS.length - 1)];
@@ -430,7 +430,7 @@ function circuitHtml(chain) {
       const absent = !!n.interim_actif && !!n.interim_id;
       const validateur = absent ? personnelName(n.interim_id) : n.titulaire_id ? personnelName(n.titulaire_id) : n.poste ? 'Poste vacant' : '';
       const sub = (n.poste || validateur)
-        ? `<span class="pers-circuit-sub">${esc([n.poste, validateur].filter(Boolean).join(' · '))}${absent ? ' <span class="pers-circuit-interim">intérim</span>' : ''}</span>`
+        ? `<span class="pers-circuit-sub">${esc([n.poste, validateur].filter(Boolean).join(' · '))}${absent ? ' <span class="pers-circuit-interim">' + t('interim') + '</span>' : ''}</span>`
         : '';
       return `<span class="pers-circuit-step" title="${esc(n.libelle)} (${esc(n.type)})${absent ? ' — intérim : ' + esc(personnelName(n.interim_id)) + ', titulaire notifié' : ''}">
           <span class="pers-circuit-sigle" style="border-bottom:2px solid ${color};color:${color};">${esc(n.sigle)}</span>${sub}
@@ -463,7 +463,7 @@ function cfgSectionPersonnel() {
         .join('');
       return `
       <tr>
-        <td><button class="shell-btn-icon pers-toggle" onclick="togglePers('${r.id}')" title="Détails" style="transform:rotate(${open ? 90 : 0}deg);">${icon('chevronRight', 14)}</button></td>
+        <td><button class="shell-btn-icon pers-toggle" onclick="togglePers('${r.id}')" title="${t('audit_col_details')}" style="transform:rotate(${open ? 90 : 0}deg);">${icon('chevronRight', 14)}</button></td>
         ${cells}
         <td class="actions-cell">
           <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}">${icon('edit', 15)}</button>
@@ -473,7 +473,7 @@ function cfgSectionPersonnel() {
       <tr class="pers-detail-row" style="${open ? '' : 'display:none;'}">
         <td colspan="${colspan}" style="background:var(--bg);">
           <div class="pers-info-grid">${detailInfo}</div>
-          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:.6rem 0 .4rem;">Circuit de validation — de son niveau au plus haut niveau</div>
+          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:.6rem 0 .4rem;">${t('circuit_validation')}</div>
           ${circuitHtml(chain)}
         </td>
       </tr>`;
@@ -491,7 +491,7 @@ function cfgSectionPersonnel() {
   <div class="shell-table-container">
     <table class="shell-table shell-table-compact">
       <thead><tr><th></th>${tableFields.map((f) => `<th>${esc(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="${colspan}" style="color:var(--text-muted);">Aucun élément.</td></tr>`}</tbody>
+      <tbody>${rows || `<tr><td colspan="${colspan}" style="color:var(--text-muted);">${t('aucun_element')}</td></tr>`}</tbody>
     </table>
   </div>`;
 }
@@ -522,7 +522,7 @@ window.openRefModal = function (coll, id, defaultsJson) {
         <div class="shell-form-group" style="margin-bottom:.75rem;">
           <label>${esc(tr(f.l))}</label>
           <input class="shell-input org-${f.k}-input" type="text" data-field="${f.k}" value="${esc(useVal)}" ${orgIsTop ? 'disabled' : ''}>
-          <span class="org-auto-note" style="font-size:.7rem;color:var(--text-muted);${orgIsTop ? '' : 'display:none;'}">Repris automatiquement depuis « Détails sur l'Administration ».</span>
+          <span class="org-auto-note" style="font-size:.7rem;color:var(--text-muted);${orgIsTop ? '' : 'display:none;'}">${t('repris_administration')}</span>
         </div>`;
       }
       if (f.type === 'multiselect') {
@@ -734,7 +734,7 @@ function cfgSectionDomaines() {
                 `<span class="shell-badge badge-neutral">${esc(x.code)}</span> <strong style="margin-left:.35rem;">${esc(x.nom)}</strong>
                  <span class="shell-badge badge-neutral">${saThemes.length} thème(s)</span>`,
                 accActions('sous_activites', x.id),
-                (saThemes.map(themeRow).join('') || '<p style="color:var(--text-muted);font-size:.8rem;">Aucun thème.</p>') +
+                (saThemes.map(themeRow).join('') || '<p style="color:var(--text-muted);font-size:.8rem;">' + t('aucun_theme') + '</p>') +
                   accAddBtn('themes_supervision', { domaine_id: d.id, secteur_id: s.id, sous_activite_id: x.id, statut: 'actif' }, 'Thème'),
                 true
               );
@@ -743,8 +743,8 @@ function cfgSectionDomaines() {
           const directThemes = themes.filter((th) => th.secteur_id === s.id && !th.sous_activite_id);
           const directBlock = `
             <div style="margin-top:.4rem;">
-              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:.35rem 0 .25rem;">Thèmes rattachés au secteur</div>
-              ${directThemes.map(themeRow).join('') || '<p style="color:var(--text-muted);font-size:.8rem;">Aucun thème rattaché directement au secteur.</p>'}
+              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:.35rem 0 .25rem;">${t('themes_du_secteur')}</div>
+              ${directThemes.map(themeRow).join('') || '<p style="color:var(--text-muted);font-size:.8rem;">' + t('aucun_theme_secteur') + '</p>'}
               ${accAddBtn('themes_supervision', { domaine_id: d.id, secteur_id: s.id, statut: 'actif' }, 'Thème')}
             </div>`;
           const nbThemes = themes.filter((th) => th.secteur_id === s.id || sSas.some((x) => x.id === th.sous_activite_id)).length;
@@ -771,7 +771,7 @@ function cfgSectionDomaines() {
          <span class="shell-badge badge-neutral">${dSecteurs.length} secteur(s)</span>
          ${statutBadge(d.statut)}`,
         accActions('domaines', d.id),
-        (secteurItems || '<p style="color:var(--text-muted);font-size:.8rem;">Aucun secteur.</p>') +
+        (secteurItems || '<p style="color:var(--text-muted);font-size:.8rem;">' + t('aucun_secteur') + '</p>') +
           accAddBtn('secteurs', { domaine_id: d.id }, 'Secteur'),
         true
       );
@@ -795,7 +795,7 @@ function cfgSectionDomaines() {
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('domaines')">${icon('plus', 13)} Domaine</button>
     </div>
   </div>
-  <div class="cfg-accordion cfg-acc-dense">${items || '<p style="color:var(--text-muted);">Aucun domaine défini.</p>'}</div>
+  <div class="cfg-accordion cfg-acc-dense">${items || '<p style="color:var(--text-muted);">' + t('aucun_domaine_defini') + '</p>'}</div>
   ${orphanBlock}`;
 }
 
@@ -837,7 +837,7 @@ function cfgSectionAAC(cfg) {
         <label class="shell-btn shell-btn-outline aac-logo-iconbtn" title="${aac.logo ? 'Changer le logo' : 'Charger un logo'}">${cameraIcon()}
           <input type="file" accept="image/*" style="display:none;" onchange="uploadAacLogo(this)">
         </label>
-        ${aac.logo ? `<button class="shell-btn shell-btn-danger aac-logo-iconbtn" onclick="removeAacLogo()" title="Supprimer le logo">${icon('trash', 15)}</button>` : ''}
+        ${aac.logo ? `<button class="shell-btn shell-btn-danger aac-logo-iconbtn" onclick="removeAacLogo()" title="${t('supprimer_logo')}">${icon('trash', 15)}</button>` : ''}
       </div>
     </div>
     <div class="aac-detail-col">
@@ -883,11 +883,11 @@ window.openAacEdit = function () {
           ${input('aacAdresse2', 'Adresse 2', aac.adresse2)}
           ${input('aacEmail', 'Email administrateur', aac.emailAdmin)}
         </div>
-        <div class="shell-form-group"><label>Langue par défaut</label>
+        <div class="shell-form-group"><label>${t('langue_defaut')}</label>
           <select class="shell-input" id="aacLang">
-            <option value="fr" ${cfg.instance.defaultLang === 'fr' ? 'selected' : ''}>Français</option>
+            <option value="fr" ${cfg.instance.defaultLang === 'fr' ? 'selected' : ''}>${t('langue_francais')}</option>
             <option value="en" ${cfg.instance.defaultLang === 'en' ? 'selected' : ''}>English</option>
-            <option value="pt" ${cfg.instance.defaultLang === 'pt' ? 'selected' : ''}>Português</option>
+            <option value="pt" ${cfg.instance.defaultLang === 'pt' ? 'selected' : ''}>${t('langue_portugais')}</option>
           </select>
         </div>
       </div>
@@ -992,7 +992,7 @@ window.openPosteRegistre = function (nodeId) {
     .map((e) => {
       const roleBadge =
         e.role === 'interim'
-          ? '<span class="shell-badge" style="background:#fef3c7;color:#92400e;">Intérimaire</span>'
+          ? '<span class="shell-badge" style="background:#fef3c7;color:#92400e;">' + t('interimaire') + '</span>'
           : '<span class="shell-badge badge-active">Titulaire</span>';
       const fin = e.end ? fmtDate(e.end) : '<span class="shell-badge badge-active">En cours</span>';
       return `<tr><td>${roleBadge}</td><td>${esc(personnelName(e.person_id))}</td><td>${fmtDate(e.start)}</td><td>${fin}</td></tr>`;
@@ -1005,12 +1005,12 @@ window.openPosteRegistre = function (nodeId) {
       <div class="shell-modal-body">
         <div class="shell-table-container">
           <table class="shell-table shell-table-compact">
-            <thead><tr><th>Rôle</th><th>Personne</th><th>Début (jour / heure)</th><th>Fin (jour / heure)</th></tr></thead>
+            <thead><tr><th>${t('users_col_role')}</th><th>Personne</th><th>${t('debut_jour_heure')}</th><th>Fin (jour / heure)</th></tr></thead>
             <tbody>${rows || '<tr><td colspan="4" style="color:var(--text-muted);">Aucun enregistrement.</td></tr>'}</tbody>
           </table>
         </div>
       </div>
-      <div class="shell-modal-footer"><button class="shell-btn shell-btn-outline" onclick="closeRefModal()">Fermer</button></div>
+      <div class="shell-modal-footer"><button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${t('fermer')}</button></div>
     </div>
   </div>`;
 };
@@ -1025,9 +1025,9 @@ window.orgStartInterim = function (nodeId) {
     <div class="shell-modal" style="max-width:440px;">
       <div class="shell-modal-header"><h3>Signaler un intérim — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
-        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.75rem;">Titulaire : <strong>${esc(titNom || 'Poste vacant')}</strong>. Sélectionnez l'intérimaire qui recevra les demandes de validation.</p>
+        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.75rem;">Titulaire : <strong>${esc(titNom || 'Poste vacant')}</strong>${t('selectionner_interimaire')}</p>
         <div class="shell-form-group">
-          <label>Intérimaire</label>
+          <label>${t('interimaire')}</label>
           <select class="shell-input" id="interimSelect">
             <option value="">— Choisir —</option>
             ${opts.map((o) => `<option value="${esc(o.v)}">${esc(o.t)}</option>`).join('')}
@@ -1036,7 +1036,7 @@ window.orgStartInterim = function (nodeId) {
       </div>
       <div class="shell-modal-footer">
         <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="orgConfirmInterim('${nodeId}')">Activer l'intérim</button>
+        <button class="shell-btn shell-btn-primary" onclick="orgConfirmInterim('${nodeId}')">${t('activer_interim')}</button>
       </div>
     </div>
   </div>`;
@@ -1132,7 +1132,7 @@ function cfgSectionOrganigramme() {
   const personnelPanel = `
     <div class="org-personnel">
       <div class="org-personnel-title">${icon('users', 15)} Personnel AAC</div>
-      <p style="font-size:.72rem;color:var(--text-muted);margin-bottom:.5rem;">Glissez un nom vers une entité de l'organigramme.</p>
+      <p style="font-size:.72rem;color:var(--text-muted);margin-bottom:.5rem;">${t('glisser_nom')}</p>
       ${
         available.length
           ? available
@@ -1155,9 +1155,9 @@ function cfgSectionOrganigramme() {
     }
     const canInterim = !!node.titulaire_id || !!node.poste;
     const toggle = absent
-      ? `<button class="shell-btn shell-btn-danger org-poste-btn" onclick="event.stopPropagation();orgEndInterim('${node.id}')">Titulaire de retour</button>`
+      ? `<button class="shell-btn shell-btn-danger org-poste-btn" onclick="event.stopPropagation();orgEndInterim('${node.id}')">${t('titulaire_retour')}</button>`
       : canInterim
-      ? `<button class="shell-btn shell-btn-outline org-poste-btn" onclick="event.stopPropagation();orgStartInterim('${node.id}')">Signaler intérim</button>`
+      ? `<button class="shell-btn shell-btn-outline org-poste-btn" onclick="event.stopPropagation();orgStartInterim('${node.id}')">${t('signaler_interim')}</button>`
       : '';
     const nbReg = Array.isArray(node.registre) ? node.registre.length : 0;
     const registreBtn = `<button class="shell-btn shell-btn-outline org-poste-btn" onclick="event.stopPropagation();openPosteRegistre('${node.id}')">Registre${nbReg ? ` (${nbReg})` : ''}</button>`;
@@ -1208,7 +1208,7 @@ function cfgSectionOrganigramme() {
 
   const roots = children('');
   const body = !roots.length
-    ? '<p style="color:var(--text-muted);">Aucune entité définie — renseignez la section Organisation.</p>'
+    ? '<p style="color:var(--text-muted);">' + t('aucune_entite') + '</p>'
     : ORG_VIEW === 'tree'
     ? `<div class="org-tree">${roots.map((r) => renderNodeTree(r, 0)).join('')}</div>`
     : roots.map((r) => renderNodeList(r, 0)).join('');
@@ -1234,26 +1234,26 @@ function cfgSectionSecurite(cfg) {
   <div class="shell-card">
     <div class="portal-page-header"><h3>${esc(t('cfg_security'))} <span class="shell-badge badge-neutral">TDR §F.3</span></h3></div>
     <div class="shell-form-row">
-      <div class="shell-form-group"><label>Longueur minimale du mot de passe</label><input class="shell-input" type="number" id="secMinLen" value="${cfg.security.passwordMinLength}"></div>
-      <div class="shell-form-group"><label>Validité du mot de passe (jours)</label><input class="shell-input" type="number" id="secMaxAge" value="${cfg.security.passwordMaxAgeDays}"></div>
+      <div class="shell-form-group"><label>${t('longueur_min_mdp')}</label><input class="shell-input" type="number" id="secMinLen" value="${cfg.security.passwordMinLength}"></div>
+      <div class="shell-form-group"><label>${t('validite_mdp')}</label><input class="shell-input" type="number" id="secMaxAge" value="${cfg.security.passwordMaxAgeDays}"></div>
     </div>
     <div class="shell-form-row">
       <div class="shell-form-group"><label>Tentatives avant blocage</label><input class="shell-input" type="number" id="secMaxFail" value="${cfg.security.maxFailedAttempts}"></div>
-      <div class="shell-form-group"><label>Déconnexion après inactivité (minutes)</label><input class="shell-input" type="number" id="secTimeout" value="${cfg.security.sessionTimeoutMinutes}"></div>
+      <div class="shell-form-group"><label>${t('deconnexion_inactivite')}</label><input class="shell-input" type="number" id="secTimeout" value="${cfg.security.sessionTimeoutMinutes}"></div>
     </div>
     <div class="cfg-module-row">
-      <strong>Session unique par utilisateur</strong>
+      <strong>${t('session_unique')}</strong>
       <label class="cfg-toggle"><input type="checkbox" id="secSingle" ${cfg.security.singleSession ? 'checked' : ''}><span class="track"></span></label>
     </div>
     <div class="cfg-module-row">
-      <strong>Changement de mot de passe à la première connexion</strong>
+      <strong>${t('mdp_premiere_connexion')}</strong>
       <label class="cfg-toggle"><input type="checkbox" id="secForce" ${cfg.security.forceChangeOnFirstLogin ? 'checked' : ''}><span class="track"></span></label>
     </div>
     <div class="cfg-module-row">
       <div>
         <strong>Authentification multifacteur (MFA)</strong>
         <div style="font-size:.72rem;color:var(--text-muted);">
-          Code à usage unique envoyé sur l'e-mail ou le téléphone du profil, valable 10 minutes.
+          ${t('code_usage_unique')}
         </div>
       </div>
       <label class="cfg-toggle"><input type="checkbox" id="secMfa" ${cfg.security.mfaEnabled ? 'checked' : ''}><span class="track"></span></label>
@@ -1323,11 +1323,11 @@ function cfgSectionSysteme(cfg) {
   <div class="shell-card">
     <div class="portal-page-header"><h3>${esc(t('cfg_replication'))}</h3></div>
     <div class="cfg-module-row">
-      <strong>Réplication asynchrone activée</strong>
+      <strong>${t('replication_activee')}</strong>
       <label class="cfg-toggle"><input type="checkbox" id="repEnabled" ${cfg.replication.enabled ? 'checked' : ''}><span class="track"></span></label>
     </div>
     <div class="shell-form-group" style="margin-top:.75rem;">
-      <label>URL du serveur central UEMOA</label>
+      <label>${t('url_serveur_central')}</label>
       <input class="shell-input" id="repUrl" value="${esc(cfg.replication.centralUrl)}">
     </div>
     <div style="display:flex;justify-content:flex-end;margin-top:1rem;">

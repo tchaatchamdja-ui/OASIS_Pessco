@@ -224,6 +224,47 @@ function _prEvalContexte(evalId) {
 
 // Corps de la fiche : barre d'outils, rappel d'un renvoi, entête et onglets.
 function _prEvalCorpsHtml(c) {
+    const { ev, evalId } = c;
+    let bodyHtml = _prEvalEnteteHtml(c);
+
+    // Inner tabs: Généralités + 3 indicator types
+    const activeTab = window._evalDetailTab || 'generalites';
+    bodyHtml += _prEvalOngletsHtml(c, activeTab);
+
+    bodyHtml += '<div id="evalModalBody">';
+
+    // Render content based on active tab
+    if (activeTab === 'generalites') {
+        bodyHtml += _prEvalGeneralitesHtml(c);
+    } else if (activeTab === 'conformite') {
+        bodyHtml += _prEvalConformiteHtml(c);
+    } else if (activeTab === 'performance') {
+        bodyHtml += _prEvalPerformanceHtml(c);
+    } else if (activeTab === 'complexite') {
+        bodyHtml += _prEvalComplexiteHtml(c);
+    } else if (activeTab === 'reunion_evaluateurs') {
+        // Phase 3 — §4.2.2.e : placeholder, loader called after slicer rendered
+        bodyHtml += `<div id="reunionEvalContent" style="padding:0.5rem 0.25rem;">
+            <div style="color:var(--text-muted);font-size:0.85rem;">Chargement des réunions...</div>
+        </div>`;
+        window._evalPendingLoader = { kind: 'reunion_evaluateurs', evalId };
+    } else if (activeTab === 'reunion_prestataire') {
+        // Phase 5 — §4.2.2.g : placeholder, loader called after slicer rendered
+        bodyHtml += `<div id="reunionPrestContent" style="padding:0.5rem 0.25rem;">
+            <div style="color:var(--text-muted);font-size:0.85rem;">Chargement...</div>
+        </div>`;
+        window._evalPendingLoader = { kind: 'reunion_prestataire', evalId, prestataireId: ev.prestataire_id };
+    } else {
+        window._evalPendingLoader = null;
+    }
+
+    bodyHtml += '</div>';
+    return bodyHtml;
+}
+
+// Entête de la fiche : barre d'outils, rappel d'un renvoi, métadonnées et
+// bandeaux des trois familles d'indicateurs.
+function _prEvalEnteteHtml(c) {
     const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
     const {
         D, ev, prest, sect, sas, indices,
@@ -295,9 +336,20 @@ function _prEvalCorpsHtml(c) {
         </div>` : ''}
     </div>
     <hr style="border:none;border-top:1px solid var(--border);margin:0.25rem 0 0.6rem;">`;
+    return bodyHtml;
+}
 
-    // Inner tabs: Généralités + 3 indicator types
-    const activeTab = window._evalDetailTab || 'generalites';
+// Onglets de la fiche : Généralités, les trois familles d'indicateurs, puis les réunions.
+function _prEvalOngletsHtml(c, activeTab) {
+    const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
+    const {
+        D, ev, prest, sect, sas, indices,
+        isReadonly, currentUserId, isValidator, isDraftMode, g, confInds,
+        perfInds, confCount, perfCount, compCount, confTotal, perfTotal,
+        compTotal, sumConf, sumPerf, sumComp, maxConf, maxPerf,
+        maxComp, evalId,
+    } = c;
+    let bodyHtml = '';
     bodyHtml += `<div class="eval-inner-tabs" style="display:flex;gap:0;margin-bottom:1rem;border-bottom:2px solid var(--border);">
         <button class="eval-tab-btn ${activeTab === 'generalites' ? 'active' : ''}" onclick="switchEvalTab('${evalId}','generalites')" style="padding:0.5rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:${activeTab === 'generalites' ? '700' : '400'};color:${activeTab === 'generalites' ? 'var(--primary)' : 'var(--text-muted)'};border-bottom:2px solid ${activeTab === 'generalites' ? 'var(--primary)' : 'transparent'};margin-bottom:-2px;font-size:0.9rem;">
             ${t('tab_generalites')}
@@ -318,230 +370,261 @@ function _prEvalCorpsHtml(c) {
             Réunion prestataire
         </button>` : ''}
     </div>`;
+    return bodyHtml;
+}
 
-    bodyHtml += '<div id="evalModalBody">';
-
-    // Render content based on active tab
-    if (activeTab === 'generalites') {
-        const gen = ev.generalites || {};
-        // Chaque champ est une pièce du rapport : son libellé au-dessus, sa
-        // saisie en dessous, la mise en forme dans la feuille du module.
-        const fld = (id, key, labelKey, defaultValue) =>
-            `<div class="pr-gen-champ">
-                <label for="${id}">${t(labelKey)}</label>
-                <textarea id="${id}" class="auto-grow eval-gen-field" rows="4" data-key="${key}"
-                    ${isReadonly ? 'readonly' : ''}>${gen[key] || defaultValue || ''}</textarea>
-            </div>`;
-
-        // Designated evaluators selector — editable only by Validateur/Administrateur.
-        // Eligible roles: M1_Contributeur, M1_Validateur, M1_Administrateur
-        // Restricted to the eval's domain (or users with no domain restriction).
-        // Source : Gestion des Droits du module. Sont éligibles les utilisateurs
-        // ayant le module dans leurs accès et un privilège Contributeur,
-        // Validateur ou Administrateur couvrant le domaine ET le secteur du
-        // prestataire évalué. Les SUPERADMIN du portail sont exclus (côté serveur).
-        const evalDom = ev.domaine_id || '';
-        const evalSec = ev.secteur_id || '';
-        const eligibleUsers = (evalEligibleEvaluators(evalDom, evalSec) || [])
-            .filter(u => u.id !== currentUserId);
-        const eligibleLoading = evalEligibleEvaluators(evalDom, evalSec) === null;
-        const designated = ev.evaluateurs_designes || [];
-        const nbMin = (ev.nb_evaluateurs_min !== undefined && ev.nb_evaluateurs_min !== null) ? Number(ev.nb_evaluateurs_min) : 3;
-        // Never expose raw user ids in the UI (§ requirement)
-        // « NOM Prénom », jamais l'adresse e-mail
-        const userName = u => {
-            const full = `${(u.nom || '').trim()} ${(u.prenom || '').trim()}`.trim();
-            if (full) return full;
-            if (u.fullName) return u.fullName;
-            if (u.nom_utilisateur) return u.nom_utilisateur;
-            if (u.email) return u.email.split('@')[0];
-            return '(sans nom)';
-        };
-        const nbCount = designated.length;
-        const countBadge = (() => {
-            if (nbMin <= 0) return '';
-            const ok = nbCount >= nbMin;
-            const color = ok ? '#059669' : '#d97706';
-            const txt = ok ? `${nbCount}/${nbMin} évaluateurs désignés ✓` : `${nbCount}/${nbMin} évaluateurs désignés (minimum non atteint)`;
-            return `<span style="display:inline-block;background:${color}20;color:${color};border:1px solid ${color}55;border-radius:4px;padding:0.1rem 0.5rem;font-size:0.75rem;font-weight:600;margin-left:0.5rem;">${txt}</span>`;
-        })();
-        let evalSelector = '';
-        if (isValidator && !isReadonly) {
-            evalSelector = `<div class="pr-gen-champ pr-gen-champ-court">
-                <label for="evalNbMin">Nombre minimal d'évaluateurs requis</label>
-                <div class="pr-gen-nb">
-                    <input type="number" id="evalNbMin" min="0" max="20" value="${nbMin}">
-                    <span class="pr-gen-aide">0 = pas de minimum imposé</span>
-                </div>
-            </div>
-            <div class="pr-gen-champ">
-                <label>Évaluateurs désignés <span class="pr-gen-aide">(Performance &amp; Complexité)</span> ${countBadge}</label>
-                <ul id="evalDesignesBox" class="pr-gen-designes">
-                    ${eligibleUsers.length ? eligibleUsers.map(u => `
-                        <li>
-                            <input type="checkbox" class="eval-designe-cb" id="cb_eval_${u.id}" data-uid="${u.id}" ${designated.includes(u.id) ? 'checked' : ''}>
-                            <label for="cb_eval_${u.id}" title="${_escapeHtml(u.privilege || '')}">${_escapeHtml(userName(u))}</label>
-                        </li>`).join('')
-                        : `<li class="pr-gen-vide">${t(eligibleLoading ? 'loading_eligible' : 'no_eligible_user')}</li>`}
-                </ul>
-            </div>`;
-        } else if (designated.length) {
-            const items = designated.map(uid => {
-                const u = evalUserById(uid) || { id: uid };
-                return `<span class="pr-gen-jeton">${_escapeHtml(userName(u))}</span>`;
-            }).join('');
-            evalSelector = `<div class="pr-gen-champ">
-                <label>Évaluateurs désignés ${countBadge}</label>
-                <div class="pr-gen-jetons">${items}</div>
-            </div>`;
-        }
-
-        // Pre-fill "Liste des évaluateurs" with selected evaluator names (one per line, prefixed "- ")
-        const designatedDefaultList = designated.map(uid => {
-            const u = evalUserById(uid);
-            return u ? ' - ' + userName(u) : '';
-        }).filter(Boolean).join('\n');
-
-        // Les sept champs libres du rapport se lisaient à la file, sans rien
-        // qui dise à quoi chacun sert. Ils se rangent en trois temps : le cadre
-        // posé, les personnes qui y prennent part, puis ce que l'évaluation en
-        // conclut.
-        const bloc = (titreKey, contenu) => `<section class="pr-gen-bloc">
-            <h4>${t(titreKey)}</h4>
-            ${contenu}
-        </section>`;
-
-        bodyHtml += `<div class="pr-gen">
-            ${bloc('gen_sec_cadre', `<div class="pr-gen-duo">
-                ${fld('genIntroduction', 'introduction', 'gen_introduction')}
-                ${fld('genSources', 'sources', 'gen_sources')}
-            </div>`)}
-            ${bloc('gen_sec_participants', `${evalSelector}
-            <div class="pr-gen-duo">
-                ${fld('genEvaluateurs', 'evaluateurs', 'gen_evaluateurs', designatedDefaultList)}
-                ${fld('genParties', 'parties', 'gen_parties')}
-            </div>`)}
-            ${bloc('gen_sec_analyse', `${fld('genResume', 'resume', 'gen_resume')}
-            ${fld('genActions', 'actions', 'gen_actions')}
-            ${fld('genConclusion', 'conclusion', 'gen_conclusion')}`)}
+// Onglet « Généralités » : les champs libres du rapport et les évaluateurs désignés.
+function _prEvalGeneralitesHtml(c) {
+    const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
+    const {
+        D, ev, prest, sect, sas, indices,
+        isReadonly, currentUserId, isValidator, isDraftMode, g, confInds,
+        perfInds, confCount, perfCount, compCount, confTotal, perfTotal,
+        compTotal, sumConf, sumPerf, sumComp, maxConf, maxPerf,
+        maxComp, evalId,
+    } = c;
+    let bodyHtml = '';
+    const gen = ev.generalites || {};
+    // Chaque champ est une pièce du rapport : son libellé au-dessus, sa
+    // saisie en dessous, la mise en forme dans la feuille du module.
+    const fld = (id, key, labelKey, defaultValue) =>
+        `<div class="pr-gen-champ">
+            <label for="${id}">${t(labelKey)}</label>
+            <textarea id="${id}" class="auto-grow eval-gen-field" rows="4" data-key="${key}"
+                ${isReadonly ? 'readonly' : ''}>${gen[key] || defaultValue || ''}</textarea>
         </div>`;
-    } else if (activeTab === 'conformite') {
-        const indicators = confInds;
-        if (sas.length && indicators.length) {
-            sas.forEach((sa, saIdx) => {
-                const saRes = ev.resultats?.sousActivites?.[sa.id] || {};
-                const saTaux = saRes.tauxConf !== undefined ? (saRes.tauxConf * 100).toFixed(1) + '%' : '-';
-                const saIdc = saRes.idc_s || '-';
-                const saAccId = `evalSa_conf_${saIdx}`;
-                const saConfSum = indicators.reduce((s, ind) => s + (ev.notes_conf?.[`${sa.id}_${ind.id}`] || 0), 0);
-                const saConfMax = indicators.length * 3;
-                // Conformité is scored by the validator only — hide aggregate stats for non-validators
-                // so designated evaluators don't see partial validator data.
-                const _confStats = isValidator
-                    ? `Notes: <strong id="evalSaSum_conf_${sa.id}">${saConfSum}</strong>/${saConfMax} | Taux: <span id="evalSaTaux_conf_${sa.id}">${saTaux}</span> | idc: <span id="evalSaIdc_${sa.id}">${saIdc}</span>`
-                    : '';
-                bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
-                    <div class="accordion-header" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
-                        <span class="chevron">${ICONS.chevron}</span>
-                        <span class="acc-title" style="font-weight:700;">${sa.code} - ${sa.nom}</span>
-                        <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">${_confStats}</span>
-                    </div>
-                    <div class="accordion-body" id="acc-body-${saAccId}">`;
-                indicators.forEach(ind => {
-                    const noteKey = `${sa.id}_${ind.id}`;
-                    bodyHtml += renderEvalIndicator(ind, 'notes_conf', noteKey, false);
-                });
-                bodyHtml += `</div></div>`;
-            });
-        } else {
-            bodyHtml += `<div class="text-center">${t('no_data')}</div>`;
-        }
-    } else if (activeTab === 'performance') {
-        const indicators = perfInds;
-        if (indicators.length && sect) {
-            // Performance indicators are scoped at the secteur level (not per sous-activité).
-            // Source des notes selon le rôle : brouillon de l'évaluateur ou notes publiées.
-            const _src = evalNotesSource(ev, 'perf');
-            const saAccId = `evalSa_perf_${sect.id}`;
-            const saPerfSum = indicators.reduce((s, ind) => s + (_src[ind.id] || 0), 0);
-            const saPerfMax = indicators.length * 3;
-            let saTauxPerf, saIdp;
-            const _ind = D.indices || {};
-            if (isDraftMode) {
-                const _t = saPerfMax > 0 ? (saPerfSum / saPerfMax) : 0;
-                saTauxPerf = saPerfSum > 0 ? (_t * 100).toFixed(1) + '%' : '-';
-                saIdp = (typeof getIndice3Levels === 'function' && saPerfSum > 0)
-                    ? getIndice3Levels(_t, _ind.perf1 || 0.8, _ind.perf2 || 0.5) : '-';
-            } else {
-                const gRes = ev.resultats?.global || {};
-                saTauxPerf = gRes.tauxPerf !== undefined ? (gRes.tauxPerf * 100).toFixed(1) + '%' : '-';
-                saIdp = gRes.idp_g || '-';
-            }
-            bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
-                <div class="accordion-header expanded" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
-                    <span class="chevron expanded">${ICONS.chevron}</span>
-                    <span class="acc-title" style="font-weight:700;">${sect.code || ''} - ${sect.nom || ''}</span>
-                    <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Notes: <strong id="evalSaSum_perf_${sect.id}">${saPerfSum}</strong>/${saPerfMax} | Taux: <span id="evalSaTaux_perf_${sect.id}">${saTauxPerf}</span> | idp: <span id="evalSaIdp_${sect.id}">${saIdp}</span></span>
-                </div>
-                <div class="accordion-body expanded" id="acc-body-${saAccId}">`;
-            indicators.forEach(ind => {
-                bodyHtml += renderEvalIndicator(ind, 'notes_perf', ind.id, false);
-            });
-            bodyHtml += `</div></div>`;
-        } else {
-            bodyHtml += `<div class="text-center">${t('no_data')}</div>`;
-        }
-    } else if (activeTab === 'complexite') {
+
+    // Designated evaluators selector — editable only by Validateur/Administrateur.
+    // Eligible roles: M1_Contributeur, M1_Validateur, M1_Administrateur
+    // Restricted to the eval's domain (or users with no domain restriction).
+    // Source : Gestion des Droits du module. Sont éligibles les utilisateurs
+    // ayant le module dans leurs accès et un privilège Contributeur,
+    // Validateur ou Administrateur couvrant le domaine ET le secteur du
+    // prestataire évalué. Les SUPERADMIN du portail sont exclus (côté serveur).
+    const evalDom = ev.domaine_id || '';
+    const evalSec = ev.secteur_id || '';
+    const eligibleUsers = (evalEligibleEvaluators(evalDom, evalSec) || [])
+        .filter(u => u.id !== currentUserId);
+    const eligibleLoading = evalEligibleEvaluators(evalDom, evalSec) === null;
+    const designated = ev.evaluateurs_designes || [];
+    const nbMin = (ev.nb_evaluateurs_min !== undefined && ev.nb_evaluateurs_min !== null) ? Number(ev.nb_evaluateurs_min) : 3;
+    // Never expose raw user ids in the UI (§ requirement)
+    // « NOM Prénom », jamais l'adresse e-mail
+    const userName = u => {
+        const full = `${(u.nom || '').trim()} ${(u.prenom || '').trim()}`.trim();
+        if (full) return full;
+        if (u.fullName) return u.fullName;
+        if (u.nom_utilisateur) return u.nom_utilisateur;
+        if (u.email) return u.email.split('@')[0];
+        return '(sans nom)';
+    };
+    const nbCount = designated.length;
+    const countBadge = (() => {
+        if (nbMin <= 0) return '';
+        const ok = nbCount >= nbMin;
+        const color = ok ? '#059669' : '#d97706';
+        const txt = ok ? `${nbCount}/${nbMin} évaluateurs désignés ✓` : `${nbCount}/${nbMin} évaluateurs désignés (minimum non atteint)`;
+        return `<span style="display:inline-block;background:${color}20;color:${color};border:1px solid ${color}55;border-radius:4px;padding:0.1rem 0.5rem;font-size:0.75rem;font-weight:600;margin-left:0.5rem;">${txt}</span>`;
+    })();
+    let evalSelector = '';
+    if (isValidator && !isReadonly) {
+        evalSelector = `<div class="pr-gen-champ pr-gen-champ-court">
+            <label for="evalNbMin">Nombre minimal d'évaluateurs requis</label>
+            <div class="pr-gen-nb">
+                <input type="number" id="evalNbMin" min="0" max="20" value="${nbMin}">
+                <span class="pr-gen-aide">0 = pas de minimum imposé</span>
+            </div>
+        </div>
+        <div class="pr-gen-champ">
+            <label>Évaluateurs désignés <span class="pr-gen-aide">(Performance &amp; Complexité)</span> ${countBadge}</label>
+            <ul id="evalDesignesBox" class="pr-gen-designes">
+                ${eligibleUsers.length ? eligibleUsers.map(u => `
+                    <li>
+                        <input type="checkbox" class="eval-designe-cb" id="cb_eval_${u.id}" data-uid="${u.id}" ${designated.includes(u.id) ? 'checked' : ''}>
+                        <label for="cb_eval_${u.id}" title="${_escapeHtml(u.privilege || '')}">${_escapeHtml(userName(u))}</label>
+                    </li>`).join('')
+                    : `<li class="pr-gen-vide">${t(eligibleLoading ? 'loading_eligible' : 'no_eligible_user')}</li>`}
+            </ul>
+        </div>`;
+    } else if (designated.length) {
+        const items = designated.map(uid => {
+            const u = evalUserById(uid) || { id: uid };
+            return `<span class="pr-gen-jeton">${_escapeHtml(userName(u))}</span>`;
+        }).join('');
+        evalSelector = `<div class="pr-gen-champ">
+            <label>Évaluateurs désignés ${countBadge}</label>
+            <div class="pr-gen-jetons">${items}</div>
+        </div>`;
+    }
+
+    // Pre-fill "Liste des évaluateurs" with selected evaluator names (one per line, prefixed "- ")
+    const designatedDefaultList = designated.map(uid => {
+        const u = evalUserById(uid);
+        return u ? ' - ' + userName(u) : '';
+    }).filter(Boolean).join('\n');
+
+    // Les sept champs libres du rapport se lisaient à la file, sans rien
+    // qui dise à quoi chacun sert. Ils se rangent en trois temps : le cadre
+    // posé, les personnes qui y prennent part, puis ce que l'évaluation en
+    // conclut.
+    const bloc = (titreKey, contenu) => `<section class="pr-gen-bloc">
+        <h4>${t(titreKey)}</h4>
+        ${contenu}
+    </section>`;
+
+    bodyHtml += `<div class="pr-gen">
+        ${bloc('gen_sec_cadre', `<div class="pr-gen-duo">
+            ${fld('genIntroduction', 'introduction', 'gen_introduction')}
+            ${fld('genSources', 'sources', 'gen_sources')}
+        </div>`)}
+        ${bloc('gen_sec_participants', `${evalSelector}
+        <div class="pr-gen-duo">
+            ${fld('genEvaluateurs', 'evaluateurs', 'gen_evaluateurs', designatedDefaultList)}
+            ${fld('genParties', 'parties', 'gen_parties')}
+        </div>`)}
+        ${bloc('gen_sec_analyse', `${fld('genResume', 'resume', 'gen_resume')}
+        ${fld('genActions', 'actions', 'gen_actions')}
+        ${fld('genConclusion', 'conclusion', 'gen_conclusion')}`)}
+    </div>`;
+    return bodyHtml;
+}
+
+// Onglet « Conformité » : une section par sous-activité.
+function _prEvalConformiteHtml(c) {
+    const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
+    const {
+        D, ev, prest, sect, sas, indices,
+        isReadonly, currentUserId, isValidator, isDraftMode, g, confInds,
+        perfInds, confCount, perfCount, compCount, confTotal, perfTotal,
+        compTotal, sumConf, sumPerf, sumComp, maxConf, maxPerf,
+        maxComp, evalId,
+    } = c;
+    let bodyHtml = '';
+    const indicators = confInds;
+    if (sas.length && indicators.length) {
         sas.forEach((sa, saIdx) => {
-            const indicators = (D.indComplex || []).filter(i => i.sous_activite_id === sa.id && i.actif !== false);
-            if (!indicators.length) return;
             const saRes = ev.resultats?.sousActivites?.[sa.id] || {};
-            // In draft mode (designated non-validator), the bandeau reflects the current
-            // evaluator's own draft notes, not the published final notes.
-            const _src = evalNotesSource(ev, 'comp');
-            const saAccId = `evalSa_comp_${saIdx}`;
-            const saCompSum = indicators.reduce((s, ind) => s + (_src[ind.id] || 0), 0);
-            const saCompMax = indicators.length * 3;
-            let saTaux, saIde;
-            if (isDraftMode) {
-                const _t = saCompMax > 0 ? (saCompSum / saCompMax) : 0;
-                saTaux = saCompSum > 0 ? (_t * 100).toFixed(1) + '%' : '-';
-                const _ind = D.indices || {};
-                saIde = (typeof getIndice3Levels === 'function' && saCompSum > 0)
-                    ? getIndice3Levels(_t, _ind.expo1 || 0.8, _ind.expo2 || 0.5) : '-';
-            } else {
-                saTaux = saRes.tauxComp !== undefined ? (saRes.tauxComp * 100).toFixed(1) + '%' : '-';
-                saIde = saRes.ide_s || '-';
-            }
+            const saTaux = saRes.tauxConf !== undefined ? (saRes.tauxConf * 100).toFixed(1) + '%' : '-';
+            const saIdc = saRes.idc_s || '-';
+            const saAccId = `evalSa_conf_${saIdx}`;
+            const saConfSum = indicators.reduce((s, ind) => s + (ev.notes_conf?.[`${sa.id}_${ind.id}`] || 0), 0);
+            const saConfMax = indicators.length * 3;
+            // Conformité is scored by the validator only — hide aggregate stats for non-validators
+            // so designated evaluators don't see partial validator data.
+            const _confStats = isValidator
+                ? `Notes: <strong id="evalSaSum_conf_${sa.id}">${saConfSum}</strong>/${saConfMax} | Taux: <span id="evalSaTaux_conf_${sa.id}">${saTaux}</span> | idc: <span id="evalSaIdc_${sa.id}">${saIdc}</span>`
+                : '';
             bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
                 <div class="accordion-header" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
                     <span class="chevron">${ICONS.chevron}</span>
                     <span class="acc-title" style="font-weight:700;">${sa.code} - ${sa.nom}</span>
-                    <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Notes: <strong id="evalSaSum_comp_${sa.id}">${saCompSum}</strong>/${saCompMax} | Taux: <span id="evalSaTaux_comp_${sa.id}">${saTaux}</span> | ide: <span id="evalSaIde_${sa.id}">${saIde}</span></span>
+                    <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">${_confStats}</span>
                 </div>
                 <div class="accordion-body" id="acc-body-${saAccId}">`;
             indicators.forEach(ind => {
-                bodyHtml += renderEvalIndicator(ind, 'notes_comp', ind.id, true);
+                const noteKey = `${sa.id}_${ind.id}`;
+                bodyHtml += renderEvalIndicator(ind, 'notes_conf', noteKey, false);
             });
             bodyHtml += `</div></div>`;
         });
-    } else if (activeTab === 'reunion_evaluateurs') {
-        // Phase 3 — §4.2.2.e : placeholder, loader called after slicer rendered
-        bodyHtml += `<div id="reunionEvalContent" style="padding:0.5rem 0.25rem;">
-            <div style="color:var(--text-muted);font-size:0.85rem;">Chargement des réunions...</div>
-        </div>`;
-        window._evalPendingLoader = { kind: 'reunion_evaluateurs', evalId };
-    } else if (activeTab === 'reunion_prestataire') {
-        // Phase 5 — §4.2.2.g : placeholder, loader called after slicer rendered
-        bodyHtml += `<div id="reunionPrestContent" style="padding:0.5rem 0.25rem;">
-            <div style="color:var(--text-muted);font-size:0.85rem;">Chargement...</div>
-        </div>`;
-        window._evalPendingLoader = { kind: 'reunion_prestataire', evalId, prestataireId: ev.prestataire_id };
     } else {
-        window._evalPendingLoader = null;
+        bodyHtml += `<div class="text-center">${t('no_data')}</div>`;
     }
+    return bodyHtml;
+}
 
-    bodyHtml += '</div>';
+// Onglet « Performance » : les indicateurs du secteur.
+function _prEvalPerformanceHtml(c) {
+    const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
+    const {
+        D, ev, prest, sect, sas, indices,
+        isReadonly, currentUserId, isValidator, isDraftMode, g, confInds,
+        perfInds, confCount, perfCount, compCount, confTotal, perfTotal,
+        compTotal, sumConf, sumPerf, sumComp, maxConf, maxPerf,
+        maxComp, evalId,
+    } = c;
+    let bodyHtml = '';
+    const indicators = perfInds;
+    if (indicators.length && sect) {
+        // Performance indicators are scoped at the secteur level (not per sous-activité).
+        // Source des notes selon le rôle : brouillon de l'évaluateur ou notes publiées.
+        const _src = evalNotesSource(ev, 'perf');
+        const saAccId = `evalSa_perf_${sect.id}`;
+        const saPerfSum = indicators.reduce((s, ind) => s + (_src[ind.id] || 0), 0);
+        const saPerfMax = indicators.length * 3;
+        let saTauxPerf, saIdp;
+        const _ind = D.indices || {};
+        if (isDraftMode) {
+            const _t = saPerfMax > 0 ? (saPerfSum / saPerfMax) : 0;
+            saTauxPerf = saPerfSum > 0 ? (_t * 100).toFixed(1) + '%' : '-';
+            saIdp = (typeof getIndice3Levels === 'function' && saPerfSum > 0)
+                ? getIndice3Levels(_t, _ind.perf1 || 0.8, _ind.perf2 || 0.5) : '-';
+        } else {
+            const gRes = ev.resultats?.global || {};
+            saTauxPerf = gRes.tauxPerf !== undefined ? (gRes.tauxPerf * 100).toFixed(1) + '%' : '-';
+            saIdp = gRes.idp_g || '-';
+        }
+        bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
+            <div class="accordion-header expanded" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
+                <span class="chevron expanded">${ICONS.chevron}</span>
+                <span class="acc-title" style="font-weight:700;">${sect.code || ''} - ${sect.nom || ''}</span>
+                <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Notes: <strong id="evalSaSum_perf_${sect.id}">${saPerfSum}</strong>/${saPerfMax} | Taux: <span id="evalSaTaux_perf_${sect.id}">${saTauxPerf}</span> | idp: <span id="evalSaIdp_${sect.id}">${saIdp}</span></span>
+            </div>
+            <div class="accordion-body expanded" id="acc-body-${saAccId}">`;
+        indicators.forEach(ind => {
+            bodyHtml += renderEvalIndicator(ind, 'notes_perf', ind.id, false);
+        });
+        bodyHtml += `</div></div>`;
+    } else {
+        bodyHtml += `<div class="text-center">${t('no_data')}</div>`;
+    }
+    return bodyHtml;
+}
+
+// Onglet « Complexité » : une section par sous-activité qui en porte.
+function _prEvalComplexiteHtml(c) {
+    const { renderEvalCriteria, renderEvalIndicator, _escapeHtml, compileIndicatorStatus } = c;
+    const {
+        D, ev, prest, sect, sas, indices,
+        isReadonly, currentUserId, isValidator, isDraftMode, g, confInds,
+        perfInds, confCount, perfCount, compCount, confTotal, perfTotal,
+        compTotal, sumConf, sumPerf, sumComp, maxConf, maxPerf,
+        maxComp, evalId,
+    } = c;
+    let bodyHtml = '';
+    sas.forEach((sa, saIdx) => {
+        const indicators = (D.indComplex || []).filter(i => i.sous_activite_id === sa.id && i.actif !== false);
+        if (!indicators.length) return;
+        const saRes = ev.resultats?.sousActivites?.[sa.id] || {};
+        // In draft mode (designated non-validator), the bandeau reflects the current
+        // evaluator's own draft notes, not the published final notes.
+        const _src = evalNotesSource(ev, 'comp');
+        const saAccId = `evalSa_comp_${saIdx}`;
+        const saCompSum = indicators.reduce((s, ind) => s + (_src[ind.id] || 0), 0);
+        const saCompMax = indicators.length * 3;
+        let saTaux, saIde;
+        if (isDraftMode) {
+            const _t = saCompMax > 0 ? (saCompSum / saCompMax) : 0;
+            saTaux = saCompSum > 0 ? (_t * 100).toFixed(1) + '%' : '-';
+            const _ind = D.indices || {};
+            saIde = (typeof getIndice3Levels === 'function' && saCompSum > 0)
+                ? getIndice3Levels(_t, _ind.expo1 || 0.8, _ind.expo2 || 0.5) : '-';
+        } else {
+            saTaux = saRes.tauxComp !== undefined ? (saRes.tauxComp * 100).toFixed(1) + '%' : '-';
+            saIde = saRes.ide_s || '-';
+        }
+        bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
+            <div class="accordion-header" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
+                <span class="chevron">${ICONS.chevron}</span>
+                <span class="acc-title" style="font-weight:700;">${sa.code} - ${sa.nom}</span>
+                <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Notes: <strong id="evalSaSum_comp_${sa.id}">${saCompSum}</strong>/${saCompMax} | Taux: <span id="evalSaTaux_comp_${sa.id}">${saTaux}</span> | ide: <span id="evalSaIde_${sa.id}">${saIde}</span></span>
+            </div>
+            <div class="accordion-body" id="acc-body-${saAccId}">`;
+        indicators.forEach(ind => {
+            bodyHtml += renderEvalIndicator(ind, 'notes_comp', ind.id, true);
+        });
+        bodyHtml += `</div></div>`;
+    });
     return bodyHtml;
 }
 

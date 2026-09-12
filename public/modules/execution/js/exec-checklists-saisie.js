@@ -170,7 +170,70 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
         || _normL(s.libelle) === 'non evaluee');
     const defaultStatutId = defaultStatut ? defaultStatut.id : '';
 
-    // ── Regroupement Sous-Domaine (sous-activité) › Thème › Sous-thème ──
+    // Statuts « non satisfaisant » → déclenchent la possibilité de générer une constatation
+    const nonSatIds = new Set(statuts
+        .filter(s => _normL(s.libelle).includes('non satisfaisant') || _normL(s.libelle).includes('non-satisfaisant'))
+        .map(s => s.id));
+
+    const tree = _execChkArbre(items, allThemes, themeLbl, sousThLbl);
+    const ligne = { respByItem, defaultStatutId, statutColor, statuts, nonSatIds, dossierId };
+    const groupsHtml = _execChkGroupesHtml(items, tree, (it) => _execChkLigneHtml(it, ligne));
+
+    // Contexte conservé pour les recalculs de synthèse / couleurs après chaque changement
+    window._execChkFillerCtx = {
+        dossierId, checklistId,
+        totalItems: items.length,
+        statuts: statuts.map(s => ({ id: s.id, libelle: s.libelle, couleur: s.couleur || '' })),
+        nonSatIds: Array.from(nonSatIds)
+    };
+
+    // ── Section rétractable « Activité » : renseignements du dossier courant ──
+    // Priorité au dossier détaillé (selectedDossier) : il contient les champs joints
+    // de la Notification (notif_nature, notif_lieu, notif_perimetre…) absents de la liste.
+    let dossier = (EXEC_STATE.selectedDossier && EXEC_STATE.selectedDossier.id === dossierId)
+        ? EXEC_STATE.selectedDossier
+        : (EXEC_STATE.data.dossiers || []).find(d => d.id === dossierId) || {};
+    // Si le dossier courant n'a pas les champs joints de notification, on le re-fetch unitairement.
+    if (dossier && dossier.id && dossier.notif_nature === undefined && dossier.notif_lieu === undefined) {
+        try {
+            const full = await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`);
+            if (full && full.id) dossier = full;
+        } catch (e) { /* repli silencieux */ }
+    }
+    const activiteHtml = _execChkActiviteHtml(dossier);
+    const html = _execChkFillerHtml(cl, dossierId, checklistId, statuts, activiteHtml, groupsHtml);
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    // Câblage des autosaves (event delegation sur le conteneur des groupes)
+    const groupsEl = document.getElementById('execChkFillerGroups');
+    groupsEl?.addEventListener('change', ev => {
+        const t = ev.target;
+        if (!t.dataset.item) return;
+        const itemId = t.dataset.item;
+        const isStatut = t.classList.contains('exec-chk-fill-statut');
+        const isObs = t.classList.contains('exec-chk-fill-obs');
+        if (!isStatut && !isObs) return;
+        _execChkFillAutosave(dossierId, checklistId, itemId, isStatut ? 'statut_id' : 'observations', t.value);
+        if (isStatut) {
+            _execChkFillerApplyRowColor(itemId, t.value);
+            _execChkFillerUpdateSummary();
+            execChkFillApplyFilter();
+            // Affiche/masque le bouton « Générer une constatation » selon le statut
+            const ctx = window._execChkFillerCtx;
+            const isNonSat = ctx && (ctx.nonSatIds || []).includes(t.value);
+            const btn = document.querySelector(`#execChkFillerGroups .exec-chk-gen-btn[data-item="${itemId}"]`);
+            if (btn) btn.style.display = isNonSat ? '' : 'none';
+        }
+    });
+    // Restaure l'état désactivé persistant des regroupements
+    _execChkApplyDisabledState(respByItem);
+    // Synthèse initiale + état des boutons « Générer une constatation »
+    _execChkFillerUpdateSummary();
+    _execChkFillSyncGenButtons(dossierId);
+}
+
+// ── Regroupement Sous-Domaine (sous-activité) › Thème › Sous-thème ──
+function _execChkArbre(items, allThemes, themeLbl, sousThLbl) {
     const sousActs = (window.PESSCO?.sharedData?.sousActivites) || [];
     const saLbl = id => { const s = sousActs.find(x => x.id === id); return s ? (s.code || s.nom || '—') : ''; };
     const themeSaId = themeId => allThemes.find(t => t.id === themeId)?.sous_activite_id || '';
@@ -188,53 +251,58 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
         if (!sn[stId]) sn[stId] = { label: stId === '_' ? '(Sans sous-thème)' : sousThLbl(stId), items: [] };
         sn[stId].items.push(it);
     });
+    return tree;
+}
 
-    // Statuts « non satisfaisant » → déclenchent la possibilité de générer une constatation
-    const nonSatIds = new Set(statuts
-        .filter(s => _normL(s.libelle).includes('non satisfaisant') || _normL(s.libelle).includes('non-satisfaisant'))
-        .map(s => s.id));
+// Une ligne d'item : référence, règlement, description, directives, statut,
+// observations, et le bouton qui génère une constatation.
+function _execChkLigneHtml(it, ligne) {
+    const { respByItem, defaultStatutId, statutColor, statuts, nonSatIds, dossierId } = ligne;
+    const _esc2 = oasisEsc;
+    const r = respByItem[it.id] || {};
+    const effStatut = r.statut_id || defaultStatutId;
+    const col = statutColor(effStatut);
+    const rowBg = col ? `background:${col}22;` : '';
+    const _esc3 = s => _esc2(s);
+    // Réf. Règlement : peut être un tableau JSON d'ids d'exigences ou du texte libre
+    const exigencesAll = (window.PESSCO?.sharedData?.exigences) || [];
+    let regDisplay = '';
+    const rawReg = String(it.ref_reglement || '').trim();
+    if (rawReg.startsWith('[')) {
+        try {
+            const arr = JSON.parse(rawReg);
+            if (Array.isArray(arr)) {
+                regDisplay = arr.map(id => {
+                    const e = exigencesAll.find(x => x.id === id);
+                    return e ? (e.reference + (e.libelle ? ' — ' + e.libelle : '')) : '';
+                }).filter(Boolean).join('\n');
+            }
+        } catch (e) { regDisplay = rawReg; }
+    } else {
+        regDisplay = rawReg;
+    }
+    return `<tr data-item-id="${it.id}" data-ref="${_esc3((it.ref_item||'')+' '+(it.description||''))}" style="${rowBg}">
+        <td><strong>${_esc3(it.ref_item || '-')}</strong></td>
+        <td style="white-space:pre-wrap;font-size:0.72rem;color:#555;">${_esc3(regDisplay)}</td>
+        <td style="white-space:pre-wrap;">${_esc3(it.description || '')}</td>
+        <td style="white-space:pre-wrap;font-size:0.72rem;color:#555;">${_esc3(it.directives || '')}</td>
+        <td><select class="exec-chk-fill-statut" data-item="${it.id}">
+            ${statuts.map(s => `<option value="${s.id}" ${effStatut===s.id?'selected':''}>${_esc3(s.alias || s.libelle)}</option>`).join('')}
+        </select></td>
+        <td><textarea class="exec-chk-fill-obs" data-item="${it.id}" rows="2" placeholder="Observations terrain…">${_esc3(r.observations || '')}</textarea></td>
+        <td style="text-align:center;">
+            <div class="exec-chk-row-state" data-item="${it.id}" style="font-size:0.7rem;color:var(--text-muted);"></div>
+            <button class="btn btn-sm btn-danger exec-chk-gen-btn" data-item="${it.id}"
+                title="Générer une constatation"
+                style="${nonSatIds.has(effStatut) ? '' : 'display:none;'}margin-top:0.2rem;padding:0.2rem 0.4rem;font-size:0.8rem;line-height:1;"
+                onclick="execChkFillGenConstatation('${dossierId}','${it.id}')">⚠</button>
+        </td>
+    </tr>`;
+}
 
-    const _itemRow = it => {
-        const r = respByItem[it.id] || {};
-        const effStatut = r.statut_id || defaultStatutId;
-        const col = statutColor(effStatut);
-        const rowBg = col ? `background:${col}22;` : '';
-        const _esc3 = s => _esc2(s);
-        // Réf. Règlement : peut être un tableau JSON d'ids d'exigences ou du texte libre
-        const exigencesAll = (window.PESSCO?.sharedData?.exigences) || [];
-        let regDisplay = '';
-        const rawReg = String(it.ref_reglement || '').trim();
-        if (rawReg.startsWith('[')) {
-            try {
-                const arr = JSON.parse(rawReg);
-                if (Array.isArray(arr)) {
-                    regDisplay = arr.map(id => {
-                        const e = exigencesAll.find(x => x.id === id);
-                        return e ? (e.reference + (e.libelle ? ' — ' + e.libelle : '')) : '';
-                    }).filter(Boolean).join('\n');
-                }
-            } catch (e) { regDisplay = rawReg; }
-        } else {
-            regDisplay = rawReg;
-        }
-        return `<tr data-item-id="${it.id}" data-ref="${_esc3((it.ref_item||'')+' '+(it.description||''))}" style="${rowBg}">
-            <td><strong>${_esc3(it.ref_item || '-')}</strong></td>
-            <td style="white-space:pre-wrap;font-size:0.72rem;color:#555;">${_esc3(regDisplay)}</td>
-            <td style="white-space:pre-wrap;">${_esc3(it.description || '')}</td>
-            <td style="white-space:pre-wrap;font-size:0.72rem;color:#555;">${_esc3(it.directives || '')}</td>
-            <td><select class="exec-chk-fill-statut" data-item="${it.id}">
-                ${statuts.map(s => `<option value="${s.id}" ${effStatut===s.id?'selected':''}>${_esc3(s.alias || s.libelle)}</option>`).join('')}
-            </select></td>
-            <td><textarea class="exec-chk-fill-obs" data-item="${it.id}" rows="2" placeholder="Observations terrain…">${_esc3(r.observations || '')}</textarea></td>
-            <td style="text-align:center;">
-                <div class="exec-chk-row-state" data-item="${it.id}" style="font-size:0.7rem;color:var(--text-muted);"></div>
-                <button class="btn btn-sm btn-danger exec-chk-gen-btn" data-item="${it.id}"
-                    title="Générer une constatation"
-                    style="${nonSatIds.has(effStatut) ? '' : 'display:none;'}margin-top:0.2rem;padding:0.2rem 0.4rem;font-size:0.8rem;line-height:1;"
-                    onclick="execChkFillGenConstatation('${dossierId}','${it.id}')">⚠</button>
-            </td>
-        </tr>`;
-    };
+// Les regroupements repliables et, au bout de chacun, la table de ses items.
+function _execChkGroupesHtml(items, tree, _itemRow) {
+    const _esc2 = oasisEsc;
     const _leafTable = grpItems => `<table class="exec-cli-inline-table" style="margin-top:0.3rem;">
         <thead><tr>
             <th style="width:90px;">Réf. Item</th>
@@ -284,28 +352,12 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
             </details>`;
         }).join('');
     }
+    return groupsHtml;
+}
 
-    // Contexte conservé pour les recalculs de synthèse / couleurs après chaque changement
-    window._execChkFillerCtx = {
-        dossierId, checklistId,
-        totalItems: items.length,
-        statuts: statuts.map(s => ({ id: s.id, libelle: s.libelle, couleur: s.couleur || '' })),
-        nonSatIds: Array.from(nonSatIds)
-    };
-
-    // ── Section rétractable « Activité » : renseignements du dossier courant ──
-    // Priorité au dossier détaillé (selectedDossier) : il contient les champs joints
-    // de la Notification (notif_nature, notif_lieu, notif_perimetre…) absents de la liste.
-    let dossier = (EXEC_STATE.selectedDossier && EXEC_STATE.selectedDossier.id === dossierId)
-        ? EXEC_STATE.selectedDossier
-        : (EXEC_STATE.data.dossiers || []).find(d => d.id === dossierId) || {};
-    // Si le dossier courant n'a pas les champs joints de notification, on le re-fetch unitairement.
-    if (dossier && dossier.id && dossier.notif_nature === undefined && dossier.notif_lieu === undefined) {
-        try {
-            const full = await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`);
-            if (full && full.id) dossier = full;
-        } catch (e) { /* repli silencieux */ }
-    }
+// ── Section rétractable « Activité » : renseignements du dossier courant ──
+function _execChkActiviteHtml(dossier) {
+    const _esc2 = oasisEsc;
     const _dval = v => (v === null || v === undefined || v === '') ? '—' : String(v);
     const refDossier = dossier.final_reference || dossier.base_reference || dossier.reference || dossier.id || '';
     const _prestObj = (window.PESSCO?.sharedData?.prestataires || EXEC_STATE.data.prestataires || [])
@@ -365,8 +417,13 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
             </div>
         </div>
     </details>`;
+    return activiteHtml;
+}
 
-    const html = `
+// Le volet plein écran de saisie : ses styles, son entête, ses filtres et les regroupements.
+function _execChkFillerHtml(cl, dossierId, checklistId, statuts, activiteHtml, groupsHtml) {
+    const _esc2 = oasisEsc;
+    return `
     <div id="execChkFillerWrap" class="exec-cli-slicer-wrap">
         <style>
             #execChkFillerWrap { position:fixed; top:var(--topbar-height, 56px); left:var(--sidebar-width, 240px); right:0; bottom:0; z-index:1100; transition:left 0.3s ease; }
@@ -459,34 +516,6 @@ async function execOpenChecklistFiller(dossierId, checklistId) {
             </div>
         </aside>
     </div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
-
-    // Câblage des autosaves (event delegation sur le conteneur des groupes)
-    const groupsEl = document.getElementById('execChkFillerGroups');
-    groupsEl?.addEventListener('change', ev => {
-        const t = ev.target;
-        if (!t.dataset.item) return;
-        const itemId = t.dataset.item;
-        const isStatut = t.classList.contains('exec-chk-fill-statut');
-        const isObs = t.classList.contains('exec-chk-fill-obs');
-        if (!isStatut && !isObs) return;
-        _execChkFillAutosave(dossierId, checklistId, itemId, isStatut ? 'statut_id' : 'observations', t.value);
-        if (isStatut) {
-            _execChkFillerApplyRowColor(itemId, t.value);
-            _execChkFillerUpdateSummary();
-            execChkFillApplyFilter();
-            // Affiche/masque le bouton « Générer une constatation » selon le statut
-            const ctx = window._execChkFillerCtx;
-            const isNonSat = ctx && (ctx.nonSatIds || []).includes(t.value);
-            const btn = document.querySelector(`#execChkFillerGroups .exec-chk-gen-btn[data-item="${itemId}"]`);
-            if (btn) btn.style.display = isNonSat ? '' : 'none';
-        }
-    });
-    // Restaure l'état désactivé persistant des regroupements
-    _execChkApplyDisabledState(respByItem);
-    // Synthèse initiale + état des boutons « Générer une constatation »
-    _execChkFillerUpdateSummary();
-    _execChkFillSyncGenButtons(dossierId);
 }
 
 // Restaure, à l'ouverture, l'état désactivé des items / regroupements à partir des réponses.

@@ -32,16 +32,9 @@ const DOUBLONS_CSS_TOLERES = 25;
 // se déclarerait ici, avec la taille constatée à ne pas dépasser.
 const FICHIERS_TOLERES = {};
 
-// Fonctions encore trop longues, à découper au prochain passage sur l'écran.
-const FONCTIONS_TOLEREES = {
-  planRenderCalendar: 401,
-  execOpenChecklistFiller: 373,
-  execDownloadRapport: 345,
-  _prEvalCorpsHtml: 308,
-  _buildDossierTabContent: 284,
-  execShowStatistiquesAdvanced: 266,
-  renderParamIndicateurs: 263,
-};
+// Aucune fonction ne franchit plus le seuil : les dix qui le dépassaient ont
+// été décomposées. Une exception se déclarerait ici, avec sa longueur.
+const FONCTIONS_TOLEREES = {};
 
 function sources() {
   const liste = [];

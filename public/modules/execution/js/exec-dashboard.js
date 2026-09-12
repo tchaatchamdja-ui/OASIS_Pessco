@@ -1398,6 +1398,60 @@ function execShowStatistiquesAdvanced() {
         EXEC_STATE.statsFilters = { domaine: f.domaine || '', prestataire: f.prestataire || '', annee: f.annee || '', trimestre: f.trimestre || '' };
     }
     const F = EXEC_STATE.statsFilters;
+    const filtrees = _execStatsConstatations(F);
+    const { consts, bornes, P, cycle } = _execStatsPeriode(F, filtrees.consts);
+    const k = _execStatsCalculs(consts);
+    const indicateur = EXEC_STATE.statsIndicateur || '';
+    const detail = k.DETAILS[indicateur] || null;
+
+    // Sous-menus du formulaire : les indicateurs, puis la situation générale.
+    const onglet = EXEC_STATE.statsOnglet || 'indicateurs';
+    const sousMenus = `<div class="exec-stats-onglets">
+        ${[['indicateurs', te('indicateurs')], ['situation', te('situation_generale')]]
+            .map(([cle, libelle]) => `<button class="exec-stats-onglet${onglet === cle ? ' actif' : ''}"
+                onclick="EXEC_STATE.statsOnglet='${cle}';execShowStatistiquesAdvanced()">${_esc(libelle)}</button>`).join('')}
+    </div>`;
+
+    const filterBar = _execStatsBarreFiltres(F, filtrees.prests);
+
+    const body = `
+    <div style="padding:1rem 1.25rem;">
+        ${sousMenus}
+        ${onglet === 'situation' ? `
+        <div class="card" id="execSituationGeneraleCard">
+            <div class="exec-stats-entete">
+                <h4>${te('situation_generale')}</h4>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('xlsx')" title="Exporter Excel">
+                        ${EXEC_ICONS.download || EXEC_ICONS.file || ''} ${te('export_excel')}
+                    </button>
+                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('pdf')" title="Exporter PDF">
+                        ${EXEC_ICONS.pdf || EXEC_ICONS.download || ''} ${te('export_pdf')}
+                    </button>
+                </div>
+            </div>
+            <div id="execSituationGeneraleRoot">${_execSituationGenerale(F).tableHtml}</div>
+        </div>` : _execStatsIndicateursHtml(k, filterBar, bornes, P, cycle, indicateur, detail)}
+    </div>`;
+
+    // Bandeau : sortie du formulaire à gauche, avant son intitulé ; la croix
+    // de fermeture n'a plus lieu d'être.
+    const titre = `<button class="btn btn-outline btn-sm exec-proc-retour" onclick="execCloseSlider()">
+            ${EXEC_ICONS.back || ''} ${te('back')}
+        </button>${EXEC_ICONS.dashboard || ''} ${te('statistiques')}`;
+    execShowSlider(titre, body, '', 'max');
+    // Onglet, indicateur, filtres et période vivent dans EXEC_STATE : rejouer
+    // le formulaire suffit à le retrouver dans l'état où on l'a laissé.
+    EXEC_STATE.voletRejouer = () => execShowStatistiquesAdvanced();
+    // Le formulaire se rejoue à chaque onglet et à chaque indicateur : ni
+    // glissement du volet, ni fondu du corps entre deux états.
+    document.getElementById('execSlider')?.classList.add('exec-proc-instant');
+    document.getElementById('execSliderOverlay')?.classList.add('exec-proc-instant');
+    document.querySelector('#execSlider .exec-slider-close')?.remove();
+}
+
+// Constatations du formulaire : portée du compte, puis ses filtres.
+function _execStatsConstatations(F) {
     const isPrest = _execIsPrestataire();
     const scopedPid = (EXEC_STATE.user || {}).prestataire_id || '';
     const secteurs = EXEC_STATE.data.secteurs || [];
@@ -1417,6 +1471,11 @@ function execShowStatistiquesAdvanced() {
         const d = String(c.date_creation || c.date_ouverture || '');
         return d.length >= 7 && String(Math.ceil(parseInt(d.slice(5, 7)) / 3)) === String(F.trimestre);
     });
+    return { consts, prests };
+}
+
+// Période retenue et bornes offertes au curseur de la chronologie.
+function _execStatsPeriode(F, consts) {
     // Période retenue : la chronologie sous les filtres borne les données sur
     // lesquelles les indicateurs sont calculés.
     if (!EXEC_STATE.statsPeriode) EXEC_STATE.statsPeriode = { debut: '', fin: '' };
@@ -1444,7 +1503,11 @@ function execShowStatistiquesAdvanced() {
     };
     if (P.debut) consts = consts.filter(c => jourDe(c) >= P.debut);
     if (P.fin) consts = consts.filter(c => jourDe(c) <= P.fin);
+    return { consts, bornes, P, cycle };
+}
 
+// Indicateurs, répartitions, et la liste que chacun recouvre.
+function _execStatsCalculs(consts) {
     const POST = new Set(EXEC_CONSTA_EN_VIGUEUR);
     const transmitted = consts.filter(c => POST.has(c.statut || ''));
     const crit = c => (c.criticite || c.gravite || '').toLowerCase();
@@ -1484,7 +1547,6 @@ function execShowStatistiquesAdvanced() {
 
     // Ce que chaque indicateur recouvre : la liste qu'il compte. Cliquer la
     // carte affiche cette liste, sous les indicateurs.
-    const indicateur = EXEC_STATE.statsIndicateur || '';
     const recurrentes = transmitted.filter(c => {
         const k = (c.prestataire_id || '') + '|'
             + ((c.theme || c.titre || c.description || '').toString().toLowerCase().slice(0, 50));
@@ -1542,16 +1604,15 @@ function execShowStatistiquesAdvanced() {
         majeures: { titre: te('stats_cloture_majeures'), lignes: majeures },
         recurrentes: { titre: te('stats_recurrentes'), lignes: recurrentes },
     };
-    const detail = DETAILS[indicateur] || null;
+    return {
+        transmitted, criticals, nbCrit, critResolvedInTime, cm, moyMensCritMaj, majeures, majSolded,
+        tauxClotMaj, nbRecur, repartitionMois, recurrentes, ouvertesStats, soldeesStats, horsDelaiListe,
+        repCritSegments, repEmisesSegments, repPacSegments, DETAILS,
+    };
+}
 
-    // Sous-menus du formulaire : les indicateurs, puis la situation générale.
-    const onglet = EXEC_STATE.statsOnglet || 'indicateurs';
-    const sousMenus = `<div class="exec-stats-onglets">
-        ${[['indicateurs', te('indicateurs')], ['situation', te('situation_generale')]]
-            .map(([cle, libelle]) => `<button class="exec-stats-onglet${onglet === cle ? ' actif' : ''}"
-                onclick="EXEC_STATE.statsOnglet='${cle}';execShowStatistiquesAdvanced()">${_esc(libelle)}</button>`).join('')}
-    </div>`;
-
+// Barre de filtres propre au formulaire.
+function _execStatsBarreFiltres(F, prests) {
     // Options du filtre propre
     const domaines = EXEC_STATE.data.domaines || [];
     const allConstYears = new Set((EXEC_STATE.data.constatations || [])
@@ -1577,25 +1638,16 @@ function execShowStatistiquesAdvanced() {
         </select>
         <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="Réinitialiser">${EXEC_ICONS.reset || '↺'}</button>
     </div>`;
+    return filterBar;
+}
 
-    const body = `
-    <div style="padding:1rem 1.25rem;">
-        ${sousMenus}
-        ${onglet === 'situation' ? `
-        <div class="card" id="execSituationGeneraleCard">
-            <div class="exec-stats-entete">
-                <h4>${te('situation_generale')}</h4>
-                <div style="display:flex;gap:0.5rem;">
-                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('xlsx')" title="Exporter Excel">
-                        ${EXEC_ICONS.download || EXEC_ICONS.file || ''} ${te('export_excel')}
-                    </button>
-                    <button class="btn btn-primary btn-sm sg-export-btn" onclick="execExportSituationGenerale('pdf')" title="Exporter PDF">
-                        ${EXEC_ICONS.pdf || EXEC_ICONS.download || ''} ${te('export_pdf')}
-                    </button>
-                </div>
-            </div>
-            <div id="execSituationGeneraleRoot">${_execSituationGenerale(F).tableHtml}</div>
-        </div>` : `
+// Onglet « Indicateurs » : filtres, chronologie, cartes, répartitions et détail.
+function _execStatsIndicateursHtml(k, filterBar, bornes, P, cycle, indicateur, detail) {
+    const {
+        nbCrit, critResolvedInTime, moyMensCritMaj, repartitionMois, tauxClotMaj, majSolded, majeures, nbRecur,
+        repCritSegments, repEmisesSegments, repPacSegments, transmitted, ouvertesStats,
+    } = k;
+    return `
         ${filterBar}
         ${_execStatsChronologie(bornes, P, cycle)}
         <div class="oasis-kpi-groupes pleine cinq">
@@ -1639,22 +1691,6 @@ function execShowStatistiquesAdvanced() {
             ${_execTableauRepartition(te('graph_emises'), repEmisesSegments, transmitted.length)}
             ${_execTableauRepartition(te('graph_pac_titre'), repPacSegments, ouvertesStats.length)}
         </div>
-        ${_execStatsDetailHtml(indicateur, detail)}`}
-    </div>`;
-
-    // Bandeau : sortie du formulaire à gauche, avant son intitulé ; la croix
-    // de fermeture n'a plus lieu d'être.
-    const titre = `<button class="btn btn-outline btn-sm exec-proc-retour" onclick="execCloseSlider()">
-            ${EXEC_ICONS.back || ''} ${te('back')}
-        </button>${EXEC_ICONS.dashboard || ''} ${te('statistiques')}`;
-    execShowSlider(titre, body, '', 'max');
-    // Onglet, indicateur, filtres et période vivent dans EXEC_STATE : rejouer
-    // le formulaire suffit à le retrouver dans l'état où on l'a laissé.
-    EXEC_STATE.voletRejouer = () => execShowStatistiquesAdvanced();
-    // Le formulaire se rejoue à chaque onglet et à chaque indicateur : ni
-    // glissement du volet, ni fondu du corps entre deux états.
-    document.getElementById('execSlider')?.classList.add('exec-proc-instant');
-    document.getElementById('execSliderOverlay')?.classList.add('exec-proc-instant');
-    document.querySelector('#execSlider .exec-slider-close')?.remove();
+        ${_execStatsDetailHtml(indicateur, detail)}`;
 }
 

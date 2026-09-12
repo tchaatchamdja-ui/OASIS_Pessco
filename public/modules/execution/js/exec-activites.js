@@ -1188,288 +1188,312 @@ function execSwitchRedactionSubtab(dossierId, subtabId) {
 }
 
 function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
-    const { notifObjet, notifDates, notifEquipe, notifPerimetre, notifRefs, notifProgramme } = defaults || {};
-    const constatations = dossier.constatations || [];
     const ro = canEdit ? '' : ' readonly';
-    const dis = canEdit ? '' : ' disabled';
     const roBg = canEdit ? '' : 'background:var(--bg);';
 
-    if (tab === 'introduction') {
-        return `
-        <div style="display:grid;grid-template-columns:1fr 3fr;gap:1rem;margin-bottom:1rem;">
-            <div class="form-group">
-                <label>Date d'exécution</label>
-                <input type="text" class="form-input" id="dossier_dates_activite" value="${_escAttr(dossier.dates_activite || notifDates || '')}"${ro} style="${roBg}">
-            </div>
-            <div class="form-group">
-                <label>Objet de l'activité</label>
-                <textarea class="form-input" id="dossier_objet_activite" rows="1" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.objet_activite || notifObjet || '')}</textarea>
-            </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-            <div class="form-group">
-                <label>Description générale de l'activité</label>
-                <textarea class="form-input" id="dossier_description_activite" rows="3" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.description_activite || '')}</textarea>
-            </div>
-            <div class="form-group">
-                <label>Équipe d'inspection</label>
-                <textarea class="form-input" id="dossier_equipe_inspection" rows="3" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.equipe_inspection || notifEquipe || '')}</textarea>
-            </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-            <div class="form-group">
-                <label>Aspects couverts par l'inspection</label>
-                <textarea class="form-input" id="dossier_aspects_couverts" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.aspects_couverts || notifPerimetre || '')}</textarea>
-            </div>
-            <div class="form-group">
-                <label>Référentiel</label>
-                <textarea class="form-input" id="dossier_referentiel" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.referentiel || notifRefs || '')}</textarea>
-            </div>
-        </div>`;
-    } else if (tab === 'checklists') {
-        // ── Section Checklists renseignées (issues de l'étape Réalisation) ──
-        const _parse = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
-        const realChkIds = _parse(dossier.realisation_checklists);
-        const validees = _parse(dossier.checklists_validees);
-        const allChecklists = EXEC_STATE.data.checklists || [];
-        const allItems = EXEC_STATE.data.checklistItems || [];
-        const chkSectionHtml = realChkIds.length
-            ? realChkIds.map(cid => {
-                const c = allChecklists.find(x => x.id === cid);
-                if (!c) return '';
-                const nbItems = allItems.filter(i => i.checklist_id === cid).length;
-                const isVal = validees.includes(cid);
-                return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.7rem;border:1px solid var(--border);border-radius:6px;margin-bottom:0.4rem;background:#fff;">
-                    <span style="font-weight:600;font-size:0.85rem;flex:1;">${c.reference ? _esc(c.reference) + ' — ' : ''}${_esc(c.nom)}
-                        <span style="color:var(--text-muted);font-weight:400;font-size:0.75rem;">(${nbItems} item${nbItems>1?'s':''})</span>
-                    </span>
-                    ${isVal
-                        ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;padding:0.15rem 0.5rem;font-size:0.74rem;font-weight:700;">✓ Validée</span>`
-                        : ''}
-                    <button class="btn btn-sm btn-outline" onclick="execOpenChecklistFiller('${dossierId}','${cid}')">${isVal ? '👁 Consulter' : '📝 Renseigner'}</button>
-                    ${canEdit ? (isVal
-                        ? `<button class="btn btn-sm btn-ghost" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',false)" title="Annuler la validation">↩</button>`
-                        : `<button class="btn btn-sm btn-primary" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',true)">✓ Checklist Validée</button>`) : ''}
-                </div>`;
-            }).filter(Boolean).join('')
-            : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_checklist_realisation')}</p>`;
-
-        // ── Section Pièces jointes de l'activité (issues de l'étape Réalisation) ──
-        let realPjs = [];
-        try {
-            realPjs = typeof dossier.realisation_pieces_jointes === 'string'
-                ? JSON.parse(dossier.realisation_pieces_jointes || '[]')
-                : (dossier.realisation_pieces_jointes || []);
-        } catch (e) { realPjs = []; }
-        if (!Array.isArray(realPjs)) realPjs = [];
-        const pjRowsHtml = realPjs.map(pj => _execRealisationPjRow(pj, canEdit)).join('');
-        const pjSectionHtml = `<div id="realisation_pj_list">${pjRowsHtml}</div>
-            ${canEdit ? `
-            <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
-                <button class="btn btn-sm btn-outline" onclick="document.getElementById('realisation_pj_input').click()">${EXEC_ICONS.upload} Ajouter / remplacer</button>
-                <button class="btn btn-sm btn-primary" onclick="execSaveRedactionPj('${dossierId}')">${EXEC_ICONS.check} Enregistrer</button>
-                <input type="file" id="realisation_pj_input" style="display:none;" multiple onchange="execUploadRealisationPj(this.files)">
-            </div>`
-            : (realPjs.length ? '' : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_pj_realisation')}</p>`)}`;
-
-        return `
-        <div style="margin-bottom:1.25rem;">
-            <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Checklists renseignées</h4>
-            ${chkSectionHtml}
-            ${canEdit ? `<button class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="execOpenChecklistsPicker('${dossierId}','checklists')">${EXEC_ICONS.add} Ajouter des checklists</button>` : ''}
-        </div>
-        <div style="margin-bottom:1.25rem;">
-            <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Pièces jointes de l'activité</h4>
-            ${pjSectionHtml}
-        </div>
-        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Autres documents</h4>
-        <div id="dossier_checklists_list">
-            ${(dossier.checklists || []).map(cl => `
-            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_escAttr(cl.path || '')}">
-                ${EXEC_ICONS.file} <span style="flex:1;">${_esc(cl.filename || cl)}</span>
-                ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>` : ''}
-            </div>`).join('')}
-        </div>
-        ${canEdit ? `
-        <div class="exec-upload-zone" style="margin-top:0.75rem;padding:1.5rem;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" onclick="document.getElementById('dossier_checklist_input').click()">
-            ${EXEC_ICONS.upload} ${te('upload_zone')}
-            <input type="file" id="dossier_checklist_input" style="display:none;" multiple onchange="execUploadDossierFile(this.files, 'checklist')">
-        </div>` : ''}`;
-    } else if (tab === 'synthese') {
-        return `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-            <div class="form-group">
-                <label>${te('points_forts')}</label>
-                <textarea class="form-input" id="dossier_points_forts" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.synthese_points_forts || '')}</textarea>
-            </div>
-            <div class="form-group">
-                <label>${te('points_faibles')}</label>
-                <textarea class="form-input" id="dossier_points_faibles" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.synthese_points_faibles || '')}</textarea>
-            </div>
-        </div>
-        <div class="form-group" style="margin-bottom:1rem;">
-            <label>${te('opportunites_amelioration')}</label>
-            <textarea class="form-input" id="dossier_opportunites" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.opportunites_amelioration || '')}</textarea>
-        </div>
-        <div class="form-group">
-            <label>${te('resume_global')}</label>
-            <textarea class="form-input" id="dossier_resume_global" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.resume_global_constatations || '')}</textarea>
-        </div>`;
-    } else if (tab === 'constatations') {
-        // Determine rapport validation status for the Modifier button
-        const rapports = dossier.rapports || [];
-        const hasRapportValide = rapports.some(r => r.statut === 'valide');
-        const hasRapportTransmis = rapports.some(r => r.statut === 'transmis');
-        const isAdmin = _execIsAdmin();
-        return `
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
-            ${canEdit ? `
-            <button class="btn btn-sm btn-danger" onclick="execOpenFNCForm('${dossierId}')">
-                ${EXEC_ICONS.add} ${te('ajouter_constatation')}
-            </button>` : ''}
-            ${constatations.length > 0 ? `
-            <button class="btn btn-primary btn-sm" onclick="execExportConstatations('${dossierId}','xlsx')" title="Exporter Excel">
-                ${EXEC_ICONS.download || EXEC_ICONS.file} Exporter Excel
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="execFichesConstatDossier('${dossierId}')" title="Exporter PDF">
-                ${EXEC_ICONS.pdf || EXEC_ICONS.download || EXEC_ICONS.file} Exporter PDF
-            </button>` : ''}
-        </div>
-        ${constatations.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${te('no_data')}</p>` : `
-        <div style="overflow-x:auto;">
-        <table class="exec-data-table" id="exec_constatations_table">
-            <thead><tr>
-                <th>${te('reference')}</th>
-                <th>${te('criticite')}</th>
-                <th style="min-width:180px;">${te('description_constatation')}</th>
-                <th>Date Ouv.</th>
-                <th>Delai</th>
-                <th>${te('date_due')}</th>
-                <th>${te('preuves')}</th>
-                <th>${te('status')}</th>
-                <th style="width:1%;white-space:nowrap;text-align:center;">${te('actions')}</th>
-            </tr></thead>
-            <tbody>
-                ${constatations.map(c => {
-                    const preuves = c.preuves_constatation || [];
-                    const preuvesHtml = preuves.length > 0 ? preuves.map(p => {
-                        const fname = typeof p === 'object' ? (p.filename || p.name || '') : p;
-                        const fpath = typeof p === 'object' ? (p.path || '') : '';
-                        return fpath ? `<a href="${_escAttr(_execDl(fpath))}" download="${_escAttr(fname)}" style="display:inline-flex;align-items:center;gap:0.2rem;font-size:0.8rem;color:var(--primary);">${EXEC_ICONS.file} ${_esc(fname)}</a>` : `<span style="font-size:0.8rem;">${_esc(fname)}</span>`;
-                    }).join('<br>') : '-';
-                    // Read-only when rapport validé/transmis or dossier clôturé (admin bypass)
-                    const isConstReadOnly = (hasRapportValide || hasRapportTransmis || dossier.statut === 'cloture') && !isAdmin;
-                    let modifierBtn = '';
-                    if (isConstReadOnly) {
-                        modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execViewFNC('${dossierId}','${c.id}')" title="${te('consulter')}">${EXEC_ICONS.eye||'👁'}</button>`;
-                    } else {
-                        modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execEditFNC('${dossierId}','${c.id}')" title="${te('modifier_fnc')}">${EXEC_ICONS.edit}</button>`;
-                    }
-                    const autoGenFlag = c.checklist_item_id
-                        ? ` <span title="Cette constatation a été générée automatiquement à partir d'une checklist. Une revue de la constatation est nécessaire ainsi que sa validation." style="cursor:help;color:#f59e0b;font-size:0.95rem;">&#9888;</span>`
-                        : '';
-                    return `<tr>
-                    <td><strong>${_esc(c.reference || '')}</strong>${autoGenFlag}</td>
-                    <td>${_execGraviteBadge(c.criticite || c.gravite)}</td>
-                    <td style="white-space:normal;word-break:break-word;">${_esc(c.description || c.titre || '')}</td>
-                    <td>${_formatDate(c.date_ouverture || '')}</td>
-                    <td>${_esc(c.delai_solde || c.delai_correction || '-')}</td>
-                    <td>${_formatDate(c.date_due_cloture || c.date_due || '')}</td>
-                    <td>${preuvesHtml}</td>
-                    <td>${_execStatusBadge(c.statut)}</td>
-                    <td style="display:flex;gap:0.25rem;justify-content:center;align-items:center;white-space:nowrap;">
-                        ${modifierBtn}
-                        <button class="btn btn-sm btn-outline" id="fiches_btn_${c.id}" style="padding:0.2rem 0.4rem;" onclick="_execToggleFiches('${c.id}')" title="Fiches">
-                            ${EXEC_ICONS.file}<span class="caret" style="display:inline-block;transition:transform 0.15s;">▸</span>
-                        </button>
-                        ${(!isConstReadOnly || isAdmin) ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.2rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete')}">${EXEC_ICONS.x || '✕'}</button>` : ''}
-                    </td>
-                </tr>
-                <tr id="fiches_row_${c.id}" style="display:none;">
-                    <td colspan="9" style="background:var(--bg);padding:0.6rem 0.8rem;border-top:none;">
-                        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-                            <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-right:0.4rem;">Fiches :</span>
-                            <button class="btn btn-sm btn-outline" onclick="execExportFicheConstat('${c.id}','pdf')">
-                                ${EXEC_ICONS.pdf||EXEC_ICONS.file} ${te('fiche_constat')} (PDF)
-                            </button>
-                            <button class="btn btn-sm btn-outline" onclick="execExportFicheConstat('${c.id}','word')">
-                                ${EXEC_ICONS.file} ${te('fiche_constat')} (Word)
-                            </button>
-                            <button class="btn btn-sm btn-outline" onclick="execExportFicheSuivi('${c.id}','pdf')">
-                                ${EXEC_ICONS.pdf||EXEC_ICONS.clipboard} ${te('fiche_suivi')} (PDF)
-                            </button>
-                            <button class="btn btn-sm btn-outline" onclick="execExportFicheSuivi('${c.id}','word')">
-                                ${EXEC_ICONS.clipboard} ${te('fiche_suivi')} (Word)
-                            </button>
-                        </div>
-                    </td>
-                </tr>`}).join('')}
-            </tbody>
-        </table>
-        </div>`}`;
-    } else if (tab === 'conclusion') {
+    if (tab === 'introduction') return _dossierOngletIntroduction(dossier, ro, roBg, defaults);
+    if (tab === 'checklists') return _dossierOngletChecklists(dossier, dossierId, canEdit);
+    if (tab === 'synthese') return _dossierOngletSynthese(dossier, ro, roBg);
+    if (tab === 'constatations') return _dossierOngletConstatations(dossier, dossierId, canEdit);
+    if (tab === 'conclusion') {
         return `
         <div class="form-group">
             <textarea class="form-input" id="dossier_conclusion" rows="5" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.conclusion || '')}</textarea>
         </div>`;
-    } else if (tab === 'annexes') {
-        return `
-        <div id="dossier_annexes_list">
-            ${(dossier.annexes || []).map((a, i) => {
-                const obj = typeof a === 'object' ? a : { intitule: '', contenu: '', filename: a };
-                return `
-                <div class="dossier-annexe-item" style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;">
-                    <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
-                        <input type="text" class="form-input annexe-intitule" value="${_escAttr(obj.intitule || obj.filename || '')}" placeholder="Intitulé de l'annexe" style="flex:1;">
-                        ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.closest('.dossier-annexe-item').remove()">${EXEC_ICONS.x}</button>` : ''}
-                    </div>
-                    <textarea class="form-input annexe-contenu" rows="3" style="resize:vertical;margin-bottom:0.5rem;" placeholder="Contenu...">${_esc(obj.contenu || '')}</textarea>
-                    <div class="annexe-files" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                        ${(obj.files || []).map(f => `<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:var(--bg);border-radius:4px;font-size:0.8rem;" data-path="${_escAttr(f.path || '')}" data-filename="${_escAttr(f.filename || f)}">${EXEC_ICONS.file} ${_esc(f.filename || f)} <button class="btn btn-sm" style="padding:0;color:#ef4444;" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button></span>`).join('')}
-                    </div>
-                    <div style="margin-top:0.5rem;">
-                        <button class="btn btn-sm btn-outline" onclick="this.nextElementSibling.click();">${EXEC_ICONS.upload} Pièces jointes</button>
-                        <input type="file" style="display:none;" multiple onchange="execUploadAnnexeFile(this)">
-                    </div>
-                </div>`;
-            }).join('')}
-        </div>
-        ${canEdit ? `
-        <button class="btn btn-sm btn-outline" onclick="execAddAnnexeBlock()" style="margin-top:0.5rem;">
-            ${EXEC_ICONS.add} Ajouter une annexe
-        </button>` : ''}`;
-    } else if (tab === 'rapports') {
-        const rapports = dossier.rapports || [];
-        return `
-        ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${te('no_data')}</p>` : `
-        <table class="exec-data-table">
-            <thead><tr>
-                <th>${te('ref_rapport')}</th>
-                <th>${te('titre_rapport')}</th>
-                <th>${te('date_emission')}</th>
-                <th>${te('statut_validation')}</th>
-                <th>${te('actions')}</th>
-            </tr></thead>
-            <tbody>
-                ${rapports.map(r => `<tr>
-                    <td><strong>${_esc(r.reference || '')}</strong></td>
-                    <td>${_esc(r.titre || '')}</td>
-                    <td>${_formatDate(r.date_creation)}</td>
-                    <td>${_execStatusBadge(r.statut)}</td>
-                    <td style="display:flex;gap:0.25rem;flex-wrap:wrap;">
-                        <button class="btn btn-sm btn-outline" onclick="execPreviewRapport('${r.id}')">
-                            ${EXEC_ICONS.eye} ${te('apercu')}
-                        </button>
-                        ${_execCanContribute() && r.statut !== 'transmis' ? `
-                        <button class="btn btn-sm btn-accent" onclick="execSendRapport('${r.id}')">
-                            ${EXEC_ICONS.send} ${te('envoyer_prestataire')}
-                        </button>` : ''}
-                    </td>
-                </tr>`).join('')}
-            </tbody>
-        </table>`}`;
     }
+    if (tab === 'annexes') return _dossierOngletAnnexes(dossier, canEdit);
+    if (tab === 'rapports') return _dossierOngletRapports(dossier);
     return '';
+}
+
+// Onglet « Introduction » : dates, objet, description, équipe, périmètre, référentiel.
+function _dossierOngletIntroduction(dossier, ro, roBg, defaults) {
+    const { notifObjet, notifDates, notifEquipe, notifPerimetre, notifRefs } = defaults || {};
+    return `
+    <div style="display:grid;grid-template-columns:1fr 3fr;gap:1rem;margin-bottom:1rem;">
+        <div class="form-group">
+            <label>Date d'exécution</label>
+            <input type="text" class="form-input" id="dossier_dates_activite" value="${_escAttr(dossier.dates_activite || notifDates || '')}"${ro} style="${roBg}">
+        </div>
+        <div class="form-group">
+            <label>Objet de l'activité</label>
+            <textarea class="form-input" id="dossier_objet_activite" rows="1" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.objet_activite || notifObjet || '')}</textarea>
+        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="form-group">
+            <label>Description générale de l'activité</label>
+            <textarea class="form-input" id="dossier_description_activite" rows="3" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.description_activite || '')}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Équipe d'inspection</label>
+            <textarea class="form-input" id="dossier_equipe_inspection" rows="3" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.equipe_inspection || notifEquipe || '')}</textarea>
+        </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="form-group">
+            <label>Aspects couverts par l'inspection</label>
+            <textarea class="form-input" id="dossier_aspects_couverts" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.aspects_couverts || notifPerimetre || '')}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Référentiel</label>
+            <textarea class="form-input" id="dossier_referentiel" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.referentiel || notifRefs || '')}</textarea>
+        </div>
+    </div>`;
+}
+
+// Onglet « Checklists » : checklists et pièces jointes issues de l'étape Réalisation,
+// puis les autres documents.
+function _dossierOngletChecklists(dossier, dossierId, canEdit) {
+    // ── Section Checklists renseignées (issues de l'étape Réalisation) ──
+    const _parse = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
+    const realChkIds = _parse(dossier.realisation_checklists);
+    const validees = _parse(dossier.checklists_validees);
+    const allChecklists = EXEC_STATE.data.checklists || [];
+    const allItems = EXEC_STATE.data.checklistItems || [];
+    const chkSectionHtml = realChkIds.length
+        ? realChkIds.map(cid => {
+            const c = allChecklists.find(x => x.id === cid);
+            if (!c) return '';
+            const nbItems = allItems.filter(i => i.checklist_id === cid).length;
+            const isVal = validees.includes(cid);
+            return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.7rem;border:1px solid var(--border);border-radius:6px;margin-bottom:0.4rem;background:#fff;">
+                <span style="font-weight:600;font-size:0.85rem;flex:1;">${c.reference ? _esc(c.reference) + ' — ' : ''}${_esc(c.nom)}
+                    <span style="color:var(--text-muted);font-weight:400;font-size:0.75rem;">(${nbItems} item${nbItems>1?'s':''})</span>
+                </span>
+                ${isVal
+                    ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;padding:0.15rem 0.5rem;font-size:0.74rem;font-weight:700;">✓ Validée</span>`
+                    : ''}
+                <button class="btn btn-sm btn-outline" onclick="execOpenChecklistFiller('${dossierId}','${cid}')">${isVal ? '👁 Consulter' : '📝 Renseigner'}</button>
+                ${canEdit ? (isVal
+                    ? `<button class="btn btn-sm btn-ghost" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',false)" title="Annuler la validation">↩</button>`
+                    : `<button class="btn btn-sm btn-primary" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',true)">✓ Checklist Validée</button>`) : ''}
+            </div>`;
+        }).filter(Boolean).join('')
+        : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_checklist_realisation')}</p>`;
+
+    // ── Section Pièces jointes de l'activité (issues de l'étape Réalisation) ──
+    let realPjs = [];
+    try {
+        realPjs = typeof dossier.realisation_pieces_jointes === 'string'
+            ? JSON.parse(dossier.realisation_pieces_jointes || '[]')
+            : (dossier.realisation_pieces_jointes || []);
+    } catch (e) { realPjs = []; }
+    if (!Array.isArray(realPjs)) realPjs = [];
+    const pjRowsHtml = realPjs.map(pj => _execRealisationPjRow(pj, canEdit)).join('');
+    const pjSectionHtml = `<div id="realisation_pj_list">${pjRowsHtml}</div>
+        ${canEdit ? `
+        <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
+            <button class="btn btn-sm btn-outline" onclick="document.getElementById('realisation_pj_input').click()">${EXEC_ICONS.upload} Ajouter / remplacer</button>
+            <button class="btn btn-sm btn-primary" onclick="execSaveRedactionPj('${dossierId}')">${EXEC_ICONS.check} Enregistrer</button>
+            <input type="file" id="realisation_pj_input" style="display:none;" multiple onchange="execUploadRealisationPj(this.files)">
+        </div>`
+        : (realPjs.length ? '' : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_pj_realisation')}</p>`)}`;
+
+    return `
+    <div style="margin-bottom:1.25rem;">
+        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Checklists renseignées</h4>
+        ${chkSectionHtml}
+        ${canEdit ? `<button class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="execOpenChecklistsPicker('${dossierId}','checklists')">${EXEC_ICONS.add} Ajouter des checklists</button>` : ''}
+    </div>
+    <div style="margin-bottom:1.25rem;">
+        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Pièces jointes de l'activité</h4>
+        ${pjSectionHtml}
+    </div>
+    <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Autres documents</h4>
+    <div id="dossier_checklists_list">
+        ${(dossier.checklists || []).map(cl => `
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;" data-path="${_escAttr(cl.path || '')}">
+            ${EXEC_ICONS.file} <span style="flex:1;">${_esc(cl.filename || cl)}</span>
+            ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>` : ''}
+        </div>`).join('')}
+    </div>
+    ${canEdit ? `
+    <div class="exec-upload-zone" style="margin-top:0.75rem;padding:1.5rem;border:2px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-muted);cursor:pointer;font-size:0.85rem;" onclick="document.getElementById('dossier_checklist_input').click()">
+        ${EXEC_ICONS.upload} ${te('upload_zone')}
+        <input type="file" id="dossier_checklist_input" style="display:none;" multiple onchange="execUploadDossierFile(this.files, 'checklist')">
+    </div>` : ''}`;
+}
+
+// Onglet « Synthèse » : points forts et faibles, opportunités, résumé global.
+function _dossierOngletSynthese(dossier, ro, roBg) {
+    return `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div class="form-group">
+            <label>${te('points_forts')}</label>
+            <textarea class="form-input" id="dossier_points_forts" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.synthese_points_forts || '')}</textarea>
+        </div>
+        <div class="form-group">
+            <label>${te('points_faibles')}</label>
+            <textarea class="form-input" id="dossier_points_faibles" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.synthese_points_faibles || '')}</textarea>
+        </div>
+    </div>
+    <div class="form-group" style="margin-bottom:1rem;">
+        <label>${te('opportunites_amelioration')}</label>
+        <textarea class="form-input" id="dossier_opportunites" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.opportunites_amelioration || '')}</textarea>
+    </div>
+    <div class="form-group">
+        <label>${te('resume_global')}</label>
+        <textarea class="form-input" id="dossier_resume_global" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.resume_global_constatations || '')}</textarea>
+    </div>`;
+}
+
+// Onglet « Constatations » : la table du dossier et les fiches de chaque constatation.
+function _dossierOngletConstatations(dossier, dossierId, canEdit) {
+    const constatations = dossier.constatations || [];
+    // Determine rapport validation status for the Modifier button
+    const rapports = dossier.rapports || [];
+    const hasRapportValide = rapports.some(r => r.statut === 'valide');
+    const hasRapportTransmis = rapports.some(r => r.statut === 'transmis');
+    const isAdmin = _execIsAdmin();
+    return `
+    <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+        ${canEdit ? `
+        <button class="btn btn-sm btn-danger" onclick="execOpenFNCForm('${dossierId}')">
+            ${EXEC_ICONS.add} ${te('ajouter_constatation')}
+        </button>` : ''}
+        ${constatations.length > 0 ? `
+        <button class="btn btn-primary btn-sm" onclick="execExportConstatations('${dossierId}','xlsx')" title="Exporter Excel">
+            ${EXEC_ICONS.download || EXEC_ICONS.file} Exporter Excel
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="execFichesConstatDossier('${dossierId}')" title="Exporter PDF">
+            ${EXEC_ICONS.pdf || EXEC_ICONS.download || EXEC_ICONS.file} Exporter PDF
+        </button>` : ''}
+    </div>
+    ${constatations.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${te('no_data')}</p>` : `
+    <div style="overflow-x:auto;">
+    <table class="exec-data-table" id="exec_constatations_table">
+        <thead><tr>
+            <th>${te('reference')}</th>
+            <th>${te('criticite')}</th>
+            <th style="min-width:180px;">${te('description_constatation')}</th>
+            <th>Date Ouv.</th>
+            <th>Delai</th>
+            <th>${te('date_due')}</th>
+            <th>${te('preuves')}</th>
+            <th>${te('status')}</th>
+            <th style="width:1%;white-space:nowrap;text-align:center;">${te('actions')}</th>
+        </tr></thead>
+        <tbody>
+            ${constatations.map(c => {
+                const preuves = c.preuves_constatation || [];
+                const preuvesHtml = preuves.length > 0 ? preuves.map(p => {
+                    const fname = typeof p === 'object' ? (p.filename || p.name || '') : p;
+                    const fpath = typeof p === 'object' ? (p.path || '') : '';
+                    return fpath ? `<a href="${_escAttr(_execDl(fpath))}" download="${_escAttr(fname)}" style="display:inline-flex;align-items:center;gap:0.2rem;font-size:0.8rem;color:var(--primary);">${EXEC_ICONS.file} ${_esc(fname)}</a>` : `<span style="font-size:0.8rem;">${_esc(fname)}</span>`;
+                }).join('<br>') : '-';
+                // Read-only when rapport validé/transmis or dossier clôturé (admin bypass)
+                const isConstReadOnly = (hasRapportValide || hasRapportTransmis || dossier.statut === 'cloture') && !isAdmin;
+                let modifierBtn = '';
+                if (isConstReadOnly) {
+                    modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execViewFNC('${dossierId}','${c.id}')" title="${te('consulter')}">${EXEC_ICONS.eye||'👁'}</button>`;
+                } else {
+                    modifierBtn = `<button class="btn btn-sm btn-outline" style="padding:0.2rem 0.4rem;" onclick="execEditFNC('${dossierId}','${c.id}')" title="${te('modifier_fnc')}">${EXEC_ICONS.edit}</button>`;
+                }
+                const autoGenFlag = c.checklist_item_id
+                    ? ` <span title="Cette constatation a été générée automatiquement à partir d'une checklist. Une revue de la constatation est nécessaire ainsi que sa validation." style="cursor:help;color:#f59e0b;font-size:0.95rem;">&#9888;</span>`
+                    : '';
+                return `<tr>
+                <td><strong>${_esc(c.reference || '')}</strong>${autoGenFlag}</td>
+                <td>${_execGraviteBadge(c.criticite || c.gravite)}</td>
+                <td style="white-space:normal;word-break:break-word;">${_esc(c.description || c.titre || '')}</td>
+                <td>${_formatDate(c.date_ouverture || '')}</td>
+                <td>${_esc(c.delai_solde || c.delai_correction || '-')}</td>
+                <td>${_formatDate(c.date_due_cloture || c.date_due || '')}</td>
+                <td>${preuvesHtml}</td>
+                <td>${_execStatusBadge(c.statut)}</td>
+                <td style="display:flex;gap:0.25rem;justify-content:center;align-items:center;white-space:nowrap;">
+                    ${modifierBtn}
+                    <button class="btn btn-sm btn-outline" id="fiches_btn_${c.id}" style="padding:0.2rem 0.4rem;" onclick="_execToggleFiches('${c.id}')" title="Fiches">
+                        ${EXEC_ICONS.file}<span class="caret" style="display:inline-block;transition:transform 0.15s;">▸</span>
+                    </button>
+                    ${(!isConstReadOnly || isAdmin) ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.2rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete')}">${EXEC_ICONS.x || '✕'}</button>` : ''}
+                </td>
+            </tr>
+            <tr id="fiches_row_${c.id}" style="display:none;">
+                <td colspan="9" style="background:var(--bg);padding:0.6rem 0.8rem;border-top:none;">
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                        <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600;margin-right:0.4rem;">Fiches :</span>
+                        <button class="btn btn-sm btn-outline" onclick="execExportFicheConstat('${c.id}','pdf')">
+                            ${EXEC_ICONS.pdf||EXEC_ICONS.file} ${te('fiche_constat')} (PDF)
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="execExportFicheConstat('${c.id}','word')">
+                            ${EXEC_ICONS.file} ${te('fiche_constat')} (Word)
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="execExportFicheSuivi('${c.id}','pdf')">
+                            ${EXEC_ICONS.pdf||EXEC_ICONS.clipboard} ${te('fiche_suivi')} (PDF)
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="execExportFicheSuivi('${c.id}','word')">
+                            ${EXEC_ICONS.clipboard} ${te('fiche_suivi')} (Word)
+                        </button>
+                    </div>
+                </td>
+            </tr>`}).join('')}
+        </tbody>
+    </table>
+    </div>`}`;
+}
+
+// Onglet « Annexes » : intitulé, contenu et pièces de chaque annexe.
+function _dossierOngletAnnexes(dossier, canEdit) {
+    return `
+    <div id="dossier_annexes_list">
+        ${(dossier.annexes || []).map((a, i) => {
+            const obj = typeof a === 'object' ? a : { intitule: '', contenu: '', filename: a };
+            return `
+            <div class="dossier-annexe-item" style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;">
+                <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
+                    <input type="text" class="form-input annexe-intitule" value="${_escAttr(obj.intitule || obj.filename || '')}" placeholder="Intitulé de l'annexe" style="flex:1;">
+                    ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.closest('.dossier-annexe-item').remove()">${EXEC_ICONS.x}</button>` : ''}
+                </div>
+                <textarea class="form-input annexe-contenu" rows="3" style="resize:vertical;margin-bottom:0.5rem;" placeholder="Contenu...">${_esc(obj.contenu || '')}</textarea>
+                <div class="annexe-files" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    ${(obj.files || []).map(f => `<span style="display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:var(--bg);border-radius:4px;font-size:0.8rem;" data-path="${_escAttr(f.path || '')}" data-filename="${_escAttr(f.filename || f)}">${EXEC_ICONS.file} ${_esc(f.filename || f)} <button class="btn btn-sm" style="padding:0;color:#ef4444;" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button></span>`).join('')}
+                </div>
+                <div style="margin-top:0.5rem;">
+                    <button class="btn btn-sm btn-outline" onclick="this.nextElementSibling.click();">${EXEC_ICONS.upload} Pièces jointes</button>
+                    <input type="file" style="display:none;" multiple onchange="execUploadAnnexeFile(this)">
+                </div>
+            </div>`;
+        }).join('')}
+    </div>
+    ${canEdit ? `
+    <button class="btn btn-sm btn-outline" onclick="execAddAnnexeBlock()" style="margin-top:0.5rem;">
+        ${EXEC_ICONS.add} Ajouter une annexe
+    </button>` : ''}`;
+}
+
+// Onglet « Rapports » : les rapports du dossier et leurs gestes.
+function _dossierOngletRapports(dossier) {
+    const rapports = dossier.rapports || [];
+    return `
+    ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${te('no_data')}</p>` : `
+    <table class="exec-data-table">
+        <thead><tr>
+            <th>${te('ref_rapport')}</th>
+            <th>${te('titre_rapport')}</th>
+            <th>${te('date_emission')}</th>
+            <th>${te('statut_validation')}</th>
+            <th>${te('actions')}</th>
+        </tr></thead>
+        <tbody>
+            ${rapports.map(r => `<tr>
+                <td><strong>${_esc(r.reference || '')}</strong></td>
+                <td>${_esc(r.titre || '')}</td>
+                <td>${_formatDate(r.date_creation)}</td>
+                <td>${_execStatusBadge(r.statut)}</td>
+                <td style="display:flex;gap:0.25rem;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-outline" onclick="execPreviewRapport('${r.id}')">
+                        ${EXEC_ICONS.eye} ${te('apercu')}
+                    </button>
+                    ${_execCanContribute() && r.statut !== 'transmis' ? `
+                    <button class="btn btn-sm btn-accent" onclick="execSendRapport('${r.id}')">
+                        ${EXEC_ICONS.send} ${te('envoyer_prestataire')}
+                    </button>` : ''}
+                </td>
+            </tr>`).join('')}
+        </tbody>
+    </table>`}`;
 }
 
 async function execUploadDossierFile(files, type) {

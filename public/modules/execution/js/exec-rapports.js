@@ -135,6 +135,37 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
     if (rapport.dossier_id && rapport.dossier_id !== dossier.id) {
         try { dossier = await api(`${EXEC_MODULE_API}/dossiers/${rapport.dossier_id}`); } catch { /* use cached */ }
     }
+    const d = _execRapportDonnees(rapport, dossier);
+
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<title>${_esc(rapport.reference || 'Rapport')}</title>
+<style>${_execRapportStyles()}</style>
+</head><body>
+${_execRapportBarre(rapport)}
+<div id="report-content">
+${_execRapportPrincipal(d)}
+
+${_execRapportAnnexes(d)}
+</div><!-- /#report-content -->
+<script>
+// Set document title to empty so the browser print header shows nothing
+// (the URL/date may still appear unless user disables headers/footers in dialog).
+try { document.title = ' '; } catch (e) {}
+${autoPrint ? `// Auto-trigger print dialog (user picks "Save as PDF")
+window.addEventListener('load', () => { setTimeout(() => { try { window.focus(); window.print(); } catch (e) {} }, 600); });` : ''}
+<\/script>
+</body></html>`;
+
+    // Le même document sert à l'aperçu intégré : on le renvoie sur demande.
+    if (retournerHtml) return html;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+    _execToast(te('telecharger'), 'success');
+    return html;
+}
+
+// Données du rapport, lues sur le rapport et sur son dossier.
+function _execRapportDonnees(rapport, dossier) {
     const aac = EXEC_STATE.data.aac || {};
     const constatations = dossier.constatations || [];
     const logoImg = aac.logo_data ? `<img src="${aac.logo_data}" style="max-height:70px;">` : '';
@@ -181,10 +212,16 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
     const chefEquipe = dossier.equipe_chef || (equipeRows.length > 0 ? equipeRows[0].nom : '');
     const interlocuteur = dossier.notif_interlocuteur_nom || dossier.notif_interlocuteur || '';
     const interlocuteurFonction = dossier.notif_fonction_responsable || '';
+    return {
+        rapport, dossier, aac, constatations, logoImg, notifRef, natureActivite, intituleRapport,
+        prestNom, refAgrement, secteur, refActivite, lieu, dateExec, objet, equipeRows,
+        perimetreLines, refLines, nbCritique, nbMajeure, nbMineure, chefEquipe, interlocuteur, interlocuteurFonction,
+    };
+}
 
-    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
-<title>${_esc(rapport.reference || 'Rapport')}</title>
-<style>
+// Feuille de style du rapport : l'aperçu à l'écran, puis l'impression.
+function _execRapportStyles() {
+    return `
     @page { size: A4; margin: 2cm 1.5cm; }
     body { font-family: Calibri, 'Segoe UI', Arial, sans-serif; color: #111; font-size: 11pt; line-height: 1.45; margin: 0; padding: 0; }
     .page { max-width: 720px; margin: 0 auto; padding: 1.5cm; }
@@ -254,9 +291,12 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
         .preview-toolbar-status { color: #fbbf24; font-size: 12px; font-style: italic; margin-right: 6px; }
         .page-offset { height: 110px; }
     }
-</style>
-</head><body>
-<div class="no-print preview-toolbar">
+`;
+}
+
+// Barre d'outils de l'aperçu, masquée à l'impression.
+function _execRapportBarre(rapport) {
+    return `<div class="no-print preview-toolbar">
     <span class="preview-toolbar-title">Aperçu •</span>
     <span class="preview-toolbar-ref">${_esc(rapport.reference || 'Rapport')}</span>
     <button class="preview-btn preview-btn-success" onclick="window.print()" title="Dans la boîte de dialogue : choisir 'Enregistrer au format PDF'">
@@ -270,9 +310,18 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
     <span><strong>Astuce :</strong> dans la boîte de dialogue, ouvrez « Plus de paramètres » et décochez « En-têtes et pieds de page » pour un PDF sans URL ni date (à faire une seule fois — votre navigateur retient le réglage).</span>
     <button onclick="this.parentElement.style.display='none'" style="margin-left:auto;background:transparent;border:none;color:#92400e;cursor:pointer;font-size:18px;font-weight:700;">×</button>
 </div>
-<div class="no-print page-offset"></div>
-<div id="report-content">
-<div class="page">
+<div class="no-print page-offset"></div>`;
+}
+
+// Le corps du rapport : identification, introduction, synthèse, constatations,
+// conclusion et signatures.
+function _execRapportPrincipal(d) {
+    const {
+        rapport, dossier, aac, constatations, logoImg, notifRef, natureActivite, intituleRapport,
+        prestNom, refAgrement, secteur, refActivite, lieu, dateExec, objet, equipeRows,
+        perimetreLines, refLines, nbCritique, nbMajeure, nbMineure, chefEquipe, interlocuteur, interlocuteurFonction,
+    } = d;
+    return `<div class="page">
     <!-- HEADER -->
     <div class="doc-hdr">
         <div class="doc-hdr-logo">
@@ -359,9 +408,17 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
             <div class="sig-line" style="width:200px;margin:0.5cm auto 0;"></div>
         </div>
     </div>
-</div>
+</div>`;
+}
 
-<!-- ═══════ ANNEXE A ═══════ -->
+// Les annexes : fiche d'acceptation des constatations (A), fiches détaillées (B).
+function _execRapportAnnexes(d) {
+    const {
+        rapport, dossier, aac, constatations, logoImg, notifRef, natureActivite, intituleRapport,
+        prestNom, refAgrement, secteur, refActivite, lieu, dateExec, objet, equipeRows,
+        perimetreLines, refLines, nbCritique, nbMajeure, nbMineure, chefEquipe, interlocuteur, interlocuteurFonction,
+    } = d;
+    return `<!-- ═══════ ANNEXE A ═══════ -->
 <div class="page page-break">
     <div class="doc-hdr">
         <div class="doc-hdr-logo">${logoImg}<div class="doc-hdr-admin">${_esc(aac.nom || '')}</div></div>
@@ -446,23 +503,7 @@ ${constatations.length > 0 ? `
             <tr><td><strong>Statut</strong></td><td>${_esc(c.statut || '')}</td></tr>
         </table>
     </div>`).join('')}
-</div>` : ''}
-</div><!-- /#report-content -->
-<script>
-// Set document title to empty so the browser print header shows nothing
-// (the URL/date may still appear unless user disables headers/footers in dialog).
-try { document.title = ' '; } catch (e) {}
-${autoPrint ? `// Auto-trigger print dialog (user picks "Save as PDF")
-window.addEventListener('load', () => { setTimeout(() => { try { window.focus(); window.print(); } catch (e) {} }, 600); });` : ''}
-<\/script>
-</body></html>`;
-
-    // Le même document sert à l'aperçu intégré : on le renvoie sur demande.
-    if (retournerHtml) return html;
-    const w = window.open('', '_blank');
-    if (w) { w.document.write(html); w.document.close(); }
-    _execToast(te('telecharger'), 'success');
-    return html;
+</div>` : ''}`;
 }
 
 // ── Export constatations list (xlsx / pdf) ───────────────────────

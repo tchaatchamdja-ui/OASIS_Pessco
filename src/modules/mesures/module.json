@@ -31,8 +31,8 @@
   ],
   "requires": [
     "SURV.constatationsOuvertes",
-    "SAFA.constatationsCritiques",
+    "RAMP.constatationsCritiques",
     "SURV.pacDeConstatation",
-    "SAFA.pacDeConstatation"
+    "RAMP.pacDeConstatation"
   ]
 }

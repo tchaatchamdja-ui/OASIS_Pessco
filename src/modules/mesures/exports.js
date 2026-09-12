@@ -145,7 +145,7 @@ const COLONNES_CARENCES = [
 
 const ORIGINES = {
   SURV: 'Exécution de la Surveillance',
-  SAFA: 'RAMP Inspections',
+  RAMP: 'RAMP Inspections',
   CARE: 'Relevée ici',
 };
 const STATUTS_CARE = {

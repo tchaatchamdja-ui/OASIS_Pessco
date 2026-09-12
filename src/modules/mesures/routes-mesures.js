@@ -60,7 +60,7 @@ module.exports = function register(app, deps, M) {
   // sur aire de trafic. Ce module ne lit jamais leurs données directement, et
   // l'absence de l'un comme de l'autre ne l'empêche pas de fonctionner — la
   // liste correspondante est alors vide.
-  const SOURCES = ['SURV.constatationsOuvertes', 'SAFA.constatationsCritiques'];
+  const SOURCES = ['SURV.constatationsOuvertes', 'RAMP.constatationsCritiques'];
   // S'y ajoutent celles que le module relève lui-même : tout ne vient pas d'un
   // acte de surveillance ou d'une inspection sur aire de trafic — un
   // signalement, un contrôle inopiné, une saisine appellent aussi une mesure.
@@ -207,7 +207,7 @@ module.exports = function register(app, deps, M) {
         .toLowerCase().includes(cherche);
     });
     const criteres = criteresLisibles([
-      ['Origine', q.origine ? ({ SURV: 'Exécution de la Surveillance', SAFA: 'RAMP Inspections', CARE: 'Relevée ici' }[q.origine] || q.origine) : ''],
+      ['Origine', q.origine ? ({ SURV: 'Exécution de la Surveillance', RAMP: 'RAMP Inspections', CARE: 'Relevée ici' }[q.origine] || q.origine) : ''],
       ['Statut', q.statut || ''],
       ['Prestataire', nomPrestataire(q.prestataire)],
       ['Recherche', String(q.recherche || '').trim()],
@@ -426,7 +426,7 @@ module.exports = function register(app, deps, M) {
   // Le plan d'actions correctives vient du module qui a relevé la carence,
   // par le bus. Aucun des deux producteurs n'est requis : sans eux, la section
   // se présente vide plutôt que de faire échouer l'écran.
-  const SOURCES_PAC = ['SURV.pacDeConstatation', 'SAFA.pacDeConstatation'];
+  const SOURCES_PAC = ['SURV.pacDeConstatation', 'RAMP.pacDeConstatation'];
   const pacDe = (id) => SOURCES_PAC
     .map((nom) => services.callOr(nom, {}))
     .map((tout) => (tout || {})[id])

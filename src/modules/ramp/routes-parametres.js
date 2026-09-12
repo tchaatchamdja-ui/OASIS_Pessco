@@ -152,7 +152,7 @@ module.exports = function register(app, deps, M) {
   // ses libellés, ses droits et le champ où il les range.
   comptesPrestataire.register(app, deps, M, {
     module: R.MODULE,
-    champDroits: 'droits_safa',
+    champDroits: 'droits_ramp',
     droits: R.DROITS_PRESTATAIRE,
     roles: R,
     vueUtilisateur,

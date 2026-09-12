@@ -1,6 +1,6 @@
 // Module « Inspections d'aéronefs sur aire de trafic » — accès aux données.
 //
-// Reprise de l'application RAMP/SAFA (Express + Prisma/PostgreSQL) sur le socle
+// Reprise de l'application RAMP (Express + Prisma/PostgreSQL) sur le socle
 // OASIS (JSON via src/store.js). Les modèles Prisma deviennent les collections
 // de data/ramp.json ; la relation Inspection → Anomaly, portée par une clé
 // étrangère et un `onDelete: Cascade`, se rejoue ici par `inspection_id` et une

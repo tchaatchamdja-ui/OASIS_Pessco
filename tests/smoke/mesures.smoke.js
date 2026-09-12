@@ -79,14 +79,14 @@ module.exports = async function mesuresSmoke(port) {
     // Ils appellent une mesure d'application au même titre qu'une constatation
     // critique de la surveillance, et arrivent par le même bus : le module
     // n'ouvre jamais les données de RAMP.
-    const safa = (consts.corps || []).filter((c) => c.origine === 'SAFA');
-    verifier('les écarts SAFA arrivent sous le contrat des constatations',
-      safa.every((c) => c.id && c.reference && c.criticite === 'critique'
+    const ramp = (consts.corps || []).filter((c) => c.origine === 'RAMP');
+    verifier('les écarts RAMP arrivent sous le contrat des constatations',
+      ramp.every((c) => c.id && c.reference && c.criticite === 'critique'
         && typeof c.prestataire_id === 'string'),
-      JSON.stringify(safa[0] || {}).slice(0, 120));
-    verifier('aucun écart SAFA de catégorie inférieure à 3',
-      safa.every((c) => c.criticite === 'critique'));
-    // Sans producteur SAFA, la liste reste servie : le module tient seul.
+      JSON.stringify(ramp[0] || {}).slice(0, 120));
+    verifier('aucun écart RAMP de catégorie inférieure à 3',
+      ramp.every((c) => c.criticite === 'critique'));
+    // Sans producteur RAMP, la liste reste servie : le module tient seul.
     verifier('constatations servies même sans module producteur',
       Array.isArray(consts.corps));
 

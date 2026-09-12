@@ -22,7 +22,7 @@ const DR_TR = {
     // ── Espaces réglés par la page ──
     mod_PLAN: 'Planification de la Surveillance',
     mod_SURV: 'Exécution de la Surveillance',
-    mod_SAFA: 'RAMP Inspections',
+    mod_RAMP: 'RAMP Inspections',
     mod_CARE: 'Mesures d’Application',
 
     // ── Refus ──
@@ -121,12 +121,12 @@ const DR_TR = {
     desc_CARE_LECTEUR: 'Consultation seule des carences et des mesures.',
     desc_CARE_AUCUN: 'Aucun accès aux carences et aux mesures de ce domaine ou de ce secteur.',
 
-    desc_SAFA_GESTIONNAIRE: 'Administrateur : paramètre le module, importe, supprime, sans limite d’État.',
-    desc_SAFA_VALIDATEUR: 'Coordonnateur Régional : consulte les inspections de tous les États, sans importer.',
-    desc_SAFA_CONTRIBUTEUR: 'Coordonnateur National : importe et instruit les inspections des États de sa portée.',
-    desc_SAFA_LECTEUR: 'Consultation seule des inspections et des écarts.',
-    desc_SAFA_AUCUN: 'Aucun accès aux données de cet État.',
-    desc_SAFA_PRESTATAIRE: 'Vue Prestataire : l’exploitant ne voit que les inspections et les écarts qui le concernent.',
+    desc_RAMP_GESTIONNAIRE: 'Administrateur : paramètre le module, importe, supprime, sans limite d’État.',
+    desc_RAMP_VALIDATEUR: 'Coordonnateur Régional : consulte les inspections de tous les États, sans importer.',
+    desc_RAMP_CONTRIBUTEUR: 'Coordonnateur National : importe et instruit les inspections des États de sa portée.',
+    desc_RAMP_LECTEUR: 'Consultation seule des inspections et des écarts.',
+    desc_RAMP_AUCUN: 'Aucun accès aux données de cet État.',
+    desc_RAMP_PRESTATAIRE: 'Vue Prestataire : l’exploitant ne voit que les inspections et les écarts qui le concernent.',
   },
 
   en: {
@@ -139,7 +139,7 @@ const DR_TR = {
 
     mod_PLAN: 'Surveillance Planning',
     mod_SURV: 'Surveillance Execution',
-    mod_SAFA: 'RAMP Inspections',
+    mod_RAMP: 'RAMP Inspections',
     mod_CARE: 'Enforcement Measures',
 
     reserve_autorite: 'Rights Management is reserved for Authority accounts.',
@@ -233,12 +233,12 @@ const DR_TR = {
     desc_CARE_LECTEUR: 'Read-only access to deficiencies and measures.',
     desc_CARE_AUCUN: 'No access to the deficiencies and measures of this domain or sector.',
 
-    desc_SAFA_GESTIONNAIRE: 'Administrator: configures the module, imports, deletes, with no State limit.',
-    desc_SAFA_VALIDATEUR: 'Regional Coordinator: views the inspections of every State, without importing.',
-    desc_SAFA_CONTRIBUTEUR: 'National Coordinator: imports and handles the inspections of the States in scope.',
-    desc_SAFA_LECTEUR: 'Read-only access to inspections and findings.',
-    desc_SAFA_AUCUN: 'No access to the data of this State.',
-    desc_SAFA_PRESTATAIRE: 'Provider view: the operator sees only the inspections and findings that concern it.',
+    desc_RAMP_GESTIONNAIRE: 'Administrator: configures the module, imports, deletes, with no State limit.',
+    desc_RAMP_VALIDATEUR: 'Regional Coordinator: views the inspections of every State, without importing.',
+    desc_RAMP_CONTRIBUTEUR: 'National Coordinator: imports and handles the inspections of the States in scope.',
+    desc_RAMP_LECTEUR: 'Read-only access to inspections and findings.',
+    desc_RAMP_AUCUN: 'No access to the data of this State.',
+    desc_RAMP_PRESTATAIRE: 'Provider view: the operator sees only the inspections and findings that concern it.',
   },
 
   pt: {
@@ -251,7 +251,7 @@ const DR_TR = {
 
     mod_PLAN: 'Planeamento da Vigilancia',
     mod_SURV: 'Execucao da Vigilancia',
-    mod_SAFA: 'RAMP Inspections',
+    mod_RAMP: 'RAMP Inspections',
     mod_CARE: 'Medidas de Aplicacao',
 
     reserve_autorite: 'Gestao de Direitos: reservada as contas da Autoridade.',
@@ -345,12 +345,12 @@ const DR_TR = {
     desc_CARE_LECTEUR: 'Consulta apenas das deficiencias e das medidas.',
     desc_CARE_AUCUN: 'Sem acesso as deficiencias e as medidas deste dominio ou setor.',
 
-    desc_SAFA_GESTIONNAIRE: 'Administrador: configura o modulo, importa, elimina, sem limite de Estado.',
-    desc_SAFA_VALIDATEUR: 'Coordenador Regional: consulta as inspecoes de todos os Estados, sem importar.',
-    desc_SAFA_CONTRIBUTEUR: 'Coordenador Nacional: importa e instrui as inspecoes dos Estados do seu ambito.',
-    desc_SAFA_LECTEUR: 'Consulta apenas das inspecoes e dos desvios.',
-    desc_SAFA_AUCUN: 'Sem acesso aos dados deste Estado.',
-    desc_SAFA_PRESTATAIRE: 'Vista Prestador: o operador ve apenas as inspecoes e os desvios que lhe dizem respeito.',
+    desc_RAMP_GESTIONNAIRE: 'Administrador: configura o modulo, importa, elimina, sem limite de Estado.',
+    desc_RAMP_VALIDATEUR: 'Coordenador Regional: consulta as inspecoes de todos os Estados, sem importar.',
+    desc_RAMP_CONTRIBUTEUR: 'Coordenador Nacional: importa e instrui as inspecoes dos Estados do seu ambito.',
+    desc_RAMP_LECTEUR: 'Consulta apenas das inspecoes e dos desvios.',
+    desc_RAMP_AUCUN: 'Sem acesso aos dados deste Estado.',
+    desc_RAMP_PRESTATAIRE: 'Vista Prestador: o operador ve apenas as inspecoes e os desvios que lhe dizem respeito.',
   },
 };
 

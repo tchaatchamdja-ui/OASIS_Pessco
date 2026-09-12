@@ -26,7 +26,7 @@ const ROLES_PRESTATAIRE = ['PRESTATAIRE', 'ADMIN_PRESTATAIRE'];
 
 /**
  * @param {object} o
- * @param {string} o.module        code du module (SURV, SAFA…)
+ * @param {string} o.module        code du module (SURV, RAMP…)
  * @param {object} o.db            store du module ; porte la collection `vues`
  * @param {string[]} [o.rolesBascule]      rôles autorisés à basculer
  * @param {string[]} [o.rolesPrestataire]  rôles portail traités en prestataire

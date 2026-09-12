@@ -462,7 +462,7 @@ async function rampSupprimerContact(id) {
     } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
-const rampExporterContacts = () => rampTelecharger('/contacts/export-xlsx', {}, 'contacts_safa.xlsx');
+const rampExporterContacts = () => rampTelecharger('/contacts/export-xlsx', {}, 'contacts_ramp.xlsx');
 
 // ══════════════════════════════════════
 //  Écran 8 — Paramètres

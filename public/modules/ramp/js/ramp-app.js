@@ -1,4 +1,4 @@
-/* OASIS — Module « Inspections d'aéronefs sur aire de trafic » (SAFA, D.8)
+/* OASIS — Module « Inspections d'aéronefs sur aire de trafic » (RAMP, D.8)
  *
  * Reprise de l'application RAMP. Huit menus :
  *   Tableau de Bord · Statistiques · Inspections · Écarts
@@ -244,7 +244,7 @@ const RAMP_NAV = {
 // ══════════════════════════════════════
 //  Droits
 // ══════════════════════════════════════
-// Les trois rôles de RAMP se déduisent du privilège SAFA du socle.
+// Les trois rôles de RAMP se déduisent du privilège RAMP du socle.
 
 // Vue Prestataire : le compte tient celui de l'exploitant inspecté. Il ne voit
 // que ses propres données, et le module se réduit à ce qui le concerne — pas
@@ -1006,7 +1006,7 @@ function rampRenderPage() {
     } catch (err) {
         // Sans cela, une erreur de rendu laisse l'écran précédent affiché :
         // l'agent clique, rien ne change, et rien ne le dit.
-        console.error('[SAFA] rendu de la page', RAMP_STATE.currentPage, err);
+        console.error('[RAMP] rendu de la page', RAMP_STATE.currentPage, err);
         corps = `<div class="ramp-card">
             <p class="ramp-erreur">Cet écran n'a pas pu s'afficher : ${_rEsc(err && err.message)}.</p>
             <p class="ramp-sous-titre">Rechargez la page (Ctrl+Maj+R) ; si le message revient,

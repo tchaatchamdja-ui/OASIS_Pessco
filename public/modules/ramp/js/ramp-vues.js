@@ -111,7 +111,7 @@ function rampDessinerActions() {
     if (rampPeutGererDroits()) {
         actions.push({
             key: 'droits', label: rt('gestion_droits'), icon: RAMP_DROITS_ICON,
-            onClick: () => { window.location.href = '/modules/droits/index.html?module=SAFA'; },
+            onClick: () => { window.location.href = '/modules/droits/index.html?module=RAMP'; },
         });
     }
     oasisModuleActions(actions);

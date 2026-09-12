@@ -691,7 +691,7 @@ module.exports = function register(app, deps, M) {
 
   // ── Commentaires de validation ──
   // Le valideur annote la constatation champ par champ avant de se prononcer,
-  // comme sur la fiche d'inspection du module SAFA. Les commentaires vivent
+  // comme sur la fiche d'inspection du module RAMP. Les commentaires vivent
   // par versions : celle en cours se modifie tant que la constatation est
   // soumise ; la décision la fige, et le tour suivant en ouvre une nouvelle.
   const versionOuverte = (c) => (c.commentaires_validation || []).find((v) => !v.close_le) || null;

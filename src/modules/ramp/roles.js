@@ -2,7 +2,7 @@
 //
 // RAMP portait ses propres comptes et trois rôles : Administrateur,
 // Coordonnateur Régional, Coordonnateur National. Sur OASIS, le privilège vient
-// de « Gestion des Droits » (espace SAFA) et le rôle RAMP s'en déduit :
+// de « Gestion des Droits » (espace RAMP) et le rôle RAMP s'en déduit :
 //
 //   GESTIONNAIRE → Administrateur          paramétrage, suppression
 //   VALIDATEUR   → Coordonnateur Régional  consultation de tout, pas d'import
@@ -14,7 +14,7 @@
 // c'est le domaine, ou à défaut le secteur, déclaré à « Gestion des Droits ».
 const moduleRights = require('../../module_rights');
 
-const MODULE = 'SAFA';
+const MODULE = 'RAMP';
 
 // Vue Prestataire : le compte tient celui de l'exploitant inspecté. Il consulte
 // ce qui le concerne et n'écrit rien dans le module — le rôle est posé par
@@ -113,7 +113,7 @@ const normaliserDroits = (liste) => (Array.isArray(liste)
 
 // `compte` est l'enregistrement portail (auth), non `req.user`.
 const droitsDe = (compte) => {
-  const liste = normaliserDroits(compte && compte.droits_safa);
+  const liste = normaliserDroits(compte && compte.droits_ramp);
   if (liste) return liste;
   return DROITS_PRESTATAIRE.map((d) => d.cle);
 };

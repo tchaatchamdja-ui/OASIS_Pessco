@@ -187,7 +187,7 @@ function mesSectionCarence() {
     if (!c) return '';
     const prest = (MES_STATE.data.prestataires || []).find((p) => p.id === c.prestataire_id);
     const source = c.origine === 'CARE' ? (c.origine_libelle || mt('relevee_par'))
-        : mesOrigine(c.origine === 'SAFA' ? 'SAFA' : 'SURV');
+        : mesOrigine(c.origine === 'RAMP' ? 'RAMP' : 'SURV');
     // Deux colonnes pour les repères, qui tiennent sur une ligne chacun. La
     // description, elle, court sur toute la largeur : la serrer sur une demie
     // la rendait illisible.

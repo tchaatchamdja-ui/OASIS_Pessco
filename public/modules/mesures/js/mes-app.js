@@ -122,7 +122,7 @@ const mesNavLabel = (page) => mt((MES_NAV[page] || {}).cle || page);
 // réunit sous les mêmes intitulés.
 // Les trois provenances d'une carence, et les cinq statuts du circuit d'une
 // mesure : la clé demeure, le libellé se lit dans la langue retenue.
-const MES_CLES_ORIGINE = ['SURV', 'SAFA', 'CARE'];
+const MES_CLES_ORIGINE = ['SURV', 'RAMP', 'CARE'];
 const mesOrigine = (code) => mt(`origine_${code}`);
 
 // Teintes des catégories de mesure : la gravité se lit à la couleur — l'orange
@@ -133,7 +133,7 @@ const MES_COULEURS_CATEGORIE = ['#1d4ed8', '#ea580c', '#7c3aed', '#059669', '#08
 // Provenance d'une carence : chaque module a sa teinte.
 const MES_COULEUR_PAR_SOURCE = {
     SURV: '#1d4ed8',
-    SAFA: '#0891b2',
+    RAMP: '#0891b2',
     CARE: '#7c3aed',
 };
 
@@ -955,7 +955,7 @@ function mesLignesCritiques() {
         const retard = c.statut !== 'soldee' && c.date_due_cloture && c.date_due_cloture < aujourdhui;
         return `<tr>
             <td><strong>${_mesEsc(c.reference)}</strong>
-                ${c.origine === 'SAFA'
+                ${c.origine === 'RAMP'
                     ? `<div class="mes-sous-titre">${mt('ramp_cat3')}</div>` : ''}
                 ${c.origine === 'CARE'
                     ? `<div class="mes-sous-titre">${mt('origine_CARE')}${c.origine_libelle

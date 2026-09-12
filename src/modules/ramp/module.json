@@ -1,5 +1,5 @@
 {
-  "code": "SAFA",
+  "code": "RAMP",
   "tdr": "D.8",
   "priority": 1,
   "icon": "✈️",
@@ -17,9 +17,9 @@
   "apiPrefixes": [
     "/api/m/ramp"
   ],
-  "auditModule": "SAFA",
-  "rightsModule": "SAFA",
-  "portalCode": "SAFA",
+  "auditModule": "RAMP",
+  "rightsModule": "RAMP",
+  "portalCode": "RAMP",
   "front": {
     "key": "ramp",
     "url": "/modules/ramp/index.html",
@@ -27,9 +27,9 @@
     "order": 1
   },
   "provides": [
-    "SAFA.ecartsParExploitant",
-    "SAFA.constatationsCritiques",
-    "SAFA.pacDeConstatation"
+    "RAMP.ecartsParExploitant",
+    "RAMP.constatationsCritiques",
+    "RAMP.pacDeConstatation"
   ],
   "requires": []
 }

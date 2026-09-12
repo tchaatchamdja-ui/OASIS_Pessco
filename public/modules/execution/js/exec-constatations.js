@@ -773,7 +773,7 @@ function _execCdHistoriqueHtml(c) {
 // ══════════════════════════════════════
 //  Commentaires de validation (constatation hors activités)
 // ══════════════════════════════════════
-// Même principe que la fiche d'inspection du module SAFA : le valideur annote
+// Même principe que la fiche d'inspection du module RAMP : le valideur annote
 // champ par champ, ses observations vivent par versions, et la décision les
 // fige. Le motif de renvoi n'est plus une phrase saisie à part : ce sont ces
 // commentaires, rendus en tête du formulaire à corriger.

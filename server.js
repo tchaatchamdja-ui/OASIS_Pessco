@@ -998,6 +998,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 const PORT = process.env.PORT || 4750;
+// Reprise ponctuelle des enregistrements posés sous l'ancien nom du module
+// d'inspections sur aire de trafic. Idempotente : silencieuse une fois passée.
+require('./src/migration_ramp').migrer(store, loadConfig, saveConfig);
 auth.seedUsers(loadConfig());
 referentiels.seedReferentiels();
 moduleLoader.seedAll(MODULES_MONTES);

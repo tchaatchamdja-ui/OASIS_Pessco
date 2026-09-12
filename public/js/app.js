@@ -77,7 +77,7 @@ const PRIO_COLORS = { 1: '#2563eb', 2: '#0891b2', 3: '#f59e0b', 4: '#10b981', 5:
 const COULEURS_MODULE = {
   PLAN: '#0059ff',
   SURV: '#ed580e',
-  SAFA: '#ff9500',
+  RAMP: '#ff9500',
   CARE: '#ff0000',
 };
 const LEVEL_COLORS = ['#2563eb', '#0891b2', '#f59e0b', '#10b981', '#8b5cf6'];

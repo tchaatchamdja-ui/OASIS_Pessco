@@ -68,7 +68,7 @@ const MODULE_ICONS = {
   PLAN: 'calendar',
   SURV: 'search',
   CARE: 'pulse',
-  SAFA: 'planeTrail',
+  RAMP: 'planeTrail',
   REG: 'fileText',
   DOC: 'bookOpen',
   CERT: 'award',

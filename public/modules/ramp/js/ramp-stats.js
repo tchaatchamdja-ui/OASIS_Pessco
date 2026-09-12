@@ -877,7 +877,7 @@ async function rampTelechargerTable(colonnes) {
         const zone = document.getElementById('rampGenLien');
         if (zone) {
             zone.innerHTML = `<a class="btn btn-outline btn-sm" href="${_rAttr(url)}"
-                    download="table_safa.xlsx">
+                    download="table_ramp.xlsx">
                 ${RAMP_ICONS.download} ${rt('gen_telecharger', r.lignes)}</a>`;
         }
         window.location.assign(url);
@@ -1148,7 +1148,7 @@ async function rampExporterSituation() {
                 it.cat.G, it.tauxG, it.total, it.tauxCloture, '']);
         });
     });
-    await rampTelecharger('/situation/export-xlsx', { lignes }, 'situation_safa.xlsx');
+    await rampTelecharger('/situation/export-xlsx', { lignes }, 'situation_ramp.xlsx');
 }
 
 // ══════════════════════════════════════

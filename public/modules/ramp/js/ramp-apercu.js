@@ -336,10 +336,10 @@ function rampRenderApercu() {
 // exporte, pas la base entière.
 
 const rampExporterInspections = () => rampTelecharger('/inspections/export-xlsx',
-    { filtres: RAMP_STATE.filtres }, 'inspections_safa.xlsx');
+    { filtres: RAMP_STATE.filtres }, 'inspections_ramp.xlsx');
 
 const rampExporterEcarts = () => rampTelecharger('/ecarts/export-xlsx',
-    { filtres: RAMP_STATE.filtres }, 'ecarts_safa.xlsx');
+    { filtres: RAMP_STATE.filtres }, 'ecarts_ramp.xlsx');
 
 // ══════════════════════════════════════
 //  Volet et modale — mécanique partagée

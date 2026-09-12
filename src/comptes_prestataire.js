@@ -24,7 +24,7 @@ const ROLES = (libelles) => [
  * @param {object} deps      dépendances du socle (requireAuth, auth, loadConfig)
  * @param {string} M         préfixe d'API du module
  * @param {object} o
- * @param {string} o.module          code du module (SURV, SAFA…)
+ * @param {string} o.module          code du module (SURV, RAMP…)
  * @param {string} o.champDroits     champ du compte portail portant les droits
  * @param {object[]} o.droits        catalogue des droits confiables
  * @param {object} o.libelles        intitulés des deux rôles

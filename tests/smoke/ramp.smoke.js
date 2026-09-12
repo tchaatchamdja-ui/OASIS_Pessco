@@ -1,10 +1,10 @@
-// Fumée — module « Inspections d'aéronefs sur aire de trafic » (SAFA) :
+// Fumée — module « Inspections d'aéronefs sur aire de trafic » (RAMP) :
 // contexte, sept familles de paramètres, import en deux temps, inspections et
 // écarts, dépôts, contacts et exports.
 const { demarrer, verifier, bilan } = require('./harness');
 
 module.exports = async function rampSmoke(port) {
-  console.log('\n── Module SAFA — Inspections sur aire de trafic ──');
+  console.log('\n── Module RAMP — Inspections sur aire de trafic ──');
   const srv = await demarrer({ port });
   const M = '/api/m/ramp';
   try {
@@ -13,7 +13,7 @@ module.exports = async function rampSmoke(port) {
     // ── Contexte ──
     const ctx = await srv.appel(`${M}/context`);
     verifier('contexte du module', ctx.statut === 200 && !!ctx.corps.user);
-    verifier('rôle RAMP reconstitué depuis le privilège SAFA',
+    verifier('rôle RAMP reconstitué depuis le privilège RAMP',
       ctx.corps.user.role_ramp === 'Administrateur', ctx.corps.user.role_ramp);
     verifier('neuf États d’inspection servis',
       (ctx.corps.etats_inspection || []).length === 9,
@@ -1015,12 +1015,12 @@ module.exports = async function rampSmoke(port) {
 
     // ── Le module est monté et déclaré ──
     const modules = await srv.appel('/api/modules');
-    const safa = (modules.corps || []).find((m) => m.code === 'SAFA');
-    verifier('module SAFA au catalogue', !!safa && safa.installed === true);
-    verifier('module SAFA nommé « RAMP Inspections »',
-      !!safa && safa.name.fr === 'RAMP Inspections', safa && safa.name.fr);
+    const ramp = (modules.corps || []).find((m) => m.code === 'RAMP');
+    verifier('module RAMP au catalogue', !!ramp && ramp.installed === true);
+    verifier('module RAMP nommé « RAMP Inspections »',
+      !!ramp && ramp.name.fr === 'RAMP Inspections', ramp && ramp.name.fr);
 
-    return bilan('SAFA');
+    return bilan('RAMP');
   } finally {
     await srv.arreter();
   }

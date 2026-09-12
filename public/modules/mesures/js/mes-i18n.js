@@ -35,7 +35,7 @@ const MES_TR = {
 
     // ── Origine d'une carence ──
     origine_SURV: 'Exécution de la Surveillance',
-    origine_SAFA: 'RAMP Inspections',
+    origine_RAMP: 'RAMP Inspections',
     origine_CARE: 'Relevée ici',
     relevee_par: 'Relevée par le module',
     ramp_cat3: 'RAMP · catégorie 3',
@@ -609,7 +609,7 @@ const MES_TR = {
     session_expiree: 'Session expired',
 
     origine_SURV: 'Surveillance Execution',
-    origine_SAFA: 'RAMP Inspections',
+    origine_RAMP: 'RAMP Inspections',
     origine_CARE: 'Raised here',
     relevee_par: 'Raised by module',
     ramp_cat3: 'RAMP · category 3',
@@ -1161,7 +1161,7 @@ const MES_TR = {
     session_expiree: 'Sessao expirada',
 
     origine_SURV: 'Execucao da Vigilancia',
-    origine_SAFA: 'RAMP Inspections',
+    origine_RAMP: 'RAMP Inspections',
     origine_CARE: 'Registada aqui',
     relevee_par: 'Registada pelo modulo',
     ramp_cat3: 'RAMP · categoria 3',

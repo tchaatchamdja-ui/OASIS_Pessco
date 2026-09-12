@@ -718,7 +718,7 @@ module.exports = function register(app, deps, M) {
       bcc: copiesCachees.join(', ') || undefined,
       subject: objet,
       body: texte(d.message),
-      origine: 'communication_safa',
+      origine: 'communication_ramp',
       reference: p.reference,
       poi_id: p.id,
     });

@@ -1,13 +1,13 @@
-// Module « Inspections d'aéronefs sur aire de trafic » (SAFA) — D.8
+// Module « Inspections d'aéronefs sur aire de trafic » (RAMP) — D.8
 //
 // Reprise intégrale de l'application RAMP (Express + Prisma/PostgreSQL + React),
 // posée sur le socle OASIS : authentification et sessions, droits par
-// domaine/secteur (espace SAFA), journal d'audit, stockage JSON.
+// domaine/secteur (espace RAMP), journal d'audit, stockage JSON.
 //
 // Ce que le socle reprend à sa charge, et que le module ne redéploie donc pas :
 //   · comptes, mots de passe, sessions et écran de connexion (RAMP portait son
 //     propre modèle `User`, son JWT et sa page de login) ;
-//   · rôles : les trois rôles RAMP se déduisent du privilège SAFA (roles.js) ;
+//   · rôles : les trois rôles RAMP se déduisent du privilège RAMP (roles.js) ;
 //   · journal d'audit : le modèle `AuditLog` de RAMP est remplacé par le
 //     journal du socle, qui trace déjà les appels aux préfixes du module ;
 //   · thème, langue et coquille de module.
@@ -40,7 +40,7 @@ module.exports = {
     // Le poids des écarts relevés sur aire de trafic, exploitant par
     // exploitant. Le Profil de Risque s'en saisira sans lire les données d'ici.
     if (deps.services) {
-      deps.services.publish('SAFA.volumeParInstance', () => {
+      deps.services.publish('RAMP.volumeParInstance', () => {
         const parInstance = {};
         ['inspections', 'poi'].forEach((coll) => {
           db.list(coll).forEach((r) => {
@@ -51,7 +51,7 @@ module.exports = {
         return parInstance;
       }, { description: 'Nombre d’enregistrements du module, par instance' });
 
-      deps.services.publish('SAFA.ecartsParExploitant', () => {
+      deps.services.publish('RAMP.ecartsParExploitant', () => {
         const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
         const ponderations = {};
         db.list('parametres')
@@ -80,7 +80,7 @@ module.exports = {
         });
         return parExploitant;
       }, {
-        description: 'Écarts SAFA par exploitant : inspections, items, écarts et score normalisé',
+        description: 'Écarts RAMP par exploitant : inspections, items, écarts et score normalisé',
       });
 
       // Un écart de catégorie 3 est un manquement grave relevé sur aire de
@@ -89,7 +89,7 @@ module.exports = {
       // même contrat que « SURV.constatationsOuvertes » — les Mesures
       // d'Application n'ont donc rien à savoir de RAMP pour l'instruire, et
       // fonctionnent aussi bien si ce module n'est pas déployé.
-      deps.services.publish('SAFA.constatationsCritiques', () => {
+      deps.services.publish('RAMP.constatationsCritiques', () => {
         const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
         // Rapprochement de l'exploitant, en deux temps.
         //
@@ -131,7 +131,7 @@ module.exports = {
             const solde = /clôtur|cloture|soldé|solde/i.test(String(ec.suivi || ''));
             const exploitant = parExploitant.get(norm(i.exploitant)) || {};
             return {
-              id: `safa:${ec.id}`,
+              id: `ramp:${ec.id}`,
               reference: `${i.poi_reference || i.id || ''}${ec.itemCode ? ` · ${ec.itemCode}` : ''}`,
               titre: [ec.itemCode, items.get(ec.itemCode)].filter(Boolean).join(' — '),
               description: ec.description || '',
@@ -148,21 +148,21 @@ module.exports = {
               statut: solde ? 'soldee' : 'ouverte',
               date_ouverture: i.date || '',
               date_due_cloture: '',
-              origine: 'SAFA',
+              origine: 'RAMP',
               inspection_id: ec.inspection_id,
               immatriculation: i.immatriculation || '',
               action: ec.action || '',
             };
           });
       }, {
-        description: 'Écarts SAFA de catégorie 3, appelant une mesure d’application',
+        description: 'Écarts RAMP de catégorie 3, appelant une mesure d’application',
       });
 
       // Plan d'actions correctives déposé sur un écart, publié sous le même
       // contrat que celui de « Exécution de la Surveillance ». Les clés sont
-      // celles des carences servies plus haut — « safa:<écart> » — pour que le
+      // celles des carences servies plus haut — « ramp:<écart> » — pour que le
       // consommateur rapproche l'un de l'autre sans rien savoir d'ici.
-      deps.services.publish('SAFA.pacDeConstatation', () => {
+      deps.services.publish('RAMP.pacDeConstatation', () => {
         const parConstatation = {};
         db.list('ecarts').forEach((ec) => {
           const pac = ec.pac || {};
@@ -173,7 +173,7 @@ module.exports = {
             action: p.action || '',
           }));
           if (!pac.soumis_le && !preuves.length && !pac.cause_primaire) return;
-          parConstatation[`safa:${ec.id}`] = {
+          parConstatation[`ramp:${ec.id}`] = {
             cause_primaire: pac.cause_primaire || '',
             action_curative: pac.action_curative || '',
             curative_date_prevue: pac.curative_date_prevue || '',
@@ -189,7 +189,7 @@ module.exports = {
         return parConstatation;
       }, {
         description: 'Plan d’actions correctives déposé sur un écart, par carence',
-        retour: '{ "safa:<ecart_id>": { cause_primaire, action_curative, actions_correctives, statut, preuves[] } }',
+        retour: '{ "ramp:<ecart_id>": { cause_primaire, action_curative, actions_correctives, statut, preuves[] } }',
       });
     }
   },
@@ -209,8 +209,8 @@ module.exports = {
     // donc d'attribuer les droits depuis l'application. On ne touche qu'aux
     // comptes SUPERADMIN, et seulement s'ils n'ont pas déjà été paramétrés.
     auth.getUsers()
-      .filter((u) => u.role === 'SUPERADMIN' && moduleRights.getRights('SAFA', u.username).isDefault)
-      .forEach((u) => moduleRights.setRights('SAFA', u.username, {
+      .filter((u) => u.role === 'SUPERADMIN' && moduleRights.getRights('RAMP', u.username).isDefault)
+      .forEach((u) => moduleRights.setRights('RAMP', u.username, {
         privilege: 'GESTIONNAIRE', scopes: [],
         updatedAt: new Date().toISOString(), updatedBy: 'installation',
       }));

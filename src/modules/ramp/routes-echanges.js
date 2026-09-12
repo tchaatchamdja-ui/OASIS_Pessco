@@ -300,7 +300,7 @@ module.exports = function register(app, deps, M) {
     envoyer(res, classeur(
       "Modèle d'import — Inspections sur aire de trafic",
       entetes, exemple, [18, 12, 14, 20, 14, 16, 10, 12, 14, 8, 18, 44, 10, 10, 14], 'Inspections',
-    ), 'modele_import_safa.xlsx');
+    ), 'modele_import_ramp.xlsx');
   });
 
   // ══════════════════════════════════════
@@ -626,10 +626,10 @@ module.exports = function register(app, deps, M) {
     // Le client peut demander le fichier tout de suite, ou un jeton pour aller
     // le chercher par une navigation — c'est ce que fait le générateur.
     if (corps.differe) {
-      const jeton = deposerClasseur(buffer, 'table_safa.xlsx', req.user.username);
+      const jeton = deposerClasseur(buffer, 'table_ramp.xlsx', req.user.username);
       return res.json({ jeton, url: `${M}/tables/fichier/${jeton}`, lignes: lignes.length });
     }
-    envoyer(res, buffer, 'table_safa.xlsx');
+    envoyer(res, buffer, 'table_ramp.xlsx');
     return undefined;
   });
 
@@ -652,7 +652,7 @@ module.exports = function register(app, deps, M) {
     });
     envoyer(res, classeur('Inspections sur aire de trafic', ENTETES_INSP, lignes,
       [12, 14, 20, 14, 16, 10, 12, 14, 8, 18, 44, 10, 10, 14], 'Inspections'),
-    'inspections_safa.xlsx');
+    'inspections_ramp.xlsx');
   });
 
   const ENTETES_ECARTS = ['Item', 'Libellé item', 'Std Ref.', 'Description', 'Catégorie', 'Action',
@@ -675,7 +675,7 @@ module.exports = function register(app, deps, M) {
     });
     envoyer(res, classeur('Écarts relevés sur aire de trafic', ENTETES_ECARTS, lignes,
       [8, 34, 18, 44, 10, 10, 12, 14, 20, 14, 16, 12, 14], 'Ecarts'),
-    'ecarts_safa.xlsx');
+    'ecarts_ramp.xlsx');
   });
 
   // Situation générale par exploitant, avec le détail par item.
@@ -688,7 +688,7 @@ module.exports = function register(app, deps, M) {
     const lignes = donnees.map((l) => entetes.map((_, n) => (l[n] === undefined ? '' : l[n])));
     envoyer(res, classeur('Situation générale par exploitant', entetes, lignes,
       [24, 18, 34, 12, 14, 8, 12, 8, 12, 8, 12, 8, 12, 12, 12, 10], 'Situation'),
-    'situation_safa.xlsx');
+    'situation_ramp.xlsx');
   });
 
   app.post(`${M}/parametres/export-xlsx`, requireAuth, (req, res) => {
@@ -719,7 +719,7 @@ module.exports = function register(app, deps, M) {
       .map((c) => [c.etat || '', c.nom || '', c.prenom || '', c.fonction || '',
         c.email || '', c.telephone || '', c.autres || '', c.actif === false ? 'Non' : 'Oui']);
     envoyer(res, classeur('Carnet de contacts', entetes, lignes, [18, 20, 20, 26, 30, 18, 30, 8], 'Contacts'),
-      'contacts_safa.xlsx');
+      'contacts_ramp.xlsx');
   });
 };
 

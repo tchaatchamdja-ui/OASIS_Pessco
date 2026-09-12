@@ -46,9 +46,9 @@
       <div class="portal-sidebar-footer">
         <div class="portal-sidebar-logo" id="sidebarLogo" style="display:none;"></div>
         <div class="portal-theme-selector">
-          <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu"></div>
-          <div class="theme-dot" data-theme="corporate"   onclick="applyTheme('corporate')"   title="Corporate"></div>
-          <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris"></div>
+          <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu" data-i18n-title="palette_bleu"></div>
+          <div class="theme-dot" data-theme="corporate"   onclick="applyTheme('corporate')"   title="Corporate" data-i18n-title="palette_corporate"></div>
+          <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris" data-i18n-title="palette_gris"></div>
         </div>
         <div class="portal-lang-selector">
           <button class="lang-btn" onclick="applyLang('fr')">FR</button>
@@ -66,12 +66,12 @@
           <span class="portal-header-brand">
             <span class="portal-header-brand-sigle">OASIS</span>
             <span class="portal-header-brand-sep">|</span>
-            <span class="portal-header-brand-tagline">Outils d'Administration et de Supervision Intégrée de la Sécurité</span>
+            <span class="portal-header-brand-tagline" data-i18n="tagline">Outils d'Administration et de Supervision Intégrée de la Sécurité</span>
           </span>
         </div>
         <div class="portal-header-right">
           <span class="portal-header-instance" id="instanceBadge"></span>
-          <button class="portal-notif-bell" id="notifBell" title="Notifications">
+          <button class="portal-notif-bell" id="notifBell" title="Notifications" data-i18n-title="notif_title">
             <span data-icon="bell"></span><span class="portal-notif-badge" id="notifBadge" style="display:none;">0</span>
           </button>
           <div class="portal-header-identite">

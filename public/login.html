@@ -41,26 +41,27 @@
 
       <!-- Étape 2 : authentification multifacteur -->
       <form id="mfaForm" autocomplete="off" style="display:none;">
-        <p class="mfa-intro">Un code de vérification à 6 chiffres vient d'être envoyé à
-          <strong id="mfaTarget"></strong>. Il est valable <span id="mfaTtl">10</span> minutes.</p>
+        <p class="mfa-intro"><span data-i18n="mfa_intro">Un code de vérification à 6 chiffres vient d'être envoyé à</span>
+          <strong id="mfaTarget"></strong>. <span data-i18n="mfa_valable">Il est valable</span>
+          <span id="mfaTtl">10</span> <span data-i18n="mfa_minutes">minutes.</span></p>
         <div class="shell-form-group" style="margin-bottom:1rem;">
-          <label>Code de vérification</label>
+          <label data-i18n="mfa_code">Code de vérification</label>
           <input class="shell-input mfa-code" id="mfaCode" inputmode="numeric" autocomplete="one-time-code"
                  maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
         </div>
-        <button type="submit" class="shell-btn shell-btn-primary" style="width:100%;justify-content:center;">Vérifier</button>
+        <button type="submit" class="shell-btn shell-btn-primary" style="width:100%;justify-content:center;" data-i18n="mfa_verifier">Vérifier</button>
         <div class="mfa-actions">
           <select class="shell-input mfa-channel" id="mfaChannel"></select>
-          <button type="button" class="shell-btn shell-btn-sm" id="mfaResend">Renvoyer le code</button>
+          <button type="button" class="shell-btn shell-btn-sm" id="mfaResend" data-i18n="mfa_renvoyer">Renvoyer le code</button>
         </div>
-        <button type="button" class="mfa-back" id="mfaCancel">← Revenir à la connexion</button>
+        <button type="button" class="mfa-back" id="mfaCancel" data-i18n="mfa_retour">← Revenir à la connexion</button>
       </form>
 
       <div class="login-footer-bar">
         <div class="portal-theme-selector">
-          <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu"></div>
-          <div class="theme-dot" data-theme="corporate"   onclick="applyTheme('corporate')"   title="Corporate"></div>
-          <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris"></div>
+          <div class="theme-dot" data-theme="blue-dark"   onclick="applyTheme('blue-dark')"   title="Bleu" data-i18n-title="palette_bleu"></div>
+          <div class="theme-dot" data-theme="corporate"   onclick="applyTheme('corporate')"   title="Corporate" data-i18n-title="palette_corporate"></div>
+          <div class="theme-dot" data-theme="grey"        onclick="applyTheme('grey')"        title="Gris" data-i18n-title="palette_gris"></div>
         </div>
         <div class="portal-lang-selector">
           <button class="lang-btn" onclick="applyLang('fr')">FR</button>
@@ -102,7 +103,7 @@
       } else {
         const data = await res.json().catch(() => ({}));
         errBox.textContent = data.error === 'locked' ? t('login_err_locked')
-          : data.error === 'temp_expired' ? 'Mot de passe temporaire expiré (48 h). Contactez votre administrateur pour une réinitialisation.'
+          : data.error === 'temp_expired' ? t('login_err_temp_expired')
           : t('login_err_invalid');
         errBox.style.display = 'block';
         loginPending = false;
@@ -150,9 +151,9 @@
       if (res.ok) { window.location.href = '/'; return; }
       const data = await res.json().catch(() => ({}));
       errBox.textContent =
-        data.error === 'mfa_expired' ? 'Code expiré. Demandez un nouveau code.'
-        : data.error === 'mfa_too_many_attempts' ? 'Trop de tentatives. Recommencez la connexion.'
-        : `Code incorrect.${typeof data.remaining === 'number' ? ` ${data.remaining} tentative(s) restante(s).` : ''}`;
+        data.error === 'mfa_expired' ? t('mfa_err_expired')
+        : data.error === 'mfa_too_many_attempts' ? t('mfa_err_too_many')
+        : `${t('mfa_err_code')}${typeof data.remaining === 'number' ? ` ${data.remaining} ${t('mfa_err_restantes')}` : ''}`;
       errBox.style.display = 'block';
       if (data.error === 'mfa_expired' || data.error === 'mfa_too_many_attempts') resetToLogin();
     });
@@ -171,7 +172,7 @@
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) showMfaStep(data);
-      else { errBox.textContent = 'Envoi impossible. Recommencez la connexion.'; errBox.style.display = 'block'; resetToLogin(); }
+      else { errBox.textContent = t('mfa_err_envoi'); errBox.style.display = 'block'; resetToLogin(); }
     });
   </script>
 </body>

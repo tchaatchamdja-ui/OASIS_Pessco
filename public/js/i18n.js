@@ -1,6 +1,22 @@
 // OASIS — i18n FR / EN / PT (TDR §F.7)
 const I18N = {
   fr: {
+    palette_bleu: 'Bleu',
+    palette_corporate: 'Corporate',
+    palette_gris: 'Gris',
+    mfa_intro: 'Un code de vérification à 6 chiffres vient d\'être envoyé à',
+    mfa_valable: 'Il est valable',
+    mfa_minutes: 'minutes.',
+    mfa_code: 'Code de vérification',
+    mfa_verifier: 'Vérifier',
+    mfa_renvoyer: 'Renvoyer le code',
+    mfa_retour: '← Revenir à la connexion',
+    login_err_temp_expired: 'Mot de passe temporaire expiré (48 h). Contactez votre administrateur pour une réinitialisation.',
+    mfa_err_expired: 'Code expiré. Demandez un nouveau code.',
+    mfa_err_too_many: 'Trop de tentatives. Recommencez la connexion.',
+    mfa_err_code: 'Code incorrect.',
+    mfa_err_restantes: 'tentative(s) restante(s).',
+    mfa_err_envoi: 'Envoi impossible. Recommencez la connexion.',
     tagline: "Outils d'Administration et de Supervision Intégrée de la Sécurité",
     login_title: 'Connexion à la plateforme',
     login_user: 'Identifiant',
@@ -159,6 +175,22 @@ const I18N = {
     donnees_col: 'Données',
 },
   en: {
+    palette_bleu: 'Blue',
+    palette_corporate: 'Corporate',
+    palette_gris: 'Grey',
+    mfa_intro: 'A 6-digit verification code has just been sent to',
+    mfa_valable: 'It is valid for',
+    mfa_minutes: 'minutes.',
+    mfa_code: 'Verification code',
+    mfa_verifier: 'Verify',
+    mfa_renvoyer: 'Resend the code',
+    mfa_retour: '← Back to sign-in',
+    login_err_temp_expired: 'Temporary password expired (48 h). Contact your administrator for a reset.',
+    mfa_err_expired: 'Code expired. Request a new code.',
+    mfa_err_too_many: 'Too many attempts. Start the sign-in again.',
+    mfa_err_code: 'Incorrect code.',
+    mfa_err_restantes: 'attempt(s) left.',
+    mfa_err_envoi: 'Sending failed. Start the sign-in again.',
     tagline: 'Integrated Safety Administration and Oversight Tools',
     login_title: 'Sign in to the platform',
     login_user: 'Username',
@@ -317,6 +349,22 @@ const I18N = {
     donnees_col: 'Data',
 },
   pt: {
+    palette_bleu: 'Azul',
+    palette_corporate: 'Corporativo',
+    palette_gris: 'Cinzento',
+    mfa_intro: 'Um código de verificação de 6 dígitos acaba de ser enviado para',
+    mfa_valable: 'É válido durante',
+    mfa_minutes: 'minutos.',
+    mfa_code: 'Código de verificação',
+    mfa_verifier: 'Verificar',
+    mfa_renvoyer: 'Reenviar o código',
+    mfa_retour: '← Voltar à ligação',
+    login_err_temp_expired: 'Palavra-passe temporária expirada (48 h). Contacte o seu administrador para uma reposição.',
+    mfa_err_expired: 'Código expirado. Peça um novo código.',
+    mfa_err_too_many: 'Demasiadas tentativas. Recomece a ligação.',
+    mfa_err_code: 'Código incorreto.',
+    mfa_err_restantes: 'tentativa(s) restante(s).',
+    mfa_err_envoi: 'Envio impossível. Recomece a ligação.',
     tagline: 'Ferramentas Integradas de Administração e Supervisão da Segurança',
     login_title: 'Iniciar sessão na plataforma',
     login_user: 'Identificador',
@@ -492,6 +540,9 @@ function applyLang(lang) {
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+    el.title = t(el.dataset.i18nTitle);
   });
   document.querySelectorAll('.lang-btn').forEach((b) => {
     b.classList.toggle('active', b.textContent.trim().toLowerCase() === CURRENT_LANG);

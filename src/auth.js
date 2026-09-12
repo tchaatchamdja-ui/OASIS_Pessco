@@ -40,14 +40,16 @@ function generatePassword(cfg) {
   return pwd.join('');
 }
 
+// Les règles non tenues sortent en codes, non en phrases : le serveur ne sait
+// pas dans quelle langue l'écran les affichera. `n` porte la longueur attendue.
 function passwordPolicyErrors(password, cfg) {
   const sec = cfg.security;
   const errors = [];
-  if (password.length < sec.passwordMinLength) errors.push(`longueur minimale ${sec.passwordMinLength} caractères`);
-  if (sec.passwordRequireUpper && !/[A-Z]/.test(password)) errors.push('au moins une majuscule');
-  if (sec.passwordRequireLower && !/[a-z]/.test(password)) errors.push('au moins une minuscule');
-  if (sec.passwordRequireDigit && !/[0-9]/.test(password)) errors.push('au moins un chiffre');
-  if (sec.passwordRequireSpecial && !/[^A-Za-z0-9]/.test(password)) errors.push('au moins un caractère spécial');
+  if (password.length < sec.passwordMinLength) errors.push({ regle: 'longueur', n: sec.passwordMinLength });
+  if (sec.passwordRequireUpper && !/[A-Z]/.test(password)) errors.push({ regle: 'majuscule' });
+  if (sec.passwordRequireLower && !/[a-z]/.test(password)) errors.push({ regle: 'minuscule' });
+  if (sec.passwordRequireDigit && !/[0-9]/.test(password)) errors.push({ regle: 'chiffre' });
+  if (sec.passwordRequireSpecial && !/[^A-Za-z0-9]/.test(password)) errors.push({ regle: 'special' });
   return errors;
 }
 

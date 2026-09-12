@@ -361,7 +361,7 @@ window.saveExigDrawer = async function (id, showRegFields, reglement, date) {
     method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
   if (res.ok) { closeExigDrawer(); await loadRefs(); renderConfig(); showToast('OK', 'success'); }
-  else showToast('Erreur', 'error');
+  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 // Formulaire séparé : Règlement + Date d'adoption (s'applique à toutes les exigences du groupe)
@@ -396,7 +396,7 @@ window.saveReglement = async function (oldReglement) {
       body: JSON.stringify({ ...e, reglement: nom, date_adoption: date }),
     });
   }
-  closeExigDrawer(); await loadRefs(); renderConfig(); showToast('Règlement mis à jour.', 'success');
+  closeExigDrawer(); await loadRefs(); renderConfig(); showToast(t('reglement_maj'), 'success');
 };
 
 function fmtDay(iso) {
@@ -646,9 +646,8 @@ window.saveRef = async function (coll, id) {
   } else {
     const d = await res.json().catch(() => ({}));
     showToast(
-      d.error === 'duplicate_code' ? `Le code « ${body.code || ''} » est déjà utilisé.`
-      : d.error === 'code_required' ? 'Le code est obligatoire.'
-      : 'Erreur',
+      d.error === 'duplicate_code' ? t('code_deja_utilise', body.code || '')
+      : oasisMessageErreur(d, res.status),
       'error', 5000
     );
   }
@@ -661,7 +660,7 @@ window.deleteRef = async function (coll, id) {
     await loadRefs();
     renderConfig();
     showToast('OK', 'success');
-  } else showToast('Erreur', 'error');
+  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 // ── Accordéons hiérarchiques (Domaines / Secteurs / Sous-activités / Thèmes) ──
@@ -909,20 +908,20 @@ async function saveAacLogo(dataUrl) {
     showToast(dataUrl ? 'Logo enregistré.' : 'Logo supprimé.', 'success');
     await loadMe();
     renderConfig();
-  } else showToast('Erreur (fichier trop volumineux ?)', 'error', 4000);
+  } else showToast(t('erreur_fichier_volumineux'), 'error', 4000);
 }
 
 window.uploadAacLogo = function (inputEl) {
   const file = inputEl.files && inputEl.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) return showToast('Image trop lourde (max 2 Mo).', 'error');
+  if (file.size > 2 * 1024 * 1024) return showToast(t('image_trop_lourde'), 'error');
   const reader = new FileReader();
   reader.onload = () => saveAacLogo(reader.result);
   reader.readAsDataURL(file);
 };
 
 window.removeAacLogo = async function () {
-  if (!await oasisConfirmer('Supprimer le logo ?')) return;
+  if (!await oasisConfirmer(t('confirmer_suppr_logo'))) return;
   saveAacLogo('');
 };
 
@@ -945,7 +944,7 @@ window.saveAAC = async function () {
     showToast(t('cfg_saved'), 'success');
     await loadMe();
     renderConfig();
-  } else showToast('Erreur', 'error');
+  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 let ORG_VIEW = 'list'; // 'list' | 'tree'
@@ -972,7 +971,7 @@ window.orgDrop = async function (ev, orgId) {
   const personId = ev.dataTransfer.getData('text/plain');
   if (!personId) return;
   const exists = (REFS.organisation_assignments || []).some((a) => a.org_id === orgId && a.person_id === personId);
-  if (exists) return showToast('Déjà rattaché.', 'warning');
+  if (exists) return showToast(t('deja_rattache'), 'warning');
   const res = await api('/api/referentiels/organisation_assignments', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -981,8 +980,8 @@ window.orgDrop = async function (ev, orgId) {
   if (res.ok) {
     await loadRefs();
     renderConfig();
-    showToast('Personnel rattaché.', 'success');
-  } else showToast('Erreur', 'error');
+    showToast(t('personnel_rattache'), 'success');
+  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 window.openPosteRegistre = function (nodeId) {
   const node = (REFS.organisation || []).find((o) => o.id === nodeId);
@@ -1045,7 +1044,7 @@ window.orgStartInterim = function (nodeId) {
 window.orgConfirmInterim = async function (nodeId) {
   const node = (REFS.organisation || []).find((o) => o.id === nodeId);
   const interimId = document.getElementById('interimSelect').value;
-  if (!interimId) return showToast('Sélectionnez un intérimaire.', 'warning');
+  if (!interimId) return showToast(t('choisir_interimaire'), 'warning');
   const registre = Array.isArray(node.registre) ? [...node.registre] : [];
   registre.push({ role: 'interim', person_id: interimId, start: new Date().toISOString(), end: null });
   const res = await api(`/api/referentiels/organisation/${nodeId}`, {
@@ -1053,7 +1052,7 @@ window.orgConfirmInterim = async function (nodeId) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...node, interim_id: interimId, interim_actif: true, registre }),
   });
-  if (!res.ok) return showToast('Erreur', 'error');
+  if (!res.ok) return showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
   const posteLbl = node.poste || node.sigle;
   const interimNom = personnelName(interimId);
   const titNom = node.titulaire_id ? personnelName(node.titulaire_id) : null;
@@ -1073,7 +1072,7 @@ window.orgConfirmInterim = async function (nodeId) {
   await loadRefs();
   renderConfig();
   refreshNotifications();
-  showToast(`Intérim activé — validations vers ${interimNom}.`, 'success', 4000);
+  showToast(t('interim_active', interimNom), 'success', 4000);
 };
 
 window.orgEndInterim = async function (nodeId) {
@@ -1087,10 +1086,10 @@ window.orgEndInterim = async function (nodeId) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ...node, interim_id: '', interim_actif: false, registre }),
   });
-  if (!res.ok) return showToast('Erreur', 'error');
+  if (!res.ok) return showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
   await loadRefs();
   renderConfig();
-  showToast('Titulaire de retour — intérimaire retiré.', 'success');
+  showToast(t('interim_retire'), 'success');
 };
 
 window.orgUnassign = async function (id) {
@@ -1098,8 +1097,8 @@ window.orgUnassign = async function (id) {
   if (res.ok) {
     await loadRefs();
     renderConfig();
-    showToast('Rattachement retiré.', 'success');
-  } else showToast('Erreur', 'error');
+    showToast(t('rattachement_retire'), 'success');
+  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 function orgPersonName(p) {
@@ -1281,7 +1280,7 @@ window.saveSecurite = async function () {
     }),
   });
   if (res.ok) showToast(t('cfg_saved'), 'success');
-  else showToast('Erreur', 'error');
+  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 function cfgSectionModules(modules) {
@@ -1348,7 +1347,7 @@ window.saveSysteme = async function () {
     }),
   });
   if (res.ok) showToast(t('cfg_saved'), 'success');
-  else showToast('Erreur', 'error');
+  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 window.cfgNavigate = function (sub) {
@@ -1434,10 +1433,10 @@ async function renderConfig() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled: toggle.checked }),
       });
-      if (res.ok) showToast(`Module ${code} ${toggle.checked ? 'activé' : 'désactivé'}.`, 'success');
+      if (res.ok) showToast(toggle.checked ? t('module_active', code) : t('module_desactive', code), 'success');
       else {
         toggle.checked = !toggle.checked;
-        showToast('Erreur', 'error');
+        showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
       }
     });
   });

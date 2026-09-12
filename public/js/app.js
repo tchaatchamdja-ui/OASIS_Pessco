@@ -190,6 +190,16 @@ async function api(path, options) {
   return res;
 }
 
+// Les règles de mot de passe non tenues arrivent du serveur en codes : la phrase
+// se compose ici, dans la langue de l'écran. Une chaîne reçue telle quelle —
+// d'un serveur antérieur à ce changement — s'affiche sans être traduite plutôt
+// que de disparaître.
+function reglesMotDePasse(details) {
+  return (details || [])
+    .map((d) => (typeof d === 'string' ? d : t('mdp_regle_' + d.regle, d.n)))
+    .join(', ');
+}
+
 // Valeur passée en argument d'un gestionnaire inline. `esc` seul ne suffit
 // pas : il laisse passer le guillemet une fois l'entité redécodée, et une
 // valeur importée d'un classeur peut refermer l'attribut pour en ouvrir un
@@ -340,7 +350,7 @@ window.openImportModal = function (coll, title) {
 
 window.doImport = function (coll) {
   const file = document.getElementById('importFile').files[0];
-  if (!file) return showToast('Sélectionnez un fichier .xlsx.', 'warning');
+  if (!file) return showToast(t('choisir_xlsx'), 'warning');
   const reader = new FileReader();
   reader.onload = async () => {
     const res = await api(`/api/referentiels/${coll}/import`, {
@@ -357,7 +367,7 @@ window.doImport = function (coll) {
       closeRefModal();
       await loadRefs();
       renderConfig();
-    } else showToast(d.error === 'parse_error' ? 'Fichier illisible.' : 'Erreur import.', 'error');
+    } else showToast(oasisMessageErreur(d, res.status, t('erreur_import')), 'error');
   };
   reader.readAsDataURL(file);
 };
@@ -508,7 +518,7 @@ async function renderHome() {
       const code = cardEl.dataset.module;
       // Carte éteinte : le clic ne mène nulle part, il dit pourquoi.
       if (!enabled) {
-        showToast('Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.', 'error');
+        showToast(t('module_non_ouvert'), 'error');
         return;
       }
       // Le registre des modules peut ne pas avoir encore été chargé (session
@@ -660,19 +670,19 @@ async function renderUsers() {
     btn.addEventListener('click', async () => {
       const action = btn.dataset.action;
       const username = btn.dataset.user;
-      if (action === 'reset-password' && !await oasisConfirmer('Générer un nouveau mot de passe temporaire et l\'envoyer par email à l\'utilisateur ?')) return;
+      if (action === 'reset-password' && !await oasisConfirmer(t('confirmer_reset_mdp'))) return;
       const res = await api(`/api/users/${encodeURIComponent(username)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
       if (res.ok) {
-        showToast(action === 'reset-password' ? 'Mot de passe réinitialisé — email envoyé.' : 'OK', 'success');
+        showToast(action === 'reset-password' ? t('mdp_reinitialise') : 'OK', 'success');
         renderUsers();
       } else {
         const data = await res.json().catch(() => ({}));
-        const msg = data.error === 'forbidden_target' ? "Un Admin AAC ne peut pas désactiver un Admin AAC ou un SuperAdmin."
-          : data.details ? data.details.join(', ') : 'Erreur';
+        const msg = data.error === 'forbidden_target' ? t('admin_pas_sur_admin')
+          : data.details ? reglesMotDePasse(data.details) : oasisMessageErreur(data, res.status);
         showToast(msg, 'error', 4000);
       }
     });
@@ -686,7 +696,7 @@ async function renderUsers() {
   }));
   document.querySelectorAll('[data-topersonnel]:not([disabled])').forEach((btn) => btn.addEventListener('click', async () => {
     const res = await api(`/api/users/${encodeURIComponent(btn.dataset.topersonnel)}/to-personnel`, { method: 'POST' });
-    if (res.ok) { await loadRefs(); showToast('Ajouté à la Liste du personnel de l\'Administration.', 'success'); renderUsers(); }
+    if (res.ok) { await loadRefs(); showToast(t('ajoute_personnel'), 'success'); renderUsers(); }
     else { const d = await res.json().catch(() => ({})); showToast(d.error === 'exists' ? 'Déjà présent dans le Personnel AAC.' : 'Erreur', 'error'); }
   }));
   document.querySelectorAll('[data-modules]').forEach((btn) => btn.addEventListener('click', () => showModulesModal(users.find((u) => u.username === btn.dataset.modules))));
@@ -718,8 +728,8 @@ window.saveUserModules = async function (username) {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'set-modules', modules }),
   });
-  if (res.ok) { closeUserModal(); showToast('Accès aux modules enregistré.', 'success'); renderUsers(); }
-  else showToast('Erreur', 'error');
+  if (res.ok) { closeUserModal(); showToast(t('acces_modules_enregistre'), 'success'); renderUsers(); }
+  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
 function showEditUserModal(u) {
@@ -778,13 +788,13 @@ window.submitEditUser = async function (username) {
   const res = await api(`/api/users/${encodeURIComponent(username)}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
-  if (res.ok) { closeUserModal(); showToast('Utilisateur modifié.', 'success'); renderUsers(); }
+  if (res.ok) { closeUserModal(); showToast(t('utilisateur_modifie'), 'success'); renderUsers(); }
   else {
     const d = await res.json().catch(() => ({}));
-    const msg = d.error === 'admin_password' ? 'Mot de passe SuperAdmin incorrect.'
-      : d.error === 'exists' ? 'Un compte existe déjà avec cet email.'
-      : d.error === 'invalid_email' ? 'Email invalide.'
-      : 'Erreur';
+    const msg = d.error === 'admin_password' ? t('mdp_superadmin_incorrect')
+      : d.error === 'exists' ? t('compte_existe_email')
+      : d.error === 'invalid_email' ? t('email_invalide')
+      : oasisMessageErreur(d, res.status);
     showToast(msg, 'error', 4500);
   }
 };
@@ -855,14 +865,14 @@ function showNewUserModal() {
     });
     if (res.ok) {
       close();
-      showToast('Utilisateur créé — email d\'identifiants envoyé.', 'success');
+      showToast(t('utilisateur_cree'), 'success');
       renderUsers();
     } else {
       const data = await res.json().catch(() => ({}));
-      const msg = data.details ? 'Mot de passe : ' + data.details.join(', ')
-        : data.error === 'exists' ? 'Un compte existe déjà avec cet email.'
-        : data.error === 'invalid_email' ? 'Email invalide (il sert d\'identifiant).'
-        : 'Erreur';
+      const msg = data.details ? t('mdp_politique', reglesMotDePasse(data.details))
+        : data.error === 'exists' ? t('compte_existe_email')
+        : data.error === 'invalid_email' ? t('email_invalide_identifiant')
+        : oasisMessageErreur(data, res.status);
       showToast(msg, 'error', 4500);
     }
   });
@@ -875,14 +885,14 @@ const ROLE_LABELS = { SUPERADMIN: 'SuperAdmin', ADMIN: 'Admin AAC', ADMIN_PRESTA
 window.uploadProfilePhoto = function (inputEl) {
   const file = inputEl.files && inputEl.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) return showToast('Image trop lourde (max 2 Mo).', 'error');
+  if (file.size > 2 * 1024 * 1024) return showToast(t('image_trop_lourde'), 'error');
   const reader = new FileReader();
   reader.onload = () => saveProfile({ photo: reader.result });
   reader.readAsDataURL(file);
 };
 
 window.removeProfilePhoto = async function () {
-  if (!await oasisConfirmer('Supprimer la photo de profil ?')) return;
+  if (!await oasisConfirmer(t('confirmer_suppr_photo'))) return;
   saveProfile({ photo: '' });
 };
 
@@ -893,10 +903,10 @@ async function saveProfile(patch) {
     body: JSON.stringify(patch),
   });
   if (res.ok) {
-    showToast('Profil mis à jour.', 'success');
+    showToast(t('profil_maj'), 'success');
     await loadMe();
     renderProfile();
-  } else showToast('Erreur', 'error');
+  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 }
 
 window.saveProfileInfos = function () {
@@ -912,25 +922,23 @@ window.submitProfilePassword = async function () {
   const oldPassword = document.getElementById('pfOld').value;
   const newPassword = document.getElementById('pfNew').value;
   const confirmVal = document.getElementById('pfConfirm').value;
-  if (!oldPassword) return showToast('Confirmez votre mot de passe actuel.', 'warning');
-  if (newPassword !== confirmVal) return showToast('Les deux mots de passe ne correspondent pas.', 'error');
+  if (!oldPassword) return showToast(t('confirmer_mdp_actuel'), 'warning');
+  if (newPassword !== confirmVal) return showToast(t('mdp_discordants'), 'error');
   const res = await api('/api/change-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ oldPassword, newPassword }),
   });
   if (res.ok) {
-    showToast('Mot de passe modifié.', 'success');
+    showToast(t('mdp_modifie'), 'success');
     ['pfOld', 'pfNew', 'pfConfirm'].forEach((id) => (document.getElementById(id).value = ''));
     await loadMe();
     renderProfile();
   } else {
     const data = await res.json().catch(() => ({}));
     const msg =
-      data.error === 'policy' ? 'Mot de passe : ' + (data.details || []).join(', ')
-      : data.error === 'reused' ? "Réutilisation d'un ancien mot de passe interdite."
-      : data.error === 'wrong_old' ? 'Mot de passe actuel incorrect.'
-      : 'Erreur';
+      data.error === 'policy' ? t('mdp_politique', reglesMotDePasse(data.details))
+      : oasisMessageErreur(data, res.status);
     showToast(msg, 'error', 4500);
   }
 };

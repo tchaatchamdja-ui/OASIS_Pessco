@@ -131,7 +131,7 @@ document.getElementById('pwdSubmit').addEventListener('click', async () => {
   const oldPassword = document.getElementById('pwdOld').value;
   const newPassword = document.getElementById('pwdNew').value;
   const confirmVal = document.getElementById('pwdConfirm').value;
-  if (newPassword !== confirmVal) return showToast('Les deux mots de passe ne correspondent pas.', 'error');
+  if (newPassword !== confirmVal) return showToast(t('mdp_discordants'), 'error');
   const res = await api('/api/change-password', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -139,15 +139,13 @@ document.getElementById('pwdSubmit').addEventListener('click', async () => {
   });
   if (res.ok) {
     document.getElementById('pwdModal').style.display = 'none';
-    showToast('Mot de passe changé.', 'success');
+    showToast(t('mdp_change'), 'success');
     loadMe();
   } else {
     const data = await res.json().catch(() => ({}));
     const msg =
-      data.error === 'policy' ? 'Mot de passe : ' + (data.details || []).join(', ')
-      : data.error === 'reused' ? 'Réutilisation d\'un ancien mot de passe interdite.'
-      : data.error === 'wrong_old' ? 'Mot de passe actuel incorrect.'
-      : 'Erreur';
+      data.error === 'policy' ? t('mdp_politique', reglesMotDePasse(data.details))
+      : oasisMessageErreur(data, res.status);
     showToast(msg, 'error', 4500);
   }
 });
@@ -162,4 +160,9 @@ document.getElementById('pwdSubmit').addEventListener('click', async () => {
   navigate('home');
   refreshNotifications();
   setInterval(refreshNotifications, 60000);
-})();
+})().catch((e) => {
+  // Sans session, `api` renvoie déjà la fenêtre à la connexion et interrompt
+  // le démarrage : le rejet qui s'ensuit est attendu, il n'a pas à s'afficher
+  // en console. Tout autre échec, lui, doit se voir.
+  if (!e || e.message !== 'unauthenticated') console.error(e);
+});

@@ -103,7 +103,7 @@ async function changerInstance(valeur) {
     body: JSON.stringify({ instance: valeur }),
   });
   if (!res.ok) {
-    showToast('Changement d’instance impossible', 'error');
+    showToast(t('instance_changement_impossible'), 'error');
     majBandeauInstance();
     return;
   }
@@ -125,14 +125,13 @@ async function ouvrirInstance() {
   });
   const d = await res.json().catch(() => ({}));
   if (!res.ok) {
-    showToast(d.error === 'instance_existe' ? 'Cette instance existe déjà.'
-      : d.error === 'portee_nationale' ? 'Réservé au SuperAdmin régional.'
-      : 'Nom d’instance invalide.', 'error');
+    showToast(d.error === 'portee_nationale' ? t('reserve_superadmin_regional')
+      : oasisMessageErreur(d, res.status, t('nom_instance_invalide')), 'error');
     return;
   }
   ME.instance_vue = { ...(ME.instance_vue || {}), instances: d.instances };
   majBandeauInstance();
-  showToast(`Instance « ${nom} » ouverte — elle part vide.`, 'success');
+  showToast(t('instance_ouverte', nom), 'success');
   if (CFG_SUB === 'instances') { await cfgChargerInstances(); renderConfig(); }
 }
 
@@ -183,21 +182,23 @@ function cfgSectionInstances() {
 window.basculerInstance = async function (nom) {
   const res = await api(`/api/instances/${encodeURIComponent(nom)}/activite`, { method: 'PUT' });
   const d = await res.json().catch(() => ({}));
-  if (!res.ok) return showToast(d.error === 'instance_locale' ? 'L’instance installée ici ne se désactive pas.' : 'Erreur', 'error');
-  showToast(d.active ? `Instance « ${nom} » réactivée.` : `Instance « ${nom} » désactivée.`, 'success');
+  if (!res.ok) return showToast(d.error === 'instance_locale' ? t('instance_locale_non_desactivable')
+    : oasisMessageErreur(d, res.status), 'error');
+  showToast(d.active ? t('instance_reactivee', nom) : t('instance_desactivee', nom), 'success');
   await cfgChargerInstances();
   renderConfig();
 };
 
 window.supprimerInstance = async function (nom) {
-  if (!await oasisConfirmer(`Supprimer l’instance « ${nom} » ? Cette action est sans retour.`)) return;
+  if (!await oasisConfirmer(t('confirmer_suppr_instance', nom))) return;
   const res = await api(`/api/instances/${encodeURIComponent(nom)}`, { method: 'DELETE' });
   const d = await res.json().catch(() => ({}));
   if (!res.ok) {
-    return showToast(d.error === 'instance_non_vide' ? `Impossible : ${d.donnees} enregistrement(s) y sont rattachés.`
-      : d.error === 'instance_locale' ? 'L’instance installée ici ne se supprime pas.' : 'Erreur', 'error', 4500);
+    return showToast(d.error === 'instance_non_vide' ? t('instance_non_vide_n', d.donnees)
+      : d.error === 'instance_locale' ? t('instance_locale_non_supprimable')
+      : oasisMessageErreur(d, res.status), 'error', 4500);
   }
-  showToast(`Instance « ${nom} » supprimée.`, 'success');
+  showToast(t('instance_supprimee', nom), 'success');
   ME.instance_vue = { ...(ME.instance_vue || {}), instances: ((ME.instance_vue || {}).instances || []).filter((e) => e !== nom) };
   majBandeauInstance();
   await cfgChargerInstances();

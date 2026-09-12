@@ -26,10 +26,10 @@ function execRenderParametres() {
             Checklists <span class="exec-tab-badge">${counts.checklists}</span>
         </button>
         <button class="exec-tab ${sub==='delais'?'active':''}" onclick="window._execParamSub='delais';execRenderPage();">
-            Délais
+            ${te('delais_onglet')}
         </button>
         <button class="exec-tab ${sub==='autres'?'active':''}" onclick="window._execParamSub='autres';execRenderPage();">
-            Autres paramètres
+            ${te('autres_parametres')}
         </button>
     </div>`;
     const compactCss = `<style>
@@ -303,18 +303,18 @@ function _execClLigne(c, D, refs, isAdmin) {
             <div class="exec-cl-nom">${_esc(c.nom)}</div>
             ${c.description ? `<div class="exec-cl-desc">${_esc(c.description)}</div>` : ''}
         </td>
-        <td>${portee || '<span class="exec-cl-partout">Toutes portées</span>'}</td>
+        <td>${portee || '<span class="exec-cl-partout">' + te('toutes_portees') + '</span>'}</td>
         <td style="text-align:center;">
             <span class="exec-cl-compte ${itemsCount ? '' : 'vide'}"
                   title="${itemsCount} item${itemsCount > 1 ? 's' : ''}">${itemsCount}</span>
         </td>
         <td class="exec-etats-actions" style="text-align:right;white-space:nowrap;">
             <button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistEditor('${c.id}')"
-                    title="Items de la checklist">${EXEC_ICONS.list}</button>
+                    title="${te('items_checklist')}">${EXEC_ICONS.list}</button>
             ${isAdmin ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistModal('${c.id}')"
                     title="${_escAttr(te('modifier'))}">${EXEC_ICONS.edit}</button>
             <button class="btn btn-sm btn-outline btn-icon-only" onclick="execDeleteChecklist('${c.id}')"
-                    style="color:#dc2626;border-color:#dc2626;" title="Supprimer">${EXEC_ICONS.delete}</button>` : ''}
+                    style="color:#dc2626;border-color:#dc2626;" title="${te('supprimer')}">${EXEC_ICONS.delete}</button>` : ''}
         </td>
     </tr>`;
 }
@@ -351,11 +351,11 @@ function execRenderChecklistsTab() {
                 <div class="exec-cl-outils">
                     <div class="exec-cl-recherche">
                         ${EXEC_ICONS.search}
-                        <input type="text" id="clRecherche" placeholder="Rechercher une checklist…"
+                        <input type="text" id="clRecherche" placeholder="${te('rechercher_checklist')}"
                                value="${_escAttr(EXEC_CL_RECHERCHE)}" oninput="execClRechercher(this.value)">
                     </div>
                     ${isAdmin ? `<button class="btn btn-sm btn-outline" onclick="execOpenStatutsManager()"
-                            title="Statuts d'évaluation des items">${EXEC_ICONS.settings} Statuts</button>` : ''}
+                            title="${te('statuts_evaluation_items')}">${EXEC_ICONS.settings} Statuts</button>` : ''}
                     ${isAdmin ? `<button class="btn btn-sm btn-primary" onclick="execOpenChecklistModal()">
                             ${EXEC_ICONS.add} Ajouter</button>` : ''}
                 </div>
@@ -363,9 +363,9 @@ function execRenderChecklistsTab() {
             <div style="overflow-x:auto;">
                 <table class="exec-table exec-cl-table">
                     <thead><tr>
-                        <th style="width:118px;">Réf.</th>
-                        <th style="width:36%;">Checklist</th>
-                        <th style="width:auto;">Portée</th>
+                        <th style="width:118px;">${te('ref_court')}</th>
+                        <th style="width:36%;">${te('checklist_col')}</th>
+                        <th style="width:auto;">${te('portee_col')}</th>
                         <th style="text-align:center;width:66px;">Items</th>
                         <th style="text-align:right;width:126px;">Actions</th>
                     </tr></thead>
@@ -438,12 +438,12 @@ function execOpenChecklistModal(clId) {
     shellShowModal((item ? 'Modifier' : 'Ajouter') + ' — Checklist', `
         <div class="shell-form-row" style="display:grid;grid-template-columns:140px 1fr;gap:0.6rem;">
             <div class="shell-form-group">
-                <label>Réf.</label>
+                <label>${te('ref_court')}</label>
                 <input id="clRef" class="shell-input" value="${_escAttr(item?.reference || '')}" placeholder="ex. CHK-001">
             </div>
             <div class="shell-form-group">
-                <label>Nom *</label>
-                <input id="clNom" class="shell-input" value="${_escAttr(item?.nom || '')}" placeholder="Nom de la checklist">
+                <label>${te('nom_requis')}</label>
+                <input id="clNom" class="shell-input" value="${_escAttr(item?.nom || '')}" placeholder="${te('nom_checklist')}">
             </div>
         </div>
         <div class="shell-form-group">
@@ -467,13 +467,13 @@ function execOpenChecklistModal(clId) {
             <div id="clSecsBox" style="${boxStyle}" onchange="_clRefreshSousActivites()"></div>
         </div>
         <div class="shell-form-group">
-            <label>Sous-activités applicables <span id="clSasHint" style="color:var(--text-muted);font-size:0.7rem;font-weight:400;"></span>
+            <label>${te('sous_activites_applicables')} <span id="clSasHint" style="color:var(--text-muted);font-size:0.7rem;font-weight:400;"></span>
                 ${_clBoutonsPortee('cl-sas-cb', '')}</label>
             <div id="clSasBox" style="${boxStyle}"></div>
         </div>
     `, `
         <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">Annuler</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveChecklist('${clId || ''}')">Enregistrer</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveChecklist('${clId || ''}')">${te('save')}</button>
     `);
     // Initialisation des deux listes dépendantes après l'ouverture du modal
     setTimeout(() => _clRefreshSecteurs(), 0);
@@ -580,11 +580,11 @@ function execOpenStatutsManager() {
             <button class="btn btn-sm btn-primary" onclick="execOpenStatutModal()">${EXEC_ICONS.add} Ajouter un statut</button>
         </div>
         <table class="exec-table" style="width:100%;font-size:0.8rem;">
-            <thead><tr><th>Libellé</th><th>Alias</th><th style="text-align:center;width:60px;">Couleur</th><th style="text-align:center;width:60px;">Ordre</th><th></th></tr></thead>
+            <thead><tr><th>${te('libelle_col')}</th><th>Alias</th><th style="text-align:center;width:60px;">Couleur</th><th style="text-align:center;width:60px;">Ordre</th><th></th></tr></thead>
             <tbody>${rowsHtml}</tbody>
         </table>
         <p style="font-size:0.74rem;color:var(--text-muted);margin-top:0.4rem;">L'alias (s'il est renseigné) est la valeur affichée dans les listes déroulantes des checklists à renseigner.</p>
-    `, `<button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">Fermer</button>`);
+    `, `<button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">${te('close')}</button>`);
 }
 
 function execOpenStatutModal(sId) {
@@ -593,12 +593,12 @@ function execOpenStatutModal(sId) {
     const nextOrder = D.statuts.length ? Math.max(...D.statuts.map(x => x.ordre || 0)) + 1 : 1;
     shellShowModal((s ? 'Modifier' : 'Ajouter') + " — Statut d'évaluation", `
         <div class="shell-form-group">
-            <label>Libellé *</label>
+            <label>${te('libelle_requis')}</label>
             <input id="stLib" class="shell-input" value="${(s?.libelle || '').replace(/"/g, '&quot;')}" placeholder="ex. Satisfaisant / Non Satisfaisant / Non Applicable">
         </div>
         <div class="shell-form-group">
             <label>Alias</label>
-            <input id="stAlias" class="shell-input" value="${(s?.alias || '').replace(/"/g, '&quot;')}" placeholder="Valeur affichée dans les checklists (ex. S / NS / NA)">
+            <input id="stAlias" class="shell-input" value="${(s?.alias || '').replace(/"/g, '&quot;')}" placeholder="${te('alias_statut_aide')}">
         </div>
         <div class="shell-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
             <div class="shell-form-group">
@@ -611,8 +611,8 @@ function execOpenStatutModal(sId) {
             </div>
         </div>
     `, `
-        <button class="shell-btn shell-btn-outline" onclick="execOpenStatutsManager()">Retour</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveStatut('${sId || ''}')">Enregistrer</button>
+        <button class="shell-btn shell-btn-outline" onclick="execOpenStatutsManager()">${te('retour_btn')}</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveStatut('${sId || ''}')">${te('save')}</button>
     `);
 }
 
@@ -664,7 +664,7 @@ function execOpenChecklistEditor(clId) {
             <header class="exec-cli-slicer-header">
                 <div class="exec-cli-ident">
                     <button class="btn btn-sm btn-outline btn-icon-only" onclick="execCloseChecklistEditor()"
-                            title="Fermer">${EXEC_ICONS.back}</button>
+                            title="${te('close')}">${EXEC_ICONS.back}</button>
                     <div>
                         <div class="exec-cli-surtitre">
                             Checklist${cl.reference ? ` · <span class="exec-cl-ref">${_esc(cl.reference)}</span>` : ''}
@@ -672,17 +672,17 @@ function execOpenChecklistEditor(clId) {
                         <div class="exec-cli-titre">${_esc(cl.nom || '')}</div>
                     </div>
                     <span class="exec-cl-compte" id="execCliCompte"
-                          title="Items de la checklist">${D.items.filter(i => i.checklist_id === clId).length}</span>
+                          title="${te('items_checklist')}">${D.items.filter(i => i.checklist_id === clId).length}</span>
                 </div>
                 <div class="exec-cli-actions">
                     <span id="execCliSaveState" class="exec-cli-etat"></span>
                     <button class="btn btn-sm btn-outline btn-icon-only" onclick="execChecklistExportXlsx('${clId}')"
-                            title="Exporter la checklist en Excel">${EXEC_ICONS.download}</button>
-                    <button class="btn btn-sm btn-outline btn-icon-only" title="Importer des items depuis Excel"
+                            title="${te('exporter_checklist_excel')}">${EXEC_ICONS.download}</button>
+                    <button class="btn btn-sm btn-outline btn-icon-only" title="${te('importer_items_excel')}"
                             onclick="document.getElementById('execCliImportFile').click()">${EXEC_ICONS.upload}</button>
                     <input type="file" id="execCliImportFile" accept=".xlsx" style="display:none" onchange="execChecklistImportXlsx('${clId}', event)">
                     <button class="btn btn-sm btn-outline" onclick="execOpenSousThemesManager('${clId}')"
-                            title="Gérer les sous-thèmes de cette checklist">${EXEC_ICONS.layers} Sous-thèmes</button>
+                            title="${te('gerer_sous_themes')}">${EXEC_ICONS.layers} Sous-thèmes</button>
                     <button class="btn btn-sm btn-primary" onclick="execAddChecklistRow('${clId}')">
                         ${EXEC_ICONS.add} Ajouter une ligne</button>
                 </div>
@@ -692,10 +692,10 @@ function execOpenChecklistEditor(clId) {
                     <table id="execCliItemsTable" class="exec-cli-inline-table">
                         <thead><tr>
                             <th style="width:55px;">Ordre</th>
-                            <th style="width:85px;">Réf. Item</th>
-                            <th style="width:110px;">Thème</th>
-                            <th style="width:130px;">Sous-thème</th>
-                            <th style="width:170px;">Réf. Règlement</th>
+                            <th style="width:85px;">${te('ref_item_col')}</th>
+                            <th style="width:110px;">${te('theme_col')}</th>
+                            <th style="width:130px;">${te('sous_theme_col')}</th>
+                            <th style="width:170px;">${te('ref_reglement_col')}</th>
                             <th style="min-width:320px;">Description</th>
                             <th style="min-width:320px;">Directives</th>
                             <th style="width:44px;"></th>
@@ -811,7 +811,7 @@ function _execCliRenderRows(clId) {
             <td>${_execCliRefReglementCell(it, clId)}</td>
             <td><textarea rows="3" onchange="_execCliAutosave('${it.id}','description',this.value)">${_esc2(it.description || '')}</textarea></td>
             <td><textarea rows="3" onchange="_execCliAutosave('${it.id}','directives',this.value)">${_esc2(it.directives || '')}</textarea></td>
-            <td><button class="row-delete" title="Supprimer l'item"
+            <td><button class="row-delete" title="${te('supprimer_item')}"
                 onclick="execDeleteChecklistItemInline('${it.id}','${clId}')">${EXEC_ICONS.delete}</button></td>
         </tr>`;
     }).join('');
@@ -947,12 +947,12 @@ function execOpenRefReglementPicker(itId, clId) {
             ${list}
         </div>
         <details style="margin-top:0.5rem;">
-            <summary style="font-size:0.78rem;cursor:pointer;color:var(--text-muted);">Texte libre (compatibilité)</summary>
-            <textarea id="exgLegacy" class="shell-input" rows="2" placeholder="Saisi librement — utilisé si aucune exigence cochée">${_esc2(legacyText)}</textarea>
+            <summary style="font-size:0.78rem;cursor:pointer;color:var(--text-muted);">${te('texte_libre_compat')}</summary>
+            <textarea id="exgLegacy" class="shell-input" rows="2" placeholder="${te('texte_libre_aide')}">${_esc2(legacyText)}</textarea>
         </details>
     `, `
         <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">Annuler</button>
-        <button class="shell-btn shell-btn-primary" onclick="_execCliRefRegSave('${itId}','${clId}')">Valider</button>
+        <button class="shell-btn shell-btn-primary" onclick="_execCliRefRegSave('${itId}','${clId}')">${te('valider')}</button>
     `);
 }
 
@@ -1075,10 +1075,10 @@ function execOpenSousThemesManager(clId) {
             <button class="btn btn-sm btn-primary" onclick="execOpenSousThemeModal('${clId}')">${EXEC_ICONS.add} Ajouter</button>
         </div>
         <table class="exec-table" style="width:100%;font-size:0.78rem;">
-            <thead><tr><th>Thème</th><th>Sous-thème</th><th style="text-align:center;width:60px;">Ordre</th><th></th></tr></thead>
+            <thead><tr><th>${te('theme_col')}</th><th>${te('sous_theme_col')}</th><th style="text-align:center;width:60px;">Ordre</th><th></th></tr></thead>
             <tbody>${rowsHtml}</tbody>
         </table>
-    `, `<button class="shell-btn shell-btn-outline" onclick="shellCloseModal();execOpenChecklistEditor('${clId}')">Retour à la checklist</button>`);
+    `, `<button class="shell-btn shell-btn-outline" onclick="shellCloseModal();execOpenChecklistEditor('${clId}')">${te('retour_checklist')}</button>`);
 }
 
 // ── Export / Import xlsx des sous-thèmes d'une checklist ──
@@ -1138,13 +1138,13 @@ function execOpenSousThemeModal(clId, stId) {
     const _esc2 = oasisEsc;
     shellShowModal((item ? 'Modifier' : 'Ajouter') + ' — Sous-thème', `
         <div class="shell-form-group">
-            <label>Thème *</label>
+            <label>${te('theme_requis')}</label>
             <select id="stTheme" class="shell-input">
                 ${themes.map(t => `<option value="${t.id}" ${item?.theme_id===t.id?'selected':''}>${_esc2(t.libelle)}</option>`).join('')}
             </select>
         </div>
         <div class="shell-form-group">
-            <label>Libellé du sous-thème *</label>
+            <label>${te('libelle_sous_theme_requis')}</label>
             <input id="stLib2" class="shell-input" value="${_esc2(item?.libelle || '')}">
         </div>
         <div class="shell-form-group">
@@ -1152,8 +1152,8 @@ function execOpenSousThemeModal(clId, stId) {
             <input id="stOrd2" type="number" class="shell-input" value="${item?.ordre ?? 0}" min="0">
         </div>
     `, `
-        <button class="shell-btn shell-btn-outline" onclick="execOpenSousThemesManager('${clId}')">Retour</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveSousTheme('${clId}','${stId || ''}')">Enregistrer</button>
+        <button class="shell-btn shell-btn-outline" onclick="execOpenSousThemesManager('${clId}')">${te('retour_btn')}</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveSousTheme('${clId}','${stId || ''}')">${te('save')}</button>
     `);
 }
 
@@ -1209,7 +1209,7 @@ function execOpenCriticiteModal(critId) {
         </div>
         <div class="shell-form-group">
             <label>Alias</label>
-            <input id="critAlias" class="shell-input" value="${_escAttr(c?.alias || '')}" placeholder="Valeur affichée dans les listes déroulantes (ex. C / M / m)">
+            <input id="critAlias" class="shell-input" value="${_escAttr(c?.alias || '')}" placeholder="${te('alias_criticite_aide')}">
         </div>
         <div class="shell-form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
             <div class="shell-form-group">
@@ -1275,7 +1275,7 @@ function execOpenTypeCasModal(tcId) {
     shellShowModal(title, `
         <div class="shell-form-group">
             <label>${te('item')} *</label>
-            <input id="tcItem" class="shell-input" value="${_escAttr(t?.item || '')}" placeholder="Isolé / Récurrent">
+            <input id="tcItem" class="shell-input" value="${_escAttr(t?.item || '')}" placeholder="${te('isole_recurrent')}">
         </div>
         <div class="shell-form-group">
             <label>${te('description')}</label>

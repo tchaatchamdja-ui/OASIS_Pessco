@@ -143,20 +143,20 @@ function execProcColonneAccord() {
   const acte = n.statut === 'acte';
   const peut = _execCanContribute() && !_execIsPrestataire();
   if (acte) {
-    return `<h4 class="exec-proc-col-titre">Activité confirmée</h4>
+    return `<h4 class="exec-proc-col-titre">${te('activite_confirmee_titre')}</h4>
       <div class="exec-proc-bloc">
         ${execProcLigne('Référence d’activité', _esc(n.reference_activite || ''))}
         ${execProcLigne('Dates confirmées', `${_formatDate(n.date_debut_effective)} → ${_formatDate(n.date_fin_effective)}`)}
         ${execProcLigne('Périmètre validé', _esc(n.perimetre_valide || ''))}
       </div>`;
   }
-  return `<h4 class="exec-proc-col-titre">Confirmer l'activité</h4>
+  return `<h4 class="exec-proc-col-titre">${te('confirmer_activite')}</h4>
     <div class="exec-proc-bloc">
-      <label class="form-label">Date de début confirmée</label>
+      <label class="form-label">${te('date_debut_confirmee')}</label>
       <input type="date" class="form-control" onchange="oasisDatesBorner(EXEC_PROC_DATES)" id="exec_proc_debut" value="${_escAttr((n.date_debut_effective || n.date_activite || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
-      <label class="form-label">Date de fin confirmée</label>
+      <label class="form-label">${te('date_fin_confirmee')}</label>
       <input type="date" class="form-control" onchange="oasisDatesBorner(EXEC_PROC_DATES)" id="exec_proc_fin" value="${_escAttr((n.date_fin_effective || '').slice(0, 10))}" ${peut ? '' : 'disabled'}>
-      <label class="form-label">Périmètre validé</label>
+      <label class="form-label">${te('perimetre_valide')}</label>
       <textarea class="form-control" id="exec_proc_perimetre" rows="8" ${peut ? '' : 'disabled'}>${_esc(n.perimetre_valide || n.perimetre_activite || '')}</textarea>
       ${peut ? `<div class="exec-proc-accord-actions">
         <button class="btn btn-outline btn-sm" onclick="execProcEnregistrerAccord()">
@@ -725,8 +725,8 @@ function execProcInfoTransmission() {
   if (!execProcSousFaite('transmission')) return '';
   const par = n.envoye_par_nom || n.envoye_par || '';
   return `<div class="exec-proc-transmission">
-    <span><i>Transmise le</i> <strong>${_formatDate(n.date_envoi)}</strong></span>
-    ${par ? `<span><i>par</i> <strong>${_esc(par)}</strong></span>` : ''}
+    <span><i>${te('transmise_le')}</i> <strong>${_formatDate(n.date_envoi)}</strong></span>
+    ${par ? `<span><i>${te('par_auteur')}</i> <strong>${_esc(par)}</strong></span>` : ''}
     <span><i>Destinataire</i> <strong>${_esc(n.interlocuteur_nom || n.prestataire_interlocuteur || n.prestataire_nom || '')}</strong></span>
   </div>`;
 }
@@ -750,9 +750,9 @@ function execProcBlocValidation() {
   if (EXEC_PROC.etape !== 'notification' || !EXEC_PROC.notif) return '';
   if ((EXEC_PROC.sousEtape || execProcSousDefaut()) !== 'validation') return '';
   return `<div class="exec-proc-validation">
-    <label class="form-label" for="exec_proc_observations">Observations à l'attention de l'initiateur</label>
+    <label class="form-label" for="exec_proc_observations">${te('observations_initiateur')}</label>
     <textarea class="form-control" id="exec_proc_observations" rows="2"
-      placeholder="Renseigner en cas de corrections demandées">${_esc(EXEC_PROC.observations || EXEC_PROC.notif.motif_rejet || '')}</textarea>
+      placeholder="${te('renseigner_si_corrections')}">${_esc(EXEC_PROC.observations || EXEC_PROC.notif.motif_rejet || '')}</textarea>
   </div>`;
 }
 
@@ -802,7 +802,7 @@ function execProcActionsEtape() {
         : `<button class="btn btn-sm btn-primary" onclick="execProcDeclencher()">${EXEC_ICONS.send || ''} Déclencher</button>`);
     }
     if (n && st === 'brouillon' && peut) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('submit','Notification soumise')">Soumettre</button>`);
-    if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('validate','Notification validée')">Valider</button>`);
+    if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('validate','Notification validée')">${te('valider')}</button>`);
     if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm exec-btn-rejet" onclick="execProcRejeter()">Rejeter</button>`);
     if (n && st === 'valide' && peut) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('send','Notification transmise')">Transmettre</button>`);
     // Avant transmission, la notification validée peut repartir en correction.
@@ -812,7 +812,7 @@ function execProcActionsEtape() {
   }
   // 4. L'action qui clôt l'étape Confirmation siège sur la ligne du titre.
   if (EXEC_PROC.etape === 'confirmation' && n && st !== 'acte' && peut && !_execIsPrestataire()) {
-    boutons.push(`<button class="btn btn-sm btn-primary exec-proc-btn-accord" onclick="execProcValiderAccord()">Confirmer l'activité</button>`);
+    boutons.push(`<button class="btn btn-sm btn-primary exec-proc-btn-accord" onclick="execProcValiderAccord()">${te('confirmer_activite')}</button>`);
   }
   return boutons.length ? `<div class="exec-proc-actions-etape">${boutons.join('')}</div>` : '';
 }
@@ -827,8 +827,8 @@ function execProcPanNotification(sous) {
   const n = EXEC_PROC.notif;
   const a = EXEC_PROC.act || {};
   if (!n) {
-    return `<p class="exec-proc-vide">Activité planifiée non encore déclenchée.<br>
-      Utilisez « Déclencher » pour ouvrir le formulaire de notification.</p>`;
+    return `<p class="exec-proc-vide">${te('activite_non_declenchee')}<br>
+      ${te('utilisez_declencher')}</p>`;
   }
   // Les sous-étapes Soumission et Validation affichent le formulaire ; ce
   // panneau ne sert qu'aux cas où il n'a pas pu être ouvert.
@@ -848,12 +848,12 @@ function execProcPanNotification(sous) {
         </div>`
       : `<p class="exec-proc-vide">Validation interne en attente.</p>${n.motif_rejet ? `<div class="exec-proc-bloc">${execProcLigne('Motif du dernier rejet', _esc(n.motif_rejet))}</div>` : ''}`;
   }
-  return `<p class="exec-proc-vide">Notification pas encore transmise au prestataire.</p>`;
+  return `<p class="exec-proc-vide">${te('notification_non_transmise')}</p>`;
 }
 
 // Sans notification transmise, l'étape Confirmation n'a rien à afficher.
 function execProcPanConfirmation() {
-  return `<p class="exec-proc-vide">La notification doit d'abord être transmise.</p>`;
+  return `<p class="exec-proc-vide">${te('notification_a_transmettre')}</p>`;
 }
 
 function execProcEnteteEtape() {
@@ -912,7 +912,7 @@ function execProcAttendusHtml() {
   return `<div class="exec-proc-attendus${d.peut_agir ? '' : ' bloque'}">
       <span class="exec-proc-attendus-titre">Intervenants attendus</span>
       ${lignes}
-      ${d.peut_agir ? '' : '<span class="exec-proc-attendus-refus">Vous n’êtes pas désigné à cette étape.</span>'}
+      ${d.peut_agir ? '' : '<span class="exec-proc-attendus-refus">' + te('non_designe_etape') + '</span>'}
     </div>`;
 }
 
@@ -1089,7 +1089,7 @@ window.execProcImprimerFiche = function () {
   if (!f) { _execToast(te('popup_bloque'), 'error'); return; }
   f.document.open();
   f.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
-    <title>Fiche de notification</title>
+    <title>${te('fiche_notification')}</title>
     <link rel="stylesheet" href="/shared/css/oasis-module.css">
     <link rel="stylesheet" href="/modules/execution/css/exec-styles.css">
     <style>body{margin:0;padding:1.5rem;background:#fff;}@page{margin:14mm;}</style>
@@ -1224,7 +1224,7 @@ window.execProcNouvelleActivite = function (notifId) {
   const req = '<span class="exec-hp-req">*</span>';
   const corps = `
     <div class="exec-proc-bloc">
-      <div class="exec-hp-bloc-titre">Organisme surveillé</div>
+      <div class="exec-hp-bloc-titre">${te('organisme_surveille')}</div>
       <div class="exec-proc-grille exec-hp-grille">
         <div>
           <label class="form-label">Année ${req}</label>
@@ -1241,13 +1241,13 @@ window.execProcNouvelleActivite = function (notifId) {
         <div>
           <label class="form-label">Secteur d'activité ${req}</label>
           <select class="form-control" id="hp_secteur" onchange="execProcHpPrestataires()">
-            <option value="">— Choisir un domaine —</option>
+            <option value="">${te('choisir_domaine')}</option>
           </select>
         </div>
         <div>
           <label class="form-label">Prestataire ${req}</label>
           <select class="form-control" id="hp_prestataire">
-            <option value="">— Choisir un secteur —</option>
+            <option value="">${te('choisir_secteur')}</option>
           </select>
         </div>
       </div>
@@ -1257,29 +1257,29 @@ window.execProcNouvelleActivite = function (notifId) {
       <div class="exec-hp-bloc-titre">Programmation</div>
       <div class="exec-proc-grille exec-hp-grille">
         <div>
-          <label class="form-label">Type de supervision</label>
+          <label class="form-label">${te('type_supervision_label')}</label>
           <select class="form-control" id="hp_type">
             <option value="">— Choisir —</option>
             ${(D.typesSupervision || []).map((t) => `<option value="${t.id}">${_esc(t.type_supervision || t.libelle || t.nom || '')}</option>`).join('')}
           </select>
         </div>
         <div>
-          <label class="form-label">Mode de supervision</label>
+          <label class="form-label">${te('mode_supervision_label')}</label>
           <select class="form-control" id="hp_mode">
             <option value="">— Choisir —</option>
             ${(D.modesSupervision || []).map((m) => `<option value="${m.id}">${_esc(m.mode || m.libelle || m.nom || '')}</option>`).join('')}
           </select>
         </div>
         <div>
-          <label class="form-label">Date de début</label>
+          <label class="form-label">${te('date_debut_label')}</label>
           <input type="date" class="form-control" id="hp_debut" onchange="execProcHpBornerDates()">
         </div>
         <div>
-          <label class="form-label">Date de fin</label>
+          <label class="form-label">${te('date_fin_label')}</label>
           <input type="date" class="form-control" id="hp_fin" onchange="execProcHpBornerDates()">
         </div>
         <div>
-          <label class="form-label">Responsable de l'activité</label>
+          <label class="form-label">${te('responsable_activite_label')}</label>
           <select class="form-control" id="hp_responsable">
             <option value="">— Choisir —</option>
             ${options((D.inspecteurs || []).filter((i) => i.statut !== 'inactif'),
@@ -1291,19 +1291,19 @@ window.execProcNouvelleActivite = function (notifId) {
           <input type="number" class="form-control" id="hp_nb_inspecteurs" min="1" max="99" placeholder="1">
         </div>
         <div class="exec-hp-pleine">
-          <label class="form-label">Lieu de l'activité</label>
-          <input type="text" class="form-control" id="hp_lieu" placeholder="Lieu de l'activité">
+          <label class="form-label">${te('lieu_activite_label')}</label>
+          <input type="text" class="form-control" id="hp_lieu" placeholder="${te('lieu_activite_label')}">
         </div>
       </div>
     </div>
 
     <div class="exec-proc-bloc">
-      <div class="exec-hp-bloc-titre">Objet et périmètre</div>
+      <div class="exec-hp-bloc-titre">${te('objet_et_perimetre')}</div>
       <label class="form-label">Objet de l'activité ${req}</label>
-      <input type="text" class="form-control" id="hp_objet" placeholder="Objet de la surveillance">
-      <label class="form-label">Périmètre — sous-activités et thèmes de supervision</label>
+      <input type="text" class="form-control" id="hp_objet" placeholder="${te('objet_surveillance')}">
+      <label class="form-label">${te('perimetre_sous_activites')}</label>
       <div class="exec-hp-perimetre" id="hp_perimetre_liste">
-        <p class="exec-proc-vide">Choisissez d'abord un secteur d'activité.</p>
+        <p class="exec-proc-vide">${te('choisir_secteur_dabord')}</p>
       </div>
     </div>
     <p class="exec-proc-erreur" id="hp_erreur"></p>`;
@@ -1404,7 +1404,7 @@ window.execProcHpPerimetre = function () {
   const hote = document.getElementById('hp_perimetre_liste');
   if (!hote) return;
   if (!secteur) {
-    hote.innerHTML = '<p class="exec-proc-vide">Choisissez d’abord un secteur d’activité.</p>';
+    hote.innerHTML = '<p class="exec-proc-vide">' + te('choisir_secteur_dabord_2') + '</p>';
     return;
   }
   const sousActs = (EXEC_STATE.data.sousActivites || []).filter((sa) => sa.secteur_id === secteur);
@@ -1796,7 +1796,7 @@ function execProcGroupeHorsPlan(F) {
     const dos = dossiers.find((d) => d.notification_id === n.id);
     return `<tr class="exec-act-row" style="cursor:pointer;"
         onclick="if(!event.target.closest('button'))execOpenActiviteProcessus('hors-plan','${n.id}')"
-        title="Ouvrir le processus de l'activité">
+        title="${te('ouvrir_processus')}">
       <td>${_esc(n.prestataire_nom || '')}</td>
       <td>${_esc(n.objet_activite || '')}</td>
       <td>${_formatDate(n.date_activite)}</td>

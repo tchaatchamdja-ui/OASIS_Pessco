@@ -121,7 +121,7 @@ function _execRenderConstaRows(filtered) {
                         return `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteFormById('${c.id}')" title="${te('modifier_fnc')}">${EXEC_ICONS.edit||''}</button>`;
                     if (st === 'direct_soumis')
                         return isVal
-                            ? `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteSlider('${c.id}')" title="Valider">${EXEC_ICONS.check||''}</button>`
+                            ? `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteSlider('${c.id}')" title="${te('valider')}">${EXEC_ICONS.check||''}</button>`
                             : `<button class="btn btn-sm btn-outline" onclick="execOpenConstatationDirecteSlider('${c.id}')" title="Consulter">${EXEC_ICONS.eye||''}</button>`;
                     if (st === 'direct_valide')
                         return `<button class="btn btn-sm btn-primary" onclick="execOpenConstatationDirecteSlider('${c.id}')" title="Transmettre">${EXEC_ICONS.send||''}</button>`;
@@ -146,8 +146,8 @@ function _execRenderConstaRows(filtered) {
                         ${isSoldee ? `<div><span style="font-weight:600;color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;">${te('date_solde')}</span><div style="color:#16a34a;font-weight:600;">${dateSolde ? _formatDate(dateSolde) : '-'}</div></div>` : ''}
                         ${delaiInfo ? `<div>${delaiInfo}</div>` : ''}
                     </div>
-                    ${c.motif_rejet_pac && c.statut === 'direct_rejete' ? `<div style="margin-top:0.4rem;padding:0.4rem 0.6rem;background:#fef2f2;border-left:3px solid #dc2626;border-radius:3px;font-size:0.8rem;"><strong style="color:#dc2626;">Motif de rejet :</strong> ${_esc(c.motif_rejet_pac)}</div>` : ''}
-                    ${c.motif_renvoi && c.statut === 'direct_renvoye' ? `<div style="margin-top:0.4rem;padding:0.4rem 0.6rem;background:#fff7ed;border-left:3px solid #f97316;border-radius:3px;font-size:0.8rem;"><strong style="color:#f97316;">Motif de renvoi :</strong> ${_esc(c.motif_renvoi)}</div>` : ''}
+                    ${c.motif_rejet_pac && c.statut === 'direct_rejete' ? `<div style="margin-top:0.4rem;padding:0.4rem 0.6rem;background:#fef2f2;border-left:3px solid #dc2626;border-radius:3px;font-size:0.8rem;"><strong style="color:#dc2626;">${te('motif_rejet_label')}</strong> ${_esc(c.motif_rejet_pac)}</div>` : ''}
+                    ${c.motif_renvoi && c.statut === 'direct_renvoye' ? `<div style="margin-top:0.4rem;padding:0.4rem 0.6rem;background:#fff7ed;border-left:3px solid #f97316;border-radius:3px;font-size:0.8rem;"><strong style="color:#f97316;">${te('motif_renvoi_label')}</strong> ${_esc(c.motif_renvoi)}</div>` : ''}
                 </div>
             </td>
         </tr>`;
@@ -845,7 +845,7 @@ function execCdCommentairesHtml(c, modifiable) {
     // Replié, le panneau se réduit à sa poignée, qui porte l'intitulé.
     if (replie) {
         return `<button class="exec-cd-com-poignee pleine" type="button"
-                title="Déplier" onclick="execCdBasculerCommentaires()">
+                title="${te('deplier')}" onclick="execCdBasculerCommentaires()">
             ${EXEC_ICONS.chevronLeft || EXEC_ICONS.back || '‹'}
             <span class="exec-cd-com-titre-replie">${te('commentaires_validation')}${nombre ? ` (${nombre})` : ''}</span>
         </button>`;
@@ -863,7 +863,7 @@ function execCdCommentairesHtml(c, modifiable) {
                 <button class="btn btn-outline btn-sm" title="Retirer"
                         onclick="execCdRetirerCommentaire(${i})">${EXEC_ICONS.x}</button>
             </div>
-            <textarea class="form-input exec-cd-com-texte" rows="2" placeholder="Observation du valideur"
+            <textarea class="form-input exec-cd-com-texte" rows="2" placeholder="${te('observation_valideur')}"
                       oninput="execCdCommentaireChamp(${i}, 'texte', this.value)">${_esc(x.texte || '')}</textarea>
         </div>`;
 
@@ -912,7 +912,7 @@ function execCdCommentairesHtml(c, modifiable) {
                 ? `<div class="exec-cd-com-corps">${courante.entrees.map(lu).join('')}</div>`
                 : `<div class="exec-cd-com-vide">${te('aucun_commentaire_en_cours')}</div>`}`}
             ${versions.filter((v) => v.close_le).length ? `
-                <div class="exec-cd-com-vide" style="margin:.6rem 0 .2rem;">Versions précédentes</div>
+                <div class="exec-cd-com-vide" style="margin:.6rem 0 .2rem;">${te('versions_precedentes')}</div>
                 ${versions.filter((v) => v.close_le).map(close).join('')}` : ''}
         </div>
     </div>`;
@@ -1008,7 +1008,7 @@ function _execCdMotifHtml(c) {
                 <span class="exec-cd-motif-quand">${_esc(dernier
                     ? execCdQuand(dernier.close_le, dernier.close_par)
                     : (c.date_renvoi ? _formatDate(String(c.date_renvoi).slice(0, 10)) : ''))}</span>
-                <span class="exec-cd-motif-consigne">Corrigez la constatation, puis soumettez-la de nouveau.</span>
+                <span class="exec-cd-motif-consigne">${te('corriger_constatation')}</span>
             </div>
             <div class="exec-cd-motif-corps">
                 ${dernier && (dernier.entrees || []).length
@@ -1171,7 +1171,7 @@ function execOpenConstatationDirecteForm(existing) {
                 </select>
             </div>
             <div class="form-group" style="${MB}">
-                <label>Secteur</label>
+                <label>${te('secteur')}</label>
                 <select class="form-select" id="cd_secteur" onchange="execCdOnSecteurChange()">
                     <option value="">${te('select_option')}</option>
                     ${secteurs.map(s => `<option value="${s.id}" ${defaultSecteurId===s.id?'selected':''}>${_esc(s.code || s.nom)}</option>`).join('')}
@@ -1227,7 +1227,7 @@ function execOpenConstatationDirecteForm(existing) {
                 </select>
             </div>
             <div class="form-group" style="${MB}">
-                <label>Délai</label>
+                <label>${te('delai_col')}</label>
                 <input type="number" class="form-input" id="cd_delai" min="1" value="${_escAttr(c.delai_solde || c.delai_correction || _execCriticiteDelai(c.criticite || c.gravite) || '30')}" oninput="execCdCalcDateDue()" onchange="execCdCalcDateDue()">
             </div>
             <div class="form-group" style="${MB}">
@@ -1556,20 +1556,20 @@ function _execCourrielConstatation(fnc, prestataire) {
         <div class="form-group">
             <label>Destinataire</label>
             <input type="text" class="form-input" id="courriel_destinataire" value="${_escAttr(adresse)}"
-                   placeholder="adresse@prestataire.bj"${ro}>
+                   placeholder="${te('ex_adresse_prestataire')}"${ro}>
         </div>
         <div class="exec-courriel-copies">
             <div class="form-group">
                 <label>Copie (Cc)</label>
-                <input type="text" class="form-input" id="courriel_copie" placeholder="Adresses séparées par des virgules"${ro}>
+                <input type="text" class="form-input" id="courriel_copie" placeholder="${te('adresses_virgules')}"${ro}>
             </div>
             <div class="form-group">
-                <label>Copie cachée (Cci)</label>
-                <input type="text" class="form-input" id="courriel_copie_cachee" placeholder="Adresses séparées par des virgules"${ro}>
+                <label>${te('copie_cachee')}</label>
+                <input type="text" class="form-input" id="courriel_copie_cachee" placeholder="${te('adresses_virgules')}"${ro}>
             </div>
         </div>
         <div class="form-group">
-            <label>Objet</label>
+            <label>${te('objet')}</label>
             <input type="text" class="form-input" id="courriel_objet" value="${_escAttr(objet)}"${ro}>
         </div>
         <div class="form-group">
@@ -1670,7 +1670,7 @@ function _execCommentModal(title, color, onConfirm) {
         <h3 style="margin:0 0 1rem;font-size:1rem;font-weight:700;color:${color};">${title}</h3>
         <div class="form-group" style="margin-bottom:1rem;">
             <label style="font-size:0.85rem;font-weight:600;margin-bottom:0.4rem;display:block;">Commentaire *</label>
-            <textarea id="exec_comment_text" class="form-input" rows="3" placeholder="Saisir le motif…" style="resize:vertical;"></textarea>
+            <textarea id="exec_comment_text" class="form-input" rows="3" placeholder="${te('saisir_motif')}" style="resize:vertical;"></textarea>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:0.5rem;">
             <button class="btn btn-outline" onclick="document.getElementById('exec_comment_modal').remove()">Annuler</button>
@@ -1692,7 +1692,7 @@ function execCdDecisionModal(titre, couleur, verbe, action) {
     const entrees = (EXEC_CD_COM.saisie || []).filter((x) => (x.texte || '').trim());
     const corps = `
         <p style="margin:0 0 .6rem;font-size:.86rem;">
-            Les commentaires de validation sont transmis comme motif ; cette version est figée.
+            ${te('commentaires_comme_motif')}
         </p>
         ${entrees.length ? `<div class="exec-cd-motif-corps" style="padding:0;">
             ${entrees.map((x) => `<div class="exec-cd-motif-ligne">

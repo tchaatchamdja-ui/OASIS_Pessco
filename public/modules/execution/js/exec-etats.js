@@ -456,7 +456,7 @@ function execEtatsPanA_declencher(R) {
     </tr>`).join('');
   return `
     <div class="card">
-      <h3>Activités à notifier <span class="exec-etats-compte">${R.aDeclencher.length}</span></h3>
+      <h3>${te('activites_a_notifier')} <span class="exec-etats-compte">${R.aDeclencher.length}</span></h3>
       <p class="exec-etats-intro">
         Activités planifiées non encore déclenchées, dont la date de début tombe dans les
         ${EXEC_ETATS.delais.horizon_a_declencher} prochains mois. L'échéance de déclenchement
@@ -541,29 +541,29 @@ function execEtatsPanEn_vie(R) {
         <td>${_esc(n.reference || '—')}</td>
         <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
         <td>${l.arretee
-          ? `<span class="exec-statut-etape arrete" title="${_escAttr(n.motif_arret || '')}">Arrêté</span>`
+          ? `<span class="exec-statut-etape arrete" title="${_escAttr(n.motif_arret || '')}">${te('arrete_badge')}</span>`
           : etape}</td>
         <td class="exec-etats-actions">
           <button class="btn btn-sm btn-outline btn-icon-only" onclick="${execEtatsOuvrir(l)}"
-            title="Consulter le processus" aria-label="Consulter le processus">${EXEC_ICONS.eye || ''}</button>
+            title="${te('consulter_processus')}" aria-label="${te('consulter_processus')}">${EXEC_ICONS.eye || ''}</button>
           <button class="btn btn-sm btn-outline btn-icon-only" onclick="execProcHistorique('${l.planId}','${l.activiteId}')"
             title="${te('historique')}" aria-label="${te('historique')}">${EXEC_ICONS.clock || ''}</button>
           ${administre ? (l.arretee
             ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execEtatsReprendre('${n.id}')"
-                 title="Reprendre le processus" aria-label="Reprendre le processus">${EXEC_ICONS.refresh || EXEC_ICONS.back || ''}</button>
+                 title="${te('reprendre_processus')}" aria-label="${te('reprendre_processus')}">${EXEC_ICONS.refresh || EXEC_ICONS.back || ''}</button>
                <button class="btn btn-sm btn-primary btn-icon-only" onclick="execEtatsArchiverActivite('${n.id}',true)"
-                 title="Archiver l’activité" aria-label="Archiver l’activité">${EXEC_ICONS.folder || ''}</button>`
+                 title="${te('archiver_activite')}" aria-label="${te('archiver_activite')}">${EXEC_ICONS.folder || ''}</button>`
             : `<button class="btn btn-sm btn-icon-only exec-btn-rejet" onclick="execEtatsArreter('${n.id}')"
-                 title="Arrêter le processus" aria-label="Arrêter le processus">${EXEC_ICONS.close || '✕'}</button>`) : ''}
+                 title="${te('arreter_processus')}" aria-label="${te('arreter_processus')}">${EXEC_ICONS.close || '✕'}</button>`) : ''}
           ${superadmin ? `<button class="btn btn-sm btn-icon-only exec-btn-rejet" onclick="execEtatsSupprimer('${n.id}')"
-            title="Supprimer l’activité" aria-label="Supprimer l’activité">${EXEC_ICONS.delete || EXEC_ICONS.trash || '🗑'}</button>` : ''}
+            title="${te('supprimer_activite_btn')}" aria-label="${te('supprimer_activite_btn')}">${EXEC_ICONS.delete || EXEC_ICONS.trash || '🗑'}</button>` : ''}
         </td>
       </tr>`;
   }).join('');
   const arretees = R.enVie.filter((l) => l.arretee).length;
   return `
     <div class="card">
-      <h3>Activités en cours
+      <h3>${te('activites_en_cours_titre')}
         <span class="exec-etats-compte${R.enVie.length > 1 ? ' alerte' : ''}">${R.enVie.length}</span>
         ${arretees ? `<span class="exec-etats-compte retard">${arretees} arrêtée${arretees > 1 ? 's' : ''}</span>` : ''}
       </h3>
@@ -595,16 +595,16 @@ function execEtatsPanClos(items, archivees) {
         <td>${_esc(l.prestataire || '—')}</td>
         <td>${_esc(l.objet || '—')}</td>
         <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
-        <td>${d ? _esc(d.reference || '') : '<span style="color:var(--text-muted);">Non déclenchée</span>'}</td>
+        <td>${d ? _esc(d.reference || '') : '<span style="color:var(--text-muted);">' + te('non_declenchee') + '</span>'}</td>
         <td>${rapport ? _esc(rapport.reference || '') : '—'}</td>
         <td>${dateArchivage || dateCloture ? _formatDate(archivees ? dateArchivage : dateCloture) : '—'}</td>
         ${archivees ? '' : `<td>${execEtatsBadgeDelai(execEtatsJoursRestants(
           execEtatsPlus(dateCloture, EXEC_ETATS.delais.archivage_apres_cloture)))}</td>`}
         <td class="exec-etats-actions">
           ${d ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="${execEtatsOuvrir(l)}"
-            title="Consulter le dossier" aria-label="Consulter le dossier">${EXEC_ICONS.eye || ''}</button>` : ''}
+            title="${te('consulter_dossier')}" aria-label="${te('consulter_dossier')}">${EXEC_ICONS.eye || ''}</button>` : ''}
           ${rapport ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execPreviewRapport('${rapport.id}')"
-            title="Rapport" aria-label="Rapport">${EXEC_ICONS.rapports || ''}</button>` : ''}
+            title="${te('rapport_col')}" aria-label="${te('rapport_col')}">${EXEC_ICONS.rapports || ''}</button>` : ''}
           <button class="btn btn-sm btn-outline btn-icon-only" onclick="execProcHistorique('${l.planId}','${l.activiteId}')"
             title="${te('historique')}" aria-label="${te('historique')}">${EXEC_ICONS.clock || ''}</button>
           ${(execEtatsPeutAdministrer() && d && !l.planArchive) ? `<button class="btn btn-sm btn-icon-only ${archivees ? 'btn-outline' : 'btn-primary'}"
@@ -613,7 +613,7 @@ function execEtatsPanClos(items, archivees) {
             ${(archivees ? EXEC_ICONS.back : EXEC_ICONS.folder) || ''}</button>` : ''}
           ${(archivees && execEtatsPeutAdministrer() && (l.planArchive || (!d && l.notif))) ? `<button class="btn btn-sm btn-outline btn-icon-only"
             onclick="execEtatsDesarchiverActivite('${l.activiteId}',${l.planArchive ? 'true' : 'false'})"
-            title="Désarchiver l’activité" aria-label="Désarchiver l’activité">
+            title="${te('desarchiver_activite')}" aria-label="${te('desarchiver_activite')}">
             ${EXEC_ICONS.back || ''}</button>` : ''}
         </td>
       </tr>`;
@@ -676,7 +676,7 @@ function execEtatsPanClos(items, archivees) {
             ${g.le ? `<span class="exec-etats-groupe-date">archivé le ${_formatDate(g.le)}</span>` : ''}
             ${(parPlan && execEtatsPeutAdministrer()) ? `<button class="btn btn-sm btn-outline exec-etats-desarchiver"
               onclick="event.stopPropagation();execEtatsDesarchiverPlan('${cle}')"
-              title="Sortir le plan et ses activités des archives">
+              title="${te('sortir_des_archives')}">
               ${EXEC_ICONS.back || ''} Désarchiver le plan</button>` : ''}
           </h4>
           <div class="exec-etats-groupe-corps">
@@ -731,7 +731,7 @@ function execRenderEtats() {
   return `
     <div class="page-content exec-etats">
       <div class="page-header">
-        <h2>États</h2>
+        <h2>${te('etats_titre')}</h2>
         ${retards ? `<span class="exec-etats-alerte">${retards} action${retards > 1 ? 's' : ''} en retard</span>` : ''}
       </div>
       ${barre}
@@ -813,7 +813,7 @@ window.execEtatsRappel = async function (planId, activiteId, motif) {
       <p class="exec-proc-note">${note}</p>
       <label class="form-label">Destinataire</label>
       <select class="form-control" id="rappel_dest">
-        ${options || `<option value="">— Aucun inspecteur enregistré —</option>`}
+        ${options || `<option value="">${te('aucun_inspecteur_enregistre')}</option>`}
       </select>
       <label class="form-label">Message</label>
       <textarea class="form-control" id="rappel_msg" rows="5">${_esc(texte)}</textarea>
@@ -1033,9 +1033,9 @@ function execRenderDelaisTab() {
       <table class="exec-table exec-delais-table">
         <thead><tr>
           <th>Attente</th>
-          <th style="width:32%;">Court de … à …</th>
-          <th style="width:140px;">Délai</th>
-          <th style="width:20%;">Signalé dans</th>
+          <th style="width:32%;">${te('court_de_a')}</th>
+          <th style="width:140px;">${te('delai_col')}</th>
+          <th style="width:20%;">${te('signale_dans')}</th>
         </tr></thead>
         <tbody>${g.delais.map(ligne).join('')}</tbody>
       </table>
@@ -1054,7 +1054,7 @@ function execRenderDelaisTab() {
 
   return `
     <div class="card">
-      <h3>Délais du processus</h3>
+      <h3>${te('delais_processus')}</h3>
       <p class="exec-etats-intro">
         Relevé des attentes des processus « Activité » et « Constatation ». Chaque ligne
         court d'une date enregistrée jusqu'à l'événement attendu. Ces délais n'empêchent
@@ -1063,8 +1063,8 @@ function execRenderDelaisTab() {
       ${groupes}
       <div class="exec-delai-groupe">
         <div class="exec-delai-groupe-entete">
-          <h4>Réglés ailleurs</h4>
-          <span>Deux attentes du module ne se paramètrent pas sur cet écran.</span>
+          <h4>${te('regles_ailleurs')}</h4>
+          <span>${te('deux_attentes_ailleurs')}</span>
         </div>
         <table class="exec-table exec-delais-table"><tbody>${ailleurs}</tbody></table>
       </div>
@@ -1075,7 +1075,7 @@ function execRenderDelaisTab() {
         <button class="btn btn-outline btn-sm" onclick="execEtatsDelaisDefaut()">
           ${EXEC_ICONS.reset || ''} Valeurs par défaut
         </button>
-      </div>` : '<p class="exec-etats-intro">Seul un administrateur du module modifie ces délais.</p>'}
+      </div>` : '<p class="exec-etats-intro">' + te('delais_admin_seul') + '</p>'}
     </div>`;
 }
 
@@ -1190,7 +1190,7 @@ function execRefsLigneSegment(objet, index, s, total) {
         ${meta.saisie ? `<input type="text" class="form-control" maxlength="12" placeholder="Texte"
           value="${_escAttr(s.valeur || '')}" ${off}
           oninput="execRefsSaisir('${objet}',${index},'valeur',this)">` : ''}
-        ${meta.longueur ? `<input type="number" class="form-control" min="1" max="8" title="Nombre de chiffres"
+        ${meta.longueur ? `<input type="number" class="form-control" min="1" max="8" title="${te('nombre_chiffres')}"
           value="${Number(s.longueur) || 3}" ${off}
           oninput="execRefsSaisir('${objet}',${index},'longueur',this)">
           <span class="exec-ref-unite">chiffres</span>` : ''}
@@ -1210,7 +1210,7 @@ function execRefsLigneSegment(objet, index, s, total) {
 function execRenderAutresParametresTab() {
   if (!EXEC_REFS.charge) {
     execRefsCharger().then(() => execRenderPage());
-    return '<div class="card"><p class="exec-etats-intro">Chargement des paramètres…</p></div>';
+    return '<div class="card"><p class="exec-etats-intro">' + te('chargement_parametres') + '</p></div>';
   }
   const off = EXEC_REFS.modifiable ? '' : 'disabled';
   const blocs = EXEC_REFS_OBJETS.map((o) => {
@@ -1230,7 +1230,7 @@ function execRenderAutresParametresTab() {
         <div class="exec-ref-corps">
           <p class="exec-etats-intro">${_esc(o.aide)}</p>
           <div class="exec-ref-entete">
-            <span></span><span>Élément</span><span>Valeur</span><span>Rendu</span><span></span>
+            <span></span><span>${te('element_col')}</span><span>Valeur</span><span>Rendu</span><span></span>
           </div>
           <div class="exec-ref-segments">
             ${segments.map((s, i) => execRefsLigneSegment(o.cle, i, s, segments.length)).join('')}
@@ -1239,7 +1239,7 @@ function execRenderAutresParametresTab() {
             <button class="btn btn-sm btn-outline" ${off} onclick="execRefsAjouter('${o.cle}')">
               ${EXEC_ICONS.add || '+'} Ajouter un élément
             </button>
-            <label class="exec-ref-sep">Séparateur
+            <label class="exec-ref-sep">${te('separateur_col')}
               <input type="text" class="form-control" maxlength="3" value="${_escAttr(m.separateur === undefined ? '-' : m.separateur)}"
                 ${off} oninput="execRefsMajSeparateur('${o.cle}',this.value)">
             </label>
@@ -1251,7 +1251,7 @@ function execRenderAutresParametresTab() {
 
   return `
     <div class="card">
-      <h3>Composition des références</h3>
+      <h3>${te('composition_references')}</h3>
       <p class="exec-etats-intro">
         Les références produites par le module se composent des éléments ordonnés ci-dessous.
         Le numéro d'ordre se poursuit par famille : deux compositions différentes numérotent
@@ -1263,8 +1263,8 @@ function execRenderAutresParametresTab() {
       <button class="btn btn-primary btn-sm" onclick="execRefsEnregistrer()">
         ${EXEC_ICONS.clipboard || ''} Enregistrer
       </button>
-      <button class="btn btn-outline btn-sm" onclick="execRefsDefaut()">Compositions par défaut</button>
-    </div>` : '<p class="exec-etats-intro">Seul un administrateur du module compose les références.</p>'}
+      <button class="btn btn-outline btn-sm" onclick="execRefsDefaut()">${te('compositions_defaut')}</button>
+    </div>` : '<p class="exec-etats-intro">' + te('references_admin_seul') + '</p>'}
     ${execRenderRolesEquipeTab()}`;
 }
 

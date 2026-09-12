@@ -155,31 +155,31 @@ function execOpenMesUserModal(userId) {
         <div class="shell-form-row">
             <div class="shell-form-group"><label>Courriel</label>
                 <input id="muEmail" class="shell-input" type="email" value="${_escAttr(user?.email || '')}"
-                    placeholder="prenom.nom@prestataire.bj">
-                <small class="shell-hint">Le courriel sert d’identifiant de connexion.</small>
+                    placeholder="${te('ex_courriel_prestataire')}">
+                <small class="shell-hint">${te('courriel_identifiant')}</small>
             </div>
-            <div class="shell-form-group"><label>Nom</label>
+            <div class="shell-form-group"><label>${te('col_nom')}</label>
                 <input id="muNom" class="shell-input" value="${_escAttr(user?.nom || '')}">
             </div>
         </div>
         <div class="shell-form-row">
-            <div class="shell-form-group"><label>Prénom</label>
+            <div class="shell-form-group"><label>${te('prenom_col')}</label>
                 <input id="muPrenom" class="shell-input" value="${_escAttr(user?.prenom || '')}">
             </div>
-            <div class="shell-form-group"><label>Statut</label>
+            <div class="shell-form-group"><label>${te('status')}</label>
                 <select id="muActif" class="shell-input">
                     <option value="true" ${user?.actif !== false && user?.actif !== 0 ? 'selected' : ''}>Actif</option>
                     <option value="false" ${user?.actif === false || user?.actif === 0 ? 'selected' : ''}>Inactif</option>
                 </select>
             </div>
         </div>
-        <div class="shell-form-group"><label>Rôle</label>
+        <div class="shell-form-group"><label>${te('col_role')}</label>
             <select id="muRole" class="shell-input">
                 ${roles.map(r => `<option value="${r.cle}" ${r.cle === roleCourant ? 'selected' : ''}>${_esc(r.libelle)}</option>`).join('')}
             </select>
         </div>
         <div class="shell-form-group">
-            <label>Droits confiés</label>
+            <label>${te('droits_confies')}</label>
             <div class="exec-droits-liste">
                 ${_mesDroitsCache.map(d => `
                     <label class="exec-droit">
@@ -191,7 +191,7 @@ function execOpenMesUserModal(userId) {
     `;
     const footer = `
         <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">Annuler</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveMesUser('${userId || ''}')">Enregistrer</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveMesUser('${userId || ''}')">${te('save')}</button>
     `;
     shellShowModal(titre, body, footer);
 }

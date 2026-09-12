@@ -97,12 +97,12 @@ function execRenderRapports() {
                             <td>${_formatDate(r.date_transmission || '')}</td>
                             <td>${_execStatusBadge(r.statut)}</td>
                             <td class="exec-etats-actions">
-                                <button class="btn btn-outline btn-sm" onclick="execDownloadRapport('${r.id}')" title="Aperçu PDF">
+                                <button class="btn btn-outline btn-sm" onclick="execDownloadRapport('${r.id}')" title="${te('apercu_pdf')}">
                                     ${EXEC_ICONS.eye}
                                 </button>
                                 <a href="javascript:void(0)"
                                    onclick="execDownloadRapport('${r.id}', true)"
-                                   title="Télécharger le PDF (identique à l'aperçu)"
+                                   title="${te('telecharger_pdf_identique')}"
                                    style="display:inline-flex;align-items:center;padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;color:#1e293b;text-decoration:none;cursor:pointer;transition:all 0.15s;"
                                    onmouseover="this.style.background='#e0f2fe';this.style.borderColor='#0284c7';"
                                    onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0';">
@@ -297,13 +297,13 @@ function _execRapportStyles() {
 // Barre d'outils de l'aperçu, masquée à l'impression.
 function _execRapportBarre(rapport) {
     return `<div class="no-print preview-toolbar">
-    <span class="preview-toolbar-title">Aperçu •</span>
+    <span class="preview-toolbar-title">${te('apercu_puce')}</span>
     <span class="preview-toolbar-ref">${_esc(rapport.reference || 'Rapport')}</span>
-    <button class="preview-btn preview-btn-success" onclick="window.print()" title="Dans la boîte de dialogue : choisir 'Enregistrer au format PDF'">
+    <button class="preview-btn preview-btn-success" onclick="window.print()" title="${te('astuce_enregistrer_pdf')}">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Télécharger PDF
+        ${te('telecharger_pdf')}
     </button>
-    <button class="preview-btn preview-btn-ghost" onclick="window.close()">✕ Fermer</button>
+    <button class="preview-btn preview-btn-ghost" onclick="window.close()">${te('fermer_croix')}</button>
 </div>
 <div id="print-tip" class="no-print" style="position:fixed;top:56px;left:0;right:0;z-index:998;background:#fef3c7;color:#92400e;padding:8px 20px;font-size:13px;border-bottom:1px solid #fbbf24;display:flex;align-items:center;gap:10px;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>

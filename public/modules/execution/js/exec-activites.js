@@ -43,12 +43,12 @@ function execRenderExecution() {
             <table class="exec-data-table">
                 <thead>
                     <tr>
-                        <th>Réf. Activité</th>
+                        <th>${te('ref_activite_col')}</th>
                         <th>${te('provider')}</th>
                         <th>Dom. &amp; Sec.</th>
                         <th style="min-width:230px;">${te('objet')}</th>
-                        <th>Date Activité</th>
-                        <th>Dernière Maj</th>
+                        <th>${te('date_activite_col')}</th>
+                        <th>${te('derniere_maj')}</th>
                         <th>${te('status')}</th>
                         <th style="width:1%;white-space:nowrap;text-align:center;">${te('actions')}</th>
                     </tr>
@@ -87,7 +87,7 @@ function execRenderExecution() {
                             <button class="btn btn-sm btn-outline" onclick="execOpenExchangeSlider('${d.notification_id}')" title="${te('gerer_echange')}">
                                 ${EXEC_ICONS.chat}
                             </button>
-                            <button class="btn btn-sm btn-accent" onclick="execOpenDossierSlider('${d.id}')" title="Ouvrir le dossier">
+                            <button class="btn btn-sm btn-accent" onclick="execOpenDossierSlider('${d.id}')" title="${te('ouvrir_dossier_btn')}">
                                 ${EXEC_ICONS.openFolder}
                             </button>
                             ${_execIsAdmin() ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.25rem 0.4rem;" onclick="execDeleteDossier('${d.id}')" title="${te('delete')}">
@@ -216,11 +216,11 @@ function _renderDossierSliderContent(dossierId) {
     const titleHtml = `
     <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;flex:1;font-size:0.85rem;font-weight:400;">
         <span style="font-weight:600;font-size:0.95rem;">${EXEC_ICONS.folder} ${te('dossier')}</span>
-        <span><strong>Ref :</strong> ${_esc(dossier.reference || dossierId)}</span>
-        <span><strong>Prestataire :</strong> ${_esc(dossier.prestataire_nom || '')}</span>
+        <span><strong>${te('ref_deux_points')}</strong> ${_esc(dossier.reference || dossierId)}</span>
+        <span><strong>${te('prestataire_label')}</strong> ${_esc(dossier.prestataire_nom || '')}</span>
         <span>${_execStatusBadge(dossier.statut)}</span>
         <span style="color:var(--text-muted);font-style:italic;">${_esc(notifObjet)}</span>
-        <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="execCloseSlider()" title="Retour à la liste d'activités">
+        <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="execCloseSlider()" title="${te('retour_liste_activites')}">
             ${EXEC_ICONS.back} Retour à la liste d'activités
         </button>
     </div>`;
@@ -286,7 +286,7 @@ function _buildStepNotification(dossier, dossierId) {
         const eq = typeof dossier.notif_equipe === 'string' ? JSON.parse(dossier.notif_equipe || '[]') : (dossier.notif_equipe || []);
         if (eq.length > 0) {
             equipeHtml = `<table class="exec-data-table" style="font-size:0.83rem;">
-                <thead><tr><th>Nom</th><th>Rôle</th></tr></thead>
+                <thead><tr><th>${te('col_nom')}</th><th>${te('col_role')}</th></tr></thead>
                 <tbody>${eq.map(m => {
                     const nom = typeof m === 'string' ? m : (m.nom || '');
                     const role = typeof m === 'object' ? (m.role || '') : '';
@@ -414,7 +414,7 @@ function _buildStepNotification(dossier, dossierId) {
     `, false)}
 
     <div style="margin-top:1rem;">
-        <label style="font-weight:600;">Fiche de notification</label>
+        <label style="font-weight:600;">${te('fiche_notification')}</label>
         <div style="margin-top:0.35rem;">
             ${pdfPath ? `<a href="${_escAttr(_execDl(pdfPath))}" download class="btn btn-primary btn-sm" style="text-decoration:none;">${EXEC_ICONS.pdf} Exporter PDF</a>` :
             `<button class="btn btn-primary btn-sm" onclick="execGenerateNotificationPdf('${dossierId}')">${EXEC_ICONS.pdf} Exporter PDF</button>`}
@@ -479,7 +479,7 @@ function _buildStepRealisation(dossier, dossierId) {
             ${EXEC_ICONS.add} ${te('ajouter_membre')}
         </button>` : `
         <table class="exec-data-table" style="font-size:0.83rem;">
-            <thead><tr><th>Nom</th><th>Rôle</th></tr></thead>
+            <thead><tr><th>${te('col_nom')}</th><th>${te('col_role')}</th></tr></thead>
             <tbody>${equipe.length === 0 ? `<tr><td colspan="2" style="text-align:center;color:var(--text-muted);">-</td></tr>` :
             equipe.map(m => {
                 const nom = typeof m === 'string' ? m : (m.nom || '');
@@ -534,7 +534,7 @@ function _buildStepRealisation(dossier, dossierId) {
             if (!c) return '';
             return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:6px;background:#fff;">
                 <strong style="font-size:0.83rem;flex:1;">${c.reference ? _esc(c.reference) + ' — ' : ''}${_esc(c.nom)}</strong>
-                <button type="button" class="btn btn-sm btn-primary" onclick="execOpenChecklistFiller('${dossierId}','${c.id}')">📝 Renseigner la Checklist</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="execOpenChecklistFiller('${dossierId}','${c.id}')">${te('renseigner_checklist_btn')}</button>
                 ${canEdit ? `<button type="button" class="btn btn-sm btn-ghost" onclick="execRemoveDossierChecklist('${dossierId}','${c.id}')" title="Retirer" style="color:#ef4444;">✕</button>` : ''}
             </div>`;
         }).filter(Boolean).join('');
@@ -642,7 +642,7 @@ function _execRealisationPjRow(pj, canEdit) {
             ${canEdit ? `<button class="btn btn-sm btn-danger" style="margin-left:auto;" onclick="this.closest('.realisation-pj-item').remove()">${EXEC_ICONS.x}</button>` : ''}
         </div>
         <div style="display:grid;grid-template-columns:1fr 2fr;gap:0.5rem;">
-            <input type="text" class="form-input pj-nom" value="${_escAttr(filename)}" placeholder="Nom du fichier"${dis}>
+            <input type="text" class="form-input pj-nom" value="${_escAttr(filename)}" placeholder="${te('nom_fichier')}"${dis}>
             <input type="text" class="form-input pj-desc" value="${_escAttr(description)}" placeholder="Description (optionnel)"${dis}>
         </div>
     </div>`;
@@ -754,14 +754,14 @@ function _execTypeRapportChamp(dossier, canEdit) {
     return `
     <div class="exec-type-rapport">
         <div class="form-group" id="dossier_type_rapport_autre_group" style="${estAutre ? '' : 'display:none;'}">
-            <label>Intitulé du rapport</label>
+            <label>${te('intitule_rapport')}</label>
             <input type="text" class="form-input" id="dossier_type_rapport_autre" value="${_escAttr(libre)}"
-                   placeholder="Ex. : RAPPORT DE CONTRÔLE"${ro} style="${roBg}">
+                   placeholder="${te('ex_intitule_rapport')}"${ro} style="${roBg}">
         </div>
         <div class="form-group">
-            <label>Type de Rapport</label>
+            <label>${te('type_rapport')}</label>
             <select class="form-input" id="dossier_type_rapport" onchange="execTypeRapportChange()"${dis} style="${roBg}">
-                <option value="">-- Sélectionner --</option>
+                <option value="">${te('selectionner_vide')}</option>
                 ${EXEC_TYPES_RAPPORT.map((t) => `<option value="${_escAttr(t)}"${t === choisi ? ' selected' : ''}>${_esc(t)}</option>`).join('')}
             </select>
         </div>
@@ -942,7 +942,7 @@ function _execCourrielTransmission(dossier, rapport) {
     <div class="exec-courriel" id="exec_courriel_transmission">
         <div class="exec-courriel-entete">
             <span>${EXEC_ICONS.send}</span>
-            <h4>Transmission du rapport au prestataire</h4>
+            <h4>${te('transmission_rapport')}</h4>
             ${dejaTransmis ? `<span class="exec-courriel-etat">Transmis le ${_formatDate(rapport.date_transmission)}${
                 rapport.transmis_a ? ` à ${_esc(rapport.transmis_a)}` : ''}</span>` : ''}
         </div>
@@ -950,20 +950,20 @@ function _execCourrielTransmission(dossier, rapport) {
             <label>Destinataire</label>
             <input type="text" class="form-input" id="courriel_destinataire"
                    value="${_escAttr(dejaTransmis ? (rapport.transmis_a || '') : _execAdressePrestataire(dossier))}"
-                   placeholder="adresse@prestataire.bj"${ro}>
+                   placeholder="${te('ex_adresse_prestataire')}"${ro}>
         </div>
         <div class="exec-courriel-copies">
             <div class="form-group">
                 <label>Copie (Cc)</label>
-                <input type="text" class="form-input" id="courriel_copie" placeholder="Adresses séparées par des virgules"${ro}>
+                <input type="text" class="form-input" id="courriel_copie" placeholder="${te('adresses_virgules')}"${ro}>
             </div>
             <div class="form-group">
-                <label>Copie cachée (Cci)</label>
-                <input type="text" class="form-input" id="courriel_copie_cachee" placeholder="Adresses séparées par des virgules"${ro}>
+                <label>${te('copie_cachee')}</label>
+                <input type="text" class="form-input" id="courriel_copie_cachee" placeholder="${te('adresses_virgules')}"${ro}>
             </div>
         </div>
         <div class="form-group">
-            <label>Objet</label>
+            <label>${te('objet')}</label>
             <input type="text" class="form-input" id="courriel_objet" value="${_escAttr(objet)}"${ro}>
         </div>
         <div class="form-group">
@@ -979,7 +979,7 @@ function _execCourrielTransmission(dossier, rapport) {
                     <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
                     ${_execPieceLien((rapport.document || {}).path, `${rapport.reference || 'rapport'}.pdf`,
                         `execDownloadRapport('${rapport.id}', false)`)}
-                    <span class="exec-piece-mention">Rapport validé — joint d'office</span>
+                    <span class="exec-piece-mention">${te('rapport_joint_office')}</span>
                 </div>
                 ${(dejaTransmis ? (rapport.pieces_transmises || []) : []).map(f => `
                 <div class="exec-piece">
@@ -1017,7 +1017,7 @@ function _execPieceLien(chemin, intitule, repli) {
     }
     if (repli) {
         return `<a class="exec-piece-nom" href="#" onclick="event.preventDefault();${_escAttr(repli)}"
-                   title="Aperçu du rapport">${nom}</a>`;
+                   title="${te('apercu_rapport')}">${nom}</a>`;
     }
     return `<span class="exec-piece-nom">${nom}</span>`;
 }
@@ -1046,9 +1046,9 @@ async function execCourrielAjouterFichiers(input) {
             ligne.innerHTML = `
                 <span class="exec-piece-icone">${EXEC_ICONS.file}</span>
                 <input type="text" class="form-input exec-piece-intitule" value="${_escAttr(data.filename)}"
-                       placeholder="Intitulé du document">
+                       placeholder="${te('intitule_document')}">
                 <a class="exec-piece-ouvrir" href="${_escAttr(data.path)}" target="_blank" rel="noopener"
-                   title="Ouvrir le document">${EXEC_ICONS.eye || 'Ouvrir'}</a>
+                   title="${te('ouvrir_document')}">${EXEC_ICONS.eye || 'Ouvrir'}</a>
                 <span class="exec-piece-mention">${_esc(_execTaille(data.size))}</span>
                 <button class="btn btn-sm btn-ghost exec-piece-retirer" title="Retirer"
                         onclick="this.closest('.exec-piece').remove()">${EXEC_ICONS.x}</button>`;
@@ -1212,31 +1212,31 @@ function _dossierOngletIntroduction(dossier, ro, roBg, defaults) {
     return `
     <div style="display:grid;grid-template-columns:1fr 3fr;gap:1rem;margin-bottom:1rem;">
         <div class="form-group">
-            <label>Date d'exécution</label>
+            <label>${te('date_execution')}</label>
             <input type="text" class="form-input" id="dossier_dates_activite" value="${_escAttr(dossier.dates_activite || notifDates || '')}"${ro} style="${roBg}">
         </div>
         <div class="form-group">
-            <label>Objet de l'activité</label>
+            <label>${te('objet_activite_label')}</label>
             <textarea class="form-input" id="dossier_objet_activite" rows="1" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.objet_activite || notifObjet || '')}</textarea>
         </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <div class="form-group">
-            <label>Description générale de l'activité</label>
+            <label>${te('description_activite_label')}</label>
             <textarea class="form-input" id="dossier_description_activite" rows="3" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.description_activite || '')}</textarea>
         </div>
         <div class="form-group">
-            <label>Équipe d'inspection</label>
+            <label>${te('equipe_inspection_label')}</label>
             <textarea class="form-input" id="dossier_equipe_inspection" rows="3" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.equipe_inspection || notifEquipe || '')}</textarea>
         </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
         <div class="form-group">
-            <label>Aspects couverts par l'inspection</label>
+            <label>${te('aspects_couverts_label')}</label>
             <textarea class="form-input" id="dossier_aspects_couverts" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.aspects_couverts || notifPerimetre || '')}</textarea>
         </div>
         <div class="form-group">
-            <label>Référentiel</label>
+            <label>${te('referentiel_label')}</label>
             <textarea class="form-input" id="dossier_referentiel" rows="4" style="resize:vertical;${roBg}"${ro}>${_esc(dossier.referentiel || notifRefs || '')}</textarea>
         </div>
     </div>`;
@@ -1262,12 +1262,12 @@ function _dossierOngletChecklists(dossier, dossierId, canEdit) {
                     <span style="color:var(--text-muted);font-weight:400;font-size:0.75rem;">(${nbItems} item${nbItems>1?'s':''})</span>
                 </span>
                 ${isVal
-                    ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;padding:0.15rem 0.5rem;font-size:0.74rem;font-weight:700;">✓ Validée</span>`
+                    ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;padding:0.15rem 0.5rem;font-size:0.74rem;font-weight:700;">${te('validee_badge')}</span>`
                     : ''}
                 <button class="btn btn-sm btn-outline" onclick="execOpenChecklistFiller('${dossierId}','${cid}')">${isVal ? '👁 Consulter' : '📝 Renseigner'}</button>
                 ${canEdit ? (isVal
-                    ? `<button class="btn btn-sm btn-ghost" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',false)" title="Annuler la validation">↩</button>`
-                    : `<button class="btn btn-sm btn-primary" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',true)">✓ Checklist Validée</button>`) : ''}
+                    ? `<button class="btn btn-sm btn-ghost" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',false)" title="${te('annuler_validation')}">↩</button>`
+                    : `<button class="btn btn-sm btn-primary" onclick="execSetDossierChecklistValidee('${dossierId}','${cid}',true)">${te('checklist_validee_btn')}</button>`) : ''}
             </div>`;
         }).filter(Boolean).join('')
         : `<p style="color:var(--text-muted);font-size:0.83rem;font-style:italic;">${te('aucune_checklist_realisation')}</p>`;
@@ -1292,12 +1292,12 @@ function _dossierOngletChecklists(dossier, dossierId, canEdit) {
 
     return `
     <div style="margin-bottom:1.25rem;">
-        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Checklists renseignées</h4>
+        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">${te('checklists_renseignees')}</h4>
         ${chkSectionHtml}
         ${canEdit ? `<button class="btn btn-sm btn-outline" style="margin-top:0.5rem;" onclick="execOpenChecklistsPicker('${dossierId}','checklists')">${EXEC_ICONS.add} Ajouter des checklists</button>` : ''}
     </div>
     <div style="margin-bottom:1.25rem;">
-        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Pièces jointes de l'activité</h4>
+        <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">${te('real_section_pj')}</h4>
         ${pjSectionHtml}
     </div>
     <h4 style="margin:0 0 0.5rem;font-size:0.9rem;color:#1a365d;">Autres documents</h4>
@@ -1367,8 +1367,8 @@ function _dossierOngletConstatations(dossier, dossierId, canEdit) {
             <th>${te('reference')}</th>
             <th>${te('criticite')}</th>
             <th style="min-width:180px;">${te('description_constatation')}</th>
-            <th>Date Ouv.</th>
-            <th>Delai</th>
+            <th>${te('date_ouv_col')}</th>
+            <th>${te('delai_col_court')}</th>
             <th>${te('date_due')}</th>
             <th>${te('preuves')}</th>
             <th>${te('status')}</th>
@@ -1443,7 +1443,7 @@ function _dossierOngletAnnexes(dossier, canEdit) {
             return `
             <div class="dossier-annexe-item" style="border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;">
                 <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
-                    <input type="text" class="form-input annexe-intitule" value="${_escAttr(obj.intitule || obj.filename || '')}" placeholder="Intitulé de l'annexe" style="flex:1;">
+                    <input type="text" class="form-input annexe-intitule" value="${_escAttr(obj.intitule || obj.filename || '')}" placeholder="${te('intitule_annexe')}" style="flex:1;">
                     ${canEdit ? `<button class="btn btn-sm btn-danger" onclick="this.closest('.dossier-annexe-item').remove()">${EXEC_ICONS.x}</button>` : ''}
                 </div>
                 <textarea class="form-input annexe-contenu" rows="3" style="resize:vertical;margin-bottom:0.5rem;" placeholder="Contenu...">${_esc(obj.contenu || '')}</textarea>
@@ -1534,7 +1534,7 @@ function execAddAnnexeBlock() {
     div.style.cssText = 'border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.75rem;';
     div.innerHTML = `
         <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.5rem;">
-            <input type="text" class="form-input annexe-intitule" value="" placeholder="Intitulé de l'annexe" style="flex:1;">
+            <input type="text" class="form-input annexe-intitule" value="" placeholder="${te('intitule_annexe')}" style="flex:1;">
             <button class="btn btn-sm btn-danger" onclick="this.closest('.dossier-annexe-item').remove()">${EXEC_ICONS.x}</button>
         </div>
         <textarea class="form-input annexe-contenu" rows="3" style="resize:vertical;margin-bottom:0.5rem;" placeholder="Contenu..."></textarea>

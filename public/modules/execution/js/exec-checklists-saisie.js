@@ -93,7 +93,7 @@ function execOpenChecklistsPicker(dossierId, returnTab) {
         </div>
     `, `
         <button class="shell-btn shell-btn-outline" onclick="shellCloseModal()">Annuler</button>
-        <button class="shell-btn shell-btn-primary" onclick="execSaveChecklistsPicker('${dossierId}','${returnTab || ''}')">Valider la sélection</button>
+        <button class="shell-btn shell-btn-primary" onclick="execSaveChecklistsPicker('${dossierId}','${returnTab || ''}')">${te('valider_selection')}</button>
     `);
 }
 
@@ -293,7 +293,7 @@ function _execChkLigneHtml(it, ligne) {
         <td style="text-align:center;">
             <div class="exec-chk-row-state" data-item="${it.id}" style="font-size:0.7rem;color:var(--text-muted);"></div>
             <button class="btn btn-sm btn-danger exec-chk-gen-btn" data-item="${it.id}"
-                title="Générer une constatation"
+                title="${te('generer_constatation')}"
                 style="${nonSatIds.has(effStatut) ? '' : 'display:none;'}margin-top:0.2rem;padding:0.2rem 0.4rem;font-size:0.8rem;line-height:1;"
                 onclick="execChkFillGenConstatation('${dossierId}','${it.id}')">⚠</button>
         </td>
@@ -305,11 +305,11 @@ function _execChkGroupesHtml(items, tree, _itemRow) {
     const _esc2 = oasisEsc;
     const _leafTable = grpItems => `<table class="exec-cli-inline-table" style="margin-top:0.3rem;">
         <thead><tr>
-            <th style="width:90px;">Réf. Item</th>
-            <th style="min-width:170px;">Réf. Règlement</th>
+            <th style="width:90px;">${te('ref_item_col')}</th>
+            <th style="min-width:170px;">${te('ref_reglement_col')}</th>
             <th style="min-width:280px;">Description</th>
             <th style="min-width:200px;">Directives</th>
-            <th style="width:170px;">Statut</th>
+            <th style="width:170px;">${te('status')}</th>
             <th style="min-width:220px;">Observations</th>
             <th style="width:60px;"></th>
         </tr></thead>
@@ -318,10 +318,10 @@ function _execChkGroupesHtml(items, tree, _itemRow) {
 
     let groupsHtml = '';
     if (!items.length) {
-        groupsHtml = `<div style="text-align:center;color:var(--text-muted);padding:1.5rem;font-style:italic;">Cette checklist ne contient aucun item.</div>`;
+        groupsHtml = `<div style="text-align:center;color:var(--text-muted);padding:1.5rem;font-style:italic;">${te('checklist_sans_item')}</div>`;
     } else {
         // Bouton d'activation/désactivation d'un regroupement
-        const _grpToggleBtn = `<button type="button" class="exec-chk-grp-toggle" title="Activer / désactiver ce regroupement"
+        const _grpToggleBtn = `<button type="button" class="exec-chk-grp-toggle" title="${te('basculer_regroupement')}"
             onclick="event.preventDefault();event.stopPropagation();execChkToggleGroup(this);">◉</button>`;
         groupsHtml = Object.keys(tree).map(saId => {
             const sa = tree[saId];
@@ -477,7 +477,7 @@ function _execChkFillerHtml(cl, dossierId, checklistId, statuts, activiteHtml, g
         <aside class="exec-cli-slicer" role="dialog" aria-modal="true">
             <header class="exec-cli-slicer-header">
                 <div>
-                    <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Renseigner la checklist (brouillon)</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${te('renseigner_checklist_titre')}</div>
                     <div style="font-weight:700;font-size:1rem;">${cl.reference ? _esc2(cl.reference) + ' — ' : ''}${_esc2(cl.nom)}</div>
                 </div>
                 <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
@@ -486,7 +486,7 @@ function _execChkFillerHtml(cl, dossierId, checklistId, statuts, activiteHtml, g
                     <button class="btn btn-sm btn-primary" onclick="execChkFillExportXlsx('${dossierId}','${checklistId}')" title="Exporter Excel">${EXEC_ICONS.download || ''} Exporter Excel</button>
                     <button class="btn btn-sm btn-primary" onclick="document.getElementById('execChkFillImportFile').click()" title="Importer">${EXEC_ICONS.upload || ''} Importer</button>
                     <input type="file" id="execChkFillImportFile" accept=".xlsx" style="display:none" onchange="execChkFillImportXlsx('${dossierId}','${checklistId}',event)">
-                    <button class="btn btn-sm btn-ghost" onclick="execCloseChecklistFiller('${dossierId}')" title="Fermer">✕</button>
+                    <button class="btn btn-sm btn-ghost" onclick="execCloseChecklistFiller('${dossierId}')" title="${te('close')}">✕</button>
                 </div>
             </header>
             <div class="exec-cli-slicer-body">
@@ -495,7 +495,7 @@ function _execChkFillerHtml(cl, dossierId, checklistId, statuts, activiteHtml, g
                     <div id="execChkFillerSummary" style="display:flex;flex-wrap:wrap;gap:0.6rem;"></div>
                     <div style="display:flex;flex-direction:column;gap:0.4rem;flex:1 1 340px;min-width:240px;">
                         <div style="display:flex;gap:0.4rem;justify-content:flex-end;">
-                            <button class="btn btn-sm btn-primary" onclick="execChkFillExpandAll(true)">▼ Tout déplier</button>
+                            <button class="btn btn-sm btn-primary" onclick="execChkFillExpandAll(true)">${te('tout_deplier_btn')}</button>
                             <button class="btn btn-sm btn-primary" onclick="execChkFillExpandAll(false)">▲ Tout plier</button>
                         </div>
                         <div style="display:flex;gap:0.4rem;align-items:center;">
@@ -506,12 +506,12 @@ function _execChkFillerHtml(cl, dossierId, checklistId, statuts, activiteHtml, g
                                 <option value="">Tous statuts</option>
                                 ${statuts.map(s => `<option value="${s.id}">${_esc2(s.alias || s.libelle)}</option>`).join('')}
                             </select>
-                            <button class="btn btn-sm btn-ghost" title="Réinitialiser les filtres" style="flex:0 0 auto;"
+                            <button class="btn btn-sm btn-ghost" title="${te('reinitialiser_filtres')}" style="flex:0 0 auto;"
                                 onclick="document.getElementById('execChkFillSearch').value='';document.getElementById('execChkFillStatutFilter').value='';execChkFillApplyFilter();">↺</button>
                         </div>
                     </div>
                 </div>
-                <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.5rem;">Les réponses sont enregistrées en <strong>brouillon</strong> à mesure de la saisie et restent attachées au dossier.</p>
+                <p style="font-size:0.78rem;color:var(--text-muted);margin:0 0 0.5rem;">${te('reponses_enregistrees_1')} <strong>brouillon</strong> ${te('reponses_enregistrees_2')}</p>
                 <div id="execChkFillerGroups" style="overflow:auto;">${groupsHtml}</div>
             </div>
         </aside>
@@ -924,7 +924,7 @@ function execChkFillExportPdf(dossierId, checklistId) {
         <h1>${cl.reference ? _e(cl.reference) + ' — ' : ''}${_e(cl.nom)}</h1>
         <div class="meta">Checklist renseignée (brouillon) — ${items.length} item(s) — Édité le ${today}</div>
         <table>
-            <thead><tr><th>Réf. Item</th><th>Réf. Règlement</th><th>Thème / Sous-thème</th><th>Description</th><th>Directives</th><th>Statut</th><th>Observations</th></tr></thead>
+            <thead><tr><th>${te('ref_item_col')}</th><th>${te('ref_reglement_col')}</th><th>${te('theme_sous_theme')}</th><th>Description</th><th>Directives</th><th>${te('status')}</th><th>Observations</th></tr></thead>
             <tbody>${rows || `<tr><td colspan="7">${te('aucun_item')}</td></tr>`}</tbody>
         </table>
         <script>window.onload=function(){setTimeout(function(){window.print();},200);};</script>

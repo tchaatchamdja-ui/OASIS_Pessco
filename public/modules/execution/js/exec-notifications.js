@@ -129,7 +129,7 @@ function _renderTabBrouillons(items) {
                     <td>
                         <strong>${_esc(n.reference || '')}</strong>
                         ${n.motif_rejet ? `<div style="margin-top:0.3rem;padding:0.3rem 0.5rem;background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;border-radius:4px;font-size:0.78rem;color:#ef4444;">
-                            <strong>Motif de rejet :</strong> ${_esc(n.motif_rejet)}
+                            <strong>${te('motif_rejet_label')}</strong> ${_esc(n.motif_rejet)}
                         </div>` : ''}
                     </td>
                     <td>${_esc(n.prestataire_nom || '')}</td>
@@ -894,11 +894,11 @@ function _showValidatorPicker(onConfirm) {
         overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
         overlay.innerHTML = `
         <div style="background:var(--card-bg,#fff);border-radius:12px;padding:1.5rem;width:400px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-            <h3 style="margin:0 0 1rem;">Soumettre pour validation</h3>
+            <h3 style="margin:0 0 1rem;">${te('soumettre_validation_titre')}</h3>
             <div class="form-group">
                 <label style="font-weight:600;margin-bottom:0.5rem;display:block;">Validateur</label>
                 <select class="form-select" id="validator_picker_select" style="width:100%;">
-                    <option value="">-- Sélectionner un validateur --</option>
+                    <option value="">${te('selectionner_validateur_option')}</option>
                     ${validators.map(u => `<option value="${u.id}">${_esc(u.prenom || '')} ${_esc(u.nom || '')} (${_esc(u.role_m3 || '')})</option>`).join('')}
                 </select>
             </div>
@@ -968,12 +968,12 @@ function execShowContacts(prestataireId) {
         <!-- Row 1: Dirigeant ; Fonction du Responsable ; Email Prestataire -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;">
             <div class="form-group"><label>Dirigeant</label><input type="text" class="form-input" id="contact_dirigeant" value="${_escAttr(prest.dirigeant || '')}"></div>
-            <div class="form-group"><label>Fonction du Responsable</label><input type="text" class="form-input" id="contact_fonction_resp" value="${_escAttr(prest.fonction_responsable || '')}"></div>
-            <div class="form-group"><label>Email Prestataire</label><input type="email" class="form-input" id="contact_email_prest" value="${_escAttr(prest.email_prestataire || '')}"></div>
+            <div class="form-group"><label>${te('fonction_responsable_champ')}</label><input type="text" class="form-input" id="contact_fonction_resp" value="${_escAttr(prest.fonction_responsable || '')}"></div>
+            <div class="form-group"><label>${te('email_prestataire')}</label><input type="email" class="form-input" id="contact_email_prest" value="${_escAttr(prest.email_prestataire || '')}"></div>
         </div>
         <!-- Row 2: Nom Point Focal ; Fonction Point Focal ; Email Point Focal ; N° Point Focal -->
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.75rem;">
-            <div class="form-group"><label>Nom Point Focal</label><input type="text" class="form-input" id="contact_point_focal" value="${_escAttr(prest.point_focal || '')}"></div>
+            <div class="form-group"><label>${te('nom_point_focal')}</label><input type="text" class="form-input" id="contact_point_focal" value="${_escAttr(prest.point_focal || '')}"></div>
             <div class="form-group"><label>Fonction Point Focal</label><input type="text" class="form-input" id="contact_fonction_pf" value="${_escAttr(prest.fonction_point_focal || '')}"></div>
             <div class="form-group"><label>Email Point Focal</label><input type="email" class="form-input" id="contact_email_pf" value="${_escAttr(prest.email_point_focal || '')}"></div>
             <div class="form-group"><label>N° Point Focal</label><input type="text" class="form-input" id="contact_numero_pf" value="${_escAttr(prest.numero_point_focal || '')}"></div>
@@ -990,8 +990,8 @@ function execShowContacts(prestataireId) {
                 }
                 return addContacts.map(c => `
                 <div class="contact-row" style="display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;">
-                    <input type="text" class="form-input" value="${_escAttr(c.nom || '')}" placeholder="Nom" style="flex:1;">
-                    <input type="text" class="form-input" value="${_escAttr(c.tel || '')}" placeholder="Téléphone" style="flex:1;">
+                    <input type="text" class="form-input" value="${_escAttr(c.nom || '')}" placeholder="${te('col_nom')}" style="flex:1;">
+                    <input type="text" class="form-input" value="${_escAttr(c.tel || '')}" placeholder="${te('telephone')}" style="flex:1;">
                     <input type="email" class="form-input" value="${_escAttr(c.email || '')}" placeholder="Email" style="flex:1;">
                     <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
                 </div>`).join('');
@@ -1016,8 +1016,8 @@ function execAddContactRow() {
     div.className = 'contact-row';
     div.style.cssText = 'display:flex;gap:0.5rem;align-items:center;margin-bottom:0.35rem;';
     div.innerHTML = `
-        <input type="text" class="form-input" value="" placeholder="Nom" style="flex:1;">
-        <input type="text" class="form-input" value="" placeholder="Téléphone" style="flex:1;">
+        <input type="text" class="form-input" value="" placeholder="${te('col_nom')}" style="flex:1;">
+        <input type="text" class="form-input" value="" placeholder="${te('telephone')}" style="flex:1;">
         <input type="email" class="form-input" value="" placeholder="Email" style="flex:1;">
         <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>
     `;
@@ -1139,7 +1139,7 @@ async function execOpenExchangeSlider(notifId) {
     <div class="exchange-reply">
         <label>${te('repondre')}</label>
         <div class="exchange-reply-row">
-            <textarea class="form-input" id="exec_exchange_msg" rows="1" placeholder="Votre message..."
+            <textarea class="form-input" id="exec_exchange_msg" rows="1" placeholder="${te('votre_message_ph')}"
                       style="resize:none;overflow:hidden;min-height:2.2rem;line-height:1.4;"
                       oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"></textarea>
             <button class="btn btn-primary" onclick="execSendExchangeMessage('${notifId}')">

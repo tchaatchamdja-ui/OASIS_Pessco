@@ -23,7 +23,7 @@ function execRenderPlans() {
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
             <h2>${te('plan_surveillance')}</h2>
             <div style="display:flex;gap:0.5rem;">
-                ${_execCanContribute() ? `<button class="btn btn-accent btn-sm" onclick="execProcNouvelleActivite()" title="Déclencher une activité hors plan">
+                ${_execCanContribute() ? `<button class="btn btn-accent btn-sm" onclick="execProcNouvelleActivite()" title="${te('declencher_hors_plan')}">
                     ${EXEC_ICONS.plus || EXEC_ICONS.send || ''} Nouvelles Activités
                 </button>` : ''}
                 <button class="btn btn-primary btn-sm" onclick="execExportPlansPdf()" title="Exporter PDF">
@@ -369,7 +369,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                         // Le déclenchement se fait depuis le processus de
                         // l'activité, ouvert au clic sur la ligne : la colonne
                         // Actions ne le double plus.
-                        return `<tr class="exec-act-row" style="cursor:pointer;" onclick="if(!event.target.closest('button'))execOpenActiviteProcessus('${plan.id}','${a.id}')" title="Ouvrir le processus de l'activité">
+                        return `<tr class="exec-act-row" style="cursor:pointer;" onclick="if(!event.target.closest('button'))execOpenActiviteProcessus('${plan.id}','${a.id}')" title="${te('ouvrir_processus')}">
                             <td style="${tdColorStyle}">${_esc(a.prestataire_nom || '-')}</td>
                             <td style="${tdColorStyle}">${_esc(a.objet || a.description || '-')}</td>
                             <td style="${tdColorStyle}">${_formatDate(a.date_debut)}</td>

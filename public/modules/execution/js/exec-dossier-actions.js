@@ -364,7 +364,7 @@ function execOpenFNCForm(dossierId, existingFnc) {
                 </select>
             </div>
             <div class="form-group" style="${MB}">
-                <label>Secteur</label>
+                <label>${te('secteur')}</label>
                 <select class="form-select" id="fnc_secteur" onchange="execFncOnSecteurChange()">
                     <option value="">${te('select_option')}</option>
                     ${secteurs.map(s => `<option value="${s.id}" ${defaultSecteurId===s.id?'selected':''}>${_esc(s.code || s.nom)}</option>`).join('')}

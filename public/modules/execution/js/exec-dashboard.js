@@ -1621,22 +1621,22 @@ function _execStatsBarreFiltres(F, prests) {
     const filterBar = `
     <div style="display:flex;flex-wrap:nowrap;gap:0.5rem;margin-bottom:1rem;padding:0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;align-items:center;">
         <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.domaine=this.value;execShowStatistiquesAdvanced()">
-            <option value="">Tous les domaines</option>
+            <option value="">${te('all_domains')}</option>
             ${domaines.map(d => `<option value="${d.id}" ${F.domaine===d.id?'selected':''}>${_esc(d.code || d.nom)}</option>`).join('')}
         </select>
         <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.prestataire=this.value;execShowStatistiquesAdvanced()">
-            <option value="">Tous les prestataires</option>
+            <option value="">${te('all_providers')}</option>
             ${prests.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
         </select>
         <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.annee=this.value;execShowStatistiquesAdvanced()">
-            <option value="">Toutes les années</option>
+            <option value="">${te('toutes_annees_option')}</option>
             ${years.map(y => `<option value="${y}" ${F.annee===y?'selected':''}>${y}</option>`).join('')}
         </select>
         <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.trimestre=this.value;execShowStatistiquesAdvanced()">
-            <option value="">Tous les trimestres</option>
+            <option value="">${te('all_trimestres')}</option>
             ${['1','2','3','4'].map(t => `<option value="${t}" ${String(F.trimestre)===t?'selected':''}>T${t}</option>`).join('')}
         </select>
-        <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="Réinitialiser">${EXEC_ICONS.reset || '↺'}</button>
+        <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="${te('reinitialiser')}">${EXEC_ICONS.reset || '↺'}</button>
     </div>`;
     return filterBar;
 }

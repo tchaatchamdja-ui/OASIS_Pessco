@@ -1004,7 +1004,18 @@ moduleLoader.seedAll(MODULES_MONTES);
 // Écoute sur toutes les interfaces : les plateformes d'hébergement routent le
 // trafic vers le conteneur, une écoute sur la seule boucle locale y serait
 // injoignable.
-app.listen(PORT, '0.0.0.0', () => {
+const serveur = app.listen(PORT, '0.0.0.0', () => {
   console.log(`OASIS — socle Phase 1 démarré sur le port ${PORT}`);
   console.log(`Modules montés : ${MODULES_MONTES.map((m) => m.code).join(', ') || 'aucun'}`);
+});
+
+// Le port déjà pris est l'ennui le plus courant au démarrage — le plus souvent
+// une instance oubliée, détachée de son terminal. La trace d'erreur de Node ne
+// le disait pas : elle se lit ici en clair, avec le geste qui la lève.
+serveur.on('error', (e) => {
+  if (e.code !== 'EADDRINUSE') throw e;
+  console.error(`OASIS — le port ${PORT} est déjà occupé : une autre instance tourne sans doute encore.`);
+  console.error(`  La retrouver : lsof -nP -iTCP:${PORT} -sTCP:LISTEN`);
+  console.error('  L\'arrêter, puis relancer ; ou choisir un autre port : PORT=4751 npm run dev');
+  process.exit(1);
 });

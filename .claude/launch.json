@@ -8,8 +8,7 @@
         "run",
         "dev"
       ],
-      "port": 4750,
-      "autoPort": true
+      "port": 4750
     }
   ]
 }

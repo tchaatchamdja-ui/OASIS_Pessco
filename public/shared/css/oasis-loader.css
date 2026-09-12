@@ -56,25 +56,37 @@
 }
 .oasis-loader-avion {
     fill: var(--ramp-accent, #ea580c);
-    offset-path: path('M60,60 m-48,0 a48,30 0 1,1 96,0 a48,30 0 1,1 -96,0');
-    offset-rotate: auto;
-    animation: oasisAvionOrbite 2.8s linear infinite,
-               oasisAvionProfondeur 2.8s ease-in-out infinite;
+    offset-path: path('M60,60 m-44,0 a44,30 0 1,1 88,0 a44,30 0 1,1 -88,0');
+    /* La marque ne pivote pas avec la trajectoire : elle garde le cap qu'elle
+       a sur le portail, et reste lisible d'un bout à l'autre du tour. */
+    offset-rotate: 0deg;
+    animation: oasisAvionOrbite 2.8s linear infinite;
+}
+/* La profondeur se joue un cran plus bas : appliquée à l'élément qui porte la
+   trajectoire, la réduction se composait avec elle et rétrécissait l'orbite
+   elle-même. Ici elle ne touche qu'au dessin, autour de son propre centre. */
+.oasis-loader-profondeur {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: oasisAvionProfondeur 2.8s ease-in-out infinite;
 }
 @keyframes oasisAvionOrbite {
     from { offset-distance: 0%; }
     to   { offset-distance: 100%; }
 }
-/* Derrière le globe, l'appareil s'éloigne : plus petit, plus pâle. */
+/* L'orbite est un anneau vu de biais : son côté haut passe derrière le globe.
+   L'appareil y est donc au plus loin — plus petit, plus pâle — et au plus près
+   en bas. Le repère suit la trajectoire : au quart du tour, il est au fond. */
 @keyframes oasisAvionProfondeur {
-    0%, 100% { opacity: 1;   scale: 1; }
-    30%      { opacity: .3;  scale: .72; }
-    50%      { opacity: .28; scale: .7; }
-    70%      { opacity: .95; scale: .98; }
+    0%       { opacity: .7;  scale: .85; }
+    25%      { opacity: .45; scale: .7; }
+    50%      { opacity: .7;  scale: .85; }
+    75%      { opacity: 1;   scale: 1.05; }
+    100%     { opacity: .7;  scale: .85; }
 }
 
 /* L'attente ne doit pas s'imposer à qui a demandé moins d'animation. */
 @media (prefers-reduced-motion: reduce) {
-    .oasis-loader-avion, .oasis-loader-meridien,
+    .oasis-loader-avion, .oasis-loader-profondeur, .oasis-loader-meridien,
     .oasis-loader-meridien-2, .oasis-loader-meridien-3 { animation: none; }
 }

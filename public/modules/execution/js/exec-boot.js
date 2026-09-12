@@ -56,7 +56,7 @@ async function api(path, options = {}) {
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Erreur ${res.status}`);
+        throw new Error(oasisMessageErreur(err, res.status));
     }
     if ((res.headers.get('content-type') || '').includes('application/json')) return res.json();
     return res;

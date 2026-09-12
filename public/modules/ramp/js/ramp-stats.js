@@ -1191,7 +1191,7 @@ async function rampTelecharger(chemin, corps, nomFichier) {
         });
         if (!r.ok) {
             const err = await r.json().catch(() => ({ error: r.statusText }));
-            throw new Error(err.error || r.statusText);
+            throw new Error(oasisMessageErreur(err, r.status));
         }
         const blob = await r.blob();
         rampEnregistrerFichier(blob, nomFichier);
@@ -1356,7 +1356,7 @@ async function rampAnalyserClasseur(fichier) {
             method: 'POST', credentials: 'same-origin', body: fd,
         });
         const d = await r.json();
-        if (!r.ok) throw new Error(d.error || r.statusText);
+        if (!r.ok) throw new Error(oasisMessageErreur(d, r.status));
         RAMP_STATE.importAnalyse = d;
         RAMP_STATE.importPrevisu = d.lignes || [];
         rampRenderPage();

@@ -4,6 +4,7 @@
  */
 
 EXEC_TR.pt = {
+        televersement_refuse: 'Carregamento recusado',
         module_title: 'Execucao da Vigilancia',
         dashboard: 'Painel',
         plan_surveillance: 'Atividades de Supervisao',

@@ -66,7 +66,7 @@ async function api(path, options = {}) {
         throw new Error('Session expirée');
     }
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    if (!res.ok) throw new Error(oasisMessageErreur(data, res.status));
     return data;
 }
 

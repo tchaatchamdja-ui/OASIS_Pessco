@@ -822,7 +822,7 @@ async function execChkFillExportXlsx(dossierId, checklistId) {
         });
         if (!res.ok) {
             const j = await res.json().catch(() => ({}));
-            throw new Error(j.error || ('HTTP ' + res.status));
+            throw new Error(oasisMessageErreur(j, res.status));
         }
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -846,7 +846,7 @@ async function execChkFillImportXlsx(dossierId, checklistId, ev) {
             method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd
         });
         const j = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+        if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));
         _execToast(te('import_ok_reponses', j.imported), 'success');
         // Recharge le filler pour refléter les réponses importées
         execOpenChecklistFiller(dossierId, checklistId);

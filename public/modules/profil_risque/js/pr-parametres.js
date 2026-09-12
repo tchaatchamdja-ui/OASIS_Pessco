@@ -431,9 +431,9 @@ async function importIndicateursExcel(event) {
             const ct = res.headers.get('content-type') || '';
             if (ct.includes('application/json')) {
                 const d = await res.json();
-                throw new Error(d.error || 'Import failed');
+                throw new Error(oasisMessageErreur(d, res.status, t('import_refuse')));
             } else {
-                throw new Error(`Erreur serveur (${res.status}). Vérifiez le format du fichier Excel. Les onglets attendus sont: Conformite, Performance, Complexite.`);
+                throw new Error(t('import_format_excel', res.status));
             }
         }
         const data = await res.json().catch(() => ({}));

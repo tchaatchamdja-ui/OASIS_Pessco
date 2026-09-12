@@ -826,7 +826,7 @@ async function execChecklistExportXlsx(clId) {
         });
         if (!res.ok) {
             const j = await res.json().catch(() => ({}));
-            throw new Error(j.error || ('HTTP ' + res.status));
+            throw new Error(oasisMessageErreur(j, res.status));
         }
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -853,7 +853,7 @@ async function execChecklistImportXlsx(clId, ev) {
             method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd
         });
         const j = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+        if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));
         shellShowToast(`Import OK : ${j.imported} ligne(s) — mode ${j.mode}.`, 'success');
         await execRefreshChecklists();
         _execCliRenderRows(clId);
@@ -1090,7 +1090,7 @@ async function execSousThemesExportXlsx(clId) {
         });
         if (!res.ok) {
             const j = await res.json().catch(() => ({}));
-            throw new Error(j.error || ('HTTP ' + res.status));
+            throw new Error(oasisMessageErreur(j, res.status));
         }
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
@@ -1114,7 +1114,7 @@ async function execSousThemesImportXlsx(clId, ev) {
             method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd
         });
         const j = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(j.error || ('HTTP ' + res.status));
+        if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));
         shellShowToast(`Import OK : ${j.imported} sous-thème(s).`, 'success');
         await execRefreshChecklists();
         execOpenSousThemesManager(clId);

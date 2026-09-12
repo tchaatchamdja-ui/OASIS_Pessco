@@ -4,6 +4,7 @@
  */
 
 EXEC_TR.en = {
+        televersement_refuse: 'Upload refused',
         module_title: 'Surveillance Execution',
         dashboard: 'Dashboard',
         plan_surveillance: 'Supervision Activities',

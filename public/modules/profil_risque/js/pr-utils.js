@@ -4,6 +4,11 @@
 
 const TRANSLATIONS = {
   fr: {
+    televersement_impossible: 'Téléversement impossible',
+    fichier_trop_volumineux_max: 'Fichier trop volumineux (maximum {0} Mo).',
+    import_refuse: 'Import refusé',
+    import_format_excel: 'Erreur serveur ({0}). Vérifiez le format du fichier Excel. Les onglets attendus sont : Conformite, Performance, Complexite.',
+    evaluation_verrouillee_import: 'Évaluation verrouillée : import impossible après soumission ou validation.',
     // Login
     login_title:'Profil de Risque', login_subtitle:'Surveillance', login_username:'Utilisateur/Email',
     login_password:'Mot de passe', login_btn:'Se connecter', login_error:'Identifiants incorrects',
@@ -236,6 +241,11 @@ const TRANSLATIONS = {
     perf_summary_peers:'Synthèse Performance et comparaison aux pairs',
 },
   en: {
+    televersement_impossible: 'Upload failed',
+    fichier_trop_volumineux_max: 'File too large (maximum {0} MB).',
+    import_refuse: 'Import refused',
+    import_format_excel: 'Server error ({0}). Check the Excel file format. The expected sheets are: Conformite, Performance, Complexite.',
+    evaluation_verrouillee_import: 'Assessment locked: import is not possible after submission or validation.',
     login_title:'Risk Profile', login_subtitle:'Surveillance', login_username:'Username/Email',
     login_password:'Password', login_btn:'Sign in', login_error:'Invalid credentials',
     dashboard:'Dashboard', dashboard_subtitle:'Global surveillance overview',
@@ -456,6 +466,11 @@ const TRANSLATIONS = {
     perf_summary_peers:'Performance summary and comparison with peers',
 },
   pt: {
+    televersement_impossible: 'Carregamento impossível',
+    fichier_trop_volumineux_max: 'Ficheiro demasiado grande (máximo {0} MB).',
+    import_refuse: 'Importação recusada',
+    import_format_excel: 'Erro do servidor ({0}). Verifique o formato do ficheiro Excel. Os separadores esperados são: Conformite, Performance, Complexite.',
+    evaluation_verrouillee_import: 'Avaliação bloqueada: importação impossível após submissão ou validação.',
     login_title:'Perfil de Risco', login_subtitle:'Vigilância', login_username:'Utilizador/Email',
     login_password:'Senha', login_btn:'Entrar', login_error:'Credenciais inválidas',
     dashboard:'Painel', dashboard_subtitle:'Visão geral da vigilância',

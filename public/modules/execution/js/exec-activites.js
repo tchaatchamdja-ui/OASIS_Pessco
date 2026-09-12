@@ -1038,7 +1038,7 @@ async function execCourrielAjouterFichiers(input) {
                 body: formData,
             });
             const data = await res.json();
-            if (data.status !== 'ok') throw new Error(data.error || 'Téléversement refusé');
+            if (data.status !== 'ok') throw new Error(oasisMessageErreur(data, res.status, te('televersement_refuse')));
             const ligne = document.createElement('div');
             ligne.className = 'exec-piece';
             ligne.dataset.path = data.path;

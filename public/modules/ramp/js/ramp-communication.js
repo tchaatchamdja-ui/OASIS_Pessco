@@ -425,7 +425,7 @@ async function rampComDeposerPieces(requeteId, echangeId) {
         });
         if (!r.ok) {
             const d = await r.json().catch(() => ({}));
-            throw new Error(d.error || rt('com_piece_refusee'));
+            throw new Error(oasisMessageErreur(d, r.status, rt('com_piece_refusee')));
         }
     }
     RAMP_COM.enAttente = [];

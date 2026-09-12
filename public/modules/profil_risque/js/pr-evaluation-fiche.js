@@ -1780,8 +1780,8 @@ async function importEvalExcel(event, evalId, type) {
         if (!res.ok) {
             const d = await res.json().catch(() => ({}));
             throw new Error(d.error === 'evaluation_verrouillee'
-                ? "Évaluation verrouillée : import impossible après soumission ou validation."
-                : (d.error || 'Import failed'));
+                ? t('evaluation_verrouillee_import')
+                : oasisMessageErreur(d, res.status, t('import_refuse')));
         }
         const d = await res.json().catch(() => ({}));
         event.target.value = '';

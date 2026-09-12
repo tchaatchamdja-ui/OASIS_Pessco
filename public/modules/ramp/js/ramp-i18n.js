@@ -11,6 +11,7 @@
 
 const RAMP_TR = {
     fr: {
+        depot_refuse: 'Dépôt refusé',
         // ── Navigation et coquille ──
         module_titre: 'Inspections d’aéronefs sur aire de trafic',
         nav_dashboard: 'Tableau de Bord',
@@ -621,6 +622,7 @@ const RAMP_TR = {
 },
 
     en: {
+        depot_refuse: 'Submission refused',
         module_titre: 'Ramp Inspections of Aircraft',
         nav_dashboard: 'Dashboard',
         nav_inspections: 'Inspections',
@@ -1219,6 +1221,7 @@ const RAMP_TR = {
 },
 
     pt: {
+        depot_refuse: 'Depósito recusado',
         module_titre: 'Inspeções de aeronaves na plataforma',
         nav_dashboard: 'Painel',
         nav_inspections: 'Inspeções',

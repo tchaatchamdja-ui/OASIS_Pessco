@@ -83,12 +83,11 @@ async function uploadDocWithFile() {
         if (!res.ok) {
             // Le corps peut ne pas être du JSON (413 renvoyé par le body-parser)
             const d = await res.json().catch(() => ({}));
+            // La borne en mégaoctets dit plus que le code seul : elle reste ici.
             throw new Error(
                 res.status === 413 || d.error === 'fichier_trop_volumineux'
-                    ? `Fichier trop volumineux (maximum ${(DOC_MAX_BYTES / 1048576).toFixed(1)} Mo).`
-                : d.error === 'fichier_requis' ? 'Fichier illisible.'
-                : d.error === 'nom_requis' ? 'Nom requis.'
-                : d.error || `Téléversement impossible (erreur ${res.status})`
+                    ? t('fichier_trop_volumineux_max', (DOC_MAX_BYTES / 1048576).toFixed(1))
+                    : oasisMessageErreur(d, res.status, t('televersement_impossible'))
             );
         }
         window._pendingDocFile = null;

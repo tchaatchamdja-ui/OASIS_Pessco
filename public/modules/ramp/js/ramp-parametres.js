@@ -247,7 +247,7 @@ async function rampEnregistrerDepot() {
             fd.append('mois', mois);
             const r = await fetch(`${RAMP_API}/depots`, { method: 'POST', credentials: 'same-origin', body: fd });
             const rep = await r.json();
-            if (!r.ok) throw new Error(rep.error || r.statusText);
+            if (!r.ok) throw new Error(oasisMessageErreur(rep, r.status));
         }
         rampFermerModal();
         await rampChargerDepots();

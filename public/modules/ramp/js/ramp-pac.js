@@ -760,7 +760,7 @@ async function rampEnvoyerPreuve() {
         let rep = {};
         try { rep = brut ? JSON.parse(brut) : {}; } catch (x) { rep = {}; }
         if (!r.ok || !rep.status) {
-            throw new Error(rep.error || `Dépôt refusé (HTTP ${r.status})`);
+            throw new Error(oasisMessageErreur(rep, r.status, rt('depot_refuse')));
         }
         rampFermerModal();
         await rampLoadData();

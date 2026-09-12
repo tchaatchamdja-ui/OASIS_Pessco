@@ -15,6 +15,7 @@
 
 const EXEC_TR = {
     fr: {
+        televersement_refuse: 'Téléversement refusé',
         module_title: 'Exécution de la Surveillance et Suivi',
         dashboard: 'Tableau de Bord',
         plan_surveillance: 'Activites de Supervision',

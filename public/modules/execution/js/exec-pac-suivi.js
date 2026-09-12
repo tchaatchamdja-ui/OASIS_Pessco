@@ -661,7 +661,7 @@ async function execSuiviJoindreFichiers(input) {
                 body: formData,
             });
             const data = await res.json();
-            if (data.status !== 'ok') throw new Error(data.error || 'Téléversement refusé');
+            if (data.status !== 'ok') throw new Error(oasisMessageErreur(data, res.status, te('televersement_refuse')));
             const ligne = document.createElement('span');
             ligne.className = 'exec-suivi-pj-item';
             ligne.dataset.path = data.path;

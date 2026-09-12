@@ -56,7 +56,7 @@ function rampSelecteurAeronefLignes() {
         <table class="ramp-table">
             <thead><tr>
                 <th style="width:90px;">Code</th>
-                <th>Modèle-variante</th>
+                <th>${rt('stats_modele')}</th>
                 <th style="width:24%;">Constructeur</th>
                 <th style="width:90px;text-align:center;">Choisir</th>
             </tr></thead>
@@ -66,7 +66,7 @@ function rampSelecteurAeronefLignes() {
                 <td>${_rEsc(a.modele)}</td>
                 <td class="ramp-desc">${_rEsc(a.constructeur || '—')}</td>
                 <td style="text-align:center;">
-                    <button class="btn btn-outline btn-sm ramp-btn-icone" title="Retenir ce code"
+                    <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('retenir_code')}"
                             onclick="event.stopPropagation();rampChoisirAeronef(${_rArg(a.designation)})">
                         ${RAMP_ICONS.check}</button>
                 </td>
@@ -80,13 +80,13 @@ function rampSelecteurAeronefHtml() {
     <div class="ramp-modal-fond" onclick="rampFermerModal()">
         <div class="ramp-modal ramp-modal-large" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
-                <span style="flex:1;">Choisir un type d’aéronef</span>
+                <span style="flex:1;">${rt('choisir_type_aeronef')}</span>
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-recherche-boite" style="margin-bottom:.6rem;">
                     ${RAMP_ICONS.search}
-                    <input type="text" placeholder="Désignation, modèle ou constructeur…"
+                    <input type="text" placeholder="${rt('recherche_aeronef')}"
                            oninput="rampChercherAeronefPoi(this.value)">
                 </div>
                 <div id="rampSelAeronefCorps">${rampSelecteurAeronefLignes()}</div>
@@ -137,16 +137,16 @@ function rampPoiPieces() {
                title="Télécharger ${_rAttr(pj.nom_origine)} (${_rAttr(rampTaille(pj.taille))})"
                href="${RAMP_API}/poi/${_rAttr(p.id)}/pieces/${_rAttr(pj.id)}/fichier">${RAMP_ICONS.download}</a>
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="Modifier ou remplacer"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier_remplacer')}"
                     onclick="rampOuvrirPiece(${_rArg(pj.id)})">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                    onclick="rampSupprimerPiece(${_rArg(pj.id)})" title="Supprimer">${RAMP_ICONS.delete}</button>` : ''}
+                    onclick="rampSupprimerPiece(${_rArg(pj.id)})" title="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
         </td>
     </tr>`;
 
     return `
     <div class="ramp-actions-bar">
-        <strong style="font-size:.9rem;">Pièces jointes</strong>
+        <strong style="font-size:.9rem;">${rt('par_pieces_jointes')}</strong>
         <span class="ramp-sous-titre">
             ${pieces.length} pièce${pieces.length > 1 ? 's' : ''}${modifiable
                 ? '' : ' · fiche transmise, les pièces ne se modifient plus'}
@@ -159,9 +159,9 @@ function rampPoiPieces() {
         <div class="ramp-table-wrap">
             <table class="ramp-table">
                 <thead><tr>
-                    <th style="width:32%;">Intitulé</th>
+                    <th style="width:32%;">${rt('c_intitule')}</th>
                     <th>Commentaire</th>
-                    <th style="width:180px;">Déposée par</th>
+                    <th style="width:180px;">${rt('deposee_par')}</th>
                     <th style="width:130px;text-align:center;">Actions</th>
                 </tr></thead>
                 <tbody>${pieces.length ? pieces.map(ligne).join('')
@@ -186,15 +186,15 @@ function rampOuvrirPiece(id) {
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-champ">
-                    <label>Intitulé de la pièce</label>
+                    <label>${rt('intitule_piece')}</label>
                     <input class="ramp-input" id="rampPieceIntitule"
-                           placeholder="ex. Photo du pneu avant droit"
+                           placeholder="${rt('ex_photo')}"
                            value="${_rAttr((pj || {}).intitule || '')}">
                 </div>
                 <div class="ramp-champ">
                     <label>Commentaire</label>
                     <textarea class="ramp-input" id="rampPieceCommentaire" rows="3"
-                              placeholder="Ce que la pièce établit"
+                              placeholder="${rt('objet_piece')}"
                               >${_rEsc((pj || {}).commentaire || '')}</textarea>
                 </div>
                 <div class="ramp-champ">
@@ -204,7 +204,7 @@ function rampOuvrirPiece(id) {
                         Fichier actuel : ${_rEsc(pj.nom_origine)} · ${_rEsc(rampTaille(pj.taille))}</div>` : ''}
                 </div>
                 <p class="ramp-note">
-                    Formats acceptés : PDF, images, documents bureautiques, archives — 25 Mo au plus.
+                    ${rt('formats_acceptes')}
                 </p>
                 <p class="ramp-erreur" id="rampPieceErreur"></p>
             </div>
@@ -321,7 +321,7 @@ function rampRenvoyerPoi() {
     <div class="ramp-modal-fond" onclick="rampFermerModal()">
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
-                <span style="flex:1;">Renvoyer la fiche à l’inspecteur</span>
+                <span style="flex:1;">${rt('renvoyer_fiche')}</span>
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
@@ -421,7 +421,7 @@ function rampPoiRedessinerEquipe() {
     const sel = zone.parentElement.querySelector('select');
     if (sel) {
         const p = RAMP_STATE.poiEnCours;
-        sel.innerHTML = `<option value="">— Ajouter un inspecteur —</option>`
+        sel.innerHTML = `<option value="">${rt('ajouter_inspecteur')}</option>`
             + rampPoiCtx().inspecteurs
                 .filter((i) => !(p.equipe || []).some((m) => m.id === i.id))
                 .map((i) => `<option value="${_rAttr(i.id)}">${_rEsc(`${i.nom} ${i.prenom}`)}${
@@ -478,9 +478,9 @@ function rampValiderPoi() {
                     ensuite verrouillée.
                 </p>
                 <dl class="ramp-poi-recap">
-                    <div class="ramp-poi-recap-ligne"><dt>Items contrôlés</dt>
+                    <div class="ramp-poi-recap-ligne"><dt>${rt('items_controles')}</dt>
                         <dd>${rampPoiControles()} / ${ctx.items.length}</dd></div>
-                    <div class="ramp-poi-recap-ligne"><dt>Écarts</dt>
+                    <div class="ramp-poi-recap-ligne"><dt>${rt('nav_ecarts')}</dt>
                         <dd>${rampPoiEcarts()}</dd></div>
                     <div class="ramp-poi-recap-ligne"><dt>Classe d’action</dt>
                         <dd>${_rEsc(action ? `${action.code} — ${action.label}` : '—')}</dd></div>
@@ -491,7 +491,7 @@ function rampValiderPoi() {
             </div>
             <div class="ramp-modal-footer">
                 <button class="btn btn-outline btn-sm" onclick="rampFermerModal()">Annuler</button>
-                <button class="btn btn-primary btn-sm" onclick="rampConfirmerValidation()">Valider</button>
+                <button class="btn btn-primary btn-sm" onclick="rampConfirmerValidation()">${rt('poi_valider')}</button>
             </div>
         </div>
     </div>`);

@@ -86,7 +86,7 @@ function rampPacPreuves(action, modifiable, sansLabel) {
                     · ${_rEsc(rampHorodatage(p.depose_le))}</div>
                 ${p.commentaire ? `<div class="ramp-desc">${_rEsc(p.commentaire)}</div>` : ''}
             </div>
-            <a class="btn btn-outline btn-sm ramp-btn-icone" title="Télécharger"
+            <a class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('telecharger')}"
                href="${RAMP_API}/ecarts/${_rAttr(e.id)}/preuves/${_rAttr(p.id)}/fichier">${RAMP_ICONS.download}</a>
             ${modifiable ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                     style="color:#dc2626;border-color:#dc2626;" title="Retirer"
@@ -95,7 +95,7 @@ function rampPacPreuves(action, modifiable, sansLabel) {
 
     return `
     <div class="ramp-pac-preuves" id="rampPacPreuves_${action}">
-        ${sansLabel ? '' : '<label>Preuves de l’action</label>'}
+        ${sansLabel ? '' : '<label>' + rt('preuves_action') + '</label>'}
         ${lignes || `<p class="ramp-sous-titre" style="margin:.2rem 0;">${rt('aucune_preuve_deposee')}</p>`}
         ${modifiable ? `<button class="btn btn-outline btn-sm" style="margin-top:.35rem;"
                 onclick="rampOuvrirDepotPreuve(${_rArg(action)})">
@@ -172,7 +172,7 @@ function rampPacModalRenvoi() {
     <div class="ramp-modal-fond" onclick="rampFermerModal()">
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
-                <span style="flex:1;">Renvoyer le plan d’actions</span>
+                <span style="flex:1;">${rt('renvoyer_plan')}</span>
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
@@ -203,7 +203,7 @@ function rampPacModalCloture() {
     <div class="ramp-modal-fond" onclick="rampFermerModal()">
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
-                <span style="flex:1;">Clôturer l’écart</span>
+                <span style="flex:1;">${rt('cloturer_ecart')}</span>
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
@@ -225,7 +225,7 @@ function rampPacModalCloture() {
             </div>
             <div class="ramp-modal-footer">
                 <button class="btn btn-outline btn-sm" onclick="rampFermerModal()">Annuler</button>
-                <button class="btn btn-primary btn-sm" onclick="rampPacCloturer()">Confirmer la clôture</button>
+                <button class="btn btn-primary btn-sm" onclick="rampPacCloturer()">${rt('confirmer_cloture')}</button>
             </div>
         </div>
     </div>`);
@@ -290,7 +290,7 @@ function rampPacHtml() {
             <div class="ramp-champ">
                 <label>${rt('pac_cause')}</label>
                 <textarea class="ramp-input" rows="2" id="rampPac_cause_primaire" ${d}
-                          placeholder="Ce qui a produit l’écart">${_rEsc(pac.cause_primaire || '')}</textarea>
+                          placeholder="${rt('cause_ecart')}">${_rEsc(pac.cause_primaire || '')}</textarea>
             </div>
             <div class="ramp-champ">
                 <!-- L'échéance se tient au bout de la ligne du libellé ; le
@@ -298,13 +298,13 @@ function rampPacHtml() {
                 <div class="ramp-pac-ligne">
                     <label>${rt('pac_mesures_immediates')}</label>
                     <span class="ramp-pac-echeance">
-                        <label for="rampPac_curative_date_prevue">Date</label>
+                        <label for="rampPac_curative_date_prevue">${rt('com_c_date')}</label>
                         <input class="ramp-input" type="date" id="rampPac_curative_date_prevue" ${d}
                                value="${_rAttr(pac.curative_date_prevue || '')}">
                     </span>
                 </div>
                 <textarea class="ramp-input" rows="2" id="rampPac_action_curative" ${d}
-                          placeholder="Ce qui a été corrigé sur-le-champ">${_rEsc(pac.action_curative || '')}</textarea>
+                          placeholder="${rt('correction_immediate')}">${_rEsc(pac.action_curative || '')}</textarea>
             </div>
             ${rampPacPreuves('curative', modifiable)}
 
@@ -312,13 +312,13 @@ function rampPacHtml() {
                 <div class="ramp-pac-ligne">
                     <label>${rt('pac_mesures_complementaires')}</label>
                     <span class="ramp-pac-echeance">
-                        <label for="rampPac_corrective_date_prevue">Date</label>
+                        <label for="rampPac_corrective_date_prevue">${rt('com_c_date')}</label>
                         <input class="ramp-input" type="date" id="rampPac_corrective_date_prevue" ${d}
                                value="${_rAttr(pac.corrective_date_prevue || '')}">
                     </span>
                 </div>
                 <textarea class="ramp-input" rows="2" id="rampPac_actions_correctives" ${d}
-                          placeholder="Ce qui empêche l’écart de se reproduire">${_rEsc(pac.actions_correctives || '')}</textarea>
+                          placeholder="${rt('action_preventive')}">${_rEsc(pac.actions_correctives || '')}</textarea>
             </div>
             ${rampPacPreuves('corrective', modifiable)}
         </div>
@@ -332,7 +332,7 @@ function rampPacHtml() {
     ${modifiable ? `
     <div class="ramp-poi-bas">
         <span class="ramp-sous-titre">
-            La soumission date le plan et le porte au suivi de l’écart ; il reste modifiable ensuite.
+            ${rt('soumission_plan_aide')}
         </span>
         <span style="flex:1;"></span>
         <button class="btn btn-outline btn-sm" onclick="rampEnregistrerPac(false)">${rt('enregistrer')}</button>
@@ -413,14 +413,14 @@ function rampPacEvaluationHtml() {
                     <textarea class="ramp-input" id="rampPacSuiviEdition" rows="2">${_rEsc(x.texte)}</textarea>
                     <div class="ramp-poi-commentaires-actions" style="margin-top:.3rem;">
                         <button class="btn btn-primary btn-sm"
-                                onclick="rampPacEnregistrerSuivi(${_rArg(x.id)})">Enregistrer</button>
+                                onclick="rampPacEnregistrerSuivi(${_rArg(x.id)})">${rt('enregistrer')}</button>
                         <button class="btn btn-outline btn-sm"
                                 onclick="rampPacEditerSuivi('')">Annuler</button>
                     </div>`
                     : `<div class="ramp-desc">${_rEsc(x.texte)}</div>
                     ${amendable ? `<div class="ramp-poi-commentaires-actions" style="margin-top:.25rem;">
                         <button class="btn btn-outline btn-sm"
-                                onclick="rampPacEditerSuivi(${_rArg(x.id)})">Modifier</button>
+                                onclick="rampPacEditerSuivi(${_rArg(x.id)})">${rt('modifier')}</button>
                         <button class="btn btn-outline btn-sm" style="color:#dc2626;border-color:#dc2626;"
                                 onclick="rampPacSupprimerSuivi(${_rArg(x.id)})">Retirer</button>
                     </div>` : ''}`}
@@ -429,11 +429,11 @@ function rampPacEvaluationHtml() {
             ${peut ? `
             <div class="ramp-champ" style="margin-top:.5rem;">
                 <textarea class="ramp-input" id="rampPacSuiviTexte" rows="2"
-                          placeholder="Ce que le suivi établit"></textarea>
+                          placeholder="${rt('objet_suivi')}"></textarea>
             </div>
             <div class="ramp-poi-commentaires-actions">
                 <button class="btn btn-primary btn-sm"
-                        onclick="rampPacAjouterSuivi('rampPacSuiviTexte')">Ajouter</button>
+                        onclick="rampPacAjouterSuivi('rampPacSuiviTexte')">${rt('ajouter')}</button>
             </div>` : ''}
         </div>
     </div>`;
@@ -470,11 +470,11 @@ function rampPacResultatsHtml() {
                     ${peut ? `
                     <div class="ramp-pac-suivi-saisie">
                         <textarea class="ramp-input" id="rampPacSuiviResultats" rows="2"
-                                  placeholder="Saisir un commentaire de suivi…"></textarea>
+                                  placeholder="${rt('saisir_suivi')}"></textarea>
                         <button class="btn btn-primary btn-sm"
-                                onclick="rampPacAjouterSuivi('rampPacSuiviResultats')">Ajouter</button>
+                                onclick="rampPacAjouterSuivi('rampPacSuiviResultats')">${rt('ajouter')}</button>
                     </div>`
-                    : '<p class="ramp-sous-titre" style="margin:0;">Réservé au valideur.</p>'}
+                    : '<p class="ramp-sous-titre" style="margin:0;">' + rt('reserve_valideur') + '</p>'}
                 </div>
                 <div class="ramp-pac-bloc">
                     <div class="ramp-pac-bloc-titre">${rt('pac_preuves')}</div>
@@ -711,23 +711,23 @@ function rampOuvrirDepotPreuve(action) {
                 </div>`}
                 <div class="ramp-champ">
                     <label>${rt('c_intitule')}</label>
-                    <input class="ramp-input" id="rampPreuveIntitule" placeholder="ex. Ordre de travail signé">
+                    <input class="ramp-input" id="rampPreuveIntitule" placeholder="${rt('ex_piece_preuve')}">
                 </div>
                 <div class="ramp-champ">
                     <label>Commentaire</label>
                     <textarea class="ramp-input" id="rampPreuveCommentaire" rows="2"
-                              placeholder="Ce que la pièce établit"></textarea>
+                              placeholder="${rt('objet_piece')}"></textarea>
                 </div>
                 <div class="ramp-champ">
                     <label>Fichier</label>
                     <input class="ramp-input" type="file" id="rampPreuveFichier">
                 </div>
-                <p class="ramp-note">PDF, images, documents bureautiques ou archives — 25 Mo au plus.</p>
+                <p class="ramp-note">${rt('formats_preuve')}</p>
                 <p class="ramp-erreur" id="rampPreuveErreur"></p>
             </div>
             <div class="ramp-modal-footer">
                 <button class="btn btn-outline btn-sm" onclick="rampFermerModal()">Annuler</button>
-                <button class="btn btn-primary btn-sm" onclick="rampEnvoyerPreuve()">Déposer</button>
+                <button class="btn btn-primary btn-sm" onclick="rampEnvoyerPreuve()">${rt('deposer')}</button>
             </div>
         </div>
     </div>`);

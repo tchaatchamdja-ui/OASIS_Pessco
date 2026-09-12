@@ -144,7 +144,7 @@ function rampOuvrirUtilisateur(id) {
                 <div class="ramp-champ">
                     <label>${rt('u_courriel')}</label>
                     <input class="ramp-input" id="rampUserEmail" type="email"
-                           value="${_rAttr((u || {}).email || '')}" placeholder="prenom.nom@exploitant.aero">
+                           value="${_rAttr((u || {}).email || '')}" placeholder="${rt('ex_courriel')}">
                     <span class="ramp-sous-titre">${rt('u_courriel_aide')}</span>
                 </div>
                 <div class="ramp-champ">

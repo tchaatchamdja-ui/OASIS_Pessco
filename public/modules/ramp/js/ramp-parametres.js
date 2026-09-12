@@ -118,12 +118,12 @@ function rampRenderDepot() {
         </select>
         <div class="ramp-recherche-boite">
             ${RAMP_ICONS.search}
-            <input type="text" placeholder="Rechercher un dépôt…"
+            <input type="text" placeholder="${rt('rechercher_depot')}"
                    value="${_rAttr(F.depotRecherche || '')}"
                    oninput="rampChercherDepot(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampResetFiltresDepot()"
-                title="Réinitialiser les filtres">${RAMP_ICONS.reset}</button>
+                title="${rt('reinitialiser_filtres')}">${RAMP_ICONS.reset}</button>
     </div>
     <div class="ramp-actions-bar">
         <span style="flex:1;"></span>
@@ -185,20 +185,20 @@ function rampOuvrirDepot(id) {
                     <label>Fichier</label>
                     <div class="ramp-depot-zone" onclick="document.getElementById('rampFichierDepot').click()">
                         ${RAMP_ICONS.upload}
-                        <div id="rampNomFichier" style="margin-top:.4rem;font-weight:600;">Choisir un fichier</div>
+                        <div id="rampNomFichier" style="margin-top:.4rem;font-weight:600;">${rt('choisir_fichier')}</div>
                         <div style="font-size:.78rem;">xlsx, xls, csv, pdf, docx, zip, images — 50 Mo maximum</div>
                     </div>
                     <input type="file" id="rampFichierDepot" style="display:none;"
                            onchange="document.getElementById('rampNomFichier').textContent = this.files[0] ? this.files[0].name : 'Choisir un fichier';">
                 </div>` : ''}
                 <div class="ramp-champ">
-                    <label>Intitulé</label>
+                    <label>${rt('c_intitule')}</label>
                     <input class="ramp-input" id="rampDepotNom" value="${_rAttr((d || {}).nom || '')}"
-                           placeholder="ex. Relevé SAFA — mars 2026">
+                           placeholder="${rt('ex_depot')}">
                 </div>
                 <div class="ramp-paire">
                     <div class="ramp-champ">
-                        <label>Année</label>
+                        <label>${rt('annee_label')}</label>
                         <select class="ramp-select" id="rampDepotAnnee">
                             ${RAMP_ANNEES_DEPOT().map((a) =>
                                 opt(a, a, (d || {}).annee || String(maintenant.getFullYear()))).join('')}
@@ -359,7 +359,7 @@ function rampRenderContacts() {
     return `
     <div class="ramp-page-header">
         <h2>${rt('p_contacts_titre')}</h2>
-        <span class="ramp-sous-titre">Correspondants de chaque État du dispositif</span>
+        <span class="ramp-sous-titre">${rt('correspondants_etats')}</span>
     </div>
     <p class="ramp-note">
         Un coordonnateur national tient le carnet de son État ; le gestionnaire du module et
@@ -392,7 +392,7 @@ function rampOuvrirContact(id) {
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-champ">
-                    <label>État</label>
+                    <label>${rt('c_etat')}</label>
                     <select class="ramp-select" id="rampContactEtat">
                         <option value="">—</option>
                         ${etats.filter(rampPeutGererEtat).map((e) =>
@@ -744,7 +744,7 @@ function rampOuvrirParam(id, famille) {
                 ${f.cat ? `<div class="ramp-champ">
                     <label>${rt('p_groupe_items')}</label>
                     <select class="ramp-select" id="rampParamCat">
-                        <option value="">— Sans groupe —</option>
+                        <option value="">${rt('sans_groupe')}</option>
                         ${rampGroupes().map((g) => `<option value="${_rAttr(g.code)}"
                             ${(p || {}).cat === g.code ? 'selected' : ''}>${_rEsc(g.label)}</option>`).join('')}
                     </select>
@@ -752,7 +752,7 @@ function rampOuvrirParam(id, famille) {
                 ${f.desc ? `<div class="ramp-champ">
                     <label>${rt('c_description')}</label>
                     <textarea class="ramp-input" id="rampParamDesc" rows="3"
-                              placeholder="Ce que l'item recouvre, pour l'inspecteur qui le renseigne"
+                              placeholder="${rt('aide_item')}"
                               >${_rEsc((p || {}).description || '')}</textarea>
                 </div>` : ''}
                 ${f.pays ? `<div class="ramp-champ">
@@ -811,12 +811,12 @@ function rampOuvrirGroupe(id) {
                 </p>
                 <div class="ramp-paire">
                     <div class="ramp-champ">
-                        <label>Intitulé du groupe</label>
+                        <label>${rt('intitule_groupe')}</label>
                         <input class="ramp-input" id="rampGroupeLabel" value="${_rAttr((g || {}).label || '')}"
                                placeholder="ex. Flight Deck">
                     </div>
                     <div class="ramp-champ">
-                        <label>Numéro d'ordre</label>
+                        <label>${rt('numero_ordre')}</label>
                         <input class="ramp-input" id="rampGroupeOrdre" type="number" min="0" step="1"
                                value="${_rAttr((g || {}).ordre === undefined ? rampProchainOrdreGroupe() : g.ordre)}">
                     </div>
@@ -824,7 +824,7 @@ function rampOuvrirGroupe(id) {
                 <div class="ramp-champ">
                     <label>${rt('c_description')}</label>
                     <textarea class="ramp-input" id="rampGroupeDesc" rows="3"
-                              placeholder="Ce que le groupe recouvre"
+                              placeholder="${rt('aide_groupe')}"
                               >${_rEsc((g || {}).description || '')}</textarea>
                 </div>
                 <p class="ramp-erreur" id="rampGroupeErreur"></p>
@@ -1009,12 +1009,12 @@ function rampPaysResultats() {
             <!-- Case à cocher : l'appartenance à l'UEMOA se change d'un clic,
                  sans passer par le formulaire. -->
             <input type="checkbox" class="ramp-case" ${p.uemoa ? 'checked' : ''}
-                   ${modifiable ? '' : 'disabled'} aria-label="Membre de l'UEMOA"
+                   ${modifiable ? '' : 'disabled'} aria-label="${rt('membre_uemoa')}"
                    onchange="rampPaysUemoa(${_rArg(p.id)}, this.checked)">
         </td>
         <td class="ramp-cell-actions">
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="Modifier"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}"
                     onclick="rampOuvrirPays(${_rArg(p.id)})">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone"
                     title="${p.actif === false ? 'Réactiver' : 'Désactiver'}"
@@ -1102,7 +1102,7 @@ function rampOuvrirPays(id) {
             <div class="ramp-modal-body">
                 <div class="ramp-paire">
                     <div class="ramp-champ">
-                        <label>Nom</label>
+                        <label>${rt('u_nom')}</label>
                         <input class="ramp-input" id="rampPaysNom" placeholder="ex. Togo"
                                value="${_rAttr((p || {}).nom || '')}">
                     </div>
@@ -1113,15 +1113,15 @@ function rampOuvrirPays(id) {
                     </div>
                 </div>
                 <div class="ramp-champ">
-                    <label>AAC — Administration de l'aviation civile</label>
+                    <label>${rt('aac_label_long')}</label>
                     <input class="ramp-input" id="rampPaysAac"
-                           placeholder="ex. Agence Nationale de l'Aviation Civile (ANAC Togo)"
+                           placeholder="${rt('ex_aac')}"
                            value="${_rAttr((p || {}).aac || '')}">
                 </div>
                 <div class="ramp-champ">
                     <label>Adresse</label>
                     <textarea class="ramp-input" id="rampPaysAdresse" rows="2"
-                              placeholder="ex. BP 2699 Lomé, Togo">${_rEsc((p || {}).adresse || '')}</textarea>
+                              placeholder="${rt('ex_adresse')}">${_rEsc((p || {}).adresse || '')}</textarea>
                 </div>
                 <div class="ramp-champ">
                     <label>Site web</label>
@@ -1131,12 +1131,12 @@ function rampOuvrirPays(id) {
                 <div class="ramp-champ">
                     <label>Email</label>
                     <textarea class="ramp-input" id="rampPaysEmails" rows="2"
-                              placeholder="Plusieurs adresses, séparées par des virgules"
+                              placeholder="${rt('plusieurs_adresses')}"
                               >${_rEsc(((p || {}).emails || []).join(', '))}</textarea>
                 </div>
                 <label class="ramp-champ-case">
                     <input type="checkbox" id="rampPaysUemoa" ${(p || {}).uemoa ? 'checked' : ''}>
-                    <span>Pays membre de l’UEMOA</span>
+                    <span>${rt('pays_uemoa')}</span>
                 </label>
                 <p class="ramp-erreur" id="rampPaysErreur"></p>
             </div>
@@ -1314,7 +1314,7 @@ function rampAptResultats() {
             <span class="ramp-badge ${a.actif === false ? 'inactif' : 'actif'}">
                 ${a.actif === false ? 'Inactif' : 'Actif'}</span>
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="Modifier"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}"
                     onclick="rampOuvrirAeroport('${_rAttr(a.id)}')">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone"
                     title="${a.actif === false ? 'Réactiver' : 'Désactiver'}"
@@ -1454,12 +1454,12 @@ function rampOuvrirAeroport(id, pays) {
                     </div>
                 </div>
                 <div class="ramp-champ">
-                    <label>Intitulé de l'aéroport</label>
-                    <input class="ramp-input" id="rampAptNom" placeholder="ex. Lomé (Gnassingbé Eyadéma)"
+                    <label>${rt('intitule_aeroport')}</label>
+                    <input class="ramp-input" id="rampAptNom" placeholder="${rt('ex_aeroport')}"
                            value="${_rAttr((a || {}).nom || '')}">
                 </div>
                 <div class="ramp-champ">
-                    <label>Statut</label>
+                    <label>${rt('c_statut')}</label>
                     <input class="ramp-input" id="rampAptStatut" list="rampAptStatutsListe"
                            placeholder="ex. International" value="${_rAttr((a || {}).statut || '')}">
                     <datalist id="rampAptStatutsListe">
@@ -1625,7 +1625,7 @@ function rampAerResultats() {
             <span class="ramp-badge ${a.actif === false ? 'inactif' : 'actif'}">
                 ${a.actif === false ? 'Inactif' : 'Actif'}</span>
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="Modifier"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}"
                     onclick="rampOuvrirAeronef('${_rAttr(a.id)}')">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone"
                     title="${a.actif === false ? 'Réactiver' : 'Désactiver'}"
@@ -1770,12 +1770,12 @@ function rampOuvrirAeronef(id, designation) {
             <div class="ramp-modal-body">
                 <div class="ramp-paire">
                     <div class="ramp-champ">
-                        <label>Désignation aéronef</label>
+                        <label>${rt('designation_aeronef')}</label>
                         <input class="ramp-input" id="rampAerDesignation" placeholder="ex. A320"
                                value="${_rAttr((a || {}).designation || designation || '')}">
                     </div>
                     <div class="ramp-champ">
-                        <label>Modèle-Variante</label>
+                        <label>${rt('p_modele')}</label>
                         <input class="ramp-input" id="rampAerModele" placeholder="ex. AIRBUS A-320-214"
                                value="${_rAttr((a || {}).modele || '')}">
                     </div>
@@ -1787,7 +1787,7 @@ function rampOuvrirAeronef(id, designation) {
                                value="${_rAttr((a || {}).constructeur || '')}">
                     </div>
                     <div class="ramp-champ">
-                        <label>État de conception</label>
+                        <label>${rt('p_etat_conception')}</label>
                         <input class="ramp-input" id="rampAerEtat" placeholder="ex. FRANCE"
                                value="${_rAttr((a || {}).etat_conception || '')}">
                     </div>

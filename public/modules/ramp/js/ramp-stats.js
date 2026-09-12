@@ -294,7 +294,7 @@ function rampAnneeTempsBoutons(inspections) {
         return d ? String(d.getFullYear()) : '';
     }).filter(Boolean))].sort((a, b) => Number(b) - Number(a));
     if (!annees.length) return '';
-    return `<select class="ramp-select ramp-select-annee" title="Année observée"
+    return `<select class="ramp-select ramp-select-annee" title="${rt('stats_annee_observee')}"
                 onchange="rampChoisirAnneeTemps(this.value)">
         ${annees.map((a) => `<option value="${_rAttr(a)}" ${a === courante ? 'selected' : ''}>${_rEsc(a)}</option>`).join('')}
     </select>`;
@@ -686,7 +686,7 @@ function rampVoletGenerateur() {
                  draggable="true" data-cle="${_rAttr(c.cle)}"
                  ondragstart="rampGenDragStart(event, ${_rArg(c.cle)})"
                  ondblclick="rampGenAjouter(${_rArg(c.cle)})"
-                 title="Glissez à droite, ou double-cliquez">
+                 title="${rt('glisser_droite')}">
                 <span>${_rEsc(c.label)}</span>
                 <i>${c.type === 'nombre' ? '123' : 'abc'}</i>
             </div>`).join('')}
@@ -710,13 +710,13 @@ function rampVoletGenerateur() {
             </span>
             <span class="ramp-bascule">
                 <button type="button" class="${role === 'regroupement' ? 'actif' : ''}"
-                        title="Regrouper les données sur ce champ (en lignes)"
+                        title="${rt('grouper_lignes')}"
                         onclick="rampGenRole(${i}, 'regroupement')">${rt('gen_regrouper')}</button>
                 <button type="button" class="${role === 'croisement' ? 'actif' : ''}"
-                        title="Croiser : ce champ ouvre les colonnes du tableau"
+                        title="${rt('croiser_colonnes')}"
                         onclick="rampGenRole(${i}, 'croisement')">${rt('gen_croiser')}</button>
                 <button type="button" class="${role === 'donnee' ? 'actif' : ''}"
-                        title="Donnée observée dans les cellules"
+                        title="${rt('donnee_cellules')}"
                         onclick="rampGenRole(${i}, 'donnee')">${rt('gen_donnee')}</button>
             </span>
             ${role === 'donnee' ? `<span class="ramp-bascule">
@@ -1037,13 +1037,13 @@ function rampRenderStatistiques() {
                         ${rampTh('situation', 'inspections', rt('stats_insp'), 'width:70px;text-align:center;')}
                         ${rampTh('situation', 'items', rt('c_items'), 'width:70px;text-align:center;')}
                         ${rampTh('situation', 'cat1', rt('cat_court_1'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">Clôt. 1</th>
+                        <th style="width:80px;text-align:center;">${rt('clot_1')}</th>
                         ${rampTh('situation', 'cat2', rt('cat_court_2'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">Clôt. 2</th>
+                        <th style="width:80px;text-align:center;">${rt('clot_2')}</th>
                         ${rampTh('situation', 'cat3', rt('cat_court_3'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">Clôt. 3</th>
+                        <th style="width:80px;text-align:center;">${rt('clot_3')}</th>
                         ${rampTh('situation', 'catG', rt('cat_court_g'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">Clôt. G</th>
+                        <th style="width:80px;text-align:center;">${rt('clot_g')}</th>
                         ${rampTh('situation', 'totalEcarts', rt('c_ecarts'), 'width:70px;text-align:center;')}
                         <th style="width:90px;text-align:center;">${rt('stats_taux_cloture')}</th>
                         ${rampTh('situation', 'scoreTotal', rt('score'), 'width:80px;text-align:center;')}
@@ -1255,7 +1255,7 @@ function rampRenderImportation() {
         return `
         <div class="ramp-page-header">
             <h2>Importation</h2>
-            <span class="ramp-sous-titre">Reprise d'un relevé d'inspections au format Excel</span>
+            <span class="ramp-sous-titre">${rt('import_titre')}</span>
         </div>
         ${rampCartesInspections()}
         <p class="ramp-note">
@@ -1269,8 +1269,8 @@ function rampRenderImportation() {
             <div class="ramp-depot-zone" id="rampZoneImport"
                  onclick="document.getElementById('rampFichierImport').click()">
                 ${RAMP_ICONS.upload}
-                <div style="margin-top:.5rem;font-weight:600;">Choisir un classeur (.xlsx)</div>
-                <div style="font-size:.8rem;">ou déposez-le ici</div>
+                <div style="margin-top:.5rem;font-weight:600;">${rt('choisir_classeur')}</div>
+                <div style="font-size:.8rem;">${rt('ou_deposer_ici')}</div>
             </div>
             <input type="file" id="rampFichierImport" accept=".xlsx,.xls" style="display:none;"
                    onchange="rampAnalyserClasseur(this.files[0]); this.value='';">
@@ -1282,8 +1282,8 @@ function rampRenderImportation() {
     }
 
     const badge = (sort) => ({
-        nouvelle: '<span class="ramp-badge neuf">Nouvelle</span>',
-        maj: '<span class="ramp-badge maj">Mise à jour</span>',
+        nouvelle: '<span class="ramp-badge neuf">' + rt('nouvelle_ligne') + '</span>',
+        maj: '<span class="ramp-badge maj">' + rt('mise_a_jour') + '</span>',
         doublon: '<span class="ramp-badge doublon">Doublon</span>',
     }[sort] || '');
 
@@ -1292,7 +1292,7 @@ function rampRenderImportation() {
 
     return `
     <div class="ramp-page-header">
-        <h2>Importation — aperçu</h2>
+        <h2>${rt('import_apercu')}</h2>
         <span class="ramp-sous-titre">${_rEsc((analyse || {}).fichier || '')}</span>
     </div>
     ${rampCartesImport(T, P.length)}
@@ -1313,11 +1313,11 @@ function rampRenderImportation() {
             <table class="ramp-table">
                 <thead><tr>
                     <th style="width:110px;">POI</th>
-                    <th style="width:100px;">Date</th><th style="width:120px;">État</th>
-                    <th>Exploitant</th><th style="width:110px;">Aéronef</th>
+                    <th style="width:100px;">${rt('com_c_date')}</th><th style="width:120px;">${rt('c_etat')}</th>
+                    <th>Exploitant</th><th style="width:110px;">${rt('c_aeronef')}</th>
                     <th style="width:120px;">Immat.</th><th style="width:80px;">Vol</th>
                     <th style="width:70px;text-align:center;">Items</th>
-                    <th style="width:70px;text-align:center;">Écarts</th>
+                    <th style="width:70px;text-align:center;">${rt('nav_ecarts')}</th>
                     <th style="width:110px;">Sort</th>
                     <th style="width:60px;text-align:center;">Retirer</th>
                 </tr></thead>
@@ -1328,7 +1328,7 @@ function rampRenderImportation() {
                             : '<span class="ramp-vide">—</span>'}</td>
                         <td>${_rEsc(rampDate(l.date))}</td>
                         <td>${_rEsc(l.pays || '—')}${l.hors_perimetre
-                            ? ' <span class="ramp-badge doublon">hors périmètre</span>' : ''}</td>
+                            ? ' <span class="ramp-badge doublon">' + rt('hors_perimetre') + '</span>' : ''}</td>
                         <td><strong>${_rEsc(l.exploitant || '—')}</strong></td>
                         <td>${_rEsc(l.aeronef || '—')}</td>
                         <td>${_rEsc(l.immatriculation || '—')}</td>

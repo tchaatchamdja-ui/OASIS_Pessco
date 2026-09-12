@@ -115,7 +115,7 @@ function rampPoiRedessiner() {
 function rampPoiLignes() {
     const S = RAMP_STATE.poi;
     if (S.chargement && !S.liste.length) {
-        return '<div class="ramp-card"><p class="ramp-table-vide">Chargement des fiches…</p></div>';
+        return '<div class="ramp-card"><p class="ramp-table-vide">' + rt('chargement_fiches') + '</p></div>';
     }
     const liste = rampPoiFiltrer();
     const brouillons = liste.filter((p) => p.statut === 'brouillon').length;
@@ -143,7 +143,7 @@ function rampPoiLignes() {
                     ${valide ? RAMP_ICONS.eye : RAMP_ICONS.edit}</button>
                 ${(!valide && RAMP_STATE.poi.peutSaisir) || rampEstAdmin()
                     ? `<button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                               onclick="event.stopPropagation();rampSupprimerPoi(${_rArg(p.id)})" title="Supprimer">
+                               onclick="event.stopPropagation();rampSupprimerPoi(${_rArg(p.id)})" title="${rt('supprimer')}">
                            ${RAMP_ICONS.delete}</button>` : ''}
             </td>
         </tr>`;
@@ -257,7 +257,7 @@ function rampRenderPoi() {
                    oninput="rampPoiChercher(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampPoiReset()"
-                title="Réinitialiser tous les filtres">${RAMP_ICONS.reset}</button>
+                title="${rt('f_reinitialiser')}">${RAMP_ICONS.reset}</button>
     </div>
     <div id="rampPoiZone">${rampPoiLignes()}</div>`;
 }
@@ -514,12 +514,12 @@ function rampPoiItems() {
                 <div class="ramp-poi-constat-grille">
                     <select class="ramp-select" ${fige ? 'disabled' : ''}
                             onchange="rampPoiEcart(${_rArg(item.code)}, 'categorie', this.value)">
-                        <option value="">Catégorie…</option>
+                        <option value="">${rt('categorie_choix')}</option>
                         ${ctx.categories.map((c) => opt(c.code, c.label, e.categorie)).join('')}
                     </select>
                     <select class="ramp-select" ${fige ? 'disabled' : ''}
                             onchange="rampPoiEcart(${_rArg(item.code)}, 'standard', this.value)">
-                        <option value="">Référentiel…</option>
+                        <option value="">${rt('referentiel_choix')}</option>
                         ${ctx.standards.map((s) => opt(s.code, `${s.code} — ${s.label}`, e.standard)).join('')}
                     </select>
                     <select class="ramp-select" ${fige ? 'disabled' : ''}
@@ -530,13 +530,13 @@ function rampPoiItems() {
                     <!-- Statut du constat : l'exploitant l'a-t-il soldé avant
                          la fin de l'inspection ? Valeurs du paramétrage. -->
                     <select class="ramp-select" ${fige ? 'disabled' : ''}
-                            title="Statut du constat à la fin de l’inspection"
+                            title="${rt('statut_constat_fin')}"
                             onchange="rampPoiEcart(${_rArg(item.code)}, 'suivi', this.value)">
-                        <option value="">Statut…</option>
+                        <option value="">${rt('statut_choix')}</option>
                         ${ctx.statuts.map((st) => opt(st, st, e.suivi)).join('')}
                     </select>
                     <textarea class="ramp-input ramp-poi-description" rows="2"
-                              placeholder="Description du constat" ${fige ? 'disabled' : ''}
+                              placeholder="${rt('description_constat')}" ${fige ? 'disabled' : ''}
                               oninput="rampPoiEcart(${_rArg(item.code)}, 'description', this.value);rampPoiAjuster(this)"
                               >${_rEsc(e.description || '')}</textarea>
                 </div>
@@ -586,8 +586,8 @@ function rampPoiItems() {
     <table class="ramp-table ramp-table-poi">
         <thead><tr>
             <th style="width:60px;">Item</th>
-            <th style="width:22%;">Intitulé</th>
-            <th style="width:75px;text-align:center;">Contrôlé</th>
+            <th style="width:22%;">${rt('c_intitule')}</th>
+            <th style="width:75px;text-align:center;">${rt('controle_case')}</th>
             <th>Remarque</th>
             <th style="width:75px;text-align:center;">Constat</th>
         </tr></thead>
@@ -638,7 +638,7 @@ function rampPoiEntete() {
                 <option value="">— Choisir —</option>
                 ${valeurs.map((v) => `<option value="${_rAttr(v)}"
                     ${valeur === v ? 'selected' : ''}>${_rEsc(v)}</option>`).join('')}
-                <option value="__autre__" ${horsListe ? 'selected' : ''}>— Autre (à saisir) —</option>
+                <option value="__autre__" ${horsListe ? 'selected' : ''}>${rt('autre_a_saisir')}</option>
             </select>
             ${horsListe || RAMP_STATE.poiSaisieLibre[cle] ? `
             <input class="ramp-input" style="margin-top:.35rem;" ${d}
@@ -691,7 +691,7 @@ function rampPoiEntete() {
                             ${e.aeronef === v ? 'selected' : ''}>${_rEsc(v)}</option>`).join('')}
                     </select>
                     <button class="btn btn-outline btn-sm ramp-btn-icone" type="button" ${d}
-                            title="Rechercher par modèle ou constructeur"
+                            title="${rt('rechercher_modele')}"
                             onclick="rampOuvrirSelecteurAeronef()">${RAMP_ICONS.search}</button>
                 </div>
             </div>
@@ -792,7 +792,7 @@ function rampPoiActions() {
             ${RAMP_ICONS.check} Valider</button>`);
     }
     if (etape === 'validation' && !peutValider) {
-        b.push('<span class="ramp-sous-titre">En attente du valideur</span>');
+        b.push('<span class="ramp-sous-titre">' + rt('attente_valideur') + '</span>');
     }
     // La transmission ne se déclare plus : elle est acquise dès que les deux
     // communications sont parties.
@@ -910,7 +910,7 @@ function rampPoiVueValidation() {
     return `
     <div class="ramp-card ramp-card-bandeau">
         <div class="ramp-card-entete ramp-poi-recap-bandeau">
-            <span style="flex:1;">Ce qui est soumis à validation</span>
+            <span style="flex:1;">${rt('soumis_validation')}</span>
             <span class="ramp-poi-recap-soumise">${p.soumis_le
                 ? `Soumise ${_rEsc(rampPoiQuand(p.soumis_le, p.soumis_par_nom || p.soumis_par))}`
                 : 'Non soumise'}</span>
@@ -948,7 +948,7 @@ function rampPoiVueValidation() {
     <div class="ramp-poi-validation">
     <div class="ramp-poi-validation-corps">
     <div class="ramp-actions-bar ramp-actions-bar-tete">
-        <strong style="font-size:.9rem;">Constats relevés</strong>
+        <strong style="font-size:.9rem;">${rt('constats_releves')}</strong>
         <span class="ramp-sous-titre">${constats.length} écart${constats.length > 1 ? 's' : ''}
             sur ${rampPoiControles()} item${rampPoiControles() > 1 ? 's' : ''} contrôlé${rampPoiControles() > 1 ? 's' : ''}</span>
     </div>
@@ -957,10 +957,10 @@ function rampPoiVueValidation() {
             <table class="ramp-table">
                 <thead><tr>
                     <th style="width:70px;">Item</th>
-                    <th style="width:24%;">Intitulé</th>
-                    <th style="width:110px;">Catégorie</th>
-                    <th style="width:110px;">Référentiel</th>
-                    <th style="width:110px;">Statut</th>
+                    <th style="width:24%;">${rt('c_intitule')}</th>
+                    <th style="width:110px;">${rt('c_categorie')}</th>
+                    <th style="width:110px;">${rt('referentiel')}</th>
+                    <th style="width:110px;">${rt('c_statut')}</th>
                     <th>Description</th>
                 </tr></thead>
                 <tbody>${constats.length ? constats.map(([code, i]) => `<tr>
@@ -978,15 +978,15 @@ function rampPoiVueValidation() {
 
     <div class="ramp-actions-bar">
         <strong style="font-size:.9rem;">Autres remarques</strong>
-        <span class="ramp-sous-titre">Items commentés sans constat</span>
+        <span class="ramp-sous-titre">${rt('items_commentes')}</span>
     </div>
     <div class="ramp-card" style="padding:0;">
         <div class="ramp-table-wrap">
             <table class="ramp-table">
                 <thead><tr>
                     <th style="width:70px;">Item</th>
-                    <th style="width:24%;">Intitulé</th>
-                    <th style="width:90px;text-align:center;">Contrôlé</th>
+                    <th style="width:24%;">${rt('c_intitule')}</th>
+                    <th style="width:90px;text-align:center;">${rt('controle_case')}</th>
                     <th>Remarque</th>
                 </tr></thead>
                 <tbody>${remarques.length ? remarques.map(([code, i]) => `<tr>
@@ -1028,11 +1028,11 @@ function rampPoiMotifRenvoi() {
     return `
     <div class="ramp-card ramp-card-bandeau ramp-poi-renvoi">
         <div class="ramp-card-entete">
-            Motif de renvoi
+            ${rt('motif_renvoi_titre')}
             <span class="ramp-poi-renvoi-quand">${_rEsc(dernier
                 ? rampPoiQuand(dernier.close_le, dernier.close_par_nom || dernier.close_par)
                 : rampPoiQuand(p.renvoye_le))}</span>
-            <span class="ramp-poi-renvoi-consigne">Corrigez la fiche, puis soumettez-la de nouveau.</span>
+            <span class="ramp-poi-renvoi-consigne">${rt('corriger_puis_soumettre')}</span>
         </div>
         <div class="ramp-poi-renvoi-corps">
             ${dernier && (dernier.entrees || []).length
@@ -1040,7 +1040,7 @@ function rampPoiMotifRenvoi() {
                 : `<p class="ramp-sous-titre">${p.motif_renvoi
                     ? _rEsc(p.motif_renvoi) : rt('renvoi_sans_motif')}</p>`}
             ${anciens.length ? `
-                <div class="ramp-sous-titre" style="margin:.6rem 0 .2rem;">Renvois précédents</div>
+                <div class="ramp-sous-titre" style="margin:.6rem 0 .2rem;">${rt('renvois_precedents')}</div>
                 ${anciens.map((v) => {
                     const ouvert = !!RAMP_STATE.poiVersionsOuvertes[`r${v.version}`];
                     return `
@@ -1123,7 +1123,7 @@ function rampPoiCommentaires() {
     const bandeau = `
         <div class="ramp-poi-commentaires-bandeau">
             <span class="ramp-poi-commentaires-pastille">i</span>
-            <strong>Commentaires de validation</strong>
+            <strong>${rt('commentaires_validation')}</strong>
             <span class="ramp-poi-commentaires-compte">${nombre}</span>
         </div>`;
 
@@ -1131,7 +1131,7 @@ function rampPoiCommentaires() {
     // l'intitulé, à la verticale — c'est là qu'on clique pour rouvrir.
     if (replie) {
         return `<button class="ramp-poi-commentaires-poignee pleine" type="button"
-                title="Déplier les commentaires" onclick="rampPoiBasculerCommentaires()">
+                title="${rt('deplier_commentaires')}" onclick="rampPoiBasculerCommentaires()">
             ${RAMP_ICONS.chevron}
             <span class="ramp-poi-commentaires-titre-replie">Commentaires de validation${
                 nombre ? ` (${nombre})` : ''}</span>
@@ -1148,10 +1148,10 @@ function rampPoiCommentaires() {
                             ${c.cible === v ? 'selected' : ''}>${_rEsc(l)}</option>`).join('')}
                     </optgroup>`).join('')}
                 </select>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" title="Retirer ce commentaire"
+                <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('retirer_commentaire')}"
                         onclick="rampPoiRetirerCommentaire(${i})">${RAMP_ICONS.x}</button>
             </div>
-            <textarea class="ramp-input" rows="2" placeholder="Observation du valideur"
+            <textarea class="ramp-input" rows="2" placeholder="${rt('observation_valideur')}"
                       oninput="rampPoiCommentaireChamp(${i}, 'texte', this.value)">${_rEsc(c.texte || '')}</textarea>
         </div>`;
 
@@ -1203,7 +1203,7 @@ function rampPoiCommentaires() {
             </div>` : `<p class="ramp-sous-titre">${rt('aucun_commentaire_en_cours')}</p>`}`}
         ${versions.filter((v) => v.close_le).length ? `
             <div class="ramp-poi-versions">
-                <div class="ramp-sous-titre" style="margin:.6rem 0 .3rem;">Versions précédentes</div>
+                <div class="ramp-sous-titre" style="margin:.6rem 0 .3rem;">${rt('versions_precedentes')}</div>
                 ${versions.filter((v) => v.close_le).map(versionClose).join('')}
             </div>` : ''}
         </div>
@@ -1439,13 +1439,13 @@ function rampPoiEnvoiHtml(cible, titre) {
                            value="${_rAttr(dernier ? dernier.copie : '')}">
                 </div>
                 <div class="ramp-champ" style="grid-column: span 2;">
-                    <label>Copie cachée (Cci)</label>
+                    <label>${rt('copie_cachee')}</label>
                     <input class="ramp-input" id="rampEnvoi_${cible}_cci" ${modifiable ? '' : 'disabled'}
                            value="${_rAttr(dernier ? dernier.copie_cachee : '')}">
                 </div>
             </div>
             <div class="ramp-champ">
-                <label>Objet</label>
+                <label>${rt('com_c_objet')}</label>
                 <input class="ramp-input" id="rampEnvoi_${cible}_objet" ${modifiable ? '' : 'disabled'}
                        value="${_rAttr(dernier ? dernier.objet : rampPoiObjet(cible))}">
             </div>
@@ -1458,7 +1458,7 @@ function rampPoiEnvoiHtml(cible, titre) {
                 <span style="flex:1;"></span>
                 <button class="btn btn-outline btn-sm" ${modifiable ? '' : 'disabled'}
                         onclick="rampPoiReinitialiserLettre(${_rArg(cible)})">
-                    Rétablir le modèle</button>
+                    ${rt('retablir_modele')}</button>
                 <button class="btn btn-primary btn-sm" ${modifiable ? '' : 'disabled'}
                         title="${_rAttr(modifiable ? '' : 'Notification déjà envoyée')}"
                         onclick="rampEnvoyerCommunication(${_rArg(cible)})">
@@ -1565,13 +1565,13 @@ function rampRenderPoiFiche() {
             et ses écarts aux états du module.
         </span>
         <span style="flex:1;"></span>
-        <button class="btn btn-primary btn-sm" onclick="rampEnregistrerPoi()">Enregistrer</button>
+        <button class="btn btn-primary btn-sm" onclick="rampEnregistrerPoi()">${rt('enregistrer')}</button>
     </div>`;
 
     return `${haut}
     ${p.renvoye_le && p.statut === 'brouillon' && vue === 'soumission' ? rampPoiMotifRenvoi() : ''}
     ${!RAMP_STATE.poi.peutSaisir && !valide && vue === 'soumission'
-        ? '<p class="ramp-note">Consultation seule : la saisie est réservée aux contributeurs du module.</p>' : ''}
+        ? '<p class="ramp-note">' + rt('consultation_seule') + '</p>' : ''}
     <div id="rampPoiVue">${corps}</div>
     ${bas}`;
 }
@@ -1587,9 +1587,9 @@ function rampPoiVueSaisie() {
 
     <div class="ramp-card" style="padding:0;">
         <div class="ramp-card-bande ramp-card-bande-nue">
-            <span class="ramp-card-lettre">B</span>Items du programme SAFA
+            <span class="ramp-card-lettre">B</span>${rt('items_safa')}
             <span style="flex:1;"></span>
-            <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(true)">Tout déplier</button>
+            <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(true)">${rt('p_tout_deplier')}</button>
             <button class="btn btn-outline btn-sm" onclick="rampPoiToutDeplier(false)">Tout replier</button>
         </div>
         <div class="ramp-table-wrap" id="rampPoiItems">${rampPoiItems()}</div>
@@ -1608,9 +1608,9 @@ function rampPoiVueSaisie() {
                 </select>
             </div>
             <div class="ramp-champ">
-                <label>Statut de suivi de l’inspection</label>
+                <label>${rt('statut_suivi_inspection')}</label>
                 <select class="ramp-select" ${d} onchange="rampPoiMeta('statut_suivi', this.value)">
-                    <option value="">— Selon les constats —</option>
+                    <option value="">${rt('selon_constats')}</option>
                     ${ctx.statuts.map((s) => `<option value="${_rAttr(s)}"
                         ${p.statut_suivi === s ? 'selected' : ''}>${_rEsc(s)}</option>`).join('')}
                 </select>
@@ -1623,7 +1623,7 @@ function rampPoiVueSaisie() {
                  qualification : la fiche les garde, même si le référentiel
                  change ensuite. -->
             ${d ? '' : `<select class="ramp-select" onchange="rampPoiAjouterInspecteur(this.value); this.value='';">
-                <option value="">— Ajouter un inspecteur —</option>
+                <option value="">${rt('ajouter_inspecteur')}</option>
                 ${rampPoiCtx().inspecteurs
                     .filter((i) => !(p.equipe || []).some((m) => m.id === i.id))
                     .map((i) => `<option value="${_rAttr(i.id)}">${_rEsc(`${i.nom} ${i.prenom}`)}${
@@ -1632,12 +1632,12 @@ function rampPoiVueSaisie() {
             <div id="rampPoiEquipe">${rampPoiEquipe()}</div>
         </div>
         <div class="ramp-champ">
-            <label>Commentaires du commandant de bord ou du représentant de l’exploitant</label>
+            <label>${rt('commentaires_commandant')}</label>
             <textarea class="ramp-input" rows="2" ${d}
                       oninput="rampPoiMeta('commentaires_pic', this.value)">${_rEsc(p.commentaires_pic || '')}</textarea>
         </div>
         <div class="ramp-champ">
-            <label>Informations complémentaires</label>
+            <label>${rt('infos_complementaires')}</label>
             <textarea class="ramp-input" rows="2" ${d}
                       oninput="rampPoiMeta('informations', this.value)">${_rEsc(p.informations || '')}</textarea>
         </div>

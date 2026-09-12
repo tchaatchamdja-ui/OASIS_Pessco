@@ -887,7 +887,7 @@ function rampRenderApp() {
         <aside class="app-sidebar ${S.sidebarCollapsed ? 'collapsed' : ''}">
             <div class="sidebar-header">
                 <button class="btn-back-portal" onclick="rampRetourPortail()" title="${_rAttr(rt('retour_portail'))}">
-                    ${RAMP_ICONS.back} <span class="back-portal-label">Retour au portail</span>
+                    ${RAMP_ICONS.back} <span class="back-portal-label">${rt('retour_portail')}</span>
                 </button>
             </div>
             <nav class="sidebar-nav">${nav}</nav>
@@ -1350,7 +1350,7 @@ function rampRenderDashboard() {
     <div class="ramp-page-header">
         <h2>${rt('nav_dashboard')}</h2>
         <button class="btn btn-primary btn-sm" onclick="rampOuvrirStatistiques()"
-                title="Situation générale, répartitions et évolutions">
+                title="${rt('stats_sous_titre')}">
             ${RAMP_ICONS.chart} ${rt('voir_statistiques')}
         </button>
     </div>
@@ -1571,11 +1571,11 @@ function rampResumeHtml(quoi) {
     const items = inspections.reduce((s, i) => s + (Number(i.itemsInspectes) || 0), 0);
     if (quoi === 'ecarts') {
         const insp = new Set(ecarts.map((a) => a.inspection.id)).size;
-        return `<strong>${ecarts.length}</strong> écart(s) rattaché(s) à <strong>${insp}</strong> `
+        return `<strong>${ecarts.length}</strong> ${rt('ecarts_rattaches_a')} <strong>${insp}</strong> `
             + `inspection(s) sur <strong>${exploitants}</strong> exploitant(s).`;
     }
     return `<strong>${inspections.length}</strong> inspection(s), <strong>${exploitants}</strong> exploitant(s), `
-        + `<strong>${items}</strong> items inspectés, <strong>${ecarts.length}</strong> écart(s).`;
+        + `<strong>${items}</strong> ${rt('items_inspectes')} <strong>${ecarts.length}</strong> écart(s).`;
 }
 
 function rampLignesInspections() {
@@ -1605,7 +1605,7 @@ function rampLignesInspections() {
                         title="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
                 ${rampEstAdmin() && !rampVuePrestataire() ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                         style="color:#dc2626;border-color:#dc2626;"
-                        onclick="rampSupprimerInspection('${i.id}')" title="Supprimer">${RAMP_ICONS.delete}</button>` : ''}
+                        onclick="rampSupprimerInspection('${i.id}')" title="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
             </td>
         </tr>`;
     }).join('');

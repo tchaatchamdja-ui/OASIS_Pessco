@@ -21,7 +21,7 @@ async function prAppliquerInstance(valeur) {
     try {
         await api(`${MODULE_API}/instance`, { method: 'PUT', body: JSON.stringify({ instance: valeur }) });
     } catch (e) {
-        if (typeof showToast === 'function') showToast((e && e.message) || 'Changement d’instance impossible', 'error');
+        if (typeof showToast === 'function') showToast((e && e.message) || t('instance_changement_impossible'), 'error');
         return;
     }
     // L'instance commande le périmètre de tous les écrans : on recharge le

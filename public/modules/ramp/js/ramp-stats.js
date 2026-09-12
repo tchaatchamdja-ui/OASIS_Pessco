@@ -1196,7 +1196,7 @@ async function rampTelecharger(chemin, corps, nomFichier) {
         const blob = await r.blob();
         rampEnregistrerFichier(blob, nomFichier);
     } catch (e) {
-        rampToast(e.message || 'Export impossible', 'error');
+        rampToast(e.message || rt('gen_export_impossible'), 'error');
     }
 }
 
@@ -1397,9 +1397,9 @@ async function rampConfirmerImport() {
         // L'import fait, le volet se referme sur les états rafraîchis.
         rampFermerSlider();
         await rampRecharger();
-        rampToast(r.message || 'Importation effectuée');
+        rampToast(r.message || rt('m_importation_effectuee'));
     } catch (e) {
-        rampToast(e.message || 'Importation impossible', 'error');
+        rampToast(e.message || rt('m_importation_impossible'), 'error');
     }
 }
 

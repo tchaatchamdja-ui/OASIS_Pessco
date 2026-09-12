@@ -280,7 +280,7 @@ async function mesEnregistrerComite() {
 async function mesSupprimerComite(id) {
     const c = mesComites().find((x) => x.id === id);
     if (!c) return;
-    if (!await oasisConfirmer(`Supprimer le comité « ${c.libelle} » ?`)) return;
+    if (!await oasisConfirmer(mt('confirmer_suppr_comite', c.libelle))) return;
     try {
         await mesApi(`/parametres/comites/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
@@ -311,7 +311,7 @@ async function mesEnregistrerTypeInvestigation() {
 async function mesSupprimerTypeInvestigation(id) {
     const t = mesTypesInvestigation().find((x) => x.id === id);
     if (!t) return;
-    if (!await oasisConfirmer(`Supprimer le type « ${t.libelle} » ?`)) return;
+    if (!await oasisConfirmer(mt('confirmer_suppr_type', t.libelle))) return;
     try {
         await mesApi(`/parametres/types-investigation/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
@@ -352,7 +352,7 @@ async function mesEnregistrerType() {
 
 async function mesSupprimerCategorie(id) {
     const c = mesCategories().find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Supprimer la catégorie « ${c.libelle} » et tous ses types ?`)) return;
+    if (!await oasisConfirmer(mt('confirmer_suppr_categorie', c.libelle))) return;
     try {
         await mesApi(`/parametres/categories/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();
@@ -362,7 +362,7 @@ async function mesSupprimerCategorie(id) {
 
 async function mesSupprimerType(id) {
     const t = mesTypes().find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Supprimer le type « ${t.libelle} » ?`)) return;
+    if (!await oasisConfirmer(mt('confirmer_suppr_type', t.libelle))) return;
     try {
         await mesApi(`/parametres/types/${id}`, { method: 'DELETE' });
         await mesRechargerParametres();

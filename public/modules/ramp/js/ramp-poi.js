@@ -40,7 +40,7 @@ async function rampChargerPoi() {
         S.liste = r.poi || [];
         S.peutSaisir = !!r.peut_saisir;
     } catch (e) {
-        rampToast(e.message || 'Chargement impossible', 'error');
+        rampToast(e.message || rt('m_chargement_impossible'), 'error');
     } finally {
         S.chargement = false;
     }
@@ -1264,7 +1264,7 @@ async function rampEnregistrerCommentaires(silencieux) {
         RAMP_STATE.poiCommentairesSaisie = entrees.slice();
         rampPoiRedessinerCommentaires();
         if (!silencieux) rampToast(rt('commentaires_enregistres'));
-    } catch (e) { rampToast(e.message || 'Enregistrement impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_enregistrement_impossible'), 'error'); }
 }
 
 // ── Étape « Transmission » ──
@@ -1492,14 +1492,14 @@ async function rampEnvoyerCommunication(cible) {
         const dejaTransmise = !!p.transmis_le;
         await rampChargerPoi();
         await rampOuvrirPoi(p.id);
-        rampToast(r.envoye ? 'Communication envoyée'
-            : `Communication consignée, courriel non parti${r.erreur ? ` : ${r.erreur}` : ''}`,
+        rampToast(r.envoye ? rt('m_communication_envoyee')
+            : rt('m_communication_consignee') + (r.erreur ? ` : ${r.erreur}` : ''),
             r.envoye ? 'success' : 'warning');
         // Les deux communications parties, la fiche est transmise d'elle-même.
         if (r.transmise && !dejaTransmise) {
             setTimeout(() => rampToast(rt('communications_parties')), 1200);
         }
-    } catch (e) { rampToast(e.message || 'Envoi impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_envoi_impossible'), 'error'); }
 }
 
 

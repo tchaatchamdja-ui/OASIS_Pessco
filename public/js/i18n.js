@@ -1,6 +1,11 @@
 // OASIS — i18n FR / EN / PT (TDR §F.7)
 const I18N = {
   fr: {
+    logo_enregistre: "Logo enregistré.",
+    logo_supprime: "Logo supprimé.",
+    prestataire_enregistre: "Prestataire enregistré.",
+    deja_present_personnel: "Déjà présent dans le Personnel AAC.",
+    entrees_n: "{0} entrées",
     mdp_regle_longueur: "longueur minimale {0} caractères",
     mdp_regle_majuscule: "au moins une majuscule",
     mdp_regle_minuscule: "au moins une minuscule",
@@ -224,6 +229,11 @@ const I18N = {
     donnees_col: 'Données',
 },
   en: {
+    logo_enregistre: "Logo saved.",
+    logo_supprime: "Logo deleted.",
+    prestataire_enregistre: "Provider saved.",
+    deja_present_personnel: "Already in the Authority staff list.",
+    entrees_n: "{0} entries",
     mdp_regle_longueur: "minimum length {0} characters",
     mdp_regle_majuscule: "at least one capital letter",
     mdp_regle_minuscule: "at least one lowercase letter",
@@ -447,6 +457,11 @@ const I18N = {
     donnees_col: 'Data',
 },
   pt: {
+    logo_enregistre: "Logótipo guardado.",
+    logo_supprime: "Logótipo eliminado.",
+    prestataire_enregistre: "Prestador guardado.",
+    deja_present_personnel: "Já presente no pessoal da Autoridade.",
+    entrees_n: "{0} entradas",
     mdp_regle_longueur: "comprimento mínimo de {0} caracteres",
     mdp_regle_majuscule: "pelo menos uma maiúscula",
     mdp_regle_minuscule: "pelo menos uma minúscula",

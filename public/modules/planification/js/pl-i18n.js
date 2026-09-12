@@ -43,6 +43,7 @@ window.PLAN_STATE = PLAN_STATE;
 
 const PLAN_TR = {
     fr: {
+        confirmer_plan_transmis: "Marquer ce plan comme transmis au prestataire ?\nLa lettre de transmission doit avoir été enregistrée.",
         module_title: 'Planification de la Surveillance',
         module_subtitle: 'Gestion des plans de surveillance',
         dashboard: 'Tableau de Bord',
@@ -334,6 +335,7 @@ const PLAN_TR = {
         close: 'Fermer'
     },
     en: {
+        confirmer_plan_transmis: "Mark this plan as sent to the provider?\nThe covering letter must already be recorded.",
         module_title: 'Surveillance Planning',
         module_subtitle: 'Surveillance plan management',
         dashboard: 'Dashboard',
@@ -625,6 +627,7 @@ const PLAN_TR = {
         close: 'Close'
     },
     pt: {
+        confirmer_plan_transmis: "Marcar este plano como transmitido ao prestador?\nA carta de transmissão deve ter sido registada.",
         module_title: 'Planejamento da Vigilância',
         module_subtitle: 'Gestão dos planos de vigilância',
         dashboard: 'Painel',

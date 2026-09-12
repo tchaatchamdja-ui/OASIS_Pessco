@@ -905,7 +905,7 @@ async function saveAacLogo(dataUrl) {
     body: JSON.stringify({ aac: { logo: dataUrl } }),
   });
   if (res.ok) {
-    showToast(dataUrl ? 'Logo enregistré.' : 'Logo supprimé.', 'success');
+    showToast(dataUrl ? t('logo_enregistre') : t('logo_supprime'), 'success');
     await loadMe();
     renderConfig();
   } else showToast(t('erreur_fichier_volumineux'), 'error', 4000);

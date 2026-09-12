@@ -15,6 +15,9 @@
 
 const MES_TR = {
   fr: {
+    confirmer_suppr_comite: "Supprimer le comité « {0} » ?",
+    confirmer_suppr_type: "Supprimer le type « {0} » ?",
+    confirmer_suppr_categorie: "Supprimer la catégorie « {0} » et tous ses types ?",
     // ── Coquille et navigation ──
     module_titre: 'Mesures d’Application',
     module_titre_page: 'Mesures d’Application / {0}',
@@ -588,6 +591,9 @@ const MES_TR = {
   },
 
   en: {
+    confirmer_suppr_comite: "Delete the committee “{0}”?",
+    confirmer_suppr_type: "Delete the type “{0}”?",
+    confirmer_suppr_categorie: "Delete the category “{0}” and all its types?",
     module_titre: 'Enforcement Measures',
     module_titre_page: 'Enforcement Measures / {0}',
     nav_dashboard: 'Dashboard',
@@ -1137,6 +1143,9 @@ const MES_TR = {
   },
 
   pt: {
+    confirmer_suppr_comite: "Eliminar o comité «{0}»?",
+    confirmer_suppr_type: "Eliminar o tipo «{0}»?",
+    confirmer_suppr_categorie: "Eliminar a categoria «{0}» e todos os seus tipos?",
     module_titre: 'Medidas de Aplicacao',
     module_titre_page: 'Medidas de Aplicacao / {0}',
     nav_dashboard: 'Painel',

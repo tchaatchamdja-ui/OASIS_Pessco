@@ -240,7 +240,7 @@ async function rampPacRenvoyer() {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
         rampToast(rt('plan_renvoye_reprise'));
-    } catch (x) { rampToast(x.message || 'Renvoi impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_renvoi_impossible'), 'error'); }
 }
 
 async function rampPacCloturer() {
@@ -256,7 +256,7 @@ async function rampPacCloturer() {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
         rampToast(rt('ecart_cloture'));
-    } catch (x) { rampToast(x.message || 'Clôture impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_cloture_impossible'), 'error'); }
 }
 
 function rampPacHtml() {
@@ -356,8 +356,8 @@ async function rampEnregistrerPac(soumettre) {
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
-        rampToast(soumettre ? 'Plan d’actions correctives soumis' : 'Plan enregistré');
-    } catch (err) { rampToast(err.message || 'Enregistrement impossible', 'error'); }
+        rampToast(soumettre ? rt('pac_soumis_titre') : rt('m_plan_enregistre'));
+    } catch (err) { rampToast(err.message || rt('m_enregistrement_impossible'), 'error'); }
 }
 
 // ══════════════════════════════════════
@@ -506,7 +506,7 @@ async function rampPacEvaluer(patch) {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
         rampToast(rt('evaluation_enregistree'));
-    } catch (x) { rampToast(x.message || 'Enregistrement impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_enregistrement_impossible'), 'error'); }
 }
 
 function rampPacEditerSuivi(id) {
@@ -531,7 +531,7 @@ async function rampPacEnregistrerSuivi(id) {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
         rampToast(rt('suivi_modifie'));
-    } catch (x) { rampToast(x.message || 'Modification impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_modification_impossible'), 'error'); }
 }
 
 async function rampPacSupprimerSuivi(id) {
@@ -543,7 +543,7 @@ async function rampPacSupprimerSuivi(id) {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
         rampToast(rt('suivi_retire'));
-    } catch (x) { rampToast(x.message || 'Suppression impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_suppression_impossible'), 'error'); }
 }
 
 // Le brouillon des preuves : le commentaire de suivi se garde sans clore
@@ -576,7 +576,7 @@ async function rampPacAjouterSuivi(cible) {
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         rampVoletPac();
         rampToast(rt('suivi_consigne'));
-    } catch (x) { rampToast(x.message || 'Enregistrement impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_enregistrement_impossible'), 'error'); }
 }
 
 // ══════════════════════════════════════
@@ -773,14 +773,14 @@ async function rampEnvoyerPreuve() {
 async function rampSupprimerPreuve(id) {
     const e = RAMP_STATE.pacEnCours;
     const pj = (e.preuves || []).find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Retirer la preuve « ${pj.intitule || ''} » ?`)) return;
+    if (!await oasisConfirmer(rt('confirmer_retirer_preuve', pj.intitule || ''))) return;
     try {
         await rampApi(`/ecarts/${e.id}/preuves/${id}`, { method: 'DELETE' });
         await rampLoadData();
         RAMP_STATE.pacEnCours = rampEcartDe(e.id);
         if (RAMP_STATE.voletRejouer) RAMP_STATE.voletRejouer();
         rampToast(rt('preuve_retiree'));
-    } catch (x) { rampToast(x.message || 'Suppression impossible', 'error'); }
+    } catch (x) { rampToast(x.message || rt('m_suppression_impossible'), 'error'); }
 }
 
 Object.assign(window, {

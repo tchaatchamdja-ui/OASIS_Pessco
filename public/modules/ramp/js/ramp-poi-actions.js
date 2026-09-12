@@ -265,19 +265,19 @@ async function rampEnregistrerPiece() {
         }
         rampFermerModal();
         await rampRechargerPieces();
-        rampToast(pj ? 'Pièce mise à jour' : 'Pièce ajoutée');
-    } catch (e) { err.textContent = e.message || 'Enregistrement impossible'; }
+        rampToast(pj ? rt('m_piece_maj') : rt('m_piece_ajoutee'));
+    } catch (e) { err.textContent = e.message || rt('m_enregistrement_impossible'); }
 }
 
 async function rampSupprimerPiece(id) {
     const p = RAMP_STATE.poiEnCours || {};
     const pj = (p.pieces || []).find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Supprimer la pièce « ${pj.intitule || ''} » ?`)) return;
+    if (!await oasisConfirmer(rt('confirmer_suppr_piece', pj.intitule || ''))) return;
     try {
         await rampApi(`/poi/${p.id}/pieces/${id}`, { method: 'DELETE' });
         await rampRechargerPieces();
         rampToast(rt('piece_supprimee'));
-    } catch (e) { rampToast(e.message || 'Suppression impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
 // Seule la liste des pièces se recharge : le reste de la fiche est à l'écran,
@@ -288,7 +288,7 @@ async function rampRechargerPieces() {
     try {
         const r = await rampApi(`/poi/${p.id}/pieces`);
         p.pieces = r.pieces || [];
-    } catch (e) { rampToast(e.message || 'Pièces indisponibles', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_pieces_indisponibles'), 'error'); }
     const zone = document.getElementById('rampPoiPieces');
     if (!zone) { rampVoletPoi(); return; }
     const rendreDefilement = rampMemoriserDefilement();
@@ -300,14 +300,14 @@ async function rampRechargerPieces() {
 
 async function rampSoumettrePoi() {
     const p = RAMP_STATE.poiEnCours;
-    if (!await oasisConfirmer('Soumettre cette fiche pour validation ? Elle ne sera plus modifiable tant qu’elle n’est pas renvoyée.')) return;
+    if (!await oasisConfirmer(rt('confirmer_soumettre_fiche'))) return;
     if (!await rampEnregistrerPoi(true)) return;
     try {
         await rampApi(`/poi/${p.id}/soumettre`, { method: 'POST', body: '{}' });
         await rampChargerPoi();
         await rampOuvrirPoi(p.id);
         rampToast(rt('fiche_soumise'));
-    } catch (e) { rampToast(e.message || 'Soumission impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_soumission_impossible'), 'error'); }
 }
 
 // Le motif du renvoi, ce sont les commentaires de validation : la fenêtre ne
@@ -359,7 +359,7 @@ async function rampConfirmerRenvoi() {
         await rampChargerPoi();
         await rampOuvrirPoi(p.id);
         rampToast(rt('fiche_renvoyee'));
-    } catch (e) { rampToast(e.message || 'Renvoi impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_renvoi_impossible'), 'error'); }
 }
 
 // ── Équipe d'inspection ──
@@ -454,7 +454,7 @@ async function rampEnregistrerPoi(silencieux) {
         if (!silencieux) rampToast(rt('brouillon_enregistre_ref', p.reference));
         return true;
     } catch (e) {
-        rampToast(e.message || 'Enregistrement impossible', 'error');
+        rampToast(e.message || rt('m_enregistrement_impossible'), 'error');
         return false;
     }
 }
@@ -502,23 +502,23 @@ async function rampConfirmerValidation() {
     rampFermerModal();
     try {
         const r = await rampApi(`/poi/${p.id}/valider`, { method: 'POST', body: '{}' });
-        rampToast(r.message || 'Inspection créée');
+        rampToast(r.message || rt('m_inspection_creee'));
         // Les états lisent les inspections chargées au démarrage : elles
         // doivent connaître celle qui vient de naître.
         await rampLoadData();
         await rampOuvrirPoi(p.id);
-    } catch (e) { rampToast(e.message || 'Validation impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_validation_impossible'), 'error'); }
 }
 
 async function rampSupprimerPoi(id) {
     const p = RAMP_STATE.poi.liste.find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Supprimer la fiche ${p.reference || ''} ?`)) return;
+    if (!await oasisConfirmer(rt('confirmer_suppr_fiche', p.reference || ''))) return;
     try {
         await rampApi(`/poi/${id}`, { method: 'DELETE' });
         if ((RAMP_STATE.poiEnCours || {}).id === id) RAMP_STATE.poiEnCours = null;
         await rampChargerPoi();
         rampToast(rt('fiche_supprimee'));
-    } catch (e) { rampToast(e.message || 'Suppression impossible', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_suppression_impossible'), 'error'); }
 }
 
 // Depuis une fiche validée, on rejoint l'inspection qu'elle a produite : les

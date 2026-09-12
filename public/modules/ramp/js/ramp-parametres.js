@@ -36,7 +36,7 @@ async function rampChargerDepots() {
         RAMP_STATE.data.depots = await rampApi('/depots');
         const corps = document.querySelector('[data-corps="depots"]');
         if (corps) corps.innerHTML = rampLignesDepots();
-    } catch (e) { rampToast(e.message || 'Dépôts indisponibles', 'error'); }
+    } catch (e) { rampToast(e.message || rt('m_depots_indisponibles'), 'error'); }
 }
 
 // Les dépôts retenus à un jeu de critères donné : la liste s'en sert, les
@@ -257,7 +257,7 @@ async function rampEnregistrerDepot() {
 
 async function rampSupprimerDepot(id) {
     const d = RAMP_STATE.data.depots.find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Supprimer le dépôt « ${d.nom} » et son fichier ?`)) return;
+    if (!await oasisConfirmer(rt('confirmer_suppr_depot', d.nom))) return;
     try {
         await rampApi(`/depots/${id}`, { method: 'DELETE' });
         await rampChargerDepots();
@@ -454,7 +454,7 @@ async function rampBasculerContact(id) {
 
 async function rampSupprimerContact(id) {
     const c = RAMP_STATE.data.contacts.find((x) => x.id === id) || {};
-    if (!await oasisConfirmer(`Supprimer définitivement ${c.prenom} ${c.nom} ?`)) return;
+    if (!await oasisConfirmer(rt('confirmer_suppr_contact', `${c.prenom} ${c.nom}`))) return;
     try {
         await rampApi(`/contacts/${id}`, { method: 'DELETE' });
         await rampChargerContacts();

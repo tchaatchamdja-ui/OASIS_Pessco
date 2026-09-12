@@ -141,7 +141,7 @@ async function planApprouverDG(planId) {
 }
 
 async function planTransmettre(planId) {
-    if (!await oasisConfirmer('Marquer ce plan comme transmis au prestataire ?\nLa lettre de transmission doit avoir été enregistrée.')) return;
+    if (!await oasisConfirmer(tp('confirmer_plan_transmis'))) return;
     try {
         await api(`${PLAN_MODULE_API}/plans/${planId}/transmettre`, { method: 'POST' });
         await planLoadData(); await planOpenDetail(planId);

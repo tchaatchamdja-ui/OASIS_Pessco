@@ -880,7 +880,7 @@ function _renderConsolidationTable(cumulative, currentChanges, roundsCount) {
 async function startConsolidation(evalId) {
     const ev = APP_STATE.data.evaluations.find(e => e.id === evalId);
     if (!ev) return;
-    if (!await oasisConfirmer("Démarrer la consolidation ?\nLes notes des indicateurs (Conformité, Performance, Complexité) deviendront éditables pour permettre les modifications. Le suivi s'arrête à l'enregistrement de la réunion.")) return;
+    if (!await oasisConfirmer(t('confirmer_consolidation'))) return;
     const snap = {
         notes_conf: { ...(ev.notes_conf || {}) },
         notes_perf: { ...(ev.notes_perf || {}) },
@@ -1503,7 +1503,7 @@ async function reunionEvalSaveFromTab(evalId) {
         // Refresh APP_STATE then re-render the tab inline (no slicer rebuild → no "Chargement..." flash)
         await loadAllData();
         await _loadReunionEvalTab(evalId);
-        showToast(rawSnap ? 'Réunion enregistrée — indicateurs verrouillés en lecture seule' : 'Réunion enregistrée');
+        showToast(rawSnap ? t('reunion_enregistree_verrou') : t('reunion_enregistree'));
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -1587,7 +1587,7 @@ async function soumettreMesNotes(evalId) {
         showToast(t('submit_missing_scores', perfMissing.length, compMissing.length), 'error');
         return;
     }
-    if (!await oasisConfirmer('Soumettre vos notes au validateur ? Elles deviendront visibles et ne pourront plus être modifiées.')) return;
+    if (!await oasisConfirmer(t('confirmer_soumettre_notes'))) return;
 
     // Promote draft → published for this user, then clear the draft slot
     if (!ev.notes_per_evaluator || typeof ev.notes_per_evaluator !== 'object') ev.notes_per_evaluator = {};
@@ -1617,7 +1617,7 @@ async function soumettreMesNotes(evalId) {
 
 // ── Phase 4 — Workflow validation directeur (4.2.2.f) ──
 async function soumettreDirecteur(evalId) {
-    if (!await oasisConfirmer('Soumettre cette évaluation à la validation ?')) return;
+    if (!await oasisConfirmer(t('confirmer_soumettre_evaluation'))) return;
     try {
         await _persistPendingComments(evalId);
         await saveEvalScores(evalId);
@@ -1645,9 +1645,9 @@ async function decisionDirecteur(evalId, decision) {
         cloturer: 'Réunion prestataire clôturée — vous pouvez valider'
     };
     const requiresMotif = (decision === 'renvoyer' || decision === 'rejeter');
-    if (requiresMotif && decision === 'rejeter' && !await oasisConfirmer('Rejeter cette évaluation arrête le processus. Confirmer ?')) return;
-    if (requiresMotif && decision === 'renvoyer' && !await oasisConfirmer('Renvoyer pour prise en compte des observations ?')) return;
-    if (decision === 'cloturer' && !await oasisConfirmer('Clôturer la réunion prestataire ? Cela verrouille tous les onglets en lecture seule jusqu\'à la validation finale.')) return;
+    if (requiresMotif && decision === 'rejeter' && !await oasisConfirmer(t('confirmer_rejet_evaluation'))) return;
+    if (requiresMotif && decision === 'renvoyer' && !await oasisConfirmer(t('confirmer_renvoi_observations'))) return;
+    if (decision === 'cloturer' && !await oasisConfirmer(t('confirmer_cloture_reunion'))) return;
     const commentaire = (requiresMotif || decision !== 'accepter')
         ? ((await oasisSaisir(promptByDecision[decision], { requis: requiresMotif })) || '') : '';
     if (requiresMotif && !commentaire.trim()) {
@@ -1715,7 +1715,7 @@ async function updateCycleDate(evalId, kind, value, csrbo, champ) {
 
 // ── Phase 8 — Réévaluation (4.3) ──
 async function reevaluerEval(evalId) {
-    const motif = await oasisSaisir('Motif de la réévaluation', { titre: 'Réévaluer', valeur: 'Fin de cycle' });
+    const motif = await oasisSaisir(t('motif_reevaluation'), { titre: t('reevaluer_titre'), valeur: t('fin_de_cycle') });
     if (!motif) return;
     try {
         const res = await api(`${MODULE_API}/evaluations/${evalId}/reevaluer`, {

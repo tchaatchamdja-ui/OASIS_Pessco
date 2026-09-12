@@ -692,12 +692,16 @@ async function renderUsers() {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'set-prestataire', prestataire_id: sel.value }),
     });
-    showToast(res.ok ? 'Prestataire enregistré.' : 'Erreur', res.ok ? 'success' : 'error');
+    if (res.ok) showToast(t('prestataire_enregistre'), 'success');
+    else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
   }));
   document.querySelectorAll('[data-topersonnel]:not([disabled])').forEach((btn) => btn.addEventListener('click', async () => {
     const res = await api(`/api/users/${encodeURIComponent(btn.dataset.topersonnel)}/to-personnel`, { method: 'POST' });
     if (res.ok) { await loadRefs(); showToast(t('ajoute_personnel'), 'success'); renderUsers(); }
-    else { const d = await res.json().catch(() => ({})); showToast(d.error === 'exists' ? 'Déjà présent dans le Personnel AAC.' : 'Erreur', 'error'); }
+    else {
+      const d = await res.json().catch(() => ({}));
+      showToast(d.error === 'exists' ? t('deja_present_personnel') : oasisMessageErreur(d, res.status), 'error');
+    }
   }));
   document.querySelectorAll('[data-modules]').forEach((btn) => btn.addEventListener('click', () => showModulesModal(users.find((u) => u.username === btn.dataset.modules))));
   document.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => showEditUserModal(users.find((u) => u.username === btn.dataset.edit))));
@@ -1099,6 +1103,6 @@ async function renderAudit() {
   document.getElementById('verifyBtn').addEventListener('click', async () => {
     const res = await api('/api/audit/verify');
     const v = await res.json();
-    showToast(v.valid ? `${t('audit_ok')} — ${v.total} entrées` : `${t('audit_broken')} #${v.brokenAt}`, v.valid ? 'success' : 'error', 4000);
+    showToast(v.valid ? `${t('audit_ok')} — ${t('entrees_n', v.total)}` : `${t('audit_broken')} #${v.brokenAt}`, v.valid ? 'success' : 'error', 4000);
   });
 }

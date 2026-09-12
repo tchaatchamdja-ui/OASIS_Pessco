@@ -1226,7 +1226,7 @@ async function execHandlePACProofUpload(files, containerId) {
             }
         } catch (e) {
             console.error('Upload PAC proof error:', e);
-            _execToast((e && e.message) || 'Erreur lors du dépôt de la pièce', 'error');
+            _execToast((e && e.message) || te('err_depot_piece'), 'error');
         }
     }
 }

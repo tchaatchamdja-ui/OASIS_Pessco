@@ -1118,7 +1118,7 @@ async function execTransmettreRapport(rapportId) {
         if (d) execOpenDossierSlider(d.id);
     } catch (e) {
         console.error('Transmission rapport :', e);
-        _execToast((e && e.message) || 'Erreur lors de la transmission', 'error');
+        _execToast((e && e.message) || te('err_transmission'), 'error');
         if (bouton) { bouton.disabled = false; bouton.innerHTML = `${EXEC_ICONS.send} Envoyer`; }
     }
 }
@@ -1577,7 +1577,7 @@ async function execUploadAnnexeFile(input) {
 }
 
 async function execSubmitDossier(dossierId) {
-    if (!await oasisConfirmer('Soumettre ce rapport pour validation ?')) return;
+    if (!await oasisConfirmer(te('confirmer_soumettre_rapport'))) return;
     // Save first, also clear observations
     await execSaveDossier(dossierId, true);
     try {
@@ -1698,7 +1698,7 @@ async function execSaveRealisation(dossierId) {
 }
 
 async function execCloseRealisation(dossierId) {
-    if (!await oasisConfirmer('Clôturer l\'exécution sur le terrain ? La rédaction du rapport sera activée.')) return;
+    if (!await oasisConfirmer(te('confirmer_cloture_terrain'))) return;
     await execSaveRealisation(dossierId);
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/close-realisation`, { method: 'PUT' });

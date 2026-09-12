@@ -106,7 +106,7 @@ async function execSaveChecklistsPicker(dossierId, returnTab) {
 
 // Retire une checklist de la sélection du dossier (depuis la section déployée).
 async function execRemoveDossierChecklist(dossierId, checklistId) {
-    if (!await oasisConfirmer('Retirer cette checklist de la sélection ?')) return;
+    if (!await oasisConfirmer(te('confirmer_retirer_checklist'))) return;
     const dossier = (EXEC_STATE.data.dossiers || []).find(d => d.id === dossierId)
         || EXEC_STATE.selectedDossier || {};
     const _parse = v => { try { return JSON.parse(v || '[]'); } catch { return []; } };
@@ -550,7 +550,7 @@ async function execSetDossierChecklistValidee(dossierId, checklistId, validee) {
     let ids = _parse(dossier.checklists_validees);
     if (validee) { if (!ids.includes(checklistId)) ids.push(checklistId); }
     else { ids = ids.filter(id => id !== checklistId); }
-    if (validee && !await oasisConfirmer('Confirmer que cette checklist a été vérifiée et validée ?')) return;
+    if (validee && !await oasisConfirmer(te('confirmer_checklist_validee'))) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, {
             method: 'PUT', body: JSON.stringify({ checklists_validees: JSON.stringify(ids) })
@@ -565,7 +565,7 @@ async function execSetDossierChecklistValidee(dossierId, checklistId, validee) {
         } else {
             execOpenDossierSlider(dossierId);
         }
-        _execToast(validee ? 'Checklist marquée comme validée.' : 'Validation annulée.', 'success');
+        _execToast(validee ? te('checklist_validee_ok') : te('validation_annulee'), 'success');
     } catch (e) {
         _execToast(te('erreur_x', e.message || e), 'error');
     }
@@ -609,7 +609,7 @@ async function execChkFillGenConstatation(dossierId, itemId) {
     // Observation terrain saisie pour cet item (état courant du DOM)
     const obsEl = document.querySelector(`#execChkFillerGroups .exec-chk-fill-obs[data-item="${itemId}"]`);
     const observation = obsEl ? obsEl.value : '';
-    if (!await oasisConfirmer('Générer une constatation (brouillon) pour cet item non satisfaisant ?')) return;
+    if (!await oasisConfirmer(te('confirmer_generer_constat'))) return;
     try {
         const _ds = _execResolveDossierDomSec(dossier);
         const payload = {

@@ -272,7 +272,7 @@ function _renderDossiersArchives(prestataires, dossiers, domaines) {
 }
 
 async function execArchiveDossier(dossierId) {
-    if (!await oasisConfirmer('Archiver ce dossier ?')) return;
+    if (!await oasisConfirmer(te('confirmer_archiver_dossier'))) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'PUT', body: JSON.stringify({ statut: 'archive' }) });
         await execRefreshDynamic();

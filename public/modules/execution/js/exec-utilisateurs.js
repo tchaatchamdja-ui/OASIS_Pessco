@@ -202,10 +202,10 @@ async function execToggleMesUser(userId, actif) {
         await api(`${EXEC_MODULE_API}/mes-utilisateurs/${userId}`, {
             method: 'PUT', body: JSON.stringify({ actif }),
         });
-        shellShowToast(actif ? 'Compte activé' : 'Compte désactivé', 'success');
+        shellShowToast(actif ? te('compte_active') : te('compte_desactive'), 'success');
         await execLoadMesUtilisateurs();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 
@@ -245,7 +245,7 @@ async function execSaveMesUser(userId) {
         shellCloseModal();
         await execLoadMesUtilisateurs();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 
@@ -262,7 +262,7 @@ async function execResetMesUserPw(userId) {
         }
         await execLoadMesUtilisateurs();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 
@@ -286,7 +286,7 @@ function execRevealMesUserPassword(userId) {
 
 async function execDoRevealMesUserPassword(userId) {
     const adminPw = document.getElementById('mesAdminPwConfirm')?.value || '';
-    if (!adminPw) { shellShowToast((typeof pt === 'function' ? pt('required_field') : 'Requis'), 'error'); return; }
+    if (!adminPw) { shellShowToast((typeof pt === 'function' ? pt('required_field') : te('requis')), 'error'); return; }
     try {
         const res = await api(`${EXEC_MODULE_API}/mes-utilisateurs/${userId}/reveal-password`, {
             method: 'POST', body: JSON.stringify({ admin_password: adminPw })
@@ -305,7 +305,7 @@ async function execDoRevealMesUserPassword(userId) {
             }, 10000);
         }
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 

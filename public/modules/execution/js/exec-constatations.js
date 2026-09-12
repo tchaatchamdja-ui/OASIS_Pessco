@@ -309,7 +309,7 @@ async function execExporterConstatationsXlsx() {
         setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch (e) {
         console.error('Export xlsx :', e);
-        _execToast((e && e.message) || 'Erreur lors de l\'export', 'error');
+        _execToast((e && e.message) || te('err_export'), 'error');
     }
 }
 
@@ -1640,7 +1640,7 @@ async function execTransmettreConstatation(fncId) {
         execOpenConstatationDirecteSlider(fncId);
     } catch (e) {
         console.error('Transmission constatation :', e);
-        _execToast((e && e.message) || 'Erreur lors de la transmission', 'error');
+        _execToast((e && e.message) || te('err_transmission'), 'error');
         if (bouton) { bouton.disabled = false; bouton.innerHTML = `${EXEC_ICONS.send} Envoyer`; }
     }
 }

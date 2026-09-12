@@ -846,7 +846,7 @@ window.execEtatsEnvoyerRappel = async function (planId, activiteId, motif) {
     execCloseSlider();
     _execToast(te('rappel_envoye', r.destinataire), 'success');
   } catch (e) {
-    erreur.textContent = (e && e.message) || 'Envoi impossible';
+    erreur.textContent = (e && e.message) || te('envoi_impossible');
   }
 };
 
@@ -866,7 +866,7 @@ window.execEtatsArreter = async function (notifId) {
     await execRefreshDynamic();
     _execToast(te('processus_arrete'), 'success');
     execRenderPage();
-  } catch (e) { _execToast((e && e.message) || 'Arrêt impossible', 'error'); }
+  } catch (e) { _execToast((e && e.message) || te('arret_impossible'), 'error'); }
 };
 
 window.execEtatsReprendre = async function (notifId) {
@@ -881,7 +881,7 @@ window.execEtatsReprendre = async function (notifId) {
     await execRefreshDynamic();
     _execToast(te('processus_repris'), 'success');
     execRenderPage();
-  } catch (e) { _execToast((e && e.message) || 'Reprise impossible', 'error'); }
+  } catch (e) { _execToast((e && e.message) || te('reprise_impossible'), 'error'); }
 };
 
 window.execEtatsArchiverActivite = async function (notifId, archiver) {
@@ -896,9 +896,9 @@ window.execEtatsArchiverActivite = async function (notifId, archiver) {
   try {
     await api(`${EXEC_MODULE_API}/activites-en-cours/${notifId}/${archiver ? 'archiver' : 'desarchiver'}`, { method: 'PUT' });
     await execRefreshDynamic();
-    _execToast(archiver ? 'Activité archivée' : 'Activité désarchivée', 'success');
+    _execToast(archiver ? te('activite_archivee') : te('activite_desarchivee'), 'success');
     execRenderPage();
-  } catch (e) { _execToast((e && e.message) || 'Action impossible', 'error'); }
+  } catch (e) { _execToast((e && e.message) || te('action_impossible'), 'error'); }
 };
 
 // Suppression définitive : réservée au super-administrateur, confirmée deux
@@ -922,7 +922,7 @@ window.execEtatsSupprimer = async function (notifId) {
     await execRefreshDynamic();
     _execToast(te('activite_supprimee'), 'success');
     execRenderPage();
-  } catch (e) { _execToast((e && e.message) || 'Suppression impossible', 'error'); }
+  } catch (e) { _execToast((e && e.message) || te('suppression_impossible'), 'error'); }
 };
 
 // Un lot d'archives se replie : on n'ouvre que le plan qu'on vient consulter.
@@ -946,7 +946,7 @@ window.execEtatsDesarchiverPlan = async function (planId) {
     _execToast(te('plan_desarchive'), 'success');
     execRenderPage();
   } catch (e) {
-    _execToast((e && e.message) || 'Action impossible', 'error');
+    _execToast((e && e.message) || te('action_impossible'), 'error');
   }
 };
 
@@ -975,7 +975,7 @@ window.execEtatsDesarchiverActivite = async function (activiteId, parLePlan) {
     _execToast(te('activite_desarchivee'), 'success');
     execRenderPage();
   } catch (e) {
-    _execToast((e && e.message) || 'Action impossible', 'error');
+    _execToast((e && e.message) || te('action_impossible'), 'error');
   }
 };
 
@@ -991,10 +991,10 @@ window.execEtatsArchiver = async function (dossierId, archiver) {
   try {
     await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/${archiver ? 'archiver' : 'desarchiver'}`, { method: 'PUT' });
     await execRefreshDynamic();
-    _execToast(archiver ? 'Dossier archivé' : 'Dossier désarchivé', 'success');
+    _execToast(archiver ? te('dossier_archive') : te('dossier_desarchive'), 'success');
     execRenderPage();
   } catch (e) {
-    _execToast((e && e.message) || 'Action impossible', 'error');
+    _execToast((e && e.message) || te('action_impossible'), 'error');
   }
 };
 
@@ -1099,7 +1099,7 @@ window.execEtatsEnregistrerDelais = async function () {
     EXEC_ETATS.delais = { ...EXEC_ETATS_DELAIS_DEFAUT, ...(r.valeurs || {}) };
     _execToast(te('delais_enregistres'), 'success');
   } catch (e) {
-    _execToast((e && e.message) || 'Enregistrement impossible', 'error');
+    _execToast((e && e.message) || te('enregistrement_impossible'), 'error');
   }
 };
 
@@ -1350,7 +1350,7 @@ window.execRefsEnregistrer = async function () {
     _execToast(te('composition_refs_enregistree'), 'success');
     execRenderPage();
   } catch (e) {
-    _execToast((e && e.message) || 'Enregistrement impossible', 'error');
+    _execToast((e && e.message) || te('enregistrement_impossible'), 'error');
   }
 };
 

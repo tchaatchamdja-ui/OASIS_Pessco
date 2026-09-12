@@ -64,7 +64,7 @@ async function execAppliquerVue(vue, prestataireId) {
       body: JSON.stringify(prestataireId ? { vue, prestataire_id: prestataireId } : { vue }),
     });
   } catch (e) {
-    _execToast((e && e.message) || 'Bascule impossible', 'error');
+    _execToast((e && e.message) || te('bascule_impossible'), 'error');
     return;
   }
   // Le rôle conditionne la navigation, les menus et le périmètre des données :
@@ -90,7 +90,7 @@ async function execAppliquerInstance(valeur) {
       method: 'PUT', body: JSON.stringify({ instance: valeur }),
     });
   } catch (e) {
-    _execToast((e && e.message) || 'Changement d’instance impossible', 'error');
+    _execToast((e && e.message) || te('instance_changement_impossible'), 'error');
     return;
   }
   // L'instance commande le périmètre de tous les écrans : on recharge le

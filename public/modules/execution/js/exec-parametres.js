@@ -536,18 +536,18 @@ async function execSaveChecklist(clId) {
         secteurs_ids: JSON.stringify(collect('cl-secs-cb')),
         sous_activites_ids: JSON.stringify(collect('cl-sas-cb'))
     };
-    if (!data.nom) { shellShowToast('Nom requis', 'error'); return; }
+    if (!data.nom) { shellShowToast(te('msg_nom_requis'), 'error'); return; }
     try {
         if (clId) await api('/api/exec-checklists/' + clId, { method: 'PUT', body: JSON.stringify(data) });
         else      await api('/api/exec-checklists',          { method: 'POST', body: JSON.stringify(data) });
         shellCloseModal();
         await execRefreshChecklists();
         execRenderPage();
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 async function execDeleteChecklist(clId) {
-    if (!await oasisConfirmer('Supprimer cette checklist et tous ses items ?')) return;
+    if (!await oasisConfirmer(te('confirmer_suppr_checklist'))) return;
     try {
         // Cascade : supprime items + sous-thèmes liés
         const D = _execCl_data();
@@ -558,7 +558,7 @@ async function execDeleteChecklist(clId) {
         await api('/api/exec-checklists/' + clId, { method: 'DELETE' });
         await execRefreshChecklists();
         execRenderPage();
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 // ── Statuts d'évaluation manager ──
@@ -623,22 +623,22 @@ async function execSaveStatut(sId) {
         couleur: document.getElementById('stCol')?.value || '',
         ordre: parseInt(document.getElementById('stOrd')?.value || '0', 10) || 0
     };
-    if (!data.libelle) { shellShowToast('Libellé requis', 'error'); return; }
+    if (!data.libelle) { shellShowToast(te('msg_libelle_requis'), 'error'); return; }
     try {
         if (sId) await api('/api/exec-checklist-statuts/' + sId, { method: 'PUT', body: JSON.stringify(data) });
         else     await api('/api/exec-checklist-statuts',         { method: 'POST', body: JSON.stringify(data) });
         await execRefreshChecklists();
         execOpenStatutsManager();
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 async function execDeleteStatut(sId) {
-    if (!await oasisConfirmer('Supprimer ce statut ?')) return;
+    if (!await oasisConfirmer(te('confirmer_suppr_statut'))) return;
     try {
         await api('/api/exec-checklist-statuts/' + sId, { method: 'DELETE' });
         await execRefreshChecklists();
         execOpenStatutsManager();
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 // ── Éditeur Items d'une checklist — SLICER plein largeur avec édition inline ──
@@ -836,13 +836,13 @@ async function execChecklistExportXlsx(clId) {
         a.download = `checklist_${(cl?.nom || 'export').replace(/[^\w\-]/g, '_').slice(0, 60)}.xlsx`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) { shellShowToast('Export échoué : ' + (e.message || e), 'error'); }
+    } catch (e) { shellShowToast(te('export_echoue', e.message || e), 'error'); }
 }
 
 async function execChecklistImportXlsx(clId, ev) {
     const file = ev?.target?.files?.[0];
     if (!file) return;
-    const replace = await oasisConfirmer('Les lignes du fichier remplacent-elles les items existants, ou s\'y ajoutent-elles ?\n« Remplacer » supprime d\'abord tous les items de la checklist.', { titre: 'Import des items', libelle: 'Remplacer', libelleAnnuler: 'Ajouter', danger: true });
+    const replace = await oasisConfirmer(te('confirmer_import_remplacer'), { titre: te('import_items_titre'), libelle: 'Remplacer', libelleAnnuler: 'Ajouter', danger: true });
     const mode = replace ? 'replace' : 'append';
     const token = localStorage.getItem('pr_token');
     const fd = new FormData();
@@ -854,11 +854,11 @@ async function execChecklistImportXlsx(clId, ev) {
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));
-        shellShowToast(`Import OK : ${j.imported} ligne(s) — mode ${j.mode}.`, 'success');
+        shellShowToast(te('import_ok_lignes', j.imported, j.mode), 'success');
         await execRefreshChecklists();
         _execCliRenderRows(clId);
     } catch (e) {
-        shellShowToast('Import échoué : ' + (e.message || e), 'error');
+        shellShowToast(te('import_echoue', e.message || e), 'error');
     } finally {
         // Réinitialise l'input pour permettre une nouvelle sélection du même fichier
         if (ev?.target) ev.target.value = '';
@@ -990,17 +990,17 @@ async function execAddChecklistRow(clId) {
             const last = rows[rows.length - 1];
             last?.querySelector('input, textarea')?.focus();
         }, 30);
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 // Suppression d'une ligne depuis la table inline (re-rend la table en place)
 async function execDeleteChecklistItemInline(itId, clId) {
-    if (!await oasisConfirmer('Supprimer cette ligne ?')) return;
+    if (!await oasisConfirmer(te('confirmer_suppr_ligne'))) return;
     try {
         await api('/api/exec-checklist-items/' + itId, { method: 'DELETE' });
         await execRefreshChecklists();
         _execCliRenderRows(clId);
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 // Quand le thème d'une ligne change, recalcule les sous-thèmes éligibles de la même ligne.
@@ -1038,7 +1038,7 @@ async function _execCliAutosave(itId, field, value) {
         if (it) it[field] = value;
     } catch (e) {
         if (stateEl) { stateEl.textContent = '⚠ erreur'; stateEl.style.color = '#ef4444'; }
-        shellShowToast(e.message || 'Erreur d\'enregistrement', 'error');
+        shellShowToast(e.message || te('err_enregistrement_bref'), 'error');
     }
 }
 
@@ -1100,7 +1100,7 @@ async function execSousThemesExportXlsx(clId) {
         a.download = `sous_themes_${(cl?.nom || 'export').replace(/[^\w\-]/g, '_').slice(0, 50)}.xlsx`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) { shellShowToast('Export échoué : ' + (e.message || e), 'error'); }
+    } catch (e) { shellShowToast(te('export_echoue', e.message || e), 'error'); }
 }
 
 async function execSousThemesImportXlsx(clId, ev) {
@@ -1115,11 +1115,11 @@ async function execSousThemesImportXlsx(clId, ev) {
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));
-        shellShowToast(`Import OK : ${j.imported} sous-thème(s).`, 'success');
+        shellShowToast(te('import_ok_sous_themes', j.imported), 'success');
         await execRefreshChecklists();
         execOpenSousThemesManager(clId);
     } catch (e) {
-        shellShowToast('Import échoué : ' + (e.message || e), 'error');
+        shellShowToast(te('import_echoue', e.message || e), 'error');
     } finally {
         if (ev?.target) ev.target.value = '';
     }
@@ -1164,22 +1164,22 @@ async function execSaveSousTheme(clId, stId) {
         libelle: document.getElementById('stLib2')?.value.trim() || '',
         ordre: parseInt(document.getElementById('stOrd2')?.value || '0', 10) || 0
     };
-    if (!data.theme_id || !data.libelle) { shellShowToast('Thème et libellé requis', 'error'); return; }
+    if (!data.theme_id || !data.libelle) { shellShowToast(te('theme_libelle_requis'), 'error'); return; }
     try {
         if (stId) await api('/api/exec-checklist-sous-themes/' + stId, { method: 'PUT', body: JSON.stringify(data) });
         else      await api('/api/exec-checklist-sous-themes',          { method: 'POST', body: JSON.stringify(data) });
         await execRefreshChecklists();
         execOpenSousThemesManager(clId);
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 async function execDeleteSousTheme(stId, clId) {
-    if (!await oasisConfirmer('Supprimer ce sous-thème ?')) return;
+    if (!await oasisConfirmer(te('confirmer_suppr_sous_theme'))) return;
     try {
         await api('/api/exec-checklist-sous-themes/' + stId, { method: 'DELETE' });
         await execRefreshChecklists();
         execOpenSousThemesManager(clId);
-    } catch (e) { shellShowToast(e.message || 'Erreur', 'error'); }
+    } catch (e) { shellShowToast(e.message || te('erreur_generique'), 'error'); }
 }
 
 // ── Chargement / refresh checklists ──
@@ -1253,7 +1253,7 @@ async function execSaveCriticite(critId) {
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 
@@ -1264,7 +1264,7 @@ async function execDeleteCriticite(critId) {
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 
@@ -1311,7 +1311,7 @@ async function execSaveTypeCas(tcId) {
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 
@@ -1322,7 +1322,7 @@ async function execDeleteTypeCas(tcId) {
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {
-        shellShowToast(e.message || 'Erreur', 'error');
+        shellShowToast(e.message || te('erreur_generique'), 'error');
     }
 }
 

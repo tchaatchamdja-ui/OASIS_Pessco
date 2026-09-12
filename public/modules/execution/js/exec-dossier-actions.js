@@ -7,7 +7,7 @@
  */
 
 async function execValidateRapport(rapportId) {
-    if (!await oasisConfirmer('Valider ce rapport ? Un numéro de rapport final sera généré.')) return;
+    if (!await oasisConfirmer(te('confirmer_valider_rapport'))) return;
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/validate`, { method: 'PUT' });
         await execRefreshDynamic();
@@ -21,8 +21,8 @@ async function execValidateRapport(rapportId) {
 }
 
 async function execAmendRapport(rapportId) {
-    const observations = await oasisSaisir('Observations pour l’amendement — les points à corriger',
-        { titre: 'Amender le rapport', libelle: 'Renvoyer en rédaction' });
+    const observations = await oasisSaisir(te('observations_amendement'),
+        { titre: te('amender_rapport_titre'), libelle: te('renvoyer_redaction') });
     if (observations === null) return;
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/amend`, {
@@ -39,7 +39,7 @@ async function execAmendRapport(rapportId) {
 }
 
 async function execSendRapportValidated(rapportId) {
-    if (!await oasisConfirmer('Envoyer ce rapport à l\'organisme ?')) return;
+    if (!await oasisConfirmer(te('confirmer_envoyer_organisme'))) return;
     try {
         await api(`${EXEC_MODULE_API}/rapports/${rapportId}/send`, { method: 'PUT' });
         await execRefreshDynamic();
@@ -78,7 +78,7 @@ async function execGenerateNotificationPdf(dossierId) {
 }
 
 async function execReturnDossier(dossierId) {
-    if (!await oasisConfirmer('Confirmer le renvoi du dossier pour correction ?')) return;
+    if (!await oasisConfirmer(te('confirmer_renvoi_dossier'))) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/return`, {
             method: 'PUT',
@@ -183,7 +183,7 @@ async function execSaveDossier(dossierId, silent) {
 }
 
 async function execCloseDossier(dossierId) {
-    if (!await oasisConfirmer('Cloturer ce dossier ?')) return;
+    if (!await oasisConfirmer(te('confirmer_cloture_dossier'))) return;
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/close`, { method: 'PUT' });
         await execRefreshDynamic();

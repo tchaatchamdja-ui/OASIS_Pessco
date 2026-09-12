@@ -185,7 +185,7 @@ window.execProcEnregistrerAccord = async function () {
     _execToast(te('confirmation_enregistree'), 'success');
     await execProcRecharger('confirmation');
   } catch (e) {
-    _execToast((e && e.message) || 'Enregistrement impossible', 'error');
+    _execToast((e && e.message) || te('enregistrement_impossible'), 'error');
   }
 };
 
@@ -1016,7 +1016,7 @@ window.execProcAction = async function (action, message) {
     EXEC_PROC.sousEtape = null;   // la sous-étape suivante devient la courante
     await execProcRecharger();
   } catch (e) {
-    _execToast((e && e.message) || 'Action impossible', 'error');
+    _execToast((e && e.message) || te('action_impossible'), 'error');
   }
 };
 
@@ -1076,7 +1076,7 @@ window.execProcRenvoyerSoumission = async function () {
     EXEC_PROC.sousEtape = null;
     await execProcRecharger('notification');
   } catch (e) {
-    _execToast((e && e.message) || 'Renvoi impossible', 'error');
+    _execToast((e && e.message) || te('renvoi_impossible'), 'error');
   }
 };
 
@@ -1111,7 +1111,7 @@ window.execProcRejeter = async function () {
     EXEC_PROC.editionAutorisee = false;
     await execProcRecharger();
   } catch (e) {
-    _execToast((e && e.message) || 'Rejet impossible', 'error');
+    _execToast((e && e.message) || te('rejet_impossible'), 'error');
   }
 };
 
@@ -1138,7 +1138,7 @@ window.execProcValiderAccord = async function () {
     EXEC_PROC.sousEtape = null;
     await execProcRecharger('realisation');
   } catch (e) {
-    _execToast((e && e.message) || 'Validation impossible', 'error');
+    _execToast((e && e.message) || te('validation_impossible'), 'error');
   }
 };
 

@@ -125,7 +125,7 @@ async function execDownloadRapport(rapportId, autoPrint, retournerHtml) {
         rapport = await api(`${EXEC_MODULE_API}/rapports/${rapportId}`);
     } catch (e) {
         console.error('Load rapport error:', e);
-        _execToast((e && e.message) || 'Erreur lors du chargement du rapport', 'error');
+        _execToast((e && e.message) || te('err_chargement_rapport'), 'error');
         return;
     }
     if (!rapport) return;
@@ -512,7 +512,7 @@ function execExportConstatations(dossierId, format) {
     const constatations = dossier.constatations || [];
     if (constatations.length === 0) { _execToast(te('no_data'), 'info'); return; }
     const aac = EXEC_STATE.data.aac || {};
-    const headers = [te('reference'), te('criticite'), te('description_constatation'), 'Date Ouv.', 'Délai', te('date_due'), te('status')];
+    const headers = [te('reference'), te('criticite'), te('description_constatation'), te('date_ouverture_court'), te('delai'), te('date_due'), te('status')];
     const rows = constatations.map(c => [
         c.reference || '',
         c.criticite || c.gravite || '',
@@ -793,7 +793,7 @@ async function _execDownloadAsWord(html, filename) {
         window.location.href = `${EXEC_MODULE_API}/documents/word/${jeton}`;
     } catch (e) {
         console.error('Export Word :', e);
-        _execToast((e && e.message) || 'Erreur lors du téléchargement', 'error');
+        _execToast((e && e.message) || te('err_telechargement'), 'error');
     }
 }
 

@@ -186,7 +186,7 @@ async function execPreviewRapport(rapportId) {
   try {
     rapport = await api(`${EXEC_MODULE_API}/rapports/${rapportId}`);
   } catch (e) {
-    _execToast((e && e.message) || 'Erreur lors du chargement du rapport', 'error');
+    _execToast((e && e.message) || te('err_chargement_rapport'), 'error');
     return;
   }
   if (!rapport) return;

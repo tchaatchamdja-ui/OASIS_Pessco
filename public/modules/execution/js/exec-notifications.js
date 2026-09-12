@@ -841,7 +841,7 @@ async function execValidateNotification(notifId) {
 }
 
 async function execRejectNotification(notifId) {
-    const motif = await oasisSaisir('Motif du rejet', { titre: 'Rejeter la notification', libelle: 'Rejeter' });
+    const motif = await oasisSaisir('Motif du rejet', { titre: te('rejeter_notification_titre'), libelle: 'Rejeter' });
     if (motif === null) return;
     try {
         await api(`${EXEC_MODULE_API}/notifications/${notifId}/reject`, { method: 'PUT', body: JSON.stringify({ motif }) });
@@ -878,7 +878,7 @@ async function execSubmitBrouillon(notifId) {
             if (typeof showNotification === 'function') showNotification(te('notification_submitted'), 'success');
         } catch (e) {
             console.error('Submit brouillon error:', e);
-            oasisToast(e.message || 'Erreur lors de la soumission', 'error');
+            oasisToast(e.message || te('err_soumission'), 'error');
         }
     });
 }
@@ -925,7 +925,7 @@ function _showValidatorPicker(onConfirm) {
 }
 
 async function execDeleteBrouillon(notifId) {
-    if (!await oasisConfirmer('Supprimer ce brouillon ? L\'activité sera de nouveau disponible dans "A Notifier".')) return;
+    if (!await oasisConfirmer(te('confirmer_suppr_brouillon'))) return;
     try {
         await api(`${EXEC_MODULE_API}/notifications/${notifId}`, { method: 'DELETE' });
         await execRefreshDynamic();
@@ -934,12 +934,12 @@ async function execDeleteBrouillon(notifId) {
         if (typeof showNotification === 'function') showNotification('Brouillon supprimé', 'success');
     } catch (e) {
         console.error('Delete brouillon error:', e);
-        oasisToast(e.message || 'Erreur lors de la suppression', 'error');
+        oasisToast(e.message || te('err_suppression'), 'error');
     }
 }
 
 async function execCancelNotification(notifId, fromTab) {
-    const motif = await oasisSaisir('Motif de l’annulation', { titre: 'Annuler la notification', libelle: 'Annuler la notification', libelleAnnuler: 'Revenir' });
+    const motif = await oasisSaisir('Motif de l’annulation', { titre: te('annuler_notification_titre'), libelle: te('annuler_notification_titre'), libelleAnnuler: 'Revenir' });
     if (motif === null) return;
     try {
         await api(`${EXEC_MODULE_API}/notifications/${notifId}/cancel`, {
@@ -952,7 +952,7 @@ async function execCancelNotification(notifId, fromTab) {
         if (typeof showNotification === 'function') showNotification('Notification annulée', 'success');
     } catch (e) {
         console.error('Cancel notification error:', e);
-        oasisToast(e.message || 'Erreur lors de l\'annulation', 'error');
+        oasisToast(e.message || te('err_annulation'), 'error');
     }
 }
 
@@ -1060,7 +1060,7 @@ async function execSaveContactChanges(prestataireId) {
         if (typeof showNotification === 'function') showNotification('Contacts mis à jour', 'success');
     } catch (e) {
         console.error('Save contacts error:', e);
-        oasisToast(e.message || 'Erreur', 'error');
+        oasisToast(e.message || te('erreur_generique'), 'error');
     }
 }
 

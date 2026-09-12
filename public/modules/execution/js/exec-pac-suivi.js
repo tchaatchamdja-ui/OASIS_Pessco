@@ -210,7 +210,7 @@ async function execExporterFncPdf(fncId) {
         fnc = await api(`${EXEC_MODULE_API}/constatations/${fncId}`);
     } catch (e) {
         console.error('Export FNC :', e);
-        _execToast((e && e.message) || 'Erreur lors de la préparation du document', 'error');
+        _execToast((e && e.message) || te('err_preparation_document'), 'error');
         return;
     }
     if (!fnc) return;
@@ -421,7 +421,7 @@ async function execEnvoyerEchangePac(fncId) {
         execPacDiscussionsOuvrir(fncId);          // le tiroir reste ouvert
     } catch (e) {
         console.error('Envoi échange PAC :', e);
-        _execToast((e && e.message) || 'Erreur lors de l\'envoi du message', 'error');
+        _execToast((e && e.message) || te('err_envoi_message'), 'error');
     }
 }
 
@@ -943,7 +943,7 @@ async function execReturnPACtoPostulant(fncId) {
         execOpenPACSlider(fncId);
     } catch (e) {
         console.error('Return PAC error:', e);
-        _execToast((e && e.message) || 'Erreur lors du renvoi du PAC', 'error');
+        _execToast((e && e.message) || te('err_renvoi_pac'), 'error');
     }
 }
 
@@ -1011,7 +1011,7 @@ async function _execPacRetablirPlanAccepte(fncId) {
         await execRefreshDynamic();
     } catch (e) {
         console.error('Rétablissement du plan accepté :', e);
-        _execToast((e && e.message) || 'Erreur lors du rétablissement du plan', 'error');
+        _execToast((e && e.message) || te('err_retablissement_plan'), 'error');
     }
 }
 
@@ -1092,7 +1092,7 @@ async function execSoumettreMiseEnOeuvre(fncId, mode) {
         execOpenPACSlider(fncId);
     } catch (e) {
         console.error('Soumission mise en oeuvre error:', e);
-        _execToast((e && e.message) || 'Erreur lors de la soumission', 'error');
+        _execToast((e && e.message) || te('err_soumission'), 'error');
     }
 }
 
@@ -1118,7 +1118,7 @@ function execPreuvesNonAcceptables(fncId) {
             execOpenPACSlider(fncId);
         } catch (e) {
             console.error('Refus des preuves :', e);
-            _execToast((e && e.message) || 'Erreur lors du refus des preuves', 'error');
+            _execToast((e && e.message) || te('err_refus_preuves'), 'error');
         }
     });
 }
@@ -1150,7 +1150,7 @@ async function execAccepterPreuves(fncId) {
         execOpenPACSlider(fncId);
     } catch (e) {
         console.error('Acceptation des preuves :', e);
-        _execToast((e && e.message) || 'Erreur lors de l\'acceptation des preuves', 'error');
+        _execToast((e && e.message) || te('err_acceptation_preuves'), 'error');
     }
 }
 
@@ -1185,7 +1185,7 @@ function execRenvoyerMiseEnOeuvre(fncId) {
             execOpenPACSlider(fncId);
         } catch (e) {
             console.error('Renvoi à la mise en oeuvre :', e);
-            _execToast((e && e.message) || 'Erreur lors du renvoi', 'error');
+            _execToast((e && e.message) || te('err_renvoi'), 'error');
         }
     });
 }
@@ -1230,7 +1230,7 @@ async function execAccepterPAC(fncId, avecPreuves) {
         execOpenPACSlider(fncId);
     } catch (e) {
         console.error('Accepter PAC error:', e);
-        _execToast((e && e.message) || 'Erreur lors de l\'acceptation du PAC', 'error');
+        _execToast((e && e.message) || te('err_acceptation_pac'), 'error');
     }
 }
 

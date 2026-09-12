@@ -51,7 +51,7 @@ function buildSynthesisAccordion(ev, accPrefix) {
         <div class="detail-item"><label>IDS</label><span class="badge">${idsG}</span></div>
         <div class="detail-item"><label>IDE</label><span class="badge">${g.ide_g || '-'}</span></div>
         <div class="detail-item"><label>Index Risque</label><span class="badge ${getRiskBadgeClass(riskDesc)}">${riskLabel}</span></div>
-        <div class="detail-item"><label>Intensité</label><span>${intensity}</span></div>
+        <div class="detail-item"><label>${t('intensity')}</label><span>${intensity}</span></div>
         <div class="detail-item"><label>Cycle (CSRBO)</label><span style="font-weight:700;color:var(--primary);">${csrbo} ${t('months')}</span></div>
     </div>`;
     if (idsG === 'Incohérant') {
@@ -87,14 +87,14 @@ function buildSynthesisAccordion(ev, accPrefix) {
         <div class="accordion-item acc-level-2">
             <div class="accordion-header" data-acc-id="${gId}" onclick="toggleAccordion('${gId}')">
                 <span class="chevron">${ICONS.chevron}</span>
-                <span class="acc-title">Synthèse Globale</span>
+                <span class="acc-title">${t('global_synthesis')}</span>
             </div>
             <div class="accordion-body" id="acc-body-${gId}">${globalHtml}</div>
         </div>
         <div class="accordion-item acc-level-2">
             <div class="accordion-header" data-acc-id="${sId}" onclick="toggleAccordion('${sId}')">
                 <span class="chevron">${ICONS.chevron}</span>
-                <span class="acc-title">Synthèse par Sous-activité</span>
+                <span class="acc-title">${t('synthesis_by_sa')}</span>
                 <span class="acc-count">${sas.length}</span>
             </div>
             <div class="accordion-body" id="acc-body-${sId}">${saHtml || t('no_data')}</div>
@@ -189,9 +189,9 @@ function renderEvalProcessSteps(ev) {
         return `<span class="eval-step ${state}" title="${tip}">${s.label}</span>`;
     }).join('');
     const flag = rejected
-        ? '<span class="eval-step rejected" title="Évaluation rejetée — circuit interrompu">Rejetée</span>'
-        : (cur === -1 ? '<span class="eval-step todo" title="Aucun évaluateur désigné : la notation n\'est pas encore ouverte">En préparation</span>' : '');
-    return `<div class="eval-steps" role="img" aria-label="Avancement de l'évaluation">${items}${flag}</div>`;
+        ? '<span class="eval-step rejected" title="' + t('eval_rejected_stopped') + '">' + t('rejected_f') + '</span>'
+        : (cur === -1 ? '<span class="eval-step todo" title="' + t('no_assessor_yet') + '">' + t('in_preparation') + '</span>' : '');
+    return `<div class="eval-steps" role="img" aria-label="${t('eval_progress')}">${items}${flag}</div>`;
 }
 
 // Tout déplier / tout replier (doubles chevrons)
@@ -385,7 +385,7 @@ function renderEvaluations() {
 
         const renvoiBlock = (ev.statut === 'renvoyee' && (ev.commentaire_directeur || '').trim())
             ? `<div style="background:#fee2e2;border-left:4px solid #dc2626;border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.75rem;">
-                <div style="font-weight:700;color:#991b1b;font-size:0.82rem;">↩ Renvoyée pour prise en compte des observations</div>
+                <div style="font-weight:700;color:#991b1b;font-size:0.82rem;">${t('returned_for_observations')}</div>
                 <div style="font-size:0.78rem;color:#7f1d1d;margin-top:0.15rem;">${ev.date_revue_directeur ? 'Le ' + formatDate(ev.date_revue_directeur) : ''}</div>
                 <div style="font-size:0.85rem;margin-top:0.4rem;white-space:pre-wrap;color:#7f1d1d;">${_genEsc(ev.commentaire_directeur)}</div>
             </div>` : '';
@@ -420,7 +420,7 @@ function renderEvaluations() {
                 <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="${t('edit')}">${ICONS.edit}</button>
                 ${ev.statut === 'brouillon' && canCreate ?
                     `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}">${ICONS.trash}</button>` : ''}
-                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="Détails">${ICONS.chevron}</button>
+                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('details')}">${ICONS.chevron}</button>
             </div>
             <div class="accordion-body" id="acc-body-${accId}">${detailHtml}</div>
         </div>`;
@@ -535,7 +535,7 @@ function renderEvalResults() {
                 <span class="badge ${getRiskBadgeClass(risk.risk)}" style="margin-left:auto;">${risk.label || '-'}</span>
                 <span style="font-weight:700;color:var(--primary);">${csrbo} ${t('months')}</span>
                 <span class="date-cell">${formatDate(ev.date_validation || ev.date)}</span>
-                <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="Consulter les indicateurs et notes">${ICONS.eye}</button>
+                <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="${t('view_indicators_scores')}">${ICONS.eye}</button>
                 <button class="btn-icon" onclick="exportEvalReport('${ev.id}','word')" title="Exporter Word">${ICONS.word}</button>
                 <button class="btn-icon" onclick="exportEvalReport('${ev.id}','pdf')" title="Exporter PDF">${ICONS.download}</button>
                 ${prCanSupprimerEval(ev) ? `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}">${ICONS.trash}</button>` : ''}
@@ -544,7 +544,7 @@ function renderEvalResults() {
             ${reminderBanner}
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.4rem;padding-top:0.4rem;border-top:1px dashed var(--border);font-size:0.78rem;align-items:center;">
                 <label style="display:flex;align-items:center;gap:0.3rem;color:var(--text-muted);white-space:nowrap;">
-                    <span style="white-space:nowrap;">Début Cycle :</span>
+                    <span style="white-space:nowrap;">${t('cycle_start_label')}</span>
                     <input type="date" value="${debut}" ${dInputAttrs}
                         onchange="updateCycleDate('${ev.id}','debut',this.value,${csrbo || 0},this)"
                         style="${dInputStyle}">
@@ -556,10 +556,10 @@ function renderEvalResults() {
                         style="${dInputStyle}">
                 </label>
                 ${prCanReevaluer(ev)
-                    ? `<button class="${reevalBtnClass}" style="${reevalBtnStyle}margin-left:auto;" onclick="reevaluerEval('${ev.id}')">↻ Réévaluer</button>`
+                    ? `<button class="${reevalBtnClass}" style="${reevalBtnStyle}margin-left:auto;" onclick="reevaluerEval('${ev.id}')">${t('reevaluer_btn')}</button>`
                     : (prReevaluationEnCours(ev)
                         ? `<span style="margin-left:auto;font-size:.72rem;color:var(--text-muted);">Réévaluation en cours (cycle ${prReevaluationEnCours(ev).cycle || (ev.cycle || 1) + 1})</span>`
-                        : `<span style="margin-left:auto;font-size:.72rem;color:var(--text-muted);" title="Réservé aux privilèges Gestionnaire et Validateur couvrant ce domaine et ce secteur.">Réévaluation non autorisée</span>`)}
+                        : `<span style="margin-left:auto;font-size:.72rem;color:var(--text-muted);" title="${t('reserved_manager_validator')}">${t('reassess_not_allowed')}</span>`)}
             </div>
             <div class="accordion-body" id="acc-body-${accId}">${buildSynthesisAccordion(ev, accId)}</div>
         </div>`;

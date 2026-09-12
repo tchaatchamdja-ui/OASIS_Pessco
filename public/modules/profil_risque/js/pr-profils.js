@@ -284,7 +284,7 @@ function openIndividualIndicator(evalId, type, indId, saId) {
     }
 
     // Trend arrow text
-    let trendLine = '<div style="color:var(--text-muted);font-style:italic;font-size:0.78rem;">Pas d\'évaluation antérieure</div>';
+    let trendLine = '<div style="color:var(--text-muted);font-style:italic;font-size:0.78rem;">' + t('no_previous_eval') + '</div>';
     if (currentScore && prevScore) {
         const diff = currentScore - prevScore;
         let icon, col, lbl;
@@ -349,17 +349,17 @@ function openIndividualIndicator(evalId, type, indId, saId) {
         </div>
 
         <div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Tendance vs évaluation précédente</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">${t('trend_vs_previous')}</div>
             ${trendLine}
         </div>
 
         ${criteriaHtml ? `<div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;">Critères d'évaluation</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;">${t('assessment_criteria')}</div>
             ${criteriaHtml}
         </div>` : ''}
 
         <div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Situation par rapport aux autres prestataires du secteur</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">${t('position_vs_peers')}</div>
             <div style="display:flex;flex-wrap:wrap;gap:0.4rem;font-size:0.78rem;margin-bottom:0.3rem;">
                 <div style="flex:1;background:var(--bg);padding:0.3rem 0.5rem;border-radius:4px;border:1px solid var(--border);">
                     <div style="color:var(--text-muted);font-size:0.7rem;">Moyenne pairs</div>
@@ -370,13 +370,13 @@ function openIndividualIndicator(evalId, type, indId, saId) {
                     <strong style="font-size:0.9rem;">${rank ? `${rank}/${totalPeers + 1}` : '-'}</strong>
                 </div>
                 <div style="flex:1;background:var(--bg);padding:0.3rem 0.5rem;border-radius:4px;border:1px solid var(--border);">
-                    <div style="color:var(--text-muted);font-size:0.7rem;">Pairs évalués</div>
+                    <div style="color:var(--text-muted);font-size:0.7rem;">${t('peers_assessed')}</div>
                     <strong style="font-size:0.9rem;">${totalPeers}</strong>
                 </div>
             </div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">Distribution des notes (pairs)</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">${t('scores_distribution')}</div>
             ${distHtml}
-            ${peerListHtml ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;">Détail par prestataire</div>${peerListHtml}` : ''}
+            ${peerListHtml ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;">${t('detail_by_provider')}</div>${peerListHtml}` : ''}
         </div>
     </div>`;
 
@@ -460,7 +460,7 @@ function openIndividualGroup(evalId, type, saId) {
         .filter(e => e.statut === 'valide' && e.prestataire_id === ev.prestataire_id && e.id !== ev.id)
         .sort((a, b) => new Date(b.date_validation || b.date) - new Date(a.date_validation || a.date))[0];
     const prev = myPrev ? _grpTaux(myPrev) : null;
-    let trendHtml = '<div style="color:var(--text-muted);font-style:italic;font-size:0.78rem;">Pas d\'évaluation antérieure</div>';
+    let trendHtml = '<div style="color:var(--text-muted);font-style:italic;font-size:0.78rem;">' + t('no_previous_eval') + '</div>';
     if (my && prev && prev.cnt > 0 && my.cnt > 0) {
         const diff = my.taux - prev.taux;
         let icon, col, lbl;
@@ -518,7 +518,7 @@ function openIndividualGroup(evalId, type, saId) {
                 </div>`;
             }).join('')}
         </div>
-        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">La barre <span style="color:#1d4ed8;font-weight:700;">bleue</span> représente la tranche du prestataire courant.</div>`;
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">${t('the_bar')} <span style="color:#1d4ed8;font-weight:700;">bleue</span> ${t('represents_current_band')}</div>`;
     } else {
         distHtml = `<div class="text-center" style="padding:0.5rem;color:var(--text-muted);font-style:italic;font-size:0.78rem;">${t('no_peer_group')}</div>`;
     }
@@ -546,7 +546,7 @@ function openIndividualGroup(evalId, type, saId) {
 
     const bodyHtml = `<div style="display:flex;flex-direction:column;gap:0.6rem;">
         <div style="border-left:4px solid ${color};padding:0.35rem 0.6rem;background:var(--bg);border-radius:4px;">
-            <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Synthèse de groupe</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">${t('group_summary')}</div>
             <div style="font-weight:800;font-size:0.95rem;color:${color};">${_esc(groupTitle)}</div>
             <div style="font-size:0.78rem;color:#374151;margin-top:0.15rem;">${inds.length} indicateur${inds.length>1?'s':''}</div>
         </div>
@@ -572,19 +572,19 @@ function openIndividualGroup(evalId, type, saId) {
         </div>
 
         <div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Tendance vs évaluation précédente</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">${t('trend_vs_previous')}</div>
             ${trendHtml}
         </div>
 
         ${indListHtml ? `<div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Indicateurs du groupe</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">${t('group_indicators')}</div>
             <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;">${indListHtml}</div>
         </div>` : ''}
 
         <div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">Situation par rapport aux autres prestataires du secteur</div>
+            <div style="font-size:0.72rem;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.2rem;">${t('position_vs_peers')}</div>
             ${distHtml}
-            ${peerListHtml ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;">Détail par prestataire</div>${peerListHtml}` : ''}
+            ${peerListHtml ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem;">${t('detail_by_provider')}</div>${peerListHtml}` : ''}
         </div>
     </div>`;
 
@@ -802,7 +802,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
     if (!ev) {
         return `${header}
         <div class="text-center" style="padding:2rem;color:var(--text-muted);">
-            Aucune évaluation validée pour le prestataire sélectionné.
+            ${t('no_validated_eval_provider')}
         </div>`;
     }
 
@@ -827,7 +827,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
             const bg = (score >= n && score >= 1) ? fillColor : '#e5e7eb';
             return `<div style="flex:1;height:14px;background:${bg};border-radius:${n===1?'10px 0 0 10px':(n===3?'0 10px 10px 0':'0')};"></div>`;
         }).join('');
-        const lbl = score >= 1 && score <= 3 ? `<div style="font-size:0.68rem;color:#555;text-align:center;margin-top:0.15rem;">Score : <strong>${score}</strong>/3</div>` : `<div style="font-size:0.68rem;color:var(--text-muted);text-align:center;margin-top:0.15rem;font-style:italic;">non noté</div>`;
+        const lbl = score >= 1 && score <= 3 ? `<div style="font-size:0.68rem;color:#555;text-align:center;margin-top:0.15rem;">Score : <strong>${score}</strong>/3</div>` : `<div style="font-size:0.68rem;color:var(--text-muted);text-align:center;margin-top:0.15rem;font-style:italic;">${t('not_scored')}</div>`;
         return `<div style="display:flex;flex-direction:column;width:100%;">
             <div style="display:flex;width:100%;border:1px solid #d1d5db;border-radius:11px;overflow:hidden;background:#f9fafb;">${segs}</div>
             ${lbl}
@@ -847,7 +847,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
         const c = parseInt(currentScore || 0);
         const p = parseInt(prevScore || 0);
         if (!c || !p) {
-            return `<div style="font-size:0.65rem;color:var(--text-muted);text-align:center;margin-top:0.25rem;font-style:italic;">Pas d'évaluation antérieure</div>`;
+            return `<div style="font-size:0.65rem;color:var(--text-muted);text-align:center;margin-top:0.25rem;font-style:italic;">${t('no_previous_eval')}</div>`;
         }
         const diff = c - p;
         const isComp = (type === 'comp');
@@ -930,7 +930,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
                 <span class="chevron expanded">${ICONS.chevron}</span>
                 <span class="acc-title" style="font-weight:700;font-size:0.78rem;color:${color};">${sa.code} — ${sa.nom}</span>
                 <span style="margin-left:auto;font-size:0.7rem;color:var(--text-muted);">${count} indicateur${count>1?'s':''}</span>
-                <button class="btn btn-outline btn-sm" style="padding:0.15rem 0.45rem;font-size:0.7rem;margin-left:0.4rem;" onclick="event.stopPropagation();openIndividualGroup('${ev.id}','${type}','${sa.id}')" title="Synthèse du groupe et comparaison aux pairs">📊 Synthèse</button>
+                <button class="btn btn-outline btn-sm" style="padding:0.15rem 0.45rem;font-size:0.7rem;margin-left:0.4rem;" onclick="event.stopPropagation();openIndividualGroup('${ev.id}','${type}','${sa.id}')" title="${t('group_summary_peers')}">${t('summary_tab')}</button>
             </div>
             <div class="accordion-body expanded" id="acc-body-${aId}" style="padding:0.4rem;">
                 <div style="${_gridStyle}">${cardsHtml}</div>
@@ -971,7 +971,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
     if (perfInds.length) {
         const cards = perfInds.map(ind => makeIndCard(ind, ev.notes_perf?.[ind.id] || 0, prevEv?.notes_perf?.[ind.id] || 0, 'perf', '#059669')).join('');
         perfBody = `<div style="display:flex;justify-content:flex-end;padding:0.2rem 0.5rem 0;">
-            <button class="btn btn-outline btn-sm" style="padding:0.15rem 0.45rem;font-size:0.7rem;" onclick="openIndividualGroup('${ev.id}','perf','')" title="Synthèse Performance et comparaison aux pairs">📊 Synthèse</button>
+            <button class="btn btn-outline btn-sm" style="padding:0.15rem 0.45rem;font-size:0.7rem;" onclick="openIndividualGroup('${ev.id}','perf','')" title="${t('perf_summary_peers')}">${t('summary_tab')}</button>
         </div>
         <div style="${_gridStyle};padding:0.35rem 0.5rem;">${cards}</div>`;
     }
@@ -998,11 +998,11 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
             <button class="btn btn-outline btn-sm" onclick="expandCollapseAll('indivContainer',false)">${t('collapse_all')}</button>
         </div>
         <div id="indivContainer">
-            <h3 style="margin:0.75rem 0 0.3rem;font-size:0.82rem;font-weight:700;color:#1a365d;">Conformité — Détail des indicateurs</h3>
+            <h3 style="margin:0.75rem 0 0.3rem;font-size:0.82rem;font-weight:700;color:#1a365d;">${t('conformity_indicators_detail')}</h3>
             ${confSection}
-            <h3 style="margin:0.75rem 0 0.3rem;font-size:0.82rem;font-weight:700;color:#059669;">Performance — Détail des indicateurs</h3>
+            <h3 style="margin:0.75rem 0 0.3rem;font-size:0.82rem;font-weight:700;color:#059669;">${t('performance_indicators_detail')}</h3>
             ${perfSection}
-            <h3 style="margin:0.75rem 0 0.3rem;font-size:0.82rem;font-weight:700;color:#d97706;">Complexité — Détail des indicateurs</h3>
+            <h3 style="margin:0.75rem 0 0.3rem;font-size:0.82rem;font-weight:700;color:#d97706;">${t('complexity_indicators_detail')}</h3>
             ${compSection}
         </div>`;
 }
@@ -1237,28 +1237,28 @@ function _prStatsTendancesHtml(D, allValids) {
     const trendChartHtml = `<div class="chart-card" style="padding:0.6rem 0.75rem;margin-bottom:1rem;">
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">
             <div style="font-weight:700;font-size:0.82rem;">Tendances — ${tmInfo.label} <span style="color:var(--text-muted);font-weight:400;font-size:0.72rem;">(Δ ${usePeriod ? 'sur période sélectionnée' : 'entre les 2 dernières évaluations'})</span></div>
-            <button class="btn btn-outline btn-sm" style="margin-left:auto;font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="window._dashTrend={mode:'prestataire',metric:'conf',start:'',end:''};renderPage();" title="Réinitialiser">${ICONS.refresh}</button>
+            <button class="btn btn-outline btn-sm" style="margin-left:auto;font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="window._dashTrend={mode:'prestataire',metric:'conf',start:'',end:''};renderPage();" title="${t('reset_filters')}">${ICONS.refresh}</button>
         </div>
         <div style="display:flex;gap:0.75rem;align-items:flex-start;flex-wrap:wrap;">
             <div style="flex:1;min-width:280px;">${trendSvg}</div>
             <div style="width:200px;display:flex;flex-direction:column;gap:0.3rem;font-size:0.72rem;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:0.6rem;">
                 <label style="display:flex;flex-direction:column;gap:0.1rem;">Regroupement
                     <select onchange="window._dashTrend.mode=this.value;renderPage();" style="${_trSel}">
-                        <option value="secteur" ${dt.mode==='secteur'?'selected':''}>Secteur</option>
-                        <option value="prestataire" ${dt.mode==='prestataire'?'selected':''}>Prestataire</option>
+                        <option value="secteur" ${dt.mode==='secteur'?'selected':''}>${t('sector')}</option>
+                        <option value="prestataire" ${dt.mode==='prestataire'?'selected':''}>${t('provider')}</option>
                     </select>
                 </label>
                 <label style="display:flex;flex-direction:column;gap:0.1rem;">Indicateur
                     <select onchange="window._dashTrend.metric=this.value;renderPage();" style="${_trSel}">
-                        <option value="conf" ${dt.metric==='conf'?'selected':''}>Conformité</option>
+                        <option value="conf" ${dt.metric==='conf'?'selected':''}>${t('conformity')}</option>
                         <option value="perf" ${dt.metric==='perf'?'selected':''}>Performance</option>
-                        <option value="comp" ${dt.metric==='comp'?'selected':''}>Complexité</option>
+                        <option value="comp" ${dt.metric==='comp'?'selected':''}>${t('complexity')}</option>
                     </select>
                 </label>
-                <label style="display:flex;flex-direction:column;gap:0.1rem;">Période — Début
+                <label style="display:flex;flex-direction:column;gap:0.1rem;">${t('period_start')}
                     <input type="date" value="${dt.start || ''}" onchange="window._dashTrend.start=this.value;renderPage();" style="${_trSel}">
                 </label>
-                <label style="display:flex;flex-direction:column;gap:0.1rem;">Période — Fin
+                <label style="display:flex;flex-direction:column;gap:0.1rem;">${t('period_end')}
                     <input type="date" value="${dt.end || ''}" onchange="window._dashTrend.end=this.value;renderPage();" style="${_trSel}">
                 </label>
             </div>
@@ -1458,7 +1458,7 @@ function _prStatsIndicateursHtml(D, latestEvals) {
             return `<div class="card" style="padding:1rem;border-top:3px solid ${color};">
                 <h4 style="color:${color};">${title}</h4>
                 <div style="margin-top:0.5rem;">
-                    <div style="font-size:0.75rem;font-weight:700;color:#ef4444;margin-bottom:0.3rem;">POINTS À AMÉLIORER</div>
+                    <div style="font-size:0.75rem;font-weight:700;color:#ef4444;margin-bottom:0.3rem;">${t('improvement_points')}</div>
                     ${weak.map(i => `<div style="display:flex;justify-content:space-between;padding:0.3rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.82rem;">
                         <span>${i.code} - ${(i.label || '').substring(0, 40)}${(i.label || '').length > 40 ? '...' : ''}</span>
                         <strong>${i.avg.toFixed(2)}</strong>
@@ -1567,25 +1567,25 @@ function _prStatsTauxHtml(D, latestEvals, allValids) {
     const tauxBarChart = `<div class="chart-card" style="padding:0.6rem 0.75rem;margin-bottom:1rem;">
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">
             <div style="font-weight:700;font-size:0.82rem;">Taux par ${dbc.mode === 'prestataire' ? 'prestataire' : 'secteur'} — ${mInfo.label}</div>
-            <button class="btn btn-outline btn-sm" style="margin-left:auto;font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="window._dashBarChart={mode:'secteur',metric:'conf',secteur:'',prestataire:'',selected:''};renderPage();" title="Réinitialiser">${ICONS.refresh}</button>
+            <button class="btn btn-outline btn-sm" style="margin-left:auto;font-size:0.72rem;padding:0.2rem 0.4rem;" onclick="window._dashBarChart={mode:'secteur',metric:'conf',secteur:'',prestataire:'',selected:''};renderPage();" title="${t('reset_filters')}">${ICONS.refresh}</button>
         </div>
         <div style="display:flex;gap:0.75rem;align-items:flex-start;flex-wrap:wrap;">
             <div style="flex:1;min-width:280px;">${tauxBarSvg}</div>
             <div style="width:200px;display:flex;flex-direction:column;gap:0.3rem;font-size:0.72rem;background:#f1f5f9;border:1px solid var(--border);border-radius:8px;padding:0.6rem;">
                 <label style="display:flex;flex-direction:column;gap:0.1rem;">Regroupement
                     <select onchange="window._dashBarChart.mode=this.value;window._dashBarChart.selected='';renderPage();" style="${_selStyle}">
-                        <option value="secteur" ${dbc.mode==='secteur'?'selected':''}>Secteur</option>
-                        <option value="prestataire" ${dbc.mode==='prestataire'?'selected':''}>Prestataire</option>
+                        <option value="secteur" ${dbc.mode==='secteur'?'selected':''}>${t('sector')}</option>
+                        <option value="prestataire" ${dbc.mode==='prestataire'?'selected':''}>${t('provider')}</option>
                     </select>
                 </label>
                 <label style="display:flex;flex-direction:column;gap:0.1rem;">Indicateur
                     <select onchange="window._dashBarChart.metric=this.value;renderPage();" style="${_selStyle}">
-                        <option value="conf" ${dbc.metric==='conf'?'selected':''}>Conformité</option>
+                        <option value="conf" ${dbc.metric==='conf'?'selected':''}>${t('conformity')}</option>
                         <option value="perf" ${dbc.metric==='perf'?'selected':''}>Performance</option>
-                        <option value="comp" ${dbc.metric==='comp'?'selected':''}>Complexité</option>
+                        <option value="comp" ${dbc.metric==='comp'?'selected':''}>${t('complexity')}</option>
                     </select>
                 </label>
-                ${dbc.selected ? `<div style="font-size:0.7rem;color:var(--text-muted);">Sélection : <strong style="color:#1d4ed8;">${(grpAgg[dbc.selected]?.label || '—')}</strong></div>` : `<div style="font-size:0.7rem;color:var(--text-muted);font-style:italic;">Cliquez une barre pour filtrer les graphiques par sous-activité</div>`}
+                ${dbc.selected ? `<div style="font-size:0.7rem;color:var(--text-muted);">${t('selection_label')} <strong style="color:#1d4ed8;">${(grpAgg[dbc.selected]?.label || '—')}</strong></div>` : `<div style="font-size:0.7rem;color:var(--text-muted);font-style:italic;">${t('click_bar_filter')}</div>`}
             </div>
         </div>
     </div>`;

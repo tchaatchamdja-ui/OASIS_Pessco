@@ -37,9 +37,9 @@ function renderParamCapacite() {
         const flag = c >= 5 ? '🔴' : c >= 3 ? '🟡' : '🟢';
         return `<tr><td>${flag}</td><td>${name}</td><td>${u.role_m1?.replace('M1_', '') || '-'}</td><td>${(u.domaines || []).join(', ') || '-'}</td><td style="text-align:right;font-weight:700;">${c}</td></tr>`;
     }).join('');
-    return `<div class="page-header"><h2>Capacité des inspecteurs</h2></div>
-    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Charge de chaque inspecteur — nombre d'évaluations où il est désigné. 🟢 ≤2  🟡 3-4  🔴 ≥5</p>
-    <table class="data-table"><thead><tr><th></th><th>Inspecteur</th><th>Rôle M1</th><th>Domaines</th><th style="text-align:right;">Évaluations actives</th></tr></thead>
+    return `<div class="page-header"><h2>${t('inspectors_capacity')}</h2></div>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">${t('inspectors_capacity_hint')}</p>
+    <table class="data-table"><thead><tr><th></th><th>Inspecteur</th><th>${t('m1_role')}</th><th>Domaines</th><th style="text-align:right;">${t('active_assessments')}</th></tr></thead>
     <tbody>${rows || `<tr><td colspan="5" class="text-center">${t('no_inspector')}</td></tr>`}</tbody></table>`;
 }
 
@@ -58,11 +58,11 @@ function renderParamArchives() {
             dret = d.toISOString().slice(0, 10);
         } catch (e) {}
         const expired = dret && new Date(dret) < new Date();
-        return `<tr><td>${prest.nom || '-'}</td><td>${sect.code || '-'}</td><td>${formatDate(dval)}</td><td>${dret}</td><td>${expired ? '<span style="color:#dc2626;font-weight:700;">Expiré</span>' : '<span style="color:#059669;">Conservé</span>'}</td></tr>`;
+        return `<tr><td>${prest.nom || '-'}</td><td>${sect.code || '-'}</td><td>${formatDate(dval)}</td><td>${dret}</td><td>${expired ? '<span style="color:#dc2626;font-weight:700;">' + t('expired') + '</span>' : '<span style="color:#059669;">' + t('retained') + '</span>'}</td></tr>`;
     }).join('');
-    return `<div class="page-header"><h2>Archives — politique de rétention</h2></div>
+    return `<div class="page-header"><h2>${t('archives_retention')}</h2></div>
     <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Les rapports d'évaluation, les plans et les comptes-rendus sont conservés au moins 5 ans après la fin du cycle de surveillance.</p>
-    <table class="data-table"><thead><tr><th>Prestataire</th><th>Secteur</th><th>Date validation</th><th>Conservation jusqu'au</th><th>Statut</th></tr></thead>
+    <table class="data-table"><thead><tr><th>${t('provider')}</th><th>${t('sector')}</th><th>${t('validation_date')}</th><th>${t('retained_until')}</th><th>${t('status')}</th></tr></thead>
     <tbody>${rows || `<tr><td colspan="5" class="text-center">${t('no_validated_eval')}</td></tr>`}</tbody></table>`;
 }
 
@@ -565,15 +565,15 @@ async function openEntityModal(collection, itemId) {
         <div class="form-group"><label>${t('telephone')}</label><input id="eTel" value="${item?.contact_tel||''}"></div></div>
         <div class="form-group"><label>${t('email_label')}</label><input id="eEmail" value="${item?.contact_email||''}"></div>
         <hr style="border:none;border-top:1px solid var(--border);margin:0.5rem 0;">
-        <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.4rem;">Surveillance basée sur le risque (Chap. 4 §4.2.1)</div>
+        <div style="font-weight:600;font-size:0.85rem;margin-bottom:0.4rem;">${t('rbs_title')}</div>
         <div class="form-row">
-            <div class="form-group"><label>Date de certification / agrément</label>
+            <div class="form-group"><label>${t('certification_date')}</label>
                 <input id="eDateCert" type="date" value="${item?.date_certification||''}"></div>
             <div class="form-group"><label style="display:flex;align-items:center;gap:0.4rem;font-weight:500;">
                 <input id="eIsNouveau" type="checkbox" ${item?.is_nouveau?'checked':''} style="margin:0;">
-                Nouveau prestataire (2 ans avant SBR)</label></div>
+                ${t('new_provider_rbs')}</label></div>
         </div>
-        <div class="form-group"><label>Date butoir SBR (auto-calculée si vide)</label>
+        <div class="form-group"><label>${t('rbs_deadline')}</label>
             <input id="eDateButoir" type="date" value="${item?.date_butoir||''}"></div>`;
     }
 

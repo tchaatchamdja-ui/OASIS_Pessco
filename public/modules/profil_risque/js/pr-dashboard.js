@@ -296,7 +296,7 @@ function renderDashboard() {
     ${dashFiltersHtml}
     <div class="charts-grid">
         <div class="chart-card" style="width:100%;max-width:100%;">
-            <div class="chart-title">Matrice des profils de risque</div>
+            <div class="chart-title">${t('risk_matrix_title')}</div>
             <div style="padding:0.75rem;">${matrixHtml}</div>
         </div>
     </div>

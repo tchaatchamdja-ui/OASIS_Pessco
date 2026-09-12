@@ -147,7 +147,7 @@ function _prEvalContexte(evalId) {
                 </div>`;
             } else {
                 commentBlock = `<div id="${commentRowId}" style="margin-top:0.35rem;">
-                    <button class="btn btn-outline" onclick="_inlineCommentReveal('${commentRowId}','${cSlot}','${noteKey}')" style="padding:0.22rem 0.7rem;font-size:0.78rem;">💬 Ajouter un commentaire</button>
+                    <button class="btn btn-outline" onclick="_inlineCommentReveal('${commentRowId}','${cSlot}','${noteKey}')" style="padding:0.22rem 0.7rem;font-size:0.78rem;">${t('add_comment_btn')}</button>
                 </div>`;
             }
         }
@@ -245,7 +245,7 @@ function _prEvalCorpsHtml(c) {
     } else if (activeTab === 'reunion_evaluateurs') {
         // Phase 3 — §4.2.2.e : placeholder, loader called after slicer rendered
         bodyHtml += `<div id="reunionEvalContent" style="padding:0.5rem 0.25rem;">
-            <div style="color:var(--text-muted);font-size:0.85rem;">Chargement des réunions...</div>
+            <div style="color:var(--text-muted);font-size:0.85rem;">${t('loading_meetings')}</div>
         </div>`;
         window._evalPendingLoader = { kind: 'reunion_evaluateurs', evalId };
     } else if (activeTab === 'reunion_prestataire') {
@@ -288,7 +288,7 @@ function _prEvalEnteteHtml(c) {
     // Renvoi comment block (Chap. 4 §4.2.2.f) — visible when statut='renvoyee'
     const renvoiHeader = (ev.statut === 'renvoyee' && (ev.commentaire_directeur || '').trim())
         ? `<div style="background:#fee2e2;border-left:4px solid #dc2626;border-radius:6px;padding:0.6rem 0.85rem;margin-bottom:0.6rem;">
-            <div style="font-weight:700;color:#991b1b;font-size:0.88rem;">↩ Évaluation renvoyée pour prise en compte des observations</div>
+            <div style="font-weight:700;color:#991b1b;font-size:0.88rem;">${t('eval_returned_banner')}</div>
             <div style="font-size:0.78rem;color:#7f1d1d;margin-top:0.15rem;">${ev.date_revue_directeur ? 'Le ' + formatDate(ev.date_revue_directeur) : ''}</div>
             <div style="font-size:0.88rem;margin-top:0.4rem;white-space:pre-wrap;color:#7f1d1d;"><strong>Motif :</strong> ${_escapeHtml(ev.commentaire_directeur)}</div>
           </div>`
@@ -367,7 +367,7 @@ function _prEvalOngletsHtml(c, activeTab) {
             Consolidation
         </button>` : ''}
         ${(isValidator && ['acceptee', 'cloturee', 'valide'].includes(ev.statut)) ? `<button class="eval-tab-btn ${activeTab === 'reunion_prestataire' ? 'active' : ''}" onclick="switchEvalTab('${evalId}','reunion_prestataire')" style="padding:0.5rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:${activeTab === 'reunion_prestataire' ? '700' : '400'};color:${activeTab === 'reunion_prestataire' ? 'var(--primary)' : 'var(--text-muted)'};border-bottom:2px solid ${activeTab === 'reunion_prestataire' ? 'var(--primary)' : 'transparent'};margin-bottom:-2px;font-size:0.9rem;">
-            Réunion prestataire
+            ${t('provider_meeting_tab')}
         </button>` : ''}
     </div>`;
     return bodyHtml;
@@ -429,14 +429,14 @@ function _prEvalGeneralitesHtml(c) {
     let evalSelector = '';
     if (isValidator && !isReadonly) {
         evalSelector = `<div class="pr-gen-champ pr-gen-champ-court">
-            <label for="evalNbMin">Nombre minimal d'évaluateurs requis</label>
+            <label for="evalNbMin">${t('min_assessors')}</label>
             <div class="pr-gen-nb">
                 <input type="number" id="evalNbMin" min="0" max="20" value="${nbMin}">
                 <span class="pr-gen-aide">0 = pas de minimum imposé</span>
             </div>
         </div>
         <div class="pr-gen-champ">
-            <label>Évaluateurs désignés <span class="pr-gen-aide">(Performance &amp; Complexité)</span> ${countBadge}</label>
+            <label>${t('designated_assessors')} <span class="pr-gen-aide">${t('perf_comp_hint')}</span> ${countBadge}</label>
             <ul id="evalDesignesBox" class="pr-gen-designes">
                 ${eligibleUsers.length ? eligibleUsers.map(u => `
                     <li>
@@ -652,9 +652,9 @@ function _prEvalPiedHtml(c) {
             const _myCompPub = ev.notes_per_evaluator?.comp?.[currentUserId] || {};
             const _alreadySubmitted = Object.keys(_myPerfPub).length > 0 || Object.keys(_myCompPub).length > 0;
             if (!_alreadySubmitted) {
-                footerHtml += `<button class="btn btn-success" ${_bs} onclick="soumettreMesNotes('${evalId}')" title="Soumettre mes notes au validateur (elles deviendront visibles)">${ICON_SEND} Soumettre mes notes</button>`;
+                footerHtml += `<button class="btn btn-success" ${_bs} onclick="soumettreMesNotes('${evalId}')" title="${t('submit_my_scores')}">${ICON_SEND} Soumettre mes notes</button>`;
             } else {
-                footerHtml += `<span ${_bs} style="padding:0.28rem 0.6rem;color:var(--text-muted);font-size:0.78rem;">✓ Notes déjà soumises</span>`;
+                footerHtml += `<span ${_bs} style="padding:0.28rem 0.6rem;color:var(--text-muted);font-size:0.78rem;">${t('scores_already_submitted')}</span>`;
             }
         }
     }
@@ -669,7 +669,7 @@ function _prEvalPiedHtml(c) {
         } else if (ev.statut === 'cloturee') {
             footerHtml += `<button class="btn btn-success" ${_bs} onclick="decisionDirecteur('${evalId}','valider')">${ICONS.check} Valider</button>`;
         } else if (ev.statut === 'valide' && prCanReevaluer(ev)) {
-            footerHtml += `<button class="btn btn-outline" ${_bs} onclick="reevaluerEval('${evalId}')">↻ Réévaluer</button>`;
+            footerHtml += `<button class="btn btn-outline" ${_bs} onclick="reevaluerEval('${evalId}')">${t('reevaluer_btn')}</button>`;
         }
     }
 
@@ -727,8 +727,8 @@ async function _loadReunionEvalTab(evalId) {
                 ${isLocked
                     ? ''
                     : (snap
-                        ? `<span class="badge badge-warning" style="padding:2px 10px;">⚙ Consolidation active — sera attachée au prochain compte-rendu enregistré</span>`
-                        : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();startConsolidation('${evalId}')">⚙ Actualiser Évaluation — Consolidation</button>`)}
+                        ? `<span class="badge badge-warning" style="padding:2px 10px;">${t('consolidation_active')}</span>`
+                        : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();startConsolidation('${evalId}')">${t('refresh_consolidation')}</button>`)}
             </summary>
             <div style="padding:0 0.75rem 0.75rem;">
                 ${snap
@@ -755,15 +755,15 @@ async function _loadReunionEvalTab(evalId) {
                         ${mChanges.length ? `<span class="cr-tag cr-tag-accent">${mChanges.length} changement${mChanges.length > 1 ? 's' : ''}</span>` : ''}
                     </span>
                     <span class="cr-actions">
-                        ${isLocked ? '' : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','${m.id}')">Modifier</button>`}
+                        ${isLocked ? '' : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','${m.id}')">${t('edit')}</button>`}
                         <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();exportReunionPdf('${m.id}','${evalId}')">${ICONS.download} Exporter PDF</button>
                     </span>
                 </summary>
                 <div class="cr-body">
-                    ${m.ordre_du_jour ? `<div class="cr-block"><span class="cr-label">Ordre du jour</span><div class="cr-text">${escTxt(m.ordre_du_jour)}</div></div>` : ''}
+                    ${m.ordre_du_jour ? `<div class="cr-block"><span class="cr-label">${t('agenda')}</span><div class="cr-text">${escTxt(m.ordre_du_jour)}</div></div>` : ''}
                     ${Array.isArray(m.participants) && m.participants.length ? `<div class="cr-block"><span class="cr-label">Participants</span><div class="cr-text">${escTxt(m.participants.join(', '))}</div></div>` : ''}
                     <div class="cr-block"><span class="cr-label">Compte rendu</span><div class="cr-text">${m.compte_rendu ? escTxt(m.compte_rendu) : `<em style="color:var(--text-muted);">${t('no_minutes')}</em>`}</div></div>
-                    ${mChanges.length ? `<div class="cr-block"><span class="cr-label">Consolidation associée</span>${_renderConsolidationTable(mChanges, [], 0)}</div>` : ''}
+                    ${mChanges.length ? `<div class="cr-block"><span class="cr-label">${t('linked_consolidation')}</span>${_renderConsolidationTable(mChanges, [], 0)}</div>` : ''}
                 </div>
             </details>`;
         }).join('') : `<div style="color:var(--text-muted);font-size:0.85rem;padding:0.5rem;">${t('no_meeting')}</div>`;
@@ -773,7 +773,7 @@ async function _loadReunionEvalTab(evalId) {
             <summary style="cursor:pointer;padding:0.6rem 0.75rem;font-weight:700;font-size:0.95rem;list-style:none;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
                 <span>Comptes-rendus de la consolidation${allMeetings.length ? ' (' + allMeetings.length + ')' : ''}${isLocked ? ' — lecture seule' : ''}</span>
                 <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
-                    ${isLocked ? '' : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','')">+ Nouvelle réunion</button>`}
+                    ${isLocked ? '' : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','')">${t('new_meeting_btn')}</button>`}
                     ${showResubmit ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();event.preventDefault();soumettreDirecteur('${evalId}')">${ICON_SUBMIT} Soumettre à la Validation</button>` : ''}
                 </div>
             </summary>
@@ -863,10 +863,10 @@ function _renderConsolidationTable(cumulative, currentChanges, roundsCount) {
         <table style="width:100%;border-collapse:collapse;font-size:0.85rem;border:1px solid var(--border);">
             <thead><tr style="background:var(--bg);">
                 <th style="padding:5px 8px;text-align:left;font-size:0.78rem;">Round</th>
-                <th style="padding:5px 8px;text-align:left;font-size:0.78rem;">Réf.</th>
-                <th style="padding:5px 8px;text-align:left;font-size:0.78rem;">Libellé</th>
+                <th style="padding:5px 8px;text-align:left;font-size:0.78rem;">${t('ref_short')}</th>
+                <th style="padding:5px 8px;text-align:left;font-size:0.78rem;">${t('label')}</th>
                 <th style="padding:5px 8px;text-align:center;font-size:0.78rem;">Ancienne</th>
-                <th style="padding:5px 8px;text-align:center;font-size:0.78rem;">Nouvelle</th>
+                <th style="padding:5px 8px;text-align:center;font-size:0.78rem;">${t('new_f')}</th>
             </tr></thead>
             <tbody>${rowsHtml}</tbody>
         </table>
@@ -924,31 +924,31 @@ async function _loadReunionPrestTab(evalId, prestId) {
                     <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
                         ${isLocked ? '' : `<button class="btn btn-primary" onclick="reunionPrestSaveFromTab('${evalId}','${prestId}')" style="padding:0.28rem 0.85rem;font-size:0.82rem;">${ICONS.check} ${cur.id ? 'Mettre à jour' : 'Enregistrer'}</button>`}
                         ${cur.id ? `<button class="btn btn-outline btn-sm" onclick="exportReunionPrestPdf('${cur.id}','${evalId}')">${ICONS.download} Exporter PDF</button>` : ''}
-                        ${(evNow?.statut === 'acceptee') ? `<button class="btn btn-success" onclick="decisionDirecteur('${evalId}','cloturer')" style="padding:0.28rem 0.85rem;font-size:0.82rem;">🔒 Clôturer</button>` : ''}
+                        ${(evNow?.statut === 'acceptee') ? `<button class="btn btn-success" onclick="decisionDirecteur('${evalId}','cloturer')" style="padding:0.28rem 0.85rem;font-size:0.82rem;">${t('close_meeting_btn')}</button>` : ''}
                     </div>
                 </div>
                 <input type="hidden" id="rpId" value="${escVal(cur.id || '')}">
                 <!-- Row 1: Date 1/5 width -->
-                <div class="form-group" style="max-width:20%;min-width:160px;"><label>Date de réunion</label>
+                <div class="form-group" style="max-width:20%;min-width:160px;"><label>${t('meeting_date')}</label>
                     <input type="date" id="rpDate" value="${escVal(cur.date || today)}" style="width:100%;" ${ro}></div>
                 <!-- Row 2: Participants AAC + Participants prestataire (2 columns) -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                    <div class="form-group"><label>Participants AAC (un par ligne)</label>
+                    <div class="form-group"><label>${t('participants_caa')}</label>
                         <textarea id="rpAac" rows="3" style="width:100%;" ${ro}>${escTxt((cur.participants_aac || []).join('\n'))}</textarea></div>
-                    <div class="form-group"><label>Participants prestataire (un par ligne)</label>
+                    <div class="form-group"><label>${t('participants_provider')}</label>
                         <textarea id="rpPrest" rows="3" style="width:100%;" ${ro}>${escTxt((cur.participants_prestataire || []).join('\n'))}</textarea></div>
                 </div>
                 <!-- Row 3: Résumé des échanges (full width) -->
-                <div class="form-group"><label>Résumé des échanges</label>
+                <div class="form-group"><label>${t('exchanges_summary')}</label>
                     <textarea id="rpResume" rows="4" style="width:100%;" ${ro}>${escTxt(cur.resume_echanges || '')}</textarea></div>
                 <!-- Row 4: Recommandations (full width) -->
                 <div class="form-group"><label>Recommandations</label>
                     <textarea id="rpReco" rows="3" style="width:100%;" ${ro}>${escTxt(cur.recommandations || '')}</textarea></div>
                 <!-- Row 5: Signature prestataire + Signature AAC -->
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                    <div class="form-group"><label>Signature prestataire (nom du représentant)</label>
+                    <div class="form-group"><label>${t('signature_provider')}</label>
                         <input id="rpSigPrest" value="${escVal(cur.signature_prestataire || '')}" ${ro}></div>
-                    <div class="form-group"><label>Signature AAC (nom du représentant)</label>
+                    <div class="form-group"><label>${t('signature_caa')}</label>
                         <input id="rpSigAac" value="${escVal(cur.signature_aac || '')}" ${ro}></div>
                 </div>
             </div>`;
@@ -1279,15 +1279,15 @@ async function openReunionEvaluateursList(evalId) {
         <div style="border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.4rem;">
             <div style="display:flex;justify-content:space-between;font-weight:600;font-size:0.88rem;">
                 <span>📅 ${r.date || '(sans date)'}</span>
-                <button class="btn btn-outline btn-sm" onclick="openReunionEvaluateursForm('${evalId}','${r.id}')">Modifier</button>
+                <button class="btn btn-outline btn-sm" onclick="openReunionEvaluateursForm('${evalId}','${r.id}')">${t('edit')}</button>
             </div>
             <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">Participants : ${(r.participants || []).length}</div>
             ${r.compte_rendu ? `<div style="font-size:0.82rem;margin-top:0.3rem;white-space:pre-wrap;">${_genEsc(r.compte_rendu)}</div>` : ''}
         </div>`).join('') : `<div class="text-muted" style="padding:1rem;text-align:center;">${t('no_meeting')}</div>`;
     const body = `${list}
         <hr style="margin:1rem 0;">
-        <button class="btn btn-primary" onclick="openReunionEvaluateursForm('${evalId}','')">+ Nouvelle réunion</button>`;
-    const footer = `<button class="btn btn-outline" onclick="closeModal()">Fermer</button>`;
+        <button class="btn btn-primary" onclick="openReunionEvaluateursForm('${evalId}','')">${t('new_meeting_btn')}</button>`;
+    const footer = `<button class="btn btn-outline" onclick="closeModal()">${t('close_btn')}</button>`;
     showModal(`Réunions des évaluateurs (§4.2.2.e)`, body, footer, 'modal-lg');
 }
 
@@ -1301,15 +1301,15 @@ async function openReunionEvaluateursForm(evalId, rid) {
     }
     const today = new Date().toISOString().slice(0, 10);
     const body = `
-        <div class="form-group"><label>Date</label><input type="date" id="reDate" value="${cur.date || today}"></div>
-        <div class="form-group"><label>Participants (un par ligne)</label>
+        <div class="form-group"><label>${t('date')}</label><input type="date" id="reDate" value="${cur.date || today}"></div>
+        <div class="form-group"><label>${t('participants_one_per_line')}</label>
             <textarea id="reParts" rows="3" style="width:100%;">${(cur.participants || []).join('\n')}</textarea></div>
-        <div class="form-group"><label>Ordre du jour</label>
+        <div class="form-group"><label>${t('agenda')}</label>
             <textarea id="reOdj" rows="2" style="width:100%;">${cur.ordre_du_jour || ''}</textarea></div>
         <div class="form-group"><label>Compte rendu</label>
             <textarea id="reCr" rows="5" style="width:100%;">${cur.compte_rendu || ''}</textarea></div>`;
     const footer = `
-        <button class="btn btn-outline" onclick="openReunionEvaluateursList('${evalId}')">← Retour</button>
+        <button class="btn btn-outline" onclick="openReunionEvaluateursList('${evalId}')">${t('back_arrow')}</button>
         <button class="btn btn-primary" onclick="saveReunionEval('${evalId}','${rid || ''}')">${ICONS.check} Enregistrer</button>`;
     showModal(`Réunion évaluateurs`, body, footer, 'modal-lg');
 }
@@ -1363,8 +1363,8 @@ function _printCompteRendu(m, evalId, titre) {
         ? m.consolidation_data.cumulative_changes : [];
     const changesHtml = changes.length ? `
       <table class="rep-tbl">
-        <thead><tr><th style="width:12%">S.A.</th><th style="width:12%">Réf.</th><th style="width:34%">Libellé</th>
-          <th style="width:14%">Axe</th><th style="width:14%">Ancienne</th><th style="width:14%">Nouvelle</th></tr></thead>
+        <thead><tr><th style="width:12%">S.A.</th><th style="width:12%">${t('ref_short')}</th><th style="width:34%">${t('label')}</th>
+          <th style="width:14%">Axe</th><th style="width:14%">Ancienne</th><th style="width:14%">${t('new_f')}</th></tr></thead>
         <tbody>${changes.map(c => `<tr>
           <td>${esc(c.sa_code || '-')}</td><td>${esc(c.ind_code || '-')}</td><td>${esc(c.ind_label || '-')}</td>
           <td>${esc(c.type || '-')}</td><td>${esc(c.old || '-')}</td><td>${esc(c.new || '-')}</td></tr>`).join('')}
@@ -1392,18 +1392,18 @@ function _printCompteRendu(m, evalId, titre) {
   <div class="rep-runhead">${esc(aac.nom || "Autorité de l'Aviation Civile")}</div>
   <h1>${esc(titre)}</h1>
   <table class="rep-meta">
-    <tr><td>Nom du Prestataire :</td><td>${esc(prest.nom || '-')}</td></tr>
-    <tr><td>Secteur :</td><td>${esc(sect.code || '')} ${sect.nom ? '- ' + esc(sect.nom) : ''}</td></tr>
-    <tr><td>Date de la réunion :</td><td>${esc(m.date || '-')}</td></tr>
-    <tr><td>Référence évaluation :</td><td>eval_${esc(String(ev.id || '').slice(-4))}</td></tr>
+    <tr><td>${t('provider_name_label')}</td><td>${esc(prest.nom || '-')}</td></tr>
+    <tr><td>${t('sector_label')}</td><td>${esc(sect.code || '')} ${sect.nom ? '- ' + esc(sect.nom) : ''}</td></tr>
+    <tr><td>${t('meeting_date_label')}</td><td>${esc(m.date || '-')}</td></tr>
+    <tr><td>${t('eval_ref_label')}</td><td>eval_${esc(String(ev.id || '').slice(-4))}</td></tr>
   </table>
   <h2>Participants</h2>
   <div class="rep-list">${parts.length ? parts.map(p => '- ' + esc(p)).join('<br>') : '-'}</div>
-  <h2>Ordre du jour</h2>
+  <h2>${t('agenda')}</h2>
   <div class="rep-field">${txt(m.ordre_du_jour)}</div>
   <h2>Compte rendu</h2>
   <div class="rep-field">${txt(m.compte_rendu)}</div>
-  <h2>Consolidation associée</h2>
+  <h2>${t('linked_consolidation')}</h2>
   ${changesHtml}
 </body></html>`;
 
@@ -1433,10 +1433,10 @@ async function reunionEvalEditInline(evalId, rid) {
         <div style="border:1px solid var(--border);border-radius:6px;padding:0.6rem 0.85rem;background:var(--bg-card);">
             <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.4rem;">${rid ? 'Modifier la réunion' : 'Nouvelle réunion'}</div>
             <input type="hidden" id="reId" value="${escVal(cur.id || '')}">
-            <div class="form-group"><label>Date</label>
+            <div class="form-group"><label>${t('date')}</label>
                 <input type="date" id="reDate" value="${escVal(cur.date || today)}"></div>
             <div style="display:grid;grid-template-columns:1fr 4fr;gap:0.75rem;">
-                <div class="form-group"><label>Participants (un par ligne)</label>
+                <div class="form-group"><label>${t('participants_one_per_line')}</label>
                     <textarea id="reParts" rows="5" style="width:100%;">${escTxt((cur.participants || []).join('\n'))}</textarea></div>
                 <div class="form-group"><label>Compte rendu</label>
                     <textarea id="reCr" rows="5" style="width:100%;">${escTxt(cur.compte_rendu || '')}</textarea></div>

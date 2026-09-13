@@ -608,7 +608,9 @@ function mesRenderDashboard() {
     const carencesStatut = sourceRetenue
         ? constPortee.filter((c) => (c.origine || 'SURV') === sourceRetenue) : constPortee;
     const segmentsStatutConstat = Object.entries(MES_STATUT_CARE).map(([cle, st]) => ({
-        label: st.libelle,
+        // Le statut se nomme par sa clé de traduction, comme la pastille et la
+        // colonne « Statut » : la table ne porte plus de libellé en dur.
+        label: mt(st.cle),
         value: carencesStatut.filter((c) => (c.statut_care || 'a_traiter') === cle).length,
         color: st.couleur,
     }));

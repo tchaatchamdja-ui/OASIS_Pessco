@@ -43,6 +43,10 @@ window.PLAN_STATE = PLAN_STATE;
 
 const PLAN_TR = {
     fr: {
+        sect_activite: "Activité",
+        sect_perimetre: "Périmètre",
+        sect_conduite: "Conduite",
+        sect_calendrier: "Calendrier",
         commentaire_approbation_dg: "Commentaire d’approbation (facultatif)",
         approbation_dg_titre: "Approbation du DG",
         suivant: "Suivant",
@@ -342,6 +346,10 @@ const PLAN_TR = {
         close: 'Fermer'
     },
     en: {
+        sect_activite: "Activity",
+        sect_perimetre: "Scope",
+        sect_conduite: "Conduct",
+        sect_calendrier: "Schedule",
         commentaire_approbation_dg: "Approval comment (optional)",
         approbation_dg_titre: "Director General approval",
         suivant: "Next",
@@ -641,6 +649,10 @@ const PLAN_TR = {
         close: 'Close'
     },
     pt: {
+        sect_activite: "Atividade",
+        sect_perimetre: "Âmbito",
+        sect_conduite: "Condução",
+        sect_calendrier: "Calendário",
         commentaire_approbation_dg: "Comentário de aprovação (facultativo)",
         approbation_dg_titre: "Aprovação do Diretor-Geral",
         suivant: "Seguinte",

@@ -348,13 +348,10 @@ function planShowActivityModal(planId, actId = '') {
     }
 
     // Read-only for Priorité/Risque/Fréquence/Intensité/Cycle unless Validateur or Admin
-    const riskReadonly = !_canValidate();
-    const roAttr = riskReadonly ? 'disabled' : '';
-    const roClass = riskReadonly ? 'form-input readonly-field' : 'form-input';
-    const roSelectClass = riskReadonly ? 'form-select readonly-field' : 'form-select';
 
     const body = `
-    <div class="form-grid">
+    <div class="form-grid plan-act-form">
+        <div class="plan-form-section">${tp('sect_activite')}</div>
         <div class="form-group full-width">
             <label>${tp('objet')}</label>
             <input type="text" class="form-input" id="actObjet" value="${act ? _esc(act.objet || '') : ''}">
@@ -363,14 +360,16 @@ function planShowActivityModal(planId, actId = '') {
             <label>${tp('description_activite')}</label>
             <textarea class="form-input" id="actDescription" rows="2">${act ? _esc(act.description_activite || '') : ''}</textarea>
         </div>
-        <div class="form-group">
+
+        <div class="plan-form-section">${tp('sect_perimetre')}</div>
+        <div class="form-group span-3">
             <label>${tp('provider')}</label>
             <select class="form-select" id="actPrestataire">
                 <option value="">${tp('select_option')}</option>
                 ${prestataires.map(p => `<option value="${p.id}" ${prestSel === p.id ? 'selected' : ''}>${_esc(p.nom)}</option>`).join('')}
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group span-3">
             <label>${tp('sector')}</label>
             <select class="form-select" id="actSecteur">
                 <option value="">${tp('select_option')}</option>
@@ -379,13 +378,14 @@ function planShowActivityModal(planId, actId = '') {
         </div>
         <div class="form-group full-width">
             <label>${tp('sub_activity')} / ${tp('themes_couverts')}</label>
-            <div id="actSAThemesTableWrap" style="max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;">
-            </div>
+            <div id="actSAThemesTableWrap" class="act-sa-wrap"></div>
             <small class="form-hint" id="actSAHint">${tp('select_sector_first')}</small>
             <div id="actSousActiviteGroup" style="display:none;"></div>
             <div id="actThemesGroup" style="display:none;"></div>
             <small class="form-hint" id="actThemeHint" style="display:none;"></small>
         </div>
+
+        <div class="plan-form-section">${tp('sect_conduite')}</div>
         <div class="form-group">
             <label>${tp('mode_supervision')}</label>
             <select class="form-select" id="actModeSupervision">
@@ -404,13 +404,19 @@ function planShowActivityModal(planId, actId = '') {
             <label>${tp('lieu_activite')}</label>
             <input type="text" class="form-input" id="actLieu" value="${act ? _esc(act.lieu_activite || '') : ''}">
         </div>
-        <div class="form-group">
+        <div class="form-group span-3">
             <label>${tp('responsable_activite')}</label>
             <select class="form-select" id="actResponsable">
                 <option value="">${tp('select_option')}</option>
                 ${inspecteurs.map(i => { const label = ((i.nom || '') + ' ' + (i.prenom || '')).trim() || i.nom_complet || i.email || ''; return `<option value="${i.id}" ${act?.responsable_id === i.id ? 'selected' : ''}>${_esc(label)}</option>`; }).join('')}
             </select>
         </div>
+        <div class="form-group">
+            <label>${tp('nombre_inspecteurs')}</label>
+            <input type="number" class="form-input" id="actNbInspecteurs" value="${act?.nombre_inspecteurs || 1}" min="1">
+        </div>
+
+        <div class="plan-form-section">${tp('sect_calendrier')}</div>
         <div class="form-group">
             <label>${tp('start_date')}</label>
             <input type="date" class="form-input" id="actDebut" value="${act?.date_debut?.substring(0, 10) || ''}">
@@ -419,25 +425,13 @@ function planShowActivityModal(planId, actId = '') {
             <label>${tp('end_date')}</label>
             <input type="date" class="form-input" id="actFin" value="${act?.date_fin?.substring(0, 10) || ''}">
         </div>
-        <div class="form-group">
-            <label>${tp('nombre_inspecteurs')}</label>
-            <input type="number" class="form-input" id="actNbInspecteurs" value="${act?.nombre_inspecteurs || 1}" min="1">
-        </div>
-        <div class="form-group">
-            <label>${tp('priority')}${riskReadonly ? ' 🔒' : ''}</label>
-            <select class="${roSelectClass}" id="actPriorite" ${roAttr}>
-                <option value="haute" ${act?.priorite === 'haute' ? 'selected' : ''}>${tp('priority_haute')}</option>
-                <option value="normale" ${!act || act?.priorite === 'normale' ? 'selected' : ''}>${tp('priority_normale')}</option>
-                <option value="basse" ${act?.priorite === 'basse' ? 'selected' : ''}>${tp('priority_basse')}</option>
-            </select>
-        </div>
     </div>`;
 
     const footer = `
         <button class="btn btn-ghost" onclick="planCloseModal()">${tp('cancel')}</button>
         <button class="btn btn-primary" onclick="${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}">${tp('save')}</button>`;
 
-    planShowModal(actId ? tp('edit') : tp('new_activity'), body, footer, 'modal-drawer modal-drawer-2-3');
+    planShowModal(actId ? tp('edit') : tp('new_activity'), body, footer, 'modal-drawer modal-drawer-3-4');
 
     // Règles communes des dates : une activité commence dans l'année de son
     // plan — elle n'a pas de champ Année, c'est le plan qui la déclare — et
@@ -610,13 +604,6 @@ function _collectActivityForm() {
         nombre_inspecteurs: parseInt(document.getElementById('actNbInspecteurs')?.value) || 1,
         themes_couverts: themes
     };
-
-    // Priorité reste saisissable par les valideurs ; niveau de risque,
-    // fréquence, intensité et cycle proviennent du profil de risque et ne
-    // sont plus édités ici.
-    if (_canValidate()) {
-        data.priorite = document.getElementById('actPriorite')?.value || 'normale';
-    }
 
     return data;
 }

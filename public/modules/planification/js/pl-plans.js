@@ -513,7 +513,12 @@ function _renderActivitiesTable(activites, canEdit, plan) {
             </div>
             <div class="act-acc-body">
                 <div style="overflow-x:auto;">
-                <table class="data-table">
+                <table class="data-table plan-act-table">
+                    <colgroup>
+                        <col style="width:3.5%"><col style="width:21%"><col style="width:15%">
+                        <col style="width:13%"><col style="width:11%"><col style="width:13%">
+                        <col style="width:8%"><col style="width:8%"><col style="width:7.5%">
+                    </colgroup>
                     <thead><tr>
                         <th>#</th><th>${tp('objet')}</th><th>${tp('sector')}</th>
                         <th>Mode / Type</th>

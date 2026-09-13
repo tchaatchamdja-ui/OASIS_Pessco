@@ -1221,6 +1221,57 @@ tr.hidden { display: none; }
 .modal.modal-drawer.modal-drawer-2-3 { width: 66.6667%; }
 @media (max-width: 820px) { .modal.modal-drawer.modal-drawer-2-3 { width: 100%; } }
 
+/* Volet latéral occupant 3/4 de la largeur — la saisie d'une activité tient
+   douze champs et une table de sous-activités : elle a besoin de la place. */
+.modal.modal-drawer.modal-drawer-3-4 { width: 75%; }
+@media (max-width: 820px) { .modal.modal-drawer.modal-drawer-3-4 { width: 100%; } }
+
+/* ── Formulaire d'activité ──
+   Six colonnes : un champ court en occupe deux — trois par ligne —, un champ
+   qui demande de la place en occupe trois, et l'objet comme la table des
+   sous-activités prennent toute la largeur. Les intitulés de section donnent
+   à la saisie l'ordre dans lequel elle se pense : ce qu'est l'activité, sur
+   qui elle porte, comment elle se conduit, quand. */
+.form-grid.plan-act-form {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.55rem 1rem;
+    align-items: start;
+}
+.plan-act-form .form-group { grid-column: span 2; margin-bottom: 0; }
+.plan-act-form .form-group.span-3 { grid-column: span 3; }
+.plan-act-form .form-group.full-width { grid-column: 1 / -1; }
+.plan-act-form .form-input,
+.plan-act-form .form-select { width: 100%; }
+.plan-form-section {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin: 0.7rem 0 0.1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+.plan-form-section::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.plan-form-section:first-child { margin-top: 0; }
+.act-sa-wrap {
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+@media (max-width: 1200px) {
+    .form-grid.plan-act-form { grid-template-columns: repeat(4, 1fr); }
+    .plan-act-form .form-group.span-3 { grid-column: span 2; }
+}
+@media (max-width: 820px) {
+    .form-grid.plan-act-form { grid-template-columns: 1fr; }
+    .plan-act-form .form-group,
+    .plan-act-form .form-group.span-3 { grid-column: 1 / -1; }
+}
+
 /* Discussions : bulles, auteur nommé, alignement selon l'auteur */
 .disc-list { display: flex; flex-direction: column; gap: .5rem; max-height: 420px; overflow-y: auto; }
 .disc-item { display: flex; }
@@ -1649,3 +1700,15 @@ tr.hidden { display: none; }
 /* Vue resserrée : une ligne par organisme, une sur deux détachée comme dans
    les tables du module. */
 .pl-gantt .g-groupe.g-alt { background: color-mix(in srgb, var(--primary) 3%, var(--bg)); }
+
+
+/* ── Activités d'un plan : les colonnes se répondent d'un prestataire à
+   l'autre ──
+   Chaque prestataire a sa propre table ; sans largeurs déclarées, chacune
+   réglait ses colonnes sur son seul contenu et les tables ne s'alignaient
+   plus entre elles. Les largeurs sont posées une fois, en pourcentage, et la
+   même grille sert à toutes. */
+.plan-act-table { table-layout: fixed; width: 100%; min-width: 940px; }
+.plan-act-table th,
+.plan-act-table td { overflow-wrap: anywhere; }
+.plan-act-table .activity-detail-row td { overflow-wrap: normal; }

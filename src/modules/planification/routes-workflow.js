@@ -92,9 +92,18 @@ module.exports = function register(app, deps, M) {
     if (!D.STATUTS_EN_VIGUEUR.includes(src.statut)) {
       return res.status(409).json({ error: 'plan_non_amendable', statut: src.statut });
     }
+    // Un plan n'a qu'un amendement à la fois. Ouvrir le second donnerait deux
+    // héritiers de la même version : chacun copierait les activités d'alors,
+    // et valider l'un effacerait le travail fait dans l'autre. La demande est
+    // donc refusée — l'amendement en cours est nommé dans le refus, pour que
+    // l'écran sache où renvoyer.
     const enCours = db.list('plans').find((p) => p.parent_plan_id === src.id
       && D.STATUTS_AMENDEMENT.includes(p.statut));
-    if (enCours) return res.json({ ok: true, new_plan_id: enCours.id, deja_en_cours: true });
+    if (enCours) {
+      return res.status(409).json({
+        error: 'amendement_en_cours', amendement: enCours.id, version: enCours.version,
+      });
+    }
 
     const motif = (req.body && req.body.motif) || '';
     const { id: _old, ...base } = src;

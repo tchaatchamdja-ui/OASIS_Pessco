@@ -77,6 +77,7 @@ const ERREURS = {
   fichier_trop_volumineux: ['Fichier trop volumineux.', 'File too large.', 'Ficheiro demasiado grande.'],
   too_large: ['Fichier trop volumineux.', 'File too large.', 'Ficheiro demasiado grande.'],
   activite_declenchee: ['Activité déjà déclenchée : elle n’est plus amendable.', 'Activity already triggered: it can no longer be amended.', 'Atividade já desencadeada: já não pode ser emendada.'],
+  amendement_en_cours: ['Un amendement de ce plan est déjà en cours.', 'An amendment of this plan is already under way.', 'Já está em curso uma emenda deste plano.'],
   plan_non_amendable: ['Ce plan n’est pas amendable.', 'This plan cannot be amended.', 'Este plano não pode ser emendado.'],
   plan_non_archive: ['Ce plan n’est pas archivé.', 'This plan is not archived.', 'Este plano não está arquivado.'],
   pas_un_amendement: ['Cette version n’est pas un amendement.', 'This version is not an amendment.', 'Esta versão não é uma emenda.'],

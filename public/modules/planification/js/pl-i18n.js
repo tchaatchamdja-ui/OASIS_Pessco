@@ -43,6 +43,8 @@ window.PLAN_STATE = PLAN_STATE;
 
 const PLAN_TR = {
     fr: {
+        col_responsable: "Responsable",
+        duree_jours: "Durée (jours)",
         sect_activite: "Activité",
         sect_perimetre: "Périmètre",
         sect_conduite: "Conduite",
@@ -346,6 +348,8 @@ const PLAN_TR = {
         close: 'Fermer'
     },
     en: {
+        col_responsable: "Officer",
+        duree_jours: "Duration (days)",
         sect_activite: "Activity",
         sect_perimetre: "Scope",
         sect_conduite: "Conduct",
@@ -649,6 +653,8 @@ const PLAN_TR = {
         close: 'Close'
     },
     pt: {
+        col_responsable: "Responsável",
+        duree_jours: "Duração (dias)",
         sect_activite: "Atividade",
         sect_perimetre: "Âmbito",
         sect_conduite: "Condução",

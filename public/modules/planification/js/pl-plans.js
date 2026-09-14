@@ -305,10 +305,14 @@ function planRenderPlanDetail() {
     // Sync disabled for "Ponctuel/Spécial" type
     const canSync   = _canContribute(secteurPlan) && plan.statut !== 'archive' && !isPonctuelSpecial;
     const canValidateBtn = plan.statut === 'soumis' && _canValidate(secteurPlan);
-    const canAmendBtn = plan.statut === 'valide' && _canContribute(secteurPlan);
-    // "Amendement en cours" only for VALIDATED plans that have a child amendment in progress
+    // Un amendement chemine-t-il déjà ? Mêmes statuts que le serveur — dont
+    // « rejete », qui reste un amendement ouvert tant qu'il n'est ni repris ni
+    // annulé. L'écran manquait celui-là.
     const hasChildAmendment = (PLAN_STATE.data.plans || []).some(p =>
-        p.parent_plan_id === plan.id && ['brouillon', 'soumis', 'en_revue'].includes(p.statut));
+        p.parent_plan_id === plan.id && ['brouillon', 'soumis', 'en_revue', 'rejete'].includes(p.statut));
+    // Amender n'est proposé que s'il n'y a pas déjà une version suivante en
+    // chemin : le serveur refuse le second amendement, le bouton ne l'offre pas.
+    const canAmendBtn = plan.statut === 'valide' && _canContribute(secteurPlan) && !hasChildAmendment;
     const isAmendmentInProgress = plan.statut === 'valide' && hasChildAmendment;
     // Distinct flag: this plan itself is an amendment child (used for cancel button logic)
     const isAmendmentChild = !!(plan.parent_plan_id);
@@ -515,15 +519,15 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                 <div style="overflow-x:auto;">
                 <table class="data-table plan-act-table">
                     <colgroup>
-                        <col style="width:3.5%"><col style="width:21%"><col style="width:15%">
-                        <col style="width:13%"><col style="width:11%"><col style="width:13%">
-                        <col style="width:8%"><col style="width:8%"><col style="width:7.5%">
+                        <col style="width:3.5%"><col style="width:18%"><col style="width:12%">
+                        <col style="width:10.5%"><col style="width:12%"><col style="width:15%">
+                        <col style="width:9%"><col style="width:9%"><col style="width:11%">
                     </colgroup>
                     <thead><tr>
                         <th>#</th><th>${tp('objet')}</th><th>${tp('sector')}</th>
                         <th>Mode / Type</th>
                         <th>${tp('lieu_activite')}</th>
-                        <th>${tp('responsable_activite')}</th>
+                        <th>${tp('col_responsable')}</th>
                         <th>${tp('start_date')}</th><th>${tp('end_date')}</th>
                         <th>${tp('actions')}</th>
                     </tr></thead>

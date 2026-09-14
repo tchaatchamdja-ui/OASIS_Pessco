@@ -102,6 +102,16 @@ module.exports = async function planificationSmoke(port) {
       (enfant.activites || []).length === 1 && !!enfant.activites[0].parent_activite_id);
     verifier('version incrémentée', enfant.version === (cree.corps.version || 1) + 1);
 
+    // Un plan n'a qu'un amendement à la fois : le second est refusé, et le
+    // refus nomme celui qui chemine déjà.
+    const second = await P(`/api/m/planification/plans/${id}/amender`, { motif: 'second amendement' });
+    verifier('second amendement refusé',
+      second.statut === 409 && second.corps.error === 'amendement_en_cours'
+      && second.corps.amendement === enfant.id, `${second.statut} ${second.corps.error || ''}`);
+    verifier('aucune seconde version créée',
+      (await srv.appel('/api/m/planification/plans')).corps
+        .filter((p) => p.parent_plan_id === id).length === 1);
+
     const annule = await P(`/api/m/planification/plans/${enfant.id}/annuler-amendement`, { commentaire: '' });
     verifier('annulation de l’amendement', annule.statut === 200 && annule.corps.parent_plan_id === id);
 

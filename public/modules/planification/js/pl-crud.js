@@ -307,6 +307,51 @@ async function planArchivePlan(planId) {
 
 // ── Activities CRUD ──
 
+// Durée d'une activité, en jours pleins, bornes comprises : du 9 au 13 mars,
+// cinq jours. Une seule date, ou des dates qui se croisent, ne donnent rien.
+function _planDureeEntre(debut, fin) {
+    const d = String(debut || '').substring(0, 10);
+    const f = String(fin || '').substring(0, 10);
+    if (!d || !f) return '';
+    const t1 = new Date(`${d}T00:00:00`).getTime();
+    const t2 = new Date(`${f}T00:00:00`).getTime();
+    if (Number.isNaN(t1) || Number.isNaN(t2) || t2 < t1) return '';
+    return Math.round((t2 - t1) / 86400000) + 1;
+}
+
+// Date de fin déduite d'une durée : le premier jour compte, la fin tombe donc
+// à début + (durée − 1).
+function _planFinDepuisDuree(debut, jours) {
+    const d = String(debut || '').substring(0, 10);
+    const n = Number(jours);
+    if (!d || !Number.isFinite(n) || n < 1) return '';
+    const t = new Date(`${d}T00:00:00`);
+    if (Number.isNaN(t.getTime())) return '';
+    t.setDate(t.getDate() + Math.round(n) - 1);
+    return t.toISOString().substring(0, 10);
+}
+
+// Dates et durée disent la même chose de deux façons : renseigner l'une
+// remplit l'autre. La dernière saisie commande — on ne réécrit jamais le champ
+// que l'agent est en train de remplir.
+function _planLierDatesDuree() {
+    const debut = document.getElementById('actDebut');
+    const fin = document.getElementById('actFin');
+    const duree = document.getElementById('actDuree');
+    if (!debut || !fin || !duree) return;
+    const depuisDates = () => { duree.value = _planDureeEntre(debut.value, fin.value); };
+    debut.addEventListener('change', () => {
+        // Début posé alors qu'une durée est déjà saisie : c'est la fin qui suit.
+        if (duree.value && !fin.value) fin.value = _planFinDepuisDuree(debut.value, duree.value);
+        else depuisDates();
+    });
+    fin.addEventListener('change', depuisDates);
+    duree.addEventListener('input', () => {
+        const f = _planFinDepuisDuree(debut.value, duree.value);
+        if (f) fin.value = f;
+    });
+}
+
 function planShowActivityModal(planId, actId = '') {
     const prestataires = PLAN_STATE.data.prestataires || [];
     const secteurs = PLAN_STATE.data.secteurs || [];
@@ -386,6 +431,7 @@ function planShowActivityModal(planId, actId = '') {
         </div>
 
         <div class="plan-form-section">${tp('sect_conduite')}</div>
+        <div class="plan-row-conduite">
         <div class="form-group">
             <label>${tp('mode_supervision')}</label>
             <select class="form-select" id="actModeSupervision">
@@ -415,6 +461,7 @@ function planShowActivityModal(planId, actId = '') {
             <label>${tp('nombre_inspecteurs')}</label>
             <input type="number" class="form-input" id="actNbInspecteurs" value="${act?.nombre_inspecteurs || 1}" min="1">
         </div>
+        </div>
 
         <div class="plan-form-section">${tp('sect_calendrier')}</div>
         <div class="form-group">
@@ -424,6 +471,10 @@ function planShowActivityModal(planId, actId = '') {
         <div class="form-group">
             <label>${tp('end_date')}</label>
             <input type="date" class="form-input" id="actFin" value="${act?.date_fin?.substring(0, 10) || ''}">
+        </div>
+        <div class="form-group">
+            <label>${tp('duree_jours')}</label>
+            <input type="number" class="form-input" id="actDuree" min="1" value="${_planDureeEntre(act?.date_debut, act?.date_fin)}">
         </div>
     </div>`;
 
@@ -437,6 +488,7 @@ function planShowActivityModal(planId, actId = '') {
     // plan — elle n'a pas de champ Année, c'est le plan qui la déclare — et
     // ne se termine pas avant d'avoir commencé.
     oasisDatesLier(_planDatesActivite());
+    _planLierDatesDuree();
 
     // ── Dynamic: SA/Themes table (columns = sous-activités) ──
     const secteurSelect = document.getElementById('actSecteur');

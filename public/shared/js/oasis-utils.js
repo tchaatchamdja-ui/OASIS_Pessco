@@ -63,7 +63,7 @@ async function api(path, options = {}) {
     const res = await fetch(path, { ...options, headers: { ...headers, ...options.headers } });
     if (res.status === 401) {
         oasisSessionPerdue();
-        throw new Error('Session expirée');
+        throw new Error(oasisMessageErreur({ error: 'unauthenticated' }, res.status));
     }
     const data = await res.json();
     if (!res.ok) throw new Error(oasisMessageErreur(data, res.status));

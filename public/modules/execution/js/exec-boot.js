@@ -52,7 +52,7 @@ async function api(path, options = {}) {
         // Le module vit en cadre — s'y rendre lui-même y aurait ouvert la page
         // de connexion, entourée de la coquille du portail.
         oasisSessionPerdue();
-        throw new Error('Session expirée');
+        throw new Error(oasisMessageErreur({ error: 'unauthenticated' }, res.status));
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));

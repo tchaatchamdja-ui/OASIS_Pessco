@@ -124,7 +124,10 @@ function oasisMessageErreur(donnees, statut, defaut) {
     const r = await fetch(url, o);
     if (r.status === 401) {
       if (typeof window.oasisSessionPerdue === 'function') window.oasisSessionPerdue();
-      throw new Error('Session expirée');
+      // Le renvoi vers la connexion est lancé, mais l'appelant reçoit quand
+      // même l'échec et l'affiche souvent : la phrase doit donc suivre la
+      // langue, comme tous les autres refus du serveur.
+      throw new Error(oasisMessageErreur({ error: 'unauthenticated' }, r.status));
     }
     if (!r.ok) {
       const err = await r.json().catch(() => ({ error: r.statusText }));

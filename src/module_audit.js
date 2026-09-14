@@ -73,12 +73,29 @@ function log(moduleCode, user, action, objet, ref, details) {
   return entry;
 }
 
+// Un module a pu changer de nom : ses entrées d'alors portent l'ancien code.
+// Elles ne se réécrivent pas — chaque chaîne tient par ses hachages, et les
+// toucher effacerait ce qu'elles attestent — mais elles se lisent avec les
+// nouvelles, sans quoi l'historique disparaîtrait de l'écran le jour du
+// renommage. Les entrées nouvelles s'écrivent toujours sous le code courant.
+const ANCIENS_CODES = { RAMP: ['SAFA'] };
+
+// Du plus ancien nom au nom courant : l'ordre des chaînes suit celui du temps.
+const codesDe = (moduleCode) => [...(ANCIENS_CODES[moduleCode] || []), moduleCode];
+
 function list(moduleCode) {
-  return all()[moduleCode] || [];
+  const data = all();
+  const codes = codesDe(moduleCode);
+  if (codes.length === 1) return data[moduleCode] || [];
+  // `codeModule` dit sous quel nom l'entrée a été écrite : deux chaînes
+  // distinctes numérotent chacune à partir de un.
+  return codes
+    .flatMap((c) => (data[c] || []).map((e) => ({ ...e, codeModule: c })))
+    .sort((x, y) => String(x.ts).localeCompare(String(y.ts)));
 }
 
-function verifyChain(moduleCode) {
-  const entries = list(moduleCode);
+// Une chaîne se vérifie seule : elle part de sa propre genèse.
+function chaineValide(entries) {
   let prevHash = GENESIS;
   for (const e of entries) {
     if (e.prevHash !== prevHash || entryHash(prevHash, e) !== e.hash) {
@@ -87,6 +104,19 @@ function verifyChain(moduleCode) {
     prevHash = e.hash;
   }
   return { valid: true, total: entries.length };
+}
+
+// Plusieurs noms, plusieurs chaînes : chacune est vérifiée pour elle-même, et
+// le module n'est déclaré intègre que si toutes le sont.
+function verifyChain(moduleCode) {
+  const data = all();
+  let total = 0;
+  for (const c of codesDe(moduleCode)) {
+    const r = chaineValide(data[c] || []);
+    total += r.total;
+    if (!r.valid) return { valid: false, brokenAt: r.brokenAt, codeModule: c, total };
+  }
+  return { valid: true, total };
 }
 
 // ── Déduction de l'action et de l'objet à partir de la requête ──

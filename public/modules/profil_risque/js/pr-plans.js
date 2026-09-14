@@ -41,17 +41,17 @@ function renderPlans() {
             <div class="filter-group"><label>${t('domain')}</label>
                 <select onchange="window._planFilters.domaine=this.value;renderPage();">
                     <option value="">${t('all_domains')}</option>
-                    ${(D.domaines||[]).map(d => `<option value="${d.id}" ${f.domaine===d.id?'selected':''}>${d.code} - ${d.nom}</option>`).join('')}
+                    ${(D.domaines||[]).map(d => `<option value="${d.id}" ${f.domaine===d.id?'selected':''}>${escapeHtml(`${d.code} - ${d.nom}`)}</option>`).join('')}
                 </select></div>
             <div class="filter-group"><label>${t('sector')}</label>
                 <select onchange="window._planFilters.secteur=this.value;renderPage();">
                     <option value="">${t('all_sectors')}</option>
-                    ${(D.secteurs||[]).map(s => `<option value="${s.id}" ${f.secteur===s.id?'selected':''}>${s.code} - ${s.nom}</option>`).join('')}
+                    ${(D.secteurs||[]).map(s => `<option value="${s.id}" ${f.secteur===s.id?'selected':''}>${escapeHtml(`${s.code} - ${s.nom}`)}</option>`).join('')}
                 </select></div>
             <div class="filter-group"><label>${t('provider')}</label>
                 <select onchange="window._planFilters.prestataire=this.value;renderPage();">
                     <option value="">${t('all_providers')}</option>
-                    ${(D.prestataires||[]).filter(p=>p.actif!==false&&p.actif!==0).map(p => `<option value="${p.id}" ${f.prestataire===p.id?'selected':''}>${p.nom}</option>`).join('')}
+                    ${(D.prestataires||[]).filter(p=>p.actif!==false&&p.actif!==0).map(p => `<option value="${p.id}" ${f.prestataire===p.id?'selected':''}>${escapeHtml(p.nom)}</option>`).join('')}
                 </select></div>
             <div class="filter-group filter-search"><label>${t('search')}</label>
                 <input type="text" id="pr-plan-search" placeholder="${t('search')}" value="${f.search}" oninput="_pesSearchInput(this, () => { window._planFilters.search=document.getElementById('pr-plan-search').value; renderPage(); })"></div>
@@ -90,7 +90,7 @@ function renderPlans() {
             const saRiskDesc = saRes.risk_desc || saRes.globalRisk?.risk || '-';
             const freq = saRes.freq || saRes.globalRisk?.freq || '-';
             return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.4rem 0.5rem;border-bottom:1px solid var(--border);font-size:0.82rem;">
-                <span style="flex:1;font-weight:500;">${sa.code} - ${sa.nom}</span>
+                <span style="flex:1;font-weight:500;">${escapeHtml(`${sa.code} - ${sa.nom}`)}</span>
                 <span class="badge ${getRiskBadgeClass(saRiskDesc)}" style="margin:0 0.5rem;">${saRiskLabel}</span>
                 <span style="font-weight:700;min-width:80px;text-align:right;">${freq !== '-' ? freq + 'x / cycle' : '-'}</span>
             </div>`;

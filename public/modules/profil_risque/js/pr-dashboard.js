@@ -263,7 +263,7 @@ function renderDashboard() {
             <div class="filter-group"><label>${t('provider')}</label>
                 <select onchange="window._dashFilters.prestataire=this.value;renderPage();">
                     <option value="">${t('all_providers')}</option>
-                    ${dashPrestList.map(p => `<option value="${p.id}" ${df.prestataire===p.id?'selected':''}>${p.nom}</option>`).join('')}
+                    ${dashPrestList.map(p => `<option value="${p.id}" ${df.prestataire===p.id?'selected':''}>${escapeHtml(p.nom)}</option>`).join('')}
                 </select></div>
             <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();">${ICONS.refresh}</button>
         </div>

@@ -31,17 +31,17 @@ function renderProfils() {
             <div class="filter-group"><label>${t('domain')}</label>
                 <select onchange="window._profilFilters.domaine=this.value;renderPage();">
                     <option value="">${t('all_domains')}</option>
-                    ${(D.domaines||[]).map(d => `<option value="${d.id}" ${f.domaine===d.id?'selected':''}>${d.code} - ${d.nom}</option>`).join('')}
+                    ${(D.domaines||[]).map(d => `<option value="${d.id}" ${f.domaine===d.id?'selected':''}>${escapeHtml(`${d.code} - ${d.nom}`)}</option>`).join('')}
                 </select></div>
             <div class="filter-group ${secOff ? 'filter-disabled' : ''}"><label>${t('sector')}</label>
                 <select ${secOff ? 'disabled' : ''} onchange="window._profilFilters.secteur=this.value;renderPage();">
                     <option value="">${t('all_sectors')}</option>
-                    ${(D.secteurs||[]).map(s => `<option value="${s.id}" ${f.secteur===s.id?'selected':''}>${s.code} - ${s.nom}</option>`).join('')}
+                    ${(D.secteurs||[]).map(s => `<option value="${s.id}" ${f.secteur===s.id?'selected':''}>${escapeHtml(`${s.code} - ${s.nom}`)}</option>`).join('')}
                 </select></div>
             <div class="filter-group ${prestOff ? 'filter-disabled' : ''}"><label>${t('provider')}</label>
                 <select ${prestOff ? 'disabled' : ''} onchange="window._profilFilters.prestataire=this.value;renderPage();">
                     <option value="">${t('all_providers')}</option>
-                    ${(D.prestataires||[]).filter(p=>p.actif!==false&&p.actif!==0).map(p => `<option value="${p.id}" ${f.prestataire===p.id?'selected':''}>${p.nom}</option>`).join('')}
+                    ${(D.prestataires||[]).filter(p=>p.actif!==false&&p.actif!==0).map(p => `<option value="${p.id}" ${f.prestataire===p.id?'selected':''}>${escapeHtml(p.nom)}</option>`).join('')}
                 </select></div>
             <div class="filter-group filter-search"><label>${t('search')}</label>
                 <input type="text" id="pr-profil-search" placeholder="${t('search')}" value="${f.search}" oninput="_pesSearchInput(this, () => { window._profilFilters.search=document.getElementById('pr-profil-search').value; renderPage(); })"></div>
@@ -928,7 +928,7 @@ function renderProfilIndividuel(D, allValids, applyFilters, filtersHtml) {
         return `<div class="accordion-item" style="margin:0.35rem 0 0.35rem 0.75rem;border-left:3px solid ${color};">
             <div class="accordion-header expanded" data-acc-id="${aId}" onclick="toggleAccordion('${aId}')" style="padding:0.4rem 0.6rem;">
                 <span class="chevron expanded">${ICONS.chevron}</span>
-                <span class="acc-title" style="font-weight:700;font-size:0.78rem;color:${color};">${sa.code} — ${sa.nom}</span>
+                <span class="acc-title" style="font-weight:700;font-size:0.78rem;color:${color};">${escapeHtml(`${sa.code} — ${sa.nom}`)}</span>
                 <span style="margin-left:auto;font-size:0.7rem;color:var(--text-muted);">${count} indicateur${count>1?'s':''}</span>
                 <button class="btn btn-outline btn-sm" style="padding:0.15rem 0.45rem;font-size:0.7rem;margin-left:0.4rem;" onclick="event.stopPropagation();openIndividualGroup('${ev.id}','${type}','${sa.id}')" title="${t('group_summary_peers')}">${t('summary_tab')}</button>
             </div>
@@ -1562,7 +1562,7 @@ function _prStatsTauxHtml(D, latestEvals, allValids) {
     const tauxBarSecteurOptions = (D.secteurs || []).map(s => `<option value="${s.id}" ${dbc.secteur===s.id?'selected':''}>${s.code || s.nom}</option>`).join('');
     const _evaluatedPrestIds = new Set(allValids.map(e => e.prestataire_id));
     const _dashPrestList = (D.prestataires || []).filter(p => p.actif !== false && p.actif !== 0 && _evaluatedPrestIds.has(p.id));
-    const tauxBarPrestOptions = _dashPrestList.map(p => `<option value="${p.id}" ${dbc.prestataire===p.id?'selected':''}>${p.nom}</option>`).join('');
+    const tauxBarPrestOptions = _dashPrestList.map(p => `<option value="${p.id}" ${dbc.prestataire===p.id?'selected':''}>${escapeHtml(p.nom)}</option>`).join('');
     const _selStyle = 'padding:0.14rem 0.3rem;border:1px solid var(--border);border-radius:4px;background:var(--bg-card);font-size:0.72rem;width:100%;';
     const tauxBarChart = `<div class="chart-card" style="padding:0.6rem 0.75rem;margin-bottom:1rem;">
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;">

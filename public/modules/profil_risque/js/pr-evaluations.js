@@ -68,7 +68,7 @@ function buildSynthesisAccordion(ev, accPrefix) {
         const saFreq = saRes.freq || saRes.globalRisk?.freq || '-';
 
         saHtml += `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.82rem;">
-            <span style="min-width:200px;font-weight:600;">${sa.code} - ${sa.nom}</span>
+            <span style="min-width:200px;font-weight:600;">${escapeHtml(`${sa.code} - ${sa.nom}`)}</span>
             <span>idc: ${saRes.idc_s || '-'}</span>
             <span>idp: ${saRes.idp_s || '-'}</span>
             <span>ids: ${idsS}</span>
@@ -791,14 +791,14 @@ async function openNewEvalModal() {
             <label>${t('provider')}</label>
             <select id="evalPrestId">
                 <option value="">${t('select_option')}</option>
-                ${prestataires.map(p => `<option value="${p.id}" data-secteur="${p.secteur_id}">${p.nom} (${p.trigramme || ''})</option>`).join('')}
+                ${prestataires.map(p => `<option value="${p.id}" data-secteur="${p.secteur_id}">${escapeHtml(p.nom)} (${p.trigramme || ''})</option>`).join('')}
             </select>
         </div>
         <div class="form-group">
             <label>${t('sector')}</label>
             <select id="evalSectId">
                 <option value="">${t('select_option')}</option>
-                ${secteurs.map(s => `<option value="${s.id}">${s.nom} (${s.code})</option>`).join('')}
+                ${secteurs.map(s => `<option value="${s.id}">${escapeHtml(s.nom)} (${escapeHtml(s.code)})</option>`).join('')}
             </select>
         </div>
     `, `<button class="btn btn-outline" onclick="closeModal()">${t('cancel')}</button>

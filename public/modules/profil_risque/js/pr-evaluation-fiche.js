@@ -517,7 +517,7 @@ function _prEvalConformiteHtml(c) {
             bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
                 <div class="accordion-header" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
                     <span class="chevron">${ICONS.chevron}</span>
-                    <span class="acc-title" style="font-weight:700;">${sa.code} - ${sa.nom}</span>
+                    <span class="acc-title" style="font-weight:700;">${escapeHtml(`${sa.code} - ${sa.nom}`)}</span>
                     <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">${_confStats}</span>
                 </div>
                 <div class="accordion-body" id="acc-body-${saAccId}">`;
@@ -616,7 +616,7 @@ function _prEvalComplexiteHtml(c) {
         bodyHtml += `<div class="accordion-item" style="margin-bottom:0.5rem;">
             <div class="accordion-header" data-acc-id="${saAccId}" onclick="toggleAccordion('${saAccId}')" style="padding:0.5rem 0.75rem;">
                 <span class="chevron">${ICONS.chevron}</span>
-                <span class="acc-title" style="font-weight:700;">${sa.code} - ${sa.nom}</span>
+                <span class="acc-title" style="font-weight:700;">${escapeHtml(`${sa.code} - ${sa.nom}`)}</span>
                 <span style="margin-left:auto;font-size:0.8rem;color:var(--text-muted);">Notes: <strong id="evalSaSum_comp_${sa.id}">${saCompSum}</strong>/${saCompMax} | Taux: <span id="evalSaTaux_comp_${sa.id}">${saTaux}</span> | ide: <span id="evalSaIde_${sa.id}">${saIde}</span></span>
             </div>
             <div class="accordion-body" id="acc-body-${saAccId}">`;

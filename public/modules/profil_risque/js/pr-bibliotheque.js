@@ -27,7 +27,7 @@ function renderBibliotheque() {
                 <td>${d.taille ? (d.taille/1024).toFixed(1)+' Ko' : '-'}</td>
                 <td class="date-cell">${formatDate(d.date_upload)}</td>
                 <td class="actions-cell">
-                    <button class="btn-icon" onclick="downloadDoc('${d.id}','${d.nom}')" title="${t('download')}">${ICONS.download}</button>
+                    <button class="btn-icon" onclick="downloadDoc('${d.id}')" title="${t('download')}">${ICONS.download}</button>
                     ${isAdmin ? `<button class="btn-icon danger" onclick="deleteDoc('${d.id}')">${ICONS.trash}</button>` : ''}
                 </td>
             </tr>`).join('') || `<tr><td colspan="5" class="text-center">${t('no_document')}</td></tr>`}</tbody>
@@ -108,7 +108,12 @@ async function deleteDoc(id) {
     try { await api(`/api/documents/${id}`, { method: 'DELETE' }); await loadAllData(); renderPage(); } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function downloadDoc(id, nom) {
+// Le nom du document se retrouve ici, il ne voyage plus dans l'attribut.
+// Posé en clair dans une chaîne JavaScript au milieu d'un `onclick`, il en
+// sortait à la première apostrophe : « Rapport d'audit » rendait le bouton
+// inopérant, et un nom composé pour cela y aurait glissé du code.
+async function downloadDoc(id) {
+    const nom = ((APP_STATE.data.documents || []).find((d) => d.id === id) || {}).nom;
     try {
         const token = localStorage.getItem('pr_token');
         const res = await fetch(`/api/documents/${id}/download`, { credentials: 'same-origin', headers: token ? { Authorization: `Bearer ${token}` } : {} });

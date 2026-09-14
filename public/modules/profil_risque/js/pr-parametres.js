@@ -524,13 +524,13 @@ async function openEntityModal(collection, itemId) {
     } else if (collection === 'secteurs') {
         fields = `
         <div class="form-row"><div class="form-group"><label>${t('code')}</label><input id="eCode" value="${item?.code||''}"></div>
-        <div class="form-group"><label>${t('domain')}</label><select id="eDomaine">${(D.domaines||[]).map(d=>`<option value="${d.id}" ${item?.domaine_id===d.id?'selected':''}>${d.code} - ${d.nom}</option>`).join('')}</select></div></div>
+        <div class="form-group"><label>${t('domain')}</label><select id="eDomaine">${(D.domaines||[]).map(d=>`<option value="${d.id}" ${item?.domaine_id===d.id?'selected':''}>${escapeHtml(`${d.code} - ${d.nom}`)}</option>`).join('')}</select></div></div>
         <div class="form-row"><div class="form-group"><label>${t('name')}</label><input id="eNom" value="${item?.nom||''}"></div>
         <div class="form-group"><label>CSN (${t('months')})</label><input id="eCsn" type="number" value="${item?.csn||24}"></div></div>`;
     } else if (collection === 'sous_activites') {
         fields = `
         <div class="form-row"><div class="form-group"><label>${t('code')}</label><input id="eCode" value="${item?.code||''}"></div>
-        <div class="form-group"><label>${t('sector')}</label><select id="eSecteur">${(D.secteurs||[]).map(s=>`<option value="${s.id}" ${item?.secteur_id===s.id?'selected':''}>${s.code} - ${s.nom}</option>`).join('')}</select></div></div>
+        <div class="form-group"><label>${t('sector')}</label><select id="eSecteur">${(D.secteurs||[]).map(s=>`<option value="${s.id}" ${item?.secteur_id===s.id?'selected':''}>${escapeHtml(`${s.code} - ${s.nom}`)}</option>`).join('')}</select></div></div>
         <div class="form-group"><label>${t('name')}</label><input id="eNom" value="${item?.nom||''}"></div>`;
     } else if (collection === 'indicateurs_conf') {
         fields = `
@@ -550,7 +550,7 @@ async function openEntityModal(collection, itemId) {
     } else if (collection === 'indicateurs_complex') {
         fields = `
         <div class="form-row"><div class="form-group"><label>${t('code')}</label><input id="eCode" value="${item?.code||''}"></div>
-        <div class="form-group"><label>S.A.</label><select id="eSA">${(D.sousActivites||[]).map(s=>`<option value="${s.id}" ${item?.sous_activite_id===s.id?'selected':''}>${s.code} - ${s.nom}</option>`).join('')}</select></div></div>
+        <div class="form-group"><label>S.A.</label><select id="eSA">${(D.sousActivites||[]).map(s=>`<option value="${s.id}" ${item?.sous_activite_id===s.id?'selected':''}>${escapeHtml(`${s.code} - ${s.nom}`)}</option>`).join('')}</select></div></div>
         <div class="form-group"><label>${t('label')}</label><textarea id="eLabel" class="auto-grow" rows="1" style="width:100%;resize:vertical;">${item?.label||''}</textarea></div>
         <div class="form-group"><label>${t('criterion1')}</label><textarea id="eC1" class="auto-grow" rows="1" style="width:100%;resize:vertical;">${item?.c1||''}</textarea></div>
         <div class="form-group"><label>${t('criterion2')}</label><textarea id="eC2" class="auto-grow" rows="1" style="width:100%;resize:vertical;">${item?.c2||''}</textarea></div>
@@ -559,7 +559,7 @@ async function openEntityModal(collection, itemId) {
         fields = `
         <div class="form-row"><div class="form-group"><label>${t('name')}</label><input id="eNom" value="${item?.nom||''}"></div>
         <div class="form-group"><label>${t('trigramme')}</label><input id="eTri" value="${item?.trigramme||''}" maxlength="3"></div></div>
-        <div class="form-row"><div class="form-group"><label>${t('sector')}</label><select id="eSecteur">${(D.secteurs||[]).map(s=>`<option value="${s.id}" ${item?.secteur_id===s.id?'selected':''}>${s.code} - ${s.nom}</option>`).join('')}</select></div>
+        <div class="form-row"><div class="form-group"><label>${t('sector')}</label><select id="eSecteur">${(D.secteurs||[]).map(s=>`<option value="${s.id}" ${item?.secteur_id===s.id?'selected':''}>${escapeHtml(`${s.code} - ${s.nom}`)}</option>`).join('')}</select></div>
         <div class="form-group"><label>${t('domain')}</label><select id="eDomaine">${(D.domaines||[]).map(d=>`<option value="${d.id}" ${item?.domaine_id===d.id?'selected':''}>${d.code}</option>`).join('')}</select></div></div>
         <div class="form-row"><div class="form-group"><label>${t('contact')}</label><input id="eContact" value="${item?.contact_nom||''}"></div>
         <div class="form-group"><label>${t('telephone')}</label><input id="eTel" value="${item?.contact_tel||''}"></div></div>

@@ -118,7 +118,9 @@ async function execRemoveDossierChecklist(dossierId, checklistId) {
 async function execOpenChecklistFiller(dossierId, checklistId) {
     // Recharge si nécessaire (le cache peut être vide juste après création)
     if (!(EXEC_STATE.data.checklists || []).length) {
-        try { await execRefreshChecklists(); } catch (e) {}
+        // L'échec se dit plus bas : sans la checklist, la ligne suivante ne la
+        // trouve pas et l'écran l'annonce. Rien à ajouter ici.
+        try { await execRefreshChecklists(); } catch (e) { /* rattrapé ci-dessous */ }
     }
     const cl = (EXEC_STATE.data.checklists || []).find(c => c.id === checklistId);
     if (!cl) {

@@ -1273,8 +1273,12 @@ async function saveEvalScores(evalId) {
 
 // ── Phase 3 — Réunions des évaluateurs (Chap. 4 §4.2.2.e) ──
 async function openReunionEvaluateursList(evalId) {
+    // Sans cette garde, un échec de chargement faisait afficher « aucune
+    // réunion » : l'écran affirmait qu'il n'y en avait pas, au lieu de dire
+    // qu'il n'avait pas pu le savoir.
     let rows = [];
-    try { rows = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`); } catch (e) {}
+    try { rows = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`); }
+    catch (e) { showToast(t('chargement_impossible', e.message), 'error'); return; }
     const list = rows.length ? rows.map(r => `
         <div style="border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.4rem;">
             <div style="display:flex;justify-content:space-between;font-weight:600;font-size:0.88rem;">
@@ -1297,7 +1301,12 @@ async function openReunionEvaluateursForm(evalId, rid) {
         try {
             const all = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`);
             cur = all.find(r => r.id === rid) || cur;
-        } catch (e) {}
+        } catch (e) {
+            // Ouvrir le formulaire vide sur une réunion qu'on n'a pas su lire,
+            // c'est offrir de l'écraser par des champs blancs.
+            showToast(t('chargement_impossible', e.message), 'error');
+            return;
+        }
     }
     const today = new Date().toISOString().slice(0, 10);
     const body = `
@@ -1424,7 +1433,10 @@ async function reunionEvalEditInline(evalId, rid) {
         try {
             const all = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`);
             cur = (all || []).find(r => r.id === rid) || cur;
-        } catch (e) {}
+        } catch (e) {
+            showToast(t('chargement_impossible', e.message), 'error');
+            return;
+        }
     }
     const today = new Date().toISOString().slice(0, 10);
     const escVal = s => String(s || '').replace(/"/g, '&quot;');
@@ -1468,7 +1480,12 @@ async function reunionEvalSaveFromTab(evalId) {
                 ? cur.consolidation_data.cumulative_changes : [];
             roundsCount = cur.consolidation_data.rounds_count || 0;
         }
-    } catch (e) {}
+    } catch (e) {
+        // Les tours déjà consolidés se cumulent : enregistrer sans les avoir
+        // lus les effacerait.
+        showToast(t('chargement_impossible', e.message), 'error');
+        return;
+    }
 
     const snapKey = 'pr_consol_' + evalId;
     const rawSnap = localStorage.getItem(snapKey);

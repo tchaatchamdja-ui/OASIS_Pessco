@@ -4,6 +4,7 @@
 
 const TRANSLATIONS = {
   fr: {
+    chargement_impossible: "Chargement impossible : {0}",
     aucun_minimum: "0 = pas de minimum imposé",
     televersement_en_cours: "Téléversement…",
     reevaluation_privilege: "Réévaluation réservée aux privilèges Gestionnaire et Validateur couvrant ce domaine et ce secteur.",
@@ -257,6 +258,7 @@ const TRANSLATIONS = {
     perf_summary_peers:'Synthèse Performance et comparaison aux pairs',
 },
   en: {
+    chargement_impossible: "Could not load: {0}",
     aucun_minimum: "0 = no minimum required",
     televersement_en_cours: "Uploading…",
     reevaluation_privilege: "Re-assessment is reserved for Manager and Approver privileges covering this domain and sector.",
@@ -498,6 +500,7 @@ const TRANSLATIONS = {
     perf_summary_peers:'Performance summary and comparison with peers',
 },
   pt: {
+    chargement_impossible: "Impossível carregar: {0}",
     aucun_minimum: "0 = sem mínimo imposto",
     televersement_en_cours: "A carregar…",
     reevaluation_privilege: "A reavaliação está reservada aos privilégios de Gestor e Validador que cubram este domínio e setor.",

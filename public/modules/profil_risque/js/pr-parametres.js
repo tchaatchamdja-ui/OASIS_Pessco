@@ -512,7 +512,13 @@ async function openEntityModal(collection, itemId) {
             const apiMap = { domaines:'/api/domaines', secteurs:'/api/secteurs', sous_activites:'/api/sous-activites',
                 indicateurs_conf:`${MODULE_API}/indicateurs-conf`, indicateurs_perf:`${MODULE_API}/indicateurs-perf`, indicateurs_complex:`${MODULE_API}/indicateurs-complex`,
                 prestataires:'/api/prestataires' };
-            try { item = await api(`${apiMap[collection]}/${itemId}`); } catch(e) {}
+            try { item = await api(`${apiMap[collection]}/${itemId}`); }
+            catch (e) {
+                // Le formulaire s'ouvrait vide sur un élément qu'on n'avait pas
+                // su lire : l'enregistrer l'aurait remplacé par des champs blancs.
+                showToast(t('chargement_impossible', e.message), 'error');
+                return;
+            }
         }
     }
 

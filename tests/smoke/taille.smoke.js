@@ -25,7 +25,7 @@ const MARGE = 1.05;
 // Une règle écrite deux fois dans la même feuille en annule silencieusement une
 // autre : la suite refuse qu'il s'en ajoute, sans exiger de résoudre d'un coup
 // les vingt-cinq héritées (portail, exécution, planification, profils, RAMP).
-const DOUBLONS_CSS_TOLERES = 15;
+const DOUBLONS_CSS_TOLERES = 13;
 
 // Aucun fichier ne franchit plus le seuil : les six qui le dépassaient ont été
 // découpés en morceaux consécutifs, chargés dans le même ordre. Une exception

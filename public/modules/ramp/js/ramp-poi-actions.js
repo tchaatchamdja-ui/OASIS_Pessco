@@ -78,7 +78,7 @@ function rampSelecteurAeronefLignes() {
 function rampSelecteurAeronefHtml() {
     return `
     <div class="ramp-modal-fond" onclick="rampFermerModal()">
-        <div class="ramp-modal ramp-modal-large" onclick="event.stopPropagation();">
+        <div class="ramp-modal ramp-modal-aeronef" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('choisir_type_aeronef')}</span>
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>

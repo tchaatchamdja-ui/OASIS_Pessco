@@ -1156,9 +1156,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-champ-avec-bouton .ramp-select { flex: 1 1 auto; min-width: 0; }
 .ramp-champ-avec-bouton .btn { flex: 0 0 auto; height: 32px; }
 
-/* Volet de choix d'un aéronef : plus large qu'une modale de saisie. */
-.ramp-modal-large { max-width: 900px; width: 92vw; }
-
 /* Étape du fil : c'est un bouton, on peut la consulter. */
 button.ramp-proc-step { border: none; cursor: pointer; font-family: inherit; }
 button.ramp-proc-step.selected:not(.current):not(.rejected) { background: var(--ramp-accent); color: #fff; }
@@ -1348,6 +1345,10 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
 .ramp-modal-body { padding: 1rem; max-height: 70vh; overflow-y: auto; }
 /* Le générateur de tables demande de la place : deux colonnes côte à côte. */
 .ramp-modal-large { width: 1100px; max-width: 94vw; }
+/* Le volet de choix d'un aéronef n'est qu'une table de recherche : plus large
+   qu'une modale de saisie, moins que le générateur. Sa propre classe, car une
+   largeur commune revenait à imposer à l'un la mesure prévue pour l'autre. */
+.ramp-modal-aeronef { width: 900px; max-width: 92vw; }
 .ramp-modal-footer {
     display: flex; justify-content: flex-end; gap: .5rem;
     padding: .7rem 1rem; border-top: 1px solid var(--border);

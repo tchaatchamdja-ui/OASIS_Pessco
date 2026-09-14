@@ -4,6 +4,8 @@
  */
 
 EXEC_TR.pt = {
+        commentaires_rapport: "Comentários sobre o relatório",
+        previsualisation: "Pré-visualização",
         err_transmission: "Falha na transmissão",
         confirmer_soumettre_rapport: "Submeter este relatório a validação?",
         confirmer_cloture_terrain: "Encerrar a execução no terreno? A redação do relatório será ativada.",

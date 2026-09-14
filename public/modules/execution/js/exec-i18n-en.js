@@ -4,6 +4,8 @@
  */
 
 EXEC_TR.en = {
+        commentaires_rapport: "Comments on the report",
+        previsualisation: "Preview",
         err_transmission: "Transmission failed",
         confirmer_soumettre_rapport: "Submit this report for approval?",
         confirmer_cloture_terrain: "Close the field work? Report writing will be enabled.",

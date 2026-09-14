@@ -309,7 +309,7 @@ function cfgSectionExigences() {
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openExigDrawer(null,null,null,true)">${icon('plus', 13)} ${esc(t('add'))}</button>
     </div>
   </div>
-  ${blocks || `<p style="color:var(--text-muted);">Aucune exigence.</p>`}
+  ${blocks || `<p style="color:var(--text-muted);">${t('aucune_exigence')}</p>`}
   <div id="exigDrawerRoot"></div>`;
 }
 
@@ -534,7 +534,7 @@ window.openRefModal = function (coll, id, defaultsJson) {
           <div class="multi-check">
             ${opts.length
               ? opts.map((o) => `<label class="multi-check-item"><input type="checkbox" data-multi="${f.k}" value="${esc(o.v)}" ${vals.includes(String(o.v)) ? 'checked' : ''}> ${esc(o.t)}</label>`).join('')
-              : '<span style="color:var(--text-muted);font-size:.8rem;">Aucune option — voir « Autres configurations ».</span>'}
+              : `<span style="color:var(--text-muted);font-size:.8rem;">${t('aucune_option_config')}</span>`}
           </div>
         </div>`;
       }
@@ -810,7 +810,7 @@ function cfgSectionAAC(cfg) {
   const langLabel = { fr: 'Français', en: 'English', pt: 'Português' }[cfg.instance.defaultLang] || cfg.instance.defaultLang;
   const logoBox = aac.logo
     ? `<img src="${aac.logo}" alt="Logo AAC" class="aac-logo-preview">`
-    : `<div class="aac-logo-empty">${icon('landmark', 30)}<span>Aucun logo</span></div>`;
+    : `<div class="aac-logo-empty">${icon('landmark', 30)}<span>${t('aucun_logo')}</span></div>`;
   const rows = [
     ['Nom complet', val(aac.nom)],
     ['Sigle', val(aac.sigle)],
@@ -1005,7 +1005,7 @@ window.openPosteRegistre = function (nodeId) {
         <div class="shell-table-container">
           <table class="shell-table shell-table-compact">
             <thead><tr><th>${t('users_col_role')}</th><th>Personne</th><th>${t('debut_jour_heure')}</th><th>Fin (jour / heure)</th></tr></thead>
-            <tbody>${rows || '<tr><td colspan="4" style="color:var(--text-muted);">Aucun enregistrement.</td></tr>'}</tbody>
+            <tbody>${rows || `<tr><td colspan="4" style="color:var(--text-muted);">${t('aucun_enregistrement')}</td></tr>`}</tbody>
           </table>
         </div>
       </div>

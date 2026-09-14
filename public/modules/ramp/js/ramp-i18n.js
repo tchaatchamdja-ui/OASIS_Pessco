@@ -11,6 +11,7 @@
 
 const RAMP_TR = {
     fr: {
+        aucune_option: "— Aucune —",
         confirmer_suppr_inspection: "Supprimer l’inspection du {0} ({1}) et ses {2} écart(s) ?",
         m_depot_impossible: "Dépôt impossible",
         m_renvoi_impossible: "Renvoi impossible",
@@ -646,6 +647,7 @@ const RAMP_TR = {
 },
 
     en: {
+        aucune_option: "— None —",
         confirmer_suppr_inspection: "Delete the inspection of {0} ({1}) and its {2} finding(s)?",
         m_depot_impossible: "Cannot file",
         m_renvoi_impossible: "Cannot send back",
@@ -1269,6 +1271,7 @@ const RAMP_TR = {
 },
 
     pt: {
+        aucune_option: "— Nenhuma —",
         confirmer_suppr_inspection: "Eliminar a inspeção de {0} ({1}) e os seus {2} desvio(s)?",
         m_depot_impossible: "Depósito impossível",
         m_renvoi_impossible: "Devolução impossível",

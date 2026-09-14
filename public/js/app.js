@@ -332,7 +332,7 @@ window.openImportModal = function (coll, title) {
     <div class="shell-modal" style="max-width:460px;">
       <div class="shell-modal-header"><h3>Importer Excel — ${esc(title)}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeRefModal()">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem;">1. Téléchargez le modèle, renseignez-le, puis importez-le (.xlsx).</p>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem;">${t('import_marche_a_suivre')}</p>
         <a class="shell-btn shell-btn-outline" href="/api/referentiels/${coll}/template" style="margin-bottom:1rem;">${icon('download', 14)} Télécharger le modèle (.xlsx)</a>
         <div class="shell-form-group">
           <label>${t('fichier_renseigne')}</label>

@@ -1602,7 +1602,7 @@ function rampPoiVueSaisie() {
                 <label>Classe d’action</label>
                 <select class="ramp-select" data-champ="classe_action" ${d}
                         onchange="rampPoiMeta('classe_action', this.value)">
-                    <option value="">— Aucune —</option>
+                    <option value="">${rt('aucune_option')}</option>
                     ${ctx.actions.map((a) => `<option value="${_rAttr(a.code)}"
                         ${p.classe_action === a.code ? 'selected' : ''}>${_rEsc(`${a.code} — ${a.label}`)}</option>`).join('')}
                 </select>

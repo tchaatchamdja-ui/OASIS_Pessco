@@ -671,73 +671,73 @@ function buildEvalReportHtml(ev) {
 </style></head>
 <body>
   <div class="rep-runhead">${esc(aac.nom || "Autorité de l'Aviation Civile")}</div>
-  <h1>Rapport d'Evaluation du Profil de Risque</h1>
+  <h1>Rapport d'Évaluation du Profil de Risque</h1>
 
   <table class="rep-meta">
     <tr><td>Nom du Prestataire :</td><td>${esc(prest.nom || '-')}</td></tr>
     <tr><td>Secteur :</td><td>${esc(sect.code || '')} - ${esc(sect.nom || '')}</td></tr>
-    <tr><td>Date d'evaluation :</td><td>${esc(dateStr)}</td></tr>
-    <tr><td>Reference :</td><td>${esc(reference)}</td></tr>
-    <tr><td>Prepare par :</td><td>${esc(preparePar)}</td></tr>
+    <tr><td>Date d'évaluation :</td><td>${esc(dateStr)}</td></tr>
+    <tr><td>Référence :</td><td>${esc(reference)}</td></tr>
+    <tr><td>Préparé par :</td><td>${esc(preparePar)}</td></tr>
   </table>
 
-  <h2>Section 1 : Introduction et resume analytique</h2>
+  <h2>Section 1 : Introduction et résumé analytique</h2>
   <h3>Introduction</h3>
   <div class="rep-field">${txt(gen.introduction)}</div>
-  <h3>Resume analytique</h3>
+  <h3>Résumé analytique</h3>
   <div class="rep-field">${txt(gen.resume)}</div>
 
-  <h2>Section 2 : Liste des evaluateurs et parties prenantes</h2>
-  <h3>Liste des evaluateurs</h3>
+  <h2>Section 2 : Liste des évaluateurs et parties prenantes</h2>
+  <h3>Liste des évaluateurs</h3>
   <div class="rep-field">${txt(gen.evaluateurs
       || (ev.evaluateurs_designes || []).map(u => ' - ' + evalUserLabel(u)).join('\n'))}</div>
   <h3>Parties prenantes</h3>
   <div class="rep-field">${txt(gen.parties)}</div>
 
-  <h2>Section 3 : Sources de donnees pour les evaluations</h2>
+  <h2>Section 3 : Sources de données pour les évaluations</h2>
   <div class="rep-field">${txt(gen.sources)}</div>
 
   <h2>Section 4 : Profil de risque du prestataire de service</h2>
-  <h3>4.1 Sous-secteurs d'activites du prestataire</h3>
+  <h3>4.1 Sous-secteurs d'activités du prestataire</h3>
   <div class="rep-list">${sas.length ? sas.map(sa => `- ${esc(saLabel(sa))}`).join('<br>') : '-'}</div>
 
-  <h3>4.2 Synthese globale du profil de risque</h3>
-  ${tbl(['Indice Conformite (IDC)', 'Indice Performance (IDP)', 'Indice Securite (IDS)', 'Indice Complexite (IDE)'],
+  <h3>4.2 Synthèse globale du profil de risque</h3>
+  ${tbl(['Indice Conformité (IDC)', 'Indice Performance (IDP)', 'Indice Sécurité (IDS)', 'Indice Complexité (IDE)'],
         [[g.idc_g || '-', g.idp_g || '-', g.ids_g || '-', g.ide_g || '-']])}
 
-  <h3>4.3 Synthese par sous-activite</h3>
+  <h3>4.3 Synthèse par sous-activité</h3>
   ${sas.length ? synthSa : '<div class="rep-field">-</div>'}
 
-  <h2>Section 5 : Cycle de surveillance actuel et propose</h2>
-  ${tbl(['Cycle actuel (CSn)', 'Index Risque Securite', 'Intensite surveillance', 'Cycle propose (CSRBO)'],
+  <h2>Section 5 : Cycle de surveillance actuel et proposé</h2>
+  ${tbl(['Cycle actuel (CSn)', 'Index Risque Sécurité', 'Intensité surveillance', 'Cycle proposé (CSRBO)'],
         [[g.csn ? `${g.csn} mois` : '-',
           g.globalRisk?.label ? `${g.globalRisk.label}${g.globalRisk.risk ? ' (' + g.globalRisk.risk + ')' : ''}` : '-',
           g.globalRisk?.intensity || '-',
           g.csrbo ? `${g.csrbo} mois` : '-']])}
-  <h3>Periodicite par sous-activite :</h3>
-  ${tbl(['Sous-activite', 'Index Risque', 'Periodicite', 'Cycle CSRBO (mois)'], periodiciteRows,
+  <h3>Périodicité par sous-activité :</h3>
+  ${tbl(['Sous-activité', 'Index Risque', 'Périodicité', 'Cycle CSRBO (mois)'], periodiciteRows,
         ['42%', '18%', '20%', '20%'])}
 
-  <h2>Section 6 : Actions d'ameliorations proposees suite aux echanges avec les prestataires</h2>
+  <h2>Section 6 : Actions d'améliorations proposées suite aux échanges avec les prestataires</h2>
   <div class="rep-field">${txt(gen.actions)}</div>
 
   <h2>Section 7 : Conclusion</h2>
   <div class="rep-field">${txt(gen.conclusion)}</div>
 
   <div class="rep-appendix">
-    <h2>Appendices : Tableaux d'evaluations</h2>
-    <h3>Appendice 1 : Details indicateurs Conformite</h3>
-    ${tbl(['S.A.', 'Code', 'Libelle', 'Score', 'Critere'], rowsConf, ['10%', '11%', '30%', '7%', '42%'])}
+    <h2>Appendices : Tableaux d'évaluations</h2>
+    <h3>Appendice 1 : Détails indicateurs Conformité</h3>
+    ${tbl(['S.A.', 'Code', 'Libellé', 'Score', 'Critère'], rowsConf, ['10%', '11%', '30%', '7%', '42%'])}
   </div>
 
   <div class="rep-appendix">
-    <h3>Appendice 2 : Details indicateurs Performance</h3>
-    ${tbl(['Code', 'Libelle', 'Score', 'Critere'], rowsPerf, ['12%', '33%', '7%', '48%'])}
+    <h3>Appendice 2 : Détails indicateurs Performance</h3>
+    ${tbl(['Code', 'Libellé', 'Score', 'Critère'], rowsPerf, ['12%', '33%', '7%', '48%'])}
   </div>
 
   <div class="rep-appendix">
-    <h3>Appendice 3 : Details indicateurs Complexite</h3>
-    ${tbl(['S.A.', 'Code', 'Libelle', 'Score', 'Critere'], rowsComp, ['10%', '11%', '30%', '7%', '42%'])}
+    <h3>Appendice 3 : Détails indicateurs Complexité</h3>
+    ${tbl(['S.A.', 'Code', 'Libellé', 'Score', 'Critère'], rowsComp, ['10%', '11%', '30%', '7%', '42%'])}
   </div>
 </body></html>`;
 }

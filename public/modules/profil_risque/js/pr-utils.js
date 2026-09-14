@@ -4,6 +4,7 @@
 
 const TRANSLATIONS = {
   fr: {
+    aucun_minimum: "0 = pas de minimum imposé",
     televersement_en_cours: "Téléversement…",
     reevaluation_privilege: "Réévaluation réservée aux privilèges Gestionnaire et Validateur couvrant ce domaine et ce secteur.",
     reevaluation_en_cours: "Une réévaluation est déjà en cours pour ce prestataire.",
@@ -256,6 +257,7 @@ const TRANSLATIONS = {
     perf_summary_peers:'Synthèse Performance et comparaison aux pairs',
 },
   en: {
+    aucun_minimum: "0 = no minimum required",
     televersement_en_cours: "Uploading…",
     reevaluation_privilege: "Re-assessment is reserved for Manager and Approver privileges covering this domain and sector.",
     reevaluation_en_cours: "A re-assessment is already under way for this provider.",
@@ -496,6 +498,7 @@ const TRANSLATIONS = {
     perf_summary_peers:'Performance summary and comparison with peers',
 },
   pt: {
+    aucun_minimum: "0 = sem mínimo imposto",
     televersement_en_cours: "A carregar…",
     reevaluation_privilege: "A reavaliação está reservada aos privilégios de Gestor e Validador que cubram este domínio e setor.",
     reevaluation_en_cours: "Já está em curso uma reavaliação para este prestador.",

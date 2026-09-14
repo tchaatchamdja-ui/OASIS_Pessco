@@ -853,13 +853,13 @@ async function execPreviewRapport(rapportId) {
     const bodyHtml = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
         <div style="position:sticky;top:0;">
-            <h4 style="margin-bottom:0.5rem;">Commentaires sur le rapport</h4>
+            <h4 style="margin-bottom:0.5rem;">${te('commentaires_rapport')}</h4>
             <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">Rapport : <strong>${_esc(rapport.reference || '')}</strong> (v${rapport.version || 1}) — ${_execStatusBadge(rapport.statut)}</p>
             <textarea id="apercu_commentaires" class="form-input" rows="18" style="resize:vertical;width:100%;${!canComment ? 'background:var(--bg);' : ''}" placeholder="${canComment ? 'Saisir vos observations...' : ''}" ${canComment ? '' : 'readonly'}>${_esc(existingComments)}</textarea>
             ${canComment ? `<button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="execSaveApercuComments('${rapportId}')">${EXEC_ICONS.clipboard} Enregistrer les observations</button>` : ''}
         </div>
         <div style="border-left:1px solid var(--border);padding-left:1rem;max-height:80vh;overflow-y:auto;">
-            <h4 style="margin-bottom:0.5rem;">Prévisualisation</h4>
+            <h4 style="margin-bottom:0.5rem;">${te('previsualisation')}</h4>
             ${previewHtml}
         </div>
     </div>`;

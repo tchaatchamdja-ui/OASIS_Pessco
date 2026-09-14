@@ -15,6 +15,8 @@
 
 const EXEC_TR = {
     fr: {
+        commentaires_rapport: "Commentaires sur le rapport",
+        previsualisation: "Prévisualisation",
         err_transmission: "Erreur lors de la transmission",
         confirmer_soumettre_rapport: "Soumettre ce rapport pour validation ?",
         confirmer_cloture_terrain: "Clôturer l'exécution sur le terrain ? La rédaction du rapport sera activée.",

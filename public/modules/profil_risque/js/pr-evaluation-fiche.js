@@ -432,7 +432,7 @@ function _prEvalGeneralitesHtml(c) {
             <label for="evalNbMin">${t('min_assessors')}</label>
             <div class="pr-gen-nb">
                 <input type="number" id="evalNbMin" min="0" max="20" value="${nbMin}">
-                <span class="pr-gen-aide">0 = pas de minimum imposé</span>
+                <span class="pr-gen-aide">${t('aucun_minimum')}</span>
             </div>
         </div>
         <div class="pr-gen-champ">

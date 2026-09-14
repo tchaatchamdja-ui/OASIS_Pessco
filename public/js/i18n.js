@@ -1,6 +1,11 @@
 // OASIS — i18n FR / EN / PT (TDR §F.7)
 const I18N = {
   fr: {
+    aucune_exigence: "Aucune exigence.",
+    aucune_option_config: "Aucune option — voir « Autres configurations ».",
+    aucun_logo: "Aucun logo",
+    aucun_enregistrement: "Aucun enregistrement.",
+    import_marche_a_suivre: "1. Téléchargez le modèle, renseignez-le, puis importez-le (.xlsx).",
     logo_enregistre: "Logo enregistré.",
     logo_supprime: "Logo supprimé.",
     prestataire_enregistre: "Prestataire enregistré.",
@@ -229,6 +234,11 @@ const I18N = {
     donnees_col: 'Données',
 },
   en: {
+    aucune_exigence: "No requirement.",
+    aucune_option_config: "No option — see “Other settings”.",
+    aucun_logo: "No logo",
+    aucun_enregistrement: "No record.",
+    import_marche_a_suivre: "1. Download the template, fill it in, then import it (.xlsx).",
     logo_enregistre: "Logo saved.",
     logo_supprime: "Logo deleted.",
     prestataire_enregistre: "Provider saved.",
@@ -457,6 +467,11 @@ const I18N = {
     donnees_col: 'Data',
 },
   pt: {
+    aucune_exigence: "Nenhum requisito.",
+    aucune_option_config: "Nenhuma opção — ver «Outras configurações».",
+    aucun_logo: "Sem logótipo",
+    aucun_enregistrement: "Nenhum registo.",
+    import_marche_a_suivre: "1. Descarregue o modelo, preencha-o e importe-o (.xlsx).",
     logo_enregistre: "Logótipo guardado.",
     logo_supprime: "Logótipo eliminado.",
     prestataire_enregistre: "Prestador guardado.",

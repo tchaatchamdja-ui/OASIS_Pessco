@@ -239,8 +239,8 @@ function planExportPDF(planId) {
             <td>${_esc(`${mode ? (mode.mode || '') : '-'} / ${typeS ? (typeS.type_supervision || '') : '-'}`)}</td>
             <td>${_esc(a.lieu_activite || '-')}</td>
             <td>${_esc(resp ? `${resp.nom || ''} ${resp.prenom || ''}`.trim() : '-')}</td>
-            <td>${(a.date_debut || '').substring(0, 10) || '-'}</td>
-            <td>${(a.date_fin || '').substring(0, 10) || '-'}</td>
+            <td>${planDateFr(a.date_debut) || '-'}</td>
+            <td>${planDateFr(a.date_fin) || '-'}</td>
         </tr>`;
     }).join('');
 

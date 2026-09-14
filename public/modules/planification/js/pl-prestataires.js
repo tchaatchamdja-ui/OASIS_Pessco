@@ -75,7 +75,7 @@ function planRenderPrestataires() {
                                 <td>${canEditCycles ?
                                     `<input type="date" class="cycle-date-input" value="${p.fin_cycle || ''}" onchange="planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)">` :
                                     (p.fin_cycle || '-')}</td>
-                                <td>${(rpByPrestId.get(p.id)?.date_validation || p.evaluation_date || '').substring(0, 10)}</td>
+                                <td>${planDateFr(rpByPrestId.get(p.id)?.date_validation || p.evaluation_date)}</td>
                                 <td><button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}">${PLAN_ICONS.chevron}</button></td>
                             </tr>
                             <tr class="hidden prest-detail-row">

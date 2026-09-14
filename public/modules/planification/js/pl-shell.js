@@ -47,6 +47,16 @@ const PLAN_ICONS = {
 //  NAVIGATION CONFIG
 // ══════════════════════════════════════
 
+// Une date se lit jj/mm/aaaa à l'écran, quand elle s'enregistre aaaa-mm-jj.
+// La conversion se fait sur la chaîne, sans passer par `Date` : « 2026-11-20 »
+// interprété comme minuit UTC recule d'un jour pour qui vit à l'ouest de
+// Greenwich, et la date affichée ne serait plus celle qui est enregistrée.
+function planDateFr(valeur) {
+    const s = String(valeur || '').substring(0, 10);
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : s;
+}
+
 const PLAN_NAV = {
     dashboard: { labelKey: 'dashboard', icon: 'dashboard' },
     prestataires: { labelKey: 'profils_de_risques', icon: 'risk_profile' },

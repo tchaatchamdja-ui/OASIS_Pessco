@@ -591,8 +591,8 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                                 <td>${modeTypeStr}</td>
                                 <td>${_esc(a.lieu_activite || '-')}</td>
                                 <td>${respStr}</td>
-                                <td>${(a.date_debut || '').substring(0, 10)}${cycleWarn}</td>
-                                <td>${(a.date_fin || '').substring(0, 10)}</td>
+                                <td>${planDateFr(a.date_debut)}${cycleWarn}</td>
+                                <td>${planDateFr(a.date_fin)}</td>
                                 <td class="actions-cell">
                                     <button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}">${PLAN_ICONS.eye}</button>
                                     ${(() => {

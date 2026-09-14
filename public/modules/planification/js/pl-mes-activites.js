@@ -120,8 +120,8 @@ function planRenderMesActivites() {
             <td>${sect ? _esc(sect.code + ' - ' + sect.nom) : '—'}</td>
             <td>${mode ? _esc(mode.mode || mode.libelle || '') : '—'} / ${typeS ? _esc(typeS.type_supervision || typeS.libelle || '') : '—'}</td>
             <td>${_esc(a.lieu_activite || '—')}</td>
-            <td class="plan-ma-date">${(a.date_debut || '').substring(0, 10) || '—'}</td>
-            <td class="plan-ma-date">${(a.date_fin || '').substring(0, 10) || '—'}</td>
+            <td class="plan-ma-date">${planDateFr(a.date_debut) || '—'}</td>
+            <td class="plan-ma-date">${planDateFr(a.date_fin) || '—'}</td>
             <td class="plan-ma-duree">${duree || '—'}</td>
         </tr>`;
     }).join('');

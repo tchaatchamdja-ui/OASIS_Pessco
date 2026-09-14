@@ -235,8 +235,8 @@ function _renderPlanDiffBody(diff, planId) {
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:0.25rem 0;margin-bottom:0.4rem;">
                 ${field(tp('lieu_activite'), _esc(a.lieu_activite || '') || '—')}
-                ${field(tp('start_date'), (a.date_debut || '').substring(0, 10) || '—')}
-                ${field(tp('end_date'), (a.date_fin || '').substring(0, 10) || '—')}
+                ${field(tp('start_date'), planDateFr(a.date_debut) || '—')}
+                ${field(tp('end_date'), planDateFr(a.date_fin) || '—')}
                 ${field(tp('nombre_inspecteurs'), a.nombre_inspecteurs || '—')}
                 ${field(tp('priority'), _esc(a.priorite || '—'))}
                 ${field(tp('risk_label'), _esc(a.risk_label || '—'))}
@@ -432,7 +432,7 @@ function planRenderHistory() {
                             v${v.version || 1}
                         </td>
                         <td>${_statusBadge(v.statut)}</td>
-                        <td>${(v.date_validation || v.date_creation || '').substring(0, 10) || '-'}</td>
+                        <td>${planDateFr(v.date_validation || v.date_creation) || '-'}</td>
                         <td>${isAmend ? `<span style="color:var(--warning);">${tp('amendement')} — ${(tp('modif_count')).replace('{0}', modifCount)}</span>` : `<span style="color:var(--text-muted);">${tp('initial_version')}</span>`}</td>
                         <td>
                             <button class="btn btn-primary btn-sm" onclick="planExportPDF('${v.id}')" title="${tp('download_pdf')}">

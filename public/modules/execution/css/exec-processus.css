@@ -148,7 +148,7 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 /* Formulaire de notification dans le volet : présentation resserrée, pour
    garder l'ensemble des rubriques sous les yeux. */
 .exec-proc-hote .exec-form-section { margin-bottom: .6rem; }
-.exec-proc-hote .exec-form-section-body { padding: .6rem .8rem; }
+.exec-proc-hote .exec-form-section-body { padding: .5rem .8rem .2rem; }
 .exec-proc-hote .exec-form-grid { gap: .55rem .9rem; }
 .exec-proc-hote .form-group { margin-bottom: .45rem; }
 .exec-proc-hote .form-group > label,
@@ -161,7 +161,6 @@ button.exec-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
    resserre l'écart et l'entête des rubriques. */
 .exec-proc-hote .exec-form-section-body > div[style*="grid"] { gap: .55rem .9rem !important; }
 .exec-proc-hote .exec-form-section-header { padding: .5rem .8rem; }
-.exec-proc-hote .exec-form-section-body { padding: .5rem .8rem .2rem; }
 .exec-proc-hote .exec-form-sections { gap: .5rem; }
 /* Formulaire consulté en lecture seule. */
 .exec-proc-hote.exec-proc-lecture { opacity: .92; }

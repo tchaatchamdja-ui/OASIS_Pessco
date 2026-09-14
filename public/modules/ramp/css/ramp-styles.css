@@ -545,15 +545,13 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     display: grid; grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: .35rem; flex: 1; min-width: 0;
 }
-.ramp-pays-btn {
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    text-align: center; padding: .3rem .4rem;
-}
+
 @media (max-width: 1100px) {
     .ramp-barre-pays-liste { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) { .ramp-barre-pays-titre { display: none; } }
 .ramp-pays-btn {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
     padding: .3rem .7rem; border: 1px solid var(--primary); border-radius: 999px;
     background: var(--bg); color: var(--text); font-size: .8rem; font-family: inherit;
     cursor: pointer; transition: background .15s, color .15s, border-color .15s;
@@ -760,7 +758,8 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-table-poi tr.ramp-poi-ecart > td { background: rgba(220, 38, 38, .05); }
 .ramp-table-poi tr.ramp-poi-constat > td { background: rgba(220, 38, 38, .05); padding-top: 0; }
 .ramp-poi-constat-grille {
-    display: grid; grid-template-columns: 130px 150px 1fr; gap: .4rem;
+    /* Quatre réglages : catégorie, référentiel, action, statut. */
+    display: grid; grid-template-columns: 130px 150px 1fr 150px; gap: .4rem;
     padding-bottom: .4rem;
 }
  /* La description occupe toute la largeur du formulaire : c'est le champ qu'on
@@ -1117,8 +1116,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-poi-envoi-etat { margin-left: auto; font-weight: 500; font-size: .78rem; opacity: .9; }
 .ramp-poi-envoi-corps { padding-bottom: .9rem; }
 .ramp-poi-lettre { font-size: .82rem; line-height: 1.5; resize: vertical; }
-/* Le constat porte quatre réglages : catégorie, référentiel, action, statut. */
-.ramp-poi-constat-grille { grid-template-columns: 130px 150px 1fr 150px; }
 
 /* Récapitulatif de validation : deux colonnes, intitulés alignés, valeurs
    qui respirent — on le lit, on n'y saisit rien. */

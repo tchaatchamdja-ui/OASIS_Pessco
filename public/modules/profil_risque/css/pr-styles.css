@@ -219,9 +219,8 @@ button:disabled {
     flex-wrap: wrap;
     font-size: .82rem;
     font-weight: 700;
-    margin-bottom: .35rem;
+    margin-bottom: .1rem;
 }
-.apercu-title { margin-bottom: .1rem; }
 .apercu-meta {
     font-size: .72rem;
     color: var(--text-muted);

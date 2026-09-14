@@ -102,6 +102,13 @@ function oasisMessageErreur(donnees, statut, defaut) {
   const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
   const connue = ERREURS[d.error];
   if (connue) return connue[rang] || connue[0];
+  // Toutes les routes ne répondent pas par un code : beaucoup renvoient une
+  // phrase toute faite — « Infraction non trouvée ». Un code s'écrit en
+  // minuscules et tirets bas ; tout le reste est déjà une phrase, et se lit
+  // telle quelle. L'envelopper dans « L'opération a échoué (…) » ne faisait
+  // qu'ajouter du bruit devant un message qui se suffisait.
+  const brut = d.error === undefined || d.error === null ? '' : String(d.error);
+  if (brut && !/^[a-z][a-z0-9_]*$/.test(brut)) return brut;
   // Le point final se pose à la fin, une fois le code joint : « L'opération a
   // échoué (not_found). », jamais « … échoué. (not_found) ».
   const general = String(defaut || ECHEC[rang] || ECHEC[0]).replace(/\s*\.$/, '');

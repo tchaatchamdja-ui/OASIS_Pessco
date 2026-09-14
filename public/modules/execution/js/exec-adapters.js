@@ -24,10 +24,10 @@ window.PESSCO = {
   portalSidebarCollapsed: false,
 };
 
-// Le module est affiché dans un cadre : le retour au portail passe par l'hôte.
-window.backToPortal = function () {
-  parent.postMessage({ type: 'oasis:back-portal' }, '*');
-};
+// Le retour au portail est posé par la coquille commune (module-chrome.js), qui
+// adresse le même message à l'hôte. Le `backToPortal` propre à ce module, qui
+// n'avait plus qu'un appelant — le bouton retiré ci-contre —, disparaît avec
+// lui : deux boutons pour un même geste, c'était un de trop.
 
 // PESSCO produisait le PDF du rapport côté serveur (fpdf2). OASIS génère
 // tous ses documents côté client, via la fenêtre d'impression : on réutilise

@@ -159,6 +159,13 @@
   const LEGENDES = {
     retour_portail: { fr: 'Retour au portail', en: 'Back to the portal', pt: 'Voltar ao portal' },
     aucun_acces: { fr: 'Aucun accès', en: 'No access', pt: 'Sem acesso' },
+    // Le même pied que le portail : les trois versions y sont déjà, on les
+    // reprend au mot près pour que les deux écrans ne se contredisent pas.
+    pied: {
+      fr: '© 2026 UEMOA / URSAC — OASIS · Outils d\'Administration et de Supervision Intégrée de la Sécurité',
+      en: '© 2026 UEMOA / URSAC — OASIS · Integrated Safety Oversight Platform',
+      pt: '© 2026 UEMOA / URSAC — OASIS · Plataforma Integrada de Supervisão da Segurança',
+    },
   };
   const langue = () => {
     try { return (window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr').slice(0, 2); }
@@ -351,8 +358,7 @@
     if (content && !content.querySelector('.oasis-module-footer')) {
       const f = document.createElement('footer');
       f.className = 'oasis-module-footer';
-      f.textContent =
-        '© 2026 UEMOA / URSAC — OASIS · Outils d\'Administration et de Supervision Intégrée de la Sécurité';
+      f.textContent = legende('pied');
       content.appendChild(f);
     }
   }

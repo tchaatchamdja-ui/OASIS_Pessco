@@ -797,14 +797,15 @@ function execRenderApp() {
         }
     }
 
+    // En-tête vide : le retour au portail vient de la coquille commune, qui
+    // remplace le bouton de déconnexion. Ce module posait en plus le sien, sous
+    // condition de `window.PESSCO` — qu'il met, lui, bel et bien —, si bien que
+    // les deux paraissaient. La Planification et les Profils de Risque n'ont
+    // plus le leur ; celui-ci suit.
     document.getElementById('app').innerHTML = `
     <div class="app-layout exec-module ${S.sidebarCollapsed ? 'sidebar-collapsed' : ''}">
         <aside class="app-sidebar ${S.sidebarCollapsed ? 'collapsed' : ''}">
-            <div class="sidebar-header">
-                ${window.PESSCO ? `<button class="btn-back-portal" onclick="backToPortal()" title="${et('back_portal')}">
-                    ${EXEC_ICONS.back} <span class="back-portal-label">${et('back_portal')}</span>
-                </button>` : ''}
-            </div>
+            <div class="sidebar-header"></div>
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">

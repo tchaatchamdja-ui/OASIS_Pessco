@@ -220,5 +220,18 @@ module.exports = async function tailleSmoke() {
   verifier('aucun nom global déclaré dans deux fichiers du même écran',
     collisions.length === 0, collisions.join(' · '));
 
+  // ── Pas de caractère de contrôle dans les sources ──
+  // Un caractère nul posé en clair dans un fichier — comme séparateur, ou dans
+  // une classe d'expression régulière — fonctionne, mais le fait passer pour un
+  // binaire : les outils de recherche cessent d'en montrer la moindre ligne, et
+  // le fichier devient invisible aux relectures. La valeur s'écrit échappée.
+  const CONTROLE = /[\x00-\x08\x0e-\x1f\x7f]/;
+  const salis = sources()
+    .filter((f) => /\.(js|json|css|html|md)$/.test(f))
+    .filter((f) => CONTROLE.test(fs.readFileSync(f, 'utf8')))
+    .map(relatif);
+  verifier('aucun caractère de contrôle dans les sources',
+    salis.length === 0, salis.join(' · '));
+
   return bilan('taille');
 };

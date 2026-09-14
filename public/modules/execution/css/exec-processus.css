@@ -3,12 +3,16 @@
    déclaré par index.html, l'ordre de cascade d'origine est donc conservé. */
 
 /* ─── Workflow Stepper (horizontal, numbered circles) ─── */
+/* Les mesures sont celles du pas compact : elles étaient posées ici, puis
+   réécrites quatre-vingt-dix lignes plus bas par un bloc « Compact stepper ».
+   Modifier celles d'origine ne produisait donc plus rien. Les valeurs qui
+   valaient sont remontées à leur place ; le rendu ne change pas. */
 .exec-wf-stepper {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin: 0.5rem 0 1.5rem;
-    padding: 0 1rem;
+    margin: 0.25rem 0 0.75rem;
+    padding: 0 0.5rem;
     position: relative;
     gap: 0;
 }
@@ -26,14 +30,14 @@
 }
 .exec-wf-step:disabled { cursor: not-allowed; }
 .exec-wf-step .wf-circle {
-    width: 44px;
-    height: 44px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.9rem;
     background: #fff;
     border: 2px solid #cbd5e1;
     color: #94a3b8;
@@ -57,8 +61,8 @@
     color: #94a3b8;
 }
 .exec-wf-step .wf-label {
-    margin-top: 0.5rem;
-    font-size: 0.82rem;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
     text-align: center;
     color: #64748b;
     max-width: 140px;
@@ -70,7 +74,7 @@
 .exec-wf-step:not(:last-child)::after {
     content: '';
     position: absolute;
-    top: 22px;
+    top: 17px;
     left: 50%;
     width: 100%;
     height: 2px;
@@ -92,11 +96,6 @@
     margin: 0;
     display: flex;
 }
-/* Compact stepper */
-.exec-wf-stepper { margin: 0.25rem 0 0.75rem; padding: 0 0.5rem; }
-.exec-wf-step .wf-circle { width: 34px; height: 34px; font-size: 0.9rem; }
-.exec-wf-step .wf-label { margin-top: 0.25rem; font-size: 0.75rem; }
-.exec-wf-step:not(:last-child)::after { top: 17px; }
 
 /* ── Processus d'une activité (volet ouvert depuis Activités de Supervision) ──
    Le fil d'avancement reprend le composant partagé `.eval-steps` du socle ;

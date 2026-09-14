@@ -52,6 +52,7 @@ const PLAN_NAV = {
     prestataires: { labelKey: 'profils_de_risques', icon: 'risk_profile' },
     plans: { labelKey: 'nav_plans', icon: 'plans' },
     workflow: { labelKey: 'workflow', icon: 'workflow' },
+    'mes-activites': { labelKey: 'nav_mes_activites', icon: 'plans' },
     historique: { labelKey: 'historique', icon: 'history' },
     // Paramètres removed - managed from portal Configuration
 };
@@ -361,6 +362,7 @@ function planRenderPage() {
         case 'plan-detail': content = planRenderPlanDetail(); break;
         case 'prestataires': content = planRenderPrestataires(); break;
         case 'workflow': content = planRenderWorkflow(); break;
+        case 'mes-activites': content = planRenderMesActivites(); break;
         case 'historique': content = planRenderHistory(); break;
         default: content = `<div class="text-center">${tp('no_data')}</div>`;
     }

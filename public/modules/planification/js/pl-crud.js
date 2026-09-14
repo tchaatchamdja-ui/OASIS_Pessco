@@ -352,7 +352,10 @@ function _planLierDatesDuree() {
     });
 }
 
-function planShowActivityModal(planId, actId = '') {
+// `options.lecture` ouvre la même fiche, mais fermée à la saisie : c'est le
+// formulaire qui fait foi, on ne le redessine pas ailleurs pour le lire.
+function planShowActivityModal(planId, actId = '', options = {}) {
+    const lecture = !!options.lecture;
     const prestataires = PLAN_STATE.data.prestataires || [];
     const secteurs = PLAN_STATE.data.secteurs || [];
     const sousActivites = PLAN_STATE.data.sousActivites || [];
@@ -364,6 +367,11 @@ function planShowActivityModal(planId, actId = '') {
     let act = null;
     if (actId && PLAN_STATE.selectedPlan?.activites) {
         act = PLAN_STATE.selectedPlan.activites.find(a => a.id === actId);
+    }
+    // Ouverte depuis « Mes activités », la fiche n'a pas de plan sélectionné :
+    // l'activité se retrouve dans la liste complète.
+    if (actId && !act) {
+        act = (PLAN_STATE.data.allActivites || []).find(a => a.id === actId) || null;
     }
 
     // Plan ouvert depuis le bandeau d'un prestataire : ses données
@@ -478,11 +486,14 @@ function planShowActivityModal(planId, actId = '') {
         </div>
     </div>`;
 
-    const footer = `
+    const footer = lecture
+        ? `<button class="btn btn-ghost" onclick="planCloseModal()">${tp('close')}</button>`
+        : `
         <button class="btn btn-ghost" onclick="planCloseModal()">${tp('cancel')}</button>
         <button class="btn btn-primary" onclick="${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}">${tp('save')}</button>`;
 
-    planShowModal(actId ? tp('edit') : tp('new_activity'), body, footer, 'modal-drawer modal-drawer-3-4');
+    const titre = lecture ? tp('activity_detail') : (actId ? tp('edit') : tp('new_activity'));
+    planShowModal(titre, body, footer, 'modal-drawer modal-drawer-3-4');
 
     // Règles communes des dates : une activité commence dans l'année de son
     // plan — elle n'a pas de champ Année, c'est le plan qui la déclare — et
@@ -581,6 +592,17 @@ function planShowActivityModal(planId, actId = '') {
 
     // Initial population (if editing or secteur pre-selected)
     _renderSAThemesTable();
+
+    // Lecture seule : la fiche est dessinée entière, puis fermée à la saisie.
+    // Fermer après le dessin de la table des sous-activités, sinon ses cases
+    // renaîtraient actives.
+    if (lecture) {
+        const volet = document.getElementById('planModal');
+        if (volet) {
+            volet.querySelectorAll('input, select, textarea').forEach((el) => { el.disabled = true; });
+            volet.querySelectorAll('.sa-item, .sa-theme-list').forEach((el) => { el.style.pointerEvents = 'none'; });
+        }
+    }
 }
 
 async function planCreateActivity(planId) {

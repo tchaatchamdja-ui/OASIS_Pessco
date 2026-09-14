@@ -525,8 +525,8 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                     </colgroup>
                     <thead><tr>
                         <th>#</th><th>${tp('objet')}</th><th>${tp('sector')}</th>
-                        <th>Mode / Type</th>
-                        <th>${tp('lieu_activite')}</th>
+                        <th>${tp('col_mode_type')}</th>
+                        <th>${tp('col_lieu')}</th>
                         <th>${tp('col_responsable')}</th>
                         <th>${tp('start_date')}</th><th>${tp('end_date')}</th>
                         <th>${tp('actions')}</th>

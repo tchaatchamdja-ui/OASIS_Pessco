@@ -1732,6 +1732,44 @@ tr.hidden { display: none; }
    plus entre elles. Les largeurs sont posées une fois, en pourcentage, et la
    même grille sert à toutes. */
 .plan-act-table { table-layout: fixed; width: 100%; min-width: 940px; }
+/* La feuille commune tient les en-têtes sur une seule ligne — ce qui va de soi
+   quand la colonne s'ajuste à son contenu. Ici les largeurs sont fixées : un
+   intitulé long ne pouvant plus revenir à la ligne débordait sur la colonne
+   voisine. Dans ces deux tables, et elles seules, il s'enroule. */
+.plan-act-table th,
+.plan-ma-table th { white-space: normal; }
 .plan-act-table th,
 .plan-act-table td { overflow-wrap: anywhere; }
 .plan-act-table .activity-detail-row td { overflow-wrap: normal; }
+
+
+/* ── « Mes Activités » ──
+   Une ligne se clique pour lire la fiche ; le cumul des jours se tient à
+   droite de l'en-tête du tableau, et ne paraît que sous filtre. */
+.plan-ma-table { table-layout: fixed; width: 100%; min-width: 1040px; }
+.plan-ma-table th,
+.plan-ma-table td { overflow-wrap: anywhere; }
+.plan-ma-table .plan-ma-duree { text-align: right; font-variant-numeric: tabular-nums; }
+.plan-ma-ligne { cursor: pointer; }
+.plan-ma-ligne:hover > td { background: var(--hover, rgba(148, 163, 184, .12)); }
+.plan-ma-cumul {
+    margin-left: auto;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    background: var(--primary, #1a365d);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.plan-ma-periode {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+.plan-ma-periode .form-input { width: auto; }
+
+.plan-ma-reinit { margin-left: auto; white-space: nowrap; }
+.plan-ma-reinit[disabled] { opacity: .45; cursor: default; }

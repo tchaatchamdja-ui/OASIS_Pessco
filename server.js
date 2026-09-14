@@ -952,8 +952,16 @@ if (process.env.OASIS_COMPRESSION !== '0') {
     if (!TEXTE_STATIQUE.test(req.path) || req.path.includes('..')) return next();
     if (!/\bgzip\b/.test(req.headers['accept-encoding'] || '')) return next();
 
-    const chemin = path.join(RACINE_PUBLIC, decodeURIComponent(req.path));
-    if (!chemin.startsWith(RACINE_PUBLIC)) return next();
+    // Une adresse peut porter une séquence d'échappement malformée — « %zz » —
+    // et le décodage lève alors. Sans cette garde, la requête finissait en
+    // erreur serveur là où elle ne mérite qu'un « fichier absent » : c'est ce
+    // que rend la même adresse quand le client n'accepte pas la compression.
+    let demande;
+    try { demande = decodeURIComponent(req.path); } catch { return next(); }
+    const chemin = path.join(RACINE_PUBLIC, demande);
+    // La borne inclut le séparateur : sans lui, un répertoire voisin dont le
+    // nom commence par « public » passerait pour un sous-dossier de celui-ci.
+    if (chemin !== RACINE_PUBLIC && !chemin.startsWith(RACINE_PUBLIC + path.sep)) return next();
     let stat;
     try { stat = fs.statSync(chemin); } catch { return next(); }
     if (!stat.isFile() || stat.size < SEUIL_COMPRESSION) return next();

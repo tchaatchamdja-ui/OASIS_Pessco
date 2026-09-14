@@ -187,5 +187,38 @@ module.exports = async function tailleSmoke() {
   verifier('chaque écran charge la feuille commune des filtres',
     sansFiltres.length === 0, sansFiltres.join(' · '));
 
+  // ── Un nom global, une définition ──
+  // Les scripts d'un écran partagent une seule portée : deux fichiers qui
+  // déclarent la même fonction ne se contredisent pas, le dernier chargé
+  // efface l'autre — sans erreur, sans trace. Une version périmée peut ainsi
+  // survivre des mois et revenir au premier changement d'ordre des balises.
+  const DECLARATION = /^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=)/gm;
+  const collisions = [];
+  PAGES.forEach((rel) => {
+    const page = path.join(RACINE, rel);
+    if (!fs.existsSync(page)) return;
+    const html = fs.readFileSync(page, 'utf8');
+    const ou = new Map();
+    (html.match(/<script\s+src="[^"]+"/g) || []).forEach((balise) => {
+      const src = balise.match(/src="([^"]+)"/)[1];
+      if (!src.startsWith('/')) return;
+      const f = path.join(RACINE, 'public', src);
+      if (!fs.existsSync(f)) return;
+      const code = fs.readFileSync(f, 'utf8');
+      let m;
+      DECLARATION.lastIndex = 0;
+      while ((m = DECLARATION.exec(code)) !== null) {
+        const nom = m[1] || m[2];
+        if (!ou.has(nom)) ou.set(nom, new Set());
+        ou.get(nom).add(path.basename(f));
+      }
+    });
+    ou.forEach((fichiers, nom) => {
+      if (fichiers.size > 1) collisions.push(`${path.basename(path.dirname(rel))}/${nom} : ${[...fichiers].join(', ')}`);
+    });
+  });
+  verifier('aucun nom global déclaré dans deux fichiers du même écran',
+    collisions.length === 0, collisions.join(' · '));
+
   return bilan('taille');
 };

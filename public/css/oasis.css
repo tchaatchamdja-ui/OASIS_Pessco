@@ -128,7 +128,6 @@ body.app-sidebar-collapsed .portal-sidebar .oasis-logo-img { height: 28px; width
     font-family: "Brush Script MT", "Segoe Script", "Lucida Handwriting", "Monotype Corsiva", "Apple Chancery", cursive;
     font-size: 1.35rem; font-weight: 700; font-style: italic;
 }
-.portal-sidebar-brand-text .brand-sub { font-size: 0.6rem; opacity: .7; letter-spacing: .5px; text-transform: uppercase; }
 
 .portal-sidebar-nav { flex: 1; overflow-y: auto; padding: 0.75rem 0.5rem; display: flex; flex-direction: column; gap: 2px; }
 .portal-sidebar-section {
@@ -180,7 +179,6 @@ body.app-sidebar-collapsed .portal-sidebar-logo img { max-height: 34px; }
 }
 .aac-logo-preview { max-width: 100%; max-height: 100%; object-fit: contain; }
 .aac-logo-empty { display: flex; flex-direction: column; align-items: center; gap: .3rem; color: var(--text-muted); font-size: .72rem; }
-.aac-logo-btn { width: 100%; justify-content: center; }
 .aac-logo-btns { display: flex; gap: .5rem; justify-content: center; }
 .aac-logo-btns .aac-logo-iconbtn {
     padding: 0; width: 46px; height: 23px;
@@ -204,7 +202,6 @@ body.app-sidebar-collapsed .portal-sidebar-logo img { max-height: 34px; }
 .aac-presentation-compact .aac-info-table td { padding: .3rem .8rem; }
 .aac-presentation-compact .aac-info-lbl { width: 190px; font-size: .68rem; }
 .aac-presentation-compact .aac-info-val { font-size: .82rem; }
-.aac-presentation-compact .aac-logo-btn { font-size: .78rem; padding: .35rem .6rem; }
 
 @media (max-width: 640px) { .aac-logo-col { width: 100%; } .aac-logo-frame { width: 140px; height: 140px; } }
 
@@ -389,13 +386,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 }
 .tb-tower-beacon { animation: towerBeacon 1.8s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .tb-tower-beacon { animation: none; } }
-.hero-plane.p1 { top: 12%;  animation: planeFlyLeft  38s linear infinite; }
-.hero-plane.p2 { top: 55%;  animation: planeFlyRight 46s linear infinite; animation-delay: -18s; }
-.stat-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 1rem 1.25rem; box-shadow: var(--shadow);
-    display: flex; align-items: center; gap: 0.9rem;
-}
 /* ── Cards modules ── */
 .portal-grid {
     display: grid;
@@ -424,7 +414,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .portal-card:hover:not(.disabled) { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--module-color, var(--accent)); }
 .portal-card:hover:not(.disabled)::before { height: 6px; opacity: 1; }
 .portal-card.disabled { cursor: default; opacity: 0.55; }
-.portal-card-icon  { margin-bottom: 0.5rem; font-size: 1.6rem; }
 /* Titre et description gagnent un point typographique (1 pt = 1/72 pouce, soit
    0.083rem à la racine de 16 px) : 0.95 → 1.033 et 0.78 → 0.863. */
 .portal-card-title { font-size: 1.033rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
@@ -432,10 +421,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     font-size: 0.863rem; color: var(--text-muted); line-height: 1.35;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.portal-card-badge { display: inline-block; margin-top: 0.45rem; padding: 0.15rem 0.5rem;
-                     background: var(--border); color: var(--text-muted); border-radius: 10px;
-                     font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.portal-card-badge.prio { color: #fff; background: var(--module-color, var(--accent)); }
 
 /* Entête de page et composants « shell » : voir /shared/css/oasis-shell.css
    (socle commun au portail et aux modules). */
@@ -516,7 +501,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .portal-modules.list-view .portal-card > div:last-child {
     display: flex; align-items: center; gap: 0.4rem; white-space: nowrap;
 }
-.portal-modules.list-view .portal-card-badge { margin-top: 0; }
 
 /* ── Layout Configuration (PESSCO) ── */
 .cfg-layout { display: flex; gap: 0; min-height: 500px; }
@@ -554,8 +538,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .cfg-sidebar-item.active { color: var(--primary); background: rgba(0,0,0,.04); border-left-color: var(--primary); }
 .cfg-sidebar-icon { display: flex; align-items: center; flex-shrink: 0; }
 .cfg-sidebar-label { overflow: hidden; text-overflow: ellipsis; flex: 1; }
-.cfg-sidebar-count { flex-shrink: 0; }
-.cfg-sidebar.collapsed .cfg-sidebar-count { display: none; }
 /* Sous-menus Utilisateurs : bande latérale jusqu'au bas de la page */
 .users-layout { min-height: calc(100vh - var(--topbar-height) - 6rem); }
 .cfg-sidebar-section {
@@ -715,13 +697,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .org-interim-on { color: #d97706; }
 .org-titulaire-off { text-decoration: line-through; opacity: .6; }
 .pers-circuit-interim { background: #fef3c7; color: #92400e; border-radius: 6px; padding: 0 .3rem; font-weight: 700; font-size: .62rem; text-transform: uppercase; }
-.plan-super-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: var(--shadow); }
-
-/* Calendrier annuel */
-.plan-cal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; }
-.plan-cal-cell { border: 1px solid var(--border); border-radius: 10px; padding: .5rem; min-height: 90px; background: var(--bg); }
-.plan-cal-month { font-size: .72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: .35rem; }
-.plan-cal-item { background: var(--bg-card); border-radius: 6px; padding: .3rem .45rem; margin-bottom: .3rem; font-size: .74rem; font-weight: 600; }
 
 /* ── Exigences groupées par règlement ── */
 .exig-group { margin-bottom: 1rem; }
@@ -841,7 +816,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 @media (max-width: 900px) { .portal-header-brand-tagline { display: none; } }
 @media (max-width: 768px) {
     .portal-sidebar { transform: translateX(-100%); }
-    body.app-sidebar-open .portal-sidebar { transform: translateX(0); }
     .portal-body { margin-left: 0 !important; }
     .portal-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
     .shell-modal-overlay { left: 0; }
@@ -865,7 +839,7 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    .hero-plane, .hero-heli, .login-sky-plane, .login-sky-cloud { display: none; }
+    .login-sky-plane, .login-sky-cloud { display: none; }
 }
 
 /* ── Module plein écran : interface du portail entièrement masquée ── */

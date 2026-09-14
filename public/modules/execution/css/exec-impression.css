@@ -12,11 +12,7 @@
     .exec-slider-footer,
     .exec-workflow-tabs,
     .exec-filter-bar,
-    .exec-page-actions,
-    .report-preview-toolbar,
-    .btn-exec,
-    .btn-exec-outline,
-    .btn-exec-ghost {
+    .exec-page-actions {
         display: none !important;
     }
 
@@ -27,16 +23,11 @@
         box-shadow: none;
     }
 
-    .official-doc-page,
-    .report-preview-page {
+    .official-doc-page {
         box-shadow: none;
         margin: 0;
         padding: 1.5cm 2cm;
         break-inside: avoid;
-    }
-
-    .report-preview-page {
-        page-break-after: always;
     }
 
     body {
@@ -101,8 +92,7 @@
         left: 0 !important;
     }
 
-    .official-doc-page,
-    .report-preview-page {
+    .official-doc-page {
         width: 100%;
         padding: 1.5rem;
         min-height: auto;
@@ -115,15 +105,6 @@
 
     .official-doc-page .doc-header-right {
         text-align: left;
-    }
-
-    .official-doc-page .doc-signature-block {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .exchange-msg {
-        max-width: 95%;
     }
 
     .exec-page-header {
@@ -145,10 +126,6 @@
         align-items: flex-start;
     }
 
-    .report-preview-toolbar {
-        width: 100%;
-        flex-wrap: wrap;
-    }
 }
 
 @media (max-width: 480px) {
@@ -164,10 +141,6 @@
 
     .exec-slider-header h3 {
         font-size: 0.95rem;
-    }
-
-    .exchange-msg {
-        max-width: 100%;
     }
 
     .exec-stepper {

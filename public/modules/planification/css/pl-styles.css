@@ -1,38 +1,4 @@
 
-.plan-toast.show {
-    opacity: 1;
-    transform: translateX(0);
-    pointer-events: auto;
-}
-/* ── KPI Grid ── */
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 0.75rem;
-    margin-top: 1rem;
-}
-
-.kpi-card {
-    background: var(--bg-card);
-    border-radius: 10px;
-    padding: 0.6rem 0.9rem;
-    box-shadow: var(--shadow);
-    text-align: center;
-    border-left: 4px solid var(--kpi-color, var(--primary));
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-}
-
-.kpi-value {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--kpi-color, var(--primary));
-    line-height: 1.15;
-}
 /* ── Gantt Chart ── */
 .gantt-table {
     width: 100%;
@@ -67,10 +33,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 140px;
-}
-
-.gantt-month {
-    min-width: 42px;
 }
 
 .gantt-cell {
@@ -112,11 +74,6 @@
 
 .gantt-table-enhanced .gantt-row-alt:hover {
     background: rgba(59, 130, 246, 0.09);
-}
-
-/* Quarter / month separators — thicker left border */
-.gantt-table-enhanced .gantt-quarter-sep {
-    border-left: 2px solid var(--primary) !important;
 }
 
 /* Weekend shading in month view */
@@ -205,38 +162,6 @@
     flex-shrink: 0;
 }
 
-/* ── Calendar ── */
-.calendar-year-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-.cal-day {
-    aspect-ratio: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    border-radius: 4px;
-    position: relative;
-    cursor: default;
-}
-
-.cal-day.empty {
-    visibility: hidden;
-}
-
-.cal-day.today {
-    background: var(--primary);
-    color: #fff;
-    font-weight: 700;
-}
-
-.cal-day.has-activity {
-    font-weight: 600;
-}
 /* ── Barre de filtres — son cadre vient du socle (oasis-module.css) ; restent
    ici la taille de ses champs et la variante en deux lignes. ── */
 
@@ -391,14 +316,6 @@
 .modal-lg {
     max-width: 700px !important;
 }
-.timeline-avatar.workflow {
-    background: var(--accent, #8b5cf6);
-}
-.plan-sub-nav-btn.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-    font-weight: 600;
-}
 
 /* ── Filter bar reset button (planification-scoped) ──
    No `margin-left: auto` here: on narrow screens that would push the
@@ -457,12 +374,6 @@
 }
 
 @media (max-width: 768px) {
-    .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .calendar-year-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
     .plan-filter-bar .form-input,
     .plan-filter-bar .form-select {
         flex: 1 1 calc(50% - 0.25rem);
@@ -477,15 +388,6 @@
     .page-actions {
         width: 100%;
         margin-top: 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .kpi-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    .calendar-year-grid {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -560,11 +462,6 @@
 }
 
 /* ── Read-only fields in activity form ── */
-.readonly-field {
-    opacity: 0.7;
-    cursor: not-allowed;
-    background: var(--bg) !important;
-}
 .checkbox-item {
     display: flex;
     align-items: center;
@@ -701,13 +598,6 @@ tr.hidden { display: none; }
     font-weight: 600;
     color: var(--text-muted);
     margin-bottom: 0.25rem;
-}
-
-.cal-activity-dot {
-    width: 100%;
-    height: 4px;
-    border-radius: 2px;
-    margin-bottom: 2px;
 }
 
 .cal-more {
@@ -1179,10 +1069,6 @@ tr.hidden { display: none; }
 /* Espace entre les boutons de la section Activités et le premier bandeau */
 .plan-activities-accordion { margin-top: .6rem; }
 
-/* Volet latéral occupant 2/3 de la largeur */
-.modal.modal-drawer.modal-drawer-2-3 { width: 66.6667%; }
-@media (max-width: 820px) { .modal.modal-drawer.modal-drawer-2-3 { width: 100%; } }
-
 /* Volet latéral occupant 3/4 de la largeur — la saisie d'une activité tient
    douze champs et une table de sous-activités : elle a besoin de la place. */
 .modal.modal-drawer.modal-drawer-3-4 { width: 75%; }
@@ -1381,20 +1267,6 @@ tr.hidden { display: none; }
     font-size: .85rem;
     white-space: pre-wrap;
 }
-
-/* Gantt annuel : graduation par semaine, cellules sans texte */
-.gantt-week-cell {
-    padding: 0;
-    min-width: 0;
-    width: auto;
-    height: 18px;
-    border-right: 1px dotted var(--border);
-}
-.gantt-week-cell.gantt-month-start { border-left: 1px solid var(--border); }
-.gantt-week-cell.gantt-quarter-sep { border-left: 2px solid var(--text-muted); }
-.gantt-week-on { cursor: pointer; }
-.gantt-week-on:hover { filter: brightness(1.15); }
-.gantt-table-enhanced th.gantt-month { text-align: center; }
 
 /* Activité déjà déclenchée dans l'exécution : elle ne s'amende plus, le
    cadenas prend la place des actions d'édition. */
@@ -1649,9 +1521,6 @@ tr.hidden { display: none; }
 .pl-gantt .g-trait { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--border); }
 .pl-gantt .g-aujourdhui { position: absolute; top: 0; bottom: 0; width: 2px; background: #dc2626; }
 
-
-
-
 /* ── Débordement horizontal ──
    La colonne de contenu est un élément de flex : sans `min-width: 0`, elle
    refuse de descendre sous la largeur intrinsèque de ce qu'elle porte. Un
@@ -1686,7 +1555,6 @@ tr.hidden { display: none; }
    les tables du module. */
 .pl-gantt .g-groupe.g-alt { background: color-mix(in srgb, var(--primary) 3%, var(--bg)); }
 
-
 /* ── Activités d'un plan : les colonnes se répondent d'un prestataire à
    l'autre ──
    Chaque prestataire a sa propre table ; sans largeurs déclarées, chacune
@@ -1703,7 +1571,6 @@ tr.hidden { display: none; }
 .plan-act-table th,
 .plan-act-table td { overflow-wrap: anywhere; }
 .plan-act-table .activity-detail-row td { overflow-wrap: normal; }
-
 
 /* ── « Mes Activités » ──
    Une ligne se clique pour lire la fiche ; le cumul des jours se tient à

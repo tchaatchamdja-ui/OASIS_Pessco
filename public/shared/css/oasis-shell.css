@@ -157,16 +157,6 @@ body.app-sidebar-collapsed .shell-modal-overlay { left: var(--sidebar-collapsed,
 .shell-modal-body   { padding: 1.5rem; }
 .shell-modal-footer { display: flex; justify-content: flex-end; gap: 0.5rem;
                       padding: 1rem 1.5rem; border-top: 1px solid var(--border); }
-.shell-toast.show     { opacity: 1; transform: translateY(0); }
-.shell-tab-btn {
-    padding: 0.6rem 1rem; border: none; background: none;
-    color: var(--text-muted); font-size: 0.85rem; font-weight: 600; cursor: pointer;
-    border-bottom: 3px solid transparent; margin-bottom: -2px;
-    transition: all .2s; white-space: nowrap;
-}
-.shell-tab-btn:hover { color: var(--primary); }
-.shell-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-.users-tabs .shell-tab-btn { display: inline-flex; align-items: center; gap: .3rem; }
 
 .loading-spinner {
     width: 40px; height: 40px;

@@ -108,13 +108,6 @@
     gap: 1rem;
 }
 
-/* ── Lignes de statistique ── */
-.mes-stat-ligne {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: .35rem 0; border-bottom: 1px solid var(--border); font-size: .85rem;
-}
-.mes-stat-ligne:last-child { border-bottom: none; }
-.mes-stat-valeur { font-weight: 700; }
 /* ── Tableaux ──
    L'habillage vient du socle (oasis-module.css) : bandeau d'entête au thème,
    filets horizontaux, une ligne sur deux teintée. */
@@ -766,8 +759,6 @@ body.app-sidebar-collapsed .mes-volet-fond { left: var(--sidebar-collapsed, 60px
     background: #fff; border: 1px solid var(--primary); color: var(--primary);
 }
 .mes-btn-consulter:hover { background: var(--mes-accent-bg); }
-.mes-btn-classer { background: #ea580c; border: 1px solid #ea580c; color: #fff; }
-.mes-btn-classer:hover { background: #c2410c; border-color: #c2410c; }
 /* Boutons d'action : un tiers de hauteur en moins — ils s'alignent en rangée
    dans une cellule de tableau, pas dans une barre d'outils. La hauteur est un
    plancher, non une contrainte : un libellé qui se replie sur deux lignes fait

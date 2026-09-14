@@ -248,16 +248,11 @@
     font-size: .7rem; font-weight: 700;
     display: flex; align-items: baseline; gap: .2rem; white-space: nowrap;
 }
-.ramp-histo-etat-val .v-insp { color: var(--primary); }
-.ramp-histo-etat-val .v-ecart { color: #dc2626; }
 .ramp-histo-etat-val i { color: var(--text-muted); font-style: normal; }
-.ramp-bande-temps .ramp-granularites { flex-wrap: nowrap; }
 /* Même hauteur pour tout ce qui accompagne un titre de graphique : les bords
    s'alignent, pas seulement les centres. */
 .ramp-grille-repartitions .ramp-card-titre .ramp-granularite,
-.ramp-grille-repartitions .ramp-card-titre .ramp-granularite button,
-.ramp-bande-temps .ramp-granularite,
-.ramp-bande-temps .ramp-granularite button { height: 24px; }
+.ramp-grille-repartitions .ramp-card-titre .ramp-granularite button { height: 24px; }
 .ramp-grille-repartitions .ramp-card-titre .ramp-select-annee { margin-left: .3rem; }
 
 /* L'année observée : une liste courte, à la hauteur des boutons voisins. */
@@ -450,10 +445,6 @@
 .ramp-anneau-total {
     text-anchor: middle; font-size: 30px; font-weight: 800; fill: var(--text);
 }
-.ramp-anneau-libelle {
-    text-anchor: middle; font-size: 11px; fill: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .05em;
-}
 .ramp-anneau-legende { flex: 1; min-width: 0; }
 /* Les lignes de légende commandent l'anneau : ce sont des boutons, sans barre
    de progression — la part se lit sur le disque. */
@@ -575,26 +566,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-kpi-ligne { grid-template-columns: 1fr; }
 .ramp-kpi-ligne .oasis-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .ramp-kpi-ligne .oasis-kpi-card { min-width: 0; }
-.ramp-kpi-grille {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: .8rem; margin-bottom: 1rem;
-}
-.ramp-kpi {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-left: 4px solid var(--ramp-accent); border-radius: 8px;
-    padding: .7rem .9rem;
-}
-.ramp-kpi-titre {
-    font-size: .7rem; font-weight: 700; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: .04em;
-}
-.ramp-kpi-valeur { font-size: 1.5rem; font-weight: 800; color: var(--text); margin-top: .15rem; }
-.ramp-kpi.cat1 { border-left-color: #d97706; }
-.ramp-kpi.cat2 { border-left-color: #ea580c; }
-.ramp-kpi.cat3 { border-left-color: #dc2626; }
-.ramp-kpi.catg { border-left-color: #64748b; }
-.ramp-kpi.items { border-left-color: #0d9488; }
-.ramp-kpi.ratio { border-left-color: #f59e0b; }
 
 /* ── Cartes ── */
 .ramp-card {
@@ -625,9 +596,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     color: inherit; border-color: rgba(255, 255, 255, .45); background: transparent;
 }
 .ramp-card-bande .btn:hover { background: rgba(255, 255, 255, .15); }
-.ramp-grille-2 {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem;
-}
 
 /* ── Barres empilées « top items par catégorie » ── */
 .ramp-barre-ligne { margin-bottom: .6rem; }
@@ -650,13 +618,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 }
 .ramp-legende span { display: inline-flex; align-items: center; gap: .3rem; }
 .ramp-pastille { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-
-/* Histogramme mensuel / annuel. */
-.ramp-histo { display: flex; align-items: flex-end; gap: .35rem; height: 130px; padding-top: .5rem; }
-.ramp-histo-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .25rem; min-width: 0; }
-.ramp-histo-barre { width: 100%; background: var(--ramp-accent); border-radius: 3px 3px 0 0; min-height: 2px; }
-.ramp-histo-val { font-size: .68rem; font-weight: 700; color: var(--text); }
-.ramp-histo-lbl { font-size: .66rem; color: var(--text-muted); white-space: nowrap; }
 
 /* ── Tableaux ──
    L'habillage vient du socle (oasis-module.css). RAMP y ajoute l'entête qui
@@ -799,14 +760,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     font-size: .8rem;
 }
 .ramp-poi-entete-volet .ramp-poi-bande i { opacity: .7; }
-
-/* Le rang supérieur : le retour à la liste, puis la bande d'identification qui
-   prend tout ce qui reste. */
-.ramp-poi-rang {
-    display: flex; align-items: center; gap: .6rem; margin-bottom: .55rem;
-}
-.ramp-poi-rang > .btn { flex: 0 0 auto; }
-.ramp-poi-rang > .ramp-poi-bande { flex: 1 1 auto; min-width: 0; }
 
 /* Bande d'identification : les repères de la fiche sur une seule ligne, dans
    la couleur du thème. */
@@ -1051,7 +1004,6 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     overflow: hidden; transition: box-shadow .2s;
 }
 .ramp-pac-bloc:hover { box-shadow: var(--shadow); }
-.ramp-pac-suivis { max-height: 150px; overflow-y: auto; margin-bottom: .5rem; }
 .ramp-pac-suivi-saisie { display: flex; gap: .5rem; align-items: flex-start; }
 .ramp-pac-suivi-saisie textarea { flex: 1; min-width: 0; }
 .ramp-pac-bloc-titre {
@@ -1299,10 +1251,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
 .ramp-slider-header .btn { color: inherit; border-color: rgba(255,255,255,.4); }
 .ramp-slider-titre { font-weight: 700; font-size: 1rem; flex: 1; }
 .ramp-slider-body { flex: 1; overflow-y: auto; padding: 1rem; }
-.ramp-slider-footer {
-    display: flex; justify-content: flex-end; gap: .5rem;
-    padding: .7rem 1rem; border-top: 1px solid var(--border); background: var(--bg);
-}
 
 /* ── Champs ── */
 .ramp-champ { margin-bottom: .8rem; }
@@ -1322,12 +1270,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
     background: var(--ramp-accent-bg); border-left: 3px solid var(--ramp-accent);
     border-radius: 0 4px 4px 0; color: var(--text-muted); font-size: .82rem; line-height: 1.45;
 }
-/* Note d'avertissement : ce que la page ne couvre pas se dit en rouge clair. */
-.ramp-note-rouge {
-    color: #ef4444; border-left-color: #ef4444;
-    background: rgba(239, 68, 68, .08);
-}
-
 
 /* ── Modale ── */
 .ramp-modal-fond {
@@ -1447,19 +1389,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
     .poi-bande { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .poi-pied { grid-template-columns: 1fr; }
 }
-.ramp-fiche-entete {
-    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-    border-bottom: 2px solid var(--ramp-accent); padding-bottom: .8rem; margin-bottom: 1.2rem;
-}
-.ramp-fiche-titre { font-size: 1.15rem; font-weight: 800; color: var(--ramp-accent); margin: 0; }
-.ramp-fiche-soustitre { font-size: .78rem; color: var(--text-muted); }
-.ramp-fiche-cartouche {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .8rem;
-    background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-    padding: .8rem; margin-bottom: 1.2rem;
-}
-.ramp-fiche-cartouche .cle { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; }
-.ramp-fiche-cartouche .val { font-weight: 700; }
 .ramp-fiche-pied {
     margin-top: 1.5rem; text-align: center; font-size: .74rem; color: var(--text-muted);
 }
@@ -1475,8 +1404,8 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
     @page { size: A4 portrait; margin: 9mm; }
 
     .app-sidebar, .app-header, .ramp-filtres, .ramp-actions-bar,
-    .oasis-module-footer, .ramp-slider-header, .ramp-slider-footer,
-    .ramp-page-header button, .oasis-kpi-groupes, .ramp-resume,
+    .oasis-module-footer, .ramp-slider-header,
+    .ramp-page-header button, .oasis-kpi-groupes,
     .ramp-poi-haut, .ramp-poi-bas { display: none !important; }
     .ramp-slider { position: static; width: 100%; transform: none; box-shadow: none; }
     .ramp-slider-overlay { display: none !important; }
@@ -1566,12 +1495,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
 }
 .ramp-com-etat:hover { background: var(--ramp-accent-bg); }
 .ramp-com-etat input { width: 15px; height: 15px; accent-color: var(--ramp-accent); }
-/* Une grille d'États pour désigner les destinataires : mêmes boutons que la
-   bande du bas des listes, mais posés dans le formulaire. */
-.ramp-pays-grille {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: .4rem;
-}
 /* Le fil : une entrée par message, la plus récente en bas. */
 .ramp-suivi-liste { display: flex; flex-direction: column; gap: .6rem; }
 .ramp-suivi-entree {
@@ -1599,7 +1522,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
    déplier le volet, elle vit donc hors du bouton d'entête. */
 .ramp-poi-volet-bandeau { display: flex; align-items: stretch; gap: .4rem; }
 .ramp-poi-volet-bandeau > .ramp-card-entete { flex: 1; min-width: 0; }
-.ramp-poi-volet-action { flex: 0 0 auto; align-self: center; margin-right: .7rem; }
 /* Un élément que la fiche ne porte pas ne se coche pas : la case reste lisible
    mais éteinte. */
 .ramp-champ-case.ramp-case-indispo { opacity: .5; cursor: not-allowed; }
@@ -1608,12 +1530,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
     margin: .5rem 0 0; padding: .7rem .85rem; white-space: pre-wrap;
     font-family: inherit; font-size: .84rem; line-height: 1.45;
     background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-}
-/* Compteur porté par un sous-menu du menu Communication. */
-.ramp-onglet-compte {
-    display: inline-block; margin-left: .35rem; padding: 0 .4rem;
-    border-radius: 999px; background: var(--ramp-accent-bg);
-    font-size: .72rem; font-weight: 700;
 }
 
 /* ── Étape Transmission : les deux communications côte à côte ── */
@@ -1638,18 +1554,6 @@ body.app-sidebar-collapsed .ramp-slider.max { left: var(--sidebar-collapsed, 60p
 }
 @media (max-width: 1100px) {
     .ramp-poi-envois-rangee { grid-template-columns: 1fr; }
-}
-.ramp-toast-fond.succes {
-    --ramp-toast-teinte: #047857; --ramp-toast-fond: #ecfdf5;
-    --ramp-toast-bord: #a7f3d0; --ramp-toast-encre: #065f46;
-}
-.ramp-toast-fond.error {
-    --ramp-toast-teinte: #b91c1c; --ramp-toast-fond: #fef2f2;
-    --ramp-toast-bord: #fecaca; --ramp-toast-encre: #7f1d1d;
-}
-.ramp-toast-fond.warning {
-    --ramp-toast-teinte: #b45309; --ramp-toast-fond: #fffbeb;
-    --ramp-toast-bord: #fde68a; --ramp-toast-encre: #78350f;
 }
 @keyframes rampToastEntree {
     from { opacity: 0; transform: scale(.96); }

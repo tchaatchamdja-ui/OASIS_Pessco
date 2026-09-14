@@ -60,13 +60,6 @@
     margin-bottom: 0.5cm;
 }
 
-.official-doc-page .doc-subtitle {
-    text-align: center;
-    font-weight: 600;
-    font-size: 12pt;
-    margin-bottom: 1cm;
-}
-
 .official-doc-page .doc-ref {
     text-align: right;
     font-size: 9pt;
@@ -82,38 +75,6 @@
     padding-bottom: 0.15cm;
     margin-top: 0.75cm;
     margin-bottom: 0.4cm;
-}
-
-.official-doc-page .doc-field {
-    margin-bottom: 0.3cm;
-}
-
-.official-doc-page .doc-field-label {
-    font-weight: 700;
-    font-size: 10pt;
-}
-
-.official-doc-page .doc-field-value {
-    font-size: 10pt;
-    padding-left: 0.25cm;
-}
-
-.official-doc-page .doc-signature-block {
-    margin-top: 2cm;
-    display: flex;
-    justify-content: space-between;
-}
-
-.official-doc-page .doc-signature-area {
-    text-align: center;
-    min-width: 200px;
-}
-
-.official-doc-page .doc-signature-line {
-    border-top: 1px solid #1a1a1a;
-    margin-top: 2cm;
-    padding-top: 0.2cm;
-    font-size: 10pt;
 }
 
 /* ══════════════════════════════════════════════
@@ -197,21 +158,6 @@
 
 .exec-form-section.expanded .exec-form-section-body {
     display: block;
-}
-
-.exchange-msg.operator {
-    align-self: flex-end;
-    background: var(--exec-accent-bg);
-    border-color: rgba(var(--exec-accent-rgb), 0.2);
-    flex-direction: row-reverse;
-}
-
-.exchange-msg:not(.operator) .exchange-icon {
-    background: var(--primary);
-}
-
-.exchange-msg.operator .exchange-icon {
-    background: var(--exec-accent);
 }
 
 .exchange-attachment {
@@ -307,10 +253,6 @@
     border-top-right-radius: 6px;
 }
 
-.exchange-bubble-row.self .exchange-bubble-author {
-    display: none;
-}
-
 .exchange-bubble-body {
     font-size: 0.9rem;
     line-height: 1.4;
@@ -384,9 +326,6 @@
     background: #60a5fa;        /* blue-400 */
     color: #ffffff;
     border-top-right-radius: 18px;
-}
-.discussions-chat .exchange-bubble-author {
-    margin-left: 0.25rem;
 }
 .discussions-chat .exchange-bubble-row.other .exchange-bubble-time {
     margin-left: 0.25rem;

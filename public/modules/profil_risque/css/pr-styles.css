@@ -47,10 +47,6 @@
    reprennent donc les couleurs des critères — 1 vert, 2 jaune, 3 rouge. */
 .score-selector.inverse .score-btn.active-1 { background: #dcfce7; border-color: #22c55e; color: #16a34a; }
 .score-selector.inverse .score-btn.active-3 { background: #fee2e2; border-color: #ef4444; color: #dc2626; }
-.risk-matrix .cell-a { background: #bbf7d0; }
-.risk-matrix .cell-c { background: #fed7aa; }
-.risk-matrix .cell-d { background: #fca5a5; }
-.dashboard-banner .subtitle { color: rgba(255,255,255,0.7); font-size: 0.88rem; }
 /* ── Eval Inner Tabs ── */
 .eval-inner-tabs { user-select: none; }
 .eval-tab-btn { transition: all 0.2s; }
@@ -127,7 +123,6 @@ button:disabled {
     color: var(--text-muted); font-size: .85rem; line-height: 1; padding: .1rem .2rem;
 }
 .pr-import-close:hover { color: var(--text); }
-
 
 /* ── Comptes-rendus de la consolidation : bandeaux compacts repliables ── */
 .cr-item {

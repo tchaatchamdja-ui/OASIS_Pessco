@@ -34,6 +34,15 @@ const EXEC_PREFIXE_CRUD = '/api/exec-';
 function execRoute(path) {
     const [chemin, requete] = String(path).split('?');
     let cible = EXEC_ROUTES_SOCLE[chemin];
+    // La table traduit une racine, pas une seule adresse : « /api/prestataires »
+    // vaut aussi pour « /api/prestataires/{id} ». Sans cela, l'appel qui porte
+    // un identifiant passait sans traduction et se perdait sur une route que le
+    // serveur n'expose pas — un 404 muet, là où l'écran attendait un
+    // enregistrement.
+    if (!cible) {
+        const racine = Object.keys(EXEC_ROUTES_SOCLE).find((r) => chemin.startsWith(r + '/'));
+        if (racine) cible = EXEC_ROUTES_SOCLE[racine] + chemin.slice(racine.length);
+    }
     if (!cible && chemin.startsWith(EXEC_PREFIXE_CRUD)) {
         cible = `/api/m/execution/${chemin.slice('/api/'.length)}`;
     }

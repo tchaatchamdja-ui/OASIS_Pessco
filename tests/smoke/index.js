@@ -16,6 +16,8 @@ const suites = [
   { nom: 'ramp', port: 4797, run: require('./ramp.smoke') },
   // Garde-fou de taille : ne démarre aucun serveur, lit les sources.
   { nom: 'taille', port: 0, run: require('./taille.smoke') },
+  // Garde-fou des traductions : même chose, sur les tables de libellés.
+  { nom: 'traductions', port: 0, run: require('./traductions.smoke') },
 ];
 
 (async () => {

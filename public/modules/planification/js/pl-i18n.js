@@ -736,7 +736,7 @@ const PLAN_TR = {
         cal_titre: 'Calendário das Atividades',
         cal_planifie: 'A vir', cal_en_cours: 'Em curso', cal_en_retard: 'Em atraso',
         cal_aujourdhui: 'Hoje', cal_debut: 'Início do período', cal_fin: 'Fim do período',
-        cal_reculer: 'Recuar', cal_avancar: 'Avancar', cal_avancer: 'Avancar', cal_dates: 'Datas',
+        cal_reculer: 'Recuar', cal_avancer: 'Avançar', cal_dates: 'Datas',
         cal_tout_visible: 'Todo o período está visível', no_access: 'Sem acesso',
         archive: 'Arquivado',
         action: 'Ação',

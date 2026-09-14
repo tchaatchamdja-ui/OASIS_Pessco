@@ -571,7 +571,7 @@ const TRANSLATIONS = {
     every_x_months:'A cada {0} meses', x_per_cycle:'{0}x/ciclo',
     threshold_high:'Limiar Alto', threshold_low:'Limiar Baixo',
     full_name:'Nome completo', abbreviation:'Sigla', state:'Estado', city:'Cidade',
-    address1:'Endereço 1', address2:'Endereço 2', admin_email:'Email admin',
+    address1:'Endereço 1', address2:'Endereço 2', admin_email:'Email do administrador',
     logo_label:'Logo (Base64)',
     new_user:'Novo Utilizador', password_gen:'Senha gerada',
     reset_password:'Redefinir Senha', connection_logs:'Logs de conexão',

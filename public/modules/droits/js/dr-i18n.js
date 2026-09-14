@@ -302,7 +302,7 @@ const DR_TR = {
     modal_titre: 'Privilégios — {0}',
     role_portail_court: 'papel no portal',
     par_defaut: '— por defeito',
-    portee_prestataires: 'Âmbito especifico — prestadores',
+    portee_prestataires: 'Âmbito específico — prestadores',
     hint_prestataires: 'Indique o ou os prestadores cujos dados esta conta pode ver, por setor de atividade e depois por nome. Sem prestador escolhido, não tem acesso a nenhum dado do módulo.',
     prestataires_retenus: '{0} prestador(es) escolhido(s).',
     portees_particulieres: 'Ambitos especificos — domínios e setores de atividade',

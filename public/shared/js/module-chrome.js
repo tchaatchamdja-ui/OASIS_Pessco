@@ -153,6 +153,19 @@
     const s = SUPERS.find((x) => x.key === key);
     if (s && key !== CURRENT) window.location.href = s.src;
   };
+  // La coquille se dessine avant que le module n'ait chargé son dictionnaire :
+  // ses deux libellés vivent donc ici, comme ceux de l'écran d'attente. La
+  // langue est celle que le portail a retenue.
+  const LEGENDES = {
+    retour_portail: { fr: 'Retour au portail', en: 'Back to the portal', pt: 'Voltar ao portal' },
+    aucun_acces: { fr: 'Aucun accès', en: 'No access', pt: 'Sem acesso' },
+  };
+  const langue = () => {
+    try { return (window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr').slice(0, 2); }
+    catch (e) { return 'fr'; }
+  };
+  const legende = (cle) => (LEGENDES[cle] || {})[langue()] || (LEGENDES[cle] || {}).fr || cle;
+
   window.oasisBackToPortal = function () {
     parent.postMessage({ type: 'oasis:back-portal' }, '*');
   };
@@ -181,7 +194,7 @@
       if (!d) return;
       // Privilège issu de « Gestion des Droits » : même espace (module) pour
       // tous les super-menus, donc même libellé partout.
-      MODULE_PRIVILEGE = d.hasAccess ? privLabel(d.privilege) : 'Aucun accès';
+      MODULE_PRIVILEGE = d.hasAccess ? privLabel(d.privilege) : legende('aucun_acces');
       const el = document.querySelector('.oasis-user-role');
       if (el) el.textContent = MODULE_PRIVILEGE;
     })
@@ -293,8 +306,8 @@
     if (logout && !document.querySelector('.oasis-back-btn')) {
       const btn = document.createElement('button');
       btn.className = 'oasis-back-btn';
-      btn.innerHTML = SVG.back + '<span class="oasis-btn-label">Retour au portail</span>';
-      btn.title = 'Retour au portail';
+      btn.innerHTML = SVG.back + `<span class="oasis-btn-label">${legende('retour_portail')}</span>`;
+      btn.title = legende('retour_portail');
       btn.onclick = window.oasisBackToPortal;
       logout.replaceWith(btn);
     }

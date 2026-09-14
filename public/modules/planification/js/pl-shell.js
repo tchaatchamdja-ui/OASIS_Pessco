@@ -292,14 +292,16 @@ function planRenderApp() {
         </button>`;
     }
 
+    // L'en-tête de la barre latérale est vide : le retour au portail est posé
+    // par la coquille commune, qui remplace le bouton de déconnexion. Une
+    // version propre au module vivait ici, sous condition de `window.PESSCO` —
+    // que ce module met à null — et appelait `backToPortal`, qu'il ne définit
+    // pas. Elle ne pouvait donc que rester invisible, ou échouer si la
+    // condition changeait.
     document.getElementById('app').innerHTML = `
     <div class="app-layout ${S.sidebarCollapsed ? 'sidebar-collapsed' : ''}">
         <aside class="app-sidebar ${S.sidebarCollapsed ? 'collapsed' : ''}">
-            <div class="sidebar-header">
-                ${window.PESSCO ? `<button class="btn-back-portal" onclick="backToPortal()" title="${pt('back_portal')}">
-                    ${PLAN_ICONS.back} <span class="back-portal-label">${pt('back_portal')}</span>
-                </button>` : ''}
-            </div>
+            <div class="sidebar-header"></div>
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">

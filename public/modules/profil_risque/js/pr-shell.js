@@ -243,15 +243,13 @@ function renderApp() {
         </button>`;
     }
 
+    // En-tête vide : voir pl-shell.js — le retour au portail vient de la
+    // coquille commune, et la version locale, conditionnée à `window.PESSCO`
+    // que ce module met à null, appelait une fonction absente d'ici.
     document.getElementById('app').innerHTML = `
     <div class="app-layout ${S.sidebarCollapsed ? 'sidebar-collapsed' : ''}">
         <aside class="app-sidebar ${S.sidebarCollapsed ? 'collapsed' : ''}">
-            <div class="sidebar-header">
-                ${window.PESSCO ? `<button class="btn-back-portal" onclick="backToPortal()" title="${pt('back_portal')}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-                    <span class="back-portal-label">${pt('back_portal')}</span>
-                </button>` : ''}
-            </div>
+            <div class="sidebar-header"></div>
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">

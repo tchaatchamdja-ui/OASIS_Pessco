@@ -1771,5 +1771,6 @@ tr.hidden { display: none; }
 }
 .plan-ma-periode .form-input { width: auto; }
 
-.plan-ma-reinit { margin-left: auto; white-space: nowrap; }
-.plan-ma-reinit[disabled] { opacity: .45; cursor: default; }
+/* Une date tient sur une ligne : la colonne lui laisse la place, et la cellule
+   ne s'enroule pas — « 2026-11-20 » coupé en deux ne se lit plus. */
+.plan-ma-table .plan-ma-date { white-space: nowrap; }

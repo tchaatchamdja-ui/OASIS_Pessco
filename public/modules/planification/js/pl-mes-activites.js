@@ -120,8 +120,8 @@ function planRenderMesActivites() {
             <td>${sect ? _esc(sect.code + ' - ' + sect.nom) : '—'}</td>
             <td>${mode ? _esc(mode.mode || mode.libelle || '') : '—'} / ${typeS ? _esc(typeS.type_supervision || typeS.libelle || '') : '—'}</td>
             <td>${_esc(a.lieu_activite || '—')}</td>
-            <td>${(a.date_debut || '').substring(0, 10) || '—'}</td>
-            <td>${(a.date_fin || '').substring(0, 10) || '—'}</td>
+            <td class="plan-ma-date">${(a.date_debut || '').substring(0, 10) || '—'}</td>
+            <td class="plan-ma-date">${(a.date_fin || '').substring(0, 10) || '—'}</td>
             <td class="plan-ma-duree">${duree || '—'}</td>
         </tr>`;
     }).join('');
@@ -160,8 +160,8 @@ function planRenderMesActivites() {
                 <input type="date" class="form-input" value="${_esc(F.au)}"
                        onchange="planMaSetFiltre('au', this.value)">
             </label>
-            <button class="btn btn-ghost btn-sm plan-ma-reinit" onclick="planMaReinit()"
-                    ${_planMaFiltre() ? '' : 'disabled'}>${tp('reset_filters')}</button>
+            <button class="btn-icon-reset" onclick="planMaReinit()"
+                    title="${_esc(tp('reset_filters'))}">${PLAN_ICONS.reset}</button>
         </div>
 
         <div class="card">
@@ -172,9 +172,9 @@ function planRenderMesActivites() {
             <div style="overflow-x:auto;">
                 <table class="data-table plan-ma-table">
                     <colgroup>
-                        <col style="width:14%"><col style="width:14%"><col style="width:19%">
-                        <col style="width:13%"><col style="width:12%"><col style="width:10%">
-                        <col style="width:6%"><col style="width:6%"><col style="width:6%">
+                        <col style="width:13%"><col style="width:13%"><col style="width:16%">
+                        <col style="width:12%"><col style="width:11%"><col style="width:8%">
+                        <col style="width:10%"><col style="width:10%"><col style="width:7%">
                     </colgroup>
                     <thead><tr>
                         <th>${tp('col_responsable')}</th>

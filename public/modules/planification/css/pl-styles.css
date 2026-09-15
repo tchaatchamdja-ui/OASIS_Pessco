@@ -1581,6 +1581,12 @@ tr.hidden { display: none; }
 .plan-ma-table .plan-ma-duree { text-align: right; font-variant-numeric: tabular-nums; }
 .plan-ma-ligne { cursor: pointer; }
 .plan-ma-ligne:hover > td { background: var(--hover, rgba(148, 163, 184, .12)); }
+/* La carte n'a qu'une marge intérieure : son en-tête touche la table qui le
+   suit. La pastille de cumul, plus haute que le titre, s'y appuyait au point de
+   mordre sur le bandeau de colonnes. L'écart se pose ici, sur cette page
+   seulement — les autres cartes du module n'ont pas de pastille. */
+.plan-ma-entete { margin-bottom: 0.7rem; }
+
 .plan-ma-cumul {
     margin-left: auto;
     padding: 0.18rem 0.6rem;

@@ -158,7 +158,7 @@ function planRenderMesActivites() {
         </div>
 
         <div class="card">
-            <div class="card-header card-header-flex">
+            <div class="card-header card-header-flex plan-ma-entete">
                 <h3>${tp('activities')} (${actes.length})</h3>
                 <span class="plan-ma-cumul">${tp('mes_act_cumul', cumul)}</span>
             </div>

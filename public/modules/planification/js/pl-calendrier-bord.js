@@ -101,9 +101,35 @@ function _planCalLignes(activites) {
     return { lignes, aujourdhui };
 }
 
-// Prestataires du périmètre : ceux que les filtres retiennent. Un organisme
-// sans activité garde sa ligne — son absence laisserait croire qu'il a été
-// écarté, quand il n'a simplement rien de programmé.
+// Organismes portés en ligne, une fois le périmètre connu.
+//
+// Sans filtre, tous ceux du périmètre y figurent, même sans activité : la ligne
+// vide dit « rien de programmé », et son absence laisserait croire que
+// l'organisme a été écarté. Dès qu'un filtre est posé, la question change — on
+// demande un périmètre, et un organisme que le filtre ne retient pas n'a plus
+// de raison d'occuper une ligne.
+//
+// L'organisme expressément demandé fait exception : c'est lui qu'on est venu
+// voir, et le vide est la réponse.
+function _planCalRestreindre(duPerimetre, lignes, filtre) {
+    const f = filtre || {};
+    if (f.prestataire) return duPerimetre.filter((p) => p.id === f.prestataire);
+    if (!f.pose) return duPerimetre;
+    const concernes = new Set(lignes.map((l) => l.prestataire_id));
+    return duPerimetre.filter((p) => concernes.has(p.id));
+}
+
+// Filtres de la barre du tableau de bord. L'année en est un ici : la barre
+// s'ouvre sur « toutes », et en choisir une restreint bien le périmètre — à la
+// différence du menu « Calendrier », qui porte toujours sur une année.
+const PLAN_BORD_FILTRES = ['domaine', 'secteur', 'prestataire', 'sousActivite', 'theme', 'statut', 'search', 'annee'];
+
+const _planCalFiltreDuBord = () => ({
+    prestataire: PLAN_STATE.filters.prestataire,
+    pose: PLAN_BORD_FILTRES.some((k) => PLAN_STATE.filters[k]),
+});
+
+// Prestataires du périmètre : ceux que les filtres retiennent.
 function _planCalPrestataires() {
     const F = PLAN_STATE.filters;
     const secteurs = PLAN_STATE.data.secteurs || [];
@@ -144,7 +170,9 @@ function _planCalendrierHtml(activites, options) {
     });
 
     const groupes = {};
-    (o.prestataires || _planCalPrestataires()).forEach(p => { groupes[p.id] = { nom: p.nom, lignes: [] }; });
+    const enLigne = _planCalRestreindre(o.prestataires || _planCalPrestataires(),
+        visibles, o.filtre || _planCalFiltreDuBord());
+    enLigne.forEach(p => { groupes[p.id] = { nom: p.nom, lignes: [] }; });
     visibles.forEach(l => {
         if (!groupes[l.prestataire_id]) groupes[l.prestataire_id] = { nom: l.prestataire_nom, lignes: [] };
         groupes[l.prestataire_id].lignes.push(l);

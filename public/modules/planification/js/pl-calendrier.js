@@ -74,7 +74,8 @@ function planRenderCalendar() {
     const ganttHtml = _planCalendrierHtml(ganttActivities, {
         annee: year,
         titre: `${tp('gantt_diagram')} - ${year}`,
-        prestataires: _planCalPrestatairesDiagramme(CF, filteredPrest, ganttActivities),
+        prestataires: filteredPrest,
+        filtre: { prestataire: CF.prestataire, pose: PLAN_CAL_FILTRES_PERIMETRE.some((k) => CF[k]) },
         couleur: (l) => _prestataireColor(l.act.prestataire_id),
         clic: (l) => `PLAN_STATE.calendarMonth=${l.debut.getMonth()};PLAN_STATE.calendarView='month';planRenderPage();`,
     });
@@ -186,27 +187,14 @@ function _planCalBarreFiltres(CF, refs) {
     return calFilterBar;
 }
 
-// Organismes portés en ligne sur le diagramme.
+// Filtres de la barre du calendrier qui commandent le périmètre — ceux dont
+// `_planCalRestreindre` tient compte pour ne porter en ligne que les organismes
+// retenus.
 //
-// Sans filtre, tous ceux du périmètre y figurent, même sans activité : la ligne
-// vide dit « rien de programmé », et son absence laisserait croire que
-// l'organisme a été écarté. Dès qu'un filtre est posé, la question change — on
-// demande un périmètre, et un organisme que le filtre ne retient pas n'a plus
-// de raison d'occuper une ligne.
-//
-// L'année n'en est pas un : le diagramme porte toujours sur une année, et
-// celle par défaut se lit sans qu'aucun bouton ait été touché. La compter
-// ferait dépendre la liste d'un clic qui ne change rien au périmètre.
+// L'année n'en est pas : le diagramme porte toujours sur une année, et celle
+// par défaut se lit sans qu'aucun bouton ait été touché. La compter ferait
+// dépendre la liste d'un clic qui ne change rien au périmètre.
 const PLAN_CAL_FILTRES_PERIMETRE = ['domaine', 'secteur', 'prestataire', 'trimestre', 'responsable', 'search'];
-
-function _planCalPrestatairesDiagramme(CF, duPerimetre, activites) {
-    // L'organisme expressément demandé garde sa ligne même sans activité :
-    // c'est lui qu'on est venu voir, et le vide est la réponse.
-    if (CF.prestataire) return duPerimetre.filter((p) => p.id === CF.prestataire);
-    if (!PLAN_CAL_FILTRES_PERIMETRE.some((k) => CF[k])) return duPerimetre;
-    const concernes = new Set(activites.map((a) => a.prestataire_id));
-    return duPerimetre.filter((p) => concernes.has(p.id));
-}
 
 // Activités des plans validés qui touchent l'année, filtres du calendrier appliqués.
 function _planCalActivites(CF, year, refs) {

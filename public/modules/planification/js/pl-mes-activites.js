@@ -65,12 +65,6 @@ function _planMaPrestataires() {
     return s ? tous.filter((p) => p.secteur_id === s) : tous;
 }
 
-// Un filtre est-il posé ? Le compte courant, retenu à l'ouverture, en est un.
-const _planMaFiltre = () => {
-    const F = PLAN_MA_FILTRES;
-    return !!(F.responsable || F.prestataire || F.secteur || F.mode || F.du || F.au);
-};
-
 window.planMaSetFiltre = function (champ, valeur) {
     PLAN_MA_FILTRES[champ] = valeur;
     // Le prestataire retenu peut ne pas appartenir au nouveau secteur : il
@@ -131,7 +125,6 @@ function planRenderMesActivites() {
         <div class="page-header">
             <div>
                 <h2>${tp('nav_mes_activites')}</h2>
-                <p class="text-muted">${tp('mes_act_intro')}</p>
             </div>
         </div>
 
@@ -167,7 +160,7 @@ function planRenderMesActivites() {
         <div class="card">
             <div class="card-header card-header-flex">
                 <h3>${tp('activities')} (${actes.length})</h3>
-                ${_planMaFiltre() ? `<span class="plan-ma-cumul">${tp('mes_act_cumul', cumul)}</span>` : ''}
+                <span class="plan-ma-cumul">${tp('mes_act_cumul', cumul)}</span>
             </div>
             <div style="overflow-x:auto;">
                 <table class="data-table plan-ma-table">

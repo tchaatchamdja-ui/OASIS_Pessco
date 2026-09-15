@@ -119,7 +119,9 @@ function planRenderDashboard() {
 // liste et le calendrier partagent ce périmètre.
 function _planActivitesDuBord() {
     const plans = PLAN_STATE.data.plans || [];
-    const enVigueur = _applyRoleFilter(_applyPlanFilters(plans))
+    // La recherche est laissée au niveau de l'activité, où elle porte sur
+    // l'objet — voir `_applyPlanFilters`.
+    const enVigueur = _applyRoleFilter(_applyPlanFilters(plans, { sansRecherche: true }))
         .filter(p => PL_STATUTS_EN_VIGUEUR.includes(p.statut));
     return _planActivitesARealiser(enVigueur);
 }
@@ -249,14 +251,21 @@ function _planTablePrestataires(activites) {
 
 
 
-function _applyPlanFilters(plans) {
+// Filtres de la barre appliqués aux plans.
+//
+// La recherche vise ce que l'écran liste : le titre d'un plan quand on liste
+// des plans, l'objet d'une activité quand on liste des activités. L'appliquer
+// aux deux reviendrait à exiger que le mot figure aux deux endroits — et à ne
+// rien rendre. Les écrans qui partent des plans pour atteindre leurs activités
+// la laissent donc de côté ici, et la posent sur l'activité.
+function _applyPlanFilters(plans, options) {
     const F = PLAN_STATE.filters;
     let filtered = [...plans];
     if (F.domaine) filtered = filtered.filter(p => p.domaine_id === F.domaine);
     if (F.secteur) filtered = filtered.filter(p => p.secteur_id === F.secteur);
     if (F.statut) filtered = filtered.filter(p => p.statut === F.statut);
     if (F.annee) filtered = filtered.filter(p => String(p.annee) === String(F.annee));
-    if (F.search) {
+    if (F.search && !(options || {}).sansRecherche) {
         const s = F.search.toLowerCase();
         filtered = filtered.filter(p => (p.titre || '').toLowerCase().includes(s));
     }

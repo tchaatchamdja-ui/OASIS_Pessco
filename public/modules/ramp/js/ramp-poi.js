@@ -453,9 +453,7 @@ function rampPoiRedessinerItems() {
     const rendreDefilement = rampMemoriserDefilement();
     zone.innerHTML = rampPoiItems();
     rendreDefilement();
-    const compteur = document.getElementById('rampPoiCompteur');
-    if (compteur) compteur.innerHTML = rampPoiCompteur();
-    // La bande d'identification porte les mêmes compteurs : elle suit.
+    // La bande d'identification porte les compteurs : elle suit.
     const bande = document.querySelector('.ramp-poi-bande');
     if (bande) bande.outerHTML = rampPoiBande();
 }
@@ -464,12 +462,6 @@ const rampPoiControles = () => Object.values((RAMP_STATE.poiEnCours || {}).items
     .filter((i) => i.controle).length;
 const rampPoiEcarts = () => Object.values((RAMP_STATE.poiEnCours || {}).items || {})
     .filter((i) => i.ecart && i.ecart.categorie).length;
-
-function rampPoiCompteur() {
-    const total = rampPoiCtx().items.length;
-    return `${rampPoiControles()} / ${total} item${total > 1 ? 's' : ''} contrôlé${rampPoiControles() > 1 ? 's' : ''}
-        · ${rampPoiEcarts()} écart${rampPoiEcarts() > 1 ? 's' : ''}`;
-}
 
 // ── Les 54 items, rangés sous leur groupe ──
 

@@ -701,20 +701,6 @@ async function saveIndices() {
 
 
 
-async function saveAAC() {
-    const data = {
-        nom: document.getElementById('aacNom').value, sigle: document.getElementById('aacSigle').value,
-        etat: document.getElementById('aacEtat').value, ville: document.getElementById('aacVille').value,
-        adresse1: document.getElementById('aacAdr1').value, adresse2: document.getElementById('aacAdr2').value,
-        email_admin: document.getElementById('aacEmail').value, logo_data: document.getElementById('aacLogo').value
-    };
-    try {
-        await api('/api/aac', { method: 'PUT', body: JSON.stringify(data) });
-        APP_STATE.data.aac = data;
-        showToast('OK');
-    } catch (e) { showToast(e.message, 'error'); }
-}
-
 // ══════════════════════════════════════
 //  NOTIFICATIONS (bell)
 // ══════════════════════════════════════

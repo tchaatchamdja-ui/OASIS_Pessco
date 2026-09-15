@@ -538,7 +538,7 @@ Object.assign(window, {
     rampNouveauPoi, rampOuvrirPoi, rampFermerPoi, rampPoiFige,
     rampPoiChamp, rampPoiMeta, rampPoiControle, rampPoiRemarque,
     rampPoiBasculerEcart, rampPoiEcart, rampPoiBasculerGroupe, rampPoiToutDeplier,
-    rampPoiItems, rampPoiEntete, rampRenderPoiFiche, rampPoiCompteur,
+    rampPoiItems, rampPoiEntete, rampRenderPoiFiche,
     rampEnregistrerPoi, rampValiderPoi, rampSupprimerPoi, rampVoirInspectionDuPoi,
     rampPoiChampOuvert, rampPoiRedessinerEntete, rampPoiAjuster,
     rampPoiPieces, rampPoiPiecesModifiables, rampOuvrirPiece, rampEnregistrerPiece,

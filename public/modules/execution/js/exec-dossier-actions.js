@@ -668,8 +668,13 @@ async function execDeleteConstatation(fncId) {
     try {
         await api(`${EXEC_MODULE_API}/constatations/${fncId}`, { method: 'DELETE' });
         await execRefreshDynamic();
-        // Si un dossier est ouvert, ré-affiche son slider (onglet Constatations) ; sinon page courante.
-        const openDossier = document.getElementById('execDossierSlider') || document.querySelector('.exec-dossier-slider');
+        // Si la rédaction d'un dossier est ouverte, on y reste et on ramène la
+        // section « Constatations » sous les yeux ; sinon on redessine la page.
+        // Le marqueur est le conteneur des sections de rédaction : ni
+        // « execDossierSlider » ni « .exec-dossier-slider », cherchés ici
+        // auparavant, n'existent nulle part — la branche ne se prenait jamais et
+        // la suppression renvoyait toujours à la page entière.
+        const openDossier = document.getElementById('dossier_redaction_sections');
         const dId = EXEC_STATE.selectedDossier?.id;
         if (openDossier && dId && typeof execSwitchRedactionSubtab === 'function') {
             execSwitchRedactionSubtab(dId, 'constatations');

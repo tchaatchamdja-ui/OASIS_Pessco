@@ -123,8 +123,11 @@ function planRenderMesActivites() {
     return `
     <div class="page-content">
         <div class="page-header">
-            <div>
-                <h2>${tp('nav_mes_activites')}</h2>
+            <h2>${tp('nav_mes_activites')}</h2>
+            <div class="page-actions">
+                <button class="btn btn-primary btn-sm" onclick="planOuvrirCalendrier()">
+                    ${PLAN_ICONS.calendar} ${tp('cal_voir_detail')}
+                </button>
             </div>
         </div>
 

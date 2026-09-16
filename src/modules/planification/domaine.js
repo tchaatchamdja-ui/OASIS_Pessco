@@ -215,7 +215,10 @@ const ecartsRisques = (plan, profils) => {
 const SCHEMA_PLAN = {
   titre: { type: 'texte', requis: true, max: 200 },
   annee: { type: 'entier', min: 2000, max: 2100 },
-  type: { type: 'texte', max: 40, parmi: ['periodique', 'ponctuel', 'thematique'] },
+  // Les trois types que propose le formulaire — et que l'écran sait nommer.
+  // La liste portait « ponctuel » et « thematique », que rien n'emploie : un
+  // plan inopiné ou spécial était refusé à la création comme à la modification.
+  type: { type: 'texte', max: 40, parmi: ['periodique', 'inopine', 'ponctuel_special'] },
   domaine_id: { type: 'texte', max: 40 },
   secteur_id: { type: 'texte', max: 40 },
 };

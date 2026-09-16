@@ -313,7 +313,7 @@ function planExportPDF(planId) {
       <td class="k">Version :</td><td>v${plan.version || 1}</td>
     </tr>
     <tr>
-      <td class="k">Type :</td><td>${_esc(tp(plan.type) || plan.type || '-')}</td>
+      <td class="k">Type :</td><td>${_esc(planLibelleType(plan.type))}</td>
       <td class="k">Secteur :</td><td>${_esc(sec ? `${sec.code} - ${sec.nom}` : '-')}</td>
       <td class="k">Statut :</td><td>${_esc(tp(plan.statut) || plan.statut || '-')} — ${activites.length} activité(s)</td>
     </tr>
@@ -500,11 +500,24 @@ function _statusColor(status) {
     return colors[status] || '#6b7280';
 }
 
+// Nom d'un type de plan. Le code enregistré n'est pas la clé de traduction :
+// « periodique » se nomme sous « periodic ». `tp` rendant la clé elle-même
+// quand elle manque, l'écran et le PDF affichaient le code brut —
+// « periodique » au lieu de « Périodique ».
+const PLAN_TYPE_CLES = {
+    periodique: 'periodic', annuel: 'annual',
+    inopine: 'inopine', ponctuel_special: 'ponctuel_special',
+};
+
+function planLibelleType(type) {
+    const cle = PLAN_TYPE_CLES[type];
+    return cle ? tp(cle) : (type || '-');
+}
+
 function _planTypeBadge(type) {
     const colors = { periodique: '#3b82f6', annuel: '#3b82f6', inopine: '#f97316', ponctuel_special: '#8b5cf6' };
     const color = colors[type] || '#6b7280';
-    const label = tp(type) || type;
-    return `<span class="status-badge" style="background:${color}15;color:${color};border:1px solid ${color}40;">${label}</span>`;
+    return `<span class="status-badge" style="background:${color}15;color:${color};border:1px solid ${color}40;">${_esc(planLibelleType(type))}</span>`;
 }
 
 function _riskBadge(riskLabel) {

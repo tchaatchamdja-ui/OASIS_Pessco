@@ -155,6 +155,25 @@ module.exports = async function planificationSmoke(port) {
     verifier('le plan forcé n’entre pas en vigueur',
       !((await srv.appel('/api/shared/surveillance-plans')).corps || []).some((p) => p.id === brouillon.corps.id));
 
+    // ── Chaque type proposé par le formulaire s'enregistre ──
+    // Le schéma n'admettait que « periodique », « ponctuel » et « thematique »,
+    // quand le formulaire propose « periodique », « inopine » et
+    // « ponctuel_special » : un plan inopiné ou spécial était refusé à la
+    // création comme à la modification.
+    for (const type of ['periodique', 'inopine', 'ponctuel_special']) {
+      const cree = await P('/api/m/planification/plans', { titre: `Type ${type}`, annee: 2032, type });
+      verifier(`plan « ${type} » créé`,
+        cree.statut === 200 && cree.corps.type === type, `statut ${cree.statut} · ${JSON.stringify(cree.corps).slice(0, 80)}`);
+      if (cree.statut !== 200) continue;
+      const modifie = await srv.appel(`/api/m/planification/plans/${cree.corps.id}`, {
+        method: 'PUT', body: JSON.stringify({ titre: `Type ${type}`, annee: 2032, type }),
+      });
+      verifier(`plan « ${type} » modifiable`, modifie.statut === 200, `statut ${modifie.statut}`);
+      await srv.appel(`/api/m/planification/plans/${cree.corps.id}`, { method: 'DELETE' });
+    }
+    verifier('type inconnu refusé',
+      (await P('/api/m/planification/plans', { titre: 'Type inconnu', annee: 2032, type: 'fantaisie' })).statut === 400);
+
     // Le fil de discussion suit le sort du plan : le lire suppose d'y avoir
     // accès, y écrire suppose d'y contribuer. Ces routes n'opposaient aucun
     // refus — toute session écrivait dans le fil et en effaçait les avis.

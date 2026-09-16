@@ -322,11 +322,7 @@ module.exports = function register(app, deps, M) {
     const notif = db.list('notifications').find((n) => n.activite_id === req.params.id);
     if (notif) {
       const dossier = db.list('dossiers').find((d) => d.notification_id === notif.id);
-      if (dossier) {
-        db.removeWhere('constatations', (c) => c.dossier_id === dossier.id);
-        db.removeWhere('rapports', (r) => r.dossier_id === dossier.id);
-        db.remove('dossiers', dossier.id);
-      }
+      if (dossier) db.removeDossier(dossier.id);
       db.removeWhere('echanges', (e) => e.notification_id === notif.id);
       db.remove('notifications', notif.id);
     }

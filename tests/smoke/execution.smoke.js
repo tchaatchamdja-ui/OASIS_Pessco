@@ -237,6 +237,19 @@ module.exports = async function executionSmoke(port) {
       verifier('tableau de bord alimenté',
         stats.statut === 200 && stats.corps.notifications_actees >= 1 && stats.corps.rapports_transmis_ytd >= 1);
 
+      // Une réponse de checklist, pour vérifier qu'elle part avec le dossier.
+      // Elle ne se lit que sous l'identifiant de celui-ci : laissée derrière,
+      // elle ne reparaît jamais et s'accumule — la base en portait trente et
+      // une, d'un acte remis à zéro de longue date.
+      const reponse = await P(`${M}/exec-checklist-responses`, {
+        dossier_id: dossierId, checklist_id: checklists.corps[0].id,
+        item_id: items.corps[0].id, statut_id: statuts.corps[0].id,
+      });
+      verifier('réponse de checklist enregistrée', reponse.statut === 201);
+      const reponsesDu = async () => ((await srv.appel(`${M}/exec-checklist-responses`)).corps || [])
+        .filter((r) => r.dossier_id === dossierId);
+      verifier('réponse rattachée au dossier', (await reponsesDu()).length >= 1);
+
       // Remise à zéro : l'activité doit pouvoir être redéclenchée.
       verifier('suppression de l’acte par l’administrateur',
         (await srv.appel(`${M}/activites/${activite.id}`, { method: 'DELETE' })).statut === 200);
@@ -245,6 +258,8 @@ module.exports = async function executionSmoke(port) {
         (rendu.corps || []).some((p) => (p.activites || []).some((a) => a.id === activite.id)));
       verifier('rapport supprimé avec l’acte',
         (await srv.appel(`${M}/rapports/${rapportId}`)).statut === 404);
+      verifier('réponses de checklist emportées avec le dossier',
+        (await reponsesDu()).length === 0);
     }
 
     // ── Délais du processus (menu Paramètres → Délais) ──

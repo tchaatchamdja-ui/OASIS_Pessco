@@ -271,9 +271,7 @@ module.exports = function register(app, deps, M) {
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
     const d = db.get('dossiers', req.params.id);
     if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
-    db.removeWhere('constatations', (c) => c.dossier_id === d.id);
-    db.removeWhere('rapports', (r) => r.dossier_id === d.id);
-    db.remove('dossiers', d.id);
+    db.removeDossier(d.id);
     // La notification part aussi : l'activité redevient « à notifier ».
     if (d.notification_id) {
       db.removeWhere('echanges', (e) => e.notification_id === d.notification_id);

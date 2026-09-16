@@ -82,5 +82,24 @@ function removeWhere(coll, predicat) {
   return avant - d[coll].length;
 }
 
+// Retrait d'un dossier et de tout ce qui n'existe que par lui.
+//
+// Constatations, rapports et réponses de checklist ne se lisent que sous
+// l'identifiant du dossier : laissés derrière, ils ne reparaissent jamais et
+// s'accumulent. Deux routes suppriment un dossier — la suppression directe et
+// la remise à zéro d'une activité ; l'une des deux oubliait les réponses, et la
+// base en portait trente et une d'un dossier disparu. Le retrait s'écrit donc
+// une fois, ici.
+function removeDossier(id) {
+  if (!id) return false;
+  removeWhere('constatations', (c) => c.dossier_id === id);
+  removeWhere('rapports', (r) => r.dossier_id === id);
+  removeWhere('checklist_responses', (r) => r.dossier_id === id);
+  return remove('dossiers', id);
+}
+
 // Référence séquentielle « PREFIXE-ANNÉE-001 », identique à PESSCO.
-module.exports = { COLLECTIONS, load, save, list, get, insert, update, remove, removeWhere, uid, now, seed };
+module.exports = {
+  COLLECTIONS, load, save, list, get, insert, update, remove, removeWhere,
+  removeDossier, uid, now, seed,
+};

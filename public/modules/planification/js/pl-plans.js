@@ -47,6 +47,30 @@ window._planSortBy = function(col) {
     planRenderPage();
 };
 
+// En-tête d'un accordéon : le chevron, l'intitulé, le compteur. C'est un
+// bouton pour le clavier comme pour la souris — Entrée ou Espace l'ouvrent —
+// et il dit son état aux lecteurs d'écran. `titre` est du HTML déjà échappé.
+function _planAccEntete(titre, compte, ouvert) {
+    return `<div class="act-acc-header" role="button" tabindex="0" aria-expanded="${ouvert ? 'true' : 'false'}"
+                 onclick="planAccBasculer(this)" onkeydown="planAccClavier(event, this)">
+                <span class="act-acc-chevron" aria-hidden="true">${PLAN_ICONS.chevron}</span>
+                <span class="act-acc-titre">${titre}</span>
+                <span class="act-acc-count">${_esc(compte)}</span>
+            </div>`;
+}
+
+window.planAccBasculer = function (entete) {
+    const item = entete.parentElement;
+    const ouvert = item.classList.toggle('expanded');
+    entete.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+};
+
+window.planAccClavier = function (e, entete) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    planAccBasculer(entete);
+};
+
 // Group plans by Domaine / Secteur into 2-level accordions.
 function _renderPlansByDomaineTypeAccordion(plans) {
     if (!plans.length) return `<p class="text-center" style="padding:2rem;color:var(--text-muted);">${tp('no_data')}</p>`;
@@ -83,32 +107,23 @@ function _renderPlansByDomaineTypeAccordion(plans) {
             (secById.get(a)?.code || 'ZZZ').localeCompare(secById.get(b)?.code || 'ZZZ')
         );
 
-        let secHtml = '<div style="padding:0.5rem 0.75rem;">';
+        let secHtml = '';
         sortedSecs.forEach(([secId, secPlans], secIdx) => {
             const sec = secById.get(secId);
             const secLabel = sec ? `${sec.code} - ${_esc(sec.nom)}` : '-';
-            const secExpanded = secIdx === 0 ? ' expanded' : '';
+            const ouvert = secIdx === 0;
             secHtml += `
-            <div class="act-acc-item${secExpanded}" style="margin-bottom:0.35rem;border-left:3px solid var(--accent);">
-                <div class="act-acc-header" onclick="this.parentElement.classList.toggle('expanded')" style="padding:0.5rem 0.75rem;background:var(--bg-card);">
-                    <span class="act-acc-chevron">${PLAN_ICONS.chevron}</span>
-                    <span style="font-size:0.88rem;font-weight:600;">${secLabel}</span>
-                    <span class="act-acc-count">${secPlans.length} ${tp('plans').toLowerCase()}</span>
-                </div>
+            <div class="act-acc-item act-acc-niveau-2${ouvert ? ' expanded' : ''}">
+                ${_planAccEntete(secLabel, tp('acc_nb_plans', secPlans.length), ouvert)}
                 <div class="act-acc-body">${_renderPlansTable(secPlans)}</div>
             </div>`;
         });
-        secHtml += '</div>';
 
-        const expanded = domIdx === 0 ? ' expanded' : '';
+        const ouvert = domIdx === 0;
         html += `
-        <div class="act-acc-item${expanded}" style="border-left:3px solid var(--primary);">
-            <div class="act-acc-header" onclick="this.parentElement.classList.toggle('expanded')">
-                <span class="act-acc-chevron">${PLAN_ICONS.chevron}</span>
-                <strong>${domLabel}</strong>
-                <span class="act-acc-count">${domTotal} ${tp('plans').toLowerCase()}</span>
-            </div>
-            <div class="act-acc-body">${secHtml}</div>
+        <div class="act-acc-item act-acc-niveau-1${ouvert ? ' expanded' : ''}">
+            ${_planAccEntete(domLabel, tp('acc_nb_plans', domTotal), ouvert)}
+            <div class="act-acc-body act-acc-groupes">${secHtml}</div>
         </div>`;
     });
     html += '</div>';
@@ -509,12 +524,8 @@ function _renderActivitiesTable(activites, canEdit, plan) {
     let html = '<div class="plan-activities-accordion">';
     for (const [key, group] of Object.entries(grouped)) {
         html += `
-        <div class="act-acc-item expanded">
-            <div class="act-acc-header" onclick="this.parentElement.classList.toggle('expanded')">
-                <span class="act-acc-chevron">${PLAN_ICONS.chevron}</span>
-                <strong>${_esc(group.label)}</strong>
-                <span class="act-acc-count">${group.acts.length} ${tp('activities').toLowerCase()}</span>
-            </div>
+        <div class="act-acc-item act-acc-niveau-1 expanded">
+            ${_planAccEntete(_esc(group.label), tp('acc_nb_activites', group.acts.length), true)}
             <div class="act-acc-body">
                 <div style="overflow-x:auto;">
                 <table class="data-table plan-act-table">

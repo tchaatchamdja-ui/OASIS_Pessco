@@ -505,6 +505,36 @@
     display: block;
 }
 
+/* En-têtes chargés (Validation, Historique) : un titre, des repères, des
+   actions. Quand la place manque, les repères passent à la ligne d'un bloc
+   plutôt que de se briser mot à mot à côté du titre. */
+.act-acc-header.act-acc-riche {
+    flex-wrap: wrap;
+    row-gap: 0.35rem;
+}
+
+.act-acc-riche-titre {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.act-acc-reperes {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 400;
+}
+
+.act-acc-droite {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 /* Premier niveau (domaine, organisme) : un filet à la couleur du module. */
 .act-acc-niveau-1 > .act-acc-header {
     box-shadow: inset 4px 0 0 var(--primary);

@@ -67,6 +67,9 @@ window.planAccBasculer = function (entete) {
 
 window.planAccClavier = function (e, entete) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
+    // Un lien ou un bouton posé dans l'en-tête garde sa touche : Entrée sur
+    // « ouvrir le plan » ouvre le plan, elle ne replie pas l'accordéon.
+    if (e.target !== entete) return;
     e.preventDefault();
     planAccBasculer(entete);
 };

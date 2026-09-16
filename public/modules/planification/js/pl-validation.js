@@ -297,10 +297,10 @@ function _renderPlanDiffAccordion(plan) {
     }
 
     const badge = isAmendment
-        ? `<span class="badge badge-warning" style="margin-left:0.5rem;">${tp('amendement')}</span>
-           <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.85rem;">${(tp('modif_count')).replace('{0}', diff ? diff.totalCount : 0)}</span>`
-        : `<span class="badge badge-info" style="margin-left:0.5rem;">${tp('initial_version')}</span>
-           <span style="margin-left:0.5rem;color:var(--text-muted);font-size:0.85rem;">${plan.nb_activites || 0} ${tp('activities')}</span>`;
+        ? `<span class="badge badge-warning">${tp('amendement')}</span>
+           <span>${_esc(tp('modif_count', diff ? diff.totalCount : 0))}</span>`
+        : `<span class="badge badge-info">${tp('initial_version')}</span>
+           <span>${_esc(tp('acc_nb_activites', plan.nb_activites || 0))}</span>`;
 
     let bodyHtml;
     if (!isAmendment) {
@@ -316,12 +316,13 @@ function _renderPlanDiffAccordion(plan) {
 
     return `
     <div class="act-acc-item">
-        <div class="act-acc-header" onclick="this.parentElement.classList.toggle('expanded')" style="display:flex;align-items:center;gap:0.5rem;">
-            <span class="act-acc-chevron">${PLAN_ICONS.chevron}</span>
-            <strong><a href="#" onclick="event.stopPropagation();planOpenDetail('${plan.id}');return false;">${_esc(plan.titre)}</a></strong>
-            <span style="color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">${plan.annee} · v${plan.version || 1} · ${_planTypeBadge(plan.type)}</span>
-            ${badge}
-            <span style="margin-left:auto;display:flex;gap:0.25rem;">${actionsHtml}</span>
+        <div class="act-acc-header act-acc-riche" role="button" tabindex="0" aria-expanded="false"
+             onclick="planAccBasculer(this)" onkeydown="planAccClavier(event, this)">
+            <span class="act-acc-chevron" aria-hidden="true">${PLAN_ICONS.chevron}</span>
+            <strong class="act-acc-riche-titre"><a href="#" onclick="event.stopPropagation();planOpenDetail('${plan.id}');return false;">${_esc(plan.titre)}</a></strong>
+            <span class="act-acc-reperes">${plan.annee} · v${plan.version || 1} · ${_planTypeBadge(plan.type)}</span>
+            <span class="act-acc-reperes">${badge}</span>
+            <span class="act-acc-droite">${actionsHtml}</span>
         </div>
         <div class="act-acc-body" style="padding:0.75rem 1rem;">
             ${bodyHtml}
@@ -452,13 +453,14 @@ function planRenderHistory() {
                 }).join('');
                 return `
                 <div class="act-acc-item">
-                    <div class="act-acc-header" onclick="this.parentElement.classList.toggle('expanded')">
-                        <span class="act-acc-chevron">${PLAN_ICONS.chevron}</span>
-                        <strong>${_esc(root.titre)}</strong>
-                        <span style="margin-left:auto;display:flex;gap:0.5rem;align-items:center;">
+                    <div class="act-acc-header act-acc-riche" role="button" tabindex="0" aria-expanded="false"
+                         onclick="planAccBasculer(this)" onkeydown="planAccClavier(event, this)">
+                        <span class="act-acc-chevron" aria-hidden="true">${PLAN_ICONS.chevron}</span>
+                        <strong class="act-acc-riche-titre">${_esc(root.titre)}</strong>
+                        <span class="act-acc-reperes act-acc-droite">
                             ${_planTypeBadge(root.type)}
                             ${_statusBadge(latest.statut)}
-                            <span style="color:var(--text-muted);font-size:0.85rem;">${root.annee} | ${versions.length} ${versions.length > 1 ? 'versions' : 'version'} (v${maxVersion})</span>
+                            <span>${root.annee} | ${versions.length} ${versions.length > 1 ? 'versions' : 'version'} (v${maxVersion})</span>
                         </span>
                     </div>
                     <div class="act-acc-body">

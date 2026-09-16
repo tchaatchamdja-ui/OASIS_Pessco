@@ -406,8 +406,6 @@ module.exports = async function rampSmoke(port) {
       (await srv.appel(`${M}/poi/inexistant`)).statut === 404);
 
     // ── Pièces jointes et transmission ──
-    // Le dépôt d'un fichier passe par du multipart, que le harnais ne compose
-    // pas : on vérifie ici les règles qui l'entourent.
     const pieces = await srv.appel(`${M}/poi/${fiche.corps.id}/pieces`);
     verifier('pièces d’une fiche listées', pieces.statut === 200
       && Array.isArray(pieces.corps.pieces) && pieces.corps.pieces.length === 0);
@@ -415,6 +413,15 @@ module.exports = async function rampSmoke(port) {
       pieces.corps.modifiable === true);
     verifier('pièce inconnue introuvable',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/pieces/inexistante`, { method: 'DELETE' })).statut === 404);
+    // Une pièce déposée : elle suivra la fiche jusqu'au partage.
+    const frPiece = '----oasis-piece';
+    const depotPiece = await srv.appel(`${M}/poi/${fiche.corps.id}/pieces`, {
+      method: 'POST',
+      headers: { 'content-type': `multipart/form-data; boundary=${frPiece}` },
+      body: [`--${frPiece}`, 'Content-Disposition: form-data; name="file"; filename="lettre.pdf"',
+        'Content-Type: application/pdf', '', '%PDF-1.4 piece', `--${frPiece}--`, ''].join('\r\n'),
+    });
+    verifier('pièce déposée sur la fiche', depotPiece.statut === 201, `statut ${depotPiece.statut}`);
 
     // ── Communications écrites (classe 2 ou 3) ──
     verifier('transmission refusée sans communication écrite en classe 3',
@@ -863,10 +870,13 @@ module.exports = async function rampSmoke(port) {
         method: 'POST',
         body: JSON.stringify({ etats: ['Togo', 'Mali'], elements: { autorite: true, pieces: true } }),
       });
-      // La fiche a pu écrire plusieurs fois à l'autorité : le partage emporte
-      // toutes ses lettres à cette cible, pas seulement la dernière.
-      verifier('transmission partagée', partage.statut === 201 && partage.corps.communications >= 1,
-        JSON.stringify(partage.corps).slice(0, 90));
+      // Le partage désigne les pièces de la fiche sous le même nom de fichier,
+      // sans copie.
+      const paPiece = (srv.donnees('ramp').partages || []).find((x) => x.poi_id === poiValide.id) || {};
+      const piecePartagee = (paPiece.pieces || [])[0];
+      const cheminPiece = piecePartagee ? `uploads/ramp/poi/${piecePartagee.fichier}` : '';
+      verifier('le partage emporte les pièces de la fiche',
+        !!piecePartagee && srv.fichierExiste(cheminPiece), JSON.stringify(paPiece.pieces || []).slice(0, 80));
       verifier('partage sans État refusé',
         (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {
           method: 'POST', body: JSON.stringify({ etats: [], elements: { autorite: true } }),
@@ -913,6 +923,16 @@ module.exports = async function rampSmoke(port) {
         faits.statut === 200 && (faits.corps.partages || []).length === 1
         && faits.corps.partages[0].rappelable === true,
         JSON.stringify(faits.corps.partages || []).slice(0, 90));
+      // La fiche supprimée par le gestionnaire : ce qu'un partage désigne
+      // encore reste pour l'État qui l'a reçu.
+      verifier('fiche partagée supprimée par le gestionnaire',
+        (await srv.appel(`${M}/poi/${poiValide.id}`, { method: 'DELETE' })).statut === 200);
+      if (piecePartagee) {
+        verifier('la pièce partagée reste sur le disque',
+          srv.fichierExiste(cheminPiece));
+        verifier('et reste téléchargeable depuis le partage',
+          (await srv.appel(`${M}/partages/${paPiece.id}/pieces/${piecePartagee.id}/fichier`)).statut === 200);
+      }
       verifier('rappel d’un État non destinataire refusé',
         (await srv.appel(`${M}/partages/${pa.id}/rappeler`, {
           method: 'POST', body: JSON.stringify({ etat: 'Sénégal' }),
@@ -930,6 +950,10 @@ module.exports = async function rampSmoke(port) {
       verifier('dernier rappel : la copie disparaît',
         dernier.statut === 200 && dernier.corps.retire === true
         && (await srv.appel(`${M}/partages/${pa.id}`)).statut === 404);
+      if (piecePartagee) {
+        verifier('plus rien ne la désigne : la pièce quitte le disque',
+          !srv.fichierExiste(cheminPiece));
+      }
     }
 
     // ── Vue AAC / Vue Prestataire ──

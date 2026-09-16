@@ -575,8 +575,10 @@ module.exports = function register(app, deps, M) {
     return { surDisque };
   }
 
+  // À n'appeler qu'une fois la désignation retirée de la fiche : un fichier
+  // qu'un partage désigne encore reste pour l'État qui l'a reçu.
   const effacerFichier = (nom) => {
-    if (!nom) return;
+    if (!nom || db.fichierPoiDesigne(nom)) return;
     try { fs.unlinkSync(path.join(DOSSIER_PIECES, path.basename(nom))); }
     catch (e) { /* le fichier a déjà disparu : rien à défaire */ }
   };
@@ -642,7 +644,6 @@ module.exports = function register(app, deps, M) {
     if (f) {
       const { surDisque, erreur } = ecrireFichier(f);
       if (erreur) return res.status(400).json({ error: erreur });
-      effacerFichier(pj.fichier);
       maj.fichier = surDisque;
       maj.nom_origine = f.filename;
       maj.taille = f.buffer.length;
@@ -652,6 +653,7 @@ module.exports = function register(app, deps, M) {
     db.update('poi', p.id, {
       pieces: (p.pieces || []).map((x) => (x.id === pj.id ? maj : x)),
     });
+    if (maj.fichier !== pj.fichier) effacerFichier(pj.fichier);
     return res.json({ status: 'ok' });
   });
 
@@ -660,8 +662,8 @@ module.exports = function register(app, deps, M) {
     if (!p) return undefined;
     const pj = piece(p, req.params.pid);
     if (!pj) return res.status(404).json({ error: 'Pièce non trouvée' });
-    effacerFichier(pj.fichier);
     db.update('poi', p.id, { pieces: (p.pieces || []).filter((x) => x.id !== pj.id) });
+    effacerFichier(pj.fichier);
     return res.json({ status: 'ok' });
   });
 
@@ -797,9 +799,10 @@ module.exports = function register(app, deps, M) {
     if (p.statut !== 'validee' && !R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     // Les preuves partent avec la fiche : les laisser sur le disque
-    // accumulerait des fichiers que plus rien ne désigne.
-    (p.pieces || []).forEach((pj) => effacerFichier(pj.fichier));
+    // accumulerait des fichiers que plus rien ne désigne. Celles qu'un partage
+    // désigne encore restent pour l'État qui les a reçues.
     db.remove('poi', p.id);
+    (p.pieces || []).forEach((pj) => effacerFichier(pj.fichier));
     res.json({ status: 'ok' });
   });
 };

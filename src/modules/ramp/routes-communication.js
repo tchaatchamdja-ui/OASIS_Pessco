@@ -301,6 +301,18 @@ module.exports = function register(app, deps, M) {
     'uploads', 'ramp', 'poi',
   );
 
+  // Retrait d'un partage. Ses pièces désignent les fichiers de la fiche : si la
+  // fiche a disparu depuis, ce partage était le dernier à les tenir, et ils
+  // partent avec lui.
+  const retirerPartage = (pa) => {
+    db.remove('partages', pa.id);
+    (pa.pieces || []).forEach((pj) => {
+      if (!pj.fichier || db.fichierPoiDesigne(pj.fichier)) return;
+      try { fs.unlinkSync(path.join(DOSSIER_POI, path.basename(pj.fichier))); }
+      catch (e) { /* le fichier a déjà disparu */ }
+    });
+  };
+
   const vuePartage = (pa) => ({
     ...pa,
     pieces: (pa.pieces || []).map((x) => ({
@@ -373,7 +385,7 @@ module.exports = function register(app, deps, M) {
     if (pa.partage_par !== req.user.username && !admin(req)) return refuser(res);
     const etat = texte((req.body || {}).etat);
     if (!etat) {
-      db.remove('partages', pa.id);
+      retirerPartage(pa);
       return res.json({ status: 'ok', retire: true, etats: [] });
     }
     if (!(pa.etats || []).includes(etat)) {
@@ -381,7 +393,7 @@ module.exports = function register(app, deps, M) {
     }
     const restants = (pa.etats || []).filter((e) => e !== etat);
     if (!restants.length) {
-      db.remove('partages', pa.id);
+      retirerPartage(pa);
       return res.json({ status: 'ok', retire: true, etats: [] });
     }
     db.update('partages', pa.id, { etats: restants, rappel_le: db.now(), rappel_par: req.user.username });
@@ -472,7 +484,7 @@ module.exports = function register(app, deps, M) {
     const pa = db.get('partages', req.params.id);
     if (!pa) return res.status(404).json({ error: 'Partage non trouvé' });
     if (pa.partage_par !== req.user.username && !admin(req)) return refuser(res);
-    db.remove('partages', pa.id);
+    retirerPartage(pa);
     return res.json({ status: 'ok' });
   });
 

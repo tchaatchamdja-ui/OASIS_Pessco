@@ -441,9 +441,24 @@ function removeInspection(id) {
   return true;
 }
 
+// Un fichier du dossier des fiches est-il encore désigné, par une fiche ou par
+// un partage ? Un partage garde les pièces de la fiche telles qu'elles étaient
+// — mais sous le même nom de fichier, sans copie. Effacer ce fichier parce que
+// la fiche ne le désigne plus le retirait aussi à l'État destinataire, qui
+// tombait sur « Fichier introuvable ». Un fichier ne s'efface donc que lorsque
+// plus rien ne le désigne ; l'appelant retire d'abord la désignation.
+function fichierPoiDesigne(nom) {
+  const cible = String(nom || '').split(/[\\/]/).pop();
+  if (!cible) return false;
+  const d = load();
+  const dans = (pieces) => (pieces || []).some((p) => String(p.fichier || '').split(/[\\/]/).pop() === cible);
+  return (d.poi || []).some((p) => dans(p.pieces)) || (d.partages || []).some((pa) => dans(pa.pieces));
+}
+
 module.exports = {
   COLLECTIONS, FAMILLES, ETATS_INSPECTION, ETATS_CONTACT, codeDeGroupe,
   CATEGORIES_DEFAUT, seed, list, get, insert, insertMany, update, remove, removeInspection,
+  fichierPoiDesigne,
   uid, now, load, save,
   seedAeronefs, aeronefs, getAeronef, insertAeronef, updateAeronef, removeAeronef,
   seedAeroports, seedPays, completerActions, retirerStatutEnCours, prochaineReferencePoi

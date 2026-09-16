@@ -59,6 +59,25 @@ module.exports = async function planificationSmoke(port) {
     verifier('dates de cycle par défaut renseignées',
       (prest.corps || []).every((p) => !p.csrbo || p.debut_cycle));
 
+    // Une date de cycle saisie puis effacée rend la main à la date par défaut.
+    const pc = (prest.corps || []).find(Boolean);
+    if (pc) {
+      const finDe = async () => ((await srv.appel('/api/m/planification/prestataires-risques')).corps || [])
+        .find((x) => x && x.id === pc.id).fin_cycle;
+      const cycle = (corps) => srv.appel(`/api/m/planification/prestataires/${pc.id}/cycle`,
+        { method: 'PUT', body: JSON.stringify(corps) });
+      const finAvant = await finDe();
+      await cycle({ fin_cycle: '2099-01-01' });
+      verifier('fin de cycle saisie', (await finDe()) === '2099-01-01');
+      // Effacée, elle n'est plus la saisie : c'est la date calculée depuis le
+      // profil de risque qui est servie.
+      await cycle({ fin_cycle: '' });
+      const finApres = await finDe();
+      verifier('fin de cycle effacée', finApres !== '2099-01-01' && /^\d{4}-\d{2}-\d{2}$/.test(finApres || ''),
+        `après « ${finApres} »`);
+      await cycle({ fin_cycle: finAvant });
+    }
+
     // ── Cycle de vie complet sur un plan jetable ──
     const secteur = (await srv.appel('/api/secteurs')).corps[0];
     const cree = await P('/api/m/planification/plans', {
@@ -72,6 +91,23 @@ module.exports = async function planificationSmoke(port) {
       objet: 'Activité de fumée', date_debut: '2030-03-01', date_fin: '2030-03-05',
     });
     verifier('ajout d’une activité', act.statut === 200 && !!act.corps.id);
+
+    // Vider un champ facultatif l'efface. Le validateur tenait une valeur vide
+    // pour absente ; la modification fusionnant avec l'existant, l'ancienne
+    // valeur revenait — un lieu ou une description ne s'effaçait jamais.
+    const avecLieu = await srv.appel(`/api/m/planification/activites/${act.corps.id}`, {
+      method: 'PUT', body: JSON.stringify({ objet: 'Activité de fumée', lieu_activite: 'Cotonou', description_activite: 'À effacer' }),
+    });
+    verifier('lieu et description enregistrés',
+      avecLieu.statut === 200 && avecLieu.corps.lieu_activite === 'Cotonou' && avecLieu.corps.description_activite === 'À effacer');
+    const vide = await srv.appel(`/api/m/planification/activites/${act.corps.id}`, {
+      method: 'PUT', body: JSON.stringify({ objet: 'Activité de fumée', lieu_activite: '', description_activite: '' }),
+    });
+    verifier('lieu et description effacés',
+      vide.statut === 200 && !vide.corps.lieu_activite && !vide.corps.description_activite,
+      `lieu « ${vide.corps && vide.corps.lieu_activite} » · description « ${vide.corps && vide.corps.description_activite} »`);
+    verifier('champ requis vide toujours refusé',
+      (await srv.appel(`/api/m/planification/plans/${id}`, { method: 'PUT', body: JSON.stringify({ titre: '' }) })).statut === 400);
 
     const detail = await srv.appel(`/api/m/planification/plans/${id}`);
     verifier('détail du plan avec ses activités',

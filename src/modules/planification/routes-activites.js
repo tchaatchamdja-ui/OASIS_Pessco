@@ -65,7 +65,7 @@ module.exports = function register(app, deps, M) {
     })));
   });
 
-  app.put(`${M}/activites/:id`, requireAuth, valider(D.SCHEMA_ACTIVITE), (req, res) => {
+  app.put(`${M}/activites/:id`, requireAuth, valider(D.SCHEMA_ACTIVITE, { effacer: true }), (req, res) => {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
     if (act && D.estVerrouillee(act)) return D.refusVerrou(res);

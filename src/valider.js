@@ -59,7 +59,16 @@ const TYPES = {
   },
 };
 
-function valider(schema) {
+// Valeur d'un champ facultatif que le client a vidé, par type. Un booléen ou un
+// objet vide n'a pas de sens d'effacement : il reste absent.
+const VIDES = { texte: '', date: '', entier: null, liste: [] };
+
+// `options.effacer` : pour une route de modification. Un champ facultatif
+// présent mais vide y est recopié vide, et efface donc la valeur enregistrée.
+// Sans l'option, le vide vaut absence — ce qui convient à une création, mais
+// rendait tout effacement impossible à une modification fusionnée avec
+// l'existant : le lieu ou la description vidés revenaient à l'identique.
+function valider(schema, options = {}) {
   return (req, res, next) => {
     const recu = req.body || {};
     const propre = {};
@@ -73,6 +82,10 @@ function valider(schema) {
       const absent = brut === undefined || brut === null || brut === '';
       if (absent) {
         if (regle.requis) manquants.push(cle);
+        else if (options.effacer && brut !== undefined && regle.type in VIDES) {
+          const vide = VIDES[regle.type];
+          propre[cle] = Array.isArray(vide) ? [] : vide;
+        }
         continue;
       }
       const valeur = lecteur(brut, regle);

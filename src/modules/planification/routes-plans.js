@@ -174,7 +174,7 @@ module.exports = function register(app, deps, M) {
   // Validateur. Sans le schéma, un Contributeur posait ici `statut: valide` et
   // son plan entrait en vigueur — servi à « Exécution de la Surveillance »
   // sans qu'aucun validateur ne l'ait vu.
-  app.put(`${M}/plans/:id`, requireAuth, valider(D.SCHEMA_PLAN), (req, res) => {
+  app.put(`${M}/plans/:id`, requireAuth, valider(D.SCHEMA_PLAN, { effacer: true }), (req, res) => {
     if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
     const rec = db.update('plans', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });

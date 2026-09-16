@@ -64,13 +64,11 @@ module.exports = function register(app, deps, M) {
     const d = db.load();
     d.cycles = d.cycles || [];
     const i = d.cycles.findIndex((c) => c.prestataire_id === req.params.id);
-    // Une date effacée arrive vide, et le schéma tient le vide pour une
-    // absence : on la reprend telle quelle, sans quoi un cycle ne pourrait
-    // plus se vider — l'ancienne date lui survivrait.
+    // Une date effacée arrive vide et le validateur la recopie vide (option
+    // `effacer`) : le cycle se vide, l'ancienne date ne lui survit pas.
     const dates = {};
     ['debut_cycle', 'fin_cycle'].forEach((k) => {
       if (req.valide[k] !== undefined) dates[k] = req.valide[k];
-      else if (k in (req.body || {})) dates[k] = '';
     });
     const rec = { prestataire_id: req.params.id, ...dates, updatedAt: new Date().toISOString() };
     if (i >= 0) d.cycles[i] = { ...d.cycles[i], ...rec }; else d.cycles.push({ id: db.uid(), ...rec });
@@ -81,8 +79,8 @@ module.exports = function register(app, deps, M) {
   // prestataire, l'identifiant du rang et sa date de mise à jour s'y
   // réécrivaient depuis le client.
   const SCHEMA_CYCLE = { debut_cycle: { type: 'date' }, fin_cycle: { type: 'date' } };
-  app.post(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE), majCycle);
-  app.put(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE), majCycle);
+  app.post(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE, { effacer: true }), majCycle);
+  app.put(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE, { effacer: true }), majCycle);
 
   // ── Synchronisation des risques → plan ──
   app.get(`${M}/plans/:id/sync-risques`, requireAuth, (req, res) => {

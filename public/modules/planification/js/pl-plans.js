@@ -530,9 +530,9 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                 <div style="overflow-x:auto;">
                 <table class="data-table plan-act-table">
                     <colgroup>
-                        <col style="width:3.5%"><col style="width:18%"><col style="width:12%">
-                        <col style="width:10.5%"><col style="width:12%"><col style="width:15%">
-                        <col style="width:9%"><col style="width:9%"><col style="width:11%">
+                        <col style="width:3.5%"><col style="width:16%"><col style="width:12%">
+                        <col style="width:10.5%"><col style="width:12%"><col style="width:14%">
+                        <col style="width:10.5%"><col style="width:10.5%"><col style="width:11%">
                     </colgroup>
                     <thead><tr>
                         <th>#</th><th>${tp('objet')}</th><th>${tp('sector')}</th>
@@ -602,8 +602,8 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                                 <td>${modeTypeStr}</td>
                                 <td>${_esc(a.lieu_activite || '-')}</td>
                                 <td>${respStr}</td>
-                                <td>${planDateFr(a.date_debut)}${cycleWarn}</td>
-                                <td>${planDateFr(a.date_fin)}</td>
+                                <td><span class="plan-act-date">${planDateFr(a.date_debut)}</span>${cycleWarn}</td>
+                                <td><span class="plan-act-date">${planDateFr(a.date_fin)}</span></td>
                                 <td class="actions-cell">
                                     <button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}">${PLAN_ICONS.eye}</button>
                                     ${(() => {

@@ -1662,6 +1662,11 @@ tr.hidden { display: none; }
 .plan-act-table th,
 .plan-act-table td { overflow-wrap: anywhere; }
 .plan-act-table .activity-detail-row td { overflow-wrap: normal; }
+/* Une date ne se coupe jamais : « 20/11/202 » puis « 6 » ne se lit plus. Les
+   deux colonnes de dates sont larges de 10,5 % — 99 px à la largeur minimale
+   de 940, pour 96 de texte et de marges. L'alerte de cycle, elle, peut passer
+   à la ligne. */
+.plan-act-table .plan-act-date { white-space: nowrap; overflow-wrap: normal; }
 
 /* ── « Mes Activités » ──
    Une ligne se clique pour lire la fiche ; le cumul des jours se tient à

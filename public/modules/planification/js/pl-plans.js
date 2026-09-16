@@ -172,7 +172,11 @@ function _renderPlansTable(plans) {
         const arrow = active ? (s.dir === 'asc' ? ' ▲' : ' ▼') : '';
         return `<th style="cursor:pointer;user-select:none;white-space:nowrap;" onclick="_planSortBy('${col}')">${label}${arrow}</th>`;
     };
+    // La table défile d'elle-même : l'accordéon qui la porte masque ce qui
+    // dépasse, et les colonnes de droite — actions comprises — disparaissaient
+    // sans barre pour les atteindre.
     return `
+    <div class="plan-table-defile">
     <table class="data-table">
         <thead><tr>
             ${_th('titre', tp('plan_title'))}
@@ -189,7 +193,7 @@ function _renderPlansTable(plans) {
                 // fréquences de surveillance par thème, sous l'enregistrement.
                 const panneau = planPrestThemesPanel(p);
                 return `<tr>
-                <td>${panneau ? `<button class="plan-prest-toggle" onclick="planTogglePrestRow('${p.id}',this)" title="${tp('providers_of_sector')}" aria-label="${tp('providers_of_sector')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>` : '<span class="plan-prest-toggle-spacer"></span>'}<a href="#" onclick="planOpenDetail('${p.id}');return false;">${_esc(p.titre)}</a></td>
+                <td><div class="plan-titre-cellule">${panneau ? `<button class="plan-prest-toggle" onclick="planTogglePrestRow('${p.id}',this)" title="${tp('providers_of_sector')}" aria-label="${tp('providers_of_sector')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>` : '<span class="plan-prest-toggle-spacer"></span>'}<a href="#" onclick="planOpenDetail('${p.id}');return false;">${_esc(p.titre)}</a></div></td>
                 <td>${p.annee}</td>
                 <td>${_planTypeBadge(p.type)}</td>
                 <td>${_statusBadge(p.statut)}</td>
@@ -204,7 +208,8 @@ function _renderPlansTable(plans) {
             </tr>${panneau ? `<tr class="plan-prest-row" id="prestRow_${p.id}" hidden><td colspan="7" style="padding:0;">${panneau}</td></tr>` : ''}`;
             }).join('')}
         </tbody>
-    </table>`;
+    </table>
+    </div>`;
 }
 
 // ══════════════════════════════════════

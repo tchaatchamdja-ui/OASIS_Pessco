@@ -973,6 +973,13 @@ tr.hidden { display: none; }
 .plan-prest-toggle:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
 .plan-prest-toggle.expanded { transform: rotate(90deg); }
 .plan-prest-toggle-spacer { display: inline-block; width: 22px; margin-right: .45rem; vertical-align: middle; }
+/* Le bouton et le titre côte à côte : un titre long revient à la ligne sous
+   lui-même, pas sous le bouton. La cellule reste une cellule ; c'est le
+   conteneur intérieur qui se range en ligne. */
+.plan-titre-cellule { display: flex; align-items: flex-start; }
+.plan-titre-cellule > .plan-prest-toggle,
+.plan-titre-cellule > .plan-prest-toggle-spacer { flex: 0 0 auto; }
+.plan-titre-cellule > a { min-width: 0; padding-top: 1px; }
 .plan-prest-body { padding: .3rem .5rem .5rem; max-height: 42vh; overflow-y: auto; }
 .plan-prest-item {
     border: 1px solid var(--border);
@@ -1735,3 +1742,7 @@ tr.hidden { display: none; }
 /* Une date tient sur une ligne : la colonne lui laisse la place, et la cellule
    ne s'enroule pas — « 2026-11-20 » coupé en deux ne se lit plus. */
 .plan-ma-table .plan-ma-date { white-space: nowrap; }
+
+/* La table des plans défile horizontalement dans son accordéon, qui masque ce
+   qui dépasse. */
+.plan-table-defile { overflow-x: auto; }

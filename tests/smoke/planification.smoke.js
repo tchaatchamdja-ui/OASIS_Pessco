@@ -148,8 +148,17 @@ module.exports = async function planificationSmoke(port) {
       (await srv.appel('/api/m/planification/plans')).corps
         .filter((p) => p.parent_plan_id === id).length === 1);
 
+    const avisEnfant = await P(`/api/m/planification/plans/${enfant.id}/commentaires`, { contenu: 'Avis sur l’amendement' });
+    verifier('avis posé sur l’amendement', avisEnfant.statut === 200 || avisEnfant.statut === 201,
+      `statut ${avisEnfant.statut}`);
     const annule = await P(`/api/m/planification/plans/${enfant.id}/annuler-amendement`, { commentaire: '' });
     verifier('annulation de l’amendement', annule.statut === 200 && annule.corps.parent_plan_id === id);
+    const apresAnnul = srv.donnees('planification');
+    const restesEnfant = ['activites', 'workflow', 'commentaires', 'versions']
+      .map((c) => [c, (apresAnnul[c] || []).filter((x) => x.plan_id === enfant.id).length])
+      .filter(([, n]) => n);
+    verifier('l’amendement annulé n’a rien laissé derrière lui', restesEnfant.length === 0,
+      restesEnfant.map(([c, n]) => `${c} : ${n}`).join(' · '));
 
     const sync = await srv.appel(`/api/m/planification/plans/${id}/sync-risques`);
     verifier('synchronisation des risques : écarts calculés',
@@ -226,8 +235,22 @@ module.exports = async function planificationSmoke(port) {
     await srv.connexion();
     await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}`, { method: 'DELETE' });
 
+    const avantSuppr = srv.donnees('planification');
+    verifier('le plan de test porte des décisions de circuit',
+      (avantSuppr.workflow || []).some((w) => w.plan_id === id));
     const suppr = await srv.appel(`/api/m/planification/plans/${id}`, { method: 'DELETE' });
     verifier('suppression du plan de test', suppr.statut === 200);
+
+    // Un plan supprimé emporte ce qui n'existe que par lui. Ses décisions et
+    // ses avis ne se lisent qu'à travers sa lignée ; lui parti, elles restaient
+    // en base sans que rien ne puisse plus les atteindre — la base de travail
+    // en porte trente-quatre, de seize plans disparus.
+    const apresSuppr = srv.donnees('planification');
+    const restes = ['workflow', 'commentaires', 'versions']
+      .map((c) => [c, (apresSuppr[c] || []).filter((x) => x.plan_id === id || x.plan_id === brouillon.corps.id).length])
+      .filter(([, n]) => n);
+    verifier('décisions, avis et versions emportés avec le plan', restes.length === 0,
+      restes.map(([c, n]) => `${c} : ${n}`).join(' · '));
   } finally {
     srv.arreter();
   }

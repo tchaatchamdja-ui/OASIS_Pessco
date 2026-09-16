@@ -182,9 +182,9 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/plans/:id`, requireAuth, (req, res) => {
     if (!D.peut(req, 'GESTIONNAIRE', D.planDe(req.params.id))) return D.refus(res);
-    if (!db.remove('plans', req.params.id)) return res.status(404).json({ error: 'not_found' });
     const d = db.load();
-    d.activites = (d.activites || []).filter((a) => a.plan_id !== req.params.id);
+    if (!(d.plans || []).some((p) => p.id === req.params.id)) return res.status(404).json({ error: 'not_found' });
+    D.retirerPlan(d, req.params.id);
     db.save(d);
     return res.json({ ok: true });
   });

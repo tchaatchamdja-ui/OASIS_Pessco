@@ -155,8 +155,7 @@ module.exports = function register(app, deps, M) {
     if (!child.parent_plan_id) return res.status(409).json({ error: 'pas_un_amendement' });
     if (!D.peut(req, 'CONTRIBUTEUR', child)) return D.refus(res);
     const d = db.load();
-    d.activites = (d.activites || []).filter((a) => a.plan_id !== child.id);
-    d.plans = (d.plans || []).filter((p) => p.id !== child.id);
+    D.retirerPlan(d, child.id);
     db.save(d);
     D.wf(child.parent_plan_id, 'annuler-amendement', req.user.username,
       { commentaire: (req.body && req.body.commentaire) || '', amendement: child.id });

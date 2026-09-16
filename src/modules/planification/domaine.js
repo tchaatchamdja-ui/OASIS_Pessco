@@ -209,6 +209,23 @@ const ecartsRisques = (plan, profils) => {
   }).filter(Boolean);
 };
 
+// ── Retrait d'un plan ──
+// Un plan part avec tout ce qui n'existe que par lui : ses activités, ses
+// décisions de circuit, ses avis, ses versions. Les trois derniers ne se lisent
+// qu'à travers la lignée du plan ; lui parti, plus rien ne les atteint. Deux
+// routes retirent un plan — la suppression et l'annulation d'un amendement —
+// et n'emportaient que les activités : la base de travail portait trente-quatre
+// décisions et avis de seize plans disparus. `d` est l'état chargé ; l'appelant
+// l'enregistre.
+const DEPENDANCES_PLAN = ['activites', 'workflow', 'commentaires', 'versions'];
+
+function retirerPlan(d, planId) {
+  d.plans = (d.plans || []).filter((p) => p.id !== planId);
+  DEPENDANCES_PLAN.forEach((coll) => {
+    d[coll] = (d[coll] || []).filter((x) => x.plan_id !== planId);
+  });
+}
+
 // ── Schémas de saisie ──
 // Les corps sont bornés avant d'entrer dans la logique : ce qui n'est pas
 // décrit ici n'a pas à être enregistré.
@@ -252,6 +269,6 @@ module.exports = {
   STATUTS_AMENDEMENT, STATUT_REMPLACE, plansEnAmendement,
   planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,
-  wf, nomComplet, familleDuPlan, ecartsRisques,
+  wf, nomComplet, familleDuPlan, ecartsRisques, retirerPlan,
   SCHEMA_PLAN, SCHEMA_ACTIVITE
 };

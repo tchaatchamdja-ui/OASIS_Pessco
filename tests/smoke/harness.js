@@ -93,7 +93,11 @@ async function demarrer({ port = 4788 } = {}) {
     fs.rmSync(tmp, { recursive: true, force: true });
   };
 
-  return { base, appel, connexion, arreter, logs: () => sortie };
+  // Lecture directe d'une collection du serveur d'essai : ce qu'aucune route
+  // ne sert plus — les restes d'un enregistrement supprimé — se vérifie ici.
+  const donnees = (nom) => JSON.parse(fs.readFileSync(path.join(tmp, 'data', `${nom}.json`), 'utf-8'));
+
+  return { base, appel, connexion, arreter, donnees, logs: () => sortie };
 }
 
 // ── Mini-assertions ──

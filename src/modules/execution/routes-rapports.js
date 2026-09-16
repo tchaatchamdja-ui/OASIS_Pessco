@@ -12,6 +12,7 @@ const refModele = require('./references');
 const R = require('./roles');
 const acteurs = require('./acteurs');
 const instances = require('../../instances');
+const suitesCare = require('../../suites_care');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -322,6 +323,10 @@ module.exports = function register(app, deps, M) {
     const notif = db.list('notifications').find((n) => n.activite_id === req.params.id);
     if (notif) {
       const dossier = db.list('dossiers').find((d) => d.notification_id === notif.id);
+      // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
+      // été décidé : l'acte qui la porte ne se défait plus.
+      const fncs = dossier ? db.list('constatations').filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
+      if (suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
       if (dossier) db.removeDossier(dossier.id);
       db.removeWhere('echanges', (e) => e.notification_id === notif.id);
       db.remove('notifications', notif.id);

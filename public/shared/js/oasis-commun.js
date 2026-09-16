@@ -77,6 +77,7 @@ const ERREURS = {
   fichier_trop_volumineux: ['Fichier trop volumineux.', 'File too large.', 'Ficheiro demasiado grande.'],
   too_large: ['Fichier trop volumineux.', 'File too large.', 'Ficheiro demasiado grande.'],
   activite_declenchee: ['Activité déjà déclenchée : elle n’est plus amendable.', 'Activity already triggered: it can no longer be amended.', 'Atividade já desencadeada: já não pode ser emendada.'],
+  suites_care: ['Une constatation concernée a déjà reçu une suite dans « Mesures d’Application » (mesure, classement ou traitement) : la suppression est refusée.', 'A finding concerned has already been followed up in “Enforcement Measures” (measure, closure or processing): deletion is refused.', 'Uma constatação envolvida já teve seguimento em « Medidas de Aplicação » (medida, arquivamento ou tratamento): a eliminação é recusada.'],
   amendement_en_cours: ['Un amendement de ce plan est déjà en cours.', 'An amendment of this plan is already under way.', 'Já está em curso uma emenda deste plano.'],
   plan_non_amendable: ['Ce plan n’est pas amendable.', 'This plan cannot be amended.', 'Este plano não pode ser emendado.'],
   plan_non_archive: ['Ce plan n’est pas archivé.', 'This plan is not archived.', 'Este plano não está arquivado.'],

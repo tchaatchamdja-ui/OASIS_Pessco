@@ -48,6 +48,27 @@ module.exports = {
       }, {
         description: 'Nombre de mesures d’application prises par constatation',
       });
+
+      // Ce que le module a bâti sur chaque constatation : mesures prononcées,
+      // classements, traitements en cours. Un module source le consulte avant
+      // de supprimer une constatation — sans quoi une mesure prononcée perdrait
+      // l'écart qui la fonde. Les clés sont celles des sources : « ramp:<écart> »
+      // pour RAMP, l'identifiant nu pour SURV.
+      deps.services.publish('CARE.suitesParConstatation', () => {
+        const parId = {};
+        const compter = (coll, champ) => db.list(coll).forEach((x) => {
+          if (!x.constatation_id) return;
+          const s = parId[x.constatation_id] || (parId[x.constatation_id] = { mesures: 0, classements: 0, traitements: 0 });
+          s[champ] += 1;
+        });
+        compter('mesures', 'mesures');
+        compter('classements', 'classements');
+        compter('traitements', 'traitements');
+        return parId;
+      }, {
+        description: 'Mesures, classements et traitements rattachés à chaque constatation',
+        retour: '{ "<constatation_id>": { mesures, classements, traitements } }',
+      });
     }
   },
 

@@ -27,7 +27,8 @@
     "order": 1
   },
   "provides": [
-    "CARE.mesuresParConstatation"
+    "CARE.mesuresParConstatation",
+    "CARE.suitesParConstatation"
   ],
   "requires": [
     "SURV.constatationsOuvertes",

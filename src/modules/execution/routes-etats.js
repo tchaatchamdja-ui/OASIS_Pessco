@@ -12,6 +12,7 @@ const db = require('./store');
 const R = require('./roles');
 const refModele = require('./references');
 const instances = require('../../instances');
+const suitesCare = require('../../suites_care');
 const { valider } = require('../../valider');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
@@ -295,7 +296,9 @@ module.exports = function register(app, deps, M) {
             + `${rapports.length} rapport(s) en dépendent`,
         });
       }
-      db.remove('dossiers', dossier.id);
+      // Sans constatation ni rapport, il peut rester des réponses de
+      // checklist : elles partent avec le dossier.
+      db.removeDossier(dossier.id);
     }
     db.removeWhere('echanges', (e) => e.notification_id === n.id);
     db.removeWhere('rappels', (r) => r.notification_id === n.id);
@@ -313,11 +316,11 @@ module.exports = function register(app, deps, M) {
     const n = notifDeLActivite(req.params.id);
     if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
     const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
-    if (dossier) {
-      db.removeWhere('constatations', (c) => c.dossier_id === dossier.id);
-      db.removeWhere('rapports', (r) => r.dossier_id === dossier.id);
-      db.remove('dossiers', dossier.id);
-    }
+    // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
+    // été décidé : l'activité qui la porte ne se supprime plus.
+    const fncs = dossier ? db.list('constatations').filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
+    if (suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
+    if (dossier) db.removeDossier(dossier.id);
     db.removeWhere('echanges', (e) => e.notification_id === n.id);
     db.removeWhere('rappels', (r) => r.notification_id === n.id);
     db.remove('notifications', n.id);

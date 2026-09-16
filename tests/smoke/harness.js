@@ -97,7 +97,11 @@ async function demarrer({ port = 4788 } = {}) {
   // ne sert plus — les restes d'un enregistrement supprimé — se vérifie ici.
   const donnees = (nom) => JSON.parse(fs.readFileSync(path.join(tmp, 'data', `${nom}.json`), 'utf-8'));
 
-  return { base, appel, connexion, arreter, donnees, logs: () => sortie };
+  // Présence d'un fichier sous le dossier de données du serveur d'essai
+  // (pièces déposées, preuves).
+  const fichierExiste = (relatif) => fs.existsSync(path.join(tmp, 'data', relatif));
+
+  return { base, appel, connexion, arreter, donnees, fichierExiste, logs: () => sortie };
 }
 
 // ── Mini-assertions ──

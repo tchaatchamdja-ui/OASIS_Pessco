@@ -237,6 +237,24 @@ module.exports = async function executionSmoke(port) {
       verifier('tableau de bord alimenté',
         stats.statut === 200 && stats.corps.notifications_actees >= 1 && stats.corps.rapports_transmis_ytd >= 1);
 
+      // ── Suppression gardée par « Mesures d'Application » ──
+      // La constatation du scénario y devient une carence. Une suite donnée,
+      // ni elle ni l'acte qui la porte ne se suppriment plus.
+      const CARE = '/api/m/mesures';
+      const carenceSurv = ((await srv.appel(`${CARE}/constatations`)).corps || [])
+        .find((c) => c.id === fnc.corps.id);
+      verifier('constatation reprise comme carence', !!carenceSurv);
+      const classeSurv = await P(`${CARE}/constatations/${fnc.corps.id}/classer`, { motif: 'Essai de garde' });
+      verifier('carence SURV classée', classeSurv.statut === 200 || classeSurv.statut === 201, `statut ${classeSurv.statut}`);
+      const refusFnc = await srv.appel(`${M}/constatations/${fnc.corps.id}`, { method: 'DELETE' });
+      verifier('constatation suivie : suppression refusée',
+        refusFnc.statut === 409 && refusFnc.corps.error === 'suites_care', `statut ${refusFnc.statut}`);
+      const refusActe = await srv.appel(`${M}/activites/${activite.id}`, { method: 'DELETE' });
+      verifier('acte portant une constatation suivie : remise à zéro refusée',
+        refusActe.statut === 409 && refusActe.corps.error === 'suites_care', `statut ${refusActe.statut}`);
+      verifier('classement SURV retiré',
+        (await srv.appel(`${CARE}/constatations/${fnc.corps.id}/classer`, { method: 'DELETE' })).statut === 200);
+
       // Une réponse de checklist, pour vérifier qu'elle part avec le dossier.
       // Elle ne se lit que sous l'identifiant de celui-ci : laissée derrière,
       // elle ne reparaît jamais et s'accumule — la base en portait trente et

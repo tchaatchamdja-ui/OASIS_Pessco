@@ -8,6 +8,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
+const suitesCare = require('../../suites_care');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
@@ -271,6 +272,10 @@ module.exports = function register(app, deps, M) {
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
     const d = db.get('dossiers', req.params.id);
     if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
+    // été décidé : le dossier qui la porte ne se supprime plus.
+    const fncs = db.list('constatations').filter((c) => c.dossier_id === d.id).map((c) => c.id);
+    if (suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
     db.removeDossier(d.id);
     // La notification part aussi : l'activité redevient « à notifier ».
     if (d.notification_id) {
@@ -929,6 +934,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
     if (!db.get('constatations', req.params.id)) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
     db.remove('constatations', req.params.id);
     res.json({ status: 'ok' });
   });

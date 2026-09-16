@@ -102,6 +102,42 @@ module.exports = async function rampSmoke(port) {
         method: 'PUT', body: JSON.stringify({ suivi: 'Corrigé le 20/03' }),
       })).statut === 200);
 
+    // ── Suppression gardée par « Mesures d'Application » ──
+    // L'écart de catégorie 3 y devient une carence. Une fois qu'une suite lui
+    // est donnée, l'inspection qui le porte ne se supprime plus : la suite
+    // perdrait l'écart qui la fonde.
+    const CARE = '/api/m/mesures';
+    const cat3 = cible.anomalies.find((a) => String(a.categorie) === '3');
+    const cle = `ramp:${cat3 && cat3.id}`;
+    const carence = ((await srv.appel(`${CARE}/constatations`)).corps || []).find((c) => c.id === cle);
+    verifier('écart de catégorie 3 repris comme carence', !!carence);
+    const classe = await srv.appel(`${CARE}/constatations/${encodeURIComponent(cle)}/classer`, {
+      method: 'POST', body: JSON.stringify({ motif: 'Essai de garde' }),
+    });
+    verifier('carence classée', classe.statut === 200 || classe.statut === 201, `statut ${classe.statut}`);
+    const refus = await srv.appel(`${M}/inspections/${cible.id}`, { method: 'DELETE' });
+    verifier('inspection dont un écart a une suite : suppression refusée',
+      refus.statut === 409 && refus.corps.error === 'suites_care', `statut ${refus.statut} · ${JSON.stringify(refus.corps).slice(0, 80)}`);
+    verifier('classement retiré',
+      (await srv.appel(`${CARE}/constatations/${encodeURIComponent(cle)}/classer`, { method: 'DELETE' })).statut === 200);
+
+    // Une preuve déposée sur l'écart, pour vérifier qu'elle quitte le disque
+    // avec l'inspection.
+    const frontiere = '----oasis-essai';
+    const corpsPreuve = [
+      `--${frontiere}`,
+      'Content-Disposition: form-data; name="file"; filename="preuve.pdf"',
+      'Content-Type: application/pdf', '', '%PDF-1.4 essai', `--${frontiere}--`, '',
+    ].join('\r\n');
+    const depot = await srv.appel(`${M}/ecarts/${cat3.id}/preuves`, {
+      method: 'POST', headers: { 'content-type': `multipart/form-data; boundary=${frontiere}` }, body: corpsPreuve,
+    });
+    verifier('preuve déposée sur l’écart', depot.statut === 201, `statut ${depot.statut}`);
+    const fichierPreuve = ((srv.donnees('ramp').ecarts || []).find((e) => e.id === cat3.id).preuves || [])
+      .map((p) => p.fichier)[0] || '';
+    verifier('preuve présente sur le disque',
+      !!fichierPreuve && srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
+
     // ── Suppression en cascade ──
     const avant = (await srv.appel(`${M}/inspections`)).corps
       .reduce((n, x) => n + (x.anomalies || []).length, 0);
@@ -111,6 +147,8 @@ module.exports = async function rampSmoke(port) {
       .reduce((n, x) => n + (x.anomalies || []).length, 0);
     verifier('les écarts partent avec leur inspection', apres === avant - 2,
       `${avant} → ${apres}`);
+    verifier('les preuves des écarts quittent le disque',
+      !srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
 
     // ── Paramètres : ajout, désactivation, garde à la suppression ──
     const nouveau = await srv.appel(`${M}/parametres`, {

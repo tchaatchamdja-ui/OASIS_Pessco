@@ -11,6 +11,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
+const suitesCare = require('../../suites_care');
 const vues = require('./vues');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
@@ -204,9 +205,19 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/inspections/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, "Réservé au gestionnaire du module");
+    const ecarts = db.list('ecarts').filter((e) => e.inspection_id === req.params.id);
+    // Un écart repris par « Mesures d'Application » fonde ce qui y a été
+    // décidé : l'inspection qui le porte ne se supprime plus.
+    if (suitesCare.refusSiSuites(res, ecarts.map((e) => `ramp:${e.id}`))) return undefined;
     if (!db.removeInspection(req.params.id)) {
       return res.status(404).json({ error: 'Inspection non trouvée' });
     }
+    // Les preuves des écarts partent avec eux, comme celles d'une fiche : les
+    // laisser sur le disque accumulerait des fichiers que plus rien ne désigne.
+    ecarts.forEach((e) => (e.preuves || []).forEach((pj) => {
+      try { fs.unlinkSync(path.join(DOSSIER_PREUVES, path.basename(pj.fichier || ''))); }
+      catch (err) { /* le fichier a déjà disparu */ }
+    }));
     res.json({ status: 'ok' });
   });
 

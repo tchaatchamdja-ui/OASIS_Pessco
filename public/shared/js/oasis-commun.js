@@ -72,7 +72,6 @@ const ERREURS = {
   mfa_invalid_code: ['Code incorrect.', 'Incorrect code.', 'Código incorreto.'],
   mfa_too_many_attempts: ['Trop de tentatives. Recommencez la connexion.', 'Too many attempts. Start the sign-in again.', 'Demasiadas tentativas. Recomece a ligação.'],
   no_mfa_channel: ['Aucun moyen d’envoi du code n’est enregistré.', 'No channel is recorded for sending the code.', 'Nenhum meio de envio do código está registado.'],
-  fichier_requis: ['Un fichier est attendu.', 'A file is expected.', 'É esperado um ficheiro.'],
   no_file: ['Aucun fichier reçu.', 'No file received.', 'Nenhum ficheiro recebido.'],
   fichier_trop_volumineux: ['Fichier trop volumineux.', 'File too large.', 'Ficheiro demasiado grande.'],
   too_large: ['Fichier trop volumineux.', 'File too large.', 'Ficheiro demasiado grande.'],
@@ -139,8 +138,18 @@ function traduirePhraseServeur(texte, rang) {
 
 // Erreur normalisée (src/erreurs.js) : un code et l'objet concerné. La phrase
 // se compose ici, dans la langue de l'agent, accordée au genre du nom.
+const TROP_VOLUMINEUX = [
+  'Fichier trop volumineux ({0} Mo maximum)',
+  'File too large ({0} MB maximum)',
+  'Ficheiro demasiado grande (máximo {0} MB)',
+];
+
 function composerErreurNormalisee(d, rang) {
   const fenetre = typeof window !== 'undefined' ? window : {};
+  if (d.error === 'fichier_trop_volumineux' && Number(d.maxMo) > 0) {
+    const mo = Number(d.maxMo).toLocaleString(['fr-FR', 'en-GB', 'pt-PT'][rang] || 'fr-FR', { maximumFractionDigits: 1 });
+    return TROP_VOLUMINEUX[rang].replace('{0}', mo);
+  }
   const gabarits = (fenetre.OASIS_GABARITS_SERVEUR || {})[d.error];
   if (!gabarits) return '';
   const objet = (fenetre.OASIS_OBJETS_SERVEUR || {})[d.objet] || (fenetre.OASIS_OBJETS_SERVEUR || {}).element;

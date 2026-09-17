@@ -27,7 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu, horsPerimetre } = require('../../erreurs');
+const { introuvable, requis, inconnu, horsPerimetre, tropVolumineux } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -565,10 +565,10 @@ module.exports = function register(app, deps, M) {
   function ecrireFichier(f) {
     const ext = path.extname(f.filename || '').toLowerCase();
     if (!EXTENSIONS_PIECES.includes(ext)) {
-      return { erreur: `Type de fichier non autorisé (${EXTENSIONS_PIECES.join(', ')})` };
+      return { refus: (res) => res.status(400).json({ error: `Type de fichier non autorisé (${EXTENSIONS_PIECES.join(', ')})` }) };
     }
     if (f.buffer.length > TAILLE_PIECE_MAX) {
-      return { erreur: 'Fichier trop volumineux (25 Mo maximum)' };
+      return { refus: (res) => tropVolumineux(res, TAILLE_PIECE_MAX / (1024 * 1024)) };
     }
     fs.mkdirSync(DOSSIER_PIECES, { recursive: true });
     const surDisque = `${crypto.randomBytes(6).toString('hex')}${ext}`;
@@ -614,11 +614,11 @@ module.exports = function register(app, deps, M) {
     const p = fichePourPiece(req, res);
     if (!p) return undefined;
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     const d = req.body || {};
     const intitule = texte(d.intitule) || f.filename;
-    const { surDisque, erreur } = ecrireFichier(f);
-    if (erreur) return res.status(400).json({ error: erreur });
+    const { surDisque, refus } = ecrireFichier(f);
+    if (refus) return refus(res);
 
     const pj = {
       id: db.uid('pj'), intitule, commentaire: texte(d.commentaire),
@@ -643,8 +643,8 @@ module.exports = function register(app, deps, M) {
 
     const f = (req.files || {}).file;
     if (f) {
-      const { surDisque, erreur } = ecrireFichier(f);
-      if (erreur) return res.status(400).json({ error: erreur });
+      const { surDisque, refus } = ecrireFichier(f);
+      if (refus) return refus(res);
       maj.fichier = surDisque;
       maj.nom_origine = f.filename;
       maj.taille = f.buffer.length;

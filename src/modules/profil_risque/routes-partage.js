@@ -5,7 +5,7 @@ const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
 const { enregistrement } = require('../../valider');
-const { inconnu } = require('../../erreurs');
+const { inconnu, requis, tropVolumineux } = require('../../erreurs');
 
 // Collections du module servies par le CRUD générique.
 const CRUD = {
@@ -87,9 +87,9 @@ module.exports = function register(app, deps, M) {
     const { nom, type, mime, fileB64 } = req.body || {};
     if (!nom) return res.status(400).json({ error: 'nom_requis' });
     const contenu = String(fileB64 || '').split(',').pop();
-    if (!contenu) return res.status(400).json({ error: 'fichier_requis' });
+    if (!contenu) return requis(res, 'fichier');
     const taille = Math.round((contenu.length * 3) / 4);
-    if (taille > MAX_DOC_BYTES) return res.status(413).json({ error: 'fichier_trop_volumineux', maxMo: 3.5 });
+    if (taille > MAX_DOC_BYTES) return tropVolumineux(res, 3.5);
     const rec = db.insert('documents', {
       nom, type: type || '', mime: mime || 'application/octet-stream', taille, contenu,
       date_upload: new Date().toISOString(), uploade_par: req.user.username,

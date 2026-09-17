@@ -18,7 +18,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
-const { inconnu } = require('../../erreurs');
+const { inconnu, requis, tropVolumineux } = require('../../erreurs');
 
 const TAILLE_MAX = 8 * 1024 * 1024;
 
@@ -178,12 +178,12 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/import/analyser`, requireAuth, multipart(), (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à importer');
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     if (!/\.(xlsx|xls)$/i.test(f.filename || '')) {
       return res.status(400).json({ error: 'Format non supporté — utilisez .xlsx' });
     }
     if (f.buffer.length > TAILLE_MAX) {
-      return res.status(400).json({ error: 'Fichier trop volumineux (8 Mo maximum)' });
+      return tropVolumineux(res, TAILLE_MAX / (1024 * 1024));
     }
 
     let lignes;

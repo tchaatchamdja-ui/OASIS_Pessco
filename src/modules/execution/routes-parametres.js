@@ -296,7 +296,7 @@ module.exports = function register(app, deps, M) {
     const cl = db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     if (!/\.xlsx$/i.test(f.filename || '')) return res.status(400).json({ error: 'Format non supporté — utilisez .xlsx' });
     const lignes = lignesApresEntete(f.buffer, 'Ordre');
     if (!lignes) return res.status(400).json({ error: "Format non reconnu — colonne 'Ordre' introuvable dans les 20 premières lignes." });
@@ -361,7 +361,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/checklist-fill/:dossierId/:checklistId/import-xlsx`, requireAuth, multipart(), (req, res) => {
     if (!R.canContribute(req.user, null, referentiels)) return refuser(res);
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     if (!/\.xlsx$/i.test(f.filename || '')) return res.status(400).json({ error: 'Format non supporté — utilisez .xlsx' });
     const lignes = lignesApresEntete(f.buffer, 'Ordre');
     if (!lignes) return res.status(400).json({ error: "Format non reconnu — colonne 'Ordre' introuvable." });
@@ -414,7 +414,7 @@ module.exports = function register(app, deps, M) {
     const cl = db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     if (!/\.xlsx$/i.test(f.filename || '')) return res.status(400).json({ error: 'Format non supporté — utilisez .xlsx' });
     const lignes = lignesApresEntete(f.buffer, 'Thème');
     if (!lignes) return res.status(400).json({ error: "Format non reconnu — colonne 'Thème' introuvable." });

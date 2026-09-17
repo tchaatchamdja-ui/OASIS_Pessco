@@ -9,6 +9,8 @@
 // maximale, ce qui suffit aux pièces jointes bureautiques manipulées par
 // OASIS et évite une dépendance externe.
 
+const { tropVolumineux } = require('./erreurs');
+
 const TAILLE_MAX_DEFAUT = 25 * 1024 * 1024; // 25 Mo
 
 // Découpe le corps brut sur la frontière et reconstitue chaque partie.
@@ -73,7 +75,7 @@ function multipart(options) {
       taille += c.length;
       if (taille > tailleMax) {
         arrete = true;
-        res.status(413).json({ error: 'Fichier trop volumineux' });
+        tropVolumineux(res, tailleMax / (1024 * 1024));
         req.destroy();
         return;
       }

@@ -275,9 +275,9 @@ function controlerPhrasesServeur() {
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-commun.js'), 'utf8'), ctx);
   const dire = (langue, corps) => { fenetre.PESSCO.lang = langue; return fenetre.oasisMessageErreur(corps, 400); };
   const r = {
-    fr: dire('fr', { error: 'Aucun fichier fourni' }),
-    en: dire('en', { error: 'Aucun fichier fourni' }),
-    pt: dire('pt', { error: 'Aucun fichier fourni' }),
+    fr: dire('fr', { error: 'Classeur illisible' }),
+    en: dire('en', { error: 'Classeur illisible' }),
+    pt: dire('pt', { error: 'Classeur illisible' }),
     normFr: dire('fr', { error: 'introuvable', objet: 'carence' }),
     normEn: dire('en', { error: 'introuvable', objet: 'carence' }),
     normPt: dire('pt', { error: 'introuvable', objet: 'carence' }),
@@ -292,6 +292,9 @@ function controlerPhrasesServeur() {
     inconnuPt: dire('pt', { error: 'inconnu', objet: 'portee' }),
     existantFr: dire('fr', { error: 'existant', objet: 'categorie' }),
     existantEn: dire('en', { error: 'existant', objet: 'utilisateur' }),
+    lourdFr: dire('fr', { error: 'fichier_trop_volumineux', maxMo: 3.5 }),
+    lourdEn: dire('en', { error: 'fichier_trop_volumineux', maxMo: 25 }),
+    lourdSansMax: dire('pt', { error: 'fichier_trop_volumineux' }),
     ecran: (() => { fenetre.PESSCO.lang = 'pt'; return fenetre.oasisChampRequis('intitule'); })(),
     gabarit: dire('pt', { error: 'Import refusé pour : Togo, Mali — hors de votre périmètre' }),
     horsPt: dire('pt', { error: 'hors_perimetre', objet: 'ecart', precision: 'Togo' }),
@@ -302,7 +305,7 @@ function controlerPhrasesServeur() {
     code: dire('pt', { error: 'plan_amende' }),
   };
   verifier('phrase du serveur rendue dans la langue de l’agent',
-    r.fr === 'Aucun fichier fourni' && r.en === 'No file provided' && r.pt === 'Nenhum ficheiro fornecido',
+    r.fr === 'Classeur illisible' && r.en === 'Unreadable workbook' && r.pt === 'Livro de cálculo ilegível',
     JSON.stringify([r.fr, r.en, r.pt]));
   verifier('phrase à trous : la valeur passe dans la traduction',
     r.gabarit === 'Importação recusada para: Togo, Mali — fora do seu âmbito'
@@ -332,6 +335,11 @@ function controlerPhrasesServeur() {
   verifier('hors périmètre composé, la précision entre parenthèses',
     r.horsPt === 'Constatação fora do seu âmbito (Togo)' && r.horsEn === 'Contact outside your scope',
     JSON.stringify([r.horsPt, r.horsEn]));
+
+  verifier('fichier trop volumineux : la limite dite dans la langue de l’agent',
+    r.lourdFr === 'Fichier trop volumineux (3,5 Mo maximum)' && r.lourdEn === 'File too large (25 MB maximum)'
+    && r.lourdSansMax === 'Ficheiro demasiado grande.',
+    JSON.stringify([r.lourdFr, r.lourdEn, r.lourdSansMax]));
 
   // Chaque objet cité par une erreur normalisée a son nom dans les trois
   // langues, et son genre là où la phrase s'accorde.

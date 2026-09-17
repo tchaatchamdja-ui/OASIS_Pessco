@@ -17,7 +17,7 @@ const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
-const { introuvable, requis, horsPerimetre } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre, tropVolumineux } = require('../../erreurs');
 
 // Les pièces jointes vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -258,12 +258,12 @@ module.exports = function register(app, deps, M) {
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return res.status(409).json({ error: 'Discussion close' });
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     const ext = path.extname(f.filename || '').toLowerCase();
     if (!EXTENSIONS.includes(ext)) {
       return res.status(400).json({ error: `Type de fichier non autorisé (${EXTENSIONS.join(', ')})` });
     }
-    if (f.buffer.length > TAILLE_MAX) return res.status(400).json({ error: 'Fichier trop volumineux (25 Mo maximum)' });
+    if (f.buffer.length > TAILLE_MAX) return tropVolumineux(res, TAILLE_MAX / (1024 * 1024));
 
     fs.mkdirSync(DOSSIER_PIECES, { recursive: true });
     const surDisque = `${crypto.randomBytes(6).toString('hex')}${ext}`;

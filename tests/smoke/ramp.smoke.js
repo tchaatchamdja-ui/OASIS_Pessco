@@ -425,6 +425,23 @@ module.exports = async function rampSmoke(port) {
     });
     verifier('pièce déposée sur la fiche', depotPiece.statut === 201, `statut ${depotPiece.statut}`);
 
+    // Refus de fichier normalisés : le serveur dit le cas et la limite,
+    // l'écran compose la phrase.
+    const envoi = (nom, contenu) => srv.appel(`${M}/import/analyser`, {
+      method: 'POST',
+      headers: { 'content-type': `multipart/form-data; boundary=${frPiece}` },
+      body: [`--${frPiece}`, `Content-Disposition: form-data; name="${nom}"; filename="lot.xlsx"`,
+        'Content-Type: application/octet-stream', '', contenu, `--${frPiece}--`, ''].join('\r\n'),
+    });
+    const lourd = await envoi('file', 'x'.repeat(9 * 1024 * 1024));
+    verifier('classeur trop lourd : 413 et limite en Mo',
+      lourd.statut === 413 && lourd.corps.error === 'fichier_trop_volumineux' && lourd.corps.maxMo === 8,
+      JSON.stringify(lourd.corps));
+    const sansFichier = await envoi('autre', 'x');
+    verifier('envoi sans fichier : champ requis',
+      sansFichier.statut === 400 && sansFichier.corps.error === 'requis' && sansFichier.corps.objet === 'fichier',
+      JSON.stringify(sansFichier.corps));
+
     // ── Communications écrites (classe 2 ou 3) ──
     verifier('transmission refusée sans communication écrite en classe 3',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/transmettre`, {

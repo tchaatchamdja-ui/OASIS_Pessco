@@ -40,4 +40,9 @@ function horsPerimetre(res, objet, precision) {
   return res.status(403).json(corps);
 }
 
-module.exports = { introuvable, requis, inconnu, existant, horsPerimetre };
+// Le fichier dépasse la taille admise (413). La limite est dite en Mo.
+function tropVolumineux(res, maxMo) {
+  return res.status(413).json({ error: 'fichier_trop_volumineux', maxMo });
+}
+
+module.exports = { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux };

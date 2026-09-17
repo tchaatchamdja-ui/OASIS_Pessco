@@ -13,7 +13,7 @@ const R = require('./roles');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const vues = require('./vues');
-const { introuvable, requis, horsPerimetre } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre, tropVolumineux } = require('../../erreurs');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
 const DOSSIER_PREUVES = path.join(
@@ -399,13 +399,13 @@ module.exports = function register(app, deps, M) {
     const e = ecartPourPreuve(req, res);
     if (!e) return undefined;
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     const ext = path.extname(f.filename || '').toLowerCase();
     if (!EXTENSIONS_PREUVES.includes(ext)) {
       return res.status(400).json({ error: `Type de fichier non autorisé (${EXTENSIONS_PREUVES.join(', ')})` });
     }
     if (f.buffer.length > TAILLE_PREUVE_MAX) {
-      return res.status(400).json({ error: 'Fichier trop volumineux (25 Mo maximum)' });
+      return tropVolumineux(res, TAILLE_PREUVE_MAX / (1024 * 1024));
     }
     fs.mkdirSync(DOSSIER_PREUVES, { recursive: true });
     const surDisque = `${crypto.randomBytes(6).toString('hex')}${ext}`;

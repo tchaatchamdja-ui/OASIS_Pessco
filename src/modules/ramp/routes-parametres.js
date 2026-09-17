@@ -11,7 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
-const { introuvable, requis, inconnu, existant, horsPerimetre } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -620,7 +620,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/depots`, requireAuth, multipart(), (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à déposer');
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     const d = req.body || {};
     const nom = texte(d.nom);
     const annee = texte(d.annee);
@@ -630,7 +630,7 @@ module.exports = function register(app, deps, M) {
     }
     const ext = path.extname(f.filename || '').toLowerCase();
     if (!EXTENSIONS.includes(ext)) return res.status(400).json({ error: 'Type de fichier non autorisé' });
-    if (f.buffer.length > TAILLE_MAX) return res.status(400).json({ error: 'Fichier trop volumineux (50 Mo maximum)' });
+    if (f.buffer.length > TAILLE_MAX) return tropVolumineux(res, TAILLE_MAX / (1024 * 1024));
 
     fs.mkdirSync(DOSSIER_DEPOTS, { recursive: true });
     const surDisque = `${crypto.randomBytes(6).toString('hex')}${ext}`;

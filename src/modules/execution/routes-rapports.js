@@ -13,7 +13,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -412,7 +412,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/upload`, requireAuth, multipart(), (req, res) => {
     if (!R.canContribute(req.user, null, referentiels)) return refuser(res);
     const f = (req.files || {}).file;
-    if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
+    if (!f) return requis(res, 'fichier');
     if (!f.filename) return res.status(400).json({ error: 'Nom de fichier vide' });
     const ext = path.extname(f.filename).toLowerCase();
     if (!EXTENSIONS.includes(ext)) return res.status(400).json({ error: 'Type de fichier non autorisé' });

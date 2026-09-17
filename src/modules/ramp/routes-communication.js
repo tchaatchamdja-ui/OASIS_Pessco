@@ -17,7 +17,7 @@ const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre } = require('../../erreurs');
 
 // Les pièces jointes vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -412,7 +412,7 @@ module.exports = function register(app, deps, M) {
     // fiche d'un autre État — copies des lettres et pièces comprises.
     const etatFiche = (p.entete || {}).etat_inspection || '';
     if (!R.couvreEtat(req.user, referentiels, etatFiche)) {
-      return refuser(res, `Formulaire hors de votre périmètre (${etatFiche})`);
+      return horsPerimetre(res, 'formulaire', etatFiche);
     }
     if (p.statut !== 'validee') {
       return res.status(400).json({ error: 'Seule une fiche validée se partage' });

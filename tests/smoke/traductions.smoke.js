@@ -293,7 +293,9 @@ function controlerPhrasesServeur() {
     existantFr: dire('fr', { error: 'existant', objet: 'categorie' }),
     existantEn: dire('en', { error: 'existant', objet: 'utilisateur' }),
     ecran: (() => { fenetre.PESSCO.lang = 'pt'; return fenetre.oasisChampRequis('intitule'); })(),
-    gabarit: dire('pt', { error: 'Écart hors de votre périmètre (Togo)' }),
+    gabarit: dire('pt', { error: 'Import refusé pour : Togo, Mali — hors de votre périmètre' }),
+    horsPt: dire('pt', { error: 'hors_perimetre', objet: 'ecart', precision: 'Togo' }),
+    horsEn: dire('en', { error: 'hors_perimetre', objet: 'contact' }),
     deuxTrous: dire('en', { error: 'Activité non réinitialisable : 2 constatation(s) et 1 rapport(s) en dépendent' }),
     message: dire('en', { message: 'Aucune donnée à exporter' }),
     inconnue: dire('en', { error: 'Une phrase que la table ignore' }),
@@ -303,7 +305,7 @@ function controlerPhrasesServeur() {
     r.fr === 'Aucun fichier fourni' && r.en === 'No file provided' && r.pt === 'Nenhum ficheiro fornecido',
     JSON.stringify([r.fr, r.en, r.pt]));
   verifier('phrase à trous : la valeur passe dans la traduction',
-    r.gabarit === 'Constatação fora do seu âmbito (Togo)'
+    r.gabarit === 'Importação recusada para: Togo, Mali — fora do seu âmbito'
     && r.deuxTrous === 'Activity cannot be reset: 2 finding(s) and 1 report(s) depend on it',
     JSON.stringify([r.gabarit, r.deuxTrous]));
   verifier('phrase inconnue rendue telle quelle, code toujours traduit',
@@ -327,6 +329,10 @@ function controlerPhrasesServeur() {
     && r.existantEn === 'User already exists',
     JSON.stringify([r.inconnuFr, r.inconnuEn, r.inconnuPt, r.existantFr, r.existantEn]));
 
+  verifier('hors périmètre composé, la précision entre parenthèses',
+    r.horsPt === 'Constatação fora do seu âmbito (Togo)' && r.horsEn === 'Contact outside your scope',
+    JSON.stringify([r.horsPt, r.horsEn]));
+
   // Chaque objet cité par une erreur normalisée a son nom dans les trois
   // langues, et son genre là où la phrase s'accorde.
   const objets = fenetre.OASIS_OBJETS_SERVEUR || {};
@@ -341,7 +347,7 @@ function controlerPhrasesServeur() {
   parcourirEcrans(path.join(RACINE, 'public'));
   [...sourcesServeur(), ...ecrans].forEach((f) => {
     const texte = fs.readFileSync(f, 'utf8');
-    for (const m of texte.matchAll(/\b(?:(?:introuvable|requis|inconnu|existant)\(\s*res\s*,|oasisChampRequis\()\s*'([a-z_]+)'\s*[,)]/g)) {
+    for (const m of texte.matchAll(/\b(?:(?:introuvable|requis|inconnu|existant|horsPerimetre)\(\s*res\s*,|oasisChampRequis\()\s*'([a-z_]+)'\s*[,)]/g)) {
       if (!cites.has(m[1])) cites.set(m[1], `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`);
     }
   });

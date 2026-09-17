@@ -11,7 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
-const { introuvable, requis, inconnu, existant } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant, horsPerimetre } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -724,7 +724,7 @@ module.exports = function register(app, deps, M) {
     // Les deux États comptent : celui d'où le contact part, et celui où il va.
     if (!R.couvreEtat(req.user, referentiels, contact.etat)
       || !R.couvreEtat(req.user, referentiels, c.etat)) {
-      return refuser(res, 'Contact hors de votre périmètre');
+      return horsPerimetre(res, 'contact');
     }
     db.update('contacts', contact.id, c);
     res.json({ status: 'ok' });
@@ -734,7 +734,7 @@ module.exports = function register(app, deps, M) {
     const contact = db.get('contacts', req.params.id);
     if (!contact) return introuvable(res, 'contact');
     if (!R.couvreEtat(req.user, referentiels, contact.etat)) {
-      return refuser(res, 'Contact hors de votre périmètre');
+      return horsPerimetre(res, 'contact');
     }
     db.update('contacts', contact.id, { actif: !contact.actif });
     res.json({ status: 'ok', actif: !contact.actif });
@@ -744,7 +744,7 @@ module.exports = function register(app, deps, M) {
     const contact = db.get('contacts', req.params.id);
     if (!contact) return introuvable(res, 'contact');
     if (!admin(req) && !R.couvreEtat(req.user, referentiels, contact.etat)) {
-      return refuser(res, 'Contact hors de votre périmètre');
+      return horsPerimetre(res, 'contact');
     }
     db.remove('contacts', contact.id);
     res.json({ status: 'ok' });

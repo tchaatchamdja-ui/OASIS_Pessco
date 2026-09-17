@@ -32,4 +32,12 @@ function existant(res, objet) {
   return res.status(409).json({ error: 'existant', objet });
 }
 
-module.exports = { introuvable, requis, inconnu, existant };
+// L'enregistrement existe, mais hors de ce que le compte couvre (403).
+// `precision` nomme ce qui le place au dehors — l'État, le plus souvent.
+function horsPerimetre(res, objet, precision) {
+  const corps = { error: 'hors_perimetre', objet };
+  if (precision) corps.precision = String(precision);
+  return res.status(403).json(corps);
+}
+
+module.exports = { introuvable, requis, inconnu, existant, horsPerimetre };

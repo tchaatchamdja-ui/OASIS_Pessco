@@ -61,7 +61,6 @@ window.OASIS_MESSAGES_SERVEUR = {
   'Classeur illisible': ['Unreadable workbook', 'Livro de cálculo ilegível'],
   'Classeur vide': ['Empty workbook', 'Livro de cálculo vazio'],
   'Colonnes introuvables : {0}. Intitulés lus : {1}': ['Columns not found: {0}. Headings read: {1}', 'Colunas não encontradas: {0}. Títulos lidos: {1}'],
-  'Contact hors de votre périmètre': ['Contact outside your scope', 'Contacto fora do seu âmbito'],
   'Décision réservée au validateur': ['Decision restricted to the approver', 'Decisão reservada ao validador'],
   'Des mesures sont rattachées à cette infraction': ['Measures are attached to this breach', 'Existem medidas associadas a esta infração'],
   'Discussion close': ['Discussion closed', 'Discussão encerrada'],
@@ -71,9 +70,7 @@ window.OASIS_MESSAGES_SERVEUR = {
   'Dossier déjà clôturé': ['File already closed', 'Processo já encerrado'],
   'Droit non confié à ce compte': ['Right not granted to this account', 'Direito não atribuído a esta conta'],
   'Écart clôturé': ['Finding closed', 'Constatação encerrada'],
-  'Écart hors de votre périmètre ({0})': ['Finding outside your scope ({0})', 'Constatação fora do seu âmbito ({0})'],
   'État émetteur indéterminé': ['Sending State undetermined', 'Estado emissor indeterminado'],
-  'État hors de votre périmètre ({0})': ['State outside your scope ({0})', 'Estado fora do seu âmbito ({0})'],
   'État, nom et prénoms sont obligatoires': ['State, surname and first names are required', 'Estado, apelido e nomes próprios são obrigatórios'],
   'Fiche déjà transmise': ['Form already transmitted', 'Formulário já transmitido'],
   'Fiche transmise à l’exploitant — ses pièces ne se modifient plus': ['Form transmitted to the operator — its attachments can no longer be changed', 'Formulário transmitido ao operador — os seus anexos já não podem ser alterados'],
@@ -88,8 +85,6 @@ window.OASIS_MESSAGES_SERVEUR = {
   "Format non reconnu — colonne 'Thème' introuvable.": ["Unrecognised format — 'Theme' column not found.", "Formato não reconhecido — coluna 'Tema' não encontrada."],
   'Format non supporté — utilisez .xlsx': ['Unsupported format — use .xlsx', 'Formato não suportado — utilize .xlsx'],
   'Formulaire déjà validé': ['Form already validated', 'Formulário já validado'],
-  'Formulaire hors de votre périmètre': ['Form outside your scope', 'Formulário fora do seu âmbito'],
-  'Formulaire hors de votre périmètre ({0})': ['Form outside your scope ({0})', 'Formulário fora do seu âmbito ({0})'],
   'Formulaire soumis à validation — demandez son renvoi pour le reprendre': ['Form submitted for validation — ask for it to be sent back to resume it', 'Formulário submetido a validação — peça a sua devolução para o retomar'],
   'Formulaire transmis — il ne peut plus être modifié': ['Form transmitted — it can no longer be changed', 'Formulário transmitido — já não pode ser alterado'],
   'Formulaire validé — il ne peut plus être modifié': ['Form validated — it can no longer be changed', 'Formulário validado — já não pode ser alterado'],
@@ -100,7 +95,6 @@ window.OASIS_MESSAGES_SERVEUR = {
   'Impossible de supprimer votre propre compte': ['You cannot delete your own account', 'Não pode eliminar a sua própria conta'],
   'Infraction déjà classée': ['Breach already dismissed', 'Infração já arquivada'],
   'Infraction non classée': ['Breach not dismissed', 'Infração não arquivada'],
-  'Inspection hors de votre périmètre ({0})': ['Inspection outside your scope ({0})', 'Inspeção fora do seu âmbito ({0})'],
   'Intitulé inexploitable': ['Unusable title', 'Título inutilizável'],
   'Investigation déjà soumise': ['Investigation already submitted', 'Investigação já submetida'],
   'Investigation soumise : elle ne se modifie plus': ['Investigation submitted: it can no longer be changed', 'Investigação submetida: já não pode ser alterada'],
@@ -212,7 +206,6 @@ window.OASIS_MESSAGES_SERVEUR = {
   'Une mesure a déjà été prise sur cette infraction': ['A measure has already been taken on this breach', 'Já foi tomada uma medida sobre esta infração'],
   'Une mesure au moins requiert le suivi de sa mise en œuvre': ['At least one measure requires follow-up of its implementation', 'Pelo menos uma medida requer o acompanhamento da sua implementação'],
   'Une mesure clôturée ou annulée ne se modifie plus': ['A closed or cancelled measure can no longer be changed', 'Uma medida encerrada ou anulada já não pode ser alterada'],
-  'Utilisateur non trouvé ou hors périmètre': ['User not found or outside scope', 'Utilizador não encontrado ou fora do âmbito'],
   'Validez la fiche avant de communiquer': ['Validate the form before communicating', 'Valide o formulário antes de comunicar'],
   'Validez la fiche avant de la transmettre': ['Validate the form before transmitting it', 'Valide o formulário antes de o transmitir'],
   'Vous n\'écrivez pas au nom de « {0} »': ['You do not write on behalf of “{0}”', 'Não escreve em nome de «{0}»'],
@@ -249,6 +242,7 @@ window.OASIS_OBJETS_SERVEUR = {
   echange: [['Échange', 'm'], ['Exchange'], ['Troca', 'f']],
   element: [['Élément', 'm'], ['Item'], ['Elemento', 'm']],
   etape: [['Étape', 'f'], ['Step'], ['Etapa', 'f']],
+  etat: [['État', 'm'], ['State'], ['Estado', 'm']],
   famille: [['Famille', 'f'], ['Family'], ['Família', 'f']],
   fichier: [['Fichier', 'm'], ['File'], ['Ficheiro', 'm']],
   formulaire: [['Formulaire', 'm'], ['Form'], ['Formulário', 'm']],
@@ -288,7 +282,8 @@ window.OASIS_OBJETS_SERVEUR = {
 /* Gabarits des erreurs normalisées : pour chaque code, la phrase de chaque
  * langue, au masculin et au féminin quand la langue accorde. {objet} reçoit le
  * nom ; placé au milieu de la phrase, il y perd sa majuscule
- * (« Unknown view »). */
+ * (« Unknown view »). Une précision reçue du serveur se joint entre
+ * parenthèses : « Écart hors de votre périmètre (Togo) ». */
 window.OASIS_GABARITS_SERVEUR = {
   introuvable: [
     { m: '{objet} introuvable', f: '{objet} introuvable' },
@@ -309,5 +304,10 @@ window.OASIS_GABARITS_SERVEUR = {
     { m: '{objet} déjà existant', f: '{objet} déjà existante' },
     { m: '{objet} already exists', f: '{objet} already exists' },
     { m: '{objet} já existente', f: '{objet} já existente' },
+  ],
+  hors_perimetre: [
+    { m: '{objet} hors de votre périmètre', f: '{objet} hors de votre périmètre' },
+    { m: '{objet} outside your scope', f: '{objet} outside your scope' },
+    { m: '{objet} fora do seu âmbito', f: '{objet} fora do seu âmbito' },
   ],
 };

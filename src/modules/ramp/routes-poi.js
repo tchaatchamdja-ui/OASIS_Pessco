@@ -27,7 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu } = require('../../erreurs');
+const { introuvable, requis, inconnu, horsPerimetre } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -288,7 +288,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/poi/:id`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     res.json({
       ...p,
       cree_par_nom: nomAffiche(p.cree_par),
@@ -323,7 +323,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
       return res.status(400).json({
         error: 'Les commentaires ne se saisissent que sur une fiche soumise à validation',
@@ -373,7 +373,7 @@ module.exports = function register(app, deps, M) {
     const corps = corpsPoi(req.body || {});
     const etat = corps.entete.etat_inspection;
     if (etat && !R.couvreEtat(req.user, referentiels, etat)) {
-      return refuser(res, `État hors de votre périmètre (${etat})`);
+      return horsPerimetre(res, 'etat', etat);
     }
     const p = {
       id: db.uid('poi'),
@@ -407,11 +407,11 @@ module.exports = function register(app, deps, M) {
         error: 'Formulaire soumis à validation — demandez son renvoi pour le reprendre',
       });
     }
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     const corps = corpsPoi(req.body || {});
     const etat = corps.entete.etat_inspection;
     if (etat && !R.couvreEtat(req.user, referentiels, etat)) {
-      return refuser(res, `État hors de votre périmètre (${etat})`);
+      return horsPerimetre(res, 'etat', etat);
     }
     db.update('poi', p.id, corps);
     res.json({ status: 'ok' });
@@ -444,7 +444,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à soumettre une inspection');
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'brouillon') {
       return res.status(400).json({ error: 'Seul un brouillon se soumet' });
     }
@@ -467,7 +467,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
       return res.status(400).json({ error: 'Seule une fiche soumise se renvoie' });
     }
@@ -491,7 +491,7 @@ module.exports = function register(app, deps, M) {
     if (p.statut !== 'soumis') {
       return res.status(400).json({ error: 'Soumettez la fiche avant de la valider' });
     }
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     const trous = manquants(p);
     if (trous.length) {
       return res.status(400).json({ error: `À compléter avant validation : ${trous.join(', ')}` });
@@ -590,7 +590,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('poi', req.params.id);
     if (!p) { introuvable(res, 'formulaire'); return null; }
     if (!R.canContribute(req.user)) { refuser(res); return null; }
-    if (!dansPerimetre(req, p)) { refuser(res, 'Formulaire hors de votre périmètre'); return null; }
+    if (!dansPerimetre(req, p)) { horsPerimetre(res, 'formulaire'); return null; }
     if (piecesFigees(p)) {
       res.status(403).json({
         error: 'Fiche transmise à l’exploitant — ses pièces ne se modifient plus',
@@ -603,7 +603,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/poi/:id/pieces`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     res.json({
       pieces: (p.pieces || []).map(vuePiece),
       modifiable: R.canContribute(req.user) && !piecesFigees(p),
@@ -671,7 +671,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/poi/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     const pj = piece(p, req.params.pid);
     if (!pj) return introuvable(res, 'piece');
     const chemin = path.join(DOSSIER_PIECES, path.basename(pj.fichier || ''));
@@ -699,7 +699,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'validee') {
       return res.status(400).json({ error: 'Validez la fiche avant de communiquer' });
     }
@@ -765,7 +765,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'validee') {
       return res.status(400).json({ error: 'Validez la fiche avant de la transmettre' });
     }
@@ -798,7 +798,7 @@ module.exports = function register(app, deps, M) {
       return refuser(res, 'Formulaire validé — suppression réservée au gestionnaire');
     }
     if (p.statut !== 'validee' && !R.canContribute(req.user)) return refuser(res);
-    if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
+    if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     // Les preuves partent avec la fiche : les laisser sur le disque
     // accumulerait des fichiers que plus rien ne désigne. Celles qu'un partage
     // désigne encore restent pour l'État qui les a reçues.

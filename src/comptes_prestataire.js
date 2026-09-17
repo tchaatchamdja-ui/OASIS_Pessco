@@ -12,7 +12,7 @@
 //   · les comptes créés héritent du rattachement et n'accèdent qu'au module ;
 //   · un compte hors du périmètre n'existe pas — 404, jamais 403.
 
-const { requis, existant } = require('./erreurs');
+const { introuvable, requis, existant } = require('./erreurs');
 
 // Rôles portail qu'un compte rattaché à un organisme peut porter. Les libellés
 // diffèrent d'un module à l'autre : « prestataire » ici, « exploitant » là.
@@ -124,7 +124,7 @@ function register(app, deps, M, o) {
     const miens = garde(req, res);
     if (!miens) return undefined;
     const existant = cible(req.params.id, miens);
-    if (!existant) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors périmètre' });
+    if (!existant) return introuvable(res, 'utilisateur');
     const d = req.body || {};
     const users = auth.getUsers();
     const u = users.find((x) => x.username === req.params.id);
@@ -150,7 +150,7 @@ function register(app, deps, M, o) {
     if (req.params.id === (req.userReel || req.user).username) {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     }
-    if (!cible(req.params.id, miens)) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors périmètre' });
+    if (!cible(req.params.id, miens)) return introuvable(res, 'utilisateur');
     auth.saveUsers(auth.getUsers().filter((u) => u.username !== req.params.id));
     return res.json({ status: 'ok' });
   });
@@ -158,7 +158,7 @@ function register(app, deps, M, o) {
   app.post(`${M}/mes-utilisateurs/:id/reset-password`, requireAuth, (req, res) => {
     const miens = garde(req, res);
     if (!miens) return undefined;
-    if (!cible(req.params.id, miens)) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors périmètre' });
+    if (!cible(req.params.id, miens)) return introuvable(res, 'utilisateur');
     const motDePasse = auth.generatePassword(loadConfig());
     const { salt, hash } = auth.hashPassword(motDePasse);
     const users = auth.getUsers();
@@ -174,7 +174,7 @@ function register(app, deps, M, o) {
     const miens = garde(req, res);
     if (!miens) return undefined;
     const u = cible(req.params.id, miens);
-    if (!u) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors périmètre' });
+    if (!u) return introuvable(res, 'utilisateur');
     const motDePasse = (req.body || {}).admin_password || '';
     if (!motDePasse) return requis(res, 'mot_de_passe');
     // Le demandeur prouve son identité avant de lire un secret.

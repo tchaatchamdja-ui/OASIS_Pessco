@@ -13,7 +13,7 @@ const R = require('./roles');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const vues = require('./vues');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre } = require('../../erreurs');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
 const DOSSIER_PREUVES = path.join(
@@ -193,7 +193,7 @@ module.exports = function register(app, deps, M) {
     if (!i) return introuvable(res, 'inspection');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      return refuser(res, `Inspection hors de votre périmètre (${i.pays})`);
+      return horsPerimetre(res, 'inspection', i.pays);
     }
     const d = req.body || {};
     const patch = {};
@@ -235,7 +235,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user)) return refuser(res);
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      return refuser(res, `Écart hors de votre périmètre (${i.pays || '—'})`);
+      return horsPerimetre(res, 'ecart', i.pays);
     }
     const d = req.body || {};
     const pac = { ...(e.pac || {}) };
@@ -278,7 +278,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canValidate(req.user)) { refuser(res, 'Réservé au valideur du module'); return null; }
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      refuser(res, `Écart hors de votre périmètre (${i.pays || '—'})`);
+      horsPerimetre(res, 'ecart', i.pays);
       return null;
     }
     return e;
@@ -389,7 +389,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user)) { refuser(res); return null; }
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      refuser(res, `Écart hors de votre périmètre (${i.pays || '—'})`);
+      horsPerimetre(res, 'ecart', i.pays);
       return null;
     }
     return e;
@@ -463,7 +463,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user)) return refuser(res);
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      return refuser(res, `Écart hors de votre périmètre (${i.pays || '—'})`);
+      return horsPerimetre(res, 'ecart', i.pays);
     }
     db.update('ecarts', e.id, { suivi: texte((req.body || {}).suivi) });
     res.json({ status: 'ok' });

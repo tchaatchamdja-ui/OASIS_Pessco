@@ -615,7 +615,24 @@ tr.hidden { display: none; }
    atteignait aussi les cellules de la table des sous-activités imbriquée, et
    leur retirait toute marge : libellés collés au bord, lignes tassées. */
 .prest-detail-row > td { background: var(--bg); padding: 0 !important; }
-.prest-accordion-content { padding: 0.5rem 0; }
+/* Le volet part juste sous la ligne du prestataire : pas de marge haute, qui
+   laissait une bande vide entre les deux. */
+.prest-accordion-content { padding: 0 0 0.6rem; }
+
+/* Un prestataire déplié se distingue de ses voisins : sa ligne se teinte, un
+   filet à la couleur du module borde son volet, et un trait marqué le ferme
+   avant le prestataire suivant. */
+.data-table tr:has(+ .prest-detail-row:not(.hidden)) > td {
+    background: color-mix(in srgb, var(--primary) 7%, var(--bg-card));
+}
+/* Une bordure et non une ombre intérieure : les fonds de l'en-tête et de la
+   table recouvraient l'ombre. */
+.prest-detail-row:not(.hidden) .prest-accordion-content {
+    border-left: 4px solid var(--primary);
+}
+.prest-detail-row:not(.hidden) > td {
+    border-bottom: 3px solid color-mix(in srgb, var(--primary) 45%, var(--border));
+}
 .prest-accordion-header {
     padding: 0.5rem 1rem;
     display: flex;

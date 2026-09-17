@@ -611,7 +611,10 @@
 
 /* ── Hidden rows (prestataires detail, activity detail) ── */
 tr.hidden { display: none; }
-.prest-detail-row td { background: var(--bg); padding: 0 !important; }
+/* La seule cellule enveloppe du volet déplié. Sans le `>`, la règle
+   atteignait aussi les cellules de la table des sous-activités imbriquée, et
+   leur retirait toute marge : libellés collés au bord, lignes tassées. */
+.prest-detail-row > td { background: var(--bg); padding: 0 !important; }
 .prest-accordion-content { padding: 0.5rem 0; }
 .prest-accordion-header {
     padding: 0.5rem 1rem;
@@ -623,6 +626,25 @@ tr.hidden { display: none; }
 .prest-accordion-content .data-table { font-size: 0.82rem; }
 .prest-accordion-content .data-table th { font-size: 0.72rem; text-transform: uppercase; }
 .sa-risk-table th { background: #fff !important; color: var(--text) !important; border-bottom: 2px solid var(--border); }
+/* Les sous-activités se lisent sous le prestataire qui les porte : leurs
+   libellés sont en retrait, reliés par un filet vertical d'où part un trait
+   vers chacun — une arborescence. L'intitulé de colonne s'aligne sur eux. */
+.sa-risk-table th:first-child,
+.sa-risk-table td:first-child { padding-left: 2.4rem; }
+.sa-risk-table td:first-child { position: relative; }
+.sa-risk-table td:first-child::before,
+.sa-risk-table td:first-child::after {
+    content: '';
+    position: absolute;
+    left: 1.15rem;
+    border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+    border-style: solid;
+    border-width: 0;
+}
+.sa-risk-table td:first-child::before { top: 0; bottom: 0; border-left-width: 2px; }
+.sa-risk-table tbody tr:last-child td:first-child::before { bottom: 50%; }
+.sa-risk-table td:first-child::after { top: 50%; width: 0.8rem; border-top-width: 2px; }
+.sa-risk-table td:first-child strong { font-weight: 600; }
 
 /* Planification: no rounded corners on tables */
 .plan-activities-accordion .data-table th:first-child,

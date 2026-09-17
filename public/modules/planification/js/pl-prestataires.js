@@ -196,7 +196,7 @@ function planShowAddRiskProfileModal() {
     const evaluatedIds = new Set(prestRisques.map(pr => pr.id));
     const candidates = allPrest.filter(p => !evaluatedIds.has(p.id));
     const secteurs = PLAN_STATE.data.secteurs || [];
-    const today = new Date().toISOString().substring(0, 10);
+    const today = oasisJour();
 
     const body = `
     <div class="form-grid">
@@ -309,7 +309,7 @@ async function planSaveRiskProfile() {
     const intensite = document.getElementById('rpIntensite')?.value || '';
     const debutCycle = document.getElementById('rpDebutCycle')?.value || '';
     let finCycle = document.getElementById('rpFinCycle')?.value || '';
-    const evalDate = document.getElementById('rpEvalDate')?.value || new Date().toISOString().substring(0, 10);
+    const evalDate = document.getElementById('rpEvalDate')?.value || oasisJour();
 
     if (!pid || !secteurId || !riskLabel || !intensite) {
         oasisToast(tp('required_fields'), 'warning');

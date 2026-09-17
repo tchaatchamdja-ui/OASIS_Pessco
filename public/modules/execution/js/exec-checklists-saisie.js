@@ -700,7 +700,7 @@ async function _execChkPersistGroupDisabled(itemIds, disabled) {
         const byItem = {};
         (all || []).filter(r => r.dossier_id === ctx.dossierId && r.checklist_id === ctx.checklistId)
             .forEach(r => { byItem[r.item_id] = r; });
-        const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const now = oasisHorodatage();
         for (const itemId of itemIds) {
             const ex = byItem[itemId];
             if (ex) {
@@ -883,7 +883,7 @@ function execChkFillExportPdf(dossierId, checklistId) {
             observations: tr.querySelector('.exec-chk-fill-obs')?.value || ''
         };
     });
-    const today = new Date().toISOString().slice(0, 10);
+    const today = oasisJour();
     const w = window.open('', '_blank');
     if (!w) { _execToast(te('autoriser_popups'), 'error'); return; }
     const exigencesAll = (window.PESSCO?.sharedData?.exigences) || [];
@@ -968,7 +968,7 @@ async function _execChkFillAutosave(dossierId, checklistId, itemId, field, value
             checklist_id: checklistId,
             item_id: itemId,
             statut_resp: 'brouillon',
-            date_maj: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            date_maj: oasisHorodatage(),
             [field]: value
         };
         if (existing) {

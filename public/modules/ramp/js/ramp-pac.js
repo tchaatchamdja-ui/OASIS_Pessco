@@ -215,7 +215,7 @@ function rampPacModalCloture() {
                     <div class="ramp-champ">
                         <label>${rt('pac_date_solde')}</label>
                         <input class="ramp-input" type="date" id="rampPacClotureDate"
-                               value="${_rAttr(cl.date_solde || new Date().toISOString().slice(0, 10))}">
+                               value="${_rAttr(cl.date_solde || oasisJour())}">
                     </div>
                     <div class="ramp-champ">
                         <label>${rt('pac_solde_par')}</label>

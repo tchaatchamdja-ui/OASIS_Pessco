@@ -15,7 +15,7 @@
 const RAMP_POI_VIDE = () => ({
     equipe: [],
     entete: {
-        date: new Date().toISOString().slice(0, 10),
+        date: oasisJour(),
         heure_debut: '', heure_fin: '', place: '', etat_inspection: '', autorite: '',
         exploitant: '', aoc: '', type_inspection: 'SAFA', type_exploitation: '',
         etat_exploitant: '', route_depuis: '', vol_depuis: '', route_vers: '', vol_vers: '',

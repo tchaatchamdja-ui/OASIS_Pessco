@@ -321,7 +321,7 @@ function execOpenFNCForm(dossierId, existingFnc) {
 
     const defaultEmisPar = fnc.emis_par || relNotif.equipe_chef || EXEC_STATE.user?.nom || '';
     const defaultAdresseA = fnc.adresse_a || relNotif.prestataire_interlocuteur || '';
-    const defaultDateOuverture = fnc.date_ouverture || actDateFin || new Date().toISOString().slice(0, 10);
+    const defaultDateOuverture = fnc.date_ouverture || actDateFin || oasisJour();
     const minDate = actDateDebut || '';
     const G = 'gap:0.6rem;', MB = 'margin-bottom:0.5rem;';
 

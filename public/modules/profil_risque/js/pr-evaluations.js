@@ -501,7 +501,7 @@ function renderEvalResults() {
             const dt = new Date(debut + 'T00:00:00');
             if (!isNaN(dt.getTime())) {
                 dt.setMonth(dt.getMonth() + parseInt(csrbo || 0));
-                fin = dt.toISOString().slice(0, 10);
+                fin = oasisJour(dt);
             }
         }
         // Reminder level: red if fin < +1 month, orange if fin < +2 months

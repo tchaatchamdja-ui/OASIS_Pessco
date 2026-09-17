@@ -289,7 +289,7 @@ function execOpenNotificationForm(data) {
     const fonctionRespVal = data.fonction_responsable || data.prestataire_responsable_fonction || '';
     const dirigeantVal = data.dirigeant || data.prestataire_dirigeant_nom || '';
     const interlocuteurVal = data.interlocuteur || prest.fonction_point_focal || data.prestataire_interlocuteur || '';
-    const dateSigVal = data.date_signature || data.date_edition || new Date().toISOString().slice(0, 10);
+    const dateSigVal = data.date_signature || data.date_edition || oasisJour();
 
     const bodyHtml = `
     <div class="exec-form-sections">

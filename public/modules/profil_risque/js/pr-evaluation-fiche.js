@@ -706,7 +706,7 @@ async function _loadReunionEvalTab(evalId) {
         const isLocked = !!ev && ['valide', 'cloturee', 'rejetee'].includes(ev.statut);
         const rows = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`);
         const allMeetings = rows || [];
-        const today = new Date().toISOString().slice(0, 10);
+        const today = oasisJour();
         const escVal = s => String(s || '').replace(/"/g, '&quot;');
         const escTxt = oasisEsc;
 
@@ -907,7 +907,7 @@ async function _loadReunionPrestTab(evalId, prestId) {
         const rows = await api(`${MODULE_API}/eval-reunions-prest?eval_id=${evalId}`);
         if (myGen !== window._reunionPrestGen) return;
         const cur = (rows && rows[0]) || { eval_id: evalId, prestataire_id: prestId };
-        const today = new Date().toISOString().slice(0, 10);
+        const today = oasisJour();
         const escVal = s => String(s || '').replace(/"/g, '&quot;');
         const escTxt = oasisEsc;
         const evNow = APP_STATE.data.evaluations.find(e => e.id === evalId);
@@ -1308,7 +1308,7 @@ async function openReunionEvaluateursForm(evalId, rid) {
             return;
         }
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = oasisJour();
     const body = `
         <div class="form-group"><label>${t('date')}</label><input type="date" id="reDate" value="${cur.date || today}"></div>
         <div class="form-group"><label>${t('participants_one_per_line')}</label>
@@ -1438,7 +1438,7 @@ async function reunionEvalEditInline(evalId, rid) {
             return;
         }
     }
-    const today = new Date().toISOString().slice(0, 10);
+    const today = oasisJour();
     const escVal = s => String(s || '').replace(/"/g, '&quot;');
     const escTxt = oasisEsc;
     inner.innerHTML = `
@@ -1710,7 +1710,7 @@ async function updateCycleDate(evalId, kind, value, csrbo, champ) {
             const dt = new Date(value + 'T00:00:00');
             if (!isNaN(dt.getTime())) {
                 dt.setMonth(dt.getMonth() + parseInt(csrbo));
-                payload.date_fin_cycle = dt.toISOString().slice(0, 10);
+                payload.date_fin_cycle = oasisJour(dt);
             }
         } else if (!value) {
             payload.date_fin_cycle = null;

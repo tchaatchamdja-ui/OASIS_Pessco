@@ -302,7 +302,7 @@ async function execExporterConstatationsXlsx() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `constatations-${new Date().toISOString().slice(0, 10)}.xlsx`;
+        a.download = `constatations-${oasisJour()}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -1092,7 +1092,7 @@ function execOpenConstatationDirecteForm(existing) {
     const prestataires = EXEC_STATE.data.prestataires || [];
     const domaines = EXEC_STATE.data.domaines || [];
     const secteurs = EXEC_STATE.data.secteurs || [];
-    const today = new Date().toISOString().slice(0, 10);
+    const today = oasisJour();
     const defaultEmisPar = c.emis_par || (EXEC_STATE.user && EXEC_STATE.user.nom) || '';
     const defaultDateOuverture = c.date_ouverture ? (c.date_ouverture.slice ? c.date_ouverture.slice(0, 10) : c.date_ouverture) : today;
 

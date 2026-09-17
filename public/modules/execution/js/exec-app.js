@@ -1105,7 +1105,7 @@ function _execAlertesEtapesConstatation(constatations, jour) {
             type: 'overdue', severity: 'overdue', icon: EXEC_ICONS.alarm,
             // La référence porte déjà « FNC » : la répéter alourdit la ligne.
             label: `${_esc(c.reference || 'Constatation')} — ${attente.quoi} : ${Math.abs(jours)} j de retard`,
-            date: limite.toISOString().substring(0, 10), days: jours,
+            date: oasisJour(limite), days: jours,
         });
     });
     return alertes;

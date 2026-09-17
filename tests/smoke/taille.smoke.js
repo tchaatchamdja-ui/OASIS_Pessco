@@ -233,5 +233,20 @@ module.exports = async function tailleSmoke() {
   verifier('aucun caractère de contrôle dans les sources',
     salis.length === 0, salis.join(' · '));
 
+  // ── Dates des écrans : le calendrier de l'agent, pas celui de Greenwich ──
+  // `toISOString` rend la date en temps universel. À UTC+1 — Bénin, Niger —
+  // la date du jour ainsi lue retardait d'un jour entre minuit et une heure,
+  // et une date construite à minuit local sortait la veille, toujours. Les
+  // écrans passent par `oasisJour` / `oasisHorodatage` (oasis-dates.js).
+  const JOUR_UTC = /new Date\(\)\.toISOString\(\)\.(slice|substring)\(/;
+  const MINUIT_LOCAL = /T00:00:00[`'"]\)[\s\S]{0,160}?\.toISOString\(\)\.(slice|substring)\(0, ?10\)/;
+  const ecrans = sources().filter((f) => relatif(f).startsWith('public/modules/') && f.endsWith('.js'));
+  const jourUtc = ecrans.filter((f) => JOUR_UTC.test(fs.readFileSync(f, 'utf8'))).map(relatif);
+  verifier('date du jour des écrans lue dans le calendrier local',
+    jourUtc.length === 0, jourUtc.join(' · '));
+  const minuitLocal = ecrans.filter((f) => MINUIT_LOCAL.test(fs.readFileSync(f, 'utf8'))).map(relatif);
+  verifier('aucune date construite à minuit local relue en temps universel',
+    minuitLocal.length === 0, minuitLocal.join(' · '));
+
   return bilan('taille');
 };

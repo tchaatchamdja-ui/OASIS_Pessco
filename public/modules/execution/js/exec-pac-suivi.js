@@ -623,7 +623,7 @@ function execAjouterCommentaireSuivi() {
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || 'Utilisateur';
     liste.querySelector('.exec-suivi-vide')?.remove();
     liste.insertAdjacentHTML('beforeend', _execCommentaireSuiviHtml({
-        date: new Date().toISOString().slice(0, 10), auteur, items, precision, texte,
+        date: oasisJour(), auteur, items, precision, texte,
         fichiers: _execSuiviFichiersDeposes(), publie: false,
     }, true, 0, true));
     liste.querySelectorAll('.exec-suivi-comm:not(:last-child)')
@@ -739,7 +739,7 @@ function execAjouterSuivi() {
     if (!liste) return;
     liste.querySelector('.exec-suivi-vide')?.remove();       // retire « aucun suivi »
     liste.insertAdjacentHTML('beforeend', _execSuiviHtml({
-        date: new Date().toISOString().slice(0, 10), auteur, texte,
+        date: oasisJour(), auteur, texte,
     }, true));
     zone.value = '';
     liste.scrollTop = liste.scrollHeight;
@@ -878,7 +878,7 @@ async function execSubmitPAC(fncId) {
     const user = EXEC_STATE.user || {};
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || '';
     evalData.submit_info = {
-        date: new Date().toISOString().slice(0, 10),
+        date: oasisJour(),
         auteur,
         motif: modifiedFields.length > 0 ? modifiedFields.join(', ') : te('aucune_modification')
     };
@@ -921,7 +921,7 @@ async function execReturnPACtoPostulant(fncId) {
         if (itemsComments[key] && itemsComments[key].length > 0) commentedItems.push(label);
     }
     evalData.rejet_info = {
-        date: new Date().toISOString().slice(0, 10),
+        date: oasisJour(),
         auteur,
         motif: commentedItems.length > 0 ? commentedItems.join(', ') : ''
     };
@@ -1057,7 +1057,7 @@ async function execSoumettreMiseEnOeuvre(fncId, mode) {
     const evalData = _collectFullEvalData();
     const user = EXEC_STATE.user || {};
     const auteur = `${user.prenom || ''} ${user.nom || ''}`.trim() || user.email || user.username || '';
-    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const aujourdhui = oasisJour();
 
     try {
         if (amendement) {
@@ -1106,7 +1106,7 @@ function execPreuvesNonAcceptables(fncId) {
         const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
         const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
         anac.verification = { ...(anac.verification || {}), preuves_acceptees: 'NON' };
-        evalData.preuves_refus = { date: new Date().toISOString().slice(0, 10), auteur, motif };
+        evalData.preuves_refus = { date: oasisJour(), auteur, motif };
         delete evalData.preuves_info;
         try {
             await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
@@ -1136,7 +1136,7 @@ async function execAccepterPreuves(fncId) {
         ...(anac.verification || {}),
         preuves_acceptees: 'OUI',
         verification_terrain: terrain,
-        date_acceptation_preuves: new Date().toISOString().slice(0, 10),
+        date_acceptation_preuves: oasisJour(),
         acceptees_par: auteur,
     };
     delete evalData.preuves_refus;
@@ -1174,7 +1174,7 @@ function execRenvoyerMiseEnOeuvre(fncId) {
             preuves_acceptees: '', date_acceptation_preuves: '', acceptees_par: '',
         };
         anac.cloture = { ...(anac.cloture || {}), mise_en_oeuvre_effective: '' };
-        evalData.retour_mise_oeuvre = { date: new Date().toISOString().slice(0, 10), auteur, motif };
+        evalData.retour_mise_oeuvre = { date: oasisJour(), auteur, motif };
         try {
             await api(`${EXEC_MODULE_API}/constatations/${fncId}`, {
                 method: 'PUT',
@@ -1201,7 +1201,7 @@ async function execAccepterPAC(fncId, avecPreuves) {
 
     const evalData = _execPublierCommentairesSuivi(_collectFullEvalData());
     const anac = evalData.evaluation_anac || (evalData.evaluation_anac = {});
-    const aujourdhui = new Date().toISOString().slice(0, 10);
+    const aujourdhui = oasisJour();
 
     anac.acceptation = { ...(anac.acceptation || {}), accepte: 'OUI' };
     if (!anac.acceptation.date) anac.acceptation.date = aujourdhui;

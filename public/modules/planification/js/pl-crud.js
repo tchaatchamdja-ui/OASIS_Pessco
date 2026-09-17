@@ -328,7 +328,7 @@ function _planFinDepuisDuree(debut, jours) {
     const t = new Date(`${d}T00:00:00`);
     if (Number.isNaN(t.getTime())) return '';
     t.setDate(t.getDate() + Math.round(n) - 1);
-    return t.toISOString().substring(0, 10);
+    return oasisJour(t);
 }
 
 // Dates et durée disent la même chose de deux façons : renseigner l'une

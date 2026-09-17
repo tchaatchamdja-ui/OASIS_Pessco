@@ -38,8 +38,8 @@
       ordre: 'The end date must be on or after the start date.',
     },
     pt: {
-      annee: (a) => `A data de inicio deve estar no ano ${a}.`,
-      ordre: 'A data de fim deve ser igual ou posterior a data de inicio.',
+      annee: (a) => `A data de início deve estar no ano ${a}.`,
+      ordre: 'A data de fim deve ser igual ou posterior à data de início.',
     },
   };
 
@@ -144,6 +144,26 @@
     return false;
   }
 
+  // ── Date du calendrier local ──
+  // `toISOString` rend la date en temps universel. À UTC+1 — Bénin, Niger —
+  // minuit local tombe la veille à 23 h UTC : une date construite en heure
+  // locale sortait décalée d'un jour, et la date du jour retardait d'un jour
+  // chaque nuit entre minuit et une heure. Ces deux fonctions lisent la date
+  // et l'heure telles que l'agent les voit.
+  const deux = (n) => String(n).padStart(2, '0');
+  function oasisJour(d) {
+    const x = d instanceof Date ? d : new Date();
+    if (Number.isNaN(x.getTime())) return '';
+    return `${x.getFullYear()}-${deux(x.getMonth() + 1)}-${deux(x.getDate())}`;
+  }
+  function oasisHorodatage(d) {
+    const x = d instanceof Date ? d : new Date();
+    if (Number.isNaN(x.getTime())) return '';
+    return `${oasisJour(x)} ${deux(x.getHours())}:${deux(x.getMinutes())}:${deux(x.getSeconds())}`;
+  }
+
+  window.oasisJour = oasisJour;
+  window.oasisHorodatage = oasisHorodatage;
   window.oasisDatesControler = oasisDatesControler;
   window.oasisDatesBorner = oasisDatesBorner;
   window.oasisDatesLier = oasisDatesLier;

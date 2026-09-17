@@ -593,7 +593,7 @@ function execExportSituationGenerale(format) {
     if (!rows.length) { _execToast(te('no_data'), 'info'); return; }
 
     const now = new Date();
-    const stamp = now.toISOString().slice(0, 10);
+    const stamp = oasisJour(now);
     const title = 'Situation Générale';
     const filename = `situation_generale_${stamp}`;
 

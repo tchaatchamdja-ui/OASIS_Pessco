@@ -52,8 +52,36 @@ module.exports = async function socleSmoke(port) {
     srv.arreter();
   }
   await controlerDoubleEnvoi();
+  controlerJourLocal();
   return bilan('Socle');
 };
+
+// ── Date du calendrier local ──
+// `oasisJour` et `oasisHorodatage` exécutés sous le fuseau de Porto-Novo
+// (UTC+1), le 18 septembre à 00 h 30 — encore le 17 en temps universel.
+function controlerJourLocal() {
+  const { execFileSync } = require('child_process');
+  const path = require('path');
+  const script = `
+    const fs = require('fs'), vm = require('vm');
+    const fenetre = {};
+    vm.runInContext(fs.readFileSync(${JSON.stringify(path.join(__dirname, '..', '..', 'public', 'shared', 'js', 'oasis-dates.js'))}, 'utf8'),
+      vm.createContext({ window: fenetre, Date, Number, String, localStorage: { getItem: () => 'fr' } }));
+    const d = new Date(Date.UTC(2026, 8, 17, 23, 30, 0));
+    const local = new Date(2026, 0, 1);
+    console.log(JSON.stringify({
+      jour: fenetre.oasisJour(d), horodatage: fenetre.oasisHorodatage(d), utc: d.toISOString().slice(0, 10),
+      minuit: fenetre.oasisJour(local), invalide: fenetre.oasisJour(new Date('x')),
+    }));`;
+  const r = JSON.parse(execFileSync(process.execPath, ['-e', script], {
+    env: { ...process.env, TZ: 'Africa/Porto-Novo' }, encoding: 'utf8',
+  }));
+  verifier('à UTC+1, 00 h 30 le 18 : le jour est le 18 (le temps universel dit le 17)',
+    r.jour === '2026-09-18' && r.utc === '2026-09-17', JSON.stringify(r));
+  verifier('horodatage à l’heure de l’agent', r.horodatage === '2026-09-18 00:30:00', r.horodatage);
+  verifier('minuit local du 1er janvier reste le 1er janvier', r.minuit === '2026-01-01', r.minuit);
+  verifier('date invalide : chaîne vide', r.invalide === '', r.invalide);
+}
 
 // ── Double envoi ──
 // L'enveloppe de fetch du socle (oasis-requete.js) ne renvoie pas une écriture

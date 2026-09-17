@@ -311,7 +311,7 @@ function _execSgADeclencher(F, mesPrest, prestDomaineLookup) {
     // celles dont la date de début est passée — en retard — et celles qui
     // restent à planifier dans l'horizon.
     const attente = etats ? etats.aDeclencher.filter(ligneRetenue) : [];
-    const aujourdhuiIso = new Date().toISOString().slice(0, 10);
+    const aujourdhuiIso = oasisJour();
     const actEnRetard = attente.filter((l) => String(l.debut || '') < aujourdhuiIso).length;
     const aDeclencher = attente.filter((l) => String(l.debut || '') >= aujourdhuiIso);
     const horizonMois = (typeof EXEC_ETATS !== 'undefined' && EXEC_ETATS.delais
@@ -641,7 +641,7 @@ function _execSuiviActivitesDonnees() {
     const activites = EXEC_STATE._ganttActivites || [];
     const dossiers = EXEC_STATE.data.dossiers || [];
     const prestataires = EXEC_STATE.data.prestataires || [];
-    const aujourdhuiIso = new Date().toISOString().slice(0, 10);
+    const aujourdhuiIso = oasisJour();
 
     const dossierParActivite = {};
     dossiers.forEach(d => { if (d.activite_id) dossierParActivite[d.activite_id] = d; });
@@ -1141,7 +1141,7 @@ const _execChronoJour = (v) => {
     const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
     return isNaN(d.getTime()) ? null : d;
 };
-const _execChronoIso = (d) => d.toISOString().slice(0, 10);
+const _execChronoIso = (d) => oasisJour(d);
 const _execChronoIndex = (v, min) => Math.round((_execChronoJour(v) - min) / 86400000);
 const _execChronoDate = (i, min) => _execChronoIso(new Date(min.getTime() + i * 86400000));
 

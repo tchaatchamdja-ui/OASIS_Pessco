@@ -296,7 +296,10 @@ const rampDate = (v) => {
 };
 const rampISO = (v) => {
     const d = rampParseDate(v);
-    return d ? d.toISOString().slice(0, 10) : '';
+    // Une date ISO se rend telle quelle ; une date saisie « jj/mm/aaaa » est
+    // construite en heure locale, et se lit donc en heure locale.
+    if (/^\d{4}-\d{2}-\d{2}/.test(String(v || '').trim())) return String(v).trim().slice(0, 10);
+    return d ? oasisJour(d) : '';
 };
 
 const RAMP_MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',

@@ -41,7 +41,7 @@ function _showNotificationPreview(data, fromForm) {
       </div>
       <div class="fiche-identite">
         <div class="fiche-ref"><span>Référence</span><strong>${_fVal(ref)}</strong></div>
-        <div class="fiche-ref"><span>Édité le</span><strong>${_formatDate(new Date().toISOString().slice(0, 10))}</strong></div>
+        <div class="fiche-ref"><span>Édité le</span><strong>${_formatDate(oasisJour())}</strong></div>
       </div>
     </header>
     <h1 class="fiche-titre">Fiche de notification d'activité de surveillance</h1>

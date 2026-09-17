@@ -445,7 +445,7 @@ function execEtatsPanA_declencher(R) {
       <td>${_esc(l.prestataire || '—')}</td>
       <td>${_esc(l.objet || '—')}</td>
       <td>${_formatDate(l.debut)}</td>
-      <td>${l.limite ? _formatDate(l.limite.toISOString().slice(0, 10)) : '—'}</td>
+      <td>${l.limite ? _formatDate(oasisJour(l.limite)) : '—'}</td>
       <td>${execEtatsBadgeDelai(l.jours)}</td>
       <td>${_esc(l.responsable || '—')}</td>
       <td style="text-align:center;white-space:nowrap;">

@@ -390,7 +390,7 @@ window.execAjustEcheance = function () {
     if (Number.isNaN(delai) || !/^\d{4}-\d{2}-\d{2}$/.test(String(ouv || ''))) { apercu.value = '—'; return; }
     const d = new Date(`${ouv}T00:00:00`);
     d.setDate(d.getDate() + delai);
-    apercu.value = _formatDate(d.toISOString().slice(0, 10));
+    apercu.value = _formatDate(oasisJour(d));
 };
 
 window.execAjustAppliquer = async function (fncId, portee) {
@@ -1220,7 +1220,7 @@ async function execHandlePACProofUpload(files, containerId) {
                 container.insertAdjacentHTML('beforeend', _execPreuveHtml({
                     filename: data.filename, path: data.path,
                     intitule: saisie.intitule, commentaire: saisie.commentaire,
-                    date: new Date().toISOString().slice(0, 10),
+                    date: oasisJour(),
                 }, container.children.length + 1, true));
                 _execRenumeroterPreuves(container);
             }

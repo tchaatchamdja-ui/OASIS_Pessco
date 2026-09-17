@@ -208,7 +208,7 @@ const mesLibelleType = (code) => {
 //  Dates et badges
 // ══════════════════════════════════════
 
-const mesJour = () => new Date().toISOString().slice(0, 10);
+const mesJour = () => oasisJour();
 const mesDate = (v) => (v ? String(v).slice(0, 10).split('-').reverse().join('/') : '—');
 
 const MES_CLOS = ['cloturee', 'annulee'];
@@ -1374,8 +1374,7 @@ function mesConstatDelai(source) {
     if (source !== 'echeance') {
         const jours = Number((el('mesConstDelai') || {}).value);
         if (!Number.isFinite(jours) || jours < 0) return;
-        el('mesConstEcheance').value = new Date(debut.getTime() + jours * jour)
-            .toISOString().slice(0, 10);
+        el('mesConstEcheance').value = oasisJour(new Date(debut.getTime() + jours * jour));
         return;
     }
     const echeance = (el('mesConstEcheance') || {}).value || '';

@@ -60,6 +60,20 @@ module.exports = async function profilRisqueSmoke(port) {
     await srv.connexion();
     const apres = (await srv.appel(`/api/m/profil-risque/evaluations/${ev.corps.id}`)).corps || {};
     verifier('l’évaluation est restée en brouillon', apres.statut === 'brouillon', apres.statut);
+    // Une évaluation réévaluée ne se supprime pas tant que sa réévaluation
+    // existe : celle-ci perdrait son origine.
+    const EV = '/api/m/profil-risque/evaluations';
+    await srv.appel(`${EV}/${ev.corps.id}`, { method: 'PUT', body: JSON.stringify({ statut: 'valide' }) });
+    const reev = await srv.appel(`${EV}/${ev.corps.id}/reevaluer`, { method: 'POST', body: '{}' });
+    const enfantId = (reev.corps || {}).id || ((srv.donnees('profil_risque').evaluations || [])
+      .find((x) => x.parent_id === ev.corps.id) || {}).id;
+    verifier('réévaluation lancée', reev.statut === 200 && !!enfantId, `statut ${reev.statut}`);
+    const refusReev = await srv.appel(`${EV}/${ev.corps.id}`, { method: 'DELETE' });
+    verifier('évaluation réévaluée : suppression refusée',
+      refusReev.statut === 409 && refusReev.corps.error === 'evaluation_reevaluee', `statut ${refusReev.statut}`);
+    verifier('réévaluation supprimée d’abord',
+      (await srv.appel(`${EV}/${enfantId}`, { method: 'DELETE' })).statut === 200);
+
     // Une évaluation supprimée emporte ses réunions : elles ne se lisent que
     // sous son identifiant, et resteraient en base sans que rien les atteigne.
     const reunion = await srv.appel('/api/m/profil-risque/eval-reunions', {

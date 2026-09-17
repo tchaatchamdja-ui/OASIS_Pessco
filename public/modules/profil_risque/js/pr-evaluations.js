@@ -277,8 +277,12 @@ function prCanReevaluer(ev) {
 }
 
 // Suppression d'une évaluation : Gestionnaire du domaine/secteur uniquement
+// Une évaluation dont la réévaluation existe ne se supprime pas : le serveur
+// le refuse, la réévaluation perdrait son origine. On supprime d'abord celle-ci.
 function prCanSupprimerEval(ev) {
-    return !!ev && prPrivOn(prSecteurOf(ev)) === 'GESTIONNAIRE';
+    if (!ev || prPrivOn(prSecteurOf(ev)) !== 'GESTIONNAIRE') return false;
+    const evals = (APP_STATE.data || {}).evaluations || [];
+    return !(ev.enfant_id && evals.some((e) => e.id === ev.enfant_id));
 }
 // Le sous-menu reste accessible aux contributeurs (pour leurs désignations)
 function prCanSeeEvalsEnCours() {

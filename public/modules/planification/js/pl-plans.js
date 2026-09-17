@@ -152,6 +152,17 @@ function _applyRoleFilter(plans) {
     });
 }
 
+// Un plan amendé ne se supprime pas : le serveur le refuse, sa lignée se
+// couperait. Le bouton reste visible — l'administrateur sait qu'il existe —
+// mais inactif, et dit pourquoi.
+function _planBoutonSupprimer(p) {
+    const amende = (PLAN_STATE.data.plans || []).some((x) => x.parent_plan_id === p.id);
+    if (amende) {
+        return `<button class="btn-icon" disabled aria-disabled="true" style="opacity:.35;cursor:not-allowed;" title="${_escAttr(tp('suppression_plan_amende'))}">${PLAN_ICONS.delete}</button>`;
+    }
+    return `<button class="btn-icon text-danger" onclick="planDeletePlan('${p.id}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>`;
+}
+
 function _renderPlansTable(plans) {
     if (!plans.length) return `<p class="text-center" style="padding:2rem;color:var(--text-muted);">${tp('no_data')}</p>`;
     const s = window._planTableSort;
@@ -203,7 +214,7 @@ function _renderPlansTable(plans) {
                     <button class="btn-icon" onclick="planOpenDetail('${p.id}')" title="${tp('details')}">${PLAN_ICONS.eye}</button>
                     ${_canContribute(p.secteur_id) ? `<button class="btn-icon" onclick="planShowEditModal('${p.id}')" title="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
                     ${_canValidate(p.secteur_id) ? `<button class="btn-icon" onclick="planArchivePlan('${p.id}')" title="${tp('archive_plan')}" style="color:var(--text-muted);">${PLAN_ICONS.archive || '🗄'}</button>` : ''}
-                    ${_isAdmin() ? `<button class="btn-icon text-danger" onclick="planDeletePlan('${p.id}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}
+                    ${_isAdmin() ? _planBoutonSupprimer(p) : ''}
                 </td>
             </tr>${panneau ? `<tr class="plan-prest-row" id="prestRow_${p.id}" hidden><td colspan="7" style="padding:0;">${panneau}</td></tr>` : ''}`;
             }).join('')}

@@ -195,6 +195,11 @@ module.exports = function register(app, deps, M) {
         const priv = moduleRights.effectivePrivilege(D.RIGHTS, req.user.username, cible.domaine_id || '', cible.secteur_id || '');
         if (D.estPrestataire(req.user) || priv !== 'GESTIONNAIRE') return D.refus(res);
         parentId = cible.parent_id;
+        // Une évaluation réévaluée porte le cycle suivant : la supprimer
+        // laisserait la réévaluation rattachée à une évaluation disparue. On
+        // supprime d'abord la réévaluation, ce qui libère celle-ci.
+        const enfant = cible.enfant_id && db.getColl('evaluations').some((x) => x.id === cible.enfant_id);
+        if (enfant) return res.status(409).json({ error: 'evaluation_reevaluee', reevaluation: cible.enfant_id });
       // Les autres collections tenaient la porte ouverte : un indicateur du
       // barème s'y supprimait sans le moindre privilège.
       } else if (!D.peut(req, 'GESTIONNAIRE', portee(cible))) {

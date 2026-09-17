@@ -60,7 +60,23 @@ module.exports = async function profilRisqueSmoke(port) {
     await srv.connexion();
     const apres = (await srv.appel(`/api/m/profil-risque/evaluations/${ev.corps.id}`)).corps || {};
     verifier('l’évaluation est restée en brouillon', apres.statut === 'brouillon', apres.statut);
-    await srv.appel(`/api/m/profil-risque/evaluations/${ev.corps.id}`, { method: 'DELETE' });
+    // Une évaluation supprimée emporte ses réunions : elles ne se lisent que
+    // sous son identifiant, et resteraient en base sans que rien les atteigne.
+    const reunion = await srv.appel('/api/m/profil-risque/eval-reunions', {
+      method: 'POST', body: JSON.stringify({ eval_id: ev.corps.id, date: '2026-09-17', objet: 'Réunion d’essai' }),
+    });
+    const reunionPrest = await srv.appel('/api/m/profil-risque/eval-reunions-prest', {
+      method: 'POST', body: JSON.stringify({ eval_id: ev.corps.id, prestataire_id: 'smoke', date: '2026-09-17' }),
+    });
+    verifier('réunions rattachées à l’évaluation', reunion.statut === 200 && reunionPrest.statut === 200,
+      `statuts ${reunion.statut} / ${reunionPrest.statut}`);
+    const suppr = await srv.appel(`/api/m/profil-risque/evaluations/${ev.corps.id}`, { method: 'DELETE' });
+    verifier('évaluation supprimée', suppr.statut === 200);
+    const restes = srv.donnees('profil_risque');
+    const orphelines = ['eval_reunions', 'eval_reunions_prest']
+      .map((c) => [c, (restes[c] || []).filter((x) => x.eval_id === ev.corps.id).length]).filter(([, n]) => n);
+    verifier('les réunions partent avec leur évaluation', orphelines.length === 0,
+      orphelines.map(([c, n]) => `${c} : ${n}`).join(' · '));
   } finally {
     srv.arreter();
   }

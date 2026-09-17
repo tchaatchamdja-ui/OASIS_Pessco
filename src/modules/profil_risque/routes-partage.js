@@ -202,6 +202,11 @@ module.exports = function register(app, deps, M) {
       }
       if (!db.remove(coll, req.params.id)) return res.status(404).json({ error: 'not_found' });
       if (parentId) db.update('evaluations', parentId, { reevalue_le: '', reevalue_par: '', enfant_id: '' });
+      // Les réunions d'une évaluation ne se lisent que sous son identifiant :
+      // elle partie, elles resteraient en base sans que rien les atteigne.
+      if (coll === 'evaluations') {
+        ['eval_reunions', 'eval_reunions_prest'].forEach((c) => db.removeWhere(c, (x) => x.eval_id === req.params.id));
+      }
       audit.log(req.user.username, 'PR_DELETE', { coll, id: req.params.id, parent_libere: parentId || null });
       return res.json({ ok: true });
     });

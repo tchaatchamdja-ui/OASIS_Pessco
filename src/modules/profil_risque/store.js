@@ -88,4 +88,12 @@ function remove(coll, id) {
   return true;
 }
 
-module.exports = { COLLECTIONS, uid, load, save, list, get, getColl, seed, insert, update, remove };
+function removeWhere(coll, predicat) {
+  const d = load();
+  const avant = (d[coll] || []).length;
+  d[coll] = (d[coll] || []).filter((r) => !predicat(r));
+  if (d[coll].length !== avant) save(d);
+  return avant - d[coll].length;
+}
+
+module.exports = { COLLECTIONS, uid, load, save, list, get, getColl, seed, insert, update, remove, removeWhere };

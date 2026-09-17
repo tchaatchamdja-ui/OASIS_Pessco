@@ -13,6 +13,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
+const { introuvable } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -125,7 +126,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/rapports/:id`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     const enrichi = enrichirRapport(r);
     if (R.estPrestataire(req.user)) {
       if (!R.accedeA(req.user, enrichi.dossier_prestataire_id || '') || r.statut !== 'transmis') {
@@ -138,7 +139,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/rapports`, requireAuth, (req, res) => {
     const d = req.body || {};
     const dossier = db.get('dossiers', d.dossier_id || '');
-    if (!dossier) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!dossier) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(dossier.prestataire_id), referentiels)) return refuser(res);
     const rec = db.insert('rapports', {
       id: db.uid('rpt'),
@@ -164,7 +165,7 @@ module.exports = function register(app, deps, M) {
   // signé reste servi et couvert par le smoke : il attend son écran.
   app.put(`${M}/rapports/:id/sign-inspector`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     db.update('rapports', r.id, { signe_par_inspecteur: req.user.username, date_signature_inspecteur: db.now() });
     res.json({ status: 'ok', signe_inspecteur: true });
@@ -172,7 +173,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/rapports/:id/sign-director`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) {
       return refuser(res, 'Non autorisé à signer en tant que directeur');
     }
@@ -183,7 +184,7 @@ module.exports = function register(app, deps, M) {
   // Validation : le rapport reçoit la référence définitive du dossier.
   app.put(`${M}/rapports/:id/validate`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (r.statut !== 'soumis') return res.status(400).json({ error: 'Seul un rapport soumis peut être validé' });
     if (refusProcessus(req, res, r, 'validation')) return undefined;
@@ -205,7 +206,7 @@ module.exports = function register(app, deps, M) {
   // Amendement : un rapport validé repasse en rédaction.
   app.put(`${M}/rapports/:id/amend`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (r.statut !== 'valide') return res.status(400).json({ error: 'Seul un rapport validé peut être amendé' });
     const observations = (req.body || {}).observations || '';
@@ -225,7 +226,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/rapports/:id/apercu-comments`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     db.update('rapports', r.id, { commentaires_apercu: (req.body || {}).commentaires || '' });
     res.json({ status: 'ok' });
@@ -236,7 +237,7 @@ module.exports = function register(app, deps, M) {
   // conservée du portage PESSCO, sans écran à ce jour.
   app.put(`${M}/rapports/:id/transmit`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (!r.signe_par_inspecteur || !r.signe_par_directeur) {
       return res.status(400).json({ error: "Le rapport doit être signé par l'inspecteur et le directeur avant transmission" });
@@ -254,7 +255,7 @@ module.exports = function register(app, deps, M) {
   // de téléchargement, se fait par POST /transmettre.
   app.put(`${M}/rapports/:id/send`, requireAuth, (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (r.statut !== 'valide') return res.status(400).json({ error: 'Seul un rapport validé peut être envoyé' });
     if (refusProcessus(req, res, r, 'transmission')) return undefined;
@@ -270,7 +271,7 @@ module.exports = function register(app, deps, M) {
   // constatations restées en brouillon, comme /send.
   app.post(`${M}/rapports/:id/transmettre`, requireAuth, async (req, res) => {
     const r = db.get('rapports', req.params.id);
-    if (!r) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!r) return introuvable(res, 'rapport');
     // La transmission part du serveur de messagerie de l'Autorité et fige le
     // document officiel : elle appartient au valideur, jamais à l'organisme
     // surveillé — pour qui « contribuer » ne veut dire que « être concerné ».
@@ -311,7 +312,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/rapports/:id`, requireAuth, (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
-    if (!db.get('rapports', req.params.id)) return res.status(404).json({ error: 'Rapport non trouvé' });
+    if (!db.get('rapports', req.params.id)) return introuvable(res, 'rapport');
     db.remove('rapports', req.params.id);
     res.json({ status: 'ok' });
   });
@@ -429,7 +430,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/uploads/:fichier`, requireAuth, (req, res) => {
     const nom = path.basename(req.params.fichier);
     const chemin = path.join(DOSSIER_UPLOADS, nom);
-    if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier non trouvé' });
+    if (!fs.existsSync(chemin)) return introuvable(res, 'fichier');
     // Ouverture dans l'onglet, sous l'intitulé de la pièce quand il est fourni.
     const affiche = nomDePresentation(req.query.nom || nom, path.extname(nom).toLowerCase());
     res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(affiche)}`);

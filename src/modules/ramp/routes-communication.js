@@ -17,6 +17,7 @@ const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
+const { introuvable } = require('../../erreurs');
 
 // Les pièces jointes vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -145,7 +146,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/requetes/:id`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     return res.json(vueRequete(r));
   });
 
@@ -195,7 +196,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/requetes/:id/echanges`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return res.status(409).json({ error: 'Discussion close' });
     const message = texte((req.body || {}).message);
     if (!message) return res.status(400).json({ error: 'Message requis' });
@@ -216,7 +217,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/requetes/:id/cloturer`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return res.json({ status: 'ok', deja: true });
     if (r.cree_par !== req.user.username && !admin(req)) {
       return refuser(res, 'Seul l’État émetteur referme la discussion');
@@ -233,7 +234,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/requetes/:id/rouvrir`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.cree_par !== req.user.username && !admin(req)) return refuser(res);
     db.update('requetes', r.id, { statut: 'ouverte', close_le: '', close_par: '' });
     return res.json({ status: 'ok' });
@@ -242,7 +243,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/requetes/:id`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
-    if (!db.remove('requetes', req.params.id)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!db.remove('requetes', req.params.id)) return introuvable(res, 'requete');
     return res.json({ status: 'ok' });
   });
 
@@ -254,7 +255,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/requetes/:id/pieces`, requireAuth, multipart(), (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return res.status(409).json({ error: 'Discussion close' });
     const f = (req.files || {}).file;
     if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
@@ -279,7 +280,7 @@ module.exports = function register(app, deps, M) {
     if (echangeId) {
       const echanges = (r.echanges || []).map((e) =>
         (e.id === echangeId ? { ...e, pieces: (e.pieces || []).concat([piece]) } : e));
-      if (!echanges.some((e) => e.id === echangeId)) return res.status(404).json({ error: 'Échange non trouvé' });
+      if (!echanges.some((e) => e.id === echangeId)) return introuvable(res, 'echange');
       db.update('requetes', r.id, { echanges });
     } else {
       db.update('requetes', r.id, { pieces: (r.pieces || []).concat([piece]) });
@@ -349,7 +350,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/partages/:id`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const pa = db.get('partages', req.params.id);
-    if (!pa || !partageVisible(req, pa)) return res.status(404).json({ error: 'Partage non trouvé' });
+    if (!pa || !partageVisible(req, pa)) return introuvable(res, 'partage');
     return res.json(vuePartage(pa));
   });
 
@@ -381,7 +382,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/partages/:id/rappeler`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const pa = db.get('partages', req.params.id);
-    if (!pa) return res.status(404).json({ error: 'Partage non trouvé' });
+    if (!pa) return introuvable(res, 'partage');
     if (pa.partage_par !== req.user.username && !admin(req)) return refuser(res);
     const etat = texte((req.body || {}).etat);
     if (!etat) {
@@ -405,7 +406,7 @@ module.exports = function register(app, deps, M) {
     if (!gardeAac(req, res)) return undefined;
     if (!R.canContribute(req.user) && !admin(req)) return refuser(res, 'Non autorisé à partager');
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     // Même garde que partout ailleurs sur un POI : on ne met à disposition que
     // ce qu'on a le droit de lire. Sans elle, le partage rendait lisible la
     // fiche d'un autre État — copies des lettres et pièces comprises.
@@ -482,7 +483,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/partages/:id`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const pa = db.get('partages', req.params.id);
-    if (!pa) return res.status(404).json({ error: 'Partage non trouvé' });
+    if (!pa) return introuvable(res, 'partage');
     if (pa.partage_par !== req.user.username && !admin(req)) return refuser(res);
     retirerPartage(pa);
     return res.json({ status: 'ok' });
@@ -492,9 +493,9 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/partages/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const pa = db.get('partages', req.params.id);
-    if (!pa || !partageVisible(req, pa)) return res.status(404).json({ error: 'Partage non trouvé' });
+    if (!pa || !partageVisible(req, pa)) return introuvable(res, 'partage');
     const pj = (pa.pieces || []).find((x) => x.id === req.params.pid);
-    if (!pj) return res.status(404).json({ error: 'Pièce non trouvée' });
+    if (!pj) return introuvable(res, 'piece');
     const chemin = path.join(DOSSIER_POI, path.basename(pj.fichier || ''));
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
     res.setHeader('Content-Disposition',
@@ -508,9 +509,9 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/requetes/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     const p = trouverPiece(r, req.params.pid);
-    if (!p) return res.status(404).json({ error: 'Pièce non trouvée' });
+    if (!p) return introuvable(res, 'piece');
     const chemin = path.join(DOSSIER_PIECES, path.basename(p.fichier || ''));
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
     res.setHeader('Content-Disposition',
@@ -521,9 +522,9 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/requetes/:id/pieces/:pid`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
-    if (!r || !concerne(req, r)) return res.status(404).json({ error: 'Requête non trouvée' });
+    if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     const p = trouverPiece(r, req.params.pid);
-    if (!p) return res.status(404).json({ error: 'Pièce non trouvée' });
+    if (!p) return introuvable(res, 'piece');
     // On ne retire que ce qu'on a déposé, sauf pour le gestionnaire du module.
     if (p.depose_par !== req.user.username && !admin(req)) return refuser(res);
     try { fs.unlinkSync(path.join(DOSSIER_PIECES, path.basename(p.fichier || ''))); }

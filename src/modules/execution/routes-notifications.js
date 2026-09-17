@@ -9,6 +9,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
+const { introuvable } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
@@ -109,7 +110,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/plans-valides/:planId/activites`, requireAuth, (req, res) => {
     const plans = services.callOr('PLAN.plansValides', []);
     const plan = plans.find((p) => p.id === req.params.planId);
-    if (!plan) return res.status(404).json({ error: 'Plan validé non trouvé' });
+    if (!plan) return introuvable(res, 'plan_valide');
     const prestataires = refs().prestataires || [];
     const secteurs = refs().secteurs || [];
     const types = refs().types_supervision || [];
@@ -166,7 +167,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/notifications/:id`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (R.estPrestataire(req.user)) {
       if (!R.accedeA(req.user, n.prestataire_id || '') || !['envoye', 'acte', 'cloture'].includes(n.statut)) {
         return refuser(res);
@@ -340,7 +341,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/notifications/:id`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     const patch = {};
     Object.entries(req.body || {}).forEach(([k, v]) => {
@@ -359,7 +360,7 @@ module.exports = function register(app, deps, M) {
   // ── Circuit : brouillon → soumis → validé → envoyé → acté ──
   app.put(`${M}/notifications/:id/submit`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'brouillon') return res.status(400).json({ error: 'Seule une notification en brouillon peut être soumise' });
     if (refusProcessus(req, res, n, 'notification:soumission')) return undefined;
@@ -371,7 +372,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/notifications/:id/validate`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à valider');
     if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être validée' });
     if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
@@ -381,7 +382,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/notifications/:id/reject`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à rejeter');
     if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être rejetée' });
     if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
@@ -391,7 +392,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/notifications/:id/send`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'valide') return res.status(400).json({ error: 'Seule une notification validée peut être envoyée' });
     if (refusProcessus(req, res, n, 'notification:transmission')) return undefined;
@@ -414,7 +415,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/notifications/:id`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (n.statut !== 'brouillon') return res.status(400).json({ error: 'Seul un brouillon peut être supprimé' });
     if (n.created_by !== req.user.username && !R.isAdmin(req.user, referentiels)) {
       return refuser(res, "Seul l'initiateur peut supprimer ce brouillon");
@@ -426,7 +427,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/notifications/:id/cancel`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     db.update('notifications', n.id, {
       statut: 'brouillon', motif_rejet: (req.body || {}).motif || 'Annulation', date_rejet: db.now(),
@@ -453,7 +454,7 @@ module.exports = function register(app, deps, M) {
     // Côté prestataire, échanger avec l'Autorité est un droit confié.
     if (!R.compteA(req.user, 'echanges', auth)) return refuser(res, 'Droit non confié à ce compte');
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     const d = req.body || {};
     const rec = db.insert('echanges', {
@@ -496,7 +497,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/notifications/:id/accuser-reception`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.estPrestataire(req.user)) {
       return refuser(res, 'Accusé de réception réservé au prestataire notifié');
     }
@@ -549,7 +550,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/accord`, requireAuth, (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (!['envoye', 'acte'].includes(n.statut)) {
       return res.status(400).json({ error: 'La confirmation n’est pas ouverte à ce stade' });
@@ -571,7 +572,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/validate-accord`, requireAuth, (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
     const n = db.get('notifications', req.params.id);
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     const perim = perimetrePrestataire(n.prestataire_id);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
     if (n.statut !== 'envoye') return res.status(400).json({ error: "Seule une notification envoyée peut passer en 'acté'" });

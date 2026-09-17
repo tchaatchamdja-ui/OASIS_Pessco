@@ -275,9 +275,14 @@ function controlerPhrasesServeur() {
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-commun.js'), 'utf8'), ctx);
   const dire = (langue, corps) => { fenetre.PESSCO.lang = langue; return fenetre.oasisMessageErreur(corps, 400); };
   const r = {
-    fr: dire('fr', { error: 'Carence non trouvée' }),
-    en: dire('en', { error: 'Carence non trouvée' }),
-    pt: dire('pt', { error: 'Carence non trouvée' }),
+    fr: dire('fr', { error: 'Motif requis' }),
+    en: dire('en', { error: 'Motif requis' }),
+    pt: dire('pt', { error: 'Motif requis' }),
+    normFr: dire('fr', { error: 'introuvable', objet: 'carence' }),
+    normEn: dire('en', { error: 'introuvable', objet: 'carence' }),
+    normPt: dire('pt', { error: 'introuvable', objet: 'carence' }),
+    normPtM: dire('pt', { error: 'introuvable', objet: 'rapport' }),
+    normInconnu: dire('en', { error: 'introuvable', objet: 'objet_que_la_table_ignore' }),
     gabarit: dire('pt', { error: 'Écart hors de votre périmètre (Togo)' }),
     deuxTrous: dire('en', { error: 'Activité non réinitialisable : 2 constatation(s) et 1 rapport(s) en dépendent' }),
     message: dire('en', { message: 'Aucune donnée à exporter' }),
@@ -285,7 +290,7 @@ function controlerPhrasesServeur() {
     code: dire('pt', { error: 'plan_amende' }),
   };
   verifier('phrase du serveur rendue dans la langue de l’agent',
-    r.fr === 'Carence non trouvée' && r.en === 'Deficiency not found' && r.pt === 'Deficiência não encontrada',
+    r.fr === 'Motif requis' && r.en === 'Reason required' && r.pt === 'Motivo obrigatório',
     JSON.stringify([r.fr, r.en, r.pt]));
   verifier('phrase à trous : la valeur passe dans la traduction',
     r.gabarit === 'Constatação fora do seu âmbito (Togo)'
@@ -294,4 +299,28 @@ function controlerPhrasesServeur() {
   verifier('phrase inconnue rendue telle quelle, code toujours traduit',
     r.message === 'No data to export' && r.inconnue === 'Une phrase que la table ignore'
     && /^Este plano foi emendado/.test(r.code), JSON.stringify([r.message, r.inconnue, r.code]));
+  verifier('erreur normalisée composée dans la langue de l’agent, accordée',
+    r.normFr === 'Carence introuvable' && r.normEn === 'Deficiency not found'
+    && r.normPt === 'Deficiência não encontrada' && r.normPtM === 'Relatório não encontrado'
+    && r.normInconnu === 'Item not found',
+    JSON.stringify([r.normFr, r.normEn, r.normPt, r.normPtM, r.normInconnu]));
+
+  // Chaque objet cité par une erreur normalisée a son nom dans les trois
+  // langues, et son genre là où la phrase s'accorde.
+  const objets = fenetre.OASIS_OBJETS_SERVEUR || {};
+  const cites = new Map();
+  sourcesServeur().forEach((f) => {
+    const texte = fs.readFileSync(f, 'utf8');
+    for (const m of texte.matchAll(/\bintrouvable\(\s*res\s*,\s*'([a-z_]+)'\s*\)/g)) {
+      if (!cites.has(m[1])) cites.set(m[1], `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`);
+    }
+  });
+  const sansNom = [...cites].filter(([k]) => {
+    const o = objets[k];
+    return !o || o.length !== 3 || !o[0][0] || !o[1][0] || !o[2][0] || !['m', 'f'].includes(o[0][1]) || !['m', 'f'].includes(o[2][1]);
+  });
+  verifier(`chaque objet des erreurs normalisées est nommé (${cites.size})`,
+    sansNom.length === 0, sansNom.map(([k, ou]) => `« ${k} » (${ou})`).join(' · '));
+  const orphelins = Object.keys(objets).filter((k) => k !== 'element' && !cites.has(k));
+  verifier('aucun nom d’objet que le serveur ne cite plus', orphelins.length === 0, orphelins.join(' · '));
 }

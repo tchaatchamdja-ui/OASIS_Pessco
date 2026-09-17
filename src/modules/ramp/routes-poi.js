@@ -27,6 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
+const { introuvable } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -286,7 +287,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/poi/:id`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     res.json({
       ...p,
@@ -320,7 +321,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/poi/:id/commentaires`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     if (p.statut !== 'soumis') {
@@ -391,7 +392,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/poi/:id`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     // Une fiche validée a produit une inspection et ses écarts : la rouvrir
     // les ferait mentir. Elle se consulte, elle ne se corrige plus.
@@ -441,7 +442,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/poi/:id/soumettre`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à soumettre une inspection');
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     if (p.statut !== 'brouillon') {
@@ -464,7 +465,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/poi/:id/renvoyer`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     if (p.statut !== 'soumis') {
@@ -480,7 +481,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/poi/:id/valider`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
     if (p.statut === 'validee') {
       return res.status(400).json({ error: 'Formulaire déjà validé' });
@@ -587,7 +588,7 @@ module.exports = function register(app, deps, M) {
   // périmètre, l'agent contribue, et elle n'est pas encore partie.
   function fichePourPiece(req, res) {
     const p = db.get('poi', req.params.id);
-    if (!p) { res.status(404).json({ error: 'Formulaire non trouvé' }); return null; }
+    if (!p) { introuvable(res, 'formulaire'); return null; }
     if (!R.canContribute(req.user)) { refuser(res); return null; }
     if (!dansPerimetre(req, p)) { refuser(res, 'Formulaire hors de votre périmètre'); return null; }
     if (piecesFigees(p)) {
@@ -601,7 +602,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/poi/:id/pieces`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     res.json({
       pieces: (p.pieces || []).map(vuePiece),
@@ -634,7 +635,7 @@ module.exports = function register(app, deps, M) {
     const p = fichePourPiece(req, res);
     if (!p) return undefined;
     const pj = piece(p, req.params.pid);
-    if (!pj) return res.status(404).json({ error: 'Pièce non trouvée' });
+    if (!pj) return introuvable(res, 'piece');
     const d = req.body || {};
     const maj = { ...pj };
     if (d.intitule !== undefined) maj.intitule = texte(d.intitule) || pj.intitule;
@@ -661,7 +662,7 @@ module.exports = function register(app, deps, M) {
     const p = fichePourPiece(req, res);
     if (!p) return undefined;
     const pj = piece(p, req.params.pid);
-    if (!pj) return res.status(404).json({ error: 'Pièce non trouvée' });
+    if (!pj) return introuvable(res, 'piece');
     db.update('poi', p.id, { pieces: (p.pieces || []).filter((x) => x.id !== pj.id) });
     effacerFichier(pj.fichier);
     return res.json({ status: 'ok' });
@@ -669,10 +670,10 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/poi/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     const pj = piece(p, req.params.pid);
-    if (!pj) return res.status(404).json({ error: 'Pièce non trouvée' });
+    if (!pj) return introuvable(res, 'piece');
     const chemin = path.join(DOSSIER_PIECES, path.basename(pj.fichier || ''));
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
     res.setHeader('Content-Disposition',
@@ -696,7 +697,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/poi/:id/communiquer`, requireAuth, async (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     if (p.statut !== 'validee') {
@@ -762,7 +763,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/poi/:id/transmettre`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return refuser(res, 'Formulaire hors de votre périmètre');
     if (p.statut !== 'validee') {
@@ -790,7 +791,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/poi/:id`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Formulaire non trouvé' });
+    if (!p) return introuvable(res, 'formulaire');
     // Une fiche validée est la pièce justificative de son inspection : seul le
     // gestionnaire du module peut la retirer, et l'inspection reste.
     if (p.statut === 'validee' && !admin(req)) {

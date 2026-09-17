@@ -17,6 +17,7 @@ const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
+const { introuvable } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -293,7 +294,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/mesures/:id`, requireAuth, (req, res) => {
     const m = db.get('mesures', req.params.id);
-    if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+    if (!m) return introuvable(res, 'mesure');
     if (!lisible(req, m)) return refuser(res);
     res.json(enrichir(m));
   });
@@ -385,7 +386,7 @@ module.exports = function register(app, deps, M) {
   // est consignée ici, quelle que soit l'origine de l'infraction.
   app.post(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Infraction non trouvée' });
+    if (!c) return introuvable(res, 'infraction');
     if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Classement réservé au validateur');
     if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
       return res.status(400).json({ error: 'Une mesure a déjà été prise sur cette infraction' });
@@ -438,7 +439,7 @@ module.exports = function register(app, deps, M) {
   // ensemble, il n'a pas à les demander séparément.
   app.get(`${M}/constatations/:id/traitement`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const t = traitementDe(c.id);
     res.json({
@@ -485,7 +486,7 @@ module.exports = function register(app, deps, M) {
   // sa propre route.
   app.put(`${M}/constatations/:id/traitement`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const d = req.body || {};
     const patch = {
@@ -528,7 +529,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/investigation`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const t = traitementDe(c.id);
     // L'investigation ne s'ouvre qu'une fois la suite décidée : on ne consigne
@@ -550,7 +551,7 @@ module.exports = function register(app, deps, M) {
   // validateur.
   app.post(`${M}/constatations/:id/investigation/soumettre`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Soumission réservée au validateur');
     const t = traitementDe(c.id);
     if (!t || t.decision !== 'investiguer' || t.etape !== 'investigations') {
@@ -571,7 +572,7 @@ module.exports = function register(app, deps, M) {
   // l'état de l'investigation.
   app.get(`${M}/constatations/:id/rapport-investigation.pdf`, requireAuth, async (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const t = traitementDe(c.id);
     if (!t || !t.investigation) return res.status(404).json({ error: 'Aucune investigation' });
@@ -604,7 +605,7 @@ module.exports = function register(app, deps, M) {
   // suit toujours l'état du dossier.
   app.get(`${M}/constatations/:id/etapes/:cle.pdf`, requireAuth, async (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const cle = String(req.params.cle || '');
     if (!etapePdf.ETAPES[cle]) return res.status(404).json({ error: 'Étape inconnue' });
@@ -783,7 +784,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/qualification`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const t = traitementDe(c.id);
     if (!t || t.etape !== 'qualification') {
@@ -809,7 +810,7 @@ module.exports = function register(app, deps, M) {
   // reculer — le fil : elles relèvent du validateur, comme les décisions.
   const carenceAQualifier = (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) { res.status(404).json({ error: 'Carence non trouvée' }); return null; }
+    if (!c) { introuvable(res, 'carence'); return null; }
     if (!R.canValidate(req.user, perimetre(c))) { refuser(res, 'Décision réservée au validateur'); return null; }
     const t = traitementDe(c.id);
     if (!t || t.etape !== 'qualification') {
@@ -1019,7 +1020,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/suivi`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const t = traitementDe(c.id);
     if (!t || t.etape !== 'suivi') {
@@ -1068,7 +1069,7 @@ module.exports = function register(app, deps, M) {
   // relèvent du validateur, et ne valent que sur un dossier ouvert.
   const carenceEnSuivi = (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) { res.status(404).json({ error: 'Carence non trouvée' }); return null; }
+    if (!c) { introuvable(res, 'carence'); return null; }
     if (!R.canValidate(req.user, perimetre(c))) { refuser(res, 'Décision réservée au validateur'); return null; }
     const t = traitementDe(c.id);
     if (!t || t.etape !== 'suivi') {
@@ -1132,7 +1133,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
-    if (!c) return res.status(404).json({ error: 'Carence non trouvée' });
+    if (!c) return introuvable(res, 'carence');
     if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Décision réservée au validateur');
     const d = req.body || {};
     const decision = texte(d.decision);
@@ -1217,7 +1218,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!peutEcrire(req, c)) return refuser(res, 'Non autorisé à modifier cette constatation');
     const champs = constatPropre({ ...c, ...(req.body || {}) });
     if (!champs.titre) return res.status(400).json({ error: 'Objet requis' });
@@ -1234,7 +1235,7 @@ module.exports = function register(app, deps, M) {
   // perdrait ce qui la motive.
   app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Suppression réservée au gestionnaire');
     if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
       return res.status(400).json({ error: 'Des mesures sont rattachées à cette infraction' });
@@ -1275,7 +1276,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/mesures/:id`, requireAuth, (req, res) => {
     const m = db.get('mesures', req.params.id);
-    if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+    if (!m) return introuvable(res, 'mesure');
     if (!peutEcrire(req, m)) return refuser(res, 'Non autorisé à modifier cette mesure');
     // Une mesure clôturée ou annulée est un acte pris : elle ne se réécrit pas.
     if (CLOS.includes(m.statut)) {
@@ -1293,7 +1294,7 @@ module.exports = function register(app, deps, M) {
     // gestionnaire du module.
     if (req.user.role !== 'SUPERADMIN') return refuser(res, "Réservé au SuperAdmin");
     if (!db.remove('mesures', req.params.id)) {
-      return res.status(404).json({ error: 'Mesure non trouvée' });
+      return introuvable(res, 'mesure');
     }
     res.json({ status: 'ok' });
   });
@@ -1307,7 +1308,7 @@ module.exports = function register(app, deps, M) {
   const transition = (route, depuis, vers, champs) => {
     app.post(`${M}/mesures/:id/${route}`, requireAuth, (req, res) => {
       const m = db.get('mesures', req.params.id);
-      if (!m) return res.status(404).json({ error: 'Mesure non trouvée' });
+      if (!m) return introuvable(res, 'mesure');
       if (!peutDecider(req, m)) return refuser(res, 'Réservé au validateur et au gestionnaire');
       if (!depuis.includes(m.statut)) {
         return res.status(400).json({
@@ -1373,7 +1374,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canRead(req.user, null)) return refuser(res);
     const nom = path.basename(req.params.fichier);
     const chemin = path.join(DOSSIER_UPLOADS, nom);
-    if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier non trouvé' });
+    if (!fs.existsSync(chemin)) return introuvable(res, 'fichier');
     const affiche = nomDePresentation(req.query.nom || nom, path.extname(nom).toLowerCase());
     res.setHeader('Content-Disposition', `inline; filename*=UTF-8''${encodeURIComponent(affiche)}`);
     res.sendFile(chemin);

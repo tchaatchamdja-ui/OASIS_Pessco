@@ -8,6 +8,7 @@ const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
+const { introuvable } = require('../../erreurs');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -133,7 +134,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const c = db.get('comites', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Comité non trouvé' });
+    if (!c) return introuvable(res, 'comite');
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
     // Le code ne suit pas le libellé : une décision déjà rendue le porte.
@@ -144,7 +145,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Suppression réservée au gestionnaire');
     const c = db.get('comites', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Comité non trouvé' });
+    if (!c) return introuvable(res, 'comite');
     // Un comité qui a siégé ne se retire pas : la mesure perdrait l'instance
     // qui l'a décidée.
     if (db.list('mesures').some((m) => m.comite_code === c.code)) {
@@ -174,7 +175,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const t = db.get('types_investigation', req.params.id);
-    if (!t) return res.status(404).json({ error: 'Type non trouvé' });
+    if (!t) return introuvable(res, 'type');
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
     // Le code ne suit pas le libellé : les investigations déjà consignées le
@@ -186,7 +187,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Suppression réservée au gestionnaire');
     const t = db.get('types_investigation', req.params.id);
-    if (!t) return res.status(404).json({ error: 'Type non trouvé' });
+    if (!t) return introuvable(res, 'type');
     // Un type déjà employé par une investigation ne se retire pas : le travail
     // consigné perdrait son intitulé.
     const employe = db.list('traitements').some((x) => ((x.investigation || {}).travaux || [])
@@ -216,7 +217,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/parametres/categories/:id`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const c = db.get('categories', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Catégorie non trouvée' });
+    if (!c) return introuvable(res, 'categorie');
     const d = req.body || {};
     const patch = {};
     // Le code ne change pas avec le libellé : les mesures déjà prises le
@@ -234,7 +235,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/parametres/categories/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const c = db.get('categories', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Catégorie non trouvée' });
+    if (!c) return introuvable(res, 'categorie');
     // Une catégorie encore portée par une mesure ne se supprime pas : la
     // mesure deviendrait illisible.
     const utilisee = db.list('mesures').filter((m) => m.categorie === c.code).length;
@@ -275,7 +276,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/parametres/types/:id`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const t = db.get('types', req.params.id);
-    if (!t) return res.status(404).json({ error: 'Type non trouvé' });
+    if (!t) return introuvable(res, 'type');
     const d = req.body || {};
     const patch = {};
     if (d.libelle !== undefined) {
@@ -298,7 +299,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/parametres/types/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const t = db.get('types', req.params.id);
-    if (!t) return res.status(404).json({ error: 'Type non trouvé' });
+    if (!t) return introuvable(res, 'type');
     const utilise = db.list('mesures').filter((m) => m.type_mesure === t.code).length;
     if (utilise) {
       return res.status(400).json({

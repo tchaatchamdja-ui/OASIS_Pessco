@@ -11,6 +11,7 @@ const instances = require('../../instances');
 const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
+const { introuvable } = require('../../erreurs');
 
 // Collections servies par le CRUD générique, comme `register_crud` dans PESSCO.
 const CRUD = {
@@ -156,7 +157,7 @@ module.exports = function register(app, deps, M) {
       if (!admin(req)) return refuser(res);
       const d = req.body || {};
       if (!String(d.item || '').trim()) return res.status(400).json({ error: 'Item requis' });
-      if (!db.update(coll, req.params.id, champs(d))) return res.status(404).json({ error: 'Non trouvé' });
+      if (!db.update(coll, req.params.id, champs(d))) return introuvable(res, 'element');
       res.json({ status: 'ok' });
     });
 
@@ -190,7 +191,7 @@ module.exports = function register(app, deps, M) {
 
     app.get(`${M}/${route}/:id`, requireAuth, (req, res) => {
       const rec = db.get(coll, req.params.id);
-      if (!rec) return res.status(404).json({ error: 'Non trouvé' });
+      if (!rec) return introuvable(res, 'element');
       res.json(rec);
     });
 
@@ -213,7 +214,7 @@ module.exports = function register(app, deps, M) {
       const ouvert = coll === 'checklist_responses';
       if (!ouvert && !admin(req)) return refuser(res);
       if (ouvert && !R.canContribute(req.user, null, referentiels)) return refuser(res);
-      if (!db.update(coll, req.params.id, req.valide)) return res.status(404).json({ error: 'Non trouvé' });
+      if (!db.update(coll, req.params.id, req.valide)) return introuvable(res, 'element');
       res.json({ status: 'ok' });
     });
 
@@ -274,7 +275,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/checklists/:id/export-xlsx`, requireAuth, (req, res) => {
     const cl = db.get('checklists', req.params.id);
-    if (!cl) return res.status(404).json({ error: 'Checklist introuvable' });
+    if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
     const sousThemes = libelles('checklist_sous_themes');
     const lignes = db.list('checklist_items')
@@ -293,7 +294,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/checklists/:id/import-xlsx`, requireAuth, multipart(), (req, res) => {
     if (!admin(req)) return refuser(res);
     const cl = db.get('checklists', req.params.id);
-    if (!cl) return res.status(404).json({ error: 'Checklist introuvable' });
+    if (!cl) return introuvable(res, 'checklist');
     const f = (req.files || {}).file;
     if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
     if (!/\.xlsx$/i.test(f.filename || '')) return res.status(400).json({ error: 'Format non supporté — utilisez .xlsx' });
@@ -332,7 +333,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/checklist-fill/:dossierId/:checklistId/export-xlsx`, requireAuth, (req, res) => {
     const cl = db.get('checklists', req.params.checklistId);
-    if (!cl) return res.status(404).json({ error: 'Checklist introuvable' });
+    if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
     const sousThemes = libelles('checklist_sous_themes');
     const statuts = libelles('checklist_statuts');
@@ -397,7 +398,7 @@ module.exports = function register(app, deps, M) {
   // ── Sous-thèmes d'une checklist ──
   app.get(`${M}/checklists/:id/sous-themes/export-xlsx`, requireAuth, (req, res) => {
     const cl = db.get('checklists', req.params.id);
-    if (!cl) return res.status(404).json({ error: 'Checklist introuvable' });
+    if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
     const lignes = db.list('checklist_sous_themes')
       .filter((s) => s.checklist_id === cl.id)
@@ -411,7 +412,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/checklists/:id/sous-themes/import-xlsx`, requireAuth, multipart(), (req, res) => {
     if (!admin(req)) return refuser(res);
     const cl = db.get('checklists', req.params.id);
-    if (!cl) return res.status(404).json({ error: 'Checklist introuvable' });
+    if (!cl) return introuvable(res, 'checklist');
     const f = (req.files || {}).file;
     if (!f) return res.status(400).json({ error: 'Aucun fichier fourni' });
     if (!/\.xlsx$/i.test(f.filename || '')) return res.status(400).json({ error: 'Format non supporté — utilisez .xlsx' });
@@ -492,7 +493,7 @@ module.exports = function register(app, deps, M) {
     let contexte = { secteur_id: q.secteur_id || '', domaine_id: q.domaine_id || '', dossier: null };
     if (q.constatation_id) {
       const c = db.get('constatations', q.constatation_id);
-      if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+      if (!c) return introuvable(res, 'constatation');
       type = 'constatation';
       const p = perim(c.prestataire_id);
       contexte = {
@@ -502,7 +503,7 @@ module.exports = function register(app, deps, M) {
       };
     } else if (q.notification_id) {
       const n = db.get('notifications', q.notification_id);
-      if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+      if (!n) return introuvable(res, 'notification');
       const p = perim(n.prestataire_id);
       contexte = {
         secteur_id: n.secteur_id || p.secteur_id,
@@ -561,7 +562,7 @@ module.exports = function register(app, deps, M) {
       .forEach((k) => { if (d[k] !== undefined) patch[k] = d[k]; });
     patch.date_maj = db.now();
     const rec = db.update('processus', req.params.id, patch);
-    return rec ? res.json(rec) : res.status(404).json({ error: 'Processus non trouvé' });
+    return rec ? res.json(rec) : introuvable(res, 'processus');
   });
 
   app.delete(`${M}/processus/:id`, requireAuth, (req, res) => {
@@ -574,7 +575,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/processus/:id/dupliquer`, requireAuth, (req, res) => {
     if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
     const src = db.get('processus', req.params.id);
-    if (!src) return res.status(404).json({ error: 'Processus non trouvé' });
+    if (!src) return introuvable(res, 'processus');
     const d = req.body || {};
     const { id: _ignore, ...base } = src;
     const rec = db.insert('processus', {

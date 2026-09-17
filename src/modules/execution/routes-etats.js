@@ -14,6 +14,7 @@ const refModele = require('./references');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const { valider } = require('../../valider');
+const { introuvable } = require('../../erreurs');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
 // disent à partir de quand une étape est en retard.
@@ -146,7 +147,7 @@ module.exports = function register(app, deps, M) {
   // qu'elles ne sont pas soldées.
   const basculerArchive = (archive) => (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     const notif = db.get('notifications', d.notification_id) || { secteur_id: d.secteur_id };
     if (!peutAdministrer(req, notif)) {
       return refuser(res, 'Archivage réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
@@ -176,7 +177,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${A}/:id/arreter`, requireAuth, (req, res) => {
     const n = notifDeLActivite(req.params.id);
-    if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
+    if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
       return refuser(res, 'Arrêt réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
     }
@@ -199,7 +200,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${A}/:id/reprendre`, requireAuth, (req, res) => {
     const n = notifDeLActivite(req.params.id);
-    if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
+    if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
       return refuser(res, 'Reprise réservée au super-administrateur et à l’administrateur AAC, sur leur portée');
     }
@@ -217,7 +218,7 @@ module.exports = function register(app, deps, M) {
   // pièces comprises.
   const archiverActivite = (archive) => (req, res) => {
     const n = notifDeLActivite(req.params.id);
-    if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
+    if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
       return refuser(res, 'Archivage réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
     }
@@ -281,7 +282,7 @@ module.exports = function register(app, deps, M) {
   // survivraient sans dossier, et le prestataire les a déjà reçues.
   app.put(`${A}/:id/reinitialiser`, requireAuth, (req, res) => {
     const n = notifDeLActivite(req.params.id);
-    if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
+    if (!n) return introuvable(res, 'activite');
     if (!R.isAdmin(req.user, referentiels)
       || !R.canValidate(req.user, perimetreActivite(n), referentiels)) {
       return refuser(res, 'Réinitialisation réservée au gestionnaire du module, sur sa portée');
@@ -314,7 +315,7 @@ module.exports = function register(app, deps, M) {
       return refuser(res, 'Suppression réservée au super-administrateur');
     }
     const n = notifDeLActivite(req.params.id);
-    if (!n) return res.status(404).json({ error: 'Activité non trouvée' });
+    if (!n) return introuvable(res, 'activite');
     const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : l'activité qui la porte ne se supprime plus.

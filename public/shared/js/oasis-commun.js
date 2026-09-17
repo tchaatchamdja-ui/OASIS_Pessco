@@ -137,9 +137,24 @@ function traduirePhraseServeur(texte, rang) {
   return texte;
 }
 
+// Erreur normalisée (src/erreurs.js) : un code et l'objet concerné. La phrase
+// se compose ici, dans la langue de l'agent, accordée au genre du nom.
+function composerErreurNormalisee(d, rang) {
+  const fenetre = typeof window !== 'undefined' ? window : {};
+  const gabarits = (fenetre.OASIS_GABARITS_SERVEUR || {})[d.error];
+  if (!gabarits) return '';
+  const objet = (fenetre.OASIS_OBJETS_SERVEUR || {})[d.objet] || (fenetre.OASIS_OBJETS_SERVEUR || {}).element;
+  if (!objet) return '';
+  const [nom, genre] = objet[rang] || objet[0];
+  const gabarit = gabarits[rang] || gabarits[0];
+  return (gabarit[genre === 'f' ? 'f' : 'm'] || gabarit.m).replace('{objet}', nom);
+}
+
 function oasisMessageErreur(donnees, statut, defaut) {
   const d = donnees || {};
   const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
+  const normalisee = composerErreurNormalisee(d, rang);
+  if (normalisee) return normalisee;
   // Une phrase déjà écrite par le serveur dit mieux le cas particulier.
   if (d.message) return traduirePhraseServeur(String(d.message), rang);
   const connue = ERREURS[d.error];

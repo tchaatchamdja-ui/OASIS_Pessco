@@ -11,6 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
+const { introuvable } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -223,7 +224,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/parametres/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = db.get('parametres', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Paramètre non trouvé' });
+    if (!p) return introuvable(res, 'parametre');
     const d = req.body || {};
     const patch = {};
     if (d.label !== undefined) {
@@ -252,7 +253,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/parametres/:id/actif`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = db.get('parametres', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Paramètre non trouvé' });
+    if (!p) return introuvable(res, 'parametre');
     db.update('parametres', p.id, { actif: !p.actif });
     res.json({ status: 'ok', actif: !p.actif });
   });
@@ -260,7 +261,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/parametres/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = db.get('parametres', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Paramètre non trouvé' });
+    if (!p) return introuvable(res, 'parametre');
     // Un paramètre encore porté par une inspection ou un écart ne se supprime
     // pas : la donnée deviendrait illisible. Il se désactive.
     const utilise = compterUsages(p);
@@ -326,7 +327,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/pays/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = db.get('pays', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Pays non trouvé' });
+    if (!p) return introuvable(res, 'pays');
     const patch = champsPays(req.body || {});
     if (patch.nom === '') return res.status(400).json({ error: 'Nom requis' });
     if (patch.iso2 !== undefined) {
@@ -342,7 +343,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/pays/:id/actif`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = db.get('pays', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Pays non trouvé' });
+    if (!p) return introuvable(res, 'pays');
     db.update('pays', p.id, { actif: p.actif === false });
     res.json({ status: 'ok', actif: p.actif === false });
   });
@@ -350,7 +351,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/pays/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = db.get('pays', req.params.id);
-    if (!p) return res.status(404).json({ error: 'Pays non trouvé' });
+    if (!p) return introuvable(res, 'pays');
     // Un pays cité par une inspection ne se supprime pas : la ligne
     // deviendrait illisible. Il se désactive.
     const utilise = db.list('inspections').filter((i) => i.pays === p.nom).length;
@@ -401,7 +402,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/aeroports/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = db.get('aeroports', req.params.id);
-    if (!a) return res.status(404).json({ error: 'Aéroport non trouvé' });
+    if (!a) return introuvable(res, 'aeroport');
     const d = req.body || {};
     const patch = {};
     ['pays', 'nom', 'code', 'statut'].forEach((k) => {
@@ -420,7 +421,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/aeroports/:id/actif`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = db.get('aeroports', req.params.id);
-    if (!a) return res.status(404).json({ error: 'Aéroport non trouvé' });
+    if (!a) return introuvable(res, 'aeroport');
     db.update('aeroports', a.id, { actif: a.actif === false });
     res.json({ status: 'ok', actif: a.actif === false });
   });
@@ -428,7 +429,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/aeroports/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = db.get('aeroports', req.params.id);
-    if (!a) return res.status(404).json({ error: 'Aéroport non trouvé' });
+    if (!a) return introuvable(res, 'aeroport');
     db.remove('aeroports', a.id);
     res.json({ status: 'ok' });
   });
@@ -546,7 +547,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/aeronefs/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = db.getAeronef(req.params.id);
-    if (!a) return res.status(404).json({ error: 'Aéronef non trouvé' });
+    if (!a) return introuvable(res, 'aeronef');
     const d = req.body || {};
     const patch = {};
     ['designation', 'modele', 'constructeur', 'etat_conception'].forEach((k) => {
@@ -562,7 +563,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/aeronefs/:id/actif`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = db.getAeronef(req.params.id);
-    if (!a) return res.status(404).json({ error: 'Aéronef non trouvé' });
+    if (!a) return introuvable(res, 'aeronef');
     db.updateAeronef(a.id, { actif: a.actif === false });
     res.json({ status: 'ok', actif: a.actif === false });
   });
@@ -570,7 +571,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/aeronefs/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = db.getAeronef(req.params.id);
-    if (!a) return res.status(404).json({ error: 'Aéronef non trouvé' });
+    if (!a) return introuvable(res, 'aeronef');
     // Un appareil cité par une inspection ne se supprime pas : la ligne
     // deviendrait illisible. Il se désactive.
     const utilise = db.list('inspections')
@@ -646,7 +647,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/depots/:id`, requireAuth, (req, res) => {
     const dep = db.get('depots', req.params.id);
-    if (!dep) return res.status(404).json({ error: 'Dépôt introuvable' });
+    if (!dep) return introuvable(res, 'depot');
     if (!peutModifierDepot(req, dep)) return refuser(res, 'Seul le déposant ou le gestionnaire modifie ce dépôt');
     const d = req.body || {};
     db.update('depots', dep.id, {
@@ -659,7 +660,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/depots/:id`, requireAuth, (req, res) => {
     const dep = db.get('depots', req.params.id);
-    if (!dep) return res.status(404).json({ error: 'Dépôt introuvable' });
+    if (!dep) return introuvable(res, 'depot');
     if (!peutModifierDepot(req, dep)) return refuser(res, 'Seul le déposant ou le gestionnaire supprime ce dépôt');
     const chemin = path.join(DOSSIER_DEPOTS, path.basename(dep.fichier || ''));
     if (dep.fichier && fs.existsSync(chemin)) fs.unlinkSync(chemin);
@@ -669,7 +670,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/depots/:id/fichier`, requireAuth, (req, res) => {
     const dep = db.get('depots', req.params.id);
-    if (!dep) return res.status(404).json({ error: 'Dépôt introuvable' });
+    if (!dep) return introuvable(res, 'depot');
     if (!peutTelecharger(req, dep)) return refuser(res, 'Téléchargement non autorisé');
     const chemin = path.join(DOSSIER_DEPOTS, path.basename(dep.fichier || ''));
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
@@ -715,7 +716,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/contacts/:id`, requireAuth, (req, res) => {
     const contact = db.get('contacts', req.params.id);
-    if (!contact) return res.status(404).json({ error: 'Contact non trouvé' });
+    if (!contact) return introuvable(res, 'contact');
     const c = champsContact({ ...contact, ...(req.body || {}) });
     if (!c.etat || !c.nom || !c.prenom) {
       return res.status(400).json({ error: 'État, nom et prénoms sont obligatoires' });
@@ -731,7 +732,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/contacts/:id/actif`, requireAuth, (req, res) => {
     const contact = db.get('contacts', req.params.id);
-    if (!contact) return res.status(404).json({ error: 'Contact non trouvé' });
+    if (!contact) return introuvable(res, 'contact');
     if (!R.couvreEtat(req.user, referentiels, contact.etat)) {
       return refuser(res, 'Contact hors de votre périmètre');
     }
@@ -741,7 +742,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/contacts/:id`, requireAuth, (req, res) => {
     const contact = db.get('contacts', req.params.id);
-    if (!contact) return res.status(404).json({ error: 'Contact non trouvé' });
+    if (!contact) return introuvable(res, 'contact');
     if (!admin(req) && !R.couvreEtat(req.user, referentiels, contact.etat)) {
       return refuser(res, 'Contact hors de votre périmètre');
     }

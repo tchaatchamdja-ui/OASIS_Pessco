@@ -9,6 +9,7 @@ const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
+const { introuvable } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
@@ -97,7 +98,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/dossiers/:id`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     const n = db.get('notifications', d.notification_id) || {};
     const pr = parId('prestataires', d.prestataire_id) || {};
     const constatations = db.list('constatations')
@@ -142,7 +143,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/dossiers`, requireAuth, (req, res) => {
     const d = req.body || {};
     const n = db.get('notifications', d.notification_id || '');
-    if (!n) return res.status(404).json({ error: 'Notification non trouvée' });
+    if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (!['envoye', 'acte'].includes(n.statut)) {
       return res.status(400).json({ error: "La notification doit être au statut 'envoyé' ou 'acté'" });
@@ -174,7 +175,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/dossiers/:id`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     const patch = {};
     Object.entries(req.body || {}).forEach(([k, v]) => {
@@ -189,7 +190,7 @@ module.exports = function register(app, deps, M) {
   // Réalisation close → l'étape Rédaction s'ouvre.
   app.put(`${M}/dossiers/:id/close-realisation`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     db.update('dossiers', d.id, { realisation_closed: 1, current_step: 'redaction', date_maj: db.now() });
     res.json({ status: 'ok', current_step: 'redaction' });
@@ -199,7 +200,7 @@ module.exports = function register(app, deps, M) {
   // référence de base, et bascule le dossier à l'étape Validation.
   app.put(`${M}/dossiers/:id/submit`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     const maintenant = db.now();
     let baseRef = d.base_reference || '';
@@ -235,7 +236,7 @@ module.exports = function register(app, deps, M) {
   // Renvoi pour correction : retour à l'étape Rédaction.
   app.put(`${M}/dossiers/:id/return`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à renvoyer');
     const observations = (req.body || {}).observations || '';
     const soumis = db.list('rapports')
@@ -251,7 +252,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/dossiers/:id/close`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à clôturer');
     if (d.statut === 'cloture') return res.status(400).json({ error: 'Dossier déjà clôturé' });
     // Le dossier ne se clôt qu'une fois le rapport transmis au prestataire.
@@ -271,7 +272,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/dossiers/:id`, requireAuth, (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
     const d = db.get('dossiers', req.params.id);
-    if (!d) return res.status(404).json({ error: 'Dossier non trouvé' });
+    if (!d) return introuvable(res, 'dossier');
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : le dossier qui la porte ne se supprime plus.
     const fncs = db.list('constatations').filter((c) => c.dossier_id === d.id).map((c) => c.id);
@@ -339,7 +340,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (R.estPrestataire(req.user)) {
       if (!R.accedeA(req.user, c.prestataire_id || '')) return refuser(res, 'Accès refusé à cette constatation');
     }
@@ -456,7 +457,7 @@ module.exports = function register(app, deps, M) {
   // constatation : l'AAC et le prestataire s'y répondent sur le PAC.
   app.get(`${M}/constatations/:id/echanges`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (R.estPrestataire(req.user) && !R.accedeA(req.user, c.prestataire_id || '')) {
       return refuser(res, 'Accès refusé à cette constatation');
     }
@@ -474,7 +475,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/constatations/:id/echanges`, requireAuth, (req, res) => {
     if (!R.compteA(req.user, 'echanges', auth)) return refuser(res, 'Droit non confié à ce compte');
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     const contenu = String((req.body || {}).contenu || '').trim();
     if (!contenu) return res.status(400).json({ error: 'Message vide' });
@@ -498,7 +499,7 @@ module.exports = function register(app, deps, M) {
     let dossier = null;
     if (!direct) {
       dossier = db.get('dossiers', d.dossier_id || '');
-      if (!dossier) return res.status(404).json({ error: 'Dossier non trouvé' });
+      if (!dossier) return introuvable(res, 'dossier');
       if (dossier.statut === 'cloture') {
         return res.status(400).json({ error: 'Impossible de créer une FNC sur un dossier clôturé' });
       }
@@ -547,7 +548,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     // Champs sur lesquels la constatation engage le prestataire une fois
     // notifiée : ils relèvent alors de /ajuster, jamais de ce PUT.
@@ -600,7 +601,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/ajuster`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
 
     const roleReel = ((req.userReel || req.user || {}).role || '');
     if (!['SUPERADMIN', 'ADMIN'].includes(roleReel)
@@ -677,7 +678,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/direct-soumettre`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (!DEPUIS_SOUMISSION.includes(c.statut)) {
       return res.status(400).json({ error: 'Seule une constatation en préparation peut être soumise' });
@@ -701,7 +702,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/commentaires-validation`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
       return refuser(res, 'Non autorisé à commenter cette constatation');
     }
@@ -751,7 +752,7 @@ module.exports = function register(app, deps, M) {
   const decision = (route, statut, champs, motifRequis, issue) => {
     app.put(`${M}/constatations/:id/${route}`, requireAuth, (req, res) => {
       const c = db.get('constatations', req.params.id);
-      if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+      if (!c) return introuvable(res, 'constatation');
       if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
         return refuser(res, 'Non autorisé à statuer sur cette constatation');
       }
@@ -789,7 +790,7 @@ module.exports = function register(app, deps, M) {
     // Déposer un plan d'actions correctives est un droit confié au compte.
     if (!R.compteA(req.user, 'constatations', auth)) return refuser(res, 'Droit non confié à ce compte');
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     // « pac_valide » : le plan avait été accepté, le prestataire l'amende.
     if (!['ouverte', 'ouvert', 'pac_rejetee', 'pac_valide'].includes(c.statut)) {
       return res.status(400).json({ error: 'La FNC doit être ouverte, PAC rejetée ou PAC accepté pour soumettre un PAC' });
@@ -829,7 +830,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/constatations/:id/submit-preuves`, requireAuth, (req, res) => {
     if (!R.compteA(req.user, 'constatations', auth)) return refuser(res, 'Droit non confié à ce compte');
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (c.statut !== 'pac_valide') {
       return res.status(400).json({ error: 'Le PAC doit être accepté pour déposer des preuves de mise en oeuvre' });
     }
@@ -845,7 +846,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/validate-pac`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à valider le PAC');
     if (c.statut !== 'pac_soumis') return res.status(400).json({ error: 'Le PAC doit être soumis pour être validé' });
     if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
@@ -862,7 +863,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/reject-pac`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à renvoyer le PAC');
     if (c.statut !== 'pac_soumis') return res.status(400).json({ error: 'Le PAC doit être soumis pour être renvoyé' });
     if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
@@ -876,7 +877,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/constatations/:id/close`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à clôturer la FNC');
     if (c.statut === 'soldee') return res.status(400).json({ error: 'La FNC est déjà soldée' });
     if (refusProcessus(req, res, c, 'pac_cloture')) return undefined;
@@ -894,7 +895,7 @@ module.exports = function register(app, deps, M) {
   // constatation, qui entre alors dans le suivi du PAC.
   app.post(`${M}/constatations/:id/transmettre`, requireAuth, async (req, res) => {
     const c = db.get('constatations', req.params.id);
-    if (!c) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!c) return introuvable(res, 'constatation');
     // Même règle que pour un rapport : c'est l'Autorité qui notifie.
     if (R.estPrestataire(req.user)) return refuser(res, "Transmission réservée à l'Autorité");
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
@@ -933,7 +934,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
-    if (!db.get('constatations', req.params.id)) return res.status(404).json({ error: 'Constatation non trouvée' });
+    if (!db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
     if (suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
     db.remove('constatations', req.params.id);
     res.json({ status: 'ok' });

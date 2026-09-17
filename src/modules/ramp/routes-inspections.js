@@ -13,6 +13,7 @@ const R = require('./roles');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const vues = require('./vues');
+const { introuvable } = require('../../erreurs');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
 const DOSSIER_PREUVES = path.join(
@@ -84,7 +85,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/inspections/:id`, requireAuth, (req, res) => {
     const i = db.get('inspections', req.params.id);
     if (!i || !vues.voitExploitant(req, i.exploitant)) {
-      return res.status(404).json({ error: 'Inspection non trouvée' });
+      return introuvable(res, 'inspection');
     }
     res.json(avecEcarts([i], db.list('ecarts'))[0]);
   });
@@ -189,7 +190,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/inspections/:id`, requireAuth, (req, res) => {
     const i = db.get('inspections', req.params.id);
-    if (!i) return res.status(404).json({ error: 'Inspection non trouvée' });
+    if (!i) return introuvable(res, 'inspection');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
       return refuser(res, `Inspection hors de votre périmètre (${i.pays})`);
@@ -210,7 +211,7 @@ module.exports = function register(app, deps, M) {
     // décidé : l'inspection qui le porte ne se supprime plus.
     if (suitesCare.refusSiSuites(res, ecarts.map((e) => `ramp:${e.id}`))) return undefined;
     if (!db.removeInspection(req.params.id)) {
-      return res.status(404).json({ error: 'Inspection non trouvée' });
+      return introuvable(res, 'inspection');
     }
     // Les preuves des écarts partent avec eux, comme celles d'une fiche : les
     // laisser sur le disque accumulerait des fichiers que plus rien ne désigne.
@@ -230,7 +231,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/ecarts/:id/pac`, requireAuth, (req, res) => {
     const e = db.get('ecarts', req.params.id);
-    if (!e) return res.status(404).json({ error: 'Écart non trouvé' });
+    if (!e) return introuvable(res, 'ecart');
     if (!R.canContribute(req.user)) return refuser(res);
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
@@ -272,7 +273,7 @@ module.exports = function register(app, deps, M) {
 
   function ecartPourEvaluation(req, res) {
     const e = db.get('ecarts', req.params.id);
-    if (!e) { res.status(404).json({ error: 'Écart non trouvé' }); return null; }
+    if (!e) { introuvable(res, 'ecart'); return null; }
     // Se prononcer sur un plan relève du valideur, non de qui l'a rédigé.
     if (!R.canValidate(req.user)) { refuser(res, 'Réservé au valideur du module'); return null; }
     const i = db.get('inspections', e.inspection_id) || {};
@@ -361,7 +362,7 @@ module.exports = function register(app, deps, M) {
     if (!commentaire) return res.status(400).json({ error: 'Commentaire vide' });
     const ev = evaluationDe(e);
     const cible = (ev.verification.suivis || []).find((x) => x.id === req.params.sid);
-    if (!cible) return res.status(404).json({ error: 'Suivi non trouvé' });
+    if (!cible) return introuvable(res, 'suivi');
     ev.verification.suivis = ev.verification.suivis.map((x) => (x.id === cible.id
       ? { ...x, texte: commentaire, modifie_le: db.now(), modifie_par: req.user.username } : x));
     db.update('ecarts', e.id, { evaluation: ev });
@@ -375,7 +376,7 @@ module.exports = function register(app, deps, M) {
     const ev = evaluationDe(e);
     const avant = (ev.verification.suivis || []).length;
     ev.verification.suivis = ev.verification.suivis.filter((x) => x.id !== req.params.sid);
-    if (ev.verification.suivis.length === avant) return res.status(404).json({ error: 'Suivi non trouvé' });
+    if (ev.verification.suivis.length === avant) return introuvable(res, 'suivi');
     db.update('ecarts', e.id, { evaluation: ev });
     return res.json({ status: 'ok' });
   });
@@ -384,7 +385,7 @@ module.exports = function register(app, deps, M) {
 
   function ecartPourPreuve(req, res) {
     const e = db.get('ecarts', req.params.id);
-    if (!e) { res.status(404).json({ error: 'Écart non trouvé' }); return null; }
+    if (!e) { introuvable(res, 'ecart'); return null; }
     if (!R.canContribute(req.user)) { refuser(res); return null; }
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
@@ -431,7 +432,7 @@ module.exports = function register(app, deps, M) {
     const e = ecartPourPreuve(req, res);
     if (!e) return undefined;
     const pj = preuve(e, req.params.pid);
-    if (!pj) return res.status(404).json({ error: 'Preuve non trouvée' });
+    if (!pj) return introuvable(res, 'preuve');
     try { fs.unlinkSync(path.join(DOSSIER_PREUVES, path.basename(pj.fichier || ''))); }
     catch (err) { /* le fichier a déjà disparu */ }
     db.update('ecarts', e.id, { preuves: (e.preuves || []).filter((x) => x.id !== pj.id) });
@@ -440,13 +441,13 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/ecarts/:id/preuves/:pid/fichier`, requireAuth, (req, res) => {
     const e = db.get('ecarts', req.params.id);
-    if (!e) return res.status(404).json({ error: 'Écart non trouvé' });
+    if (!e) return introuvable(res, 'ecart');
     const inspection = db.get('inspections', e.inspection_id) || {};
     if (!vues.voitExploitant(req, inspection.exploitant)) {
-      return res.status(404).json({ error: 'Écart non trouvé' });
+      return introuvable(res, 'ecart');
     }
     const pj = preuve(e, req.params.pid);
-    if (!pj) return res.status(404).json({ error: 'Preuve non trouvée' });
+    if (!pj) return introuvable(res, 'preuve');
     const chemin = path.join(DOSSIER_PREUVES, path.basename(pj.fichier || ''));
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
     res.setHeader('Content-Disposition',
@@ -458,7 +459,7 @@ module.exports = function register(app, deps, M) {
   // l'import, les autres venant du classeur.
   app.put(`${M}/ecarts/:id`, requireAuth, (req, res) => {
     const e = db.get('ecarts', req.params.id);
-    if (!e) return res.status(404).json({ error: 'Écart non trouvé' });
+    if (!e) return introuvable(res, 'ecart');
     if (!R.canContribute(req.user)) return refuser(res);
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {

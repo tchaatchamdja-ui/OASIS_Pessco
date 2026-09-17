@@ -146,5 +146,152 @@ module.exports = async function () {
   verifier('les trois volets de chaque table portent les mêmes clés',
     ecarts.length === 0, `${ecarts.length} écart(s) — ${ecarts.slice(0, 6).join(' · ')}`);
 
+  controlerPhrasesServeur();
+  controlerAccentsPortugais();
+
   return bilan('traductions');
 };
+
+// ── Accents du portugais ──
+// Des formes sans accent déjà corrigées une fois — « constituida »,
+// « decisoria », « Avancar » — ne doivent pas revenir. Aucune n'existe en
+// français ni en anglais : on les cherche dans les chaînes des volets
+// portugais, du marqueur `pt` à la fin de chaque table.
+const SANS_ACCENT_PT = ['constituida', 'constituidas', 'constituido', 'constituidos', 'decisoria', 'decisorio',
+  'incluida', 'incluidas', 'incluido', 'incluidos', 'excluida', 'excluidas', 'excluido', 'excluidos',
+  'substituida', 'substituido', 'especifico', 'especifica', 'avancar', 'tambem', 'ultimo', 'ultima',
+  'codigo', 'periodo', 'analise', 'pagina', 'inicio', 'obrigatorio', 'obrigatoria', 'relatorio', 'nao'];
+
+function controlerAccentsPortugais() {
+  const tables = [
+    ...TABLES.map((t) => t.dossier), 'public/shared/js',
+  ].flatMap((d) => scripts(d)).filter((f) => /i18n|pr-utils|oasis-messages-serveur|oasis-dates|oasis-commun/.test(f));
+  const fautes = [];
+  const motif = new RegExp(`\\b(${SANS_ACCENT_PT.join('|')})\\b`, 'i');
+  tables.forEach((f) => {
+    const texte = fs.readFileSync(f, 'utf8');
+    const i = texte.search(/\bpt\s*[:=]\s*\{|EXEC_TR\.pt\b/);
+    // Tables à un seul volet par ligne (messages, dates, erreurs) : on lit le
+    // troisième élément de chaque triplet, qui est le portugais.
+    const portugais = i >= 0 ? texte.slice(i)
+      : [...texte.matchAll(/\[\s*(['"`])(?:\\.|(?!\1).)*\1\s*,\s*(['"`])(?:\\.|(?!\2).)*\2\s*(?:,\s*(['"`])((?:\\.|(?!\3).)*)\3)?/g)]
+        .map((m) => m[4] || '').join('\n')
+        + [...texte.matchAll(/\bpt\s*:\s*(['"`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]).join('\n');
+    for (const s of portugais.matchAll(/(['"`])((?:\\.|(?!\1).)*)\1/g)) {
+      const m = motif.exec(s[2]);
+      if (m) fautes.push(`${path.relative(RACINE, f)} : « ${m[1]} »`);
+    }
+    if (i < 0) {
+      const m = motif.exec(portugais);
+      if (m) fautes.push(`${path.relative(RACINE, f)} : « ${m[1]} »`);
+    }
+  });
+  const uniques = [...new Set(fautes)];
+  verifier('volets portugais : aucune forme privée de son accent', uniques.length === 0, uniques.slice(0, 6).join(' · '));
+}
+
+// ── Phrases d'erreur du serveur ──
+// Le serveur répond souvent par une phrase française ; l'écran la traduit par
+// la table oasis-messages-serveur.js. Chaque phrase émise doit y figurer, avec
+// ses deux traductions et les mêmes trous.
+function sourcesServeur() {
+  const liste = [path.join(RACINE, 'server.js')];
+  const parcourir = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => {
+    const p = path.join(d, e.name);
+    if (e.isDirectory()) { parcourir(p); return; }
+    if (e.name.endsWith('.js')) liste.push(p);
+  });
+  parcourir(path.join(RACINE, 'src'));
+  return liste;
+}
+
+// La phrase qui suit `error:` ou `refuser(res,` : une ou plusieurs chaînes
+// jointes par « + ». Les interpolations deviennent des trous {0}, {1}…
+function phrasesServeur() {
+  const phrases = new Map();
+  const LITTERAL = /^\s*(['"`])((?:\\.|(?!\1)[\s\S])*)\1/;
+  sourcesServeur().forEach((f) => {
+    const texte = fs.readFileSync(f, 'utf8');
+    for (const m of texte.matchAll(/(?:\berror\s*:|\brefuser\(\s*res\s*,)/g)) {
+      let reste = texte.slice(m.index + m[0].length);
+      let phrase = '';
+      let lu = LITTERAL.exec(reste);
+      if (!lu) continue;
+      while (lu) {
+        phrase += lu[2];
+        reste = reste.slice(lu[0].length);
+        const suite = /^\s*\+/.exec(reste);
+        if (!suite) break;
+        reste = reste.slice(suite[0].length);
+        lu = LITTERAL.exec(reste);
+      }
+      if (/^[a-z0-9_]*$/.test(phrase)) continue; // un code, non une phrase
+      let n = 0;
+      const gabarit = phrase.replace(/\$\{[^}]*\}/g, () => `{${n++}}`).replace(/\\(['"`])/g, '$1');
+      const ou = `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`;
+      if (!phrases.has(gabarit)) phrases.set(gabarit, ou);
+    }
+  });
+  return phrases;
+}
+
+function controlerPhrasesServeur() {
+  const fenetre = {};
+  const vm = require('vm');
+  vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-messages-serveur.js'), 'utf8'),
+    vm.createContext({ window: fenetre }));
+  const table = fenetre.OASIS_MESSAGES_SERVEUR || {};
+  const trous = (s) => (String(s).match(/\{\d\}/g) || []).sort().join('');
+
+  const phrases = phrasesServeur();
+  const absentes = [...phrases].filter(([p]) => !table[p]);
+  verifier(`chaque phrase d'erreur du serveur est traduite (${phrases.size})`,
+    absentes.length === 0, absentes.slice(0, 5).map(([p, ou]) => `« ${p} » (${ou})`).join(' · '));
+
+  const bancales = Object.entries(table).filter(([fr, t]) => !Array.isArray(t) || t.length !== 2
+    || t.some((x) => !x || trous(x) !== trous(fr)));
+  verifier('chaque entrée a ses deux traductions, avec les mêmes trous',
+    bancales.length === 0, bancales.slice(0, 5).map(([fr]) => fr).join(' · '));
+
+  // Toute page qui traduit les erreurs doit charger la table.
+  const pages = ['public/index.html', ...fs.readdirSync(path.join(RACINE, 'public/modules'))
+    .map((m) => `public/modules/${m}/index.html`)]
+    .filter((p) => fs.existsSync(path.join(RACINE, p)));
+  const sansTable = pages.filter((p) => {
+    const h = fs.readFileSync(path.join(RACINE, p), 'utf8');
+    return h.includes('oasis-commun.js') && !h.includes('oasis-messages-serveur.js');
+  });
+  verifier('chaque écran qui traduit les erreurs charge la table des phrases',
+    sansTable.length === 0, sansTable.join(' · '));
+
+  const mortes = Object.keys(table).filter((fr) => !phrases.has(fr));
+  verifier('aucune traduction pour une phrase que le serveur n’émet plus',
+    mortes.length === 0, mortes.slice(0, 5).join(' · '));
+
+  // La traduction elle-même, telle que l'écran l'applique.
+  const bac = { window: fenetre, localStorage: { getItem: () => 'fr' } };
+  bac.window.PESSCO = { lang: 'fr' };
+  const ctx = vm.createContext(bac);
+  vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-commun.js'), 'utf8'), ctx);
+  const dire = (langue, corps) => { fenetre.PESSCO.lang = langue; return fenetre.oasisMessageErreur(corps, 400); };
+  const r = {
+    fr: dire('fr', { error: 'Carence non trouvée' }),
+    en: dire('en', { error: 'Carence non trouvée' }),
+    pt: dire('pt', { error: 'Carence non trouvée' }),
+    gabarit: dire('pt', { error: 'Écart hors de votre périmètre (Togo)' }),
+    deuxTrous: dire('en', { error: 'Activité non réinitialisable : 2 constatation(s) et 1 rapport(s) en dépendent' }),
+    message: dire('en', { message: 'Aucune donnée à exporter' }),
+    inconnue: dire('en', { error: 'Une phrase que la table ignore' }),
+    code: dire('pt', { error: 'plan_amende' }),
+  };
+  verifier('phrase du serveur rendue dans la langue de l’agent',
+    r.fr === 'Carence non trouvée' && r.en === 'Deficiency not found' && r.pt === 'Deficiência não encontrada',
+    JSON.stringify([r.fr, r.en, r.pt]));
+  verifier('phrase à trous : la valeur passe dans la traduction',
+    r.gabarit === 'Constatação fora do seu âmbito (Togo)'
+    && r.deuxTrous === 'Activity cannot be reset: 2 finding(s) and 1 report(s) depend on it',
+    JSON.stringify([r.gabarit, r.deuxTrous]));
+  verifier('phrase inconnue rendue telle quelle, code toujours traduit',
+    r.message === 'No data to export' && r.inconnue === 'Une phrase que la table ignore'
+    && /^Este plano foi emendado/.test(r.code), JSON.stringify([r.message, r.inconnue, r.code]));
+}

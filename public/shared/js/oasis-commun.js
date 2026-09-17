@@ -98,11 +98,50 @@ function oasisLangue() {
 
 // `defaut` — la phrase que l'appelant tient du geste en cours (« Téléversement
 // refusé ») : elle sert quand le code est inconnu du dictionnaire, ou absent.
+// Une phrase française du serveur, dans la langue de l'agent quand la table
+// oasis-messages-serveur.js la connaît. Une phrase à trous s'y reconnaît par
+// son gabarit ; les valeurs lues à la place des trous passent dans la
+// traduction. Une phrase inconnue se rend telle quelle.
+let gabaritsServeur = null;
+const TROU = /\{(\d)\}/g;
+const echapperMotif = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, (c) => `\\${c}`);
+
+function compilerGabarits(table) {
+  return Object.keys(table).filter((fr) => /\{\d\}/.test(fr)).map((fr) => {
+    const ordre = [];
+    const motif = fr.split(/(\{\d\})/).map((bout) => {
+      const trou = /^\{(\d)\}$/.exec(bout);
+      if (!trou) return echapperMotif(bout);
+      ordre.push(Number(trou[1]));
+      return '([\\s\\S]*?)';
+    }).join('');
+    return { re: new RegExp(`^${motif}$`), ordre, trad: table[fr] };
+  });
+}
+
+function traduirePhraseServeur(texte, rang) {
+  const table = typeof window !== 'undefined' ? window.OASIS_MESSAGES_SERVEUR : null;
+  if (!rang || !table) return texte;
+  const exacte = table[texte];
+  if (exacte) return exacte[rang - 1] || texte;
+  if (!gabaritsServeur) gabaritsServeur = compilerGabarits(table);
+  for (const g of gabaritsServeur) {
+    const m = g.re.exec(texte);
+    if (!m) continue;
+    const cible = g.trad[rang - 1];
+    if (!cible) return texte;
+    const valeurs = {};
+    g.ordre.forEach((n, i) => { valeurs[n] = m[i + 1]; });
+    return cible.replace(TROU, (_, n) => (valeurs[n] === undefined ? '' : valeurs[n]));
+  }
+  return texte;
+}
+
 function oasisMessageErreur(donnees, statut, defaut) {
   const d = donnees || {};
-  // Une phrase déjà écrite par le serveur dit mieux le cas particulier.
-  if (d.message) return String(d.message);
   const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
+  // Une phrase déjà écrite par le serveur dit mieux le cas particulier.
+  if (d.message) return traduirePhraseServeur(String(d.message), rang);
   const connue = ERREURS[d.error];
   if (connue) return connue[rang] || connue[0];
   // Toutes les routes ne répondent pas par un code : beaucoup renvoient une
@@ -111,7 +150,7 @@ function oasisMessageErreur(donnees, statut, defaut) {
   // telle quelle. L'envelopper dans « L'opération a échoué (…) » ne faisait
   // qu'ajouter du bruit devant un message qui se suffisait.
   const brut = d.error === undefined || d.error === null ? '' : String(d.error);
-  if (brut && !/^[a-z][a-z0-9_]*$/.test(brut)) return brut;
+  if (brut && !/^[a-z][a-z0-9_]*$/.test(brut)) return traduirePhraseServeur(brut, rang);
   // Le point final se pose à la fin, une fois le code joint : « L'opération a
   // échoué (not_found). », jamais « … échoué. (not_found) ».
   const general = String(defaut || ECHEC[rang] || ECHEC[0]).replace(/\s*\.$/, '');

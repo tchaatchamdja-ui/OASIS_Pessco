@@ -906,7 +906,7 @@ const PLAN_TR = {
         confirm_reject_close_intro: 'Este plano será rejeitado e encerrado: permanece só de leitura, sem retoma possível.',
         'rejeter-annuler': 'Rejeição definitiva',
         rejete_clos: 'Rejeitado e Encerrado',
-        remplace: 'Versão substituida',
+        remplace: 'Versão substituída',
         confirm_validate_title: 'Confirmar a validação',
         confirm_reject_title: 'Confirmar a rejeição',
         confirm_validate_intro: 'Este plano será validado:',

@@ -5,7 +5,7 @@ const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
 const { enregistrement } = require('../../valider');
-const { inconnu, requis, tropVolumineux } = require('../../erreurs');
+const { inconnu, requis, tropVolumineux, reserve } = require('../../erreurs');
 
 // Collections du module servies par le CRUD générique.
 const CRUD = {
@@ -225,7 +225,7 @@ module.exports = function register(app, deps, M) {
     // Noter un organisme n'est pas l'affaire de l'organisme noté : son compte
     // n'ouvre pas l'écran, quand bien même la case serait cochée.
     if (D.estPrestataire(req.user) || !moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
-      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.' });
+      return res.status(403).json({ error: 'no_module_access' });
     }
     const cfg = loadConfig();
     res.json({
@@ -252,7 +252,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/instance`, requireAuth, (req, res) => {
     if (!instances.estRegional(req.user)) {
-      return res.status(403).json({ error: 'Choix de l’instance réservé au super-administrateur régional' });
+      return reserve(res, 'super_admin_regional');
     }
     // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
     // que les écrans serviront, il ne s'invente pas.

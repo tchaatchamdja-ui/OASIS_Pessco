@@ -9,14 +9,13 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
-const { introuvable } = require('../../erreurs');
+const { introuvable, reserve, refuser } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
 
   const refs = () => referentiels.getAll();
   const parId = (coll, id) => (refs()[coll] || []).find((x) => x.id === id) || null;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Non autorisé' });
 
   // Instance regardée : les listes ne servent que ses activités. Le choix suit
   // le compte réellement connecté, non celui que la vue Prestataire simule.
@@ -373,7 +372,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/validate`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à valider');
+    if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être validée' });
     if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
     db.update('notifications', n.id, { statut: 'valide', validateur_id: req.user.username, date_validation: db.now() });
@@ -383,7 +382,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/reject`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à rejeter');
+    if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être rejetée' });
     if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
     db.update('notifications', n.id, { statut: 'brouillon', motif_rejet: (req.body || {}).motif || '', date_rejet: db.now() });
@@ -499,7 +498,7 @@ module.exports = function register(app, deps, M) {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.estPrestataire(req.user)) {
-      return refuser(res, 'Accusé de réception réservé au prestataire notifié');
+      return reserve(res, 'prestataire_notifie');
     }
     if (!R.accedeA(req.user, n.prestataire_id || '')) return refuser(res);
     if (n.statut !== 'envoye') {

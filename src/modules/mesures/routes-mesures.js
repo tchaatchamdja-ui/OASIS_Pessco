@@ -17,7 +17,7 @@ const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu } = require('../../erreurs');
+const { introuvable, requis, inconnu, reserve, refuser } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -45,7 +45,6 @@ const LISTES = ['pieces_jointes', 'preuves_constatation', 'preuves_cloture'];
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const refs = () => referentiels.getAll();
 
   // ── Instance regardée ──
@@ -387,7 +386,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'infraction');
-    if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Classement réservé au validateur');
+    if (!R.canValidate(req.user, perimetre(c))) return reserve(res, 'validateur');
     if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
       return res.status(400).json({ error: 'Une mesure a déjà été prise sur cette infraction' });
     }
@@ -552,7 +551,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/constatations/:id/investigation/soumettre`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
-    if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Soumission réservée au validateur');
+    if (!R.canValidate(req.user, perimetre(c))) return reserve(res, 'validateur');
     const t = traitementDe(c.id);
     if (!t || t.decision !== 'investiguer' || t.etape !== 'investigations') {
       return res.status(409).json({ error: 'La carence n’est pas à l’étape Investigations' });
@@ -811,7 +810,7 @@ module.exports = function register(app, deps, M) {
   const carenceAQualifier = (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) { introuvable(res, 'carence'); return null; }
-    if (!R.canValidate(req.user, perimetre(c))) { refuser(res, 'Décision réservée au validateur'); return null; }
+    if (!R.canValidate(req.user, perimetre(c))) { reserve(res, 'validateur'); return null; }
     const t = traitementDe(c.id);
     if (!t || t.etape !== 'qualification') {
       res.status(409).json({ error: 'La carence n’est pas à l’étape Qualification et Mesures' });
@@ -1070,7 +1069,7 @@ module.exports = function register(app, deps, M) {
   const carenceEnSuivi = (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) { introuvable(res, 'carence'); return null; }
-    if (!R.canValidate(req.user, perimetre(c))) { refuser(res, 'Décision réservée au validateur'); return null; }
+    if (!R.canValidate(req.user, perimetre(c))) { reserve(res, 'validateur'); return null; }
     const t = traitementDe(c.id);
     if (!t || t.etape !== 'suivi') {
       res.status(409).json({ error: 'La carence n’est pas à l’étape Suivi des Mesures' });
@@ -1134,7 +1133,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
-    if (!R.canValidate(req.user, perimetre(c))) return refuser(res, 'Décision réservée au validateur');
+    if (!R.canValidate(req.user, perimetre(c))) return reserve(res, 'validateur');
     const d = req.body || {};
     const decision = texte(d.decision);
     if (!DECISIONS.includes(decision)) {
@@ -1180,7 +1179,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
     const x = db.list('classements').find((c) => c.constatation_id === req.params.id);
     if (!x) return res.status(404).json({ error: 'Infraction non classée' });
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Retrait réservé au gestionnaire');
+    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'gestionnaire');
     db.remove('classements', x.id);
     return res.json({ status: 'ok' });
   });
@@ -1194,7 +1193,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/constatations`, requireAuth, (req, res) => {
     const d = req.body || {};
-    if (!peutEcrire(req, d)) return refuser(res, 'Non autorisé à ajouter une constatation');
+    if (!peutEcrire(req, d)) return refuser(res);
     const champs = constatPropre(d);
     if (!champs.titre) return requis(res, 'objet');
     const c = {
@@ -1219,7 +1218,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
-    if (!peutEcrire(req, c)) return refuser(res, 'Non autorisé à modifier cette constatation');
+    if (!peutEcrire(req, c)) return refuser(res);
     const champs = constatPropre({ ...c, ...(req.body || {}) });
     if (!champs.titre) return requis(res, 'objet');
     const statut = texte((req.body || {}).statut);
@@ -1236,7 +1235,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Suppression réservée au gestionnaire');
+    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'gestionnaire');
     if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
       return res.status(400).json({ error: 'Des mesures sont rattachées à cette infraction' });
     }
@@ -1253,7 +1252,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/mesures`, requireAuth, (req, res) => {
     const d = req.body || {};
-    if (!peutEcrire(req, d)) return refuser(res, 'Non autorisé à créer une mesure');
+    if (!peutEcrire(req, d)) return refuser(res);
     // Une mesure suit la carence qu'elle sanctionne : elle appartient à
     // l'instance qui a ouvert le dossier, non à celle d'où on la saisit.
     const carence = indexConstatations().get(texte(d.constatation_id));
@@ -1277,7 +1276,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/mesures/:id`, requireAuth, (req, res) => {
     const m = db.get('mesures', req.params.id);
     if (!m) return introuvable(res, 'mesure');
-    if (!peutEcrire(req, m)) return refuser(res, 'Non autorisé à modifier cette mesure');
+    if (!peutEcrire(req, m)) return refuser(res);
     // Une mesure clôturée ou annulée est un acte pris : elle ne se réécrit pas.
     if (CLOS.includes(m.statut)) {
       return res.status(400).json({ error: 'Une mesure clôturée ou annulée ne se modifie plus' });
@@ -1292,7 +1291,7 @@ module.exports = function register(app, deps, M) {
     // Une mesure efface une sanction prononcée et le suivi qui l'accompagne :
     // le geste est réservé au compte qui administre l'application, non au
     // gestionnaire du module.
-    if (req.user.role !== 'SUPERADMIN') return refuser(res, "Réservé au SuperAdmin");
+    if (req.user.role !== 'SUPERADMIN') return reserve(res, 'super_admin');
     if (!db.remove('mesures', req.params.id)) {
       return introuvable(res, 'mesure');
     }
@@ -1309,7 +1308,7 @@ module.exports = function register(app, deps, M) {
     app.post(`${M}/mesures/:id/${route}`, requireAuth, (req, res) => {
       const m = db.get('mesures', req.params.id);
       if (!m) return introuvable(res, 'mesure');
-      if (!peutDecider(req, m)) return refuser(res, 'Réservé au validateur et au gestionnaire');
+      if (!peutDecider(req, m)) return reserve(res, 'validateur_gestionnaire');
       if (!depuis.includes(m.statut)) {
         return res.status(400).json({
           error: `Transition impossible depuis le statut « ${m.statut} »`,

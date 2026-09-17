@@ -45,4 +45,16 @@ function tropVolumineux(res, maxMo) {
   return res.status(413).json({ error: 'fichier_trop_volumineux', maxMo });
 }
 
-module.exports = { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux };
+// Le compte n'a pas le droit d'agir (403). Sans message, le refus est
+// générique ; un message ne sert qu'aux cas qui disent autre chose que
+// « non autorisé » (« Seul l'État émetteur referme la discussion »).
+function refuser(res, message) {
+  return res.status(403).json({ error: message || 'forbidden' });
+}
+
+// L'action est réservée à un rôle (403) : l'écran dit lequel.
+function reserve(res, role) {
+  return res.status(403).json({ error: 'reserve', role });
+}
+
+module.exports = { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, refuser, reserve };

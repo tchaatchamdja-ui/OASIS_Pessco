@@ -14,7 +14,7 @@ const refModele = require('./references');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const { valider } = require('../../valider');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, reserve, refuser } = require('../../erreurs');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
 // disent à partir de quand une étape est en retard.
@@ -57,7 +57,6 @@ function delais() {
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
 
   // Un geste groupé ne sort pas de l'instance regardée : archiver « toutes les
   // activités hors plan » depuis le poste d'un État ne range pas celles des
@@ -85,7 +84,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/parametres/delais`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Seul un administrateur modifie les délais');
+    if (!admin(req)) return reserve(res, 'administrateurs');
     const recu = (req.body || {}).valeurs || req.body || {};
     const valeurs = {};
     Object.keys(DELAIS_DEFAUT).forEach((cle) => {
@@ -113,7 +112,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/parametres/references`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Seul un administrateur compose les références');
+    if (!admin(req)) return reserve(res, 'administrateurs');
     const recu = (req.body || {}).modeles || {};
     const modeles = {};
     Object.keys(refModele.MODELES_DEFAUT).forEach((type) => {
@@ -150,7 +149,7 @@ module.exports = function register(app, deps, M) {
     if (!d) return introuvable(res, 'dossier');
     const notif = db.get('notifications', d.notification_id) || { secteur_id: d.secteur_id };
     if (!peutAdministrer(req, notif)) {
-      return refuser(res, 'Archivage réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
+      return reserve(res, 'super_admin_aac');
     }
     if (archive && d.statut !== 'cloture') {
       return res.status(400).json({ error: 'Seul un dossier clôturé peut être archivé' });
@@ -179,7 +178,7 @@ module.exports = function register(app, deps, M) {
     const n = notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
-      return refuser(res, 'Arrêt réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
+      return reserve(res, 'super_admin_aac');
     }
     const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
     if (dossier && dossier.statut === 'cloture') {
@@ -202,7 +201,7 @@ module.exports = function register(app, deps, M) {
     const n = notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
-      return refuser(res, 'Reprise réservée au super-administrateur et à l’administrateur AAC, sur leur portée');
+      return reserve(res, 'super_admin_aac');
     }
     db.update('notifications', n.id, { arret: 0, date_arret: '', arrete_par: '' });
     const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
@@ -220,7 +219,7 @@ module.exports = function register(app, deps, M) {
     const n = notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
-      return refuser(res, 'Archivage réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
+      return reserve(res, 'super_admin_aac');
     }
     const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
     const arretee = Number(n.arret) === 1 || (dossier && dossier.statut === 'arrete');
@@ -258,7 +257,7 @@ module.exports = function register(app, deps, M) {
     if (!lot.length) return res.json({ status: 'ok', archive, nombre: 0 });
     const refuses = lot.filter((n) => !peutAdministrer(req, n));
     if (refuses.length) {
-      return refuser(res, 'Archivage réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
+      return reserve(res, 'super_admin_aac');
     }
     const maintenant = db.now();
     const champs = {
@@ -285,7 +284,7 @@ module.exports = function register(app, deps, M) {
     if (!n) return introuvable(res, 'activite');
     if (!R.isAdmin(req.user, referentiels)
       || !R.canValidate(req.user, perimetreActivite(n), referentiels)) {
-      return refuser(res, 'Réinitialisation réservée au gestionnaire du module, sur sa portée');
+      return reserve(res, 'gestionnaire_portee');
     }
     const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
     if (dossier) {
@@ -312,7 +311,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${A}/:id`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
     if (!reel || reel.role !== 'SUPERADMIN') {
-      return refuser(res, 'Suppression réservée au super-administrateur');
+      return reserve(res, 'super_admin');
     }
     const n = notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');

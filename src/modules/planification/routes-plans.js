@@ -6,7 +6,7 @@ const { valider } = require('../../valider');
 const db = require('./store');
 const D = require('./domaine');
 const instances = require('../../instances');
-const { inconnu } = require('../../erreurs');
+const { inconnu, reserve } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
@@ -58,7 +58,7 @@ module.exports = function register(app, deps, M) {
     // module n'a pas d'écran de son côté, et toutes ses listes lui sont
     // refusées.
     if (D.estPrestataire(req.user) || !moduleRights.accesAuModule(D.RIGHTS, req.user.username)) {
-      return res.status(403).json({ error: 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.' });
+      return res.status(403).json({ error: 'no_module_access' });
     }
     const cfg = loadConfig();
     const u = auth.publicUser(req.user);
@@ -81,7 +81,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/instance`, requireAuth, (req, res) => {
     if (!instances.estRegional(req.user)) {
-      return res.status(403).json({ error: 'Choix de l’instance réservé au super-administrateur régional' });
+      return reserve(res, 'super_admin_regional');
     }
     // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
     // que les écrans serviront, il ne s'invente pas.

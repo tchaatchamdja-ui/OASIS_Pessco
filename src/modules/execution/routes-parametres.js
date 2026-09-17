@@ -11,7 +11,7 @@ const instances = require('../../instances');
 const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
-const { introuvable, requis, inconnu } = require('../../erreurs');
+const { introuvable, requis, inconnu, reserve, refuser } = require('../../erreurs');
 
 // Collections servies par le CRUD générique, comme `register_crud` dans PESSCO.
 const CRUD = {
@@ -32,7 +32,6 @@ module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
 
   const refs = () => referentiels.getAll();
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const admin = (req) => R.isAdmin(req.user, referentiels);
 
   // ══════════════════════════════════════
@@ -78,7 +77,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/context`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
     if (!moduleRights.accesAuModule(R.MODULE, reel.username)) {
-      return refuser(res, 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.');
+      return res.status(403).json({ error: 'no_module_access' });
     }
     return res.json({
       user: vueUtilisateur(req.user),
@@ -95,7 +94,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/instance`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
     if (!instances.estRegional(reel)) {
-      return refuser(res, 'Choix de l’instance réservé au super-administrateur régional');
+      return reserve(res, 'super_admin_regional');
     }
     // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
     // que les écrans serviront, il ne s'invente pas.
@@ -111,7 +110,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/vue`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
-    if (!vues.peutBasculer(reel)) return refuser(res, 'Bascule réservée au super-administrateur');
+    if (!vues.peutBasculer(reel)) return reserve(res, 'super_admin');
     const d = req.body || {};
     if (!vues.VUES.includes(d.vue)) return inconnu(res, 'vue');
     const prestataireId = d.vue === 'prestataire'
@@ -527,12 +526,12 @@ module.exports = function register(app, deps, M) {
   });
 
   app.get(`${M}/processus`, requireAuth, (req, res) => {
-    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     res.json(db.list('processus'));
   });
 
   app.post(`${M}/processus`, requireAuth, (req, res) => {
-    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     const d = req.body || {};
     if (!String(d.libelle || '').trim()) return requis(res, 'libelle');
     if (!['activite', 'constatation'].includes(d.type)) {
@@ -555,7 +554,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/processus/:id`, requireAuth, (req, res) => {
-    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     const d = req.body || {};
     const patch = {};
     ['libelle', 'type', 'secteur_id', 'domaine_id', 'description', 'acteurs', 'actif']
@@ -566,14 +565,14 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/processus/:id`, requireAuth, (req, res) => {
-    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     res.json({ status: db.remove('processus', req.params.id) ? 'ok' : 'absent' });
   });
 
   // Duplication : un processus déjà réglé sert de patron au suivant. Le
   // secteur visé est repris du corps, sinon la copie reste sur le même.
   app.post(`${M}/processus/:id/dupliquer`, requireAuth, (req, res) => {
-    if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
+    if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     const src = db.get('processus', req.params.id);
     if (!src) return introuvable(res, 'processus');
     const d = req.body || {};

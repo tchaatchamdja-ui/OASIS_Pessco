@@ -13,7 +13,7 @@ const R = require('./roles');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const vues = require('./vues');
-const { introuvable, requis, horsPerimetre, tropVolumineux } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
 const DOSSIER_PREUVES = path.join(
@@ -42,7 +42,6 @@ const CHAMPS_ECART = ['itemCode', 'stdRef', 'description', 'categorie', 'action'
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const admin = (req) => R.isAdmin(req.user, referentiels);
 
   // Instance regardée : le poste d'AAC tenu, commun au portail et aux six
@@ -101,7 +100,7 @@ module.exports = function register(app, deps, M) {
   //   doublon     — tout correspond ; la ligne est ignorée
 
   app.post(`${M}/inspections/import`, requireAuth, (req, res) => {
-    if (!R.canContribute(req.user)) return refuser(res, "Non autorisé à importer");
+    if (!R.canContribute(req.user)) return refuser(res);
     const lignes = (req.body || {}).data;
     if (!Array.isArray(lignes)) return res.status(400).json({ error: 'Aucune donnée à importer' });
     if (!lignes.length) return res.json({ creees: 0, majs: 0, doublons: 0, message: 'Rien à importer' });
@@ -205,7 +204,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/inspections/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, "Réservé au gestionnaire du module");
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const ecarts = db.list('ecarts').filter((e) => e.inspection_id === req.params.id);
     // Un écart repris par « Mesures d'Application » fonde ce qui y a été
     // décidé : l'inspection qui le porte ne se supprime plus.
@@ -275,7 +274,7 @@ module.exports = function register(app, deps, M) {
     const e = db.get('ecarts', req.params.id);
     if (!e) { introuvable(res, 'ecart'); return null; }
     // Se prononcer sur un plan relève du valideur, non de qui l'a rédigé.
-    if (!R.canValidate(req.user)) { refuser(res, 'Réservé au valideur du module'); return null; }
+    if (!R.canValidate(req.user)) { reserve(res, 'validateur'); return null; }
     const i = db.get('inspections', e.inspection_id) || {};
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
       horsPerimetre(res, 'ecart', i.pays);

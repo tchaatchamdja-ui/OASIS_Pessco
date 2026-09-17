@@ -12,7 +12,7 @@
 //   · les comptes créés héritent du rattachement et n'accèdent qu'au module ;
 //   · un compte hors du périmètre n'existe pas — 404, jamais 403.
 
-const { introuvable, requis, existant } = require('./erreurs');
+const { introuvable, requis, existant, reserve } = require('./erreurs');
 
 // Rôles portail qu'un compte rattaché à un organisme peut porter. Les libellés
 // diffèrent d'un module à l'autre : « prestataire » ici, « exploitant » là.
@@ -43,7 +43,7 @@ function register(app, deps, M, o) {
 
   const garde = (req, res) => {
     if (!R.estPrestataire(req.user)) {
-      res.status(403).json({ error: 'Accès réservé à la vue Prestataire' });
+      reserve(res, 'vue_prestataire');
       return null;
     }
     const miens = R.prestatairesDe(req.user);

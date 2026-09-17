@@ -37,11 +37,11 @@ const ERREURS = {
   invalid_action: ['Action inconnue.', 'Unknown action.', 'Ação desconhecida.'],
   corps_invalide: ['La saisie n’est pas valide.', 'The input is not valid.', 'A introdução não é válida.'],
   parse_error: ['Fichier illisible.', 'File could not be read.', 'Ficheiro ilegível.'],
-  forbidden: ['Action non autorisée.', 'Action not allowed.', 'Ação não autorizada.'],
+  forbidden: ['Action non autorisée pour votre compte.', 'Action not allowed for your account.', 'Ação não autorizada para a sua conta.'],
   forbidden_target: ['Action non autorisée sur cet élément.', 'Action not allowed on this item.', 'Ação não autorizada neste elemento.'],
   privilege_insuffisant: ['Privilège insuffisant pour cette action.', 'Insufficient privilege for this action.', 'Privilégio insuficiente para esta ação.'],
   unauthenticated: ['Session expirée. Reconnectez-vous.', 'Session expired. Sign in again.', 'Sessão expirada. Volte a ligar-se.'],
-  no_module_access: ['Ce module ne vous est pas ouvert.', 'This module is not open to you.', 'Este módulo não lhe está aberto.'],
+  no_module_access: ['Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.', 'This module is not open to you. Please contact the administrator.', 'Este módulo não lhe está aberto. Contacte o administrador.'],
   reserve_autorite: ['Action réservée à l’Autorité.', 'Action reserved for the Authority.', 'Ação reservada à Autoridade.'],
   role_hors_perimetre: ['Ce rôle sort de votre périmètre.', 'This role is outside your scope.', 'Este papel está fora do seu âmbito.'],
   portee_nationale: ['Action réservée à la portée nationale.', 'Action reserved for the national scope.', 'Ação reservada ao âmbito nacional.'],
@@ -138,6 +138,7 @@ function traduirePhraseServeur(texte, rang) {
 
 // Erreur normalisée (src/erreurs.js) : un code et l'objet concerné. La phrase
 // se compose ici, dans la langue de l'agent, accordée au genre du nom.
+const RESERVEE = ['Action réservée', 'Action restricted', 'Ação reservada'];
 const TROP_VOLUMINEUX = [
   'Fichier trop volumineux ({0} Mo maximum)',
   'File too large ({0} MB maximum)',
@@ -146,6 +147,11 @@ const TROP_VOLUMINEUX = [
 
 function composerErreurNormalisee(d, rang) {
   const fenetre = typeof window !== 'undefined' ? window : {};
+  if (d.error === 'reserve') {
+    const role = (fenetre.OASIS_ROLES_SERVEUR || {})[d.role];
+    if (!role) return ERREURS.forbidden[rang] || ERREURS.forbidden[0];
+    return `${RESERVEE[rang]} ${role[rang] || role[0]}.`;
+  }
   if (d.error === 'fichier_trop_volumineux' && Number(d.maxMo) > 0) {
     const mo = Number(d.maxMo).toLocaleString(['fr-FR', 'en-GB', 'pt-PT'][rang] || 'fr-FR', { maximumFractionDigits: 1 });
     return TROP_VOLUMINEUX[rang].replace('{0}', mo);

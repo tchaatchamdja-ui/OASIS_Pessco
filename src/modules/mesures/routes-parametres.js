@@ -8,7 +8,7 @@ const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu, existant } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant, reserve, refuser } = require('../../erreurs');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -21,7 +21,6 @@ const codeDepuisLibelle = (libelle) => String(libelle || '')
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const admin = (req) => R.isAdmin(req.user, referentiels);
   // Le paramétrage se tient à jour au fil des décisions : un contributeur y
   // ajoute un type manquant sans attendre. La suppression reste au gestionnaire.
@@ -53,7 +52,7 @@ module.exports = function register(app, deps, M) {
     // Sans accès au module, l'écran ne s'ouvre pas : il s'ouvrait vide, et
     // laissait croire à une panne plutôt qu'à un refus.
     if (!moduleRights.accesAuModule(R.MODULE, req.user.username)) {
-      return refuser(res, 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.');
+      return res.status(403).json({ error: 'no_module_access' });
     }
     return res.json({
       user: vueUtilisateur(req.user),
@@ -66,7 +65,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/instance`, requireAuth, (req, res) => {
     if (!instances.estRegional(req.user)) {
-      return refuser(res, 'Choix de l’instance réservé au super-administrateur régional');
+      return reserve(res, 'super_admin_regional');
     }
     // Vide : la vue régionale. Sinon, une instance déclarée — le nom borne ce
     // que les écrans serviront, il ne s'invente pas.
@@ -143,7 +142,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Suppression réservée au gestionnaire');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const c = db.get('comites', req.params.id);
     if (!c) return introuvable(res, 'comite');
     // Un comité qui a siégé ne se retire pas : la mesure perdrait l'instance
@@ -185,7 +184,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Suppression réservée au gestionnaire');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const t = db.get('types_investigation', req.params.id);
     if (!t) return introuvable(res, 'type');
     // Un type déjà employé par une investigation ne se retire pas : le travail
@@ -233,7 +232,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/parametres/categories/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const c = db.get('categories', req.params.id);
     if (!c) return introuvable(res, 'categorie');
     // Une catégorie encore portée par une mesure ne se supprime pas : la
@@ -297,7 +296,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/parametres/types/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const t = db.get('types', req.params.id);
     if (!t) return introuvable(res, 'type');
     const utilise = db.list('mesures').filter((m) => m.type_mesure === t.code).length;

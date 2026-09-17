@@ -13,7 +13,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, reserve, refuser } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -49,7 +49,6 @@ module.exports = function register(app, deps, M) {
     };
   };
   const parId = (coll, id) => (refs()[coll] || []).find((x) => x.id === id) || null;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Non autorisé' });
 
   const perimetrePrestataire = (prestataireId) => {
     const p = parId('prestataires', prestataireId) || {};
@@ -130,7 +129,7 @@ module.exports = function register(app, deps, M) {
     const enrichi = enrichirRapport(r);
     if (R.estPrestataire(req.user)) {
       if (!R.accedeA(req.user, enrichi.dossier_prestataire_id || '') || r.statut !== 'transmis') {
-        return refuser(res, 'Accès refusé à ce rapport');
+        return refuser(res);
       }
     }
     res.json(enrichi);
@@ -175,7 +174,7 @@ module.exports = function register(app, deps, M) {
     const r = db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) {
-      return refuser(res, 'Non autorisé à signer en tant que directeur');
+      return refuser(res);
     }
     db.update('rapports', r.id, { signe_par_directeur: req.user.username, date_signature_directeur: db.now() });
     res.json({ status: 'ok', signe_directeur: true });
@@ -311,7 +310,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/rapports/:id`, requireAuth, (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
+    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     if (!db.get('rapports', req.params.id)) return introuvable(res, 'rapport');
     db.remove('rapports', req.params.id);
     res.json({ status: 'ok' });
@@ -320,7 +319,7 @@ module.exports = function register(app, deps, M) {
   // Une activité supprimée redevient « à notifier » : notification, dossier,
   // constatations et rapports associés disparaissent.
   app.delete(`${M}/activites/:id`, requireAuth, (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
+    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     const notif = db.list('notifications').find((n) => n.activite_id === req.params.id);
     if (notif) {
       const dossier = db.list('dossiers').find((d) => d.notification_id === notif.id);

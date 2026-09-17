@@ -336,7 +336,9 @@ module.exports = async function executionSmoke(port) {
 
     // ── Rôles et droits confiés aux comptes d'un organisme ──
     const roleModule = await srv.appel(`${M}/mes-utilisateurs`);
-    verifier('« Mes utilisateurs » fermé hors vue Prestataire', roleModule.statut === 403);
+    verifier('« Mes utilisateurs » fermé hors vue Prestataire, rôle nommé',
+      roleModule.statut === 403 && roleModule.corps.error === 'reserve' && roleModule.corps.role === 'vue_prestataire',
+      JSON.stringify(roleModule.corps));
 
     // ── Comptes prestataire : réservés aux comptes rattachés ──
     verifier('« Mes utilisateurs » fermé aux comptes AAC',

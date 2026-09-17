@@ -18,7 +18,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
-const { inconnu, requis, tropVolumineux } = require('../../erreurs');
+const { inconnu, requis, tropVolumineux, reserve, refuser } = require('../../erreurs');
 
 const TAILLE_MAX = 8 * 1024 * 1024;
 
@@ -75,7 +75,6 @@ function dateISO(v) {
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const texte = (v) => String(v == null ? '' : v).trim();
 
   // ── Mise en forme du classeur ──
@@ -176,7 +175,7 @@ module.exports = function register(app, deps, M) {
   }
 
   app.post(`${M}/import/analyser`, requireAuth, multipart(), (req, res) => {
-    if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à importer');
+    if (!R.canContribute(req.user)) return refuser(res);
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
     if (!/\.(xlsx|xls)$/i.test(f.filename || '')) {
@@ -388,7 +387,7 @@ module.exports = function register(app, deps, M) {
   const famillesCompatibles = (a, b) => (FAMILLES_LIEES[a] || [a]).includes(b);
 
   app.get(`${M}/tables/champs`, requireAuth, (req, res) => {
-    if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
+    if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     res.json({ champs: CHAMPS_TABLE, liees: FAMILLES_LIEES });
   });
 
@@ -468,7 +467,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/tables/export-xlsx`, requireAuth, (req, res) => {
-    if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
+    if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     const corps = req.body || {};
     const colonnes = (corps.colonnes || [])
       .map((c) => ({ role: 'donnee', mode: 'valeurs', ...c, def: CHAMPS_TABLE.find((x) => x.cle === c.cle) }))
@@ -693,7 +692,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/parametres/export-xlsx`, requireAuth, (req, res) => {
-    if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
+    if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     const famille = String((req.body || {}).famille || '');
     if (!db.FAMILLES.includes(famille)) return inconnu(res, 'famille');
     // Le groupe d'items est stocké par son code : c'est son intitulé qu'on
@@ -712,7 +711,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/contacts/export-xlsx`, requireAuth, (req, res) => {
-    if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
+    if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     const entetes = ['État', 'Nom', 'Prénoms', 'Fonction', 'Courriel', 'Téléphone', 'Autres', 'Actif'];
     const lignes = db.list('contacts')
       .sort((a, b) => String(a.etat).localeCompare(String(b.etat))

@@ -9,14 +9,13 @@ const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable, requis, inconnu } = require('../../erreurs');
+const { introuvable, requis, inconnu, reserve, refuser } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
 
   const refs = () => referentiels.getAll();
   const parId = (coll, id) => (refs()[coll] || []).find((x) => x.id === id) || null;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Non autorisé' });
 
   // ── Instance regardée ──
   // Chaque AAC tient son instance ; les listes ne servent que ses dossiers.
@@ -237,7 +236,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/dossiers/:id/return`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
-    if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à renvoyer');
+    if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     const observations = (req.body || {}).observations || '';
     const soumis = db.list('rapports')
       .filter((r) => r.dossier_id === d.id && r.statut === 'soumis')
@@ -253,7 +252,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/dossiers/:id/close`, requireAuth, (req, res) => {
     const d = db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
-    if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à clôturer');
+    if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     if (d.statut === 'cloture') return res.status(400).json({ error: 'Dossier déjà clôturé' });
     // Le dossier ne se clôt qu'une fois le rapport transmis au prestataire.
     const transmis = db.list('rapports').some((r) => r.dossier_id === d.id && r.statut === 'transmis');
@@ -270,7 +269,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/dossiers/:id`, requireAuth, (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
+    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     const d = db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
@@ -342,7 +341,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (R.estPrestataire(req.user)) {
-      if (!R.accedeA(req.user, c.prestataire_id || '')) return refuser(res, 'Accès refusé à cette constatation');
+      if (!R.accedeA(req.user, c.prestataire_id || '')) return refuser(res);
     }
     res.json(enrichirFnc(c));
   });
@@ -459,7 +458,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (R.estPrestataire(req.user) && !R.accedeA(req.user, c.prestataire_id || '')) {
-      return refuser(res, 'Accès refusé à cette constatation');
+      return refuser(res);
     }
     const users = auth.getUsers();
     const rows = db.list('echanges')
@@ -606,7 +605,7 @@ module.exports = function register(app, deps, M) {
     const roleReel = ((req.userReel || req.user || {}).role || '');
     if (!['SUPERADMIN', 'ADMIN'].includes(roleReel)
       || !R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
-      return refuser(res, 'Réservé au super-administrateur et à l’administrateur AAC, sur leur portée');
+      return reserve(res, 'super_admin_aac');
     }
 
     const b = req.body || {};
@@ -704,7 +703,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
-      return refuser(res, 'Non autorisé à commenter cette constatation');
+      return refuser(res);
     }
     if (c.statut !== 'direct_soumis') {
       return res.status(400).json({
@@ -754,7 +753,7 @@ module.exports = function register(app, deps, M) {
       const c = db.get('constatations', req.params.id);
       if (!c) return introuvable(res, 'constatation');
       if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
-        return refuser(res, 'Non autorisé à statuer sur cette constatation');
+        return refuser(res);
       }
       if (c.statut !== 'direct_soumis') {
         return res.status(400).json({ error: 'Seule une constatation soumise peut être jugée' });
@@ -847,7 +846,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/constatations/:id/validate-pac`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
-    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à valider le PAC');
+    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut !== 'pac_soumis') return res.status(400).json({ error: 'Le PAC doit être soumis pour être validé' });
     if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
     db.update('constatations', c.id, {
@@ -864,7 +863,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/constatations/:id/reject-pac`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
-    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à renvoyer le PAC');
+    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut !== 'pac_soumis') return res.status(400).json({ error: 'Le PAC doit être soumis pour être renvoyé' });
     if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
     const d = req.body || {};
@@ -878,7 +877,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/constatations/:id/close`, requireAuth, (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
-    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res, 'Non autorisé à clôturer la FNC');
+    if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut === 'soldee') return res.status(400).json({ error: 'La FNC est déjà soldée' });
     if (refusProcessus(req, res, c, 'pac_cloture')) return undefined;
     const d = req.body || {};
@@ -933,7 +932,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return refuser(res, 'Réservé aux administrateurs');
+    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     if (!db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
     if (suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
     db.remove('constatations', req.params.id);

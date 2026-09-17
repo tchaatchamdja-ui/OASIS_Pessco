@@ -27,7 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu, horsPerimetre, tropVolumineux } = require('../../erreurs');
+const { introuvable, requis, inconnu, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -76,7 +76,6 @@ module.exports = function register(app, deps, M) {
   // Instance regardée : une fiche d'inspection appartient à l'AAC qui l'a
   // ouverte, comme l'inspection qui en naîtra.
   const instanceCourante = (req) => instances.courante(req.userReel || req.user, loadConfig);
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const texte = (v) => String(v == null ? '' : v).trim();
   const admin = (req) => R.isAdmin(req.user, referentiels);
 
@@ -322,7 +321,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/poi/:id/commentaires`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
+    if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
       return res.status(400).json({
@@ -369,7 +368,7 @@ module.exports = function register(app, deps, M) {
   // ══════════════════════════════════════
 
   app.post(`${M}/poi`, requireAuth, (req, res) => {
-    if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à saisir une inspection');
+    if (!R.canContribute(req.user)) return refuser(res);
     const corps = corpsPoi(req.body || {});
     const etat = corps.entete.etat_inspection;
     if (etat && !R.couvreEtat(req.user, referentiels, etat)) {
@@ -443,7 +442,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/poi/:id/soumettre`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à soumettre une inspection');
+    if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'brouillon') {
       return res.status(400).json({ error: 'Seul un brouillon se soumet' });
@@ -466,7 +465,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/poi/:id/renvoyer`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
+    if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
       return res.status(400).json({ error: 'Seule une fiche soumise se renvoie' });
@@ -482,7 +481,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/poi/:id/valider`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
-    if (!R.canValidate(req.user)) return refuser(res, 'Réservé au valideur du module');
+    if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (p.statut === 'validee') {
       return res.status(400).json({ error: 'Formulaire déjà validé' });
     }

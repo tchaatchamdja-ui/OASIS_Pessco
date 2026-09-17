@@ -1034,8 +1034,9 @@ module.exports = async function rampSmoke(port) {
       `${inspPrest.corps.length} / ${toutes}`);
     verifier('inspection d’un autre exploitant introuvable en vue Prestataire',
       (await srv.appel(`${M}/inspections/${horsPerimetre}`)).statut === 404);
-    verifier('import fermé à la vue Prestataire',
-      (await importer([insp])).statut === 403);
+    const importFerme = await importer([insp]);
+    verifier('import fermé à la vue Prestataire, par le refus générique',
+      importFerme.statut === 403 && importFerme.corps.error === 'forbidden', JSON.stringify(importFerme.corps));
     verifier('suppression fermée à la vue Prestataire',
       (await srv.appel(`${M}/inspections/${horsPerimetre}`, { method: 'DELETE' })).statut === 403);
     verifier('générateur de tables fermé à la vue Prestataire',

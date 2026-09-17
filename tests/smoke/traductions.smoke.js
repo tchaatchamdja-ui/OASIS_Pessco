@@ -295,6 +295,11 @@ function controlerPhrasesServeur() {
     lourdFr: dire('fr', { error: 'fichier_trop_volumineux', maxMo: 3.5 }),
     lourdEn: dire('en', { error: 'fichier_trop_volumineux', maxMo: 25 }),
     lourdSansMax: dire('pt', { error: 'fichier_trop_volumineux' }),
+    reserveFr: dire('fr', { error: 'reserve', role: 'administrateurs' }),
+    reserveEn: dire('en', { error: 'reserve', role: 'validateur' }),
+    reservePt: dire('pt', { error: 'reserve', role: 'gestionnaire' }),
+    reserveInconnu: dire('en', { error: 'reserve', role: 'role_que_la_table_ignore' }),
+    refus: dire('fr', { error: 'forbidden' }),
     ecran: (() => { fenetre.PESSCO.lang = 'pt'; return fenetre.oasisChampRequis('intitule'); })(),
     gabarit: dire('pt', { error: 'Import refusé pour : Togo, Mali — hors de votre périmètre' }),
     horsPt: dire('pt', { error: 'hors_perimetre', objet: 'ecart', precision: 'Togo' }),
@@ -340,6 +345,28 @@ function controlerPhrasesServeur() {
     r.lourdFr === 'Fichier trop volumineux (3,5 Mo maximum)' && r.lourdEn === 'File too large (25 MB maximum)'
     && r.lourdSansMax === 'Ficheiro demasiado grande.',
     JSON.stringify([r.lourdFr, r.lourdEn, r.lourdSansMax]));
+
+  verifier('action réservée : le rôle dit dans la langue de l’agent',
+    r.reserveFr === 'Action réservée aux administrateurs.' && r.reserveEn === 'Action restricted to the approver.'
+    && r.reservePt === 'Ação reservada ao gestor do módulo.' && r.reserveInconnu === 'Action not allowed for your account.'
+    && r.refus === 'Action non autorisée pour votre compte.',
+    JSON.stringify([r.reserveFr, r.reserveEn, r.reservePt, r.reserveInconnu, r.refus]));
+
+  // Chaque rôle cité par le serveur a sa phrase dans les trois langues, et la
+  // table ne garde aucun rôle que le serveur ne cite plus.
+  const roles = fenetre.OASIS_ROLES_SERVEUR || {};
+  const rolesCites = new Map();
+  sourcesServeur().forEach((f) => {
+    const texte = fs.readFileSync(f, 'utf8');
+    for (const m of texte.matchAll(/\breserve\(\s*res\s*,\s*'([a-z_]+)'\s*\)/g)) {
+      if (!rolesCites.has(m[1])) rolesCites.set(m[1], `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`);
+    }
+  });
+  const rolesSansNom = [...rolesCites].filter(([k]) => !(roles[k] || []).every(Boolean) || (roles[k] || []).length !== 3);
+  verifier(`chaque rôle des actions réservées est nommé (${rolesCites.size})`,
+    rolesSansNom.length === 0, rolesSansNom.map(([k, ou]) => `« ${k} » (${ou})`).join(' · '));
+  const rolesOrphelins = Object.keys(roles).filter((k) => !rolesCites.has(k));
+  verifier('aucun rôle que le serveur ne cite plus', rolesOrphelins.length === 0, rolesOrphelins.join(' · '));
 
   // Chaque objet cité par une erreur normalisée a son nom dans les trois
   // langues, et son genre là où la phrase s'accorde.

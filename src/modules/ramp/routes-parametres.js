@@ -11,7 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
-const { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -24,7 +24,6 @@ const TAILLE_MAX = 50 * 1024 * 1024;
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const admin = (req) => R.isAdmin(req.user, referentiels);
   const texte = (v) => String(v == null ? '' : v).trim();
   const norm = (v) => String(v == null ? '' : v)
@@ -81,7 +80,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/context`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
     if (!moduleRights.accesAuModule(R.MODULE, reel.username)) {
-      return refuser(res, 'Ce module ne vous est pas ouvert. Veuillez contacter l’administrateur.');
+      return res.status(403).json({ error: 'no_module_access' });
     }
     return res.json({
       user: vueUtilisateur(req.user),
@@ -113,7 +112,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/instance`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
     if (!instances.estRegional(reel)) {
-      return refuser(res, 'Choix de l’instance réservé au super-administrateur régional');
+      return reserve(res, 'super_admin_regional');
     }
     const demandee = texte((req.body || {}).instance);
     if (demandee && !instances.liste(loadConfig).includes(demandee)) {
@@ -127,7 +126,7 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/vue`, requireAuth, (req, res) => {
     const reel = req.userReel || req.user;
-    if (!vues.peutBasculer(reel)) return refuser(res, 'Bascule réservée au super-administrateur');
+    if (!vues.peutBasculer(reel)) return reserve(res, 'super_admin');
     const d = req.body || {};
     if (!vues.VUES.includes(d.vue)) return inconnu(res, 'vue');
     const prestataireId = d.vue === 'prestataire'
@@ -187,7 +186,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/parametres`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const d = req.body || {};
     const type = texte(d.type);
     const label = texte(d.label);
@@ -222,7 +221,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/parametres/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = db.get('parametres', req.params.id);
     if (!p) return introuvable(res, 'parametre');
     const d = req.body || {};
@@ -251,7 +250,7 @@ module.exports = function register(app, deps, M) {
   // Désactiver plutôt que supprimer : un paramètre retiré des listes reste
   // lisible sur les inspections déjà importées qui le portent.
   app.put(`${M}/parametres/:id/actif`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = db.get('parametres', req.params.id);
     if (!p) return introuvable(res, 'parametre');
     db.update('parametres', p.id, { actif: !p.actif });
@@ -259,7 +258,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/parametres/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = db.get('parametres', req.params.id);
     if (!p) return introuvable(res, 'parametre');
     // Un paramètre encore porté par une inspection ou un écart ne se supprime
@@ -308,7 +307,7 @@ module.exports = function register(app, deps, M) {
   const bigrammeValide = (v) => /^[A-Z]{2}$/.test(v);
 
   app.post(`${M}/pays`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = champsPays(req.body || {});
     if (!p.nom) return requis(res, 'nom');
     if (!p.iso2) return requis(res, 'bigramme');
@@ -325,7 +324,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/pays/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
     const patch = champsPays(req.body || {});
@@ -341,7 +340,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/pays/:id/actif`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
     db.update('pays', p.id, { actif: p.actif === false });
@@ -349,7 +348,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/pays/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
     // Un pays cité par une inspection ne se supprime pas : la ligne
@@ -386,7 +385,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/aeroports`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = champsAeroport(req.body || {});
     if (!a.pays) return requis(res, 'pays');
     if (!a.nom) return requis(res, 'intitule');
@@ -400,7 +399,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/aeroports/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = db.get('aeroports', req.params.id);
     if (!a) return introuvable(res, 'aeroport');
     const d = req.body || {};
@@ -419,7 +418,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/aeroports/:id/actif`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = db.get('aeroports', req.params.id);
     if (!a) return introuvable(res, 'aeroport');
     db.update('aeroports', a.id, { actif: a.actif === false });
@@ -427,7 +426,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/aeroports/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = db.get('aeroports', req.params.id);
     if (!a) return introuvable(res, 'aeroport');
     db.remove('aeroports', a.id);
@@ -531,7 +530,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.post(`${M}/aeronefs`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = champsAeronef(req.body || {});
     if (!a.designation) return requis(res, 'designation');
     if (!a.modele) return requis(res, 'modele_variante');
@@ -545,7 +544,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/aeronefs/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = db.getAeronef(req.params.id);
     if (!a) return introuvable(res, 'aeronef');
     const d = req.body || {};
@@ -561,7 +560,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.put(`${M}/aeronefs/:id/actif`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = db.getAeronef(req.params.id);
     if (!a) return introuvable(res, 'aeronef');
     db.updateAeronef(a.id, { actif: a.actif === false });
@@ -569,7 +568,7 @@ module.exports = function register(app, deps, M) {
   });
 
   app.delete(`${M}/aeronefs/:id`, requireAuth, (req, res) => {
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = db.getAeronef(req.params.id);
     if (!a) return introuvable(res, 'aeronef');
     // Un appareil cité par une inspection ne se supprime pas : la ligne
@@ -612,13 +611,13 @@ module.exports = function register(app, deps, M) {
     || R.roleRamp(req.user, referentiels) === 'Coordonnateur Régional';
 
   app.get(`${M}/depots`, requireAuth, (req, res) => {
-    if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
+    if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     res.json(db.list('depots').slice()
       .sort((a, b) => String(b.depose_le || '').localeCompare(String(a.depose_le || ''))));
   });
 
   app.post(`${M}/depots`, requireAuth, multipart(), (req, res) => {
-    if (!R.canContribute(req.user)) return refuser(res, 'Non autorisé à déposer');
+    if (!R.canContribute(req.user)) return refuser(res);
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
     const d = req.body || {};
@@ -648,7 +647,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/depots/:id`, requireAuth, (req, res) => {
     const dep = db.get('depots', req.params.id);
     if (!dep) return introuvable(res, 'depot');
-    if (!peutModifierDepot(req, dep)) return refuser(res, 'Seul le déposant ou le gestionnaire modifie ce dépôt');
+    if (!peutModifierDepot(req, dep)) return reserve(res, 'deposant_gestionnaire');
     const d = req.body || {};
     db.update('depots', dep.id, {
       nom: texte(d.nom) || dep.nom,
@@ -661,7 +660,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/depots/:id`, requireAuth, (req, res) => {
     const dep = db.get('depots', req.params.id);
     if (!dep) return introuvable(res, 'depot');
-    if (!peutModifierDepot(req, dep)) return refuser(res, 'Seul le déposant ou le gestionnaire supprime ce dépôt');
+    if (!peutModifierDepot(req, dep)) return reserve(res, 'deposant_gestionnaire');
     const chemin = path.join(DOSSIER_DEPOTS, path.basename(dep.fichier || ''));
     if (dep.fichier && fs.existsSync(chemin)) fs.unlinkSync(chemin);
     db.remove('depots', dep.id);
@@ -671,7 +670,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/depots/:id/fichier`, requireAuth, (req, res) => {
     const dep = db.get('depots', req.params.id);
     if (!dep) return introuvable(res, 'depot');
-    if (!peutTelecharger(req, dep)) return refuser(res, 'Téléchargement non autorisé');
+    if (!peutTelecharger(req, dep)) return refuser(res);
     const chemin = path.join(DOSSIER_DEPOTS, path.basename(dep.fichier || ''));
     if (!fs.existsSync(chemin)) return res.status(404).json({ error: 'Fichier introuvable sur le serveur' });
     res.setHeader('Content-Disposition',
@@ -686,7 +685,7 @@ module.exports = function register(app, deps, M) {
   // le carnet du sien.
 
   app.get(`${M}/contacts`, requireAuth, (req, res) => {
-    if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
+    if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     res.json(db.list('contacts').slice().sort((a, b) =>
       String(a.etat || '').localeCompare(String(b.etat || ''))
       || String(a.nom || '').localeCompare(String(b.nom || ''))));

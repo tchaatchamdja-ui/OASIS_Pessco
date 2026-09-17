@@ -17,7 +17,7 @@ const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
-const { introuvable, requis, horsPerimetre, tropVolumineux } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
 
 // Les pièces jointes vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -31,13 +31,12 @@ const TAILLE_MAX = 25 * 1024 * 1024;
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig } = deps;
-  const refuser = (res, msg) => res.status(403).json({ error: msg || 'Accès refusé' });
   const texte = (v) => String(v == null ? '' : v).trim();
   const admin = (req) => R.isAdmin(req.user, referentiels);
 
   // Le menu n'existe pas en vue Prestataire : les échanges sont entre États.
   const gardeAac = (req, res) => {
-    if (R.estPrestataire(req.user)) { refuser(res, 'Réservé à la vue AAC'); return false; }
+    if (R.estPrestataire(req.user)) { reserve(res, 'vue_aac'); return false; }
     return true;
   };
 
@@ -152,7 +151,7 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/requetes`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    if (!R.canContribute(req.user) && !admin(req)) return refuser(res, 'Non autorisé à écrire');
+    if (!R.canContribute(req.user) && !admin(req)) return refuser(res);
     const d = req.body || {};
     const objet = texte(d.objet);
     const message = texte(d.message);
@@ -242,7 +241,7 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/requetes/:id`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
+    if (!admin(req)) return reserve(res, 'gestionnaire');
     if (!db.remove('requetes', req.params.id)) return introuvable(res, 'requete');
     return res.json({ status: 'ok' });
   });
@@ -404,7 +403,7 @@ module.exports = function register(app, deps, M) {
   // Mise à disposition depuis l'étape Transmission d'une fiche.
   app.post(`${M}/poi/:id/partager`, requireAuth, (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    if (!R.canContribute(req.user) && !admin(req)) return refuser(res, 'Non autorisé à partager');
+    if (!R.canContribute(req.user) && !admin(req)) return refuser(res);
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     // Même garde que partout ailleurs sur un POI : on ne met à disposition que

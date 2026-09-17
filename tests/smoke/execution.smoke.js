@@ -65,7 +65,7 @@ module.exports = async function executionSmoke(port) {
         && relecture.corps.date_debut_prevue === '2026-09-01');
 
       verifier('accord refusé tant que la notification n’est pas envoyée',
-        (await PUT(`${M}/notifications/${notifId}/validate-accord`)).statut === 400);
+        (await PUT(`${M}/notifications/${notifId}/validate-accord`)).statut === 409);
 
       verifier('soumission', (await PUT(`${M}/notifications/${notifId}/submit`)).statut === 200);
       verifier('validation', (await PUT(`${M}/notifications/${notifId}/validate`)).statut === 200);
@@ -189,7 +189,7 @@ module.exports = async function executionSmoke(port) {
       verifier('commentaires refusés avant soumission',
         (await PUT(`${M}/constatations/${directe.corps.id}/commentaires-validation`, {
           entrees: [{ cible: 'titre', texte: 'Préciser' }],
-        })).statut === 400);
+        })).statut === 409);
       verifier('constatation soumise',
         (await PUT(`${M}/constatations/${directe.corps.id}/direct-soumettre`)).statut === 200);
       verifier('commentaires de validation enregistrés',

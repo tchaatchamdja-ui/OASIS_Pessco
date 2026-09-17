@@ -128,7 +128,7 @@ module.exports = async function mesuresSmoke(port) {
     verifier('une mesure clôturée ne se modifie plus',
       (await srv.appel(`${M}/mesures/${id}`, {
         method: 'PUT', body: JSON.stringify({ objet: 'Autre objet' }),
-      })).statut === 400);
+      })).statut === 409);
     verifier('réouverture possible',
       (await srv.appel(`${M}/mesures/${id}/rouvrir`, { method: 'POST', body: '{}' })).statut === 200);
     verifier('mesure rouverte modifiable à nouveau',
@@ -139,11 +139,14 @@ module.exports = async function mesuresSmoke(port) {
     // ── Un paramètre encore utilisé ne se supprime pas ──
     const catAdmin = (await srv.appel(`${M}/parametres`)).corps.categories
       .find((c) => c.code === 'administrative');
-    verifier('catégorie encore utilisée non supprimable',
-      (await srv.appel(`${M}/parametres/categories/${catAdmin.id}`, { method: 'DELETE' })).statut === 400);
+    const catUtilisee = await srv.appel(`${M}/parametres/categories/${catAdmin.id}`, { method: 'DELETE' });
+    verifier('catégorie encore utilisée non supprimable, usages comptés',
+      catUtilisee.statut === 409 && catUtilisee.corps.error === 'en_usage'
+      && catUtilisee.corps.objet === 'categorie' && catUtilisee.corps.n >= 1,
+      JSON.stringify(catUtilisee.corps));
     const typPreavis = (await srv.appel(`${M}/parametres`)).corps.types.find((t) => t.code === 'preavis');
     verifier('type encore utilisé non supprimable',
-      (await srv.appel(`${M}/parametres/types/${typPreavis.id}`, { method: 'DELETE' })).statut === 400);
+      (await srv.appel(`${M}/parametres/types/${typPreavis.id}`, { method: 'DELETE' })).statut === 409);
     verifier('catégorie inutilisée supprimable',
       (await srv.appel(`${M}/parametres/categories/${cat.corps.id}`, { method: 'DELETE' })).statut === 200);
     verifier('les types de la catégorie supprimée disparaissent avec elle',
@@ -232,7 +235,7 @@ module.exports = async function mesuresSmoke(port) {
     verifier('classement non rejouable',
       (await srv.appel(`${M}/constatations/${aClasser.corps.id}/classer`, {
         method: 'POST', body: '{}',
-      })).statut === 400);
+      })).statut === 409);
     verifier('suppression refusée sur une infraction classée',
       (await srv.appel(`${M}/constatations/${aClasser.corps.id}`, { method: 'DELETE' })).statut === 400);
     verifier('classement retiré par le gestionnaire',

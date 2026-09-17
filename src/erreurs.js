@@ -57,4 +57,28 @@ function reserve(res, role) {
   return res.status(403).json({ error: 'reserve', role });
 }
 
-module.exports = { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, refuser, reserve };
+// Règles d'état (409). L'écran accorde l'état au genre de l'objet.
+//   statutRequis — l'action n'est possible qu'à ce statut (un ou plusieurs) ;
+//   dejaFait     — l'objet est déjà dans l'état que l'action produirait ;
+//   fige         — l'objet, dans cet état, ne se modifie plus.
+const liste = (v) => (Array.isArray(v) ? v : [v]);
+function statutRequis(res, objet, attendu) {
+  return res.status(409).json({ error: 'statut_requis', objet, etats: liste(attendu) });
+}
+function dejaFait(res, objet, etat) {
+  return res.status(409).json({ error: 'deja', objet, etats: liste(etat) });
+}
+function fige(res, objet, etat) {
+  return res.status(409).json({ error: 'fige', objet, etats: liste(etat) });
+}
+
+// L'enregistrement est encore employé ailleurs : il ne se supprime pas (409).
+// `desactivable` : l'écran propose de le désactiver à la place.
+function enUsage(res, objet, n, { desactivable = false } = {}) {
+  return res.status(409).json({ error: 'en_usage', objet, n, desactivable });
+}
+
+module.exports = {
+  introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, refuser, reserve,
+  statutRequis, dejaFait, fige, enUsage,
+};

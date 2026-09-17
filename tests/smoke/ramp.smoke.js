@@ -174,7 +174,7 @@ module.exports = async function rampSmoke(port) {
     const asky = (await srv.appel(`${M}/parametres`)).corps.familles.exploitants
       .find((p) => p.label === 'Asky Airlines');
     verifier('paramètre encore utilisé non supprimable',
-      (await srv.appel(`${M}/parametres/${asky.id}`, { method: 'DELETE' })).statut === 400);
+      (await srv.appel(`${M}/parametres/${asky.id}`, { method: 'DELETE' })).statut === 409);
 
     // ── Groupes d'items ──
     const g1 = await srv.appel(`${M}/parametres`, {
@@ -211,7 +211,7 @@ module.exports = async function rampSmoke(port) {
       apresRenommage.items.find((x) => x.id === item.corps.id).cat === 'documents_de_bord');
 
     verifier('groupe portant des items non supprimable',
-      (await srv.appel(`${M}/parametres/${g1.corps.id}`, { method: 'DELETE' })).statut === 400);
+      (await srv.appel(`${M}/parametres/${g1.corps.id}`, { method: 'DELETE' })).statut === 409);
     await srv.appel(`${M}/parametres/${item.corps.id}`, { method: 'DELETE' });
     verifier('groupe vidé de ses items supprimable',
       (await srv.appel(`${M}/parametres/${g1.corps.id}`, { method: 'DELETE' })).statut === 200);
@@ -255,8 +255,11 @@ module.exports = async function rampSmoke(port) {
       && /^POI-\d{4}$/.test(ficheVide.corps.reference), ficheVide.corps.reference);
     verifier('fiche incomplète non soumissible',
       (await srv.appel(`${M}/poi/${ficheVide.corps.id}/soumettre`, { method: 'POST', body: '{}' })).statut === 400);
-    verifier('fiche non soumise non validable',
-      (await srv.appel(`${M}/poi/${ficheVide.corps.id}/valider`, { method: 'POST', body: '{}' })).statut === 400);
+    const nonSoumise = await srv.appel(`${M}/poi/${ficheVide.corps.id}/valider`, { method: 'POST', body: '{}' });
+    verifier('fiche non soumise non validable, statut attendu nommé',
+      nonSoumise.statut === 409 && nonSoumise.corps.error === 'statut_requis'
+      && nonSoumise.corps.objet === 'formulaire' && String(nonSoumise.corps.etats) === 'soumis',
+      JSON.stringify(nonSoumise.corps));
     verifier('brouillon supprimé',
       (await srv.appel(`${M}/poi/${ficheVide.corps.id}`, { method: 'DELETE' })).statut === 200);
 
@@ -292,7 +295,7 @@ module.exports = async function rampSmoke(port) {
 
     // ── Circuit : soumission, renvoi, validation ──
     verifier('validation refusée avant soumission',
-      (await srv.appel(`${M}/poi/${fiche.corps.id}/valider`, { method: 'POST', body: '{}' })).statut === 400);
+      (await srv.appel(`${M}/poi/${fiche.corps.id}/valider`, { method: 'POST', body: '{}' })).statut === 409);
     verifier('fiche soumise',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/soumettre`, { method: 'POST', body: '{}' })).statut === 200);
     verifier('étape « validation » atteinte',
@@ -302,7 +305,7 @@ module.exports = async function rampSmoke(port) {
         method: 'PUT', body: JSON.stringify({ inspecteurs: 'X' }),
       })).statut === 400);
     verifier('soumission non rejouable',
-      (await srv.appel(`${M}/poi/${fiche.corps.id}/soumettre`, { method: 'POST', body: '{}' })).statut === 400);
+      (await srv.appel(`${M}/poi/${fiche.corps.id}/soumettre`, { method: 'POST', body: '{}' })).statut === 409);
     // ── Commentaires de validation ──
     verifier('commentaires enregistrés sur une fiche soumise',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/commentaires`, {
@@ -342,7 +345,7 @@ module.exports = async function rampSmoke(port) {
     verifier('commentaires refusés hors étape de validation',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/commentaires`, {
         method: 'PUT', body: JSON.stringify({ entrees: [] }),
-      })).statut === 400);
+      })).statut === 409);
     const renvoyee = (await srv.appel(`${M}/poi`)).corps.poi.find((p) => p.id === fiche.corps.id);
     verifier('renvoi ramène au brouillon, motif conservé',
       renvoyee.statut === 'brouillon' && renvoyee.etape === 'soumission'
@@ -353,7 +356,7 @@ module.exports = async function rampSmoke(port) {
           classe_action: '3a', inspecteurs: 'AGBEKO K.' }),
       })).statut === 200);
     verifier('renvoi impossible hors soumission',
-      (await srv.appel(`${M}/poi/${fiche.corps.id}/renvoyer`, { method: 'POST', body: '{}' })).statut === 400);
+      (await srv.appel(`${M}/poi/${fiche.corps.id}/renvoyer`, { method: 'POST', body: '{}' })).statut === 409);
     await srv.appel(`${M}/poi/${fiche.corps.id}/soumettre`, { method: 'POST', body: '{}' });
 
     // Un second tour ouvre une nouvelle version, sans toucher à la première.
@@ -399,9 +402,9 @@ module.exports = async function rampSmoke(port) {
     verifier('fiche validée verrouillée',
       (await srv.appel(`${M}/poi/${fiche.corps.id}`, {
         method: 'PUT', body: JSON.stringify({ inspecteurs: 'AUTRE' }),
-      })).statut === 400);
+      })).statut === 409);
     verifier('validation non rejouable',
-      (await srv.appel(`${M}/poi/${fiche.corps.id}/valider`, { method: 'POST', body: '{}' })).statut === 400);
+      (await srv.appel(`${M}/poi/${fiche.corps.id}/valider`, { method: 'POST', body: '{}' })).statut === 409);
     verifier('fiche listée avec ses compteurs',
       (await srv.appel(`${M}/poi`)).corps.poi.find((p) => p.id === fiche.corps.id).ecarts === 2);
     verifier('fiche inconnue introuvable',
@@ -496,14 +499,14 @@ module.exports = async function rampSmoke(port) {
     verifier('transmission manuelle sans objet une fois la fiche partie',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/transmettre`, {
         method: 'POST', body: JSON.stringify({ destinataire: 'X' }),
-      })).statut === 400);
+      })).statut === 409);
 
     const apresTransmission = await srv.appel(`${M}/poi/${fiche.corps.id}/pieces`);
     verifier('pièces figées après transmission', apresTransmission.corps.modifiable === false);
     verifier('suppression d’une pièce refusée après transmission',
       (await srv.appel(`${M}/poi/${fiche.corps.id}/pieces/inexistante`, { method: 'DELETE' })).statut === 403);
     verifier('transmission non rejouable',
-      (await srv.appel(`${M}/poi/${fiche.corps.id}/transmettre`, { method: 'POST', body: '{}' })).statut === 400);
+      (await srv.appel(`${M}/poi/${fiche.corps.id}/transmettre`, { method: 'POST', body: '{}' })).statut === 409);
     const listeApres = (await srv.appel(`${M}/poi`)).corps.poi.find((p) => p.id === fiche.corps.id);
     verifier('date et destinataires de transmission conservés',
       !!listeApres.transmis_le
@@ -518,7 +521,7 @@ module.exports = async function rampSmoke(port) {
     verifier('étape « soumission » sur un brouillon',
       (await srv.appel(`${M}/poi`)).corps.poi.find((p) => p.id === brouillon.corps.id).etape === 'soumission');
     verifier('brouillon non transmissible',
-      (await srv.appel(`${M}/poi/${brouillon.corps.id}/transmettre`, { method: 'POST', body: '{}' })).statut === 400);
+      (await srv.appel(`${M}/poi/${brouillon.corps.id}/transmettre`, { method: 'POST', body: '{}' })).statut === 409);
     await srv.appel(`${M}/poi/${brouillon.corps.id}`, { method: 'DELETE' });
 
     // ── Pays ──

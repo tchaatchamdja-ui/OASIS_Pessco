@@ -14,7 +14,7 @@ const refModele = require('./references');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const { valider } = require('../../valider');
-const { introuvable, requis, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, reserve, refuser, statutRequis } = require('../../erreurs');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
 // disent à partir de quand une étape est en retard.
@@ -152,7 +152,7 @@ module.exports = function register(app, deps, M) {
       return reserve(res, 'super_admin_aac');
     }
     if (archive && d.statut !== 'cloture') {
-      return res.status(400).json({ error: 'Seul un dossier clôturé peut être archivé' });
+      return statutRequis(res, 'dossier', 'cloture');
     }
     db.update('dossiers', d.id, {
       archive: archive ? 1 : 0,
@@ -225,7 +225,7 @@ module.exports = function register(app, deps, M) {
     const arretee = Number(n.arret) === 1 || (dossier && dossier.statut === 'arrete');
     const close = dossier && dossier.statut === 'cloture';
     if (archive && !arretee && !close) {
-      return res.status(400).json({ error: 'Seule une activité arrêtée ou clôturée s’archive' });
+      return statutRequis(res, 'activite', ['arrete', 'cloture']);
     }
     const maintenant = db.now();
     db.update('notifications', n.id, {

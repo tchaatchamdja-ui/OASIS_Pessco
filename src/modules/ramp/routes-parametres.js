@@ -11,7 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
-const { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, reserve, refuser, enUsage } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -265,9 +265,7 @@ module.exports = function register(app, deps, M) {
     // pas : la donnée deviendrait illisible. Il se désactive.
     const utilise = compterUsages(p);
     if (utilise) {
-      return res.status(400).json({
-        error: `Paramètre utilisé ${utilise} fois — désactivez-le plutôt que de le supprimer`,
-      });
+      return enUsage(res, 'parametre', utilise, { desactivable: true });
     }
     db.remove('parametres', p.id);
     res.json({ status: 'ok' });
@@ -355,9 +353,7 @@ module.exports = function register(app, deps, M) {
     // deviendrait illisible. Il se désactive.
     const utilise = db.list('inspections').filter((i) => i.pays === p.nom).length;
     if (utilise) {
-      return res.status(400).json({
-        error: `Pays cité par ${utilise} inspection(s) — désactivez-le plutôt`,
-      });
+      return enUsage(res, 'pays', utilise, { desactivable: true });
     }
     db.remove('pays', p.id);
     res.json({ status: 'ok' });
@@ -576,9 +572,7 @@ module.exports = function register(app, deps, M) {
     const utilise = db.list('inspections')
       .filter((i) => i.aeronef === a.designation || i.aeronef === a.modele).length;
     if (utilise) {
-      return res.status(400).json({
-        error: `Aéronef cité par ${utilise} inspection(s) — désactivez-le plutôt`,
-      });
+      return enUsage(res, 'aeronef', utilise, { desactivable: true });
     }
     db.removeAeronef(a.id);
     res.json({ status: 'ok' });

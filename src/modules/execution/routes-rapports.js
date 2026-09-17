@@ -13,7 +13,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable, requis, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, reserve, refuser, statutRequis } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -185,7 +185,7 @@ module.exports = function register(app, deps, M) {
     const r = db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
-    if (r.statut !== 'soumis') return res.status(400).json({ error: 'Seul un rapport soumis peut être validé' });
+    if (r.statut !== 'soumis') return statutRequis(res, 'rapport', 'soumis');
     if (refusProcessus(req, res, r, 'validation')) return undefined;
     const dossier = db.get('dossiers', r.dossier_id) || {};
     const refFinale = dossier.final_reference
@@ -207,7 +207,7 @@ module.exports = function register(app, deps, M) {
     const r = db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
-    if (r.statut !== 'valide') return res.status(400).json({ error: 'Seul un rapport validé peut être amendé' });
+    if (r.statut !== 'valide') return statutRequis(res, 'rapport', 'valide');
     const observations = (req.body || {}).observations || '';
     db.update('rapports', r.id, { statut: 'brouillon', observations_validation: observations });
     db.update('dossiers', r.dossier_id, {
@@ -256,7 +256,7 @@ module.exports = function register(app, deps, M) {
     const r = db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
     if (!R.canContribute(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
-    if (r.statut !== 'valide') return res.status(400).json({ error: 'Seul un rapport validé peut être envoyé' });
+    if (r.statut !== 'valide') return statutRequis(res, 'rapport', 'valide');
     if (refusProcessus(req, res, r, 'transmission')) return undefined;
     const maintenant = db.now();
     db.update('rapports', r.id, { statut: 'transmis', date_transmission: maintenant, transmis_par: req.user.username });
@@ -277,7 +277,7 @@ module.exports = function register(app, deps, M) {
     if (R.estPrestataire(req.user)) return refuser(res, "Transmission réservée à l'Autorité");
     if (!R.canValidate(req.user, perimetrePrestataire(r.prestataire_id), referentiels)) return refuser(res);
     if (!['valide', 'transmis'].includes(r.statut)) {
-      return res.status(400).json({ error: 'Seul un rapport validé peut être transmis' });
+      return statutRequis(res, 'rapport', 'valide');
     }
     if (refusProcessus(req, res, r, 'transmission')) return undefined;
 

@@ -300,6 +300,17 @@ function controlerPhrasesServeur() {
     reservePt: dire('pt', { error: 'reserve', role: 'gestionnaire' }),
     reserveInconnu: dire('en', { error: 'reserve', role: 'role_que_la_table_ignore' }),
     refus: dire('fr', { error: 'forbidden' }),
+    statutFr: dire('fr', { error: 'statut_requis', objet: 'notification', etats: ['soumis'] }),
+    statutFrDeux: dire('fr', { error: 'statut_requis', objet: 'activite', etats: ['arrete', 'cloture'] }),
+    statutEn: dire('en', { error: 'statut_requis', objet: 'rapport', etats: ['valide'] }),
+    statutPt: dire('pt', { error: 'statut_requis', objet: 'formulaire', etats: ['brouillon'] }),
+    statutSigle: dire('fr', { error: 'statut_requis', objet: 'pac', etats: ['accepte'] }),
+    dejaFr: dire('fr', { error: 'deja', objet: 'dossier', etats: ['cloture'] }),
+    figeEn: dire('en', { error: 'fige', objet: 'formulaire', etats: ['transmis'] }),
+    figePt: dire('pt', { error: 'fige', objet: 'discussion', etats: ['clos'] }),
+    usageFr: dire('fr', { error: 'en_usage', objet: 'categorie', n: 3 }),
+    usageFrDesactivable: dire('fr', { error: 'en_usage', objet: 'parametre', n: 2, desactivable: true }),
+    usagePt: dire('pt', { error: 'en_usage', objet: 'aeronef', n: 1, desactivable: true }),
     ecran: (() => { fenetre.PESSCO.lang = 'pt'; return fenetre.oasisChampRequis('intitule'); })(),
     gabarit: dire('pt', { error: 'Import refusé pour : Togo, Mali — hors de votre périmètre' }),
     horsPt: dire('pt', { error: 'hors_perimetre', objet: 'ecart', precision: 'Togo' }),
@@ -368,6 +379,42 @@ function controlerPhrasesServeur() {
   const rolesOrphelins = Object.keys(roles).filter((k) => !rolesCites.has(k));
   verifier('aucun rôle que le serveur ne cite plus', rolesOrphelins.length === 0, rolesOrphelins.join(' · '));
 
+  verifier('règle d’état composée, l’état accordé au nom',
+    r.statutFr === 'Action possible seulement sur une notification soumise'
+    && r.statutFrDeux === 'Action possible seulement sur une activité arrêtée ou clôturée'
+    && r.statutEn === 'Only possible when the report is validated'
+    && r.statutPt === 'Ação possível apenas quando o formulário está em rascunho'
+    && r.statutSigle === 'Action possible seulement sur un PAC accepté'
+    && r.dejaFr === 'Dossier déjà clôturé'
+    && r.figeEn === 'Form transmitted: no further changes'
+    && r.figePt === 'Discussão encerrada: alteração impossível',
+    JSON.stringify([r.statutFr, r.statutFrDeux, r.statutEn, r.statutPt, r.statutSigle, r.dejaFr, r.figeEn, r.figePt]));
+  verifier('élément encore utilisé : le compte et, s’il se désactive, le conseil',
+    r.usageFr === 'Catégorie utilisée 3 fois : suppression impossible'
+    && r.usageFrDesactivable === 'Paramètre utilisé 2 fois : suppression impossible — désactivez-le plutôt'
+    && r.usagePt === 'Aeronave utilizada 1 vez(es): eliminação impossível — desative-a em vez disso',
+    JSON.stringify([r.usageFr, r.usageFrDesactivable, r.usagePt]));
+
+  // Chaque état cité par une règle d'état a ses formes dans les trois langues.
+  const etatsTable = fenetre.OASIS_ETATS_SERVEUR || {};
+  const etatsCites = new Map();
+  sourcesServeur().forEach((f) => {
+    const texte = fs.readFileSync(f, 'utf8');
+    for (const m of texte.matchAll(/(?:statutRequis|dejaFait|fige)\(\s*res\s*,\s*'[a-z_]+'\s*,\s*(\[[^\]]*\]|'[a-z_]+')/g)) {
+      for (const e of m[1].matchAll(/'([a-z_]+)'/g)) {
+        if (!etatsCites.has(e[1])) etatsCites.set(e[1], `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`);
+      }
+    }
+  });
+  const etatsSansForme = [...etatsCites].filter(([k]) => {
+    const e = etatsTable[k];
+    return !e || e.length !== 3 || !e[0][0] || !e[0][1] || !e[1][0] || !e[2][0] || !e[2][1];
+  });
+  verifier(`chaque état des règles d’état est nommé (${etatsCites.size})`,
+    etatsSansForme.length === 0, etatsSansForme.map(([k, ou]) => `« ${k} » (${ou})`).join(' · '));
+  const etatsOrphelins = Object.keys(etatsTable).filter((k) => !etatsCites.has(k));
+  verifier('aucun état que le serveur ne cite plus', etatsOrphelins.length === 0, etatsOrphelins.join(' · '));
+
   // Chaque objet cité par une erreur normalisée a son nom dans les trois
   // langues, et son genre là où la phrase s'accorde.
   const objets = fenetre.OASIS_OBJETS_SERVEUR || {};
@@ -382,7 +429,7 @@ function controlerPhrasesServeur() {
   parcourirEcrans(path.join(RACINE, 'public'));
   [...sourcesServeur(), ...ecrans].forEach((f) => {
     const texte = fs.readFileSync(f, 'utf8');
-    for (const m of texte.matchAll(/\b(?:(?:introuvable|requis|inconnu|existant|horsPerimetre)\(\s*res\s*,|oasisChampRequis\()\s*'([a-z_]+)'\s*[,)]/g)) {
+    for (const m of texte.matchAll(/\b(?:(?:introuvable|requis|inconnu|existant|horsPerimetre|statutRequis|dejaFait|fige|enUsage)\(\s*res\s*,|oasisChampRequis\()\s*'([a-z_]+)'\s*[,)]/g)) {
       if (!cites.has(m[1])) cites.set(m[1], `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`);
     }
   });

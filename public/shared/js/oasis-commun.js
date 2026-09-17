@@ -163,10 +163,27 @@ function composerErreurNormalisee(d, rang) {
   const [nom, genre] = objet[rang] || objet[0];
   const gabarit = gabarits[rang] || gabarits[0];
   const phrase = gabarit[genre === 'f' ? 'f' : 'm'] || gabarit.m;
-  // En tête de phrase, le nom garde sa majuscule ; au milieu, il la perd.
-  const place = phrase.startsWith('{objet}') ? nom : nom.charAt(0).toLowerCase() + nom.slice(1);
+  // En tête de phrase, le nom garde sa majuscule ; au milieu, il la perd —
+  // sauf un sigle, qui s'écrit en capitales où qu'il soit (PAC, FNC).
+  const sigle = nom.slice(1) !== nom.slice(1).toLowerCase();
+  const place = phrase.startsWith('{objet}') || sigle ? nom : nom.charAt(0).toLowerCase() + nom.slice(1);
+  // L'état s'accorde au genre du nom dans sa langue ; plusieurs états
+  // attendus se joignent par « ou ».
+  const table = fenetre.OASIS_ETATS_SERVEUR || {};
+  const etats = (d.etats || []).map((cle) => {
+    const e = table[cle];
+    if (!e) return cle;
+    const formes = e[rang] || e[0];
+    return formes[genre === 'f' ? 1 : 0] || formes[0];
+  });
+  if (phrase.includes('{etat}') && !etats.length) return '';
+  const ou = (fenetre.OASIS_OU_SERVEUR || ['ou'])[rang] || 'ou';
   const precision = d.precision ? ` (${d.precision})` : '';
-  return phrase.replace('{objet}', place) + precision;
+  const suite = d.desactivable ? (gabarit[genre === 'f' ? 'desactivableF' : 'desactivableM'] || '') : '';
+  return phrase
+    .replace('{objet}', place)
+    .replace('{etat}', etats.join(` ${ou} `))
+    .replace('{n}', Number(d.n) || 0) + suite + precision;
 }
 
 // Le même message, quand c'est l'écran qui constate le champ vide avant

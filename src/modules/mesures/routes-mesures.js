@@ -17,7 +17,7 @@ const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, inconnu, reserve, refuser, dejaFait, fige } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -391,7 +391,7 @@ module.exports = function register(app, deps, M) {
       return res.status(400).json({ error: 'Une mesure a déjà été prise sur cette infraction' });
     }
     if (db.list('classements').some((x) => x.constatation_id === c.id)) {
-      return res.status(400).json({ error: 'Infraction déjà classée' });
+      return dejaFait(res, 'infraction', 'classe');
     }
     const motif = String((req.body || {}).motif || '').trim();
     db.insert('classements', {
@@ -539,7 +539,7 @@ module.exports = function register(app, deps, M) {
     // Une investigation soumise est close : elle se consulte, elle ne se
     // réécrit plus.
     const avant = t.investigation || {};
-    if (avant.soumise_le) return res.status(409).json({ error: 'Investigation soumise : elle ne se modifie plus' });
+    if (avant.soumise_le) return fige(res, 'investigation', 'soumis');
     db.update('traitements', t.id, { investigation: investigation(req.body || {}) });
     return res.json({ status: 'ok' });
   });
@@ -557,7 +557,7 @@ module.exports = function register(app, deps, M) {
       return res.status(409).json({ error: 'La carence n’est pas à l’étape Investigations' });
     }
     const inv = t.investigation || {};
-    if (inv.soumise_le) return res.status(409).json({ error: 'Investigation déjà soumise' });
+    if (inv.soumise_le) return dejaFait(res, 'investigation', 'soumis');
     db.update('traitements', t.id, {
       etape: 'qualification',
       investigation: { ...inv, soumise_le: db.now(), soumise_par: req.user.username },
@@ -1028,7 +1028,7 @@ module.exports = function register(app, deps, M) {
     // Un dossier clos — classé, ou clôturé faute de suivi à conduire — ne se
     // réécrit plus : l'étape se consulte.
     if (t.classe_le || t.cloture_le) {
-      return res.status(409).json({ error: 'Le traitement est clos : le suivi ne se modifie plus' });
+      return fige(res, 'traitement', 'clos');
     }
     const d = req.body || {};
     // Seules les mesures nées de cette carence sont touchées : un identifiant
@@ -1076,7 +1076,7 @@ module.exports = function register(app, deps, M) {
       return null;
     }
     if (t.classe_le || t.cloture_le) {
-      res.status(409).json({ error: 'Le traitement est déjà clos' });
+      dejaFait(res, 'traitement', 'clos');
       return null;
     }
     return { c, t };
@@ -1279,7 +1279,7 @@ module.exports = function register(app, deps, M) {
     if (!peutEcrire(req, m)) return refuser(res);
     // Une mesure clôturée ou annulée est un acte pris : elle ne se réécrit pas.
     if (CLOS.includes(m.statut)) {
-      return res.status(400).json({ error: 'Une mesure clôturée ou annulée ne se modifie plus' });
+      return fige(res, 'mesure', ['cloture', 'annule']);
     }
     const patch = normaliser(req.body || {});
     if (!Object.keys(patch).length) return res.json({ status: 'ok' });

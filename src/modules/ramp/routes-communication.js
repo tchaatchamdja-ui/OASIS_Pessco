@@ -17,7 +17,7 @@ const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
-const { introuvable, requis, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre, tropVolumineux, reserve, refuser, fige, statutRequis } = require('../../erreurs');
 
 // Les pièces jointes vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -196,7 +196,7 @@ module.exports = function register(app, deps, M) {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
-    if (r.statut === 'close') return res.status(409).json({ error: 'Discussion close' });
+    if (r.statut === 'close') return fige(res, 'discussion', 'clos');
     const message = texte((req.body || {}).message);
     if (!message) return requis(res, 'message');
     const echange = {
@@ -255,7 +255,7 @@ module.exports = function register(app, deps, M) {
     if (!gardeAac(req, res)) return undefined;
     const r = db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
-    if (r.statut === 'close') return res.status(409).json({ error: 'Discussion close' });
+    if (r.statut === 'close') return fige(res, 'discussion', 'clos');
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
     const ext = path.extname(f.filename || '').toLowerCase();
@@ -414,7 +414,7 @@ module.exports = function register(app, deps, M) {
       return horsPerimetre(res, 'formulaire', etatFiche);
     }
     if (p.statut !== 'validee') {
-      return res.status(400).json({ error: 'Seule une fiche validée se partage' });
+      return statutRequis(res, 'formulaire', 'valide');
     }
     const d = req.body || {};
     const demandes = (Array.isArray(d.etats) ? d.etats : [])

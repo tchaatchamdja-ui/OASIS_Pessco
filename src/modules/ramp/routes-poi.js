@@ -27,7 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, inconnu, horsPerimetre, tropVolumineux, reserve, refuser, statutRequis, fige, dejaFait } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -324,9 +324,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
-      return res.status(400).json({
-        error: 'Les commentaires ne se saisissent que sur une fiche soumise à validation',
-      });
+      return statutRequis(res, 'formulaire', 'soumis');
     }
     const entrees = (Array.isArray((req.body || {}).entrees) ? req.body.entrees : [])
       .map((e) => ({ cible: texte(e.cible), texte: texte(e.texte) }))
@@ -396,10 +394,10 @@ module.exports = function register(app, deps, M) {
     // Une fiche validée a produit une inspection et ses écarts : la rouvrir
     // les ferait mentir. Elle se consulte, elle ne se corrige plus.
     if (p.statut === 'validee') {
-      return res.status(400).json({ error: 'Formulaire validé — il ne peut plus être modifié' });
+      return fige(res, 'formulaire', 'valide');
     }
     if (transmise(p)) {
-      return res.status(400).json({ error: 'Formulaire transmis — il ne peut plus être modifié' });
+      return fige(res, 'formulaire', 'transmis');
     }
     if (p.statut === 'soumis') {
       return res.status(400).json({
@@ -445,7 +443,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'brouillon') {
-      return res.status(400).json({ error: 'Seul un brouillon se soumet' });
+      return statutRequis(res, 'formulaire', 'brouillon');
     }
     const trous = manquants(p);
     if (trous.length) {
@@ -468,7 +466,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
-      return res.status(400).json({ error: 'Seule une fiche soumise se renvoie' });
+      return statutRequis(res, 'formulaire', 'soumis');
     }
     db.update('poi', p.id, {
       statut: 'brouillon', renvoye_le: db.now(),
@@ -483,12 +481,12 @@ module.exports = function register(app, deps, M) {
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (p.statut === 'validee') {
-      return res.status(400).json({ error: 'Formulaire déjà validé' });
+      return dejaFait(res, 'formulaire', 'valide');
     }
     // La validation prend la suite de la soumission : une fiche encore en
     // brouillon n'est pas passée par son auteur.
     if (p.statut !== 'soumis') {
-      return res.status(400).json({ error: 'Soumettez la fiche avant de la valider' });
+      return statutRequis(res, 'formulaire', 'soumis');
     }
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     const trous = manquants(p);
@@ -700,7 +698,7 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'validee') {
-      return res.status(400).json({ error: 'Validez la fiche avant de communiquer' });
+      return statutRequis(res, 'formulaire', 'valide');
     }
     const d = req.body || {};
     const cible = CIBLES_ENVOI[texte(d.cible)] ? texte(d.cible) : '';
@@ -766,9 +764,9 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'validee') {
-      return res.status(400).json({ error: 'Validez la fiche avant de la transmettre' });
+      return statutRequis(res, 'formulaire', 'valide');
     }
-    if (transmise(p)) return res.status(400).json({ error: 'Fiche déjà transmise' });
+    if (transmise(p)) return dejaFait(res, 'formulaire', 'transmis');
     // Classes 2 et 3 : les constats significatifs ou majeurs appellent une
     // communication écrite. Sans elle, la transmission n'est pas acquise.
     const classe = texte(p.classe_action);

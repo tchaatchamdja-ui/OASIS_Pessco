@@ -13,7 +13,7 @@ const R = require('./roles');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const vues = require('./vues');
-const { introuvable, requis, horsPerimetre, tropVolumineux, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, horsPerimetre, tropVolumineux, reserve, refuser, statutRequis, fige } = require('../../erreurs');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
 const DOSSIER_PREUVES = path.join(
@@ -324,9 +324,9 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/ecarts/:id/pac/renvoyer`, requireAuth, (req, res) => {
     const e = ecartPourEvaluation(req, res);
     if (!e) return undefined;
-    if (!((e.pac || {}).soumis_le)) return res.status(409).json({ error: 'Plan non soumis' });
+    if (!((e.pac || {}).soumis_le)) return statutRequis(res, 'pac', 'soumis');
     const ev = evaluationDe(e);
-    if (ev.cloture.effective === 'OUI') return res.status(409).json({ error: 'Écart clôturé' });
+    if (ev.cloture.effective === 'OUI') return fige(res, 'ecart', 'cloture');
     // Le plan repasse en rédaction ; la date de soumission tombe, le renvoi est
     // consigné pour que l'auteur sache ce qui est attendu.
     const pac = {
@@ -340,7 +340,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/ecarts/:id/cloturer`, requireAuth, (req, res) => {
     const e = ecartPourEvaluation(req, res);
     if (!e) return undefined;
-    if (!((e.pac || {}).soumis_le)) return res.status(409).json({ error: 'Plan non soumis' });
+    if (!((e.pac || {}).soumis_le)) return statutRequis(res, 'pac', 'soumis');
     const ev = evaluationDe(e);
     ev.cloture.effective = 'OUI';
     ev.cloture.date_solde = texte((req.body || {}).date_solde) || db.now().slice(0, 10);
@@ -356,7 +356,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/ecarts/:id/evaluation/suivi/:sid`, requireAuth, (req, res) => {
     const e = ecartPourEvaluation(req, res);
     if (!e) return undefined;
-    if (!suiviOuvert(e)) return res.status(409).json({ error: 'Plan soumis : suivi figé' });
+    if (!suiviOuvert(e)) return fige(res, 'pac', 'soumis');
     const commentaire = texte((req.body || {}).texte);
     if (!commentaire) return requis(res, 'commentaire');
     const ev = evaluationDe(e);
@@ -371,7 +371,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/ecarts/:id/evaluation/suivi/:sid`, requireAuth, (req, res) => {
     const e = ecartPourEvaluation(req, res);
     if (!e) return undefined;
-    if (!suiviOuvert(e)) return res.status(409).json({ error: 'Plan soumis : suivi figé' });
+    if (!suiviOuvert(e)) return fige(res, 'pac', 'soumis');
     const ev = evaluationDe(e);
     const avant = (ev.verification.suivis || []).length;
     ev.verification.suivis = ev.verification.suivis.filter((x) => x.id !== req.params.sid);

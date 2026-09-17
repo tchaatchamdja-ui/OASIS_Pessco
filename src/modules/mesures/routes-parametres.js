@@ -8,7 +8,7 @@ const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis, inconnu, existant, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant, reserve, refuser, enUsage } = require('../../erreurs');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -189,9 +189,9 @@ module.exports = function register(app, deps, M) {
     if (!t) return introuvable(res, 'type');
     // Un type déjà employé par une investigation ne se retire pas : le travail
     // consigné perdrait son intitulé.
-    const employe = db.list('traitements').some((x) => ((x.investigation || {}).travaux || [])
-      .some((w) => w.type === t.code));
-    if (employe) return res.status(400).json({ error: 'Ce type est employé par une investigation' });
+    const employe = db.list('traitements').filter((x) => ((x.investigation || {}).travaux || [])
+      .some((w) => w.type === t.code)).length;
+    if (employe) return enUsage(res, 'type', employe);
     db.remove('types_investigation', t.id);
     return res.json({ status: 'ok' });
   });
@@ -239,9 +239,7 @@ module.exports = function register(app, deps, M) {
     // mesure deviendrait illisible.
     const utilisee = db.list('mesures').filter((m) => m.categorie === c.code).length;
     if (utilisee) {
-      return res.status(400).json({
-        error: `Catégorie utilisée par ${utilisee} mesure${utilisee > 1 ? 's' : ''}`,
-      });
+      return enUsage(res, 'categorie', utilisee);
     }
     db.list('types').filter((t) => t.categorie_code === c.code)
       .forEach((t) => db.remove('types', t.id));
@@ -301,9 +299,7 @@ module.exports = function register(app, deps, M) {
     if (!t) return introuvable(res, 'type');
     const utilise = db.list('mesures').filter((m) => m.type_mesure === t.code).length;
     if (utilise) {
-      return res.status(400).json({
-        error: `Type utilisé par ${utilise} mesure${utilise > 1 ? 's' : ''}`,
-      });
+      return enUsage(res, 'type', utilise);
     }
     db.remove('types', t.id);
     res.json({ status: 'ok' });

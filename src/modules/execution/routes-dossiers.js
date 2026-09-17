@@ -9,7 +9,7 @@ const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable, requis, inconnu, reserve, refuser } = require('../../erreurs');
+const { introuvable, requis, inconnu, reserve, refuser, statutRequis, dejaFait } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
@@ -145,7 +145,7 @@ module.exports = function register(app, deps, M) {
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (!['envoye', 'acte'].includes(n.statut)) {
-      return res.status(400).json({ error: "La notification doit être au statut 'envoyé' ou 'acté'" });
+      return statutRequis(res, 'notification', ['envoye', 'acte']);
     }
     const maintenant = db.now();
     const rec = db.insert('dossiers', {
@@ -253,7 +253,7 @@ module.exports = function register(app, deps, M) {
     const d = db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
-    if (d.statut === 'cloture') return res.status(400).json({ error: 'Dossier déjà clôturé' });
+    if (d.statut === 'cloture') return dejaFait(res, 'dossier', 'cloture');
     // Le dossier ne se clôt qu'une fois le rapport transmis au prestataire.
     const transmis = db.list('rapports').some((r) => r.dossier_id === d.id && r.statut === 'transmis');
     if (!transmis) return res.status(400).json({ error: 'Un rapport transmis est requis pour clôturer' });
@@ -680,7 +680,7 @@ module.exports = function register(app, deps, M) {
     if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (!DEPUIS_SOUMISSION.includes(c.statut)) {
-      return res.status(400).json({ error: 'Seule une constatation en préparation peut être soumise' });
+      return statutRequis(res, 'constatation', 'en_preparation');
     }
     if (refusProcessus(req, res, c, 'preparation')) return undefined;
     db.update('constatations', c.id, {
@@ -706,9 +706,7 @@ module.exports = function register(app, deps, M) {
       return refuser(res);
     }
     if (c.statut !== 'direct_soumis') {
-      return res.status(400).json({
-        error: 'Les commentaires ne se saisissent que sur une constatation soumise',
-      });
+      return statutRequis(res, 'constatation', 'soumis');
     }
     const entrees = (Array.isArray((req.body || {}).entrees) ? req.body.entrees : [])
       .map((e) => ({ cible: String(e.cible || '').trim(), texte: String(e.texte || '').trim() }))
@@ -756,7 +754,7 @@ module.exports = function register(app, deps, M) {
         return refuser(res);
       }
       if (c.statut !== 'direct_soumis') {
-        return res.status(400).json({ error: 'Seule une constatation soumise peut être jugée' });
+        return statutRequis(res, 'constatation', 'soumis');
       }
       if (refusProcessus(req, res, c, 'validation')) return undefined;
       const d = req.body || {};
@@ -831,7 +829,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (c.statut !== 'pac_valide') {
-      return res.status(400).json({ error: 'Le PAC doit être accepté pour déposer des preuves de mise en oeuvre' });
+      return statutRequis(res, 'pac', 'accepte');
     }
     const d = req.body || {};
     const patch = {
@@ -847,7 +845,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
-    if (c.statut !== 'pac_soumis') return res.status(400).json({ error: 'Le PAC doit être soumis pour être validé' });
+    if (c.statut !== 'pac_soumis') return statutRequis(res, 'pac', 'soumis');
     if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
     db.update('constatations', c.id, {
       statut: 'pac_valide', valideur_pac_id: req.user.username,
@@ -864,7 +862,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
-    if (c.statut !== 'pac_soumis') return res.status(400).json({ error: 'Le PAC doit être soumis pour être renvoyé' });
+    if (c.statut !== 'pac_soumis') return statutRequis(res, 'pac', 'soumis');
     if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
     const d = req.body || {};
     db.update('constatations', c.id, {
@@ -878,7 +876,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
-    if (c.statut === 'soldee') return res.status(400).json({ error: 'La FNC est déjà soldée' });
+    if (c.statut === 'soldee') return dejaFait(res, 'fnc', 'solde');
     if (refusProcessus(req, res, c, 'pac_cloture')) return undefined;
     const d = req.body || {};
     db.update('constatations', c.id, {
@@ -899,7 +897,7 @@ module.exports = function register(app, deps, M) {
     if (R.estPrestataire(req.user)) return refuser(res, "Transmission réservée à l'Autorité");
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut !== 'direct_valide') {
-      return res.status(400).json({ error: 'Seule une constatation validée peut être transmise' });
+      return statutRequis(res, 'constatation', 'valide');
     }
     if (refusProcessus(req, res, c, 'transmission')) return undefined;
 

@@ -9,7 +9,7 @@ const R = require('./roles');
 const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
-const { introuvable, reserve, refuser } = require('../../erreurs');
+const { introuvable, reserve, refuser, statutRequis, dejaFait } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig } = deps;
@@ -361,7 +361,7 @@ module.exports = function register(app, deps, M) {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
-    if (n.statut !== 'brouillon') return res.status(400).json({ error: 'Seule une notification en brouillon peut être soumise' });
+    if (n.statut !== 'brouillon') return statutRequis(res, 'notification', 'brouillon');
     if (refusProcessus(req, res, n, 'notification:soumission')) return undefined;
     db.update('notifications', n.id, {
       statut: 'soumis', date_soumission: db.now(), validateur_id: (req.body || {}).validateur_id || '',
@@ -373,7 +373,7 @@ module.exports = function register(app, deps, M) {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
-    if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être validée' });
+    if (n.statut !== 'soumis') return statutRequis(res, 'notification', 'soumis');
     if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
     db.update('notifications', n.id, { statut: 'valide', validateur_id: req.user.username, date_validation: db.now() });
     res.json({ status: 'ok', statut: 'valide' });
@@ -383,7 +383,7 @@ module.exports = function register(app, deps, M) {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
-    if (n.statut !== 'soumis') return res.status(400).json({ error: 'Seule une notification soumise peut être rejetée' });
+    if (n.statut !== 'soumis') return statutRequis(res, 'notification', 'soumis');
     if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
     db.update('notifications', n.id, { statut: 'brouillon', motif_rejet: (req.body || {}).motif || '', date_rejet: db.now() });
     res.json({ status: 'ok', statut: 'brouillon' });
@@ -393,7 +393,7 @@ module.exports = function register(app, deps, M) {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
-    if (n.statut !== 'valide') return res.status(400).json({ error: 'Seule une notification validée peut être envoyée' });
+    if (n.statut !== 'valide') return statutRequis(res, 'notification', 'valide');
     if (refusProcessus(req, res, n, 'notification:transmission')) return undefined;
     db.update('notifications', n.id, { statut: 'envoye', date_envoi: db.now(), envoye_par: req.user.username });
     // Les comptes du prestataire à qui la réception des courriels a été
@@ -415,7 +415,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/notifications/:id`, requireAuth, (req, res) => {
     const n = db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (n.statut !== 'brouillon') return res.status(400).json({ error: 'Seul un brouillon peut être supprimé' });
+    if (n.statut !== 'brouillon') return statutRequis(res, 'notification', 'brouillon');
     if (n.created_by !== req.user.username && !R.isAdmin(req.user, referentiels)) {
       return refuser(res, "Seul l'initiateur peut supprimer ce brouillon");
     }
@@ -505,7 +505,7 @@ module.exports = function register(app, deps, M) {
       return res.status(400).json({ error: 'La notification n’est pas au stade de la réception' });
     }
     if (Number(n.accuse_reception) === 1) {
-      return res.status(400).json({ error: 'Réception déjà accusée' });
+      return dejaFait(res, 'reception', 'accuse');
     }
     const debut = n.date_debut_effective || n.date_debut_prevue || n.date_activite || '';
     const fin = n.date_fin_effective || n.date_fin_prevue || '';
@@ -574,7 +574,7 @@ module.exports = function register(app, deps, M) {
     if (!n) return introuvable(res, 'notification');
     const perim = perimetrePrestataire(n.prestataire_id);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
-    if (n.statut !== 'envoye') return res.status(400).json({ error: "Seule une notification envoyée peut passer en 'acté'" });
+    if (n.statut !== 'envoye') return statutRequis(res, 'notification', 'envoye');
     if (refusProcessus(req, res, n, 'confirmation')) return undefined;
 
     const d = req.body || {};

@@ -184,6 +184,13 @@ module.exports = function register(app, deps, M) {
     if (!D.peut(req, 'GESTIONNAIRE', D.planDe(req.params.id))) return D.refus(res);
     const d = db.load();
     if (!(d.plans || []).some((p) => p.id === req.params.id)) return res.status(404).json({ error: 'not_found' });
+    // Un plan amendé porte la lignée de ses versions suivantes : le supprimer
+    // la couperait, et ses amendements citeraient un parent disparu. Seule la
+    // dernière version d'une lignée — un plan sans descendant — se supprime.
+    const amendements = (d.plans || []).filter((p) => p.parent_plan_id === req.params.id);
+    if (amendements.length) {
+      return res.status(409).json({ error: 'plan_amende', amendements: amendements.map((p) => p.id) });
+    }
     D.retirerPlan(d, req.params.id);
     db.save(d);
     return res.json({ ok: true });

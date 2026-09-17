@@ -148,6 +148,11 @@ module.exports = async function planificationSmoke(port) {
       (await srv.appel('/api/m/planification/plans')).corps
         .filter((p) => p.parent_plan_id === id).length === 1);
 
+    // Un plan amendé ne se supprime pas : sa lignée se couperait.
+    const suppAmende = await srv.appel(`/api/m/planification/plans/${id}`, { method: 'DELETE' });
+    verifier('plan amendé : suppression refusée',
+      suppAmende.statut === 409 && suppAmende.corps.error === 'plan_amende'
+      && (suppAmende.corps.amendements || []).includes(enfant.id), `statut ${suppAmende.statut}`);
     const avisEnfant = await P(`/api/m/planification/plans/${enfant.id}/commentaires`, { contenu: 'Avis sur l’amendement' });
     verifier('avis posé sur l’amendement', avisEnfant.statut === 200 || avisEnfant.statut === 201,
       `statut ${avisEnfant.statut}`);

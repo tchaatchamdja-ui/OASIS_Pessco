@@ -14,4 +14,10 @@ function introuvable(res, objet) {
   return res.status(404).json({ error: 'introuvable', objet });
 }
 
-module.exports = { introuvable };
+// Un champ obligatoire est resté vide (400). Le nom du champ se lit dans la
+// même table que les objets.
+function requis(res, objet) {
+  return res.status(400).json({ error: 'requis', objet });
+}
+
+module.exports = { introuvable, requis };

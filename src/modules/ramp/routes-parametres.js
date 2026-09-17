@@ -11,7 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -192,7 +192,7 @@ module.exports = function register(app, deps, M) {
     const type = texte(d.type);
     const label = texte(d.label);
     if (!db.FAMILLES.includes(type)) return res.status(400).json({ error: 'Famille inconnue' });
-    if (!label) return res.status(400).json({ error: 'Libellé requis' });
+    if (!label) return requis(res, 'libelle');
     // Un groupe d'items porte un code technique dérivé de son intitulé : les
     // items le retiennent, si bien qu'un groupe renommé garde les siens.
     const code = type === 'groupes' ? db.codeDeGroupe(label) : texte(d.code);
@@ -228,7 +228,7 @@ module.exports = function register(app, deps, M) {
     const d = req.body || {};
     const patch = {};
     if (d.label !== undefined) {
-      if (!texte(d.label)) return res.status(400).json({ error: 'Libellé requis' });
+      if (!texte(d.label)) return requis(res, 'libelle');
       patch.label = texte(d.label);
     }
     // Le code d'un groupe ne suit pas son intitulé : les items déjà rattachés
@@ -310,8 +310,8 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/pays`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const p = champsPays(req.body || {});
-    if (!p.nom) return res.status(400).json({ error: 'Nom requis' });
-    if (!p.iso2) return res.status(400).json({ error: 'Bigramme requis' });
+    if (!p.nom) return requis(res, 'nom');
+    if (!p.iso2) return requis(res, 'bigramme');
     if (!bigrammeValide(p.iso2)) return res.status(400).json({ error: 'Bigramme : deux lettres attendues' });
     if (db.list('pays').some((x) => x.iso2 === p.iso2)) {
       return res.status(400).json({ error: `Le bigramme ${p.iso2} désigne déjà un pays` });
@@ -329,7 +329,7 @@ module.exports = function register(app, deps, M) {
     const p = db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
     const patch = champsPays(req.body || {});
-    if (patch.nom === '') return res.status(400).json({ error: 'Nom requis' });
+    if (patch.nom === '') return requis(res, 'nom');
     if (patch.iso2 !== undefined) {
       if (!bigrammeValide(patch.iso2)) return res.status(400).json({ error: 'Bigramme : deux lettres attendues' });
       if (db.list('pays').some((x) => x.id !== p.id && x.iso2 === patch.iso2)) {
@@ -388,8 +388,8 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/aeroports`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = champsAeroport(req.body || {});
-    if (!a.pays) return res.status(400).json({ error: 'Pays requis' });
-    if (!a.nom) return res.status(400).json({ error: 'Intitulé requis' });
+    if (!a.pays) return requis(res, 'pays');
+    if (!a.nom) return requis(res, 'intitule');
     // Le code OACI identifie la plateforme : deux aéroports ne le partagent pas.
     if (a.code && db.list('aeroports').some((x) => x.code === a.code)) {
       return res.status(400).json({ error: `Le code ${a.code} désigne déjà un aéroport` });
@@ -409,8 +409,8 @@ module.exports = function register(app, deps, M) {
       if (d[k] === undefined) return;
       patch[k] = k === 'code' ? texte(d[k]).toUpperCase() : texte(d[k]);
     });
-    if (patch.pays === '') return res.status(400).json({ error: 'Pays requis' });
-    if (patch.nom === '') return res.status(400).json({ error: 'Intitulé requis' });
+    if (patch.pays === '') return requis(res, 'pays');
+    if (patch.nom === '') return requis(res, 'intitule');
     if (patch.code && db.list('aeroports').some((x) => x.id !== a.id && x.code === patch.code)) {
       return res.status(400).json({ error: `Le code ${patch.code} désigne déjà un aéroport` });
     }
@@ -533,8 +533,8 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/aeronefs`, requireAuth, (req, res) => {
     if (!admin(req)) return refuser(res, 'Réservé au gestionnaire du module');
     const a = champsAeronef(req.body || {});
-    if (!a.designation) return res.status(400).json({ error: 'Désignation requise' });
-    if (!a.modele) return res.status(400).json({ error: 'Modèle-variante requis' });
+    if (!a.designation) return requis(res, 'designation');
+    if (!a.modele) return requis(res, 'modele_variante');
     // La nomenclature ne porte pas deux fois le même appareil : désignation,
     // modèle et constructeur l'identifient.
     const existe = db.aeronefs().some((x) => x.designation === a.designation
@@ -554,8 +554,8 @@ module.exports = function register(app, deps, M) {
       if (d[k] === undefined) return;
       patch[k] = k === 'designation' ? texte(d[k]).toUpperCase() : texte(d[k]);
     });
-    if (patch.designation === '') return res.status(400).json({ error: 'Désignation requise' });
-    if (patch.modele === '') return res.status(400).json({ error: 'Modèle-variante requis' });
+    if (patch.designation === '') return requis(res, 'designation');
+    if (patch.modele === '') return requis(res, 'modele_variante');
     db.updateAeronef(a.id, patch);
     res.json({ status: 'ok' });
   });

@@ -14,7 +14,7 @@ const refModele = require('./references');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const { valider } = require('../../valider');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Délais du processus, en jours (sauf mention). Ils ne bloquent rien : ils
 // disent à partir de quand une étape est en retard.
@@ -347,7 +347,7 @@ module.exports = function register(app, deps, M) {
     if (R.estPrestataire(req.user)) return refuser(res);
     const d = req.body || {};
     const destinataire = String(d.destinataire || '').trim();
-    if (!destinataire) return res.status(400).json({ error: 'Destinataire requis' });
+    if (!destinataire) return requis(res, 'destinataire');
 
     const utilisateur = auth.getUsers()
       .find((u) => u.username === destinataire || u.email === destinataire);

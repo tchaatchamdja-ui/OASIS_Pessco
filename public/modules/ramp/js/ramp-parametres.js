@@ -229,7 +229,7 @@ async function rampEnregistrerDepot() {
     const nom = (document.getElementById('rampDepotNom') || {}).value || '';
     const annee = (document.getElementById('rampDepotAnnee') || {}).value || '';
     const mois = (document.getElementById('rampDepotMois') || {}).value || '';
-    if (!nom.trim()) { err.textContent = 'Intitulé requis'; return; }
+    if (!nom.trim()) { err.textContent = oasisChampRequis('intitule'); return; }
 
     try {
         if (d.id) {
@@ -843,7 +843,7 @@ async function rampEnregistrerGroupe() {
     const v = (id) => (document.getElementById(id) || {}).value || '';
     const err = document.getElementById('rampGroupeErreur');
     const label = v('rampGroupeLabel');
-    if (!label.trim()) { err.textContent = 'Intitulé requis'; return; }
+    if (!label.trim()) { err.textContent = oasisChampRequis('intitule'); return; }
     const corps = {
         type: 'groupes', label, description: v('rampGroupeDesc'),
         ordre: v('rampGroupeOrdre'),
@@ -1159,7 +1159,7 @@ async function rampEnregistrerPays() {
         site: v('rampPaysSite'), emails: v('rampPaysEmails'),
         uemoa: !!(document.getElementById('rampPaysUemoa') || {}).checked,
     };
-    if (!corps.nom.trim()) { err.textContent = 'Nom requis'; return; }
+    if (!corps.nom.trim()) { err.textContent = oasisChampRequis('nom'); return; }
     if (!/^[A-Z]{2}$/.test(corps.iso2)) { err.textContent = 'Bigramme : deux lettres attendues'; return; }
     try {
         if (p.id) await rampApi(`/pays/${p.id}`, { method: 'PUT', body: JSON.stringify(corps) });
@@ -1485,8 +1485,8 @@ async function rampEnregistrerAeroport() {
         pays: v('rampAptPays'), nom: v('rampAptNom'),
         code: v('rampAptCode'), statut: v('rampAptStatut'),
     };
-    if (!corps.pays.trim()) { err.textContent = 'Pays requis'; return; }
-    if (!corps.nom.trim()) { err.textContent = 'Intitulé requis'; return; }
+    if (!corps.pays.trim()) { err.textContent = oasisChampRequis('pays'); return; }
+    if (!corps.nom.trim()) { err.textContent = oasisChampRequis('intitule'); return; }
     try {
         if (a.id) await rampApi(`/aeroports/${a.id}`, { method: 'PUT', body: JSON.stringify(corps) });
         else await rampApi('/aeroports', { method: 'POST', body: JSON.stringify(corps) });
@@ -1811,8 +1811,8 @@ async function rampEnregistrerAeronef() {
         designation: v('rampAerDesignation'), modele: v('rampAerModele'),
         constructeur: v('rampAerConstructeur'), etat_conception: v('rampAerEtat'),
     };
-    if (!corps.designation.trim()) { err.textContent = 'Désignation requise'; return; }
-    if (!corps.modele.trim()) { err.textContent = 'Modèle-variante requis'; return; }
+    if (!corps.designation.trim()) { err.textContent = oasisChampRequis('designation'); return; }
+    if (!corps.modele.trim()) { err.textContent = oasisChampRequis('modele_variante'); return; }
     try {
         if (a.id) await rampApi(`/aeronefs/${a.id}`, { method: 'PUT', body: JSON.stringify(corps) });
         else await rampApi('/aeronefs', { method: 'POST', body: JSON.stringify(corps) });

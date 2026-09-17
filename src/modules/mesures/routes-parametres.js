@@ -8,7 +8,7 @@ const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -120,7 +120,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/parametres/comites`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const libelle = String((req.body || {}).libelle || '').trim();
-    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    if (!libelle) return requis(res, 'libelle');
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('comites').some((c) => c.code === code)) {
@@ -136,7 +136,7 @@ module.exports = function register(app, deps, M) {
     const c = db.get('comites', req.params.id);
     if (!c) return introuvable(res, 'comite');
     const libelle = String((req.body || {}).libelle || '').trim();
-    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    if (!libelle) return requis(res, 'libelle');
     // Le code ne suit pas le libellé : une décision déjà rendue le porte.
     db.update('comites', c.id, { libelle });
     return res.json({ status: 'ok' });
@@ -161,7 +161,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/parametres/types-investigation`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const libelle = String((req.body || {}).libelle || '').trim();
-    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    if (!libelle) return requis(res, 'libelle');
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('types_investigation').some((t) => t.code === code)) {
@@ -177,7 +177,7 @@ module.exports = function register(app, deps, M) {
     const t = db.get('types_investigation', req.params.id);
     if (!t) return introuvable(res, 'type');
     const libelle = String((req.body || {}).libelle || '').trim();
-    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    if (!libelle) return requis(res, 'libelle');
     // Le code ne suit pas le libellé : les investigations déjà consignées le
     // portent, et un renommage ne doit pas les détacher de leur type.
     db.update('types_investigation', t.id, { libelle });
@@ -200,7 +200,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/parametres/categories`, requireAuth, (req, res) => {
     if (!editeur(req)) return refuser(res);
     const libelle = String((req.body || {}).libelle || '').trim();
-    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+    if (!libelle) return requis(res, 'libelle');
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('categories').some((c) => c.code === code)) {
@@ -224,7 +224,7 @@ module.exports = function register(app, deps, M) {
     // portent, et un renommage ne doit pas les détacher de leur catégorie.
     if (d.libelle !== undefined) {
       const libelle = String(d.libelle).trim();
-      if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+      if (!libelle) return requis(res, 'libelle');
       patch.libelle = libelle;
     }
     if (d.ordre !== undefined) patch.ordre = Number(d.ordre) || 0;
@@ -255,8 +255,8 @@ module.exports = function register(app, deps, M) {
     const d = req.body || {};
     const libelle = String(d.libelle || '').trim();
     const categorie = String(d.categorie_code || '').trim();
-    if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
-    if (!categorie) return res.status(400).json({ error: 'Catégorie requise' });
+    if (!libelle) return requis(res, 'libelle');
+    if (!categorie) return requis(res, 'categorie');
     if (!db.list('categories').some((c) => c.code === categorie)) {
       return res.status(400).json({ error: 'Catégorie inconnue' });
     }
@@ -281,7 +281,7 @@ module.exports = function register(app, deps, M) {
     const patch = {};
     if (d.libelle !== undefined) {
       const libelle = String(d.libelle).trim();
-      if (!libelle) return res.status(400).json({ error: 'Libellé requis' });
+      if (!libelle) return requis(res, 'libelle');
       patch.libelle = libelle;
     }
     if (d.categorie_code !== undefined) {

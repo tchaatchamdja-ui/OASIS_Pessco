@@ -17,7 +17,7 @@ const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -1196,7 +1196,7 @@ module.exports = function register(app, deps, M) {
     const d = req.body || {};
     if (!peutEcrire(req, d)) return refuser(res, 'Non autorisé à ajouter une constatation');
     const champs = constatPropre(d);
-    if (!champs.titre) return res.status(400).json({ error: 'Objet requis' });
+    if (!champs.titre) return requis(res, 'objet');
     const c = {
       id: db.uid('cst'),
       reference: db.prochaineReferenceConstat(),
@@ -1221,7 +1221,7 @@ module.exports = function register(app, deps, M) {
     if (!c) return introuvable(res, 'constatation');
     if (!peutEcrire(req, c)) return refuser(res, 'Non autorisé à modifier cette constatation');
     const champs = constatPropre({ ...c, ...(req.body || {}) });
-    if (!champs.titre) return res.status(400).json({ error: 'Objet requis' });
+    if (!champs.titre) return requis(res, 'objet');
     const statut = texte((req.body || {}).statut);
     db.update('constatations', c.id, {
       ...champs,
@@ -1387,7 +1387,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/indicateurs`, requireAuth, (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
     const prestataireId = String((req.query || {}).prestataire_id || '');
-    if (!prestataireId) return res.status(400).json({ error: 'prestataire_id requis' });
+    if (!prestataireId) return requis(res, 'prestataire');
     const aujourdhui = new Date().toISOString().slice(0, 10);
 
     const consts = parInstance(req, constatations())

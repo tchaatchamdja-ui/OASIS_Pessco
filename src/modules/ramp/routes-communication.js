@@ -17,7 +17,7 @@ const instances = require('../../instances');
 const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Les pièces jointes vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -158,8 +158,8 @@ module.exports = function register(app, deps, M) {
     const message = texte(d.message);
     const destinataires = (Array.isArray(d.etats_destinataires) ? d.etats_destinataires : [])
       .map(texte).filter((e) => etatsUemoa().includes(e));
-    if (!objet) return res.status(400).json({ error: 'Objet requis' });
-    if (!message) return res.status(400).json({ error: 'Message requis' });
+    if (!objet) return requis(res, 'objet');
+    if (!message) return requis(res, 'message');
     if (!destinataires.length) return res.status(400).json({ error: 'Au moins un État destinataire' });
 
     // L'État émetteur n'est pas déclaratif : une correspondance officielle
@@ -199,7 +199,7 @@ module.exports = function register(app, deps, M) {
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return res.status(409).json({ error: 'Discussion close' });
     const message = texte((req.body || {}).message);
-    if (!message) return res.status(400).json({ error: 'Message requis' });
+    if (!message) return requis(res, 'message');
     const echange = {
       id: db.uid('ech'),
       message,

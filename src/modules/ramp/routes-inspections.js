@@ -13,7 +13,7 @@ const R = require('./roles');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
 const vues = require('./vues');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Preuves des actions correctives : des fichiers, déposés hors de data/.
 const DOSSIER_PREUVES = path.join(
@@ -308,7 +308,7 @@ module.exports = function register(app, deps, M) {
     const e = ecartPourEvaluation(req, res);
     if (!e) return undefined;
     const commentaire = texte((req.body || {}).texte);
-    if (!commentaire) return res.status(400).json({ error: 'Commentaire vide' });
+    if (!commentaire) return requis(res, 'commentaire');
     const ev = evaluationDe(e);
     // Les suivis s'ajoutent, ne s'écrasent pas : chacun daté et signé.
     ev.verification.suivis = (ev.verification.suivis || []).concat([{
@@ -359,7 +359,7 @@ module.exports = function register(app, deps, M) {
     if (!e) return undefined;
     if (!suiviOuvert(e)) return res.status(409).json({ error: 'Plan soumis : suivi figé' });
     const commentaire = texte((req.body || {}).texte);
-    if (!commentaire) return res.status(400).json({ error: 'Commentaire vide' });
+    if (!commentaire) return requis(res, 'commentaire');
     const ev = evaluationDe(e);
     const cible = (ev.verification.suivis || []).find((x) => x.id === req.params.sid);
     if (!cible) return introuvable(res, 'suivi');

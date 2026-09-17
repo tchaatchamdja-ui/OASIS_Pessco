@@ -159,10 +159,12 @@ module.exports = async function rampSmoke(port) {
       (await srv.appel(`${M}/parametres`, {
         method: 'POST', body: JSON.stringify({ type: 'inconnue', label: 'X' }),
       })).statut === 400);
-    verifier('libellé vide refusé',
-      (await srv.appel(`${M}/parametres`, {
-        method: 'POST', body: JSON.stringify({ type: 'exploitants', label: '  ' }),
-      })).statut === 400);
+    const vide = await srv.appel(`${M}/parametres`, {
+      method: 'POST', body: JSON.stringify({ type: 'exploitants', label: '  ' }),
+    });
+    verifier('libellé vide refusé, par l’erreur normalisée',
+      vide.statut === 400 && vide.corps.error === 'requis' && vide.corps.objet === 'libelle',
+      JSON.stringify(vide.corps));
     verifier('paramètre désactivable',
       (await srv.appel(`${M}/parametres/${nouveau.corps.id}/actif`, { method: 'PUT', body: '{}' })).corps.actif === false);
     verifier('paramètre inutilisé supprimable',

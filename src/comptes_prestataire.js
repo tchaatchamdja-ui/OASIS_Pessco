@@ -12,6 +12,8 @@
 //   · les comptes créés héritent du rattachement et n'accèdent qu'au module ;
 //   · un compte hors du périmètre n'existe pas — 404, jamais 403.
 
+const { requis } = require('./erreurs');
+
 // Rôles portail qu'un compte rattaché à un organisme peut porter. Les libellés
 // diffèrent d'un module à l'autre : « prestataire » ici, « exploitant » là.
 const ROLES = (libelles) => [
@@ -95,7 +97,7 @@ function register(app, deps, M, o) {
     // Rattachement demandé s'il fait partie du périmètre, premier sinon.
     const pid = miens.includes(d.prestataire_id) ? d.prestataire_id : miens[0];
     const username = texte(d.email || d.nom_utilisateur);
-    if (!username) return res.status(400).json({ error: 'Courriel requis' });
+    if (!username) return requis(res, 'courriel');
     if (auth.findUser(username)) return res.status(409).json({ error: 'Utilisateur déjà existant' });
     const motDePasse = auth.generatePassword(loadConfig());
     const { salt, hash } = auth.hashPassword(motDePasse);
@@ -174,7 +176,7 @@ function register(app, deps, M, o) {
     const u = cible(req.params.id, miens);
     if (!u) return res.status(404).json({ error: 'Utilisateur non trouvé ou hors périmètre' });
     const motDePasse = (req.body || {}).admin_password || '';
-    if (!motDePasse) return res.status(400).json({ error: 'Mot de passe requis' });
+    if (!motDePasse) return requis(res, 'mot_de_passe');
     // Le demandeur prouve son identité avant de lire un secret.
     const moi = auth.findUser((req.userReel || req.user).username);
     if (!auth.checkPasswordPublic(moi, motDePasse)) {

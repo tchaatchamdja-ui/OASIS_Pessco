@@ -11,7 +11,7 @@ const instances = require('../../instances');
 const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Collections servies par le CRUD générique, comme `register_crud` dans PESSCO.
 const CRUD = {
@@ -148,7 +148,7 @@ module.exports = function register(app, deps, M) {
     app.post(`${M}/${route}`, requireAuth, (req, res) => {
       if (!admin(req)) return refuser(res);
       const d = req.body || {};
-      if (!String(d.item || '').trim()) return res.status(400).json({ error: 'Item requis' });
+      if (!String(d.item || '').trim()) return requis(res, 'item');
       const rec = db.insert(coll, { id: db.uid(prefixe).toUpperCase(), ...champs(d) });
       res.json({ id: rec.id, status: 'ok' });
     });
@@ -156,7 +156,7 @@ module.exports = function register(app, deps, M) {
     app.put(`${M}/${route}/:id`, requireAuth, (req, res) => {
       if (!admin(req)) return refuser(res);
       const d = req.body || {};
-      if (!String(d.item || '').trim()) return res.status(400).json({ error: 'Item requis' });
+      if (!String(d.item || '').trim()) return requis(res, 'item');
       if (!db.update(coll, req.params.id, champs(d))) return introuvable(res, 'element');
       res.json({ status: 'ok' });
     });
@@ -483,7 +483,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/processus/attendus`, requireAuth, (req, res) => {
     const q = req.query || {};
     const cle = String(q.etape || '');
-    if (!cle) return res.status(400).json({ error: 'Étape requise' });
+    if (!cle) return requis(res, 'etape');
     const perim = (prestataireId) => {
       const p = (refs().prestataires || []).find((x) => x.id === prestataireId) || {};
       const s = (refs().secteurs || []).find((x) => x.id === p.secteur_id) || {};
@@ -534,7 +534,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/processus`, requireAuth, (req, res) => {
     if (!peutProcessus(req)) return refuser(res, 'Réservé aux administrateurs et gestionnaires');
     const d = req.body || {};
-    if (!String(d.libelle || '').trim()) return res.status(400).json({ error: 'Libellé requis' });
+    if (!String(d.libelle || '').trim()) return requis(res, 'libelle');
     if (!['activite', 'constatation'].includes(d.type)) {
       return res.status(400).json({ error: 'Type de processus inconnu' });
     }

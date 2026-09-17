@@ -226,7 +226,7 @@ async function rampEnregistrerPiece() {
     const fichier = (document.getElementById('rampPieceFichier') || {}).files
         ? document.getElementById('rampPieceFichier').files[0] : null;
     if (!pj && !fichier) { err.textContent = 'Choisissez un fichier'; return; }
-    if (!intitule.trim() && !fichier) { err.textContent = 'Intitulé requis'; return; }
+    if (!intitule.trim() && !fichier) { err.textContent = oasisChampRequis('intitule'); return; }
     // La fiche doit exister avant de recevoir une pièce : un brouillon jamais
     // enregistré n'a pas d'identifiant auquel rattacher un fichier.
     if (!p.id && !await rampEnregistrerPoi(true)) return;

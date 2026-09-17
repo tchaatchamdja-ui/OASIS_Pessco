@@ -27,7 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -707,13 +707,13 @@ module.exports = function register(app, deps, M) {
     const cible = CIBLES_ENVOI[texte(d.cible)] ? texte(d.cible) : '';
     if (!cible) return res.status(400).json({ error: 'Destinataire de la communication inconnu' });
     const destinataires = listeAdresses(d.destinataire);
-    if (!destinataires.length) return res.status(400).json({ error: 'Destinataire manquant' });
+    if (!destinataires.length) return requis(res, 'destinataire');
     const copies = listeAdresses(d.copie);
     const copiesCachees = listeAdresses(d.copie_cachee);
     const invalide = [...destinataires, ...copies, ...copiesCachees].find((a) => !ADRESSE.test(a));
     if (invalide) return res.status(400).json({ error: `Adresse invalide : ${invalide}` });
     const objet = texte(d.objet);
-    if (!objet) return res.status(400).json({ error: 'Objet manquant' });
+    if (!objet) return requis(res, 'objet');
 
     const envoi = await courriel.queue({
       to: destinataires.join(', '),

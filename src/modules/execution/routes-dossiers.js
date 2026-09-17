@@ -9,7 +9,7 @@ const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable } = require('../../erreurs');
+const { introuvable, requis } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
@@ -478,7 +478,7 @@ module.exports = function register(app, deps, M) {
     if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     const contenu = String((req.body || {}).contenu || '').trim();
-    if (!contenu) return res.status(400).json({ error: 'Message vide' });
+    if (!contenu) return requis(res, 'message');
     const rec = db.insert('echanges', {
       id: db.uid('ech'),
       constatation_id: c.id,
@@ -615,13 +615,13 @@ module.exports = function register(app, deps, M) {
     if (!autorises) return res.status(400).json({ error: 'Portée inconnue' });
 
     const motDePasse = String(b.admin_password || '');
-    if (!motDePasse) return res.status(400).json({ error: 'Mot de passe requis' });
+    if (!motDePasse) return requis(res, 'mot_de_passe');
     if (!auth.checkPasswordPublic(auth.findUser(req.user.username), motDePasse)) {
       return res.status(403).json({ error: 'Mot de passe incorrect' });
     }
 
     const motif = String(b.motif || '').trim();
-    if (!motif) return res.status(400).json({ error: 'Motif requis' });
+    if (!motif) return requis(res, 'motif');
 
     const patch = {};
     const changements = [];
@@ -762,7 +762,7 @@ module.exports = function register(app, deps, M) {
       if (refusProcessus(req, res, c, 'validation')) return undefined;
       const d = req.body || {};
       const motif = String(d.motif || '').trim();
-      if (motifRequis && !motif) return res.status(400).json({ error: 'Motif requis' });
+      if (motifRequis && !motif) return requis(res, 'motif');
       const versions = clore(c, req, issue);
       db.update('constatations', c.id, {
         statut,

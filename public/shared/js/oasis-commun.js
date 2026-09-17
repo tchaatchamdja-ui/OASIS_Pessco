@@ -150,6 +150,13 @@ function composerErreurNormalisee(d, rang) {
   return (gabarit[genre === 'f' ? 'f' : 'm'] || gabarit.m).replace('{objet}', nom);
 }
 
+// Le même message, quand c'est l'écran qui constate le champ vide avant
+// d'écrire au serveur : « Intitulé requis », « Title required ».
+function oasisChampRequis(champ) {
+  const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
+  return composerErreurNormalisee({ error: 'requis', objet: champ }, rang);
+}
+
 function oasisMessageErreur(donnees, statut, defaut) {
   const d = donnees || {};
   const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
@@ -236,6 +243,7 @@ function oasisMessageErreur(donnees, statut, defaut) {
 
   window.oasisEsc = oasisEsc;
   window.oasisMessageErreur = oasisMessageErreur;
+  window.oasisChampRequis = oasisChampRequis;
   window.oasisJson = oasisJson;
   window.oasisAppliquerTheme = oasisAppliquerTheme;
   window.oasisSaisieDifferee = oasisSaisieDifferee;

@@ -76,7 +76,7 @@ function planRenderPrestataires() {
                                     `<input type="date" class="cycle-date-input" value="${p.fin_cycle || ''}" onchange="planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)">` :
                                     (p.fin_cycle || '-')}</td>
                                 <td>${planDateFr(rpByPrestId.get(p.id)?.date_validation || p.evaluation_date)}</td>
-                                <td><button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}">${PLAN_ICONS.chevron}</button></td>
+                                <td><button class="btn-icon prest-bascule" aria-expanded="false" onclick="planPrestBasculer(this)" title="${tp('details')}">${PLAN_ICONS.chevron}</button></td>
                             </tr>
                             <tr class="hidden prest-detail-row">
                                 <td colspan="9" style="padding:0;">
@@ -109,6 +109,15 @@ function planRenderPrestataires() {
         </div>
     </div>`;
 }
+
+// Ouvre ou referme le volet des sous-activités d'un prestataire, et dit son
+// état : le chevron pivote sur lui (voir pl-styles.css), les lecteurs d'écran
+// l'entendent.
+window.planPrestBasculer = function (bouton) {
+    const volet = bouton.closest('tr').nextElementSibling;
+    const ouvert = !volet.classList.toggle('hidden');
+    bouton.setAttribute('aria-expanded', ouvert ? 'true' : 'false');
+};
 
 function _parseSADetails(prest) {
     // Parse sub-activity risk details from prestataire risk profile (evaluation resultats)

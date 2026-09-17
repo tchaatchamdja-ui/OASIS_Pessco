@@ -624,6 +624,10 @@ tr.hidden { display: none; }
 .data-table tr:has(+ .prest-detail-row:not(.hidden)) > td {
     background: color-mix(in srgb, var(--primary) 7%, var(--bg-card));
 }
+/* Le chevron du prestataire pointe à droite replié, en bas déplié — comme
+   ceux des accordéons de la page Planification. L'icône pointe à gauche. */
+.prest-bascule svg { transform: rotate(-180deg); transition: transform 0.2s; }
+.data-table tr:has(+ .prest-detail-row:not(.hidden)) .prest-bascule svg { transform: rotate(-90deg); }
 .prest-detail-row:not(.hidden) > td {
     border-bottom: 3px solid color-mix(in srgb, var(--primary) 45%, var(--border));
 }

@@ -19,7 +19,11 @@ const EXEC_STATE = {
     sidebarCollapsed: localStorage.getItem('exec_sidebar') === 'true',
     data: {},
     filters: {
-        domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: String(new Date().getFullYear()), trimestre: '', criticite: '',
+        // Aucune année retenue à l'ouverture : le tableau de bord montre tout
+        // ce qui est en cours, y compris les activités d'un plan de l'année
+        // précédente qui courent encore. « Toutes les années » est le bouton
+        // actif, et l'agent restreint ensuite s'il le souhaite.
+        domaine: '', secteur: '', prestataire: '', statut: '', search: '', annee: '', trimestre: '', criticite: '',
         type_supervision: '', mode_supervision: '', avancement: ''
     },
     // Plan surveillance tabs

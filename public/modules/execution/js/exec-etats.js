@@ -701,23 +701,26 @@ function execEtatsPanClos(items, archivees) {
 
 function execRenderEtats() {
   const R = execEtatsRepartir();
-  const enCoursTotal = Object.values(R.enCours).reduce((n, x) => n + x.length, 0);
   const retards = Object.values(R.enCours)
     .reduce((n, x) => n + x.filter((l) => l.jours !== null && l.jours < 0).length, 0)
     + R.aDeclencher.filter((l) => l.jours !== null && l.jours < 0).length;
 
+  // Barre des sous-menus : les intitulés seuls. Chaque panneau redonne son
+  // compte en tête de section, où il se lit à côté de ce qu'il dénombre ;
+  // dans la barre, la pastille se glissait devant l'intitulé dès qu'un rang
+  // se repliait.
   const onglets = [
-    { cle: 'a_declencher', titre: 'Activités à déclencher', compte: R.aDeclencher.length },
-    { cle: 'en_vie', titre: 'Activités en cours', compte: R.enVie.length },
-    { cle: 'en_cours', titre: 'Actions en attentes', compte: enCoursTotal },
-    { cle: 'cloturees', titre: 'Activités clôturées', compte: R.cloturees.length },
-    { cle: 'archivees', titre: 'Activités archivées', compte: R.archivees.length },
+    { cle: 'a_declencher', titre: 'Activités à déclencher' },
+    { cle: 'en_vie', titre: 'Activités en cours' },
+    { cle: 'en_cours', titre: 'Actions en attentes' },
+    { cle: 'cloturees', titre: 'Activités clôturées' },
+    { cle: 'archivees', titre: 'Activités archivées' },
   ];
   const barre = `<div class="exec-workflow-tabs exec-tabs-serrees">
     <div class="exec-tabs-rang">${onglets.map((o) => `
     <button class="exec-tab ${EXEC_ETATS.sub === o.cle ? 'active' : ''}"
       onclick="EXEC_ETATS.sub='${o.cle}';execRenderPage();">
-      ${_esc(o.titre)} <span class="exec-tab-badge">${o.compte}</span>
+      ${_esc(o.titre)}
     </button>`).join('')}</div>
   </div>`;
 

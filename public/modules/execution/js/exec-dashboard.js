@@ -740,8 +740,12 @@ function _execSuiviActivitesHtml() {
         const t = Math.floor(m.mois / 3) + 1;
         const dernier = trimestres[trimestres.length - 1];
         if (dernier && dernier.annee === m.annee && dernier.t === t) dernier.n += 1;
-        else trimestres.push({ annee: m.annee, t, n: 1 });
+        else trimestres.push({ annee: m.annee, t, n: 1, debutAnnee: !dernier || dernier.annee !== m.annee });
     });
+    // Sans année sélectionnée, le calendrier peut courir sur plusieurs années :
+    // « T1 » seul ne dit plus de quelle année il s'agit. Le premier trimestre
+    // de chaque année la porte alors, et un trait plus marqué les sépare.
+    const plusieursAnnees = trimestres.some(t => t.annee !== trimestres[0].annee);
 
     // Regroupement par prestataire, dans l'ordre alphabétique. Tous les
     // prestataires du périmètre figurent au calendrier, y compris ceux sans
@@ -844,7 +848,8 @@ function _execSuiviActivitesHtml() {
                 <div class="exec-gantt" style="min-width:${Math.max(680, mois.length * 62)}px;">
                     <div class="g-nom g-annee">${min.getFullYear()}${max.getFullYear() !== min.getFullYear() ? ` – ${max.getFullYear()}` : ''}</div>
                     <div class="g-piste g-entete">
-                        ${trimestres.map(t => `<div class="g-cellule" style="flex-grow:${t.n};">T${t.t}</div>`).join('')}
+                        ${trimestres.map(t => `<div class="g-cellule${plusieursAnnees && t.debutAnnee ? ' g-debut-annee' : ''}" style="flex-grow:${t.n};">${
+                            plusieursAnnees && t.debutAnnee ? `<b class="g-cellule-annee">${t.annee}</b> ` : ''}T${t.t}</div>`).join('')}
                     </div>
                     <div class="g-nom g-entete-vide"></div>
                     <div class="g-piste g-entete g-entete-mois">
@@ -852,7 +857,7 @@ function _execSuiviActivitesHtml() {
                     </div>
                     ${corps}
                     <div class="g-overlay">
-                        ${mois.map((m, i) => i ? `<div class="g-trait" style="left:${((i / mois.length) * 100).toFixed(3)}%;"></div>` : '').join('')}
+                        ${mois.map((m, i) => i ? `<div class="g-trait${m.mois === 0 ? ' g-trait-annee' : ''}" style="left:${((i / mois.length) * 100).toFixed(3)}%;"></div>` : '').join('')}
                         ${marqueur}
                     </div>
                 </div>

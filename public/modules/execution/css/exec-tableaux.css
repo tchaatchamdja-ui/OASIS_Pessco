@@ -344,6 +344,16 @@
     font-size: 0.7rem;
 }
 .exec-module .exec-gantt .g-entete .g-cellule:first-child { border-left: none; }
+/* Calendrier à cheval sur plusieurs années : le trimestre qui ouvre une année
+   la porte, et la coupure se voit. */
+.exec-module .exec-gantt .g-entete .g-cellule.g-debut-annee {
+    border-left: 2px solid color-mix(in srgb, var(--primary) 55%, var(--border));
+    gap: 0.25rem;
+}
+.exec-module .exec-gantt .g-entete .g-cellule .g-cellule-annee {
+    color: var(--primary);
+    font-weight: 700;
+}
 
 /* Graduation tenue en haut du cadre pendant le défilement vertical : sans
    elle, on lit des barres sans savoir de quel mois il s'agit. Les hauteurs
@@ -513,6 +523,11 @@
     bottom: 0;
     width: 1px;
     background: var(--border);
+}
+/* Janvier : la limite entre deux années se distingue des limites de mois. */
+.exec-module .exec-gantt .g-trait.g-trait-annee {
+    width: 2px;
+    background: color-mix(in srgb, var(--primary) 45%, var(--border));
 }
 .exec-module .exec-gantt .g-aujourdhui {
     position: absolute;

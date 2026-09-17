@@ -147,7 +147,10 @@ function composerErreurNormalisee(d, rang) {
   if (!objet) return '';
   const [nom, genre] = objet[rang] || objet[0];
   const gabarit = gabarits[rang] || gabarits[0];
-  return (gabarit[genre === 'f' ? 'f' : 'm'] || gabarit.m).replace('{objet}', nom);
+  const phrase = gabarit[genre === 'f' ? 'f' : 'm'] || gabarit.m;
+  // En tête de phrase, le nom garde sa majuscule ; au milieu, il la perd.
+  const place = phrase.startsWith('{objet}') ? nom : nom.charAt(0).toLowerCase() + nom.slice(1);
+  return phrase.replace('{objet}', place);
 }
 
 // Le même message, quand c'est l'écran qui constate le champ vide avant

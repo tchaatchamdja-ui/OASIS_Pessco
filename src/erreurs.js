@@ -20,4 +20,16 @@ function requis(res, objet) {
   return res.status(400).json({ error: 'requis', objet });
 }
 
-module.exports = { introuvable, requis };
+// La valeur reçue ne désigne rien que le serveur connaisse (400) : une
+// famille, une vue, une instance… `suite` joint ce qui aide à corriger
+// (les valeurs attendues).
+function inconnu(res, objet, suite = {}) {
+  return res.status(400).json({ ...suite, error: 'inconnu', objet });
+}
+
+// L'enregistrement existe déjà : même libellé, même compte (409).
+function existant(res, objet) {
+  return res.status(409).json({ error: 'existant', objet });
+}
+
+module.exports = { introuvable, requis, inconnu, existant };

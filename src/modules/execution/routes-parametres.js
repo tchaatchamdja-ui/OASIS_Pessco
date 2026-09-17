@@ -11,7 +11,7 @@ const instances = require('../../instances');
 const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
 const acteurs = require('./acteurs');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, inconnu } = require('../../erreurs');
 
 // Collections servies par le CRUD générique, comme `register_crud` dans PESSCO.
 const CRUD = {
@@ -101,7 +101,7 @@ module.exports = function register(app, deps, M) {
     // que les écrans serviront, il ne s'invente pas.
     const demandee = String((req.body || {}).instance || '').trim();
     if (demandee && !instances.liste(loadConfig).includes(demandee)) {
-      return res.status(400).json({ error: 'Instance inconnue' });
+      return inconnu(res, 'instance');
     }
     instances.definir(reel.username, demandee);
     return res.json({ status: 'ok', instance: demandee });
@@ -113,7 +113,7 @@ module.exports = function register(app, deps, M) {
     const reel = req.userReel || req.user;
     if (!vues.peutBasculer(reel)) return refuser(res, 'Bascule réservée au super-administrateur');
     const d = req.body || {};
-    if (!vues.VUES.includes(d.vue)) return res.status(400).json({ error: 'Vue inconnue' });
+    if (!vues.VUES.includes(d.vue)) return inconnu(res, 'vue');
     const prestataireId = d.vue === 'prestataire'
       ? (d.prestataire_id || vues.vueDe(reel.username).prestataire_id || vues.prestataireParDefaut())
       : '';
@@ -123,7 +123,7 @@ module.exports = function register(app, deps, M) {
     // Le prestataire choisi en barre supérieure doit exister : c'est lui qui
     // borne les données servies.
     if (prestataireId && !(refs().prestataires || []).some((p) => p.id === prestataireId)) {
-      return res.status(400).json({ error: 'Prestataire inconnu' });
+      return inconnu(res, 'prestataire');
     }
     vues.definirVue(reel.username, d.vue, prestataireId);
     res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
@@ -536,7 +536,7 @@ module.exports = function register(app, deps, M) {
     const d = req.body || {};
     if (!String(d.libelle || '').trim()) return requis(res, 'libelle');
     if (!['activite', 'constatation'].includes(d.type)) {
-      return res.status(400).json({ error: 'Type de processus inconnu' });
+      return inconnu(res, 'type_processus');
     }
     const rec = db.insert('processus', {
       id: db.uid('proc'),

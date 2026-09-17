@@ -9,7 +9,7 @@ const acteurs = require('./acteurs');
 const transmission = require('./transmission');
 const instances = require('../../instances');
 const suitesCare = require('../../suites_care');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, inconnu } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, loadConfig, auth } = deps;
@@ -612,7 +612,7 @@ module.exports = function register(app, deps, M) {
     const b = req.body || {};
     const portee = String(b.portee || '');
     const autorises = CHAMPS_AJUSTEMENT[portee];
-    if (!autorises) return res.status(400).json({ error: 'Portée inconnue' });
+    if (!autorises) return inconnu(res, 'portee');
 
     const motDePasse = String(b.admin_password || '');
     if (!motDePasse) return requis(res, 'mot_de_passe');

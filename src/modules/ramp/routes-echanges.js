@@ -18,6 +18,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
+const { inconnu } = require('../../erreurs');
 
 const TAILLE_MAX = 8 * 1024 * 1024;
 
@@ -694,7 +695,7 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/parametres/export-xlsx`, requireAuth, (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res, 'Hors de la vue Prestataire');
     const famille = String((req.body || {}).famille || '');
-    if (!db.FAMILLES.includes(famille)) return res.status(400).json({ error: 'Famille inconnue' });
+    if (!db.FAMILLES.includes(famille)) return inconnu(res, 'famille');
     // Le groupe d'items est stocké par son code : c'est son intitulé qu'on
     // exporte, un code technique ne se lit pas dans un classeur.
     const groupes = Object.fromEntries(db.list('parametres')

@@ -185,7 +185,7 @@ module.exports = async function rampSmoke(port) {
     verifier('groupe en double refusé',
       (await srv.appel(`${M}/parametres`, {
         method: 'POST', body: JSON.stringify({ type: 'groupes', label: 'Documents de bord' }),
-      })).statut === 400);
+      })).corps.error === 'existant');
 
     const item = await srv.appel(`${M}/parametres`, {
       method: 'POST',
@@ -673,7 +673,7 @@ module.exports = async function rampSmoke(port) {
         body: JSON.stringify({
           designation: 'ZZ9', modele: 'Essai-1', constructeur: 'ESSAI', etat_conception: 'TOGO',
         }),
-      })).statut === 400);
+      })).corps.error === 'existant');
     verifier('aéronef sans modèle refusé',
       (await srv.appel(`${M}/aeronefs`, {
         method: 'POST', body: JSON.stringify({ designation: 'ZZ8' }),

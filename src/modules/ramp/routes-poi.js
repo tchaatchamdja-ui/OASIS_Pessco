@@ -27,7 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, inconnu } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
 // documents — vivent hors de data/ : ce sont des fichiers, pas des
@@ -705,7 +705,7 @@ module.exports = function register(app, deps, M) {
     }
     const d = req.body || {};
     const cible = CIBLES_ENVOI[texte(d.cible)] ? texte(d.cible) : '';
-    if (!cible) return res.status(400).json({ error: 'Destinataire de la communication inconnu' });
+    if (!cible) return inconnu(res, 'destinataire');
     const destinataires = listeAdresses(d.destinataire);
     if (!destinataires.length) return requis(res, 'destinataire');
     const copies = listeAdresses(d.copie);

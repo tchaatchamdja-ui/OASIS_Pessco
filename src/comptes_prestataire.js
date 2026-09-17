@@ -12,7 +12,7 @@
 //   · les comptes créés héritent du rattachement et n'accèdent qu'au module ;
 //   · un compte hors du périmètre n'existe pas — 404, jamais 403.
 
-const { requis } = require('./erreurs');
+const { requis, existant } = require('./erreurs');
 
 // Rôles portail qu'un compte rattaché à un organisme peut porter. Les libellés
 // diffèrent d'un module à l'autre : « prestataire » ici, « exploitant » là.
@@ -98,7 +98,7 @@ function register(app, deps, M, o) {
     const pid = miens.includes(d.prestataire_id) ? d.prestataire_id : miens[0];
     const username = texte(d.email || d.nom_utilisateur);
     if (!username) return requis(res, 'courriel');
-    if (auth.findUser(username)) return res.status(409).json({ error: 'Utilisateur déjà existant' });
+    if (auth.findUser(username)) return existant(res, 'utilisateur');
     const motDePasse = auth.generatePassword(loadConfig());
     const { salt, hash } = auth.hashPassword(motDePasse);
     const users = auth.getUsers();

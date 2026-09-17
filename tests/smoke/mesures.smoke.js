@@ -44,7 +44,7 @@ module.exports = async function mesuresSmoke(port) {
     verifier('libellé en double refusé',
       (await srv.appel(`${M}/parametres/categories`, {
         method: 'POST', body: JSON.stringify({ libelle: 'Mesure conservatoire' }),
-      })).statut === 400);
+      })).corps.error === 'existant');
     verifier('libellé vide refusé',
       (await srv.appel(`${M}/parametres/categories`, {
         method: 'POST', body: JSON.stringify({ libelle: '  ' }),

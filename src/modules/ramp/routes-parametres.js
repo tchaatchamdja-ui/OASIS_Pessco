@@ -11,7 +11,7 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
 // enregistrements.
@@ -117,7 +117,7 @@ module.exports = function register(app, deps, M) {
     }
     const demandee = texte((req.body || {}).instance);
     if (demandee && !instances.liste(loadConfig).includes(demandee)) {
-      return res.status(400).json({ error: 'Instance inconnue' });
+      return inconnu(res, 'instance');
     }
     instances.definir(reel.username, demandee);
     return res.json({ status: 'ok', instance: demandee });
@@ -129,7 +129,7 @@ module.exports = function register(app, deps, M) {
     const reel = req.userReel || req.user;
     if (!vues.peutBasculer(reel)) return refuser(res, 'Bascule réservée au super-administrateur');
     const d = req.body || {};
-    if (!vues.VUES.includes(d.vue)) return res.status(400).json({ error: 'Vue inconnue' });
+    if (!vues.VUES.includes(d.vue)) return inconnu(res, 'vue');
     const prestataireId = d.vue === 'prestataire'
       ? (d.prestataire_id || vues.vueDe(reel.username).prestataire_id || vues.prestataireParDefaut())
       : '';
@@ -139,7 +139,7 @@ module.exports = function register(app, deps, M) {
     // Le prestataire choisi en barre supérieure doit exister : c'est lui qui
     // borne les données servies.
     if (prestataireId && !(referentiels.getAll().prestataires || []).some((p) => p.id === prestataireId)) {
-      return res.status(400).json({ error: 'Prestataire inconnu' });
+      return inconnu(res, 'prestataire');
     }
     vues.definirVue(reel.username, d.vue, prestataireId);
     return res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
@@ -191,7 +191,7 @@ module.exports = function register(app, deps, M) {
     const d = req.body || {};
     const type = texte(d.type);
     const label = texte(d.label);
-    if (!db.FAMILLES.includes(type)) return res.status(400).json({ error: 'Famille inconnue' });
+    if (!db.FAMILLES.includes(type)) return inconnu(res, 'famille');
     if (!label) return requis(res, 'libelle');
     // Un groupe d'items porte un code technique dérivé de son intitulé : les
     // items le retiennent, si bien qu'un groupe renommé garde les siens.
@@ -199,7 +199,7 @@ module.exports = function register(app, deps, M) {
     if (type === 'groupes') {
       if (!code) return res.status(400).json({ error: 'Intitulé inexploitable' });
       if (db.list('parametres').some((x) => x.type === 'groupes' && x.code === code)) {
-        return res.status(400).json({ error: 'Un groupe porte déjà cet intitulé' });
+        return existant(res, 'groupe');
       }
     }
     const p = {
@@ -539,7 +539,7 @@ module.exports = function register(app, deps, M) {
     // modèle et constructeur l'identifient.
     const existe = db.aeronefs().some((x) => x.designation === a.designation
       && x.modele === a.modele && x.constructeur === a.constructeur);
-    if (existe) return res.status(400).json({ error: 'Cet aéronef figure déjà dans la nomenclature' });
+    if (existe) return existant(res, 'aeronef');
     const cree = db.insertAeronef({ id: db.uid('aer'), ...a, actif: true });
     res.status(201).json({ status: 'ok', id: cree.id });
   });

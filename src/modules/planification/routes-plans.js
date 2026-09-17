@@ -6,6 +6,7 @@ const { valider } = require('../../valider');
 const db = require('./store');
 const D = require('./domaine');
 const instances = require('../../instances');
+const { inconnu } = require('../../erreurs');
 
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
@@ -86,7 +87,7 @@ module.exports = function register(app, deps, M) {
     // que les écrans serviront, il ne s'invente pas.
     const demandee = String((req.body || {}).instance || '').trim();
     if (demandee && !instances.liste(loadConfig).includes(demandee)) {
-      return res.status(400).json({ error: 'Instance inconnue' });
+      return inconnu(res, 'instance');
     }
     instances.definir(req.user.username, demandee);
     return res.json({ status: 'ok', instance: demandee });

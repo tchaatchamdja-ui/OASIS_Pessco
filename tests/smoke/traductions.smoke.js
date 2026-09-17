@@ -275,9 +275,9 @@ function controlerPhrasesServeur() {
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-commun.js'), 'utf8'), ctx);
   const dire = (langue, corps) => { fenetre.PESSCO.lang = langue; return fenetre.oasisMessageErreur(corps, 400); };
   const r = {
-    fr: dire('fr', { error: 'Vue inconnue' }),
-    en: dire('en', { error: 'Vue inconnue' }),
-    pt: dire('pt', { error: 'Vue inconnue' }),
+    fr: dire('fr', { error: 'Aucun fichier fourni' }),
+    en: dire('en', { error: 'Aucun fichier fourni' }),
+    pt: dire('pt', { error: 'Aucun fichier fourni' }),
     normFr: dire('fr', { error: 'introuvable', objet: 'carence' }),
     normEn: dire('en', { error: 'introuvable', objet: 'carence' }),
     normPt: dire('pt', { error: 'introuvable', objet: 'carence' }),
@@ -287,6 +287,11 @@ function controlerPhrasesServeur() {
     requisFrM: dire('fr', { error: 'requis', objet: 'motif' }),
     requisEn: dire('en', { error: 'requis', objet: 'mot_de_passe' }),
     requisPt: dire('pt', { error: 'requis', objet: 'mot_de_passe' }),
+    inconnuFr: dire('fr', { error: 'inconnu', objet: 'vue', attendu: ['a'] }),
+    inconnuEn: dire('en', { error: 'inconnu', objet: 'type_processus' }),
+    inconnuPt: dire('pt', { error: 'inconnu', objet: 'portee' }),
+    existantFr: dire('fr', { error: 'existant', objet: 'categorie' }),
+    existantEn: dire('en', { error: 'existant', objet: 'utilisateur' }),
     ecran: (() => { fenetre.PESSCO.lang = 'pt'; return fenetre.oasisChampRequis('intitule'); })(),
     gabarit: dire('pt', { error: 'Écart hors de votre périmètre (Togo)' }),
     deuxTrous: dire('en', { error: 'Activité non réinitialisable : 2 constatation(s) et 1 rapport(s) en dépendent' }),
@@ -295,7 +300,7 @@ function controlerPhrasesServeur() {
     code: dire('pt', { error: 'plan_amende' }),
   };
   verifier('phrase du serveur rendue dans la langue de l’agent',
-    r.fr === 'Vue inconnue' && r.en === 'Unknown view' && r.pt === 'Vista desconhecida',
+    r.fr === 'Aucun fichier fourni' && r.en === 'No file provided' && r.pt === 'Nenhum ficheiro fornecido',
     JSON.stringify([r.fr, r.en, r.pt]));
   verifier('phrase à trous : la valeur passe dans la traduction',
     r.gabarit === 'Constatação fora do seu âmbito (Togo)'
@@ -316,6 +321,12 @@ function controlerPhrasesServeur() {
     && r.ecran === 'Título obrigatório',
     JSON.stringify([r.requisFrF, r.requisFrM, r.requisEn, r.requisPt, r.ecran]));
 
+  verifier('valeur inconnue et doublon composés, le nom à sa place',
+    r.inconnuFr === 'Vue inconnue' && r.inconnuEn === 'Unknown process type'
+    && r.inconnuPt === 'Âmbito desconhecido' && r.existantFr === 'Catégorie déjà existante'
+    && r.existantEn === 'User already exists',
+    JSON.stringify([r.inconnuFr, r.inconnuEn, r.inconnuPt, r.existantFr, r.existantEn]));
+
   // Chaque objet cité par une erreur normalisée a son nom dans les trois
   // langues, et son genre là où la phrase s'accorde.
   const objets = fenetre.OASIS_OBJETS_SERVEUR || {};
@@ -330,7 +341,7 @@ function controlerPhrasesServeur() {
   parcourirEcrans(path.join(RACINE, 'public'));
   [...sourcesServeur(), ...ecrans].forEach((f) => {
     const texte = fs.readFileSync(f, 'utf8');
-    for (const m of texte.matchAll(/\b(?:(?:introuvable|requis)\(\s*res\s*,|oasisChampRequis\()\s*'([a-z_]+)'\s*\)/g)) {
+    for (const m of texte.matchAll(/\b(?:(?:introuvable|requis|inconnu|existant)\(\s*res\s*,|oasisChampRequis\()\s*'([a-z_]+)'\s*[,)]/g)) {
       if (!cites.has(m[1])) cites.set(m[1], `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`);
     }
   });

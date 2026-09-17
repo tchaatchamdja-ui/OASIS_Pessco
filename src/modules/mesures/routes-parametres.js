@@ -8,7 +8,7 @@ const moduleRights = require('../../module_rights');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, inconnu, existant } = require('../../erreurs');
 
 // Code technique dérivé d'un libellé : c'est lui qui est stocké sur la mesure,
 // de sorte qu'un libellé renommé n'orpheline pas les mesures existantes.
@@ -72,7 +72,7 @@ module.exports = function register(app, deps, M) {
     // que les écrans serviront, il ne s'invente pas.
     const demandee = String((req.body || {}).instance || '').trim();
     if (demandee && !instances.liste(loadConfig).includes(demandee)) {
-      return res.status(400).json({ error: 'Instance inconnue' });
+      return inconnu(res, 'instance');
     }
     instances.definir(req.user.username, demandee);
     return res.json({ status: 'ok', instance: demandee });
@@ -124,7 +124,7 @@ module.exports = function register(app, deps, M) {
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('comites').some((c) => c.code === code)) {
-      return res.status(400).json({ error: 'Un comité porte déjà ce libellé' });
+      return existant(res, 'comite');
     }
     const c = { id: db.uid('mco'), code, libelle, ordre: db.list('comites').length };
     db.insert('comites', c);
@@ -165,7 +165,7 @@ module.exports = function register(app, deps, M) {
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('types_investigation').some((t) => t.code === code)) {
-      return res.status(400).json({ error: 'Un type porte déjà ce libellé' });
+      return existant(res, 'type');
     }
     const t = { id: db.uid('mti'), code, libelle, ordre: db.list('types_investigation').length };
     db.insert('types_investigation', t);
@@ -204,7 +204,7 @@ module.exports = function register(app, deps, M) {
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('categories').some((c) => c.code === code)) {
-      return res.status(400).json({ error: 'Une catégorie porte déjà ce libellé' });
+      return existant(res, 'categorie');
     }
     const c = {
       id: db.uid('mca'), code, libelle,
@@ -258,12 +258,12 @@ module.exports = function register(app, deps, M) {
     if (!libelle) return requis(res, 'libelle');
     if (!categorie) return requis(res, 'categorie');
     if (!db.list('categories').some((c) => c.code === categorie)) {
-      return res.status(400).json({ error: 'Catégorie inconnue' });
+      return inconnu(res, 'categorie');
     }
     const code = codeDepuisLibelle(libelle);
     if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
     if (db.list('types').some((t) => t.code === code)) {
-      return res.status(400).json({ error: 'Un type porte déjà ce libellé' });
+      return existant(res, 'type');
     }
     const t = {
       id: db.uid('mty'), categorie_code: categorie, code, libelle,
@@ -287,7 +287,7 @@ module.exports = function register(app, deps, M) {
     if (d.categorie_code !== undefined) {
       const cat = String(d.categorie_code).trim();
       if (!db.list('categories').some((c) => c.code === cat)) {
-        return res.status(400).json({ error: 'Catégorie inconnue' });
+        return inconnu(res, 'categorie');
       }
       patch.categorie_code = cat;
     }

@@ -17,7 +17,7 @@ const etapePdf = require('./etape-pdf');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
-const { introuvable, requis } = require('../../erreurs');
+const { introuvable, requis, inconnu } = require('../../erreurs');
 
 // Les pièces jointes du module vivent hors de data/ : ce sont des fichiers,
 // pas des enregistrements.
@@ -608,7 +608,7 @@ module.exports = function register(app, deps, M) {
     if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const cle = String(req.params.cle || '');
-    if (!etapePdf.ETAPES[cle]) return res.status(404).json({ error: 'Étape inconnue' });
+    if (!etapePdf.ETAPES[cle]) return introuvable(res, 'etape');
     const t = traitementDe(c.id);
     if (!t) return res.status(404).json({ error: 'Aucun traitement ouvert sur cette carence' });
     const libelle = (coll, code) => (db.list(coll).find((x) => x.code === code) || {}).libelle
@@ -793,7 +793,7 @@ module.exports = function register(app, deps, M) {
     const q = qualification(req.body || {});
     // Le comité retenu doit exister : la mesure qui en découlera le portera.
     if (q.comite_code && !db.list('comites').some((x) => x.code === q.comite_code)) {
-      return res.status(400).json({ error: 'Comité décisionnel inconnu' });
+      return inconnu(res, 'comite');
     }
     // Une décision de recours change le sort de la mesure : elle est modifiée
     // — et l'on garde ce qu'elle était — ou annulée. Le rang fait le lien avec
@@ -1138,7 +1138,7 @@ module.exports = function register(app, deps, M) {
     const d = req.body || {};
     const decision = texte(d.decision);
     if (!DECISIONS.includes(decision)) {
-      return res.status(400).json({ error: 'Décision inconnue', attendu: DECISIONS });
+      return inconnu(res, 'decision', { attendu: DECISIONS });
     }
     const motif = texte(d.motif);
     // Classer, c'est décider qu'aucune mesure d'application ne sera prise : la

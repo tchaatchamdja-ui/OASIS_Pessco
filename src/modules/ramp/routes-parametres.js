@@ -314,7 +314,7 @@ module.exports = function register(app, deps, M) {
     if (!p.iso2) return requis(res, 'bigramme');
     if (!bigrammeValide(p.iso2)) return res.status(400).json({ error: 'Bigramme : deux lettres attendues' });
     if (db.list('pays').some((x) => x.iso2 === p.iso2)) {
-      return res.status(400).json({ error: `Le bigramme ${p.iso2} désigne déjà un pays` });
+      return res.status(409).json({ error: `Le bigramme ${p.iso2} désigne déjà un pays` });
     }
     const cree = {
       id: db.uid('pay'), aac: '', adresse: '', site: '', emails: [], uemoa: false,
@@ -333,7 +333,7 @@ module.exports = function register(app, deps, M) {
     if (patch.iso2 !== undefined) {
       if (!bigrammeValide(patch.iso2)) return res.status(400).json({ error: 'Bigramme : deux lettres attendues' });
       if (db.list('pays').some((x) => x.id !== p.id && x.iso2 === patch.iso2)) {
-        return res.status(400).json({ error: `Le bigramme ${patch.iso2} désigne déjà un pays` });
+        return res.status(409).json({ error: `Le bigramme ${patch.iso2} désigne déjà un pays` });
       }
     }
     db.update('pays', p.id, patch);
@@ -392,7 +392,7 @@ module.exports = function register(app, deps, M) {
     if (!a.nom) return requis(res, 'intitule');
     // Le code OACI identifie la plateforme : deux aéroports ne le partagent pas.
     if (a.code && db.list('aeroports').some((x) => x.code === a.code)) {
-      return res.status(400).json({ error: `Le code ${a.code} désigne déjà un aéroport` });
+      return res.status(409).json({ error: `Le code ${a.code} désigne déjà un aéroport` });
     }
     const cree = { id: db.uid('apt'), ...a, actif: true };
     db.insert('aeroports', cree);
@@ -412,7 +412,7 @@ module.exports = function register(app, deps, M) {
     if (patch.pays === '') return requis(res, 'pays');
     if (patch.nom === '') return requis(res, 'intitule');
     if (patch.code && db.list('aeroports').some((x) => x.id !== a.id && x.code === patch.code)) {
-      return res.status(400).json({ error: `Le code ${patch.code} désigne déjà un aéroport` });
+      return res.status(409).json({ error: `Le code ${patch.code} désigne déjà un aéroport` });
     }
     db.update('aeroports', a.id, patch);
     res.json({ status: 'ok' });

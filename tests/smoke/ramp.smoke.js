@@ -540,7 +540,7 @@ module.exports = async function rampSmoke(port) {
     verifier('bigramme en double refusé',
       (await srv.appel(`${M}/pays`, {
         method: 'POST', body: JSON.stringify({ nom: 'Autre', iso2: 'ZZ' }),
-      })).statut === 400);
+      })).statut === 409);
     verifier('bigramme à trois lettres refusé',
       (await srv.appel(`${M}/pays`, {
         method: 'POST', body: JSON.stringify({ nom: 'Autre', iso2: 'ZZZ' }),
@@ -591,7 +591,7 @@ module.exports = async function rampSmoke(port) {
     verifier('code OACI en double refusé',
       (await srv.appel(`${M}/aeroports`, {
         method: 'POST', body: JSON.stringify({ pays: 'Togo', nom: 'Autre', code: 'DXES' }),
-      })).statut === 400);
+      })).statut === 409);
     verifier('aéroport sans pays refusé',
       (await srv.appel(`${M}/aeroports`, {
         method: 'POST', body: JSON.stringify({ nom: 'Sans pays' }),
@@ -607,7 +607,7 @@ module.exports = async function rampSmoke(port) {
     verifier('modification vers un code déjà pris refusée',
       (await srv.appel(`${M}/aeroports/${nouvelAeroport.corps.id}`, {
         method: 'PUT', body: JSON.stringify({ code: 'DXXX' }),
-      })).statut === 400);
+      })).statut === 409);
     verifier('aéroport désactivable',
       (await srv.appel(`${M}/aeroports/${nouvelAeroport.corps.id}/actif`, {
         method: 'PUT', body: '{}',

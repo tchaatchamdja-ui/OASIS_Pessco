@@ -42,6 +42,28 @@
     } catch { return false; }
   };
 
+  // ── Double envoi ──
+  // Un bouton cliqué deux fois pendant que la requête part envoyait deux fois
+  // la même création : deux plans, deux mesures, deux notifications. Aucun
+  // écran ne désactivait son bouton le temps de la réponse. Une écriture
+  // identique — même méthode, même adresse, même corps — déjà en route n'est
+  // donc pas renvoyée : le second appel reçoit la réponse du premier, clonée,
+  // pour que chacun puisse la lire.
+  //
+  // Seules les créations et suppressions sont concernées : une modification
+  // répétée à l'identique ne change rien. Un corps qui n'est pas du texte — un
+  // fichier téléversé — n'est pas comparé.
+  const DEDOUBLONNEES = ['POST', 'DELETE'];
+  const enRoute = new Map();
+
+  const cleEcriture = (entree, o) => {
+    const methode = String(o.method || 'GET').toUpperCase();
+    if (!DEDOUBLONNEES.includes(methode)) return '';
+    if (o.body !== undefined && o.body !== null && typeof o.body !== 'string') return '';
+    const url = new URL(typeof entree === 'string' ? entree : entree.url, window.location.href).href;
+    return `${methode} ${url}\n${o.body || ''}`;
+  };
+
   window.fetch = function fetchMarque(entree, options) {
     if (!versApplication(entree)) return fetchOrigine(entree, options);
 
@@ -56,6 +78,15 @@
     const entetes = new Headers(o.headers || {});
     entetes.set('X-OASIS-Request', '1');
     o.headers = entetes;
-    return fetchOrigine(entree, o);
+
+    const cle = cleEcriture(entree, o);
+    if (!cle) return fetchOrigine(entree, o);
+    if (!enRoute.has(cle)) {
+      const envoi = fetchOrigine(entree, o);
+      enRoute.set(cle, envoi);
+      const liberer = () => { if (enRoute.get(cle) === envoi) enRoute.delete(cle); };
+      envoi.then(liberer, liberer);
+    }
+    return enRoute.get(cle).then((reponse) => reponse.clone());
   };
 }());

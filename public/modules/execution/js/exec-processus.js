@@ -1799,8 +1799,8 @@ function execProcGroupeHorsPlan(F) {
         title="${te('ouvrir_processus')}">
       <td>${_esc(n.prestataire_nom || '')}</td>
       <td>${_esc(n.objet_activite || '')}</td>
-      <td>${_formatDate(n.date_activite)}</td>
-      <td>${_formatDate(n.date_fin_effective)}</td>
+      <td style="white-space:nowrap;">${_formatDate(n.date_activite)}</td>
+      <td style="white-space:nowrap;">${_formatDate(n.date_fin_effective)}</td>
       <td>${_esc(respMap[n.responsable_id] || '-')}</td>
       <td>${typeof execAvancementBadge === 'function' ? execAvancementBadge(n, dos) : ''}</td>
       <td>${execProcStatutBadge(n, dos)}</td>
@@ -1838,16 +1838,16 @@ function execProcGroupeHorsPlan(F) {
       </div>
     </div>
     <div class="exec-accordion-body" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
-      <table class="exec-data-table exec-compact-table" style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
+      <table class="exec-data-table exec-compact-table" style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
         <thead><tr>
-          <th style="width:160px;">${te('provider')}</th>
-          <th style="width:300px;">${te('objet')}</th>
-          <th style="width:95px;">${te('date_debut')}</th>
-          <th style="width:95px;">${te('date_fin')}</th>
-          <th style="width:150px;">${te('responsable')}</th>
+          <th style="width:140px;">${te('provider')}</th>
+          <th>${te('objet')}</th>
+          <th style="width:100px;">${te('date_debut')}</th>
+          <th style="width:100px;">${te('date_fin')}</th>
+          <th style="width:130px;">${te('responsable')}</th>
           <th style="width:110px;">${te('avancement')}</th>
-          <th style="width:110px;">${te('etape')}</th>
-          <th style="width:110px;text-align:center;">${te('actions')}</th>
+          <th style="width:115px;">${te('etape')}</th>
+          <th style="width:80px;text-align:center;">${te('actions')}</th>
         </tr></thead>
         <tbody>${corps}</tbody>
       </table>

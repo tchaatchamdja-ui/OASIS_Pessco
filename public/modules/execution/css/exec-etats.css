@@ -31,8 +31,15 @@
 .exec-etats-intro { font-size: .78rem; color: var(--text-muted); margin: .1rem 0 .7rem; }
 .exec-etats-vide { font-size: .8rem; color: var(--text-muted); font-style: italic; padding: .4rem 0; }
 /* Format repris de la table des activités : largeurs fixes, texte tronqué
-   plutôt que colonnes déformées, en-tête de 35 px. */
-.exec-etats-table thead th { height: 35px; }
+   plutôt que colonnes déformées, en-tête de 35 px. L'en-tête prend la teinte
+   claire du thème : le bandeau de section, juste au-dessus, porte déjà la
+   couleur pleine, et deux bandes foncées superposées ne se distinguaient plus. */
+.exec-etats-table thead th {
+    height: 35px;
+    background: color-mix(in srgb, var(--primary) 14%, var(--bg-card, #fff));
+    color: var(--text);
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
+}
 .exec-etats-table td {
     overflow: hidden; text-overflow: ellipsis;
     vertical-align: middle;

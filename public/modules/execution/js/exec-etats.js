@@ -467,23 +467,25 @@ function execEtatsPanA_declencher(R) {
         précède le début de ${EXEC_ETATS.delais.notification_avant_activite} jours.
       </p>
       ${execEtatsTableau([
-        { titre: 'Prestataire', largeur: '130px' }, { titre: 'Objet' },
-        { titre: 'Début', largeur: '95px' }, { titre: 'À notifier avant', largeur: '100px' },
-        { titre: 'Délai', largeur: '110px' }, { titre: 'Responsable', largeur: '130px' },
-        { titre: 'Action', largeur: '115px', centre: true },
+        { titre: te('provider'), largeur: '130px' }, { titre: te('objet') },
+        { titre: te('debut'), largeur: '95px' }, { titre: te('etats_col_a_notifier'), largeur: '100px' },
+        { titre: te('delai'), largeur: '110px' }, { titre: te('responsable'), largeur: '130px' },
+        { titre: te('actions'), largeur: '115px', centre: true },
       ], lignes, te('etats_vide_a_declencher'))}
     </div>`;
 }
 
 // ── Onglet 2 : activités en cours ──
 const EXEC_ETATS_SECTIONS = [
-  { cle: 'brouillons', titre: 'Brouillons en attente de soumission', echeance: 'Déclenchement attendu' },
-  { cle: 'validation_notif', titre: 'Notifications en attente de validation', echeance: 'À valider avant' },
-  { cle: 'confirmation', titre: 'Confirmations d’activités en attente', echeance: 'À confirmer avant' },
-  { cle: 'rapport', titre: 'Projets de rapport en attente', echeance: 'À soumettre avant' },
-  { cle: 'validation_rapport', titre: 'Rapports en attente de validation', echeance: 'À valider avant' },
-  { cle: 'transmission', titre: 'Rapports validés en attente de transmission', echeance: 'À transmettre avant' },
-  { cle: 'cloture', titre: 'Dossiers en attente de clôture', echeance: 'À clôturer avant' },
+  // Les intitulés sont des clés de traduction : l'écran les rend dans la
+  // langue de l'agent.
+  { cle: 'brouillons', titre: 'etats_sec_brouillons', echeance: 'etats_ech_declenchement' },
+  { cle: 'validation_notif', titre: 'etats_sec_validation_notif', echeance: 'etats_ech_a_valider' },
+  { cle: 'confirmation', titre: 'etats_sec_confirmation', echeance: 'etats_ech_a_confirmer' },
+  { cle: 'rapport', titre: 'etats_sec_rapport', echeance: 'etats_ech_a_soumettre' },
+  { cle: 'validation_rapport', titre: 'etats_sec_validation_rapport', echeance: 'etats_ech_a_valider' },
+  { cle: 'transmission', titre: 'etats_sec_transmission', echeance: 'etats_ech_a_transmettre' },
+  { cle: 'cloture', titre: 'etats_sec_cloture', echeance: 'etats_ech_a_cloturer' },
 ];
 
 function execEtatsPanEn_cours(R) {
@@ -499,7 +501,7 @@ function execEtatsPanEn_cours(R) {
         <td>${execEtatsPeriode(l)}</td>
         <td>${execEtatsBadgeDelai(l.jours)}</td>
         <td style="text-align:center;white-space:nowrap;">
-          <button class="btn btn-sm btn-outline" onclick="execEtatsRappel('${l.planId}','${l.activiteId}','${_escAttr(s.titre)}')">
+          <button class="btn btn-sm btn-outline" onclick="execEtatsRappel('${l.planId}','${l.activiteId}','${_escAttr(te(s.titre))}')">
             ${EXEC_ICONS.bell || ''} Rappel
           </button>
         </td>
@@ -512,16 +514,16 @@ function execEtatsPanEn_cours(R) {
         ontoggle="EXEC_ETATS.ouvertes['${s.cle}']=this.open;">
         <summary>
           <span class="exec-etats-chevron">${EXEC_ICONS.chevronDown || ''}</span>
-          <span class="exec-etats-titre">${_esc(s.titre)}</span>
+          <span class="exec-etats-titre">${_esc(te(s.titre))}</span>
           <span class="exec-etats-compte${items.length > 1 ? ' alerte' : ''}">${items.length}</span>
           ${retard ? `<span class="exec-etats-compte retard">${retard} en retard</span>` : ''}
         </summary>
         <div class="exec-etats-section-corps">
           ${execEtatsTableau([
-            { titre: 'Prestataire', largeur: '130px' }, { titre: 'Objet' },
-            { titre: 'Référence', largeur: '130px' }, { titre: 'Période', largeur: '110px' },
-            { titre: s.echeance, largeur: '125px' }, { titre: 'Action', largeur: '115px', centre: true },
-          ], lignes, 'Rien en attente.')}
+            { titre: te('provider'), largeur: '130px' }, { titre: te('objet') },
+            { titre: te('reference'), largeur: '130px' }, { titre: te('etats_col_periode'), largeur: '110px' },
+            { titre: te(s.echeance), largeur: '125px' }, { titre: te('actions'), largeur: '115px', centre: true },
+          ], lignes, te('etats_rien_attente'))}
         </div>
       </details>`;
   }).join('');
@@ -576,10 +578,10 @@ function execEtatsPanEn_vie(R) {
         se poursuivre s'arrête : il reste consultable et peut être archivé, ou repris.
       </p>
       ${execEtatsTableau([
-        { titre: 'Prestataire', largeur: '130px' }, { titre: 'Objet' },
-        { titre: 'Référence', largeur: '130px' }, { titre: 'Période', largeur: '110px' },
-        { titre: 'Étape', largeur: '115px' },
-        { titre: 'Consultation', largeur: '170px', centre: true },
+        { titre: te('provider'), largeur: '130px' }, { titre: te('objet') },
+        { titre: te('reference'), largeur: '130px' }, { titre: te('etats_col_periode'), largeur: '110px' },
+        { titre: te('etape'), largeur: '115px' },
+        { titre: te('etats_col_consultation'), largeur: '170px', centre: true },
       ], lignes, te('etats_vide_en_cours'))}
     </div>`;
 }
@@ -613,7 +615,7 @@ function execEtatsPanClos(items, archivees) {
             title="${te('historique')}" aria-label="${te('historique')}">${EXEC_ICONS.clock || ''}</button>
           ${(execEtatsPeutAdministrer() && d && !l.planArchive) ? `<button class="btn btn-sm btn-icon-only ${archivees ? 'btn-outline' : 'btn-primary'}"
             onclick="execEtatsArchiver('${d.id}',${archivees ? 'false' : 'true'})"
-            title="${archivees ? 'Désarchiver' : 'Archiver'}" aria-label="${archivees ? 'Désarchiver' : 'Archiver'}">
+            title="${_escAttr(te(archivees ? 'etats_desarchiver' : 'archiver'))}" aria-label="${_escAttr(te(archivees ? 'etats_desarchiver' : 'archiver'))}">
             ${(archivees ? EXEC_ICONS.back : EXEC_ICONS.folder) || ''}</button>` : ''}
           ${(archivees && execEtatsPeutAdministrer() && (l.planArchive || (!d && l.notif))) ? `<button class="btn btn-sm btn-outline btn-icon-only"
             onclick="execEtatsDesarchiverActivite('${l.activiteId}',${l.planArchive ? 'true' : 'false'})"
@@ -626,20 +628,16 @@ function execEtatsPanClos(items, archivees) {
   const colonnes = [
     // Huit colonnes : l'objet prend ce qui reste, pour que la consultation
     // reste visible sans faire défiler la table.
-    { titre: 'Prestataire', largeur: '115px' }, { titre: 'Objet' },
-    { titre: 'Période', largeur: '110px' }, { titre: 'Dossier', largeur: '115px' },
-    { titre: 'Rapport', largeur: '115px' },
-    { titre: archivees ? 'Archivé le' : 'Clôturé le', largeur: '95px' },
-    ...(archivees ? [] : [{ titre: 'À archiver avant', largeur: '110px' }]),
-    { titre: 'Consultation', largeur: '140px', centre: true },
+    { titre: te('provider'), largeur: '115px' }, { titre: te('objet') },
+    { titre: te('etats_col_periode'), largeur: '110px' }, { titre: te('dossier'), largeur: '115px' },
+    { titre: te('rapport_col'), largeur: '115px' },
+    { titre: te(archivees ? 'etats_col_archive_le' : 'etats_col_cloture_le'), largeur: '95px' },
+    ...(archivees ? [] : [{ titre: te('etats_col_a_archiver'), largeur: '110px' }]),
+    { titre: te('etats_col_consultation'), largeur: '140px', centre: true },
   ];
   const intro = archivees
-    ? 'Activités archivées, une à une ou avec leur plan de surveillance. Les pièces '
-      + 'produites restent consultables ; les constatations qui en sont issues '
-      + 'poursuivent leur suivi et ne sont pas archivées.'
-    : `Dossiers clôturés non encore archivés : l'archivage est attendu dans les `
-      + `${EXEC_ETATS.delais.archivage_apres_cloture} jours suivant la clôture. `
-      + `Les constatations issues de l'activité poursuivent leur suivi et ne sont pas archivées.`;
+    ? te('etats_intro_archivees')
+    : te('etats_intro_a_archiver', EXEC_ETATS.delais.archivage_apres_cloture);
 
   // Les archives se lisent par plan : une activité rangée se retrouve par le
   // plan qui la portait, « Autres Activités » tenant lieu de plan pour celles
@@ -650,7 +648,7 @@ function execEtatsPanClos(items, archivees) {
     items.forEach((l) => {
       const cle = l.planId || 'hors-plan';
       if (!groupes.has(cle)) {
-        groupes.set(cle, { nom: l.planNom || (l.horsPlan ? 'Autres Activités' : '—'), lignes: [], le: '' });
+        groupes.set(cle, { nom: l.planNom || (l.horsPlan ? te('etats_autres_activites') : '—'), lignes: [], le: '' });
       }
       const g = groupes.get(cle);
       g.lignes.push(l);
@@ -677,11 +675,11 @@ function execEtatsPanClos(items, archivees) {
             ${cle === 'hors-plan' ? (EXEC_ICONS.trigger || '') : (EXEC_ICONS.plans || '')}
             <span>${_esc(g.nom)}</span>
             <span class="exec-etats-compte">${g.lignes.length}</span>
-            ${g.le ? `<span class="exec-etats-groupe-date">archivé le ${_formatDate(g.le)}</span>` : ''}
+            ${g.le ? `<span class="exec-etats-groupe-date">${te('etats_archive_le_court', _formatDate(g.le))}</span>` : ''}
             ${(parPlan && execEtatsPeutAdministrer()) ? `<button class="btn btn-sm btn-outline exec-etats-desarchiver"
               onclick="event.stopPropagation();execEtatsDesarchiverPlan('${cle}')"
               title="${te('sortir_des_archives')}">
-              ${EXEC_ICONS.back || ''} Désarchiver le plan</button>` : ''}
+              ${EXEC_ICONS.back || ''} ${te('etats_desarchiver_plan')}</button>` : ''}
           </h4>
           <div class="exec-etats-groupe-corps">
             ${execEtatsTableau(colonnes, g.lignes.map(ligneDe).join(''), te('etats_vide_archivees'))}
@@ -696,7 +694,7 @@ function execEtatsPanClos(items, archivees) {
 
   return `
     <div class="card">
-      <h3>${archivees ? 'Activités archivées' : 'Activités clôturées'}
+      <h3>${te(archivees ? 'etats_onglet_archivees' : 'etats_onglet_cloturees')}
         <span class="exec-etats-compte">${items.length}</span></h3>
       <p class="exec-etats-intro">${intro}</p>
       ${corps}
@@ -714,11 +712,11 @@ function execRenderEtats() {
   // dans la barre, la pastille se glissait devant l'intitulé dès qu'un rang
   // se repliait.
   const onglets = [
-    { cle: 'a_declencher', titre: 'Activités à déclencher' },
-    { cle: 'en_vie', titre: 'Activités en cours' },
-    { cle: 'en_cours', titre: 'Actions en attentes' },
-    { cle: 'cloturees', titre: 'Activités clôturées' },
-    { cle: 'archivees', titre: 'Activités archivées' },
+    { cle: 'a_declencher', titre: te('etats_onglet_a_declencher') },
+    { cle: 'en_vie', titre: te('etats_onglet_en_cours') },
+    { cle: 'en_cours', titre: te('etats_onglet_actions') },
+    { cle: 'cloturees', titre: te('etats_onglet_cloturees') },
+    { cle: 'archivees', titre: te('etats_onglet_archivees') },
   ];
   const barre = `<div class="exec-workflow-tabs exec-tabs-serrees">
     <div class="exec-tabs-rang">${onglets.map((o) => `

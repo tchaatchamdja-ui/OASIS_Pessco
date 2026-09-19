@@ -99,7 +99,7 @@ function execRenderMesUsersTable() {
       <table class="exec-data-table exec-compact-table exec-etats-table"
         style="font-size:0.8rem;table-layout:fixed;min-width:900px;">
         <thead><tr>
-            <th style="width:200px;">${L.utilisateur}</th>
+            <th>${L.utilisateur}</th>
             <th style="width:230px;">${L.email}</th>
             <th style="width:120px;">${L.motDePasse}</th>
             <th style="width:160px;">${L.role}</th>

@@ -1744,8 +1744,11 @@ tr.hidden { display: none; }
 
 /* ── « Mes Activités » ──
    Une ligne se clique pour lire la fiche ; le cumul des jours se tient à
-   droite de l'en-tête du tableau, et ne paraît que sous filtre. */
-.plan-ma-table { table-layout: fixed; width: 100%; min-width: 1040px; }
+   droite de l'en-tête du tableau, et ne paraît que sous filtre. La table loge
+   en 900 px — sans défilement, barre latérale dépliée, dès un écran de
+   1280 px ; ses dates, à 11 %, y gardent 99 px, comme dans la table des
+   activités d'un plan. */
+.plan-ma-table { table-layout: fixed; width: 100%; min-width: 900px; }
 .plan-ma-table th,
 .plan-ma-table td { overflow-wrap: anywhere; }
 .plan-ma-table .plan-ma-duree { text-align: right; font-variant-numeric: tabular-nums; }

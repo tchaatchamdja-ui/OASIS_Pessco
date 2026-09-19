@@ -168,9 +168,9 @@ function planRenderMesActivites() {
             <div style="overflow-x:auto;">
                 <table class="data-table plan-ma-table">
                     <colgroup>
-                        <col style="width:13%"><col style="width:13%"><col style="width:16%">
+                        <col style="width:12%"><col style="width:12%"><col style="width:16%">
                         <col style="width:12%"><col style="width:11%"><col style="width:8%">
-                        <col style="width:10%"><col style="width:10%"><col style="width:7%">
+                        <col style="width:11%"><col style="width:11%"><col style="width:7%">
                     </colgroup>
                     <thead><tr>
                         <th>${tp('col_responsable')}</th>

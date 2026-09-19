@@ -1030,22 +1030,22 @@ function rampRenderStatistiques() {
             deux exploitants inspectés inégalement.
         </p>
         <div class="ramp-table-wrap">
-            <table class="ramp-table">
+            <table class="ramp-table ramp-table-dense">
                 <thead>
                     <tr>
                         ${rampTh('situation', 'exploitant', rt('stats_exploitant'))}
                         ${rampTh('situation', 'inspections', rt('stats_insp'), 'width:70px;text-align:center;')}
                         ${rampTh('situation', 'items', rt('c_items'), 'width:70px;text-align:center;')}
                         ${rampTh('situation', 'cat1', rt('cat_court_1'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">${rt('clot_1')}</th>
+                        <th style="width:64px;text-align:center;">${rt('clot_1')}</th>
                         ${rampTh('situation', 'cat2', rt('cat_court_2'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">${rt('clot_2')}</th>
+                        <th style="width:64px;text-align:center;">${rt('clot_2')}</th>
                         ${rampTh('situation', 'cat3', rt('cat_court_3'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">${rt('clot_3')}</th>
+                        <th style="width:64px;text-align:center;">${rt('clot_3')}</th>
                         ${rampTh('situation', 'catG', rt('cat_court_g'), 'width:60px;text-align:center;')}
-                        <th style="width:80px;text-align:center;">${rt('clot_g')}</th>
+                        <th style="width:64px;text-align:center;">${rt('clot_g')}</th>
                         ${rampTh('situation', 'totalEcarts', rt('c_ecarts'), 'width:70px;text-align:center;')}
-                        <th style="width:90px;text-align:center;">${rt('stats_taux_cloture')}</th>
+                        <th style="width:76px;text-align:center;">${rt('stats_taux_cloture')}</th>
                         ${rampTh('situation', 'scoreTotal', rt('score'), 'width:80px;text-align:center;')}
                     </tr>
                 </thead>

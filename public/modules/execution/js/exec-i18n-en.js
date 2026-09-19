@@ -211,7 +211,7 @@ EXEC_TR.en = {
         etape: 'Step', tous_avancements: 'All progress levels',
         mode_supervision: 'Mode', sans_mode: 'No mode',
         gantt_tout_visible: 'The whole period fits on screen: nothing to scroll',
-        activites_hors_plan: 'Activities Outside Surveillance Plans',
+        activites_hors_plan: 'Activities Outside Planning',
         hp_modif_fermee: 'Activity under way: these details can no longer be changed here',
         taux_realisation: 'Completion Rate',
         avancement_non_initiee: 'Not Started', avancement_initiee: 'Started',

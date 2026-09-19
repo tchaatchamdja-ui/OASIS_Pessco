@@ -211,7 +211,7 @@ EXEC_TR.pt = {
         etape: 'Etapa', tous_avancements: 'Todos os avancos',
         mode_supervision: 'Modo', sans_mode: 'Sem modo',
         gantt_tout_visible: 'Todo o período cabe no ecra: nada a deslocar',
-        activites_hors_plan: 'Atividades Fora dos Planos de Vigilância',
+        activites_hors_plan: 'Atividades Fora da Planificação',
         hp_modif_fermee: 'Atividade em curso: estes dados já não se alteram aqui',
         taux_realisation: 'Taxa de Realização',
         avancement_non_initiee: 'Não Iniciada', avancement_initiee: 'Iniciada',

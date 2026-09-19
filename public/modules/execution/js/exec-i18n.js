@@ -223,7 +223,7 @@ const EXEC_TR = {
         etape: 'Étape', tous_avancements: 'Tous les avancements',
         mode_supervision: 'Mode', sans_mode: 'Sans mode',
         gantt_tout_visible: 'Toute la période tient à l’écran : rien à faire défiler',
-        activites_hors_plan: 'Activités Hors Plans de Surveillance',
+        activites_hors_plan: 'Activités Hors Planification',
         hp_modif_fermee: 'Activité engagée : les renseignements ne se modifient plus ici',
         taux_realisation: 'Taux de Réalisation',
         avancement_non_initiee: 'Non Initiée', avancement_initiee: 'Initiée',

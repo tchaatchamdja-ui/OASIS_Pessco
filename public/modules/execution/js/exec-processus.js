@@ -1766,7 +1766,7 @@ function _execHpBoutonModifier(n) {
     title="${_escAttr(ouvert ? te('edit') : te('hp_modif_fermee'))}">${EXEC_ICONS.edit}</button>`;
 }
 
-// Groupe « Activités Hors Plans de Surveillance » : les activités déclenchées
+// Groupe « Activités Hors Planification » : les activités déclenchées
 // hors plan. La section reste à sa place sous les plans même vide — son
 // absence laisserait croire que le module ne les accueille pas.
 function execProcGroupeHorsPlan(F) {

@@ -83,7 +83,7 @@ function execRenderExecution() {
                             <div>${_execStatusBadge(d.statut)}</div>
                             <div style="color:var(--text-muted);font-size:0.78rem;margin-top:0.15rem;">${_esc(_dossierStepLabel(d))}</div>
                         </td>
-                        <td style="display:flex;gap:0.4rem;justify-content:center;white-space:nowrap;">
+                        <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons">
                             <button class="btn btn-sm btn-outline" onclick="execOpenExchangeSlider('${d.notification_id}')" title="${te('gerer_echange')}">
                                 ${EXEC_ICONS.chat}
                             </button>
@@ -93,7 +93,7 @@ function execRenderExecution() {
                             ${_execIsAdmin() ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.25rem 0.4rem;" onclick="execDeleteDossier('${d.id}')" title="${te('delete')}">
                                 ${EXEC_ICONS.x}
                             </button>` : ''}
-                        </td>
+                        </div></td>
                     </tr>`;
                     }).join('')}
                 </tbody>
@@ -877,7 +877,7 @@ function _buildStepValidation(dossier, dossierId) {
                 <td>${_esc(r.titre || '')}</td>
                 <td>${_formatDate(r.date_creation)}</td>
                 <td>${_execStatusBadge(r.statut)}</td>
-                <td style="display:flex;gap:0.25rem;flex-wrap:wrap;">
+                <td><div class="exec-cellule-boutons serre plie">
                     <button class="btn btn-sm btn-outline" onclick="execPreviewRapport('${r.id}')">
                         ${EXEC_ICONS.eye} ${te('apercu')}
                     </button>
@@ -885,7 +885,7 @@ function _buildStepValidation(dossier, dossierId) {
                     <button class="btn btn-sm btn-outline" style="color:#d97706;border-color:#d97706;" onclick="execReturnDossier('${dossierId}')">
                         ${EXEC_ICONS.back} Renvoyer
                     </button>` : ''}
-                </td>
+                </div></td>
             </tr>
             ${hasComments ? `<tr>
                 <td colspan="6" style="padding:0;">
@@ -1402,13 +1402,13 @@ function _dossierOngletConstatations(dossier, dossierId, canEdit) {
                 <td>${_formatDate(c.date_due_cloture || c.date_due || '')}</td>
                 <td>${preuvesHtml}</td>
                 <td>${_execStatusBadge(c.statut)}</td>
-                <td style="display:flex;gap:0.25rem;justify-content:center;align-items:center;white-space:nowrap;">
+                <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons serre">
                     ${modifierBtn}
                     <button class="btn btn-sm btn-outline" id="fiches_btn_${c.id}" style="padding:0.2rem 0.4rem;" onclick="_execToggleFiches('${c.id}')" title="Fiches">
                         ${EXEC_ICONS.file}<span class="caret" style="display:inline-block;transition:transform 0.15s;">▸</span>
                     </button>
                     ${(!isConstReadOnly || isAdmin) ? `<button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;padding:0.2rem 0.4rem;" onclick="execDeleteConstatation('${c.id}')" title="${te('delete')}">${EXEC_ICONS.x || '✕'}</button>` : ''}
-                </td>
+                </div></td>
             </tr>
             <tr id="fiches_row_${c.id}" style="display:none;">
                 <td colspan="9" style="background:var(--bg);padding:0.6rem 0.8rem;border-top:none;">
@@ -1482,7 +1482,7 @@ function _dossierOngletRapports(dossier) {
                 <td>${_esc(r.titre || '')}</td>
                 <td>${_formatDate(r.date_creation)}</td>
                 <td>${_execStatusBadge(r.statut)}</td>
-                <td style="display:flex;gap:0.25rem;flex-wrap:wrap;">
+                <td><div class="exec-cellule-boutons serre plie">
                     <button class="btn btn-sm btn-outline" onclick="execPreviewRapport('${r.id}')">
                         ${EXEC_ICONS.eye} ${te('apercu')}
                     </button>
@@ -1490,7 +1490,7 @@ function _dossierOngletRapports(dossier) {
                     <button class="btn btn-sm btn-accent" onclick="execSendRapport('${r.id}')">
                         ${EXEC_ICONS.send} ${te('envoyer_prestataire')}
                     </button>` : ''}
-                </td>
+                </div></td>
             </tr>`).join('')}
         </tbody>
     </table>`}`;

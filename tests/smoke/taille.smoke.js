@@ -169,6 +169,15 @@ module.exports = async function tailleSmoke() {
       }
     });
   });
+  // Le même défaut s'écrit aussi dans les gabarits, en style en ligne :
+  // « <td style="display:flex;…"> ». La lecture des seules feuilles l'avait
+  // laissé passer neuf fois.
+  fichiers.filter((f) => f.endsWith('.js')).forEach((fichier) => {
+    const texte = fs.readFileSync(fichier, 'utf8');
+    for (const m of texte.matchAll(/<t[dh]\b[^>]*\bstyle="[^"]*display:\s*(?:flex|inline-flex|grid|inline-grid)/g)) {
+      cellulesEnFlex.push(`${relatif(fichier)}:${texte.slice(0, m.index).split('\n').length} (style en ligne)`);
+    }
+  });
   verifier('aucune cellule de tableau mise en flex ou en grille',
     cellulesEnFlex.length === 0, cellulesEnFlex.join(' · '));
 

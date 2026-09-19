@@ -113,21 +113,21 @@ function _renderDossiersEnCours(prestataires, dossiers, notifications, domaines)
         return `
         <div class="card" style="margin-bottom:0.5rem;padding:0.6rem 0.75rem;overflow-x:auto;">
             <div style="margin-bottom:0.35rem;"><strong style="font-size:1rem;">${_esc(_domNom(domId))}</strong></div>
-            <table class="exec-data-table exec-compact-table" style="margin-bottom:0;table-layout:fixed;">
+            <table class="exec-data-table exec-compact-table" style="margin-bottom:0;table-layout:fixed;min-width:760px;">
                 <thead><tr>
-                    ${th('ref', te('reference'), 'width:120px;')}
-                    ${th('prest', te('provider'), 'width:160px;')}
-                    ${th('objet', te('objet'), 'width:300px;')}
-                    ${th('date', te('date_debut'), 'width:110px;')}
-                    ${th('statut', te('status'), 'width:120px;')}
-                    <th style="width:150px;text-align:center;">${te('actions')}</th>
+                    ${th('ref', te('reference'), 'width:130px;')}
+                    ${th('prest', te('provider'), 'width:150px;')}
+                    ${th('objet', te('objet'))}
+                    ${th('date', te('date_debut'), 'width:125px;')}
+                    ${th('statut', te('status'), 'width:115px;')}
+                    <th style="width:90px;text-align:center;">${te('actions')}</th>
                 </tr></thead>
                 <tbody>
                     ${rows.map(d => `<tr>
                         <td><strong>${_esc(d.reference || d.id)}</strong></td>
                         <td>${_esc(d.prestataire_nom || (prestById[d.prestataire_id] || {}).nom || '')}</td>
-                        <td>${_esc((d.notification_objet || d.objet_activite || '').substring(0, 50))}</td>
-                        <td>${_formatDate(d.date_debut_execution || d.date_creation)}</td>
+                        <td>${_esc(d.notification_objet || d.objet_activite || '')}</td>
+                        <td style="white-space:nowrap;">${_formatDate(d.date_debut_execution || d.date_creation)}</td>
                         <td>${_execStatusBadge(d.statut)}</td>
                         <td style="text-align:center;white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="execOpenDossierSlider('${d.id}','realisation')" title="${te('ouvrir_dossier')}">${EXEC_ICONS.openFolder}</button></td>
                     </tr>`).join('')}
@@ -187,14 +187,14 @@ function _renderDossiersClotures(prestataires, dossiers, notifications, domaines
         return `
         <div class="card" style="margin-bottom:0.5rem;padding:0.6rem 0.75rem;overflow-x:auto;">
             <div style="margin-bottom:0.35rem;"><strong style="font-size:1rem;">${_esc(_domNom(domId))}</strong></div>
-            <table class="exec-data-table exec-compact-table" style="margin-bottom:0;table-layout:fixed;">
+            <table class="exec-data-table exec-compact-table" style="margin-bottom:0;table-layout:fixed;min-width:760px;">
                 <thead><tr>
-                    ${th('ref', te('reference'), 'width:120px;')}
+                    ${th('ref', te('reference'), 'width:130px;')}
                     ${th('prest', te('provider'), 'width:150px;')}
-                    ${th('objet', te('objet'), 'width:300px;')}
-                    ${th('date', 'Date clôture', 'width:105px;')}
-                    ${th('statut', te('status'), 'width:110px;')}
-                    <th style="width:275px;text-align:center;">${te('actions')}</th>
+                    ${th('objet', te('objet'))}
+                    ${th('date', 'Date clôture', 'width:125px;')}
+                    ${th('statut', te('status'), 'width:115px;')}
+                    <th style="width:110px;text-align:center;">${te('actions')}</th>
                 </tr></thead>
                 <tbody>
                     ${rows.map(d => {
@@ -202,13 +202,13 @@ function _renderDossiersClotures(prestataires, dossiers, notifications, domaines
                         return `<tr>
                         <td><strong>${_esc(d.reference || d.id)}</strong></td>
                         <td>${_esc(d.prestataire_nom || (prestById[d.prestataire_id] || {}).nom || '')}</td>
-                        <td>${_esc(d.notification_objet || d.objet_activite || relNotif.objet_activite || '').substring(0, 50)}</td>
-                        <td>${_formatDate(d.date_fin_execution || '')}</td>
+                        <td>${_esc(d.notification_objet || d.objet_activite || relNotif.objet_activite || '')}</td>
+                        <td style="white-space:nowrap;">${_formatDate(d.date_fin_execution || '')}</td>
                         <td>${_execStatusBadge(d.statut)}</td>
-                        <td style="display:flex;gap:0.25rem;justify-content:center;white-space:nowrap;">
+                        <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons serre">
                             <button class="btn btn-sm btn-outline" onclick="execOpenDossierSlider('${d.id}','notification')" title="${te('ouvrir_dossier')}">${EXEC_ICONS.openFolder}</button>
                             ${_execIsAdmin() ? `<button class="btn btn-sm btn-outline" style="color:var(--exec-accent);border-color:var(--exec-accent);" onclick="execArchiveDossier('${d.id}')" title="Archiver">${EXEC_ICONS.folder}</button>` : ''}
-                        </td>
+                        </div></td>
                     </tr>`}).join('')}
                 </tbody>
             </table>
@@ -249,20 +249,20 @@ function _renderDossiersArchives(prestataires, dossiers, domaines) {
         return `
         <div class="card" style="margin-bottom:0.5rem;padding:0.6rem 0.75rem;overflow-x:auto;">
             <div style="margin-bottom:0.35rem;"><strong style="font-size:1rem;">${_esc(_domNom(domId))}</strong></div>
-            <table class="exec-data-table exec-compact-table" style="margin-bottom:0;table-layout:fixed;">
+            <table class="exec-data-table exec-compact-table" style="margin-bottom:0;table-layout:fixed;min-width:760px;">
                 <thead><tr>
-                    ${th('ref', te('reference'), 'width:120px;')}
-                    ${th('prest', te('provider'), 'width:160px;')}
-                    ${th('objet', te('objet'), 'width:300px;')}
-                    ${th('date', 'Date clôture', 'width:105px;')}
-                    <th style="width:160px;text-align:center;">${te('actions')}</th>
+                    ${th('ref', te('reference'), 'width:130px;')}
+                    ${th('prest', te('provider'), 'width:150px;')}
+                    ${th('objet', te('objet'))}
+                    ${th('date', 'Date clôture', 'width:125px;')}
+                    <th style="width:90px;text-align:center;">${te('actions')}</th>
                 </tr></thead>
                 <tbody>
                     ${rows.map(d => `<tr>
                         <td><strong>${_esc(d.reference || d.id)}</strong></td>
                         <td>${_esc(d.prestataire_nom || (prestById[d.prestataire_id] || {}).nom || '')}</td>
-                        <td>${_esc((d.notification_objet || d.objet_activite || '').substring(0, 50))}</td>
-                        <td>${_formatDate(d.date_fin_execution || '')}</td>
+                        <td>${_esc(d.notification_objet || d.objet_activite || '')}</td>
+                        <td style="white-space:nowrap;">${_formatDate(d.date_fin_execution || '')}</td>
                         <td style="text-align:center;white-space:nowrap;"><button class="btn btn-sm btn-outline" onclick="execOpenDossierSlider('${d.id}','notification')" title="${te('ouvrir_dossier')}">${EXEC_ICONS.openFolder}</button></td>
                     </tr>`).join('')}
                 </tbody>

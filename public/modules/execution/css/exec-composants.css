@@ -109,6 +109,20 @@
     padding-bottom: 0.3rem;
 }
 
+/* Boutons d'une cellule d'actions. La cellule reste une cellule : passée en
+   flex, elle ne suivait plus la hauteur de sa ligne et ses traits ne
+   s'alignaient plus sur les colonnes voisines. La disposition se fait ici,
+   dans un élément intérieur. « serre » resserre l'écart, « plie » laisse les
+   boutons passer à la ligne. */
+.exec-cellule-boutons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    vertical-align: middle;
+}
+.exec-cellule-boutons.serre { gap: 0.25rem; }
+.exec-cellule-boutons.plie { display: flex; flex-wrap: wrap; }
+
 .exec-data-table tbody tr.selected {
     background: var(--exec-accent-bg-hover);
 }

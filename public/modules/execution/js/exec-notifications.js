@@ -100,10 +100,10 @@ function _renderTabANotifier(items) {
                     <td>${_esc(a.type_supervision || '')}</td>
                     <td>${_esc(a.objet || '').substring(0, 50)}</td>
                     <td>${_daysUntilBadge(a.date_debut)}</td>
-                    <td style="display:flex;gap:0.4rem;justify-content:center;white-space:nowrap;">
+                    <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons">
                         <button class="btn btn-sm btn-outline" onclick="execShowContacts('${a.prestataire_id || ''}')" title="${te('contacts')}">${EXEC_ICONS.contact}</button>
                         <button class="btn btn-sm btn-accent" onclick="execStartNotification('${a.plan_id}', '${a.id}')" title="${te('renseigner')}">${EXEC_ICONS.fillForm}</button>
-                    </td>
+                    </div></td>
                 </tr>`).join('')}
             </tbody>
         </table>
@@ -135,7 +135,7 @@ function _renderTabBrouillons(items) {
                     <td>${_esc(n.prestataire_nom || '')}</td>
                     <td>${_esc(n.objet || '').substring(0, 50)}</td>
                     <td>${_formatDate(n.date_creation)}</td>
-                    <td style="display:flex;gap:0.4rem;justify-content:center;white-space:nowrap;">
+                    <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons">
                         <button class="btn btn-sm btn-outline" onclick="execEditNotification('${n.id}')" title="${te('continuer_edition')}">
                             ${EXEC_ICONS.edit}
                         </button>
@@ -145,7 +145,7 @@ function _renderTabBrouillons(items) {
                         <button class="btn btn-sm btn-danger" onclick="execDeleteBrouillon('${n.id}')" title="${te('delete')}">
                             ${EXEC_ICONS.delete}
                         </button>
-                    </td>
+                    </div></td>
                 </tr>`).join('')}
             </tbody>
         </table>
@@ -172,7 +172,7 @@ function _renderTabSoumis(items) {
                     <td>${_esc(n.prestataire_nom || '')}</td>
                     <td>${_esc(n.objet || '').substring(0, 50)}</td>
                     <td>${_execStatusBadge(n.statut)}</td>
-                    <td style="display:flex;gap:0.4rem;justify-content:center;white-space:nowrap;">
+                    <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons">
                         <button class="btn btn-sm btn-outline" onclick="execPreviewNotification('${n.id}')" title="${te('apercu')}">
                             ${EXEC_ICONS.eye}
                         </button>
@@ -187,7 +187,7 @@ function _renderTabSoumis(items) {
                         <button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;" onclick="execCancelNotification('${n.id}', 'soumis')" title="Annuler et retourner en brouillon">
                             ${EXEC_ICONS.undo}
                         </button>
-                    </td>
+                    </div></td>
                 </tr>`).join('')}
             </tbody>
         </table>
@@ -222,7 +222,7 @@ function _renderTabEnvoyes(items) {
                     <td>${_esc(n.prestataire_nom || '')}</td>
                     <td>${_esc(n.objet || '').substring(0, 50)}</td>
                     <td>${_execStatusBadge(n.statut)}</td>
-                    <td style="display:flex;gap:0.4rem;justify-content:center;white-space:nowrap;">
+                    <td style="text-align:center;white-space:nowrap;"><div class="exec-cellule-boutons">
                         <button class="btn btn-sm btn-outline" onclick="execToggleEnvoiPanel('${n.id}', this)" title="${te('valider_accord')}">
                             ${EXEC_ICONS.chevronDown}
                         </button>
@@ -236,7 +236,7 @@ function _renderTabEnvoyes(items) {
                         <button class="btn btn-sm btn-outline" style="color:#ef4444;border-color:#ef4444;" onclick="execCancelNotification('${n.id}', 'envoyes')" title="Annuler et retourner en brouillon">
                             ${EXEC_ICONS.undo}
                         </button>
-                    </td>
+                    </div></td>
                 </tr>
                 <tr id="exec_envoi_panel_${n.id}" style="display:none;">
                     <td colspan="5" style="background:var(--bg);padding:0.55rem 0.75rem;">

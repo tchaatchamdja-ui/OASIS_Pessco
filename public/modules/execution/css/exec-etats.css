@@ -36,8 +36,10 @@
    déjà la couleur pleine, et deux bandes foncées superposées ne se
    distinguaient plus. Un intitulé long (« Déclenchement attendu ») passe sur
    deux lignes : tenu sur une seule, il débordait sur la colonne voisine. */
-.exec-etats-table thead th {
-    height: 35px;
+.exec-etats-table thead th { height: 35px; }
+/* Menu « États » seulement : Constatations, Rapports et Mes utilisateurs
+   empruntent la même table, mais gardent leur en-tête. */
+.exec-etats .exec-etats-table thead th {
     white-space: normal;
     line-height: 1.25;
     vertical-align: middle;
@@ -51,8 +53,8 @@
 }
 /* Marges latérales resserrées (.5rem au lieu de .7rem) : sept colonnes de
    plus de 90 px et l'Objet logent ainsi sans défilement. */
-.exec-etats-table th,
-.exec-etats-table td { padding-left: .5rem; padding-right: .5rem; }
+.exec-etats .exec-etats-table th,
+.exec-etats .exec-etats-table td { padding-left: .5rem; padding-right: .5rem; }
 .exec-etats-table td.exec-etats-actions { overflow: visible; }
 /* Une date ne se coupe pas ; dans une période, la fin passe sous le début. */
 .exec-etats-date { white-space: nowrap; }
@@ -142,13 +144,17 @@
 
 /* Colonne « Consultation » : des icônes seules, centrées dans la cellule. */
 .exec-etats-actions {
-    text-align: center; white-space: normal; vertical-align: middle;
+    text-align: center; white-space: nowrap; vertical-align: middle;
 }
-.exec-etats-actions > * { vertical-align: middle; margin-block: .1rem; }
-/* Quatre boutons tiennent dans 140 px et cinq dans 170 ; au-delà, ils passent
-   à la ligne plutôt que de déborder. */
-.exec-etats-actions > * + * { margin-left: .2rem; }
-.exec-etats-actions .btn-icon-only { padding: .25rem .3rem; line-height: 0; }
+.exec-etats-actions > * { vertical-align: middle; }
+.exec-etats-actions > * + * { margin-left: .3rem; }
+.exec-etats-actions .btn-icon-only { padding: .25rem .45rem; line-height: 0; }
+/* Menu « États » : quatre boutons tiennent dans 140 px et cinq dans 170 ;
+   au-delà, ils passent à la ligne plutôt que de déborder. */
+.exec-etats .exec-etats-actions { white-space: normal; }
+.exec-etats .exec-etats-actions > * { margin-block: .1rem; }
+.exec-etats .exec-etats-actions > * + * { margin-left: .2rem; }
+.exec-etats .exec-etats-actions .btn-icon-only { padding: .25rem .3rem; }
 
 /* Bouton d'action de page aligné sur la hauteur des boutons du processus. */
 .exec-btn-27 {

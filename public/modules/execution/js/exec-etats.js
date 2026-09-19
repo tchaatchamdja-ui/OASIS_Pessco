@@ -418,13 +418,14 @@ function execEtatsRepartir() {
 //  Rendu
 // ══════════════════════════════════════
 // Les tables des états reprennent le format de la table des activités
-// (menu « Activités de Supervision ») : même densité, mêmes largeurs fixes,
-// même défilement horizontal — on passe de l'une à l'autre sans dépaysement.
+// (menu « Activités de Supervision ») : même densité, largeurs fixes sauf
+// l'Objet, qui prend ce qui reste. Elles logent en 920 px, sans défilement
+// horizontal barre latérale dépliée dès un écran de 1280 px.
 function execEtatsTableau(colonnes, lignesHtml, vide) {
   if (!lignesHtml) return `<p class="exec-etats-vide">${_esc(vide || te('no_data'))}</p>`;
   return `<div class="exec-etats-corps" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
     <table class="exec-data-table exec-compact-table exec-etats-table"
-      style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
+      style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
       <thead><tr>${colonnes.map((c) => {
         const style = [c.largeur ? `width:${c.largeur}` : '', c.centre ? 'text-align:center' : '']
           .filter(Boolean).join(';');
@@ -435,6 +436,9 @@ function execEtatsTableau(colonnes, lignesHtml, vide) {
   </div>`;
 }
 
+const execEtatsPeriode = (l) => `<span class="exec-etats-date">${_formatDate(l.debut)} →</span> `
+  + `<span class="exec-etats-date">${_formatDate(l.fin)}</span>`;
+
 const execEtatsOuvrir = (l) => `execOpenActiviteProcessus('${l.planId}','${l.activiteId}')`;
 
 // ── Onglet 1 : activités à déclencher ──
@@ -444,8 +448,8 @@ function execEtatsPanA_declencher(R) {
         onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}">
       <td>${_esc(l.prestataire || '—')}</td>
       <td>${_esc(l.objet || '—')}</td>
-      <td>${_formatDate(l.debut)}</td>
-      <td>${l.limite ? _formatDate(oasisJour(l.limite)) : '—'}</td>
+      <td class="exec-etats-date">${_formatDate(l.debut)}</td>
+      <td class="exec-etats-date">${l.limite ? _formatDate(oasisJour(l.limite)) : '—'}</td>
       <td>${execEtatsBadgeDelai(l.jours)}</td>
       <td>${_esc(l.responsable || '—')}</td>
       <td style="text-align:center;white-space:nowrap;">
@@ -463,10 +467,10 @@ function execEtatsPanA_declencher(R) {
         précède le début de ${EXEC_ETATS.delais.notification_avant_activite} jours.
       </p>
       ${execEtatsTableau([
-        { titre: 'Prestataire', largeur: '160px' }, { titre: 'Objet', largeur: '300px' },
-        { titre: 'Début', largeur: '95px' }, { titre: 'À notifier avant', largeur: '110px' },
-        { titre: 'Délai', largeur: '110px' }, { titre: 'Responsable', largeur: '150px' },
-        { titre: 'Action', largeur: '95px', centre: true },
+        { titre: 'Prestataire', largeur: '130px' }, { titre: 'Objet' },
+        { titre: 'Début', largeur: '95px' }, { titre: 'À notifier avant', largeur: '100px' },
+        { titre: 'Délai', largeur: '110px' }, { titre: 'Responsable', largeur: '130px' },
+        { titre: 'Action', largeur: '115px', centre: true },
       ], lignes, te('etats_vide_a_declencher'))}
     </div>`;
 }
@@ -492,7 +496,7 @@ function execEtatsPanEn_cours(R) {
         <td>${_esc(l.prestataire || '—')}</td>
         <td>${_esc(l.objet || '—')}</td>
         <td>${_esc((l.notif && l.notif.reference) || '—')}</td>
-        <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
+        <td>${execEtatsPeriode(l)}</td>
         <td>${execEtatsBadgeDelai(l.jours)}</td>
         <td style="text-align:center;white-space:nowrap;">
           <button class="btn btn-sm btn-outline" onclick="execEtatsRappel('${l.planId}','${l.activiteId}','${_escAttr(s.titre)}')">
@@ -514,9 +518,9 @@ function execEtatsPanEn_cours(R) {
         </summary>
         <div class="exec-etats-section-corps">
           ${execEtatsTableau([
-            { titre: 'Prestataire', largeur: '160px' }, { titre: 'Objet', largeur: '300px' },
-            { titre: 'Référence', largeur: '140px' }, { titre: 'Période', largeur: '170px' },
-            { titre: s.echeance, largeur: '120px' }, { titre: 'Action', largeur: '95px', centre: true },
+            { titre: 'Prestataire', largeur: '130px' }, { titre: 'Objet' },
+            { titre: 'Référence', largeur: '130px' }, { titre: 'Période', largeur: '110px' },
+            { titre: s.echeance, largeur: '125px' }, { titre: 'Action', largeur: '115px', centre: true },
           ], lignes, 'Rien en attente.')}
         </div>
       </details>`;
@@ -539,7 +543,7 @@ function execEtatsPanEn_vie(R) {
         <td>${_esc(l.prestataire || '—')}</td>
         <td>${_esc(l.objet || '—')}</td>
         <td>${_esc(n.reference || '—')}</td>
-        <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
+        <td>${execEtatsPeriode(l)}</td>
         <td>${l.arretee
           ? `<span class="exec-statut-etape arrete" title="${_escAttr(n.motif_arret || '')}">${te('arrete_badge')}</span>`
           : etape}</td>
@@ -572,9 +576,9 @@ function execEtatsPanEn_vie(R) {
         se poursuivre s'arrête : il reste consultable et peut être archivé, ou repris.
       </p>
       ${execEtatsTableau([
-        { titre: 'Prestataire', largeur: '160px' }, { titre: 'Objet', largeur: '300px' },
-        { titre: 'Référence', largeur: '140px' }, { titre: 'Période', largeur: '170px' },
-        { titre: 'Étape', largeur: '150px' },
+        { titre: 'Prestataire', largeur: '130px' }, { titre: 'Objet' },
+        { titre: 'Référence', largeur: '130px' }, { titre: 'Période', largeur: '110px' },
+        { titre: 'Étape', largeur: '115px' },
         { titre: 'Consultation', largeur: '170px', centre: true },
       ], lignes, te('etats_vide_en_cours'))}
     </div>`;
@@ -594,7 +598,7 @@ function execEtatsPanClos(items, archivees) {
           ${d ? `onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}"` : ''}>
         <td>${_esc(l.prestataire || '—')}</td>
         <td>${_esc(l.objet || '—')}</td>
-        <td>${_formatDate(l.debut)} → ${_formatDate(l.fin)}</td>
+        <td>${execEtatsPeriode(l)}</td>
         <td>${d ? _esc(d.reference || '') : '<span style="color:var(--text-muted);">' + te('non_declenchee') + '</span>'}</td>
         <td>${rapport ? _esc(rapport.reference || '') : '—'}</td>
         <td>${dateArchivage || dateCloture ? _formatDate(archivees ? dateArchivage : dateCloture) : '—'}</td>
@@ -620,14 +624,14 @@ function execEtatsPanClos(items, archivees) {
   };
 
   const colonnes = [
-    // Huit colonnes : l'objet cède la place pour que la consultation reste
-    // visible sans faire défiler la table.
-    { titre: 'Prestataire', largeur: '150px' }, { titre: 'Objet', largeur: '190px' },
-    { titre: 'Période', largeur: '160px' }, { titre: 'Dossier', largeur: '120px' },
-    { titre: 'Rapport', largeur: '120px' },
+    // Huit colonnes : l'objet prend ce qui reste, pour que la consultation
+    // reste visible sans faire défiler la table.
+    { titre: 'Prestataire', largeur: '115px' }, { titre: 'Objet' },
+    { titre: 'Période', largeur: '110px' }, { titre: 'Dossier', largeur: '115px' },
+    { titre: 'Rapport', largeur: '115px' },
     { titre: archivees ? 'Archivé le' : 'Clôturé le', largeur: '95px' },
     ...(archivees ? [] : [{ titre: 'À archiver avant', largeur: '110px' }]),
-    { titre: 'Consultation', largeur: '150px', centre: true },
+    { titre: 'Consultation', largeur: '140px', centre: true },
   ];
   const intro = archivees
     ? 'Activités archivées, une à une ou avec leur plan de surveillance. Les pièces '

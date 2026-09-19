@@ -31,11 +31,16 @@
 .exec-etats-intro { font-size: .78rem; color: var(--text-muted); margin: .1rem 0 .7rem; }
 .exec-etats-vide { font-size: .8rem; color: var(--text-muted); font-style: italic; padding: .4rem 0; }
 /* Format repris de la table des activités : largeurs fixes, texte tronqué
-   plutôt que colonnes déformées, en-tête de 35 px. L'en-tête prend la teinte
-   claire du thème : le bandeau de section, juste au-dessus, porte déjà la
-   couleur pleine, et deux bandes foncées superposées ne se distinguaient plus. */
+   plutôt que colonnes déformées, en-tête de 35 px au moins. L'en-tête prend
+   la teinte claire du thème : le bandeau de section, juste au-dessus, porte
+   déjà la couleur pleine, et deux bandes foncées superposées ne se
+   distinguaient plus. Un intitulé long (« Déclenchement attendu ») passe sur
+   deux lignes : tenu sur une seule, il débordait sur la colonne voisine. */
 .exec-etats-table thead th {
     height: 35px;
+    white-space: normal;
+    line-height: 1.25;
+    vertical-align: middle;
     background: color-mix(in srgb, var(--primary) 14%, var(--bg-card, #fff));
     color: var(--text);
     border-bottom: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
@@ -44,7 +49,13 @@
     overflow: hidden; text-overflow: ellipsis;
     vertical-align: middle;
 }
+/* Marges latérales resserrées (.5rem au lieu de .7rem) : sept colonnes de
+   plus de 90 px et l'Objet logent ainsi sans défilement. */
+.exec-etats-table th,
+.exec-etats-table td { padding-left: .5rem; padding-right: .5rem; }
 .exec-etats-table td.exec-etats-actions { overflow: visible; }
+/* Une date ne se coupe pas ; dans une période, la fin passe sous le début. */
+.exec-etats-date { white-space: nowrap; }
 
 /* Mes utilisateurs : des lignes assez hautes pour leurs pastilles, un
    courriel qui se lit d'un trait, et des colonnes qui ne se serrent plus. */
@@ -131,11 +142,13 @@
 
 /* Colonne « Consultation » : des icônes seules, centrées dans la cellule. */
 .exec-etats-actions {
-    text-align: center; white-space: nowrap; vertical-align: middle;
+    text-align: center; white-space: normal; vertical-align: middle;
 }
-.exec-etats-actions > * { vertical-align: middle; }
-.exec-etats-actions > * + * { margin-left: .3rem; }
-.exec-etats-actions .btn-icon-only { padding: .25rem .45rem; line-height: 0; }
+.exec-etats-actions > * { vertical-align: middle; margin-block: .1rem; }
+/* Quatre boutons tiennent dans 140 px et cinq dans 170 ; au-delà, ils passent
+   à la ligne plutôt que de déborder. */
+.exec-etats-actions > * + * { margin-left: .2rem; }
+.exec-etats-actions .btn-icon-only { padding: .25rem .3rem; line-height: 0; }
 
 /* Bouton d'action de page aligné sur la hauteur des boutons du processus. */
 .exec-btn-27 {

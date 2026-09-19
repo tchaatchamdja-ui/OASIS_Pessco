@@ -160,7 +160,8 @@ module.exports = async function () {
 const SANS_ACCENT_PT = ['constituida', 'constituidas', 'constituido', 'constituidos', 'decisoria', 'decisorio',
   'incluida', 'incluidas', 'incluido', 'incluidos', 'excluida', 'excluidas', 'excluido', 'excluidos',
   'substituida', 'substituido', 'especifico', 'especifica', 'avancar', 'tambem', 'ultimo', 'ultima',
-  'codigo', 'periodo', 'analise', 'pagina', 'inicio', 'obrigatorio', 'obrigatoria', 'relatorio', 'nao'];
+  'codigo', 'periodo', 'analise', 'pagina', 'inicio', 'obrigatorio', 'obrigatoria', 'relatorio', 'nao',
+  'mantem'];
 
 function controlerAccentsPortugais() {
   const tables = [

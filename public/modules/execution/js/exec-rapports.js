@@ -73,15 +73,15 @@ function execRenderRapports() {
         <div class="card">
           <div class="exec-etats-corps" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
             <table class="exec-data-table exec-compact-table exec-etats-table"
-                style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
+                style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
                 <thead>
                     <tr>
-                        <th style="width:150px;">${te('ref_rapport')}</th>
-                        <th style="width:320px;">${te('titre_rapport')} & ${te('provider')}</th>
-                        <th style="width:170px;">${te('domaine')}</th>
-                        <th style="width:130px;">${te('date_transmission')}</th>
-                        <th style="width:120px;">${te('statut')}</th>
-                        <th style="width:130px;text-align:center;">${te('actions')}</th>
+                        <th style="width:140px;">${te('ref_rapport')}</th>
+                        <th>${te('titre_rapport')} & ${te('provider')}</th>
+                        <th style="width:150px;">${te('domaine')}</th>
+                        <th style="width:100px;">${te('date_transmission')}</th>
+                        <th style="width:100px;">${te('statut')}</th>
+                        <th style="width:110px;text-align:center;">${te('actions')}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -94,7 +94,7 @@ function execRenderRapports() {
                                 <div style="font-size:0.78rem;color:var(--text-muted);">${_esc(r.prestataire_nom || '')}${r.notification_ref ? ' | ' + _esc(r.notification_ref) : ''}</div>
                             </td>
                             <td>${_esc(r.prestataire_domaine_nom || r.prestataire_domaine_code || '-')}</td>
-                            <td>${_formatDate(r.date_transmission || '')}</td>
+                            <td style="white-space:nowrap;">${_formatDate(r.date_transmission || '')}</td>
                             <td>${_execStatusBadge(r.statut)}</td>
                             <td class="exec-etats-actions">
                                 <button class="btn btn-outline btn-sm" onclick="execDownloadRapport('${r.id}')" title="${te('apercu_pdf')}">

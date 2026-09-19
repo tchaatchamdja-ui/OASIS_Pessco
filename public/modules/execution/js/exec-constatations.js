@@ -109,7 +109,7 @@ function _execRenderConstaRows(filtered) {
             <td>${_esc(c.prestataire_nom || '')}</td>
             <td>${_esc(domNom)}</td>
             <td>${_execGraviteBadge(c.criticite || c.gravite)}</td>
-            <td>${dueDate ? _formatDate(dueDate) : '-'}</td>
+            <td style="white-space:nowrap;">${dueDate ? _formatDate(dueDate) : '-'}</td>
             <td>${dueDate ? _daysUntilBadge(dueDate) : '-'}</td>
             <td>${_execStatusBadge(c.statut)}</td>
             <td class="exec-etats-actions" onclick="event.stopPropagation();">
@@ -180,13 +180,13 @@ function _execRenderConstaList(subNav) {
         <div class="card">
           <div class="exec-etats-corps" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
             <table class="exec-data-table exec-compact-table exec-etats-table"
-                style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
+                style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
               <thead><tr>
-                <th style="width:160px;">${te('ref_consta')}</th><th style="width:180px;">${te('provider')}</th>
-                <th style="width:190px;">${te('domaine')}</th><th style="width:110px;">${te('criticite')}</th>
-                <th style="width:100px;">${te('date_due')}</th><th style="width:100px;">${te('echeance')}</th>
-                <th style="width:130px;">${te('statut_pac')}</th>
-                <th style="width:130px;text-align:center;">${te('actions')}</th>
+                <th style="width:150px;">${te('ref_consta')}</th><th style="width:150px;">${te('provider')}</th>
+                <th>${te('domaine')}</th><th style="width:90px;">${te('criticite')}</th>
+                <th style="width:100px;">${te('date_due')}</th><th style="width:95px;">${te('echeance')}</th>
+                <th style="width:105px;">${te('statut_pac')}</th>
+                <th style="width:110px;text-align:center;">${te('actions')}</th>
               </tr></thead>
               <tbody>${_execRenderConstaRows(filtered)}</tbody>
             </table>
@@ -217,13 +217,13 @@ function _execRenderConstaSuivi(subNav) {
         <div class="card">
           <div class="exec-etats-corps" style="padding:0 0.75rem 0.75rem;overflow-x:auto;">
             <table class="exec-data-table exec-compact-table exec-etats-table"
-                style="font-size:0.8rem;table-layout:fixed;min-width:1020px;">
+                style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
               <thead><tr>
-                <th style="width:160px;">${te('ref_consta')}</th><th style="width:180px;">${te('provider')}</th>
-                <th style="width:190px;">${te('domaine')}</th><th style="width:110px;">${te('criticite')}</th>
-                <th style="width:100px;">${te('date_due')}</th><th style="width:100px;">${te('echeance')}</th>
-                <th style="width:130px;">${te('statut_pac')}</th>
-                <th style="width:130px;text-align:center;">${te('actions')}</th>
+                <th style="width:150px;">${te('ref_consta')}</th><th style="width:150px;">${te('provider')}</th>
+                <th>${te('domaine')}</th><th style="width:90px;">${te('criticite')}</th>
+                <th style="width:100px;">${te('date_due')}</th><th style="width:95px;">${te('echeance')}</th>
+                <th style="width:105px;">${te('statut_pac')}</th>
+                <th style="width:110px;text-align:center;">${te('actions')}</th>
               </tr></thead>
               <tbody>${_execRenderConstaRows(filtered)}</tbody>
             </table>

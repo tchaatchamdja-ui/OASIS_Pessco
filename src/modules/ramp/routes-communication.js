@@ -247,6 +247,64 @@ module.exports = function register(app, deps, M) {
   });
 
   // ══════════════════════════════════════
+  //  Écarts relevés par tous les États
+  // ══════════════════════════════════════
+  // Les inspections restent à l'AAC qui les tient — un État ne compte pas les
+  // inspections d'un autre dans ses tableaux. Les écarts, eux, se regardent
+  // ensemble : c'est l'objet même du dispositif régional, et c'est de là que
+  // part une requête. Cet écran est donc la seule lecture du module qui
+  // franchisse les instances, et il ne sert qu'à lire — rien ne s'y modifie.
+  //
+  // Ce qui en sort est réduit à ce que l'écran montre et à ce qu'une requête
+  // désigne : ni preuves déposées, ni plan d'actions correctives, qui
+  // appartiennent au suivi de l'État qui l'a relevé.
+  const vueEcartRegional = (e) => ({
+    id: e.id,
+    inspection_id: e.inspection_id,
+    itemCode: e.itemCode || '',
+    stdRef: e.stdRef || '',
+    description: e.description || '',
+    categorie: e.categorie === undefined ? '' : e.categorie,
+    action: e.action || '',
+    suivi: e.suivi || '',
+  });
+
+  app.get(`${M}/ecarts-regionaux`, requireAuth, (req, res) => {
+    if (!gardeAac(req, res)) return undefined;
+    if (!R.canRead(req.user)) return refuser(res);
+    const parInspection = new Map();
+    db.list('ecarts').forEach((e) => {
+      if (!parInspection.has(e.inspection_id)) parInspection.set(e.inspection_id, []);
+      parInspection.get(e.inspection_id).push(vueEcartRegional(e));
+    });
+    // Une inspection sans écart n'a rien à dire ici : la table est celle des
+    // constats.
+    const inspections = db.list('inspections')
+      .filter((i) => (parInspection.get(i.id) || []).length)
+      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
+      .map((i) => ({
+        id: i.id,
+        date: i.date || '',
+        pays: i.pays || '',
+        exploitant: i.exploitant || '',
+        aeronef: i.aeronef || '',
+        immatriculation: i.immatriculation || '',
+        vol: i.vol || '',
+        status: i.status || '',
+        itemsInspectes: i.itemsInspectes || 0,
+        poi_id: i.poi_id || '',
+        poi_reference: i.poi_reference || '',
+        anomalies: parInspection.get(i.id),
+      }));
+    return res.json({
+      inspections,
+      etats: etatsUemoa(),
+      mes_etats: mesEtats(req),
+      peut_ecrire: R.canContribute(req.user) || admin(req),
+    });
+  });
+
+  // ══════════════════════════════════════
   //  Pièces jointes
   // ══════════════════════════════════════
   // Une pièce accompagne soit la requête elle-même, soit l'un de ses échanges.

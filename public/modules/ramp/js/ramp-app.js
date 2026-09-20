@@ -215,6 +215,10 @@ const RAMP_ICONS = {
     chevronBas: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
     toggle: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="22" height="12" rx="6"/><circle cx="16" cy="12" r="3" fill="currentColor"/></svg>',
     clipboard: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 2h6a1 1 0 0 1 1 1v2H8V3a1 1 0 0 1 1-1z"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="13" y2="15"/></svg>',
+    // Le partage : un point qui en rejoint deux autres — ce qu'un État met à
+    // la disposition des autres. L'icône du carnet d'adresses servait ici et
+    // au menu « Contacts » : deux menus, une seule image.
+    partage: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
     plane: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.12 2.12 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7L8 11l-2 3H3l2 3 3 2 1-3 3-2 3.1 4.1a1 1 0 0 0 1.7-.9z"/></svg>',
 };
 
@@ -232,8 +236,9 @@ const RAMP_NAV = {
     // entrée : ce sont deux lectures que l'on ouvre directement.
     etats: { cle: 'nav_inspections', icon: 'list' },
     ecarts: { cle: 'nav_ecarts', icon: 'warning' },
-    // Requêtes entre États membres : hors de la vue Prestataire.
-    communication: { cle: 'nav_communication', icon: 'contacts', aac: true },
+    // Ce que les États membres mettent en commun — écarts régionaux, requêtes,
+    // transmissions partagées : hors de la vue Prestataire.
+    partages: { cle: 'nav_partages', icon: 'partage', aac: true },
     depot: { cle: 'nav_depot', icon: 'inbox' },
     contacts: { cle: 'nav_contacts', icon: 'contacts' },
     parametres: { cle: 'nav_parametres', icon: 'settings' },
@@ -1048,7 +1053,7 @@ function rampCorpsDeLaPage() {
         case 'contacts': return rampRenderContacts();
         case 'parametres': return rampRenderParametres();
         case 'utilisateurs': return rampRenderMesUtilisateurs();
-        case 'communication': return rampRenderCommunication();
+        case 'partages': return rampRenderCommunication();
         default: return rampRenderDashboard();
     }
 }

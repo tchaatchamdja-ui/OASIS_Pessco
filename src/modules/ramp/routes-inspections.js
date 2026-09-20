@@ -189,7 +189,9 @@ module.exports = function register(app, deps, M) {
 
   app.put(`${M}/inspections/:id`, requireAuth, (req, res) => {
     const i = db.get('inspections', req.params.id);
-    if (!i) return introuvable(res, 'inspection');
+    // Une inspection qu'on ne voit pas ne se modifie pas : elle appartient à
+    // une autre AAC, et rien ne se corrige à distance.
+    if (!vues.voitInspection(req, i, loadConfig)) return introuvable(res, 'inspection');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
       return horsPerimetre(res, 'inspection', i.pays);
@@ -205,6 +207,11 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/inspections/:id`, requireAuth, (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
+    // Pas davantage qu'elle ne se modifie, une inspection d'une autre instance
+    // ne se supprime d'ici.
+    if (!vues.voitInspection(req, db.get('inspections', req.params.id), loadConfig)) {
+      return introuvable(res, 'inspection');
+    }
     const ecarts = db.list('ecarts').filter((e) => e.inspection_id === req.params.id);
     // Un écart repris par « Mesures d'Application » fonde ce qui y a été
     // décidé : l'inspection qui le porte ne se supprime plus.

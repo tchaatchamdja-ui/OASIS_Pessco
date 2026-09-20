@@ -1194,8 +1194,10 @@ button.ramp-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 /* Sous-menus : des boutons de même largeur, jamais moins de 150 px.
    Les colonnes se partagent la largeur à parts égales et passent à la ligne
    dès qu'elles n'y tiennent plus — aucun rang ne défile, rien n'est coupé. */
+/* Les boutons tiennent un quart de moins qu'à l'origine : trois sous-menus
+   s'alignent sans occuper la largeur de la page. */
 .ramp-onglets {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 240px));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(113px, 180px));
     justify-content: start;
     gap: .2rem; border-bottom: 2px solid var(--border); margin-bottom: 1rem;
 }

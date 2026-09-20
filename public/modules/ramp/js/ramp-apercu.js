@@ -17,7 +17,12 @@
 // sur le papier.
 
 async function rampOuvrirApercu(id) {
-    RAMP_STATE.apercu = RAMP_STATE.data.inspections.find((i) => i.id === id) || null;
+    // L'inspection vient des données de l'instance ; ouverte depuis les écarts
+    // régionaux, elle appartient à un autre État et c'est cet écran qui la
+    // tient. Le rapport, lui, se lit quel que soit l'État qui l'a établi.
+    RAMP_STATE.apercu = RAMP_STATE.data.inspections.find((i) => i.id === id)
+        || (typeof rampComInspectionRegionale === 'function' ? rampComInspectionRegionale(id) : null)
+        || null;
     RAMP_STATE.apercuPoi = null;
     rampRenderPage();
     const insp = RAMP_STATE.apercu;

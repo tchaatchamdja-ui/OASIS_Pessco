@@ -1,5 +1,11 @@
 /* OASIS — Module « RAMP Inspections »
- * Menu « Communication » : requêtes entre États membres.
+ * Menu « Partages » : ce que les États membres mettent en commun.
+ *
+ * Trois sous-menus. Les écarts régionaux d'abord : tous les constats relevés
+ * par les États membres, quelle que soit l'AAC qui tient l'inspection — la
+ * seule lecture du module qui franchisse les instances, et le point de départ
+ * d'une requête. Viennent ensuite les requêtes elles-mêmes, puis les
+ * transmissions qu'un État met à la disposition des autres.
  *
  * Un État écrit à un ou plusieurs autres au sujet d'une inspection, parfois
  * d'un écart précis. Le fil reste attaché à ce dont il parle, accepte des
@@ -17,9 +23,14 @@ const RAMP_COM = {
     // Pièces déposées avant l'envoi : elles n'existent au serveur qu'une fois
     // la requête ou l'échange créé, on les garde donc ici en attendant.
     enAttente: [],
-    // Sous-menu affiché : les requêtes, ou les transmissions mises à
-    // disposition par d'autres États.
-    onglet: 'requetes',
+    // Sous-menu affiché : les écrans s'ouvrent sur les écarts régionaux, d'où
+    // partent les requêtes ; viennent ensuite les requêtes elles-mêmes et les
+    // transmissions mises à disposition par d'autres États.
+    onglet: 'regional',
+    // Écarts relevés par tous les États : les inspections arrivent avec les
+    // leurs, comme sur les écrans du module.
+    regionales: [], regionalDemande: false, regionalChargement: false,
+    filtresRegional: { etat: '', exploitant: '', categorie: '', recherche: '' },
     partages: [], partagesDemandes: false, partageOuvert: null,
     // Lettres d'un partage dépliées : repliées d'office — on vient d'abord y
     // chercher les pièces jointes.
@@ -57,6 +68,26 @@ async function rampChargerPartages() {
     rampRenderPage();
 }
 
+// Les écarts de tous les États. Une seule route, et elle ne sert qu'à lire :
+// ce que l'écran en fait, c'est une table et des requêtes.
+async function rampChargerEcartsRegionaux() {
+    RAMP_COM.regionalChargement = true;
+    try {
+        const r = await rampApi('/ecarts-regionaux');
+        RAMP_COM.regionales = r.inspections || [];
+        if (!RAMP_COM.etats.length) RAMP_COM.etats = r.etats || [];
+        if (!RAMP_COM.mesEtats.length) RAMP_COM.mesEtats = r.mes_etats || [];
+        // L'écran s'ouvre sur cet onglet : le bouton de requête doit savoir
+        // s'il a lieu d'être sans attendre le chargement des requêtes.
+        RAMP_COM.peutEcrire = !!r.peut_ecrire;
+    } catch (e) {
+        rampToast(e.message || rt('m_chargement_impossible'), 'error');
+        RAMP_COM.regionales = [];
+    }
+    RAMP_COM.regionalChargement = false;
+    rampRenderPage();
+}
+
 function rampComOnglet(cle) {
     RAMP_COM.onglet = cle;
     if (cle === 'partages' && !RAMP_COM.partagesDemandes) {
@@ -65,6 +96,10 @@ function rampComOnglet(cle) {
     }
     rampRenderPage();
 }
+
+// L'inspection d'un écart régional, pour l'aperçu du rapport : elle ne figure
+// pas dans les données de l'instance, l'écran la tient de sa propre liste.
+const rampComInspectionRegionale = (id) => (RAMP_COM.regionales || []).find((i) => i.id === id) || null;
 
 // ══════════════════════════════════════
 //  Liste des requêtes
@@ -124,20 +159,28 @@ function rampRenderCommunication() {
         onclick="rampComOnglet(${_rArg(cle)})">${libelle}</button>`;
 
     const onglets = `<div class="ramp-onglets">
+        ${onglet('regional', rt('com_onglet_regional'))}
         ${onglet('requetes', rt('com_onglet_requetes'))}
         ${onglet('partages', rt('com_onglet_partages'))}
     </div>`;
 
+    if (RAMP_COM.onglet === 'regional') {
+        return `
+        <div class="ramp-page-header"><h2>${rt('nav_partages')}</h2></div>
+        ${onglets}
+        ${rampComRegionalHtml()}`;
+    }
+
     if (RAMP_COM.onglet === 'partages') {
         return `
-        <div class="ramp-page-header"><h2>${rt('nav_communication')}</h2></div>
+        <div class="ramp-page-header"><h2>${rt('nav_partages')}</h2></div>
         ${onglets}
         ${rampComPartagesHtml()}`;
     }
 
     return `
     <div class="ramp-page-header">
-        <h2>${rt('nav_communication')}</h2>
+        <h2>${rt('nav_partages')}</h2>
         ${RAMP_COM.peutEcrire ? `<button class="btn btn-primary btn-sm" onclick="rampComNouvelle()">
             ${RAMP_ICONS.add} ${rt('com_nouvelle')}</button>` : ''}
     </div>
@@ -200,6 +243,134 @@ function rampComLigne(r) {
         <td class="ramp-cell-actions">
             <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampComOuvrir(${_rArg(r.id)})"
                     title="${_rAttr(rt('com_ouvrir_fil'))}">${RAMP_ICONS.eye}</button>
+        </td>
+    </tr>`;
+}
+
+// ══════════════════════════════════════
+//  Écarts relevés par tous les États
+// ══════════════════════════════════════
+// La table des constats du dispositif entier. Chaque ligne mène à deux gestes :
+// lire le rapport de l'inspection qui l'a relevé — il se consulte quel que soit
+// l'État qui le tient —, ou ouvrir une requête déjà remplie de ce que l'écart
+// dit de lui-même.
+
+function rampComRegFiltre(cle, valeur) {
+    RAMP_COM.filtresRegional[cle] = valeur;
+    rampRenderPage();
+}
+
+function rampComRegReset() {
+    RAMP_COM.filtresRegional = { etat: '', exploitant: '', categorie: '', recherche: '' };
+    rampRenderPage();
+}
+
+// Les écarts à plat, chacun portant son inspection, comme sur l'écran « Écarts »
+// du module.
+function rampComRegEcarts() {
+    const F = RAMP_COM.filtresRegional;
+    const q = _rNorm(F.recherche);
+    const lignes = [];
+    (RAMP_COM.regionales || []).forEach((i) => {
+        if (F.etat && i.pays !== F.etat) return;
+        if (F.exploitant && i.exploitant !== F.exploitant) return;
+        (i.anomalies || []).forEach((a) => {
+            if (F.categorie && String(a.categorie) !== F.categorie) return;
+            if (q && ![a.itemCode, a.description, a.stdRef, a.suivi,
+                i.exploitant, i.immatriculation, i.aeronef, i.poi_reference, i.pays]
+                .some((v) => _rNorm(v).includes(q))) return;
+            lignes.push({ ...a, inspection: i });
+        });
+    });
+    return lignes;
+}
+
+// Valeurs encore proposables : celles que porte la liste régionale, non celles
+// de l'instance — ce sont les exploitants de tous les États qu'on filtre ici.
+const rampComRegValeurs = (champ) => [...new Set((RAMP_COM.regionales || [])
+    .map((i) => i[champ]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'fr'));
+
+function rampComRegionalHtml() {
+    if (!RAMP_COM.regionalDemande) {
+        RAMP_COM.regionalDemande = true;
+        setTimeout(rampChargerEcartsRegionaux, 0);
+    }
+    const F = RAMP_COM.filtresRegional;
+    const lignes = rampComRegEcarts();
+    const etats = new Set(lignes.map((a) => a.inspection.pays).filter(Boolean));
+    const cats = rampFamille('categories');
+    const opt = (v, l, cur) => `<option value="${_rAttr(v)}" ${
+        String(cur) === String(v) ? 'selected' : ''}>${_rEsc(l)}</option>`;
+
+    return `
+    <p class="ramp-note">${rt('reg_aide')}</p>
+    <div class="ramp-filtres">
+        <select class="ramp-select" onchange="rampComRegFiltre('etat', this.value)">
+            <option value="">${rt('f_etats')}</option>
+            ${rampComRegValeurs('pays').map((v) => opt(v, v, F.etat)).join('')}
+        </select>
+        <select class="ramp-select" onchange="rampComRegFiltre('exploitant', this.value)">
+            <option value="">${rt('f_exploitants')}</option>
+            ${rampComRegValeurs('exploitant').map((v) => opt(v, v, F.exploitant)).join('')}
+        </select>
+        <select class="ramp-select" onchange="rampComRegFiltre('categorie', this.value)">
+            <option value="">${rt('f_categories')}</option>
+            ${['1', '2', '3'].map((c) => {
+        const t = cats.find((x) => String(x.code) === c);
+        return opt(c, t ? t.label : c, F.categorie);
+    }).join('')}
+        </select>
+        <div class="ramp-recherche-boite">
+            <input type="text" placeholder="${_rAttr(rt('f_rechercher'))}…" value="${_rAttr(F.recherche)}"
+                   oninput="rampComRegFiltre('recherche', this.value)">
+        </div>
+        <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampComRegReset()"
+                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+    </div>
+    <p class="ramp-sous-titre">${rt('reg_resume', lignes.length, etats.size)}</p>
+    <div class="ramp-card" style="padding:0;">
+        <div class="ramp-table-wrap">
+            <table class="ramp-table">
+                <thead><tr>
+                    <th style="width:95px;">${rt('c_date')}</th>
+                    <th style="width:110px;">${rt('c_etat')}</th>
+                    <th style="width:15%;">${rt('c_exploitant')}</th>
+                    <th style="width:105px;">${rt('c_immat_court')}</th>
+                    <th style="width:75px;">${rt('c_item')}</th>
+                    <th>${rt('c_description')}</th>
+                    <th style="width:70px;text-align:center;">${rt('c_categorie')}</th>
+                    <th style="width:110px;">${rt('c_statut')}</th>
+                    <th style="width:80px;text-align:center;">${rt('c_voir')}</th>
+                </tr></thead>
+                <tbody>${RAMP_COM.regionalChargement
+        ? `<tr><td colspan="9" class="ramp-table-vide">${rt('u_chargement')}</td></tr>`
+        : (lignes.length
+            ? lignes.map(rampComRegLigne).join('')
+            : `<tr><td colspan="9" class="ramp-table-vide">${rt('reg_aucun')}</td></tr>`)}
+                </tbody>
+            </table>
+        </div>
+    </div>`;
+}
+
+function rampComRegLigne(a) {
+    const i = a.inspection;
+    return `<tr>
+        <td style="white-space:nowrap;">${_rEsc(rampDate(i.date))}</td>
+        <td>${_rEsc(i.pays || '—')}</td>
+        <td><strong>${_rEsc(i.exploitant || '—')}</strong></td>
+        <td>${_rEsc(i.immatriculation || '—')}</td>
+        <td><strong class="ramp-code">${_rEsc(a.itemCode || '—')}</strong></td>
+        <td class="ramp-ecart-desc">${_rEsc(a.description || '—')}</td>
+        <td style="text-align:center;">${rampBadgeCat(a.categorie)}</td>
+        <td>${_rEsc(a.suivi || i.status || '—')}</td>
+        <td class="ramp-cell-actions">
+            <button class="btn btn-outline btn-sm ramp-btn-icone"
+                    onclick="rampOuvrirApercu(${_rArg(i.id)})"
+                    title="${_rAttr(rt('reg_rapport'))}">${RAMP_ICONS.eye}</button>
+            ${RAMP_COM.peutEcrire ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
+                    onclick="rampComRequeteEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
+                    title="${_rAttr(rt('reg_requete'))}">${RAMP_ICONS.contacts}</button>` : ''}
         </td>
     </tr>`;
 }
@@ -356,6 +527,44 @@ function rampComNouvelle() {
     rampVoletCommunication();
 }
 
+// Requête ouverte depuis un écart régional. Ce que l'écart dit de lui-même
+// remplit le formulaire : l'inspection et le constat sont désignés, l'objet et
+// le message les reprennent, et l'État qui a conduit l'inspection est coché —
+// c'est lui qui sait ce qu'il en est advenu. On n'écrit pas au sien.
+function rampComRequeteEcart(inspectionId, ecartId) {
+    const insp = rampComInspectionRegionale(inspectionId);
+    if (!insp) return;
+    const ec = (insp.anomalies || []).find((a) => a.id === ecartId) || null;
+    const miens = RAMP_COM.mesEtats || [];
+    RAMP_COM.brouillon = {
+        objet: rt('com_objet_ecart', ec ? (ec.itemCode || '') : '',
+            insp.exploitant || '', insp.immatriculation || ''),
+        message: ec ? rt('com_message_ecart', ec.itemCode || '', rampDate(insp.date),
+            insp.immatriculation || '', insp.exploitant || '', ec.description || '') : '',
+        etats_destinataires: (insp.pays && !miens.includes(insp.pays)) ? [insp.pays] : [],
+        etat_emetteur: miens[0] || '',
+        inspection_id: inspectionId,
+        ecart_id: ec ? ec.id : '',
+        // L'inspection visée ne figure pas dans les données de l'instance : le
+        // brouillon la porte, sans quoi le formulaire ne pourrait pas la
+        // montrer ni dire ce qu'il désigne.
+        designation: { inspection: insp, ecart: ec },
+        cible: { annee: '', etat: '', exploitant: '', immatriculation: '', recherche: '' },
+    };
+    RAMP_COM.enAttente = [];
+    rampVoletCommunication();
+}
+
+// Revenir au choix ordinaire : la désignation tombe, le formulaire retrouve
+// ses filtres et sa table d'inspections.
+function rampComRetirerDesignation() {
+    if (!RAMP_COM.brouillon) return;
+    RAMP_COM.brouillon.designation = null;
+    RAMP_COM.brouillon.inspection_id = '';
+    RAMP_COM.brouillon.ecart_id = '';
+    rampVoletCommunication();
+}
+
 // Inspections répondant aux filtres de désignation.
 function rampComInspections() {
     const c = (RAMP_COM.brouillon || {}).cible || {};
@@ -470,6 +679,33 @@ function rampVoletCommunication() {
     RAMP_STATE.voletRejouer = rampVoletCommunication;
 }
 
+// L'écart désigné, tel que la requête le porte : une lecture, non un choix.
+// Le bouton rend la main à la désignation ordinaire.
+function rampComDesignationHtml(d) {
+    const i = d.inspection || {};
+    const e = d.ecart;
+    const ligne = (cle, valeur) => (valeur
+        ? `<div class="ramp-poi-recap-ligne"><i>${rt(cle)}</i><span>${_rEsc(valeur)}</span></div>` : '');
+    return `
+    <div class="ramp-card">
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('reg_designe')}</div>
+        <p class="ramp-sous-titre">${rt('reg_designe_aide')}</p>
+        <div class="ramp-poi-recap">
+            ${ligne('c_poi', i.poi_reference)}
+            ${ligne('c_date', i.date ? rampDate(i.date) : '')}
+            ${ligne('c_etat', i.pays)}
+            ${ligne('c_exploitant', i.exploitant)}
+            ${ligne('c_aeronef', i.aeronef)}
+            ${ligne('c_immat_court', i.immatriculation)}
+            ${e ? ligne('c_item', e.itemCode) : ''}
+            ${e ? ligne('c_categorie', e.categorie) : ''}
+            ${e ? ligne('c_description', e.description) : ''}
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top:.6rem;"
+                onclick="rampComRetirerDesignation()">${rt('reg_changer')}</button>
+    </div>`;
+}
+
 function rampComFormulaireHtml() {
     const b = RAMP_COM.brouillon;
     if (!b) return '';
@@ -478,6 +714,7 @@ function rampComFormulaireHtml() {
     const ecarts = choisie ? (choisie.anomalies || []) : [];
 
     return `
+    ${b.designation ? rampComDesignationHtml(b.designation) : `
     <div class="ramp-card">
         <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('com_designer')}</div>
         <p class="ramp-sous-titre">${rt('com_designer_aide')}</p>
@@ -542,7 +779,7 @@ function rampComFormulaireHtml() {
                     ${_rEsc(e.itemCode || '')} — ${_rEsc((e.description || '').slice(0, 70))}</option>`).join('')}
             </select>
         </div>` : ''}
-    </div>
+    </div>`}
 
     <div class="ramp-card">
         <div class="ramp-card-bande"><span class="ramp-card-lettre">B</span>${rt('com_destinataires')}</div>

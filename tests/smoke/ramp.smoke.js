@@ -1041,10 +1041,53 @@ module.exports = async function rampSmoke(port) {
       (await srv.appel(`${M}/instance`, {
         method: 'PUT', body: JSON.stringify({ instance: 'France' }),
       })).statut === 400);
+    // ── Écarts régionaux ──
+    // Une inspection importée depuis le poste du Niger appartient au Niger :
+    // les écrans de l'instance installée ne la comptent pas, mais la table
+    // régionale du menu « Partages » la montre — c'est la seule lecture du
+    // module qui franchisse les instances.
+    await srv.appel(`${M}/instance`, { method: 'PUT', body: JSON.stringify({ instance: 'Niger' }) });
+    await importer([{
+      ...insp, vol: 'KP700', pays: 'Niger', immatriculation: '5U-NNN',
+      anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175', description: 'Constat du Niger', categorie: '2', action: '2' }],
+    }]);
+    const ficheNiger = await srv.appel(`${M}/poi`, { method: 'POST', body: '{}' });
+    await srv.appel(`${M}/instance`, { method: 'PUT', body: JSON.stringify({ instance: ici }) });
+
+    const chezNous = await srv.appel(`${M}/inspections`);
+    verifier('l’inspection du Niger n’entre pas dans nos écrans',
+      !chezNous.corps.some((x) => x.vol === 'KP700'));
+    const reg = await srv.appel(`${M}/ecarts-regionaux`);
+    const duNiger = (reg.corps.inspections || []).find((x) => x.vol === 'KP700');
+    verifier('la table régionale porte les écarts de tous les États',
+      reg.statut === 200 && !!duNiger && (duNiger.anomalies || []).length === 1,
+      (reg.corps.inspections || []).map((x) => `${x.vol}/${x.pays}`).join(' '));
+    verifier('une inspection sans écart n’y figure pas',
+      (reg.corps.inspections || []).every((x) => (x.anomalies || []).length));
+    verifier('ni preuves ni plan d’actions dans la table régionale',
+      (reg.corps.inspections || []).every((x) => (x.anomalies || [])
+        .every((a) => a.preuves === undefined && a.pac === undefined)));
+    verifier('l’inspection d’un autre État ne se supprime pas d’ici',
+      (await srv.appel(`${M}/inspections/${duNiger.id}`, { method: 'DELETE' })).statut === 404);
+
+    // Les formulaires restent cloisonnés — une fiche du Niger n'entre pas dans
+    // nos listes — mais le rapport, lui, se lit : c'est ce que la table
+    // régionale promet.
+    verifier('la fiche ouverte au Niger n’entre pas dans nos formulaires',
+      !((await srv.appel(`${M}/poi`)).corps.poi || []).some((p) => p.id === ficheNiger.corps.id));
+    const rapportAilleurs = await srv.appel(`${M}/poi/${ficheNiger.corps.id}`);
+    verifier('le rapport d’un autre État se consulte',
+      rapportAilleurs.statut === 200, `${rapportAilleurs.statut} ${JSON.stringify(rapportAilleurs.corps)}`);
+
     verifier('retour à la vue régionale',
       (await srv.appel(`${M}/instance`, {
         method: 'PUT', body: JSON.stringify({ instance: '' }),
       })).corps.instance === '');
+    // La vue régionale voit tout : elle peut faire le ménage de ce que l'essai
+    // a laissé au Niger, pour que la suite retrouve ses comptes.
+    verifier('inspection du Niger retirée depuis la vue régionale',
+      (await srv.appel(`${M}/inspections/${duNiger.id}`, { method: 'DELETE' })).statut === 200);
+    await srv.appel(`${M}/poi/${ficheNiger.corps.id}`, { method: 'DELETE' });
 
     const bascule = await srv.appel(`${M}/vue`, {
       method: 'PUT', body: JSON.stringify({ vue: 'prestataire' }),

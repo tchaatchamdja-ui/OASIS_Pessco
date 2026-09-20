@@ -58,8 +58,8 @@ function execRenderRapports() {
 
     // Prestataire view: only show their own data and a restricted filter set
     const filterOpts = isPrest
-        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showSearch: true }
-        : { showDomaine: true, showSecteur: true, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showSearch: true };
+        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showSearch: true }
+        : { showDomaine: true, showSecteur: true, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showSearch: true };
 
     return `
     <div class="page-content">

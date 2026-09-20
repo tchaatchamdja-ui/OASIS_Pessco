@@ -798,7 +798,6 @@ function rampBarreFiltres(options) {
     // colonnes qui restent, bouton de remise à zéro compris.
     const recherche = o.recherche === false ? '' : `
         <div class="ramp-recherche-boite">
-            ${RAMP_ICONS.search}
             <input type="text" placeholder="${_rAttr(rt('f_rechercher'))}…" value="${_rAttr(F.recherche)}"
                    oninput="rampChercher(this.value)">
         </div>`;

@@ -90,12 +90,20 @@
    Le cadre de la barre vient du socle (oasis-module.css), commun à SURV et
    à la Planification. */
 /* Les champs du filtre portent le contour du thème : ils forment un ensemble,
-   distinct des champs de saisie ordinaires. */
+   distinct des champs de saisie ordinaires. Ils sont aussi plus serrés qu'un
+   champ de saisie — un intitulé de liste tient sur trente pixels là où une
+   donnée saisie demande de l'air. C'est le rendu des barres de filtres de
+   l'application : « Exécution de la Surveillance » les dessine ainsi. */
 .ramp-filtres .ramp-select,
 .ramp-filtres .ramp-input,
 .ramp-filtres .ramp-recherche-boite,
 .ramp-filtres .btn,
 .ramp-recherche-reset { border-color: var(--primary); color: var(--primary); }
+.ramp-filtres .ramp-select,
+.ramp-filtres .ramp-input {
+    height: 30px; box-sizing: border-box;
+    padding: .3rem .5rem; font-size: .82rem; line-height: 1.2;
+}
 .ramp-filtres .ramp-select:hover,
 .ramp-filtres .ramp-input:hover { border-color: var(--primary); }
 /* Les listes ne grandissent pas : toutes de même largeur, elles s'alignent
@@ -111,22 +119,23 @@
    rouge, et l'export l'attend pour partir. */
 .ramp-gen { display: grid; grid-template-columns: 2fr 3fr; gap: 1rem; align-items: start; }
 /* Les filtres de l'export tiennent au-dessus des deux colonnes : quatre par
-   rang, à largeurs égales, et un cran plus bas que les champs ordinaires. */
+   rang, à largeurs égales. */
 .ramp-gen-filtres {
     display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: .45rem; margin-bottom: .8rem;
 }
-/* Cinq pixels de moins que les filtres ordinaires : la barre reste compacte
-   au-dessus des deux colonnes. La règle générale vise le même poids, on la
-   double donc de la classe du conteneur. */
-.ramp-filtres.ramp-gen-filtres > .ramp-select { width: 100%; height: 29px; padding: .2rem .5rem; }
+/* Mêmes champs qu'ailleurs — ils portaient cinq pixels de moins, ce qui
+   faisait de cette barre la seule du module à ne pas se lire comme les
+   autres. La règle générale vise le même poids, on la double donc de la
+   classe du conteneur pour fixer la largeur des colonnes. */
+.ramp-filtres.ramp-gen-filtres > .ramp-select { width: 100%; height: 30px; padding: .3rem .5rem; }
 .ramp-filtres.ramp-gen-filtres .btn,
 .ramp-filtres.ramp-gen-filtres .btn.ramp-btn-icone {
-    height: 29px; width: 29px; min-width: 29px; padding: 0; flex: 0 0 29px;
+    height: 30px; width: 30px; min-width: 30px; padding: 0; flex: 0 0 30px;
 }
 /* La dernière case porte son filtre et le bouton de remise à zéro. */
 .ramp-gen-filtres-fin { display: flex; align-items: center; gap: .35rem; min-width: 0; }
-.ramp-gen-filtres-fin .ramp-select { flex: 1; min-width: 0; height: 29px; padding: .2rem .5rem; }
+.ramp-gen-filtres-fin .ramp-select { flex: 1; min-width: 0; height: 30px; padding: .3rem .5rem; }
 .ramp-gen-filtres .ramp-sous-titre {
     display: flex; align-items: center; font-size: .76rem;
 }
@@ -303,7 +312,7 @@
 .ramp-multi { position: relative; min-width: 0; }
 .ramp-multi-bouton {
     display: flex; align-items: center; justify-content: space-between; gap: .4rem;
-    width: 100%; height: 34px; cursor: pointer; text-align: left;
+    width: 100%; height: 30px; cursor: pointer; text-align: left;
 }
 .ramp-multi-bouton > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ramp-multi.ouvert .ramp-multi-bouton svg { transform: rotate(180deg); }
@@ -328,14 +337,22 @@
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .5rem;
 }
 .ramp-filtres-5 > * { min-width: 0; }
-.ramp-filtres-5 .ramp-select { width: 100%; height: 34px; }
+.ramp-filtres-5 .ramp-select { width: 100%; height: 30px; }
 .ramp-filtres-fin { grid-column: span 2; display: flex; gap: .5rem; align-items: center; min-width: 0; }
-.ramp-filtres-fin .ramp-recherche-boite { flex: 1; min-width: 0; height: 34px; }
-/* Le bouton de remise à zéro s'aligne sur la hauteur des champs. */
-.ramp-filtres .btn.ramp-btn-icone,
-.ramp-filtres-fin .btn {
-    height: 34px; width: 34px; padding: 0;
+.ramp-filtres-fin .ramp-recherche-boite { flex: 1; min-width: 0; height: 30px; }
+/* Le bouton de remise à zéro s'aligne sur la hauteur des champs. Il ne porte
+   pas leur bordure : ce n'est pas un critère, c'est le geste qui les lève —
+   il reste en retrait, comme dans les autres modules. La règle du socle le
+   colore par son intitulé ; celle-ci, plus précise, l'emporte. */
+.ramp-module .ramp-filtres .btn.ramp-btn-icone,
+.ramp-module .ramp-filtres-fin .btn {
+    height: 30px; width: 30px; padding: 0; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-muted);
     display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+}
+.ramp-module .ramp-filtres .btn.ramp-btn-icone:hover,
+.ramp-module .ramp-filtres-fin .btn:hover {
+    background: var(--primary); border-color: var(--primary); color: var(--text-header, #fff);
 }
 @media (max-width: 900px) {
     .ramp-filtres.ramp-filtres-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -347,26 +364,26 @@
 .ramp-filtres > .ramp-select,
 .ramp-filtres > .ramp-contenu-transparent > .ramp-select,
 .ramp-filtres > .ramp-recherche-boite,
-.ramp-filtres > .btn { height: 34px; box-sizing: border-box; }
+.ramp-filtres > .btn { height: 30px; box-sizing: border-box; }
 .ramp-filtres > .btn { display: inline-flex; align-items: center; justify-content: center; }
-/* La loupe se pose dans le champ : le libellé « Rechercher » suffit à dire
-   ce qu'on attend, l'icône dit où. */
+/* Le champ de recherche a la forme des listes qui le précèdent : c'est le
+   dernier filtre du rang, non un champ de saisie d'une autre famille. */
 .ramp-recherche-boite {
     min-width: 0;
     display: flex; align-items: center; gap: .4rem;
-    padding: 0 .6rem; height: 32px;
-    border: 1px solid var(--border); border-radius: 6px;
-    background: var(--bg); color: var(--text-muted);
+    padding: .3rem .5rem; height: 30px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--bg-card); color: var(--text-muted);
 }
 .ramp-recherche-boite:focus-within { border-color: var(--ramp-accent); box-shadow: 0 0 0 2px var(--ramp-accent-bg); }
 .ramp-recherche-boite input {
     flex: 1; min-width: 0; height: 100%; padding: 0;
     border: none; outline: none; background: transparent;
-    color: var(--text); font-size: .84rem; font-family: inherit;
+    color: var(--text); font-size: .82rem; font-family: inherit;
 }
 .ramp-input, .ramp-select {
-    padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 6px;
-    background: var(--bg); color: var(--text); font-size: .84rem;
+    padding: .4rem .6rem; border: 1.5px solid var(--border); border-radius: 8px;
+    background: var(--bg-card); color: var(--text); font-size: .84rem;
     font-family: inherit; width: 100%; box-sizing: border-box;
 }
 .ramp-input:focus, .ramp-select:focus {

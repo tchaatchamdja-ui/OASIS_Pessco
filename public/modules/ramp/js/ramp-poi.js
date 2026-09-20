@@ -252,7 +252,6 @@ function rampRenderPoi() {
                 .map((e) => opt(e, e, F.etat)).join('')}
         </select>
         <div class="ramp-recherche-boite">
-            ${RAMP_ICONS.search}
             <input type="text" placeholder="Rechercher…" value="${_rAttr(F.recherche)}"
                    oninput="rampPoiChercher(this.value)">
         </div>

@@ -117,7 +117,6 @@ function rampRenderDepot() {
             ${auteurs.map((a) => opt(a, a, F.depotAuteur)).join('')}
         </select>
         <div class="ramp-recherche-boite">
-            ${RAMP_ICONS.search}
             <input type="text" placeholder="${rt('rechercher_depot')}"
                    value="${_rAttr(F.depotRecherche || '')}"
                    oninput="rampChercherDepot(this.value)">
@@ -1079,7 +1078,6 @@ function rampRenderPays() {
             ${opt('non', 'AAC à compléter', F.aac)}
         </select>
         <div class="ramp-recherche-boite">
-            ${RAMP_ICONS.search}
             <input type="text" placeholder="${_rAttr(rt('f_rechercher'))}…" value="${_rAttr(F.recherche)}"
                    oninput="rampPaysChercher(this.value)">
         </div>
@@ -1407,7 +1405,6 @@ function rampRenderAeroports() {
     <div class="ramp-filtres">
         <span id="rampAptListes" class="ramp-contenu-transparent">${rampAptListes()}</span>
         <div class="ramp-recherche-boite">
-            ${RAMP_ICONS.search}
             <input type="text" placeholder="${_rAttr(rt('f_rechercher'))}…" value="${_rAttr(F.recherche)}"
                    oninput="rampAptChercher(this.value)">
         </div>
@@ -1746,7 +1743,6 @@ function rampRenderAeronefs() {
     <div class="ramp-filtres">
         <span id="rampAerListes" class="ramp-contenu-transparent">${rampAerListes()}</span>
         <div class="ramp-recherche-boite">
-            ${RAMP_ICONS.search}
             <input type="text" placeholder="${_rAttr(rt('f_rechercher'))}…" value="${_rAttr(F.recherche)}"
                    oninput="rampAerChercher(this.value)">
         </div>

@@ -86,6 +86,8 @@
     .exec-slider.slider-xl,
     .exec-slider.slider-xxl,
     .exec-slider.slider-full,
+    .exec-slider.slider-third,
+    .exec-slider.slider-half,
     .exec-slider.slider-two-fifths,
     .exec-slider.slider-max {
         width: 100vw !important;

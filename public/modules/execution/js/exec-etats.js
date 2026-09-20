@@ -469,7 +469,7 @@ function execEtatsPanA_declencher(R) {
       ${execEtatsTableau([
         { titre: te('provider'), largeur: '130px' }, { titre: te('objet') },
         { titre: te('debut'), largeur: '95px' }, { titre: te('etats_col_a_notifier'), largeur: '100px' },
-        { titre: te('delai'), largeur: '110px' }, { titre: te('responsable'), largeur: '130px' },
+        { titre: te('etats_col_delai_notif'), largeur: '110px' }, { titre: te('responsable'), largeur: '130px' },
         { titre: te('actions'), largeur: '115px', centre: true },
       ], lignes, te('etats_vide_a_declencher'))}
     </div>`;
@@ -703,9 +703,14 @@ function execEtatsPanClos(items, archivees) {
 
 function execRenderEtats() {
   const R = execEtatsRepartir();
+  // Deux comptes au bandeau : ce qui reste à déclencher, et ce qui a passé
+  // son échéance. Une activité à déclencher déjà en retard ne paraît que dans
+  // le second — sans quoi elle serait comptée deux fois.
+  const enRetard = (l) => l.jours !== null && l.jours < 0;
   const retards = Object.values(R.enCours)
-    .reduce((n, x) => n + x.filter((l) => l.jours !== null && l.jours < 0).length, 0)
-    + R.aDeclencher.filter((l) => l.jours !== null && l.jours < 0).length;
+    .reduce((n, x) => n + x.filter(enRetard).length, 0)
+    + R.aDeclencher.filter(enRetard).length;
+  const aDeclencher = R.aDeclencher.filter((l) => !enRetard(l)).length;
 
   // Barre des sous-menus : les intitulés seuls. Chaque panneau redonne son
   // compte en tête de section, où il se lit à côté de ce qu'il dénombre ;
@@ -737,7 +742,10 @@ function execRenderEtats() {
     <div class="page-content exec-etats">
       <div class="page-header">
         <h2>${te('etats_titre')}</h2>
-        ${retards ? `<span class="exec-etats-alerte">${retards} action${retards > 1 ? 's' : ''} en retard</span>` : ''}
+        ${aDeclencher ? `<span class="exec-etats-alerte a-declencher">${
+          te(aDeclencher > 1 ? 'etats_alerte_declencher_n' : 'etats_alerte_declencher_un', aDeclencher)}</span>` : ''}
+        ${retards ? `<span class="exec-etats-alerte">${
+          te(retards > 1 ? 'etats_alerte_retard_n' : 'etats_alerte_retard_un', retards)}</span>` : ''}
       </div>
       ${barre}
       ${corps}
@@ -829,9 +837,11 @@ window.execEtatsRappel = async function (planId, activiteId, motif) {
     <button class="btn btn-primary" onclick="execEtatsEnvoyerRappel('${planId}','${activiteId}','${_escAttr(motif || '')}')">
       ${EXEC_ICONS.send || ''} Envoyer le rappel
     </button>`;
+  // Un rappel tient en deux champs : le volet prend le tiers de l'écran,
+  // pas la moitié.
   execShowSlider(
     `${EXEC_ICONS.bell || ''} Rappel — ${_esc(EXEC_ETATS_ETAPE_LIBELLE[etape] || etape)}`,
-    corps, pied, 'md',
+    corps, pied, 'third',
   );
 };
 

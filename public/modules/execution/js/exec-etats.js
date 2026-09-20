@@ -35,110 +35,110 @@ const EXEC_ETATS_DELAIS_DEFAUT = {
 const EXEC_ETATS_DELAIS_GROUPES = [
   {
     cle: 'activite',
-    titre: 'Processus Activité',
-    aide: 'De la préparation de la notification à l’archivage du dossier.',
+    titre: 'dl_g_activite',
+    aide: 'dl_g_activite_aide',
     delais: [
-      { cle: 'notification_avant_activite', libelle: 'Déclenchement de l’activité',
-        depuis: 'Date de début planifiée', jusqua: 'Notification créée',
-        aide: 'Jours avant la date de début où l’activité doit être déclenchée.',
-        unite: 'jours', ou: 'États → À déclencher' },
-      { cle: 'validation_notification', libelle: 'Validation de la notification',
-        depuis: 'Soumission de la notification', jusqua: 'Notification validée',
-        aide: 'Jours pour valider une notification soumise.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'confirmation_prestataire', libelle: 'Confirmation de l’activité',
-        depuis: 'Envoi de la notification', jusqua: 'Dates confirmées par le prestataire',
-        aide: 'Jours pour confirmer l’activité après transmission au prestataire.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'accuse_reception', libelle: 'Accusé de réception',
-        depuis: 'Envoi de la notification', jusqua: 'Réception accusée par le prestataire',
-        aide: 'Jours pour que le prestataire accuse réception de la notification.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'redaction_rapport', libelle: 'Soumission du projet de rapport',
-        depuis: 'Fin de l’activité', jusqua: 'Rapport soumis',
-        aide: 'Jours après la fin de l’activité pour soumettre le rapport.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'validation_rapport', libelle: 'Validation du rapport',
-        depuis: 'Soumission du rapport', jusqua: 'Rapport validé',
-        aide: 'Jours pour valider un rapport soumis.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'transmission_rapport', libelle: 'Transmission du rapport',
-        depuis: 'Validation du rapport', jusqua: 'Rapport transmis au prestataire',
-        aide: 'Jours pour transmettre au prestataire un rapport validé.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'cloture_dossier', libelle: 'Clôture du dossier',
-        depuis: 'Transmission du rapport', jusqua: 'Dossier clôturé',
-        aide: 'Jours après la transmission du rapport pour clôturer le dossier d’activité.',
-        unite: 'jours', ou: 'États → En cours' },
-      { cle: 'archivage_apres_cloture', libelle: 'Archivage du dossier clôturé',
-        depuis: 'Clôture du dossier', jusqua: 'Dossier archivé',
-        aide: 'Jours après la clôture du dossier au terme desquels l’archivage est attendu.',
-        unite: 'jours', ou: 'États → Clôturées' },
+      { cle: 'notification_avant_activite', libelle: 'dl_declenchement',
+        depuis: 'dl_de_debut_planifie', jusqua: 'dl_a_notif_creee',
+        aide: 'dl_declenchement_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_a_declencher' },
+      { cle: 'validation_notification', libelle: 'dl_validation_notif',
+        depuis: 'dl_de_soumission_notif', jusqua: 'dl_a_notif_validee',
+        aide: 'dl_validation_notif_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'confirmation_prestataire', libelle: 'dl_confirmation',
+        depuis: 'dl_de_envoi_notif', jusqua: 'dl_a_dates_confirmees',
+        aide: 'dl_confirmation_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'accuse_reception', libelle: 'dl_accuse',
+        depuis: 'dl_de_envoi_notif', jusqua: 'dl_a_reception_accusee',
+        aide: 'dl_accuse_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'redaction_rapport', libelle: 'dl_redaction',
+        depuis: 'dl_de_fin_activite', jusqua: 'dl_a_rapport_soumis',
+        aide: 'dl_redaction_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'validation_rapport', libelle: 'dl_validation_rapport',
+        depuis: 'dl_de_soumission_rapport', jusqua: 'dl_a_rapport_valide',
+        aide: 'dl_validation_rapport_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'transmission_rapport', libelle: 'dl_transmission_rapport',
+        depuis: 'dl_validation_rapport', jusqua: 'dl_a_rapport_transmis',
+        aide: 'dl_transmission_rapport_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'cloture_dossier', libelle: 'dl_cloture_dossier',
+        depuis: 'dl_transmission_rapport', jusqua: 'dl_a_dossier_cloture',
+        aide: 'dl_cloture_dossier_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_en_cours' },
+      { cle: 'archivage_apres_cloture', libelle: 'dl_archivage',
+        depuis: 'dl_cloture_dossier', jusqua: 'dl_a_dossier_archive',
+        aide: 'dl_archivage_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloturees' },
     ],
   },
   {
     cle: 'constatation',
-    titre: 'Processus Constatation',
-    aide: 'Circuit d’une constatation, de sa préparation à sa remise au prestataire.',
+    titre: 'dl_g_constatation',
+    aide: 'dl_g_constatation_aide',
     delais: [
-      { cle: 'soumission_constatation', libelle: 'Soumission de la constatation',
-        depuis: 'Ouverture de la constatation', jusqua: 'Constatation soumise',
-        aide: 'Jours pour soumettre à validation une constatation en préparation.',
-        unite: 'jours', ou: 'Cloche des alertes' },
-      { cle: 'validation_constatation', libelle: 'Validation de la constatation',
-        depuis: 'Soumission de la constatation', jusqua: 'Constatation validée, renvoyée ou rejetée',
-        aide: 'Jours pour statuer sur une constatation soumise.',
-        unite: 'jours', ou: 'Cloche des alertes' },
-      { cle: 'correction_constatation', libelle: 'Correction après renvoi',
-        depuis: 'Renvoi de la constatation', jusqua: 'Constatation soumise à nouveau',
-        aide: 'Jours pour corriger et resoumettre une constatation renvoyée.',
-        unite: 'jours', ou: 'Cloche des alertes' },
-      { cle: 'transmission_constatation', libelle: 'Transmission de la constatation',
-        depuis: 'Validation de la constatation', jusqua: 'Constatation transmise au prestataire',
-        aide: 'Jours pour transmettre au prestataire une constatation validée.',
-        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'soumission_constatation', libelle: 'dl_soumission_consta',
+        depuis: 'dl_de_ouverture_consta', jusqua: 'dl_a_consta_soumise',
+        aide: 'dl_soumission_consta_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
+      { cle: 'validation_constatation', libelle: 'dl_validation_consta',
+        depuis: 'dl_soumission_consta', jusqua: 'dl_a_consta_statuee',
+        aide: 'dl_validation_consta_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
+      { cle: 'correction_constatation', libelle: 'dl_correction_consta',
+        depuis: 'dl_de_renvoi_consta', jusqua: 'dl_a_consta_resoumise',
+        aide: 'dl_correction_consta_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
+      { cle: 'transmission_constatation', libelle: 'dl_transmission_consta',
+        depuis: 'dl_validation_consta', jusqua: 'dl_a_consta_transmise',
+        aide: 'dl_transmission_consta_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
     ],
   },
   {
     cle: 'pac',
-    titre: 'Plan d’actions correctives',
-    aide: 'Réponse du prestataire à une constatation ouverte, et son solde.',
+    titre: 'dl_g_pac',
+    aide: 'dl_g_pac_aide',
     delais: [
-      { cle: 'soumission_pac', libelle: 'Soumission du PAC',
-        depuis: 'Transmission de la constatation', jusqua: 'PAC soumis par le prestataire',
-        aide: 'Jours laissés au prestataire pour soumettre son plan d’actions.',
-        unite: 'jours', ou: 'Cloche des alertes' },
-      { cle: 'acceptation_pac', libelle: 'Acceptation du PAC',
-        depuis: 'Soumission du PAC', jusqua: 'PAC accepté ou rejeté',
-        aide: 'Jours pour statuer sur un plan d’actions soumis.',
-        unite: 'jours', ou: 'Cloche des alertes' },
-      { cle: 'correction_pac', libelle: 'Correction du PAC rejeté',
-        depuis: 'Rejet du PAC', jusqua: 'PAC soumis à nouveau',
-        aide: 'Jours pour reprendre et resoumettre un plan d’actions rejeté.',
-        unite: 'jours', ou: 'Cloche des alertes' },
-      { cle: 'verification_cloture', libelle: 'Vérification et clôture',
-        depuis: 'Échéance de solde de la constatation', jusqua: 'Constatation soldée',
-        aide: 'Jours après l’échéance de solde pour vérifier les actions et clôturer.',
-        unite: 'jours', ou: 'Cloche des alertes' },
+      { cle: 'soumission_pac', libelle: 'dl_soumission_pac',
+        depuis: 'dl_transmission_consta', jusqua: 'dl_a_pac_soumis',
+        aide: 'dl_soumission_pac_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
+      { cle: 'acceptation_pac', libelle: 'dl_acceptation_pac',
+        depuis: 'dl_soumission_pac', jusqua: 'dl_a_pac_statue',
+        aide: 'dl_acceptation_pac_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
+      { cle: 'correction_pac', libelle: 'dl_correction_pac',
+        depuis: 'dl_de_rejet_pac', jusqua: 'dl_a_pac_resoumis',
+        aide: 'dl_correction_pac_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
+      { cle: 'verification_cloture', libelle: 'dl_verification',
+        depuis: 'dl_de_echeance_solde', jusqua: 'dl_a_consta_soldee',
+        aide: 'dl_verification_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_cloche' },
     ],
   },
   {
     cle: 'surveillance',
-    titre: 'Réglages de surveillance',
-    aide: 'Ce que les écrans montrent, et à partir de quand ils alertent.',
+    titre: 'dl_g_surveillance',
+    aide: 'dl_g_surveillance_aide',
     delais: [
-      { cle: 'horizon_a_declencher', libelle: 'Horizon « à déclencher »',
-        depuis: 'Aujourd’hui', jusqua: 'Dernière activité listée',
-        aide: 'Mois à venir pris en compte dans la liste des activités à déclencher.',
-        unite: 'mois', ou: 'États → À déclencher' },
-      { cle: 'seuil_vigilance', libelle: 'Seuil de vigilance',
-        depuis: 'Échéance de l’étape', jusqua: 'Badge orange',
-        aide: 'Jours restants en deçà desquels une échéance passe en vigilance.',
-        unite: 'jours', ou: 'Tous les badges de délai' },
-      { cle: 'seuil_urgence', libelle: 'Seuil d’urgence',
-        depuis: 'Échéance de l’étape', jusqua: 'Badge rouge',
-        aide: 'Jours restants en deçà desquels une échéance passe en urgence.',
-        unite: 'jours', ou: 'Tous les badges de délai' },
+      { cle: 'horizon_a_declencher', libelle: 'dl_horizon',
+        depuis: 'dl_de_aujourdhui', jusqua: 'dl_a_derniere_activite',
+        aide: 'dl_horizon_aide',
+        unite: 'dl_u_mois', ou: 'dl_ou_a_declencher' },
+      { cle: 'seuil_vigilance', libelle: 'dl_seuil_vigilance',
+        depuis: 'dl_de_echeance_etape', jusqua: 'dl_a_badge_orange',
+        aide: 'dl_seuil_vigilance_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_badges' },
+      { cle: 'seuil_urgence', libelle: 'dl_seuil_urgence',
+        depuis: 'dl_de_echeance_etape', jusqua: 'dl_a_badge_rouge',
+        aide: 'dl_seuil_urgence_aide',
+        unite: 'dl_u_jours', ou: 'dl_ou_badges' },
     ],
   },
 ];
@@ -146,12 +146,12 @@ const EXEC_ETATS_DELAIS_GROUPES = [
 // Attentes du module dont la durée ne se règle pas ici : le relevé serait
 // trompeur s'il les passait sous silence.
 const EXEC_ETATS_DELAIS_AILLEURS = [
-  { libelle: 'Délai de solde d’une constatation',
-    depuis: 'Ouverture de la constatation', jusqua: 'Échéance de solde',
-    source: 'Paramètres → Criticité (colonne « Délai de clôture »)' },
-  { libelle: 'Échéance d’une action corrective',
-    depuis: 'Acceptation du PAC', jusqua: 'Action réalisée',
-    source: 'Saisie action par action dans le PAC' },
+  { libelle: 'dl_a_solde_consta',
+    depuis: 'dl_de_ouverture_consta', jusqua: 'dl_a_echeance_solde',
+    source: 'dl_src_criticite' },
+  { libelle: 'dl_a_action',
+    depuis: 'dl_acceptation_pac', jusqua: 'dl_a_action_realisee',
+    source: 'dl_src_pac' },
 ];
 
 // Liste à plat : la lecture et l'enregistrement travaillent clé par clé.
@@ -1013,31 +1013,31 @@ function execRenderDelaisTab() {
   const ligne = (d) => `
     <tr>
       <td>
-        <div class="exec-delai-nom">${_esc(d.libelle)}</div>
-        <div class="exec-delai-aide">${_esc(d.aide)}</div>
+        <div class="exec-delai-nom">${_esc(te(d.libelle))}</div>
+        <div class="exec-delai-aide">${_esc(te(d.aide))}</div>
       </td>
       <td class="exec-delai-course">
-        <span class="exec-delai-borne">${_esc(d.depuis)}</span>
+        <span class="exec-delai-borne">${_esc(te(d.depuis))}</span>
         <span class="exec-delai-fleche">→</span>
-        <span class="exec-delai-borne">${_esc(d.jusqua)}</span>
+        <span class="exec-delai-borne">${_esc(te(d.jusqua))}</span>
       </td>
       <td class="exec-delai-saisie">
         <input type="number" min="0" max="365" class="form-control exec-delai-champ"
           id="delai_${d.cle}" value="${_escAttr(D[d.cle])}" ${modifiable ? '' : 'disabled'}>
-        <span class="exec-delai-unite">${_esc(d.unite)}</span>
+        <span class="exec-delai-unite">${_esc(te(d.unite))}</span>
       </td>
-      <td class="exec-delai-ou">${_esc(d.ou)}</td>
+      <td class="exec-delai-ou">${_esc(te(d.ou))}</td>
     </tr>`;
 
   const groupes = EXEC_ETATS_DELAIS_GROUPES.map((g) => `
     <div class="exec-delai-groupe">
       <div class="exec-delai-groupe-entete">
-        <h4>${_esc(g.titre)}</h4>
-        <span>${_esc(g.aide)}</span>
+        <h4>${_esc(te(g.titre))}</h4>
+        <span>${_esc(te(g.aide))}</span>
       </div>
       <table class="exec-table exec-delais-table">
         <thead><tr>
-          <th>Attente</th>
+          <th>${te('dl_col_attente')}</th>
           <th style="width:32%;">${te('court_de_a')}</th>
           <th style="width:140px;">${te('delai_col')}</th>
           <th style="width:20%;">${te('signale_dans')}</th>
@@ -1048,22 +1048,20 @@ function execRenderDelaisTab() {
 
   const ailleurs = EXEC_ETATS_DELAIS_AILLEURS.map((a) => `
     <tr>
-      <td><div class="exec-delai-nom">${_esc(a.libelle)}</div></td>
+      <td><div class="exec-delai-nom">${_esc(te(a.libelle))}</div></td>
       <td class="exec-delai-course">
-        <span class="exec-delai-borne">${_esc(a.depuis)}</span>
+        <span class="exec-delai-borne">${_esc(te(a.depuis))}</span>
         <span class="exec-delai-fleche">→</span>
-        <span class="exec-delai-borne">${_esc(a.jusqua)}</span>
+        <span class="exec-delai-borne">${_esc(te(a.jusqua))}</span>
       </td>
-      <td colspan="2" class="exec-delai-ou">${_esc(a.source)}</td>
+      <td colspan="2" class="exec-delai-ou">${_esc(te(a.source))}</td>
     </tr>`).join('');
 
   return `
     <div class="card">
       <h3>${te('delais_processus')}</h3>
       <p class="exec-etats-intro">
-        Relevé des attentes des processus « Activité » et « Constatation ». Chaque ligne
-        court d'une date enregistrée jusqu'à l'événement attendu. Ces délais n'empêchent
-        aucune action : ils déterminent à partir de quand une étape est signalée en retard.
+        ${te('dl_intro')}
       </p>
       ${groupes}
       <div class="exec-delai-groupe">
@@ -1075,10 +1073,10 @@ function execRenderDelaisTab() {
       </div>
       ${modifiable ? `<div style="margin-top:0.9rem;display:flex;gap:0.5rem;">
         <button class="btn btn-primary btn-sm" onclick="execEtatsEnregistrerDelais()">
-          ${EXEC_ICONS.check || ''} Enregistrer
+          ${EXEC_ICONS.check || ''} ${te('dl_enregistrer')}
         </button>
         <button class="btn btn-outline btn-sm" onclick="execEtatsDelaisDefaut()">
-          ${EXEC_ICONS.reset || ''} Valeurs par défaut
+          ${EXEC_ICONS.reset || ''} ${te('dl_defaut')}
         </button>
       </div>` : '<p class="exec-etats-intro">' + te('delais_admin_seul') + '</p>'}
     </div>`;

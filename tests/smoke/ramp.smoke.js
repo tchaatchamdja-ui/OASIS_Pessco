@@ -101,6 +101,27 @@ module.exports = async function rampSmoke(port) {
     verifier('les deux écarts rattachés', (cible.anomalies || []).length === 2);
     verifier('statut mis à jour par le réimport', cible.status === 'Clôturé', cible.status);
 
+    // ── Référence de l'inspection ──
+    // Toute inspection en porte une, au format POI-xxxx : le classeur en
+    // apporte parfois une, le module donne les autres, et deux inspections
+    // n'en partagent jamais.
+    verifier('chaque inspection porte une référence POI-xxxx',
+      liste.corps.every((x) => /^POI-\d{4}$/.test(String(x.poi_reference || ''))),
+      liste.corps.map((x) => x.poi_reference).join(' '));
+    verifier('deux inspections ne partagent pas la même référence',
+      new Set(liste.corps.map((x) => x.poi_reference)).size === liste.corps.length);
+    // La référence du rapport papier prend la place de celle que le module
+    // avait donnée faute de mieux.
+    await importer([{ ...insp, poi_reference: 'POI-9000' }]);
+    verifier('la référence du classeur remplace celle du module',
+      (await srv.appel(`${M}/inspections`)).corps
+        .find((x) => x.vol === 'KP041').poi_reference === 'POI-9000');
+    // Mais elle ne se laisse pas effacer par un classeur qui n'en porte pas.
+    await importer([insp]);
+    verifier('un classeur sans référence ne l’efface pas',
+      (await srv.appel(`${M}/inspections`)).corps
+        .find((x) => x.vol === 'KP041').poi_reference === 'POI-9000');
+
     // ── Cloisonnement par instance ──
     // L'instance qui importe tient ce qu'elle a importé, où que l'inspection
     // ait été conduite : l'import pose son nom sur chaque ligne.

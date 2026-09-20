@@ -131,14 +131,15 @@ module.exports = function register(app, deps, M) {
         const statutChange = (dejaVue.status || 'Inconnu') !== statut;
         const itemsChanges = items > 0 && (dejaVue.itemsInspectes || 0) !== items;
         // Une référence POI apportée par le classeur complète l'inspection déjà
-        // enregistrée ; elle n'en remplace jamais une existante.
-        const refAjoutee = !!refPoi && !dejaVue.poi_reference;
+        // enregistrée ; elle n'en remplace jamais une lue sur un rapport. Celle
+        // que le module a donnée faute de mieux, si : le papier fait foi.
+        const refAjoutee = !!refPoi && (!dejaVue.poi_reference || !!dejaVue.reference_auto);
         if (statutChange || itemsChanges || refAjoutee) {
           majs.push({
             id: dejaVue.id,
             ...(statutChange ? { status: statut } : {}),
             ...(itemsChanges ? { itemsInspectes: items } : {}),
-            ...(refAjoutee ? { poi_reference: refPoi } : {}),
+            ...(refAjoutee ? { poi_reference: refPoi, reference_auto: false } : {}),
           });
         } else {
           doublons += 1;
@@ -165,6 +166,17 @@ module.exports = function register(app, deps, M) {
         CHAMPS_ECART.forEach((k) => { e[k] = texte(a[k]); });
         nouveauxEcarts.push(e);
       });
+    });
+
+    // Toute inspection porte une référence POI-xxxx. Le classeur en apporte
+    // parfois une — celle du rapport papier ; les autres la reçoivent de la
+    // suite du module, tirée en une fois pour tout le classeur.
+    const aReferencer = nouvellesInspections.filter((i) => !i.poi_reference);
+    db.reserverReferencesPoi(aReferencer.length).forEach((ref, rang) => {
+      aReferencer[rang].poi_reference = ref;
+      // Référence donnée par le module, et non lue sur le rapport : celle du
+      // papier, si un classeur l'apporte plus tard, prendra sa place.
+      aReferencer[rang].reference_auto = true;
     });
 
     if (nouvellesInspections.length || nouveauxEcarts.length) {

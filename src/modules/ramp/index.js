@@ -203,6 +203,9 @@ module.exports = {
     // Le statut « En cours » a été retiré : les données déjà saisies le
     // portent encore, et repassent en « Ouvert ».
     db.retirerStatutEnCours();
+    // Toute inspection porte une référence POI-xxxx. Celles reprises d'un
+    // classeur qui n'en portait pas la reçoivent ici, une fois.
+    db.referencerInspections();
     // Un module fraîchement installé n'a encore aucun droit attribué : sans
     // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
     // compris le super-administrateur — d'importer la première inspection et

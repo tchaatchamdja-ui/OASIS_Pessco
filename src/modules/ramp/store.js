@@ -265,16 +265,64 @@ function retirerStatutEnCours() {
 // Référence d'un formulaire d'inspection : POI-0001, POI-0002…
 // Le compteur est persisté et ne redescend jamais : une référence libérée par
 // une suppression n'est pas réattribuée.
-function prochaineReferencePoi() {
-  const d = load();
-  const plancher = (d.poi || []).reduce((n, p) => {
-    const c = /^POI-(\d+)$/.exec(String(p.reference || ''));
+//
+// Une même suite pour les fiches et les inspections : une fiche donne la
+// sienne à l'inspection qu'elle crée, et deux actes ne portent jamais le même
+// numéro. Le plancher les relit donc toutes les deux — sans quoi un compteur
+// perdu réattribuerait une référence déjà portée par une inspection.
+const REF_POI = /^POI-(\d+)$/;
+const numeroteRef = (rang) => `POI-${String(rang).padStart(4, '0')}`;
+
+function plancherReferencePoi(d) {
+  const plusHaut = (liste, champ) => (liste || []).reduce((n, x) => {
+    const c = REF_POI.exec(String((x || {})[champ] || ''));
     return c ? Math.max(n, Number(c[1])) : n;
   }, 0);
-  const rang = Math.max(Number(d.dernier_poi) || 0, plancher) + 1;
+  return Math.max(plusHaut(d.poi, 'reference'), plusHaut(d.inspections, 'poi_reference'));
+}
+
+function prochaineReferencePoi() {
+  const d = load();
+  const rang = Math.max(Number(d.dernier_poi) || 0, plancherReferencePoi(d)) + 1;
   d.dernier_poi = rang;
   save(d);
-  return `POI-${String(rang).padStart(4, '0')}`;
+  return numeroteRef(rang);
+}
+
+// Plusieurs références d'un coup, pour un classeur importé : les tirer une à
+// une réécrirait le magasin à chaque ligne.
+function reserverReferencesPoi(combien) {
+  if (!combien) return [];
+  const d = load();
+  const debut = Math.max(Number(d.dernier_poi) || 0, plancherReferencePoi(d));
+  d.dernier_poi = debut + combien;
+  save(d);
+  return Array.from({ length: combien }, (v, k) => numeroteRef(debut + k + 1));
+}
+
+// ── Toute inspection porte sa référence ──
+// Les inspections reprises d'un classeur n'en avaient que si le classeur en
+// portait une : la plupart s'affichaient sans référence, et rien ne les
+// désignait en une ligne — ni à l'écran, ni dans une requête entre États.
+// Elles la reçoivent ici, les plus anciennes d'abord, pour que la suite des
+// numéros suive celle des actes.
+function referencerInspections() {
+  const d = load();
+  const sans = (d.inspections || []).filter((i) => !REF_POI.test(String(i.poi_reference || '')));
+  if (!sans.length) return 0;
+  let rang = Math.max(Number(d.dernier_poi) || 0, plancherReferencePoi(d));
+  sans.sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))
+    || String(a.date_creation || '').localeCompare(String(b.date_creation || '')));
+  sans.forEach((i) => {
+    rang += 1;
+    i.poi_reference = numeroteRef(rang);
+    // Référence donnée par le module : un classeur qui apporterait celle du
+    // rapport papier prendra sa place.
+    i.reference_auto = true;
+  });
+  d.dernier_poi = rang;
+  save(d);
+  return sans.length;
 }
 
 // ══════════════════════════════════════
@@ -461,5 +509,6 @@ module.exports = {
   fichierPoiDesigne,
   uid, now, load, save,
   seedAeronefs, aeronefs, getAeronef, insertAeronef, updateAeronef, removeAeronef,
-  seedAeroports, seedPays, completerActions, retirerStatutEnCours, prochaineReferencePoi
+  seedAeroports, seedPays, completerActions, retirerStatutEnCours,
+  prochaineReferencePoi, reserverReferencesPoi, referencerInspections
 };

@@ -1423,6 +1423,7 @@ function execShowStatistiquesAdvanced() {
     <div style="padding:1rem 1.25rem;">
         ${sousMenus}
         ${onglet === 'situation' ? `
+        ${filterBar}
         <div class="card" id="execSituationGeneraleCard">
             <div class="exec-stats-entete">
                 <h4>${te('situation_generale')}</h4>

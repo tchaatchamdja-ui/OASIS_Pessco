@@ -83,7 +83,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/inspections/:id`, requireAuth, (req, res) => {
     const i = db.get('inspections', req.params.id);
-    if (!i || !vues.voitExploitant(req, i.exploitant)) {
+    if (!vues.voitInspection(req, i, loadConfig)) {
       return introuvable(res, 'inspection');
     }
     res.json(avecEcarts([i], db.list('ecarts'))[0]);
@@ -442,7 +442,7 @@ module.exports = function register(app, deps, M) {
     const e = db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
     const inspection = db.get('inspections', e.inspection_id) || {};
-    if (!vues.voitExploitant(req, inspection.exploitant)) {
+    if (!vues.voitInspection(req, inspection, loadConfig)) {
       return introuvable(res, 'ecart');
     }
     const pj = preuve(e, req.params.pid);

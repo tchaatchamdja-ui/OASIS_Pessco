@@ -514,6 +514,11 @@ module.exports = function register(app, deps, M) {
       status: p.statut_suivi || (constats.length ? 'Ouvert' : 'Clôturé'),
       itemsInspectes: controles.length,
       date_creation: db.now(),
+      // L'instance qui valide la fiche tient l'inspection qui en naît, comme
+      // celle qui importe tient les lignes de son classeur. Sans ce champ,
+      // l'inspection reviendrait à l'État de l'aire de trafic : une fiche
+      // saisie ici pour un contrôle mené ailleurs disparaîtrait de nos écrans.
+      instance: instanceCourante(req),
       origine: 'poi',
       poi_id: p.id,
       poi_reference: p.reference,

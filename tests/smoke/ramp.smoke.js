@@ -2,6 +2,9 @@
 // contexte, sept familles de paramètres, import en deux temps, inspections et
 // écarts, dépôts, contacts et exports.
 const { demarrer, verifier, bilan } = require('./harness');
+// Le rattachement d'une inspection à son instance se lit sans serveur : la
+// règle est une fonction, éprouvée ici sur les trois cas qu'elle départage.
+const vuesRamp = require('../../src/modules/ramp/vues');
 
 module.exports = async function rampSmoke(port) {
   console.log('\n── Module RAMP — Inspections sur aire de trafic ──');
@@ -57,6 +60,9 @@ module.exports = async function rampSmoke(port) {
       method: 'POST', body: JSON.stringify({ data }),
     });
 
+    const ici = (await srv.appel(`${M}/instance`)).corps.courante;
+    verifier('instance installée connue du module', !!ici, ici);
+
     const insp = {
       date: '2026-03-14', pays: 'Togo', exploitant: 'Asky Airlines',
       aeronef: 'B737-800', immatriculation: '5V-TTT', vol: 'KP041',
@@ -94,6 +100,25 @@ module.exports = async function rampSmoke(port) {
     const cible = liste.corps.find((x) => x.vol === 'KP041');
     verifier('les deux écarts rattachés', (cible.anomalies || []).length === 2);
     verifier('statut mis à jour par le réimport', cible.status === 'Clôturé', cible.status);
+
+    // ── Cloisonnement par instance ──
+    // L'instance qui importe tient ce qu'elle a importé, où que l'inspection
+    // ait été conduite : l'import pose son nom sur chaque ligne.
+    verifier('l’import pose l’instance sur l’inspection',
+      srv.donnees('ramp').inspections.every((x) => x.instance === ici),
+      srv.donnees('ramp').inspections.map((x) => x.instance).join(' '));
+
+    // Ce qui a été écrit avant ce champ revient à l'État nommé par
+    // l'inspection, et non à l'instance installée : c'est ce qui rend au Mali
+    // et au Togo les inspections que le tableau de bord du Bénin comptait.
+    const connues = new Map(['Bénin', 'Mali', 'Togo'].map((n) => [vuesRamp.norm(n), n]));
+    const aQui = (i) => vuesRamp.instanceDe(i, connues, 'Bénin');
+    verifier('inspection ancienne rendue à son État',
+      aQui({ pays: 'Mali' }) === 'Mali' && aQui({ pays: 'Togo' }) === 'Togo');
+    verifier('l’instance portée l’emporte sur l’État',
+      aQui({ pays: 'Mali', instance: 'Bénin' }) === 'Bénin');
+    verifier('inspection hors de l’Union tenue par l’instance installée',
+      aQui({ pays: 'Ghana' }) === 'Bénin' && aQui({}) === 'Bénin');
 
     // ── Suivi d'un écart ──
     const ecart = cible.anomalies[0];

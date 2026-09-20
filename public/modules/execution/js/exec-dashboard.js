@@ -1660,7 +1660,7 @@ function _execStatsCalculs(consts) {
 
 // Barre de filtres propre au formulaire. L'année se choisit à la rangée de
 // boutons du tableau de bord — les années couvertes se lisent d'un coup d'œil,
-// là où une liste déroulante les cache.
+// là où une liste déroulante les cache. Elle se tient sous les listes.
 function _execStatsBarreFiltres(F, prests) {
     // Options du filtre propre. Le secteur ne propose que ceux du domaine
     // retenu, et le prestataire que ceux du secteur : un choix qui ne rendrait
@@ -1686,8 +1686,8 @@ function _execStatsBarreFiltres(F, prests) {
     // à ce que la feuille commune des filtres borde les listes de la couleur du
     // thème. Elles ne s'étirent plus sur toute la largeur — un nom de domaine ou
     // de prestataire n'en demande pas tant.
-    const filterBar = `${annees}
-    <div class="exec-filter-bar" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;align-items:center;">
+    const filterBar = `
+    <div class="exec-filter-bar" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;align-items:center;">
         <select class="form-select" style="max-width:220px;" onchange="EXEC_STATE.statsFilters.domaine=this.value;EXEC_STATE.statsFilters.secteur='';execShowStatistiquesAdvanced()">
             <option value="">${te('all_domains')}</option>
             ${domaines.map(d => `<option value="${d.id}" ${F.domaine===d.id?'selected':''}>${_esc(d.code || d.nom)}</option>`).join('')}
@@ -1701,7 +1701,8 @@ function _execStatsBarreFiltres(F, prests) {
             ${prestsRetenus.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
         </select>
         <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="${te('reinitialiser')}">${EXEC_ICONS.reset || '↺'}</button>
-    </div>`;
+    </div>
+    ${annees}`;
     return filterBar;
 }
 

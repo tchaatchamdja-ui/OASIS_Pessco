@@ -1650,13 +1650,17 @@ function _execStatsBarreFiltres(F, prests) {
         ${years.map(y => `<button type="button" class="oasis-annee${retenue === y ? ' actif' : ''}"
                 onclick="EXEC_STATE.statsFilters.annee='${y}';execShowStatistiquesAdvanced()">${y}</button>`).join('')}
     </div>` : '';
+    // Barre au modèle du menu « Processus » : la classe `exec-filter-bar` suffit
+    // à ce que la feuille commune des filtres borde les listes de la couleur du
+    // thème. Elles ne s'étirent plus sur toute la largeur — un nom de domaine ou
+    // de prestataire n'en demande pas tant.
     const filterBar = `${annees}
-    <div style="display:flex;flex-wrap:nowrap;gap:0.5rem;margin-bottom:1rem;padding:0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;align-items:center;">
-        <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.domaine=this.value;execShowStatistiquesAdvanced()">
+    <div class="exec-filter-bar" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;align-items:center;">
+        <select class="form-select" style="max-width:220px;" onchange="EXEC_STATE.statsFilters.domaine=this.value;execShowStatistiquesAdvanced()">
             <option value="">${te('all_domains')}</option>
             ${domaines.map(d => `<option value="${d.id}" ${F.domaine===d.id?'selected':''}>${_esc(d.code || d.nom)}</option>`).join('')}
         </select>
-        <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.prestataire=this.value;execShowStatistiquesAdvanced()">
+        <select class="form-select" style="max-width:280px;" onchange="EXEC_STATE.statsFilters.prestataire=this.value;execShowStatistiquesAdvanced()">
             <option value="">${te('all_providers')}</option>
             ${prests.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
         </select>

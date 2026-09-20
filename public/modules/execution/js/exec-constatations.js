@@ -104,7 +104,7 @@ function _execRenderConstaRows(filtered) {
             ? `execOpenPACSlider('${c.id}')`
             : `document.getElementById('${rowId}').style.display = document.getElementById('${rowId}').style.display === 'none' ? 'table-row' : 'none';`;
         return `<tr style="cursor:pointer;" onclick="${actionLigne}">
-            <td><strong>${_esc(c.reference || '')}</strong>${ouvrePac ? ''
+            <td style="white-space:nowrap;"><strong>${_esc(c.reference || '')}</strong>${ouvrePac ? ''
                 : ` <span style="font-size:0.7rem;color:var(--text-muted);">${EXEC_ICONS.chevronDown}</span>`}</td>
             <td>${_esc(c.prestataire_nom || '')}</td>
             <td>${_esc(domNom)}</td>
@@ -163,8 +163,8 @@ function _execRenderConstaList(subNav) {
     const base = allConstatations.filter(c => PRE_TRANSMIT.has(c.statut || ''));
     const filtered = _execApplyConstaFilters(base);
     const filterOpts = isPrest
-        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true }
-        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true };
+        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showCriticite: true, showSearch: true }
+        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showCriticite: true, showSearch: true };
     const canCreateDirect = !isPrest && (typeof _execCanContribute === 'function' ? _execCanContribute() : true);
     EXEC_STATE.constaExport = filtered.map((c) => c.id);
     return `<div class="page-content">
@@ -182,11 +182,11 @@ function _execRenderConstaList(subNav) {
             <table class="exec-data-table exec-compact-table exec-etats-table"
                 style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
               <thead><tr>
-                <th style="width:150px;">${te('ref_consta')}</th><th style="width:150px;">${te('provider')}</th>
-                <th>${te('domaine')}</th><th style="width:90px;">${te('criticite')}</th>
-                <th style="width:100px;">${te('date_due')}</th><th style="width:95px;">${te('echeance')}</th>
-                <th style="width:105px;">${te('statut_pac')}</th>
-                <th style="width:110px;text-align:center;">${te('actions')}</th>
+                <th style="width:205px;">${te('ref_consta')}</th><th style="width:140px;">${te('provider')}</th>
+                <th>${te('domaine')}</th><th style="width:85px;">${te('criticite')}</th>
+                <th style="width:100px;">${te('date_due')}</th><th style="width:90px;">${te('echeance')}</th>
+                <th style="width:100px;">${te('statut_pac')}</th>
+                <th style="width:105px;text-align:center;">${te('actions')}</th>
               </tr></thead>
               <tbody>${_execRenderConstaRows(filtered)}</tbody>
             </table>
@@ -204,8 +204,8 @@ function _execRenderConstaSuivi(subNav) {
     const base = allConstatations.filter(c => POST_TRANSMIT.has(c.statut || ''));
     const filtered = _execApplyConstaFilters(base);
     const filterOpts = isPrest
-        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true }
-        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true };
+        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showCriticite: true, showSearch: true }
+        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showCriticite: true, showSearch: true };
     EXEC_STATE.constaExport = filtered.map((c) => c.id);
     return `<div class="page-content">
         <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
@@ -219,11 +219,11 @@ function _execRenderConstaSuivi(subNav) {
             <table class="exec-data-table exec-compact-table exec-etats-table"
                 style="font-size:0.8rem;table-layout:fixed;min-width:920px;">
               <thead><tr>
-                <th style="width:150px;">${te('ref_consta')}</th><th style="width:150px;">${te('provider')}</th>
-                <th>${te('domaine')}</th><th style="width:90px;">${te('criticite')}</th>
-                <th style="width:100px;">${te('date_due')}</th><th style="width:95px;">${te('echeance')}</th>
-                <th style="width:105px;">${te('statut_pac')}</th>
-                <th style="width:110px;text-align:center;">${te('actions')}</th>
+                <th style="width:205px;">${te('ref_consta')}</th><th style="width:140px;">${te('provider')}</th>
+                <th>${te('domaine')}</th><th style="width:85px;">${te('criticite')}</th>
+                <th style="width:100px;">${te('date_due')}</th><th style="width:90px;">${te('echeance')}</th>
+                <th style="width:100px;">${te('statut_pac')}</th>
+                <th style="width:105px;text-align:center;">${te('actions')}</th>
               </tr></thead>
               <tbody>${_execRenderConstaRows(filtered)}</tbody>
             </table>
@@ -448,8 +448,8 @@ function _execRenderConstaTerrain(subNav) {
     const filtered = _execApplyConstaFilters(_execConstaTerrain(EXEC_STATE.data.constatations || []));
     const isPrest = _execIsPrestataire();
     const filterOpts = isPrest
-        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true }
-        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, showCriticite: true, showSearch: true };
+        ? { showDomaine: false, showSecteur: false, showPrestataire: false, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showCriticite: true, showSearch: true }
+        : { showDomaine: true, showSecteur: false, showPrestataire: true, showStatut: false, showAnnee: true, showTrimestre: true, trimestreBoutons: true, showCriticite: true, showSearch: true };
     EXEC_STATE.constaExport = filtered.map((c) => c.id);
     return `<div class="page-content">
         <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">

@@ -1469,7 +1469,7 @@ function _execRenderFilterBar(onchangeFunc, opts) {
             <option value="">${te('all_years')}</option>${years.map(y => `<option value="${y}" ${String(F.annee)===String(y)?'selected':''}>${y}</option>`).join('')}</select>`);
     }
 
-    if (opts.showTrimestre) {
+    if (opts.showTrimestre && !opts.trimestreBoutons) {
         filters.push(`<select class="form-select" onchange="EXEC_STATE.filters.trimestre=this.value;${onchangeFunc}">
             <option value="">${te('all_trimestres')}</option>
             <option value="1" ${F.trimestre==='1'?'selected':''}>T1 (Jan-Mar)</option>
@@ -1530,6 +1530,18 @@ function _execRenderFilterBar(onchangeFunc, opts) {
     html += filters.join('');
     html += `<button class="btn-icon-reset" onclick="execResetFilters()" title="${te('reset_filters')}">${EXEC_ICONS.reset}</button>`;
     html += '</div>';
+    // Trimestres en rangée de boutons, sous les listes, à la manière des
+    // années du tableau de bord : les quatre se lisent d'un coup d'œil.
+    if (opts.showTrimestre && opts.trimestreBoutons) {
+        const retenu = String(F.trimestre || '');
+        html += `
+    <div class="oasis-annees">
+        <button type="button" class="oasis-annee${retenu ? '' : ' actif'}"
+                onclick="EXEC_STATE.filters.trimestre='';${onchangeFunc}">${te('all_trimestres')}</button>
+        ${['1', '2', '3', '4'].map(q => `<button type="button" class="oasis-annee${retenu === q ? ' actif' : ''}"
+                onclick="EXEC_STATE.filters.trimestre='${q}';${onchangeFunc}">${te('trimestre_n', q)}</button>`).join('')}
+    </div>`;
+    }
     return html;
 }
 

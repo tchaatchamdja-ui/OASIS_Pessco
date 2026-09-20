@@ -660,6 +660,7 @@ EXEC_TR.pt = {
         taux_cloture_constatations: 'Taxa de encerramento constatações',
         trimestre: 'Trimestre',
         all_trimestres: 'Todos os trimestres',
+        trimestre_n: 'Trimestre {0}',
         activites_planifiees: 'Atividades Planejadas',
         activites_non_declenchees: 'Não Acionadas',
         activites_en_cours: 'Em Andamento',

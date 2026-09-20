@@ -660,6 +660,7 @@ EXEC_TR.en = {
         taux_cloture_constatations: 'Findings closure rate',
         trimestre: 'Quarter',
         all_trimestres: 'All quarters',
+        trimestre_n: 'Quarter {0}',
         activites_planifiees: 'Planned Activities',
         activites_non_declenchees: 'Not Triggered',
         activites_en_cours: 'In Progress',

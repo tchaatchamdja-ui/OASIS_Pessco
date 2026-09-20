@@ -699,6 +699,7 @@ const EXEC_TR = {
         taux_cloture_constatations: 'Taux de clôture constatations',
         trimestre: 'Trimestre',
         all_trimestres: 'Tous les trimestres',
+        trimestre_n: 'Trimestre {0}',
         activites_planifiees: 'Activites Planifiees',
         activites_non_declenchees: 'Non Declenchees',
         activites_en_cours: 'En Cours',

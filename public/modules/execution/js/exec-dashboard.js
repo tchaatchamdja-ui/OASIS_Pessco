@@ -191,6 +191,12 @@ function _execSgActivites(F, secteurToDomaine, isPrest, mesPrest) {
         allActivities = allActivities.filter(a => a.domaine_id_resolved === F.domaine);
     }
 
+    // Apply secteur filter
+    if (F.secteur) {
+        allActivities = allActivities.filter(a =>
+            (a.secteur_id || _execSecteurDe(a.prestataire_id)) === F.secteur);
+    }
+
     // Apply prestataire filter
     if (F.prestataire) {
         allActivities = allActivities.filter(a => a.prestataire_id === F.prestataire);
@@ -226,6 +232,10 @@ function _execSgConstatations(F, constatations) {
     }
     if (F.domaine) {
         filteredConstatations = filteredConstatations.filter(c => c.domaine_id === F.domaine);
+    }
+    if (F.secteur) {
+        filteredConstatations = filteredConstatations.filter(c =>
+            (c.secteur_id || _execSecteurDe(c.prestataire_id)) === F.secteur);
     }
     if (F.prestataire) {
         filteredConstatations = filteredConstatations.filter(c => c.prestataire_id === F.prestataire);
@@ -279,6 +289,14 @@ function _execSgIndicateurs(allActivities, filteredConstatations) {
 // Rattachement de chaque prestataire (domaine + secteur + nom), pour résoudre
 // les éléments qui ne portent pas directement ces infos (dossiers et
 // constatations clôturés).
+// Secteur d'un prestataire, tel que le référentiel le rattache. Les
+// constatations et les dossiers ne portent pas de secteur : c'est par là que
+// le filtre les retient.
+function _execSecteurDe(prestataireId) {
+    const p = (EXEC_STATE.data.prestataires || []).find(x => x.id === prestataireId);
+    return (p && p.secteur_id) || '';
+}
+
 function _execSgRattachements(secteurs) {
     const prestDomaineLookup = {};
     (EXEC_STATE.data.prestataires || []).forEach(p => {
@@ -302,6 +320,7 @@ function _execSgADeclencher(F, mesPrest, prestDomaineLookup) {
         if (mesPrest && !mesPrest.includes(pId)) return false;
         if (F.prestataire && pId !== F.prestataire) return false;
         if (F.domaine && (prestDomaineLookup[pId] || {}).domaine_id !== F.domaine) return false;
+        if (F.secteur && (l.secteur_id || (prestDomaineLookup[pId] || {}).secteur_id) !== F.secteur) return false;
         const debut = String(l.debut || '');
         if (F.annee && debut.slice(0, 4) !== String(F.annee)) return false;
         if (F.trimestre) {
@@ -338,6 +357,10 @@ function _execSgDossiersClos(F, dossiers, mesPrest, prestDomaineLookup) {
     if (F.domaine) {
         closedDossiers = closedDossiers.filter(d =>
             (prestDomaineLookup[d.prestataire_id] || {}).domaine_id === F.domaine);
+    }
+    if (F.secteur) {
+        closedDossiers = closedDossiers.filter(d =>
+            (d.secteur_id || (prestDomaineLookup[d.prestataire_id] || {}).secteur_id) === F.secteur);
     }
     if (F.annee) {
         closedDossiers = closedDossiers.filter(d =>
@@ -1415,7 +1438,8 @@ function execShowStatistiquesAdvanced() {
     // un trimestre hérité du tableau de bord filtrerait sans que rien ne le dise.
     if (!EXEC_STATE.statsFilters) {
         const f = EXEC_STATE.filters || {};
-        EXEC_STATE.statsFilters = { domaine: f.domaine || '', prestataire: f.prestataire || '', annee: f.annee || '', trimestre: '' };
+        EXEC_STATE.statsFilters = { domaine: f.domaine || '', secteur: f.secteur || '',
+            prestataire: f.prestataire || '', annee: f.annee || '', trimestre: '' };
     }
     const F = EXEC_STATE.statsFilters;
     F.trimestre = '';
@@ -1488,6 +1512,7 @@ function _execStatsConstatations(F) {
     // Filtres du tableau de bord
     if (F.prestataire) consts = consts.filter(c => c.prestataire_id === F.prestataire);
     if (F.domaine) consts = consts.filter(c => (prestDom[c.prestataire_id] || c.domaine_id) === F.domaine);
+    if (F.secteur) consts = consts.filter(c => (c.secteur_id || _execSecteurDe(c.prestataire_id)) === F.secteur);
     if (F.annee) consts = consts.filter(c => String(c.date_creation || c.date_ouverture || '').slice(0, 4) === String(F.annee));
     if (F.trimestre) consts = consts.filter(c => {
         const d = String(c.date_creation || c.date_ouverture || '');
@@ -1637,8 +1662,15 @@ function _execStatsCalculs(consts) {
 // boutons du tableau de bord — les années couvertes se lisent d'un coup d'œil,
 // là où une liste déroulante les cache.
 function _execStatsBarreFiltres(F, prests) {
-    // Options du filtre propre
+    // Options du filtre propre. Le secteur ne propose que ceux du domaine
+    // retenu, et le prestataire que ceux du secteur : un choix qui ne rendrait
+    // aucune ligne n'a pas à être offert.
     const domaines = EXEC_STATE.data.domaines || [];
+    const secteurs = (EXEC_STATE.data.secteurs || [])
+        .filter(s => !F.domaine || s.domaine_id === F.domaine);
+    const prestsRetenus = prests.filter(p => (!F.domaine || (p.domaine_id
+        || (secteurs.find(s => s.id === p.secteur_id) || {}).domaine_id) === F.domaine)
+        && (!F.secteur || p.secteur_id === F.secteur));
     const allConstYears = new Set((EXEC_STATE.data.constatations || [])
         .map(c => String(c.date_creation || c.date_ouverture || '').slice(0, 4)).filter(Boolean));
     const years = [...allConstYears].sort((a, b) => b.localeCompare(a));
@@ -1656,15 +1688,19 @@ function _execStatsBarreFiltres(F, prests) {
     // de prestataire n'en demande pas tant.
     const filterBar = `${annees}
     <div class="exec-filter-bar" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;align-items:center;">
-        <select class="form-select" style="max-width:220px;" onchange="EXEC_STATE.statsFilters.domaine=this.value;execShowStatistiquesAdvanced()">
+        <select class="form-select" style="max-width:220px;" onchange="EXEC_STATE.statsFilters.domaine=this.value;EXEC_STATE.statsFilters.secteur='';execShowStatistiquesAdvanced()">
             <option value="">${te('all_domains')}</option>
             ${domaines.map(d => `<option value="${d.id}" ${F.domaine===d.id?'selected':''}>${_esc(d.code || d.nom)}</option>`).join('')}
         </select>
+        <select class="form-select" style="max-width:240px;" onchange="EXEC_STATE.statsFilters.secteur=this.value;execShowStatistiquesAdvanced()">
+            <option value="">${te('all_sectors')}</option>
+            ${secteurs.map(s => `<option value="${s.id}" ${F.secteur===s.id?'selected':''}>${_esc(s.code ? `${s.code} - ${s.nom}` : s.nom)}</option>`).join('')}
+        </select>
         <select class="form-select" style="max-width:280px;" onchange="EXEC_STATE.statsFilters.prestataire=this.value;execShowStatistiquesAdvanced()">
             <option value="">${te('all_providers')}</option>
-            ${prests.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
+            ${prestsRetenus.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
         </select>
-        <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="${te('reinitialiser')}">${EXEC_ICONS.reset || '↺'}</button>
+        <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="${te('reinitialiser')}">${EXEC_ICONS.reset || '↺'}</button>
     </div>`;
     return filterBar;
 }

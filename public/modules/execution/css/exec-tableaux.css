@@ -340,15 +340,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    /* La cellule est en flex : l'espace écrit entre l'année et le trimestre y
+       serait ignoré, et « 2025 T4 » se lirait « 2025T4 ». */
+    gap: 0.25rem;
     border-left: 1px solid var(--border);
     font-size: 0.7rem;
 }
 .exec-module .exec-gantt .g-entete .g-cellule:first-child { border-left: none; }
-/* Calendrier à cheval sur plusieurs années : le trimestre qui ouvre une année
-   la porte, et la coupure se voit. */
+/* Calendrier à cheval sur plusieurs années : chaque trimestre porte son année,
+   et la coupure entre deux années se voit. */
 .exec-module .exec-gantt .g-entete .g-cellule.g-debut-annee {
     border-left: 2px solid color-mix(in srgb, var(--primary) 55%, var(--border));
-    gap: 0.25rem;
 }
 .exec-module .exec-gantt .g-entete .g-cellule .g-cellule-annee {
     color: var(--primary);

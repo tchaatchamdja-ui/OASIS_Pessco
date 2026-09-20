@@ -743,8 +743,8 @@ function _execSuiviActivitesHtml() {
         else trimestres.push({ annee: m.annee, t, n: 1, debutAnnee: !dernier || dernier.annee !== m.annee });
     });
     // Sans année sélectionnée, le calendrier peut courir sur plusieurs années :
-    // « T1 » seul ne dit plus de quelle année il s'agit. Le premier trimestre
-    // de chaque année la porte alors, et un trait plus marqué les sépare.
+    // « T2 » seul ne dit plus de quelle année il s'agit. Chaque trimestre porte
+    // alors la sienne, et un trait plus marqué sépare les années.
     const plusieursAnnees = trimestres.some(t => t.annee !== trimestres[0].annee);
 
     // Regroupement par prestataire, dans l'ordre alphabétique. Tous les
@@ -849,7 +849,7 @@ function _execSuiviActivitesHtml() {
                     <div class="g-nom g-annee">${min.getFullYear()}${max.getFullYear() !== min.getFullYear() ? ` – ${max.getFullYear()}` : ''}</div>
                     <div class="g-piste g-entete">
                         ${trimestres.map(t => `<div class="g-cellule${plusieursAnnees && t.debutAnnee ? ' g-debut-annee' : ''}" style="flex-grow:${t.n};">${
-                            plusieursAnnees && t.debutAnnee ? `<b class="g-cellule-annee">${t.annee}</b> ` : ''}T${t.t}</div>`).join('')}
+                            plusieursAnnees ? `<b class="g-cellule-annee">${t.annee}</b> ` : ''}T${t.t}</div>`).join('')}
                     </div>
                     <div class="g-nom g-entete-vide"></div>
                     <div class="g-piste g-entete g-entete-mois">

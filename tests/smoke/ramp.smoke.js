@@ -1073,6 +1073,15 @@ module.exports = async function rampSmoke(port) {
       anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175', description: 'Constat du Niger', categorie: '2', action: '2' }],
     }]);
     const ficheNiger = await srv.appel(`${M}/poi`, { method: 'POST', body: '{}' });
+    // Une pièce déposée sur le constat du Niger : elle doit se lire d'ici,
+    // comme le rapport, et seulement se lire.
+    const ecartNiger = (srv.donnees('ramp').ecarts || [])
+      .find((e) => e.description === 'Constat du Niger') || {};
+    await srv.appel(`${M}/ecarts/${ecartNiger.id}/preuves`, {
+      method: 'POST',
+      headers: { 'content-type': `multipart/form-data; boundary=${frontiere}` },
+      body: corpsPreuve,
+    });
     await srv.appel(`${M}/instance`, { method: 'PUT', body: JSON.stringify({ instance: ici }) });
 
     const chezNous = await srv.appel(`${M}/inspections`);
@@ -1083,11 +1092,23 @@ module.exports = async function rampSmoke(port) {
     verifier('la table régionale porte les écarts de tous les États',
       reg.statut === 200 && !!duNiger && (duNiger.anomalies || []).length === 1,
       (reg.corps.inspections || []).map((x) => `${x.vol}/${x.pays}`).join(' '));
-    verifier('une inspection sans écart n’y figure pas',
-      (reg.corps.inspections || []).every((x) => (x.anomalies || []).length));
-    verifier('ni preuves ni plan d’actions dans la table régionale',
+    // Le formulaire de requête puise dans cette même liste : elle couvre donc
+    // toutes les inspections, y compris celles qui n'ont relevé aucun écart —
+    // la table, elle, n'en montre que les constats.
+    verifier('la liste régionale couvre aussi les inspections sans écart',
+      (reg.corps.inspections || []).some((x) => !(x.anomalies || []).length),
+      (reg.corps.inspections || []).map((x) => `${x.vol}:${(x.anomalies || []).length}`).join(' '));
+    verifier('pas de plan d’actions dans la table régionale',
       (reg.corps.inspections || []).every((x) => (x.anomalies || [])
-        .every((a) => a.preuves === undefined && a.pac === undefined)));
+        .every((a) => a.pac === undefined)));
+    verifier('les pièces d’un constat s’y annoncent, sans leur nom sur le disque',
+      (reg.corps.inspections || []).every((x) => (x.anomalies || [])
+        .every((a) => Array.isArray(a.preuves) && a.preuves.every((p) => p.fichier === undefined))));
+    const pieceNiger = ((duNiger.anomalies || [])[0] || {}).preuves || [];
+    verifier('la pièce du constat du Niger est annoncée', pieceNiger.length === 1,
+      JSON.stringify(pieceNiger));
+    verifier('et se télécharge depuis un autre État',
+      (await srv.appel(`${M}/ecarts/${ecartNiger.id}/preuves/${(pieceNiger[0] || {}).id}/fichier`)).statut === 200);
     verifier('l’inspection d’un autre État ne se supprime pas d’ici',
       (await srv.appel(`${M}/inspections/${duNiger.id}`, { method: 'DELETE' })).statut === 404);
 

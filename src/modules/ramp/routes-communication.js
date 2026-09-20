@@ -256,8 +256,16 @@ module.exports = function register(app, deps, M) {
   // franchisse les instances, et il ne sert qu'à lire — rien ne s'y modifie.
   //
   // Ce qui en sort est réduit à ce que l'écran montre et à ce qu'une requête
-  // désigne : ni preuves déposées, ni plan d'actions correctives, qui
-  // appartiennent au suivi de l'État qui l'a relevé.
+  // désigne : le plan d'actions correctives, qui appartient au suivi de l'État
+  // qui a relevé l'écart, n'en fait pas partie. Les pièces, si : elles se
+  // consultent comme le rapport, et le sous-menu les ouvre en lecture seule —
+  // de leur intitulé, jamais de leur nom sur le disque.
+  const vuePreuveRegionale = (p) => ({
+    id: p.id, intitule: p.intitule, commentaire: p.commentaire,
+    nom_origine: p.nom_origine, taille: p.taille,
+    action: p.action, depose_le: p.depose_le,
+  });
+
   const vueEcartRegional = (e) => ({
     id: e.id,
     inspection_id: e.inspection_id,
@@ -267,6 +275,7 @@ module.exports = function register(app, deps, M) {
     categorie: e.categorie === undefined ? '' : e.categorie,
     action: e.action || '',
     suivi: e.suivi || '',
+    preuves: (e.preuves || []).map(vuePreuveRegionale),
   });
 
   app.get(`${M}/ecarts-regionaux`, requireAuth, (req, res) => {
@@ -277,10 +286,10 @@ module.exports = function register(app, deps, M) {
       if (!parInspection.has(e.inspection_id)) parInspection.set(e.inspection_id, []);
       parInspection.get(e.inspection_id).push(vueEcartRegional(e));
     });
-    // Une inspection sans écart n'a rien à dire ici : la table est celle des
-    // constats.
+    // Toutes les inspections, écart ou non : la table ne montre que les
+    // constats — une inspection sans écart n'y produit aucune ligne —, mais le
+    // formulaire de requête propose bien toutes les inspections du dispositif.
     const inspections = db.list('inspections')
-      .filter((i) => (parInspection.get(i.id) || []).length)
       .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
       .map((i) => ({
         id: i.id,
@@ -294,7 +303,7 @@ module.exports = function register(app, deps, M) {
         itemsInspectes: i.itemsInspectes || 0,
         poi_id: i.poi_id || '',
         poi_reference: i.poi_reference || '',
-        anomalies: parInspection.get(i.id),
+        anomalies: parInspection.get(i.id) || [],
       }));
     return res.json({
       inspections,

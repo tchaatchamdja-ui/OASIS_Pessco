@@ -1062,6 +1062,18 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-btn-icone.ramp-fait {
     border-color: #047857; color: #047857; background: #d1fae5;
 }
+/* Un bouton d'action sans objet — un constat sans pièce jointe — se montre
+   sans se proposer : le geste n'aurait rien à ouvrir. */
+.ramp-btn-icone:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Rang retenu dans une table de choix : la teinte du thème et un filet à
+   gauche. La couleur seule se perdait sur les rangs pairs. */
+.ramp-table tr.ramp-rang-choisi > td {
+    background: var(--ramp-accent-bg); font-weight: 500;
+}
+.ramp-table tr.ramp-rang-choisi > td:first-child {
+    box-shadow: inset 3px 0 0 var(--ramp-accent);
+}
 
 /* Table des écarts : la description tient le tiers de la largeur, et le
    détail de l'item se déplie sous la ligne. */

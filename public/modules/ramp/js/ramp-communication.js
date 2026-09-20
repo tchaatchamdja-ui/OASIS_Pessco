@@ -30,6 +30,8 @@ const RAMP_COM = {
     // Écarts relevés par tous les États : les inspections arrivent avec les
     // leurs, comme sur les écrans du module.
     regionales: [], regionalDemande: false, regionalChargement: false,
+    // Pièces d'un constat ouvertes en volet, en lecture seule.
+    preuvesOuvertes: null,
     filtresRegional: { etat: '', exploitant: '', categorie: '', recherche: '' },
     partages: [], partagesDemandes: false, partageOuvert: null,
     // Lettres d'un partage dépliées : repliées d'office — on vient d'abord y
@@ -290,6 +292,13 @@ function rampComRegEcarts() {
 const rampComRegValeurs = (champ) => [...new Set((RAMP_COM.regionales || [])
     .map((i) => i[champ]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'fr'));
 
+// Les années couvertes par les inspections du dispositif, la plus récente
+// d'abord — celles de l'instance ne suffisent plus à désigner ce dont une
+// requête parle.
+const rampComRegAnnees = () => [...new Set((RAMP_COM.regionales || [])
+    .map((i) => String(i.date || '').slice(0, 4)).filter((a) => /^\d{4}$/.test(a)))]
+    .sort((a, b) => Number(b) - Number(a));
+
 function rampComRegionalHtml() {
     if (!RAMP_COM.regionalDemande) {
         RAMP_COM.regionalDemande = true;
@@ -355,6 +364,7 @@ function rampComRegionalHtml() {
 
 function rampComRegLigne(a) {
     const i = a.inspection;
+    const pieces = (a.preuves || []).length;
     return `<tr>
         <td style="white-space:nowrap;">${_rEsc(rampDate(i.date))}</td>
         <td>${_rEsc(i.pays || '—')}</td>
@@ -368,11 +378,76 @@ function rampComRegLigne(a) {
             <button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampOuvrirApercu(${_rArg(i.id)})"
                     title="${_rAttr(rt('reg_rapport'))}">${RAMP_ICONS.eye}</button>
+            <button class="btn btn-outline btn-sm ramp-btn-icone${pieces ? ' ramp-fait' : ''}"
+                    ${pieces ? '' : 'disabled'}
+                    onclick="rampComPreuvesEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
+                    title="${_rAttr(pieces ? `${rt('reg_pieces')} (${pieces})` : rt('reg_pieces_aucune'))}">
+                ${RAMP_ICONS.upload}</button>
             ${RAMP_COM.peutEcrire ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampComRequeteEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
                     title="${_rAttr(rt('reg_requete'))}">${RAMP_ICONS.contacts}</button>` : ''}
         </td>
     </tr>`;
+}
+
+// ── Pièces d'un constat, en lecture seule ──
+// Ce que l'État qui a relevé l'écart a déposé pour en suivre la correction :
+// on le lit et on le télécharge, on n'y touche pas. Le volet de suivi du
+// module, lui, sert à déposer — ce n'est pas ce qu'on fait chez un voisin.
+function rampComPreuvesEcart(inspectionId, ecartId) {
+    const insp = rampComInspectionRegionale(inspectionId);
+    const ec = insp ? (insp.anomalies || []).find((a) => a.id === ecartId) : null;
+    if (!ec) return;
+    RAMP_COM.preuvesOuvertes = { inspection: insp, ecart: ec };
+    rampComVoletPreuves();
+}
+
+function rampComVoletPreuves() {
+    const o = RAMP_COM.preuvesOuvertes;
+    if (!o) return;
+    rampAfficherSlider(`
+        <div class="ramp-slider-header">
+            <button class="btn btn-outline btn-sm ramp-slider-retour" onclick="rampFermerSlider()">
+                ${RAMP_ICONS.back} ${rt('retour')}
+            </button>
+            <span style="display:flex;">${RAMP_ICONS.upload}</span>
+            <span class="ramp-slider-titre">${rt('reg_pieces')} — ${_rEsc(o.ecart.itemCode || '')}</span>
+        </div>
+        <div class="ramp-slider-body">${rampComPreuvesHtml(o)}</div>`, 'moitie');
+    RAMP_STATE.voletRejouer = rampComVoletPreuves;
+}
+
+function rampComPreuvesHtml(o) {
+    const i = o.inspection;
+    const e = o.ecart;
+    const ligne = (cle, valeur) => (valeur
+        ? `<div class="ramp-poi-recap-ligne"><i>${rt(cle)}</i><span>${_rEsc(valeur)}</span></div>` : '');
+    const pieces = e.preuves || [];
+    return `
+    <p class="ramp-note">${rt('reg_pieces_aide')}</p>
+    <div class="ramp-card">
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('reg_designe')}</div>
+        <div class="ramp-poi-recap">
+            ${ligne('c_poi', i.poi_reference)}
+            ${ligne('c_date', i.date ? rampDate(i.date) : '')}
+            ${ligne('c_etat', i.pays)}
+            ${ligne('c_exploitant', i.exploitant)}
+            ${ligne('c_immat_court', i.immatriculation)}
+            ${ligne('c_item', e.itemCode)}
+            ${ligne('c_description', e.description)}
+        </div>
+    </div>
+    <div class="ramp-card">
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">B</span>${rt('pr_toutes')}</div>
+        ${pieces.length ? `<div class="ramp-preuves-liste">
+            ${pieces.map((p) => `<a class="ramp-preuve-ligne" style="text-decoration:none;"
+                href="${RAMP_API}/ecarts/${encodeURIComponent(e.id)}/preuves/${encodeURIComponent(p.id)}/fichier">
+                <span>${RAMP_ICONS.download} ${_rEsc(p.intitule || p.nom_origine)}</span>
+                <span class="ramp-sous-titre">${_rEsc(p.nom_origine || '')} ·
+                    ${Math.round((p.taille || 0) / 1024)} Ko</span>
+            </a>`).join('')}
+        </div>` : `<p class="ramp-sous-titre">${rt('reg_pieces_aucune')}</p>`}
+    </div>`;
 }
 
 // ══════════════════════════════════════
@@ -516,6 +591,12 @@ function rampComPartageHtml(pa) {
 // à retrouver l'inspection, puis l'écart s'il y en a un.
 
 function rampComNouvelle() {
+    // La désignation puise dans la liste régionale : si l'on arrive ici sans
+    // être passé par les écarts régionaux, elle se charge maintenant.
+    if (!RAMP_COM.regionalDemande) {
+        RAMP_COM.regionalDemande = true;
+        setTimeout(rampChargerEcartsRegionaux, 0);
+    }
     RAMP_COM.brouillon = {
         objet: '', message: '',
         etats_destinataires: [],
@@ -565,11 +646,14 @@ function rampComRetirerDesignation() {
     rampVoletCommunication();
 }
 
-// Inspections répondant aux filtres de désignation.
+// Inspections répondant aux filtres de désignation. Une requête s'adresse à un
+// autre État au sujet de ce qu'il a inspecté : c'est donc la liste régionale
+// qu'on parcourt — toutes les inspections du dispositif, et non les seules que
+// l'instance tient.
 function rampComInspections() {
     const c = (RAMP_COM.brouillon || {}).cible || {};
     const q = _rNorm(c.recherche);
-    return (RAMP_STATE.data.inspections || []).filter((i) => {
+    return (RAMP_COM.regionales || []).filter((i) => {
         if (c.annee && String(i.date || '').slice(0, 4) !== String(c.annee)) return false;
         if (c.etat && i.pays !== c.etat) return false;
         if (c.exploitant && i.exploitant !== c.exploitant) return false;
@@ -721,7 +805,7 @@ function rampComFormulaireHtml() {
         <div class="ramp-filtres">
             <select class="ramp-select" onchange="rampComCible('annee', this.value)">
                 <option value="">${rt('f_annees')}</option>
-                ${rampAnnees().map((a) => `<option value="${a}"
+                ${rampComRegAnnees().map((a) => `<option value="${a}"
                     ${b.cible.annee === String(a) ? 'selected' : ''}>${a}</option>`).join('')}
             </select>
             <select class="ramp-select" onchange="rampComCible('etat', this.value)">
@@ -731,12 +815,12 @@ function rampComFormulaireHtml() {
             </select>
             <select class="ramp-select" onchange="rampComCible('exploitant', this.value)">
                 <option value="">${rt('f_exploitants')}</option>
-                ${rampValeurs('exploitant').map((v) => `<option value="${_rAttr(v)}"
+                ${rampComRegValeurs('exploitant').map((v) => `<option value="${_rAttr(v)}"
                     ${b.cible.exploitant === v ? 'selected' : ''}>${_rEsc(v)}</option>`).join('')}
             </select>
             <select class="ramp-select" onchange="rampComCible('immatriculation', this.value)">
                 <option value="">${rt('f_immat')}</option>
-                ${rampValeurs('immatriculation').map((v) => `<option value="${_rAttr(v)}"
+                ${rampComRegValeurs('immatriculation').map((v) => `<option value="${_rAttr(v)}"
                     ${b.cible.immatriculation === v ? 'selected' : ''}>${_rEsc(v)}</option>`).join('')}
             </select>
             <input class="ramp-input" placeholder="${_rAttr(rt('com_rechercher_insp'))}"
@@ -751,21 +835,28 @@ function rampComFormulaireHtml() {
                     <th style="width:70px;text-align:center;">${rt('com_choisir')}</th>
                 </tr></thead>
                 <tbody>
-                    ${inspections.length ? inspections.map((i) => `<tr${i.id === b.inspection_id
-                        ? ' style="background:var(--ramp-accent-bg);"' : ''}>
+                    ${inspections.length ? inspections.map((i) => {
+        // Une seule inspection est retenue à la fois : la ligne choisie se
+        // teinte, et sa case est la seule cochée — les autres restent vides,
+        // sans quoi toutes paraissaient l'être.
+        const retenue = i.id === b.inspection_id;
+        return `<tr class="${retenue ? 'ramp-rang-choisi' : ''}">
                         <td>${i.poi_reference ? `<strong class="ramp-code">${_rEsc(i.poi_reference)}</strong>`
-                            : '<span class="ramp-vide">—</span>'}</td>
+            : '<span class="ramp-vide">—</span>'}</td>
                         <td>${_rEsc(rampDate(i.date))}</td>
                         <td><strong>${_rEsc(i.exploitant || '—')}</strong>
                             <span class="ramp-sous-titre">${_rEsc(i.pays || '')}</span></td>
                         <td>${_rEsc(i.immatriculation || '—')}</td>
                         <td style="text-align:center;">${(i.anomalies || []).length}</td>
                         <td style="text-align:center;">
-                            <button class="btn btn-outline btn-sm ramp-btn-icone"
+                            <button class="btn btn-outline btn-sm ramp-btn-icone${retenue ? ' ramp-fait' : ''}"
+                                    aria-pressed="${retenue}"
                                     onclick="rampComChoisirInspection(${_rArg(i.id)})"
-                                    title="${_rAttr(rt('com_choisir'))}">${RAMP_ICONS.check}</button>
+                                    title="${_rAttr(rt('com_choisir'))}">${
+    retenue ? RAMP_ICONS.check : RAMP_ICONS.caseVide}</button>
                         </td>
-                    </tr>`).join('')
+                    </tr>`;
+    }).join('')
                         : `<tr><td colspan="6" class="ramp-table-vide">${rt('aucune_inspection')}</td></tr>`}
                 </tbody>
             </table>

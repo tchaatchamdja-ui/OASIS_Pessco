@@ -460,8 +460,12 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/ecarts/:id/preuves/:pid/fichier`, requireAuth, (req, res) => {
     const e = db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
+    // Les pièces d'un constat se consultent comme son rapport : entre États
+    // membres, quelle que soit l'AAC qui tient l'inspection — c'est ce que le
+    // sous-menu « Écarts (Régional) » ouvre, en lecture seule. Seul le
+    // périmètre de l'exploitant s'y oppose encore, en vue Prestataire.
     const inspection = db.get('inspections', e.inspection_id) || {};
-    if (!vues.voitInspection(req, inspection, loadConfig)) {
+    if (!vues.voitExploitant(req, inspection.exploitant)) {
       return introuvable(res, 'ecart');
     }
     const pj = preuve(e, req.params.pid);

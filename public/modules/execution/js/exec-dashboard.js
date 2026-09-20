@@ -144,6 +144,9 @@ function _execSituationGenerale(F) {
         domaineMap, filteredConstatations, activiteRealisee, criticites);
     const tableHtml = _execSgTableHtml({
         domaineMap, domaineNameMap, secteurNameMap, criticites, critLibelle, computePrestStats, aggregate,
+        // Un prestataire retenu au filtre : le tableau n'a plus à le ranger
+        // sous son domaine et son secteur, ses lignes seules se lisent mieux.
+        unPrestataire: !!F.prestataire,
     });
 
     return {
@@ -480,7 +483,8 @@ function _execSgCalculs(domaineMap, filteredConstatations, activiteRealisee, cri
 // lignes de sous-total restent visibles, rien n'est à déplier. Les lignes de
 // prestataire portent data-domaine / data-secteur, que l'export relit.
 function _execSgTableHtml(sg) {
-    const { domaineMap, domaineNameMap, secteurNameMap, criticites, critLibelle, computePrestStats, aggregate } = sg;
+    const { domaineMap, domaineNameMap, secteurNameMap, criticites, critLibelle, computePrestStats, aggregate,
+        unPrestataire } = sg;
 
     // Un taux se lit d'abord à sa couleur : vert tenu, ambre à surveiller,
     // rouge en défaut. Le même barème sert à toutes les lignes, pour qu'un
@@ -538,6 +542,7 @@ function _execSgTableHtml(sg) {
     const trier = (cles, noms) => cles.sort((a, b) => (noms[a] || a).localeCompare(noms[b] || b));
     const tous = [];
     let corps = '';
+    let lignesPrest = 0;
     trier(Object.keys(domaineMap), domaineNameMap).forEach(dId => {
         const dName = domaineNameMap[dId] || dId || '—';
         const secteursDuDomaine = trier(Object.keys(domaineMap[dId]), secteurNameMap).map(sId => ({
@@ -547,9 +552,16 @@ function _execSgTableHtml(sg) {
         }));
         const duDomaine = secteursDuDomaine.flatMap(x => x.stats);
         tous.push(...duDomaine);
-        corps += `<tr class="sg-ligne-domaine"><td>${_esc(dName)}</td>${cellules(aggregate(duDomaine), true)}</tr>`;
+        // Les rangs de regroupement ne paraissent que lorsque le tableau
+        // regroupe : un prestataire retenu au filtre se lit ligne à ligne.
+        if (!unPrestataire) {
+            corps += `<tr class="sg-ligne-domaine"><td>${_esc(dName)}</td>${cellules(aggregate(duDomaine), true)}</tr>`;
+        }
         secteursDuDomaine.forEach(({ sName, stats }) => {
-            corps += `<tr class="sg-ligne-secteur"><td>${_esc(sName)}</td>${cellules(aggregate(stats), true)}</tr>`;
+            if (!unPrestataire) {
+                corps += `<tr class="sg-ligne-secteur"><td>${_esc(sName)}</td>${cellules(aggregate(stats), true)}</tr>`;
+            }
+            lignesPrest += stats.length;
             corps += stats.map(s => `<tr class="sg-ligne-prest" data-domaine="${_escAttr(dName)}" data-secteur="${_escAttr(sName)}">
                     <td>${_esc(s.prestataire_nom)}</td>${cellules(s)}</tr>`).join('');
         });
@@ -561,7 +573,8 @@ function _execSgTableHtml(sg) {
         <table class="exec-table sg-prest-table">
             ${entete}
             <tbody>${corps}</tbody>
-            <tfoot><tr><td>${te('total_general')}</td>${cellules(aggregate(tous), true)}</tr></tfoot>
+            ${(unPrestataire && lignesPrest < 2) ? ''
+      : `<tfoot><tr><td>${te('total_general')}</td>${cellules(aggregate(tous), true)}</tr></tfoot>`}
         </table>
     </div>`;
 }
@@ -1398,11 +1411,14 @@ window.execStatsIndicateur = function (cle) {
 // Statistiques avancées — ouvre un slider plein, basé sur les données filtrées du tableau de bord.
 function execShowStatistiquesAdvanced() {
     // Filtres propres au formulaire (initialisés depuis ceux du tableau de bord à la 1re ouverture).
+    // Le trimestre n'y est pas repris : le formulaire n'offre plus ce choix, et
+    // un trimestre hérité du tableau de bord filtrerait sans que rien ne le dise.
     if (!EXEC_STATE.statsFilters) {
         const f = EXEC_STATE.filters || {};
-        EXEC_STATE.statsFilters = { domaine: f.domaine || '', prestataire: f.prestataire || '', annee: f.annee || '', trimestre: f.trimestre || '' };
+        EXEC_STATE.statsFilters = { domaine: f.domaine || '', prestataire: f.prestataire || '', annee: f.annee || '', trimestre: '' };
     }
     const F = EXEC_STATE.statsFilters;
+    F.trimestre = '';
     const filtrees = _execStatsConstatations(F);
     const { consts, bornes, P, cycle } = _execStatsPeriode(F, filtrees.consts);
     const k = _execStatsCalculs(consts);
@@ -1617,14 +1633,24 @@ function _execStatsCalculs(consts) {
     };
 }
 
-// Barre de filtres propre au formulaire.
+// Barre de filtres propre au formulaire. L'année se choisit à la rangée de
+// boutons du tableau de bord — les années couvertes se lisent d'un coup d'œil,
+// là où une liste déroulante les cache.
 function _execStatsBarreFiltres(F, prests) {
     // Options du filtre propre
     const domaines = EXEC_STATE.data.domaines || [];
     const allConstYears = new Set((EXEC_STATE.data.constatations || [])
         .map(c => String(c.date_creation || c.date_ouverture || '').slice(0, 4)).filter(Boolean));
     const years = [...allConstYears].sort((a, b) => b.localeCompare(a));
-    const filterBar = `
+    const retenue = String(F.annee || '');
+    const annees = years.length ? `
+    <div class="oasis-annees">
+        <button type="button" class="oasis-annee${retenue ? '' : ' actif'}"
+                onclick="EXEC_STATE.statsFilters.annee='';execShowStatistiquesAdvanced()">${te('all_years')}</button>
+        ${years.map(y => `<button type="button" class="oasis-annee${retenue === y ? ' actif' : ''}"
+                onclick="EXEC_STATE.statsFilters.annee='${y}';execShowStatistiquesAdvanced()">${y}</button>`).join('')}
+    </div>` : '';
+    const filterBar = `${annees}
     <div style="display:flex;flex-wrap:nowrap;gap:0.5rem;margin-bottom:1rem;padding:0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;align-items:center;">
         <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.domaine=this.value;execShowStatistiquesAdvanced()">
             <option value="">${te('all_domains')}</option>
@@ -1633,14 +1659,6 @@ function _execStatsBarreFiltres(F, prests) {
         <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.prestataire=this.value;execShowStatistiquesAdvanced()">
             <option value="">${te('all_providers')}</option>
             ${prests.map(p => `<option value="${p.id}" ${F.prestataire===p.id?'selected':''}>${_esc(p.nom)}</option>`).join('')}
-        </select>
-        <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.annee=this.value;execShowStatistiquesAdvanced()">
-            <option value="">${te('toutes_annees_option')}</option>
-            ${years.map(y => `<option value="${y}" ${F.annee===y?'selected':''}>${y}</option>`).join('')}
-        </select>
-        <select class="form-select" style="flex:1;min-width:0;" onchange="EXEC_STATE.statsFilters.trimestre=this.value;execShowStatistiquesAdvanced()">
-            <option value="">${te('all_trimestres')}</option>
-            ${['1','2','3','4'].map(t => `<option value="${t}" ${String(F.trimestre)===t?'selected':''}>T${t}</option>`).join('')}
         </select>
         <button class="btn btn-sm btn-outline" style="flex-shrink:0;" onclick="EXEC_STATE.statsFilters={domaine:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()" title="${te('reinitialiser')}">${EXEC_ICONS.reset || '↺'}</button>
     </div>`;

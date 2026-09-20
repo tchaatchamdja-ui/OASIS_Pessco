@@ -592,7 +592,7 @@ const EXEC_TR = {
         all_sectors: 'Tous les secteurs',
         all_providers: 'Tous les prestataires',
         all_statuses: 'Tous les statuts',
-        all_years: 'Toutes les annees',
+        all_years: 'Toutes les années',
         all_types_supervision: 'Tous les types',
         all_modes_supervision: 'Tous les modes',
         planifie: 'Planifiée',

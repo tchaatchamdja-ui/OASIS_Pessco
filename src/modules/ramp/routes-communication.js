@@ -90,13 +90,25 @@ module.exports = function register(app, deps, M) {
 
   // Inspection visée : la requête en garde un relevé, pour rester lisible même
   // si l'inspection est supprimée plus tard.
-  const releveInspection = (inspectionId, ecartId) => {
+  //
+  // Une même question porte parfois sur plusieurs constats de la même
+  // inspection — on n'écrit pas trois lettres pour trois écarts relevés le même
+  // jour sur le même appareil. Le relevé les tient donc tous ; `ecart_id` et
+  // les trois champs qui décrivent un constat restent ceux du premier, pour ce
+  // qui n'en lit qu'un — les requêtes d'avant n'en désignaient jamais plus.
+  const releveInspection = (inspectionId, ecartIds) => {
     const i = db.get('inspections', inspectionId);
     if (!i) return {};
-    const e = ecartId ? (db.list('ecarts').find((x) => x.id === ecartId && x.inspection_id === i.id)) : null;
+    const voulus = (Array.isArray(ecartIds) ? ecartIds : [ecartIds]).map(texte).filter(Boolean);
+    const ecarts = db.list('ecarts')
+      .filter((x) => x.inspection_id === i.id && voulus.includes(x.id))
+      // L'ordre est celui de la demande, non celui du magasin.
+      .sort((a, b) => voulus.indexOf(a.id) - voulus.indexOf(b.id));
+    const premier = ecarts[0] || null;
     return {
       inspection_id: i.id,
-      ecart_id: e ? e.id : '',
+      ecart_id: premier ? premier.id : '',
+      ecart_ids: ecarts.map((e) => e.id),
       objet_reference: {
         poi_reference: i.poi_reference || '',
         date: i.date || '',
@@ -105,9 +117,15 @@ module.exports = function register(app, deps, M) {
         aeronef: i.aeronef || '',
         immatriculation: i.immatriculation || '',
         vol: i.vol || '',
-        item: e ? (e.itemCode || '') : '',
-        categorie: e ? (e.categorie || '') : '',
-        description: e ? (e.description || '') : '',
+        item: premier ? (premier.itemCode || '') : '',
+        categorie: premier ? (premier.categorie || '') : '',
+        description: premier ? (premier.description || '') : '',
+        ecarts: ecarts.map((e) => ({
+          id: e.id,
+          item: e.itemCode || '',
+          categorie: e.categorie === undefined ? '' : e.categorie,
+          description: e.description || '',
+        })),
       },
     };
   };
@@ -179,7 +197,11 @@ module.exports = function register(app, deps, M) {
       message,
       etat_emetteur: emetteur,
       etats_destinataires: destinataires,
-      ...releveInspection(texte(d.inspection_id), texte(d.ecart_id)),
+      // Un écart, plusieurs, ou aucun — la requête peut ne viser que
+      // l'inspection. `ecart_id` reste accepté : c'est ce qu'envoyaient les
+      // écrans d'avant.
+      ...releveInspection(texte(d.inspection_id),
+        Array.isArray(d.ecart_ids) ? d.ecart_ids : [d.ecart_id]),
       statut: 'ouverte',
       pieces: [],
       echanges: [],

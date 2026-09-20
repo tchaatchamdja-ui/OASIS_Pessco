@@ -116,7 +116,9 @@ function rampComFiltrees() {
             && !(r.etats_destinataires || []).includes(F.etat)) return false;
         if (!q) return true;
         const ref = r.objet_reference || {};
-        return [r.objet, r.message, ref.poi_reference, ref.exploitant, ref.immatriculation, ref.item]
+        return [r.objet, r.message, ref.poi_reference, ref.exploitant, ref.immatriculation,
+            // Les items de tous les constats visés, et non du seul premier.
+            rampComEcartsVises(ref).map((e) => e.item).join(' ')]
             .some((v) => _rNorm(v).includes(q));
     });
 }
@@ -142,7 +144,9 @@ function rampComObjetLigne(r) {
         o.exploitant ? _rEsc(o.exploitant) : '',
         o.immatriculation ? _rEsc(o.immatriculation) : '',
         o.date ? _rEsc(rampDate(o.date)) : '',
-        o.item ? `<span class="ramp-badge items">${_rEsc(o.item)}</span>` : '',
+        // Une requête peut viser plusieurs constats : chacun porte son item.
+        rampComEcartsVises(o).map((e) => (e.item
+            ? `<span class="ramp-badge items">${_rEsc(e.item)}</span>` : '')).join(' '),
     ].filter(Boolean);
     return bouts.join(' · ');
 }
@@ -601,7 +605,7 @@ function rampComNouvelle() {
         objet: '', message: '',
         etats_destinataires: [],
         etat_emetteur: RAMP_COM.mesEtats[0] || '',
-        inspection_id: '', ecart_id: '',
+        inspection_id: '', ecart_ids: [],
         cible: { annee: '', etat: '', exploitant: '', immatriculation: '', recherche: '' },
     };
     RAMP_COM.enAttente = [];
@@ -625,7 +629,7 @@ function rampComRequeteEcart(inspectionId, ecartId) {
         etats_destinataires: (insp.pays && !miens.includes(insp.pays)) ? [insp.pays] : [],
         etat_emetteur: miens[0] || '',
         inspection_id: inspectionId,
-        ecart_id: ec ? ec.id : '',
+        ecart_ids: ec ? [ec.id] : [],
         // L'inspection visée ne figure pas dans les données de l'instance : le
         // brouillon la porte, sans quoi le formulaire ne pourrait pas la
         // montrer ni dire ce qu'il désigne.
@@ -642,7 +646,7 @@ function rampComRetirerDesignation() {
     if (!RAMP_COM.brouillon) return;
     RAMP_COM.brouillon.designation = null;
     RAMP_COM.brouillon.inspection_id = '';
-    RAMP_COM.brouillon.ecart_id = '';
+    RAMP_COM.brouillon.ecart_ids = [];
     rampVoletCommunication();
 }
 
@@ -668,19 +672,55 @@ function rampComCible(cle, valeur) {
     RAMP_COM.brouillon.cible[cle] = valeur;
     // Changer les filtres invalide le choix précédent.
     RAMP_COM.brouillon.inspection_id = '';
-    RAMP_COM.brouillon.ecart_id = '';
+    RAMP_COM.brouillon.ecart_ids = [];
     rampVoletCommunication();
 }
 
 function rampComChoisirInspection(id) {
     RAMP_COM.brouillon.inspection_id = id;
-    RAMP_COM.brouillon.ecart_id = '';
+    RAMP_COM.brouillon.ecart_ids = [];
     rampVoletCommunication();
 }
 
-function rampComChoisirEcart(id) {
-    RAMP_COM.brouillon.ecart_id = id;
+// Une requête vise un constat, plusieurs, ou l'inspection entière : on coche
+// ce dont on veut parler.
+function rampComBasculerEcart(id) {
+    const b = RAMP_COM.brouillon;
+    b.ecart_ids = b.ecart_ids || [];
+    const rang = b.ecart_ids.indexOf(id);
+    if (rang >= 0) b.ecart_ids.splice(rang, 1); else b.ecart_ids.push(id);
     rampVoletCommunication();
+}
+
+// L'inspection désignée, où qu'elle vienne : la liste régionale la porte, et
+// le brouillon ouvert depuis un écart régional la porte lui-même.
+function rampComInspectionDesignee(b) {
+    if (b.designation && b.designation.inspection) return b.designation.inspection;
+    return rampComInspectionRegionale(b.inspection_id)
+        || (RAMP_STATE.data.inspections || []).find((i) => i.id === b.inspection_id)
+        || null;
+}
+
+// Les constats de l'inspection désignée, à cocher. Sans écart, rien ne
+// s'affiche : la requête porte alors sur l'inspection entière.
+function rampComEcartsChoixHtml(b) {
+    const insp = rampComInspectionDesignee(b);
+    const ecarts = insp ? (insp.anomalies || []) : [];
+    if (!ecarts.length) return '';
+    const retenus = b.ecart_ids || [];
+    return `
+        <div class="ramp-champ" style="margin-top:.7rem;">
+            <label>${rt('com_ecart_vise')}</label>
+            <p class="ramp-sous-titre">${rt('com_ecarts_aide')}</p>
+            <div class="ramp-com-etats ramp-com-ecarts">
+                ${ecarts.map((e) => `<label class="ramp-com-etat">
+                    <input type="checkbox" ${retenus.includes(e.id) ? 'checked' : ''}
+                           onchange="rampComBasculerEcart(${_rArg(e.id)})">
+                    <span><strong class="ramp-code">${_rEsc(e.itemCode || '—')}</strong>
+                        ${_rEsc((e.description || '').slice(0, 60))}</span>
+                </label>`).join('')}
+            </div>
+        </div>`;
 }
 
 function rampComBasculerEtat(etat) {
@@ -737,7 +777,7 @@ async function rampComEnvoyer() {
                 objet: b.objet, message: b.message,
                 etats_destinataires: b.etats_destinataires,
                 etat_emetteur: b.etat_emetteur,
-                inspection_id: b.inspection_id, ecart_id: b.ecart_id,
+                inspection_id: b.inspection_id, ecart_ids: b.ecart_ids || [],
             }),
         });
         await rampComDeposerPieces(r.id);
@@ -763,16 +803,17 @@ function rampVoletCommunication() {
     RAMP_STATE.voletRejouer = rampVoletCommunication;
 }
 
-// L'écart désigné, tel que la requête le porte : une lecture, non un choix.
-// Le bouton rend la main à la désignation ordinaire.
-function rampComDesignationHtml(d) {
-    const i = d.inspection || {};
-    const e = d.ecart;
+// L'inspection désignée depuis les écarts régionaux : elle se lit, elle ne se
+// choisit plus. Ses constats, eux, restent à cocher — celui d'où l'on vient
+// l'est déjà, et la même requête peut en viser d'autres de la même
+// inspection. Le bouton rend la main à la désignation ordinaire.
+function rampComDesignationHtml(b) {
+    const i = (b.designation || {}).inspection || {};
     const ligne = (cle, valeur) => (valeur
         ? `<div class="ramp-poi-recap-ligne"><i>${rt(cle)}</i><span>${_rEsc(valeur)}</span></div>` : '');
     return `
     <div class="ramp-card">
-        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('reg_designe')}</div>
+        <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('reg_inspection')}</div>
         <p class="ramp-sous-titre">${rt('reg_designe_aide')}</p>
         <div class="ramp-poi-recap">
             ${ligne('c_poi', i.poi_reference)}
@@ -781,10 +822,8 @@ function rampComDesignationHtml(d) {
             ${ligne('c_exploitant', i.exploitant)}
             ${ligne('c_aeronef', i.aeronef)}
             ${ligne('c_immat_court', i.immatriculation)}
-            ${e ? ligne('c_item', e.itemCode) : ''}
-            ${e ? ligne('c_categorie', e.categorie) : ''}
-            ${e ? ligne('c_description', e.description) : ''}
         </div>
+        ${rampComEcartsChoixHtml(b)}
         <button class="btn btn-outline btn-sm" style="margin-top:.6rem;"
                 onclick="rampComRetirerDesignation()">${rt('reg_changer')}</button>
     </div>`;
@@ -794,11 +833,9 @@ function rampComFormulaireHtml() {
     const b = RAMP_COM.brouillon;
     if (!b) return '';
     const inspections = rampComInspections();
-    const choisie = (RAMP_STATE.data.inspections || []).find((i) => i.id === b.inspection_id);
-    const ecarts = choisie ? (choisie.anomalies || []) : [];
 
     return `
-    ${b.designation ? rampComDesignationHtml(b.designation) : `
+    ${b.designation ? rampComDesignationHtml(b) : `
     <div class="ramp-card">
         <div class="ramp-card-bande"><span class="ramp-card-lettre">A</span>${rt('com_designer')}</div>
         <p class="ramp-sous-titre">${rt('com_designer_aide')}</p>
@@ -861,15 +898,7 @@ function rampComFormulaireHtml() {
                 </tbody>
             </table>
         </div>
-        ${choisie && ecarts.length ? `
-        <div class="ramp-champ" style="margin-top:.7rem;">
-            <label>${rt('com_ecart_vise')}</label>
-            <select class="ramp-select" onchange="rampComChoisirEcart(this.value)">
-                <option value="">${rt('com_toute_inspection')}</option>
-                ${ecarts.map((e) => `<option value="${_rAttr(e.id)}" ${b.ecart_id === e.id ? 'selected' : ''}>
-                    ${_rEsc(e.itemCode || '')} — ${_rEsc((e.description || '').slice(0, 70))}</option>`).join('')}
-            </select>
-        </div>` : ''}
+        ${rampComEcartsChoixHtml(b)}
     </div>`}
 
     <div class="ramp-card">
@@ -961,6 +990,28 @@ function rampComPiecesHtml(requeteId, pieces) {
     </div>`;
 }
 
+// Les constats d'une requête, au fil ouvert. Une requête d'avant n'en
+// désignait qu'un, décrit par trois champs ; on la lit comme les autres.
+function rampComEcartsVises(o) {
+    if ((o.ecarts || []).length) return o.ecarts;
+    if (!o.item && !o.description) return [];
+    return [{ item: o.item, categorie: o.categorie, description: o.description }];
+}
+
+function rampComEcartsVisesHtml(o) {
+    const ecarts = rampComEcartsVises(o);
+    if (!ecarts.length) return '';
+    return `
+        <div class="ramp-champ" style="margin-top:.5rem;">
+            <label>${rt('com_ecart_vise')}</label>
+            ${ecarts.map((e) => `<div class="ramp-poi-recap-ligne pleine">
+                <i><strong class="ramp-code">${_rEsc(e.item || '—')}</strong>
+                    ${e.categorie ? rampBadgeCat(e.categorie) : ''}</i>
+                <span>${_rEsc(e.description || '')}</span>
+            </div>`).join('')}
+        </div>`;
+}
+
 function rampComFilHtml(r) {
     const close = r.statut === 'close';
     const o = r.objet_reference || {};
@@ -980,11 +1031,8 @@ function rampComFilHtml(r) {
             ${rappel('c_date', o.date ? rampDate(o.date) : '')}
             ${rappel('c_exploitant', o.exploitant)}
             ${rappel('c_immat_court', o.immatriculation)}
-            ${rappel('c_item', o.item)}
-            ${rappel('c_categorie', o.categorie)}
-            ${o.description ? `<div class="ramp-poi-recap-ligne pleine"><i>${rt('c_description')}</i>
-                <span>${_rEsc(o.description)}</span></div>` : ''}
         </div>
+        ${rampComEcartsVisesHtml(o)}
     </div>
 
     <div class="ramp-card">
@@ -1072,10 +1120,13 @@ async function rampComRouvrir() {
 
 Object.assign(window, {
     RAMP_COM, rampRenderCommunication, rampChargerRequetes, rampComFiltre, rampComReset,
-    rampComNouvelle, rampComCible, rampComChoisirInspection, rampComChoisirEcart,
+    rampComNouvelle, rampComCible, rampComChoisirInspection, rampComBasculerEcart,
     rampComBasculerEtat, rampComSaisie, rampComJoindre, rampComRetirerPiece,
     rampComEnvoyer, rampVoletCommunication, rampComOuvrir, rampVoletFilCommunication,
     rampComRepondre, rampComCloturer, rampComRouvrir,
     rampComOnglet, rampChargerPartages, rampComPartagesHtml, rampComOuvrirPartage,
     rampVoletPartage, rampComPartageHtml,
+    rampChargerEcartsRegionaux, rampComRegFiltre, rampComRegReset, rampComRegionalHtml,
+    rampComRequeteEcart, rampComRetirerDesignation, rampComPreuvesEcart, rampComVoletPreuves,
+    rampComPreuvesHtml, rampComInspectionRegionale,
 });

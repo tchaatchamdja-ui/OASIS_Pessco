@@ -899,6 +899,40 @@ module.exports = async function rampSmoke(port) {
       JSON.stringify(fil.corps.objet_reference || {}).slice(0, 80));
     verifier('deux États destinataires retenus',
       (fil.corps.etats_destinataires || []).join(',') === 'Togo,Sénégal');
+    verifier('l’écart désigné seul est relevé',
+      (fil.corps.objet_reference.ecarts || []).length === 1
+      && fil.corps.ecart_id === inspCom.anomalies[0].id);
+
+    // Une même question porte parfois sur plusieurs constats de la même
+    // inspection : le relevé les tient tous, et le premier reste celui que
+    // lisent les écrans qui n'en attendent qu'un.
+    const tousEcarts = (inspCom.anomalies || []).map((a) => a.id);
+    const reqMulti = await srv.appel(`${M}/requetes`, {
+      method: 'POST',
+      body: JSON.stringify({
+        objet: 'Suivi de deux constats', message: 'Merci de préciser les mesures prises.',
+        etats_destinataires: ['Togo'], etat_emetteur: 'Bénin',
+        inspection_id: inspCom.id, ecart_ids: tousEcarts,
+      }),
+    });
+    const filMulti = (await srv.appel(`${M}/requetes/${reqMulti.corps.id}`)).corps;
+    verifier('plusieurs constats visés par une même requête',
+      (filMulti.ecart_ids || []).join(',') === tousEcarts.join(',')
+      && (filMulti.objet_reference.ecarts || []).length === tousEcarts.length
+      && filMulti.ecart_id === tousEcarts[0],
+      JSON.stringify(filMulti.ecart_ids || []));
+    verifier('chaque constat relevé porte son item et sa catégorie',
+      (filMulti.objet_reference.ecarts || []).every((e) => e.item && e.categorie !== undefined),
+      JSON.stringify(filMulti.objet_reference.ecarts || []).slice(0, 90));
+    verifier('un écart d’une autre inspection n’entre pas dans le relevé',
+      ((await srv.appel(`${M}/requetes/${(await srv.appel(`${M}/requetes`, {
+        method: 'POST',
+        body: JSON.stringify({
+          objet: 'Écart étranger', message: 'x',
+          etats_destinataires: ['Togo'], etat_emetteur: 'Bénin',
+          inspection_id: inspCom.id, ecart_ids: ['eca_inexistant'],
+        }),
+      })).corps.id}`)).corps.objet_reference.ecarts || []).length === 0);
 
     verifier('échange ajouté au fil',
       (await srv.appel(`${M}/requetes/${reqId}/echanges`, {

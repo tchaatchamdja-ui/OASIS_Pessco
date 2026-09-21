@@ -1631,7 +1631,7 @@ function rampLignesInspections() {
         </tr>
         ${ouvert ? `<tr class="ramp-ecart-detail">
             <td></td>
-            <td colspan="8">${rampEcartsDeLInspection(i)}</td>
+            <td colspan="9">${rampEcartsDeLInspection(i)}</td>
         </tr>` : ''}`;
     }).join('');
 }

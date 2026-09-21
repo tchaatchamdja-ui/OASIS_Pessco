@@ -1101,10 +1101,15 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
    libre prend tout ce que les autres n'ont pas pris, au lieu d'être la
    première rognée parce qu'elle sait se replier. */
 .ramp-table-fixe { table-layout: fixed; }
-/* Les intitulés se replient plutôt que de déborder : une colonne large en
-   français l'est rarement autant en anglais ou en portugais, et la largeur,
-   elle, ne change pas d'une langue à l'autre. */
-.ramp-table-fixe th { white-space: normal; }
+/* Les intitulés tiennent sur un rang, flèche de tri comprise : repliés, ils
+   rejetaient la flèche seule à la ligne suivante. Les largeurs sont donc
+   prises sur le plus long des trois intitulés — le français, l'anglais et le
+   portugais n'ont pas la même longueur, la colonne, elle, ne change pas. */
+.ramp-table-fixe th { white-space: nowrap; }
+.ramp-table-fixe th.triable .ramp-th-texte {
+    display: inline-block; max-width: calc(100% - 12px); vertical-align: bottom;
+    overflow: hidden; text-overflow: ellipsis;
+}
 /* Le chevron d'un rang n'a pas à peser autant qu'un bouton d'action : il
    ouvre un détail, il ne commande rien. */
 .ramp-table-ecarts .ramp-extension { width: 20px; height: 20px; border-radius: 5px; }

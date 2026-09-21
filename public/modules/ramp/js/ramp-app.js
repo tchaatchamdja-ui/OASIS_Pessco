@@ -852,8 +852,11 @@ function rampTh(ecran, cle, libelle, style) {
     const t = RAMP_STATE.tri[ecran];
     const actif = t && t.cle === cle;
     const fleche = actif ? (t.sens === 'asc' ? '▲' : '▼') : '↕';
+    // L'intitulé est porté par son propre élément : trop long pour la colonne,
+    // il s'abrège d'un point de suite au lieu de rejeter la flèche de tri à la
+    // ligne suivante.
     return `<th class="triable" ${style ? `style="${style}"` : ''} onclick="rampTrier('${ecran}','${cle}')">`
-        + `${_rEsc(libelle)} <span class="ramp-tri ${actif ? 'actif' : ''}">${fleche}</span></th>`;
+        + `<span class="ramp-th-texte">${_rEsc(libelle)}</span> <span class="ramp-tri ${actif ? 'actif' : ''}">${fleche}</span></th>`;
 }
 
 // ══════════════════════════════════════
@@ -1807,12 +1810,12 @@ function rampRenderEcarts() {
             <table class="ramp-table ramp-table-fixe ramp-table-ecarts">
                 <thead><tr>
                     <th style="width:32px;"></th>
-                    ${rampTh('ecarts', 'insp.exploitant', rt('c_exploitant_immat'), 'width:165px;')}
+                    ${rampTh('ecarts', 'insp.exploitant', rt('c_exploitant_immat'), 'width:174px;')}
                     ${rampTh('ecarts', 'date', rt('c_date'), 'width:88px;')}
                     ${rampTh('ecarts', 'description', rt('c_description'))}
-                    ${rampTh('ecarts', 'categorie', rt('c_cat_court'), 'width:56px;text-align:center;')}
-                    ${rampTh('ecarts', 'action', rt('c_actions'), 'width:82px;text-align:center;')}
-                    ${rampTh('ecarts', 'suivi', rt('c_statut'), 'width:80px;')}
+                    ${rampTh('ecarts', 'categorie', rt('c_cat_court'), 'width:66px;text-align:center;')}
+                    ${rampTh('ecarts', 'action', rt('c_action_court'), 'width:86px;text-align:center;')}
+                    ${rampTh('ecarts', 'suivi', rt('c_statut'), 'width:88px;')}
                     <th style="width:138px;text-align:center;">${rt('c_voir')}</th>
                 </tr></thead>
                 <tbody data-corps="ecarts">${rampLignesEcarts()}</tbody>

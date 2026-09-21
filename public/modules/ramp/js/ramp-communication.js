@@ -343,23 +343,26 @@ function rampComRegionalHtml() {
     <p class="ramp-sous-titre">${rt('reg_resume', lignes.length, etats.size)}</p>
     <div class="ramp-card" style="padding:0;">
         <div class="ramp-table-wrap">
-            <table class="ramp-table">
+            <!-- Largeurs fixées, comme à la table des écarts : sans cela le
+                 navigateur les répartit sur ce que chaque colonne contient, et
+                 la description — seule à savoir se replier — est la première
+                 rognée. L'exploitant et son appareil tiennent une colonne. -->
+            <table class="ramp-table ramp-table-fixe">
                 <thead><tr>
-                    <th style="width:95px;">${rt('c_date')}</th>
-                    <th style="width:110px;">${rt('c_etat')}</th>
-                    <th style="width:15%;">${rt('c_exploitant')}</th>
-                    <th style="width:105px;">${rt('c_immat_court')}</th>
-                    <th style="width:75px;">${rt('c_item')}</th>
+                    <th style="width:92px;">${rt('c_date')}</th>
+                    <th style="width:96px;">${rt('c_etat')}</th>
+                    <th style="width:162px;">${rt('c_exploitant_immat')}</th>
+                    <th style="width:64px;">${rt('c_item')}</th>
                     <th>${rt('c_description')}</th>
-                    <th style="width:70px;text-align:center;">${rt('c_categorie')}</th>
-                    <th style="width:110px;">${rt('c_statut')}</th>
-                    <th style="width:112px;text-align:center;">${rt('c_voir')}</th>
+                    <th style="width:66px;text-align:center;">${rt('c_cat_court')}</th>
+                    <th style="width:92px;">${rt('c_statut')}</th>
+                    <th style="width:138px;text-align:center;">${rt('c_voir')}</th>
                 </tr></thead>
                 <tbody>${RAMP_COM.regionalChargement
-        ? `<tr><td colspan="9" class="ramp-table-vide">${rt('u_chargement')}</td></tr>`
+        ? `<tr><td colspan="8" class="ramp-table-vide">${rt('u_chargement')}</td></tr>`
         : (lignes.length
             ? lignes.map(rampComRegLigne).join('')
-            : `<tr><td colspan="9" class="ramp-table-vide">${rt('reg_aucun')}</td></tr>`)}
+            : `<tr><td colspan="8" class="ramp-table-vide">${rt('reg_aucun')}</td></tr>`)}
                 </tbody>
             </table>
         </div>
@@ -372,8 +375,10 @@ function rampComRegLigne(a) {
     return `<tr>
         <td style="white-space:nowrap;">${_rEsc(rampDate(i.date))}</td>
         <td>${_rEsc(i.pays || '—')}</td>
-        <td><strong>${_rEsc(i.exploitant || '—')}</strong></td>
-        <td>${_rEsc(i.immatriculation || '—')}</td>
+        <td>
+            <strong>${_rEsc(i.exploitant || '—')}</strong>
+            <span class="ramp-sous-ligne">${_rEsc(i.immatriculation || '—')}</span>
+        </td>
         <td><strong class="ramp-code">${_rEsc(a.itemCode || '—')}</strong></td>
         <td class="ramp-ecart-desc">${_rEsc(a.description || '—')}</td>
         <td style="text-align:center;">${rampBadgeCat(a.categorie)}</td>

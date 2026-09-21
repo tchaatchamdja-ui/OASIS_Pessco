@@ -305,7 +305,7 @@ function rampTableContacts() {
                     ${rampTh('contacts', 'fonction', rt('p_fonction'))}
                     ${rampTh('contacts', 'email', rt('p_courriel'), 'width:185px;')}
                     ${rampTh('contacts', 'telephone', rt('p_telephone'), 'width:118px;')}
-                    ${rampTh('contacts', 'actif', rt('c_statut'), 'width:80px;text-align:center;')}
+                    ${rampTh('contacts', 'actif', rt('c_statut'), 'width:92px;text-align:center;')}
                     <th style="width:124px;text-align:center;">${rt('c_actions')}</th>
                 </tr></thead>
                 <tbody>${liste.map(rampLigneContact).join('')}</tbody>

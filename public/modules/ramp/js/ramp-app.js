@@ -151,6 +151,9 @@ const RAMP_STATE = {
     lignesDepliees: {},
     // Écarts dépliés à l'état « Écarts » : absent = replié.
     ecartsDeplies: {},
+    // Inspections dépliées au menu « Inspections » : le rang ouvre la liste de
+    // ses écarts. Absent = replié.
+    inspectionsDepliees: {},
     // Écart dont on suit le plan d'actions correctives, et action visée par la
     // preuve en cours de dépôt.
     pacEnCours: null,
@@ -1595,26 +1598,68 @@ function rampLignesInspections() {
     if (!liste.length) return `<tr><td colspan="10" class="ramp-table-vide">${rt('aucune_inspection')}</td></tr>`;
     return liste.map((i) => {
         const n = (i.anomalies || []).length;
-        return `<tr>
+        const ouvert = !!RAMP_STATE.inspectionsDepliees[i.id];
+        return `<tr class="ramp-depliant" onclick="rampBasculerInspection(${_rArg(i.id)})">
+            <td>
+                <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
+                        aria-expanded="${ouvert}" title="${ouvert ? rt('replier') : rt('deplier')}"
+                        onclick="event.stopPropagation();rampBasculerInspection(${_rArg(i.id)})">
+                    ${RAMP_ICONS.chevronBas}
+                </button>
+            </td>
             <td>${i.poi_reference ? `<strong class="ramp-code">${_rEsc(i.poi_reference)}</strong>`
                 : '<span class="ramp-vide">—</span>'}</td>
-            <td>${_rEsc(rampDate(i.date))}</td>
+            <td style="white-space:nowrap;">${_rEsc(rampDate(i.date))}</td>
             <td>${_rEsc(i.pays || '—')}</td>
             <td><strong>${_rEsc(i.exploitant || '—')}</strong></td>
-            <td>${_rEsc(i.aeronef || '—')}</td>
-            <td>${_rEsc(i.immatriculation || '—')}</td>
+            <td>
+                ${_rEsc(i.aeronef || '—')}
+                <span class="ramp-sous-ligne">${_rEsc(i.immatriculation || '—')}</span>
+            </td>
             <td>${_rEsc(i.vol || '—')}</td>
             <td style="text-align:center;"><span class="ramp-badge items">${Number(i.itemsInspectes) || 0}</span></td>
             <td style="text-align:center;"><span class="ramp-badge ${n ? 'ecarts' : 'zero'}">${n}</span></td>
             <td class="ramp-cell-actions">
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampOuvrirApercu('${i.id}')"
+                <button class="btn btn-outline btn-sm ramp-btn-icone"
+                        onclick="event.stopPropagation();rampOuvrirApercu('${i.id}')"
                         title="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
                 ${rampEstAdmin() && !rampVuePrestataire() ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                         style="color:#dc2626;border-color:#dc2626;"
-                        onclick="rampSupprimerInspection('${i.id}')" title="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
+                        onclick="event.stopPropagation();rampSupprimerInspection('${i.id}')"
+                        title="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
             </td>
-        </tr>`;
+        </tr>
+        ${ouvert ? `<tr class="ramp-ecart-detail">
+            <td></td>
+            <td colspan="8">${rampEcartsDeLInspection(i)}</td>
+        </tr>` : ''}`;
     }).join('');
+}
+
+// Les écarts d'une inspection, tels que son rang les déplie : un par ligne,
+// l'item d'abord, le constat ensuite, la catégorie au bout. Une inspection
+// sans écart le dit plutôt que d'ouvrir un volet vide.
+function rampEcartsDeLInspection(i) {
+    const ecarts = i.anomalies || [];
+    if (!ecarts.length) return `<span class="ramp-sous-titre">${rt('aucun_ecart')}</span>`;
+    return `<ul class="ramp-insp-ecarts">
+        ${ecarts.map((a) => `<li>
+            <strong class="ramp-code">${_rEsc(a.itemCode || '—')}</strong>
+            <span class="ramp-insp-constat">${_rEsc(a.description || rampLibelleItem(a.itemCode) || '—')}</span>
+            ${rampBadgeCat(a.categorie)}
+        </li>`).join('')}
+    </ul>`;
+}
+
+// Déplier une inspection ne touche qu'au corps du tableau : la page ne bouge
+// pas, et le défilement reste où il était.
+function rampBasculerInspection(id) {
+    RAMP_STATE.inspectionsDepliees[id] = !RAMP_STATE.inspectionsDepliees[id];
+    const corps = document.querySelector('[data-corps="inspections"]');
+    if (!corps) { rampRenderPage(); return; }
+    const rendreDefilement = rampMemoriserDefilement();
+    corps.innerHTML = rampLignesInspections();
+    rendreDefilement();
 }
 
 // ══════════════════════════════════════
@@ -1665,18 +1710,21 @@ function rampRenderInspections() {
     </div>
     <div class="ramp-card" style="padding:0;">
         <div class="ramp-table-wrap">
-            <table class="ramp-table">
+            <!-- Largeurs fixées : l'exploitant prend ce que les autres colonnes
+                 laissent, au lieu d'être rogné parce que son nom sait se
+                 replier. Le rang s'ouvre sur les écarts de l'inspection. -->
+            <table class="ramp-table ramp-table-fixe">
                 <thead><tr>
-                    ${rampTh('insp', 'poi_reference', rt('c_poi'), 'width:100px;')}
+                    <th style="width:38px;"></th>
+                    ${rampTh('insp', 'poi_reference', rt('c_poi'), 'width:88px;')}
                     ${rampTh('insp', 'date', rt('c_date'), 'width:100px;')}
-                    ${rampTh('insp', 'pays', rt('c_etat'), 'width:130px;')}
+                    ${rampTh('insp', 'pays', rt('c_etat'), 'width:92px;')}
                     ${rampTh('insp', 'exploitant', rt('c_exploitant'))}
-                    ${rampTh('insp', 'aeronef', rt('c_aeronef'), 'width:120px;')}
-                    ${rampTh('insp', 'immatriculation', rt('c_immat'), 'width:130px;')}
-                    ${rampTh('insp', 'vol', rt('c_vol'), 'width:90px;')}
-                    ${rampTh('insp', 'itemsInspectes', rt('c_items'), 'width:90px;text-align:center;')}
-                    ${rampTh('insp', 'ecarts', rt('c_ecarts'), 'width:90px;text-align:center;')}
-                    <th style="width:110px;text-align:center;">${rt('c_actions')}</th>
+                    ${rampTh('insp', 'aeronef', rt('c_aeronef'), 'width:108px;')}
+                    ${rampTh('insp', 'vol', rt('c_vol'), 'width:80px;')}
+                    ${rampTh('insp', 'itemsInspectes', rt('c_items'), 'width:80px;text-align:center;')}
+                    ${rampTh('insp', 'ecarts', rt('c_ecarts_court'), 'width:96px;text-align:center;')}
+                    <th style="width:92px;text-align:center;">${rt('c_voir')}</th>
                 </tr></thead>
                 <tbody data-corps="inspections">${rampLignesInspections()}</tbody>
             </table>

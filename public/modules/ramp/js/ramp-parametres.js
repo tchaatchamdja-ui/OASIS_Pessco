@@ -274,7 +274,7 @@ async function rampChargerContacts() {
     try {
         RAMP_STATE.data.contacts = await rampApi('/contacts');
         const zone = document.querySelector('[data-zone="contacts"]');
-        if (zone) zone.innerHTML = rampGroupesContacts();
+        if (zone) zone.innerHTML = rampTableContacts();
     } catch (e) { rampToast(e.message || 'Contacts indisponibles', 'error'); }
 }
 
@@ -287,71 +287,59 @@ function rampPeutGererEtat(etat) {
     return etats.length === 0 || etats.includes(etat);
 }
 
-function rampGroupesContacts() {
-    const parEtat = {};
-    RAMP_STATE.data.contacts.forEach((c) => {
-        const e = c.etat || '—';
-        if (!parEtat[e]) parEtat[e] = [];
-        parEtat[e].push(c);
+function rampTableContacts() {
+    const liste = rampAppliquerTri(RAMP_STATE.data.contacts || [], 'contacts', (c, k) => {
+        if (k === 'nom') return `${c.nom || ''} ${c.prenom || ''}`;
+        if (k === 'actif') return c.actif === false ? 1 : 0;
+        return c[k];
     });
-    const etats = Object.keys(parEtat).sort((a, b) => a.localeCompare(b, 'fr'));
-    if (!etats.length) return `<div class="ramp-vide">${rt('aucun_contact')}</div>`;
+    if (!liste.length) return `<div class="ramp-vide">${rt('aucun_contact')}</div>`;
 
-    return etats.map((etat) => {
-        // Absent de la liste = déplié ; seul un repli explicite le ferme.
-        const ouvert = RAMP_STATE.groupesOuverts[etat] !== false;
-        const liste = parEtat[etat];
-        const gerable = rampPeutGererEtat(etat);
-        return `
-        <div class="ramp-groupe">
-            <div class="ramp-groupe-entete" onclick="rampBasculerGroupe(${_rArg(etat)})">
-                <span class="ramp-chevron">${ouvert ? '▾' : '▸'}</span>
-                <span>${_rEsc(etat)}</span>
-                <span class="ramp-groupe-compte">${liste.length}</span>
-            </div>
-            ${ouvert ? `<div class="ramp-table-wrap" style="max-height:none;">
-                <table class="ramp-table">
-                    <thead><tr>
-                        <th style="width:180px;">${rt('c_nom')}</th><th style="width:160px;">${rt('p_prenoms')}</th>
-                        <th>${rt('p_fonction')}</th><th style="width:220px;">${rt('p_courriel')}</th>
-                        <th style="width:140px;">${rt('p_telephone')}</th>
-                        <th style="width:80px;text-align:center;">${rt('c_statut')}</th>
-                        <th style="width:110px;text-align:center;">${rt('c_actions')}</th>
-                    </tr></thead>
-                    <tbody>
-                        ${liste.map((c) => `<tr ${c.actif === false ? 'style="opacity:.55;"' : ''}>
-                            <td><strong>${_rEsc(c.nom)}</strong></td>
-                            <td>${_rEsc(c.prenom)}</td>
-                            <td>${_rEsc(c.fonction || '—')}${c.autres
-                                ? `<div style="font-size:.72rem;color:var(--text-muted);">${_rEsc(c.autres)}</div>` : ''}</td>
-                            <td>${c.email ? `<a href="mailto:${_rAttr(c.email)}">${_rEsc(c.email)}</a>` : '—'}</td>
-                            <td>${_rEsc(c.telephone || '—')}</td>
-                            <td style="text-align:center;">
-                                <span class="ramp-badge ${c.actif === false ? 'inactif' : 'actif'}">
-                                    ${c.actif === false ? 'Inactif' : 'Actif'}</span></td>
-                            <td class="ramp-cell-actions">
-                                ${gerable ? `
-                                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampOuvrirContact('${c.id}')"
-                                        title="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
-                                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampBasculerContact('${c.id}')"
-                                        title="${c.actif === false ? 'Réactiver' : 'Désactiver'}">${RAMP_ICONS.toggle}</button>
-                                <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                                        onclick="rampSupprimerContact('${c.id}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
-                                : '<span style="color:var(--text-muted);font-size:.78rem;">—</span>'}
-                            </td>
-                        </tr>`).join('')}
-                    </tbody>
-                </table>
-            </div>` : ''}
-        </div>`;
-    }).join('');
+    return `
+    <div class="ramp-card" style="padding:0;">
+        <div class="ramp-table-wrap">
+            <table class="ramp-table ramp-table-fixe">
+                <thead><tr>
+                    ${rampTh('contacts', 'etat', rt('c_etat'), 'width:105px;')}
+                    ${rampTh('contacts', 'nom', rt('p_nom_prenoms'), 'width:165px;')}
+                    ${rampTh('contacts', 'fonction', rt('p_fonction'))}
+                    ${rampTh('contacts', 'email', rt('p_courriel'), 'width:185px;')}
+                    ${rampTh('contacts', 'telephone', rt('p_telephone'), 'width:118px;')}
+                    ${rampTh('contacts', 'actif', rt('c_statut'), 'width:80px;text-align:center;')}
+                    <th style="width:124px;text-align:center;">${rt('c_actions')}</th>
+                </tr></thead>
+                <tbody>${liste.map(rampLigneContact).join('')}</tbody>
+            </table>
+        </div>
+    </div>`;
 }
 
-function rampBasculerGroupe(etat) {
-    // Déplié par défaut : c'est le repli que l'on enregistre.
-    RAMP_STATE.groupesOuverts[etat] = RAMP_STATE.groupesOuverts[etat] === false;
-    const zone = document.querySelector('[data-zone="contacts"]');
-    if (zone) zone.innerHTML = rampGroupesContacts();
+function rampLigneContact(c) {
+    const gerable = rampPeutGererEtat(c.etat);
+    return `<tr ${c.actif === false ? 'style="opacity:.55;"' : ''}>
+        <td>${_rEsc(c.etat || '—')}</td>
+        <td>
+            <strong>${_rEsc(c.nom || '—')}</strong>
+            <span class="ramp-sous-ligne">${_rEsc(c.prenom || '')}</span>
+        </td>
+        <td>${_rEsc(c.fonction || '—')}${c.autres
+        ? `<span class="ramp-sous-ligne">${_rEsc(c.autres)}</span>` : ''}</td>
+        <td>${c.email ? `<a href="mailto:${_rAttr(c.email)}">${_rEsc(c.email)}</a>` : '—'}</td>
+        <td>${_rEsc(c.telephone || '—')}</td>
+        <td style="text-align:center;">
+            <span class="ramp-badge ${c.actif === false ? 'inactif' : 'actif'}">
+                ${c.actif === false ? rt('inactif') : rt('actif')}</span></td>
+        <td class="ramp-cell-actions">
+            ${gerable ? `
+            <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampOuvrirContact('${c.id}')"
+                    title="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
+            <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampBasculerContact('${c.id}')"
+                    title="${_rAttr(c.actif === false ? rt('activer') : rt('desactiver'))}">${RAMP_ICONS.toggle}</button>
+            <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
+                    onclick="rampSupprimerContact('${c.id}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
+        : '<span class="ramp-sous-ligne">—</span>'}
+        </td>
+    </tr>`;
 }
 
 function rampRenderContacts() {
@@ -372,7 +360,7 @@ function rampRenderContacts() {
         <button class="btn btn-primary btn-sm" onclick="rampOuvrirContact()">
             ${RAMP_ICONS.add} Ajouter un contact</button>
     </div>
-    <div data-zone="contacts">${rampGroupesContacts()}</div>`;
+    <div data-zone="contacts">${rampTableContacts()}</div>`;
 }
 
 function rampOuvrirContact(id) {
@@ -436,8 +424,6 @@ async function rampEnregistrerContact() {
     try {
         if (c.id) await rampApi(`/contacts/${c.id}`, { method: 'PUT', body: JSON.stringify(corps) });
         else await rampApi('/contacts', { method: 'POST', body: JSON.stringify(corps) });
-        // Le groupe de l'État concerné s'ouvre : le contact enregistré doit se voir.
-        RAMP_STATE.groupesOuverts[corps.etat] = true;
         rampFermerModal();
         await rampChargerContacts();
         rampToast(rt('contact_enregistre'));
@@ -1849,7 +1835,7 @@ Object.assign(window, {
     rampRenderDepot, rampChargerDepots, rampLignesDepots, rampOuvrirDepot,
     rampChercherDepot, rampResetFiltresDepot,
     rampEnregistrerDepot, rampSupprimerDepot,
-    rampRenderContacts, rampChargerContacts, rampGroupesContacts, rampBasculerGroupe,
+    rampRenderContacts, rampChargerContacts, rampTableContacts,
     rampPeutGererEtat, rampOuvrirContact, rampEnregistrerContact,
     rampBasculerContact, rampSupprimerContact, rampExporterContacts,
     rampRenderParametres, rampParamOnglet, rampFamilleDe,

@@ -51,7 +51,9 @@ const RAMP_STATE = {
         // Filtres propres à l'écran Dépôt.
         depotAnnee: '', depotMois: '', depotAuteur: '', depotRecherche: '',
     },
-    tri: { insp: null, ecarts: null, situation: null },
+    // Le carnet des correspondants s'ouvre rangé par État : c'est par là qu'on
+    // le parcourt. Les autres tables s'ouvrent dans l'ordre de leurs données.
+    tri: { insp: null, ecarts: null, situation: null, contacts: { cle: 'etat', sens: 'asc' } },
     // Écrans à état propre.
     apercu: null,
     // Recherche escamotable des écarts : dépliée ou non.
@@ -1802,7 +1804,7 @@ function rampRenderEcarts() {
             <!-- Colonnes fixées : sans cela, le navigateur les répartit sur ce
                  que chacune contient, et la description — seule à pouvoir se
                  replier — se retrouvait la plus étroite du tableau. -->
-            <table class="ramp-table ramp-table-ecarts">
+            <table class="ramp-table ramp-table-fixe ramp-table-ecarts">
                 <thead><tr>
                     <th style="width:32px;"></th>
                     ${rampTh('ecarts', 'insp.exploitant', rt('c_exploitant_immat'), 'width:165px;')}

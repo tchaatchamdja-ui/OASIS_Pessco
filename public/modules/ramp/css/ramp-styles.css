@@ -1097,10 +1097,14 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 /* Table des écarts : la description prend ce que les autres colonnes laissent,
    et le détail de l'item se déplie sous la ligne. */
 .ramp-ecart-desc { white-space: normal; line-height: 1.4; }
-/* Les largeurs déclarées s'appliquent telles quelles : la description prend
-   tout ce que les sept autres colonnes laissent, au lieu d'être la première
-   rognée parce qu'elle sait se replier. */
-.ramp-table-ecarts { table-layout: fixed; }
+/* Les largeurs déclarées s'appliquent telles quelles : la colonne laissée
+   libre prend tout ce que les autres n'ont pas pris, au lieu d'être la
+   première rognée parce qu'elle sait se replier. */
+.ramp-table-fixe { table-layout: fixed; }
+/* Les intitulés se replient plutôt que de déborder : une colonne large en
+   français l'est rarement autant en anglais ou en portugais, et la largeur,
+   elle, ne change pas d'une langue à l'autre. */
+.ramp-table-fixe th { white-space: normal; }
 /* Le chevron d'un rang n'a pas à peser autant qu'un bouton d'action : il
    ouvre un détail, il ne commande rien. */
 .ramp-table-ecarts .ramp-extension { width: 20px; height: 20px; border-radius: 5px; }

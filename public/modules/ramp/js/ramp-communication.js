@@ -353,7 +353,7 @@ function rampComRegionalHtml() {
                     <th>${rt('c_description')}</th>
                     <th style="width:70px;text-align:center;">${rt('c_categorie')}</th>
                     <th style="width:110px;">${rt('c_statut')}</th>
-                    <th style="width:80px;text-align:center;">${rt('c_voir')}</th>
+                    <th style="width:112px;text-align:center;">${rt('c_voir')}</th>
                 </tr></thead>
                 <tbody>${RAMP_COM.regionalChargement
         ? `<tr><td colspan="9" class="ramp-table-vide">${rt('u_chargement')}</td></tr>`
@@ -382,11 +382,12 @@ function rampComRegLigne(a) {
             <button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampOuvrirApercu(${_rArg(i.id)})"
                     title="${_rAttr(rt('reg_rapport'))}">${RAMP_ICONS.eye}</button>
-            <button class="btn btn-outline btn-sm ramp-btn-icone${pieces ? ' ramp-fait' : ''}"
+            <button class="btn btn-outline btn-sm ramp-btn-icone ramp-btn-marque"
                     ${pieces ? '' : 'disabled'}
                     onclick="rampComPreuvesEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
                     title="${_rAttr(pieces ? `${rt('reg_pieces')} (${pieces})` : rt('reg_pieces_aucune'))}">
-                ${RAMP_ICONS.upload}</button>
+                ${RAMP_ICONS.upload}
+                ${pieces ? `<span class="ramp-btn-badge">${pieces}</span>` : ''}</button>
             ${RAMP_COM.peutEcrire ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampComRequeteEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
                     title="${_rAttr(rt('reg_requete'))}">${RAMP_ICONS.contacts}</button>` : ''}

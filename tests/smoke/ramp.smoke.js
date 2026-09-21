@@ -1124,7 +1124,7 @@ module.exports = async function rampSmoke(port) {
     await srv.appel(`${M}/instance`, { method: 'PUT', body: JSON.stringify({ instance: 'Niger' }) });
     await importer([{
       ...insp, vol: 'KP700', pays: 'Niger', immatriculation: '5U-NNN',
-      anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175', description: 'Constat du Niger', categorie: '2', action: '2' }],
+      anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175', description: 'Constat du Niger', categorie: '3', action: '3b' }],
     }]);
     const ficheNiger = await srv.appel(`${M}/poi`, { method: 'POST', body: '{}' });
     // Une pièce déposée sur le constat du Niger : elle doit se lire d'ici,
@@ -1136,7 +1136,17 @@ module.exports = async function rampSmoke(port) {
       headers: { 'content-type': `multipart/form-data; boundary=${frontiere}` },
       body: corpsPreuve,
     });
+    // La carence que cet écart de catégorie 3 fait naître appartient à l'AAC
+    // qui l'a relevé : c'est elle qui instruira la mesure d'application.
+    const carenceNiger = `ramp:${ecartNiger.id}`;
+    const careAuNiger = await srv.appel(`${CARE}/constatations`);
+    verifier('la carence du Niger s’instruit au poste du Niger',
+      (careAuNiger.corps || []).some((c) => c.id === carenceNiger));
     await srv.appel(`${M}/instance`, { method: 'PUT', body: JSON.stringify({ instance: ici }) });
+    const careIci = await srv.appel(`${CARE}/constatations`);
+    verifier('et n’entre pas dans les carences d’ici',
+      !(careIci.corps || []).some((c) => c.id === carenceNiger),
+      (careIci.corps || []).map((c) => `${c.id}/${c.instance || '—'}`).join(' ').slice(0, 120));
 
     const chezNous = await srv.appel(`${M}/inspections`);
     verifier('l’inspection du Niger n’entre pas dans nos écrans',

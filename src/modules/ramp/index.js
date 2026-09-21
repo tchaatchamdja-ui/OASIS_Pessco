@@ -91,6 +91,10 @@ module.exports = {
       // fonctionnent aussi bien si ce module n'est pas déployé.
       deps.services.publish('RAMP.constatationsCritiques', () => {
         const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
+        // L'AAC qui a relevé l'écart est celle qui instruira la mesure : la
+        // carence part sous l'instance de son inspection, et les « Mesures
+        // d'Application » la rangent sous la même plutôt que sous la leur.
+        const instanceDeLInspection = vues.resolveurInstance(deps.loadConfig);
         // Rapprochement de l'exploitant, en deux temps.
         //
         // 1. La liste des exploitants du module le nomme, dit son pays et son
@@ -132,6 +136,7 @@ module.exports = {
             const exploitant = parExploitant.get(norm(i.exploitant)) || {};
             return {
               id: `ramp:${ec.id}`,
+              instance: instanceDeLInspection(i),
               reference: `${i.poi_reference || i.id || ''}${ec.itemCode ? ` · ${ec.itemCode}` : ''}`,
               titre: [ec.itemCode, items.get(ec.itemCode)].filter(Boolean).join(' — '),
               description: ec.description || '',

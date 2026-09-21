@@ -106,6 +106,15 @@ const filtrerInspections = (req, liste, loadConfig) => {
   return retenues.filter((i) => cles.has(norm(i.exploitant)));
 };
 
+// Rattachement d'une inspection à son instance, hors requête : le bus de
+// services publie des rangs, non des réponses à un compte. La liste des
+// instances et l'instance locale se lisent une fois pour tout le lot.
+function resolveurInstance(loadConfig) {
+  const connues = new Map(instances.liste(loadConfig).map((n) => [norm(n), n]));
+  const ici = instances.locale(loadConfig);
+  return (i) => instanceDe(i, connues, ici);
+}
+
 // Une inspection désignée par son identifiant : les deux mêmes cloisonnements,
 // pour que ce qu'une fiche ouvre soit exactement ce qu'une liste montre.
 const voitInspection = (req, inspection, loadConfig) => {
@@ -118,5 +127,6 @@ const voitInspection = (req, inspection, loadConfig) => {
 
 module.exports = {
   ...socle,
-  perimetre, voitExploitant, voitInspection, filtrerInspections, instanceDe, norm
+  perimetre, voitExploitant, voitInspection, filtrerInspections,
+  instanceDe, resolveurInstance, norm
 };

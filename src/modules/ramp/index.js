@@ -37,9 +37,18 @@ module.exports = {
     require('./routes-inspections')(app, depsVue, M);
     require('./routes-communication')(app, depsVue, M);
 
-    // Le poids des écarts relevés sur aire de trafic, exploitant par
-    // exploitant. Le Profil de Risque s'en saisira sans lire les données d'ici.
     if (deps.services) {
+      // Le profil de risque d'un exploitant ne passe pas par le bus. Ce module
+      // publiait « RAMP.ecartsParExploitant » — inspections, items, écarts et
+      // score pondéré, exploitant par exploitant — à l'intention du module
+      // « Profil de Risque », qui ne l'a jamais consommé : son objet est le
+      // prestataire surveillé de l'État, non l'exploitant étranger contrôlé sur
+      // aire de trafic. Le profil de risque des inspections RAMP sera tenu ici,
+      // où les données sont, et n'aura rien à demander à personne.
+      //
+      // Ce que le module publie tient donc en deux contrats, tous deux servis
+      // aux « Mesures d'Application », plus le volume par instance que le socle
+      // demande avant de supprimer une instance.
       deps.services.publish('RAMP.volumeParInstance', () => {
         const parInstance = {};
         ['inspections', 'poi'].forEach((coll) => {
@@ -50,38 +59,6 @@ module.exports = {
         });
         return parInstance;
       }, { description: 'Nombre d’enregistrements du module, par instance' });
-
-      deps.services.publish('RAMP.ecartsParExploitant', () => {
-        const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
-        const ponderations = {};
-        db.list('parametres')
-          .filter((p) => p.type === 'categories')
-          .forEach((p) => { ponderations[p.code] = Number(p.ponderation) || 0; });
-
-        const parExploitant = {};
-        db.list('inspections').forEach((i) => {
-          const e = i.exploitant || 'Inconnu';
-          if (!parExploitant[e]) parExploitant[e] = { inspections: 0, items: 0, ecarts: 0, score: 0 };
-          parExploitant[e].inspections += 1;
-          parExploitant[e].items += Number(i.itemsInspectes) || 0;
-        });
-        db.list('ecarts').forEach((ec) => {
-          const i = inspections.get(ec.inspection_id);
-          if (!i) return;
-          const e = i.exploitant || 'Inconnu';
-          if (!parExploitant[e]) parExploitant[e] = { inspections: 0, items: 0, ecarts: 0, score: 0 };
-          parExploitant[e].ecarts += 1;
-          parExploitant[e].score += ponderations[ec.categorie] === undefined ? 1 : ponderations[ec.categorie];
-        });
-        // Le score brut ne dit rien seul : dix écarts sur mille items pèsent
-        // moins que dix sur cent. C'est le score rapporté aux items qui compte.
-        Object.values(parExploitant).forEach((v) => {
-          v.score_normalise = v.items > 0 ? Number((v.score / v.items).toFixed(4)) : 0;
-        });
-        return parExploitant;
-      }, {
-        description: 'Écarts RAMP par exploitant : inspections, items, écarts et score normalisé',
-      });
 
       // Un écart de catégorie 3 est un manquement grave relevé sur aire de
       // trafic : il appelle une mesure d'application, au même titre qu'une

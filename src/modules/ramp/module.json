@@ -27,7 +27,6 @@
     "order": 1
   },
   "provides": [
-    "RAMP.ecartsParExploitant",
     "RAMP.constatationsCritiques",
     "RAMP.pacDeConstatation"
   ],

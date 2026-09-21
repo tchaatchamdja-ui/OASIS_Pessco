@@ -305,7 +305,12 @@ const RAMP_TR = {
 
         pac_soumis_titre: 'Plan d’actions correctives soumis',
         pac_soumettre_titre: 'Soumettre un plan d’actions correctives',
+        pac_etat_sans: 'Aucun plan d’actions correctives soumis',
+        pac_etat_soumis: 'Plan d’actions correctives soumis, non soldé',
+        pac_etat_clos: 'Plan d’actions correctives soldé',
         preuves_ajouter: 'Ajouter des preuves',
+        pr_piece: 'pièce déposée',
+        pr_pieces: 'pièces déposées',
         apercu_rapport: 'Aperçu du rapport',
         // ── Messages ──
         m_chargement_impossible: 'Chargement impossible',
@@ -953,7 +958,12 @@ const RAMP_TR = {
 
         pac_soumis_titre: 'Corrective action plan submitted',
         pac_soumettre_titre: 'Submit a corrective action plan',
+        pac_etat_sans: 'No corrective action plan submitted',
+        pac_etat_soumis: 'Corrective action plan submitted, not yet settled',
+        pac_etat_clos: 'Corrective action plan settled',
         preuves_ajouter: 'Add evidence',
+        pr_piece: 'file submitted',
+        pr_pieces: 'files submitted',
         apercu_rapport: 'Report preview',
         m_chargement_impossible: 'Loading failed',
         m_enregistrement_impossible: 'Save failed',
@@ -1595,7 +1605,12 @@ const RAMP_TR = {
 
         pac_soumis_titre: 'Plano de ações corretivas submetido',
         pac_soumettre_titre: 'Submeter um plano de ações corretivas',
+        pac_etat_sans: 'Nenhum plano de ações corretivas submetido',
+        pac_etat_soumis: 'Plano de ações corretivas submetido, não saldado',
+        pac_etat_clos: 'Plano de ações corretivas saldado',
         preuves_ajouter: 'Adicionar provas',
+        pr_piece: 'ficheiro depositado',
+        pr_pieces: 'ficheiros depositados',
         apercu_rapport: 'Pré-visualização do relatório',
         m_chargement_impossible: 'Falha ao carregar',
         m_enregistrement_impossible: 'Falha ao guardar',

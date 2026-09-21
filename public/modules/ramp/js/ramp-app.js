@@ -1716,6 +1716,12 @@ function rampLignesEcarts() {
         // l'écart au premier regard, c'est l'exploitant, l'appareil et le
         // constat lui-même.
         const ouvert = !!RAMP_STATE.ecartsDeplies[a.id];
+        const pieces = (a.preuves || []).length;
+        // État du plan d'actions, dit par une pastille : rien de déposé, déposé,
+        // ou soldé. Les trois couleurs sont celles du suivi dans tout le module.
+        const pac = a.pac || {};
+        const soldee = ((a.evaluation || {}).cloture || {}).effective === 'OUI';
+        const etatPac = soldee ? 'clos' : (pac.soumis_le ? 'soumis' : 'sans');
         return `<tr class="ramp-depliant" onclick="rampBasculerEcart(${_rArg(a.id)})">
             <td>
                 <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
@@ -1737,16 +1743,22 @@ function rampLignesEcarts() {
                 <button class="btn btn-outline btn-sm ramp-btn-icone"
                         onclick="event.stopPropagation();rampOuvrirApercu('${i.id}')"
                         title="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
-                <button class="btn btn-outline btn-sm ramp-btn-icone${(a.pac || {}).soumis_le ? ' ramp-fait' : ''}"
+                <button class="btn btn-outline btn-sm ramp-btn-icone ramp-btn-marque"
                         onclick="event.stopPropagation();rampOuvrirPac(${_rArg(a.id)})"
-                        title="${(a.pac || {}).soumis_le ? rt('pac_soumis_titre') : rt('pac_soumettre_titre')}">
-                    ${RAMP_ICONS.clipboard}</button>
+                        title="${_rAttr(rt(`pac_etat_${etatPac}`))}">
+                    ${RAMP_ICONS.clipboard}
+                    <!-- L'état se dit aussi dans l'infobulle du bouton : la
+                         pastille est un repère, non la seule source. -->
+                    <span class="ramp-btn-pastille ${etatPac}" aria-hidden="true"></span>
+                </button>
                 ${rampVuePrestataire() ? '' : `
-                <button class="btn btn-outline btn-sm ramp-btn-icone${(a.preuves || []).length ? ' ramp-fait' : ''}"
+                <button class="btn btn-outline btn-sm ramp-btn-icone ramp-btn-marque"
                         onclick="event.stopPropagation();rampOuvrirPreuves(${_rArg(a.id)})"
-                        title="${_rAttr(rt('preuves_ajouter'))}${(a.preuves || []).length
-                            ? ` (${(a.preuves || []).length} déposée${a.preuves.length > 1 ? 's' : ''})` : ''}">
-                    ${RAMP_ICONS.upload}</button>`}
+                        title="${_rAttr(rt('preuves_ajouter'))}${pieces
+                            ? ` (${pieces} ${rtn(pieces, 'pr_piece', 'pr_pieces')})` : ''}">
+                    ${RAMP_ICONS.upload}
+                    ${pieces ? `<span class="ramp-btn-badge">${pieces}</span>` : ''}
+                </button>`}
             </td>
         </tr>
         ${ouvert ? `<tr class="ramp-ecart-detail">
@@ -1792,14 +1804,14 @@ function rampRenderEcarts() {
                  replier — se retrouvait la plus étroite du tableau. -->
             <table class="ramp-table ramp-table-ecarts">
                 <thead><tr>
-                    <th style="width:40px;"></th>
+                    <th style="width:32px;"></th>
                     ${rampTh('ecarts', 'insp.exploitant', rt('c_exploitant_immat'), 'width:165px;')}
                     ${rampTh('ecarts', 'date', rt('c_date'), 'width:88px;')}
                     ${rampTh('ecarts', 'description', rt('c_description'))}
                     ${rampTh('ecarts', 'categorie', rt('c_cat_court'), 'width:56px;text-align:center;')}
                     ${rampTh('ecarts', 'action', rt('c_actions'), 'width:82px;text-align:center;')}
                     ${rampTh('ecarts', 'suivi', rt('c_statut'), 'width:80px;')}
-                    <th style="width:124px;text-align:center;">${rt('c_voir')}</th>
+                    <th style="width:138px;text-align:center;">${rt('c_voir')}</th>
                 </tr></thead>
                 <tbody data-corps="ecarts">${rampLignesEcarts()}</tbody>
             </table>

@@ -1050,10 +1050,37 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-pac-preuve > div:first-child { flex: 1; min-width: 0; }
 @media (max-width: 700px) { .ramp-pac-ligne { flex-wrap: wrap; } }
 
-/* Bouton d'action déjà servi : le plan est soumis, les preuves déposées. */
+/* Bouton d'action déjà servi : le plan est soumis, les preuves déposées. Dans
+   la table des écarts, ce qui a été fait se dit par une marque posée sur le
+   coin du bouton — le bouton lui-même reste neutre. */
 .ramp-btn-icone.ramp-fait {
     border-color: #047857; color: #047857; background: #d1fae5;
 }
+.ramp-table-ecarts .ramp-btn-icone.ramp-fait {
+    border-color: var(--border); color: var(--primary); background: var(--bg-card);
+}
+
+/* ── Marques posées sur un bouton d'action ──
+   Le nombre de pièces déposées, l'état du plan d'actions : une pastille au
+   coin, qui ne pousse ni n'agrandit le bouton. */
+.ramp-btn-marque { position: relative; overflow: visible; }
+.ramp-btn-badge {
+    position: absolute; top: -6px; right: -6px;
+    min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box;
+    border-radius: 8px; border: 1.5px solid var(--bg-card);
+    background: var(--primary); color: var(--text-header, #fff);
+    font-size: .58rem; font-weight: 700; line-height: 12px; text-align: center;
+}
+.ramp-btn-pastille {
+    position: absolute; top: -3px; right: -3px;
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1.5px solid var(--bg-card);
+}
+/* Les trois couleurs du suivi, partout les mêmes dans le module : rien de
+   déposé, déposé, soldé. */
+.ramp-btn-pastille.sans { background: #dc2626; }
+.ramp-btn-pastille.soumis { background: #d97706; }
+.ramp-btn-pastille.clos { background: #16a34a; }
 /* Un bouton d'action sans objet — un constat sans pièce jointe — se montre
    sans se proposer : le geste n'aurait rien à ouvrir. */
 .ramp-btn-icone:disabled { opacity: .45; cursor: not-allowed; }
@@ -1074,6 +1101,10 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
    tout ce que les sept autres colonnes laissent, au lieu d'être la première
    rognée parce qu'elle sait se replier. */
 .ramp-table-ecarts { table-layout: fixed; }
+/* Le chevron d'un rang n'a pas à peser autant qu'un bouton d'action : il
+   ouvre un détail, il ne commande rien. */
+.ramp-table-ecarts .ramp-extension { width: 20px; height: 20px; border-radius: 5px; }
+.ramp-table-ecarts .ramp-extension svg { width: 13px; height: 13px; }
 /* L'exploitant et son appareil tiennent une seule colonne : le nom porte la
    ligne, l'immatriculation se lit dessous — deux données qui ne se lisent
    jamais l'une sans l'autre. */

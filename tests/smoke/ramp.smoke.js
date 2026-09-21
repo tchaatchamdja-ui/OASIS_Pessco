@@ -296,9 +296,29 @@ module.exports = async function rampSmoke(port) {
       ctxPoi.corps.exploitants.length > 0 && ctxPoi.corps.aeroports.length === 51
       && ctxPoi.corps.pays.length === 249 && ctxPoi.corps.aeronefs.length > 900);
 
+    // ── L'État de l'inspection est celui de l'instance ──
+    // Une AAC n'inspecte que sur ses propres aires de trafic : le formulaire
+    // pose l'État et ne le laisse pas changer, le serveur le vérifie.
+    verifier('le formulaire annonce l’État imposé par l’instance',
+      ctxPoi.corps.etat_impose === ici, `${ctxPoi.corps.etat_impose} / ${ici}`);
+
     const ficheVide = await srv.appel(`${M}/poi`, { method: 'POST', body: '{}' });
     verifier('fiche créée en brouillon', ficheVide.statut === 201
       && /^POI-\d{4}$/.test(ficheVide.corps.reference), ficheVide.corps.reference);
+    verifier('une fiche neuve porte l’État de l’instance',
+      (await srv.appel(`${M}/poi/${ficheVide.corps.id}`)).corps.entete.etat_inspection === ici);
+    const ailleurs = (await srv.appel(`${M}/pays`)).corps.pays
+      .filter((p) => p.uemoa && p.nom !== ici)[0].nom;
+    const refusEtat = await srv.appel(`${M}/poi`, {
+      method: 'POST', body: JSON.stringify({ entete: { etat_inspection: ailleurs } }),
+    });
+    verifier('fiche refusée sous l’État d’une autre instance',
+      refusEtat.statut === 403 && refusEtat.corps.error === 'hors_perimetre',
+      `${refusEtat.statut} ${JSON.stringify(refusEtat.corps)}`);
+    verifier('et la reprise d’une fiche ne la déplace pas davantage',
+      (await srv.appel(`${M}/poi/${ficheVide.corps.id}`, {
+        method: 'PUT', body: JSON.stringify({ entete: { etat_inspection: ailleurs } }),
+      })).statut === 403);
     verifier('fiche incomplète non soumissible',
       (await srv.appel(`${M}/poi/${ficheVide.corps.id}/soumettre`, { method: 'POST', body: '{}' })).statut === 400);
     const nonSoumise = await srv.appel(`${M}/poi/${ficheVide.corps.id}/valider`, { method: 'POST', body: '{}' });
@@ -313,7 +333,7 @@ module.exports = async function rampSmoke(port) {
       method: 'POST',
       body: JSON.stringify({
         entete: {
-          date: '2026-08-20', etat_inspection: 'Togo', place: 'Lomé (DXXX)',
+          date: '2026-08-20', etat_inspection: ici, place: 'Cotonou Cadjèhoun (DBBB)',
           exploitant: 'Asky Airlines', aeronef: 'B738', immatriculation: '5V-TAA',
           vol_depuis: 'KP001', type_inspection: 'SAFA',
         },
@@ -425,7 +445,7 @@ module.exports = async function rampSmoke(port) {
     verifier('une inspection de plus aux états', inspections.corps.length === inspectionsAvant + 1);
     const nee = inspections.corps.find((i) => i.id === validation.corps.inspection_id);
     verifier('l’inspection porte les clés de la fiche',
-      nee.date === '2026-08-20' && nee.pays === 'Togo' && nee.exploitant === 'Asky Airlines'
+      nee.date === '2026-08-20' && nee.pays === ici && nee.exploitant === 'Asky Airlines'
       && nee.aeronef === 'B738' && nee.immatriculation === '5V-TAA' && nee.vol === 'KP001');
     verifier('items inspectés comptés', nee.itemsInspectes === 3, String(nee.itemsInspectes));
     verifier('inspection ouverte tant qu’il y a des écarts', nee.status === 'Ouvert', nee.status);
@@ -562,7 +582,7 @@ module.exports = async function rampSmoke(port) {
     // Une fiche encore en brouillon ne se transmet pas.
     const brouillon = await srv.appel(`${M}/poi`, {
       method: 'POST',
-      body: JSON.stringify({ entete: { date: '2026-08-21', etat_inspection: 'Togo' } }),
+      body: JSON.stringify({ entete: { date: '2026-08-21', etat_inspection: ici } }),
     });
     verifier('étape « soumission » sur un brouillon',
       (await srv.appel(`${M}/poi`)).corps.poi.find((p) => p.id === brouillon.corps.id).etape === 'soumission');

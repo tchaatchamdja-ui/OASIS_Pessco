@@ -287,7 +287,12 @@ function rampVoletPoi() {
 }
 
 function rampNouveauPoi() {
-    RAMP_STATE.poiEnCours = { ...RAMP_POI_VIDE(), id: '', reference: '', statut: 'brouillon' };
+    const vide = RAMP_POI_VIDE();
+    // L'AAC n'inspecte que sur ses propres aires de trafic : l'État de
+    // l'instance est celui de la fiche, posé d'avance. La vue régionale ne
+    // tient le poste d'aucune AAC : le choix y reste entier.
+    vide.entete.etat_inspection = rampPoiEtatImpose();
+    RAMP_STATE.poiEnCours = { ...vide, id: '', reference: '', statut: 'brouillon' };
     RAMP_STATE.poiGroupesReplies = {};
     RAMP_STATE.poiSaisieLibre = {};
     RAMP_STATE.poiVue = '';
@@ -330,6 +335,11 @@ function rampFermerPoi() {
 
 const rampPoiFige = () => ['validee', 'soumis'].includes((RAMP_STATE.poiEnCours || {}).statut)
     || !RAMP_STATE.poi.peutSaisir;
+
+// L'État que l'instance impose à la fiche. Le contexte du formulaire le dit ;
+// à défaut, l'instance tenue en barre supérieure. Vide en vue régionale.
+const rampPoiEtatImpose = () => (RAMP_STATE.poi.contexte || {}).etat_impose
+    || (RAMP_STATE.instance || {}).courante || '';
 
 // La saisie vit dans l'état, non dans le DOM : replier un groupe ou basculer un
 // item redessine la fiche, et rien ne doit se perdre au passage.
@@ -638,6 +648,14 @@ function rampPoiEntete() {
         </div>`;
     };
 
+    // L'État de l'instance se pose sur une fiche neuve, ou sur une fiche qui
+    // n'en porte pas encore. Une fiche déjà renseignée garde le sien : la
+    // rouvrir depuis un autre poste ne la déplace pas.
+    const etatImpose = rampPoiEtatImpose();
+    if (etatImpose && !fige && (!(RAMP_STATE.poiEnCours || {}).id || !e.etat_inspection)) {
+        e.etat_inspection = etatImpose;
+    }
+
     // Les aéroports proposés suivent l'État d'inspection choisi : c'est là que
     // l'inspection a lieu. Sans État, la liste attend qu'on en choisisse un.
     const aeroports = (ctx.aeroports || [])
@@ -653,7 +671,15 @@ function rampPoiEntete() {
             ${champ('date', 'Date', 'type="date"', true)}
             ${champ('heure_debut', 'Heure de début', 'type="time"')}
             ${champ('heure_fin', 'Heure de fin', 'type="time"')}
-            ${liste('etat_inspection', 'État d’inspection', ctx.etats_inspection, true)}
+            ${etatImpose
+        ? `<div class="ramp-champ">
+            <label>État d’inspection${requis(true)}</label>
+            <!-- L'État vient de l'instance : il se lit, il ne se choisit pas.
+                 Un champ désactivé n'est pas renvoyé par le formulaire, mais
+                 la saisie vit dans l'état du module, non dans le DOM. -->
+            <input class="ramp-input" disabled value="${_rAttr(e.etat_inspection || etatImpose)}">
+        </div>`
+        : liste('etat_inspection', 'État d’inspection', ctx.etats_inspection, true)}
 
             ${liste('place', 'Lieu (aéroport)', aeroports, false,
                 e.etat_inspection ? '— Choisir —' : '— Choisir d’abord l’État —')}

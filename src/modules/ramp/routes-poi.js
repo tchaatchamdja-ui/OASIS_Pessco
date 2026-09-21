@@ -81,6 +81,25 @@ module.exports = function register(app, deps, M) {
 
   const items = () => db.list('parametres').filter((p) => p.type === 'items' && p.actif !== false);
 
+  // ── L'État où l'inspection a eu lieu ──
+  // Une AAC n'inspecte que sur ses propres aires de trafic : l'État de la
+  // fiche est celui de l'instance, l'écran le pose et ne le laisse pas
+  // changer. Le serveur le vérifie plutôt que d'y croire — une requête ne
+  // passe pas par l'écran.
+  //
+  // La vue régionale fait exception : elle ne tient le poste d'aucune AAC,
+  // et le choix y reste entier.
+  const etatImpose = (req) => instanceCourante(req);
+
+  const etatAccorde = (req, res, etat) => {
+    const impose = etatImpose(req);
+    if (impose && etat && etat !== impose) {
+      horsPerimetre(res, 'etat', etat);
+      return false;
+    }
+    return true;
+  };
+
   // Un POI ne se lit que dans son périmètre : un coordonnateur national voit
   // les fiches de son État, les autres profils voient tout.
   const dansPerimetre = (req, p) =>
@@ -257,6 +276,9 @@ module.exports = function register(app, deps, M) {
       types_exploitation: TYPES_EXPLOITATION,
       types_inspection: TYPES_INSPECTION,
       configurations: CONFIGURATIONS,
+      // L'État de l'instance, que le formulaire pose et verrouille. Vide en
+      // vue régionale : le choix y reste entier.
+      etat_impose: etatImpose(req),
       etats_inspection: db.ETATS_INSPECTION.filter((e) => R.couvreEtat(req.user, referentiels, e)),
       pays: db.list('pays').filter((p) => p.actif !== false)
         .map((p) => p.nom).sort((a, b) => a.localeCompare(b, 'fr')),
@@ -368,7 +390,11 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/poi`, requireAuth, (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res);
     const corps = corpsPoi(req.body || {});
+    // L'instance pose son État : une fiche neuve le porte même si l'écran ne
+    // l'a pas renvoyé.
+    corps.entete.etat_inspection = corps.entete.etat_inspection || etatImpose(req);
     const etat = corps.entete.etat_inspection;
+    if (!etatAccorde(req, res, etat)) return undefined;
     if (etat && !R.couvreEtat(req.user, referentiels, etat)) {
       return horsPerimetre(res, 'etat', etat);
     }
@@ -407,6 +433,7 @@ module.exports = function register(app, deps, M) {
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     const corps = corpsPoi(req.body || {});
     const etat = corps.entete.etat_inspection;
+    if (!etatAccorde(req, res, etat)) return undefined;
     if (etat && !R.couvreEtat(req.user, referentiels, etat)) {
       return horsPerimetre(res, 'etat', etat);
     }

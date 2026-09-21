@@ -1121,11 +1121,12 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     display: block; font-size: .78rem; color: var(--text-muted); line-height: 1.3;
 }
 .ramp-table tr.ramp-ecart-detail > td { background: var(--ramp-accent-bg); }
-/* Trois champs, trois colonnes — un sixième pour la référence, la moitié pour
-   l'item, le tiers restant pour le référentiel : le volet tient sur un rang au
-   lieu de deux, et n'écarte plus les lignes voisines. */
+/* Quatre champs, quatre colonnes sur un rang : la référence, l'appareil,
+   l'item — qui porte son libellé et demande donc la plus large — et le
+   référentiel. L'appareil s'insère sans rien reprendre aux trois autres, dont
+   les proportions ne bougent pas. */
 .ramp-ecart-detail-grille {
-    display: grid; grid-template-columns: 1fr 3fr 2fr; gap: .15rem 1.2rem;
+    display: grid; grid-template-columns: 1fr 1.5fr 3fr 2fr; gap: .15rem 1.2rem;
     padding: .1rem 0 .2rem; font-size: .82rem; line-height: 1.3;
 }
 .ramp-ecart-detail-grille i {

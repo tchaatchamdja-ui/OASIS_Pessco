@@ -1773,6 +1773,7 @@ function rampLignesEcarts() {
                     <div><i>${rt('c_poi')}</i><div>${i.poi_reference
                         ? `<strong class="ramp-code">${_rEsc(i.poi_reference)}</strong>`
                         : '<span class="ramp-vide">—</span>'}</div></div>
+                    <div><i>${rt('c_aeronef')}</i><div>${_rEsc(i.aeronef || '—')}</div></div>
                     <div><i>${rt('c_item')}</i><div><strong class="ramp-code">${_rEsc(a.itemCode || '—')}</strong>
                         ${rampLibelleItem(a.itemCode) ? ` — ${_rEsc(rampLibelleItem(a.itemCode))}` : ''}</div></div>
                     <div><i>${rt('c_ref_std')}</i><div>${_rEsc(a.stdRef || '—')}</div></div>

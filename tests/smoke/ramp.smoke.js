@@ -1163,6 +1163,23 @@ module.exports = async function rampSmoke(port) {
       JSON.stringify(pieceNiger));
     verifier('et se télécharge depuis un autre État',
       (await srv.appel(`${M}/ecarts/${ecartNiger.id}/preuves/${(pieceNiger[0] || {}).id}/fichier`)).statut === 200);
+    // Ce qu'une autre instance tient se lit, ne s'écrit pas : le suivi d'un
+    // écart, son plan d'actions et ses preuves appartiennent à l'AAC qui l'a
+    // relevé.
+    const ecartAilleurs = ((duNiger.anomalies || [])[0] || {}).id;
+    verifier('le suivi d’un écart d’une autre instance ne se modifie pas',
+      (await srv.appel(`${M}/ecarts/${ecartAilleurs}`, {
+        method: 'PUT', body: JSON.stringify({ suivi: 'Clôturé' }),
+      })).statut === 404);
+    verifier('son plan d’actions non plus',
+      (await srv.appel(`${M}/ecarts/${ecartAilleurs}/pac`, {
+        method: 'PUT', body: JSON.stringify({ cause_primaire: 'Essai' }),
+      })).statut === 404);
+    verifier('ni sa clôture',
+      (await srv.appel(`${M}/ecarts/${ecartAilleurs}/cloturer`, {
+        method: 'POST', body: '{}',
+      })).statut === 404);
+
     verifier('l’inspection d’un autre État ne se supprime pas d’ici',
       (await srv.appel(`${M}/inspections/${duNiger.id}`, { method: 'DELETE' })).statut === 404);
 

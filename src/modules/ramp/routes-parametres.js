@@ -171,6 +171,12 @@ module.exports = function register(app, deps, M) {
   // ══════════════════════════════════════
   // Sept familles : États, exploitants, aéronefs, items SAFA, catégories
   // d'écart, actions SAFA et statuts de suivi.
+  //
+  // Le paramétrage est commun à toutes les instances, et le reste : les items
+  // du programme SAFA, les catégories d'écart et les classes d'action sont
+  // ceux du dispositif, non ceux d'une AAC ; un exploitant inspecté à Cotonou
+  // l'est aussi à Lomé. Ce sont les inspections qui se cloisonnent, pas la
+  // nomenclature qui sert à les lire.
 
   app.get(`${M}/parametres`, requireAuth, (req, res) => {
     const tous = db.list('parametres');
@@ -678,6 +684,9 @@ module.exports = function register(app, deps, M) {
   // Les correspondants de chaque État. Un coordonnateur national ne tient que
   // le carnet du sien.
 
+  // Le carnet est commun à toutes les instances : ce sont les correspondants
+  // des États membres, et c'est pour les joindre d'une AAC à l'autre qu'il
+  // existe. Le cloisonnement le viderait de son objet.
   app.get(`${M}/contacts`, requireAuth, (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     res.json(db.list('contacts').slice().sort((a, b) =>

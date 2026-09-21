@@ -240,6 +240,22 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok' });
   });
 
+  // ── Écrire sur un écart ──
+  // Deux bornes, qui ne disent pas la même chose : le périmètre de l'État
+  // limite ce qu'un coordonnateur national peut toucher, l'instance dit
+  // quelle AAC tient l'inspection. Une AAC ne corrige pas le suivi d'un écart
+  // relevé par une autre : elle le lit au menu « Partages », elle n'y écrit
+  // pas. Un écart qu'on ne voit pas est introuvable, comme son inspection.
+  const inspectionEcrivable = (req, res, e) => {
+    const i = db.get('inspections', e.inspection_id) || {};
+    if (!vues.voitInspection(req, i, loadConfig)) { introuvable(res, 'ecart'); return null; }
+    if (!R.couvreEtat(req.user, referentiels, i.pays)) {
+      horsPerimetre(res, 'ecart', i.pays);
+      return null;
+    }
+    return i;
+  };
+
   // ══════════════════════════════════════
   //  Plan d'actions correctives d'un écart
   // ══════════════════════════════════════
@@ -251,10 +267,7 @@ module.exports = function register(app, deps, M) {
     const e = db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
     if (!R.canContribute(req.user)) return refuser(res);
-    const i = db.get('inspections', e.inspection_id) || {};
-    if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      return horsPerimetre(res, 'ecart', i.pays);
-    }
+    if (!inspectionEcrivable(req, res, e)) return undefined;
     const d = req.body || {};
     const pac = { ...(e.pac || {}) };
     CHAMPS_PAC.forEach((k) => { if (d[k] !== undefined) pac[k] = texte(d[k]); });
@@ -294,11 +307,7 @@ module.exports = function register(app, deps, M) {
     if (!e) { introuvable(res, 'ecart'); return null; }
     // Se prononcer sur un plan relève du valideur, non de qui l'a rédigé.
     if (!R.canValidate(req.user)) { reserve(res, 'validateur'); return null; }
-    const i = db.get('inspections', e.inspection_id) || {};
-    if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      horsPerimetre(res, 'ecart', i.pays);
-      return null;
-    }
+    if (!inspectionEcrivable(req, res, e)) return null;
     return e;
   }
 
@@ -405,11 +414,7 @@ module.exports = function register(app, deps, M) {
     const e = db.get('ecarts', req.params.id);
     if (!e) { introuvable(res, 'ecart'); return null; }
     if (!R.canContribute(req.user)) { refuser(res); return null; }
-    const i = db.get('inspections', e.inspection_id) || {};
-    if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      horsPerimetre(res, 'ecart', i.pays);
-      return null;
-    }
+    if (!inspectionEcrivable(req, res, e)) return null;
     return e;
   }
 
@@ -483,10 +488,7 @@ module.exports = function register(app, deps, M) {
     const e = db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
     if (!R.canContribute(req.user)) return refuser(res);
-    const i = db.get('inspections', e.inspection_id) || {};
-    if (!R.couvreEtat(req.user, referentiels, i.pays)) {
-      return horsPerimetre(res, 'ecart', i.pays);
-    }
+    if (!inspectionEcrivable(req, res, e)) return undefined;
     db.update('ecarts', e.id, { suivi: texte((req.body || {}).suivi) });
     res.json({ status: 'ok' });
   });

@@ -506,19 +506,11 @@
    (`oasis-kpi.js`), comme le module « Exécution de la Surveillance ».
    Les règles ci-dessous ne servent plus qu'à l'aperçu d'importation, où
    quatre compteurs simples suffisent. */
-/* Colonne « Voir » : les boutons prennent la couleur du suivi de l'écart —
-   rouge tant qu'il est ouvert, ambre pendant le traitement, vert une fois
-   soldé. Le survol inverse le fond, comme partout ailleurs. */
-.ramp-suivi-ouvert .ramp-btn-icone { color: #dc2626; border-color: #dc2626; }
-.ramp-suivi-ouvert .ramp-btn-icone:hover { background: #dc2626; color: #fff; }
-.ramp-suivi-encours .ramp-btn-icone { color: #d97706; border-color: #d97706; }
-.ramp-suivi-encours .ramp-btn-icone:hover { background: #d97706; color: #fff; }
-.ramp-suivi-clos .ramp-btn-icone { color: #16a34a; border-color: #16a34a; }
-.ramp-suivi-clos .ramp-btn-icone:hover { background: #16a34a; color: #fff; }
-/* Une action déjà accomplie garde son fond plein, dans la teinte du suivi. */
-.ramp-suivi-ouvert .ramp-btn-icone.ramp-fait { background: rgba(220, 38, 38, .12); }
-.ramp-suivi-encours .ramp-btn-icone.ramp-fait { background: rgba(217, 119, 6, .14); }
-.ramp-suivi-clos .ramp-btn-icone.ramp-fait { background: rgba(22, 163, 74, .14); }
+/* Colonne « Voir » : les boutons portaient la couleur du suivi de l'écart —
+   rouge tant qu'il était ouvert, ambre pendant le traitement, vert une fois
+   soldé. Trois boutons rouges sur chaque rang criaient plus qu'ils
+   n'informaient : la colonne « Statut » dit déjà où en est le suivi. Ils
+   reprennent donc le contour ordinaire des boutons d'action du module.
 
 /* ── Barre des États membres ──
    Collée au bas de l'écran, sous la liste : les huit États de l'UEMOA, que
@@ -1075,17 +1067,33 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
     box-shadow: inset 3px 0 0 var(--ramp-accent);
 }
 
-/* Table des écarts : la description tient le tiers de la largeur, et le
-   détail de l'item se déplie sous la ligne. */
+/* Table des écarts : la description prend ce que les autres colonnes laissent,
+   et le détail de l'item se déplie sous la ligne. */
 .ramp-ecart-desc { white-space: normal; line-height: 1.4; }
+/* Les largeurs déclarées s'appliquent telles quelles : la description prend
+   tout ce que les sept autres colonnes laissent, au lieu d'être la première
+   rognée parce qu'elle sait se replier. */
+.ramp-table-ecarts { table-layout: fixed; }
+/* L'exploitant et son appareil tiennent une seule colonne : le nom porte la
+   ligne, l'immatriculation se lit dessous — deux données qui ne se lisent
+   jamais l'une sans l'autre. */
+.ramp-sous-ligne {
+    display: block; font-size: .78rem; color: var(--text-muted); line-height: 1.3;
+}
 .ramp-table tr.ramp-ecart-detail > td { background: var(--ramp-accent-bg); }
+/* Trois champs, trois colonnes — un sixième pour la référence, la moitié pour
+   l'item, le tiers restant pour le référentiel : le volet tient sur un rang au
+   lieu de deux, et n'écarte plus les lignes voisines. */
 .ramp-ecart-detail-grille {
-    display: grid; grid-template-columns: 1fr 220px; gap: .3rem 1.5rem;
-    padding: .2rem 0 .35rem; font-size: .84rem;
+    display: grid; grid-template-columns: 1fr 3fr 2fr; gap: .15rem 1.2rem;
+    padding: .1rem 0 .2rem; font-size: .82rem; line-height: 1.3;
 }
 .ramp-ecart-detail-grille i {
-    font-style: normal; font-size: .7rem; font-weight: 700; letter-spacing: .03em;
-    text-transform: uppercase; color: var(--text-muted); display: block;
+    font-style: normal; font-size: .68rem; font-weight: 700; letter-spacing: .03em;
+    text-transform: uppercase; color: var(--text-muted); display: block; line-height: 1.2;
+}
+@media (max-width: 700px) {
+    .ramp-ecart-detail-grille { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Volet repliable : son entête est un bouton, à la couleur du bandeau. */

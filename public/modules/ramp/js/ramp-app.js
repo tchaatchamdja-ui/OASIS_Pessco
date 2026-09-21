@@ -372,15 +372,6 @@ function rampEstClos(statut) {
     return RAMP_MOTS_CLOS.some((k) => s.includes(k));
 }
 
-// Le suivi d'un écart se lit à la couleur de ses boutons d'action : rouge tant
-// qu'il est ouvert, ambre pendant le traitement, vert une fois soldé.
-function rampTeinteSuivi(ecart) {
-    const statut = (ecart.suivi || (ecart.inspection || {}).status || '').trim();
-    if (rampEstClos(statut)) return 'clos';
-    if (/\ben cours\b/.test(_rNorm(statut))) return 'encours';
-    return 'ouvert';
-}
-
 // ══════════════════════════════════════
 //  Chargement
 // ══════════════════════════════════════
@@ -1717,7 +1708,7 @@ function rampLignesEcarts() {
         if (k === 'suivi') return o.suivi || o.inspection.status || '';
         return o[k];
     });
-    if (!liste.length) return `<tr><td colspan="9" class="ramp-table-vide">${rt('aucun_ecart')}</td></tr>`;
+    if (!liste.length) return `<tr><td colspan="8" class="ramp-table-vide">${rt('aucun_ecart')}</td></tr>`;
     return liste.map((a) => {
         const i = a.inspection;
         const clos = rampEstClos(i.status);
@@ -1725,7 +1716,6 @@ function rampLignesEcarts() {
         // l'écart au premier regard, c'est l'exploitant, l'appareil et le
         // constat lui-même.
         const ouvert = !!RAMP_STATE.ecartsDeplies[a.id];
-        const teinte = rampTeinteSuivi(a);
         return `<tr class="ramp-depliant" onclick="rampBasculerEcart(${_rArg(a.id)})">
             <td>
                 <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
@@ -1734,14 +1724,16 @@ function rampLignesEcarts() {
                     ${RAMP_ICONS.chevronBas}
                 </button>
             </td>
-            <td>${_rEsc(i.exploitant || '—')}</td>
-            <td>${_rEsc(i.immatriculation || '—')}</td>
-            <td>${_rEsc(rampDate(i.date))}</td>
+            <td>
+                <strong>${_rEsc(i.exploitant || '—')}</strong>
+                <span class="ramp-sous-ligne">${_rEsc(i.immatriculation || '—')}</span>
+            </td>
+            <td style="white-space:nowrap;">${_rEsc(rampDate(i.date))}</td>
             <td class="ramp-ecart-desc">${_rEsc(a.description || '—')}</td>
             <td style="text-align:center;">${rampBadgeCat(a.categorie)}</td>
             <td style="text-align:center;">${_rEsc(a.action || '—')}</td>
             <td>${_rEsc(a.suivi || i.status || '—')}${clos ? ' <span class="ramp-badge zero">clos</span>' : ''}</td>
-            <td class="ramp-cell-actions ramp-suivi-${teinte}">
+            <td class="ramp-cell-actions">
                 <button class="btn btn-outline btn-sm ramp-btn-icone"
                         onclick="event.stopPropagation();rampOuvrirApercu('${i.id}')"
                         title="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
@@ -1759,7 +1751,7 @@ function rampLignesEcarts() {
         </tr>
         ${ouvert ? `<tr class="ramp-ecart-detail">
             <td></td>
-            <td colspan="8">
+            <td colspan="7">
                 <div class="ramp-ecart-detail-grille">
                     <div><i>${rt('c_poi')}</i><div>${i.poi_reference
                         ? `<strong class="ramp-code">${_rEsc(i.poi_reference)}</strong>`
@@ -1795,17 +1787,19 @@ function rampRenderEcarts() {
     </div>
     <div class="ramp-card" style="padding:0;">
         <div class="ramp-table-wrap">
-            <table class="ramp-table">
+            <!-- Colonnes fixées : sans cela, le navigateur les répartit sur ce
+                 que chacune contient, et la description — seule à pouvoir se
+                 replier — se retrouvait la plus étroite du tableau. -->
+            <table class="ramp-table ramp-table-ecarts">
                 <thead><tr>
-                    <th style="width:38px;"></th>
-                    ${rampTh('ecarts', 'insp.exploitant', rt('c_exploitant'), 'width:16%;')}
-                    ${rampTh('ecarts', 'insp.immatriculation', rt('c_immat'), 'width:11%;')}
-                    ${rampTh('ecarts', 'date', rt('c_date'), 'width:100px;')}
-                    ${rampTh('ecarts', 'description', rt('c_description'), 'width:33%;')}
-                    ${rampTh('ecarts', 'categorie', rt('c_categorie'), 'width:90px;text-align:center;')}
-                    ${rampTh('ecarts', 'action', rt('c_actions'), 'width:90px;text-align:center;')}
-                    ${rampTh('ecarts', 'suivi', rt('c_statut'), 'width:120px;')}
-                    <th style="width:70px;text-align:center;">${rt('c_voir')}</th>
+                    <th style="width:40px;"></th>
+                    ${rampTh('ecarts', 'insp.exploitant', rt('c_exploitant_immat'), 'width:165px;')}
+                    ${rampTh('ecarts', 'date', rt('c_date'), 'width:88px;')}
+                    ${rampTh('ecarts', 'description', rt('c_description'))}
+                    ${rampTh('ecarts', 'categorie', rt('c_cat_court'), 'width:56px;text-align:center;')}
+                    ${rampTh('ecarts', 'action', rt('c_actions'), 'width:82px;text-align:center;')}
+                    ${rampTh('ecarts', 'suivi', rt('c_statut'), 'width:80px;')}
+                    <th style="width:124px;text-align:center;">${rt('c_voir')}</th>
                 </tr></thead>
                 <tbody data-corps="ecarts">${rampLignesEcarts()}</tbody>
             </table>

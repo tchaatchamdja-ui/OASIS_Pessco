@@ -473,7 +473,7 @@ Object.assign(window, {
     rampToggleSidebar, rampSetTheme, rampSetLang, rampRafraichir, rampConserverModale, rampSaisiesEnCours, rampRetourPortail, rampDeconnexion,
     rampParseDate, rampDate, rampISO,
     rampFamille, rampPonderations, rampLibelleItem, rampGroupeDeLItem, rampEstClos,
-    _rArg, rampBasculerEcart, rampTeinteSuivi, rampMesurerEntete, rampMesurerPied, rampRemonter, rampVueCourante, rampCorpsDeLaPage, rampRole, rampEstAdmin, rampEstRegional, rampPeutContribuer, rampPeutImporter,
+    _rArg, rampBasculerEcart, rampMesurerEntete, rampMesurerPied, rampRemonter, rampVueCourante, rampCorpsDeLaPage, rampRole, rampEstAdmin, rampEstRegional, rampPeutContribuer, rampPeutImporter,
     rampFiltrer, rampSetFiltre, rampResetFiltres, rampChercher, rampBarreFiltres,
     rampAnnees, rampValeurs, rampTrier, rampAppliquerTri, rampTh, rampBadgeCat, rampResumeHtml,
     rampRenderDashboard, rampRenderEtats, rampRenderPageEcarts, rampOuvrirImportation,

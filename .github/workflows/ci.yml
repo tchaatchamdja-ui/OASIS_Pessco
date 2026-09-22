@@ -21,8 +21,10 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
-      - name: Vulnérabilités critiques
-        run: npm audit --omit=dev --audit-level=critical
+      - name: Vulnérabilités des dépendances
+        # Au niveau « high » : c'est à ce niveau qu'est sortie la faille de
+        # nodemailer, qu'un seuil « critical » laissait passer.
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Syntaxe du serveur et des modules
         run: |

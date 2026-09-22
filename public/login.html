@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="/css/oasis.css">
   <!-- Retour d'action : panneau commun au portail et aux modules. -->
   <link rel="stylesheet" href="/shared/css/oasis-toast.css">
+  <!-- Témoins de connexion : bandeau d'information à la première visite. -->
+  <link rel="stylesheet" href="/shared/css/oasis-cookies.css">
   <script src="/shared/js/oasis-toast.js"></script>
 </head>
 <body>
@@ -70,12 +72,16 @@
         </div>
       </div>
       <!-- Même mention qu'au portail et dans les modules, traduite avec la page. -->
+      <div class="login-copy" style="margin-bottom:.35rem;">
+        <a href="/cookies.html" data-i18n="cookies_titre">Témoins de connexion et données du navigateur</a>
+      </div>
       <div class="login-copy" data-i18n="footer">© 2026 UEMOA / URSAC — OASIS · Outils d'Administration et de Supervision Intégrée de la Sécurité</div>
     </div>
   </div>
 
   <script src="/shared/js/oasis-requete.js"></script>
   <script src="/js/i18n.js"></script>
+  <script src="/shared/js/oasis-cookies.js"></script>
   <script>
     applyLang(localStorage.getItem('pr_lang') || 'fr');
 

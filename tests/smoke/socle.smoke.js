@@ -9,6 +9,26 @@ module.exports = async function socleSmoke(port) {
     const anonyme = await srv.appel('/api/modules');
     verifier('les routes protégées refusent l’anonyme', anonyme.statut === 401, `statut ${anonyme.statut}`);
 
+    // ── Témoins de connexion ──
+    // La page qui dit ce que l'application dépose se lit avant de se
+    // connecter, et la durée de session qu'elle annonce vient du paramétrage,
+    // non d'un texte recopié.
+    const politique = await srv.appel('/api/politique-session');
+    verifier('politique de session lisible sans session',
+      politique.statut === 200 && Number(politique.corps.sessionTimeoutMinutes) > 0,
+      JSON.stringify(politique.corps));
+    const pageCookies = await srv.appel('/cookies.html');
+    verifier('page des témoins de connexion servie',
+      pageCookies.statut === 200 && /oasis_session/.test(String(pageCookies.corps || '')));
+
+    // Les en-têtes de sécurité accompagnent chaque réponse, y compris celle-ci.
+    const entetes = politique.entetes || {};
+    verifier('en-têtes de sécurité posés sur les réponses',
+      /default-src 'self'/.test(entetes['content-security-policy'] || '')
+      && entetes['x-content-type-options'] === 'nosniff'
+      && entetes['x-frame-options'] === 'SAMEORIGIN',
+      Object.keys(entetes).filter((k) => /policy|frame|content-type-opt/.test(k)).join(' '));
+
     const me = await srv.connexion();
     verifier('connexion superadmin', me && me.ok === true);
 

@@ -79,7 +79,11 @@ async function demarrer({ port = 4788 } = {}) {
     const texte = await r.text();
     let corps = null;
     try { corps = JSON.parse(texte); } catch (e) { corps = texte; }
-    return { statut: r.status, corps };
+    // Les en-têtes sont rendus avec la réponse : certains contrôles portent sur
+    // eux — politique de contenu, cadrage, type deviné.
+    const entetes = {};
+    r.headers.forEach((v, k) => { entetes[k.toLowerCase()] = v; });
+    return { statut: r.status, corps, entetes };
   };
 
   const connexion = async (username = 'superadmin@anac.bj', password = 'Aerosup@2026!Uemoa') => {

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OASIS — Témoins de connexion</title>
+  <link rel="stylesheet" href="/shared/css/oasis-shell.css">
+  <link rel="stylesheet" href="/css/oasis.css">
+  <link rel="stylesheet" href="/shared/css/oasis-cookies.css">
+</head>
+<body>
+  <div class="oasis-cookies-page">
+    <h1 data-i18n="cookies_titre">Témoins de connexion et données du navigateur</h1>
+    <p data-i18n="cookies_intro"></p>
+
+    <table>
+      <thead>
+        <tr>
+          <th data-i18n="cookies_col_nom">Nom</th>
+          <th data-i18n="cookies_col_role">Ce qu'il sert</th>
+          <th data-i18n="cookies_col_duree">Durée</th>
+          <th data-i18n="cookies_col_nature">Nature</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>oasis_session</code></td>
+          <td data-i18n="cookies_session_role"></td>
+          <td id="dureeSession"></td>
+          <td data-i18n="cookies_necessaire"></td>
+        </tr>
+        <tr>
+          <td><code>pr_theme</code></td>
+          <td data-i18n="cookies_theme_role"></td>
+          <td data-i18n="cookies_duree_navigateur"></td>
+          <td data-i18n="cookies_preference"></td>
+        </tr>
+        <tr>
+          <td><code>pr_lang</code></td>
+          <td data-i18n="cookies_langue_role"></td>
+          <td data-i18n="cookies_duree_navigateur"></td>
+          <td data-i18n="cookies_preference"></td>
+        </tr>
+        <tr>
+          <td><code>pr_page</code></td>
+          <td data-i18n="cookies_ecran_role"></td>
+          <td data-i18n="cookies_duree_navigateur"></td>
+          <td data-i18n="cookies_preference"></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2 data-i18n="cookies_gestion_titre">Refuser ou effacer</h2>
+    <p data-i18n="cookies_gestion"></p>
+    <p>
+      <button type="button" class="shell-btn shell-btn-primary" id="effacer"
+              data-i18n="cookies_effacer">Effacer mes préférences sur cet appareil</button>
+    </p>
+
+    <h2 data-i18n="cookies_donnees_titre">Données personnelles</h2>
+    <p data-i18n="cookies_donnees"></p>
+
+    <p style="margin-top:1.6rem;">
+      <a href="/login.html" data-i18n="cookies_retour">Revenir à la connexion</a>
+    </p>
+  </div>
+
+  <script src="/shared/js/oasis-requete.js"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/shared/js/oasis-cookies.js"></script>
+  <script>
+    applyLang(localStorage.getItem('pr_lang') || 'fr');
+
+    // La durée de session n'est pas écrite en dur : elle vient du paramétrage
+    // de l'application, et la page dit ce qui s'applique vraiment.
+    (async () => {
+      let minutes = 30;
+      try {
+        const r = await fetch('/api/politique-session', { credentials: 'same-origin' });
+        if (r.ok) minutes = (await r.json()).sessionTimeoutMinutes || minutes;
+      } catch (e) { /* la valeur par défaut fera foi */ }
+      document.getElementById('dureeSession').textContent = t('cookies_session_duree').replace('{0}', minutes);
+    })();
+
+    document.getElementById('effacer').addEventListener('click', () => {
+      window.oasisEffacerPreferences();
+      applyLang('fr');
+      alert(t('cookies_efface'));
+    });
+  </script>
+</body>
+</html>

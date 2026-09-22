@@ -1,0 +1,55 @@
+/* OASIS — Bandeau des témoins de connexion.
+ *
+ * L'application ne dépose qu'un témoin de session, strictement nécessaire :
+ * le bandeau informe, il ne demande pas un consentement qu'aucun choix ne
+ * suivrait. Il ne barre donc pas la page — on s'y connecte sans l'avoir
+ * refermé — et se retire d'un clic, pour de bon.
+ */
+.oasis-cookies {
+    position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%);
+    z-index: 3000; width: min(760px, calc(100vw - 2rem));
+    display: flex; align-items: center; gap: .9rem; flex-wrap: wrap;
+    padding: .8rem 1rem;
+    background: var(--bg-card, #fff); color: var(--text, #1a202c);
+    border: 1px solid var(--border, #e2e8f0); border-left: 4px solid var(--primary, #1a365d);
+    border-radius: 10px; box-shadow: 0 8px 28px rgba(0, 0, 0, .18);
+    font-size: .84rem; line-height: 1.45;
+}
+.oasis-cookies-texte { flex: 1 1 320px; min-width: 0; }
+.oasis-cookies-actions { display: flex; align-items: center; gap: .5rem; flex: 0 0 auto; }
+.oasis-cookies a {
+    color: var(--primary, #1a365d); font-weight: 600; text-underline-offset: 2px;
+}
+.oasis-cookies button {
+    padding: .4rem .9rem; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--primary, #1a365d);
+    background: var(--primary, #1a365d); color: #fff;
+    font-family: inherit; font-size: .82rem; font-weight: 600;
+}
+.oasis-cookies button:hover { filter: brightness(1.1); }
+
+@media (max-width: 560px) {
+    .oasis-cookies { bottom: 0; border-radius: 10px 10px 0 0; width: 100vw; }
+    .oasis-cookies-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* ── Page « Témoins de connexion et données du navigateur » ── */
+.oasis-cookies-page {
+    max-width: 860px; margin: 0 auto; padding: 2rem 1rem 3rem;
+    color: var(--text, #1a202c);
+}
+.oasis-cookies-page h1 { font-size: 1.35rem; margin-bottom: .6rem; }
+.oasis-cookies-page h2 { font-size: 1rem; margin: 1.6rem 0 .5rem; }
+.oasis-cookies-page p { line-height: 1.6; margin-bottom: .7rem; font-size: .9rem; }
+.oasis-cookies-page table {
+    width: 100%; border-collapse: collapse; margin: .6rem 0 1rem; font-size: .84rem;
+}
+.oasis-cookies-page th, .oasis-cookies-page td {
+    text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--border, #e2e8f0);
+    vertical-align: top;
+}
+.oasis-cookies-page th { background: var(--bg, #f0f4f8); font-weight: 700; }
+.oasis-cookies-page code {
+    font-family: ui-monospace, Menlo, monospace; font-size: .8rem;
+    background: var(--bg, #f0f4f8); padding: .05rem .3rem; border-radius: 4px;
+}

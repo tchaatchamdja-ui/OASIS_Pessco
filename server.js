@@ -4,6 +4,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const store = require('./src/store');
 const audit = require('./src/audit');
 const { valider } = require('./src/valider');
@@ -215,6 +216,17 @@ app.get('/api/health', (req, res) => {
     modules: MODULES_MONTES.map((m) => m.code),
     stockage,
     demarre_depuis_s: Math.round(process.uptime()),
+  });
+});
+
+// ── Politique de session, pour la page des témoins de connexion ──
+// La page qui explique ce que l'application dépose doit dire la durée qui
+// s'applique vraiment, non celle qu'on y aurait recopiée. Elle est publique —
+// on la consulte avant de se connecter — et ne rend que ce nombre.
+app.get('/api/politique-session', (req, res) => {
+  const cfg = loadConfig();
+  res.json({
+    sessionTimeoutMinutes: Number((cfg.security || {}).sessionTimeoutMinutes) || 30,
   });
 });
 
@@ -1004,6 +1016,29 @@ app.use(express.static(path.join(__dirname, 'public'), {
     }
   },
 }));
+
+// ── Dernier filet (SEC-09) ──
+// Une exception qui échappe à une route ne doit pas rendre au navigateur la
+// trace d'exécution du serveur : elle nomme les fichiers, les fonctions et
+// parfois les valeurs en cours. Le gestionnaire par défaut d'Express la rend
+// pourtant hors production, et l'application tourne aussi en recette. Elle est
+// donc inscrite au journal de l'exploitant, et l'appelant reçoit une erreur
+// normalisée, comme les autres.
+//
+// Le journal d'audit en garde trace lui aussi : une erreur répétée sur une
+// même route est un signal, et le journal est ce qu'on relit après coup.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  const reference = crypto.randomBytes(4).toString('hex');
+  console.error(`OASIS — erreur non rattrapée [${reference}] ${req.method} ${req.path}`, err);
+  try {
+    audit.log((req.user || {}).username || 'anonyme', 'ERREUR_SERVEUR', {
+      reference, methode: req.method, chemin: req.path, message: err && err.message,
+    });
+  } catch (e) { /* le journal ne doit pas masquer l'erreur d'origine */ }
+  if (res.headersSent) return next(err);
+  return res.status(500).json({ error: 'erreur_serveur', reference });
+});
 
 const PORT = process.env.PORT || 4750;
 // Reprise ponctuelle des enregistrements posés sous l'ancien nom du module

@@ -18,6 +18,18 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   l'en-tête `X-OASIS-Request`, posé par les pages de l'application. *(SEC-06)*
 - **Validation des corps de requête** (`src/valider.js`) appliquée à la création de
   comptes, de plans, d'activités, de notifications et de rappels. *(SEC-08)*
+- **Dernier filet** : une exception non rattrapée est inscrite au journal et rendue
+  sous une erreur normalisée portant une référence — la trace d'exécution ne part
+  plus au navigateur. *(SEC-09)*
+- **Témoins de connexion** : page publique `/cookies.html` — ce que l'application
+  dépose, pourquoi, pour combien de temps, et de quoi effacer ses préférences —,
+  bandeau d'information à la première visite, et mention au pied de la page de
+  connexion. Trois langues. *(SEC-10)*
+- **Politique de sécurité** consignée : `docs/SECURITE.md` — mesures en place,
+  emplacement dans le code, et ce qui reste ouvert.
+- Dépendance `nodemailer` relevée (faille de niveau « high » sur la validation du
+  domaine destinataire) ; l'intégration continue échoue désormais à ce niveau,
+  là où elle n'arrêtait que le niveau « critical ».
 
 ### Exploitation
 - `Dockerfile` multi-étages (utilisateur non privilégié, sonde de santé),

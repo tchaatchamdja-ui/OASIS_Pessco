@@ -264,6 +264,13 @@ const RAMP_NAV = {
 // d'ajout ni d'import d'inspection, pas de suppression, pas de dépôt de
 // preuves, pas de générateur de tables.
 const rampVuePrestataire = () => (RAMP_STATE.vue || {}).vue === 'prestataire';
+// Vue régionale : le super-administrateur qui ne tient le poste d'aucune AAC et
+// regarde tout le dispositif. C'est la seule vue où plusieurs États se lisent
+// ensemble — ailleurs, on est chez une Autorité et une seule.
+const rampVueRegionale = () => {
+    const inst = RAMP_STATE.instance || {};
+    return !!inst.disponible && !(inst.courante || '');
+};
 // Menus ouverts en vue Prestataire. « Mes Utilisateurs » n'y figure que si
 // l'organisme a confié la gestion des comptes — voir `rampPeutGererComptes`.
 const RAMP_NAV_PRESTATAIRE = ['dashboard', 'etats', 'ecarts', 'utilisateurs'];
@@ -575,6 +582,11 @@ function rampViderPaysUemoa() {
 }
 
 function rampBarrePays(dansVolet) {
+    // Filtrer par État membre n'a de sens qu'en vue régionale : sous le poste
+    // d'une AAC, les inspections regardées sont les siennes, et la barre
+    // n'aurait qu'un État à proposer. La page se réserve sa hauteur par
+    // « :has(.ramp-barre-pays) » — absente, elle ne réserve rien.
+    if (!rampVueRegionale()) return '';
     const F = RAMP_STATE.filtres;
     const retenus = F.paysUemoa || [];
     const boutons = RAMP_UEMOA.map((nom) => {

@@ -484,7 +484,7 @@ Object.assign(window, {
     rampChargerCorrespondancesAeronefs,
     rampFiltrerAvec, rampFacette, RAMP_FACETTES, rampTrimestresRetenus,
     rampListeTrimestres, rampBasculerTrimestres, rampBasculerTrimestre, rampViderTrimestres,
-    RAMP_UEMOA, rampBarrePays, rampBasculerPaysUemoa, rampViderPaysUemoa, rampNomPaysData,
+    RAMP_UEMOA, rampBarrePays, rampVueRegionale, rampBasculerPaysUemoa, rampViderPaysUemoa, rampNomPaysData,
     rampRenderInspections, rampRenderEcarts,
     rampLignesInspections, rampLignesEcarts, rampSupprimerInspection,
     rampOuvrirApercu, rampFermerApercu, rampRenderApercu,

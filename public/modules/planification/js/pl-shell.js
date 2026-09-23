@@ -306,7 +306,7 @@ function planRenderApp() {
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">
                     ${['blue-dark','corporate','grey'].map(th =>
-                        `<div class="theme-dot ${S.theme===th?'active':''}" data-theme="${th}" onclick="planSetTheme('${th}')" title="${th}"></div>`
+                        `<div class="theme-dot ${S.theme===th?'active':''}" data-theme="${th}" onclick="planSetTheme('${th}')" title="${oasisNomTheme(th)}"></div>`
                     ).join('')}
                 </div>
                 <div class="lang-selector sidebar-lang-selector">

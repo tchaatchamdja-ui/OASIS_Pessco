@@ -31,16 +31,20 @@
     --ramp-accent-bg-hover: rgba(30, 64, 175, .14);
 }
 
-/* Palette « Pierre » : le bleu du module n'y a pas sa place — la structure
-   prend le taupe, l'action la terre de Sienne. */
+/* Palette « Retro-Avionics Jet » : le bleu marine du module n'y a pas sa place.
+   L'accent prend le vert cockpit vintage, qui est dans cette palette la
+   couleur de ce qui est actif ; la structure garde le bleu profond océan. */
 [data-theme="grey"] .ramp-module,
 [data-theme="grey"] .ramp-slider,
 [data-theme="grey"] .ramp-slider-overlay {
-    --ramp-accent: #78716c;
-    --ramp-accent-light: #a8a29e;
-    --ramp-accent-dark: #57534e;
-    --ramp-accent-bg: rgba(120, 113, 108, .10);
-    --ramp-accent-bg-hover: rgba(120, 113, 108, .16);
+    /* Le vert cockpit d'un cran plus profond : l'accent du module sert aussi
+       à écrire — un intitulé d'onglet, un lien, un décompte — et #00a896 sur
+       blanc ne tient pas le seuil de lisibilité. Même vert, lisible. */
+    --ramp-accent: #00806f;
+    --ramp-accent-light: #00a896;
+    --ramp-accent-dark: #016353;
+    --ramp-accent-bg: rgba(0, 168, 150, .10);
+    --ramp-accent-bg-hover: rgba(0, 168, 150, .16);
 }
 
 /* ── Coquille : mêmes contraintes que le module Exécution ──

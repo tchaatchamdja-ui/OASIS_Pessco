@@ -916,7 +916,7 @@ function rampRenderApp() {
                 <div class="theme-selector sidebar-theme-selector">
                     ${['blue-dark', 'corporate', 'grey'].map((th) =>
                         `<div class="theme-dot ${S.theme === th ? 'active' : ''}" data-theme="${th}"
-                              onclick="rampSetTheme('${th}')" title="${th}"></div>`).join('')}
+                              onclick="rampSetTheme('${th}')" title="${oasisNomTheme(th)}"></div>`).join('')}
                 </div>
                 <div class="lang-selector sidebar-lang-selector">
                     ${['FR', 'EN', 'PT'].map((l) =>

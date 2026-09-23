@@ -9,13 +9,16 @@
    sont réutilisées, et leur rendu est simplement composé avec le fil.
    ─────────────────────────────────────────────────────────────────────── */
 
+// Les six étapes du circuit. Chacune porte sa clé de traduction, non son
+// libellé : la langue se choisit à l'écran, et une constante lue au chargement
+// figerait celle du démarrage.
 const EXEC_PROC_ETAPES = [
-  { id: 'notification', label: 'Notification' },
-  { id: 'confirmation', label: 'Confirmation' },
-  { id: 'realisation', label: 'Réalisation' },
-  { id: 'rapport', label: 'Rapport' },
-  { id: 'validation', label: 'Validation' },
-  { id: 'transmission', label: 'Transmission' },
+  { id: 'notification', cle: 'proc_etape_notification' },
+  { id: 'confirmation', cle: 'proc_etape_confirmation' },
+  { id: 'realisation', cle: 'proc_etape_realisation' },
+  { id: 'rapport', cle: 'proc_etape_rapport_court' },
+  { id: 'validation', cle: 'proc_etape_validation_court' },
+  { id: 'transmission', cle: 'proc_etape_transmission_court' },
 ];
 
 // Étapes portées par le formulaire Dossier, et onglet correspondant.
@@ -91,7 +94,7 @@ function execProcFilHtml(etapes, petit) {
 function execProcFilPrincipal() {
   const etat = execProcEtat(EXEC_PROC.notif, EXEC_PROC.dossier);
   const fil = execProcFilHtml(EXEC_PROC_ETAPES.map((e) => ({
-    id: e.id, label: e.label,
+    id: e.id, label: te(e.cle),
     done: etat.faites[e.id],
     current: etat.courante === e.id,
     // Dossier clôturé : le circuit est achevé, toutes les étapes se lisent en
@@ -102,7 +105,7 @@ function execProcFilPrincipal() {
   })));
   return `<div class="exec-proc-barre">
     ${fil}
-    <span class="exec-proc-fin ${etat.cloture ? 'closed' : ''}">${etat.cloture ? 'Clôturé' : 'En cours'}</span>
+    <span class="exec-proc-fin ${etat.cloture ? 'closed' : ''}">${te(etat.cloture ? 'cloture_court' : 'en_cours_court')}</span>
   </div>`;
 }
 
@@ -145,9 +148,9 @@ function execProcColonneAccord() {
   if (acte) {
     return `<h4 class="exec-proc-col-titre">${te('activite_confirmee_titre')}</h4>
       <div class="exec-proc-bloc">
-        ${execProcLigne('Référence d’activité', _esc(n.reference_activite || ''))}
-        ${execProcLigne('Dates confirmées', `${_formatDate(n.date_debut_effective)} → ${_formatDate(n.date_fin_effective)}`)}
-        ${execProcLigne('Périmètre validé', _esc(n.perimetre_valide || ''))}
+        ${execProcLigne(te('proc_reference_activite'), _esc(n.reference_activite || ''))}
+        ${execProcLigne(te('proc_dates_confirmees'), `${_formatDate(n.date_debut_effective)} → ${_formatDate(n.date_fin_effective)}`)}
+        ${execProcLigne(te('perimetre_valide'), _esc(n.perimetre_valide || ''))}
       </div>`;
   }
   return `<h4 class="exec-proc-col-titre">${te('confirmer_activite')}</h4>
@@ -231,15 +234,15 @@ const EXEC_PROC_IMPRESSION = /imprimer|exporter pdf|télécharger|generer pdf|g�
 // consultée : un rapport renvoyé en rédaction depuis la Transmission fait
 // réapparaître « Soumettre », qui rejoint la ligne comme les autres.
 const EXEC_PROC_FIN_ETAPE = [
-  { action: 'execCloseRealisation', libelle: 'Rédiger Rapport', classe: 'exec-proc-btn-rapport' },
+  { action: 'execCloseRealisation', cle: 'proc_rediger_rapport', classe: 'exec-proc-btn-rapport' },
   { action: 'execSubmitDossier', classe: 'exec-proc-btn-soumettre' },
   { action: 'execSendRapportValidated', classe: 'exec-proc-btn-envoyer' },
-  { action: 'execCloseDossier', libelle: 'Clôturer', classe: 'exec-proc-btn-cloturer' },
+  { action: 'execCloseDossier', cle: 'cloturer', classe: 'exec-proc-btn-cloturer' },
 ];
 
 // Étape Réalisation déjà close : le bouton mène simplement à la rédaction.
 const EXEC_PROC_REPLI_REALISATION = {
-  classe: 'exec-proc-btn-rapport', libelle: 'Rédiger Rapport', action: "execProcAller('rapport')",
+  classe: 'exec-proc-btn-rapport', cle: 'proc_rediger_rapport', action: "execProcAller('rapport')",
 };
 
 // Étape Validation : « Valider » se décide en regard de la version soumise,
@@ -277,7 +280,7 @@ function execProcSoignerTableRapports(volet) {
       if (cellule && !cellule.querySelector('.exec-proc-version')) {
         const libelle = cellule.textContent.trim();
         cellule.innerHTML = `<span class="exec-proc-version">${_esc(libelle)}</span>`
-          + (estCourante ? '<span class="exec-proc-version-courante">en cours</span>' : '');
+          + (estCourante ? `<span class="exec-proc-version-courante">${te('proc_version_en_cours')}</span>` : '');
       }
       const ref = tr.children[0];
       if (ref) ref.classList.add('exec-proc-rap-ref');
@@ -316,7 +319,7 @@ function execProcRepartirActions() {
       const b = document.createElement('button');
       b.className = 'btn btn-outline btn-sm exec-proc-btn-impression exec-proc-btn-fiche';
       b.setAttribute('onclick', 'execProcImprimerFiche()');
-      b.textContent = 'Imprimer la fiche';
+      b.textContent = te('proc_imprimer_fiche');
       pied.appendChild(b);
     }
     volet.querySelectorAll('.exec-slider-body button, .exec-proc-titre button').forEach((b) => {
@@ -349,7 +352,7 @@ function execProcRepartirActions() {
         .find((b) => (b.getAttribute('onclick') || '').includes(fin.action));
       if (!bouton) return;
       bouton.className = `btn btn-sm btn-primary ${fin.classe}`;
-      if (fin.libelle) bouton.textContent = fin.libelle;
+      if (fin.cle) bouton.textContent = te(fin.cle);
       cible.appendChild(bouton);
     });
     const r = EXEC_PROC_REPLI_REALISATION;
@@ -569,7 +572,7 @@ const execProcTitre = () => {
     </button>
     ${bloc('Prestataire', `<strong>${_esc(a.prestataire_nom || '—')}</strong>`)}
     ${bloc('Objet', _esc(a.objet || a.description || '—'))}
-    ${bloc('Références', `<span class="exec-proc-bandeau-ref">${_esc(refs)}</span>`)}
+    ${bloc(te('proc_references'), `<span class="exec-proc-bandeau-ref">${_esc(refs)}</span>`)}
     ${bloc('Statut', statut)}
   </div>`;
 };
@@ -727,7 +730,7 @@ function execProcInfoTransmission() {
   return `<div class="exec-proc-transmission">
     <span><i>${te('transmise_le')}</i> <strong>${_formatDate(n.date_envoi)}</strong></span>
     ${par ? `<span><i>${te('par_auteur')}</i> <strong>${_esc(par)}</strong></span>` : ''}
-    <span><i>Destinataire</i> <strong>${_esc(n.interlocuteur_nom || n.prestataire_interlocuteur || n.prestataire_nom || '')}</strong></span>
+    <span><i>${te('proc_destinataire')}</i> <strong>${_esc(n.interlocuteur_nom || n.prestataire_interlocuteur || n.prestataire_nom || '')}</strong></span>
   </div>`;
 }
 
@@ -801,13 +804,13 @@ function execProcActionsEtape() {
         ? `<button class="btn btn-sm btn-primary" onclick="execProcDeclencher()">${EXEC_ICONS.edit || ''} Modifier</button>`
         : `<button class="btn btn-sm btn-primary" onclick="execProcDeclencher()">${EXEC_ICONS.send || ''} Déclencher</button>`);
     }
-    if (n && st === 'brouillon' && peut) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('submit','Notification soumise')">Soumettre</button>`);
-    if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('validate','Notification validée')">${te('valider')}</button>`);
-    if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm exec-btn-rejet" onclick="execProcRejeter()">Rejeter</button>`);
-    if (n && st === 'valide' && peut) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('send','Notification transmise')">Transmettre</button>`);
+    if (n && st === 'brouillon' && peut) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('submit','proc_msg_notif_soumise')">${te('soumettre')}</button>`);
+    if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('validate','proc_msg_notif_validee')">${te('valider')}</button>`);
+    if (n && st === 'soumis' && peutValider) boutons.push(`<button class="btn btn-sm exec-btn-rejet" onclick="execProcRejeter()">${te('rejeter')}</button>`);
+    if (n && st === 'valide' && peut) boutons.push(`<button class="btn btn-sm btn-primary" onclick="execProcAction('send','proc_msg_notif_transmise')">${te('transmettre')}</button>`);
     // Avant transmission, la notification validée peut repartir en correction.
     if (n && st === 'valide' && sousCourante === 'transmission' && peut) {
-      boutons.push(`<button class="btn btn-sm exec-btn-rejet" onclick="execProcRenvoyerSoumission()">Renvoyer</button>`);
+      boutons.push(`<button class="btn btn-sm exec-btn-rejet" onclick="execProcRenvoyerSoumission()">${te('renvoyer')}</button>`);
     }
   }
   // 4. L'action qui clôt l'étape Confirmation siège sur la ligne du titre.
@@ -835,18 +838,18 @@ function execProcPanNotification(sous) {
   if (sous === 'soumission') {
     return `<div class="exec-proc-bloc">
       ${execProcLigne('Notification', _esc(n.reference || ''))}
-      ${execProcLigne('Créée le', _formatDate(n.date_creation))}
-      ${execProcLigne('Soumise le', _formatDate(n.date_soumission))}
+      ${execProcLigne(te('proc_creee_le'), _formatDate(n.date_creation))}
+      ${execProcLigne(te('proc_soumise_le'), _formatDate(n.date_soumission))}
       ${execProcLigne('Prestataire', _esc(a.prestataire_nom || ''))}
     </div>`;
   }
   if (sous === 'validation') {
     return execProcSousFaite('validation')
       ? `<div class="exec-proc-bloc">
-          ${execProcLigne('Validée le', _formatDate(n.date_validation))}
+          ${execProcLigne(te('proc_validee_le'), _formatDate(n.date_validation))}
           ${execProcLigne('Validateur', _esc(n.validateur_id || ''))}
         </div>`
-      : `<p class="exec-proc-vide">Validation interne en attente.</p>${n.motif_rejet ? `<div class="exec-proc-bloc">${execProcLigne('Motif du dernier rejet', _esc(n.motif_rejet))}</div>` : ''}`;
+      : `<p class="exec-proc-vide">${te('proc_validation_attente')}</p>${n.motif_rejet ? `<div class="exec-proc-bloc">${execProcLigne(te('proc_motif_dernier_rejet'), _esc(n.motif_rejet))}</div>` : ''}`;
   }
   return `<p class="exec-proc-vide">${te('notification_non_transmise')}</p>`;
 }
@@ -861,8 +864,8 @@ function execProcEnteteEtape() {
   const etat = execProcEtat(EXEC_PROC.notif, EXEC_PROC.dossier);
   const fait = etat.faites[EXEC_PROC.etape];
   return `<div class="exec-proc-titre">
-      <h4>${_esc(e.label || '')}</h4>
-      <span class="exec-proc-etat ${fait ? 'fait' : ''}">${fait ? 'Étape franchie' : 'À traiter'}</span>
+      <h4>${_esc(e.cle ? te(e.cle) : '')}</h4>
+      <span class="exec-proc-etat ${fait ? 'fait' : ''}">${te(fait ? 'proc_etape_franchie' : 'proc_a_traiter')}</span>
       ${execProcSousFil()}
       ${execProcActionsEtape()}
     </div>
@@ -910,7 +913,7 @@ function execProcAttendusHtml() {
     </span>`;
   }).join('');
   return `<div class="exec-proc-attendus${d.peut_agir ? '' : ' bloque'}">
-      <span class="exec-proc-attendus-titre">Intervenants attendus</span>
+      <span class="exec-proc-attendus-titre">${te('proc_intervenants_attendus')}</span>
       ${lignes}
       ${d.peut_agir ? '' : '<span class="exec-proc-attendus-refus">' + te('non_designe_etape') + '</span>'}
     </div>`;
@@ -927,7 +930,7 @@ function execProcAppliquerAttendus() {
   if (!d || !d.declare || d.peut_agir) return;
   volet.querySelectorAll('.exec-proc-actions-etape button').forEach((b) => {
     b.disabled = true;
-    b.title = 'Étape réservée aux intervenants désignés au processus.';
+    b.title = te('proc_etape_reservee');
   });
 }
 
@@ -953,7 +956,7 @@ function execProcConfirmer({ titre, message, depuis, vers, libelle, saisie }) {
           <textarea class="form-control exec-proc-dialogue-saisie" rows="4"
             placeholder="${_escAttr(saisie.placeholder || '')}"></textarea>` : ''}
         <div class="exec-proc-dialogue-actions">
-          <button class="btn btn-outline btn-sm" data-rep="non">Annuler</button>
+          <button class="btn btn-outline btn-sm" data-rep="non">${te('cancel')}</button>
           <button class="btn btn-primary btn-sm" data-rep="oui">${_esc(libelle || 'Confirmer')}</button>
         </div>
       </div>`;
@@ -973,7 +976,10 @@ function execProcConfirmer({ titre, message, depuis, vers, libelle, saisie }) {
   });
 }
 
-const execProcLibelleEtape = (id) => (EXEC_PROC_ETAPES.find((e) => e.id === id) || {}).label || id;
+const execProcLibelleEtape = (id) => {
+  const e = EXEC_PROC_ETAPES.find((x) => x.id === id);
+  return e ? te(e.cle) : id;
+};
 
 // Les écrans repris de PESSCO posent leur propre confirmation : la boîte du
 // processus l'a déjà posée, on ne demande pas deux fois. Ils passent par la
@@ -1000,19 +1006,22 @@ window.execProcDeclencher = function () {
 
 // Transitions simples de la notification : soumettre, valider, transmettre.
 // La transmission clôt l'étape Notification : elle demande confirmation.
-window.execProcAction = async function (action, message) {
+// `cleMessage` est une clé de traduction, non une phrase : le bouton qui
+// appelle cette action est écrit dans du HTML, et la langue peut changer entre
+// le rendu du bouton et le clic.
+window.execProcAction = async function (action, cleMessage) {
   if (action === 'send') {
     const ok = await execProcConfirmer({
-      titre: 'Transmettre la notification',
-      message: 'La notification part au prestataire : l’étape Notification est franchie et l’étape Confirmation s’ouvre.',
+      titre: te('proc_transmettre_notification'),
+      message: te('proc_transmettre_notification_msg'),
       depuis: execProcLibelleEtape('notification'), vers: execProcLibelleEtape('confirmation'),
-      libelle: 'Transmettre',
+      libelle: te('transmettre'),
     });
     if (!ok) return;
   }
   try {
     await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/${action}`, { method: 'PUT', body: '{}' });
-    _execToast(message, 'success');
+    _execToast(te(cleMessage), 'success');
     EXEC_PROC.sousEtape = null;   // la sous-étape suivante devient la courante
     await execProcRecharger();
   } catch (e) {
@@ -1025,19 +1034,21 @@ window.execProcAction = async function (action, message) {
 // Chaque entrée : action du formulaire Dossier → jalon qu'elle franchit et
 // étape à ouvrir ensuite. Le passage n'a lieu que si le jalon est bien
 // atteint : une action annulée laisse le fil en place.
+// Clés de traduction, non phrases : la table est lue au chargement, la
+// confirmation s'ouvre au clic, et la langue a pu changer entre les deux.
 const EXEC_PROC_APRES = {
   execCloseRealisation: { jalon: 'realisation', suivante: 'rapport',
-    titre: 'Clôturer l’exécution sur le terrain',
-    message: 'L’exécution sur le terrain est déclarée terminée : la rédaction du rapport s’ouvre.',
-    libelle: 'Clôturer l’exécution' },
+    titre: 'proc_cloturer_execution',
+    message: 'proc_cloturer_execution_msg',
+    libelle: 'proc_cloturer_execution_btn' },
   execSubmitDossier: { jalon: 'rapport', suivante: 'validation',
-    titre: 'Soumettre le rapport',
-    message: 'Le rapport part en validation : l’étape Rapport est franchie.',
-    libelle: 'Soumettre' },
+    titre: 'proc_soumettre_rapport',
+    message: 'proc_soumettre_rapport_msg',
+    libelle: 'soumettre' },
   execValidateRapport: { jalon: 'validation', suivante: 'transmission',
-    titre: 'Valider le rapport',
-    message: 'Le rapport validé peut être transmis au prestataire.',
-    libelle: 'Valider' },
+    titre: 'proc_valider_rapport',
+    message: 'proc_valider_rapport_msg',
+    libelle: 'valider' },
 };
 
 Object.entries(EXEC_PROC_APRES).forEach(([nom, { jalon, suivante, titre, message, libelle }]) => {
@@ -1046,7 +1057,7 @@ Object.entries(EXEC_PROC_APRES).forEach(([nom, { jalon, suivante, titre, message
   window[nom] = async function (...args) {
     if (!EXEC_PROC || !EXEC_PROC.actif) return orig.apply(this, args);
     const ok = await execProcConfirmer({
-      titre, message, libelle,
+      titre: te(titre), message: te(message), libelle: te(libelle),
       depuis: execProcLibelleEtape(jalon === 'realisation' ? 'realisation' : jalon),
       vers: execProcLibelleEtape(suivante),
     });
@@ -1066,11 +1077,11 @@ Object.entries(EXEC_PROC_APRES).forEach(([nom, { jalon, suivante, titre, message
 
 // Renvoi d'une notification validée vers la soumission, pour correction.
 window.execProcRenvoyerSoumission = async function () {
-  const motif = window.prompt('Motif du renvoi à la soumission (facultatif) :', '') ;
+  const motif = window.prompt(te('proc_motif_renvoi_invite'), '') ;
   if (motif === null) return;                       // renvoi annulé
   try {
     await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/cancel`, {
-      method: 'PUT', body: JSON.stringify({ motif: motif || 'Corrections complémentaires demandées' }),
+      method: 'PUT', body: JSON.stringify({ motif: motif || te('proc_corrections_demandees') }),
     });
     _execToast(te('notif_renvoyee_soumission'), 'success');
     EXEC_PROC.sousEtape = null;
@@ -1119,10 +1130,10 @@ window.execProcValiderAccord = async function () {
   const val = (id) => (document.getElementById(id) || {}).value || '';
   if (!oasisDatesValider(EXEC_PROC_DATES)) return;
   const ok = await execProcConfirmer({
-    titre: 'Confirmer l’activité',
-    message: 'Les dates et le périmètre retenus sont arrêtés, le dossier d’exécution est ouvert.',
+    titre: te('activite_confirmee_titre'),
+    message: te('proc_confirmer_activite_msg'),
     depuis: execProcLibelleEtape('confirmation'), vers: execProcLibelleEtape('realisation'),
-    libelle: 'Confirmer l’activité',
+    libelle: te('activite_confirmee_titre'),
   });
   if (!ok) return;
   try {
@@ -1145,18 +1156,20 @@ window.execProcValiderAccord = async function () {
 // Dernière étape : la transmission du rapport, puis la clôture du dossier,
 // achèvent le circuit. L'une et l'autre se confirment aussi.
 [['execSendRapportValidated', {
-  titre: 'Transmettre le rapport',
-  message: 'Le rapport validé est transmis au prestataire.',
-  libelle: 'Transmettre',
+  titre: 'proc_transmettre_rapport',
+  message: 'proc_transmettre_rapport_msg',
+  libelle: 'transmettre',
 }], ['execCloseDossier', {
-  titre: 'Clôturer le dossier',
-  message: 'Le dossier est clos : le circuit de l’activité s’achève.',
-  depuis: 'Transmission', vers: 'Clôturé', libelle: 'Clôturer',
-}]].forEach(([nom, dialogue]) => {
+  titre: 'proc_cloturer_dossier',
+  message: 'proc_cloturer_dossier_msg',
+  depuis: 'proc_etape_transmission_court', vers: 'cloture_court', libelle: 'cloturer',
+}]].forEach(([nom, cles]) => {
   const orig = window[nom];
   if (typeof orig !== 'function') return;
   window[nom] = async function (...args) {
     if (!EXEC_PROC || !EXEC_PROC.actif) return orig.apply(this, args);
+    // Les clés se traduisent ici : la table est lue au chargement du module.
+    const dialogue = Object.fromEntries(Object.entries(cles).map(([k, v]) => [k, te(v)]));
     if (!await execProcConfirmer(dialogue)) return undefined;
     const r = await execProcEnAction(() => execProcSansConfirm(() => orig.apply(this, args)));
     await execProcRecharger(EXEC_PROC.etape);
@@ -1172,11 +1185,11 @@ if (typeof _execProcAmender === 'function') {
   window.execAmendRapport = async function (...args) {
     if (!EXEC_PROC || !EXEC_PROC.actif) return _execProcAmender.apply(this, args);
     const observations = await execProcConfirmer({
-      titre: 'Amender le rapport',
-      message: 'Le rapport repart en rédaction : une nouvelle version sera établie à partir des points relevés.',
+      titre: te('proc_amender_rapport'),
+      message: te('proc_amender_rapport_msg'),
       depuis: execProcLibelleEtape(EXEC_PROC.etape), vers: execProcLibelleEtape('rapport'),
-      libelle: 'Renvoyer en rédaction',
-      saisie: { label: 'Points à reprendre', placeholder: 'Observations à l’attention du rédacteur…' },
+      libelle: te('proc_renvoyer_redaction'),
+      saisie: { label: te('proc_points_reprendre'), placeholder: te('proc_observations_redacteur') },
     });
     if (observations === false) return undefined;
     const r = await execProcEnAction(() => execProcSansConfirm(() => _execProcAmender.apply(this, args), observations));
@@ -1234,7 +1247,7 @@ window.execProcNouvelleActivite = function (notifId) {
         <div>
           <label class="form-label">Domaine ${req}</label>
           <select class="form-control" id="hp_domaine" onchange="execProcHpSecteurs()">
-            <option value="">— Choisir —</option>
+            <option value="">${te('proc_choisir')}</option>
             ${options(D.domaines, (d) => (d.code ? `${d.code} — ${d.nom}` : d.nom))}
           </select>
         </div>
@@ -1254,19 +1267,19 @@ window.execProcNouvelleActivite = function (notifId) {
     </div>
 
     <div class="exec-proc-bloc">
-      <div class="exec-hp-bloc-titre">Programmation</div>
+      <div class="exec-hp-bloc-titre">${te('proc_programmation')}</div>
       <div class="exec-proc-grille exec-hp-grille">
         <div>
           <label class="form-label">${te('type_supervision_label')}</label>
           <select class="form-control" id="hp_type">
-            <option value="">— Choisir —</option>
+            <option value="">${te('proc_choisir')}</option>
             ${(D.typesSupervision || []).map((t) => `<option value="${t.id}">${_esc(t.type_supervision || t.libelle || t.nom || '')}</option>`).join('')}
           </select>
         </div>
         <div>
           <label class="form-label">${te('mode_supervision_label')}</label>
           <select class="form-control" id="hp_mode">
-            <option value="">— Choisir —</option>
+            <option value="">${te('proc_choisir')}</option>
             ${(D.modesSupervision || []).map((m) => `<option value="${m.id}">${_esc(m.mode || m.libelle || m.nom || '')}</option>`).join('')}
           </select>
         </div>
@@ -1281,13 +1294,13 @@ window.execProcNouvelleActivite = function (notifId) {
         <div>
           <label class="form-label">${te('responsable_activite_label')}</label>
           <select class="form-control" id="hp_responsable">
-            <option value="">— Choisir —</option>
+            <option value="">${te('proc_choisir')}</option>
             ${options((D.inspecteurs || []).filter((i) => i.statut !== 'inactif'),
               (i) => `${i.prenom || ''} ${i.nom || ''}`.trim())}
           </select>
         </div>
         <div>
-          <label class="form-label">Nombre d'inspecteurs</label>
+          <label class="form-label">${te('proc_nombre_inspecteurs')}</label>
           <input type="number" class="form-control" id="hp_nb_inspecteurs" min="1" max="99" placeholder="1">
         </div>
         <div class="exec-hp-pleine">
@@ -1309,7 +1322,7 @@ window.execProcNouvelleActivite = function (notifId) {
     <p class="exec-proc-erreur" id="hp_erreur"></p>`;
 
   const pied = `
-    <button class="btn btn-outline" onclick="execCloseSlider()">Annuler</button>
+    <button class="btn btn-outline" onclick="execCloseSlider()">${te('cancel')}</button>
     <button class="btn btn-primary" onclick="execProcCreerHorsPlan(${n ? `'${n.id}'` : ''})">
       ${(n ? EXEC_ICONS.check : EXEC_ICONS.send) || ''} ${n ? 'Enregistrer' : 'Déclencher'}</button>`;
 
@@ -1319,7 +1332,7 @@ window.execProcNouvelleActivite = function (notifId) {
     <button class="exec-slider-retour" onclick="execCloseSlider()">
       ${EXEC_ICONS.back || ''} Retour
     </button>
-    <span>${n ? 'Modifier l’activité hors plan' : 'Nouvelle activité hors plan'}</span>`;
+    <span>${te(n ? 'proc_hp_modifier' : 'proc_hp_nouvelle')}</span>`;
   execShowSlider(titre, corps, pied, 'md');
   if (n) execProcHpRemplir(n);
   oasisDatesLier(EXEC_HP_DATES);
@@ -1391,7 +1404,7 @@ window.execProcHpSecteurs = function () {
   const domaine = (document.getElementById('hp_domaine') || {}).value || '';
   const secteurs = (EXEC_STATE.data.secteurs || []).filter((s) => s.domaine_id === domaine);
   const sel = document.getElementById('hp_secteur');
-  sel.innerHTML = `<option value="">— Choisir —</option>${secteurs
+  sel.innerHTML = `<option value="">${te('proc_choisir')}</option>${secteurs
     .map((s) => `<option value="${s.id}">${_esc(s.code ? `${s.code} — ${s.nom}` : s.nom)}</option>`).join('')}`;
   execProcHpPrestataires();
 };
@@ -1462,7 +1475,7 @@ window.execProcHpPrestataires = function () {
   const secteur = (document.getElementById('hp_secteur') || {}).value || '';
   const liste = (EXEC_STATE.data.prestataires || []).filter((p) => p.secteur_id === secteur);
   const sel = document.getElementById('hp_prestataire');
-  sel.innerHTML = `<option value="">— Choisir —</option>${liste
+  sel.innerHTML = `<option value="">${te('proc_choisir')}</option>${liste
     .map((p) => `<option value="${p.id}">${_esc(p.trigramme ? `${p.nom} (${p.trigramme})` : p.nom)}</option>`).join('')}`;
   execProcHpPerimetre();
 };
@@ -1485,7 +1498,7 @@ function execProcHpModeLibelle() {
 window.execProcCreerHorsPlan = async function (notifId) {
   const val = (id) => ((document.getElementById(id) || {}).value || '').trim();
   const erreur = document.getElementById('hp_erreur');
-  const manquants = [['hp_annee', 'Année'], ['hp_domaine', 'Domaine'], ['hp_secteur', 'Secteur'],
+  const manquants = [['hp_annee', te('exp_annee')], ['hp_domaine', 'Domaine'], ['hp_secteur', 'Secteur'],
     ['hp_prestataire', 'Prestataire'], ['hp_objet', 'Objet']].filter(([id]) => !val(id));
   if (manquants.length) {
     erreur.textContent = `À renseigner : ${manquants.map(([, l]) => l).join(', ')}.`;
@@ -1537,7 +1550,7 @@ window.execProcCreerHorsPlan = async function (notifId) {
     if (EXEC_STATE.currentPage === 'plan_surveillance') execRenderPage();
     execOpenActiviteProcessus('hors-plan', r.id);
   } catch (e) {
-    erreur.textContent = (e && e.message) || (notifId ? 'Enregistrement impossible' : 'Déclenchement impossible');
+    erreur.textContent = (e && e.message) || te(notifId ? 'proc_enregistrement_impossible' : 'proc_declenchement_impossible');
   }
 };
 
@@ -1549,14 +1562,14 @@ window.execProcCreerHorsPlan = async function (notifId) {
 // Notification, la sous-étape attendue. Une activité close se lit « Clôturé ».
 // Libellés propres à la colonne « Statut » : ils nomment ce qui reste à faire,
 // là où le fil d'avancement nomme l'étape.
-const EXEC_PROC_STATUT_LIBELLE = {
-  rapport: 'Elaboration Rapport',
-  validation: 'Validation Rapport',
-  transmission: 'Transmission Rapport',
+const EXEC_PROC_STATUT_CLE = {
+  rapport: 'proc_etape_rapport',
+  validation: 'proc_etape_validation',
+  transmission: 'proc_etape_transmission',
 };
 
 function execProcStatutActivite(notif, dossier) {
-  if (!notif) return { etape: 'Non déclenché', sous: '', clos: false };
+  if (!notif) return { etape: te('proc_non_declenche'), sous: '', clos: false };
   // La liste des dossiers ne porte pas les rapports : on les reprend du cache
   // du module, sans quoi les étapes Rapport à Transmission se confondraient.
   let d = dossier;
@@ -1564,14 +1577,14 @@ function execProcStatutActivite(notif, dossier) {
     d = { ...d, rapports: (EXEC_STATE.data.rapports || []).filter((r) => r.dossier_id === d.id) };
   }
   const etat = execProcEtat(notif, d);
-  if (etat.cloture) return { etape: 'Clôturé', sous: '', clos: true };
+  if (etat.cloture) return { etape: te('cloture_court'), sous: '', clos: true };
   const courante = etat.courante || 'transmission';
   if (courante === 'notification') {
-    const sous = { brouillon: 'Soumission', soumis: 'Validation', valide: 'Transmission' }[notif.statut] || '';
-    return { etape: 'Notification', sous, clos: false };
+    const cleSous = { brouillon: 'proc_sous_soumission', soumis: 'proc_sous_validation', valide: 'proc_sous_transmission' }[notif.statut];
+    return { etape: te('proc_etape_notification'), sous: cleSous ? te(cleSous) : '', clos: false };
   }
   return {
-    etape: EXEC_PROC_STATUT_LIBELLE[courante] || execProcLibelleEtape(courante),
+    etape: EXEC_PROC_STATUT_CLE[courante] ? te(EXEC_PROC_STATUT_CLE[courante]) : execProcLibelleEtape(courante),
     sous: '', clos: false,
   };
 }
@@ -1617,48 +1630,48 @@ function execProcHistoriqueEtapes(notif, dossier, rapports) {
 
   return [
     {
-      id: 'notification', titre: 'Notification',
+      id: 'notification', titre: te('proc_etape_notification'),
       sous: [
         {
-          nom: 'Soumission',
+          nom: te('proc_sous_soumission'),
           jalons: [
-            notif && j(n.date_creation, 'Notification créée', n.created_by),
-            n.date_rejet && j(n.date_rejet, 'Renvoyée à l’initiateur', n.rejete_par, n.motif_rejet, true),
-            n.date_soumission && j(n.date_soumission, 'Soumise à validation', n.created_by),
+            notif && j(n.date_creation, te('proc_histo_notif_creee'), n.created_by),
+            n.date_rejet && j(n.date_rejet, te('proc_histo_renvoyee'), n.rejete_par, n.motif_rejet, true),
+            n.date_soumission && j(n.date_soumission, te('proc_histo_soumise'), n.created_by),
           ].filter(Boolean),
         },
         {
-          nom: 'Validation',
-          jalons: [n.date_validation && j(n.date_validation, 'Notification validée', n.validateur_id)].filter(Boolean),
+          nom: te('proc_sous_validation'),
+          jalons: [n.date_validation && j(n.date_validation, te('proc_histo_validee'), n.validateur_id)].filter(Boolean),
         },
         {
-          nom: 'Transmission',
-          jalons: [n.date_envoi && j(n.date_envoi, 'Transmise au prestataire', n.envoye_par)].filter(Boolean),
+          nom: te('proc_sous_transmission'),
+          jalons: [n.date_envoi && j(n.date_envoi, te('proc_histo_transmise'), n.envoye_par)].filter(Boolean),
         },
       ],
     },
     {
-      id: 'confirmation', titre: 'Confirmation',
+      id: 'confirmation', titre: te('proc_etape_confirmation'),
       sous: [{
-        nom: 'Échanges et accord',
-        jalons: [n.date_accord && j(n.date_accord, 'Activité confirmée', n.acte_par,
+        nom: te('proc_echanges_accord'),
+        jalons: [n.date_accord && j(n.date_accord, te('activite_confirmee_titre'), n.acte_par,
           n.reference_activite ? `Réf. activité ${n.reference_activite}` : '')].filter(Boolean),
       }],
     },
     {
-      id: 'realisation', titre: 'Réalisation',
+      id: 'realisation', titre: te('proc_etape_realisation'),
       sous: [{
-        nom: 'Exécution sur le terrain',
+          nom: te('proc_execution_terrain'),
         jalons: [
-          d.id && j(d.date_creation || d.date_ouverture, 'Dossier d’exécution ouvert', d.created_by, d.reference),
-          d.realisation_closed && j(d.date_maj, 'Exécution sur le terrain clôturée', d.created_by),
+          d.id && j(d.date_creation || d.date_ouverture, te('proc_dossier_ouvert'), d.created_by, d.reference),
+          d.realisation_closed && j(d.date_maj, te('proc_execution_cloturee'), d.created_by),
         ].filter(Boolean),
       }],
     },
     {
-      id: 'rapport', titre: 'Elaboration Rapport',
+      id: 'rapport', titre: te('proc_etape_rapport'),
       sous: [{
-        nom: 'Rédaction et soumission',
+          nom: te('proc_redaction_soumission'),
         jalons: versions.flatMap((r) => [
           j(r.date_creation, `Version v${r.version || 1} rédigée`, r.created_by || r.auteur_nom, r.reference),
           r.observations_retour && j(r.date_maj, `Version v${r.version || 1} renvoyée en rédaction`, '', r.observations_retour, true),
@@ -1668,22 +1681,22 @@ function execProcHistoriqueEtapes(notif, dossier, rapports) {
       }],
     },
     {
-      id: 'validation', titre: 'Validation Rapport',
+      id: 'validation', titre: te('proc_etape_validation'),
       sous: [{
-        nom: 'Validation',
+        nom: te('proc_sous_validation'),
         jalons: valides.map((r) => j(r.date_validation, `Rapport ${r.reference || ''} validé`, r.valide_par)),
       }],
     },
     {
-      id: 'transmission', titre: 'Transmission Rapport',
+      id: 'transmission', titre: te('proc_etape_transmission'),
       sous: [
         {
-          nom: 'Transmission',
+          nom: te('proc_sous_transmission'),
           jalons: transmis.map((r) => j(r.date_transmission, `Rapport ${r.reference || ''} transmis au prestataire`, r.transmis_par)),
         },
         {
-          nom: 'Clôture',
-          jalons: [d.statut === 'cloture' && j(d.date_fin_execution || d.date_maj, 'Dossier clôturé', d.created_by)].filter(Boolean),
+          nom: te('proc_cloture'),
+          jalons: [d.statut === 'cloture' && j(d.date_fin_execution || d.date_maj, te('proc_dossier_cloture'), d.created_by)].filter(Boolean),
         },
       ],
     },
@@ -1722,14 +1735,14 @@ window.execProcHistorique = function (planId, activiteId) {
             <span class="exec-histo-libelle">${_esc(x.libelle)}</span>
             ${x.acteur ? `<span class="exec-histo-acteur">${_esc(x.acteur)}</span>` : ''}
             ${x.detail ? `<span class="exec-histo-detail${x.alerte ? ' alerte' : ''}">${_esc(x.detail)}</span>` : ''}
-          </div>`).join('') : '<div class="exec-histo-attente">En attente</div>'}
+          </div>`).join('') : `<div class="exec-histo-attente">${te('proc_en_attente')}</div>`}
       </div>`).join('');
     return `
       <section class="${classe}">
         <header>
           <span class="exec-histo-puce"></span>
           <h4>${_esc(e.titre)}</h4>
-          <span class="exec-histo-etat">${faite ? 'Franchie' : (courante ? 'En cours' : 'À venir')}</span>
+          <span class="exec-histo-etat">${te(faite ? 'proc_franchie' : (courante ? 'en_cours_court' : 'proc_a_venir'))}</span>
         </header>
         <div class="exec-histo-sous-liste">${sous}</div>
       </section>`;
@@ -1743,7 +1756,7 @@ window.execProcHistorique = function (planId, activiteId) {
           dossier && dossier.reference ? ` · ${_esc(dossier.reference)}` : ''}</div>
       </div>
       ${corps}
-      <div class="exec-histo-fin ${etat.cloture ? 'clos' : ''}">${etat.cloture ? 'Circuit clôturé' : 'Circuit en cours'}</div>
+      <div class="exec-histo-fin ${etat.cloture ? 'clos' : ''}">${te(etat.cloture ? 'proc_circuit_cloture' : 'proc_circuit_en_cours')}</div>
     </div>`;
 
   // L'historique se lit à côté de la liste : deux cinquièmes de l'écran.

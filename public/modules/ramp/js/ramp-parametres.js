@@ -676,11 +676,6 @@ function rampRenderParametres() {
         <span class="ramp-sous-titre">${rt('p_sous_titre')}</span>
     </div>
     <div class="ramp-onglets">${onglets}</div>
-    ${onglet.familles.includes('categories') ? `<p class="ramp-note">
-        La pondération donne son poids à un écart dans le score d'un exploitant : un écart de
-        catégorie 3 pèse plus lourd qu'un écart de catégorie 1. Le score affiché aux
-        statistiques est la somme des pondérations rapportée aux items inspectés.
-    </p>` : ''}
     ${onglet.ecran === 'aeronefs' ? rampRenderAeronefs() : ''}
     ${onglet.ecran === 'aeroports' ? rampRenderAeroports() : ''}
     ${onglet.ecran === 'pays' ? rampRenderPays() : ''}
@@ -1047,11 +1042,6 @@ function rampRenderPays() {
     const F = rampPaysFiltres();
     const opt = (v, l, cur) => `<option value="${_rAttr(v)}" ${cur === v ? 'selected' : ''}>${_rEsc(l)}</option>`;
     return `
-    <p class="ramp-note">
-        Les États du monde au sens de la norme ISO 3166-1, avec l'autorité de l'aviation civile
-        du pays et ses coordonnées. Les huit membres de l'UEMOA sont renseignés ; les autres
-        se complètent au fil des besoins.
-    </p>
     <div class="ramp-filtres" id="rampPaysFiltres">
         <select class="ramp-select" onchange="rampPaysSetFiltre('uemoa', this.value)">
             ${opt('', 'Tous les pays', F.uemoa)}
@@ -1383,11 +1373,6 @@ function rampAptResultats() {
 function rampRenderAeroports() {
     const F = rampAptFiltres();
     return `
-    <p class="ramp-note">
-        Les plateformes des États du dispositif, rangées par pays. Le code OACI identifie
-        l'aéroport ; le statut dit s'il est ouvert au trafic international. Un aéroport retiré
-        des listes se désactive plutôt qu'il ne se supprime.
-    </p>
     <div class="ramp-filtres">
         <span id="rampAptListes" class="ramp-contenu-transparent">${rampAptListes()}</span>
         <div class="ramp-recherche-boite">
@@ -1721,11 +1706,6 @@ function rampAerListes() {
 function rampRenderAeronefs() {
     const F = rampAerFiltres();
     return `
-    <p class="ramp-note">
-        La nomenclature des aéronefs range les modèles sous leur désignation OACI. Elle alimente
-        la saisie et l'import des inspections ; un appareil déjà cité par une inspection se
-        désactive plutôt qu'il ne se supprime.
-    </p>
     <div class="ramp-filtres">
         <span id="rampAerListes" class="ramp-contenu-transparent">${rampAerListes()}</span>
         <div class="ramp-recherche-boite">

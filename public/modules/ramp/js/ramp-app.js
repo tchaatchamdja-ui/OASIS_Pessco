@@ -1397,8 +1397,11 @@ function rampRenderDashboard() {
     <div class="ramp-card ramp-carte-items">
         <div class="ramp-card-titre">${rt('cinq_items')}</div>
         ${topItems.length === 0 ? `<div class="ramp-vide">${rt('aucun_ecart_constate')}</div>` : topItems.map(([code, c]) => {
-            const seg = (n, cls, lbl) => (n > 0
-                ? `<div class="ramp-barre-seg ${cls}" style="width:${(n / maxItem) * 100}%;" title="${lbl} : ${n}"></div>` : '');
+            // La légende a été retirée : la catégorie d'un segment se lit au
+            // survol, et s'y dit dans la langue de l'agent.
+            const seg = (n, cls, cle) => (n > 0
+                ? `<div class="ramp-barre-seg ${cls}" style="width:${(n / maxItem) * 100}%;"
+                        title="${_rAttr(rt(cle))} : ${n}"></div>` : '');
             return `<div class="ramp-barre-ligne">
                 <div class="ramp-barre-entete">
                     <span><strong>${_rEsc(code)}</strong>${rampLibelleItem(code)
@@ -1406,17 +1409,11 @@ function rampRenderDashboard() {
                     <strong>${c.total}</strong>
                 </div>
                 <div class="ramp-barre-piste">
-                    ${seg(c['1'], 'c1', 'Cat 1')}${seg(c['2'], 'c2', 'Cat 2')}
-                    ${seg(c['3'], 'c3', 'Cat 3')}${seg(c.G, 'cg', 'Cat G')}
+                    ${seg(c['1'], 'c1', 'cat_court_1')}${seg(c['2'], 'c2', 'cat_court_2')}
+                    ${seg(c['3'], 'c3', 'cat_court_3')}${seg(c.G, 'cg', 'cat_court_g')}
                 </div>
             </div>`;
         }).join('')}
-        ${topItems.length ? `<div class="ramp-legende">
-            <span><i class="ramp-pastille" style="background:#fbbf24;"></i>${rt('cat_court_1')}</span>
-            <span><i class="ramp-pastille" style="background:#ea580c;"></i>${rt('cat_court_2')}</span>
-            <span><i class="ramp-pastille" style="background:#dc2626;"></i>${rt('cat_court_3')}</span>
-            <span><i class="ramp-pastille" style="background:#94a3b8;"></i>${rt('cat_court_g')}</span>
-        </div>` : ''}
     </div>
     </div>
     ${rampVuePrestataire() ? '' : `

@@ -675,7 +675,7 @@ function rampRenderParametres() {
         <h2>${rt('p_parametres_titre')}</h2>
         <span class="ramp-sous-titre">${rt('p_sous_titre')}</span>
     </div>
-    <div class="ramp-onglets">${onglets}</div>
+    <div class="ramp-onglets ramp-onglets-etroits">${onglets}</div>
     ${onglet.ecran === 'aeronefs' ? rampRenderAeronefs() : ''}
     ${onglet.ecran === 'aeroports' ? rampRenderAeroports() : ''}
     ${onglet.ecran === 'pays' ? rampRenderPays() : ''}

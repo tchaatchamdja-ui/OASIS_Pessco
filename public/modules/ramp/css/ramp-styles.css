@@ -1283,6 +1283,10 @@ button.ramp-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
     border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap;
     font-family: inherit; text-align: center;
 }
+/* Les sous-menus des Paramètres portent des libellés d'un seul mot — Pays,
+   Items RAMP, Écarts : ils tiennent dans un quart de moins que ceux des
+   Partages, qui nomment un État et une portée. */
+.ramp-onglets-etroits { grid-template-columns: repeat(auto-fit, minmax(118px, 135px)); }
 .ramp-onglet:hover { color: var(--text); }
 .ramp-onglet.actif { color: var(--ramp-accent); border-bottom-color: var(--ramp-accent); }
 

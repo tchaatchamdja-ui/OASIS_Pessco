@@ -1462,7 +1462,9 @@ function rampRenderDashboard() {
 // Répartition en anneau : chaque catégorie occupe l'arc de sa part, et le
 // nombre total d'écarts se lit au centre. Un cercle unique tracé en pointillés
 // calculés — pas de bibliothèque, pas d'image.
-const RAMP_COULEURS_CAT = { 1: '#fbbf24', 2: '#ea580c', 3: '#dc2626', G: '#94a3b8' };
+// L'orange de la catégorie 2 se tient à distance du rouge de la catégorie 3 :
+// au ton soutenu (#ea580c), les deux parts d'un anneau se confondaient.
+const RAMP_COULEURS_CAT = { 1: '#fbbf24', 2: '#fb923c', 3: '#dc2626', G: '#94a3b8' };
 
 function rampBasculerCategorie(cle) {
     RAMP_STATE.catMasquees[cle] = !RAMP_STATE.catMasquees[cle];

@@ -497,7 +497,7 @@
 .ramp-cat-val { text-align: right; font-weight: 700; }
 .ramp-cat-pct { text-align: right; color: var(--text-muted); font-size: .78rem; }
 .ramp-pastille.c1 { background: #fbbf24; }
-.ramp-pastille.c2 { background: #ea580c; }
+.ramp-pastille.c2 { background: #fb923c; }
 .ramp-pastille.c3 { background: #dc2626; }
 .ramp-pastille.cg { background: #94a3b8; }
 
@@ -618,7 +618,7 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 }
 .ramp-barre-seg { height: 100%; }
 .ramp-barre-seg.c1 { background: #fbbf24; }
-.ramp-barre-seg.c2 { background: #ea580c; }
+.ramp-barre-seg.c2 { background: #fb923c; }
 .ramp-barre-seg.c3 { background: #dc2626; }
 .ramp-barre-seg.cg { background: #94a3b8; }
 .ramp-legende {

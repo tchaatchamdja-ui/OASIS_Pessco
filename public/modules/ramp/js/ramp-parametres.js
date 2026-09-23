@@ -636,13 +636,12 @@ function rampRenderParametres() {
             ${onglet.familles.length > 1
                 ? `<strong style="font-size:.9rem;">${_rEsc(rt(f.cleT))}</strong>` : ''}
             <!-- Le décompte dit ce que la liste affichée contient, actifs et
-                 inactifs confondus. -->
-            <span class="ramp-sous-titre">
-                ${liste.length} ${rtn(liste.length, 'p_element', 'p_elements')}${inactifs
-                    ? ` · ${inactifs} ${rt('p_inactif')}${inactifs > 1 ? 's' : ''}` : ''}
-            </span>
-            <button class="btn btn-primary btn-sm" onclick="rampExporterParametres('${cle}')">
-                ${RAMP_ICONS.download} ${rt('exporter_excel')}</button>
+                 inactifs confondus. Une pastille par nombre : ils se lisent
+                 d'un coup d'œil, d'un sous-menu à l'autre. -->
+            <span class="ramp-badge compte">
+                ${liste.length} ${rtn(liste.length, 'p_element', 'p_elements')}</span>
+            ${inactifs ? `<span class="ramp-badge compte muet">
+                ${inactifs} ${rt('p_inactif')}${inactifs > 1 ? 's' : ''}</span>` : ''}
             <span style="flex:1;"></span>
             ${modifiable ? `
                 ${f.groupe ? `<button class="btn btn-outline btn-sm" onclick="rampOuvrirGroupe()">
@@ -650,6 +649,10 @@ function rampRenderParametres() {
                 <button class="btn btn-primary btn-sm" onclick="rampOuvrirParam('', '${cle}')">
                     ${RAMP_ICONS.add} ${f.groupe ? rt('p_nouvel_item') : rt('ajouter')}</button>`
                 : `<span class="ramp-sous-titre">${rt('p_reserve_gestionnaire')}</span>`}
+            <!-- L'export ferme la barre : d'un sous-menu à l'autre, il se
+                 retrouve toujours au même bout. -->
+            <button class="btn btn-primary btn-sm" onclick="rampExporterParametres('${cle}')">
+                ${RAMP_ICONS.download} ${rt('exporter_excel')}</button>
         </div>
         <div class="ramp-card" style="padding:0;">
             <div class="ramp-table-wrap">
@@ -1012,9 +1015,9 @@ function rampPaysResultats() {
 
     return `
     <div class="ramp-actions-bar">
-        <span class="ramp-sous-titre">
-            ${liste.length} pays${membres ? ` · ${membres} membre${membres > 1 ? 's' : ''} de l'UEMOA` : ''}
-        </span>
+        <span class="ramp-badge compte">${liste.length} pays</span>
+        ${membres ? `<span class="ramp-badge compte">
+            ${membres} membre${membres > 1 ? 's' : ''} de l'UEMOA</span>` : ''}
         <span style="flex:1;"></span>
         ${modifiable ? `<button class="btn btn-primary btn-sm" onclick="rampOuvrirPays()">
             ${RAMP_ICONS.add} ${rt('ajouter')}</button>` : ''}
@@ -1345,10 +1348,11 @@ function rampAptResultats() {
 
     return `
     <div class="ramp-actions-bar">
-        <span class="ramp-sous-titre">
-            ${groupes.length} pays · ${liste.length} aéroport${liste.length > 1 ? 's' : ''}${inactifs
-                ? ` · ${inactifs} inactif${inactifs > 1 ? 's' : ''}` : ''}
-        </span>
+        <span class="ramp-badge compte">${groupes.length} pays</span>
+        <span class="ramp-badge compte">
+            ${liste.length} aéroport${liste.length > 1 ? 's' : ''}</span>
+        ${inactifs ? `<span class="ramp-badge compte muet">
+            ${inactifs} inactif${inactifs > 1 ? 's' : ''}</span>` : ''}
         <span style="flex:1;"></span>
         <button class="btn btn-outline btn-sm" onclick="rampAptToutDeplier(true)">${rt('p_tout_deplier')}</button>
         <button class="btn btn-outline btn-sm" onclick="rampAptToutDeplier(false)">${rt('p_tout_replier')}</button>
@@ -1659,11 +1663,12 @@ function rampAerResultats() {
 
     return `
     <div class="ramp-actions-bar">
-        <span class="ramp-sous-titre">
-            ${r.total_designations} désignation${r.total_designations > 1 ? 's' : ''} ·
-            ${r.total} aéronef${r.total > 1 ? 's' : ''}${r.pages > 1
-                ? ` · page ${r.page} sur ${r.pages}` : ''}
-        </span>
+        <span class="ramp-badge compte">
+            ${r.total_designations} désignation${r.total_designations > 1 ? 's' : ''}</span>
+        <span class="ramp-badge compte">
+            ${r.total} aéronef${r.total > 1 ? 's' : ''}</span>
+        ${r.pages > 1 ? `<span class="ramp-sous-titre">
+            page ${r.page} sur ${r.pages}</span>` : ''}
         <span style="flex:1;"></span>
         <button class="btn btn-outline btn-sm" onclick="rampAerToutDeplier(true)">${rt('p_tout_deplier')}</button>
         <button class="btn btn-outline btn-sm" onclick="rampAerToutDeplier(false)">${rt('p_tout_replier')}</button>

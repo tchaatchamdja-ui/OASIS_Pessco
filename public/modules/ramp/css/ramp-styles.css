@@ -1261,6 +1261,14 @@ button.ramp-proc-step.verrouillee { opacity: .5; cursor: not-allowed; }
 .ramp-badge.neuf { background: #d1fae5; color: #047857; }
 .ramp-badge.maj { background: #dbeafe; color: #1d4ed8; }
 .ramp-badge.doublon { background: #fee2e2; color: #b91c1c; }
+/* Décompte d'une liste de paramètres : la pastille dit un nombre, pas un
+   état — elle prend le ton du module, non celui d'une alerte. */
+.ramp-badge.compte {
+    background: #fff; color: var(--ramp-accent);
+    border: 1px solid color-mix(in srgb, var(--ramp-accent) 32%, #fff);
+}
+/* Le décompte des inactifs se range à part : même pastille, ton éteint. */
+.ramp-badge.compte.muet { color: var(--text-muted); border-color: var(--border); }
 .ramp-badge.actif { background: #d1fae5; color: #047857; }
 .ramp-badge.inactif { background: #f1f5f9; color: #94a3b8; }
 

@@ -636,10 +636,15 @@ body.app-sidebar-collapsed .ramp-barre-pays.dans-volet { left: 0; }
 .ramp-table th.triable:hover { background: color-mix(in srgb, var(--primary) 85%, #fff); }
 .ramp-table-wrap { overflow: auto; max-height: 62vh; border-radius: 8px; }
 /* Table dense — la situation générale par exploitant : quatorze colonnes de
-   petits nombres. Ce sont les intitulés, tenus sur une ligne avec leur
-   flèche de tri (« Taux clôture ↕ »), qui imposaient 1 117 px et le
-   défilement ; ils passent sur deux lignes et les marges se resserrent. */
-.ramp-table.ramp-table-dense th { white-space: normal; line-height: 1.2; vertical-align: middle; }
+   petits nombres. Les intitulés tiennent sur un seul rang, flèche de tri
+   comprise : repliés sur deux lignes, ils rejetaient la flèche seule à la
+   seconde. Ce sont les taux de clôture, écrits en toutes lettres, qui
+   imposaient la largeur ; ils se disent « % » et la table tient. */
+.ramp-table.ramp-table-dense th { line-height: 1.2; vertical-align: middle; }
+/* Les treize colonnes de chiffres sont fixées ; l'exploitant prend le reste.
+   En deçà, il ne se laisse pas réduire à rien : la table garde son plancher
+   et c'est le cadre qui défile. */
+.ramp-table.ramp-table-dense { min-width: 960px; }
 .ramp-table.ramp-table-dense th,
 .ramp-table.ramp-table-dense td { padding-left: .4rem; padding-right: .4rem; }
 .ramp-tri { opacity: .5; font-size: .7rem; margin-left: .2rem; }

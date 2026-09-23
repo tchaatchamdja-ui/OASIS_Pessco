@@ -26,7 +26,9 @@ function rampBasculerLigne(exploitant) {
 function rampSituation() {
     const { inspections, ecarts } = rampFiltrer();
     const pond = rampPonderations();
-    const taux = (clos, total) => (total > 0 ? `${Math.round((clos / total) * 100)} %` : '—');
+    // Espace fine insécable avant le signe : la typographie française la veut,
+    // et la colonne « % » est trop étroite pour qu'un taux se coupe en deux.
+    const taux = (clos, total) => (total > 0 ? `${Math.round((clos / total) * 100)} %` : '—');
 
     const brut = {};
     const neuf = () => ({
@@ -939,8 +941,14 @@ function rampRenderStatistiques() {
 
     // ── Situation générale ──
     const cel = (v, style) => `<td style="text-align:center;${style || ''}">${_rEsc(v)}</td>`;
+    // Quatorze colonnes sur un seul rang d'entête : les taux de clôture se
+    // disent « % » et suivent la catégorie qu'ils qualifient. Écrits en toutes
+    // lettres, ils repoussaient la flèche de tri des colonnes voisines à la
+    // ligne suivante — et le portugais, plus long, imposait le défilement.
+    const pct = (cleCat) => `<th style="width:46px;text-align:center;"
+        title="${_rAttr(rt('stats_taux_cat', rt(cleCat)))}">%</th>`;
     const lignesSituation = situation.length === 0
-        ? `<tr><td colspan="16" class="ramp-table-vide">${rt('aucune_donnee')}</td></tr>`
+        ? `<tr><td colspan="14" class="ramp-table-vide">${rt('aucune_donnee')}</td></tr>`
         : situation.map((r) => {
             const ouvert = !!RAMP_STATE.lignesDepliees[r.exploitant];
             const detail = ouvert ? r.detail.map((it) => `
@@ -1025,28 +1033,26 @@ function rampRenderStatistiques() {
 
     ${bloc('situation', rt('stats_situation'), `
         <p class="ramp-note">
-            ${rt('stats_cliquer_exploitant')} Le score est la somme
-            des pondérations de catégorie rapportée aux items inspectés : il permet de comparer
-            deux exploitants inspectés inégalement.
+            ${rt('stats_cliquer_exploitant')} ${rt('stats_note_pct')} ${rt('stats_note_score')}
         </p>
         <div class="ramp-table-wrap">
-            <table class="ramp-table ramp-table-dense">
+            <table class="ramp-table ramp-table-dense ramp-table-fixe">
                 <thead>
                     <tr>
                         ${rampTh('situation', 'exploitant', rt('stats_exploitant'))}
-                        ${rampTh('situation', 'inspections', rt('stats_insp'), 'width:70px;text-align:center;')}
-                        ${rampTh('situation', 'items', rt('c_items'), 'width:70px;text-align:center;')}
-                        ${rampTh('situation', 'cat1', rt('cat_court_1'), 'width:60px;text-align:center;')}
-                        <th style="width:64px;text-align:center;">${rt('clot_1')}</th>
-                        ${rampTh('situation', 'cat2', rt('cat_court_2'), 'width:60px;text-align:center;')}
-                        <th style="width:64px;text-align:center;">${rt('clot_2')}</th>
-                        ${rampTh('situation', 'cat3', rt('cat_court_3'), 'width:60px;text-align:center;')}
-                        <th style="width:64px;text-align:center;">${rt('clot_3')}</th>
-                        ${rampTh('situation', 'catG', rt('cat_court_g'), 'width:60px;text-align:center;')}
-                        <th style="width:64px;text-align:center;">${rt('clot_g')}</th>
-                        ${rampTh('situation', 'totalEcarts', rt('c_ecarts'), 'width:70px;text-align:center;')}
-                        <th style="width:76px;text-align:center;">${rt('stats_taux_cloture')}</th>
-                        ${rampTh('situation', 'scoreTotal', rt('score'), 'width:80px;text-align:center;')}
+                        ${rampTh('situation', 'inspections', rt('stats_insp'), 'width:60px;text-align:center;')}
+                        ${rampTh('situation', 'items', rt('c_items'), 'width:66px;text-align:center;')}
+                        ${rampTh('situation', 'cat1', rt('cat_court_1'), 'width:64px;text-align:center;')}
+                        ${pct('cat_court_1')}
+                        ${rampTh('situation', 'cat2', rt('cat_court_2'), 'width:64px;text-align:center;')}
+                        ${pct('cat_court_2')}
+                        ${rampTh('situation', 'cat3', rt('cat_court_3'), 'width:64px;text-align:center;')}
+                        ${pct('cat_court_3')}
+                        ${rampTh('situation', 'catG', rt('cat_court_g'), 'width:64px;text-align:center;')}
+                        ${pct('cat_court_g')}
+                        ${rampTh('situation', 'totalEcarts', rt('stats_c_total'), 'width:70px;text-align:center;')}
+                        ${pct('stats_c_total')}
+                        ${rampTh('situation', 'scoreTotal', rt('score'), 'width:108px;text-align:center;')}
                     </tr>
                 </thead>
                 <tbody>${lignesSituation}</tbody>

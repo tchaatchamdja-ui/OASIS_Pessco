@@ -13,7 +13,7 @@
 // ── Global State ──
 window.APP_STATE = {
     lang: localStorage.getItem('pr_lang') || 'fr',
-    theme: localStorage.getItem('pr_theme') || 'blue-dark',
+    theme: oasisThemeEnregistre(),
     user: JSON.parse(localStorage.getItem('pr_user') || 'null'),
     currentPage: 'dashboard',
     currentSub: '',
@@ -85,7 +85,7 @@ function isM1Admin() {
 window.initProfilRisqueModule = function() {
     APP_STATE.user = window.PESSCO?.user || JSON.parse(localStorage.getItem('pr_user') || 'null');
     APP_STATE.lang = window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr';
-    APP_STATE.theme = window.PESSCO?.theme || localStorage.getItem('pr_theme') || 'blue-dark';
+    APP_STATE.theme = oasisThemeNormalise(window.PESSCO?.theme || oasisThemeEnregistre());
     if (!APP_STATE.user) { window.location.href = '/login'; return; }
     document.body.classList.toggle('app-sidebar-collapsed', !!APP_STATE.sidebarCollapsed);
     document.documentElement.setAttribute('data-theme', APP_STATE.theme);
@@ -253,7 +253,7 @@ function renderApp() {
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">
-                    ${['blue-dark','corporate','grey'].map(th =>
+                    ${OASIS_THEMES.map(th =>
                         `<div class="theme-dot ${S.theme===th?'active':''}" data-theme="${th}" onclick="setTheme('${th}')" title="${oasisNomTheme(th)}"></div>`
                     ).join('')}
                 </div>

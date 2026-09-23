@@ -317,7 +317,7 @@ function _execIsAAC() { return _execCanValidate(); }
 window.initExecutionModule = function() {
     EXEC_STATE.user = window.PESSCO?.user || JSON.parse(localStorage.getItem('pr_user') || 'null');
     EXEC_STATE.lang = window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr';
-    EXEC_STATE.theme = window.PESSCO?.theme || localStorage.getItem('pr_theme') || 'blue-dark';
+    EXEC_STATE.theme = oasisThemeNormalise(window.PESSCO?.theme || oasisThemeEnregistre());
     if (!EXEC_STATE.user) { window.location.href = '/login'; return; }
     document.documentElement.setAttribute('data-theme', EXEC_STATE.theme);
     // Hydrate any fields that may be missing from older cached login payloads
@@ -813,7 +813,7 @@ function execRenderApp() {
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">
-                    ${['blue-dark','corporate','grey'].map(th =>
+                    ${OASIS_THEMES.map(th =>
                         `<div class="theme-dot ${S.theme===th?'active':''}" data-theme="${th}" onclick="execSetTheme('${th}')" title="${oasisNomTheme(th)}"></div>`
                     ).join('')}
                 </div>

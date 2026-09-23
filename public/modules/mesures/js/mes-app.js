@@ -338,7 +338,7 @@ function mesRenderApp() {
             <nav class="sidebar-nav">${nav}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">
-                    ${['blue-dark', 'corporate', 'grey'].map((th) =>
+                    ${OASIS_THEMES.map((th) =>
                         `<div class="theme-dot ${S.theme === th ? 'active' : ''}" data-theme="${th}"
                               onclick="mesSetTheme('${th}')" title="${oasisNomTheme(th)}"></div>`).join('')}
                 </div>

@@ -74,7 +74,7 @@ const PLAN_NAV = {
 window.initPlanificationModule = function() {
     PLAN_STATE.user = window.PESSCO?.user || JSON.parse(localStorage.getItem('pr_user') || 'null');
     PLAN_STATE.lang = window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr';
-    PLAN_STATE.theme = window.PESSCO?.theme || localStorage.getItem('pr_theme') || 'blue-dark';
+    PLAN_STATE.theme = oasisThemeNormalise(window.PESSCO?.theme || oasisThemeEnregistre());
     if (!PLAN_STATE.user) { window.location.href = '/login'; return; }
     document.body.classList.toggle('app-sidebar-collapsed', !!PLAN_STATE.sidebarCollapsed);
     document.documentElement.setAttribute('data-theme', PLAN_STATE.theme);
@@ -305,7 +305,7 @@ function planRenderApp() {
             <nav class="sidebar-nav">${navHtml}</nav>
             <div class="sidebar-footer">
                 <div class="theme-selector sidebar-theme-selector">
-                    ${['blue-dark','corporate','grey'].map(th =>
+                    ${OASIS_THEMES.map(th =>
                         `<div class="theme-dot ${S.theme===th?'active':''}" data-theme="${th}" onclick="planSetTheme('${th}')" title="${oasisNomTheme(th)}"></div>`
                     ).join('')}
                 </div>

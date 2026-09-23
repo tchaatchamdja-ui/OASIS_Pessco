@@ -808,13 +808,13 @@ function applyLang(lang) {
 
 // ── Thème ──
 const THEME_KEY = 'pr_theme';
-// Thèmes servis par l'application. Un thème retiré peut rester enregistré dans
-// le navigateur d'un utilisateur : il se ramène alors au thème par défaut.
-const THEMES = ['blue-dark', 'corporate', 'grey'];
+// La liste des palettes et la conversion d'une clé ancienne sont tenues par
+// oasis-theme.js, chargé avant celui-ci : un thème retiré, ou enregistré sous
+// un nom qui a changé, s'y ramène à une palette servie.
 function applyTheme(theme) {
-  if (!THEMES.includes(theme)) theme = THEMES[0];
+  theme = oasisThemeNormalise(theme);
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelectorAll('.theme-dot').forEach((d) => d.classList.toggle('active', d.dataset.theme === theme));
   localStorage.setItem(THEME_KEY, theme);
 }
-applyTheme(localStorage.getItem(THEME_KEY) || 'blue-dark');
+applyTheme(oasisThemeEnregistre());

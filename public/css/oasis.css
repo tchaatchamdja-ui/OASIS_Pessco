@@ -1,9 +1,8 @@
 /* ══════════════════════════════════════
    OASIS — PESSCO Design System — CSS Tokens
-   3 Thèmes : blue-dark (défaut), corporate, grey (Retro-Avionics Jet)
-   La clé « grey » est celle d'origine : elle est enregistrée dans le
-   navigateur des agents et se garde pour que leur choix survive au
-   changement de palette. Elle ne dit plus la couleur.
+   3 Thèmes : blue-dark (défaut), corporate, retro-avionics
+   Une préférence enregistrée sous l'ancienne clé « grey » est convertie à la
+   lecture — voir public/shared/js/oasis-theme.js.
    ══════════════════════════════════════ */
 
 :root, [data-theme="blue-dark"] {
@@ -47,7 +46,7 @@
 /* Palette « Retro-Avionics Jet » : fond gris aluminium clair, blocs de données
    en blanc pur, le bleu profond océan pour la structure et le vert cockpit
    vintage pour ce qui est actif. */
-[data-theme="grey"] {
+[data-theme="retro-avionics"] {
     --primary:       #028090;
     --primary-dark:  #01646f;
     --primary-light: #03a3b7;
@@ -223,7 +222,7 @@ body.app-sidebar-collapsed .portal-sidebar-logo img { max-height: 34px; }
 .theme-dot.active { border-color: var(--text-header, #fff); }
 .theme-dot[data-theme="blue-dark"]   { background: #1a365d; }
 .theme-dot[data-theme="corporate"]   { background: #1e40af; }
-.theme-dot[data-theme="grey"]        { background: #00a896; }
+.theme-dot[data-theme="retro-avionics"]        { background: #00a896; }
 
 .portal-lang-selector { display: flex; gap: 0.25rem; }
 .lang-btn {

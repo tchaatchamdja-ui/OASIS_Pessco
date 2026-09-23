@@ -20,6 +20,9 @@
   <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
   <script src="/shared/js/oasis-toast.js"></script>
   <script src="/shared/js/oasis-dates.js"></script>
+  <!-- Les palettes : la liste, les noms, et la conversion d'une clé ancienne.
+       Chargé avant l'amorçage ci-dessous, qui lit la préférence. -->
+  <script src="/shared/js/oasis-theme.js"></script>
 </head>
 <body>
   <div id="app"><div data-oasis-loader>Chargement du module…</div></div>
@@ -39,7 +42,7 @@
         domaines: u.domaines || [], photo: u.photo || '',
       };
       localStorage.setItem('pr_user', JSON.stringify(plUser));
-      const theme = localStorage.getItem('pr_theme') || 'blue-dark';
+      const theme = oasisThemeEnregistre();
       const lang = localStorage.getItem('pr_lang') || 'fr';
       document.documentElement.setAttribute('data-theme', theme);
       window.PESSCO = null; // mode autonome : le module rend son shell complet

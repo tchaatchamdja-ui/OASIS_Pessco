@@ -40,10 +40,8 @@
     --gradient: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
 }
 /* Palette « Retro-Avionics Jet » : le bleu profond océan porte la structure,
-   le vert cockpit vintage marque ce qui est actif. La clé reste « grey »,
-   celle d'origine, pour que la préférence enregistrée dans le navigateur des
-   agents survive au changement de palette. */
-[data-theme="grey"] {
+   le vert cockpit vintage marque ce qui est actif. */
+[data-theme="retro-avionics"] {
     --primary: #028090; --primary-dark: #01646f; --primary-light: #03a3b7;
     --primary-hover: #016b78; --accent: #00a896; --bg: #f0f3f4;
     --bg-card: #ffffff; --bg-header: #028090;
@@ -209,7 +207,7 @@ a:hover { text-decoration: underline; }
 .theme-dot.active { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,0,0,0.1); }
 .theme-dot[data-theme="blue-dark"] { background: #1a365d; }
 .theme-dot[data-theme="corporate"] { background: #1e40af; }
-.theme-dot[data-theme="grey"] { background: #00a896; }
+.theme-dot[data-theme="retro-avionics"] { background: #00a896; }
 
 .lang-selector { display: flex; gap: 0.15rem; align-items: center; }
 .lang-btn {
@@ -290,7 +288,7 @@ a:hover { text-decoration: underline; }
    ne porte pas de texte : l'onglet ouvert, la pastille, les parts d'un
    graphique. La règle qui donnait l'accent aux boutons a été retirée, et le
    bouton d'accent prend le même vert d'un cran plus profond. */
-[data-theme="grey"] .btn-accent { background: #00806f; }
+[data-theme="retro-avionics"] .btn-accent { background: #00806f; }
 /* Accent : la seconde couleur du thème, pour l'action qui ouvre un geste — une
    nouvelle activité, un envoi. La classe s'employait sans être définie ici :
    ces boutons restaient blancs, hors du thème. */

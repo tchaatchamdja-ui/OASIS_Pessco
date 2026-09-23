@@ -16,7 +16,7 @@ const DR = {
   editing: null,
   draft: null,
   page: 'privileges',          // 'privileges' | 'audit'
-  theme: localStorage.getItem('pr_theme') || 'blue-dark',
+  theme: oasisThemeEnregistre(),
   lang: localStorage.getItem('pr_lang') || 'fr',
   sidebarCollapsed: localStorage.getItem('pr_sidebar') === 'true',
   auditActions: {},
@@ -113,7 +113,7 @@ function drShell(content) {
       </nav>
       <div class="sidebar-footer">
         <div class="theme-selector sidebar-theme-selector">
-          ${['blue-dark', 'corporate', 'grey'].map((th) =>
+          ${OASIS_THEMES.map((th) =>
             `<div class="theme-dot ${DR.theme === th ? 'active' : ''}" data-theme="${th}" onclick="drSetTheme('${th}')" title="${oasisNomTheme(th)}"></div>`).join('')}
         </div>
         <div class="lang-selector sidebar-lang-selector">

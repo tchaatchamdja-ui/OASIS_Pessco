@@ -277,15 +277,6 @@ function oasisMessageErreur(donnees, statut, defaut) {
     }, delai === undefined ? 300 : delai));
   }
 
-  // Le nom d'une palette, pour l'infobulle des pastilles de thème. Les six
-  // modules affichaient la clé enregistrée — « grey » pour une palette qui
-  // ne l'est plus. Ce sont des noms propres : ils ne se traduisent pas.
-  const OASIS_NOMS_THEME = {
-    'blue-dark': 'Bleu', corporate: 'Corporate', grey: 'Retro-Avionics Jet',
-  };
-  const oasisNomTheme = (cle) => OASIS_NOMS_THEME[cle] || cle;
-
-  window.oasisNomTheme = oasisNomTheme;
   window.oasisEsc = oasisEsc;
   window.oasisMessageErreur = oasisMessageErreur;
   window.oasisChampRequis = oasisChampRequis;

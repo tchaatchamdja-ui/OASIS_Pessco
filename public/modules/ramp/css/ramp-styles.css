@@ -34,9 +34,9 @@
 /* Palette « Retro-Avionics Jet » : le bleu marine du module n'y a pas sa place.
    L'accent prend le vert cockpit vintage, qui est dans cette palette la
    couleur de ce qui est actif ; la structure garde le bleu profond océan. */
-[data-theme="grey"] .ramp-module,
-[data-theme="grey"] .ramp-slider,
-[data-theme="grey"] .ramp-slider-overlay {
+[data-theme="retro-avionics"] .ramp-module,
+[data-theme="retro-avionics"] .ramp-slider,
+[data-theme="retro-avionics"] .ramp-slider-overlay {
     /* Le vert cockpit d'un cran plus profond : l'accent du module sert aussi
        à écrire — un intitulé d'onglet, un lien, un décompte — et #00a896 sur
        blanc ne tient pas le seuil de lisibilité. Même vert, lisible. */

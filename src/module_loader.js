@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const valider = require('./valider');
+const trace = require('./trace');
 
 const MODULES_DIR = path.join(__dirname, 'modules');
 const METHODES_MUTATIVES = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -28,7 +29,7 @@ function discover() {
       try {
         manifeste = JSON.parse(fs.readFileSync(manifestePath, 'utf-8'));
       } catch (err) {
-        console.error(`[modules] manifeste illisible : ${e.name} — ${err.message}`);
+        trace.erreur('manifeste de module illisible', { dossier: e.name, erreur: err.message });
         return null;
       }
       return { ...manifeste, dossier: e.name, chemin: dir };
@@ -48,11 +49,11 @@ function mount(app, deps, moduleAudit) {
     try {
       impl = require(path.join(m.chemin, 'index.js'));
     } catch (err) {
-      console.error(`[modules] ${m.code} non monté — ${err.message}`);
+      trace.erreur('module non monté', { module: m.code, erreur: err.message });
       return;
     }
     if (typeof impl.register !== 'function') {
-      console.error(`[modules] ${m.code} non monté — register() manquant`);
+      trace.erreur('module non monté', { module: m.code, erreur: 'register() manquant' });
       return;
     }
     (m.apiPrefixes || []).forEach((prefix) => {
@@ -77,7 +78,7 @@ function mount(app, deps, moduleAudit) {
     montes.forEach((m) => {
       (m.requires || []).forEach((svc) => {
         if (!deps.services.has(svc)) {
-          console.warn(`[modules] ${m.code} attend le service « ${svc} » : aucun producteur monté`);
+          trace.alerte('service attendu sans producteur monté', { module: m.code, service: svc });
         }
       });
     });

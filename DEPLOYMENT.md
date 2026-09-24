@@ -149,9 +149,49 @@ curl -X POST 'https://api.render.com/deploy/srv-xxxx?key=yyyy'
 
 ### Journaux
 
-*Logs* dans le tableau de bord. Au démarrage, le serveur écrit le port et la liste des
-modules montés ; les tentatives de connexion excessives apparaissent dans le journal
-d'audit de l'application (`AUTH_DEBIT_DEPASSE`).
+*Logs* dans le tableau de bord. En production, **une ligne est un objet JSON** —
+`{"ts","niveau","message","details"}` — que le collecteur de l'hébergeur indexe
+tel quel : filtrer sur `niveau` suffit à isoler les alertes et les exceptions.
+En développement, la même trace s'écrit en clair.
+
+| Niveau | Ce qu'on y trouve |
+|---|---|
+| `erreur` | Exception non rattrapée (avec sa référence, sa route et sa pile), port occupé, module non monté |
+| `alerte` | Authentification multifacteur éteinte en production, service attendu sans producteur |
+| `info` | Démarrage (port, environnement, modules), reprises de format |
+| `debug` | Rien pour l'instant — le niveau existe pour les mises au point |
+
+`OASIS_LOG_LEVEL` abaisse ou relève le seuil (`erreur`, `alerte`, `info`,
+`debug` ; `info` par défaut). Une exception rendue à l'appelant porte une
+référence courte : la même figure dans la trace et dans le journal d'audit,
+ce qui relie le rapport d'un agent à ce que le serveur a vu.
+
+**Suivi des erreurs.** Il n'y a pas de service tiers branché, et c'est
+délibéré : les traces d'une autorité de l'aviation civile ne sortent pas du
+dispositif sans décision. Le collecteur de l'hébergeur joue ce rôle — une
+alerte sur `"niveau":"erreur"` dans les journaux vaut une sonde.
+
+### Environnements
+
+Trois, qui ne se distinguent que par leurs variables — le code est le même :
+
+| | `NODE_ENV` | `OASIS_ENV` | Données |
+|---|---|---|---|
+| Développement | absent | absent | `data/`, jeu local |
+| Recette | `production` | `recette` | Disque propre, jeu de démonstration |
+| Production | `production` | `production` | Disque persistant, sauvegardes planifiées |
+
+`NODE_ENV=production` commande le cookie `Secure`, HSTS, le cache des fichiers
+statiques et la trace structurée : une recette doit le porter, sans quoi elle
+n'éprouve pas ce qui sera servi. `OASIS_ENV` ne sert qu'à les nommer.
+
+`GET /api/health` rend l'environnement et l'instance installée, ce qui évite
+d'agir sur la mauvaise fenêtre :
+
+```bash
+curl -s https://oasis-xxxx.onrender.com/api/health
+# {"statut":"ok","version":"0.1.0","environnement":"recette","instance":"Bénin",…}
+```
 
 ### Notifications
 

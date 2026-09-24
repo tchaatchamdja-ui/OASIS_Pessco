@@ -13,6 +13,7 @@ const email = require('./src/email');
 const referentiels = require('./src/referentiels');
 const instances = require('./src/instances');
 const moduleAudit = require('./src/module_audit');
+const trace = require('./src/trace');
 const moduleLoader = require('./src/module_loader');
 const services = require('./src/services');
 const mfa = require('./src/mfa');
@@ -275,6 +276,10 @@ app.get('/api/health', (req, res) => {
   res.json({
     statut: stockage === 'ok' ? 'ok' : 'degrade',
     version: (cfg.platform && cfg.platform.version) || '',
+    // L'environnement servi et l'instance installée : deux déploiements se
+    // ressemblent, et l'on s'est déjà trompé de fenêtre. La sonde le dit.
+    environnement: process.env.OASIS_ENV || (EN_PRODUCTION ? 'production' : 'development'),
+    instance: instances.locale(loadConfig),
     modules: MODULES_MONTES.map((m) => m.code),
     stockage,
     demarre_depuis_s: Math.round(process.uptime()),
@@ -1105,7 +1110,9 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const reference = crypto.randomBytes(4).toString('hex');
-  console.error(`OASIS — erreur non rattrapée [${reference}] ${req.method} ${req.path}`, err);
+  trace.erreur('exception non rattrapée', {
+    reference, methode: req.method, chemin: req.path, erreur: err,
+  });
   try {
     audit.log((req.user || {}).username || 'anonyme', 'ERREUR_SERVEUR', {
       reference, methode: req.method, chemin: req.path, message: err && err.message,
@@ -1124,13 +1131,13 @@ require('./src/migration_ramp').migrer(store, loadConfig, saveConfig);
 // chaîne reste vérifiable. Idempotente : silencieuse une fois passée.
 [['socle', audit.reprendre()], ['modules', moduleAudit.reprendre()]]
   .filter(([, fait]) => fait)
-  .forEach(([quoi]) => console.log(`Journal d'audit ${quoi} : repris en lignes.`));
+  .forEach(([quoi]) => trace.info("journal d'audit repris en lignes", { journal: quoi }));
 // L'authentification multifacteur doit être active en production : elle ne
 // l'est pas par défaut, et un démarrage silencieux laisserait la décision se
 // perdre. Ici elle se voit, et le journal la retient.
 if (EN_PRODUCTION && !mfaActive(loadConfig())) {
-  console.warn("OASIS — ATTENTION : l'authentification multifacteur est désactivée en production."
-    + " L'activer au paramétrage (security.mfaEnabled) ou par OASIS_MFA=1.");
+  trace.alerte("authentification multifacteur désactivée en production",
+    { remede: 'security.mfaEnabled au paramétrage, ou OASIS_MFA=1' });
   audit.log('système', 'MFA_DESACTIVEE_EN_PRODUCTION', {});
 }
 auth.seedUsers(loadConfig());
@@ -1140,8 +1147,11 @@ moduleLoader.seedAll(MODULES_MONTES);
 // trafic vers le conteneur, une écoute sur la seule boucle locale y serait
 // injoignable.
 const serveur = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`OASIS — socle Phase 1 démarré sur le port ${PORT}`);
-  console.log(`Modules montés : ${MODULES_MONTES.map((m) => m.code).join(', ') || 'aucun'}`);
+  trace.info('serveur démarré', {
+    port: Number(PORT),
+    environnement: EN_PRODUCTION ? 'production' : (process.env.NODE_ENV || 'development'),
+    modules: MODULES_MONTES.map((m) => m.code),
+  });
 });
 
 // Le port déjà pris est l'ennui le plus courant au démarrage — le plus souvent
@@ -1149,8 +1159,9 @@ const serveur = app.listen(PORT, '0.0.0.0', () => {
 // le disait pas : elle se lit ici en clair, avec le geste qui la lève.
 serveur.on('error', (e) => {
   if (e.code !== 'EADDRINUSE') throw e;
-  console.error(`OASIS — le port ${PORT} est déjà occupé : une autre instance tourne sans doute encore.`);
-  console.error(`  La retrouver : lsof -nP -iTCP:${PORT} -sTCP:LISTEN`);
-  console.error('  L\'arrêter, puis relancer ; ou choisir un autre port : PORT=4751 npm run dev');
+  trace.erreur(`le port ${PORT} est déjà occupé : une autre instance tourne sans doute encore`, {
+    retrouver: `lsof -nP -iTCP:${PORT} -sTCP:LISTEN`,
+    puis: `l'arrêter et relancer, ou choisir un autre port : PORT=4751 npm run dev`,
+  });
   process.exit(1);
 });

@@ -18,6 +18,8 @@ const suites = [
   { nom: 'taille', port: 0, run: require('./taille.smoke') },
   // Garde-fou des traductions : même chose, sur les tables de libellés.
   { nom: 'traductions', port: 0, run: require('./traductions.smoke') },
+  // Unitaires : les règles prises à part, sans passer par HTTP.
+  { nom: 'unitaires', port: 0, run: require('./unitaires.smoke') },
 ];
 
 (async () => {

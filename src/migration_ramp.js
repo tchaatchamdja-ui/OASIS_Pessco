@@ -1,3 +1,4 @@
+const trace = require('./trace');
 // Migration ponctuelle — le module d'inspections sur aire de trafic s'appelait
 // « SAFA » dans OASIS, du nom du programme dont il est issu. Il s'appelle RAMP.
 //
@@ -44,7 +45,7 @@ function migrer(store, loadConfig, saveConfig) {
       faits.push('configuration : module activé sous son nouveau code');
     }
   } catch (e) {
-    console.error(`[migration RAMP] configuration illisible — ${e.message}`);
+    trace.erreur('migration RAMP : configuration illisible', { erreur: e.message });
   }
 
   // 2. Privilèges de « Gestion des Droits », rangés par code de module.
@@ -111,7 +112,7 @@ function migrer(store, loadConfig, saveConfig) {
     }
   }
 
-  if (faits.length) console.log(`[migration RAMP] SAFA → RAMP — ${faits.join(', ')}`);
+  if (faits.length) trace.info('migration RAMP : SAFA → RAMP', { faits });
   return faits;
 }
 

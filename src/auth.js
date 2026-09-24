@@ -2,6 +2,7 @@
 // mot de passe 12+ caractères complexes, changement à la première connexion,
 // blocage après tentatives infructueuses, session unique, déconnexion après inactivité.
 const crypto = require('crypto');
+const trace = require('./trace');
 const store = require('./store');
 const audit = require('./audit');
 
@@ -122,14 +123,17 @@ function seedUsers(cfg) {
   // Les identifiants ne sont montrés qu'ici, au premier démarrage : ils ne
   // sont écrits ni dans le code, ni dans un fichier, ni dans le journal.
   if (secrets.some((x) => x.genere)) {
-    console.log('');
-    console.log('  ┌─ OASIS — comptes créés au premier démarrage ─────────────────────┐');
+    // Volontairement hors des traces structurées : un mot de passe qui part
+    // vers un collecteur de journaux y reste. Ce bandeau s'adresse à la
+    // personne devant le terminal, une fois, et à personne d'autre.
+    trace.brut('');
+    trace.brut('  ┌─ OASIS — comptes créés au premier démarrage ─────────────────────┐');
     secrets.forEach(({ email, password }) => {
-      console.log(`  │  ${email.padEnd(24)} ${password}`);
+      trace.brut(`  │  ${email.padEnd(24)} ${password}`);
     });
-    console.log('  │  Mot de passe à changer à la première connexion.');
-    console.log('  └──────────────────────────────────────────────────────────────────┘');
-    console.log('');
+    trace.brut('  │  Mot de passe à changer à la première connexion.');
+    trace.brut('  └──────────────────────────────────────────────────────────────────┘');
+    trace.brut('');
   }
 }
 

@@ -234,8 +234,12 @@ body.app-sidebar-collapsed .portal-sidebar-logo img { max-height: 34px; }
 .lang-btn.active { background: rgba(255,255,255,.25); border-color: rgba(255,255,255,.7); }
 
 /* ── Corps ── */
+/* `min-width: 0` n'est pas un détail : sans lui, un élément de flexbox ne peut
+   pas devenir plus étroit que son contenu. Une seule table un peu large — la
+   liste des utilisateurs et ses neuf colonnes — poussait donc tout le corps du
+   portail au-delà du bord droit de la fenêtre, entête et pied compris. */
 .portal-body {
-    flex: 1; margin-left: var(--sidebar-width);
+    flex: 1; min-width: 0; margin-left: var(--sidebar-width);
     display: flex; flex-direction: column; min-height: 100vh;
     transition: margin-left .25s ease;
 }

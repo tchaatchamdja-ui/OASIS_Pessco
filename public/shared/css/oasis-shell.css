@@ -107,13 +107,31 @@
 }
 .shell-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .shell-table thead  { background: var(--bg); }
+/* Les intitulés se replient plutôt que d'imposer leur largeur : « Accès aux
+   modules » sur un seul rang tirait la table bien au-delà de la place dont
+   elle dispose, et c'est la page entière qui débordait. */
 .shell-table th {
     padding: 0.7rem 0.75rem; text-align: left;
     font-weight: 600; color: var(--text-muted); font-size: 0.78rem;
     text-transform: uppercase; letter-spacing: 0.3px;
-    border-bottom: 2px solid var(--border); white-space: nowrap;
+    border-bottom: 2px solid var(--border); line-height: 1.25;
 }
-.shell-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.shell-table td {
+    padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border);
+    vertical-align: middle; overflow-wrap: break-word;
+}
+/* Identifiant : une adresse électronique n'a pas d'espace où se couper, et
+   fixait à elle seule la largeur minimale de sa colonne — près de trois cents
+   pixels. « anywhere » plutôt que « break-word » : seul le premier compte
+   dans le calcul de cette largeur minimale. La coupure ne survient que faute
+   de place ; ailleurs, un nom reste entier. */
+.shell-table .cell-identifiant { overflow-wrap: anywhere; }
+/* Une pastille d'état se replie plutôt que d'imposer sa largeur à la colonne :
+   « Mudança de palavra-passe exigida » tenait deux cents pixels sur un rang. */
+.shell-table .shell-badge { white-space: normal; }
+/* Une liste déroulante se règle sur sa plus longue option — le nom d'un
+   prestataire peut être fort long. Elle tient dans sa cellule. */
+.shell-table select.shell-input { max-width: 100%; }
 .shell-table tr:last-child td { border-bottom: none; }
 .shell-table tr:hover { background: rgba(0,0,0,.02); }
 .shell-table tr.row-inactive { opacity: 0.5; }

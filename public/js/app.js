@@ -624,7 +624,7 @@ async function renderUsers() {
       <tr class="${u.active ? '' : 'row-inactive'}">
         <td>${esc(nm.nom)}</td>
         <td>${esc(nm.prenom) || '<span style="color:var(--text-muted);">—</span>'}</td>
-        <td><strong>${esc(u.email || u.username)}</strong></td>
+        <td class="cell-identifiant"><strong>${esc(u.email || u.username)}</strong></td>
         ${porteeCell}
         ${prestaCell}
         <td>${modCell}</td>
@@ -652,8 +652,10 @@ async function renderUsers() {
           <h3>${esc(USER_TABS.find((tb) => tb.id === USER_TAB).label)} <span class="shell-badge badge-neutral">${counts[USER_TAB]} utilisateur(s)</span></h3>
           <div class="portal-page-actions">${searchInputHtml('Rechercher un utilisateur...')}</div>
         </div>
+        <!-- La table dense du portail, comme toutes les autres : c'était la
+             seule à ne pas l'être, et c'est elle qui débordait. -->
         <div class="shell-table-container">
-          <table class="shell-table">
+          <table class="shell-table shell-table-compact">
             <thead><tr>
               <th>${t('col_nom')}</th><th>${t('col_prenoms')}</th><th>Email (identifiant)</th>${USER_TAB === 'SUPERADMIN' ? '<th>' + t('col_portee') + '</th>' : ''}${isPresta ? '<th>' + t('col_prestataire') + '</th>' : ''}<th>${t('col_acces_modules')}</th>
               <th>${esc(t('users_col_status'))}</th><th>${esc(t('users_col_created'))}</th><th>${esc(t('users_col_actions'))}</th>

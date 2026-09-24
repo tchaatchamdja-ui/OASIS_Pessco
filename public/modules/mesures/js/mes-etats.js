@@ -245,7 +245,7 @@ async function mesHistorique(constatationId) {
             <div class="mes-modal-header">
                 <span style="flex:1;">${MES_ICONES_ETAT.clock} ${mt('historique_traitement')}</span>
                 <button class="btn btn-outline btn-sm mes-btn-icone"
-                        onclick="mesFermerHistorique()">${MES_ICONS.close}</button>
+                        onclick="mesFermerHistorique()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
             </div>
             <div class="mes-modal-body">
                 <div class="mes-histo">
@@ -330,7 +330,7 @@ function mesMesuresDeCarence(constatationId) {
             <div class="mes-modal-header">
                 <span style="flex:1;">${MES_ICONS.shield} Mesures prises sur cette carence</span>
                 <button class="btn btn-outline btn-sm mes-btn-icone"
-                        onclick="mesFermerHistorique()">${MES_ICONS.close}</button>
+                        onclick="mesFermerHistorique()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
             </div>
             <div class="mes-modal-body">
                 <div class="mes-histo-entete">

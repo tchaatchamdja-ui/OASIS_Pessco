@@ -143,11 +143,11 @@ function execRenderProcessus() {
       <td style="text-align:center;">${nbActeurs(p)}</td>
       <td class="exec-etats-actions">
         <button class="btn btn-sm btn-outline btn-icon-only" onclick="execProcCfgEditer('${p.id}')"
-                title="${_escAttr(te('modifier'))}">${EXEC_ICONS.edit}</button>
+                title="${_escAttr(te('modifier'))}" aria-label="${_escAttr(te('modifier'))}">${EXEC_ICONS.edit}</button>
         <button class="btn btn-sm btn-outline btn-icon-only" onclick="execProcCfgDupliquer('${p.id}')"
-                title="${_escAttr(te('proc_dupliquer'))}">${EXEC_ICONS.file}</button>
+                title="${_escAttr(te('proc_dupliquer'))}" aria-label="${_escAttr(te('proc_dupliquer'))}">${EXEC_ICONS.file}</button>
         <button class="btn btn-sm btn-outline btn-icon-only" style="color:#dc2626;border-color:#dc2626;"
-                onclick="execProcCfgSupprimer('${p.id}')" title="${_escAttr(te('supprimer'))}">${EXEC_ICONS.x}</button>
+                onclick="execProcCfgSupprimer('${p.id}')" title="${_escAttr(te('supprimer'))}" aria-label="${_escAttr(te('supprimer'))}">${EXEC_ICONS.x}</button>
       </td>
     </tr>`).join('')
     : `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem;">${te('no_data')}</td></tr>`;
@@ -318,7 +318,7 @@ function _execProcCfgActeurHtml(cle, a, i) {
            value="${_escAttr(a.role_libre || '')}" ${a.role === 'autre' ? '' : 'hidden'}>
     ${cible}
     <button type="button" class="btn btn-sm btn-outline btn-icon-only" style="color:#dc2626;border-color:#dc2626;"
-            onclick="execProcCfgRetirerActeur(this)" title="${_escAttr(te('supprimer'))}">${EXEC_ICONS.x}</button>
+            onclick="execProcCfgRetirerActeur(this)" title="${_escAttr(te('supprimer'))}" aria-label="${_escAttr(te('supprimer'))}">${EXEC_ICONS.x}</button>
   </div>`;
 }
 

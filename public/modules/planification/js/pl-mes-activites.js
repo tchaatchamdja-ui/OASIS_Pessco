@@ -157,7 +157,7 @@ function planRenderMesActivites() {
                        onchange="planMaSetFiltre('au', this.value)">
             </label>
             <button class="btn-icon-reset" onclick="planMaReinit()"
-                    title="${_esc(tp('reset_filters'))}">${PLAN_ICONS.reset}</button>
+                    title="${_esc(tp('reset_filters'))}" aria-label="${_esc(tp('reset_filters'))}">${PLAN_ICONS.reset}</button>
         </div>
 
         <div class="card">

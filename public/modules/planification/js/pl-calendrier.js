@@ -46,9 +46,9 @@ function planRenderCalendar() {
     // Year navigation
     const yearNav = `
     <div class="calendar-year-nav">
-        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarYear--;planRenderPage();" title="${tp('previous_year')}">${PLAN_ICONS.back}</button>
+        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarYear--;planRenderPage();" title="${tp('previous_year')}" aria-label="${tp('previous_year')}">${PLAN_ICONS.back}</button>
         <h3 style="margin:0;min-width:80px;text-align:center;">${year}</h3>
-        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarYear++;planRenderPage();" title="${tp('next_year')}" style="transform:rotate(180deg)">${PLAN_ICONS.back}</button>
+        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarYear++;planRenderPage();" title="${tp('next_year')}" aria-label="${tp('next_year')}" style="transform:rotate(180deg)">${PLAN_ICONS.back}</button>
     </div>`;
 
     // View toggle
@@ -182,7 +182,7 @@ function _planCalBarreFiltres(CF, refs) {
             ${inspecteurs.map(i => `<option value="${i.id}" ${CF.responsable===i.id?'selected':''}>${_esc((i.nom||'')+' '+(i.prenom||''))}</option>`).join('')}
         </select>
         <input type="text" class="form-input" id="plan-cal-search" placeholder="${tp('search')}" value="${_esc(CF.search)}" oninput="_pesSearchInput(this, () => { PLAN_STATE.calFilters.search=document.getElementById('plan-cal-search').value; planRenderPage(); })">
-        <button class="btn-icon-reset" onclick="PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPage();" title="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>
+        <button class="btn-icon-reset" onclick="PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPage();" title="${tp('reset_filters')}" aria-label="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>
     </div>`;
     return calFilterBar;
 }
@@ -259,9 +259,9 @@ function _planCalVueMois(year, allActivities, refs) {
 
     const monthNav = `
     <div class="calendar-month-nav">
-        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();">${PLAN_ICONS.back}</button>
+        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();" aria-label="${tp("mois_precedent")}" title="${tp("mois_precedent")}">${PLAN_ICONS.back}</button>
         <h4 style="margin:0;min-width:120px;text-align:center;">${fullMonths[cm]}</h4>
-        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();" style="transform:rotate(180deg)">${PLAN_ICONS.back}</button>
+        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();" style="transform:rotate(180deg)" aria-label="${tp("mois_suivant")}" title="${tp("mois_suivant")}">${PLAN_ICONS.back}</button>
     </div>`;
 
     // Filter activities for this month
@@ -354,9 +354,9 @@ function _planCalVueSemaine(year, allActivities, refs) {
 
     const monthNav = `
     <div class="calendar-month-nav">
-        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();">${PLAN_ICONS.back}</button>
+        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();" aria-label="${tp("mois_precedent")}" title="${tp("mois_precedent")}">${PLAN_ICONS.back}</button>
         <h4 style="margin:0;min-width:120px;text-align:center;">${fullMonths[cm]}</h4>
-        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();" style="transform:rotate(180deg)">${PLAN_ICONS.back}</button>
+        <button class="btn btn-icon btn-sm" onclick="PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();" style="transform:rotate(180deg)" aria-label="${tp("mois_suivant")}" title="${tp("mois_suivant")}">${PLAN_ICONS.back}</button>
     </div>`;
 
     // Week number labels

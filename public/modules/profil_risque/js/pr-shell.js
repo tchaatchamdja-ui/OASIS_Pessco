@@ -196,6 +196,9 @@ function setTheme(theme) {
 function setLang(lang) {
     APP_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
+    // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
+    // l'écran dans la langue où il est écrit.
+    oasisPoserLangue(lang);
     document.querySelectorAll('.lang-btn').forEach(b => {
         b.classList.toggle('active', b.textContent.trim().toLowerCase() === lang);
     });
@@ -274,7 +277,7 @@ function renderApp() {
         <div class="app-content">
             <header class="app-header">
                 <div class="header-left">
-                    <button class="btn-icon mobile-menu-btn" onclick="toggleMobileSidebar()">${ICONS.menu}</button>
+                    <button class="btn-icon mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="${t("ouvrir_menu")}" title="${t("ouvrir_menu")}">${ICONS.menu}</button>
                     <div class="header-module-title">
                         ${ICONS.shield}
                         <span>${t('login_title')}${NAV_CONFIG[APP_STATE.currentPage] ? ' / ' + (t(NAV_CONFIG[APP_STATE.currentPage].labelKey) || NAV_CONFIG[APP_STATE.currentPage].labelKey) : ''}</span>
@@ -373,7 +376,7 @@ function showModal(title, bodyHtml, footerHtml = '', size = '') {
     div.className = 'modal-overlay';
     const resizable = size === 'modal-xl' ? 'style="resize:horizontal;overflow:auto;min-width:400px;max-width:95vw;"' : '';
     div.innerHTML = `<div class="modal ${size}" ${resizable}>
-        <div class="modal-header"><h3>${title}</h3><button class="btn-icon" onclick="closeModal()">${ICONS.close}</button></div>
+        <div class="modal-header"><h3>${title}</h3><button class="btn-icon" onclick="closeModal()" aria-label="${t("close")}" title="${t("close")}">${ICONS.close}</button></div>
         <div class="modal-body">${bodyHtml}</div>
         ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}
     </div>`;

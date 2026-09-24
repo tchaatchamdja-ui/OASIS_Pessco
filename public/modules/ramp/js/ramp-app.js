@@ -607,7 +607,7 @@ function rampBarrePays(dansVolet) {
         <span class="ramp-barre-pays-titre">${rt('etats_membres')}</span>
         <div class="ramp-barre-pays-liste">${boutons}</div>
         ${retenus.length ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
-                onclick="rampViderPaysUemoa()" title="${_rAttr(rt('retirer_selection_etats'))}">
+                onclick="rampViderPaysUemoa()" title="${_rAttr(rt('retirer_selection_etats'))}" aria-label="${_rAttr(rt('retirer_selection_etats'))}">
             ${RAMP_ICONS.reset}</button>` : ''}
     </div>`;
 }
@@ -640,7 +640,7 @@ function rampRechercheRonde(champs) {
                value="${_rAttr(F.recherche)}" aria-label="Rechercher : ${_rAttr(couverture)}"
                oninput="rampChercher(this.value)" onblur="rampFermerRechercheSiVide()">
         ${ouverte ? `<button class="btn btn-outline btn-sm ramp-btn-icone ramp-recherche-reset"
-                type="button" title="${_rAttr(rt('vider_recherche'))}"
+                type="button" title="${_rAttr(rt('vider_recherche'))}" aria-label="${_rAttr(rt('vider_recherche'))}"
                 onmousedown="event.preventDefault()"
                 onclick="rampViderRecherche()">${RAMP_ICONS.reset}</button>` : ''}
     </div>`;
@@ -824,7 +824,7 @@ function rampBarreFiltres(options) {
                    oninput="rampChercher(this.value)">
         </div>`;
     const reset = `<button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampResetFiltres()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>`;
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>`;
 
     if (o.cinq) {
         return `
@@ -839,7 +839,7 @@ function rampBarreFiltres(options) {
         ${morceaux.join('')}
         ${recherche}
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampResetFiltres()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
     </div>`;
 }
 
@@ -940,7 +940,7 @@ function rampRenderApp() {
         <div class="app-content">
             <header class="app-header">
                 <div class="header-left">
-                    <button class="btn-icon mobile-menu-btn" onclick="rampToggleSidebar()">${RAMP_ICONS.menu}</button>
+                    <button class="btn-icon mobile-menu-btn" onclick="rampToggleSidebar()" aria-label="${_rAttr(rt("ouvrir_menu"))}" title="${_rAttr(rt("ouvrir_menu"))}">${RAMP_ICONS.menu}</button>
                     <div class="header-module-title">
                         <span style="color:var(--ramp-accent);display:flex;">${RAMP_ICONS.plane}</span>
                         <span>${_rEsc(titre)}</span>
@@ -1218,6 +1218,9 @@ function rampSetTheme(theme) {
 function rampSetLang(lang) {
     RAMP_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
+    // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
+    // l'écran dans la langue où il est écrit.
+    oasisPoserLangue(lang);
     rampRafraichir();
 }
 
@@ -1619,7 +1622,7 @@ function rampLignesInspections() {
         return `<tr class="ramp-depliant" onclick="rampBasculerInspection(${_rArg(i.id)})">
             <td>
                 <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
-                        aria-expanded="${ouvert}" title="${ouvert ? rt('replier') : rt('deplier')}"
+                        aria-expanded="${ouvert}" title="${ouvert ? rt('replier') : rt('deplier')}" aria-label="${ouvert ? rt('replier') : rt('deplier')}"
                         onclick="event.stopPropagation();rampBasculerInspection(${_rArg(i.id)})">
                     ${RAMP_ICONS.chevronBas}
                 </button>
@@ -1639,11 +1642,11 @@ function rampLignesInspections() {
             <td class="ramp-cell-actions">
                 <button class="btn btn-outline btn-sm ramp-btn-icone"
                         onclick="event.stopPropagation();rampOuvrirApercu('${i.id}')"
-                        title="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
+                        title="${_rAttr(rt('apercu_rapport'))}" aria-label="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
                 ${rampEstAdmin() && !rampVuePrestataire() ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                         style="color:#dc2626;border-color:#dc2626;"
                         onclick="event.stopPropagation();rampSupprimerInspection('${i.id}')"
-                        title="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
+                        title="${rt('supprimer')}" aria-label="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
             </td>
         </tr>
         ${ouvert ? `<tr class="ramp-ecart-detail">
@@ -1795,7 +1798,7 @@ function rampLignesEcarts() {
         return `<tr class="ramp-depliant" onclick="rampBasculerEcart(${_rArg(a.id)})">
             <td>
                 <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
-                        aria-expanded="${ouvert}" title="${ouvert ? rt('replier') : rt('deplier')}"
+                        aria-expanded="${ouvert}" title="${ouvert ? rt('replier') : rt('deplier')}" aria-label="${ouvert ? rt('replier') : rt('deplier')}"
                         onclick="event.stopPropagation();rampBasculerEcart(${_rArg(a.id)})">
                     ${RAMP_ICONS.chevronBas}
                 </button>
@@ -1812,10 +1815,10 @@ function rampLignesEcarts() {
             <td class="ramp-cell-actions">
                 <button class="btn btn-outline btn-sm ramp-btn-icone"
                         onclick="event.stopPropagation();rampOuvrirApercu('${i.id}')"
-                        title="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
+                        title="${_rAttr(rt('apercu_rapport'))}" aria-label="${_rAttr(rt('apercu_rapport'))}">${RAMP_ICONS.eye}</button>
                 <button class="btn btn-outline btn-sm ramp-btn-icone ramp-btn-marque"
                         onclick="event.stopPropagation();rampOuvrirPac(${_rArg(a.id)})"
-                        title="${_rAttr(rt(`pac_etat_${etatPac}`))}">
+                        title="${_rAttr(rt(`pac_etat_${etatPac}`))}" aria-label="${_rAttr(rt(`pac_etat_${etatPac}`))}">
                     ${RAMP_ICONS.clipboard}
                     <!-- L'état se dit aussi dans l'infobulle du bouton : la
                          pastille est un repère, non la seule source. -->
@@ -1825,6 +1828,7 @@ function rampLignesEcarts() {
                 <button class="btn btn-outline btn-sm ramp-btn-icone ramp-btn-marque"
                         onclick="event.stopPropagation();rampOuvrirPreuves(${_rArg(a.id)})"
                         title="${_rAttr(rt('preuves_ajouter'))}${pieces
+                            ? ` (${pieces} ${rtn(pieces, 'pr_piece', 'pr_pieces')})` : ''}" aria-label="${_rAttr(rt('preuves_ajouter'))}${pieces
                             ? ` (${pieces} ${rtn(pieces, 'pr_piece', 'pr_pieces')})` : ''}">
                     ${RAMP_ICONS.upload}
                     ${pieces ? `<span class="ramp-btn-badge">${pieces}</span>` : ''}

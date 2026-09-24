@@ -102,7 +102,7 @@ function renderPlans() {
                 <span class="text-muted">- ${sect?.nom || '-'}</span>
                 <span class="badge ${getRiskBadgeClass(risk.risk)}" style="margin-left:auto;">${risk.label || '-'}</span>
                 <span style="font-weight:700;color:var(--primary);">${csrbo} ${t('months')}</span>
-                <button class="btn-icon" onclick="toggleAccordion('${accId}')">${ICONS.chevron}</button>
+                <button class="btn-icon" onclick="toggleAccordion('${accId}')" aria-label="${t("deplier_replier")}" title="${t("deplier_replier")}">${ICONS.chevron}</button>
             </div>
             <div class="accordion-body" id="acc-body-${accId}">${saPlans}</div>
         </div>`;

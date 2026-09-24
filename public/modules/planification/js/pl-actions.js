@@ -372,7 +372,7 @@ async function planLoadComments(planId) {
                         ${validation ? `<span class="disc-tag">${_esc(tp(it.action) || it.action)}</span>` : ''}
                         ${it.plan_version ? `<span class="disc-version">v${it.plan_version}</span>` : ''}
                         <span class="disc-date">${String(date).substring(0, 16).replace('T', ' ')}</span>
-                        ${!validation && mien ? `<button class="btn-icon text-danger btn-xs" onclick="planDeleteComment('${it.id}','${planId}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}
+                        ${!validation && mien ? `<button class="btn-icon text-danger btn-xs" onclick="planDeleteComment('${it.id}','${planId}')" title="${tp('delete')}" aria-label="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}
                     </div>
                     <div class="disc-body">${_esc(texte || '')}</div>
                 </div>

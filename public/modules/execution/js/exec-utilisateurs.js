@@ -117,7 +117,7 @@ function execRenderMesUsersTable() {
                 <td class="exec-mes-users-pw">
                     <span id="mes-pw-mask-${u.id}" style="font-family:monospace;letter-spacing:2px;">••••••••</span>
                     <span id="mes-pw-clear-${u.id}" style="display:none;font-family:monospace;font-weight:600;color:var(--primary);"></span>
-                    ${u.has_temp_password ? `<button class="shell-btn-icon" onclick="execRevealMesUserPassword('${u.id}')" title="${L.voir}">${EXEC_ICONS.eye}</button>` : ''}
+                    ${u.has_temp_password ? `<button class="shell-btn-icon" onclick="execRevealMesUserPassword('${u.id}')" title="${L.voir}" aria-label="${L.voir}">${EXEC_ICONS.eye}</button>` : ''}
                 </td>
                 <td><span class="shell-badge badge-active">${_esc(libelleRole(u.role))}</span></td>
                 <td title="${_escAttr(droits.map(libelleDroit).join(', '))}">
@@ -129,10 +129,10 @@ function execRenderMesUsersTable() {
                 </td>
                 <td><span class="shell-badge ${actif ? 'badge-active' : 'badge-inactive'}">${actif ? L.actif : L.inactif}</span></td>
                 <td class="exec-etats-actions">
-                    <button class="shell-btn-icon" onclick="execOpenMesUserModal('${u.id}')" title="${L.editer}">${EXEC_ICONS.edit}</button>
-                    <button class="shell-btn-icon" onclick="execResetMesUserPw('${u.id}')" title="${L.reinitialiser}">${EXEC_ICONS.reset || EXEC_ICONS.sync}</button>
+                    <button class="shell-btn-icon" onclick="execOpenMesUserModal('${u.id}')" title="${L.editer}" aria-label="${L.editer}">${EXEC_ICONS.edit}</button>
+                    <button class="shell-btn-icon" onclick="execResetMesUserPw('${u.id}')" title="${L.reinitialiser}" aria-label="${L.reinitialiser}">${EXEC_ICONS.reset || EXEC_ICONS.sync}</button>
                     <button class="shell-btn-icon" onclick="execToggleMesUser('${u.id}', ${actif ? 'false' : 'true'})"
-                        title="${actif ? L.desactiver : L.activer}">${actif ? EXEC_ICONS.x || EXEC_ICONS.close : EXEC_ICONS.check}</button>
+                        title="${actif ? L.desactiver : L.activer}" aria-label="${actif ? L.desactiver : L.activer}">${actif ? EXEC_ICONS.x || EXEC_ICONS.close : EXEC_ICONS.check}</button>
                 </td>
             </tr>`;
         }).join('')}</tbody>

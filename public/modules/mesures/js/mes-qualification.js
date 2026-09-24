@@ -134,7 +134,7 @@ function mesSectionInstance() {
             <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
             <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
             <td class="mes-actions">${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="${_mesAttr(mt('retirer'))}" onclick="mesQualRetirerMembre(${i})">${MES_ICONS.x}</button>`}</td>
+                title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}" onclick="mesQualRetirerMembre(${i})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
 
     return mesSection('C', mt('sec_instance'), `
@@ -178,7 +178,7 @@ function mesSectionQualification() {
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${r.date ? _mesEsc(mesDate(r.date)) : mt('reunion')}${
                     r.objet ? ` — ${_mesEsc(r.objet)}` : ''}</span>
-                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_reunion'))}"
+                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_reunion'))}" aria-label="${_mesAttr(mt('retirer_reunion'))}"
                     onclick="mesQualRetirerReunion(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
@@ -307,7 +307,7 @@ function mesSectionMesuresArretees() {
                 <span class="mes-bloc-titre">${_mesEsc(libelleCat)}</span>
                 ${annulee ? `<span class="mes-badge annulee">${mt('st_annulee')}</span>` : ''}
                 ${modifiee ? `<span class="mes-badge notifiee">${mt('st_modifiee')}</span>` : ''}
-                ${offBloc ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_mesure'))}"
+                ${offBloc ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_mesure'))}" aria-label="${_mesAttr(mt('retirer_mesure'))}"
                     onclick="mesQualRetirerMesure(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
@@ -403,7 +403,7 @@ function mesSectionMesuresArretees() {
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
                 title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
-            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}"
                 onclick="mesQualRetirerPiece(${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
 
@@ -448,7 +448,7 @@ function mesBlocRecours(m, i) {
                 ${_mesChemin(pj.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                     href="${_mesAttr(_mesChemin(pj.path))}?nom=${encodeURIComponent(pj.nom || '')}"
                     title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
-                ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
+                ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}"
                     onclick="mesRecoursRetirerPiece(${i}, '${genre}', ${k})">${MES_ICONS.x}</button>`}
             </div>`).join('') || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
         ${ro ? '' : `<input type="file" id="mesRecoursFichier_${i}_${genre}" multiple style="display:none;"
@@ -464,7 +464,7 @@ function mesBlocRecours(m, i) {
             <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
             <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
             <td class="mes-actions">${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="${_mesAttr(mt('retirer'))}" onclick="mesRecoursRetirerMembre(${i}, ${k})">${MES_ICONS.x}</button>`}</td>
+                title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}" onclick="mesRecoursRetirerMembre(${i}, ${k})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
 
     return `<div class="mes-bloc" data-rang="${i}">

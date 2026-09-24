@@ -89,7 +89,7 @@ function renderProfils() {
                     <span class="date-cell">${formatDate(ev.date_validation || ev.date)}</span>
                     <button class="btn btn-primary btn-sm" onclick="exportEvalReport('${ev.id}','word')" title="Exporter Word">${ICONS.word} Exporter Word</button>
                     <button class="btn btn-primary btn-sm" onclick="exportEvalReport('${ev.id}','pdf')" title="Exporter PDF">${ICONS.download} Exporter PDF</button>
-                    ${prCanSupprimerEval(ev) ? `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}">${ICONS.trash}</button>` : ''}
+                    ${prCanSupprimerEval(ev) ? `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}" aria-label="${t('delete')}">${ICONS.trash}</button>` : ''}
                 </div>
                 ${buildSynthesisAccordion(ev, 'profil_' + idx)}
             </div>`;

@@ -221,8 +221,8 @@ function refTable(coll, premier) {
     <tr>
       ${champsVisibles(schema).map((f) => `<td>${fieldValue(f, r)}</td>`).join('')}
       <td class="actions-cell">
-        <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}">${icon('edit', 15)}</button>
-        <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
+        <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
+        <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
       </td>
     </tr>`
     )
@@ -273,8 +273,8 @@ function cfgSectionExigences() {
           <td style="white-space:normal;">${esc(e.libelle || '')}</td>
           <td>${e.statut === 'inactif' ? '<span class="shell-badge badge-inactive">Inactif</span>' : '<span class="shell-badge badge-active">Actif</span>'}</td>
           <td class="actions-cell">
-            <button class="shell-btn-icon" onclick="openExigDrawer('${e.id}')" title="${esc(t('edit'))}">${icon('edit', 15)}</button>
-            <button class="shell-btn-icon" onclick="deleteRef('exigences','${e.id}')" title="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
+            <button class="shell-btn-icon" onclick="openExigDrawer('${e.id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
+            <button class="shell-btn-icon" onclick="deleteRef('exigences','${e.id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
           </td>
         </tr>`
         )
@@ -285,8 +285,8 @@ function cfgSectionExigences() {
           <span class="exig-banner-title"><span class="exig-chevron">${icon('chevronRight', 15)}</span>${esc(key || tr('Sans règlement'))} <span class="shell-badge" style="background:rgba(255,255,255,.2);color:#fff;">${items.length}</span></span>
           <span class="exig-banner-right" onclick="event.stopPropagation()">
             <span class="exig-banner-date">${dateAdoption ? `${tr("Date d'adoption")} : ${esc(fmtDay(dateAdoption))}` : ''}</span>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${escArg(key)})" title="${t('modifier_reglement')}">${icon('edit', 15)}</button>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})" title="${t('ajouter_exigence')}">${icon('plus', 15)}</button>
+            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${escArg(key)})" title="${t('modifier_reglement')}" aria-label="${t('modifier_reglement')}">${icon('edit', 15)}</button>
+            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})" title="${t('ajouter_exigence')}" aria-label="${t('ajouter_exigence')}">${icon('plus', 15)}</button>
           </span>
         </div>
         <div class="exig-body">
@@ -326,7 +326,7 @@ window.openExigDrawer = function (id, presetReglement, presetDate, newGroup) {
   document.getElementById('exigDrawerRoot').innerHTML = `
   <div class="exig-drawer-overlay" onclick="closeExigDrawer()"></div>
   <div class="exig-drawer">
-    <div class="exig-drawer-header"><h3>${id ? tr('Liste des exigences') : (newGroup ? 'Nouveau règlement' : 'Nouvelle exigence')}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()">${icon('x', 18)}</button></div>
+    <div class="exig-drawer-header"><h3>${id ? tr('Liste des exigences') : (newGroup ? 'Nouveau règlement' : 'Nouvelle exigence')}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
     <div class="exig-drawer-body">
       ${regBlock}
       <div class="shell-form-group"><label>${tr('Référence')}</label><input class="shell-input" id="exReference" value="${esc(e ? e.reference : '')}"></div>
@@ -372,7 +372,7 @@ window.openReglementForm = function (reglement) {
   <div class="shell-modal-overlay" style="left:0;top:0;" onclick="closeExigDrawer()"></div>
   <div class="shell-modal-overlay" style="left:0;top:0;background:none;pointer-events:none;">
     <div class="shell-modal" style="max-width:440px;pointer-events:auto;">
-      <div class="shell-modal-header"><h3>${tr('Règlement')} / ${tr("Date d'adoption")}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${tr('Règlement')} / ${tr("Date d'adoption")}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-form-group" style="margin-bottom:.75rem;"><label>${tr('Règlement')}</label><input class="shell-input" id="rgNom" value="${esc(reglement)}"></div>
         <div class="shell-form-group"><label>${tr("Date d'adoption")}</label><input class="shell-input" type="date" id="rgDate" value="${esc(date)}"></div>
@@ -463,11 +463,11 @@ function cfgSectionPersonnel() {
         .join('');
       return `
       <tr>
-        <td><button class="shell-btn-icon pers-toggle" onclick="togglePers('${r.id}')" title="${t('audit_col_details')}" style="transform:rotate(${open ? 90 : 0}deg);">${icon('chevronRight', 14)}</button></td>
+        <td><button class="shell-btn-icon pers-toggle" onclick="togglePers('${r.id}')" title="${t('audit_col_details')}" aria-label="${t('audit_col_details')}" style="transform:rotate(${open ? 90 : 0}deg);">${icon('chevronRight', 14)}</button></td>
         ${cells}
         <td class="actions-cell">
-          <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}">${icon('edit', 15)}</button>
-          <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
+          <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
+          <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
         </td>
       </tr>
       <tr class="pers-detail-row" style="${open ? '' : 'display:none;'}">
@@ -560,7 +560,7 @@ window.openRefModal = function (coll, id, defaultsJson) {
   root.innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:560px;">
-      <div class="shell-modal-header"><h3>${esc(tr(schema.title))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${esc(tr(schema.title))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">${inputs}</div>
       <div class="shell-modal-footer">
         <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${esc(t('cancel'))}</button>
@@ -680,8 +680,8 @@ function statutBadge(s) {
 
 function accActions(coll, id) {
   return `<span style="display:flex;gap:.15rem;" onclick="event.stopPropagation()">
-    <button class="shell-btn-icon" onclick="openRefModal('${coll}','${id}')" title="${esc(t('edit'))}">${icon('edit', 15)}</button>
-    <button class="shell-btn-icon" style="color:#dc2626;" onclick="deleteRef('${coll}','${id}')" title="${esc(t('delete'))}">${icon('trash', 15)}</button>
+    <button class="shell-btn-icon" onclick="openRefModal('${coll}','${id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
+    <button class="shell-btn-icon" style="color:#dc2626;" onclick="deleteRef('${coll}','${id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}">${icon('trash', 15)}</button>
   </span>`;
 }
 
@@ -864,7 +864,7 @@ window.openAacEdit = function () {
   document.getElementById('cfgModalRoot').innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:600px;">
-      <div class="shell-modal-header"><h3>${esc(t('cfg_aac'))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${esc(t('cfg_aac'))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-form-row">
           ${input('aacNom', "Nom de l'administration", aac.nom)}
@@ -1000,7 +1000,7 @@ window.openPosteRegistre = function (nodeId) {
   document.getElementById('cfgModalRoot').innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:640px;">
-      <div class="shell-modal-header"><h3>Registre — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>Registre — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-table-container">
           <table class="shell-table shell-table-compact">
@@ -1022,7 +1022,7 @@ window.orgStartInterim = function (nodeId) {
   document.getElementById('cfgModalRoot').innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:440px;">
-      <div class="shell-modal-header"><h3>Signaler un intérim — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>Signaler un intérim — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.75rem;">Titulaire : <strong>${esc(titNom || 'Poste vacant')}</strong>${t('selectionner_interimaire')}</p>
         <div class="shell-form-group">
@@ -1169,7 +1169,7 @@ function cfgSectionOrganigramme() {
     </div>`;
   };
   const editBtn = (node) =>
-    `<button class="shell-btn-icon org-edit" onclick="event.stopPropagation();openRefModal('organisation','${node.id}')" title="Poste & titulaire">${icon('edit', 14)}</button>`;
+    `<button class="shell-btn-icon org-edit" onclick="event.stopPropagation();openRefModal('organisation','${node.id}')" title="Poste & titulaire" aria-label="Poste & titulaire">${icon('edit', 14)}</button>`;
 
   // Vue liste (indentée) — présentation actuelle
   const renderNodeList = (node, depth) => {
@@ -1418,7 +1418,7 @@ async function renderConfig() {
     <div class="portal-page-header"><h2>${esc(t('config_title'))}</h2></div>
     <div class="cfg-layout">
       <div class="cfg-sidebar ${CFG_COLLAPSED ? 'collapsed' : ''}">
-        <button class="cfg-sidebar-toggle" onclick="toggleCfgSidebar()">${CFG_COLLAPSED ? icon('chevronRight', 14) : icon('chevronLeft', 14)}</button>
+        <button class="cfg-sidebar-toggle" onclick="toggleCfgSidebar()" aria-label="${esc(t("sous_menu_basculer"))}" title="${esc(t("sous_menu_basculer"))}">${CFG_COLLAPSED ? icon('chevronRight', 14) : icon('chevronLeft', 14)}</button>
         ${sidebarItems}
       </div>
       <div class="cfg-content">${content}</div>

@@ -55,7 +55,7 @@ function mesBlocSuiviMesure(m, i) {
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
                 title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
-            ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
+            ${ro ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}"
                 onclick="mesSuiviRetirerPiece(${i}, ${k})">${MES_ICONS.x}</button>`}
         </div>`).join('');
 

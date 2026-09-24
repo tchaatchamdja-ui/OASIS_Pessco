@@ -264,7 +264,7 @@ function _prIndConformiteHtml(D, f, secteurs, searchLower, isAdmin) {
                         <div class="indicator-header">
                             <span class="acc-code">${i.code}</span>
                             <span class="acc-label">${i.label}</span>
-                            ${isAdmin ? `<button class="btn-icon" onclick="openEntityModal('indicateurs_conf','${i.id}')">${ICONS.edit}</button>` : ''}
+                            ${isAdmin ? `<button class="btn-icon" onclick="openEntityModal('indicateurs_conf','${i.id}')" aria-label="${t("edit")}" title="${t("edit")}">${ICONS.edit}</button>` : ''}
                         </div>
                         <div class="criteria-list">
                             ${i.c1 ? `<div class="criteria-item criteria-score-1-bad"><span class="criteria-label">1</span><span class="criteria-text">${i.c1}</span></div>` : ''}
@@ -311,7 +311,7 @@ function _prIndPerformanceHtml(D, f, searchLower, isAdmin) {
                     <div class="indicator-header">
                         <span class="acc-code">${i.code}</span>
                         <span class="acc-label">${i.label}</span>
-                        ${isAdmin ? `<button class="btn-icon" onclick="openEntityModal('indicateurs_perf','${i.id}')">${ICONS.edit}</button>` : ''}
+                        ${isAdmin ? `<button class="btn-icon" onclick="openEntityModal('indicateurs_perf','${i.id}')" aria-label="${t("edit")}" title="${t("edit")}">${ICONS.edit}</button>` : ''}
                     </div>
                     <div class="criteria-list">
                         ${i.c1 ? `<div class="criteria-item criteria-score-1-bad"><span class="criteria-label">1</span><span class="criteria-text">${i.c1}</span></div>` : ''}
@@ -383,7 +383,7 @@ function _prIndComplexiteHtml(D, f, secteurs, sousActivites, searchLower, isAdmi
                             <div class="indicator-header">
                                 <span class="acc-code">${i.code}</span>
                                 <span class="acc-label">${i.label}</span>
-                                ${isAdmin ? `<button class="btn-icon" onclick="openEntityModal('indicateurs_complex','${i.id}')">${ICONS.edit}</button>` : ''}
+                                ${isAdmin ? `<button class="btn-icon" onclick="openEntityModal('indicateurs_complex','${i.id}')" aria-label="${t("edit")}" title="${t("edit")}">${ICONS.edit}</button>` : ''}
                             </div>
                             <div class="criteria-list">
                                 ${i.c1 ? `<div class="criteria-item criteria-score-1-good"><span class="criteria-label">1</span><span class="criteria-text">${i.c1}</span></div>` : ''}

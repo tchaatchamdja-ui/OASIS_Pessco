@@ -83,7 +83,7 @@ function shellShowModal(title, bodyHtml, footerHtml = '') {
     div.id = 'shellModal';
     div.className = 'shell-modal-overlay';
     div.innerHTML = `<div class="shell-modal">
-        <div class="shell-modal-header"><h3>${title}</h3><button class="shell-btn-icon" onclick="shellCloseModal()">${SHELL_ICONS.close}</button></div>
+        <div class="shell-modal-header"><h3>${title}</h3><button class="shell-btn-icon" onclick="shellCloseModal()" aria-label="${te("close")}" title="${te("close")}">${SHELL_ICONS.close}</button></div>
         <div class="shell-modal-body">${bodyHtml}</div>
         ${footerHtml ? `<div class="shell-modal-footer">${footerHtml}</div>` : ''}
     </div>`;

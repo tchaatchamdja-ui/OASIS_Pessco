@@ -158,9 +158,9 @@ function _applyRoleFilter(plans) {
 function _planBoutonSupprimer(p) {
     const amende = (PLAN_STATE.data.plans || []).some((x) => x.parent_plan_id === p.id);
     if (amende) {
-        return `<button class="btn-icon" disabled aria-disabled="true" style="opacity:.35;cursor:not-allowed;" title="${_escAttr(tp('suppression_plan_amende'))}">${PLAN_ICONS.delete}</button>`;
+        return `<button class="btn-icon" disabled aria-disabled="true" style="opacity:.35;cursor:not-allowed;" title="${_escAttr(tp('suppression_plan_amende'))}" aria-label="${_escAttr(tp('suppression_plan_amende'))}">${PLAN_ICONS.delete}</button>`;
     }
-    return `<button class="btn-icon text-danger" onclick="planDeletePlan('${p.id}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>`;
+    return `<button class="btn-icon text-danger" onclick="planDeletePlan('${p.id}')" title="${tp('delete')}" aria-label="${tp('delete')}">${PLAN_ICONS.delete}</button>`;
 }
 
 function _renderPlansTable(plans) {
@@ -211,9 +211,9 @@ function _renderPlansTable(plans) {
                 <td>v${p.version || 1}</td>
                 <td>${p.nb_activites || 0}</td>
                 <td class="actions-cell">
-                    <button class="btn-icon" onclick="planOpenDetail('${p.id}')" title="${tp('details')}">${PLAN_ICONS.eye}</button>
-                    ${_canContribute(p.secteur_id) ? `<button class="btn-icon" onclick="planShowEditModal('${p.id}')" title="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
-                    ${_canValidate(p.secteur_id) ? `<button class="btn-icon" onclick="planArchivePlan('${p.id}')" title="${tp('archive_plan')}" style="color:var(--text-muted);">${PLAN_ICONS.archive || '🗄'}</button>` : ''}
+                    <button class="btn-icon" onclick="planOpenDetail('${p.id}')" title="${tp('details')}" aria-label="${tp('details')}">${PLAN_ICONS.eye}</button>
+                    ${_canContribute(p.secteur_id) ? `<button class="btn-icon" onclick="planShowEditModal('${p.id}')" title="${tp('edit')}" aria-label="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
+                    ${_canValidate(p.secteur_id) ? `<button class="btn-icon" onclick="planArchivePlan('${p.id}')" title="${tp('archive_plan')}" aria-label="${tp('archive_plan')}" style="color:var(--text-muted);">${PLAN_ICONS.archive || '🗄'}</button>` : ''}
                     ${_isAdmin() ? _planBoutonSupprimer(p) : ''}
                 </td>
             </tr>${panneau ? `<tr class="plan-prest-row" id="prestRow_${p.id}" hidden><td colspan="7" style="padding:0;">${panneau}</td></tr>` : ''}`;
@@ -624,18 +624,18 @@ function _renderActivitiesTable(activites, canEdit, plan) {
                                 <td><span class="plan-act-date">${planDateFr(a.date_debut)}</span>${cycleWarn}</td>
                                 <td><span class="plan-act-date">${planDateFr(a.date_fin)}</span></td>
                                 <td class="actions-cell">
-                                    <button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}">${PLAN_ICONS.eye}</button>
+                                    <button class="btn-icon" onclick="this.closest('tr').nextElementSibling.classList.toggle('hidden')" title="${tp('details')}" aria-label="${tp('details')}">${PLAN_ICONS.eye}</button>
                                     ${(() => {
                                         // Rouge dès qu'un commentaire de validation existe ;
                                         // le clic ouvre le volet de lecture.
                                         const cv = (a.commentaire_validation || '').trim();
                                         const rouge = !!cv || hasRejet;
-                                        return `<button class="btn-icon act-comment-flag${rouge ? ' has-comment' : ''}" onclick="planShowValidationComment('${a.id}')" title="${tp('validation_comment')}">${PLAN_ICONS.comment}</button>`;
+                                        return `<button class="btn-icon act-comment-flag${rouge ? ' has-comment' : ''}" onclick="planShowValidationComment('${a.id}')" title="${tp('validation_comment')}" aria-label="${tp('validation_comment')}">${PLAN_ICONS.comment}</button>`;
                                     })()}
                                     ${(canEdit && Number(a.verrouillee) === 1)
                                         ? `<span class="plan-act-verrou" title="${_esc(tp('activite_verrouillee'))}">${PLAN_ICONS.lock || '🔒'}</span>`
-                                        : `${canEdit ? `<button class="btn-icon" onclick="planShowActivityModal('${a.plan_id}','${a.id}')" title="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
-                                    ${canEdit ? `<button class="btn-icon text-danger" onclick="planDeleteActivity('${a.id}')" title="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}`}
+                                        : `${canEdit ? `<button class="btn-icon" onclick="planShowActivityModal('${a.plan_id}','${a.id}')" title="${tp('edit')}" aria-label="${tp('edit')}">${PLAN_ICONS.edit}</button>` : ''}
+                                    ${canEdit ? `<button class="btn-icon text-danger" onclick="planDeleteActivity('${a.id}')" title="${tp('delete')}" aria-label="${tp('delete')}">${PLAN_ICONS.delete}</button>` : ''}`}
                                 </td>
                             </tr>
                             <tr class="hidden activity-detail-row">

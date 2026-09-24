@@ -21,9 +21,9 @@ function mesRenderParametres() {
         <td style="text-align:center;">${mesTypesDe(c.code).length}</td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirCategorie('${c.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirCategorie('${c.id}')" title="${_mesAttr(mt('modifier'))}" aria-label="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerCategorie('${c.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerCategorie('${c.id}')" title="${_mesAttr(mt('supprimer'))}" aria-label="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
         || `<tr><td colspan="3" class="mes-table-vide">${mt('aucune_categorie')}</td></tr>`;
 
@@ -32,9 +32,9 @@ function mesRenderParametres() {
         <td><strong>${_mesEsc(t.libelle)}</strong></td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirType('${t.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirType('${t.id}')" title="${_mesAttr(mt('modifier'))}" aria-label="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerType('${t.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerType('${t.id}')" title="${_mesAttr(mt('supprimer'))}" aria-label="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
         || `<tr><td colspan="3" class="mes-table-vide">${mt('aucun_type')}</td></tr>`;
 
@@ -43,9 +43,9 @@ function mesRenderParametres() {
             <div style="font-size:.72rem;color:var(--text-muted);font-family:ui-monospace,Menlo,monospace;">${_mesEsc(t.code)}</div></td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirTypeInvestigation('${t.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirTypeInvestigation('${t.id}')" title="${_mesAttr(mt('modifier'))}" aria-label="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerTypeInvestigation('${t.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerTypeInvestigation('${t.id}')" title="${_mesAttr(mt('supprimer'))}" aria-label="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
         || `<tr><td colspan="2" class="mes-table-vide">${mt('aucun_type_inv')}</td></tr>`;
 
@@ -54,9 +54,9 @@ function mesRenderParametres() {
             <div style="font-size:.72rem;color:var(--text-muted);font-family:ui-monospace,Menlo,monospace;">${_mesEsc(c.code)}</div></td>
         <td class="mes-actions">
             ${editeur ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                onclick="mesOuvrirComite('${c.id}')" title="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
+                onclick="mesOuvrirComite('${c.id}')" title="${_mesAttr(mt('modifier'))}" aria-label="${_mesAttr(mt('modifier'))}">${MES_ICONS.edit}</button>` : ''}
             ${supprimable ? `<button class="btn btn-outline btn-sm mes-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="mesSupprimerComite('${c.id}')" title="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
+                onclick="mesSupprimerComite('${c.id}')" title="${_mesAttr(mt('supprimer'))}" aria-label="${_mesAttr(mt('supprimer'))}">${MES_ICONS.delete}</button>` : ''}
         </td></tr>`).join('')
         || `<tr><td colspan="2" class="mes-table-vide">${mt('aucun_comite')}</td></tr>`;
 
@@ -171,7 +171,7 @@ function mesAfficherModal() {
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
                     <span style="flex:1;">${co.id ? mt('modifier_comite') : mt('nouveau_comite')}</span>
-                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
+                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
@@ -197,7 +197,7 @@ function mesAfficherModal() {
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
                     <span style="flex:1;">${ti.id ? mt('modifier_type_inv') : mt('nouveau_type_inv')}</span>
-                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
+                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
@@ -221,7 +221,7 @@ function mesAfficherModal() {
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
                     <span style="flex:1;">${c.id ? mt('modifier_categorie') : mt('nouvelle_categorie')}</span>
-                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
+                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">
@@ -245,7 +245,7 @@ function mesAfficherModal() {
             <div class="mes-modal" onclick="event.stopPropagation();">
                 <div class="mes-modal-header">
                     <span style="flex:1;">${t.id ? mt('modifier_type') : mt('nouveau_type')}</span>
-                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()">${MES_ICONS.close}</button>
+                    <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerModal()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-champ">

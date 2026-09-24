@@ -138,12 +138,12 @@ function rampPoiLignes() {
                     : (p.statut === 'soumis' ? 'Soumise' : 'Brouillon'))}</span>
                 ${p.pieces ? `<div class="ramp-desc">${p.pieces} pièce${p.pieces > 1 ? 's' : ''}</div>` : ''}</td>
             <td class="ramp-cell-actions">
-                <button class="btn btn-outline btn-sm ramp-btn-icone" title="${valide ? 'Consulter' : 'Poursuivre la saisie'}"
+                <button class="btn btn-outline btn-sm ramp-btn-icone" title="${valide ? 'Consulter' : 'Poursuivre la saisie'}" aria-label="${valide ? 'Consulter' : 'Poursuivre la saisie'}"
                         onclick="event.stopPropagation();rampOuvrirPoi(${_rArg(p.id)})">
                     ${valide ? RAMP_ICONS.eye : RAMP_ICONS.edit}</button>
                 ${(!valide && RAMP_STATE.poi.peutSaisir) || rampEstAdmin()
                     ? `<button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                               onclick="event.stopPropagation();rampSupprimerPoi(${_rArg(p.id)})" title="${rt('supprimer')}">
+                               onclick="event.stopPropagation();rampSupprimerPoi(${_rArg(p.id)})" title="${rt('supprimer')}" aria-label="${rt('supprimer')}">
                            ${RAMP_ICONS.delete}</button>` : ''}
             </td>
         </tr>`;
@@ -256,7 +256,7 @@ function rampRenderPoi() {
                    oninput="rampPoiChercher(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampPoiReset()"
-                title="${rt('f_reinitialiser')}">${RAMP_ICONS.reset}</button>
+                title="${rt('f_reinitialiser')}" aria-label="${rt('f_reinitialiser')}">${RAMP_ICONS.reset}</button>
     </div>
     <div id="rampPoiZone">${rampPoiLignes()}</div>`;
 }
@@ -557,7 +557,7 @@ function rampPoiItems() {
             <td colspan="5">
                 <div class="ramp-gi-entete">
                     <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
-                            aria-expanded="${ouvert}" title="${ouvert ? 'Replier' : 'Déplier'} ce groupe"
+                            aria-expanded="${ouvert}" title="${ouvert ? 'Replier' : 'Déplier'} ce groupe" aria-label="${ouvert ? 'Replier' : 'Déplier'} ce groupe"
                             onclick="event.stopPropagation();rampPoiBasculerGroupe(${_rArg(groupe.code)})">
                         ${RAMP_ICONS.chevronBas}
                     </button>
@@ -708,7 +708,7 @@ function rampPoiEntete() {
                             ${e.aeronef === v ? 'selected' : ''}>${_rEsc(v)}</option>`).join('')}
                     </select>
                     <button class="btn btn-outline btn-sm ramp-btn-icone" type="button" ${d}
-                            title="${rt('rechercher_modele')}"
+                            title="${rt('rechercher_modele')}" aria-label="${rt('rechercher_modele')}"
                             onclick="rampOuvrirSelecteurAeronef()">${RAMP_ICONS.search}</button>
                 </div>
             </div>
@@ -1165,7 +1165,7 @@ function rampPoiCommentaires() {
                             ${c.cible === v ? 'selected' : ''}>${_rEsc(l)}</option>`).join('')}
                     </optgroup>`).join('')}
                 </select>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('retirer_commentaire')}"
+                <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('retirer_commentaire')}" aria-label="${rt('retirer_commentaire')}"
                         onclick="rampPoiRetirerCommentaire(${i})">${RAMP_ICONS.x}</button>
             </div>
             <textarea class="ramp-input" rows="2" placeholder="${rt('observation_valideur')}"

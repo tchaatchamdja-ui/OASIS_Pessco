@@ -655,6 +655,7 @@ const EXEC_TR = {
         preuve_commentaire: 'Commentaire',
         preuve_commentaire_aide: 'À l\'attention de l\'AAC (facultatif)',
         back: 'Retour',
+        ouvrir_menu: 'Ouvrir le menu',
         close: 'Fermer',
         edit: 'Modifier',
         delete: 'Supprimer',

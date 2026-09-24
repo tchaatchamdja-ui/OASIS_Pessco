@@ -156,8 +156,8 @@ function cfgSectionInstances() {
       <td>${i.active ? '<span class="shell-badge badge-active">Active</span>' : '<span class="shell-badge badge-inactive">' + t('desactivee') + '</span>'}</td>
       <td class="actions-cell">
         ${i.locale ? '<span style="color:var(--text-muted);font-size:.75rem;">—</span>' : `
-        <button class="shell-btn-icon" onclick="basculerInstance(${escArg(i.nom)})" title="${i.active ? 'Désactiver' : 'Réactiver'}">${icon('power', 15)}</button>
-        <button class="shell-btn-icon" onclick="supprimerInstance(${escArg(i.nom)})" title="${i.donnees ? 'Suppression impossible : des données y sont rattachées' : 'Supprimer'}" ${i.donnees ? 'disabled style="opacity:.35;cursor:default;"' : 'style="color:#dc2626;"'}>${icon('trash', 15)}</button>`}
+        <button class="shell-btn-icon" onclick="basculerInstance(${escArg(i.nom)})" title="${i.active ? 'Désactiver' : 'Réactiver'}" aria-label="${i.active ? 'Désactiver' : 'Réactiver'}">${icon('power', 15)}</button>
+        <button class="shell-btn-icon" onclick="supprimerInstance(${escArg(i.nom)})" title="${i.donnees ? 'Suppression impossible : des données y sont rattachées' : 'Supprimer'}" aria-label="${i.donnees ? 'Suppression impossible : des données y sont rattachées' : 'Supprimer'}" ${i.donnees ? 'disabled style="opacity:.35;cursor:default;"' : 'style="color:#dc2626;"'}>${icon('trash', 15)}</button>`}
       </td>
     </tr>`).join('');
   return `

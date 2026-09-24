@@ -1776,7 +1776,7 @@ function _execHpBoutonModifier(n) {
   const ouvert = !n.statut || n.statut === 'brouillon';
   return `<button class="btn-icon" ${ouvert ? '' : 'disabled'}
     ${ouvert ? `onclick="execProcNouvelleActivite('${n.id}')"` : ''}
-    title="${_escAttr(ouvert ? te('edit') : te('hp_modif_fermee'))}">${EXEC_ICONS.edit}</button>`;
+    title="${_escAttr(ouvert ? te('edit') : te('hp_modif_fermee'))}" aria-label="${_escAttr(ouvert ? te('edit') : te('hp_modif_fermee'))}">${EXEC_ICONS.edit}</button>`;
 }
 
 // Groupe « Activités Hors Planification » : les activités déclenchées
@@ -1819,7 +1819,7 @@ function execProcGroupeHorsPlan(F) {
       <td>${execProcStatutBadge(n, dos)}</td>
       <td style="white-space:nowrap;text-align:center;">
         ${_execHpBoutonModifier(n)}
-        <button class="btn-icon" onclick="execProcHistorique('hors-plan','${n.id}')" title="${te('historique')}">${EXEC_ICONS.clock}</button>
+        <button class="btn-icon" onclick="execProcHistorique('hors-plan','${n.id}')" title="${te('historique')}" aria-label="${te('historique')}">${EXEC_ICONS.clock}</button>
       </td>
     </tr>`;
   }).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:1rem;">${te('no_data')}</td></tr>`;

@@ -50,7 +50,7 @@ function rampPoiOuvrirPartage() {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('par_titre')} — ${_rEsc(p.reference || '')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <p class="ramp-sous-titre">${rt('par_aide')}</p>

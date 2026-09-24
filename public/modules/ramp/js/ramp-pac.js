@@ -89,7 +89,7 @@ function rampPacPreuves(action, modifiable, sansLabel) {
             <a class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('telecharger')}"
                href="${RAMP_API}/ecarts/${_rAttr(e.id)}/preuves/${_rAttr(p.id)}/fichier">${RAMP_ICONS.download}</a>
             ${modifiable ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
-                    style="color:#dc2626;border-color:#dc2626;" title="Retirer"
+                    style="color:#dc2626;border-color:#dc2626;" title="Retirer" aria-label="Retirer"
                     onclick="rampSupprimerPreuve(${_rArg(p.id)})">${RAMP_ICONS.delete}</button>` : ''}
         </div>`).join('');
 
@@ -173,7 +173,7 @@ function rampPacModalRenvoi() {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('renvoyer_plan')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <p class="ramp-note">
@@ -204,7 +204,7 @@ function rampPacModalCloture() {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('cloturer_ecart')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <p class="ramp-note">
@@ -675,7 +675,7 @@ function rampToutesPreuves(modifiable) {
             <a class="btn btn-outline btn-sm ramp-btn-icone" title="${_rAttr(rt('telecharger'))}"
                href="${RAMP_API}/ecarts/${_rAttr(e.id)}/preuves/${_rAttr(p.id)}/fichier">${RAMP_ICONS.download}</a>
             ${modifiable ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
-                    style="color:#dc2626;border-color:#dc2626;" title="${_rAttr(rt('retirer'))}"
+                    style="color:#dc2626;border-color:#dc2626;" title="${_rAttr(rt('retirer'))}" aria-label="${_rAttr(rt('retirer'))}"
                     onclick="rampSupprimerPreuve(${_rArg(p.id)})">${RAMP_ICONS.delete}</button>` : ''}
         </div>`).join('');
 
@@ -699,7 +699,7 @@ function rampOuvrirDepotPreuve(action) {
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('pr_ajouter_une')}${action
                     ? ` — ${action === 'curative' ? rt('pr_action_curative') : rt('pr_action_corrective')}` : ''}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 ${action ? '' : `<div class="ramp-champ">

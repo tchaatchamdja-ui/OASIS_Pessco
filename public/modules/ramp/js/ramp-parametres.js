@@ -80,9 +80,9 @@ function rampLignesDepots() {
         <td class="ramp-cell-actions">
             ${rampPeutModifierDepot(d)
                 ? `<button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampOuvrirDepot('${d.id}')"
-                           title="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
+                           title="${_rAttr(rt('modifier'))}" aria-label="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
                    <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                           onclick="rampSupprimerDepot('${d.id}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
+                           onclick="rampSupprimerDepot('${d.id}')" title="${_rAttr(rt('supprimer'))}" aria-label="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
                 : '<span style="color:var(--text-muted);font-size:.78rem;">—</span>'}
         </td>
     </tr>`).join('');
@@ -122,7 +122,7 @@ function rampRenderDepot() {
                    oninput="rampChercherDepot(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampResetFiltresDepot()"
-                title="${rt('reinitialiser_filtres')}">${RAMP_ICONS.reset}</button>
+                title="${rt('reinitialiser_filtres')}" aria-label="${rt('reinitialiser_filtres')}">${RAMP_ICONS.reset}</button>
     </div>
     <div class="ramp-actions-bar">
         <span style="flex:1;"></span>
@@ -176,7 +176,7 @@ function rampOuvrirDepot(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${nouveau ? 'Déposer un fichier' : 'Modifier le dépôt'}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 ${nouveau ? `
@@ -332,11 +332,11 @@ function rampLigneContact(c) {
         <td class="ramp-cell-actions">
             ${gerable ? `
             <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampOuvrirContact('${c.id}')"
-                    title="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
+                    title="${_rAttr(rt('modifier'))}" aria-label="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampBasculerContact('${c.id}')"
-                    title="${_rAttr(c.actif === false ? rt('activer') : rt('desactiver'))}">${RAMP_ICONS.toggle}</button>
+                    title="${_rAttr(c.actif === false ? rt('activer') : rt('desactiver'))}" aria-label="${_rAttr(c.actif === false ? rt('activer') : rt('desactiver'))}">${RAMP_ICONS.toggle}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                    onclick="rampSupprimerContact('${c.id}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
+                    onclick="rampSupprimerContact('${c.id}')" title="${_rAttr(rt('supprimer'))}" aria-label="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
         : '<span class="ramp-sous-ligne">—</span>'}
         </td>
     </tr>`;
@@ -375,7 +375,7 @@ function rampOuvrirContact(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${c ? 'Modifier le contact' : 'Nouveau contact'}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-champ">
@@ -558,11 +558,11 @@ function rampRenderParametres() {
         ${modifiable ? `
         <button class="btn btn-outline btn-sm ramp-btn-icone"
                 onclick="event.stopPropagation();${ouvrir || 'rampOuvrirParam'}('${p.id}')"
-                title="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
+                title="${_rAttr(rt('modifier'))}" aria-label="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="event.stopPropagation();rampBasculerParam('${p.id}')"
-                title="${p.actif === false ? _rAttr(rt('activer')) : _rAttr(rt('desactiver'))}">${RAMP_ICONS.toggle}</button>
+                title="${p.actif === false ? _rAttr(rt('activer')) : _rAttr(rt('desactiver'))}" aria-label="${p.actif === false ? _rAttr(rt('activer')) : _rAttr(rt('desactiver'))}">${RAMP_ICONS.toggle}</button>
         <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                onclick="event.stopPropagation();rampSupprimerParam('${p.id}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>` : ''}
+                onclick="event.stopPropagation();rampSupprimerParam('${p.id}')" title="${_rAttr(rt('supprimer'))}" aria-label="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>` : ''}
     </td>`;
 
     // ── Un bloc par famille portée par le sous-menu ──
@@ -616,7 +616,7 @@ function rampRenderParametres() {
                                  cliquable, mais le bouton dit où appuyer. -->
                             <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
                                     aria-expanded="${ouvert}"
-                                    title="${ouvert ? _rAttr(rt('replier')) : _rAttr(rt('deplier'))}"
+                                    title="${ouvert ? _rAttr(rt('replier')) : _rAttr(rt('deplier'))}" aria-label="${ouvert ? _rAttr(rt('replier')) : _rAttr(rt('deplier'))}"
                                     onclick="event.stopPropagation();rampBasculerGroupeItems(${_rArg(id)})">
                                 ${RAMP_ICONS.chevronBas}
                             </button>
@@ -736,7 +736,7 @@ function rampOuvrirParam(id, famille) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${p ? rt('modifier') : rt('ajouter')} — ${_rEsc(rt(f.cleT))}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 ${f.code ? `<div class="ramp-champ">
@@ -808,7 +808,7 @@ function rampOuvrirGroupe(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${g ? 'Modifier le groupe' : "Nouveau groupe d'items"}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <p class="ramp-note">
@@ -1021,13 +1021,13 @@ function rampPaysResultats() {
         </td>
         <td class="ramp-cell-actions">
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}" aria-label="${rt('modifier')}"
                     onclick="rampOuvrirPays(${_rArg(p.id)})">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone"
-                    title="${p.actif === false ? 'Réactiver' : 'Désactiver'}"
+                    title="${p.actif === false ? 'Réactiver' : 'Désactiver'}" aria-label="${p.actif === false ? 'Réactiver' : 'Désactiver'}"
                     onclick="rampBasculerPays(${_rArg(p.id)})">${RAMP_ICONS.toggle}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                    onclick="rampSupprimerPays(${_rArg(p.id)})" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
+                    onclick="rampSupprimerPays(${_rArg(p.id)})" title="${_rAttr(rt('supprimer'))}" aria-label="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>`
                 : `<span class="ramp-badge ${p.actif === false ? 'inactif' : 'actif'}">
                     ${p.actif === false ? 'Inactif' : 'Actif'}</span>`}
         </td>
@@ -1085,7 +1085,7 @@ function rampRenderPays() {
                    oninput="rampPaysChercher(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampPaysReset()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
     </div>
     <div id="rampPaysZone">${rampPaysResultats()}</div>`;
 }
@@ -1098,7 +1098,7 @@ function rampOuvrirPays(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${p ? rt('modifier') : rt('ajouter')} — ${rt('p_onglet_pays')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-paire">
@@ -1315,13 +1315,13 @@ function rampAptResultats() {
             <span class="ramp-badge ${a.actif === false ? 'inactif' : 'actif'}">
                 ${a.actif === false ? 'Inactif' : 'Actif'}</span>
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}" aria-label="${rt('modifier')}"
                     onclick="rampOuvrirAeroport('${_rAttr(a.id)}')">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone"
-                    title="${a.actif === false ? 'Réactiver' : 'Désactiver'}"
+                    title="${a.actif === false ? 'Réactiver' : 'Désactiver'}" aria-label="${a.actif === false ? 'Réactiver' : 'Désactiver'}"
                     onclick="rampBasculerAeroport('${_rAttr(a.id)}')">${RAMP_ICONS.toggle}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                    onclick="rampSupprimerAeroport('${_rAttr(a.id)}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>` : ''}
+                    onclick="rampSupprimerAeroport('${_rAttr(a.id)}')" title="${_rAttr(rt('supprimer'))}" aria-label="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>` : ''}
         </td>
     </tr>`;
 
@@ -1336,7 +1336,7 @@ function rampAptResultats() {
                 <div class="ramp-gi-entete">
                     <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
                             aria-expanded="${ouvert}"
-                            title="${ouvert ? 'Replier' : 'Déplier'} ce pays"
+                            title="${ouvert ? 'Replier' : 'Déplier'} ce pays" aria-label="${ouvert ? 'Replier' : 'Déplier'} ce pays"
                             onclick="event.stopPropagation();rampAptBasculer(${_rArg(pays)})">
                         ${RAMP_ICONS.chevronBas}
                     </button>
@@ -1348,7 +1348,7 @@ function rampAptResultats() {
             </td>
             <td class="ramp-cell-actions">
                 ${modifiable ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
-                        title="Ajouter un aéroport au ${_rAttr(pays)}"
+                        title="Ajouter un aéroport au ${_rAttr(pays)}" aria-label="Ajouter un aéroport au ${_rAttr(pays)}"
                         onclick="event.stopPropagation();rampOuvrirAeroport('', ${_rArg(pays)})"
                         >${RAMP_ICONS.add}</button>` : '—'}
             </td>
@@ -1408,7 +1408,7 @@ function rampRenderAeroports() {
                    oninput="rampAptChercher(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampAptReset()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
     </div>
     <div id="rampAptZone">${rampAptResultats()}</div>`;
 }
@@ -1430,7 +1430,7 @@ function rampOuvrirAeroport(id, pays) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${a ? rt('modifier') : rt('ajouter')} — ${rt('p_onglet_aeroports')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-paire">
@@ -1621,13 +1621,13 @@ function rampAerResultats() {
             <span class="ramp-badge ${a.actif === false ? 'inactif' : 'actif'}">
                 ${a.actif === false ? 'Inactif' : 'Actif'}</span>
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier')}" aria-label="${rt('modifier')}"
                     onclick="rampOuvrirAeronef('${_rAttr(a.id)}')">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone"
-                    title="${a.actif === false ? 'Réactiver' : 'Désactiver'}"
+                    title="${a.actif === false ? 'Réactiver' : 'Désactiver'}" aria-label="${a.actif === false ? 'Réactiver' : 'Désactiver'}"
                     onclick="rampBasculerAeronef('${_rAttr(a.id)}')">${RAMP_ICONS.toggle}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                    onclick="rampSupprimerAeronef('${_rAttr(a.id)}')" title="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>` : ''}
+                    onclick="rampSupprimerAeronef('${_rAttr(a.id)}')" title="${_rAttr(rt('supprimer'))}" aria-label="${_rAttr(rt('supprimer'))}">${RAMP_ICONS.delete}</button>` : ''}
         </td>
     </tr>`;
 
@@ -1644,7 +1644,7 @@ function rampAerResultats() {
                 <div class="ramp-gi-entete">
                     <button class="ramp-extension${ouvert ? ' ouvert' : ''}" type="button"
                             aria-expanded="${ouvert}"
-                            title="${ouvert ? 'Replier' : 'Déplier'} cette désignation"
+                            title="${ouvert ? 'Replier' : 'Déplier'} cette désignation" aria-label="${ouvert ? 'Replier' : 'Déplier'} cette désignation"
                             onclick="event.stopPropagation();rampAerBasculer(${_rArg(designation)})">
                         ${RAMP_ICONS.chevronBas}
                     </button>
@@ -1655,7 +1655,7 @@ function rampAerResultats() {
             </td>
             <td class="ramp-cell-actions">
                 ${modifiable ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
-                        title="Ajouter une variante à ${_rAttr(designation)}"
+                        title="Ajouter une variante à ${_rAttr(designation)}" aria-label="Ajouter une variante à ${_rAttr(designation)}"
                         onclick="event.stopPropagation();rampOuvrirAeronef('', ${_rArg(designation)})"
                         >${RAMP_ICONS.add}</button>` : '—'}
             </td>
@@ -1742,7 +1742,7 @@ function rampRenderAeronefs() {
                    oninput="rampAerChercher(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampAerReset()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
     </div>
     <div id="rampAerZone">${rampAerResultats()}</div>`;
 }
@@ -1756,7 +1756,7 @@ function rampOuvrirAeronef(id, designation) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${a ? rt('modifier') : rt('ajouter')} — ${rt('p_onglet_aeronefs')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-paire">

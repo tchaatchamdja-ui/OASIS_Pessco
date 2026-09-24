@@ -1210,11 +1210,11 @@ function execRefsLigneSegment(objet, index, s, total) {
       </div>
       <code class="exec-ref-rendu">${_esc(rendu)}</code>
       <div class="exec-ref-boutons">
-        <button class="btn btn-sm btn-outline btn-icon-only" ${off || (index === 0 ? 'disabled' : '')} title="Monter"
+        <button class="btn btn-sm btn-outline btn-icon-only" ${off || (index === 0 ? 'disabled' : '')} title="Monter" aria-label="Monter"
           onclick="execRefsDeplacer('${objet}',${index},-1)">${EXEC_ICONS.chevron || '↑'}</button>
-        <button class="btn btn-sm btn-outline btn-icon-only" ${off || (index === total - 1 ? 'disabled' : '')} title="Descendre"
+        <button class="btn btn-sm btn-outline btn-icon-only" ${off || (index === total - 1 ? 'disabled' : '')} title="Descendre" aria-label="Descendre"
           onclick="execRefsDeplacer('${objet}',${index},1)">${EXEC_ICONS.chevronDown || '↓'}</button>
-        <button class="btn btn-sm btn-icon-only exec-btn-rejet" ${off} title="Retirer"
+        <button class="btn btn-sm btn-icon-only exec-btn-rejet" ${off} title="Retirer" aria-label="Retirer"
           onclick="execRefsRetirer('${objet}',${index})">${EXEC_ICONS.close || '✕'}</button>
       </div>
     </div>`;

@@ -616,6 +616,7 @@ EXEC_TR.en = {
         preuve_commentaire: 'Comment',
         preuve_commentaire_aide: 'For the CAA (optional)',
         back: 'Back',
+        ouvrir_menu: 'Open the menu',
         close: 'Close',
         edit: 'Edit',
         delete: 'Delete',

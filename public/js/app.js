@@ -228,7 +228,7 @@ function searchInputHtml(ph) {
       <input class="cfg-search-input" type="search" placeholder="${libelle}" aria-label="${libelle}"
              value="${esc(PORTAIL_RECHERCHE.valeur)}"
              oninput="portailChercher(this)" onblur="portailFermerRechercheSiVide()">
-      ${ouverte ? `<button class="shell-btn-icon cfg-search-reset" type="button" title="${t('vider_recherche')}"
+      ${ouverte ? `<button class="shell-btn-icon cfg-search-reset" type="button" title="${t('vider_recherche')}" aria-label="${t('vider_recherche')}"
               onmousedown="event.preventDefault()" onclick="portailViderRecherche()">${icon('x', 14)}</button>` : ''}
     </div>`;
 }
@@ -330,7 +330,7 @@ window.openImportModal = function (coll, title) {
   document.getElementById('cfgModalRoot').innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:460px;">
-      <div class="shell-modal-header"><h3>Importer Excel — ${esc(title)}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeRefModal()">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>Importer Excel — ${esc(title)}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeRefModal()" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem;">${t('import_marche_a_suivre')}</p>
         <a class="shell-btn shell-btn-outline" href="/api/referentiels/${coll}/template" style="margin-bottom:1rem;">${icon('download', 14)} Télécharger le modèle (.xlsx)</a>
@@ -601,13 +601,13 @@ async function renderUsers() {
       const actions = [];
       if (USER_TAB === 'AAC') {
         const already = (REFS.inspecteurs || []).some((p) => (p.email || '').toLowerCase() === (u.email || u.username).toLowerCase());
-        actions.push(`<button class="shell-btn-icon" data-topersonnel="${esc(u.username)}" title="${already ? 'Déjà dans le Personnel AAC' : 'Générer dans le Personnel AAC'}" ${already ? 'disabled style="opacity:.4;cursor:default;"' : ''}>${icon('userPlus', 15)}</button>`);
+        actions.push(`<button class="shell-btn-icon" data-topersonnel="${esc(u.username)}" title="${already ? 'Déjà dans le Personnel AAC' : 'Générer dans le Personnel AAC'}" aria-label="${already ? 'Déjà dans le Personnel AAC' : 'Générer dans le Personnel AAC'}" ${already ? 'disabled style="opacity:.4;cursor:default;"' : ''}>${icon('userPlus', 15)}</button>`);
       }
-      if (isSuper) actions.push(`<button class="shell-btn-icon" data-edit="${esc(u.username)}" title="${t('edit')}">${icon('edit', 15)}</button>`);
-      if (u.locked) actions.push(`<button class="shell-btn-icon" data-action="unlock" data-user="${esc(u.username)}" title="${esc(t('action_unlock'))}">${icon('unlock', 15)}</button>`);
+      if (isSuper) actions.push(`<button class="shell-btn-icon" data-edit="${esc(u.username)}" title="${t('edit')}" aria-label="${t('edit')}">${icon('edit', 15)}</button>`);
+      if (u.locked) actions.push(`<button class="shell-btn-icon" data-action="unlock" data-user="${esc(u.username)}" title="${esc(t('action_unlock'))}" aria-label="${esc(t('action_unlock'))}">${icon('unlock', 15)}</button>`);
       const canToggle = u.username !== ME.user.username && !(ME.user.role === 'ADMIN' && (u.role === 'ADMIN' || u.role === 'SUPERADMIN'));
-      if (canToggle) actions.push(`<button class="shell-btn-icon" data-action="toggle-active" data-user="${esc(u.username)}" title="${t('action_toggle')}">${icon('power', 15)}</button>`);
-      actions.push(`<button class="shell-btn-icon" data-action="reset-password" data-user="${esc(u.username)}" title="${t('reinitialiser_mdp')}">${icon('key', 15)}</button>`);
+      if (canToggle) actions.push(`<button class="shell-btn-icon" data-action="toggle-active" data-user="${esc(u.username)}" title="${t('action_toggle')}" aria-label="${t('action_toggle')}">${icon('power', 15)}</button>`);
+      actions.push(`<button class="shell-btn-icon" data-action="reset-password" data-user="${esc(u.username)}" title="${t('reinitialiser_mdp')}" aria-label="${t('reinitialiser_mdp')}">${icon('key', 15)}</button>`);
       let prestaCell = '';
       if (isPresta) {
         prestaCell = isSuper
@@ -644,7 +644,7 @@ async function renderUsers() {
     </div>
     <div class="cfg-layout users-layout">
       <div class="cfg-sidebar ${USER_COLLAPSED ? 'collapsed' : ''}">
-        <button class="cfg-sidebar-toggle" onclick="toggleUserSidebar()">${USER_COLLAPSED ? icon('chevronRight', 14) : icon('chevronLeft', 14)}</button>
+        <button class="cfg-sidebar-toggle" onclick="toggleUserSidebar()" aria-label="${esc(t("sous_menu_basculer"))}" title="${esc(t("sous_menu_basculer"))}">${USER_COLLAPSED ? icon('chevronRight', 14) : icon('chevronLeft', 14)}</button>
         ${sidebarItems}
       </div>
       <div class="cfg-content">
@@ -718,7 +718,7 @@ function showModulesModal(u) {
   root.innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:520px;">
-      <div class="shell-modal-header"><h3>Accès aux modules — ${esc(u.email || u.username)}</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>Accès aux modules — ${esc(u.email || u.username)}</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body"><div class="multi-check">${items}</div></div>
       <div class="shell-modal-footer">
         <button class="shell-btn shell-btn-outline" onclick="closeUserModal()">${esc(t('cancel'))}</button>
@@ -744,7 +744,7 @@ function showEditUserModal(u) {
   root.innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:560px;">
-      <div class="shell-modal-header"><h3>${t('modifier_utilisateur')}</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${t('modifier_utilisateur')}</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-form-row">
           <div class="shell-form-group"><label>${t('col_nom')}</label><input class="shell-input" id="euNom" value="${esc(nm.nom)}"></div>
@@ -813,7 +813,7 @@ function showNewUserModal() {
   root.innerHTML = `
   <div class="shell-modal-overlay" id="newUserOverlay">
     <div class="shell-modal" style="max-width:520px;">
-      <div class="shell-modal-header"><h3>${esc(t('users_new'))}</h3><button class="shell-btn-icon" id="closeModal" style="color:#fff;">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${esc(t('users_new'))}</h3><button class="shell-btn-icon" id="closeModal" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
         <div class="shell-form-row">
           <div class="shell-form-group"><label>${t('col_nom')}</label><input class="shell-input" id="nuNom"></div>

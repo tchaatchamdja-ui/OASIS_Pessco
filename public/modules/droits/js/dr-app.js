@@ -152,6 +152,9 @@ window.drSetTheme = function (th) {
 window.drSetLang = function (lang) {
   DR.lang = lang;
   localStorage.setItem('pr_lang', lang);
+  // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
+  // l'écran dans la langue où il est écrit.
+  oasisPoserLangue(lang);
   drRender();
 };
 
@@ -480,7 +483,7 @@ function drRenderModal() {
     <div class="modal dr-modal" style="max-width:660px;">
       <div class="modal-header">
         <h3>${dt('modal_titre', drEsc(u.fullName))}</h3>
-        <button class="btn-icon" onclick="drCloseModal()" style="color:#fff;">✕</button>
+        <button class="btn-icon" onclick="drCloseModal()" style="color:#fff;" aria-label="${drEsc(dt("fermer"))}" title="${drEsc(dt("fermer"))}">✕</button>
       </div>
       <div class="modal-body">
         <p class="dr-user-line">${drEsc(u.email)} · ${dt('role_portail_court')} : ${drEsc(u.role)}</p>

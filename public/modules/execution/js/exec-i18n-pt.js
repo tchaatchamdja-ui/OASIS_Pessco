@@ -616,6 +616,7 @@ EXEC_TR.pt = {
         preuve_commentaire: 'Comentário',
         preuve_commentaire_aide: 'A atenção da AAC (facultativo)',
         back: 'Voltar',
+        ouvrir_menu: 'Abrir o menu',
         close: 'Fechar',
         edit: 'Editar',
         delete: 'Excluir',

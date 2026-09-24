@@ -429,7 +429,7 @@ function planRenderHistory() {
                     return `
                     <tr>
                         <td>
-                            ${hasDiff ? `<button class="btn-icon" onclick="const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle('expanded');" title="${tp('amendment_modifications')}">${PLAN_ICONS.chevron}</button>` : ''}
+                            ${hasDiff ? `<button class="btn-icon" onclick="const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle('expanded');" title="${tp('amendment_modifications')}" aria-label="${tp('amendment_modifications')}">${PLAN_ICONS.chevron}</button>` : ''}
                             v${v.version || 1}
                         </td>
                         <td>${_statusBadge(v.statut)}</td>
@@ -439,8 +439,8 @@ function planRenderHistory() {
                             <button class="btn btn-primary btn-sm" onclick="planExportPDF('${v.id}')" title="${tp('download_pdf')}">
                                 ${PLAN_ICONS.pdf} v${v.version || 1}
                             </button>
-                            <button class="btn-icon" onclick="planShowWorkflowHistory('${v.id}')" title="${tp('workflow_history')}">${PLAN_ICONS.workflow}</button>
-                            <button class="btn-icon" onclick="planOpenDetail('${v.id}')" title="${tp('details')}">${PLAN_ICONS.eye}</button>
+                            <button class="btn-icon" onclick="planShowWorkflowHistory('${v.id}')" title="${tp('workflow_history')}" aria-label="${tp('workflow_history')}">${PLAN_ICONS.workflow}</button>
+                            <button class="btn-icon" onclick="planOpenDetail('${v.id}')" title="${tp('details')}" aria-label="${tp('details')}">${PLAN_ICONS.eye}</button>
                         </td>
                     </tr>
                     ${hasDiff ? `

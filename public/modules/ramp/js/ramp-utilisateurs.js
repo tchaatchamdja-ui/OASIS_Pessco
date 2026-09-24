@@ -62,7 +62,7 @@ function rampLignesMesUtilisateurs() {
                 <span id="rampPwClair-${_rAttr(u.id)}" style="display:none;font-family:monospace;font-weight:600;color:var(--ramp-accent);"></span>
                 ${u.has_temp_password ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampRevelerMotDePasse(${_rArg(u.id)})"
-                    title="${_rAttr(rt('u_voir_mdp'))}">${RAMP_ICONS.eye}</button>` : ''}
+                    title="${_rAttr(rt('u_voir_mdp'))}" aria-label="${_rAttr(rt('u_voir_mdp'))}">${RAMP_ICONS.eye}</button>` : ''}
             </td>
             <td><span class="ramp-badge items">${_rEsc(rampLibelleRole(u.role))}</span></td>
             <td title="${_rAttr(droits.map(rampLibelleDroit).join(', '))}">
@@ -73,12 +73,12 @@ function rampLignesMesUtilisateurs() {
             <td><span class="ramp-badge ${actif ? 'zero' : 'ecarts'}">${actif ? rt('u_actif') : rt('u_inactif')}</span></td>
             <td class="ramp-cell-actions">
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampOuvrirUtilisateur(${_rArg(u.id)})"
-                        title="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
+                        title="${_rAttr(rt('modifier'))}" aria-label="${_rAttr(rt('modifier'))}">${RAMP_ICONS.edit}</button>
                 <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampReinitialiserMotDePasse(${_rArg(u.id)})"
-                        title="${_rAttr(rt('u_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                        title="${_rAttr(rt('u_reinitialiser'))}" aria-label="${_rAttr(rt('u_reinitialiser'))}">${RAMP_ICONS.reset}</button>
                 <button class="btn btn-outline btn-sm ramp-btn-icone"
                         onclick="rampBasculerCompte(${_rArg(u.id)}, ${actif ? 'false' : 'true'})"
-                        title="${_rAttr(actif ? rt('u_desactiver') : rt('u_activer'))}">
+                        title="${_rAttr(actif ? rt('u_desactiver') : rt('u_activer'))}" aria-label="${_rAttr(actif ? rt('u_desactiver') : rt('u_activer'))}">
                     ${actif ? RAMP_ICONS.x : RAMP_ICONS.check}</button>
             </td>
         </tr>`;
@@ -138,7 +138,7 @@ function rampOuvrirUtilisateur(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${u ? rt('u_modifier') : rt('u_ajouter')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-champ">
@@ -254,7 +254,7 @@ function rampRevelerMotDePasse(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('u_confirmer_identite')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-champ">

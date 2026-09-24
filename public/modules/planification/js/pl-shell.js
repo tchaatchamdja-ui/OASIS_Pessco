@@ -241,6 +241,9 @@ function planSetLang(lang) {
     planFermerCalendrier();
     PLAN_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
+    // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
+    // l'écran dans la langue où il est écrit.
+    oasisPoserLangue(lang);
     if (window.PESSCO) window.PESSCO.lang = lang;
     planRenderApp();
     planNavigateTo(PLAN_STATE.currentPage, PLAN_STATE.currentSub);
@@ -323,7 +326,7 @@ function planRenderApp() {
         <div class="app-content">
             <header class="app-header">
                 <div class="header-left">
-                    <button class="btn-icon mobile-menu-btn" onclick="planToggleMobileSidebar()">${PLAN_ICONS.menu}</button>
+                    <button class="btn-icon mobile-menu-btn" onclick="planToggleMobileSidebar()" aria-label="${tp("ouvrir_menu")}" title="${tp("ouvrir_menu")}">${PLAN_ICONS.menu}</button>
                     <div class="header-module-title">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--accent)">
                             <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
@@ -464,7 +467,7 @@ function planShowModal(title, bodyHtml, footerHtml = '', size = '') {
     const drawer = String(size).includes('modal-drawer');
     div.className = `modal-overlay${drawer ? ' drawer-overlay' : ''}`;
     div.innerHTML = `<div class="modal ${size}">
-        <div class="modal-header"><h3>${title}</h3><button class="btn-icon" onclick="planCloseModal()">${PLAN_ICONS.close}</button></div>
+        <div class="modal-header"><h3>${title}</h3><button class="btn-icon" onclick="planCloseModal()" aria-label="${tp("close")}" title="${tp("close")}">${PLAN_ICONS.close}</button></div>
         <div class="modal-body">${bodyHtml}</div>
         ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ''}
     </div>`;
@@ -548,7 +551,7 @@ function _renderFilterBar(onchangeFunc, opts = {}) {
 
     const recherche = opts.showSearch === false ? ''
         : `<input type="text" class="form-input" id="plan-filter-search" placeholder="${tp('search')}" value="${_esc(F.search)}" oninput="_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeFunc} })">`;
-    const reinitialiser = `<button class="btn-icon-reset" onclick="planResetFilters()" title="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>`;
+    const reinitialiser = `<button class="btn-icon-reset" onclick="planResetFilters()" title="${tp('reset_filters')}" aria-label="${tp('reset_filters')}">${PLAN_ICONS.reset}</button>`;
 
     // L'année ne se choisit plus dans la barre : une rangée de boutons la
     // précède, comme dans « Exécution de la Surveillance ».

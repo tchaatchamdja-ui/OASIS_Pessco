@@ -421,10 +421,10 @@ function renderEvaluations() {
                 <span class="text-muted">- ${sect?.nom || '-'}</span>
                 <span class="badge ${statusClass}" style="margin-left:auto;background:${statusColor}22;color:${statusColor};border:1px solid ${statusColor}55;">${statusLabel}</span>
                 <span class="date-cell">${formatDate(ev.date_validation || ev.date)}</span>
-                <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="${t('edit')}">${ICONS.edit}</button>
+                <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="${t('edit')}" aria-label="${t('edit')}">${ICONS.edit}</button>
                 ${ev.statut === 'brouillon' && canCreate ?
-                    `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}">${ICONS.trash}</button>` : ''}
-                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('details')}">${ICONS.chevron}</button>
+                    `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}" aria-label="${t('delete')}">${ICONS.trash}</button>` : ''}
+                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('details')}" aria-label="${t('details')}">${ICONS.chevron}</button>
             </div>
             <div class="accordion-body" id="acc-body-${accId}">${detailHtml}</div>
         </div>`;
@@ -539,11 +539,11 @@ function renderEvalResults() {
                 <span class="badge ${getRiskBadgeClass(risk.risk)}" style="margin-left:auto;">${risk.label || '-'}</span>
                 <span style="font-weight:700;color:var(--primary);">${csrbo} ${t('months')}</span>
                 <span class="date-cell">${formatDate(ev.date_validation || ev.date)}</span>
-                <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="${t('view_indicators_scores')}">${ICONS.eye}</button>
-                <button class="btn-icon" onclick="exportEvalReport('${ev.id}','word')" title="Exporter Word">${ICONS.word}</button>
-                <button class="btn-icon" onclick="exportEvalReport('${ev.id}','pdf')" title="Exporter PDF">${ICONS.download}</button>
-                ${prCanSupprimerEval(ev) ? `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}">${ICONS.trash}</button>` : ''}
-                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('synthesis')}">${ICONS.chevron}</button>
+                <button class="btn-icon" onclick="openEvalDetail('${ev.id}')" title="${t('view_indicators_scores')}" aria-label="${t('view_indicators_scores')}">${ICONS.eye}</button>
+                <button class="btn-icon" onclick="exportEvalReport('${ev.id}','word')" title="Exporter Word" aria-label="Exporter Word">${ICONS.word}</button>
+                <button class="btn-icon" onclick="exportEvalReport('${ev.id}','pdf')" title="Exporter PDF" aria-label="Exporter PDF">${ICONS.download}</button>
+                ${prCanSupprimerEval(ev) ? `<button class="btn-icon danger" onclick="deleteEval('${ev.id}')" title="${t('delete')}" aria-label="${t('delete')}">${ICONS.trash}</button>` : ''}
+                <button class="btn-icon" onclick="toggleAccordion('${accId}')" title="${t('synthesis')}" aria-label="${t('synthesis')}">${ICONS.chevron}</button>
             </div>
             ${reminderBanner}
             <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.4rem;padding-top:0.4rem;border-top:1px dashed var(--border);font-size:0.78rem;align-items:center;">

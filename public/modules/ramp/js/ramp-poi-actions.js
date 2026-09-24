@@ -66,7 +66,7 @@ function rampSelecteurAeronefLignes() {
                 <td>${_rEsc(a.modele)}</td>
                 <td class="ramp-desc">${_rEsc(a.constructeur || '—')}</td>
                 <td style="text-align:center;">
-                    <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('retenir_code')}"
+                    <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('retenir_code')}" aria-label="${rt('retenir_code')}"
                             onclick="event.stopPropagation();rampChoisirAeronef(${_rArg(a.designation)})">
                         ${RAMP_ICONS.check}</button>
                 </td>
@@ -81,7 +81,7 @@ function rampSelecteurAeronefHtml() {
         <div class="ramp-modal ramp-modal-aeronef" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('choisir_type_aeronef')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-recherche-boite" style="margin-bottom:.6rem;">
@@ -137,10 +137,10 @@ function rampPoiPieces() {
                title="Télécharger ${_rAttr(pj.nom_origine)} (${_rAttr(rampTaille(pj.taille))})"
                href="${RAMP_API}/poi/${_rAttr(p.id)}/pieces/${_rAttr(pj.id)}/fichier">${RAMP_ICONS.download}</a>
             ${modifiable ? `
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier_remplacer')}"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="${rt('modifier_remplacer')}" aria-label="${rt('modifier_remplacer')}"
                     onclick="rampOuvrirPiece(${_rArg(pj.id)})">${RAMP_ICONS.edit}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone" style="color:#dc2626;border-color:#dc2626;"
-                    onclick="rampSupprimerPiece(${_rArg(pj.id)})" title="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
+                    onclick="rampSupprimerPiece(${_rArg(pj.id)})" title="${rt('supprimer')}" aria-label="${rt('supprimer')}">${RAMP_ICONS.delete}</button>` : ''}
         </td>
     </tr>`;
 
@@ -182,7 +182,7 @@ function rampOuvrirPiece(id) {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${pj ? 'Modifier la pièce' : 'Ajouter une pièce'}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <div class="ramp-champ">
@@ -322,7 +322,7 @@ function rampRenvoyerPoi() {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">${rt('renvoyer_fiche')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <p class="ramp-note">
@@ -384,7 +384,7 @@ function rampPoiEquipe() {
                         ? ` · ${_rEsc(m.niveau)}` : ''}
                 </div>
             </div>
-            ${fige ? '' : `<button class="btn btn-outline btn-sm ramp-btn-icone" title="Retirer"
+            ${fige ? '' : `<button class="btn btn-outline btn-sm ramp-btn-icone" title="Retirer" aria-label="Retirer"
                     onclick="rampPoiRetirerInspecteur(${_rArg(m.id)})">${RAMP_ICONS.x}</button>`}
         </div>`).join('')}</div>`;
 }
@@ -470,7 +470,7 @@ function rampValiderPoi() {
         <div class="ramp-modal" onclick="event.stopPropagation();">
             <div class="ramp-modal-header">
                 <span style="flex:1;">Valider l’inspection ${_rEsc(p.reference || '')}</span>
-                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 <p class="ramp-note">

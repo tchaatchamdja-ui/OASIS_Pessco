@@ -95,6 +95,16 @@ function oasisLangue() {
   try { return (window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr').slice(0, 2); } catch (e) { return 'fr'; }
 }
 
+// L'attribut `lang` de la page commande la prononciation d'un lecteur d'écran.
+// Les six modules le laissaient à « fr », figé dans leur gabarit : un écran
+// anglais ou portugais s'annonçait alors en français, du premier mot au
+// dernier. Le portail, lui, le mettait à jour — la règle vaut pour tous.
+function oasisPoserLangue(langue) {
+  const l = langue || oasisLangue();
+  try { document.documentElement.lang = l; } catch (e) { /* hors document */ }
+  return l;
+}
+
 // `defaut` — la phrase que l'appelant tient du geste en cours (« Téléversement
 // refusé ») : elle sert quand le code est inconnu du dictionnaire, ou absent.
 // Une phrase française du serveur, dans la langue de l'agent quand la table
@@ -277,6 +287,12 @@ function oasisMessageErreur(donnees, statut, defaut) {
     }, delai === undefined ? 300 : delai));
   }
 
+  // Dès le chargement du socle, avant tout rendu : la page part dans la langue
+  // de l'agent, sans attendre qu'il actionne la bascule.
+  oasisPoserLangue();
+
+  window.oasisLangue = oasisLangue;
+  window.oasisPoserLangue = oasisPoserLangue;
   window.oasisEsc = oasisEsc;
   window.oasisMessageErreur = oasisMessageErreur;
   window.oasisChampRequis = oasisChampRequis;

@@ -703,6 +703,9 @@ function execSetTheme(theme) {
 function execSetLang(lang) {
     EXEC_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
+    // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
+    // l'écran dans la langue où il est écrit.
+    oasisPoserLangue(lang);
     if (window.PESSCO) window.PESSCO.lang = lang;
     // Changer de langue n'est pas quitter le formulaire ouvert : on le rejoue
     // dans la nouvelle langue. execNavigateTo referme le volet au passage,
@@ -831,7 +834,7 @@ function execRenderApp() {
         <div class="app-content">
             <header class="app-header">
                 <div class="header-left">
-                    <button class="btn-icon mobile-menu-btn" onclick="execToggleMobileSidebar()">${EXEC_ICONS.menu}</button>
+                    <button class="btn-icon mobile-menu-btn" onclick="execToggleMobileSidebar()" aria-label="${te("ouvrir_menu")}" title="${te("ouvrir_menu")}">${EXEC_ICONS.menu}</button>
                     <div class="header-module-title">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--exec-accent, var(--accent))">
                             <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -1139,7 +1142,7 @@ function execToggleNotifPanel() {
     panel.innerHTML = `
         <div class="exec-notif-panel-header">
             <strong>${EXEC_ICONS.bell} Notifications (${alerts.length})</strong>
-            <button class="btn-icon-reset" onclick="document.getElementById('execNotifPanel')?.remove()" style="border:none;background:none;cursor:pointer;">${EXEC_ICONS.close}</button>
+            <button class="btn-icon-reset" onclick="document.getElementById('execNotifPanel')?.remove()" style="border:none;background:none;cursor:pointer;" aria-label="${te("close")}" title="${te("close")}">${EXEC_ICONS.close}</button>
         </div>
         <div class="exec-notif-panel-body">
             ${alerts.length === 0 ? `<div style="padding:1.5rem;text-align:center;color:var(--text-muted);">${te('no_data')}</div>` :
@@ -1528,7 +1531,7 @@ function _execRenderFilterBar(onchangeFunc, opts) {
     const barClass = (filters.length > 0 && filters.length % 6 === 0) ? 'filter-bar filter-bar--align-reset' : 'filter-bar';
     let html = `<div class="${barClass}">`;
     html += filters.join('');
-    html += `<button class="btn-icon-reset" onclick="execResetFilters()" title="${te('reset_filters')}">${EXEC_ICONS.reset}</button>`;
+    html += `<button class="btn-icon-reset" onclick="execResetFilters()" title="${te('reset_filters')}" aria-label="${te('reset_filters')}">${EXEC_ICONS.reset}</button>`;
     html += '</div>';
     // Trimestres en rangée de boutons, sous les listes, à la manière des
     // années du tableau de bord : les quatre se lisent d'un coup d'œil.

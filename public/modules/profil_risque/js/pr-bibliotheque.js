@@ -27,8 +27,8 @@ function renderBibliotheque() {
                 <td>${d.taille ? (d.taille/1024).toFixed(1)+' Ko' : '-'}</td>
                 <td class="date-cell">${formatDate(d.date_upload)}</td>
                 <td class="actions-cell">
-                    <button class="btn-icon" onclick="downloadDoc('${d.id}')" title="${t('download')}">${ICONS.download}</button>
-                    ${isAdmin ? `<button class="btn-icon danger" onclick="deleteDoc('${d.id}')">${ICONS.trash}</button>` : ''}
+                    <button class="btn-icon" onclick="downloadDoc('${d.id}')" title="${t('download')}" aria-label="${t('download')}">${ICONS.download}</button>
+                    ${isAdmin ? `<button class="btn-icon danger" onclick="deleteDoc('${d.id}')" aria-label="${t("delete")}" title="${t("delete")}">${ICONS.trash}</button>` : ''}
                 </td>
             </tr>`).join('') || `<tr><td colspan="5" class="text-center">${t('no_document')}</td></tr>`}</tbody>
         </table>

@@ -101,9 +101,9 @@ const mesEtatsCarte = (alerte, intro, corps) => `
 // Les deux gestes que toute ligne offre : ouvrir le dossier, lire son
 // histoire. Le reste dépend du sous-menu.
 const mesEtatsActions = (id) => `
-    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('ouvrir_traitement'))}"
+    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('ouvrir_traitement'))}" aria-label="${_mesAttr(mt('ouvrir_traitement'))}"
             onclick="mesMesureDepuisConstatation('${id}')">${MES_ICONS.edit}</button>
-    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('historique_traitement'))}"
+    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('historique_traitement'))}" aria-label="${_mesAttr(mt('historique_traitement'))}"
             onclick="mesHistorique('${id}')">${MES_ICONES_ETAT.clock}</button>`;
 
 const mesEtatsLigneCarence = (c, colonnes) => `

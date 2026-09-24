@@ -393,7 +393,7 @@ function _renderPlansWithActivitesAccordion(plans, F) {
                                     onclick="execReinitialiserActivite('${a.id}')"
                                     title="${_escAttr(te('reinitialiser_activite'))}"
                                     aria-label="${_escAttr(te('reinitialiser_activite'))}">${EXEC_ICONS.reset || EXEC_ICONS.back || '↺'}</button>` : ''}
-                                <button class="btn-icon" onclick="execShowActiviteHistorique('${a.id}','${plan.id}')" title="${te('historique')}">${EXEC_ICONS.clock}</button>
+                                <button class="btn-icon" onclick="execShowActiviteHistorique('${a.id}','${plan.id}')" title="${te('historique')}" aria-label="${te('historique')}">${EXEC_ICONS.clock}</button>
                             </td>
                         </tr>`;
                     }).join('')}

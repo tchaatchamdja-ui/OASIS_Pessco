@@ -596,7 +596,7 @@ function rampGenBarreFiltres() {
         <span class="ramp-gen-filtres-fin">
             ${listes.slice(coupe)}
             <button class="btn btn-outline btn-sm ramp-btn-icone"
-                    title="${_rAttr(rt('f_reinitialiser'))}${poses ? ` (${poses})` : ''}"
+                    title="${_rAttr(rt('f_reinitialiser'))}${poses ? ` (${poses})` : ''}" aria-label="${_rAttr(rt('f_reinitialiser'))}${poses ? ` (${poses})` : ''}"
                     onclick="rampGenFiltresReset()">${RAMP_ICONS.reset}</button>
         </span>
     </div>`;
@@ -729,7 +729,7 @@ function rampVoletGenerateur() {
                         title="${def.type === 'nombre' ? 'Somme des valeurs' : 'Nombre d’occurrences'}">
                     ${def.type === 'nombre' ? rt('gen_somme') : rt('gen_nombre')}</button>
             </span>` : ''}
-            <button class="btn btn-outline btn-sm ramp-btn-icone" title="Retirer"
+            <button class="btn btn-outline btn-sm ramp-btn-icone" title="Retirer" aria-label="Retirer"
                     onclick="rampGenRetirer(${i})">${RAMP_ICONS.x}</button>
         </div>`;
     }).join('') : `<p class="ramp-gen-vide">${rt('gen_glisser')}</p>`;
@@ -741,7 +741,7 @@ function rampVoletGenerateur() {
                 <span style="display:flex;">${RAMP_ICONS.list}</span>
                 <span style="flex:1;">${rt('gen_titre')}</span>
                 <button class="btn btn-outline btn-sm ramp-btn-icone"
-                        onclick="rampFermerModal()">${RAMP_ICONS.close}</button>
+                        onclick="rampFermerModal()" aria-label="${_rAttr(rt("fermer"))}" title="${_rAttr(rt("fermer"))}">${RAMP_ICONS.close}</button>
             </div>
             <div class="ramp-modal-body">
                 ${rampGenBarreFiltres()}
@@ -1344,7 +1344,7 @@ function rampRenderImportation() {
                         <td>${badge(l.sort)}</td>
                         <td class="ramp-cell-actions">
                             <button class="btn btn-outline btn-sm ramp-btn-icone"
-                                    onclick="rampRetirerLigneImport(${n})" title="Retirer">${RAMP_ICONS.x}</button>
+                                    onclick="rampRetirerLigneImport(${n})" title="Retirer" aria-label="Retirer">${RAMP_ICONS.x}</button>
                         </td>
                     </tr>`).join('')}
                 </tbody>

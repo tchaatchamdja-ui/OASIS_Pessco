@@ -362,7 +362,7 @@ function mesRenderApp() {
         <div class="app-content">
             <header class="app-header">
                 <div class="header-left">
-                    <button class="btn-icon mobile-menu-btn" onclick="mesToggleSidebar()">${MES_ICONS.menu}</button>
+                    <button class="btn-icon mobile-menu-btn" onclick="mesToggleSidebar()" aria-label="${_mesAttr(mt("ouvrir_menu"))}" title="${_mesAttr(mt("ouvrir_menu"))}">${MES_ICONS.menu}</button>
                     <div class="header-module-title">
                         <span style="color:var(--mes-accent);display:flex;">${MES_ICONS.shield}</span>
                         <span>${_mesEsc(titre)}</span>
@@ -488,6 +488,9 @@ function mesSetTheme(theme) {
 function mesSetLang(lang) {
     MES_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
+    // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
+    // l'écran dans la langue où il est écrit.
+    oasisPoserLangue(lang);
     // Les libellés changent : la coquille doit être redessinée. Les volets
     // ouverts sont alors remontés tels quels, saisie comprise. Les commandes
     // posées dans la barre supérieure — instance regardée, gestion des droits —
@@ -711,7 +714,7 @@ function mesRenderDashboard() {
                 ${opt('sans', mt('ech_sans'), F.db_echeance)}
             </select>
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresDashboard()"
-                    title="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
+                    title="${_mesAttr(mt('reinit_filtres'))}" aria-label="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
         </div>
     </div>
     ${cartes}
@@ -814,7 +817,7 @@ function mesLignesMesures() {
                             title="${_mesAttr(suiviClos ? mt('suivi_termine_consulte') : mt('ouvre_suivi'))}">
                         ${MES_ICONS.check} ${suiviClos ? mt('consulte') : mt('suivi')}</button>
                     ${mesEstSuperAdmin() ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger"
-                        title="${_mesAttr(mt('supprimer_mesure'))}"
+                        title="${_mesAttr(mt('supprimer_mesure'))}" aria-label="${_mesAttr(mt('supprimer_mesure'))}"
                         onclick="mesSupprimerMesure('${m.id}')">${MES_ICONS.delete}</button>` : ''}
                 </div>
             </td>
@@ -882,7 +885,7 @@ function mesRenderMesures() {
                    oninput="mesRechercher('mes_recherche', this.value)">
             ${mesFiltreCarence()}
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresMesures()"
-                    title="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
+                    title="${_mesAttr(mt('reinit_filtres'))}" aria-label="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
         </div>
     </div>
     <div class="mes-card" style="padding:0;">
@@ -991,17 +994,17 @@ function mesLignesCritiques() {
                   <span class="mes-actions-case-bouton">${mesBoutonTraitement(c)}</span>
                   <span class="mes-actions-secondaires">
                     <button class="btn btn-outline btn-sm mes-btn-icone"
-                            title="${_mesAttr(mt('historique_traitement'))}"
+                            title="${_mesAttr(mt('historique_traitement'))}" aria-label="${_mesAttr(mt('historique_traitement'))}"
                             onclick="mesHistorique('${c.id}')">${MES_ICONES_ETAT.clock}</button>
                     ${c.mesures_liees ? `<button class="btn btn-outline btn-sm mes-btn-icone"
-                            title="${_mesAttr(mt('voir_mesures_liees', c.mesures_liees))}"
+                            title="${_mesAttr(mt('voir_mesures_liees', c.mesures_liees))}" aria-label="${_mesAttr(mt('voir_mesures_liees', c.mesures_liees))}"
                             onclick="mesMesuresDeCarence('${c.id}')">${MES_ICONS.shield}</button>` : ''}
                     ${c.origine === 'CARE' && mesPeutEcrire() ? `
-                    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('modifier'))}"
+                    <button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('modifier'))}" aria-label="${_mesAttr(mt('modifier'))}"
                             onclick="mesOuvrirConstat('${c.id}')">${MES_ICONS.edit}</button>` : ''}
                     ${c.origine === 'CARE' && mesPeutEcrire() && mesEstAdmin()
                         && !c.mesures_liees && !c.classee
-                        ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger" title="${_mesAttr(mt('supprimer'))}"
+                        ? `<button class="btn btn-outline btn-sm mes-btn-icone mes-btn-danger" title="${_mesAttr(mt('supprimer'))}" aria-label="${_mesAttr(mt('supprimer'))}"
                                    onclick="mesSupprimerConstat('${c.id}')">${MES_ICONS.delete}</button>` : ''}
                   </span>
                 </div>
@@ -1044,7 +1047,7 @@ function mesRenderCritiques() {
                    value="${_mesAttr(F.crit_recherche)}"
                    oninput="mesRechercher('crit_recherche', this.value)">
             <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesResetFiltresCritiques()"
-                    title="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
+                    title="${_mesAttr(mt('reinit_filtres'))}" aria-label="${_mesAttr(mt('reinit_filtres'))}">${MES_ICONS.reset}</button>
         </div>
     </div>
     <p class="mes-note">${mt('note_carences')}</p>
@@ -1288,7 +1291,7 @@ function mesConstatFormulaire(k) {
     <div class="mes-volet" role="dialog" aria-label="${_mesAttr(mt('carence'))}">
         <div class="mes-volet-entete">
             <span style="flex:1;">${k.id ? mt('modifier_carence') : mt('nouvelle_carence')}</span>
-            <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerVolet()">${MES_ICONS.close}</button>
+            <button class="btn btn-outline btn-sm mes-btn-icone" onclick="mesFermerVolet()" aria-label="${_mesAttr(mt("fermer"))}" title="${_mesAttr(mt("fermer"))}">${MES_ICONS.close}</button>
         </div>
         <div class="mes-volet-corps">
             <p class="mes-note">${mt('note_carence_saisie')}</p>

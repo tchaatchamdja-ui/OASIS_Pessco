@@ -205,7 +205,7 @@ function rampRenderCommunication() {
         <input class="ramp-input" placeholder="${_rAttr(rt('com_rechercher'))}"
                value="${_rAttr(F.recherche)}" oninput="rampComFiltre('recherche', this.value)">
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampComReset()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
     </div>
     <div class="ramp-card" style="padding:0;">
         <div class="ramp-table-wrap">
@@ -248,7 +248,7 @@ function rampComLigne(r) {
             ${close ? rt('com_close') : rt('com_ouverte')}</span></td>
         <td class="ramp-cell-actions">
             <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampComOuvrir(${_rArg(r.id)})"
-                    title="${_rAttr(rt('com_ouvrir_fil'))}">${RAMP_ICONS.eye}</button>
+                    title="${_rAttr(rt('com_ouvrir_fil'))}" aria-label="${_rAttr(rt('com_ouvrir_fil'))}">${RAMP_ICONS.eye}</button>
         </td>
     </tr>`;
 }
@@ -338,7 +338,7 @@ function rampComRegionalHtml() {
                    oninput="rampComRegFiltre('recherche', this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampComRegReset()"
-                title="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
+                title="${_rAttr(rt('f_reinitialiser'))}" aria-label="${_rAttr(rt('f_reinitialiser'))}">${RAMP_ICONS.reset}</button>
     </div>
     <p class="ramp-sous-titre">${rt('reg_resume', lignes.length, etats.size)}</p>
     <div class="ramp-card" style="padding:0;">
@@ -386,16 +386,16 @@ function rampComRegLigne(a) {
         <td class="ramp-cell-actions">
             <button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampOuvrirApercu(${_rArg(i.id)})"
-                    title="${_rAttr(rt('reg_rapport'))}">${RAMP_ICONS.eye}</button>
+                    title="${_rAttr(rt('reg_rapport'))}" aria-label="${_rAttr(rt('reg_rapport'))}">${RAMP_ICONS.eye}</button>
             <button class="btn btn-outline btn-sm ramp-btn-icone ramp-btn-marque"
                     ${pieces ? '' : 'disabled'}
                     onclick="rampComPreuvesEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
-                    title="${_rAttr(pieces ? `${rt('reg_pieces')} (${pieces})` : rt('reg_pieces_aucune'))}">
+                    title="${_rAttr(pieces ? `${rt('reg_pieces')} (${pieces})` : rt('reg_pieces_aucune'))}" aria-label="${_rAttr(pieces ? `${rt('reg_pieces')} (${pieces})` : rt('reg_pieces_aucune'))}">
                 ${RAMP_ICONS.upload}
                 ${pieces ? `<span class="ramp-btn-badge">${pieces}</span>` : ''}</button>
             ${RAMP_COM.peutEcrire ? `<button class="btn btn-outline btn-sm ramp-btn-icone"
                     onclick="rampComRequeteEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
-                    title="${_rAttr(rt('reg_requete'))}">${RAMP_ICONS.contacts}</button>` : ''}
+                    title="${_rAttr(rt('reg_requete'))}" aria-label="${_rAttr(rt('reg_requete'))}">${RAMP_ICONS.contacts}</button>` : ''}
         </td>
     </tr>`;
 }
@@ -501,7 +501,7 @@ function rampComPartagesHtml() {
                         <td class="ramp-cell-actions">
                             <button class="btn btn-outline btn-sm ramp-btn-icone"
                                     onclick="rampComOuvrirPartage(${_rArg(pa.id)})"
-                                    title="${_rAttr(rt('par_consulter'))}">${RAMP_ICONS.eye}</button>
+                                    title="${_rAttr(rt('par_consulter'))}" aria-label="${_rAttr(rt('par_consulter'))}">${RAMP_ICONS.eye}</button>
                         </td>
                     </tr>`;
                 }).join('') : `<tr><td colspan="7" class="ramp-table-vide">${rt('par_aucun')}</td></tr>`}
@@ -895,7 +895,7 @@ function rampComFormulaireHtml() {
                             <button class="btn btn-outline btn-sm ramp-btn-icone${retenue ? ' ramp-fait' : ''}"
                                     aria-pressed="${retenue}"
                                     onclick="rampComChoisirInspection(${_rArg(i.id)})"
-                                    title="${_rAttr(rt('com_choisir'))}">${
+                                    title="${_rAttr(rt('com_choisir'))}" aria-label="${_rAttr(rt('com_choisir'))}">${
     retenue ? RAMP_ICONS.check : RAMP_ICONS.caseVide}</button>
                         </td>
                     </tr>`;
@@ -948,7 +948,7 @@ function rampComPiecesEnAttenteHtml() {
             <span>${RAMP_ICONS.upload} ${_rEsc(f.name)}
                 <span class="ramp-sous-titre">${Math.round(f.size / 1024)} Ko</span></span>
             <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampComRetirerPiece(${n})"
-                    title="${_rAttr(rt('retirer'))}">${RAMP_ICONS.x}</button>
+                    title="${_rAttr(rt('retirer'))}" aria-label="${_rAttr(rt('retirer'))}">${RAMP_ICONS.x}</button>
         </div>`).join('')}
         <button class="btn btn-outline btn-sm" onclick="this.nextElementSibling.click()">
             ${RAMP_ICONS.upload} ${rt('com_joindre')}</button>

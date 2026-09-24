@@ -198,6 +198,22 @@ module.exports = async function tailleSmoke() {
   verifier("aucun terme de recherche rendu dans un attribut sans échappement",
     crues.length === 0, crues.join(' · '));
 
+  // ── Un bouton à icône porte son nom ──
+  // Il n'a pas de texte : sans `aria-label`, un lecteur d'écran annonce
+  // « bouton », et rien d'autre. `title` ne suffit pas — tous ne le lisent
+  // pas. Cent cinq boutons étaient dans ce cas.
+  const CLASSES_ICONE = /(btn-icone|btn-icon|shell-btn-icon|ramp-extension|cfg-sidebar-toggle)/;
+  const muets = [];
+  fichiers.filter((f) => f.endsWith('.js') || f.endsWith('.html')).forEach((fichier) => {
+    const texte = fs.readFileSync(fichier, 'utf8');
+    for (const m of texte.matchAll(/<button\b[^>]*>/g)) {
+      if (!CLASSES_ICONE.test(m[0]) || /aria-label=/.test(m[0])) continue;
+      muets.push(`${relatif(fichier)}:${texte.slice(0, m.index).split('\n').length}`);
+    }
+  });
+  verifier('chaque bouton à icône porte un nom accessible',
+    muets.length === 0, `${muets.length} — ${muets.slice(0, 6).join(' · ')}`);
+
   // ── Feuilles partagées : chaque écran les charge ──
   // Filtres, retour d'action et attente sont réglés une fois pour toute
   // l'application. Une page qui les oublie repart avec ses propres couleurs.

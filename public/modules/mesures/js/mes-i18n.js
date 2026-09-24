@@ -171,6 +171,8 @@ const MES_TR = {
     suite_a_donner: 'Suite à donner',
     historique_traitement: 'Historique du traitement',
     voir_mesures_liees: 'Voir les {0} mesure(s) prise(s) sur cette carence',
+    fermer: 'Fermer',
+    ouvrir_menu: 'Ouvrir le menu',
     modifier: 'Modifier',
     supprimer: 'Supprimer',
 
@@ -740,6 +742,8 @@ const MES_TR = {
     suite_a_donner: 'Action to take',
     historique_traitement: 'Handling history',
     voir_mesures_liees: 'View the {0} measure(s) taken on this deficiency',
+    fermer: 'Close',
+    ouvrir_menu: 'Open the menu',
     modifier: 'Edit',
     supprimer: 'Delete',
 
@@ -1295,6 +1299,8 @@ const MES_TR = {
     suite_a_donner: 'Seguimento a dar',
     historique_traitement: 'Histórico do tratamento',
     voir_mesures_liees: 'Ver as {0} medida(s) tomada(s) sobre esta deficiência',
+    fermer: 'Fechar',
+    ouvrir_menu: 'Abrir o menu',
     modifier: 'Alterar',
     supprimer: 'Eliminar',
 

@@ -329,11 +329,11 @@ function _execClLigne(c, D, refs, isAdmin) {
         </td>
         <td class="exec-etats-actions" style="text-align:right;white-space:nowrap;">
             <button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistEditor('${c.id}')"
-                    title="${te('items_checklist')}">${EXEC_ICONS.list}</button>
+                    title="${te('items_checklist')}" aria-label="${te('items_checklist')}">${EXEC_ICONS.list}</button>
             ${isAdmin ? `<button class="btn btn-sm btn-outline btn-icon-only" onclick="execOpenChecklistModal('${c.id}')"
-                    title="${_escAttr(te('modifier'))}">${EXEC_ICONS.edit}</button>
+                    title="${_escAttr(te('modifier'))}" aria-label="${_escAttr(te('modifier'))}">${EXEC_ICONS.edit}</button>
             <button class="btn btn-sm btn-outline btn-icon-only" onclick="execDeleteChecklist('${c.id}')"
-                    style="color:#dc2626;border-color:#dc2626;" title="${te('supprimer')}">${EXEC_ICONS.delete}</button>` : ''}
+                    style="color:#dc2626;border-color:#dc2626;" title="${te('supprimer')}" aria-label="${te('supprimer')}">${EXEC_ICONS.delete}</button>` : ''}
         </td>
     </tr>`;
 }
@@ -683,7 +683,7 @@ function execOpenChecklistEditor(clId) {
             <header class="exec-cli-slicer-header">
                 <div class="exec-cli-ident">
                     <button class="btn btn-sm btn-outline btn-icon-only" onclick="execCloseChecklistEditor()"
-                            title="${te('close')}">${EXEC_ICONS.back}</button>
+                            title="${te('close')}" aria-label="${te('close')}">${EXEC_ICONS.back}</button>
                     <div>
                         <div class="exec-cli-surtitre">
                             Checklist${cl.reference ? ` · <span class="exec-cl-ref">${_esc(cl.reference)}</span>` : ''}
@@ -696,8 +696,8 @@ function execOpenChecklistEditor(clId) {
                 <div class="exec-cli-actions">
                     <span id="execCliSaveState" class="exec-cli-etat"></span>
                     <button class="btn btn-sm btn-outline btn-icon-only" onclick="execChecklistExportXlsx('${clId}')"
-                            title="${te('exporter_checklist_excel')}">${EXEC_ICONS.download}</button>
-                    <button class="btn btn-sm btn-outline btn-icon-only" title="${te('importer_items_excel')}"
+                            title="${te('exporter_checklist_excel')}" aria-label="${te('exporter_checklist_excel')}">${EXEC_ICONS.download}</button>
+                    <button class="btn btn-sm btn-outline btn-icon-only" title="${te('importer_items_excel')}" aria-label="${te('importer_items_excel')}"
                             onclick="document.getElementById('execCliImportFile').click()">${EXEC_ICONS.upload}</button>
                     <input type="file" id="execCliImportFile" accept=".xlsx" style="display:none" onchange="execChecklistImportXlsx('${clId}', event)">
                     <button class="btn btn-sm btn-outline" onclick="execOpenSousThemesManager('${clId}')"

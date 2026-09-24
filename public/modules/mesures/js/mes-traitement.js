@@ -261,7 +261,7 @@ function mesSectionInformations() {
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
                 title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
-            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}"
                 onclick="mesRetirerPieceTraitement(${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
     // Même partage que le plan d'actions : ce qui est établi à gauche, ce qui
@@ -384,7 +384,7 @@ function mesPiecesHtml(cle, liste, off) {
             ${_mesChemin(p.path) ? `<a class="btn btn-outline btn-sm mes-btn-icone" target="_blank"
                 href="${_mesAttr(_mesChemin(p.path))}?nom=${encodeURIComponent(p.nom || '')}"
                 title="${_mesAttr(mt('ouvrir'))}">${MES_ICONS.download}</a>` : ''}
-            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}"
+            ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}"
                 onclick="mesInvRetirerPiece('${cle}',${i})">${MES_ICONS.x}</button>`}
         </div>`).join('');
     return `<div id="mesInvPieces_${cle}">${lignes || `<div class="mes-preuve-vide">${mt('aucune_piece')}</div>`}</div>
@@ -419,7 +419,7 @@ function mesSectionEquipe() {
             <td><input class="mes-input" type="email" data-champ="email" value="${_mesAttr(p.email || '')}" ${off}></td>
             <td><input class="mes-input" data-champ="contact" value="${_mesAttr(p.contact || '')}" ${off}></td>
             <td class="mes-actions">${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone"
-                title="${_mesAttr(mt('retirer'))}" onclick="mesInvRetirerEnqueteur(${i})">${MES_ICONS.x}</button>`}</td>
+                title="${_mesAttr(mt('retirer'))}" aria-label="${_mesAttr(mt('retirer'))}" onclick="mesInvRetirerEnqueteur(${i})">${MES_ICONS.x}</button>`}</td>
         </tr>`).join('');
     return mesSection('A', mt('sec_equipe'), `
         <div class="mes-table-wrap">
@@ -445,7 +445,7 @@ function mesSectionTravaux() {
         return `<div class="mes-bloc" data-rang="${i}">
             <div class="mes-bloc-entete">
                 <span class="mes-bloc-titre">${_mesEsc(titre)}</span>
-                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_bloc'))}"
+                ${off ? '' : `<button class="btn btn-outline btn-sm mes-btn-icone" title="${_mesAttr(mt('retirer_bloc'))}" aria-label="${_mesAttr(mt('retirer_bloc'))}"
                     onclick="mesInvRetirerTravail(${i})">${MES_ICONS.x}</button>`}
             </div>
             <div class="mes-bloc-corps">
@@ -646,7 +646,7 @@ function mesConfirmerEtape(o) {
                 <div class="mes-modal-header">
                     <span style="flex:1;">${_mesEsc(o.titre || mt('confirmer_action'))}</span>
                     <button class="btn btn-outline btn-sm mes-btn-icone"
-                            onclick="mesConfirmationRepondre(false)">${MES_ICONS.close}</button>
+                            onclick="mesConfirmationRepondre(false)" aria-label="${_mesAttr(mt("annuler"))}" title="${_mesAttr(mt("annuler"))}">${MES_ICONS.close}</button>
                 </div>
                 <div class="mes-modal-body">
                     <div class="mes-confirm-fil">

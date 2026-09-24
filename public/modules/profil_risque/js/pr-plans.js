@@ -54,7 +54,7 @@ function renderPlans() {
                     ${(D.prestataires||[]).filter(p=>p.actif!==false&&p.actif!==0).map(p => `<option value="${p.id}" ${f.prestataire===p.id?'selected':''}>${escapeHtml(p.nom)}</option>`).join('')}
                 </select></div>
             <div class="filter-group filter-search"><label>${t('search')}</label>
-                <input type="text" id="pr-plan-search" placeholder="${t('search')}" value="${f.search}" oninput="_pesSearchInput(this, () => { window._planFilters.search=document.getElementById('pr-plan-search').value; renderPage(); })"></div>
+                <input type="text" id="pr-plan-search" placeholder="${t('search')}" value="${oasisEsc(f.search)}" oninput="_pesSearchInput(this, () => { window._planFilters.search=document.getElementById('pr-plan-search').value; renderPage(); })"></div>
             <div class="filter-actions">
                 <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._planFilters={domaine:'',secteur:'',prestataire:'',search:''};renderPage();">${ICONS.refresh}</button>
             </div>

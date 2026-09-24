@@ -345,7 +345,7 @@ function renderEvaluations() {
             </div>
             <div class="filter-group filter-search">
                 <label>${t('search')}</label>
-                <input type="text" id="pr-eval-search" placeholder="${t('search')}" value="${f.search}" oninput="_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); })">
+                <input type="text" id="pr-eval-search" placeholder="${t('search')}" value="${oasisEsc(f.search)}" oninput="_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); })">
             </div>
             <div class="filter-actions">
                 <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();">${ICONS.refresh}</button>
@@ -480,7 +480,7 @@ function renderEvalResults() {
             </div>
             <div class="filter-group filter-search">
                 <label>${t('search')}</label>
-                <input type="text" id="pr-eval-search" placeholder="${t('search')}" value="${f.search}" oninput="_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); })">
+                <input type="text" id="pr-eval-search" placeholder="${t('search')}" value="${oasisEsc(f.search)}" oninput="_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); })">
             </div>
             <div class="filter-actions">
                 <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();">${ICONS.refresh}</button>

@@ -181,6 +181,23 @@ module.exports = async function tailleSmoke() {
   verifier('aucune cellule de tableau mise en flex ou en grille',
     cellulesEnFlex.length === 0, cellulesEnFlex.join(' · '));
 
+  // ── Une frappe d'agent ne s'écrit jamais crue dans un attribut ──
+  // Le terme de recherche est réinjecté dans « value » à chaque rendu. Sans
+  // échappement, une valeur qui porte un guillemet referme l'attribut et ce
+  // qui suit devient du balisage : cinq champs du Profil de Risque en sont
+  // sortis ainsi. La règle vaut pour toute valeur de filtre — ce sont les
+  // seules que l'utilisateur compose lui-même.
+  const crues = [];
+  const VALEUR_CRUE = /\bvalue="\$\{\s*(?!(?:[\w$.]*(?:[Ee]sc|Attr)\s*\())[\w$.]*\b(?:search|recherche|filtre|query)\b[\w$.]*\s*(?:\|\|[^}]*)?\}"/g;
+  fichiers.filter((f) => f.endsWith('.js')).forEach((fichier) => {
+    const texte = fs.readFileSync(fichier, 'utf8');
+    for (const m of texte.matchAll(VALEUR_CRUE)) {
+      crues.push(`${relatif(fichier)}:${texte.slice(0, m.index).split('\n').length}`);
+    }
+  });
+  verifier("aucun terme de recherche rendu dans un attribut sans échappement",
+    crues.length === 0, crues.join(' · '));
+
   // ── Feuilles partagées : chaque écran les charge ──
   // Filtres, retour d'action et attente sont réglés une fois pour toute
   // l'application. Une page qui les oublie repart avec ses propres couleurs.

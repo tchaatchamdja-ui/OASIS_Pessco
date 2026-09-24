@@ -218,7 +218,7 @@ function _prIndFiltresHtml(f, domaines, secteurs, sousActivites) {
             </div>
             <div class="filter-group filter-search">
                 <label>${t('search')}</label>
-                <input type="text" id="pr-ind-search" placeholder="${t('search')}" value="${f.search}" oninput="_pesSearchInput(this, () => { window._indFilters.search=document.getElementById('pr-ind-search').value; renderPage(); })">
+                <input type="text" id="pr-ind-search" placeholder="${t('search')}" value="${oasisEsc(f.search)}" oninput="_pesSearchInput(this, () => { window._indFilters.search=document.getElementById('pr-ind-search').value; renderPage(); })">
             </div>
             <div class="filter-actions">
                 <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._indFilters={type:'',domaine:'',secteur:'',sa:'',search:''};renderPage();">${ICONS.refresh}</button>

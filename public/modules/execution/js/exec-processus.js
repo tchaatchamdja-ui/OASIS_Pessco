@@ -480,14 +480,31 @@ function execProcPreserver(fn) {
     if (!EXEC_PROC || !EXEC_PROC.actif) return fn.apply(null, arguments);
     EXEC_PROC.enAction = true;
     EXEC_PROC.fermeDemandee = false;
-    try { fn.apply(null, arguments); } finally { EXEC_PROC.enAction = false; }
     // Le re-rendu de l'application ferme le volet (avec un retard d'animation) :
     // on le reprend aussitôt, à l'étape où il était.
-    if (EXEC_PROC.fermeDemandee) {
+    const reprendre = () => {
+      EXEC_PROC.enAction = false;
+      if (!EXEC_PROC.fermeDemandee) return;
       EXEC_PROC.fermeDemandee = false;
       _execProcOrig.close(true);
       execProcAfficher();
+    };
+    // La bascule de langue attend désormais le volet de traduction : elle rend
+    // une promesse. Relâcher le volet avant qu'elle ait rendu le laisserait
+    // fermé, sans que rien ne le dise.
+    let resultat;
+    try {
+      resultat = fn.apply(null, arguments);
+    } catch (e) {
+      reprendre();
+      throw e;
     }
+    if (resultat && typeof resultat.then === 'function') {
+      return resultat.then((v) => { reprendre(); return v; },
+        (e) => { reprendre(); throw e; });
+    }
+    reprendre();
+    return resultat;
   };
 }
 window.execSetLang = execProcPreserver(window.execSetLang);

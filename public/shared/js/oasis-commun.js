@@ -287,6 +287,26 @@ function oasisMessageErreur(donnees, statut, defaut) {
     }, delai === undefined ? 300 : delai));
   }
 
+  // ── Chargement à la demande ──
+  // Un script qu'on ne réclame qu'une fois : la promesse est retenue, si bien
+  // que deux appels pendant le même chargement attendent le même. Sert aux
+  // volets de traduction, dont un agent n'emploie jamais que le sien.
+  const enRoute = new Map();
+  function oasisCharger(src) {
+    if (!enRoute.has(src)) {
+      enRoute.set(src, new Promise((ok, ko) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = () => ok(src);
+        s.onerror = () => { enRoute.delete(src); ko(new Error(`script injoignable : ${src}`)); };
+        document.head.appendChild(s);
+      }));
+    }
+    return enRoute.get(src);
+  }
+
+  window.oasisCharger = oasisCharger;
+
   // Dès le chargement du socle, avant tout rendu : la page part dans la langue
   // de l'agent, sans attendre qu'il actionne la bascule.
   oasisPoserLangue();

@@ -3,7 +3,8 @@
  *
  * Le module rend ses écrans dans la langue choisie au portail ; `te()` lit ce
  * dictionnaire. L'anglais et le portugais vivent dans exec-i18n-en.js et
- * exec-i18n-pt.js, chargés juste après : `te()` ne lit le dictionnaire qu'à
+ * exec-i18n-pt.js, que la page ne charge plus d'emblée — `execVolet()` réclame
+ * celui de la langue de l'agent, et lui seul : `te()` ne lit le dictionnaire qu'à
  * l'appel, les trois fichiers sont donc réunis bien avant le premier écran.
  * Fichier issu du découpage de exec-app.js (portage PESSCO) : les scripts se
  * chargent dans l'ordre déclaré par index.html et partagent la même portée.
@@ -1253,6 +1254,21 @@ const EXEC_TR = {
         proc_declenchement_impossible: 'Déclenchement impossible',
 },
 };
+
+// ── Volets de traduction, chargés à la demande ──
+// Le français est dans ce fichier ; l'anglais et le portugais sont deux
+// fichiers de soixante-dix kilooctets que la page ne charge plus d'emblée —
+// un agent n'emploie jamais que le sien.
+//
+// `te()` retombe sur le français quand une table manque : un volet absent ne
+// casse donc rien, il se voit — un écran anglais qui parle français. D'où la
+// règle : on attend le volet avant de rendre, jamais après.
+function execVolet(lang) {
+    if (lang === 'fr' || EXEC_TR[lang]) return Promise.resolve();
+    if (typeof oasisCharger !== 'function') return Promise.resolve();
+    return oasisCharger(`/modules/execution/js/exec-i18n-${lang}.js`)
+        .catch(() => { /* volet injoignable : le français fera foi */ });
+}
 
 function te(key, ...args) {
     let str = (EXEC_TR[EXEC_STATE.lang] || EXEC_TR.fr)[key] || (EXEC_TR.fr)[key] || key;

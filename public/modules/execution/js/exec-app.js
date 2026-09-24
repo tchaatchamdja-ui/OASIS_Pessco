@@ -322,11 +322,15 @@ window.initExecutionModule = function() {
     document.documentElement.setAttribute('data-theme', EXEC_STATE.theme);
     // Hydrate any fields that may be missing from older cached login payloads
     // (notably prestataire_id for M3_Prestataire users).
-    _execHydrateUser().then(() => execLoadData()).then(() => {
-        execRenderApp();
-        execNavigateTo('dashboard');
-        execUpdateNotifBadge();
-    });
+    // Le volet de la langue est attendu avant le premier rendu : `te()`
+    // retombe sur le français quand une table manque, et un écran rendu trop
+    // tôt resterait français sans que rien ne le dise.
+    Promise.all([_execHydrateUser().then(() => execLoadData()), execVolet(EXEC_STATE.lang)])
+        .then(() => {
+            execRenderApp();
+            execNavigateTo('dashboard');
+            execUpdateNotifBadge();
+        });
 };
 
 async function _execHydrateUser() {
@@ -700,7 +704,7 @@ function execSetTheme(theme) {
     oasisAppliquerTheme(theme);
 }
 
-function execSetLang(lang) {
+async function execSetLang(lang) {
     EXEC_STATE.lang = lang;
     localStorage.setItem('pr_lang', lang);
     // L'attribut `lang` de la page suit : un lecteur d'écran prononce alors
@@ -712,6 +716,9 @@ function execSetLang(lang) {
     // d'où la capture avant l'appel.
     const rejouer = EXEC_STATE.voletRejouer;
     const retour = EXEC_STATE.retourVolet;
+    // Le volet de traduction d'abord : rendre avant qu'il soit là donnerait un
+    // écran resté en français, sans erreur ni trace.
+    await execVolet(lang);
     execRenderApp();
     execNavigateTo(EXEC_STATE.currentPage);
     if (typeof rejouer === 'function') {

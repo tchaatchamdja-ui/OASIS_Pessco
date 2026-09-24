@@ -5,7 +5,7 @@
 // mutatives abouties des modules (création, enregistrement, soumission,
 // validation, suppression…).
 const crypto = require('crypto');
-const store = require('./store');
+const journal = require('./journal');
 
 const GENESIS = 'OASIS-MODULE-GENESIS';
 const KEY = 'module_audit';
@@ -42,7 +42,39 @@ const PATH_ACTIONS = [
   [/\/m\/droits\//i, 'DROITS'],
 ];
 
-const all = () => store.load(KEY, {});
+// Reprise du format : l'objet hérité — un tableau par code de module — est
+// recopié en lignes, module par module et dans l'ordre d'origine. Chaque
+// entrée est écrite telle quelle, empreinte comprise ; elle gagne seulement le
+// code sous lequel elle avait été inscrite, qui ne participe pas au calcul de
+// l'empreinte. Idempotente : si le journal en lignes existe, il fait foi.
+function reprendre() {
+  if (journal.converti(KEY)) return false;
+  const herite = journal.lireHerite(KEY);
+  if (!herite || typeof herite !== 'object' || Array.isArray(herite)) return false;
+  const lignes = [];
+  Object.keys(herite).forEach((code) => {
+    (herite[code] || []).forEach((e) => lignes.push({ ...e, codeModule: code }));
+  });
+  journal.ecrireTout(KEY, lignes);
+  return true;
+}
+
+// Les entrées rangées par code de module, comme le faisait l'objet hérité. Le
+// regroupement se refait quand le journal a grandi — c'est un parcours en
+// mémoire, sans lecture de fichier.
+let groupe = { taille: -1, data: {} };
+function all() {
+  reprendre();
+  const lignes = journal.lire(KEY);
+  if (groupe.taille === lignes.length) return groupe.data;
+  const data = {};
+  lignes.forEach((e) => {
+    const code = e.codeModule || '';
+    (data[code] = data[code] || []).push(e);
+  });
+  groupe = { taille: lignes.length, data };
+  return data;
+}
 
 function entryHash(prevHash, e) {
   return crypto
@@ -67,9 +99,8 @@ function log(moduleCode, user, action, objet, ref, details) {
     prevHash,
   };
   entry.hash = entryHash(prevHash, entry);
-  entries.push(entry);
-  data[moduleCode] = entries;
-  store.save(KEY, data);
+  entry.codeModule = moduleCode;
+  journal.ajouter(KEY, entry);
   return entry;
 }
 
@@ -165,4 +196,4 @@ function middleware(moduleCode, prefix) {
   };
 }
 
-module.exports = { log, list, verifyChain, middleware, ACTIONS };
+module.exports = { log, list, verifyChain, middleware, reprendre, ACTIONS };

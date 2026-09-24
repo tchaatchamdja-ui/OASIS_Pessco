@@ -7,7 +7,7 @@ dans le code. Il sert au dossier de validation : chaque exigence y porte son
 identifiant, son état et son emplacement, de sorte qu'un contrôle puisse être
 refait sans nous.
 
-Dernière revue : 22 septembre 2026.
+Dernière revue : 24 septembre 2026.
 
 ---
 
@@ -80,7 +80,9 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 
 - **Journal d'audit chaîné** : chaque entrée porte l'empreinte SHA-256 de la
   précédente. Réécrire une ligne rompt la chaîne et se voit. Ajout seulement,
-  jamais de réécriture (`src/audit.js`).
+  jamais de réécriture — et le fichier lui-même l'applique désormais : une
+  entrée par ligne, ajoutée en fin de fichier, ce qui ne touche pas un octet de
+  ce qui précède (`src/journal.js`, `src/audit.js`, `src/module_audit.js`).
 - Sont tracés : connexions et échecs, dépassements de débit, créations et
   modifications de comptes, attributions de droits, actes de surveillance,
   erreurs serveur.
@@ -131,7 +133,7 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 | Limitation de débit hors authentification | Seule l'authentification est limitée. Un plafond par compte sur les écritures reste à poser. |
 | Validation des corps de requête | Appliquée aux routes de création du socle ; les modules valident champ par champ, sans schéma déclaré. |
 | Chiffrement au repos | Les fichiers de données reposent sur le chiffrement du volume de l'hébergeur ; aucune couche applicative. |
-| Rétention des données | Aucune purge automatique : les actes de surveillance se conservent, leur durée n'est pas encore une règle de l'application. |
+| Rétention des données | Aucune purge automatique : les actes de surveillance se conservent, leur durée n'est pas encore une règle de l'application. Les journaux d'audit, eux, sont en ajout seul par construction : leur croissance ne coûte plus rien à l'écriture, mais elle n'est pas bornée. |
 
 Ces points sont connus, documentés et sans incidence sur les contrôles de la
 présente revue ; ils sont à instruire au fil des versions.

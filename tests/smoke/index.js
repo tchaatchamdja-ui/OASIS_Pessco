@@ -20,6 +20,8 @@ const suites = [
   { nom: 'traductions', port: 0, run: require('./traductions.smoke') },
   // Unitaires : les règles prises à part, sans passer par HTTP.
   { nom: 'unitaires', port: 0, run: require('./unitaires.smoke') },
+  // Parcours : les écrans dans un vrai navigateur, console comprise.
+  { nom: 'parcours', port: 4798, run: require('./parcours.smoke') },
 ];
 
 (async () => {

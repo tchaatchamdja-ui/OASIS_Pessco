@@ -31,6 +31,8 @@ jobs:
           for f in server.js src/*.js src/modules/*/*.js; do node --check "$f"; done
 
       - name: Suite de fumée
+        # La suite « parcours » ouvre les écrans dans Chromium, celui que
+        # Puppeteer installe avec les dépendances : rien à télécharger de plus.
         run: npm run smoke
 
   image:

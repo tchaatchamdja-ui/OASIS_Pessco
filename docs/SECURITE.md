@@ -33,6 +33,7 @@ sens des catégories particulières : ni santé, ni opinion, ni biométrie.
 | SEC-01 | Mots de passe hachés par **scrypt**, sel de 16 octets par compte, jamais rendus | `src/auth.js` |
 | SEC-02 | Comptes d'amorçage à mot de passe **tiré au hasard**, affiché une fois ; `OASIS_SEED_PASSWORD` pour l'imposer | `server.js`, `src/auth.js` |
 | SEC-03 | **Limitation de débit** : 20 tentatives par adresse et par quart d'heure sur `/api/login` et les routes MFA, réponse 429 avec `Retry-After` | `server.js` |
+| SEC-10 | **Plafond d'écritures par compte** : 600 par minute, paramétrable (`maxWritesPerMinute`, 0 le retire), réponse 429 avec `Retry-After` et trace au journal. Par compte et non par adresse : plusieurs agents derrière la même sortie ne se pénalisent pas | `server.js`, `config/oasis.config.json` |
 | SEC-05 | Cookie de session **`HttpOnly`, `SameSite=Lax`, `Secure` hors développement**, sans `Max-Age` : la durée est tenue par le serveur | `server.js` |
 | | **Verrouillage** du compte après 5 échecs, **expiration après 30 minutes** d'inactivité, **session unique** par compte | `config/oasis.config.json`, `src/auth.js` |
 | | **Politique de mot de passe** : 12 caractères, majuscule, minuscule, chiffre, caractère spécial, renouvellement à 180 jours, 5 derniers interdits, changement imposé à la première connexion | `config/oasis.config.json`, `src/auth.js` |
@@ -67,8 +68,10 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 | | Mesure | Où |
 |---|---|---|
 | SEC-04 | **En-têtes de sécurité** sur toute réponse : politique de contenu (`default-src 'self'`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS en production | `server.js` |
+| SEC-12 | **Politique stricte sur les pages publiques** : la connexion et les témoins de connexion n'ont ni gestionnaire en ligne ni bloc inséré, et reçoivent `script-src 'self'` sans `'unsafe-inline'` — un script injecté n'y est pas exécuté. Ce sont les deux seules pages qu'un visiteur atteint sans être connu | `server.js`, `public/js/login-page.js`, `public/js/cookies-page.js` |
 | SEC-06 | **Requêtes forgées** : toute écriture sur `/api` doit porter l'en-tête `X-OASIS-Request`, qu'un formulaire d'un autre site ne peut pas ajouter ; `SameSite=Lax` ferme le reste | `server.js` |
 | SEC-08 | **Validation des corps de requête** sur les routes de création | `src/valider.js` |
+| SEC-11 | **Forme du corps sur toutes les écritures de module** : garde commune posée sur chaque préfixe d'API, avant la route — nom de champ attendu, liste et imbrication bornées. Ses bornes sont relevées sur les données réelles | `src/valider.js`, `src/module_loader.js` |
 | SEC-09 | **Dernier filet** : une exception non rattrapée est inscrite au journal et rendue sous une erreur normalisée avec une référence — jamais la trace d'exécution | `server.js` |
 | | **Échappement systématique** des valeurs rendues au HTML (`_esc`, `_escAttr`) ; aucune interpolation d'attribut sans échappement | modules `public/modules/*/js` |
 | | **Pièces jointes** : liste blanche d'extensions, 25 Mo par fichier, nom tiré au hasard sur le disque, stockage hors du magasin de données, chemin jamais construit depuis l'appelant | `src/multipart.js`, routes des modules |
@@ -129,9 +132,9 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 
 | Point | Pourquoi il n'est pas fermé |
 |---|---|
-| `'unsafe-inline'` dans la politique de contenu | Gestionnaires d'évènements et styles hérités du portage. À resserrer écran par écran ; la politique interdit déjà tout script externe. |
-| Limitation de débit hors authentification | Seule l'authentification est limitée. Un plafond par compte sur les écritures reste à poser. |
-| Validation des corps de requête | Appliquée aux routes de création du socle ; les modules valident champ par champ, sans schéma déclaré. |
+| `'unsafe-inline'` dans la politique de contenu | **Fermé sur les deux pages publiques** (SEC-12). Les écrans internes le gardent : leurs gestionnaires d'évènements viennent du portage et s'externalisent module par module. |
+| Schéma de validation par route | **Une garde commune borne désormais la forme de toute écriture de module** (SEC-11) ; elle ne dit pas ce qu'un champ doit contenir. Les routes valident champ par champ, sans schéma déclaré. |
+| Authentification multifacteur éteinte | Le mécanisme existe et fonctionne (`src/mfa.js`) ; `mfaEnabled` est à `false`. L'activer demande une messagerie configurée et une décision de l'Autorité — elle n'est pas encore prise, et cette ligne existe pour qu'elle le soit. |
 | Chiffrement au repos | Les fichiers de données reposent sur le chiffrement du volume de l'hébergeur ; aucune couche applicative. |
 | Rétention des données | Aucune purge automatique : les actes de surveillance se conservent, leur durée n'est pas encore une règle de l'application. Les journaux d'audit, eux, sont en ajout seul par construction : leur croissance ne coûte plus rien à l'écriture, mais elle n'est pas bornée. |
 

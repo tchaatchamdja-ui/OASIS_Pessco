@@ -36,6 +36,7 @@
     "passwordMaxAgeDays": 180,
     "passwordHistoryCount": 5,
     "maxFailedAttempts": 5,
+    "maxWritesPerMinute": 600,
     "sessionTimeoutMinutes": 30,
     "singleSession": true,
     "forceChangeOnFirstLogin": true,

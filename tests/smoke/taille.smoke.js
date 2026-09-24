@@ -51,6 +51,21 @@ function sources() {
 
 const relatif = (f) => path.relative(RACINE, f).split(path.sep).join('/');
 
+// Les pages de l'application. `sources()` ne retient que .js et .css ; deux
+// gardes portent sur le balisage, et lisent donc cette liste-ci.
+function pagesHtml() {
+  const liste = [];
+  const parcourir = (dossier) => {
+    fs.readdirSync(dossier, { withFileTypes: true }).forEach((e) => {
+      const p = path.join(dossier, e.name);
+      if (e.isDirectory()) { if (!/node_modules|\.git/.test(p)) parcourir(p); return; }
+      if (e.name.endsWith('.html')) liste.push(p);
+    });
+  };
+  parcourir(path.join(RACINE, 'public'));
+  return liste;
+}
+
 // Longueur d'une fonction déclarée en colonne 0 : de sa signature à l'accolade
 // qui la referme. Les fabriques imbriquées comptent avec elle — c'est bien la
 // taille du bloc que l'on veut mesurer.
@@ -198,13 +213,31 @@ module.exports = async function tailleSmoke() {
   verifier("aucun terme de recherche rendu dans un attribut sans échappement",
     crues.length === 0, crues.join(' · '));
 
+  // ── i18n.js ne se charge pas seul ──
+  // Il pose le thème enregistré dès sa dernière ligne, en appelant
+  // `oasisThemeEnregistre`. Une page qui l'oublie s'arrête là, sur une
+  // référence absente, et les lignes suivantes ne s'exécutent jamais — c'est
+  // arrivé à la page des témoins de connexion, sans que rien ne le dise.
+  const orphelines = [];
+  pagesHtml().forEach((fichier) => {
+    const html = fs.readFileSync(fichier, 'utf8');
+    const balises = html.match(/<script\s+src="[^"]+"/g) || [];
+    const rang = (src) => balises.findIndex((b) => b.includes(src));
+    const i18n = rang('/js/i18n.js');
+    if (i18n < 0) return;
+    const theme = rang('/shared/js/oasis-theme.js');
+    if (theme < 0 || theme > i18n) orphelines.push(relatif(fichier));
+  });
+  verifier('toute page qui charge i18n.js charge d’abord oasis-theme.js',
+    orphelines.length === 0, orphelines.join(' · '));
+
   // ── Un bouton à icône porte son nom ──
   // Il n'a pas de texte : sans `aria-label`, un lecteur d'écran annonce
   // « bouton », et rien d'autre. `title` ne suffit pas — tous ne le lisent
   // pas. Cent cinq boutons étaient dans ce cas.
   const CLASSES_ICONE = /(btn-icone|btn-icon|shell-btn-icon|ramp-extension|cfg-sidebar-toggle)/;
   const muets = [];
-  fichiers.filter((f) => f.endsWith('.js') || f.endsWith('.html')).forEach((fichier) => {
+  [...fichiers.filter((f) => f.endsWith('.js')), ...pagesHtml()].forEach((fichier) => {
     const texte = fs.readFileSync(fichier, 'utf8');
     for (const m of texte.matchAll(/<button\b[^>]*>/g)) {
       if (!CLASSES_ICONE.test(m[0]) || /aria-label=/.test(m[0])) continue;

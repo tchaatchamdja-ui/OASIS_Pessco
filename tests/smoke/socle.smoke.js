@@ -68,6 +68,39 @@ module.exports = async function socleSmoke(port) {
 
     const audit = await srv.appel('/api/audit');
     verifier('journal d’audit lisible', audit.statut === 200);
+
+    // ── Forme du corps des écritures de module (FONC-01) ──
+    // Une garde commune est posée sur le préfixe d'API de chaque module, avant
+    // la route. Elle ne dit pas ce qu'un champ doit contenir — chaque route le
+    // sait mieux — mais refuse ce qui n'a pas la forme d'un enregistrement.
+    // Ses bornes sont relevées sur les données réelles : les contrôles qui
+    // suivent le rappellent, pour qu'un resserrement ne passe pas inaperçu.
+    const poser = (corps) => srv.appel('/api/m/ramp/parametres',
+      { method: 'POST', body: JSON.stringify({ type: 'exploitants', ...corps }) });
+
+    const ordinaire = await poser({ label: 'Essai Forme', code: 'EFO' });
+    verifier('un enregistrement ordinaire passe la garde de forme',
+      ordinaire.statut < 400, `statut ${ordinaire.statut}`);
+
+    // Cinq niveaux : la plus profonde imbrication relevée dans les données.
+    const profond = await poser({ label: 'Essai Profond', code: 'EPR',
+      a: { b: { c: { d: { e: 'cinq niveaux' } } } } });
+    verifier('cinq niveaux d’imbrication passent', profond.statut < 400, `statut ${profond.statut}`);
+
+    // Une pièce encodée occupe légitimement un seul champ : il n'est pas borné.
+    const gros = await poser({ label: 'Essai Gros', code: 'EGR', contenu: 'x'.repeat(60000) });
+    verifier('un champ de 60 000 caractères passe', gros.statut < 400, `statut ${gros.statut}`);
+
+    let sansFond = 'fond';
+    for (let i = 0; i < 12; i += 1) sansFond = { n: sansFond };
+    const abyssal = await poser({ label: 'Essai', code: 'EAB', trop: sansFond });
+    verifier('une imbrication sans fond est refusée',
+      abyssal.statut === 400 && abyssal.corps.error === 'corps_invalide',
+      `statut ${abyssal.statut} ${JSON.stringify(abyssal.corps)}`);
+
+    const nomEtrange = await poser({ label: 'Essai', 'champ avec espaces & <script>': 1 });
+    verifier('un nom de champ inattendu est refusé',
+      nomEtrange.statut === 400, `statut ${nomEtrange.statut}`);
   } finally {
     srv.arreter();
   }

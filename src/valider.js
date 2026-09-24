@@ -167,4 +167,48 @@ function enregistrement(options) {
   };
 }
 
-module.exports = { valider, enregistrement, TYPES };
+// ── Garde générique des écritures de module (SEC / FONC-01) ──
+// Posée sur le préfixe d'API de chaque module, elle ne dit pas ce qu'un champ
+// doit contenir — la route le sait mieux — mais refuse un corps qui n'a pas la
+// forme d'un enregistrement : un nom de champ inattendu, une liste démesurée,
+// une imbrication sans fond.
+//
+// Ses bornes sont relevées sur les données réelles, non choisies au jugé : la
+// plus profonde imbrication enregistrée compte cinq niveaux, le plus gros
+// enregistrement quarante-huit champs, la plus longue liste quinze éléments.
+// La taille d'un champ de texte n'est pas bornée ici — une pièce jointe
+// encodée en occupe légitimement un seul, et `express.json` borne déjà le
+// corps entier.
+//
+// Elle ne touche pas `req.body` : les routes continuent de le lire tel quel.
+const ENVELOPPE = { profondeur: 8, champs: 120, liste: 2000 };
+
+function formeAcceptable(v, profondeur) {
+  if (v === null || v === undefined) return true;
+  const t = typeof v;
+  if (t === 'boolean' || t === 'string') return true;
+  if (t === 'number') return Number.isFinite(v);
+  if (profondeur <= 0) return false;
+  if (Array.isArray(v)) {
+    return v.length <= ENVELOPPE.liste && v.every((x) => formeAcceptable(x, profondeur - 1));
+  }
+  if (t === 'object') {
+    const cles = Object.keys(v);
+    return cles.length <= ENVELOPPE.champs
+      && cles.every((k) => NOM_CHAMP.test(k) && formeAcceptable(v[k], profondeur - 1));
+  }
+  return false;                       // fonction, symbole : rien de tel en JSON
+}
+
+function enveloppe(req, res, next) {
+  const recu = req.body;
+  // Un corps vide est légitime : beaucoup de transitions n'en portent pas.
+  if (recu === undefined || recu === null) return next();
+  if (typeof recu !== 'object') return res.status(400).json({ error: 'corps_invalide' });
+  if (!formeAcceptable(recu, ENVELOPPE.profondeur)) {
+    return res.status(400).json({ error: 'corps_invalide' });
+  }
+  return next();
+}
+
+module.exports = { valider, enregistrement, enveloppe, TYPES };

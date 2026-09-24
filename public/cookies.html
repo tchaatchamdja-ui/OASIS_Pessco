@@ -65,28 +65,12 @@
     </p>
   </div>
 
+  <!-- Les palettes : i18n.js s'en sert pour poser le thème enregistré. Sans
+       ce fichier, il s'arrêtait ici sur une référence absente. -->
+  <script src="/shared/js/oasis-theme.js"></script>
   <script src="/shared/js/oasis-requete.js"></script>
   <script src="/js/i18n.js"></script>
   <script src="/shared/js/oasis-cookies.js"></script>
-  <script>
-    applyLang(localStorage.getItem('pr_lang') || 'fr');
-
-    // La durée de session n'est pas écrite en dur : elle vient du paramétrage
-    // de l'application, et la page dit ce qui s'applique vraiment.
-    (async () => {
-      let minutes = 30;
-      try {
-        const r = await fetch('/api/politique-session', { credentials: 'same-origin' });
-        if (r.ok) minutes = (await r.json()).sessionTimeoutMinutes || minutes;
-      } catch (e) { /* la valeur par défaut fera foi */ }
-      document.getElementById('dureeSession').textContent = t('cookies_session_duree').replace('{0}', minutes);
-    })();
-
-    document.getElementById('effacer').addEventListener('click', () => {
-      window.oasisEffacerPreferences();
-      applyLang('fr');
-      alert(t('cookies_efface'));
-    });
-  </script>
+  <script src="/js/cookies-page.js"></script>
 </body>
 </html>

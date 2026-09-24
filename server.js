@@ -111,12 +111,24 @@ const CSP = [
   "object-src 'none'",
 ].join('; ');
 
+// Les pages qu'un visiteur atteint sans être connu — la connexion, les témoins
+// — n'ont plus ni gestionnaire en ligne ni bloc inséré : leur politique refuse
+// donc tout script qui ne vient pas d'un fichier servi par l'application.
+// C'est là que le durcissement vaut le plus, et c'est là qu'il coûte le moins.
+// Les écrans internes gardent 'unsafe-inline' le temps que leurs gestionnaires
+// hérités du portage soient externalisés, module par module (voir §8 de
+// docs/SECURITE.md).
+const CSP_STRICTE = CSP.replace("script-src 'self' 'unsafe-inline'", "script-src 'self'");
+// La politique s'applique au document, non aux fichiers qu'il charge : seules
+// les deux pages sont nommées ici.
+const PAGES_STRICTES = new Set(['/login.html', '/cookies.html']);
+
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'same-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-  res.setHeader('Content-Security-Policy', CSP);
+  res.setHeader('Content-Security-Policy', PAGES_STRICTES.has(req.path) ? CSP_STRICTE : CSP);
   if (EN_PRODUCTION) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
 });
@@ -169,6 +181,53 @@ app.use((req, res, next) => {
   return next();
 });
 
+// ── Plafond d'écritures par compte (SEC-13) ──
+// La limitation de débit ne couvrait que l'authentification : elle protège du
+// balayage avant la porte, et laisse un compte authentifié appeler les deux
+// cent trente-cinq routes mutatives sans compter. Rien d'exploitable par un
+// anonyme, mais un script maladroit — une boucle de synchronisation, un import
+// relancé en rafale — sature le service pour tout le monde.
+//
+// Le plafond est par compte, non par adresse : plusieurs agents derrière la
+// même sortie Internet ne se pénalisent pas l'un l'autre. Les lectures ne sont
+// pas comptées, elles ne coûtent rien au stockage.
+//
+// Dix écritures par seconde : aucune main ne les atteint, un import vif non
+// plus — la suite de fumée, qui joue deux cent trente-cinq écritures d'affilée,
+// est passée sous un plafond de deux par seconde et reste loin de celui-ci.
+// Une boucle emballée, elle, en demande des centaines par seconde.
+const ecritures = new Map();          // compte -> { compte, debut }
+
+function limiterEcritures(req, res, cfg) {
+  if (!METHODES_MUTATIVES.has(req.method)) return true;
+  const sec = (cfg && cfg.security) || {};
+  const max = Number(sec.maxWritesPerMinute) || 600;
+  if (max <= 0) return true;          // 0 : plafond retiré au paramétrage
+  const fenetre = 60 * 1000;
+  const cle = req.user.username;
+  const maintenant = Date.now();
+  const t = ecritures.get(cle);
+  if (!t || maintenant - t.debut > fenetre) {
+    ecritures.set(cle, { compte: 1, debut: maintenant });
+    return true;
+  }
+  t.compte += 1;
+  if (t.compte > max) {
+    const reste = Math.ceil((fenetre - (maintenant - t.debut)) / 1000);
+    res.setHeader('Retry-After', String(reste));
+    audit.log(cle, 'ECRITURE_DEBIT_DEPASSE', { path: req.path, methode: req.method, plafond: max });
+    res.status(429).json({ error: 'too_many_attempts', retry_after: reste });
+    return false;
+  }
+  return true;
+}
+
+// Purge des compteurs échus, pour que la table ne croisse pas indéfiniment.
+setInterval(() => {
+  const seuil = Date.now() - 60 * 1000;
+  for (const [cle, t] of ecritures) if (t.debut < seuil) ecritures.delete(cle);
+}, 60 * 1000).unref();
+
 // ── Middleware session ──
 function parseCookies(req) {
   const out = {};
@@ -189,6 +248,9 @@ function requireAuth(req, res, next) {
   req.user = user;
   req.cfg = cfg;
   req.token = token;
+  // Seul endroit où le compte est connu : toutes les routes protégées y
+  // passent, et c'est là que le plafond d'écritures se compte.
+  if (!limiterEcritures(req, res, cfg)) return;
   next();
 }
 

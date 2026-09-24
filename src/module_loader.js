@@ -10,8 +10,10 @@
 // la feuille de route ; le loader y adosse l'état réellement installé.
 const fs = require('fs');
 const path = require('path');
+const valider = require('./valider');
 
 const MODULES_DIR = path.join(__dirname, 'modules');
+const METHODES_MUTATIVES = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 // Lecture des manifestes, triés par priorité puis par code.
 function discover() {
@@ -53,8 +55,15 @@ function mount(app, deps, moduleAudit) {
       console.error(`[modules] ${m.code} non monté — register() manquant`);
       return;
     }
-    // Journal d'audit inaltérable sur les mutations de chaque préfixe déclaré
     (m.apiPrefixes || []).forEach((prefix) => {
+      // Forme du corps sur toutes les écritures du module : elle ne dit pas ce
+      // qu'un champ doit contenir, chaque route le sait mieux, mais refuse ce
+      // qui n'a pas la forme d'un enregistrement. Les modules validaient champ
+      // par champ, à la main, sans filet commun.
+      app.use(prefix, (req, res, next) => (
+        METHODES_MUTATIVES.has(req.method) ? valider.enveloppe(req, res, next) : next()
+      ));
+      // Journal d'audit inaltérable sur les mutations de chaque préfixe déclaré
       if (moduleAudit && m.auditModule) app.use(prefix, moduleAudit.middleware(m.auditModule, prefix));
     });
     impl.register(app, deps);

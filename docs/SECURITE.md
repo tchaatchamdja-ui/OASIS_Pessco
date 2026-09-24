@@ -37,7 +37,7 @@ sens des catégories particulières : ni santé, ni opinion, ni biométrie.
 | SEC-05 | Cookie de session **`HttpOnly`, `SameSite=Lax`, `Secure` hors développement**, sans `Max-Age` : la durée est tenue par le serveur | `server.js` |
 | | **Verrouillage** du compte après 5 échecs, **expiration après 30 minutes** d'inactivité, **session unique** par compte | `config/oasis.config.json`, `src/auth.js` |
 | | **Politique de mot de passe** : 12 caractères, majuscule, minuscule, chiffre, caractère spécial, renouvellement à 180 jours, 5 derniers interdits, changement imposé à la première connexion | `config/oasis.config.json`, `src/auth.js` |
-| | **Authentification multifacteur** par code à usage unique (courriel), code valable 10 minutes, débit limité ; désactivée par défaut, activable au paramétrage | `src/auth.js`, `server.js` |
+| | **Authentification multifacteur** par code à usage unique (courriel), code valable 10 minutes, débit limité. Éteinte en développement, **requise en production** : au paramétrage (`security.mfaEnabled`) ou par `OASIS_MFA=1` ; un démarrage en production sans elle est signalé et journalisé | `src/auth.js`, `server.js` |
 
 Les paramètres sont tenus au fichier de configuration, non dans le code : une
 Autorité qui durcit sa politique ne modifie pas l'application.
@@ -134,7 +134,7 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 |---|---|
 | `'unsafe-inline'` dans la politique de contenu | **Fermé sur les deux pages publiques** (SEC-12). Les écrans internes le gardent : leurs gestionnaires d'évènements viennent du portage et s'externalisent module par module. |
 | Schéma de validation par route | **Une garde commune borne désormais la forme de toute écriture de module** (SEC-11) ; elle ne dit pas ce qu'un champ doit contenir. Les routes valident champ par champ, sans schéma déclaré. |
-| Authentification multifacteur éteinte | Le mécanisme existe et fonctionne (`src/mfa.js`) ; `mfaEnabled` est à `false`. L'activer demande une messagerie configurée et une décision de l'Autorité — elle n'est pas encore prise, et cette ligne existe pour qu'elle le soit. |
+| Authentification multifacteur éteinte hors production | **Décision prise** : elle reste éteinte en développement et en démonstration, et **doit être active en production**. Le réglage se force par `OASIS_MFA=1` sans toucher au fichier de configuration, qu'un hébergement ne laisse pas modifier. Un démarrage en production sans elle l'écrit sur la console et au journal d'audit — il ne la refuse pas, pour ne pas laisser une Autorité hors de son application. |
 | Chiffrement au repos | Les fichiers de données reposent sur le chiffrement du volume de l'hébergeur ; aucune couche applicative. |
 | Rétention des données | Aucune purge automatique : les actes de surveillance se conservent, leur durée n'est pas encore une règle de l'application. Les journaux d'audit, eux, sont en ajout seul par construction : leur croissance ne coûte plus rien à l'écriture, mais elle n'est pas bornée. |
 

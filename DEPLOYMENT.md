@@ -84,9 +84,18 @@ build `npm ci`, start `npm start`, health check `/api/health`, puis les variable
 | `OASIS_TRUST_PROXY` | `1` | `req.ip` = adresse réelle du client, derrière le proxy Render |
 | `OASIS_COMPRESSION` | `0` | Le proxy Render compresse déjà |
 | `OASIS_SEED_PASSWORD` | *(à saisir)* | Mot de passe des comptes d'amorçage |
+| `OASIS_MFA` | `1` | **Authentification multifacteur — requise en production** |
 | `OASIS_DATA_DIR` | `/var/data` | **Seulement** si un disque persistant est monté |
 
 `PORT` est fourni par Render : ne pas le définir.
+
+**`OASIS_MFA=1` n'est pas facultative.** Le fichier de configuration est cuit
+dans l'image et n'est pas modifiable au déploiement : cette variable est le seul
+moyen d'activer l'authentification multifacteur sur un hébergement. Elle exige
+une messagerie joignable — voir la section `smtp` du paramétrage — puisque le
+code à usage unique part par courriel. Un démarrage en production sans elle
+n'est pas refusé, pour ne pas laisser une Autorité dehors, mais il l'écrit sur
+la console et l'inscrit au journal d'audit.
 
 ---
 

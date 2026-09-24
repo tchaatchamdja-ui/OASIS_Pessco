@@ -35,6 +35,12 @@ services:
       # Le proxy de Render compresse déjà : inutile de le faire deux fois.
       - key: OASIS_COMPRESSION
         value: "0"
+      # Authentification multifacteur : requise en production. Le fichier de
+      # configuration est cuit dans l'image et n'y est pas modifiable ; c'est
+      # ici que la décision se pose. Elle exige une messagerie joignable — le
+      # code à usage unique part par courriel.
+      - key: OASIS_MFA
+        value: "1"
       # Chromium survit aux constructions : sans cela, il serait retéléchargé
       # à chaque déploiement — ou introuvable au démarrage.
       - key: PUPPETEER_CACHE_DIR

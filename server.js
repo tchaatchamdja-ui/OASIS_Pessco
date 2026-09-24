@@ -301,11 +301,24 @@ function setSessionCookie(res, token) {
   res.setHeader('Set-Cookie', `oasis_session=${token}; HttpOnly; SameSite=Lax; Path=/${secure}`);
 }
 
+// ── Authentification multifacteur : le réglage effectif (SEC-12) ──
+// Le paramétrage porte la décision de l'Autorité. `OASIS_MFA` la force depuis
+// l'environnement, ce dont un hébergement a besoin : le fichier de
+// configuration y est cuit dans l'image, et n'est pas modifiable au
+// déploiement. En production, elle doit être active ; si elle ne l'est pas, le
+// démarrage le dit et le journal le retient.
+function mfaActive(cfg) {
+  const force = process.env.OASIS_MFA;
+  if (force === '1' || force === 'true') return true;
+  if (force === '0' || force === 'false') return false;
+  return !!(cfg.security && cfg.security.mfaEnabled);
+}
+
 app.post('/api/login', limiterAuth, (req, res) => {
   const cfg = loadConfig();
   const { username, password, channel } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'invalid' });
-  const mfaOn = !!(cfg.security && cfg.security.mfaEnabled);
+  const mfaOn = mfaActive(cfg);
   // Une instance désactivée ne laisse plus entrer les siens. Le contrôle est
   // ici, après l'authentification : refuser avant dirait qui existe.
   const compte = auth.findUser(String(username).trim().toLowerCase());
@@ -1112,6 +1125,14 @@ require('./src/migration_ramp').migrer(store, loadConfig, saveConfig);
 [['socle', audit.reprendre()], ['modules', moduleAudit.reprendre()]]
   .filter(([, fait]) => fait)
   .forEach(([quoi]) => console.log(`Journal d'audit ${quoi} : repris en lignes.`));
+// L'authentification multifacteur doit être active en production : elle ne
+// l'est pas par défaut, et un démarrage silencieux laisserait la décision se
+// perdre. Ici elle se voit, et le journal la retient.
+if (EN_PRODUCTION && !mfaActive(loadConfig())) {
+  console.warn("OASIS — ATTENTION : l'authentification multifacteur est désactivée en production."
+    + " L'activer au paramétrage (security.mfaEnabled) ou par OASIS_MFA=1.");
+  audit.log('système', 'MFA_DESACTIVEE_EN_PRODUCTION', {});
+}
 auth.seedUsers(loadConfig());
 referentiels.seedReferentiels();
 moduleLoader.seedAll(MODULES_MONTES);

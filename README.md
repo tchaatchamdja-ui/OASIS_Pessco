@@ -113,6 +113,7 @@ OASIS/
 | `DEPLOYMENT.md` | Déploiement Render et Docker, variables, ennuis courants |
 | `docs/SECURITE.md` | Politique de sécurité : mesures, emplacements, points ouverts |
 | `docs/architecture-uml.md` | Modèle de données et enchaînements |
+| `docs/MAGASIN-POSTGRESQL.md` | Le magasin PostgreSQL : ce qui est fait, ce qui bloque la bascule |
 | `CHANGELOG.md` | Journal des versions |
 | `.env.example` | Variables d'environnement, commentées |
 
@@ -126,7 +127,13 @@ suivie par `render.yaml`. Le détail est dans `DEPLOYMENT.md`.
 
 Le stockage par fichiers JSON de `src/store.js` est la couche de démonstration :
 la cible est PostgreSQL 16, une base par État, avec réplication logique
-asynchrone vers le serveur central UEMOA. Les points encore ouverts — dont
-celui-ci — sont recensés au §8 de `docs/SECURITE.md`.
+asynchrone vers le serveur central UEMOA.
+
+Le magasin PostgreSQL est écrit (`src/store_pg.js`) et la reprise des données
+éprouvée sur les données réelles (`scripts/migrer-pg.js`) ; la bascule, elle,
+demande de rendre asynchrones les quelque 450 accès des modules. L'état du
+chantier et les chemins possibles : `docs/MAGASIN-POSTGRESQL.md`.
+
+Les autres points ouverts sont recensés au §8 de `docs/SECURITE.md`.
 
 © 2026 UEMOA / URSAC

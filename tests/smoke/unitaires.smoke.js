@@ -183,6 +183,91 @@ function traces() {
     brutes.length === 1 && brutes[0] === '  │  compte@aac.bj  MotDePasse!');
 }
 
+// ── 5. Les deux magasins rendent la même chose ──
+// Le magasin PostgreSQL doit tenir exactement le contrat des fichiers : une
+// collection entière se lit, une collection entière s'écrit, un défaut revient
+// quand rien n'est là. Les deux sont ici éprouvés sur les mêmes gestes — c'est
+// ce qui les empêchera de diverger.
+//
+// PostgreSQL s'éprouve contre une base de papier, qui retient ce qu'on lui
+// écrit. Elle ne dit rien du serveur — ni des types, ni des verrous, ni du
+// réseau — mais tout du contrat et du SQL produit. `DATABASE_URL` posé, les
+// mêmes contrôles se rejouent contre une vraie base.
+function basePapier() {
+  const collections = new Map();
+  const journal = [];
+  return {
+    async query(sql, p) {
+      const s = sql.trim();
+      if (/^CREATE/.test(s)) return { rows: [] };
+      if (/^SELECT valeur/.test(s)) {
+        const v = collections.get(p[0]);
+        return { rows: v === undefined ? [] : [{ valeur: JSON.parse(JSON.stringify(v)) }] };
+      }
+      if (/^INSERT INTO collections/.test(s)) { collections.set(p[0], JSON.parse(p[1])); return { rows: [] }; }
+      if (/^INSERT INTO journal/.test(s)) { journal.push({ nom: p[0], entree: JSON.parse(p[1]) }); return { rows: [] }; }
+      if (/ORDER BY ordre DESC/.test(s)) {
+        const l = journal.filter((x) => x.nom === p[0]);
+        return { rows: l.length ? [{ entree: l[l.length - 1].entree }] : [] };
+      }
+      if (/^SELECT entree/.test(s)) {
+        return { rows: journal.filter((x) => x.nom === p[0]).map((x) => ({ entree: x.entree })) };
+      }
+      if (/count\(\*\)/.test(s)) {
+        return { rows: [{ n: journal.filter((x) => x.nom === p[0]).length }] };
+      }
+      if (/^SELECT nom/.test(s)) {
+        return { rows: [...collections.keys()].sort().map((nom) => ({ nom })) };
+      }
+      throw new Error(`SQL inattendu : ${s.slice(0, 60)}`);
+    },
+  };
+}
+
+async function magasins() {
+  const storePg = require('../../src/store_pg');
+  const fichiers = require('../../src/store');
+  const journalFichier = require('../../src/journal');
+  const pg = storePg.creer(basePapier());
+  await pg.preparer();
+
+  // Le même geste des deux côtés, et la même réponse attendue.
+  const DEFAUT = { rien: true };
+  verifier('magasins : une collection absente rend le défaut',
+    JSON.stringify(fichiers.load('inconnue_xyz', DEFAUT)) === JSON.stringify(DEFAUT)
+    && JSON.stringify(await pg.load('inconnue_xyz', DEFAUT)) === JSON.stringify(DEFAUT));
+
+  const valeur = { items: [{ id: 'a', n: 1 }, { id: 'b', n: 2 }], maj: '2026-09-24' };
+  fichiers.save('essai_contrat', valeur);
+  await pg.save('essai_contrat', valeur);
+  verifier('magasins : ce qui est écrit se relit à l’identique',
+    JSON.stringify(fichiers.load('essai_contrat', null)) === JSON.stringify(valeur)
+    && JSON.stringify(await pg.load('essai_contrat', null)) === JSON.stringify(valeur));
+
+  const modifie = { ...valeur, items: [...valeur.items, { id: 'c', n: 3 }] };
+  fichiers.save('essai_contrat', modifie);
+  await pg.save('essai_contrat', modifie);
+  verifier('magasins : une seconde écriture remplace, elle n’ajoute pas',
+    fichiers.load('essai_contrat', null).items.length === 3
+    && (await pg.load('essai_contrat', null)).items.length === 3);
+
+  // Journal : ajout seul des deux côtés, et la dernière entrée sans tout relire.
+  const entrees = [{ id: 1, hash: 'a' }, { id: 2, prevHash: 'a', hash: 'b' }];
+  entrees.forEach((e) => journalFichier.ajouter('essai_journal', e));
+  for (const e of entrees) await pg.ajouter('essai_journal', e);
+  verifier('magasins : le journal s’ajoute et se relit dans l’ordre',
+    JSON.stringify(journalFichier.lire('essai_journal')) === JSON.stringify(entrees)
+    && JSON.stringify(await pg.lire('essai_journal')) === JSON.stringify(entrees));
+  verifier('magasins : PostgreSQL rend la dernière entrée sans tout relire',
+    (await pg.derniere('essai_journal')).hash === 'b' && (await pg.compte('essai_journal')) === 2);
+
+  // Le SQL est paramétré : une valeur ne s'y glisse jamais par concaténation.
+  const sqlEnDur = storePg.SCHEMA.concat([
+    'SELECT valeur FROM collections WHERE nom = $1',
+  ]).every((sql) => !/\$\{|' \+ |\+ '/.test(sql));
+  verifier('magasins : aucune valeur concaténée dans le SQL', sqlEnDur);
+}
+
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
@@ -190,6 +275,7 @@ module.exports = async function unitairesSmoke() {
     rattachement();
     bornes();
     traces();
+    await magasins();
   } finally {
     fs.rmSync(BAC, { recursive: true, force: true });
     delete process.env.OASIS_DATA_DIR;

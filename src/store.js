@@ -1,5 +1,10 @@
 // Couche de persistance du socle (fichiers JSON).
-// Production : remplacée par PostgreSQL 16 — une base par État (cf. Note technique §4).
+//
+// La cible reste PostgreSQL 16, une base par État (note technique §4). Le
+// magasin est écrit et sa reprise éprouvée — `src/store_pg.js`,
+// `scripts/migrer-pg.js` —, mais la bascule attend : `load` et `save` sont
+// synchrones, aucun client PostgreSQL ne l'est, et 450 appels en dépendent.
+// L'état du chantier et les trois chemins possibles : docs/MAGASIN-POSTGRESQL.md.
 const fs = require('fs');
 const path = require('path');
 

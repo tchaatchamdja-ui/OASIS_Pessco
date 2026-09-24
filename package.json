@@ -16,6 +16,7 @@
   "dependencies": {
     "express": "^4.19.2",
     "nodemailer": "^9.0.4",
+    "pg": "^8.23.0",
     "puppeteer": "^25.8.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "xlsx-js-style": "^1.2.0"

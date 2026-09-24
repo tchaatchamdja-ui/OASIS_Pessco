@@ -1,6 +1,9 @@
 # OASIS — Outils d'Administration et de Supervision Intégrée de la Sécurité
 
-Socle technique transverse (**Phase 1**) de l'outil intégré de supervision de la sécurité de l'aviation civile — UEMOA / URSAC.
+Outil intégré de supervision de la sécurité de l'aviation civile — **UEMOA / URSAC**.
+
+Un portail, un socle transverse, et six modules métier montés par manifeste.
+Une seule application Node, un seul port, aucun cadre côté navigateur.
 
 ## Démarrage
 
@@ -9,50 +12,121 @@ npm install
 npm start
 ```
 
-Application disponible sur **http://localhost:4750**.
+Application sur **http://localhost:4750**.
 
-## Comptes de démonstration
-
-Au premier démarrage, trois comptes sont créés — `superadmin@anac.bj` (SUPERADMIN),
-`admin@anac.bj` (ADMIN AAC) et `m.ahoyo@anac.bj` (AAC). Leur mot de passe est **tiré au
-hasard et affiché une seule fois sur la console du serveur** ; il doit être changé à la
-première connexion.
-
-Pour fixer ce mot de passe — développement, démonstration, tests :
+Au premier démarrage, trois comptes sont créés — `superadmin@anac.bj`,
+`admin@anac.bj` et `m.ahoyo@anac.bj`. Leur mot de passe est **tiré au hasard et
+affiché une seule fois sur la console du serveur** ; il doit être changé à la
+première connexion. Pour le fixer — développement, démonstration :
 
 ```bash
 OASIS_SEED_PASSWORD='UnMotDePasse!2026' npm start
 ```
 
-## Périmètre du socle (Phase 1 — TDR)
+## Contrôles
 
-- **Authentification et sécurité (§F.3)** : politique de mots de passe (12+ caractères, complexité), changement obligatoire à la première connexion, blocage après 5 tentatives infructueuses (déblocage par un administrateur), session unique par utilisateur, déconnexion automatique après 30 min d'inactivité.
-- **Gestion hiérarchisée des utilisateurs (§C.2)** : rôles SUPERADMIN / ADMIN / INSPECTEUR / PRESTATAIRE, création avec mot de passe temporaire, activation/désactivation, réinitialisation.
-- **Journal d'audit inaltérable (§F.3)** : append-only avec chaînage cryptographique SHA-256 ; vérification d'intégrité de la chaîne intégrée à l'interface.
-- **Multilinguisme (§F.7)** : interface FR / EN / PT, langue par utilisateur (localStorage).
-- **Cartes des modules (D.1–D.10)** : registre des 10 modules métiers avec priorités du GT2 (§E) ; activation progressive via la configuration (SUPERADMIN).
-- **Configuration** : instance État, politique de sécurité, activation des modules, cible PostgreSQL, réplication vers le serveur central UEMOA (préparée, désactivée par défaut).
-- **Notifications** : cloche de notifications globales (créations de comptes, blocages, changements de configuration).
-- **Design system PESSCO** : 5 thèmes, sidebar rétractable, motifs aviation, responsive.
+```bash
+npm run smoke
+```
+
+Neuf suites, **624 contrôles**, exécutés contre un vrai serveur lancé sur un jeu
+de données isolé (`tests/fixtures/`) : `data/` n'est jamais touché. La même
+commande tourne en intégration continue à chaque poussée, avec `npm audit` au
+niveau « high » et un contrôle de syntaxe sur chaque fichier
+(`.github/workflows/ci.yml`).
+
+Trois suites vérifient le code plutôt que le comportement : taille des fichiers
+et des fonctions, redéfinitions de sélecteurs CSS, échappement des valeurs
+rendues, et parité des trois tables de traduction.
+
+## Les modules
+
+Chaque module se décrit dans un manifeste (`src/modules/<nom>/module.json`) :
+préfixe d'API, journal d'audit, module de droits, fichiers du front, et les
+services qu'il publie ou consomme. Le socle n'en connaît aucun en particulier —
+`src/module_loader.js` les découvre et les monte.
+
+| Code | Module | TDR | Publie / consomme |
+|---|---|---|---|
+| **PLAN** | Plans de Surveillance | D.6 | publie `plansValides` · consomme `PR.riskProfiles`, `SURV.activitesDeclenchees` |
+| **PR** | Profils de Risques | D.6 | publie `riskProfiles` |
+| **SURV** | Exécution de la Surveillance | D.7.1 | publie `activitesDeclenchees`, `constatationsOuvertes`, `pacDeConstatation` · consomme `PLAN.plansValides` |
+| **CARE** | Mesures d'Application | D.7.2 | publie `mesuresParConstatation`, `suitesParConstatation` · consomme les constatations de SURV et de RAMP |
+| **RAMP** | Inspections d'aéronefs sur aire de trafic | D.8 | publie `constatationsCritiques`, `pacDeConstatation` |
+| **DROITS** | Gestion des Droits | socle | — |
+
+Les échanges passent par un bus de services (`src/services.js`) : un module
+n'appelle jamais un autre module, il demande un service au nom déclaré.
+
+## Le socle
+
+- **Authentification** (§F.3) : mots de passe hachés par scrypt, politique de
+  12 caractères et complexité, changement imposé à la première connexion,
+  verrouillage après 5 échecs, session unique, expiration après 30 minutes
+  d'inactivité, authentification multifacteur par code à usage unique
+  (désactivée par défaut).
+- **Utilisateurs** (§C.2) : super-administrateur régional ou national,
+  administrateur et utilisateur d'AAC, administrateur et utilisateur
+  prestataire ; privilèges par module attribués dans « Gestion des Droits ».
+- **Instances** : chaque AAC ne voit et n'écrit que ses propres dossiers ; la
+  vue régionale, réservée au super-administrateur régional, lit tout le
+  dispositif (`src/instances.js`).
+- **Vue Prestataire** : un compte d'organisme ne voit que ses propres données ;
+  le cloisonnement est posé au serveur, jamais à l'écran.
+- **Journal d'audit inaltérable** (§F.3) : ajout seul, chaque entrée portant
+  l'empreinte SHA-256 de la précédente. Un journal pour le socle, un par module.
+- **Multilinguisme** (§F.7) : français, anglais, portugais, par utilisateur.
+- **Trois palettes** : Bleu, Corporate, Retro-Avionics Jet.
 
 ## Architecture des fichiers
 
 ```
 OASIS/
-├── server.js               # API Express (auth, users, audit, config, modules)
+├── server.js                 # Socle : authentification, comptes, référentiels, montage des modules
 ├── config/
-│   ├── oasis.config.json # Configuration de l'instance (sécurité, BDD, réplication)
-│   └── modules.json        # Registre des 10 modules métiers (D.1–D.10)
+│   ├── oasis.config.json     # Instance, politique de sécurité, modules actifs, messagerie
+│   └── modules.json          # Registre des modules du TDR (D.1–D.10)
 ├── src/
-│   ├── store.js            # Persistance (JSON — production : PostgreSQL 16)
-│   ├── audit.js            # Journal chaîné SHA-256
-│   └── auth.js             # Sessions, politique de mots de passe, comptes
-├── data/                   # Données générées (users, audit, notifications)
-└── public/                 # Frontend (PESSCO design system)
+│   ├── store.js              # Persistance (fichiers JSON — cible : PostgreSQL 16)
+│   ├── auth.js  mfa.js       # Sessions, mots de passe, code à usage unique
+│   ├── audit.js              # Journal chaîné du socle
+│   ├── module_audit.js       # Journal chaîné par module
+│   ├── module_loader.js      # Découverte et montage des manifestes
+│   ├── services.js           # Bus de services entre modules
+│   ├── instances.js          # Cloisonnement par AAC, vue régionale
+│   ├── vues_prestataire.js   # Cloisonnement des comptes d'organisme
+│   ├── valider.js erreurs.js # Validation des corps, erreurs normalisées
+│   └── modules/<code>/       # Un dossier par module : manifeste, routes, vues, magasin
+├── public/
+│   ├── index.html  js/  css/ # Portail
+│   ├── shared/               # Socle du front : requêtes, thème, filtres, retours d'action
+│   └── modules/<nom>/        # Un dossier par module
+├── tests/smoke/              # Neuf suites, exécutées par npm run smoke
+├── scripts/sauvegarde.sh     # Archives horodatées de data/ et config/
+└── docs/
 ```
 
-## Production (cf. Note technique)
+## Documentation
 
-Le stockage JSON du socle est une couche de démonstration : en production, `src/store.js` est remplacé par PostgreSQL 16 (une base par État, réplication logique asynchrone vers le serveur central UEMOA), l'authentification par Keycloak (MFA), et le déploiement par Docker/K3s.
+| Document | Contenu |
+|---|---|
+| `DEPLOYMENT.md` | Déploiement Render et Docker, variables, ennuis courants |
+| `docs/SECURITE.md` | Politique de sécurité : mesures, emplacements, points ouverts |
+| `docs/architecture-uml.md` | Modèle de données et enchaînements |
+| `CHANGELOG.md` | Journal des versions |
+| `.env.example` | Variables d'environnement, commentées |
+
+## Déploiement
+
+Image Docker à deux étages, compte non privilégié, sonde de santé sur
+`/api/health` (`Dockerfile`). Déploiement continu sur Render depuis la branche
+suivie par `render.yaml`. Le détail est dans `DEPLOYMENT.md`.
+
+## En production
+
+Le stockage par fichiers JSON de `src/store.js` est la couche de démonstration :
+la cible est PostgreSQL 16, une base par État, avec réplication logique
+asynchrone vers le serveur central UEMOA. Les points encore ouverts — dont
+celui-ci — sont recensés au §8 de `docs/SECURITE.md`.
 
 © 2026 UEMOA / URSAC

@@ -548,6 +548,9 @@ const MES_TR = {
 
     // ── Paramètres ──
     par_sous_titre: 'Catégories, types de mesure, types d’investigation et comités décisionnels',
+    ajouter: 'Ajouter',
+    sous_menu_replier: 'Replier le sous-menu',
+    sous_menu_deplier: 'Déplier le sous-menu',
     par_categories: 'Catégories',
     par_types_mesure: 'Types de mesure',
     par_types_inv: 'Types d’investigation',
@@ -1100,6 +1103,9 @@ const MES_TR = {
     col_mesures: 'Measures',
 
     par_sous_titre: 'Categories, types of measure, types of investigation and decision panels',
+    ajouter: 'Add',
+    sous_menu_replier: 'Collapse the sub-menu',
+    sous_menu_deplier: 'Expand the sub-menu',
     par_categories: 'Categories',
     par_types_mesure: 'Types of measure',
     par_types_inv: 'Types of investigation',
@@ -1652,6 +1658,9 @@ const MES_TR = {
     col_mesures: 'Medidas',
 
     par_sous_titre: 'Categorias, tipos de medida, tipos de investigação e comites decisórios',
+    ajouter: 'Adicionar',
+    sous_menu_replier: 'Recolher o submenu',
+    sous_menu_deplier: 'Expandir o submenu',
     par_categories: 'Categorias',
     par_types_mesure: 'Tipos de medida',
     par_types_inv: 'Tipos de investigação',

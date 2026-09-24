@@ -60,61 +60,75 @@ function mesRenderParametres() {
         </td></tr>`).join('')
         || `<tr><td colspan="2" class="mes-table-vide">${mt('aucun_comite')}</td></tr>`;
 
+    // Chaque liste a son sous-menu : elles se lisent une à la fois, dans la
+    // bande latérale du portail, comme aux Paramètres des autres modules. Le
+    // bandeau qui présentait les quatre ensemble n'a plus d'objet.
+    const carte = (cleTitre, ouvrir, entetes, lignes) => `
+        <div class="mes-card" style="padding:0;">
+            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
+                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt(cleTitre)}</div>
+                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="${ouvrir}()">${MES_ICONS.add} ${mt('ajouter')}</button>` : ''}
+            </div>
+            <div class="mes-table-wrap"><table class="mes-table">
+                <thead><tr>${entetes}</tr></thead>
+                <tbody>${lignes}</tbody>
+            </table></div>
+        </div>`;
+
+    const SOUS_MENUS = [
+        { cle: 'categories', cleT: 'par_categories', icone: 'couches',
+          corps: () => carte('par_categories', 'mesOuvrirCategorie',
+            `<th>${mt('col_libelle')}</th><th style="width:70px;text-align:center;">${mt('col_types')}</th>`
+            + `<th style="width:110px;">${mt('col_actions')}</th>`, lignesCat) },
+        { cle: 'types', cleT: 'par_types_mesure', icone: 'shield',
+          corps: () => carte('par_types_mesure', 'mesOuvrirType',
+            `<th style="width:170px;">${mt('fiche_categorie')}</th><th>${mt('col_libelle')}</th>`
+            + `<th style="width:110px;">${mt('col_actions')}</th>`, lignesType) },
+        { cle: 'investigations', cleT: 'par_types_inv', icone: 'loupe',
+          corps: () => carte('par_types_inv', 'mesOuvrirTypeInvestigation',
+            `<th>${mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th>`, lignesInv) },
+        { cle: 'comites', cleT: 'par_comites', icone: 'groupe',
+          corps: () => carte('par_comites', 'mesOuvrirComite',
+            `<th>${mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th>`, lignesCom) },
+    ];
+
+    const courant = SOUS_MENUS.find((o) => o.cle === MES_STATE.paramSousMenu) || SOUS_MENUS[0];
+    const repliee = !!MES_STATE.paramBarreRepliee;
+    const bascule = mt(repliee ? 'sous_menu_deplier' : 'sous_menu_replier');
+    const entrees = SOUS_MENUS.map((o) => `
+        <button class="cfg-sidebar-item ${o.cle === courant.cle ? 'active' : ''}"
+                onclick="mesParamSousMenu('${o.cle}')" title="${_mesAttr(mt(o.cleT))}">
+            <span class="cfg-sidebar-icon">${MES_ICONS[o.icone]}</span>
+            <span class="cfg-sidebar-label">${_mesEsc(mt(o.cleT))}</span>
+        </button>`).join('');
+
     return `
     <div class="mes-page-header">
         <h2>${mt('nav_parametres')}</h2>
         <span class="mes-sous-titre">${mt('par_sous_titre')}</span>
     </div>
-    <p class="mes-note">
-        Ces quatre listes peuplent les formulaires du module : une mesure porte une catégorie
-        et un type rattaché à cette catégorie ; une investigation porte son type ; un comité
-        décisionnel siège pour qualifier une carence et arrêter la sanction. Le code technique
-        ne change pas avec le libellé — renommer n'orpheline pas ce qui a déjà été enregistré.
-    </p>
-    <div class="mes-grille-parametres">
-        <div class="mes-card" style="padding:0;">
-            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_categories')}</div>
-                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirCategorie()">${MES_ICONS.add} Ajouter</button>` : ''}
-            </div>
-            <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th>${mt('col_libelle')}</th><th style="width:70px;text-align:center;">${
-                    mt('col_types')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
-                <tbody>${lignesCat}</tbody>
-            </table></div>
+    <div class="cfg-layout">
+        <div class="cfg-sidebar ${repliee ? 'collapsed' : ''}">
+            <button class="cfg-sidebar-toggle" onclick="mesBasculerBarreParam()"
+                    title="${_mesAttr(bascule)}" aria-label="${_mesAttr(bascule)}"
+                    aria-expanded="${!repliee}">
+                <span style="display:flex;${repliee ? 'transform:rotate(180deg);' : ''}">${MES_ICONS.chevron}</span>
+            </button>
+            ${entrees}
         </div>
-        <div class="mes-card" style="padding:0;">
-            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_types_mesure')}</div>
-                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirType()">${MES_ICONS.add} Ajouter</button>` : ''}
-            </div>
-            <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th style="width:170px;">${mt('fiche_categorie')}</th><th>${
-                    mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
-                <tbody>${lignesType}</tbody>
-            </table></div>
-        </div>
-        <div class="mes-card" style="padding:0;">
-            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_types_inv')}</div>
-                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirTypeInvestigation()">${MES_ICONS.add} Ajouter</button>` : ''}
-            </div>
-            <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th>${mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
-                <tbody>${lignesInv}</tbody>
-            </table></div>
-        </div>
-        <div class="mes-card" style="padding:0;">
-            <div class="mes-action-bar" style="margin:0;padding:.6rem .8rem;border-bottom:1px solid var(--border);">
-                <div class="mes-card-titre" style="margin:0;border:none;padding:0;flex:1;">${mt('par_comites')}</div>
-                ${editeur ? `<button class="btn btn-primary btn-sm" onclick="mesOuvrirComite()">${MES_ICONS.add} Ajouter</button>` : ''}
-            </div>
-            <div class="mes-table-wrap"><table class="mes-table">
-                <thead><tr><th>${mt('col_libelle')}</th><th style="width:110px;">${mt('col_actions')}</th></tr></thead>
-                <tbody>${lignesCom}</tbody>
-            </table></div>
-        </div>
+        <div class="cfg-content">${courant.corps()}</div>
     </div>`;
+}
+
+// Un sous-menu s'ouvre ; la bande se replie sur ses icônes, comme au portail.
+function mesParamSousMenu(cle) {
+    MES_STATE.paramSousMenu = cle;
+    mesRenderPage();
+}
+
+function mesBasculerBarreParam() {
+    MES_STATE.paramBarreRepliee = !MES_STATE.paramBarreRepliee;
+    mesRenderPage();
 }
 
 // ── Modales de paramétrage ──
@@ -374,7 +388,8 @@ async function mesSupprimerType(id) {
 // `window` : mes-app.js ne peut pas les exporter, elles n'existent pas encore
 // quand son propre bloc d'exports s'exécute.
 Object.assign(window, {
-    mesRenderParametres, mesAfficherModal, mesFermerModal,
+    mesRenderParametres, mesParamSousMenu, mesBasculerBarreParam,
+    mesAfficherModal, mesFermerModal,
     mesOuvrirCategorie, mesOuvrirType,
     mesEnregistrerCategorie, mesEnregistrerType,
     mesSupprimerCategorie, mesSupprimerType,

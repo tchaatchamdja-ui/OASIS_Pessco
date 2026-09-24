@@ -97,10 +97,9 @@
    les unes sous les autres. Côte à côte, elles formaient quatre colonnes
    étroites où chaque libellé se repliait sur trois lignes — la place manquait
    en largeur, et il fallait dérouler pour lire une liste un peu longue. */
-.mes-grille-parametres { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
-/* La table d'une liste ne dépasse pas la hauteur d'un écran : au-delà elle
-   défile chez elle, sans repousser la liste suivante hors de vue. */
-.mes-grille-parametres .mes-table-wrap { max-height: 340px; overflow-y: auto; }
+/* Les quatre listes des Paramètres ne s'empilent plus : chacune a son
+   sous-menu et occupe la page seule. La grille qui les rangeait, et le
+   plafond de 340 px qui les empêchait de se repousser, n'ont plus d'objet. */
 /* Ouverture, délai et clôture se lisent ensemble : trois champs courts, un
    seul rang tant que la largeur le permet. */
 .mes-grille-3 {

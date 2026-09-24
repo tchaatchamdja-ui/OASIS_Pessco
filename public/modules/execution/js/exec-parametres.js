@@ -18,19 +18,29 @@ function execRenderParametres() {
         constatations: (EXEC_STATE.data.criticites || []).length + (EXEC_STATE.data.typesCas || []).length,
         checklists: (EXEC_STATE.data.checklists || []).length
     };
-    const tabs = `<div class="exec-workflow-tabs">
-        <button class="exec-tab ${sub==='constatations'?'active':''}" onclick="window._execParamSub='constatations';execRenderPage();">
-            Constatations <span class="exec-tab-badge">${counts.constatations}</span>
+    // Les sous-menus des Paramètres reprennent la bande latérale du portail :
+    // une colonne d'entrées à icône, qui se replie sur ses seules icônes.
+    const SOUS = [
+        { id: 'constatations', libelle: te('constatations'), icone: 'constatations', compte: counts.constatations },
+        { id: 'checklists', libelle: te('checklists'), icone: 'clipboard', compte: counts.checklists },
+        { id: 'delais', libelle: te('delais_onglet'), icone: 'clock' },
+        { id: 'autres', libelle: te('autres_parametres'), icone: 'settings' },
+    ];
+    const repliee = !!window._execParamBarreRepliee;
+    const bascule = te(repliee ? 'sous_menu_deplier' : 'sous_menu_replier');
+    const tabs = `<div class="cfg-sidebar ${repliee ? 'collapsed' : ''}">
+        <button class="cfg-sidebar-toggle" onclick="execBasculerBarreParam()"
+                title="${_escAttr(bascule)}" aria-label="${_escAttr(bascule)}"
+                aria-expanded="${!repliee}">
+            <span style="display:flex;${repliee ? 'transform:rotate(180deg);' : ''}">${EXEC_ICONS.chevron}</span>
         </button>
-        <button class="exec-tab ${sub==='checklists'?'active':''}" onclick="window._execParamSub='checklists';execRenderPage();">
-            Checklists <span class="exec-tab-badge">${counts.checklists}</span>
-        </button>
-        <button class="exec-tab ${sub==='delais'?'active':''}" onclick="window._execParamSub='delais';execRenderPage();">
-            ${te('delais_onglet')}
-        </button>
-        <button class="exec-tab ${sub==='autres'?'active':''}" onclick="window._execParamSub='autres';execRenderPage();">
-            ${te('autres_parametres')}
-        </button>
+        ${SOUS.map((o) => `
+        <button class="cfg-sidebar-item ${sub === o.id ? 'active' : ''}"
+                onclick="window._execParamSub='${o.id}';execRenderPage();" title="${_escAttr(o.libelle)}">
+            <span class="cfg-sidebar-icon">${EXEC_ICONS[o.icone]}</span>
+            <span class="cfg-sidebar-label">${_esc(o.libelle)}</span>
+            ${o.compte === undefined ? '' : `<span class="exec-tab-badge">${o.compte}</span>`}
+        </button>`).join('')}
     </div>`;
     const compactCss = `<style>
         .exec-params-compact .exec-table { font-size: 0.78rem; }
@@ -46,9 +56,18 @@ function execRenderParametres() {
     return `<div class="page-content exec-params-compact">
         ${compactCss}
         <div class="page-header"><h2>${te('parametres')}</h2></div>
-        ${tabs}
-        ${body}
+        <div class="cfg-layout">
+            ${tabs}
+            <div class="cfg-content">${body}</div>
+        </div>
     </div>`;
+}
+
+// La bande latérale se replie sur ses icônes, comme au portail : les écrans de
+// paramétrage tiennent des tables larges, et la place se prend là.
+function execBasculerBarreParam() {
+    window._execParamBarreRepliee = !window._execParamBarreRepliee;
+    execRenderPage();
 }
 
 // ── Paramètre « Équipe d'audit / inspection » ────────────────────────

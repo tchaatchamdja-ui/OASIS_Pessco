@@ -95,6 +95,8 @@ const RAMP_STATE = {
     voletRejouer: null,
     importPrevisu: [],
     paramOnglet: 'pays',
+    // Bande latérale des sous-menus des Paramètres : repliée ou non.
+    paramBarreRepliee: false,
     paramEnCours: null,
     depotEnCours: null,
     contactEnCours: null,
@@ -227,6 +229,10 @@ const RAMP_ICONS = {
     // la disposition des autres. L'icône du carnet d'adresses servait ici et
     // au menu « Contacts » : deux menus, une seule image.
     partage: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+    // Sous-menus des Paramètres : un État, une plateforme. Les autres entrées
+    // reprennent une icône déjà servie ailleurs dans le module.
+    globe: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/></svg>',
+    tour: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21V9h6v12"/><path d="M10 9 8 3h8l-2 6"/><line x1="6" y1="21" x2="18" y2="21"/><line x1="12" y1="3" x2="12" y2="1"/></svg>',
     plane: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.12 2.12 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7L8 11l-2 3H3l2 3 3 2 1-3 3-2 3.1 4.1a1 1 0 0 0 1.7-.9z"/></svg>',
 };
 

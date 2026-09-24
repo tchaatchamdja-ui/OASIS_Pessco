@@ -1083,6 +1083,8 @@ EXEC_TR.pt = {
         email_prestataire: 'Email do prestador',
         nom_point_focal: 'Nome do ponto focal',
         votre_message_ph: 'A sua mensagem...',
+        sous_menu_replier: 'Recolher o submenu',
+        sous_menu_deplier: 'Expandir o submenu',
         delais_onglet: 'Prazos',
         autres_parametres: 'Outros parâmetros',
         toutes_portees: 'Todos os ambitos',

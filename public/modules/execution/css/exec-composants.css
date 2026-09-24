@@ -90,6 +90,13 @@
     background: var(--exec-accent);
     color: var(--text-header, #fff);
 }
+/* Le décompte suit son entrée dans la bande latérale des Paramètres, et se
+   retire avec les libellés quand elle se replie sur ses icônes. */
+.cfg-sidebar-item .exec-tab-badge { flex: 0 0 auto; margin-left: auto; }
+.cfg-sidebar-item.active .exec-tab-badge {
+    background: var(--exec-accent); color: var(--text-header, #fff);
+}
+.cfg-sidebar.collapsed .exec-tab-badge { display: none; }
 
 /* ══════════════════════════════════════════════
    6. KPI CARDS (execution variant)

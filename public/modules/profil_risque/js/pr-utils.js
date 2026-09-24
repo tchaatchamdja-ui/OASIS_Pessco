@@ -39,6 +39,7 @@ const TRANSLATIONS = {
     surveillance_plans:'Plans de Surveillance', surveillance_freq:'Fréquences de surveillance', library:'Bibliothèque',
     access_mgmt:'Gestion des Accès', parameters:'Paramètres',
     domains_sectors:'Domaines & Secteurs', indicators:'Indicateurs',
+    sous_menu_replier:'Replier le sous-menu', sous_menu_deplier:'Déplier le sous-menu',
     providers:'Prestataires', indices_cycles:'Indices & Seuils', indices_seuils:'Indices & Seuils', admin_aac:'Administration AAC',
     // Common
     active_profiles:'Profils Actifs', filters:'Filtres',
@@ -291,6 +292,7 @@ const TRANSLATIONS = {
     surveillance_plans:'Surveillance Plans', surveillance_freq:'Surveillance Frequencies', library:'Library',
     access_mgmt:'Access Management', parameters:'Parameters',
     domains_sectors:'Domains & Sectors', indicators:'Indicators',
+    sous_menu_replier:'Collapse the sub-menu', sous_menu_deplier:'Expand the sub-menu',
     providers:'Providers', indices_cycles:'Indices & Thresholds', indices_seuils:'Indices & Thresholds', admin_aac:'AAC Admin',
     active_profiles:'Active Profiles', filters:'Filters',
     coverage_rate:'Coverage Rate', of_short:'of', evaluated_short:'assessed',
@@ -532,6 +534,7 @@ const TRANSLATIONS = {
     surveillance_plans:'Planos de Vigilância', surveillance_freq:'Frequências de vigilância', library:'Biblioteca',
     access_mgmt:'Gestão de Acessos', parameters:'Parâmetros',
     domains_sectors:'Domínios e Setores', indicators:'Indicadores',
+    sous_menu_replier:'Recolher o submenu', sous_menu_deplier:'Expandir o submenu',
     providers:'Prestadores', indices_cycles:'Índices e Limiares', indices_seuils:'Índices e Limiares', admin_aac:'Admin AAC',
     active_profiles:'Perfis Ativos', filters:'Filtros',
     coverage_rate:'Taxa de Cobertura', of_short:'de', evaluated_short:'avaliados',

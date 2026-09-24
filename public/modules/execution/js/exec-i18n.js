@@ -1107,6 +1107,8 @@ const EXEC_TR = {
         email_prestataire: 'Email Prestataire',
         nom_point_focal: 'Nom Point Focal',
         votre_message_ph: 'Votre message...',
+        sous_menu_replier: 'Replier le sous-menu',
+        sous_menu_deplier: 'Déplier le sous-menu',
         delais_onglet: 'Délais',
         autres_parametres: 'Autres paramètres',
         toutes_portees: 'Toutes portées',

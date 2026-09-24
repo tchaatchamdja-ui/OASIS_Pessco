@@ -474,17 +474,17 @@ const RAMP_FAMILLES = [
 const RAMP_ONGLETS_PARAM = [
     // Les pays ne sont plus un simple libellé : bigramme, autorité de
     // l'aviation civile et coordonnées. Ils ont leur écran.
-    { cle: 'pays', cleT: 'p_onglet_pays', familles: [], ecran: 'pays' },
-    { cle: 'exploitants', cleT: 'p_onglet_exploitants', familles: ['exploitants'] },
+    { cle: 'pays', cleT: 'p_onglet_pays', icone: 'globe', familles: [], ecran: 'pays' },
+    { cle: 'exploitants', cleT: 'p_onglet_exploitants', icone: 'contacts', familles: ['exploitants'] },
     // La nomenclature des aéronefs compte près de dix mille lignes : elle a son
     // propre écran, servi page par page, et non un bloc de paramètres.
-    { cle: 'aeronefs', cleT: 'p_onglet_aeronefs', familles: [], ecran: 'aeronefs' },
+    { cle: 'aeronefs', cleT: 'p_onglet_aeronefs', icone: 'plane', familles: [], ecran: 'aeronefs' },
     // Les aéroports du dispositif, rangés par pays : leur écran leur est propre.
-    { cle: 'aeroports', cleT: 'p_onglet_aeroports', familles: [], ecran: 'aeroports' },
-    { cle: 'items', cleT: 'p_onglet_items', familles: ['items'] },
+    { cle: 'aeroports', cleT: 'p_onglet_aeroports', icone: 'tour', familles: [], ecran: 'aeroports' },
+    { cle: 'items', cleT: 'p_onglet_items', icone: 'clipboard', familles: ['items'] },
     // Un écart se qualifie par sa catégorie, la classe d'action qui s'ensuit et
     // le statut de son suivi : les trois listes se règlent au même endroit.
-    { cle: 'constatations', cleT: 'p_onglet_ecarts', familles: ['categories', 'actions', 'statuts'] },
+    { cle: 'constatations', cleT: 'p_onglet_ecarts', icone: 'warning', familles: ['categories', 'actions', 'statuts'] },
 ];
 
 const rampOngletParamCourant = () =>
@@ -512,6 +512,13 @@ function rampParamOnglet(cle) {
     rampRenderPage();
 }
 
+// La bande latérale se replie sur ses icônes, comme au portail : les écrans de
+// paramétrage tiennent des tables larges, et la place se prend là.
+function rampBasculerBarreParam() {
+    RAMP_STATE.paramBarreRepliee = !RAMP_STATE.paramBarreRepliee;
+    rampRenderPage();
+}
+
 // Les écrans servis par leur propre route chargent à la demande, et depuis le
 // rendu plutôt que depuis le clic sur l'onglet : on arrive aussi sur ces
 // sous-menus par la navigation, sans passer par `rampParamOnglet`.
@@ -531,10 +538,16 @@ function rampRenderParametres() {
     if (onglet.ecran) rampChargerEcranParam(onglet.ecran);
     const modifiable = !!RAMP_STATE.data.parametres.modifiable;
 
+    // Les sous-menus des Paramètres reprennent la bande latérale du portail :
+    // une colonne d'entrées à icône, qui se replie sur ses seules icônes.
     const onglets = RAMP_ONGLETS_PARAM.map((x) => `
-        <button class="ramp-onglet ${x.cle === onglet.cle ? 'actif' : ''}" onclick="rampParamOnglet('${x.cle}')">
-            ${_rEsc(rt(x.cleT))}
+        <button class="cfg-sidebar-item ${x.cle === onglet.cle ? 'active' : ''}"
+                onclick="rampParamOnglet('${x.cle}')" title="${_rAttr(rt(x.cleT))}">
+            <span class="cfg-sidebar-icon">${RAMP_ICONS[x.icone]}</span>
+            <span class="cfg-sidebar-label">${_rEsc(rt(x.cleT))}</span>
         </button>`).join('');
+    const repliee = !!RAMP_STATE.paramBarreRepliee;
+    const libelleBascule = rt(repliee ? 'sous_menu_deplier' : 'sous_menu_replier');
 
     // Cellule d'actions, commune aux lignes de paramètre et aux bandeaux de
     // groupe : même jeu de boutons, même ordre. `ouvrir` diffère selon la
@@ -678,11 +691,22 @@ function rampRenderParametres() {
         <h2>${rt('p_parametres_titre')}</h2>
         <span class="ramp-sous-titre">${rt('p_sous_titre')}</span>
     </div>
-    <div class="ramp-onglets ramp-onglets-etroits">${onglets}</div>
-    ${onglet.ecran === 'aeronefs' ? rampRenderAeronefs() : ''}
-    ${onglet.ecran === 'aeroports' ? rampRenderAeroports() : ''}
-    ${onglet.ecran === 'pays' ? rampRenderPays() : ''}
-    ${onglet.ecran ? '' : onglet.familles.map(bloc).join('')}`;
+    <div class="cfg-layout">
+        <div class="cfg-sidebar ${repliee ? 'collapsed' : ''}">
+            <button class="cfg-sidebar-toggle" onclick="rampBasculerBarreParam()"
+                    title="${_rAttr(libelleBascule)}" aria-label="${_rAttr(libelleBascule)}"
+                    aria-expanded="${!repliee}">
+                <span style="display:flex;${repliee ? 'transform:rotate(180deg);' : ''}">${RAMP_ICONS.chevron}</span>
+            </button>
+            ${onglets}
+        </div>
+        <div class="cfg-content">
+            ${onglet.ecran === 'aeronefs' ? rampRenderAeronefs() : ''}
+            ${onglet.ecran === 'aeroports' ? rampRenderAeroports() : ''}
+            ${onglet.ecran === 'pays' ? rampRenderPays() : ''}
+            ${onglet.ecran ? '' : onglet.familles.map(bloc).join('')}
+        </div>
+    </div>`;
 }
 
 function rampBasculerGroupeItems(cle) {
@@ -1823,7 +1847,7 @@ Object.assign(window, {
     rampRenderContacts, rampChargerContacts, rampTableContacts,
     rampPeutGererEtat, rampOuvrirContact, rampEnregistrerContact,
     rampBasculerContact, rampSupprimerContact, rampExporterContacts,
-    rampRenderParametres, rampParamOnglet, rampFamilleDe,
+    rampRenderParametres, rampParamOnglet, rampBasculerBarreParam, rampFamilleDe,
     RAMP_ONGLETS_PARAM, rampOngletParamCourant,
     rampOuvrirParam, rampEnregistrerParam, rampBasculerParam, rampSupprimerParam,
     rampGroupes, rampLibelleGroupe, rampBasculerGroupeItems,

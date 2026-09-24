@@ -8,15 +8,44 @@
 // ══════════════════════════════════════
 //  PARAMETRES
 // ══════════════════════════════════════
+// Les sous-menus des Paramètres reprennent la bande latérale du portail : une
+// colonne d'entrées à icône, qui se replie sur ses seules icônes. Les autres
+// pages du module gardent leur barre horizontale (`.sub-nav`).
 function renderParametres() {
     const sub = APP_STATE.currentSub;
-    switch (sub) {
-        case 'indicateurs': return renderParamIndicateurs();
-        case 'indices': return renderParamIndices();
-        case 'capacite': return renderParamCapacite();
-        case 'archives': return renderParamArchives();
-        default: return renderParamIndicateurs();
-    }
+    const corps = sub === 'indices' ? renderParamIndices()
+        : sub === 'capacite' ? renderParamCapacite()
+        : sub === 'archives' ? renderParamArchives()
+        : renderParamIndicateurs();
+
+    const repliee = !!APP_STATE.paramBarreRepliee;
+    const bascule = t(repliee ? 'sous_menu_deplier' : 'sous_menu_replier');
+    const entrees = (NAV_CONFIG.parametres.subs || []).map((o) => `
+        <button class="cfg-sidebar-item ${sub === o.id ? 'active' : ''}"
+                onclick="APP_STATE.currentSub='${o.id}';renderPage();"
+                title="${oasisEsc(t(o.labelKey))}">
+            <span class="cfg-sidebar-icon">${ICONS[o.icon]}</span>
+            <span class="cfg-sidebar-label">${oasisEsc(t(o.labelKey))}</span>
+        </button>`).join('');
+
+    return `<div class="cfg-layout">
+        <div class="cfg-sidebar ${repliee ? 'collapsed' : ''}">
+            <button class="cfg-sidebar-toggle" onclick="basculerBarreParam()"
+                    title="${oasisEsc(bascule)}" aria-label="${oasisEsc(bascule)}"
+                    aria-expanded="${!repliee}">
+                <span style="display:flex;${repliee ? '' : 'transform:rotate(180deg);'}">${ICONS.chevron}</span>
+            </button>
+            ${entrees}
+        </div>
+        <div class="cfg-content">${corps}</div>
+    </div>`;
+}
+
+// La bande se replie sur ses icônes : les écrans de paramétrage tiennent des
+// tables larges, et la place se prend là.
+function basculerBarreParam() {
+    APP_STATE.paramBarreRepliee = !APP_STATE.paramBarreRepliee;
+    renderPage();
 }
 
 // Phase 9 — Capacité inspecteurs (Chap. 4 §4.4)

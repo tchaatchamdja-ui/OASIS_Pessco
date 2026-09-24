@@ -33,9 +33,12 @@ const NAV_CONFIG = {
         { id: 'archives', labelKey: 'eval_archives' }
     ]},
     bibliotheque: { labelKey: 'library', icon: 'library', subs: [] },
-    parametres: { labelKey: 'parameters', icon: 'params', subs: [
-        { id: 'indicateurs', labelKey: 'indicators' },
-        { id: 'indices', labelKey: 'indices_seuils' }
+    // Les sous-menus des Paramètres ne s'affichent pas en barre horizontale
+    // comme ceux des autres pages : ils prennent la bande latérale du portail,
+    // rendue par renderParametres(). D'où l'icône portée par chacun.
+    parametres: { labelKey: 'parameters', icon: 'params', lateral: true, subs: [
+        { id: 'indicateurs', labelKey: 'indicators', icon: 'dashboard' },
+        { id: 'indices', labelKey: 'indices_seuils', icon: 'params' }
     ]}
 };
 
@@ -306,7 +309,8 @@ function renderPage() {
 
     const config = NAV_CONFIG[S.currentPage];
     let subNav = '';
-    if (config?.subs?.length) {
+    // `lateral` : la page rend elle-même ses sous-menus, en bande latérale.
+    if (config?.subs?.length && !config.lateral) {
         const isAdmin = S.user?.role === 'Administrateur';
         const visibleSubs = config.subs.filter(s => !s.adminOnly || isAdmin);
         subNav = `<div class="sub-nav">${visibleSubs.map(s =>

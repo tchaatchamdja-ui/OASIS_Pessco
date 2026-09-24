@@ -1083,6 +1083,8 @@ EXEC_TR.en = {
         email_prestataire: 'Provider email',
         nom_point_focal: 'Focal point name',
         votre_message_ph: 'Your message...',
+        sous_menu_replier: 'Collapse the sub-menu',
+        sous_menu_deplier: 'Expand the sub-menu',
         delais_onglet: 'Time limits',
         autres_parametres: 'Other settings',
         toutes_portees: 'All scopes',

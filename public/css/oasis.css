@@ -753,13 +753,13 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     position: fixed; inset: 0;
     background: url('/img/connexion-aire-de-trafic.webp') center 58% / cover no-repeat;
 }
-/* Le voile. Sans lui, la carte blanche se pose sur un tarmac gris clair et son
-   bord disparaît ; avec lui, la palette teinte encore la page et les trois
-   choix se voient toujours. Le haut reste clair — le ciel de l'aube est ce que
-   l'image a de mieux. */
+/* Le voile, à 20 %. Il est là pour que la palette teinte encore la page — les
+   trois choix doivent se voir — et pour que le bord de la carte ne se perde
+   pas sur un tarmac gris clair. À 34 %, il faisait plus que cela : il
+   repeignait l'aube en bleu. Vingt pour cent suffit à l'un sans l'autre. */
 .login-voile {
     position: fixed; inset: 0;
-    background: var(--gradient); opacity: .34; mix-blend-mode: multiply;
+    background: var(--gradient); opacity: .2; mix-blend-mode: multiply;
 }
 
 .login-card {

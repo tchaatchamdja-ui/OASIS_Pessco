@@ -1,6 +1,8 @@
 # Le magasin PostgreSQL — état, et ce qui reste
 
-*ARCH-01 de l'audit du 24 septembre 2026.*
+*ARCH-01 de l'audit du 24 septembre 2026. La décision, elle, est portée par
+[ADR-001](ADR-001-magasin-de-donnees.md) : ce document dit l'état du chantier,
+l'ADR dit ce qu'on en fait et pourquoi.*
 
 Depuis l'origine, `src/store.js` porte en tête : « Production : remplacée par
 PostgreSQL 16 ». L'application sert aujourd'hui six modules sur des fichiers

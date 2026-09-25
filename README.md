@@ -114,6 +114,7 @@ OASIS/
 | `docs/SECURITE.md` | Politique de sécurité : mesures, emplacements, points ouverts |
 | `docs/architecture-uml.md` | Modèle de données et enchaînements |
 | `docs/MAGASIN-POSTGRESQL.md` | Le magasin PostgreSQL : ce qui est fait, ce qui bloque la bascule |
+| `docs/ADR-001-magasin-de-donnees.md` | Décision : différer la bascule, spécifier la réplication d'abord |
 | `CHANGELOG.md` | Journal des versions |
 | `.env.example` | Variables d'environnement, commentées |
 

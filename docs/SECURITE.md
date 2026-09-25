@@ -7,7 +7,7 @@ dans le code. Il sert au dossier de validation : chaque exigence y porte son
 identifiant, son état et son emplacement, de sorte qu'un contrôle puisse être
 refait sans nous.
 
-Dernière revue : 24 septembre 2026.
+Dernière revue : 25 septembre 2026.
 
 ---
 
@@ -105,8 +105,28 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 - **Bandeau d'information** à la première visite (`public/shared/js/oasis-cookies.js`) :
   il informe, il ne demande pas un consentement qu'aucun choix ne suivrait — un
   témoin nécessaire ne se refuse pas sans renoncer à l'application.
-- **Droits des personnes** : accès, rectification, suppression auprès de
+- **Droits des personnes** : accès, rectification, effacement auprès de
   l'administrateur de l'Autorité ; la page les mentionne.
+- **Effacement d'un compte** (`DELETE /api/users/:username`, réservé au
+  super-administrateur, confirmé par son propre mot de passe) : emporte
+  l'identité — nom, prénom, adresse, téléphone, fonction, photo —, l'empreinte
+  du mot de passe, la fiche du répertoire du personnel et les sessions
+  ouvertes.
+
+  **Ce qu'il n'emporte pas, et pourquoi.** Les actes de surveillance déjà posés
+  et le journal d'audit demeurent, et l'identifiant de connexion y subsiste.
+  Le journal est chaîné : en retirer une entrée romprait la chaîne et
+  détruirait la garantie même qu'il apporte. Les actes, eux, sont des actes
+  d'autorité — ce qu'une AAC a constaté ne s'efface pas parce que son auteur
+  quitte le service. Ces deux traitements relèvent d'une obligation légale et
+  d'une mission d'intérêt public, que le droit à l'effacement ne recouvre pas.
+  La limite est dite à la personne, dans la boîte qui demande confirmation,
+  plutôt que découverte après coup.
+- **Secrets hors du journal des envois** : trois messages portent un secret —
+  mot de passe d'ouverture de compte, mot de passe réinitialisé, code à usage
+  unique. Leur corps n'est pas conservé dans `data/emails.json` ; seul l'entête
+  l'est, qui dit qu'un message est parti et s'il est arrivé. Un contrôle de
+  fumée refuse qu'un nouveau message porte un secret sans le déclarer.
 
 ---
 

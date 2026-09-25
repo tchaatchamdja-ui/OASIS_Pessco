@@ -470,6 +470,66 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
   res.json({ ok: true });
 });
 
+// ── Effacement d'un compte (droit à l'effacement) ──
+// Jusqu'ici un compte se désactivait, jamais ne s'effaçait : le droit à
+// l'effacement n'avait aucun moyen technique. Il en a un.
+//
+// Ce que l'effacement emporte : l'identité — nom, prénom, adresse, téléphone,
+// fonction, photo —, l'empreinte du mot de passe et son historique, la fiche
+// du répertoire du personnel qui s'y rattache, et les sessions ouvertes.
+//
+// Ce qu'il n'emporte pas, et ne peut pas emporter : les actes de surveillance
+// déjà posés, et le journal d'audit. Le journal est chaîné : en retirer une
+// entrée romprait la chaîne et détruirait la garantie même qu'il apporte. Les
+// actes, eux, sont des actes d'autorité — ce qu'une AAC a constaté ne
+// s'efface pas parce que son auteur quitte le service.
+//
+// L'identifiant de connexion y subsiste donc. C'est une limite assumée, et
+// elle se justifie : ces traitements relèvent d'une obligation légale et d'une
+// mission d'intérêt public, que l'effacement ne recouvre pas. Elle est écrite
+// dans docs/SECURITE.md et dite à la personne qui demande.
+app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+  const users = auth.getUsers();
+  const user = users.find((u) => u.username === req.params.username);
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (!memeInstance(req, user)) return res.status(404).json({ error: 'not_found' });
+  // On n'efface pas son propre compte : la demande passe par un autre
+  // administrateur, qui en répond.
+  if (user.username === req.user.username) return res.status(400).json({ error: 'self' });
+  // Ni le dernier super-administrateur : l'application deviendrait ingouvernable.
+  if (user.role === 'SUPERADMIN'
+    && users.filter((u) => u.role === 'SUPERADMIN' && u.active).length <= 1) {
+    return res.status(409).json({ error: 'dernier_superadmin' });
+  }
+  // Un effacement est irréversible : il se confirme par le mot de passe de
+  // celui qui le demande, comme un changement d'identifiant.
+  const moi = auth.findUser(req.user.username);
+  if (!req.body || !req.body.adminPassword
+    || !auth.checkPasswordPublic(moi, String(req.body.adminPassword))) {
+    return res.status(403).json({ error: 'admin_password' });
+  }
+
+  // La fiche du répertoire du personnel porte les mêmes données : elle part
+  // avec le compte, sans quoi l'effacement n'en serait pas un.
+  const personnel = referentiels.getAll().inspecteurs || [];
+  const fiche = personnel.find((p) => p.user_id === user.username
+    || String(p.email || '').toLowerCase() === String(user.email || user.username).toLowerCase());
+  if (fiche) referentiels.deleteItem('inspecteurs', fiche.id);
+
+  // Les sessions ouvertes tombent : un compte effacé ne doit pas survivre
+  // dans un onglet resté ouvert.
+  for (const [jeton, s] of auth.sessions) if (s.username === user.username) auth.sessions.delete(jeton);
+
+  auth.saveUsers(users.filter((u) => u.username !== user.username));
+  // L'effacement est lui-même un acte, et il se trace — l'identifiant y figure,
+  // c'est ce qui rend l'opération redevable.
+  audit.log(req.user.username, 'COMPTE_EFFACE', {
+    cible: user.username, role: user.role, fiche_personnel: fiche ? fiche.id : null,
+  });
+  auth.notify(`Compte « ${user.username} » effacé.`, 'info');
+  return res.json({ ok: true, efface: user.username, fiche_personnel_effacee: !!fiche });
+});
+
 app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
   const users = auth.getUsers();
   const user = users.find((u) => u.username === req.params.username);

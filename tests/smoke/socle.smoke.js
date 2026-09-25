@@ -69,6 +69,50 @@ module.exports = async function socleSmoke(port) {
     const audit = await srv.appel('/api/audit');
     verifier('journal d’audit lisible', audit.statut === 200);
 
+    // ── Effacement d'un compte (droit à l'effacement) ──
+    // Un compte se désactivait, jamais ne s'effaçait : le droit n'avait aucun
+    // moyen technique. Ces contrôles tiennent les deux bouts — que
+    // l'effacement efface, et qu'il n'emporte pas ce qu'il ne doit pas.
+    const MDP_ADMIN = 'Aerosup@2026!Uemoa';
+    const effacer = (qui, mdp) => srv.appel(`/api/users/${encodeURIComponent(qui)}`,
+      { method: 'DELETE', body: JSON.stringify({ adminPassword: mdp }) });
+
+    const sansMdp = await effacer('m.ahoyo@anac.bj', 'mauvais');
+    verifier('effacement : le mot de passe du demandeur est exigé',
+      sansMdp.statut === 403 && sansMdp.corps.error === 'admin_password',
+      `${sansMdp.statut} ${sansMdp.corps.error}`);
+
+    const soiMeme = await effacer('superadmin@anac.bj', MDP_ADMIN);
+    verifier('effacement : on n’efface pas son propre compte',
+      soiMeme.statut === 400 && soiMeme.corps.error === 'self', soiMeme.corps.error);
+
+    const avant = (await srv.appel('/api/users')).corps.length;
+    const fait = await effacer('m.ahoyo@anac.bj', MDP_ADMIN);
+    verifier('effacement : le compte part', fait.statut === 200 && fait.corps.ok,
+      JSON.stringify(fait.corps));
+    verifier('effacement : plus aucune trace dans le fichier des comptes',
+      !/m\.ahoyo/.test(JSON.stringify(srv.donnees('users'))));
+    verifier('effacement : la fiche du répertoire du personnel part aussi',
+      !/m\.ahoyo/i.test(JSON.stringify(srv.donnees('referentiels').inspecteurs || [])));
+    verifier('effacement : la liste en compte un de moins',
+      (await srv.appel('/api/users')).corps.length === avant - 1);
+
+    const reconnexion = await srv.appel('/api/login',
+      { method: 'POST', body: JSON.stringify({ username: 'm.ahoyo@anac.bj', password: MDP_ADMIN }) });
+    verifier('effacement : le compte effacé ne se connecte plus',
+      reconnexion.statut === 401, String(reconnexion.statut));
+
+    // Ce que l'effacement ne doit pas emporter : la chaîne d'audit, et la
+    // trace de l'acte lui-même — c'est ce qui le rend redevable.
+    const chaine = await srv.appel('/api/audit/verify');
+    verifier('effacement : la chaîne d’audit reste vérifiable',
+      chaine.corps && chaine.corps.valid === true, JSON.stringify(chaine.corps));
+    const journal = (await srv.appel('/api/audit')).corps;
+    const acte = (Array.isArray(journal) ? journal : journal.entries || [])
+      .find((e) => e.action === 'COMPTE_EFFACE');
+    verifier('effacement : l’acte est inscrit au journal, avec sa cible',
+      !!acte && acte.details.cible === 'm.ahoyo@anac.bj', acte ? acte.details.cible : '—');
+
     // ── Forme du corps des écritures de module (FONC-01) ──
     // Une garde commune est posée sur le préfixe d'API de chaque module, avant
     // la route. Elle ne dit pas ce qu'un champ doit contenir — chaque route le

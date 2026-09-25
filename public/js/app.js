@@ -608,6 +608,11 @@ async function renderUsers() {
       const canToggle = u.username !== ME.user.username && !(ME.user.role === 'ADMIN' && (u.role === 'ADMIN' || u.role === 'SUPERADMIN'));
       if (canToggle) actions.push(`<button class="shell-btn-icon" data-action="toggle-active" data-user="${esc(u.username)}" title="${t('action_toggle')}" aria-label="${t('action_toggle')}">${icon('power', 15)}</button>`);
       actions.push(`<button class="shell-btn-icon" data-action="reset-password" data-user="${esc(u.username)}" title="${t('reinitialiser_mdp')}" aria-label="${t('reinitialiser_mdp')}">${icon('key', 15)}</button>`);
+      // Effacement : le droit à l'effacement demande un geste, pas seulement
+      // une route. Réservé au super-administrateur, et jamais sur soi-même.
+      if (isSuper && u.username !== ME.user.username) {
+        actions.push(`<button class="shell-btn-icon" data-effacer="${esc(u.username)}" style="color:#b91c1c;" title="${esc(t('effacer_compte'))}" aria-label="${esc(t('effacer_compte'))}">${icon('trash', 15)}</button>`);
+      }
       let prestaCell = '';
       if (isPresta) {
         prestaCell = isSuper
@@ -707,6 +712,7 @@ async function renderUsers() {
   }));
   document.querySelectorAll('[data-modules]').forEach((btn) => btn.addEventListener('click', () => showModulesModal(users.find((u) => u.username === btn.dataset.modules))));
   document.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => showEditUserModal(users.find((u) => u.username === btn.dataset.edit))));
+  document.querySelectorAll('[data-effacer]').forEach((btn) => btn.addEventListener('click', () => showEffacerUserModal(users.find((u) => u.username === btn.dataset.effacer))));
 }
 
 function showModulesModal(u) {
@@ -737,6 +743,50 @@ window.saveUserModules = async function (username) {
   if (res.ok) { closeUserModal(); showToast(t('acces_modules_enregistre'), 'success'); renderUsers(); }
   else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
+
+// Effacement d'un compte : irréversible, donc confirmé par le mot de passe de
+// celui qui le demande — comme un changement d'identifiant. La boîte dit aussi
+// ce que l'effacement n'emporte pas : les actes posés et le journal d'audit
+// restent, et l'identifiant y subsiste. Le taire serait promettre à tort.
+function showEffacerUserModal(u) {
+  const root = document.getElementById('userModalRoot');
+  root.innerHTML = `
+  <div class="shell-modal-overlay">
+    <div class="shell-modal" style="max-width:520px;">
+      <div class="shell-modal-header"><h3>${esc(t('effacer_compte'))}</h3><button class="shell-btn-icon" onclick="closeUserModal()" style="color:#fff;" aria-label="${esc(t('fermer'))}" title="${esc(t('fermer'))}">${icon('x', 18)}</button></div>
+      <div class="shell-modal-body">
+        <p style="margin-bottom:.9rem;">${esc(t('effacer_compte_qui'))} <strong>${esc(u.email || u.username)}</strong></p>
+        <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem;">${esc(t('effacer_compte_portee'))}</p>
+        <div class="shell-form-group">
+          <label>${esc(t('effacer_compte_mdp'))}</label>
+          <input class="shell-input" type="password" id="efAdminPwd" autocomplete="off">
+        </div>
+        <div id="efErreur" class="login-error" style="margin-top:.8rem;"></div>
+      </div>
+      <div class="shell-modal-footer">
+        <button class="shell-btn shell-btn-outline" onclick="closeUserModal()">${esc(t('cancel'))}</button>
+        <button class="shell-btn shell-btn-danger" id="efValider">${esc(t('effacer_compte'))}</button>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById('efValider').addEventListener('click', () => effacerUtilisateur(u.username));
+  document.getElementById('efAdminPwd').focus();
+}
+
+async function effacerUtilisateur(username) {
+  const boite = document.getElementById('efErreur');
+  boite.style.display = 'none';
+  const res = await api(`/api/users/${encodeURIComponent(username)}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminPassword: document.getElementById('efAdminPwd').value }),
+  });
+  if (res.ok) { closeUserModal(); showToast(t('compte_efface'), 'success'); renderUsers(); return; }
+  const data = await res.json().catch(() => ({}));
+  boite.textContent = data.error === 'dernier_superadmin' ? t('dernier_superadmin')
+    : oasisMessageErreur(data, res.status);
+  boite.style.display = 'block';
+}
 
 function showEditUserModal(u) {
   const root = document.getElementById('userModalRoot');

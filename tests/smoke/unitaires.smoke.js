@@ -268,7 +268,48 @@ async function magasins() {
   verifier('magasins : aucune valeur concaténée dans le SQL', sqlEnDur);
 }
 
-// ── 6. Verrou du répertoire de données ──
+// ── 6. Aucun secret dans le journal des envois ──
+// Trois messages portent un secret : mot de passe d'ouverture de compte, mot
+// de passe réinitialisé, code à usage unique. Leur corps était conservé en
+// clair dans data/emails.json — un journal d'envois devenu trousseau. Deux
+// mots de passe utilisables y dormaient depuis six semaines.
+async function courrielsSansSecret() {
+  const email = require('../../src/email');
+
+  // Ce que le journal retient d'un message à secret. L'envoi est attendu : la
+  // messagerie n'est pas joignable ici, et c'est l'échec qui journalise.
+  const avant = email.list().length;
+  await Promise.all([
+    email.accountCreated({ to: 'essai@aac.bj', name: 'Essai', username: 'essai@aac.bj', password: 'SecretEnClair!42' }),
+    email.passwordReset({ to: 'essai@aac.bj', name: 'Essai', username: 'essai@aac.bj', password: 'AutreSecret!42' }),
+    email.mfaCode({ to: 'essai@aac.bj', name: 'Essai', code: '424242', minutes: 10, channel: 'email' }),
+  ].map((p) => Promise.resolve(p).catch(() => null)));
+  const ecrits = email.list().slice(avant);
+
+  verifier('courriels : les trois messages à secret sont bien journalisés',
+    ecrits.length === 3, `${ecrits.length} message(s)`);
+  verifier('courriels : aucun secret ne subsiste dans le journal',
+    !ecrits.some((m) => /SecretEnClair|AutreSecret|424242/.test(JSON.stringify(m))),
+    JSON.stringify(ecrits.map((m) => m.body)).slice(0, 120));
+  verifier('courriels : l’entête reste, pour savoir qu’un message est parti',
+    ecrits.every((m) => m.to === 'essai@aac.bj' && m.subject && m.status),
+    JSON.stringify(ecrits.map((m) => m.subject)));
+
+  // Le garde-fou de la source : un message qui interpole un mot de passe ou un
+  // code dans son corps doit se déclarer. Sans quoi le prochain repartirait en
+  // clair, et rien ne le dirait.
+  const source = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'email.js'), 'utf8');
+  const bavards = [];
+  source.split(/\nfunction /).forEach((bloc) => {
+    const nom = (bloc.match(/^([A-Za-z_$][\w$]*)\s*\(/) || [])[1];
+    if (!nom || !/queue\(\{/.test(bloc)) return;
+    if (/\$\{(password|code)\}/.test(bloc) && !/secret:\s*true/.test(bloc)) bavards.push(nom);
+  });
+  verifier('courriels : tout message portant un secret le déclare',
+    bavards.length === 0, bavards.join(' · '));
+}
+
+// ── 7. Verrou du répertoire de données ──
 // Il n'y a pas de verrou de base derrière les fichiers : deux processus sur le
 // même répertoire s'effacent l'un l'autre en silence. C'est la condition qui
 // rend ADR-001 tenable — d'où ces contrôles, et notamment celui du verrou
@@ -332,6 +373,7 @@ module.exports = async function unitairesSmoke() {
     rattachement();
     bornes();
     traces();
+    await courrielsSansSecret();
     verrouDuRepertoire();
     await magasins();
   } finally {

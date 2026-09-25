@@ -80,7 +80,22 @@ function transport(smtp) {
 function record(email, status, error) {
   // Le journal garde la trace des pièces jointes, jamais leur contenu :
   // data/emails.json resterait sinon illisible et grossirait sans fin.
-  const { attachments, ...entete } = email;
+  //
+  // Et jamais le corps d'un message qui porte un secret. Trois messages en
+  // portent un — mot de passe d'ouverture de compte, mot de passe
+  // réinitialisé, code à usage unique — et ils étaient conservés en clair,
+  // cinq cents messages durant, sans limite de temps. Un journal d'envois
+  // devenait ainsi un trousseau : qui lisait le fichier de données obtenait
+  // des mots de passe utilisables, non des empreintes.
+  //
+  // Le marquage est explicite au lieu d'être deviné : un motif de texte se
+  // trompe, une intention non. Un contrôle de fumée refuse qu'un nouveau
+  // message porte un secret sans le dire.
+  const { attachments, secret, ...entete } = email;
+  if (secret) {
+    entete.body = '(corps retiré : ce message portait un secret)';
+    entete.secret = true;
+  }
   const trace = (attachments || []).map((p) => p.filename);
   const box = store.load('emails', []);
   box.push({
@@ -118,7 +133,9 @@ function queue(email) {
 }
 
 function accountCreated({ to, name, username, password }) {
-  queue({
+  return queue({
+    // Ce message porte un secret : son corps ne sera pas conservé.
+    secret: true,
     to,
     subject: `Bienvenue sur ${APP} - Vos identifiants de connexion`,
     body: `Bonjour ${name},
@@ -135,7 +152,9 @@ Si vous n'avez pas demandé la création de ce compte, veuillez ignorer cet e-ma
 }
 
 function passwordReset({ to, name, username, password }) {
-  queue({
+  return queue({
+    // Ce message porte un secret : son corps ne sera pas conservé.
+    secret: true,
     to,
     subject: `${APP} - Votre nouveau mot de passe`,
     body: `Bonjour ${name},
@@ -152,7 +171,9 @@ L'équipe ${APP}`,
 }
 
 function mfaCode({ to, name, code, minutes, channel }) {
-  queue({
+  return queue({
+    // Ce message porte un secret : son corps ne sera pas conservé.
+    secret: true,
     to,
     subject: `${APP} - Code de vérification`,
     body: `Bonjour ${name},

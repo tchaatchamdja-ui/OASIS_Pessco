@@ -90,6 +90,23 @@ module.exports = async function parcoursSmoke(port) {
     verifier('palette et langue répondent sur la page de connexion',
       bascules.theme === 'retro-avionics' && bascules.langue === 'pt', JSON.stringify(bascules));
 
+    // L'œil montre la saisie et se renomme : le nom accessible dit ce que le
+    // clic va faire, et un attribut, lui, ne suit pas `data-i18n` tout seul.
+    const oeil = await page.evaluate(() => {
+      const b = document.getElementById('voirMdp');
+      const champ = document.getElementById('password');
+      const repos = { type: champ.type, nom: b.getAttribute('aria-label') };
+      b.click();
+      const montre = { type: champ.type, nom: b.getAttribute('aria-label'), presse: b.getAttribute('aria-pressed') };
+      b.click();
+      return { repos, montre, retour: champ.type };
+    });
+    verifier('l’œil de la page de connexion montre le mot de passe et se renomme',
+      oeil.repos.type === 'password' && oeil.montre.type === 'text'
+      && oeil.montre.presse === 'true' && oeil.retour === 'password'
+      && oeil.repos.nom && oeil.montre.nom && oeil.repos.nom !== oeil.montre.nom,
+      JSON.stringify(oeil));
+
     // ── La connexion ──
     await page.type('#username', IDENTIFIANT);
     await page.type('#password', MOT_DE_PASSE);

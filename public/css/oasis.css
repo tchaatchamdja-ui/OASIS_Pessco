@@ -743,36 +743,90 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
     background: var(--gradient); position: relative; overflow: hidden; padding: 1rem;
 }
-.login-sky-plane { position: absolute; font-size: 2rem; opacity: 0.15; pointer-events: none; }
+.login-sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+/* Deux halos pour creuser le dégradé : sans eux, le fond est un aplat et la
+   carte flotte sur rien. */
+.login-halo {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 70%);
+    animation: float 11s ease-in-out infinite;
+}
+.login-halo.a { width: 30rem; height: 30rem; top: -8rem; left: -8rem; }
+.login-halo.b { width: 24rem; height: 24rem; bottom: -7rem; right: -6rem; animation-delay: -5s; }
+.login-sky-plane { position: absolute; width: 2.4rem; height: 2.4rem; color: #fff; opacity: .18; }
 .login-sky-plane.a { top: 15%; animation: planeFlyLeft 34s linear infinite; }
-.login-sky-plane.b { top: 65%; animation: planeFlyRight 44s linear infinite; animation-delay: -20s; }
-.login-sky-cloud { position: absolute; font-size: 3rem; opacity: 0.08; pointer-events: none; animation: float 9s ease-in-out infinite; }
-.login-sky-cloud.a { top: 25%; left: 12%; }
-.login-sky-cloud.b { top: 70%; right: 15%; animation-delay: -4s; }
+.login-sky-plane.b { top: 68%; width: 1.6rem; height: 1.6rem; opacity: .12;
+                     animation: planeFlyRight 44s linear infinite; animation-delay: -20s; }
 
 .login-card {
-    background: var(--bg-card); border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.3);
-    width: 100%; max-width: 420px; padding: 2.5rem 2.25rem 1.5rem;
-    position: relative; z-index: 2; animation: modalSlide .35s ease;
+    background: var(--bg-card); border-radius: 18px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.32);
+    width: 100%; max-width: 430px; padding: 2.25rem 2.25rem 1.25rem;
+    position: relative; z-index: 2; overflow: hidden;
+    animation: modalSlide .35s ease;
 }
-.login-logo { display: flex; justify-content: center; margin-bottom: 1rem; }
+/* Un filet de la palette en haut de la carte : la marque se lit avant le
+   premier mot, et le changement de palette se voit sur la carte elle-même. */
+.login-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: var(--gradient);
+}
+.login-head { text-align: center; margin-bottom: 1.5rem; }
+.login-logo { height: 62px; width: 70px; margin: 0 auto .5rem; color: var(--primary); }
 .login-brand {
-    text-align: center;
     font-family: "Brush Script MT", "Segoe Script", "Lucida Handwriting", "Monotype Corsiva", "Apple Chancery", cursive;
-    font-size: 2.6rem; font-weight: 700; font-style: italic; color: var(--primary); line-height: 1;
+    font-size: 2.3rem; font-weight: 700; font-style: italic; color: var(--primary);
+    line-height: 1; margin: 0;
 }
-.login-tagline { text-align: center; font-size: 0.85rem; color: var(--text-muted); font-style: italic; margin: 0.4rem 0 1.5rem; }
+.login-tagline {
+    font-size: 0.78rem; color: var(--text-muted); font-style: italic; line-height: 1.4;
+    margin: 0.5rem auto 0; max-width: 21rem; text-wrap: balance;
+}
 .login-error {
-    background: #fee2e2; color: #991b1b; border-radius: 8px;
+    background: #fee2e2; color: #991b1b; border-radius: 8px; border-left: 3px solid #dc2626;
     padding: 0.6rem 0.9rem; font-size: 0.8rem; font-weight: 600; margin-bottom: 1rem; display: none;
 }
-.login-footer-bar { display: flex; justify-content: center; gap: 1rem; align-items: center; margin-top: 1.5rem; }
+.login-group { margin-bottom: 1.1rem; }
+/* Le champ porte son icône : l'œil du lecteur trouve la ligne sans lire son
+   intitulé, et le mot de passe garde à droite de quoi se montrer. */
+.login-field { position: relative; display: block; }
+.login-field-icone {
+    position: absolute; left: .8rem; top: 50%; transform: translateY(-50%);
+    width: 1.05rem; height: 1.05rem; color: var(--text-muted); pointer-events: none;
+}
+.login-field .shell-input { padding: .65rem .85rem .65rem 2.4rem; font-size: .9rem; }
+.login-field .shell-input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent); }
+.login-field:focus-within .login-field-icone { color: var(--primary); }
+#password { padding-right: 2.6rem; }
+.login-oeil {
+    position: absolute; right: .45rem; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: var(--text-muted);
+    padding: .3rem; border-radius: 6px; display: inline-flex; transition: color .2s, background .2s;
+}
+.login-oeil:hover { color: var(--primary); background: var(--bg); }
+.login-oeil svg { width: 1.05rem; height: 1.05rem; }
+.login-oeil .oeil-barre { display: none; }
+.login-oeil[aria-pressed="true"] .oeil-ouvert { display: none; }
+.login-oeil[aria-pressed="true"] .oeil-barre { display: inline; }
+.login-submit {
+    width: 100%; justify-content: center; margin-top: .4rem;
+    padding: .7rem 1rem; font-size: .9rem; letter-spacing: .01em;
+}
+.login-submit:disabled { opacity: .65; cursor: progress; }
+.login-etape-cachee { display: none; }
+.login-footer-bar {
+    display: flex; justify-content: center; gap: 1rem; align-items: center;
+    margin-top: 1.5rem; padding-top: 1.1rem; border-top: 1px solid var(--border);
+}
 .login-card .portal-theme-selector { background: var(--bg); }
 .login-card .theme-dot.active { border-color: var(--primary); }
 .login-card .lang-btn { border-color: var(--border); color: var(--text-muted); }
 .login-card .lang-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-.login-copy { text-align: center; font-size: 0.7rem; color: var(--text-muted); margin-top: 1.25rem; }
+.login-copy {
+    display: flex; flex-direction: column; align-items: center; gap: .3rem;
+    text-align: center; font-size: 0.7rem; color: var(--text-muted); margin: .9rem 0 0;
+}
+.login-copy-droits { opacity: .8; }
 
 /* ── Responsive ── */
 @media (max-width: 900px) { .portal-header-brand-tagline { display: none; } }
@@ -801,7 +855,7 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    .login-sky-plane, .login-sky-cloud { display: none; }
+    .login-sky-plane, .login-halo { display: none; }
 }
 
 /* ── Module plein écran : interface du portail entièrement masquée ── */

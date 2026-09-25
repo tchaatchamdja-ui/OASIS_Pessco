@@ -15,6 +15,29 @@ document.querySelectorAll('.lang-btn').forEach((b) => {
   b.addEventListener('click', () => applyLang(b.dataset.lang));
 });
 
+// ── Montrer le mot de passe ──
+// Sur un clavier de téléphone comme sur un clavier étranger, une saisie muette
+// se retente à l'aveugle ; le compte se verrouille au cinquième essai. Le nom
+// accessible dit ce que le clic va faire, et suit la langue de la page.
+const oeil = document.getElementById('voirMdp');
+const champMdp = document.getElementById('password');
+
+function nommerOeil() {
+  oeil.setAttribute('aria-label', t(champMdp.type === 'password' ? 'mdp_afficher' : 'mdp_masquer'));
+}
+
+oeil.addEventListener('click', () => {
+  const cache = champMdp.type === 'password';
+  champMdp.type = cache ? 'text' : 'password';
+  oeil.setAttribute('aria-pressed', String(cache));
+  nommerOeil();
+  champMdp.focus();
+});
+
+// i18n.js rappelle ce point d'entrée à chaque changement de langue : l'intitulé
+// des boutons suit par `data-i18n`, un attribut, lui, doit être réécrit.
+window.onLangChange = nommerOeil;
+
 applyLang(localStorage.getItem('pr_lang') || 'fr');
 
 let loginPending = false;
@@ -23,20 +46,35 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   if (loginPending) return;
   loginPending = true;
   const submitBtn = e.target.querySelector('button[type="submit"]');
+  // Le bouton dit qu'il travaille : désactivé seul, il se lit comme un refus.
+  const libelle = submitBtn.textContent;
+  const rendreLeBouton = () => { submitBtn.disabled = false; submitBtn.textContent = libelle; };
   submitBtn.disabled = true;
+  submitBtn.textContent = t('login_en_cours');
   const errBox = document.getElementById('loginError');
   errBox.style.display = 'none';
-  const res = await fetch('/api/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: document.getElementById('username').value.trim(),
-      password: document.getElementById('password').value,
-    }),
-  });
+  let res;
+  try {
+    res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('username').value.trim(),
+        password: champMdp.value,
+      }),
+    });
+  } catch {
+    // Réseau coupé, serveur arrêté : sans ceci, le bouton restait à
+    // « Connexion… » et la page paraissait bloquée, sans un mot.
+    errBox.textContent = t('login_err_reseau');
+    errBox.style.display = 'block';
+    loginPending = false;
+    rendreLeBouton();
+    return;
+  }
   if (res.ok) {
     const data = await res.json().catch(() => ({}));
-    if (data.mfaRequired) { showMfaStep(data); loginPending = false; submitBtn.disabled = false; return; }
+    if (data.mfaRequired) { showMfaStep(data); loginPending = false; rendreLeBouton(); return; }
     window.location.href = '/';
   } else {
     const data = await res.json().catch(() => ({}));
@@ -45,7 +83,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       : t('login_err_invalid');
     errBox.style.display = 'block';
     loginPending = false;
-    submitBtn.disabled = false;
+    rendreLeBouton();
+    champMdp.focus();
+    champMdp.select();
   }
 });
 
@@ -72,7 +112,12 @@ function resetToLogin() {
   mfaState = null;
   document.getElementById('mfaForm').style.display = 'none';
   document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('password').value = '';
+  // Le mot de passe repart vide, et caché : le laisser en clair exposerait la
+  // saisie suivante à qui passe derrière l'agent.
+  champMdp.value = '';
+  champMdp.type = 'password';
+  oeil.setAttribute('aria-pressed', 'false');
+  nommerOeil();
 }
 
 document.getElementById('mfaCancel').addEventListener('click', resetToLogin);

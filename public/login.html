@@ -15,46 +15,72 @@
 </head>
 <body>
   <div class="login-page">
-    <span class="login-sky-plane a">✈️</span>
-    <span class="login-sky-plane b">✈️</span>
-    <span class="login-sky-cloud a">☁️</span>
-    <span class="login-sky-cloud b">☁️</span>
+    <!-- Décor. Il ne porte aucune information : deux halos et deux appareils,
+         en silhouette et non en émoji — un émoji change de dessin d'un système
+         à l'autre, et ne prend pas la couleur de la palette. -->
+    <div class="login-sky" aria-hidden="true">
+      <span class="login-halo a"></span>
+      <span class="login-halo b"></span>
+      <svg class="login-sky-plane a" viewBox="0 0 24 24" fill="currentColor"><path transform="rotate(90 12 12)" d="M21 16v-2l-8-5V3.5C13 2.67 12.33 2 11.5 2S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+      <svg class="login-sky-plane b" viewBox="0 0 24 24" fill="currentColor"><path transform="rotate(90 12 12)" d="M21 16v-2l-8-5V3.5C13 2.67 12.33 2 11.5 2S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+    </div>
 
-    <div class="login-card">
-      <div class="login-logo">
-        <span class="oasis-logo-img" role="img" aria-label="OASIS"
-              style="height:84px;width:94px;color:var(--primary);"></span>
+    <main class="login-card">
+      <div class="login-head">
+        <span class="oasis-logo-img login-logo" role="img" aria-label="OASIS"></span>
+        <h1 class="login-brand">OASIS</h1>
+        <p class="login-tagline" data-i18n="tagline">Outils d'Administration et de Supervision Intégrée de la Sécurité</p>
       </div>
-      <div class="login-brand">OASIS</div>
-      <div class="login-tagline" data-i18n="tagline">Outils d'Administration et de Supervision Intégrée de la Sécurité</div>
 
-      <div class="login-error" id="loginError"></div>
+      <!-- Le message d'erreur est annoncé : sans role, un lecteur d'écran ne
+           voit rien se passer quand la connexion échoue. -->
+      <div class="login-error" id="loginError" role="alert"></div>
 
-      <form id="loginForm" autocomplete="off">
-        <div class="shell-form-group" style="margin-bottom:1rem;">
-          <label data-i18n="login_user">Email</label>
-          <input class="shell-input" type="email" id="username" required autofocus>
+      <form id="loginForm">
+        <div class="shell-form-group login-group">
+          <label for="username" data-i18n="login_user">Email</label>
+          <div class="login-field">
+            <svg class="login-field-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 7 9 6 9-6"/>
+            </svg>
+            <input class="shell-input" type="email" id="username" autocomplete="username" required autofocus>
+          </div>
         </div>
-        <div class="shell-form-group" style="margin-bottom:1.5rem;">
-          <label data-i18n="login_pass">Mot de passe</label>
-          <input class="shell-input" type="password" id="password" required>
+        <div class="shell-form-group login-group">
+          <label for="password" data-i18n="login_pass">Mot de passe</label>
+          <div class="login-field">
+            <svg class="login-field-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <rect x="4" y="10.5" width="16" height="10.5" rx="2.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/>
+            </svg>
+            <input class="shell-input" type="password" id="password" autocomplete="current-password" required>
+            <!-- Le nom accessible est repris à chaque changement de langue et à
+                 chaque bascule : il dit ce que le clic va faire, pas l'état. -->
+            <button type="button" class="login-oeil" id="voirMdp" aria-pressed="false" aria-label="Afficher le mot de passe">
+              <svg class="oeil-ouvert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>
+              </svg>
+              <svg class="oeil-barre" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M2 12s3.8-6.5 10-6.5c2 0 3.7.7 5.1 1.6M22 12s-3.8 6.5-10 6.5c-2 0-3.7-.7-5.1-1.6"/><path d="M3 3l18 18"/>
+              </svg>
+            </button>
+          </div>
         </div>
-        <button type="submit" class="shell-btn shell-btn-primary" style="width:100%;justify-content:center;" data-i18n="login_btn">Se connecter</button>
+        <button type="submit" class="shell-btn shell-btn-primary login-submit" data-i18n="login_btn">Se connecter</button>
       </form>
 
       <!-- Étape 2 : authentification multifacteur -->
-      <form id="mfaForm" autocomplete="off" style="display:none;">
+      <form id="mfaForm" class="login-etape-cachee">
         <p class="mfa-intro"><span data-i18n="mfa_intro">Un code de vérification à 6 chiffres vient d'être envoyé à</span>
           <strong id="mfaTarget"></strong>. <span data-i18n="mfa_valable">Il est valable</span>
           <span id="mfaTtl">10</span> <span data-i18n="mfa_minutes">minutes.</span></p>
-        <div class="shell-form-group" style="margin-bottom:1rem;">
-          <label data-i18n="mfa_code">Code de vérification</label>
+        <div class="shell-form-group login-group">
+          <label for="mfaCode" data-i18n="mfa_code">Code de vérification</label>
           <input class="shell-input mfa-code" id="mfaCode" inputmode="numeric" autocomplete="one-time-code"
                  maxlength="6" pattern="[0-9]{6}" placeholder="••••••" required>
         </div>
-        <button type="submit" class="shell-btn shell-btn-primary" style="width:100%;justify-content:center;" data-i18n="mfa_verifier">Vérifier</button>
+        <button type="submit" class="shell-btn shell-btn-primary login-submit" data-i18n="mfa_verifier">Vérifier</button>
         <div class="mfa-actions">
-          <select class="shell-input mfa-channel" id="mfaChannel"></select>
+          <select class="shell-input mfa-channel" id="mfaChannel" aria-label="Canal d'envoi du code"></select>
           <button type="button" class="shell-btn shell-btn-sm" id="mfaResend" data-i18n="mfa_renvoyer">Renvoyer le code</button>
         </div>
         <button type="button" class="mfa-back" id="mfaCancel" data-i18n="mfa_retour">← Revenir à la connexion</button>
@@ -72,12 +98,13 @@
           <button class="lang-btn" data-lang="pt">PT</button>
         </div>
       </div>
-      <!-- Même mention qu'au portail et dans les modules, traduite avec la page. -->
-      <div class="login-copy" style="margin-bottom:.35rem;">
+      <!-- La mention complète est au portail et dans les modules ; ici la carte
+           porte déjà le nom développé sous la marque, et ne le répète pas. -->
+      <p class="login-copy">
         <a href="/cookies.html" data-i18n="cookies_titre">Témoins de connexion et données du navigateur</a>
-      </div>
-      <div class="login-copy" data-i18n="footer">© 2026 UEMOA / URSAC — OASIS · Outils d'Administration et de Supervision Intégrée de la Sécurité</div>
-    </div>
+        <span class="login-copy-droits">© 2026 UEMOA / URSAC</span>
+      </p>
+    </main>
   </div>
 
   <script src="/shared/js/oasis-theme.js"></script>

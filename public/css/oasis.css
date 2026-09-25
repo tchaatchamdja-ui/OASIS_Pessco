@@ -331,6 +331,14 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     display: flex; align-items: center; gap: 0.12em;
 }
 
+/* « pessco » suit le sigle : même écriture, en bas de casse, la moitié du
+   corps. Il est écrit dans le mot et non à côté, ce qui le pose sur la même
+   ligne de base — placé en voisin de la boîte, il se calait en haut du sigle,
+   accroché à sa hampe au lieu de reposer au pied. */
+/* L'écriture cursive penche : sans marge, le « p » venait se loger sous la
+   queue du « S ». La marge est comptée dans le petit corps, d'où sa valeur. */
+.tb-pessco { font-size: .5em; text-transform: lowercase; margin-left: .55em; }
+
 /* Avion traversant le bloc titre depuis le dernier « S », traînée à sa suite */
 .tb-word { flex: 0 0 auto; position: relative; }
 

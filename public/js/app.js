@@ -476,7 +476,7 @@ async function renderHome() {
   document.getElementById('mainView').innerHTML = `
     <div class="portal-titleblock">
       <div class="portal-titleblock-sigle">
-        <span class="tb-word"><span class="tb-o">O</span>ASIS
+        <span class="tb-word"><span class="tb-o">O</span>ASIS<span class="tb-pessco">pessco</span>
         </span>
         <span class="tb-flight" aria-hidden="true">
           <span class="tb-trail"></span>

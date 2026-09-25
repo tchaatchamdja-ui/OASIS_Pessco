@@ -87,8 +87,6 @@ a:hover { text-decoration: underline; }
 @keyframes slideIn   { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes spin      { to { transform: rotate(360deg); } }
 @keyframes float     { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-@keyframes planeFlyLeft  { from { transform: translateX(110vw); } to { transform: translateX(-15vw); } }
-@keyframes planeFlyRight { from { transform: translateX(-15vw) scaleX(-1); } to { transform: translateX(110vw) scaleX(-1); } }
 @keyframes heliDriftLeft { from { transform: translateX(110vw); } to { transform: translateX(-15vw); } }
 @keyframes towerBeacon   { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 
@@ -739,24 +737,30 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 .cfg-module-row:last-child { border-bottom: none; }
 
 /* ══════════ Page Login ══════════ */
+/* `overflow: hidden` vivait ici pour retenir le décor dessiné. Le décor est
+   maintenant en position fixe — il ne déborde plus rien — et la page peut
+   défiler : sur un écran bas, ou avec l'étape du code à six chiffres, la carte
+   dépasse la fenêtre, et le pied s'en trouvait coupé sans recours. */
 .login-page {
     min-height: 100vh; display: flex; align-items: center; justify-content: center;
-    background: var(--gradient); position: relative; overflow: hidden; padding: 1rem;
+    background: var(--gradient); position: relative; padding: 1.5rem 1rem;
 }
-.login-sky { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-/* Deux halos pour creuser le dégradé : sans eux, le fond est un aplat et la
-   carte flotte sur rien. */
-.login-halo {
-    position: absolute; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 70%);
-    animation: float 11s ease-in-out infinite;
+/* La photo, nette. Elle a d'abord porté un flou de 3 px — censé tenir lieu de
+   profondeur de champ, il ne faisait que brouiller. Elle est agrandie et
+   réaffûtée à la source (2048 px) : le navigateur n'a plus à l'étirer, et rien
+   ici ne l'adoucit. */
+.login-photo {
+    position: fixed; inset: 0;
+    background: url('/img/connexion-aire-de-trafic.webp') center 58% / cover no-repeat;
 }
-.login-halo.a { width: 30rem; height: 30rem; top: -8rem; left: -8rem; }
-.login-halo.b { width: 24rem; height: 24rem; bottom: -7rem; right: -6rem; animation-delay: -5s; }
-.login-sky-plane { position: absolute; width: 2.4rem; height: 2.4rem; color: #fff; opacity: .18; }
-.login-sky-plane.a { top: 15%; animation: planeFlyLeft 34s linear infinite; }
-.login-sky-plane.b { top: 68%; width: 1.6rem; height: 1.6rem; opacity: .12;
-                     animation: planeFlyRight 44s linear infinite; animation-delay: -20s; }
+/* Le voile. Sans lui, la carte blanche se pose sur un tarmac gris clair et son
+   bord disparaît ; avec lui, la palette teinte encore la page et les trois
+   choix se voient toujours. Le haut reste clair — le ciel de l'aube est ce que
+   l'image a de mieux. */
+.login-voile {
+    position: fixed; inset: 0;
+    background: var(--gradient); opacity: .34; mix-blend-mode: multiply;
+}
 
 .login-card {
     background: var(--bg-card); border-radius: 18px;
@@ -865,7 +869,6 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
-    .login-sky-plane, .login-halo { display: none; }
 }
 
 /* ── Module plein écran : interface du portail entièrement masquée ── */

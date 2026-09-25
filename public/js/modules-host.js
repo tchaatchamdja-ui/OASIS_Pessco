@@ -47,19 +47,16 @@ async function moduleHostRender(key) {
   mv.innerHTML = `<iframe id="prFrame" class="pr-frame pr-frame-full" src="${m.src}" title="${esc(m.label)}"></iframe>`;
 }
 
-// Le portail masque son propre entête pendant l'affichage d'un module ;
-// le module réaffiche son titre via postMessage.
-function moduleHostChrome(on, subtitle) {
+// Le portail masque son propre entête pendant l'affichage d'un module : le
+// module occupe l'écran entier et porte son titre lui-même.
+//
+// Cette fonction réécrivait aussi l'étiquette de la marque avec le nom du
+// module et la page en cours. Elle écrivait dans le vide : `module-fullscreen`
+// masque la barre supérieure tout entière, et personne ne voyait jamais ce
+// titre. L'étiquette a disparu de la barre ; le geste part avec elle. Le second
+// paramètre reste reçu — les modules l'envoient encore par postMessage.
+function moduleHostChrome(on) {
   document.body.classList.toggle('module-fullscreen', !!on);
-  const tag = document.querySelector('.portal-header-brand-tagline');
-  if (!tag) return;
-  if (on) {
-    if (!tag.dataset.orig) tag.dataset.orig = tag.textContent;
-    const courant = MODULE_HOST.registre.find((x) => x.key === MODULE_HOST.courant);
-    tag.textContent = (courant ? courant.label : 'Module') + (subtitle ? ' · ' + subtitle : '');
-  } else if (tag.dataset.orig) {
-    tag.textContent = tag.dataset.orig;
-  }
 }
 
 window.planSetModuleChrome = moduleHostChrome;   // nom conservé : utilisé par app.js

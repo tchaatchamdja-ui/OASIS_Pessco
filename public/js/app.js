@@ -462,13 +462,17 @@ async function renderHome() {
       .filter((m) => m.theme === th.code && m.enabled)
       .sort((a, b) => rang.get(a.code) - rang.get(b.code));
     if (!mods.length) return '';
-    return `
-    <div class="portal-group">
+    // Le groupe « surveillance » n'a plus d'en-tête : le bloc PESSCO qui ferme
+    // la page dit déjà son nom, en grand. Les autres gardent le leur — rien ne
+    // les nomme ailleurs.
+    const entete = th.code === 'surveillance' ? '' : `
       <div class="portal-group-header">
         ${th.icon ? `<span class="group-icon">${icon(th.icon, 18)}</span>` : ''}
         ${esc(t('theme_' + th.code))}
         <span class="group-count">${mods.length}</span>
-      </div>
+      </div>`;
+    return `
+    <div class="portal-group">${entete}
       <div class="portal-grid">${mods.map(card).join('')}</div>
     </div>`;
   }).join('');
@@ -509,7 +513,14 @@ async function renderHome() {
                 onclick="setModulesView('list')" title="${esc(t('view_list'))}">${icon('list', 16)}</button>
       </div>
     </div>
-    <div class="portal-modules ${MODULES_VIEW === 'list' ? 'list-view' : ''}" id="portalModules">${groups}</div>`;
+    <div class="portal-modules ${MODULES_VIEW === 'list' ? 'list-view' : ''}" id="portalModules">${groups}</div>
+    <!-- Le nom du dispositif ferme la page, au même corps que le bloc titre qui
+         l'ouvre. Le développé n'est pas traduit : c'est celui qui forme le
+         sigle — P·E·S·S·CO — et il ne le formerait plus dans une autre langue. -->
+    <div class="portal-brandmark">
+      <div class="portal-brandmark-sigle">PESSCO</div>
+      <div class="portal-brandmark-sub">Planification, Exécution et Suivi de la Surveillance Continue</div>
+    </div>`;
 
 
   document.querySelectorAll('.portal-card[data-module]').forEach((cardEl) => {

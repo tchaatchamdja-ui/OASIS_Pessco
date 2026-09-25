@@ -17,7 +17,11 @@ mkdir -p "$DESTINATION"
 
 # L'écriture du store est atomique (fichier temporaire puis renommage) : une
 # archive prise à chaud ne peut pas contenir de fichier à moitié écrit.
-tar czf "$ARCHIVE" -C "$(dirname "$SOURCE")" "$(basename "$SOURCE")"
+# Le verrou du répertoire n'entre pas dans l'archive : restaurée sur une autre
+# machine, elle y porterait un verrou qu'aucun processus ne tient et que rien ne
+# peut vérifier — le serveur refuserait de démarrer.
+tar czf "$ARCHIVE" --exclude='.verrou' --exclude='.sonde' \
+  -C "$(dirname "$SOURCE")" "$(basename "$SOURCE")"
 echo "Sauvegarde : $ARCHIVE ($(du -h "$ARCHIVE" | cut -f1))"
 
 # Rétention : les archives plus anciennes que N jours sont supprimées.

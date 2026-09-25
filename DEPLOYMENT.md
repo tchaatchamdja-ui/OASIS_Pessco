@@ -188,6 +188,28 @@ délibéré : les traces d'une autorité de l'aviation civile ne sortent pas du
 dispositif sans décision. Le collecteur de l'hébergeur joue ce rôle — une
 alerte sur `"niveau":"erreur"` dans les journaux vaut une sonde.
 
+### Un seul processus par répertoire de données
+
+Le magasin par fichiers n'a pas de verrou de base : **deux processus servant le
+même répertoire s'effacent l'un l'autre en silence**. C'est la condition qui
+rend les fichiers acceptables (ADR-001), et le serveur la tient désormais
+lui-même : au démarrage il pose un `.verrou` dans le répertoire de données, et
+refuse de démarrer si un autre le tient.
+
+| Situation | Ce qui se passe |
+|---|---|
+| Répertoire libre | Le verrou se pose, le serveur démarre. |
+| Un processus vivant le tient, même machine | **Démarrage refusé**, avec le `ps -p` qui le retrouve. |
+| Verrou laissé par un arrêt brutal | Repris, le démarrage se poursuit ; une alerte le signale. |
+| Verrou d'une autre machine | **Démarrage refusé** : rien ici ne peut savoir si ce processus vit. C'est le cas de deux conteneurs sur un même volume — n'en servir qu'un. |
+
+Sur Render, un service à disque ne tourne qu'en une instance : la contrainte est
+tenue par la plateforme, et le verrou ne fait que la rendre visible.
+
+`OASIS_VERROU=0` le lève, pour l'opérateur qui sait pourquoi il le fait. Une
+archive de sauvegarde n'emporte pas le verrou : restaurée ailleurs, elle
+empêcherait le démarrage.
+
 ### Environnements
 
 Trois, qui ne se distinguent que par leurs variables — le code est le même :
@@ -257,6 +279,8 @@ docker run -p 4750:4750 \
 | `403 origine_non_reconnue` | Écriture sans l'en-tête `X-OASIS-Request` | Appeler l'API depuis l'application, ou ajouter l'en-tête dans les appels directs |
 | `429` à la connexion | Plus de 20 tentatives en 15 minutes depuis une IP | Attendre le délai indiqué par `Retry-After` |
 | Impossible de se connecter | Mot de passe d'amorçage inconnu après un réveil | Définir `OASIS_SEED_PASSWORD`, ou lire les journaux du démarrage |
+| « démarrage refusé — le répertoire de données est déjà servi » | Un autre processus tient le répertoire | Le message donne le `ps -p` qui le retrouve ; l'arrêter, ou servir un autre répertoire (`OASIS_DATA_DIR`) |
+| « le répertoire de données porte un verrou posé par … » | Verrou d'une autre machine — deux conteneurs sur un volume partagé | N'en servir qu'un. Si c'est un reste, effacer `.verrou` dans le répertoire de données |
 | Données disparues | Disque éphémère du plan free | Passer au plan Starter avec un disque (§ 2) |
 | Première requête très lente | Mise en veille du plan free | Normal : environ 30 secondes de réveil |
 | « Moteur de rendu PDF indisponible sur ce serveur » | Chromium n'a pas pu démarrer : les 512 Mo du plan free ne lui suffisent pas | Le reste de l'application n'est pas touché — le rendu PDF exige le plan Starter |

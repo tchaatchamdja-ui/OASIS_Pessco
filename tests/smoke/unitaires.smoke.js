@@ -268,6 +268,63 @@ async function magasins() {
   verifier('magasins : aucune valeur concaténée dans le SQL', sqlEnDur);
 }
 
+// ── 6. Verrou du répertoire de données ──
+// Il n'y a pas de verrou de base derrière les fichiers : deux processus sur le
+// même répertoire s'effacent l'un l'autre en silence. C'est la condition qui
+// rend ADR-001 tenable — d'où ces contrôles, et notamment celui du verrou
+// périmé : un verrou qui bloque après un arrêt brutal est pire que pas de
+// verrou du tout.
+function verrouDuRepertoire() {
+  const verrou = require('../../src/verrou');
+  const bac = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-verrou-'));
+  const chemin = path.join(bac, verrou.NOM);
+  const prise = (d) => { try { return { v: verrou.prendre(d) }; } catch (e) { return { e }; } };
+
+  try {
+    const premier = prise(bac);
+    verifier('verrou : un répertoire neuf se prend',
+      premier.v && fs.existsSync(chemin));
+
+    const second = prise(bac);
+    verifier('verrou : un second processus vivant est refusé',
+      second.e && second.e.code === 'VERROU_TENU', second.e && second.e.code);
+    verifier('verrou : le refus dit comment retrouver le tenant',
+      second.e && /ps -p \d+/.test(second.e.message));
+
+    premier.v.relacher();
+    const apres = prise(bac);
+    verifier('verrou : relâché, il se reprend', !!apres.v);
+    apres.v.relacher();
+
+    // Arrêt brutal : le verrou reste, son processus non.
+    fs.writeFileSync(chemin, JSON.stringify({ pid: 999999, machine: os.hostname(), debut: 'x' }));
+    const repris = prise(bac);
+    verifier('verrou : un verrou périmé ne bloque pas le redémarrage',
+      repris.v && repris.v.repris && repris.v.repris.pid === 999999);
+    repris.v.relacher();
+
+    // Deux conteneurs sur un même volume : rien ici ne peut vérifier l'autre.
+    fs.writeFileSync(chemin, JSON.stringify({ pid: 1234, machine: 'autre-machine', debut: 'x' }));
+    const etranger = prise(bac);
+    verifier('verrou : celui d’une autre machine est refusé, faute de pouvoir le vérifier',
+      etranger.e && etranger.e.code === 'VERROU_ETRANGER', etranger.e && etranger.e.code);
+
+    process.env.OASIS_VERROU = '0';
+    const leve = prise(bac);
+    delete process.env.OASIS_VERROU;
+    verifier('verrou : OASIS_VERROU=0 passe outre, pour l’opérateur qui sait',
+      leve.v && leve.v.leve === true);
+
+    // Un processus qui s'arrête n'emporte pas le verrou d'un autre, repris
+    // entre-temps : sans quoi le troisième démarrage croirait la place libre.
+    fs.writeFileSync(chemin, JSON.stringify({ pid: 4242, machine: os.hostname(), debut: 'x' }));
+    premier.v.relacher();
+    verifier('verrou : on ne relâche que le sien', fs.existsSync(chemin));
+  } finally {
+    fs.rmSync(bac, { recursive: true, force: true });
+  }
+}
+
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
@@ -275,6 +332,7 @@ module.exports = async function unitairesSmoke() {
     rattachement();
     bornes();
     traces();
+    verrouDuRepertoire();
     await magasins();
   } finally {
     fs.rmSync(BAC, { recursive: true, force: true });

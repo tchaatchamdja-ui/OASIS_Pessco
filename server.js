@@ -69,6 +69,7 @@ const EN_PRODUCTION = process.env.NODE_ENV === 'production';
 // `limiterAuth` garde les routes de connexion ; `limiterEcritures` est appelée
 // depuis `requireAuth`, seul endroit où le compte est connu.
 const zlib = require('zlib');
+const verrou = require('./src/verrou');
 const protections = require('./src/protections');
 const { limiterAuth, limiterEcritures, SEUIL_COMPRESSION } = protections;
 
@@ -966,6 +967,22 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   return res.status(500).json({ error: 'erreur_serveur', reference });
 });
+
+// ── Un seul processus par répertoire de données (ADR-001) ──
+// Le magasin par fichiers n'a pas de verrou : deux processus sur le même
+// répertoire s'effacent l'un l'autre en silence. C'est la condition qui rend
+// les fichiers acceptables ; elle était tacite, elle est désormais tenue.
+try {
+  const v = verrou.poserEtTenir(DATA_DIR_SONDE);
+  if (v.repris) {
+    trace.alerte('verrou périmé repris — le processus précédent s’est arrêté brutalement',
+      { precedent: v.repris.pid, depuis: v.repris.debut });
+  }
+  if (v.leve) trace.alerte('verrou du répertoire de données levé par OASIS_VERROU=0');
+} catch (e) {
+  trace.erreur(`démarrage refusé — ${e.message}`, { repertoire: DATA_DIR_SONDE, code: e.code });
+  process.exit(1);
+}
 
 const PORT = process.env.PORT || 4750;
 // Reprise ponctuelle des enregistrements posés sous l'ancien nom du module

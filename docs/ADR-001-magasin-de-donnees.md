@@ -172,8 +172,9 @@ payée** — il ne reste qu'à l'exercer le jour venu.
 - Les six contrôles de contrat empêchent les deux magasins de diverger d'ici là.
 
 **Ce qui devient plus difficile**
-- La contrainte « un seul processus par instance » doit être écrite et tenue :
-  aujourd'hui rien ne l'impose, et deux processus se perdraient en silence.
+- ~~La contrainte « un seul processus par instance » doit être écrite et
+  tenue~~ — faite : le verrou la tient (`src/verrou.js`). Elle devient une
+  contrainte explicite du déploiement, non plus une hypothèse tacite.
 - Pas de restauration à un instant donné : les archives horodatées restent le
   seul recours, et leur planification doit être vérifiée.
 
@@ -190,9 +191,11 @@ payée** — il ne reste qu'à l'exercer le jour venu.
 1. [ ] **Obtenir la spécification de la réplication** auprès de l'URSAC : ce qui
        remonte, à quelle maille, dans quel sens, règles de conflit, fréquence.
        *C'est le préalable à toute autre décision ici.*
-2. [ ] **Écrire la contrainte d'un seul processus par instance** dans
-       `DEPLOYMENT.md` et la rendre visible : un verrou de fichier au démarrage,
-       qui refuse un second processus sur le même répertoire de données.
+2. [x] **Écrire la contrainte d'un seul processus par instance** — faite
+       (`src/verrou.js`). Le serveur pose un `.verrou` dans le répertoire de
+       données et refuse de démarrer si un autre le tient ; un verrou laissé par
+       un arrêt brutal est repris, celui d'une autre machine est refusé faute de
+       pouvoir le vérifier. Huit contrôles, et le geste dans `DEPLOYMENT.md`.
 3. [ ] **Éprouver `src/store_pg.js` contre un vrai PostgreSQL** — il n'a tourné
        que contre une base de papier. Trois commandes dans
        `docs/MAGASIN-POSTGRESQL.md`.

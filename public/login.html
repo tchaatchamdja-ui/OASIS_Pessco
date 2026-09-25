@@ -29,7 +29,14 @@
       <div class="login-head">
         <span class="oasis-logo-img login-logo" role="img" aria-label="OASIS"></span>
         <h1 class="login-brand">OASIS</h1>
-        <p class="login-tagline" data-i18n="tagline">Outils d'Administration et de Supervision Intégrée de la Sécurité</p>
+        <!-- Deux lignes, et non un repli laissé au navigateur : la coupure est
+             choisie dans chaque langue pour ne pas séparer un groupe de mots.
+             Le portail, lui, garde la phrase d'un seul tenant — d'où deux clés
+             propres à cette page plutôt qu'un saut dans `tagline`. -->
+        <p class="login-tagline">
+          <span data-i18n="tagline_l1">Outils d'Administration et de</span>
+          <span data-i18n="tagline_l2">Supervision Intégrée de la Sécurité</span>
+        </p>
       </div>
 
       <!-- Le message d'erreur est annoncé : sans role, un lecteur d'écran ne

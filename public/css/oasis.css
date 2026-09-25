@@ -779,9 +779,11 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     line-height: 1; margin: 0;
 }
 .login-tagline {
-    font-size: 0.78rem; color: var(--text-muted); font-style: italic; line-height: 1.4;
-    margin: 0.5rem auto 0; max-width: 21rem; text-wrap: balance;
+    font-size: 0.78rem; color: var(--text-muted); font-style: italic; font-weight: 700;
+    line-height: 1.45; margin: 0.5rem auto 0;
 }
+/* Chaque moitié tient sa ligne : la coupure est écrite, non subie. */
+.login-tagline span { display: block; }
 .login-error {
     background: #fee2e2; color: #991b1b; border-radius: 8px; border-left: 3px solid #dc2626;
     padding: 0.6rem 0.9rem; font-size: 0.8rem; font-weight: 600; margin-bottom: 1rem; display: none;
@@ -851,6 +853,14 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
 /* Sur les écrans les plus étroits (320 px), le sigle de la barre supérieure
    part à son tour : le bloc titre le reprend juste en dessous, en grand. */
 @media (max-width: 400px) { .portal-header-left { display: none; } }
+/* Le nom développé tient sur deux lignes, et sur deux seulement : sous 420 px,
+   la moitié la plus longue — « Ferramentas Integradas de Administração » —
+   débordait sur une troisième. La carte rend de la marge, la phrase un peu de
+   corps, et la coupure écrite reste la seule. */
+@media (max-width: 420px) {
+    .login-card { padding: 1.75rem 1.25rem 1rem; }
+    .login-tagline { font-size: 0.72rem; }
+}
 @media (max-width: 480px) { .portal-grid { grid-template-columns: 1fr; } }
 
 @media (prefers-reduced-motion: reduce) {

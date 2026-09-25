@@ -99,6 +99,11 @@
       font-family: "Brush Script MT", "Segoe Script", "Lucida Handwriting", "Monotype Corsiva", "Apple Chancery", cursive;
       font-size: 1.35rem; font-weight: 700; font-style: italic;
     }
+    /* « pessco » : la règle est celle d'oasis-shell.css, redite ici parce que
+       « Planification » et « Droits » ne chargent pas cette feuille — sans
+       elle, le mot s'y écrirait au corps du sigle. Les deux doivent rester
+       identiques ; si l'une change, changer l'autre. */
+    .oasis-brand .oasis-pessco { font-size: .5em; text-transform: lowercase; margin-left: .28em; }
     /* Barre latérale rétractée (ou écran étroit) : logo seul */
     .app-sidebar.collapsed .oasis-brand { padding: .4rem .25rem; justify-content: center; }
     .app-sidebar.collapsed .oasis-brand-sigle { display: none; }
@@ -326,7 +331,7 @@
       b.className = 'oasis-brand';
       b.innerHTML =
         '<span class="oasis-brand-logo" role="img" aria-label="OASIS"></span>' +
-        '<span class="oasis-brand-sigle">OASIS</span>';
+        '<span class="oasis-brand-sigle">OASIS<span class="oasis-pessco">pessco</span></span>';
       sh.innerHTML = '';
       sh.appendChild(b);
     }

@@ -28,6 +28,13 @@
 .shell-btn-primary:hover { background: var(--primary-hover); }
 .shell-btn-outline  { background: transparent; color: var(--primary); border-color: var(--primary); }
 .shell-btn-outline:hover { background: var(--primary); color: #fff; }
+/* « pessco » après le sigle, partout où la marque se montre : bloc titre de
+   l'accueil, barre latérale du portail, carte de connexion. Il s'écrit dans le
+   mot et non à côté — la ligne de base est alors la même sans rien régler, et
+   une barre latérale rétractée qui masque le sigle l'emporte avec lui. Les
+   valeurs sont relatives : le même geste vaut à 21 px comme à 47 px. */
+.oasis-pessco { font-size: .5em; text-transform: lowercase; margin-left: .28em; }
+
 /* Étape MFA de la page de connexion */
 .mfa-intro { font-size: .82rem; color: var(--text-muted); text-align: left; margin-bottom: 1rem; line-height: 1.45; }
 .mfa-code { text-align: center; letter-spacing: .5em; font-size: 1.3rem; font-weight: 700; padding-left: .5em; }

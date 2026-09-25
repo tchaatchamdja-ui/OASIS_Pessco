@@ -37,10 +37,26 @@ services:
         value: "0"
       # Authentification multifacteur : requise en production. Le fichier de
       # configuration est cuit dans l'image et n'y est pas modifiable ; c'est
-      # ici que la décision se pose. Elle exige une messagerie joignable — le
-      # code à usage unique part par courriel.
+      # ici que la décision se pose.
+      #
+      # ⚠ ELLE EXIGE LES QUATRE VARIABLES SMTP CI-DESSOUS. Sans messagerie
+      # joignable, le code à usage unique ne part nulle part et PERSONNE ne
+      # peut se connecter. Le démarrage le signale, mais ne l'empêche pas.
+      # Tant qu'elles ne sont pas renseignées, laisser OASIS_MFA à "0".
       - key: OASIS_MFA
-        value: "1"
+        value: "0"
+      # Messagerie. Le paramétrage du dépôt pointe sur le Mailpit d'un poste de
+      # développement (localhost:1025) : sur un hébergement, seules ces
+      # variables donnent un serveur joignable. À saisir dans le tableau de
+      # bord (Environment) — l'hôte suffit à activer l'envoi.
+      - key: OASIS_SMTP_HOST
+        sync: false
+      - key: OASIS_SMTP_PORT
+        sync: false
+      - key: OASIS_SMTP_USER
+        sync: false
+      - key: OASIS_SMTP_PASS
+        sync: false
       # Chromium survit aux constructions : sans cela, il serait retéléchargé
       # à chaque déploiement — ou introuvable au démarrage.
       - key: PUPPETEER_CACHE_DIR

@@ -985,6 +985,20 @@ if (EN_PRODUCTION && !mfaActive(loadConfig())) {
     { remede: 'security.mfaEnabled au paramétrage, ou OASIS_MFA=1' });
   audit.log('système', 'MFA_DESACTIVEE_EN_PRODUCTION', {});
 }
+// L'inverse est plus dangereux encore : l'authentification multifacteur active
+// et aucune messagerie joignable ferme l'application à tout le monde — le code
+// à usage unique part vers un serveur qui n'existe pas. Le démarrage le dit
+// haut, avant que le premier agent s'y heurte.
+if (EN_PRODUCTION && mfaActive(loadConfig())) {
+  const m = email.messagerieCredible();
+  if (!m.ok) {
+    trace.alerte('authentification multifacteur active, messagerie injoignable — nul ne pourra se connecter',
+      { motif: m.motif, remede: 'OASIS_SMTP_HOST, OASIS_SMTP_PORT, OASIS_SMTP_USER, OASIS_SMTP_PASS' });
+    audit.log('système', 'MFA_SANS_MESSAGERIE', { motif: m.motif });
+  } else {
+    trace.info('authentification multifacteur active', { messagerie: m.hote });
+  }
+}
 auth.seedUsers(loadConfig());
 referentiels.seedReferentiels();
 moduleLoader.seedAll(MODULES_MONTES);

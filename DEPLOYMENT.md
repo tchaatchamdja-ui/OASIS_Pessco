@@ -84,18 +84,35 @@ build `npm ci`, start `npm start`, health check `/api/health`, puis les variable
 | `OASIS_TRUST_PROXY` | `1` | `req.ip` = adresse réelle du client, derrière le proxy Render |
 | `OASIS_COMPRESSION` | `0` | Le proxy Render compresse déjà |
 | `OASIS_SEED_PASSWORD` | *(à saisir)* | Mot de passe des comptes d'amorçage |
-| `OASIS_MFA` | `1` | **Authentification multifacteur — requise en production** |
+| `OASIS_MFA` | `1` | **Authentification multifacteur — requise en production, et exige les quatre suivantes** |
+| `OASIS_SMTP_HOST` | *(à saisir)* | Serveur de messagerie — **sans lui, aucun code ne part** |
+| `OASIS_SMTP_PORT` | *(à saisir)* | 587 le plus souvent |
+| `OASIS_SMTP_USER` | *(à saisir)* | Compte d'envoi |
+| `OASIS_SMTP_PASS` | *(à saisir)* | Son mot de passe |
 | `OASIS_DATA_DIR` | `/var/data` | **Seulement** si un disque persistant est monté |
 
 `PORT` est fourni par Render : ne pas le définir.
 
-**`OASIS_MFA=1` n'est pas facultative.** Le fichier de configuration est cuit
-dans l'image et n'est pas modifiable au déploiement : cette variable est le seul
-moyen d'activer l'authentification multifacteur sur un hébergement. Elle exige
-une messagerie joignable — voir la section `smtp` du paramétrage — puisque le
-code à usage unique part par courriel. Un démarrage en production sans elle
-n'est pas refusé, pour ne pas laisser une Autorité dehors, mais il l'écrit sur
-la console et l'inscrit au journal d'audit.
+**L'ordre compte : la messagerie d'abord, l'authentification multifacteur
+ensuite.**
+
+Le fichier de configuration est cuit dans l'image : `config/oasis.config.json`
+pointe sur `localhost:1025`, le Mailpit d'un poste de développement. Sur un
+hébergement, ce serveur n'existe pas. Poser `OASIS_MFA=1` sans les variables
+SMTP **ferme l'application à tout le monde** : la connexion rend bien un code à
+saisir, mais le courriel qui le porte ne part nulle part.
+
+La marche à suivre :
+
+1. Renseigner `OASIS_SMTP_HOST`, `_PORT`, `_USER`, `_PASS` dans *Environment*.
+2. Redéployer, et vérifier dans les journaux la ligne
+   `authentification multifacteur active` avec le nom du serveur.
+3. Alors seulement passer `OASIS_MFA` à `1`.
+
+Le démarrage ne refuse ni l'un ni l'autre — laisser une Autorité dehors sur un
+paramètre manquant serait pire — mais il écrit sur la console et inscrit au
+journal d'audit : `MFA_DESACTIVEE_EN_PRODUCTION` si elle est éteinte,
+`MFA_SANS_MESSAGERIE` si elle est active sans messagerie joignable.
 
 ---
 

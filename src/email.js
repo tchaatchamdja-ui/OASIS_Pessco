@@ -19,6 +19,24 @@ const RACINE_PUBLIQUE = process.env.RENDER_EXTERNAL_URL
 const LOGIN_URL = process.env.APP_URL || RACINE_PUBLIQUE;
 const SUPPORT = 'support@anac.bj';
 
+// L'environnement passe devant le paramétrage, comme pour OASIS_MFA. Sans
+// cela, la messagerie n'était réglable que dans le dépôt : sur un hébergement,
+// le fichier de configuration est cuit dans l'image et le serveur restait
+// pointé sur le Mailpit du poste de développement. Le code à usage unique de
+// l'authentification multifacteur n'y serait jamais parti.
+function surcharge(smtp) {
+  const e = process.env;
+  const out = { ...smtp };
+  if (e.OASIS_SMTP_HOST) out.host = e.OASIS_SMTP_HOST;
+  if (e.OASIS_SMTP_PORT) out.port = Number(e.OASIS_SMTP_PORT);
+  if (e.OASIS_SMTP_USER) out.user = e.OASIS_SMTP_USER;
+  if (e.OASIS_SMTP_PASS) out.pass = e.OASIS_SMTP_PASS;
+  if (e.OASIS_SMTP_FROM) out.from = e.OASIS_SMTP_FROM;
+  if (e.OASIS_SMTP_SECURE !== undefined) out.secure = /^(1|true)$/i.test(e.OASIS_SMTP_SECURE);
+  if (e.OASIS_SMTP_HOST) out.enabled = true;
+  return out;
+}
+
 function loadSmtp() {
   try {
     // Même répertoire que le serveur, surcharge comprise : sans cela une
@@ -26,8 +44,20 @@ function loadSmtp() {
     // lisait tout de même les réglages SMTP du dépôt.
     const dir = process.env.OASIS_CONFIG_DIR || path.join(__dirname, '..', 'config');
     const cfg = JSON.parse(require('fs').readFileSync(path.join(dir, 'oasis.config.json'), 'utf-8'));
-    return cfg.smtp || {};
-  } catch { return {}; }
+    return surcharge(cfg.smtp || {});
+  } catch { return surcharge({}); }
+}
+
+// Une messagerie joignable ? Le port 1025 sur la boucle locale, c'est le
+// Mailpit d'un poste de développement : en production, c'est un envoi qui
+// n'arrivera nulle part.
+function messagerieCredible() {
+  const s = loadSmtp();
+  if (!s.enabled || !s.host) return { ok: false, motif: 'messagerie désactivée ou sans hôte' };
+  if (/^(localhost|127\.0\.0\.1|::1)$/i.test(String(s.host))) {
+    return { ok: false, motif: `hôte « ${s.host} » — serveur de développement` };
+  }
+  return { ok: true, hote: `${s.host}:${s.port || 1025}` };
 }
 
 let _transport = null;
@@ -164,4 +194,5 @@ function etatSmtp() {
   };
 }
 
-module.exports = { queue, accountCreated, passwordReset, mfaCode, verify, list, etatSmtp };
+module.exports = {
+  messagerieCredible, queue, accountCreated, passwordReset, mfaCode, verify, list, etatSmtp };

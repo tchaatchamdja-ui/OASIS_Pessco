@@ -772,7 +772,7 @@ body.app-sidebar-collapsed .portal-body { margin-left: var(--sidebar-collapsed);
     background: var(--gradient);
 }
 .login-head { text-align: center; margin-bottom: 1.5rem; }
-.login-logo { height: 62px; width: 70px; margin: 0 auto .5rem; color: var(--primary); }
+.login-logo { height: 84px; width: 94px; margin: 0 auto .6rem; color: var(--primary); }
 .login-brand {
     font-family: "Brush Script MT", "Segoe Script", "Lucida Handwriting", "Monotype Corsiva", "Apple Chancery", cursive;
     font-size: 2.3rem; font-weight: 700; font-style: italic; color: var(--primary);

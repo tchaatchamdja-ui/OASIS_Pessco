@@ -1,0 +1,47 @@
+/* OASIS — Le bandeau du mode dégradé.
+ *
+ * Il ne paraît que lorsqu'il a quelque chose à dire : hors réseau, ou tant
+ * qu'une saisie attend d'être portée au serveur. Le reste du temps, rien.
+ *
+ * Il est posé en bas plutôt qu'en haut : les barres supérieures des six
+ * modules y sont déjà, et une bande de plus les repousserait toutes. En bas,
+ * il ne coûte aucune place à l'écran de saisie — celui de l'inspecteur sur
+ * l'aire de trafic, qui est justement celui qu'on ne veut pas rétrécir.
+ */
+.oasis-hl-bandeau {
+    position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%);
+    z-index: 2000; max-width: calc(100vw - 2rem);
+    display: flex; align-items: center; gap: .5rem;
+    padding: .55rem 1rem; border-radius: 999px;
+    font-size: .8rem; font-weight: 600; line-height: 1.3;
+    color: #0f2440; background: #fde68a; border: 1px solid #f59e0b;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+    /* La saisie passe avant le bandeau : il n'intercepte aucun geste. */
+    pointer-events: none;
+}
+
+/* Hors réseau : l'ambre devient franc. C'est l'état qui demande de l'attention,
+   pas celui où la file se vide toute seule. */
+.oasis-hl-bandeau.hors-ligne {
+    color: #fff; background: #b45309; border-color: #92400e;
+}
+
+/* Quelque chose a été refusé au rejeu et attend un humain. Le rouge est
+   réservé à ce cas : il ne se résoudra pas de lui-même. */
+.oasis-hl-bandeau.a-reprendre {
+    color: #fff; background: #b91c1c; border-color: #991b1b;
+}
+
+/* Une pastille qui bat devant le texte, pour que le bandeau se remarque sans
+   avoir à être lu. Elle s'arrête avec les animations. */
+.oasis-hl-bandeau::before {
+    content: ''; flex: 0 0 auto;
+    width: .5rem; height: .5rem; border-radius: 50%;
+    background: currentColor; opacity: .85;
+    animation: oasisHlBattement 2s ease-in-out infinite;
+}
+@keyframes oasisHlBattement { 0%, 100% { opacity: .85; } 50% { opacity: .25; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .oasis-hl-bandeau::before { animation: none; }
+}

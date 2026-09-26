@@ -77,6 +77,9 @@ n'appelle jamais un autre module, il demande un service au nom déclaré.
   l'empreinte SHA-256 de la précédente. Un journal pour le socle, un par module.
 - **Multilinguisme** (§F.7) : français, anglais, portugais, par utilisateur.
 - **Trois palettes** : Bleu, Corporate, Retro-Avionics Jet.
+- **Mode dégradé** (§F.2) : application installable, écrans déjà vus servis sans réseau,
+  saisies de terrain retenues puis rejouées au retour. RAMP et SURV. Les actes d'autorité —
+  valider, transmettre, clôturer — ne se diffèrent jamais.
 
 ## Architecture des fichiers
 

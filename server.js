@@ -976,7 +976,7 @@ app.get(['/login', '/login/'], (req, res) => res.redirect('/login.html'));
 // res.send, ne le voit pas. Les fichiers texte sont donc compressés ici, une
 // fois, et gardés en mémoire tant que leur date de modification ne change pas.
 const RACINE_PUBLIC = path.join(__dirname, 'public');
-const TEXTE_STATIQUE = /\.(js|css|html|json|svg|map)$/i;
+const TEXTE_STATIQUE = /\.(js|css|html|json|svg|map|webmanifest)$/i;
 const cacheGzip = new Map();     // chemin -> { mtimeMs, corps, type }
 
 const TYPES = {
@@ -986,6 +986,9 @@ const TYPES = {
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.map': 'application/json; charset=utf-8',
+  // Sans ce type, le navigateur refuse le manifeste et l'application
+  // n'est pas installable — le mode dégradé des TDR commence là.
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
 if (process.env.OASIS_COMPRESSION !== '0') {
@@ -1026,7 +1029,13 @@ if (process.env.OASIS_COMPRESSION !== '0') {
     // apparaît donne une page à moitié chargée — un menu présent dont l'écran
     // ne s'ouvre pas.
     const estHtml = path.extname(chemin).toLowerCase() === '.html';
-    res.setHeader('Cache-Control', EN_PRODUCTION && !estHtml ? 'public, max-age=3600' : 'no-cache');
+    // Le service worker et le manifeste ne dorment jamais en cache : c'est le
+    // service worker qui décide de ce qui est gardé, et un déploiement doit
+    // pouvoir le remplacer tout de suite. Gardé une heure, il servirait
+    // l'ancienne réserve pendant une heure.
+    const estSocle = req.path === '/sw.js' || req.path === '/manifest.webmanifest';
+    res.setHeader('Cache-Control',
+      EN_PRODUCTION && !estHtml && !estSocle ? 'public, max-age=3600' : 'no-cache');
     if (req.headers['if-none-match'] === res.getHeader('ETag')) return res.status(304).end();
     return res.end(req.method === 'HEAD' ? undefined : entree.corps);
   });
@@ -1041,7 +1050,11 @@ app.use(express.static(path.join(__dirname, 'public'), {
   // Même règle que pour les fichiers compressés : la coquille HTML se
   // revalide, le reste peut dormir en cache.
   setHeaders: (res, chemin) => {
-    if (path.extname(chemin).toLowerCase() === '.html') {
+    const base = path.basename(chemin);
+    if (base === 'manifest.webmanifest') {
+      res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    }
+    if (path.extname(chemin).toLowerCase() === '.html' || base === 'sw.js' || base === 'manifest.webmanifest') {
       res.setHeader('Cache-Control', 'no-cache');
     }
   },

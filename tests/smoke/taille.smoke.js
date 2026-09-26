@@ -290,6 +290,36 @@ module.exports = async function tailleSmoke() {
     NATURES_ATTENDUES.every((n) => consultations.NATURES.includes(n)),
     consultations.NATURES.join(', '));
 
+  // ── La file du mode dégradé n'admet que de la saisie ──
+  //
+  // Différer une saisie de terrain est le but du mode dégradé. Différer une
+  // validation, une transmission à l'exploitant ou une clôture serait autre
+  // chose : ce sont des actes pris par quelqu'un qui décide, à un moment qui
+  // compte. Les rejouer trois heures plus tard sur un dossier qui a bougé,
+  // c'est signer à l'aveugle.
+  //
+  // Le jour où quelqu'un ajoutera `/valider` à la liste pour « que ça marche
+  // aussi hors ligne », ce contrôle l'arrêtera. C'est le seul endroit du code
+  // où une erreur de ce genre ne se verrait pas à l'exécution : elle ne se
+  // manifesterait qu'au rejeu, sur une instance réelle, trop tard.
+  const TRANSITIONS = /(valider|validate|soumettre|submit|transmettre|cloturer|close|renvoyer|reject|approuver|archiver|signer|decision|effacer|delete)/i;
+  const fichierHL = path.join(RACINE, 'public', 'shared', 'js', 'oasis-hors-ligne.js');
+  const sourceHL = fs.existsSync(fichierHL) ? fs.readFileSync(fichierHL, 'utf8') : '';
+  // On lit les lignes, non les littéraux : analyser une expression régulière
+  // écrite à la main revient à en écrire une pour les lire toutes, et la
+  // première tentative s'arrêtait au premier « \/ » — elle ne voyait donc que
+  // « /^\/api » de chaque motif, et ne pouvait rien attraper. La ligne entière
+  // porte le motif et son libellé ; c'est tout ce qu'il faut.
+  const bloc = sourceHL.match(/const DIFFERABLES = \[([\s\S]*?)\n {2}\];/);
+  const motifs = bloc
+    ? bloc[1].split('\n').map((l) => l.trim()).filter((l) => l.startsWith('{') && l.includes('motif:'))
+    : [];
+  verifier('la liste des écritures différables est lisible',
+    motifs.length >= 3, `${motifs.length} entrée(s)`);
+  const actes = motifs.filter((m) => TRANSITIONS.test(m));
+  verifier('aucun acte d’autorité n’est différable hors ligne',
+    actes.length === 0, actes.join(' · '));
+
   // ── Un nom global, une définition ──
   // Les scripts d'un écran partagent une seule portée : deux fichiers qui
   // déclarent la même fonction ne se contredisent pas, le dernier chargé

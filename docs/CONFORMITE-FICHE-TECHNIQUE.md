@@ -16,6 +16,13 @@ Les commandes de vérification sont données en fin de document.
 > garde de pseudonymisation. Les lignes concernées portent la mention *(vague 0)*.
 > [ADR-001](ADR-001-magasin-de-donnees.md) a été rouvert : la fiche spécifiait la réplication
 > qu'il disait manquante.
+>
+> La **vague 3** est exécutée (26 septembre 2026) : le mode dégradé, seul manque purement
+> fonctionnel de la fiche, est comblé sur les deux modules de terrain. Lignes marquées
+> *(vague 3)*.
+>
+> **Décompte : 4 conformes au relevé initial → 10.** Restent 25 écarts, dont 7 hors de portée
+> du code ([PLAN-CONFORMITE.md](PLAN-CONFORMITE.md) §2.1).
 
 ---
 
@@ -42,7 +49,7 @@ deux systèmes différents**, et qu'un auditeur qui compare l'un à l'autre le v
 |---|---|---|---|
 | 1 | Souveraineté et cloisonnement par État | ◐ | Partitionnement **logique** par champ `instance` (`src/instances.js`), rigoureux et éprouvé. Ni instance par infrastructure, ni réplication vers le central. |
 | 2 | **Modularité D.1–D.10, activation progressive** | ✓ | **Tenue, et bien tenue.** Manifestes par module (`src/modules/*/module.json`), chargeur dynamique (`module_loader.js`), bus de services (`services.js`), registre des onze entrées TDR, activation par configuration. |
-| 3 | **Offline-first, obligatoire pour le terrain** | ✗ | Aucun service worker, aucun manifeste d'application, aucune file de synchronisation. Or RAMP — inspections sur aire de trafic — est livré, et *est* une activité de terrain. |
+| 3 | **Offline-first, obligatoire pour le terrain** | **✓** | `public/sw.js` sert les écrans déjà vus ; `oasis-hors-ligne.js` retient les saisies que le réseau n'a pas portées, les rejoue au retour et l'affiche. **RAMP et SURV** — les deux modules de terrain. Éprouvé réseau réellement coupé. *(vague 3)* |
 | 4 | Sécurité de niveau critique | ◐ | Voir le détail ci-dessous. |
 | 5 | Interopérabilité régionale et internationale | ◐ | Exports xlsx / pdf / csv / docx : **présents**. OLF, OACI iSTARs, services de paiement : **aucun code**. |
 | 6 | Pérennité et transférabilité | ✓ | Docker, briques open source exclusivement, documentation de reprise, trilinguisme fr/en/pt complet et gardé par une suite de contrôles. |
@@ -66,7 +73,7 @@ indépendant avant recette** — non réalisé.
 
 | Couche | Prescrit par la fiche | Réalisé | État |
 |---|---|---|---|
-| Frontend | PWA **React + TypeScript** | JavaScript sans cadre ; **0** fichier `.ts` ou `.tsx` ; ni manifeste, ni service worker | ✗ |
+| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ✗** — JavaScript sans cadre, 0 fichier `.ts` | ◐ |
 | Backend applicatif | API REST **Java 21 / Spring Boot** | **Node 20 / Express 4**, CommonJS, 386 routes | ✗ |
 | Identité et accès | **Keycloak** (OpenID Connect) | `src/auth.js` écrit à la main ; sessions en mémoire | ✗ |
 | Moteur de workflow | **Flowable ou Camunda** (BPMN 2.0) | moteur de processus écrit à la main (`routes-processus.js`) | ✗ |
@@ -166,9 +173,9 @@ spécifiée »*. **Or la fiche la spécifie**, depuis le 2 août : réplication 
 asynchrone, tolérante aux coupures, vers un serveur central jouant le rôle de sauvegarde.
 ADR-001 a été écrit sans cette réponse. **Il doit être rouvert.**
 
-**3. L'offline-first est le seul manque purement fonctionnel.** Tout le reste est affaire de
-moyens ou d'organisation. Celui-là est une capacité que les TDR déclarent obligatoire pour le
-terrain, et le module de terrain est livré sans elle.
+**3. ~~L'offline-first est le seul manque purement fonctionnel.~~** — **comblé le 26 septembre
+2026** (vague 3). C'était la seule capacité manquante, par opposition aux écarts de moyens et
+d'organisation ; les deux modules de terrain, RAMP et SURV, tiennent désormais sans réseau.
 
 ---
 

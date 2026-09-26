@@ -192,6 +192,120 @@ module.exports = async function parcoursSmoke(port) {
       verifier('une carte de module ouverte est offerte au portail', false, 'aucune carte ouverte');
     }
 
+    // ── Le mode dégradé (TDR §F.2 ; fiche technique §2, contrainte n° 3) ──
+    //
+    // C'est le seul endroit de la suite où l'on peut couper le réseau pour de
+    // vrai : Puppeteer le fait, et rien d'autre ici ne le peut. Sans cette
+    // épreuve, le hors-ligne serait une intention.
+    etape = 'hors-ligne';
+    // Cet onglet n'est pas surveillé, et c'est voulu : on y coupe le réseau
+    // exprès, donc les requêtes y échouent exprès. Les compter au verdict
+    // ferait échouer la suite sur ce qu'elle vient d'éprouver.
+    const ramp = await navigateur.newPage();
+    await ramp.goto(`${srv.base}/modules/ramp/index.html`, { waitUntil: 'networkidle2' });
+    await new Promise((r) => setTimeout(r, 1500));
+
+    const socle = await ramp.evaluate(async () => ({
+      horsLigne: typeof window.oasisHorsLigne === 'object',
+      manifeste: !!document.querySelector('link[rel="manifest"]'),
+      sw: 'serviceWorker' in navigator
+        && !!(await navigator.serviceWorker.getRegistration()),
+    }));
+    verifier('RAMP embarque le socle du mode dégradé',
+      socle.horsLigne && socle.manifeste && socle.sw, JSON.stringify(socle));
+
+    // La liste d'autorisation : la saisie se diffère, l'acte d'autorité non.
+    const admis = await ramp.evaluate(() => {
+      const d = (m, u) => !!window.oasisHorsLigne.differable(m, u);
+      return {
+        fiche: d('POST', '/api/m/ramp/poi'),
+        brouillon: d('PUT', '/api/m/ramp/poi/abc'),
+        dossier: d('PUT', '/api/m/execution/dossiers/abc'),
+        constatation: d('POST', '/api/m/execution/constatations'),
+        valider: d('POST', '/api/m/ramp/poi/abc/valider'),
+        transmettre: d('POST', '/api/m/ramp/poi/abc/transmettre'),
+        soumettreDossier: d('PUT', '/api/m/execution/dossiers/abc/submit'),
+        cloturer: d('PUT', '/api/m/execution/constatations/abc/close'),
+        effacerCompte: d('DELETE', '/api/users/qui@que.bj'),
+      };
+    });
+    verifier('la saisie de terrain est différable, dans les deux modules',
+      admis.fiche && admis.brouillon && admis.dossier && admis.constatation,
+      JSON.stringify(admis));
+    // Les bornes des motifs comptent : « /submit » et « /close » partagent le
+    // préfixe de la saisie, et ce sont des actes.
+    verifier('un acte d’autorité ne se diffère pas',
+      !admis.valider && !admis.transmettre && !admis.soumettreDossier
+      && !admis.cloturer && !admis.effacerCompte, JSON.stringify(admis));
+
+    // Réseau coupé, pour de bon.
+    await ramp.setOfflineMode(true);
+    const horsReseau = await ramp.evaluate(async () => {
+      const r = await fetch('/api/m/ramp/poi', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ essai: 'saisie sur l’aire de trafic' }),
+      });
+      const corps = await r.json().catch(() => ({}));
+      const file = await window.oasisHorsLigne.file();
+      return { statut: r.statut || r.status, differe: !!corps.differe, enFile: file.length };
+    });
+    verifier('hors réseau, la saisie est retenue plutôt que perdue',
+      horsReseau.statut === 202 && horsReseau.differe && horsReseau.enFile === 1,
+      JSON.stringify(horsReseau));
+
+    // Un acte d'autorité, lui, doit échouer franchement.
+    const refus = await ramp.evaluate(async () => {
+      try {
+        await fetch('/api/m/ramp/poi/abc/valider', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+        });
+        return 'passé';
+      } catch (e) { return 'refusé'; }
+    });
+    verifier('hors réseau, un acte d’autorité échoue franchement',
+      refus === 'refusé', refus);
+
+    // Et l'agent le voit : le bandeau est là, et il dit ce qui attend.
+    const bandeau = await ramp.evaluate(() => {
+      const b = document.querySelector('.oasis-hl-bandeau');
+      return b ? { texte: b.textContent, horsLigne: b.classList.contains('hors-ligne') } : null;
+    });
+    verifier('le bandeau annonce le hors-ligne et ce qui attend',
+      bandeau && bandeau.horsLigne && /en attente/.test(bandeau.texte),
+      JSON.stringify(bandeau));
+
+    // Un écran déjà vu se recharge sans réseau : c'est ce que seul le service
+    // worker peut donner, et c'est la raison d'être de la contrainte n° 3.
+    await ramp.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
+    const debout = await ramp.evaluate(() => ({
+      titre: document.title,
+      corps: document.body.textContent.trim().length,
+    }));
+    verifier('hors réseau, un écran déjà vu se recharge',
+      /OASIS/.test(debout.titre) && debout.corps > 100, JSON.stringify(debout));
+
+    // Le réseau revient : la file part toute seule, et se vide.
+    await ramp.setOfflineMode(false);
+    await ramp.evaluate(() => window.oasisHorsLigne.rejouer());
+    const apresRetour = await ramp.evaluate(async () => {
+      for (let i = 0; i < 40; i += 1) {
+        const f = await window.oasisHorsLigne.file();
+        if (!f.length) return { reste: 0 };
+        if (f.every((e) => e.echec)) return { reste: f.length, echecs: f.map((e) => e.statut) };
+        await new Promise((r) => { setTimeout(r, 50); });
+      }
+      return { reste: (await window.oasisHorsLigne.file()).length };
+    });
+    // Le serveur refusera cette saisie d'essai — elle n'a pas la forme d'une
+    // fiche. Ce qui est éprouvé ici, c'est que le rejeu a bien eu lieu et que
+    // le refus est **gardé** au lieu d'être jeté : perdre une saisie de terrain
+    // en silence serait le pire défaut possible.
+    verifier('au retour du réseau, la file est rejouée et un refus est gardé',
+      apresRetour.reste === 0
+      || (Array.isArray(apresRetour.echecs) && apresRetour.echecs.every((s) => s >= 400)),
+      JSON.stringify(apresRetour));
+    await ramp.close();
+
     // ── Le verdict ──
     // Tout ce qui précède peut passer avec une console pleine d'erreurs : ce
     // sont elles que cette suite existe pour voir.

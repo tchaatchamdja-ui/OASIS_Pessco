@@ -210,6 +210,18 @@ tenue par la plateforme, et le verrou ne fait que la rendre visible.
 archive de sauvegarde n'emporte pas le verrou : restaurée ailleurs, elle
 empêcherait le démarrage.
 
+### Mode dégradé et service worker
+
+L'application s'installe et tient sans réseau sur les deux modules de terrain (RAMP, SURV) —
+les TDR le déclarent obligatoire (§F.2). Deux conséquences d'exploitation :
+
+| Point | Ce qu'il faut savoir |
+|---|---|
+| **HTTPS obligatoire** | Un service worker ne s'enregistre qu'en HTTPS (ou sur `localhost`). Derrière un proxy inverse en clair, le mode dégradé ne s'active pas — silencieusement. |
+| **`/sw.js` et `/manifest.webmanifest` ne sont jamais mis en cache** | `Cache-Control: no-cache`. Un service worker gardé une heure servirait l'ancienne réserve pendant une heure après un déploiement. Ne pas les faire dormir dans un CDN. |
+| **Purge après déploiement** | Le service worker efface les caches des versions antérieures à son activation. Rien à faire côté exploitation. |
+| **Saisies en attente** | Elles vivent dans IndexedDB, **dans le navigateur de l'agent** — jamais sur le serveur. Un poste réinstallé avant le retour du réseau perd ce qu'il n'a pas envoyé. À dire aux agents de terrain. |
+
 ### Environnements
 
 Trois, qui ne se distinguent que par leurs variables — le code est le même :

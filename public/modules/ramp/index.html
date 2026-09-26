@@ -21,6 +21,13 @@
   <link rel="stylesheet" href="/shared/css/oasis-toast.css">
   <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
   <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <!-- Mode dégradé (TDR §F.2, fiche technique §2 n° 3) : ce module est celui du
+       terrain — un inspecteur devant un appareil, sur une aire de trafic, avec
+       un réseau qui n'accroche pas. Le bandeau dit ce qui attend d'être porté
+       au serveur ; le service worker sert les écrans déjà vus. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#1a365d">
+  <link rel="stylesheet" href="/shared/css/oasis-hors-ligne.css">
   <script src="/shared/js/oasis-toast.js"></script>
   <script src="/shared/js/oasis-dates.js"></script>
   <!-- Les palettes : la liste, les noms, et la conversion d'une clé ancienne.
@@ -49,6 +56,9 @@
   </script>
 
   <script src="/shared/js/oasis-requete.js"></script>
+  <!-- Après oasis-requete.js, et jamais avant : l'en-tête d'origine
+       applicative doit être posé quand la file s'empare d'une écriture. -->
+  <script src="/shared/js/oasis-hors-ligne.js"></script>
   <script src="/shared/js/oasis-messages-serveur.js"></script>
   <script src="/shared/js/oasis-commun.js"></script>
   <!-- Cartes d'indicateurs du socle, comme au tableau de bord d'Exécution. -->

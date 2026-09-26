@@ -32,6 +32,11 @@
   <link rel="stylesheet" href="/shared/css/oasis-toast.css">
   <!-- Filtres : bordure aux couleurs du thème, pour toute l'application. -->
   <link rel="stylesheet" href="/shared/css/oasis-filtres.css">
+  <!-- Mode dégradé (TDR §F.2, fiche technique §2 n° 3) : le dossier se remplit
+       sur site, chez l'organisme surveillé, où le réseau n'est pas acquis. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#1a365d">
+  <link rel="stylesheet" href="/shared/css/oasis-hors-ligne.css">
   <script src="/shared/js/oasis-toast.js"></script>
   <script src="/shared/js/oasis-dates.js"></script>
   <!-- Les palettes : la liste, les noms, et la conversion d'une clé ancienne.
@@ -69,6 +74,8 @@
   </script>
 
   <script src="/shared/js/oasis-requete.js"></script>
+  <!-- Après oasis-requete.js, et jamais avant. -->
+  <script src="/shared/js/oasis-hors-ligne.js"></script>
   <script src="/shared/js/oasis-messages-serveur.js"></script>
   <script src="/shared/js/oasis-commun.js"></script>
   <script src="/shared/js/oasis-kpi.js"></script>

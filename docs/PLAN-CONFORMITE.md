@@ -165,13 +165,41 @@ niveau des lignes, le chiffrement au repos.
 
 *Ferme le §3.3 en entier et la contrainte structurante n° 1.*
 
-### Vague 3 — Offline-first *(≈ 4 semaines, indépendante des autres)*
+### Vague 3 — Offline-first — **✅ FAITE le 26 septembre 2026**
 
 Chantier **12**, en commençant par **RAMP** — le module de terrain déjà livré — puis SURV.
 Elle peut être menée **en parallèle** des vagues 1 et 2 : elle ne touche que le front, qui ne
 bouge pas si le contrat REST est tenu.
 
 *Ferme la contrainte structurante n° 3, le seul manque purement fonctionnel.*
+
+**Ce qui a été livré**
+
+| Pièce | Rôle |
+|---|---|
+| `public/sw.js` | Sert les écrans déjà vus. Trois régimes : navigation réseau d'abord, ressources cache d'abord, lectures d'API réseau d'abord avec repli marqué. Les écritures n'y passent jamais. |
+| `public/shared/js/oasis-hors-ligne.js` | La file des écritures différées (IndexedDB), son rejeu ordonné, et le bandeau. |
+| `public/manifest.webmanifest` + icônes 192/512 | L'application s'installe sur l'écran d'accueil. |
+| RAMP et SURV | Les deux modules de terrain, branchés. |
+
+**La décision qui gouverne ce chantier : une liste d'autorisation, pas une liste d'exclusion.**
+Différer la saisie d'une fiche d'inspection est le but du mode dégradé. Différer une
+validation, une transmission à l'exploitant ou une clôture d'écart serait autre chose : ce
+sont des actes d'autorité, pris par quelqu'un qui décide, à un moment qui compte. Les rejouer
+trois heures plus tard sur un dossier qui a bougé, c'est signer à l'aveugle. Seules six
+écritures de saisie sont admises ; **ce qu'on oublie d'inscrire est refusé**, et un contrôle
+de source arrête quiconque y ajouterait un verbe de circuit.
+
+**Ce qui est assumé et écrit.** Une écriture différée rend un 202, et l'écran affichera
+« enregistré ». C'est vrai pour l'agent — sa saisie est retenue — mais pas encore pour le
+serveur. Cet écart ne se rattrape pas au cas par cas sur des centaines d'appels : il se
+rattrape par le bandeau, qui reste tant qu'il y a quelque chose en attente et qui dit combien.
+Un rejeu refusé ne disparaît jamais : il passe en « à reprendre » avec sa date de saisie et la
+raison du refus. Perdre une saisie de terrain en silence serait le pire défaut possible.
+
+**Huit contrôles dans la suite « parcours », réseau réellement coupé** (`setOfflineMode`) —
+c'est le seul endroit de la suite où cela soit possible. Plus deux gardes de source.
+**724 → 734 contrôles.**
 
 ### Vague 4 — Les briques d'infrastructure *(arbitrage n° 2)*
 

@@ -70,10 +70,21 @@ const EN_PRODUCTION = process.env.NODE_ENV === 'production';
 // depuis `requireAuth`, seul endroit où le compte est connu.
 const zlib = require('zlib');
 const verrou = require('./src/verrou');
+const horloge = require('./src/horloge');
+
+// L'état de l'horloge, mesuré une fois au démarrage : la sonde de santé le
+// rend, pour qu'un collecteur puisse alerter sur une dérive.
+let ETAT_HORLOGE = { verifiee: false, raison: 'vérification en cours' };
 const protections = require('./src/protections');
 const { limiterAuth, limiterEcritures, SEUIL_COMPRESSION } = protections;
 
 protections.poser(app, { audit });
+
+// Les consultations de données personnelles entrent au journal, comme les
+// modifications (fiche technique §5.2). L'intercepteur se pose ici, avant les
+// routes : il ne journalise qu'après elles, quand la réponse est partie.
+const consultations = require('./src/consultations');
+consultations.poser(app, { audit });
 
 // ── Middleware session ──
 function parseCookies(req) {
@@ -128,6 +139,15 @@ app.get('/api/health', (req, res) => {
     instance: instances.locale(loadConfig),
     modules: MODULES_MONTES.map((m) => m.code),
     stockage,
+    // L'horodatage des journaux d'audit : vérifié contre un serveur de temps,
+    // ou non — et dans ce cas la sonde le dit plutôt que de le taire.
+    horloge: {
+      verifiee: !!ETAT_HORLOGE.verifiee,
+      derive: !!ETAT_HORLOGE.derive,
+      ...(ETAT_HORLOGE.serveur ? { serveur: ETAT_HORLOGE.serveur } : {}),
+      ...(typeof ETAT_HORLOGE.ecartMs === 'number' ? { ecartMs: ETAT_HORLOGE.ecartMs } : {}),
+      ...(ETAT_HORLOGE.raison ? { motif: ETAT_HORLOGE.raison } : {}),
+    },
     demarre_depuis_s: Math.round(process.uptime()),
   });
 });
@@ -1076,6 +1096,28 @@ if (EN_PRODUCTION && mfaActive(loadConfig())) {
     trace.info('authentification multifacteur active', { messagerie: m.hote });
   }
 }
+// L'heure des journaux, et la preuve qu'elle vaut quelque chose (fiche
+// technique §3.3). Un journal inaltérable dont les dates dérivent est
+// inaltérable et faux à la fois : la chaîne SHA-256 scelle l'heure écrite, non
+// l'heure vraie. La vérification ne corrige rien — elle témoigne, et le
+// journal garde son témoignage.
+horloge.verifier(loadConfig()).then((h) => {
+  ETAT_HORLOGE = h;
+  if (h.verifiee && !h.derive) {
+    trace.info('horloge vérifiée', { serveur: h.serveur, ecartMs: h.ecartMs });
+    audit.log('système', 'HORLOGE_VERIFIEE', { serveur: h.serveur, ecartMs: h.ecartMs });
+    return;
+  }
+  trace.alerte(h.derive ? 'horloge dérivée' : "horodatage non vérifié", {
+    motif: h.raison,
+    remede: h.serveur
+      ? 'synchroniser le système (chrony, ntpd, timesyncd) — ce serveur ne corrige pas l’heure'
+      : 'déclarer temps.serveur au paramétrage, ou OASIS_TEMPS_SERVEUR',
+  });
+  audit.log('système', h.derive ? 'HORLOGE_DERIVEE' : 'HORLOGE_NON_VERIFIEE',
+    { serveur: h.serveur || '', ecartMs: h.ecartMs, motif: h.raison });
+}).catch(() => { /* `verifier` ne lève pas : ceci est une ceinture */ });
+
 auth.seedUsers(loadConfig());
 referentiels.seedReferentiels();
 moduleLoader.seedAll(MODULES_MONTES);

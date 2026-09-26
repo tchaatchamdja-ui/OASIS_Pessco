@@ -9,6 +9,7 @@
 // `verifyChain()` reste vérifiable sur tout l'historique.
 const crypto = require('crypto');
 const journal = require('./journal');
+const horloge = require('./horloge');
 
 const GENESIS = 'AEROSUP-GENESIS';
 const NOM = 'audit';
@@ -36,7 +37,7 @@ function log(user, action, details) {
   const prevHash = entries.length ? entries[entries.length - 1].hash : GENESIS;
   const entry = {
     id: entries.length + 1,
-    ts: new Date().toISOString(),
+    ts: horloge.maintenant(),
     user: user || 'système',
     action,
     details: details || {},

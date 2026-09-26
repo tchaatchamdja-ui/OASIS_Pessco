@@ -6,6 +6,7 @@
 // validation, suppression…).
 const crypto = require('crypto');
 const journal = require('./journal');
+const horloge = require('./horloge');
 
 const GENESIS = 'OASIS-MODULE-GENESIS';
 const KEY = 'module_audit';
@@ -89,7 +90,7 @@ function log(moduleCode, user, action, objet, ref, details) {
   const prevHash = entries.length ? entries[entries.length - 1].hash : GENESIS;
   const entry = {
     id: entries.length + 1,
-    ts: new Date().toISOString(),
+    ts: horloge.maintenant(),
     user: user || 'système',
     action,
     actionLabel: ACTIONS[action] || action,

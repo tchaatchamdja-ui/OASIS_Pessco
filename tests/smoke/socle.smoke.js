@@ -10,7 +10,7 @@ module.exports = async function socleSmoke(port) {
     verifier('les routes protégées refusent l’anonyme', anonyme.statut === 401, `statut ${anonyme.statut}`);
 
     // ── Témoins de connexion ──
-    // La page qui dit ce que l'application dépose se lit avant de se
+    // La page qui dit ce que l'application dépose se lit consultAvant de se
     // connecter, et la durée de session qu'elle annonce vient du paramétrage,
     // non d'un texte recopié.
     const politique = await srv.appel('/api/politique-session');
@@ -68,6 +68,67 @@ module.exports = async function socleSmoke(port) {
 
     const audit = await srv.appel('/api/audit');
     verifier('journal d’audit lisible', audit.statut === 200);
+
+    // ── Consultations de données personnelles (fiche technique §5.2) ──
+    // Le journal ne portait que des verbes d'écriture : on savait qui avait
+    // changé un dossier, jamais qui l'avait ouvert. Cette trace-là ne se
+    // reconstitue pas après coup — c'est pourquoi elle est gardée ici.
+    // Deux précautions. La consultation entre au journal *après* l'envoi de la
+    // réponse : lire dans la foulée peut le prendre de court, on attend donc le
+    // compte voulu. Et `/api/audit` rend du plus récent au plus ancien : la
+    // dernière consultation est en tête, non en queue.
+    const consultations = async () => (await srv.appel('/api/audit')).corps
+      .filter((e) => e.action === 'CONSULTATION');
+    const derniere = (l) => l[0];
+    const consultationsAu = async (n) => {
+      for (let i = 0; i < 20; i += 1) {
+        const l = await consultations();
+        if (l.length >= n) return l;
+        await new Promise((r) => { setTimeout(r, 25); });
+      }
+      return consultations();
+    };
+
+    const consultAvant = (await consultations()).length;
+    await srv.appel('/api/referentiels/inspecteurs');
+    const consultApres = await consultationsAu(consultAvant + 1);
+    verifier('la consultation du personnel entre au journal',
+      consultApres.length === consultAvant + 1
+      && derniere(consultApres).details.nature === 'personnel',
+      JSON.stringify(derniere(consultApres) || null).slice(0, 140));
+
+    await srv.appel('/api/users');
+    const consultComptes = derniere(await consultationsAu(consultApres.length + 1));
+    verifier('la consultation de la liste des comptes entre au journal',
+      consultComptes.details.nature === 'identite' && consultComptes.user === 'superadmin@anac.bj',
+      JSON.stringify(consultComptes).slice(0, 140));
+
+    // Une donnée qui ne porte personne n'encombre pas le journal : sans cette
+    // borne, chaque lecture d'écran y écrirait une ligne.
+    const consultN1 = (await consultations()).length;
+    await srv.appel('/api/referentiels/domaines');
+    await srv.appel('/api/health');
+    verifier('un référentiel sans personne n’écrit rien au journal',
+      (await consultations()).length === consultN1);
+
+    // Un refus n'est pas une consultation : il ne montre rien.
+    const consultN2 = (await consultations()).length;
+    const consultRefus = await srv.appel('/api/users/inconnu@nulle-part.bj');
+    verifier('une lecture refusée n’écrit rien au journal',
+      consultRefus.statut >= 400 && (await consultations()).length === consultN2, `statut ${consultRefus.statut}`);
+
+    // ── Horodatage vérifié (fiche technique §3.3) ──
+    // Sans serveur de temps déclaré, l'état honnête est « non vérifiée » — et
+    // il doit se voir, dans la sonde comme au journal.
+    const santeHorloge = (await srv.appel('/api/health')).corps;
+    verifier('la sonde de santé rend l’état de l’horloge',
+      santeHorloge.horloge && santeHorloge.horloge.verifiee === false
+      && !!santeHorloge.horloge.motif,
+      JSON.stringify(santeHorloge.horloge));
+    verifier('l’horodatage non vérifié est consigné au journal',
+      audit.corps.some((e) => e.action === 'HORLOGE_NON_VERIFIEE'));
+    verifier('les entrées du journal portent une date ISO',
+      audit.corps.every((e) => /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(e.ts)));
 
     // ── Effacement d'un compte (droit à l'effacement) ──
     // Un compte se désactivait, jamais ne s'effaçait : le droit n'avait aucun

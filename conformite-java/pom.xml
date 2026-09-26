@@ -65,6 +65,45 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
       </plugin>
+
+      <!--
+        Le JDK qui exécute compte autant que celui que l'on vise.
+
+        Homebrew installe Maven avec son propre JDK — le 27 aujourd'hui — et
+        son lanceur ne prend le 21 que si JAVA_HOME le lui dit. Sans cette
+        règle, `mvn test` passerait au vert sur un autre JDK que celui de la
+        cible, et l'on croirait avoir éprouvé ce qu'on n'a pas éprouvé.
+
+        C'est exactement le genre d'écart que ce projet existe pour interdire :
+        il vaut mieux un refus qui nomme la cause qu'un vert qui ne prouve rien.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>le-jdk-doit-etre-le-21</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[21,22)</version>
+                  <message>
+Ce projet éprouve des contrats d'octets : il doit tourner sur le JDK 21, celui de la cible.
+
+  JAVA_HOME="$(/usr/libexec/java_home -v 21)" mvn test
+
+Ou, une fois pour toutes :
+
+  echo 'export JAVA_HOME="$(/usr/libexec/java_home -v 21)"' >> ~/.zshrc
+                  </message>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>

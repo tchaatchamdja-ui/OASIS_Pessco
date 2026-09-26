@@ -38,8 +38,25 @@ Sur un poste où Homebrew a posé le JDK :
 JAVA_HOME=/opt/homebrew/opt/openjdk@21 mvn test
 ```
 
-Maven peut être installé sur un autre JDK que le 21 — d'où `JAVA_HOME` imposé. `mvn -v` dit
-sur lequel il tourne.
+Une fois pour toutes :
+
+```bash
+echo 'export JAVA_HOME="$(/usr/libexec/java_home -v 21)"' >> ~/.zshrc
+```
+
+**Pourquoi `JAVA_HOME` et pas simplement `mvn test`.** Homebrew installe Maven avec son propre
+JDK — le 27 aujourd'hui — et son lanceur ne prend le 21 que si `JAVA_HOME` le lui dit. Le lien
+symbolique de `/Library/Java/JavaVirtualMachines` sert `/usr/bin/java`, pas Maven.
+
+Le projet ne s'en remet pas à la mémoire de chacun : **une règle `enforcer` refuse tout JDK
+autre que le 21**, en donnant le remède. Un projet qui éprouve des contrats d'octets ne doit
+pas pouvoir passer au vert sur un JDK qui n'est pas celui de la cible — ce serait croire avoir
+éprouvé ce qu'on n'a pas éprouvé.
+
+```
+[ERROR] Ce projet éprouve des contrats d'octets : il doit tourner sur le JDK 21, celui de la cible.
+[ERROR]   JAVA_HOME="$(/usr/libexec/java_home -v 21)" mvn test
+```
 
 ## D'où viennent les vecteurs
 

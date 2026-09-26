@@ -177,5 +177,69 @@
         "attendu": "cc694a0cbe638953de22b51442b15acb4430bc76c174844311bf1afecdaeb917"
       }
     ]
+  },
+  "chaineModule": {
+    "contrat": {
+      "algorithme": "SHA-256",
+      "formule": "sha256( prevHash |ts |user |action |objet |ref |json(details) )",
+      "genese": "OASIS-MODULE-GENESIS",
+      "note": [
+        "SIX champs, non quatre : « objet » et « ref » s’intercalent entre l’action et le détail.",
+        "Un module renommé garde ses anciennes entrées sous leur ancien code, et chaque chaîne se vérifie pour elle-même en repartant de la genèse. RAMP porte ainsi l’héritage de SAFA.",
+        "Mêmes règles de sérialisation que la chaîne du socle."
+      ]
+    },
+    "cas": [
+      {
+        "quoi": "entrée de module ordinaire — six champs scellés",
+        "precedent": "OASIS-MODULE-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T09:00:00.000Z",
+          "user": "m.ahoyo@anac.bj",
+          "action": "VALIDATION",
+          "objet": "Plan de surveillance",
+          "ref": "PS-2026-014",
+          "details": {
+            "statut": "valide"
+          }
+        },
+        "json_attendu": "{\"statut\":\"valide\"}",
+        "attendu": "c1bd2153a39aa39d2717711c59704a6d808a5d14f3d31373a8c268e2289d9d9f"
+      },
+      {
+        "quoi": "objet et référence vides — la barre verticale reste, le champ non",
+        "precedent": "OASIS-MODULE-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T09:01:00.000Z",
+          "user": "admin@anac.bj",
+          "action": "DROITS",
+          "objet": "",
+          "ref": "",
+          "details": {
+            "module": "PLAN",
+            "cible": "agent@anac.bj"
+          }
+        },
+        "json_attendu": "{\"module\":\"PLAN\",\"cible\":\"agent@anac.bj\"}",
+        "attendu": "ea4e298b10fbe511aeb89d46e4a2b983c63e8db82f582691bb20eb7575e21182"
+      },
+      {
+        "quoi": "accents dans l’objet — non échappés, comme partout ailleurs",
+        "precedent": "6b33940a522a80a631312076bbafceed0dfd99cbfdf4674791c8dab386782fe2",
+        "entree": {
+          "ts": "2026-09-26T09:02:00.000Z",
+          "user": "superadmin@anac.bj",
+          "action": "CREATION",
+          "objet": "Inspection sur aire de trafic — Cotonou",
+          "ref": "RAMP/2026/07",
+          "details": {
+            "etat": "Bénin",
+            "exploitant": "Côte d'Ivoire Air"
+          }
+        },
+        "json_attendu": "{\"etat\":\"Bénin\",\"exploitant\":\"Côte d'Ivoire Air\"}",
+        "attendu": "ee62d0d42d025ba73da84a25c983be81e8e38d344b577c6b3adc2d710b9dd267"
+      }
+    ]
   }
 }

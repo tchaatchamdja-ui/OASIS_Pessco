@@ -404,6 +404,24 @@ function vecteursDeMigration() {
     .digest('hex');
   verifier('vecteurs de migration : le journal sérialise comme le vecteur l’annonce',
     ecrite.hash === attendu, `${ecrite.hash.slice(0, 16)}… ≠ ${attendu.slice(0, 16)}…`);
+
+  // La chaîne des modules scelle six champs, non quatre. Ce contrat manquait
+  // aux vecteurs, et le manque s'est vu en écrivant le socle Java — qui aurait
+  // rompu 1 582 entrées en croyant le contrat satisfait.
+  const moduleAudit = require('../../src/module_audit');
+  const casModule = (fige.chaineModule || { cas: [] }).cas[0];
+  verifier('vecteurs de migration : la chaîne des modules est couverte', !!casModule);
+  if (casModule) {
+    const e = casModule.entree;
+    const inscrite = moduleAudit.log('ESSAI_VECTEURS', e.user, e.action, e.objet, e.ref, e.details);
+    const attenduModule = crypto.createHash('sha256')
+      .update([inscrite.prevHash, inscrite.ts, inscrite.user, inscrite.action,
+        inscrite.objet, inscrite.ref, casModule.json_attendu].join('|'))
+      .digest('hex');
+    verifier('vecteurs de migration : le journal de module scelle bien six champs',
+      inscrite.hash === attenduModule,
+      `${inscrite.hash.slice(0, 16)}… ≠ ${attenduModule.slice(0, 16)}…`);
+  }
 }
 
 // ── Conservation : ce qui se purge, ce qui s'archive, ce qui ne bouge pas ──

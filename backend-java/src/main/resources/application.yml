@@ -1,0 +1,17 @@
+# Le socle Java, première tranche.
+#
+# Il lit le répertoire de données que le socle Node sert, et n'y écrit jamais.
+server:
+  port: ${OASIS_JAVA_PORT:4900}
+
+oasis:
+  # Passé au démarrage : OASIS_DATA_DIR=/tmp/oasis-cible-4899/data
+  data-dir: ${OASIS_DATA_DIR:../data}
+
+spring:
+  application:
+    name: oasis-socle
+  # Les dates sortent en ISO, comme celles de Node : un horodatage rendu en
+  # secondes depuis l'époque ne se compare pas à « 2026-09-26T08:00:00.000Z ».
+  jackson:
+    default-property-inclusion: always

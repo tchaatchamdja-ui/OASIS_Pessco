@@ -95,6 +95,27 @@ class VecteursTest {
   }
 
   @Test
+  @DisplayName("la chaîne des modules scelle six champs, non quatre")
+  void chaineDesModules() {
+    JsonNode cas = vecteurs.path("chaineModule").path("cas");
+    assertTrue(cas.size() > 0, "le contrat de la chaîne des modules a disparu des vecteurs");
+    List<String> echecs = new ArrayList<>();
+    for (JsonNode c : cas) {
+      JsonNode e = c.path("entree");
+      String obtenue = ChaineModule.empreinte(
+          c.path("precedent").asText(),
+          e.path("ts").asText(), e.path("user").asText(), e.path("action").asText(),
+          e.path("objet").asText(""), e.path("ref").asText(""),
+          enCarte(e.path("details")));
+      if (!c.path("attendu").asText().equals(obtenue)) {
+        echecs.add(c.path("quoi").asText() + " → " + obtenue.substring(0, 16) + "…");
+      }
+    }
+    assertEquals(List.of(), echecs,
+        "l'empreinte diffère : les journaux de module seraient déclarés rompus");
+  }
+
+  @Test
   @DisplayName("l'ordre des clés est bien appliqué, et non hérité du fichier")
   void ordreDesClesVraimentApplique() {
     JsonNode cas = null;

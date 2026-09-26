@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OASIS — Le socle en Spring Boot (ADR-002, jalon n° 6).
+
+  Première tranche : le module « Gestion des Droits », en LECTURE SEULE.
+
+  La lecture seule n'est pas une timidité, c'est une contrainte du magasin.
+  `src/store.js` écrit par fichier temporaire puis renomme : un lecteur
+  concurrent ne voit donc jamais un fichier à moitié écrit. Mais deux
+  ÉCRIVAINS sur le même répertoire se perdent l'un l'autre — lire, modifier,
+  écrire, et la modification de l'autre a disparu. C'est la raison d'être de
+  `src/verrou.js`, et elle ne cesse pas parce que le second écrivain parle Java.
+
+  Cette tranche prouve donc toute la chaîne — routage, session, droits,
+  sérialisation, journal — sans risquer une donnée.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.3.4</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>int.uemoa.ursac.oasis</groupId>
+  <artifactId>backend</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <name>OASIS — socle Java</name>
+
+  <properties>
+    <java.version>21</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!--
+      Les contrats d'octets, éprouvés avant toute route (ADR-002 jalon n° 2) :
+      scrypt et la sérialisation qui scelle la chaîne d'audit. Dépendance et
+      non copie — une copie divergerait, et c'est ce que ces vecteurs
+      existent pour empêcher.
+
+      Installer d'abord : cd ../conformite-java && mvn install
+    -->
+    <dependency>
+      <groupId>int.uemoa.ursac.oasis</groupId>
+      <artifactId>conformite</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>le-jdk-doit-etre-le-21</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[21,22)</version>
+                  <message>Le socle vise le JDK 21 : JAVA_HOME="$(/usr/libexec/java_home -v 21)" mvn …</message>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

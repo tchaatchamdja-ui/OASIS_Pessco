@@ -213,7 +213,6 @@ une dépendance, non un chantier.
        tranché par l'usage : **Maven**, en monodépôt. `conformite-java/` en est le premier
        occupant ; le socle prendra `backend-java/` à côté. À confirmer formellement avant
        d'engager le module DROITS.
-4. [ ] **Monter la passerelle** de routage par préfixe, avec bascule route par route.
 5. [x] **Rendre la suite de fumée exécutable contre une adresse** — **fait le 26 septembre
        2026**. `OASIS_SMOKE_BASE=http://… npm run smoke -- <suite>` : le harnais ne démarre
        alors rien et s'adresse à ce qui écoute là.
@@ -241,5 +240,47 @@ une dépendance, non un chantier.
        **La cible doit repartir des fixtures à chaque exécution**, et ne sert qu'une suite à la
        fois : `scripts/cible-essai.sh`. Sans cela, le second passage échoue sur un jeu de
        données déjà consommé, et l'on croit à une régression.
-6. [ ] **Migrer DROITS**, le plus petit, et mesurer le coût réel avant d'engager la suite.
-7. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.
+4. [x] **Monter la passerelle** — faite : `scripts/passerelle.js`. Une liste d'autorisation,
+       encore : elle nomme ce qui est migré, et tout le reste va au Node par défaut. L'en-tête
+       `X-OASIS-Servi-Par` dit qui a répondu — sans lui, un vert ne prouverait rien.
+
+6. [x] **Migrer DROITS et mesurer le coût réel** — **fait le 26 septembre 2026**
+       ([`backend-java/`](../backend-java/README.md)). Huit routes de lecture, **14 réponses
+       sur 14 identiques à l'octet** à celles de Node sur les données réelles, **1 582 maillons
+       SHA-256 revérifiés**, et **20/20 contrôles** à travers la passerelle. ~700 lignes de
+       Java pour ~180 lignes de Node.
+
+       > **Quatre constats qui changent la suite de cet ADR.**
+       >
+       > **1. DROITS n'est pas un module, c'est le noyau.** Son manifeste déclare
+       > `provides: []` / `requires: []`, mais **dix-sept fichiers** du socle l'interrogent
+       > pour décider ce qu'un compte peut faire dans chacun des six modules. Le couplage
+       > passe par le code, non par le bus de services.
+       >
+       > **2. L'écriture ne peut pas basculer avant le magasin partagé.** Lire depuis Java
+       > est sans danger — `store.save` écrit par renommage atomique. Écrire ne l'est pas :
+       > deux écrivains se perdent l'un l'autre, et le verrou ne voit même pas le second.
+       > `PUT …/users/:username` rend donc un 501 explicite et reste routé vers Node.
+       >
+       > **3. La session ne se rafraîchit pas depuis Java**, pour la même raison. Sans
+       > conséquence tant que le portail reste servi par Node ; bloquant dès qu'un écran
+       > entier passera à Java.
+       >
+       > **4. Ces vecteurs étaient incomplets.** La chaîne des modules scelle **six** champs,
+       > non quatre. Une réécriture fiée au seul contrat du socle aurait rompu 1 582 entrées
+       > en croyant avoir tout éprouvé. Corrigé — mais c'est la deuxième fois que ce chantier
+       > révèle un trou dans ses propres garde-fous.
+
+7. [ ] **Trancher le séquencement, à la lumière du jalon n° 6.** La séquence retenue plus haut
+       — modules du plus petit au plus gros, socle en dernier — supposait des modules
+       indépendants. Ils ne le sont pas : ils partagent un noyau et un magasin sans verrou.
+       Tant que ce magasin est un répertoire de fichiers, **un seul runtime peut écrire**, et
+       la migration ne peut avancer qu'en lecture.
+
+       Deux voies, et elles demandent une décision du GT2 :
+       **(a)** migrer le socle d'abord — authentification, comptes, droits, référentiels,
+       audit — les modules Node l'interrogeant ensuite par API ;
+       **(b)** basculer le magasin sur PostgreSQL d'abord, une base ayant les verrous et les
+       transactions qu'un répertoire n'a pas, puis reprendre module par module comme prévu.
+
+8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

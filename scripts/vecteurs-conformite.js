@@ -39,6 +39,17 @@ const empreinteEntree = (precedent, e) => crypto
   .update(`${precedent}|${e.ts}|${e.user}|${e.action}|${JSON.stringify(e.details || {})}`)
   .digest('hex');
 
+// La chaîne des modules scelle SIX champs, non quatre : `objet` et `ref`
+// s'ajoutent entre l'action et le détail. Ce contrat manquait à ce fichier, et
+// le manque s'est vu en écrivant le socle Java — qui aurait rompu 1 582
+// entrées en croyant le contrat satisfait. Un contrat ne vaut que pour ce
+// qu'il énumère.
+const empreinteEntreeModule = (precedent, e) => crypto
+  .createHash('sha256')
+  .update([precedent, e.ts, e.user, e.action, e.objet || '', e.ref || '',
+    JSON.stringify(e.details || {})].join('|'))
+  .digest('hex');
+
 // ── Les cas, choisis pour ce qu'ils cassent ──
 const CAS_SCRYPT = [
   {
@@ -115,6 +126,34 @@ const CAS_CHAINE = [
   },
 ];
 
+const CAS_CHAINE_MODULE = [
+  {
+    quoi: 'entrée de module ordinaire — six champs scellés',
+    precedent: 'OASIS-MODULE-GENESIS',
+    entree: {
+      ts: '2026-09-26T09:00:00.000Z', user: 'm.ahoyo@anac.bj', action: 'VALIDATION',
+      objet: 'Plan de surveillance', ref: 'PS-2026-014', details: { statut: 'valide' },
+    },
+  },
+  {
+    quoi: 'objet et référence vides — la barre verticale reste, le champ non',
+    precedent: 'OASIS-MODULE-GENESIS',
+    entree: {
+      ts: '2026-09-26T09:01:00.000Z', user: 'admin@anac.bj', action: 'DROITS',
+      objet: '', ref: '', details: { module: 'PLAN', cible: 'agent@anac.bj' },
+    },
+  },
+  {
+    quoi: 'accents dans l’objet — non échappés, comme partout ailleurs',
+    precedent: '6b33940a522a80a631312076bbafceed0dfd99cbfdf4674791c8dab386782fe2',
+    entree: {
+      ts: '2026-09-26T09:02:00.000Z', user: 'superadmin@anac.bj', action: 'CREATION',
+      objet: 'Inspection sur aire de trafic — Cotonou', ref: 'RAMP/2026/07',
+      details: { etat: 'Bénin', exploitant: "Côte d'Ivoire Air" },
+    },
+  },
+];
+
 function calculer() {
   return {
     apropos: {
@@ -163,6 +202,23 @@ function calculer() {
         attendu: empreinteEntree(c.precedent, c.entree),
       })),
     },
+    chaineModule: {
+      contrat: {
+        algorithme: 'SHA-256',
+        formule: 'sha256( prevHash |ts |user |action |objet |ref |json(details) )',
+        genese: 'OASIS-MODULE-GENESIS',
+        note: [
+          'SIX champs, non quatre : « objet » et « ref » s’intercalent entre l’action et le détail.',
+          'Un module renommé garde ses anciennes entrées sous leur ancien code, et chaque chaîne se vérifie pour elle-même en repartant de la genèse. RAMP porte ainsi l’héritage de SAFA.',
+          'Mêmes règles de sérialisation que la chaîne du socle.',
+        ],
+      },
+      cas: CAS_CHAINE_MODULE.map((c) => ({
+        ...c,
+        json_attendu: JSON.stringify(c.entree.details || {}),
+        attendu: empreinteEntreeModule(c.precedent, c.entree),
+      })),
+    },
   };
 }
 
@@ -182,6 +238,10 @@ function verifier() {
     const v = vif.chaine.cas[i] || {};
     if (c.attendu !== v.attendu) ecarts.push(`chaîne[${i}] « ${c.quoi} » — empreinte`);
     if (c.json_attendu !== v.json_attendu) ecarts.push(`chaîne[${i}] « ${c.quoi} » — sérialisation`);
+  });
+  (fige.chaineModule || { cas: [] }).cas.forEach((c, i) => {
+    const v = (vif.chaineModule.cas || [])[i] || {};
+    if (c.attendu !== v.attendu) ecarts.push(`chaîne module[${i}] « ${c.quoi} » — empreinte`);
   });
   return ecarts;
 }

@@ -133,9 +133,9 @@ central de sauvegarde. ADR-001 a été écrit sans cette réponse ; son raisonne
 | 2 — Journalisation des consultations | `src/consultations.js` | 5 |
 | 3 — Conservation et purge | `src/retention.js`, `GET /api/retention`, `POST /api/retention/purger` | 11 |
 | 4 — Pseudonymisation | **sans objet aujourd'hui** — garde posée | 2 |
-| 5 — Horodatage | `src/horloge.js`, client SNTP sans dépendance | 4 |
+| 5 — Horodatage | `src/horloge.js`, client SNTP sans dépendance | 3 |
 
-**702 → 736 contrôles.** Toutes les gardes ont été contre-éprouvées : réintroduire le défaut
+**702 → 724 contrôles** (+22). Toutes les gardes ont été contre-éprouvées : réintroduire le défaut
 les fait tomber.
 
 **Le chantier 4 mérite un mot.** La fiche demande la pseudonymisation « dans les tableaux de

@@ -366,6 +366,77 @@ function verrouDuRepertoire() {
   }
 }
 
+// ── Conservation : ce qui se purge, ce qui s'archive, ce qui ne bouge pas ──
+//
+// La purge efface pour de bon : elle ne s'éprouve pas dans le répertoire de
+// travail. Le scénario tourne dans un processus à part, avec son propre
+// `OASIS_DATA_DIR` — aucune donnée réelle n'est à portée, quoi qu'il arrive.
+function conservation() {
+  const { execFileSync } = require('child_process');
+  const bac = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-retention-'));
+  const scenario = `
+    const fs = require('fs');
+    const retention = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'retention'))});
+    const audit = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'audit'))});
+    const store = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'store'))});
+
+    const JOUR = 86400000;
+    // Tout se juge à un seul instant : onze ans devant nous, de sorte que les
+    // entrées de journal (dix ans de conservation) soient échues. Les dates
+    // des courriels sont posées par rapport à CET instant, sans quoi le
+    // « récent » aurait onze ans lui aussi — et la purge aurait raison de
+    // l'emporter.
+    const instant = Date.now() + 11 * 365 * JOUR;
+    const vieux = new Date(instant - 200 * JOUR).toISOString();
+    const recent = new Date(instant - 2 * JOUR).toISOString();
+
+    store.save('emails', [
+      { id: 1, to: 'a@x.bj', ts: vieux }, { id: 2, to: 'b@x.bj', ts: vieux },
+      { id: 3, to: 'c@x.bj', ts: recent },
+    ]);
+    audit.log('essai', 'PREMIERE', {});
+    audit.log('essai', 'SECONDE', {});
+
+    const rapport = retention.appliquer({}, { appliquer: true, maintenant: instant });
+
+    console.log(JSON.stringify({
+      rapport,
+      courrielsRestants: store.load('emails', []).map((e) => e.id),
+      entreesJournal: audit.list().length,
+      chaine: audit.verifyChain(),
+      archives: fs.existsSync(process.env.OASIS_DATA_DIR + '/archives')
+        ? fs.readdirSync(process.env.OASIS_DATA_DIR + '/archives') : [],
+    }));
+  `;
+  let r;
+  try {
+    r = JSON.parse(execFileSync(process.execPath, ['-e', scenario],
+      { env: { ...process.env, OASIS_DATA_DIR: bac }, encoding: 'utf8' }));
+  } finally {
+    fs.rmSync(bac, { recursive: true, force: true });
+  }
+
+  // Ce qui est échu part, ce qui ne l'est pas reste. Le troisième courriel a
+  // deux jours : il n'a rien à faire dans une purge à quatre-vingt-dix.
+  verifier('conservation : la purge retire les entrées échues, et elles seules',
+    JSON.stringify(r.courrielsRestants) === '[3]', JSON.stringify(r.courrielsRestants));
+
+  // Le point qui décide de tout : le journal d'audit sort une copie et **ne
+  // perd rien**. Retirer une entrée romprait la chaîne du §F.3.
+  verifier('conservation : le journal d’audit garde toutes ses entrées',
+    r.entreesJournal === 2, `${r.entreesJournal} entrée(s)`);
+  verifier('conservation : la chaîne reste vérifiable après archivage',
+    r.chaine.valid === true, JSON.stringify(r.chaine));
+  verifier('conservation : l’archive est écrite à côté, horodatée',
+    r.archives.some((f) => /^audit-jusqu-a-.*\.jsonl$/.test(f)), JSON.stringify(r.archives));
+
+  const actes = Object.fromEntries((r.rapport.actes || []).map((a) => [a.collection, a]));
+  verifier('conservation : le rapport nomme la purge et l’archivage',
+    actes.emails && actes.emails.retirees === 2
+    && actes.audit && actes.audit.archivees === 2,
+    JSON.stringify(r.rapport.actes));
+}
+
 // ── Ce que la barre de RAMP nomme, et à qui ──
 //
 // Elle ne nommait que le prestataire : un agent d'AAC n'y lisait rien, quand
@@ -432,6 +503,7 @@ module.exports = async function unitairesSmoke() {
     traces();
     await courrielsSansSecret();
     verrouDuRepertoire();
+    conservation();
     barreDeRamp();
     await magasins();
   } finally {

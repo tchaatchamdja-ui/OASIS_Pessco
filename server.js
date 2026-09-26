@@ -7,7 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const store = require('./src/store');
 const audit = require('./src/audit');
-const { valider } = require('./src/valider');
+const { valider, enveloppe } = require('./src/valider');
 const auth = require('./src/auth');
 const email = require('./src/email');
 const referentiels = require('./src/referentiels');
@@ -71,6 +71,7 @@ const EN_PRODUCTION = process.env.NODE_ENV === 'production';
 const zlib = require('zlib');
 const verrou = require('./src/verrou');
 const horloge = require('./src/horloge');
+const retention = require('./src/retention');
 
 // L'état de l'horloge, mesuré une fois au démarrage : la sonde de santé le
 // rend, pour qu'un collecteur puisse alerter sur une dérive.
@@ -660,6 +661,29 @@ app.get('/api/audit', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res
 
 app.get('/api/audit/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
   res.json(audit.verifyChain());
+});
+
+// ── Durées de conservation (fiche technique §5.2) ──
+// Ce que l'application garde, combien de temps, et pourquoi. La première
+// question d'un contrôle, et jusqu'ici elle n'avait pas de réponse.
+app.get('/api/retention', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+  res.json(retention.etat(loadConfig()));
+});
+
+// L'application de la politique. À blanc par défaut : effacer des données est
+// un geste délibéré, et il laisse une trace au journal — lequel, justement,
+// n'est jamais purgé mais archivé.
+app.post('/api/retention/purger', requireAuth, requireRole('SUPERADMIN'), enveloppe, (req, res) => {
+  const appliquer = (req.body || {}).appliquer === true;
+  const rapport = retention.appliquer(loadConfig(), { appliquer });
+  if (appliquer) {
+    audit.log(req.user.username, 'RETENTION_APPLIQUEE', {
+      actes: rapport.actes.map((a) => ({
+        collection: a.collection, action: a.action, retirees: a.retirees || 0, archivees: a.archivees || 0,
+      })),
+    });
+  }
+  res.json(rapport);
 });
 
 // ── Notifications ──

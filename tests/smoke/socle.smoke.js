@@ -130,6 +130,41 @@ module.exports = async function socleSmoke(port) {
     verifier('les entrées du journal portent une date ISO',
       audit.corps.every((e) => /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(e.ts)));
 
+    // ── Durées de conservation et purge (fiche technique §5.2) ──
+    // Rien n'expirait : le journal des envois gardait des messages d'août et
+    // personne n'aurait su dire combien de temps l'application conserve quoi.
+    const ret = await srv.appel('/api/retention');
+    verifier('l’état de conservation est servi',
+      ret.statut === 200 && Array.isArray(ret.corps.lignes) && ret.corps.lignes.length >= 10,
+      `statut ${ret.statut}`);
+
+    const parNom = Object.fromEntries((ret.corps.lignes || []).map((l) => [l.collection, l]));
+    verifier('chaque durée porte son motif',
+      (ret.corps.lignes || []).every((l) => typeof l.motif === 'string' && l.motif.length > 20));
+
+    // Le point qui compte : un journal chaîné s'archive, il ne se purge pas.
+    // Retirer une entrée romprait la chaîne SHA-256 du §F.3.
+    verifier('les journaux d’audit sont en archivage, jamais en purge',
+      parNom.audit.action === 'archive' && parNom.module_audit.action === 'archive',
+      `${parNom.audit.action} / ${parNom.module_audit.action}`);
+    verifier('les actes d’autorité ne sont pas purgés automatiquement',
+      ['execution', 'mesures', 'planification', 'ramp']
+        .every((c) => parNom[c] && parNom[c].action === 'conserver'));
+
+    // L'exécution à blanc ne touche à rien.
+    const courriersAvant = srv.donnees('emails').length;
+    const blanc = await srv.appel('/api/retention/purger',
+      { method: 'POST', body: JSON.stringify({}) });
+    verifier('la purge à blanc ne retire rien',
+      blanc.statut === 200 && blanc.corps.applique === false
+      && srv.donnees('emails').length === courriersAvant,
+      `statut ${blanc.statut}`);
+
+    // Et la chaîne d'audit survit à tout : c'est la garantie du §F.3.
+    const chaineApres = await srv.appel('/api/audit/verify');
+    verifier('la chaîne d’audit reste vérifiable après la rétention',
+      chaineApres.corps.valid === true, JSON.stringify(chaineApres.corps));
+
     // ── Effacement d'un compte (droit à l'effacement) ──
     // Un compte se désactivait, jamais ne s'effaçait : le droit n'avait aucun
     // moyen technique. Ces contrôles tiennent les deux bouts — que

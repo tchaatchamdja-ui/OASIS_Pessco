@@ -48,6 +48,17 @@
     "delaiMs": 3000,
     "note": "Serveur de temps SNTP vérifiant l'horodatage des journaux (fiche technique §3.3). Vide : l'horodatage est déclaré non vérifié et le démarrage le signale. Surchargeable par OASIS_TEMPS_SERVEUR."
   },
+  "retention": {
+    "note": "Durées de conservation par catégorie (fiche technique §5.2). Les défauts et leurs motifs sont dans src/retention.js ; on ne surcharge ici que ce qui s'écarte. Trois actions : purge, archive, conserver. La purge d'un journal chaîné est refusée — elle romprait la chaîne du §F.3.",
+    "emails": {
+      "jours": 90,
+      "action": "purge"
+    },
+    "notifications": {
+      "jours": 365,
+      "action": "purge"
+    }
+  },
   "database": {
     "driver": "json-file",
     "note": "Socle de démonstration : stockage fichier. Production : PostgreSQL 16 (cf. Note technique §4) — une base par État, réplication logique vers le serveur central UEMOA.",

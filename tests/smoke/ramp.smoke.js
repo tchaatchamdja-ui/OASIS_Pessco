@@ -1,7 +1,7 @@
 // Fumée — module « Inspections d'aéronefs sur aire de trafic » (RAMP) :
 // contexte, sept familles de paramètres, import en deux temps, inspections et
 // écarts, dépôts, contacts et exports.
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 // Le rattachement d'une inspection à son instance se lit sans serveur : la
 // règle est une fonction, éprouvée ici sur les trois cas qu'elle départage.
 const vuesRamp = require('../../src/modules/ramp/vues');
@@ -125,9 +125,13 @@ module.exports = async function rampSmoke(port) {
     // ── Cloisonnement par instance ──
     // L'instance qui importe tient ce qu'elle a importé, où que l'inspection
     // ait été conduite : l'import pose son nom sur chaque ligne.
-    verifier('l’import pose l’instance sur l’inspection',
-      srv.donnees('ramp').inspections.every((x) => x.instance === ici),
-      srv.donnees('ramp').inspections.map((x) => x.instance).join(' '));
+    if (srv.local) {
+      verifier('l’import pose l’instance sur l’inspection',
+        srv.donnees('ramp').inspections.every((x) => x.instance === ici),
+        srv.donnees('ramp').inspections.map((x) => x.instance).join(' '));
+    } else {
+      horsPortee('l’import pose l’instance sur l’inspection', 'se lit sur le disque du serveur');
+    }
 
     // Ce qui a été écrit avant ce champ revient à l'État nommé par
     // l'inspection, et non à l'instance installée : c'est ce qui rend au Mali
@@ -179,10 +183,18 @@ module.exports = async function rampSmoke(port) {
       method: 'POST', headers: { 'content-type': `multipart/form-data; boundary=${frontiere}` }, body: corpsPreuve,
     });
     verifier('preuve déposée sur l’écart', depot.statut === 201, `statut ${depot.statut}`);
-    const fichierPreuve = ((srv.donnees('ramp').ecarts || []).find((e) => e.id === cat3.id).preuves || [])
-      .map((p) => p.fichier)[0] || '';
-    verifier('preuve présente sur le disque',
-      !!fichierPreuve && srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
+    // Le nom du fichier déposé, puis sa présence : deux lectures du disque du
+    // serveur, et c'est bien ce disque que le contrôle regarde.
+    const fichierPreuve = srv.local
+      ? ((srv.donnees('ramp').ecarts || []).find((e) => e.id === cat3.id).preuves || [])
+        .map((p) => p.fichier)[0] || ''
+      : '';
+    if (srv.local) {
+      verifier('preuve présente sur le disque',
+        !!fichierPreuve && srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
+    } else {
+      horsPortee('preuve présente sur le disque', 'se lit sur le disque du serveur');
+    }
 
     // ── Suppression en cascade ──
     const avant = (await srv.appel(`${M}/inspections`)).corps
@@ -193,8 +205,12 @@ module.exports = async function rampSmoke(port) {
       .reduce((n, x) => n + (x.anomalies || []).length, 0);
     verifier('les écarts partent avec leur inspection', apres === avant - 2,
       `${avant} → ${apres}`);
-    verifier('les preuves des écarts quittent le disque',
-      !srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
+    if (srv.local) {
+      verifier('les preuves des écarts quittent le disque',
+        !srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
+    } else {
+      horsPortee('les preuves des écarts quittent le disque', 'se lit sur le disque du serveur');
+    }
 
     // ── Paramètres : ajout, désactivation, garde à la suppression ──
     const nouveau = await srv.appel(`${M}/parametres`, {
@@ -994,11 +1010,20 @@ module.exports = async function rampSmoke(port) {
       });
       // Le partage désigne les pièces de la fiche sous le même nom de fichier,
       // sans copie.
-      const paPiece = (srv.donnees('ramp').partages || []).find((x) => x.poi_id === poiValide.id) || {};
+      // Le partage se lit par sa route — ce qui l'éprouve, et vaut à distance.
+      const paPiece = ((await srv.appel(`${M}/partages`)).corps.partages || [])
+        .find((x) => x.poi_id === poiValide.id) || {};
       const piecePartagee = (paPiece.pieces || [])[0];
-      const cheminPiece = piecePartagee ? `uploads/ramp/poi/${piecePartagee.fichier}` : '';
+      // Le nom du fichier, lui, ne sort pas par l'API : `vuePartage` le retire
+      // délibérément, pour qu'un nom interne ne fuie pas. Il faut donc le
+      // disque — et les contrôles qui en dépendent restent locaux.
+      const cheminPiece = srv.local && piecePartagee
+        ? `uploads/ramp/poi/${((srv.donnees('ramp').partages || [])
+          .find((x) => x.id === paPiece.id) || { pieces: [] }).pieces[0].fichier}`
+        : '';
       verifier('le partage emporte les pièces de la fiche',
-        !!piecePartagee && srv.fichierExiste(cheminPiece), JSON.stringify(paPiece.pieces || []).slice(0, 80));
+        !!piecePartagee && (!srv.local || srv.fichierExiste(cheminPiece)),
+        JSON.stringify(paPiece.pieces || []).slice(0, 80));
       verifier('partage sans État refusé',
         (await srv.appel(`${M}/poi/${poiValide.id}/partager`, {
           method: 'POST', body: JSON.stringify({ etats: [], elements: { autorite: true } }),
@@ -1050,8 +1075,11 @@ module.exports = async function rampSmoke(port) {
       verifier('fiche partagée supprimée par le gestionnaire',
         (await srv.appel(`${M}/poi/${poiValide.id}`, { method: 'DELETE' })).statut === 200);
       if (piecePartagee) {
-        verifier('la pièce partagée reste sur le disque',
-          srv.fichierExiste(cheminPiece));
+        if (srv.local) {
+          verifier('la pièce partagée reste sur le disque', srv.fichierExiste(cheminPiece));
+        } else {
+          horsPortee('la pièce partagée reste sur le disque', 'se lit sur le disque du serveur');
+        }
         verifier('et reste téléchargeable depuis le partage',
           (await srv.appel(`${M}/partages/${paPiece.id}/pieces/${piecePartagee.id}/fichier`)).statut === 200);
       }
@@ -1073,8 +1101,13 @@ module.exports = async function rampSmoke(port) {
         dernier.statut === 200 && dernier.corps.retire === true
         && (await srv.appel(`${M}/partages/${pa.id}`)).statut === 404);
       if (piecePartagee) {
-        verifier('plus rien ne la désigne : la pièce quitte le disque',
-          !srv.fichierExiste(cheminPiece));
+        if (srv.local) {
+          verifier('plus rien ne la désigne : la pièce quitte le disque',
+            !srv.fichierExiste(cheminPiece));
+        } else {
+          horsPortee('plus rien ne la désigne : la pièce quitte le disque',
+            'se lit sur le disque du serveur');
+        }
       }
     }
 
@@ -1129,7 +1162,11 @@ module.exports = async function rampSmoke(port) {
     const ficheNiger = await srv.appel(`${M}/poi`, { method: 'POST', body: '{}' });
     // Une pièce déposée sur le constat du Niger : elle doit se lire d'ici,
     // comme le rapport, et seulement se lire.
-    const ecartNiger = (srv.donnees('ramp').ecarts || [])
+    // Les inspections servent leurs anomalies — les écarts entiers. Passer par
+    // là plutôt que par le fichier vaut dans les deux régimes, et éprouve la
+    // route au passage.
+    const ecartNiger = ((await srv.appel(`${M}/inspections`)).corps || [])
+      .flatMap((i) => i.anomalies || [])
       .find((e) => e.description === 'Constat du Niger') || {};
     await srv.appel(`${M}/ecarts/${ecartNiger.id}/preuves`, {
       method: 'POST',

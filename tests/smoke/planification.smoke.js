@@ -1,7 +1,7 @@
 // Fumée — module « Plans de Surveillance » : plans et activités, cycle de vie
 // d'un plan (création → soumission → validation → amendement → annulation),
 // synchronisation des risques et fil de discussion.
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 
 // Ouvre une session sur un compte au privilège LECTEUR pour le secteur visé
 // et tente les écritures : le serveur doit les refuser.
@@ -158,12 +158,18 @@ module.exports = async function planificationSmoke(port) {
       `statut ${avisEnfant.statut}`);
     const annule = await P(`/api/m/planification/plans/${enfant.id}/annuler-amendement`, { commentaire: '' });
     verifier('annulation de l’amendement', annule.statut === 200 && annule.corps.parent_plan_id === id);
-    const apresAnnul = srv.donnees('planification');
-    const restesEnfant = ['activites', 'workflow', 'commentaires', 'versions']
-      .map((c) => [c, (apresAnnul[c] || []).filter((x) => x.plan_id === enfant.id).length])
-      .filter(([, n]) => n);
-    verifier('l’amendement annulé n’a rien laissé derrière lui', restesEnfant.length === 0,
-      restesEnfant.map(([c, n]) => `${c} : ${n}`).join(' · '));
+    // Ce qu'aucune route ne sert : le reste d'un amendement annulé. C'est tout
+    // l'objet du contrôle, et il se lit donc sur le fichier.
+    if (srv.local) {
+      const apresAnnul = srv.donnees('planification');
+      const restesEnfant = ['activites', 'workflow', 'commentaires', 'versions']
+        .map((c) => [c, (apresAnnul[c] || []).filter((x) => x.plan_id === enfant.id).length])
+        .filter(([, n]) => n);
+      verifier('l’amendement annulé n’a rien laissé derrière lui', restesEnfant.length === 0,
+        restesEnfant.map(([c, n]) => `${c} : ${n}`).join(' · '));
+    } else {
+      horsPortee('l’amendement annulé n’a rien laissé derrière lui', 'se lit sur le disque du serveur');
+    }
 
     const sync = await srv.appel(`/api/m/planification/plans/${id}/sync-risques`);
     verifier('synchronisation des risques : écarts calculés',
@@ -240,9 +246,13 @@ module.exports = async function planificationSmoke(port) {
     await srv.connexion();
     await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}`, { method: 'DELETE' });
 
-    const avantSuppr = srv.donnees('planification');
-    verifier('le plan de test porte des décisions de circuit',
-      (avantSuppr.workflow || []).some((w) => w.plan_id === id));
+    if (srv.local) {
+      const avantSuppr = srv.donnees('planification');
+      verifier('le plan de test porte des décisions de circuit',
+        (avantSuppr.workflow || []).some((w) => w.plan_id === id));
+    } else {
+      horsPortee('le plan de test porte des décisions de circuit', 'se lit sur le disque du serveur');
+    }
     const suppr = await srv.appel(`/api/m/planification/plans/${id}`, { method: 'DELETE' });
     verifier('suppression du plan de test', suppr.statut === 200);
 
@@ -250,12 +260,16 @@ module.exports = async function planificationSmoke(port) {
     // ses avis ne se lisent qu'à travers sa lignée ; lui parti, elles restaient
     // en base sans que rien ne puisse plus les atteindre — la base de travail
     // en porte trente-quatre, de seize plans disparus.
-    const apresSuppr = srv.donnees('planification');
-    const restes = ['workflow', 'commentaires', 'versions']
-      .map((c) => [c, (apresSuppr[c] || []).filter((x) => x.plan_id === id || x.plan_id === brouillon.corps.id).length])
-      .filter(([, n]) => n);
-    verifier('décisions, avis et versions emportés avec le plan', restes.length === 0,
-      restes.map(([c, n]) => `${c} : ${n}`).join(' · '));
+    if (srv.local) {
+      const apresSuppr = srv.donnees('planification');
+      const restes = ['workflow', 'commentaires', 'versions']
+        .map((c) => [c, (apresSuppr[c] || []).filter((x) => x.plan_id === id || x.plan_id === brouillon.corps.id).length])
+        .filter(([, n]) => n);
+      verifier('décisions, avis et versions emportés avec le plan', restes.length === 0,
+        restes.map(([c, n]) => `${c} : ${n}`).join(' · '));
+    } else {
+      horsPortee('décisions, avis et versions emportés avec le plan', 'se lit sur le disque du serveur');
+    }
   } finally {
     srv.arreter();
   }

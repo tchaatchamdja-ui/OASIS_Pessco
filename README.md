@@ -39,6 +39,20 @@ Trois suites vérifient le code plutôt que le comportement : taille des fichier
 et des fonctions, redéfinitions de sélecteurs CSS, échappement des valeurs
 rendues, et parité des trois tables de traduction.
 
+**Contre une adresse plutôt qu'un processus.** Les contrôles passent par HTTP
+avec session et n'appellent aucune fonction interne : on peut les diriger sur
+un autre serveur que celui qu'ils lancent — c'est la recette de chaque bascule
+de la réécriture Java ([ADR-002](docs/ADR-002-migration-spring-boot.md)).
+
+```bash
+scripts/cible-essai.sh 4899
+OASIS_SMOKE_BASE=http://localhost:4899 npm run smoke -- socle
+```
+
+**632 des 737 contrôles** s'exécutent ainsi ; 12 se déclarent *hors de portée*
+— ils lisent le disque du serveur — et le bilan les compte à part. La cible
+repart des fixtures à chaque exécution et ne sert qu'une suite à la fois.
+
 ## Les modules
 
 Chaque module se décrit dans un manifeste (`src/modules/<nom>/module.json`) :

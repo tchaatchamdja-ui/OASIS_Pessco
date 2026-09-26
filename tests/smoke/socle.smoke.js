@@ -1,6 +1,6 @@
 // Fumée — socle : authentification, référentiels, catalogue de modules,
 // bus de services et journal d'audit.
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 
 module.exports = async function socleSmoke(port) {
   console.log('\n── Socle ──');
@@ -151,14 +151,19 @@ module.exports = async function socleSmoke(port) {
       ['execution', 'mesures', 'planification', 'ramp']
         .every((c) => parNom[c] && parNom[c].action === 'conserver'));
 
-    // L'exécution à blanc ne touche à rien.
-    const courriersAvant = srv.donnees('emails').length;
-    const blanc = await srv.appel('/api/retention/purger',
-      { method: 'POST', body: JSON.stringify({}) });
-    verifier('la purge à blanc ne retire rien',
-      blanc.statut === 200 && blanc.corps.applique === false
-      && srv.donnees('emails').length === courriersAvant,
-      `statut ${blanc.statut}`);
+    // L'exécution à blanc ne touche à rien. Se vérifie sur le fichier : aucune
+    // route ne rend le journal des envois, et c'est heureux.
+    if (srv.local) {
+      const courriersAvant = srv.donnees('emails').length;
+      const blanc = await srv.appel('/api/retention/purger',
+        { method: 'POST', body: JSON.stringify({}) });
+      verifier('la purge à blanc ne retire rien',
+        blanc.statut === 200 && blanc.corps.applique === false
+        && srv.donnees('emails').length === courriersAvant,
+        `statut ${blanc.statut}`);
+    } else {
+      horsPortee('la purge à blanc ne retire rien', 'se lit sur le disque du serveur');
+    }
 
     // Et la chaîne d'audit survit à tout : c'est la garantie du §F.3.
     const chaineApres = await srv.appel('/api/audit/verify');
@@ -222,10 +227,19 @@ module.exports = async function socleSmoke(port) {
     const fait = await effacer('m.ahoyo@anac.bj', MDP_ADMIN);
     verifier('effacement : le compte part', fait.statut === 200 && fait.corps.ok,
       JSON.stringify(fait.corps));
-    verifier('effacement : plus aucune trace dans le fichier des comptes',
-      !/m\.ahoyo/.test(JSON.stringify(srv.donnees('users'))));
-    verifier('effacement : la fiche du répertoire du personnel part aussi',
-      !/m\.ahoyo/i.test(JSON.stringify(srv.donnees('referentiels').inspecteurs || [])));
+    // Ce qu'aucune route ne montre : le reste d'un enregistrement effacé. Le
+    // droit à l'effacement se prouve sur le fichier, non sur une liste.
+    if (srv.local) {
+      verifier('effacement : plus aucune trace dans le fichier des comptes',
+        !/m\.ahoyo/.test(JSON.stringify(srv.donnees('users'))));
+      verifier('effacement : la fiche du répertoire du personnel part aussi',
+        !/m\.ahoyo/i.test(JSON.stringify(srv.donnees('referentiels').inspecteurs || [])));
+    } else {
+      horsPortee('effacement : plus aucune trace dans le fichier des comptes',
+        'se lit sur le disque du serveur');
+      horsPortee('effacement : la fiche du répertoire du personnel part aussi',
+        'se lit sur le disque du serveur');
+    }
     verifier('effacement : la liste en compte un de moins',
       (await srv.appel('/api/users')).corps.length === avant - 1);
 

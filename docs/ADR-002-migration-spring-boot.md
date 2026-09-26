@@ -214,8 +214,32 @@ une dépendance, non un chantier.
        occupant ; le socle prendra `backend-java/` à côté. À confirmer formellement avant
        d'engager le module DROITS.
 4. [ ] **Monter la passerelle** de routage par préfixe, avec bascule route par route.
-5. [ ] **Rendre la suite de fumée exécutable contre une base quelconque** — elle lance
-       aujourd'hui `server.js` elle-même (`tests/smoke/harness.js`). Lui donner une adresse
-       plutôt qu'un processus la rend utilisable contre le Java sans la réécrire.
+5. [x] **Rendre la suite de fumée exécutable contre une adresse** — **fait le 26 septembre
+       2026**. `OASIS_SMOKE_BASE=http://… npm run smoke -- <suite>` : le harnais ne démarre
+       alors rien et s'adresse à ce qui écoute là.
+
+       | Suite | Contre une adresse | Hors de portée |
+       |---|---|---|
+       | socle | 56 | 3 |
+       | droits | 20 | — |
+       | profil-risque | 22 | 1 |
+       | planification | 50 | 3 |
+       | execution (SURV) | 103 | — |
+       | mesures (CARE) | 62 | — |
+       | ramp | 294 | 5 |
+       | parcours (navigateur) | 25 | — |
+       | **Total** | **632** | **12** |
+
+       Les 12 hors de portée lisent le disque du serveur — le reste d'un enregistrement
+       effacé, un fichier de preuve. Ils ne sont ni réussis ni échoués : ils sont **déclarés**,
+       et le bilan les compte à part. Les passer silencieusement gonflerait le vert d'une
+       assurance qu'on n'a pas.
+
+       Deux contrôles ont même gagné à la manœuvre : les partages et les écarts se lisent
+       désormais par leur route plutôt que par le fichier — ce qui éprouve la route au passage.
+
+       **La cible doit repartir des fixtures à chaque exécution**, et ne sert qu'une suite à la
+       fois : `scripts/cible-essai.sh`. Sans cela, le second passage échoue sur un jeu de
+       données déjà consommé, et l'on croit à une régression.
 6. [ ] **Migrer DROITS**, le plus petit, et mesurer le coût réel avant d'engager la suite.
 7. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

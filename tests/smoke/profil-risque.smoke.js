@@ -1,6 +1,6 @@
 // Fumée — module « Profils de Risques » : contexte, collections, droits,
 // service publié et cohérence des profils produits.
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 
 module.exports = async function profilRisqueSmoke(port) {
   console.log('\n── Module PR — Profils de Risques ──');
@@ -65,8 +65,12 @@ module.exports = async function profilRisqueSmoke(port) {
     const EV = '/api/m/profil-risque/evaluations';
     await srv.appel(`${EV}/${ev.corps.id}`, { method: 'PUT', body: JSON.stringify({ statut: 'valide' }) });
     const reev = await srv.appel(`${EV}/${ev.corps.id}/reevaluer`, { method: 'POST', body: '{}' });
-    const enfantId = (reev.corps || {}).id || ((srv.donnees('profil_risque').evaluations || [])
-      .find((x) => x.parent_id === ev.corps.id) || {}).id;
+    // La route rend l'identifiant ; le disque n'était qu'un filet pour le cas
+    // où elle ne le ferait pas. À distance on s'en remet à la réponse.
+    const enfantId = (reev.corps || {}).id || (srv.local
+      ? ((srv.donnees('profil_risque').evaluations || [])
+        .find((x) => x.parent_id === ev.corps.id) || {}).id
+      : undefined);
     verifier('réévaluation lancée', reev.statut === 200 && !!enfantId, `statut ${reev.statut}`);
     const refusReev = await srv.appel(`${EV}/${ev.corps.id}`, { method: 'DELETE' });
     verifier('évaluation réévaluée : suppression refusée',
@@ -86,11 +90,17 @@ module.exports = async function profilRisqueSmoke(port) {
       `statuts ${reunion.statut} / ${reunionPrest.statut}`);
     const suppr = await srv.appel(`/api/m/profil-risque/evaluations/${ev.corps.id}`, { method: 'DELETE' });
     verifier('évaluation supprimée', suppr.statut === 200);
-    const restes = srv.donnees('profil_risque');
-    const orphelines = ['eval_reunions', 'eval_reunions_prest']
-      .map((c) => [c, (restes[c] || []).filter((x) => x.eval_id === ev.corps.id).length]).filter(([, n]) => n);
-    verifier('les réunions partent avec leur évaluation', orphelines.length === 0,
-      orphelines.map(([c, n]) => `${c} : ${n}`).join(' · '));
+    // Le reste d'une réunion orpheline ne se lit sur aucune route — elles ne
+    // s'atteignaient que par leur évaluation, et c'est bien le problème.
+    if (srv.local) {
+      const restes = srv.donnees('profil_risque');
+      const orphelines = ['eval_reunions', 'eval_reunions_prest']
+        .map((c) => [c, (restes[c] || []).filter((x) => x.eval_id === ev.corps.id).length]).filter(([, n]) => n);
+      verifier('les réunions partent avec leur évaluation', orphelines.length === 0,
+        orphelines.map(([c, n]) => `${c} : ${n}`).join(' · '));
+    } else {
+      horsPortee('les réunions partent avec leur évaluation', 'se lit sur le disque du serveur');
+    }
   } finally {
     srv.arreter();
   }

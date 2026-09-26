@@ -117,7 +117,8 @@ OASIS/
 | `docs/SECURITE.md` | Politique de sécurité : mesures, emplacements, points ouverts |
 | `docs/architecture-uml.md` | Modèle de données et enchaînements |
 | `docs/MAGASIN-POSTGRESQL.md` | Le magasin PostgreSQL : ce qui est fait, ce qui bloque la bascule |
-| `docs/ADR-001-magasin-de-donnees.md` | Décision : différer la bascule, spécifier la réplication d'abord |
+| `docs/ADR-001-magasin-de-donnees.md` | ~~Différer la bascule~~ — clos, remplacé par ADR-002 |
+| `docs/ADR-002-migration-spring-boot.md` | **Décision : réécriture Java 21 / Spring Boot, puis PostgreSQL** |
 | `docs/CONFORMITE-FICHE-TECHNIQUE.md` | Conformité à la fiche technique URSAC/GT2 : ce qui est tenu, ce qui ne l'est pas |
 | `docs/PLAN-CONFORMITE.md` | Plan de mise en conformité : ce qui peut être fait, ce qui ne le peut pas |
 | `docs/REGISTRE-DES-TRAITEMENTS.md` | Registre des traitements de données à caractère personnel |

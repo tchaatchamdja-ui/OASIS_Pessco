@@ -17,16 +17,17 @@
 > demeure exact.
 >
 > Ce qui change : l'option C (« rester sur les fichiers, spécifier la
-> réplication ») n'a plus d'objet, son préalable étant levé. La décision se
-> reporte sur le chemin de la bascule, arbitrage n° 1 de
-> [PLAN-CONFORMITE.md](PLAN-CONFORMITE.md) — PostgreSQL en Node, ou Spring Boot
-> puis PostgreSQL.
+> réplication ») n'a plus d'objet, son préalable étant levé.
+>
+> **L'arbitrage est rendu : chemin B — Spring Boot puis PostgreSQL.** Il est
+> consigné par [ADR-002](ADR-002-migration-spring-boot.md), qui remplace celui-ci.
+> L'option A de cet ADR — porter l'application Node en asynchrone — est écartée.
 >
 > Un fait découvert depuis, et qui pèse sur cet arbitrage : **la difficulté que
 > cet ADR décrit — 450 accès synchrones à convertir — n'existe pas en Java**,
 > où JDBC bloque par conception. Les deux questions n'en font qu'une.
 
-**Statut :** ~~Proposé~~ — **rouvert, en attente de l'arbitrage n° 1 du GT2**
+**Statut :** ~~Proposé~~ — **clos le 26 septembre 2026, remplacé par [ADR-002](ADR-002-migration-spring-boot.md)**
 **Date :** 25 septembre 2026 — rouvert le 26 septembre 2026
 **Décideurs :** maîtrise d'ouvrage OASIS ; URSAC/UEMOA pour l'exigence de réplication
 **Remplace :** la ligne « Production : PostgreSQL 16 » portée par `src/store.js` depuis l'origine
@@ -230,7 +231,6 @@ payée** — il ne reste qu'à l'exercer le jour venu.
        production (`scripts/sauvegarde.sh`), seule protection en l'absence de base.
 5. [x] ~~Rouvrir cet ADR à la réception de la spécification.~~ — fait le
        26 septembre 2026.
-6. [ ] **Trancher l'arbitrage n° 1** de [PLAN-CONFORMITE.md](PLAN-CONFORMITE.md) :
-       PostgreSQL en Node (3 à 6 semaines, risque élevé sur 450 accès), ou
-       Spring Boot puis PostgreSQL (4 à 7 mois, et la conversion asynchrone
-       disparaît). C'est désormais la seule question ouverte ici.
+6. [x] ~~**Trancher l'arbitrage n° 1**~~ — rendu le 26 septembre 2026 :
+       **chemin B, Spring Boot puis PostgreSQL**. Voir
+       [ADR-002](ADR-002-migration-spring-boot.md). Plus rien n'est ouvert ici.

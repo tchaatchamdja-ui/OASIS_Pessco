@@ -1,0 +1,158 @@
+{
+  "apropos": {
+    "objet": "Contrat d'octets que toute réécriture du socle doit satisfaire (ADR-002).",
+    "produit_par": "scripts/vecteurs-conformite.js"
+  },
+  "scrypt": {
+    "contrat": {
+      "algorithme": "scrypt (RFC 7914)",
+      "N": 16384,
+      "r": 8,
+      "p": 1,
+      "keylen": 64,
+      "sel": "la chaîne hexadécimale elle-même, encodée en UTF-8 (32 octets ASCII), JAMAIS l'hexadécimal décodé",
+      "motDePasse": "encodé en UTF-8",
+      "sortie": "hexadécimal minuscule, 128 caractères",
+      "stockage": "{ salt: <hex 32>, hash: <hex 128> } sur l’enregistrement du compte",
+      "comparaison": "à temps constant (crypto.timingSafeEqual sur les chaînes hexadécimales)"
+    },
+    "cas": [
+      {
+        "quoi": "cas ordinaire",
+        "motDePasse": "Aerosup@2026!Uemoa",
+        "sel": "4f3a1b8e9c2d7a6f5e4d3c2b1a098765",
+        "attendu": "1029bc811d40ce85553dd2dcc2e118015b0ab16bda37d9c2f413dfbc62b804fefc8f54ad8748eead41f88fc8fd50b70b1a42c9bbb99f8296e4b70857d7e1f02a"
+      },
+      {
+        "quoi": "accents et espace — le mot de passe est encodé en UTF-8, non en Latin-1",
+        "motDePasse": "Bénin Sécurité@2026",
+        "sel": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+        "attendu": "637b8da901572066e58e742020155db74332cabd92023a61a24aac342cf0eb8b7bb907163bd15880e9aef2e6055d18335b6b8759f0a710bb017323d5419d00c7"
+      },
+      {
+        "quoi": "hors du plan multilingue de base — deux unités de code pour un signe",
+        "motDePasse": "Aéroport✈2026!Cotonou",
+        "sel": "00112233445566778899aabbccddeeff",
+        "attendu": "46ab7d2476c473fa5203d839f23e65c7ca7f24d0476011c2116e782d3b6fd73c89b1a97bce5b519e44f63978963064a3e58e601bae55549beaf4a56fc8cbc2be"
+      }
+    ]
+  },
+  "chaine": {
+    "contrat": {
+      "algorithme": "SHA-256",
+      "formule": "sha256( prevHash + \"|\" + ts + \"|\" + user + \"|\" + action + \"|\" + json(details) )",
+      "genese": {
+        "socle": "AEROSUP-GENESIS",
+        "modules": "OASIS-MODULE-GENESIS"
+      },
+      "json": [
+        "Sémantique de JSON.stringify de JavaScript, et non celle de Jackson par défaut.",
+        "Aucun espace : ni après « : », ni après « , ».",
+        "Ordre des clés : celui de l’insertion, MAIS les clés qui sont des entiers passent devant, triées numériquement.",
+        "Les caractères non ASCII ne sont pas échappés — « Bénin » s’écrit tel quel, en UTF-8.",
+        "La barre oblique « / » n’est pas échappée.",
+        "Échappés : guillemet, contre-oblique, et les commandes (\\n, \\t, \\r, \\b, \\f, \\uXXXX)."
+      ],
+      "sortie": "hexadécimal minuscule, 64 caractères"
+    },
+    "cas": [
+      {
+        "quoi": "entrée sans détail",
+        "precedent": "AEROSUP-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T08:00:00.000Z",
+          "user": "superadmin@anac.bj",
+          "action": "LOGIN",
+          "details": {}
+        },
+        "json_attendu": "{}",
+        "attendu": "9f188066e0631d4b9e3ef2c6a047c5a546e9988adac0e30385c0bcfed3625c41"
+      },
+      {
+        "quoi": "accents dans les valeurs — JSON.stringify ne les échappe pas",
+        "precedent": "AEROSUP-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T08:01:00.000Z",
+          "user": "m.ahoyo@anac.bj",
+          "action": "INSTANCE_CHANGEE",
+          "details": {
+            "de": "Bénin",
+            "vers": "Côte d'Ivoire"
+          }
+        },
+        "json_attendu": "{\"de\":\"Bénin\",\"vers\":\"Côte d'Ivoire\"}",
+        "attendu": "48520b16518596699e419998763b0eb31491210ad0300e678fb609f031c0d578"
+      },
+      {
+        "quoi": "barre oblique — JSON.stringify ne l’échappe pas, contrairement à certains sérialiseurs",
+        "precedent": "AEROSUP-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T08:02:00.000Z",
+          "user": "admin@anac.bj",
+          "action": "CONSULTATION",
+          "details": {
+            "nature": "personnel",
+            "dossier": "/api/referentiels/inspecteurs"
+          }
+        },
+        "json_attendu": "{\"nature\":\"personnel\",\"dossier\":\"/api/referentiels/inspecteurs\"}",
+        "attendu": "787b6ee56ac1310afafc95c777d942d1d17f33b616f38908c2a5a3dff0b18029"
+      },
+      {
+        "quoi": "ORDRE DES CLÉS — les clés entières passent devant, triées numériquement",
+        "precedent": "AEROSUP-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T08:03:00.000Z",
+          "user": "admin@anac.bj",
+          "action": "ESSAI_ORDRE",
+          "details": {
+            "1": "un",
+            "2": "deux",
+            "10": "dix",
+            "b": "deux",
+            "a": "un"
+          }
+        },
+        "json_attendu": "{\"1\":\"un\",\"2\":\"deux\",\"10\":\"dix\",\"b\":\"deux\",\"a\":\"un\"}",
+        "attendu": "25ea81f249a84c5b352010c607c24ad059eb9994d63c611669cd0a67d62346a8"
+      },
+      {
+        "quoi": "objet imbriqué et liste",
+        "precedent": "6b33940a522a80a631312076bbafceed0dfd99cbfdf4674791c8dab386782fe2",
+        "entree": {
+          "ts": "2026-09-26T08:04:00.000Z",
+          "user": "superadmin@anac.bj",
+          "action": "RETENTION_APPLIQUEE",
+          "details": {
+            "actes": [
+              {
+                "collection": "emails",
+                "retirees": 2
+              },
+              {
+                "collection": "audit",
+                "archivees": 12
+              }
+            ]
+          }
+        },
+        "json_attendu": "{\"actes\":[{\"collection\":\"emails\",\"retirees\":2},{\"collection\":\"audit\",\"archivees\":12}]}",
+        "attendu": "bea6214b6a431dd2d9e8d5ce534feb47324c1d9eabc6ec2223c4802b81a90dba"
+      },
+      {
+        "quoi": "guillemets, retour à la ligne et tabulation dans une valeur",
+        "precedent": "AEROSUP-GENESIS",
+        "entree": {
+          "ts": "2026-09-26T08:05:00.000Z",
+          "user": "admin@anac.bj",
+          "action": "ERREUR_SERVEUR",
+          "details": {
+            "message": "il a dit \"non\"\net puis\tplus rien"
+          }
+        },
+        "json_attendu": "{\"message\":\"il a dit \\\"non\\\"\\net puis\\tplus rien\"}",
+        "attendu": "cc694a0cbe638953de22b51442b15acb4430bc76c174844311bf1afecdaeb917"
+      }
+    ]
+  }
+}

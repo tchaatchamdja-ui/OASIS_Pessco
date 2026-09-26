@@ -12,6 +12,7 @@
 // à son instance, les bornes de la garde de forme, et la mise en forme des
 // traces.
 const assert = require('assert');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -366,6 +367,45 @@ function verrouDuRepertoire() {
   }
 }
 
+// ── Les vecteurs de la réécriture Java (ADR-002) ──
+//
+// Deux mécanismes se jouent à l'octet près, et une erreur d'un bit n'y produit
+// aucune exception : scrypt refuserait tout le monde sans rien dire, et une
+// sérialisation qui diffère d'un espace déclarerait faux tout l'historique du
+// journal.
+//
+// `tests/conformite/vecteurs.json` fige les deux contrats. Ces contrôles font
+// deux choses distinctes, et les deux comptent :
+//   — les vecteurs décrivent bien le calcul (le script les recalcule) ;
+//   — et le **code en service** produit bien ce qu'ils annoncent.
+// Sans le second, les vecteurs décriraient une implémentation imaginaire.
+function vecteursDeMigration() {
+  const vect = require('../../scripts/vecteurs-conformite');
+  const ecarts = vect.verifier();
+  verifier('vecteurs de migration : à jour avec le calcul qu’ils décrivent',
+    ecarts.length === 0, ecarts.join(' · '));
+
+  const fige = JSON.parse(fs.readFileSync(vect.FICHIER, 'utf8'));
+
+  // scrypt, par la fonction réellement employée à la connexion.
+  const authReel = require('../../src/auth');
+  const fauxScrypt = fige.scrypt.cas.filter((c) =>
+    authReel.hashPassword(c.motDePasse, c.sel).hash !== c.attendu);
+  verifier('vecteurs de migration : scrypt du code en service conforme',
+    fauxScrypt.length === 0, fauxScrypt.map((c) => c.quoi).join(' · '));
+
+  // La chaîne, par `audit.log` lui-même : on écrit une entrée dont on maîtrise
+  // tous les champs, puis on compare son empreinte à celle qu'annonce le
+  // vecteur pour les mêmes valeurs.
+  const cas = fige.chaine.cas.find((c) => c.quoi.startsWith('ORDRE'));
+  const ecrite = audit.log(cas.entree.user, cas.entree.action, cas.entree.details);
+  const attendu = crypto.createHash('sha256')
+    .update(`${ecrite.prevHash}|${ecrite.ts}|${ecrite.user}|${ecrite.action}|${cas.json_attendu}`)
+    .digest('hex');
+  verifier('vecteurs de migration : le journal sérialise comme le vecteur l’annonce',
+    ecrite.hash === attendu, `${ecrite.hash.slice(0, 16)}… ≠ ${attendu.slice(0, 16)}…`);
+}
+
 // ── Conservation : ce qui se purge, ce qui s'archive, ce qui ne bouge pas ──
 //
 // La purge efface pour de bon : elle ne s'éprouve pas dans le répertoire de
@@ -503,6 +543,7 @@ module.exports = async function unitairesSmoke() {
     traces();
     await courrielsSansSecret();
     verrouDuRepertoire();
+    vecteursDeMigration();
     conservation();
     barreDeRamp();
     await magasins();

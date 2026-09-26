@@ -30,8 +30,10 @@ Le coût marginal de B par rapport à A est bien plus faible qu'il n'y paraît, 
 de toute façon dû** et que A est le chemin risqué. Si le backend doit un jour être en Java,
 le faire **avant** PostgreSQL et non après évite de payer deux fois.
 
-> **Arbitrage n° 1 attendu du GT2 : A ou B ?**
-> Tout ce qui suit en dépend pour son séquencement, mais rien n'en dépend pour sa faisabilité.
+> **Arbitrage n° 1 — RENDU le 26 septembre 2026 : chemin B, Spring Boot puis PostgreSQL.**
+> Consigné par [ADR-002](ADR-002-migration-spring-boot.md), qui porte le séquencement, les
+> cinq points durs et leurs parades. Le premier jalon — les contrats d'octets de scrypt et de
+> la chaîne d'audit — est **fait** et gardé par trois contrôles.
 
 ---
 
@@ -147,7 +149,7 @@ tombe dès qu'un courriel, un prénom, un identifiant de compte ou un téléphon
 où un axe « par inspecteur » sera ajouté, il le dira — et c'est à ce moment-là que le moteur
 s'écrira, pour un besoin réel.
 
-### Vague 1 — Le socle *(arbitrage n° 1, puis 1 à 7 mois)*
+### Vague 1 — Le socle — **chemin B retenu, 4 à 7 mois** *(voir [ADR-002](ADR-002-migration-spring-boot.md))*
 
 Chantier **8**, par le chemin A ou B. Si B, le strangler fig module par module, du plus petit
 au plus gros — DROITS (20 contrôles), PR (23), PLAN (53), CARE (62), SURV (103), RAMP (299),

@@ -115,11 +115,25 @@ function rampDessinerActions() {
         });
     }
     oasisModuleActions(actions);
-    // La liste déroulante nomme déjà le prestataire : la mention ne sert qu'aux
-    // comptes qui n'en changent pas.
-    if (typeof oasisModuleMention === 'function') {
-        oasisModuleMention(etat.disponible ? '' : rampNomPrestataireCourant());
-    }
+    rampDessinerMention();
+}
+
+// Ce que la barre nomme, à qui n'a rien à y choisir. Elle ne nommait que le
+// prestataire : un agent d'AAC — utilisateur, administrateur, ou
+// super-administrateur national — n'y lisait donc rien du tout, quand les
+// autres modules lui disent chez quelle AAC il travaille.
+function rampDessinerMention() {
+    if (typeof oasisModuleMention !== 'function') return;
+    const vue = RAMP_STATE.vue || {};
+    const inst = RAMP_STATE.instance || {};
+    // Vue Prestataire subie : le compte appartient à l'organisme, la barre le
+    // nomme. Qui bascule d'une vue à l'autre le lit déjà dans la barre.
+    const prestataire = vue.disponible ? '' : rampNomPrestataireCourant();
+    if (prestataire) { oasisModuleMention(prestataire); return; }
+    // Sinon l'instance — sauf à qui la prend dans la liste déroulante, qui la
+    // nomme déjà. `courante` plutôt que `locale` : un compte rattaché à un
+    // autre État travaille chez lui, non chez celui qui sert l'application.
+    oasisModuleMention(inst.disponible ? '' : (inst.courante || inst.locale || ''));
 }
 
 // L'état arrive avec le contexte, la barre est posée par le socle : l'ordre

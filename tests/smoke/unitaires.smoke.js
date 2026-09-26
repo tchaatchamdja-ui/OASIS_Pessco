@@ -366,6 +366,63 @@ function verrouDuRepertoire() {
   }
 }
 
+// ── Ce que la barre de RAMP nomme, et à qui ──
+//
+// Elle ne nommait que le prestataire : un agent d'AAC n'y lisait rien, quand
+// les autres modules lui disent chez quelle AAC il travaille. La règle est du
+// front, et aucune requête ne la mène — d'où cette épreuve, qui exécute le
+// vrai fichier dans une portée de papier et lui pose les quatre profils.
+function barreDeRamp() {
+  const vm = require('vm');
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', '..', 'public', 'modules', 'ramp', 'js', 'ramp-vues.js'), 'utf8',
+  );
+
+  const mention = (vue, instance) => {
+    let dit = null;
+    const portee = {
+      RAMP_STATE: { vue, instance },
+      rt: (k) => k,
+      rampApi: async () => ({}),
+      rampToast: () => {},
+      oasisModuleActions: () => {},
+      oasisModuleMention: (t) => { dit = t; },
+      setTimeout: () => {},
+    };
+    portee.window = { addEventListener: () => {} };
+    vm.createContext(portee);
+    vm.runInContext(source, portee);
+    portee.rampDessinerActions();
+    return dit;
+  };
+
+  const BENIN = { disponible: false, courante: 'Bénin', locale: 'Bénin' };
+  const REGIONAL = { disponible: true, courante: 'Togo', locale: 'Bénin', instances: ['Bénin', 'Togo'] };
+
+  verifier('barre RAMP : l’agent d’AAC lit son instance',
+    mention({ disponible: false, vue: 'aac' }, BENIN) === 'Bénin');
+
+  verifier('barre RAMP : l’administrateur d’AAC la lit aussi',
+    mention({ disponible: true, vue: 'aac', prestataires: [] }, BENIN) === 'Bénin');
+
+  // Celui qui la prend dans la liste déroulante l'y lit déjà : la redire
+  // au-dessous ferait deux fois le même mot, dont l'un peut être périmé.
+  verifier('barre RAMP : le super-administrateur régional ne la lit pas deux fois',
+    mention({ disponible: true, vue: 'aac', prestataires: [] }, REGIONAL) === '');
+
+  // Le compte d'organisme garde ce qu'il avait : c'est l'organisme qui décide
+  // de ce que l'écran montre, non l'AAC qui l'héberge.
+  verifier('barre RAMP : le compte prestataire lit son organisme',
+    mention({ disponible: false, vue: 'prestataire', prestataire_nom: 'Air Bénin' }, BENIN)
+    === 'Air Bénin');
+
+  // Un compte rattaché à un autre État travaille chez lui, non chez celui qui
+  // sert l'application : c'est `courante` qui fait foi, non `locale`.
+  verifier('barre RAMP : un compte d’un autre État lit le sien',
+    mention({ disponible: false, vue: 'aac' },
+      { disponible: false, courante: 'Togo', locale: 'Bénin' }) === 'Togo');
+}
+
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
@@ -375,6 +432,7 @@ module.exports = async function unitairesSmoke() {
     traces();
     await courrielsSansSecret();
     verrouDuRepertoire();
+    barreDeRamp();
     await magasins();
   } finally {
     fs.rmSync(BAC, { recursive: true, force: true });

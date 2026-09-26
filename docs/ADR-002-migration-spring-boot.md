@@ -198,12 +198,21 @@ une dépendance, non un chantier.
 
 1. [x] **Figer les contrats d'octets** — fait : `scripts/vecteurs-conformite.js`,
        `tests/conformite/vecteurs.json`, trois contrôles, contre-éprouvés.
-2. [ ] **Éprouver les vecteurs en Java** — un projet minimal, sans Spring, qui ne fait que
-       satisfaire les deux contrats. **C'est le premier jalon, et il conditionne tout le
-       reste** : si scrypt ne se reproduit pas, le plan change (réinitialisation générale des
-       mots de passe, à décider avant de commencer).
-3. [ ] **Choisir l'outil de construction** (Maven ou Gradle) et la disposition du dépôt :
-       monodépôt avec `backend-java/` à côté de l'existant, ou dépôt séparé.
+2. [x] **Éprouver les vecteurs en Java** — **fait le 26 septembre 2026**
+       ([`conformite-java/`](../conformite-java/README.md)). JDK 21, Bouncy Castle 1.78.1,
+       Jackson pour la seule lecture ; quatre tests, zéro échec, contre-éprouvés tous les deux.
+
+       > **Les deux contrats se reproduisent.** Conséquence directe pour le plan :
+       > **aucune réinitialisation générale des mots de passe n'est nécessaire**, et la chaîne
+       > d'audit existante reste reproductible — le sceau recommandé ci-dessus devient un
+       > choix d'ingénierie, non une contrainte subie.
+
+       Les deux moitiés — vecteurs à jour côté Node, contrats satisfaits côté Java — tournent
+       en intégration continue.
+3. [~] **Choisir l'outil de construction et la disposition du dépôt.** Le jalon n° 2 a
+       tranché par l'usage : **Maven**, en monodépôt. `conformite-java/` en est le premier
+       occupant ; le socle prendra `backend-java/` à côté. À confirmer formellement avant
+       d'engager le module DROITS.
 4. [ ] **Monter la passerelle** de routage par préfixe, avec bascule route par route.
 5. [ ] **Rendre la suite de fumée exécutable contre une base quelconque** — elle lance
        aujourd'hui `server.js` elle-même (`tests/smoke/harness.js`). Lui donner une adresse

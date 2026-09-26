@@ -85,9 +85,17 @@ const CAS_CHAINE = [
     precedent: 'AEROSUP-GENESIS',
     entree: {
       ts: '2026-09-26T08:03:00.000Z', user: 'admin@anac.bj', action: 'ESSAI_ORDRE',
-      // Écrit dans cet ordre ; JSON.stringify rendra 1, 2, 10 puis b, a.
       details: { b: 'deux', 10: 'dix', a: 'un', 2: 'deux', 1: 'un' },
     },
+    // Ce cas ne s'éprouve pas depuis `details` : JavaScript réordonne les clés
+    // entières **dès la création de l'objet**, et le fichier porte donc déjà
+    // l'ordre corrigé. Une implémentation qui s'y fierait passerait par
+    // accident, sans jamais appliquer la règle.
+    //
+    // D'où cette liste de paires, volontairement dans le désordre : c'est
+    // d'ELLE que la réécriture doit partir, et c'est en la ramenant à
+    // `json_attendu` qu'elle démontre qu'elle a compris la règle.
+    desordre: [['b', 'deux'], ['10', 'dix'], ['a', 'un'], ['2', 'deux'], ['1', 'un']],
   },
   {
     quoi: 'objet imbriqué et liste',
@@ -142,6 +150,7 @@ function calculer() {
           'Sémantique de JSON.stringify de JavaScript, et non celle de Jackson par défaut.',
           'Aucun espace : ni après « : », ni après « , ».',
           'Ordre des clés : celui de l’insertion, MAIS les clés qui sont des entiers passent devant, triées numériquement.',
+          'Un cas porte un champ « desordre » : partir de CETTE liste de paires, non de « details » — le fichier porte déjà l’ordre corrigé, et s’y fier ferait passer le contrôle sans appliquer la règle.',
           'Les caractères non ASCII ne sont pas échappés — « Bénin » s’écrit tel quel, en UTF-8.',
           'La barre oblique « / » n’est pas échappée.',
           'Échappés : guillemet, contre-oblique, et les commandes (\\n, \\t, \\r, \\b, \\f, \\uXXXX).',

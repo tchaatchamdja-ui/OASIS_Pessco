@@ -49,6 +49,7 @@
         "Sémantique de JSON.stringify de JavaScript, et non celle de Jackson par défaut.",
         "Aucun espace : ni après « : », ni après « , ».",
         "Ordre des clés : celui de l’insertion, MAIS les clés qui sont des entiers passent devant, triées numériquement.",
+        "Un cas porte un champ « desordre » : partir de CETTE liste de paires, non de « details » — le fichier porte déjà l’ordre corrigé, et s’y fier ferait passer le contrôle sans appliquer la règle.",
         "Les caractères non ASCII ne sont pas échappés — « Bénin » s’écrit tel quel, en UTF-8.",
         "La barre oblique « / » n’est pas échappée.",
         "Échappés : guillemet, contre-oblique, et les commandes (\\n, \\t, \\r, \\b, \\f, \\uXXXX)."
@@ -113,6 +114,28 @@
             "a": "un"
           }
         },
+        "desordre": [
+          [
+            "b",
+            "deux"
+          ],
+          [
+            "10",
+            "dix"
+          ],
+          [
+            "a",
+            "un"
+          ],
+          [
+            "2",
+            "deux"
+          ],
+          [
+            "1",
+            "un"
+          ]
+        ],
         "json_attendu": "{\"1\":\"un\",\"2\":\"deux\",\"10\":\"dix\",\"b\":\"deux\",\"a\":\"un\"}",
         "attendu": "25ea81f249a84c5b352010c607c24ad059eb9994d63c611669cd0a67d62346a8"
       },

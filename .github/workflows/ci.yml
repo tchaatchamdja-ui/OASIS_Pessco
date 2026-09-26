@@ -35,10 +35,38 @@ jobs:
         # Puppeteer installe avec les dépendances : rien à télécharger de plus.
         run: npm run smoke
 
+  contrats:
+    name: Contrats d'octets (ADR-002)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Les vecteurs sont produits depuis l'implémentation Node : on vérifie
+      # d'abord qu'ils n'ont pas dérivé sous elle.
+      - name: Vecteurs à jour avec Node
+        run: node scripts/vecteurs-conformite.js
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Puis que Java les satisfait. Sans ce travail, la réécriture d'ADR-002
+      # perdrait les mots de passe existants ou romprait la chaîne d'audit —
+      # deux pannes qui ne lèvent aucune exception.
+      - name: Java satisfait les contrats
+        working-directory: conformite-java
+        run: mvn -B test
+
   image:
     name: Construction de l'image
     runs-on: ubuntu-latest
-    needs: verifier
+    needs: [verifier, contrats]
     steps:
       - uses: actions/checkout@v4
       - name: Construire

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OASIS — Le projet qui n'a qu'un travail : satisfaire les vecteurs.
+
+  Premier jalon d'ADR-002, et il conditionne tout le reste. Avant d'écrire une
+  seule route Spring, il faut savoir que Java sait reproduire deux choses à
+  l'octet près : le condensé scrypt des mots de passe existants, et la
+  sérialisation qui scelle la chaîne d'audit.
+
+  Si scrypt ne se reproduit pas, le plan change — réinitialisation générale des
+  mots de passe, à décider avant de commencer et non au troisième mois.
+
+  Pas de Spring ici, volontairement : ce projet doit pouvoir échouer vite et
+  pour une seule raison. Deux dépendances, et pas une de plus.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>int.uemoa.ursac.oasis</groupId>
+  <artifactId>conformite</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>OASIS — contrats d'octets</name>
+  <description>Éprouve scrypt et la sérialisation de la chaîne d'audit contre les vecteurs figés (ADR-002).</description>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <!-- scrypt : le JDK ne le porte pas. Bouncy Castle est la référence, et
+         `SCrypt.generate` prend les paramètres bruts — donc sans surprise. -->
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk18on</artifactId>
+      <version>1.78.1</version>
+    </dependency>
+
+    <!-- Pour LIRE le fichier de vecteurs, et rien d'autre. L'écriture
+         canonique est écrite à la main : c'est elle qui est le contrat, et la
+         confier à une bibliothèque reviendrait à éprouver la bibliothèque. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.17.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.3</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+      </plugin>
+    </plugins>
+  </build>
+</project>

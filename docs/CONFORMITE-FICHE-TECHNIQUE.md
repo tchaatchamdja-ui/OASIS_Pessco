@@ -11,6 +11,12 @@ Les commandes de vérification sont données en fin de document.
 
 **Le plan de correction est un document distinct :** [PLAN-CONFORMITE.md](PLAN-CONFORMITE.md).
 
+> **Suivi.** La **vague 0** du plan est exécutée (26 septembre 2026) : horodatage vérifié,
+> journalisation des consultations, durées de conservation et purge, registre des traitements,
+> garde de pseudonymisation. Les lignes concernées portent la mention *(vague 0)*.
+> [ADR-001](ADR-001-magasin-de-donnees.md) a été rouvert : la fiche spécifiait la réplication
+> qu'il disait manquante.
+
 ---
 
 ## En un paragraphe
@@ -82,7 +88,7 @@ indépendant avant recette** — non réalisé.
 | **Isolation physique** : une base PostgreSQL dédiée par État, *« et non un simple cloisonnement logique dans une base partagée »* | ✗ | C'est **exactement** un cloisonnement logique, par champ `instance`. Il est appliqué au serveur et non à l'écran, il est éprouvé — mais c'est le modèle que la fiche écarte nommément. |
 | Partage inter-États par **API d'échange dédiée** sur le serveur central | ✗ | `config/oasis.config.json` porte `replication.enabled: false`, un `centralUrl` et un intervalle. **Aucun code ne l'implémente.** |
 | **Journal d'audit inaltérable** : table en ajout seul, chaînage cryptographique | **✓** | JSON Lines en ajout seul (`src/journal.js`), chaque entrée portant l'empreinte SHA-256 de la précédente. Un journal pour le socle, un par module. 3 203 entrées, chaîne vérifiée. |
-| Horodatage synchronisé sur un serveur de temps | ✗ | Horloge système, sans source de temps déclarée ni vérifiée. |
+| Horodatage synchronisé sur un serveur de temps | **✓** | `src/horloge.js` — client SNTP sans dépendance. Il vérifie et **témoigne**, il ne corrige pas : décaler en silence les dates d'un journal d'autorité serait pire que la dérive. Sans serveur déclaré, l'état est « non vérifiée », dit au démarrage, consigné au journal et rendu par la sonde. *(vague 0)* |
 | Réplication logique asynchrone vers le central | ✗ | Non implémentée. |
 
 ---
@@ -110,15 +116,15 @@ Le raisonnement de la fiche tient toujours, et le magasin PostgreSQL est écrit
 
 | Exigence de la fiche | État | Constat |
 |---|---|---|
-| Registre des traitements par module, dès la phase 0 | ✗ | Inexistant. |
-| Durées de conservation paramétrables, purge ou archivage automatisé | ✗ | Aucun mécanisme. Les journaux ne sont jamais purgés. |
+| Registre des traitements par module, dès la phase 0 | **✓** | [REGISTRE-DES-TRAITEMENTS.md](REGISTRE-DES-TRAITEMENTS.md) — treize traitements. Un contrôle échoue si un module monté n'y figure pas : le registre ne peut pas prendre du retard en silence. *(vague 0)* |
+| Durées de conservation paramétrables, purge ou archivage automatisé | **✓** | `src/retention.js` — trois actions, chaque durée avec son motif, consultables sur `GET /api/retention`. **La purge d'un journal chaîné est refusée**, et le refus est dit. *(vague 0)* |
 | Droits des personnes : consultation, rectification tracée | ◐ | Consultation du profil : ✓. **Effacement de compte : ✓** (route `DELETE /api/users/:username`, confirmation par mot de passe, refus du dernier super-administrateur). Rectification tracée : partielle — les modifications sont journalisées, il n'existe pas de circuit de demande. |
 | Chiffrement AES-256 au repos | ✗ | Aucun. |
 | TLS 1.3 en transit | ◐ | HSTS posé en production ; le TLS est porté par l'hébergeur, non maîtrisé ici. |
-| Pseudonymisation dans les tableaux de bord et exports d'analyse | ✗ | Les tableaux de bord portent les noms en clair. |
+| Pseudonymisation dans les tableaux de bord et exports d'analyse | **◐** | **Sans objet aujourd'hui, et désormais gardé.** Vérifié en service : les agrégats se font par État, domaine, secteur et exploitant — jamais par personne. Un contrôle ausculte les réponses des tableaux de bord et tombe dès qu'un courriel, un prénom, un identifiant de compte ou un téléphone y paraît. Contre-éprouvé. *(vague 0)* |
 | Encadrement des transferts transfrontaliers, accord-cadre | ✗ | L'instance de démonstration est hébergée à Francfort, **sans base juridique documentée**. |
 | DPO par AAC, DPO de coordination, AIPD, notification des violations | ✗ | Aucune désignation, aucune analyse d'impact, aucune procédure. |
-| **Journalisation étendue aux consultations** de données sensibles | ✗ | **Vérifié :** le journal ne porte que des verbes de modification. Aucun verbe de lecture n'existe — ni `CONSULTATION`, ni `LECTURE`, ni `ACCES_DOSSIER`. |
+| **Journalisation étendue aux consultations** de données sensibles | **✓** | `src/consultations.js` — les ressources portant des personnes sont déclarées, un intercepteur les reconnaît à l'adresse. Trois bornes : se consulter soi-même, un refus et un référentiel sans personne n'écrivent rien. Un export nominatif l'est, fût-il en POST. *(vague 0)* |
 
 ---
 

@@ -117,6 +117,7 @@ OASIS/
 | `docs/ADR-001-magasin-de-donnees.md` | Décision : différer la bascule, spécifier la réplication d'abord |
 | `docs/CONFORMITE-FICHE-TECHNIQUE.md` | Conformité à la fiche technique URSAC/GT2 : ce qui est tenu, ce qui ne l'est pas |
 | `docs/PLAN-CONFORMITE.md` | Plan de mise en conformité : ce qui peut être fait, ce qui ne le peut pas |
+| `docs/REGISTRE-DES-TRAITEMENTS.md` | Registre des traitements de données à caractère personnel |
 | `CHANGELOG.md` | Journal des versions |
 | `.env.example` | Variables d'environnement, commentées |
 

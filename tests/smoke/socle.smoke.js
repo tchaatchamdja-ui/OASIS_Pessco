@@ -165,6 +165,42 @@ module.exports = async function socleSmoke(port) {
     verifier('la chaîne d’audit reste vérifiable après la rétention',
       chaineApres.corps.valid === true, JSON.stringify(chaineApres.corps));
 
+    // ── Pseudonymisation des tableaux de bord (fiche technique §5.2) ──
+    //
+    // « Pseudonymisation des données personnelles dans les tableaux de bord
+    // statistiques et les exports d'analyse. » Aujourd'hui l'exigence est sans
+    // objet : les agrégats se font par État, domaine, secteur et exploitant —
+    // jamais par personne. Ce contrôle l'établit, et le tiendra : le jour où
+    // un axe « par inspecteur » apparaîtra, il tombera, et c'est à ce
+    // moment-là qu'il faudra pseudonymiser.
+    //
+    // Un nom d'organisme n'est pas un nom de personne : « Air Bénin Express »
+    // doit passer. Ce qui trahit une personne physique, en revanche, ce sont un
+    // courriel, un prénom, un identifiant de compte ou un téléphone.
+    const COURRIEL = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+    const PERSONNE = /"(prenom|username|user_id|telephone|(?:inspecteur|agent|responsable|signataire)_nom)"/g;
+    const TABLEAUX = [
+      '/api/m/execution/dashboard-stats',
+      '/api/m/planification/stats',
+      '/api/m/planification/prestataires-risques',
+    ];
+    const nominatifs = [];
+    let exerces = 0;
+    for (const point of TABLEAUX) {
+      const r = await srv.appel(point);
+      if (r.statut !== 200) continue;
+      const texte = JSON.stringify(r.corps || '');
+      // Un agrégat vide ne prouverait rien : on exige qu'il y ait de la matière.
+      if (texte.length < 50) continue;
+      exerces += 1;
+      const trouve = [...new Set([...(texte.match(COURRIEL) || []), ...(texte.match(PERSONNE) || [])])];
+      if (trouve.length) nominatifs.push(`${point} → ${trouve.slice(0, 3).join(', ')}`);
+    }
+    verifier('les tableaux de bord sont exercés sur des données réelles',
+      exerces === TABLEAUX.length, `${exerces}/${TABLEAUX.length}`);
+    verifier('aucun tableau de bord statistique ne nomme une personne',
+      nominatifs.length === 0, nominatifs.join(' · '));
+
     // ── Effacement d'un compte (droit à l'effacement) ──
     // Un compte se désactivait, jamais ne s'effaçait : le droit n'avait aucun
     // moyen technique. Ces contrôles tiennent les deux bouts — que

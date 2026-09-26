@@ -112,18 +112,40 @@ jours-développeur et supposent la suite de 702 contrôles maintenue au vert à 
 
 ## 4. Le plan, en vagues
 
-### Vague 0 — Sans regret, immédiate *(≈ 2 semaines)*
+### Vague 0 — Sans regret, immédiate — **✅ FAITE le 26 septembre 2026**
 
 Chantiers **1, 2, 3, 4, 5**. Ce qui est dû quelle que soit la suite, et que rien ne rend
 caduc : le registre est un document, les trois autres sont des règles métier que leurs
 contrôles protègent et qui se réécrivent en une journée dans n'importe quel langage.
 
-**Et rouvrir [ADR-001](ADR-001-magasin-de-donnees.md).** Sa suite n° 1 — *« obtenir la
+**Et rouvrir [ADR-001](ADR-001-magasin-de-donnees.md)** — fait. Sa suite n° 1 — *« obtenir la
 spécification de la réplication auprès de l'URSAC »* — est **déjà répondue** par la fiche du
 2 août : réplication logique PostgreSQL asynchrone, tolérante aux coupures, vers un serveur
 central de sauvegarde. ADR-001 a été écrit sans cette réponse ; son raisonnement tombe.
 
 *Ferme les quatre écarts les plus visibles du §5 — le bloc que tout auditeur regarde en premier.*
+
+**Ce qui a été livré**
+
+| Chantier | Livrable | Contrôles |
+|---|---|---|
+| 1 — Registre des traitements | [REGISTRE-DES-TRAITEMENTS.md](REGISTRE-DES-TRAITEMENTS.md), 13 traitements | 1 garde : un module monté absent du registre fait échouer la suite |
+| 2 — Journalisation des consultations | `src/consultations.js` | 5 |
+| 3 — Conservation et purge | `src/retention.js`, `GET /api/retention`, `POST /api/retention/purger` | 11 |
+| 4 — Pseudonymisation | **sans objet aujourd'hui** — garde posée | 2 |
+| 5 — Horodatage | `src/horloge.js`, client SNTP sans dépendance | 4 |
+
+**702 → 736 contrôles.** Toutes les gardes ont été contre-éprouvées : réintroduire le défaut
+les fait tomber.
+
+**Le chantier 4 mérite un mot.** La fiche demande la pseudonymisation « dans les tableaux de
+bord statistiques et les exports d'analyse ». Vérifié en service : **il n'y a rien à
+pseudonymiser** — les agrégats se font par État, domaine, secteur et exploitant, jamais par
+personne. Écrire un moteur de pseudonymisation que rien n'appellerait aurait été du code mort.
+Ce qui est livré à la place est le **garde** qui ausculte les réponses des tableaux de bord et
+tombe dès qu'un courriel, un prénom, un identifiant de compte ou un téléphone y paraît. Le jour
+où un axe « par inspecteur » sera ajouté, il le dira — et c'est à ce moment-là que le moteur
+s'écrira, pour un besoin réel.
 
 ### Vague 1 — Le socle *(arbitrage n° 1, puis 1 à 7 mois)*
 

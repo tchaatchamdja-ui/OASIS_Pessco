@@ -1,7 +1,33 @@
 # ADR-001 : Magasin de données des instances nationales
 
-**Statut :** Proposé
-**Date :** 25 septembre 2026
+> **⚠ ROUVERT le 26 septembre 2026 — son raisonnement est caduc.**
+>
+> Cet ADR diffère la bascule PostgreSQL au motif, écrit en toutes lettres, que
+> **« la réplication n'est pas spécifiée »**. Elle l'était : la [fiche technique
+> URSAC/GT2 du 2 août 2026](CONFORMITE-FICHE-TECHNIQUE.md) — antérieure de sept
+> semaines à cet ADR — la spécifie au §3.3, *réplication logique PostgreSQL
+> asynchrone vers un serveur central jouant le rôle de sauvegarde, tolérante aux
+> coupures de connectivité*, et consacre son §4 entier à justifier PostgreSQL.
+>
+> Cet ADR a donc été écrit sans la réponse qu'il réclamait, et sa suite n° 1 —
+> « obtenir la spécification de la réplication auprès de l'URSAC » — était déjà
+> accomplie au moment où elle a été écrite. **Le document est conservé tel quel**
+> : la chronologie d'une erreur de décision vaut d'être lisible, et le reste de
+> son analyse — les mesures, le coût des 450 accès, le risque de l'option A —
+> demeure exact.
+>
+> Ce qui change : l'option C (« rester sur les fichiers, spécifier la
+> réplication ») n'a plus d'objet, son préalable étant levé. La décision se
+> reporte sur le chemin de la bascule, arbitrage n° 1 de
+> [PLAN-CONFORMITE.md](PLAN-CONFORMITE.md) — PostgreSQL en Node, ou Spring Boot
+> puis PostgreSQL.
+>
+> Un fait découvert depuis, et qui pèse sur cet arbitrage : **la difficulté que
+> cet ADR décrit — 450 accès synchrones à convertir — n'existe pas en Java**,
+> où JDBC bloque par conception. Les deux questions n'en font qu'une.
+
+**Statut :** ~~Proposé~~ — **rouvert, en attente de l'arbitrage n° 1 du GT2**
+**Date :** 25 septembre 2026 — rouvert le 26 septembre 2026
 **Décideurs :** maîtrise d'ouvrage OASIS ; URSAC/UEMOA pour l'exigence de réplication
 **Remplace :** la ligne « Production : PostgreSQL 16 » portée par `src/store.js` depuis l'origine
 
@@ -188,9 +214,10 @@ payée** — il ne reste qu'à l'exercer le jour venu.
 
 ## Suites
 
-1. [ ] **Obtenir la spécification de la réplication** auprès de l'URSAC : ce qui
-       remonte, à quelle maille, dans quel sens, règles de conflit, fréquence.
-       *C'est le préalable à toute autre décision ici.*
+1. [x] ~~**Obtenir la spécification de la réplication** auprès de l'URSAC~~ —
+       **elle existait déjà** : fiche technique du 2 août 2026, §3.3. Réplication
+       logique PostgreSQL asynchrone vers le serveur central, tolérante aux
+       coupures. Le préalable est levé ; c'est ce qui rouvre cet ADR.
 2. [x] **Écrire la contrainte d'un seul processus par instance** — faite
        (`src/verrou.js`). Le serveur pose un `.verrou` dans le répertoire de
        données et refuse de démarrer si un autre le tient ; un verrou laissé par
@@ -201,4 +228,9 @@ payée** — il ne reste qu'à l'exercer le jour venu.
        `docs/MAGASIN-POSTGRESQL.md`.
 4. [ ] **Vérifier la planification des sauvegardes** sur l'instance de
        production (`scripts/sauvegarde.sh`), seule protection en l'absence de base.
-5. [ ] Rouvrir cet ADR à la réception de la spécification.
+5. [x] ~~Rouvrir cet ADR à la réception de la spécification.~~ — fait le
+       26 septembre 2026.
+6. [ ] **Trancher l'arbitrage n° 1** de [PLAN-CONFORMITE.md](PLAN-CONFORMITE.md) :
+       PostgreSQL en Node (3 à 6 semaines, risque élevé sur 450 accès), ou
+       Spring Boot puis PostgreSQL (4 à 7 mois, et la conversion asynchrone
+       disparaît). C'est désormais la seule question ouverte ici.

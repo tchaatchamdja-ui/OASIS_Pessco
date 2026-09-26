@@ -262,6 +262,34 @@ module.exports = async function tailleSmoke() {
   verifier('chaque écran charge la feuille commune des filtres',
     sansFiltres.length === 0, sansFiltres.join(' · '));
 
+  // ── Le registre des traitements suit les modules ──
+  // Un registre est un document du responsable de traitement, et un document
+  // prend du retard en silence. Celui-ci ne le peut pas : un module monté qui
+  // n'y figure pas fait échouer la suite. C'est la seule façon qu'un registre
+  // reste vrai — l'y obliger, plutôt que l'espérer.
+  const REGISTRE = path.join(RACINE, 'docs', 'REGISTRE-DES-TRAITEMENTS.md');
+  const dossierModules = path.join(RACINE, 'src', 'modules');
+  const codesModules = fs.existsSync(dossierModules)
+    ? fs.readdirSync(dossierModules)
+      .filter((d) => fs.existsSync(path.join(dossierModules, d, 'module.json')))
+      .map((d) => JSON.parse(fs.readFileSync(path.join(dossierModules, d, 'module.json'), 'utf8')).code)
+      .filter(Boolean)
+    : [];
+  const registre = fs.existsSync(REGISTRE) ? fs.readFileSync(REGISTRE, 'utf8') : '';
+  const absentsDuRegistre = codesModules.filter((c) => !new RegExp(`\\b${c}\\b`).test(registre));
+  verifier('chaque module monté figure au registre des traitements',
+    !!registre && absentsDuRegistre.length === 0,
+    registre ? absentsDuRegistre.join(' · ') : 'registre introuvable');
+
+  // Les collections qui portent des personnes doivent être déclarées à
+  // l'intercepteur de consultations : une lecture non tracée ne laisse rien,
+  // et l'oubli ne se voit donc jamais de lui-même.
+  const consultations = require('../../src/consultations');
+  const NATURES_ATTENDUES = ['identite', 'personnel', 'contact'];
+  verifier('l’intercepteur de consultations couvre les trois natures de données personnelles',
+    NATURES_ATTENDUES.every((n) => consultations.NATURES.includes(n)),
+    consultations.NATURES.join(', '));
+
   // ── Un nom global, une définition ──
   // Les scripts d'un écran partagent une seule portée : deux fichiers qui
   // déclarent la même fonction ne se contredisent pas, le dernier chargé

@@ -1,6 +1,7 @@
 // Module « Exécution de la Surveillance » — rapports, tableau de bord,
 // téléversements et suppressions administrateur.
 const fs = require('fs');
+const { asynchrone } = require('../../route');
 const path = require('path');
 const crypto = require('crypto');
 const referentiels = require('../../referentiels');
@@ -268,7 +269,7 @@ module.exports = function register(app, deps, M) {
   // liens, la mécanique est commune à toutes les remises (voir transmission.js).
   // L'envoi vaut transmission — inutile de l'acter deux fois — et ouvre les
   // constatations restées en brouillon, comme /send.
-  app.post(`${M}/rapports/:id/transmettre`, requireAuth, async (req, res) => {
+  app.post(`${M}/rapports/:id/transmettre`, requireAuth, asynchrone(async (req, res) => {
     const r = db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
     // La transmission part du serveur de messagerie de l'Autorité et fige le
@@ -307,7 +308,7 @@ module.exports = function register(app, deps, M) {
       .forEach((c) => db.update('constatations', c.id, { statut: 'ouvert' }));
     if (r.dossier_id) db.update('dossiers', r.dossier_id, { date_maj: maintenant });
     res.json({ status: 'ok', statut: 'transmis', destinataires: remise.destinataires, envoye: remise.envoye });
-  });
+  }));
 
   app.delete(`${M}/rapports/:id`, requireAuth, (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');

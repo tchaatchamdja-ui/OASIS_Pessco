@@ -5,6 +5,7 @@
 // La notification et la clôture relèvent du validateur ; la suppression, du
 // seul gestionnaire du module. Une mesure clôturée ne se réécrit plus.
 const path = require('path');
+const { asynchrone } = require('../../route');
 const fs = require('fs');
 const crypto = require('crypto');
 const referentiels = require('../../referentiels');
@@ -569,7 +570,7 @@ module.exports = function register(app, deps, M) {
   // l'investigation entière sous une forme qui se transmet et s'archive. Le
   // document est composé à la demande — rien n'est stocké, il suit toujours
   // l'état de l'investigation.
-  app.get(`${M}/constatations/:id/rapport-investigation.pdf`, requireAuth, async (req, res) => {
+  app.get(`${M}/constatations/:id/rapport-investigation.pdf`, requireAuth, asynchrone(async (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
@@ -597,12 +598,12 @@ module.exports = function register(app, deps, M) {
     } catch (e) {
       return res.status(500).json({ error: e.message || 'Rendu du rapport impossible' });
     }
-  });
+  }));
 
   // Chaque étape du fil se transmet et s'archive telle qu'elle a été
   // renseignée. Le document est composé à la demande : rien n'est stocké, il
   // suit toujours l'état du dossier.
-  app.get(`${M}/constatations/:id/etapes/:cle.pdf`, requireAuth, async (req, res) => {
+  app.get(`${M}/constatations/:id/etapes/:cle.pdf`, requireAuth, asynchrone(async (req, res) => {
     const c = constatations().find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
@@ -632,7 +633,7 @@ module.exports = function register(app, deps, M) {
     });
     const nom = `${cle}-${String(c.reference || c.id).replace(/[^\w.-]+/g, '_')}.pdf`;
     return envoyerPdf(res, html, nom);
-  });
+  }));
 
   // ── Qualification et mesures ──
   // L'instance décisionnelle qualifie la carence — l'infraction est constituée

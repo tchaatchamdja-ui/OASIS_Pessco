@@ -310,8 +310,36 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        aucune perdue. **C'est lui, et non `save`, que la conversion devra employer partout où
        un appel lit pour réécrire.**
 
-9. [ ] **Convertir les appels du magasin, module par module.** 69 appels directs, 381 par les
-       magasins de module, 5 gestionnaires de route asynchrones sur 386. Chaque appel qui lit
-       pour réécrire devient un `modifier` ; chaque suite de module garde sa bascule.
+9. [~] **Convertir les appels du magasin, collection par collection.** 69 appels directs, 381
+       par les magasins de module, 5 gestionnaires de route asynchrones sur 386. Chaque appel
+       qui lit pour réécrire devient un `modifier` ; chaque suite garde sa bascule.
+
+       **Première collection passée le 28 septembre 2026** : `ramp_aeronefs`, la nomenclature
+       des aéronefs — la plus isolée qui soit encore gardée. 8 fonctions de magasin, 7 routes,
+       9 fichiers touchés, +213/−109 lignes, **299 contrôles verts dans les deux régimes**.
+       `src/magasin.js` porte la liste d'autorisation des collections migrées et sert les deux
+       régimes ; sans `DATABASE_URL`, tout reste sur fichiers.
+
+       Trois enseignements qui portent sur les quatorze collections suivantes :
+
+       > **1. L'unité de conversion n'est pas le module, c'est la grappe.** `profil_risque`
+       > semblait plus isolée — un seul fichier de magasin, 23 contrôles. Mais le module
+       > publie `PR.riskProfiles`, que PLAN appelle de façon synchrone : **le bus de services
+       > propage l'asynchronisme**, et la conversion aurait entraîné deux modules.
+       >
+       > **2. L'amorçage remonte jusqu'au démarrage.** `seed()` du module, `seedAll` du
+       > chargeur, puis le démarrage : le serveur attend désormais l'amorçage avant d'écouter.
+       > Servir une route dont la collection n'est pas posée rendrait une liste vide, que
+       > l'écran croirait.
+       >
+       > **3. « Vérifier puis écrire » cesse d'être sûr**, et rien ne le signale. Trois routes
+       > le faisaient ; elles passent leur vérification dans la transformation de `modifier`.
+       > Une traduction mécanique en `await` compile, répond juste, et perd une écriture de
+       > temps à autre.
+
+       Deux contrôles de forme ferment les portes : aucune collection migrée n'est plus lue
+       par `store` — un appel oublié lirait le fichier figé, sans erreur —, et tout
+       gestionnaire de route asynchrone passe par `asynchrone` — sans quoi un rejet laisse la
+       requête ouverte, sans trace, Express 4 ne regardant pas la promesse.
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

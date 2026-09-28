@@ -27,6 +27,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
+const { asynchrone } = require('../../route');
 const { introuvable, requis, inconnu, horsPerimetre, tropVolumineux, reserve, refuser, statutRequis, fige, dejaFait } = require('../../erreurs');
 
 // Les preuves recueillies sur l'aire de trafic — photographies, copies de
@@ -255,11 +256,15 @@ module.exports = function register(app, deps, M) {
   //  Lecture
   // ══════════════════════════════════════
 
-  app.get(`${M}/poi/contexte`, requireAuth, (req, res) => {
+  app.get(`${M}/poi/contexte`, requireAuth, asynchrone(async (req, res) => {
     // Tout ce que le formulaire met dans ses listes déroulantes vient d'ici :
     // les items et les catégories du paramétrage, les exploitants, les
     // aéroports, les pays, la nomenclature des aéronefs. Un seul appel, pour
     // que l'écran s'ouvre d'un coup.
+    // Seule lecture asynchrone du contexte : la nomenclature des aéronefs est
+    // la première collection passée en base (ADR-002, jalon n° 9). Elle est
+    // lue ici, une fois, avant la construction de la réponse.
+    const nomenclature = await db.aeronefs();
     const params = db.list('parametres');
     const actifs = (type) => params.filter((p) => p.type === type && p.actif !== false)
       .sort((a, b) => (Number(a.ordre) || 0) - (Number(b.ordre) || 0)
@@ -293,11 +298,11 @@ module.exports = function register(app, deps, M) {
       // sont des identifiants — on les rend en clair, l'écran n'a pas à
       // connaître les référentiels du socle.
       inspecteurs: inspecteursActifs(),
-      aeronefs: [...new Set(db.aeronefs().filter((a) => a.actif !== false).map((a) => a.designation))]
+      aeronefs: [...new Set(nomenclature.filter((a) => a.actif !== false).map((a) => a.designation))]
         .sort((a, b) => String(a).localeCompare(String(b), 'fr')),
       peut_saisir: R.canContribute(req.user),
     });
-  });
+  }));
 
   app.get(`${M}/poi`, requireAuth, (req, res) => {
     const liste = instances.filtrer(db.list('poi'), instanceCourante(req), loadConfig)
@@ -724,7 +729,7 @@ module.exports = function register(app, deps, M) {
   const listeAdresses = (v) => String(v || '').split(/[;,\s]+/).map((x) => x.trim()).filter(Boolean);
   const CIBLES_ENVOI = { exploitant: 'Exploitant', autorite: 'Autorité de surveillance' };
 
-  app.post(`${M}/poi/:id/communiquer`, requireAuth, async (req, res) => {
+  app.post(`${M}/poi/:id/communiquer`, requireAuth, asynchrone(async (req, res) => {
     const p = db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
@@ -788,7 +793,7 @@ module.exports = function register(app, deps, M) {
       status: 'ok', envoye: parti, erreur: echec, destinataires,
       transmise: !!patch.transmis_le || transmise(p),
     });
-  });
+  }));
 
   app.post(`${M}/poi/:id/transmettre`, requireAuth, (req, res) => {
     const p = db.get('poi', req.params.id);

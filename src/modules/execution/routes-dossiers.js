@@ -1,6 +1,7 @@
 // Module « Exécution de la Surveillance » — dossiers d'exécution et
 // constatations FNC/PAC (reprise intégrale des routes PESSCO).
 const XLSX = require('xlsx');
+const { asynchrone } = require('../../route');
 const referentiels = require('../../referentiels');
 const db = require('./store');
 const refModele = require('./references');
@@ -890,7 +891,7 @@ module.exports = function register(app, deps, M) {
   // Transmission d'une constatation hors activités de supervision. Le courriel
   // ne porte que des liens (voir transmission.js) ; la remise ouvre la
   // constatation, qui entre alors dans le suivi du PAC.
-  app.post(`${M}/constatations/:id/transmettre`, requireAuth, async (req, res) => {
+  app.post(`${M}/constatations/:id/transmettre`, requireAuth, asynchrone(async (req, res) => {
     const c = db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     // Même règle que pour un rapport : c'est l'Autorité qui notifie.
@@ -927,7 +928,7 @@ module.exports = function register(app, deps, M) {
       pieces_transmises: remise.jointes,
     });
     res.json({ status: 'ok', statut: 'ouvert', destinataires: remise.destinataires, envoye: remise.envoye });
-  });
+  }));
 
   app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');

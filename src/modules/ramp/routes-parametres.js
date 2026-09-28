@@ -11,6 +11,10 @@ const R = require('./roles');
 const vues = require('./vues');
 const instances = require('../../instances');
 const comptesPrestataire = require('../../comptes_prestataire');
+// La nomenclature des aéronefs est en base : ses six routes sont asynchrones,
+// et une promesse rejetée qu'Express ne regarde pas laisserait la requête
+// ouverte sans fin (ADR-002, jalon n° 9).
+const { asynchrone } = require('../../route');
 const { introuvable, requis, inconnu, existant, horsPerimetre, tropVolumineux, reserve, refuser, enUsage } = require('../../erreurs');
 
 // Les fichiers déposés vivent hors de data/ : ce sont des fichiers, pas des
@@ -444,13 +448,13 @@ module.exports = function register(app, deps, M) {
 
   const TAILLE_PAGE = 50;
 
-  app.get(`${M}/aeronefs`, requireAuth, (req, res) => {
+  app.get(`${M}/aeronefs`, requireAuth, asynchrone(async (req, res) => {
     const q = req.query || {};
     const cherche = norm(q.q);
 
     // Socle commun : ce que la recherche et l'état d'activité laissent passer,
     // avant que les trois listes déroulantes ne s'appliquent.
-    let socle = db.aeronefs();
+    let socle = await db.aeronefs();
     if (q.actif === '1') socle = socle.filter((a) => a.actif !== false);
     if (q.actif === '0') socle = socle.filter((a) => a.actif === false);
     if (cherche) {
@@ -499,7 +503,7 @@ module.exports = function register(app, deps, M) {
       etats: valeurs('etat', 'etat_conception'),
       modifiable: admin(req),
     });
-  });
+  }));
 
   const champsAeronef = (d) => ({
     designation: texte(d.designation).toUpperCase(),
@@ -511,9 +515,9 @@ module.exports = function register(app, deps, M) {
   // Correspondance modèle-variante → désignation OACI, pour les seuls
   // appareils que les inspections citent : les statistiques s'en servent pour
   // regrouper les inspections d'une même désignation.
-  app.get(`${M}/aeronefs/correspondances`, requireAuth, (req, res) => {
+  app.get(`${M}/aeronefs/correspondances`, requireAuth, asynchrone(async (req, res) => {
     const cites = [...new Set(db.list('inspections').map((i) => i.aeronef).filter(Boolean))];
-    const socle = db.aeronefs();
+    const socle = await db.aeronefs();
     const normal = (v) => String(v || '').trim().toUpperCase();
     const parDesignation = new Set(socle.map((a) => normal(a.designation)));
     const parModele = new Map();
@@ -529,26 +533,35 @@ module.exports = function register(app, deps, M) {
       table[valeur] = parDesignation.has(racine) ? racine : valeur;
     });
     res.json({ correspondances: table });
-  });
+  }));
 
-  app.post(`${M}/aeronefs`, requireAuth, (req, res) => {
+  app.post(`${M}/aeronefs`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = champsAeronef(req.body || {});
     if (!a.designation) return requis(res, 'designation');
     if (!a.modele) return requis(res, 'modele_variante');
+
     // La nomenclature ne porte pas deux fois le même appareil : désignation,
     // modèle et constructeur l'identifient.
-    const existe = db.aeronefs().some((x) => x.designation === a.designation
-      && x.modele === a.modele && x.constructeur === a.constructeur);
-    if (existe) return existant(res, 'aeronef');
-    const cree = db.insertAeronef({ id: db.uid('aer'), ...a, actif: true });
-    res.status(201).json({ status: 'ok', id: cree.id });
-  });
+    //
+    // Le doublon se vérifie **dans** la transformation, et non avant. Vérifier
+    // puis écrire en deux temps laisserait passer deux créations simultanées du
+    // même appareil : chacune verrait la liste d'avant l'autre. Le geste était
+    // sûr tant que le magasin était synchrone ; il ne l'est plus.
+    let doublon = false;
+    const apres = await db.modifierAeronefs((d) => {
+      const liste = d.aeronefs || [];
+      doublon = liste.some((x) => x.designation === a.designation
+        && x.modele === a.modele && x.constructeur === a.constructeur);
+      if (doublon) return d;
+      return { ...d, aeronefs: liste.concat([{ id: db.uid('aer'), ...a, actif: true }]) };
+    });
+    if (doublon) return existant(res, 'aeronef');
+    return res.status(201).json({ status: 'ok', id: apres.aeronefs[apres.aeronefs.length - 1].id });
+  }));
 
-  app.put(`${M}/aeronefs/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/aeronefs/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const a = db.getAeronef(req.params.id);
-    if (!a) return introuvable(res, 'aeronef');
     const d = req.body || {};
     const patch = {};
     ['designation', 'modele', 'constructeur', 'etat_conception'].forEach((k) => {
@@ -557,32 +570,50 @@ module.exports = function register(app, deps, M) {
     });
     if (patch.designation === '') return requis(res, 'designation');
     if (patch.modele === '') return requis(res, 'modele_variante');
-    db.updateAeronef(a.id, patch);
-    res.json({ status: 'ok' });
-  });
+    const modifie = await db.updateAeronef(req.params.id, patch);
+    if (!modifie) return introuvable(res, 'aeronef');
+    return res.json({ status: 'ok' });
+  }));
 
-  app.put(`${M}/aeronefs/:id/actif`, requireAuth, (req, res) => {
+  // La bascule d'activité lit l'état pour l'inverser : deux clics simultanés
+  // liraient le même, écriraient la même valeur, et l'un des deux serait resté
+  // sans effet visible. L'inversion se fait donc dans la transformation, sur la
+  // ligne que la base vient de rendre.
+  app.put(`${M}/aeronefs/:id/actif`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const a = db.getAeronef(req.params.id);
-    if (!a) return introuvable(res, 'aeronef');
-    db.updateAeronef(a.id, { actif: a.actif === false });
-    res.json({ status: 'ok', actif: a.actif === false });
-  });
+    let actif = null;
+    await db.modifierAeronefs((d) => {
+      const arr = (d.aeronefs || []).slice();
+      const i = arr.findIndex((a) => a.id === req.params.id);
+      if (i < 0) return d;
+      actif = arr[i].actif === false;
+      arr[i] = { ...arr[i], actif };
+      return { ...d, aeronefs: arr };
+    });
+    if (actif === null) return introuvable(res, 'aeronef');
+    return res.json({ status: 'ok', actif });
+  }));
 
-  app.delete(`${M}/aeronefs/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/aeronefs/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const a = db.getAeronef(req.params.id);
+    const a = await db.getAeronef(req.params.id);
     if (!a) return introuvable(res, 'aeronef');
     // Un appareil cité par une inspection ne se supprime pas : la ligne
     // deviendrait illisible. Il se désactive.
+    //
+    // Le compte porte sur `inspections`, qui est encore sur fichiers et lu de
+    // façon synchrone : rien ne s'intercale entre le compte et la suppression.
+    // **Le jour où `inspections` basculera, ces deux gestes devront n'en faire
+    // qu'un** — sans quoi un appareil serait supprimé pendant qu'une inspection
+    // le cite.
     const utilise = db.list('inspections')
       .filter((i) => i.aeronef === a.designation || i.aeronef === a.modele).length;
     if (utilise) {
       return enUsage(res, 'aeronef', utilise, { desactivable: true });
     }
-    db.removeAeronef(a.id);
-    res.json({ status: 'ok' });
-  });
+    await db.removeAeronef(a.id);
+    return res.json({ status: 'ok' });
+  }));
 
   function compterUsages(p) {
     const inspections = db.list('inspections');

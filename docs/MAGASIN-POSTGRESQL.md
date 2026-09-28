@@ -88,6 +88,75 @@ depuis un seul processus, ce qui est le cas. Le journal d'audit est déjà en
 ajout seul (PERF-01), et le coût d'écriture ne croît plus. Ce qui manque
 demeure : la concurrence entre processus, et la réplication vers l'UEMOA.
 
+## La première collection est passée — ce qu'elle a coûté
+
+*28 septembre 2026. `ramp_aeronefs`, la nomenclature des aéronefs.*
+
+Choisie pour être **la plus isolée qui soit encore gardée** : son propre
+fichier, un seul module, aucun service publié sur le bus, et une quinzaine de
+contrôles qui l'exercent de bout en bout. Deux collections paraissaient plus
+isolées encore, et perdent toutes deux pour des raisons qui valent d'être
+dites :
+
+| Candidate | Pourquoi elle perd |
+|---|---|
+| `mfa_challenges` | Deux appels, un seul fichier — la plus isolée de toutes. Mais **aucun contrôle ne l'exerce** : la MFA est désactivée dans la configuration d'essai. Convertir sans filet n'apprend rien. |
+| `profil_risque` | Un seul fichier de magasin, 23 contrôles. Mais le module **publie `PR.riskProfiles`** sur le bus de services, que PLAN appelle de façon synchrone. Rendre PR asynchrone rendrait PLAN asynchrone : **le bus propage l'asynchronisme**, et la conversion aurait entraîné deux modules au lieu d'un. |
+
+Le second constat est le plus important pour la suite : **l'unité de conversion
+n'est pas le module, c'est la grappe qu'un service publié rend solidaire.**
+
+### Le coût, mesuré
+
+| | |
+|---|---|
+| Fonctions de magasin converties | **8** |
+| Routes converties | **7** — six de nomenclature, plus le contexte de la fiche POI |
+| Fichiers touchés | **9**, dont 4 qui ne parlent pas d'aéronefs |
+| Lignes | **+213 / −109** |
+| Contrôles qui la gardent, inchangés | **299** (suite « ramp »), verts sur fichiers **et** en base |
+
+Les quatre fichiers « qui ne parlent pas d'aéronefs » sont le prix réel : le
+chargeur de modules, le démarrage du serveur, et trois modules sans rapport dont
+il a fallu envelopper les gestionnaires asynchrones. **Une collection isolée
+n'a pas de conversion isolée.**
+
+### Trois choses apprises, et qui serviront aux quatorze suivantes
+
+**1. L'amorçage remonte jusqu'au démarrage.** `seedAeronefs` devient
+asynchrone, donc `seed()` du module, donc `seedAll` du chargeur, donc le
+démarrage lui-même. Le serveur **attend** désormais l'amorçage avant d'écouter :
+servir une route dont la nomenclature n'est pas encore posée rendrait une liste
+vide, et l'écran la croirait.
+
+**2. « Vérifier puis écrire » cesse d'être sûr.** Trois routes le faisaient —
+refus d'un doublon, bascule d'activité, refus d'une suppression. Entre la
+vérification et l'écriture, une autre requête s'intercale désormais. Les trois
+passent leur vérification **dans** la transformation de `modifier`. Rien dans le
+langage ne le signale : le code traduit mécaniquement compile, répond juste, et
+perd une écriture sur mille.
+
+**3. Express 4 ne regarde pas la promesse d'un gestionnaire `async`.** Un rejet
+ne mène nulle part : pas d'erreur 500, pas de trace, **la requête reste
+ouverte**. Six gestionnaires l'étaient déjà, sans enveloppe — le cas était rare,
+il allait devenir la règle. `src/route.js` les enveloppe, et un contrôle de
+forme impose l'enveloppe à tout nouveau.
+
+### Ce que les contrôles disent, et ce qu'ils ne diraient pas
+
+Les 299 contrôles de RAMP passent dans les deux régimes. **Cela seul ne prouve
+rien** : une façade qui retomberait silencieusement sur les fichiers les
+passerait aussi. La preuve est dans la base — `ramp_aeronefs` seule y figure,
+9 550 appareils, `rev = 5` : l'amorçage **et** les quatre écritures de la suite
+y sont allés. Les quatorze autres collections sont restées sur fichiers.
+
+Et un contrôle de forme ferme la porte derrière : **aucune collection migrée ne
+peut plus être lue par `store`**. Un appel synchrone oublié lirait le fichier
+figé au dernier jour des fichiers — sans erreur, avec une liste plausible et
+périmée.
+
+---
+
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout
 
 Le jalon n° 7 d'[ADR-002](ADR-002-migration-spring-boot.md) tranche : **le

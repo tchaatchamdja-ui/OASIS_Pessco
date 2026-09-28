@@ -16,6 +16,9 @@
 // socle porte déjà les comptes, les sessions et le journal d'audit.
 const crypto = require('crypto');
 const store = require('../../store');
+// La nomenclature des aéronefs passe par la façade, non par `store` : elle est
+// la première collection basculée en base (ADR-002, jalon n° 9).
+const magasin = require('../../magasin');
 
 const COLLECTIONS = ['inspections', 'ecarts', 'parametres', 'depots', 'contacts', 'aeroports', 'pays', 'poi',
   // Requêtes entre États membres, et leurs fils d'échanges.
@@ -383,54 +386,78 @@ function seedAeroports() {
 // liste est une donnée de référence : on la lit constamment, on l'écrit
 // rarement. Elle vit donc à part des données d'exploitation, dans son propre
 // fichier — une écriture d'inspection ne la réécrit pas.
+//
+// ── Première collection passée en base (ADR-002, jalon n° 9) ──
+//
+// Ces huit fonctions sont **asynchrones**, seules du module à l'être. Elles
+// passent par `magasin` et non par `store` : selon la configuration, la
+// nomenclature vit dans un fichier ou dans PostgreSQL, et rien ici ne change.
+//
+// Les trois écritures emploient `modifier`, non `load` puis `save`. La
+// différence n'est pas de style : entre une lecture et une écriture séparées,
+// une autre requête s'intercale désormais — ce qui ne pouvait pas arriver tant
+// que le magasin était synchrone. Deux ajouts simultanés en perdraient un.
 
-const chargerAeronefs = () => store.load('ramp_aeronefs', {});
-const enregistrerAeronefs = (d) => store.save('ramp_aeronefs', d);
-const aeronefs = () => chargerAeronefs().aeronefs || [];
+const aeronefs = async () => (await magasin.load('ramp_aeronefs', {})).aeronefs || [];
+
+// Le geste atomique, exposé tel quel : une route qui doit **vérifier puis
+// écrire** — un doublon, un compte d'usages — ne peut pas le faire en deux
+// appels, l'un lisant l'état d'avant l'autre. Elle passe sa vérification ici.
+const modifierAeronefs = (transformer) => magasin.modifier('ramp_aeronefs', {}, transformer);
 
 // Amorçage depuis la nomenclature livrée avec le module. Idempotent : une
-// liste déjà en place n'est pas retouchée.
-function seedAeronefs() {
-  const d = store.load('ramp_aeronefs', null);
-  if (d && (d.aeronefs || []).length) return 0;
-  // eslint-disable-next-line global-require
-  const reference = require('./aeronefs-reference.json');
-  const liste = reference.map(([designation, modele, constructeur, etat]) => ({
-    id: uid('aer'), designation, modele, constructeur, etat_conception: etat, actif: true,
+// liste déjà en place n'est pas retouchée — et le `modifier` garantit qu'un
+// second amorçage lancé en même temps ne la double pas non plus.
+async function seedAeronefs() {
+  let poses = 0;
+  await magasin.modifier('ramp_aeronefs', {}, (d) => {
+    if ((d.aeronefs || []).length) return d;
+    // eslint-disable-next-line global-require
+    const reference = require('./aeronefs-reference.json');
+    const liste = reference.map(([designation, modele, constructeur, etat]) => ({
+      id: uid('aer'), designation, modele, constructeur, etat_conception: etat, actif: true,
+    }));
+    poses = liste.length;
+    return { aeronefs: liste, createdAt: now() };
+  });
+  return poses;
+}
+
+async function getAeronef(id) {
+  return (await aeronefs()).find((a) => a.id === id) || null;
+}
+
+async function insertAeronef(a) {
+  await magasin.modifier('ramp_aeronefs', {}, (d) => ({
+    ...d, aeronefs: (d.aeronefs || []).concat([a]),
   }));
-  enregistrerAeronefs({ aeronefs: liste, createdAt: now() });
-  return liste.length;
-}
-
-function getAeronef(id) {
-  return aeronefs().find((a) => a.id === id) || null;
-}
-
-function insertAeronef(a) {
-  const d = chargerAeronefs();
-  d.aeronefs = (d.aeronefs || []).concat([a]);
-  enregistrerAeronefs(d);
   return a;
 }
 
-function updateAeronef(id, patch) {
-  const d = chargerAeronefs();
-  const arr = d.aeronefs || [];
-  const i = arr.findIndex((a) => a.id === id);
-  if (i < 0) return null;
-  arr[i] = { ...arr[i], ...patch };
-  enregistrerAeronefs(d);
-  return arr[i];
+// Le patch s'applique **dans** la transformation, sur la version que la base
+// vient de rendre : appliqué au dehors, il écraserait la modification d'un
+// autre. `rendu` retient la ligne écrite, pour la rendre à l'appelant.
+async function updateAeronef(id, patch) {
+  let rendu = null;
+  await magasin.modifier('ramp_aeronefs', {}, (d) => {
+    const arr = (d.aeronefs || []).slice();
+    const i = arr.findIndex((a) => a.id === id);
+    if (i < 0) return d;
+    arr[i] = { ...arr[i], ...patch };
+    rendu = arr[i];
+    return { ...d, aeronefs: arr };
+  });
+  return rendu;
 }
 
-function removeAeronef(id) {
-  const d = chargerAeronefs();
-  const arr = d.aeronefs || [];
-  const i = arr.findIndex((a) => a.id === id);
-  if (i < 0) return false;
-  arr.splice(i, 1);
-  enregistrerAeronefs(d);
-  return true;
+async function removeAeronef(id) {
+  let retire = false;
+  await magasin.modifier('ramp_aeronefs', {}, (d) => {
+    const arr = (d.aeronefs || []).filter((a) => a.id !== id);
+    retire = arr.length !== (d.aeronefs || []).length;
+    return retire ? { ...d, aeronefs: arr } : d;
+  });
+  return retire;
 }
 
 function get(coll, id) {
@@ -508,7 +535,7 @@ module.exports = {
   CATEGORIES_DEFAUT, seed, list, get, insert, insertMany, update, remove, removeInspection,
   fichierPoiDesigne,
   uid, now, load, save,
-  seedAeronefs, aeronefs, getAeronef, insertAeronef, updateAeronef, removeAeronef,
+  seedAeronefs, aeronefs, modifierAeronefs, getAeronef, insertAeronef, updateAeronef, removeAeronef,
   seedAeroports, seedPays, completerActions, retirerStatutEnCours,
   prochaineReferencePoi, reserverReferencesPoi, referencerInspections
 };

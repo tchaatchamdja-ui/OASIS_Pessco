@@ -276,6 +276,87 @@ async function magasins() {
   verifier('magasins : aucune valeur concaténée dans le SQL', sqlEnDur);
 }
 
+// ── 5 bis. La façade, sur fichiers ──
+// `src/magasin.js` sert les deux régimes. Sans `DATABASE_URL` — celui des
+// contrôles, et celui d'une instance qui n'a pas encore basculé — tout reste
+// sur fichiers, et c'est ce régime-là qu'on éprouve ici.
+//
+// Le point qui compte est `modifier`. En base, son atomicité vient de `rev` ;
+// sur fichiers, d'une file d'attente par collection. Sans elle, deux
+// transformations concurrentes liraient le même état et l'une écraserait
+// l'autre — le défaut même que la bascule doit fermer, réintroduit par la
+// façade qui prétendait le refermer.
+// Le nom de la collection d'essai est tiré au hasard à chaque exécution. Ce
+// n'est pas une coquetterie : `src/store.js` fige son répertoire de données à
+// l'import, et « ramp » — qui s'exécute avant celle-ci — charge le socle au
+// moment où l'index requiert les suites, donc **avant** que `OASIS_DATA_DIR`
+// soit posé ici. Les écritures d'essai partent alors dans le vrai `data/`, et
+// un nom fixe y serait retrouvé au passage suivant : le contrôle « rend le
+// défaut » échouerait à la deuxième exécution, et pas à la première.
+//
+// Le nom tiré au sort rend le contrôle juste dans tous les cas ; le nettoyage
+// plus bas efface ce qu'il a écrit. La cause, elle, reste entière.
+const COLL_ESSAI = `essai_facade_${Math.random().toString(36).slice(2, 8)}`;
+
+async function facadeDuMagasin() {
+  const magasin = require('../../src/magasin');
+
+  verifier('façade : sans DATABASE_URL, rien n’est servi par la base',
+    magasin.surBase('ramp_aeronefs') === false);
+  verifier('façade : une collection non migrée ne l’est jamais',
+    magasin.surBase('users') === false && !magasin.MIGREES.has('users'));
+
+  verifier('façade : une collection absente rend le défaut',
+    JSON.stringify(await magasin.load(COLL_ESSAI, { rien: true })) === '{"rien":true}');
+
+  await magasin.save(COLL_ESSAI, { items: [] });
+  verifier('façade : ce qui est écrit se relit',
+    JSON.stringify((await magasin.load(COLL_ESSAI, null)).items) === '[]');
+
+  // Vingt transformations lancées ensemble, chacune ajoutant sa ligne. Sans
+  // file d'attente, il n'en resterait qu'une poignée.
+  const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+  await Promise.all(Array.from({ length: 20 }, (_, i) => magasin.modifier(
+    COLL_ESSAI, { items: [] },
+    async (d) => { await attendre(1); return { items: [...d.items, i] }; },
+  )));
+  const apres = (await magasin.load(COLL_ESSAI, null)).items;
+  verifier('façade : 20 modifications concurrentes sur fichiers, aucune perdue',
+    apres.length === 20 && new Set(apres).size === 20, `${apres.length} entrée(s)`);
+
+  // Une transformation qui échoue ne doit pas bloquer la file derrière elle.
+  let leve = false;
+  await magasin.modifier(COLL_ESSAI, {}, () => { throw new Error('essai'); })
+    .catch(() => { leve = true; });
+  await magasin.modifier(COLL_ESSAI, { items: [] }, (d) => ({ items: [...d.items, 99] }));
+  verifier('façade : un échec est relevé et ne bloque pas la file',
+    leve && (await magasin.load(COLL_ESSAI, null)).items.length === 21);
+
+  // ── L'enveloppe des gestionnaires asynchrones ──
+  // Express 4 ne regarde pas la promesse d'un gestionnaire `async`. Sans
+  // enveloppe, un rejet ne mène nulle part : la requête reste ouverte, et le
+  // dernier filet du socle n'est jamais atteint. Le contrôle de forme de la
+  // suite « taille » impose l'enveloppe ; celui-ci vérifie qu'elle fait bien ce
+  // qu'on attend d'elle.
+  const { asynchrone } = require('../../src/route');
+  const recu = [];
+  await new Promise((fini) => {
+    asynchrone(async () => { throw new Error('échec du gestionnaire'); })(
+      {}, {}, (e) => { recu.push(e); fini(); },
+    );
+  });
+  verifier('route : un gestionnaire asynchrone qui échoue part au filet du socle',
+    recu.length === 1 && recu[0].message === 'échec du gestionnaire');
+
+  // Et ce qui réussit ne doit surtout pas y partir : une enveloppe qui appelle
+  // `next` à tort rendrait une erreur 500 sur une requête servie.
+  let appele = false;
+  let suivant = false;
+  await asynchrone(async () => { appele = true; })({}, {}, () => { suivant = true; });
+  verifier('route : un gestionnaire qui aboutit ne réveille pas le filet',
+    appele && !suivant);
+}
+
 // ── 6. Aucun secret dans le journal des envois ──
 // Trois messages portent un secret : mot de passe d'ouverture de compte, mot
 // de passe réinitialisé, code à usage unique. Leur corps était conservé en
@@ -572,8 +653,21 @@ module.exports = async function unitairesSmoke() {
     conservation();
     barreDeRamp();
     await magasins();
+    await facadeDuMagasin();
   } finally {
     fs.rmSync(BAC, { recursive: true, force: true });
+    // Effacer ce que les contrôles ont écrit, là où ils l'ont réellement écrit.
+    // `src/store.js` fige son répertoire à l'import : si une suite précédente
+    // a chargé le socle avant que `OASIS_DATA_DIR` soit posé ici, ce répertoire
+    // est le vrai `data/`, et le bac n'aura rien reçu. On nettoie donc les deux.
+    ['essai_contrat', COLL_ESSAI, 'essai_journal'].forEach((nom) => {
+      [BAC, process.env.OASIS_DATA_DIR, path.join(__dirname, '..', '..', 'data')]
+        .filter(Boolean)
+        .forEach((rep) => {
+          fs.rmSync(path.join(rep, `${nom}.json`), { force: true });
+          fs.rmSync(path.join(rep, `${nom}.jsonl`), { force: true });
+        });
+    });
     delete process.env.OASIS_DATA_DIR;
   }
   assert.ok(true);

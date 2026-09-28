@@ -2,10 +2,14 @@
 // Socle technique transverse (Phase 1) : authentification, utilisateurs, audit,
 // configuration, notifications, registre des modules à intégrer.
 const express = require('express');
+const { asynchrone } = require('./src/route');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const store = require('./src/store');
+// La façade du magasin : elle sait quelles collections sont passées en base, et
+// prépare celle-ci au démarrage (ADR-002, jalon n° 9).
+const magasin = require('./src/magasin');
 const audit = require('./src/audit');
 const { valider, enveloppe } = require('./src/valider');
 const auth = require('./src/auth');
@@ -650,9 +654,9 @@ app.get('/api/emails', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, re
   res.json(email.list().slice(-50).reverse());
 });
 
-app.get('/api/emails/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), async (req, res) => {
+app.get('/api/emails/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   res.json(await email.verify());
-});
+}));
 
 // ── Journal d'audit ──
 app.get('/api/audit', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
@@ -1157,26 +1161,50 @@ horloge.verifier(loadConfig()).then((h) => {
 
 auth.seedUsers(loadConfig());
 referentiels.seedReferentiels();
-moduleLoader.seedAll(MODULES_MONTES);
-// Écoute sur toutes les interfaces : les plateformes d'hébergement routent le
-// trafic vers le conteneur, une écoute sur la seule boucle locale y serait
-// injoignable.
-const serveur = app.listen(PORT, '0.0.0.0', () => {
-  trace.info('serveur démarré', {
-    port: Number(PORT),
-    environnement: EN_PRODUCTION ? 'production' : (process.env.NODE_ENV || 'development'),
-    modules: MODULES_MONTES.map((m) => m.code),
-  });
-});
 
-// Le port déjà pris est l'ennui le plus courant au démarrage — le plus souvent
-// une instance oubliée, détachée de son terminal. La trace d'erreur de Node ne
-// le disait pas : elle se lit ici en clair, avec le geste qui la lève.
-serveur.on('error', (e) => {
-  if (e.code !== 'EADDRINUSE') throw e;
-  trace.erreur(`le port ${PORT} est déjà occupé : une autre instance tourne sans doute encore`, {
-    retrouver: `lsof -nP -iTCP:${PORT} -sTCP:LISTEN`,
-    puis: `l'arrêter et relancer, ou choisir un autre port : PORT=4751 npm run dev`,
+// ── L'amorçage précède l'écoute ──
+//
+// `seedAll` est asynchrone depuis qu'une collection peut vivre en base
+// (ADR-002, jalon n° 9). Écouter avant qu'il soit fini servirait des listes
+// vides que l'écran croirait — un amorçage à moitié posé ne se voit pas, il se
+// lit comme une donnée absente.
+//
+// Un amorçage qui échoue arrête le démarrage plutôt que de servir une
+// application incomplète : c'est un défaut de configuration, et il doit se lire
+// au démarrage, non se découvrir à l'usage.
+function ecouter() {
+  // Écoute sur toutes les interfaces : les plateformes d'hébergement routent le
+  // trafic vers le conteneur, une écoute sur la seule boucle locale y serait
+  // injoignable.
+  const serveur = app.listen(PORT, '0.0.0.0', () => {
+    trace.info('serveur démarré', {
+      port: Number(PORT),
+      environnement: EN_PRODUCTION ? 'production' : (process.env.NODE_ENV || 'development'),
+      modules: MODULES_MONTES.map((m) => m.code),
+    });
   });
-  process.exit(1);
-});
+
+  // Le port déjà pris est l'ennui le plus courant au démarrage — le plus souvent
+  // une instance oubliée, détachée de son terminal. La trace d'erreur de Node ne
+  // le disait pas : elle se lit ici en clair, avec le geste qui la lève.
+  serveur.on('error', (e) => {
+    if (e.code !== 'EADDRINUSE') throw e;
+    trace.erreur(`le port ${PORT} est déjà occupé : une autre instance tourne sans doute encore`, {
+      retrouver: `lsof -nP -iTCP:${PORT} -sTCP:LISTEN`,
+      puis: `l'arrêter et relancer, ou choisir un autre port : PORT=4751 npm run dev`,
+    });
+    process.exit(1);
+  });
+  return serveur;
+}
+
+magasin.preparer()
+  .then(() => moduleLoader.seedAll(MODULES_MONTES))
+  .then(ecouter)
+  .catch((e) => {
+    trace.erreur('amorçage interrompu : le serveur n’écoutera pas', {
+      detail: e.message,
+      remede: 'vérifier DATABASE_URL et que la base répond, ou retirer la variable pour rester sur fichiers',
+    });
+    process.exit(1);
+  });

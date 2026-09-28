@@ -87,10 +87,18 @@ function mount(app, deps, moduleAudit) {
 }
 
 // Initialisation des données de chaque module (idempotent).
-function seedAll(montes) {
-  montes.forEach((m) => {
-    if (typeof m.impl.seed === 'function') m.impl.seed();
-  });
+//
+// Asynchrone depuis qu'une collection peut vivre en base (ADR-002, jalon n° 9).
+// Les amorçages se suivent, jamais en parallèle : un module peut dépendre des
+// données d'un autre, et l'ordre de montage est celui du manifeste.
+//
+// Le serveur **attend** cette promesse avant d'écouter. Servir une route dont
+// la nomenclature n'est pas encore posée rendrait une liste vide, et l'écran la
+// croirait.
+async function seedAll(montes) {
+  for (const m of montes) {
+    if (typeof m.impl.seed === 'function') await m.impl.seed();
+  }
 }
 
 // Catalogue exposé au portail : feuille de route (config/modules.json)

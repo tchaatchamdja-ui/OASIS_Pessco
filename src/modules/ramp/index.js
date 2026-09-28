@@ -176,9 +176,11 @@ module.exports = {
     }
   },
 
-  seed() {
+  // Asynchrone depuis que la nomenclature des aéronefs est en base : c'est le
+  // seul amorçage du module qui passe par le réseau (ADR-002, jalon n° 9).
+  async seed() {
     db.seed();
-    db.seedAeronefs();
+    await db.seedAeronefs();
     db.seedAeroports();
     db.seedPays();
     db.completerActions();

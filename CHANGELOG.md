@@ -62,6 +62,21 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
 - Consigné : si ce geste est sûr aujourd'hui sur fichiers, c'est parce que `load` et
   `save` sont **synchrones**. La conversion en asynchrone détruit cette garantie avant
   même qu'un second processus existe.
+- **`src/magasin.js`** — la façade qui permet de basculer une collection à la fois.
+  Asynchrone des deux côtés : un appel converti fonctionne sur fichiers comme en base.
+  Liste d'autorisation : ce qui n'y est pas nommé reste sur fichiers. Sur fichiers,
+  `modifier` est rendu atomique par une file d'attente par collection.
+- **Première collection passée en base** : `ramp_aeronefs`, la nomenclature des aéronefs.
+  8 fonctions de magasin, 7 routes, 9 fichiers touchés ; **299 contrôles RAMP verts dans
+  les deux régimes**, et la base porte bien la nomenclature seule — 9 550 appareils.
+- Trois routes qui *vérifiaient puis écrivaient* — doublon, bascule d'activité, refus de
+  suppression — passent leur vérification **dans** la transformation : une autre requête
+  s'intercale désormais entre les deux gestes.
+- **`src/route.js`** — `asynchrone(fn)`. Express 4 ne regarde pas la promesse d'un
+  gestionnaire `async` : un rejet laissait la requête **ouverte jusqu'à expiration**, sans
+  erreur 500 ni trace. Six gestionnaires étaient dans ce cas ; ils sont enveloppés.
+- Le serveur **attend l'amorçage avant d'écouter** : une collection en base s'amorce par
+  le réseau, et servir une route avant qu'elle soit posée rendrait une liste vide.
 
 ### Tests
 - Jeu de données de référence versionné dans `tests/fixtures` : `npm run smoke`
@@ -69,6 +84,10 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
 - Suite **« magasin-pg »**, 12 contrôles contre un vrai PostgreSQL, dont deux
   contre-épreuves qui les empêchent d'être vides. Sans `OASIS_PG_ESSAI`, trois
   contrôles lisent le schéma et huit se déclarent hors de portée.
+- Deux contrôles de forme ferment les portes de la bascule : **aucune collection migrée
+  n'est plus lue par `store`** — un appel oublié lirait le fichier figé au dernier jour
+  des fichiers, sans erreur —, et **tout gestionnaire de route asynchrone passe par
+  `asynchrone`**. Les deux contre-éprouvés.
 
 ### Accessibilité
 - Contour de focus visible au clavier sur l'ensemble des écrans. *(A11Y-02)*

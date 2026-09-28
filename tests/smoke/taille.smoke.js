@@ -381,5 +381,71 @@ module.exports = async function tailleSmoke() {
   verifier('aucune date construite à minuit local relue en temps universel',
     minuitLocal.length === 0, minuitLocal.join(' · '));
 
+  // ── Une collection passée en base ne se lit plus par `store` ──
+  //
+  // La bascule se fait collection par collection (ADR-002, jalon n° 9). Une
+  // seule qui vive en base laisse derrière elle un fichier `data/<nom>.json`
+  // figé au dernier jour des fichiers. Un appel synchrone oublié le lirait
+  // **sans erreur** : l'écran montrerait une liste plausible mais périmée, et
+  // toute écriture qui passerait par là serait perdue au prochain démarrage.
+  //
+  // Rien dans le langage n'empêche cet oubli — `store.load` existe toujours, et
+  // rend un tableau. Ce contrôle s'en charge : les noms de `magasin.MIGREES`
+  // n'apparaissent plus dans un appel à `store`, hors de la façade elle-même et
+  // du script de reprise, qui doit lire les deux.
+  //
+  // La liste se lit **dans la source**, et non par `require` : charger
+  // `src/magasin.js` chargerait `src/store.js`, qui fige son répertoire de
+  // données à l'import. Cette suite tourne avant « unitaires », qui en désigne
+  // un autre — le sien serait ignoré, et les écritures d'essai partiraient dans
+  // le vrai `data/`.
+  const sourceMagasin = fs.readFileSync(path.join(RACINE, 'src', 'magasin.js'), 'utf8');
+  const blocMigrees = sourceMagasin.match(/const MIGREES = new Set\(\[([\s\S]*?)\n\]\);/);
+  verifier('la liste des collections migrées se lit dans src/magasin.js', !!blocMigrees);
+  const MIGREES = (blocMigrees ? blocMigrees[1].match(/'([^']+)'/g) || [] : [])
+    .map((s) => s.slice(1, -1));
+  const EXEMPTS = ['src/magasin.js', 'src/store.js', 'scripts/migrer-pg.js'];
+  const enDouble = [];
+  sources()
+    .filter((f) => f.endsWith('.js') && !relatif(f).startsWith('public/'))
+    .filter((f) => !EXEMPTS.includes(relatif(f)))
+    .forEach((f) => {
+      const src = fs.readFileSync(f, 'utf8');
+      MIGREES.forEach((nom) => {
+        if (new RegExp(`store\\.(load|save)\\(\\s*['"]${nom}['"]`).test(src)) {
+          enDouble.push(`${relatif(f)} → ${nom}`);
+        }
+      });
+    });
+  verifier('aucune collection passée en base n’est encore lue par « store »',
+    enDouble.length === 0, enDouble.join(' · '));
+
+  // ── Un gestionnaire asynchrone est enveloppé, ou la requête reste ouverte ──
+  //
+  // Express 4 ne regarde pas la promesse que rend un gestionnaire `async`. Si
+  // elle est rejetée, **rien ne se passe** : pas d'erreur 500, pas de trace, et
+  // la requête reste ouverte jusqu'à expiration. Côté écran, une roue qui tourne
+  // sans fin ; côté serveur, rien à lire.
+  //
+  // Le langage ne le signale pas — `async (req, res) => …` est parfaitement
+  // valide sans enveloppe, et le jour où il échoue est le seul où cela se voit.
+  // Ce contrôle est donc la seule chose qui tienne la règle, et il compte
+  // d'autant plus que la bascule du magasin rend ces gestionnaires nombreux.
+  const NUS = [];
+  sources()
+    .filter((f) => f.endsWith('.js') && !relatif(f).startsWith('public/') && !relatif(f).startsWith('tests/'))
+    .forEach((f) => {
+      const src = fs.readFileSync(f, 'utf8');
+      let i = src.indexOf('async (req, res');
+      while (i >= 0) {
+        if (!src.slice(Math.max(0, i - 11), i).endsWith('asynchrone(')) {
+          NUS.push(`${relatif(f)}:${src.slice(0, i).split('\n').length}`);
+        }
+        i = src.indexOf('async (req, res', i + 1);
+      }
+    });
+  verifier('tout gestionnaire de route asynchrone passe par « asynchrone »',
+    NUS.length === 0, NUS.join(' · '));
+
   return bilan('taille');
 };

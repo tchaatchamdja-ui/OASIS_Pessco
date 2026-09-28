@@ -16,14 +16,17 @@ Deux tables, et pas une de plus :
 
 | Table | Rôle |
 |---|---|
-| `collections (nom, valeur JSONB, maj)` | Une collection sous son nom. `load` la lit, `save` la remplace en une instruction. |
-| `journal (nom, ordre BIGSERIAL, entree JSONB)` | Une entrée d'audit par ligne, insérée, jamais réécrite. |
+| `collections (nom, valeur JSON, rev, maj)` | Une collection sous son nom. `load` la lit, `save` la remplace, `modifier` la modifie sans perdre l'écriture d'un autre. |
+| `journal (nom, ordre BIGSERIAL, entree JSON)` | Une entrée d'audit par ligne, insérée, jamais réécrite. |
+
+`JSON` et non `JSONB` : la raison est plus bas, et elle a coûté les six chaînes
+d'audit à la première épreuve contre un vrai serveur.
 
 Ce que des fichiers ne peuvent pas donner, et que la base donne :
 
 - **Écriture atomique** sans fichier temporaire ni renommage ;
-- **accès concurrent** : deux processus servant la même base ne se perdent plus
-  l'un l'autre — aujourd'hui, la dernière écriture écrase l'autre en silence ;
+- **accès concurrent** — mais seulement par `modifier`, et non par `save` : la
+  base rend atomique l'écriture, pas le lire-modifier-réécrire. Voir plus bas ;
 - **sauvegarde à chaud** et **réplication logique** vers le serveur central
   UEMOA, qui est la raison d'être du choix ;
 - pour le journal d'audit, **la dernière entrée sans tout relire** —
@@ -41,7 +44,8 @@ rien. Rien n'est transformé — empreintes du journal comprises — et **la cha
 SHA-256 se vérifie après la reprise comme avant**.
 
 **Six contrôles** (suite « unitaires ») éprouvent les deux magasins sur les
-mêmes gestes : c'est ce qui les empêchera de diverger.
+mêmes gestes, et **douze de plus** (suite « magasin-pg ») éprouvent celui-ci
+contre un vrai serveur — ce que les six premiers ne pouvaient pas faire.
 
 ## Ce qui n'est pas fait, et pourquoi
 
@@ -84,25 +88,105 @@ depuis un seul processus, ce qui est le cas. Le journal d'audit est déjà en
 ajout seul (PERF-01), et le coût d'écriture ne croît plus. Ce qui manque
 demeure : la concurrence entre processus, et la réplication vers l'UEMOA.
 
-### Recommandation
+### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout
 
-Le chemin 1, module par module, quand la réplication vers le serveur central
-devient une échéance — c'est elle qui rend la base nécessaire, non la
-performance. D'ici là, le magasin et sa reprise sont écrits, éprouvés et
-attendent ; les fichiers tiennent.
+Le jalon n° 7 d'[ADR-002](ADR-002-migration-spring-boot.md) tranche : **le
+magasin bascule avant les modules**, par le chemin 1, module par module, chacun
+derrière sa suite de fumée.
 
-## Éprouver la base pour de bon
+Deux précisions que la mesure impose au chemin 1, et qui ne figuraient pas dans
+sa description ci-dessus :
 
-Les six contrôles emploient une base de papier : elle dit le contrat et le SQL,
-non le serveur — ni les types, ni les verrous, ni le réseau. **Le code n'a pas
-encore tourné contre un vrai PostgreSQL**, faute d'en avoir un ici. Pour le
-faire :
+1. **Chaque appel qui lit pour réécrire devient un `modifier`**, non un `load`
+   suivi d'un `save`. Traduire mécaniquement en `await` introduirait des pertes
+   d'écriture là où il n'y en avait pas.
+2. La conversion se fait **module par module**, et un module converti ne peut
+   pas partager une collection avec un module qui ne l'est pas : l'un écrirait
+   en base, l'autre dans un fichier. L'ordre de conversion suit donc les
+   collections, non les écrans.
+
+## La base a été éprouvée pour de bon — et elle a tout cassé
+
+*28 septembre 2026, PostgreSQL 16.15, sur une copie des données réelles.*
+
+Les six contrôles de contrat employaient une base de papier : une `Map` qui rend
+ce qu'on lui écrit. Elle dit le contrat et le SQL, non le serveur. Le code
+n'avait jamais tourné contre un vrai PostgreSQL. Il l'a fait. **Deux défauts en
+sont sortis, et la base de papier les avait couverts tous les deux — parce
+qu'elle était plus fidèle que le vrai serveur.**
+
+### 1. `jsonb` réordonne les clés, et rompt les six chaînes d'audit
+
+`jsonb` range les clés d'un objet par longueur puis par octets. Rien n'est
+perdu ; rien ne revient dans l'ordre écrit. Or le sceau d'une entrée d'audit
+couvre `JSON.stringify(details)` : changer l'ordre du texte change l'empreinte.
+
+Première reprise, avec le schéma d'origine :
+
+| Chaîne | Sur fichiers | Après un aller-retour en `jsonb` |
+|---|---|---|
+| socle (`audit`) | intacte, 1 667 | **rompue à la 29ᵉ** |
+| PLAN | intacte, 337 | **rompue à la 1ʳᵉ** |
+| SURV | intacte, 812 | **rompue à la 1ʳᵉ** |
+| SAFA | intacte, 275 | **rompue à la 1ʳᵉ** |
+| RAMP | intacte, 37 | **rompue à la 1ʳᵉ** |
+| CARE | intacte, 121 | **rompue à la 1ʳᵉ** |
+
+Les quinze collections revenaient elles aussi différentes — même longueur, ordre
+autre.
+
+La 29ᵉ mérite un mot : les vingt-huit premières entrées du socle portaient des
+`details` dont l'ordre survivait par chance. **Un petit échantillon serait
+passé.** Il a fallu les données réelles pour que le défaut se montre.
+
+**Corrigé** : les deux colonnes sont en `json`, qui conserve le texte donné.
+Coût : l'indexation GIN et les opérateurs de `jsonb`, dont aucun n'est employé
+ici — on lit une collection par son nom, jamais dans son contenu. Après quoi :
+**15 collections et 3 249 entrées reprises, les six chaînes intactes**.
+
+### 2. La base ne règle pas la concurrence — le portage la reconduit
+
+C'était pourtant la raison du choix. Deux agents lisent une collection, y
+ajoutent chacun une ligne, la réécrivent : **une des deux disparaît, en base
+exactement comme sur fichier.** PostgreSQL rend l'*écriture* atomique ; il ne
+rend pas atomique le *lire-modifier-réécrire*, et c'est ce geste-là que font
+presque tous les appels du socle.
+
+Et la mesure en dit une de plus, qui n'était écrite nulle part : **si ce geste
+est sûr aujourd'hui, c'est parce que `load` et `save` sont synchrones.** Node ne
+rend la main qu'aux `await`, et il n'y en a pas entre les deux. Rendre le
+magasin asynchrone détruit cette garantie — *avant même qu'un second processus
+existe*. La conversion n'est donc pas seulement un coût : c'est une régression
+de correction, à traiter comme telle.
+
+**Ajouté** : `modifier(nom, defaut, transformer)` — lire, transformer, n'écrire
+que si `rev` n'a pas bougé, recommencer sinon, refuser après vingt essais plutôt
+qu'écraser. Cinquante écritures concurrentes, aucune perdue. C'est lui, et non
+`save`, que la conversion devra employer partout où un appel lit pour réécrire.
+
+Le journal, lui, n'avait rien à perdre : il est en ajout seul, et 100 insertions
+concurrentes donnent 100 lignes.
+
+### La suite qui garde tout cela
+
+`tests/smoke/magasin-pg.smoke.js` — **12 contrôles**, dont deux contre-épreuves
+qui les empêchent d'être vides : la même chaîne rangée en `jsonb` doit se
+rompre, et `save` concurrent doit bien perdre une écriture. Sans elles, les
+contrôles passeraient aussi sur une base où rien ne se serait jamais croisé.
 
 ```bash
-docker run -d --name oasis-pg -e POSTGRES_PASSWORD=essai -p 5432:5432 postgres:16
-export DATABASE_URL='postgres://postgres:essai@localhost:5432/postgres'
-node scripts/migrer-pg.js --verifier
+docker run -d --name oasis-pg -e POSTGRES_PASSWORD=essai -p 5433:5432 postgres:16
+OASIS_PG_ESSAI='postgres://postgres:essai@localhost:5433/postgres' npm run smoke -- magasin-pg
 ```
 
-La reprise crée les tables, copie tout et compare. C'est la première chose à
-faire avant d'envisager la bascule.
+Sans `OASIS_PG_ESSAI`, trois contrôles lisent le schéma et les huit autres se
+déclarent **hors de portée** — jamais tus. La variable est distincte de
+`DATABASE_URL` à dessein : cette suite écrit, et un `DATABASE_URL` posé pour
+autre chose ne doit pas la diriger sur une base qui compte. Tout se passe dans
+un schéma `oasis_essai`, créé puis détruit.
+
+Pour reprendre un jeu de données complet :
+
+```bash
+DATABASE_URL='postgres://…' OASIS_DATA_DIR=/chemin/vers/data node scripts/migrer-pg.js --verifier
+```

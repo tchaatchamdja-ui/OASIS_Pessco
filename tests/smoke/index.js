@@ -20,6 +20,9 @@ const suites = [
   { nom: 'traductions', port: 0, run: require('./traductions.smoke') },
   // Unitaires : les règles prises à part, sans passer par HTTP.
   { nom: 'unitaires', port: 0, run: require('./unitaires.smoke') },
+  // Magasin PostgreSQL : ce qu'une base de papier ne peut pas dire. Trois
+  // contrôles lisent le schéma ; les huit autres demandent OASIS_PG_ESSAI.
+  { nom: 'magasin-pg', port: 0, run: require('./magasin-pg.smoke') },
   // Parcours : les écrans dans un vrai navigateur, console comprise.
   { nom: 'parcours', port: 4798, run: require('./parcours.smoke') },
 ];

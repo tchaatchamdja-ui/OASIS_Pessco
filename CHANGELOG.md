@@ -45,9 +45,30 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
 - Le cache mémoire du stockage se **relit quand le fichier change** sur le disque :
   deux processus servant le même répertoire ne s'ignorent plus. *(PERF-04)*
 
+### Magasin de données
+- **Le magasin PostgreSQL a tourné contre un vrai serveur** (16.15), et deux défauts
+  en sont sortis que la base simulée des contrôles avait couverts.
+- `jsonb` → **`json`** pour les deux colonnes. `jsonb` réordonne les clés ; le sceau
+  d'une entrée d'audit couvrant `JSON.stringify(details)`, les six chaînes des données
+  réelles — 1 667 entrées du socle, 1 582 des modules — étaient **rompues** après un
+  aller-retour. La chaîne du socle ne cédait qu'à la 29ᵉ entrée : un petit échantillon
+  serait passé. Après correction, 15 collections et 3 249 entrées reprises, six chaînes
+  intactes.
+- **`modifier(nom, defaut, transformer)`** : lire-modifier-réécrire atomique par `rev`.
+  La base rend l'écriture atomique, pas le geste complet — deux agents qui lisent une
+  collection, y ajoutent chacun une ligne et la réécrivent en perdaient une, *en base
+  comme sur fichier*. Cinquante écritures concurrentes, aucune perdue ; un conflit sans
+  issue est refusé plutôt qu'écrasé.
+- Consigné : si ce geste est sûr aujourd'hui sur fichiers, c'est parce que `load` et
+  `save` sont **synchrones**. La conversion en asynchrone détruit cette garantie avant
+  même qu'un second processus existe.
+
 ### Tests
 - Jeu de données de référence versionné dans `tests/fixtures` : `npm run smoke`
   ne dépend plus de l'état de `data/`. *(TEST-01)*
+- Suite **« magasin-pg »**, 12 contrôles contre un vrai PostgreSQL, dont deux
+  contre-épreuves qui les empêchent d'être vides. Sans `OASIS_PG_ESSAI`, trois
+  contrôles lisent le schéma et huit se déclarent hors de portée.
 
 ### Accessibilité
 - Contour de focus visible au clavier sur l'ensemble des écrans. *(A11Y-02)*

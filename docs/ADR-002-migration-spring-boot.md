@@ -148,11 +148,16 @@ route.** Ils ont été écrits avant lui, et c'est leur raison d'être.
 
 ## Le séquencement
 
+*Revu le 28 septembre 2026 par le jalon n° 7 : le magasin passe en tête. La séquence
+ci-dessous supposait des modules indépendants ; le jalon n° 6 a montré qu'ils partagent un
+noyau et un magasin sans verrou, et qu'un seul runtime peut donc écrire.*
+
 Étranglement progressif, une passerelle en tête qui route par préfixe. **Du plus petit au plus
 gros**, pour que les erreurs se paient sur les petits :
 
 | Ordre | Module | Contrôles qui le gardent |
 |---|---|---|
+| **0** | **Le magasin — bascule sur PostgreSQL** | 12 (suite « magasin-pg ») |
 | 1 | DROITS | 20 |
 | 2 | PR — Profils de Risque | 23 |
 | 3 | PLAN — Plans de Surveillance | 53 |
@@ -164,8 +169,11 @@ gros**, pour que les erreurs se paient sur les petits :
 À chaque étape, la suite du module doit passer **contre le Java** avant que la route ne bascule.
 L'application reste servie sans interruption.
 
-PostgreSQL entre au moment du socle, ou plus tôt si un module migré en a besoin : en Java, c'est
-une dépendance, non un chantier.
+~~PostgreSQL entre au moment du socle, ou plus tôt si un module migré en a besoin : en Java,
+c'est une dépendance, non un chantier.~~ — **faux, et corrigé par le jalon n° 7.** PostgreSQL
+est une dépendance en Java ; il est un chantier en Node, où 450 appels synchrones deviennent
+asynchrones et où le geste lire-modifier-réécrire perd la garantie que lui donnait justement
+d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
 
 ---
 
@@ -271,16 +279,39 @@ une dépendance, non un chantier.
        > en croyant avoir tout éprouvé. Corrigé — mais c'est la deuxième fois que ce chantier
        > révèle un trou dans ses propres garde-fous.
 
-7. [ ] **Trancher le séquencement, à la lumière du jalon n° 6.** La séquence retenue plus haut
-       — modules du plus petit au plus gros, socle en dernier — supposait des modules
-       indépendants. Ils ne le sont pas : ils partagent un noyau et un magasin sans verrou.
-       Tant que ce magasin est un répertoire de fichiers, **un seul runtime peut écrire**, et
-       la migration ne peut avancer qu'en lecture.
+7. [x] **Trancher le séquencement, à la lumière du jalon n° 6** — **tranché le 28 septembre
+       2026 : le magasin d'abord.** La séquence retenue plus haut — modules du plus petit au
+       plus gros, socle en dernier — supposait des modules indépendants. Ils ne le sont pas :
+       ils partagent un noyau et un magasin sans verrou. Tant que ce magasin est un répertoire
+       de fichiers, **un seul runtime peut écrire**, et la migration ne peut avancer qu'en
+       lecture.
 
-       Deux voies, et elles demandent une décision du GT2 :
-       **(a)** migrer le socle d'abord — authentification, comptes, droits, référentiels,
-       audit — les modules Node l'interrogeant ensuite par API ;
-       **(b)** basculer le magasin sur PostgreSQL d'abord, une base ayant les verrous et les
-       transactions qu'un répertoire n'a pas, puis reprendre module par module comme prévu.
+       Deux voies étaient ouvertes : **(a)** migrer le socle d'abord, les modules Node
+       l'interrogeant par API ; **(b)** basculer le magasin sur PostgreSQL d'abord, puis
+       reprendre module par module. **La voie (b) est retenue** : elle lève la contrainte à sa
+       racine au lieu de la contourner, et elle acquitte en même temps le §3.2 de la fiche
+       technique.
+
+       **Une réserve levée par la mesure, et elle corrige cette ADR.** La voie (b) était
+       présentée ici comme apportant « les verrous et les transactions qu'un répertoire n'a
+       pas ». C'est vrai du moteur et **faux du portage** : `src/store_pg.js` rejouait le
+       contrat des fichiers — une collection entière se lit, une collection entière s'écrit —
+       et deux agents qui lisent, ajoutent chacun une ligne et réécrivent en perdaient une,
+       *en base exactement comme sur fichier*. Mesuré contre PostgreSQL 16.15 le 28 septembre.
+
+       Ce que la mesure a aussi montré : si le geste est sûr aujourd'hui sur fichiers, c'est
+       pour une raison que personne n'avait écrite — **`load` et `save` sont synchrones, donc
+       rien ne s'intercale entre les deux**. Rendre le magasin asynchrone détruit cette
+       garantie *avant même qu'un second processus existe*. La conversion en asynchrone n'est
+       donc pas seulement un coût : c'est une régression de correction, à traiter comme telle.
+
+       D'où le geste ajouté au magasin : `modifier(nom, defaut, transformer)`, lire-modifier-
+       réécrire atomique par `rev` comparé à l'écriture. Cinquante écritures concurrentes,
+       aucune perdue. **C'est lui, et non `save`, que la conversion devra employer partout où
+       un appel lit pour réécrire.**
+
+9. [ ] **Convertir les appels du magasin, module par module.** 69 appels directs, 381 par les
+       magasins de module, 5 gestionnaires de route asynchrones sur 386. Chaque appel qui lit
+       pour réécrire devient un `modifier` ; chaque suite de module garde sa bascule.
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

@@ -31,16 +31,44 @@
 // `journal` : une entrée par ligne, `ordre` croissant. La chaîne SHA-256 est
 // dans les entrées elles-mêmes ; la base n'a pas à la connaître, elle a
 // seulement à ne rien perdre et à ne rien réordonner.
+//
+// ── `json`, et surtout pas `jsonb` ──
+//
+// `jsonb` range les clés d'un objet par longueur puis par octets. Rien n'est
+// perdu — mais rien ne revient dans l'ordre écrit. Or le sceau d'une entrée
+// d'audit couvre `JSON.stringify(details)` : changer l'ordre des clés change
+// le texte, donc l'empreinte, donc la chaîne.
+//
+// Mesuré contre PostgreSQL 16.15, sur les données réelles : les six chaînes
+// intactes sur fichiers étaient rompues après un aller-retour en `jsonb` —
+// 1 667 entrées du socle, 1 582 des modules. La chaîne du socle ne cédait
+// qu'à la 29ᵉ entrée : les vingt-huit premières portaient des `details` dont
+// l'ordre des clés survivait par chance. Un petit échantillon aurait donc
+// passé, et la base de papier passait déjà.
+//
+// `json` conserve le texte tel qu'il a été écrit. Il coûte l'indexation GIN et
+// les opérateurs de `jsonb` — dont aucun n'est employé ici : on lit une
+// collection par son nom, jamais dans son contenu.
+//
+// ── `rev`, et ce qu'une base ne donne pas toute seule ──
+//
+// `rev` compte les écritures d'une collection. Il ne sert pas à `save`, qui
+// remplace sans regarder — il sert à `modifier`, et la raison est mesurée plus
+// bas : **remplacer un document entier ne protège de rien**. Deux agents qui
+// lisent la même collection, y ajoutent chacun leur ligne et la réécrivent en
+// perdent une, en base comme sur fichier.
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS collections (
      nom    TEXT PRIMARY KEY,
-     valeur JSONB NOT NULL,
+     valeur JSON NOT NULL,
+     rev    INTEGER NOT NULL DEFAULT 0,
      maj    TIMESTAMPTZ NOT NULL DEFAULT now()
    )`,
+  'ALTER TABLE collections ADD COLUMN IF NOT EXISTS rev INTEGER NOT NULL DEFAULT 0',
   `CREATE TABLE IF NOT EXISTS journal (
      nom    TEXT NOT NULL,
      ordre  BIGSERIAL PRIMARY KEY,
-     entree JSONB NOT NULL
+     entree JSON NOT NULL
    )`,
   'CREATE INDEX IF NOT EXISTS journal_nom_ordre ON journal (nom, ordre)',
 ];
@@ -66,10 +94,15 @@ function creer(client) {
   // Une écriture, une instruction : PostgreSQL la rend atomique. Le fichier
   // demandait un temporaire puis un renommage, et deux processus écrivant
   // ensemble se perdaient l'un l'autre.
+  //
+  // `rev` avance à chaque écriture, y compris celles-ci : sans quoi un `save`
+  // glissé entre la lecture et l'écriture d'un `modifier` resterait invisible,
+  // et serait écrasé sans bruit — le défaut même qu'on cherche à fermer.
   async function save(nom, valeur) {
     await client.query(
-      `INSERT INTO collections (nom, valeur, maj) VALUES ($1, $2, now())
-       ON CONFLICT (nom) DO UPDATE SET valeur = EXCLUDED.valeur, maj = now()`,
+      `INSERT INTO collections (nom, valeur, rev, maj) VALUES ($1, $2, 0, now())
+       ON CONFLICT (nom) DO UPDATE
+         SET valeur = EXCLUDED.valeur, rev = collections.rev + 1, maj = now()`,
       [nom, JSON.stringify(valeur)],
     );
     return valeur;
@@ -77,6 +110,61 @@ function creer(client) {
 
   const collections = async () => (await client.query('SELECT nom FROM collections ORDER BY nom'))
     .rows.map((r) => r.nom);
+
+  // ── Lire, modifier, réécrire — sans rien perdre ──
+  //
+  // C'est le geste de presque tous les appels du socle : `load`, on pousse une
+  // ligne, `save`. Sur fichiers il est sûr, et pour une raison qu'on n'avait
+  // pas écrite : `load` et `save` sont **synchrones**, donc rien ne s'intercale
+  // entre les deux. Node ne rend la main qu'aux `await`, et il n'y en a pas.
+  //
+  // Rendre le magasin asynchrone détruit cette garantie — avant même qu'un
+  // second processus existe. Mesuré ici contre PostgreSQL 16.15 : deux agents
+  // ajoutant chacun une entrée, une seule reste. L'autre disparaît sans erreur.
+  //
+  // `modifier` rend le geste atomique sans transaction ni connexion réservée :
+  // on lit la valeur **et son `rev`**, on transforme, on n'écrit que si `rev`
+  // n'a pas bougé. Sinon quelqu'un est passé entre-temps, et l'on recommence
+  // sur ce qu'il a laissé.
+  //
+  // Vingt essais, et une attente courte et tirée au sort entre deux. Cinq
+  // suffisaient à deux agents et pas à dix : à chaque tour un seul gagne, et le
+  // dernier arrivé peut donc perdre autant de fois qu'il a de concurrents.
+  // L'attente les désynchronise — sans elle, les perdants repartent ensemble et
+  // se heurtent de nouveau. À trente écritures par jour une reprise est déjà
+  // rare ; la borne est là pour que l'échec soit **dit**, non subi.
+  async function modifier(nom, defaut, transformer, { essais = 20 } = {}) {
+    for (let i = 0; i < essais; i++) {
+      if (i) await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 5 * i) + 1));
+      const r = await client.query('SELECT valeur, rev FROM collections WHERE nom = $1', [nom]);
+      const presente = r.rows.length > 0;
+      const valeur = presente ? r.rows[0].valeur : defaut;
+      const rev = presente ? r.rows[0].rev : -1;
+      const suivante = await transformer(valeur);
+
+      if (!presente) {
+        // Personne n'avait encore écrit. Un autre a pu le faire entre le SELECT
+        // et ici : `DO NOTHING` le laisse gagner, et l'on repart de sa version.
+        const ins = await client.query(
+          `INSERT INTO collections (nom, valeur, rev, maj) VALUES ($1, $2, 0, now())
+           ON CONFLICT (nom) DO NOTHING`,
+          [nom, JSON.stringify(suivante)],
+        );
+        if (ins.rowCount) return suivante;
+        continue;
+      }
+
+      const maj = await client.query(
+        `UPDATE collections SET valeur = $2, rev = rev + 1, maj = now()
+         WHERE nom = $1 AND rev = $3`,
+        [nom, JSON.stringify(suivante), rev],
+      );
+      if (maj.rowCount) return suivante;
+    }
+    // Dire l'échec plutôt que d'écrire par-dessus : perdre l'écriture d'un
+    // autre est précisément ce que cette fonction existe pour empêcher.
+    throw new Error(`magasin : « ${nom} » modifiée sous nos pieds ${essais} fois de suite`);
+  }
 
   // ── Contrat de src/journal.js ──
 
@@ -105,7 +193,7 @@ function creer(client) {
     'SELECT count(*)::int AS n FROM journal WHERE nom = $1', [nom],
   )).rows[0].n);
 
-  return { preparer, load, save, collections, ajouter, lire, derniere, compte, SCHEMA };
+  return { preparer, load, save, modifier, collections, ajouter, lire, derniere, compte, SCHEMA };
 }
 
 // `pg` ne s'attache qu'ici. Ailleurs, un client est un objet qui sait

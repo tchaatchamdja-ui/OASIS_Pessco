@@ -1,10 +1,20 @@
 // Couche de persistance du socle (fichiers JSON).
 //
 // La cible reste PostgreSQL 16, une base par État (note technique §4). Le
-// magasin est écrit et sa reprise éprouvée — `src/store_pg.js`,
-// `scripts/migrer-pg.js` —, mais la bascule attend : `load` et `save` sont
+// magasin est écrit et sa reprise éprouvée contre un vrai serveur —
+// `src/store_pg.js`, `scripts/migrer-pg.js` —, et la bascule est décidée
+// (ADR-002, jalon n° 7). Elle n'est pas faite : `load` et `save` sont
 // synchrones, aucun client PostgreSQL ne l'est, et 450 appels en dépendent.
-// L'état du chantier et les trois chemins possibles : docs/MAGASIN-POSTGRESQL.md.
+//
+// **Ce que ces deux fonctions garantissent sans le dire.** Étant synchrones,
+// rien ne s'intercale entre un `load` et le `save` qui le suit : Node ne rend
+// la main qu'aux `await`, et il n'y en a pas. C'est ce qui rend sûr le geste
+// que font presque tous les appels du socle — lire, ajouter une ligne,
+// réécrire. La conversion en asynchrone **détruit cette garantie**, avant même
+// qu'un second processus existe ; chaque appel de cette forme devra devenir un
+// `modifier`, non un `load` et un `save` suivis d'`await`.
+//
+// Mesures, défauts trouvés et suite qui les garde : docs/MAGASIN-POSTGRESQL.md.
 const fs = require('fs');
 const path = require('path');
 

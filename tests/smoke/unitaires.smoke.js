@@ -190,17 +190,24 @@ function traces() {
 // quand rien n'est là. Les deux sont ici éprouvés sur les mêmes gestes — c'est
 // ce qui les empêchera de diverger.
 //
-// PostgreSQL s'éprouve contre une base de papier, qui retient ce qu'on lui
-// écrit. Elle ne dit rien du serveur — ni des types, ni des verrous, ni du
-// réseau — mais tout du contrat et du SQL produit. `DATABASE_URL` posé, les
-// mêmes contrôles se rejouent contre une vraie base.
+// PostgreSQL s'éprouve ici contre une base de papier, qui retient ce qu'on lui
+// écrit. Elle dit le contrat et le SQL produit — et **rien du serveur**.
+//
+// Ce n'est pas une nuance : elle a menti deux fois. Elle rendait les clés dans
+// l'ordre écrit, quand `jsonb` les réordonne et rompt ainsi les chaînes
+// d'audit ; et elle n'avait aucune concurrence à perdre, quand deux agents
+// écrivant ensemble en perdent une. Les deux défauts ont passé ces contrôles
+// au vert pendant tout ce temps.
+//
+// Ce qu'une base de papier ne peut pas dire est éprouvé ailleurs, contre un
+// vrai serveur : `tests/smoke/magasin-pg.smoke.js`.
 function basePapier() {
   const collections = new Map();
   const journal = [];
   return {
     async query(sql, p) {
       const s = sql.trim();
-      if (/^CREATE/.test(s)) return { rows: [] };
+      if (/^(CREATE|ALTER)/.test(s)) return { rows: [] };
       if (/^SELECT valeur/.test(s)) {
         const v = collections.get(p[0]);
         return { rows: v === undefined ? [] : [{ valeur: JSON.parse(JSON.stringify(v)) }] };

@@ -26,6 +26,29 @@
 > Un fait découvert depuis, et qui pèse sur cet arbitrage : **la difficulté que
 > cet ADR décrit — 450 accès synchrones à convertir — n'existe pas en Java**,
 > où JDBC bloque par conception. Les deux questions n'en font qu'une.
+>
+> ---
+>
+> **Addendum du 28 septembre 2026 — l'option A revient, et c'est assumé.**
+>
+> Le jalon n° 7 d'ADR-002 tranche : **le magasin bascule sur PostgreSQL avant
+> tout le reste**. Or Node continuera de servir tout ce qui n'est pas migré, et
+> devra donc parler à la base. C'est exactement l'option A de cet ADR — porter
+> l'application Node en asynchrone — que la note ci-dessus écartait.
+>
+> Elle est rétablie, et la raison de son rejet est tombée : cet ADR l'écartait
+> comme « le prix fort, payé maintenant, pour un besoin qui n'est pas encore
+> formulé ». Le besoin est formulé — fiche technique §3.3 et §4 — et
+> l'arbitrage est rendu. Ce qui reste exact de l'analyse d'alors, c'est le
+> **coût** (450 accès) et le **risque** (un `await` oublié rend une promesse là
+> où un tableau est attendu, sans erreur) : les deux tiennent toujours, et
+> commandent une conversion module par module, chacun derrière sa suite.
+>
+> S'y ajoute un risque que cet ADR n'avait pas vu, mesuré depuis contre un vrai
+> serveur : **la conversion en asynchrone crée des pertes d'écriture à
+> l'intérieur d'un même processus**, parce que `load` et `save` synchrones
+> interdisaient aujourd'hui toute intercalation. Voir
+> [MAGASIN-POSTGRESQL.md](MAGASIN-POSTGRESQL.md).
 
 **Statut :** ~~Proposé~~ — **clos le 26 septembre 2026, remplacé par [ADR-002](ADR-002-migration-spring-boot.md)**
 **Date :** 25 septembre 2026 — rouvert le 26 septembre 2026

@@ -33,10 +33,11 @@
 // Pour la même raison, une cible sert **une suite à la fois** : à distance
 // elles la partagent, alors qu'en local chacune a la sienne.
 //
-// Relevé du 26 septembre 2026, contre un serveur Node externe : **632 des 737
-// contrôles passent**, 12 se déclarent hors de portée. Les 93 restants — les
-// suites « taille », « traductions » et « unitaires » — lisent les sources et
-// n'ont pas de serveur à viser.
+// Relevé du 26 septembre 2026, contre un serveur Node externe : **632 des 742
+// contrôles passent**, 13 se déclarent hors de portée. Les 98 restants — les
+// suites « taille », « traductions », « unitaires » et « magasin-pg » — lisent
+// les sources ou visent une base, et n'ont pas de serveur d'application à
+// atteindre.
 const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');

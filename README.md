@@ -29,8 +29,8 @@ OASIS_SEED_PASSWORD='UnMotDePasse!2026' npm start
 npm run smoke
 ```
 
-Neuf suites, **624 contrôles**, exécutés contre un vrai serveur lancé sur un jeu
-de données isolé (`tests/fixtures/`) : `data/` n'est jamais touché. La même
+Douze suites, **742 contrôles**, exécutés contre un vrai serveur lancé sur un
+jeu de données isolé (`tests/fixtures/`) : `data/` n'est jamais touché. La même
 commande tourne en intégration continue à chaque poussée, avec `npm audit` au
 niveau « high » et un contrôle de syntaxe sur chaque fichier
 (`.github/workflows/ci.yml`).
@@ -38,6 +38,15 @@ niveau « high » et un contrôle de syntaxe sur chaque fichier
 Trois suites vérifient le code plutôt que le comportement : taille des fichiers
 et des fonctions, redéfinitions de sélecteurs CSS, échappement des valeurs
 rendues, et parité des trois tables de traduction.
+
+Une quatrième demande un vrai PostgreSQL, et se déclare *hors de portée* sans
+lui — elle porte ce qu'une base simulée ne peut pas dire
+([docs/MAGASIN-POSTGRESQL.md](docs/MAGASIN-POSTGRESQL.md)) :
+
+```bash
+docker run -d --name oasis-pg -e POSTGRES_PASSWORD=essai -p 5433:5432 postgres:16
+OASIS_PG_ESSAI='postgres://postgres:essai@localhost:5433/postgres' npm run smoke -- magasin-pg
+```
 
 **Contre une adresse plutôt qu'un processus.** Les contrôles passent par HTTP
 avec session et n'appellent aucune fonction interne : on peut les diriger sur
@@ -49,7 +58,7 @@ scripts/cible-essai.sh 4899
 OASIS_SMOKE_BASE=http://localhost:4899 npm run smoke -- socle
 ```
 
-**632 des 737 contrôles** s'exécutent ainsi ; 12 se déclarent *hors de portée*
+**632 des 742 contrôles** s'exécutent ainsi ; 13 se déclarent *hors de portée*
 — ils lisent le disque du serveur — et le bilan les compte à part. La cible
 repart des fixtures à chaque exécution et ne sert qu'une suite à la fois.
 
@@ -118,7 +127,7 @@ OASIS/
 │   ├── index.html  js/  css/ # Portail
 │   ├── shared/               # Socle du front : requêtes, thème, filtres, retours d'action
 │   └── modules/<nom>/        # Un dossier par module
-├── tests/smoke/              # Neuf suites, exécutées par npm run smoke
+├── tests/smoke/              # Douze suites, exécutées par npm run smoke
 ├── scripts/sauvegarde.sh     # Archives horodatées de data/ et config/
 └── docs/
 ```

@@ -77,6 +77,17 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   erreur 500 ni trace. Six gestionnaires étaient dans ce cas ; ils sont enveloppés.
 - Le serveur **attend l'amorçage avant d'écouter** : une collection en base s'amorce par
   le réseau, et servir une route avant qu'elle soit posée rendrait une liste vide.
+- **Le bus de services est asynchrone par contrat.** `services.call` et `callOr` rendent
+  une promesse quoi que fasse le producteur. Fait pendant que tous les producteurs sont
+  encore synchrones : le jour où l'un passera en base, ses consommateurs n'auront rien à
+  reprendre. Sept consommations converties, **57 gestionnaires de route enveloppés**.
+- `OASIS_BUS_DIFFERE=1` rend tout producteur asynchrone — mise en situation de la bascule,
+  et recette de chacune des suivantes. La campagne complète y reste verte.
+- **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
+  `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
+  n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.
+  La vérification lit un module et l'effacement en écrit un autre : il y faudra une
+  transaction entre modules. Porté aux points ouverts d'ADR-002.
 
 ### Tests
 - Jeu de données de référence versionné dans `tests/fixtures` : `npm run smoke`

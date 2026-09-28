@@ -11,7 +11,10 @@ const db = require('./store');
 // Profils de risque : produits par le module « Profils de Risques » et
 // obtenus via le bus de services. Aucun accès direct aux collections d'un
 // autre module — si ce module n'est pas monté, la liste est simplement vide.
-function riskProfiles() {
+// Asynchrone depuis l'étape A d'ADR-002 : le producteur lit la collection
+// `profil_risque`, qui passera en base. Attendre une valeur qui n'est pas
+// encore une promesse ne coûte rien et évite de reprendre PLAN ce jour-là.
+async function riskProfiles() {
   return services.callOr('PR.riskProfiles', []);
 }
 
@@ -101,7 +104,7 @@ const planDe = (id) => db.list('plans').find((x) => x.id === id) || null;
 // ne se réécrit plus : l'amendement du plan la recopie, mais telle quelle. Le
 // verrou suit la lignée (`parent_activite_id`), sinon une copie amendée
 // échapperait au déclenchement de son ancêtre.
-const activitesDeclenchees = () => new Set(services.callOr('SURV.activitesDeclenchees', []) || []);
+const activitesDeclenchees = async () => new Set((await services.callOr('SURV.activitesDeclenchees', [])) || []);
 
 // Toutes les copies d'une même activité partagent leur racine : l'amendement
 // pose `parent_activite_id = parent_activite_id || id`. Comparer les racines
@@ -109,8 +112,8 @@ const activitesDeclenchees = () => new Set(services.callOr('SURV.activitesDeclen
 // sens comme dans l'autre.
 const racine = (act) => (act ? (act.parent_activite_id || act.id) : '');
 
-const racinesDeclenchees = () => {
-  const declenchees = activitesDeclenchees();
+const racinesDeclenchees = async () => {
+  const declenchees = await activitesDeclenchees();
   if (!declenchees.size) return new Set();
   const toutes = db.list('activites');
   const racines = new Set();
@@ -121,7 +124,12 @@ const racinesDeclenchees = () => {
   return racines;
 };
 
-const estVerrouillee = (act) => !!act && racinesDeclenchees().has(racine(act));
+// `racines` déjà calculées : une liste les obtient **une fois** et interroge
+// ensuite sans attendre. Sans ce paramètre, chaque élément d'une liste
+// rappellerait le bus — ce que la version synchrone faisait déjà, et qui
+// coûterait désormais un aller-retour par ligne.
+const estVerrouillee = async (act, racines) => !!act
+  && (racines || await racinesDeclenchees()).has(racine(act));
 
 const refusVerrou = (res) => res.status(409).json({
   error: 'activite_declenchee',
@@ -179,9 +187,9 @@ const familleDuPlan = (planId) => {
 // Profils concernés par un plan : ceux de son secteur / domaine, sinon tous.
 // `profils` — déjà resserrés sur l'instance du plan par la route appelante —
 // évite qu'un plan se compare aux notations d'un autre État ; à défaut, tous.
-const profilsDuPlan = (plan, profils) => {
+const profilsDuPlan = async (plan, profils) => {
   const secteurs = referentiels.getAll().secteurs || [];
-  return (profils || riskProfiles()).filter((p) => {
+  return (profils || await riskProfiles()).filter((p) => {
     if (plan.secteur_id) return p.secteur_id === plan.secteur_id;
     if (plan.domaine_id) {
       const sec = secteurs.find((s) => s.id === p.secteur_id);
@@ -192,9 +200,9 @@ const profilsDuPlan = (plan, profils) => {
 };
 
 // Écarts entre le plan et les profils de risque en vigueur.
-const ecartsRisques = (plan, profils) => {
+const ecartsRisques = async (plan, profils) => {
   const acts = db.list('activites').filter((a) => a.plan_id === plan.id);
-  return profilsDuPlan(plan, profils).map((p) => {
+  return (await profilsDuPlan(plan, profils)).map((p) => {
     const mesActs = acts.filter((a) => a.prestataire_id === p.prestataire_id);
     const courant = { risk_label: p.niveau || '', csrbo: p.csrbo || null };
     if (!mesActs.length) {

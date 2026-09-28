@@ -6,6 +6,7 @@
 //   2. l'archivage des dossiers clôturés, qui sépare l'actif du révolu ;
 //   3. les rappels adressés aux responsables d'une activité en attente.
 const referentiels = require('../../referentiels');
+const { asynchrone } = require('../../route');
 const auth = require('../../auth');
 const email = require('../../email');
 const db = require('./store');
@@ -308,7 +309,7 @@ module.exports = function register(app, deps, M) {
 
   // Suppression définitive : le super-administrateur du portail seul en
   // répond. Tout ce qui a été produit pour l'activité disparaît avec elle.
-  app.delete(`${A}/:id`, requireAuth, (req, res) => {
+  app.delete(`${A}/:id`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!reel || reel.role !== 'SUPERADMIN') {
       return reserve(res, 'super_admin');
@@ -319,13 +320,13 @@ module.exports = function register(app, deps, M) {
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : l'activité qui la porte ne se supprime plus.
     const fncs = dossier ? db.list('constatations').filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
-    if (suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
+    if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
     if (dossier) db.removeDossier(dossier.id);
     db.removeWhere('echanges', (e) => e.notification_id === n.id);
     db.removeWhere('rappels', (r) => r.notification_id === n.id);
     db.remove('notifications', n.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Rappels aux responsables ──
   app.get(`${M}/rappels`, requireAuth, (req, res) => {

@@ -1,6 +1,7 @@
 // Module « Exécution de la Surveillance » — plans validés, notifications,
 // échanges et accord (reprise intégrale des routes PESSCO).
 const referentiels = require('../../referentiels');
+const { asynchrone } = require('../../route');
 const services = require('../../services');
 const db = require('./store');
 const refModele = require('./references');
@@ -52,7 +53,7 @@ module.exports = function register(app, deps, M) {
   // Les activités déjà déclenchées (une notification existe pour elles ou
   // pour leur activité d'origine) sont écartées de la synchronisation et
   // remontées à part pour que l'interface les signale.
-  app.get(`${M}/plans-valides`, requireAuth, (req, res) => {
+  app.get(`${M}/plans-valides`, requireAuth, asynchrone(async (req, res) => {
     let scopePrest = null;
     if (R.estPrestataire(req.user)) {
       scopePrest = R.prestatairesDe(req.user);
@@ -66,7 +67,7 @@ module.exports = function register(app, deps, M) {
     // Les plans viennent de « Planification » avec l'instance qui les a
     // programmés : on ne déclenche que ceux de l'instance dont on tient le
     // poste. En vue régionale, tous.
-    const plans = parInstance(req, services.callOr('PLAN.plansValides', []));
+    const plans = parInstance(req, await services.callOr('PLAN.plansValides', []));
     const resultat = [];
     for (const p of plans) {
       let acts = (p.activites || []).map((a) => {
@@ -104,10 +105,10 @@ module.exports = function register(app, deps, M) {
       resultat.push({ ...p, nb_activites: retenues.length, activites: retenues, excluded_activites: exclues });
     }
     res.json(resultat);
-  });
+  }));
 
-  app.get(`${M}/plans-valides/:planId/activites`, requireAuth, (req, res) => {
-    const plans = services.callOr('PLAN.plansValides', []);
+  app.get(`${M}/plans-valides/:planId/activites`, requireAuth, asynchrone(async (req, res) => {
+    const plans = await services.callOr('PLAN.plansValides', []);
     const plan = plans.find((p) => p.id === req.params.planId);
     if (!plan) return introuvable(res, 'plan_valide');
     const prestataires = refs().prestataires || [];
@@ -123,7 +124,7 @@ module.exports = function register(app, deps, M) {
         secteur_nom: s.nom || '', type_supervision: ts.type_supervision || ts.libelle || '',
       };
     }));
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Notifications

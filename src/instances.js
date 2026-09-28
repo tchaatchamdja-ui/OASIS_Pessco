@@ -273,7 +273,12 @@ function visibles(rangs, coll, user, loadConfig) {
 // Référentiels et comptes se comptent ici ; les modules comptent eux-mêmes ce
 // qu'ils tiennent et le publient au bus. Le socle ne lit pas leurs données —
 // il leur demande.
-function volume(nom, deps, loadConfig) {
+// Asynchrone depuis l'étape A d'ADR-002 : `volumeParInstance` est publié par
+// chacun des six modules, et un module dont une collection passe en base rend
+// un compte par le réseau. C'est le seul point du socle que **tous** les
+// modules traversent — le rendre tolérant une fois évite de le reprendre à
+// chaque bascule.
+async function volume(nom, deps, loadConfig) {
   const n = String(nom || '').trim();
   const ici = locale(loadConfig);
   // Un enregistrement sans champ `instance` revient à l'instance locale : il
@@ -285,24 +290,28 @@ function volume(nom, deps, loadConfig) {
     compte += (tout[c] || []).filter(sien).length;
   });
   compte += ((deps && deps.utilisateurs) || []).filter(sien).length;
-  ((deps && deps.services) ? deps.services.list() : [])
-    .filter((s) => /\.volumeParInstance$/.test(s.nom || ''))
-    .forEach((s) => {
-      const par = deps.services.callOr(s.nom, {}) || {};
-      // Les modules comptent par valeur portée : la clé vide est la locale.
-      compte += Number(par[n] || 0) + (n === ici ? Number(par[''] || 0) : 0);
-    });
+  const publies = ((deps && deps.services) ? deps.services.list() : [])
+    .filter((s) => /\.volumeParInstance$/.test(s.nom || ''));
+  // En série, et non par `Promise.all` : l'ordre des comptes n'a pas
+  // d'importance, mais six requêtes simultanées sur la même base pour une page
+  // d'administration n'en ont pas davantage.
+  for (const s of publies) {
+    const par = (await deps.services.callOr(s.nom, {})) || {};
+    // Les modules comptent par valeur portée : la clé vide est la locale.
+    compte += Number(par[n] || 0) + (n === ici ? Number(par[''] || 0) : 0);
+  }
   return compte;
 }
 
 // Supprimer une instance : seulement si rien ne s'y rattache. Les données
 // d'une instance ne se déplacent pas ; les effacer avec elle ferait
 // disparaître des dossiers de surveillance sans trace.
-function supprimer(nom, loadConfig, deps) {
+// Asynchrone par `volume`, qu'elle interroge avant d'effacer.
+async function supprimer(nom, loadConfig, deps) {
   const n = String(nom || '').trim();
   if (!n || !liste(loadConfig).includes(n)) return { error: 'instance_inconnue' };
   if (n === locale(loadConfig)) return { error: 'instance_locale' };
-  const porte = volume(n, deps, loadConfig);
+  const porte = await volume(n, deps, loadConfig);
   if (porte) return { error: 'instance_non_vide', donnees: porte };
   const tout = store.load('instances', {}) || {};
   store.save('instances', {

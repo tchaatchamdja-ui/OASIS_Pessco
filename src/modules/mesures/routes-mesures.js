@@ -65,8 +65,12 @@ module.exports = function register(app, deps, M) {
   // S'y ajoutent celles que le module relève lui-même : tout ne vient pas d'un
   // acte de surveillance ou d'une inspection sur aire de trafic — un
   // signalement, un contrôle inopiné, une saisine appellent aussi une mesure.
-  const constatations = () => SOURCES
-    .flatMap((nom) => services.callOr(nom, []))
+  // Asynchrone depuis l'étape A d'ADR-002 : les deux producteurs — SURV et
+  // RAMP — liront leurs constatations en base. Ce module ne les lit jamais
+  // directement, il passe par le bus : c'est donc ici, et ici seulement, que
+  // la bascule se paiera.
+  const constatations = async () => (await Promise.all(SOURCES.map((nom) => services.callOr(nom, []))))
+    .flat()
     .filter(Boolean)
     .concat(db.list('constatations').map((c) => ({ ...c, origine: 'CARE' })));
 
@@ -77,16 +81,16 @@ module.exports = function register(app, deps, M) {
   // Index des constatations, construit une fois par requête. Le rebâtir pour
   // chaque mesure ferait reparcourir tous les écarts du module RAMP autant de
   // fois qu'il y a de mesures.
-  const indexConstatations = () => new Map(constatations().map((c) => [c.id, c]));
+  const indexConstatations = async () => new Map((await constatations()).map((c) => [c.id, c]));
 
   // Une mesure sort enrichie : le nom du prestataire et la référence de la
   // constatation liée se lisent à l'affichage, ils ne sont pas stockés.
   // `index` est l'index des constatations ; sans lui, il est construit ici —
   // ce qui ne vaut que pour une mesure isolée.
-  const enrichir = (m, index) => {
+  const enrichir = async (m, index) => {
     if (!m) return m;
     const p = (refs().prestataires || []).find((x) => x.id === m.prestataire_id) || {};
-    const c = (index || indexConstatations()).get(m.constatation_id) || {};
+    const c = (index || await indexConstatations()).get(m.constatation_id) || {};
     return {
       ...m,
       // Le référentiel nomme le prestataire quand la mesure l'identifie. Une
@@ -135,7 +139,7 @@ module.exports = function register(app, deps, M) {
   // Une mesure ne se lit que par un compte de l'Autorité, et dans sa portée.
   const lisible = (req, m) => R.canRead(req.user, perimetre(m));
 
-  app.get(`${M}/mesures`, requireAuth, (req, res) => {
+  app.get(`${M}/mesures`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
     const q = req.query || {};
     let liste = db.list('mesures');
@@ -145,9 +149,9 @@ module.exports = function register(app, deps, M) {
     if (q.constatation_id) liste = liste.filter((m) => m.constatation_id === q.constatation_id);
     liste = parInstance(req, liste).filter((m) => lisible(req, m));
     liste = liste.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
-    const index = indexConstatations();
-    res.json(liste.map((m) => enrichir(m, index)));
-  });
+    const index = await indexConstatations();
+    res.json(await Promise.all(liste.map((m) => enrichir(m, index))));
+  }));
 
   // ══════════════════════════════════════
   //  États exportables
@@ -195,11 +199,11 @@ module.exports = function register(app, deps, M) {
   const criteresLisibles = (paires) => paires.filter((x) => x[1])
     .map((x) => `${x[0]} : ${x[1]}`).join(' · ');
 
-  const carencesFiltrees = (req) => {
+  const carencesFiltrees = async (req) => {
     const q = req.query || {};
     const nomPrestataire = (id) => ((refs().prestataires || []).find((p) => p.id === id) || {}).nom || '';
     const cherche = String(q.recherche || '').trim().toLowerCase();
-    const liste = parInstance(req, listeCarences()).filter((c) => {
+    const liste = parInstance(req, await listeCarences()).filter((c) => {
       if (q.origine && (c.origine || 'SURV') !== q.origine) return false;
       if (q.statut && (c.statut_care || 'a_traiter') !== q.statut) return false;
       if (q.prestataire && c.prestataire_id !== q.prestataire) return false;
@@ -216,17 +220,17 @@ module.exports = function register(app, deps, M) {
     return { liste, criteres };
   };
 
-  app.get(`${M}/constatations/export.xlsx`, requireAuth, (req, res) => {
+  app.get(`${M}/constatations/export.xlsx`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
-    const { liste } = carencesFiltrees(req);
+    const { liste } = await carencesFiltrees(req);
     return envoyerClasseur(res, exports_.classeurCarences(liste), `carences-${jour()}.xlsx`);
-  });
+  }));
 
-  app.get(`${M}/constatations/export.pdf`, requireAuth, (req, res) => {
+  app.get(`${M}/constatations/export.pdf`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
-    const { liste, criteres } = carencesFiltrees(req);
+    const { liste, criteres } = await carencesFiltrees(req);
     return envoyerPdf(res, exports_.htmlCarences(liste, criteres), `carences-${jour()}.pdf`);
-  });
+  }));
 
   // Statut de suivi effectif d'une mesure — le même calcul qu'à l'écran.
   const suiviCourant = (m) => {
@@ -239,14 +243,18 @@ module.exports = function register(app, deps, M) {
     return 'attendu';
   };
 
-  const mesuresFiltrees = (req) => {
+  const mesuresFiltrees = async (req) => {
     const q = req.query || {};
-    const index = indexConstatations();
+    const index = await indexConstatations();
     const nomPrestataire = (id) => ((refs().prestataires || []).find((p) => p.id === id) || {}).nom || '';
     const cherche = String(q.recherche || '').trim().toLowerCase();
-    const liste = parInstance(req, db.list('mesures'))
+    // L'enrichissement précède les filtres, et il est attendu d'un bloc :
+    // enchaîner `.map(enrichir)` sur `.filter` ferait filtrer des promesses,
+    // qui passent toutes — la liste ne serait plus filtrée du tout.
+    const enrichies = await Promise.all(parInstance(req, db.list('mesures'))
       .filter((m) => lisible(req, m))
-      .map((m) => enrichir(m, index))
+      .map((m) => enrichir(m, index)));
+    const liste = enrichies
       .filter((m) => {
         if (q.categorie && m.categorie !== q.categorie) return false;
         if (q.prestataire && m.prestataire_id !== q.prestataire) return false;
@@ -264,7 +272,10 @@ module.exports = function register(app, deps, M) {
       attendu: 'Plan attendu', en_cours: 'En cours de mise en œuvre', solde: 'Soldé',
       sans_suite: 'Sans suite', sans_objet: 'Suivi sans objet', recours: 'Recours',
     };
-    const refCarence = (id) => (constatations().find((c) => c.id === id) || {}).reference || '';
+    // L'index une seule fois : `refCarence` est appelée dans une liste, et
+    // relire le bus par ligne coûterait un aller-retour par critère.
+    const parId = await indexConstatations();
+    const refCarence = (id) => (parId.get(id) || {}).reference || '';
     const criteres = criteresLisibles([
       ['Carence', refCarence(q.carence)],
       ['Catégorie', libelle('categories', q.categorie) || q.categorie || ''],
@@ -280,24 +291,24 @@ module.exports = function register(app, deps, M) {
     };
   };
 
-  app.get(`${M}/mesures/export.xlsx`, requireAuth, (req, res) => {
+  app.get(`${M}/mesures/export.xlsx`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
-    const { liste, cat, typ } = mesuresFiltrees(req);
+    const { liste, cat, typ } = await mesuresFiltrees(req);
     return envoyerClasseur(res, exports_.classeurMesures(liste, cat, typ), `mesures-${jour()}.xlsx`);
-  });
+  }));
 
-  app.get(`${M}/mesures/export.pdf`, requireAuth, (req, res) => {
+  app.get(`${M}/mesures/export.pdf`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
-    const { liste, criteres, cat, typ } = mesuresFiltrees(req);
+    const { liste, criteres, cat, typ } = await mesuresFiltrees(req);
     return envoyerPdf(res, exports_.htmlMesures(liste, criteres, cat, typ), `mesures-${jour()}.pdf`);
-  });
+  }));
 
-  app.get(`${M}/mesures/:id`, requireAuth, (req, res) => {
+  app.get(`${M}/mesures/:id`, requireAuth, asynchrone(async (req, res) => {
     const m = db.get('mesures', req.params.id);
     if (!m) return introuvable(res, 'mesure');
     if (!lisible(req, m)) return refuser(res);
-    res.json(enrichir(m));
-  });
+    return res.json(await enrichir(m));
+  }));
 
   // Constatations sur lesquelles une mesure peut être prise. Le module
   // Exécution les fournit ; il en donne aussi la criticité, dont dépend
@@ -308,7 +319,7 @@ module.exports = function register(app, deps, M) {
   const nomPrestataire = (id) => ((refs().prestataires || [])
     .find((p) => p.id === id) || {}).nom || '';
 
-  const listeCarences = () => {
+  const listeCarences = async () => {
     const mesures = db.list('mesures');
     const parId = new Map((refs().prestataires || []).map((p) => [p.id, p.nom]));
     const classements = new Map(db.list('classements').map((x) => [x.constatation_id, x]));
@@ -324,7 +335,7 @@ module.exports = function register(app, deps, M) {
       if (!liees.length || !liees.every((m) => m.statut === 'cloturee' || m.statut === 'annulee')) return '';
       return liees.map((m) => m.date_cloture || '').filter(Boolean).sort().pop() || '';
     };
-    return constatations().map((c) => {
+    return (await constatations()).map((c) => {
       const liees = mesures.filter((m) => m.constatation_id === c.id);
       const classee = classements.get(c.id) || null;
       // Statut au sens des mesures d'application : il dit où en est la
@@ -377,15 +388,15 @@ module.exports = function register(app, deps, M) {
     });
   };
 
-  app.get(`${M}/constatations`, requireAuth, (req, res) => {
+  app.get(`${M}/constatations`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
-    return res.json(parInstance(req, listeCarences()));
-  });
+    return res.json(parInstance(req, await listeCarences()));
+  }));
 
   // Classement : l'autorité décide qu'aucune mesure ne sera prise. La décision
   // est consignée ici, quelle que soit l'origine de l'infraction.
-  app.post(`${M}/constatations/:id/classer`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.post(`${M}/constatations/:id/classer`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'infraction');
     if (!R.canValidate(req.user, perimetre(c))) return reserve(res, 'validateur');
     if (db.list('mesures').some((m) => m.constatation_id === c.id)) {
@@ -404,7 +415,7 @@ module.exports = function register(app, deps, M) {
       date_creation: db.now(),
     });
     return res.status(201).json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Traitement d'une carence — fil d'avancement
@@ -428,8 +439,7 @@ module.exports = function register(app, deps, M) {
   // par le bus. Aucun des deux producteurs n'est requis : sans eux, la section
   // se présente vide plutôt que de faire échouer l'écran.
   const SOURCES_PAC = ['SURV.pacDeConstatation', 'RAMP.pacDeConstatation'];
-  const pacDe = (id) => SOURCES_PAC
-    .map((nom) => services.callOr(nom, {}))
+  const pacDe = async (id) => (await Promise.all(SOURCES_PAC.map((nom) => services.callOr(nom, {}))))
     .map((tout) => (tout || {})[id])
     .find(Boolean) || null;
 
@@ -437,8 +447,8 @@ module.exports = function register(app, deps, M) {
 
   // Le traitement sort avec le plan d'actions qui l'a motivé : l'écran les lit
   // ensemble, il n'a pas à les demander séparément.
-  app.get(`${M}/constatations/:id/traitement`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.get(`${M}/constatations/:id/traitement`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const t = traitementDe(c.id);
@@ -476,16 +486,16 @@ module.exports = function register(app, deps, M) {
       mesures: db.list('mesures')
         .filter((m) => m.constatation_id === c.id)
         .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || ''))),
-      pac: pacDe(c.id),
+      pac: await pacDe(c.id),
       etapes: ETAPES,
     });
-  });
+  }));
 
   // Informations recueillies et pièces jointes : de la contribution. La
   // décision, elle, engage l'autorité — elle relève du validateur et passe par
   // sa propre route.
-  app.put(`${M}/constatations/:id/traitement`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.put(`${M}/constatations/:id/traitement`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const d = req.body || {};
@@ -502,7 +512,7 @@ module.exports = function register(app, deps, M) {
       });
     }
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Investigation ──
   // Rassembler les preuves matérielles et documentaires pour établir les faits :
@@ -527,8 +537,8 @@ module.exports = function register(app, deps, M) {
     rapport: texte(d.rapport),
   });
 
-  app.put(`${M}/constatations/:id/investigation`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.put(`${M}/constatations/:id/investigation`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const t = traitementDe(c.id);
@@ -543,14 +553,14 @@ module.exports = function register(app, deps, M) {
     if (avant.soumise_le) return fige(res, 'investigation', 'soumis');
     db.update('traitements', t.id, { investigation: investigation(req.body || {}) });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // Soumettre l'investigation : elle est close, ses éléments ne se réécrivent
   // plus, et le traitement passe à « Qualification et Mesures ». Comme la
   // décision qui l'avait ouverte, ce geste fait avancer le fil : il relève du
   // validateur.
-  app.post(`${M}/constatations/:id/investigation/soumettre`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.post(`${M}/constatations/:id/investigation/soumettre`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canValidate(req.user, perimetre(c))) return reserve(res, 'validateur');
     const t = traitementDe(c.id);
@@ -564,14 +574,14 @@ module.exports = function register(app, deps, M) {
       investigation: { ...inv, soumise_le: db.now(), soumise_par: req.user.username },
     });
     return res.status(201).json({ status: 'ok', etape: 'qualification' });
-  });
+  }));
 
   // Rapport d'investigation en PDF : l'instance décisionnelle reçoit
   // l'investigation entière sous une forme qui se transmet et s'archive. Le
   // document est composé à la demande — rien n'est stocké, il suit toujours
   // l'état de l'investigation.
   app.get(`${M}/constatations/:id/rapport-investigation.pdf`, requireAuth, asynchrone(async (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const t = traitementDe(c.id);
@@ -604,7 +614,7 @@ module.exports = function register(app, deps, M) {
   // renseignée. Le document est composé à la demande : rien n'est stocké, il
   // suit toujours l'état du dossier.
   app.get(`${M}/constatations/:id/etapes/:cle.pdf`, requireAuth, asynchrone(async (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canRead(req.user, perimetre(c))) return refuser(res);
     const cle = String(req.params.cle || '');
@@ -621,7 +631,7 @@ module.exports = function register(app, deps, M) {
       mesures: db.list('mesures')
         .filter((m) => m.constatation_id === c.id)
         .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || ''))),
-      pac: pacDe(c.id),
+      pac: await pacDe(c.id),
       aac: instances.aacDe(instances.de(c, loadConfig), loadConfig),
       // Les types d'investigation et de mesure ne partagent pas leur registre :
       // l'étape dit lequel elle nomme.
@@ -782,8 +792,8 @@ module.exports = function register(app, deps, M) {
     };
   };
 
-  app.put(`${M}/constatations/:id/qualification`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.put(`${M}/constatations/:id/qualification`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const t = traitementDe(c.id);
@@ -802,14 +812,14 @@ module.exports = function register(app, deps, M) {
     q.mesures = q.mesures.map((m, rang) => recoursApplique(m, avant[rang]));
     db.update('traitements', t.id, { qualification: q });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Issues de l'étape « Qualification et Mesures » ──
   // Trois sorties : renvoyer pour complément d'enquête, classer faute
   // d'infraction, ou passer au suivi des mesures. Chacune fait avancer — ou
   // reculer — le fil : elles relèvent du validateur, comme les décisions.
-  const carenceAQualifier = (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  const carenceAQualifier = async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) { introuvable(res, 'carence'); return null; }
     if (!R.canValidate(req.user, perimetre(c))) { reserve(res, 'validateur'); return null; }
     const t = traitementDe(c.id);
@@ -823,8 +833,8 @@ module.exports = function register(app, deps, M) {
   // Renvoi : l'instance veut un complément d'enquête. Le fil recule d'une
   // étape, l'investigation redevient modifiable, et le motif du renvoi s'y
   // affiche — l'équipe doit savoir ce qui lui est demandé.
-  app.post(`${M}/constatations/:id/qualification/renvoyer`, requireAuth, (req, res) => {
-    const ctx = carenceAQualifier(req, res);
+  app.post(`${M}/constatations/:id/qualification/renvoyer`, requireAuth, asynchrone(async (req, res) => {
+    const ctx = await carenceAQualifier(req, res);
     if (!ctx) return undefined;
     const q = ctx.t.qualification || {};
     if (!q.renvoi_demande) {
@@ -843,12 +853,12 @@ module.exports = function register(app, deps, M) {
       qualification: { ...q, renvoi_demande: false, renvoi_motif: '' },
     });
     return res.status(201).json({ status: 'ok', etape: 'investigations' });
-  });
+  }));
 
   // Classement : l'infraction n'est pas constituée, aucune mesure ne sera
   // prise. La carence est close ici, comme au classement de la suite à donner.
-  app.post(`${M}/constatations/:id/qualification/classer`, requireAuth, (req, res) => {
-    const ctx = carenceAQualifier(req, res);
+  app.post(`${M}/constatations/:id/qualification/classer`, requireAuth, asynchrone(async (req, res) => {
+    const ctx = await carenceAQualifier(req, res);
     if (!ctx) return undefined;
     const q = ctx.t.qualification || {};
     if (!q.infraction_non_constituee) {
@@ -869,7 +879,7 @@ module.exports = function register(app, deps, M) {
       classe_le: db.now(), classe_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok' });
-  });
+  }));
 
   // Les mesures arrêtées par l'instance entrent au registre des mesures : c'est
   // là qu'elles se notifient, se suivent et se clôturent. Elles y arrivent en
@@ -966,8 +976,8 @@ module.exports = function register(app, deps, M) {
     return creees;
   };
 
-  app.post(`${M}/constatations/:id/qualification/suivi`, requireAuth, (req, res) => {
-    const ctx = carenceAQualifier(req, res);
+  app.post(`${M}/constatations/:id/qualification/suivi`, requireAuth, asynchrone(async (req, res) => {
+    const ctx = await carenceAQualifier(req, res);
     if (!ctx) return undefined;
     const q = ctx.t.qualification || {};
     if (!q.infraction_constituee) {
@@ -978,13 +988,13 @@ module.exports = function register(app, deps, M) {
       etape: 'suivi', qualifie_le: db.now(), qualifie_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok', etape: 'suivi', mesures: creees });
-  });
+  }));
 
   // Clôture directe : les mesures sont arrêtées, mais aucune n'appelle le suivi
   // de sa mise en œuvre. Le dossier passe à la dernière étape et s'y ferme, sans
   // ouvrir un suivi que rien n'alimenterait.
-  app.post(`${M}/constatations/:id/qualification/cloturer`, requireAuth, (req, res) => {
-    const ctx = carenceAQualifier(req, res);
+  app.post(`${M}/constatations/:id/qualification/cloturer`, requireAuth, asynchrone(async (req, res) => {
+    const ctx = await carenceAQualifier(req, res);
     if (!ctx) return undefined;
     const q = ctx.t.qualification || {};
     if (!q.infraction_constituee) {
@@ -1008,7 +1018,7 @@ module.exports = function register(app, deps, M) {
       cloture_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok', etape: 'suivi', clos: true, mesures: creees });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Étape « Suivi des Mesures »
@@ -1018,8 +1028,8 @@ module.exports = function register(app, deps, M) {
   // — s'inscrit sur la mesure elle-même, et le menu Mesures le lit aussitôt.
   const SUIVI_STATUTS = ['attendu', 'en_cours', 'solde', 'sans_suite', 'sans_objet', 'recours'];
 
-  app.put(`${M}/constatations/:id/suivi`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.put(`${M}/constatations/:id/suivi`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!peutEcrire(req, c)) return refuser(res);
     const t = traitementDe(c.id);
@@ -1063,12 +1073,12 @@ module.exports = function register(app, deps, M) {
       },
     });
     return res.json({ status: 'ok', mesures: majes.length });
-  });
+  }));
 
   // Contexte commun aux deux issues du suivi : elles engagent l'autorité, donc
   // relèvent du validateur, et ne valent que sur un dossier ouvert.
-  const carenceEnSuivi = (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  const carenceEnSuivi = async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) { introuvable(res, 'carence'); return null; }
     if (!R.canValidate(req.user, perimetre(c))) { reserve(res, 'validateur'); return null; }
     const t = traitementDe(c.id);
@@ -1085,8 +1095,8 @@ module.exports = function register(app, deps, M) {
 
   // Clôture de la carence : le suivi est terminé. Un recours en cours l'en
   // empêche — le dossier ne se ferme pas sur une contestation non tranchée.
-  app.post(`${M}/constatations/:id/suivi/cloturer`, requireAuth, (req, res) => {
-    const ctx = carenceEnSuivi(req, res);
+  app.post(`${M}/constatations/:id/suivi/cloturer`, requireAuth, asynchrone(async (req, res) => {
+    const ctx = await carenceEnSuivi(req, res);
     if (!ctx) return undefined;
     const contestees = db.list('mesures')
       .filter((m) => m.constatation_id === ctx.c.id && m.recours_intente);
@@ -1099,14 +1109,14 @@ module.exports = function register(app, deps, M) {
       cloture_le: db.now(), cloture_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok', clos: true });
-  });
+  }));
 
   // Action de recours : le prestataire conteste une ou plusieurs mesures. Le
   // fil recule à la qualification, où l'instance examinera chaque recours.
   // Chaque mesure contestée porte sa marque sur la mesure arrêtée qui lui
   // correspond — c'est là que la section « Recours » ira la lire.
-  app.post(`${M}/constatations/:id/suivi/recours`, requireAuth, (req, res) => {
-    const ctx = carenceEnSuivi(req, res);
+  app.post(`${M}/constatations/:id/suivi/recours`, requireAuth, asynchrone(async (req, res) => {
+    const ctx = await carenceEnSuivi(req, res);
     if (!ctx) return undefined;
     const contestees = db.list('mesures')
       .filter((m) => m.constatation_id === ctx.c.id && m.recours_intente);
@@ -1129,10 +1139,10 @@ module.exports = function register(app, deps, M) {
       recours_ouvert_par: req.user.username,
     });
     return res.status(201).json({ status: 'ok', etape: 'qualification', mesures: contestees.length });
-  });
+  }));
 
-  app.post(`${M}/constatations/:id/decision`, requireAuth, (req, res) => {
-    const c = constatations().find((x) => x.id === req.params.id);
+  app.post(`${M}/constatations/:id/decision`, requireAuth, asynchrone(async (req, res) => {
+    const c = (await constatations()).find((x) => x.id === req.params.id);
     if (!c) return introuvable(res, 'carence');
     if (!R.canValidate(req.user, perimetre(c))) return reserve(res, 'validateur');
     const d = req.body || {};
@@ -1173,7 +1183,7 @@ module.exports = function register(app, deps, M) {
       });
     }
     return res.status(201).json({ status: 'ok', etape: patch.etape });
-  });
+  }));
 
   // Le classement se retire : une décision prise par erreur ne doit pas
   // enfermer l'infraction.
@@ -1251,12 +1261,12 @@ module.exports = function register(app, deps, M) {
   //  Écriture
   // ══════════════════════════════════════
 
-  app.post(`${M}/mesures`, requireAuth, (req, res) => {
+  app.post(`${M}/mesures`, requireAuth, asynchrone(async (req, res) => {
     const d = req.body || {};
     if (!peutEcrire(req, d)) return refuser(res);
     // Une mesure suit la carence qu'elle sanctionne : elle appartient à
     // l'instance qui a ouvert le dossier, non à celle d'où on la saisit.
-    const carence = indexConstatations().get(texte(d.constatation_id));
+    const carence = (await indexConstatations()).get(texte(d.constatation_id));
     const m = {
       id: db.uid('mes'),
       reference: db.prochaineReference(),
@@ -1272,7 +1282,7 @@ module.exports = function register(app, deps, M) {
     };
     db.insert('mesures', m);
     res.status(201).json({ status: 'ok', id: m.id, reference: m.reference });
-  });
+  }));
 
   app.put(`${M}/mesures/:id`, requireAuth, (req, res) => {
     const m = db.get('mesures', req.params.id);
@@ -1384,13 +1394,13 @@ module.exports = function register(app, deps, M) {
   //  Indicateurs par prestataire
   // ══════════════════════════════════════
 
-  app.get(`${M}/indicateurs`, requireAuth, (req, res) => {
+  app.get(`${M}/indicateurs`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.user, null)) return refuser(res);
     const prestataireId = String((req.query || {}).prestataire_id || '');
     if (!prestataireId) return requis(res, 'prestataire');
     const aujourdhui = new Date().toISOString().slice(0, 10);
 
-    const consts = parInstance(req, constatations())
+    const consts = parInstance(req, await constatations())
       .filter((c) => c.prestataire_id === prestataireId);
     const soldees = consts.filter((c) => c.statut === 'soldee');
     const enRetard = consts.filter((c) => c.statut !== 'soldee'
@@ -1422,7 +1432,7 @@ module.exports = function register(app, deps, M) {
       total_mesures: mesures.length,
       mesures_par_statut: parStatut,
     });
-  });
+  }));
 };
 
 module.exports.STATUTS = STATUTS;

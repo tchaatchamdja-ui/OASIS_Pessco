@@ -276,18 +276,26 @@ app.get('/api/instance', requireAuth, (req, res) => res.json(instances.etat(req.
 // les modules disent eux-mêmes ce qu'ils tiennent.
 const depsInstances = () => ({ services, utilisateurs: auth.getUsers() });
 
-app.get('/api/instances', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.get('/api/instances', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
   const ici = instances.locale(loadConfig);
   const d = depsInstances();
-  res.json(instances.liste(loadConfig).map((nom) => ({
-    nom,
-    locale: nom === ici,
-    active: instances.estActive(nom),
-    donnees: instances.volume(nom, d, loadConfig),
-    aac: instances.aacDe(nom, loadConfig).sigle || '',
-  })));
-});
+  // `volume` interroge les six modules par le bus : la boucle attend chacun.
+  // `map` rendrait ici un tableau de promesses, que `res.json` sérialiserait
+  // en autant d'objets vides — sans erreur, et l'écran montrerait zéro donnée
+  // partout. C'est le piège type de l'étape A, et il ne lève rien.
+  const lignes = [];
+  for (const nom of instances.liste(loadConfig)) {
+    lignes.push({
+      nom,
+      locale: nom === ici,
+      active: instances.estActive(nom),
+      donnees: await instances.volume(nom, d, loadConfig),
+      aac: instances.aacDe(nom, loadConfig).sigle || '',
+    });
+  }
+  return res.json(lignes);
+}));
 
 app.put('/api/instances/:nom/activite', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
@@ -297,13 +305,13 @@ app.put('/api/instances/:nom/activite', requireAuth, requireRole('SUPERADMIN'), 
   return res.json({ ok: true, ...r });
 });
 
-app.delete('/api/instances/:nom', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.delete('/api/instances/:nom', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
-  const r = instances.supprimer(req.params.nom, loadConfig, depsInstances());
+  const r = await instances.supprimer(req.params.nom, loadConfig, depsInstances());
   if (r.error) return res.status(400).json(r);
   audit.log(req.user.username, 'INSTANCE_SUPPRIMEE', { instance: r.instance });
   return res.json({ ok: true, ...r });
-});
+}));
 
 // Ouvrir une instance : le dispositif s'étend sans toucher au fichier de
 // configuration. Réservé au régional, seul à voir au-delà de la sienne.

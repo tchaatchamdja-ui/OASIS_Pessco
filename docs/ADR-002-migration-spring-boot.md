@@ -314,6 +314,50 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        par les magasins de module, 5 gestionnaires de route asynchrones sur 386. Chaque appel
        qui lit pour réécrire devient un `modifier` ; chaque suite garde sa bascule.
 
+       **Étape A — le bus rendu asynchrone par contrat, faite le 28 septembre 2026.**
+
+       Le graphe du bus a été relevé avant de choisir : **il n'a qu'une seule composante**.
+       PLAN et SURV forment un cycle (`PLAN.plansValides` ↔ `SURV.activitesDeclenchees`), et
+       `src/instances.js` consomme `volumeParInstance` de **chacun** des six modules.
+       « Avancer par grappes de bus » n'est donc pas une voie intermédiaire : c'est le grand
+       soir — 15 collections et 386 gestionnaires d'un coup.
+
+       D'où cette étape, qui n'est ni l'une ni l'autre : `services.call` et `callOr` rendent
+       désormais une promesse **quoi que fasse le producteur**. Faite pendant que tous les
+       producteurs sont encore synchrones, elle se vérifie sous les contrôles existants —
+       `await` sur une valeur qui n'est pas une promesse la rend telle quelle. Le jour de
+       chaque bascule, il n'y aura plus rien à reprendre chez les consommateurs.
+
+       | | |
+       |---|---|
+       | Consommations du bus converties | **7**, dans 6 fichiers |
+       | Gestionnaires de route enveloppés | **57** au total |
+       | Fichiers touchés | **14** |
+       | Lignes | **+367 / −190** |
+       | Contrôles | **757, verts — et 757 avec `OASIS_BUS_DIFFERE=1`** |
+
+       `OASIS_BUS_DIFFERE=1` rend tout producteur asynchrone : c'est la mise en situation de
+       la bascule, et **la recette de chacune des suivantes**. Deux contrôles de forme s'y
+       ajoutent — aucun appel au bus consommé sans `await`, tout gestionnaire asynchrone
+       enveloppé — et trois contrôles de comportement sur le contrat du bus.
+
+       **Ce que l'étape a ouvert, et qui reste à fermer.** Les cinq suppressions gardées par
+       `src/suites_care.js` — trois dans SURV, une dans RAMP, une sur les constatations —
+       **vérifient auprès de CARE puis effacent**. Tant que le bus était synchrone, rien ne
+       s'intercalait entre les deux gestes. Ce n'est plus vrai : entre la vérification et
+       l'effacement, CARE peut avoir prononcé une mesure sur la constatation qu'on supprime.
+       La vérification lit les données d'un module et l'effacement écrit celles d'un autre :
+       **aucun `modifier` ne couvre les deux**. Il y faudra une transaction entre modules —
+       ce que PostgreSQL donnera, et qu'un répertoire de fichiers n'a jamais donné. En
+       attendant, la fenêtre est bornée (rien n'est attendu entre les deux gestes, et ces
+       suppressions sont réservées aux administrateurs), et le sens du refus protège du pire :
+       un `await` oublié refuserait *toutes* les suppressions au lieu de les laisser passer.
+
+       **Étape B — les collections, par ordre croissant de propagation** : `mfa_challenges`
+       (1 fichier) → les journaux (3, 2) → `emails` (5) → `users`/`sessions` (8) →
+       `module_rights` (16) → `instances` (18) → `referentiels` (24) → les cinq collections
+       de module.
+
        **Première collection passée le 28 septembre 2026** : `ramp_aeronefs`, la nomenclature
        des aéronefs — la plus isolée qui soit encore gardée. 8 fonctions de magasin, 7 routes,
        9 fichiers touchés, +213/−109 lignes, **299 contrôles verts dans les deux régimes**.

@@ -319,7 +319,7 @@ module.exports = function register(app, deps, M) {
 
   // Une activité supprimée redevient « à notifier » : notification, dossier,
   // constatations et rapports associés disparaissent.
-  app.delete(`${M}/activites/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/activites/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     const notif = db.list('notifications').find((n) => n.activite_id === req.params.id);
     if (notif) {
@@ -327,18 +327,18 @@ module.exports = function register(app, deps, M) {
       // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
       // été décidé : l'acte qui la porte ne se défait plus.
       const fncs = dossier ? db.list('constatations').filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
-      if (suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
+      if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
       if (dossier) db.removeDossier(dossier.id);
       db.removeWhere('echanges', (e) => e.notification_id === notif.id);
       db.remove('notifications', notif.id);
     }
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Tableau de bord
   // ══════════════════════════════════════
-  app.get(`${M}/dashboard-stats`, requireAuth, (req, res) => {
+  app.get(`${M}/dashboard-stats`, requireAuth, asynchrone(async (req, res) => {
     const maintenant = new Date();
     const annee = maintenant.getFullYear();
     const debutAnnee = `${annee}-01-01`;
@@ -365,7 +365,7 @@ module.exports = function register(app, deps, M) {
 
     // Activités planifiées : le module Planification reste la source, et les
     // plans y portent l'instance qui les a programmés.
-    const plans = parInstance(req, services.callOr('PLAN.plansValides', []));
+    const plans = parInstance(req, await services.callOr('PLAN.plansValides', []));
     let activites = [];
     plans.forEach((p) => { activites = activites.concat((p.activites || []).map((a) => ({ ...a, annee: p.annee }))); });
     if (prestataire) activites = activites.filter((a) => miens.includes(a.prestataire_id));
@@ -390,7 +390,7 @@ module.exports = function register(app, deps, M) {
       rapports_total_ytd: rapports.length,
       rapports_transmis_ytd: rapports.filter((r) => r.statut === 'transmis').length,
     });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Pièces jointes

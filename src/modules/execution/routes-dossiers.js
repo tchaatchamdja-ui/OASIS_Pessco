@@ -269,14 +269,14 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok', statut: 'cloture' });
   });
 
-  app.delete(`${M}/dossiers/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     const d = db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : le dossier qui la porte ne se supprime plus.
     const fncs = db.list('constatations').filter((c) => c.dossier_id === d.id).map((c) => c.id);
-    if (suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
+    if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
     db.removeDossier(d.id);
     // La notification part aussi : l'activité redevient « à notifier ».
     if (d.notification_id) {
@@ -284,7 +284,7 @@ module.exports = function register(app, deps, M) {
       db.remove('notifications', d.notification_id);
     }
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Constatations (FNC) et plans d'actions correctives (PAC)
@@ -930,11 +930,11 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok', statut: 'ouvert', destinataires: remise.destinataires, envoye: remise.envoye });
   }));
 
-  app.delete(`${M}/constatations/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     if (!db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
-    if (suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
+    if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
     db.remove('constatations', req.params.id);
     res.json({ status: 'ok' });
-  });
+  }));
 };

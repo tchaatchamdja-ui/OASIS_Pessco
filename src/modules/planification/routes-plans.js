@@ -1,6 +1,7 @@
 // Module « Planification de la Surveillance » — référentiels partagés,
 // contexte, statistiques et plans.
 const referentiels = require('../../referentiels');
+const { asynchrone } = require('../../route');
 const moduleRights = require('../../module_rights');
 const { valider } = require('../../valider');
 const db = require('./store');
@@ -39,7 +40,7 @@ module.exports = function register(app, deps, M) {
   // Les profils de risque viennent du module voisin par le bus : le bus ignore
   // qui l'interroge, l'instance regardée se pose donc ici, comme sur les plans.
   app.get('/api/shared/risk-profiles', requireAuth, lecture,
-    (req, res) => res.json(parInstance(req, D.riskProfiles())));
+    asynchrone(async (req, res) => res.json(parInstance(req, await D.riskProfiles()))));
   // Même contrat, exposé en HTTP pour les fronts des autres modules. Un front
   // demande ce que son compte a le droit de voir : l'instance regardée borne
   // donc la réponse, ici comme sur les autres listes.
@@ -48,7 +49,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/plans-valides`, requireAuth, lecture,
     (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
   app.get(`${M}/risk-profiles`, requireAuth, lecture,
-    (req, res) => res.json(parInstance(req, D.riskProfiles())));
+    asynchrone(async (req, res) => res.json(parInstance(req, await D.riskProfiles()))));
 
   // Contexte du module (utilisateur + rôle M2)
   app.get(`${M}/context`, requireAuth, (req, res) => {
@@ -144,17 +145,17 @@ module.exports = function register(app, deps, M) {
     })));
   });
 
-  app.get(`${M}/plans/:id`, requireAuth, (req, res) => {
+  app.get(`${M}/plans/:id`, requireAuth, asynchrone(async (req, res) => {
     const p = db.list('plans').find((x) => x.id === req.params.id);
     if (!p) return res.status(404).json({ error: 'not_found' });
     if (!D.peutLire(req, p)) return D.refus(res);
     // L'écran de détail lit ses activités ici : le verrou d'exécution doit
     // donc y figurer, comme sur /all-activites.
-    const racines = D.racinesDeclenchees();
+    const racines = await D.racinesDeclenchees();
     const activites = db.list('activites').filter((a) => a.plan_id === p.id)
       .map((a) => ({ ...a, verrouillee: racines.has(D.racine(a)) ? 1 : 0 }));
     return res.json({ ...p, activites, nb_activites: activites.length });
-  });
+  }));
 
   // Le corps validé — et lui seul — entre en base : `req.body` y faisait entrer
   // tout le reste, à commencer par `statut`, qui n'appartient qu'au circuit.

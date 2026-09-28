@@ -2,6 +2,7 @@
 // Une activité déclenchée dans « Exécution de la Surveillance » ne se réécrit
 // plus : le verrou est porté par `domaine.js` et appliqué ici.
 const { valider } = require('../../valider');
+const { asynchrone } = require('../../route');
 const db = require('./store');
 const D = require('./domaine');
 const instances = require('../../instances');
@@ -14,12 +15,17 @@ module.exports = function register(app, deps, M) {
   const parInstance = (req, rangs) => instances.filtrer(rangs,
     instances.courante(req.user, loadConfig), loadConfig);
 
-  app.get(`${M}/plans/:id/activites`, requireAuth, (req, res) => {
+  app.get(`${M}/plans/:id/activites`, requireAuth, asynchrone(async (req, res) => {
     const plan = D.planDe(req.params.id);
     if (!D.peutLire(req, plan)) return D.refus(res);
+    // Les racines déclenchées une seule fois, avant la liste : `map` avec un
+    // appel asynchrone rendrait un tableau de promesses, que `res.json`
+    // sérialiserait en objets vides — toutes les activités paraîtraient
+    // déverrouillées, sans la moindre erreur.
+    const racines = await D.racinesDeclenchees();
     return res.json(db.list('activites').filter((a) => a.plan_id === req.params.id)
-      .map((a) => ({ ...a, verrouillee: D.estVerrouillee(a) ? 1 : 0 })));
-  });
+      .map((a) => ({ ...a, verrouillee: racines.has(D.racine(a)) ? 1 : 0 })));
+  }));
 
   // Les deux règles communes aux dates : une activité commence dans l'année de
   // son plan — c'est le plan qui la déclare — et ne se termine pas avant
@@ -51,11 +57,11 @@ module.exports = function register(app, deps, M) {
   });
 
   // Statut et version du plan portés par chaque activité (vue Calendrier)
-  app.get(`${M}/all-activites`, requireAuth, (req, res) => {
+  app.get(`${M}/all-activites`, requireAuth, asynchrone(async (req, res) => {
     if (!D.peutLire(req)) return D.refus(res);
     const plans = {};
     db.list('plans').forEach((p) => { plans[p.id] = p; });
-    const racines = D.racinesDeclenchees();
+    const racines = await D.racinesDeclenchees();
     return res.json(parInstance(req, db.list('activites')).filter((a) => D.peutLire(req, plans[a.plan_id])).map((a) => ({
       ...a,
       plan_statut: (plans[a.plan_id] || {}).statut || '',
@@ -63,16 +69,16 @@ module.exports = function register(app, deps, M) {
       plan_version: (plans[a.plan_id] || {}).version || 1,
       verrouillee: racines.has(D.racine(a)) ? 1 : 0,
     })));
-  });
+  }));
 
-  app.put(`${M}/activites/:id`, requireAuth, valider(D.SCHEMA_ACTIVITE, { effacer: true }), (req, res) => {
+  app.put(`${M}/activites/:id`, requireAuth, valider(D.SCHEMA_ACTIVITE, { effacer: true }), asynchrone(async (req, res) => {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
-    if (act && D.estVerrouillee(act)) return D.refusVerrou(res);
+    if (act && await D.estVerrouillee(act)) return D.refusVerrou(res);
     if (refusDates(res, act && D.planDe(act.plan_id), { ...act, ...req.valide })) return undefined;
     const rec = db.update('activites', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
-  });
+  }));
 
   // Sortie des archives d'une activité prise isolément. Son plan reste
   // archivé : l'exception est portée par l'activité, que « Exécution de la
@@ -97,10 +103,10 @@ module.exports = function register(app, deps, M) {
     return res.json(db.update('activites', act.id, { desarchivee: 0, desarchiver_le: '', desarchiver_par: '' }));
   });
 
-  app.delete(`${M}/activites/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/activites/:id`, requireAuth, asynchrone(async (req, res) => {
     const act = db.list('activites').find((a) => a.id === req.params.id);
     if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
-    if (act && D.estVerrouillee(act)) return D.refusVerrou(res);
+    if (act && await D.estVerrouillee(act)) return D.refusVerrou(res);
     return res.json({ ok: db.remove('activites', req.params.id) });
-  });
+  }));
 };

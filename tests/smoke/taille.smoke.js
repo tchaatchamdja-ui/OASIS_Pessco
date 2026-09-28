@@ -431,6 +431,12 @@ module.exports = async function tailleSmoke() {
   // valide sans enveloppe, et le jour où il échoue est le seul où cela se voit.
   // Ce contrôle est donc la seule chose qui tienne la règle, et il compte
   // d'autant plus que la bascule du magasin rend ces gestionnaires nombreux.
+  // Ce qui distingue un gestionnaire d'une aide : le gestionnaire est **passé
+  // en argument** — `app.post(chemin, requireAuth, async (req, res) => …` —,
+  // l'aide est **affectée** — `const carenceEnSuivi = async (req, res) => …`.
+  // Seul le premier est appelé par Express, donc seul le premier a besoin de
+  // l'enveloppe ; une aide est attendue par son appelant, qui est lui-même
+  // dans un gestionnaire enveloppé.
   const NUS = [];
   sources()
     .filter((f) => f.endsWith('.js') && !relatif(f).startsWith('public/') && !relatif(f).startsWith('tests/'))
@@ -438,7 +444,9 @@ module.exports = async function tailleSmoke() {
       const src = fs.readFileSync(f, 'utf8');
       let i = src.indexOf('async (req, res');
       while (i >= 0) {
-        if (!src.slice(Math.max(0, i - 11), i).endsWith('asynchrone(')) {
+        const avant = src.slice(Math.max(0, i - 11), i);
+        const passeEnArgument = /,\s*$/.test(avant);
+        if (passeEnArgument && !avant.endsWith('asynchrone(')) {
           NUS.push(`${relatif(f)}:${src.slice(0, i).split('\n').length}`);
         }
         i = src.indexOf('async (req, res', i + 1);
@@ -446,6 +454,32 @@ module.exports = async function tailleSmoke() {
     });
   verifier('tout gestionnaire de route asynchrone passe par « asynchrone »',
     NUS.length === 0, NUS.join(' · '));
+
+  // ── Le bus ne se consomme pas sans l'attendre ──
+  //
+  // `services.call` et `callOr` rendent une promesse par contrat (étape A
+  // d'ADR-002). Une consommation qui ne l'attend pas reçoit l'objet promesse :
+  // `.filter` lève, mais `res.json` sérialise `{}` — une liste vide, sans
+  // erreur, que l'écran croit. C'est le défaut que cette étape existe pour
+  // rendre impossible, et rien dans le langage ne l'empêche.
+  const BUS = [];
+  sources()
+    .filter((f) => f.endsWith('.js') && !relatif(f).startsWith('public/') && !relatif(f).startsWith('tests/'))
+    .filter((f) => relatif(f) !== 'src/services.js')
+    .forEach((f) => {
+      fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
+        if (!/services\.(call|callOr)\(/.test(ligne)) return;
+        // Attendue sur place : le cas ordinaire.
+        if (/\bawait\b/.test(ligne)) return;
+        // Ou **transmise** sans être consommée — `return` d'une fonction
+        // asynchrone, corps d'une flèche : la promesse remonte à l'appelant,
+        // qui l'attendra. L'attendre ici ne changerait rien.
+        if (/(return|=>)\s+[\w.]*services\.(call|callOr)\(/.test(ligne)) return;
+        BUS.push(`${relatif(f)}:${n + 1}`);
+      });
+    });
+  verifier('aucun appel au bus de services n’est consommé sans « await »',
+    BUS.length === 0, BUS.join(' · '));
 
   return bilan('taille');
 };

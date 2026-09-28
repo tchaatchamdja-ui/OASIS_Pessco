@@ -4,6 +4,7 @@
 // immatriculation, vol, nombre d'items inspectés et statut de suivi. Les écarts
 // relevés lui sont rattachés.
 const path = require('path');
+const { asynchrone } = require('../../route');
 const fs = require('fs');
 const crypto = require('crypto');
 const referentiels = require('../../referentiels');
@@ -217,7 +218,7 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok' });
   });
 
-  app.delete(`${M}/inspections/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/inspections/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     // Pas davantage qu'elle ne se modifie, une inspection d'une autre instance
     // ne se supprime d'ici.
@@ -227,7 +228,7 @@ module.exports = function register(app, deps, M) {
     const ecarts = db.list('ecarts').filter((e) => e.inspection_id === req.params.id);
     // Un écart repris par « Mesures d'Application » fonde ce qui y a été
     // décidé : l'inspection qui le porte ne se supprime plus.
-    if (suitesCare.refusSiSuites(res, ecarts.map((e) => `ramp:${e.id}`))) return undefined;
+    if (await suitesCare.refusSiSuites(res, ecarts.map((e) => `ramp:${e.id}`))) return undefined;
     if (!db.removeInspection(req.params.id)) {
       return introuvable(res, 'inspection');
     }
@@ -238,7 +239,7 @@ module.exports = function register(app, deps, M) {
       catch (err) { /* le fichier a déjà disparu */ }
     }));
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Écrire sur un écart ──
   // Deux bornes, qui ne disent pas la même chose : le périmètre de l'État

@@ -1,6 +1,7 @@
 // Module « Planification de la Surveillance » — cycles de surveillance des
 // prestataires et synchronisation des profils de risque vers le plan.
 const referentiels = require('../../referentiels');
+const { asynchrone } = require('../../route');
 const moduleRights = require('../../module_rights');
 const instances = require('../../instances');
 const db = require('./store');
@@ -13,14 +14,14 @@ module.exports = function register(app, deps, M) {
   // Les profils de risque arrivent du module voisin par le bus, qui ignore le
   // compte : l'instance se pose ici. Ceux d'un plan sont ceux de son instance
   // à lui — un plan validé au Togo ne se compare pas aux notations du Bénin.
-  const profilsVus = (req) => instances.filtrer(
-    D.riskProfiles(), instances.courante(req.user, loadConfig), loadConfig);
-  const profilsDuPlan = (plan) => instances.filtrer(
-    D.riskProfiles(), instances.de(plan, loadConfig), loadConfig);
+  const profilsVus = async (req) => instances.filtrer(
+    await D.riskProfiles(), instances.courante(req.user, loadConfig), loadConfig);
+  const profilsDuPlan = async (plan) => instances.filtrer(
+    await D.riskProfiles(), instances.de(plan, loadConfig), loadConfig);
 
   // ── Cycles de surveillance des prestataires ──
-  app.get(`${M}/prestataires-risques`, requireAuth, (req, res) => {
-    const profs = profilsVus(req);
+  app.get(`${M}/prestataires-risques`, requireAuth, asynchrone(async (req, res) => {
+    const profs = await profilsVus(req);
     const prest = instances.refs(req.user, loadConfig).prestataires || [];
     // Un prestataire n'apparaît que s'il a un profil de risque validé :
     // la page « Profils de risque » reflète ainsi « Synthèses Profils ».
@@ -51,7 +52,7 @@ module.exports = function register(app, deps, M) {
         fin_cycle: cyc.fin_cycle || p.fin_cycle || finDefaut,
       };
     }).filter(Boolean));
-  });
+  }));
 
   // Le client enregistre les dates de cycle en PUT ; POST conservé pour
   // compatibilité (sans PUT, Express renvoyait une 404 HTML que le client
@@ -83,12 +84,12 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE, { effacer: true }), majCycle);
 
   // ── Synchronisation des risques → plan ──
-  app.get(`${M}/plans/:id/sync-risques`, requireAuth, (req, res) => {
+  app.get(`${M}/plans/:id/sync-risques`, requireAuth, asynchrone(async (req, res) => {
     const plan = db.list('plans').find((x) => x.id === req.params.id);
     if (!plan) return res.status(404).json({ error: 'not_found' });
-    const changes = D.ecartsRisques(plan, profilsDuPlan(plan));
+    const changes = await D.ecartsRisques(plan, await profilsDuPlan(plan));
     return res.json({ has_changes: changes.length > 0, changes });
-  });
+  }));
 
   // Plan déjà validé : les changements alimentent un amendement (nouvelle
   // version en brouillon) plutôt que le plan en vigueur.
@@ -106,13 +107,16 @@ module.exports = function register(app, deps, M) {
     return { cible, amended: true };
   };
 
-  app.post(`${M}/plans/:id/apply-sync`, requireAuth, (req, res) => {
+  app.post(`${M}/plans/:id/apply-sync`, requireAuth, asynchrone(async (req, res) => {
     const plan = db.list('plans').find((x) => x.id === req.params.id);
     if (!plan) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
     const ids = (req.body && (req.body.prestataire_ids || req.body.items)) || [];
     const retenus = new Set(ids.map((x) => (typeof x === 'string' ? x : x.prestataire_id)));
-    const changes = D.ecartsRisques(plan, profilsDuPlan(plan))
+    // Les écarts sont calculés **avant** `cibleDeSynchro`, qui écrit : entre
+    // les deux, plus rien n'est attendu. Intercaler une attente ici ferait
+    // porter l'amendement sur des profils qui ont pu changer depuis.
+    const changes = (await D.ecartsRisques(plan, await profilsDuPlan(plan)))
       .filter((c) => retenus.has(c.prestataire_id));
 
     const { cible, amended } = cibleDeSynchro(plan, req.user.username);
@@ -144,5 +148,5 @@ module.exports = function register(app, deps, M) {
 
     audit.log(req.user.username, 'PLAN_SYNC_RISQUES', { plan: cible.id, created, updated, amended });
     return res.json({ ok: true, created, updated, amended, target_plan_id: cible.id });
-  });
+  }));
 };

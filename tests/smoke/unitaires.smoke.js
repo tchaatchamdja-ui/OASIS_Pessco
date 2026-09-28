@@ -355,6 +355,28 @@ async function facadeDuMagasin() {
   await asynchrone(async () => { appele = true; })({}, {}, () => { suivant = true; });
   verifier('route : un gestionnaire qui aboutit ne réveille pas le filet',
     appele && !suivant);
+
+  // ── Le bus rend une promesse, quoi que fasse le producteur ──
+  // C'est tout l'objet de l'étape A d'ADR-002 : le jour où un producteur
+  // passera en base, ses consommateurs n'auront rien à reprendre, parce qu'ils
+  // l'attendent déjà. Encore faut-il que le contrat tienne **des deux côtés** —
+  // producteur synchrone comme asynchrone.
+  const services = require('../../src/services');
+  services.publish('ESSAI.synchrone', () => [1, 2, 3], { module: 'ESSAI' });
+  services.publish('ESSAI.asynchrone', async () => [4, 5], { module: 'ESSAI' });
+
+  const rendu = services.callOr('ESSAI.synchrone', []);
+  verifier('bus : un producteur synchrone est servi comme une promesse',
+    typeof rendu.then === 'function'
+    && JSON.stringify(await rendu) === '[1,2,3]');
+  verifier('bus : un producteur asynchrone est servi de la même façon',
+    JSON.stringify(await services.callOr('ESSAI.asynchrone', [])) === '[4,5]');
+
+  // Sans producteur, le consommateur reste servi : c'est ce qui permet de
+  // déployer un module sans ses voisins.
+  verifier('bus : sans producteur, le défaut est rendu — en promesse aussi',
+    JSON.stringify(await services.callOr('ESSAI.absent', ['défaut'])) === '["défaut"]'
+    && (await services.call('ESSAI.absent')) === undefined);
 }
 
 // ── 6. Aucun secret dans le journal des envois ──

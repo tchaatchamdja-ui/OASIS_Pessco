@@ -301,9 +301,16 @@ const COLL_ESSAI = `essai_facade_${Math.random().toString(36).slice(2, 8)}`;
 async function facadeDuMagasin() {
   const magasin = require('../../src/magasin');
 
-  verifier('façade : sans DATABASE_URL, rien n’est servi par la base',
-    magasin.surBase('ramp_aeronefs') === false);
-  verifier('façade : une collection non migrée ne l’est jamais',
+  // Le régime dépend de `DATABASE_URL`, et le contrôle doit dire la même chose
+  // dans les deux — c'est tout l'intérêt d'une façade. Affirmer le seul régime
+  // des fichiers le faisait échouer dès qu'on visait une vraie base, ce qui est
+  // précisément le cas qu'on veut pouvoir éprouver.
+  const enBase = !!process.env.DATABASE_URL;
+  verifier(`façade : une collection migrée est servie par ${enBase ? 'la base' : 'les fichiers'}`,
+    magasin.surBase('ramp_aeronefs') === enBase);
+  // Celui-ci, lui, ne dépend d'aucun régime : la liste d'autorisation nomme ce
+  // qui est migré, et rien d'autre ne l'est jamais.
+  verifier('façade : une collection non migrée ne l’est dans aucun régime',
     magasin.surBase('users') === false && !magasin.MIGREES.has('users'));
 
   verifier('façade : une collection absente rend le défaut',
@@ -387,18 +394,43 @@ async function facadeDuMagasin() {
 async function courrielsSansSecret() {
   const email = require('../../src/email');
 
-  // Ce que le journal retient d'un message à secret. L'envoi est attendu : la
-  // messagerie n'est pas joignable ici, et c'est l'échec qui journalise.
-  const avant = email.list().length;
+  // ── La messagerie est coupée, et il faut le forcer ──
+  //
+  // Sans cela, ce contrôle dépend de ce qui écoute sur le poste. Un Mailpit sur
+  // le port 1025 — l'usage courant en développement — rend `sendMail`
+  // joignable : les trois envois s'espacent alors sur le réseau, et leurs
+  // inscriptions au registre ne se croisent plus. Le contrôle passait, mais
+  // pour la mauvaise raison : il ne prouvait plus rien de la concurrence.
+  //
+  // Une configuration sans hôte SMTP force la branche « en attente », où
+  // l'inscription au registre est le **seul** temps asynchrone. Les trois
+  // s'y croisent donc pour de bon.
+  const configAvant = process.env.OASIS_CONFIG_DIR;
+  const bacConfig = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-smtp-'));
+  fs.writeFileSync(path.join(bacConfig, 'oasis.config.json'),
+    JSON.stringify({ smtp: { enabled: false } }));
+  process.env.OASIS_CONFIG_DIR = bacConfig;
+  verifier('courriels : l’épreuve tourne bien sans messagerie joignable',
+    email.etatSmtp().actif === false, JSON.stringify(email.etatSmtp()));
+
+  // Ce que le journal retient d'un message à secret.
+  const avant = (await email.list()).length;
   await Promise.all([
     email.accountCreated({ to: 'essai@aac.bj', name: 'Essai', username: 'essai@aac.bj', password: 'SecretEnClair!42' }),
     email.passwordReset({ to: 'essai@aac.bj', name: 'Essai', username: 'essai@aac.bj', password: 'AutreSecret!42' }),
     email.mfaCode({ to: 'essai@aac.bj', name: 'Essai', code: '424242', minutes: 10, channel: 'email' }),
   ].map((p) => Promise.resolve(p).catch(() => null)));
-  const ecrits = email.list().slice(avant);
+  const ecrits = (await email.list()).slice(avant);
 
+  // Trois envois lancés **ensemble**. Le registre écrit par `modifier` : sans
+  // lui, deux des trois seraient perdus, chacun ayant lu la même liste avant
+  // d'y pousser sa ligne. C'est la preuve du geste, sur un chemin réel et non
+  // sur une collection d'essai.
   verifier('courriels : les trois messages à secret sont bien journalisés',
     ecrits.length === 3, `${ecrits.length} message(s)`);
+  verifier('courriels : trois envois concurrents, trois identifiants distincts',
+    new Set(ecrits.map((m) => m.id)).size === 3,
+    JSON.stringify(ecrits.map((m) => m.id)));
   verifier('courriels : aucun secret ne subsiste dans le journal',
     !ecrits.some((m) => /SecretEnClair|AutreSecret|424242/.test(JSON.stringify(m))),
     JSON.stringify(ecrits.map((m) => m.body)).slice(0, 120));
@@ -418,6 +450,11 @@ async function courrielsSansSecret() {
   });
   verifier('courriels : tout message portant un secret le déclare',
     bavards.length === 0, bavards.join(' · '));
+
+  // Le paramétrage rendu, et le bac effacé.
+  if (configAvant === undefined) delete process.env.OASIS_CONFIG_DIR;
+  else process.env.OASIS_CONFIG_DIR = configAvant;
+  fs.rmSync(bacConfig, { recursive: true, force: true });
 }
 
 // ── 7. Verrou du répertoire de données ──

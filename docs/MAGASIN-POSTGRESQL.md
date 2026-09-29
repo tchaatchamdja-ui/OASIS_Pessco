@@ -157,6 +157,47 @@ périmée.
 
 ---
 
+## Deuxième collection : `emails`, le registre des envois
+
+*29 septembre 2026. Cinq fichiers, une propagation qui s'arrête à un appelant.*
+
+Choisie parce que `queue()` **rendait déjà une promesse** : la propagation ne
+franchit donc pas ses cinq appelants, et une seule route du socle — `/api/emails`
+— a dû être reprise. Et parce que son écriture est le cas d'école du geste que
+`modifier` existe pour tenir : **l'identifiant dérive de la longueur du
+registre**. Deux envois simultanés liraient la même liste, y pousseraient chacun
+une ligne portant le même `id`, et l'un des deux disparaîtrait — dans le registre
+même qui doit dire ce qui est parti.
+
+Mesuré, sur les fichiers comme en base : trois envois lancés ensemble, **trois
+entrées, trois identifiants distincts**. Avec `load` puis `save` à la place du
+`modifier` : **une seule entrée**.
+
+### Deux garde-fous ont fait leur travail
+
+Le contrôle « aucune collection passée en base n'est encore lue par `store` » a
+trouvé un appel que rien d'autre n'aurait signalé : `src/migration_ramp.js`
+reprend l'origine des courriels sortis du module, au démarrage. Il lisait le
+fichier — qui serait resté figé au dernier jour des fichiers, sans la moindre
+erreur. La reprise passe désormais par la façade, dans une transformation
+atomique, et le serveur l'attend avant d'écouter.
+
+### Et un contrôle à moi qui passait pour la mauvaise raison
+
+Le contrôle des trois envois concurrents **passait avant même que `modifier`
+existe**. Cause : un Mailpit écoutait sur le port 1025 du poste. `sendMail`
+étant alors joignable, les trois envois s'espaçaient sur le réseau et leurs
+inscriptions au registre ne se croisaient plus.
+
+L'épreuve force donc désormais une configuration sans hôte SMTP, où
+l'inscription au registre est le **seul** temps asynchrone. Après quoi la
+contre-épreuve mord : une entrée au lieu de trois. C'est la troisième fois que
+ce chantier produit un vert qui ne prouvait rien — base de papier, journal vide,
+messagerie joignable — et la leçon ne change pas : **un contrôle qui n'a jamais
+échoué n'a pas encore été éprouvé.**
+
+---
+
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout
 
 Le jalon n° 7 d'[ADR-002](ADR-002-migration-spring-boot.md) tranche : **le

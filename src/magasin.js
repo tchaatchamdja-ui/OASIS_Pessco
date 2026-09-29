@@ -45,8 +45,14 @@ const storePg = require('./store_pg');
 // qu'elle est la plus isolée qui soit encore gardée : son propre fichier, un
 // seul module, aucun service publié sur le bus, et une quinzaine de contrôles
 // qui l'exercent de bout en bout.
+//
+// `emails` — le registre des envois. Deuxième, et pour deux raisons : `queue`
+// rendait déjà une promesse, donc la propagation s'arrête à cinq appelants ; et
+// son écriture dérive l'identifiant de la longueur du journal, ce qui en fait le
+// cas d'école du lire-modifier-réécrire que `modifier` existe pour tenir.
 const MIGREES = new Set([
   'ramp_aeronefs',
+  'emails',
 ]);
 
 let socle = null;

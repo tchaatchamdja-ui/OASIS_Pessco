@@ -358,6 +358,29 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        `module_rights` (16) → `instances` (18) → `referentiels` (24) → les cinq collections
        de module.
 
+       **`emails` passée le 29 septembre 2026.** Prise avant `mfa_challenges`, qui la
+       précède par la propagation mais qu'**aucun contrôle n'exerce** — la MFA est
+       désactivée dans la configuration d'essai. Convertir sans filet n'apprend rien.
+
+       `queue()` rendant déjà une promesse, la propagation s'arrête à ses cinq appelants et
+       une seule route du socle a été reprise. 5 fichiers, +98/−37 lignes. Son écriture
+       dérive l'identifiant de la longueur du registre : trois envois simultanés donnent
+       **trois entrées et trois identifiants distincts** avec `modifier`, **une seule** avec
+       `load` puis `save`.
+
+       Deux enseignements de plus :
+
+       > **Le garde-fou « plus rien par `store` » a trouvé ce que rien d'autre n'aurait
+       > signalé** : `src/migration_ramp.js` reprend l'origine des courriels au démarrage,
+       > en lisant le fichier — qui serait resté figé au dernier jour des fichiers, sans
+       > erreur. La reprise passe par la façade, et le serveur l'attend avant d'écouter.
+       >
+       > **Un de mes contrôles passait pour la mauvaise raison.** Les trois envois
+       > concurrents passaient *avant* que `modifier` existe : un Mailpit écoutait sur le
+       > port 1025 du poste, `sendMail` était joignable, et les trois envois s'espaçaient sur
+       > le réseau. L'épreuve force désormais une configuration sans hôte SMTP. Troisième
+       > vert vide de ce chantier — base de papier, journal vide, messagerie joignable.
+
        **Première collection passée le 28 septembre 2026** : `ramp_aeronefs`, la nomenclature
        des aéronefs — la plus isolée qui soit encore gardée. 8 fonctions de magasin, 7 routes,
        9 fichiers touchés, +213/−109 lignes, **299 contrôles verts dans les deux régimes**.

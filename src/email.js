@@ -2,7 +2,9 @@
 // Envoi réel via SMTP (nodemailer) si config.smtp.enabled ; toujours journalisé dans data/emails.json.
 // En local : brancher Mailpit (SMTP :1025, UI http://localhost:8025).
 const path = require('path');
-const store = require('./store');
+// Le registre des envois passe par la façade : il est la deuxième collection
+// basculée en base (ADR-002, étape B).
+const magasin = require('./magasin');
 
 let nodemailer = null;
 try { nodemailer = require('nodemailer'); } catch { /* fallback fichier seul */ }
@@ -77,7 +79,7 @@ function transport(smtp) {
   return _transport;
 }
 
-function record(email, status, error) {
+async function record(email, status, error) {
   // Le journal garde la trace des pièces jointes, jamais leur contenu :
   // data/emails.json resterait sinon illisible et grossirait sans fin.
   //
@@ -97,12 +99,15 @@ function record(email, status, error) {
     entete.secret = true;
   }
   const trace = (attachments || []).map((p) => p.filename);
-  const box = store.load('emails', []);
-  box.push({
+  // `modifier`, et non `load` puis `save` : **l'identifiant dérive de la
+  // longueur du journal**. Deux envois simultanés liraient la même liste, y
+  // pousseraient chacun une ligne portant le même `id`, et l'un des deux
+  // disparaîtrait — sans erreur, dans le registre même qui doit dire ce qui est
+  // parti. Le geste était sûr tant que le magasin était synchrone.
+  return magasin.modifier('emails', [], (box) => [...box, {
     id: box.length + 1, ts: new Date().toISOString(), status, error: error || null,
     ...entete, ...(trace.length ? { pieces_jointes: trace } : {}),
-  });
-  store.save('emails', box.slice(-500));
+  }].slice(-500));
 }
 
 // Renvoie une promesse : les envois ordinaires l'ignorent (file d'attente),
@@ -111,7 +116,10 @@ function record(email, status, error) {
 function queue(email) {
   const smtp = loadSmtp();
   const tr = transport(smtp);
-  if (!tr) { record(email, 'queued'); return Promise.resolve({ status: 'queued' }); }
+  // L'inscription au registre est **attendue** avant de rendre l'état : dire
+  // « en attente » avant d'avoir noté qu'on l'est laisserait un message parti
+  // de la file sans trace nulle part.
+  if (!tr) return record(email, 'queued').then(() => ({ status: 'queued' }));
   return tr.sendMail({
     from: smtp.from || `${APP} <no-reply@localhost>`,
     to: email.to,
@@ -121,13 +129,13 @@ function queue(email) {
     text: email.body,
     attachments: (email.attachments || []).length ? email.attachments : undefined,
   })
-    .then((info) => {
-      record({ ...email, messageId: info.messageId }, 'sent');
+    .then(async (info) => {
+      await record({ ...email, messageId: info.messageId }, 'sent');
       return { status: 'sent', messageId: info.messageId };
     })
-    .catch((err) => {
+    .catch(async (err) => {
       const motif = String((err && err.message) || err);
-      record(email, 'error', motif);
+      await record(email, 'error', motif);
       return { status: 'error', error: motif };
     });
 }
@@ -199,8 +207,8 @@ async function verify() {
   catch (e) { return { ok: false, reason: String(e && e.message || e) }; }
 }
 
-function list() {
-  return store.load('emails', []);
+async function list() {
+  return magasin.load('emails', []);
 }
 
 // État du canal d'envoi, pour que l'appelant sache si un message peut partir.

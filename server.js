@@ -658,9 +658,9 @@ app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADM
   res.json({ ok: true, record: rec });
 });
 
-app.get('/api/emails', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  res.json(email.list().slice(-50).reverse());
-});
+app.get('/api/emails', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
+  res.json((await email.list()).slice(-50).reverse());
+}));
 
 app.get('/api/emails/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   res.json(await email.verify());
@@ -1114,9 +1114,6 @@ try {
 }
 
 const PORT = process.env.PORT || 4750;
-// Reprise ponctuelle des enregistrements posés sous l'ancien nom du module
-// d'inspections sur aire de trafic. Idempotente : silencieuse une fois passée.
-require('./src/migration_ramp').migrer(store, loadConfig, saveConfig);
 // Reprise du format des journaux d'audit : le tableau JSON d'origine devient
 // une entrée par ligne, recopiée telle quelle — empreintes comprises, la
 // chaîne reste vérifiable. Idempotente : silencieuse une fois passée.
@@ -1207,6 +1204,11 @@ function ecouter() {
 }
 
 magasin.preparer()
+  // Reprise ponctuelle des enregistrements posés sous l'ancien nom du module
+  // d'inspections sur aire de trafic. Idempotente : silencieuse une fois
+  // passée. Elle est entrée dans cette chaîne le jour où le registre des
+  // envois est passé en base : elle le reprend, donc elle attend.
+  .then(() => require('./src/migration_ramp').migrer(store, loadConfig, saveConfig))
   .then(() => moduleLoader.seedAll(MODULES_MONTES))
   .then(ecouter)
   .catch((e) => {

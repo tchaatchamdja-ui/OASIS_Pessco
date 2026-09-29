@@ -83,6 +83,16 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   reprendre. Sept consommations converties, **57 gestionnaires de route enveloppés**.
 - `OASIS_BUS_DIFFERE=1` rend tout producteur asynchrone — mise en situation de la bascule,
   et recette de chacune des suivantes. La campagne complète y reste verte.
+- **`emails` passée en base**, deuxième collection. `queue()` rendant déjà une promesse,
+  la propagation s'arrête à ses cinq appelants. Son écriture dérive l'identifiant de la
+  longueur du registre : trois envois simultanés donnent trois entrées avec `modifier`,
+  **une seule** avec `load` puis `save`.
+- Le garde-fou « plus rien par `store` » a trouvé un appel que rien d'autre n'aurait
+  signalé : la reprise SAFA → RAMP lisait le registre des envois sur fichier au démarrage.
+  Elle passe par la façade, et le serveur l'attend avant d'écouter.
+- Le contrôle des trois envois concurrents **passait pour la mauvaise raison** — un Mailpit
+  sur le port 1025 espaçait les envois sur le réseau. L'épreuve force désormais une
+  configuration sans hôte SMTP ; la contre-épreuve mord.
 - **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
   `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.

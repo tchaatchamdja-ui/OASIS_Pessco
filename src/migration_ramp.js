@@ -1,4 +1,5 @@
 const trace = require('./trace');
+const magasin = require('./magasin');
 // Migration ponctuelle — le module d'inspections sur aire de trafic s'appelait
 // « SAFA » dans OASIS, du nom du programme dont il est issu. Il s'appelle RAMP.
 //
@@ -27,7 +28,10 @@ const NOUVEAU = 'RAMP';
 const ANCIEN_PREFIXE = 'safa:';
 const NOUVEAU_PREFIXE = 'ramp:';
 
-function migrer(store, loadConfig, saveConfig) {
+// Asynchrone depuis que `emails` vit en base (ADR-002, étape B) : la reprise
+// des courriels passe par la façade, tout le reste reste sur fichiers et donc
+// synchrone. Le serveur l'attend avant d'écouter.
+async function migrer(store, loadConfig, saveConfig) {
   const faits = [];
 
   // 1. Activation du module dans la configuration.
@@ -100,17 +104,21 @@ function migrer(store, loadConfig, saveConfig) {
   }
 
   // 5. Courriels sortis du module : leur origine le nomme.
-  const emails = store.load('emails', null);
-  if (Array.isArray(emails)) {
-    let n = 0;
-    emails.forEach((e) => {
-      if (e && e.origine === 'communication_safa') { e.origine = 'communication_ramp'; n += 1; }
+  //
+  // Le registre des envois est en base : il passe par `magasin`, et la reprise
+  // se fait **dans** une transformation atomique. Un envoi concurrent pendant
+  // le démarrage ne serait pas écrasé — et au démarrage, c'est justement ce qui
+  // peut arriver, plusieurs reprises se succédant sur le même répertoire.
+  let n = 0;
+  await magasin.modifier('emails', [], (box) => {
+    n = 0;
+    const repris = (box || []).map((e) => {
+      if (e && e.origine === 'communication_safa') { n += 1; return { ...e, origine: 'communication_ramp' }; }
+      return e;
     });
-    if (n) {
-      store.save('emails', emails);
-      faits.push(`courriels : ${n}`);
-    }
-  }
+    return n ? repris : box;
+  });
+  if (n) faits.push(`courriels : ${n}`);
 
   if (faits.length) trace.info('migration RAMP : SAFA → RAMP', { faits });
   return faits;

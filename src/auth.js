@@ -75,7 +75,7 @@ function publicUser(u) {
 // sont tirés au hasard au premier démarrage et affichés une seule fois sur la
 // console ; l'exploitant peut en imposer un par OASIS_SEED_PASSWORD (utile en
 // développement et pour les tests de fumée).
-function seedUsers(cfg) {
+async function seedUsers(cfg) {
   if (getUsers().length) return;
   const impose = process.env.OASIS_SEED_PASSWORD || '';
   const secrets = [];
@@ -118,7 +118,7 @@ function seedUsers(cfg) {
       };
     })
   );
-  audit.log('système', 'INIT', { message: 'Comptes initiaux créés (superadmin, admin.aac, inspecteur1)' });
+  await audit.log('système', 'INIT', { message: 'Comptes initiaux créés (superadmin, admin.aac, inspecteur1)' });
 
   // Les identifiants ne sont montrés qu'ici, au premier démarrage : ils ne
   // sont écrits ni dans le code, ni dans un fichier, ni dans le journal.
@@ -167,20 +167,20 @@ function destroySession(token) {
 }
 
 // ── Login ──
-function login(username, password, cfg, opts) {
+async function login(username, password, cfg, opts) {
   const users = getUsers();
   const user = users.find((u) => u.username === username);
   if (!user || !user.active) {
-    audit.log(username, 'LOGIN_ECHEC', { motif: 'compte inconnu ou inactif' });
+    await audit.log(username, 'LOGIN_ECHEC', { motif: 'compte inconnu ou inactif' });
     return { ok: false, error: 'invalid' };
   }
   if (user.locked) {
-    audit.log(username, 'LOGIN_ECHEC', { motif: 'compte bloqué' });
+    await audit.log(username, 'LOGIN_ECHEC', { motif: 'compte bloqué' });
     return { ok: false, error: 'locked' };
   }
   // Mot de passe temporaire expiré (48h) et non encore utilisé
   if (user.mustChange && user.tempExpiresAt && Date.now() > new Date(user.tempExpiresAt).getTime()) {
-    audit.log(username, 'LOGIN_ECHEC', { motif: 'mot de passe temporaire expiré' });
+    await audit.log(username, 'LOGIN_ECHEC', { motif: 'mot de passe temporaire expiré' });
     return { ok: false, error: 'temp_expired' };
   }
   if (!checkPassword(user, password)) {
@@ -189,10 +189,10 @@ function login(username, password, cfg, opts) {
     if (user.failedAttempts >= cfg.security.maxFailedAttempts) {
       user.locked = true;
       error = 'locked';
-      audit.log(username, 'COMPTE_BLOQUE', { tentatives: user.failedAttempts });
+      await audit.log(username, 'COMPTE_BLOQUE', { tentatives: user.failedAttempts });
       notify(`Compte « ${username} » bloqué après ${user.failedAttempts} tentatives infructueuses.`, 'warning');
     } else {
-      audit.log(username, 'LOGIN_ECHEC', { tentative: user.failedAttempts });
+      await audit.log(username, 'LOGIN_ECHEC', { tentative: user.failedAttempts });
     }
     saveUsers(users);
     return { ok: false, error };
@@ -202,11 +202,11 @@ function login(username, password, cfg, opts) {
   // MFA : le mot de passe est validé mais la session n'est ouverte qu'après le code
   if (opts && opts.noSession) return { ok: true, pending: true, account: user };
   const token = createSession(user.username, cfg);
-  audit.log(username, 'LOGIN', { role: user.role });
+  await audit.log(username, 'LOGIN', { role: user.role });
   return { ok: true, token, user: publicUser(user) };
 }
 
-function changePassword(username, oldPassword, newPassword, cfg) {
+async function changePassword(username, oldPassword, newPassword, cfg) {
   const users = getUsers();
   const user = users.find((u) => u.username === username);
   if (!user) return { ok: false, error: 'invalid' };
@@ -224,7 +224,7 @@ function changePassword(username, oldPassword, newPassword, cfg) {
   user.passwordChangedAt = new Date().toISOString();
   user.passwordHistory = [...history, newHash].slice(-cfg.security.passwordHistoryCount);
   saveUsers(users);
-  audit.log(username, 'MOT_DE_PASSE_CHANGE', {});
+  await audit.log(username, 'MOT_DE_PASSE_CHANGE', {});
   return { ok: true };
 }
 

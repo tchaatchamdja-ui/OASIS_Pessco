@@ -61,7 +61,12 @@ async function migrer({ verifier = false } = {}) {
     // ajout seul, on ne reprend donc que ce qui manque à la fin.
     const deja = await magasin.compte(nom);
     for (const ligne of lignes.slice(deja)) {
-      await magasin.ajouter(nom, JSON.parse(ligne));
+      const entree = JSON.parse(ligne);
+      // `cle` dit de quelle chaîne l'entrée fait partie — le `codeModule` pour
+      // le journal des modules, rien pour celui du socle qui n'en a qu'une.
+      // C'est une donnée de rangement : elle ne touche pas à l'entrée, dont
+      // l'empreinte reste calculée sur les mêmes champs qu'avant.
+      await magasin.ajouter(nom, entree, entree.codeModule || '');
       bilan.entrees += 1;
     }
     if (verifier) {

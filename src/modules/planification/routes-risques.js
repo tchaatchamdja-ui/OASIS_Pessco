@@ -146,7 +146,7 @@ module.exports = function register(app, deps, M) {
       }
     });
 
-    audit.log(req.user.username, 'PLAN_SYNC_RISQUES', { plan: cible.id, created, updated, amended });
+    await audit.log(req.user.username, 'PLAN_SYNC_RISQUES', { plan: cible.id, created, updated, amended });
     return res.json({ ok: true, created, updated, amended, target_plan_id: cible.id });
   }));
 };

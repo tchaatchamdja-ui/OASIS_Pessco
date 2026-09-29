@@ -47,7 +47,7 @@ function maskPhone(v) {
 }
 
 // Crée un défi et envoie le code. Renvoie l'identifiant du défi (pas le code).
-function createChallenge(user, channelId) {
+async function createChallenge(user, channelId) {
   const channels = channelsFor(user);
   const channel = channels.find((c) => c.id === channelId) || channels[0];
   if (!channel) return { ok: false, error: 'no_mfa_channel' };
@@ -78,36 +78,36 @@ function createChallenge(user, channelId) {
     channel: channel.id,
   });
 
-  audit.log(user.username, 'MFA_CODE_ENVOYE', { canal: channel.id, cible: channel.masked });
+  await audit.log(user.username, 'MFA_CODE_ENVOYE', { canal: channel.id, cible: channel.masked });
   return { ok: true, challengeId: id, channel: channel.id, masked: channel.masked, expiresIn: TTL_MINUTES * 60, channels };
 }
 
 // Vérifie un code. Consomme le défi en cas de succès.
-function verifyChallenge(challengeId, code) {
+async function verifyChallenge(challengeId, code) {
   const d = purge(load());
   const c = d[challengeId];
   if (!c) return { ok: false, error: 'mfa_expired' };
   if (c.attempts >= MAX_ATTEMPTS) {
     delete d[challengeId];
     save(d);
-    audit.log(c.username, 'MFA_ECHEC', { motif: 'trop de tentatives' });
+    await audit.log(c.username, 'MFA_ECHEC', { motif: 'trop de tentatives' });
     return { ok: false, error: 'mfa_too_many_attempts' };
   }
   const given = String(code || '').trim();
   if (digest(given, c.salt) !== c.hash) {
     c.attempts += 1;
     save(d);
-    audit.log(c.username, 'MFA_ECHEC', { tentative: c.attempts });
+    await audit.log(c.username, 'MFA_ECHEC', { tentative: c.attempts });
     return { ok: false, error: 'mfa_invalid_code', remaining: MAX_ATTEMPTS - c.attempts };
   }
   const username = c.username;
   delete d[challengeId];
   save(d);
-  audit.log(username, 'MFA_VALIDE', { canal: c.channel });
+  await audit.log(username, 'MFA_VALIDE', { canal: c.channel });
   return { ok: true, username };
 }
 
-function resend(challengeId, user, channelId) {
+async function resend(challengeId, user, channelId) {
   const d = purge(load());
   if (!d[challengeId]) return { ok: false, error: 'mfa_expired' };
   delete d[challengeId];

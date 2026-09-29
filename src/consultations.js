@@ -1,4 +1,5 @@
-// OASIS — Qui a consulté quel dossier, et quand.
+
+const trace = require('./trace');// OASIS — Qui a consulté quel dossier, et quand.
 //
 // La fiche technique URSAC/GT2 (§5.2, « journalisation étendue ») demande que
 // le journal d'audit inaltérable du §F.3 couvre aussi les **consultations** de
@@ -85,21 +86,31 @@ function poser(app, { audit }) {
     const vu = reconnaitre(req.path, req.method);
     if (!vu) return next();
 
-    res.on('finish', () => {
+    // `res.on('finish')` est appelé après la réponse : l'inscription ne peut
+    // plus être attendue par la requête — c'était déjà vrai quand elle était
+    // synchrone. Ce qui change, c'est qu'un rejet ne mène nulle part : un échec
+    // d'inscription disparaîtrait sans bruit, dans le registre même qui doit
+    // dire qui a consulté quoi. Il part donc aux traces.
+    res.on('finish', () => { inscrire().catch((e) => trace.erreur(
+      'consultation non journalisée',
+      { nature: vu.nature, dossier: vu.dossier, url: req.originalUrl, detail: e.message },
+    )); });
+
+    async function inscrire() {
       // Un refus n'est pas une consultation : 401, 403 et 404 ne montrent rien.
       if (res.statusCode < 200 || res.statusCode >= 300) return;
       const qui = (req.user || {}).username || '';
       if (!qui) return;
       // Se consulter soi-même est un droit, pas un accès à surveiller.
       if (vu.dossier === qui) return;
-      audit.log(qui, 'CONSULTATION', {
+      await audit.log(qui, 'CONSULTATION', {
         nature: vu.nature,
         dossier: vu.dossier,
         // Le compte réellement connecté, quand une vue en simule un autre :
         // c'est lui qui répond de la consultation.
         ...(req.userReel && req.userReel.username !== qui ? { par: req.userReel.username } : {}),
       });
-    });
+    }
     next();
   });
 }

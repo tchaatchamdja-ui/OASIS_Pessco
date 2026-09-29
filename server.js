@@ -81,7 +81,10 @@ const retention = require('./src/retention');
 // rend, pour qu'un collecteur puisse alerter sur une dérive.
 let ETAT_HORLOGE = { verifiee: false, raison: 'vérification en cours' };
 const protections = require('./src/protections');
-const { limiterAuth, limiterEcritures, SEUIL_COMPRESSION } = protections;
+const { limiterEcritures, SEUIL_COMPRESSION } = protections;
+// `limiterAuth` est asynchrone depuis que le refus est journalisé : elle est
+// enveloppée ici, une fois, pour que tout rejet parte au filet du socle.
+const limiterAuth = asynchrone(protections.limiterAuth);
 
 protections.poser(app, { audit });
 
@@ -101,7 +104,7 @@ function parseCookies(req) {
   return out;
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const cfg = loadConfig();
   const token = parseCookies(req).oasis_session;
   const session = auth.getSession(token, cfg);
@@ -113,7 +116,9 @@ function requireAuth(req, res, next) {
   req.token = token;
   // Seul endroit où le compte est connu : toutes les routes protégées y
   // passent, et c'est là que le plafond d'écritures se compte.
-  if (!limiterEcritures(req, res, cfg)) return;
+  // Attendu : sans `await`, la promesse serait toujours vraie et le plafond
+  // d'écritures ne se déclencherait plus — sans erreur ni trace.
+  if (!await limiterEcritures(req, res, cfg)) return;
   next();
 }
 
@@ -190,7 +195,7 @@ function mfaActive(cfg) {
   return !!(cfg.security && cfg.security.mfaEnabled);
 }
 
-app.post('/api/login', limiterAuth, (req, res) => {
+app.post('/api/login', limiterAuth, asynchrone(async (req, res) => {
   const cfg = loadConfig();
   const { username, password, channel } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'invalid' });
@@ -198,14 +203,14 @@ app.post('/api/login', limiterAuth, (req, res) => {
   // Une instance désactivée ne laisse plus entrer les siens. Le contrôle est
   // ici, après l'authentification : refuser avant dirait qui existe.
   const compte = auth.findUser(String(username).trim().toLowerCase());
-  const result = auth.login(String(username).trim().toLowerCase(), String(password), cfg, { noSession: mfaOn });
+  const result = await auth.login(String(username).trim().toLowerCase(), String(password), cfg, { noSession: mfaOn });
   if (!result.ok) return res.status(401).json({ error: result.error });
   if (compte && !instances.estActive(instances.courante(compte, loadConfig))) {
     return res.status(403).json({ error: 'instance_desactivee' });
   }
 
   if (result.pending) {
-    const ch = mfa.createChallenge(result.account, channel);
+    const ch = await mfa.createChallenge(result.account, channel);
     if (!ch.ok) return res.status(500).json({ error: ch.error });
     return res.json({
       ok: true, mfaRequired: true, challengeId: ch.challengeId,
@@ -215,42 +220,42 @@ app.post('/api/login', limiterAuth, (req, res) => {
   }
   setSessionCookie(res, result.token);
   res.json({ ok: true, user: result.user });
-});
+}));
 
 // Vérification du code MFA : ouvre la session
-app.post('/api/login/mfa', limiterAuth, (req, res) => {
+app.post('/api/login/mfa', limiterAuth, asynchrone(async (req, res) => {
   const cfg = loadConfig();
   const { challengeId, code } = req.body || {};
-  const v = mfa.verifyChallenge(challengeId, code);
+  const v = await mfa.verifyChallenge(challengeId, code);
   if (!v.ok) return res.status(401).json({ error: v.error, remaining: v.remaining });
   const user = auth.findUser(v.username);
   if (!user || !user.active) return res.status(401).json({ error: 'invalid' });
   const token = auth.createSession(user.username, cfg);
-  audit.log(user.username, 'LOGIN', { role: user.role, mfa: true });
+  await audit.log(user.username, 'LOGIN', { role: user.role, mfa: true });
   setSessionCookie(res, token);
   res.json({ ok: true, user: auth.publicUser(user) });
-});
+}));
 
 // Renvoi d'un nouveau code (éventuellement sur un autre canal)
-app.post('/api/login/mfa/resend', limiterAuth, (req, res) => {
+app.post('/api/login/mfa/resend', limiterAuth, asynchrone(async (req, res) => {
   const { challengeId, username, channel } = req.body || {};
   const user = auth.findUser(String(username || '').trim().toLowerCase());
   if (!user || !user.active) return res.status(401).json({ error: 'invalid' });
-  const ch = mfa.resend(challengeId, user, channel);
+  const ch = await mfa.resend(challengeId, user, channel);
   if (!ch.ok) return res.status(400).json({ error: ch.error });
   res.json({
     ok: true, challengeId: ch.challengeId, channel: ch.channel,
     masked: ch.masked, expiresIn: ch.expiresIn,
     channels: ch.channels.map((c) => ({ id: c.id, label: c.label, masked: c.masked })),
   });
-});
+}));
 
-app.post('/api/logout', requireAuth, (req, res) => {
-  audit.log(req.user.username, 'LOGOUT', {});
+app.post('/api/logout', requireAuth, asynchrone(async (req, res) => {
+  await audit.log(req.user.username, 'LOGOUT', {});
   auth.destroySession(req.token);
   res.setHeader('Set-Cookie', 'oasis_session=; HttpOnly; Path=/; Max-Age=0');
   res.json({ ok: true });
-});
+}));
 
 app.get('/api/me', requireAuth, (req, res) => {
   const aac = instances.aac(req.user, loadConfig);
@@ -297,33 +302,33 @@ app.get('/api/instances', requireAuth, requireRole('SUPERADMIN'), asynchrone(asy
   return res.json(lignes);
 }));
 
-app.put('/api/instances/:nom/activite', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.put('/api/instances/:nom/activite', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
   const r = instances.basculerActivite(req.params.nom, loadConfig);
   if (r.error) return res.status(400).json(r);
-  audit.log(req.user.username, r.active ? 'INSTANCE_ACTIVEE' : 'INSTANCE_DESACTIVEE', { instance: r.instance });
+  await audit.log(req.user.username, r.active ? 'INSTANCE_ACTIVEE' : 'INSTANCE_DESACTIVEE', { instance: r.instance });
   return res.json({ ok: true, ...r });
-});
+}));
 
 app.delete('/api/instances/:nom', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
   const r = await instances.supprimer(req.params.nom, loadConfig, depsInstances());
   if (r.error) return res.status(400).json(r);
-  audit.log(req.user.username, 'INSTANCE_SUPPRIMEE', { instance: r.instance });
+  await audit.log(req.user.username, 'INSTANCE_SUPPRIMEE', { instance: r.instance });
   return res.json({ ok: true, ...r });
 }));
 
 // Ouvrir une instance : le dispositif s'étend sans toucher au fichier de
 // configuration. Réservé au régional, seul à voir au-delà de la sienne.
-app.post('/api/instances', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.post('/api/instances', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
   const r = instances.ouvrir((req.body || {}).nom, loadConfig);
   if (r.error) return res.status(400).json(r);
-  audit.log(req.user.username, 'INSTANCE_OUVERTE', { instance: r.instance });
+  await audit.log(req.user.username, 'INSTANCE_OUVERTE', { instance: r.instance });
   return res.json({ ok: true, instance: r.instance, instances: instances.liste(loadConfig) });
-});
+}));
 
-app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   // Seul le super-administrateur régional change d'instance : le national
   // n'administre que la sienne.
   if (!instances.estRegional(req.user)) return res.status(403).json({ error: 'portee_nationale' });
@@ -337,12 +342,12 @@ app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
     return res.status(400).json({ error: 'instance_desactivee' });
   }
   instances.definir(req.user.username, demandee);
-  audit.log(req.user.username, 'INSTANCE_CHANGEE', { instance: demandee || '(régionale)' });
+  await audit.log(req.user.username, 'INSTANCE_CHANGEE', { instance: demandee || '(régionale)' });
   return res.json({ ok: true, instance: demandee });
-});
+}));
 
 // ── Profil personnel ──
-app.put('/api/me/profile', requireAuth, (req, res) => {
+app.put('/api/me/profile', requireAuth, asynchrone(async (req, res) => {
   const users = auth.getUsers();
   const user = users.find((u) => u.username === req.user.username);
   if (!user) return res.status(404).json({ error: 'not_found' });
@@ -360,16 +365,16 @@ app.put('/api/me/profile', requireAuth, (req, res) => {
     user.fullName = `${user.nom || ''} ${user.prenom || ''}`.trim() || user.fullName;
   }
   auth.saveUsers(users);
-  audit.log(req.user.username, 'PROFIL_MODIFIE', {});
+  await audit.log(req.user.username, 'PROFIL_MODIFIE', {});
   res.json({ ok: true, user: auth.publicUser(user) });
-});
+}));
 
-app.post('/api/change-password', requireAuth, (req, res) => {
+app.post('/api/change-password', requireAuth, asynchrone(async (req, res) => {
   const { oldPassword, newPassword } = req.body || {};
-  const result = auth.changePassword(req.user.username, String(oldPassword || ''), String(newPassword || ''), req.cfg);
+  const result = await auth.changePassword(req.user.username, String(oldPassword || ''), String(newPassword || ''), req.cfg);
   if (!result.ok) return res.status(400).json(result);
   res.json({ ok: true });
-});
+}));
 
 // ── Modules (cartes du portail) ──
 app.get('/api/modules', requireAuth, (req, res) => {
@@ -400,16 +405,16 @@ app.get('/api/modules/cartes', requireAuth, (req, res) => res.json(moduleLoader.
 // Inventaire des services inter-modules (diagnostic).
 app.get('/api/services', requireAuth, requireRole('SUPERADMIN'), (req, res) => res.json(services.list()));
 
-app.put('/api/modules/:code', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.put('/api/modules/:code', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   const cfg = loadConfig();
   const code = req.params.code;
   if (!(code in cfg.modules)) return res.status(404).json({ error: 'unknown_module' });
   cfg.modules[code] = !!req.body.enabled;
   saveConfig(cfg);
-  audit.log(req.user.username, cfg.modules[code] ? 'MODULE_ACTIVE' : 'MODULE_DESACTIVE', { module: code });
+  await audit.log(req.user.username, cfg.modules[code] ? 'MODULE_ACTIVE' : 'MODULE_DESACTIVE', { module: code });
   auth.notify(`Module ${code} ${cfg.modules[code] ? 'activé' : 'désactivé'} par ${req.user.username}.`, 'info');
   res.json({ ok: true, code, enabled: cfg.modules[code] });
-});
+}));
 
 // ── Utilisateurs (ADMIN et SUPERADMIN) ──
 // Un compte appartient à l'AAC qui l'a ouvert : la liste ne montre que ceux de
@@ -459,7 +464,7 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
   // n'est accepté que d'un régional : lui seul voit au-delà de la sienne.
   portee: { type: 'texte', max: 12 },
   instance: { type: 'texte', max: 60 },
-}), (req, res) => {
+}), asynchrone(async (req, res) => {
   const { nom, prenom, role, modules } = req.body || {};
   const username = String(req.body.email || '').trim().toLowerCase();
   if (!username || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username)) return res.status(400).json({ error: 'invalid_email' });
@@ -498,10 +503,10 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
   });
   auth.saveUsers(users);
   email.accountCreated({ to: username, name: `${nom} ${prenom || ''}`.trim(), username, password: tempPassword });
-  audit.log(req.user.username, 'UTILISATEUR_CREE', { cible: username, role });
+  await audit.log(req.user.username, 'UTILISATEUR_CREE', { cible: username, role });
   auth.notify(`Utilisateur « ${username} » créé par ${req.user.username} — email d'identifiants envoyé.`, 'success');
   res.json({ ok: true });
-});
+}));
 
 // ── Effacement d'un compte (droit à l'effacement) ──
 // Jusqu'ici un compte se désactivait, jamais ne s'effaçait : le droit à
@@ -521,7 +526,7 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
 // elle se justifie : ces traitements relèvent d'une obligation légale et d'une
 // mission d'intérêt public, que l'effacement ne recouvre pas. Elle est écrite
 // dans docs/SECURITE.md et dite à la personne qui demande.
-app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   const users = auth.getUsers();
   const user = users.find((u) => u.username === req.params.username);
   if (!user) return res.status(404).json({ error: 'not_found' });
@@ -556,14 +561,14 @@ app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), (req,
   auth.saveUsers(users.filter((u) => u.username !== user.username));
   // L'effacement est lui-même un acte, et il se trace — l'identifiant y figure,
   // c'est ce qui rend l'opération redevable.
-  audit.log(req.user.username, 'COMPTE_EFFACE', {
+  await audit.log(req.user.username, 'COMPTE_EFFACE', {
     cible: user.username, role: user.role, fiche_personnel: fiche ? fiche.id : null,
   });
   auth.notify(`Compte « ${user.username} » effacé.`, 'info');
   return res.json({ ok: true, efface: user.username, fiche_personnel_effacee: !!fiche });
-});
+}));
 
-app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   const users = auth.getUsers();
   const user = users.find((u) => u.username === req.params.username);
   if (!user) return res.status(404).json({ error: 'not_found' });
@@ -574,13 +579,13 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
   if (action === 'unlock') {
     user.locked = false;
     user.failedAttempts = 0;
-    audit.log(req.user.username, 'COMPTE_DEBLOQUE', { cible: user.username });
+    await audit.log(req.user.username, 'COMPTE_DEBLOQUE', { cible: user.username });
   } else if (action === 'toggle-active') {
     if (user.username === req.user.username) return res.status(400).json({ error: 'self' });
     // Un Admin AAC ne peut pas désactiver un autre Admin AAC ni un SuperAdmin
     if (req.user.role === 'ADMIN' && (user.role === 'ADMIN' || user.role === 'SUPERADMIN')) return res.status(403).json({ error: 'forbidden_target' });
     user.active = !user.active;
-    audit.log(req.user.username, user.active ? 'COMPTE_ACTIVE' : 'COMPTE_DESACTIVE', { cible: user.username });
+    await audit.log(req.user.username, user.active ? 'COMPTE_ACTIVE' : 'COMPTE_DESACTIVE', { cible: user.username });
   } else if (action === 'reset-password') {
     // Nouveau mot de passe temporaire généré automatiquement + email
     const tempPassword = auth.generatePassword(req.cfg);
@@ -591,16 +596,16 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
     user.tempExpiresAt = new Date(Date.now() + TEMP_PWD_TTL_MS).toISOString();
     user.passwordChangedAt = new Date().toISOString();
     email.passwordReset({ to: user.email || user.username, name: user.fullName || user.username, username: user.username, password: tempPassword });
-    audit.log(req.user.username, 'MOT_DE_PASSE_REINITIALISE', { cible: user.username });
+    await audit.log(req.user.username, 'MOT_DE_PASSE_REINITIALISE', { cible: user.username });
     auth.notify(`Mot de passe réinitialisé pour « ${user.username} » — email envoyé.`, 'info');
   } else if (action === 'set-modules') {
     if (req.user.role !== 'SUPERADMIN') return res.status(403).json({ error: 'forbidden' });
     user.modules = Array.isArray(req.body.modules) ? req.body.modules : [];
-    audit.log(req.user.username, 'ACCES_MODULES_MODIFIE', { cible: user.username, modules: user.modules });
+    await audit.log(req.user.username, 'ACCES_MODULES_MODIFIE', { cible: user.username, modules: user.modules });
   } else if (action === 'set-prestataire') {
     if (req.user.role !== 'SUPERADMIN') return res.status(403).json({ error: 'forbidden' });
     user.prestataire_id = String(req.body.prestataire_id || '');
-    audit.log(req.user.username, 'PRESTATAIRE_MODIFIE', { cible: user.username, prestataire: user.prestataire_id });
+    await audit.log(req.user.username, 'PRESTATAIRE_MODIFIE', { cible: user.username, prestataire: user.prestataire_id });
   } else if (action === 'edit') {
     if (req.user.role !== 'SUPERADMIN') return res.status(403).json({ error: 'forbidden' });
     const b = req.body;
@@ -614,7 +619,7 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
       const oldU = user.username;
       user.username = newUsername;
       user.email = newUsername;
-      audit.log(req.user.username, 'IDENTIFIANT_MODIFIE', { ancien: oldU, nouveau: newUsername });
+      await audit.log(req.user.username, 'IDENTIFIANT_MODIFIE', { ancien: oldU, nouveau: newUsername });
     }
     for (const k of ['nom', 'prenom', 'telephone', 'fonction']) if (typeof b[k] === 'string') user[k] = b[k];
     if (typeof b.prestataire_id === 'string') user.prestataire_id = b.prestataire_id;
@@ -632,7 +637,7 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
       if (inst && instances.liste(loadConfig).includes(inst)) user.instance = inst;
     }
     user.fullName = `${user.nom || ''} ${user.prenom || ''}`.trim() || user.fullName;
-    audit.log(req.user.username, 'UTILISATEUR_MODIFIE', {
+    await audit.log(req.user.username, 'UTILISATEUR_MODIFIE', {
       cible: user.username, portee: user.portee || '', instance: user.instance || '',
     });
   } else {
@@ -640,10 +645,10 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
   }
   auth.saveUsers(users);
   res.json({ ok: true, user: auth.publicUser(user) });
-});
+}));
 
 // Générer un équivalent dans la Liste du personnel de l'Administration (référentiel inspecteurs)
-app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   const user = auth.findUser(req.params.username);
   if (!user || !memeInstance(req, user)) return res.status(404).json({ error: 'not_found' });
   const em = (user.email || user.username).toLowerCase();
@@ -654,9 +659,9 @@ app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADM
     email: user.email || user.username, telephone: user.telephone || '', specialite: '',
     est_inspecteur: 'non', domaines: [], specialites: [], niveau_qualification: '', statut: 'actif', user_id: user.username,
   }, instances.de(user, loadConfig));
-  audit.log(req.user.username, 'PERSONNEL_GENERE', { cible: user.username });
+  await audit.log(req.user.username, 'PERSONNEL_GENERE', { cible: user.username });
   res.json({ ok: true, record: rec });
-});
+}));
 
 app.get('/api/emails', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   res.json((await email.list()).slice(-50).reverse());
@@ -667,36 +672,36 @@ app.get('/api/emails/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), a
 }));
 
 // ── Journal d'audit ──
-app.get('/api/audit', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  res.json(audit.list().slice(-500).reverse());
-});
+app.get('/api/audit', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
+  res.json((await audit.list()).slice(-500).reverse());
+}));
 
-app.get('/api/audit/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  res.json(audit.verifyChain());
-});
+app.get('/api/audit/verify', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
+  res.json(await audit.verifyChain());
+}));
 
 // ── Durées de conservation (fiche technique §5.2) ──
 // Ce que l'application garde, combien de temps, et pourquoi. La première
 // question d'un contrôle, et jusqu'ici elle n'avait pas de réponse.
-app.get('/api/retention', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  res.json(retention.etat(loadConfig()));
-});
+app.get('/api/retention', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
+  res.json(await retention.etat(loadConfig()));
+}));
 
 // L'application de la politique. À blanc par défaut : effacer des données est
 // un geste délibéré, et il laisse une trace au journal — lequel, justement,
 // n'est jamais purgé mais archivé.
-app.post('/api/retention/purger', requireAuth, requireRole('SUPERADMIN'), enveloppe, (req, res) => {
+app.post('/api/retention/purger', requireAuth, requireRole('SUPERADMIN'), enveloppe, asynchrone(async (req, res) => {
   const appliquer = (req.body || {}).appliquer === true;
-  const rapport = retention.appliquer(loadConfig(), { appliquer });
+  const rapport = await retention.appliquer(loadConfig(), { appliquer });
   if (appliquer) {
-    audit.log(req.user.username, 'RETENTION_APPLIQUEE', {
+    await audit.log(req.user.username, 'RETENTION_APPLIQUEE', {
       actes: rapport.actes.map((a) => ({
         collection: a.collection, action: a.action, retirees: a.retirees || 0, archivees: a.archivees || 0,
       })),
     });
   }
   res.json(rapport);
-});
+}));
 
 // ── Notifications ──
 app.get('/api/notifications', requireAuth, (req, res) => {
@@ -725,7 +730,7 @@ app.get('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
   });
 });
 
-app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   const cfg = loadConfig();
   const { instance, security, replication, aac } = req.body || {};
   // « Détails sur l'Administration » : chaque État a la sienne. Celle de
@@ -763,10 +768,10 @@ app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
     if (replication.centralUrl) cfg.replication.centralUrl = String(replication.centralUrl);
   }
   saveConfig(cfg);
-  audit.log(req.user.username, 'CONFIGURATION_MODIFIEE', { instance: retenue || '(régionale)' });
+  await audit.log(req.user.username, 'CONFIGURATION_MODIFIEE', { instance: retenue || '(régionale)' });
   auth.notify(`Configuration modifiée par ${req.user.username}.`, 'info');
   res.json({ ok: true, config: { ...cfg, aac: instances.aac(req.user, loadConfig) } });
-});
+}));
 
 // ── Référentiels du portail (Configuration PESSCO) ──
 // Servis dans la vue de l'instance regardée : ses organismes, ses inspecteurs,
@@ -776,39 +781,39 @@ app.get('/api/referentiels', requireAuth, (req, res) => {
   res.json(instances.refs(req.user, loadConfig));
 });
 
-app.post('/api/referentiels/:coll', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+app.post('/api/referentiels/:coll', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   const record = referentiels.createItem(req.params.coll, req.body || {},
     instances.courante(req.user, loadConfig));
   if (!record) return res.status(404).json({ error: 'unknown_collection' });
   if (record.error) return res.status(409).json({ error: record.error });
-  audit.log(req.user.username, 'REFERENTIEL_AJOUT', { collection: req.params.coll, id: record.id });
+  await audit.log(req.user.username, 'REFERENTIEL_AJOUT', { collection: req.params.coll, id: record.id });
   res.json({ ok: true, record });
-});
+}));
 
-app.put('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+app.put('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   const record = referentiels.updateItem(req.params.coll, req.params.id, req.body || {});
   if (!record) return res.status(404).json({ error: 'not_found' });
   if (record.error) return res.status(409).json({ error: record.error });
-  audit.log(req.user.username, 'REFERENTIEL_MODIFIE', { collection: req.params.coll, id: req.params.id });
+  await audit.log(req.user.username, 'REFERENTIEL_MODIFIE', { collection: req.params.coll, id: req.params.id });
   res.json({ ok: true, record });
-});
+}));
 
-app.delete('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+app.delete('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   const removed = referentiels.deleteItem(req.params.coll, req.params.id);
   if (!removed) return res.status(404).json({ error: 'not_found' });
-  audit.log(req.user.username, 'REFERENTIEL_SUPPRIME', { collection: req.params.coll, id: req.params.id, supprimes: removed });
+  await audit.log(req.user.username, 'REFERENTIEL_SUPPRIME', { collection: req.params.coll, id: req.params.id, supprimes: removed });
   res.json({ ok: true, removed });
-});
+}));
 
 // Contrôle d'intégrité : enregistrements dont le parent a été supprimé
 app.get('/api/referentiels/orphans', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
   res.json({ orphans: referentiels.orphans(false) });
 });
-app.post('/api/referentiels/orphans/purge', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
+app.post('/api/referentiels/orphans/purge', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
   const removed = referentiels.orphans(true);
-  audit.log(req.user.username, 'REFERENTIELS_PURGE_ORPHELINS', removed);
+  await audit.log(req.user.username, 'REFERENTIELS_PURGE_ORPHELINS', removed);
   res.json({ ok: true, removed });
-});
+}));
 
 // Lecture d'une seule collection : les modules n'ont pas à charger tout le
 // référentiel pour un besoin ciblé. Déclarée après /orphans, qui est une
@@ -886,7 +891,7 @@ app.get('/api/referentiels/:coll/template', requireAuth, (req, res) => {
   sendWorkbook(res, req.params.coll, false, `modele_${req.params.coll}.xlsx`);
 });
 
-app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
+app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
   const sheets = collsFor(req.params.coll);
   if (!sheets) return res.status(404).json({ error: 'unknown_collection' });
   const b64 = String((req.body && req.body.fileB64) || '').split(',').pop();
@@ -950,23 +955,23 @@ app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN'
     });
   });
   const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
-  audit.log(req.user.username, 'REFERENTIEL_IMPORT', {
+  await audit.log(req.user.username, 'REFERENTIEL_IMPORT', {
     collection: req.params.coll, ajouts: sum(added), maj: sum(updated), erreurs: errors.length,
   });
   res.json({ ok: true, imported: sum(added) + sum(updated), added: sum(added), updated: sum(updated), detail: { added, updated }, errors });
-});
+}));
 
 // ── Statistiques du portail ──
-app.get('/api/stats', requireAuth, (req, res) => {
+app.get('/api/stats', requireAuth, asynchrone(async (req, res) => {
   const users = auth.getUsers();
   const enabled = Object.values(req.cfg.modules).filter(Boolean).length;
   res.json({
     users: users.filter((u) => u.active).length,
     modulesEnabled: enabled,
     modulesTotal: MODULES.length,
-    auditEntries: audit.list().length,
+    auditEntries: (await audit.list()).length,
   });
-});
+}));
 
 // ── Montage des modules ──
 // Découverte des manifestes, middleware d'audit par préfixe d'API, puis
@@ -1083,13 +1088,13 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // Le journal d'audit en garde trace lui aussi : une erreur répétée sur une
 // même route est un signal, et le journal est ce qu'on relit après coup.
 // eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
+app.use(async (err, req, res, next) => {
   const reference = crypto.randomBytes(4).toString('hex');
   trace.erreur('exception non rattrapée', {
     reference, methode: req.method, chemin: req.path, erreur: err,
   });
   try {
-    audit.log((req.user || {}).username || 'anonyme', 'ERREUR_SERVEUR', {
+    await audit.log((req.user || {}).username || 'anonyme', 'ERREUR_SERVEUR', {
       reference, methode: req.method, chemin: req.path, message: err && err.message,
     });
   } catch (e) { /* le journal ne doit pas masquer l'erreur d'origine */ }
@@ -1114,32 +1119,28 @@ try {
 }
 
 const PORT = process.env.PORT || 4750;
-// Reprise du format des journaux d'audit : le tableau JSON d'origine devient
-// une entrée par ligne, recopiée telle quelle — empreintes comprises, la
-// chaîne reste vérifiable. Idempotente : silencieuse une fois passée.
-[['socle', audit.reprendre()], ['modules', moduleAudit.reprendre()]]
-  .filter(([, fait]) => fait)
-  .forEach(([quoi]) => trace.info("journal d'audit repris en lignes", { journal: quoi }));
 // L'authentification multifacteur doit être active en production : elle ne
 // l'est pas par défaut, et un démarrage silencieux laisserait la décision se
 // perdre. Ici elle se voit, et le journal la retient.
-if (EN_PRODUCTION && !mfaActive(loadConfig())) {
-  trace.alerte("authentification multifacteur désactivée en production",
-    { remede: 'security.mfaEnabled au paramétrage, ou OASIS_MFA=1' });
-  audit.log('système', 'MFA_DESACTIVEE_EN_PRODUCTION', {});
-}
+async function controlerMfa() {
+  if (EN_PRODUCTION && !mfaActive(loadConfig())) {
+    trace.alerte("authentification multifacteur désactivée en production",
+      { remede: 'security.mfaEnabled au paramétrage, ou OASIS_MFA=1' });
+    await audit.log('système', 'MFA_DESACTIVEE_EN_PRODUCTION', {});
+  }
 // L'inverse est plus dangereux encore : l'authentification multifacteur active
 // et aucune messagerie joignable ferme l'application à tout le monde — le code
 // à usage unique part vers un serveur qui n'existe pas. Le démarrage le dit
 // haut, avant que le premier agent s'y heurte.
-if (EN_PRODUCTION && mfaActive(loadConfig())) {
-  const m = email.messagerieCredible();
-  if (!m.ok) {
-    trace.alerte('authentification multifacteur active, messagerie injoignable — nul ne pourra se connecter',
-      { motif: m.motif, remede: 'OASIS_SMTP_HOST, OASIS_SMTP_PORT, OASIS_SMTP_USER, OASIS_SMTP_PASS' });
-    audit.log('système', 'MFA_SANS_MESSAGERIE', { motif: m.motif });
-  } else {
-    trace.info('authentification multifacteur active', { messagerie: m.hote });
+  if (EN_PRODUCTION && mfaActive(loadConfig())) {
+    const m = email.messagerieCredible();
+    if (!m.ok) {
+      trace.alerte('authentification multifacteur active, messagerie injoignable — nul ne pourra se connecter',
+        { motif: m.motif, remede: 'OASIS_SMTP_HOST, OASIS_SMTP_PORT, OASIS_SMTP_USER, OASIS_SMTP_PASS' });
+      await audit.log('système', 'MFA_SANS_MESSAGERIE', { motif: m.motif });
+    } else {
+      trace.info('authentification multifacteur active', { messagerie: m.hote });
+    }
   }
 }
 // L'heure des journaux, et la preuve qu'elle vaut quelque chose (fiche
@@ -1147,11 +1148,20 @@ if (EN_PRODUCTION && mfaActive(loadConfig())) {
 // inaltérable et faux à la fois : la chaîne SHA-256 scelle l'heure écrite, non
 // l'heure vraie. La vérification ne corrige rien — elle témoigne, et le
 // journal garde son témoignage.
-horloge.verifier(loadConfig()).then((h) => {
+// Le magasin est préparé **une fois**, et cette promesse est ce que tout ce qui
+// écrit au démarrage attend. La vérification d'horloge interroge le réseau et
+// peut prendre plusieurs secondes : elle ne bloque donc pas l'écoute, mais son
+// inscription au journal, elle, ne peut pas partir avant que les tables
+// existent. Sans cette attente, l'entrée était perdue — et le `catch` de fin la
+// perdait sans rien dire.
+const MAGASIN_PRET = magasin.preparer();
+
+horloge.verifier(loadConfig()).then(async (h) => {
   ETAT_HORLOGE = h;
+  await MAGASIN_PRET;
   if (h.verifiee && !h.derive) {
     trace.info('horloge vérifiée', { serveur: h.serveur, ecartMs: h.ecartMs });
-    audit.log('système', 'HORLOGE_VERIFIEE', { serveur: h.serveur, ecartMs: h.ecartMs });
+    await audit.log('système', 'HORLOGE_VERIFIEE', { serveur: h.serveur, ecartMs: h.ecartMs });
     return;
   }
   trace.alerte(h.derive ? 'horloge dérivée' : "horodatage non vérifié", {
@@ -1160,12 +1170,13 @@ horloge.verifier(loadConfig()).then((h) => {
       ? 'synchroniser le système (chrony, ntpd, timesyncd) — ce serveur ne corrige pas l’heure'
       : 'déclarer temps.serveur au paramétrage, ou OASIS_TEMPS_SERVEUR',
   });
-  audit.log('système', h.derive ? 'HORLOGE_DERIVEE' : 'HORLOGE_NON_VERIFIEE',
+  await audit.log('système', h.derive ? 'HORLOGE_DERIVEE' : 'HORLOGE_NON_VERIFIEE',
     { serveur: h.serveur || '', ecartMs: h.ecartMs, motif: h.raison });
-}).catch(() => { /* `verifier` ne lève pas : ceci est une ceinture */ });
+}).catch((e) => trace.erreur("état de l'horloge non consigné au journal", {
+  detail: e.message,
+  remede: "vérifier que le magasin répond — l'horloge elle-même ne lève pas",
+}));
 
-auth.seedUsers(loadConfig());
-referentiels.seedReferentiels();
 
 // ── L'amorçage précède l'écoute ──
 //
@@ -1203,7 +1214,22 @@ function ecouter() {
   return serveur;
 }
 
-magasin.preparer()
+MAGASIN_PRET
+  // L'amorçage des comptes inscrit au journal : il attend donc le magasin.
+  .then(() => auth.seedUsers(loadConfig()))
+  .then(() => referentiels.seedReferentiels())
+  // Les contrôles de démarrage inscrivent au journal : ils attendent donc que
+  // le magasin soit prêt, et le démarrage les attend à son tour.
+  .then(controlerMfa)
+  // Reprise du format des journaux d'audit : le tableau JSON d'origine devient
+  // une entrée par ligne, recopiée telle quelle — empreintes comprises, la
+  // chaîne reste vérifiable. Idempotente : silencieuse une fois passée. Elle est
+  // entrée dans cette chaîne le jour où les journaux sont passés en base.
+  .then(async () => {
+    for (const [quoi, faire] of [['socle', audit.reprendre], ['modules', moduleAudit.reprendre]]) {
+      if (await faire()) trace.info("journal d'audit repris en lignes", { journal: quoi });
+    }
+  })
   // Reprise ponctuelle des enregistrements posés sous l'ancien nom du module
   // d'inspections sur aire de trafic. Idempotente : silencieuse une fois
   // passée. Elle est entrée dans cette chaîne le jour où le registre des

@@ -67,7 +67,10 @@ const FENETRE_AUTH_MS = 15 * 60 * 1000;
 const MAX_TENTATIVES_AUTH = 20;
 const tentativesAuth = new Map();
 
-function limiterAuth(req, res, next) {
+// Middleware Express : il ne rend rien à Express, qui attend `next()`. Il est
+// enveloppé par `asynchrone` à la pose — sans quoi un rejet laisserait la
+// requête ouverte sans trace.
+async function limiterAuth(req, res, next) {
   const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'inconnu';
   const maintenant = Date.now();
   const t = tentativesAuth.get(ip);
@@ -79,7 +82,7 @@ function limiterAuth(req, res, next) {
   if (t.compte > MAX_TENTATIVES_AUTH) {
     const reste = Math.ceil((FENETRE_AUTH_MS - (maintenant - t.debut)) / 1000);
     res.setHeader('Retry-After', String(reste));
-    audit.log(String((req.body || {}).username || 'inconnu'), 'AUTH_DEBIT_DEPASSE', { ip });
+    await audit.log(String((req.body || {}).username || 'inconnu'), 'AUTH_DEBIT_DEPASSE', { ip });
     return res.status(429).json({ error: 'too_many_attempts', retry_after: reste });
   }
   return next();
@@ -115,7 +118,12 @@ const ROUTES_SANS_ENTETE = ['/api/login'];   // et ses sous-routes MFA
 // Une boucle emballée, elle, en demande des centaines par seconde.
 const ecritures = new Map();          // compte -> { compte, debut }
 
-function limiterEcritures(req, res, cfg) {
+// **Asynchrone, et son résultat doit être attendu.** Elle rend un booléen :
+// « l'écriture est-elle permise ? ». Appelée sans `await`, elle rend une
+// promesse — toujours vraie — et le plafond ne se déclencherait plus jamais.
+// Aucune erreur, aucune trace : le garde-fou serait simplement parti. Un
+// contrôle de forme interdit désormais de l'appeler sans l'attendre.
+async function limiterEcritures(req, res, cfg) {
   if (!METHODES_MUTATIVES.has(req.method)) return true;
   const sec = (cfg && cfg.security) || {};
   const max = Number(sec.maxWritesPerMinute) || 600;
@@ -132,7 +140,7 @@ function limiterEcritures(req, res, cfg) {
   if (t.compte > max) {
     const reste = Math.ceil((fenetre - (maintenant - t.debut)) / 1000);
     res.setHeader('Retry-After', String(reste));
-    audit.log(cle, 'ECRITURE_DEBIT_DEPASSE', { path: req.path, methode: req.method, plafond: max });
+    await audit.log(cle, 'ECRITURE_DEBIT_DEPASSE', { path: req.path, methode: req.method, plafond: max });
     res.status(429).json({ error: 'too_many_attempts', retry_after: reste });
     return false;
   }

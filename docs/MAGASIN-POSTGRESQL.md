@@ -196,6 +196,74 @@ ce chantier produit un vert qui ne prouvait rien — base de papier, journal vid
 messagerie joignable — et la leçon ne change pas : **un contrôle qui n'a jamais
 échoué n'a pas encore été éprouvé.**
 
+## Troisième et quatrième : les journaux d'audit
+
+*29 septembre 2026. `audit` et `module_audit` — la plus grosse conversion du
+chantier, et la plus haute en enjeu.*
+
+64 inscriptions dans 12 fichiers, 21 fichiers touchés, **+874 / −366 lignes**.
+Le retour de `audit.log` n'était utilisé nulle part : les 64 appels étaient tous
+en pose-et-oublie, ce qui a rendu la conversion mécanique — mais pas anodine.
+
+### Le vrai risque n'était pas l'ajout, c'était le chaînage
+
+Ajouter est sans danger : cent insertions concurrentes donnent cent lignes, des
+deux côtés. **Inscrire une entrée chaînée ne l'est pas** : c'est lire la
+dernière, en dériver l'empreinte, puis ajouter. Deux inscriptions concurrentes
+qui lisent la même dernière entrée en posent deux prétendant le même
+prédécesseur — et *une chaîne forchée ne se répare pas*, une entrée inscrite ne
+se réécrivant jamais.
+
+Ce geste était sûr sur fichiers pour la raison qu'on connaît maintenant : `log`
+n'avait aucun `await`. Il l'est de nouveau, explicitement :
+
+| | chaînage atomique | geste naïf |
+|---|---|---|
+| **Fichiers** — file d'attente par journal | 20 entrées, chaîne intacte | 20 entrées, **chaîne rompue**, sans bruit |
+| **Base** — index unique `(nom, cle, rang)` | 20 entrées, chaîne intacte | 1 entrée, chaîne intacte, **19 refus** |
+
+### La garantie est dans le schéma, non dans le code
+
+Le premier essai posait la condition « le bout de la chaîne n'a pas bougé » dans
+le `WHERE` de l'insertion. **Il ne protégeait rien, et la mesure l'a dit du
+premier coup** : vingt inscriptions concurrentes, chaîne rompue. Un `UPDATE …
+WHERE rev = …` verrouille la ligne qu'il modifie et le second attend ; une
+insertion n'a **aucune ligne à verrouiller** — deux insertions simultanées
+évaluent la même sous-requête, y lisent le même bout, et passent toutes les
+deux.
+
+La garantie est donc posée dans le schéma : `(nom, cle, rang)` unique, `rang`
+étant le numéro de l'entrée dans sa chaîne, `cle` le code du module. Ce n'est pas
+seulement plus sûr, c'est d'une autre nature : **un protocole se contourne, une
+contrainte non**. La base refuse désormais une chaîne forchée quel que soit le
+code qui l'écrit — y compris le socle Java.
+
+L'index est **partiel, sur `rang > 0`** : une entrée simplement ajoutée n'a pas
+de rang, et sans cette réserve deux ajouts non chaînés se refuseraient l'un
+l'autre. Le revers est dit et gardé : relevé sur les journaux réels, **1 623
+entrées du socle et 1 582 des modules, aucune sans numéro, aucun numéro en
+double dans sa chaîne**, et deux contrôles le tiennent pour les suivantes.
+
+### Deux défauts trouvés au passage
+
+**Les garde-fous de forme ne regardaient pas `server.js`.** Ils scannaient
+`public/` et `src/` ; le fichier de 1 200 lignes qui porte la moitié des
+inscriptions au journal et la lecture du plafond d'écritures leur échappait.
+L'angle mort s'est vu parce qu'une contre-épreuve refusait de mordre. Corrigé —
+et le contrôle élargi a immédiatement trouvé un gestionnaire asynchrone sans
+enveloppe qui dormait là.
+
+**La vérification d'horloge écrivait au journal hors de la chaîne de
+démarrage**, donc avant que les tables existent, et son `catch` avalait l'échec
+en silence. L'entrée « horodatage non vérifié » était perdue — et c'est un
+contrôle de la suite « socle » qui l'a dit, non moi.
+
+### Ce que le passage a rendu plus rapide
+
+`log` ne relit plus le journal entier, mais **seulement sa propre chaîne** :
+`all()`, qui regroupait les 3 205 entrées par module à chaque écriture, a disparu
+du chemin d'écriture. En base, c'est un index qui répond.
+
 ---
 
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout

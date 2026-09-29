@@ -4,8 +4,20 @@
 // Alimenté automatiquement par un middleware qui journalise les requêtes
 // mutatives abouties des modules (création, enregistrement, soumission,
 // validation, suppression…).
+// Asynchrone depuis ADR-002, étape B : l'inscription est un
+// lire-modifier-réécrire — lire la dernière entrée de la chaîne du module, en
+// dériver l'empreinte, ajouter. Deux inscriptions concurrentes la forcheraient,
+// et une chaîne forchée ne se répare pas. Elle passe donc par
+// `magasin.journalChainer` : file d'attente sur fichiers, contrainte d'unicité
+// en base.
+//
+// Chaque module a **sa** chaîne, numérotée depuis un et scellée depuis sa propre
+// genèse. La clé de chaîne est le code du module : deux modules qui écrivent en
+// même temps ne se gênent donc pas en base, et ne rompent rien sur fichiers.
 const crypto = require('crypto');
 const journal = require('./journal');
+const magasin = require('./magasin');
+const trace = require('./trace');
 const horloge = require('./horloge');
 
 const GENESIS = 'OASIS-MODULE-GENESIS';
@@ -48,33 +60,36 @@ const PATH_ACTIONS = [
 // entrée est écrite telle quelle, empreinte comprise ; elle gagne seulement le
 // code sous lequel elle avait été inscrite, qui ne participe pas au calcul de
 // l'empreinte. Idempotente : si le journal en lignes existe, il fait foi.
-function reprendre() {
-  if (journal.converti(KEY)) return false;
+// Le drapeau évite de redemander au magasin à chaque écriture si la reprise est
+// faite : en base, la question coûterait une requête par entrée inscrite.
+let repriseFaite = false;
+async function reprendre() {
+  if (repriseFaite) return false;
+  if (await magasin.journalConverti(KEY)) { repriseFaite = true; return false; }
   const herite = journal.lireHerite(KEY);
-  if (!herite || typeof herite !== 'object' || Array.isArray(herite)) return false;
+  if (!herite || typeof herite !== 'object' || Array.isArray(herite)) {
+    repriseFaite = true;
+    return false;
+  }
   const lignes = [];
   Object.keys(herite).forEach((code) => {
     (herite[code] || []).forEach((e) => lignes.push({ ...e, codeModule: code }));
   });
-  journal.ecrireTout(KEY, lignes);
+  await magasin.journalReprendre(KEY, lignes);
+  repriseFaite = true;
   return true;
 }
 
-// Les entrées rangées par code de module, comme le faisait l'objet hérité. Le
-// regroupement se refait quand le journal a grandi — c'est un parcours en
-// mémoire, sans lecture de fichier.
-let groupe = { taille: -1, data: {} };
-function all() {
-  reprendre();
-  const lignes = journal.lire(KEY);
-  if (groupe.taille === lignes.length) return groupe.data;
-  const data = {};
-  lignes.forEach((e) => {
-    const code = e.codeModule || '';
-    (data[code] = data[code] || []).push(e);
-  });
-  groupe = { taille: lignes.length, data };
-  return data;
+// Les entrées d'une chaîne, sous le code où elles ont été inscrites.
+//
+// Le regroupement de tout le journal a disparu : il n'était là que pour
+// retrouver la chaîne d'un module, ce que le magasin fait désormais lui-même —
+// par un filtre en mémoire sur fichiers, par un index en base. Surtout, il
+// n'est plus sur le chemin d'écriture : inscrire une entrée ne relit plus que
+// sa propre chaîne, non le journal entier.
+async function chaineDe(code) {
+  await reprendre();
+  return magasin.journalLireChaine(KEY, code);
 }
 
 function entryHash(prevHash, e) {
@@ -84,25 +99,29 @@ function entryHash(prevHash, e) {
     .digest('hex');
 }
 
-function log(moduleCode, user, action, objet, ref, details) {
-  const data = all();
-  const entries = data[moduleCode] || [];
-  const prevHash = entries.length ? entries[entries.length - 1].hash : GENESIS;
-  const entry = {
-    id: entries.length + 1,
-    ts: horloge.maintenant(),
-    user: user || 'système',
-    action,
-    actionLabel: ACTIONS[action] || action,
-    objet: objet || '',
-    ref: ref || '',
-    details: details || {},
-    prevHash,
-  };
-  entry.hash = entryHash(prevHash, entry);
-  entry.codeModule = moduleCode;
-  journal.ajouter(KEY, entry);
-  return entry;
+async function log(moduleCode, user, action, objet, ref, details) {
+  await reprendre();
+  // Rejoué si une autre inscription est passée entre-temps — horodatage
+  // compris. C'est voulu : une entrée porte l'heure à laquelle elle a
+  // réellement pris sa place dans la chaîne.
+  return magasin.journalChainer(KEY, moduleCode, (entries) => {
+    const prevHash = entries.length ? entries[entries.length - 1].hash : GENESIS;
+    const entry = {
+      id: entries.length + 1,
+      ts: horloge.maintenant(),
+      user: user || 'système',
+      action,
+      actionLabel: ACTIONS[action] || action,
+      objet: objet || '',
+      ref: ref || '',
+      details: details || {},
+      prevHash,
+    };
+    entry.hash = entryHash(prevHash, entry);
+    // `codeModule` est posé **après** le calcul : il ne participe pas au sceau.
+    entry.codeModule = moduleCode;
+    return entry;
+  });
 }
 
 // Un module a pu changer de nom : ses entrées d'alors portent l'ancien code.
@@ -115,14 +134,14 @@ const ANCIENS_CODES = { RAMP: ['SAFA'] };
 // Du plus ancien nom au nom courant : l'ordre des chaînes suit celui du temps.
 const codesDe = (moduleCode) => [...(ANCIENS_CODES[moduleCode] || []), moduleCode];
 
-function list(moduleCode) {
-  const data = all();
+async function list(moduleCode) {
   const codes = codesDe(moduleCode);
-  if (codes.length === 1) return data[moduleCode] || [];
+  if (codes.length === 1) return chaineDe(moduleCode);
   // `codeModule` dit sous quel nom l'entrée a été écrite : deux chaînes
   // distinctes numérotent chacune à partir de un.
-  return codes
-    .flatMap((c) => (data[c] || []).map((e) => ({ ...e, codeModule: c })))
+  const parCode = await Promise.all(codes.map(async (c) => ({ c, entrees: await chaineDe(c) })));
+  return parCode
+    .flatMap(({ c, entrees }) => entrees.map((e) => ({ ...e, codeModule: c })))
     .sort((x, y) => String(x.ts).localeCompare(String(y.ts)));
 }
 
@@ -140,11 +159,10 @@ function chaineValide(entries) {
 
 // Plusieurs noms, plusieurs chaînes : chacune est vérifiée pour elle-même, et
 // le module n'est déclaré intègre que si toutes le sont.
-function verifyChain(moduleCode) {
-  const data = all();
+async function verifyChain(moduleCode) {
   let total = 0;
   for (const c of codesDe(moduleCode)) {
-    const r = chaineValide(data[c] || []);
+    const r = chaineValide(await chaineDe(c));
     total += r.total;
     if (!r.valid) return { valid: false, brokenAt: r.brokenAt, codeModule: c, total };
   }
@@ -184,6 +202,15 @@ function middleware(moduleCode, prefix) {
       }
       details.methode = req.method;
       details.url = req.originalUrl.split('?')[0];
+      // `res.on('finish')` est appelé **après** la réponse : l'inscription ne
+      // peut plus être attendue par la requête, et c'était déjà le cas quand
+      // elle était synchrone. Ce qui change, c'est qu'une promesse rejetée ne
+      // mène nulle part : un échec d'écriture du journal disparaîtrait sans
+      // bruit, dans le registre même qui doit dire ce qui a eu lieu.
+      //
+      // Il est donc inscrit aux traces, avec de quoi retrouver l'acte qui n'a
+      // pas été journalisé. On ne peut pas faire mieux d'ici — la réponse est
+      // partie, et l'acte a eu lieu.
       log(
         moduleCode,
         (req.user && req.user.username) || 'anonyme',
@@ -191,7 +218,13 @@ function middleware(moduleCode, prefix) {
         inferObjet(req, prefix),
         inferRef(req),
         details
-      );
+      ).catch((e) => trace.erreur('journal du module non inscrit', {
+        module: moduleCode,
+        url: details.url,
+        methode: details.methode,
+        utilisateur: (req.user && req.user.username) || 'anonyme',
+        detail: e.message,
+      }));
     });
     next();
   };

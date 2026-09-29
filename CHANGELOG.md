@@ -93,6 +93,27 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
 - Le contrôle des trois envois concurrents **passait pour la mauvaise raison** — un Mailpit
   sur le port 1025 espaçait les envois sur le réseau. L'épreuve force désormais une
   configuration sans hôte SMTP ; la contre-épreuve mord.
+- **Les journaux d'audit passés en base** — `audit` et `module_audit`. 64 inscriptions
+  dans 12 fichiers, 21 fichiers touchés. `log` ne relit plus le journal entier mais
+  seulement sa propre chaîne.
+- **Une chaîne d'audit ne peut plus forcher** : index unique `(nom, cle, rang)` sur la
+  table `journal`. Le premier essai posait la condition dans le `WHERE` de l'insertion —
+  il ne protégeait rien, faute de ligne à verrouiller, et vingt inscriptions concurrentes
+  l'ont montré. La garantie est désormais dans le schéma, donc valable pour tout code qui
+  écrit dans cette base.
+- `magasin.journalChainer` rend l'inscription atomique dans les deux régimes : file
+  d'attente par journal sur fichiers, contrainte d'unicité en base.
+- **Les garde-fous de forme ne regardaient pas `server.js`** — 1 200 lignes, la moitié des
+  inscriptions au journal. Corrigé ; le contrôle élargi a aussitôt trouvé un gestionnaire
+  asynchrone sans enveloppe.
+- La vérification d'horloge écrivait au journal **avant que les tables existent**, et son
+  `catch` avalait l'échec : l'entrée « horodatage non vérifié » était perdue. Elle attend
+  désormais la préparation du magasin, et un échec est tracé.
+- Deux garde-fous : toute inscription au journal est attendue, et le plafond d'écritures
+  est lu avec `await` — sans quoi il rendrait une promesse toujours vraie et ne se
+  déclencherait plus jamais.
+- La base de papier des contrôles de contrat tient maintenant **la même contrainte** que le
+  vrai schéma. Elle avait menti une quatrième fois.
 - **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
   `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.

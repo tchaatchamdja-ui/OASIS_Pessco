@@ -32,6 +32,16 @@
 // dans les entrées elles-mêmes ; la base n'a pas à la connaître, elle a
 // seulement à ne rien perdre et à ne rien réordonner.
 //
+// `cle` dit **de quelle chaîne** l'entrée fait partie. Le journal des modules en
+// porte une par module, chacune numérotée depuis un et scellée depuis sa propre
+// genèse : sans cette colonne, retrouver la dernière entrée d'un module
+// demanderait de parcourir tout le journal, ou d'interroger le contenu JSON —
+// ce qui forcerait une conversion, et une conversion réordonne les clés.
+//
+// `cle` est une donnée de rangement, **pas un champ scellé** : elle recopie le
+// `codeModule` de l'entrée, comme `ordre` recopie sa position. L'empreinte ne la
+// couvre pas, et elle ne doit jamais entrer dans son calcul.
+//
 // ── `json`, et surtout pas `jsonb` ──
 //
 // `jsonb` range les clés d'un objet par longueur puis par octets. Rien n'est
@@ -68,9 +78,26 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS journal (
      nom    TEXT NOT NULL,
      ordre  BIGSERIAL PRIMARY KEY,
+     cle    TEXT NOT NULL DEFAULT '',
+     rang   INTEGER NOT NULL DEFAULT 0,
      entree JSON NOT NULL
    )`,
+  "ALTER TABLE journal ADD COLUMN IF NOT EXISTS cle TEXT NOT NULL DEFAULT ''",
+  'ALTER TABLE journal ADD COLUMN IF NOT EXISTS rang INTEGER NOT NULL DEFAULT 0',
   'CREATE INDEX IF NOT EXISTS journal_nom_ordre ON journal (nom, ordre)',
+  'CREATE INDEX IF NOT EXISTS journal_chaine ON journal (nom, cle, ordre)',
+  // La contrainte qui empêche une chaîne de forcher — voir `chainer`.
+  //
+  // **Partielle, sur `rang > 0`.** Une entrée chaînée porte toujours son numéro
+  // dans la chaîne ; une entrée simplement ajoutée n'en a pas, et se range au
+  // rang zéro. Sans cette réserve, deux ajouts non chaînés se refuseraient l'un
+  // l'autre — ce qui s'est vu du premier coup à l'épreuve, et n'a rien à voir
+  // avec ce que la contrainte protège.
+  //
+  // Le revers est à dire : une entrée de journal chaîné qui arriverait sans
+  // numéro échapperait à la garantie. Un contrôle vérifie donc que les journaux
+  // chaînés n'en portent aucune.
+  'CREATE UNIQUE INDEX IF NOT EXISTS journal_rang ON journal (nom, cle, rang) WHERE rang > 0',
 ];
 
 function creer(client) {
@@ -170,9 +197,70 @@ function creer(client) {
 
   // Ajout seul : rien de ce qui précède n'est relu ni réécrit, comme le
   // fichier en lignes — et sans la lecture préalable que celui-ci demandait.
-  async function ajouter(nom, entree) {
-    await client.query('INSERT INTO journal (nom, entree) VALUES ($1, $2)',
-      [nom, JSON.stringify(entree)]);
+  async function ajouter(nom, entree, cle) {
+    await client.query('INSERT INTO journal (nom, cle, rang, entree) VALUES ($1, $2, $3, $4)',
+      [nom, cle || '', Number(entree && entree.id) || 0, JSON.stringify(entree)]);
+  }
+
+  // Les entrées d'une seule chaîne, dans l'ordre. C'est ce que `cle` sert à
+  // rendre indexable : le journal des modules en porte cinq.
+  const lireChaine = async (nom, cle) => (await client.query(
+    'SELECT entree FROM journal WHERE nom = $1 AND cle = $2 ORDER BY ordre', [nom, cle || ''],
+  )).rows.map((r) => r.entree);
+
+  // ── Ajouter au bout d'une chaîne, sans la rompre ──
+  //
+  // Inscrire une entrée chaînée n'est pas un ajout : c'est **lire la dernière,
+  // en dériver l'empreinte, puis ajouter**. Deux inscriptions concurrentes qui
+  // liraient la même dernière entrée poseraient deux entrées prétendant le même
+  // prédécesseur — la chaîne forcherait, et `verifyChain` la déclarerait rompue
+  // pour toujours. On ne peut pas la réparer : une entrée inscrite ne se
+  // réécrit pas.
+  //
+  // Sur fichiers, ce geste était sûr sans que rien ne le dise : `log` n'avait
+  // aucun `await`, donc rien ne s'intercalait.
+  //
+  // ── Pourquoi une contrainte d'unicité, et non une condition ──
+  //
+  // Le premier essai posait la condition `MAX(ordre) inchangé` dans le `WHERE`
+  // de l'insertion. **Il ne protégeait rien**, et la mesure l'a montré du
+  // premier coup : vingt inscriptions concurrentes, chaîne rompue. Un `UPDATE
+  // … WHERE rev = …` verrouille la ligne qu'il change, et le second attend ;
+  // ici il n'y a **aucune ligne à verrouiller** — deux insertions simultanées
+  // évaluent la même sous-requête, y lisent le même bout, et passent toutes
+  // les deux.
+  //
+  // La garantie est donc posée dans le schéma : `(nom, cle, rang)` est unique,
+  // `rang` étant le numéro de l'entrée dans sa chaîne. Deux inscriptions au
+  // même rang ne peuvent pas coexister — la seconde est refusée par la base,
+  // et l'on recommence sur ce que la première a laissé.
+  //
+  // Ce n'est pas seulement plus sûr, c'est d'une autre nature : un protocole se
+  // contourne, une contrainte non. **La base refuse désormais une chaîne
+  // forchée**, quel que soit le code qui l'écrit — y compris le socle Java.
+  //
+  // `construire(entrees)` reçoit les entrées de la chaîne et rend celle à
+  // inscrire. Elle peut être rappelée : elle ne doit donc rien faire d'autre que
+  // calculer.
+  const RANG_PRIS = '23505';   // unique_violation
+  async function chainer(nom, cle, construire, { essais = 20 } = {}) {
+    for (let i = 0; i < essais; i++) {
+      if (i) await new Promise((r) => setTimeout(r, Math.floor(Math.random() * 5 * i) + 1));
+      const entrees = await lireChaine(nom, cle);
+      const entree = await construire(entrees);
+      const rang = Number(entree && entree.id) || entrees.length + 1;
+      try {
+        await client.query(
+          'INSERT INTO journal (nom, cle, rang, entree) VALUES ($1, $2, $3, $4)',
+          [nom, cle || '', rang, JSON.stringify(entree)],
+        );
+        return entree;
+      } catch (e) {
+        if (e && e.code === RANG_PRIS) continue;
+        throw e;
+      }
+    }
+    throw new Error(`journal « ${nom} » : la chaîne « ${cle || '—'} » a bougé ${essais} fois de suite`);
   }
 
   const lire = async (nom) => (await client.query(
@@ -193,7 +281,10 @@ function creer(client) {
     'SELECT count(*)::int AS n FROM journal WHERE nom = $1', [nom],
   )).rows[0].n);
 
-  return { preparer, load, save, modifier, collections, ajouter, lire, derniere, compte, SCHEMA };
+  return {
+    preparer, load, save, modifier, collections,
+    ajouter, lire, derniere, compte, chainer, lireChaine, SCHEMA,
+  };
 }
 
 // `pg` ne s'attache qu'ici. Ailleurs, un client est un objet qui sait

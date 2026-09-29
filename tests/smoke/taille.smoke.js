@@ -14,6 +14,11 @@ const { verifier, bilan } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const DOSSIERS = ['public', 'src'];
+// `server.js` est à la racine : les garde-fous ne le voyaient pas. Il porte
+// 1 200 lignes, la moitié des inscriptions au journal d'audit et la lecture du
+// plafond d'écritures — c'est-à-dire précisément ce que ces contrôles gardent.
+// L'angle mort s'est vu à la première contre-épreuve qui ne mordait pas.
+const FICHIERS_RACINE = ['server.js'];
 
 // Au-delà de ces seuils, l'exception doit être déclarée.
 const SEUIL_FICHIER = 2000;
@@ -46,6 +51,7 @@ function sources() {
     });
   };
   DOSSIERS.forEach((d) => parcourir(path.join(RACINE, d)));
+  FICHIERS_RACINE.forEach((f) => liste.push(path.join(RACINE, f)));
   return liste;
 }
 
@@ -480,6 +486,54 @@ module.exports = async function tailleSmoke() {
     });
   verifier('aucun appel au bus de services n’est consommé sans « await »',
     BUS.length === 0, BUS.join(' · '));
+
+  // ── Ce qui inscrit au journal doit être attendu ──
+  //
+  // `audit.log` et `moduleAudit.log` sont asynchrones depuis que les journaux
+  // vivent en base (ADR-002, étape B). Appelés sans `await`, ils **écrivent
+  // quand même** — mais après que la réponse est partie, et un échec d'écriture
+  // ne mène nulle part. Sur un acte d'autorité, répondre « enregistré » avant
+  // que le journal le dise n'est pas défendable.
+  //
+  // Deux endroits s'en dispensent, et le déclarent : les deux crochets
+  // `res.on('finish')`, appelés après la réponse par construction. Ils prennent
+  // le rejet en charge et l'inscrivent aux traces.
+  const APRES_REPONSE = ['src/module_audit.js', 'src/consultations.js'];
+  const JOURNAL_NU = [];
+  sources()
+    .filter((f) => f.endsWith('.js') && !relatif(f).startsWith('public/') && !relatif(f).startsWith('tests/'))
+    .filter((f) => !APRES_REPONSE.includes(relatif(f)))
+    .forEach((f) => {
+      fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
+        const m = /(.{0,8})\b(audit|moduleAudit)\.log\(/.exec(ligne);
+        if (m && !/await\s*$/.test(m[1]) && !/(return|=>)\s*$/.test(m[1])) {
+          JOURNAL_NU.push(`${relatif(f)}:${n + 1}`);
+        }
+      });
+    });
+  verifier('toute inscription au journal d’audit est attendue',
+    JOURNAL_NU.length === 0, JOURNAL_NU.join(' · '));
+
+  // ── Le plafond d'écritures ne se lit pas sans l'attendre ──
+  //
+  // `limiterEcritures` rend un booléen — « l'écriture est-elle permise ? ». Elle
+  // est asynchrone depuis qu'un refus s'inscrit au journal. Appelée sans
+  // `await`, elle rend une promesse, **toujours vraie** : le plafond ne se
+  // déclencherait plus jamais, sans erreur ni trace. Le garde-fou serait
+  // simplement parti, et rien ne l'aurait dit.
+  const PLAFOND = [];
+  sources()
+    .filter((f) => f.endsWith('.js') && !relatif(f).startsWith('public/') && !relatif(f).startsWith('tests/'))
+    .filter((f) => relatif(f) !== 'src/protections.js')
+    .forEach((f) => {
+      fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
+        if (/\blimiterEcritures\(/.test(ligne) && !/\bawait\b/.test(ligne)) {
+          PLAFOND.push(`${relatif(f)}:${n + 1}`);
+        }
+      });
+    });
+  verifier('le plafond d’écritures est lu avec « await »',
+    PLAFOND.length === 0, PLAFOND.join(' · '));
 
   return bilan('taille');
 };

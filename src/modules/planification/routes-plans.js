@@ -9,7 +9,7 @@ const D = require('./domaine');
 const instances = require('../../instances');
 const { inconnu, reserve } = require('../../erreurs');
 
-module.exports = function register(app, deps, M) {
+module.exports = async function register(app, deps, M) {
   const { requireAuth, auth, loadConfig, audit } = deps;
 
   // ── Instance regardée ──
@@ -159,7 +159,7 @@ module.exports = function register(app, deps, M) {
 
   // Le corps validé — et lui seul — entre en base : `req.body` y faisait entrer
   // tout le reste, à commencer par `statut`, qui n'appartient qu'au circuit.
-  app.post(`${M}/plans`, requireAuth, valider(D.SCHEMA_PLAN), (req, res) => {
+  app.post(`${M}/plans`, requireAuth, valider(D.SCHEMA_PLAN), asynchrone(async (req, res) => {
     if (!D.peut(req, 'CONTRIBUTEUR', req.valide)) return D.refus(res);
     // Le plan appartient à l'instance sous laquelle il est ouvert : c'est elle
     // qui le verra, et « Exécution de la Surveillance » avec elle.
@@ -167,9 +167,9 @@ module.exports = function register(app, deps, M) {
       ...req.valide, statut: 'brouillon', instance: instanceCourante(req),
       created_by: req.user.username,
     });
-    audit.log(req.user.username, 'PLAN_CREE', { id: rec.id });
+    await audit.log(req.user.username, 'PLAN_CREE', { id: rec.id });
     return res.json(rec);
-  });
+  }));
 
   // Modifier un plan, ce n'est pas décider de son sort : le statut, la version
   // et les traces de décision restent aux routes du circuit, qui exigent un

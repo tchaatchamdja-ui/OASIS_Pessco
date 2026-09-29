@@ -2,6 +2,7 @@
 // Format du classeur (modèle AAC) : une feuille par type, colonnes en clair et
 // portée désignée par le CODE du secteur / de la sous-activité, pas par un id.
 const XLSX = require('xlsx');
+const { asynchrone } = require('../../route');
 const referentiels = require('../../referentiels');
 const db = require('./store');
 const D = require('./domaine');
@@ -143,7 +144,7 @@ module.exports = function register(app, deps, M) {
   });
 
   // Un classeur d'indicateurs réécrit la bibliothèque entière : Gestionnaire.
-  app.post(`${M}/indicateurs/import`, requireAuth, gerer, (req, res) => {
+  app.post(`${M}/indicateurs/import`, requireAuth, gerer, asynchrone(async (req, res) => {
     const { wb, error } = readUpload(req);
     if (error) return res.status(400).json({ error });
     const d = db.load();
@@ -162,9 +163,9 @@ module.exports = function register(app, deps, M) {
     });
 
     if (stats.added || stats.updated) db.save(d);
-    audit.log(req.user.username, 'PR_IMPORT_INDICATEURS', stats);
+    await audit.log(req.user.username, 'PR_IMPORT_INDICATEURS', stats);
     return res.json({ ok: true, ...stats, detail, errors });
-  });
+  }));
 
   // Évaluation — export des notes et import
   app.get(`${M}/evaluations/:id/export-excel`, requireAuth, (req, res) => {
@@ -198,7 +199,7 @@ module.exports = function register(app, deps, M) {
     return sendWorkbook(res, wb, `evaluation_${ev.id}.xlsx`);
   });
 
-  app.post(`${M}/evaluations/:id/import-excel`, requireAuth, (req, res) => {
+  app.post(`${M}/evaluations/:id/import-excel`, requireAuth, asynchrone(async (req, res) => {
     const { wb, error } = readUpload(req);
     if (error) return res.status(400).json({ error });
     const d = db.load();
@@ -222,7 +223,7 @@ module.exports = function register(app, deps, M) {
     });
     ev.updatedAt = new Date().toISOString();
     db.save(d);
-    audit.log(req.user.username, 'PR_IMPORT_EVALUATION', { id: ev.id, notes: updated });
+    await audit.log(req.user.username, 'PR_IMPORT_EVALUATION', { id: ev.id, notes: updated });
     return res.json({ ok: true, updated });
-  });
+  }));
 };

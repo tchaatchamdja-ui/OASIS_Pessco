@@ -2,6 +2,7 @@
 // Soumission, validation, approbation DG, transmission, rejet et archivage ;
 // amendement (nouvelle version), désarchivage, versions et commentaires.
 const db = require('./store');
+const { asynchrone } = require('../../route');
 const D = require('./domaine');
 const { valider } = require('../../valider');
 
@@ -53,7 +54,7 @@ module.exports = function register(app, deps, M) {
   };
 
   Object.entries(TRANSITIONS).forEach(([route, statut]) => {
-    app.post(`${M}/plans/:id/${route}`, requireAuth, (req, res) => {
+    app.post(`${M}/plans/:id/${route}`, requireAuth, asynchrone(async (req, res) => {
       const requis = route === 'soumettre' ? 'CONTRIBUTEUR' : 'VALIDATEUR';
       if (!D.peut(req, requis, D.planDe(req.params.id))) return D.refus(res);
       const body = req.body || {};
@@ -76,16 +77,16 @@ module.exports = function register(app, deps, M) {
       });
       if (route === 'valider' && rec.parent_plan_id) retirerAncetres(rec, req.user.username);
       D.wf(rec.id, route, req.user.username, { motif: body.motif || '', commentaire });
-      audit.log(req.user.username, `PLAN_${route.toUpperCase().replace(/-/g, '_')}`, { id: rec.id });
+      await audit.log(req.user.username, `PLAN_${route.toUpperCase().replace(/-/g, '_')}`, { id: rec.id });
       return res.json(rec);
-    });
+    }));
   });
 
   // ── Amendement ──
   // Amender un plan en vigueur crée une nouvelle version en brouillon
   // (copie des activités) ; le plan validé reste la référence tant que
   // l'amendement n'est pas validé à son tour.
-  app.post(`${M}/plans/:id/amender`, requireAuth, (req, res) => {
+  app.post(`${M}/plans/:id/amender`, requireAuth, asynchrone(async (req, res) => {
     const src = db.list('plans').find((x) => x.id === req.params.id);
     if (!src) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'CONTRIBUTEUR', src)) return D.refus(res);
@@ -120,14 +121,14 @@ module.exports = function register(app, deps, M) {
       db.insert('activites', { ...ab, plan_id: child.id, parent_activite_id: a.parent_activite_id || a.id });
     });
     D.wf(child.id, 'amender', req.user.username, { motif, source: src.id });
-    audit.log(req.user.username, 'PLAN_AMENDER', { source: src.id, amendement: child.id });
+    await audit.log(req.user.username, 'PLAN_AMENDER', { source: src.id, amendement: child.id });
     return res.json({ ok: true, new_plan_id: child.id, parent_plan_id: src.id, plan: child });
-  });
+  }));
 
   // Sortie des archives : le plan revient parmi les plans validés, avec ses
   // activités. Une version remplacée par une autre n'y a pas droit — elle a
   // été archivée par le versionnement, pas par une décision de rangement.
-  app.post(`${M}/plans/:id/desarchiver`, requireAuth, (req, res) => {
+  app.post(`${M}/plans/:id/desarchiver`, requireAuth, asynchrone(async (req, res) => {
     const p = db.list('plans').find((x) => x.id === req.params.id);
     if (!p) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'VALIDATEUR', p)) return D.refus(res);
@@ -143,13 +144,13 @@ module.exports = function register(app, deps, M) {
     db.list('activites').filter((a) => a.plan_id === p.id && Number(a.desarchivee) === 1)
       .forEach((a) => db.update('activites', a.id, { desarchivee: 0 }));
     D.wf(p.id, 'desarchiver', req.user.username, {});
-    audit.log(req.user.username, 'PLAN_DESARCHIVER', { id: p.id });
+    await audit.log(req.user.username, 'PLAN_DESARCHIVER', { id: p.id });
     return res.json(rec);
-  });
+  }));
 
   // Annuler l'amendement : la version en brouillon et ses activités sont
   // supprimées, le plan d'origine reste en vigueur.
-  app.post(`${M}/plans/:id/annuler-amendement`, requireAuth, (req, res) => {
+  app.post(`${M}/plans/:id/annuler-amendement`, requireAuth, asynchrone(async (req, res) => {
     const child = db.list('plans').find((x) => x.id === req.params.id);
     if (!child) return res.status(404).json({ error: 'not_found' });
     if (!child.parent_plan_id) return res.status(409).json({ error: 'pas_un_amendement' });
@@ -159,9 +160,9 @@ module.exports = function register(app, deps, M) {
     db.save(d);
     D.wf(child.parent_plan_id, 'annuler-amendement', req.user.username,
       { commentaire: (req.body && req.body.commentaire) || '', amendement: child.id });
-    audit.log(req.user.username, 'PLAN_ANNULER_AMENDEMENT', { amendement: child.id, plan: child.parent_plan_id });
+    await audit.log(req.user.username, 'PLAN_ANNULER_AMENDEMENT', { amendement: child.id, plan: child.parent_plan_id });
     return res.json({ ok: true, parent_plan_id: child.parent_plan_id });
-  });
+  }));
 
   // Le circuit, les versions et le fil de discussion suivent le sort du plan :
   // les lire suppose d'avoir accès au plan, y écrire suppose d'y contribuer.

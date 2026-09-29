@@ -64,6 +64,15 @@ function schema() {
   const magasin = storePg.creer({ query: async () => ({ rows: [] }) });
   verifier('contrat : le magasin expose « modifier », le geste lire-modifier-réécrire',
     typeof magasin.modifier === 'function');
+  verifier('contrat : le magasin expose « chainer », l’inscription au bout d’une chaîne',
+    typeof magasin.chainer === 'function');
+
+  // La garantie du chaînage est dans le schéma, non dans le code : elle doit y
+  // être lisible. Un index unique sur `(nom, cle, rang)`, et rien d'autre, est
+  // ce qui empêche deux entrées de prétendre le même prédécesseur.
+  verifier('schéma : (nom, cle, rang) est unique — une chaîne ne peut pas forcher',
+    /CREATE UNIQUE INDEX[^\n]*journal_rang[^\n]*\(nom, cle, rang\) WHERE rang > 0/.test(sql),
+    sql.match(/.*journal_rang.*/)?.[0]?.trim());
 }
 
 // ── 2. Ce qui demande un vrai serveur ──
@@ -208,6 +217,57 @@ async function contreUnVraiServeur(url) {
     })()));
     verifier('journal : 100 ajouts concurrents, 100 entrées',
       (await m.compte('journal_conc')) === 100);
+
+    // ── Le chaînage : ce que l'ajout seul ne protège pas ──
+    //
+    // Ajouter est sans danger. **Chaîner ne l'est pas** : c'est lire la dernière
+    // entrée, en dériver l'empreinte, puis ajouter. Deux inscriptions
+    // concurrentes qui liraient la même dernière entrée poseraient deux entrées
+    // prétendant le même prédécesseur — et une chaîne forchée ne se répare pas,
+    // une entrée inscrite ne se réécrivant jamais.
+    const inscrire = (cle, n) => m.chainer('ch', cle, (entrees) => {
+      const prevHash = entrees.length ? entrees[entrees.length - 1].hash : GENESE;
+      const e = {
+        id: entrees.length + 1,
+        ts: `2026-09-29T12:00:${String(n).padStart(2, '0')}.000Z`,
+        user: `agent${n}`,
+        action: 'CREATION',
+        objet: 'essai',
+        ref: `R-${n}`,
+        details: { observations: 'texte long', n },
+        prevHash,
+      };
+      e.hash = sceau(prevHash, e);
+      e.codeModule = cle;
+      return e;
+    });
+
+    await Promise.all(Array.from({ length: 20 }, (_, i) => inscrire('A', i)));
+    verifier('chaînage : 20 inscriptions concurrentes, la chaîne reste intacte',
+      intacte(await m.lireChaine('ch', 'A')), JSON.stringify((await m.lireChaine('ch', 'A')).length));
+
+    // Deux chaînes du même journal, mêlées : chacune tient pour elle-même.
+    await Promise.all([
+      ...Array.from({ length: 10 }, (_, i) => inscrire('B', i)),
+      ...Array.from({ length: 10 }, (_, i) => inscrire('C', i)),
+    ]);
+    verifier('chaînage : deux chaînes mêlées tiennent chacune pour elle-même',
+      intacte(await m.lireChaine('ch', 'B')) && intacte(await m.lireChaine('ch', 'C')));
+
+    // ── Contre-épreuve : la base refuse elle-même une chaîne forchée ──
+    //
+    // La garantie n'est pas un protocole que le code respecterait : c'est une
+    // contrainte du schéma, `(nom, cle, rang)` unique. Elle vaut donc pour
+    // **tout** ce qui écrit dans cette base — y compris un socle écrit dans une
+    // autre langue. Un premier essai posait la condition dans le `WHERE` de
+    // l'insertion : il ne protégeait rien, faute de ligne à verrouiller.
+    let refuse = '';
+    const derniere = (await m.lireChaine('ch', 'A')).slice(-1)[0];
+    try {
+      await m.ajouter('ch', { ...derniere, user: 'usurpateur' }, 'A');
+    } catch (e) { refuse = e.code || e.message; }
+    verifier('contre-épreuve : la base refuse une seconde entrée au même rang',
+      refuse === '23505', refuse || 'aucun refus');
   } finally {
     // Le schéma d'essai disparaît avec tout ce qu'il portait. Rien d'autre
     // n'est touché dans la base visée.
@@ -222,7 +282,7 @@ module.exports = async function magasinPgSmoke() {
 
   const url = process.env.OASIS_PG_ESSAI;
   if (!url) {
-    horsPortee('magasin PostgreSQL : les 8 contrôles contre un vrai serveur',
+    horsPortee('magasin PostgreSQL : les 12 contrôles contre un vrai serveur',
       'poser OASIS_PG_ESSAI — voir l’en-tête du fichier');
     return bilan('Magasin PostgreSQL');
   }

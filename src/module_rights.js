@@ -7,6 +7,7 @@
 // relevé, abaissé, ou mis à AUCUN — l'utilisateur n'accède alors pas aux
 // données de ce domaine / secteur.
 const store = require('./store');
+const { asynchrone } = require('./route');
 const referentiels = require('./referentiels');
 const moduleAudit = require('./module_audit');
 const instances = require('./instances');
@@ -149,7 +150,7 @@ function prestatairesDuScope(moduleCode, username) {
   return (r.scopes || []).map((s) => s.prestataire_id).filter(Boolean);
 }
 
-function register(app, deps) {
+async function register(app, deps) {
   const { requireAuth, requireRole, auth, loadConfig, audit } = deps;
   const R = '/api/m/droits';
   const canManage = requireRole('SUPERADMIN', 'ADMIN');
@@ -177,11 +178,11 @@ function register(app, deps) {
   });
 
   // ── Journal d'audit du module (inaltérable) ──
-  app.get(`${R}/:module/audit`, requireAuth, canManage, (req, res) => {
+  app.get(`${R}/:module/audit`, requireAuth, canManage, asynchrone(async (req, res) => {
     const code = req.params.module.toUpperCase();
     const { user, action, from, to, q, limit } = req.query;
     const ql = (q || '').toLowerCase();
-    let rows = moduleAudit.list(code).slice().reverse();
+    let rows = (await moduleAudit.list(code)).slice().reverse();
     if (user) rows = rows.filter((e) => e.user === user);
     if (action) rows = rows.filter((e) => e.action === action);
     if (from) rows = rows.filter((e) => e.ts >= from);
@@ -193,12 +194,12 @@ function register(app, deps) {
     }
     const total = rows.length;
     const n = Math.min(parseInt(limit, 10) || 500, 2000);
-    res.json({ total, entries: rows.slice(0, n), integrity: moduleAudit.verifyChain(code) });
-  });
+    res.json({ total, entries: rows.slice(0, n), integrity: await moduleAudit.verifyChain(code) });
+  }));
 
-  app.get(`${R}/:module/audit/verify`, requireAuth, canManage, (req, res) => {
-    res.json(moduleAudit.verifyChain(req.params.module.toUpperCase()));
-  });
+  app.get(`${R}/:module/audit/verify`, requireAuth, canManage, asynchrone(async (req, res) => {
+    res.json(await moduleAudit.verifyChain(req.params.module.toUpperCase()));
+  }));
 
   // Privilège de l'utilisateur courant (lisible par tous : affiché en barre supérieure)
   app.get(`${R}/:module/me`, requireAuth, (req, res) => {
@@ -292,7 +293,7 @@ function register(app, deps) {
     res.json(users);
   });
 
-  app.put(`${R}/:module/users/:username`, requireAuth, canManage, (req, res) => {
+  app.put(`${R}/:module/users/:username`, requireAuth, canManage, asynchrone(async (req, res) => {
     const code = req.params.module.toUpperCase();
     const username = req.params.username;
     const target = auth.getUsers().find((u) => u.username === username);
@@ -318,15 +319,15 @@ function register(app, deps) {
     // Défaut (Lecteur sans portée particulière) : aucun enregistrement à conserver
     if (privilege === DEFAULT_PRIVILEGE && !scopes.length) {
       setRights(code, username, null);
-      audit.log(req.user.username, 'DROITS_MODULE_DEFAUT', { module: code, cible: username });
+      await audit.log(req.user.username, 'DROITS_MODULE_DEFAUT', { module: code, cible: username });
       return res.json({ ok: true, privilege: DEFAULT_PRIVILEGE, scopes: [], isDefault: true });
     }
 
     const value = { privilege, scopes, updatedAt: new Date().toISOString(), updatedBy: req.user.username };
     setRights(code, username, value);
-    audit.log(req.user.username, 'DROITS_MODULE_MODIFIES', { module: code, cible: username, privilege, scopes });
+    await audit.log(req.user.username, 'DROITS_MODULE_MODIFIES', { module: code, cible: username, privilege, scopes });
     res.json({ ok: true, ...value, isDefault: false });
-  });
+  }));
 
   return { can, getRights, effectivePrivilege };
 }

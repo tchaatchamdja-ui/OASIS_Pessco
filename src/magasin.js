@@ -37,6 +37,7 @@
 // l'écriture en base, par une file d'attente par collection sur fichiers — où
 // un seul processus sert, le verrou s'en charge (ADR-001).
 const store = require('./store');
+const journal = require('./journal');
 const storePg = require('./store_pg');
 
 // Ce qui est passé en base, et rien d'autre.
@@ -114,10 +115,93 @@ async function modifier(nom, defaut, transformer) {
   });
 }
 
+// ── Les journaux d'audit ──
+//
+// Ils ne passent pas par `store` mais par `src/journal.js` — une entrée par
+// ligne, en ajout seul — et la base les range dans sa table `journal`, une
+// ligne par entrée. Le contrat est donc distinct de celui des collections, et
+// la liste de ce qui est migré l'est aussi.
+//
+// **Ce qui les rend particuliers n'est pas l'ajout, c'est le chaînage.**
+// Ajouter est sans danger : cent insertions concurrentes donnent cent lignes,
+// des deux côtés. Mais inscrire une entrée chaînée, c'est lire la dernière, en
+// dériver l'empreinte, puis ajouter — un lire-modifier-réécrire. Deux
+// inscriptions qui liraient la même dernière entrée poseraient deux entrées
+// prétendant le même prédécesseur : **la chaîne forcherait, et rien ne pourrait
+// la réparer** puisqu'une entrée inscrite ne se réécrit jamais.
+//
+// Ce geste était sûr sur fichiers sans que rien ne le dise : `log` n'avait aucun
+// `await`. `journalChainer` le rend sûr explicitement — par une condition sur le
+// bout de la chaîne en base, par une file d'attente sur fichiers.
+const JOURNAUX_MIGRES = new Set([
+  'audit',
+  'module_audit',
+]);
+
+const journalSurBase = (nom) => JOURNAUX_MIGRES.has(nom) && !!base();
+
+// Toutes les entrées d'un journal, de la plus ancienne à la plus récente.
+async function journalLire(nom) {
+  if (journalSurBase(nom)) return base().lire(nom);
+  return journal.lire(nom);
+}
+
+// Les entrées d'une seule chaîne. Sur fichiers, le filtre se fait en mémoire —
+// c'est ce que faisait déjà le regroupement par module.
+async function journalLireChaine(nom, cle) {
+  if (journalSurBase(nom)) return base().lireChaine(nom, cle);
+  const tout = journal.lire(nom);
+  return cle === undefined || cle === null || cle === ''
+    ? tout
+    : tout.filter((e) => (e.codeModule || '') === cle);
+}
+
+// Inscrit une entrée au bout d'une chaîne, sans qu'une inscription concurrente
+// la rompe. `construire(entrees)` reçoit les entrées de la chaîne et rend celle
+// à inscrire ; elle peut être rappelée, et ne doit donc que calculer.
+async function journalChainer(nom, cle, construire) {
+  if (journalSurBase(nom)) return base().chainer(nom, cle, construire);
+  // Une file par journal, et non par chaîne : deux chaînes du même journal
+  // écrivent dans le même fichier, et c'est lui qu'il faut sérialiser.
+  return enFile(`journal:${nom}`, async () => {
+    const tout = journal.lire(nom);
+    const chaine = cle ? tout.filter((e) => (e.codeModule || '') === cle) : tout;
+    const entree = await construire(chaine);
+    journal.ajouter(nom, entree);
+    return entree;
+  });
+}
+
+// Reprise du format hérité : elle écrit un journal entier, et n'a donc lieu
+// qu'une fois, avant que quoi que ce soit s'y ajoute. Sur base, la reprise des
+// données est faite par scripts/migrer-pg.js, non ici.
+async function journalReprendre(nom, entrees) {
+  if (journalSurBase(nom)) {
+    if (await base().compte(nom)) return false;
+    for (const e of entrees) await base().ajouter(nom, e, e.codeModule || '');
+    return true;
+  }
+  journal.ecrireTout(nom, entrees);
+  return true;
+}
+
+// Un journal déjà repris n'est pas repris deux fois.
+async function journalConverti(nom) {
+  if (journalSurBase(nom)) return (await base().compte(nom)) > 0;
+  return journal.converti(nom);
+}
+
 async function fermer() {
   if (socle && socle.fermer) await socle.fermer();
   socle = null;
   ouvert = false;
 }
 
-module.exports = { load, save, modifier, preparer, surBase, fermer, MIGREES };
+module.exports = {
+  load, save, modifier, preparer, surBase, fermer, MIGREES,
+  journalLire, journalLireChaine, journalChainer, journalReprendre, journalConverti,
+  journalSurBase, JOURNAUX_MIGRES,
+  // Alias du contrat, pour que la suite « magasin-pg » éprouve le même nom que
+  // celui qu'emploie `src/store_pg.js`.
+  chainer: journalChainer,
+};

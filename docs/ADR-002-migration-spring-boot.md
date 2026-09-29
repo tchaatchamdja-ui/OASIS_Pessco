@@ -381,6 +381,37 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        > le réseau. L'épreuve force désormais une configuration sans hôte SMTP. Troisième
        > vert vide de ce chantier — base de papier, journal vide, messagerie joignable.
 
+       **Les journaux d'audit passés le 29 septembre 2026** — `audit` et `module_audit`, la
+       plus grosse conversion du chantier et la plus haute en enjeu. 64 inscriptions dans 12
+       fichiers, 21 fichiers touchés, +874/−366 lignes. Le retour de `log` n'était utilisé
+       nulle part, ce qui a rendu la conversion mécanique.
+
+       > **Le risque n'était pas l'ajout, c'était le chaînage.** Cent insertions concurrentes
+       > donnent cent lignes. Mais inscrire une entrée chaînée, c'est lire la dernière, en
+       > dériver l'empreinte, puis ajouter : deux inscriptions concurrentes en posent deux
+       > prétendant le même prédécesseur, et **une chaîne forchée ne se répare pas**.
+       >
+       > **La garantie est dans le schéma, non dans un protocole.** Le premier essai posait
+       > la condition dans le `WHERE` de l'insertion ; il ne protégeait rien, et vingt
+       > inscriptions concurrentes l'ont montré du premier coup — un `UPDATE` verrouille la
+       > ligne qu'il change, une insertion n'a **aucune ligne à verrouiller**. C'est donc un
+       > index unique `(nom, cle, rang)` qui tient la chaîne. Un protocole se contourne, une
+       > contrainte non : **la base refuse une chaîne forchée quel que soit le code qui
+       > l'écrit, y compris le socle Java.**
+       >
+       > **Les garde-fous de forme ne regardaient pas `server.js`** — 1 200 lignes, la moitié
+       > des inscriptions au journal, la lecture du plafond d'écritures. L'angle mort s'est vu
+       > parce qu'une contre-épreuve refusait de mordre. Le contrôle élargi a aussitôt trouvé
+       > un gestionnaire asynchrone sans enveloppe qui dormait là.
+       >
+       > **La vérification d'horloge écrivait au journal hors de la chaîne de démarrage**,
+       > avant que les tables existent, et son `catch` avalait l'échec. Un contrôle de la
+       > suite « socle » l'a dit — pas moi.
+
+       Deux garde-fous de plus : toute inscription au journal est attendue, et le plafond
+       d'écritures est lu avec `await` — sans quoi il rendrait une promesse toujours vraie et
+       **ne se déclencherait plus jamais**, sans erreur ni trace.
+
        **Première collection passée le 28 septembre 2026** : `ramp_aeronefs`, la nomenclature
        des aéronefs — la plus isolée qui soit encore gardée. 8 fonctions de magasin, 7 routes,
        9 fichiers touchés, +213/−109 lignes, **299 contrôles verts dans les deux régimes**.

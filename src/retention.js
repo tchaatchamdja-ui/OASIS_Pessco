@@ -32,8 +32,9 @@
 // d'autorité et un fichier de traces.
 const fs = require('fs');
 const path = require('path');
-const store = require('./store');
-const journal = require('./journal');
+// Tout passe par la façade : elle sait, collection par collection, si la donnée
+// vit dans un fichier ou dans la base (ADR-002, étape B).
+const magasin = require('./magasin');
 const horloge = require('./horloge');
 
 const JOUR_MS = 24 * 60 * 60 * 1000;
@@ -117,27 +118,32 @@ function politique(config) {
 }
 
 // Les entrées d'une collection, selon la forme du magasin, réduites à leur date.
-function dates(nom, regle) {
+//
+// Asynchrone depuis qu'une collection ou un journal peut vivre en base
+// (ADR-002, étape B) : tout passe par la façade, qui sait lequel des deux
+// régimes sert.
+async function dates(nom, regle) {
   const lire = {
-    liste: () => store.load(nom, []).map((e) => e && e[regle.champ]),
-    table: () => Object.values(store.load(nom, {})).map((e) => e && e[regle.champ]),
-    journal: () => journal.lire(nom).map((e) => e && e[regle.champ]),
-    opaque: () => [],
-  }[regle.forme] || (() => []);
-  return lire()
+    liste: async () => (await magasin.load(nom, [])).map((e) => e && e[regle.champ]),
+    table: async () => Object.values(await magasin.load(nom, {})).map((e) => e && e[regle.champ]),
+    journal: async () => (await magasin.journalLire(nom)).map((e) => e && e[regle.champ]),
+    opaque: async () => [],
+  }[regle.forme] || (async () => []);
+  return (await lire())
     .map((v) => (typeof v === 'number' ? v : Date.parse(v)))
     .filter((t) => Number.isFinite(t));
 }
 
 // L'état de la conservation, sans rien modifier. C'est ce que rend la route de
 // consultation et ce que l'exécution à blanc affiche.
-function etat(config, maintenant = Date.now()) {
+async function etat(config, maintenant = Date.now()) {
   const regles = politique(config);
-  const lignes = Object.entries(regles).map(([nom, r]) => {
+  const lignes = [];
+  for (const [nom, r] of Object.entries(regles)) {
     const limite = maintenant - r.jours * JOUR_MS;
-    const ts = dates(nom, r);
+    const ts = await dates(nom, r);
     const echues = ts.filter((t) => t < limite).length;
-    return {
+    lignes.push({
       collection: nom,
       jours: r.jours,
       action: r.action,
@@ -146,33 +152,40 @@ function etat(config, maintenant = Date.now()) {
       entrees: r.forme === 'opaque' ? null : ts.length,
       echues: r.forme === 'opaque' ? null : echues,
       plusAncienne: ts.length ? new Date(Math.min(...ts)).toISOString() : null,
-    };
-  });
+    });
+  }
   return { releve: horloge.maintenant(), lignes };
 }
 
 // Retire les entrées échues d'une collection en purge. Rend le nombre retiré.
-function purgerUne(nom, regle, limite) {
+// La purge lit, filtre et réécrit : elle passe donc par `modifier`. Sans lui,
+// une écriture arrivée pendant la purge serait effacée par elle — et la purge
+// tourne sur la collection la plus écrite du socle, le registre des envois.
+async function purgerUne(nom, regle, limite) {
+  let retirees = 0;
   if (regle.forme === 'liste') {
-    const tout = store.load(nom, []);
-    const gardees = tout.filter((e) => {
-      const t = Date.parse(e && e[regle.champ]);
-      return !Number.isFinite(t) || t >= limite;
+    await magasin.modifier(nom, [], (tout) => {
+      const gardees = tout.filter((e) => {
+        const t = Date.parse(e && e[regle.champ]);
+        return !Number.isFinite(t) || t >= limite;
+      });
+      retirees = tout.length - gardees.length;
+      return retirees ? gardees : tout;
     });
-    if (gardees.length !== tout.length) store.save(nom, gardees);
-    return tout.length - gardees.length;
+    return retirees;
   }
   if (regle.forme === 'table') {
-    const tout = store.load(nom, {});
-    const gardees = {};
-    let retirees = 0;
-    for (const [cle, e] of Object.entries(tout)) {
-      const brut = e && e[regle.champ];
-      const t = typeof brut === 'number' ? brut : Date.parse(brut);
-      if (Number.isFinite(t) && t < limite) retirees += 1;
-      else gardees[cle] = e;
-    }
-    if (retirees) store.save(nom, gardees);
+    await magasin.modifier(nom, {}, (tout) => {
+      const gardees = {};
+      retirees = 0;
+      for (const [cle, e] of Object.entries(tout)) {
+        const brut = e && e[regle.champ];
+        const t = typeof brut === 'number' ? brut : Date.parse(brut);
+        if (Number.isFinite(t) && t < limite) retirees += 1;
+        else gardees[cle] = e;
+      }
+      return retirees ? gardees : tout;
+    });
     return retirees;
   }
   return 0;
@@ -181,8 +194,8 @@ function purgerUne(nom, regle, limite) {
 // Sort les entrées échues d'un journal dans un fichier horodaté, **sans y
 // toucher**. L'archive est une copie : la chaîne reste entière, et c'est elle
 // qui fait foi.
-function archiverUn(nom, regle, limite, dossier) {
-  const entrees = journal.lire(nom);
+async function archiverUn(nom, regle, limite, dossier) {
+  const entrees = await magasin.journalLire(nom);
   const echues = entrees.filter((e) => {
     const t = Date.parse(e && e[regle.champ]);
     return Number.isFinite(t) && t < limite;
@@ -197,7 +210,7 @@ function archiverUn(nom, regle, limite, dossier) {
 
 // Applique la politique. À blanc par défaut : `appliquer: true` est un geste
 // délibéré, et la route qui l'offre est réservée au super-administrateur.
-function appliquerPolitique(config, { appliquer = false, maintenant = Date.now(), dossierArchives } = {}) {
+async function appliquerPolitique(config, { appliquer = false, maintenant = Date.now(), dossierArchives } = {}) {
   const regles = politique(config);
   const dossier = dossierArchives
     || path.join(process.env.OASIS_DATA_DIR || path.join(__dirname, '..', 'data'), 'archives');
@@ -205,12 +218,12 @@ function appliquerPolitique(config, { appliquer = false, maintenant = Date.now()
   for (const [nom, r] of Object.entries(regles)) {
     const limite = maintenant - r.jours * JOUR_MS;
     if (r.action === 'purge') {
-      const echues = dates(nom, r).filter((t) => t < limite).length;
-      const retirees = appliquer ? purgerUne(nom, r, limite) : 0;
+      const echues = (await dates(nom, r)).filter((t) => t < limite).length;
+      const retirees = appliquer ? await purgerUne(nom, r, limite) : 0;
       if (echues || retirees) actes.push({ collection: nom, action: 'purge', echues, retirees });
     } else if (r.action === 'archive') {
-      const echues = dates(nom, r).filter((t) => t < limite).length;
-      const fait = appliquer ? archiverUn(nom, r, limite, dossier) : { archivees: 0, fichier: '' };
+      const echues = (await dates(nom, r)).filter((t) => t < limite).length;
+      const fait = appliquer ? await archiverUn(nom, r, limite, dossier) : { archivees: 0, fichier: '' };
       if (echues || fait.archivees) {
         actes.push({ collection: nom, action: 'archive', echues, ...fait });
       }

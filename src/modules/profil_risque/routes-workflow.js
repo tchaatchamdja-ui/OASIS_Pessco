@@ -1,6 +1,7 @@
 // Module « Profils de Risque » — circuit d'une évaluation (repris de PESSCO) :
 // soumission au directeur, décision, et lancement d'un nouveau cycle.
 const db = require('./store');
+const { asynchrone } = require('../../route');
 const D = require('./domaine');
 
 // Décisions du directeur. Chaque décision a son statut : « accepter » ouvre la
@@ -24,7 +25,7 @@ module.exports = function register(app, deps, M) {
   // évaluation, et « valider » suffisait à en faire le profil en vigueur.
   const portee = (ev) => ({ domaine_id: (ev && ev.domaine_id) || '', secteur_id: (ev && ev.secteur_id) || '' });
 
-  app.post(`${M}/evaluations/:id/soumettre-directeur`, requireAuth, (req, res) => {
+  app.post(`${M}/evaluations/:id/soumettre-directeur`, requireAuth, asynchrone(async (req, res) => {
     const cur = db.getColl('evaluations').find((x) => x.id === req.params.id);
     if (!cur) return res.status(404).json({ error: 'not_found' });
     if (!D.peut(req, 'CONTRIBUTEUR', portee(cur))) return D.refus(res);
@@ -34,11 +35,11 @@ module.exports = function register(app, deps, M) {
       etapes: D.etapesWith(cur, { soumission: (cur.etapes || {}).soumission || now, acceptation: now }),
     });
     if (!rec) return res.status(404).json({ error: 'not_found' });
-    audit.log(req.user.username, 'PR_SOUMISSION_DIRECTEUR', { id: rec.id });
+    await audit.log(req.user.username, 'PR_SOUMISSION_DIRECTEUR', { id: rec.id });
     return res.json(rec);
-  });
+  }));
 
-  app.post(`${M}/evaluations/:id/decision-directeur`, requireAuth, (req, res) => {
+  app.post(`${M}/evaluations/:id/decision-directeur`, requireAuth, asynchrone(async (req, res) => {
     const body = req.body || {};
     const decision = String(body.decision || '').toLowerCase();
     const commentaire = body.commentaire || body.motif || '';
@@ -73,11 +74,11 @@ module.exports = function register(app, deps, M) {
 
     const rec = db.update('evaluations', req.params.id, patch);
     if (!rec) return res.status(404).json({ error: 'not_found' });
-    audit.log(req.user.username, 'PR_DECISION_DIRECTEUR', { id: rec.id, decision, statut });
+    await audit.log(req.user.username, 'PR_DECISION_DIRECTEUR', { id: rec.id, decision, statut });
     return res.json(rec);
-  });
+  }));
 
-  app.post(`${M}/evaluations/:id/reevaluer`, requireAuth, (req, res) => {
+  app.post(`${M}/evaluations/:id/reevaluer`, requireAuth, asynchrone(async (req, res) => {
     const src = db.getColl('evaluations').find((x) => x.id === req.params.id);
     if (!src) return res.status(404).json({ error: 'not_found' });
     // Réservé aux Gestionnaire / Validateur couvrant le domaine et le secteur
@@ -100,7 +101,7 @@ module.exports = function register(app, deps, M) {
     db.update('evaluations', src.id, {
       reevalue_le: new Date().toISOString(), reevalue_par: req.user.username, enfant_id: clone.id,
     });
-    audit.log(req.user.username, 'PR_REEVALUATION', { source: src.id, nouvelle: clone.id });
+    await audit.log(req.user.username, 'PR_REEVALUATION', { source: src.id, nouvelle: clone.id });
     return res.json(clone);
-  });
+  }));
 };

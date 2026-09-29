@@ -1,6 +1,7 @@
 // Module « Profils de Risque » — données partagées du portail, bibliothèque
 // documentaire, contexte et collections du module (CRUD générique).
 const moduleRights = require('../../module_rights');
+const { asynchrone } = require('../../route');
 const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
@@ -62,13 +63,13 @@ module.exports = function register(app, deps, M) {
   // Les indices commandent le calcul de tous les profils de risque : les
   // réécrire, c'est refaire le barème de la surveillance. Réservé au
   // Gestionnaire — la route n'opposait jusqu'ici aucun refus.
-  app.put('/api/indices', requireAuth, gerer, (req, res) => {
+  app.put('/api/indices', requireAuth, gerer, asynchrone(async (req, res) => {
     const d = db.load();
     d.indices = Array.isArray(req.body) ? req.body : (req.body && req.body.indices) || d.indices;
     db.save(d);
-    audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: (d.indices || []).length });
+    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: (d.indices || []).length });
     res.json({ ok: true, indices: d.indices });
-  });
+  }));
 
   app.get('/api/aac', requireAuth, (req, res) => {
     const cfg = { aac: instances.aac(req.user, loadConfig) };
@@ -83,7 +84,7 @@ module.exports = function register(app, deps, M) {
 
   app.get('/api/documents', requireAuth, lecture, (req, res) => res.json(db.getColl('documents').map(publicDoc)));
 
-  app.post('/api/documents', requireAuth, contribuer, (req, res) => {
+  app.post('/api/documents', requireAuth, contribuer, asynchrone(async (req, res) => {
     const { nom, type, mime, fileB64 } = req.body || {};
     if (!nom) return res.status(400).json({ error: 'nom_requis' });
     const contenu = String(fileB64 || '').split(',').pop();
@@ -94,9 +95,9 @@ module.exports = function register(app, deps, M) {
       nom, type: type || '', mime: mime || 'application/octet-stream', taille, contenu,
       date_upload: new Date().toISOString(), uploade_par: req.user.username,
     });
-    audit.log(req.user.username, 'PR_DOCUMENT_AJOUT', { id: rec.id, nom, taille });
+    await audit.log(req.user.username, 'PR_DOCUMENT_AJOUT', { id: rec.id, nom, taille });
     return res.json(publicDoc(rec));
-  });
+  }));
 
   app.get('/api/documents/:id/download', requireAuth, lecture, (req, res) => {
     const doc = db.getColl('documents').find((d) => d.id === req.params.id);
@@ -109,11 +110,11 @@ module.exports = function register(app, deps, M) {
 
   // Retirer une pièce de la bibliothèque est définitif : réservé au
   // Gestionnaire. Toute session pouvait jusqu'ici vider la bibliothèque.
-  app.delete('/api/documents/:id', requireAuth, gerer, (req, res) => {
+  app.delete('/api/documents/:id', requireAuth, gerer, asynchrone(async (req, res) => {
     const ok = db.remove('documents', req.params.id);
-    if (ok) audit.log(req.user.username, 'PR_DOCUMENT_SUPPRIME', { id: req.params.id });
+    if (ok) await audit.log(req.user.username, 'PR_DOCUMENT_SUPPRIME', { id: req.params.id });
     res.json({ ok });
-  });
+  }));
 
   // Utilisateur courant enrichi pour le module (rôle M1, domaines)
   app.get(`${M}/me`, requireAuth, (req, res) => {
@@ -150,7 +151,7 @@ module.exports = function register(app, deps, M) {
     // l'administrateur y met — mais un enregistrement se borne : le socle
     // refuse ce qui n'en est pas un et retire les champs que le serveur seul
     // écrit, à commencer par l'identifiant.
-    app.post(`${M}/${route}`, requireAuth, enregistrement(), (req, res) => {
+    app.post(`${M}/${route}`, requireAuth, enregistrement(), asynchrone(async (req, res) => {
       // Créer une évaluation engage la notation d'un organisme : Validateur.
       // Les autres collections — indicateurs, comptes rendus de réunion —
       // relèvent de la contribution, mais aucune n'était gardée.
@@ -161,11 +162,11 @@ module.exports = function register(app, deps, M) {
       // vide et le champ retombe sur l'instance locale, comme partout.
       const marque = COLLECTIONS_INSTANCE.includes(coll) ? { instance: instanceCourante(req) } : {};
       const rec = db.insert(coll, { ...req.valide, ...marque, created_by: req.user.username });
-      audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
+      await audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
       return res.json(rec);
-    });
+    }));
 
-    app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), (req, res) => {
+    app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), asynchrone(async (req, res) => {
       const avant = db.getColl(coll).find((x) => x.id === req.params.id);
       if (!avant) return res.status(404).json({ error: 'not_found' });
       // Le statut d'une évaluation dit une décision — acceptation, clôture,
@@ -181,11 +182,11 @@ module.exports = function register(app, deps, M) {
       // Les deux premières étapes du fil d'avancement ne passent pas par une
       // route dédiée : elles se déduisent de l'état de l'évaluation.
       if (coll === 'evaluations') rec = D.stampNotationEtapes(rec);
-      audit.log(req.user.username, 'PR_UPDATE', { coll, id: rec.id });
+      await audit.log(req.user.username, 'PR_UPDATE', { coll, id: rec.id });
       return res.json(rec);
-    });
+    }));
 
-    app.delete(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.delete(`${M}/${route}/:id`, requireAuth, asynchrone(async (req, res) => {
       // Supprimer une réévaluation libère l'évaluation d'origine : sans cela
       // elle resterait marquée « réévaluation en cours » sans cycle suivant.
       let parentId = null;
@@ -213,9 +214,9 @@ module.exports = function register(app, deps, M) {
       if (coll === 'evaluations') {
         ['eval_reunions', 'eval_reunions_prest'].forEach((c) => db.removeWhere(c, (x) => x.eval_id === req.params.id));
       }
-      audit.log(req.user.username, 'PR_DELETE', { coll, id: req.params.id, parent_libere: parentId || null });
+      await audit.log(req.user.username, 'PR_DELETE', { coll, id: req.params.id, parent_libere: parentId || null });
       return res.json({ ok: true });
-    });
+    }));
   });
 
   // ── Contexte agrégé (chargement initial rapide) ──

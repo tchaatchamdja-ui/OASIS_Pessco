@@ -16,7 +16,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { verifier, bilan } = require('./harness');
+const { verifier, horsPortee, bilan } = require('./harness');
+const magasinDuJournal = require('../../src/magasin');
 
 // Les modules du socle lisent `OASIS_DATA_DIR` à l'import : il est posé avant.
 const BAC = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-unit-'));
@@ -45,21 +46,34 @@ function jouer(middleware, corps) {
 // coup se voit. Les suites HTTP vérifient qu'il se lit ; celle-ci, qu'il
 // détecte. On casse donc une chaîne exprès — la seule façon de savoir que la
 // vérification ne se contente pas de dire « oui ».
-function chainage() {
-  audit.log('essai@oasis', 'PREMIERE', { n: 1 });
-  audit.log('essai@oasis', 'DEUXIEME', { n: 2 });
-  audit.log('essai@oasis', 'TROISIEME', { n: 3 });
+async function chainage() {
+  // Le journal ne part pas forcément vide : posé en base, il garde ce que les
+  // exécutions précédentes y ont inscrit. Les contrôles portent donc sur ce que
+  // **ces trois** inscriptions ajoutent, non sur un total absolu.
+  const avant = (await audit.list()).length;
+  await audit.log('essai@oasis', 'PREMIERE', { n: 1 });
+  await audit.log('essai@oasis', 'DEUXIEME', { n: 2 });
+  await audit.log('essai@oasis', 'TROISIEME', { n: 3 });
 
-  const saine = audit.verifyChain();
+  const saine = await audit.verifyChain();
   verifier('une chaîne intacte se vérifie',
-    saine.valid === true && saine.total === 3, JSON.stringify(saine));
+    saine.valid === true && saine.total === avant + 3, JSON.stringify(saine));
 
-  const entrees = audit.list();
+  const entrees = (await audit.list()).slice(avant);
   verifier('chaque entrée porte l’empreinte de la précédente',
     entrees[1].prevHash === entrees[0].hash && entrees[2].prevHash === entrees[1].hash);
 
-  // Le détail d'une entrée est falsifié sur le disque, empreinte laissée telle
-  // quelle : c'est exactement ce qu'un effacement de trace tenterait.
+  // ── La falsification, et pourquoi elle ne s'éprouve qu'ici ──
+  //
+  // Ce qui suit modifie le journal **sur le disque** : c'est le geste même d'un
+  // effacement de trace, et c'est le seul moyen de vérifier que la chaîne le
+  // dit. Posé en base, le journal n'est pas ce fichier — le contrôle n'aurait
+  // plus d'objet, et le taire le ferait passer pour réussi.
+  if (magasinDuJournal.journalSurBase('audit')) {
+    horsPortee('une falsification du journal rompt la chaîne',
+      'le journal est en base — ce contrôle falsifie le fichier');
+    return;
+  }
   const chemin = path.join(BAC, 'audit.jsonl');
   const lignes = fs.readFileSync(chemin, 'utf-8').trim().split('\n');
   const falsifiee = JSON.parse(lignes[1]);
@@ -67,15 +81,58 @@ function chainage() {
   lignes[1] = JSON.stringify(falsifiee);
   fs.writeFileSync(chemin, `${lignes.join('\n')}\n`);
 
-  const rompue = audit.verifyChain();
+  const rompue = await audit.verifyChain();
   verifier('un détail modifié après coup rompt la chaîne',
     rompue.valid === false && rompue.brokenAt === 2, JSON.stringify(rompue));
 
   // Une entrée retirée se voit aussi : la suivante ne s'enchaîne plus.
   fs.writeFileSync(chemin, `${[lignes[0], JSON.parse(lignes[2]) && lignes[2]].join('\n')}\n`);
-  const trouee = audit.verifyChain();
+  const trouee = await audit.verifyChain();
   verifier('une entrée retirée rompt la chaîne',
     trouee.valid === false, JSON.stringify(trouee));
+}
+
+// ── 1 ter. Toute entrée de journal chaîné porte son numéro ──
+// La garantie qui empêche une chaîne de forcher en base est un index unique sur
+// `(nom, cle, rang)`, **partiel sur `rang > 0`** — sans quoi deux ajouts non
+// chaînés se refuseraient l'un l'autre. Le revers : une entrée de journal
+// chaîné qui arriverait sans numéro y échapperait.
+//
+// Relevé sur les journaux réels de `data/` : 1 623 entrées du socle et 1 582 des
+// modules, **aucune sans numéro, aucun numéro en double dans sa chaîne**. Ce
+// contrôle le tient pour les entrées à venir.
+async function numerosDeChaine() {
+  const marque = `NUMEROS_${Math.random().toString(36).slice(2, 8)}`;
+  for (let i = 0; i < 3; i++) await audit.log('essai', marque, { i });
+  const entrees = (await audit.list()).filter((e) => e.action === marque);
+  verifier('journal : toute entrée inscrite porte un numéro strictement positif',
+    entrees.length === 3 && entrees.every((e) => Number(e.id) > 0),
+    JSON.stringify(entrees.map((e) => e.id)));
+  verifier('journal : les numéros se suivent dans la chaîne',
+    entrees.every((e, i) => i === 0 || Number(e.id) === Number(entrees[i - 1].id) + 1),
+    JSON.stringify(entrees.map((e) => e.id)));
+}
+
+// ── 1 bis. Vingt inscriptions lancées ensemble ──
+// C'est la garantie que l'asynchrone a détruite, puis qu'il a fallu rétablir
+// explicitement. `log` lit la dernière entrée, en dérive une empreinte, puis
+// ajoute : deux inscriptions concurrentes poseraient deux entrées prétendant le
+// même prédécesseur. **Une chaîne forchée ne se répare pas** — une entrée
+// inscrite ne se réécrit jamais, c'est toute sa valeur.
+//
+// Le geste était sûr tant que `log` n'avait aucun `await`. Il l'est de nouveau
+// par `magasin.journalChainer` : file d'attente sur fichiers, contrainte
+// d'unicité `(nom, cle, rang)` en base.
+async function chainageConcurrent() {
+  const marque = `CONCURRENT_${Math.random().toString(36).slice(2, 8)}`;
+  await Promise.all(Array.from({ length: 20 }, (_, i) => audit.log(`agent${i}`, marque, { i })));
+  const etat = await audit.verifyChain();
+  verifier('vingt inscriptions concurrentes : la chaîne reste intacte',
+    etat.valid === true, JSON.stringify(etat));
+  const numeros = (await audit.list()).filter((e) => e.action === marque).map((e) => e.id);
+  verifier('vingt inscriptions concurrentes : vingt numéros distincts',
+    numeros.length === 20 && new Set(numeros).size === 20,
+    `${numeros.length} entrée(s), ${new Set(numeros).size} numéro(s)`);
 }
 
 // ── 2. Rattachement d'une inspection à son instance ──
@@ -213,13 +270,30 @@ function basePapier() {
         return { rows: v === undefined ? [] : [{ valeur: JSON.parse(JSON.stringify(v)) }] };
       }
       if (/^INSERT INTO collections/.test(s)) { collections.set(p[0], JSON.parse(p[1])); return { rows: [] }; }
-      if (/^INSERT INTO journal/.test(s)) { journal.push({ nom: p[0], entree: JSON.parse(p[1]) }); return { rows: [] }; }
+      if (/^INSERT INTO journal/.test(s)) {
+        // Mêmes colonnes que le vrai schéma — `(nom, cle, rang, entree)` — et
+        // **la même contrainte** : `(nom, cle, rang)` est unique. Une base de
+        // papier qui accepterait deux entrées au même rang laisserait passer
+        // une chaîne forchée, et ce faux serait de nouveau plus permissif que
+        // le serveur. C'est déjà arrivé quatre fois sur ce chantier.
+        const [nom, cle, rang, brut] = p;
+        if (journal.some((x) => x.nom === nom && x.cle === cle && x.rang === rang && rang > 0)) {
+          const e = new Error(`duplicate key value violates unique constraint "journal_rang"`);
+          e.code = '23505';
+          throw e;
+        }
+        journal.push({ nom, cle, rang, entree: JSON.parse(brut) });
+        return { rows: [] };
+      }
       if (/ORDER BY ordre DESC/.test(s)) {
         const l = journal.filter((x) => x.nom === p[0]);
         return { rows: l.length ? [{ entree: l[l.length - 1].entree }] : [] };
       }
       if (/^SELECT entree/.test(s)) {
-        return { rows: journal.filter((x) => x.nom === p[0]).map((x) => ({ entree: x.entree })) };
+        // Avec `cle`, c'est une seule chaîne qui est demandée ; sans, tout le journal.
+        const dans = journal.filter((x) => x.nom === p[0]
+          && (p.length < 2 || x.cle === p[1]));
+        return { rows: dans.map((x) => ({ entree: x.entree })) };
       }
       if (/count\(\*\)/.test(s)) {
         return { rows: [{ n: journal.filter((x) => x.nom === p[0]).length }] };
@@ -526,7 +600,7 @@ function verrouDuRepertoire() {
 //   — les vecteurs décrivent bien le calcul (le script les recalcule) ;
 //   — et le **code en service** produit bien ce qu'ils annoncent.
 // Sans le second, les vecteurs décriraient une implémentation imaginaire.
-function vecteursDeMigration() {
+async function vecteursDeMigration() {
   const vect = require('../../scripts/vecteurs-conformite');
   const ecarts = vect.verifier();
   verifier('vecteurs de migration : à jour avec le calcul qu’ils décrivent',
@@ -545,7 +619,7 @@ function vecteursDeMigration() {
   // tous les champs, puis on compare son empreinte à celle qu'annonce le
   // vecteur pour les mêmes valeurs.
   const cas = fige.chaine.cas.find((c) => c.quoi.startsWith('ORDRE'));
-  const ecrite = audit.log(cas.entree.user, cas.entree.action, cas.entree.details);
+  const ecrite = await audit.log(cas.entree.user, cas.entree.action, cas.entree.details);
   const attendu = crypto.createHash('sha256')
     .update(`${ecrite.prevHash}|${ecrite.ts}|${ecrite.user}|${ecrite.action}|${cas.json_attendu}`)
     .digest('hex');
@@ -560,7 +634,7 @@ function vecteursDeMigration() {
   verifier('vecteurs de migration : la chaîne des modules est couverte', !!casModule);
   if (casModule) {
     const e = casModule.entree;
-    const inscrite = moduleAudit.log('ESSAI_VECTEURS', e.user, e.action, e.objet, e.ref, e.details);
+    const inscrite = await moduleAudit.log('ESSAI_VECTEURS', e.user, e.action, e.objet, e.ref, e.details);
     const attenduModule = crypto.createHash('sha256')
       .update([inscrite.prevHash, inscrite.ts, inscrite.user, inscrite.action,
         inscrite.objet, inscrite.ref, casModule.json_attendu].join('|'))
@@ -583,7 +657,7 @@ function conservation() {
     const fs = require('fs');
     const retention = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'retention'))});
     const audit = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'audit'))});
-    const store = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'store'))});
+    const magasin = require(${JSON.stringify(path.join(__dirname, '..', '..', 'src', 'magasin'))});
 
     const JOUR = 86400000;
     // Tout se juge à un seul instant : onze ans devant nous, de sorte que les
@@ -595,28 +669,42 @@ function conservation() {
     const vieux = new Date(instant - 200 * JOUR).toISOString();
     const recent = new Date(instant - 2 * JOUR).toISOString();
 
-    store.save('emails', [
-      { id: 1, to: 'a@x.bj', ts: vieux }, { id: 2, to: 'b@x.bj', ts: vieux },
-      { id: 3, to: 'c@x.bj', ts: recent },
-    ]);
-    audit.log('essai', 'PREMIERE', {});
-    audit.log('essai', 'SECONDE', {});
+    (async () => {
+      await magasin.save('emails', [
+        { id: 1, to: 'a@x.bj', ts: vieux }, { id: 2, to: 'b@x.bj', ts: vieux },
+        { id: 3, to: 'c@x.bj', ts: recent },
+      ]);
+      await audit.log('essai', 'PREMIERE', {});
+      await audit.log('essai', 'SECONDE', {});
 
-    const rapport = retention.appliquer({}, { appliquer: true, maintenant: instant });
+      const rapport = await retention.appliquer({}, { appliquer: true, maintenant: instant });
 
-    console.log(JSON.stringify({
-      rapport,
-      courrielsRestants: store.load('emails', []).map((e) => e.id),
-      entreesJournal: audit.list().length,
-      chaine: audit.verifyChain(),
-      archives: fs.existsSync(process.env.OASIS_DATA_DIR + '/archives')
-        ? fs.readdirSync(process.env.OASIS_DATA_DIR + '/archives') : [],
-    }));
+      console.log(JSON.stringify({
+        rapport,
+        courrielsRestants: (await magasin.load('emails', [])).map((e) => e.id),
+        entreesJournal: (await audit.list()).length,
+        chaine: await audit.verifyChain(),
+        archives: fs.existsSync(process.env.OASIS_DATA_DIR + '/archives')
+          ? fs.readdirSync(process.env.OASIS_DATA_DIR + '/archives') : [],
+      }));
+    })();
   `;
   let r;
   try {
-    r = JSON.parse(execFileSync(process.execPath, ['-e', scenario],
-      { env: { ...process.env, OASIS_DATA_DIR: bac }, encoding: 'utf8' }));
+    // Le scénario écrit son résultat en dernier : une erreur de son côté rendrait
+    // une sortie vide, et `JSON.parse` dirait seulement « fin de JSON
+    // inattendue ». Sa sortie d'erreur est donc rendue telle quelle.
+    // `DATABASE_URL` est retiré : ce scénario pose ses propres fixtures et
+    // compte ce qui reste après la purge. Sur une base partagée avec le reste
+    // de la campagne, il compterait les entrées des autres contrôles — ce qu'il
+    // a fait, et le chiffre faux était le seul indice. La politique de
+    // conservation ne dépend pas du régime ; son épreuve se fait donc sur
+    // fichiers, où l'isolement est gratuit.
+    const env = { ...process.env, OASIS_DATA_DIR: bac };
+    delete env.DATABASE_URL;
+    const sortie = execFileSync(process.execPath, ['-e', scenario],
+      { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    r = JSON.parse(sortie);
   } finally {
     fs.rmSync(bac, { recursive: true, force: true });
   }
@@ -702,13 +790,17 @@ function barreDeRamp() {
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
-    chainage();
+    // Le concurrent d'abord : `chainage` falsifie le journal à la fin, exprès,
+    // et la chaîne ne s'en relève pas — c'est tout son objet.
+    await numerosDeChaine();
+    await chainageConcurrent();
+    await chainage();
     rattachement();
     bornes();
     traces();
     await courrielsSansSecret();
     verrouDuRepertoire();
-    vecteursDeMigration();
+    await vecteursDeMigration();
     conservation();
     barreDeRamp();
     await magasins();

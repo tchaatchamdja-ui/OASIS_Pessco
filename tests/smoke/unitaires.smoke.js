@@ -350,6 +350,44 @@ async function magasins() {
   verifier('magasins : aucune valeur concaténée dans le SQL', sqlEnDur);
 }
 
+// ── 4 bis. Le compteur d'essais du second facteur ──
+//
+// C'est le geste le plus sensible de la bascule : `verifyChallenge` lit le défi,
+// incrémente son compteur d'essais, réécrit. Rendu asynchrone sans précaution,
+// **dix codes faux lancés ensemble liraient tous `attempts: 0` et n'en
+// écriraient qu'un** — le plafond de cinq essais tomberait, et une force brute
+// disposerait d'autant d'essais qu'elle saurait en lancer en parallèle.
+//
+// L'épreuve se fait **en processus**, et non par HTTP : deux requêtes ne se
+// chevauchent côté serveur que si chaque traitement dure assez longtemps, et
+// celui-ci dure une milliseconde. La suite « mfa » couvre le parcours ; celle-ci
+// couvre le croisement.
+async function compteurDuSecondFacteur() {
+  const mfa = require('../../src/mfa');
+  const compte = { username: 'essai@aac.bj', fullName: 'Essai', email: 'essai@aac.bj' };
+
+  const defi = await mfa.createChallenge(compte, 'email');
+  verifier('second facteur : un défi est posé et ne rend pas le code',
+    defi.ok === true && !!defi.challengeId && !('code' in defi), JSON.stringify(defi).slice(0, 120));
+
+  // Dix codes faux lancés ensemble, sans passer par le réseau.
+  const essais = await Promise.all(Array.from({ length: 10 },
+    () => mfa.verifyChallenge(defi.challengeId, '000000')));
+  const restes = essais.map((r) => r.remaining).filter((v) => v !== undefined);
+
+  // Cinq essais sont décomptés, un à un, puis le défi est consommé. Si le
+  // compteur avait été lu hors de la transformation, les dix auraient annoncé le
+  // même reste — et le plafond n'aurait jamais été atteint.
+  verifier('second facteur : dix essais concurrents sont décomptés un à un',
+    JSON.stringify([...restes].sort((a, b) => b - a)) === JSON.stringify([4, 3, 2, 1, 0]),
+    `restes annoncés : ${JSON.stringify(restes)}`);
+  verifier('second facteur : au-delà du plafond, le défi est refusé',
+    essais.filter((r) => r.error === 'mfa_too_many_attempts' || r.error === 'mfa_expired').length === 5,
+    JSON.stringify(essais.map((r) => r.error)));
+  verifier('second facteur : aucun essai faux n’aboutit',
+    essais.every((r) => r.ok !== true));
+}
+
 // ── 5 bis. La façade, sur fichiers ──
 // `src/magasin.js` sert les deux régimes. Sans `DATABASE_URL` — celui des
 // contrôles, et celui d'une instance qui n'a pas encore basculé — tout reste
@@ -803,6 +841,7 @@ module.exports = async function unitairesSmoke() {
     await vecteursDeMigration();
     conservation();
     barreDeRamp();
+    await compteurDuSecondFacteur();
     await magasins();
     await facadeDuMagasin();
   } finally {

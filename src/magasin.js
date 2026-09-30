@@ -51,9 +51,21 @@ const storePg = require('./store_pg');
 // rendait déjà une promesse, donc la propagation s'arrête à cinq appelants ; et
 // son écriture dérive l'identifiant de la longueur du journal, ce qui en fait le
 // cas d'école du lire-modifier-réécrire que `modifier` existe pour tenir.
+//
+// `notifications` — les avis du socle. Trois appels, deux fichiers, et le même
+// identifiant dérivé d'une longueur.
+//
+// `mfa_challenges` — les défis d'authentification à deux facteurs. Un seul
+// fichier, et le geste le plus sensible de tous : **le compteur de tentatives**.
+// `verifyChallenge` lit le défi, incrémente son compteur, réécrit. Rendu
+// asynchrone sans précaution, dix codes faux envoyés ensemble liraient tous
+// `attempts: 0` et n'en écriraient qu'un — le plafond de cinq essais tomberait,
+// et une force brute passerait. C'est `modifier` qui le tient.
 const MIGREES = new Set([
   'ramp_aeronefs',
   'emails',
+  'notifications',
+  'mfa_challenges',
 ]);
 
 let socle = null;

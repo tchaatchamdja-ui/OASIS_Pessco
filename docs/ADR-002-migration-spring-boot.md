@@ -412,6 +412,27 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        d'écritures est lu avec `await` — sans quoi il rendrait une promesse toujours vraie et
        **ne se déclencherait plus jamais**, sans erreur ni trace.
 
+       **`notifications` et `mfa_challenges` passées le 30 septembre 2026.** Les deux plus
+       petites du socle — et la seconde est la plus sensible de la bascule. `verifyChallenge`
+       lit le défi, incrémente son compteur d'essais, réécrit : dix codes faux lancés
+       ensemble liraient tous `attempts: 0`, et **le plafond de cinq essais ne se
+       déclencherait jamais**. Mesuré en processus : restes annoncés `4, 3, 2, 1, 0` avec le
+       verdict arrêté dans la transformation, `4, 4, 4, 4, 4, 4, 4, 4, 4, 4` avec le compteur
+       lu au-dehors.
+
+       > **Le filet manquait, et il a été écrit d'abord.** `mfa_challenges` était la plus
+       > isolée du socle depuis le début, et écartée deux fois pour cela : **aucun des
+       > contrôles ne traversait l'authentification à deux facteurs**, éteinte dans la
+       > configuration d'essai. Une suite lui est consacrée — 11 contrôles, son propre
+       > serveur, `OASIS_MFA=1` — écrite avant la conversion.
+       >
+       > **Une concurrence que le réseau ne reproduit pas.** Le premier contrôle du compteur
+       > passait par dix requêtes HTTP simultanées ; il passait, et ne prouvait rien. Deux
+       > requêtes ne se chevauchent côté serveur que si chaque traitement dure assez
+       > longtemps : mesuré, dix requêtes vers un gestionnaire retardé de 30 ms se chevauchent
+       > à dix, vers celui-ci elles s'enchaînent. La preuve est passée en processus.
+       > Cinquième vert vide de ce chantier.
+
        **Première collection passée le 28 septembre 2026** : `ramp_aeronefs`, la nomenclature
        des aéronefs — la plus isolée qui soit encore gardée. 8 fonctions de magasin, 7 routes,
        9 fichiers touchés, +213/−109 lignes, **299 contrôles verts dans les deux régimes**.

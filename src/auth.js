@@ -4,6 +4,9 @@
 const crypto = require('crypto');
 const trace = require('./trace');
 const store = require('./store');
+// Les avis du socle vivent dans une collection migrée : ils passent par la
+// façade (ADR-002, étape B).
+const magasin = require('./magasin');
 const audit = require('./audit');
 
 const ROLES = ['SUPERADMIN', 'ADMIN', 'ADMIN_PRESTATAIRE', 'AAC', 'PRESTATAIRE', 'INDEPENDANT', 'INSPECTEUR'];
@@ -229,10 +232,13 @@ async function changePassword(username, oldPassword, newPassword, cfg) {
 }
 
 // ── Notifications globales (socle) ──
-function notify(message, type) {
-  const notifications = store.load('notifications', []);
-  notifications.push({ id: notifications.length + 1, ts: new Date().toISOString(), message, type: type || 'info' });
-  store.save('notifications', notifications.slice(-100));
+// `modifier`, et non `load` puis `save` : l'identifiant dérive de la longueur de
+// la liste. Deux avis simultanés porteraient le même numéro, et l'un des deux
+// disparaîtrait.
+async function notify(message, type) {
+  await magasin.modifier('notifications', [], (liste) => [...liste, {
+    id: liste.length + 1, ts: new Date().toISOString(), message, type: type || 'info',
+  }].slice(-100));
 }
 
 module.exports = {

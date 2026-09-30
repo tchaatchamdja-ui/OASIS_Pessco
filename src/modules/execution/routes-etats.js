@@ -343,7 +343,7 @@ module.exports = function register(app, deps, M) {
     activite_id: { type: 'texte', max: 40 },
     notification_id: { type: 'texte', max: 40 },
     dossier_id: { type: 'texte', max: 40 },
-  }), (req, res) => {
+  }), asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res);
     const d = req.body || {};
     const destinataire = String(d.destinataire || '').trim();
@@ -358,7 +358,7 @@ module.exports = function register(app, deps, M) {
     if (adresse.includes('@')) {
       email.queue({ to: adresse, subject: `[OASIS] ${objet}`, body: corps });
     }
-    auth.notify(`Rappel adressé à ${adresse} — ${objet}`, 'info');
+    await auth.notify(`Rappel adressé à ${adresse} — ${objet}`, 'info');
 
     const rec = db.insert('rappels', {
       id: db.uid('rap'),
@@ -373,6 +373,6 @@ module.exports = function register(app, deps, M) {
       date: db.now(),
     });
     res.status(201).json({ status: 'ok', id: rec.id, destinataire: adresse });
-  });
+  }));
 };
 

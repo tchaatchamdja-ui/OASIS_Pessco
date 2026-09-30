@@ -20,9 +20,12 @@ const suites = [
   { nom: 'traductions', port: 0, run: require('./traductions.smoke') },
   // Unitaires : les règles prises à part, sans passer par HTTP.
   { nom: 'unitaires', port: 0, run: require('./unitaires.smoke') },
-  // Magasin PostgreSQL : ce qu'une base de papier ne peut pas dire. Trois
-  // contrôles lisent le schéma ; les huit autres demandent OASIS_PG_ESSAI.
+  // Magasin PostgreSQL : ce qu'une base de papier ne peut pas dire. Cinq
+  // contrôles lisent le schéma ; les douze autres demandent OASIS_PG_ESSAI.
   { nom: 'magasin-pg', port: 0, run: require('./magasin-pg.smoke') },
+  // Authentification à deux facteurs : son propre serveur, avec OASIS_MFA=1.
+  // Aucune autre suite ne la traverse — elle est éteinte partout ailleurs.
+  { nom: 'mfa', port: 4799, run: require('./mfa.smoke') },
   // Parcours : les écrans dans un vrai navigateur, console comprise.
   { nom: 'parcours', port: 4798, run: require('./parcours.smoke') },
 ];

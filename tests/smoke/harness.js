@@ -33,8 +33,8 @@
 // Pour la même raison, une cible sert **une suite à la fois** : à distance
 // elles la partagent, alors qu'en local chacune a la sienne.
 //
-// Relevé du 26 septembre 2026, contre un serveur Node externe : **632 des 767
-// contrôles passent**, 13 se déclarent hors de portée. Les 123 restants — les
+// Relevé du 26 septembre 2026, contre un serveur Node externe : **632 des 782
+// contrôles passent**, 13 se déclarent hors de portée. Les 138 restants — les
 // suites « taille », « traductions », « unitaires » et « magasin-pg » — lisent
 // les sources ou visent une base, et n'ont pas de serveur d'application à
 // atteindre.
@@ -67,7 +67,10 @@ function attendre(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-async function demarrer({ port = 4788 } = {}) {
+// `env` ajoute des variables à celles du serveur d'essai. Une suite qui éprouve
+// un réglage — l'authentification à deux facteurs, par exemple — a besoin de le
+// poser sans toucher au paramétrage des autres.
+async function demarrer({ port = 4788, env: envSup = {} } = {}) {
   // Une adresse est donnée : on ne démarre rien, on s'y adresse.
   const externe = String(process.env.OASIS_SMOKE_BASE || '').replace(/\/$/, '');
   const tmp = externe ? null : copierDonnees();
@@ -80,6 +83,7 @@ async function demarrer({ port = 4788 } = {}) {
       // Les comptes d'amorçage tirent un mot de passe au hasard : les tests
       // en imposent un connu, pour rester exécutables sur un jeu vierge.
       OASIS_SEED_PASSWORD: 'Aerosup@2026!Uemoa',
+      ...envSup,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

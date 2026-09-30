@@ -412,7 +412,7 @@ app.put('/api/modules/:code', requireAuth, requireRole('SUPERADMIN'), asynchrone
   cfg.modules[code] = !!req.body.enabled;
   saveConfig(cfg);
   await audit.log(req.user.username, cfg.modules[code] ? 'MODULE_ACTIVE' : 'MODULE_DESACTIVE', { module: code });
-  auth.notify(`Module ${code} ${cfg.modules[code] ? 'activé' : 'désactivé'} par ${req.user.username}.`, 'info');
+  await auth.notify(`Module ${code} ${cfg.modules[code] ? 'activé' : 'désactivé'} par ${req.user.username}.`, 'info');
   res.json({ ok: true, code, enabled: cfg.modules[code] });
 }));
 
@@ -504,7 +504,7 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
   auth.saveUsers(users);
   email.accountCreated({ to: username, name: `${nom} ${prenom || ''}`.trim(), username, password: tempPassword });
   await audit.log(req.user.username, 'UTILISATEUR_CREE', { cible: username, role });
-  auth.notify(`Utilisateur « ${username} » créé par ${req.user.username} — email d'identifiants envoyé.`, 'success');
+  await auth.notify(`Utilisateur « ${username} » créé par ${req.user.username} — email d'identifiants envoyé.`, 'success');
   res.json({ ok: true });
 }));
 
@@ -564,7 +564,7 @@ app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), async
   await audit.log(req.user.username, 'COMPTE_EFFACE', {
     cible: user.username, role: user.role, fiche_personnel: fiche ? fiche.id : null,
   });
-  auth.notify(`Compte « ${user.username} » effacé.`, 'info');
+  await auth.notify(`Compte « ${user.username} » effacé.`, 'info');
   return res.json({ ok: true, efface: user.username, fiche_personnel_effacee: !!fiche });
 }));
 
@@ -597,7 +597,7 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
     user.passwordChangedAt = new Date().toISOString();
     email.passwordReset({ to: user.email || user.username, name: user.fullName || user.username, username: user.username, password: tempPassword });
     await audit.log(req.user.username, 'MOT_DE_PASSE_REINITIALISE', { cible: user.username });
-    auth.notify(`Mot de passe réinitialisé pour « ${user.username} » — email envoyé.`, 'info');
+    await auth.notify(`Mot de passe réinitialisé pour « ${user.username} » — email envoyé.`, 'info');
   } else if (action === 'set-modules') {
     if (req.user.role !== 'SUPERADMIN') return res.status(403).json({ error: 'forbidden' });
     user.modules = Array.isArray(req.body.modules) ? req.body.modules : [];
@@ -704,16 +704,16 @@ app.post('/api/retention/purger', requireAuth, requireRole('SUPERADMIN'), envelo
 }));
 
 // ── Notifications ──
-app.get('/api/notifications', requireAuth, (req, res) => {
-  res.json(store.load('notifications', []).slice(-30).reverse());
-});
+app.get('/api/notifications', requireAuth, asynchrone(async (req, res) => {
+  res.json((await magasin.load('notifications', [])).slice(-30).reverse());
+}));
 
-app.post('/api/notifications', requireAuth, (req, res) => {
+app.post('/api/notifications', requireAuth, asynchrone(async (req, res) => {
   const message = String((req.body && req.body.message) || '').slice(0, 300);
   if (!message) return res.status(400).json({ error: 'invalid' });
-  auth.notify(message, (req.body && req.body.type) || 'info');
+  await auth.notify(message, (req.body && req.body.type) || 'info');
   res.json({ ok: true });
-});
+}));
 
 // ── Configuration (SUPERADMIN) ──
 app.get('/api/config', requireAuth, requireRole('SUPERADMIN'), (req, res) => {
@@ -769,7 +769,7 @@ app.put('/api/config', requireAuth, requireRole('SUPERADMIN'), asynchrone(async 
   }
   saveConfig(cfg);
   await audit.log(req.user.username, 'CONFIGURATION_MODIFIEE', { instance: retenue || '(régionale)' });
-  auth.notify(`Configuration modifiée par ${req.user.username}.`, 'info');
+  await auth.notify(`Configuration modifiée par ${req.user.username}.`, 'info');
   res.json({ ok: true, config: { ...cfg, aac: instances.aac(req.user, loadConfig) } });
 }));
 

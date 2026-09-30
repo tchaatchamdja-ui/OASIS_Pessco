@@ -29,7 +29,7 @@ OASIS_SEED_PASSWORD='UnMotDePasse!2026' npm start
 npm run smoke
 ```
 
-Douze suites, **767 contrôles**, exécutés contre un vrai serveur lancé sur un
+Treize suites, **782 contrôles**, exécutés contre un vrai serveur lancé sur un
 jeu de données isolé (`tests/fixtures/`) : `data/` n'est jamais touché. La même
 commande tourne en intégration continue à chaque poussée, avec `npm audit` au
 niveau « high » et un contrôle de syntaxe sur chaque fichier
@@ -58,7 +58,7 @@ scripts/cible-essai.sh 4899
 OASIS_SMOKE_BASE=http://localhost:4899 npm run smoke -- socle
 ```
 
-**632 des 767 contrôles** s'exécutent ainsi ; 13 se déclarent *hors de portée*
+**632 des 782 contrôles** s'exécutent ainsi ; 13 se déclarent *hors de portée*
 — ils lisent le disque du serveur — et le bilan les compte à part. La cible
 repart des fixtures à chaque exécution et ne sert qu'une suite à la fois.
 
@@ -127,7 +127,7 @@ OASIS/
 │   ├── index.html  js/  css/ # Portail
 │   ├── shared/               # Socle du front : requêtes, thème, filtres, retours d'action
 │   └── modules/<nom>/        # Un dossier par module
-├── tests/smoke/              # Douze suites, exécutées par npm run smoke
+├── tests/smoke/              # Treize suites, exécutées par npm run smoke
 ├── scripts/sauvegarde.sh     # Archives horodatées de data/ et config/
 └── docs/
 ```

@@ -264,6 +264,58 @@ contrôle de la suite « socle » qui l'a dit, non moi.
 `all()`, qui regroupait les 3 205 entrées par module à chaque écriture, a disparu
 du chemin d'écriture. En base, c'est un index qui répond.
 
+## Cinquième et sixième : `notifications` et `mfa_challenges`
+
+*30 septembre 2026. Les deux plus petites du socle — et la plus sensible.*
+
+`notifications` : trois appels, deux fichiers, le même identifiant dérivé d'une
+longueur que `emails` avait déjà montré.
+
+`mfa_challenges` : un seul fichier, et **le geste le plus sensible de toute la
+bascule**. `verifyChallenge` lit le défi, incrémente son compteur d'essais,
+réécrit. Rendu asynchrone sans précaution, dix codes faux lancés ensemble
+liraient tous `attempts: 0` et n'en écriraient qu'un : le plafond de cinq essais
+tomberait, et **une force brute disposerait d'autant d'essais qu'elle saurait en
+lancer en parallèle**.
+
+Mesuré, en processus :
+
+| Dix codes faux lancés ensemble | restes annoncés | plafond |
+|---|---|---|
+| verdict arrêté **dans** la transformation | `4, 3, 2, 1, 0` | atteint |
+| compteur lu **au-dehors** | `4, 4, 4, 4, 4, 4, 4, 4, 4, 4` | **jamais atteint** |
+
+### Le filet qui manquait, écrit d'abord
+
+`mfa_challenges` était la plus isolée du socle depuis le début, et c'est pour
+cela qu'elle avait été écartée deux fois : **aucun des contrôles ne traversait
+l'authentification à deux facteurs**. Elle est éteinte dans la configuration
+d'essai, et personne n'avait posé `OASIS_MFA=1`. La fiche l'exige en production,
+le démarrage refuse de se taire quand elle manque — et rien ne l'éprouvait.
+
+Une suite lui est donc consacrée, **écrite avant la conversion** : 11 contrôles,
+son propre serveur, `OASIS_MFA=1`. Le harnais accepte désormais des variables
+d'environnement pour cela.
+
+Ce qui ne peut pas s'éprouver, et c'est voulu : le code à usage unique n'est pas
+récupérable. Il part par courriel, et le registre des envois retire le corps des
+messages à secret. **Aucun contrôle ne peut donc réussir une ouverture de session
+à deux facteurs** — ce sont les refus qui s'éprouvent, et ce sont eux qui
+comptent.
+
+### Une concurrence que le réseau ne reproduit pas
+
+Le premier contrôle du compteur passait par dix requêtes HTTP simultanées. Il
+passait — **et il ne prouvait rien** : deux requêtes ne se chevauchent côté
+serveur que si chaque traitement dure assez longtemps. Mesuré : dix requêtes vers
+un gestionnaire retardé de 30 ms se chevauchent bien à dix, mais vers celui-ci,
+qui dure une milliseconde, elles s'enchaînent.
+
+La preuve est donc en processus, où le croisement peut être forcé ; la suite
+« mfa » garde le parcours et le dit franchement. **Cinquième vert vide de ce
+chantier** — base de papier, journal vide, messagerie joignable, `server.js` hors
+périmètre, et maintenant une concurrence que le réseau ne reproduit pas.
+
 ---
 
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout

@@ -114,6 +114,18 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   déclencherait plus jamais.
 - La base de papier des contrôles de contrat tient maintenant **la même contrainte** que le
   vrai schéma. Elle avait menti une quatrième fois.
+- **`notifications` et `mfa_challenges` passées en base.** La seconde porte le geste le
+  plus sensible de la bascule : le compteur d'essais du second facteur. Dix codes faux
+  lancés ensemble liraient tous `attempts: 0` et le plafond de cinq essais ne se
+  déclencherait jamais — mesuré, `4,3,2,1,0` avec le verdict arrêté dans la transformation,
+  `4,4,4,4,4,4,4,4,4,4` sans.
+- **Suite « mfa », 11 contrôles** — l'authentification à deux facteurs n'était traversée
+  par aucun contrôle, étant éteinte dans la configuration d'essai. Elle a désormais son
+  serveur et `OASIS_MFA=1`. Le harnais accepte des variables d'environnement pour cela.
+- Le code à usage unique n'est pas récupérable et ne le sera pas : ce sont les refus qui
+  s'éprouvent — code faux, défi expiré, plafond de tentatives, rafale.
+- Un envoi de code qui échoue est désormais **tracé** : sans quoi un agent attendrait un
+  code jamais parti, et rien ne le dirait.
 - **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
   `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.

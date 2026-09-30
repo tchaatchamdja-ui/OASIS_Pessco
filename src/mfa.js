@@ -3,8 +3,20 @@
 // canal choisi (email ou téléphone du profil). La session n'est créée qu'après
 // validation du code.
 // Le code n'est jamais stocké en clair : seule son empreinte SHA-256 salée l'est.
+// ── Le compteur de tentatives est le geste sensible (ADR-002, étape B) ──
+//
+// Les défis vivent en base. `verifyChallenge` lit le défi, incrémente son
+// compteur d'essais, réécrit : un lire-modifier-réécrire. Rendu asynchrone sans
+// précaution, **dix codes faux envoyés ensemble liraient tous `attempts: 0` et
+// n'en écriraient qu'un** — le plafond de cinq essais tomberait, et une force
+// brute passerait sans que rien ne le dise.
+//
+// Tout ce qui touche à un défi passe donc par `magasin.modifier`, qui rend le
+// geste atomique : file d'attente sur fichiers, `rev` comparé à l'écriture en
+// base.
 const crypto = require('crypto');
-const store = require('./store');
+const magasin = require('./magasin');
+const trace = require('./trace');
 const audit = require('./audit');
 const email = require('./email');
 
@@ -12,8 +24,11 @@ const CODE_LENGTH = 6;
 const TTL_MINUTES = 10;
 const MAX_ATTEMPTS = 5;
 
-const load = () => store.load('mfa_challenges', {});
-const save = (d) => store.save('mfa_challenges', d);
+// Lire-modifier-réécrire atomique sur la table des défis. `transformer` reçoit
+// les défis purgés de ceux qui ont expiré, et rend ceux à écrire ; il peut être
+// rejoué, et ne doit donc que calculer.
+const modifierDefis = (transformer) => magasin.modifier('mfa_challenges', {},
+  (d) => transformer(purge({ ...d })));
 
 const digest = (code, salt) => crypto.createHash('sha256').update(salt + '|' + code).digest('hex');
 
@@ -55,63 +70,87 @@ async function createChallenge(user, channelId) {
   const code = String(crypto.randomInt(0, 10 ** CODE_LENGTH)).padStart(CODE_LENGTH, '0');
   const salt = crypto.randomBytes(16).toString('hex');
   const id = crypto.randomBytes(24).toString('hex');
-  const d = purge(load());
-  d[id] = {
-    username: user.username,
-    channel: channel.id,
-    target: channel.target,
-    salt,
-    hash: digest(code, salt),
-    attempts: 0,
-    createdAt: new Date().toISOString(),
-    expiresAt: new Date(Date.now() + TTL_MINUTES * 60000).toISOString(),
-  };
-  save(d);
+  await modifierDefis((d) => ({
+    ...d,
+    [id]: {
+      username: user.username,
+      channel: channel.id,
+      target: channel.target,
+      salt,
+      hash: digest(code, salt),
+      attempts: 0,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + TTL_MINUTES * 60000).toISOString(),
+    },
+  }));
 
   // Le canal SMS n'a pas encore de passerelle : le message est journalisé dans
-  // data/emails.json comme les autres envois (visible en local via Mailpit).
+  // le registre des envois comme les autres (visible en local via Mailpit).
+  //
+  // L'envoi n'est pas attendu : le défi est posé, et la réponse peut partir sans
+  // que le courriel soit remis. Mais un échec doit se lire — sans quoi un agent
+  // attendrait un code qui n'est jamais parti, et rien ne le dirait.
   email.mfaCode({
     to: channel.target,
     name: user.fullName || user.username,
     code,
     minutes: TTL_MINUTES,
     channel: channel.id,
-  });
+  }).catch((e) => trace.erreur('code à usage unique non envoyé', {
+    utilisateur: user.username, canal: channel.id, detail: e.message,
+  }));
 
   await audit.log(user.username, 'MFA_CODE_ENVOYE', { canal: channel.id, cible: channel.masked });
   return { ok: true, challengeId: id, channel: channel.id, masked: channel.masked, expiresIn: TTL_MINUTES * 60, channels };
 }
 
 // Vérifie un code. Consomme le défi en cas de succès.
+// Le verdict est **arrêté dans la transformation**, sur le défi que la base
+// vient de rendre : lire le compteur au-dehors puis l'incrémenter laisserait dix
+// essais parallèles n'en compter qu'un. Ce qui suit l'écriture — le journal — se
+// fait après, sur ce que la transformation a décidé.
 async function verifyChallenge(challengeId, code) {
-  const d = purge(load());
-  const c = d[challengeId];
-  if (!c) return { ok: false, error: 'mfa_expired' };
-  if (c.attempts >= MAX_ATTEMPTS) {
-    delete d[challengeId];
-    save(d);
-    await audit.log(c.username, 'MFA_ECHEC', { motif: 'trop de tentatives' });
-    return { ok: false, error: 'mfa_too_many_attempts' };
-  }
   const given = String(code || '').trim();
-  if (digest(given, c.salt) !== c.hash) {
-    c.attempts += 1;
-    save(d);
-    await audit.log(c.username, 'MFA_ECHEC', { tentative: c.attempts });
-    return { ok: false, error: 'mfa_invalid_code', remaining: MAX_ATTEMPTS - c.attempts };
-  }
-  const username = c.username;
-  delete d[challengeId];
-  save(d);
-  await audit.log(username, 'MFA_VALIDE', { canal: c.channel });
-  return { ok: true, username };
+  let verdict = { ok: false, error: 'mfa_expired' };
+  let journal = null;
+
+  await modifierDefis((d) => {
+    const c = d[challengeId];
+    if (!c) { verdict = { ok: false, error: 'mfa_expired' }; return d; }
+
+    if (c.attempts >= MAX_ATTEMPTS) {
+      verdict = { ok: false, error: 'mfa_too_many_attempts' };
+      journal = [c.username, 'MFA_ECHEC', { motif: 'trop de tentatives' }];
+      const reste = { ...d }; delete reste[challengeId];
+      return reste;
+    }
+
+    if (digest(given, c.salt) !== c.hash) {
+      const tentative = c.attempts + 1;
+      verdict = { ok: false, error: 'mfa_invalid_code', remaining: MAX_ATTEMPTS - tentative };
+      journal = [c.username, 'MFA_ECHEC', { tentative }];
+      return { ...d, [challengeId]: { ...c, attempts: tentative } };
+    }
+
+    verdict = { ok: true, username: c.username };
+    journal = [c.username, 'MFA_VALIDE', { canal: c.channel }];
+    const reste = { ...d }; delete reste[challengeId];
+    return reste;
+  });
+
+  if (journal) await audit.log(...journal);
+  return verdict;
 }
 
 async function resend(challengeId, user, channelId) {
-  const d = purge(load());
-  if (!d[challengeId]) return { ok: false, error: 'mfa_expired' };
-  delete d[challengeId];
-  save(d);
+  let existait = false;
+  await modifierDefis((d) => {
+    existait = !!d[challengeId];
+    if (!existait) return d;
+    const reste = { ...d }; delete reste[challengeId];
+    return reste;
+  });
+  if (!existait) return { ok: false, error: 'mfa_expired' };
   return createChallenge(user, channelId);
 }
 

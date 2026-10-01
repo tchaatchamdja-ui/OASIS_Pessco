@@ -161,7 +161,7 @@ module.exports = async function planificationSmoke(port) {
     // Ce qu'aucune route ne sert : le reste d'un amendement annulé. C'est tout
     // l'objet du contrôle, et il se lit donc sur le fichier.
     if (srv.local) {
-      const apresAnnul = srv.donnees('planification');
+      const apresAnnul = await srv.donnees('planification');
       const restesEnfant = ['activites', 'workflow', 'commentaires', 'versions']
         .map((c) => [c, (apresAnnul[c] || []).filter((x) => x.plan_id === enfant.id).length])
         .filter(([, n]) => n);
@@ -247,7 +247,7 @@ module.exports = async function planificationSmoke(port) {
     await srv.appel(`/api/m/planification/plans/${brouillon.corps.id}`, { method: 'DELETE' });
 
     if (srv.local) {
-      const avantSuppr = srv.donnees('planification');
+      const avantSuppr = await srv.donnees('planification');
       verifier('le plan de test porte des décisions de circuit',
         (avantSuppr.workflow || []).some((w) => w.plan_id === id));
     } else {
@@ -261,7 +261,7 @@ module.exports = async function planificationSmoke(port) {
     // en base sans que rien ne puisse plus les atteindre — la base de travail
     // en porte trente-quatre, de seize plans disparus.
     if (srv.local) {
-      const apresSuppr = srv.donnees('planification');
+      const apresSuppr = await srv.donnees('planification');
       const restes = ['workflow', 'commentaires', 'versions']
         .map((c) => [c, (apresSuppr[c] || []).filter((x) => x.plan_id === id || x.plan_id === brouillon.corps.id).length])
         .filter(([, n]) => n);

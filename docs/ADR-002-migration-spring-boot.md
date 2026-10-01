@@ -494,8 +494,43 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        une base ayant les verrous qu'un répertoire n'a pas. Ce qui **reste ouvert** : le point
        n° 3, la session, `sessions` n'étant pas encore migrée.
 
-11. [ ] **Migrer `users` et `sessions`.** 50 appels dans 16 fichiers. `sessions` ferme le
-       point n° 3 du jalon n° 6 : le socle Java pourra alors rafraîchir `lastActivity`, ce
-       qu'il ne peut pas faire tant que la donnée est un fichier qu'un seul runtime écrit.
+11. [x] **`users` et `sessions` migrées** — faites le 1ᵉʳ octobre 2026, et par une autre voie
+       que les précédentes.
+
+       **Une conversion mécanique aurait été une faute, et c'est mesuré.** `getUsers()` et
+       `findUser()` sont appelés depuis des prédicats de rôle **synchrones** employés dans
+       **101 appels et 545 chaînes de tableau** à travers les six modules : chaque
+       `liste.filter(canRead)` aurait dû devenir `await Promise.all(liste.map(…))`. Plus un
+       portage, une réécriture de la couche module — pour une donnée lue constamment et écrite
+       une fois par semaine.
+
+       L'annuaire est donc tenu en mémoire (`src/annuaire.js`) et **rafraîchi une fois par
+       requête**, dans `requireAuth`. Garantie **plus forte** que l'ancienne : toutes les
+       lectures d'une requête voient le même annuaire. Deux contrôles de forme imposent ce
+       rafraîchissement — retiré, rien ne tombe et l'application servirait l'annuaire du
+       dernier démarrage.
+
+       Les douze écritures ne reportent que **les champs réellement changés**. Réécrire
+       l'enregistrement entier aurait effacé le décompte de tentatives infructueuses qu'une
+       connexion incrémente — et le compte aurait cessé de se bloquer. Mesuré en séquence :
+       `failedAttempts` à **3** en réécrivant tout, à **4** en reportant les champs changés.
+
+       **Ce que le régime base a révélé du harnais.** Chaque suite recevait une copie neuve de
+       `data/`, mais **la base était partagée** : la suite « socle » efface un compte, les
+       suivantes le cherchaient. Et **les fixtures n'entraient jamais dans la base** — trois
+       comptes au lieu de quinze, aucun privilège, et les contrôles de droits rendaient des
+       listes vides. Chaque suite reçoit désormais son propre schéma, garni des fixtures et
+       détruit à l'arrêt ; `srv.donnees()` lit là où la donnée vit.
+
+       | | |
+       |---|---|
+       | Contrôles, quatre régimes | **795** sur fichiers · **793** en base (2 hors de portée) |
+       | Réponses identiques à l'octet, Node contre Java | **14 / 14** |
+       | Maillons SHA-256 revérifiés depuis la base | **1 582** |
+       | Suite « droits » à travers la passerelle | **20 / 20** |
+
+       **Le point n° 3 du jalon n° 6 est levé** : une session ouverte par Node dans la base
+       est reconnue par Java à travers elle. Le rafraîchissement de `lastActivity` par Java
+       n'est pas écrit — mais rien ne l'empêche plus.
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

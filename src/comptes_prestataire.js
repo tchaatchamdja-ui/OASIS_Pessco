@@ -13,6 +13,7 @@
 //   · un compte hors du périmètre n'existe pas — 404, jamais 403.
 
 const { introuvable, requis, existant, reserve } = require('./erreurs');
+const { asynchrone } = require('./route');
 
 // Rôles portail qu'un compte rattaché à un organisme peut porter. Les libellés
 // diffèrent d'un module à l'autre : « prestataire » ici, « exploitant » là.
@@ -90,7 +91,7 @@ function register(app, deps, M, o) {
     });
   });
 
-  app.post(`${M}/mes-utilisateurs`, requireAuth, (req, res) => {
+  app.post(`${M}/mes-utilisateurs`, requireAuth, asynchrone(async (req, res) => {
     const miens = garde(req, res);
     if (!miens) return undefined;
     const d = req.body || {};
@@ -103,7 +104,7 @@ function register(app, deps, M, o) {
     const { salt, hash } = auth.hashPassword(motDePasse);
     const users = auth.getUsers();
     const role = rolesPrestataire.some((r) => r.cle === d.role) ? d.role : 'PRESTATAIRE';
-    users.push({
+    const nouveau = {
       username, nom: texte(d.nom), prenom: texte(d.prenom),
       email: texte(d.email) || username,
       fullName: `${texte(d.nom)} ${texte(d.prenom)}`.trim(),
@@ -115,19 +116,26 @@ function register(app, deps, M, o) {
       mustChange: true, tempPassword: motDePasse,
       passwordChangedAt: o.now(), passwordHistory: [hash],
       createdAt: o.now(), createdBy: req.user.username,
+    };
+    // Le doublon est vérifié **dans** la transformation : le vérifier au-dehors
+    // laisserait passer deux créations simultanées du même identifiant.
+    let doublon = false;
+    await auth.modifierUsers((comptes) => {
+      doublon = comptes.some((x) => x.username === username);
+      return doublon ? comptes : [...comptes, nouveau];
     });
-    auth.saveUsers(users);
+    if (doublon) return existant(res, 'utilisateur');
     return res.status(201).json({ status: 'ok', id: username, temp_password: motDePasse });
-  });
+  }));
 
-  app.put(`${M}/mes-utilisateurs/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/mes-utilisateurs/:id`, requireAuth, asynchrone(async (req, res) => {
     const miens = garde(req, res);
     if (!miens) return undefined;
     const existant = cible(req.params.id, miens);
     if (!existant) return introuvable(res, 'utilisateur');
     const d = req.body || {};
-    const users = auth.getUsers();
-    const u = users.find((x) => x.username === req.params.id);
+    const avant = auth.findUser(req.params.id);
+    const u = { ...avant };
     ['nom', 'prenom', 'email'].forEach((k) => { if (k in d) u[k] = texte(d[k]); });
     if ('actif' in d) u.active = !!d.actif;
     u.fullName = `${u.nom || ''} ${u.prenom || ''}`.trim();
@@ -140,35 +148,41 @@ function register(app, deps, M, o) {
     // modifications portent sur le compte portail lui-même : elles se lisent
     // aussitôt dans la gestion des utilisateurs du portail.
     u.prestataire_id = existant.prestataire_id;
-    auth.saveUsers(users);
+    // Seuls les champs changés sont reportés sur la version que la base porte :
+    // réécrire l'enregistrement entier effacerait, par exemple, le décompte de
+    // tentatives infructueuses qu'une connexion concurrente vient d'incrémenter.
+    const changes = auth.champsChanges(avant, u);
+    await auth.modifierUsers((comptes) => comptes.map(
+      (x) => (x.username === req.params.id ? { ...x, ...changes } : x),
+    ));
     return res.json({ status: 'ok', role: u.role, droits: R.droitsDe(u) });
-  });
+  }));
 
-  app.delete(`${M}/mes-utilisateurs/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/mes-utilisateurs/:id`, requireAuth, asynchrone(async (req, res) => {
     const miens = garde(req, res);
     if (!miens) return undefined;
     if (req.params.id === (req.userReel || req.user).username) {
       return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
     }
     if (!cible(req.params.id, miens)) return introuvable(res, 'utilisateur');
-    auth.saveUsers(auth.getUsers().filter((u) => u.username !== req.params.id));
+    await auth.modifierUsers((comptes) => comptes.filter((u) => u.username !== req.params.id));
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.post(`${M}/mes-utilisateurs/:id/reset-password`, requireAuth, (req, res) => {
+  app.post(`${M}/mes-utilisateurs/:id/reset-password`, requireAuth, asynchrone(async (req, res) => {
     const miens = garde(req, res);
     if (!miens) return undefined;
     if (!cible(req.params.id, miens)) return introuvable(res, 'utilisateur');
     const motDePasse = auth.generatePassword(loadConfig());
     const { salt, hash } = auth.hashPassword(motDePasse);
-    const users = auth.getUsers();
-    const u = users.find((x) => x.username === req.params.id);
-    Object.assign(u, { salt, hash, mustChange: true, tempPassword: motDePasse, passwordChangedAt: o.now() });
-    u.logs = [{ action: `Réinitialisation par ${req.user.fullName || req.user.username}`, date: o.now() },
-      ...(u.logs || [])];
-    auth.saveUsers(users);
+    const u = await auth.modifierUn(req.params.id, (frais) => {
+      Object.assign(frais, { salt, hash, mustChange: true, tempPassword: motDePasse, passwordChangedAt: o.now() });
+      frais.logs = [{ action: `Réinitialisation par ${req.user.fullName || req.user.username}`, date: o.now() },
+        ...(frais.logs || [])];
+      return frais;
+    }).then((comptes) => comptes.find((x) => x.username === req.params.id) || {});
     return res.json({ status: 'ok', new_password: motDePasse, email: u.email || '' });
-  });
+  }));
 
   app.post(`${M}/mes-utilisateurs/:id/reveal-password`, requireAuth, (req, res) => {
     const miens = garde(req, res);

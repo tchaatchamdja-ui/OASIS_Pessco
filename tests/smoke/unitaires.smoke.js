@@ -388,6 +388,110 @@ async function compteurDuSecondFacteur() {
     essais.every((r) => r.ok !== true));
 }
 
+// ── 4 ter. L'annuaire des comptes : instantané et écritures atomiques ──
+//
+// C'est la seule collection dont les lectures sont restées synchrones, et ce
+// choix se paie par deux invariants qu'il faut tenir :
+//
+//   · l'instantané ne vaut que s'il est rafraîchi — sans quoi une route servirait
+//     l'annuaire du démarrage, et un compte créé depuis ne pourrait se connecter ;
+//   · les écritures doivent être atomiques **par champ**, parce que deux
+//     gestionnaires touchent le même enregistrement pour des raisons différentes :
+//     une connexion incrémente le décompte de tentatives pendant qu'un
+//     administrateur change un nom. Réécrire l'enregistrement entier ferait
+//     perdre l'un des deux — et si c'est le décompte, le compte cesse de se
+//     bloquer.
+async function annuaireDesComptes() {
+  const annuaire = require('../../src/annuaire');
+  const auth = require('../../src/auth');
+
+  await annuaire.remplacer([
+    { username: 'a@x.bj', nom: 'A', failedAttempts: 0 },
+    { username: 'b@x.bj', nom: 'B', failedAttempts: 0 },
+  ]);
+  verifier('annuaire : la lecture est synchrone et rend ce qui a été posé',
+    auth.getUsers().length === 2 && auth.findUser('a@x.bj').nom === 'A');
+
+  // L'instantané ne bouge pas tant qu'on ne le rafraîchit pas : c'est ce qui
+  // rend toutes les lectures d'une requête cohérentes entre elles.
+  const magasin = require('../../src/magasin');
+  await magasin.modifier('users', [], (c) => [...c, { username: 'c@x.bj', nom: 'C' }]);
+  verifier('annuaire : l’instantané ne bouge pas de lui-même',
+    auth.getUsers().length === 2, `${auth.getUsers().length} compte(s)`);
+  await annuaire.rafraichir();
+  verifier('annuaire : rafraîchi, il voit ce que la base porte',
+    auth.getUsers().length === 3 && !!auth.findUser('c@x.bj'));
+
+  // Vingt décomptes de tentatives, lancés ensemble, sur le même compte.
+  await annuaire.remplacer([{ username: 'a@x.bj', nom: 'A', failedAttempts: 0 }]);
+  await Promise.all(Array.from({ length: 20 }, () => auth.modifierUsers(
+    (c) => c.map((u) => (u.username === 'a@x.bj'
+      ? { ...u, failedAttempts: (u.failedAttempts || 0) + 1 } : u)),
+  )));
+  verifier('annuaire : vingt décomptes concurrents comptent jusqu’à vingt',
+    auth.findUser('a@x.bj').failedAttempts === 20,
+    `${auth.findUser('a@x.bj').failedAttempts}`);
+
+  // Deux gestionnaires sur le même compte, pour des champs différents : aucun
+  // des deux ne doit effacer l'autre.
+  await annuaire.remplacer([{ username: 'a@x.bj', nom: 'A', failedAttempts: 3 }]);
+  const avant = auth.findUser('a@x.bj');
+  const apresNom = { ...avant, nom: 'Modifié' };          // ce qu'un administrateur produit
+  await Promise.all([
+    // l'administrateur ne reporte que ce qu'il a changé
+    auth.modifierUsers((c) => c.map((u) => (u.username === 'a@x.bj'
+      ? { ...u, ...auth.champsChanges(avant, apresNom) } : u))),
+    // la connexion incrémente, sur la version fraîche
+    auth.modifierUsers((c) => c.map((u) => (u.username === 'a@x.bj'
+      ? { ...u, failedAttempts: (u.failedAttempts || 0) + 1 } : u))),
+  ]);
+  const fin = auth.findUser('a@x.bj');
+  verifier('annuaire : deux écritures sur des champs différents coexistent',
+    fin.nom === 'Modifié' && fin.failedAttempts === 4,
+    JSON.stringify({ nom: fin.nom, failedAttempts: fin.failedAttempts }));
+
+  // Et le contre-exemple, pour que le précédent ne prouve pas rien.
+  //
+  // Il est **séquentiel**, et c'est voulu : lancé en parallèle, le résultat
+  // dépendrait de l'ordre d'arrivée dans la file et la perte n'arriverait qu'une
+  // fois sur deux. Le scénario réel, lui, est bien celui-ci — l'administrateur
+  // lit la fiche, une connexion échoue entre-temps, l'administrateur écrit.
+  await annuaire.remplacer([{ username: 'a@x.bj', nom: 'A', failedAttempts: 3 }]);
+  const vieux = auth.findUser('a@x.bj');                 // ce que l'administrateur a lu
+  await auth.modifierUsers((c) => c.map((u) => (u.username === 'a@x.bj'
+    ? { ...u, failedAttempts: (u.failedAttempts || 0) + 1 } : u)));   // une connexion échoue
+  await auth.modifierUsers((c) => c.map((u) => (u.username === 'a@x.bj'
+    ? { ...vieux, nom: 'Modifié' } : u)));               // réécrit tout, à l'ancienne
+  const ecrase = auth.findUser('a@x.bj');
+  verifier('annuaire : contre-épreuve — réécrire tout efface l’autre écriture',
+    ecrase.failedAttempts === 3,
+    `failedAttempts = ${ecrase.failedAttempts} (3 attendu : l’incrément est perdu)`);
+
+  // Et le même scénario avec le report des seuls champs changés : les deux
+  // écritures coexistent. C'est la paire qui fait la démonstration.
+  await annuaire.remplacer([{ username: 'a@x.bj', nom: 'A', failedAttempts: 3 }]);
+  const lu = auth.findUser('a@x.bj');
+  await auth.modifierUsers((c) => c.map((u) => (u.username === 'a@x.bj'
+    ? { ...u, failedAttempts: (u.failedAttempts || 0) + 1 } : u)));
+  const voulu = { ...lu, nom: 'Modifié' };
+  await auth.modifierUsers((c) => c.map((u) => (u.username === 'a@x.bj'
+    ? { ...u, ...auth.champsChanges(lu, voulu) } : u)));
+  const garde = auth.findUser('a@x.bj');
+  verifier('annuaire : le report des seuls champs changés les garde tous les deux',
+    garde.nom === 'Modifié' && garde.failedAttempts === 4,
+    JSON.stringify({ nom: garde.nom, failedAttempts: garde.failedAttempts }));
+
+  // La table des sessions survit au redémarrage : elle est rechargée depuis le
+  // magasin, et `getSession` la lit sans attendre.
+  const jeton = await auth.createSession('a@x.bj', { security: { singleSession: false } });
+  auth.sessions.clear();
+  verifier('sessions : vidée, la table ne reconnaît plus le jeton',
+    auth.getSession(jeton, { security: { sessionTimeoutMinutes: 60 } }) === null);
+  await auth.chargerSessions();
+  verifier('sessions : rechargée depuis le magasin, elle le reconnaît de nouveau',
+    (auth.getSession(jeton, { security: { sessionTimeoutMinutes: 60 } }) || {}).username === 'a@x.bj');
+}
+
 // ── 5 bis. La façade, sur fichiers ──
 // `src/magasin.js` sert les deux régimes. Sans `DATABASE_URL` — celui des
 // contrôles, et celui d'une instance qui n'a pas encore basculé — tout reste
@@ -422,8 +526,16 @@ async function facadeDuMagasin() {
     magasin.surBase('ramp_aeronefs') === enBase);
   // Celui-ci, lui, ne dépend d'aucun régime : la liste d'autorisation nomme ce
   // qui est migré, et rien d'autre ne l'est jamais.
+  //
+  // Le témoin est pris **dans** la liste, par son complément : nommer une
+  // collection en dur l'aurait fait échouer le jour où elle bascule, ce qui est
+  // arrivé à `users`. Un nom qui n'est pas dans la liste n'est jamais en base,
+  // quelle que soit la liste.
+  const pasMigree = ['referentiels', 'module_rights', 'execution', 'ramp']
+    .find((n) => !magasin.MIGREES.has(n));
   verifier('façade : une collection non migrée ne l’est dans aucun régime',
-    magasin.surBase('users') === false && !magasin.MIGREES.has('users'));
+    !!pasMigree && magasin.surBase(pasMigree) === false,
+    `témoin : ${pasMigree || '(aucun — tout est migré)'}`);
 
   verifier('façade : une collection absente rend le défaut',
     JSON.stringify(await magasin.load(COLL_ESSAI, { rien: true })) === '{"rien":true}');
@@ -828,6 +940,11 @@ function barreDeRamp() {
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
+    // Cette suite n'ouvre aucun serveur : c'est elle qui doit préparer le
+    // magasin. Sans cela, en régime base, la première inscription au journal
+    // échoue sur « relation journal does not exist » — une table que le
+    // démarrage du serveur crée, et qu'aucun serveur ne démarre ici.
+    await magasinDuJournal.preparer();
     // Le concurrent d'abord : `chainage` falsifie le journal à la fin, exprès,
     // et la chaîne ne s'en relève pas — c'est tout son objet.
     await numerosDeChaine();
@@ -842,6 +959,7 @@ module.exports = async function unitairesSmoke() {
     conservation();
     barreDeRamp();
     await compteurDuSecondFacteur();
+    await annuaireDesComptes();
     await magasins();
     await facadeDuMagasin();
   } finally {

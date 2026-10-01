@@ -109,6 +109,18 @@ async function requireAuth(req, res, next) {
   const token = parseCookies(req).oasis_session;
   const session = auth.getSession(token, cfg);
   if (!session) return res.status(401).json({ error: 'unauthenticated' });
+  // ── L'instantané de l'annuaire, pris ici et une seule fois ──
+  //
+  // `users` vit en base, mais `getUsers()` et `findUser()` sont restés
+  // synchrones : les rendre asynchrones aurait atteint 101 prédicats de rôle et
+  // 545 chaînes de tableau dans les modules. L'annuaire est donc relu **ici**,
+  // au seul endroit déjà asynchrone par lequel toute route protégée passe, et
+  // toutes les lectures d'une même requête voient le même annuaire.
+  //
+  // C'est une garantie plus forte que l'ancienne, non plus faible : sans elle,
+  // deux `getUsers()` d'un même gestionnaire pourraient rendre des listes
+  // différentes. Voir `src/annuaire.js` pour ce qu'elle ne garantit pas.
+  await auth.rafraichirAnnuaire();
   const user = auth.findUser(session.username);
   if (!user || !user.active) return res.status(401).json({ error: 'unauthenticated' });
   req.user = user;
@@ -196,6 +208,10 @@ function mfaActive(cfg) {
 }
 
 app.post('/api/login', limiterAuth, asynchrone(async (req, res) => {
+  // La connexion ne passe pas par `requireAuth` : elle relit l'annuaire
+  // elle-même, sans quoi un compte créé depuis le dernier démarrage ne pourrait
+  // pas se connecter.
+  await auth.rafraichirAnnuaire();
   const cfg = loadConfig();
   const { username, password, channel } = req.body || {};
   if (!username || !password) return res.status(400).json({ error: 'invalid' });
@@ -230,7 +246,7 @@ app.post('/api/login/mfa', limiterAuth, asynchrone(async (req, res) => {
   if (!v.ok) return res.status(401).json({ error: v.error, remaining: v.remaining });
   const user = auth.findUser(v.username);
   if (!user || !user.active) return res.status(401).json({ error: 'invalid' });
-  const token = auth.createSession(user.username, cfg);
+  const token = await auth.createSession(user.username, cfg);
   await audit.log(user.username, 'LOGIN', { role: user.role, mfa: true });
   setSessionCookie(res, token);
   res.json({ ok: true, user: auth.publicUser(user) });
@@ -252,7 +268,7 @@ app.post('/api/login/mfa/resend', limiterAuth, asynchrone(async (req, res) => {
 
 app.post('/api/logout', requireAuth, asynchrone(async (req, res) => {
   await audit.log(req.user.username, 'LOGOUT', {});
-  auth.destroySession(req.token);
+  await auth.destroySession(req.token);
   res.setHeader('Set-Cookie', 'oasis_session=; HttpOnly; Path=/; Max-Age=0');
   res.json({ ok: true });
 }));
@@ -348,25 +364,28 @@ app.put('/api/instance', requireAuth, requireRole('SUPERADMIN'), asynchrone(asyn
 
 // ── Profil personnel ──
 app.put('/api/me/profile', requireAuth, asynchrone(async (req, res) => {
-  const users = auth.getUsers();
-  const user = users.find((u) => u.username === req.user.username);
-  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (!auth.findUser(req.user.username)) return res.status(404).json({ error: 'not_found' });
   const { photo, nom, prenom, telephone, fonction, extra } = req.body || {};
   // L'email est l'identifiant de connexion : non modifiable depuis le profil
-  if (typeof photo === 'string') {
-    if (photo.length > 3_000_000) return res.status(400).json({ error: 'too_large' });
-    user.photo = photo;
+  if (typeof photo === 'string' && photo.length > 3_000_000) {
+    return res.status(400).json({ error: 'too_large' });
   }
-  if (extra && typeof extra === 'object') user.extra = { ...(user.extra || {}), ...extra };
-  for (const [k, v] of Object.entries({ nom, prenom, telephone, fonction })) {
-    if (typeof v === 'string') user[k] = v;
-  }
-  if (typeof nom === 'string' || typeof prenom === 'string') {
-    user.fullName = `${user.nom || ''} ${user.prenom || ''}`.trim() || user.fullName;
-  }
-  auth.saveUsers(users);
+  // La mutation est faite **sur l'enregistrement que la base vient de rendre**, et
+  // non sur l'instantané de la requête : réécrire celui-ci en entier effacerait ce
+  // qu'une autre requête y aurait mis entre-temps.
+  const apres = await auth.modifierUn(req.user.username, (user) => {
+    if (typeof photo === 'string') user.photo = photo;
+    if (extra && typeof extra === 'object') user.extra = { ...(user.extra || {}), ...extra };
+    for (const [k, v] of Object.entries({ nom, prenom, telephone, fonction })) {
+      if (typeof v === 'string') user[k] = v;
+    }
+    if (typeof nom === 'string' || typeof prenom === 'string') {
+      user.fullName = `${user.nom || ''} ${user.prenom || ''}`.trim() || user.fullName;
+    }
+    return user;
+  });
   await audit.log(req.user.username, 'PROFIL_MODIFIE', {});
-  res.json({ ok: true, user: auth.publicUser(user) });
+  res.json({ ok: true, user: auth.publicUser(apres.find((u) => u.username === req.user.username)) });
 }));
 
 app.post('/api/change-password', requireAuth, asynchrone(async (req, res) => {
@@ -473,8 +492,7 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
   // Mot de passe temporaire généré automatiquement par le système
   const tempPassword = auth.generatePassword(req.cfg);
   const { salt, hash } = auth.hashPassword(tempPassword);
-  const users = auth.getUsers();
-  users.push({
+  const nouveauCompte = {
     username,
     nom: String(nom),
     prenom: String(prenom || ''),
@@ -500,8 +518,16 @@ app.post('/api/users', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), valider(
     passwordHistory: [hash],
     createdAt: new Date().toISOString(),
     createdBy: req.user.username,
+  };
+  // Un ajout, et une vérification de doublon **dans** la transformation : la
+  // vérifier au-dehors laisserait passer deux créations simultanées du même
+  // compte, chacune voyant l'annuaire d'avant l'autre.
+  let doublon = false;
+  await auth.modifierUsers((comptes) => {
+    doublon = comptes.some((u) => u.username === username);
+    return doublon ? comptes : [...comptes, nouveauCompte];
   });
-  auth.saveUsers(users);
+  if (doublon) return res.status(409).json({ error: 'user_exists' });
   email.accountCreated({ to: username, name: `${nom} ${prenom || ''}`.trim(), username, password: tempPassword });
   await audit.log(req.user.username, 'UTILISATEUR_CREE', { cible: username, role });
   await auth.notify(`Utilisateur « ${username} » créé par ${req.user.username} — email d'identifiants envoyé.`, 'success');
@@ -558,7 +584,7 @@ app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), async
   // dans un onglet resté ouvert.
   for (const [jeton, s] of auth.sessions) if (s.username === user.username) auth.sessions.delete(jeton);
 
-  auth.saveUsers(users.filter((u) => u.username !== user.username));
+  await auth.modifierUsers((comptes) => comptes.filter((u) => u.username !== user.username));
   // L'effacement est lui-même un acte, et il se trace — l'identifiant y figure,
   // c'est ce qui rend l'opération redevable.
   await audit.log(req.user.username, 'COMPTE_EFFACE', {
@@ -569,9 +595,12 @@ app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), async
 }));
 
 app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
-  const users = auth.getUsers();
-  const user = users.find((u) => u.username === req.params.username);
-  if (!user) return res.status(404).json({ error: 'not_found' });
+  const avant = auth.findUser(req.params.username);
+  if (!avant) return res.status(404).json({ error: 'not_found' });
+  // Une **copie** : muter l'instantané de la requête le rendrait faux pour la
+  // suite du gestionnaire, et surtout pour ce qui s'y compare.
+  const user = { ...avant };
+  const identifiantOrigine = avant.username;
   // Hors de son instance, le compte est aussi introuvable qu'inexistant : le
   // dire autrement révélerait qui existe ailleurs.
   if (!memeInstance(req, user)) return res.status(404).json({ error: 'not_found' });
@@ -643,7 +672,14 @@ app.put('/api/users/:username', requireAuth, requireRole('SUPERADMIN', 'ADMIN'),
   } else {
     return res.status(400).json({ error: 'invalid_action' });
   }
-  auth.saveUsers(users);
+  // Seuls les champs que ce gestionnaire a changés sont reportés sur la version
+  // que la base porte. Réécrire l'enregistrement entier remettrait à zéro, par
+  // exemple, le décompte de tentatives infructueuses qu'une connexion
+  // concurrente vient d'incrémenter — et le compte cesserait de se bloquer.
+  const changes = auth.champsChanges(avant, user);
+  await auth.modifierUsers((comptes) => comptes.map(
+    (u) => (u.username === identifiantOrigine ? { ...u, ...changes } : u),
+  ));
   res.json({ ok: true, user: auth.publicUser(user) });
 }));
 
@@ -1215,6 +1251,12 @@ function ecouter() {
 }
 
 MAGASIN_PRET
+  // La table des sessions est chargée avant tout : `getSession` la lit de façon
+  // synchrone, et une table vide refuserait toutes les sessions encore ouvertes.
+  .then(async () => {
+    const n = await auth.chargerSessions();
+    if (n) trace.info('sessions reprises', { nombre: n });
+  })
   // L'amorçage des comptes inscrit au journal : il attend donc le magasin.
   .then(() => auth.seedUsers(loadConfig()))
   .then(() => referentiels.seedReferentiels())

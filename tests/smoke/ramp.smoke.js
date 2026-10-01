@@ -127,8 +127,8 @@ module.exports = async function rampSmoke(port) {
     // ait été conduite : l'import pose son nom sur chaque ligne.
     if (srv.local) {
       verifier('l’import pose l’instance sur l’inspection',
-        srv.donnees('ramp').inspections.every((x) => x.instance === ici),
-        srv.donnees('ramp').inspections.map((x) => x.instance).join(' '));
+        (await srv.donnees('ramp')).inspections.every((x) => x.instance === ici),
+        (await srv.donnees('ramp')).inspections.map((x) => x.instance).join(' '));
     } else {
       horsPortee('l’import pose l’instance sur l’inspection', 'se lit sur le disque du serveur');
     }
@@ -186,7 +186,7 @@ module.exports = async function rampSmoke(port) {
     // Le nom du fichier déposé, puis sa présence : deux lectures du disque du
     // serveur, et c'est bien ce disque que le contrôle regarde.
     const fichierPreuve = srv.local
-      ? ((srv.donnees('ramp').ecarts || []).find((e) => e.id === cat3.id).preuves || [])
+      ? (((await srv.donnees('ramp')).ecarts || []).find((e) => e.id === cat3.id).preuves || [])
         .map((p) => p.fichier)[0] || ''
       : '';
     if (srv.local) {
@@ -1018,7 +1018,7 @@ module.exports = async function rampSmoke(port) {
       // délibérément, pour qu'un nom interne ne fuie pas. Il faut donc le
       // disque — et les contrôles qui en dépendent restent locaux.
       const cheminPiece = srv.local && piecePartagee
-        ? `uploads/ramp/poi/${((srv.donnees('ramp').partages || [])
+        ? `uploads/ramp/poi/${(((await srv.donnees('ramp')).partages || [])
           .find((x) => x.id === paPiece.id) || { pieces: [] }).pieces[0].fichier}`
         : '';
       verifier('le partage emporte les pièces de la fiche',

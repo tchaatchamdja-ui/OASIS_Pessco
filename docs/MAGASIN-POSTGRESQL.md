@@ -316,6 +316,85 @@ La preuve est donc en processus, où le croisement peut être forcé ; la suite
 chantier** — base de papier, journal vide, messagerie joignable, `server.js` hors
 périmètre, et maintenant une concurrence que le réseau ne reproduit pas.
 
+## Septième et huitième : `users` et `sessions` — et un choix de conception
+
+*1ᵉʳ octobre 2026.*
+
+### Pourquoi `getUsers()` est resté synchrone
+
+Les cinq collections précédentes ont été converties en rendant asynchrone ce qui
+les lit. Pour `users`, ce chemin aurait été une faute, et c'est mesuré :
+`getUsers()` et `findUser()` sont appelés depuis des **prédicats de rôle
+synchrones** — `compteA`, `canRead`, `canContribute` — eux-mêmes employés dans
+**101 appels et 545 chaînes de tableau** à travers les six modules. Chaque
+`liste.filter(canRead)` aurait dû devenir `await Promise.all(liste.map(…))`.
+Ce n'aurait plus été un portage mais une réécriture de la couche module, pour une
+donnée qu'on lit constamment et qu'on écrit une fois par semaine.
+
+L'annuaire est donc tenu en mémoire (`src/annuaire.js`) et **rafraîchi une fois
+par requête**, au seul endroit déjà asynchrone par lequel toute route protégée
+passe : `requireAuth`. Les lectures restent synchrones, et toutes celles d'une
+même requête voient le même annuaire.
+
+**C'est une garantie plus forte que l'ancienne, non plus faible** : sans elle,
+deux `getUsers()` d'un même gestionnaire pourraient rendre des listes
+différentes, et une décision se prendrait sur l'une pendant qu'une autre
+servirait à écrire.
+
+**Ce qu'elle ne garantit pas, et il faut le dire** : à l'intérieur d'une requête,
+l'instantané ne voit pas une écriture concurrente. C'est exactement ce que le
+magasin par fichiers offrait, et cela ne met rien en péril parce que les
+écritures, elles, sont atomiques.
+
+Tout tient à un seul geste — `rafraichirAnnuaire()` dans `requireAuth`. Retiré,
+rien ne tombe : l'application servirait l'annuaire du dernier démarrage, un
+compte créé ne pourrait pas se connecter, un droit retiré continuerait d'ouvrir.
+**Deux contrôles de forme l'imposent**, contre-éprouvés.
+
+### Les écritures reportent les champs changés, et pas davantage
+
+Douze écritures touchaient l'annuaire. Toutes suivaient la même forme : lire,
+muter sur place, réécrire la liste entière. Rendues asynchrones telles quelles,
+elles auraient effacé les écritures concurrentes sur **le même enregistrement**
+— et l'une de ces écritures est le décompte de tentatives infructueuses, que la
+connexion incrémente.
+
+Un administrateur modifiant un nom aurait donc remis ce décompte à zéro, et **le
+compte aurait cessé de se bloquer**. `annuaire.champsChanges(avant, après)` ne
+reporte que ce que le gestionnaire a réellement changé. Mesuré, en séquence :
+
+| | `failedAttempts` après | |
+|---|---|---|
+| réécrire l'enregistrement entier | **3** | l'incrément est perdu |
+| reporter les seuls champs changés | **4** | les deux écritures coexistent |
+
+### `sessions` : la table en mémoire fait foi
+
+`getSession` reste synchrone — la table est la source, le magasin ne fait que la
+garder d'un démarrage à l'autre. Seules l'ouverture, la fermeture et l'expiration
+constatée persistent. La table est chargée avant que le serveur écoute.
+
+### L'isolement des suites, qui n'existait plus
+
+Le régime base a révélé un défaut du harnais : **chaque suite recevait une copie
+neuve de `data/`, mais la base était partagée.** La suite « socle » efface un
+compte, et les suivantes le cherchaient en vain ; l'amorçage ne reposait pas les
+comptes du jeu d'essai, puisqu'il en trouvait déjà.
+
+Pire : **les fixtures n'entraient jamais dans la base.** Le régime base n'avait
+que les trois comptes de l'amorçage au lieu des quinze du jeu d'essai, et aucun
+privilège — les contrôles de droits rendaient des listes vides. Le fichier
+restait là, complet et ignoré.
+
+Chaque suite reçoit désormais **son propre schéma PostgreSQL**, créé avant le
+démarrage, garni des fixtures, détruit à l'arrêt. L'isolement est rendu, et de la
+même façon des deux côtés : un répertoire à elle, un schéma à elle.
+
+Et `srv.donnees()` lit maintenant **là où la donnée vit**. Un contrôle cherchait
+les restes d'un compte effacé dans le fichier `users.json` — figé sur la copie
+des fixtures — et les y trouvait toujours : il concluait que l'effacement n'avait
+pas eu lieu.
+
 ---
 
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout

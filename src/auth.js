@@ -7,14 +7,36 @@ const store = require('./store');
 // Les avis du socle vivent dans une collection migrée : ils passent par la
 // façade (ADR-002, étape B).
 const magasin = require('./magasin');
+const annuaire = require('./annuaire');
 const audit = require('./audit');
 
 const ROLES = ['SUPERADMIN', 'ADMIN', 'ADMIN_PRESTATAIRE', 'AAC', 'PRESTATAIRE', 'INDEPENDANT', 'INSPECTEUR'];
-// token -> { username, lastActivity } — persisté pour survivre aux redémarrages du socle
-const sessions = new Map(Object.entries(store.load('sessions', {})));
+// token -> { username, lastActivity } — persisté pour survivre aux redémarrages
+// du socle.
+//
+// ── La table en mémoire fait foi, le magasin ne fait que la garder ──
+//
+// `getSession` reste **synchrone** : il lit la table, pas le magasin. C'est ce
+// qui permet à `requireAuth` de rester léger — une requête sur deux n'écrit
+// rien, et il n'y a donc rien à attendre.
+//
+// Seules trois écritures persistent : l'ouverture, la fermeture, et l'expiration
+// constatée. Elles sont asynchrones depuis que `sessions` vit en base (ADR-002,
+// étape B), et la table est chargée au démarrage avant que le serveur écoute.
+const sessions = new Map();
 
+async function chargerSessions() {
+  const posees = await magasin.load('sessions', {});
+  sessions.clear();
+  Object.entries(posees || {}).forEach(([jeton, s]) => sessions.set(jeton, s));
+  return sessions.size;
+}
+
+// Remplacement de la table entière : c'est elle qui fait foi, et un seul
+// processus l'écrit (le verrou d'ADR-001 l'impose). `modifier` n'aurait rien à
+// réconcilier — la version en base n'est qu'une copie de celle-ci.
 function persistSessions() {
-  store.save('sessions', Object.fromEntries(sessions));
+  return magasin.save('sessions', Object.fromEntries(sessions));
 }
 
 function hashPassword(password, salt) {
@@ -57,13 +79,38 @@ function passwordPolicyErrors(password, cfg) {
   return errors;
 }
 
+// ── Lire l'annuaire : synchrone, et pourquoi (ADR-002, étape B) ──
+//
+// `users` vit en base, mais `getUsers()` et `findUser()` restent synchrones :
+// ils lisent l'instantané que `src/annuaire.js` tient en mémoire et que
+// `requireAuth` rafraîchit une fois par requête. Les rendre asynchrones aurait
+// atteint 101 prédicats de rôle et 545 chaînes de tableau dans les modules —
+// l'en-tête d'`annuaire.js` dit pourquoi ce n'était pas la bonne voie.
 function getUsers() {
-  return store.load('users', []);
+  return annuaire.comptes();
 }
 
-function saveUsers(users) {
-  store.save('users', users);
+// Remplace l'annuaire entier. **Réservé à l'amorçage** : partout ailleurs,
+// `modifierUsers` est le geste juste. Remplacer une liste entière efface ce
+// qu'une écriture concurrente y a mis entre la lecture et l'écriture.
+async function saveUsers(users) {
+  await annuaire.remplacer(users);
 }
+
+// Lire-modifier-réécrire atomique. `transformer(comptes)` reçoit l'annuaire que
+// la base vient de rendre — non l'instantané — et rend celui à écrire. Il peut
+// être rejoué : il ne doit donc que calculer.
+const modifierUsers = (transformer) => annuaire.modifier(transformer);
+
+// Un seul compte, modifié en place sur la version que la base vient de rendre.
+// `transformer` reçoit une **copie** de l'enregistrement frais et rend celui à
+// écrire ; il peut donc garder la forme d'une mutation, qui est celle qu'avaient
+// tous les appelants, et il peut être rejoué sans risque.
+//
+// C'est le geste courant : douze écritures sur treize ne touchent qu'un compte.
+const modifierUn = (username, transformer) => annuaire.modifier(
+  (comptes) => comptes.map((u) => (u.username === username ? transformer({ ...u }) : u)),
+);
 
 function findUser(username) {
   return getUsers().find((u) => u.username === username);
@@ -79,7 +126,8 @@ function publicUser(u) {
 // console ; l'exploitant peut en imposer un par OASIS_SEED_PASSWORD (utile en
 // développement et pour les tests de fumée).
 async function seedUsers(cfg) {
-  if (getUsers().length) return;
+  // L'annuaire n'a pas encore été lu au démarrage : on le lit ici.
+  if ((await annuaire.rafraichir()).length) return;
   const impose = process.env.OASIS_SEED_PASSWORD || '';
   const secrets = [];
   const motDePasse = () => {
@@ -98,7 +146,7 @@ async function seedUsers(cfg) {
     // comptes autres que le super-administrateur.
     return { ...u, username: u.email, password: valeur, mustChange: genere || u.role !== 'SUPERADMIN' };
   });
-  saveUsers(
+  await saveUsers(
     users.map((u) => {
       const { salt, hash } = hashPassword(u.password);
       return {
@@ -141,32 +189,38 @@ async function seedUsers(cfg) {
 }
 
 // ── Sessions ──
-function createSession(username, cfg) {
+async function createSession(username, cfg) {
   if (cfg.security.singleSession) {
     for (const [token, s] of sessions) if (s.username === username) sessions.delete(token);
   }
   const token = crypto.randomBytes(32).toString('hex');
   sessions.set(token, { username, lastActivity: Date.now() });
-  persistSessions();
+  await persistSessions();
   return token;
 }
 
+// Synchrone, et c'est voulu : la table fait foi. L'expiration constatée écrit,
+// mais son écriture n'a pas besoin d'être attendue pour que la session soit
+// refusée — elle l'est déjà, en mémoire. Un échec de persistance part donc aux
+// traces : la session restera refusée ici, et sera refusée de nouveau au
+// prochain démarrage puisque son horodatage n'aura pas bougé.
 function getSession(token, cfg) {
   if (!token || !sessions.has(token)) return null;
   const s = sessions.get(token);
   const timeoutMs = cfg.security.sessionTimeoutMinutes * 60 * 1000;
   if (Date.now() - s.lastActivity > timeoutMs) {
     sessions.delete(token);
-    persistSessions();
+    persistSessions().catch((e) => trace.erreur('session expirée non retirée du magasin',
+      { detail: e.message }));
     return null;
   }
   s.lastActivity = Date.now();
   return s;
 }
 
-function destroySession(token) {
+async function destroySession(token) {
   sessions.delete(token);
-  persistSessions();
+  await persistSessions();
 }
 
 // ── Login ──
@@ -187,24 +241,33 @@ async function login(username, password, cfg, opts) {
     return { ok: false, error: 'temp_expired' };
   }
   if (!checkPassword(user, password)) {
-    user.failedAttempts = (user.failedAttempts || 0) + 1;
-    let error = 'invalid';
-    if (user.failedAttempts >= cfg.security.maxFailedAttempts) {
-      user.locked = true;
-      error = 'locked';
-      await audit.log(username, 'COMPTE_BLOQUE', { tentatives: user.failedAttempts });
-      notify(`Compte « ${username} » bloqué après ${user.failedAttempts} tentatives infructueuses.`, 'warning');
+    // Le décompte est arrêté **dans** la transformation, sur l'annuaire que la
+    // base vient de rendre. Lu au-dehors, dix mots de passe faux envoyés
+    // ensemble liraient tous le même compteur et n'en écriraient qu'un : le
+    // blocage après N tentatives ne se déclencherait jamais, et une force brute
+    // passerait. Même raison que le compteur du second facteur.
+    let tentatives = 0;
+    let bloque = false;
+    await modifierUsers((comptes) => comptes.map((u) => {
+      if (u.username !== username) return u;
+      tentatives = (u.failedAttempts || 0) + 1;
+      bloque = tentatives >= cfg.security.maxFailedAttempts;
+      return { ...u, failedAttempts: tentatives, ...(bloque ? { locked: true } : {}) };
+    }));
+    if (bloque) {
+      await audit.log(username, 'COMPTE_BLOQUE', { tentatives });
+      await notify(`Compte « ${username} » bloqué après ${tentatives} tentatives infructueuses.`, 'warning');
     } else {
-      await audit.log(username, 'LOGIN_ECHEC', { tentative: user.failedAttempts });
+      await audit.log(username, 'LOGIN_ECHEC', { tentative: tentatives });
     }
-    saveUsers(users);
-    return { ok: false, error };
+    return { ok: false, error: bloque ? 'locked' : 'invalid' };
   }
-  user.failedAttempts = 0;
-  saveUsers(users);
+  await modifierUsers((comptes) => comptes.map(
+    (u) => (u.username === username ? { ...u, failedAttempts: 0 } : u),
+  ));
   // MFA : le mot de passe est validé mais la session n'est ouverte qu'après le code
   if (opts && opts.noSession) return { ok: true, pending: true, account: user };
-  const token = createSession(user.username, cfg);
+  const token = await createSession(user.username, cfg);
   await audit.log(username, 'LOGIN', { role: user.role });
   return { ok: true, token, user: publicUser(user) };
 }
@@ -220,13 +283,16 @@ async function changePassword(username, oldPassword, newPassword, cfg) {
   const history = user.passwordHistory || [];
   if (history.includes(newHash)) return { ok: false, error: 'reused' };
   const { salt, hash } = hashPassword(newPassword);
-  user.salt = salt;
-  user.hash = hash;
-  user.mustChange = false;
-  user.tempExpiresAt = null;
-  user.passwordChangedAt = new Date().toISOString();
-  user.passwordHistory = [...history, newHash].slice(-cfg.security.passwordHistoryCount);
-  saveUsers(users);
+  await modifierUsers((comptes) => comptes.map((u) => (u.username !== username ? u : {
+    ...u,
+    salt,
+    hash,
+    mustChange: false,
+    tempExpiresAt: null,
+    passwordChangedAt: new Date().toISOString(),
+    passwordHistory: [...(u.passwordHistory || []), newHash]
+      .slice(-cfg.security.passwordHistoryCount),
+  })));
   await audit.log(username, 'MOT_DE_PASSE_CHANGE', {});
   return { ok: true };
 }
@@ -249,12 +315,20 @@ module.exports = {
   generatePassword,
   getUsers,
   saveUsers,
+  modifierUsers,
+  modifierUn,
+  champsChanges: annuaire.champsChanges,
   findUser,
   publicUser,
   seedUsers,
   getSession,
   createSession,
   destroySession,
+  chargerSessions,
+  // L'instantané de l'annuaire : rafraîchi une fois par requête par `requireAuth`,
+  // et au démarrage. Voir `src/annuaire.js`.
+  rafraichirAnnuaire: annuaire.rafraichir,
+  annuairePrisLe: annuaire.pris,
   login,
   changePassword,
   notify

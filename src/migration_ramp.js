@@ -62,26 +62,32 @@ async function migrer(store, loadConfig, saveConfig) {
   }
 
   // 3. Accès aux modules et droits d'organisme, sur chaque compte.
-  const users = store.load('users', []);
+  //
+  // L'annuaire est en base : la reprise passe par la façade, dans une
+  // transformation atomique. Au démarrage, c'est justement ce qui peut se
+  // croiser — plusieurs reprises se succédant sur le même répertoire.
   let comptes = 0;
-  (Array.isArray(users) ? users : []).forEach((u) => {
-    let touche = false;
-    if (Array.isArray(u.modules) && u.modules.includes(ANCIEN)) {
-      u.modules = u.modules.map((m) => (m === ANCIEN ? NOUVEAU : m))
-        .filter((m, i, l) => l.indexOf(m) === i);
-      touche = true;
-    }
-    if (u.droits_safa !== undefined) {
-      if (u.droits_ramp === undefined) u.droits_ramp = u.droits_safa;
-      delete u.droits_safa;
-      touche = true;
-    }
-    if (touche) comptes += 1;
+  await magasin.modifier('users', [], (liste) => {
+    comptes = 0;
+    const repris = (Array.isArray(liste) ? liste : []).map((brut) => {
+      const u = { ...brut };
+      let touche = false;
+      if (Array.isArray(u.modules) && u.modules.includes(ANCIEN)) {
+        u.modules = u.modules.map((m) => (m === ANCIEN ? NOUVEAU : m))
+          .filter((m, i, l) => l.indexOf(m) === i);
+        touche = true;
+      }
+      if (u.droits_safa !== undefined) {
+        if (u.droits_ramp === undefined) u.droits_ramp = u.droits_safa;
+        delete u.droits_safa;
+        touche = true;
+      }
+      if (touche) comptes += 1;
+      return touche ? u : brut;
+    });
+    return comptes ? repris : liste;
   });
-  if (comptes) {
-    store.save('users', users);
-    faits.push(`comptes : ${comptes}`);
-  }
+  if (comptes) faits.push(`comptes : ${comptes}`);
 
   // 4. Carences des « Mesures d'Application » : le lien vers l'écart d'origine.
   const mesures = store.load('mesures', null);

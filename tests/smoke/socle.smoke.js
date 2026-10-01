@@ -154,12 +154,12 @@ module.exports = async function socleSmoke(port) {
     // L'exécution à blanc ne touche à rien. Se vérifie sur le fichier : aucune
     // route ne rend le journal des envois, et c'est heureux.
     if (srv.local) {
-      const courriersAvant = srv.donnees('emails').length;
+      const courriersAvant = (await srv.donnees('emails')).length;
       const blanc = await srv.appel('/api/retention/purger',
         { method: 'POST', body: JSON.stringify({}) });
       verifier('la purge à blanc ne retire rien',
         blanc.statut === 200 && blanc.corps.applique === false
-        && srv.donnees('emails').length === courriersAvant,
+        && (await srv.donnees('emails')).length === courriersAvant,
         `statut ${blanc.statut}`);
     } else {
       horsPortee('la purge à blanc ne retire rien', 'se lit sur le disque du serveur');
@@ -231,9 +231,9 @@ module.exports = async function socleSmoke(port) {
     // droit à l'effacement se prouve sur le fichier, non sur une liste.
     if (srv.local) {
       verifier('effacement : plus aucune trace dans le fichier des comptes',
-        !/m\.ahoyo/.test(JSON.stringify(srv.donnees('users'))));
+        !/m\.ahoyo/.test(JSON.stringify(await srv.donnees('users'))));
       verifier('effacement : la fiche du répertoire du personnel part aussi',
-        !/m\.ahoyo/i.test(JSON.stringify(srv.donnees('referentiels').inspecteurs || [])));
+        !/m\.ahoyo/i.test(JSON.stringify((await srv.donnees('referentiels')).inspecteurs || [])));
     } else {
       horsPortee('effacement : plus aucune trace dans le fichier des comptes',
         'se lit sur le disque du serveur');

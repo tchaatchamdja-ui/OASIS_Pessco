@@ -80,7 +80,9 @@ public class Magasin {
       "ramp_aeronefs",
       "emails",
       "notifications",
-      "mfa_challenges");
+      "mfa_challenges",
+      "users",
+      "sessions");
 
   /**
    * Les journaux servis par la base. <b>Recopie de {@code JOURNAUX_MIGRES} dans

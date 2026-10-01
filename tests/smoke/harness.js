@@ -33,8 +33,8 @@
 // Pour la même raison, une cible sert **une suite à la fois** : à distance
 // elles la partagent, alors qu'en local chacune a la sienne.
 //
-// Relevé du 26 septembre 2026, contre un serveur Node externe : **632 des 784
-// contrôles passent**, 13 se déclarent hors de portée. Les 140 restants — les
+// Relevé du 26 septembre 2026, contre un serveur Node externe : **632 des 795
+// contrôles passent**, 13 se déclarent hors de portée. Les 151 restants — les
 // suites « taille », « traductions », « unitaires » et « magasin-pg » — lisent
 // les sources ou visent une base, et n'ont pas de serveur d'application à
 // atteindre.
@@ -44,6 +44,19 @@ const os = require('os');
 const path = require('path');
 
 const RACINE = path.join(__dirname, '..', '..');
+// La liste des collections migrées : `donnees()` doit savoir où chercher.
+//
+// Lue **dans la source**, et non par `require` : charger `src/magasin.js`
+// chargerait `src/store.js`, qui fige son répertoire de données à l'import. Ce
+// harnais est requis par toutes les suites avant qu'« unitaires » ne pose le
+// sien, et les écritures d'essai partiraient alors dans le vrai `data/`. Le
+// défaut est connu, et il a déjà été corrigé une fois dans la suite « taille » :
+// il ne faut pas le réintroduire ici.
+const COLLECTIONS_EN_BASE = new Set(
+  ((fs.readFileSync(path.join(RACINE, 'src', 'magasin.js'), 'utf8')
+    .match(/const MIGREES = new Set\(\[([\s\S]*?)\n\]\);/) || [])[1] || '')
+    .match(/'([^']+)'/g)?.map((x) => x.slice(1, -1)) || [],
+);
 
 function copierDonnees() {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-smoke-'));
@@ -70,10 +83,63 @@ function attendre(ms) {
 // `env` ajoute des variables à celles du serveur d'essai. Une suite qui éprouve
 // un réglage — l'authentification à deux facteurs, par exemple — a besoin de le
 // poser sans toucher au paramétrage des autres.
+// ── L'isolement, quand une partie des données vit en base ──
+//
+// Chaque suite reçoit une copie neuve de `data/` : c'est ce qui la rend
+// indépendante des autres. **Depuis que des collections vivent en base, cette
+// copie ne suffit plus** — la base, elle, est partagée. La suite « socle »
+// efface un compte, et les suivantes le cherchent en vain ; l'amorçage ne
+// repose pas les comptes des fixtures, puisqu'il en trouve déjà.
+//
+// Chaque suite reçoit donc **son propre schéma PostgreSQL**, créé avant le
+// démarrage et détruit à l'arrêt. L'isolement est rendu, et il l'est de la même
+// façon des deux côtés : un répertoire à elle, un schéma à elle.
+async function schemaIsole(port, dossierDonnees) {
+  const url = process.env.DATABASE_URL;
+  if (!url) return null;
+  const nom = `oasis_smoke_${port}_${Math.random().toString(36).slice(2, 8)}`;
+  // eslint-disable-next-line global-require
+  const { Pool } = require('pg');
+  const p = new Pool({ connectionString: url });
+  await p.query(`DROP SCHEMA IF EXISTS ${nom} CASCADE`);
+  await p.query(`CREATE SCHEMA ${nom}`);
+  await p.end();
+  const sep = url.includes('?') ? '&' : '?';
+  const schema = { nom, url: `${url}${sep}options=-c%20search_path%3D${nom}` };
+
+  // ── Les fixtures doivent entrer dans la base, et pas seulement sur le disque ──
+  //
+  // Sans cette reprise, le régime base n'a que ce que l'amorçage y pose : trois
+  // comptes au lieu des quinze du jeu d'essai, et aucun privilège. Les contrôles
+  // de droits rendaient alors des listes vides — et c'est ainsi que le manque
+  // s'est vu. Le fichier, lui, restait là, complet et ignoré.
+  //
+  // La reprise se fait dans un processus à part : `scripts/migrer-pg.js` fige son
+  // répertoire de données à l'import, et l'appeler ici le pointerait sur le
+  // mauvais.
+  // eslint-disable-next-line global-require
+  const { execFileSync } = require('child_process');
+  execFileSync(process.execPath, [path.join(RACINE, 'scripts', 'migrer-pg.js')], {
+    env: { ...process.env, DATABASE_URL: schema.url, OASIS_DATA_DIR: dossierDonnees },
+    stdio: ['ignore', 'ignore', 'pipe'],
+  });
+  return schema;
+}
+
+async function effacerSchema(schema) {
+  if (!schema) return;
+  // eslint-disable-next-line global-require
+  const { Pool } = require('pg');
+  const p = new Pool({ connectionString: process.env.DATABASE_URL });
+  await p.query(`DROP SCHEMA IF EXISTS ${schema.nom} CASCADE`);
+  await p.end();
+}
+
 async function demarrer({ port = 4788, env: envSup = {} } = {}) {
   // Une adresse est donnée : on ne démarre rien, on s'y adresse.
   const externe = String(process.env.OASIS_SMOKE_BASE || '').replace(/\/$/, '');
   const tmp = externe ? null : copierDonnees();
+  const schema = externe ? null : await schemaIsole(port, path.join(tmp, 'data'));
   const proc = externe ? null : spawn(process.execPath, [path.join(RACINE, 'server.js')], {
     env: {
       ...process.env,
@@ -83,6 +149,7 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
       // Les comptes d'amorçage tirent un mot de passe au hasard : les tests
       // en imposent un connu, pour rester exécutables sur un jeu vierge.
       OASIS_SEED_PASSWORD: 'Aerosup@2026!Uemoa',
+      ...(schema ? { DATABASE_URL: schema.url } : {}),
       ...envSup,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -137,6 +204,11 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
     if (!proc) return;
     proc.kill();
     fs.rmSync(tmp, { recursive: true, force: true });
+    // Le schéma part avec la suite. L'effacement n'est pas attendu : la suite
+    // est finie, et un schéma oublié ne gêne que l'espace disque — le prochain
+    // passage en crée un autre. L'échec part aux traces plutôt que de faire
+    // tomber une campagne qui vient de réussir.
+    effacerSchema(schema).catch((e) => console.log(`  ◌ schéma ${schema && schema.nom} non effacé — ${e.message}`));
   };
 
   // Ce qui n'a de sens qu'en local : le disque du serveur est ici, ou bien il
@@ -151,9 +223,27 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
 
   // Lecture directe d'une collection du serveur d'essai : ce qu'aucune route
   // ne sert plus — les restes d'un enregistrement supprimé — se vérifie ici.
-  const donnees = (nom) => (tmp
-    ? JSON.parse(fs.readFileSync(path.join(tmp, 'data', `${nom}.json`), 'utf-8'))
-    : seulementEnLocal('donnees()'));
+  //
+  // **Elle doit lire là où la donnée vit.** Une collection passée en base n'est
+  // plus dans le fichier, qui reste figé sur la copie des fixtures : un contrôle
+  // qui y chercherait les restes d'un compte effacé les y trouverait toujours, et
+  // conclurait que l'effacement n'a pas eu lieu. C'est exactement ce qui s'est
+  // produit le jour où `users` a basculé.
+  //
+  // Asynchrone pour cette raison, et pour elle seule.
+  const donnees = async (nom) => {
+    if (!tmp) return seulementEnLocal('donnees()');
+    if (schema && COLLECTIONS_EN_BASE.has(nom)) {
+      // eslint-disable-next-line global-require
+      const { Pool } = require('pg');
+      const p = new Pool({ connectionString: schema.url });
+      try {
+        const r = await p.query('SELECT valeur FROM collections WHERE nom = $1', [nom]);
+        return r.rows.length ? r.rows[0].valeur : null;
+      } finally { await p.end(); }
+    }
+    return JSON.parse(fs.readFileSync(path.join(tmp, 'data', `${nom}.json`), 'utf-8'));
+  };
 
   // Présence d'un fichier sous le dossier de données du serveur d'essai
   // (pièces déposées, preuves).

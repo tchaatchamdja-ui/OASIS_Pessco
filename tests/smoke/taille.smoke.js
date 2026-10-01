@@ -535,6 +535,27 @@ module.exports = async function tailleSmoke() {
   verifier('le plafond d’écritures est lu avec « await »',
     PLAFOND.length === 0, PLAFOND.join(' · '));
 
+  // ── L'annuaire est relu à chaque requête, ou il ne vaut rien ──
+  //
+  // `getUsers()` et `findUser()` sont restés synchrones : ils lisent l'instantané
+  // que `src/annuaire.js` tient en mémoire. Tout tient donc à un seul geste —
+  // `rafraichirAnnuaire()` dans `requireAuth`, et dans la connexion qui ne passe
+  // pas par lui.
+  //
+  // Retiré, rien ne tombe : l'application servirait l'annuaire du dernier
+  // démarrage. Un compte créé ne pourrait pas se connecter, un compte désactivé
+  // le resterait pour tout le monde sauf lui, et un droit retiré continuerait
+  // d'ouvrir. Aucune erreur, aucune trace.
+  const serveur = fs.readFileSync(path.join(RACINE, 'server.js'), 'utf8');
+  const extrait = (motif) => {
+    const i = serveur.search(motif);
+    return i < 0 ? '' : serveur.slice(i, i + 2600);
+  };
+  verifier('l’annuaire est relu dans requireAuth',
+    /await auth\.rafraichirAnnuaire\(\)/.test(extrait(/function requireAuth\b/)));
+  verifier('l’annuaire est relu à la connexion, qui ne passe pas par requireAuth',
+    /await auth\.rafraichirAnnuaire\(\)/.test(extrait(/app\.post\('\/api\/login'/)));
+
   // ── Les deux socles doivent nommer les mêmes collections migrées ──
   //
   // La bascule se fait collection par collection, et pendant ce temps une partie

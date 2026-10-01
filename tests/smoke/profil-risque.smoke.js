@@ -68,7 +68,7 @@ module.exports = async function profilRisqueSmoke(port) {
     // La route rend l'identifiant ; le disque n'était qu'un filet pour le cas
     // où elle ne le ferait pas. À distance on s'en remet à la réponse.
     const enfantId = (reev.corps || {}).id || (srv.local
-      ? ((srv.donnees('profil_risque').evaluations || [])
+      ? (((await srv.donnees('profil_risque')).evaluations || [])
         .find((x) => x.parent_id === ev.corps.id) || {}).id
       : undefined);
     verifier('réévaluation lancée', reev.statut === 200 && !!enfantId, `statut ${reev.statut}`);
@@ -93,7 +93,7 @@ module.exports = async function profilRisqueSmoke(port) {
     // Le reste d'une réunion orpheline ne se lit sur aucune route — elles ne
     // s'atteignaient que par leur évaluation, et c'est bien le problème.
     if (srv.local) {
-      const restes = srv.donnees('profil_risque');
+      const restes = await srv.donnees('profil_risque');
       const orphelines = ['eval_reunions', 'eval_reunions_prest']
         .map((c) => [c, (restes[c] || []).filter((x) => x.eval_id === ev.corps.id).length]).filter(([, n]) => n);
       verifier('les réunions partent avec leur évaluation', orphelines.length === 0,

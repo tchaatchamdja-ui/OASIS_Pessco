@@ -61,11 +61,24 @@ const storePg = require('./store_pg');
 // asynchrone sans précaution, dix codes faux envoyés ensemble liraient tous
 // `attempts: 0` et n'en écriraient qu'un — le plafond de cinq essais tomberait,
 // et une force brute passerait. C'est `modifier` qui le tient.
+//
+// `users` — l'annuaire des comptes. **La seule dont les lectures sont restées
+// synchrones**, et c'est mesuré : elles passent par des prédicats de rôle employés
+// dans 101 appels et 545 chaînes de tableau. `src/annuaire.js` en tient un
+// instantané, rafraîchi une fois par requête ; les écritures, elles, sont
+// atomiques. L'en-tête de ce fichier-là dit le compromis et ce qu'il ne garantit
+// pas.
+//
+// `sessions` — la table des jetons. La table en mémoire fait foi ; le magasin ne
+// fait que la garder d'un démarrage à l'autre. Elle ferme le point n° 3 du jalon
+// n° 6 : le socle Java peut désormais la lire là où Node l'écrit.
 const MIGREES = new Set([
   'ramp_aeronefs',
   'emails',
   'notifications',
   'mfa_challenges',
+  'users',
+  'sessions',
 ]);
 
 let socle = null;

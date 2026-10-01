@@ -138,6 +138,20 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   ferait lire à Java un fichier que personne n'écrit plus, sans aucune erreur.
 - `scripts/cible-essai.sh` remet aussi la base à zéro : sans cela la remise à zéro ne portait
   que sur les fichiers, et les collections migrées gardaient le jeu de la veille.
+- **`users` et `sessions` en base**, par une autre voie que les précédentes. `getUsers()`
+  reste **synchrone** : le rendre asynchrone aurait atteint 101 prédicats de rôle et 545
+  chaînes de tableau. `src/annuaire.js` en tient un instantané, rafraîchi une fois par
+  requête dans `requireAuth` — deux contrôles de forme l'imposent.
+- Les écritures sur un compte ne reportent que **les champs changés** : réécrire
+  l'enregistrement entier effaçait le décompte de tentatives infructueuses qu'une connexion
+  incrémente, et le compte cessait de se bloquer. Mesuré : 3 contre 4.
+- `sessions` : la table en mémoire fait foi, le magasin la garde d'un démarrage à l'autre.
+  Une session ouverte par Node est désormais reconnue par le socle Java **à travers la base**.
+- **Le harnais de fumée n'isolait plus les suites** en régime base : la copie de `data/` était
+  neuve, la base partagée. Et les fixtures n'y entraient jamais — trois comptes au lieu de
+  quinze. Chaque suite reçoit son propre schéma PostgreSQL, garni puis détruit.
+- `srv.donnees()` lit **là où la donnée vit** : un contrôle cherchait les restes d'un compte
+  effacé dans un fichier figé sur les fixtures, et les y trouvait toujours.
 - **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
   `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.

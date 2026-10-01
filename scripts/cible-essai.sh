@@ -36,6 +36,23 @@ rm -rf "$BAC"
 mkdir -p "$BAC/data" "$BAC/config"
 cp "$RACINE"/tests/fixtures/* "$BAC/data/"
 
+# Une base désignée est vidée elle aussi. Sans cela, la remise à zéro ne porte
+# que sur les fichiers : les collections déjà basculées garderaient ce que la
+# veille y avait laissé, et l'on croirait à une régression là où il n'y a qu'un
+# jeu de données à moitié neuf. La reprise recopie ensuite les fixtures.
+if [ -n "${DATABASE_URL:-}" ]; then
+  echo "· base vidée puis reprise des fixtures"
+  (cd "$RACINE" && node -e '
+    const { Pool } = require("pg");
+    (async () => {
+      const p = new Pool({ connectionString: process.env.DATABASE_URL });
+      await p.query("DROP TABLE IF EXISTS collections, journal");
+      await p.end();
+    })().catch((e) => { console.error("base injoignable — " + e.message); process.exit(1); });
+  ')
+  (cd "$RACINE" && OASIS_DATA_DIR="$BAC/data" node scripts/migrer-pg.js >/dev/null)
+fi
+
 # Session unique désactivée, comme le fait le harnais : sans cela, deux
 # connexions successives s'évincent et la moitié des contrôles tombent.
 for f in "$RACINE"/config/*; do

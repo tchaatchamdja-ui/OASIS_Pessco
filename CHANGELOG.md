@@ -126,6 +126,18 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   s'éprouvent — code faux, défi expiré, plafond de tentatives, rafale.
 - Un envoi de code qui échoue est désormais **tracé** : sans quoi un agent attendrait un
   code jamais parti, et rien ne le dirait.
+- **Le socle Java lit PostgreSQL.** La bascule des journaux l'avait cassé sans que rien ne
+  le dise : en régime base, `module_audit.jsonl` n'existe plus, et la vérification de chaîne
+  annonçait « valide, zéro entrée » — un satisfecit sur un journal vide. Mesuré après
+  correction : **14/14 réponses identiques à l'octet** et **1 582 maillons revérifiés depuis
+  la base**, 20/20 à travers la passerelle.
+- `DATABASE_URL` sert les deux socles : la traduction vers JDBC est explicite et éprouvée
+  par 10 contrôles. Une adresse donnée mais incomprise arrête le démarrage ; le mot de passe
+  n'apparaît dans aucun message ni aucune trace.
+- **Un contrôle compare les listes de collections migrées des deux socles.** Leur divergence
+  ferait lire à Java un fichier que personne n'écrit plus, sans aucune erreur.
+- `scripts/cible-essai.sh` remet aussi la base à zéro : sans cela la remise à zéro ne portait
+  que sur les fichiers, et les collections migrées gardaient le jeu de la veille.
 - **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
   `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.

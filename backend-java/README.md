@@ -89,6 +89,73 @@ Corrigé : `ChaineModule` côté Java, trois cas de plus aux vecteurs, deux cont
 suite Node. C'est la deuxième fois que ce chantier révèle un trou dans ses propres garde-fous,
 et la leçon est la même — **un contrat ne vaut que pour ce qu'il énumère**.
 
+## Le socle lit PostgreSQL — et il était temps
+
+*1ᵉʳ octobre 2026.*
+
+Les journaux d'audit sont passés en base le 29 septembre, et **ce socle ne le
+savait pas**. En régime base, le fichier `module_audit.jsonl` n'existe même
+plus : `Magasin.journal()` rendait une liste vide, et la vérification de chaîne
+annonçait **`{valid: true, total: 0}`**.
+
+Un satisfecit sur un journal vide. Pour un outil d'autorité, c'est le pire mode
+de défaillance qui soit : rien ne tombe, rien ne s'écrit aux traces, et la
+réponse rassure. Aucun contrôle ne l'a dit — il a fallu aller le chercher en se
+demandant ce que la bascule de la veille avait cassé ailleurs.
+
+### Deux régimes, et une liste qui doit s'accorder
+
+`Magasin` route désormais collection par collection : `MIGREES` et
+`JOURNAUX_MIGRES` recopient les listes de `src/magasin.js`. Sans base
+configurée, tout reste sur fichiers et le socle démarre comme avant — c'est
+pourquoi seul le pilote PostgreSQL est au chemin de classes, et non
+`spring-boot-starter-jdbc` : rien n'essaie de configurer une source de données
+au démarrage, et la source est construite à la main quand une adresse est donnée.
+
+**Un contrôle de la suite « taille » compare les deux listes.** Si elles
+divergent, Java lit un fichier que personne n'écrit plus — exactement le défaut
+qu'on vient de corriger. Contre-éprouvé dans les deux sens.
+
+### `DATABASE_URL`, une seule variable pour deux socles
+
+Node la donne sous la forme `postgres://utilisateur:motdepasse@hôte:port/base` ;
+JDBC veut `jdbc:postgresql://…` et refuse les identifiants dans l'URL. La
+traduction est donc explicite — `AdressePostgres` — et éprouvée par **10
+contrôles**, parce qu'une adresse mal traduite ne se voit pas : elle se solde par
+un refus de connexion au démarrage, loin de sa cause.
+
+Deux adresses à tenir, une par socle, divergeraient : chacun servirait une base
+différente en ayant raison de son côté. La même variable interdit cet écart. Une
+adresse donnée mais incomprise **arrête le démarrage** plutôt que de servir en
+silence le mauvais régime ; et aucun message ni aucune trace ne porte le mot de
+passe.
+
+### Mesuré
+
+| | |
+|---|---|
+| Réponses **identiques à l'octet** à celles de Node, en régime base | **14 / 14** |
+| Maillons SHA-256 revérifiés par Java **depuis PostgreSQL** | **1 582** — PLAN 337, SURV 812, RAMP 312 (alias SAFA compris), CARE 121 |
+| Contrôles de la suite « droits » à travers la passerelle | **20 / 20** — Java 11 requêtes, Node 7 |
+| Contrôles Java | **10** sur l'adresse, **5** de conformité d'octets |
+
+**La première comparaison donnait 14/14 et ne prouvait rien** : les fixtures
+portent un `module_audit` vide, et les deux socles répondaient sagement
+`total: 0`. C'est la deuxième fois que ce jeu de données vide produit un vert
+creux ici. La comparaison ne vaut qu'avec les 1 582 entrées réelles versées en
+base.
+
+### Le cache regarde maintenant la version
+
+Sur fichier, la date et la taille font la clé. En base, c'est `rev` pour une
+collection — qui avance à chaque écriture — et le nombre de lignes pour un
+journal en ajout seul, qui ne perd ni ne réordonne jamais. Dans les deux cas la
+marque change dès que la donnée change, et jamais autrement.
+
+Une base injoignable n'est **pas** une collection vide : l'erreur part aux
+traces et la lecture rend `null`, comme un fichier absent. Taire la panne ferait
+lire « aucun droit » au lieu de « la base ne répond pas ».
+
 ## Ce qu'il faut décider avant de continuer
 
 Ces quatre constats convergent vers une question que le GT2 doit trancher :

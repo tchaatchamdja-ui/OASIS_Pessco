@@ -56,6 +56,16 @@
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
 
+    <!-- Le pilote PostgreSQL, et lui seul : pas de `spring-boot-starter-jdbc`.
+         Sans Spring JDBC au chemin de classes, rien n'essaie de configurer une
+         source de données au démarrage — et le socle démarre donc aussi bien
+         sans base, ce qui est le régime des fichiers. La source est construite à
+         la main dans `Magasin`, quand une adresse est donnée. -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>42.7.4</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>

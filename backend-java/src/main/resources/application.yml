@@ -7,6 +7,10 @@ server:
 oasis:
   # Passé au démarrage : OASIS_DATA_DIR=/tmp/oasis-cible-4899/data
   data-dir: ${OASIS_DATA_DIR:../data}
+  # La même variable que Node, et c'est délibéré : deux adresses à tenir
+  # divergeraient, et chaque socle servirait une base différente en ayant raison
+  # de son côté. Absente, tout est lu dans des fichiers.
+  database-url: ${DATABASE_URL:}
 
 spring:
   application:

@@ -461,4 +461,41 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        gestionnaire de route asynchrone passe par `asynchrone` — sans quoi un rejet laisse la
        requête ouverte, sans trace, Express 4 ne regardant pas la promesse.
 
+10. [~] **Le socle Java lit PostgreSQL** — fait le 1ᵉʳ octobre 2026, et il était temps.
+
+       **Le jalon n° 9 l'avait cassé sans que rien ne le dise.** Les journaux d'audit sont
+       passés en base le 29 septembre ; `Magasin.java` lisait toujours les fichiers, et en
+       régime base `module_audit.jsonl` n'existe même plus. La vérification de chaîne
+       annonçait **`{valid: true, total: 0}`** — un satisfecit sur un journal vide, le pire
+       mode de défaillance pour un outil d'autorité. Aucun contrôle ne l'a dit.
+
+       `Magasin` route désormais collection par collection, et ses deux listes recopient
+       celles de `src/magasin.js`. **Un contrôle de la suite « taille » compare les deux** :
+       leur divergence ferait lire à Java un fichier que personne n'écrit plus.
+
+       `DATABASE_URL` est la même variable pour les deux socles — deux adresses à tenir
+       divergeraient, et chacun servirait une base différente en ayant raison de son côté. La
+       traduction vers JDBC est explicite et éprouvée par 10 contrôles ; une adresse donnée
+       mais incomprise **arrête le démarrage** plutôt que de servir en silence le mauvais
+       régime, et le mot de passe n'apparaît dans aucun message ni aucune trace.
+
+       | | |
+       |---|---|
+       | Réponses identiques à l'octet, en régime base | **14 / 14** |
+       | Maillons SHA-256 revérifiés **depuis PostgreSQL** | **1 582** |
+       | Suite « droits » à travers la passerelle | **20 / 20** — Java 11, Node 7 |
+
+       **La première comparaison donnait 14/14 et ne prouvait rien** : les fixtures portent un
+       `module_audit` vide, et les deux socles répondaient `total: 0`. Deuxième fois que ce jeu
+       vide produit un vert creux ici.
+
+       Ce que cela **ferme** : le point n° 2 du jalon n° 6 — « l'écriture ne peut pas basculer
+       avant le magasin partagé » — n'a plus de raison d'être pour les collections migrées,
+       une base ayant les verrous qu'un répertoire n'a pas. Ce qui **reste ouvert** : le point
+       n° 3, la session, `sessions` n'étant pas encore migrée.
+
+11. [ ] **Migrer `users` et `sessions`.** 50 appels dans 16 fichiers. `sessions` ferme le
+       point n° 3 du jalon n° 6 : le socle Java pourra alors rafraîchir `lastActivity`, ce
+       qu'il ne peut pas faire tant que la donnée est un fichier qu'un seul runtime écrit.
+
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

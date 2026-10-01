@@ -535,5 +535,43 @@ module.exports = async function tailleSmoke() {
   verifier('le plafond d’écritures est lu avec « await »',
     PLAFOND.length === 0, PLAFOND.join(' · '));
 
+  // ── Les deux socles doivent nommer les mêmes collections migrées ──
+  //
+  // La bascule se fait collection par collection, et pendant ce temps une partie
+  // des données vit en base et le reste dans des fichiers. **Les deux socles
+  // doivent être d'accord sur laquelle est laquelle.** Si la liste de Java
+  // oublie une collection que Node a basculée, Java lit un fichier que personne
+  // n'écrit plus : il rend une donnée périmée, ou vide, **sans aucune erreur**.
+  //
+  // Ce n'est pas une crainte abstraite. Les journaux d'audit sont passés en base
+  // le 29 septembre 2026 et `Magasin.java` ne le savait pas : le fichier
+  // `module_audit.jsonl` n'existe même plus en régime base, et la vérification
+  // de chaîne rendait « valide, zéro entrée » — un satisfecit sur un journal
+  // vide, le pire mode de défaillance pour un outil d'autorité. Rien ne l'a dit ;
+  // il a fallu aller le chercher.
+  const javaMagasin = path.join(RACINE, 'backend-java', 'src', 'main', 'java',
+    'int_', 'uemoa', 'ursac', 'oasis', 'magasin', 'Magasin.java');
+  if (!fs.existsSync(javaMagasin)) {
+    horsPortee('les deux socles nomment les mêmes collections migrées',
+      'backend-java absent de ce dépôt');
+  } else {
+    const java = fs.readFileSync(javaMagasin, 'utf8');
+    const listeJava = (nom) => {
+      const bloc = java.match(new RegExp(`Set<String> ${nom} = Set\\.of\\(([\\s\\S]*?)\\);`));
+      return bloc ? (bloc[1].match(/"([^"]+)"/g) || []).map((x) => x.slice(1, -1)).sort() : null;
+    };
+    const listeNode = (nom) => {
+      const bloc = sourceMagasin.match(new RegExp(`const ${nom} = new Set\\(\\[([\\s\\S]*?)\\n\\]\\);`));
+      return bloc ? (bloc[1].match(/'([^']+)'/g) || []).map((x) => x.slice(1, -1)).sort() : null;
+    };
+    [['MIGREES', 'collections'], ['JOURNAUX_MIGRES', 'journaux']].forEach(([nom, quoi]) => {
+      const n = listeNode(nom);
+      const j = listeJava(nom);
+      verifier(`les deux socles nomment les mêmes ${quoi} migré(e)s`,
+        !!n && !!j && JSON.stringify(n) === JSON.stringify(j),
+        `Node ${JSON.stringify(n)} · Java ${JSON.stringify(j)}`);
+    });
+  }
+
   return bilan('taille');
 };

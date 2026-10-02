@@ -5,6 +5,7 @@
 // déroulantes du formulaire de mesure.
 const referentiels = require('../../referentiels');
 const moduleRights = require('../../module_rights');
+const { asynchrone } = require('../../route');
 const db = require('./store');
 const R = require('./roles');
 const instances = require('../../instances');
@@ -101,122 +102,153 @@ module.exports = function register(app, deps, M) {
 
   const ordonner = (l) => l.slice().sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
 
-  app.get(`${M}/parametres`, requireAuth, (req, res) => {
+  // ── Créer et supprimer un paramètre, en une seule transformation ──
+  //
+  // Six créations et quatre suppressions suivaient la même forme : vérifier,
+  // puis écrire. **La vérification était hors de l'écriture qu'elle gardait.**
+  // Deux créations du même libellé parties ensemble la passaient toutes deux et
+  // posaient deux rangs portant le même `code` — or c'est `code` que les mesures
+  // retiennent, précisément pour qu'un renommage ne les orpheline pas. Deux
+  // catégories sous un même code rendaient la mesure ambiguë.
+  //
+  // Le refus se rend donc dans la transformation, et la réponse après : un
+  // transformateur peut être rejoué, et répondre dedans répondrait deux fois.
+  const creer = async (coll, prefixe, libelle, extra) => {
+    const code = codeDepuisLibelle(libelle);
+    if (!code) return { refus: { code: 400, corps: { error: 'Libellé inexploitable' } } };
+    // Tiré hors de la transformation : rejouée, elle doit reposer le même.
+    const id = db.uid(prefixe);
+    let doublon = false;
+    let rang = null;
+    await db.transformer((d) => {
+      doublon = false; rang = null;
+      const liste = d[coll] || [];
+      if (liste.some((x) => x.code === code)) { doublon = true; return db.INCHANGE; }
+      rang = { id, code, libelle, ordre: liste.length, ...(extra || {}) };
+      liste.push(rang);
+      d[coll] = liste;
+      return d;
+    });
+    return doublon ? { doublon: true } : { rang };
+  };
+
+  // `empeche(d)` rend le nombre d'emplois qui interdisent le retrait, lu sur
+  // l'état qu'on va écrire — un emploi survenu entre la vérification et le
+  // retrait passait inaperçu. `aussi` emporte ce qui n'existe que par le rang.
+  const supprimer = async (coll, id, empeche, aussi) => {
+    let etat = null;
+    await db.transformer((d) => {
+      etat = null;
+      const liste = d[coll] || [];
+      const i = liste.findIndex((x) => x.id === id);
+      if (i < 0) { etat = { absent: true }; return db.INCHANGE; }
+      const employe = empeche ? empeche(d, liste[i]) : 0;
+      if (employe) { etat = { employe }; return db.INCHANGE; }
+      if (aussi) aussi(d, liste[i]);
+      liste.splice(i, 1);
+      etat = { ote: true };
+      return d;
+    });
+    return etat;
+  };
+
+  app.get(`${M}/parametres`, requireAuth, asynchrone(async (req, res) => {
+    // Les quatre listes ensemble : enchaîner quatre allers-retours pour peupler
+    // des listes déroulantes quadruplerait l'attente de l'écran.
+    const [categories, types, investigation, comites] = await Promise.all(
+      ['categories', 'types', 'types_investigation', 'comites'].map((c) => db.list(c)),
+    );
     res.json({
-      categories: ordonner(db.list('categories')),
-      types: ordonner(db.list('types')),
-      types_investigation: ordonner(db.list('types_investigation')),
-      comites: ordonner(db.list('comites')),
+      categories: ordonner(categories),
+      types: ordonner(types),
+      types_investigation: ordonner(investigation),
+      comites: ordonner(comites),
       modifiable: editeur(req),
       supprimable: admin(req),
     });
-  });
+  }));
 
   // ── Comités décisionnels ──
   // Les instances qui siègent pour qualifier une carence et arrêter la
   // sanction. Une simple liste de noms : le comité retenu sera porté par la
   // mesure, à l'étape « Qualification et Mesures ».
-  app.post(`${M}/parametres/comites`, requireAuth, (req, res) => {
+  app.post(`${M}/parametres/comites`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return requis(res, 'libelle');
-    const code = codeDepuisLibelle(libelle);
-    if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
-    if (db.list('comites').some((c) => c.code === code)) {
-      return existant(res, 'comite');
-    }
-    const c = { id: db.uid('mco'), code, libelle, ordre: db.list('comites').length };
-    db.insert('comites', c);
-    return res.status(201).json({ status: 'ok', id: c.id, code: c.code });
-  });
+    const issu = await creer('comites', 'mco', libelle);
+    if (issu.refus) return res.status(issu.refus.code).json(issu.refus.corps);
+    if (issu.doublon) return existant(res, 'comite');
+    return res.status(201).json({ status: 'ok', id: issu.rang.id, code: issu.rang.code });
+  }));
 
-  app.put(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/comites/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
-    const c = db.get('comites', req.params.id);
-    if (!c) return introuvable(res, 'comite');
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return requis(res, 'libelle');
     // Le code ne suit pas le libellé : une décision déjà rendue le porte.
-    db.update('comites', c.id, { libelle });
-    return res.json({ status: 'ok' });
-  });
+    const maj = await db.update('comites', req.params.id, { libelle });
+    return maj ? res.json({ status: 'ok' }) : introuvable(res, 'comite');
+  }));
 
-  app.delete(`${M}/parametres/comites/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/parametres/comites/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const c = db.get('comites', req.params.id);
-    if (!c) return introuvable(res, 'comite');
     // Un comité qui a siégé ne se retire pas : la mesure perdrait l'instance
     // qui l'a décidée.
-    if (db.list('mesures').some((m) => m.comite_code === c.code)) {
-      return res.status(400).json({ error: 'Ce comité a déjà siégé sur une mesure' });
-    }
-    db.remove('comites', c.id);
+    const etat = await supprimer('comites', req.params.id,
+      (d, c) => (d.mesures || []).filter((m) => m.comite_code === c.code).length);
+    if (etat.absent) return introuvable(res, 'comite');
+    if (etat.employe) return res.status(400).json({ error: 'Ce comité a déjà siégé sur une mesure' });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Types d'investigation ──
   // Ce que l'équipe a fait pour établir les faits. Liste plate : un type ne
   // dépend d'aucune catégorie, contrairement aux types de mesure.
-  app.post(`${M}/parametres/types-investigation`, requireAuth, (req, res) => {
+  app.post(`${M}/parametres/types-investigation`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return requis(res, 'libelle');
-    const code = codeDepuisLibelle(libelle);
-    if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
-    if (db.list('types_investigation').some((t) => t.code === code)) {
-      return existant(res, 'type');
-    }
-    const t = { id: db.uid('mti'), code, libelle, ordre: db.list('types_investigation').length };
-    db.insert('types_investigation', t);
-    return res.status(201).json({ status: 'ok', id: t.id, code: t.code });
-  });
+    const issu = await creer('types_investigation', 'mti', libelle);
+    if (issu.refus) return res.status(issu.refus.code).json(issu.refus.corps);
+    if (issu.doublon) return existant(res, 'type');
+    return res.status(201).json({ status: 'ok', id: issu.rang.id, code: issu.rang.code });
+  }));
 
-  app.put(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/types-investigation/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
-    const t = db.get('types_investigation', req.params.id);
-    if (!t) return introuvable(res, 'type');
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return requis(res, 'libelle');
     // Le code ne suit pas le libellé : les investigations déjà consignées le
     // portent, et un renommage ne doit pas les détacher de leur type.
-    db.update('types_investigation', t.id, { libelle });
-    return res.json({ status: 'ok' });
-  });
+    const maj = await db.update('types_investigation', req.params.id, { libelle });
+    return maj ? res.json({ status: 'ok' }) : introuvable(res, 'type');
+  }));
 
-  app.delete(`${M}/parametres/types-investigation/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/parametres/types-investigation/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const t = db.get('types_investigation', req.params.id);
-    if (!t) return introuvable(res, 'type');
     // Un type déjà employé par une investigation ne se retire pas : le travail
     // consigné perdrait son intitulé.
-    const employe = db.list('traitements').filter((x) => ((x.investigation || {}).travaux || [])
-      .some((w) => w.type === t.code)).length;
-    if (employe) return enUsage(res, 'type', employe);
-    db.remove('types_investigation', t.id);
+    const etat = await supprimer('types_investigation', req.params.id,
+      (d, t) => (d.traitements || []).filter((x) => ((x.investigation || {}).travaux || [])
+        .some((w) => w.type === t.code)).length);
+    if (etat.absent) return introuvable(res, 'type');
+    if (etat.employe) return enUsage(res, 'type', etat.employe);
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.post(`${M}/parametres/categories`, requireAuth, (req, res) => {
+  app.post(`${M}/parametres/categories`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
     const libelle = String((req.body || {}).libelle || '').trim();
     if (!libelle) return requis(res, 'libelle');
-    const code = codeDepuisLibelle(libelle);
-    if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
-    if (db.list('categories').some((c) => c.code === code)) {
-      return existant(res, 'categorie');
-    }
-    const c = {
-      id: db.uid('mca'), code, libelle,
-      ordre: db.list('categories').length,
-    };
-    db.insert('categories', c);
-    res.status(201).json({ status: 'ok', id: c.id, code: c.code });
-  });
+    const issu = await creer('categories', 'mca', libelle);
+    if (issu.refus) return res.status(issu.refus.code).json(issu.refus.corps);
+    if (issu.doublon) return existant(res, 'categorie');
+    return res.status(201).json({ status: 'ok', id: issu.rang.id, code: issu.rang.code });
+  }));
 
-  app.put(`${M}/parametres/categories/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/categories/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
-    const c = db.get('categories', req.params.id);
-    if (!c) return introuvable(res, 'categorie');
     const d = req.body || {};
     const patch = {};
     // Le code ne change pas avec le libellé : les mesures déjà prises le
@@ -227,53 +259,42 @@ module.exports = function register(app, deps, M) {
       patch.libelle = libelle;
     }
     if (d.ordre !== undefined) patch.ordre = Number(d.ordre) || 0;
-    db.update('categories', c.id, patch);
-    res.json({ status: 'ok' });
-  });
+    const maj = await db.update('categories', req.params.id, patch);
+    return maj ? res.json({ status: 'ok' }) : introuvable(res, 'categorie');
+  }));
 
-  app.delete(`${M}/parametres/categories/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/parametres/categories/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const c = db.get('categories', req.params.id);
-    if (!c) return introuvable(res, 'categorie');
     // Une catégorie encore portée par une mesure ne se supprime pas : la
-    // mesure deviendrait illisible.
-    const utilisee = db.list('mesures').filter((m) => m.categorie === c.code).length;
-    if (utilisee) {
-      return enUsage(res, 'categorie', utilisee);
-    }
-    db.list('types').filter((t) => t.categorie_code === c.code)
-      .forEach((t) => db.remove('types', t.id));
-    db.remove('categories', c.id);
-    res.json({ status: 'ok' });
-  });
+    // mesure deviendrait illisible. Ses types partent avec elle — c'était une
+    // écriture par type, plus une : entre elles, des types rattachés à une
+    // catégorie disparue, que plus aucun écran n'atteint.
+    const etat = await supprimer('categories', req.params.id,
+      (d, c) => (d.mesures || []).filter((m) => m.categorie === c.code).length,
+      (d, c) => { d.types = (d.types || []).filter((t) => t.categorie_code !== c.code); });
+    if (etat.absent) return introuvable(res, 'categorie');
+    if (etat.employe) return enUsage(res, 'categorie', etat.employe);
+    return res.json({ status: 'ok' });
+  }));
 
-  app.post(`${M}/parametres/types`, requireAuth, (req, res) => {
+  app.post(`${M}/parametres/types`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
     const d = req.body || {};
     const libelle = String(d.libelle || '').trim();
     const categorie = String(d.categorie_code || '').trim();
     if (!libelle) return requis(res, 'libelle');
     if (!categorie) return requis(res, 'categorie');
-    if (!db.list('categories').some((c) => c.code === categorie)) {
+    if (!(await db.list('categories')).some((c) => c.code === categorie)) {
       return inconnu(res, 'categorie');
     }
-    const code = codeDepuisLibelle(libelle);
-    if (!code) return res.status(400).json({ error: 'Libellé inexploitable' });
-    if (db.list('types').some((t) => t.code === code)) {
-      return existant(res, 'type');
-    }
-    const t = {
-      id: db.uid('mty'), categorie_code: categorie, code, libelle,
-      ordre: db.list('types').length,
-    };
-    db.insert('types', t);
-    res.status(201).json({ status: 'ok', id: t.id, code: t.code });
-  });
+    const issu = await creer('types', 'mty', libelle, { categorie_code: categorie });
+    if (issu.refus) return res.status(issu.refus.code).json(issu.refus.corps);
+    if (issu.doublon) return existant(res, 'type');
+    return res.status(201).json({ status: 'ok', id: issu.rang.id, code: issu.rang.code });
+  }));
 
-  app.put(`${M}/parametres/types/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/types/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!editeur(req)) return refuser(res);
-    const t = db.get('types', req.params.id);
-    if (!t) return introuvable(res, 'type');
     const d = req.body || {};
     const patch = {};
     if (d.libelle !== undefined) {
@@ -283,27 +304,24 @@ module.exports = function register(app, deps, M) {
     }
     if (d.categorie_code !== undefined) {
       const cat = String(d.categorie_code).trim();
-      if (!db.list('categories').some((c) => c.code === cat)) {
+      if (!(await db.list('categories')).some((c) => c.code === cat)) {
         return inconnu(res, 'categorie');
       }
       patch.categorie_code = cat;
     }
     if (d.ordre !== undefined) patch.ordre = Number(d.ordre) || 0;
-    db.update('types', t.id, patch);
-    res.json({ status: 'ok' });
-  });
+    const maj = await db.update('types', req.params.id, patch);
+    return maj ? res.json({ status: 'ok' }) : introuvable(res, 'type');
+  }));
 
-  app.delete(`${M}/parametres/types/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/parametres/types/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const t = db.get('types', req.params.id);
-    if (!t) return introuvable(res, 'type');
-    const utilise = db.list('mesures').filter((m) => m.type_mesure === t.code).length;
-    if (utilise) {
-      return enUsage(res, 'type', utilise);
-    }
-    db.remove('types', t.id);
-    res.json({ status: 'ok' });
-  });
+    const etat = await supprimer('types', req.params.id,
+      (d, t) => (d.mesures || []).filter((m) => m.type_mesure === t.code).length);
+    if (etat.absent) return introuvable(res, 'type');
+    if (etat.employe) return enUsage(res, 'type', etat.employe);
+    return res.json({ status: 'ok' });
+  }));
 };
 
 module.exports.codeDepuisLibelle = codeDepuisLibelle;

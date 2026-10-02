@@ -50,7 +50,18 @@ const uid = () => crypto.randomBytes(8).toString('hex');
 
 // `nom` est la collection du magasin — celle que `src/magasin.js` nomme dans sa
 // liste d'autorisation, et qui décide du régime, fichier ou base.
-function magasinDeModule(nom) {
+//
+// Deux options, parce que les modules ne tiennent pas tous leurs enregistrements
+// de la même façon et que **changer leur forme en passant n'est pas une
+// conversion, c'est une migration de données** :
+//
+//   · `identifiantParLeMagasin` — `insert` tire l'identifiant et le pose en
+//     dernier, pour qu'un `id` venu du client ne le choisisse pas. « Mesures
+//     d'Application » le tire lui-même, avec un préfixe parlant (`mes_`, `cst_`),
+//     avant d'insérer : l'option l'en laisse maître ;
+//   · `horodater` — `insert` pose `createdAt`, `update` pose `updatedAt`. Les
+//     mesures d'application portent leurs propres dates, nommées autrement.
+function magasinDeModule(nom, { identifiantParLeMagasin = true, horodater = true } = {}) {
   const load = () => magasin.load(nom, {});
   const save = (d) => magasin.save(nom, d);
   const transformer = (fn) => magasin.modifier(nom, {}, fn);
@@ -62,7 +73,11 @@ function magasinDeModule(nom) {
   // l'enregistrement, un `id` venu du client l'écrasait — il pouvait ainsi
   // choisir sous quelle clé sa création allait vivre.
   async function insert(coll, item) {
-    const rec = { createdAt: new Date().toISOString(), ...item, id: uid() };
+    const rec = {
+      ...(horodater ? { createdAt: new Date().toISOString() } : {}),
+      ...item,
+      ...(identifiantParLeMagasin ? { id: uid() } : {}),
+    };
     await transformer((d) => {
       d[coll] = d[coll] || [];
       d[coll].push(rec);
@@ -78,7 +93,10 @@ function magasinDeModule(nom) {
       const i = arr.findIndex((r) => r.id === id);
       apres = null;
       if (i < 0) return magasin.INCHANGE;
-      arr[i] = { ...arr[i], ...patch, id, updatedAt: new Date().toISOString() };
+      arr[i] = {
+        ...arr[i], ...patch, id,
+        ...(horodater ? { updatedAt: new Date().toISOString() } : {}),
+      };
       apres = arr[i];
       return d;
     });

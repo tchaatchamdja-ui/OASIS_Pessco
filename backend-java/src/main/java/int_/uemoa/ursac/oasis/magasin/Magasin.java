@@ -86,7 +86,8 @@ public class Magasin {
       "referentiels",
       "module_rights",
       "profil_risque",
-      "planification");
+      "planification",
+      "mesures");
 
   /**
    * Les journaux servis par la base. <b>Recopie de {@code JOURNAUX_MIGRES} dans

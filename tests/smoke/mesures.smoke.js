@@ -216,6 +216,125 @@ module.exports = async function mesuresSmoke(port) {
     verifier('constatation inconnue introuvable',
       (await srv.appel(`${M}/constatations/inexistante`, { method: 'DELETE' })).statut === 404);
 
+    // ── Le circuit complet d'une carence, qu'aucun contrôle ne traversait ──
+    //
+    // Investigation, qualification, suivi : c'est le cœur du module, et la
+    // bascule en base l'a entièrement récrit en transformations (ADR-002,
+    // jalon n° 13). Rien ne l'exerçait. Or c'est ici que les mesures
+    // d'application sont **prononcées**, avec leur référence — notifiée au
+    // prestataire, et qui désigne un acte d'autorité.
+    const POST = (chemin, corps) => srv.appel(chemin, {
+      method: 'POST', body: JSON.stringify(corps || {}),
+    });
+    const PUT = (chemin, corps) => srv.appel(chemin, {
+      method: 'PUT', body: JSON.stringify(corps || {}),
+    });
+
+    const carence = await POST(`${M}/constatations`, {
+      titre: 'Manquement au programme de maintenance', description: 'Vérification omise',
+      origine_libelle: 'Contrôle inopiné', date_ouverture: '2026-09-15',
+    });
+    const CID = carence.corps.id;
+    verifier('circuit : carence ouverte', carence.statut === 201 && !!CID);
+
+    // 1. Le dossier s'ouvre avec les informations recueillies.
+    verifier('circuit : dossier ouvert avec ses informations',
+      (await PUT(`${M}/constatations/${CID}/traitement`, { informations: 'Pièces reçues' })).statut === 200);
+    const ouvert = await srv.appel(`${M}/constatations/${CID}/traitement`);
+    verifier('circuit : le dossier se relit à l’étape « suite »',
+      ouvert.statut === 200 && ouvert.corps.etape === 'suite'
+      && ouvert.corps.informations === 'Pièces reçues', ouvert.corps.etape);
+
+    // 2. La décision d'investiguer avance le fil.
+    const investiguer = await POST(`${M}/constatations/${CID}/decision`, { decision: 'investiguer' });
+    verifier('circuit : décision d’investiguer',
+      investiguer.statut === 201 && investiguer.corps.etape === 'investigations',
+      `${investiguer.statut} ${investiguer.corps.etape || ''}`);
+
+    // 3. L'investigation se consigne, puis se soumet.
+    verifier('circuit : investigation consignée',
+      (await PUT(`${M}/constatations/${CID}/investigation`, {
+        equipe: ['insp1'], travaux: [], rapport: 'Faits établis',
+      })).statut === 200);
+    const soumise = await POST(`${M}/constatations/${CID}/investigation/soumettre`);
+    verifier('circuit : investigation soumise, étape « qualification »',
+      soumise.statut === 201 && soumise.corps.etape === 'qualification',
+      `${soumise.statut} ${soumise.corps.etape || ''}`);
+    verifier('circuit : une investigation ne se soumet pas deux fois',
+      (await POST(`${M}/constatations/${CID}/investigation/soumettre`)).statut === 409);
+
+    // 4. L'instance qualifie et arrête deux mesures.
+    verifier('circuit : qualification enregistrée',
+      (await PUT(`${M}/constatations/${CID}/qualification`, {
+        infraction_constituee: true, nature: 'Manquement grave',
+        caracterisation: 'Récidive', mesures: [
+          { categorie: 'administrative', type_mesure: 'lettre_correction', commentaire: 'Première', suivi_requis: true },
+          { categorie: 'sanction', type_mesure: 'avertissement', commentaire: 'Seconde', suivi_requis: true },
+        ],
+      })).statut === 200);
+
+    // 5. **Le geste qui compte** : les deux mesures entrent au registre avec
+    //    leurs références, et le fil passe au suivi — d'un seul coup.
+    const prononcees = await POST(`${M}/constatations/${CID}/qualification/suivi`);
+    verifier('circuit : les mesures arrêtées entrent au registre',
+      prononcees.statut === 201 && (prononcees.corps.mesures || []).length === 2,
+      JSON.stringify(prononcees.corps).slice(0, 140));
+    // Deux références distinctes, et bien formées : c'est ce que le compteur
+    // tenu dans la transformation garantit. Deux mesures sous un même numéro
+    // seraient deux actes d'autorité confondus.
+    const refs2 = prononcees.corps.mesures || [];
+    verifier('circuit : deux références distinctes et bien formées',
+      refs2.length === 2 && new Set(refs2).size === 2
+      && refs2.every((r) => /^MES-\d{4}$/.test(r)), refs2.join(' · '));
+    const dossier = await srv.appel(`${M}/constatations/${CID}/traitement`);
+    verifier('circuit : le fil est au suivi, et le registre porte les deux mesures',
+      dossier.corps.etape === 'suivi'
+      && (dossier.corps.mesures || []).filter((m) => m.issue_de === 'qualification').length === 2,
+      `${dossier.corps.etape} · ${(dossier.corps.mesures || []).length} mesure(s)`);
+
+    // 6. Le suivi des mesures s'inscrit sur les mesures elles-mêmes.
+    const auRegistre = (dossier.corps.mesures || []).filter((m) => m.issue_de === 'qualification');
+    const suivi = await PUT(`${M}/constatations/${CID}/suivi`, {
+      commentaire_general: 'Plans reçus',
+      mesures: auRegistre.map((m) => ({ id: m.id, suivi_statut: 'solde', suivi_commentaire: 'Soldé' })),
+    });
+    verifier('circuit : suivi porté sur les deux mesures',
+      suivi.statut === 200 && suivi.corps.mesures === 2, JSON.stringify(suivi.corps));
+    const apresSuivi = await srv.appel(`${M}/constatations/${CID}/traitement`);
+    verifier('circuit : le commentaire général et les statuts tiennent ensemble',
+      (apresSuivi.corps.suivi || {}).commentaire_general === 'Plans reçus'
+      && (apresSuivi.corps.mesures || []).filter((m) => m.suivi_statut === 'solde').length === 2);
+
+    // 7. La carence se clôt.
+    verifier('circuit : carence clôturée',
+      (await POST(`${M}/constatations/${CID}/suivi/cloturer`)).statut === 201);
+    const clos = await srv.appel(`${M}/constatations/${CID}/traitement`);
+    verifier('circuit : le dossier porte sa clôture', !!clos.corps.cloture_le);
+
+    // 8. Et un dossier clos ne se réécrit plus.
+    verifier('circuit : un dossier clos ne se réécrit plus',
+      (await PUT(`${M}/constatations/${CID}/suivi`, { commentaire_general: 'tard' })).statut === 409);
+
+    // Ménage : les deux mesures prononcées, puis la carence.
+    for (const m of auRegistre) await srv.appel(`${M}/mesures/${m.id}`, { method: 'DELETE' });
+    await srv.appel(`${M}/constatations/${CID}`, { method: 'DELETE' });
+
+    // ── Comités et types d'investigation : le paramétrage que rien n'exerçait ──
+    const comite = await POST(`${M}/parametres/comites`, { libelle: 'Comité de fumée' });
+    verifier('comité créé avec son code dérivé',
+      comite.statut === 201 && comite.corps.code === 'comite_de_fumee', JSON.stringify(comite.corps));
+    verifier('comité en doublon refusé',
+      (await POST(`${M}/parametres/comites`, { libelle: 'Comité de fumée' })).statut === 409);
+    verifier('comité renommé sans changer son code',
+      (await PUT(`${M}/parametres/comites/${comite.corps.id}`, { libelle: 'Comité revu' })).statut === 200);
+    const typeInv = await POST(`${M}/parametres/types-investigation`, { libelle: 'Relevé de fumée' });
+    verifier('type d’investigation créé', typeInv.statut === 201 && !!typeInv.corps.code);
+    verifier('type d’investigation en doublon refusé',
+      (await POST(`${M}/parametres/types-investigation`, { libelle: 'Relevé de fumée' })).statut === 409);
+    verifier('comité et type d’investigation retirés',
+      (await srv.appel(`${M}/parametres/comites/${comite.corps.id}`, { method: 'DELETE' })).statut === 200
+      && (await srv.appel(`${M}/parametres/types-investigation/${typeInv.corps.id}`, { method: 'DELETE' })).statut === 200);
+
     // ── Classement : aucune suite donnée ──
     const aClasser = await srv.appel(`${M}/constatations`, {
       method: 'POST', body: JSON.stringify({ titre: 'Manquement régularisé sur place' }),

@@ -1,13 +1,27 @@
 // Module « Mesures d'Application » — accès aux données.
 //
-// Reprise du module PESSCO (Flask + SQLite) sur le socle OASIS (JSON via
-// src/store.js). Les tables du module deviennent les collections de
-// data/mesures.json :
+// Reprise du module PESSCO (Flask + SQLite) sur le socle OASIS. Les tables du
+// module deviennent les collections de `mesures` :
 //   mesures_application → mesures
 //   mes_categories      → categories
 //   mes_types           → types
+//
+// En base depuis ADR-002, jalon n° 13. Le vocabulaire commun aux cinq modules
+// vit dans `src/magasin_module.js` ; ce module-ci tire ses identifiants lui-même,
+// avec un préfixe parlant, et porte ses propres dates — d'où les deux options.
+//
+// ── Ce que la bascule rendait dangereux ici ──
+//
+// Les deux compteurs de référence. `prochaineReference` lit le dernier numéro,
+// l'incrémente et réécrit : **c'est le geste le plus sensible de ce module.**
+// Rendu asynchrone sans précaution, deux mesures prononcées ensemble liraient le
+// même dernier numéro et porteraient la même référence `MES-0042` — référence
+// notifiée au prestataire, et qui désigne un acte d'autorité. Elles passent par
+// `transformer`.
 const crypto = require('crypto');
-const store = require('../../store');
+const { magasinDeModule } = require('../../magasin_module');
+
+const base = magasinDeModule('mesures', { identifiantParLeMagasin: false, horodater: false });
 
 // « constatations » : celles que le module relève lui-même, faute d'un module
 // producteur — un signalement, un contrôle inopiné, une saisine. Celles des
@@ -61,16 +75,16 @@ const TYPES_DEFAUT = [
   ['penale', 'saisine_judiciaire', 'Saisine judiciaire'],
 ];
 
-const load = () => store.load('mesures', {});
-const save = (d) => store.save('mesures', d);
-const list = (coll) => load()[coll] || [];
-
 const uid = (prefix) => `${prefix}_${crypto.randomBytes(4).toString('hex')}`;
 const now = () => new Date().toISOString();
 
-function seed() {
-  const d = store.load('mesures', null);
-  if (d) return;
+const typesInvestigationDefaut = () => TYPES_INVESTIGATION_DEFAUT.map(([code, libelle], i) => ({
+  id: `mti_${code}`, code, libelle, ordre: i,
+}));
+
+async function seed() {
+  const existant = await base.load();
+  if (Object.keys(existant).length) return;
   const vide = {};
   COLLECTIONS.forEach((c) => { vide[c] = []; });
   vide.categories = CATEGORIES_DEFAUT.map((c, i) => ({
@@ -79,87 +93,53 @@ function seed() {
   vide.types = TYPES_DEFAUT.map(([cat, code, libelle], i) => ({
     id: `mty_${code}`, categorie_code: cat, code, libelle, ordre: i,
   }));
-  vide.types_investigation = TYPES_INVESTIGATION_DEFAUT.map(([code, libelle], i) => ({
-    id: `mti_${code}`, code, libelle, ordre: i,
-  }));
-  save({ ...vide, createdAt: now() });
+  vide.types_investigation = typesInvestigationDefaut();
+  await base.save({ ...vide, createdAt: now() });
 }
 
 // Les instances déjà installées n'ont pas la liste : on l'amorce au démarrage
 // plutôt que d'ouvrir un écran de paramétrage vide.
-function seedTypesInvestigation() {
-  const d = load();
-  if (!d || (d.types_investigation || []).length) return;
-  d.types_investigation = TYPES_INVESTIGATION_DEFAUT.map(([code, libelle], i) => ({
-    id: `mti_${code}`, code, libelle, ordre: i,
-  }));
-  save(d);
+async function seedTypesInvestigation() {
+  await base.transformer((d) => {
+    if ((d.types_investigation || []).length) return base.INCHANGE;
+    d.types_investigation = typesInvestigationDefaut();
+    return d;
+  });
 }
 
-function get(coll, id) {
-  return list(coll).find((r) => r.id === id) || null;
-}
-
-function insert(coll, item) {
-  const d = load();
-  d[coll] = d[coll] || [];
-  d[coll].push(item);
-  save(d);
-  return item;
-}
-
-function update(coll, id, patch) {
-  const d = load();
-  const arr = d[coll] || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return null;
-  arr[i] = { ...arr[i], ...patch };
-  save(d);
-  return arr[i];
-}
-
-function remove(coll, id) {
-  const d = load();
-  const arr = d[coll] || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return false;
-  arr.splice(i, 1);
-  save(d);
-  return true;
-}
-
-// Numérotation continue : MES-0001, MES-0002… Le rang est conservé à part et
-// jamais recalculé depuis les mesures présentes : une mesure supprimée rendrait
-// sinon sa référence, qui a pu être notifiée à un prestataire.
-// Le plus grand numéro en base sert de plancher, pour les données antérieures
-// à ce compteur.
-function prochaineReference() {
-  const d = load();
-  const plancher = (d.mesures || []).reduce((n, m) => {
-    const c = /^MES-(\d+)$/.exec(String(m.reference || ''));
+// ── Numérotation continue : MES-0001, MES-0002… ──
+//
+// Le rang est conservé à part et jamais recalculé depuis les mesures présentes :
+// une mesure supprimée rendrait sinon sa référence, qui a pu être notifiée à un
+// prestataire. Le plus grand numéro en base sert de plancher, pour les données
+// antérieures à ce compteur.
+//
+// **Le calcul se fait dans la transformation, et il le faut.** Lire le dernier
+// numéro, l'incrémenter et réécrire est le geste qu'une conversion asynchrone
+// naïve casse : deux mesures prononcées ensemble liraient le même rang et
+// porteraient la même référence. Un acte d'autorité ne partage pas son numéro.
+// L'allocateur est **pur** : il avance le compteur dans l'état qu'on est en train
+// d'écrire et rend la référence. C'est ce qui permet d'en tirer plusieurs dans la
+// même transformation — l'instance arrête souvent trois ou quatre mesures d'un
+// coup, et chacune aurait sinon demandé son propre aller-retour, donc sa propre
+// occasion de collision.
+const allouer = (cle, prefixe, coll, motif) => (d) => {
+  const plancher = (d[coll] || []).reduce((n, r) => {
+    const c = motif.exec(String(r.reference || ''));
     return c ? Math.max(n, Number(c[1])) : n;
   }, 0);
-  const rang = Math.max(Number(d.dernier_numero) || 0, plancher) + 1;
-  d.dernier_numero = rang;
-  save(d);
-  return `MES-${String(rang).padStart(4, '0')}`;
-}
+  const rang = Math.max(Number(d[cle]) || 0, plancher) + 1;
+  d[cle] = rang;
+  return `${prefixe}-${String(rang).padStart(4, '0')}`;
+};
 
-// Numérotation des constatations propres : CST-0001, CST-0002… Même règle que
-// pour les mesures — un numéro rendu ne se réattribue pas.
-function prochaineReferenceConstat() {
-  const d = load();
-  const plancher = (d.constatations || []).reduce((n, c) => {
-    const m = /^CST-(\d+)$/.exec(String(c.reference || ''));
-    return m ? Math.max(n, Number(m[1])) : n;
-  }, 0);
-  const rang = Math.max(Number(d.dernier_numero_constat) || 0, plancher) + 1;
-  d.dernier_numero_constat = rang;
-  save(d);
-  return `CST-${String(rang).padStart(4, '0')}`;
-}
+const allouerReference = allouer('dernier_numero', 'MES', 'mesures', /^MES-(\d+)$/);
+// Même règle pour les constatations que le module relève lui-même.
+const allouerReferenceConstat = allouer('dernier_numero_constat', 'CST', 'constatations', /^CST-(\d+)$/);
 
 module.exports = {
-  COLLECTIONS, CATEGORIES_DEFAUT, seed, seedTypesInvestigation, list, get, insert, update, remove, uid, now,
-  prochaineReference, prochaineReferenceConstat
+  ...base,
+  COLLECTIONS, CATEGORIES_DEFAUT, uid, now,
+  seed, seedTypesInvestigation,
+  allouerReference, allouerReferenceConstat,
 };

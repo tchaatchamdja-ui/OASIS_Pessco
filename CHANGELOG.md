@@ -213,6 +213,27 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
 - **`src/magasin_module.js`** porte le vocabulaire des cinq magasins de module une seule fois :
   `list`, `get`, `insert`, `update`, `remove`, `removeWhere`, `transformer`. Écrit cinq fois,
   il aurait fallu tenir d'accord cinq copies de la même subtilité.
+- **`mesures` en base**, troisième magasin de module — 118 appels, 3 fichiers. Le module des
+  actes de sanction, et **le geste le plus sensible de toute la bascule** : `prochaineReference`
+  lisait le dernier numéro, l'incrémentait et réécrivait. Deux mesures prononcées ensemble
+  auraient porté la même référence `MES-0042` — notifiée au prestataire, et qui désigne un acte
+  d'autorité. L'allocateur est devenu pur : il avance le compteur dans l'état qu'on écrit.
+- **Deux gardes que leur propre commentaire dénonçait** : « sans cette garde, un double clic
+  notifierait deux fois » — et la garde était hors de l'écriture qu'elle gardait. Onze refus du
+  module se relisent désormais dans la transformation.
+- **Le dossier de traitement s'ouvrait deux fois** : deux routes faisaient « chercher, créer si
+  absent », et deux requêtes simultanées ouvraient deux dossiers pour une même carence. Comme
+  `traitementDe` n'en rend qu'un, le travail consigné dans l'autre devenait inatteignable.
+- **Le circuit complet d'une carence n'était exercé par aucun contrôle** — investigation,
+  qualification, suivi, soit le cœur du module. Vingt-trois contrôles le traversent maintenant,
+  dont celui qui vérifie que deux mesures arrêtées d'un même geste portent deux références
+  distinctes. Troisième fois que la conversion révèle ce trou.
+- Le garde-fou des magasins de module **a cessé de couvrir « Mesures d'Application » sans le
+  dire** : la fabrique y prend des options, et la regex de détection exigeait une parenthèse
+  juste après le nom de la collection. Le défaut que ce garde-fou existe pour empêcher, dans le
+  garde-fou lui-même.
+- Un message de refus porté dans une variable **sortait de l'endroit où le garde-fou des
+  traductions le lit**. Il l'a dit. Le refus porte un code, la phrase reste où la réponse se forme.
 - **Six routes de PLAN n'étaient exercées par aucun contrôle** — application de la
   synchronisation des risques, `transmettre`, `approuver-dg`, les archives du plan et les deux
   exceptions posées activité par activité. Deuxième fois que la conversion révèle ce trou ;

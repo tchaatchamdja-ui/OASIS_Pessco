@@ -111,6 +111,7 @@ const MIGREES = new Set([
   'module_rights',
   'profil_risque',
   'planification',
+  'mesures',
 ]);
 
 let socle = null;

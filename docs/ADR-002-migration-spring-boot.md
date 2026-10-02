@@ -673,6 +673,49 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
        | Suites « droits » et « PLAN » par la passerelle | **20 / 20** et **62 / 62** |
 
-       Restent `mesures` (93 appels), `ramp` (148) et `execution` (202).
+       **`mesures` faite le 2 octobre 2026** — 118 appels, 3 fichiers. Le module des actes
+       de sanction, et celui qui porte le geste le plus sensible de toute la bascule.
+
+       > **Un numéro qui ne se partage pas.** `prochaineReference` lisait le dernier numéro,
+       > l'incrémentait et réécrivait. Deux mesures prononcées ensemble auraient porté la même
+       > référence `MES-0042` — notifiée au prestataire, et qui désigne un acte d'autorité.
+       > L'allocateur est devenu **pur** : il avance le compteur dans l'état qu'on écrit, de
+       > sorte que plusieurs mesures d'un même geste en tirent chacune la leur sans
+       > aller-retour. La contre-épreuve a montré que la distinction est tenue **deux fois** —
+       > par le compteur et par le plancher calculé sur les références présentes.
+       >
+       > **Deux gardes que leur propre commentaire dénonçait.** « Sans cette garde, un double
+       > clic notifierait deux fois » — et la garde était hors de l'écriture qu'elle gardait.
+       > Onze refus du module se relisent désormais dans la transformation.
+       >
+       > **Le dossier de traitement s'ouvrait deux fois.** Deux routes faisaient « chercher,
+       > créer si absent » : deux requêtes simultanées ouvraient deux dossiers pour une même
+       > carence, et `traitementDe` n'en rend qu'un — le travail consigné dans l'autre devenait
+       > inatteignable sans qu'aucune erreur le dise.
+       >
+       > **Le circuit complet n'était exercé par aucun contrôle** — investigation,
+       > qualification, suivi, soit le cœur du module. Vingt-trois contrôles le traversent
+       > maintenant. Troisième fois que la conversion révèle ce trou ; c'est devenu une étape
+       > de la recette plutôt qu'une surprise.
+       >
+       > **Le garde-fou a cessé de couvrir ce module sans le dire.** La fabrique prend des
+       > options depuis celui-ci — il tire ses identifiants lui-même et porte ses propres
+       > dates —, et ma regex exigeait une parenthèse juste après le nom de la collection. La
+       > couverture est tombée en silence : le défaut que ce garde-fou existe pour empêcher,
+       > dans le garde-fou lui-même.
+       >
+       > **Et une phrase rendue invisible à qui doit la traduire** : portée dans une variable
+       > de refus, elle sortait de l'endroit où le garde-fou des traductions la lit. Il l'a
+       > dit. Le refus porte un code, la phrase reste où la réponse se forme.
+
+       | | |
+       |---|---|
+       | Contrôles, quatre régimes | **849** sur fichiers et bus différé · **859** en base |
+       | Dont nouveaux | **24** |
+       | Node contre Java, **onze** collections en base | **38 / 38** à l'octet |
+       | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+       | Suite « droits » par la passerelle | **20 / 20** |
+
+       Restent `ramp` (148 appels) et `execution` (202).
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

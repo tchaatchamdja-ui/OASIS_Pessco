@@ -454,7 +454,11 @@ module.exports = async function tailleSmoke() {
     'seed', 'insert', 'update', 'remove', 'removeWhere'];
   const converti = (source) => {
     if (/\bconst list = async\b/.test(source)) return true;
-    const m = /magasinDeModule\('([^']+)'\)/.exec(source);
+    // Le nom seul, quoi qui suive : la fabrique prend des options depuis
+    // « Mesures d'Application », et une parenthèse exigée juste après le nom a
+    // fait **cesser silencieusement** la couverture de ce module-là. Un
+    // détecteur qui se tait est pire qu'une règle écrite.
+    const m = /magasinDeModule\('([^']+)'/.exec(source);
     return !!m && MIGREES.includes(m[1]);
   };
   const magasinsDeModule = fs.readdirSync(path.join(RACINE, 'src', 'modules'))

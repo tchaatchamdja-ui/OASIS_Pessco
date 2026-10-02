@@ -94,9 +94,13 @@ async function migrer(store, loadConfig, saveConfig) {
   if (comptes) faits.push(`comptes : ${comptes}`);
 
   // 4. Carences des « Mesures d'Application » : le lien vers l'écart d'origine.
-  const mesures = store.load('mesures', null);
-  if (mesures && typeof mesures === 'object') {
-    let liens = 0;
+  //
+  // `mesures` est en base : la reprise passe par la façade, et **dans** une
+  // transformation. Une mesure prononcée pendant le démarrage ne serait pas
+  // écrasée — et au démarrage, c'est justement le moment où personne ne regarde.
+  let liens = 0;
+  await magasin.modifier('mesures', {}, (mesures) => {
+    liens = 0;
     Object.values(mesures).forEach((collection) => {
       if (!Array.isArray(collection)) return;
       collection.forEach((e) => {
@@ -107,11 +111,9 @@ async function migrer(store, loadConfig, saveConfig) {
         if (e && e.origine === ANCIEN) { e.origine = NOUVEAU; liens += 1; }
       });
     });
-    if (liens) {
-      store.save('mesures', mesures);
-      faits.push(`carences : ${liens} lien(s)`);
-    }
-  }
+    return liens ? mesures : magasin.INCHANGE;
+  });
+  if (liens) faits.push(`carences : ${liens} lien(s)`);
 
   // 5. Courriels sortis du module : leur origine le nomme.
   //

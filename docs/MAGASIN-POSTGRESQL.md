@@ -664,7 +664,101 @@ Dix contrôles les couvrent. Et trois contre-épreuves n'ont pas mordu :
 | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
 | Suites « droits » et « PLAN » par la passerelle | **20 / 20** et **62 / 62** |
 
-Restent `mesures` (93 appels), `ramp` (148) et `execution` (202).
+Restent `mesures`, `ramp` et `execution`.
+
+---
+
+## Treizième : `mesures` — un numéro qui ne se partage pas
+
+*2 octobre 2026. 118 appels, 3 fichiers. Le module des actes de sanction.*
+
+### Le geste le plus sensible de la bascule
+
+```js
+function prochaineReference() {
+  const d = load();                       // lire
+  const rang = Math.max(d.dernier_numero, plancher) + 1;
+  d.dernier_numero = rang;                // modifier
+  save(d);                                // réécrire
+  return `MES-${rang}`;
+}
+```
+
+Deux mesures prononcées ensemble liraient le même dernier numéro et porteraient
+**la même référence**. Cette référence est notifiée au prestataire et désigne un
+acte d'autorité : deux actes sous un seul numéro ne se distinguent plus.
+
+L'allocateur est devenu **pur** — il avance le compteur dans l'état qu'on écrit et
+rend la référence. C'est ce qui permet d'en tirer plusieurs dans la même
+transformation : l'instance arrête souvent trois ou quatre mesures d'un coup.
+
+La distinction est en fait tenue **deux fois** — par le compteur et par le
+plancher calculé sur les références présentes. La contre-épreuve l'a montré :
+figer le compteur seul ne suffisait pas à produire un doublon, il fallait retirer
+les deux. Le contrôle le dit maintenant.
+
+### Deux gardes que leur propre commentaire dénonçait
+
+```js
+// Chacune vérifie le statut de départ : sans cette garde, un double clic
+// notifierait deux fois, et une mesure clôturée pourrait être « notifiée ».
+```
+
+La garde était **hors de l'écriture**. Deux requêtes simultanées lisaient toutes
+deux « projet », et la notification partait deux fois — exactement ce que le
+commentaire annonçait. Même forme pour la réécriture d'une mesure clôturée.
+
+Onze refus de ce module se relisent désormais dans la transformation.
+
+### Le dossier de traitement s'ouvrait deux fois
+
+Deux routes faisaient « chercher le dossier, le créer s'il n'existe pas ». Deux
+requêtes parties ensemble n'en trouvaient aucune et ouvraient **deux dossiers pour
+la même carence** — or `traitementDe` n'en rend qu'un : le travail consigné dans
+l'autre devenait inatteignable, sans qu'aucune erreur le dise. Les deux routes
+passent par une seule fonction, qui pose le dossier en une transformation.
+
+### Le circuit complet n'était exercé par aucun contrôle
+
+Investigation, qualification, suivi : le cœur du module, et c'est là que les
+mesures sont **prononcées**. Vingt-trois contrôles le traversent maintenant de
+bout en bout, dont celui qui vérifie que deux mesures arrêtées d'un même geste
+portent deux références distinctes.
+
+**Troisième fois que la conversion révèle ce trou** — après les six routes de
+classeur de `profil_risque` et les six routes de PLAN. Ce n'est plus une surprise :
+c'est une étape de la recette.
+
+### Le garde-fou a cessé de couvrir ce module sans le dire
+
+La fabrique `magasinDeModule` prend des options depuis ce module-ci — « Mesures
+d'Application » tire ses identifiants lui-même et porte ses propres dates, et
+changer la forme de ses enregistrements en passant n'aurait pas été une conversion
+mais une migration de données. Ma regex de détection exigeait une parenthèse juste
+après le nom de la collection : `magasinDeModule('mesures', { … })` ne
+correspondait plus, et **la couverture est tombée en silence**.
+
+C'est le défaut que ce garde-fou existe pour empêcher, dans le garde-fou lui-même.
+Il reconnaît maintenant le nom seul, quoi qui suive.
+
+### Et une phrase rendue invisible à qui doit la traduire
+
+En portant un message de refus dans une variable pour le rendre après la
+transformation, je l'ai sorti de l'endroit où le garde-fou des traductions le lit —
+après `error:`. Il l'a dit. Le refus porte donc un **code**, et la phrase reste là
+où la réponse se forme.
+
+### Le coût, mesuré
+
+| | |
+|---|---|
+| Contrôles, quatre régimes | **849** sur fichiers et bus différé · **859** en base |
+| Dont nouveaux | **24** |
+| Node contre Java, **onze** collections en base | **38 / 38** à l'octet |
+| Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+| Suite « droits » par la passerelle | **20 / 20** |
+
+Restent `ramp` (148 appels) et `execution` (202).
 
 ---
 

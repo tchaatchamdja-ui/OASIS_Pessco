@@ -27,20 +27,22 @@ module.exports = {
     // Combien de mesures pèsent sur une constatation : le module Exécution
     // l'affiche en regard de chaque constatation, sans lire les données d'ici.
     if (deps.services) {
-      deps.services.publish('CARE.volumeParInstance', () => {
+      // Asynchrones depuis que `mesures` vit en base (ADR-002, jalon n° 13) : le
+      // bus rend une promesse par contrat, et ses consommateurs l'attendent déjà.
+      deps.services.publish('CARE.volumeParInstance', async () => {
         const parInstance = {};
-        ['mesures', 'constatations', 'traitements'].forEach((coll) => {
-          db.list(coll).forEach((r) => {
-            const i = r.instance || '';
-            parInstance[i] = (parInstance[i] || 0) + 1;
-          });
+        const rangs = await Promise.all(['mesures', 'constatations', 'traitements']
+          .map((coll) => db.list(coll)));
+        rangs.flat().forEach((r) => {
+          const i = r.instance || '';
+          parInstance[i] = (parInstance[i] || 0) + 1;
         });
         return parInstance;
       }, { description: 'Nombre d’enregistrements du module, par instance' });
 
-      deps.services.publish('CARE.mesuresParConstatation', () => {
+      deps.services.publish('CARE.mesuresParConstatation', async () => {
         const parId = {};
-        db.list('mesures').forEach((m) => {
+        (await db.list('mesures')).forEach((m) => {
           if (!m.constatation_id) return;
           parId[m.constatation_id] = (parId[m.constatation_id] || 0) + 1;
         });
@@ -54,16 +56,22 @@ module.exports = {
       // de supprimer une constatation — sans quoi une mesure prononcée perdrait
       // l'écart qui la fonde. Les clés sont celles des sources : « ramp:<écart> »
       // pour RAMP, l'identifiant nu pour SURV.
-      deps.services.publish('CARE.suitesParConstatation', () => {
+      deps.services.publish('CARE.suitesParConstatation', async () => {
         const parId = {};
-        const compter = (coll, champ) => db.list(coll).forEach((x) => {
+        const compter = (rangs, champ) => rangs.forEach((x) => {
           if (!x.constatation_id) return;
           const s = parId[x.constatation_id] || (parId[x.constatation_id] = { mesures: 0, classements: 0, traitements: 0 });
           s[champ] += 1;
         });
-        compter('mesures', 'mesures');
-        compter('classements', 'classements');
-        compter('traitements', 'traitements');
+        // Les trois collections ensemble : un module source interroge ce contrat
+        // avant de supprimer une constatation, et trois allers-retours enchaînés
+        // tripleraient l'attente de chacune de ses suppressions.
+        const [mesures, classements, traitements] = await Promise.all(
+          ['mesures', 'classements', 'traitements'].map((c) => db.list(c)),
+        );
+        compter(mesures, 'mesures');
+        compter(classements, 'classements');
+        compter(traitements, 'traitements');
         return parId;
       }, {
         description: 'Mesures, classements et traitements rattachés à chaque constatation',
@@ -73,10 +81,10 @@ module.exports = {
   },
 
   async seed() {
-    db.seed();
+    await db.seed();
     // Instance déjà installée : la liste des types d'investigation n'existait
     // pas encore, on l'amorce plutôt que d'ouvrir un paramétrage vide.
-    db.seedTypesInvestigation();
+    await db.seedTypesInvestigation();
     // Un module fraîchement installé n'a encore aucun droit attribué : sans
     // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
     // compris le super-administrateur — de prendre la première mesure et donc

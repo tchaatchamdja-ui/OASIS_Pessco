@@ -82,7 +82,9 @@ public class Magasin {
       "notifications",
       "mfa_challenges",
       "users",
-      "sessions");
+      "sessions",
+      "referentiels",
+      "module_rights");
 
   /**
    * Les journaux servis par la base. <b>Recopie de {@code JOURNAUX_MIGRES} dans

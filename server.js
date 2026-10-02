@@ -109,17 +109,17 @@ async function requireAuth(req, res, next) {
   const token = parseCookies(req).oasis_session;
   const session = auth.getSession(token, cfg);
   if (!session) return res.status(401).json({ error: 'unauthenticated' });
-  // ── L'instantané de l'annuaire, pris ici et une seule fois ──
+  // ── L'instantané, pris ici et une seule fois par requête ──
   //
-  // `users` vit en base, mais `getUsers()` et `findUser()` sont restés
-  // synchrones : les rendre asynchrones aurait atteint 101 prédicats de rôle et
-  // 545 chaînes de tableau dans les modules. L'annuaire est donc relu **ici**,
-  // au seul endroit déjà asynchrone par lequel toute route protégée passe, et
-  // toutes les lectures d'une même requête voient le même annuaire.
+  // Trois collections vivent en base et se lisent pourtant de façon synchrone :
+  // `users`, `referentiels` et `module_rights`. Les rendre asynchrones aurait
+  // atteint les prédicats de rôle — 101 appels, 545 chaînes de tableau — et les
+  // 45 lectures du référentiel. Elles sont donc relues **ici**, ensemble, au seul
+  // endroit déjà asynchrone par lequel toute route protégée passe.
   //
   // C'est une garantie plus forte que l'ancienne, non plus faible : sans elle,
-  // deux `getUsers()` d'un même gestionnaire pourraient rendre des listes
-  // différentes. Voir `src/annuaire.js` pour ce qu'elle ne garantit pas.
+  // deux lectures d'un même gestionnaire pourraient rendre des états différents.
+  // Voir `src/instantane.js` pour ce qu'elle ne garantit pas.
   await auth.rafraichirAnnuaire();
   const user = auth.findUser(session.username);
   if (!user || !user.active) return res.status(401).json({ error: 'unauthenticated' });
@@ -578,7 +578,7 @@ app.delete('/api/users/:username', requireAuth, requireRole('SUPERADMIN'), async
   const personnel = referentiels.getAll().inspecteurs || [];
   const fiche = personnel.find((p) => p.user_id === user.username
     || String(p.email || '').toLowerCase() === String(user.email || user.username).toLowerCase());
-  if (fiche) referentiels.deleteItem('inspecteurs', fiche.id);
+  if (fiche) await referentiels.deleteItem('inspecteurs', fiche.id);
 
   // Les sessions ouvertes tombent : un compte effacé ne doit pas survivre
   // dans un onglet resté ouvert.
@@ -690,7 +690,7 @@ app.post('/api/users/:username/to-personnel', requireAuth, requireRole('SUPERADM
   const em = (user.email || user.username).toLowerCase();
   const existing = (referentiels.getAll().inspecteurs || []).find((p) => (p.email || '').toLowerCase() === em);
   if (existing) return res.status(409).json({ error: 'exists' });
-  const rec = referentiels.createItem('inspecteurs', {
+  const rec = await referentiels.createItem('inspecteurs', {
     ref_personnel: '', nom: user.nom || '', prenom: user.prenom || '', numero_inspecteur: '',
     email: user.email || user.username, telephone: user.telephone || '', specialite: '',
     est_inspecteur: 'non', domaines: [], specialites: [], niveau_qualification: '', statut: 'actif', user_id: user.username,
@@ -818,7 +818,7 @@ app.get('/api/referentiels', requireAuth, (req, res) => {
 });
 
 app.post('/api/referentiels/:coll', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
-  const record = referentiels.createItem(req.params.coll, req.body || {},
+  const record = await referentiels.createItem(req.params.coll, req.body || {},
     instances.courante(req.user, loadConfig));
   if (!record) return res.status(404).json({ error: 'unknown_collection' });
   if (record.error) return res.status(409).json({ error: record.error });
@@ -827,7 +827,7 @@ app.post('/api/referentiels/:coll', requireAuth, requireRole('SUPERADMIN', 'ADMI
 }));
 
 app.put('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
-  const record = referentiels.updateItem(req.params.coll, req.params.id, req.body || {});
+  const record = await referentiels.updateItem(req.params.coll, req.params.id, req.body || {});
   if (!record) return res.status(404).json({ error: 'not_found' });
   if (record.error) return res.status(409).json({ error: record.error });
   await audit.log(req.user.username, 'REFERENTIEL_MODIFIE', { collection: req.params.coll, id: req.params.id });
@@ -835,18 +835,18 @@ app.put('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'A
 }));
 
 app.delete('/api/referentiels/:coll/:id', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
-  const removed = referentiels.deleteItem(req.params.coll, req.params.id);
+  const removed = await referentiels.deleteItem(req.params.coll, req.params.id);
   if (!removed) return res.status(404).json({ error: 'not_found' });
   await audit.log(req.user.username, 'REFERENTIEL_SUPPRIME', { collection: req.params.coll, id: req.params.id, supprimes: removed });
   res.json({ ok: true, removed });
 }));
 
 // Contrôle d'intégrité : enregistrements dont le parent a été supprimé
-app.get('/api/referentiels/orphans', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), (req, res) => {
-  res.json({ orphans: referentiels.orphans(false) });
-});
+app.get('/api/referentiels/orphans', requireAuth, requireRole('SUPERADMIN', 'ADMIN'), asynchrone(async (req, res) => {
+  res.json({ orphans: await referentiels.orphans(false) });
+}));
 app.post('/api/referentiels/orphans/purge', requireAuth, requireRole('SUPERADMIN'), asynchrone(async (req, res) => {
-  const removed = referentiels.orphans(true);
+  const removed = await referentiels.orphans(true);
   await audit.log(req.user.username, 'REFERENTIELS_PURGE_ORPHELINS', removed);
   res.json({ ok: true, removed });
 }));
@@ -943,14 +943,18 @@ app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN'
   const added = {};
   const updated = {};
   const errors = [];
-  sheets.forEach((coll, i) => {
+  // Des boucles, et non des `forEach` : les écritures du référentiel sont
+  // asynchrones depuis qu'il vit en base, et un `forEach` les lancerait sans
+  // les attendre — les feuilles parent/enfant se croiseraient, les codes
+  // parents ne seraient pas encore résolvables, et le compte rendu serait faux.
+  for (const [i, coll] of sheets.entries()) {
     const cols = IMPORT_COLS[coll];
     // feuille par nom, sinon par position
     const wsName = wb.SheetNames.find((n) => n === (SHEET_NAME[coll] || coll)) || wb.SheetNames[sheets.length > 1 ? i : 0];
     const ws = wb.Sheets[wsName];
-    if (!ws) return;
+    if (!ws) continue;
     const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-    rows.forEach((raw, n) => {
+    for (const [n, raw] of rows.entries()) {
       const all = referentiels.getAll();
       const item = {};
       let hasData = false;
@@ -971,8 +975,8 @@ app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN'
         if (v !== '' && !(Array.isArray(v) && !v.length)) hasData = true;
         item[c] = v;
       }
-      if (!hasData) return;
-      if (rowError) { errors.push(rowError); return; }
+      if (!hasData) continue;
+      if (rowError) { errors.push(rowError); continue; }
       if (cols.includes('statut') && !item.statut) item.statut = 'actif';
 
       // Upsert sur le code lorsque la collection en possède un
@@ -980,16 +984,16 @@ app.post('/api/referentiels/:coll/import', requireAuth, requireRole('SUPERADMIN'
         ? referentiels.findByCode(coll, item.code, null, all)
         : null;
       if (existing) {
-        const r = referentiels.updateItem(coll, existing.id, item);
+        const r = await referentiels.updateItem(coll, existing.id, item);
         if (r && r.error) errors.push(`${SHEET_NAME[coll] || coll} ligne ${n + 2} : ${r.error}`);
         else updated[coll] = (updated[coll] || 0) + 1;
-        return;
+        continue;
       }
-      const r = referentiels.createItem(coll, item, instances.courante(req.user, loadConfig));
+      const r = await referentiels.createItem(coll, item, instances.courante(req.user, loadConfig));
       if (r && r.error) errors.push(`${SHEET_NAME[coll] || coll} ligne ${n + 2} : ${r.error === 'code_required' ? 'code manquant' : r.error}`);
       else added[coll] = (added[coll] || 0) + 1;
-    });
-  });
+    }
+  }
   const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
   await audit.log(req.user.username, 'REFERENTIEL_IMPORT', {
     collection: req.params.coll, ajouts: sum(added), maj: sum(updated), erreurs: errors.length,

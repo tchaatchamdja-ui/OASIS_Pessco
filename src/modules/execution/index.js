@@ -118,18 +118,21 @@ module.exports = {
     }
   },
 
-  seed() {
+  async seed() {
     db.seed();
     // Un module fraîchement installé n'a encore aucun droit attribué : sans
     // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
     // compris le super-administrateur — d'ouvrir le premier acte et donc
     // d'attribuer les droits depuis l'application. On ne touche qu'aux
     // comptes SUPERADMIN, et seulement s'ils n'ont pas déjà été paramétrés.
-    auth.getUsers()
-      .filter((u) => u.role === 'SUPERADMIN' && moduleRights.getRights(R.MODULE, u.username).isDefault)
-      .forEach((u) => moduleRights.setRights(R.MODULE, u.username, {
+    // En série : chaque pose relit la table, et `Promise.all` les ferait se
+    // heurter sur la même collection pour rien — ils sont trois ou quatre.
+    for (const u of auth.getUsers()
+      .filter((x) => x.role === 'SUPERADMIN' && moduleRights.getRights(R.MODULE, x.username).isDefault)) {
+      await moduleRights.setRights(R.MODULE, u.username, {
         privilege: 'GESTIONNAIRE', scopes: [],
         updatedAt: new Date().toISOString(), updatedBy: 'installation',
-      }));
+      });
+    }
   },
 };

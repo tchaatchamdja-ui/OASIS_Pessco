@@ -72,6 +72,11 @@ const storePg = require('./store_pg');
 // `sessions` — la table des jetons. La table en mémoire fait foi ; le magasin ne
 // fait que la garder d'un démarrage à l'autre. Elle ferme le point n° 3 du jalon
 // n° 6 : le socle Java peut désormais la lire là où Node l'écrit.
+//
+// `referentiels` et `module_rights` — mêmes que `users`, et pour la même raison
+// mesurée : lues depuis des prédicats synchrones, 45 appels pour la première,
+// quatre prédicats pour la seconde. Les trois sont tenues par
+// `src/instantane.js`, rafraîchies ensemble une fois par requête.
 const MIGREES = new Set([
   'ramp_aeronefs',
   'emails',
@@ -79,6 +84,8 @@ const MIGREES = new Set([
   'mfa_challenges',
   'users',
   'sessions',
+  'referentiels',
+  'module_rights',
 ]);
 
 let socle = null;

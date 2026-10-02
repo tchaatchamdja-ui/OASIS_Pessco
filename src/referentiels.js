@@ -2,7 +2,10 @@
 // organisation, domaines/secteurs/sous-activités, thèmes, exigences, prestataires,
 // inspecteurs, types/modes de supervision, niveaux de qualification.
 const crypto = require('crypto');
-const store = require('./store');
+// Le référentiel vit en base et se lit en mémoire : `src/instantane.js` dit
+// pourquoi, et ce que ce choix ne garantit pas.
+const instantane = require('./instantane');
+const magasin = require('./magasin');
 
 const COLLECTIONS = [
   'organisation_levels',
@@ -91,8 +94,8 @@ function uid() {
 const listeInstances = (v) => [...new Set((Array.isArray(v) ? v : [])
   .map((x) => String(x == null ? '' : x).trim()).filter(Boolean))];
 
-function seedReferentiels() {
-  const existing = store.load('referentiels', null);
+async function seedReferentiels() {
+  const existing = await magasin.load('referentiels', null);
   if (existing) return;
   const data = {
     organisation_levels: [
@@ -166,11 +169,22 @@ function seedReferentiels() {
       { id: uid(), libelle: 'Médecine aéronautique (MED)', domaines: ['MED'], statut: 'actif' },
     ],
   };
-  store.save('referentiels', data);
+  await instantane.remplacer('referentiels', data);
 }
 
+// ── Lire : synchrone, et pourquoi (ADR-002, étape B) ──
+//
+// `referentiels` vit en base, mais `getAll()` reste synchrone : il est appelé
+// **45 fois** hors de ce module, dont depuis les prédicats de rôle employés dans
+// les chaînes de tableau des six modules. Il rend l'instantané que
+// `src/instantane.js` tient en mémoire et que `requireAuth` rafraîchit une fois
+// par requête.
+//
+// Il rend l'instantané **lui-même**, non une copie : copier 45 fois par requête
+// un objet de 25 Ko serait coûteux pour rien. Les appelants ne font que lire —
+// vérifié — et ceux qui écrivent passent par les fonctions ci-dessous.
 function getAll() {
-  return store.load('referentiels', {});
+  return instantane.lire('referentiels');
 }
 
 // Collections dont le « code » est une clé secondaire : unique, il sert de
@@ -187,13 +201,19 @@ function findByCode(collection, code, exceptId, data) {
   return list.find((r) => normCode(r.code) === c && r.id !== exceptId) || null;
 }
 
-function createItem(collection, item, instance) {
+// ── Écrire : atomique ──
+//
+// Les quatre écritures lisaient, modifiaient sur place, réécrivaient le tout.
+// Rendues asynchrones telles quelles, deux inscriptions simultanées — dans deux
+// collections différentes du même référentiel — se perdraient l'une l'autre.
+//
+// La vérification de doublon de code se fait **dans** la transformation : la
+// faire au-dehors laisserait passer deux créations du même code, chacune voyant
+// le référentiel d'avant l'autre.
+async function createItem(collection, item, instance) {
   if (!COLLECTIONS.includes(collection)) return null;
-  const data = getAll();
-  if (CODE_KEYED.includes(collection)) {
-    if (!normCode(item.code)) return { error: 'code_required' };
-    if (findByCode(collection, item.code, null, data)) return { error: 'duplicate_code' };
-  }
+  if (CODE_KEYED.includes(collection) && !normCode(item.code)) return { error: 'code_required' };
+  let refus = null;
   const record = { id: uid(), ...item };
   // L'instance qui l'inscrit le tient : elle seule le verra ensuite. Les
   // collections communes n'en portent pas — elles appartiennent à l'Union.
@@ -202,32 +222,44 @@ function createItem(collection, item, instance) {
   if (COLLECTIONS_VISIBILITE.includes(collection)) record.visibilite = listeInstances(record.visibilite);
   else delete record.visibilite;
   if (CODE_KEYED.includes(collection)) record.code = normCode(record.code);
-  data[collection] = data[collection] || [];
-  data[collection].push(record);
-  store.save('referentiels', data);
-  return record;
+  await instantane.modifier('referentiels', (data) => {
+    if (CODE_KEYED.includes(collection) && findByCode(collection, record.code, null, data)) {
+      refus = { error: 'duplicate_code' };
+      return data;
+    }
+    return { ...data, [collection]: [...(data[collection] || []), record] };
+  });
+  return refus || record;
 }
 
-function updateItem(collection, id, patch) {
+async function updateItem(collection, id, patch) {
   if (!COLLECTIONS.includes(collection)) return null;
-  const data = getAll();
-  const list = data[collection] || [];
-  const idx = list.findIndex((r) => r.id === id);
-  if (idx < 0) return null;
-  if (CODE_KEYED.includes(collection) && patch.code !== undefined) {
-    if (!normCode(patch.code)) return { error: 'code_required' };
-    if (findByCode(collection, patch.code, id, data)) return { error: 'duplicate_code' };
-    patch = { ...patch, code: normCode(patch.code) };
+  if (CODE_KEYED.includes(collection) && patch.code !== undefined && !normCode(patch.code)) {
+    return { error: 'code_required' };
   }
-  const suite = { ...list[idx], ...patch, id };
-  // Restreindre la visibilité d'un élément commun, ou la rouvrir : la liste
-  // est toujours normalisée, jamais laissée à ce que le client a envoyé.
-  if (COLLECTIONS_VISIBILITE.includes(collection) && patch.visibilite !== undefined) {
-    suite.visibilite = listeInstances(patch.visibilite);
-  }
-  list[idx] = suite;
-  store.save('referentiels', data);
-  return list[idx];
+  let refus = null;
+  let ecrit = null;
+  await instantane.modifier('referentiels', (data) => {
+    const list = data[collection] || [];
+    const idx = list.findIndex((r) => r.id === id);
+    if (idx < 0) return data;
+    let champs = patch;
+    if (CODE_KEYED.includes(collection) && patch.code !== undefined) {
+      if (findByCode(collection, patch.code, id, data)) { refus = { error: 'duplicate_code' }; return data; }
+      champs = { ...patch, code: normCode(patch.code) };
+    }
+    const suite = { ...list[idx], ...champs, id };
+    // Restreindre la visibilité d'un élément commun, ou la rouvrir : la liste
+    // est toujours normalisée, jamais laissée à ce que le client a envoyé.
+    if (COLLECTIONS_VISIBILITE.includes(collection) && patch.visibilite !== undefined) {
+      suite.visibilite = listeInstances(patch.visibilite);
+    }
+    ecrit = suite;
+    const neuve = list.slice();
+    neuve[idx] = suite;
+    return { ...data, [collection]: neuve };
+  });
+  return refus || ecrit;
 }
 
 // Hiérarchie des activités supervisées : supprimer un parent supprime ses
@@ -252,19 +284,27 @@ function removeCascade(data, collection, id, counts) {
   return true;
 }
 
-function deleteItem(collection, id) {
+async function deleteItem(collection, id) {
   if (!COLLECTIONS.includes(collection)) return false;
-  const data = getAll();
-  const counts = {};
-  if (!removeCascade(data, collection, id, counts)) return false;
-  store.save('referentiels', data);
-  return counts;
+  let counts = null;
+  await instantane.modifier('referentiels', (data) => {
+    // `removeCascade` mute ce qu'on lui donne : il travaille donc sur une copie
+    // de ce que la base vient de rendre, jamais sur l'instantané.
+    const copie = JSON.parse(JSON.stringify(data));
+    const compte = {};
+    if (!removeCascade(copie, collection, id, compte)) return data;
+    counts = compte;
+    return copie;
+  });
+  return counts || false;
 }
 
 // Enregistrements dont le parent n'existe plus : invisibles dans l'interface,
 // ils fausseraient les exports. `apply` = true pour les supprimer.
-function orphans(apply) {
-  const data = getAll();
+async function orphans(apply) {
+  // Avec suppression, on travaille une copie : `splice` mute, et l'instantané
+  // n'est pas à nous.
+  const data = apply ? JSON.parse(JSON.stringify(getAll())) : getAll();
   const counts = {};
   let changed = true;
   while (changed) {
@@ -286,7 +326,11 @@ function orphans(apply) {
     }
     if (!apply) break;
   }
-  if (apply) store.save('referentiels', data);
+  // Le comptage ne touche à rien ; la suppression écrit la copie travaillée.
+  // Ce n'est pas un `modifier` : c'est un geste d'administration, lancé à la main
+  // sur un référentiel qu'on vient de lire et dont on montre le compte avant
+  // d'appliquer. Il remplace donc, en le disant.
+  if (apply) await instantane.remplacer('referentiels', data);
   return counts;
 }
 

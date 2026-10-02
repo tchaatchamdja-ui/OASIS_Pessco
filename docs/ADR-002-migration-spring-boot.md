@@ -533,4 +533,37 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        est reconnue par Java à travers elle. Le rafraîchissement de `lastActivity` par Java
        n'est pas écrit — mais rien ne l'empêche plus.
 
+12. [x] **`referentiels` et `module_rights` migrées** — faites le 2 octobre 2026. Même cas que
+       `users` — lues depuis des prédicats synchrones, 45 appels pour la première, quatre
+       prédicats pour la seconde — donc même traitement.
+
+       Trois mécaniques pour une seule idée auraient fait trois choses à tenir d'accord :
+       celle de l'annuaire vit désormais dans **`src/instantane.js`**, qui sert les trois et
+       dit en un seul endroit le compromis et ce qu'il ne garantit pas. Les trois sont relues
+       **ensemble et en parallèle** — trois allers-retours enchaînés tripleraient la latence
+       de chaque requête.
+
+       > **Un `forEach` qui aurait rendu un compte faux.** L'import de référentiel par
+       > classeur écrivait dans deux `forEach` imbriqués. Les écritures devenues asynchrones,
+       > il les aurait **lancées sans les attendre** : feuilles parent et enfant croisées,
+       > codes parents non résolvables, et un compte rendu — « 12 ajouts » — rendu avant que
+       > rien ne soit écrit. Ce piège ne lève rien : il rend un chiffre faux.
+       >
+       > **Les lectures rendent l'instantané, non une copie** — 45 copies d'un objet de 25 Ko
+       > par requête seraient coûteuses pour rien. Vérifié avant de le décider : aucun
+       > appelant extérieur ne le mute. Les deux écritures internes qui mutaient leur argument
+       > travaillent désormais sur une copie.
+
+       | | |
+       |---|---|
+       | Contrôles, quatre régimes | **795** sur fichiers · **793** en base |
+       | Node contre Java, **huit** collections en base | **14 / 14** à l'octet |
+       | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+       | Suite « droits » par la passerelle | **20 / 20** |
+
+13. [ ] **Les cinq collections de module** — `planification`, `execution`, `mesures`,
+       `profil_risque`, `ramp`. C'est là que se trouvent les **381 appels** mesurés au départ,
+       par les magasins de module (`db.list`, `db.get`, `db.save`). Propagation d'une autre
+       nature : ces appels ne sont pas des prédicats mais le corps même des gestionnaires.
+
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

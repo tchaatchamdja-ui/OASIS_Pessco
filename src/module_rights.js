@@ -10,6 +10,7 @@ const store = require('./store');
 const { asynchrone } = require('./route');
 const referentiels = require('./referentiels');
 const moduleAudit = require('./module_audit');
+const instantane = require('./instantane');
 const instances = require('./instances');
 const auth = require('./auth');
 
@@ -42,8 +43,14 @@ const ROLES_GERES_MODULE = {
 const privilegesDe = (moduleCode) => PRIVILEGES_MODULE[moduleCode] || PRIVILEGES;
 const rolesGeresDe = (moduleCode) => ROLES_GERES_MODULE[moduleCode] || ROLES_GERES;
 
-const load = () => store.load('module_rights', {});
-const save = (d) => store.save('module_rights', d);
+// ── Lire : synchrone, et pourquoi (ADR-002, étape B) ──
+//
+// `module_rights` vit en base, mais `getRights`, `can`, `effectivePrivilege` et
+// `accesAuModule` restent synchrones : ce sont des prédicats, employés dans les
+// chaînes de tableau des six modules. Ils lisent l'instantané que
+// `src/instantane.js` tient en mémoire et que `requireAuth` rafraîchit une fois
+// par requête.
+const load = () => instantane.lire('module_rights');
 
 // Privilège enregistré, tel qu'il est écrit. C'est ce que l'écran « Gestion
 // des Droits » montre — il doit dire ce qui est posé, même sur un compte qui
@@ -55,12 +62,16 @@ function getRights(moduleCode, username) {
   return { privilege: rec.privilege, scopes: rec.scopes || [], isDefault: false, updatedAt: rec.updatedAt, updatedBy: rec.updatedBy };
 }
 
-function setRights(moduleCode, username, value) {
-  const all = load();
-  all[moduleCode] = all[moduleCode] || {};
-  if (value === null) delete all[moduleCode][username];
-  else all[moduleCode][username] = value;
-  save(all);
+// Écrire : atomique. Deux privilèges posés en même temps sur le même module —
+// ce que fait l'amorçage de chaque module sur chaque super-administrateur — se
+// perdraient l'un l'autre si l'on réécrivait la table entière.
+async function setRights(moduleCode, username, value) {
+  await instantane.modifier('module_rights', (tout) => {
+    const parModule = { ...(tout[moduleCode] || {}) };
+    if (value === null) delete parModule[username];
+    else parModule[username] = value;
+    return { ...tout, [moduleCode]: parModule };
+  });
   return value;
 }
 
@@ -318,13 +329,13 @@ async function register(app, deps) {
 
     // Défaut (Lecteur sans portée particulière) : aucun enregistrement à conserver
     if (privilege === DEFAULT_PRIVILEGE && !scopes.length) {
-      setRights(code, username, null);
+      await setRights(code, username, null);
       await audit.log(req.user.username, 'DROITS_MODULE_DEFAUT', { module: code, cible: username });
       return res.json({ ok: true, privilege: DEFAULT_PRIVILEGE, scopes: [], isDefault: true });
     }
 
     const value = { privilege, scopes, updatedAt: new Date().toISOString(), updatedBy: req.user.username };
-    setRights(code, username, value);
+    await setRights(code, username, value);
     await audit.log(req.user.username, 'DROITS_MODULE_MODIFIES', { module: code, cible: username, privilege, scopes });
     res.json({ ok: true, ...value, isDefault: false });
   }));

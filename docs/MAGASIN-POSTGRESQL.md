@@ -395,6 +395,53 @@ les restes d'un compte effacé dans le fichier `users.json` — figé sur la cop
 des fixtures — et les y trouvait toujours : il concluait que l'effacement n'avait
 pas eu lieu.
 
+## Neuvième et dixième : `referentiels` et `module_rights`
+
+*2 octobre 2026. Même cas que `users`, donc même traitement — et une seule
+mécanique pour les trois.*
+
+Les deux relèvent exactement du cas de `users` : elles sont lues depuis des
+prédicats synchrones. `referentiels.getAll()` est appelé **45 fois** hors de son
+module ; `module_rights` l'est par `getRights`, `can`, `effectivePrivilege` et
+`accesAuModule`, qui **sont** des prédicats.
+
+Trois mécaniques pour une seule idée auraient fait trois choses à tenir
+d'accord. `src/annuaire.js` portait celle de `users` ; elle vit désormais dans
+**`src/instantane.js`**, qui sert les trois et dit en un seul endroit le
+compromis et ce qu'il ne garantit pas. `annuaire.js` reste, réduit à la vue
+« comptes » — c'est sous ce nom que `src/auth.js` le lit et que les contrôles
+l'éprouvent.
+
+Les trois collections sont relues **ensemble**, en parallèle : ce sont trois
+allers-retours vers la même base, et les enchaîner triplerait la latence de
+chaque requête.
+
+### Les lectures rendent l'instantané, non une copie
+
+Copier 45 fois par requête un objet de 25 Ko serait coûteux pour rien. Vérifié
+avant de le décider : **aucun appelant extérieur ne mute** ce que `getAll()`
+rend — ils passent tous le résultat à un `.find` ou un `.filter`. Ceux qui
+écrivent passent par les quatre fonctions d'écriture, qui travaillent sur ce que
+la base vient de rendre.
+
+Les deux écritures internes qui mutaient leur argument — `removeCascade` par
+`splice`, et le nettoyage des orphelins — travaillent désormais sur une copie.
+Muter l'instantané l'aurait rendu faux pour la suite de la requête, sans qu'une
+seule erreur le dise.
+
+### Un `forEach` qui aurait rendu un compte faux
+
+L'import de référentiel par classeur parcourait deux `forEach` imbriqués —
+feuilles, puis lignes — et y écrivait. Les écritures devenues asynchrones, un
+`forEach` les aurait **lancées sans les attendre** : les feuilles parent et
+enfant se seraient croisées, les codes parents n'auraient pas été résolvables au
+moment voulu, et le compte rendu — « 12 ajouts, 3 mises à jour » — aurait été
+rendu avant que rien ne soit écrit.
+
+Ce sont des boucles `for…of` maintenant. C'est le même piège que `.map()` sur un
+appel asynchrone, à ceci près qu'il ne lève rien : il rend simplement un chiffre
+faux à qui vient d'importer un référentiel.
+
 ---
 
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout

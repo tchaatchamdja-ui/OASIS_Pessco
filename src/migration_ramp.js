@@ -53,13 +53,17 @@ async function migrer(store, loadConfig, saveConfig) {
   }
 
   // 2. Privilèges de « Gestion des Droits », rangés par code de module.
-  const droits = store.load('module_rights', {});
-  if (droits && ANCIEN in droits) {
-    droits[NOUVEAU] = { ...(droits[NOUVEAU] || {}), ...droits[ANCIEN] };
-    delete droits[ANCIEN];
-    store.save('module_rights', droits);
-    faits.push(`privilèges : ${Object.keys(droits[NOUVEAU]).length} compte(s)`);
-  }
+  let reprisPrivileges = 0;
+  await magasin.modifier('module_rights', {}, (droits) => {
+    reprisPrivileges = 0;
+    if (!droits || !(ANCIEN in droits)) return droits;
+    const fusion = { ...(droits[NOUVEAU] || {}), ...droits[ANCIEN] };
+    reprisPrivileges = Object.keys(fusion).length;
+    const suite = { ...droits, [NOUVEAU]: fusion };
+    delete suite[ANCIEN];
+    return suite;
+  });
+  if (reprisPrivileges) faits.push(`privilèges : ${reprisPrivileges} compte(s)`);
 
   // 3. Accès aux modules et droits d'organisme, sur chaque compte.
   //

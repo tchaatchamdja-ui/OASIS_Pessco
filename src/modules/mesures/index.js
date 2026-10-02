@@ -72,7 +72,7 @@ module.exports = {
     }
   },
 
-  seed() {
+  async seed() {
     db.seed();
     // Instance déjà installée : la liste des types d'investigation n'existait
     // pas encore, on l'amorce plutôt que d'ouvrir un paramétrage vide.
@@ -82,11 +82,14 @@ module.exports = {
     // compris le super-administrateur — de prendre la première mesure et donc
     // d'attribuer les droits depuis l'application. On ne touche qu'aux comptes
     // SUPERADMIN, et seulement s'ils n'ont pas déjà été paramétrés.
-    auth.getUsers()
-      .filter((u) => u.role === 'SUPERADMIN' && moduleRights.getRights('CARE', u.username).isDefault)
-      .forEach((u) => moduleRights.setRights('CARE', u.username, {
+    // En série : chaque pose relit la table, et `Promise.all` les ferait se
+    // heurter sur la même collection pour rien — ils sont trois ou quatre.
+    for (const u of auth.getUsers()
+      .filter((x) => x.role === 'SUPERADMIN' && moduleRights.getRights('CARE', x.username).isDefault)) {
+      await moduleRights.setRights('CARE', u.username, {
         privilege: 'GESTIONNAIRE', scopes: [],
         updatedAt: new Date().toISOString(), updatedBy: 'installation',
-      }));
+      });
+    }
   },
 };

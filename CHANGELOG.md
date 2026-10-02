@@ -152,6 +152,18 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   quinze. Chaque suite reçoit son propre schéma PostgreSQL, garni puis détruit.
 - `srv.donnees()` lit **là où la donnée vit** : un contrôle cherchait les restes d'un compte
   effacé dans un fichier figé sur les fixtures, et les y trouvait toujours.
+- **`referentiels` et `module_rights` en base.** Même cas que `users` — lues depuis des
+  prédicats synchrones — donc même traitement. La mécanique de l'instantané, qui vivait dans
+  `src/annuaire.js`, est désormais dans **`src/instantane.js`** et sert les trois : une seule
+  chose à tenir d'accord au lieu de trois. Les trois collections sont relues ensemble et en
+  parallèle.
+- Les lectures rendent l'instantané **et non une copie** : 45 copies d'un objet de 25 Ko par
+  requête seraient coûteuses pour rien. Vérifié : aucun appelant extérieur ne le mute. Les
+  deux écritures internes qui mutaient leur argument travaillent sur une copie.
+- **L'import de référentiel par classeur écrivait dans deux `forEach` imbriqués** : les
+  écritures devenues asynchrones, il les aurait lancées sans les attendre — feuilles parent
+  et enfant croisées, et un compte rendu rendu avant que rien ne soit écrit. Ce sont des
+  boucles maintenant.
 - **Une fenêtre ouverte et consignée** : les cinq suppressions gardées par
   `src/suites_care.js` vérifient auprès de « Mesures d'Application » puis effacent. Le bus
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.

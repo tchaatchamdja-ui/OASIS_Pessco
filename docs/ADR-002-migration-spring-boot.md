@@ -619,6 +619,60 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
        | Suite « droits » par la passerelle | **20 / 20** — Java arrêté, 3 tombent aussitôt |
 
-       Restent `planification` (55 appels), `mesures` (93), `ramp` (148) et `execution` (202).
+       **`planification` faite le 2 octobre 2026** — 68 appels, 6 fichiers. C'est le module
+       où la **composition** compte, et il a fallu une pièce de plus pour la tenir.
+
+       > **Jusqu'à une dizaine d'écritures pour un seul geste.** Valider un plan posait son
+       > statut, reportait les avis saisis activité par activité, retirait les versions
+       > remplacées — deux écritures par ancêtre — et inscrivait la décision au circuit. Entre
+       > elles, un plan était validé et son circuit ne le disait pas : **un acte d'autorité
+       > sans sa justification**. Un échec au milieu l'y laissait. Même chose pour
+       > `apply-sync`, qui ouvrait un amendement, y recopiait chaque activité, puis appliquait
+       > les écarts : une écriture par activité, plus deux.
+       >
+       > `D.inscrireWf` pose désormais l'entrée de circuit **dans** l'état qu'on écrit, et
+       > `retirerAncetres` comme `cibleDeSynchro` travaillent sur cet état sans rien écrire
+       > eux-mêmes. Sept gestes du module sont devenus sept transformations.
+       >
+       > **Deux gardes de route étaient des prédicats synchrones.** `lecturePlan` et
+       > `ecriturePlan` lisent le plan pour décider. Devenues asynchrones, elles passent par
+       > `asynchrone` comme un gestionnaire — Express 4 ne traite pas mieux un middleware
+       > `async` qu'un gestionnaire : sans l'enveloppe, un échec laisse la requête ouverte.
+       >
+       > **Le vocabulaire des magasins de module est extrait** dans `src/magasin_module.js`.
+       > Écrit cinq fois, il aurait fallu tenir d'accord cinq copies de la même subtilité ;
+       > trois défauts du premier module l'ont montré.
+       >
+       > **Un garde-fou qui dénonçait 150 lignes correctes, puis 8.** Le critère « le magasin
+       > requiert la façade » désignait RAMP, dont le magasin la requiert depuis le jalon n° 9
+       > pour la seule nomenclature des aéronefs. Corrigé, il dénonçait les lectures lancées
+       > ensemble — `await Promise.all([db.list('plans'), db.list('activites')])` n'en porte
+       > qu'un seul `await`, et tient parfois sur trois lignes. Il balaie maintenant **par
+       > instruction**, non par ligne.
+       >
+       > **Six routes converties qu'aucun contrôle n'exerçait** : `apply-sync`, `transmettre`,
+       > `approuver-dg`, les archives du plan, et les deux exceptions d'archive posées
+       > activité par activité. C'est la deuxième fois que la conversion révèle ce trou —
+       > les six routes de classeur de `profil_risque` étaient dans le même cas. Dix contrôles
+       > les couvrent, tous contre-éprouvés.
+       >
+       > **Et trois contre-épreuves qui n'ont pas mordu.** Un `await` retiré sur la lecture du
+       > plan dans `apply-sync` ne change rien — la transformation relit l'état elle-même. Une
+       > écriture non attendue passe aussi : la réponse part avant l'écriture, mais la requête
+       > suivante arrive après. C'est le **garde-fou de forme** qui attrape celle-là, et il
+       > fallait le vérifier plutôt que le supposer. La troisième a trouvé une assertion trop
+       > faible de ma part : « la cible porte des activités » passait sans la copie, puisque la
+       > synchronisation en créait de neuves. Elle porte maintenant sur `parent_activite_id`,
+       > qui n'appartient qu'à une copie.
+
+       | | |
+       |---|---|
+       | Contrôles, quatre régimes | **825** sur fichiers et bus différé · **835** en base |
+       | Dont nouveaux | **12** |
+       | Node contre Java, **dix** collections en base | **38 / 38** à l'octet |
+       | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+       | Suites « droits » et « PLAN » par la passerelle | **20 / 20** et **62 / 62** |
+
+       Restent `mesures` (93 appels), `ramp` (148) et `execution` (202).
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

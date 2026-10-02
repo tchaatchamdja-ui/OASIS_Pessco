@@ -18,13 +18,16 @@ const M = '/api/m/planification';
 
 function register(app, deps) {
   // Contrat exposé aux autres modules (Exécution de la Surveillance…)
-  services.publish('PLAN.volumeParInstance', () => {
+  // Asynchrone depuis que `planification` vit en base (ADR-002, jalon n° 13) : le
+  // bus rend une promesse par contrat, et `src/instances.js` l'attend déjà.
+  services.publish('PLAN.volumeParInstance', async () => {
     const parInstance = {};
-    ['plans', 'activites'].forEach((coll) => {
-      db.list(coll).forEach((r) => {
-        const i = r.instance || '';
-        parInstance[i] = (parInstance[i] || 0) + 1;
-      });
+    // Les deux collections ensemble : le socle interroge ce contrat avant de
+    // supprimer une instance, et six modules lui répondent.
+    const rangs = await Promise.all(['plans', 'activites'].map((coll) => db.list(coll)));
+    rangs.flat().forEach((r) => {
+      const i = r.instance || '';
+      parInstance[i] = (parInstance[i] || 0) + 1;
     });
     return parInstance;
   }, { description: 'Nombre d’enregistrements du module, par instance' });

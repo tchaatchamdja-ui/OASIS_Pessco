@@ -42,10 +42,13 @@ function plansEnAmendement(plans) {
   return (plans || []).filter((p) => STATUTS_EN_VIGUEUR.includes(p.statut) && parents.has(p.id));
 }
 
-function plansValides(filtre) {
+// Asynchrone depuis que `planification` vit en base (ADR-002, jalon n° 13). Le
+// bus l'autorise : `call` et `callOr` rendent une promesse par contrat depuis
+// l'étape A, et « Exécution de la Surveillance » attend déjà ce contrat-ci.
+async function plansValides(filtre) {
   const f = filtre || {};
-  const acts = db.list('activites');
-  return db.list('plans')
+  const [acts, plans] = await Promise.all([db.list('activites'), db.list('plans')]);
+  return plans
     .filter((p) => STATUTS_EN_VIGUEUR.includes(p.statut))
     .filter((p) => (!f.annee || String(p.annee) === String(f.annee))
       && (!f.secteur_id || p.secteur_id === f.secteur_id)
@@ -97,7 +100,7 @@ function plansValides(filtre) {
     .filter((p) => !f.prestataire_id || p.activites.length > 0);
 }
 
-const planDe = (id) => db.list('plans').find((x) => x.id === id) || null;
+const planDe = (id) => db.get('plans', id);
 
 // ── Activités verrouillées par l'exécution ──
 // Une activité dont le circuit a commencé dans « Exécution de la Surveillance »
@@ -115,7 +118,7 @@ const racine = (act) => (act ? (act.parent_activite_id || act.id) : '');
 const racinesDeclenchees = async () => {
   const declenchees = await activitesDeclenchees();
   if (!declenchees.size) return new Set();
-  const toutes = db.list('activites');
+  const toutes = await db.list('activites');
   const racines = new Set();
   declenchees.forEach((id) => {
     const a = toutes.find((x) => x.id === id);
@@ -136,10 +139,26 @@ const refusVerrou = (res) => res.status(409).json({
   message: 'Activité déjà déclenchée dans l’exécution de la surveillance : elle n’est pas amendable.',
 });
 
-// Journal du circuit d'un plan.
-const wf = (planId, action, user, extra) => db.insert('workflow', {
-  plan_id: planId, action, user, date: new Date().toISOString(), ...(extra || {}),
-});
+// ── Journal du circuit d'un plan ──
+//
+// `inscrireWf` pose l'entrée **dans l'état qu'on est en train d'écrire**, et
+// n'écrit rien elle-même. C'est tout le point : une route consigne la décision
+// dans la même transformation que la décision elle-même.
+//
+// Avant, l'inscription était une écriture séparée, après celle du plan. Entre les
+// deux, le plan était validé et son circuit ne le disait pas — un acte d'autorité
+// sans sa justification ; et un échec au milieu l'y laissait.
+//
+// L'identifiant est tiré ici, à l'intérieur : un essai rejoué repart d'un état
+// neuf, l'entrée du précédent est abandonnée avec lui, et personne ne tient cet
+// identifiant au-delà de la transformation.
+const inscrireWf = (d, planId, action, user, extra) => {
+  d.workflow = d.workflow || [];
+  d.workflow.push({
+    plan_id: planId, action, user, date: new Date().toISOString(),
+    createdAt: new Date().toISOString(), id: db.uid(), ...(extra || {}),
+  });
+};
 
 // Nom complet de l'auteur, résolu depuis l'annuaire des utilisateurs.
 const nomComplet = (auth) => (identifiant) => {
@@ -153,8 +172,8 @@ const nomComplet = (auth) => (identifiant) => {
 
 // Lignée du plan : ses ascendants, lui-même, puis ses descendants. Un
 // amendement abandonné dans une branche voisine n'est pas repris.
-const familleDuPlan = (planId) => {
-  const tous = db.list('plans');
+const familleDuPlan = async (planId) => {
+  const tous = await db.list('plans');
   const parId = {};
   tous.forEach((p) => { parId[p.id] = p; });
   const courant = parId[planId];
@@ -201,7 +220,7 @@ const profilsDuPlan = async (plan, profils) => {
 
 // Écarts entre le plan et les profils de risque en vigueur.
 const ecartsRisques = async (plan, profils) => {
-  const acts = db.list('activites').filter((a) => a.plan_id === plan.id);
+  const acts = (await db.list('activites')).filter((a) => a.plan_id === plan.id);
   return (await profilsDuPlan(plan, profils)).map((p) => {
     const mesActs = acts.filter((a) => a.prestataire_id === p.prestataire_id);
     const courant = { risk_label: p.niveau || '', csrbo: p.csrbo || null };
@@ -277,6 +296,6 @@ module.exports = {
   STATUTS_AMENDEMENT, STATUT_REMPLACE, plansEnAmendement,
   planDe,
   racine, racinesDeclenchees, estVerrouillee, refusVerrou,
-  wf, nomComplet, familleDuPlan, ecartsRisques, retirerPlan,
+  inscrireWf, nomComplet, familleDuPlan, ecartsRisques, retirerPlan,
   SCHEMA_PLAN, SCHEMA_ACTIVITE
 };

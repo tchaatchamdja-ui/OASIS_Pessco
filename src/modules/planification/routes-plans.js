@@ -45,9 +45,9 @@ module.exports = async function register(app, deps, M) {
   // demande ce que son compte a le droit de voir : l'instance regardée borne
   // donc la réponse, ici comme sur les autres listes.
   app.get('/api/shared/surveillance-plans', requireAuth, lecture,
-    (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
+    asynchrone(async (req, res) => res.json(parInstance(req, await D.plansValides(req.query)))));
   app.get(`${M}/plans-valides`, requireAuth, lecture,
-    (req, res) => res.json(parInstance(req, D.plansValides(req.query))));
+    asynchrone(async (req, res) => res.json(parInstance(req, await D.plansValides(req.query)))));
   app.get(`${M}/risk-profiles`, requireAuth, lecture,
     asynchrone(async (req, res) => res.json(parInstance(req, await D.riskProfiles()))));
 
@@ -95,9 +95,12 @@ module.exports = async function register(app, deps, M) {
   });
 
   // ── Statistiques ──
-  app.get(`${M}/stats`, requireAuth, lecture, (req, res) => {
-    const plans = parInstance(req, db.list('plans'));
-    const acts = parInstance(req, db.list('activites'));
+  app.get(`${M}/stats`, requireAuth, lecture, asynchrone(async (req, res) => {
+    // Les deux collections ensemble : enchaîner deux allers-retours doublerait
+    // l'attente du tableau de bord, qui n'affiche que des compteurs.
+    const [tousPlans, toutesActs] = await Promise.all([db.list('plans'), db.list('activites')]);
+    const plans = parInstance(req, tousPlans);
+    const acts = parInstance(req, toutesActs);
     // Les plans que la surveillance suit : validés, approuvés ou transmis. Une
     // version archivée n'en fait pas partie, elle a été remplacée.
     const enVigueur = new Set(plans.filter((p) => D.STATUTS_EN_VIGUEUR.includes(p.statut)).map((p) => p.id));
@@ -131,28 +134,28 @@ module.exports = async function register(app, deps, M) {
         .filter((a) => enVigueur.has(a.plan_id) && a.prestataire_id)
         .map((a) => a.prestataire_id)).size,
     });
-  });
+  }));
 
   // ── Plans ──
   // Les plans sont renvoyés avec leur nombre d'activités, et le détail avec
   // ses activités : le client les lit directement sur l'objet plan.
-  app.get(`${M}/plans`, requireAuth, lecture, (req, res) => {
-    const acts = db.list('activites');
+  app.get(`${M}/plans`, requireAuth, lecture, asynchrone(async (req, res) => {
+    const [tousPlans, acts] = await Promise.all([db.list('plans'), db.list('activites')]);
     // Un privilège posé à « Aucun » sur un domaine ferme aussi la liste :
     // sinon le plan y figurait, seul son détail était refusé.
-    res.json(parInstance(req, db.list('plans')).filter((p) => D.peutLire(req, p)).map((p) => ({
+    res.json(parInstance(req, tousPlans).filter((p) => D.peutLire(req, p)).map((p) => ({
       ...p, nb_activites: acts.filter((a) => a.plan_id === p.id).length,
     })));
-  });
+  }));
 
   app.get(`${M}/plans/:id`, requireAuth, asynchrone(async (req, res) => {
-    const p = db.list('plans').find((x) => x.id === req.params.id);
+    const p = await db.get('plans', req.params.id);
     if (!p) return res.status(404).json({ error: 'not_found' });
     if (!D.peutLire(req, p)) return D.refus(res);
     // L'écran de détail lit ses activités ici : le verrou d'exécution doit
     // donc y figurer, comme sur /all-activites.
-    const racines = await D.racinesDeclenchees();
-    const activites = db.list('activites').filter((a) => a.plan_id === p.id)
+    const [racines, toutesActs] = await Promise.all([D.racinesDeclenchees(), db.list('activites')]);
+    const activites = toutesActs.filter((a) => a.plan_id === p.id)
       .map((a) => ({ ...a, verrouillee: racines.has(D.racine(a)) ? 1 : 0 }));
     return res.json({ ...p, activites, nb_activites: activites.length });
   }));
@@ -163,7 +166,7 @@ module.exports = async function register(app, deps, M) {
     if (!D.peut(req, 'CONTRIBUTEUR', req.valide)) return D.refus(res);
     // Le plan appartient à l'instance sous laquelle il est ouvert : c'est elle
     // qui le verra, et « Exécution de la Surveillance » avec elle.
-    const rec = db.insert('plans', {
+    const rec = await db.insert('plans', {
       ...req.valide, statut: 'brouillon', instance: instanceCourante(req),
       created_by: req.user.username,
     });
@@ -176,25 +179,37 @@ module.exports = async function register(app, deps, M) {
   // Validateur. Sans le schéma, un Contributeur posait ici `statut: valide` et
   // son plan entrait en vigueur — servi à « Exécution de la Surveillance »
   // sans qu'aucun validateur ne l'ait vu.
-  app.put(`${M}/plans/:id`, requireAuth, valider(D.SCHEMA_PLAN, { effacer: true }), (req, res) => {
-    if (!D.peut(req, 'CONTRIBUTEUR', D.planDe(req.params.id))) return D.refus(res);
-    const rec = db.update('plans', req.params.id, req.valide);
-    return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
-  });
+  app.put(`${M}/plans/:id`, requireAuth, valider(D.SCHEMA_PLAN, { effacer: true }),
+    asynchrone(async (req, res) => {
+      if (!D.peut(req, 'CONTRIBUTEUR', await D.planDe(req.params.id))) return D.refus(res);
+      const rec = await db.update('plans', req.params.id, req.valide);
+      return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
+    }));
 
-  app.delete(`${M}/plans/:id`, requireAuth, (req, res) => {
-    if (!D.peut(req, 'GESTIONNAIRE', D.planDe(req.params.id))) return D.refus(res);
-    const d = db.load();
-    if (!(d.plans || []).some((p) => p.id === req.params.id)) return res.status(404).json({ error: 'not_found' });
-    // Un plan amendé porte la lignée de ses versions suivantes : le supprimer
-    // la couperait, et ses amendements citeraient un parent disparu. Seule la
-    // dernière version d'une lignée — un plan sans descendant — se supprime.
-    const amendements = (d.plans || []).filter((p) => p.parent_plan_id === req.params.id);
-    if (amendements.length) {
-      return res.status(409).json({ error: 'plan_amende', amendements: amendements.map((p) => p.id) });
-    }
-    D.retirerPlan(d, req.params.id);
-    db.save(d);
+  app.delete(`${M}/plans/:id`, requireAuth, asynchrone(async (req, res) => {
+    if (!D.peut(req, 'GESTIONNAIRE', await D.planDe(req.params.id))) return D.refus(res);
+    // Les deux refus se décident **dans** la transformation, sur l'état qu'on va
+    // écrire : un amendement ouvert entre la vérification et le retrait citerait
+    // un parent disparu, et c'est précisément ce que le second refus interdit.
+    let refus = null;
+    await db.transformer((d) => {
+      refus = null;
+      const plans = d.plans || [];
+      if (!plans.some((p) => p.id === req.params.id)) {
+        refus = { code: 404, corps: { error: 'not_found' } }; return db.INCHANGE;
+      }
+      // Un plan amendé porte la lignée de ses versions suivantes : le supprimer
+      // la couperait, et ses amendements citeraient un parent disparu. Seule la
+      // dernière version d'une lignée — un plan sans descendant — se supprime.
+      const amendements = plans.filter((p) => p.parent_plan_id === req.params.id);
+      if (amendements.length) {
+        refus = { code: 409, corps: { error: 'plan_amende', amendements: amendements.map((p) => p.id) } };
+        return db.INCHANGE;
+      }
+      D.retirerPlan(d, req.params.id);
+      return d;
+    });
+    if (refus) return res.status(refus.code).json(refus.corps);
     return res.json({ ok: true });
-  });
+  }));
 };

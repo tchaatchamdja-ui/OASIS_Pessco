@@ -175,6 +175,95 @@ module.exports = async function planificationSmoke(port) {
     verifier('synchronisation des risques : écarts calculés',
       sync.statut === 200 && 'has_changes' in sync.corps && Array.isArray(sync.corps.changes));
 
+    // ── Six routes converties qu'aucun contrôle n'exerçait ──
+    //
+    // `apply-sync`, les trois dernières transitions du circuit, le retrait de la
+    // version remplacée et les archives : toutes récrites en transformation unique
+    // (ADR-002, jalon n° 13), et toutes sans contrôle avant celui-ci. Un `await`
+    // oublié y rendrait une liste vide ou une promesse sérialisée en `{}`, sans la
+    // moindre erreur — c'est précisément là que le défaut se logeait.
+
+    // 1. Appliquer la synchronisation. Le plan étant en vigueur, elle ouvre un
+    //    amendement, y recopie les activités, et y applique les écarts retenus :
+    //    c'était une écriture par activité, plus deux. Les écarts peuvent être
+    //    vides selon le jeu de données ; ce qui s'éprouve ici, c'est que la route
+    //    réponde et que l'amendement soit ouvert avec ses activités.
+    const appliquee = await P(`/api/m/planification/plans/${id}/apply-sync`, {
+      prestataire_ids: (sync.corps.changes || []).map((c) => c.prestataire_id),
+    });
+    verifier('application de la synchronisation',
+      appliquee.statut === 200 && appliquee.corps.ok === true && !!appliquee.corps.target_plan_id,
+      JSON.stringify(appliquee.corps).slice(0, 140));
+    const cibleSync = (await srv.appel(`/api/m/planification/plans/${appliquee.corps.target_plan_id}`)).corps || {};
+    // **La copie se reconnaît à `parent_activite_id`**, et non au nombre
+    // d'activités : si rien n'était recopié, la synchronisation en créerait de
+    // neuves pour les mêmes organismes, et un simple décompte passerait. C'est ce
+    // qu'a montré la contre-épreuve — l'assertion d'abord écrite ne mordait pas.
+    const copiees = (cibleSync.activites || []).filter((a) => a.parent_activite_id === act.corps.id);
+    verifier('la cible de synchronisation porte les activités recopiées du plan',
+      appliquee.corps.amended === true
+      && cibleSync.parent_plan_id === id
+      && copiees.length === 1,
+      `amendé ${appliquee.corps.amended} · ${copiees.length} copie(s) sur ${(cibleSync.activites || []).length} activité(s)`);
+
+    // 2. Valider l'amendement : la version précédente se retire, et son circuit
+    //    doit porter la décision qui l'a retirée. C'étaient deux écritures par
+    //    ancêtre — entre elles, une version retirée sans que rien ne dise par quoi.
+    await P(`/api/m/planification/plans/${cibleSync.id}/soumettre`, { commentaire: '' });
+    await P(`/api/m/planification/plans/${cibleSync.id}/valider`, { commentaire: 'version suivante' });
+    const parentRetire = (await srv.appel(`/api/m/planification/plans/${id}`)).corps || {};
+    verifier('la version précédente se retire au profit de la suivante',
+      parentRetire.statut === 'remplace' && parentRetire.remplace_par === cibleSync.id,
+      `statut ${parentRetire.statut}`);
+    const circuitParent = (await srv.appel(`/api/m/planification/plans/${id}/workflow`)).corps || [];
+    verifier('et son circuit porte la décision qui l’a retirée',
+      Array.isArray(circuitParent) && circuitParent.some((w) => w.action === 'remplacer'),
+      (circuitParent.map ? circuitParent.map((w) => w.action).join(', ') : String(circuitParent)).slice(0, 120));
+
+    // 3. Les deux dernières transitions, jamais exercées.
+    for (const [transition, attendu] of [['approuver-dg', 'approuve_dg'], ['transmettre', 'transmis']]) {
+      const r = await P(`/api/m/planification/plans/${cibleSync.id}/${transition}`, { commentaire: '' });
+      const apres = (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps || {};
+      verifier(`transition « ${transition} »`, r.statut === 200 && apres.statut === attendu,
+        `statut ${r.statut}, plan « ${apres.statut} »`);
+    }
+
+    // 4. L'exception d'archive posée activité par activité, puis levée.
+    const actCible = (cibleSync.activites || [])[0] || {};
+    const sortie = await srv.appel(`/api/m/planification/activites/${actCible.id}/desarchiver`, { method: 'PUT' });
+    verifier('activité sortie des archives à titre d’exception',
+      sortie.statut === 200 && Number(sortie.corps.desarchivee) === 1 && !!sortie.corps.desarchiver_par,
+      `statut ${sortie.statut}`);
+
+    // 5. Archiver le plan, puis le sortir des archives : la sortie remet le plan
+    //    en vigueur **et** lève les exceptions posées activité par activité —
+    //    c'était une écriture par activité, plus deux.
+    await P(`/api/m/planification/plans/${cibleSync.id}/archiver`, { commentaire: 'fin de plan' });
+    verifier('plan archivé',
+      (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps.statut === 'archive');
+    const sortiePlan = await P(`/api/m/planification/plans/${cibleSync.id}/desarchiver`, {});
+    const revenu = (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps || {};
+    verifier('plan sorti des archives, exceptions levées',
+      sortiePlan.statut === 200 && revenu.statut === 'valide'
+      && (revenu.activites || []).every((a) => !Number(a.desarchivee)),
+      `statut ${revenu.statut} · ${(revenu.activites || []).filter((a) => Number(a.desarchivee)).length} exception(s) restante(s)`);
+    // Sortir deux fois n'a pas de sens : le refus se relit dans la transformation.
+    const deuxFois = await P(`/api/m/planification/plans/${cibleSync.id}/desarchiver`, {});
+    verifier('sortie des archives refusée deux fois de suite',
+      deuxFois.statut === 409 && deuxFois.corps.error === 'plan_non_archive', `statut ${deuxFois.statut}`);
+
+    // 6. Et le retour aux archives d'une activité.
+    const retour = await srv.appel(`/api/m/planification/activites/${actCible.id}/rearchiver`, { method: 'PUT' });
+    verifier('activité rendue aux archives',
+      retour.statut === 200 && !Number(retour.corps.desarchivee) && !retour.corps.desarchiver_par,
+      `statut ${retour.statut}`);
+
+    // La version suivante s'en va, et elle seule : le plan d'origine sert encore
+    // aux contrôles de suppression, plus bas. Une lignée se supprime par le bas —
+    // le parent refuse tant qu'un descendant le cite (« plan_amende »).
+    verifier('la version suivante se supprime, libérant sa lignée',
+      (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`, { method: 'DELETE' })).statut === 200);
+
     // ── Contrat « plans en vigueur » consommé par Exécution de la Surveillance ──
     const vigueur = await srv.appel('/api/shared/surveillance-plans');
     verifier('service PLAN.plansValides exposé en HTTP',

@@ -572,10 +572,99 @@ Deux `forEach` y sont devenus `for…of`, comme pour l'import de référentiel.
 | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
 | Suite « droits » par la passerelle | **20 / 20** ; Java arrêté, 3 tombent aussitôt |
 
-Restent `planification` (55 appels), `mesures` (93), `ramp` (148) et `execution`
-(202). Les quatre suivent la même recette ; les trois défauts trouvés ici —
+Les quatre suivants suivent la même recette ; les trois défauts trouvés ici —
 gestes composites, gardes hors de l'écriture, mutation du cache — s'y
 retrouveront, et deux d'entre eux sont désormais gardés par un contrôle de forme.
+
+---
+
+## Douzième : `planification`, et la composition
+
+*2 octobre 2026. 68 appels, 6 fichiers. Le module où un geste du métier en vaut
+le plus d'ici.*
+
+### Jusqu'à une dizaine d'écritures pour un seul geste
+
+| Geste du métier | Écritures avant | Après |
+|---|---|---|
+| Valider un plan amendant une version | statut + 1 par avis d'activité + **2 par ancêtre retiré** + la décision au circuit | **1** |
+| Appliquer la synchronisation des risques | ouverture de l'amendement + **1 par activité recopiée** + 1 par écart appliqué | **1** |
+| Sortir un plan des archives | statut + 1 par exception d'activité + la décision | **1** |
+| Annuler un amendement | retrait + la décision | **1** |
+| Amender | le nouveau plan + 1 par activité copiée + la décision | **1** |
+
+Ce qui compte n'est pas le nombre. C'est qu'entre ces écritures, **un plan était
+validé et son circuit ne le disait pas** — un acte d'autorité sans sa
+justification —, une version était retirée sans que rien ne dise par quoi, et un
+amendement à moitié recopié ne se distinguait pas d'un amendement réel.
+
+`D.inscrireWf` pose désormais l'entrée de circuit *dans* l'état qu'on écrit, et
+n'écrit rien elle-même. `retirerAncetres` et `cibleDeSynchro` font de même : elles
+reçoivent l'état, le modifient, et c'est la transformation qui l'enregistre.
+
+### Deux gardes de route étaient des prédicats synchrones
+
+```js
+const lecturePlan = (req, res, next) => (D.peutLire(req, D.planDe(req.params.id)) ? next() : D.refus(res));
+```
+
+`D.planDe` lit la base. Ces deux gardes sont donc asynchrones, et passent par
+`asynchrone` **comme un gestionnaire** : Express 4 ne traite pas mieux un
+middleware `async` qu'un gestionnaire, et sans l'enveloppe un échec laisse la
+requête ouverte sans erreur ni trace.
+
+### Le vocabulaire des magasins de module, extrait
+
+`src/magasin_module.js` porte `list`, `get`, `insert`, `update`, `remove`,
+`removeWhere` et `transformer` **une fois**, pour les cinq modules. Les trois
+défauts du premier module ont montré que la subtilité est réelle ; écrite cinq
+fois, il aurait fallu tenir cinq copies d'accord.
+
+### Un garde-fou qui dénonçait 150 lignes correctes, puis 8
+
+Le contrôle « aucun magasin de module lu sans `await` » s'est trompé deux fois
+avant de tenir :
+
+1. **Critère « le magasin requiert la façade »** — le magasin de RAMP la requiert
+   depuis le jalon n° 9 pour la seule nomenclature des aéronefs, tandis que ses
+   autres collections restent sur fichiers. 150 lignes parfaitement correctes
+   désignées.
+2. **Balayage ligne à ligne** — `await Promise.all([db.list('plans'),
+   db.list('activites')])` ne porte qu'un `await` pour deux appels, et tient
+   parfois sur trois lignes. Huit appels corrects désignés.
+
+Il balaie maintenant **par instruction**, et reconnaît un magasin converti à deux
+formes dont aucune n'est une déclaration qu'on peut oublier de poser : bâti sur
+`magasinDeModule('<nom>')` avec ce nom dans la liste des migrées, ou un
+`const list = async` écrit à la main.
+
+### Six routes converties qu'aucun contrôle n'exerçait
+
+`apply-sync`, `transmettre`, `approuver-dg`, les archives du plan, et les deux
+exceptions d'archive posées activité par activité. **Deuxième fois que la
+conversion révèle ce trou** — les six routes de classeur de `profil_risque`
+étaient dans le même cas, et c'est devenu la chose à vérifier avant de convertir :
+quelles routes la suite touche-t-elle réellement ?
+
+Dix contrôles les couvrent. Et trois contre-épreuves n'ont pas mordu :
+
+| Contre-épreuve | Ce qu'elle a montré |
+|---|---|
+| `await` retiré sur la lecture du plan dans `apply-sync` | Sans effet : la transformation relit l'état elle-même. |
+| `await` retiré devant `db.transformer` | Sans effet par HTTP — la réponse part avant l'écriture, mais la requête suivante arrive après. C'est le **garde-fou de forme** qui l'attrape, vérifié plutôt que supposé. |
+| Copie des activités supprimée | **Mon assertion était trop faible** : « la cible porte des activités » passait, la synchronisation en créant de neuves. Elle porte maintenant sur `parent_activite_id`, qui n'appartient qu'à une copie. |
+
+### Le coût, mesuré
+
+| | |
+|---|---|
+| Contrôles, quatre régimes | **825** sur fichiers et bus différé · **835** en base |
+| Dont nouveaux | **12** |
+| Node contre Java, **dix** collections en base | **38 / 38** à l'octet |
+| Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+| Suites « droits » et « PLAN » par la passerelle | **20 / 20** et **62 / 62** |
+
+Restent `mesures` (93 appels), `ramp` (148) et `execution` (202).
 
 ---
 

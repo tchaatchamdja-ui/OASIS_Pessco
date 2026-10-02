@@ -198,6 +198,25 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   modèle, export des notes, import. Un `await` oublié y rendrait un classeur vide et bien
   formé : trois feuilles, leurs entêtes, aucune ligne. Elles sont couvertes, et les deux
   `forEach` de leurs boucles sont devenus `for…of`.
+- **`planification` en base**, deuxième magasin de module — 68 appels, 6 fichiers. C'est là
+  que la **composition** compte : valider un plan posait son statut, reportait les avis saisis
+  activité par activité, retirait les versions remplacées (deux écritures par ancêtre) et
+  inscrivait la décision au circuit. Entre elles, **un plan était validé et son circuit ne le
+  disait pas** — un acte d'autorité sans sa justification. Sept gestes du module sont devenus
+  sept transformations.
+- `D.inscrireWf` pose l'entrée de circuit **dans** l'état qu'on écrit ; `retirerAncetres` et
+  `cibleDeSynchro` travaillent sur cet état sans rien écrire elles-mêmes.
+- **Deux gardes de route étaient des prédicats synchrones** : `lecturePlan` et `ecriturePlan`
+  lisent le plan pour décider. Devenues asynchrones, elles passent par `asynchrone` comme un
+  gestionnaire — Express 4 ne traite pas mieux un middleware `async`, et sans l'enveloppe un
+  échec laisse la requête ouverte.
+- **`src/magasin_module.js`** porte le vocabulaire des cinq magasins de module une seule fois :
+  `list`, `get`, `insert`, `update`, `remove`, `removeWhere`, `transformer`. Écrit cinq fois,
+  il aurait fallu tenir d'accord cinq copies de la même subtilité.
+- **Six routes de PLAN n'étaient exercées par aucun contrôle** — application de la
+  synchronisation des risques, `transmettre`, `approuver-dg`, les archives du plan et les deux
+  exceptions posées activité par activité. Deuxième fois que la conversion révèle ce trou ;
+  c'est devenu la chose à vérifier avant de convertir. Dix contrôles, tous contre-éprouvés.
 
 ### Tests
 - Jeu de données de référence versionné dans `tests/fixtures` : `npm run smoke`
@@ -222,6 +241,17 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   contre-épreuve — l'ancienne logique, la garde hors de l'écriture — la passait aussi. Dix
   requêtes HTTP contre un gestionnaire rapide se sérialisent. Deuxième fois que ce piège se
   présente ; la première était le compteur du second facteur.
+- Le garde-fou des magasins de module s'est trompé **deux fois avant de tenir** : le critère
+  « requiert la façade » désignait 150 lignes correctes de RAMP, dont le magasin la requiert
+  pour la seule nomenclature des aéronefs ; puis le balayage ligne à ligne en désignait 8, une
+  lecture lancée en parallèle ne portant qu'un `await` pour deux appels. Il balaie désormais
+  **par instruction**.
+- **Trois contre-épreuves n'ont pas mordu, et chacune a appris quelque chose** : un `await`
+  retiré sur une lecture que la transformation relit elle-même ne change rien ; une écriture non
+  attendue passe par HTTP — la réponse part avant l'écriture, mais la requête suivante arrive
+  après —, et c'est le garde-fou de forme qui l'attrape ; et la troisième a trouvé **une
+  assertion trop faible de ma part**, qui ne distinguait pas une activité recopiée d'une
+  activité créée.
 
 ### Accessibilité
 - Contour de focus visible au clavier sur l'ensemble des écrans. *(A11Y-02)*

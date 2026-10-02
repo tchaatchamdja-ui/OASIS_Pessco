@@ -16,14 +16,14 @@ module.exports = function register(app, deps, M) {
     instances.courante(req.user, loadConfig), loadConfig);
 
   app.get(`${M}/plans/:id/activites`, requireAuth, asynchrone(async (req, res) => {
-    const plan = D.planDe(req.params.id);
+    const plan = await D.planDe(req.params.id);
     if (!D.peutLire(req, plan)) return D.refus(res);
     // Les racines déclenchées une seule fois, avant la liste : `map` avec un
     // appel asynchrone rendrait un tableau de promesses, que `res.json`
     // sérialiserait en objets vides — toutes les activités paraîtraient
     // déverrouillées, sans la moindre erreur.
-    const racines = await D.racinesDeclenchees();
-    return res.json(db.list('activites').filter((a) => a.plan_id === req.params.id)
+    const [racines, toutes] = await Promise.all([D.racinesDeclenchees(), db.list('activites')]);
+    return res.json(toutes.filter((a) => a.plan_id === req.params.id)
       .map((a) => ({ ...a, verrouillee: racines.has(D.racine(a)) ? 1 : 0 })));
   }));
 
@@ -46,23 +46,26 @@ module.exports = function register(app, deps, M) {
     return false;
   };
 
-  app.post(`${M}/plans/:id/activites`, requireAuth, valider(D.SCHEMA_ACTIVITE), (req, res) => {
-    const plan = D.planDe(req.params.id);
-    if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
-    if (refusDates(res, plan, req.valide)) return undefined;
-    // L'activité appartient à l'instance de son plan.
-    return res.json(db.insert('activites', {
-      ...req.valide, plan_id: req.params.id, instance: instances.de(plan, loadConfig),
+  app.post(`${M}/plans/:id/activites`, requireAuth, valider(D.SCHEMA_ACTIVITE),
+    asynchrone(async (req, res) => {
+      const plan = await D.planDe(req.params.id);
+      if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
+      if (refusDates(res, plan, req.valide)) return undefined;
+      // L'activité appartient à l'instance de son plan.
+      return res.json(await db.insert('activites', {
+        ...req.valide, plan_id: req.params.id, instance: instances.de(plan, loadConfig),
+      }));
     }));
-  });
 
   // Statut et version du plan portés par chaque activité (vue Calendrier)
   app.get(`${M}/all-activites`, requireAuth, asynchrone(async (req, res) => {
     if (!D.peutLire(req)) return D.refus(res);
+    const [tousPlans, toutesActs, racines] = await Promise.all([
+      db.list('plans'), db.list('activites'), D.racinesDeclenchees(),
+    ]);
     const plans = {};
-    db.list('plans').forEach((p) => { plans[p.id] = p; });
-    const racines = await D.racinesDeclenchees();
-    return res.json(parInstance(req, db.list('activites')).filter((a) => D.peutLire(req, plans[a.plan_id])).map((a) => ({
+    tousPlans.forEach((p) => { plans[p.id] = p; });
+    return res.json(parInstance(req, toutesActs).filter((a) => D.peutLire(req, plans[a.plan_id])).map((a) => ({
       ...a,
       plan_statut: (plans[a.plan_id] || {}).statut || '',
       plan_titre: (plans[a.plan_id] || {}).titre || '',
@@ -72,41 +75,44 @@ module.exports = function register(app, deps, M) {
   }));
 
   app.put(`${M}/activites/:id`, requireAuth, valider(D.SCHEMA_ACTIVITE, { effacer: true }), asynchrone(async (req, res) => {
-    const act = db.list('activites').find((a) => a.id === req.params.id);
-    if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
+    const act = await db.get('activites', req.params.id);
+    // Le plan une seule fois : `D.planDe` touche la base, et il était appelé
+    // deux fois sur la même activité — deux allers-retours pour la même ligne.
+    const plan = act ? await D.planDe(act.plan_id) : null;
+    if (!D.peut(req, 'CONTRIBUTEUR', plan)) return D.refus(res);
     if (act && await D.estVerrouillee(act)) return D.refusVerrou(res);
-    if (refusDates(res, act && D.planDe(act.plan_id), { ...act, ...req.valide })) return undefined;
-    const rec = db.update('activites', req.params.id, req.valide);
+    if (refusDates(res, plan, { ...act, ...req.valide })) return undefined;
+    const rec = await db.update('activites', req.params.id, req.valide);
     return rec ? res.json(rec) : res.status(404).json({ error: 'not_found' });
   }));
 
   // Sortie des archives d'une activité prise isolément. Son plan reste
   // archivé : l'exception est portée par l'activité, que « Exécution de la
   // Surveillance » remet alors parmi les activités en cours.
-  app.put(`${M}/activites/:id/desarchiver`, requireAuth, (req, res) => {
-    const act = db.list('activites').find((a) => a.id === req.params.id);
+  app.put(`${M}/activites/:id/desarchiver`, requireAuth, asynchrone(async (req, res) => {
+    const act = await db.get('activites', req.params.id);
     if (!act) return res.status(404).json({ error: 'not_found' });
-    if (!D.peut(req, 'VALIDATEUR', D.planDe(act.plan_id))) return D.refus(res);
-    return res.json(db.update('activites', act.id, {
+    if (!D.peut(req, 'VALIDATEUR', await D.planDe(act.plan_id))) return D.refus(res);
+    return res.json(await db.update('activites', act.id, {
       desarchivee: 1,
       desarchiver_le: new Date().toISOString(),
       desarchiver_par: req.user.username,
     }));
-  });
+  }));
 
   // Retour aux archives : l'exception est levée, l'activité suit de nouveau
   // le sort de son plan.
-  app.put(`${M}/activites/:id/rearchiver`, requireAuth, (req, res) => {
-    const act = db.list('activites').find((a) => a.id === req.params.id);
+  app.put(`${M}/activites/:id/rearchiver`, requireAuth, asynchrone(async (req, res) => {
+    const act = await db.get('activites', req.params.id);
     if (!act) return res.status(404).json({ error: 'not_found' });
-    if (!D.peut(req, 'VALIDATEUR', D.planDe(act.plan_id))) return D.refus(res);
-    return res.json(db.update('activites', act.id, { desarchivee: 0, desarchiver_le: '', desarchiver_par: '' }));
-  });
+    if (!D.peut(req, 'VALIDATEUR', await D.planDe(act.plan_id))) return D.refus(res);
+    return res.json(await db.update('activites', act.id, { desarchivee: 0, desarchiver_le: '', desarchiver_par: '' }));
+  }));
 
   app.delete(`${M}/activites/:id`, requireAuth, asynchrone(async (req, res) => {
-    const act = db.list('activites').find((a) => a.id === req.params.id);
-    if (!D.peut(req, 'CONTRIBUTEUR', act && D.planDe(act.plan_id))) return D.refus(res);
+    const act = await db.get('activites', req.params.id);
+    if (!D.peut(req, 'CONTRIBUTEUR', act ? await D.planDe(act.plan_id) : null)) return D.refus(res);
     if (act && await D.estVerrouillee(act)) return D.refusVerrou(res);
-    return res.json({ ok: db.remove('activites', req.params.id) });
+    return res.json({ ok: await db.remove('activites', req.params.id) });
   }));
 };

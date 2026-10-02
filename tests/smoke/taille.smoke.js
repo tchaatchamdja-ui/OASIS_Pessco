@@ -439,37 +439,59 @@ module.exports = async function tailleSmoke() {
   // promesse n'a pas de `.find`, donc une 500 sans rapport apparent avec un
   // `await`.
   //
-  // **Le critère est que `list` soit asynchrone**, et non que le magasin
-  // requière la façade : celui de RAMP la requiert depuis le jalon n° 9 pour la
-  // seule nomenclature des aéronefs, tandis que ses autres collections restent
-  // sur fichiers et se lisent encore de façon synchrone. Clore sur le `require`
-  // désignait donc 150 lignes parfaitement correctes.
+  // **Le critère porte sur ce qui rend les lectures asynchrones**, et non sur le
+  // `require` de la façade : le magasin de RAMP la requiert depuis le jalon n° 9
+  // pour la seule nomenclature des aéronefs, tandis que ses autres collections
+  // restent sur fichiers et se lisent encore de façon synchrone. Clore sur le
+  // `require` désignait 150 lignes parfaitement correctes.
   //
-  // Ce critère-ci n'est pas une déclaration qu'on peut oublier de poser : c'est
-  // la propriété même dont le contrôle dépend. Un magasin converti est reconnu
-  // du seul fait de sa conversion. La source se lit, et non le `require` — pour
-  // la même raison que plus haut.
+  // Deux formes sont reconnues, et aucune n'est une déclaration qu'on peut oublier
+  // de poser : un magasin bâti sur `magasinDeModule('<nom>')`, si ce nom figure
+  // dans la liste des migrées, ou un `const list = async` écrit à la main. Un
+  // magasin converti est donc reconnu du seul fait de sa conversion. La source se
+  // lit, et non le `require` — pour la même raison que plus haut.
   const ASYNCHRONES = ['load', 'save', 'transformer', 'list', 'get', 'getColl',
     'seed', 'insert', 'update', 'remove', 'removeWhere'];
+  const converti = (source) => {
+    if (/\bconst list = async\b/.test(source)) return true;
+    const m = /magasinDeModule\('([^']+)'\)/.exec(source);
+    return !!m && MIGREES.includes(m[1]);
+  };
   const magasinsDeModule = fs.readdirSync(path.join(RACINE, 'src', 'modules'))
     .map((m) => ({ module: m, chemin: path.join(RACINE, 'src', 'modules', m, 'store.js') }))
     .filter(({ chemin }) => fs.existsSync(chemin))
-    .filter(({ chemin }) => /\bconst list = async\b/.test(fs.readFileSync(chemin, 'utf8')));
-  verifier('au moins un magasin de module est reconnu converti',
-    magasinsDeModule.length > 0, magasinsDeModule.map((m) => m.module).join(' · '));
+    .filter(({ chemin }) => converti(fs.readFileSync(chemin, 'utf8')));
+  verifier('les magasins de module convertis sont reconnus',
+    magasinsDeModule.length >= 2, magasinsDeModule.map((m) => m.module).join(' · '));
 
+  // Le balayage se fait **par instruction**, non par ligne. Deux lectures lancées
+  // ensemble — `await Promise.all([db.list('plans'), db.list('activites')])` —
+  // n'en portent qu'un seul `await`, et tiennent parfois sur trois lignes : un
+  // contrôle ligne à ligne les dénonçait toutes, et il a fallu le constater sur
+  // huit appels parfaitement corrects avant de le corriger.
+  //
+  // Le revers est à dire : dans une instruction qui porte déjà un `await`, un
+  // second appel qui en manquerait passerait. C'est le même compromis que pour le
+  // bus, et il tient parce qu'ici une instruction est une ligne ou deux.
   const MAGASIN_NU = [];
+  const APPEL = new RegExp(`(.{0,10})\\bdb\\.(${ASYNCHRONES.join('|')})\\(`);
   magasinsDeModule.forEach(({ module }) => {
     sources()
       .filter((f) => relatif(f).startsWith(`src/modules/${module}/`) && f.endsWith('.js'))
       .filter((f) => !relatif(f).endsWith('/store.js'))
       .forEach((f) => {
-        fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
-          const m = new RegExp(`(.{0,8})\\bdb\\.(${ASYNCHRONES.join('|')})\\(`).exec(ligne);
+        const texte = fs.readFileSync(f, 'utf8');
+        let curseur = 0;
+        texte.split(';').forEach((instruction) => {
+          const m = APPEL.exec(instruction);
+          const depart = curseur;
+          curseur += instruction.length + 1;
           if (!m) return;
-          // Attendu sur place, ou transmis à un appelant qui l'attendra.
-          if (/await\s*$/.test(m[1]) || /(return|=>)\s*$/.test(m[1])) return;
-          MAGASIN_NU.push(`${relatif(f)}:${n + 1}`);
+          // Attendu dans l'instruction, ou transmis à un appelant qui l'attendra.
+          if (/\bawait\b/.test(instruction)) return;
+          if (/(return|=>)\s*$/.test(m[1])) return;
+          const ligne = texte.slice(0, depart + m.index).split('\n').length;
+          MAGASIN_NU.push(`${relatif(f)}:${ligne}`);
         });
       });
   });

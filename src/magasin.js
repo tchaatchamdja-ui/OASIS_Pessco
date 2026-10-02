@@ -89,6 +89,17 @@ const { INCHANGE } = storePg;
 // sont pas lues par des prédicats mais dans le corps des gestionnaires, déjà
 // asynchrones depuis la bascule des journaux. L'instantané ne conviendrait pas :
 // une évaluation est un acte d'autorité en écriture permanente.
+//
+// `planification` — deuxième magasin de module, et celui où la **composition**
+// compte : valider un plan faisait jusqu'à une dizaine d'écritures — le statut, les
+// avis saisis activité par activité, les versions remplacées avec leur inscription
+// au circuit, et la décision elle-même. Un plan validé dont le circuit ne porte pas
+// la validation est un acte d'autorité sans sa justification.
+//
+// Le vocabulaire commun aux cinq magasins de module — `list`, `get`, `insert`,
+// `update`, `remove`, `transformer` — vit dans `src/magasin_module.js` depuis ce
+// deuxième : écrit cinq fois, il aurait fallu tenir d'accord cinq copies de la
+// même subtilité.
 const MIGREES = new Set([
   'ramp_aeronefs',
   'emails',
@@ -99,6 +110,7 @@ const MIGREES = new Set([
   'referentiels',
   'module_rights',
   'profil_risque',
+  'planification',
 ]);
 
 let socle = null;

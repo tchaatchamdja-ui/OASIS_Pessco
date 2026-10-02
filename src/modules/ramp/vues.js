@@ -28,12 +28,16 @@ function clesExploitants(prestataireIds) {
 
 // Noms d'exploitants du module qui répondent au périmètre — ce que le front
 // affiche en barre supérieure et ce que les écrans annoncent.
-function exploitantsDuPerimetre(prestataireIds) {
+// Asynchrone depuis que `ramp` vit en base (ADR-002, jalon n° 13). Les deux
+// collections sont lues ensemble : ce périmètre se calcule à chaque requête d'un
+// compte prestataire, et deux allers-retours enchaînés doubleraient son coût.
+async function exploitantsDuPerimetre(prestataireIds) {
   const cles = clesExploitants(prestataireIds);
   if (!cles.size) return [];
   const noms = new Set();
-  db.list('inspections').forEach((i) => { if (cles.has(norm(i.exploitant))) noms.add(i.exploitant); });
-  db.list('parametres')
+  const [inspections, parametres] = await Promise.all([db.list('inspections'), db.list('parametres')]);
+  inspections.forEach((i) => { if (cles.has(norm(i.exploitant))) noms.add(i.exploitant); });
+  parametres
     .filter((p) => p.type === 'exploitants' && cles.has(norm(p.label)))
     .forEach((p) => noms.add(p.label));
   return [...noms];
@@ -45,9 +49,11 @@ const socle = vuesSocle.creer({
   // La bascule appartient à l'Autorité : super-administrateur et
   // administrateur AAC.
   rolesBascule: vuesSocle.ROLES_AAC,
-  perimetre: (liste) => ({
+  // Le socle attend ce périmètre : il est asynchrone depuis que les inspections
+  // vivent en base, et `enPrestataire` l'attend.
+  perimetre: async (liste) => ({
     cles: clesExploitants(liste),
-    exploitants: exploitantsDuPerimetre(liste),
+    exploitants: await exploitantsDuPerimetre(liste),
   }),
 });
 

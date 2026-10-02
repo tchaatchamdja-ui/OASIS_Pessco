@@ -13,6 +13,7 @@
 // cloisonnement des données s'applique réellement — on voit exactement ce que
 // verrait ce prestataire.
 const referentiels = require('./referentiels');
+const { asynchrone } = require('./route');
 const moduleRights = require('./module_rights');
 
 const VUES = ['aac', 'prestataire'];
@@ -47,21 +48,37 @@ function creer(o) {
   // regardée, commune au portail et aux six modules (`src/instances.js`). Deux
   // mécanismes concurrents laissaient un module sur un État et son voisin sur
   // un autre.
-  function vueDe(username) {
-    const rec = db.get('vues', username);
+  // ── Asynchrones depuis que le magasin d'un module peut vivre en base ──
+  //
+  // Ce socle est partagé par RAMP et « Exécution de la Surveillance ». Le premier
+  // est passé en base (ADR-002, jalon n° 13), le second non : les deux régimes
+  // cohabitent donc ici, et c'est précisément ce que la façade permet — un appel
+  // attendu fonctionne des deux côtés, et attendre une valeur qui n'est pas une
+  // promesse ne coûte rien.
+  async function vueDe(username) {
+    const rec = await db.get('vues', username);
     if (!rec || !VUES.includes(rec.vue)) return { vue: 'aac', prestataire_id: '' };
     return { vue: rec.vue, prestataire_id: rec.prestataire_id || '' };
   }
 
-  function definirVue(username, vue, prestataireId) {
+  async function definirVue(username, vue, prestataireId) {
     const rec = {
       id: username,
       vue: VUES.includes(vue) ? vue : 'aac',
       prestataire_id: prestataireId || '',
       date_maj: db.now(),
     };
-    if (db.get('vues', username)) db.update('vues', username, rec);
-    else db.insert('vues', rec);
+    // Le choix de vue se pose en une transformation : « chercher puis créer »
+    // laissait deux bascules simultanées du même compte écrire deux
+    // enregistrements, et `vueDe` n'en lit qu'un.
+    await db.transformer((d) => {
+      const liste = d.vues || [];
+      const i = liste.findIndex((x) => x.id === username);
+      if (i >= 0) liste[i] = { ...liste[i], ...rec };
+      else liste.push(rec);
+      d.vues = liste;
+      return d;
+    });
     return vueDe(username);
   }
 
@@ -78,36 +95,40 @@ function creer(o) {
   // connecté — c'est lui, et non la vue simulée, qui décide du droit de
   // basculer. `prestataires` porte le périmètre complet ; `prestataire_id` en
   // garde le premier, valeur par défaut des formulaires.
-  const enPrestataire = (req, liste, origine) => {
+  const enPrestataire = async (req, liste, origine) => {
     req.user = { ...req.user, role: 'PRESTATAIRE', prestataire_id: liste[0] || '', prestataires: liste };
-    req.vuePrestataire = { prestataires: liste, origine, ...perimetreDe(liste) };
+    req.vuePrestataire = { prestataires: liste, origine, ...await perimetreDe(liste) };
   };
 
-  function middleware(req, res, next) {
+  // **Enveloppé ici, et non à chaque montage.** Express 4 ne regarde pas la
+  // promesse d'un middleware `async` : un rejet laisserait la requête ouverte
+  // sans erreur ni trace. Deux modules le montent ; l'enveloppe est donc posée
+  // là où il est défini, une fois.
+  const middleware = asynchrone(async (req, res, next) => {
     req.userReel = req.user;
 
     // Privilège « Prestataire » attribué dans Gestion des Droits : le compte
     // travaille en permanence dans le périmètre des prestataires retenus en
     // portée. Aucune portée renseignée = aucun accès aux données du module.
     if (moduleRights.getRights(MODULE, req.user.username).privilege === 'PRESTATAIRE') {
-      enPrestataire(req, moduleRights.prestatairesDuScope(MODULE, req.user.username), 'privilege');
+      await enPrestataire(req, moduleRights.prestatairesDuScope(MODULE, req.user.username), 'privilege');
       return next();
     }
 
     // Compte prestataire du portail : périmètre limité à son rattachement.
     if (rolesPrestataire.includes(req.user.role)) {
-      enPrestataire(req, req.user.prestataire_id ? [req.user.prestataire_id] : [], 'compte');
+      await enPrestataire(req, req.user.prestataire_id ? [req.user.prestataire_id] : [], 'compte');
       return next();
     }
 
     if (!peutBasculer(req.user)) return next();
-    const active = vueDe(req.user.username);
+    const active = await vueDe(req.user.username);
     if (active.vue !== 'prestataire') return next();
     const prestataireId = active.prestataire_id || prestataireParDefaut();
     if (!prestataireId) return next();
-    enPrestataire(req, [prestataireId], 'bascule');
+    await enPrestataire(req, [prestataireId], 'bascule');
     return next();
-  }
+  });
 
   // Prestataires connus du référentiel, pour les listes du front.
   const listePrestataires = () => (referentiels.getAll().prestataires || [])

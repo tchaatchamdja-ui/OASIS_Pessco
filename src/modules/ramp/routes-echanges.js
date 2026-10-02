@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const XLSX = require('xlsx');
 // L'écriture avec styles : le paquet « xlsx » de la communauté les ignore.
 const XLSXS = require('xlsx-js-style');
+const { asynchrone } = require('../../route');
 const referentiels = require('../../referentiels');
 const multipart = require('../../multipart');
 const db = require('./store');
@@ -174,7 +175,7 @@ module.exports = function register(app, deps, M) {
       .map((ligne) => Object.fromEntries(entetes.map((k, i) => [k, ligne[i] === undefined ? '' : ligne[i]])));
   }
 
-  app.post(`${M}/import/analyser`, requireAuth, multipart(), (req, res) => {
+  app.post(`${M}/import/analyser`, requireAuth, multipart(), asynchrone(async (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res);
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -255,7 +256,7 @@ module.exports = function register(app, deps, M) {
     });
 
     // Confrontation à l'existant, pour dire à l'agent ce qui va se passer.
-    const existantes = new Map(db.list('inspections')
+    const existantes = new Map((await db.list('inspections'))
       .map((i) => [CLES.map((k) => texte(i[k])).join(' '), i]));
     const apercu = [...groupes.values()].map((g) => {
       const cle = CLES.map((k) => g[k]).join(' ');
@@ -283,10 +284,10 @@ module.exports = function register(app, deps, M) {
         hors_perimetre: apercu.filter((a) => a.hors_perimetre).length,
       },
     });
-  });
+  }));
 
   // Modèle de classeur, pour que les États sachent quoi remplir.
-  app.get(`${M}/import/modele`, requireAuth, (req, res) => {
+  app.get(`${M}/import/modele`, requireAuth, asynchrone(async (req, res) => {
     // La référence POI ouvre la ligne : c'est elle qui rattache l'inspection
     // à sa fiche quand l'État en tient une. Laissée vide, elle n'empêche rien.
     const entetes = ['POI', 'Date', 'Pays', 'Exploitant', 'Aéronef', 'Immatriculation', 'N° Vol',
@@ -301,7 +302,7 @@ module.exports = function register(app, deps, M) {
       "Modèle d'import — Inspections sur aire de trafic",
       entetes, exemple, [18, 12, 14, 20, 14, 16, 10, 12, 14, 8, 18, 44, 10, 10, 14], 'Inspections',
     ), 'modele_import_ramp.xlsx');
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Exports
@@ -311,14 +312,14 @@ module.exports = function register(app, deps, M) {
 
   // `req` porte la vue active : en vue Prestataire, l'export ne peut pas
   // sortir plus que ce que l'écran montre.
-  const filtrer = (corps, req) => {
+  const filtrer = async (corps, req) => {
     const F = corps || {};
     const ecartsDe = new Map();
-    db.list('ecarts').forEach((e) => {
+    (await db.list('ecarts')).forEach((e) => {
       if (!ecartsDe.has(e.inspection_id)) ecartsDe.set(e.inspection_id, []);
       ecartsDe.get(e.inspection_id).push(e);
     });
-    const retenues = vues.filtrerInspections(req, db.list('inspections'), loadConfig).filter((i) => {
+    const retenues = vues.filtrerInspections(req, await db.list('inspections'), loadConfig).filter((i) => {
       const ecarts = ecartsDe.get(i.id) || [];
       if (F.annee && String(i.date || '').slice(0, 4) !== String(F.annee)) return false;
       // Le trimestre arrive seul ou en liste ; une liste vide ne filtre rien.
@@ -386,27 +387,27 @@ module.exports = function register(app, deps, M) {
   const FAMILLES_LIEES = { inspection: ['inspection', 'ecart'], ecart: ['inspection', 'ecart'] };
   const famillesCompatibles = (a, b) => (FAMILLES_LIEES[a] || [a]).includes(b);
 
-  app.get(`${M}/tables/champs`, requireAuth, (req, res) => {
+  app.get(`${M}/tables/champs`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     res.json({ champs: CHAMPS_TABLE, liees: FAMILLES_LIEES });
-  });
+  }));
 
   // Les lignes de base d'une famille, à plat : une ligne par écart pour la
   // famille « écart », une par inspection sinon.
-  function lignesSource(familles, filtres, req) {
-    const libelles = Object.fromEntries(db.list('parametres')
+  async function lignesSource(familles, filtres, req) {
+    const libelles = Object.fromEntries((await db.list('parametres'))
       .filter((p) => p.type === 'items').map((p) => [p.code, p.label]));
     const veutEcart = familles.includes('ecart');
 
     if (familles.includes('contact')) {
-      return db.list('contacts').map((c) => ({
+      return (await db.list('contacts')).map((c) => ({
         c_nom: [c.prenom, c.nom].filter(Boolean).join(' ') || c.nom || '',
         c_organisme: c.organisme || '', c_pays: c.pays || '', c_email: c.email || '',
       }));
     }
 
     const lignes = [];
-    filtrer(filtres, req).forEach((i) => {
+    (await filtrer(filtres, req)).forEach((i) => {
       const base = {
         date: i.date || '',
         annee: String(i.date || '').slice(0, 4),
@@ -454,7 +455,7 @@ module.exports = function register(app, deps, M) {
     return jeton;
   }
 
-  app.get(`${M}/tables/fichier/:jeton`, requireAuth, (req, res) => {
+  app.get(`${M}/tables/fichier/:jeton`, requireAuth, asynchrone(async (req, res) => {
     const item = CLASSEURS.get(req.params.jeton);
     if (!item || item.expire < Date.now()) {
       CLASSEURS.delete(req.params.jeton);
@@ -464,9 +465,9 @@ module.exports = function register(app, deps, M) {
     CLASSEURS.delete(req.params.jeton);
     envoyer(res, item.buffer, item.nom);
     return undefined;
-  });
+  }));
 
-  app.post(`${M}/tables/export-xlsx`, requireAuth, (req, res) => {
+  app.post(`${M}/tables/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     const corps = req.body || {};
     const colonnes = (corps.colonnes || [])
@@ -479,7 +480,7 @@ module.exports = function register(app, deps, M) {
     const incompatible = familles.find((f) => familles.some((g) => !famillesCompatibles(f, g)));
     if (incompatible) return res.status(400).json({ error: 'Données sans relation entre elles' });
 
-    const source = lignesSource(familles, corps.filtres, req);
+    const source = await lignesSource(familles, corps.filtres, req);
 
     // Chaque colonne porte son rôle : elle regroupe (en ligne), elle croise
     // (en colonne), ou elle est la donnée observée — valeurs telles quelles ou
@@ -631,13 +632,13 @@ module.exports = function register(app, deps, M) {
     }
     envoyer(res, buffer, 'table_ramp.xlsx');
     return undefined;
-  });
+  }));
 
   const ENTETES_INSP = ['Date', 'Pays', 'Exploitant', 'Aéronef', 'Immatriculation', 'N° Vol',
     'Statut', 'Items Inspectés', 'Item', 'Std Ref.', 'Description', 'Catégorie', 'Action', 'Suivi'];
 
-  app.post(`${M}/inspections/export-xlsx`, requireAuth, (req, res) => {
-    const inspections = filtrer((req.body || {}).filtres, req);
+  app.post(`${M}/inspections/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+    const inspections = await filtrer((req.body || {}).filtres, req);
     const lignes = [];
     inspections.forEach((i) => {
       const base = [i.date || '', i.pays || '', i.exploitant || '', i.aeronef || '',
@@ -653,16 +654,16 @@ module.exports = function register(app, deps, M) {
     envoyer(res, classeur('Inspections sur aire de trafic', ENTETES_INSP, lignes,
       [12, 14, 20, 14, 16, 10, 12, 14, 8, 18, 44, 10, 10, 14], 'Inspections'),
     'inspections_ramp.xlsx');
-  });
+  }));
 
   const ENTETES_ECARTS = ['Item', 'Libellé item', 'Std Ref.', 'Description', 'Catégorie', 'Action',
     'Date', 'Pays', 'Exploitant', 'Aéronef', 'Immatriculation', 'Statut', 'Suivi'];
 
-  app.post(`${M}/ecarts/export-xlsx`, requireAuth, (req, res) => {
-    const libelles = Object.fromEntries(db.list('parametres')
+  app.post(`${M}/ecarts/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+    const libelles = Object.fromEntries((await db.list('parametres'))
       .filter((p) => p.type === 'items').map((p) => [p.code, p.label]));
     const lignes = [];
-    filtrer((req.body || {}).filtres, req).forEach((i) => {
+    (await filtrer((req.body || {}).filtres, req)).forEach((i) => {
       const F = (req.body || {}).filtres || {};
       i.anomalies
         .filter((a) => (!F.categorie || String(a.categorie) === String(F.categorie))
@@ -676,10 +677,10 @@ module.exports = function register(app, deps, M) {
     envoyer(res, classeur('Écarts relevés sur aire de trafic', ENTETES_ECARTS, lignes,
       [8, 34, 18, 44, 10, 10, 12, 14, 20, 14, 16, 12, 14], 'Ecarts'),
     'ecarts_ramp.xlsx');
-  });
+  }));
 
   // Situation générale par exploitant, avec le détail par item.
-  app.post(`${M}/situation/export-xlsx`, requireAuth, (req, res) => {
+  app.post(`${M}/situation/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
     const donnees = (req.body || {}).lignes;
     if (!Array.isArray(donnees)) return res.status(400).json({ error: 'Aucune donnée à exporter' });
     const entetes = ['Exploitant', 'Ligne', 'Item', 'Inspections', 'Items inspectés',
@@ -689,38 +690,38 @@ module.exports = function register(app, deps, M) {
     envoyer(res, classeur('Situation générale par exploitant', entetes, lignes,
       [24, 18, 34, 12, 14, 8, 12, 8, 12, 8, 12, 8, 12, 12, 12, 10], 'Situation'),
     'situation_ramp.xlsx');
-  });
+  }));
 
-  app.post(`${M}/parametres/export-xlsx`, requireAuth, (req, res) => {
+  app.post(`${M}/parametres/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     const famille = String((req.body || {}).famille || '');
     if (!db.FAMILLES.includes(famille)) return inconnu(res, 'famille');
     // Le groupe d'items est stocké par son code : c'est son intitulé qu'on
     // exporte, un code technique ne se lit pas dans un classeur.
-    const groupes = Object.fromEntries(db.list('parametres')
+    const groupes = Object.fromEntries((await db.list('parametres'))
       .filter((p) => p.type === 'groupes').map((p) => [p.code, p.label]));
     const entetes = ['Code', famille === 'items' ? 'Item' : 'Libellé',
       "Groupe d'items", 'Description', 'Pondération', 'Actif'];
-    const lignes = db.list('parametres').filter((p) => p.type === famille)
+    const lignes = (await db.list('parametres')).filter((p) => p.type === famille)
       .map((p) => [p.code || '', p.label || '',
         groupes[p.cat] || p.cat || '', p.description || '',
         p.ponderation === null || p.ponderation === undefined ? '' : p.ponderation,
         p.actif === false ? 'Non' : 'Oui']);
     envoyer(res, classeur(`Paramètres — ${famille}`, entetes, lignes,
       [12, 44, 22, 50, 14, 8], 'Parametres'), `parametres_${famille}.xlsx`);
-  });
+  }));
 
-  app.post(`${M}/contacts/export-xlsx`, requireAuth, (req, res) => {
+  app.post(`${M}/contacts/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
     const entetes = ['État', 'Nom', 'Prénoms', 'Fonction', 'Courriel', 'Téléphone', 'Autres', 'Actif'];
-    const lignes = db.list('contacts')
+    const lignes = (await db.list('contacts'))
       .sort((a, b) => String(a.etat).localeCompare(String(b.etat))
         || String(a.nom).localeCompare(String(b.nom)))
       .map((c) => [c.etat || '', c.nom || '', c.prenom || '', c.fonction || '',
         c.email || '', c.telephone || '', c.autres || '', c.actif === false ? 'Non' : 'Oui']);
     envoyer(res, classeur('Carnet de contacts', entetes, lignes, [18, 20, 20, 26, 30, 18, 30, 8], 'Contacts'),
       'contacts_ramp.xlsx');
-  });
+  }));
 };
 
 module.exports.dateISO = dateISO;

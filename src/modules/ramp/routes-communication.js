@@ -12,6 +12,7 @@
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const { asynchrone } = require('../../route');
 const referentiels = require('../../referentiels');
 const instances = require('../../instances');
 const multipart = require('../../multipart');
@@ -96,11 +97,11 @@ module.exports = function register(app, deps, M) {
   // jour sur le même appareil. Le relevé les tient donc tous ; `ecart_id` et
   // les trois champs qui décrivent un constat restent ceux du premier, pour ce
   // qui n'en lit qu'un — les requêtes d'avant n'en désignaient jamais plus.
-  const releveInspection = (inspectionId, ecartIds) => {
-    const i = db.get('inspections', inspectionId);
+  const releveInspection = async (inspectionId, ecartIds) => {
+    const i = await db.get('inspections', inspectionId);
     if (!i) return {};
     const voulus = (Array.isArray(ecartIds) ? ecartIds : [ecartIds]).map(texte).filter(Boolean);
-    const ecarts = db.list('ecarts')
+    const ecarts = (await db.list('ecarts'))
       .filter((x) => x.inspection_id === i.id && voulus.includes(x.id))
       // L'ordre est celui de la demande, non celui du magasin.
       .sort((a, b) => voulus.indexOf(a.id) - voulus.indexOf(b.id));
@@ -131,8 +132,8 @@ module.exports = function register(app, deps, M) {
   };
 
   // États membres de l'UEMOA, tels que le paramétrage « Pays » les déclare.
-  const etatsUemoa = () => {
-    const membres = db.list('pays').filter((p) => p.uemoa && p.actif !== false)
+  const etatsUemoa = async () => {
+    const membres = (await db.list('pays')).filter((p) => p.uemoa && p.actif !== false)
       .map((p) => p.nom).sort((a, b) => a.localeCompare(b, 'fr'));
     return membres.length ? membres : db.ETATS_INSPECTION;
   };
@@ -141,9 +142,9 @@ module.exports = function register(app, deps, M) {
   //  Requêtes
   // ══════════════════════════════════════
 
-  app.get(`${M}/requetes`, requireAuth, (req, res) => {
+  app.get(`${M}/requetes`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const liste = db.list('requetes')
+    const liste = (await db.list('requetes'))
       .filter((r) => concerne(req, r))
       .sort((a, b) => String(b.cree_le || '').localeCompare(String(a.cree_le || '')))
       .map(vueRequete);
@@ -152,29 +153,33 @@ module.exports = function register(app, deps, M) {
       // Destinataires possibles : les États cochés « membre de l'UEMOA » dans
       // le paramétrage des pays. À défaut de paramétrage, les États du
       // dispositif — le module reste utilisable avant tout réglage.
-      etats: etatsUemoa(),
+      etats: await etatsUemoa(),
       mes_etats: mesEtats(req),
       // Ce que l'écran a besoin de savoir pour ouvrir ou fermer un fil.
       peut_ecrire: R.canContribute(req.user) || admin(req),
       voit_tout: voitTout(req),
     });
-  });
+  }));
 
-  app.get(`${M}/requetes/:id`, requireAuth, (req, res) => {
+  app.get(`${M}/requetes/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     return res.json(vueRequete(r));
-  });
+  }));
 
-  app.post(`${M}/requetes`, requireAuth, (req, res) => {
+  app.post(`${M}/requetes`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     if (!R.canContribute(req.user) && !admin(req)) return refuser(res);
     const d = req.body || {};
     const objet = texte(d.objet);
     const message = texte(d.message);
+    // La liste des États membres lue **une fois**, avant le filtre : appelée dans
+    // le rappel, elle rendait une promesse par destinataire — et `.includes` sur
+    // une promesse est toujours faux, donc aucun destinataire n'aurait passé.
+    const membres = await etatsUemoa();
     const destinataires = (Array.isArray(d.etats_destinataires) ? d.etats_destinataires : [])
-      .map(texte).filter((e) => etatsUemoa().includes(e));
+      .map(texte).filter((e) => membres.includes(e));
     if (!objet) return requis(res, 'objet');
     if (!message) return requis(res, 'message');
     if (!destinataires.length) return res.status(400).json({ error: 'Au moins un État destinataire' });
@@ -185,7 +190,7 @@ module.exports = function register(app, deps, M) {
     // États membres.
     const demande = texte(d.etat_emetteur);
     const miens = mesEtats(req);
-    const autorises = miens.length ? miens : etatsUemoa();
+    const autorises = miens.length ? miens : await etatsUemoa();
     if (demande && !autorises.includes(demande)) {
       return refuser(res, `Vous n'écrivez pas au nom de « ${demande} »`);
     }
@@ -200,7 +205,7 @@ module.exports = function register(app, deps, M) {
       // Un écart, plusieurs, ou aucun — la requête peut ne viser que
       // l'inspection. `ecart_id` reste accepté : c'est ce qu'envoyaient les
       // écrans d'avant.
-      ...releveInspection(texte(d.inspection_id),
+      ...await releveInspection(texte(d.inspection_id),
         Array.isArray(d.ecart_ids) ? d.ecart_ids : [d.ecart_id]),
       statut: 'ouverte',
       pieces: [],
@@ -208,15 +213,15 @@ module.exports = function register(app, deps, M) {
       cree_par: req.user.username,
       cree_le: db.now(),
     };
-    db.insert('requetes', rec);
+    await db.insert('requetes', rec);
     return res.status(201).json({ status: 'ok', id: rec.id });
-  });
+  }));
 
   // Un échange de plus dans le fil. Émetteur comme destinataires écrivent ;
   // une requête close ne reçoit plus rien.
-  app.post(`${M}/requetes/:id/echanges`, requireAuth, (req, res) => {
+  app.post(`${M}/requetes/:id/echanges`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return fige(res, 'discussion', 'clos');
     const message = texte((req.body || {}).message);
@@ -229,44 +234,44 @@ module.exports = function register(app, deps, M) {
       date: db.now(),
       pieces: [],
     };
-    db.update('requetes', r.id, { echanges: (r.echanges || []).concat([echange]) });
+    await db.update('requetes', r.id, { echanges: (r.echanges || []).concat([echange]) });
     return res.status(201).json({ status: 'ok', id: echange.id });
-  });
+  }));
 
   // Clôture : l'émetteur ferme ce qu'il a ouvert ; le gestionnaire du module
   // peut solder un fil laissé en suspens.
-  app.post(`${M}/requetes/:id/cloturer`, requireAuth, (req, res) => {
+  app.post(`${M}/requetes/:id/cloturer`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return res.json({ status: 'ok', deja: true });
     if (r.cree_par !== req.user.username && !admin(req)) {
       return refuser(res, 'Seul l’État émetteur referme la discussion');
     }
-    db.update('requetes', r.id, {
+    await db.update('requetes', r.id, {
       statut: 'close',
       motif_cloture: texte((req.body || {}).motif),
       close_le: db.now(),
       close_par: req.user.username,
     });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.post(`${M}/requetes/:id/rouvrir`, requireAuth, (req, res) => {
+  app.post(`${M}/requetes/:id/rouvrir`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.cree_par !== req.user.username && !admin(req)) return refuser(res);
-    db.update('requetes', r.id, { statut: 'ouverte', close_le: '', close_par: '' });
+    await db.update('requetes', r.id, { statut: 'ouverte', close_le: '', close_par: '' });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.delete(`${M}/requetes/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/requetes/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    if (!db.remove('requetes', req.params.id)) return introuvable(res, 'requete');
+    if (!await db.remove('requetes', req.params.id)) return introuvable(res, 'requete');
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Écarts relevés par tous les États
@@ -300,18 +305,18 @@ module.exports = function register(app, deps, M) {
     preuves: (e.preuves || []).map(vuePreuveRegionale),
   });
 
-  app.get(`${M}/ecarts-regionaux`, requireAuth, (req, res) => {
+  app.get(`${M}/ecarts-regionaux`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     if (!R.canRead(req.user)) return refuser(res);
     const parInspection = new Map();
-    db.list('ecarts').forEach((e) => {
+    (await db.list('ecarts')).forEach((e) => {
       if (!parInspection.has(e.inspection_id)) parInspection.set(e.inspection_id, []);
       parInspection.get(e.inspection_id).push(vueEcartRegional(e));
     });
     // Toutes les inspections, écart ou non : la table ne montre que les
     // constats — une inspection sans écart n'y produit aucune ligne —, mais le
     // formulaire de requête propose bien toutes les inspections du dispositif.
-    const inspections = db.list('inspections')
+    const inspections = (await db.list('inspections'))
       .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')))
       .map((i) => ({
         id: i.id,
@@ -329,20 +334,20 @@ module.exports = function register(app, deps, M) {
       }));
     return res.json({
       inspections,
-      etats: etatsUemoa(),
+      etats: await etatsUemoa(),
       mes_etats: mesEtats(req),
       peut_ecrire: R.canContribute(req.user) || admin(req),
     });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Pièces jointes
   // ══════════════════════════════════════
   // Une pièce accompagne soit la requête elle-même, soit l'un de ses échanges.
 
-  app.post(`${M}/requetes/:id/pieces`, requireAuth, multipart(), (req, res) => {
+  app.post(`${M}/requetes/:id/pieces`, requireAuth, multipart(), asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     if (r.statut === 'close') return fige(res, 'discussion', 'clos');
     const f = (req.files || {}).file;
@@ -369,12 +374,12 @@ module.exports = function register(app, deps, M) {
       const echanges = (r.echanges || []).map((e) =>
         (e.id === echangeId ? { ...e, pieces: (e.pieces || []).concat([piece]) } : e));
       if (!echanges.some((e) => e.id === echangeId)) return introuvable(res, 'echange');
-      db.update('requetes', r.id, { echanges });
+      await db.update('requetes', r.id, { echanges });
     } else {
-      db.update('requetes', r.id, { pieces: (r.pieces || []).concat([piece]) });
+      await db.update('requetes', r.id, { pieces: (r.pieces || []).concat([piece]) });
     }
     return res.status(201).json({ status: 'ok', id: piece.id });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Partages — transmissions mises à disposition d'autres États
@@ -393,13 +398,18 @@ module.exports = function register(app, deps, M) {
   // Retrait d'un partage. Ses pièces désignent les fichiers de la fiche : si la
   // fiche a disparu depuis, ce partage était le dernier à les tenir, et ils
   // partent avec lui.
-  const retirerPartage = (pa) => {
-    db.remove('partages', pa.id);
-    (pa.pieces || []).forEach((pj) => {
-      if (!pj.fichier || db.fichierPoiDesigne(pj.fichier)) return;
+  // `for…of` et non `forEach` : le corps interroge le magasin pour savoir si un
+  // fichier est encore désigné ailleurs, et `forEach` lancerait les questions sans
+  // attendre les réponses — des pièces encore tenues par un autre partage seraient
+  // effacées, et l'État destinataire tomberait sur « Fichier introuvable ».
+  const retirerPartage = async (pa) => {
+    await db.remove('partages', pa.id);
+    for (const pj of (pa.pieces || [])) {
+      // eslint-disable-next-line no-await-in-loop
+      if (!pj.fichier || await db.fichierPoiDesigne(pj.fichier)) continue;
       try { fs.unlinkSync(path.join(DOSSIER_POI, path.basename(pj.fichier))); }
       catch (e) { /* le fichier a déjà disparu */ }
-    });
+    }
   };
 
   const vuePartage = (pa) => ({
@@ -426,28 +436,28 @@ module.exports = function register(app, deps, M) {
     return voitTout(req) || pa.partage_par === req.user.username || parLesEtats;
   };
 
-  app.get(`${M}/partages`, requireAuth, (req, res) => {
+  app.get(`${M}/partages`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const liste = db.list('partages')
+    const liste = (await db.list('partages'))
       .filter((pa) => partageVisible(req, pa))
       .sort((a, b) => String(b.partage_le || '').localeCompare(String(a.partage_le || '')))
       .map(vuePartage);
-    return res.json({ partages: liste, etats: etatsUemoa() });
-  });
+    return res.json({ partages: liste, etats: await etatsUemoa() });
+  }));
 
-  app.get(`${M}/partages/:id`, requireAuth, (req, res) => {
+  app.get(`${M}/partages/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const pa = db.get('partages', req.params.id);
+    const pa = await db.get('partages', req.params.id);
     if (!pa || !partageVisible(req, pa)) return introuvable(res, 'partage');
     return res.json(vuePartage(pa));
-  });
+  }));
 
   // Ce qu'une fiche a déjà mis à disposition, et à qui : le formulaire de
   // partage le rappelle sous les États destinataires, pour qu'on ne partage
   // pas deux fois et qu'on puisse revenir sur un envoi.
-  app.get(`${M}/poi/:id/partages`, requireAuth, (req, res) => {
+  app.get(`${M}/poi/:id/partages`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const liste = db.list('partages')
+    const liste = (await db.list('partages'))
       .filter((pa) => pa.poi_id === req.params.id && partageVisible(req, pa))
       .sort((a, b) => String(b.partage_le || '').localeCompare(String(a.partage_le || '')))
       .map((pa) => ({
@@ -462,19 +472,19 @@ module.exports = function register(app, deps, M) {
         rappelable: pa.partage_par === req.user.username || admin(req),
       }));
     return res.json({ partages: liste });
-  });
+  }));
 
   // Rappel : l'État visé perd l'accès à la copie. Sans État précisé, c'est
   // tout le partage qui est retiré. Le dernier État retiré emporte la copie —
   // un partage sans destinataire n'a plus d'objet.
-  app.post(`${M}/partages/:id/rappeler`, requireAuth, (req, res) => {
+  app.post(`${M}/partages/:id/rappeler`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const pa = db.get('partages', req.params.id);
+    const pa = await db.get('partages', req.params.id);
     if (!pa) return introuvable(res, 'partage');
     if (pa.partage_par !== req.user.username && !admin(req)) return refuser(res);
     const etat = texte((req.body || {}).etat);
     if (!etat) {
-      retirerPartage(pa);
+      await retirerPartage(pa);
       return res.json({ status: 'ok', retire: true, etats: [] });
     }
     if (!(pa.etats || []).includes(etat)) {
@@ -482,18 +492,18 @@ module.exports = function register(app, deps, M) {
     }
     const restants = (pa.etats || []).filter((e) => e !== etat);
     if (!restants.length) {
-      retirerPartage(pa);
+      await retirerPartage(pa);
       return res.json({ status: 'ok', retire: true, etats: [] });
     }
-    db.update('partages', pa.id, { etats: restants, rappel_le: db.now(), rappel_par: req.user.username });
+    await db.update('partages', pa.id, { etats: restants, rappel_le: db.now(), rappel_par: req.user.username });
     return res.json({ status: 'ok', retire: false, etats: restants });
-  });
+  }));
 
   // Mise à disposition depuis l'étape Transmission d'une fiche.
-  app.post(`${M}/poi/:id/partager`, requireAuth, (req, res) => {
+  app.post(`${M}/poi/:id/partager`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
     if (!R.canContribute(req.user) && !admin(req)) return refuser(res);
-    const p = db.get('poi', req.params.id);
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     // Même garde que partout ailleurs sur un POI : on ne met à disposition que
     // ce qu'on a le droit de lire. Sans elle, le partage rendait lisible la
@@ -506,13 +516,15 @@ module.exports = function register(app, deps, M) {
       return statutRequis(res, 'formulaire', 'valide');
     }
     const d = req.body || {};
+    // La liste lue une fois, hors du filtre : voir le même geste plus haut.
+    const membresUemoa = await etatsUemoa();
     const demandes = (Array.isArray(d.etats) ? d.etats : [])
-      .map(texte).filter((e) => etatsUemoa().includes(e));
+      .map(texte).filter((e) => membresUemoa.includes(e));
     if (!demandes.length) return res.status(400).json({ error: 'Au moins un État destinataire' });
     // Un État qui tient déjà une copie de cette fiche n'en reçoit pas une
     // seconde : il aurait deux entrées identiques à consulter, et deux
     // rappels à faire pour s'en défaire.
-    const dejaServis = new Set(db.list('partages')
+    const dejaServis = new Set((await db.list('partages'))
       .filter((pa) => pa.poi_id === p.id)
       .flatMap((pa) => pa.etats || []));
     const etats = demandes.filter((e) => !dejaServis.has(e));
@@ -563,24 +575,24 @@ module.exports = function register(app, deps, M) {
       partage_etat: mesEtats(req)[0] || e.etat_inspection || '',
       partage_le: db.now(),
     };
-    db.insert('partages', rec);
+    await db.insert('partages', rec);
     return res.status(201).json({ status: 'ok', id: rec.id, communications: communications.length, pieces: pieces.length });
-  });
+  }));
 
   // Retrait d'une mise à disposition : celui qui l'a faite, ou le gestionnaire.
-  app.delete(`${M}/partages/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/partages/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const pa = db.get('partages', req.params.id);
+    const pa = await db.get('partages', req.params.id);
     if (!pa) return introuvable(res, 'partage');
     if (pa.partage_par !== req.user.username && !admin(req)) return refuser(res);
-    retirerPartage(pa);
+    await retirerPartage(pa);
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // Les pièces partagées se téléchargent, jamais ne se modifient.
-  app.get(`${M}/partages/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
+  app.get(`${M}/partages/:id/pieces/:pid/fichier`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const pa = db.get('partages', req.params.id);
+    const pa = await db.get('partages', req.params.id);
     if (!pa || !partageVisible(req, pa)) return introuvable(res, 'partage');
     const pj = (pa.pieces || []).find((x) => x.id === req.params.pid);
     if (!pj) return introuvable(res, 'piece');
@@ -589,14 +601,14 @@ module.exports = function register(app, deps, M) {
     res.setHeader('Content-Disposition',
       `attachment; filename*=UTF-8''${encodeURIComponent(pj.nom_origine || pj.fichier)}`);
     return res.sendFile(chemin);
-  });
+  }));
 
   const trouverPiece = (r, pid) => (r.pieces || []).find((p) => p.id === pid)
     || (r.echanges || []).flatMap((e) => e.pieces || []).find((p) => p.id === pid);
 
-  app.get(`${M}/requetes/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
+  app.get(`${M}/requetes/:id/pieces/:pid/fichier`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     const p = trouverPiece(r, req.params.pid);
     if (!p) return introuvable(res, 'piece');
@@ -605,11 +617,11 @@ module.exports = function register(app, deps, M) {
     res.setHeader('Content-Disposition',
       `attachment; filename*=UTF-8''${encodeURIComponent(p.nom_origine || p.fichier)}`);
     return res.sendFile(chemin);
-  });
+  }));
 
-  app.delete(`${M}/requetes/:id/pieces/:pid`, requireAuth, (req, res) => {
+  app.delete(`${M}/requetes/:id/pieces/:pid`, requireAuth, asynchrone(async (req, res) => {
     if (!gardeAac(req, res)) return undefined;
-    const r = db.get('requetes', req.params.id);
+    const r = await db.get('requetes', req.params.id);
     if (!r || !concerne(req, r)) return introuvable(res, 'requete');
     const p = trouverPiece(r, req.params.pid);
     if (!p) return introuvable(res, 'piece');
@@ -617,10 +629,10 @@ module.exports = function register(app, deps, M) {
     if (p.depose_par !== req.user.username && !admin(req)) return refuser(res);
     try { fs.unlinkSync(path.join(DOSSIER_PIECES, path.basename(p.fichier || ''))); }
     catch (e) { /* le fichier a déjà disparu */ }
-    db.update('requetes', r.id, {
+    await db.update('requetes', r.id, {
       pieces: (r.pieces || []).filter((x) => x.id !== p.id),
       echanges: (r.echanges || []).map((e) => ({ ...e, pieces: (e.pieces || []).filter((x) => x.id !== p.id) })),
     });
     return res.json({ status: 'ok' });
-  });
+  }));
 };

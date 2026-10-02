@@ -73,22 +73,22 @@ module.exports = function register(app, deps, M) {
   //  Lecture
   // ══════════════════════════════════════
 
-  app.get(`${M}/inspections`, requireAuth, (req, res) => {
+  app.get(`${M}/inspections`, requireAuth, asynchrone(async (req, res) => {
     // En vue Prestataire, la liste se réduit aux inspections de l'exploitant :
     // le cloisonnement est posé ici, non à l'écran.
     if (!R.canRead(req.userReel || req.user)) return refuser(res);
-    const inspections = vues.filtrerInspections(req, db.list('inspections'), loadConfig).slice()
+    const inspections = vues.filtrerInspections(req, await db.list('inspections'), loadConfig).slice()
       .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
-    res.json(avecEcarts(inspections, db.list('ecarts')));
-  });
+    res.json(avecEcarts(inspections, await db.list('ecarts')));
+  }));
 
-  app.get(`${M}/inspections/:id`, requireAuth, (req, res) => {
-    const i = db.get('inspections', req.params.id);
+  app.get(`${M}/inspections/:id`, requireAuth, asynchrone(async (req, res) => {
+    const i = await db.get('inspections', req.params.id);
     if (!vues.voitInspection(req, i, loadConfig)) {
       return introuvable(res, 'inspection');
     }
-    res.json(avecEcarts([i], db.list('ecarts'))[0]);
-  });
+    res.json(avecEcarts([i], await db.list('ecarts'))[0]);
+  }));
 
   // ══════════════════════════════════════
   //  Import
@@ -100,7 +100,7 @@ module.exports = function register(app, deps, M) {
   //                 d'items inspectés diffère
   //   doublon     — tout correspond ; la ligne est ignorée
 
-  app.post(`${M}/inspections/import`, requireAuth, (req, res) => {
+  app.post(`${M}/inspections/import`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res);
     const lignes = (req.body || {}).data;
     if (!Array.isArray(lignes)) return res.status(400).json({ error: 'Aucune donnée à importer' });
@@ -112,7 +112,7 @@ module.exports = function register(app, deps, M) {
       return refuser(res, `Import refusé pour : ${refuses.join(', ')} — hors de votre périmètre`);
     }
 
-    const existantes = db.list('inspections');
+    const existantes = await db.list('inspections');
     const index = new Map(existantes.map((i) => [empreinte(i), i]));
 
     const nouvellesInspections = [];
@@ -169,23 +169,33 @@ module.exports = function register(app, deps, M) {
       });
     });
 
-    // Toute inspection porte une référence POI-xxxx. Le classeur en apporte
-    // parfois une — celle du rapport papier ; les autres la reçoivent de la
-    // suite du module, tirée en une fois pour tout le classeur.
+    // ── Tout l'import en une seule transformation ──
+    //
+    // Les références POI, les inspections neuves, leurs écarts et les mises à
+    // jour des inspections déjà connues : c'était une allocation de compteur,
+    // une insertion groupée, **puis une écriture par inspection mise à jour**.
+    // Un classeur de deux cents lignes faisait donc deux cents écritures, et
+    // entre elles l'écran montrait un import à moitié fait. Un échec au milieu
+    // l'y laissait.
+    //
+    // Les références sont allouées **dedans** : le compteur ne redescend jamais,
+    // et deux imports simultanés ne peuvent plus se donner les mêmes numéros.
     const aReferencer = nouvellesInspections.filter((i) => !i.poi_reference);
-    db.reserverReferencesPoi(aReferencer.length).forEach((ref, rang) => {
-      aReferencer[rang].poi_reference = ref;
-      // Référence donnée par le module, et non lue sur le rapport : celle du
-      // papier, si un classeur l'apporte plus tard, prendra sa place.
-      aReferencer[rang].reference_auto = true;
-    });
-
-    if (nouvellesInspections.length || nouveauxEcarts.length) {
-      db.insertMany({ inspections: nouvellesInspections, ecarts: nouveauxEcarts });
-    }
-    majs.forEach((m) => {
-      const { id, ...patch } = m;
-      db.update('inspections', id, patch);
+    await db.transformer((d) => {
+      db.allouerReferencesPoi(d, aReferencer.length).forEach((ref, rang) => {
+        aReferencer[rang].poi_reference = ref;
+        // Référence donnée par le module, et non lue sur le rapport : celle du
+        // papier, si un classeur l'apporte plus tard, prendra sa place.
+        aReferencer[rang].reference_auto = true;
+      });
+      d.inspections = (d.inspections || []).concat(nouvellesInspections);
+      d.ecarts = (d.ecarts || []).concat(nouveauxEcarts);
+      majs.forEach((m) => {
+        const { id, ...patch } = m;
+        const i = d.inspections.findIndex((x) => x.id === id);
+        if (i >= 0) d.inspections[i] = { ...d.inspections[i], ...patch };
+      });
+      return d;
     });
 
     res.status(201).json({
@@ -194,14 +204,14 @@ module.exports = function register(app, deps, M) {
       doublons,
       message: `${nouvellesInspections.length} inspection(s) créée(s), ${majs.length} mise(s) à jour, ${doublons} doublon(s) ignoré(s).`,
     });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Écriture à l'unité
   // ══════════════════════════════════════
 
-  app.put(`${M}/inspections/:id`, requireAuth, (req, res) => {
-    const i = db.get('inspections', req.params.id);
+  app.put(`${M}/inspections/:id`, requireAuth, asynchrone(async (req, res) => {
+    const i = await db.get('inspections', req.params.id);
     // Une inspection qu'on ne voit pas ne se modifie pas : elle appartient à
     // une autre AAC, et rien ne se corrige à distance.
     if (!vues.voitInspection(req, i, loadConfig)) return introuvable(res, 'inspection');
@@ -214,22 +224,22 @@ module.exports = function register(app, deps, M) {
     if (d.status !== undefined) patch.status = texte(d.status);
     if (d.itemsInspectes !== undefined) patch.itemsInspectes = parseInt(d.itemsInspectes, 10) || 0;
     if (!Object.keys(patch).length) return res.json({ status: 'ok' });
-    db.update('inspections', i.id, patch);
+    await db.update('inspections', i.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
   app.delete(`${M}/inspections/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     // Pas davantage qu'elle ne se modifie, une inspection d'une autre instance
     // ne se supprime d'ici.
-    if (!vues.voitInspection(req, db.get('inspections', req.params.id), loadConfig)) {
+    if (!vues.voitInspection(req, await db.get('inspections', req.params.id), loadConfig)) {
       return introuvable(res, 'inspection');
     }
-    const ecarts = db.list('ecarts').filter((e) => e.inspection_id === req.params.id);
+    const ecarts = (await db.list('ecarts')).filter((e) => e.inspection_id === req.params.id);
     // Un écart repris par « Mesures d'Application » fonde ce qui y a été
     // décidé : l'inspection qui le porte ne se supprime plus.
     if (await suitesCare.refusSiSuites(res, ecarts.map((e) => `ramp:${e.id}`))) return undefined;
-    if (!db.removeInspection(req.params.id)) {
+    if (!await db.removeInspection(req.params.id)) {
       return introuvable(res, 'inspection');
     }
     // Les preuves des écarts partent avec eux, comme celles d'une fiche : les
@@ -247,8 +257,8 @@ module.exports = function register(app, deps, M) {
   // quelle AAC tient l'inspection. Une AAC ne corrige pas le suivi d'un écart
   // relevé par une autre : elle le lit au menu « Partages », elle n'y écrit
   // pas. Un écart qu'on ne voit pas est introuvable, comme son inspection.
-  const inspectionEcrivable = (req, res, e) => {
-    const i = db.get('inspections', e.inspection_id) || {};
+  const inspectionEcrivable = async (req, res, e) => {
+    const i = await db.get('inspections', e.inspection_id) || {};
     if (!vues.voitInspection(req, i, loadConfig)) { introuvable(res, 'ecart'); return null; }
     if (!R.couvreEtat(req.user, referentiels, i.pays)) {
       horsPerimetre(res, 'ecart', i.pays);
@@ -264,11 +274,11 @@ module.exports = function register(app, deps, M) {
   // engage pour que cela ne se reproduise pas, et à quelle échéance. Les
   // preuves suivent, au fil de la mise en œuvre.
 
-  app.put(`${M}/ecarts/:id/pac`, requireAuth, (req, res) => {
-    const e = db.get('ecarts', req.params.id);
+  app.put(`${M}/ecarts/:id/pac`, requireAuth, asynchrone(async (req, res) => {
+    const e = await db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
     if (!R.canContribute(req.user)) return refuser(res);
-    if (!inspectionEcrivable(req, res, e)) return undefined;
+    if (!await inspectionEcrivable(req, res, e)) return undefined;
     const d = req.body || {};
     const pac = { ...(e.pac || {}) };
     CHAMPS_PAC.forEach((k) => { if (d[k] !== undefined) pac[k] = texte(d[k]); });
@@ -281,14 +291,14 @@ module.exports = function register(app, deps, M) {
       pac.soumis_le = db.now();
       pac.soumis_par = req.user.username;
     }
-    db.update('ecarts', e.id, {
+    await db.update('ecarts', e.id, {
       pac,
       // Le suivi de l'écart suit le plan : soumis, il n'est plus simplement
       // ouvert.
       ...(d.soumettre && !e.suivi ? { suivi: 'En cours' } : {}),
     });
     return res.json({ status: 'ok', soumis: !!pac.soumis_le });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Évaluation et suivi de l'écart (AAC)
@@ -303,17 +313,17 @@ module.exports = function register(app, deps, M) {
     cloture: { effective: '', date_solde: '', solde_par: '', ...(e.evaluation || {}).cloture },
   });
 
-  function ecartPourEvaluation(req, res) {
-    const e = db.get('ecarts', req.params.id);
+  async function ecartPourEvaluation(req, res) {
+    const e = await db.get('ecarts', req.params.id);
     if (!e) { introuvable(res, 'ecart'); return null; }
     // Se prononcer sur un plan relève du valideur, non de qui l'a rédigé.
     if (!R.canValidate(req.user)) { reserve(res, 'validateur'); return null; }
-    if (!inspectionEcrivable(req, res, e)) return null;
+    if (!await inspectionEcrivable(req, res, e)) return null;
     return e;
   }
 
-  app.put(`${M}/ecarts/:id/evaluation`, requireAuth, (req, res) => {
-    const e = ecartPourEvaluation(req, res);
+  app.put(`${M}/ecarts/:id/evaluation`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourEvaluation(req, res);
     if (!e) return undefined;
     const d = req.body || {};
     const ev = evaluationDe(e);
@@ -328,12 +338,12 @@ module.exports = function register(app, deps, M) {
     const patch = { evaluation: ev };
     if (ev.cloture.effective === 'OUI') patch.suivi = 'Clôturé';
     else if (ev.acceptation.accepte === 'OUI' && (!e.suivi || e.suivi === 'Ouvert')) patch.suivi = 'En cours';
-    db.update('ecarts', e.id, patch);
+    await db.update('ecarts', e.id, patch);
     return res.json({ status: 'ok', evaluation: ev });
-  });
+  }));
 
-  app.post(`${M}/ecarts/:id/evaluation/suivi`, requireAuth, (req, res) => {
-    const e = ecartPourEvaluation(req, res);
+  app.post(`${M}/ecarts/:id/evaluation/suivi`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourEvaluation(req, res);
     if (!e) return undefined;
     const commentaire = texte((req.body || {}).texte);
     if (!commentaire) return requis(res, 'commentaire');
@@ -343,15 +353,15 @@ module.exports = function register(app, deps, M) {
       id: db.uid('sui'), texte: commentaire,
       auteur: req.user.username, date: db.now(),
     }]);
-    db.update('ecarts', e.id, { evaluation: ev });
+    await db.update('ecarts', e.id, { evaluation: ev });
     return res.status(201).json({ status: 'ok' });
-  });
+  }));
 
   // Le circuit de l'écart tient en deux temps : le plan se rédige et se soumet,
   // puis l'autorité le renvoie pour reprise ou solde l'écart.
 
-  app.post(`${M}/ecarts/:id/pac/renvoyer`, requireAuth, (req, res) => {
-    const e = ecartPourEvaluation(req, res);
+  app.post(`${M}/ecarts/:id/pac/renvoyer`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourEvaluation(req, res);
     if (!e) return undefined;
     if (!((e.pac || {}).soumis_le)) return statutRequis(res, 'pac', 'soumis');
     const ev = evaluationDe(e);
@@ -362,28 +372,28 @@ module.exports = function register(app, deps, M) {
       ...(e.pac || {}), soumis_le: '', soumis_par: '',
       renvoye_le: db.now(), renvoye_par: req.user.username,
     };
-    db.update('ecarts', e.id, { pac, suivi: 'En cours' });
+    await db.update('ecarts', e.id, { pac, suivi: 'En cours' });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.post(`${M}/ecarts/:id/cloturer`, requireAuth, (req, res) => {
-    const e = ecartPourEvaluation(req, res);
+  app.post(`${M}/ecarts/:id/cloturer`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourEvaluation(req, res);
     if (!e) return undefined;
     if (!((e.pac || {}).soumis_le)) return statutRequis(res, 'pac', 'soumis');
     const ev = evaluationDe(e);
     ev.cloture.effective = 'OUI';
     ev.cloture.date_solde = texte((req.body || {}).date_solde) || db.now().slice(0, 10);
     ev.cloture.solde_par = texte((req.body || {}).solde_par) || ev.cloture.solde_par || req.user.username;
-    db.update('ecarts', e.id, { evaluation: ev, suivi: 'Clôturé' });
+    await db.update('ecarts', e.id, { evaluation: ev, suivi: 'Clôturé' });
     return res.json({ status: 'ok', evaluation: ev });
-  });
+  }));
 
   // Un suivi reste amendable tant que le plan n'a pas été soumis : passé la
   // soumission, il fait partie du dossier et ne bouge plus.
   const suiviOuvert = (e) => !((e.pac || {}).soumis_le);
 
-  app.put(`${M}/ecarts/:id/evaluation/suivi/:sid`, requireAuth, (req, res) => {
-    const e = ecartPourEvaluation(req, res);
+  app.put(`${M}/ecarts/:id/evaluation/suivi/:sid`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourEvaluation(req, res);
     if (!e) return undefined;
     if (!suiviOuvert(e)) return fige(res, 'pac', 'soumis');
     const commentaire = texte((req.body || {}).texte);
@@ -393,34 +403,34 @@ module.exports = function register(app, deps, M) {
     if (!cible) return introuvable(res, 'suivi');
     ev.verification.suivis = ev.verification.suivis.map((x) => (x.id === cible.id
       ? { ...x, texte: commentaire, modifie_le: db.now(), modifie_par: req.user.username } : x));
-    db.update('ecarts', e.id, { evaluation: ev });
+    await db.update('ecarts', e.id, { evaluation: ev });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.delete(`${M}/ecarts/:id/evaluation/suivi/:sid`, requireAuth, (req, res) => {
-    const e = ecartPourEvaluation(req, res);
+  app.delete(`${M}/ecarts/:id/evaluation/suivi/:sid`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourEvaluation(req, res);
     if (!e) return undefined;
     if (!suiviOuvert(e)) return fige(res, 'pac', 'soumis');
     const ev = evaluationDe(e);
     const avant = (ev.verification.suivis || []).length;
     ev.verification.suivis = ev.verification.suivis.filter((x) => x.id !== req.params.sid);
     if (ev.verification.suivis.length === avant) return introuvable(res, 'suivi');
-    db.update('ecarts', e.id, { evaluation: ev });
+    await db.update('ecarts', e.id, { evaluation: ev });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   const preuve = (e, pid) => (e.preuves || []).find((x) => x.id === pid);
 
-  function ecartPourPreuve(req, res) {
-    const e = db.get('ecarts', req.params.id);
+  async function ecartPourPreuve(req, res) {
+    const e = await db.get('ecarts', req.params.id);
     if (!e) { introuvable(res, 'ecart'); return null; }
     if (!R.canContribute(req.user)) { refuser(res); return null; }
-    if (!inspectionEcrivable(req, res, e)) return null;
+    if (!await inspectionEcrivable(req, res, e)) return null;
     return e;
   }
 
-  app.post(`${M}/ecarts/:id/preuves`, requireAuth, multipart(), (req, res) => {
-    const e = ecartPourPreuve(req, res);
+  app.post(`${M}/ecarts/:id/preuves`, requireAuth, multipart(), asynchrone(async (req, res) => {
+    const e = await ecartPourPreuve(req, res);
     if (!e) return undefined;
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -448,29 +458,29 @@ module.exports = function register(app, deps, M) {
       nom_origine: f.filename, fichier: surDisque, taille: f.buffer.length,
       depose_par: req.user.username, depose_le: db.now(),
     };
-    db.update('ecarts', e.id, { preuves: (e.preuves || []).concat([pj]) });
+    await db.update('ecarts', e.id, { preuves: (e.preuves || []).concat([pj]) });
     return res.status(201).json({ status: 'ok', id: pj.id });
-  });
+  }));
 
-  app.delete(`${M}/ecarts/:id/preuves/:pid`, requireAuth, (req, res) => {
-    const e = ecartPourPreuve(req, res);
+  app.delete(`${M}/ecarts/:id/preuves/:pid`, requireAuth, asynchrone(async (req, res) => {
+    const e = await ecartPourPreuve(req, res);
     if (!e) return undefined;
     const pj = preuve(e, req.params.pid);
     if (!pj) return introuvable(res, 'preuve');
     try { fs.unlinkSync(path.join(DOSSIER_PREUVES, path.basename(pj.fichier || ''))); }
     catch (err) { /* le fichier a déjà disparu */ }
-    db.update('ecarts', e.id, { preuves: (e.preuves || []).filter((x) => x.id !== pj.id) });
+    await db.update('ecarts', e.id, { preuves: (e.preuves || []).filter((x) => x.id !== pj.id) });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.get(`${M}/ecarts/:id/preuves/:pid/fichier`, requireAuth, (req, res) => {
-    const e = db.get('ecarts', req.params.id);
+  app.get(`${M}/ecarts/:id/preuves/:pid/fichier`, requireAuth, asynchrone(async (req, res) => {
+    const e = await db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
     // Les pièces d'un constat se consultent comme son rapport : entre États
     // membres, quelle que soit l'AAC qui tient l'inspection — c'est ce que le
     // sous-menu « Écarts (Régional) » ouvre, en lecture seule. Seul le
     // périmètre de l'exploitant s'y oppose encore, en vue Prestataire.
-    const inspection = db.get('inspections', e.inspection_id) || {};
+    const inspection = await db.get('inspections', e.inspection_id) || {};
     if (!vues.voitExploitant(req, inspection.exploitant)) {
       return introuvable(res, 'ecart');
     }
@@ -481,18 +491,18 @@ module.exports = function register(app, deps, M) {
     res.setHeader('Content-Disposition',
       `attachment; filename*=UTF-8''${encodeURIComponent(pj.nom_origine || pj.fichier)}`);
     return res.sendFile(chemin);
-  });
+  }));
 
   // Suivi d'un écart : c'est la seule donnée que l'autorité renseigne après
   // l'import, les autres venant du classeur.
-  app.put(`${M}/ecarts/:id`, requireAuth, (req, res) => {
-    const e = db.get('ecarts', req.params.id);
+  app.put(`${M}/ecarts/:id`, requireAuth, asynchrone(async (req, res) => {
+    const e = await db.get('ecarts', req.params.id);
     if (!e) return introuvable(res, 'ecart');
     if (!R.canContribute(req.user)) return refuser(res);
-    if (!inspectionEcrivable(req, res, e)) return undefined;
-    db.update('ecarts', e.id, { suivi: texte((req.body || {}).suivi) });
+    if (!await inspectionEcrivable(req, res, e)) return undefined;
+    await db.update('ecarts', e.id, { suivi: texte((req.body || {}).suivi) });
     res.json({ status: 'ok' });
-  });
+  }));
 };
 
 module.exports.CLES = CLES;

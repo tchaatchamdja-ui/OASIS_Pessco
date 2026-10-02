@@ -100,6 +100,18 @@ const { INCHANGE } = storePg;
 // `update`, `remove`, `transformer` — vit dans `src/magasin_module.js` depuis ce
 // deuxième : écrit cinq fois, il aurait fallu tenir d'accord cinq copies de la
 // même subtilité.
+// `ramp` — quatrième magasin de module, et le plus large : 155 appels, 7 fichiers,
+// **86 gestionnaires de route encore synchrones**. Deux particularités :
+//
+//   · ses références `POI-xxxx` s'allouent par lots — un classeur porte les
+//     inspections d'un mois —, et l'allocation se fait dans la transformation qui
+//     écrit les inspections. Deux actes d'inspection ne partagent pas un numéro ;
+//   · il entraîne `src/vues_prestataire.js`, le socle des vues AAC / Prestataire,
+//     **partagé avec « Exécution de la Surveillance »** qui reste sur fichiers. Le
+//     socle est donc asynchrone et sert les deux régimes — ce que la façade existe
+//     pour permettre. `execution` a reçu `transformer` à cette occasion, par la
+//     façade : sur fichiers elle sérialise par une file d'attente, et le jour de sa
+//     bascule il n'y aura que son nom à ajouter ici.
 const MIGREES = new Set([
   'ramp_aeronefs',
   'emails',
@@ -112,6 +124,7 @@ const MIGREES = new Set([
   'profil_risque',
   'planification',
   'mesures',
+  'ramp',
 ]);
 
 let socle = null;

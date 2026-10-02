@@ -49,13 +49,15 @@ module.exports = {
       // Ce que le module publie tient donc en deux contrats, tous deux servis
       // aux « Mesures d'Application », plus le volume par instance que le socle
       // demande avant de supprimer une instance.
-      deps.services.publish('RAMP.volumeParInstance', () => {
+      // Les trois contrats sont asynchrones depuis que `ramp` vit en base
+      // (ADR-002, jalon n° 13) : le bus rend une promesse par contrat, et ses
+      // consommateurs l'attendent déjà.
+      deps.services.publish('RAMP.volumeParInstance', async () => {
         const parInstance = {};
-        ['inspections', 'poi'].forEach((coll) => {
-          db.list(coll).forEach((r) => {
-            const i = r.instance || '';
-            parInstance[i] = (parInstance[i] || 0) + 1;
-          });
+        const rangs = await Promise.all(['inspections', 'poi'].map((coll) => db.list(coll)));
+        rangs.flat().forEach((r) => {
+          const i = r.instance || '';
+          parInstance[i] = (parInstance[i] || 0) + 1;
         });
         return parInstance;
       }, { description: 'Nombre d’enregistrements du module, par instance' });
@@ -66,8 +68,13 @@ module.exports = {
       // même contrat que « SURV.constatationsOuvertes » — les Mesures
       // d'Application n'ont donc rien à savoir de RAMP pour l'instruire, et
       // fonctionnent aussi bien si ce module n'est pas déployé.
-      deps.services.publish('RAMP.constatationsCritiques', () => {
-        const inspections = new Map(db.list('inspections').map((i) => [i.id, i]));
+      deps.services.publish('RAMP.constatationsCritiques', async () => {
+        // Les trois collections ensemble : ce contrat est consommé par les
+        // « Mesures d'Application » à chaque ouverture de leur écran.
+        const [toutesInspections, tousParametres, tousEcarts] = await Promise.all(
+          ['inspections', 'parametres', 'ecarts'].map((c) => db.list(c)),
+        );
+        const inspections = new Map(toutesInspections.map((i) => [i.id, i]));
         // L'AAC qui a relevé l'écart est celle qui instruira la mesure : la
         // carence part sous l'instance de son inspection, et les « Mesures
         // d'Application » la rangent sous la même plutôt que sous la leur.
@@ -92,12 +99,12 @@ module.exports = {
           .trim();
 
         const parExploitant = new Map();
-        db.list('parametres')
+        tousParametres
           .filter((p) => p.type === 'exploitants' && p.label)
           .forEach((p) => parExploitant.set(norm(p.label), p));
         // Libellés des items du programme : l'objet d'un écart, c'est l'item
         // contrôlé — son code et son intitulé, rien d'autre.
-        const items = new Map(db.list('parametres')
+        const items = new Map(tousParametres
           .filter((p) => p.type === 'items')
           .map((p) => [p.code, p.label]));
         const parCle = new Map();
@@ -105,7 +112,7 @@ module.exports = {
           if (p.nom) parCle.set(norm(p.nom), p.id);
           if (p.trigramme) parCle.set(norm(p.trigramme), p.id);
         });
-        return db.list('ecarts')
+        return tousEcarts
           .filter((ec) => String(ec.categorie) === '3')
           .map((ec) => {
             const i = inspections.get(ec.inspection_id) || {};
@@ -144,9 +151,9 @@ module.exports = {
       // contrat que celui de « Exécution de la Surveillance ». Les clés sont
       // celles des carences servies plus haut — « ramp:<écart> » — pour que le
       // consommateur rapproche l'un de l'autre sans rien savoir d'ici.
-      deps.services.publish('RAMP.pacDeConstatation', () => {
+      deps.services.publish('RAMP.pacDeConstatation', async () => {
         const parConstatation = {};
-        db.list('ecarts').forEach((ec) => {
+        (await db.list('ecarts')).forEach((ec) => {
           const pac = ec.pac || {};
           const preuves = (ec.preuves || []).map((p) => ({
             intitule: p.intitule || p.nom_origine || '',
@@ -179,17 +186,17 @@ module.exports = {
   // Asynchrone depuis que la nomenclature des aéronefs est en base : c'est le
   // seul amorçage du module qui passe par le réseau (ADR-002, jalon n° 9).
   async seed() {
-    db.seed();
+    await db.seed();
     await db.seedAeronefs();
-    db.seedAeroports();
-    db.seedPays();
-    db.completerActions();
+    await db.seedAeroports();
+    await db.seedPays();
+    await db.completerActions();
     // Le statut « En cours » a été retiré : les données déjà saisies le
     // portent encore, et repassent en « Ouvert ».
-    db.retirerStatutEnCours();
+    await db.retirerStatutEnCours();
     // Toute inspection porte une référence POI-xxxx. Celles reprises d'un
     // classeur qui n'en portait pas la reçoivent ici, une fois.
-    db.referencerInspections();
+    await db.referencerInspections();
     // Un module fraîchement installé n'a encore aucun droit attribué : sans
     // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
     // compris le super-administrateur — d'importer la première inspection et

@@ -50,7 +50,7 @@ module.exports = function register(app, deps, M) {
   // barre supérieure affiche les boutons au bon endroit et dans le bon état.
   // Un compte prestataire n'a pas de bascule : il annonce seulement la vue
   // qu'il tient, et l'exploitant dont il voit les données.
-  const etatVue = (req) => {
+  const etatVue = async (req) => {
     const reel = req.userReel || req.user;
     const perimetre = req.vuePrestataire || null;
     // Le nom de l'organisme, qu'il ait ou non des inspections à son nom : un
@@ -70,7 +70,7 @@ module.exports = function register(app, deps, M) {
     if (!vues.peutBasculer(reel)) {
       return { ...base, disponible: false, prestataire_id: (perimetre && perimetre.prestataires[0]) || '', prestataires: [] };
     }
-    const active = vues.vueDe(reel.username);
+    const active = await vues.vueDe(reel.username);
     return {
       ...base,
       disponible: true,
@@ -81,7 +81,7 @@ module.exports = function register(app, deps, M) {
     };
   };
 
-  app.get(`${M}/context`, requireAuth, (req, res) => {
+  app.get(`${M}/context`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!moduleRights.accesAuModule(R.MODULE, reel.username)) {
       return res.status(403).json({ error: 'no_module_access' });
@@ -91,7 +91,7 @@ module.exports = function register(app, deps, M) {
       privilege: R.meilleurPrivilege(req.user, referentiels),
       etats_inspection: db.ETATS_INSPECTION,
       etats_contact: db.ETATS_CONTACT,
-      vue: etatVue(req),
+      vue: await etatVue(req),
       // Instance regardée : la même que celle du portail et des autres
       // modules — la barre supérieure en fait une liste déroulante.
       instance: instances.etat(req.userReel || req.user, loadConfig),
@@ -103,7 +103,7 @@ module.exports = function register(app, deps, M) {
       // L'administrateur de l'organisme gère les comptes d'office.
       admin_prestataire: ((req.userReel || req.user) || {}).role === 'ADMIN_PRESTATAIRE',
     });
-  });
+  }));
 
   app.get(`${M}/moi`, requireAuth, (req, res) => res.json(vueUtilisateur(req.user)));
 
@@ -113,7 +113,7 @@ module.exports = function register(app, deps, M) {
   app.get(`${M}/instance`, requireAuth,
     (req, res) => res.json(instances.etat(req.userReel || req.user, loadConfig)));
 
-  app.put(`${M}/instance`, requireAuth, (req, res) => {
+  app.put(`${M}/instance`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!instances.estRegional(reel)) {
       return reserve(res, 'super_admin_regional');
@@ -124,17 +124,17 @@ module.exports = function register(app, deps, M) {
     }
     instances.definir(reel.username, demandee);
     return res.json({ status: 'ok', instance: demandee });
-  });
+  }));
 
-  app.get(`${M}/vue`, requireAuth, (req, res) => res.json(etatVue(req)));
+  app.get(`${M}/vue`, requireAuth, asynchrone(async (req, res) => res.json(await etatVue(req))));
 
-  app.put(`${M}/vue`, requireAuth, (req, res) => {
+  app.put(`${M}/vue`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!vues.peutBasculer(reel)) return reserve(res, 'super_admin');
     const d = req.body || {};
     if (!vues.VUES.includes(d.vue)) return inconnu(res, 'vue');
     const prestataireId = d.vue === 'prestataire'
-      ? (d.prestataire_id || vues.vueDe(reel.username).prestataire_id || vues.prestataireParDefaut())
+      ? (d.prestataire_id || (await vues.vueDe(reel.username)).prestataire_id || vues.prestataireParDefaut())
       : '';
     if (d.vue === 'prestataire' && !prestataireId) {
       return res.status(400).json({ error: 'Aucun prestataire disponible pour la vue Prestataire' });
@@ -144,9 +144,9 @@ module.exports = function register(app, deps, M) {
     if (prestataireId && !(referentiels.getAll().prestataires || []).some((p) => p.id === prestataireId)) {
       return inconnu(res, 'prestataire');
     }
-    vues.definirVue(reel.username, d.vue, prestataireId);
+    await vues.definirVue(reel.username, d.vue, prestataireId);
     return res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Mes utilisateurs — comptes rattachés à l'exploitant
@@ -182,8 +182,8 @@ module.exports = function register(app, deps, M) {
   // l'est aussi à Lomé. Ce sont les inspections qui se cloisonnent, pas la
   // nomenclature qui sert à les lire.
 
-  app.get(`${M}/parametres`, requireAuth, (req, res) => {
-    const tous = db.list('parametres');
+  app.get(`${M}/parametres`, requireAuth, asynchrone(async (req, res) => {
+    const tous = await db.list('parametres');
     // Le numéro d'ordre commande d'abord — c'est lui qui range les groupes
     // d'items à l'écran. À numéro égal, le code ou l'intitulé départage.
     const familles = {};
@@ -193,9 +193,9 @@ module.exports = function register(app, deps, M) {
           || String(a.code || a.label).localeCompare(String(b.code || b.label)));
     });
     res.json({ familles, modifiable: admin(req) });
-  });
+  }));
 
-  app.post(`${M}/parametres`, requireAuth, (req, res) => {
+  app.post(`${M}/parametres`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     const d = req.body || {};
     const type = texte(d.type);
@@ -207,7 +207,7 @@ module.exports = function register(app, deps, M) {
     const code = type === 'groupes' ? db.codeDeGroupe(label) : texte(d.code);
     if (type === 'groupes') {
       if (!code) return res.status(400).json({ error: 'Intitulé inexploitable' });
-      if (db.list('parametres').some((x) => x.type === 'groupes' && x.code === code)) {
+      if ((await db.list('parametres')).some((x) => x.type === 'groupes' && x.code === code)) {
         return existant(res, 'groupe');
       }
     }
@@ -226,13 +226,13 @@ module.exports = function register(app, deps, M) {
       uemoa: type === 'exploitants' ? !!d.uemoa : false,
       actif: true,
     };
-    db.insert('parametres', p);
+    await db.insert('parametres', p);
     res.status(201).json({ status: 'ok', id: p.id, code: p.code });
-  });
+  }));
 
-  app.put(`${M}/parametres/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const p = db.get('parametres', req.params.id);
+    const p = await db.get('parametres', req.params.id);
     if (!p) return introuvable(res, 'parametre');
     const d = req.body || {};
     const patch = {};
@@ -253,33 +253,33 @@ module.exports = function register(app, deps, M) {
       if (d.pays !== undefined) patch.pays = texte(d.pays);
       if (d.uemoa !== undefined) patch.uemoa = !!d.uemoa;
     }
-    db.update('parametres', p.id, patch);
+    await db.update('parametres', p.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // Désactiver plutôt que supprimer : un paramètre retiré des listes reste
   // lisible sur les inspections déjà importées qui le portent.
-  app.put(`${M}/parametres/:id/actif`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/:id/actif`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const p = db.get('parametres', req.params.id);
+    const p = await db.get('parametres', req.params.id);
     if (!p) return introuvable(res, 'parametre');
-    db.update('parametres', p.id, { actif: !p.actif });
+    await db.update('parametres', p.id, { actif: !p.actif });
     res.json({ status: 'ok', actif: !p.actif });
-  });
+  }));
 
-  app.delete(`${M}/parametres/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/parametres/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const p = db.get('parametres', req.params.id);
+    const p = await db.get('parametres', req.params.id);
     if (!p) return introuvable(res, 'parametre');
     // Un paramètre encore porté par une inspection ou un écart ne se supprime
     // pas : la donnée deviendrait illisible. Il se désactive.
-    const utilise = compterUsages(p);
+    const utilise = await compterUsages(p);
     if (utilise) {
       return enUsage(res, 'parametre', utilise, { desactivable: true });
     }
-    db.remove('parametres', p.id);
+    await db.remove('parametres', p.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Pays
@@ -288,11 +288,11 @@ module.exports = function register(app, deps, M) {
   // pays et ses coordonnées. Deux cent cinquante lignes courtes : la liste part
   // entière et l'écran la filtre.
 
-  app.get(`${M}/pays`, requireAuth, (req, res) => {
-    const liste = db.list('pays').slice()
+  app.get(`${M}/pays`, requireAuth, asynchrone(async (req, res) => {
+    const liste = (await db.list('pays')).slice()
       .sort((a, b) => String(a.nom).localeCompare(String(b.nom), 'fr'));
     res.json({ pays: liste, modifiable: admin(req) });
-  });
+  }));
 
   // Plusieurs adresses de contact par autorité : on accepte aussi bien un
   // tableau qu'une saisie séparée par des virgules, des points-virgules ou des
@@ -314,60 +314,60 @@ module.exports = function register(app, deps, M) {
 
   const bigrammeValide = (v) => /^[A-Z]{2}$/.test(v);
 
-  app.post(`${M}/pays`, requireAuth, (req, res) => {
+  app.post(`${M}/pays`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     const p = champsPays(req.body || {});
     if (!p.nom) return requis(res, 'nom');
     if (!p.iso2) return requis(res, 'bigramme');
     if (!bigrammeValide(p.iso2)) return res.status(400).json({ error: 'Bigramme : deux lettres attendues' });
-    if (db.list('pays').some((x) => x.iso2 === p.iso2)) {
+    if ((await db.list('pays')).some((x) => x.iso2 === p.iso2)) {
       return res.status(409).json({ error: `Le bigramme ${p.iso2} désigne déjà un pays` });
     }
     const cree = {
       id: db.uid('pay'), aac: '', adresse: '', site: '', emails: [], uemoa: false,
       ...p, actif: true,
     };
-    db.insert('pays', cree);
+    await db.insert('pays', cree);
     res.status(201).json({ status: 'ok', id: cree.id });
-  });
+  }));
 
-  app.put(`${M}/pays/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/pays/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const p = db.get('pays', req.params.id);
+    const p = await db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
     const patch = champsPays(req.body || {});
     if (patch.nom === '') return requis(res, 'nom');
     if (patch.iso2 !== undefined) {
       if (!bigrammeValide(patch.iso2)) return res.status(400).json({ error: 'Bigramme : deux lettres attendues' });
-      if (db.list('pays').some((x) => x.id !== p.id && x.iso2 === patch.iso2)) {
+      if ((await db.list('pays')).some((x) => x.id !== p.id && x.iso2 === patch.iso2)) {
         return res.status(409).json({ error: `Le bigramme ${patch.iso2} désigne déjà un pays` });
       }
     }
-    db.update('pays', p.id, patch);
+    await db.update('pays', p.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.put(`${M}/pays/:id/actif`, requireAuth, (req, res) => {
+  app.put(`${M}/pays/:id/actif`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const p = db.get('pays', req.params.id);
+    const p = await db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
-    db.update('pays', p.id, { actif: p.actif === false });
+    await db.update('pays', p.id, { actif: p.actif === false });
     res.json({ status: 'ok', actif: p.actif === false });
-  });
+  }));
 
-  app.delete(`${M}/pays/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/pays/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const p = db.get('pays', req.params.id);
+    const p = await db.get('pays', req.params.id);
     if (!p) return introuvable(res, 'pays');
     // Un pays cité par une inspection ne se supprime pas : la ligne
     // deviendrait illisible. Il se désactive.
-    const utilise = db.list('inspections').filter((i) => i.pays === p.nom).length;
+    const utilise = (await db.list('inspections')).filter((i) => i.pays === p.nom).length;
     if (utilise) {
       return enUsage(res, 'pays', utilise, { desactivable: true });
     }
-    db.remove('pays', p.id);
+    await db.remove('pays', p.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Aéroports
@@ -376,12 +376,12 @@ module.exports = function register(app, deps, M) {
   // filtre. Pas de pagination ici — ce serait servir moins de lignes qu'une
   // page n'en montre.
 
-  app.get(`${M}/aeroports`, requireAuth, (req, res) => {
-    const liste = db.list('aeroports').slice().sort((a, b) =>
+  app.get(`${M}/aeroports`, requireAuth, asynchrone(async (req, res) => {
+    const liste = (await db.list('aeroports')).slice().sort((a, b) =>
       String(a.pays).localeCompare(String(b.pays), 'fr')
       || String(a.nom).localeCompare(String(b.nom), 'fr'));
     res.json({ aeroports: liste, modifiable: admin(req) });
-  });
+  }));
 
   const champsAeroport = (d) => ({
     pays: texte(d.pays),
@@ -390,23 +390,23 @@ module.exports = function register(app, deps, M) {
     statut: texte(d.statut),
   });
 
-  app.post(`${M}/aeroports`, requireAuth, (req, res) => {
+  app.post(`${M}/aeroports`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     const a = champsAeroport(req.body || {});
     if (!a.pays) return requis(res, 'pays');
     if (!a.nom) return requis(res, 'intitule');
     // Le code OACI identifie la plateforme : deux aéroports ne le partagent pas.
-    if (a.code && db.list('aeroports').some((x) => x.code === a.code)) {
+    if (a.code && (await db.list('aeroports')).some((x) => x.code === a.code)) {
       return res.status(409).json({ error: `Le code ${a.code} désigne déjà un aéroport` });
     }
     const cree = { id: db.uid('apt'), ...a, actif: true };
-    db.insert('aeroports', cree);
+    await db.insert('aeroports', cree);
     res.status(201).json({ status: 'ok', id: cree.id });
-  });
+  }));
 
-  app.put(`${M}/aeroports/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/aeroports/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const a = db.get('aeroports', req.params.id);
+    const a = await db.get('aeroports', req.params.id);
     if (!a) return introuvable(res, 'aeroport');
     const d = req.body || {};
     const patch = {};
@@ -416,28 +416,28 @@ module.exports = function register(app, deps, M) {
     });
     if (patch.pays === '') return requis(res, 'pays');
     if (patch.nom === '') return requis(res, 'intitule');
-    if (patch.code && db.list('aeroports').some((x) => x.id !== a.id && x.code === patch.code)) {
+    if (patch.code && (await db.list('aeroports')).some((x) => x.id !== a.id && x.code === patch.code)) {
       return res.status(409).json({ error: `Le code ${patch.code} désigne déjà un aéroport` });
     }
-    db.update('aeroports', a.id, patch);
+    await db.update('aeroports', a.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.put(`${M}/aeroports/:id/actif`, requireAuth, (req, res) => {
+  app.put(`${M}/aeroports/:id/actif`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const a = db.get('aeroports', req.params.id);
+    const a = await db.get('aeroports', req.params.id);
     if (!a) return introuvable(res, 'aeroport');
-    db.update('aeroports', a.id, { actif: a.actif === false });
+    await db.update('aeroports', a.id, { actif: a.actif === false });
     res.json({ status: 'ok', actif: a.actif === false });
-  });
+  }));
 
-  app.delete(`${M}/aeroports/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/aeroports/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
-    const a = db.get('aeroports', req.params.id);
+    const a = await db.get('aeroports', req.params.id);
     if (!a) return introuvable(res, 'aeroport');
-    db.remove('aeroports', a.id);
+    await db.remove('aeroports', a.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Nomenclature des aéronefs
@@ -516,7 +516,7 @@ module.exports = function register(app, deps, M) {
   // appareils que les inspections citent : les statistiques s'en servent pour
   // regrouper les inspections d'une même désignation.
   app.get(`${M}/aeronefs/correspondances`, requireAuth, asynchrone(async (req, res) => {
-    const cites = [...new Set(db.list('inspections').map((i) => i.aeronef).filter(Boolean))];
+    const cites = [...new Set((await db.list('inspections')).map((i) => i.aeronef).filter(Boolean))];
     const socle = await db.aeronefs();
     const normal = (v) => String(v || '').trim().toUpperCase();
     const parDesignation = new Set(socle.map((a) => normal(a.designation)));
@@ -606,7 +606,7 @@ module.exports = function register(app, deps, M) {
     // **Le jour où `inspections` basculera, ces deux gestes devront n'en faire
     // qu'un** — sans quoi un appareil serait supprimé pendant qu'une inspection
     // le cite.
-    const utilise = db.list('inspections')
+    const utilise = (await db.list('inspections'))
       .filter((i) => i.aeronef === a.designation || i.aeronef === a.modele).length;
     if (utilise) {
       return enUsage(res, 'aeronef', utilise, { desactivable: true });
@@ -615,13 +615,13 @@ module.exports = function register(app, deps, M) {
     return res.json({ status: 'ok' });
   }));
 
-  function compterUsages(p) {
-    const inspections = db.list('inspections');
-    const ecarts = db.list('ecarts');
+  async function compterUsages(p) {
+    const inspections = await db.list('inspections');
+    const ecarts = await db.list('ecarts');
     // Un groupe n'est pas porté par une inspection mais par des items : c'est
     // eux qu'il faut compter, sans quoi on supprimerait le groupe sous eux.
     if (p.type === 'groupes') {
-      return db.list('parametres').filter((x) => x.type === 'items' && x.cat === p.code).length;
+      return (await db.list('parametres')).filter((x) => x.type === 'items' && x.cat === p.code).length;
     }
     if (p.type === 'exploitants') return inspections.filter((i) => i.exploitant === p.label).length;
     if (p.type === 'statuts') return inspections.filter((i) => i.status === p.label).length;
@@ -641,13 +641,13 @@ module.exports = function register(app, deps, M) {
   const peutTelecharger = (req, d) => peutModifierDepot(req, d)
     || R.roleRamp(req.user, referentiels) === 'Coordonnateur Régional';
 
-  app.get(`${M}/depots`, requireAuth, (req, res) => {
+  app.get(`${M}/depots`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
-    res.json(db.list('depots').slice()
+    res.json((await db.list('depots')).slice()
       .sort((a, b) => String(b.depose_le || '').localeCompare(String(a.depose_le || ''))));
-  });
+  }));
 
-  app.post(`${M}/depots`, requireAuth, multipart(), (req, res) => {
+  app.post(`${M}/depots`, requireAuth, multipart(), asynchrone(async (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res);
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -671,35 +671,35 @@ module.exports = function register(app, deps, M) {
       nom_origine: f.filename, fichier: surDisque, taille: f.buffer.length,
       depose_par: req.user.username, depose_le: db.now(),
     };
-    db.insert('depots', depot);
+    await db.insert('depots', depot);
     res.status(201).json({ status: 'ok', id: depot.id });
-  });
+  }));
 
-  app.put(`${M}/depots/:id`, requireAuth, (req, res) => {
-    const dep = db.get('depots', req.params.id);
+  app.put(`${M}/depots/:id`, requireAuth, asynchrone(async (req, res) => {
+    const dep = await db.get('depots', req.params.id);
     if (!dep) return introuvable(res, 'depot');
     if (!peutModifierDepot(req, dep)) return reserve(res, 'deposant_gestionnaire');
     const d = req.body || {};
-    db.update('depots', dep.id, {
+    await db.update('depots', dep.id, {
       nom: texte(d.nom) || dep.nom,
       annee: texte(d.annee) || dep.annee,
       mois: texte(d.mois) || dep.mois,
     });
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.delete(`${M}/depots/:id`, requireAuth, (req, res) => {
-    const dep = db.get('depots', req.params.id);
+  app.delete(`${M}/depots/:id`, requireAuth, asynchrone(async (req, res) => {
+    const dep = await db.get('depots', req.params.id);
     if (!dep) return introuvable(res, 'depot');
     if (!peutModifierDepot(req, dep)) return reserve(res, 'deposant_gestionnaire');
     const chemin = path.join(DOSSIER_DEPOTS, path.basename(dep.fichier || ''));
     if (dep.fichier && fs.existsSync(chemin)) fs.unlinkSync(chemin);
-    db.remove('depots', dep.id);
+    await db.remove('depots', dep.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.get(`${M}/depots/:id/fichier`, requireAuth, (req, res) => {
-    const dep = db.get('depots', req.params.id);
+  app.get(`${M}/depots/:id/fichier`, requireAuth, asynchrone(async (req, res) => {
+    const dep = await db.get('depots', req.params.id);
     if (!dep) return introuvable(res, 'depot');
     if (!peutTelecharger(req, dep)) return refuser(res);
     const chemin = path.join(DOSSIER_DEPOTS, path.basename(dep.fichier || ''));
@@ -707,7 +707,7 @@ module.exports = function register(app, deps, M) {
     res.setHeader('Content-Disposition',
       `attachment; filename*=UTF-8''${encodeURIComponent(dep.nom_origine || dep.fichier)}`);
     res.sendFile(chemin);
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Carnet de contacts
@@ -718,12 +718,12 @@ module.exports = function register(app, deps, M) {
   // Le carnet est commun à toutes les instances : ce sont les correspondants
   // des États membres, et c'est pour les joindre d'une AAC à l'autre qu'il
   // existe. Le cloisonnement le viderait de son objet.
-  app.get(`${M}/contacts`, requireAuth, (req, res) => {
+  app.get(`${M}/contacts`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return reserve(res, 'vue_prestataire');
-    res.json(db.list('contacts').slice().sort((a, b) =>
+    res.json((await db.list('contacts')).slice().sort((a, b) =>
       String(a.etat || '').localeCompare(String(b.etat || ''))
       || String(a.nom || '').localeCompare(String(b.nom || ''))));
-  });
+  }));
 
   const champsContact = (d) => ({
     etat: texte(d.etat), nom: texte(d.nom), prenom: texte(d.prenom),
@@ -731,7 +731,7 @@ module.exports = function register(app, deps, M) {
     fonction: texte(d.fonction), autres: texte(d.autres),
   });
 
-  app.post(`${M}/contacts`, requireAuth, (req, res) => {
+  app.post(`${M}/contacts`, requireAuth, asynchrone(async (req, res) => {
     const c = champsContact(req.body || {});
     if (!c.etat || !c.nom || !c.prenom) {
       return res.status(400).json({ error: 'État, nom et prénoms sont obligatoires' });
@@ -743,12 +743,12 @@ module.exports = function register(app, deps, M) {
       id: db.uid('con'), ...c, actif: true,
       cree_par: req.user.username, date_creation: db.now(),
     };
-    db.insert('contacts', contact);
+    await db.insert('contacts', contact);
     res.status(201).json({ status: 'ok', id: contact.id });
-  });
+  }));
 
-  app.put(`${M}/contacts/:id`, requireAuth, (req, res) => {
-    const contact = db.get('contacts', req.params.id);
+  app.put(`${M}/contacts/:id`, requireAuth, asynchrone(async (req, res) => {
+    const contact = await db.get('contacts', req.params.id);
     if (!contact) return introuvable(res, 'contact');
     const c = champsContact({ ...contact, ...(req.body || {}) });
     if (!c.etat || !c.nom || !c.prenom) {
@@ -759,27 +759,27 @@ module.exports = function register(app, deps, M) {
       || !R.couvreEtat(req.user, referentiels, c.etat)) {
       return horsPerimetre(res, 'contact');
     }
-    db.update('contacts', contact.id, c);
+    await db.update('contacts', contact.id, c);
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.put(`${M}/contacts/:id/actif`, requireAuth, (req, res) => {
-    const contact = db.get('contacts', req.params.id);
+  app.put(`${M}/contacts/:id/actif`, requireAuth, asynchrone(async (req, res) => {
+    const contact = await db.get('contacts', req.params.id);
     if (!contact) return introuvable(res, 'contact');
     if (!R.couvreEtat(req.user, referentiels, contact.etat)) {
       return horsPerimetre(res, 'contact');
     }
-    db.update('contacts', contact.id, { actif: !contact.actif });
+    await db.update('contacts', contact.id, { actif: !contact.actif });
     res.json({ status: 'ok', actif: !contact.actif });
-  });
+  }));
 
-  app.delete(`${M}/contacts/:id`, requireAuth, (req, res) => {
-    const contact = db.get('contacts', req.params.id);
+  app.delete(`${M}/contacts/:id`, requireAuth, asynchrone(async (req, res) => {
+    const contact = await db.get('contacts', req.params.id);
     if (!contact) return introuvable(res, 'contact');
     if (!admin(req) && !R.couvreEtat(req.user, referentiels, contact.etat)) {
       return horsPerimetre(res, 'contact');
     }
-    db.remove('contacts', contact.id);
+    await db.remove('contacts', contact.id);
     res.json({ status: 'ok' });
-  });
+  }));
 };

@@ -1,8 +1,7 @@
 // Module « Inspections d'aéronefs sur aire de trafic » — accès aux données.
 //
 // Reprise de l'application RAMP (Express + Prisma/PostgreSQL) sur le socle
-// OASIS (JSON via src/store.js). Les modèles Prisma deviennent les collections
-// de data/ramp.json ; la relation Inspection → Anomaly, portée par une clé
+// OASIS. Les modèles Prisma deviennent les collections de `ramp` ; la relation Inspection → Anomaly, portée par une clé
 // étrangère et un `onDelete: Cascade`, se rejoue ici par `inspection_id` et une
 // suppression explicite des écarts.
 //
@@ -14,11 +13,22 @@
 //
 // Les modèles `User` et `AuditLog` de RAMP n'ont pas d'équivalent ici : le
 // socle porte déjà les comptes, les sessions et le journal d'audit.
+// En base depuis ADR-002, jalon n° 13 — quatrième magasin de module. Le
+// vocabulaire commun aux cinq vit dans `src/magasin_module.js`, dont l'en-tête dit
+// ce que `transformer` existe pour empêcher.
+//
+// Ce module tire ses identifiants lui-même, avec un préfixe parlant, et porte ses
+// propres dates : d'où les deux options. Changer la forme de ses enregistrements
+// en passant n'aurait pas été une conversion mais une migration de données.
+//
+// La nomenclature des aéronefs, elle, est en base depuis le jalon n° 9 et garde
+// son propre magasin : on la lit constamment, on l'écrit rarement, et une
+// écriture d'inspection n'a pas à la réécrire.
 const crypto = require('crypto');
-const store = require('../../store');
-// La nomenclature des aéronefs passe par la façade, non par `store` : elle est
-// la première collection basculée en base (ADR-002, jalon n° 9).
+const { magasinDeModule } = require('../../magasin_module');
 const magasin = require('../../magasin');
+
+const base = magasinDeModule('ramp', { identifiantParLeMagasin: false, horodater: false });
 
 const COLLECTIONS = ['inspections', 'ecarts', 'parametres', 'depots', 'contacts', 'aeroports', 'pays', 'poi',
   // Requêtes entre États membres, et leurs fils d'échanges.
@@ -117,9 +127,7 @@ const codeDeGroupe = (libelle) => String(libelle || '')
   .replace(/^_+|_+$/g, '')
   .slice(0, 40);
 
-const load = () => store.load('ramp', {});
-const save = (d) => store.save('ramp', d);
-const list = (coll) => load()[coll] || [];
+const { load, save, transformer, list, get, insert, update, remove, INCHANGE } = base;
 
 const uid = (prefix) => `${prefix}_${crypto.randomBytes(4).toString('hex')}`;
 const now = () => new Date().toISOString();
@@ -131,9 +139,14 @@ const now = () => new Date().toISOString();
 // ici depuis les intitulés que les items portent en clair, puis on remplace ce
 // libellé par le code du groupe. Idempotent : une base déjà reprise ne bouge
 // plus, puisqu'il n'y a plus de `cat` sans groupe correspondant.
-function reprendreGroupes() {
-  const d = store.load('ramp', null);
-  if (!d) return 0;
+// Les cinq reprises de démarrage suivent la même forme : elles lisent, décident,
+// et n'écrivent que s'il y a quelque chose à reprendre. Toutes passent par une
+// transformation — `INCHANGE` quand il n'y a rien à faire, ce qui évite de
+// réécrire deux cents kilo-octets à chaque démarrage.
+async function reprendreGroupes() {
+  let faits = 0;
+  await transformer((d) => {
+  faits = 0;
   const params = d.parametres || [];
   const codesConnus = new Set(params.filter((p) => p.type === 'groupes').map((p) => p.code));
   const items = params.filter((p) => p.type === 'items');
@@ -156,7 +169,7 @@ function reprendreGroupes() {
   const aNumeroter = groupes.filter((g) => !Number(g.ordre));
   aNumeroter.forEach((g) => { rang += 1; g.ordre = rang; });
 
-  if (!aCreer.size && !aNumeroter.length) return 0;
+  if (!aCreer.size && !aNumeroter.length) return INCHANGE;
 
   [...aCreer.entries()].forEach(([libelle, code]) => {
     rang += 1;
@@ -170,13 +183,15 @@ function reprendreGroupes() {
     if (code) it.cat = code;
   });
   d.parametres = params;
-  store.save('ramp', d);
-  return aCreer.size + aNumeroter.length;
+  faits = aCreer.size + aNumeroter.length;
+  return d;
+  });
+  return faits;
 }
 
-function seed() {
-  const d = store.load('ramp', null);
-  if (d) { reprendreGroupes(); return; }
+async function seed() {
+  const existant = await load();
+  if (Object.keys(existant).length) { await reprendreGroupes(); return; }
   const vide = {};
   COLLECTIONS.forEach((c) => { vide[c] = []; });
 
@@ -202,7 +217,7 @@ function seed() {
   ACTIONS_DEFAUT.forEach(([code, label]) => ajouter('actions', label, { code }));
   vide.parametres = params;
 
-  save({ ...vide, createdAt: now() });
+  await save({ ...vide, createdAt: now() });
 }
 
 // Classes d'action du formulaire d'inspection (POI).
@@ -216,20 +231,22 @@ const ACTIONS_POI = [
   ['3d', "Interdiction d'exploitation immédiate"],
 ];
 
-function completerActions() {
-  const d = store.load('ramp', null);
-  if (!d) return 0;
-  const params = d.parametres || [];
-  const connus = new Set(params.filter((p) => p.type === 'actions').map((p) => p.code));
-  const aCreer = ACTIONS_POI.filter(([code]) => !connus.has(code));
-  if (!aCreer.length) return 0;
-  aCreer.forEach(([code, label]) => params.push({
-    id: uid('par'), type: 'actions', label, code,
-    cat: '', description: '', ordre: 0, ponderation: null, actif: true,
-  }));
-  d.parametres = params;
-  save(d);
-  return aCreer.length;
+async function completerActions() {
+  let faits = 0;
+  await transformer((d) => {
+    const params = d.parametres || [];
+    const connus = new Set(params.filter((p) => p.type === 'actions').map((p) => p.code));
+    const aCreer = ACTIONS_POI.filter(([code]) => !connus.has(code));
+    faits = aCreer.length;
+    if (!faits) return INCHANGE;
+    aCreer.forEach(([code, label]) => params.push({
+      id: uid('par'), type: 'actions', label, code,
+      cat: '', description: '', ordre: 0, ponderation: null, actif: true,
+    }));
+    d.parametres = params;
+    return d;
+  });
+  return faits;
 }
 
 // Retrait du statut « En cours ».
@@ -241,27 +258,27 @@ function completerActions() {
 const STATUT_RETIRE = 'En cours';
 const STATUT_REPRIS = 'Ouvert';
 
-function retirerStatutEnCours() {
-  const d = store.load('ramp', null);
-  if (!d) return 0;
+async function retirerStatutEnCours() {
   let touches = 0;
+  await transformer((d) => {
+    touches = 0;
+    const params = (d.parametres || []).filter((p) => {
+      const aRetirer = p.type === 'statuts' && p.label === STATUT_RETIRE;
+      if (aRetirer) touches += 1;
+      return !aRetirer;
+    });
 
-  const params = (d.parametres || []).filter((p) => {
-    const aRetirer = p.type === 'statuts' && p.label === STATUT_RETIRE;
-    if (aRetirer) touches += 1;
-    return !aRetirer;
-  });
+    (d.ecarts || []).forEach((e) => {
+      if (e.suivi === STATUT_RETIRE) { e.suivi = STATUT_REPRIS; touches += 1; }
+    });
+    (d.inspections || []).forEach((i) => {
+      if (i.status === STATUT_RETIRE) { i.status = STATUT_REPRIS; touches += 1; }
+    });
 
-  (d.ecarts || []).forEach((e) => {
-    if (e.suivi === STATUT_RETIRE) { e.suivi = STATUT_REPRIS; touches += 1; }
+    if (!touches) return INCHANGE;
+    d.parametres = params;
+    return d;
   });
-  (d.inspections || []).forEach((i) => {
-    if (i.status === STATUT_RETIRE) { i.status = STATUT_REPRIS; touches += 1; }
-  });
-
-  if (!touches) return 0;
-  d.parametres = params;
-  save(d);
   return touches;
 }
 
@@ -284,24 +301,26 @@ function plancherReferencePoi(d) {
   return Math.max(plusHaut(d.poi, 'reference'), plusHaut(d.inspections, 'poi_reference'));
 }
 
-function prochaineReferencePoi() {
-  const d = load();
-  const rang = Math.max(Number(d.dernier_poi) || 0, plancherReferencePoi(d)) + 1;
-  d.dernier_poi = rang;
-  save(d);
-  return numeroteRef(rang);
-}
-
-// Plusieurs références d'un coup, pour un classeur importé : les tirer une à
-// une réécrirait le magasin à chaque ligne.
-function reserverReferencesPoi(combien) {
+// ── Allouer des références, dans l'état qu'on écrit ──
+//
+// Les deux allocateurs sont **purs** : ils avancent le compteur dans l'état en
+// cours de transformation et rendent les références. Lire le compteur,
+// l'incrémenter et réécrire en trois temps aurait donné la même référence `POI-42`
+// à deux inspections parties ensemble — or elle désigne un acte d'autorité, et une
+// requête entre États la cite.
+//
+// Les routes composent donc : la référence et l'acte qui la porte s'écrivent
+// ensemble. `allouerReferencesPoi` en tire plusieurs d'un coup, pour un classeur
+// importé — ligne à ligne, un import de plusieurs milliers d'écarts aurait
+// réécrit le magasin à chaque tour.
+const allouerReferencesPoi = (d, combien) => {
   if (!combien) return [];
-  const d = load();
   const debut = Math.max(Number(d.dernier_poi) || 0, plancherReferencePoi(d));
   d.dernier_poi = debut + combien;
-  save(d);
   return Array.from({ length: combien }, (v, k) => numeroteRef(debut + k + 1));
-}
+};
+
+const allouerReferencePoi = (d) => allouerReferencesPoi(d, 1)[0];
 
 // ── Toute inspection porte sa référence ──
 // Les inspections reprises d'un classeur n'en avaient que si le classeur en
@@ -309,10 +328,12 @@ function reserverReferencesPoi(combien) {
 // désignait en une ligne — ni à l'écran, ni dans une requête entre États.
 // Elles la reçoivent ici, les plus anciennes d'abord, pour que la suite des
 // numéros suive celle des actes.
-function referencerInspections() {
-  const d = load();
+async function referencerInspections() {
+  let faits = 0;
+  await transformer((d) => {
+  faits = 0;
   const sans = (d.inspections || []).filter((i) => !REF_POI.test(String(i.poi_reference || '')));
-  if (!sans.length) return 0;
+  if (!sans.length) return INCHANGE;
   let rang = Math.max(Number(d.dernier_poi) || 0, plancherReferencePoi(d));
   sans.sort((a, b) => String(a.date || '').localeCompare(String(b.date || ''))
     || String(a.date_creation || '').localeCompare(String(b.date_creation || '')));
@@ -324,8 +345,10 @@ function referencerInspections() {
     i.reference_auto = true;
   });
   d.dernier_poi = rang;
-  save(d);
-  return sans.length;
+  faits = sans.length;
+  return d;
+  });
+  return faits;
 }
 
 // ══════════════════════════════════════
@@ -337,20 +360,23 @@ function referencerInspections() {
 //
 // Comme pour les aéroports, `seed()` ne rejouant pas sur une base existante,
 // l'amorçage se fait ici, une fois, et se souvient de l'avoir fait.
-function seedPays() {
-  const d = store.load('ramp', null);
-  if (!d) return 0;
-  if ((d.pays || []).length || d.pays_amorces) return 0;
-  // eslint-disable-next-line global-require
-  const reference = require('./pays-reference.json');
-  d.pays = reference.map(([nom, iso2, aac, adresse, site, emails, uemoa]) => ({
-    id: uid('pay'), nom, iso2, aac, adresse, site,
-    emails: emails ? emails.split(',').map((e) => e.trim()).filter(Boolean) : [],
-    uemoa: !!uemoa, actif: true,
-  }));
-  d.pays_amorces = now();
-  save(d);
-  return d.pays.length;
+async function seedPays() {
+  let faits = 0;
+  await transformer((d) => {
+    faits = 0;
+    if ((d.pays || []).length || d.pays_amorces) return INCHANGE;
+    // eslint-disable-next-line global-require
+    const reference = require('./pays-reference.json');
+    d.pays = reference.map(([nom, iso2, aac, adresse, site, emails, uemoa]) => ({
+      id: uid('pay'), nom, iso2, aac, adresse, site,
+      emails: emails ? emails.split(',').map((e) => e.trim()).filter(Boolean) : [],
+      uemoa: !!uemoa, actif: true,
+    }));
+    d.pays_amorces = now();
+    faits = d.pays.length;
+    return d;
+  });
+  return faits;
 }
 
 // ══════════════════════════════════════
@@ -363,20 +389,23 @@ function seedPays() {
 // `seed()` ne s'exécutant que sur une base absente, une base déjà créée n'aurait
 // jamais d'aéroports : on les y ajoute ici. Idempotent — une liste déjà en
 // place n'est pas retouchée, et un aéroport supprimé ne revient pas.
-function seedAeroports() {
-  const d = store.load('ramp', null);
-  if (!d) return 0;
-  if ((d.aeroports || []).length || d.aeroports_amorces) return 0;
-  // eslint-disable-next-line global-require
-  const reference = require('./aeroports-reference.json');
-  d.aeroports = reference.map(([pays, nom, code, statut]) => ({
-    id: uid('apt'), pays, nom, code, statut, actif: true,
-  }));
-  // Marque posée une fois pour toutes : sans elle, une liste vidée à la main se
-  // reconstituerait au démarrage suivant.
-  d.aeroports_amorces = now();
-  save(d);
-  return d.aeroports.length;
+async function seedAeroports() {
+  let faits = 0;
+  await transformer((d) => {
+    faits = 0;
+    if ((d.aeroports || []).length || d.aeroports_amorces) return INCHANGE;
+    // eslint-disable-next-line global-require
+    const reference = require('./aeroports-reference.json');
+    d.aeroports = reference.map(([pays, nom, code, statut]) => ({
+      id: uid('apt'), pays, nom, code, statut, actif: true,
+    }));
+    // Marque posée une fois pour toutes : sans elle, une liste vidée à la main se
+    // reconstituerait au démarrage suivant.
+    d.aeroports_amorces = now();
+    faits = d.aeroports.length;
+    return d;
+  });
+  return faits;
 }
 
 // ══════════════════════════════════════
@@ -460,60 +489,34 @@ async function removeAeronef(id) {
   return retire;
 }
 
-function get(coll, id) {
-  return list(coll).find((r) => r.id === id) || null;
-}
-
-function insert(coll, item) {
-  const d = load();
-  d[coll] = d[coll] || [];
-  d[coll].push(item);
-  save(d);
-  return item;
-}
-
-// Insertion groupée : une seule écriture du fichier pour tout un import.
-// Ligne par ligne, un import de plusieurs milliers d'écarts relirait et
-// réécrirait le fichier à chaque tour.
-function insertMany(entrees) {
-  const d = load();
-  Object.entries(entrees).forEach(([coll, items]) => {
-    d[coll] = (d[coll] || []).concat(items);
+// Insertion groupée : une seule écriture pour tout un import. Ligne par ligne, un
+// import de plusieurs milliers d'écarts aurait relu et réécrit le magasin à chaque
+// tour — et, en base, autant d'allers-retours.
+async function insertMany(entrees) {
+  await transformer((d) => {
+    Object.entries(entrees).forEach(([coll, items]) => {
+      d[coll] = (d[coll] || []).concat(items);
+    });
+    return d;
   });
-  save(d);
-}
-
-function update(coll, id, patch) {
-  const d = load();
-  const arr = d[coll] || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return null;
-  arr[i] = { ...arr[i], ...patch };
-  save(d);
-  return arr[i];
-}
-
-function remove(coll, id) {
-  const d = load();
-  const arr = d[coll] || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return false;
-  arr.splice(i, 1);
-  save(d);
-  return true;
 }
 
 // Supprimer une inspection emporte ses écarts, comme le faisait la cascade
-// déclarée au schéma Prisma. Une seule écriture pour les deux collections.
-function removeInspection(id) {
-  const d = load();
-  const arr = d.inspections || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return false;
-  arr.splice(i, 1);
-  d.ecarts = (d.ecarts || []).filter((e) => e.inspection_id !== id);
-  save(d);
-  return true;
+// déclarée au schéma Prisma. **Une seule transformation pour les deux
+// collections** : entre deux écritures, les écarts d'une inspection disparue
+// restaient lisibles et plus rien ne les rattachait.
+async function removeInspection(id) {
+  let ote = false;
+  await transformer((d) => {
+    const arr = d.inspections || [];
+    const i = arr.findIndex((r) => r.id === id);
+    ote = i >= 0;
+    if (!ote) return INCHANGE;
+    arr.splice(i, 1);
+    d.ecarts = (d.ecarts || []).filter((e) => e.inspection_id !== id);
+    return d;
+  });
+  return ote;
 }
 
 // Un fichier du dossier des fiches est-il encore désigné, par une fiche ou par
@@ -522,20 +525,21 @@ function removeInspection(id) {
 // la fiche ne le désigne plus le retirait aussi à l'État destinataire, qui
 // tombait sur « Fichier introuvable ». Un fichier ne s'efface donc que lorsque
 // plus rien ne le désigne ; l'appelant retire d'abord la désignation.
-function fichierPoiDesigne(nom) {
+async function fichierPoiDesigne(nom) {
   const cible = String(nom || '').split(/[\\/]/).pop();
   if (!cible) return false;
-  const d = load();
+  const d = await load();
   const dans = (pieces) => (pieces || []).some((p) => String(p.fichier || '').split(/[\\/]/).pop() === cible);
   return (d.poi || []).some((p) => dans(p.pieces)) || (d.partages || []).some((pa) => dans(pa.pieces));
 }
 
 module.exports = {
+  ...base,
   COLLECTIONS, FAMILLES, ETATS_INSPECTION, ETATS_CONTACT, codeDeGroupe,
-  CATEGORIES_DEFAUT, seed, list, get, insert, insertMany, update, remove, removeInspection,
+  CATEGORIES_DEFAUT, seed, insertMany, removeInspection,
   fichierPoiDesigne,
-  uid, now, load, save,
+  uid, now,
   seedAeronefs, aeronefs, modifierAeronefs, getAeronef, insertAeronef, updateAeronef, removeAeronef,
   seedAeroports, seedPays, completerActions, retirerStatutEnCours,
-  prochaineReferencePoi, reserverReferencesPoi, referencerInspections
+  allouerReferencePoi, allouerReferencesPoi, referencerInspections,
 };

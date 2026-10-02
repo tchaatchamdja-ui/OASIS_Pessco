@@ -110,6 +110,56 @@ module.exports = async function rampSmoke(port) {
       liste.corps.map((x) => x.poi_reference).join(' '));
     verifier('deux inspections ne partagent pas la même référence',
       new Set(liste.corps.map((x) => x.poi_reference)).size === liste.corps.length);
+
+    // ── Deux inspections neuves dans **un même classeur** ──
+    //
+    // L'allocation groupée n'était exercée par aucun contrôle : la suite
+    // n'importait jamais qu'une inspection neuve à la fois, et `combien` valait
+    // toujours un. La contre-épreuve l'a montré — rendre la même référence pour
+    // tout le lot passait sans broncher.
+    //
+    // C'est pourtant le cas ordinaire : un classeur porte les inspections d'un
+    // mois. Deux actes sous le même numéro `POI-0042` ne se distinguent plus, et
+    // une requête entre États en cite un.
+    const lot = await importer([
+      { ...insp, vol: 'KP201', immatriculation: '5V-AAA' },
+      { ...insp, vol: 'KP202', immatriculation: '5V-BBB', anomalies: [] },
+    ]);
+    verifier('deux inspections neuves créées d’un même classeur',
+      lot.corps.creees === 2, lot.corps.message);
+    const duLot = (await srv.appel(`${M}/inspections`)).corps
+      .filter((x) => ['KP201', 'KP202'].includes(x.vol));
+    const refsDuLot = duLot.map((x) => x.poi_reference);
+    verifier('et elles reçoivent deux références distinctes',
+      duLot.length === 2 && new Set(refsDuLot).size === 2
+      && refsDuLot.every((r) => /^POI-\d{4}$/.test(String(r || ''))),
+      refsDuLot.join(' · '));
+
+    // ── Une inspection supprimée emporte ses écarts ──
+    //
+    // La cascade du schéma Prisma se rejoue à la main, et depuis la bascule en
+    // base elle tient dans **une seule transformation** : entre deux écritures,
+    // les écarts d'une inspection disparue restaient lisibles sans que rien ne les
+    // rattache. Aucun contrôle ne le vérifiait — la contre-épreuve passait.
+    // C'est l'une des deux du lot qu'on supprime, et non KP041 : les contrôles
+    // suivants la cherchent encore, avec ses écarts et leurs preuves.
+    const aSupprimer = duLot.find((x) => x.vol === 'KP201');
+    const ecartsAvant = (aSupprimer.anomalies || []).length;
+    verifier('l’inspection à supprimer porte bien des écarts', ecartsAvant > 0, `${ecartsAvant}`);
+    verifier('inspection supprimée',
+      (await srv.appel(`${M}/inspections/${aSupprimer.id}`, { method: 'DELETE' })).statut === 200);
+    // Un écart orphelin ne se lit sur aucune route — les écarts n'arrivent qu'avec
+    // leur inspection, et c'est bien le problème : rien ne les montrerait. Le
+    // contrôle se lit donc là où la donnée vit.
+    if (srv.local) {
+      const restes = ((await srv.donnees('ramp')).ecarts || [])
+        .filter((e) => e.inspection_id === aSupprimer.id);
+      verifier('ses écarts partent avec elle', restes.length === 0,
+        `${restes.length} écart(s) orphelin(s) sur ${ecartsAvant}`);
+    } else {
+      horsPortee('ses écarts partent avec elle', 'se lit là où la donnée vit');
+    }
+
     // La référence du rapport papier prend la place de celle que le module
     // avait donnée faute de mieux.
     await importer([{ ...insp, poi_reference: 'POI-9000' }]);

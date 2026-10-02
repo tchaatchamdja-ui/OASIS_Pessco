@@ -7,6 +7,7 @@ const multipart = require('../../multipart');
 const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
+const { asynchrone } = require('../../route');
 const instances = require('../../instances');
 const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
@@ -54,10 +55,10 @@ module.exports = function register(app, deps, M) {
 
   // Bascule AAC / Prestataire : état courant, joint au contexte pour que la
   // barre supérieure affiche les boutons au bon endroit et dans le bon état.
-  const etatVue = (req) => {
+  const etatVue = async (req) => {
     const reel = req.userReel || req.user;
     if (!vues.peutBasculer(reel)) return { disponible: false, vue: 'aac', prestataire_id: '', prestataires: [] };
-    const active = vues.vueDe(reel.username);
+    const active = await vues.vueDe(reel.username);
     return {
       disponible: true,
       vue: active.vue,
@@ -74,7 +75,7 @@ module.exports = function register(app, deps, M) {
   // compte réellement connecté, non celui que la vue Prestataire simule.
   const etatInstances = (req) => instances.etat(req.userReel || req.user, loadConfig);
 
-  app.get(`${M}/context`, requireAuth, (req, res) => {
+  app.get(`${M}/context`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!moduleRights.accesAuModule(R.MODULE, reel.username)) {
       return res.status(403).json({ error: 'no_module_access' });
@@ -82,10 +83,10 @@ module.exports = function register(app, deps, M) {
     return res.json({
       user: vueUtilisateur(req.user),
       privilege: R.meilleurPrivilege(req.user, referentiels),
-      vue: etatVue(req),
+      vue: await etatVue(req),
       instance: etatInstances(req),
     });
-  });
+  }));
 
   app.get(`${M}/moi`, requireAuth, (req, res) => res.json(vueUtilisateur(req.user)));
 
@@ -106,15 +107,15 @@ module.exports = function register(app, deps, M) {
     return res.json({ status: 'ok', instance: demandee });
   });
 
-  app.get(`${M}/vue`, requireAuth, (req, res) => res.json(etatVue(req)));
+  app.get(`${M}/vue`, requireAuth, asynchrone(async (req, res) => res.json(await etatVue(req))));
 
-  app.put(`${M}/vue`, requireAuth, (req, res) => {
+  app.put(`${M}/vue`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!vues.peutBasculer(reel)) return reserve(res, 'super_admin');
     const d = req.body || {};
     if (!vues.VUES.includes(d.vue)) return inconnu(res, 'vue');
     const prestataireId = d.vue === 'prestataire'
-      ? (d.prestataire_id || vues.vueDe(reel.username).prestataire_id || vues.prestataireParDefaut())
+      ? (d.prestataire_id || (await vues.vueDe(reel.username)).prestataire_id || vues.prestataireParDefaut())
       : '';
     if (d.vue === 'prestataire' && !prestataireId) {
       return res.status(400).json({ error: 'Aucun prestataire disponible pour la vue Prestataire' });
@@ -124,9 +125,9 @@ module.exports = function register(app, deps, M) {
     if (prestataireId && !(refs().prestataires || []).some((p) => p.id === prestataireId)) {
       return inconnu(res, 'prestataire');
     }
-    vues.definirVue(reel.username, d.vue, prestataireId);
-    res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
-  });
+    await vues.definirVue(reel.username, d.vue, prestataireId);
+    return res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
+  }));
 
   app.get(`${M}/utilisateurs`, requireAuth, (req, res) => {
     const retenue = instances.courante(req.userReel || req.user, loadConfig);

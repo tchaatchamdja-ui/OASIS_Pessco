@@ -80,7 +80,7 @@ module.exports = function register(app, deps, M) {
   const texte = (v) => String(v == null ? '' : v).trim();
   const admin = (req) => R.isAdmin(req.user, referentiels);
 
-  const items = () => db.list('parametres').filter((p) => p.type === 'items' && p.actif !== false);
+  const items = async () => (await db.list('parametres')).filter((p) => p.type === 'items' && p.actif !== false);
 
   // ── L'État où l'inspection a eu lieu ──
   // Une AAC n'inspecte que sur ses propres aires de trafic : l'État de la
@@ -151,8 +151,8 @@ module.exports = function register(app, deps, M) {
 
   // Le formulaire ne retient que les items connus du paramétrage : c'est lui
   // qui fait foi, et un item retiré des paramètres ne doit pas ressurgir.
-  function normaliserItems(brut) {
-    const connus = new Map(items().map((i) => [i.code, i]));
+  async function normaliserItems(brut) {
+    const connus = new Map((await items()).map((i) => [i.code, i]));
     const propres = {};
     Object.keys(brut || {}).forEach((code) => {
       if (!connus.has(code)) return;
@@ -178,12 +178,12 @@ module.exports = function register(app, deps, M) {
     return propres;
   }
 
-  const corpsPoi = (d) => {
+  const corpsPoi = async (d) => {
     const entete = {};
     CHAMPS_ENTETE.forEach((k) => { entete[k] = texte((d.entete || {})[k]); });
     return {
       entete,
-      items: normaliserItems(d.items),
+      items: await normaliserItems(d.items),
       classe_action: texte(d.classe_action),
       statut_suivi: texte(d.statut_suivi),
       inspecteurs: texte(d.inspecteurs),
@@ -265,7 +265,7 @@ module.exports = function register(app, deps, M) {
     // la première collection passée en base (ADR-002, jalon n° 9). Elle est
     // lue ici, une fois, avant la construction de la réponse.
     const nomenclature = await db.aeronefs();
-    const params = db.list('parametres');
+    const params = await db.list('parametres');
     const actifs = (type) => params.filter((p) => p.type === type && p.actif !== false)
       .sort((a, b) => (Number(a.ordre) || 0) - (Number(b.ordre) || 0)
         || String(a.code || a.label).localeCompare(String(b.code || b.label)));
@@ -285,13 +285,13 @@ module.exports = function register(app, deps, M) {
       // vue régionale : le choix y reste entier.
       etat_impose: etatImpose(req),
       etats_inspection: db.ETATS_INSPECTION.filter((e) => R.couvreEtat(req.user, referentiels, e)),
-      pays: db.list('pays').filter((p) => p.actif !== false)
+      pays: (await db.list('pays')).filter((p) => p.actif !== false)
         .map((p) => p.nom).sort((a, b) => a.localeCompare(b, 'fr')),
       // L'autorité de surveillance de chaque État, avec ses adresses : la
       // communication écrite lui est adressée sans ressaisie.
-      autorites: db.list('pays').filter((p) => p.actif !== false && (p.aac || (p.emails || []).length))
+      autorites: (await db.list('pays')).filter((p) => p.actif !== false && (p.aac || (p.emails || []).length))
         .map((p) => ({ pays: p.nom, aac: p.aac || '', emails: p.emails || [], site: p.site || '' })),
-      aeroports: db.list('aeroports').filter((a) => a.actif !== false)
+      aeroports: (await db.list('aeroports')).filter((a) => a.actif !== false)
         .map((a) => ({ pays: a.pays, nom: a.nom, code: a.code })),
       // Les inspecteurs viennent du référentiel du portail (Personnel AAC) :
       // seuls ceux marqués inspecteurs et actifs. Spécialités et niveaux y
@@ -304,15 +304,15 @@ module.exports = function register(app, deps, M) {
     });
   }));
 
-  app.get(`${M}/poi`, requireAuth, (req, res) => {
-    const liste = instances.filtrer(db.list('poi'), instanceCourante(req), loadConfig)
+  app.get(`${M}/poi`, requireAuth, asynchrone(async (req, res) => {
+    const liste = instances.filtrer(await db.list('poi'), instanceCourante(req), loadConfig)
       .filter((p) => dansPerimetre(req, p))
       .sort((a, b) => String(b.cree_le || '').localeCompare(String(a.cree_le || '')));
     res.json({ poi: liste.map(resume), peut_saisir: R.canContribute(req.user) });
-  });
+  }));
 
-  app.get(`${M}/poi/:id`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.get(`${M}/poi/:id`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     res.json({
@@ -332,7 +332,7 @@ module.exports = function register(app, deps, M) {
       // Le valideur écrit ses observations tant que la fiche est chez lui.
       commentaires_modifiables: R.canValidate(req.user) && p.statut === 'soumis',
     });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Commentaires de validation
@@ -345,8 +345,8 @@ module.exports = function register(app, deps, M) {
 
   const versionCourante = (p) => (p.commentaires || []).find((v) => !v.close_le) || null;
 
-  app.put(`${M}/poi/:id/commentaires`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.put(`${M}/poi/:id/commentaires`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
@@ -372,9 +372,9 @@ module.exports = function register(app, deps, M) {
         close_le: '', close_par: '', issue: '',
       });
     }
-    db.update('poi', p.id, { commentaires: versions });
+    await db.update('poi', p.id, { commentaires: versions });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // La version en cours se ferme sur la décision : elle devient l'archive de
   // ce qui a été observé à ce tour.
@@ -392,9 +392,9 @@ module.exports = function register(app, deps, M) {
   //  Écriture
   // ══════════════════════════════════════
 
-  app.post(`${M}/poi`, requireAuth, (req, res) => {
+  app.post(`${M}/poi`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canContribute(req.user)) return refuser(res);
-    const corps = corpsPoi(req.body || {});
+    const corps = await corpsPoi(req.body || {});
     // L'instance pose son État : une fiche neuve le porte même si l'écran ne
     // l'a pas renvoyé.
     corps.entete.etat_inspection = corps.entete.etat_inspection || etatImpose(req);
@@ -405,7 +405,7 @@ module.exports = function register(app, deps, M) {
     }
     const p = {
       id: db.uid('poi'),
-      reference: db.prochaineReferencePoi(),
+      reference: '',
       instance: instanceCourante(req),
       statut: 'brouillon',
       ...corps,
@@ -414,12 +414,22 @@ module.exports = function register(app, deps, M) {
       soumis_par: '', soumis_le: '', renvoye_le: '', motif_renvoi: '',
       valide_par: '', valide_le: '', inspection_id: '', pieces: [],
     };
-    db.insert('poi', p);
+    // La référence et la fiche qui la porte s'écrivent **ensemble** : allouer un
+    // numéro puis écrire dans un second temps laisserait un numéro consommé sans
+    // fiche pour le porter si l'écriture échouait, et deux fiches ouvertes en même
+    // temps pouvaient recevoir le même — or `POI-0042` désigne un acte
+    // d'inspection, et une requête entre États le cite.
+    await db.transformer((d) => {
+      p.reference = db.allouerReferencePoi(d);
+      d.poi = d.poi || [];
+      d.poi.push(p);
+      return d;
+    });
     res.status(201).json({ status: 'ok', id: p.id, reference: p.reference });
-  });
+  }));
 
-  app.put(`${M}/poi/:id`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.put(`${M}/poi/:id`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     // Une fiche validée a produit une inspection et ses écarts : la rouvrir
@@ -436,15 +446,15 @@ module.exports = function register(app, deps, M) {
       });
     }
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
-    const corps = corpsPoi(req.body || {});
+    const corps = await corpsPoi(req.body || {});
     const etat = corps.entete.etat_inspection;
     if (!etatAccorde(req, res, etat)) return undefined;
     if (etat && !R.couvreEtat(req.user, referentiels, etat)) {
       return horsPerimetre(res, 'etat', etat);
     }
-    db.update('poi', p.id, corps);
+    await db.update('poi', p.id, corps);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // Ce qu'il faut avoir renseigné pour qu'une fiche devienne une inspection.
   function manquants(p) {
@@ -469,8 +479,8 @@ module.exports = function register(app, deps, M) {
   // de complétude sont ceux de la validation : mieux vaut les faire ici, tant
   // que l'auteur a encore la fiche en main.
 
-  app.post(`${M}/poi/:id/soumettre`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.post(`${M}/poi/:id/soumettre`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
@@ -481,35 +491,35 @@ module.exports = function register(app, deps, M) {
     if (trous.length) {
       return res.status(400).json({ error: `À compléter avant soumission : ${trous.join(', ')}` });
     }
-    db.update('poi', p.id, {
+    await db.update('poi', p.id, {
       statut: 'soumis', soumis_par: req.user.username, soumis_le: db.now(),
       renvoye_le: '', motif_renvoi: '',
     });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Renvoi ──
   // Le valideur rend la fiche à son auteur, avec le motif : c'est le seul
   // chemin de retour, une fiche validée ayant déjà produit son inspection.
 
-  app.post(`${M}/poi/:id/renvoyer`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.post(`${M}/poi/:id/renvoyer`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     if (p.statut !== 'soumis') {
       return statutRequis(res, 'formulaire', 'soumis');
     }
-    db.update('poi', p.id, {
+    await db.update('poi', p.id, {
       statut: 'brouillon', renvoye_le: db.now(),
       motif_renvoi: texte((req.body || {}).motif),
       commentaires: cloreCommentaires(p, req, 'renvoi'),
     });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.post(`${M}/poi/:id/valider`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.post(`${M}/poi/:id/valider`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canValidate(req.user)) return reserve(res, 'validateur');
     if (p.statut === 'validee') {
@@ -569,8 +579,8 @@ module.exports = function register(app, deps, M) {
       suivi: i.ecart.suivi || '',
     }));
 
-    db.insertMany({ inspections: [inspection], ecarts });
-    db.update('poi', p.id, {
+    await db.insertMany({ inspections: [inspection], ecarts });
+    await db.update('poi', p.id, {
       statut: 'validee',
       valide_par: req.user.username,
       valide_le: db.now(),
@@ -585,7 +595,7 @@ module.exports = function register(app, deps, M) {
       ecarts: ecarts.length,
       message: `Inspection créée : ${controles.length} item(s) contrôlé(s), ${ecarts.length} écart(s).`,
     });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Pièces jointes
@@ -612,16 +622,16 @@ module.exports = function register(app, deps, M) {
 
   // À n'appeler qu'une fois la désignation retirée de la fiche : un fichier
   // qu'un partage désigne encore reste pour l'État qui l'a reçu.
-  const effacerFichier = (nom) => {
-    if (!nom || db.fichierPoiDesigne(nom)) return;
+  const effacerFichier = async (nom) => {
+    if (!nom || await db.fichierPoiDesigne(nom)) return;
     try { fs.unlinkSync(path.join(DOSSIER_PIECES, path.basename(nom))); }
     catch (e) { /* le fichier a déjà disparu : rien à défaire */ }
   };
 
   // Garde commune aux trois écritures : la fiche existe, elle est dans le
   // périmètre, l'agent contribue, et elle n'est pas encore partie.
-  function fichePourPiece(req, res) {
-    const p = db.get('poi', req.params.id);
+  async function fichePourPiece(req, res) {
+    const p = await db.get('poi', req.params.id);
     if (!p) { introuvable(res, 'formulaire'); return null; }
     if (!R.canContribute(req.user)) { refuser(res); return null; }
     if (!dansPerimetre(req, p)) { horsPerimetre(res, 'formulaire'); return null; }
@@ -634,18 +644,18 @@ module.exports = function register(app, deps, M) {
     return p;
   }
 
-  app.get(`${M}/poi/:id/pieces`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.get(`${M}/poi/:id/pieces`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     res.json({
       pieces: (p.pieces || []).map(vuePiece),
       modifiable: R.canContribute(req.user) && !piecesFigees(p),
     });
-  });
+  }));
 
-  app.post(`${M}/poi/:id/pieces`, requireAuth, multipart(), (req, res) => {
-    const p = fichePourPiece(req, res);
+  app.post(`${M}/poi/:id/pieces`, requireAuth, multipart(), asynchrone(async (req, res) => {
+    const p = await fichePourPiece(req, res);
     if (!p) return undefined;
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -659,14 +669,14 @@ module.exports = function register(app, deps, M) {
       nom_origine: f.filename, fichier: surDisque, taille: f.buffer.length,
       depose_par: req.user.username, depose_le: db.now(),
     };
-    db.update('poi', p.id, { pieces: (p.pieces || []).concat([pj]) });
+    await db.update('poi', p.id, { pieces: (p.pieces || []).concat([pj]) });
     return res.status(201).json({ status: 'ok', id: pj.id });
-  });
+  }));
 
   // Remplacement du fichier, ou correction de l'intitulé et du commentaire :
   // c'est la même route, selon qu'un fichier accompagne ou non l'envoi.
-  app.post(`${M}/poi/:id/pieces/:pid`, requireAuth, multipart(), (req, res) => {
-    const p = fichePourPiece(req, res);
+  app.post(`${M}/poi/:id/pieces/:pid`, requireAuth, multipart(), asynchrone(async (req, res) => {
+    const p = await fichePourPiece(req, res);
     if (!p) return undefined;
     const pj = piece(p, req.params.pid);
     if (!pj) return introuvable(res, 'piece');
@@ -685,25 +695,25 @@ module.exports = function register(app, deps, M) {
       maj.depose_par = req.user.username;
       maj.depose_le = db.now();
     }
-    db.update('poi', p.id, {
+    await db.update('poi', p.id, {
       pieces: (p.pieces || []).map((x) => (x.id === pj.id ? maj : x)),
     });
-    if (maj.fichier !== pj.fichier) effacerFichier(pj.fichier);
+    if (maj.fichier !== pj.fichier) await effacerFichier(pj.fichier);
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.delete(`${M}/poi/:id/pieces/:pid`, requireAuth, (req, res) => {
-    const p = fichePourPiece(req, res);
+  app.delete(`${M}/poi/:id/pieces/:pid`, requireAuth, asynchrone(async (req, res) => {
+    const p = await fichePourPiece(req, res);
     if (!p) return undefined;
     const pj = piece(p, req.params.pid);
     if (!pj) return introuvable(res, 'piece');
-    db.update('poi', p.id, { pieces: (p.pieces || []).filter((x) => x.id !== pj.id) });
-    effacerFichier(pj.fichier);
+    await db.update('poi', p.id, { pieces: (p.pieces || []).filter((x) => x.id !== pj.id) });
+    await effacerFichier(pj.fichier);
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.get(`${M}/poi/:id/pieces/:pid/fichier`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.get(`${M}/poi/:id/pieces/:pid/fichier`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
     const pj = piece(p, req.params.pid);
@@ -713,7 +723,7 @@ module.exports = function register(app, deps, M) {
     res.setHeader('Content-Disposition',
       `attachment; filename*=UTF-8''${encodeURIComponent(pj.nom_origine || pj.fichier)}`);
     return res.sendFile(chemin);
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Transmission à l'exploitant
@@ -730,7 +740,7 @@ module.exports = function register(app, deps, M) {
   const CIBLES_ENVOI = { exploitant: 'Exploitant', autorite: 'Autorité de surveillance' };
 
   app.post(`${M}/poi/:id/communiquer`, requireAuth, asynchrone(async (req, res) => {
-    const p = db.get('poi', req.params.id);
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
@@ -788,15 +798,15 @@ module.exports = function register(app, deps, M) {
       patch.transmis_par = req.user.username;
       patch.transmis_a = envois.map((c) => c.destinataire).filter(Boolean).join(', ');
     }
-    db.update('poi', p.id, patch);
+    await db.update('poi', p.id, patch);
     return res.json({
       status: 'ok', envoye: parti, erreur: echec, destinataires,
       transmise: !!patch.transmis_le || transmise(p),
     });
   }));
 
-  app.post(`${M}/poi/:id/transmettre`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.post(`${M}/poi/:id/transmettre`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     if (!R.canContribute(req.user)) return refuser(res);
     if (!dansPerimetre(req, p)) return horsPerimetre(res, 'formulaire');
@@ -814,17 +824,17 @@ module.exports = function register(app, deps, M) {
         error: `Classe d'action ${classe} : la communication écrite à l'exploitant est requise`,
       });
     }
-    db.update('poi', p.id, {
+    await db.update('poi', p.id, {
       transmis_le: db.now(),
       transmis_par: req.user.username,
       transmis_a: texte((req.body || {}).destinataire)
         || (p.communications || []).map((c) => c.destinataire).join(', '),
     });
     return res.json({ status: 'ok' });
-  });
+  }));
 
-  app.delete(`${M}/poi/:id`, requireAuth, (req, res) => {
-    const p = db.get('poi', req.params.id);
+  app.delete(`${M}/poi/:id`, requireAuth, asynchrone(async (req, res) => {
+    const p = await db.get('poi', req.params.id);
     if (!p) return introuvable(res, 'formulaire');
     // Une fiche validée est la pièce justificative de son inspection : seul le
     // gestionnaire du module peut la retirer, et l'inspection reste.
@@ -836,10 +846,16 @@ module.exports = function register(app, deps, M) {
     // Les preuves partent avec la fiche : les laisser sur le disque
     // accumulerait des fichiers que plus rien ne désigne. Celles qu'un partage
     // désigne encore restent pour l'État qui les a reçues.
-    db.remove('poi', p.id);
-    (p.pieces || []).forEach((pj) => effacerFichier(pj.fichier));
+    await db.remove('poi', p.id);
+    // `for…of` : chaque effacement demande au magasin si le fichier est encore
+    // désigné ailleurs, et `forEach` lancerait les questions sans attendre les
+    // réponses — des pièces qu'un partage tient encore partiraient avec.
+    for (const pj of (p.pieces || [])) {
+      // eslint-disable-next-line no-await-in-loop
+      await effacerFichier(pj.fichier);
+    }
     res.json({ status: 'ok' });
-  });
+  }));
 };
 
 module.exports.STANDARDS = STANDARDS;

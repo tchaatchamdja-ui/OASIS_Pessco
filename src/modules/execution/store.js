@@ -6,6 +6,7 @@
 // enrichissements explicites au moment de la lecture.
 const crypto = require('crypto');
 const store = require('../../store');
+const magasin = require('../../magasin');
 
 const COLLECTIONS = [
   'notifications',      // exec_notifications
@@ -30,6 +31,22 @@ const COLLECTIONS = [
 const load = () => store.load('execution', {});
 const save = (d) => store.save('execution', d);
 const list = (coll) => load()[coll] || [];
+
+// ── `transformer`, avant la bascule de ce module ──
+//
+// Lire, changer, réécrire en un seul geste. Ce module est le dernier à rester sur
+// fichiers (ADR-002, jalon n° 13) ; cette fonction y passe quand même par la
+// façade, pour deux raisons :
+//
+//   · le socle des vues (`src/vues_prestataire.js`) est partagé avec RAMP, qui est
+//     en base. Il écrit le choix de vue par une transformation, et ce magasin-ci
+//     doit donc savoir en faire une ;
+//   · sur fichiers, la façade sérialise par une file d'attente par collection :
+//     deux bascules simultanées du même compte ne s'écrasent plus.
+//
+// Le jour où ce module basculera, la seule chose à changer sera son nom dans la
+// liste d'autorisation.
+const transformer = (fn) => magasin.modifier('execution', {}, fn);
 
 const uid = (prefix) => `${prefix}_${crypto.randomBytes(4).toString('hex')}`;
 const now = () => new Date().toISOString();
@@ -100,6 +117,6 @@ function removeDossier(id) {
 
 // Référence séquentielle « PREFIXE-ANNÉE-001 », identique à PESSCO.
 module.exports = {
-  COLLECTIONS, load, save, list, get, insert, update, remove, removeWhere,
+  COLLECTIONS, load, save, transformer, list, get, insert, update, remove, removeWhere,
   removeDossier, uid, now, seed,
 };

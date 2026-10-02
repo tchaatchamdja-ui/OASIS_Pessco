@@ -42,6 +42,7 @@ const sharedPrestataires = () => (referentiels.getAll().prestataires || []).map(
   debut_cycle: x.debut_cycle || '', fin_cycle: x.fin_cycle || '', date_init_surveillance: x.date_init_surveillance || '',
 }));
 
+// Asynchrone depuis que `profil_risque` vit en base (ADR-002, jalon n° 13).
 const sharedIndices = () => db.list('indices');
 
 // Service publié : profils de risque en vigueur, consommés par les autres
@@ -52,8 +53,12 @@ const sharedIndices = () => db.list('indices');
 // Chaque profil porte l'instance de l'évaluation dont il est tiré : le bus ne
 // connaît pas le compte qui l'interroge, c'est donc au consommateur d'écarter
 // ce qui n'appartient pas à l'instance qu'il regarde — comme pour toute liste.
-function riskProfiles() {
-  const evals = (db.getColl('evaluations') || []).filter((e) => e.statut === 'valide');
+//
+// Asynchrone depuis que `profil_risque` vit en base. Le bus l'autorise : `call`
+// et `callOr` rendent une promesse par contrat depuis l'étape A d'ADR-002, et
+// `OASIS_BUS_DIFFERE=1` éprouve ce producteur-ci comme les autres.
+async function riskProfiles() {
+  const evals = (await db.getColl('evaluations')).filter((e) => e.statut === 'valide');
   const dateOf = (e) => e.date_validation || e.decide_le || e.updatedAt || e.createdAt || '';
 
   const dernier = {};
@@ -108,7 +113,13 @@ const toutesNotesSoumises = (ev) => {
 
 // Étapes « Notation » (désignation des évaluateurs) et « Soumission » (toutes
 // les notes publiées) : déduites de l'état, pas d'une route dédiée.
-function stampNotationEtapes(rec) {
+//
+// **Pure, et elle ne l'était pas.** Elle écrivait elle-même — une seconde
+// écriture juste après celle du PUT, donc un état intermédiaire où le statut
+// était posé mais l'étape pas encore horodatée, et deux occasions de perdre
+// l'une des deux. Elle rend désormais l'enregistrement horodaté, et c'est
+// l'appelant qui l'écrit, dans la même transformation que la mise à jour.
+function avecEtapesNotation(rec) {
   const now = new Date().toISOString();
   const e = { ...(rec.etapes || {}) };
   let touched = false;
@@ -119,11 +130,11 @@ function stampNotationEtapes(rec) {
   // La validation finale passe par un PUT direct, pas par decision-directeur.
   if (rec.statut === 'valide' && !e.validee) { e.validee = rec.date_validation || now; touched = true; }
   if (rec.statut === 'rejetee' && !e.rejetee) { e.rejetee = now; touched = true; }
-  return touched ? (db.update('evaluations', rec.id, { etapes: e }) || rec) : rec;
+  return touched ? { ...rec, etapes: e } : rec;
 }
 
 module.exports = {
   ...roles,
   sharedDomaines, sharedSecteurs, sharedSousActivites, sharedPrestataires, sharedIndices,
-  riskProfiles, etapesWith, stampNotationEtapes, STATUTS_DECIDES
+  riskProfiles, etapesWith, avecEtapesNotation, STATUTS_DECIDES
 };

@@ -561,9 +561,64 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
        | Suite « droits » par la passerelle | **20 / 20** |
 
-13. [ ] **Les cinq collections de module** — `planification`, `execution`, `mesures`,
+13. [~] **Les cinq collections de module** — `planification`, `execution`, `mesures`,
        `profil_risque`, `ramp`. C'est là que se trouvent les **381 appels** mesurés au départ,
        par les magasins de module (`db.list`, `db.get`, `db.save`). Propagation d'une autre
-       nature : ces appels ne sont pas des prédicats mais le corps même des gestionnaires.
+       nature : ces appels ne sont pas des prédicats mais le corps même des gestionnaires,
+       déjà asynchrones depuis la bascule des journaux. L'instantané ne conviendrait donc pas —
+       une évaluation est un acte d'autorité, en écriture permanente, où lire un état vieux de
+       quelques millisecondes n'est pas acceptable. **Conversion asynchrone franche**, module
+       par module, chacun derrière sa suite.
+
+       **`profil_risque` faite le 2 octobre 2026** — le plus petit des cinq (12 appels,
+       5 fichiers, 23 contrôles), choisi pour mesurer le coût réel avant d'engager les quatre
+       autres. Le coût est celui qu'on attendait ; ce que la conversion a trouvé ne l'était pas.
+
+       > **Trois gestes en faisaient plusieurs, et c'est ce qui coûtait.** Poser une décision
+       > puis horodater l'étape ; supprimer une évaluation, libérer son parent, puis ses
+       > réunions — **quatre écritures** ; ouvrir un cycle puis le rattacher. Entre elles,
+       > l'application montrait une évaluation disparue dont le parent se disait encore
+       > « réévaluation en cours », et des comptes rendus rattachés à rien. Un échec au milieu
+       > l'y laissait pour de bon. `db.transformer` les rend d'un seul coup.
+       >
+       > **Une garde hors de l'écriture ne garde rien.** Deux réévaluations parties ensemble
+       > passaient toutes deux le contrôle « pas déjà lancée » et créaient deux clones, dont un
+       > qu'aucun écran n'atteint plus. Même forme pour le verrou d'une évaluation validée : un
+       > classeur de notes parti au moment de la validation se posait après elle, et le profil
+       > servi à la Planification n'était plus celui qui avait été arrêté. Les deux gardes se
+       > relisent désormais **dans** la transformation.
+       >
+       > **Le transformateur recevait l'objet du cache.** Trouvé par un contrôle que je venais
+       > d'écrire, pas prévu : sur fichiers, `store.load` rend l'objet partagé par tout le
+       > processus. Un transformateur qui le mute — `arr.splice`, la façon naturelle d'écrire —
+       > le mutait pour tout le monde **avant toute écriture**. Refusée ou échouée, l'écriture
+       > laissait la valeur en mémoire fausse, et durablement : le cache est indexé sur la date
+       > du fichier, que rien n'avait changée. La base n'a jamais eu ce défaut — elle relit le
+       > JSON à chaque essai. Une copie met les deux régimes au même comportement, ce qui est
+       > tout l'objet de la façade.
+       >
+       > **`INCHANGE`, et pourquoi pas `undefined`.** Réécrire une collection entière pour
+       > répondre `404` coûte un aller-retour sur plusieurs mégaoctets — la bibliothèque
+       > documentaire porte ses pièces en base64. D'où un refus explicite. Un symbole, et non
+       > `undefined` : un `return` oublié rend `undefined`, et le prendre pour « ne rien
+       > écrire » ferait disparaître une écriture sans erreur ni trace. `undefined` lève donc,
+       > et nomme l'oubli.
+       >
+       > **Un vert creux, retiré.** Une rafale de dix réévaluations simultanées passait — et la
+       > contre-épreuve, l'ancienne logique en trois temps, la passait aussi. Dix requêtes HTTP
+       > contre un gestionnaire rapide se sérialisent. Le contrôle est remplacé par deux :
+       > l'atomicité en processus sur `modifier`, avec sa contre-épreuve ; et la forme, qui
+       > vérifie que la garde est dans la transformation. C'est la deuxième fois qu'une rafale
+       > HTTP se révèle creuse ici — la première était le compteur du second facteur.
+
+       | | |
+       |---|---|
+       | Contrôles, quatre régimes | **813** sur fichiers et bus différé · **823** en base |
+       | Dont nouveaux | **16** — dont 6 sur des routes de classeur qu'aucun contrôle n'exerçait |
+       | Node contre Java, **neuf** collections en base | **38 / 38** à l'octet |
+       | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+       | Suite « droits » par la passerelle | **20 / 20** — Java arrêté, 3 tombent aussitôt |
+
+       Restent `planification` (55 appels), `mesures` (93), `ramp` (148) et `execution` (202).
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

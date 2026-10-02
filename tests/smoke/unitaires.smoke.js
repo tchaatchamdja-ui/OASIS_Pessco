@@ -555,6 +555,51 @@ async function facadeDuMagasin() {
   verifier('façade : 20 modifications concurrentes sur fichiers, aucune perdue',
     apres.length === 20 && new Set(apres).size === 20, `${apres.length} entrée(s)`);
 
+  // ── Ne rien écrire, et le dire ──
+  //
+  // `INCHANGE` existe pour les cas où il n'y a rien à faire : la ligne visée
+  // n'existe pas, la transformation ne change rien. Réécrire quand même coûterait
+  // la collection entière — jusqu'à plusieurs mégaoctets pour la bibliothèque
+  // documentaire — pour répondre un `404`.
+  const avantInchange = JSON.stringify(await magasin.load(COLL_ESSAI, null));
+  const renduInchange = await magasin.modifier(COLL_ESSAI, {}, () => magasin.INCHANGE);
+  verifier('façade : INCHANGE n’écrit rien et rend la valeur en place',
+    JSON.stringify(renduInchange) === avantInchange
+    && JSON.stringify(await magasin.load(COLL_ESSAI, null)) === avantInchange);
+
+  // **Et c'est pour cela que ce n'est pas `undefined`.** Un `return` oublié rend
+  // `undefined` ; le prendre pour « ne rien écrire » ferait disparaître une
+  // écriture sans erreur ni trace — exactement ce que `modifier` existe pour
+  // empêcher. Il lève donc, et nomme l'oubli.
+  let oubli = null;
+  await magasin.modifier(COLL_ESSAI, {}, (d) => { d.items.push(42); })
+    .catch((e) => { oubli = e; });
+  verifier('façade : un transformateur qui ne rend rien lève, et nomme l’oubli',
+    !!oubli && /return/.test(oubli.message),
+    oubli ? oubli.message.slice(0, 90) : 'rien levé — l’écriture a disparu en silence');
+  verifier('façade : et rien n’a été écrit à sa place',
+    JSON.stringify(await magasin.load(COLL_ESSAI, null)) === avantInchange);
+
+  // ── Ce que le transformateur mute ne sort pas de lui ──
+  //
+  // Sur fichiers, la valeur lue est **l'objet du cache**, partagé par tout le
+  // processus. Un transformateur qui le mute en place — `arr.splice`, `arr[i] = …`,
+  // la façon naturelle d'écrire — le mutait pour tout le monde avant la moindre
+  // écriture. Refusée, l'écriture laissait la valeur en mémoire fausse, et
+  // durablement : le cache est indexé sur la date du fichier, que rien n'avait
+  // changée. La base, elle, relit le JSON à chaque essai — d'où la copie, qui met
+  // les deux régimes au même comportement.
+  //
+  // Les deux sorties non écrivantes sont prises : le refus explicite, et l'échec.
+  await magasin.modifier(COLL_ESSAI, {}, (d) => { d.items.push(-1); return magasin.INCHANGE; });
+  const apresRefus = JSON.stringify(await magasin.load(COLL_ESSAI, null));
+  await magasin.modifier(COLL_ESSAI, {}, (d) => { d.items.push(-2); throw new Error('essai'); })
+    .catch(() => {});
+  verifier('façade : ce qu’un transformateur mute avant de renoncer ne se voit pas',
+    apresRefus === avantInchange
+    && JSON.stringify(await magasin.load(COLL_ESSAI, null)) === avantInchange,
+    `${avantInchange.length} octets attendus`);
+
   // Une transformation qui échoue ne doit pas bloquer la file derrière elle.
   let leve = false;
   await magasin.modifier(COLL_ESSAI, {}, () => { throw new Error('essai'); })
@@ -562,6 +607,43 @@ async function facadeDuMagasin() {
   await magasin.modifier(COLL_ESSAI, { items: [] }, (d) => ({ items: [...d.items, 99] }));
   verifier('façade : un échec est relevé et ne bloque pas la file',
     leve && (await magasin.load(COLL_ESSAI, null)).items.length === 21);
+
+  // ── La fenêtre « lire, vérifier, écrire », et où la garde doit se tenir ──
+  //
+  // C'est le défaut de la réévaluation d'un profil de risque, et il se retrouvera
+  // dans les quatre modules qui restent : vérifier qu'un drapeau n'est pas posé,
+  // puis le poser. Vérifié **avant** la transformation, dix demandes passent
+  // toutes ; vérifié **dedans**, sur l'état qu'on va écrire, une seule.
+  //
+  // Les deux formes sont jouées ici, sur dix tentatives simultanées. Celle du
+  // dehors est la contre-épreuve : elle doit échouer, et c'est elle qui donne sa
+  // valeur à l'autre. La rafale HTTP, elle, ne prouvait rien — dix requêtes
+  // contre un gestionnaire rapide se sérialisent.
+  await magasin.save(COLL_ESSAI, { drapeau: '', gagnants: [] });
+  const dehors = async (i) => {
+    const d = await magasin.load(COLL_ESSAI, null);
+    if (d.drapeau) return false;                       // la garde, hors de l'écriture
+    await magasin.modifier(COLL_ESSAI, {}, (v) => ({
+      ...v, drapeau: `pris-${i}`, gagnants: [...v.gagnants, i],
+    }));
+    return true;
+  };
+  const passesDehors = (await Promise.all(Array.from({ length: 10 }, (_, i) => dehors(i))))
+    .filter(Boolean).length;
+  verifier('contre-épreuve : la garde hors de la transformation laisse tout passer',
+    passesDehors > 1, `${passesDehors} passage(s) sur 10 — un seul aurait dû`);
+
+  await magasin.save(COLL_ESSAI, { drapeau: '', gagnants: [] });
+  const dedans = (i) => magasin.modifier(COLL_ESSAI, {}, (v) => {
+    if (v.drapeau) return magasin.INCHANGE;            // la garde, dans l'écriture
+    return { ...v, drapeau: `pris-${i}`, gagnants: [...v.gagnants, i] };
+  });
+  await Promise.all(Array.from({ length: 10 }, (_, i) => dedans(i)));
+  const gagnants = (await magasin.load(COLL_ESSAI, null)).gagnants;
+  verifier('la garde dans la transformation n’en laisse passer qu’une',
+    gagnants.length === 1, `${gagnants.length} passage(s) sur 10`);
+
+  await magasin.save(COLL_ESSAI, { items: [] });
 
   // ── L'enveloppe des gestionnaires asynchrones ──
   // Express 4 ne regarde pas la promesse d'un gestionnaire `async`. Sans

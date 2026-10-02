@@ -5,6 +5,7 @@ const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 module.exports = async function profilRisqueSmoke(port) {
   console.log('\n── Module PR — Profils de Risques ──');
   const srv = await demarrer({ port });
+  const M = '/api/m/profil-risque';
   try {
     await srv.connexion();
 
@@ -72,6 +73,79 @@ module.exports = async function profilRisqueSmoke(port) {
         .find((x) => x.parent_id === ev.corps.id) || {}).id
       : undefined);
     verifier('réévaluation lancée', reev.statut === 200 && !!enfantId, `statut ${reev.statut}`);
+
+    // ── Les trois classeurs, qu'aucun contrôle n'exerçait ──
+    //
+    // Ces routes lisent le magasin trois fois chacune, en boucle sur les familles
+    // d'indicateurs. Converties en asynchrone (jalon n° 13), un `await` oublié y
+    // rendrait un classeur **vide et bien formé** : trois feuilles, leurs
+    // entêtes, aucune ligne. Rien ne l'aurait dit — et personne ne les exerçait.
+    for (const [quoi, chemin] of [
+      ['export des indicateurs', `${M}/indicateurs/export`],
+      ['modèle d’indicateurs', `${M}/indicateurs/template`],
+      ['export des notes d’une évaluation', `${M}/evaluations/${ev.corps.id}/export-excel`],
+    ]) {
+      const r = await srv.appel(chemin);
+      // Un classeur xlsx est un zip : « PK » en tête. Le corps rendu est du
+      // texte, mais ses deux premiers octets suffisent à le dire.
+      verifier(`${quoi} rend un classeur`,
+        r.statut === 200 && typeof r.corps === 'string' && r.corps.slice(0, 2) === 'PK',
+        `statut ${r.statut}, ${String(r.corps).length} octet(s)`);
+    }
+
+    // L'import, lui, écrit — en une seule transformation, dont les compteurs se
+    // remettent à zéro à chaque essai. Deux lignes, puis les mêmes : la seconde
+    // passe doit les dire « inchangées » et ne rien écrire.
+    const XLSX = require('xlsx');
+    const classeur = (lignes) => {
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+        ['Code', 'Label', 'Secteur_ID', 'Critere 1', 'Critere 2', 'Critere 3'], ...lignes,
+      ]), 'Conformite');
+      return `data:x;base64,${XLSX.write(wb, { type: 'base64', bookType: 'xlsx' })}`;
+    };
+    const importer = (lignes) => srv.appel(`${M}/indicateurs/import`, {
+      method: 'POST', body: JSON.stringify({ fileB64: classeur(lignes) }),
+    });
+    const LIGNES = [['SMK-1', 'Indicateur d’essai', '', 'a', 'b', 'c'], ['SMK-2', 'Second', '', 'd', 'e', 'f']];
+    const premier = await importer(LIGNES);
+    verifier('import d’indicateurs : deux lignes ajoutées',
+      premier.statut === 200 && premier.corps.added === 2 && premier.corps.updated === 0,
+      JSON.stringify(premier.corps).slice(0, 120));
+    const second = await importer(LIGNES);
+    verifier('import d’indicateurs : le même classeur ne réécrit rien',
+      second.statut === 200 && second.corps.added === 0 && second.corps.unchanged === 2,
+      JSON.stringify(second.corps).slice(0, 120));
+    const poses = ((await srv.appel(`${M}/indicateurs-conf`)).corps || [])
+      .filter((i) => String(i.code || '').startsWith('SMK-'));
+    verifier('import d’indicateurs : deux enregistrements, pas quatre',
+      poses.length === 2, `${poses.length} enregistrement(s)`);
+    for (const i of poses) await srv.appel(`${M}/indicateurs-conf/${i.id}`, { method: 'DELETE' });
+
+    // ── Un cycle ne s'ouvre qu'une fois ──
+    //
+    // Le refus d'une seconde réévaluation, et le lien qui tient : le parent
+    // désigne le clone qui existe.
+    //
+    // **Ce contrôle est séquentiel, et il faut dire pourquoi.** La rafale de dix
+    // demandes simultanées a été écrite, puis retirée : la contre-épreuve — la
+    // logique d'avant, en trois temps avec la vérification hors de l'écriture —
+    // **l'a passée sans broncher**. Dix requêtes HTTP contre un gestionnaire
+    // rapide se sérialisent, la fenêtre ne s'ouvre pas, et le contrôle aurait
+    // laissé croire qu'il gardait quelque chose. C'est la même mesure que pour le
+    // compteur du second facteur.
+    //
+    // L'atomicité se prouve donc là où elle se décide : en processus, sur
+    // `modifier` (suite « unitaires », fenêtre lire-vérifier-écrire), et par la
+    // forme — la suite « taille » vérifie que la garde est **dans** la
+    // transformation.
+    const refusSecond = await srv.appel(`${EV}/${ev.corps.id}/reevaluer`, { method: 'POST', body: '{}' });
+    verifier('une seconde réévaluation est refusée',
+      refusSecond.statut === 409 && refusSecond.corps.error === 'reevaluation_deja_lancee',
+      `statut ${refusSecond.statut}`);
+    const parent = (await srv.appel(`${EV}/${ev.corps.id}`)).corps || {};
+    verifier('le parent désigne le cycle ouvert', parent.enfant_id === enfantId,
+      `enfant_id ${parent.enfant_id || '(vide)'}`);
     const refusReev = await srv.appel(`${EV}/${ev.corps.id}`, { method: 'DELETE' });
     verifier('évaluation réévaluée : suppression refusée',
       refusReev.statut === 409 && refusReev.corps.error === 'evaluation_reevaluee', `statut ${refusReev.statut}`);

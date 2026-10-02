@@ -84,7 +84,8 @@ public class Magasin {
       "users",
       "sessions",
       "referentiels",
-      "module_rights");
+      "module_rights",
+      "profil_risque");
 
   /**
    * Les journaux servis par la base. <b>Recopie de {@code JOURNAUX_MIGRES} dans

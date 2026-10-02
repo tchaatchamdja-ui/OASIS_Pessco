@@ -58,17 +58,20 @@ module.exports = function register(app, deps, M) {
   // l'instance regardée, à la différence de la taxinomie au-dessus.
   app.get('/api/prestataires', requireAuth, (req, res) => res.json(
     parInstance(req, D.sharedPrestataires())));
-  app.get('/api/indices', requireAuth, lecture, (req, res) => res.json(D.sharedIndices()));
+  app.get('/api/indices', requireAuth, lecture,
+    asynchrone(async (req, res) => res.json(await D.sharedIndices())));
 
   // Les indices commandent le calcul de tous les profils de risque : les
   // réécrire, c'est refaire le barème de la surveillance. Réservé au
   // Gestionnaire — la route n'opposait jusqu'ici aucun refus.
   app.put('/api/indices', requireAuth, gerer, asynchrone(async (req, res) => {
-    const d = db.load();
-    d.indices = Array.isArray(req.body) ? req.body : (req.body && req.body.indices) || d.indices;
-    db.save(d);
-    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: (d.indices || []).length });
-    res.json({ ok: true, indices: d.indices });
+    const apres = await db.transformer((d) => {
+      d.indices = Array.isArray(req.body) ? req.body : (req.body && req.body.indices) || d.indices;
+      return d;
+    });
+    const indices = apres.indices || [];
+    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: indices.length });
+    res.json({ ok: true, indices });
   }));
 
   app.get('/api/aac', requireAuth, (req, res) => {
@@ -82,7 +85,8 @@ module.exports = function register(app, deps, M) {
   const MAX_DOC_BYTES = 3_500_000; // marge sous la limite express.json (5 Mo)
   const publicDoc = ({ contenu, ...d }) => ({ ...d, taille: d.taille || 0 });
 
-  app.get('/api/documents', requireAuth, lecture, (req, res) => res.json(db.getColl('documents').map(publicDoc)));
+  app.get('/api/documents', requireAuth, lecture,
+    asynchrone(async (req, res) => res.json((await db.getColl('documents')).map(publicDoc))));
 
   app.post('/api/documents', requireAuth, contribuer, asynchrone(async (req, res) => {
     const { nom, type, mime, fileB64 } = req.body || {};
@@ -91,7 +95,7 @@ module.exports = function register(app, deps, M) {
     if (!contenu) return requis(res, 'fichier');
     const taille = Math.round((contenu.length * 3) / 4);
     if (taille > MAX_DOC_BYTES) return tropVolumineux(res, 3.5);
-    const rec = db.insert('documents', {
+    const rec = await db.insert('documents', {
       nom, type: type || '', mime: mime || 'application/octet-stream', taille, contenu,
       date_upload: new Date().toISOString(), uploade_par: req.user.username,
     });
@@ -99,19 +103,19 @@ module.exports = function register(app, deps, M) {
     return res.json(publicDoc(rec));
   }));
 
-  app.get('/api/documents/:id/download', requireAuth, lecture, (req, res) => {
-    const doc = db.getColl('documents').find((d) => d.id === req.params.id);
+  app.get('/api/documents/:id/download', requireAuth, lecture, asynchrone(async (req, res) => {
+    const doc = await db.get('documents', req.params.id);
     if (!doc || !doc.contenu) return res.status(404).json({ error: 'not_found' });
     const buf = Buffer.from(doc.contenu, 'base64');
     res.setHeader('Content-Type', doc.mime || 'application/octet-stream');
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.nom)}"`);
     return res.send(buf);
-  });
+  }));
 
   // Retirer une pièce de la bibliothèque est définitif : réservé au
   // Gestionnaire. Toute session pouvait jusqu'ici vider la bibliothèque.
   app.delete('/api/documents/:id', requireAuth, gerer, asynchrone(async (req, res) => {
-    const ok = db.remove('documents', req.params.id);
+    const ok = await db.remove('documents', req.params.id);
     if (ok) await audit.log(req.user.username, 'PR_DOCUMENT_SUPPRIME', { id: req.params.id });
     res.json({ ok });
   }));
@@ -133,19 +137,19 @@ module.exports = function register(app, deps, M) {
   const portee = (r) => ({ domaine_id: (r && r.domaine_id) || '', secteur_id: (r && r.secteur_id) || '' });
 
   Object.entries(CRUD).forEach(([route, coll]) => {
-    app.get(`${M}/${route}`, requireAuth, lecture, (req, res) => {
-      let rows = db.getColl(coll).filter((r) => D.peutLire(req, portee(r)));
+    app.get(`${M}/${route}`, requireAuth, lecture, asynchrone(async (req, res) => {
+      let rows = (await db.getColl(coll)).filter((r) => D.peutLire(req, portee(r)));
       if (COLLECTIONS_INSTANCE.includes(coll)) rows = parInstance(req, rows);
       if (req.query.eval_id) rows = rows.filter((r) => r.eval_id === req.query.eval_id);
       if (req.query.prestataire_id) rows = rows.filter((r) => r.prestataire_id === req.query.prestataire_id);
       res.json(rows);
-    });
+    }));
 
-    app.get(`${M}/${route}/:id`, requireAuth, lecture, (req, res) => {
-      const r = db.getColl(coll).find((x) => x.id === req.params.id);
+    app.get(`${M}/${route}/:id`, requireAuth, lecture, asynchrone(async (req, res) => {
+      const r = await db.get(coll, req.params.id);
       if (!r) return res.status(404).json({ error: 'not_found' });
       return D.peutLire(req, portee(r)) ? res.json(r) : D.refus(res);
-    });
+    }));
 
     // Ces collections n'ont pas de forme arrêtée — le barème suit ce que
     // l'administrateur y met — mais un enregistrement se borne : le socle
@@ -161,13 +165,13 @@ module.exports = function register(app, deps, M) {
       // c'est elle qui le reverra. En vue régionale, l'instance retenue est
       // vide et le champ retombe sur l'instance locale, comme partout.
       const marque = COLLECTIONS_INSTANCE.includes(coll) ? { instance: instanceCourante(req) } : {};
-      const rec = db.insert(coll, { ...req.valide, ...marque, created_by: req.user.username });
+      const rec = await db.insert(coll, { ...req.valide, ...marque, created_by: req.user.username });
       await audit.log(req.user.username, 'PR_CREATE', { coll, id: rec.id });
       return res.json(rec);
     }));
 
     app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), asynchrone(async (req, res) => {
-      const avant = db.getColl(coll).find((x) => x.id === req.params.id);
+      const avant = await db.get(coll, req.params.id);
       if (!avant) return res.status(404).json({ error: 'not_found' });
       // Le statut d'une évaluation dit une décision — acceptation, clôture,
       // validation, rejet. La poser demande un Validateur ; la route ne
@@ -177,11 +181,23 @@ module.exports = function register(app, deps, M) {
       const decide = coll === 'evaluations' && statut && statut !== avant.statut
         && D.STATUTS_DECIDES.includes(statut);
       if (!D.peut(req, decide ? 'VALIDATEUR' : 'CONTRIBUTEUR', portee(avant))) return D.refus(res);
-      let rec = db.update(coll, req.params.id, req.valide);
+      // Un seul geste. Les deux premières étapes du fil d'avancement ne passent
+      // pas par une route dédiée — elles se déduisent de l'état de l'évaluation
+      // —, et les horodater était jusqu'ici une **seconde** écriture : le statut
+      // posé, l'étape pas encore, et deux occasions de se perdre.
+      let rec = null;
+      await db.transformer((d) => {
+        const arr = d[coll] || [];
+        const i = arr.findIndex((x) => x.id === req.params.id);
+        rec = null;
+        if (i < 0) return db.INCHANGE;
+        let maj = { ...arr[i], ...req.valide, id: req.params.id, updatedAt: new Date().toISOString() };
+        if (coll === 'evaluations') maj = D.avecEtapesNotation(maj);
+        arr[i] = maj;
+        rec = maj;
+        return d;
+      });
       if (!rec) return res.status(404).json({ error: 'not_found' });
-      // Les deux premières étapes du fil d'avancement ne passent pas par une
-      // route dédiée : elles se déduisent de l'état de l'évaluation.
-      if (coll === 'evaluations') rec = D.stampNotationEtapes(rec);
       await audit.log(req.user.username, 'PR_UPDATE', { coll, id: rec.id });
       return res.json(rec);
     }));
@@ -190,7 +206,7 @@ module.exports = function register(app, deps, M) {
       // Supprimer une réévaluation libère l'évaluation d'origine : sans cela
       // elle resterait marquée « réévaluation en cours » sans cycle suivant.
       let parentId = null;
-      const cible = db.getColl(coll).find((x) => x.id === req.params.id);
+      const cible = await db.get(coll, req.params.id);
       if (!cible) return res.status(404).json({ error: 'not_found' });
       if (coll === 'evaluations') {
         // Suppression réservée au Gestionnaire du domaine/secteur du prestataire
@@ -200,27 +216,54 @@ module.exports = function register(app, deps, M) {
         // Une évaluation réévaluée porte le cycle suivant : la supprimer
         // laisserait la réévaluation rattachée à une évaluation disparue. On
         // supprime d'abord la réévaluation, ce qui libère celle-ci.
-        const enfant = cible.enfant_id && db.getColl('evaluations').some((x) => x.id === cible.enfant_id);
+        const enfant = cible.enfant_id
+          && (await db.getColl('evaluations')).some((x) => x.id === cible.enfant_id);
         if (enfant) return res.status(409).json({ error: 'evaluation_reevaluee', reevaluation: cible.enfant_id });
       // Les autres collections tenaient la porte ouverte : un indicateur du
       // barème s'y supprimait sans le moindre privilège.
       } else if (!D.peut(req, 'GESTIONNAIRE', portee(cible))) {
         return D.refus(res);
       }
-      if (!db.remove(coll, req.params.id)) return res.status(404).json({ error: 'not_found' });
-      if (parentId) db.update('evaluations', parentId, { reevalue_le: '', reevalue_par: '', enfant_id: '' });
-      // Les réunions d'une évaluation ne se lisent que sous son identifiant :
-      // elle partie, elles resteraient en base sans que rien les atteigne.
-      if (coll === 'evaluations') {
-        ['eval_reunions', 'eval_reunions_prest'].forEach((c) => db.removeWhere(c, (x) => x.eval_id === req.params.id));
-      }
+      // Un seul geste, là où il y en avait quatre : l'enregistrement ôté, le
+      // parent libéré, et les réunions de l'évaluation avec elle. Entre ces
+      // quatre écritures, l'application montrait une évaluation disparue dont le
+      // parent se disait encore « réévaluation en cours », et des comptes rendus
+      // rattachés à rien ; un échec au milieu l'y laissait pour de bon.
+      let ote = false;
+      await db.transformer((d) => {
+        ote = false;
+        const arr = d[coll] || [];
+        const i = arr.findIndex((x) => x.id === req.params.id);
+        if (i < 0) return db.INCHANGE;
+        arr.splice(i, 1);
+        ote = true;
+        if (parentId) {
+          const evs = d.evaluations || [];
+          const j = evs.findIndex((x) => x.id === parentId);
+          if (j >= 0) {
+            evs[j] = {
+              ...evs[j], reevalue_le: '', reevalue_par: '', enfant_id: '',
+              updatedAt: new Date().toISOString(),
+            };
+          }
+        }
+        // Les réunions d'une évaluation ne se lisent que sous son identifiant :
+        // elle partie, elles resteraient en base sans que rien les atteigne.
+        if (coll === 'evaluations') {
+          ['eval_reunions', 'eval_reunions_prest'].forEach((c) => {
+            d[c] = (d[c] || []).filter((x) => x.eval_id !== req.params.id);
+          });
+        }
+        return d;
+      });
+      if (!ote) return res.status(404).json({ error: 'not_found' });
       await audit.log(req.user.username, 'PR_DELETE', { coll, id: req.params.id, parent_libere: parentId || null });
       return res.json({ ok: true });
     }));
   });
 
   // ── Contexte agrégé (chargement initial rapide) ──
-  app.get(`${M}/context`, requireAuth, (req, res) => {
+  app.get(`${M}/context`, requireAuth, asynchrone(async (req, res) => {
     // Les profils de risque partagent la carte et l'espace de droits de la
     // Planification : c'est la même case d'« Accès aux modules » qui les ouvre.
     // Noter un organisme n'est pas l'affaire de l'organisme noté : son compte
@@ -244,10 +287,10 @@ module.exports = function register(app, deps, M) {
         secteurs: instances.visibles(D.sharedSecteurs(), 'secteurs', req.user, loadConfig),
         sousActivites: instances.visibles(D.sharedSousActivites(), 'sous_activites', req.user, loadConfig),
         prestataires: parInstance(req, D.sharedPrestataires()),
-        indices: D.sharedIndices(),
+        indices: await D.sharedIndices(),
       },
     });
-  });
+  }));
 
   app.get(`${M}/instance`, requireAuth, (req, res) => res.json(instances.etat(req.user, loadConfig)));
 

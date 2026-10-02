@@ -444,6 +444,141 @@ faux à qui vient d'importer un référentiel.
 
 ---
 
+## Onzième : `profil_risque` — le premier magasin de module
+
+*2 octobre 2026. Le plus petit des cinq, pris pour mesurer le coût réel avant
+d'engager les quatre autres.*
+
+Les cinq collections de module portent les **381 appels** mesurés au départ. La
+propagation n'y est pas de la nature des trois précédentes : ces données ne sont
+pas lues par des prédicats mais **dans le corps des gestionnaires**, qui sont déjà
+asynchrones depuis la bascule des journaux d'audit. L'instantané par requête ne
+conviendrait donc pas — et ne devrait pas convenir : une évaluation est un acte
+d'autorité, en écriture permanente, où lire un état vieux de quelques
+millisecondes ne se défend pas.
+
+La conversion est donc franche. `profil_risque` est le plus petit : **12 appels,
+5 fichiers, 23 contrôles**. Le coût de portage a été celui qu'on attendait. Ce que
+la conversion a trouvé ne l'était pas.
+
+### Trois gestes en faisaient plusieurs
+
+| Geste | Écritures avant | Après |
+|---|---|---|
+| Mettre à jour une évaluation, puis horodater son étape | 2 | **1** |
+| Supprimer une évaluation, libérer son parent, ses deux séries de réunions | **4** | **1** |
+| Ouvrir un cycle de réévaluation, puis le rattacher | 2 | **1** |
+
+Entre ces écritures, l'application montrait des états qui n'ont jamais été voulus :
+une évaluation disparue dont le parent se disait encore « réévaluation en cours »,
+des comptes rendus rattachés à rien, un statut posé dont l'étape n'était pas
+horodatée. Un échec au milieu les y laissait pour de bon.
+
+C'est pour cela que le magasin expose `transformer` et non seulement `insert` /
+`update` / `remove` : un geste composite s'écrit d'un seul coup, ou il n'est pas
+atomique.
+
+### Une garde hors de l'écriture ne garde rien
+
+Deux endroits vérifiaient un état avant d'écrire :
+
+- **la réévaluation** — « aucune n'est déjà lancée ». Deux demandes parties
+  ensemble passaient toutes deux le contrôle, créaient deux clones, et le second
+  `enfant_id` écrasait le premier : un clone qu'aucun écran n'atteint plus, et que
+  rien ne signale ;
+- **le verrou d'une évaluation validée** — l'import de notes par classeur. Parti
+  au moment où le directeur valide, il se posait **après** la décision : les notes
+  qui la fondent changeaient après elle, et le profil servi à la Planification
+  n'était plus celui qui avait été arrêté.
+
+Les deux gardes n'étaient pas fausses. Elles étaient **hors de l'écriture
+qu'elles gardaient**. Elles se relisent désormais dans la transformation, sur
+l'état qu'on va écrire.
+
+### Le transformateur recevait l'objet du cache
+
+Celui-ci n'était pas prévu : un contrôle que je venais d'écrire l'a trouvé.
+
+Sur fichiers, `store.load` rend **l'objet du cache**, partagé par tout le
+processus. Un transformateur qui le mute en place — `arr.splice(i, 1)`,
+`arr[i] = …`, la façon naturelle d'écrire — le mutait donc pour tout le monde,
+avant la moindre écriture. Deux conséquences, mesurées :
+
+```
+en mémoire après l'échec : {"items":[1,2,99]}
+sur le disque            : {"items":[1,2]}
+```
+
+L'écriture est refusée, et la donnée est fausse quand même — **durablement** : le
+cache est indexé sur la date du fichier, que rien n'a changée. Et si le
+transformateur contient un `await`, son état intermédiaire est lisible par une
+autre requête.
+
+La base n'a jamais eu ce défaut : chaque essai y relit le JSON, donc un objet
+neuf. Le transformateur reçoit maintenant une copie dans les deux régimes, ce qui
+est tout l'objet de cette façade — un appel converti doit se comporter de la même
+façon sur fichiers et en base. Coût : un clonage par écriture, quelques
+millisecondes sur la plus grosse collection, pour une trentaine d'écritures par
+jour.
+
+### `INCHANGE`, et pourquoi ce n'est pas `undefined`
+
+Un transformateur ne trouve pas toujours de quoi travailler : la ligne visée
+n'existe pas, la transformation ne change rien. Réécrire quand même coûte un
+aller-retour sur la collection entière — la bibliothèque documentaire porte ses
+pièces en base64, jusqu'à 3,5 Mo l'une — pour répondre `404`.
+
+D'où un refus explicite, `magasin.INCHANGE`. **Il fallait un symbole.** Un
+`return` oublié rend `undefined` ; le prendre pour « ne rien écrire » ferait
+disparaître une écriture sans erreur ni trace, c'est-à-dire exactement le défaut
+que `modifier` existe pour empêcher. `undefined` lève donc, et nomme l'oubli.
+
+### Un vert creux, retiré plutôt que gardé
+
+J'avais écrit une rafale de dix réévaluations simultanées. Elle passait. La
+contre-épreuve — l'ancienne logique en trois temps, la garde hors de l'écriture —
+**la passait aussi** : dix requêtes HTTP contre un gestionnaire rapide se
+sérialisent, et la fenêtre ne s'ouvre jamais.
+
+C'est la deuxième fois que ce piège se présente ici ; la première était le
+compteur du second facteur. Le contrôle est remplacé par deux qui mordent :
+
+| Preuve | Où | Contre-épreuve |
+|---|---|---|
+| Dix gardes dans la transformation, une seule passe | « unitaires », en processus | La même garde hors de la transformation en laisse passer plusieurs |
+| La garde est **dans** le `db.transformer` | « taille », sur la forme | Retirée, le contrôle tombe |
+
+Le premier marqueur de forme ne mordait pas non plus : il cherchait le nom du
+champ, qui apparaît aussi dans la mise à jour du parent, à l'intérieur de la même
+transformation. C'est le **refus** qui sert de marqueur maintenant.
+
+### Six routes de classeur qu'aucun contrôle n'exerçait
+
+Export des indicateurs, modèle, export des notes, import d'indicateurs : ces
+routes lisent le magasin trois fois chacune, en boucle sur les familles. Un
+`await` oublié y rendrait un classeur **vide et bien formé** — trois feuilles,
+leurs entêtes, aucune ligne. Rien ne l'aurait dit, et personne ne les exerçait.
+Elles portent six contrôles maintenant, tous contre-éprouvés.
+
+Deux `forEach` y sont devenus `for…of`, comme pour l'import de référentiel.
+
+### Le coût, mesuré
+
+| | |
+|---|---|
+| Contrôles, quatre régimes | **813** sur fichiers et bus différé · **823** en base |
+| Dont nouveaux | **16** |
+| Node contre Java, **neuf** collections en base | **38 / 38** à l'octet |
+| Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+| Suite « droits » par la passerelle | **20 / 20** ; Java arrêté, 3 tombent aussitôt |
+
+Restent `planification` (55 appels), `mesures` (93), `ramp` (148) et `execution`
+(202). Les quatre suivent la même recette ; les trois défauts trouvés ici —
+gestes composites, gardes hors de l'écriture, mutation du cache — s'y
+retrouveront, et deux d'entre eux sont désormais gardés par un contrôle de forme.
+
+---
+
 ### Décidé le 28 septembre 2026 : le chemin 1, et en tête de tout
 
 Le jalon n° 7 d'[ADR-002](ADR-002-migration-spring-boot.md) tranche : **le

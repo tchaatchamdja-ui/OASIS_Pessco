@@ -426,6 +426,83 @@ module.exports = async function tailleSmoke() {
   verifier('aucune collection passée en base n’est encore lue par « store »',
     enDouble.length === 0, enDouble.join(' · '));
 
+  // ── Le magasin d'un module en base ne se lit pas sans l'attendre ──
+  //
+  // Le jalon n° 13 fait passer les magasins de module en base : `db.list`,
+  // `db.get`, `db.getColl` rendent désormais une promesse. C'est **le défaut le
+  // plus discret de toute la bascule**, parce que ces appels ne sont pas des
+  // prédicats qu'on reconnaît : ils sont le corps même des gestionnaires.
+  //
+  // Un `await` oublié ne lève pas. `res.json(promesse)` sérialise `{}` : un
+  // écran de notations vide, qu'aucune erreur n'accompagne et que personne ne
+  // distingue d'une AAC qui n'a rien saisi. Pire sur un `.find(...)` — la
+  // promesse n'a pas de `.find`, donc une 500 sans rapport apparent avec un
+  // `await`.
+  //
+  // **Le critère est que `list` soit asynchrone**, et non que le magasin
+  // requière la façade : celui de RAMP la requiert depuis le jalon n° 9 pour la
+  // seule nomenclature des aéronefs, tandis que ses autres collections restent
+  // sur fichiers et se lisent encore de façon synchrone. Clore sur le `require`
+  // désignait donc 150 lignes parfaitement correctes.
+  //
+  // Ce critère-ci n'est pas une déclaration qu'on peut oublier de poser : c'est
+  // la propriété même dont le contrôle dépend. Un magasin converti est reconnu
+  // du seul fait de sa conversion. La source se lit, et non le `require` — pour
+  // la même raison que plus haut.
+  const ASYNCHRONES = ['load', 'save', 'transformer', 'list', 'get', 'getColl',
+    'seed', 'insert', 'update', 'remove', 'removeWhere'];
+  const magasinsDeModule = fs.readdirSync(path.join(RACINE, 'src', 'modules'))
+    .map((m) => ({ module: m, chemin: path.join(RACINE, 'src', 'modules', m, 'store.js') }))
+    .filter(({ chemin }) => fs.existsSync(chemin))
+    .filter(({ chemin }) => /\bconst list = async\b/.test(fs.readFileSync(chemin, 'utf8')));
+  verifier('au moins un magasin de module est reconnu converti',
+    magasinsDeModule.length > 0, magasinsDeModule.map((m) => m.module).join(' · '));
+
+  const MAGASIN_NU = [];
+  magasinsDeModule.forEach(({ module }) => {
+    sources()
+      .filter((f) => relatif(f).startsWith(`src/modules/${module}/`) && f.endsWith('.js'))
+      .filter((f) => !relatif(f).endsWith('/store.js'))
+      .forEach((f) => {
+        fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
+          const m = new RegExp(`(.{0,8})\\bdb\\.(${ASYNCHRONES.join('|')})\\(`).exec(ligne);
+          if (!m) return;
+          // Attendu sur place, ou transmis à un appelant qui l'attendra.
+          if (/await\s*$/.test(m[1]) || /(return|=>)\s*$/.test(m[1])) return;
+          MAGASIN_NU.push(`${relatif(f)}:${n + 1}`);
+        });
+      });
+  });
+  verifier('aucun magasin de module en base n’est lu sans « await »',
+    MAGASIN_NU.length === 0, MAGASIN_NU.join(' · '));
+
+  // ── Une garde « lire, vérifier, écrire » se tient dans la transformation ──
+  //
+  // Trois gestes du module « Profils de Risque » vérifient un état avant
+  // d'écrire : la réévaluation n'est pas déjà lancée, l'évaluation n'est pas
+  // verrouillée. Vérifiée **avant** la transformation, la garde ne garde rien —
+  // deux demandes simultanées la passent toutes deux. C'est le défaut mesuré au
+  // jalon n° 13, et la suite « unitaires » en tient la preuve avec sa
+  // contre-épreuve.
+  //
+  // Ici c'est la forme : le drapeau est relu à l'intérieur du `db.transformer`.
+  // Une rafale HTTP ne saurait pas le dire — dix requêtes contre un gestionnaire
+  // rapide se sérialisent, et la contre-épreuve passait. Ce contrôle-ci, lui,
+  // tombe dès que la relecture sort de la transformation.
+  const dansLaTransformation = (fichier, garde) => {
+    const src = fs.readFileSync(path.join(RACINE, 'src', 'modules', 'profil_risque', fichier), 'utf8');
+    const i = src.indexOf('db.transformer(');
+    const j = i < 0 ? -1 : src.indexOf(garde, i);
+    return i >= 0 && j > i;
+  };
+  // Le marqueur est **le refus lui-même**, et non le nom du champ : `reevalue_le`
+  // apparaît aussi dans la mise à jour du parent, à l'intérieur de la même
+  // transformation, et la contre-épreuve passait sur cette occurrence-là.
+  verifier('PR : la réévaluation refuse depuis la transformation',
+    dansLaTransformation('routes-workflow.js', "refus = 'reevaluation_deja_lancee'"));
+  verifier('PR : l’import de notes refuse depuis la transformation',
+    dansLaTransformation('routes-excel.js', "refus = 'evaluation_verrouillee'"));
+
   // ── Un gestionnaire asynchrone est enveloppé, ou la requête reste ouverte ──
   //
   // Express 4 ne regarde pas la promesse que rend un gestionnaire `async`. Si

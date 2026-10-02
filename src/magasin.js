@@ -40,6 +40,11 @@ const store = require('./store');
 const journal = require('./journal');
 const storePg = require('./store_pg');
 
+// Le symbole « ne rien écrire », défini là où vit la seule implémentation non
+// triviale de `modifier`, et rendu ici parce que c'est la façade que les
+// appelants connaissent.
+const { INCHANGE } = storePg;
+
 // Ce qui est passé en base, et rien d'autre.
 //
 // `ramp_aeronefs` — la nomenclature des aéronefs. Première convertie parce
@@ -77,6 +82,13 @@ const storePg = require('./store_pg');
 // mesurée : lues depuis des prédicats synchrones, 45 appels pour la première,
 // quatre prédicats pour la seconde. Les trois sont tenues par
 // `src/instantane.js`, rafraîchies ensemble une fois par requête.
+//
+// `profil_risque` — **le premier magasin de module** (jalon n° 13). Choisi parce
+// qu'il est le plus petit des cinq : 12 appels, 5 fichiers, 23 contrôles. La
+// propagation n'y est pas de la nature des trois précédentes — ces données ne
+// sont pas lues par des prédicats mais dans le corps des gestionnaires, déjà
+// asynchrones depuis la bascule des journaux. L'instantané ne conviendrait pas :
+// une évaluation est un acte d'autorité en écriture permanente.
 const MIGREES = new Set([
   'ramp_aeronefs',
   'emails',
@@ -86,6 +98,7 @@ const MIGREES = new Set([
   'sessions',
   'referentiels',
   'module_rights',
+  'profil_risque',
 ]);
 
 let socle = null;
@@ -138,10 +151,37 @@ async function save(nom, valeur) {
 // asynchrone, et il peut être rappelé si quelqu'un est passé entre-temps. Il ne
 // doit donc rien faire d'autre que calculer — pas d'envoi de courriel, pas
 // d'écriture au journal : ceux-là se font après, sur ce que `modifier` rend.
+//
+// `INCHANGE` dit « ne rien écrire » — la ligne visée n'existe pas, ou rien n'a
+// changé. La raison du symbole, plutôt que `undefined`, est dans l'en-tête de
+// `src/store_pg.js` : un `return` oublié ne doit pas faire disparaître une
+// écriture en silence.
+//
+// ── Le transformateur reçoit une copie, et il le fallait ──
+//
+// Sur fichiers, `store.load` rend **l'objet du cache**, partagé par tout le
+// processus. Un transformateur qui le mute en place — et c'est la façon naturelle
+// d'écrire `arr.splice(i, 1)` ou `arr[i] = …` — le mutait donc pour tout le
+// monde, avant toute écriture. Deux conséquences, mesurées :
+//
+//   · s'il échoue, ou s'il rend `INCHANGE`, la valeur en mémoire reste celle
+//     qu'il a fabriquée. Elle **diverge du fichier et y reste** : le cache est
+//     indexé sur la date du fichier, que rien n'a changée. L'écriture est
+//     refusée, et la donnée est fausse quand même ;
+//   · s'il contient un `await`, son état intermédiaire est lisible par une autre
+//     requête — un enregistrement déjà ôté et son parent pas encore libéré.
+//
+// La base n'a jamais eu ce défaut : chaque essai y relit le JSON, donc un objet
+// neuf. La copie met les deux régimes au même comportement, ce qui est tout
+// l'objet de cette façade. Elle coûte un clonage par écriture — quelques
+// millisecondes sur la plus grosse collection, pour une trentaine d'écritures
+// par jour.
 async function modifier(nom, defaut, transformer) {
   if (surBase(nom)) return base().modifier(nom, defaut, transformer);
   return enFile(nom, async () => {
-    const suivante = await transformer(store.load(nom, defaut));
+    const valeur = store.load(nom, defaut);
+    const suivante = storePg.verifierRendu(nom, await transformer(structuredClone(valeur)));
+    if (suivante === INCHANGE) return valeur;
     store.save(nom, suivante);
     return suivante;
   });
@@ -230,7 +270,7 @@ async function fermer() {
 }
 
 module.exports = {
-  load, save, modifier, preparer, surBase, fermer, MIGREES,
+  load, save, modifier, preparer, surBase, fermer, MIGREES, INCHANGE,
   journalLire, journalLireChaine, journalChainer, journalReprendre, journalConverti,
   journalSurBase, JOURNAUX_MIGRES,
   // Alias du contrat, pour que la suite « magasin-pg » éprouve le même nom que

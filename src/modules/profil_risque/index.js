@@ -30,6 +30,7 @@ function register(app, deps) {
 
 module.exports = {
   register,
+  // Asynchrone depuis que `profil_risque` vit en base (ADR-002, jalon n° 13).
   seed: db.seed,
   COLLECTIONS: db.COLLECTIONS,
   getColl: db.getColl,

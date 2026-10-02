@@ -67,6 +67,30 @@
 // bas : **remplacer un document entier ne protège de rien**. Deux agents qui
 // lisent la même collection, y ajoutent chacun leur ligne et la réécrivent en
 // perdent une, en base comme sur fichier.
+//
+// ── Ne rien écrire, et le dire ──
+//
+// Un transformateur ne trouve pas toujours de quoi travailler : la ligne visée
+// n'existe pas, ou la transformation ne change rien. Réécrire quand même coûte
+// un aller-retour sur la collection entière — la bibliothèque documentaire des
+// profils de risque porte ses pièces en base64, jusqu'à 3,5 Mo l'une — et, sur
+// fichiers, invalide le cache de tout le monde pour un `404`.
+//
+// D'où `INCHANGE`, rendu explicitement. **Il fallait un symbole, et non
+// `undefined`** : un `return` oublié rend `undefined`, et le prendre pour « ne
+// rien écrire » ferait exactement le défaut que `modifier` existe pour
+// empêcher — une écriture qui disparaît sans erreur ni trace. `undefined` lève
+// donc, et nomme l'oubli.
+const INCHANGE = Symbol('magasin.INCHANGE');
+
+function verifierRendu(nom, rendu) {
+  if (rendu === undefined) {
+    throw new Error(`magasin : la transformation de « ${nom} » n’a rien rendu`
+      + ' — « return » oublié ? (rendre magasin.INCHANGE pour ne rien écrire)');
+  }
+  return rendu;
+}
+
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS collections (
      nom    TEXT PRIMARY KEY,
@@ -167,7 +191,12 @@ function creer(client) {
       const presente = r.rows.length > 0;
       const valeur = presente ? r.rows[0].valeur : defaut;
       const rev = presente ? r.rows[0].rev : -1;
-      const suivante = await transformer(valeur);
+      const suivante = verifierRendu(nom, await transformer(valeur));
+      // Rien à écrire : l'enregistrement visé n'existe pas, ou la transformation
+      // n'a rien changé. Réécrire une collection entière pour un `404` coûterait
+      // ici un aller-retour sur plusieurs mégaoctets — la bibliothèque
+      // documentaire porte ses pièces en base64.
+      if (suivante === INCHANGE) return valeur;
 
       if (!presente) {
         // Personne n'avait encore écrit. Un autre a pu le faire entre le SELECT
@@ -307,4 +336,4 @@ function ouvrir(url) {
   return magasin;
 }
 
-module.exports = { creer, ouvrir, SCHEMA };
+module.exports = { creer, ouvrir, SCHEMA, INCHANGE, verifierRendu };

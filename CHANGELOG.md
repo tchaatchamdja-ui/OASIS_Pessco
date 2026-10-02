@@ -169,6 +169,35 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   n'étant plus synchrone, une mesure peut désormais être prononcée entre les deux gestes.
   La vérification lit un module et l'effacement en écrit un autre : il y faudra une
   transaction entre modules. Porté aux points ouverts d'ADR-002.
+- **`profil_risque` en base — le premier magasin de module.** Propagation d'une autre nature
+  que les trois précédentes : ces données ne sont pas lues par des prédicats mais dans le
+  corps des gestionnaires, déjà asynchrones. L'instantané ne conviendrait pas — une évaluation
+  est un acte d'autorité en écriture permanente. Conversion franche, sur le plus petit des
+  cinq modules : 12 appels, 5 fichiers.
+- **Trois gestes du module en faisaient plusieurs** : mettre à jour une évaluation puis
+  horodater son étape (2 écritures), la supprimer puis libérer son parent puis ses deux séries
+  de réunions (**4**), ouvrir un cycle puis le rattacher (2). Entre elles, l'application
+  montrait une évaluation disparue dont le parent se disait encore « réévaluation en cours »,
+  et des comptes rendus rattachés à rien ; un échec au milieu l'y laissait. Chacun est
+  désormais **une seule transformation**.
+- **Deux gardes se tenaient hors de l'écriture qu'elles gardaient** : deux réévaluations
+  simultanées créaient deux clones dont un orphelin ; et un classeur de notes parti au moment
+  d'une validation se posait après elle, de sorte que le profil servi à la Planification
+  n'était plus celui qui avait été arrêté. Les deux se relisent dans la transformation.
+- **Le transformateur recevait l'objet du cache**, sur fichiers — trouvé par un contrôle
+  écrit pour autre chose. Mutation en place (`arr.splice`, la façon naturelle d'écrire) :
+  l'écriture refusée, la valeur en mémoire restait fausse **durablement**, le cache étant
+  indexé sur la date du fichier que rien n'avait changée. Il reçoit une copie, ce qui met les
+  deux régimes au même comportement — l'objet même de la façade.
+- **`magasin.INCHANGE`** : ne rien écrire, et le dire. Réécrire une collection entière pour
+  répondre `404` coûtait un aller-retour sur plusieurs mégaoctets — la bibliothèque
+  documentaire porte ses pièces en base64. Un **symbole** et non `undefined` : un `return`
+  oublié rend `undefined`, et le prendre pour « ne rien écrire » ferait disparaître une
+  écriture sans erreur ni trace. `undefined` lève, et nomme l'oubli.
+- **Six routes de classeur n'étaient exercées par aucun contrôle** — export des indicateurs,
+  modèle, export des notes, import. Un `await` oublié y rendrait un classeur vide et bien
+  formé : trois feuilles, leurs entêtes, aucune ligne. Elles sont couvertes, et les deux
+  `forEach` de leurs boucles sont devenus `for…of`.
 
 ### Tests
 - Jeu de données de référence versionné dans `tests/fixtures` : `npm run smoke`
@@ -180,6 +209,19 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   n'est plus lue par `store`** — un appel oublié lirait le fichier figé au dernier jour
   des fichiers, sans erreur —, et **tout gestionnaire de route asynchrone passe par
   `asynchrone`**. Les deux contre-éprouvés.
+- **Aucun magasin de module en base n'est lu sans `await`** — le défaut le plus discret de
+  la bascule, parce que ces appels ne sont pas des prédicats qu'on reconnaît mais le corps
+  des gestionnaires. `res.json(promesse)` sérialise `{}` : un écran vide, sans erreur. Le
+  critère est **que `list` soit asynchrone**, et non que le magasin requière la façade —
+  celui de RAMP la requiert pour la seule nomenclature des aéronefs, et le premier jet
+  désignait 150 lignes correctes.
+- **Une garde « lire, vérifier, écrire » se tient dans la transformation** : deux contrôles
+  de forme, et la preuve d'atomicité en processus avec sa contre-épreuve — la même garde
+  hors de la transformation laisse passer plusieurs écritures.
+- **Un vert creux retiré** : une rafale de dix réévaluations simultanées passait, et la
+  contre-épreuve — l'ancienne logique, la garde hors de l'écriture — la passait aussi. Dix
+  requêtes HTTP contre un gestionnaire rapide se sérialisent. Deuxième fois que ce piège se
+  présente ; la première était le compteur du second facteur.
 
 ### Accessibilité
 - Contour de focus visible au clavier sur l'ensemble des écrans. *(A11Y-02)*

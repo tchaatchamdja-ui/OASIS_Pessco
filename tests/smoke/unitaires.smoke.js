@@ -310,6 +310,54 @@ function basePapier() {
   };
 }
 
+// ── Le répertoire de données ne se fige pas à l'import ──
+//
+// C'est la propriété dont dépend tout le reste de cette suite, et son absence a
+// **détruit `data/users.json`** : un module du socle chargé avant que
+// `OASIS_DATA_DIR` soit posé figeait le vrai `data/` pour toute la durée du
+// processus, et les contrôles y écrivaient. `tests/smoke/bac.js` en raconte le
+// chemin complet.
+//
+// Le contrôle déplace la variable entre deux écritures et vérifie qu'elles
+// atterrissent dans deux répertoires différents — ce qui est faux si le
+// répertoire est figé —, puis que la seconde n'a pas effacé la première du cache.
+function repertoireNonFige() {
+  const fichiers = require('../../src/store');
+  const avant = process.env.OASIS_DATA_DIR;
+  const a = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-rep-a-'));
+  const b = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-rep-b-'));
+  try {
+    process.env.OASIS_DATA_DIR = a;
+    fichiers.save('essai_repertoire', { ou: 'a' });
+    process.env.OASIS_DATA_DIR = b;
+    fichiers.save('essai_repertoire', { ou: 'b' });
+    verifier('magasin : le répertoire est lu à chaque appel, non figé à l’import',
+      fs.existsSync(path.join(a, 'essai_repertoire.json'))
+      && fs.existsSync(path.join(b, 'essai_repertoire.json')),
+      `a : ${fs.existsSync(path.join(a, 'essai_repertoire.json'))} · b : ${fs.existsSync(path.join(b, 'essai_repertoire.json'))}`);
+    // Et le cache ne confond pas deux répertoires. Indexé par nom seul, il les
+    // confondrait — mais **la date du fichier le rattrape presque toujours**, et
+    // c'est ce qu'a montré la contre-épreuve : l'écart de quelques millisecondes
+    // entre les deux écritures suffisait à provoquer une relecture.
+    //
+    // La fenêtre réelle est celle de deux fichiers portant la même date, à la
+    // milliseconde — ce qui arrive. On la force donc, sinon le contrôle ne garde
+    // rien : c'est le seul cas où l'indexation par chemin est ce qui décide.
+    const quand = new Date('2026-06-01T12:00:00.000Z');
+    [a, b].forEach((r) => fs.utimesSync(path.join(r, 'essai_repertoire.json'), quand, quand));
+    process.env.OASIS_DATA_DIR = b;
+    fichiers.load('essai_repertoire', null);        // met « b » au cache
+    process.env.OASIS_DATA_DIR = a;
+    const relu = (fichiers.load('essai_repertoire', null) || {}).ou;
+    verifier('magasin : le cache ne confond pas deux répertoires de même date',
+      relu === 'a', `relu « ${relu} » dans a`);
+  } finally {
+    if (avant === undefined) delete process.env.OASIS_DATA_DIR;
+    else process.env.OASIS_DATA_DIR = avant;
+    [a, b].forEach((r) => fs.rmSync(r, { recursive: true, force: true }));
+  }
+}
+
 async function magasins() {
   const storePg = require('../../src/store_pg');
   const fichiers = require('../../src/store');
@@ -1046,6 +1094,7 @@ module.exports = async function unitairesSmoke() {
     barreDeRamp();
     await compteurDuSecondFacteur();
     await annuaireDesComptes();
+    repertoireNonFige();
     await magasins();
     await facadeDuMagasin();
   } finally {

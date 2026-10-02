@@ -18,17 +18,35 @@
 const fs = require('fs');
 const path = require('path');
 
-// Répertoire de données : surchargeable (tests de fumée, instances multiples).
-const DATA_DIR = process.env.OASIS_DATA_DIR || path.join(__dirname, '..', 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+// ── Répertoire de données : lu à chaque appel, et non figé à l'import ──
+//
+// Il l'était, et **cela a détruit `data/users.json`**. Un module du socle chargé
+// avant que `OASIS_DATA_DIR` soit posé figeait le vrai `data/` pour toute la durée
+// du processus ; la variable posée ensuite n'avait plus aucun effet, et les
+// contrôles écrivaient dans les données de travail. Le chemin complet de
+// l'incident est dans l'en-tête de `tests/smoke/bac.js`.
+//
+// Une fonction, donc — comme le fait déjà `src/journal.js`, son voisin. Lire
+// `process.env` coûte moins qu'un appel système, et il y a un accès disque juste
+// après.
+//
+// Le répertoire se crée **à la première écriture**, et non à l'import : créer un
+// `data/` du seul fait de charger un module faisait apparaître un répertoire que
+// personne n'avait demandé, là où le processus avait été lancé.
+const dossier = () => process.env.OASIS_DATA_DIR || path.join(__dirname, '..', 'data');
 
 // Cache mémoire, invalidé dès que le fichier change sur le disque : deux
 // processus servant le même répertoire (déploiement multi-instance, seconde
 // instance lancée par mégarde) ne se rendent plus mutuellement aveugles.
-const cache = new Map();     // nom -> { valeur, mtimeMs }
+//
+// **Indexé par chemin complet, non par nom** : le répertoire pouvant changer,
+// deux `users` de deux répertoires se seraient rendus l'un pour l'autre — un
+// contrôle aurait lu les comptes de production depuis son bac, sans rien
+// toucher mais en les croyant siens.
+const cache = new Map();     // chemin -> { valeur, mtimeMs }
 
 function file(name) {
-  return path.join(DATA_DIR, name + '.json');
+  return path.join(dossier(), name + '.json');
 }
 
 function mtime(chemin) {
@@ -38,7 +56,7 @@ function mtime(chemin) {
 function load(name, fallback) {
   const chemin = file(name);
   const surDisque = mtime(chemin);
-  const enCache = cache.get(name);
+  const enCache = cache.get(chemin);
   if (enCache && enCache.mtimeMs === surDisque) return enCache.valeur;
 
   let valeur = fallback;
@@ -49,17 +67,19 @@ function load(name, fallback) {
       valeur = fallback;
     }
   }
-  cache.set(name, { valeur, mtimeMs: surDisque });
+  cache.set(chemin, { valeur, mtimeMs: surDisque });
   return valeur;
 }
 
 function save(name, value) {
-  const chemin = file(name);
+  const rep = dossier();
+  if (!fs.existsSync(rep)) fs.mkdirSync(rep, { recursive: true });
+  const chemin = path.join(rep, name + '.json');
   const tmp = chemin + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(value, null, 2));
   fs.renameSync(tmp, chemin);
   // Le cache retient la version écrite et la date du fichier qui la porte.
-  cache.set(name, { valeur: value, mtimeMs: mtime(chemin) });
+  cache.set(chemin, { valeur: value, mtimeMs: mtime(chemin) });
 }
 
 module.exports = { load, save };

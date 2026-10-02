@@ -6,6 +6,17 @@
 //
 //   npm run smoke            toutes les suites
 //   npm run smoke -- plan    seulement les suites dont le nom contient « plan »
+//
+// ── Le bac, en premier, et avant la liste ──
+//
+// Cette ligne doit rester la première. La liste ci-dessous est construite avec des
+// `require` : **toutes** les suites sont donc chargées, y compris pour un passage
+// filtré, et l'une d'elles tire `src/store`, qui fige son répertoire de données à
+// l'import. Chargé après, le bac n'aurait aucun effet — et les contrôles qui
+// écrivent en processus écriraient dans le vrai `data/`. C'est ainsi que
+// `data/users.json` a été détruit. `bac.js` refuse de se charger trop tard.
+const bac = require('./bac');
+
 const suites = [
   { nom: 'socle', port: 4791, run: require('./socle.smoke') },
   { nom: 'profil-risque', port: 4792, run: require('./profil-risque.smoke') },
@@ -38,6 +49,25 @@ const suites = [
     process.exit(2);
   }
 
+  // ── Les données de travail, relevées avant et après ──
+  //
+  // Le bac et son verrou empêchent la cause connue. Celui-ci dit si quelque chose
+  // a quand même écrit dans `data/` — c'est la seule chose qui ne se rattrape pas,
+  // et elle s'est produite sans qu'aucun contrôle ne le signale. Une empreinte par
+  // fichier : taille et date, ce qui suffit à voir une réécriture.
+  const empreinte = () => {
+    const fs = require('fs');
+    const dossier = bac.DONNEES_DE_TRAVAIL;
+    if (!fs.existsSync(dossier)) return {};
+    return Object.fromEntries(fs.readdirSync(dossier)
+      .filter((f) => f.endsWith('.json') || f.endsWith('.jsonl'))
+      .map((f) => {
+        const s = fs.statSync(require('path').join(dossier, f));
+        return [f, `${s.size}@${s.mtimeMs}`];
+      }));
+  };
+  const avant = empreinte();
+
   const resultats = [];
   for (const s of choisies) {
     try {
@@ -48,7 +78,18 @@ const suites = [
     }
   }
 
+  const apres = empreinte();
+  const touches = Object.keys({ ...avant, ...apres }).filter((f) => avant[f] !== apres[f]);
+  if (touches.length) {
+    console.error('\n✗✗ LES DONNÉES DE TRAVAIL ONT ÉTÉ MODIFIÉES PAR LES CONTRÔLES ✗✗');
+    console.error(`   ${bac.DONNEES_DE_TRAVAIL}`);
+    touches.forEach((f) => console.error(`   · ${f} — ${avant[f] || '(absent)'} → ${apres[f] || '(effacé)'}`));
+    console.error('   Un module du socle a servi le vrai répertoire : voir tests/smoke/bac.js.');
+    console.error('   Restaurer depuis sauvegardes/ avant toute autre chose.');
+  }
+  bac.effacer();
+
   console.log('\n═══ Bilan ═══');
   resultats.forEach(([nom, ok]) => console.log(` ${ok ? '✓' : '✗'} ${nom}`));
-  process.exit(resultats.every(([, ok]) => ok) ? 0 : 1);
+  process.exit(resultats.every(([, ok]) => ok) && !touches.length ? 0 : 1);
 })();

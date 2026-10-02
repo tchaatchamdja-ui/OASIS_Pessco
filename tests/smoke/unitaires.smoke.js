@@ -16,12 +16,16 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+// Le bac du processus, posé par le lanceur avant tout module du socle. Cette
+// suite s'y range plutôt que d'en poser un : `src/store.js` fige son répertoire
+// à l'import, et une suite chargée après lui n'y peut plus rien.
+//
+// Elle en posait un, trois lignes sous un commentaire qui affirmait la règle
+// qu'il enfreignait — et son contrôle de l'annuaire écrivait donc dans le vrai
+// `data/users.json`, qu'il a détruit. L'en-tête de `bac.js` raconte le mécanisme.
+const { BAC } = require('./bac');
 const { verifier, horsPortee, bilan } = require('./harness');
 const magasinDuJournal = require('../../src/magasin');
-
-// Les modules du socle lisent `OASIS_DATA_DIR` à l'import : il est posé avant.
-const BAC = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-unit-'));
-process.env.OASIS_DATA_DIR = BAC;
 
 const audit = require('../../src/audit');
 const valider = require('../../src/valider');
@@ -1045,20 +1049,15 @@ module.exports = async function unitairesSmoke() {
     await magasins();
     await facadeDuMagasin();
   } finally {
-    fs.rmSync(BAC, { recursive: true, force: true });
-    // Effacer ce que les contrôles ont écrit, là où ils l'ont réellement écrit.
-    // `src/store.js` fige son répertoire à l'import : si une suite précédente
-    // a chargé le socle avant que `OASIS_DATA_DIR` soit posé ici, ce répertoire
-    // est le vrai `data/`, et le bac n'aura rien reçu. On nettoie donc les deux.
+    // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
+    // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre
+    // avec la fuite plutôt que de la corriger, et qui ne couvrait de toute façon
+    // que trois noms d'essai, jamais `users`. Le lanceur efface le bac entier et
+    // relève toute écriture dans les données de travail.
     ['essai_contrat', COLL_ESSAI, 'essai_journal'].forEach((nom) => {
-      [BAC, process.env.OASIS_DATA_DIR, path.join(__dirname, '..', '..', 'data')]
-        .filter(Boolean)
-        .forEach((rep) => {
-          fs.rmSync(path.join(rep, `${nom}.json`), { force: true });
-          fs.rmSync(path.join(rep, `${nom}.jsonl`), { force: true });
-        });
+      fs.rmSync(path.join(BAC, `${nom}.json`), { force: true });
+      fs.rmSync(path.join(BAC, `${nom}.jsonl`), { force: true });
     });
-    delete process.env.OASIS_DATA_DIR;
   }
   assert.ok(true);
   return bilan('Unitaires');

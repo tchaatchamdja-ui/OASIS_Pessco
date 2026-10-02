@@ -88,7 +88,8 @@ public class Magasin {
       "profil_risque",
       "planification",
       "mesures",
-      "ramp");
+      "ramp",
+      "execution");
 
   /**
    * Les journaux servis par la base. <b>Recopie de {@code JOURNAUX_MIGRES} dans

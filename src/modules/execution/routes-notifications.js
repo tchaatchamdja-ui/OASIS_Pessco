@@ -32,16 +32,16 @@ module.exports = function register(app, deps, M) {
 
   // Restriction par processus : l'étape n'est franchie que par les
   // intervenants qui y sont désignés (voir acteurs.js pour les garde-fous).
-  const contexteActivite = (n) => {
+  const contexteActivite = async (n) => {
     const perim = perimetrePrestataire(n.prestataire_id);
     return {
       secteur_id: n.secteur_id || perim.secteur_id || '',
       domaine_id: n.domaine_id || perim.domaine_id || '',
-      dossier: db.list('dossiers').find((d) => d.notification_id === n.id) || null,
+      dossier: (await db.list('dossiers')).find((d) => d.notification_id === n.id) || null,
     };
   };
-  const refusProcessus = (req, res, n, cle) => {
-    const motif = acteurs.refusEventuel(req.user, 'activite', contexteActivite(n), cle);
+  const refusProcessus = async (req, res, n, cle) => {
+    const motif = await acteurs.refusEventuel(req.user, 'activite', await contexteActivite(n), cle);
     if (!motif) return false;
     res.status(403).json({ error: motif });
     return true;
@@ -60,7 +60,7 @@ module.exports = function register(app, deps, M) {
       if (!scopePrest.length) return res.json([]);
     }
 
-    const declenchees = new Set(db.list('notifications').map((n) => n.activite_id).filter(Boolean));
+    const declenchees = new Set((await db.list('notifications')).map((n) => n.activite_id).filter(Boolean));
     const prestataires = refs().prestataires || [];
     const types = refs().types_supervision || [];
 
@@ -150,9 +150,9 @@ module.exports = function register(app, deps, M) {
     };
   };
 
-  app.get(`${M}/notifications`, requireAuth, (req, res) => {
+  app.get(`${M}/notifications`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.userReel || req.user)) return refuser(res);
-    let rows = parInstance(req, db.list('notifications'));
+    let rows = parInstance(req, await db.list('notifications'));
     // Un prestataire ne voit que ses notifications, une fois envoyées.
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
@@ -163,10 +163,10 @@ module.exports = function register(app, deps, M) {
     if (req.query.prestataire_id) rows = rows.filter((n) => n.prestataire_id === req.query.prestataire_id);
     rows = rows.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
     res.json(rows.map(enrichirNotif));
-  });
+  }));
 
-  app.get(`${M}/notifications/:id`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.get(`${M}/notifications/:id`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (R.estPrestataire(req.user)) {
       if (!R.accedeA(req.user, n.prestataire_id || '') || !['envoye', 'acte', 'cloture'].includes(n.statut)) {
@@ -187,7 +187,7 @@ module.exports = function register(app, deps, M) {
       date_signature: n.date_edition || '',
       equipe: n.equipe_membres || [],
     });
-  });
+  }));
 
   // Éléments dont se compose une référence : État, domaine, secteur,
   // prestataire, année. Ils sont lus une fois, à la création.
@@ -270,16 +270,19 @@ module.exports = function register(app, deps, M) {
     return false;
   };
 
-  app.post(`${M}/notifications`, requireAuth, valider(SCHEMA_NOTIFICATION), (req, res) => {
+  app.post(`${M}/notifications`, requireAuth, valider(SCHEMA_NOTIFICATION), asynchrone(async (req, res) => {
     const d = req.body || {};
     const perim = perimetrePrestataire(d.prestataire_id);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
     if (d.hors_plan && refusDates(res, d.annee,
       d.date_debut_prevue || d.date_activite, d.date_fin_prevue || d.date_fin_effective)) return undefined;
-    const rec = db.insert('notifications', {
+    // La référence se tire **dans** la transformation qui écrit la notification :
+    // elle se déduit des références existantes, sans compteur persisté, et deux
+    // notifications ouvertes ensemble auraient porté la même — or elle désigne un
+    // acte de surveillance.
+    const contexteRef = contexteReference(req, d);
+    const rec = await refModele.insererAvec('notifications', 'notification', contexteRef, {
       id: db.uid('notif'),
-      // Composition définie dans Paramètres → Autres paramètres.
-      reference: refModele.suivante('notification', contexteReference(req, d)),
       // L'instance sous laquelle l'activité est notifiée : c'est elle qui la
       // verra ensuite, ainsi que le dossier et les constatations qui en
       // naîtront.
@@ -321,7 +324,7 @@ module.exports = function register(app, deps, M) {
       date_creation: db.now(),
     });
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference });
-  });
+  }));
 
   // Correspondance des noms de champs du formulaire vers ceux du modèle
   const CHAMPS = {
@@ -339,8 +342,8 @@ module.exports = function register(app, deps, M) {
   };
   const FIGES = ['id', 'reference', 'activite_id', 'plan_id', 'hors_plan'];
 
-  app.put(`${M}/notifications/:id`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.put(`${M}/notifications/:id`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     const patch = {};
@@ -353,50 +356,50 @@ module.exports = function register(app, deps, M) {
     // dates se relisent sur la notification telle qu'elle sera.
     const apres = { ...n, ...patch };
     if (n.hors_plan && refusDates(res, apres.annee, apres.date_activite, apres.date_fin_effective)) return undefined;
-    db.update('notifications', req.params.id, patch);
+    await db.update('notifications', req.params.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Circuit : brouillon → soumis → validé → envoyé → acté ──
-  app.put(`${M}/notifications/:id/submit`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.put(`${M}/notifications/:id/submit`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'brouillon') return statutRequis(res, 'notification', 'brouillon');
-    if (refusProcessus(req, res, n, 'notification:soumission')) return undefined;
-    db.update('notifications', n.id, {
+    if (await refusProcessus(req, res, n, 'notification:soumission')) return undefined;
+    await db.update('notifications', n.id, {
       statut: 'soumis', date_soumission: db.now(), validateur_id: (req.body || {}).validateur_id || '',
     });
     res.json({ status: 'ok', statut: 'soumis' });
-  });
+  }));
 
-  app.put(`${M}/notifications/:id/validate`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.put(`${M}/notifications/:id/validate`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'soumis') return statutRequis(res, 'notification', 'soumis');
-    if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
-    db.update('notifications', n.id, { statut: 'valide', validateur_id: req.user.username, date_validation: db.now() });
+    if (await refusProcessus(req, res, n, 'notification:validation')) return undefined;
+    await db.update('notifications', n.id, { statut: 'valide', validateur_id: req.user.username, date_validation: db.now() });
     res.json({ status: 'ok', statut: 'valide' });
-  });
+  }));
 
-  app.put(`${M}/notifications/:id/reject`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.put(`${M}/notifications/:id/reject`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'soumis') return statutRequis(res, 'notification', 'soumis');
-    if (refusProcessus(req, res, n, 'notification:validation')) return undefined;
-    db.update('notifications', n.id, { statut: 'brouillon', motif_rejet: (req.body || {}).motif || '', date_rejet: db.now() });
+    if (await refusProcessus(req, res, n, 'notification:validation')) return undefined;
+    await db.update('notifications', n.id, { statut: 'brouillon', motif_rejet: (req.body || {}).motif || '', date_rejet: db.now() });
     res.json({ status: 'ok', statut: 'brouillon' });
-  });
+  }));
 
-  app.put(`${M}/notifications/:id/send`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.put(`${M}/notifications/:id/send`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (n.statut !== 'valide') return statutRequis(res, 'notification', 'valide');
-    if (refusProcessus(req, res, n, 'notification:transmission')) return undefined;
-    db.update('notifications', n.id, { statut: 'envoye', date_envoi: db.now(), envoye_par: req.user.username });
+    if (await refusProcessus(req, res, n, 'notification:transmission')) return undefined;
+    await db.update('notifications', n.id, { statut: 'envoye', date_envoi: db.now(), envoye_par: req.user.username });
     // Les comptes du prestataire à qui la réception des courriels a été
     // confiée en sont avertis ; l'absence de destinataire n'arrête rien.
     transmission.avertirPrestataire(n.prestataire_id, {
@@ -411,36 +414,36 @@ module.exports = function register(app, deps, M) {
       journal: { notification_id: n.id },
     });
     res.json({ status: 'ok', statut: 'envoye' });
-  });
+  }));
 
-  app.delete(`${M}/notifications/:id`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.delete(`${M}/notifications/:id`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (n.statut !== 'brouillon') return statutRequis(res, 'notification', 'brouillon');
     if (n.created_by !== req.user.username && !R.isAdmin(req.user, referentiels)) {
       return refuser(res, "Seul l'initiateur peut supprimer ce brouillon");
     }
-    db.removeWhere('echanges', (e) => e.notification_id === n.id);
-    db.remove('notifications', n.id);
+    await db.removeWhere('echanges', (e) => e.notification_id === n.id);
+    await db.remove('notifications', n.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.put(`${M}/notifications/:id/cancel`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.put(`${M}/notifications/:id/cancel`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
-    db.update('notifications', n.id, {
+    await db.update('notifications', n.id, {
       statut: 'brouillon', motif_rejet: (req.body || {}).motif || 'Annulation', date_rejet: db.now(),
     });
     res.json({ status: 'ok', statut: 'brouillon' });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Échanges (négociation avec le prestataire)
   // ══════════════════════════════════════
-  app.get(`${M}/notifications/:id/echanges`, requireAuth, (req, res) => {
+  app.get(`${M}/notifications/:id/echanges`, requireAuth, asynchrone(async (req, res) => {
     const users = auth.getUsers();
-    const rows = db.list('echanges')
+    const rows = (await db.list('echanges'))
       .filter((e) => e.notification_id === req.params.id)
       .sort((a, b) => String(a.date_creation || '').localeCompare(String(b.date_creation || '')))
       .map((e) => {
@@ -448,16 +451,16 @@ module.exports = function register(app, deps, M) {
         return { ...e, auteur_nom: u.nom || '', auteur_prenom: u.prenom || '' };
       });
     res.json(rows);
-  });
+  }));
 
-  app.post(`${M}/notifications/:id/echanges`, requireAuth, (req, res) => {
+  app.post(`${M}/notifications/:id/echanges`, requireAuth, asynchrone(async (req, res) => {
     // Côté prestataire, échanger avec l'Autorité est un droit confié.
     if (!R.compteA(req.user, 'echanges', auth)) return refuser(res, 'Droit non confié à ce compte');
-    const n = db.get('notifications', req.params.id);
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     const d = req.body || {};
-    const rec = db.insert('echanges', {
+    const rec = await db.insert('echanges', {
       id: db.uid('ech'),
       notification_id: n.id,
       auteur_id: req.user.username,
@@ -481,7 +484,7 @@ module.exports = function register(app, deps, M) {
       });
     }
     res.status(201).json({ status: 'ok', id: rec.id });
-  });
+  }));
 
   // ── Accusé de réception, côté prestataire ───────────────────────────
   // Le prestataire acte qu'il a reçu la notification et se dit prêt à
@@ -495,8 +498,8 @@ module.exports = function register(app, deps, M) {
     return m ? `${m[3]}/${m[2]}/${m[1]}` : '—';
   };
 
-  app.post(`${M}/notifications/:id/accuser-reception`, requireAuth, (req, res) => {
-    const n = db.get('notifications', req.params.id);
+  app.post(`${M}/notifications/:id/accuser-reception`, requireAuth, asynchrone(async (req, res) => {
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.estPrestataire(req.user)) {
       return reserve(res, 'prestataire_notifie');
@@ -512,7 +515,7 @@ module.exports = function register(app, deps, M) {
     const fin = n.date_fin_effective || n.date_fin_prevue || '';
     const perimetre = n.perimetre_activite || n.perimetre || '';
     const maintenant = db.now();
-    db.update('notifications', n.id, {
+    await db.update('notifications', n.id, {
       accuse_reception: 1,
       accuse_le: maintenant,
       accuse_par: req.user.username,
@@ -525,7 +528,7 @@ module.exports = function register(app, deps, M) {
     });
     // Le message reprend mot pour mot le libellé de l'accusé : le fil de
     // discussion et la fiche disent la même chose.
-    db.insert('echanges', {
+    await db.insert('echanges', {
       id: db.uid('ech'),
       notification_id: n.id,
       auteur_id: req.user.username,
@@ -538,7 +541,7 @@ module.exports = function register(app, deps, M) {
       date_creation: maintenant,
     });
     res.json({ status: 'ok', accuse_le: maintenant });
-  });
+  }));
 
   // ══════════════════════════════════════
   //  Accord : envoyé → acté, et ouverture du dossier d'exécution
@@ -547,9 +550,9 @@ module.exports = function register(app, deps, M) {
   // et périmètre validé sont sauvegardés, la notification reste « envoyée ».
   // Les dates retenues deviennent celles de l'activité — c'est le sens même de
   // la confirmation, et le calendrier comme les états les lisent là.
-  app.put(`${M}/notifications/:id/accord`, requireAuth, (req, res) => {
+  app.put(`${M}/notifications/:id/accord`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
-    const n = db.get('notifications', req.params.id);
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (!['envoye', 'acte'].includes(n.statut)) {
@@ -565,43 +568,62 @@ module.exports = function register(app, deps, M) {
     }
     if (d.date_fin_effective !== undefined) patch.date_fin_effective = d.date_fin_effective;
     if (d.perimetre_valide !== undefined) patch.perimetre_valide = d.perimetre_valide;
-    db.update('notifications', n.id, patch);
+    await db.update('notifications', n.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
-  app.put(`${M}/notifications/:id/validate-accord`, requireAuth, (req, res) => {
+  app.put(`${M}/notifications/:id/validate-accord`, requireAuth, asynchrone(async (req, res) => {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
-    const n = db.get('notifications', req.params.id);
+    const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     const perim = perimetrePrestataire(n.prestataire_id);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
     if (n.statut !== 'envoye') return statutRequis(res, 'notification', 'envoye');
-    if (refusProcessus(req, res, n, 'confirmation')) return undefined;
+    if (await refusProcessus(req, res, n, 'confirmation')) return undefined;
 
     const d = req.body || {};
     const maintenant = db.now();
 
     // Référence d'activité : composition définie dans les paramètres.
-    const refActivite = refModele.suivante('activite', contexteReference(req, {
+    const ctxActivite = contexteReference(req, {
       prestataire_id: n.prestataire_id, secteur_id: n.secteur_id, domaine_id: perim.domaine_id,
       annee: n.annee || new Date().getFullYear(),
-    }));
+    });
+    const ctxDossier = contexteReference(req, n);
+    const idDossier = db.uid('dossier');
 
     const dateDebut = d.date_debut_effective || n.date_activite || '';
     const dateFin = d.date_fin_effective || '';
-    db.update('notifications', n.id, {
-      statut: 'acte',
-      date_debut_effective: dateDebut,
-      date_fin_effective: dateFin,
-      date_accord: maintenant,
-      reference_activite: refActivite,
-      perimetre_valide: d.perimetre_valide || n.perimetre_activite || '',
-    });
-
-    // Ouverture automatique du dossier : l'étape « réalisation » démarre.
-    const dossier = db.insert('dossiers', {
-      id: db.uid('dossier'),
-      reference: refModele.suivante('dossier', contexteReference(req, n)),
+    // ── L'accord, les deux références et le dossier, d'un seul geste ──
+    //
+    // C'était une écriture pour la notification et une pour le dossier, avec
+    // **deux références tirées avant** — déduites chacune des références
+    // existantes, sans compteur persisté. Deux accords actés ensemble auraient
+    // porté les mêmes, et l'activité se serait trouvée nommée deux fois.
+    //
+    // Entre les deux écritures, l'activité était actée sans dossier pour la
+    // réaliser ; un échec au milieu l'y laissait.
+    let refActivite = '';
+    let dossier = null;
+    await db.transformer((etat) => {
+      refActivite = refModele.suivanteDans(etat, 'activite', ctxActivite);
+      const notifs = etat.notifications || [];
+      const i = notifs.findIndex((x) => x.id === n.id);
+      if (i >= 0) {
+        notifs[i] = {
+          ...notifs[i],
+          statut: 'acte',
+          date_debut_effective: dateDebut,
+          date_fin_effective: dateFin,
+          date_accord: maintenant,
+          reference_activite: refActivite,
+          perimetre_valide: d.perimetre_valide || n.perimetre_activite || '',
+        };
+      }
+      // Ouverture automatique du dossier : l'étape « réalisation » démarre.
+      dossier = {
+      id: idDossier,
+      reference: refModele.suivanteDans(etat, 'dossier', ctxDossier),
       notification_id: n.id,
       activite_id: n.activite_id || '',
       plan_id: n.plan_id || '',
@@ -618,11 +640,14 @@ module.exports = function register(app, deps, M) {
       date_maj: maintenant,
       created_by: req.user.username,
       date_creation: maintenant,
+      };
+      etat.dossiers = (etat.dossiers || []).concat([dossier]);
+      return etat;
     });
 
-    res.json({
+    return res.json({
       status: 'ok', statut: 'acte', reference_activite: refActivite,
       dossier_id: dossier.id, dossier_ref: dossier.reference,
     });
-  });
+  }));
 };

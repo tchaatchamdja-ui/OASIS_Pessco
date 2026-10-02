@@ -1,12 +1,28 @@
 // Module « Exécution de la Surveillance » — accès aux données.
 //
-// Reprise du module PESSCO (Flask + SQLite) sur le socle OASIS (JSON via
-// src/store.js). Les tables `exec_*` deviennent les collections de ce module,
-// dans data/execution.json ; les jointures SQL sont remplacées par des
-// enrichissements explicites au moment de la lecture.
+// Reprise du module PESSCO (Flask + SQLite) sur le socle OASIS. Les tables
+// `exec_*` deviennent les collections de ce module ; les jointures SQL sont
+// remplacées par des enrichissements explicites au moment de la lecture.
+//
+// ── Cinquième et dernier magasin de module en base (ADR-002, jalon n° 13) ──
+//
+// Le vocabulaire commun aux cinq vit dans `src/magasin_module.js`. Ce module tire
+// ses identifiants lui-même et ne porte pas de dates automatiques : d'où les deux
+// options, comme « Mesures d'Application » et RAMP.
+//
+// Il porte deux gestes qu'une conversion naïve aurait cassés :
+//
+//   · `removeDossier` retirait un dossier et ses trois dépendances par **quatre
+//     écritures**. Entre elles, des constatations et des rapports sans dossier
+//     pour les atteindre — ce que la fonction existe précisément pour empêcher ;
+//   · la composition des références (`references.js`) déduit le numéro suivant des
+//     références existantes, puis l'enregistrement s'écrit séparément. Deux
+//     créations simultanées auraient porté la même — et une référence désigne un
+//     acte de surveillance.
 const crypto = require('crypto');
-const store = require('../../store');
-const magasin = require('../../magasin');
+const { magasinDeModule } = require('../../magasin_module');
+
+const base = magasinDeModule('execution', { identifiantParLeMagasin: false, horodater: false });
 
 const COLLECTIONS = [
   'notifications',      // exec_notifications
@@ -28,75 +44,19 @@ const COLLECTIONS = [
   'roles_equipe',       // rôles d'une équipe d'audit / inspection
 ];
 
-const load = () => store.load('execution', {});
-const save = (d) => store.save('execution', d);
-const list = (coll) => load()[coll] || [];
+const { load, save, transformer, list, get, insert, update, remove, removeWhere, INCHANGE } = base;
 
-// ── `transformer`, avant la bascule de ce module ──
-//
-// Lire, changer, réécrire en un seul geste. Ce module est le dernier à rester sur
-// fichiers (ADR-002, jalon n° 13) ; cette fonction y passe quand même par la
-// façade, pour deux raisons :
-//
-//   · le socle des vues (`src/vues_prestataire.js`) est partagé avec RAMP, qui est
-//     en base. Il écrit le choix de vue par une transformation, et ce magasin-ci
-//     doit donc savoir en faire une ;
-//   · sur fichiers, la façade sérialise par une file d'attente par collection :
-//     deux bascules simultanées du même compte ne s'écrasent plus.
-//
-// Le jour où ce module basculera, la seule chose à changer sera son nom dans la
-// liste d'autorisation.
-const transformer = (fn) => magasin.modifier('execution', {}, fn);
+
 
 const uid = (prefix) => `${prefix}_${crypto.randomBytes(4).toString('hex')}`;
 const now = () => new Date().toISOString();
 
-function seed() {
-  const d = store.load('execution', null);
-  if (d) return;
+async function seed() {
+  const existant = await load();
+  if (Object.keys(existant).length) return;
   const vide = {};
   COLLECTIONS.forEach((c) => { vide[c] = []; });
-  save({ ...vide, createdAt: now() });
-}
-
-function get(coll, id) {
-  return list(coll).find((r) => r.id === id) || null;
-}
-
-function insert(coll, item) {
-  const d = load();
-  d[coll] = d[coll] || [];
-  d[coll].push(item);
-  save(d);
-  return item;
-}
-
-function update(coll, id, patch) {
-  const d = load();
-  const arr = d[coll] || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return null;
-  arr[i] = { ...arr[i], ...patch, id };
-  save(d);
-  return arr[i];
-}
-
-function remove(coll, id) {
-  const d = load();
-  const arr = d[coll] || [];
-  const i = arr.findIndex((r) => r.id === id);
-  if (i < 0) return false;
-  arr.splice(i, 1);
-  save(d);
-  return true;
-}
-
-function removeWhere(coll, predicat) {
-  const d = load();
-  const avant = (d[coll] || []).length;
-  d[coll] = (d[coll] || []).filter((r) => !predicat(r));
-  save(d);
-  return avant - d[coll].length;
+  await save({ ...vide, createdAt: now() });
 }
 
 // Retrait d'un dossier et de tout ce qui n'existe que par lui.
@@ -107,16 +67,29 @@ function removeWhere(coll, predicat) {
 // la remise à zéro d'une activité ; l'une des deux oubliait les réponses, et la
 // base en portait trente et une d'un dossier disparu. Le retrait s'écrit donc
 // une fois, ici.
-function removeDossier(id) {
+// **Une seule transformation**, là où il y en avait quatre. Entre elles,
+// l'application portait des constatations et des rapports dont le dossier avait
+// disparu — exactement ce que cette fonction existe pour empêcher — et un échec au
+// milieu les y laissait pour de bon.
+async function removeDossier(id) {
   if (!id) return false;
-  removeWhere('constatations', (c) => c.dossier_id === id);
-  removeWhere('rapports', (r) => r.dossier_id === id);
-  removeWhere('checklist_responses', (r) => r.dossier_id === id);
-  return remove('dossiers', id);
+  let ote = false;
+  await transformer((d) => {
+    const arr = d.dossiers || [];
+    const i = arr.findIndex((r) => r.id === id);
+    ote = i >= 0;
+    if (!ote) return INCHANGE;
+    arr.splice(i, 1);
+    d.constatations = (d.constatations || []).filter((c) => c.dossier_id !== id);
+    d.rapports = (d.rapports || []).filter((r) => r.dossier_id !== id);
+    d.checklist_responses = (d.checklist_responses || []).filter((r) => r.dossier_id !== id);
+    return d;
+  });
+  return ote;
 }
 
 // Référence séquentielle « PREFIXE-ANNÉE-001 », identique à PESSCO.
 module.exports = {
-  COLLECTIONS, load, save, transformer, list, get, insert, update, remove, removeWhere,
-  removeDossier, uid, now, seed,
+  ...base,
+  COLLECTIONS, removeDossier, uid, now, seed,
 };

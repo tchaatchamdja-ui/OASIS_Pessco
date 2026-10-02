@@ -51,8 +51,8 @@ const DELAIS_DEFAUT = {
   seuil_urgence: 7,
 };
 
-function delais() {
-  const enregistre = (db.list('parametres') || []).find((p) => p.id === 'delais') || {};
+async function delais() {
+  const enregistre = ((await db.list('parametres')) || []).find((p) => p.id === 'delais') || {};
   return { ...DELAIS_DEFAUT, ...(enregistre.valeurs || {}) };
 }
 
@@ -80,11 +80,11 @@ module.exports = function register(app, deps, M) {
     && R.canValidate(req.user, perimetreActivite(n), referentiels);
 
   // ── Délais du processus ──
-  app.get(`${M}/parametres/delais`, requireAuth, (req, res) => {
-    res.json({ valeurs: delais(), defauts: DELAIS_DEFAUT, modifiable: admin(req) });
-  });
+  app.get(`${M}/parametres/delais`, requireAuth, asynchrone(async (req, res) => {
+    res.json({ valeurs: await delais(), defauts: DELAIS_DEFAUT, modifiable: admin(req) });
+  }));
 
-  app.put(`${M}/parametres/delais`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/delais`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'administrateurs');
     const recu = (req.body || {}).valeurs || req.body || {};
     const valeurs = {};
@@ -92,27 +92,35 @@ module.exports = function register(app, deps, M) {
       const v = Number(recu[cle]);
       valeurs[cle] = Number.isFinite(v) && v >= 0 ? Math.round(v) : DELAIS_DEFAUT[cle];
     });
-    const existant = (db.list('parametres') || []).find((p) => p.id === 'delais');
     const enregistrement = {
       id: 'delais', valeurs, date_maj: db.now(), maj_par: req.user.username,
     };
-    if (existant) db.update('parametres', 'delais', enregistrement);
-    else db.insert('parametres', enregistrement);
-    res.json({ status: 'ok', valeurs });
-  });
+    // « Chercher, puis créer si absent » en une transformation : deux
+    // enregistrements de délais parties ensemble en posaient deux, et la lecture
+    // n'en rend qu'un — le second réglage devenait invisible.
+    await db.transformer((etat) => {
+      const liste = etat.parametres || [];
+      const i = liste.findIndex((p) => p.id === 'delais');
+      if (i >= 0) liste[i] = { ...liste[i], ...enregistrement };
+      else liste.push(enregistrement);
+      etat.parametres = liste;
+      return etat;
+    });
+    return res.json({ status: 'ok', valeurs });
+  }));
 
   // ── Composition des références (Paramètres → Autres paramètres) ──
-  app.get(`${M}/parametres/references`, requireAuth, (req, res) => {
+  app.get(`${M}/parametres/references`, requireAuth, asynchrone(async (req, res) => {
     res.json({
-      modeles: refModele.modeles(),
+      modeles: await refModele.modeles(),
       defauts: refModele.MODELES_DEFAUT,
       segments: Object.entries(refModele.SEGMENTS)
         .map(([cle, s]) => ({ cle, libelle: s.libelle, saisie: !!s.saisie, longueur: !!s.longueur })),
       modifiable: admin(req),
     });
-  });
+  }));
 
-  app.put(`${M}/parametres/references`, requireAuth, (req, res) => {
+  app.put(`${M}/parametres/references`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'administrateurs');
     const recu = (req.body || {}).modeles || {};
     const modeles = {};
@@ -132,37 +140,46 @@ module.exports = function register(app, deps, M) {
       modeles[type] = { separateur: String(m.separateur === undefined ? '-' : m.separateur).slice(0, 3), segments };
     });
     const enregistrement = { id: 'references', modeles, date_maj: db.now(), maj_par: req.user.username };
-    if ((db.list('parametres') || []).some((p) => p.id === 'references')) {
-      db.update('parametres', 'references', enregistrement);
-    } else {
-      db.insert('parametres', enregistrement);
-    }
-    res.json({ status: 'ok', modeles });
-  });
+    // Même geste unique. Et le `await` manquait ici : le garde-fou l'avait laissé
+    // passer, sa parenthèse ouvrante masquant l'appel — c'est le balayage manuel
+    // qui l'a trouvé, et la composition des références en dépend entièrement.
+    await db.transformer((etat) => {
+      const liste = etat.parametres || [];
+      const i = liste.findIndex((p) => p.id === 'references');
+      if (i >= 0) liste[i] = { ...liste[i], ...enregistrement };
+      else liste.push(enregistrement);
+      etat.parametres = liste;
+      return etat;
+    });
+    return res.json({ status: 'ok', modeles });
+  }));
 
   // ── Archivage d'un dossier clôturé ──
   // Un dossier archivé quitte les affaires courantes ; ses pièces restent
   // consultables, rien n'est effacé. Les constatations (FNC, PAC) nées de
   // l'activité ne suivent pas : leur suivi se poursuit indépendamment, tant
   // qu'elles ne sont pas soldées.
-  const basculerArchive = (archive) => (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  // La fabrique rend un gestionnaire : c'est **lui** qui doit être enveloppé, et
+  // non la fabrique — Express appelle le gestionnaire, et un rejet non pris
+  // laisserait la requête ouverte sans erreur ni trace.
+  const basculerArchive = (archive) => asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
-    const notif = db.get('notifications', d.notification_id) || { secteur_id: d.secteur_id };
+    const notif = await db.get('notifications', d.notification_id) || { secteur_id: d.secteur_id };
     if (!peutAdministrer(req, notif)) {
       return reserve(res, 'super_admin_aac');
     }
     if (archive && d.statut !== 'cloture') {
       return statutRequis(res, 'dossier', 'cloture');
     }
-    db.update('dossiers', d.id, {
+    await db.update('dossiers', d.id, {
       archive: archive ? 1 : 0,
       date_archivage: archive ? db.now() : '',
       archive_par: archive ? req.user.username : '',
       date_maj: db.now(),
     });
-    res.json({ status: 'ok', archive: archive ? 1 : 0 });
-  };
+    return res.json({ status: 'ok', archive: archive ? 1 : 0 });
+  });
   app.put(`${M}/dossiers/:id/archiver`, requireAuth, basculerArchive(true));
   app.put(`${M}/dossiers/:id/desarchiver`, requireAuth, basculerArchive(false));
 
@@ -170,80 +187,80 @@ module.exports = function register(app, deps, M) {
   // Un processus qui ne peut pas se poursuivre — activité annulée, prestataire
   // disparu, plan revu — est arrêté plutôt que laissé en suspens. Rien n'est
   // effacé : l'arrêt est un état, réversible, et l'activité s'archive ensuite.
-  const notifDeLActivite = (id) => db.get('notifications', id)
-    || db.list('notifications').find((n) => n.activite_id === id) || null;
+  const notifDeLActivite = async (id) => await db.get('notifications', id)
+    || (await db.list('notifications')).find((n) => n.activite_id === id) || null;
 
   const A = `${M}/activites-en-cours`;
 
-  app.put(`${A}/:id/arreter`, requireAuth, (req, res) => {
-    const n = notifDeLActivite(req.params.id);
+  app.put(`${A}/:id/arreter`, requireAuth, asynchrone(async (req, res) => {
+    const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
       return reserve(res, 'super_admin_aac');
     }
-    const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+    const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
     if (dossier && dossier.statut === 'cloture') {
       return res.status(400).json({ error: 'Un dossier clôturé ne s’arrête pas' });
     }
     const maintenant = db.now();
-    db.update('notifications', n.id, {
+    await db.update('notifications', n.id, {
       arret: 1, motif_arret: (req.body || {}).motif || '',
       date_arret: maintenant, arrete_par: req.user.username,
     });
     if (dossier) {
-      db.update('dossiers', dossier.id, {
+      await db.update('dossiers', dossier.id, {
         statut_avant_arret: dossier.statut, statut: 'arrete', date_maj: maintenant,
       });
     }
     res.json({ status: 'ok', arret: 1 });
-  });
+  }));
 
-  app.put(`${A}/:id/reprendre`, requireAuth, (req, res) => {
-    const n = notifDeLActivite(req.params.id);
+  app.put(`${A}/:id/reprendre`, requireAuth, asynchrone(async (req, res) => {
+    const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
       return reserve(res, 'super_admin_aac');
     }
-    db.update('notifications', n.id, { arret: 0, date_arret: '', arrete_par: '' });
-    const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+    await db.update('notifications', n.id, { arret: 0, date_arret: '', arrete_par: '' });
+    const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
     if (dossier && dossier.statut === 'arrete') {
-      db.update('dossiers', dossier.id, {
+      await db.update('dossiers', dossier.id, {
         statut: dossier.statut_avant_arret || 'ouvert', statut_avant_arret: '', date_maj: db.now(),
       });
     }
     res.json({ status: 'ok', arret: 0 });
-  });
+  }));
 
   // Archivage d'une activité arrêtée : elle rejoint les activités archivées,
   // pièces comprises.
-  const archiverActivite = (archive) => (req, res) => {
-    const n = notifDeLActivite(req.params.id);
+  const archiverActivite = (archive) => asynchrone(async (req, res) => {
+    const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!peutAdministrer(req, n)) {
       return reserve(res, 'super_admin_aac');
     }
-    const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+    const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
     const arretee = Number(n.arret) === 1 || (dossier && dossier.statut === 'arrete');
     const close = dossier && dossier.statut === 'cloture';
     if (archive && !arretee && !close) {
       return statutRequis(res, 'activite', ['arrete', 'cloture']);
     }
     const maintenant = db.now();
-    db.update('notifications', n.id, {
+    await db.update('notifications', n.id, {
       archive: archive ? 1 : 0,
       date_archivage: archive ? maintenant : '',
       archive_par: archive ? req.user.username : '',
     });
     if (dossier) {
-      db.update('dossiers', dossier.id, {
+      await db.update('dossiers', dossier.id, {
         archive: archive ? 1 : 0,
         date_archivage: archive ? maintenant : '',
         archive_par: archive ? req.user.username : '',
         date_maj: maintenant,
       });
     }
-    res.json({ status: 'ok', archive: archive ? 1 : 0 });
-  };
+    return res.json({ status: 'ok', archive: archive ? 1 : 0 });
+  });
   app.put(`${A}/:id/archiver`, requireAuth, archiverActivite(true));
   app.put(`${A}/:id/desarchiver`, requireAuth, archiverActivite(false));
 
@@ -252,9 +269,9 @@ module.exports = function register(app, deps, M) {
   // « seule une activité arrêtée ou clôturée s'archive » ne s'applique pas
   // ici : ranger le porteur range ce qu'il porte, quel qu'en soit l'état.
   // Les constatations issues de ces activités ne sont pas touchées.
-  app.put(`${A}/hors-plan-archiver`, requireAuth, (req, res) => {
+  app.put(`${A}/hors-plan-archiver`, requireAuth, asynchrone(async (req, res) => {
     const archive = req.body && req.body.archive === false ? 0 : 1;
-    const lot = parInstance(req, db.list('notifications')).filter((n) => n.hors_plan);
+    const lot = parInstance(req, await db.list('notifications')).filter((n) => n.hors_plan);
     if (!lot.length) return res.json({ status: 'ok', archive, nombre: 0 });
     const refuses = lot.filter((n) => !peutAdministrer(req, n));
     if (refuses.length) {
@@ -266,13 +283,19 @@ module.exports = function register(app, deps, M) {
       date_archivage: archive ? maintenant : '',
       archive_par: archive ? req.user.username : '',
     };
-    lot.forEach((n) => {
-      db.update('notifications', n.id, champs);
-      const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
-      if (dossier) db.update('dossiers', dossier.id, { ...champs, date_maj: maintenant });
+    // Tout le lot d'un seul geste : c'était deux écritures par activité. Un
+    // archivage de masse en laissait la moitié rangée et l'autre non, et l'écran
+    // montrait les deux états mêlés.
+    const ids = new Set(lot.map((n) => n.id));
+    await db.transformer((etat) => {
+      etat.notifications = (etat.notifications || [])
+        .map((n) => (ids.has(n.id) ? { ...n, ...champs } : n));
+      etat.dossiers = (etat.dossiers || [])
+        .map((d) => (ids.has(d.notification_id) ? { ...d, ...champs, date_maj: maintenant } : d));
+      return etat;
     });
-    res.json({ status: 'ok', archive, nombre: lot.length });
-  });
+    return res.json({ status: 'ok', archive, nombre: lot.length });
+  }));
 
   // ── Réinitialisation d'une activité déclenchée ──────────────────────
   // L'activité revient à l'état « non déclenchée » : notification, dossier et
@@ -280,17 +303,17 @@ module.exports = function register(app, deps, M) {
   // au Gestionnaire du module. Une activité qui a déjà produit des
   // constatations ou un rapport n'est pas réinitialisable : ces pièces
   // survivraient sans dossier, et le prestataire les a déjà reçues.
-  app.put(`${A}/:id/reinitialiser`, requireAuth, (req, res) => {
-    const n = notifDeLActivite(req.params.id);
+  app.put(`${A}/:id/reinitialiser`, requireAuth, asynchrone(async (req, res) => {
+    const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
     if (!R.isAdmin(req.user, referentiels)
       || !R.canValidate(req.user, perimetreActivite(n), referentiels)) {
       return reserve(res, 'gestionnaire_portee');
     }
-    const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+    const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
     if (dossier) {
-      const constats = db.list('constatations').filter((c) => c.dossier_id === dossier.id);
-      const rapports = db.list('rapports').filter((r) => r.dossier_id === dossier.id);
+      const constats = (await db.list('constatations')).filter((c) => c.dossier_id === dossier.id);
+      const rapports = (await db.list('rapports')).filter((r) => r.dossier_id === dossier.id);
       if (constats.length || rapports.length) {
         return res.status(400).json({
           error: `Activité non réinitialisable : ${constats.length} constatation(s) et `
@@ -299,13 +322,13 @@ module.exports = function register(app, deps, M) {
       }
       // Sans constatation ni rapport, il peut rester des réponses de
       // checklist : elles partent avec le dossier.
-      db.removeDossier(dossier.id);
+      await db.removeDossier(dossier.id);
     }
-    db.removeWhere('echanges', (e) => e.notification_id === n.id);
-    db.removeWhere('rappels', (r) => r.notification_id === n.id);
-    db.remove('notifications', n.id);
+    await db.removeWhere('echanges', (e) => e.notification_id === n.id);
+    await db.removeWhere('rappels', (r) => r.notification_id === n.id);
+    await db.remove('notifications', n.id);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // Suppression définitive : le super-administrateur du portail seul en
   // répond. Tout ce qui a été produit pour l'activité disparaît avec elle.
@@ -314,26 +337,26 @@ module.exports = function register(app, deps, M) {
     if (!reel || reel.role !== 'SUPERADMIN') {
       return reserve(res, 'super_admin');
     }
-    const n = notifDeLActivite(req.params.id);
+    const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
-    const dossier = db.list('dossiers').find((d) => d.notification_id === n.id);
+    const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : l'activité qui la porte ne se supprime plus.
-    const fncs = dossier ? db.list('constatations').filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
+    const fncs = dossier ? (await db.list('constatations')).filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
-    if (dossier) db.removeDossier(dossier.id);
-    db.removeWhere('echanges', (e) => e.notification_id === n.id);
-    db.removeWhere('rappels', (r) => r.notification_id === n.id);
-    db.remove('notifications', n.id);
+    if (dossier) await db.removeDossier(dossier.id);
+    await db.removeWhere('echanges', (e) => e.notification_id === n.id);
+    await db.removeWhere('rappels', (r) => r.notification_id === n.id);
+    await db.remove('notifications', n.id);
     res.json({ status: 'ok' });
   }));
 
   // ── Rappels aux responsables ──
-  app.get(`${M}/rappels`, requireAuth, (req, res) => {
-    let rows = db.list('rappels');
+  app.get(`${M}/rappels`, requireAuth, asynchrone(async (req, res) => {
+    let rows = await db.list('rappels');
     if (req.query.activite_id) rows = rows.filter((r) => r.activite_id === req.query.activite_id);
     res.json(rows.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))));
-  });
+  }));
 
   app.post(`${M}/rappels`, requireAuth, valider({
     destinataire: { type: 'texte', requis: true, max: 160 },
@@ -360,7 +383,7 @@ module.exports = function register(app, deps, M) {
     }
     await auth.notify(`Rappel adressé à ${adresse} — ${objet}`, 'info');
 
-    const rec = db.insert('rappels', {
+    const rec = await db.insert('rappels', {
       id: db.uid('rap'),
       activite_id: d.activite_id || '',
       notification_id: d.notification_id || '',

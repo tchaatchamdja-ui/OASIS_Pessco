@@ -33,12 +33,12 @@ module.exports = function register(app, deps, M) {
   };
 
   // Restriction par processus sur le circuit de la constatation.
-  const refusProcessus = (req, res, c, cle) => {
+  const refusProcessus = async (req, res, c, cle) => {
     const perim = perimetrePrestataire(c.prestataire_id);
-    const motif = acteurs.refusEventuel(req.user, 'constatation', {
+    const motif = await acteurs.refusEventuel(req.user, 'constatation', {
       secteur_id: perim.secteur_id,
       domaine_id: c.domaine_id || perim.domaine_id,
-      dossier: c.dossier_id ? db.get('dossiers', c.dossier_id) : null,
+      dossier: c.dossier_id ? await db.get('dossiers', c.dossier_id) : null,
     }, cle);
     if (!motif) return false;
     res.status(403).json({ error: motif });
@@ -69,8 +69,8 @@ module.exports = function register(app, deps, M) {
     };
   };
 
-  const enrichirDossier = (d) => {
-    const n = db.get('notifications', d.notification_id) || {};
+  const enrichirDossier = async (d) => {
+    const n = await db.get('notifications', d.notification_id) || {};
     const pr = parId('prestataires', d.prestataire_id) || {};
     return {
       ...d,
@@ -82,9 +82,9 @@ module.exports = function register(app, deps, M) {
     };
   };
 
-  app.get(`${M}/dossiers`, requireAuth, (req, res) => {
+  app.get(`${M}/dossiers`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.userReel || req.user)) return refuser(res);
-    let rows = parInstance(req, db.list('dossiers'));
+    let rows = parInstance(req, await db.list('dossiers'));
     // Un prestataire ne voit que ses dossiers, une fois clôturés.
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
@@ -93,22 +93,25 @@ module.exports = function register(app, deps, M) {
     }
     if (req.query.statut) rows = rows.filter((d) => d.statut === req.query.statut);
     rows = rows.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
-    res.json(rows.map(enrichirDossier));
-  });
+    // `Promise.all`, et non `.map` seul : l'enrichissement touche la base depuis la
+    // bascule, et un tableau de promesses se sérialise en objets **vides** — une
+    // liste pleine d'enregistrements sans aucun champ, sans la moindre erreur.
+    res.json(await Promise.all(rows.map(enrichirDossier)));
+  }));
 
-  app.get(`${M}/dossiers/:id`, requireAuth, (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  app.get(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
-    const n = db.get('notifications', d.notification_id) || {};
+    const n = await db.get('notifications', d.notification_id) || {};
     const pr = parId('prestataires', d.prestataire_id) || {};
-    const constatations = db.list('constatations')
+    const constatations = (await db.list('constatations'))
       .filter((c) => c.dossier_id === d.id)
       .sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
-    const rapports = db.list('rapports')
+    const rapports = (await db.list('rapports'))
       .filter((r) => r.dossier_id === d.id)
       .sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
     res.json({
-      ...enrichirDossier(d),
+      ...await enrichirDossier(d),
       // Champs de la notification, préfixés `notif_` comme dans PESSCO
       notif_perimetre: n.perimetre_activite || '',
       notif_perimetre_valide: n.perimetre_valide || '',
@@ -138,20 +141,19 @@ module.exports = function register(app, deps, M) {
       rapports,
       rapport: rapports[0] || null,
     });
-  });
+  }));
 
-  app.post(`${M}/dossiers`, requireAuth, (req, res) => {
+  app.post(`${M}/dossiers`, requireAuth, asynchrone(async (req, res) => {
     const d = req.body || {};
-    const n = db.get('notifications', d.notification_id || '');
+    const n = await db.get('notifications', d.notification_id || '');
     if (!n) return introuvable(res, 'notification');
     if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
     if (!['envoye', 'acte'].includes(n.statut)) {
       return statutRequis(res, 'notification', ['envoye', 'acte']);
     }
     const maintenant = db.now();
-    const rec = db.insert('dossiers', {
+    const rec = await refModele.insererAvec('dossiers', 'dossier', contexteRefDossier(req, d), {
       id: db.uid('dossier'),
-      reference: refModele.suivante('dossier', contexteRefDossier(req, d)),
       notification_id: n.id,
       // Le dossier appartient à l'instance qui a notifié l'activité.
       instance: instances.de(n, loadConfig),
@@ -171,10 +173,10 @@ module.exports = function register(app, deps, M) {
       date_creation: maintenant,
     });
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference });
-  });
+  }));
 
-  app.put(`${M}/dossiers/:id`, requireAuth, (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  app.put(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     const patch = {};
@@ -183,36 +185,51 @@ module.exports = function register(app, deps, M) {
     });
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
     patch.date_maj = db.now();
-    db.update('dossiers', d.id, patch);
+    await db.update('dossiers', d.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // Réalisation close → l'étape Rédaction s'ouvre.
-  app.put(`${M}/dossiers/:id/close-realisation`, requireAuth, (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  app.put(`${M}/dossiers/:id/close-realisation`, requireAuth, asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
-    db.update('dossiers', d.id, { realisation_closed: 1, current_step: 'redaction', date_maj: db.now() });
+    await db.update('dossiers', d.id, { realisation_closed: 1, current_step: 'redaction', date_maj: db.now() });
     res.json({ status: 'ok', current_step: 'redaction' });
-  });
+  }));
 
   // Soumission : crée le rapport v1, ou une version suivante sur la même
   // référence de base, et bascule le dossier à l'étape Validation.
-  app.put(`${M}/dossiers/:id/submit`, requireAuth, (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  app.put(`${M}/dossiers/:id/submit`, requireAuth, asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     const maintenant = db.now();
+    const ctxRef = contexteRefDossier(req, d);
+    const n = await db.get('notifications', d.notification_id) || {};
+    // ── La référence de base, le numéro de version et le rapport, d'un seul geste ──
+    //
+    // C'était jusqu'à trois écritures, et **deux lectures qui décidaient d'un
+    // numéro** : la référence de base, déduite des références existantes, et la
+    // version, déduite des rapports du dossier. Deux soumissions parties ensemble
+    // auraient produit deux rapports « v1 » sous la même référence.
     let baseRef = d.base_reference || '';
-    if (!baseRef) {
-      baseRef = refModele.suivante('rapport', contexteRefDossier(req, d));
-      db.update('dossiers', d.id, { base_reference: baseRef });
-    }
-    const versions = db.list('rapports').filter((r) => r.dossier_id === d.id).map((r) => Number(r.version) || 0);
-    const version = (versions.length ? Math.max(...versions) : 0) + 1;
-    const n = db.get('notifications', d.notification_id) || {};
-    const rap = db.insert('rapports', {
-      id: db.uid('rap'),
+    let version = 1;
+    let rap = null;
+    const idRap = db.uid('rap');
+    await db.transformer((etat) => {
+      const dossiers = etat.dossiers || [];
+      const j = dossiers.findIndex((x) => x.id === d.id);
+      baseRef = (j >= 0 ? dossiers[j].base_reference : d.base_reference) || '';
+      if (!baseRef) {
+        baseRef = refModele.suivanteDans(etat, 'rapport', ctxRef);
+        if (j >= 0) dossiers[j] = { ...dossiers[j], base_reference: baseRef };
+      }
+      const versions = (etat.rapports || [])
+        .filter((r) => r.dossier_id === d.id).map((r) => Number(r.version) || 0);
+      version = (versions.length ? Math.max(...versions) : 0) + 1;
+      rap = {
+      id: idRap,
       reference: `${baseRef}-v${version}`,
       dossier_id: d.id,
       notification_id: d.notification_id || '',
@@ -225,63 +242,81 @@ module.exports = function register(app, deps, M) {
       version,
       created_by: req.user.username,
       date_creation: maintenant,
+      };
+      etat.rapports = (etat.rapports || []).concat([rap]);
+      if (j >= 0) {
+        dossiers[j] = {
+          ...dossiers[j],
+          statut: 'soumis', date_soumission: maintenant, date_maj: maintenant,
+          redaction_closed: 1, current_step: 'validation', observations_retour: '',
+        };
+      }
+      etat.dossiers = dossiers;
+      return etat;
     });
-    db.update('dossiers', d.id, {
-      statut: 'soumis', date_soumission: maintenant, date_maj: maintenant,
-      redaction_closed: 1, current_step: 'validation', observations_retour: '',
-    });
-    res.json({ status: 'ok', statut: 'soumis', rapport_id: rap.id, rapport_ref: rap.reference, version });
-  });
+    return res.json({ status: 'ok', statut: 'soumis', rapport_id: rap.id, rapport_ref: rap.reference, version });
+  }));
 
   // Renvoi pour correction : retour à l'étape Rédaction.
-  app.put(`${M}/dossiers/:id/return`, requireAuth, (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  app.put(`${M}/dossiers/:id/return`, requireAuth, asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     const observations = (req.body || {}).observations || '';
-    const soumis = db.list('rapports')
+    const soumis = (await db.list('rapports'))
       .filter((r) => r.dossier_id === d.id && r.statut === 'soumis')
       .sort((a, b) => (Number(b.version) || 0) - (Number(a.version) || 0))[0];
-    if (soumis) db.update('rapports', soumis.id, { statut: 'brouillon', observations_validation: observations });
-    db.update('dossiers', d.id, {
+    if (soumis) await db.update('rapports', soumis.id, { statut: 'brouillon', observations_validation: observations });
+    await db.update('dossiers', d.id, {
       statut: 'brouillon', observations_retour: observations, date_maj: db.now(),
       redaction_closed: 0, current_step: 'redaction',
     });
     res.json({ status: 'ok', statut: 'brouillon' });
-  });
+  }));
 
-  app.put(`${M}/dossiers/:id/close`, requireAuth, (req, res) => {
-    const d = db.get('dossiers', req.params.id);
+  app.put(`${M}/dossiers/:id/close`, requireAuth, asynchrone(async (req, res) => {
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canValidate(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
     if (d.statut === 'cloture') return dejaFait(res, 'dossier', 'cloture');
     // Le dossier ne se clôt qu'une fois le rapport transmis au prestataire.
-    const transmis = db.list('rapports').some((r) => r.dossier_id === d.id && r.statut === 'transmis');
+    const transmis = (await db.list('rapports')).some((r) => r.dossier_id === d.id && r.statut === 'transmis');
     if (!transmis) return res.status(400).json({ error: 'Un rapport transmis est requis pour clôturer' });
     const maintenant = db.now();
-    db.update('dossiers', d.id, {
-      statut: 'cloture', date_fin_execution: maintenant, date_maj: maintenant, current_step: 'cloture',
+    // La clôture et ce qu'elle rend opposable, **d'un seul geste**. Les
+    // constatations en brouillon deviennent opposables au prestataire à la
+    // clôture : c'était une écriture pour le dossier, puis une par constatation.
+    // Entre elles, un dossier clos dont les constatations ne l'étaient pas encore —
+    // et un échec au milieu les y laissait, inopposables pour toujours.
+    await db.transformer((etat) => {
+      const dossiers = etat.dossiers || [];
+      const i = dossiers.findIndex((x) => x.id === d.id);
+      if (i >= 0) {
+        dossiers[i] = {
+          ...dossiers[i],
+          statut: 'cloture', date_fin_execution: maintenant, date_maj: maintenant, current_step: 'cloture',
+        };
+      }
+      etat.constatations = (etat.constatations || []).map((c) => (c.dossier_id === d.id && c.statut === 'brouillon'
+        ? { ...c, statut: 'ouvert' } : c));
+      return etat;
     });
-    // Les constatations en brouillon deviennent opposables à la clôture.
-    db.list('constatations')
-      .filter((c) => c.dossier_id === d.id && c.statut === 'brouillon')
-      .forEach((c) => db.update('constatations', c.id, { statut: 'ouvert' }));
     res.json({ status: 'ok', statut: 'cloture' });
-  });
+  }));
 
   app.delete(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
-    const d = db.get('dossiers', req.params.id);
+    const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : le dossier qui la porte ne se supprime plus.
-    const fncs = db.list('constatations').filter((c) => c.dossier_id === d.id).map((c) => c.id);
+    const fncs = (await db.list('constatations')).filter((c) => c.dossier_id === d.id).map((c) => c.id);
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
-    db.removeDossier(d.id);
+    await db.removeDossier(d.id);
     // La notification part aussi : l'activité redevient « à notifier ».
     if (d.notification_id) {
-      db.removeWhere('echanges', (e) => e.notification_id === d.notification_id);
-      db.remove('notifications', d.notification_id);
+      await db.removeWhere('echanges', (e) => e.notification_id === d.notification_id);
+      await db.remove('notifications', d.notification_id);
     }
     res.json({ status: 'ok' });
   }));
@@ -289,8 +324,8 @@ module.exports = function register(app, deps, M) {
   // ══════════════════════════════════════
   //  Constatations (FNC) et plans d'actions correctives (PAC)
   // ══════════════════════════════════════
-  const enrichirFnc = (c) => {
-    const d = db.get('dossiers', c.dossier_id) || {};
+  const enrichirFnc = async (c) => {
+    const d = await db.get('dossiers', c.dossier_id) || {};
     const pr = parId('prestataires', c.prestataire_id) || {};
     return { ...c, notification_id: d.notification_id || '', prestataire_nom: pr.nom || '', prestataire_code: pr.trigramme || '' };
   };
@@ -317,9 +352,9 @@ module.exports = function register(app, deps, M) {
     return sortie;
   };
 
-  app.get(`${M}/constatations`, requireAuth, (req, res) => {
+  app.get(`${M}/constatations`, requireAuth, asynchrone(async (req, res) => {
     if (!R.canRead(req.userReel || req.user)) return refuser(res);
-    let rows = parInstance(req, db.list('constatations'));
+    let rows = parInstance(req, await db.list('constatations'));
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
       if (!miens.length) return res.json([]);
@@ -330,22 +365,20 @@ module.exports = function register(app, deps, M) {
     if (req.query.dossier_id) rows = rows.filter((c) => c.dossier_id === req.query.dossier_id);
     if (criticite) rows = rows.filter((c) => c.criticite === criticite);
     rows = rows.slice().sort((a, b) => String(b.date_creation || '').localeCompare(String(a.date_creation || '')));
-    res.json(rows.map(enrichirFnc));
-  });
+    res.json(await Promise.all(rows.map(enrichirFnc)));
+  }));
 
   // Avant la route paramétrée : sans quoi « export-xlsx » serait lu comme un
   // identifiant de constatation.
-  app.get(`${M}/constatations/export-xlsx`, requireAuth, (req, res) => exporterConstatations(req, res));
-  app.post(`${M}/constatations/export-xlsx`, requireAuth, (req, res) => exporterConstatations(req, res));
 
-  app.get(`${M}/constatations/:id`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.get(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (R.estPrestataire(req.user)) {
       if (!R.accedeA(req.user, c.prestataire_id || '')) return refuser(res);
     }
-    res.json(enrichirFnc(c));
-  });
+    res.json(await enrichirFnc(c));
+  }));
 
   // ══════════════════════════════════════
   //  Export des constatations (classeur)
@@ -354,13 +387,15 @@ module.exports = function register(app, deps, M) {
   // porte donc exactement sur ce que les filtres ont retenu.
   // Deux entrées pour le même classeur : POST (corps JSON) et GET (paramètres
   // d'URL). La seconde laisse le navigateur télécharger nativement le fichier.
-  const exporterConstatations = (req, res) => {
+  // Enveloppé ici : c'est ce gestionnaire que les deux routes montent, et
+  // Express ne regarde pas la promesse d'un middleware `async`.
+  const exporterConstatations = asynchrone(async (req, res) => {
     const d = req.method === 'GET'
       ? { ids: String(req.query.ids || '').split(',').filter(Boolean),
           titre: req.query.titre, filtres: req.query.filtres }
       : (req.body || {});
     const demandes = Array.isArray(d.ids) ? d.ids : [];
-    let rows = parInstance(req, db.list('constatations')).filter((c) => demandes.includes(c.id));
+    let rows = parInstance(req, await db.list('constatations')).filter((c) => demandes.includes(c.id));
     if (R.estPrestataire(req.user)) {
       const miens = R.prestatairesDe(req.user);
       rows = rows.filter((c) => miens.includes(c.prestataire_id));
@@ -447,22 +482,30 @@ module.exports = function register(app, deps, M) {
     const nom = `constatations-${new Date().toISOString().slice(0, 10)}.xlsx`;
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
-    res.send(buffer);
-  };
+    return res.send(buffer);
+  });
+
+  // Montés **après** la déclaration, et non réenveloppés dans une flèche. Deux
+  // raisons, l'une après l'autre : l'enveloppe reçoit `next` d'Express, et une
+  // flèche à deux arguments le lui retirait — un rejet aurait appelé `undefined` ;
+  // et un `const` ne vit qu'à partir de sa déclaration, de sorte que monter la
+  // route plus haut arrêtait le démarrage du serveur.
+  app.get(`${M}/constatations/export-xlsx`, requireAuth, exporterConstatations);
+  app.post(`${M}/constatations/export-xlsx`, requireAuth, exporterConstatations);
 
   // ══════════════════════════════════════
   //  Échanges attachés à une constatation
   // ══════════════════════════════════════
   // Même fil que la négociation d'une activité, mais rattaché à la
   // constatation : l'AAC et le prestataire s'y répondent sur le PAC.
-  app.get(`${M}/constatations/:id/echanges`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.get(`${M}/constatations/:id/echanges`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (R.estPrestataire(req.user) && !R.accedeA(req.user, c.prestataire_id || '')) {
       return refuser(res);
     }
     const users = auth.getUsers();
-    const rows = db.list('echanges')
+    const rows = (await db.list('echanges'))
       .filter((e) => e.constatation_id === c.id)
       .sort((a, b) => String(a.date_creation || '').localeCompare(String(b.date_creation || '')))
       .map((e) => {
@@ -470,16 +513,16 @@ module.exports = function register(app, deps, M) {
         return { ...e, auteur_nom: u.nom || '', auteur_prenom: u.prenom || '' };
       });
     res.json(rows);
-  });
+  }));
 
-  app.post(`${M}/constatations/:id/echanges`, requireAuth, (req, res) => {
+  app.post(`${M}/constatations/:id/echanges`, requireAuth, asynchrone(async (req, res) => {
     if (!R.compteA(req.user, 'echanges', auth)) return refuser(res, 'Droit non confié à ce compte');
-    const c = db.get('constatations', req.params.id);
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     const contenu = String((req.body || {}).contenu || '').trim();
     if (!contenu) return requis(res, 'message');
-    const rec = db.insert('echanges', {
+    const rec = await db.insert('echanges', {
       id: db.uid('ech'),
       constatation_id: c.id,
       notification_id: '',
@@ -491,14 +534,14 @@ module.exports = function register(app, deps, M) {
       date_creation: db.now(),
     });
     res.status(201).json({ status: 'ok', id: rec.id });
-  });
+  }));
 
-  app.post(`${M}/constatations`, requireAuth, (req, res) => {
+  app.post(`${M}/constatations`, requireAuth, asynchrone(async (req, res) => {
     const d = req.body || {};
     const direct = !!d.direct;
     let dossier = null;
     if (!direct) {
-      dossier = db.get('dossiers', d.dossier_id || '');
+      dossier = await db.get('dossiers', d.dossier_id || '');
       if (!dossier) return introuvable(res, 'dossier');
       if (dossier.statut === 'cloture') {
         return res.status(400).json({ error: 'Impossible de créer une FNC sur un dossier clôturé' });
@@ -508,12 +551,12 @@ module.exports = function register(app, deps, M) {
     if (!R.canContribute(req.user, perimetrePrestataire(prestataireId), referentiels)) return refuser(res);
     const maintenant = db.now();
     const domaine = d.domaine_id || d.domaine || 'GEN';
-    const rec = db.insert('constatations', {
+    const ctxFnc = {
+      ...contexteRefDossier(req, { prestataire_id: prestataireId, secteur_id: (dossier || {}).secteur_id }),
+      domaine: codeDomaine(domaine) + (direct ? '-DIR' : ''),
+    };
+    const rec = await refModele.insererAvec('constatations', 'constatation', ctxFnc, {
       id: db.uid('fnc'),
-      reference: refModele.suivante('constatation', {
-        ...contexteRefDossier(req, { prestataire_id: prestataireId, secteur_id: (dossier || {}).secteur_id }),
-        domaine: codeDomaine(domaine) + (direct ? '-DIR' : ''),
-      }),
       dossier_id: d.dossier_id || '',
       // Une constatation appartient à l'instance de son dossier ; relevée
       // directement, à celle d'où elle est relevée.
@@ -539,15 +582,15 @@ module.exports = function register(app, deps, M) {
       date_creation: maintenant,
     });
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference, statut: rec.statut });
-  });
+  }));
 
   // Une constatation notifiée engage le prestataire : ses termes ne se
   // réécrivent plus au fil de l'eau. Avant, elle est en cours de rédaction.
   const STATUTS_OPPOSABLES = ['ouvert', 'ouverte', 'pac_soumis', 'pac_valide',
     'pac_rejetee', 'soldee'];
 
-  app.put(`${M}/constatations/:id`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     // Champs sur lesquels la constatation engage le prestataire une fois
@@ -577,9 +620,9 @@ module.exports = function register(app, deps, M) {
     if (R.estPrestataire(req.user) && patch.commentaire_evaluation !== undefined) {
       patch.commentaire_evaluation = fusionEvaluationPostulant(c, patch.commentaire_evaluation, false);
     }
-    db.update('constatations', c.id, patch);
+    await db.update('constatations', c.id, patch);
     res.json({ status: 'ok' });
-  });
+  }));
 
   // ── Ajustement d'une constatation déjà opposable ────────────────────
   // Proroger un délai, requalifier une criticité ou reprendre le rappel de la
@@ -599,8 +642,8 @@ module.exports = function register(app, deps, M) {
     domaine_id: 'Domaine',
   };
 
-  app.put(`${M}/constatations/:id/ajuster`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id/ajuster`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
 
     const roleReel = ((req.userReel || req.user || {}).role || '');
@@ -662,9 +705,9 @@ module.exports = function register(app, deps, M) {
       changements,
     };
     patch.ajustements = [...(c.ajustements || []), trace];
-    db.update('constatations', c.id, patch);
+    await db.update('constatations', c.id, patch);
     res.json({ status: 'ok', ajustement: trace });
-  });
+  }));
 
 
   // ══════════════════════════════════════
@@ -676,22 +719,22 @@ module.exports = function register(app, deps, M) {
   // désormais la sienne, comme le circuit des notifications.
   const DEPUIS_SOUMISSION = ['direct_brouillon', 'direct_renvoye'];
 
-  app.put(`${M}/constatations/:id/direct-soumettre`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id/direct-soumettre`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canContribute(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (!DEPUIS_SOUMISSION.includes(c.statut)) {
       return statutRequis(res, 'constatation', 'en_preparation');
     }
-    if (refusProcessus(req, res, c, 'preparation')) return undefined;
-    db.update('constatations', c.id, {
+    if (await refusProcessus(req, res, c, 'preparation')) return undefined;
+    await db.update('constatations', c.id, {
       statut: 'direct_soumis',
       date_soumission_pac: db.now(),
       soumis_par: req.user.username,
       motif_rejet_pac: '',
     });
     res.json({ status: 'ok', statut: 'direct_soumis' });
-  });
+  }));
 
   // ── Commentaires de validation ──
   // Le valideur annote la constatation champ par champ avant de se prononcer,
@@ -700,8 +743,8 @@ module.exports = function register(app, deps, M) {
   // soumise ; la décision la fige, et le tour suivant en ouvre une nouvelle.
   const versionOuverte = (c) => (c.commentaires_validation || []).find((v) => !v.close_le) || null;
 
-  app.put(`${M}/constatations/:id/commentaires-validation`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id/commentaires-validation`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
       return refuser(res);
@@ -728,9 +771,9 @@ module.exports = function register(app, deps, M) {
         close_le: '', close_par: '', issue: '',
       });
     }
-    db.update('constatations', c.id, { commentaires_validation: versions });
+    await db.update('constatations', c.id, { commentaires_validation: versions });
     return res.json({ status: 'ok' });
-  });
+  }));
 
   // La décision ferme la version en cours : elle devient l'archive de ce qui
   // a été observé à ce tour.
@@ -748,8 +791,8 @@ module.exports = function register(app, deps, M) {
   // motif est exigé pour les deux dernières — une décision qui arrête ou
   // renvoie un dossier doit se justifier.
   const decision = (route, statut, champs, motifRequis, issue) => {
-    app.put(`${M}/constatations/:id/${route}`, requireAuth, (req, res) => {
-      const c = db.get('constatations', req.params.id);
+    app.put(`${M}/constatations/:id/${route}`, requireAuth, asynchrone(async (req, res) => {
+      const c = await db.get('constatations', req.params.id);
       if (!c) return introuvable(res, 'constatation');
       if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) {
         return refuser(res);
@@ -757,12 +800,12 @@ module.exports = function register(app, deps, M) {
       if (c.statut !== 'direct_soumis') {
         return statutRequis(res, 'constatation', 'soumis');
       }
-      if (refusProcessus(req, res, c, 'validation')) return undefined;
+      if (await refusProcessus(req, res, c, 'validation')) return undefined;
       const d = req.body || {};
       const motif = String(d.motif || '').trim();
       if (motifRequis && !motif) return requis(res, 'motif');
       const versions = clore(c, req, issue);
-      db.update('constatations', c.id, {
+      await db.update('constatations', c.id, {
         statut,
         ...champs(motif, req.user.username),
         // Le journal des décisions est composé par le client, qui connaît le
@@ -771,7 +814,7 @@ module.exports = function register(app, deps, M) {
         ...(versions ? { commentaires_validation: versions } : {}),
       });
       res.json({ status: 'ok', statut });
-    });
+    }));
   };
 
   decision('direct-valider', 'direct_valide',
@@ -784,10 +827,10 @@ module.exports = function register(app, deps, M) {
     (motif, user) => ({ motif_rejet_pac: motif, date_rejet_pac: db.now(), rejete_par: user }),
     true, 'rejet');
 
-  app.put(`${M}/constatations/:id/submit-pac`, requireAuth, (req, res) => {
+  app.put(`${M}/constatations/:id/submit-pac`, requireAuth, asynchrone(async (req, res) => {
     // Déposer un plan d'actions correctives est un droit confié au compte.
     if (!R.compteA(req.user, 'constatations', auth)) return refuser(res, 'Droit non confié à ce compte');
-    const c = db.get('constatations', req.params.id);
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     // « pac_valide » : le plan avait été accepté, le prestataire l'amende.
     if (!['ouverte', 'ouvert', 'pac_rejetee', 'pac_valide'].includes(c.statut)) {
@@ -819,15 +862,15 @@ module.exports = function register(app, deps, M) {
       // L'empreinte a servi : elle sera reprise à la prochaine acceptation.
       patch.pac_accepte = null;
     }
-    db.update('constatations', c.id, patch);
+    await db.update('constatations', c.id, patch);
     res.json({ status: 'ok', statut: 'pac_soumis', amendement });
-  });
+  }));
 
   // Dépôt des preuves de mise en oeuvre : le plan accepté ne bouge pas, le
   // circuit reste à l'étape « Mise en oeuvre ».
-  app.put(`${M}/constatations/:id/submit-preuves`, requireAuth, (req, res) => {
+  app.put(`${M}/constatations/:id/submit-preuves`, requireAuth, asynchrone(async (req, res) => {
     if (!R.compteA(req.user, 'constatations', auth)) return refuser(res, 'Droit non confié à ce compte');
-    const c = db.get('constatations', req.params.id);
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (c.statut !== 'pac_valide') {
       return statutRequis(res, 'pac', 'accepte');
@@ -838,17 +881,17 @@ module.exports = function register(app, deps, M) {
       date_preuves_mise_oeuvre: db.now(),
     };
     patch.commentaire_evaluation = fusionEvaluationPostulant(c, d.evaluation, false);
-    db.update('constatations', c.id, patch);
+    await db.update('constatations', c.id, patch);
     res.json({ status: 'ok', statut: c.statut });
-  });
+  }));
 
-  app.put(`${M}/constatations/:id/validate-pac`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id/validate-pac`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut !== 'pac_soumis') return statutRequis(res, 'pac', 'soumis');
-    if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
-    db.update('constatations', c.id, {
+    if (await refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
+    await db.update('constatations', c.id, {
       statut: 'pac_valide', valideur_pac_id: req.user.username,
       date_validation_pac: db.now(), commentaire_evaluation: (req.body || {}).evaluation || '',
       // Empreinte du plan au moment de l'acceptation : c'est à elle que se
@@ -857,42 +900,42 @@ module.exports = function register(app, deps, M) {
       pac_accepte: { date: db.now(), actions_correctives: c.actions_correctives || [] },
     });
     res.json({ status: 'ok', statut: 'pac_valide' });
-  });
+  }));
 
-  app.put(`${M}/constatations/:id/reject-pac`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id/reject-pac`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut !== 'pac_soumis') return statutRequis(res, 'pac', 'soumis');
-    if (refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
+    if (await refusProcessus(req, res, c, 'pac_acceptation')) return undefined;
     const d = req.body || {};
-    db.update('constatations', c.id, {
+    await db.update('constatations', c.id, {
       statut: 'pac_rejetee', motif_rejet_pac: d.motif || '',
       date_rejet_pac: db.now(), commentaire_evaluation: d.commentaire_evaluation || '',
     });
     res.json({ status: 'ok', statut: 'pac_rejetee' });
-  });
+  }));
 
-  app.put(`${M}/constatations/:id/close`, requireAuth, (req, res) => {
-    const c = db.get('constatations', req.params.id);
+  app.put(`${M}/constatations/:id/close`, requireAuth, asynchrone(async (req, res) => {
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     if (!R.canValidate(req.user, perimetrePrestataire(c.prestataire_id), referentiels)) return refuser(res);
     if (c.statut === 'soldee') return dejaFait(res, 'fnc', 'solde');
-    if (refusProcessus(req, res, c, 'pac_cloture')) return undefined;
+    if (await refusProcessus(req, res, c, 'pac_cloture')) return undefined;
     const d = req.body || {};
-    db.update('constatations', c.id, {
+    await db.update('constatations', c.id, {
       statut: 'soldee',
       commentaire_evaluation: d.evaluation || d.commentaire || '',
       date_solde: db.now(),
     });
     res.json({ status: 'ok', statut: 'soldee' });
-  });
+  }));
 
   // Transmission d'une constatation hors activités de supervision. Le courriel
   // ne porte que des liens (voir transmission.js) ; la remise ouvre la
   // constatation, qui entre alors dans le suivi du PAC.
   app.post(`${M}/constatations/:id/transmettre`, requireAuth, asynchrone(async (req, res) => {
-    const c = db.get('constatations', req.params.id);
+    const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
     // Même règle que pour un rapport : c'est l'Autorité qui notifie.
     if (R.estPrestataire(req.user)) return refuser(res, "Transmission réservée à l'Autorité");
@@ -900,7 +943,7 @@ module.exports = function register(app, deps, M) {
     if (c.statut !== 'direct_valide') {
       return statutRequis(res, 'constatation', 'valide');
     }
-    if (refusProcessus(req, res, c, 'transmission')) return undefined;
+    if (await refusProcessus(req, res, c, 'transmission')) return undefined;
 
     let remise;
     try {
@@ -918,7 +961,7 @@ module.exports = function register(app, deps, M) {
     }
 
     const maintenant = db.now();
-    db.update('constatations', c.id, {
+    await db.update('constatations', c.id, {
       statut: 'ouvert',
       date_ouverture: maintenant.slice(0, 10),
       date_transmission: maintenant,
@@ -932,9 +975,9 @@ module.exports = function register(app, deps, M) {
 
   app.delete(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
-    if (!db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
+    if (!await db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
-    db.remove('constatations', req.params.id);
+    await db.remove('constatations', req.params.id);
     res.json({ status: 'ok' });
   }));
 };

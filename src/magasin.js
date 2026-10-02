@@ -125,6 +125,7 @@ const MIGREES = new Set([
   'planification',
   'mesures',
   'ramp',
+  'execution',
 ]);
 
 let socle = null;

@@ -583,11 +583,18 @@ async function facadeDuMagasin() {
   // collection en dur l'aurait fait échouer le jour où elle bascule, ce qui est
   // arrivé à `users`. Un nom qui n'est pas dans la liste n'est jamais en base,
   // quelle que soit la liste.
-  const pasMigree = ['referentiels', 'module_rights', 'execution', 'ramp']
-    .find((n) => !magasin.MIGREES.has(n));
-  verifier('façade : une collection non migrée ne l’est dans aucun régime',
-    !!pasMigree && magasin.surBase(pasMigree) === false,
-    `témoin : ${pasMigree || '(aucun — tout est migré)'}`);
+  // Le témoin était pris dans une liste de collections réelles, par leur
+  // complément — et **les quinze sont maintenant migrées**, donc il n'en restait
+  // aucune. Le contrôle disait alors « tout est migré » et tombait, pour une
+  // bonne raison et sans rien garder.
+  //
+  // Il porte désormais sur un nom qui n'existe pas : c'est la liste
+  // d'autorisation qui décide, et un nom qui n'y figure pas n'est jamais servi
+  // par la base, quel que soit l'état de la migration.
+  const pasMigree = 'collection_que_personne_na_migree';
+  verifier('façade : un nom hors de la liste n’est servi par la base dans aucun régime',
+    magasin.MIGREES.has(pasMigree) === false && magasin.surBase(pasMigree) === false,
+    `témoin : ${pasMigree}`);
 
   verifier('façade : une collection absente rend le défaut',
     JSON.stringify(await magasin.load(COLL_ESSAI, { rien: true })) === '{"rien":true}');

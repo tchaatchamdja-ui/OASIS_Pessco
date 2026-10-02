@@ -92,7 +92,7 @@ module.exports = function register(app, deps, M) {
 
   app.get(`${M}/instance`, requireAuth, (req, res) => res.json(etatInstances(req)));
 
-  app.put(`${M}/instance`, requireAuth, (req, res) => {
+  app.put(`${M}/instance`, requireAuth, asynchrone(async (req, res) => {
     const reel = req.userReel || req.user;
     if (!instances.estRegional(reel)) {
       return reserve(res, 'super_admin_regional');
@@ -105,7 +105,7 @@ module.exports = function register(app, deps, M) {
     }
     instances.definir(reel.username, demandee);
     return res.json({ status: 'ok', instance: demandee });
-  });
+  }));
 
   app.get(`${M}/vue`, requireAuth, asynchrone(async (req, res) => res.json(await etatVue(req))));
 
@@ -129,10 +129,10 @@ module.exports = function register(app, deps, M) {
     return res.json({ status: 'ok', vue: d.vue, prestataire_id: prestataireId });
   }));
 
-  app.get(`${M}/utilisateurs`, requireAuth, (req, res) => {
+  app.get(`${M}/utilisateurs`, requireAuth, asynchrone(async (req, res) => {
     const retenue = instances.courante(req.userReel || req.user, loadConfig);
     res.json(instances.filtrer(auth.getUsers(), retenue, loadConfig).map(vueUtilisateur));
-  });
+  }));
 
   app.get(`${M}/aac`, requireAuth,
     (req, res) => res.json(instances.aac(req.userReel || req.user, loadConfig)));
@@ -141,31 +141,31 @@ module.exports = function register(app, deps, M) {
   //  Niveaux de constatation (criticités) et types de cas
   // ══════════════════════════════════════
   const parametre = (route, coll, prefixe, champs, tri) => {
-    app.get(`${M}/${route}`, requireAuth, (req, res) => {
-      res.json(db.list(coll).slice().sort(tri));
-    });
+    app.get(`${M}/${route}`, requireAuth, asynchrone(async (req, res) => {
+      res.json((await db.list(coll)).slice().sort(tri));
+    }));
 
-    app.post(`${M}/${route}`, requireAuth, (req, res) => {
+    app.post(`${M}/${route}`, requireAuth, asynchrone(async (req, res) => {
       if (!admin(req)) return refuser(res);
       const d = req.body || {};
       if (!String(d.item || '').trim()) return requis(res, 'item');
-      const rec = db.insert(coll, { id: db.uid(prefixe).toUpperCase(), ...champs(d) });
+      const rec = await db.insert(coll, { id: db.uid(prefixe).toUpperCase(), ...champs(d) });
       res.json({ id: rec.id, status: 'ok' });
-    });
+    }));
 
-    app.put(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.put(`${M}/${route}/:id`, requireAuth, asynchrone(async (req, res) => {
       if (!admin(req)) return refuser(res);
       const d = req.body || {};
       if (!String(d.item || '').trim()) return requis(res, 'item');
-      if (!db.update(coll, req.params.id, champs(d))) return introuvable(res, 'element');
+      if (!await db.update(coll, req.params.id, champs(d))) return introuvable(res, 'element');
       res.json({ status: 'ok' });
-    });
+    }));
 
-    app.delete(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.delete(`${M}/${route}/:id`, requireAuth, asynchrone(async (req, res) => {
       if (!admin(req)) return refuser(res);
-      db.remove(coll, req.params.id);
+      await db.remove(coll, req.params.id);
       res.json({ status: 'ok' });
-    });
+    }));
   };
 
   parametre('criticites', 'criticites', 'CRIT',
@@ -187,56 +187,56 @@ module.exports = function register(app, deps, M) {
   //  CRUD générique des collections de checklists
   // ══════════════════════════════════════
   Object.entries(CRUD).forEach(([route, { coll, prefixe }]) => {
-    app.get(`${M}/${route}`, requireAuth, (req, res) => res.json(db.list(coll)));
+    app.get(`${M}/${route}`, requireAuth, asynchrone(async (req, res) => res.json(await db.list(coll))));
 
-    app.get(`${M}/${route}/:id`, requireAuth, (req, res) => {
-      const rec = db.get(coll, req.params.id);
+    app.get(`${M}/${route}/:id`, requireAuth, asynchrone(async (req, res) => {
+      const rec = await db.get(coll, req.params.id);
       if (!rec) return introuvable(res, 'element');
       res.json(rec);
-    });
+    }));
 
     // Une réponse de checklist porte une clé par champ paramétré : sa forme
     // n'est pas connue d'avance et ne peut pas se décrire champ par champ. Le
     // socle la borne tout de même — nombre de champs, taille des valeurs — et
     // retire ce que le serveur seul écrit, dont l'identifiant : le client le
     // choisissait, et pouvait ainsi écrire sous la clé d'un autre.
-    app.post(`${M}/${route}`, requireAuth, enregistrement(), (req, res) => {
+    app.post(`${M}/${route}`, requireAuth, enregistrement(), asynchrone(async (req, res) => {
       // Les réponses de checklist sont saisies par les inspecteurs ; les
       // autres collections relèvent du paramétrage, donc de l'administrateur.
       const ouvert = coll === 'checklist_responses';
       if (!ouvert && !admin(req)) return refuser(res);
       if (ouvert && !R.canContribute(req.user, null, referentiels)) return refuser(res);
       const id = db.uid(prefixe);
-      res.status(201).json({ status: 'ok', id: db.insert(coll, { ...req.valide, id }).id });
-    });
+      res.status(201).json({ status: 'ok', id: (await db.insert(coll, { ...req.valide, id })).id });
+    }));
 
-    app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), (req, res) => {
+    app.put(`${M}/${route}/:id`, requireAuth, enregistrement(), asynchrone(async (req, res) => {
       const ouvert = coll === 'checklist_responses';
       if (!ouvert && !admin(req)) return refuser(res);
       if (ouvert && !R.canContribute(req.user, null, referentiels)) return refuser(res);
-      if (!db.update(coll, req.params.id, req.valide)) return introuvable(res, 'element');
+      if (!await db.update(coll, req.params.id, req.valide)) return introuvable(res, 'element');
       res.json({ status: 'ok' });
-    });
+    }));
 
-    app.delete(`${M}/${route}/:id`, requireAuth, (req, res) => {
+    app.delete(`${M}/${route}/:id`, requireAuth, asynchrone(async (req, res) => {
       const ouvert = coll === 'checklist_responses';
       if (!ouvert && !admin(req)) return refuser(res);
       if (ouvert && !R.canContribute(req.user, null, referentiels)) return refuser(res);
-      db.remove(coll, req.params.id);
+      await db.remove(coll, req.params.id);
       // Supprimer une checklist emporte ses items, sous-thèmes et réponses.
       if (coll === 'checklists') {
-        db.removeWhere('checklist_items', (x) => x.checklist_id === req.params.id);
-        db.removeWhere('checklist_sous_themes', (x) => x.checklist_id === req.params.id);
-        db.removeWhere('checklist_responses', (x) => x.checklist_id === req.params.id);
+        await db.removeWhere('checklist_items', (x) => x.checklist_id === req.params.id);
+        await db.removeWhere('checklist_sous_themes', (x) => x.checklist_id === req.params.id);
+        await db.removeWhere('checklist_responses', (x) => x.checklist_id === req.params.id);
       }
       res.json({ status: 'ok' });
-    });
+    }));
   });
 
   // ══════════════════════════════════════
   //  Échanges Excel des checklists
   // ══════════════════════════════════════
-  const libelles = (coll) => Object.fromEntries(db.list(coll).map((r) => [r.id, r.libelle || '']));
+  const libelles = async (coll) => Object.fromEntries((await db.list(coll)).map((r) => [r.id, r.libelle || '']));
   const themesSupervision = () => Object.fromEntries((refs().themes_supervision || []).map((t) => [t.id, t.libelle || t.nom || '']));
 
   // Construit le classeur : titre en ligne 1, en-têtes en ligne 3, données ensuite.
@@ -273,12 +273,12 @@ module.exports = function register(app, deps, M) {
   // ── Items d'une checklist ──
   const ENTETES_ITEMS = ['Ordre', 'Réf. Item', 'Thème', 'Sous-thème', 'Réf. Règlement', 'Description', 'Directives'];
 
-  app.get(`${M}/checklists/:id/export-xlsx`, requireAuth, (req, res) => {
-    const cl = db.get('checklists', req.params.id);
+  app.get(`${M}/checklists/:id/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+    const cl = await db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
-    const sousThemes = libelles('checklist_sous_themes');
-    const lignes = db.list('checklist_items')
+    const sousThemes = await libelles('checklist_sous_themes');
+    const lignes = (await db.list('checklist_items'))
       .filter((it) => it.checklist_id === cl.id)
       .sort((a, b) => (a.ordre - b.ordre) || String(a.id).localeCompare(String(b.id)))
       .map((it) => [
@@ -289,11 +289,11 @@ module.exports = function register(app, deps, M) {
     envoyerClasseur(res,
       classeur(`Checklist : ${cl.nom || ''}`, ENTETES_ITEMS, lignes, [8, 14, 20, 20, 28, 50, 50], 'Items'),
       nomFichier('checklist', cl.nom));
-  });
+  }));
 
-  app.post(`${M}/checklists/:id/import-xlsx`, requireAuth, multipart(), (req, res) => {
+  app.post(`${M}/checklists/:id/import-xlsx`, requireAuth, multipart(), asynchrone(async (req, res) => {
     if (!admin(req)) return refuser(res);
-    const cl = db.get('checklists', req.params.id);
+    const cl = await db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -305,43 +305,51 @@ module.exports = function register(app, deps, M) {
     const themesParLibelle = {};
     Object.entries(themesSupervision()).forEach(([id, lib]) => { if (lib) themesParLibelle[norm(lib)] = id; });
     const sousThemesParLibelle = {};
-    db.list('checklist_sous_themes')
+    (await db.list('checklist_sous_themes'))
       .filter((s) => s.checklist_id === cl.id && s.libelle)
       .forEach((s) => { sousThemesParLibelle[norm(s.libelle)] = s.id; });
 
-    if (mode === 'replace') db.removeWhere('checklist_items', (it) => it.checklist_id === cl.id);
-
-    let importes = 0;
-    lignes.forEach((r) => {
-      db.insert('checklist_items', {
-        id: db.uid('exe'), checklist_id: cl.id,
-        ref_item: String(r[1] || '').trim(),
-        ref_reglement: String(r[4] || ''),
-        description: String(r[5] || '').trim(),
-        directives: String(r[6] || ''),
-        theme_id: themesParLibelle[norm(r[2])] || '',
-        sous_theme_id: sousThemesParLibelle[norm(r[3])] || '',
-        statut_id: '', observations: '', ordre: parseInt(r[0], 10) || 0,
-      });
-      importes += 1;
+    // ── Tout le classeur en une seule transformation ──
+    //
+    // C'était un retrait des items existants, **puis une écriture par ligne**. Une
+    // checklist de deux cents items faisait deux cent une écritures, et entre
+    // elles l'écran montrait une checklist à moitié remplacée — vide, pour
+    // commencer. Un échec au milieu l'y laissait, et c'est sur cette liste que
+    // l'inspecteur s'appuie sur le terrain.
+    const nouveaux = lignes.map((r) => ({
+      id: db.uid('exe'), checklist_id: cl.id,
+      ref_item: String(r[1] || '').trim(),
+      ref_reglement: String(r[4] || ''),
+      description: String(r[5] || '').trim(),
+      directives: String(r[6] || ''),
+      theme_id: themesParLibelle[norm(r[2])] || '',
+      sous_theme_id: sousThemesParLibelle[norm(r[3])] || '',
+      statut_id: '', observations: '', ordre: parseInt(r[0], 10) || 0,
+    }));
+    await db.transformer((d) => {
+      const garde = mode === 'replace'
+        ? (d.checklist_items || []).filter((it) => it.checklist_id !== cl.id)
+        : (d.checklist_items || []);
+      d.checklist_items = garde.concat(nouveaux);
+      return d;
     });
-    res.json({ status: 'ok', imported: importes, mode });
-  });
+    res.json({ status: 'ok', imported: nouveaux.length, mode });
+  }));
 
   // ── Checklist renseignée sur un dossier ──
   const ENTETES_FILL = ['Ordre', 'Réf. Item', 'Réf. Règlement', 'Thème', 'Sous-thème', 'Description', 'Directives', 'Statut', 'Observations'];
 
-  app.get(`${M}/checklist-fill/:dossierId/:checklistId/export-xlsx`, requireAuth, (req, res) => {
-    const cl = db.get('checklists', req.params.checklistId);
+  app.get(`${M}/checklist-fill/:dossierId/:checklistId/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+    const cl = await db.get('checklists', req.params.checklistId);
     if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
-    const sousThemes = libelles('checklist_sous_themes');
-    const statuts = libelles('checklist_statuts');
+    const sousThemes = await libelles('checklist_sous_themes');
+    const statuts = await libelles('checklist_statuts');
     const reponses = {};
-    db.list('checklist_responses')
+    (await db.list('checklist_responses'))
       .filter((r) => r.dossier_id === req.params.dossierId && r.checklist_id === cl.id)
       .forEach((r) => { reponses[r.item_id] = r; });
-    const lignes = db.list('checklist_items')
+    const lignes = (await db.list('checklist_items'))
       .filter((it) => it.checklist_id === cl.id)
       .sort((a, b) => (a.ordre - b.ordre) || String(a.id).localeCompare(String(b.id)))
       .map((it) => {
@@ -356,9 +364,9 @@ module.exports = function register(app, deps, M) {
     envoyerClasseur(res,
       classeur(`Checklist : ${cl.nom || ''}`, ENTETES_FILL, lignes, [8, 14, 28, 20, 20, 44, 44, 22, 40], 'Checklist'),
       nomFichier('checklist_renseignee', cl.nom));
-  });
+  }));
 
-  app.post(`${M}/checklist-fill/:dossierId/:checklistId/import-xlsx`, requireAuth, multipart(), (req, res) => {
+  app.post(`${M}/checklist-fill/:dossierId/:checklistId/import-xlsx`, requireAuth, multipart(), asynchrone(async (req, res) => {
     if (!R.canContribute(req.user, null, referentiels)) return refuser(res);
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -368,50 +376,62 @@ module.exports = function register(app, deps, M) {
 
     const { dossierId, checklistId } = req.params;
     const itemsParRef = {};
-    db.list('checklist_items')
+    (await db.list('checklist_items'))
       .filter((it) => it.checklist_id === checklistId)
       .forEach((it) => { const k = norm(it.ref_item); if (!(k in itemsParRef)) itemsParRef[k] = it.id; });
     const statutsParLibelle = {};
-    db.list('checklist_statuts').forEach((s) => { if (s.libelle) statutsParLibelle[norm(s.libelle)] = s.id; });
+    (await db.list('checklist_statuts')).forEach((s) => { if (s.libelle) statutsParLibelle[norm(s.libelle)] = s.id; });
     const existantes = {};
-    db.list('checklist_responses')
+    (await db.list('checklist_responses'))
       .filter((r) => r.dossier_id === dossierId && r.checklist_id === checklistId)
       .forEach((r) => { existantes[r.item_id] = r; });
 
     const maintenant = db.now();
-    let importes = 0;
-    lignes.forEach((r) => {
-      const itemId = itemsParRef[norm(r[1])];
-      if (!itemId) return;
-      const patch = {
-        statut_id: statutsParLibelle[norm(r[7])] || '',
-        observations: String(r[8] || ''),
-        statut_resp: 'brouillon', date_maj: maintenant,
-      };
-      if (existantes[itemId]) db.update('checklist_responses', existantes[itemId].id, patch);
-      else db.insert('checklist_responses', { id: db.uid('ecr'), dossier_id: dossierId, checklist_id: checklistId, item_id: itemId, ...patch });
-      importes += 1;
+    // Mêmes raisons qu'à l'import de la checklist : une écriture par ligne
+    // montrait une checklist à moitié renseignée, et c'est le relevé sur lequel
+    // l'inspecteur s'appuie. Les identifiants sont tirés **hors** de la
+    // transformation, qui peut être rejouée.
+    const aPoser = lignes
+      .map((r) => ({ itemId: itemsParRef[norm(r[1])], r, id: db.uid('ecr') }))
+      .filter((x) => x.itemId);
+    await db.transformer((d) => {
+      const liste = d.checklist_responses || [];
+      aPoser.forEach(({ itemId, r, id }) => {
+        const patch = {
+          statut_id: statutsParLibelle[norm(r[7])] || '',
+          observations: String(r[8] || ''),
+          statut_resp: 'brouillon', date_maj: maintenant,
+        };
+        // L'existence se relit sur l'état qu'on écrit : une réponse posée entre
+        // la lecture et l'écriture se serait doublée.
+        const i = liste.findIndex((x) => x.dossier_id === dossierId
+          && x.checklist_id === checklistId && x.item_id === itemId);
+        if (i >= 0) liste[i] = { ...liste[i], ...patch };
+        else liste.push({ id, dossier_id: dossierId, checklist_id: checklistId, item_id: itemId, ...patch });
+      });
+      d.checklist_responses = liste;
+      return d;
     });
-    res.json({ status: 'ok', imported: importes });
-  });
+    res.json({ status: 'ok', imported: aPoser.length });
+  }));
 
   // ── Sous-thèmes d'une checklist ──
-  app.get(`${M}/checklists/:id/sous-themes/export-xlsx`, requireAuth, (req, res) => {
-    const cl = db.get('checklists', req.params.id);
+  app.get(`${M}/checklists/:id/sous-themes/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+    const cl = await db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
-    const lignes = db.list('checklist_sous_themes')
+    const lignes = (await db.list('checklist_sous_themes'))
       .filter((s) => s.checklist_id === cl.id)
       .sort((a, b) => (a.ordre - b.ordre) || String(a.libelle).localeCompare(String(b.libelle)))
       .map((s) => [themes[s.theme_id] || '', String(s.libelle || ''), Number(s.ordre) || 0]);
     envoyerClasseur(res,
       classeur(`Sous-thèmes — ${cl.nom || ''}`, ['Thème', 'Sous-thème', 'Ordre'], lignes, [34, 40, 10], 'Sous-themes'),
       nomFichier('sous_themes', cl.nom));
-  });
+  }));
 
-  app.post(`${M}/checklists/:id/sous-themes/import-xlsx`, requireAuth, multipart(), (req, res) => {
+  app.post(`${M}/checklists/:id/sous-themes/import-xlsx`, requireAuth, multipart(), asynchrone(async (req, res) => {
     if (!admin(req)) return refuser(res);
-    const cl = db.get('checklists', req.params.id);
+    const cl = await db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const f = (req.files || {}).file;
     if (!f) return requis(res, 'fichier');
@@ -423,24 +443,34 @@ module.exports = function register(app, deps, M) {
     Object.entries(themesSupervision()).forEach(([id, lib]) => { if (lib) themesParLibelle[norm(lib)] = id; });
     // Unicité par couple (thème, libellé) : un ré-import met à jour, il ne duplique pas.
     const existantes = {};
-    db.list('checklist_sous_themes')
+    (await db.list('checklist_sous_themes'))
       .filter((s) => s.checklist_id === cl.id)
       .forEach((s) => { existantes[`${s.theme_id}|${norm(s.libelle)}`] = s.id; });
 
-    let importes = 0;
-    lignes.forEach((r) => {
-      const libelle = String(r[1] || '').trim();
-      if (!libelle) return;
-      const themeId = themesParLibelle[norm(r[0])];
-      if (!themeId) return; // thème inconnu → ligne ignorée
-      const ordre = parseInt(r[2], 10) || 0;
-      const cle = `${themeId}|${norm(libelle)}`;
-      if (existantes[cle]) db.update('checklist_sous_themes', existantes[cle], { libelle, ordre });
-      else db.insert('checklist_sous_themes', { id: db.uid('est'), checklist_id: cl.id, theme_id: themeId, libelle, ordre });
-      importes += 1;
+    // Même geste unique que les deux imports précédents. L'unicité par couple
+    // (thème, libellé) se relit **dans** la transformation : lue avant seulement,
+    // un ré-import simultané aurait dupliqué ce qu'elle existe pour tenir unique.
+    const aPoser = lignes
+      .map((r) => ({
+        libelle: String(r[1] || '').trim(),
+        themeId: themesParLibelle[norm(r[0])],
+        ordre: parseInt(r[2], 10) || 0,
+        id: db.uid('est'),
+      }))
+      .filter((x) => x.libelle && x.themeId);
+    await db.transformer((d) => {
+      const liste = d.checklist_sous_themes || [];
+      aPoser.forEach(({ libelle, themeId, ordre, id }) => {
+        const i = liste.findIndex((s) => s.checklist_id === cl.id
+          && s.theme_id === themeId && norm(s.libelle) === norm(libelle));
+        if (i >= 0) liste[i] = { ...liste[i], libelle, ordre };
+        else liste.push({ id, checklist_id: cl.id, theme_id: themeId, libelle, ordre });
+      });
+      d.checklist_sous_themes = liste;
+      return d;
     });
-    res.json({ status: 'ok', imported: importes });
-  });
+    res.json({ status: 'ok', imported: aPoser.length });
+  }));
 
   // ══════════════════════════════════════
   //  Mes utilisateurs — comptes rattachés au prestataire
@@ -480,7 +510,7 @@ module.exports = function register(app, deps, M) {
   // Qui est attendu à une étape, pour l'afficher au fil d'avancement. Ouvert
   // à tout compte authentifié : savoir qui doit agir n'est pas un privilège.
   // `activite_id` ou `constatation_id` situe l'objet ; `etape` porte la clé.
-  app.get(`${M}/processus/attendus`, requireAuth, (req, res) => {
+  app.get(`${M}/processus/attendus`, requireAuth, asynchrone(async (req, res) => {
     const q = req.query || {};
     const cle = String(q.etape || '');
     if (!cle) return requis(res, 'etape');
@@ -492,26 +522,26 @@ module.exports = function register(app, deps, M) {
     let type = 'activite';
     let contexte = { secteur_id: q.secteur_id || '', domaine_id: q.domaine_id || '', dossier: null };
     if (q.constatation_id) {
-      const c = db.get('constatations', q.constatation_id);
+      const c = await db.get('constatations', q.constatation_id);
       if (!c) return introuvable(res, 'constatation');
       type = 'constatation';
       const p = perim(c.prestataire_id);
       contexte = {
         secteur_id: p.secteur_id,
         domaine_id: c.domaine_id || p.domaine_id,
-        dossier: c.dossier_id ? db.get('dossiers', c.dossier_id) : null,
+        dossier: c.dossier_id ? await db.get('dossiers', c.dossier_id) : null,
       };
     } else if (q.notification_id) {
-      const n = db.get('notifications', q.notification_id);
+      const n = await db.get('notifications', q.notification_id);
       if (!n) return introuvable(res, 'notification');
       const p = perim(n.prestataire_id);
       contexte = {
         secteur_id: n.secteur_id || p.secteur_id,
         domaine_id: n.domaine_id || p.domaine_id,
-        dossier: db.list('dossiers').find((d) => d.notification_id === n.id) || null,
+        dossier: (await db.list('dossiers')).find((d) => d.notification_id === n.id) || null,
       };
     }
-    const a = acteurs.attendus(type, contexte, cle);
+    const a = await acteurs.attendus(type, contexte, cle);
     res.json({
       etape: cle,
       processus: a.processus ? { id: a.processus.id, libelle: a.processus.libelle } : null,
@@ -522,23 +552,23 @@ module.exports = function register(app, deps, M) {
       // des adresses de l'autorité.
       comptes: (req.user || {}).role === 'PRESTATAIRE' ? [] : a.comptes,
       // Le demandeur peut-il agir ? La réponse sert à griser les boutons.
-      peut_agir: !acteurs.refusEventuel(req.user, type, contexte, cle),
+      peut_agir: !await acteurs.refusEventuel(req.user, type, contexte, cle),
     });
-  });
+  }));
 
-  app.get(`${M}/processus`, requireAuth, (req, res) => {
+  app.get(`${M}/processus`, requireAuth, asynchrone(async (req, res) => {
     if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
-    res.json(db.list('processus'));
-  });
+    res.json(await db.list('processus'));
+  }));
 
-  app.post(`${M}/processus`, requireAuth, (req, res) => {
+  app.post(`${M}/processus`, requireAuth, asynchrone(async (req, res) => {
     if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     const d = req.body || {};
     if (!String(d.libelle || '').trim()) return requis(res, 'libelle');
     if (!['activite', 'constatation'].includes(d.type)) {
       return inconnu(res, 'type_processus');
     }
-    const rec = db.insert('processus', {
+    const rec = await db.insert('processus', {
       id: db.uid('proc'),
       libelle: String(d.libelle).trim(),
       type: d.type,
@@ -552,33 +582,33 @@ module.exports = function register(app, deps, M) {
       date_creation: db.now(),
     });
     res.status(201).json(rec);
-  });
+  }));
 
-  app.put(`${M}/processus/:id`, requireAuth, (req, res) => {
+  app.put(`${M}/processus/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
     const d = req.body || {};
     const patch = {};
     ['libelle', 'type', 'secteur_id', 'domaine_id', 'description', 'acteurs', 'actif']
       .forEach((k) => { if (d[k] !== undefined) patch[k] = d[k]; });
     patch.date_maj = db.now();
-    const rec = db.update('processus', req.params.id, patch);
+    const rec = await db.update('processus', req.params.id, patch);
     return rec ? res.json(rec) : introuvable(res, 'processus');
-  });
+  }));
 
-  app.delete(`${M}/processus/:id`, requireAuth, (req, res) => {
+  app.delete(`${M}/processus/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
-    res.json({ status: db.remove('processus', req.params.id) ? 'ok' : 'absent' });
-  });
+    res.json({ status: await db.remove('processus', req.params.id) ? 'ok' : 'absent' });
+  }));
 
   // Duplication : un processus déjà réglé sert de patron au suivant. Le
   // secteur visé est repris du corps, sinon la copie reste sur le même.
-  app.post(`${M}/processus/:id/dupliquer`, requireAuth, (req, res) => {
+  app.post(`${M}/processus/:id/dupliquer`, requireAuth, asynchrone(async (req, res) => {
     if (!peutProcessus(req)) return reserve(res, 'admins_gestionnaires');
-    const src = db.get('processus', req.params.id);
+    const src = await db.get('processus', req.params.id);
     if (!src) return introuvable(res, 'processus');
     const d = req.body || {};
     const { id: _ignore, ...base } = src;
-    const rec = db.insert('processus', {
+    const rec = await db.insert('processus', {
       ...base,
       id: db.uid('proc'),
       libelle: String(d.libelle || `${src.libelle} (copie)`).trim(),
@@ -593,5 +623,5 @@ module.exports = function register(app, deps, M) {
       date_maj: '',
     });
     res.status(201).json(rec);
-  });
+  }));
 };

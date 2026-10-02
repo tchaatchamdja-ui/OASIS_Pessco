@@ -19,8 +19,8 @@ const refs = () => referentiels.getAll();
 
 // Processus applicable : celui du secteur d'abord, celui du domaine à défaut.
 // Un processus sans portée sert de modèle général pour son type.
-function processusDe(type, secteurId, domaineId) {
-  const liste = db.list('processus').filter((p) => p.type === type && p.actif !== 0);
+async function processusDe(type, secteurId, domaineId) {
+  const liste = (await db.list('processus')).filter((p) => p.type === type && p.actif !== 0);
   return liste.find((p) => p.secteur_id && p.secteur_id === secteurId)
     || liste.find((p) => !p.secteur_id && p.domaine_id && p.domaine_id === domaineId)
     || liste.find((p) => !p.secteur_id && !p.domaine_id)
@@ -93,8 +93,8 @@ const LIBELLES_ROLE = {
 
 // Ce que l'étape attend, sous deux formes : les comptes qui peuvent agir, et
 // la description lisible qu'on affiche à l'écran.
-function attendus(type, contexte, cle) {
-  const proc = processusDe(type, contexte.secteur_id, contexte.domaine_id);
+async function attendus(type, contexte, cle) {
+  const proc = await processusDe(type, contexte.secteur_id, contexte.domaine_id);
   const entrees = entreesDe(proc, cle);
   if (!entrees.length) return { processus: proc, declare: false, comptes: [], lignes: [] };
 
@@ -124,11 +124,11 @@ function attendus(type, contexte, cle) {
 }
 
 // Le contrôle. `null` = rien à opposer ; sinon, le motif du refus.
-function refusEventuel(user, type, contexte, cle) {
+async function refusEventuel(user, type, contexte, cle) {
   // Le gestionnaire du module passe outre : sans cette porte, un processus
   // incomplet arrêterait le circuit sans recours applicatif.
   if (R.isAdmin(user, referentiels)) return null;
-  const a = attendus(type, contexte, cle);
+  const a = await attendus(type, contexte, cle);
   if (!a.declare) return null;
   // Aucun compte résolu : le processus nomme des rôles sans titulaire connu.
   // On n'oppose rien — la désignation est incomplète, pas l'agent en faute.

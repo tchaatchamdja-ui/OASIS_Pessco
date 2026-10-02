@@ -39,18 +39,21 @@ module.exports = {
     if (deps.services) {
       // Ce que le module tient par instance : le portail s'en sert pour
       // savoir si une instance peut être supprimée sans rien perdre.
-      deps.services.publish('SURV.volumeParInstance', () => {
+      // Les quatre contrats sont asynchrones depuis que `execution` vit en base
+      // (ADR-002, jalon n° 13) : le bus rend une promesse par contrat, et PLAN
+      // comme CARE les attendent depuis l'étape A.
+      deps.services.publish('SURV.volumeParInstance', async () => {
         const parInstance = {};
-        ['notifications', 'dossiers', 'constatations', 'rapports'].forEach((coll) => {
-          db.list(coll).forEach((r) => {
-            const i = r.instance || '';
-            parInstance[i] = (parInstance[i] || 0) + 1;
-          });
+        const rangs = await Promise.all(['notifications', 'dossiers', 'constatations', 'rapports']
+          .map((coll) => db.list(coll)));
+        rangs.flat().forEach((r) => {
+          const i = r.instance || '';
+          parInstance[i] = (parInstance[i] || 0) + 1;
         });
         return parInstance;
       }, { description: 'Nombre d’enregistrements du module, par instance' });
 
-      deps.services.publish('SURV.activitesDeclenchees', () => db.list('notifications')
+      deps.services.publish('SURV.activitesDeclenchees', async () => (await db.list('notifications'))
         .map((n) => n.activite_id)
         .filter(Boolean), {
         description: 'Identifiants des activités pour lesquelles une notification existe',
@@ -59,7 +62,7 @@ module.exports = {
       // Les Mesures d'Application se prennent sur une constatation. Elles
       // n'ont pas besoin du dossier entier : la référence, le prestataire, la
       // criticité et l'échéance suffisent à les instruire.
-      deps.services.publish('SURV.constatationsOuvertes', () => db.list('constatations')
+      deps.services.publish('SURV.constatationsOuvertes', async () => (await db.list('constatations'))
         .filter((c) => !String(c.statut || '').startsWith('direct_'))
         .map((c) => ({
           id: c.id,
@@ -84,9 +87,9 @@ module.exports = {
       // classe pas une carence sans avoir lu ce que l'organisme propose. Le
       // contrat est le même que celui de « RAMP Inspections » — le
       // consommateur n'a donc pas à savoir d'où vient la carence.
-      deps.services.publish('SURV.pacDeConstatation', () => {
+      deps.services.publish('SURV.pacDeConstatation', async () => {
         const parConstatation = {};
-        db.list('constatations').forEach((c) => {
+        (await db.list('constatations')).forEach((c) => {
           const pac = (c.actions_correctives || [])[0];
           if (!pac) return;
           const preuve = (p) => ({
@@ -119,7 +122,7 @@ module.exports = {
   },
 
   async seed() {
-    db.seed();
+    await db.seed();
     // Un module fraîchement installé n'a encore aucun droit attribué : sans
     // amorce, le privilège par défaut (Lecteur) empêcherait quiconque — y
     // compris le super-administrateur — d'ouvrir le premier acte et donc

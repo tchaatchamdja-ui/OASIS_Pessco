@@ -1,0 +1,74 @@
+{
+ "oasis-loader": [
+  "oasisLoaderHtml:function",
+  "oasisLoaderPoser:function",
+  "oasisModuleIndisponible:function"
+ ],
+ "oasis-toast": [
+  "oasisConfirmer:function",
+  "oasisSaisir:function",
+  "oasisToast:function"
+ ],
+ "oasis-dates": [
+  "oasisDatesBorner:function",
+  "oasisDatesControler:function",
+  "oasisDatesLier:function",
+  "oasisDatesValider:function",
+  "oasisHorodatage:function",
+  "oasisJour:function"
+ ],
+ "oasis-theme": [
+  "OASIS_THEMES:object",
+  "oasisNomTheme:function",
+  "oasisThemeEnregistre:function",
+  "oasisThemeNormalise:function"
+ ],
+ "oasis-requete": [
+  "__oasisRequeteMarquee:boolean",
+  "oasisSessionPerdue:function"
+ ],
+ "oasis-hors-ligne": [
+  "__oasisHorsLigne:boolean",
+  "oasisHorsLigne:object"
+ ],
+ "oasis-messages-serveur": [
+  "OASIS_ETATS_SERVEUR:object",
+  "OASIS_GABARITS_SERVEUR:object",
+  "OASIS_MESSAGES_SERVEUR:object",
+  "OASIS_OBJETS_SERVEUR:object",
+  "OASIS_OU_SERVEUR:object",
+  "OASIS_ROLES_SERVEUR:object"
+ ],
+ "oasis-commun": [
+  "oasisAppliquerTheme:function",
+  "oasisChampRequis:function",
+  "oasisCharger:function",
+  "oasisEsc:function",
+  "oasisJson:function",
+  "oasisLangue:function",
+  "oasisMessageErreur:function",
+  "oasisPoserLangue:function",
+  "oasisSaisieDifferee:function"
+ ],
+ "oasis-utils": [
+  "_pesSearchInput:function",
+  "api:function",
+  "escapeHtml:function",
+  "formatDate:function",
+  "showToast:function"
+ ],
+ "oasis-kpi": [
+  "oasisKpiCarte:function",
+  "oasisKpiFigures:object",
+  "oasisKpiGroupe:function"
+ ],
+ "oasis-cookies": [
+  "oasisEffacerPreferences:function"
+ ],
+ "module-chrome": [
+  "oasisBackToPortal:function",
+  "oasisGoSuper:function",
+  "oasisModuleActions:function",
+  "oasisModuleMention:function"
+ ]
+}

@@ -274,7 +274,64 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        et **le typage n'est défait nulle part** — ni `any`, ni `as unknown as`. Ce dernier a
        d'abord dénoncé un commentaire qui disait qu'on ne le fait pas ; il écarte désormais
        les commentaires.
-5. [ ] Les sept modules restants, du plus petit au plus gros : socle commun, portail,
-       PLAN, CARE, PR, RAMP, SURV.
+5. [ ] Les sept modules restants. **L'ordre par volume était le mauvais critère**, et
+       la mesure l'a dit le 3 octobre 2026 :
+
+       | | Chargé par |
+       |---|---|
+       | `public/js` (« portail », 4 217 l.) | **3 pages** — `index`, `login`, `cookies`. Une feuille. |
+       | `public/shared/js` (socle commun, 2 250 l.) | **les neuf écrans**, DROITS compris |
+
+       Le socle n'est pas un écran : il n'a ni interface, ni React. Le convertir veut
+       dire autre chose que convertir un module — il devra servir **les deux régimes**
+       pendant la cohabitation : des globales pour les sept écrans restés en
+       JavaScript, des imports typés pour les écrans en React. Une seule source, deux
+       consommations.
+
+       5.a [x] **Mesurer le socle avant d'y toucher** — fait. C'est la leçon de la
+           suite n° 0 appliquée là où elle compte le plus : neuf écrans en dépendent,
+           et aucune suite ne regardait sa surface.
+
+           **48 noms globaux, 12 fichiers**, relevés dans un navigateur et figés dans
+           [`tests/smoke/surface-socle.json`](../tests/smoke/surface-socle.json).
+           La mesure a été fausse deux fois avant d'être juste, et dans le sens
+           rassurant les deux fois : partie de `login.html`, elle voyait un `window`
+           déjà peuplé par les quatre fichiers que cette page charge — **quatre
+           fichiers paraissaient alors ne rien apporter du tout** ; partie
+           d'`about:blank`, aucun script ne se chargeait, faute d'origine. Il a fallu
+           servir une page vierge sur l'origine du serveur.
+
+           Et le constat qui justifie tout le reste : `frontend/droits/socle.ts`
+           **déclare** ce que le socle pose, sans que personne ne le vérifie. Une
+           déclaration est une affirmation sur le monde ; le compilateur la croit,
+           c'est son rôle. Deux fois elle a menti :
+
+           · `window.dtPriv` — `dr-i18n.js` le définit en `const`, qui ne pose rien
+             sur `window`. L'écran s'arrêtait net. Trouvé en ouvrant la page.
+           · `window.ICONS` — **même cause, et muet** : `oasis-utils.js` le déclare
+             aussi en `const`, et `(window.ICONS || {}).shield || ''` rendait la
+             chaîne vide sans rien dire. Celui-là, aucun contrôle ne l'aurait trouvé.
+
+           Sa conséquence s'est révélée nulle, et il faut le dire plutôt que de
+           s'attribuer une réparation : `module-chrome.js` retire `.header-module-title`
+           de tous les écrans de module, pour y mettre ses super-menus. L'icône
+           n'était donc visible nulle part. **Défaut réel, conséquence nulle — le
+           pire des deux**, parce qu'il survit à toute inspection.
+
+           D'où la suite [`frontend.smoke.js`](../tests/smoke/frontend.smoke.js), six
+           contrôles, tous contre-essayés, tous mordants :
+           · chaque `window.X` **lu** par le TypeScript existe sur l'écran qui le lit
+             (les écritures sont exclues — poser une globale n'exige pas qu'elle
+             préexiste) ; mord sur `window.ICONS`, mord sur `oasisEsc` renommé dans le
+             socle, et **nomme le coupable** ;
+           · chaque globale **lexicale** déclarée existe ; mord sur un nom inventé ;
+           · la surface du socle est conforme au relevé ; mord sur un nom ajouté sans
+             l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
+             jour de la conversion.
+
+       5.b [ ] **Le socle en TypeScript, servant les deux régimes.** Le relevé des 48
+           noms est le contrat à préserver, et la suite `frontend` le vérifie.
+       5.c [ ] Puis les écrans, en commençant par les feuilles : portail, PLAN, CARE,
+           PR, RAMP, SURV.
 6. [ ] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

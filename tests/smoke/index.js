@@ -39,6 +39,9 @@ const suites = [
   { nom: 'mfa', port: 4799, run: require('./mfa.smoke') },
   // Parcours : les écrans dans un vrai navigateur, console comprise.
   { nom: 'parcours', port: 4798, run: require('./parcours.smoke') },
+  // Frontend : ce que le TypeScript affirme du socle global, vérifié dans un
+  // navigateur. Une déclaration n'est pas une mesure — deux défauts l'ont dit.
+  { nom: 'frontend', port: 4790, run: require('./frontend.smoke') },
 ];
 
 (async () => {

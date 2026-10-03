@@ -69,7 +69,27 @@ declare global {
    */
   const dtPriv: (p: string) => string;
   const dtPrivDesc: (p: string) => string;
+
+  /**
+   * Les icônes en SVG, fournies par `oasis-utils.js` — **et pour la même raison
+   * déclarées ici, non sur `Window`.** Je ne l'avais pas vu : `Coquille.tsx`
+   * lisait `(window.ICONS || {}).shield`, qui rend `undefined`, et le `|| ''`
+   * rendait le défaut muet. Le bouclier de l'en-tête manquait depuis la
+   * réécriture — l'ancien `dr-app.js` lisait `ICONS` nu, lui.
+   *
+   * Deux fois la même cause, deux fois en silence. C'est ce qui a motivé le
+   * contrôle qui compare les lectures `window.*` du frontend à la surface
+   * réellement posée par le socle, mesurée dans un navigateur.
+   */
+  const ICONS: Record<string, string | undefined>;
 }
+
+/**
+ * Une icône du socle, ou la chaîne vide. Le `?? ''` reste — une icône absente
+ * ne doit pas arrêter un écran — mais il est **ici**, à un seul endroit, et non
+ * répété sur chaque lecture où il camoufle une erreur de nom.
+ */
+export const icone = (nom: string): string => ICONS[nom] ?? '';
 
 export const MODULE: string = (window.DR_MODULE || 'PLAN').toUpperCase();
 

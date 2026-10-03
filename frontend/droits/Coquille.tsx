@@ -8,7 +8,7 @@
 // C'est ce qui rend la cohabitation possible : le cadre reste, le contenu change
 // de technique.
 import type { ReactNode } from 'react';
-import { THEMES, dt, nomTheme } from './socle';
+import { THEMES, dt, icone, nomTheme } from './socle';
 import { ICONE_AUDIT, ICONE_CHEVRON_D, ICONE_CHEVRON_G, ICONE_PRIVILEGES } from './icones';
 import type { Contexte } from './api';
 
@@ -99,8 +99,21 @@ export function Coquille({
         <div className="app-content">
           <header className="app-header">
             <div className="header-left">
+              {/*
+                Ce titre ne s'affiche jamais sur un écran de module : `module-chrome.js`
+                le retire pour mettre ses super-menus à sa place (`injectChrome`,
+                « remplacent le titre »). Il est gardé parce que `.header-left` doit
+                exister pour recevoir l'injection, et qu'il dit ce que la barre
+                remplace — mais il ne faut pas le croire visible.
+
+                C'est en cherchant pourquoi son icône manquait que l'on a trouvé la
+                vraie cause : `window.ICONS` rend `undefined`, `oasis-utils.js` le
+                déclarant en `const`. Défaut réel, conséquence nulle — et c'est le
+                pire des deux, parce qu'il ne se voit pas. La suite `frontend` le
+                verrait désormais.
+              */}
               <div className="header-module-title">
-                <Icone svg={(window.ICONS || {}).shield || ''} /> <span>{dt('module_titre')}</span>
+                <Icone svg={icone('shield')} /> <span>{dt('module_titre')}</span>
               </div>
             </div>
             <div className="header-right">

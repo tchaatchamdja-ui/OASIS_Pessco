@@ -5,6 +5,13 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
 ## Non publié
 
 ### Sécurité
+- **`nodemailer` 9.1.1 → 10.0.13** — une vulnérabilité *haute* préexistante, trouvée en
+  installant l'outillage du frontend : le cache DNS, global au processus, réutilisait le
+  `servername` TLS d'un transport à l'autre, **exposant les justificatifs SMTP d'une AAC à
+  une autre**. Trois autres avis du même paquet sont corrigés avec elle (déni de service par
+  récursion de destinataires, enveloppe mal formée, retour arrière quadratique).
+  L'API employée — `createTransport` — est inchangée, et les six contrôles d'envoi passent.
+  `npm audit` : **0 vulnérabilité**, dépendances de développement comprises.
 - Les comptes créés au premier démarrage reçoivent un mot de passe **tiré au hasard**,
   affiché une seule fois sur la console. `OASIS_SEED_PASSWORD` permet de l'imposer.
   Les mots de passe ne figurent plus ni dans le code ni dans le README. *(SEC-02)*
@@ -314,6 +321,25 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   après —, et c'est le garde-fou de forme qui l'attrape ; et la troisième a trouvé **une
   assertion trop faible de ma part**, qui ne distinguait pas une activité recopiée d'une
   activité créée.
+
+### Frontend — React + TypeScript (ADR-003)
+- **Six contrôles de navigateur sur l'écran des droits, posés avant sa réécriture.** Aucun
+  ne l'ouvrait : les vingt contrôles de la suite « droits » parlent à l'API, et une API verte
+  ne dit rien d'un écran qui reste blanc. On ne mesure pas une réécriture contre rien.
+  Ils décrivent l'écran tel qu'il est : il se monte et se remplit, il liste les comptes avec
+  leur privilège en pastille, il ne déborde pas, sa page de journal montre que la chaîne
+  d'audit est intacte, **il attribue un privilège** et **le serveur le porte**. Les deux
+  derniers couvrent l'acte du module, que seul l'API éprouvait.
+  Cinq contre-épreuves, chacune tombant sur le bon contrôle et sur lui seul.
+- **L'étape de construction** : `esbuild` plutôt que Vite — une dépendance, pas de fichier de
+  configuration, et pas de serveur de développement dont nous n'avons que faire (les écrans
+  sont servis par Express, avec leurs sessions et leur politique de contenu).
+  La **vérification des types est dans la construction**, non enchaînée à côté : esbuild
+  retire les annotations sans les lire, et `tsc && esbuild` se saute d'un appel direct — on
+  aurait eu le coût de TypeScript sans son bénéfice.
+  La source vit dans `frontend/`, le paquet dans `public/modules/<module>/app/`, **non
+  versionné** : un paquet obsolète servi en production est un défaut qui ne se voit pas.
+  `npm run smoke` construit donc avant d'éprouver.
 
 ### Décisions de la maîtrise d'ouvrage
 - **Ce qu'un autre module fonde est retiré, jamais détruit** *(3 octobre 2026)*. Une

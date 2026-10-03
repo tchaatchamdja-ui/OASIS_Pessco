@@ -237,6 +237,88 @@ module.exports = async function parcoursSmoke(port) {
     } else {
       verifier('l’écran des droits offre sa page de journal d’audit', false, 'aucun élément trouvé');
     }
+
+    // ── L'attribution d'un privilège, par l'écran ──
+    //
+    // C'est l'acte du module : donner à un compte le droit d'agir sur un module.
+    // La suite « droits » l'éprouve par l'API ; **rien ne l'éprouvait par
+    // l'écran**, et c'est l'écran que l'agent emploie. Un bouton qui n'ouvre
+    // rien, une fenêtre qui n'enregistre pas, un privilège qui ne se repose pas
+    // sur la ligne : la réponse HTTP reste 200.
+    //
+    // Posé avant la reprise en React (ADR-003), comme les quatre précédents.
+    etape = 'attribution d’un privilège';
+    await ecranDroits.evaluate(() => {
+      const nav = [...document.querySelectorAll('.sidebar-nav-item, [data-dr-page], a, button')]
+        .find((el) => /privil/i.test(el.textContent || ''));
+      if (nav) nav.click();
+    });
+    await new Promise((r) => setTimeout(r, 800));
+
+    const attribution = await ecranDroits.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      // La première ligne dont le privilège n'est pas déjà « Gestionnaire ».
+      const lignes = [...document.querySelectorAll('.data-table tbody tr')];
+      const ligne = lignes.find((tr) => !/GESTIONNAIRE/i.test(
+        (tr.querySelector('.dr-priv') || {}).className || ''));
+      if (!ligne) return { erreur: 'aucune ligne modifiable' };
+      const avant = (ligne.querySelector('.dr-priv') || {}).textContent || '';
+      const nom = (ligne.querySelector('td strong') || {}).textContent || '';
+
+      const bouton = [...ligne.querySelectorAll('button')]
+        .find((b) => /modifi/i.test(b.textContent || ''));
+      if (!bouton) return { erreur: 'aucun bouton de modification' };
+      bouton.click();
+      await attendre(400);
+
+      const fenetre = document.querySelector('.dr-modal, .modal');
+      if (!fenetre) return { erreur: 'la fenêtre ne s’est pas ouverte', avant, nom };
+
+      // Le choix « Gestionnaire », parmi les privilèges proposés.
+      const choix = [...fenetre.querySelectorAll('input[type="radio"]')]
+        .find((r) => String(r.value).toUpperCase() === 'GESTIONNAIRE');
+      if (!choix) return { erreur: 'privilège « Gestionnaire » non proposé', avant, nom };
+      choix.click();
+      await attendre(200);
+
+      const valider = [...fenetre.querySelectorAll('button')]
+        .find((b) => /enregistr|valider|appliquer/i.test(b.textContent || ''));
+      if (!valider) return { erreur: 'aucun bouton d’enregistrement', avant, nom };
+      valider.click();
+      await attendre(1500);
+
+      // La ligne doit porter le nouveau privilège, sans rechargement de page.
+      const relue = [...document.querySelectorAll('.data-table tbody tr')]
+        .find((tr) => ((tr.querySelector('td strong') || {}).textContent || '') === nom);
+      return {
+        nom,
+        avant,
+        apres: relue ? ((relue.querySelector('.dr-priv') || {}).textContent || '') : '(ligne perdue)',
+        fenetreFermee: !document.querySelector('.dr-modal, .modal'),
+      };
+    });
+
+    verifier('l’écran attribue un privilège, et la ligne le porte aussitôt',
+      !attribution.erreur
+      && /gestionnaire/i.test(attribution.apres)
+      && attribution.fenetreFermee,
+      attribution.erreur || `${attribution.nom} : « ${attribution.avant} » → « ${attribution.apres} »`);
+
+    // Et le serveur l'a bien reçu : ce que l'écran montre doit être ce qui est
+    // enregistré, non ce qu'il espère. L'API le dit, depuis le même navigateur.
+    if (!attribution.erreur) {
+      const enregistre = await ecranDroits.evaluate(async () => {
+        const r = await fetch('/api/m/droits/PLAN/users', { credentials: 'same-origin' });
+        return r.ok ? await r.json() : null;
+      });
+      const compte = (enregistre || []).find((u) => (u.nom || '') === attribution.nom);
+      verifier('et le serveur porte le privilège attribué',
+        !!compte && compte.privilege === 'GESTIONNAIRE' && !compte.isDefault,
+        compte ? `${compte.privilege}${compte.isDefault ? ' (par défaut)' : ''}` : 'compte introuvable');
+    } else {
+      verifier('et le serveur porte le privilège attribué', false, 'attribution non faite');
+    }
+
     await ecranDroits.close();
 
     // ── Un module, dans son cadre ──

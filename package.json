@@ -10,18 +10,28 @@
   },
   "scripts": {
     "start": "node server.js",
-    "smoke": "node tests/smoke/index.js",
-    "dev": "node server.js"
+    "smoke": "npm run build && node tests/smoke/index.js",
+    "dev": "node server.js",
+    "types": "tsc --noEmit -p frontend/tsconfig.json",
+    "build": "node frontend/construire.mjs"
   },
   "dependencies": {
     "express": "^4.19.2",
-    "nodemailer": "^9.0.4",
+    "nodemailer": "^10.0.13",
     "pg": "^8.23.0",
     "puppeteer": "^25.8.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "xlsx-js-style": "^1.2.0"
   },
   "overrides": {
     "qs": "^6.16.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
   }
 }

@@ -21,3 +21,4 @@ audit-output/
 # Documents de travail à la racine (sources métier, non nécessaires au code)
 /*.xlsx
 /*.docx
+public/modules/*/app/

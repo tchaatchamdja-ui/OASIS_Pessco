@@ -47,8 +47,25 @@ const ecrans = readdirSync(ICI, { withFileTypes: true })
   .map((d) => d.name)
   .filter((nom) => existsSync(join(ICI, nom, 'main.tsx')));
 
-if (!ecrans.length) {
-  console.log('construction : aucun écran à construire.');
+// ── La seconde cible : les sas du socle commun (ADR-003, 5.b) ──
+//
+// Le socle n'est pas un écran : il n'a ni interface, ni React, et il est
+// consommé de deux façons le temps de la cohabitation. `frontend/socle/*.ts`
+// porte la source typée, que les écrans en React importent ; chaque fichier de
+// `frontend/socle/globales/` est un sas qui en publie les globales pour les
+// écrans restés en JavaScript.
+//
+// Le nom du sas **est** celui du fichier servi : `globales/oasis-theme.ts` donne
+// `public/shared/app/oasis-theme.js`, sous le nom que les balises portaient
+// déjà. Aucune table de correspondance à tenir d'accord — c'est ce qui fera que
+// les onze fichiers suivants n'auront pas à toucher à celui-ci.
+const DOSSIER_SAS = join(ICI, 'socle', 'globales');
+const sas = existsSync(DOSSIER_SAS)
+  ? readdirSync(DOSSIER_SAS).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''))
+  : [];
+
+if (!ecrans.length && !sas.length) {
+  console.log('construction : rien à construire.');
   process.exit(0);
 }
 
@@ -73,21 +90,37 @@ try {
 
 const production = process.env.NODE_ENV === 'production' || process.argv.includes('--production');
 
+// Les réglages que les deux cibles partagent. Écrits une fois : deux copies
+// auraient divergé, et c'est la minification ou la carte de source qui aurait
+// différé d'une cible à l'autre sans que rien ne le dise.
+const commun = {
+  bundle: true,
+  format: 'iife',
+  target: 'es2020',
+  // Les cartes de source en développement seulement : en production elles
+  // publieraient la source de l'écran, et pèseraient pour rien.
+  sourcemap: !production,
+  minify: production,
+  logLevel: 'warning',
+  define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') },
+};
+
+await Promise.all(sas.map(async (nom) => {
+  await build({
+    ...commun,
+    entryPoints: [join(DOSSIER_SAS, `${nom}.ts`)],
+    outfile: join(RACINE, 'public', 'shared', 'app', `${nom}.js`),
+  });
+  console.log(`construction : socle ${nom} → public/shared/app/${nom}.js`);
+}));
+
 await Promise.all(ecrans.map(async (nom) => {
   const sortie = join(RACINE, 'public', 'modules', nom, 'app', 'main.js');
   await build({
+    ...commun,
     entryPoints: [join(ICI, nom, 'main.tsx')],
     outfile: sortie,
-    bundle: true,
-    format: 'iife',
-    target: 'es2020',
     jsx: 'automatic',
-    // Les cartes de source en développement seulement : en production elles
-    // publieraient la source de l'écran, et pèseraient pour rien.
-    sourcemap: !production,
-    minify: production,
-    logLevel: 'warning',
-    define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') },
   });
   console.log(`construction : ${nom} → public/modules/${nom}/app/main.js`);
 }));

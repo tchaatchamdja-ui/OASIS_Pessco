@@ -96,6 +96,31 @@ function lecturesDeWindow(fichiers) {
   return [...lus].sort();
 }
 
+// Ce que le TypeScript **déclare** sur `window`, dans `declare global {
+// interface Window { … } }`.
+//
+// Vérifier les déclarations et non seulement les lectures est plus fort, et la
+// conversion du socle l'a montré : `Window.ICONS?: Record<string, string>`
+// était une affirmation **fausse** — `oasis-utils.js` déclare `ICONS` en
+// `const`, qui ne pose rien sur `window` — et personne ne la lisait plus depuis
+// que l'accès était corrigé. Une déclaration fausse que rien ne lit est un
+// piège posé pour le prochain qui la croira.
+//
+// Les membres optionnels (`X?: …`) sont exclus : `DR_MODULE` et `drBoot` sont
+// légitimement absents selon la page, et c'est ce que le `?` dit.
+function declarationsDeWindow(fichiers) {
+  const noms = new Set();
+  for (const f of fichiers) {
+    const texte = sansCommentaires(fs.readFileSync(f, 'utf8'));
+    for (const bloc of texte.matchAll(/interface Window\s*\{([\s\S]*?)\n {2}\}/g)) {
+      for (const m of bloc[1].matchAll(/^\s{4}([A-Za-z_][A-Za-z0-9_]*)(\??)\s*[:(]/gm)) {
+        if (!m[2]) noms.add(m[1]);
+      }
+    }
+  }
+  return [...noms].sort();
+}
+
 // Les globales lexicales déclarées : `declare global { const X: … }`. Hors de
 // `interface Window`, donc à lire par leur nom nu.
 function globalesLexicales(fichiers) {
@@ -142,7 +167,14 @@ async function mesurerSurface(page, base) {
   const incidents = [];
   let avant = await page.evaluate(() => Object.getOwnPropertyNames(window));
   for (const f of ORDRE_SOCLE) {
-    await page.addScriptTag({ url: `/shared/js/${f}.js` })
+    // Le répertoire se déduit de l'état de la conversion, il ne se nomme pas :
+    // un fichier converti est servi depuis `shared/app/`, les autres depuis
+    // `shared/js/`. Écrit en dur, ce chemin aurait fait **cesser la mesure de
+    // couvrir le fichier le jour de sa conversion** — et la surface du socle,
+    // qui est tout l'objet de cette mesure, aurait paru conforme en perdant un
+    // fichier entier.
+    const converti = fs.existsSync(path.join(FRONTEND, 'socle', 'globales', `${f}.ts`));
+    await page.addScriptTag({ url: `/shared/${converti ? 'app' : 'js'}/${f}.js` })
       .catch((e) => incidents.push(`${f} : ${String(e.message).slice(0, 80)}`));
     const apres = await page.evaluate(() => Object.getOwnPropertyNames(window));
     const neufs = apres.filter((x) => !avant.includes(x));
@@ -189,9 +221,25 @@ module.exports = async function frontendSmoke(port) {
       page.click('#loginForm button[type="submit"]'),
     ]);
 
+    // Les modules purs du socle (`frontend/socle/*.ts`) sont **empaquetés dans**
+    // l'écran qui les importe : ce qu'ils lisent du monde doit tenir sur cet
+    // écran. Les lire avec les sources du module n'est donc pas un excès de
+    // zèle — sans cela, un accès global posé là serait invisible à cette suite
+    // alors qu'il tourne bel et bien dans l'écran.
+    //
+    // `socle/globales/` est volontairement hors de ce relevé : ces sas posent
+    // les globales qu'ils déclarent, et c'est le contrôle de surface ci-dessous
+    // qui vérifie qu'ils les posent vraiment.
+    const dossierSocle = path.join(FRONTEND, 'socle');
+    const socleCommun = fs.existsSync(dossierSocle)
+      ? fs.readdirSync(dossierSocle, { withFileTypes: true })
+        .filter((e) => e.isFile() && /\.tsx?$/.test(e.name))
+        .map((e) => path.join(dossierSocle, e.name))
+      : [];
+
     for (const nom of modules) {
-      const fichiers = sources(path.join(FRONTEND, nom));
-      const lus = lecturesDeWindow(fichiers);
+      const fichiers = [...sources(path.join(FRONTEND, nom)), ...socleCommun];
+      const lus = [...new Set([...lecturesDeWindow(fichiers), ...declarationsDeWindow(fichiers)])].sort();
       const lexicales = globalesLexicales(fichiers);
       verifier(`${nom} : ses affirmations sur le monde sont relevées`,
         lus.length + lexicales.length > 0,
@@ -206,7 +254,7 @@ module.exports = async function frontendSmoke(port) {
       const absentes = await page.evaluate((ns) => ns.filter((n) => {
         try { return typeof window[n] === 'undefined'; } catch (_) { return true; }
       }), lus);
-      verifier(`${nom} : chaque « window.X » lu par le TypeScript existe`,
+      verifier(`${nom} : chaque « window.X » lu ou déclaré par le TypeScript existe`,
         absentes.length === 0,
         absentes.length ? `absentes : ${absentes.join(', ')}` : `${lus.length} vérifiées`);
 
@@ -224,7 +272,46 @@ module.exports = async function frontendSmoke(port) {
         manquantes.length ? `absentes : ${manquantes.join(', ')}` : `${lexicales.length} vérifiées`);
     }
 
-    // ── 3 : la surface du socle, contre le relevé de référence ──
+    // ── 3 : chaque ressource qu'une page référence est servie ──
+    //
+    // Le contrôle le plus bête, et celui qui rendra les onze fichiers suivants
+    // sûrs. Le socle passe en TypeScript un fichier à la fois, et chaque
+    // conversion déplace le fichier servi : neuf pages portent la balise, et
+    // **une page oubliée ne se plaint pas**. Le navigateur demande, reçoit 404,
+    // continue de charger la page, et les globales manquent.
+    //
+    // Un garde-fou de forme attrape déjà l'ancien chemin nommé en dur. Celui-ci
+    // attrape tout le reste : une faute de frappe, un fichier renommé, une
+    // feuille de style oubliée. Il ne connaît aucune liste — il lit les pages.
+    const ressources = new Map();
+    const pages = [];
+    (function parcourir(rep) {
+      for (const e of fs.readdirSync(rep, { withFileTypes: true })) {
+        const chemin = path.join(rep, e.name);
+        if (e.isDirectory()) parcourir(chemin);
+        else if (e.name.endsWith('.html')) pages.push(chemin);
+      }
+    }(path.join(RACINE, 'public')));
+    for (const page_ of pages) {
+      const html = fs.readFileSync(page_, 'utf8');
+      const relatif = path.relative(path.join(RACINE, 'public'), page_);
+      for (const m of html.matchAll(/(?:src|href)="(\/[^"?#]+\.(?:js|css))"/g)) {
+        if (!ressources.has(m[1])) ressources.set(m[1], []);
+        ressources.get(m[1]).push(relatif);
+      }
+    }
+    const absentes404 = [];
+    for (const [url, pagesQuiDemandent] of ressources) {
+      /* eslint-disable no-await-in-loop */
+      const r = await fetch(`${srv.base}${url}`, { redirect: 'manual' });
+      if (r.status !== 200) absentes404.push(`${url} (${r.status}) ← ${pagesQuiDemandent.join(', ')}`);
+    }
+    verifier('chaque script et feuille de style référencés par une page sont servis',
+      absentes404.length === 0,
+      absentes404.length ? absentes404.join(' · ')
+        : `${ressources.size} ressources, ${pages.length} pages`);
+
+    // ── 4 : la surface du socle, contre le relevé de référence ──
     const mesure = await navigateur.newPage();
     const { surface, incidents } = await mesurerSurface(mesure, srv.base);
     verifier('le socle se charge sans incident', incidents.length === 0, incidents.join(' · '));

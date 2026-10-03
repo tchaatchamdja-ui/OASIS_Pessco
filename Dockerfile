@@ -48,10 +48,18 @@ COPY server.js ./
 COPY src ./src
 COPY public ./public
 COPY config ./config
-# Le paquet des écrans construits, par-dessus `public/` : `express.static` le sert
-# comme le reste. Sans cette ligne, la page se charge et l'écran reste blanc — la
-# réponse HTTP est 200, et c'est bien le problème.
-COPY --from=construction /app/public/modules ./public/modules
+# Tout ce que l'étage de construction a produit, par-dessus `public/` :
+# `express.static` le sert comme le reste. Sans cette ligne, la page se charge et
+# l'écran reste blanc — la réponse HTTP est 200, et c'est bien le problème.
+#
+# On copie `public/` **entier**, et non `public/modules` : l'étage de
+# construction ne porte que ce qu'il a produit — il ne reçoit que `frontend/` —
+# donc ce répertoire ne contient rien d'autre, et la copie fusionne. Nommer les
+# sous-répertoires un par un a coûté le défaut suivant, trouvé par le contrôle
+# d'image de la CI : le socle commun passé en TypeScript se construit vers
+# `public/shared/app/`, qui n'était pas dans la liste. L'image servait alors un
+# 404 sur `oasis-theme.js` — pour **les neuf écrans**, pas pour un seul.
+COPY --from=construction /app/public ./public
 
 # Les données vivent hors de l'image : un volume les porte d'une version à
 # l'autre. Le répertoire est créé et cédé au compte applicatif.

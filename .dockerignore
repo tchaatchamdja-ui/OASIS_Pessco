@@ -11,6 +11,7 @@ tests/
 # chaîne ne l'aura construit. Le seul paquet qu'une image porte est celui qu'elle
 # a produit elle-même.
 public/modules/*/app/
+public/shared/app/
 .DS_Store
 *.log
 *.tmp

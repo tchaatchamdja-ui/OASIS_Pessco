@@ -329,8 +329,63 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [ ] **Le socle en TypeScript, servant les deux régimes.** Le relevé des 48
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** Le relevé des 48
            noms est le contrat à préserver, et la suite `frontend` le vérifie.
+           **Un fichier sur douze converti** le 3 octobre 2026 — `oasis-theme.js`,
+           choisi parce que trois des déclarations de DROITS en venaient.
+
+           La forme, qui vaudra pour les onze suivants :
+
+           | | |
+           |---|---|
+           | `frontend/socle/theme.ts` | la source typée, **sans un seul `window`**. Les écrans en React l'importent. |
+           | `frontend/socle/globales/oasis-theme.ts` | le sas de cohabitation : il en publie les quatre globales, et rien d'autre. |
+           | `public/shared/app/oasis-theme.js` | le fichier servi, construit. Les huit écrans en JavaScript ne voient aucun changement. |
+
+           Les deux répertoires disent la vérité : `shared/js/` est ce qui est
+           encore écrit en JavaScript, `shared/app/` ce qui est construit. Le jour
+           où `shared/js/` est vide, les sas disparaissent avec lui et il ne reste
+           que la source typée.
+
+           **Le coût, mesuré.** 32 lignes de code deviennent 40 — 26 pour la source,
+           14 pour le sas ; les commentaires, eux, doublent, parce que le double
+           régime se documente. Et le fichier servi passe de 2 633 à **557 octets**
+           minifié, soit 4,7 fois moins. Quatre déclarations ambiantes disparaissent
+           de DROITS, dont une qui était **fausse** : `Window.ICONS` — plus personne
+           ne la lisait depuis la correction, mais elle restait un piège posé pour
+           le prochain qui la croirait.
+
+           **Ce qui a été prouvé avant de basculer la moindre balise** : le fichier
+           construit se comporte comme l'ancien, sur douze sondes dans un
+           navigateur — la surface, les quatre fonctions, la conversion de
+           l'ancienne clé `grey`, et la réécriture du stockage au chargement.
+           Comparaison elle-même contre-essayée : en retirant la conversion de
+           `grey`, elle signale trois écarts.
+
+           **Et le défaut que cela a trouvé, qui est le plus gros de la journée.**
+           Le contrôle d'image de la CI — posé à la suite n° 3, et dont la liste de
+           paquets se **déduit maintenant du dépôt** plutôt que de s'écrire — a
+           refusé l'image : `/shared/app/oasis-theme.js` en était absent. Le
+           `Dockerfile` copiait `public/modules`, nommé à la main, et le socle ne
+           s'y trouvait pas. L'image aurait servi un 404 sur `oasis-theme.js` **pour
+           les neuf écrans**, pas pour un seul. Il copie désormais `public/` entier
+           depuis l'étage de construction — qui ne porte que ce qu'il a produit.
+           Le contrôle a payé son prix deux commits après avoir été écrit.
+
+           Deux contrôles de plus, tous deux contre-essayés :
+           · **aucune page ne charge un fichier converti depuis son ancien chemin**,
+             le détecteur lisant `frontend/socle/globales/` plutôt qu'une liste ;
+           · **chaque script et feuille de style qu'une page référence est servi** —
+             114 ressources, 9 pages. Le contrôle le plus bête de la suite, et celui
+             qui rendra les onze conversions suivantes sûres : une page oubliée ne se
+             plaint pas, le navigateur reçoit 404 et continue.
+
+           Deux garde-fous ont dû apprendre à suivre la conversion plutôt qu'à
+           nommer un chemin : l'ordre `oasis-theme` avant `i18n.js`, et la mesure de
+           surface elle-même. Écrits en dur, ils auraient **cessé de couvrir le
+           fichier le jour de sa conversion**, sans rien dire — c'est ce qui est
+           arrivé au garde-fou des magasins de module quand la fabrique a pris des
+           options.
        5.c [ ] Puis les écrans, en commençant par les feuilles : portail, PLAN, CARE,
            PR, RAMP, SURV.
 6. [ ] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)

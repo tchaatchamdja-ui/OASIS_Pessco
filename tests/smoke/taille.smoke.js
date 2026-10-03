@@ -244,11 +244,45 @@ module.exports = async function tailleSmoke() {
     const rang = (src) => balises.findIndex((b) => b.includes(src));
     const i18n = rang('/js/i18n.js');
     if (i18n < 0) return;
-    const theme = rang('/shared/js/oasis-theme.js');
+    // Le répertoire n'est pas fixé : le socle passe en TypeScript fichier par
+    // fichier (ADR-003, 5.b), et le même fichier est servi depuis `shared/js/`
+    // avant conversion, `shared/app/` après. Nommer un seul des deux ferait
+    // **cesser ce garde-fou de couvrir la page le jour de la conversion**, sans
+    // rien dire — c'est exactement ce qui est arrivé au garde-fou des magasins
+    // de module quand la fabrique a pris des options.
+    const theme = balises.findIndex((b) => /\/shared\/(js|app)\/oasis-theme\.js/.test(b));
     if (theme < 0 || theme > i18n) orphelines.push(relatif(fichier));
   });
   verifier('toute page qui charge i18n.js charge d’abord oasis-theme.js',
     orphelines.length === 0, orphelines.join(' · '));
+
+  // ── Aucune page ne charge un fichier du socle depuis son ancien chemin ──
+  //
+  // Le socle passe en TypeScript fichier par fichier. Chaque conversion déplace
+  // le fichier servi de `shared/js/` vers `shared/app/`, et il faut basculer la
+  // balise des neuf pages. Une page oubliée demanderait un fichier qui n'existe
+  // plus : le navigateur rend 404, la page continue de se charger, et les
+  // globales manquent — un écran qui s'arrête sur `oasisNomTheme is not a
+  // function`, ou pire, qui ne s'arrête pas.
+  //
+  // Le détecteur ne tient pas de liste : il lit `frontend/socle/globales/`. Un
+  // fichier converti y est, donc son ancien chemin ne doit plus être demandé.
+  const sas = path.join(RACINE, 'frontend', 'socle', 'globales');
+  if (!fs.existsSync(sas)) {
+    horsPortee('aucune page ne charge un fichier du socle converti depuis son ancien chemin',
+      'aucun fichier du socle converti');
+  } else {
+    const convertis = fs.readdirSync(sas).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''));
+    const fautives = [];
+    pagesHtml().forEach((fichier) => {
+      const html = fs.readFileSync(fichier, 'utf8');
+      convertis.forEach((nom) => {
+        if (html.includes(`/shared/js/${nom}.js`)) fautives.push(`${relatif(fichier)} → ${nom}`);
+      });
+    });
+    verifier('aucune page ne charge un fichier du socle converti depuis son ancien chemin',
+      fautives.length === 0, fautives.length ? fautives.join(' · ') : `${convertis.length} converti(s)`);
+  }
 
   // ── Un bouton à icône porte son nom ──
   // Il n'a pas de texte : sans `aria-label`, un lecteur d'écran annonce

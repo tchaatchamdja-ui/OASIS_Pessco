@@ -42,15 +42,10 @@ declare global {
     oasisEsc: (v: unknown) => string;
     /** `dr-i18n.js` : les libellés de l'écran. Déclaré en `function`, donc sur `window`. */
     dt: Traduire;
-    /** `oasis-theme.js` : les palettes, leur nom, et celle qui est retenue. */
-    OASIS_THEMES: readonly string[];
-    oasisNomTheme: (t: string) => string;
+    /** `oasis-commun.js` : applique une palette au document. */
     oasisAppliquerTheme: (t: string) => void;
-    oasisThemeEnregistre: () => string;
     /** `oasis-commun.js` : pose l'attribut `lang` de la page. */
     oasisPoserLangue: (l: string) => void;
-    /** Jeu d'icônes du socle ; l'écran n'en emploie qu'une. */
-    ICONS?: Record<string, string>;
     /** Point d'entrée que `index.html` appelle au chargement. */
     drBoot?: () => void;
   }
@@ -111,10 +106,18 @@ export const dt: Traduire = (cle, ...args) => window.dt(cle, ...args);
 export const libellePrivilege = (p: string): string => dtPriv(p);
 export const descriptionPrivilege = (p: string): string => dtPrivDesc(p);
 
-export const THEMES: readonly string[] = window.OASIS_THEMES;
-export const nomTheme = (t: string): string => window.oasisNomTheme(t);
+// ── Les palettes viennent de la source, non de `window` (ADR-003, 5.b) ──
+//
+// Ces trois noms étaient déclarés puis relus sur `window` : trois affirmations
+// de plus que personne ne vérifiait. `frontend/socle/theme.ts` est désormais du
+// TypeScript, et il n'y a plus rien à affirmer — **le type est la source**.
+//
+// Le sas `socle/globales/oasis-theme.ts` continue de poser les mêmes globales,
+// pour les huit écrans restés en JavaScript. Le jour où il n'y en a plus, il
+// disparaît et ces imports ne changent pas.
+export { THEMES, nomTheme, themeEnregistre } from '../socle/theme';
+
 export const appliquerTheme = (t: string): void => window.oasisAppliquerTheme(t);
-export const themeEnregistre = (): string => window.oasisThemeEnregistre();
 export const poserLangue = (l: string): void => window.oasisPoserLangue(l);
 
 /** Libellé de l'espace dont la page règle les droits. À défaut, son code. */

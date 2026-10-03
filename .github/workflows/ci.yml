@@ -91,13 +91,23 @@ jobs:
             curl -sf http://localhost:4750/api/health >/dev/null && break
             sleep 2
           done
+          # La liste se **déduit du dépôt**, elle ne s'écrit pas : un écran ajouté
+          # à `frontend/`, un fichier du socle converti dans
+          # `frontend/socle/globales/`, et ce contrôle les couvre sans qu'on y
+          # pense. Une liste écrite ici aurait dérivé — c'est exactement la
+          # dérive qui avait laissé trois chemins de déploiement faux.
+          paquets=$(
+            ls -d frontend/*/main.tsx 2>/dev/null | sed 's#^frontend/#/modules/#; s#/main\.tsx$#/app/main.js#'
+            ls frontend/socle/globales/*.ts 2>/dev/null | sed 's#^.*/#/shared/app/#; s#\.ts$#.js#'
+          )
+          echo "paquets attendus :"; echo "$paquets"
+          test -n "$paquets" || { echo "::error::aucun paquet attendu — le relevé est faux"; exit 1; }
           echec=0
-          for ecran in droits; do
-            paquet="/modules/$ecran/app/main.js"
+          for paquet in $paquets; do
             if curl -sf -o /dev/null "http://localhost:4750$paquet"; then
-              echo "::notice::$ecran — paquet servi"
+              echo "::notice::$paquet servi"
             else
-              echo "::error::$ecran — $paquet absent de l'image : l'écran serait blanc"
+              echo "::error::$paquet absent de l'image : l'écran serait blanc"
               echec=1
             fi
           done

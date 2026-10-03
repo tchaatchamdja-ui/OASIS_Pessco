@@ -22,3 +22,7 @@ audit-output/
 /*.xlsx
 /*.docx
 public/modules/*/app/
+# Le socle commun en cours de conversion (ADR-003, 5.b) : `shared/js/` est ce qui
+# est encore écrit en JavaScript, `shared/app/` ce qui est construit à partir de
+# `frontend/socle/`. Le jour où `shared/js/` est vide, les deux disparaissent.
+public/shared/app/

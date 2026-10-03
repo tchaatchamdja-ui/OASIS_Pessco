@@ -167,6 +167,20 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
 ## Suites
 
+0. [x] **Éprouver l'écran avant de le réécrire** — fait le 3 octobre 2026, et c'est venu
+       en premier pour une raison qu'il faut dire : **aucun contrôle n'ouvrait l'écran
+       DROITS dans un navigateur.** Les vingt contrôles de la suite « droits » parlent à
+       l'API, et une API verte ne dit rien d'un écran qui reste blanc.
+
+       On ne mesure pas une réécriture contre rien. Quatre contrôles décrivent donc ce que
+       l'écran fait **aujourd'hui**, en vanilla : il se monte et se remplit, il liste les
+       comptes avec leur privilège en pastille, il ne déborde pas à droite, et sa page de
+       journal montre que la chaîne d'audit est intacte. Contre-éprouvés trois fois — rendu
+       supprimé, pastille retirée, bandeau d'intégrité ôté.
+
+       C'est à ces quatre contrôles que la version React devra répondre, à l'identique.
+       Ils sont la définition de « la réécriture marche ».
+
 1. [ ] **Reprendre DROITS en React + TypeScript** — 933 lignes, 2 fichiers. Avec son
        étape de construction, et ses 20 contrôles verts avant comme après.
 2. [ ] **Mesurer et consigner le coût réel** de ce premier module : lignes écrites,

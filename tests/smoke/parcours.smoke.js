@@ -164,6 +164,81 @@ module.exports = async function parcoursSmoke(port) {
         etat.debordement <= 0, `${etat.debordement} px`);
     }
 
+    // ── L'écran « Gestion des Droits », avant sa réécriture ──
+    //
+    // Aucun contrôle ne l'ouvrait : les vingt contrôles de la suite « droits »
+    // parlent à l'API, et une API verte ne dit rien d'un écran qui reste blanc.
+    //
+    // Ces contrôles sont posés **avant** la reprise en React + TypeScript
+    // (ADR-003), et non après : on ne mesure pas une réécriture contre rien. Ils
+    // décrivent ce que l'écran fait aujourd'hui, et c'est à eux que la version
+    // réécrite devra répondre — à l'identique.
+    etape = 'écran « Gestion des Droits »';
+    // Son propre onglet : la page principale reste au portail, que les contrôles
+    // suivants y retrouvent. L'avoir emmenée ailleurs les a cassés une fois.
+    const ecranDroits = await navigateur.newPage();
+    surveiller(ecranDroits, () => incidents, () => etape);
+    await ecranDroits.goto(`${srv.base}/modules/droits/index.html?module=PLAN`,
+      { waitUntil: 'networkidle2' });
+    // Le rendu remplace l'attente : on l'attend, comme pour les écrans du portail.
+    await ecranDroits.waitForFunction(
+      () => !document.querySelector('[data-oasis-loader]')
+        && document.body.textContent.trim().length > 200,
+      { timeout: 15000 },
+    ).catch(() => { /* les contrôles qui suivent le diront */ });
+
+    const droits = await ecranDroits.evaluate(() => {
+      const texte = document.body.textContent || '';
+      const lignes = document.querySelectorAll('.data-table tbody tr');
+      return {
+        titre: document.title,
+        contenu: texte.trim().length,
+        attente: !!document.querySelector('[data-oasis-loader]'),
+        debordement: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        // Les comptes ayant accès au module, un par ligne.
+        lignes: lignes.length,
+        // Chaque ligne porte un privilège, en pastille.
+        pastilles: document.querySelectorAll('.dr-priv').length,
+        // Les deux pages du module : privilèges et journal d'audit.
+        navigation: document.querySelectorAll('.sidebar-nav-item, [data-dr-page]').length,
+        refus: /reserve_autorite|reserve_admin|module_indisponible/.test(texte),
+      };
+    });
+
+    verifier('l’écran des droits se monte et se remplit',
+      droits.contenu > 200 && !droits.attente && !droits.refus,
+      `${droits.contenu} caractères`);
+    verifier('l’écran des droits liste les comptes avec leur privilège',
+      droits.lignes > 0 && droits.pastilles > 0,
+      `${droits.lignes} ligne(s), ${droits.pastilles} pastille(s)`);
+    verifier('l’écran des droits ne déborde pas à droite',
+      droits.debordement <= 0, `${droits.debordement} px`);
+
+    // Le journal d'audit est la seconde page du module, et la seule qui dise si
+    // la chaîne tient : un écran qui ne la montre pas rend la garantie du §F.3
+    // invisible à qui doit la lire.
+    const audit = await ecranDroits.evaluate(() => {
+      const cible = [...document.querySelectorAll('.sidebar-nav-item, [data-dr-page], a, button')]
+        .find((el) => /audit|journal/i.test(el.textContent || ''));
+      if (!cible) return null;
+      cible.click();
+      return true;
+    });
+    if (audit) {
+      await new Promise((r) => setTimeout(r, 1500));
+      const etatAudit = await ecranDroits.evaluate(() => ({
+        integrite: !!document.querySelector('.dr-integrity'),
+        intacte: !!document.querySelector('.dr-integrity.ok'),
+        contenu: (document.body.textContent || '').trim().length,
+      }));
+      verifier('l’écran des droits montre l’intégrité de la chaîne d’audit',
+        etatAudit.integrite && etatAudit.intacte,
+        `bandeau ${etatAudit.integrite ? 'présent' : 'absent'}, ${etatAudit.intacte ? 'intacte' : 'rompue'}`);
+    } else {
+      verifier('l’écran des droits offre sa page de journal d’audit', false, 'aucun élément trouvé');
+    }
+    await ecranDroits.close();
+
     // ── Un module, dans son cadre ──
     // Le portail monte les modules en iframe : un module qui ne démarre pas
     // laisse un cadre vide, et le portail, lui, répond toujours 200.

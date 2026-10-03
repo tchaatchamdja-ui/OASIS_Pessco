@@ -303,6 +303,16 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   activité créée.
 
 ### Décisions de la maîtrise d'ouvrage
+- **Le frontend passe à React + TypeScript** *(3 octobre 2026)* — [ADR-003](docs/ADR-003-cadre-du-frontend.md),
+  qui clôt le jalon n° 8 d'ADR-002. Module par module, en cohabitation, **DROITS d'abord**
+  (933 lignes, 2 fichiers, 20 contrôles) pour mesurer le coût réel avant d'engager les sept
+  autres — la méthode qui a tenu cinq fois à la bascule du magasin. 63 434 lignes d'écran au
+  total, dont 23 731 pour SURV seul.
+  Deux documents de ce dépôt déconseillaient d'y aller ; leur avis est **conservé et daté**,
+  non effacé : il était technique et sa mesure du volume juste, mais la conformité à la fiche
+  est une exigence de la maîtrise d'ouvrage, non un arbitrage d'ingénierie.
+  Ce que cela touche hors des écrans : une **étape de construction** là où il n'y en avait
+  aucune — `Dockerfile`, commande de déploiement, et ce qui est versionné.
 - **Les documents imprimés ne sont pas à traduire** *(3 octobre 2026)*. Les libellés des
   rapports de surveillance, de la fiche officielle de notification et de la fiche d'évaluation
   de risque restent en français et ne passent pas par la table de traduction : un acte de

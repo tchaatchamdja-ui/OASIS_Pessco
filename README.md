@@ -142,6 +142,7 @@ OASIS/
 | `docs/MAGASIN-POSTGRESQL.md` | Le magasin PostgreSQL : ce qui est fait, ce qui bloque la bascule |
 | `docs/ADR-001-magasin-de-donnees.md` | ~~Différer la bascule~~ — clos, remplacé par ADR-002 |
 | `docs/ADR-002-migration-spring-boot.md` | **Décision : réécriture Java 21 / Spring Boot, puis PostgreSQL** |
+| `docs/ADR-003-cadre-du-frontend.md` | **Décision : React + TypeScript, module par module, DROITS d'abord** |
 | `backend-java/README.md` | Le socle Java — première tranche, et ce qu'elle a appris |
 | `conformite-java/README.md` | Les contrats d'octets que toute réécriture doit satisfaire |
 | `docs/CONFORMITE-FICHE-TECHNIQUE.md` | Conformité à la fiche technique URSAC/GT2 : ce qui est tenu, ce qui ne l'est pas |

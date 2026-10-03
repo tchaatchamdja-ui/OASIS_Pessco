@@ -195,8 +195,10 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
   être assumé par écrit auprès du GT2.
 
 **Ce qu'il faudra revoir**
-- Si le GT2 exige aussi React + TypeScript : c'est un second chantier, de même ampleur, et il
-  doit faire l'objet de son propre ADR.
+- ~~Si le GT2 exige aussi React + TypeScript : c'est un second chantier, de même ampleur, et il
+  doit faire l'objet de son propre ADR.~~ **Fait** : exigé, et tranché par
+  [ADR-003](ADR-003-cadre-du-frontend.md) le 3 octobre 2026 — React + TypeScript, module par
+  module. Les deux chantiers restent séparés par le contrat REST et n'ont pas à se croiser.
 - Si un module migré devait écrire dans un journal encore tenu par Node : **interdit** — voir la
   règle du sceau ci-dessus.
 

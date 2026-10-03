@@ -81,7 +81,7 @@ qu'elle donne pour écarter les microservices. Le même argument s'applique ici.
 | **Prometheus + Grafana** | `src/trace.js` + `/api/health` | **À arbitrer.** Deux services de plus. Le SLA 99,5 % du §F.4 se mesure difficilement sans eux |
 | **K3s** | déploiement Docker simple | **Déconseillé.** Un orchestrateur pour un nœud unique par État : coût d'exploitation réel, bénéfice faible |
 | **Camunda / Flowable** (BPMN) | moteur de processus écrit à la main | **À arbitrer, en dernier.** Le plus lourd des cinq, et celui dont le code actuel s'acquitte le mieux |
-| **React + TypeScript** | 62 979 lignes de front sans cadre | **Déconseillé.** Réécriture complète, **aucun gain fonctionnel**. L'offline-first ne l'exige pas : un service worker s'écrit en JavaScript ordinaire |
+| **React + TypeScript** | 63 434 lignes de front sans cadre | **Tranché le 3 octobre 2026 : on y va** — [ADR-003](ADR-003-cadre-du-frontend.md). L'avis ci-dessous était technique et sa mesure juste ; la conformité à la fiche est une exigence de la maîtrise d'ouvrage, non un arbitrage d'ingénierie. *Avis d'alors : déconseillé — réécriture complète, aucun gain fonctionnel, l'offline-first ne l'exige pas.* |
 
 > **Arbitrage n° 2 attendu du GT2 :** lesquelles de ces six briques sont exigées à la recette,
 > et lesquelles peuvent être remplacées par une équivalence fonctionnelle documentée ?
@@ -228,8 +228,11 @@ Sur **35 prescriptions vérifiables** de la fiche (§2, §3.2, §3.3, §4, §5) 
 | Après vague 3 | 23 | 2 | 10 |
 | Après vague 4 *(toutes briques)* | **28** | 2 | 5 |
 
-Les cinq irréductibles sont ceux de la section 2.1 — actes institutionnels et juridiques — et
-React/TypeScript, que je continue de déconseiller.
+Les cinq irréductibles sont ceux de la section 2.1 — actes institutionnels et juridiques. Le
+sixième, React/TypeScript, ne l'est plus : la maîtrise d'ouvrage l'a tranché le 3 octobre 2026
+([ADR-003](ADR-003-cadre-du-frontend.md)), et il se ferme module par module. Ce document
+conserve l'avis contraire qu'il portait — il était technique, et sa mesure du volume était
+juste ; ce qu'il n'avait pas à trancher, c'est l'exigence.
 
 **Aucun chemin ne mène à 35 sur 35 par le code seul.** C'est une conclusion, pas un aveu : une
 fiche technique de ce niveau décrit autant une organisation qu'un logiciel.

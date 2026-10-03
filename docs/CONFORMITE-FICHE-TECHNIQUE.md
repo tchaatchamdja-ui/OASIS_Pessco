@@ -73,7 +73,7 @@ indépendant avant recette** — non réalisé.
 
 | Couche | Prescrit par la fiche | Réalisé | État |
 |---|---|---|---|
-| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ✗** — JavaScript sans cadre, 0 fichier `.ts` | ◐ |
+| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ✗** — JavaScript sans cadre, 0 fichier `.ts`. **Décidé le 3 octobre 2026** : on y va, module par module ([ADR-003](ADR-003-cadre-du-frontend.md)) ; DROITS d'abord, 933 lignes | ◐ |
 | Backend applicatif | API REST **Java 21 / Spring Boot** | **Node 20 / Express 4**, CommonJS, 386 routes | ✗ |
 | Identité et accès | **Keycloak** (OpenID Connect) | `src/auth.js` écrit à la main ; sessions en mémoire | ✗ |
 | Moteur de workflow | **Flowable ou Camunda** (BPMN 2.0) | moteur de processus écrit à la main (`routes-processus.js`) | ✗ |

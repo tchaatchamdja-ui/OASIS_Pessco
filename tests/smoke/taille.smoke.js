@@ -378,7 +378,34 @@ module.exports = async function tailleSmoke() {
   // déclarent la même fonction ne se contredisent pas, le dernier chargé
   // efface l'autre — sans erreur, sans trace. Une version périmée peut ainsi
   // survivre des mois et revenir au premier changement d'ordre des balises.
+  //
+  //
+  // ── Et pourquoi `window.X = …` ne compte que dans les sas du socle ──
+  //
+  // La conversion du socle en TypeScript (ADR-003, 5.b) rend un fichier converti
+  // en IIFE construite qui pose `window.X`. Sa collision avec un `const X` d'un
+  // autre fichier passerait d'une **erreur franche** — `Identifier 'X' has
+  // already been declared`, qui arrête la page — à un **masquage silencieux**,
+  // le `const` lexical couvrant la propriété de `window` pour tous les scripts
+  // suivants. Mesuré : `oasis-utils.js` et `public/js/icons.js` déclarent tous
+  // deux `const ICONS`, et aucune page ne charge les deux — c'est ce garde-fou
+  // qui le tient, et il ne doit pas cesser de le tenir à la conversion.
+  //
+  // Mais détecter `window.X = …` **partout** ne vaut rien : essayé, il a rendu
+  // treize collisions, et **les treize étaient délibérées** — un `const` exposé
+  // à `window` par un fichier voisin, une décoration explicite
+  // (`execProcPreserver(window.execSetTheme)`), une sauvegarde rendue dans un
+  // `finally`, le chaînage de `fetch` par deux couches du socle, et des
+  // `window.onload` qui n'étaient que du **texte dans un gabarit** fabriquant un
+  // document imprimable. Cent pour cent de bruit : un garde-fou qu'on apprend à
+  // ignorer ne garde rien.
+  //
+  // La détection est donc restreinte aux **sas** — `frontend/socle/globales/` —
+  // où l'affectation à `window` *est* la déclaration de la surface publiée,
+  // écrite à la main, et rien d'autre. C'est exactement le cas qu'il fallait
+  // couvrir, et c'est le seul où cette forme ne soit pas ambiguë.
   const DECLARATION = /^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=)/gm;
+  const POSE_SUR_WINDOW = /^window\.([A-Za-z_$][\w$]*)\s*=[^=]/gm;
   const collisions = [];
   PAGES.forEach((rel) => {
     const page = path.join(RACINE, rel);
@@ -388,15 +415,27 @@ module.exports = async function tailleSmoke() {
     (html.match(/<script\s+src="[^"]+"/g) || []).forEach((balise) => {
       const src = balise.match(/src="([^"]+)"/)[1];
       if (!src.startsWith('/')) return;
-      const f = path.join(RACINE, 'public', src);
-      if (!fs.existsSync(f)) return;
-      const code = fs.readFileSync(f, 'utf8');
+      // Un fichier du socle converti est **construit** : lu tel quel il serait
+      // minifié en production, et un détecteur sur du code minifié ne vaut
+      // rien. On lit son sas — `frontend/socle/globales/<nom>.ts` —, qui dit
+      // exactement la surface qu'il publie et qui, lui, est une source.
+      const sas = /^\/shared\/app\/(.+)\.js$/.exec(src);
+      const source = sas
+        ? path.join(RACINE, 'frontend', 'socle', 'globales', `${sas[1]}.ts`)
+        : path.join(RACINE, 'public', src);
+      if (!fs.existsSync(source)) return;
+      const code = fs.readFileSync(source, 'utf8');
+      const etiquette = sas ? `${sas[1]}.js` : path.basename(source);
+      const noter = (nom) => {
+        if (!ou.has(nom)) ou.set(nom, new Set());
+        ou.get(nom).add(etiquette);
+      };
       let m;
       DECLARATION.lastIndex = 0;
-      while ((m = DECLARATION.exec(code)) !== null) {
-        const nom = m[1] || m[2];
-        if (!ou.has(nom)) ou.set(nom, new Set());
-        ou.get(nom).add(path.basename(f));
+      while ((m = DECLARATION.exec(code)) !== null) noter(m[1] || m[2]);
+      if (sas) {
+        POSE_SUR_WINDOW.lastIndex = 0;
+        while ((m = POSE_SUR_WINDOW.exec(code)) !== null) noter(m[1]);
       }
     });
     ou.forEach((fichiers, nom) => {

@@ -51,6 +51,37 @@ const REFERENCE = path.join(__dirname, 'surface-socle.json');
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 
+// ── Ce qu'un paquet embarque réellement : son graphe d'imports ──
+//
+// Première écriture : les sources du module **plus tous** les fichiers de
+// `frontend/socle/`. C'était faux, et la deuxième conversion du socle l'a dit
+// aussitôt — `cookies.ts` lit `window.t`, que `public/js/i18n.js` pose sur les
+// trois pages du portail et nulle part ailleurs. L'écran DROITS, qui n'importe
+// pas `cookies.ts`, se voyait reprocher une globale qu'il n'emploie pas.
+//
+// Un paquet n'embarque que ce qu'il importe. On suit donc le graphe depuis le
+// point d'entrée, et l'on ne reproche à un écran que ses propres affirmations.
+function graphe(entree) {
+  const vus = new Set();
+  const file = [entree];
+  while (file.length) {
+    const f = file.pop();
+    if (vus.has(f) || !fs.existsSync(f)) continue;
+    vus.add(f);
+    const texte = fs.readFileSync(f, 'utf8');
+    for (const m of texte.matchAll(/(?:from|import)\s+['"](\.[^'"]+)['"]/g)) {
+      const brut = path.resolve(path.dirname(f), m[1]);
+      // Un import TypeScript s'écrit sans extension ; on essaie les quatre
+      // formes, et l'on ignore ce qui ne se résout pas — un paquet de
+      // `node_modules` n'est pas de notre ressort.
+      const candidat = ['.ts', '.tsx', '/index.ts', '/index.tsx', '']
+        .map((e) => `${brut}${e}`).find((c) => fs.existsSync(c) && fs.statSync(c).isFile());
+      if (candidat) file.push(candidat);
+    }
+  }
+  return [...vus];
+}
+
 // Les sources TypeScript d'un module, hors paquet construit.
 function sources(dossier) {
   const liste = [];
@@ -221,24 +252,14 @@ module.exports = async function frontendSmoke(port) {
       page.click('#loginForm button[type="submit"]'),
     ]);
 
-    // Les modules purs du socle (`frontend/socle/*.ts`) sont **empaquetés dans**
-    // l'écran qui les importe : ce qu'ils lisent du monde doit tenir sur cet
-    // écran. Les lire avec les sources du module n'est donc pas un excès de
-    // zèle — sans cela, un accès global posé là serait invisible à cette suite
-    // alors qu'il tourne bel et bien dans l'écran.
-    //
-    // `socle/globales/` est volontairement hors de ce relevé : ces sas posent
-    // les globales qu'ils déclarent, et c'est le contrôle de surface ci-dessous
-    // qui vérifie qu'ils les posent vraiment.
-    const dossierSocle = path.join(FRONTEND, 'socle');
-    const socleCommun = fs.existsSync(dossierSocle)
-      ? fs.readdirSync(dossierSocle, { withFileTypes: true })
-        .filter((e) => e.isFile() && /\.tsx?$/.test(e.name))
-        .map((e) => path.join(dossierSocle, e.name))
-      : [];
-
     for (const nom of modules) {
-      const fichiers = [...sources(path.join(FRONTEND, nom)), ...socleCommun];
+      // Les sources de l'écran, **plus les modules du socle qu'il importe** —
+      // ceux-là sont empaquetés dedans, donc ce qu'ils lisent du monde doit
+      // tenir sur cet écran. Et rien de plus : voir `graphe`.
+      const fichiers = [...new Set([
+        ...sources(path.join(FRONTEND, nom)),
+        ...graphe(path.join(FRONTEND, nom, 'main.tsx')),
+      ])];
       const lus = [...new Set([...lecturesDeWindow(fichiers), ...declarationsDeWindow(fichiers)])].sort();
       const lexicales = globalesLexicales(fichiers);
       verifier(`${nom} : ses affirmations sur le monde sont relevées`,
@@ -270,6 +291,68 @@ module.exports = async function frontendSmoke(port) {
       verifier(`${nom} : chaque globale lexicale déclarée existe`,
         manquantes.length === 0,
         manquantes.length ? `absentes : ${manquantes.join(', ')}` : `${lexicales.length} vérifiées`);
+    }
+
+    // ── 2 bis : ce qu'un sas du socle lit du monde existe sur les pages qui le chargent ──
+    //
+    // Les contrôles ci-dessus portent sur les écrans en React. Les sas, eux, sont
+    // chargés par des pages restées en JavaScript — et ce qu'ils lisent doit y
+    // exister. `cookies.ts` lit `window.t`, que `public/js/i18n.js` pose : rien
+    // ne le vérifiait, parce que l'écran DROITS ne charge ni l'un ni l'autre.
+    //
+    // C'est **le** contrôle qui rend les dix conversions restantes sûres : chaque
+    // fichier du socle converti sera chargé par plusieurs des neuf pages, et une
+    // globale qu'il croit trouver sur l'une peut manquer sur l'autre.
+    //
+    // Les lectures optionnelles (`X?: …`) sont vérifiées **aussi**, et c'est un
+    // choix : lire un nom, même prudemment, c'est l'attendre. S'il manque
+    // réellement sur une page, mieux vaut une décision explicite qu'un `typeof`
+    // qui retombe en silence sur un secours que personne n'a mesuré.
+    const dossierSas = path.join(FRONTEND, 'socle', 'globales');
+    const sas = fs.existsSync(dossierSas)
+      ? fs.readdirSync(dossierSas).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''))
+      : [];
+    if (!sas.length) {
+      horsPortee('ce qu’un sas du socle lit existe sur les pages qui le chargent',
+        'aucun fichier du socle converti');
+    } else {
+      // Page → noms à vérifier. Regroupé : les neuf pages chargent des
+      // sous-ensembles qui se recouvrent, et l'on n'ouvre chaque page qu'une fois.
+      const aVerifier = new Map();
+      const pagesDuSocle = [];
+      (function parcourir(rep) {
+        for (const e of fs.readdirSync(rep, { withFileTypes: true })) {
+          const c = path.join(rep, e.name);
+          if (e.isDirectory()) parcourir(c);
+          else if (e.name.endsWith('.html')) pagesDuSocle.push(c);
+        }
+      }(path.join(RACINE, 'public')));
+
+      for (const nom of sas) {
+        const lus = lecturesDeWindow(graphe(path.join(dossierSas, `${nom}.ts`)));
+        if (!lus.length) continue;
+        for (const page_ of pagesDuSocle) {
+          const html = fs.readFileSync(page_, 'utf8');
+          if (!html.includes(`/shared/app/${nom}.js`)) continue;
+          const url = `/${path.relative(path.join(RACINE, 'public'), page_).split(path.sep).join('/')}`;
+          if (!aVerifier.has(url)) aVerifier.set(url, new Set());
+          lus.forEach((n) => aVerifier.get(url).add(n));
+        }
+      }
+
+      const manques = [];
+      for (const [url, noms] of aVerifier) {
+        /* eslint-disable no-await-in-loop */
+        await page.goto(`${srv.base}${url}`, { waitUntil: 'networkidle2' });
+        const absentes = await page.evaluate((ns) => ns.filter((n) => {
+          try { return typeof window[n] === 'undefined'; } catch (_) { return true; }
+        }), [...noms]);
+        if (absentes.length) manques.push(`${url} → ${absentes.join(', ')}`);
+      }
+      verifier('ce qu’un sas du socle lit existe sur les pages qui le chargent',
+        manques.length === 0,
+        manques.length ? manques.join(' · ')
+          : `${aVerifier.size} page(s), ${[...aVerifier.values()].reduce((n, s_) => n + s_.size, 0)} vérification(s)`);
     }
 
     // ── 3 : chaque ressource qu'une page référence est servie ──

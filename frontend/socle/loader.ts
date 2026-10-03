@@ -1,30 +1,38 @@
-/* OASIS — Attente : l'aéronef en orbite, posé partout où l'on patiente.
- *
- * Un seul dessin, servi par `oasisLoaderHtml()`. Les écrans existants n'ont
- * rien à changer : tout `.loading-spinner` vide et tout bloc marqué
- * `data-oasis-loader` reçoit le globe, y compris ceux qu'un module crée en
- * cours de route.
- */
-(function () {
-  // Le module s'annonce avant d'avoir chargé ses propres traductions : les
-  // deux textes de l'attente vivent donc ici, dans les trois langues. La
-  // langue est celle que le portail a retenue.
-  const LEGENDES = {
-    'Chargement du module…': { en: 'Loading the module…', pt: 'A carregar o módulo…' },
-    'Chargement…': { en: 'Loading…', pt: 'A carregar…' },
-    // Le deux-points prend une espace avant en français, jamais en anglais :
-    // la ponctuation appartient au texte, pas au code qui l'assemble.
-    'Module indisponible : ': { en: 'Module unavailable: ', pt: 'Módulo indisponível: ' },
-  };
-  function langue() {
-    try { return (localStorage.getItem('pr_lang') || 'fr').slice(0, 2); } catch (e) { return 'fr'; }
-  }
-  function traduire(texte) {
-    const e = LEGENDES[texte];
-    return (e && e[langue()]) || texte;
-  }
+// OASIS — Attente : l'aéronef en orbite. Le socle, en TypeScript (ADR-003, 5.b).
+//
+// Un seul dessin, servi par `loaderHtml()`. Les écrans existants n'ont rien à
+// changer : tout `.loading-spinner` vide et tout bloc marqué `data-oasis-loader`
+// reçoit le globe, y compris ceux qu'un module crée en cours de route.
+//
+// Ce fichier ne touche pas à `window` : c'est `globales/oasis-loader.ts` qui
+// publie, et lui seul. Voir `theme.ts` pour la raison.
 
-  const SVG = () => `
+// Le module s'annonce avant d'avoir chargé ses propres traductions : les deux
+// textes de l'attente vivent donc ici, dans les trois langues. La langue est
+// celle que le portail a retenue.
+const LEGENDES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  'Chargement du module…': { en: 'Loading the module…', pt: 'A carregar o módulo…' },
+  'Chargement…': { en: 'Loading…', pt: 'A carregar…' },
+  // Le deux-points prend une espace avant en français, jamais en anglais : la
+  // ponctuation appartient au texte, pas au code qui l'assemble.
+  'Module indisponible : ': { en: 'Module unavailable: ', pt: 'Módulo indisponível: ' },
+};
+
+function langue(): string {
+  try { return (localStorage.getItem('pr_lang') || 'fr').slice(0, 2); } catch { return 'fr'; }
+}
+
+function traduire(texte: string): string {
+  return LEGENDES[texte]?.[langue()] ?? texte;
+}
+
+// L'échappement des trois caractères qui comptent dans un attribut ou un nœud
+// de texte. Écrit une fois : il l'était deux, à l'identique.
+const ECHAPPE: Readonly<Record<string, string>> = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+const esc = (v: unknown): string =>
+  String(v).replace(/[&<>]/g, (c) => ECHAPPE[c] ?? c);
+
+const SVG = (): string => `
     <svg class="oasis-loader" viewBox="0 0 120 120" role="img" aria-label="${traduire('Chargement…')}">
       <ellipse class="oasis-loader-orbite" cx="60" cy="60" rx="44" ry="30"></ellipse>
       <circle class="oasis-loader-sphere" cx="60" cy="60" r="20"></circle>
@@ -84,52 +92,53 @@
       </g>
     </svg>`;
 
-  function oasisLoaderHtml(legende) {
-    return `<div class="oasis-loader-bloc">${SVG()}${legende
-      ? `<span>${String(legende).replace(/[&<>]/g, (c) =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))}</span>` : ''}</div>`;
-  }
+export function loaderHtml(legende?: string): string {
+  return `<div class="oasis-loader-bloc">${SVG()}${legende
+    ? `<span>${esc(legende)}</span>` : ''}</div>`;
+}
 
-  // Un conteneur déjà servi ne se redessine pas : l'animation repartirait de
-  // zéro à chaque passage de l'observateur.
-  function poser(el) {
-    if (!el || el.querySelector('.oasis-loader')) return;
-    const legende = el.hasAttribute('data-oasis-loader') ? traduire(el.textContent.trim()) : '';
-    el.innerHTML = oasisLoaderHtml(legende);
-    if (legende) el.removeAttribute('data-oasis-loader');
-  }
+// Un conteneur déjà servi ne se redessine pas : l'animation repartirait de zéro
+// à chaque passage de l'observateur.
+function poser(el: Element): void {
+  if (el.querySelector('.oasis-loader')) return;
+  const legende = el.hasAttribute('data-oasis-loader')
+    ? traduire((el.textContent ?? '').trim())
+    : '';
+  el.innerHTML = loaderHtml(legende);
+  if (legende) el.removeAttribute('data-oasis-loader');
+}
 
-  function balayer(racine) {
-    (racine || document).querySelectorAll('.loading-spinner, [data-oasis-loader]')
-      .forEach(poser);
-  }
+export function balayer(racine?: ParentNode | null): void {
+  (racine ?? document).querySelectorAll('.loading-spinner, [data-oasis-loader]')
+    .forEach(poser);
+}
 
-  // Un module qui ne démarre pas le dit de la même façon partout, et dans la
-  // langue retenue : le message était recopié dans chacune des pages.
-  function oasisModuleIndisponible(cause) {
-    const detail = (cause && cause.message) ? cause.message : String(cause == null ? '' : cause);
-    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-    return `<div style="padding:2rem;color:#991b1b;">${traduire('Module indisponible : ')}${esc(detail)}</div>`;
-  }
+// Un module qui ne démarre pas le dit de la même façon partout, et dans la
+// langue retenue : le message était recopié dans chacune des pages.
+export function moduleIndisponible(cause: unknown): string {
+  const detail = (cause instanceof Error || (cause && typeof cause === 'object' && 'message' in cause))
+    ? String((cause as { message?: unknown }).message ?? '')
+    : String(cause == null ? '' : cause);
+  return `<div style="padding:2rem;color:#991b1b;">${traduire('Module indisponible : ')}${esc(detail)}</div>`;
+}
 
-  window.oasisLoaderHtml = oasisLoaderHtml;
-  window.oasisLoaderPoser = balayer;
-  window.oasisModuleIndisponible = oasisModuleIndisponible;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    balayer();
-    // Les écrans se redessinent : un disque d'attente peut apparaître bien
-    // après le chargement de la page. On n'examine que les nœuds ajoutés, et
-    // une seule fois par trame — un module qui redessine sa page à chaque
-    // frappe produit des dizaines de mutations pour un seul rendu.
-    let prevu = false;
-    const observateur = new MutationObserver((mutations) => {
-      if (prevu) return;
-      const ajouts = mutations.some((m) => m.addedNodes.length);
-      if (!ajouts) return;
-      prevu = true;
-      requestAnimationFrame(() => { prevu = false; balayer(); });
-    });
-    observateur.observe(document.body, { childList: true, subtree: true });
+/**
+ * Les écrans se redessinent : un disque d'attente peut apparaître bien après le
+ * chargement de la page. On n'examine que les nœuds ajoutés, et une seule fois
+ * par trame — un module qui redessine sa page à chaque frappe produit des
+ * dizaines de mutations pour un seul rendu.
+ *
+ * Rend l'observateur, pour qu'un appelant puisse l'arrêter. Rien ne le fait
+ * aujourd'hui ; un écran en React, lui, le voudra à son démontage.
+ */
+export function observer(): MutationObserver {
+  let prevu = false;
+  const observateur = new MutationObserver((mutations) => {
+    if (prevu) return;
+    if (!mutations.some((m) => m.addedNodes.length)) return;
+    prevu = true;
+    requestAnimationFrame(() => { prevu = false; balayer(); });
   });
-}());
+  observateur.observe(document.body, { childList: true, subtree: true });
+  return observateur;
+}

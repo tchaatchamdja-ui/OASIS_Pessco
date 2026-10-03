@@ -329,7 +329,68 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** Le relevé des 48
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(3 fichiers sur 12
+           au 3 octobre 2026 : `oasis-theme`, `oasis-cookies`, `oasis-loader`.)*
+
+           **L'inconnue du chantier est levée, et ce n'en était pas une.**
+           `oasis-utils.js` déclare `ICONS` en `const` au premier niveau — une
+           globale **lexicale**, qu'une IIFE construite ne peut pas reproduire —
+           et ~90 lectures de `ICONS` nu l'attendent dans douze fichiers. Mesuré
+           dans un navigateur : **`window.X = …` est lisible comme identifiant
+           nu**, même posé depuis une IIFE. Le sas n'a donc qu'à l'affecter, et
+           les 90 lectures continuent de fonctionner. La conversion améliore même
+           la situation : le nom devient lisible des deux façons, ce que la
+           déclaration de DROITS supposait à tort.
+
+           **Un garde-fou étendu, puis restreint — et il faut dire pourquoi.** Un
+           fichier converti pose `window.X` : sa collision avec un `const X` d'un
+           autre fichier passerait d'une **erreur franche** qui arrête la page à
+           un **masquage silencieux**. Le garde-fou « un nom global, une
+           définition » ne voyait que les déclarations au premier niveau. Étendu à
+           `window.X = …` partout, il a rendu **treize collisions, toutes
+           délibérées** : un `const` exposé à `window` par un fichier voisin, une
+           décoration explicite, une sauvegarde rendue dans un `finally`, le
+           chaînage de `fetch` par deux couches du socle, et des `window.onload`
+           qui n'étaient que du **texte dans un gabarit** d'impression. Cent pour
+           cent de bruit. La détection est donc restreinte aux sas, où
+           l'affectation *est* la déclaration de la surface publiée — le seul cas
+           où cette forme ne soit pas ambiguë. Contre-essayé : un sas posant un
+           nom que `dr-i18n.js` déclare, et les deux fichiers sont nommés.
+
+           **Deux défauts de ma propre suite, révélés par ces deux conversions.**
+           Elle ajoutait *tous* les fichiers de `frontend/socle/` à *chaque*
+           écran : faux, un paquet n'embarque que ce qu'il **importe**, et
+           `cookies.ts` lisant `window.t` — posé par `i18n.js` sur les trois pages
+           du portail — faisait rougir DROITS pour une globale qu'il n'emploie
+           pas. Elle suit maintenant le graphe d'imports. Et du coup cette lecture
+           n'était plus vérifiée **nulle part** : un contrôle de plus ouvre, pour
+           chaque sas, **les pages qui le chargent** et vérifie que ce qu'il lit y
+           existe. C'est celui qui rendra les neuf conversions restantes sûres —
+           un fichier du socle est chargé par plusieurs des neuf pages, et une
+           globale présente sur l'une peut manquer sur l'autre. Contre-essayé : il
+           nomme les trois pages.
+
+           **Et trois verts vides dans ma comparaison, sur les sondes qui
+           comptaient.** Le dessin de l'attente se branche sur
+           `DOMContentLoaded` ; en injectant le script *après* le chargement,
+           l'événement était déjà passé — les deux fichiers étaient identiques **à
+           ne rien faire**, et trois sondes sur treize le disaient en vert. La page
+           d'épreuve porte désormais sa balise elle-même, comme une vraie page, et
+           les sondes asynchrones sont attendues. Les treize mesurent alors : deux
+           blocs servis au chargement, un bloc ajouté après coup servi par
+           l'observateur de mutations, le tracé à 5 276 octets identique.
+
+           Le coût des trois fichiers, mesuré, et ce qui en sort :
+
+           | Fichier | Avant | Après (source + sas) | Servi, minifié |
+           |---|---|---|---|
+           | `oasis-theme` | 64 l. | 78 + 38 | 2 633 → 557 o |
+           | `oasis-cookies` | 79 l. | 93 + 21 | — |
+           | `oasis-loader` | 135 l. | 144 + 27 | — |
+
+           Le tracé SVG de l'attente — 5 254 octets — a été **extrait du fichier
+           existant par script**, jamais recopié : quarante lignes de courbes
+           retranscrites à la main sont une occasion de faute invisible. Le relevé des 48
            noms est le contrat à préserver, et la suite `frontend` le vérifie.
            **Un fichier sur douze converti** le 3 octobre 2026 — `oasis-theme.js`,
            choisi parce que trois des déclarations de DROITS en venaient.

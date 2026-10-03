@@ -234,6 +234,34 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   garde-fou lui-même.
 - Un message de refus porté dans une variable **sortait de l'endroit où le garde-fou des
   traductions le lit**. Il l'a dit. Le refus porte un code, la phrase reste où la réponse se forme.
+- **`ramp` en base**, quatrième magasin de module — 155 appels, 7 fichiers, et **86
+  gestionnaires de route encore synchrones**. Il entraîne `src/vues_prestataire.js`, le socle
+  de la bascule AAC / Prestataire alors partagé avec un module resté sur fichiers : le socle
+  sert donc les deux régimes, ce que la façade existe pour permettre.
+- Les références `POI-xxxx` s'allouent **par lots** — un classeur porte les inspections du
+  mois — dans la transformation qui écrit les inspections. L'import entier, qui faisait une
+  écriture par ligne, est une transformation.
+- **Trois `forEach` auraient effacé les pièces d'autrui** : le retrait d'un partage demande au
+  magasin, pièce par pièce, si le fichier est encore désigné ailleurs. Sans attendre les
+  réponses, l'État destinataire tombait sur « Fichier introuvable ».
+- **Un contrôle qui existait et ne gardait rien** : « les écarts partent avec leur inspection »
+  passait avec la cascade supprimée. Et l'allocation groupée n'était exercée par rien — la
+  suite n'importait jamais qu'une inspection neuve à la fois.
+- **`execution` en base** — le dernier des cinq, 237 appels, 8 fichiers. **La bascule du
+  magasin est complète : les quinze collections vivent en base.**
+- Les références du circuit se déduisent **des références existantes**, sans compteur persisté.
+  Calculées avant l'écriture, deux actes ouverts ensemble auraient porté la même. Elles se
+  tirent désormais dans la transformation qui écrit l'enregistrement ; la soumission d'un
+  rapport, qui tirait deux numéros par deux lectures avant trois écritures, est un seul geste.
+- **Clôturer un dossier rend opposables au prestataire ses constatations en brouillon** :
+  c'étaient deux écritures, puis une par constatation. Entre elles, un dossier clos dont les
+  constatations ne l'étaient pas — et un échec au milieu les y laissait inopposables pour
+  toujours. Six gestes de ce genre sont devenus six transformations.
+- **Le défaut que seul un contrôle de comportement pouvait voir** : `res.json(rows.map(
+  enrichirFnc))`. L'enrichissement touchant la base, `.map` rend un tableau de promesses que
+  `res.json` sérialise en objets **vides** — une liste pleine d'enregistrements sans aucun
+  champ, sans erreur. Le garde-fou de forme ne peut pas le voir : ce n'est pas un appel au
+  magasin, c'est un `map`. Trois contrôles de la suite SURV l'ont dit, sur quatre listes.
 - **Six routes de PLAN n'étaient exercées par aucun contrôle** — application de la
   synchronisation des risques, `transmettre`, `approuver-dg`, les archives du plan et les deux
   exceptions posées activité par activité. Deuxième fois que la conversion révèle ce trou ;

@@ -561,7 +561,7 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
        | Suite « droits » par la passerelle | **20 / 20** |
 
-13. [~] **Les cinq collections de module** — `planification`, `execution`, `mesures`,
+13. [x] **Les cinq collections de module** — `planification`, `execution`, `mesures`,
        `profil_risque`, `ramp`. C'est là que se trouvent les **381 appels** mesurés au départ,
        par les magasins de module (`db.list`, `db.get`, `db.save`). Propagation d'une autre
        nature : ces appels ne sont pas des prédicats mais le corps même des gestionnaires,
@@ -716,6 +716,66 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
        | Suite « droits » par la passerelle | **20 / 20** |
 
-       Restent `ramp` (148 appels) et `execution` (202).
+       **`ramp` faite le 2 octobre 2026** — 155 appels, 7 fichiers, et **86 gestionnaires
+       de route encore synchrones**.
+
+       > **Il entraîne `src/vues_prestataire.js`**, le socle de la bascule AAC / Prestataire,
+       > alors partagé avec « Exécution de la Surveillance » qui restait sur fichiers. Le socle
+       > est donc asynchrone et a servi les deux régimes à la fois — ce que la façade existe
+       > pour permettre. `execution` a reçu `transformer` à cette occasion.
+       >
+       > **Les références `POI-xxxx` s'allouent par lots** — un classeur porte le mois entier.
+       > L'allocation se fait dans la transformation qui écrit les inspections, et l'import
+       > entier, qui faisait une écriture par ligne, est une transformation.
+       >
+       > **Trois `forEach` auraient effacé les pièces d'autrui** : le retrait d'un partage
+       > demande au magasin, pièce par pièce, si le fichier est encore désigné ailleurs.
+       >
+       > **Un contrôle qui existait et ne gardait rien** : « les écarts partent avec leur
+       > inspection » passait avec la cascade supprimée. Et l'allocation groupée n'était
+       > exercée par rien — la suite n'importait jamais qu'une inspection neuve à la fois.
+       >
+       > **Un passage outillé défait** : un script a enveloppé les 86 gestionnaires, un second
+       > devait poser les `await` et a rendu asynchrones des aides pures. Refait à la main.
+
+       **`execution` faite le 2 octobre 2026** — 237 appels, 8 fichiers. Le dernier, et le plus
+       gros. **Le jalon est clos : les quinze collections vivent en base.**
+
+       > **Des références sans compteur.** `references.js` compose les références du circuit
+       > selon un modèle paramétrable, et le numéro d'ordre se déduit des références
+       > existantes. La référence se calculait, puis l'enregistrement s'écrivait séparément :
+       > deux actes ouverts ensemble auraient porté la même. `suivanteDans` est pure, et
+       > `insererAvec` écrit l'enregistrement avec sa référence d'un seul geste. Le cas le plus
+       > dense — la soumission d'un rapport — tirait **deux numéros par deux lectures** avant
+       > trois écritures.
+       >
+       > **Ce qu'une clôture rend opposable.** Clôturer un dossier pose son statut *et* rend
+       > opposables au prestataire les constatations en brouillon. Entre les deux écritures, un
+       > dossier clos dont les constatations ne l'étaient pas — et un échec au milieu les y
+       > laissait **inopposables pour toujours**. Six gestes de ce genre sont devenus six
+       > transformations.
+       >
+       > **Le défaut que seul un contrôle de comportement pouvait voir** : `res.json(rows.map(
+       > enrichirFnc))`. L'enrichissement touche la base, `.map` rend un tableau de promesses,
+       > et `res.json` les sérialise en objets **vides** — une liste pleine d'enregistrements
+       > sans aucun champ. Le garde-fou de forme ne peut pas le voir : ce n'est pas un appel au
+       > magasin, c'est un `map`. Trois contrôles de la suite SURV l'ont dit, sur quatre listes
+       > dans ce cas. **C'est la limite de ce que la forme garde.**
+       >
+       > **Un contrôle qui tombait pour une bonne raison** : « une collection non migrée ne
+       > l'est dans aucun régime » prenait son témoin par le complément d'une liste de
+       > collections réelles. Les quinze étant migrées, il n'en restait aucun. Il porte
+       > désormais sur un nom qui n'existe pas.
+
+       | | |
+       |---|---|
+       | Contrôles, quatre régimes | **854** sur fichiers et bus différé · **864** en base |
+       | Node contre Java, **treize** collections en base | **38 / 38** à l'octet |
+       | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+       | Suites « droits » et « SURV » par la passerelle | **20 / 20** et **103 / 103** |
+
+       **Jalon n° 13 clos.** La bascule du magasin est complète : treize collections nommées et
+       les deux journaux chaînés vivent en PostgreSQL, et le même code sert les fichiers quand
+       aucune adresse n'est donnée.
 
 8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.

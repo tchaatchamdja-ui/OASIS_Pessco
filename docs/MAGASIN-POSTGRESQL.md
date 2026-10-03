@@ -47,12 +47,17 @@ SHA-256 se vérifie après la reprise comme avant**.
 mêmes gestes, et **douze de plus** (suite « magasin-pg ») éprouvent celui-ci
 contre un vrai serveur — ce que les six premiers ne pouvaient pas faire.
 
-## Ce qui n'est pas fait, et pourquoi
+## Ce qui restait à faire, et ce que cela a coûté
 
-**La bascule.** `DATABASE_URL` posé, l'application continue d'écrire dans des
+> **Achevé le 2 octobre 2026.** Cette section décrit l'état d'avant la bascule et
+> les trois chemins qui s'offraient. Elle est conservée parce qu'elle dit le
+> raisonnement : c'est le chemin 1 qui a été pris, module par module, et les quinze
+> collections sont aujourd'hui en base. Le récit de chacune suit, plus bas.
+
+**La bascule.** `DATABASE_URL` posé, l'application continuait d'écrire dans des
 fichiers.
 
-La raison n'est pas le magasin, elle est au-dessus : **`store.load()` et
+La raison n'était pas le magasin, elle était au-dessus : **`store.load()` et
 `store.save()` sont synchrones**, et aucun client PostgreSQL ne l'est. Rendre
 le magasin asynchrone rend asynchrone tout ce qui l'appelle.
 
@@ -87,6 +92,9 @@ une file persistante et une reprise, c'est-à-dire la complexité qu'on voulait
 depuis un seul processus, ce qui est le cas. Le journal d'audit est déjà en
 ajout seul (PERF-01), et le coût d'écriture ne croît plus. Ce qui manque
 demeure : la concurrence entre processus, et la réplication vers l'UEMOA.
+
+> **C'est le chemin 1 qui a été pris** (ADR-002, jalon n° 7), collection par
+> collection, chacune derrière les contrôles qui la gardent. Les quinze y sont.
 
 ## La première collection est passée — ce qu'elle a coûté
 
@@ -758,7 +766,149 @@ où la réponse se forme.
 | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
 | Suite « droits » par la passerelle | **20 / 20** |
 
-Restent `ramp` (148 appels) et `execution` (202).
+---
+
+## Quatorzième : `ramp`, et un socle qui sert deux régimes
+
+*2 octobre 2026. 155 appels, 7 fichiers, et **86 gestionnaires de route encore
+synchrones** — presque tous ceux du module.*
+
+### Des références allouées par lots
+
+Un classeur d'inspections porte le mois entier. Les références `POI-xxxx`
+s'allouaient donc déjà par lots, pour ne pas réécrire le magasin à chaque ligne ;
+l'allocateur est devenu pur, et le lot se tire dans la transformation qui écrit
+les inspections. Deux actes d'inspection ne partagent pas un numéro — une requête
+entre États en cite un.
+
+L'import d'un classeur allouait les références, insérait les inspections neuves et
+leurs écarts, puis **écrivait une fois par inspection mise à jour**. Deux cents
+lignes faisaient deux cents écritures ; entre elles, un import à moitié fait.
+
+### Le socle des vues sert maintenant deux régimes
+
+`src/vues_prestataire.js` porte la bascule AAC / Prestataire pour RAMP **et** pour
+« Exécution de la Surveillance ». Quand RAMP est passé en base et l'autre pas
+encore, le socle a dû servir les deux côtés à la fois — c'est exactement ce que la
+façade existe pour permettre.
+
+Son middleware est enveloppé **là où il est défini**, et non à chaque montage :
+deux modules le montent, et Express 4 ne traite pas mieux un middleware `async`
+qu'un gestionnaire.
+
+### Trois `forEach` qui auraient effacé les pièces d'autrui
+
+Le retrait d'un partage demande au magasin, pièce par pièce, si le fichier est
+encore désigné ailleurs. En `forEach`, les questions partent sans attendre les
+réponses : des pièces qu'un autre partage tient encore seraient effacées, et
+l'État destinataire tomberait sur « Fichier introuvable ». Ce sont des `for…of`.
+
+### Un contrôle qui existait et ne gardait rien
+
+« Les écarts partent avec leur inspection » passait **avec la cascade
+supprimée** — la contre-épreuve l'a montré. Un second contrôle lit maintenant les
+orphelins là où la donnée vit : aucune route ne les sert, et c'est bien le problème
+qu'il garde.
+
+Et l'allocation groupée n'était exercée par rien : la suite n'importait jamais
+qu'une inspection neuve à la fois, donc le lot valait toujours un. Rendre la même
+référence pour tout le lot passait sans broncher. Deux inspections neuves dans un
+même classeur sont désormais contrôlées — c'est le cas ordinaire.
+
+### Le passage outillé, et pourquoi il a été défait
+
+Un script a enveloppé les 86 gestionnaires : forme régulière, `node --check` en
+filet. Un second devait poser les `await` et rendre asynchrones les fonctions
+englobantes ; il a rendu asynchrones des **aides pures** — `texte`, `admin`,
+`voitTout`. Défait, et refait à la main : onze aides converties, et leurs appels
+avec elles.
+
+---
+
+## Quinzième : `execution` — et le magasin est entièrement en base
+
+*2 octobre 2026. 237 appels, 8 fichiers, 84 gestionnaires synchrones. Le dernier.*
+
+### Des références sans compteur
+
+`references.js` compose les références du circuit — activité, notification,
+rapport, constatation, dossier — selon un modèle que l'administrateur définit au
+menu Paramètres. Le numéro d'ordre se déduit **des références existantes** : il n'y
+a pas de compteur persisté.
+
+La référence se calculait, puis l'enregistrement s'écrivait dans un second temps.
+En synchrone, rien ne s'intercalait ; converti sans précaution, deux actes ouverts
+ensemble auraient porté la même référence. `suivanteDans` est donc pure, et
+`insererAvec` écrit l'enregistrement avec sa référence en une transformation.
+
+Le cas le plus dense : la soumission d'un rapport tirait **deux numéros par deux
+lectures** — la référence de base et le numéro de version — avant trois écritures.
+Deux soumissions simultanées auraient produit deux rapports « v1 » sous la même
+référence.
+
+### Ce qu'une clôture rend opposable
+
+| Geste | Écritures avant | Après |
+|---|---|---|
+| Clôturer un dossier | statut + **1 par constatation rendue opposable** | **1** |
+| Valider le rapport final | rapport + dossier + 1 par constatation | **1** |
+| Amender un rapport validé | rapport + dossier + 1 par constatation | **1** |
+| Transmettre (deux routes) | rapport + 1 par constatation (+ dossier) | **1** |
+| Archiver les activités hors plan | **2 par activité** | **1** |
+| Importer une checklist (trois routes) | **1 par ligne** | **1** |
+
+Ce qui compte n'est pas le nombre. Clôturer un dossier rend opposables au
+prestataire les constatations en brouillon : entre les deux écritures, un dossier
+clos dont les constatations ne l'étaient pas — et un échec au milieu les y laissait
+**inopposables pour toujours**.
+
+### Le défaut que seul un contrôle de comportement pouvait voir
+
+```js
+res.json(rows.map(enrichirFnc));
+```
+
+`enrichirFnc` touche la base depuis la bascule. `.map` rend donc un tableau de
+**promesses**, et `res.json` les sérialise en objets vides : une liste pleine
+d'enregistrements sans aucun champ, sans la moindre erreur.
+
+**Le garde-fou de forme ne peut pas le voir** — ce n'est pas un appel au magasin,
+c'est un `map`. Ce sont trois contrôles de la suite SURV qui l'ont dit, sur quatre
+listes dans ce cas. C'est la limite de ce que la forme garde, et la raison pour
+laquelle les contrôles de comportement ne se remplacent pas.
+
+### Deux autres choses trouvées en chemin
+
+Le garde-fou avait laissé passer un `await` manquant : `if ((db.list(…)` — sa
+parenthèse ouvrante masquait l'appel à la détection. C'est le balayage manuel qui
+l'a trouvé, et la composition des références en dépendait entièrement.
+
+Et une route montée **avant** la déclaration de son gestionnaire : un `const` ne
+vit qu'à partir de sa déclaration, et le serveur refusait de démarrer. Le
+gestionnaire est monté tel quel, non réenveloppé dans une flèche — l'enveloppe
+reçoit `next` d'Express, et une flèche à deux arguments le lui retirait.
+
+### Un contrôle qui tombait pour une bonne raison
+
+« Une collection non migrée ne l'est dans aucun régime » prenait son témoin dans
+une liste de collections réelles, par leur complément. **Les quinze étant migrées,
+il n'en restait aucun.** Le contrôle porte désormais sur un nom qui n'existe pas :
+c'est la liste d'autorisation qui décide, et un nom qui n'y figure pas n'est jamais
+servi par la base, quel que soit l'état de la migration.
+
+### Le coût, mesuré — et le total
+
+| | |
+|---|---|
+| Contrôles, quatre régimes | **854** sur fichiers et bus différé · **864** en base |
+| Node contre Java, **treize** collections en base | **38 / 38** à l'octet |
+| Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
+| Suites « droits » et « SURV » par la passerelle | **20 / 20** et **103 / 103** |
+| `data/users.json` après chaque campagne | intact |
+
+**La bascule du magasin est complète** : treize collections nommées et les deux
+journaux chaînés vivent en PostgreSQL, et le même code sert les fichiers quand
+aucune adresse n'est donnée.
 
 ---
 

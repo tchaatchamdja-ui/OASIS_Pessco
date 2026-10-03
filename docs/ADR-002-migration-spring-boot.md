@@ -343,17 +343,43 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        ajoutent — aucun appel au bus consommé sans `await`, tout gestionnaire asynchrone
        enveloppé — et trois contrôles de comportement sur le contrat du bus.
 
-       **Ce que l'étape a ouvert, et qui reste à fermer.** Les cinq suppressions gardées par
-       `src/suites_care.js` — trois dans SURV, une dans RAMP, une sur les constatations —
-       **vérifient auprès de CARE puis effacent**. Tant que le bus était synchrone, rien ne
-       s'intercalait entre les deux gestes. Ce n'est plus vrai : entre la vérification et
+       **Ce que l'étape a ouvert — fermé le 3 octobre 2026.** Les cinq suppressions gardées
+       par `src/suites_care.js` — trois dans SURV, une dans RAMP, une sur les constatations —
+       **vérifiaient auprès de CARE puis effaçaient**. Tant que le bus était synchrone, rien
+       ne s'intercalait entre les deux gestes. Ce n'est plus vrai : entre la vérification et
        l'effacement, CARE peut avoir prononcé une mesure sur la constatation qu'on supprime.
        La vérification lit les données d'un module et l'effacement écrit celles d'un autre :
-       **aucun `modifier` ne couvre les deux**. Il y faudra une transaction entre modules —
-       ce que PostgreSQL donnera, et qu'un répertoire de fichiers n'a jamais donné. En
-       attendant, la fenêtre est bornée (rien n'est attendu entre les deux gestes, et ces
-       suppressions sont réservées aux administrateurs), et le sens du refus protège du pire :
-       un `await` oublié refuserait *toutes* les suppressions au lieu de les laisser passer.
+       **aucun `modifier` ne couvre les deux**, et une transaction entre modules ferait
+       divergir les deux régimes — les fichiers n'ont pas d'équivalent.
+
+       > **La fenêtre n'a pas été fermée. Ce qui s'y passe a changé.** Sur décision de la
+       > maîtrise d'ouvrage, les constatations et les écarts ne sont plus détruits : ils sont
+       > **retirés**. L'enregistrement porte `retire_le`, disparaît de toutes les listes, et
+       > subsiste. Une mesure prononcée dans la fenêtre garde donc l'écart qui la fonde.
+       >
+       > Trois choses rendent le geste complet, et la troisième est la moins évidente :
+       >
+       > · **les lectures ignorent ce qui est retiré** — une seule règle, dans
+       >   `src/magasin_module.js`, et rien à déclarer collection par collection. Un
+       >   enregistrement sans marque n'est pas concerné, donc rien ne change ailleurs ;
+       > · **les contrats du bus continuent de le servir**, avec sa marque. Cacher à CARE le
+       >   fondement de sa propre décision serait le pire des deux maux : la mesure
+       >   s'afficherait sans objet, et personne ne saurait pourquoi ;
+       > · **les preuves restent sur le disque.** Elles partaient avec les écarts ; garder le
+       >   fondement en vidant sa substance ne vaudrait rien.
+       >
+       > Le refus que ces cinq routes opposent reste — pour l'agent, à qui l'on dit pourquoi
+       > son geste n'aboutit pas, plutôt que de retirer en silence ce qu'une sanction fonde.
+       > Mais ce n'est plus lui qui tient l'intégrité.
+       >
+       > Ce que cela coûte, et qu'il faut dire : rien ne purge les enregistrements retirés.
+       > C'est voulu — `src/retention.js` range déjà ces collections sous « conserver », au
+       > motif qu'« un logiciel qui effacerait de lui-même un acte de surveillance serait une
+       > faute ». Le volume en jeu est celui de quelques suppressions d'administrateur par an.
+       >
+       > **Un garde-fou de forme l'interdit de revenir** : aucun `remove` ni filtre
+       > destructeur sur ces deux collections. Rien dans le langage ne l'empêcherait, et le
+       > jour où l'on voudra « faire le ménage », la suppression paraîtra légitime.
 
        **Étape B — les collections, par ordre croissant de propagation** : `mfa_challenges`
        (1 fichier) → les journaux (3, 2) → `emails` (5) → `users`/`sessions` (8) →

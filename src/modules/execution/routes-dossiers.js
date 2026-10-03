@@ -312,7 +312,7 @@ module.exports = function register(app, deps, M) {
     // été décidé : le dossier qui la porte ne se supprime plus.
     const fncs = (await db.list('constatations')).filter((c) => c.dossier_id === d.id).map((c) => c.id);
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
-    await db.removeDossier(d.id);
+    await db.removeDossier(d.id, req.user.username);
     // La notification part aussi : l'activité redevient « à notifier ».
     if (d.notification_id) {
       await db.removeWhere('echanges', (e) => e.notification_id === d.notification_id);
@@ -977,7 +977,10 @@ module.exports = function register(app, deps, M) {
     if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     if (!await db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
-    await db.remove('constatations', req.params.id);
+    // Retirée, non détruite : une mesure d'application a pu être prononcée dessus
+    // entre la vérification ci-dessus et cette ligne, et elle garde son fondement
+    // (décision du 3 octobre 2026 — voir l'en-tête de `src/suites_care.js`).
+    await db.retirer('constatations', req.params.id, req.user.username);
     res.json({ status: 'ok' });
   }));
 };

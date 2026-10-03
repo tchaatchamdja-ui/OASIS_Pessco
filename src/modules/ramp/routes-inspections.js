@@ -239,15 +239,21 @@ module.exports = function register(app, deps, M) {
     // Un écart repris par « Mesures d'Application » fonde ce qui y a été
     // décidé : l'inspection qui le porte ne se supprime plus.
     if (await suitesCare.refusSiSuites(res, ecarts.map((e) => `ramp:${e.id}`))) return undefined;
-    if (!await db.removeInspection(req.params.id)) {
+    if (!await db.removeInspection(req.params.id, req.user.username)) {
       return introuvable(res, 'inspection');
     }
-    // Les preuves des écarts partent avec eux, comme celles d'une fiche : les
-    // laisser sur le disque accumulerait des fichiers que plus rien ne désigne.
-    ecarts.forEach((e) => (e.preuves || []).forEach((pj) => {
-      try { fs.unlinkSync(path.join(DOSSIER_PREUVES, path.basename(pj.fichier || ''))); }
-      catch (err) { /* le fichier a déjà disparu */ }
-    }));
+    // ── Les preuves restent, et c'est voulu ──
+    //
+    // Elles partaient avec les écarts, pour ne pas laisser sur le disque des
+    // fichiers que plus rien ne désigne. Mais les écarts ne sont plus détruits :
+    // ils sont retirés, et restent servis aux « Mesures d'Application » qui ont
+    // pu prononcer une sanction dessus (décision du 3 octobre 2026).
+    //
+    // Garder le fondement en vidant sa substance ne vaudrait rien : une mesure
+    // renverrait à un écart dont les preuves auraient disparu. Les fichiers
+    // restent donc tant que l'écart reste, c'est-à-dire tant que la politique de
+    // conservation ne décide pas autre chose — et pour ces collections, elle dit
+    // « conserver ».
     res.json({ status: 'ok' });
   }));
 

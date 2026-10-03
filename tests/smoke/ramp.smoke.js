@@ -148,17 +148,43 @@ module.exports = async function rampSmoke(port) {
     verifier('l’inspection à supprimer porte bien des écarts', ecartsAvant > 0, `${ecartsAvant}`);
     verifier('inspection supprimée',
       (await srv.appel(`${M}/inspections/${aSupprimer.id}`, { method: 'DELETE' })).statut === 200);
-    // Un écart orphelin ne se lit sur aucune route — les écarts n'arrivent qu'avec
-    // leur inspection, et c'est bien le problème : rien ne les montrerait. Le
-    // contrôle se lit donc là où la donnée vit.
+    // ── Ses écarts sont retirés, non détruits ──
+    //
+    // La décision du 3 octobre 2026 : un écart peut fonder une mesure d'application
+    // prise dans un autre module, et le bus étant asynchrone, une mesure peut être
+    // prononcée entre la vérification et l'écriture. Détruire l'écart laissait la
+    // sanction sans fondement ; il est donc marqué `retire_le` et subsiste.
+    //
+    // Trois choses à vérifier, et la troisième est celle qui compte.
     if (srv.local) {
-      const restes = ((await srv.donnees('ramp')).ecarts || [])
+      const tous = ((await srv.donnees('ramp')).ecarts || [])
         .filter((e) => e.inspection_id === aSupprimer.id);
-      verifier('ses écarts partent avec elle', restes.length === 0,
-        `${restes.length} écart(s) orphelin(s) sur ${ecartsAvant}`);
+      verifier('ses écarts subsistent, marqués retirés',
+        tous.length === ecartsAvant && tous.every((e) => !!e.retire_le && !!e.retire_par),
+        `${tous.length} sur ${ecartsAvant}, marqués : ${tous.filter((e) => e.retire_le).length}`);
     } else {
-      horsPortee('ses écarts partent avec elle', 'se lit là où la donnée vit');
+      horsPortee('ses écarts subsistent, marqués retirés', 'se lit là où la donnée vit');
     }
+
+    // ── Et voici ce qui compte : CARE garde le fondement de sa décision ──
+    //
+    // Un écart retiré disparaît des écrans de RAMP — c'est le sens du geste. Mais
+    // il **reste servi aux « Mesures d'Application »**, avec sa marque : une
+    // sanction prononcée dessus doit pouvoir montrer l'écart qui la fonde.
+    //
+    // Lui cacher ce fondement serait le pire des deux maux : la mesure
+    // s'afficherait sans objet, et personne ne saurait pourquoi. C'est exactement
+    // ce que la destruction faisait, et ce que le retrait évite.
+    //
+    // Les deux modules sont montés sur le même serveur : la carence se lit donc
+    // ici, au menu Carences de CARE, telle que le bus la lui sert.
+    const chezCare = (await srv.appel('/api/m/mesures/constatations')).corps || [];
+    const retires = Array.isArray(chezCare)
+      ? chezCare.filter((c) => String(c.id || '').startsWith('ramp:') && c.retire_le)
+      : [];
+    verifier('un écart retiré est encore servi aux « Mesures d’Application », marqué',
+      retires.length >= 1 && retires.every((c) => c.reference && c.prestataire_nom !== undefined),
+      `${retires.length} carence(s) retirée(s) servie(s) sur ${Array.isArray(chezCare) ? chezCare.length : '?'}`);
 
     // La référence du rapport papier prend la place de celle que le module
     // avait donnée faute de mieux.
@@ -255,11 +281,17 @@ module.exports = async function rampSmoke(port) {
       .reduce((n, x) => n + (x.anomalies || []).length, 0);
     verifier('les écarts partent avec leur inspection', apres === avant - 2,
       `${avant} → ${apres}`);
+    // ── Les preuves restent, et c'est la décision du 3 octobre 2026 ──
+    //
+    // Elles partaient avec les écarts. Mais les écarts ne sont plus détruits : ils
+    // sont retirés, et restent servis aux « Mesures d'Application », qui ont pu
+    // prononcer une sanction dessus. Garder le fondement en vidant sa substance ne
+    // vaudrait rien — une mesure renverrait à un écart sans preuves.
     if (srv.local) {
-      verifier('les preuves des écarts quittent le disque',
-        !srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
+      verifier('les preuves de l’écart retiré restent sur le disque',
+        srv.fichierExiste(`uploads/ramp/preuves/${fichierPreuve}`));
     } else {
-      horsPortee('les preuves des écarts quittent le disque', 'se lit sur le disque du serveur');
+      horsPortee('les preuves de l’écart retiré restent sur le disque', 'se lit sur le disque du serveur');
     }
 
     // ── Paramètres : ajout, désactivation, garde à la suppression ──

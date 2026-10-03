@@ -505,7 +505,20 @@ async function insertMany(entrees) {
 // déclarée au schéma Prisma. **Une seule transformation pour les deux
 // collections** : entre deux écritures, les écarts d'une inspection disparue
 // restaient lisibles et plus rien ne les rattachait.
-async function removeInspection(id) {
+//
+// ── Les écarts ne sont pas détruits, ils sont retirés ──
+//
+// Un écart de catégorie 3 est servi aux « Mesures d'Application » et peut fonder
+// une mesure prise là-bas. Le module demandait à CARE s'il avait bâti quelque
+// chose, puis supprimait ; depuis que le bus est asynchrone, une mesure peut être
+// prononcée **entre la question et la suppression**.
+//
+// Décision de la maîtrise d'ouvrage du 3 octobre 2026 : on marque au lieu
+// d'effacer. L'écart porte `retire_le`, disparaît de toutes les listes, et ne se
+// détruit pas. La fenêtre existe toujours ; il ne s'y passe plus rien
+// d'irréversible. L'inspection, elle, est bien détruite : rien d'un autre module
+// ne s'y rattache directement.
+async function removeInspection(id, par) {
   let ote = false;
   await transformer((d) => {
     const arr = d.inspections || [];
@@ -513,7 +526,7 @@ async function removeInspection(id) {
     ote = i >= 0;
     if (!ote) return INCHANGE;
     arr.splice(i, 1);
-    d.ecarts = (d.ecarts || []).filter((e) => e.inspection_id !== id);
+    base.marquerRetire(d, 'ecarts', (e) => e.inspection_id === id, par);
     return d;
   });
   return ote;

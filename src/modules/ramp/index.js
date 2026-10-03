@@ -71,9 +71,13 @@ module.exports = {
       deps.services.publish('RAMP.constatationsCritiques', async () => {
         // Les trois collections ensemble : ce contrat est consommé par les
         // « Mesures d'Application » à chaque ouverture de leur écran.
-        const [toutesInspections, tousParametres, tousEcarts] = await Promise.all(
-          ['inspections', 'parametres', 'ecarts'].map((c) => db.list(c)),
-        );
+        // `listTout` pour les écarts : un écart retiré par l'inspection reste
+        // servi ici, avec sa marque. Les « Mesures d'Application » ont pu
+        // prononcer une sanction dessus, et lui cacher le fondement de sa propre
+        // décision serait le pire des deux maux.
+        const [toutesInspections, tousParametres, tousEcarts] = await Promise.all([
+          db.list('inspections'), db.list('parametres'), db.listTout('ecarts'),
+        ]);
         const inspections = new Map(toutesInspections.map((i) => [i.id, i]));
         // L'AAC qui a relevé l'écart est celle qui instruira la mesure : la
         // carence part sous l'instance de son inspection, et les « Mesures
@@ -119,7 +123,10 @@ module.exports = {
             const solde = /clôtur|cloture|soldé|solde/i.test(String(ec.suivi || ''));
             const exploitant = parExploitant.get(norm(i.exploitant)) || {};
             return {
-              id: `ramp:${ec.id}`,
+                id: `ramp:${ec.id}`,
+              // Retiré par l'inspection : l'écart n'est plus poursuivi à la
+              // source, mais ce qui a été bâti dessus garde son fondement.
+              retire_le: ec.retire_le || '',
               instance: instanceDeLInspection(i),
               reference: `${i.poi_reference || i.id || ''}${ec.itemCode ? ` · ${ec.itemCode}` : ''}`,
               titre: [ec.itemCode, items.get(ec.itemCode)].filter(Boolean).join(' — '),
@@ -151,9 +158,11 @@ module.exports = {
       // contrat que celui de « Exécution de la Surveillance ». Les clés sont
       // celles des carences servies plus haut — « ramp:<écart> » — pour que le
       // consommateur rapproche l'un de l'autre sans rien savoir d'ici.
+      // `listTout`, même raison : le plan d'actions d'un écart retiré reste
+      // lisible par qui a bâti dessus.
       deps.services.publish('RAMP.pacDeConstatation', async () => {
         const parConstatation = {};
-        (await db.list('ecarts')).forEach((ec) => {
+        (await db.listTout('ecarts')).forEach((ec) => {
           const pac = ec.pac || {};
           const preuves = (ec.preuves || []).map((p) => ({
             intitule: p.intitule || p.nom_origine || '',

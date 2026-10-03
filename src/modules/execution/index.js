@@ -62,10 +62,21 @@ module.exports = {
       // Les Mesures d'Application se prennent sur une constatation. Elles
       // n'ont pas besoin du dossier entier : la référence, le prestataire, la
       // criticité et l'échéance suffisent à les instruire.
-      deps.services.publish('SURV.constatationsOuvertes', async () => (await db.list('constatations'))
+      // ── Pourquoi `listTout` et non `list` ──
+      //
+      // Une constatation retirée par la surveillance **reste servie ici**, avec sa
+      // marque. Les « Mesures d'Application » ont pu prononcer une sanction sur
+      // elle : lui cacher le fondement de sa propre décision serait le pire des
+      // deux maux — la mesure s'afficherait sans objet, et personne ne saurait
+      // pourquoi. Le consommateur reçoit donc la carence et l'information qu'elle
+      // a été retirée, à lui d'en tirer ce qu'il doit.
+      deps.services.publish('SURV.constatationsOuvertes', async () => (await db.listTout('constatations'))
         .filter((c) => !String(c.statut || '').startsWith('direct_'))
         .map((c) => ({
           id: c.id,
+          // Retirée par la surveillance : la carence n'est plus poursuivie à la
+          // source, mais ce qui a été bâti dessus garde son fondement.
+          retire_le: c.retire_le || '',
           // L'instance qui a relevé la carence : les Mesures d'Application la
           // rangent sous la même, plutôt que de la donner à la leur.
           instance: c.instance || '',
@@ -87,9 +98,11 @@ module.exports = {
       // classe pas une carence sans avoir lu ce que l'organisme propose. Le
       // contrat est le même que celui de « RAMP Inspections » — le
       // consommateur n'a donc pas à savoir d'où vient la carence.
+      // `listTout` pour la même raison : le plan d'actions correctives d'une
+      // carence retirée reste lisible par qui a bâti dessus.
       deps.services.publish('SURV.pacDeConstatation', async () => {
         const parConstatation = {};
-        (await db.list('constatations')).forEach((c) => {
+        (await db.listTout('constatations')).forEach((c) => {
           const pac = (c.actions_correctives || [])[0];
           if (!pac) return;
           const preuve = (p) => ({

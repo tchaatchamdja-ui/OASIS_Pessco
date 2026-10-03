@@ -61,17 +61,27 @@ async function seed() {
 
 // Retrait d'un dossier et de tout ce qui n'existe que par lui.
 //
-// Constatations, rapports et réponses de checklist ne se lisent que sous
-// l'identifiant du dossier : laissés derrière, ils ne reparaissent jamais et
-// s'accumulent. Deux routes suppriment un dossier — la suppression directe et
-// la remise à zéro d'une activité ; l'une des deux oubliait les réponses, et la
-// base en portait trente et une d'un dossier disparu. Le retrait s'écrit donc
-// une fois, ici.
 // **Une seule transformation**, là où il y en avait quatre. Entre elles,
 // l'application portait des constatations et des rapports dont le dossier avait
 // disparu — exactement ce que cette fonction existe pour empêcher — et un échec au
 // milieu les y laissait pour de bon.
-async function removeDossier(id) {
+//
+// ── Les constatations ne sont pas détruites, elles sont retirées ──
+//
+// Une constatation peut fonder une mesure d'application prise dans un autre
+// module. Jusqu'ici, le module source demandait à CARE s'il avait bâti quelque
+// chose, puis supprimait ; depuis que le bus est asynchrone, une mesure peut être
+// prononcée **entre la question et la suppression**, et la sanction perdait alors
+// l'écart qui la fonde.
+//
+// Décision de la maîtrise d'ouvrage du 3 octobre 2026 : on marque au lieu
+// d'effacer. La constatation porte `retire_le`, disparaît de toutes les listes, et
+// ne se détruit pas. La fenêtre existe toujours ; **il ne s'y passe plus rien
+// d'irréversible**, et c'est ce qui la rend sans conséquence.
+//
+// Le reste — rapports, réponses de checklist, le dossier lui-même — est détruit :
+// aucun autre module n'y rattache quoi que ce soit.
+async function removeDossier(id, par) {
   if (!id) return false;
   let ote = false;
   await transformer((d) => {
@@ -80,7 +90,7 @@ async function removeDossier(id) {
     ote = i >= 0;
     if (!ote) return INCHANGE;
     arr.splice(i, 1);
-    d.constatations = (d.constatations || []).filter((c) => c.dossier_id !== id);
+    base.marquerRetire(d, 'constatations', (c) => c.dossier_id === id, par);
     d.rapports = (d.rapports || []).filter((r) => r.dossier_id !== id);
     d.checklist_responses = (d.checklist_responses || []).filter((r) => r.dossier_id !== id);
     return d;

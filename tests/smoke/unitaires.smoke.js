@@ -358,6 +358,61 @@ function repertoireNonFige() {
   }
 }
 
+// ── Retirer sans détruire ──
+//
+// Les constatations de la surveillance et les écarts d'aire de trafic fondent ce
+// que les « Mesures d'Application » décident. Les détruire laissait une sanction
+// sans son fondement, et le bus étant asynchrone, une mesure peut être prononcée
+// entre la vérification et l'écriture. Décision du 3 octobre 2026 : on marque.
+//
+// La règle est posée **une seule fois**, dans `src/magasin_module.js` : les
+// lectures ignorent ce qui porte `retire_le`. Une règle qu'on peut oublier de
+// déclarer collection par collection ne garde rien — c'est la leçon du garde-fou
+// qui avait cessé de couvrir « Mesures d'Application » en silence.
+//
+// Ces contrôles portent sur la fabrique, et non sur une route : aucun chemin de
+// l'application ne produit aujourd'hui un enregistrement retiré dont le parent
+// vive encore, de sorte qu'une épreuve par HTTP ne distinguerait pas le filtre de
+// la disparition du parent. C'est dit, plutôt que supposé couvert.
+async function retraitSansDestruction() {
+  const { magasinDeModule } = require('../../src/magasin_module');
+  // Sa propre collection : un contrôle plus bas veut `COLL_ESSAI` encore absente,
+  // et l'ordre d'exécution ne doit pas être ce qui décide s'ils passent.
+  const m = magasinDeModule(COLL_RETRAIT);
+
+  await m.save({ pieces: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] });
+  verifier('retrait : trois enregistrements posés', (await m.list('pieces')).length === 3);
+
+  verifier('retrait : marquer rend vrai', await m.retirer('pieces', 'b', 'agent@anac.bj'));
+
+  const vues = await m.list('pieces');
+  verifier('retrait : la lecture ordinaire ne le voit plus',
+    vues.length === 2 && !vues.some((p) => p.id === 'b'), vues.map((p) => p.id).join(','));
+  verifier('retrait : `get` ne le voit plus non plus',
+    (await m.get('pieces', 'b')) === null);
+
+  // Ce qui distingue le retrait de la destruction, et toute la raison du geste.
+  const tout = await m.listTout('pieces');
+  const retire = tout.find((p) => p.id === 'b') || {};
+  verifier('retrait : il subsiste, et dit quand et par qui',
+    tout.length === 3 && !!retire.retire_le && retire.retire_par === 'agent@anac.bj',
+    `${tout.length} au total, marque « ${retire.retire_par || ''} »`);
+  verifier('retrait : `getTout` le retrouve',
+    ((await m.getTout('pieces', 'b')) || {}).id === 'b');
+
+  // Marquer deux fois ne réécrit pas la marque : la date du retrait est celle du
+  // retrait, non celle de la dernière tentative.
+  const dateDuRetrait = retire.retire_le;
+  verifier('retrait : un second retrait ne fait rien',
+    (await m.retirer('pieces', 'b', 'autre@anac.bj')) === false
+    && ((await m.getTout('pieces', 'b')) || {}).retire_le === dateDuRetrait);
+
+  // Et un enregistrement qui ne porte pas la marque n'est pas concerné : c'est ce
+  // qui permet à la règle de valoir pour toutes les collections sans réglage.
+  verifier('retrait : les autres collections ne changent pas de comportement',
+    (await m.list('pieces')).every((p) => !('retire_le' in p)));
+}
+
 async function magasins() {
   const storePg = require('../../src/store_pg');
   const fichiers = require('../../src/store');
@@ -565,6 +620,7 @@ async function annuaireDesComptes() {
 // Le nom tiré au sort rend le contrôle juste dans tous les cas ; le nettoyage
 // plus bas efface ce qu'il a écrit. La cause, elle, reste entière.
 const COLL_ESSAI = `essai_facade_${Math.random().toString(36).slice(2, 8)}`;
+const COLL_RETRAIT = 'essai_retrait';
 
 async function facadeDuMagasin() {
   const magasin = require('../../src/magasin');
@@ -1102,6 +1158,7 @@ module.exports = async function unitairesSmoke() {
     await compteurDuSecondFacteur();
     await annuaireDesComptes();
     repertoireNonFige();
+    await retraitSansDestruction();
     await magasins();
     await facadeDuMagasin();
   } finally {
@@ -1110,7 +1167,7 @@ module.exports = async function unitairesSmoke() {
     // avec la fuite plutôt que de la corriger, et qui ne couvrait de toute façon
     // que trois noms d'essai, jamais `users`. Le lanceur efface le bac entier et
     // relève toute écriture dans les données de travail.
-    ['essai_contrat', COLL_ESSAI, 'essai_journal'].forEach((nom) => {
+    ['essai_contrat', COLL_ESSAI, COLL_RETRAIT, 'essai_journal'].forEach((nom) => {
       fs.rmSync(path.join(BAC, `${nom}.json`), { force: true });
       fs.rmSync(path.join(BAC, `${nom}.jsonl`), { force: true });
     });

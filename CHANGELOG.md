@@ -316,6 +316,26 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   activité créée.
 
 ### Décisions de la maîtrise d'ouvrage
+- **Ce qu'un autre module fonde est retiré, jamais détruit** *(3 octobre 2026)*. Une
+  constatation de la surveillance ou un écart d'aire de trafic peut fonder une mesure
+  d'application prise ailleurs. Les cinq suppressions gardées par `src/suites_care.js`
+  vérifiaient auprès de CARE puis effaçaient — et depuis que le bus est asynchrone, une mesure
+  peut être prononcée **entre la vérification et l'effacement**. La fenêtre ne se ferme pas :
+  la vérification lit un module, l'écriture en touche un autre, et une transaction entre
+  modules ferait divergir les deux régimes.
+  **La fenêtre n'est pas fermée ; ce qui s'y passe a changé.** L'enregistrement porte
+  `retire_le`, disparaît de toutes les listes, et subsiste : une mesure prononcée dans la
+  fenêtre garde l'écart qui la fonde. Il ne s'y passe plus rien d'irréversible, et c'est la
+  seule chose qui comptait.
+- Trois choses rendent le geste complet : **les lectures ignorent ce qui est retiré** — une
+  seule règle, dans `src/magasin_module.js`, rien à déclarer collection par collection ;
+  **les contrats du bus continuent de le servir**, avec sa marque, parce que cacher à CARE le
+  fondement de sa propre décision serait le pire des deux maux ; et **les preuves restent sur
+  le disque** — garder le fondement en vidant sa substance ne vaudrait rien.
+- Un garde-fou de forme **interdit la destruction de revenir** : aucun `remove` ni filtre
+  destructeur sur ces deux collections, contre-éprouvé des deux manières. Le jour où l'on
+  voudra « faire le ménage », la suppression paraîtra légitime — et la sanction perdrait son
+  écart, sans erreur ni trace.
 - **Le frontend passe à React + TypeScript** *(3 octobre 2026)* — [ADR-003](docs/ADR-003-cadre-du-frontend.md),
   qui clôt le jalon n° 8 d'ADR-002. Module par module, en cohabitation, **DROITS d'abord**
   (933 lignes, 2 fichiers, 20 contrôles) pour mesurer le coût réel avant d'engager les sept

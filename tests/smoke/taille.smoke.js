@@ -502,6 +502,42 @@ module.exports = async function tailleSmoke() {
   verifier('aucun magasin de module en base n’est lu sans « await »',
     MAGASIN_NU.length === 0, MAGASIN_NU.join(' · '));
 
+  // ── Ce qu'un autre module fonde ne se détruit pas ──
+  //
+  // Une constatation de la surveillance, un écart d'aire de trafic : les « Mesures
+  // d'Application » y rattachent des mesures, et les détruire laisserait une
+  // sanction sans son fondement. Le bus étant asynchrone, une mesure peut être
+  // prononcée **entre la vérification et l'écriture** — fenêtre qui ne se ferme
+  // pas, puisque la vérification lit un module et l'écriture en touche un autre.
+  //
+  // D'où la décision du 3 octobre 2026 : on marque au lieu d'effacer. La fenêtre
+  // existe toujours, il ne s'y passe plus rien d'irréversible.
+  //
+  // Rien dans le langage n'empêche d'y remettre un `remove`. Un jour où l'on
+  // voudra « faire le ménage », la suppression paraîtra légitime — et la sanction
+  // perdra son écart, sans erreur ni trace. Ce contrôle est la seule chose qui
+  // tienne la règle.
+  const DESTRUCTION_INTERDITE = [
+    ['src/modules/execution', 'constatations'],
+    ['src/modules/ramp', 'ecarts'],
+  ];
+  const DETRUITS = [];
+  DESTRUCTION_INTERDITE.forEach(([dossier, coll]) => {
+    sources()
+      .filter((f) => relatif(f).startsWith(`${dossier}/`) && f.endsWith('.js'))
+      .forEach((f) => {
+        fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
+          // `remove` et `removeWhere` sur la collection, et le filtre qui l'ôte
+          // d'un état en cours de transformation — les deux manières de détruire.
+          const parAppel = new RegExp(`db\\.remove(Where)?\\(\\s*['"]${coll}['"]`).test(ligne);
+          const parFiltre = new RegExp(`\\b${coll}\\s*=\\s*\\(?[a-zA-Z.\\[\\]']*\\s*\\|\\|\\s*\\[\\]\\)?\\s*\\.filter\\(`).test(ligne);
+          if (parAppel || parFiltre) DETRUITS.push(`${relatif(f)}:${n + 1}`);
+        });
+      });
+  });
+  verifier('ce qu’un autre module fonde est retiré, jamais détruit',
+    DETRUITS.length === 0, DETRUITS.join(' · '));
+
   // ── Une garde « lire, vérifier, écrire » se tient dans la transformation ──
   //
   // Trois gestes du module « Profils de Risque » vérifient un état avant

@@ -389,7 +389,7 @@ module.exports = function register(app, deps, M) {
       // été décidé : l'acte qui la porte ne se défait plus.
       const fncs = dossier ? (await db.list('constatations')).filter((c) => c.dossier_id === dossier.id).map((c) => c.id) : [];
       if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv(fncs))) return undefined;
-      if (dossier) await db.removeDossier(dossier.id);
+      if (dossier) await db.removeDossier(dossier.id, req.user.username);
       await db.removeWhere('echanges', (e) => e.notification_id === notif.id);
       await db.remove('notifications', notif.id);
     }

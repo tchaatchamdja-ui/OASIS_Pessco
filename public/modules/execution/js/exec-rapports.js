@@ -2,6 +2,17 @@
  * Écran 7 — Rapports d’audit.
  *
  * Rédaction, transmission et impression des rapports de surveillance.
+ *
+ * ── Document imprimé : français seulement, et c'est une décision ──
+ *
+ * Les libellés de ce document ne passent pas par la table de traduction, et
+ * n'ont pas à y passer : **la maîtrise d'ouvrage a tranché le 3 octobre 2026 —
+ * les documents eux-mêmes ne sont pas à traduire.** Un acte de surveillance
+ * d'une AAC de l'UEMOA est rédigé en français ; l'écran qui le compose est
+ * trilingue, le document qu'il produit ne l'est pas.
+ *
+ * Ce n'est donc pas un oubli à rattraper. Le garde-fou des traductions ne
+ * couvre que les écrans, et il n'a pas à être élargi ici.
  * Fichier issu du découpage de exec-app.js (portage PESSCO) : les scripts se
  * chargent dans l'ordre déclaré par index.html et partagent la même portée.
  */

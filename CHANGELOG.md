@@ -302,6 +302,15 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   assertion trop faible de ma part**, qui ne distinguait pas une activité recopiée d'une
   activité créée.
 
+### Décisions de la maîtrise d'ouvrage
+- **Les documents imprimés ne sont pas à traduire** *(3 octobre 2026)*. Les libellés des
+  rapports de surveillance, de la fiche officielle de notification et de la fiche d'évaluation
+  de risque restent en français et ne passent pas par la table de traduction : un acte de
+  surveillance d'une AAC de l'UEMOA est rédigé en français. L'écran qui compose le document
+  est trilingue, le document qu'il produit ne l'est pas. La décision est consignée dans les
+  trois gabarits, pour qu'elle ne soit pas prise pour un oubli — le garde-fou des traductions
+  ne couvre que les écrans, et n'a pas à être élargi.
+
 ### Accessibilité
 - Contour de focus visible au clavier sur l'ensemble des écrans. *(A11Y-02)*
 

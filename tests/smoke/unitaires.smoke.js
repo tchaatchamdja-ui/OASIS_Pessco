@@ -878,6 +878,82 @@ async function courrielsSansSecret() {
   fs.rmSync(bacConfig, { recursive: true, force: true });
 }
 
+// ── 6 bis. La sonde des sauvegardes ──
+//
+// ADR-001 a différé la bascule vers PostgreSQL en écrivant ce que cela coûte :
+// pas de restauration à un instant donné, les archives horodatées pour seul
+// recours. Sa suite n° 4 demandait de vérifier la planification — et la vérifier
+// une fois, à la main, ne vaut rien : une planification se défait sans bruit, et
+// l'application continue de servir parfaitement.
+//
+// **Le cas qui compte n'est pas « périmée », c'est « je ne vois rien ».** Une
+// sonde qui rend « ok » faute de pouvoir regarder est pire que pas de sonde :
+// elle fournit l'assurance exacte qu'on n'a pas. Les cinq verdicts sont donc
+// distincts, et chacun est éprouvé ici — dont « tronquée », l'archive fraîche
+// qui ne vaut rien parce qu'un `tar` s'est interrompu sur un disque plein.
+function sondeDesSauvegardes() {
+  // eslint-disable-next-line global-require
+  const sauvegardes = require('../../src/sauvegardes');
+  const dossier = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-sv-'));
+  const archive = (nom, octets) => fs.writeFileSync(path.join(dossier, nom), Buffer.alloc(octets));
+  const verdict = (opts) => sauvegardes.etat({ dossier, ...opts }).verdict;
+  try {
+    verifier('sauvegardes : un répertoire absent n’est pas « ok »',
+      sauvegardes.etat({ dossier: path.join(dossier, 'nulle-part') }).verdict === 'non_configure');
+    verifier('sauvegardes : un répertoire vide n’est pas un répertoire absent',
+      verdict() === 'aucune');
+
+    archive('oasis-data-20261003-020000.tgz', 50 * 1024);
+    verifier('sauvegardes : une archive fraîche et plausible est « ok »', verdict() === 'ok');
+    verifier('sauvegardes : la même, passé le seuil, est « périmée »',
+      verdict({ maintenant: Date.now() + 40 * 3600000 }) === 'perimee');
+    // Le seuil est réglable, et le contrôle le dit : 26 heures en dur ici aurait
+    // fait échouer ce contrôle le jour où l'on passe à des sauvegardes horaires.
+    verifier('sauvegardes : le seuil décide, et il se règle',
+      verdict({ maintenant: Date.now() + 3 * 3600000, seuilHeures: 2 }) === 'perimee'
+      && verdict({ maintenant: Date.now() + 3 * 3600000, seuilHeures: 6 }) === 'ok');
+
+    // Le cas silencieux : récent, donc rassurant, et vide.
+    archive('oasis-data-20261003-030000.tgz', 200);
+    verifier('sauvegardes : une archive tronquée est dénoncée, non comptée fraîche',
+      verdict() === 'tronquee');
+
+    // Et le motif : la sonde ne doit pas prendre n'importe quel `.tgz` pour une
+    // sauvegarde du magasin. Le dépôt en porte un — `oasis-config-….tgz` — qui
+    // n'en est pas une.
+    fs.rmSync(path.join(dossier, 'oasis-data-20261003-030000.tgz'));
+    archive('oasis-config-20260917-112155.tgz', 300 * 1024);
+    verifier('sauvegardes : une archive qui n’est pas celle du magasin ne compte pas',
+      sauvegardes.etat({ dossier }).nombre === 1);
+
+    // Le motif de la sonde et celui du script doivent s'accorder. Un garde-fou
+    // de forme le tient aussi ; ici on vérifie que le nom que le script
+    // **fabrique** est bien reconnu, et non seulement qu'il est écrit pareil.
+    const script = fs.readFileSync(path.join(__dirname, '..', '..', 'scripts', 'sauvegarde.sh'), 'utf8');
+    const gabarit = (script.match(/ARCHIVE="[^"]*\/([^"/]+)"/) || [])[1] || '';
+    const fabrique = gabarit
+      .replace('$DESTINATION', '').replace('$HORODATAGE', '20261003-020000');
+    verifier('sauvegardes : le nom que le script fabrique est reconnu par la sonde',
+      !!fabrique && sauvegardes.MOTIF.test(fabrique), `${gabarit} → ${fabrique}`);
+
+    // Tout verdict que le module peut rendre doit avoir sa phrase et son niveau.
+    // Sans cela, un verdict ajouté plus tard partirait à la trace sous son nom
+    // brut, au niveau `info` — c'est-à-dire **silencieusement**, puisque c'est
+    // le niveau qu'on ne lit pas. Les trois listes se lisent du module, aucune
+    // n'est recopiée ici : une liste recopiée aurait cessé de couvrir le
+    // nouveau verdict au moment même où il arrive.
+    const source = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'sauvegardes.js'), 'utf8');
+    const rendus = [...new Set([...source.matchAll(/verdict: '([a-z_]+)'/g)].map((m) => m[1]))].sort();
+    const phrases = Object.keys(sauvegardes.PHRASES).sort();
+    const niveaux = Object.keys(sauvegardes.NIVEAUX).sort();
+    verifier('sauvegardes : chaque verdict a sa phrase et son niveau',
+      rendus.length > 0 && rendus.every((v) => phrases.includes(v) && niveaux.includes(v)),
+      `rendus ${rendus.join(',')} · phrases ${phrases.join(',')} · niveaux ${niveaux.join(',')}`);
+  } finally {
+    fs.rmSync(dossier, { recursive: true, force: true });
+  }
+}
+
 // ── 7. Verrou du répertoire de données ──
 // Il n'y a pas de verrou de base derrière les fichiers : deux processus sur le
 // même répertoire s'effacent l'un l'autre en silence. C'est la condition qui
@@ -1161,6 +1237,7 @@ module.exports = async function unitairesSmoke() {
     await retraitSansDestruction();
     await magasins();
     await facadeDuMagasin();
+    sondeDesSauvegardes();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

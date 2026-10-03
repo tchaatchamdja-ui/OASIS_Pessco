@@ -75,6 +75,7 @@ const EN_PRODUCTION = process.env.NODE_ENV === 'production';
 const zlib = require('zlib');
 const verrou = require('./src/verrou');
 const horloge = require('./src/horloge');
+const sauvegardes = require('./src/sauvegardes');
 const retention = require('./src/retention');
 
 // L'état de l'horloge, mesuré une fois au démarrage : la sonde de santé le
@@ -170,6 +171,22 @@ app.get('/api/health', (req, res) => {
       ...(typeof ETAT_HORLOGE.ecartMs === 'number' ? { ecartMs: ETAT_HORLOGE.ecartMs } : {}),
       ...(ETAT_HORLOGE.raison ? { motif: ETAT_HORLOGE.raison } : {}),
     },
+    // L'état des sauvegardes. ADR-001 a différé la bascule vers PostgreSQL en
+    // écrivant ce que cela coûte : pas de restauration à un instant donné, les
+    // archives horodatées pour seul recours. Une planification se défait sans
+    // bruit — une tâche `cron` emportée par un conteneur recréé, un disque
+    // plein, un répertoire remonté ailleurs — et l'application continue de
+    // servir parfaitement. La sonde le dit, et **ne dit jamais « ok » quand elle
+    // ne voit rien** : « non_configure » est un état honnête.
+    sauvegardes: (() => {
+      const e = sauvegardes.etat();
+      return {
+        verdict: e.verdict,
+        ...(e.derniere ? { derniere_le: e.derniere_le, age_h: e.age_h, octets: e.octets } : {}),
+        nombre: e.nombre,
+        seuil_h: e.seuil_h,
+      };
+    })(),
     demarre_depuis_s: Math.round(process.uptime()),
   });
 });
@@ -1195,6 +1212,20 @@ async function controlerMfa() {
 // existent. Sans cette attente, l'entrée était perdue — et le `catch` de fin la
 // perdait sans rien dire.
 const MAGASIN_PRET = magasin.preparer();
+
+// ── L'état des sauvegardes, dit au démarrage puis chaque jour ──
+//
+// Au démarrage, parce que c'est le moment où un exploitant regarde les traces.
+// Et chaque jour, parce qu'un serveur qui tourne des semaines n'aurait dit la
+// chose **qu'une fois, le jour où elle était encore vraie** : une planification
+// qui se défait le surlendemain ne produirait aucune ligne.
+//
+// `unref()` : ce minuteur ne doit pas retenir le processus à l'arrêt. Sans lui,
+// chaque serveur du harnais de contrôle resterait vivant jusqu'à son échéance.
+if (process.env.OASIS_SONDE_SAUVEGARDES !== '0') {
+  sauvegardes.tracer(trace);
+  setInterval(() => sauvegardes.tracer(trace), 24 * 3600 * 1000).unref();
+}
 
 horloge.verifier(loadConfig()).then(async (h) => {
   ETAT_HORLOGE = h;

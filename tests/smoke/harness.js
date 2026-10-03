@@ -146,6 +146,13 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
       PORT: String(port),
       OASIS_DATA_DIR: path.join(tmp, 'data'),
       OASIS_CONFIG_DIR: path.join(tmp, 'config'),
+      // La sonde des sauvegardes regarde un répertoire à elle, dans le bac.
+      // Sans cela elle lirait les archives du dépôt — donc une suite dirait une
+      // chose et la même suite une autre selon la machine, et chaque serveur
+      // d'essai journaliserait une erreur sur un répertoire qui n'est pas en
+      // cause. Un contrôle qui dépend de l'état du disque de celui qui le lance
+      // ne contrôle rien.
+      OASIS_SAUVEGARDES_DIR: path.join(tmp, 'sauvegardes'),
       // Les comptes d'amorçage tirent un mot de passe au hasard : les tests
       // en imposent un connu, pour rester exécutables sur un jeu vierge.
       OASIS_SEED_PASSWORD: 'Aerosup@2026!Uemoa',

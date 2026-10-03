@@ -296,8 +296,60 @@ payée** — il ne reste qu'à l'exercer le jour venu.
        le service doit être un PostgreSQL, les deux épreuves doivent être
        lancées avec leurs adresses — distinctes à dessein —, et la campagne sur
        fichiers ne doit porter **aucune** adresse de base.
-4. [ ] **Vérifier la planification des sauvegardes** sur l'instance de
+4. [~] **Vérifier la planification des sauvegardes** sur l'instance de
        production (`scripts/sauvegarde.sh`), seule protection en l'absence de base.
+
+       **Ce point était mal formulé, et c'est pourquoi il n'avançait pas.**
+       « Vérifier » est un geste qu'on fait une fois ; une planification, elle,
+       se défait sans bruit — une tâche `cron` emportée par un conteneur
+       recréé, un disque plein, un `tar` interrompu, un répertoire remonté
+       ailleurs. Dans tous ces cas **l'application continue de servir
+       parfaitement**, et le jour où l'on apprend qu'elle n'était plus protégée
+       est le jour où l'on en avait besoin. C'est la même leçon que la suite
+       n° 3 : une vérification qui ne se rejoue pas ne vérifie rien.
+
+       **Fait (`src/sauvegardes.js`)** : le serveur dit lui-même l'état des
+       sauvegardes, dans `GET /api/health` et à la trace — au démarrage **puis
+       chaque jour**, parce qu'un serveur qui tourne des semaines n'aurait dit la
+       chose qu'une fois, le jour où elle était encore vraie.
+
+       Cinq verdicts, parce que la conduite à tenir diffère pour chacun :
+
+       | Verdict | Niveau | Pourquoi il est distinct |
+       |---|---|---|
+       | `ok` | `info` | Une archive de taille plausible, dans le seuil |
+       | `perimee` | **`erreur`** | La planification s'est arrêtée, et `age_h` dit depuis quand |
+       | `tronquee` | **`erreur`** | Un `tar` interrompu — **l'archive est fraîche et elle ne vaut rien.** Sans ce plancher, la sonde l'aurait comptée « ok » : c'est le cas le plus silencieux des cinq |
+       | `aucune` | **`erreur`** | Le répertoire existe et ne porte rien |
+       | `non_configure` | `alerte` | **La sonde ne sait pas.** Elle ne dit pas « ok » faute de pouvoir regarder |
+
+       Les deux derniers choix sont les seuls qui méritent discussion.
+       « Introuvable » n'est pas « à jour » : une sonde qui rassure faute de
+       pouvoir regarder fournit l'assurance exacte qu'on n'a pas. Et
+       `non_configure` est une **alerte**, non une erreur : crier « erreur » sur
+       ce qu'on ignore est la meilleure façon de faire ignorer les vraies. Enfin
+       le `statut` global ne passe pas à `degrade` — le service n'est pas
+       dégradé, il est non protégé, et confondre les deux ferait ignorer
+       `degrade`.
+
+       Onze contrôles, dont trois contre-essayés : la sonde rendue complaisante
+       sur un répertoire absent, le plancher de taille ôté, et le script renommant
+       ses archives sans que la sonde le sache — ce dernier parce que le motif de
+       la sonde et le nom que le script **fabrique** doivent s'accorder, sinon
+       elle dirait « aucune sauvegarde » sur une instance parfaitement
+       sauvegardée et l'on apprendrait à ignorer l'alerte. Un douzième vérifie
+       que tout verdict ajouté plus tard porte sa phrase et son niveau : sans
+       lui, il partirait sous son nom brut au niveau `info`, c'est-à-dire celui
+       qu'on ne lit pas.
+
+       **Ce qui reste, et qui ne m'appartient pas.** Il faut, sur l'instance de
+       production : planifier `scripts/sauvegarde.sh` (la ligne de `crontab` est
+       dans `DEPLOYMENT.md` § 5), poser `OASIS_SAUVEGARDES_DIR` si les archives
+       ne vont pas dans `./sauvegardes`, et brancher l'alerte de l'hébergeur sur
+       `"niveau":"erreur"`. Puis **restaurer une archive une fois** : une
+       sauvegarde jamais restaurée est une hypothèse, pas une protection — et
+       c'est la seule partie que ni la sonde ni moi ne pouvons faire à votre
+       place. Le point reste donc ouvert jusqu'à ce constat.
 5. [x] ~~Rouvrir cet ADR à la réception de la spécification.~~ — fait le
        26 septembre 2026.
 6. [x] ~~**Trancher l'arbitrage n° 1**~~ — rendu le 26 septembre 2026 :

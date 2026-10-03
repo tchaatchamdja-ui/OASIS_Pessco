@@ -250,6 +250,54 @@ les TDR le déclarent obligatoire (§F.2). Deux conséquences d'exploitation :
 | **Purge après déploiement** | Le service worker efface les caches des versions antérieures à son activation. Rien à faire côté exploitation. |
 | **Saisies en attente** | Elles vivent dans IndexedDB, **dans le navigateur de l'agent** — jamais sur le serveur. Un poste réinstallé avant le retour du réseau perd ce qu'il n'a pas envoyé. À dire aux agents de terrain. |
 
+### Les sauvegardes, et la sonde qui dit si elles existent
+
+[ADR-001](docs/ADR-001-magasin-de-donnees.md) a différé la bascule vers PostgreSQL en
+écrivant ce que cela coûte : **pas de restauration à un instant donné ; les archives
+horodatées sont le seul recours.** Elles doivent donc être planifiées, et la planification
+doit être *vérifiable* — une tâche `cron` emportée par un conteneur recréé, un disque
+plein, un `tar` interrompu, un répertoire remonté ailleurs : dans tous ces cas
+**l'application continue de servir parfaitement**, et le jour où l'on apprend qu'elle
+n'était plus protégée est le jour où l'on en avait besoin.
+
+Planifier :
+
+```bash
+0 2 * * * /chemin/vers/oasis/scripts/sauvegarde.sh /var/sauvegardes/oasis 30
+```
+
+Et dire au serveur où regarder, s'il n'écrit pas dans `./sauvegardes` :
+
+```bash
+OASIS_SAUVEGARDES_DIR=/var/sauvegardes/oasis
+```
+
+`GET /api/health` rend alors un verdict, et une trace est écrite au démarrage **puis chaque
+jour** — parce qu'un serveur qui tourne des semaines ne dirait la chose qu'une fois, le
+jour où elle était encore vraie :
+
+| Verdict | Ce que ça veut dire | Niveau de trace | Conduite à tenir |
+|---|---|---|---|
+| `ok` | Une archive de taille plausible, dans le seuil | `info` | — |
+| `perimee` | La dernière dépasse le seuil (26 h par défaut) | **`erreur`** | La planification s'est arrêtée ; `age_h` dit depuis quand |
+| `tronquee` | La dernière est trop petite pour être une sauvegarde | **`erreur`** | Un `tar` interrompu, le plus souvent un disque plein. **Elle est fraîche et elle ne vaut rien** |
+| `aucune` | Le répertoire existe et ne porte aucune archive | **`erreur`** | La planification n'a jamais tourné, ou n'écrit pas là |
+| `non_configure` | Le répertoire est introuvable | `alerte` | **La sonde ne sait pas.** Poser `OASIS_SAUVEGARDES_DIR` sur le répertoire réellement employé |
+
+Deux choix à souligner.
+
+**La sonde ne dit jamais « ok » quand elle ne voit rien.** « Introuvable » et « vide » sont
+deux états distincts de « à jour », et chacun a sa conduite à tenir. Une sonde qui rassure
+faute de pouvoir regarder fournit l'assurance exacte qu'on n'a pas.
+
+**`non_configure` est une alerte, non une erreur.** Crier « erreur » sur ce qu'on ignore
+est la meilleure façon de faire ignorer les vraies. `OASIS_SAUVEGARDES_SEUIL_H` règle le
+seuil ; `OASIS_SONDE_SAUVEGARDES=0` éteint la sonde.
+
+Le `statut` global de la sonde **ne passe pas** à `degrade` pour une sauvegarde manquante :
+le service n'est pas dégradé, il est non protégé. Confondre les deux ferait ignorer
+`degrade`. C'est l'alerte sur `"niveau":"erreur"` dans les journaux qui porte celle-ci.
+
 ### Environnements
 
 Trois, qui ne se distinguent que par leurs variables — le code est le même :
@@ -345,6 +393,9 @@ d'esbuild, de TypeScript et de React — ce téléchargement pèse plus que tout
 | « démarrage refusé — le répertoire de données est déjà servi » | Un autre processus tient le répertoire | Le message donne le `ps -p` qui le retrouve ; l'arrêter, ou servir un autre répertoire (`OASIS_DATA_DIR`) |
 | « le répertoire de données porte un verrou posé par … » | Verrou d'une autre machine — deux conteneurs sur un volume partagé | N'en servir qu'un. Si c'est un reste, effacer `.verrou` dans le répertoire de données |
 | Données disparues | Disque éphémère du plan free | Passer au plan Starter avec un disque (§ 2) |
+| Trace « sauvegardes : répertoire de sauvegardes introuvable » | La sonde ne voit pas le répertoire — elle ne prétend pas que tout va bien | Poser `OASIS_SAUVEGARDES_DIR` sur le répertoire réellement employé (§ 5) |
+| Trace « sauvegardes : la dernière archive est trop petite » | Un `tar` interrompu, le plus souvent un disque plein | Libérer de la place, relancer `scripts/sauvegarde.sh`, **et ne pas compter sur cette archive** |
+| Trace « sauvegardes : la dernière sauvegarde dépasse le seuil » | La planification s'est arrêtée | Vérifier la tâche `cron` ou l'ordonnanceur ; `age_h` dans la trace dit depuis quand |
 | Première requête très lente | Mise en veille du plan free | Normal : environ 30 secondes de réveil |
 | « Moteur de rendu PDF indisponible sur ce serveur » | Chromium n'a pas pu démarrer : les 512 Mo du plan free ne lui suffisent pas | Le reste de l'application n'est pas touché — le rendu PDF exige le plan Starter |
 | Build long ou en échec au premier déploiement | `npm ci` télécharge Chromium (≈ 170 Mo) | Normal une seule fois : `PUPPETEER_CACHE_DIR` le conserve d'une construction à l'autre |

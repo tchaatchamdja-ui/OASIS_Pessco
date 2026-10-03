@@ -127,6 +127,28 @@ module.exports = async function socleSmoke(port) {
       JSON.stringify(santeHorloge.horloge));
     verifier('l’horodatage non vérifié est consigné au journal',
       audit.corps.some((e) => e.action === 'HORLOGE_NON_VERIFIEE'));
+
+    // ── État des sauvegardes (ADR-001, suite n° 4) ──
+    //
+    // Même principe que l'horloge, et pour la même raison : ADR-001 a différé la
+    // bascule vers PostgreSQL en assumant que les archives horodatées sont le
+    // seul recours. Une planification se défait sans bruit, et l'application
+    // continue de servir parfaitement — c'est le jour où l'on en a besoin qu'on
+    // l'apprend. La sonde le dit, et **ne dit jamais « ok » quand elle ne voit
+    // rien**.
+    //
+    // Sous le harnais, le répertoire est celui du bac et n'existe pas : le
+    // verdict attendu est donc « non_configure », déterministe. Nommer ici le
+    // vrai répertoire du dépôt aurait fait dire à ce contrôle une chose
+    // différente selon la machine de celui qui le lance.
+    const sante = (await srv.appel('/api/health')).corps;
+    verifier('la sonde de santé rend l’état des sauvegardes',
+      !!sante.sauvegardes && typeof sante.sauvegardes.verdict === 'string'
+      && typeof sante.sauvegardes.seuil_h === 'number',
+      JSON.stringify(sante.sauvegardes));
+    verifier('la sonde ne déclare pas « ok » un répertoire qu’elle ne voit pas',
+      sante.sauvegardes.verdict === 'non_configure',
+      JSON.stringify(sante.sauvegardes));
     verifier('les entrées du journal portent une date ISO',
       audit.corps.every((e) => /^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(e.ts)));
 

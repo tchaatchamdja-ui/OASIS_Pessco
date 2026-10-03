@@ -11,12 +11,38 @@ Un seul **Web Service** Render suffit.
 | Élément | Valeur |
 |---|---|
 | Runtime | Node ≥ 20 (`engines` dans `package.json`) |
-| Commande de construction | `npm ci` |
+| Commande de construction | `npm ci --include=dev && npm run build` — voir § 1.1 |
 | Commande de démarrage | `npm start` → `node server.js` |
 | Port | `process.env.PORT`, écoute sur `0.0.0.0` |
 | Sonde de santé | `GET /api/health` |
 | Stockage | fichiers JSON dans `OASIS_DATA_DIR` (défaut `./data`) |
 | Base de données | aucune — PostgreSQL est la cible prévue, non branchée |
+
+### 1.1 Les écrans se construisent
+
+Les écrans portés en React + TypeScript ([ADR-003](docs/ADR-003-cadre-du-frontend.md)) ne sont
+pas servis depuis leurs sources : `npm run build` les assemble dans
+`public/modules/<module>/app/`. **Ce paquet n'est pas versionné** — un paquet obsolète
+servi en production est un défaut qui ne se voit pas.
+
+Conséquence : `npm ci` seul ne suffit plus. Une plateforme qui installe et démarre sans
+construire met un service en ligne qui **démarre, répond 200 sur `/api/health`, répond
+200 sur la page de l'écran — et sert un écran blanc.** Mesuré : en retirant du
+`Dockerfile` la seule ligne qui copie le paquet, ces trois vérifications restent vertes
+et seul `/modules/droits/app/main.js` manque.
+
+Deux pièges, l'un et l'autre rencontrés :
+
+| Piège | Ce qui arrive | Ce qui l'évite |
+|---|---|---|
+| `npm ci` sans `--include=dev` | `NODE_ENV=production` suffit à faire écarter les dépendances de développement par npm ; la construction échoue en annonçant qu'esbuild est introuvable, **loin de sa cause** | `--include=dev`, explicite, dans la commande de construction |
+| Construire sans `NODE_ENV=production` | Le paquet part sans minification, avec sa carte de source, et **React en régime de développement** : 3,2 Mo au lieu de 244 Ko | Poser `NODE_ENV=production` *avant* `npm run build` |
+
+Les deux se tiennent ensemble : la variable qui fait bien construire est celle qui fait
+mal installer. C'est pourquoi `--include=dev` est écrit partout où la construction passe.
+
+La CI ne se contente pas de constater que l'image se construit : elle la **démarre et
+demande le paquet** (§ 6). « L'image se construit » ne dit pas qu'elle sert quelque chose.
 
 ---
 
@@ -74,7 +100,9 @@ Le fichier `render.yaml` décrit le service ; Render le lit comme un *Blueprint*
 5. **Apply**. Le premier déploiement prend deux à trois minutes.
 
 Sans Blueprint (création manuelle) : *New → Web Service*, dépôt OASIS, runtime Node,
-build `npm ci`, start `npm start`, health check `/api/health`, puis les variables du § 4.
+build **`npm ci --include=dev && npm run build`**, start `npm start`, health check
+`/api/health`, puis les variables du § 4. Le `--include=dev` et le `build` ne sont pas
+optionnels : sans eux le service démarre et sert des écrans blancs (§ 1.1).
 
 ### 3.3 Variables d'environnement
 
@@ -281,6 +309,29 @@ docker run -p 4750:4750 \
 
 `docker-compose.yml` fait la même chose avec un volume nommé et la sonde de santé.
 
+### Ce que l'image construit elle-même
+
+L'image a trois étages : les dépendances d'exécution, la **construction des écrans**, et
+l'image finale. L'étage de construction installe l'arbre de développement et lance
+`npm run build` ; l'image finale copie le paquet produit par-dessus `public/`.
+
+Rien de cela n'est visible depuis l'extérieur, d'où deux précautions qui le rendent
+vérifiable :
+
+- **`.dockerignore` exclut `public/modules/*/app/`.** Présent sur la machine du
+  développeur, le paquet local serait emporté par `COPY public` et l'image paraîtrait
+  correcte alors que rien dans la chaîne ne l'aura construit — un faux vert dont la seule
+  cause est l'état d'un disque. Le seul paquet qu'une image porte est celui qu'elle a
+  produit.
+- **La CI démarre l'image et demande le paquet** (`.github/workflows/ci.yml`, tâche
+  `image`). C'est le seul contrôle qui distingue une image qui se construit d'une image
+  qui sert. Éprouvé dans les deux sens : il rend 0 sur l'image correcte, 1 sur une image
+  dont on a retiré la ligne de copie.
+
+L'étage de construction installe avec `--ignore-scripts` : l'arbre de développement porte
+Puppeteer, qui télécharge Chromium à l'installation, et cet étage n'a besoin que
+d'esbuild, de TypeScript et de React — ce téléchargement pèse plus que tout le reste réuni.
+
 ---
 
 ## 7. Ennuis courants
@@ -297,3 +348,6 @@ docker run -p 4750:4750 \
 | Première requête très lente | Mise en veille du plan free | Normal : environ 30 secondes de réveil |
 | « Moteur de rendu PDF indisponible sur ce serveur » | Chromium n'a pas pu démarrer : les 512 Mo du plan free ne lui suffisent pas | Le reste de l'application n'est pas touché — le rendu PDF exige le plan Starter |
 | Build long ou en échec au premier déploiement | `npm ci` télécharge Chromium (≈ 170 Mo) | Normal une seule fois : `PUPPETEER_CACHE_DIR` le conserve d'une construction à l'autre |
+| Écran blanc sur un module, la page répondant 200 | Le paquet de l'écran n'a pas été construit : commande de construction sans `npm run build` | Rétablir `npm ci --include=dev && npm run build` (§ 1.1). Vérifier par `curl -I https://…/modules/droits/app/main.js` — un 404 est le symptôme |
+| Build en échec : « esbuild introuvable » | `NODE_ENV=production` a fait écarter les dépendances de développement | Ajouter `--include=dev` à `npm ci` (§ 1.1) |
+| Écran lent et paquet anormalement lourd | Construit sans `NODE_ENV=production` : React en régime de développement | Poser `NODE_ENV=production` avant `npm run build` |

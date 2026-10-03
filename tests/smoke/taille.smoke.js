@@ -794,5 +794,89 @@ module.exports = async function tailleSmoke() {
     });
   }
 
+  // ── Tout chemin qui installe doit construire ──
+  //
+  // Les écrans portés en React + TypeScript (ADR-003) ne sont pas servis depuis
+  // leurs sources : `npm run build` les assemble dans `public/modules/<m>/app/`,
+  // et **ce paquet n'est pas versionné** — un paquet obsolète servi en production
+  // est un défaut qui ne se voit pas.
+  //
+  // Il y a donc trois chemins de déploiement, et aucun ne garde les autres : le
+  // `Dockerfile`, le `render.yaml`, la CI. Un chemin qui installe sans construire
+  // met en ligne un service qui **démarre, répond 200 sur `/api/health`, répond
+  // 200 sur la page de l'écran — et sert un écran blanc.**
+  //
+  // Mesuré le 3 octobre 2026, en retirant du `Dockerfile` la seule ligne qui
+  // copie le paquet : l'image démarre, `/api/health` rend 200, la page rend 200,
+  // et seul `/modules/droits/app/main.js` rend 404. Les trois vérifications
+  // évidentes restent vertes. C'est pour ce défaut-là que ce garde-fou existe.
+  const lire = (f) => {
+    const c = path.join(RACINE, f);
+    return fs.existsSync(c) ? fs.readFileSync(c, 'utf8') : null;
+  };
+  const sansCommentaires = (t, marque) =>
+    t.split('\n').filter((l) => !l.trim().startsWith(marque)).join('\n');
+
+  const render = lire('render.yaml');
+  if (!render) horsPortee('Render construit les écrans', 'render.yaml absent');
+  else {
+    const build = (sansCommentaires(render, '#').match(/buildCommand:(.*)/) || [])[1] || '';
+    verifier('Render construit les écrans', /npm run build/.test(build), build.trim());
+    // `NODE_ENV=production` est posé pour le service : npm en tire la conclusion
+    // qu'il peut écarter les dépendances de développement, et la construction
+    // échoue en annonçant qu'esbuild est introuvable, loin de sa cause.
+    verifier('Render installe de quoi construire', /--include=dev/.test(build), build.trim());
+  }
+
+  const dockerfile = lire('Dockerfile');
+  if (!dockerfile) horsPortee('l’image construit les écrans', 'Dockerfile absent');
+  else {
+    const utile = sansCommentaires(dockerfile, '#');
+    const etage = (utile.match(/FROM[^\n]*AS construction\n([\s\S]*?)(?=\nFROM )/) || [])[1] || '';
+    verifier('l’image a un étage qui construit les écrans', /npm run build/.test(etage));
+    verifier('cet étage installe de quoi construire', /--include=dev/.test(etage));
+    // Sans cela, le paquet part non minifié, avec sa carte de source, et React en
+    // régime de développement : 3,2 Mo au lieu de 244 Ko. Mesuré.
+    verifier('cet étage construit en régime de production',
+      /ENV NODE_ENV=production/.test(etage));
+    // Le défaut mesuré ci-dessus est exactement l'absence de cette ligne.
+    verifier('l’image finale emporte le paquet construit',
+      /COPY --from=construction [^\n]*public/.test(utile));
+  }
+
+  // Le paquet local doit sortir du contexte de construction : présent sur la
+  // machine du développeur, il serait emporté par `COPY public` et l'image
+  // paraîtrait correcte alors que rien dans la chaîne ne l'aura construit. Un
+  // faux vert dont la seule cause est l'état d'un disque.
+  const dockerignore = lire('.dockerignore');
+  verifier('le paquet local ne peut pas se glisser dans l’image',
+    !!dockerignore && /public\/modules\/\*\/app\//.test(sansCommentaires(dockerignore, '#')));
+
+  // Et le seul contrôle qui distingue une image qui se construit d'une image qui
+  // sert : la démarrer et demander le paquet. « L'image se construit » ne dit
+  // rien de ce qu'elle sert.
+  const ci = lire('.github/workflows/ci.yml');
+  if (!ci) horsPortee('la CI éprouve que l’image sert les écrans', 'ci.yml absent');
+  else {
+    // Le détecteur porte sur l'étape, non sur le fichier : trouver « docker run »
+    // quelque part et « main.js » ailleurs ne dirait pas qu'on interroge l'image.
+    // Et il ne cherche pas le chemin en littéral — la CI l'assemble dans une
+    // variable, et un détecteur qui exigeait le littéral rendait faux sur une CI
+    // correcte. Première écriture, premier défaut de la forme habituelle.
+    const etape = (ci.match(/docker run -d[\s\S]*?\n      - name:|docker run -d[\s\S]*$/) || [''])[0];
+    const lignes = etape.split('\n');
+    // Le détecteur lie l'interrogation au paquet **sur la même ligne**. Chercher
+    // « curl -sf » et « app/main.js » quelque part dans l'étape passait à vide :
+    // l'attente de démarrage porte déjà un `curl -sf`, et le chemin du paquet
+    // reste écrit dans son affectation. En remplaçant l'interrogation par `true`,
+    // le garde-fou restait vert. Mesuré — c'est pour cela qu'il est ainsi.
+    verifier('la CI demande le paquet à l’image qu’elle vient de construire',
+      lignes.some((l) => /curl/.test(l) && /(\$paquet|app\/main\.js)/.test(l)));
+    // Et ce qui transforme le constat en échec. Une étape qui interroge sans
+    // propager rend toujours zéro : le contrôle existerait et ne garderait rien.
+    verifier('et un paquet absent fait échouer la CI',
+      /echec=1/.test(etape) && /exit \$echec/.test(etape));
+  }
+
   return bilan('taille');
 };

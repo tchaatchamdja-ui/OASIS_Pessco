@@ -71,3 +71,36 @@ jobs:
       - uses: actions/checkout@v4
       - name: Construire
         run: docker build -t oasis:${{ github.sha }} .
+
+      # Ce que « l'image se construit » ne dit pas : qu'elle sert quelque chose.
+      #
+      # Les écrans en React + TypeScript (ADR-003) se construisent, et leur paquet
+      # n'est pas versionné. Une image qui ne le produit pas démarre, répond 200
+      # sur `/api/health`, répond 200 sur la page de l'écran — et sert un écran
+      # blanc. Mesuré : en retirant la seule ligne qui copie le paquet, les trois
+      # vérifications évidentes restent vertes et seul le paquet manque.
+      #
+      # On démarre donc l'image et on demande le paquet. `--fail` est ce qui fait
+      # mordre : sans lui, `curl` rend 0 sur un 404.
+      - name: Éprouver que l'image sert les écrans construits
+        run: |
+          docker run -d --name epreuve -p 4750:4750 \
+            -e OASIS_VERROU=0 -e OASIS_SEED_PASSWORD=epreuve-ci-seulement \
+            oasis:${{ github.sha }}
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4750/api/health >/dev/null && break
+            sleep 2
+          done
+          echec=0
+          for ecran in droits; do
+            paquet="/modules/$ecran/app/main.js"
+            if curl -sf -o /dev/null "http://localhost:4750$paquet"; then
+              echo "::notice::$ecran — paquet servi"
+            else
+              echo "::error::$ecran — $paquet absent de l'image : l'écran serait blanc"
+              echec=1
+            fi
+          done
+          docker logs epreuve | tail -30
+          docker rm -f epreuve >/dev/null
+          exit $echec

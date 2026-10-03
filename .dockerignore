@@ -4,6 +4,13 @@ audit-output/
 docs/
 tests/
 .git/
+
+# Le paquet des écrans construits, produit par l'étage « construction ».
+# Exclu du contexte à dessein : présent sur la machine du développeur, il serait
+# emporté par `COPY public` et l'image paraîtrait correcte alors que rien dans la
+# chaîne ne l'aura construit. Le seul paquet qu'une image porte est celui qu'elle
+# a produit elle-même.
+public/modules/*/app/
 .DS_Store
 *.log
 *.tmp

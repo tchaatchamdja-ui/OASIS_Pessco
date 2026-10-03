@@ -1,11 +1,41 @@
 # OASIS — image d'exécution.
-# Deux étages : les dépendances sont installées à part, l'image finale ne
-# contient que le nécessaire et tourne sous un compte non privilégié.
+# Trois étages : les dépendances d'exécution d'un côté, la construction du
+# frontend de l'autre, et l'image finale qui ne contient que le nécessaire et
+# tourne sous un compte non privilégié.
 
 FROM node:22-alpine AS dependances
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
+
+# ── La construction du frontend (ADR-003) ──
+#
+# Les écrans en React + TypeScript se construisent ; leur paquet n'est pas
+# versionné, parce qu'un paquet obsolète servi en production est un défaut qui ne
+# se voit pas. L'image doit donc le produire elle-même.
+#
+# `--ignore-scripts` : l'arbre de développement porte Puppeteer, qui télécharge
+# Chromium à l'installation. Cet étage n'a besoin que d'esbuild, de TypeScript et
+# de React — et ce téléchargement pèse plus que tout le reste réuni.
+#
+# `NODE_ENV=production` est posé **ici**, et non laissé vide : c'est lui qui dit
+# à esbuild de minifier, d'omettre les cartes de source, et surtout de construire
+# React en régime de production. Laissé vide, l'image emportait un paquet de
+# développement — trois fois plus lourd, et React en mode développement sur un
+# serveur de production. Render pose la variable ; l'image ne l'aurait pas posée,
+# et les deux chemins auraient servi deux paquets différents.
+#
+# Du coup `--include=dev` n'est pas une précaution de style : npm tire de
+# `NODE_ENV=production` la conclusion qu'il peut sauter les dépendances de
+# développement, et la construction échouerait en annonçant qu'esbuild est
+# introuvable, loin de sa cause. L'étage exerce donc le même piège que Render.
+FROM node:22-alpine AS construction
+WORKDIR /app
+ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --include=dev --ignore-scripts
+COPY frontend ./frontend
+RUN npm run build
 
 FROM node:22-alpine
 WORKDIR /app
@@ -18,6 +48,10 @@ COPY server.js ./
 COPY src ./src
 COPY public ./public
 COPY config ./config
+# Le paquet des écrans construits, par-dessus `public/` : `express.static` le sert
+# comme le reste. Sans cette ligne, la page se charge et l'écran reste blanc — la
+# réponse HTTP est 200, et c'est bien le problème.
+COPY --from=construction /app/public/modules ./public/modules
 
 # Les données vivent hors de l'image : un volume les porte d'une version à
 # l'autre. Le répertoire est créé et cédé au compte applicatif.

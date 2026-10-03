@@ -20,7 +20,16 @@ services:
     # Le rendu PDF des rapports transmis passe par Chromium (puppeteer).
     # Render vide node_modules entre les constructions mais conserve
     # XDG_CACHE_HOME : le navigateur y est téléchargé une fois, puis réutilisé.
-    buildCommand: npm ci
+    #
+    # `--include=dev` n'est pas une précaution de style. `NODE_ENV` est posé à
+    # `production` plus bas, et npm en tire la conclusion qu'il peut sauter les
+    # dépendances de développement : la construction échouerait alors en annonçant
+    # qu'esbuild est introuvable, loin de sa cause.
+    #
+    # `npm run build` produit les écrans en React + TypeScript (ADR-003). Leur
+    # paquet n'est pas versionné — sans cette commande, le service démarre, répond
+    # 200, et sert un écran blanc.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true

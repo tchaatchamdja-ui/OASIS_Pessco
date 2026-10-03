@@ -221,9 +221,52 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        `body.textContent` compte le **source des scripts en ligne**. L'écran paraissait
        « rempli » alors qu'il ne rendait rien. C'est `innerText` qu'il fallait lire, et le
        contrôle était plus faible que je ne le croyais depuis le début.
-3. [ ] **Reprendre le déploiement** : `Dockerfile`, commande de construction,
-       `DEPLOYMENT.md`. Un écran qui ne se construit pas ne se déploie pas. **C'est le
-       seul point qui reste avant que ce module soit déployable.**
+3. [x] **Reprendre le déploiement** — fait le 3 octobre 2026. Trois chemins mènent en
+       production, et **les trois étaient faux, chacun à sa manière** :
+
+       | Chemin | Ce qu'il faisait | Ce qu'il fait |
+       |---|---|---|
+       | `Dockerfile` | `npm ci --omit=dev` : esbuild absent, aucune construction possible ; `COPY public` copiait un `public/` sans le paquet | Un étage `construction` qui installe l'arbre de développement et lance `npm run build` ; l'image finale copie le paquet produit |
+       | `render.yaml` | `buildCommand: npm ci` | `npm ci --include=dev && npm run build` |
+       | `.dockerignore` | n'excluait pas `public/modules/*/app/` | l'exclut |
+
+       Le défaut que ce point existait pour corriger a été **mesuré avant d'être
+       réparé** : en retirant du `Dockerfile` la seule ligne qui copie le paquet,
+       l'image démarre, `/api/health` rend 200, `/modules/droits/index.html` rend 200,
+       et seul `/modules/droits/app/main.js` rend 404. Les trois vérifications
+       évidentes restent vertes. **C'est un écran blanc que rien ne signale.**
+
+       Deux pièges se sont révélés en cours de route, et ils se tiennent :
+       `NODE_ENV=production` est ce qui fait bien construire — minification, pas de
+       carte de source, React en régime de production : 244 Ko au lieu de 3,2 Mo — et
+       c'est aussi ce qui fait mal installer, npm en tirant la conclusion qu'il peut
+       écarter les dépendances de développement. D'où `--include=dev` écrit partout où
+       la construction passe. Sans lui, l'échec annonce qu'esbuild est introuvable,
+       **loin de sa cause**.
+
+       Le `.dockerignore` est le point le moins visible et le plus important : le
+       paquet présent sur la machine du développeur était emporté par `COPY public`.
+       Une image construite ici aurait donc paru correcte alors que rien dans la chaîne
+       ne l'aura construit — **un faux vert dont la seule cause est l'état d'un
+       disque**.
+
+       Deux contrôles posés, et c'est la leçon du point : « l'image se construit » ne
+       dit rien de ce qu'elle sert.
+       · La CI **démarre l'image et demande le paquet** (tâche `image`). Éprouvée dans
+         les deux sens : 0 sur l'image correcte, 1 sur l'image dont on a ôté la ligne
+         de copie.
+       · Neuf garde-fous de forme dans `taille.smoke.js` tiennent les trois chemins
+         d'accord — chacun contre-essayé, chacun mord. Le dernier a demandé deux
+         écritures : la première cherchait `curl -sf` et `app/main.js` *quelque part*
+         dans l'étape, et passait à vide — l'attente de démarrage porte déjà un
+         `curl -sf`, et le chemin reste écrit dans son affectation. Le détecteur lie
+         désormais les deux **sur la même ligne**, et un second contrôle vérifie que
+         l'étape propage son échec : une étape qui constate sans échouer existerait
+         sans rien garder.
+
+       `DEPLOYMENT.md` porte le geste : § 1.1 pour les deux pièges, § 6 pour ce que
+       l'image construit elle-même, et trois entrées aux ennuis courants — dont
+       « écran blanc, la page répondant 200 », avec le `curl -I` qui le confirme.
 4. [x] **Les deux manières sont nommées aux garde-fous de forme** — fait. Le paquet
        construit est exclu des gardes de source par son **chemin**, non par sa taille (un
        paquet de deux cents lignes resterait un paquet). Et trois gardes neufs tiennent la

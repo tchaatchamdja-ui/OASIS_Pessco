@@ -1014,3 +1014,65 @@ Pour reprendre un jeu de données complet :
 ```bash
 DATABASE_URL='postgres://…' OASIS_DATA_DIR=/chemin/vers/data node scripts/migrer-pg.js --verifier
 ```
+
+---
+
+## Rejouer l'épreuve — les deux régimes
+
+*Posé le 3 octobre 2026 en fermant [ADR-001](ADR-001-magasin-de-donnees.md) suite n° 3.*
+
+La bascule était déclarée complète, et elle l'est. Ce qui manquait n'était pas une
+vérification mais sa **répétition** : elle avait été faite une fois, à la main, et rien ne
+la rejouait. La campagne par défaut rend 5 des 17 contrôles du magasin, et aucune de ses
+treize suites ne sert la base.
+
+La tâche `base` de la CI rejoue les deux épreuves à chaque poussée. Pour les rejouer à la
+main :
+
+```bash
+docker run -d --name oasis-pg -e POSTGRES_PASSWORD=essai -p 5433:5432 postgres:16
+docker exec oasis-pg psql -U postgres -c 'CREATE DATABASE oasis_recette'
+```
+
+Les 17 contrôles du magasin, pris à part :
+
+```bash
+OASIS_PG_ESSAI='postgres://postgres:essai@localhost:5433/oasis_recette' npm run smoke -- magasin-pg
+```
+
+Et la campagne entière, l'application servie depuis la base — c'est l'épreuve du jalon
+n° 13 :
+
+```bash
+DATABASE_URL='postgres://postgres:essai@localhost:5433/oasis_recette' npm run smoke
+```
+
+### Les deux variables sont distinctes à dessein
+
+`OASIS_PG_ESSAI` ne se confond pas avec `DATABASE_URL`. La suite du magasin **écrit**, et
+l'on ne veut pas qu'une adresse posée pour tout autre chose la dirige sur une base qui
+compte. Elle travaille dans un schéma à elle, `oasis_essai`, créé puis détruit.
+
+### Chaque suite a son schéma — y compris celles qui ne démarrent aucun serveur
+
+Les suites qui démarrent un serveur reçoivent chacune un schéma, où les fixtures sont
+reprises, détruit à l'arrêt. **Les quatre qui tournent dans le processus de la campagne
+n'en avaient aucun**, et `unitaires` écrivait donc `users`, `sessions`, `emails` et
+`mfa_challenges` dans le schéma `public` de la base visée.
+
+Ce n'est pas un désordre : en régime base, `save('users', …)` **remplace la collection
+entière**. Un `npm run smoke` lancé sur une base qui compte y aurait écrasé les comptes
+par les quinze du jeu d'essai — l'incident du 29 septembre 2026 sur `data/users.json`,
+transposé à PostgreSQL, et cette fois sans archive horodatée pour s'en remettre.
+
+La campagne relève désormais l'empreinte du schéma `public` avant et après, et **refuse si
+quoi que ce soit a bougé**. C'est l'analogue exact du relevé qui garde `data/`, et c'est
+lui qui a trouvé le défaut.
+
+### Mesurer *pendant*, pas *après*
+
+Le premier relevé, fait après la campagne, ne montrait que quatre collections : chaque
+suite détruit son schéma en partant. Il a fallu interroger la base **pendant** qu'une
+suite tournait pour voir ce qu'elle y faisait réellement — les quinze collections, `ramp`
+à la révision 47, 46 entrées de `module_audit`. Une campagne verte en régime base ne
+prouve rien si l'on n'a pas vérifié qu'elle a touché la base.

@@ -912,5 +912,42 @@ module.exports = async function tailleSmoke() {
       /echec=1/.test(etape) && /exit \$echec/.test(etape));
   }
 
+  // ── La campagne est rejouée contre un vrai PostgreSQL ──
+  //
+  // ADR-002 jalon n° 13 déclare la bascule du magasin complète, et ADR-001
+  // suite n° 3 demandait de l'éprouver contre un vrai serveur. Ce fut fait **une
+  // fois, à la main**, et rien ne le rejouait : la campagne par défaut rend 5
+  // des 17 contrôles du magasin, et aucune des treize suites ne sert la base.
+  //
+  // Un jalon clos sur une épreuve que personne ne rejoue n'est pas clos. Ce
+  // garde-fou tient la tâche qui la rejoue : retirée, elle emporterait avec elle
+  // la seule preuve que l'application fonctionne dans le régime qu'elle annonce,
+  // et aucune campagne ne le dirait.
+  if (!ci) {
+    horsPortee('la campagne est rejouée contre un vrai PostgreSQL', 'ci.yml absent');
+  } else {
+    // Le détecteur porte sur la tâche, et non sur le fichier : « postgres »
+    // quelque part et « DATABASE_URL » ailleurs ne diraient pas qu'on éprouve
+    // l'application contre un serveur. C'est la leçon du détecteur de l'image,
+    // qui passait à vide en cherchant deux chaînes sans les lier.
+    const tache = (ci.match(/\n {2}base:\n([\s\S]*?)(?=\n {2}[a-z_]+:\n)|\n {2}base:\n([\s\S]*)$/) || [''])[0];
+    verifier('la CI déclare un service PostgreSQL',
+      /services:[\s\S]*postgres:[\s\S]*image: postgres:/.test(tache));
+    // Les douze contrôles du magasin, et la campagne entière : deux épreuves
+    // distinctes, et les deux variables sont distinctes à dessein.
+    verifier('la CI rejoue les contrôles du magasin contre un vrai serveur',
+      /OASIS_PG_ESSAI: postgres:/.test(tache) && /smoke -- magasin-pg/.test(tache));
+    verifier('la CI rejoue la campagne entière servie depuis la base',
+      /DATABASE_URL: postgres:/.test(tache)
+        && tache.split('DATABASE_URL: postgres:')[1]?.includes('npm run smoke'));
+    // Et la campagne sur fichiers reste éprouvée pour elle-même : c'est le
+    // régime de production d'aujourd'hui. Les deux régimes se vérifient, pas
+    // l'un à la place de l'autre.
+    const verifieSansBase = /\n {2}verifier:\n([\s\S]*?)(?=\n {2}[a-z_]+:\n)/.exec(ci);
+    verifier('la campagne sur fichiers reste éprouvée sans aucune adresse de base',
+      !!verifieSansBase && /npm run smoke/.test(verifieSansBase[1])
+        && !/DATABASE_URL/.test(verifieSansBase[1]));
+  }
+
   return bilan('taille');
 };

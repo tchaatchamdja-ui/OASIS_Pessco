@@ -806,4 +806,14 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        les deux journaux chaînés vivent en PostgreSQL, et le même code sert les fichiers quand
        aucune adresse n'est donnée.
 
-8. [ ] **Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.
+8. [x] ~~**Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.~~
+       **Caduc, et contredit.** La maîtrise d'ouvrage a tranché l'inverse le
+       3 octobre 2026 : *« je veux un java script avec cadre comme dans les
+       specifications »*. Le frontend passe en **React + TypeScript**, module par
+       module, en cohabitation — voir
+       [ADR-003](ADR-003-cadre-du-frontend.md), qui remplace ce point.
+
+       Ce qu'il y avait à acter était donc l'inverse de ce qui est écrit ici, et
+       ce point serait resté à cocher indéfiniment : relevé le 3 octobre en
+       passant en revue les suites ouvertes, non par un contrôle. Un registre de
+       décision ne se garde pas tout seul.

@@ -35,6 +35,75 @@ jobs:
         # Puppeteer installe avec les dépendances : rien à télécharger de plus.
         run: npm run smoke
 
+  base:
+    name: La campagne servie depuis PostgreSQL (ADR-001, ADR-002)
+    runs-on: ubuntu-latest
+    # ── Pourquoi cette tâche existe ──
+    #
+    # ADR-002 jalon n° 13 déclare la bascule du magasin complète : treize
+    # collections et deux journaux chaînés vivent en PostgreSQL, et le même code
+    # sert les fichiers quand aucune adresse n'est donnée. ADR-001 suite n° 3
+    # demandait d'éprouver ce magasin contre un vrai serveur.
+    #
+    # C'était fait — une fois, à la main, le 1ᵉʳ octobre 2026 — et **rien ne le
+    # rejouait**. La campagne par défaut rend 5 des 17 contrôles du magasin : les
+    # douze qui interrogent un vrai moteur se déclarent hors de portée faute de
+    # `OASIS_PG_ESSAI`, et aucune des treize suites ne sert la base faute de
+    # `DATABASE_URL`. Un jalon clos sur une épreuve que personne ne rejoue n'est
+    # pas clos : un `json` devenu `jsonb`, un `rev` mal comparé, une chaîne
+    # d'audit qui forche — rien ne l'aurait dit.
+    #
+    # La tâche est séparée de `verifier` à dessein : la campagne sur fichiers est
+    # le régime de production d'aujourd'hui et doit rester verte pour elle-même.
+    # Les deux régimes se vérifient, pas l'un à la place de l'autre.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: essai
+        ports: ['5432:5432']
+        # Sans cette attente, la première suite trouve un serveur qui n'écoute
+        # pas encore et la tâche échoue pour une raison qui n'est pas la bonne.
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Créer la base de recette
+        # Une base à elle, jamais `postgres` : la campagne écrit, et le relevé
+        # de `tests/smoke/index.js` refuse toute écriture hors des schémas qu'il
+        # s'est donnés.
+        run: |
+          PGPASSWORD=essai psql -h localhost -U postgres -c 'CREATE DATABASE oasis_recette'
+
+      - name: Les 12 contrôles du magasin contre un vrai serveur
+        # `OASIS_PG_ESSAI` est distincte de `DATABASE_URL` à dessein : cette
+        # suite écrit, et on ne veut pas qu'une adresse posée pour autre chose
+        # la dirige sur une base qui compte. Elle travaille dans son schéma.
+        env:
+          OASIS_PG_ESSAI: postgres://postgres:essai@localhost:5432/oasis_recette
+        run: npm run smoke -- magasin-pg
+
+      - name: La campagne entière, servie depuis PostgreSQL
+        # C'est l'épreuve du jalon n° 13 : les 386 routes, les quinze
+        # collections, les deux journaux chaînés — le même code, l'autre régime.
+        # Chaque suite reçoit son propre schéma, repris depuis les fixtures, et
+        # détruit à l'arrêt.
+        env:
+          DATABASE_URL: postgres://postgres:essai@localhost:5432/oasis_recette
+        run: npm run smoke
+
   contrats:
     name: Contrats d'octets (ADR-002)
     runs-on: ubuntu-latest

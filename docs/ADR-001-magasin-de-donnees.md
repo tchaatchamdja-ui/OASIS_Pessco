@@ -247,9 +247,55 @@ payée** — il ne reste qu'à l'exercer le jour venu.
        données et refuse de démarrer si un autre le tient ; un verrou laissé par
        un arrêt brutal est repris, celui d'une autre machine est refusé faute de
        pouvoir le vérifier. Huit contrôles, et le geste dans `DEPLOYMENT.md`.
-3. [ ] **Éprouver `src/store_pg.js` contre un vrai PostgreSQL** — il n'a tourné
-       que contre une base de papier. Trois commandes dans
-       `docs/MAGASIN-POSTGRESQL.md`.
+3. [x] **Éprouver `src/store_pg.js` contre un vrai PostgreSQL** — fait, et ce
+       point méritait d'être rouvert avant d'être coché.
+
+       Il l'avait été **une fois, à la main**, le 1ᵉʳ octobre 2026. Relu le
+       3 octobre, l'état réel était celui-ci : la campagne par défaut rend **5
+       des 17 contrôles** du magasin — les douze qui interrogent un vrai moteur
+       se déclarent hors de portée faute de `OASIS_PG_ESSAI` — et **aucune des
+       treize suites ne sert la base**, faute de `DATABASE_URL`. La CI ne
+       démarrait aucun PostgreSQL. ADR-002 jalon n° 13 était donc **déclaré clos
+       sur une épreuve que rien ne rejouait** : un `json` devenu `jsonb`, un
+       `rev` mal comparé, une chaîne d'audit qui forche — rien ne l'aurait dit.
+
+       Ce qui est en place maintenant, et qui tourne à chaque poussée :
+
+       | Épreuve | Ce qu'elle couvre |
+       |---|---|
+       | `OASIS_PG_ESSAI` + `smoke -- magasin-pg` | **17/17** contrôles du magasin contre PostgreSQL 16 — aller-retour octet pour octet, contre-épreuve `jsonb` qui rompt la chaîne, 50 écritures concurrentes, 100 ajouts au journal, deux chaînes mêlées |
+       | `DATABASE_URL` + `npm run smoke` | **la campagne entière servie depuis la base** — les 386 routes, les quinze collections, les deux journaux chaînés. C'est l'épreuve du jalon n° 13, et elle n'existait pas |
+       | `npm run smoke` sans adresse | le régime fichiers, éprouvé **pour lui-même**. Les deux régimes se vérifient, pas l'un à la place de l'autre |
+
+       Vérifié non vide : pendant la suite RAMP en régime base, le schéma isolé
+       porte les **quinze** collections, `ramp` à la révision 47 et 46 entrées de
+       `module_audit`. Le premier relevé, fait *après* la campagne, ne montrait
+       que quatre collections — parce que chaque suite détruit son schéma en
+       partant. Mesurer après ne disait rien ; il a fallu mesurer **pendant**.
+
+       **Et le défaut que cela a trouvé.** Les quatre collections vues dans le
+       schéma `public` n'étaient pas un reste : `unitaires.smoke.js` y écrivait
+       `users`, `sessions`, `emails` et `mfa_challenges`. Les suites qui
+       démarrent un serveur reçoivent chacune son schéma ; les quatre qui
+       tournent **dans le processus parent** n'en avaient aucun. Or en régime
+       base, `save('users', …)` **remplace la collection entière** : un
+       `npm run smoke` lancé sur une base qui compte y aurait écrasé les comptes
+       par les quinze du jeu d'essai. C'est l'incident qui a détruit
+       `data/users.json` le 29 septembre 2026, transposé à PostgreSQL — et cette
+       fois sans aucune sauvegarde horodatée pour s'en remettre.
+
+       Corrigé — les suites du parent ont leur schéma — et **tenu** : la
+       campagne relève l'empreinte du schéma `public` avant et après, et refuse
+       si quoi que ce soit a bougé. C'est l'analogue exact du relevé qui garde
+       `data/`, et c'est lui qui a trouvé le défaut. Contre-essayé dans les deux
+       cas qui comptent : base vierge — il nomme ce qui a été créé ; base déjà
+       peuplée — il montre les empreintes qui changent, c'est-à-dire la donnée
+       remplacée.
+
+       Cinq garde-fous de forme tiennent la tâche de CI, chacun contre-essayé :
+       le service doit être un PostgreSQL, les deux épreuves doivent être
+       lancées avec leurs adresses — distinctes à dessein —, et la campagne sur
+       fichiers ne doit porter **aucune** adresse de base.
 4. [ ] **Vérifier la planification des sauvegardes** sur l'instance de
        production (`scripts/sauvegarde.sh`), seule protection en l'absence de base.
 5. [x] ~~Rouvrir cet ADR à la réception de la spécification.~~ — fait le

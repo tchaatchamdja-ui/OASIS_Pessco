@@ -71,6 +71,65 @@ const suites = [
   };
   const avant = empreinte();
 
+  // ── Et la base de travail, relevée de la même façon ──
+  //
+  // `data/` a un verrou et un relevé ; la base n'avait ni l'un ni l'autre. Les
+  // suites qui démarrent un serveur reçoivent chacune **son schéma** — le
+  // harnais le crée, y reprend les fixtures, et le détruit. Mais quatre suites
+  // tournent **dans ce processus** et n'en ont pas : `unitaires` écrivait donc
+  // `users`, `sessions`, `emails` et `mfa_challenges` dans le schéma `public`
+  // de la base visée par `DATABASE_URL`.
+  //
+  // Et en régime base, `save('users', …)` **remplace la collection entière**.
+  // Un `npm run smoke` lancé sur une base qui compte y aurait écrasé les
+  // comptes par les quinze du jeu d'essai. C'est l'incident qui a détruit
+  // `data/users.json` le 29 septembre 2026, transposé à PostgreSQL — et cette
+  // fois sans aucune sauvegarde horodatée pour s'en remettre.
+  //
+  // La cause est corrigée (`bacBase` ci-dessous donne un schéma aux suites de
+  // ce processus). Ce relevé dit si quelque chose a quand même écrit ailleurs :
+  // c'est lui qui a trouvé le défaut, et c'est lui qui le tiendra fermé.
+  const ADRESSE_BASE = process.env.DATABASE_URL || '';
+  const empreinteBase = async () => {
+    if (!ADRESSE_BASE) return null;
+    // eslint-disable-next-line global-require
+    const { Pool } = require('pg');
+    const p = new Pool({ connectionString: ADRESSE_BASE });
+    try {
+      const r = await p.query(`
+        SELECT 'collections:' || nom || '=' || md5(valeur::text) AS e
+          FROM public.collections
+        UNION ALL
+        SELECT 'journal:' || nom || '=' || count(*)::text
+          FROM public.journal GROUP BY nom
+        ORDER BY 1`);
+      return r.rows.map((x) => x.e);
+    } catch (e) {
+      // Les tables n'existent pas encore : c'est le cas normal d'une base
+      // vierge, et il n'y a donc rien à préserver.
+      return /does not exist/.test(e.message) ? [] : [`ERREUR: ${e.message}`];
+    } finally {
+      await p.end();
+    }
+  };
+  const avantBase = await empreinteBase();
+
+  // Un schéma pour les suites de ce processus, créé ici et détruit à la fin.
+  // Sans lui, elles écrivent dans `public` — voir ci-dessus.
+  const bacBase = ADRESSE_BASE ? await (async () => {
+    const nom = `oasis_smoke_parent_${Math.random().toString(36).slice(2, 8)}`;
+    // eslint-disable-next-line global-require
+    const { Pool } = require('pg');
+    const p = new Pool({ connectionString: ADRESSE_BASE });
+    await p.query(`DROP SCHEMA IF EXISTS ${nom} CASCADE`);
+    await p.query(`CREATE SCHEMA ${nom}`);
+    await p.end();
+    const sep = ADRESSE_BASE.includes('?') ? '&' : '?';
+    process.env.DATABASE_URL = `${ADRESSE_BASE}${sep}options=-c%20search_path%3D${nom}`;
+    console.log(`base : les suites de ce processus écrivent dans le schéma ${nom}`);
+    return nom;
+  })() : null;
+
   const resultats = [];
   for (const s of choisies) {
     try {
@@ -79,6 +138,30 @@ const suites = [
       console.error(`\n✗ ${s.nom} — exception : ${e.message}`);
       resultats.push([s.nom, false]);
     }
+  }
+
+  // Le schéma du parent part avant le relevé : ses tables sont ailleurs que
+  // dans `public`, mais le détruire d'abord évite de laisser un schéma derrière
+  // soi quand le relevé échoue.
+  if (bacBase) {
+    process.env.DATABASE_URL = ADRESSE_BASE;
+    // eslint-disable-next-line global-require
+    const { Pool } = require('pg');
+    const p = new Pool({ connectionString: ADRESSE_BASE });
+    await p.query(`DROP SCHEMA IF EXISTS ${bacBase} CASCADE`);
+    await p.end();
+  }
+
+  const apresBase = await empreinteBase();
+  const baseTouchee = avantBase !== null
+    && JSON.stringify(avantBase) !== JSON.stringify(apresBase);
+  if (baseTouchee) {
+    console.error('\n✗✗ LA BASE DE TRAVAIL A ÉTÉ MODIFIÉE PAR LES CONTRÔLES ✗✗');
+    console.error(`   ${ADRESSE_BASE.replace(/:\/\/[^@]*@/, '://…@')}, schéma public`);
+    const tous = [...new Set([...(avantBase || []), ...(apresBase || [])])].sort();
+    tous.filter((e) => !(avantBase || []).includes(e) || !(apresBase || []).includes(e))
+      .forEach((e) => console.error(`   · ${e}`));
+    console.error('   Une suite a écrit hors de son schéma : voir le relevé dans ce fichier.');
   }
 
   const apres = empreinte();
@@ -94,5 +177,5 @@ const suites = [
 
   console.log('\n═══ Bilan ═══');
   resultats.forEach(([nom, ok]) => console.log(` ${ok ? '✓' : '✗'} ${nom}`));
-  process.exit(resultats.every(([, ok]) => ok) && !touches.length ? 0 : 1);
+  process.exit(resultats.every(([, ok]) => ok) && !touches.length && !baseTouchee ? 0 : 1);
 })();

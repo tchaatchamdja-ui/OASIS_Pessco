@@ -41,13 +41,26 @@ const FICHIERS_TOLERES = {};
 // été décomposées. Une exception se déclarerait ici, avec sa longueur.
 const FONCTIONS_TOLEREES = {};
 
+// ── Ce qui est écrit, et ce qui est construit ──
+//
+// Depuis ADR-003, `public/modules/<module>/app/` porte le paquet d'un écran en
+// React + TypeScript : un fichier de vingt-cinq mille lignes que personne n'écrit
+// ni ne lit. Tous les gardes de ce fichier portent sur la **source** — longueur
+// lisible, noms globaux, dates, appels au magasin —, et aucun n'a de sens sur un
+// paquet. La source, elle, vit dans `frontend/`, et c'est TypeScript qui la tient.
+//
+// Exclu par le chemin, et non par la taille : un paquet de deux cents lignes
+// resterait un paquet, et un fichier écrit de vingt-cinq mille lignes resterait un
+// défaut.
+const CONSTRUIT = /\/public\/modules\/[^/]+\/app\//;
+
 function sources() {
   const liste = [];
   const parcourir = (dossier) => {
     fs.readdirSync(dossier, { withFileTypes: true }).forEach((e) => {
       const p = path.join(dossier, e.name);
       if (e.isDirectory()) { if (!/node_modules|\.git/.test(p)) parcourir(p); return; }
-      if (/\.(js|css)$/.test(e.name)) liste.push(p);
+      if (/\.(js|css)$/.test(e.name) && !CONSTRUIT.test(p.split(path.sep).join('/'))) liste.push(p);
     });
   };
   DOSSIERS.forEach((d) => parcourir(path.join(RACINE, d)));
@@ -501,6 +514,54 @@ module.exports = async function tailleSmoke() {
   });
   verifier('aucun magasin de module en base n’est lu sans « await »',
     MAGASIN_NU.length === 0, MAGASIN_NU.join(' · '));
+
+  // ── La source React est tenue comme le reste ──
+  //
+  // Les gardes de ce fichier portent sur `src/` et `public/` : la source de
+  // l'écran en React vit dans `frontend/`, et serait passée à côté de tout —
+  // longueur, caractères de contrôle, noms globaux. La cohabitation (ADR-003)
+  // doit être **tenue**, non subie, et c'est ce que ces trois contrôles font.
+  const SOURCES_REACT = [];
+  const parcourirFrontend = (dossier) => {
+    if (!fs.existsSync(dossier)) return;
+    fs.readdirSync(dossier, { withFileTypes: true }).forEach((e) => {
+      const p = path.join(dossier, e.name);
+      if (e.isDirectory()) { parcourirFrontend(p); return; }
+      if (/\.(ts|tsx|mjs)$/.test(e.name)) SOURCES_REACT.push(p);
+    });
+  };
+  parcourirFrontend(path.join(RACINE, 'frontend'));
+
+  verifier('la source du frontend est trouvée', SOURCES_REACT.length > 0,
+    `${SOURCES_REACT.length} fichier(s)`);
+
+  const TROP_LONGS = SOURCES_REACT
+    .filter((f) => fs.readFileSync(f, 'utf8').split('\n').length > 600)
+    .map((f) => `${relatif(f)} : ${fs.readFileSync(f, 'utf8').split('\n').length} lignes`);
+  verifier('aucun fichier de frontend au-delà de 600 lignes',
+    TROP_LONGS.length === 0, TROP_LONGS.join(' · '));
+
+  // `any` et `as unknown as` défont le typage sans le dire, et c'est tout ce que
+  // la fiche technique attendait de TypeScript. Une seule exception est
+  // légitime : `socle.ts`, la frontière avec le socle commun non typé — et elle
+  // n'emploie ni l'un ni l'autre, elle **déclare**.
+  //
+  // Les lignes de commentaire sont écartées : la première version a dénoncé
+  // `socle.ts`, où la phrase « on aurait écrit `(window as any)` partout » dit
+  // précisément qu'on ne le fait pas. Un garde-fou qui ne distingue pas le code
+  // de ce qui l'explique fait relire un commentaire juste.
+  const TYPAGE_DEFAIT = [];
+  SOURCES_REACT.forEach((f) => {
+    fs.readFileSync(f, 'utf8').split('\n').forEach((ligne, n) => {
+      const nue = ligne.trim();
+      if (nue.startsWith('//') || nue.startsWith('*') || nue.startsWith('/*')) return;
+      if (/\bas\s+unknown\s+as\b/.test(ligne) || /:\s*any\b/.test(ligne) || /\bas\s+any\b/.test(ligne)) {
+        TYPAGE_DEFAIT.push(`${relatif(f)}:${n + 1}`);
+      }
+    });
+  });
+  verifier('le typage du frontend n’est défait nulle part',
+    TYPAGE_DEFAIT.length === 0, TYPAGE_DEFAIT.join(' · '));
 
   // ── Ce qu'un autre module fonde ne se détruit pas ──
   //

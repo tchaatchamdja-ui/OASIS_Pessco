@@ -323,6 +323,32 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   activité créée.
 
 ### Frontend — React + TypeScript (ADR-003)
+- **L'écran « Gestion des Droits » est en React + TypeScript** — premier des huit modules.
+  Les six contrôles de navigateur passent **à l'identique**, et les 20 contrôles de la suite
+  « droits » n'ont pas bougé : l'API n'est pas touchée.
+  Coût mesuré : **554 lignes vanilla → 1 208 lignes**, 8 fichiers, paquet de 240 Ko minifié.
+  Un cinquième des lignes neuves tient dans deux fichiers qui ne se réécriront pas à chaque
+  module : la frontière avec le socle commun non typé (119 lignes, qui disparaîtront le jour
+  où il sera porté) et les contrats des huit routes (121 lignes, des charges jusqu'ici
+  tacites). Projeté : **environ 1,8 ligne pour une remplacée**, moins sur les gros modules.
+- Le socle commun — 2 250 lignes de barre supérieure, thème, requêtes, messages — **n'est pas
+  porté** : React vit dans `#app` et le consomme. C'est ce que « cohabitation » veut dire, et
+  ce qui rend le premier module faisable sans en entraîner huit.
+- **Quatre défauts trouvés, dont deux de mon fait** : le répertoire de traduction lit un
+  global `DR` que l'écran d'avant portait ; `dtPriv` et `dtPrivDesc`, déclarés en `const`, ne
+  sont pas sur `window` et les y lire rendait `undefined` ; mon alias déclaré pour éviter un
+  masquage de nom **mentait**, n'existant pas à l'exécution ; et `exactOptionalPropertyTypes` a
+  refusé un champ filtré puis reposé — il avait raison, `filter` suivi de `map` masquait la
+  question.
+- **Et un défaut de mon propre contrôle**, trouvé parce que l'écran React échouait :
+  `body.textContent` compte le **source des scripts en ligne**, de sorte que l'écran paraissait
+  « rempli » alors qu'il ne rendait rien. C'est `innerText` qu'il faut lire — le contrôle était
+  plus faible que je ne le croyais depuis le début.
+- **Les deux manières sont nommées aux garde-fous de forme.** Le paquet construit est exclu des
+  gardes de source par son **chemin**, non par sa taille. Trois gardes neufs tiennent la source
+  React comme le reste : elle est trouvée, aucun fichier au-delà de 600 lignes, et le typage
+  n'est défait nulle part — ni `any`, ni `as unknown as`. Ce dernier a d'abord dénoncé un
+  commentaire disant qu'on ne le fait pas ; il écarte désormais les commentaires.
 - **Six contrôles de navigateur sur l'écran des droits, posés avant sa réécriture.** Aucun
   ne l'ouvrait : les vingt contrôles de la suite « droits » parlent à l'API, et une API verte
   ne dit rien d'un écran qui reste blanc. On ne mesure pas une réécriture contre rien.

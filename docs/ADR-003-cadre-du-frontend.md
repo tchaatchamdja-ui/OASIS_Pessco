@@ -181,14 +181,56 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        C'est à ces quatre contrôles que la version React devra répondre, à l'identique.
        Ils sont la définition de « la réécriture marche ».
 
-1. [ ] **Reprendre DROITS en React + TypeScript** — 933 lignes, 2 fichiers. Avec son
-       étape de construction, et ses 20 contrôles verts avant comme après.
-2. [ ] **Mesurer et consigner le coût réel** de ce premier module : lignes écrites,
-       temps, défauts trouvés. C'est lui qui chiffre les sept autres.
+1. [x] **Reprendre DROITS en React + TypeScript** — fait le 3 octobre 2026. Les six
+       contrôles de navigateur passent, à l'identique, et les 20 contrôles de la suite
+       « droits » n'ont pas bougé : l'API n'est pas touchée.
+
+2. [x] **Le coût réel, mesuré** — c'est lui qui chiffre les sept autres.
+
+       | | |
+       |---|---|
+       | Avant — `dr-app.js`, vanilla | **554 lignes** |
+       | Après — `frontend/droits/`, React + TS | **1 208 lignes**, 8 fichiers |
+       | dont la frontière avec le socle non typé (`socle.ts`) | 119 |
+       | dont les contrats des huit routes (`api.ts`) | 121 |
+       | Paquet servi, minifié | **240 Ko** |
+       | Dépendances ajoutées | 4 de développement, 2 de production |
+
+       **Deux fois plus de lignes, et il faut dire où elles vont.** Un cinquième tient
+       dans deux fichiers qui n'existaient pas et ne se réécriront pas à chaque module :
+       `socle.ts` déclare ce que l'écran emprunte au socle commun — il disparaîtra le jour
+       où celui-ci sera porté —, et `api.ts` décrit des charges qui étaient tacites.
+       Le reste vient du JSX, plus verbeux qu'une chaîne de balisage, et de l'état rendu
+       explicite là où un objet global mutable suffisait.
+
+       **Projeté sur les sept autres :** environ 1,8 ligne écrite pour une remplacée, et
+       moins pour les gros modules, où la part fixe pèse moins. SURV, à 23 731 lignes,
+       serait donc un chantier d'environ 40 000 lignes à lui seul. Ce chiffre est le fait
+       qui doit guider la suite, et il n'est pas une raison de s'arrêter — c'est la mesure
+       de ce que la conformité coûte.
+
+       **Quatre défauts trouvés, dont deux de mon fait.** Le répertoire de traduction lit
+       un global `DR` que l'écran d'avant portait, et il a fallu le lui rendre. `dtPriv` et
+       `dtPrivDesc` sont déclarés en `const` : ils ne sont pas sur `window`, et les y lire
+       rendait `undefined`. Mon alias déclaré pour éviter un masquage de nom **mentait** —
+       il n'existait pas à l'exécution. Et `exactOptionalPropertyTypes` a refusé de me
+       croire sur un champ filtré puis reposé : il avait raison, et `filter` suivi de `map`
+       masquait la question.
+
+       **Et un défaut de mon propre contrôle**, trouvé parce que l'écran React échouait :
+       `body.textContent` compte le **source des scripts en ligne**. L'écran paraissait
+       « rempli » alors qu'il ne rendait rien. C'est `innerText` qu'il fallait lire, et le
+       contrôle était plus faible que je ne le croyais depuis le début.
 3. [ ] **Reprendre le déploiement** : `Dockerfile`, commande de construction,
-       `DEPLOYMENT.md`. Un écran qui ne se construit pas ne se déploie pas.
-4. [ ] **Nommer les deux manières aux garde-fous de forme**, pour que la cohabitation
-       soit tenue et non subie.
+       `DEPLOYMENT.md`. Un écran qui ne se construit pas ne se déploie pas. **C'est le
+       seul point qui reste avant que ce module soit déployable.**
+4. [x] **Les deux manières sont nommées aux garde-fous de forme** — fait. Le paquet
+       construit est exclu des gardes de source par son **chemin**, non par sa taille (un
+       paquet de deux cents lignes resterait un paquet). Et trois gardes neufs tiennent la
+       source React comme le reste : elle est trouvée, aucun fichier au-delà de 600 lignes,
+       et **le typage n'est défait nulle part** — ni `any`, ni `as unknown as`. Ce dernier a
+       d'abord dénoncé un commentaire qui disait qu'on ne le fait pas ; il écarte désormais
+       les commentaires.
 5. [ ] Les sept modules restants, du plus petit au plus gros : socle commun, portail,
        PLAN, CARE, PR, RAMP, SURV.
 6. [ ] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)

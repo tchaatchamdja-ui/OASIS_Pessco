@@ -181,14 +181,18 @@ module.exports = async function parcoursSmoke(port) {
     await ecranDroits.goto(`${srv.base}/modules/droits/index.html?module=PLAN`,
       { waitUntil: 'networkidle2' });
     // Le rendu remplace l'attente : on l'attend, comme pour les écrans du portail.
+    // `innerText` et non `textContent` : celui-ci **compte le source des scripts
+    // en ligne**, et la page en porte une trentaine de lignes. L'écran paraissait
+    // donc « rempli » alors qu'il ne rendait rien du tout — c'est arrivé, et seuls
+    // les autres contrôles l'ont dit. `innerText` ne voit que ce qui s'affiche.
     await ecranDroits.waitForFunction(
       () => !document.querySelector('[data-oasis-loader]')
-        && document.body.textContent.trim().length > 200,
+        && (document.body.innerText || '').trim().length > 200,
       { timeout: 15000 },
     ).catch(() => { /* les contrôles qui suivent le diront */ });
 
     const droits = await ecranDroits.evaluate(() => {
-      const texte = document.body.textContent || '';
+      const texte = document.body.innerText || '';
       const lignes = document.querySelectorAll('.data-table tbody tr');
       return {
         titre: document.title,
@@ -229,7 +233,7 @@ module.exports = async function parcoursSmoke(port) {
       const etatAudit = await ecranDroits.evaluate(() => ({
         integrite: !!document.querySelector('.dr-integrity'),
         intacte: !!document.querySelector('.dr-integrity.ok'),
-        contenu: (document.body.textContent || '').trim().length,
+        contenu: (document.body.innerText || '').trim().length,
       }));
       verifier('l’écran des droits montre l’intégrité de la chaîne d’audit',
         etatAudit.integrite && etatAudit.intacte,

@@ -140,7 +140,11 @@
   <script src="/shared/js/oasis-commun.js"></script>
   <script src="/shared/js/oasis-utils.js"></script>
   <script src="/modules/droits/js/dr-i18n.js"></script>
-  <script src="/modules/droits/js/dr-app.js"></script>
+  <!-- L'écran est en React + TypeScript depuis ADR-003 ; le répertoire de
+       traduction ci-dessus reste en global, et le socle commun avec lui. Le
+       paquet est construit par `npm run build` et n'est pas versionné : un
+       paquet obsolète servi en production est un défaut qui ne se voit pas. -->
+  <script src="/modules/droits/app/main.js"></script>
   <script src="/shared/js/module-chrome.js"></script>
   <script>
     window.addEventListener('DOMContentLoaded', () => {

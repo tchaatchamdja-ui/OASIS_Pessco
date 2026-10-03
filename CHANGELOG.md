@@ -126,6 +126,19 @@ Les versions suivent les phases du projet ; les entrées les plus récentes en t
   s'éprouvent — code faux, défi expiré, plafond de tentatives, rafale.
 - Un envoi de code qui échoue est désormais **tracé** : sans quoi un agent attendrait un
   code jamais parti, et rien ne le dirait.
+- **Java rafraîchit l'activité d'une session**, et un agent servi par Java seul ne se voit
+  plus redemander son mot de passe en pleine séance. Il ne le faisait pas, faute d'arbitre :
+  écrire dans `sessions.json` pendant que Node l'écrit fait perdre des sessions à l'un ou à
+  l'autre, en silence. Les sessions vivant en base, l'arbitre existe — `Magasin.modifier`
+  écrit par comparaison de version, le même geste que `magasin.modifier` côté Node.
+  Mesuré : inactivité retombée de **29 minutes à 1 seconde** sur un appel à Java, table
+  intacte, jeton toujours reconnu par Node. Sans base, la méthode ne fait rien et le dit :
+  un second écrivain serait pire que l'expiration qu'il prétend éviter.
+- Cinq contrôles Java sur la décision, dont celui qui compte : **une session ouverte par Node
+  entre la lecture et l'écriture n'est pas perdue**. La décision repose une marque dans l'état
+  que la base vient de rendre, au lieu de reconstruire la table telle qu'on la croyait —
+  reconstruire l'aurait fait disparaître, et l'agent se serait simplement vu redemander son
+  mot de passe.
 - **Le socle Java lit PostgreSQL.** La bascule des journaux l'avait cassé sans que rien ne
   le dise : en régime base, `module_audit.jsonl` n'existe plus, et la vérification de chaîne
   annonçait « valide, zéro entrée » — un satisfecit sur un journal vide. Mesuré après

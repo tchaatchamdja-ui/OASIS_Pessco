@@ -221,6 +221,81 @@ public class Magasin {
     }
   }
 
+  /**
+   * Modifier une collection sans perdre l'écriture d'un autre — <b>en base
+   * seulement</b>.
+   *
+   * <p>C'est le pendant de {@code magasin.modifier} côté Node : on lit la valeur
+   * et sa version, on calcule, et l'on n'écrit que si la version n'a pas bougé.
+   * Vingt essais, avec une attente croissante ; au-delà, on renonce plutôt que
+   * d'écraser — perdre l'écriture d'un autre est précisément ce que cette
+   * méthode existe pour empêcher.
+   *
+   * <p><b>Sur fichiers, elle ne fait rien et le dit.</b> Node et Java écriraient
+   * alors le même {@code sessions.json} sans verrou, et l'un perdrait les
+   * sessions de l'autre en silence. Deux runtimes ne partagent un fichier qu'en
+   * lecture ; la base, elle, arbitre. Le refus est donc un refus de principe, non
+   * une limite d'implémentation : rendre {@code false} laisse l'appelant décider,
+   * et il n'a rien à rattraper.
+   *
+   * @param transformer reçoit la valeur en place et rend celle à écrire, ou
+   *     {@code null} pour ne rien écrire. Il peut être rappelé si quelqu'un est
+   *     passé entre-temps : il ne doit donc que calculer.
+   * @return vrai si quelque chose a été écrit.
+   */
+  public boolean modifier(String nom, java.util.function.UnaryOperator<JsonNode> transformer) {
+    if (!enBase(nom)) {
+      return false;
+    }
+    for (int essai = 0; essai < 20; essai++) {
+      if (essai > 0) {
+        try {
+          Thread.sleep(1L + (long) (Math.random() * 5 * essai));
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          return false;
+        }
+      }
+      try (Connection c = base.getConnection()) {
+        JsonNode valeur;
+        int rev;
+        try (PreparedStatement q = c.prepareStatement(
+            "SELECT valeur::text AS texte, rev FROM collections WHERE nom = ?")) {
+          q.setString(1, nom);
+          try (ResultSet r = q.executeQuery()) {
+            if (!r.next()) {
+              return false;
+            }
+            valeur = json.readTree(r.getString("texte"));
+            rev = r.getInt("rev");
+          }
+        }
+        JsonNode suivante = transformer.apply(valeur);
+        if (suivante == null) {
+          return false;
+        }
+        try (PreparedStatement maj = c.prepareStatement(
+            "UPDATE collections SET valeur = ?::json, rev = rev + 1, maj = now()"
+                + " WHERE nom = ? AND rev = ?")) {
+          maj.setString(1, json.writeValueAsString(suivante));
+          maj.setString(2, nom);
+          maj.setInt(3, rev);
+          if (maj.executeUpdate() > 0) {
+            // Le cache porte la version écrite : sans cela, la lecture suivante
+            // rendrait celle d'avant jusqu'au prochain changement de `rev`.
+            cache.put(nom, new Entree("rev:" + (rev + 1), suivante));
+            return true;
+          }
+        }
+      } catch (SQLException | IOException | RuntimeException e) {
+        trace.error("collection « {} » non modifiée : {}", nom, e.getMessage());
+        return false;
+      }
+    }
+    trace.warn("collection « {} » modifiée sous nos pieds 20 fois de suite — rien écrit", nom);
+    return false;
+  }
+
   /** Une collection qui est une liste, vide plutôt que nulle. */
   public List<JsonNode> liste(String nom) {
     JsonNode n = lire(nom);

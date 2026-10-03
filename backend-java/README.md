@@ -137,7 +137,8 @@ passe.
 | Réponses **identiques à l'octet** à celles de Node, en régime base | **14 / 14** |
 | Maillons SHA-256 revérifiés par Java **depuis PostgreSQL** | **1 582** — PLAN 337, SURV 812, RAMP 312 (alias SAFA compris), CARE 121 |
 | Contrôles de la suite « droits » à travers la passerelle | **20 / 20** — Java 11 requêtes, Node 7 |
-| Contrôles Java | **10** sur l'adresse, **5** de conformité d'octets |
+| Contrôles Java | **15** — 10 sur l'adresse, **5 sur le rafraîchissement des sessions** — plus 5 de conformité d'octets |
+| Session servie par Java seul | **ne s'éteint plus** : inactivité retombée de 29 min à 1 s, table intacte, jeton toujours reconnu par Node |
 
 **La première comparaison donnait 14/14 et ne prouvait rien** : les fixtures
 portent un `module_audit` vide, et les deux socles répondaient sagement

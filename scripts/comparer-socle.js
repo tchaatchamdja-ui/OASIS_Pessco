@@ -37,6 +37,62 @@ const { demarrer } = require('../tests/smoke/harness');
 // qui ne se produit pas le fait échouer aussi — sinon la déclaration survivrait à
 // ce qu'elle décrit.
 const JEUX = {
+  'oasis-dates': {
+    // `oasis-toast` pour que `valider` puisse dire la règle ; sans lui il se
+    // tairait, et l'on mesurerait un silence des deux côtés.
+    prealables: ['oasis-toast'],
+    avant: "localStorage.setItem('pr_lang','fr');"
+      // L'enveloppe est posée **avant** le chargement du fichier mesuré : c'est
+      // la seule façon de compter ses inscriptions d'écouteurs.
+      + "window.__ecouteurs=[];const __ael=EventTarget.prototype.addEventListener;"
+      + "EventTarget.prototype.addEventListener=function(t,f,o){"
+      + "if(this.id)window.__ecouteurs.push(this.id+':'+t);return __ael.call(this,t,f,o);};"
+      + "document.write('<input id=\"an\" value=\"2026\">"
+      + "<input id=\"d\" type=\"date\"><input id=\"f\" type=\"date\">');",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^oasis(Jour|Horodatage|Dates)/.test(n)).sort().join(',')",
+      // ── La date du calendrier local : le défaut d'un jour à UTC+1 ──
+      "oasisJour(new Date(2026,0,1,0,30))",
+      "oasisHorodatage(new Date(2026,11,31,23,59,58))",
+      "oasisJour(new Date('pas une date'))",
+      "oasisHorodatage(new Date('pas une date'))",
+      "typeof oasisJour() === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(oasisJour())",
+      // ── Règle n° 1 : le début tombe dans l'année déclarée ──
+      "(()=>{d.value='2025-06-01';f.value='';return JSON.stringify(oasisDatesControler({annee:'an',debut:'d',fin:'f'}).message);})()",
+      "(()=>{d.value='2026-06-01';f.value='';return JSON.stringify(oasisDatesControler({annee:'an',debut:'d',fin:'f'}).message);})()",
+      // L'année donnée telle quelle, non par un champ — le cas de l'activité d'un plan.
+      "(()=>{d.value='2025-06-01';return JSON.stringify(oasisDatesControler({annee:2026,debut:'d'}).message);})()",
+      "(()=>{d.value='2025-06-01';return JSON.stringify(oasisDatesControler({annee:'pas-une-annee',debut:'d'}).message);})()",
+      // ── Règle n° 2 : la fin ne précède pas le début ──
+      "(()=>{d.value='2026-06-10';f.value='2026-06-01';return JSON.stringify(oasisDatesControler({debut:'d',fin:'f'}).message);})()",
+      "(()=>{d.value='2026-06-10';f.value='2026-06-10';return JSON.stringify(oasisDatesControler({debut:'d',fin:'f'}).message);})()",
+      // Une échéance seule, rattachée à l'année — et seulement si on le demande.
+      "(()=>{d.value='';f.value='2025-06-01';return [oasisDatesControler({annee:'an',fin:'f'}).message,oasisDatesControler({annee:'an',fin:'f',finDansAnnee:true}).message].join('|');})()",
+      // ── Les langues ──
+      "(()=>{d.value='2025-01-01';const r=[];for(const l of ['fr','en','pt','xx']){localStorage.setItem('pr_lang',l);r.push(oasisDatesControler({annee:'an',debut:'d'}).message);}localStorage.setItem('pr_lang','fr');return r.join(' ~ ');})()",
+      "(()=>{window.CURRENT_LANG='en';const m=oasisDatesControler({debut:'d',fin:'f'});d.value='2026-06-10';f.value='2026-06-01';const v=oasisDatesControler({debut:'d',fin:'f'}).message;delete window.CURRENT_LANG;return v;})()",
+      // ── Les bornes posées sur les champs ──
+      "(()=>{d.value='2026-03-05';oasisDatesBorner({annee:'an',debut:'d',fin:'f'});return [d.min,d.max,f.min].join('|');})()",
+      "(()=>{oasisDatesBorner({annee:'pas-une-annee',debut:'d',fin:'f'});return [d.min,d.max].join('|');})()",
+      // ── La marque, et le fait qu'elle ne s'allume pas d'elle-même ──
+      "(()=>{d.value='2025-06-01';f.value='';['an','d','f'].forEach(i=>document.getElementById(i).classList.remove('oasis-champ-invalide'));oasisDatesBorner({annee:'an',debut:'d',fin:'f'});return [an,d,f].map(e=>e.classList.contains('oasis-champ-invalide')).join(',');})()",
+      "(()=>{d.value='2025-06-01';f.value='';const ok=oasisDatesValider({annee:'an',debut:'d',fin:'f'});return ok+'|'+[an,d,f].map(e=>e.classList.contains('oasis-champ-invalide')).join(',');})()",
+      // La marque suit la correction, sans qu'on la lui demande.
+      "(()=>{d.value='2026-06-01';oasisDatesBorner({annee:'an',debut:'d',fin:'f'});return [an,d,f].map(e=>e.classList.contains('oasis-champ-invalide')).join(',');})()",
+      "(()=>{d.value='2026-06-01';f.value='2026-07-01';return oasisDatesValider({annee:'an',debut:'d',fin:'f'});})()",
+      // ── Le branchement : un seul écouteur par champ et par événement ──
+      "(()=>{oasisDatesLier({annee:'an',debut:'d',fin:'f'});oasisDatesLier({annee:'an',debut:'d',fin:'f'});return [an.dataset.oasisDates,d.dataset.oasisDates,f.dataset.oasisDates].join('|');})()",
+      // Le marqueur `dataset` ne suffit pas à mesurer l'écouteur unique : `lier`
+      // le pose dans les deux cas. On compte les **inscriptions réelles** —
+      // `window.__ecouteurs` est posé par `avant`, qui enveloppe
+      // `addEventListener` avant que le fichier ne soit chargé.
+      "(()=>{window.__ecouteurs.length=0;['an','d','f'].forEach(i=>delete document.getElementById(i).dataset.oasisDates);oasisDatesLier({annee:'an',debut:'d',fin:'f'});const a=window.__ecouteurs.length;oasisDatesLier({annee:'an',debut:'d',fin:'f'});oasisDatesLier({annee:'an',debut:'d',fin:'f'});return a+'|'+window.__ecouteurs.length;})()",
+      "(()=>{an.value='2027';an.dispatchEvent(new Event('input'));return [d.min,d.max].join('|');})()",
+      // Rien ne doit lever sur une configuration vide ou absente.
+      "JSON.stringify([oasisDatesControler(),oasisDatesControler({}),oasisDatesValider(),oasisDatesBorner()])",
+    ],
+  },
+
   'oasis-utils': {
     prealables: ['oasis-requete', 'oasis-commun', 'oasis-toast'],
     avant: "localStorage.setItem('pr_token','jeton-essai'); window.APP_STATE={lang:'fr'};",
@@ -86,6 +142,18 @@ async function sonder(nav, base, repertoire) {
   const page = await nav.newPage();
   const incidents = [];
   page.on('pageerror', (e) => incidents.push(String(e.message).slice(0, 120)));
+  // ── Le fuseau d'épreuve est **UTC+1**, et ce n'est pas un détail ──
+  //
+  // Le navigateur de Puppeteer tourne ici en `Africa/Ouagadougou`, c'est-à-dire
+  // UTC+0 : l'heure locale et l'heure universelle y coïncident. Une sonde sur le
+  // décalage d'un jour — le défaut que `jour()` et `horodatage()` existent pour
+  // empêcher — ne peut alors **rien distinguer**. Mesuré : en remplaçant la
+  // construction locale par `toISOString().slice(0,10)`, la comparaison restait
+  // conforme.
+  //
+  // On émule donc le fuseau des instances concernées : Cotonou et Niamey sont à
+  // UTC+1, et c'est là que minuit local tombe la veille à 23 h UTC.
+  await page.emulateTimezone('Africa/Porto-Novo');
   await page.setRequestInterception(true);
   // La page porte les balises **elle-même** : `DOMContentLoaded` se déclenche
   // alors après les scripts, comme sur une vraie page. Voir l'en-tête.

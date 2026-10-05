@@ -309,4 +309,29 @@ function bilan(titre) {
   return ok;
 }
 
-module.exports = { demarrer, verifier, horsPortee, bilan, etat };
+// ── Où vit un fichier du socle, pendant la conversion ──
+//
+// Le socle passe en TypeScript un fichier à la fois (ADR-003, 5.b). Chaque
+// conversion déplace le fichier servi de `public/shared/js/` vers
+// `public/shared/app/`, où il est **construit**. Un chemin écrit en dur cesse
+// donc d'exister le jour de la conversion.
+//
+// Ce n'est pas une crainte : la conversion d'`oasis-dates` a fait tomber une
+// épreuve de la suite « socle » sur un `ENOENT`, parce qu'elle chargeait le
+// fichier par son ancien chemin dans une machine virtuelle. Le garde-fou qui
+// devait l'empêcher ne regardait que les pages HTML, pas le code des suites.
+//
+// Un seul endroit sait donc où vit un fichier du socle, et il le **déduit** de
+// l'existence du sas. Rien à tenir d'accord.
+function cheminSocle(nom) {
+  const sas = path.join(RACINE, 'frontend', 'socle', 'globales', `${nom}.ts`);
+  const repertoire = fs.existsSync(sas) ? 'app' : 'js';
+  return path.join(RACINE, 'public', 'shared', repertoire, `${nom}.js`);
+}
+
+// La même chose, en URL servie.
+const urlSocle = (nom) => `/shared/${fs.existsSync(path.join(RACINE, 'frontend', 'socle', 'globales', `${nom}.ts`)) ? 'app' : 'js'}/${nom}.js`;
+
+module.exports = {
+  demarrer, verifier, horsPortee, bilan, etat, cheminSocle, urlSocle,
+};

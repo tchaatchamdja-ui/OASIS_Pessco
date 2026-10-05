@@ -441,7 +441,20 @@ module.exports = async function frontendSmoke(port) {
         : `${ressources.size} ressources, ${pages.length} pages`);
 
     // ── 4 : la surface du socle, contre le relevé de référence ──
-    const mesure = await navigateur.newPage();
+    //
+    // Dans un **contexte de navigateur à part**, et ce n'est pas une précaution
+    // de style. `oasis-hors-ligne.js` enregistre le service worker, et les pages
+    // que les contrôles ci-dessus ouvrent le font donc entrer en service pour
+    // l'origine. La page de mesure en héritait : ses requêtes passaient par lui,
+    // et **les douze fichiers du socle devenaient « Could not load script »** —
+    // y compris ceux qui venaient d'être mesurés sans encombre.
+    //
+    // Le défaut est apparu quand la conversion d'`oasis-dates` a porté le
+    // contrôle par page de trois écrans à six, dont RAMP et EXÉCUTION, les deux
+    // qui chargent le mode dégradé. Reproduit en isolation : la mesure passait.
+    // Ce n'était donc pas la conversion, c'était l'état accumulé par la suite.
+    const bocal = await navigateur.createBrowserContext();
+    const mesure = await bocal.newPage();
     const { surface, incidents } = await mesurerSurface(mesure, srv.base);
     verifier('le socle se charge sans incident', incidents.length === 0, incidents.join(' · '));
 

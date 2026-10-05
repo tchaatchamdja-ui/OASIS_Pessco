@@ -1,6 +1,6 @@
 // Fumée — socle : authentification, référentiels, catalogue de modules,
 // bus de services et journal d'audit.
-const { demarrer, verifier, horsPortee, bilan } = require('./harness');
+const { demarrer, verifier, horsPortee, bilan, cheminSocle } = require('./harness');
 
 module.exports = async function socleSmoke(port) {
   console.log('\n── Socle ──');
@@ -330,7 +330,7 @@ function controlerJourLocal() {
   const script = `
     const fs = require('fs'), vm = require('vm');
     const fenetre = {};
-    vm.runInContext(fs.readFileSync(${JSON.stringify(path.join(__dirname, '..', '..', 'public', 'shared', 'js', 'oasis-dates.js'))}, 'utf8'),
+    vm.runInContext(fs.readFileSync(${JSON.stringify(cheminSocle('oasis-dates'))}, 'utf8'),
       vm.createContext({ window: fenetre, Date, Number, String, localStorage: { getItem: () => 'fr' } }));
     const d = new Date(Date.UTC(2026, 8, 17, 23, 30, 0));
     const local = new Date(2026, 0, 1);

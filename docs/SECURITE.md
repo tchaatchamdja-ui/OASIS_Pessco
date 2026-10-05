@@ -102,7 +102,7 @@ Autorité qui durcit sa politique ne modifie pas l'application.
 - **Page publique** `/cookies.html` : ce qui est déposé, pourquoi, pour combien
   de temps, et un bouton qui efface les préférences de cet appareil. La durée de
   session qu'elle annonce est lue au paramétrage, non recopiée.
-- **Bandeau d'information** à la première visite (`public/shared/js/oasis-cookies.js`) :
+- **Bandeau d'information** à la première visite (`public/shared/app/oasis-cookies.js`) :
   il informe, il ne demande pas un consentement qu'aucun choix ne suivrait — un
   témoin nécessaire ne se refuse pas sans renoncer à l'application.
 - **Droits des personnes** : accès, rectification, effacement auprès de

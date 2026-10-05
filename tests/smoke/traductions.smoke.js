@@ -13,7 +13,7 @@
 // Elle ne démarre pas de serveur : elle lit les sources.
 const fs = require('fs');
 const path = require('path');
-const { verifier, bilan } = require('./harness');
+const { verifier, bilan, cheminSocle } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 
@@ -239,7 +239,7 @@ function phrasesServeur() {
 function controlerPhrasesServeur() {
   const fenetre = {};
   const vm = require('vm');
-  vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-messages-serveur.js'), 'utf8'),
+  vm.runInContext(fs.readFileSync(cheminSocle('oasis-messages-serveur'), 'utf8'),
     vm.createContext({ window: fenetre }));
   const table = fenetre.OASIS_MESSAGES_SERVEUR || {};
   const trous = (s) => (String(s).match(/\{\d\}/g) || []).sort().join('');
@@ -273,7 +273,7 @@ function controlerPhrasesServeur() {
   const bac = { window: fenetre, localStorage: { getItem: () => 'fr' } };
   bac.window.PESSCO = { lang: 'fr' };
   const ctx = vm.createContext(bac);
-  vm.runInContext(fs.readFileSync(path.join(RACINE, 'public/shared/js/oasis-commun.js'), 'utf8'), ctx);
+  vm.runInContext(fs.readFileSync(cheminSocle('oasis-commun'), 'utf8'), ctx);
   const dire = (langue, corps) => { fenetre.PESSCO.lang = langue; return fenetre.oasisMessageErreur(corps, 400); };
   const r = {
     fr: dire('fr', { error: 'Classeur illisible' }),

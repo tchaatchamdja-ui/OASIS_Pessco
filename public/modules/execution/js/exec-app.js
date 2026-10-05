@@ -758,7 +758,7 @@ function execLogout() {
 // ── Champ de recherche des barres de filtres ──
 // Le re-rendu est différé de 300 ms, puis le focus et la position du curseur
 // sont rendus au champ, que le rendu a recréé. La fonction vient du socle
-// (`/shared/js/oasis-utils.js`), que ce module ne charge pas — il tient ses
+// (`/shared/app/oasis-utils.js`), que ce module ne charge pas — il tient ses
 // propres helpers — et son absence faisait échouer le `oninput` sans bruit :
 // la recherche ne filtrait rien, dans toutes les barres du module.
 // L'anti-rebond vient du socle (oasis-commun.js).

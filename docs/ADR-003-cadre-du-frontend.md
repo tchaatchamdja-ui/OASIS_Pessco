@@ -329,9 +329,60 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(4 fichiers sur 12 :
-           `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils` le
-           5 octobre 2026.)*
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(5 fichiers sur 12 :
+           `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils` et
+           `oasis-dates` le 5 octobre 2026.)*
+
+           **`oasis-dates` — 25 sondes, aucun écart.** Les deux règles des formulaires,
+           les trois langues plus le repli d'une langue inconnue, les bornes posées sur
+           les champs, la marque qui suit la correction sans s'allumer d'elle-même, et
+           la configuration vide qui ne lève pas. Tables des trois langues extraites du
+           fichier existant par script.
+
+           Deux de mes sondes étaient **vides de sens**, et il a fallu les mesurer pour
+           le voir :
+
+           · le navigateur d'épreuve tourne en `Africa/Ouagadougou`, **UTC+0** : l'heure
+             locale et l'universelle y coïncident, donc la sonde sur le décalage d'un
+             jour — le défaut même que `jour()` existe pour empêcher — ne distinguait
+             rien. En remplaçant la construction locale par `toISOString()`, la
+             comparaison restait conforme. L'outil émule désormais
+             `Africa/Porto-Novo`, UTC+1, le fuseau des instances concernées ;
+           · la sonde de l'écouteur unique lisait le **marqueur** `dataset`, que `lier`
+             pose dans les deux cas. Elle compte maintenant les inscriptions réelles,
+             par une enveloppe d'`addEventListener` posée avant le chargement : `3|3`,
+             trois au premier appel, toujours trois après deux de plus.
+
+           **Trois défauts d'outillage trouvés par cette conversion, et le troisième est
+           le plus instructif.**
+
+           · *Un faux rouge de ma suite.* La mesure de surface rendait « Could not load
+             script » pour **les douze fichiers**, y compris ceux qui venaient de
+             passer. Cause : `oasis-hors-ligne.js` enregistre le service worker, et le
+             contrôle par page visitait désormais six écrans au lieu de trois — dont
+             RAMP et EXÉCUTION. La page de mesure héritait du service worker. Reproduit
+             en isolation, la mesure passait : ce n'était pas la conversion, c'était
+             l'état accumulé par la suite. La mesure se fait maintenant dans un
+             **contexte de navigateur à part**.
+
+           · *Un chemin écrit en dur, dans une suite.* La campagne est tombée sur un
+             `ENOENT` : une épreuve de « socle » chargeait `oasis-dates.js` par son
+             ancien chemin dans une machine virtuelle, et « traductions » en nommait
+             deux autres qui auraient cédé aux conversions suivantes. Un seul endroit
+             sait désormais où vit un fichier du socle — `harness.cheminSocle`, qui le
+             **déduit** de l'existence du sas. Et 22 fichiers portaient encore l'ancien
+             chemin en commentaire ou en documentation, dont un `README` montrant une
+             balise `<script src>` qui rendrait 404 : corrigés, parce qu'une
+             documentation fausse égare qui la suit.
+
+           · *Et le garde-fou qui n'aurait pas attrapé le défaut pour lequel il était
+             écrit.* Étendu des pages HTML à tout fichier suivi, il cherchait la chaîne
+             littérale `shared/js/<nom>.js`. Or la ligne qui est réellement tombée
+             l'assemblait **par segments** — `path.join(…, 'shared', 'js',
+             'oasis-dates.js')` — et la chaîne littérale n'y figure nulle part. Mesuré
+             en la réintroduisant : le garde-fou restait vert. Le détecteur cherche
+             maintenant les trois morceaux dans l'ordre et à courte distance ; les deux
+             formes mordent, et un fichier non encore converti reste permis.
 
            **`oasis-utils` était le fichier qu'on gardait pour la fin, et il est fait.**
            `ICONS` y était un `const` au premier niveau — globale lexicale, absente de

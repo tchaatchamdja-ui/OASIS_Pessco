@@ -3,7 +3,7 @@
    attend les utilitaires que fournissait la coquille PESSCO (api, modales et
    toasts « shell », libellés du portail). On les rétablit ici, à l'identique,
    sans toucher au module lui-même.
-   Le socle OASIS (/shared/js/oasis-utils.js) n'est pas chargé sur cette page :
+   Le socle OASIS (/shared/app/oasis-utils.js) n'est pas chargé sur cette page :
    son `api()` ne gère ni FormData ni les réponses non-JSON (PDF, export XLSX)
    dont ce module a besoin.
    ─────────────────────────────────────────────────────────────────────── */

@@ -2,7 +2,7 @@
    OASIS — PESSCO Design System — CSS Tokens
    3 Thèmes : blue-dark (défaut), corporate, retro-avionics
    Une préférence enregistrée sous l'ancienne clé « grey » est convertie à la
-   lecture — voir public/shared/js/oasis-theme.js.
+   lecture — voir public/shared/app/oasis-theme.js.
    ══════════════════════════════════════ */
 
 :root, [data-theme="blue-dark"] {

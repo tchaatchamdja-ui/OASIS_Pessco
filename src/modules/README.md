@@ -59,7 +59,7 @@ module.exports = { register, seed };
    Les référentiels du socle (domaines, secteurs, prestataires, inspecteurs)
    se consomment en lecture.
 3. **Assets front** : le module charge `/shared/css/oasis-module.css` et
-   `/shared/js/oasis-utils.js`, puis les siens. Jamais ceux d'un autre module.
+   `/shared/app/oasis-utils.js`, puis les siens. Jamais ceux d'un autre module.
 4. **Une suite de fumée** par module dans `tests/smoke/`, ajoutée à
    `tests/smoke/index.js`.
 

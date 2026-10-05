@@ -2,7 +2,7 @@
    Paramètres : indicateurs, indices et seuils, notifications.
    Toutes les parties partagent la portée globale de la page : le découpage
    est physique (lisibilité), pas fonctionnel. Ordre de chargement : voir
-   index.html. Socle commun : /shared/js/oasis-utils.js
+   index.html. Socle commun : /shared/app/oasis-utils.js
    ─────────────────────────────────────────────────────────────────────── */
 
 // ══════════════════════════════════════

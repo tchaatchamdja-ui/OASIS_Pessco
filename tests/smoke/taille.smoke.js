@@ -10,6 +10,7 @@
 // Elle ne démarre pas de serveur : elle lit les sources.
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const { verifier, bilan } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
@@ -274,14 +275,51 @@ module.exports = async function tailleSmoke() {
   } else {
     const convertis = fs.readdirSync(sas).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''));
     const fautives = [];
-    pagesHtml().forEach((fichier) => {
-      const html = fs.readFileSync(fichier, 'utf8');
+    // ── Tout fichier suivi, et non les seules pages ──
+    //
+    // Première écriture : les pages HTML seulement. Insuffisant, et la
+    // conversion d'`oasis-dates` l'a dit — une épreuve de la suite « socle »
+    // chargeait le fichier par son ancien chemin dans une machine virtuelle, et
+    // la campagne entière est tombée sur un `ENOENT`. La suite « traductions »
+    // en nommait deux autres, qui auraient cédé aux conversions suivantes.
+    //
+    // Le chemin d'un fichier du socle se déduit désormais du sas
+    // (`harness.cheminSocle`), et ce garde-fou vérifie que **plus personne** ne
+    // l'écrit en dur : ni une page, ni une suite, ni un script.
+    //
+    // ── Et le détecteur voit les deux formes, parce que la première écriture
+    // n'en voyait qu'une ──
+    //
+    // Il cherchait la chaîne littérale `shared/js/<nom>.js`. Or la ligne qui est
+    // réellement tombée l'assemblait **par segments** :
+    //
+    //     path.join(__dirname, '..', '..', 'public', 'shared', 'js', 'oasis-dates.js')
+    //
+    // La chaîne littérale n'y figure nulle part. **Le garde-fou n'aurait pas
+    // attrapé le défaut pour lequel il était écrit** — mesuré en le
+    // réintroduisant. On cherche donc les trois morceaux dans l'ordre et à
+    // courte distance, ce qui couvre le chemin écrit d'un trait comme le chemin
+    // assemblé.
+    const nommeEnDur = (texte, nom) => new RegExp(
+      `shared['"\\s,/\\\\)(.]{0,12}js['"\\s,/\\\\)(.]{0,12}${nom.replace(/-/g, '\\-')}\\.js`,
+    ).test(texte);
+    const suivis = execSync('git ls-files -z', { cwd: RACINE, maxBuffer: 32 * 1024 * 1024 })
+      .toString().split('\0').filter(Boolean)
+      .filter((f) => /\.(js|mjs|ts|tsx|html|json|md|yml|sh)$/.test(f))
+      // Ce fichier nomme les chemins pour les détecter : il ne se dénonce pas.
+      .filter((f) => f !== 'tests/smoke/taille.smoke.js');
+    suivis.forEach((rel) => {
+      const chemin = path.join(RACINE, rel);
+      if (!fs.existsSync(chemin)) return;
+      const texte = fs.readFileSync(chemin, 'utf8');
       convertis.forEach((nom) => {
-        if (html.includes(`/shared/js/${nom}.js`)) fautives.push(`${relatif(fichier)} → ${nom}`);
+        if (nommeEnDur(texte, nom)) fautives.push(`${rel} → ${nom}`);
       });
     });
-    verifier('aucune page ne charge un fichier du socle converti depuis son ancien chemin',
-      fautives.length === 0, fautives.length ? fautives.join(' · ') : `${convertis.length} converti(s)`);
+    verifier('aucun fichier ne nomme un fichier du socle converti par son ancien chemin',
+      fautives.length === 0,
+      fautives.length ? fautives.join(' · ')
+        : `${convertis.length} converti(s), ${suivis.length} fichiers suivis lus`);
   }
 
   // ── Un bouton à icône porte son nom ──

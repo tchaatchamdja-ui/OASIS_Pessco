@@ -37,6 +37,49 @@ const { demarrer } = require('../tests/smoke/harness');
 // qui ne se produit pas le fait échouer aussi — sinon la déclaration survivrait à
 // ce qu'elle décrit.
 const JEUX = {
+  'oasis-kpi': {
+    // `echelle` tire au hasard l'identifiant de son dégradé — la sortie n'est
+    // donc **pas déterministe**. L'identifiant est incidentel : on le neutralise
+    // plutôt que de déclarer un écart, sinon la sonde dirait « différent » à
+    // chaque exécution et n'apprendrait plus rien.
+    avant: "window.__n = (h) => String(h).replace(/oasisKpiGrad[a-z0-9]+/g, 'GRAD');",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^oasisKpi/.test(n)).sort().join(',')",
+      "Object.keys(window.oasisKpiFigures).sort().join(',')",
+      // Les sept figures, et leurs bornes : un pourcentage hors limites, nul,
+      // absent, ou qui n'est pas un nombre.
+      "oasisKpiFigures.jauge(42)",
+      "[oasisKpiFigures.jauge(-10),oasisKpiFigures.jauge(150),oasisKpiFigures.jauge('x'),oasisKpiFigures.jauge()].join('~').length",
+      "oasisKpiFigures.jauge(-10) === oasisKpiFigures.jauge(0)",
+      "oasisKpiFigures.jauge(150) === oasisKpiFigures.jauge(100)",
+      "oasisKpiFigures.retard({pastille:'<b>Dépassé</b>',legende:'Début'})",
+      "oasisKpiFigures.retard()",
+      "oasisKpiFigures.calendrier(5)",
+      "oasisKpiFigures.calendrier()",
+      "oasisKpiFigures.cloture(37.5)",
+      "window.__n(oasisKpiFigures.echelle(90,{min:'Faible',max:'Élevé'}))",
+      "window.__n(oasisKpiFigures.echelle())",
+      // Une seule mesure ne fait pas un histogramme : la figure se complète.
+      "oasisKpiFigures.barres([3])",
+      "oasisKpiFigures.barres([1,2,3,4,5,6,7])",
+      "oasisKpiFigures.barres([])",
+      "oasisKpiFigures.barres()",
+      "oasisKpiFigures.etapes(['a','<i>b</i>','c'],1)",
+      "oasisKpiFigures.etapes()",
+      // La carte entière, ses classes, son échappement et ses valeurs absentes.
+      "oasisKpiCarte({titre:'Activités',valeur:12,precision:'sur 20',figure:{type:'jauge',pct:60}})",
+      "oasisKpiCarte({titre:'<script>x</script>',valeur:null})",
+      "oasisKpiCarte({titre:'T',valeur:1,alerte:true,onClick:\"f('a')\",actif:true,couleur:'#c00'})",
+      "oasisKpiCarte({titre:'T',valeur:1,figure:{svg:'<svg/>'}})",
+      "oasisKpiCarte()",
+      "window.__n(oasisKpiCarte({titre:'T',valeur:1,figure:{type:'echelle',position:20,min:'bas',max:'haut'}}))",
+      // Le groupe, avec et sans titre.
+      "oasisKpiGroupe('Activités',[oasisKpiCarte({titre:'A',valeur:1}),oasisKpiCarte({titre:'B',valeur:2})])",
+      "oasisKpiGroupe('',[])",
+      "oasisKpiGroupe()",
+    ],
+  },
+
   'oasis-messages-serveur': {
     // Fichier de données pur : la sonde décisive n'est pas un échantillon, c'est
     // **l'égalité intégrale**. Les six tables sont comparées entière par

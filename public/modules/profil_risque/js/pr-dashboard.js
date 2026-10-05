@@ -75,7 +75,7 @@ function prEcheancesProches(evals, mois) {
 
 // ── Indicateurs du tableau de bord ───────────────────────────────
 // Deux groupes : ce que le parc représente, et ce que les évaluations en
-// disent. Les figures viennent du socle (/shared/js/oasis-kpi.js).
+// disent. Les figures viennent du socle (/shared/app/oasis-kpi.js).
 function _prCartesIndicateurs(ctx) {
     const c = ctx || {};
     const evals = c.filteredEvals || [];

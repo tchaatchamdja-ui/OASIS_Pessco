@@ -11,7 +11,7 @@
 
 // ── Indicateurs du tableau de bord ───────────────────────────────
 // Deux groupes : où en sont les plans, et ce qu'ils programment. Les
-// figures viennent du socle (/shared/js/oasis-kpi.js), communes aux modules.
+// figures viennent du socle (/shared/app/oasis-kpi.js), communes aux modules.
 // ── Carte cliquée : la liste qu'elle commande ──
 // Chaque carte annonce un décompte ; le clic en montre le détail sous les
 // filtres, et un second clic le referme. Le tableau de bord n'affichait

@@ -329,9 +329,27 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**6 sur 12** — la
-           moitié : `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre,
-           `oasis-utils`, `oasis-dates` et `oasis-messages-serveur` le 5 octobre 2026.)*
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**7 sur 12** :
+           `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils`,
+           `oasis-dates`, `oasis-messages-serveur` et `oasis-kpi` le 5 octobre 2026.)*
+
+           **`oasis-kpi` — et la leçon de ce que « verbatim » veut dire.** Sept figures
+           en SVG, deux constructeurs de cartes, 28 sondes. Les corps ont été repris du
+           fichier d'origine, **indentation comprise**, et c'est le point : ce sont des
+           gabarits multilignes, et **l'espace de début de ligne fait partie de la
+           chaîne produite**. Une première écriture les avait désindentés de deux
+           espaces pour les mettre au premier niveau — **21 sondes sur 28** ont signalé
+           la différence. Le code est donc indenté d'un niveau de trop ; les chaînes
+           sont identiques, et c'est ce qui compte.
+
+           Cet épisode a servi de contre-essai à lui seul : les sondes distinguent **un
+           espace** dans un tracé. Un contre-essai de plus, sur la logique, en retirant
+           le bornage des pourcentages à [0, 100] : trois sondes le signalent.
+
+           `echelle` tire au hasard l'identifiant de son dégradé, donc sa sortie n'est
+           pas déterministe. L'identifiant est neutralisé dans la sonde plutôt que
+           déclaré comme écart : une sonde qui dirait « différent » à chaque exécution
+           n'apprendrait plus rien.
 
            **`oasis-messages-serveur` — et ce que le typage apporte à une table de
            données.** Six tables, 291 lignes, des centaines de chaînes en trois langues :

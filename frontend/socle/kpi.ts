@@ -1,18 +1,51 @@
-/* Cartes d'indicateurs — socle commun aux tableaux de bord des modules.
-   Une carte porte son intitulé en tête, la mesure à gauche, et à droite une
-   petite figure qui dit de quoi il s'agit : une jauge pour un taux, un
-   calendrier pour un horizon, une échelle pour une gravité. Tout est en SVG,
-   sans rien à charger, et prend la couleur de la carte.
-   ─────────────────────────────────────────────────────────────────────── */
-(function () {
-  const esc = (v) => String(v == null ? '' : v)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+// OASIS — Cartes d'indicateurs, socle commun aux tableaux de bord. En TypeScript
+// (ADR-003, 5.b).
+//
+// Une carte porte son intitulé en tête, la mesure à gauche, et à droite une
+// petite figure qui dit de quoi il s'agit : une jauge pour un taux, un
+// calendrier pour un horizon, une échelle pour une gravité. Tout est en SVG,
+// sans rien à charger, et prend la couleur de la carte.
+//
+// Les corps des figures et des deux constructeurs sont **repris au caractère
+// près** du fichier d'origine, indentation comprise. Le typage passe par
+// l'interface `Figures`, qui donne leur type aux paramètres sans qu'on touche
+// aux corps.
+//
+// L'indentation n'est pas une coquetterie : ces corps sont des gabarits
+// multilignes, et **l'espace de début de ligne fait partie de la chaîne
+// produite**. Une première écriture les avait désindentés de deux espaces pour
+// les mettre au premier niveau — 21 sondes sur 28 ont signalé la différence. Le
+// code est donc indenté d'un niveau de trop ; les chaînes sont identiques, et
+// c'est ce qui compte.
+//
+// Ce fichier ne touche pas à `window` : voir `globales/oasis-kpi.ts`.
 
-  const borne = (v) => Math.max(0, Math.min(100, Number(v) || 0));
+const esc = (v: unknown): string => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
 
-  // ── Figures ──
-  const FIGURES = {
+const borne = (v: unknown): number => Math.max(0, Math.min(100, Number(v) || 0));
+
+/** Les libellés d'une figure qui en porte. Tous facultatifs : chacun a son secours. */
+export interface LibellesFigure {
+  pastille?: string;
+  legende?: string;
+  min?: string;
+  max?: string;
+}
+
+export interface Figures {
+  jauge(pct: unknown): string;
+  retard(libelles?: LibellesFigure): string;
+  calendrier(moisEnAvant?: unknown): string;
+  cloture(pct: unknown): string;
+  echelle(position?: unknown, libelles?: LibellesFigure): string;
+  barres(valeurs?: readonly unknown[]): string;
+  etapes(liste?: readonly unknown[], actif?: number): string;
+}
+
+// ── Figures ──
+export const FIGURES: Figures = {
     // Anneau de progression, coche au centre : un taux atteint.
     jauge(pct) {
       const r = 15;
@@ -115,13 +148,41 @@
       return `<div class="oasis-kpi-fig-etapes">${(liste || []).map((e, i) => `
         <span class="oasis-kpi-etape${i === actif ? ' actif' : ''}">${esc(e)}</span>`).join('')}</div>`;
     },
-  };
+};
 
-  // Carte complète. { titre, valeur, precision, couleur, figure, alerte, onClick, actif }
-  // `figure` : { type: 'jauge'|'retard'|'calendrier'|'cloture'|'echelle'|'etapes'|'barres', … }
-  // `onClick` rend la carte cliquable : elle sert alors de filtre, et `actif`
-  // marque celle qui commande l'affichage en cours.
-  function carte(o) {
+/**
+ * La figure d'une carte. `type` choisit le dessin ; les autres champs sont ceux
+ * que ce dessin lit. `svg` permet d'en fournir un tout fait.
+ */
+export interface FigureCarte extends LibellesFigure {
+  type?: 'jauge' | 'retard' | 'calendrier' | 'cloture' | 'echelle' | 'etapes' | 'barres';
+  pct?: unknown;
+  mois?: unknown;
+  position?: unknown;
+  liste?: readonly unknown[];
+  actif?: number;
+  valeurs?: readonly unknown[];
+  svg?: string;
+}
+
+/**
+ * Une carte d'indicateur.
+ *
+ * `onClick` rend la carte cliquable : elle sert alors de filtre, et `actif`
+ * marque celle qui commande l'affichage en cours.
+ */
+export interface OptionsCarte {
+  titre?: string;
+  valeur?: unknown;
+  precision?: string;
+  couleur?: string;
+  figure?: FigureCarte;
+  alerte?: boolean;
+  onClick?: string;
+  actif?: boolean;
+}
+
+export function carte(o?: OptionsCarte): string {
     const c = o || {};
     const f = c.figure || {};
     let visuel = '';
@@ -149,17 +210,11 @@
       </div>
     </div>`;
   }
-
-  // Groupe titré de cartes : `oasisKpiGroupe('Activités', [carte, carte…])`.
-  function groupe(titre, cartes) {
+// Groupe titré de cartes : `oasisKpiGroupe('Activités', [carte, carte…])`.
+export function groupe(titre?: string, cartes?: readonly string[]): string {
     return `
     <section class="oasis-kpi-groupe">
       ${titre ? `<h3>${esc(titre)}</h3>` : ''}
       <div class="oasis-kpi-grid">${(cartes || []).join('')}</div>
     </section>`;
   }
-
-  window.oasisKpiCarte = carte;
-  window.oasisKpiGroupe = groupe;
-  window.oasisKpiFigures = FIGURES;
-})();

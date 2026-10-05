@@ -9,6 +9,7 @@
 // jalon n° 4) : les deux runtimes rendent les mêmes octets, et ce fichier décrit
 // donc ce que les deux promettent.
 import { MODULE } from './socle';
+import { api } from '../socle/utils';
 
 /** Le privilège général d'un compte sur le module. */
 export type Privilege =
@@ -98,7 +99,7 @@ export const FILTRES_VIDES: FiltresAudit = { user: '', action: '', from: '', to:
  * se propagerait.
  */
 const appel = async <T>(chemin: string, options?: RequestInit): Promise<T> =>
-  (await window.api(`/api/m/droits${chemin}`, options)) as T;
+  (await api(`/api/m/droits${chemin}`, options)) as T;
 
 export const lireContexte = (): Promise<Contexte> => appel(`/context?module=${MODULE}`);
 export const lireRefs = (): Promise<Refs> => appel('/refs');

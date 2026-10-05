@@ -51,6 +51,7 @@
   "oasisSaisieDifferee:function"
  ],
  "oasis-utils": [
+  "ICONS:object",
   "_pesSearchInput:function",
   "api:function",
   "escapeHtml:function",

@@ -36,10 +36,7 @@ declare global {
     DR: EtatPartage;
     /** Module dont la page règle les droits, posé par `index.html` (`?module=`). */
     DR_MODULE?: string;
-    /** `oasis-requete.js` : un appel d'API qui lève une erreur parlante. */
-    api: (chemin: string, options?: RequestInit) => Promise<unknown>;
-    /** `oasis-commun.js` : l'échappement de l'application. */
-    oasisEsc: (v: unknown) => string;
+
     /** `dr-i18n.js` : les libellés de l'écran. Déclaré en `function`, donc sur `window`. */
     dt: Traduire;
     /** `oasis-commun.js` : applique une palette au document. */
@@ -97,7 +94,13 @@ export const poserEtatPartage = (lang: string): void => {
   window.DR = { lang, module: MODULE };
 };
 
-export const esc = (v: unknown): string => window.oasisEsc(v);
+// ── L'échappement et l'appel d'API viennent de la source (ADR-003, 5.b) ──
+//
+// Deux affirmations de moins sur `window`. `frontend/socle/utils.ts` est du
+// TypeScript, et il porte lui-même les déclarations dont il a besoin : c'est
+// **lui** qui dit d'où vient `oasisEsc`, et la suite `frontend` vérifie que les
+// trois pages chargeant son sas le portent vraiment.
+export { escapeHtml as esc } from '../socle/utils';
 export const dt: Traduire = (cle, ...args) => window.dt(cle, ...args);
 // Les exports portent un autre nom que les globales qu'ils appellent. Reprendre
 // le même aurait masqué la globale et produit une récursion — silencieuse jusqu'au

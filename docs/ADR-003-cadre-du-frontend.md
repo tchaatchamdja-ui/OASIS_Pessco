@@ -329,8 +329,50 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(3 fichiers sur 12
-           au 3 octobre 2026 : `oasis-theme`, `oasis-cookies`, `oasis-loader`.)*
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(4 fichiers sur 12 :
+           `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils` le
+           5 octobre 2026.)*
+
+           **`oasis-utils` était le fichier qu'on gardait pour la fin, et il est fait.**
+           `ICONS` y était un `const` au premier niveau — globale lexicale, absente de
+           `window` — avec ~90 lectures nues dans douze fichiers. Le sas le pose
+           désormais sur `window`, et le nom est lisible **des deux façons** : les
+           lectures nues continuent, et `window.ICONS` fonctionne enfin. C'est la
+           correction, à la source, du défaut qui avait vidé l'icône de la coquille
+           DROITS. Les deux écarts mesurés sont ceux-là, et ils sont déclarés comme
+           voulus.
+
+           Trente icônes et le tracé de l'attente ont été **extraits des fichiers
+           existants par script**, jamais recopiés.
+
+           **La comparaison est devenue un outil** — `scripts/comparer-socle.js` —, avec
+           deux acquis payés d'avance : la page d'épreuve porte ses balises elle-même
+           (sans quoi `DOMContentLoaded` est déjà passé et les sondes du branchement
+           sont identiques **à ne rien faire**), et les sondes asynchrones s'attendent.
+           Les préalables de chaque fichier y sont nommés : `oasis-utils` lit quatre
+           globales d'autres fichiers du socle, et sans elles on ne mesurerait que des
+           exceptions.
+
+           Surtout, l'outil demande que **tout écart soit déclaré**, avec sa raison. Un
+           écart non déclaré le fait échouer ; un écart déclaré qui ne se produit pas le
+           fait échouer aussi — sinon la déclaration survivrait à ce qu'elle décrit. Les
+           deux cas sont contre-essayés. Sans ce mécanisme, un écart passait pour
+           acceptable **parce qu'on l'avait regardé et trouvé plausible**, ce qui n'est
+           pas une méthode.
+
+           **Et une règle que cette conversion a corrigée dans mes contrôles.** `utils.ts`
+           lit `window.APP_STATE?.lang` pour le format des dates. Mesuré : `APP_STATE`
+           n'est posé que par `pr-shell.js`, donc présent sur **une seule** des trois
+           pages qui chargent ce fichier — et `formatDate` n'est appelé ni sur DROITS ni
+           sur PLAN. L'absence est réelle, sans conséquence, et déjà déclarée : par le
+           `?` du type, qui est un acte d'écriture et non un oubli. Les deux contrôles —
+           par écran et par page de sas — honorent donc le `?`, **et impriment
+           l'absence** : une optionnelle absente partout est une lecture morte, et il
+           faut pouvoir le voir sans la chercher. Ce qui reste refusé, c'est un nom
+           déclaré obligatoire et absent ; contre-essayé en ôtant le `?`.
+
+           DROITS y gagne deux déclarations de moins : `api` et `esc` viennent de
+           `socle/utils.ts`, et c'est **lui** qui dit d'où elles sortent.
 
            **L'inconnue du chantier est levée, et ce n'en était pas une.**
            `oasis-utils.js` déclare `ICONS` en `const` au premier niveau — une

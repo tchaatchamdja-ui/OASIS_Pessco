@@ -152,6 +152,21 @@ function declarationsDeWindow(fichiers) {
   return [...noms].sort();
 }
 
+// Les membres de `interface Window` déclarés **optionnels** (`X?: …`). Le `?` est
+// la déclaration que le nom peut manquer ; voir le contrôle qui l'emploie.
+function declarationsOptionnelles(fichiers) {
+  const noms = new Set();
+  for (const f of fichiers) {
+    const texte = sansCommentaires(fs.readFileSync(f, 'utf8'));
+    for (const bloc of texte.matchAll(/interface Window\s*\{([\s\S]*?)\n {2}\}/g)) {
+      for (const m of bloc[1].matchAll(/^\s{4}([A-Za-z_][A-Za-z0-9_]*)\?\s*[:(]/gm)) {
+        noms.add(m[1]);
+      }
+    }
+  }
+  return [...noms];
+}
+
 // Les globales lexicales déclarées : `declare global { const X: … }`. Hors de
 // `interface Window`, donc à lire par leur nom nu.
 function globalesLexicales(fichiers) {
@@ -275,9 +290,20 @@ module.exports = async function frontendSmoke(port) {
       const absentes = await page.evaluate((ns) => ns.filter((n) => {
         try { return typeof window[n] === 'undefined'; } catch (_) { return true; }
       }), lus);
+      // La même règle que pour les sas, et il faut qu'elle soit la même : le `?`
+      // d'un membre de `Window` est une déclaration que le nom peut manquer. Dès
+      // que DROITS a importé `socle/utils.ts`, ce contrôle a hérité de sa lecture
+      // de `window.APP_STATE?` — exiger l'un et tolérer l'autre aurait été deux
+      // règles pour un seul fait.
+      const facultatives = new Set(declarationsOptionnelles(fichiers));
+      const exigees = absentes.filter((n) => !facultatives.has(n));
+      const tolerees = absentes.filter((n) => facultatives.has(n));
+      if (tolerees.length) {
+        console.log(`    ◌ ${nom} : optionnelle(s) absente(s), déclarée(s) telle(s) : ${tolerees.join(', ')}`);
+      }
       verifier(`${nom} : chaque « window.X » lu ou déclaré par le TypeScript existe`,
-        absentes.length === 0,
-        absentes.length ? `absentes : ${absentes.join(', ')}` : `${lus.length} vérifiées`);
+        exigees.length === 0,
+        exigees.length ? `absentes : ${exigees.join(', ')}` : `${lus.length} vérifiées`);
 
       // Les lexicales ne sont pas sur `window` : il faut évaluer leur nom. La
       // chaîne passe par `Runtime.evaluate`, hors de la politique de contenu de
@@ -304,10 +330,22 @@ module.exports = async function frontendSmoke(port) {
     // fichier du socle converti sera chargé par plusieurs des neuf pages, et une
     // globale qu'il croit trouver sur l'une peut manquer sur l'autre.
     //
-    // Les lectures optionnelles (`X?: …`) sont vérifiées **aussi**, et c'est un
-    // choix : lire un nom, même prudemment, c'est l'attendre. S'il manque
-    // réellement sur une page, mieux vaut une décision explicite qu'un `typeof`
-    // qui retombe en silence sur un secours que personne n'a mesuré.
+    // ── Les lectures optionnelles sont **signalées**, non reprochées ──
+    //
+    // Première écriture : toutes les lectures étaient exigées, optionnelles
+    // comprises, au motif que lire un nom c'est l'attendre. La conversion de
+    // `oasis-utils` a montré la limite. Il lit `window.APP_STATE?.lang` pour le
+    // format des dates ; `APP_STATE` n'est posé que par `pr-shell.js`, donc
+    // présent sur une seule des trois pages qui chargent ce fichier. Et
+    // `formatDate` n'est appelé ni sur DROITS ni sur PLAN. L'absence est donc
+    // réelle, sans conséquence, et **déjà déclarée** — par le `?` du type, qui
+    // est un acte d'écriture, non un oubli.
+    //
+    // Le `?` fait donc office de déclaration, comme `attendus` dans
+    // `scripts/comparer-socle.js`. Mais l'absence est **imprimée** : une
+    // optionnelle absente partout est une lecture morte, et il faut pouvoir le
+    // voir sans la chercher. Ce qui reste refusé, c'est un nom déclaré
+    // obligatoire et absent.
     const dossierSas = path.join(FRONTEND, 'socle', 'globales');
     const sas = fs.existsSync(dossierSas)
       ? fs.readdirSync(dossierSas).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''))
@@ -328,8 +366,11 @@ module.exports = async function frontendSmoke(port) {
         }
       }(path.join(RACINE, 'public')));
 
+      const optionnelles = new Set();
       for (const nom of sas) {
-        const lus = lecturesDeWindow(graphe(path.join(dossierSas, `${nom}.ts`)));
+        const noeuds = graphe(path.join(dossierSas, `${nom}.ts`));
+        declarationsOptionnelles(noeuds).forEach((n) => optionnelles.add(n));
+        const lus = lecturesDeWindow(noeuds);
         if (!lus.length) continue;
         for (const page_ of pagesDuSocle) {
           const html = fs.readFileSync(page_, 'utf8');
@@ -341,14 +382,19 @@ module.exports = async function frontendSmoke(port) {
       }
 
       const manques = [];
+      const signalees = [];
       for (const [url, noms] of aVerifier) {
         /* eslint-disable no-await-in-loop */
         await page.goto(`${srv.base}${url}`, { waitUntil: 'networkidle2' });
         const absentes = await page.evaluate((ns) => ns.filter((n) => {
           try { return typeof window[n] === 'undefined'; } catch (_) { return true; }
         }), [...noms]);
-        if (absentes.length) manques.push(`${url} → ${absentes.join(', ')}`);
+        const exigees = absentes.filter((n) => !optionnelles.has(n));
+        const tolerees = absentes.filter((n) => optionnelles.has(n));
+        if (exigees.length) manques.push(`${url} → ${exigees.join(', ')}`);
+        if (tolerees.length) signalees.push(`${url} → ${tolerees.join(', ')}`);
       }
+      signalees.forEach((l) => console.log(`    ◌ optionnelle absente, déclarée telle : ${l}`));
       verifier('ce qu’un sas du socle lit existe sur les pages qui le chargent',
         manques.length === 0,
         manques.length ? manques.join(' · ')

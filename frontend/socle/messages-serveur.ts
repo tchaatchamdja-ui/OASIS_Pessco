@@ -1,25 +1,55 @@
-/* OASIS — Phrases d'erreur du serveur, en anglais et en portugais.
- *
- * Beaucoup de routes répondent par une phrase française plutôt que par un
- * code. Le serveur ne connaît pas la langue de l'agent ; l'écran, si. La
- * phrase reçue est donc traduite ici, à l'affichage, par `oasisMessageErreur`
- * (oasis-commun.js). Une phrase absente de la table se lit en français, comme
- * avant.
- *
- * Clé : la phrase française telle que le serveur l'écrit. Une phrase à trous
- * garde ses trous sous la forme {0}, {1}… ; les deux traductions les
- * reprennent, dans l'ordre qui leur convient.
- *
- * Vocabulaire commun avec les écrans : carence → deficiency / deficiência ;
- * constatation, écart → finding / constatação ; infraction → breach /
- * infração ; formulaire, fiche → form / formulário ; dossier → file /
- * processo ; PAC → CAP / PAC ; gestionnaire → manager / gestor ; validateur →
- * approver / validador ; AAC → CAA / AAC.
- *
- * La suite de fumée « traductions » vérifie que chaque phrase émise par le
- * serveur a ici ses deux traductions.
+// OASIS — Phrases d'erreur du serveur, en anglais et en portugais.
+//
+// Beaucoup de routes répondent par une phrase française plutôt que par un
+// code. Le serveur ne connaît pas la langue de l'agent ; l'écran, si. La
+// phrase reçue est donc traduite ici, à l'affichage, par `oasisMessageErreur`
+// (oasis-commun.js). Une phrase absente de la table se lit en français, comme
+// avant.
+//
+// Clé : la phrase française telle que le serveur l'écrit. Une phrase à trous
+// garde ses trous sous la forme {0}, {1}… ; les deux traductions les
+// reprennent, dans l'ordre qui leur convient.
+//
+// Vocabulaire commun avec les écrans : carence → deficiency / deficiência ;
+// constatation, écart → finding / constatação ; infraction → breach /
+// infração ; formulaire, fiche → form / formulário ; dossier → file /
+// processo ; PAC → CAP / PAC ; gestionnaire → manager / gestor ; validateur →
+// approver / validador ; AAC → CAA / AAC.
+//
+// La suite de fumée « traductions » vérifie que chaque phrase émise par le
+// serveur a ici ses deux traductions.
+///
+//
+// ── Ce que le typage ajoute à une table de données ──
+//
+// Les trois langues sont **positionnelles** : l'indice 0 est le français, 1
+// l'anglais, 2 le portugais. Rien ne le disait, et une entrée à deux éléments au
+// lieu de trois se lisait « traduction manquante » à l'affichage — un
+// `undefined` rendu tel quel. Le type le refuse désormais à la construction.
+//
+// La suite « traductions » vérifie en plus que chaque phrase émise par le
+// serveur a bien son entrée ici. Les deux contrôles ne se remplacent pas : l'un
+// tient la forme, l'autre la couverture.
+//
+// Ce fichier ne touche pas à `window` : voir `globales/oasis-messages-serveur.ts`.
+
+/**
+ * Un mot et son genre, pour les gabarits qui s'accordent. Le second élément est
+ * absent quand la langue n'accorde pas — l'anglais —, ou quand le mot est
+ * invariable.
  */
-window.OASIS_MESSAGES_SERVEUR = {
+export type MotGenre = readonly [string, string?];
+
+/** Un gabarit de phrase, décliné au masculin et au féminin. */
+export interface Gabarit {
+  readonly m: string;
+  readonly f: string;
+  readonly desactivableM?: string;
+  readonly desactivableF?: string;
+}
+
+
+export const MESSAGES: Readonly<Record<string, readonly [string, string]>> = {
   'À compléter avant soumission : {0}': ['To be completed before submission: {0}', 'A completar antes da submissão: {0}'],
   'À compléter avant validation : {0}': ['To be completed before validation: {0}', 'A completar antes da validação: {0}'],
   "Action réservée à l'AAC": ['Action restricted to the CAA', 'Ação reservada à AAC'],
@@ -114,7 +144,8 @@ window.OASIS_MESSAGES_SERVEUR = {
  * s'accorde — « requis/requise », « obrigatório/a », « encontrado/a ».
  * L'anglais n'accorde pas : son genre est omis.
  */
-window.OASIS_OBJETS_SERVEUR = {
+
+export const OBJETS: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGenre]>> = {
   activite: [['Activité', 'f'], ['Activity'], ['Atividade', 'f']],
   aeronef: [['Aéronef', 'm'], ['Aircraft'], ['Aeronave', 'f']],
   aeroport: [['Aéroport', 'm'], ['Airport'], ['Aeroporto', 'm']],
@@ -183,7 +214,8 @@ window.OASIS_OBJETS_SERVEUR = {
  * Comme les noms d'objets : par langue, la forme masculine puis la féminine
  * quand la langue accorde — « rapport validé », « notification validée ».
  */
-window.OASIS_ETATS_SERVEUR = {
+
+export const ETATS: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGenre]>> = {
   accepte: [['accepté', 'acceptée'], ['accepted'], ['aceite', 'aceite']],
   accuse: [['accusé', 'accusée'], ['acknowledged'], ['confirmado', 'confirmada']],
   annule: [['annulé', 'annulée'], ['cancelled'], ['anulado', 'anulada']],
@@ -202,12 +234,14 @@ window.OASIS_ETATS_SERVEUR = {
 };
 
 /* Le mot qui joint deux états attendus : « arrêtée ou clôturée ». */
-window.OASIS_OU_SERVEUR = ['ou', 'or', 'ou'];
+
+export const OU: readonly [string, string, string] = ['ou', 'or', 'ou'];
 
 /* Rôles auxquels une action est réservée (erreur « reserve »). Chaque langue
  * garde sa préposition : « au validateur », « aux administrateurs ».
  */
-window.OASIS_ROLES_SERVEUR = {
+
+export const ROLES: Readonly<Record<string, readonly [string, string, string]>> = {
   administrateurs: ['aux administrateurs', 'to administrators', 'aos administradores'],
   admins_gestionnaires: ['aux administrateurs et aux gestionnaires', 'to administrators and managers', 'aos administradores e gestores'],
   deposant_gestionnaire: ['au déposant et au gestionnaire', 'to the uploader and the manager', 'a quem depositou e ao gestor'],
@@ -222,12 +256,14 @@ window.OASIS_ROLES_SERVEUR = {
   vue_aac: ['à la vue AAC', 'to the CAA view', 'à vista AAC'],
   vue_prestataire: ['à la vue Prestataire', 'to the Provider view', 'à vista Prestador'],
 };
+
 /* Gabarits des erreurs normalisées : pour chaque code, la phrase de chaque
  * langue, au masculin et au féminin quand la langue accorde. {objet} reçoit le
  * nom ; placé au milieu de la phrase, il y perd sa majuscule
  * (« Unknown view »). Une précision reçue du serveur se joint entre
  * parenthèses : « Écart hors de votre périmètre (Togo) ». */
-window.OASIS_GABARITS_SERVEUR = {
+
+export const GABARITS: Readonly<Record<string, readonly Gabarit[]>> = {
   introuvable: [
     { m: '{objet} introuvable', f: '{objet} introuvable' },
     { m: '{objet} not found', f: '{objet} not found' },

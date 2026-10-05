@@ -37,6 +37,36 @@ const { demarrer } = require('../tests/smoke/harness');
 // qui ne se produit pas le fait échouer aussi — sinon la déclaration survivrait à
 // ce qu'elle décrit.
 const JEUX = {
+  'oasis-messages-serveur': {
+    // Fichier de données pur : la sonde décisive n'est pas un échantillon, c'est
+    // **l'égalité intégrale**. Les six tables sont comparées entière par
+    // entière — 11 298 octets pour la seule table des phrases —, et un
+    // `JSON.stringify` à clés triées rend la comparaison insensible à l'ordre
+    // d'énumération, qui n'est pas une propriété du contenu.
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^OASIS_.*_SERVEUR$/.test(n)).sort().join(',')",
+      // Un relevé signé de chaque table : si un seul caractère d'une seule
+      // traduction diffère, l'empreinte change.
+      "(()=>{const tri=(o)=>JSON.stringify(o,(k,v)=>(v&&typeof v==='object'&&!Array.isArray(v))?Object.keys(v).sort().reduce((a,c)=>(a[c]=v[c],a),{}):v);return ['MESSAGES','OBJETS','ETATS','OU','ROLES','GABARITS'].map(n=>{const t=window['OASIS_'+n+'_SERVEUR'];const s=tri(t);let h=0;for(let i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0;}return n+':'+(Array.isArray(t)?t.length:Object.keys(t).length)+':'+s.length+':'+h;}).join(' | ');})()",
+      // Et le contenu lui-même, pour que l'écart soit **lisible** et non réduit
+      // à une empreinte. Découpé, parce qu'une sonde de 11 Ko ne se lit pas.
+      "JSON.stringify(Object.keys(window.OASIS_MESSAGES_SERVEUR).sort()).length + '|' + JSON.stringify(Object.keys(window.OASIS_MESSAGES_SERVEUR).sort()).slice(0,300)",
+      "JSON.stringify(Object.entries(window.OASIS_MESSAGES_SERVEUR).sort().slice(0,3))",
+      "JSON.stringify(Object.entries(window.OASIS_MESSAGES_SERVEUR).sort().slice(-3))",
+      "JSON.stringify(Object.entries(window.OASIS_OBJETS_SERVEUR).sort().slice(0,3))",
+      "JSON.stringify(Object.entries(window.OASIS_ETATS_SERVEUR).sort().slice(0,3))",
+      "JSON.stringify(window.OASIS_OU_SERVEUR)",
+      "JSON.stringify(Object.entries(window.OASIS_ROLES_SERVEUR).sort().slice(0,2))",
+      "JSON.stringify(Object.entries(window.OASIS_GABARITS_SERVEUR).sort().slice(0,1))",
+      "JSON.stringify(Object.entries(window.OASIS_GABARITS_SERVEUR).sort().slice(-1))",
+      // Toute entrée doit porter ses trois langues : c'est ce que le type
+      // affirme désormais, et la sonde vérifie qu'il dit vrai des deux côtés.
+      "Object.values(window.OASIS_MESSAGES_SERVEUR).filter(v=>!Array.isArray(v)||v.length!==2||v.some(x=>typeof x!=='string'||!x)).length",
+      "Object.values(window.OASIS_ROLES_SERVEUR).filter(v=>v.length!==3).length",
+      "Object.values(window.OASIS_OBJETS_SERVEUR).filter(v=>v.length!==3).length",
+    ],
+  },
+
   'oasis-dates': {
     // `oasis-toast` pour que `valider` puisse dire la règle ; sans lui il se
     // tairait, et l'on mesurerait un silence des deux côtés.

@@ -329,9 +329,31 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(5 fichiers sur 12 :
-           `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils` et
-           `oasis-dates` le 5 octobre 2026.)*
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**6 sur 12** — la
+           moitié : `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre,
+           `oasis-utils`, `oasis-dates` et `oasis-messages-serveur` le 5 octobre 2026.)*
+
+           **`oasis-messages-serveur` — et ce que le typage apporte à une table de
+           données.** Six tables, 291 lignes, des centaines de chaînes en trois langues :
+           le fichier où le risque de transcription était le plus élevé. Tout a été
+           **extrait par script**, commentaires des tables compris.
+
+           Les trois langues y sont **positionnelles** — indice 0 le français, 1
+           l'anglais, 2 le portugais — et rien ne le disait. Une entrée à deux éléments
+           au lieu de trois se lisait « traduction manquante » à l'affichage, sous la
+           forme d'un `undefined` rendu tel quel. Contre-essayé en retirant une
+           traduction portugaise : **refusé à la construction.** C'est le bénéfice du
+           typage sur une table de données, et il se constate.
+
+           La sonde décisive n'est pas un échantillon mais **l'égalité intégrale** : un
+           relevé signé de chaque table — taille, nombre d'entrées, empreinte — plus le
+           contenu en clair aux deux bouts, pour que l'écart soit lisible et non réduit
+           à un nombre. Contre-essayé en changeant **un seul caractère** d'une seule des
+           84 traductions : signalé.
+
+           La suite « traductions », qui charge ce fichier dans une machine virtuelle,
+           passe sans modification — le résolveur de chemin posé à la conversion
+           précédente a fait son travail, et c'était bien son objet.
 
            **`oasis-dates` — 25 sondes, aucun écart.** Les deux règles des formulaires,
            les trois langues plus le repli d'une langue inconnue, les bornes posées sur

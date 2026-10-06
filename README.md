@@ -137,6 +137,7 @@ OASIS/
 | Document | Contenu |
 |---|---|
 | `DEPLOYMENT.md` | Déploiement Render et Docker, variables, ennuis courants |
+| `docs/SPECIFICATIONS-TECHNIQUES.md` | **L'état technique mesuré** : pile, magasin, frontend, sécurité, et ce qui n'est pas fait |
 | `docs/SECURITE.md` | Politique de sécurité : mesures, emplacements, points ouverts |
 | `docs/architecture-uml.md` | Modèle de données et enchaînements |
 | `docs/MAGASIN-POSTGRESQL.md` | Le magasin PostgreSQL : ce qui est fait, ce qui bloque la bascule |

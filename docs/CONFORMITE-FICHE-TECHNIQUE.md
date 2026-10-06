@@ -1,5 +1,9 @@
 # Conformité à la fiche technique URSAC/GT2
 
+> **L'état technique de l'application**, pile par pile et chiffres à l'appui, est dans
+> [SPECIFICATIONS-TECHNIQUES.md](SPECIFICATIONS-TECHNIQUES.md). Ce document-ci ne dit que l'écart
+> au prescrit ; celui-là dit ce qui est.
+
 **Fiche de référence :** *Proposition d'architecture, d'organisation projet et de plan de
 conception — Outil intégré de supervision de la sécurité de l'aviation civile, espace UEMOA*,
 URSAC / Groupe de Travail 2, **2 août 2026**.

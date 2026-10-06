@@ -77,11 +77,11 @@ indépendant avant recette** — non réalisé.
 | Backend applicatif | API REST **Java 21 / Spring Boot** | **Node 20 / Express 4**, CommonJS, 386 routes | ✗ |
 | Identité et accès | **Keycloak** (OpenID Connect) | `src/auth.js` écrit à la main ; sessions en mémoire | ✗ |
 | Moteur de workflow | **Flowable ou Camunda** (BPMN 2.0) | moteur de processus écrit à la main (`routes-processus.js`) | ✗ |
-| Base de données | **PostgreSQL 16** | **fichiers JSON** (`src/store.js`). Magasin PostgreSQL écrit et reprise éprouvée, bascule différée — [ADR-001](ADR-001-magasin-de-donnees.md) | ✗ |
+| Base de données | **PostgreSQL 16** | **◐ les deux, et c'est délibéré.** Le même code sert PostgreSQL quand `DATABASE_URL` est donnée, les fichiers sinon : **13 des 14 collections** et les **deux journaux chaînés** y sont passés (`instances` reste, [ADR-002](ADR-002-migration-spring-boot.md) n° 14). Éprouvé contre un vrai PostgreSQL 16, et **rejoué à chaque poussée** par la tâche `base` de la CI. Ce qui reste différé est la bascule **en production**, faute de la spécification de réplication — [ADR-001](ADR-001-magasin-de-donnees.md) | ◐ |
 | Stockage documentaire | **MinIO** (S3) avec versionnage | pièces jointes en **base64 dans les enregistrements JSON**, sans versionnage | ✗ |
 | Génération de documents | gabarits + moteur de rendu headless | **Puppeteer / Chromium** ; exports pdf, xlsx, csv, docx | **✓** |
 | Tableaux de bord | moteur de restitution **BI open source** | tableaux de bord écrits à la main — ils existent et fonctionnent | ✗ |
-| Conteneurisation | Docker **+ orchestrateur K3s** | Dockerfile à deux étages, compte non privilégié, sonde de santé. **Pas de K3s** — déploiement Render | ◐ |
+| Conteneurisation | Docker **+ orchestrateur K3s** | Dockerfile à **trois** étages — dépendances, construction des écrans, image servie —, compte non privilégié, sonde de santé. **Pas de K3s** — déploiement Render | ◐ |
 | Supervision technique | **Prometheus + Grafana** | `src/trace.js` — journal structuré JSON par ligne ; `/api/health` | ✗ |
 
 **Une couche conforme, une partielle, huit non conformes.**
@@ -103,19 +103,28 @@ indépendant avant recette** — non réalisé.
 ## §4 — Le système de gestion de base de données
 
 La fiche consacre une section entière à démontrer que PostgreSQL s'impose, et invoque cinq
-atouts nommément liés aux besoins du projet. **Aucun n'est disponible aujourd'hui :**
+atouts nommément liés aux besoins du projet. **Aucun n'est exercé aujourd'hui** — et il faut
+distinguer deux choses que « bascule différée » confondait : le magasin PostgreSQL **sert**
+(13 des 14 collections, éprouvé et rejoué en CI), mais **aucun des cinq atouts** n'est mis en
+œuvre pour autant. Y être, et s'en servir, sont deux états différents :
 
 | Atout invoqué par la fiche | Disponible ? |
 |---|---|
 | Réplication logique native — le schéma États → central du §F.2 | ✗ |
 | Row-Level Security — cloisonnement en défense en profondeur | ✗ |
 | `pgcrypto` — chiffrement AES-256 au repos exigé au §F.3 | ✗ |
-| Type JSONB — checklists à structure variable | ✗ *(le magasin est en JSON, mais sans les garanties du type)* |
+| Type JSONB — checklists à structure variable | ✗ **et délibérément** : les colonnes sont en `json`, non `jsonb`. `jsonb` réordonne les clés, ce qui **briserait le sceau SHA-256** des journaux d'audit. Le choix est tenu par un contrôle |
 | Recherche plein texte intégrée | ✗ |
 
-Le raisonnement de la fiche tient toujours, et le magasin PostgreSQL est écrit
-(`src/store_pg.js`) et sa reprise éprouvée sur les données réelles — 14 collections,
-3 203 entrées de journal, chaîne vérifiée après reprise. **C'est la bascule qui n'est pas faite.**
+Le raisonnement de la fiche tient toujours. Le magasin PostgreSQL est écrit
+(`src/store_pg.js`), sa reprise éprouvée sur les données réelles — 14 collections, 3 203
+entrées de journal, chaîne vérifiée après reprise —, et **treize collections y vivent** quand
+`DATABASE_URL` est donnée. Ce qui n'est pas fait, et qu'il faut nommer séparément :
+
+- **`instances`**, la quatorzième — mesurée, non engagée ([ADR-002](ADR-002-migration-spring-boot.md) n° 14) ;
+- **la bascule en production**, qui attend la spécification de réplication ([ADR-001](ADR-001-magasin-de-donnees.md) n° 1) — c'est elle qui décide de l'architecture, et l'on ne bâtit pas avant de la connaître ;
+- **les cinq atouts**, qui ne viennent pas avec le moteur : chacun est un chantier
+  (vague 2 du [plan](PLAN-CONFORMITE.md)).
 
 ---
 

@@ -833,9 +833,53 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        | Maillons SHA-256 revérifiés de part et d'autre | **1 582** |
        | Suites « droits » et « SURV » par la passerelle | **20 / 20** et **103 / 103** |
 
-       **Jalon n° 13 clos.** La bascule du magasin est complète : treize collections nommées et
-       les deux journaux chaînés vivent en PostgreSQL, et le même code sert les fichiers quand
-       aucune adresse n'est donnée.
+       **Jalon n° 13 clos.** ~~La bascule du magasin est complète :~~ treize collections
+       nommées et les deux journaux chaînés vivent en PostgreSQL, et le même code sert les
+       fichiers quand aucune adresse n'est donnée.
+
+       > « Complète » était faux, et relevé le 6 octobre 2026 : `data/` porte **quatorze**
+       > collections hors journaux, et `instances` n'était pas du nombre. Le jalon n° 13 portait
+       > sur les cinq collections de module, et il les a toutes ; c'est la phrase de clôture qui
+       > a étendu la portée du jalon à tout le magasin. Elle est barrée, et `instances` a
+       > désormais son jalon — le n° 14, ci-dessous.
+       >
+       > Troisième affirmation périmée trouvée dans ce registre le même jour, et la troisième de
+       > la même espèce : elles sont toutes **du côté rassurant**. Personne n'écrit par
+       > inadvertance qu'un chantier est moins avancé qu'il ne l'est.
+
+14. [ ] **`instances`, la dernière** — mesurée le 6 octobre 2026, et **non engagée**.
+
+       Treize collections et les deux journaux sont en base. Il reste `instances`, et le
+       chiffre « (18) » que l'étape B lui donnait était un **rang de propagation**, non un
+       coût. Le voici mesuré :
+
+       | | |
+       |---|---|
+       | Appels au magasin pour `instances` | **15**, et tous dans `src/instances.js` |
+       | Fichiers qui requièrent `src/instances.js` | **18** |
+       | Appels `instances.*()` à convertir | **135** |
+       | Fonctions exposées devenant asynchrones | **19** |
+       | Dont `server.js` | 45 appels |
+
+       **La bonne nouvelle d'abord** : les quinze accès au magasin sont dans un seul fichier.
+       La mauvaise est tout le reste : `instances.courante()`, `instances.visibles()`,
+       `instances.aac()` sont appelées au milieu de gardes de route et de filtres de données,
+       dans les six modules. Ce n'est pas une collection de plus — c'est le dernier tiers du
+       « grand soir » décrit à l'étape A, concentré sur un fichier que tout le monde lit.
+
+       **Pourquoi ce n'est pas engagé, et c'est une raison et non une préférence.** La
+       discipline de chacune des treize migrations précédentes a été la même : la campagne
+       entière, dans les **deux** régimes, avant de commettre. Le régime base demande un
+       PostgreSQL ; il n'était pas démarré le 6 octobre. Migrer une collection vers une base
+       sans pouvoir l'éprouver contre cette base serait exactement la « vérification qui ne se
+       rejoue pas » que la suite n° 3 d'ADR-001 condamne, et qu'elle a coûté cher à lever.
+
+       **Et le risque propre à celle-ci est nommé** : `instances.visibles()` et
+       `instances.filtrer()` décident **ce qu'un agent voit des autres États**. Un `await`
+       oublié n'y rend pas une erreur : il rend une promesse là où un tableau est attendu, donc
+       un filtre qui ne filtre pas. C'est la seule collection où une conversion ratée ouvre des
+       données d'un État à un autre, et cela mérite sa propre séance — avec la base en face.
+
 
 8. [x] ~~**Acter par écrit auprès du GT2** que le frontend reste en JavaScript sans cadre.~~
        **Caduc, et contredit.** La maîtrise d'ouvrage a tranché l'inverse le

@@ -906,9 +906,18 @@ servi par la base, quel que soit l'état de la migration.
 | Suites « droits » et « SURV » par la passerelle | **20 / 20** et **103 / 103** |
 | `data/users.json` après chaque campagne | intact |
 
-**La bascule du magasin est complète** : treize collections nommées et les deux
+~~**La bascule du magasin est complète**~~ : treize collections nommées et les deux
 journaux chaînés vivent en PostgreSQL, et le même code sert les fichiers quand
 aucune adresse n'est donnée.
+
+> **« Complète » était faux**, et relevé le 6 octobre 2026 : `data/` porte **quatorze**
+> collections hors journaux. `instances` n'est pas migrée — c'est le jalon n° 14
+> d'[ADR-002](ADR-002-migration-spring-boot.md), mesuré et non engagé : 15 accès au magasin
+> dans un seul fichier, mais **135 appels** à convertir dans 18 fichiers, et deux de ses
+> fonctions décident ce qu'un agent voit des autres États.
+>
+> Le compte « treize » était juste ; c'est le mot « complète » qui a étendu au magasin entier
+> ce qui valait pour les cinq collections de module.
 
 ---
 
@@ -1021,7 +1030,9 @@ DATABASE_URL='postgres://…' OASIS_DATA_DIR=/chemin/vers/data node scripts/migr
 
 *Posé le 3 octobre 2026 en fermant [ADR-001](ADR-001-magasin-de-donnees.md) suite n° 3.*
 
-La bascule était déclarée complète, et elle l'est. Ce qui manquait n'était pas une
+La bascule était déclarée complète — elle ne l'est pas tout à fait, `instances` restant sur
+fichiers (voir l'encadré plus haut) ; mais elle l'est pour les treize collections qui y sont
+passées, et c'est de celles-là qu'il s'agit ici. Ce qui manquait n'était pas une
 vérification mais sa **répétition** : elle avait été faite une fois, à la main, et rien ne
 la rejouait. La campagne par défaut rend 5 des 17 contrôles du magasin, et aucune de ses
 treize suites ne sert la base.

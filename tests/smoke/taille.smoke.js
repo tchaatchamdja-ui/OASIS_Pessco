@@ -398,6 +398,56 @@ module.exports = async function tailleSmoke() {
         : `${convertisModules.length} converti(s) : ${convertisModules.join(', ')}`);
   }
 
+  // ── La légende d'attente est une légende que le socle sait traduire ──
+  //
+  // `oasis-loader` ne prend pas une clé : il prend **le texte de l'élément**, le
+  // cherche dans sa propre table et le remplace par le globe. Un texte absent de
+  // la table est rendu **tel quel** — sans erreur, sans trace, dans la langue où
+  // il a été écrit.
+  //
+  // C'est ce qui est arrivé à DROITS : la réécriture du 3 octobre y avait mis
+  // `dt('chargement')`, une clé absente de sa table, qui rendait donc la chaîne
+  // « chargement ». L'écran annonçait « chargement » en français comme en anglais
+  // comme en portugais, et **aucun contrôle ne le disait** — la suite « parcours »
+  // attend que l'attente s'en aille, non qu'elle se nomme.
+  //
+  // Les légendes sont lues de `loader.ts`, non recopiées ici : une liste tenue à
+  // la main se serait désaccordée, et c'est le fichier qui traduit qui dit ce
+  // qu'il sait traduire.
+  const sourceLoader = path.join(RACINE, 'frontend', 'socle', 'loader.ts');
+  if (!fs.existsSync(sourceLoader)) {
+    horsPortee('chaque légende d’attente est traduisible par le socle', 'loader.ts absent');
+  } else {
+    const texteLoader = fs.readFileSync(sourceLoader, 'utf8');
+    const bloc = /const LEGENDES[^=]*=\s*\{([\s\S]*?)\n\};/.exec(texteLoader);
+    const legendes = bloc
+      ? [...bloc[1].matchAll(/^\s*'((?:[^'\\]|\\.)*)'\s*:\s*\{/gm)].map((m) => m[1])
+      : [];
+    // Une table illisible donnerait un contrôle vert sur zéro légende connue :
+    // on le dit avant de comparer quoi que ce soit.
+    verifier('la table des légendes d’attente est lisible',
+      legendes.length >= 2, `${legendes.length} légende(s) relevée(s)`);
+
+    const inconnues = [];
+    const porteurs = [...pagesHtml(),
+      ...execSync('git ls-files -z frontend', { cwd: RACINE }).toString()
+        .split('\0').filter((f) => /\.(ts|tsx)$/.test(f)).map((f) => path.join(RACINE, f))];
+    porteurs.forEach((fichier) => {
+      if (!fs.existsSync(fichier)) return;
+      const texte = fs.readFileSync(fichier, 'utf8');
+      for (const m of texte.matchAll(/data-oasis-loader[^>]*>([^<{]+)</g)) {
+        const legende = m[1].trim();
+        // Un élément vide est licite : le socle y pose le globe sans légende.
+        if (!legende || legendes.includes(legende)) continue;
+        inconnues.push(`${relatif(fichier)} → « ${legende} »`);
+      }
+    });
+    verifier('chaque légende d’attente est traduisible par le socle',
+      inconnues.length === 0,
+      inconnues.length ? inconnues.join(' · ')
+        : `${legendes.length} légende(s) connue(s), ${porteurs.length} fichiers lus`);
+  }
+
   // ── Un bouton à icône porte son nom ──
   // Il n'a pas de texte : sans `aria-label`, un lecteur d'écran annonce
   // « bouton », et rien d'autre. `title` ne suffit pas — tous ne le lisent

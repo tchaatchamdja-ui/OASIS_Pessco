@@ -35,9 +35,14 @@ function scripts(dossier) {
   const parcourir = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => {
     const p = path.join(d, e.name);
     if (e.isDirectory()) { parcourir(p); return; }
-    if (e.name.endsWith('.js')) liste.push(p);
+    // `.ts` autant que `.js` : le socle est passé en TypeScript (ADR-003, 5.b),
+    // et ses tables de libellés y vivent désormais.
+    if (/\.(js|ts)$/.test(e.name)) liste.push(p);
   });
-  parcourir(path.join(RACINE, dossier));
+  // Un répertoire disparu n'est pas une erreur : `public/shared/js` s'est vidé
+  // le 6 octobre 2026, le dernier de ses douze fichiers ayant été converti.
+  const racine = path.join(RACINE, dossier);
+  if (fs.existsSync(racine)) parcourir(racine);
   return liste.sort();
 }
 
@@ -164,9 +169,16 @@ const SANS_ACCENT_PT = ['constituida', 'constituidas', 'constituido', 'constitui
   'mantem'];
 
 function controlerAccentsPortugais() {
+  // Le socle converti est lu **en entier** : ses fichiers ont perdu le préfixe
+  // `oasis-` en passant dans `frontend/socle/`, et un filtre par nom aurait
+  // cessé de les voir au moment même de la conversion. Ils portent tous des
+  // libellés — l'attente, le bandeau, les refus, les gabarits accordés —, donc
+  // les prendre tous est plus juste que de deviner lesquels.
   const tables = [
-    ...TABLES.map((t) => t.dossier), 'public/shared/js',
-  ].flatMap((d) => scripts(d)).filter((f) => /i18n|pr-utils|oasis-messages-serveur|oasis-dates|oasis-commun/.test(f));
+    ...TABLES.map((t) => t.dossier),
+    'public/shared/js',
+  ].flatMap((d) => scripts(d)).filter((f) => /i18n|pr-utils|oasis-messages-serveur|oasis-dates|oasis-commun/.test(f))
+    .concat(scripts('frontend/socle'));
   const fautes = [];
   const motif = new RegExp(`\\b(${SANS_ACCENT_PT.join('|')})\\b`, 'i');
   tables.forEach((f) => {
@@ -174,10 +186,23 @@ function controlerAccentsPortugais() {
     const i = texte.search(/\bpt\s*[:=]\s*\{|EXEC_TR\.pt\b/);
     // Tables à un seul volet par ligne (messages, dates, erreurs) : on lit le
     // troisième élément de chaque triplet, qui est le portugais.
+    //
+    // ── Et le **second** élément des paires, qui ne l'était pas ──
+    //
+    // La table des phrases du serveur est faite de paires `[en, pt]` : le
+    // français y est la **clé**, non un élément. L'extracteur ne lisant que les
+    // triplets, ses 84 traductions portugaises n'étaient pas contrôlées —
+    // lacune antérieure à la conversion du socle, et trouvée en contre-essayant
+    // son branchement. On lit donc aussi le dernier élément des paires.
     const portugais = i >= 0 ? texte.slice(i)
       : [...texte.matchAll(/\[\s*(['"`])(?:\\.|(?!\1).)*\1\s*,\s*(['"`])(?:\\.|(?!\2).)*\2\s*(?:,\s*(['"`])((?:\\.|(?!\3).)*)\3)?/g)]
         .map((m) => m[4] || '').join('\n')
-        + [...texte.matchAll(/\bpt\s*:\s*(['"`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]).join('\n');
+        + [...texte.matchAll(/\bpt\s*:\s*(['"`])((?:\\.|(?!\1).)*)\1/g)].map((m) => m[2]).join('\n')
+        // Les paires `['en', 'pt']` fermées juste après leur second élément :
+        // c'est le `]` qui les distingue d'un triplet, dont le second est suivi
+        // d'une virgule.
+        + [...texte.matchAll(/\[\s*(['"`])(?:\\.|(?!\1).)*\1\s*,\s*(['"`])((?:\\.|(?!\2).)*)\2\s*\]/g)]
+          .map((m) => m[3]).join('\n');
     for (const s of portugais.matchAll(/(['"`])((?:\\.|(?!\1).)*)\1/g)) {
       const m = motif.exec(s[2]);
       if (m) fautes.push(`${path.relative(RACINE, f)} : « ${m[1]} »`);

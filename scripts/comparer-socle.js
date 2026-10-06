@@ -112,6 +112,74 @@ const JEUX = {
     ],
   },
 
+  'oasis-hors-ligne': {
+    // ── Le réseau se coupe dans la sonde, pas dans le navigateur ──
+    //
+    // `window.__coupe` commande un témoin qui **lève** comme une panne de
+    // réseau — et non qui répond une erreur, ce que le serveur ferait. La
+    // distinction est tout le sujet de ce fichier : une réponse 500 n'est pas
+    // une absence de réseau, et seule la seconde met la saisie en file.
+    //
+    // La file vit dans IndexedDB, par origine : chaque passage de la comparaison
+    // a désormais son propre contexte de navigateur, sans quoi le second
+    // trouverait la file laissée par le premier.
+    avant: "window.__coupe=false; window.__vus=[]; window.__refus=null;"
+      + "window.fetch=async(e,i)=>{const u=String(typeof e==='string'?e:e.url);"
+      + "window.__vus.push([u.replace(location.origin,''),((i&&i.method)||'GET')]);"
+      + "if(window.__coupe)throw new TypeError('Failed to fetch');"
+      + "if(window.__refus)return new Response(window.__refus.corps,{status:window.__refus.statut});"
+      + "return new Response('{\"ok\":1}',{status:200,headers:{'Content-Type':'application/json'}});};",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^(oasisHorsLigne|__oasisHorsLigne)$/.test(n)).sort().join(',')",
+      "Object.keys(window.oasisHorsLigne).sort().join(',')",
+      // ── La liste d'autorisation, et ce qu'elle refuse ──
+      "JSON.stringify(window.oasisHorsLigne.DIFFERABLES.map(d=>[d.methode,String(d.motif),d.quoi]))",
+      // Les actes d'autorité sont refusés : c'est la règle du chantier.
+      "['POST /api/m/ramp/poi','PUT /api/m/ramp/poi/42','PUT /api/m/ramp/poi/42/commentaires','PUT /api/m/execution/dossiers/7','POST /api/m/execution/constatations','PUT /api/m/execution/constatations/9','POST /api/m/ramp/poi/42/submit','POST /api/m/execution/dossiers/7/close','POST /api/m/execution/dossiers/7/validate-pac','POST /api/m/execution/constatations/9/transmettre','DELETE /api/m/ramp/poi/42','POST /api/m/mesures/mesures'].map(x=>{const [m,c]=x.split(' ');const d=window.oasisHorsLigne.differable(m,c);return (d?'OUI':'non')+' '+x;}).join(' | ')",
+      // ── Hors réseau : une saisie admise est retenue, et rend 202 ──
+      "(async()=>{window.__coupe=true;const r=await fetch('/api/m/ramp/poi',{method:'POST',body:'{\"n\":1}'});const j=await r.json();const f=await window.oasisHorsLigne.file();window.__coupe=false;return [r.status,r.headers.get('X-OASIS-Differe'),j.differe,j.quoi,f.length,f[0].methode,f[0].url,f[0].corps,f[0].echec].join('|');})()",
+      "JSON.stringify(window.oasisHorsLigne.etat())",
+      // Le bandeau le dit, et dit combien — **avec l'état qu'il prétend montrer**.
+      // Les lire séparément ne permettait pas de dire laquelle des deux lectures
+      // était fausse quand elles se contredisaient.
+      "(async()=>{const e=window.oasisHorsLigne.etat();const f=await window.oasisHorsLigne.file();const b=document.querySelector('.oasis-hl-bandeau');return JSON.stringify({etat:e,echecs:f.map(x=>x.echec),classe:b?b.className:null,texte:b?b.textContent:null});})()",
+      // Hors réseau, un acte d'autorité **échoue franchement**.
+      "(async()=>{window.__coupe=true;let m='';try{await fetch('/api/m/ramp/poi/42/submit',{method:'POST',body:'{}'});}catch(e){m=e.constructor.name+': '+e.message;}window.__coupe=false;const f=await window.oasisHorsLigne.file();return m+'|file='+f.length;})()",
+      // Un téléversement non textuel ne se met pas en file.
+      "(async()=>{window.__coupe=true;let m='';const d=new FormData();d.append('f','v');try{await fetch('/api/m/ramp/poi',{method:'POST',body:d});}catch(e){m=e.constructor.name;}window.__coupe=false;const f=await window.oasisHorsLigne.file();return m+'|file='+f.length;})()",
+      // Une lecture ne se met jamais en file, même hors réseau.
+      "(async()=>{window.__coupe=true;let m='';try{await fetch('/api/m/ramp/poi');}catch(e){m=e.constructor.name;}window.__coupe=false;const f=await window.oasisHorsLigne.file();return m+'|file='+f.length;})()",
+      // ── Le rejeu, dans l'ordre de saisie ──
+      "(async()=>{window.__coupe=true;await fetch('/api/m/ramp/poi',{method:'POST',body:'A'});await fetch('/api/m/ramp/poi/1',{method:'PUT',body:'B'});window.__coupe=false;window.__vus=[];await window.oasisHorsLigne.rejouer();const f=await window.oasisHorsLigne.file();return JSON.stringify(window.__vus)+'|reste='+f.length;})()",
+      // ── Le rejeu se marque lui-même, et il faut identifier, non compter ──
+      //
+      // Sans la marque `X-OASIS-Differe`, un rejeu hors réseau repasse par la
+      // mise en file : il **se remet** dans la file qu'il quitte. Mais l'original
+      // est retiré dans le même temps — la file garde donc la **même taille**, et
+      // une sonde qui comptait ne distinguait rien. Mesuré : le contre-essai
+      // passait pour « ne mord pas ».
+      //
+      // On suit donc l'**identité** de l'entrée : un rejeu correct la laisse
+      // telle quelle, avec son identifiant et sa date de saisie. Un rejeu qui se
+      // réenfile en crée une autre.
+      "(async()=>{window.__coupe=true;await fetch('/api/m/ramp/poi',{method:'POST',body:'C'});const av=(await window.oasisHorsLigne.file()).map(x=>x.id+':'+x.capture).join(',');window.__coupe=true;await window.oasisHorsLigne.rejouer();const ap=(await window.oasisHorsLigne.file()).map(x=>x.id+':'+x.capture).join(',');window.__coupe=false;await window.oasisHorsLigne.rejouer();return 'identique='+String(av===ap)+' | '+av.replace(/:[0-9T:.Z-]+/g,':<date>')+' -> '+ap.replace(/:[0-9T:.Z-]+/g,':<date>');})()",
+      // ── Un rejeu refusé par le serveur n'est jamais jeté ──
+      "(async()=>{window.__coupe=true;await fetch('/api/m/ramp/poi',{method:'POST',body:'D'});window.__coupe=false;window.__refus={statut:409,corps:'le dossier a bougé'};await window.oasisHorsLigne.rejouer();window.__refus=null;const f=await window.oasisHorsLigne.file();const e=f.find(x=>x.corps==='D');return [f.length,e.echec,e.statut,e.raison,!!e.echoueLe,JSON.stringify(window.oasisHorsLigne.etat())].join('|');})()",
+      "(async()=>{const e=window.oasisHorsLigne.etat();const f=await window.oasisHorsLigne.file();const b=document.querySelector('.oasis-hl-bandeau');return JSON.stringify({etat:e,echecs:f.map(x=>x.echec),classe:b?b.className:null,texte:b?b.textContent:null});})()",
+      // Reprendre une entrée en échec la remet en file, et le rejeu passe.
+      "(async()=>{const f=await window.oasisHorsLigne.file();const e=f.find(x=>x.echec);const ok=await window.oasisHorsLigne.reprendre(e.id);await new Promise(r=>setTimeout(r,120));const g=await window.oasisHorsLigne.file();return [ok,g.length,JSON.stringify(window.oasisHorsLigne.etat())].join('|');})()",
+      "String(await window.oasisHorsLigne.reprendre(999999))",
+      // Abandonner, en connaissance de cause.
+      "(async()=>{window.__coupe=true;await fetch('/api/m/execution/constatations',{method:'POST',body:'E'});window.__coupe=false;const f=await window.oasisHorsLigne.file();const ok=await window.oasisHorsLigne.abandonner(f[0].id);const g=await window.oasisHorsLigne.file();return [ok,f.length,g.length].join('|');})()",
+      // Le bandeau disparaît quand il n'y a plus rien à dire.
+      "(()=>{const b=document.querySelector('.oasis-hl-bandeau');return b?b.textContent:'absent';})()",
+      // ── Une écriture qui passe alors que la file n'est pas vide la rejoue ──
+      "(async()=>{window.__coupe=true;await fetch('/api/m/ramp/poi',{method:'POST',body:'F'});window.__coupe=false;window.__vus=[];await fetch('/api/m/ramp/poi/2',{method:'PUT',body:'G'});await new Promise(r=>setTimeout(r,150));const f=await window.oasisHorsLigne.file();return 'reste='+f.length+'|appels='+window.__vus.length;})()",
+      // ── Le garde de réentrance : un second chargement n'empile pas ──
+      "(async()=>{const avant=window.fetch;const s=document.createElement('script');s.src=document.querySelector('script[src*=\"oasis-hors-ligne\"]').src;const p=new Promise(r=>{s.onload=r;s.onerror=r;});document.head.appendChild(s);await p;return String(window.fetch===avant);})()",
+    ],
+  },
+
   'oasis-requete': {
     // `avant` pose un `fetch` témoin **avant** que le fichier ne l'enveloppe :
     // c'est le seul moyen d'observer ce que l'enveloppe transmet réellement à
@@ -521,7 +589,14 @@ if (!jeu) {
 }
 
 async function sonder(nav, base, repertoire) {
-  const page = await nav.newPage();
+  // ── Chaque passage dans son propre contexte de navigateur ──
+  //
+  // IndexedDB et `localStorage` vivent par **origine** : les deux mesures les
+  // partageaient. Pour `oasis-hors-ligne`, dont toute la matière est une file
+  // persistée, le second passage aurait trouvé la file laissée par le premier —
+  // et la comparaison aurait mesuré cette contamination.
+  const bocal = await nav.createBrowserContext();
+  const page = await bocal.newPage();
   const incidents = [];
   page.on('pageerror', (e) => incidents.push(String(e.message).slice(0, 120)));
   // ── Le fuseau d'épreuve est **UTC+1**, et ce n'est pas un détail ──
@@ -571,6 +646,7 @@ async function sonder(nav, base, repertoire) {
     ]);
   }
   await page.close();
+  await bocal.close();
   return { out, incidents };
 }
 
@@ -580,6 +656,27 @@ function estConverti(f) {
   // eslint-disable-next-line global-require
   const path = require('path');
   return fs.existsSync(path.join(__dirname, '..', 'frontend', 'socle', 'globales', `${f}.ts`));
+}
+
+// ── Un fichier déjà converti ne se compare plus, et l'outil doit le dire ──
+//
+// La comparaison oppose l'ancien fichier au nouveau. L'ancien est supprimé à la
+// bascule : le jeu devient alors inexécutable. Sans ce refus, l'outil mesurait
+// une page où rien ne s'était chargé et rendait un diff où **tout** diffère —
+// un rouge spectaculaire qui ne dit rien du code. Un outil muet est mauvais ; un
+// outil qui raconte n'importe quoi est pire.
+{
+  // eslint-disable-next-line global-require
+  const fs = require('fs');
+  // eslint-disable-next-line global-require
+  const path = require('path');
+  const ancien = path.join(__dirname, '..', 'public', 'shared', 'js', `${fichier}.js`);
+  if (!fs.existsSync(ancien)) {
+    console.error(`« ${fichier} » est déjà converti : ${path.relative(path.join(__dirname, '..'), ancien)}`
+      + ' n\'existe plus, il n\'y a donc plus rien à comparer.');
+    console.error('Le jeu de sondes reste ici : c\'est le relevé de ce qui a été prouvé.');
+    process.exit(2);
+  }
 }
 
 (async () => {

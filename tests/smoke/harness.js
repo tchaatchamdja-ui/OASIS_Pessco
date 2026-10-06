@@ -329,9 +329,26 @@ function cheminSocle(nom) {
   return path.join(RACINE, 'public', 'shared', repertoire, `${nom}.js`);
 }
 
+// La **source** d'un fichier du socle : le TypeScript s'il est converti, le
+// JavaScript d'origine sinon.
+//
+// Un garde-fou qui lit le contenu écrit — la liste des écritures différables, par
+// exemple — doit viser la source, non le paquet : celui-ci est minifié en
+// production, et un détecteur sur du code minifié ne vaut rien.
+//
+// La correspondance se **déduit** du sas, qui importe son module : `oasis-hors-ligne`
+// donne `hors-ligne.ts`, et le préfixe tombe sans qu'aucune table ne le dise.
+function sourceSocle(nom) {
+  const sas = path.join(RACINE, 'frontend', 'socle', 'globales', `${nom}.ts`);
+  if (!fs.existsSync(sas)) return path.join(RACINE, 'public', 'shared', 'js', `${nom}.js`);
+  const m = /from '\.\.\/([^']+)'/.exec(fs.readFileSync(sas, 'utf8'));
+  if (!m) throw new Error(`le sas ${nom}.ts n'importe aucun module : source introuvable`);
+  return path.join(RACINE, 'frontend', 'socle', `${m[1]}.ts`);
+}
+
 // La même chose, en URL servie.
 const urlSocle = (nom) => `/shared/${fs.existsSync(path.join(RACINE, 'frontend', 'socle', 'globales', `${nom}.ts`)) ? 'app' : 'js'}/${nom}.js`;
 
 module.exports = {
-  demarrer, verifier, horsPortee, bilan, etat, cheminSocle, urlSocle,
+  demarrer, verifier, horsPortee, bilan, etat, cheminSocle, sourceSocle, urlSocle,
 };

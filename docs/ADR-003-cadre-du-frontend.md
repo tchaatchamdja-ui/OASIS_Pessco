@@ -329,8 +329,56 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**11 sur 12** —
-           ne reste que `oasis-hors-ligne`.)*
+       5.b [x] **Le socle en TypeScript, servant les deux régimes — fait.** *(**12 sur
+           12**, du 3 au 6 octobre 2026. `public/shared/js` n'existe plus.)*
+
+           2 250 lignes de JavaScript deviennent 2 905 lignes de TypeScript, dont
+           **306 pour les douze sas** — l'écart est là et dans les commentaires ; le
+           code lui-même n'a pas bougé, c'était la règle. Les huit écrans restés en
+           JavaScript ne voient aucun changement : chaque sas publie les mêmes noms,
+           et le relevé de surface le vérifie à chaque campagne.
+
+           **`oasis-hors-ligne`, le dernier et le plus engageant.** La file des
+           écritures différées, le rejeu ordonné, le bandeau, le service worker. Le
+           réseau se coupe **dans la sonde** — un témoin qui *lève* comme une panne, et
+           non qui répond une erreur : la distinction est tout le sujet du fichier,
+           puisque seule l'absence de réseau met une saisie en file. 20 sondes,
+           6 contre-essais, tous mordants, dont les trois qui gardent la règle du
+           métier : la borne `$` qui écarte `/submit`, la liste d'autorisation qui
+           refuse ce qu'on a oublié d'y inscrire, et un rejeu refusé qui n'est **jamais
+           jeté**.
+
+           Trois défauts de mesure trouvés en route, et le troisième est antérieur :
+
+           · *compter ne vaut pas identifier.* La sonde du rejeu marqué comptait la
+             file. Or sans la marque, le rejeu se réenfile **et** l'original est retiré :
+             la taille ne change pas. Elle suit maintenant l'identifiant et la date de
+             saisie ;
+           · *un bandeau se lit avec l'état qu'il prétend montrer.* Lus séparément, les
+             deux semblaient se contredire — le rejeu du chargement s'étant intercalé
+             entre les deux lectures. Lus ensemble, ils concordent, et une vraie
+             contradiction se verrait ;
+           · *la comparaison refuse désormais de tourner sur un fichier déjà converti.*
+             L'ancien fichier supprimé, elle mesurait une page vide et rendait un diff
+             où **tout** diffère — un rouge spectaculaire qui ne dit rien.
+
+           **Et une lacune antérieure, comblée.** Le contrôle des accents portugais lit
+           le troisième élément de chaque **triplet**. Or la table des phrases du
+           serveur est faite de **paires** `[en, pt]`, le français y étant la clé : ses
+           **84 traductions portugaises n'étaient pas contrôlées**. Trouvé en
+           contre-essayant le branchement de ce contrôle sur le socle converti. Les
+           paires sont désormais lues, et le contre-essai mord.
+
+           Trois garde-fous ont dû apprendre à suivre la conversion : la liste des
+           écritures différables — dont le détecteur nommait la forme JavaScript de la
+           déclaration et rendait « 0 entrée(s) », c'est-à-dire qu'il **se taisait au
+           moment même où la liste changeait de fichier** —, le contrôle des accents, et
+           le parcours des répertoires, `public/shared/js` ayant disparu.
+
+           Ce qu'il reste de dette déclarative : **deux noms**, dans
+           [`sans-proprietaire.d.ts`](../frontend/socle/sans-proprietaire.d.ts) —
+           `APP_STATE` et `PESSCO`, posés par une page et lus par plusieurs modules.
+           Aucun module ne les définit, ils resteront.
 
            **`oasis-requete` — le premier maillon de la chaîne `fetch`.** L'en-tête
            anti-CSRF posé sur tout appel vers l'application, la déduplication des

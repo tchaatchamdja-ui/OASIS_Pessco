@@ -180,7 +180,7 @@ bouge pas si le contrat REST est tenu.
 | Pièce | Rôle |
 |---|---|
 | `public/sw.js` | Sert les écrans déjà vus. Trois régimes : navigation réseau d'abord, ressources cache d'abord, lectures d'API réseau d'abord avec repli marqué. Les écritures n'y passent jamais. |
-| `public/shared/js/oasis-hors-ligne.js` | La file des écritures différées (IndexedDB), son rejeu ordonné, et le bandeau. |
+| `public/shared/app/oasis-hors-ligne.js` | La file des écritures différées (IndexedDB), son rejeu ordonné, et le bandeau. |
 | `public/manifest.webmanifest` + icônes 192/512 | L'application s'installe sur l'écran d'accueil. |
 | RAMP et SURV | Les deux modules de terrain, branchés. |
 

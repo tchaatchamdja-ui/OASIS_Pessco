@@ -11,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { verifier, bilan } = require('./harness');
+const { verifier, bilan, sourceSocle } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const DOSSIERS = ['public', 'src'];
@@ -394,14 +394,23 @@ module.exports = async function tailleSmoke() {
   // où une erreur de ce genre ne se verrait pas à l'exécution : elle ne se
   // manifesterait qu'au rejeu, sur une instance réelle, trop tard.
   const TRANSITIONS = /(valider|validate|soumettre|submit|transmettre|cloturer|close|renvoyer|reject|approuver|archiver|signer|decision|effacer|delete)/i;
-  const fichierHL = path.join(RACINE, 'public', 'shared', 'js', 'oasis-hors-ligne.js');
+  // La **source**, non le paquet servi : celui-ci est minifié en production, et
+  // un détecteur sur du code minifié ne vaut rien. `sourceSocle` la trouve des
+  // deux côtés de la conversion (ADR-003, 5.b) en la déduisant du sas.
+  const fichierHL = sourceSocle('oasis-hors-ligne');
   const sourceHL = fs.existsSync(fichierHL) ? fs.readFileSync(fichierHL, 'utf8') : '';
   // On lit les lignes, non les littéraux : analyser une expression régulière
   // écrite à la main revient à en écrire une pour les lire toutes, et la
   // première tentative s'arrêtait au premier « \/ » — elle ne voyait donc que
   // « /^\/api » de chaque motif, et ne pouvait rien attraper. La ligne entière
   // porte le motif et son libellé ; c'est tout ce qu'il faut.
-  const bloc = sourceHL.match(/const DIFFERABLES = \[([\s\S]*?)\n {2}\];/);
+  // Le détecteur ne nomme pas la forme de la déclaration : `const DIFFERABLES =`
+  // en JavaScript, `export const DIFFERABLES: readonly Differable[] =` en
+  // TypeScript, et au premier niveau donc fermée sur `];` sans indentation.
+  // L'écrire en dur a fait rendre « 0 entrée(s) » à la conversion — le garde-fou
+  // aurait cessé de couvrir la liste d'autorisation le jour même où elle changeait
+  // de fichier, et c'est le pire moment pour qu'il se taise.
+  const bloc = sourceHL.match(/DIFFERABLES[^=\n]*= \[([\s\S]*?)\n *\];/);
   const motifs = bloc
     ? bloc[1].split('\n').map((l) => l.trim()).filter((l) => l.startsWith('{') && l.includes('motif:'))
     : [];

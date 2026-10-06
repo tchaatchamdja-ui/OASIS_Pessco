@@ -11,7 +11,13 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { verifier, bilan, sourceSocle } = require('./harness');
+// `horsPortee` n'était **pas importé**, et cette suite l'appelle six fois.
+// Chacun de ces six appels levait un `ReferenceError` — c'est-à-dire que la
+// suite tombait en exception pile au moment où elle devait dire « hors de
+// portée ». Aucune des six conditions n'étant jamais remplie ici, personne ne
+// l'avait vu ; trouvé le 6 octobre 2026 en contre-essayant un septième appel,
+// en ôtant le `main.tsx` dont il se déduit.
+const { verifier, bilan, sourceSocle, horsPortee } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const DOSSIERS = ['public', 'src'];
@@ -266,6 +272,16 @@ module.exports = async function tailleSmoke() {
   // globales manquent — un écran qui s'arrête sur `oasisNomTheme is not a
   // function`, ou pire, qui ne s'arrête pas.
   //
+  // Les fichiers suivis par git, lus par les deux garde-fous d'anciens chemins
+  // qui suivent — celui du socle et celui des répertoires de module. Calculés
+  // une fois : deux appels à `git ls-files` auraient divergé le jour où l'un des
+  // deux filtres change.
+  const fichiersSuivis = execSync('git ls-files -z', { cwd: RACINE, maxBuffer: 32 * 1024 * 1024 })
+    .toString().split('\0').filter(Boolean)
+    .filter((f) => /\.(js|mjs|ts|tsx|html|json|md|yml|sh)$/.test(f))
+    // Ce fichier nomme les chemins pour les détecter : il ne se dénonce pas.
+    .filter((f) => f !== 'tests/smoke/taille.smoke.js');
+
   // Le détecteur ne tient pas de liste : il lit `frontend/socle/globales/`. Un
   // fichier converti y est, donc son ancien chemin ne doit plus être demandé.
   const sas = path.join(RACINE, 'frontend', 'socle', 'globales');
@@ -303,12 +319,7 @@ module.exports = async function tailleSmoke() {
     const nommeEnDur = (texte, nom) => new RegExp(
       `shared['"\\s,/\\\\)(.]{0,12}js['"\\s,/\\\\)(.]{0,12}${nom.replace(/-/g, '\\-')}\\.js`,
     ).test(texte);
-    const suivis = execSync('git ls-files -z', { cwd: RACINE, maxBuffer: 32 * 1024 * 1024 })
-      .toString().split('\0').filter(Boolean)
-      .filter((f) => /\.(js|mjs|ts|tsx|html|json|md|yml|sh)$/.test(f))
-      // Ce fichier nomme les chemins pour les détecter : il ne se dénonce pas.
-      .filter((f) => f !== 'tests/smoke/taille.smoke.js');
-    suivis.forEach((rel) => {
+    fichiersSuivis.forEach((rel) => {
       const chemin = path.join(RACINE, rel);
       if (!fs.existsSync(chemin)) return;
       const texte = fs.readFileSync(chemin, 'utf8');
@@ -319,7 +330,53 @@ module.exports = async function tailleSmoke() {
     verifier('aucun fichier ne nomme un fichier du socle converti par son ancien chemin',
       fautives.length === 0,
       fautives.length ? fautives.join(' · ')
-        : `${convertis.length} converti(s), ${suivis.length} fichiers suivis lus`);
+        : `${convertis.length} converti(s), ${fichiersSuivis.length} fichiers suivis lus`);
+  }
+
+  // ── Le même garde-fou, pour les répertoires de module (ADR-003, 5.c) ──
+  //
+  // Un module converti en React perd son `public/modules/<nom>/js/` : son code
+  // est construit vers `public/modules/<nom>/app/`. DROITS a été le premier à le
+  // perdre entièrement, le 6 octobre 2026.
+  //
+  // Le garde-fou du socle ne couvre que `shared/js` : il ne dirait rien d'une
+  // page qui charge encore `/modules/droits/js/dr-i18n.js` — c'est-à-dire d'un
+  // **404 sur un écran entier**. Celui-ci le dit, et il se déduit du même
+  // signe : un module est converti quand il porte un `frontend/<nom>/main.tsx`,
+  // non quand une liste le déclare.
+  //
+  // Les cinq modules qui suivront le perdront à leur tour ; ce garde-fou est
+  // écrit maintenant pour qu'aucun n'ait à s'en souvenir.
+  const convertisModules = fs.readdirSync(path.join(RACINE, 'frontend'), { withFileTypes: true })
+    .filter((e) => e.isDirectory() && e.name !== 'socle'
+      && fs.existsSync(path.join(RACINE, 'frontend', e.name, 'main.tsx')))
+    .map((e) => e.name)
+    // Un module dont le `js/` existe encore n'est pas converti : la cohabitation
+    // est permise le temps d'une conversion, et l'interdire casserait l'étape
+    // intermédiaire.
+    .filter((nom) => !fs.existsSync(path.join(RACINE, 'public', 'modules', nom, 'js')));
+  if (!convertisModules.length) {
+    horsPortee('aucun fichier ne nomme le « js » d’un module converti',
+      'aucun module n’a perdu son répertoire « js »');
+  } else {
+    // Mêmes séparateurs tolérés que pour le socle, et pour la même raison : le
+    // chemin assemblé par `path.join` ne porte pas la chaîne littérale.
+    const moduleEnDur = (texte, nom) => new RegExp(
+      `modules['"\\s,/\\\\)(.]{0,12}${nom}['"\\s,/\\\\)(.]{0,12}js['"\\s,/\\\\)(.]{0,4}`,
+    ).test(texte);
+    const coupables = [];
+    fichiersSuivis.filter((f) => f !== 'tests/smoke/traductions.smoke.js').forEach((rel) => {
+      const chemin = path.join(RACINE, rel);
+      if (!fs.existsSync(chemin)) return;
+      const texte = fs.readFileSync(chemin, 'utf8');
+      convertisModules.forEach((nom) => {
+        if (moduleEnDur(texte, nom)) coupables.push(`${rel} → ${nom}`);
+      });
+    });
+    verifier('aucun fichier ne nomme le « js » d’un module converti',
+      coupables.length === 0,
+      coupables.length ? coupables.join(' · ')
+        : `${convertisModules.length} converti(s) : ${convertisModules.join(', ')}`);
   }
 
   // ── Un bouton à icône porte son nom ──

@@ -1,16 +1,61 @@
-// ══════════════════════════════════════
-//  Module « Gestion des Droits » — traductions
-// ══════════════════════════════════════
-// Trois langues, comme le portail : français, anglais, portugais. L'écran
-// offrait le choix depuis toujours, sans rien avoir à traduire : cliquer EN ou
-// PT n'y changeait rien.
+// OASIS — Module « Gestion des Droits » : les traductions, en TypeScript.
 //
-// Usage : dt('cle') dans un gabarit, dt('cle', valeur) pour un texte à trou
-// ({0}, {1}…). Une clé absente retombe sur le français, puis sur elle-même :
-// une traduction manquante n'efface jamais le texte.
+// Trois langues, comme le portail : français, anglais, portugais.
+//
+// ── Pourquoi ce fichier est passé en TypeScript, contre ce qui était écrit ──
+//
+// `frontend/droits/socle.ts` portait, jusqu'au 6 octobre 2026 : « 390 lignes de
+// tables, que rien ne gagnerait à passer en TypeScript et qu'un portage
+// exposerait à la faute de frappe ». La suite n° 5.b a montré le contraire, et
+// la conversion l'a prouvé **avant d'être finie** :
+//
+//   · les volets sont typés les uns par l'autre — `Record<Cle, string>`. Une
+//     traduction oubliée devient une **erreur de construction**, non un libellé
+//     français au milieu d'un écran portugais ;
+//   · les clés appelées sont typées — `dt(cle: Cle)`. Et c'est ce qui a trouvé
+//     `dt('chargement')` dans `App.tsx`, **appelée et absente de la table**
+//     depuis la réécriture du 3 octobre. L'écran affichait « chargement » en
+//     guise de légende d'attente, dans les trois langues ;
+//   · trois affirmations sur `window` disparaissent — `window.dt`,
+//     `window.DR`, et les deux globales lexicales `dtPriv` / `dtPrivDesc`.
+//     C'est ici que vivait `dtPriv`, le premier des deux mensonges déclaratifs
+//     qui ont motivé la suite `frontend`.
+//
+// Le fichier ne pose **rien** sur `window` et n'a pas de sas : aucun écran resté
+// en JavaScript ne lit ces libellés — ils sont à cet écran seul. C'est la
+// différence avec le socle commun, que huit écrans lisent encore en globales.
+//
+// ── La langue et l'espace ──
+//
+// Ils vivaient dans un global, `window.DR`, posé par React et lu par ce
+// fichier. Ce global n'existait que parce que la table n'était pas portée : il
+// s'en va avec elle, et rien ne le remplace — voir plus bas pourquoi un état
+// local réglé par un appel n'aurait été que le même défaut déplacé.
 
-const DR_TR = {
-  fr: {
+declare global {
+  interface Window {
+    /**
+     * Le module dont la page règle les droits, posé par `index.html` depuis
+     * `?module=`.
+     *
+     * **Déclaré ici, chez son unique lecteur**, et non au point de
+     * rassemblement : la règle posée en 5.b veut que le nom soit déclaré là où
+     * il est défini, et à défaut là où il est lu. Celui-ci est posé par une
+     * page, non par un module ; ce fichier est le seul à le lire.
+     */
+    DR_MODULE?: string;
+  }
+}
+
+export type Langue = 'fr' | 'en' | 'pt';
+
+// ── Le volet français, et c'est lui qui définit les clés ──
+//
+// `as const` n'est pas décoratif : c'est de lui que `Cle` est déduite, donc de
+// lui que les deux autres volets tiennent leur obligation. Les trois tables sont
+// reprises **verbatim** de `dr-i18n.js`, indentation comprise — la leçon de la
+// conversion du socle, où désindenter avait changé la sortie.
+const FR = {
     // ── Coquille ──
     module_titre: 'Gestion des Droits',
     nav_privileges: 'Privilèges',
@@ -128,9 +173,17 @@ const DR_TR = {
     desc_RAMP_LECTEUR: 'Consultation seule des inspections et des écarts.',
     desc_RAMP_AUCUN: 'Aucun accès aux données de cet État.',
     desc_RAMP_PRESTATAIRE: 'Vue Prestataire : l’exploitant ne voit que les inspections et les écarts qui le concernent.',
-  },
+} as const;
 
-  en: {
+/** Une clé de libellé. Déduite du volet français : il n'y a rien à tenir à jour. */
+export type Cle = keyof typeof FR;
+
+// Les deux autres volets doivent porter **exactement** les mêmes clés : une
+// manquante ne compile pas, une de trop non plus. Les 101 clés étaient déjà
+// complètes dans les trois langues — ce type n'a donc rien réparé, il empêche
+// la prochaine. Le garde-fou de forme de la suite « traductions » le vérifie
+// aussi, et continue de le faire pour les six modules restés en JavaScript.
+const EN: Readonly<Record<Cle, string>> = {
     module_titre: 'Rights Management',
     nav_privileges: 'Privileges',
     nav_audit: 'Audit log',
@@ -241,9 +294,9 @@ const DR_TR = {
     desc_RAMP_LECTEUR: 'Read-only access to inspections and findings.',
     desc_RAMP_AUCUN: 'No access to the data of this State.',
     desc_RAMP_PRESTATAIRE: 'Provider view: the operator sees only the inspections and findings that concern it.',
-  },
+};
 
-  pt: {
+const PT: Readonly<Record<Cle, string>> = {
     module_titre: 'Gestão de Direitos',
     nav_privileges: 'Privilégios',
     nav_audit: 'Registo de auditoria',
@@ -354,26 +407,119 @@ const DR_TR = {
     desc_RAMP_LECTEUR: 'Consulta apenas das inspeções e dos desvios.',
     desc_RAMP_AUCUN: 'Sem acesso aos dados deste Estado.',
     desc_RAMP_PRESTATAIRE: 'Vista Prestador: o operador ve apenas as inspeções e os desvios que lhe dizem respeito.',
-  },
 };
 
-// Traduction d'une clé, avec textes à trou : dt('compte_entrees', 12).
-function dt(cle, ...valeurs) {
-  const langue = (DR && DR.lang) || 'fr';
-  const table = DR_TR[langue] || DR_TR.fr;
-  const texte = table[cle] !== undefined ? table[cle] : (DR_TR.fr[cle] !== undefined ? DR_TR.fr[cle] : cle);
-  return valeurs.reduce((t, v, i) => t.split(`{${i}}`).join(String(v)), texte);
+const VOLETS: Readonly<Record<Langue, Readonly<Record<Cle, string>>>> = { fr: FR, en: EN, pt: PT };
+
+// ── La langue et l'espace se lisent de leur source, au chargement ──
+//
+// Ils vivaient dans `window.DR`, que React posait et que ce fichier lisait.
+// Première réécriture : un état local, réglé par un `poser(lang, module)` que
+// `main.tsx` appelait avant le premier rendu. **C'était le même défaut déplacé.**
+//
+// Un état qui doit être réglé avant d'être lu a un état « pas encore réglé », et
+// le secours d'un tel état est toujours plausible : français, espace `PLAN`. Un
+// écran portugais rendu en français ne lève pas, ne trace rien, et se lit
+// comme un écran correct. L'ancien code, lui, **levait** — « DR is not
+// defined » —, et c'est ainsi qu'on l'avait trouvé.
+//
+// Alors plutôt que de garder le secours et d'en faire un garde, l'état n'existe
+// plus : les deux valeurs se lisent de leur source au chargement du module. La
+// langue vient de `localStorage`, comme la lisent déjà `loader.ts`, `commun.ts`,
+// `dates.ts` et `chrome.ts` — c'est la **même clé**, et c'est pourquoi la
+// légende d'attente est dans la bonne langue avant que cet écran ne démarre.
+// L'espace vient de `window.DR_MODULE`, que la page pose depuis l'URL.
+//
+// Il ne reste donc d'ordre à tenir pour personne, et `poser` ne sert plus qu'au
+// **changement** de langue, qui est un événement et non un amorçage.
+
+const CONNUES: readonly Langue[] = ['fr', 'en', 'pt'];
+const normaliser = (lg: string): Langue => {
+  const court = lg.slice(0, 2);
+  return CONNUES.find((l) => l === court) ?? 'fr';
+};
+
+const langueEnregistree = (): Langue => {
+  // Le `try` n'est pas décoratif : en navigation privée, `localStorage` lève à
+  // l'accès, et un répertoire de traduction qui lève au chargement laisse la
+  // page à son source — ce qu'elle a déjà montré une fois.
+  try { return normaliser(localStorage.getItem('pr_lang') ?? 'fr'); } catch { return 'fr'; }
+};
+
+let langue: Langue = langueEnregistree();
+
+/**
+ * L'espace dont la page règle les droits, lu de `window.DR_MODULE` au
+ * chargement. Il ne change pas au cours d'une visite : la page le tient de son
+ * URL. Exporté pour que `socle.ts` et `api.ts` le lisent **d'ici** — il était
+ * calculé en deux endroits, et deux endroits divergent.
+ */
+export const MODULE: string = (window.DR_MODULE || 'PLAN').toUpperCase();
+
+/**
+ * Change la langue. Appelée quand l'agent en choisit une autre, et par elle
+ * seule : l'amorçage n'a plus besoin de personne.
+ */
+export function poser(lg: string): void {
+  langue = normaliser(lg);
 }
 
-// Libellé d'un échelon de privilège : le référentiel les nomme en majuscules,
-// l'écran les nomme dans la langue retenue.
-const dtPriv = (p) => dt(`priv_${p}`);
+const trous = (texte: string, valeurs: readonly unknown[]): string =>
+  valeurs.reduce<string>((t, v, i) => t.split(`{${i}}`).join(String(v)), texte);
 
-// Ce qu'un échelon ouvre dépend du module : la description du module l'emporte
-// sur la description commune.
-const dtPrivDesc = (p) => {
-  const propre = DR_TR[(DR && DR.lang) || 'fr'] || DR_TR.fr;
-  const cleModule = `desc_${DR.module}_${p}`;
-  if (propre[cleModule] !== undefined || DR_TR.fr[cleModule] !== undefined) return dt(cleModule);
-  return dt(`desc_${p}`);
+/**
+ * Le libellé d'une clé connue, avec textes à trou : `dt('compte_entrees', 12)`.
+ *
+ * **Le repli sur le français a disparu, et c'est le type qui l'a rendu mort.**
+ * `DR_TR[langue][cle] ?? DR_TR.fr[cle]` existait parce qu'un volet pouvait être
+ * incomplet ; `Record<Cle, string>` l'interdit. Garder un repli inatteignable
+ * aurait laissé croire qu'il protège de quelque chose.
+ */
+export function dt(cle: Cle, ...valeurs: unknown[]): string {
+  return trous(VOLETS[langue][cle], valeurs);
+}
+
+/**
+ * Le libellé d'une clé **construite à l'exécution** — `priv_LECTEUR`,
+ * `desc_RAMP_PRESTATAIRE`, `mod_PLAN`. Celles-là peuvent manquer pour de bonnes
+ * raisons : un privilège que le référentiel ajoute, un module sans description
+ * propre. Le repli complet est donc gardé ici — volet, puis français, puis la
+ * clé elle-même.
+ *
+ * **Nommée à part plutôt que confondue avec `dt`** : la tolérance est le propre
+ * de ces trois appels, et non une facilité offerte aux quatre-vingts autres, qui
+ * doivent se tromper à la construction.
+ */
+export function dtSouple(cle: string, ...valeurs: unknown[]): string {
+  const volet: Readonly<Record<string, string | undefined>> = VOLETS[langue];
+  const secours: Readonly<Record<string, string | undefined>> = FR;
+  return trous(volet[cle] ?? secours[cle] ?? cle, valeurs);
+}
+
+/** Vrai si la clé existe dans le volet retenu ou en français. */
+const connue = (cle: string): boolean => {
+  const volet: Readonly<Record<string, string | undefined>> = VOLETS[langue];
+  const secours: Readonly<Record<string, string | undefined>> = FR;
+  return volet[cle] !== undefined || secours[cle] !== undefined;
+};
+
+/**
+ * Le libellé d'un échelon de privilège : le référentiel les nomme en majuscules,
+ * l'écran les nomme dans la langue retenue.
+ */
+export const dtPriv = (p: string): string => dtSouple(`priv_${p}`);
+
+/**
+ * Ce qu'un échelon ouvre dépend du module : la description du module l'emporte
+ * sur la description commune.
+ */
+export const dtPrivDesc = (p: string): string => {
+  const cleModule = `desc_${MODULE}_${p}`;
+  return connue(cleModule) ? dtSouple(cleModule) : dtSouple(`desc_${p}`);
+};
+
+/** Le libellé de l'espace réglé par la page. À défaut, son code. */
+export const dtModule = (): string => {
+  const cle = `mod_${MODULE}`;
+  return connue(cle) ? dtSouple(cle) : MODULE;
 };

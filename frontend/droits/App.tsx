@@ -102,9 +102,11 @@ export function App() {
   const changerLangue = (l: string) => {
     localStorage.setItem('pr_lang', l);
     poserLangue(l);
-    // Le répertoire de traduction lit la langue dans `window.DR` : il faut qu'il
-    // la voie **avant** le rendu qui suit, sinon l'écran se redessine dans
-    // l'ancienne langue et il faut y revenir pour la voir changer.
+    // Le répertoire doit voir la langue **avant** le rendu qui suit, sinon
+    // l'écran se redessine dans l'ancienne et il faut y revenir pour la voir
+    // changer. `localStorage` est écrit juste au-dessus, mais le répertoire ne
+    // le relit pas : il l'a lu à son chargement. C'est le seul usage qui reste
+    // à cet appel.
     poserEtatPartage(l);
     setLangue(l);
   };
@@ -126,7 +128,16 @@ export function App() {
   };
 
   if (amorcage.etat === 'chargement') {
-    return <div data-oasis-loader>{dt('chargement')}</div>;
+    // La légende est **le texte de l'élément**, non une clé de ce module :
+    // `oasis-loader` lit le contenu, le traduit par sa propre table — qui porte
+    // « Chargement… » dans les trois langues — et le remplace par le globe.
+    //
+    // Il y avait ici `dt('chargement')`, **appelée et absente de la table**
+    // depuis la réécriture du 3 octobre : l'écran annonçait « chargement », en
+    // français comme en anglais comme en portugais. Le typage des clés
+    // (`./i18n.ts`) l'a trouvée, et aucun contrôle ne l'aurait fait — la suite
+    // « parcours » attend que l'attente s'en aille, non qu'elle se nomme.
+    return <div data-oasis-loader>Chargement…</div>;
   }
   if (amorcage.etat === 'refus') {
     return <div style={{ padding: '2rem', color: '#991b1b' }}>{amorcage.message}</div>;

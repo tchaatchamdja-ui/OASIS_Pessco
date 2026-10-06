@@ -1,73 +1,48 @@
-// La frontière avec le socle commun — et c'est ici que TypeScript gagne sa place.
+// La frontière avec le socle commun — et ce qui en reste.
 //
-// L'écran vit dans `#app`, au milieu de 2 250 lignes de JavaScript partagé que la
-// page charge avant lui : barre supérieure, thème, langue, requêtes, messages du
-// serveur, échappement, dates. Ces lignes ne sont pas portées (ADR-003 :
-// cohabitation, module par module), et elles n'ont pas de types.
+// Ce fichier disait, à sa naissance : « tout ce que l'écran emprunte au socle est
+// déclaré ici ». Il le disait parce que le socle commun était 2 250 lignes de
+// JavaScript sans types, et qu'une déclaration écrite à la main était le seul
+// moyen de les atteindre sous `strict`.
 //
-// **Tout ce que l'écran leur emprunte est déclaré ici, une fois.** C'est le seul
-// endroit où l'on dit « je fais confiance », et on le dit explicitement : ailleurs
-// dans l'écran, une faute de nom ou d'arité ne compile pas. Sans ce fichier, le
-// `strict` du reste ne vaudrait rien — on aurait écrit `(window as any)` partout,
-// c'est-à-dire du JavaScript avec une extension en `.ts`.
+// **Il n'y a plus rien à déclarer.** Le socle est en TypeScript (ADR-003, 5.b) :
+// l'échappement, les palettes, la langue, les dates viennent de leur source, et
+// c'est elle qui les type. Le répertoire de traduction de l'écran, dernier
+// fichier en JavaScript du module, est passé dans `./i18n.ts` le 6 octobre 2026.
 //
-// Le jour où le socle commun sera porté, c'est ce fichier qui disparaîtra, et les
-// erreurs de compilation diront exactement où.
+// Ce qui subsiste de ce fichier n'est donc plus une frontière mais un **point de
+// rassemblement** : ce que l'écran emprunte, réuni sous un nom, plus les deux
+// choses qui lui sont propres — l'espace réglé par la page et le format
+// d'horodatage de son journal.
+//
+// Il ne reste d'affirmation ici que `ICONS`, et elle partira avec le dernier
+// `const` publié par un sas. Les quatre autres — `DR`, `dt`, et les globales
+// lexicales `dtPriv` / `dtPrivDesc` — s'en sont allées avec la conversion du
+// répertoire. C'est là que vivait `dtPriv`, le premier des deux mensonges
+// déclaratifs qui ont motivé la suite `frontend`.
+//
+// Les deux noms que la page pose pour elle-même sont déclarés chez leur lecteur
+// et chez leur auteur, selon la règle de 5.b : `DR_MODULE` dans `i18n.ts`, qui
+// le lit, et `drBoot` dans `main.tsx`, qui le pose.
 
-/** Le répertoire de traduction (`dr-i18n.js`), chargé en global par la page. */
-type Traduire = (cle: string, ...args: unknown[]) => string;
-
-/**
- * Ce que `dr-i18n.js` lit du global `DR` : la langue retenue et le module réglé.
- *
- * Le répertoire de traduction n'est pas porté — 390 lignes de tables, que rien ne
- * gagnerait à passer en TypeScript et qu'un portage exposerait à la faute de
- * frappe. Il reste donc en global, et il attend ces deux champs : l'objet `DR` de
- * l'écran d'avant les portait, parmi vingt autres.
- *
- * On ne garde que ces deux-là, et React les tient à jour. C'est la seule chose
- * que le portage doit au fichier qu'il ne remplace pas.
- */
-export interface EtatPartage { lang: string; module: string }
+import { poser } from './i18n';
 
 declare global {
-  interface Window {
-    /** Lu par `dr-i18n.js` seulement. Voir `EtatPartage`. */
-    DR: EtatPartage;
-    /** Module dont la page règle les droits, posé par `index.html` (`?module=`). */
-    DR_MODULE?: string;
-
-    /** `dr-i18n.js` : les libellés de l'écran. Déclaré en `function`, donc sur `window`. */
-    dt: Traduire;
-    /** Point d'entrée que `index.html` appelle au chargement. */
-    drBoot?: () => void;
-  }
-
   /**
-   * Le libellé d'un privilège, et sa description.
-   *
-   * **Déclarés hors de `Window`, et ce n'est pas un détail de style** :
-   * `dr-i18n.js` les définit en `const`, qui ne pose rien sur `window` — seuls
-   * `function` et `var` le font. Les lire par `window.dtPriv` rendait
-   * `undefined`, et l'écran s'arrêtait sur « window.dtPriv is not a function ».
+   * Les icônes en SVG, fournies par `oasis-utils.js` — **et déclarées hors de
+   * `Window`, ce qui n'est pas un détail de style.** `oasis-utils` les définit
+   * en `const`, qui ne pose rien sur `window` : seuls `function` et `var` le
+   * font. `Coquille.tsx` lisait `(window.ICONS || {}).shield`, qui rend
+   * `undefined`, et le `|| ''` rendait le défaut muet — le bouclier de l'en-tête
+   * manquait depuis la réécriture, sans que rien ne le dise.
    *
    * Un `const` au premier niveau d'un script crée une liaison du périmètre
-   * lexical global : on l'atteint par son nom, et c'est ce que ces déclarations
-   * disent au compilateur.
-   */
-  const dtPriv: (p: string) => string;
-  const dtPrivDesc: (p: string) => string;
-
-  /**
-   * Les icônes en SVG, fournies par `oasis-utils.js` — **et pour la même raison
-   * déclarées ici, non sur `Window`.** Je ne l'avais pas vu : `Coquille.tsx`
-   * lisait `(window.ICONS || {}).shield`, qui rend `undefined`, et le `|| ''`
-   * rendait le défaut muet. Le bouclier de l'en-tête manquait depuis la
-   * réécriture — l'ancien `dr-app.js` lisait `ICONS` nu, lui.
+   * lexical global : on l'atteint par son nom, et c'est ce que cette
+   * déclaration dit au compilateur.
    *
-   * Deux fois la même cause, deux fois en silence. C'est ce qui a motivé le
-   * contrôle qui compare les lectures `window.*` du frontend à la surface
-   * réellement posée par le socle, mesurée dans un navigateur.
+   * **C'est la dernière de ce fichier**, et elle partira avec la conversion du
+   * socle restant — `utils.ts` est déjà en TypeScript, mais `ICONS` y est encore
+   * publié en `const` par le sas plutôt qu'exporté.
    */
   const ICONS: Record<string, string | undefined>;
 }
@@ -79,31 +54,38 @@ declare global {
  */
 export const icone = (nom: string): string => ICONS[nom] ?? '';
 
-export const MODULE: string = (window.DR_MODULE || 'PLAN').toUpperCase();
+// ── Le répertoire de traduction vient de la source (ADR-003, 5.c) ──
+//
+// Il était chargé en `<script>` classique et lu par quatre déclarations écrites
+// ici à la main. Trois de ces quatre étaient **justes par accident** : `dt` est
+// une `function`, donc bien sur `window` ; `dtPriv` et `dtPrivDesc` sont des
+// `const`, donc nulle part sur `window` — et il a fallu que l'écran s'arrête sur
+// « window.dtPriv is not a function » pour l'apprendre.
+//
+// Il n'y a plus rien à déclarer : `./i18n.ts` est du TypeScript, et les clés
+// elles-mêmes sont typées. `dt('cle_inexistante')` ne compile plus.
+export { dt, MODULE, type Cle } from './i18n';
+export { dtPriv as libellePrivilege, dtPrivDesc as descriptionPrivilege } from './i18n';
+export { dtModule as libelleModule } from './i18n';
 
 /**
- * Posé **avant tout appel à `dt`**, et tenu à jour quand la langue change. Sans
- * lui, le répertoire de traduction lève « DR is not defined » — ce qu'il a fait,
- * et ce que l'écran a montré sous la forme d'une page restée à son source.
+ * Règle la langue du répertoire, **avant le premier rendu** et à chaque
+ * changement de langue.
+ *
+ * Elle posait `window.DR = { lang, module }` ; ce global n'existait que parce
+ * que le répertoire était un script séparé, et il s'en va avec lui. Le nom
+ * reste — l'écran l'appelle à deux endroits — mais il ne « partage » plus rien :
+ * il change la langue d'un module qui lit la sienne tout seul au chargement.
  */
-export const poserEtatPartage = (lang: string): void => {
-  window.DR = { lang, module: MODULE };
-};
+export const poserEtatPartage = (lang: string): void => { poser(lang); };
 
-// ── L'échappement et l'appel d'API viennent de la source (ADR-003, 5.b) ──
+// ── L'échappement vient de la source (ADR-003, 5.b) ──
 //
-// Deux affirmations de moins sur `window`. `frontend/socle/utils.ts` est du
+// Une affirmation de moins sur `window`. `frontend/socle/utils.ts` est du
 // TypeScript, et il porte lui-même les déclarations dont il a besoin : c'est
 // **lui** qui dit d'où vient `oasisEsc`, et la suite `frontend` vérifie que les
 // trois pages chargeant son sas le portent vraiment.
 export { escapeHtml as esc } from '../socle/utils';
-export const dt: Traduire = (cle, ...args) => window.dt(cle, ...args);
-// Les exports portent un autre nom que les globales qu'ils appellent. Reprendre
-// le même aurait masqué la globale et produit une récursion — silencieuse jusqu'au
-// débordement de pile. Un alias déclaré aurait menti : il n'existe pas à
-// l'exécution, et le compilateur l'aurait laissé passer.
-export const libellePrivilege = (p: string): string => dtPriv(p);
-export const descriptionPrivilege = (p: string): string => dtPrivDesc(p);
 
 // ── Les palettes viennent de la source, non de `window` (ADR-003, 5.b) ──
 //
@@ -112,7 +94,7 @@ export const descriptionPrivilege = (p: string): string => dtPrivDesc(p);
 // TypeScript, et il n'y a plus rien à affirmer — **le type est la source**.
 //
 // Le sas `socle/globales/oasis-theme.ts` continue de poser les mêmes globales,
-// pour les huit écrans restés en JavaScript. Le jour où il n'y en a plus, il
+// pour les sept écrans restés en JavaScript. Le jour où il n'y en a plus, il
 // disparaît et ces imports ne changent pas.
 export { THEMES, nomTheme, themeEnregistre } from '../socle/theme';
 
@@ -120,12 +102,6 @@ export { THEMES, nomTheme, themeEnregistre } from '../socle/theme';
 // Deux déclarations de moins, et deux qui étaient **fausses** : `oasisPoserLangue`
 // y était annoncé comme ne rendant rien, alors qu'il rend la langue retenue.
 export { appliquerTheme, poserLangue } from '../socle/commun';
-
-/** Libellé de l'espace dont la page règle les droits. À défaut, son code. */
-export const libelleModule = (): string => {
-  const nom = dt(`mod_${MODULE}`);
-  return nom === `mod_${MODULE}` ? MODULE : nom;
-};
 
 /**
  * L'horodatage d'une entrée de journal, dans la langue retenue.

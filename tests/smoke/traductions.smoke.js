@@ -17,16 +17,34 @@ const { verifier, bilan, cheminSocle } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 
-// Un module : le nom de sa table globale, et le dossier de ses scripts.
+// Un module : le nom de sa table globale, et où vivent ses scripts.
+//
+// ── Le répertoire se déduit, il ne se recopie pas ──
+//
+// Un module converti en React (ADR-003, 5.c) porte ses tables dans
+// `frontend/<nom>/`, et son `public/modules/<nom>/js/` disparaît. Le répertoire
+// écrit à la main ici aurait cessé de voir le module **au moment même de sa
+// conversion** : c'est le mode de défaillance qu'un détecteur d'écritures
+// différables avait déjà eu en 5.b, où il rendait « 0 entrée(s) » pile quand la
+// liste changeait de fichier.
+//
+// Celui-ci ne s'est pas tu — le contrôle de lisibilité a rendu
+// « DROITS (fr:0 en:0 pt:0) » le 6 octobre 2026, et c'est ainsi qu'on l'a su.
+// Mais il ne faut pas compter là-dessus six fois de suite : `repertoire()`
+// prend le `frontend/` du module quand il existe, son `public/` sinon.
 const TABLES = [
-  { nom: 'portail', global: 'I18N', dossier: 'public/js' },
-  { nom: 'SURV', global: 'EXEC_TR', dossier: 'public/modules/execution/js' },
-  { nom: 'PLAN', global: 'PLAN_TR', dossier: 'public/modules/planification/js' },
-  { nom: 'RAMP', global: 'RAMP_TR', dossier: 'public/modules/ramp/js' },
-  { nom: 'CARE', global: 'MES_TR', dossier: 'public/modules/mesures/js' },
-  { nom: 'PR', global: 'TRANSLATIONS', dossier: 'public/modules/profil_risque/js' },
-  { nom: 'DROITS', global: 'DR_TR', dossier: 'public/modules/droits/js' },
+  { nom: 'portail', global: 'I18N', js: 'public/js' },
+  { nom: 'SURV', global: 'EXEC_TR', js: 'public/modules/execution/js', ts: 'frontend/execution' },
+  { nom: 'PLAN', global: 'PLAN_TR', js: 'public/modules/planification/js', ts: 'frontend/planification' },
+  { nom: 'RAMP', global: 'RAMP_TR', js: 'public/modules/ramp/js', ts: 'frontend/ramp' },
+  { nom: 'CARE', global: 'MES_TR', js: 'public/modules/mesures/js', ts: 'frontend/mesures' },
+  { nom: 'PR', global: 'TRANSLATIONS', js: 'public/modules/profil_risque/js', ts: 'frontend/profil_risque' },
+  { nom: 'DROITS', global: 'DR_TR', js: 'public/modules/droits/js', ts: 'frontend/droits' },
 ];
+
+// Le répertoire réellement servi par un module. `ts` l'emporte dès qu'il
+// existe : un module converti n'a plus de `js`.
+const repertoire = (mod) => (mod.ts && fs.existsSync(path.join(RACINE, mod.ts)) ? mod.ts : mod.js);
 
 const LANGUES = ['fr', 'en', 'pt'];
 
@@ -97,15 +115,21 @@ function clesDuBloc(texte, debut) {
   return cles;
 }
 
-// Un volet s'ouvre de trois façons : dans la table elle-même (`pt: {`), par
-// affectation depuis un fichier chargé ensuite (`EXEC_TR.pt = {`), ou par
-// complément (`Object.assign(RAMP_TR.pt, {`).
+// Un volet s'ouvre de quatre façons : dans la table elle-même (`pt: {`), par
+// affectation depuis un fichier chargé ensuite (`EXEC_TR.pt = {`), par
+// complément (`Object.assign(RAMP_TR.pt, {`), ou — pour un module converti en
+// TypeScript — comme une constante nommée de la langue (`const PT: … = {`).
+//
+// La quatrième n'est pas une commodité : sans elle, un module converti rendrait
+// trois volets vides, et le contrôle de lisibilité le dénoncerait sans dire que
+// la cause est la **forme** de la table, non son contenu.
 function clesDeLangue(fichiers, global, langue) {
   const cles = new Set();
   const motifs = [
     new RegExp(`(^|[^A-Za-z0-9_$.])${langue}\\s*:\\s*\\{`, 'g'),
     new RegExp(`${global}\\.${langue}\\s*=\\s*\\{`, 'g'),
     new RegExp(`Object\\.assign\\(\\s*${global}\\.${langue}\\s*,\\s*\\{`, 'g'),
+    new RegExp(`\\bconst ${langue.toUpperCase()}\\b[^=\n]*=\\s*\\{`, 'g'),
   ];
   fichiers.forEach((f) => {
     const texte = fs.readFileSync(f, 'utf8');
@@ -128,7 +152,7 @@ module.exports = async function () {
   const vides = [];
 
   TABLES.forEach((mod) => {
-    const fichiers = scripts(mod.dossier);
+    const fichiers = scripts(repertoire(mod));
     const par = {};
     LANGUES.forEach((lg) => { par[lg] = clesDeLangue(fichiers, mod.global, lg); });
 
@@ -175,7 +199,7 @@ function controlerAccentsPortugais() {
   // libellés — l'attente, le bandeau, les refus, les gabarits accordés —, donc
   // les prendre tous est plus juste que de deviner lesquels.
   const tables = [
-    ...TABLES.map((t) => t.dossier),
+    ...TABLES.map(repertoire),
     'public/shared/js',
   ].flatMap((d) => scripts(d)).filter((f) => /i18n|pr-utils|oasis-messages-serveur|oasis-dates|oasis-commun/.test(f))
     .concat(scripts('frontend/socle'));
@@ -183,7 +207,20 @@ function controlerAccentsPortugais() {
   const motif = new RegExp(`\\b(${SANS_ACCENT_PT.join('|')})\\b`, 'i');
   tables.forEach((f) => {
     const texte = fs.readFileSync(f, 'utf8');
-    const i = texte.search(/\bpt\s*[:=]\s*\{|EXEC_TR\.pt\b/);
+    // ── Le marqueur du volet portugais, et sa troisième forme ──
+    //
+    // `pt: {` pour les tables en JavaScript, `EXEC_TR.pt` pour celle que SURV
+    // complète depuis un second fichier, et `const PT … = {` pour un module
+    // converti en TypeScript (ADR-003, 5.c).
+    //
+    // **La troisième manquait, et ce contrôle était donc muet sur DROITS
+    // converti.** Trouvé en contre-essayant : « Gestao » sans son tilde et
+    // « Codigo » sans son accent passaient tous deux au vert. Faute de
+    // marqueur, le fichier tombait dans la branche des paires et des triplets,
+    // qui ne trouve rien dans une table à volets — c'est-à-dire qu'il était lu
+    // **et vide**. Deuxième fois que ce contrôle se tait au changement de forme
+    // d'une table ; la première avait coûté 84 traductions non vérifiées.
+    const i = texte.search(/\bpt\s*[:=]\s*\{|EXEC_TR\.pt\b|\bconst PT\b[^=\n]*=\s*\{/);
     // Tables à un seul volet par ligne (messages, dates, erreurs) : on lit le
     // troisième élément de chaque triplet, qui est le portugais.
     //

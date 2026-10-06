@@ -329,9 +329,44 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**10 sur 12** —
-           ne restent que `oasis-requete` et `oasis-hors-ligne`, la paire qui chaîne
-           `window.fetch`.)*
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**11 sur 12** —
+           ne reste que `oasis-hors-ligne`.)*
+
+           **`oasis-requete` — le premier maillon de la chaîne `fetch`.** L'en-tête
+           anti-CSRF posé sur tout appel vers l'application, la déduplication des
+           écritures identiques en vol, et le retour à la connexion sur 401. Chargé par
+           les **neuf** pages, et **deux fois** sur `execution` et `ramp` — d'où un
+           garde de réentrance qui n'est pas décoratif : sans lui, le second passage
+           envelopperait le premier et chaque requête porterait deux fois la
+           déduplication.
+
+           14 sondes, 9 contre-essais, tous mordants. Mais **deux sondes étaient vides
+           de sens**, et il a fallu les contre-essayer pour le voir :
+
+           · celle qui éprouve le chemin « objet `Request` » mesurait la **cécité de mon
+             témoin**, non le code : le témoin ne lisait que l'`init`, absent dans ce
+             cas, et rendait donc « GET, pas d'en-tête » des deux côtés. Il lit
+             maintenant l'objet `Request` ; la sonde rend « POST, en-tête posé » ;
+           · celle de la session perdue tentait de redéfinir `window.top` — pas plus
+             redéfinissable que `location.href`, et verte pour la même mauvaise raison.
+             Elle est désormais **la dernière du jeu**, et laisse le geste agir : on
+             relève synchroniquement le stockage vidé et le garde posé, avant que la
+             page ne s'en aille.
+
+           **Ce que la comparaison ne couvre pas, et c'est dit plutôt que supposé :**
+           que la connexion s'ouvre dans la **fenêtre entière** et non dans le cadre du
+           portail. C'est pourtant le point du commentaire d'origine. Vérifié : la suite
+           « parcours » *tolère* les 401 sans éprouver la redirection, donc personne ne
+           le couvre aujourd'hui.
+
+           La part « fichiers du socle » de `sans-proprietaire.d.ts` est **close** :
+           `oasisSessionPerdue` a trouvé son module. Ne restent dans ce fichier que les
+           deux globales posées par une page et lues par plusieurs modules.
+
+           Et le garde-fou des anciens chemins a trouvé sa quatrième prise, sous la
+           forme **assemblée par segments** — `path.join(…, 'shared', 'js',
+           'oasis-requete.js')` dans la suite « socle ». C'est précisément la forme
+           qu'il avait appris à voir après avoir manqué la première.
 
            **`module-chrome` — 377 lignes, et deux leçons sur les sondes.** La barre
            supérieure des modules : super-menus, retour au portail, marque, bloc

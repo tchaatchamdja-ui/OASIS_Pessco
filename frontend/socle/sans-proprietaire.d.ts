@@ -26,13 +26,9 @@
 
 declare global {
   interface Window {
-    /**
-     * `oasis-requete.js` : la session a expiré — ramène à la connexion.
-     *
-     * Les neuf pages le chargent, y compris `login.html` et `cookies.html` qui
-     * ne prennent rien d'autre du socle. Non optionnel, donc, et mesuré tel.
-     */
-    oasisSessionPerdue: () => void;
+    // `oasisSessionPerdue` a quitté ce fichier le 6 octobre 2026 :
+    // `socle/requete.ts` le définit désormais, et le déclare donc lui-même.
+    // La part « fichiers encore en JavaScript » de cette dette est close.
 
     // ── Posés par une page, lus par plusieurs modules ──
 

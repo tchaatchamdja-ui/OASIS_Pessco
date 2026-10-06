@@ -371,7 +371,7 @@ async function controlerDoubleEnvoi() {
   };
   fenetre.window = fenetre;
   const ctx = vm.createContext({ ...fenetre, window: fenetre, URL, Headers, Request, Response, FormData, setTimeout });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', '..', 'public', 'shared', 'js', 'oasis-requete.js'), 'utf8'), ctx);
+  vm.runInContext(fs.readFileSync(cheminSocle('oasis-requete'), 'utf8'), ctx);
   const f = fenetre.fetch;
   const corps = JSON.stringify({ titre: 'Plan' });
   const creer = () => f('/api/m/planification/plans', { method: 'POST', body: corps }).then((r) => r.json(), () => 'rejet');

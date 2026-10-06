@@ -112,6 +112,76 @@ const JEUX = {
     ],
   },
 
+  'oasis-requete': {
+    // `avant` pose un `fetch` témoin **avant** que le fichier ne l'enveloppe :
+    // c'est le seul moyen d'observer ce que l'enveloppe transmet réellement à
+    // l'appel d'origine — l'en-tête, la méthode, le corps, et combien de fois.
+    // Le témoin lit l'**objet Request** quand aucun init n'est donné : une
+    // première écriture ne lisait que l'init, et la sonde qui éprouve ce chemin
+    // rendait « GET, pas d'en-tête » des deux côtés. Elle mesurait la cécité du
+    // témoin, non le code — identique, et sans valeur.
+    avant: "window.__vus=[];"
+      + "window.fetch=async(e,i)=>{const r=(e&&e.url)?e:null;"
+      + "const u=String(r?r.url:e);const src=i||r||{};"
+      + "const hh=src.headers;"
+      + "const h=hh?(hh.get?hh.get('X-OASIS-Request'):hh['X-OASIS-Request']):null;"
+      + "window.__vus.push([u.replace(location.origin,''),(src.method||'GET').toUpperCase(),h,(i&&i.body)||(r?'(corps de Request)':'')]);"
+      + "return new Response('{\"n\":'+window.__vus.length+'}',{status:200,headers:{'Content-Type':'application/json'}});};"
+      + "window.__origine=window.fetch;",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^(oasisSessionPerdue|__oasisRequeteMarquee)$/.test(n)).sort().join(',')",
+      // L'enveloppe est bien posée : `fetch` n'est plus celui du témoin.
+      "String(window.fetch !== window.__origine)",
+      // ── L'en-tête part sur tout appel vers l'application ──
+      "(async()=>{window.__vus=[];await fetch('/api/x');await fetch('/api/y',{method:'PUT'});return JSON.stringify(window.__vus);})()",
+      // Un appel vers l'extérieur n'est pas touché : pas d'en-tête.
+      "(async()=>{window.__vus=[];await fetch('https://exemple.invalide/x').catch(()=>{});return JSON.stringify(window.__vus);})()",
+      // Une requête décrite par un objet `Request` reçoit aussi l'en-tête.
+      "(async()=>{window.__vus=[];await fetch(new Request('/api/r',{method:'POST',body:'z'}));return JSON.stringify(window.__vus);})()",
+      // Les en-têtes de l'appelant sont conservés, l'en-tête du socle ajouté.
+      "(async()=>{window.__vus=[];let vu=null;const o=window.__origine;window.fetch=window.fetch;const g=window.fetch;window.__origine=o;await g('/api/h',{headers:{'X-Perso':'1'}});return JSON.stringify(window.__vus);})()",
+      // ── La déduplication des écritures ──
+      // Deux POST identiques simultanés : un seul part, et les deux appelants
+      // lisent la réponse — clonée, donc chacune lisible pour elle-même.
+      "(async()=>{window.__vus=[];const a=fetch('/api/p',{method:'POST',body:'{\"a\":1}'});const b=fetch('/api/p',{method:'POST',body:'{\"a\":1}'});const [ra,rb]=await Promise.all([a,b]);const ja=await ra.json();const jb=await rb.json();return [window.__vus.length,JSON.stringify(ja),JSON.stringify(jb)].join('|');})()",
+      // Deux corps différents : deux envois.
+      "(async()=>{window.__vus=[];await Promise.all([fetch('/api/p',{method:'POST',body:'1'}),fetch('/api/p',{method:'POST',body:'2'})]);return window.__vus.length;})()",
+      // Une fois la première revenue, la suivante repart : la clé est libérée.
+      "(async()=>{window.__vus=[];await fetch('/api/p',{method:'POST',body:'x'});await fetch('/api/p',{method:'POST',body:'x'});return window.__vus.length;})()",
+      // Un PUT répété à l'identique n'est pas dédoublonné : il est idempotent.
+      "(async()=>{window.__vus=[];await Promise.all([fetch('/api/p',{method:'PUT',body:'x'}),fetch('/api/p',{method:'PUT',body:'x'})]);return window.__vus.length;})()",
+      // Un DELETE l'est, lui.
+      "(async()=>{window.__vus=[];await Promise.all([fetch('/api/d',{method:'DELETE'}),fetch('/api/d',{method:'DELETE'})]);return window.__vus.length;})()",
+      // Un corps qui n'est pas du texte — un fichier — n'est pas comparé.
+      "(async()=>{window.__vus=[];const f=()=>{const d=new FormData();d.append('f','v');return d;};await Promise.all([fetch('/api/u',{method:'POST',body:f()}),fetch('/api/u',{method:'POST',body:f()})]);return window.__vus.length;})()",
+      // ── La réentrance : un second chargement n'enveloppe pas deux fois ──
+      // Les écrans `execution` et `ramp` chargent ce fichier **deux fois**.
+      "(async()=>{const avant=window.fetch;const s=document.createElement('script');s.src=document.querySelector('script[src*=\"oasis-requete\"]').src;const p=new Promise(r=>{s.onload=r;s.onerror=r;});document.head.appendChild(s);await p;window.__vus=[];await fetch('/api/x');return [String(window.fetch===avant),JSON.stringify(window.__vus)].join('|');})()",
+      // ── La session perdue, et pourquoi elle est mesurée **en dernier** ──
+      //
+      // Son effet est de quitter la page : `(window.top || window).location.href
+      // = '/login.html'`. On ne peut pas l'intercepter — `window.top` n'est pas
+      // plus redéfinissable que `location.href`, et une sonde qui l'essayait
+      // rendait « Cannot redefine property » des deux côtés, donc verte et sans
+      // valeur. On la laisse donc agir, en dernier, et l'on relève
+      // **synchroniquement** ce qu'elle a fait avant que la page ne s'en aille :
+      // le stockage vidé, le garde posé, et la cible demandée.
+      //
+      // Ce que cette comparaison ne couvre pas : que la cible soit ouverte dans
+      // la **fenêtre entière** et non dans le cadre du portail. C'est pourtant le
+      // point du commentaire d'origine, et aucune suite ne l'éprouve aujourd'hui.
+      "(()=>{try{localStorage.setItem('pr_user','u');localStorage.setItem('pr_token','t');}catch(e){}"
+        + "window.__oasisSessionPerdue=false;"
+        + "let cible='(non relevée)';const d=document.createElement('div');"
+        + "window.oasisSessionPerdue();"
+        + "const apres1=[window.__oasisSessionPerdue,localStorage.getItem('pr_user'),localStorage.getItem('pr_token')].join(',');"
+        + "try{localStorage.setItem('pr_user','encore');}catch(e){}"
+        + "window.oasisSessionPerdue();"
+        + "const apres2=localStorage.getItem('pr_user');"
+        + "return [apres1,apres2].join(' | ');})()",
+    ],
+  },
+
   // ── Un second jeu, pour les branches que le premier n'atteint pas ──
   //
   // Le jeu ci-dessus fournit trois super-menus et `hasAccess: true`. Deux

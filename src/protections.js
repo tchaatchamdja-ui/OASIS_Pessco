@@ -97,7 +97,7 @@ setInterval(() => {
 // ── Origine applicative des écritures (SEC-06) ──
 // SameSite=Lax écarte déjà l'essentiel des requêtes forgées ; cet en-tête
 // ferme les cas restants. Un formulaire d'un autre site ne peut pas l'ajouter,
-// seul un appel émis par nos pages le porte (voir public/shared/js/oasis-requete.js).
+// seul un appel émis par nos pages le porte (voir public/shared/app/oasis-requete.js).
 const METHODES_MUTATIVES = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const ROUTES_SANS_ENTETE = ['/api/login'];   // et ses sous-routes MFA
 

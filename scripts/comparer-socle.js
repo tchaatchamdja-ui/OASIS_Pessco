@@ -37,6 +37,79 @@ const { demarrer } = require('../tests/smoke/harness');
 // qui ne se produit pas le fait échouer aussi — sinon la déclaration survivrait à
 // ce qu'elle décrit.
 const JEUX = {
+  'oasis-commun': {
+    // Les cinq tables du serveur sont lues sur `window` : sans elles, la
+    // composition accordée ne rendrait que des chaînes vides des deux côtés —
+    // identiques, et sans valeur.
+    prealables: ['oasis-requete', 'oasis-messages-serveur', 'oasis-toast'],
+    avant: "localStorage.setItem('pr_lang','fr'); window.PESSCO={lang:'fr'};"
+      + "document.write('<input id=\"q\" value=\"abc\">"
+      + "<span class=\"theme-dot\" data-theme=\"corporate\"></span>"
+      + "<span class=\"theme-dot\" data-theme=\"blue-dark\"></span>');",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^oasis(Langue|PoserLangue|Esc|MessageErreur|ChampRequis|Json|AppliquerTheme|SaisieDifferee|Charger)$/.test(n)).sort().join(',')",
+      // ── Échappement : les cinq caractères, et le zéro qui n'est pas un vide ──
+      "oasisEsc('<a href=\"x\">&\\'</a>')",
+      "JSON.stringify([oasisEsc(null),oasisEsc(undefined),oasisEsc(0),oasisEsc(false),oasisEsc('')])",
+      // ── La langue, et l'attribut de la page ──
+      "oasisLangue()",
+      "(()=>{window.PESSCO={lang:'pt-BR'};const a=oasisLangue();window.PESSCO={lang:'fr'};return a;})()",
+      "(()=>{const a=oasisPoserLangue('en');const b=document.documentElement.lang;oasisPoserLangue('fr');return a+'|'+b;})()",
+      "(()=>{const a=oasisPoserLangue();return a+'|'+document.documentElement.lang;})()",
+      // ── Les codes connus, dans les trois langues ──
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push(oasisMessageErreur({error:'privilege_insuffisant'},403));}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      "oasisMessageErreur({error:'suites_care'},409).length",
+      // ── La composition accordée : le cœur du métier ──
+      // Le genre du nom commande l'accord de l'état ; la majuscule tombe au
+      // milieu d'une phrase, sauf pour un sigle.
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push(oasisMessageErreur({error:'introuvable',objet:'carence'},404));r.push(oasisMessageErreur({error:'introuvable',objet:'rapport'},404));}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      "oasisMessageErreur({error:'deja',objet:'plan',etats:['valide']},409)",
+      "oasisMessageErreur({error:'deja',objet:'activite',etats:['valide','archive']},409)",
+      "oasisMessageErreur({error:'en_usage',objet:'categorie',n:3},409)",
+      "oasisMessageErreur({error:'en_usage',objet:'categorie',n:3,desactivable:true},409)",
+      "oasisMessageErreur({error:'statut_requis',objet:'plan',etats:['valide'],precision:'v2'},409)",
+      "oasisMessageErreur({error:'introuvable',objet:'objet_que_la_table_ignore'},404)",
+      // Un état attendu manquant rend la composition vide : on retombe alors sur
+      // la phrase générale, et c'est la règle.
+      "oasisMessageErreur({error:'deja',objet:'plan'},409)",
+      // Le rôle réservé, et son repli quand le rôle est inconnu.
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push(oasisMessageErreur({error:'reserve',role:'administrateurs'},403));}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      "oasisMessageErreur({error:'reserve',role:'role_inexistant'},403)",
+      // Le fichier trop volumineux, avec son nombre mis en forme par langue.
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push(oasisMessageErreur({error:'fichier_trop_volumineux',maxMo:2.5},413));}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      "oasisMessageErreur({error:'fichier_trop_volumineux'},413)",
+      // ── La phrase française du serveur, traduite, trous compris ──
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push(oasisMessageErreur({message:'Aucune donnée à exporter'},400));}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      "(()=>{window.PESSCO={lang:'en'};const a=oasisMessageErreur({message:'Adresse invalide : jean@x'},400);window.PESSCO={lang:'fr'};return a;})()",
+      "(()=>{window.PESSCO={lang:'pt'};const a=oasisMessageErreur({error:'Activité non réinitialisable : 3 constatation(s) et 2 rapport(s) en dépendent'},409);window.PESSCO={lang:'fr'};return a;})()",
+      "oasisMessageErreur({message:'Phrase que la table ignore'},400)",
+      // Un code inconnu se dit en clair, avec son code — et le point à la fin.
+      "oasisMessageErreur({error:'code_inconnu_du_dictionnaire'},500)",
+      "oasisMessageErreur({},500)",
+      "oasisMessageErreur(null,500)",
+      "oasisMessageErreur({},500,'Téléversement refusé.')",
+      "oasisMessageErreur({error:'Infraction non trouvée'},404)",
+      // ── Le champ requis, vu par l'écran ──
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push(oasisChampRequis('designation'),oasisChampRequis('motif'));}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      // ── Le client HTTP ──
+      "(async()=>{let vu=null;const o=window.fetch;window.fetch=async(u,i)=>{vu={u,c:i.credentials,h:i.headers};return{status:200,ok:true,json:async()=>({ok:1})};};const r=await oasisJson('/x',{method:'POST'});window.fetch=o;return JSON.stringify([r,vu]);})()",
+      // Un dépôt de fichier ne doit pas recevoir de type JSON imposé.
+      "(async()=>{let h=null;const o=window.fetch;window.fetch=async(u,i)=>{h=i.headers;return{status:200,ok:true,json:async()=>(1)};};await oasisJson('/x',{body:new FormData()});window.fetch=o;return JSON.stringify(h);})()",
+      "(async()=>{const o=window.fetch;window.fetch=async()=>({status:204,ok:true,json:async()=>({non:1})});const r=await oasisJson('/x');window.fetch=o;return JSON.stringify(r);})()",
+      "(async()=>{let perdue=0;const op=window.oasisSessionPerdue;window.oasisSessionPerdue=()=>{perdue++;};const o=window.fetch;window.fetch=async()=>({status:401,ok:false,json:async()=>({})});let m='';try{await oasisJson('/x');}catch(e){m=e.message;}window.fetch=o;window.oasisSessionPerdue=op;return perdue+'|'+m;})()",
+      "(async()=>{const o=window.fetch;window.fetch=async()=>({status:409,ok:false,json:async()=>({error:'deja',objet:'plan',etats:['valide']})});let m='';try{await oasisJson('/x');}catch(e){m=e.message;}window.fetch=o;return m;})()",
+      // Un corps illisible : on retombe sur le texte du statut.
+      "(async()=>{const o=window.fetch;window.fetch=async()=>({status:500,ok:false,statusText:'Boum',json:async()=>{throw new Error('x');}});let m='';try{await oasisJson('/x');}catch(e){m=e.message;}window.fetch=o;return m;})()",
+      // ── La bascule de thème ──
+      "(()=>{oasisAppliquerTheme('corporate');return [document.documentElement.getAttribute('data-theme'),localStorage.getItem('pr_theme'),[...document.querySelectorAll('.theme-dot')].map(d=>d.className).join('/')].join('|');})()",
+      // ── La saisie différée : un minuteur par champ, le curseur rendu ──
+      "(async()=>{const q=document.getElementById('q');let n=0;oasisSaisieDifferee(q,()=>{n++;},10);oasisSaisieDifferee(q,()=>{n++;},10);await new Promise(r=>setTimeout(r,60));return n;})()",
+      "(async()=>{const q=document.getElementById('q');let n=0;oasisSaisieDifferee(q,()=>{n++;},0);await new Promise(r=>setTimeout(r,40));return n+'|'+(document.activeElement===q);})()",
+      // ── Le chargement à la demande : une seule promesse par source ──
+      "(()=>{const a=oasisCharger('/shared/css/ne-existe-pas.js');const b=oasisCharger('/shared/css/ne-existe-pas.js');return String(a===b);})()",
+    ],
+  },
+
   'oasis-toast': {
     avant: "localStorage.setItem('pr_lang','fr');"
       + "document.write('<button id=\"ailleurs\">ailleurs</button>');",

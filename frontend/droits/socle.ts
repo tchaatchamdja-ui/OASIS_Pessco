@@ -39,10 +39,6 @@ declare global {
 
     /** `dr-i18n.js` : les libellés de l'écran. Déclaré en `function`, donc sur `window`. */
     dt: Traduire;
-    /** `oasis-commun.js` : applique une palette au document. */
-    oasisAppliquerTheme: (t: string) => void;
-    /** `oasis-commun.js` : pose l'attribut `lang` de la page. */
-    oasisPoserLangue: (l: string) => void;
     /** Point d'entrée que `index.html` appelle au chargement. */
     drBoot?: () => void;
   }
@@ -120,8 +116,10 @@ export const descriptionPrivilege = (p: string): string => dtPrivDesc(p);
 // disparaît et ces imports ne changent pas.
 export { THEMES, nomTheme, themeEnregistre } from '../socle/theme';
 
-export const appliquerTheme = (t: string): void => window.oasisAppliquerTheme(t);
-export const poserLangue = (l: string): void => window.oasisPoserLangue(l);
+// La palette et l'attribut `lang` viennent eux aussi de la source (ADR-003, 5.b).
+// Deux déclarations de moins, et deux qui étaient **fausses** : `oasisPoserLangue`
+// y était annoncé comme ne rendant rien, alors qu'il rend la langue retenue.
+export { appliquerTheme, poserLangue } from '../socle/commun';
 
 /** Libellé de l'espace dont la page règle les droits. À défaut, son code. */
 export const libelleModule = (): string => {

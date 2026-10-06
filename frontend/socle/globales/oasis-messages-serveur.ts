@@ -4,19 +4,10 @@
 // écrans lisent. Le préfixe `OASIS_` et le suffixe `_SERVEUR` sont rendus ici —
 // ils évitaient les collisions dans une portée unique ; un module n'en a plus
 // besoin, mais les sept écrans qui les lisent, si.
+//
+// Il ne **déclare** rien : les six signatures vivent dans `../messages-serveur`,
+// le module qui porte les tables.
 import { ETATS, GABARITS, MESSAGES, OBJETS, OU, ROLES } from '../messages-serveur';
-import type { Gabarit, MotGenre } from '../messages-serveur';
-
-declare global {
-  interface Window {
-    OASIS_MESSAGES_SERVEUR: Readonly<Record<string, readonly [string, string]>>;
-    OASIS_OBJETS_SERVEUR: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGenre]>>;
-    OASIS_ETATS_SERVEUR: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGenre]>>;
-    OASIS_OU_SERVEUR: readonly [string, string, string];
-    OASIS_ROLES_SERVEUR: Readonly<Record<string, readonly [string, string, string]>>;
-    OASIS_GABARITS_SERVEUR: Readonly<Record<string, readonly Gabarit[]>>;
-  }
-}
 
 window.OASIS_MESSAGES_SERVEUR = MESSAGES;
 window.OASIS_OBJETS_SERVEUR = OBJETS;

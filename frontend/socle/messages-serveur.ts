@@ -40,6 +40,28 @@
  */
 export type MotGenre = readonly [string, string?];
 
+declare global {
+  interface Window {
+    // ── Déclarées ici, par le module qui les définit ──
+    //
+    // Elles l'étaient dans le sas. Mais `socle/commun.ts` les **lit** sans
+    // importer le sas : il dépendait alors d'une déclaration vivant dans un
+    // fichier qu'il ne connaît pas. Cela tient parce que `tsc` compile tout le
+    // projet, et c'est un raisonnement fragile — la même fragilité avait laissé
+    // `oasisToast` se déclarer deux fois avec deux signatures différentes.
+    //
+    // Non optionnelles, et c'est mesuré : les sept pages qui chargent
+    // `oasis-commun` chargent toutes `oasis-messages-serveur`, et aucune ne
+    // charge l'un sans l'autre.
+    OASIS_MESSAGES_SERVEUR: Readonly<Record<string, readonly [string, string]>>;
+    OASIS_OBJETS_SERVEUR: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGenre]>>;
+    OASIS_ETATS_SERVEUR: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGenre]>>;
+    OASIS_OU_SERVEUR: readonly [string, string, string];
+    OASIS_ROLES_SERVEUR: Readonly<Record<string, readonly [string, string, string]>>;
+    OASIS_GABARITS_SERVEUR: Readonly<Record<string, readonly Gabarit[]>>;
+  }
+}
+
 /** Un gabarit de phrase, décliné au masculin et au féminin. */
 export interface Gabarit {
   readonly m: string;

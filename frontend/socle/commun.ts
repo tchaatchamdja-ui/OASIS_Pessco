@@ -1,28 +1,105 @@
+// OASIS — les petits outils que chaque module réécrivait. Le socle, en TypeScript
+// (ADR-003, 5.b).
+//
+// Six modules, six façons d'échapper un texte ; deux clients HTTP identiques au
+// caractère près ; cinq copies de la même bascule de thème ; un anti-rebond de
+// recherche que le socle possédait déjà mais que trois modules ne chargeaient
+// pas. Chaque copie divergeait un peu : une échappait les guillemets, l'autre
+// non ; l'une traitait un zéro comme un vide ; l'un des clients imposait un type
+// JSON jusque sur les dépôts de fichiers, qui partaient ainsi sans leur frontière
+// multipart. Ils vivent ici, une fois, et chaque module s'y branche sous le nom
+// qu'il employait — rien n'est à renommer dans ses gabarits.
+//
+// À charger après `oasis-requete.js` (qui fournit `oasisSessionPerdue`), avant les
+// scripts du module.
+//
+// ── Deux précautions du fichier d'origine, gardées à dessein ──
+//
+// `typeof window !== 'undefined'` et les `try/catch` autour de `document` ne sont
+// pas de la superstition : **la suite « traductions » charge ce fichier dans une
+// machine virtuelle** où ni `document` ni rien d'autre n'existe, pour éprouver la
+// composition des messages sans navigateur. Les retirer casserait cette épreuve.
+//
+// Et les cinq tables du serveur sont lues sur `window`, non importées, alors que
+// `socle/messages-serveur.ts` les exporte. C'est délibéré : les importer
+// embarquerait vingt kilo-octets de tables dans **deux** fichiers servis, pour un
+// bénéfice nul — les sept pages qui chargent celui-ci chargent toutes l'autre,
+// et la suite `frontend` le vérifie page par page.
+//
+// Ce fichier ne touche pas à `window` pour publier : voir `globales/oasis-commun.ts`.
+
+/** Le rang de chaque langue dans les tables à trois éléments. */
+const RANGS: Readonly<Record<string, number>> = { fr: 0, en: 1, pt: 2 };
+
+
 /**
- * OASIS — les petits outils que chaque module réécrivait.
- *
- * Six modules, six façons d'échapper un texte ; deux clients HTTP identiques au
- * caractère près ; cinq copies de la même bascule de thème ; un anti-rebond de
- * recherche que le socle possédait déjà mais que trois modules ne chargeaient
- * pas. Chaque copie divergeait un peu : une échappait les guillemets, l'autre
- * non ; l'une traitait un zéro comme un vide ; l'un des clients imposait un
- * type JSON jusque sur les dépôts de fichiers, qui partaient ainsi sans leur
- * frontière multipart. Ils vivent ici, une fois, et chaque module s'y branche
- * sous le nom qu'il employait — rien n'est à renommer dans ses gabarits.
- *
- * À charger après oasis-requete.js (qui fournit oasisSessionPerdue), avant les
- * scripts du module.
+ * Une erreur telle que le serveur la rend. Deux formes cohabitent, et c'est la
+ * raison d'être de `messageErreur` : un **code** normalisé (`src/erreurs.js`)
+ * avec l'objet concerné, ou une **phrase** déjà rédigée en français.
  */
-(function () {
+export interface DonneesErreur {
+  error?: unknown;
+  message?: unknown;
+  objet?: unknown;
+  role?: unknown;
+  etats?: readonly string[];
+  precision?: unknown;
+  desactivable?: boolean;
+  maxMo?: unknown;
+  n?: unknown;
+  attendu?: readonly unknown[];
+}
+
+/** Un gabarit de phrase à trous, compilé une fois puis réutilisé. */
+interface GabaritCompile {
+  re: RegExp;
+  ordre: number[];
+  trad: readonly [string, string];
+}
+
+declare global {
+  interface Window {
+    /** Posé par le portail : l'état partagé, dont la langue retenue. */
+    PESSCO?: { lang?: string };
+
+    // ── Les neuf globales sont déclarées **ici**, et une seule fois ──
+    //
+    // Quatre l'étaient en double, avec des signatures différentes :
+    // `oasisPoserLangue` annoncé `(l: string) => void` d'un côté et rendant une
+    // chaîne de l'autre ; `oasisMessageErreur` à deux paramètres ici, trois là ;
+    // `oasisSaisieDifferee` sans son délai ; et `oasisToast` déjà repris la
+    // veille. Quatre fois la même cause : chaque module déclarait ce qu'il
+    // lisait, de mémoire, et personne ne confrontait les copies.
+    //
+    // La règle est désormais tenue partout : **le module qui définit un nom le
+    // déclare**, et lui seul. Ce qu'aucun module ne définit encore —
+    // `oasis-requete.js`, `module-chrome.js` — est déclaré dans
+    // `non-converti.d.ts`, dont la longueur mesure la dette qui reste.
+    oasisLangue: () => string;
+    oasisPoserLangue: (demandee?: string) => string;
+    oasisEsc: (v: unknown) => string;
+    oasisMessageErreur: (
+      donnees?: DonneesErreur | null, statut?: number | string, defaut?: string,
+    ) => string;
+    oasisChampRequis: (champ: string) => string;
+    oasisJson: (url: string, options?: RequestInit) => Promise<unknown>;
+    oasisAppliquerTheme: (theme: string) => void;
+    oasisSaisieDifferee: (
+      champ: HTMLInputElement | null, appliquer: () => void, delai?: number,
+    ) => void;
+    oasisCharger: (src: string) => Promise<string>;
+  }
+}
+
   // ── Échappement ──
   // Un seul barème, le plus sûr : les cinq caractères, dans le texte comme dans
   // un attribut. Échapper un guillemet dans du texte ne change rien à
   // l'affichage ; ne pas l'échapper dans un attribut le refermait. Seuls
   // `null` et `undefined` donnent un vide : un zéro est une valeur, il s'affiche.
-  const ENTITES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-  function oasisEsc(v) {
+  const ENTITES: Readonly<Record<string, string>> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+export function esc(v: unknown): string {
     if (v === null || v === undefined) return '';
-    return String(v).replace(/[&<>"']/g, (c) => ENTITES[c]);
+    return String(v).replace(/[&<>"']/g, (c) => ENTITES[c] ?? c);
   }
 
   // ── Erreurs du serveur ──
@@ -31,7 +108,7 @@
 // « privilege_insuffisant ». Chaque code connu a ici sa phrase, dans les trois
 // langues. Un message déjà rédigé par le serveur passe devant, et un code
 // inconnu se dit au moins en clair, avec son code entre parenthèses.
-const ERREURS = {
+const ERREURS: Readonly<Record<string, readonly [string, string, string]>> = {
   not_found: ['Élément introuvable.', 'Item not found.', 'Elemento não encontrado.'],
   invalid: ['Données invalides.', 'Invalid data.', 'Dados inválidos.'],
   invalid_action: ['Action inconnue.', 'Unknown action.', 'Ação desconhecida.'],
@@ -89,19 +166,19 @@ const ERREURS = {
   decision_inconnue: ['Décision inconnue.', 'Unknown decision.', 'Decisão desconhecida.'],
   origine_non_reconnue: ['Origine non reconnue.', 'Unrecognised origin.', 'Origem não reconhecida.'],
 };
-const ECHEC = ['L’opération a échoué', 'The operation failed', 'A operação falhou'];
+const ECHEC: readonly [string, string, string] = ['L’opération a échoué', 'The operation failed', 'A operação falhou'];
 
-function oasisLangue() {
-  try { return (window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr').slice(0, 2); } catch (e) { return 'fr'; }
+export function langue(): string {
+  try { return (window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr').slice(0, 2); } catch { return 'fr'; }
 }
 
 // L'attribut `lang` de la page commande la prononciation d'un lecteur d'écran.
 // Les six modules le laissaient à « fr », figé dans leur gabarit : un écran
 // anglais ou portugais s'annonçait alors en français, du premier mot au
 // dernier. Le portail, lui, le mettait à jour — la règle vaut pour tous.
-function oasisPoserLangue(langue) {
-  const l = langue || oasisLangue();
-  try { document.documentElement.lang = l; } catch (e) { /* hors document */ }
+export function poserLangue(demandee?: string): string {
+  const l = demandee || langue();
+  try { document.documentElement.lang = l; } catch { /* hors document */ }
   return l;
 }
 
@@ -111,24 +188,24 @@ function oasisPoserLangue(langue) {
 // oasis-messages-serveur.js la connaît. Une phrase à trous s'y reconnaît par
 // son gabarit ; les valeurs lues à la place des trous passent dans la
 // traduction. Une phrase inconnue se rend telle quelle.
-let gabaritsServeur = null;
+let gabaritsServeur: GabaritCompile[] | null = null;
 const TROU = /\{(\d)\}/g;
-const echapperMotif = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, (c) => `\\${c}`);
+const echapperMotif = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, (c) => `\\${c}`);
 
-function compilerGabarits(table) {
+function compilerGabarits(table: Readonly<Record<string, readonly [string, string]>>): GabaritCompile[] {
   return Object.keys(table).filter((fr) => /\{\d\}/.test(fr)).map((fr) => {
-    const ordre = [];
+    const ordre: number[] = [];
     const motif = fr.split(/(\{\d\})/).map((bout) => {
       const trou = /^\{(\d)\}$/.exec(bout);
       if (!trou) return echapperMotif(bout);
       ordre.push(Number(trou[1]));
       return '([\\s\\S]*?)';
     }).join('');
-    return { re: new RegExp(`^${motif}$`), ordre, trad: table[fr] };
+    return { re: new RegExp(`^${motif}$`), ordre, trad: table[fr] as readonly [string, string] };
   });
 }
 
-function traduirePhraseServeur(texte, rang) {
+function traduirePhraseServeur(texte: string, rang: number): string {
   const table = typeof window !== 'undefined' ? window.OASIS_MESSAGES_SERVEUR : null;
   if (!rang || !table) return texte;
   const exacte = table[texte];
@@ -139,39 +216,40 @@ function traduirePhraseServeur(texte, rang) {
     if (!m) continue;
     const cible = g.trad[rang - 1];
     if (!cible) return texte;
-    const valeurs = {};
+    const valeurs: Record<number, string | undefined> = {};
     g.ordre.forEach((n, i) => { valeurs[n] = m[i + 1]; });
-    return cible.replace(TROU, (_, n) => (valeurs[n] === undefined ? '' : valeurs[n]));
+    return cible.replace(TROU, (_, n: string) => (valeurs[Number(n)] === undefined ? '' : String(valeurs[Number(n)])));
   }
   return texte;
 }
 
 // Erreur normalisée (src/erreurs.js) : un code et l'objet concerné. La phrase
 // se compose ici, dans la langue de l'agent, accordée au genre du nom.
-const RESERVEE = ['Action réservée', 'Action restricted', 'Ação reservada'];
-const TROP_VOLUMINEUX = [
+const RESERVEE: readonly [string, string, string] = ['Action réservée', 'Action restricted', 'Ação reservada'];
+const TROP_VOLUMINEUX: readonly [string, string, string] = [
   'Fichier trop volumineux ({0} Mo maximum)',
   'File too large ({0} MB maximum)',
   'Ficheiro demasiado grande (máximo {0} MB)',
 ];
 
-function composerErreurNormalisee(d, rang) {
-  const fenetre = typeof window !== 'undefined' ? window : {};
+function composerErreurNormalisee(d: DonneesErreur, rang: number): string {
+  const fenetre = (typeof window !== 'undefined' ? window : {}) as Partial<Window>;
   if (d.error === 'reserve') {
-    const role = (fenetre.OASIS_ROLES_SERVEUR || {})[d.role];
-    if (!role) return ERREURS.forbidden[rang] || ERREURS.forbidden[0];
+    const role = (fenetre.OASIS_ROLES_SERVEUR || {})[String(d.role)];
+    if (!role) return ERREURS.forbidden?.[rang] || ERREURS.forbidden?.[0] || '';
     return `${RESERVEE[rang]} ${role[rang] || role[0]}.`;
   }
   if (d.error === 'fichier_trop_volumineux' && Number(d.maxMo) > 0) {
     const mo = Number(d.maxMo).toLocaleString(['fr-FR', 'en-GB', 'pt-PT'][rang] || 'fr-FR', { maximumFractionDigits: 1 });
-    return TROP_VOLUMINEUX[rang].replace('{0}', mo);
+    return (TROP_VOLUMINEUX[rang] || TROP_VOLUMINEUX[0]).replace('{0}', mo);
   }
-  const gabarits = (fenetre.OASIS_GABARITS_SERVEUR || {})[d.error];
+  const gabarits = (fenetre.OASIS_GABARITS_SERVEUR || {})[String(d.error)];
   if (!gabarits) return '';
-  const objet = (fenetre.OASIS_OBJETS_SERVEUR || {})[d.objet] || (fenetre.OASIS_OBJETS_SERVEUR || {}).element;
+  const objet = (fenetre.OASIS_OBJETS_SERVEUR || {})[String(d.objet)] || (fenetre.OASIS_OBJETS_SERVEUR || {})['element'];
   if (!objet) return '';
   const [nom, genre] = objet[rang] || objet[0];
   const gabarit = gabarits[rang] || gabarits[0];
+  if (!gabarit || nom === undefined) return '';
   const phrase = gabarit[genre === 'f' ? 'f' : 'm'] || gabarit.m;
   // En tête de phrase, le nom garde sa majuscule ; au milieu, il la perd —
   // sauf un sigle, qui s'écrit en capitales où qu'il soit (PAC, FNC).
@@ -193,24 +271,24 @@ function composerErreurNormalisee(d, rang) {
   return phrase
     .replace('{objet}', place)
     .replace('{etat}', etats.join(` ${ou} `))
-    .replace('{n}', Number(d.n) || 0) + suite + precision;
+    .replace('{n}', String(Number(d.n) || 0)) + suite + precision;
 }
 
 // Le même message, quand c'est l'écran qui constate le champ vide avant
 // d'écrire au serveur : « Intitulé requis », « Title required ».
-function oasisChampRequis(champ) {
-  const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
+export function champRequis(champ: string): string {
+  const rang = RANGS[langue()] ?? 0;
   return composerErreurNormalisee({ error: 'requis', objet: champ }, rang);
 }
 
-function oasisMessageErreur(donnees, statut, defaut) {
+export function messageErreur(donnees?: DonneesErreur | null, statut?: number | string, defaut?: string): string {
   const d = donnees || {};
-  const rang = { fr: 0, en: 1, pt: 2 }[oasisLangue()] || 0;
+  const rang = RANGS[langue()] ?? 0;
   const normalisee = composerErreurNormalisee(d, rang);
   if (normalisee) return normalisee;
   // Une phrase déjà écrite par le serveur dit mieux le cas particulier.
   if (d.message) return traduirePhraseServeur(String(d.message), rang);
-  const connue = ERREURS[d.error];
+  const connue = ERREURS[String(d.error)];
   if (connue) return connue[rang] || connue[0];
   // Toutes les routes ne répondent pas par un code : beaucoup renvoient une
   // phrase toute faite — « Infraction non trouvée ». Un code s'écrit en
@@ -231,9 +309,9 @@ function oasisMessageErreur(donnees, statut, defaut) {
   // corps en JSON — sauf un dépôt de fichier, dont le navigateur écrit lui-même
   // l'en-tête et la frontière —, une session perdue renvoyée à la connexion,
   // l'erreur du serveur rendue telle qu'il l'a dite, et un 204 lu comme vide.
-  async function oasisJson(url, options) {
-    const o = { credentials: 'same-origin', ...(options || {}) };
-    const entetes = { ...(o.headers || {}) };
+export async function json(url: string, options?: RequestInit): Promise<unknown> {
+    const o: RequestInit = { credentials: 'same-origin', ...(options || {}) };
+    const entetes: Record<string, string> = { ...(o.headers as Record<string, string> | undefined) };
     if (!(o.body instanceof FormData) && !entetes['Content-Type']) {
       entetes['Content-Type'] = 'application/json';
     }
@@ -244,11 +322,11 @@ function oasisMessageErreur(donnees, statut, defaut) {
       // Le renvoi vers la connexion est lancé, mais l'appelant reçoit quand
       // même l'échec et l'affiche souvent : la phrase doit donc suivre la
       // langue, comme tous les autres refus du serveur.
-      throw new Error(oasisMessageErreur({ error: 'unauthenticated' }, r.status));
+      throw new Error(messageErreur({ error: 'unauthenticated' }, r.status));
     }
     if (!r.ok) {
-      const err = await r.json().catch(() => ({ error: r.statusText }));
-      throw new Error(oasisMessageErreur(err, r.status));
+      const err = await r.json().catch(() => ({ error: r.statusText })) as DonneesErreur;
+      throw new Error(messageErreur(err, r.status));
     }
     return r.status === 204 ? null : r.json();
   }
@@ -257,11 +335,11 @@ function oasisMessageErreur(donnees, statut, defaut) {
   // La bascule commune : l'attribut qui porte les couleurs, la préférence
   // retenue, et la pastille active. Chaque module y ajoute ce qui lui est
   // propre — un volet à refermer, un état à tenir.
-  function oasisAppliquerTheme(theme) {
-    try { localStorage.setItem('pr_theme', theme); } catch (e) { /* stockage fermé */ }
+export function appliquerTheme(theme: string): void {
+    try { localStorage.setItem('pr_theme', theme); } catch { /* stockage fermé */ }
     document.documentElement.setAttribute('data-theme', theme);
     document.querySelectorAll('.theme-dot').forEach((d) => {
-      d.classList.toggle('active', d.dataset.theme === theme);
+      (d as HTMLElement).classList.toggle('active', (d as HTMLElement).dataset.theme === theme);
     });
   }
 
@@ -270,8 +348,8 @@ function oasisMessageErreur(donnees, statut, defaut) {
   // frappe s'arrête, puis on rend le curseur là où il était — le redessin
   // recrée souvent le champ lui-même. Un minuteur par champ, pour que deux
   // recherches voisines ne s'annulent pas l'une l'autre.
-  const minuteurs = new Map();
-  function oasisSaisieDifferee(champ, appliquer, delai) {
+  const minuteurs = new Map<unknown, ReturnType<typeof setTimeout>>();
+export function saisieDifferee(champ: HTMLInputElement | null, appliquer: () => void, delai?: number): void {
     const cle = (champ && (champ.id || champ.name)) || champ;
     const id = champ && champ.id;
     const pos = champ && champ.selectionStart;
@@ -283,7 +361,7 @@ function oasisMessageErreur(donnees, statut, defaut) {
       const el = document.getElementById(id);
       if (!el || el === document.activeElement) return;
       el.focus();
-      try { el.setSelectionRange(pos, pos); } catch (e) { /* champ non textuel */ }
+      try { (el as HTMLInputElement).setSelectionRange(pos, pos); } catch { /* champ non textuel */ }
     }, delai === undefined ? 300 : delai));
   }
 
@@ -291,10 +369,10 @@ function oasisMessageErreur(donnees, statut, defaut) {
   // Un script qu'on ne réclame qu'une fois : la promesse est retenue, si bien
   // que deux appels pendant le même chargement attendent le même. Sert aux
   // volets de traduction, dont un agent n'emploie jamais que le sien.
-  const enRoute = new Map();
-  function oasisCharger(src) {
+  const enRoute = new Map<string, Promise<string>>();
+export function charger(src: string): Promise<string> {
     if (!enRoute.has(src)) {
-      enRoute.set(src, new Promise((ok, ko) => {
+      enRoute.set(src, new Promise<string>((ok, ko) => {
         const s = document.createElement('script');
         s.src = src;
         s.onload = () => ok(src);
@@ -302,21 +380,10 @@ function oasisMessageErreur(donnees, statut, defaut) {
         document.head.appendChild(s);
       }));
     }
-    return enRoute.get(src);
+    return enRoute.get(src) as Promise<string>;
   }
 
-  window.oasisCharger = oasisCharger;
 
   // Dès le chargement du socle, avant tout rendu : la page part dans la langue
   // de l'agent, sans attendre qu'il actionne la bascule.
-  oasisPoserLangue();
-
-  window.oasisLangue = oasisLangue;
-  window.oasisPoserLangue = oasisPoserLangue;
-  window.oasisEsc = oasisEsc;
-  window.oasisMessageErreur = oasisMessageErreur;
-  window.oasisChampRequis = oasisChampRequis;
-  window.oasisJson = oasisJson;
-  window.oasisAppliquerTheme = oasisAppliquerTheme;
-  window.oasisSaisieDifferee = oasisSaisieDifferee;
-}());
+  poserLangue();

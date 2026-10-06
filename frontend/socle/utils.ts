@@ -10,21 +10,17 @@
 // venaient ni si la page qui charge ce fichier les porte. La suite `frontend`
 // le vérifie désormais, page par page.
 
+import type { DonneesErreur } from './commun';
+
 declare global {
   interface Window {
     /** Posé par le portail : la langue retenue, pour le format des dates. */
     APP_STATE?: { lang?: string };
-    // `oasisToast` n'est plus déclaré ici : sa déclaration vit dans
-    // `socle/toast.ts`, le module qui le définit. Elle l'était aux deux endroits,
-    // avec deux signatures différentes — et personne ne le savait.
-    /** `oasis-commun.js` : l'anti-rebond des champs de recherche. */
-    oasisSaisieDifferee: (champ: HTMLInputElement, appliquer: () => void) => void;
-    /** `oasis-commun.js` : l'échappement de l'application. */
-    oasisEsc: (v: unknown) => string;
-    /** `oasis-commun.js` : le message lisible d'un refus du serveur. */
-    oasisMessageErreur: (donnees: unknown, statut: number) => string;
-    /** `oasis-requete.js` : la session a expiré — ramène à la connexion. */
-    oasisSessionPerdue: () => void;
+    // Les quatre noms que ce fichier lit du socle — `oasisToast`, `oasisEsc`,
+    // `oasisMessageErreur`, `oasisSaisieDifferee` — ne sont plus déclarés ici.
+    // Leurs déclarations vivent dans `socle/toast.ts` et `socle/commun.ts`, les
+    // modules qui les définissent. Trois l'étaient aux deux endroits, avec des
+    // signatures différentes, et personne ne le savait.
   }
 }
 
@@ -115,6 +111,6 @@ export async function api(chemin: string, options: RequestInit = {}): Promise<un
     throw new Error(window.oasisMessageErreur({ error: 'unauthenticated' }, res.status));
   }
   const donnees: unknown = await res.json();
-  if (!res.ok) throw new Error(window.oasisMessageErreur(donnees, res.status));
+  if (!res.ok) throw new Error(window.oasisMessageErreur(donnees as DonneesErreur, res.status));
   return donnees;
 }

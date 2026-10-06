@@ -329,10 +329,49 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**8 sur 12** :
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**9 sur 12** :
            `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils`,
            `oasis-dates`, `oasis-messages-serveur`, `oasis-kpi` le 5 octobre,
-           `oasis-toast` le 6 octobre 2026.)*
+           `oasis-toast` et `oasis-commun` le 6 octobre 2026.)*
+
+           **`oasis-commun` — le plus gros, et la règle qu'il a fallu poser.** 322
+           lignes, neuf globales, la grande table des refus en trois langues, la
+           composition accordée au genre, le client HTTP, la bascule de thème,
+           l'anti-rebond, le chargement à la demande. 41 sondes, 6 contre-essais —
+           guillemets non échappés, majuscule qui ne tombe plus, état non accordé,
+           dépôt de fichier recevant un type JSON imposé, 204 non lu comme vide,
+           anti-rebond qui n'annule plus : les six mordent.
+
+           **Quatre globales de plus étaient déclarées deux fois, avec des signatures
+           différentes** — après `oasisToast` la veille : `oasisPoserLangue` annoncé
+           comme ne rendant rien alors qu'il rend la langue retenue,
+           `oasisMessageErreur` à deux paramètres d'un côté et trois de l'autre,
+           `oasisSaisieDifferee` sans son délai. Quatre fois la même cause : chaque
+           module déclarait de mémoire ce qu'il lisait, et **rien ne confrontait les
+           copies**. Cinq déclarations étaient simplement fausses.
+
+           D'où la règle, désormais tenue partout : **le module qui définit un nom le
+           déclare, et lui seul.** Ce qu'aucun module ne définit encore vit dans
+           [`non-converti.d.ts`](../frontend/socle/non-converti.d.ts), à un seul
+           endroit — **un nom reste** (`oasisSessionPerdue`), et la longueur de ce
+           fichier mesure la dette.
+
+           Deux précautions du fichier d'origine ont été gardées à dessein :
+           `typeof window !== 'undefined'` et les `try/catch` autour de `document`.
+           Ce ne sont pas des superstitions — la suite « traductions » charge ce
+           fichier dans une **machine virtuelle sans `document`** pour éprouver la
+           composition des messages sans navigateur. Le paquet construit y passe sans
+           modification.
+
+           Et les cinq tables du serveur restent **lues sur `window`**, non importées,
+           alors que `messages-serveur.ts` les exporte : les importer embarquerait
+           vingt kilo-octets de tables dans deux fichiers servis pour un bénéfice nul,
+           les sept pages qui chargent l'un chargeant toutes l'autre. Mesuré avant de
+           décider.
+
+           DROITS y gagne deux déclarations de moins, dont une fausse. Coût : 322
+           lignes deviennent 418 — l'écart est en commentaires et en types, le code
+           ne bouge pas.
 
            **`oasis-toast` — et une contradiction que le typage a mise au jour.** Le
            panneau de retour, la confirmation et la saisie : des promesses, du clavier,

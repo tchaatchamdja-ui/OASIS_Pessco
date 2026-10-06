@@ -164,6 +164,138 @@ module.exports = async function parcoursSmoke(port) {
         etat.debordement <= 0, `${etat.debordement} px`);
     }
 
+    // ── Le portail, avant sa réécriture (ADR-003, suite 5.c) ──
+    //
+    // Les contrôles ci-dessus ouvrent trois vues sur cinq et vérifient qu'elles
+    // se remplissent. Mesuré avant d'écrire ceux-ci : le portail déclare **cinq
+    // vues** — `profile` n'était jamais ouverte —, sa configuration porte
+    // **onze sous-vues** dont une seule était atteinte (celle qui s'affiche par
+    // défaut), et **aucun** de ses quarante gestes n'était exercé.
+    //
+    // C'est la situation de l'écran des droits avant sa suite n° 0, en moins
+    // extrême. Ces contrôles sont donc posés **avant** la reprise, et non après :
+    // on ne mesure pas une réécriture contre rien.
+
+    // La vue du profil, que rien n'ouvrait.
+    etape = 'écran « profile »';
+    await ouvrir('profile');
+    const profil = await page.evaluate(() => {
+      const v = document.getElementById('mainView');
+      const champs = [...v.querySelectorAll('input, select, textarea')]
+        .map((e) => e.id || e.name).filter(Boolean);
+      return {
+        contenu: v.textContent.trim().length,
+        champs,
+        debordement: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        erreur: /Erreur de chargement/.test(v.textContent),
+      };
+    });
+    verifier('la vue du profil se remplit et porte ses champs',
+      profil.contenu > 50 && !profil.erreur && profil.champs.length >= 3,
+      `${profil.contenu} caractères, champs : ${profil.champs.slice(0, 6).join(' ')}`);
+    verifier('la vue du profil ne déborde pas à droite',
+      profil.debordement <= 0, `${profil.debordement} px`);
+
+    // Les onze sous-vues de la configuration. La liste se **lit dans la barre**,
+    // non dans ce fichier : `instances` n'apparaît qu'à une instance régionale,
+    // et une liste écrite ici aurait échoué ailleurs — ou, pire, cessé de
+    // couvrir une sous-vue ajoutée plus tard.
+    etape = 'configuration';
+    await ouvrir('config');
+    const sousVues = await page.evaluate(() => [...document.querySelectorAll('.cfg-sidebar-item')]
+      .map((b) => (b.getAttribute('onclick') || '').match(/cfgNavigate\('([^']+)'\)/))
+      .filter(Boolean).map((m) => m[1]));
+    verifier('les sous-vues de la configuration sont lisibles depuis la barre',
+      sousVues.length >= 8, `${sousVues.length} : ${sousVues.join(' ')}`);
+
+    const sousVuesMuettes = [];
+    const sousVuesDebordantes = [];
+    const empreintes = new Map();
+    for (const sous of sousVues) {
+      etape = `configuration « ${sous} »`;
+      /* eslint-disable no-await-in-loop */
+      // ── Attendre que le contenu **change**, non qu'il soit non trivial ──
+      //
+      // Première écriture : on attendait « plus de trente caractères et pas
+      // d'attente en cours ». Condition déjà vraie du contenu **précédent** :
+      // l'attente rendait aussitôt, et les onze sous-vues ont été mesurées à
+      // 1 490 caractères — la même, onze fois. Le contrôle était vert et vide,
+      // et c'est le contre-essai qui l'a dit.
+      const avantTexte = await page.evaluate(() => {
+        const z = document.querySelector('.cfg-content');
+        return z ? z.textContent.trim() : '';
+      });
+      await page.evaluate((x) => window.cfgNavigate(x), sous);
+      await page.waitForFunction((precedent) => {
+        const z = document.querySelector('.cfg-content');
+        if (!z || z.querySelector('.loading-spinner, [data-oasis-loader]')) return false;
+        const t = z.textContent.trim();
+        return t.length > 30 && t !== precedent;
+      }, { timeout: 15000 }, avantTexte).catch(() => { /* les relevés ci-dessous le diront */ });
+      // Le rendu est synchrone pour certaines sous-vues, différé pour celles qui
+      // chargent un référentiel : on attend la disparition de l'attente, comme
+      // pour les vues du portail.
+      // `.cfg-content` est le contenu de la **sous-vue**, sans la barre latérale.
+      // Une première écriture retombait sur `mainView` faute de trouver un
+      // `#cfgContent` qui n'existe pas : or `mainView` porte toute la vue, barre
+      // comprise, donc toujours plus de trente caractères. La sonde ne pouvait
+      // pas voir une sous-vue vide — mesuré en en vidant une, le contrôle
+      // restait vert. Pas de repli, donc : un conteneur absent est un échec.
+      const etat = await page.evaluate(() => {
+        const z = document.querySelector('.cfg-content');
+        return {
+          contenu: z ? z.textContent.trim().length : 0,
+          erreur: z ? /Erreur de chargement|Erreur :/.test(z.textContent) : true,
+          debordement: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          // Une empreinte du contenu : deux sous-vues distinctes ne peuvent pas
+          // la partager, et onze identiques dénoncent une sonde immobile.
+          empreinte: z ? `${z.textContent.trim().length}:${z.textContent.trim().slice(0, 120)}` : 'absent',
+        };
+      });
+      if (etat.contenu <= 30 || etat.erreur) sousVuesMuettes.push(`${sous} (${etat.contenu}c${etat.erreur ? ', erreur' : ''})`);
+      if (etat.debordement > 0) sousVuesDebordantes.push(`${sous} (${etat.debordement} px)`);
+      empreintes.set(sous, etat.empreinte);
+    }
+    verifier('chaque sous-vue de la configuration se remplit',
+      sousVuesMuettes.length === 0,
+      sousVuesMuettes.length ? sousVuesMuettes.join(' · ') : `${sousVues.length} sous-vues`);
+    // ── Et le contrôle refuse de passer si les onze se ressemblent ──
+    //
+    // C'est la non-vacuité, dite par le contrôle lui-même plutôt que laissée à
+    // qui le relit. Onze sous-vues qui rendent la même chose, c'est une sonde
+    // qui n'a pas changé de page — et c'est exactement ce qui est arrivé.
+    const distinctes = new Set(empreintes.values()).size;
+    verifier('les sous-vues de la configuration diffèrent les unes des autres',
+      distinctes >= sousVues.length - 1,
+      `${distinctes} empreinte(s) distincte(s) pour ${sousVues.length} sous-vues`);
+    verifier('aucune sous-vue de la configuration ne déborde à droite',
+      sousVuesDebordantes.length === 0, sousVuesDebordantes.join(' · '));
+
+    // La bascule de langue agit sur la coquille du portail, et sur l'attribut
+    // `lang` du document — celui qui commande la prononciation d'un lecteur
+    // d'écran. Les six modules le laissaient figé à « fr » ; le portail, non.
+    etape = 'bascule de langue';
+    const langues = await page.evaluate(async () => {
+      const lu = () => ({
+        lang: document.documentElement.lang,
+        menu: (document.querySelector('.portal-nav-btn[data-view="users"]') || {}).textContent || '',
+      });
+      const avant = lu();
+      window.applyLang('en');
+      await new Promise((r) => setTimeout(r, 300));
+      const apres = lu();
+      window.applyLang('fr');
+      await new Promise((r) => setTimeout(r, 300));
+      return { avant, apres, retour: lu() };
+    });
+    verifier('la bascule de langue change l’attribut « lang » du document',
+      langues.avant.lang === 'fr' && langues.apres.lang === 'en' && langues.retour.lang === 'fr',
+      `${langues.avant.lang} → ${langues.apres.lang} → ${langues.retour.lang}`);
+    verifier('la bascule de langue traduit les menus du portail',
+      langues.avant.menu.trim() !== langues.apres.menu.trim()
+      && langues.avant.menu.trim() === langues.retour.menu.trim(),
+      `« ${langues.avant.menu.trim()} » → « ${langues.apres.menu.trim()} »`);
+
     // ── L'écran « Gestion des Droits », avant sa réécriture ──
     //
     // Aucun contrôle ne l'ouvrait : les vingt contrôles de la suite « droits »

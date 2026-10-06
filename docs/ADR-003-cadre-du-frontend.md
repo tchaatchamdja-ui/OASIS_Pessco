@@ -767,7 +767,37 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            fichier le jour de sa conversion**, sans rien dire — c'est ce qui est
            arrivé au garde-fou des magasins de module quand la fabrique a pris des
            options.
-       5.c [ ] Puis les écrans, en commençant par les feuilles : portail, PLAN, CARE,
+       5.c [~] Puis les écrans, en commençant par les feuilles : portail, PLAN, CARE,
            PR, RAMP, SURV.
+
+           5.c.0 [x] **Éprouver le portail avant de le réécrire** — fait le 6 octobre
+               2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.
+
+               **Mesuré d'abord.** Le portail déclare **cinq vues** : trois étaient
+               ouvertes, `profile` jamais. Sa configuration porte **onze sous-vues** :
+               une seule était atteinte, celle qui s'affiche par défaut. Et **aucun** de
+               ses quarante gestes n'était exercé. 4 217 lignes couvertes par « trois
+               vues se remplissent et ne débordent pas ».
+
+               **Huit contrôles posés**, dont les onze sous-vues parcourues une à une,
+               la vue du profil et ses champs, et la bascule de langue — l'attribut
+               `lang` du document autant que les libellés des menus.
+
+               **Et mon propre contrôle était vide de sens à sa première écriture.** Il
+               attendait « plus de trente caractères et aucune attente en cours » : une
+               condition déjà vraie du contenu **précédent**. Les onze sous-vues ont
+               donc été mesurées à **1 490 caractères — la même, onze fois**. Deux
+               erreurs s'y ajoutaient : un repli sur `mainView`, qui porte la vue
+               entière et ne peut pas voir une sous-vue vide, et un conteneur nommé
+               `#cfgContent` qui n'existe pas.
+ 
+               Corrigé en attendant que le contenu **change**, et le contrôle refuse
+               désormais de passer si les onze se ressemblent : « 1 empreinte distincte
+               pour 11 sous-vues » est l'échec que la sonde immobile aurait dû
+               produire. La non-vacuité est dite par le contrôle lui-même, non laissée
+               à qui le relit.
+
+               Contre-essayé dans les deux sens : une sous-vue rendue muette, et
+               `cfgNavigate` qui ne change plus de sous-vue. Les deux mordent.
 6. [ ] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

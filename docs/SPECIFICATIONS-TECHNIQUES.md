@@ -201,8 +201,47 @@ meilleure façon de faire ignorer les vraies.
 |---|---|---|
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail (`public/js/`) | 4 217 | JavaScript — contrôles posés |
-| PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **non mesurés** |
+| portail (`public/js/`) | 4 217 | JavaScript — **gestes relevés et couverts** |
+| PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
+
+### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
+
+Le terme était trop court dans la première version de ce document, et il a été mal compris.
+Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mot « test » confond :
+
+| | Ce qui est éprouvé | Combien |
+|---|---|---|
+| **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **39 contrôles** pour les neuf écrans réunis |
+
+Ces cinq écrans portent **1 326 gestes** — boutons, formulaires, menus, champs :
+
+| Écran | Lignes | Gestes |
+|---|---|---|
+| PLAN | 5 949 | 135 |
+| CARE | 6 428 | 145 |
+| PR | 7 315 | 186 |
+| RAMP | 12 470 | 357 |
+| SURV | 23 731 | **503** |
+| **Total** | **55 893** | **1 326** |
+
+**Aucun n'est exercé dans un navigateur.** La suite « parcours » ouvre **un** écran de module
+dans son cadre et vérifie qu'il n'est pas vide — c'est tout. Elle ne clique sur rien à
+l'intérieur.
+
+**Pourquoi c'est écrit plutôt que passé sous silence.** Le portail était dans le même état, et
+il a été mesuré avant d'être touché. Le relevé : sur **cinq** vues, trois étaient ouvertes ; sur
+**onze** sous-vues de configuration, **une** ; sur quarante gestes, **aucun**. Un écran de 4 217
+lignes était couvert par « trois vues se remplissent et ne débordent pas ».
+
+Il n'y a aucune raison d'espérer mieux des cinq autres, et c'est pourquoi chacun aura sa
+**suite n° 0** : relever ses gestes et les couvrir **avant** de le réécrire. On ne mesure pas une
+réécriture contre rien.
+
+**Ce que ce trou laisse passer, concrètement** : un défaut d'affichage ou d'interaction. Comme
+`window.ICONS` — une icône absente, rendue par la chaîne vide, sur un écran par ailleurs
+fonctionnel. Défaut réel, parfaitement silencieux, qu'aucun des 588 contrôles de serveur ne
+pouvait voir.
 
 Le socle sert **les deux régimes** : chaque fichier typé a un « sas de cohabitation »
 (`frontend/socle/globales/`) qui publie les mêmes globales pour les écrans restés en JavaScript,
@@ -650,6 +689,12 @@ grep -o '"code": *"[A-Z]*"' src/modules/*/module.json | sed 's/.*: *//'
 T=$(mktemp -d)
 OASIS_VERROU=0 OASIS_DATA_DIR="$T" PORT=4799 node server.js > "$T/boot.log" 2>&1 &
 PID=$!; sleep 5; grep -o '"modules":\[[^]]*\]' "$T/boot.log"; kill "$PID"; rm -rf "$T"
+
+# Gestes des cinq écrans non relevés (§ 4.1.1) — attendu : 1 326
+for m in planification mesures profil_risque ramp execution; do
+  printf "%-16s %s\n" "$m" "$(grep -rhoE 'onclick=|onchange=|onsubmit=|oninput=|addEventListener\(' \
+    public/modules/$m/js/*.js public/modules/$m/*.html 2>/dev/null | wc -l)"
+done
 
 # Contrôles
 npm run smoke; echo "code de sortie : $?"                             # 917, et 0

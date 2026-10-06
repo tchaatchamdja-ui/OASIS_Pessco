@@ -1,12 +1,64 @@
-// OASIS — Chrome commun aux modules PESSCO chargés en iframe.
+// OASIS — Chrome commun aux modules PESSCO chargés en iframe. Le socle, en
+// TypeScript (ADR-003, 5.b).
+//
 // Injecte dans le shell du module : les boutons de super-menu (barre supérieure
 // gauche), le bouton « Retour au portail » (à la place de Déconnexion) et la
 // marque OASIS en tête de la barre latérale.
-(function () {
+//
+// Les corps sont repris du fichier d'origine **avec leur indentation** : le bloc
+// de styles est un gabarit multiligne, et son espace de début de ligne fait
+// partie de la feuille produite.
+//
+// ── Les globales venues de la page, et qui les déclare ──
+//
+// La règle du chantier est qu'un module déclare ce qu'il **définit**. Celles-ci
+// ne sont définies par aucun module : chaque `index.html` de module les pose
+// dans un script en ligne, avant de charger ce fichier. C'est donc leur
+// **lecteur** qui les déclare, et toutes optionnelles — une page peut n'en poser
+// aucune, et le fichier retombe alors sur ses valeurs par défaut.
+//
+// Ce fichier ne touche pas à `window` pour publier : voir `globales/module-chrome.ts`.
+
+/** Un super-menu, tel que `/api/modules/super-menus` le rend. */
+export interface SuperMenu {
+  key: string;
+  label: string;
+  src: string;
+}
+
+/**
+ * Une action que le module ajoute à la barre supérieure. Un bouton par défaut ;
+ * `type: 'select'` en fait un choix, dont le module fournit les options.
+ */
+export interface ActionBarre {
+  key?: string;
+  label?: string;
+  icon?: string;
+  active?: boolean;
+  onClick?: (key?: string) => void;
+  type?: 'select';
+  options?: readonly { value: string; label: string }[];
+  value?: string;
+  onChange?: (valeur: string) => void;
+}
+
+declare global {
+  interface Window {
+    /** Clé du module courant, posée par son `index.html`. */
+    OASIS_MODULE_KEY?: string;
+    /** Nom court porté en barre, quand celui du manifeste est trop long. */
+    OASIS_MODULE_LABEL?: string;
+    /** Code du module pour « Gestion des Droits » ; `PLAN` à défaut. */
+    OASIS_MODULE_RIGHTS?: string;
+    /** État du shell de « Planification » — son volet latéral. */
+    PLAN_STATE?: { sidebarCollapsed?: boolean };
+  }
+}
+
   // Super-menus déclarés par les manifestes des modules installés
   // (/api/modules/super-menus). Rien n'est codé en dur : déposer un module
   // dans src/modules/ suffit à le voir apparaître ici.
-  let SUPERS = [];
+  let SUPERS: SuperMenu[] = [];
   // Un module seul sur sa carte du portail n'a aucun voisin : la barre reste
   // vide plutôt que d'afficher un onglet unique menant à la page courante.
   const visibleSupers = () => (SUPERS.length > 1 ? SUPERS : []);
@@ -14,18 +66,18 @@
 
   // Privilège général dans le module (Gestion des Droits), affiché sous le nom.
   const MODULE_CODE = window.OASIS_MODULE_RIGHTS || 'PLAN';
-  let MODULE_PRIVILEGE = null;
-  const privLabel = (p) => (p ? p.charAt(0) + p.slice(1).toLowerCase() : '');
+  let MODULE_PRIVILEGE: string | null = null;
+  const privLabel = (p?: string): string => (p ? p.charAt(0) + p.slice(1).toLowerCase() : '');
 
   // À chaque ouverture d'un super-menu, la barre latérale du module est étendue.
   try {
     localStorage.setItem('pr_sidebar', 'false');
     localStorage.setItem('plan_sidebar', 'false');
-  } catch (e) { /* stockage indisponible */ }
+  } catch { /* stockage indisponible */ }
   if (window.APP_STATE) window.APP_STATE.sidebarCollapsed = false;
   if (window.PLAN_STATE) window.PLAN_STATE.sidebarCollapsed = false;
 
-  const SVG = {
+  const SVG: Readonly<Record<string, string>> = {
     risk: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
     plan: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
     back: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>',
@@ -154,14 +206,14 @@
   style.textContent = css;
   document.head.appendChild(style);
 
-  window.oasisGoSuper = function (key) {
+export function goSuper(key: string) {
     const s = SUPERS.find((x) => x.key === key);
     if (s && key !== CURRENT) window.location.href = s.src;
-  };
+  }
   // La coquille se dessine avant que le module n'ait chargé son dictionnaire :
   // ses deux libellés vivent donc ici, comme ceux de l'écran d'attente. La
   // langue est celle que le portail a retenue.
-  const LEGENDES = {
+  const LEGENDES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
     retour_portail: { fr: 'Retour au portail', en: 'Back to the portal', pt: 'Voltar ao portal' },
     aucun_acces: { fr: 'Aucun accès', en: 'No access', pt: 'Sem acesso' },
     // Le même pied que le portail : les trois versions y sont déjà, on les
@@ -172,15 +224,16 @@
       pt: '© 2026 UEMOA / URSAC — OASIS · Plataforma Integrada de Supervisão da Segurança',
     },
   };
-  const langue = () => {
+  const langue = (): string => {
     try { return (window.PESSCO?.lang || localStorage.getItem('pr_lang') || 'fr').slice(0, 2); }
-    catch (e) { return 'fr'; }
+    catch { return 'fr'; }
   };
-  const legende = (cle) => (LEGENDES[cle] || {})[langue()] || (LEGENDES[cle] || {}).fr || cle;
+  const legende = (cle: string): string =>
+    (LEGENDES[cle] || {})[langue()] || (LEGENDES[cle] || {})['fr'] || cle;
 
-  window.oasisBackToPortal = function () {
+export function backToPortal(): void {
     parent.postMessage({ type: 'oasis:back-portal' }, '*');
-  };
+  }
 
   // Le serveur filtre déjà les super-menus selon le rôle du porteur de session
   // et selon la carte du portail du module courant : on n'obtient donc que les
@@ -188,7 +241,7 @@
   fetch(`/api/modules/super-menus?module=${encodeURIComponent(CURRENT || '')}`, { credentials: 'same-origin' })
     .then((r) => (r.ok ? r.json() : []))
     .then((liste) => {
-      SUPERS = Array.isArray(liste) ? liste : [];
+      SUPERS = Array.isArray(liste) ? liste as SuperMenu[] : [];
       const courant = SUPERS.find((s) => s.key === CURRENT);
       // Un module peut porter en barre un nom plus court que celui de son
       // manifeste, trop long pour la place disponible.
@@ -216,21 +269,23 @@
   // Un module déclare ses propres boutons (bascule de vue, mode d'affichage…)
   // sans réécrire la barre : le socle en garde la mise en forme et la place.
   // Chaque action : { key, label, icon (HTML optionnel), active, onClick }.
-  let ACTIONS = [];
+  let ACTIONS: ActionBarre[] = [];
   let MODULE_LABEL = window.OASIS_MODULE_LABEL || '';
   // Mention portée par la barre : ce sur quoi l'utilisateur travaille — le
   // prestataire dont il tient le compte, par exemple. Ce n'est pas une action.
   let MENTION = '';
-  window.oasisModuleActions = function (liste) {
-    ACTIONS = Array.isArray(liste) ? liste : [];
+
+export function moduleActions(liste?: readonly ActionBarre[]): void {
+    ACTIONS = Array.isArray(liste) ? [...liste] : [];
     dessinerActions();
-  };
-  window.oasisModuleMention = function (texte) {
+  }
+
+export function moduleMention(texte?: string): void {
     MENTION = texte || '';
     dessinerActions();
-  };
+  }
 
-  function dessinerActions() {
+  function dessinerActions(): void {
     const zone = document.querySelector('.oasis-module-actions');
     if (!zone) return;
     zone.innerHTML = '';
@@ -274,28 +329,30 @@
           if (String(o.value) === String(a.value)) opt.selected = true;
           sel.appendChild(opt);
         });
-        sel.onchange = () => a.onChange(sel.value);
+        sel.onchange = () => a.onChange?.(sel.value);
         zone.appendChild(sel);
         return;
       }
       const btn = document.createElement('button');
       btn.className = 'oasis-super-btn' + (a.active ? ' active' : '');
-      btn.title = a.label;
+      btn.title = a.label || '';
       btn.innerHTML = (a.icon || '') + `<span class="oasis-btn-label">${a.label}</span>`;
-      btn.onclick = () => a.onClick(a.key);
+      btn.onclick = () => a.onClick?.(a.key);
       zone.appendChild(btn);
     });
   }
 
   // Icône par clé de super-menu ; un module inconnu du socle reste affichable.
-  const SVG_OF = { risques: () => SVG.risk, plans: () => SVG.plan, droits: () => SVG.rights };
-  function superTabsHtml() {
+  const SVG_OF: Readonly<Record<string, () => string>> = {
+    risques: () => SVG['risk'] || '', plans: () => SVG['plan'] || '', droits: () => SVG['rights'] || '',
+  };
+  function superTabsHtml(): string {
     return visibleSupers().map((s) =>
       `<button class="oasis-super-btn ${s.key === CURRENT ? 'active' : ''}" onclick="oasisGoSuper('${s.key}')" title="${s.label}">${(SVG_OF[s.key] || (() => ''))()}<span class="oasis-btn-label">${s.label}</span></button>`
     ).join('');
   }
 
-  function injectChrome() {
+export function injectChrome(): void {
     // 1) Super-menus dans la barre supérieure, à gauche (remplacent le titre)
     const left = document.querySelector('.header-left');
     if (left && !left.querySelector('.oasis-super-tabs')) {
@@ -320,7 +377,7 @@
       btn.className = 'oasis-back-btn';
       btn.innerHTML = SVG.back + `<span class="oasis-btn-label">${legende('retour_portail')}</span>`;
       btn.title = legende('retour_portail');
-      btn.onclick = window.oasisBackToPortal;
+      btn.onclick = () => backToPortal();
       logout.replaceWith(btn);
     }
 
@@ -346,11 +403,11 @@
       txt.className = 'oasis-user-text';
       const n = document.createElement('div');
       n.className = 'oasis-user-name';
-      n.textContent = nameEl ? nameEl.textContent.trim() : '';
+      n.textContent = nameEl ? (nameEl.textContent || '').trim() : '';
       const r = document.createElement('div');
       r.className = 'oasis-user-role';
       // Privilège général du module ; à défaut, rôle affiché par le module
-      r.textContent = MODULE_PRIVILEGE || (roleEl ? roleEl.textContent.trim() : '');
+      r.textContent = MODULE_PRIVILEGE || (roleEl ? (roleEl.textContent || '').trim() : '');
       txt.append(n, r);
       ui.classList.add('oasis-user');
       ui.innerHTML = '';
@@ -369,9 +426,10 @@
   }
 
   // Le shell du module est re-rendu à chaque navigation : ré-injecter en continu
-  const mo = new MutationObserver(() => injectChrome());
-  document.addEventListener('DOMContentLoaded', () => {
-    injectChrome();
+  // Le shell du module est re-rendu à chaque navigation : ré-injecter en continu.
+  // L'observation est lancée par le sas, non ici — c'est un geste de publication.
+export function observer(): MutationObserver {
+    const mo = new MutationObserver(() => injectChrome());
     mo.observe(document.getElementById('app') || document.body, { childList: true, subtree: true });
-  });
-})();
+    return mo;
+  }

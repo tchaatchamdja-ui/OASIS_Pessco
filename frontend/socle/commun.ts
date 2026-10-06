@@ -59,8 +59,8 @@ interface GabaritCompile {
 
 declare global {
   interface Window {
-    /** Posé par le portail : l'état partagé, dont la langue retenue. */
-    PESSCO?: { lang?: string };
+    // `PESSCO` n'est plus déclaré ici : posé par le portail et lu par deux
+    // modules, il vit dans `sans-proprietaire.d.ts`.
 
     // ── Les neuf globales sont déclarées **ici**, et une seule fois ──
     //

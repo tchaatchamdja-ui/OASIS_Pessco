@@ -329,7 +329,47 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**9 sur 12** :
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**10 sur 12** —
+           ne restent que `oasis-requete` et `oasis-hors-ligne`, la paire qui chaîne
+           `window.fetch`.)*
+
+           **`module-chrome` — 377 lignes, et deux leçons sur les sondes.** La barre
+           supérieure des modules : super-menus, retour au portail, marque, bloc
+           utilisateur, pied, actions déclarées par le module, et la réinjection
+           continue sur mutation du shell. Deux requêtes partent au chargement :
+           interceptées dans le jeu, sinon les deux côtés mesureraient deux échecs
+           réseau identiques.
+
+           **Cinq contre-essais, et trois ne mordaient pas** — pour trois raisons
+           différentes, dont deux étaient des défauts de mes sondes :
+
+           · *le jeu de données fait partie de la sonde.* Mon jeu fournissait trois
+             super-menus et `hasAccess: true` ; les branches « un seul onglet qu'on
+             masque » et « aucun accès » n'étaient donc **jamais atteintes**. Une
+             seconde situation demande un second jeu, non une sonde de plus dans le
+             premier : `module-chrome-un-seul` les couvre, et les deux contre-essais
+             mordent ;
+           · *une sonde qui erre des deux côtés est pire que son absence.* Celle qui
+             éprouvait « le super-menu courant ne mène pas à lui-même » tentait de
+             redéfinir `window.location.href`, ce que Chrome refuse : elle rendait
+             « Cannot redefine property » **identiquement**, donc verte, et gonflait le
+             compte en rassurant. Retirée, et l'ADR dit ce qui n'est pas couvert.
+
+           **Une globale déclarée avec une forme incomplète.** `utils.ts` annonçait
+           `APP_STATE?: { lang?: string }` ; `chrome.ts` y écrit `sidebarCollapsed`, et
+           la construction a refusé. Même famille que les cinq signatures
+           contradictoires de la veille. D'où un second volet à la règle : un nom que
+           **plusieurs** modules lisent sans qu'aucun ne le définisse vit dans
+           [`sans-proprietaire.d.ts`](../frontend/socle/sans-proprietaire.d.ts) — et
+           un nom qu'un **seul** module lit se déclare chez ce lecteur.
+
+           **Et un faux rouge de ma suite, à la racine du même sujet.** Une déclaration
+           ambiante n'est importée par personne : le graphe d'imports ne la traverse
+           pas, et le `?` d'`APP_STATE` y était invisible. Deux noms correctement
+           déclarés optionnels étaient tenus pour obligatoires. La suite lit désormais
+           les `frontend/socle/*.d.ts` en plus du graphe.
+
+       5.b (détail des neuf premiers) *(**9 sur 12** :
            `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils`,
            `oasis-dates`, `oasis-messages-serveur`, `oasis-kpi` le 5 octobre,
            `oasis-toast` et `oasis-commun` le 6 octobre 2026.)*

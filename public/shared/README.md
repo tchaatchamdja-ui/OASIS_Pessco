@@ -17,5 +17,5 @@ Ordre de chargement dans un `index.html` de module :
 ...
 <script src="/shared/app/oasis-utils.js"></script>
 <script src="/modules/<code>/js/<code>-app.js"></script>
-<script src="/shared/js/module-chrome.js"></script>
+<script src="/shared/app/module-chrome.js"></script>
 ```

@@ -152,11 +152,28 @@ function declarationsDeWindow(fichiers) {
   return [...noms].sort();
 }
 
+// Les déclarations **ambiantes** du socle : `frontend/socle/*.d.ts`.
+//
+// Elles ne sont importées par personne — c'est le propre d'une déclaration
+// ambiante — donc le graphe d'imports ne les traverse pas. Elles valent pourtant
+// pour tout le programme, et c'est là que vivent les noms qu'aucun module ne
+// définit (`sans-proprietaire.d.ts`).
+//
+// Les oublier a coûté deux faux rouges : `APP_STATE` et `PESSCO`, déclarés
+// optionnels là-bas, étaient tenus pour obligatoires faute d'être vus.
+function ambiantes() {
+  const dossier = path.join(FRONTEND, 'socle');
+  if (!fs.existsSync(dossier)) return [];
+  return fs.readdirSync(dossier)
+    .filter((f) => f.endsWith('.d.ts'))
+    .map((f) => path.join(dossier, f));
+}
+
 // Les membres de `interface Window` déclarés **optionnels** (`X?: …`). Le `?` est
 // la déclaration que le nom peut manquer ; voir le contrôle qui l'emploie.
 function declarationsOptionnelles(fichiers) {
   const noms = new Set();
-  for (const f of fichiers) {
+  for (const f of [...fichiers, ...ambiantes()]) {
     const texte = sansCommentaires(fs.readFileSync(f, 'utf8'));
     for (const bloc of texte.matchAll(/interface Window\s*\{([\s\S]*?)\n {2}\}/g)) {
       for (const m of bloc[1].matchAll(/^\s{4}([A-Za-z_][A-Za-z0-9_]*)\?\s*[:(]/gm)) {

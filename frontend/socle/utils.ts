@@ -14,8 +14,10 @@ import type { DonneesErreur } from './commun';
 
 declare global {
   interface Window {
-    /** Posé par le portail : la langue retenue, pour le format des dates. */
-    APP_STATE?: { lang?: string };
+    // `APP_STATE` n'est plus déclaré ici : posé par une page et lu par deux
+    // modules, il vit dans `sans-proprietaire.d.ts`. Il l'était ici avec une
+    // forme incomplète — `{ lang }` seulement, alors que `chrome.ts` y écrit
+    // `sidebarCollapsed`.
     // Les quatre noms que ce fichier lit du socle — `oasisToast`, `oasisEsc`,
     // `oasisMessageErreur`, `oasisSaisieDifferee` — ne sont plus déclarés ici.
     // Leurs déclarations vivent dans `socle/toast.ts` et `socle/commun.ts`, les

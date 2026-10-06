@@ -37,6 +37,116 @@ const { demarrer } = require('../tests/smoke/harness');
 // qui ne se produit pas le fait échouer aussi — sinon la déclaration survivrait à
 // ce qu'elle décrit.
 const JEUX = {
+  'module-chrome': {
+    // Ce fichier lance **deux requêtes au chargement** — la liste des
+    // super-menus et le privilège dans le module. On les intercepte dans
+    // `avant`, sinon les deux côtés mesureraient deux échecs réseau identiques,
+    // et la coquille resterait vide de part et d'autre.
+    //
+    // Le shell est reconstitué ici tel qu'un module le sert : c'est ce DOM que
+    // le fichier transforme, et sans lui `injectChrome` ne trouverait rien à
+    // faire — les sondes seraient identiques **à ne rien faire**.
+    avant: "localStorage.setItem('pr_lang','fr'); window.PESSCO={lang:'fr'};"
+      + "window.OASIS_MODULE_KEY='plans'; window.OASIS_MODULE_RIGHTS='PLAN';"
+      + "window.APP_STATE={sidebarCollapsed:true}; window.PLAN_STATE={sidebarCollapsed:true};"
+      + "window.__appels=[];"
+      + "window.fetch=async(u)=>{window.__appels.push(String(u).split('?')[0]);"
+      + "if(String(u).includes('super-menus'))return{ok:true,json:async()=>["
+      + "{key:'plans',label:'Planification',src:'/modules/planification/'},"
+      + "{key:'risques',label:'Profil de Risque',src:'/modules/profil_risque/'},"
+      + "{key:'droits',label:'Droits',src:'/modules/droits/'}]};"
+      + "return{ok:true,json:async()=>({hasAccess:true,privilege:'GESTIONNAIRE'})};};"
+      + "document.write('<div id=\"app\"><div class=\"app-sidebar\">"
+      + "<div class=\"sidebar-header\">ancien</div></div>"
+      + "<div class=\"app-content\"><header><div class=\"header-left\">"
+      + "<div class=\"header-module-title\">Titre du module</div></div>"
+      + "<div class=\"user-info\"><div class=\"user-avatar\">AB</div>"
+      + "<span>NOM Prénom</span><span class=\"role-badge\">AAC</span></div>"
+      + "<button class=\"btn-logout\">Déconnexion</button></header></div></div>');",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^oasis(BackToPortal|GoSuper|ModuleActions|ModuleMention)$/.test(n)).sort().join(',')",
+      "window.__appels.sort().join(',')",
+      // ── Le volet latéral est déplié dès le chargement ──
+      "[window.APP_STATE.sidebarCollapsed,window.PLAN_STATE.sidebarCollapsed,localStorage.getItem('pr_sidebar'),localStorage.getItem('plan_sidebar')].join('|')",
+      // ── Les super-menus : le courant est actif, et il ne mène pas à lui-même ──
+      "[...document.querySelectorAll('.oasis-super-btn')].map(b=>b.className+'/'+b.title).join(' ~ ')",
+      "document.querySelectorAll('.oasis-super-tabs svg').length",
+      // Le titre du module est **retiré** — c'est le geste qui avait vidé
+      // l'icône de la coquille DROITS, et il est voulu.
+      "String(document.querySelector('.header-module-title') === null)",
+      // ── Le retour au portail remplace la déconnexion ──
+      "(()=>{const b=document.querySelector('.oasis-back-btn');return [b.title,b.textContent.trim(),document.querySelectorAll('.btn-logout').length].join('|');})()",
+      "(()=>{let vu=null;const o=window.parent.postMessage;window.parent.postMessage=(m)=>{vu=JSON.stringify(m);};document.querySelector('.oasis-back-btn').click();window.parent.postMessage=o;return vu;})()",
+      // ── La marque remplace l'en-tête de la barre latérale ──
+      "document.querySelector('.sidebar-header').innerHTML.replace(/\\s+/g,' ')",
+      // ── Le bloc utilisateur : nom, privilège du module, et l'avatar gardé ──
+      "(()=>{const u=document.querySelector('.user-info');return [u.className,u.querySelector('.oasis-user-name').textContent,u.querySelector('.oasis-user-role').textContent,!!u.querySelector('.user-avatar')].join('|');})()",
+      // ── Le pied, dans les trois langues ──
+      "document.querySelector('.oasis-module-footer').textContent",
+      "(()=>{const r=[];for(const l of ['fr','en','pt','xx']){window.PESSCO={lang:l};document.querySelector('.oasis-module-footer').remove();window.oasisModuleActions([]);document.dispatchEvent(new Event('DOMContentLoaded'));r.push((document.querySelector('.oasis-module-footer')||{}).textContent);}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+      // ── Les actions du module : boutons, choix, mention, séparateur ──
+      "(()=>{window.oasisModuleActions([{key:'a',label:'Vue AAC',icon:'<svg/>',active:true},{key:'b',label:'Vue Prestataire'}]);return document.querySelector('.oasis-module-actions').innerHTML.replace(/\\s+/g,' ');})()",
+      "(()=>{let vu=null;window.oasisModuleActions([{key:'z',label:'L',onClick:(k)=>{vu=k;}}]);document.querySelector('.oasis-module-actions button').click();return String(vu);})()",
+      "(()=>{window.oasisModuleActions([{type:'select',label:'Prestataire',value:'2',options:[{value:'1',label:'Un'},{value:'2',label:'Deux'}]}]);const s=document.querySelector('.oasis-super-select');return [s.title,s.value,[...s.options].map(o=>o.value+':'+o.label+':'+o.selected).join('/')].join('|');})()",
+      "(()=>{let vu=null;window.oasisModuleActions([{type:'select',options:[{value:'9',label:'N'}],onChange:(v)=>{vu=v;}}]);const s=document.querySelector('.oasis-super-select');s.value='9';s.onchange();return String(vu);})()",
+      "(()=>{window.oasisModuleMention('AeroMaint');window.oasisModuleActions([{key:'a',label:'A'}]);const z=document.querySelector('.oasis-module-actions');return [!!z.querySelector('.oasis-module-mention'),z.querySelector('.oasis-module-mention').textContent,z.querySelectorAll('button').length].join('|');})()",
+      "(()=>{window.oasisModuleMention('');window.oasisModuleActions([]);return document.querySelector('.oasis-module-actions').innerHTML;})()",
+      // Un nom de module ne s'inscrit que **sans** onglets de super-menu : ici il
+      // y en a trois, donc pas de nom — et c'est la règle.
+      "String(document.querySelector('.oasis-module-name') === null)",
+      // ── Ce que cette comparaison **ne** couvre pas, et pourquoi on le dit ──
+      //
+      // `goSuper` refuse de naviguer vers le super-menu courant
+      // (`key !== CURRENT`). Ce n'est pas mesurable ici : `window.location.href`
+      // n'est pas redéfinissable dans Chrome, et une sonde qui l'essayait
+      // rendait « Cannot redefine property » **des deux côtés**, donc
+      // identiquement. Elle était verte sans rien prouver, et gonflait le compte
+      // en rassurant — pire que son absence. Elle est retirée.
+      //
+      // Reste couvert : l'onglet courant porte bien la classe `active`, et c'est
+      // la même donnée (`CURRENT`) qui commande les deux.
+      // ── La feuille de styles injectée ──
+      "(()=>{const s=[...document.querySelectorAll('style')].map(e=>e.textContent).join('');return [s.length,s.includes('.oasis-super-btn'),s.includes('.oasis-back-btn'),s.includes('.oasis-module-footer')].join('|');})()",
+      // ── Réinjecter est sans effet : rien ne se duplique ──
+      "(()=>{window.oasisModuleActions([]);document.dispatchEvent(new Event('DOMContentLoaded'));document.dispatchEvent(new Event('DOMContentLoaded'));return [document.querySelectorAll('.oasis-super-tabs').length,document.querySelectorAll('.oasis-back-btn').length,document.querySelectorAll('.oasis-brand').length,document.querySelectorAll('.oasis-module-footer').length].join('|');})()",
+    ],
+  },
+
+  // ── Un second jeu, pour les branches que le premier n'atteint pas ──
+  //
+  // Le jeu ci-dessus fournit trois super-menus et `hasAccess: true`. Deux
+  // branches restaient donc hors d'atteinte, et deux contre-essais passaient
+  // pour « ne mord pas » alors que les sondes n'y allaient pas : l'onglet
+  // unique qu'on masque, et « aucun accès » quand le module est fermé.
+  //
+  // Le jeu de données fait partie de la sonde. Une seconde situation demande
+  // donc un second jeu, et non une sonde de plus dans le premier.
+  'module-chrome-un-seul': {
+    fichier: 'module-chrome',
+    avant: "localStorage.setItem('pr_lang','fr'); window.PESSCO={lang:'fr'};"
+      + "window.OASIS_MODULE_KEY='plans'; window.OASIS_MODULE_RIGHTS='PLAN';"
+      + "window.fetch=async(u)=>{"
+      + "if(String(u).includes('super-menus'))return{ok:true,json:async()=>["
+      + "{key:'plans',label:'Planification',src:'/modules/planification/'}]};"
+      + "return{ok:true,json:async()=>({hasAccess:false})};};"
+      + "document.write('<div id=\"app\"><div class=\"app-content\">"
+      + "<header><div class=\"header-left\"></div>"
+      + "<div class=\"user-info\"><span>NOM</span>"
+      + "<span class=\"role-badge\">AAC</span></div></header></div></div>');",
+    sondes: [
+      // Un module seul sur sa carte n'a aucun voisin : la barre reste vide.
+      "document.querySelectorAll('.oasis-super-btn').length",
+      // Et c'est alors son **nom** qui identifie le module dans la barre.
+      "(()=>{const n=document.querySelector('.oasis-module-name');return n ? n.textContent : 'absent';})()",
+      // Avec des actions à sa suite, un séparateur les sépare du nom.
+      "(()=>{window.oasisModuleActions([{key:'a',label:'A'}]);const z=document.querySelector('.oasis-module-actions');return [z.querySelector('.oasis-module-name').textContent,!!z.querySelector('.oasis-sep'),z.querySelector('.oasis-sep').textContent].join('|');})()",
+      "(()=>{window.oasisModuleActions([]);const z=document.querySelector('.oasis-module-actions');return [z.querySelector('.oasis-module-name').textContent,!!z.querySelector('.oasis-sep')].join('|');})()",
+      // Module fermé : le privilège cède la place à « aucun accès », traduit.
+      "document.querySelector('.oasis-user-role').textContent",
+      "(()=>{const r=[];for(const l of ['fr','en','pt']){window.PESSCO={lang:l};r.push((document.querySelector('.oasis-user-role')||{}).textContent);}window.PESSCO={lang:'fr'};return r.join(' ~ ');})()",
+    ],
+  },
+
   'oasis-commun': {
     // Les cinq tables du serveur sont lues sur `window` : sans elles, la
     // composition accordée ne rendrait que des chaînes vides des deux côtés —
@@ -332,6 +442,9 @@ const JEUX = {
 
 const nom = process.argv[2];
 const jeu = JEUX[nom];
+// Un jeu peut porter sur un fichier dont il ne porte pas le nom : deux
+// situations distinctes du même fichier font deux jeux.
+const fichier = jeu && jeu.fichier ? jeu.fichier : nom;
 if (!jeu) {
   console.error(`Jeu de sondes inconnu : ${nom}\nDisponibles : ${Object.keys(JEUX).join(', ')}`);
   process.exit(2);
@@ -362,7 +475,7 @@ async function sonder(nav, base, repertoire) {
     // Les préalables sont pris dans leur régime courant : converti s'il l'est,
     // d'origine sinon. C'est l'état réel des pages pendant la cohabitation.
     + (jeu.prealables || []).map((f) => balise(estConverti(f) ? 'app' : 'js', f)).join('')
-    + balise(repertoire, nom)
+    + balise(repertoire, fichier)
     + '</body></html>';
   page.on('request', (r) => (r.url().endsWith('/__comparaison')
     ? r.respond({ status: 200, contentType: 'text/html', body: corps })

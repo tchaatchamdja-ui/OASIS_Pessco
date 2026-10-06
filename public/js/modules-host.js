@@ -5,7 +5,7 @@
 // enregistre une vue `mod_<CODE>` par module installé. Chaque module est
 // chargé en iframe : isolation des globals, de la charte et des formulaires.
 // La barre supérieure du module (super-menus, « Retour au Portail ») est
-// injectée côté module par /shared/js/module-chrome.js.
+// injectée côté module par /shared/app/module-chrome.js.
 
 const MODULE_HOST = {
   registre: [],      // [{ key, code, label, src, roles }]

@@ -13,8 +13,12 @@
 //
 // La connexion se fait avec le compte d'amorçage du harnais, sur une copie
 // jetable de `data/` — jamais sur les données de travail.
+const fs = require('fs');
+const path = require('path');
 const puppeteer = require('puppeteer');
 const { demarrer, verifier, bilan } = require('./harness');
+
+const RACINE = path.join(__dirname, '..', '..');
 
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
@@ -51,7 +55,25 @@ module.exports = async function parcoursSmoke(port) {
       headless: 'new',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
     });
-    const page = await navigateur.newPage();
+    // ── Le mouchard des gestes (ADR-003, 5.c — `scripts/relever-gestes.js`) ──
+    //
+    // Posé seulement si `OASIS_MOUCHARD` l'est : la campagne ordinaire n'en
+    // porte rien. Il sert au relevé de couverture des gestes, et il est branché
+    // **ici** plutôt que dans l'outil, pour une raison apprise à ses dépens.
+    //
+    // La première version de l'outil **rejouait** ce que fait cette suite. Elle
+    // s'est trompée de sélecteur — `.cfg-nav-item[data-cfg]`, qui ne désigne
+    // rien, là où la suite emploie `.cfg-sidebar-item` —, et a donc rendu
+    // « aucune sous-vue exercée » en mesurant sa propre cécité. Une imitation
+    // d'un parcours ne mesure pas ce parcours. On instrumente donc l'original.
+    const mouchard = process.env.OASIS_MOUCHARD
+      ? require(path.join(RACINE, 'scripts', 'relever-gestes.js')).MOUCHARD : null;
+    const ouvrirPage = async () => {
+      const p = await navigateur.newPage();
+      if (mouchard) await p.evaluateOnNewDocument(mouchard);
+      return p;
+    };
+    const page = await ouvrirPage();
     await page.setViewport({ width: 1280, height: 900 });
     // Deux relevés : ce que dit la console avant la session, et ce qu'elle dit
     // après. Les confondre ferait passer une erreur de la page de connexion
@@ -225,7 +247,28 @@ module.exports = async function parcoursSmoke(port) {
         const z = document.querySelector('.cfg-content');
         return z ? z.textContent.trim() : '';
       });
-      await page.evaluate((x) => window.cfgNavigate(x), sous);
+      // ── On **clique** le bouton, on n'appelle pas la fonction ──
+      //
+      // La première écriture faisait `window.cfgNavigate(sous)`. Cela éprouve la
+      // fonction, non le geste : l'onglet pouvait être masqué, désactivé, ou ne
+      // plus porter son `onclick`, et les onze contrôles restaient verts sur un
+      // écran où personne n'aurait pu atteindre une seule sous-vue.
+      //
+      // Mesuré avant de corriger (`scripts/relever-gestes.js`) : sur les **121
+      // gestes** du portail, **trois** étaient exercés. `cfgNavigate` n'en était
+      // pas, bien que onze contrôles passent par lui.
+      //
+      // Le clic, lui, traverse tout : l'élément doit exister, être trouvable, et
+      // porter son gestionnaire. Et si le bouton disparaît, le contrôle le dit
+      // au lieu de réussir à côté.
+      const clique = await page.evaluate((x) => {
+        const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+          .find((e) => (e.getAttribute('onclick') || '').includes(`cfgNavigate('${x}')`));
+        if (!b) return false;
+        b.click();
+        return true;
+      }, sous);
+      if (!clique) sousVuesMuettes.push(`${sous} (bouton introuvable)`);
       await page.waitForFunction((precedent) => {
         const z = document.querySelector('.cfg-content');
         if (!z || z.querySelector('.loading-spinner, [data-oasis-loader]')) return false;
@@ -264,9 +307,21 @@ module.exports = async function parcoursSmoke(port) {
     // C'est la non-vacuité, dite par le contrôle lui-même plutôt que laissée à
     // qui le relit. Onze sous-vues qui rendent la même chose, c'est une sonde
     // qui n'a pas changé de page — et c'est exactement ce qui est arrivé.
+    //
+    // ── Et il refuse aussi de passer sur **zéro** sous-vue ──
+    //
+    // Première écriture : `distinctes >= sousVues.length - 1`. Sur une liste
+    // vide, cela donne `0 >= -1`, c'est-à-dire **vrai**. Le contrôle écrit
+    // contre la vacuité l'était donc lui-même dans le seul cas où la barre ne
+    // rend rien — et ce cas n'est pas théorique : retirer le `onclick` des
+    // onze boutons le produit, et c'est le contre-essai qui l'a montré.
+    //
+    // Les deux contre-essais de la veille — une sous-vue muette, un
+    // `cfgNavigate` immobile — passaient tous deux par une liste **pleine**. Un
+    // contre-essai ne couvre que le chemin qu'il emprunte.
     const distinctes = new Set(empreintes.values()).size;
     verifier('les sous-vues de la configuration diffèrent les unes des autres',
-      distinctes >= sousVues.length - 1,
+      sousVues.length >= 8 && distinctes >= sousVues.length - 1,
       `${distinctes} empreinte(s) distincte(s) pour ${sousVues.length} sous-vues`);
     verifier('aucune sous-vue de la configuration ne déborde à droite',
       sousVuesDebordantes.length === 0, sousVuesDebordantes.join(' · '));
@@ -308,7 +363,7 @@ module.exports = async function parcoursSmoke(port) {
     etape = 'écran « Gestion des Droits »';
     // Son propre onglet : la page principale reste au portail, que les contrôles
     // suivants y retrouvent. L'avoir emmenée ailleurs les a cassés une fois.
-    const ecranDroits = await navigateur.newPage();
+    const ecranDroits = await ouvrirPage();
     surveiller(ecranDroits, () => incidents, () => etape);
     await ecranDroits.goto(`${srv.base}/modules/droits/index.html?module=PLAN`,
       { waitUntil: 'networkidle2' });
@@ -494,7 +549,7 @@ module.exports = async function parcoursSmoke(port) {
     // Cet onglet n'est pas surveillé, et c'est voulu : on y coupe le réseau
     // exprès, donc les requêtes y échouent exprès. Les compter au verdict
     // ferait échouer la suite sur ce qu'elle vient d'éprouver.
-    const ramp = await navigateur.newPage();
+    const ramp = await ouvrirPage();
     await ramp.goto(`${srv.base}/modules/ramp/index.html`, { waitUntil: 'networkidle2' });
     await new Promise((r) => setTimeout(r, 1500));
 
@@ -605,6 +660,31 @@ module.exports = async function parcoursSmoke(port) {
     verifier('aucune erreur de console ni requête échouée sur le parcours',
       apresSession.length === 0, apresSession.slice(0, 4).join(' · '));
   } finally {
+    // Le journal du mouchard, relevé sur **toutes** les pages encore ouvertes et
+    // avant de fermer le navigateur : une page fermée n'a plus de `window`, et
+    // un relevé fait après la fermeture rendrait zéro geste — c'est-à-dire la
+    // mesure de rien, présentée comme une couverture nulle.
+    if (process.env.OASIS_MOUCHARD && navigateur) {
+      // Le registre durable est dans `localStorage`, partagé par toutes les
+      // pages de l'origine : il survit à la fermeture de celles que la suite
+      // ferme en route. Relevé en mémoire en plus, pour dire combien de pages
+      // ont effectivement porté l'instrumentation.
+      const vu = { enLigne: [], ecouteurs: [], poses: 0, pages: 0 };
+      for (const p of await navigateur.pages()) {
+        try {
+          const j = await p.evaluate(() => {
+            const d = JSON.parse(localStorage.getItem('__oasis_gestes') || 'null');
+            return { durable: d, vivante: !!window.__gestes, poses: window.__gestes ? window.__gestes.poses : 0 };
+          });
+          if (j.vivante) { vu.pages += 1; vu.poses += j.poses; }
+          if (j.durable && !vu.enLigne.length) {
+            vu.enLigne.push(...j.durable.enLigne);
+            vu.ecouteurs.push(...j.durable.ecouteurs);
+          }
+        } catch { /* page déjà partie : le registre durable l'a gardée */ }
+      }
+      fs.writeFileSync(process.env.OASIS_MOUCHARD, JSON.stringify(vu));
+    }
     if (navigateur) await navigateur.close();
     srv.arreter();
   }

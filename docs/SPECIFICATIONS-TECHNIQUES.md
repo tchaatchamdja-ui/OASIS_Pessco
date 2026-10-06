@@ -201,7 +201,7 @@ meilleure façon de faire ignorer les vraies.
 |---|---|---|
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail (`public/js/`) | 4 217 | JavaScript — **gestes relevés et couverts** |
+| portail (`public/js/`) | 4 217 | JavaScript — **gestes relevés (78), 4 exercés** |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -214,7 +214,11 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
 | **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **39 contrôles** pour les neuf écrans réunis |
 
-Ces cinq écrans portent **1 326 gestes** — boutons, formulaires, menus, champs :
+Ces cinq écrans portent **1 326 occurrences de geste** — boutons, formulaires, menus, champs.
+Ce sont des *occurrences* et non des gestes nommés : le portail en compte 121 pour **78** noms
+distincts, et la couverture se mesure sur les noms. Le relevé nommé de ces cinq écrans n'est pas
+fait — il le sera par `scripts/relever-gestes.js`, une ligne par écran, au moment de leur suite
+n° 0.
 
 | Écran | Lignes | Gestes |
 |---|---|---|
@@ -231,8 +235,14 @@ l'intérieur.
 
 **Pourquoi c'est écrit plutôt que passé sous silence.** Le portail était dans le même état, et
 il a été mesuré avant d'être touché. Le relevé : sur **cinq** vues, trois étaient ouvertes ; sur
-**onze** sous-vues de configuration, **une** ; sur quarante gestes, **aucun**. Un écran de 4 217
-lignes était couvert par « trois vues se remplissent et ne débordent pas ».
+**onze** sous-vues de configuration, **une** ; et sur ses **78 gestes nommés**, **aucun**. Un
+écran de 4 217 lignes était couvert par « trois vues se remplissent et ne débordent pas ».
+
+Ce relevé a lui-même dû être refait : la première version annonçait « quarante gestes », qui
+étaient ceux d'**un fichier sur neuf**. Un dénominateur faux rend une couverture fausse, et
+toujours dans le sens rassurant. La mesure est désormais faite par
+[`scripts/relever-gestes.js`](../scripts/relever-gestes.js), qui instrumente la suite réelle
+dans un navigateur, et son inventaire est **gardé à chaque campagne**.
 
 Il n'y a aucune raison d'espérer mieux des cinq autres, et c'est pourquoi chacun aura sa
 **suite n° 0** : relever ses gestes et les couvrir **avant** de le réécrire. On ne mesure pas une
@@ -696,8 +706,11 @@ for m in planification mesures profil_risque ramp execution; do
     public/modules/$m/js/*.js public/modules/$m/*.html 2>/dev/null | wc -l)"
 done
 
+# Couverture des gestes d'un écran (§ 4.1.1) — portail : 4 sur 78
+node scripts/relever-gestes.js portail | head -8
+
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 917, et 0
+npm run smoke; echo "code de sortie : $?"                             # 918, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

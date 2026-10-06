@@ -398,6 +398,53 @@ module.exports = async function tailleSmoke() {
         : `${convertisModules.length} converti(s) : ${convertisModules.join(', ')}`);
   }
 
+  // ── L'inventaire des gestes d'un écran ne dérive pas en silence ──
+  //
+  // ADR-003, suite n° 5.c : chaque écran est mesuré avant d'être réécrit. La
+  // mesure de couverture elle-même demande un navigateur et vit dans
+  // `scripts/relever-gestes.js` ; ce contrôle-ci garde son **dénominateur**.
+  //
+  // Pourquoi il existe : le relevé du portail du 6 octobre 2026 annonçait
+  // **quarante gestes**. Il y en a **cent vingt et un** — les quarante étaient
+  // ceux d'`app.js`, et le portail porte neuf fichiers. Un relevé fait à la main
+  // compte le fichier qu'on regarde, et une couverture dont le dénominateur est
+  // faux est une couverture fausse, **dans le sens rassurant**.
+  //
+  // Le relevé est donc figé, et comparé à chaque campagne. Un geste ajouté sans
+  // que le relevé soit refait fait tomber ce contrôle, et la conduite à tenir est
+  // dans son message.
+  const releves = fs.readdirSync(path.join(RACINE, 'tests', 'smoke'))
+    .filter((f) => /^gestes-[a-z_]+\.json$/.test(f));
+  if (!releves.length) {
+    horsPortee('l’inventaire des gestes de chaque écran est à jour', 'aucun relevé figé');
+  } else {
+    const { relever, ECRANS } = require(path.join(RACINE, 'scripts', 'relever-gestes.js'));
+    const derives = [];
+    releves.forEach((f) => {
+      const quoi = f.replace(/^gestes-|\.json$/g, '');
+      const ecran = ECRANS[quoi];
+      if (!ecran) { derives.push(`${quoi} : relevé figé sans écran déclaré`); return; }
+      const fige = JSON.parse(fs.readFileSync(path.join(RACINE, 'tests', 'smoke', f), 'utf8'));
+      const maintenant = relever(ecran.sources());
+      const nomsFiges = new Set((fige.gestes || []).map((g) => g.nom));
+      const nomsActuels = new Set(maintenant.map((g) => g.nom));
+      const apparus = [...nomsActuels].filter((n) => !nomsFiges.has(n));
+      const disparus = [...nomsFiges].filter((n) => !nomsActuels.has(n));
+      if (apparus.length) derives.push(`${quoi} : ${apparus.length} geste(s) apparu(s) — ${apparus.slice(0, 4).join(', ')}`);
+      if (disparus.length) derives.push(`${quoi} : ${disparus.length} geste(s) disparu(s) — ${disparus.slice(0, 4).join(', ')}`);
+      if (maintenant.length !== fige.occurrences) {
+        derives.push(`${quoi} : ${maintenant.length} occurrences contre ${fige.occurrences} figées`);
+      }
+    });
+    verifier('l’inventaire des gestes de chaque écran est à jour',
+      derives.length === 0,
+      derives.length ? `${derives.join(' · ')} — refaire : node scripts/relever-gestes.js <écran>`
+        : releves.map((f) => {
+          const d = JSON.parse(fs.readFileSync(path.join(RACINE, 'tests', 'smoke', f), 'utf8'));
+          return `${f.replace(/^gestes-|\.json$/g, '')} ${d.exerces}/${d.gestesNommes} exercés`;
+        }).join(', '));
+  }
+
   // ── La légende d'attente est une légende que le socle sait traduire ──
   //
   // `oasis-loader` ne prend pas une clé : il prend **le texte de l'élément**, le

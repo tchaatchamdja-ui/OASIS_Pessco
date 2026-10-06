@@ -1,0 +1,1129 @@
+{
+ "releve": "2026-10-06",
+ "gestesNommes": 78,
+ "occurrences": 121,
+ "exerces": 4,
+ "indecidables": 8,
+ "gestes": [
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 224,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}','${r.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 225,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('${coll}','${r.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 235,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 276,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openExigDrawer",
+   "source": "openExigDrawer('${e.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 277,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('exigences','${e.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 284,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleExigGroup",
+   "source": "toggleExigGroup(${escArg(key)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 286,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 288,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openReglementForm",
+   "source": "openReglementForm(${escArg(key)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 289,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openExigDrawer",
+   "source": "openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 309,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openExigDrawer",
+   "source": "openExigDrawer(null,null,null,true)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 327,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 329,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 339,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 340,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveExigDrawer",
+   "source": "saveExigDrawer(${escArg(id || '')}, ${showRegFields}, ${escArg(reglement || '')}, ${escArg(date || '')})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 372,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 375,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 382,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 383,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveReglement",
+   "source": "saveReglement(${escArg(reglement)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 466,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "togglePers",
+   "source": "togglePers('${r.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 469,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}','${r.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 470,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('${coll}','${r.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 488,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 516,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "toggleInspectorFields",
+   "source": "toggleInspectorFields()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 517,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "onchange=\"orgTypeChanged()\"",
+   "source": "onchange=\"orgTypeChanged()\"",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 563,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 566,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 567,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveRef",
+   "source": "saveRef('${coll}','${id || ''}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 682,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 683,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}','${id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 684,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('${coll}','${id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 690,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal(\"${coll}\",\"\",${json})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 697,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleAcc",
+   "source": "toggleAcc('${key}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 794,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('domaines')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 830,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openAacEdit",
+   "source": "openAacEdit()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 837,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "uploadAacLogo",
+   "source": "uploadAacLogo(this)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 839,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "removeAacLogo",
+   "source": "removeAacLogo()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 867,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 894,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 895,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveAAC",
+   "source": "saveAAC()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1003,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1012,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1025,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1037,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1038,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgConfirmInterim",
+   "source": "orgConfirmInterim('${nodeId}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1116,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgUnassign",
+   "source": "orgUnassign('${a.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1157,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgEndInterim",
+   "source": "event.stopPropagation();orgEndInterim('${node.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1159,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgStartInterim",
+   "source": "event.stopPropagation();orgStartInterim('${node.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1162,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openPosteRegistre",
+   "source": "event.stopPropagation();openPosteRegistre('${node.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1172,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "event.stopPropagation();openRefModal('organisation','${node.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1220,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setOrgView",
+   "source": "setOrgView('list')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1221,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setOrgView",
+   "source": "setOrgView('tree')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1261,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveSecurite",
+   "source": "saveSecurite()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1333,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveSysteme",
+   "source": "saveSysteme()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1411,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "cfgNavigate",
+   "source": "cfgNavigate('${tab.id}')",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1421,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleCfgSidebar",
+   "source": "toggleCfgSidebar()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1429,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "toggle:change",
+   "source": "toggle.addEventListener('change', async () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app-demarrage.js",
+   "ligne": 100,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('sidebarNav'):click",
+   "source": "document.getElementById('sidebarNav').addEventListener('click', (e) => {",
+   "id": "sidebarNav",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-demarrage.js",
+   "ligne": 105,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('logoutBtn'):click",
+   "source": "document.getElementById('logoutBtn').addEventListener('click', async () => {",
+   "id": "logoutBtn",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-demarrage.js",
+   "ligne": 110,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('notifBell'):click",
+   "source": "document.getElementById('notifBell').addEventListener('click', async () => {",
+   "id": "notifBell",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app-demarrage.js",
+   "ligne": 130,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('pwdSubmit'):click",
+   "source": "document.getElementById('pwdSubmit').addEventListener('click', async () => {",
+   "id": "pwdSubmit",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 227,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "portailOuvrirRecherche",
+   "source": "portailOuvrirRecherche()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 230,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "portailChercher",
+   "source": "portailChercher(this)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 232,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "portailViderRecherche",
+   "source": "portailViderRecherche()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 291,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "${pdf}",
+   "source": "${pdf}",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 293,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openImportModal",
+   "source": "openImportModal('${coll}','${esc(title)}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 333,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 344,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 345,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "doImport",
+   "source": "doImport('${coll}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 511,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setModulesView",
+   "source": "setModulesView('grid')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 513,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setModulesView",
+   "source": "setModulesView('list')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 595,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setUserTab",
+   "source": "setUserTab('${tb.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 663,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleUserSidebar",
+   "source": "toggleUserSidebar()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 738,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 741,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 742,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveUserModules",
+   "source": "saveUserModules('${esc(u.username)}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 767,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 778,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 808,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 831,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 832,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "submitEditUser",
+   "source": "submitEditUser('${esc(u.username)}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 1041,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "uploadProfilePhoto",
+   "source": "uploadProfilePhoto(this)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 1043,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "removeProfilePhoto",
+   "source": "removeProfilePhoto()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 1061,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveProfileInfos",
+   "source": "saveProfileInfos()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 1094,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "submitProfilePassword",
+   "source": "submitProfilePassword()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 1111,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveProfileExtra",
+   "source": "saveProfileExtra('${key}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 527,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "cardEl:click",
+   "source": "cardEl.addEventListener('click', async () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 686,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('newUserBtn'):click",
+   "source": "document.getElementById('newUserBtn').addEventListener('click', showNewUserModal);",
+   "id": "newUserBtn",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 688,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "btn:click",
+   "source": "btn.addEventListener('click', async () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 708,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "sel:change",
+   "source": "document.querySelectorAll('[data-presta]').forEach((sel) => sel.addEventListener('change', async () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 716,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "btn:click",
+   "source": "document.querySelectorAll('[data-topersonnel]:not([disabled])').forEach((btn) => btn.addEventListener('click', async () ",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 724,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "btn:click",
+   "source": "document.querySelectorAll('[data-modules]').forEach((btn) => btn.addEventListener('click', () => showModulesModal(users.",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 725,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "btn:click",
+   "source": "document.querySelectorAll('[data-edit]').forEach((btn) => btn.addEventListener('click', () => showEditUserModal(users.fi",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 726,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "btn:click",
+   "source": "document.querySelectorAll('[data-effacer]').forEach((btn) => btn.addEventListener('click', () => showEffacerUserModal(us",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 783,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('efValider'):click",
+   "source": "document.getElementById('efValider').addEventListener('click', () => effacerUtilisateur(u.username));",
+   "id": "efValider",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 838,
+   "forme": "écouteur",
+   "evenement": "input",
+   "nom": "document.getElementById('euEmail'):input",
+   "source": "document.getElementById('euEmail').addEventListener('input', (e) => {",
+   "id": "euEmail",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 912,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('closeModal'):click",
+   "source": "document.getElementById('closeModal').addEventListener('click', close);",
+   "id": "closeModal",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 913,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('cancelModal'):click",
+   "source": "document.getElementById('cancelModal').addEventListener('click', close);",
+   "id": "cancelModal",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 914,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "document.getElementById('nuRole'):change",
+   "source": "document.getElementById('nuRole').addEventListener('change', (e) => {",
+   "id": "nuRole",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 918,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('createUser'):click",
+   "source": "document.getElementById('createUser').addEventListener('click', async () => {",
+   "id": "createUser",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 1166,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('verifyBtn'):click",
+   "source": "document.getElementById('verifyBtn').addEventListener('click', async () => {",
+   "id": "verifyBtn",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/cookies-page.js",
+   "ligne": 20,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('effacer'):click",
+   "source": "document.getElementById('effacer').addEventListener('click', () => {",
+   "id": "effacer",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 12,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "d:click",
+   "source": "d.addEventListener('click', () => applyTheme(d.dataset.theme));",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 15,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "b:click",
+   "source": "b.addEventListener('click', () => applyLang(b.dataset.lang));",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 29,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "oeil:click",
+   "source": "oeil.addEventListener('click', () => {",
+   "id": "voirMdp",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 44,
+   "forme": "écouteur",
+   "evenement": "submit",
+   "nom": "document.getElementById('loginForm'):submit",
+   "source": "document.getElementById('loginForm').addEventListener('submit', async (e) => {",
+   "id": "loginForm",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 123,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('mfaCancel'):click",
+   "source": "document.getElementById('mfaCancel').addEventListener('click', resetToLogin);",
+   "id": "mfaCancel",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 125,
+   "forme": "écouteur",
+   "evenement": "submit",
+   "nom": "document.getElementById('mfaForm'):submit",
+   "source": "document.getElementById('mfaForm').addEventListener('submit', async (e) => {",
+   "id": "mfaForm",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/login-page.js",
+   "ligne": 144,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('mfaResend'):click",
+   "source": "document.getElementById('mfaResend').addEventListener('click', async () => {",
+   "id": "mfaResend",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/modules-host.js",
+   "ligne": 72,
+   "forme": "écouteur",
+   "evenement": "message",
+   "nom": "window:message",
+   "source": "window.addEventListener('message', (ev) => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/portail-instances.js",
+   "ligne": 159,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "basculerInstance",
+   "source": "basculerInstance(${escArg(i.nom)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/portail-instances.js",
+   "ligne": 160,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "supprimerInstance",
+   "source": "supprimerInstance(${escArg(i.nom)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/portail-instances.js",
+   "ligne": 167,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "ouvrirInstance",
+   "source": "ouvrirInstance()",
+   "exerce": false
+  },
+  {
+   "fichier": "public/js/portail-instances.js",
+   "ligne": 55,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "selectRole:change",
+   "source": "selectRole.addEventListener('change', majAffichage);",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/js/portail-instances.js",
+   "ligne": 56,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "sel:change",
+   "source": "sel.addEventListener('change', majAffichage);",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 52,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "applyTheme",
+   "source": "applyTheme('blue-dark')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 53,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "applyTheme",
+   "source": "applyTheme('corporate')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 54,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "applyTheme",
+   "source": "applyTheme('retro-avionics')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 57,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "applyLang",
+   "source": "applyLang('fr')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 58,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "applyLang",
+   "source": "applyLang('en')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 59,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "applyLang",
+   "source": "applyLang('pt')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/index.html",
+   "ligne": 62,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleSidebar",
+   "source": "toggleSidebar()",
+   "exerce": false
+  }
+ ]
+}

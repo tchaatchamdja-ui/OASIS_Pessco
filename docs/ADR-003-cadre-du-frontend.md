@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 4 217 | contrôles **posés** (5.c.0), réécriture à venir |
+           | portail (`public/js`) | 4 217 | **78 gestes nommés, 4 exercés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -877,13 +877,99 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            lignes était couvert par « trois vues se remplissent ». Il n'y a aucune raison
            d'espérer mieux des cinq autres, et chacun aura donc sa suite n° 0.
 
-           5.c.0 [x] **Éprouver le portail avant de le réécrire** — fait le 6 octobre
+           5.c.0 [x] **Éprouver le portail avant de le réécrire — reprise du 7 octobre 2026,
+               et mon relevé de la veille était faux d'un facteur trois.**
+
+               Le relevé du 6 octobre annonçait **quarante gestes**. Il y en a **cent vingt
+               et un**, en **soixante-dix-huit noms distincts**. Les quarante étaient ceux
+               d'`app.js` — et le portail porte **neuf fichiers**, dont `app-config.js` qui
+               en a cinquante-six à lui seul. *Un relevé fait à la main compte le fichier
+               qu'on regarde.*
+
+               Et un dénominateur faux rend une couverture fausse **dans le sens
+               rassurant** : c'est le troisième jour de suite que cette direction-là est la
+               seule où je me trompe.
+
+               **D'où un outil plutôt qu'un geste** : [`scripts/relever-gestes.js`](../scripts/relever-gestes.js).
+               Il relève les gestes d'un écran, **les nomme** — « 121 » ne dit pas lequel
+               manque —, puis mesure dans un navigateur lesquels le parcours exerce
+               réellement. Les cinq écrans suivants n'auront qu'une ligne à y ajouter.
+
+               | | |
+               |---|---|
+               | Gestes nommés | **78** (121 occurrences) |
+               | Exercés par la suite « parcours » | **4** — 5 % |
+               | Indécidables (cible créée en vol, sans identifiant) | 8 |
+               | **Non exercés** | **66** |
+
+               ── Ce que l'outil a trouvé, et qui n'était pas le sujet ──
+
+               **La suite appelait les fonctions, elle ne cliquait pas les gestes.** Les onze
+               contrôles de sous-vues faisaient `window.cfgNavigate(sous)`. Cela éprouve la
+               fonction ; cela n'éprouve ni que l'onglet existe, ni qu'il est trouvable, ni
+               qu'il porte son gestionnaire. **Les onze contrôles seraient restés verts sur
+               un écran où personne n'aurait pu atteindre une seule sous-vue.**
+
+               Corrigé : la suite clique le bouton. Et le contre-essai mesure la différence —
+               l'appel direct laisse `cfgNavigate` **non exercé**, le clic le marque exercé.
+               L'outil distingue donc « la fonction marche » de « le geste marche », ce qui
+               est tout l'objet d'une suite n° 0.
+
+               **Un contrôle de la veille était vert sur zéro sous-vue.** Il comparait
+               `distinctes >= sousVues.length - 1` : sur une liste vide, `0 >= -1`, donc
+               **vrai**. Le contrôle écrit contre la vacuité l'était lui-même dans le seul
+               cas où la barre ne rend rien — et ce cas se produit en retirant le `onclick`
+               des onze boutons. Mes deux contre-essais de la veille passaient tous deux par
+               une liste **pleine** : *un contre-essai ne couvre que le chemin qu'il
+               emprunte.*
+
+               ── Quatre fautes de l'outil, toutes trouvées en le contre-essayant ──
+
+               Aucune n'aurait été vue en le relisant, et chacune rendait un chiffre
+               plausible :
+
+               · **il rejouait le parcours au lieu de le lancer.** Il cherchait
+                 `.cfg-nav-item[data-cfg]`, qui ne désigne rien, là où la suite emploie
+                 `.cfg-sidebar-item` : il mesurait **sa propre cécité**. La correction n'est
+                 pas de rectifier le sélecteur, c'est de supprimer l'imitation —
+                 `OASIS_MOUCHARD` fait poser l'instrumentation par la suite elle-même ;
+               · **il ne relevait qu'une page sur trois.** La suite en ouvre trois et en
+                 ferme deux ; une page fermée n'a plus de `window`. Le registre est passé
+                 dans `localStorage`, que les pages d'une origine partagent ;
+               · **il comparait la source du gestionnaire mot pour mot.** Or c'est un
+                 gabarit : la source écrit `cfgNavigate('${tab.id}')`, le navigateur porte
+                 `cfgNavigate('general')`. L'identité d'un geste est **la fonction qu'il
+                 appelle** ;
+               · **il agissait à l'import.** Sans garde de module, `require()` lançait la
+                 mesure entière — découvert en voulant le contre-essayer, qui démarrait un
+                 second serveur et réécrivait le relevé avant de commencer.
+
+               Ce que le rapprochement par nom coûte est dit plutôt que découvert : deux
+               gestes appelant la même fonction avec des arguments différents ne se
+               distinguent plus. La couverture est donc comptée en **noms distincts**, les
+               occurrences à côté — annoncer 8/121 sur un seul clic serait une couverture
+               surévaluée d'un facteur huit.
+
+               ── Le dénominateur est désormais gardé ──
+
+               Le relevé est figé dans
+               [`tests/smoke/gestes-portail.json`](../tests/smoke/gestes-portail.json), et un
+               contrôle de la suite « taille » le compare à chaque campagne. Un geste ajouté
+               ou retiré sans refaire le relevé fait tomber le contrôle, et son message dit
+               quoi lancer. Trois contre-essais : un geste ajouté, un geste retiré, le relevé
+               effacé — qui met le contrôle hors de portée plutôt que de le laisser vert.
+
+               C'est ce qui manquait le 6 octobre : non pas la mesure, mais **le fait qu'elle
+               se rejoue**.
+
+           5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.
 
                **Mesuré d'abord.** Le portail déclare **cinq vues** : trois étaient
                ouvertes, `profile` jamais. Sa configuration porte **onze sous-vues** :
                une seule était atteinte, celle qui s'affiche par défaut. Et **aucun** de
-               ses quarante gestes n'était exercé. 4 217 lignes couvertes par « trois
+               ses quarante gestes n'était exercé — *chiffre faux, voir la reprise du 7 octobre :
+               il y en a 121*. 4 217 lignes couvertes par « trois
                vues se remplissent et ne débordent pas ».
 
                **Huit contrôles posés**, dont les onze sous-vues parcourues une à une,

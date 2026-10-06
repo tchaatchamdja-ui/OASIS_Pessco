@@ -280,7 +280,26 @@ module.exports = async function tailleSmoke() {
     .toString().split('\0').filter(Boolean)
     .filter((f) => /\.(js|mjs|ts|tsx|html|json|md|yml|sh)$/.test(f))
     // Ce fichier nomme les chemins pour les détecter : il ne se dénonce pas.
-    .filter((f) => f !== 'tests/smoke/taille.smoke.js');
+    .filter((f) => f !== 'tests/smoke/taille.smoke.js')
+    // ── `docs/` tient le récit, non les gestes — et c'est un choix, pas un accident ──
+    //
+    // Un ADR doit pouvoir écrire le chemin qu'il raconte avoir supprimé. ADR-003
+    // en nomme trois, et le garde-fou du socle **ne les voit pas** : non parce
+    // qu'on l'a décidé, mais parce que l'indentation du Markdown place plus de
+    // douze caractères entre `'js',` et le nom de fichier à la ligne suivante,
+    // et que sa fenêtre s'arrête à douze. Il y échappe par chance.
+    //
+    // Le second garde-fou, écrit le 6 octobre, les a vus — et a dénoncé le texte
+    // même qui l'annonçait. La règle est donc posée explicitement plutôt que
+    // laissée à la largeur d'un retrait :
+    //
+    //   · `docs/` — les ADR, les plans, les comptes rendus : **hors de portée**.
+    //     Ce qui s'y écrit est de l'histoire, et l'histoire a le droit de nommer
+    //     ce qui n'existe plus ;
+    //   · tout le reste — y compris `README.md` et `DEPLOYMENT.md` à la racine,
+    //     qui donnent des **gestes** qu'on recopie : **en portée**. Un chemin
+    //     mort dans une instruction est un chemin qu'un exploitant va taper.
+    .filter((f) => !f.startsWith('docs/'));
 
   // Le détecteur ne tient pas de liste : il lit `frontend/socle/globales/`. Un
   // fichier converti y est, donc son ancien chemin ne doit plus être demandé.

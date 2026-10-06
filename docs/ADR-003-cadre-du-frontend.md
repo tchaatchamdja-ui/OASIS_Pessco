@@ -181,9 +181,97 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        C'est à ces quatre contrôles que la version React devra répondre, à l'identique.
        Ils sont la définition de « la réécriture marche ».
 
-1. [x] **Reprendre DROITS en React + TypeScript** — fait le 3 octobre 2026. Les six
-       contrôles de navigateur passent, à l'identique, et les 20 contrôles de la suite
-       « droits » n'ont pas bougé : l'API n'est pas touchée.
+1. [x] **Reprendre DROITS en React + TypeScript** — l'écran le 3 octobre 2026, le module
+       **entier le 6**. Les six contrôles de navigateur passent, à l'identique, et les 20
+       contrôles de la suite « droits » n'ont pas bougé : l'API n'est pas touchée.
+
+       **Ce jalon est resté trois jours « fait » avec 379 lignes de JavaScript dedans.**
+       `dr-i18n.js`, le répertoire de traduction, chargé en `<script>` classique et lu par
+       quatre déclarations écrites à la main. Le compte des lignes converties était juste ;
+       le mot « fait » ne l'était pas.
+
+       `socle.ts` portait la justification : « 390 lignes de tables, que **rien ne gagnerait**
+       à passer en TypeScript et qu'un portage exposerait à la faute de frappe ». **C'était
+       faux, et la conversion l'a prouvé avant d'être finie.** Les trois volets se typent les
+       uns par l'autre, et le volet français définit les clés :
+
+       | Ce que le type interdit | Contre-essai |
+       |---|---|
+       | Une traduction manquante dans un volet | `nav_audit` ôté du portugais → `TS2741` |
+       | Une clé en trop dans un volet | `cle_inventee` en anglais → `TS2353` |
+       | Une clé appelée qui n'existe pas | `dt('chargement')` → `TS2345` |
+
+       Les trois arrêtent la **construction**, ce qu'aucun contrôle de forme ne peut faire.
+
+       **Et la troisième a trouvé un défaut réel, en place depuis la réécriture.**
+       `dt('chargement')` était appelée dans `App.tsx` et **absente de la table** : la légende
+       d'attente de l'écran annonçait « chargement », en français comme en anglais comme en
+       portugais. Aucun contrôle ne l'aurait dit — la suite « parcours » attend que l'attente
+       s'en aille, non qu'elle se nomme.
+
+       Corrigé en **ôtant l'appel** : `oasis-loader` porte déjà « Chargement… » dans les trois
+       langues et la lit du contenu de l'élément. Une clé de moins à traduire, et le libellé
+       au seul endroit qui le dessine.
+
+       **Quatre affirmations sur `window` s'en vont** — `window.dt`, `window.DR`, et les deux
+       globales lexicales `dtPriv` / `dtPrivDesc`. C'est ici que vivait `dtPriv`, **le premier
+       des deux mensonges déclaratifs** qui ont motivé la suite `frontend`. Ne reste que
+       `ICONS`, qui partira avec le dernier `const` publié par un sas.
+
+       **Un état par défaut supprimé plutôt que gardé.** La première écriture réglait la langue
+       par un `poser(lang, module)` appelé avant le premier rendu : le même défaut déplacé. Un
+       état qu'il faut régler avant de lire a un état « pas encore réglé », et son secours —
+       français, espace `PLAN` — est *plausible*, donc silencieux. L'ancien code **levait**
+       (« DR is not defined »), et c'est ainsi qu'on l'avait trouvé. La langue se lit donc de
+       `localStorage` au chargement, comme la lisent déjà quatre fichiers du socle ; l'espace
+       de `window.DR_MODULE`. Plus d'ordre à tenir pour personne.
+
+       Les trois volets sont repris **à l'octet**, et l'équivalence mesurée sur **3 000
+       comparaisons** : 101 clés × 5 langues × 5 espaces, les six échelons de privilège, leurs
+       descriptions, les textes à trou, la clé inconnue, la langue inconnue. Trois
+       contre-essais, trois morsures — dont une qui ne rend pas un écart mais une exception :
+       ôter le repli de langue fait lever la comparaison. Elle refuse de passer, et c'est ce
+       qui compte, mais le message est une pile d'appels et non un écart nommé.
+
+       **Deux garde-fous qui se taisaient, ou allaient se taire.**
+
+       · *Le contrôle des accents portugais était **muet** sur la table convertie.* Il cherche
+         `pt: {` ou `EXEC_TR.pt` ; une table en TypeScript ouvre `const PT … = {`. Faute de
+         marqueur, le fichier tombait dans la branche des paires et des triplets — **lu, et
+         vide**. « Gestao » sans tilde, « Codigo » sans accent : verts tous les deux.
+         **Deuxième fois que ce contrôle se tait au changement de forme d'une table** ; la
+         première avait coûté 84 traductions non vérifiées. Trouvé en contre-essayant, non en
+         relisant.
+       · *Le répertoire des tables était écrit à la main.* Il se déduit désormais —
+         `frontend/<nom>` quand il existe, `public/modules/<nom>/js` sinon. Celui-là ne s'est
+         **pas** tu : il a rendu « DROITS (fr:0 en:0 pt:0) », et c'est ainsi qu'on l'a su. Mais
+         il ne faut pas compter là-dessus cinq fois de suite.
+
+       **Un garde-fou de plus, écrit pour les cinq conversions qui suivent** : aucun fichier ne
+       nomme le `js/` d'un module converti. Celui du socle ne couvre que `shared/js` ; il ne
+       dirait rien d'une page chargeant encore `/modules/droits/js/…`, c'est-à-dire d'un **404
+       sur un écran entier**. Les deux formes du chemin mordent — écrit d'un trait, et assemblé
+       par `path.join`.
+
+       **Et il a dénoncé le texte même qui l'annonçait.** Ce paragraphe nommait
+       `/modules/droits/js/…`, et le garde-fou l'a refusé — à juste titre : un fichier qui
+       écrit ce chemin est un fichier qui le demande. Mais le garde-fou du socle, lui, ne voit
+       pas les trois chemins que cet ADR nomme déjà, **et il y échappe par chance** :
+       l'indentation du Markdown place plus de douze caractères entre `'js',` et le nom de
+       fichier à la ligne suivante, et sa fenêtre s'arrête à douze.
+
+       La frontière est donc posée explicitement, plutôt que laissée à la largeur d'un retrait :
+       `docs/` est **hors de portée** des deux garde-fous — un ADR a le droit de nommer ce qu'il
+       raconte avoir supprimé —, et tout le reste y est, **`README.md` et `DEPLOYMENT.md`
+       compris** : ceux-là donnent des gestes qu'on recopie, et un chemin mort dans une
+       instruction est un chemin qu'un exploitant va taper. Les quatre cas sont contre-essayés.
+
+       **Et un défaut antérieur, trouvé par un contre-essai.** `horsPortee` **n'était pas
+       importé** dans la suite « taille », qui l'appelle six fois : chacun de ces six appels
+       levait un `ReferenceError`, c'est-à-dire que la suite tombait en exception **pile au
+       moment où elle devait dire « hors de portée »**. Aucune des six conditions n'étant jamais
+       remplie, personne ne l'avait vu. Trouvé en contre-essayant un septième appel, en ôtant
+       le `main.tsx` dont il se déduit.
 
 2. [x] **Le coût réel, mesuré** — c'est lui qui chiffre les sept autres.
 
@@ -770,6 +858,25 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        5.c [~] Puis les écrans, en commençant par les feuilles : portail, PLAN, CARE,
            PR, RAMP, SURV.
 
+           **L'état, au 6 octobre 2026.** Le volume dit ce qui reste, et il ne dit que cela :
+           la suite n° 0 et la n° 5.c.0 ont montré deux fois que ce n'est pas lui qui ordonne.
+
+           | Écran | Lignes | État |
+           |---|---|---|
+           | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
+           | portail (`public/js`) | 4 217 | contrôles **posés** (5.c.0), réécriture à venir |
+           | PLAN (`planification`) | 5 949 | non mesuré |
+           | CARE (`mesures`) | 6 428 | non mesuré |
+           | PR (`profil_risque`) | 7 315 | non mesuré |
+           | RAMP | 12 470 | non mesuré |
+           | SURV (`execution`) | 23 731 | non mesuré |
+
+           « Non mesuré » est à prendre au mot : on ne sait pas, pour ces cinq écrans, quelles
+           vues sont ouvertes par la suite « parcours » ni quels gestes y sont exercés. Le
+           portail a été mesuré avant d'être touché, et la mesure a dit qu'un écran de 4 217
+           lignes était couvert par « trois vues se remplissent ». Il n'y a aucune raison
+           d'espérer mieux des cinq autres, et chacun aura donc sa suite n° 0.
+
            5.c.0 [x] **Éprouver le portail avant de le réécrire** — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.
 
@@ -799,5 +906,29 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
                Contre-essayé dans les deux sens : une sous-vue rendue muette, et
                `cfgNavigate` qui ne change plus de sous-vue. Les deux mordent.
-6. [ ] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
+6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
+
+       **Premier passage le 6 octobre 2026**, pour le socle et DROITS. La ligne « Frontend »
+       disait « **✗** — JavaScript sans cadre, 0 fichier `.ts` » cinq jours après la conversion
+       du premier écran. Elle porte maintenant la mesure des deux côtés : **4 932 lignes** de
+       TypeScript en 35 fichiers, **60 110** encore en JavaScript.
+
+       **Et la commande de vérification de ce document était fausse.** Il porte, en fin de
+       texte, les commandes qui permettent de le contredire — c'est sa meilleure propriété. Or
+       celle du TypeScript cherchait dans `public/` :
+
+       ```
+       find public -name '*.ts' -o -name '*.tsx' | wc -l   # rendait 0
+       ```
+
+       Le TypeScript vit dans `frontend/` ; `public/` reçoit ce qu'esbuild en construit. La
+       commande rendait donc **0 sur un dépôt qui porte 4 932 lignes de TypeScript**, et
+       confirmait le « ✗ » de la ligne qu'elle était censée éprouver. Les deux fautes se
+       tenaient l'une l'autre.
+
+       La commande est corrigée, et une seconde a été ajoutée : le JavaScript qui reste. Une
+       mesure qui ne dit que le numérateur ne mesure pas une conversion.
+
+       Les cinq écrans restants mettront cette ligne à jour chacun à son tour. Le jalon reste
+       ouvert jusqu'au dernier.

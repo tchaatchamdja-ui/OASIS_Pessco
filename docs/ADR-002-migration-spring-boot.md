@@ -191,8 +191,12 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
 - Deux runtimes cohabitent pendant plusieurs mois : deux déploiements, deux jeux de journaux,
   une passerelle à tenir.
 - Le rendu PDF reste en Node — une dépendance de plus à exploiter.
-- Le front reste en JavaScript sans cadre : l'écart au §3.2 sur le frontend demeure, et doit
-  être assumé par écrit auprès du GT2.
+- ~~Le front reste en JavaScript sans cadre : l'écart au §3.2 sur le frontend demeure, et doit
+  être assumé par écrit auprès du GT2.~~ — **renversé par [ADR-003](ADR-003-cadre-du-frontend.md)
+  le 3 octobre 2026**, qui a mesuré ce que la réécriture coûte au lieu de l'estimer, et décidé
+  de la mener module par module. Le socle commun et DROITS sont convertis. Les deux phrases
+  ci-dessus décrivent l'état du 26 septembre ; elles restent lisibles, barrées — un ADR
+  enregistre une décision à une date, il ne se réécrit pas.
 
 **Ce qu'il faudra revoir**
 - ~~Si le GT2 exige aussi React + TypeScript : c'est un second chantier, de même ampleur, et il
@@ -219,10 +223,26 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
 
        Les deux moitiés — vecteurs à jour côté Node, contrats satisfaits côté Java — tournent
        en intégration continue.
-3. [~] **Choisir l'outil de construction et la disposition du dépôt.** Le jalon n° 2 a
-       tranché par l'usage : **Maven**, en monodépôt. `conformite-java/` en est le premier
-       occupant ; le socle prendra `backend-java/` à côté. À confirmer formellement avant
-       d'engager le module DROITS.
+3. [x] **Choisir l'outil de construction et la disposition du dépôt** — **acté le 6 octobre
+       2026** : **Maven**, en monodépôt.
+
+       Le jalon n° 2 avait tranché par l'usage, et la formalité restait due « avant d'engager
+       le module DROITS ». Or le jalon n° 6 a migré DROITS le 26 septembre, et les jalons
+       n° 10 à 13 tout le socle : la condition a été franchie sans que personne la relise, et
+       l'on a bâti six mois sur un choix marqué « à confirmer ».
+
+       Il n'y a donc rien à arbitrer — il y a à **enregistrer ce qui est en place**, et à dire
+       ce qu'il coûterait d'en changer :
+
+       | | |
+       |---|---|
+       | Outil | Maven. `conformite-java/pom.xml`, `backend-java/pom.xml` |
+       | Disposition | Monodépôt : le Java à côté du Node, dans le même arbre |
+       | Ce que la disposition rend possible | Les vecteurs de conformité et la passerelle lisent les **mêmes fichiers** que Node. Deux dépôts auraient exigé de les publier, donc de les figer, donc de les voir diverger entre deux publications |
+       | Ce qu'elle coûte | Une construction Java à chaque clone, et un `.gitignore` qui doit connaître `target/` |
+
+       Ce qui ferait rouvrir : un besoin de publier le socle Java comme artefact consommé
+       ailleurs — c'est le seul cas où le monodépôt gêne.
 5. [x] **Rendre la suite de fumée exécutable contre une adresse** — **fait le 26 septembre
        2026**. `OASIS_SMOKE_BASE=http://… npm run smoke -- <suite>` : le harnais ne démarre
        alors rien et s'adresse à ce qui écoute là.
@@ -489,7 +509,9 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
        gestionnaire de route asynchrone passe par `asynchrone` — sans quoi un rejet laisse la
        requête ouverte, sans trace, Express 4 ne regardant pas la promesse.
 
-10. [~] **Le socle Java lit PostgreSQL** — fait le 1ᵉʳ octobre 2026, et il était temps.
+10. [x] **Le socle Java lit PostgreSQL** — fait le 1ᵉʳ octobre 2026, et il était temps.
+       *(Clos le 6 octobre : sa seule réserve — la session — était levée par le jalon n° 11 le
+       jour même, sans que la ligne suive. Voir l'encadré en fin de jalon.)*
 
        **Le jalon n° 9 l'avait cassé sans que rien ne le dise.** Les journaux d'audit sont
        passés en base le 29 septembre ; `Magasin.java` lisait toujours les fichiers, et en
@@ -519,8 +541,17 @@ d'être synchrone. Le magasin passe donc en tête, et non au moment du socle.
 
        Ce que cela **ferme** : le point n° 2 du jalon n° 6 — « l'écriture ne peut pas basculer
        avant le magasin partagé » — n'a plus de raison d'être pour les collections migrées,
-       une base ayant les verrous qu'un répertoire n'a pas. Ce qui **reste ouvert** : le point
-       n° 3, la session, `sessions` n'étant pas encore migrée.
+       une base ayant les verrous qu'un répertoire n'a pas.
+
+       > ~~Ce qui **reste ouvert** : le point n° 3, la session, `sessions` n'étant pas encore
+       > migrée.~~ — **périmé le jour même.** Le jalon n° 11 a migré `sessions` quelques heures
+       > plus tard et levé ce point ; cette ligne ne l'a pas suivi, et elle est restée fausse
+       > cinq jours. Relevée le 6 octobre 2026 en relisant les jalons pour en dresser l'état.
+       >
+       > Elle est barrée plutôt qu'effacée : c'est le mode de défaillance que ce dépôt traque
+       > partout ailleurs — une affirmation que plus rien ne vérifie —, appliqué cette fois à
+       > sa propre documentation. Aucun contrôle ne lit les ADR, et il n'y en aura pas : ce
+       > qu'on peut faire, c'est ne pas prétendre qu'il y en a.
 
 11. [x] **`users` et `sessions` migrées** — faites le 1ᵉʳ octobre 2026, et par une autre voie
        que les précédentes.

@@ -14,8 +14,9 @@ declare global {
   interface Window {
     /** Posé par le portail : la langue retenue, pour le format des dates. */
     APP_STATE?: { lang?: string };
-    /** `oasis-toast.js` — absent sur une page qui ne le charge pas, d'où le `?`. */
-    oasisToast?: (message: string, type?: string) => unknown;
+    // `oasisToast` n'est plus déclaré ici : sa déclaration vit dans
+    // `socle/toast.ts`, le module qui le définit. Elle l'était aux deux endroits,
+    // avec deux signatures différentes — et personne ne le savait.
     /** `oasis-commun.js` : l'anti-rebond des champs de recherche. */
     oasisSaisieDifferee: (champ: HTMLInputElement, appliquer: () => void) => void;
     /** `oasis-commun.js` : l'échappement de l'application. */

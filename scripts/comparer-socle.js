@@ -37,6 +37,59 @@ const { demarrer } = require('../tests/smoke/harness');
 // qui ne se produit pas le fait échouer aussi — sinon la déclaration survivrait à
 // ce qu'elle décrit.
 const JEUX = {
+  'oasis-toast': {
+    avant: "localStorage.setItem('pr_lang','fr');"
+      + "document.write('<button id=\"ailleurs\">ailleurs</button>');",
+    sondes: [
+      "Object.getOwnPropertyNames(window).filter(n=>/^oasis(Toast|Confirmer|Saisir)$/.test(n)).sort().join(',')",
+      // ── Le panneau de retour ──
+      "(()=>{const f=oasisToast('Bonjour','success');return [f.className,f.querySelector('.oasis-toast-titre').textContent,f.querySelector('.oasis-toast-message').textContent].join('|');})()",
+      // Les alias de type, et le repli sur la réussite pour un type inventé.
+      "['success','succes','ok','error','danger','erreur','warning','warn','alerte','info','inventé',''].map(t=>oasisToast('m',t).className.replace('oasis-toast-fond ','')).join(',')",
+      // Un seul panneau : le dernier remplace le précédent.
+      "(()=>{oasisToast('un');oasisToast('deux');return document.querySelectorAll('.oasis-toast-fond').length+'|'+document.querySelector('.oasis-toast-message').textContent;})()",
+      // Le message est posé en texte, non en HTML : une balise ne s'interprète pas.
+      "(()=>{const f=oasisToast('<b>gras</b>');return f.querySelector('.oasis-toast-message').innerHTML;})()",
+      // Un clic referme.
+      "(()=>{const f=oasisToast('x');f.click();return document.querySelectorAll('.oasis-toast-fond').length;})()",
+      // Les trois langues du titre.
+      "(()=>{const r=[];for(const l of ['fr','en','pt','xx']){localStorage.setItem('pr_lang',l);r.push(oasisToast('m','error').querySelector('.oasis-toast-titre').textContent);}localStorage.setItem('pr_lang','fr');return r.join(' ~ ');})()",
+      // La durée : plancher à 1 500 ms, quoi qu'on demande.
+      "(()=>{let d=null;const o=window.setTimeout;window.setTimeout=(f,ms)=>{d=ms;return 0;};oasisToast('x',null,10);const a=d;oasisToast('x',null,9000);const b=d;oasisToast('x');const c=d;window.setTimeout=o;return [a,b,c].join('|');})()",
+      // ── La confirmation ──
+      "(async()=>{document.querySelectorAll('.oasis-toast-fond,.oasis-confirm-fond').forEach(e=>e.remove());const p=oasisConfirmer('Continuer ?');const f=document.querySelector('.oasis-confirm-fond');const vu=[f.className,f.querySelector('.oasis-confirm-titre').textContent,f.querySelector('.oasis-confirm-non').textContent,f.querySelector('.oasis-confirm-oui').textContent,document.activeElement.className].join('|');f.querySelector('.oasis-confirm-oui').click();return vu+'|'+await p;})()",
+      // `danger` se déduit du message — et le mot le dit.
+      "(async()=>{const r=[];for(const m of ['Supprimer ceci ?','Enregistrer ?','Réinitialiser ?','Remove it?','Valider ?']){const p=oasisConfirmer(m);r.push(document.querySelector('.oasis-confirm-fond').className.includes('danger'));document.querySelector('.oasis-confirm-non').click();await p;}return r.join(',');})()",
+      "(async()=>{const p=oasisConfirmer('Enregistrer ?',{danger:true});const d=document.querySelector('.oasis-confirm-fond').className.includes('danger');document.querySelector('.oasis-confirm-non').click();return d+'|'+await p;})()",
+      // Échap répond non, Entrée répond oui.
+      "(async()=>{const p=oasisConfirmer('Q');document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));return String(await p);})()",
+      "(async()=>{const p=oasisConfirmer('Q');document.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));return String(await p);})()",
+      // Un clic sur le fond, en dehors du panneau, répond non.
+      "(async()=>{const p=oasisConfirmer('Q');document.querySelector('.oasis-confirm-fond').click();return String(await p);})()",
+      // Une nouvelle question clôt la précédente, par la négative.
+      "(async()=>{const p1=oasisConfirmer('Q1');const p2=oasisConfirmer('Q2');document.querySelector('.oasis-confirm-oui').click();return [await p1,await p2,document.querySelectorAll('.oasis-confirm-fond').length].join('|');})()",
+      // Le focus revient là où il était.
+      "(async()=>{const b=document.getElementById('ailleurs');b.focus();const p=oasisConfirmer('Q');const pendant=document.activeElement.className;document.querySelector('.oasis-confirm-non').click();await p;return pendant+'|'+document.activeElement.id;})()",
+      // Les libellés imposés, et les trois langues.
+      "(async()=>{const p=oasisConfirmer('Q',{titre:'T',libelle:'Oui!',libelleAnnuler:'Non!'});const f=document.querySelector('.oasis-confirm-fond');const v=[f.querySelector('.oasis-confirm-titre').textContent,f.querySelector('.oasis-confirm-oui').textContent,f.querySelector('.oasis-confirm-non').textContent].join('/');f.querySelector('.oasis-confirm-non').click();await p;return v;})()",
+      "(async()=>{const r=[];for(const l of ['fr','en','pt']){localStorage.setItem('pr_lang',l);const p=oasisConfirmer('Q');r.push(document.querySelector('.oasis-confirm-oui').textContent);document.querySelector('.oasis-confirm-non').click();await p;}localStorage.setItem('pr_lang','fr');return r.join(',');})()",
+      // ── La saisie ──
+      "(async()=>{const p=oasisSaisir('Motif',{valeur:'prérempli'});const f=document.querySelector('.oasis-confirm-fond');const v=[f.className,f.querySelector('.oasis-saisie-champ').value,f.querySelector('.oasis-confirm-oui').textContent,f.querySelector('.oasis-confirm-oui').disabled,document.activeElement.className].join('|');f.querySelector('.oasis-confirm-oui').click();return v+'|'+await p;})()",
+      // `requis` tient le bouton fermé tant que le champ est vide.
+      "(async()=>{const p=oasisSaisir('Motif',{requis:true});const c=document.querySelector('.oasis-saisie-champ');const o=document.querySelector('.oasis-confirm-oui');const a=o.disabled;c.value='  ';c.dispatchEvent(new Event('input'));const b=o.disabled;c.value='x';c.dispatchEvent(new Event('input'));const d=o.disabled;o.click();return [a,b,d,await p].join('|');})()",
+      // Renoncer rend `null` — et non la chaîne vide.
+      "(async()=>{const p=oasisSaisir('M');document.querySelector('.oasis-confirm-non').click();const r=await p;return typeof r+'|'+String(r);})()",
+      "(async()=>{const p=oasisSaisir('M');document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));return String(await p);})()",
+      // Entrée seule passe à la ligne ; Ctrl+Entrée valide.
+      "(async()=>{const p=oasisSaisir('M',{valeur:'texte'});document.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));const encore=document.querySelectorAll('.oasis-confirm-fond').length;document.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',ctrlKey:true,bubbles:true}));return encore+'|'+String(await p);})()",
+      // Une saisie clôt une confirmation en attente, par `null` de son côté.
+      "(async()=>{const p1=oasisConfirmer('Q');const p2=oasisSaisir('M',{valeur:'v'});document.querySelector('.oasis-confirm-oui').click();return [await p1,await p2].join('|');})()",
+      "(async()=>{const r=[];for(const l of ['fr','en','pt']){localStorage.setItem('pr_lang',l);const p=oasisSaisir('M');r.push(document.querySelector('.oasis-confirm-oui').textContent);document.querySelector('.oasis-confirm-non').click();await p;}localStorage.setItem('pr_lang','fr');return r.join(',');})()",
+      // Rien ne doit lever sur un message absent.
+      "(async()=>{const p=oasisConfirmer();const t=document.querySelector('.oasis-confirm-message').textContent;document.querySelector('.oasis-confirm-non').click();await p;const q=oasisSaisir();const u=document.querySelector('.oasis-confirm-message').textContent;document.querySelector('.oasis-confirm-non').click();await q;return JSON.stringify([t,u]);})()",
+    ],
+  },
+
   'oasis-kpi': {
     // `echelle` tire au hasard l'identifiant de son dégradé — la sortie n'est
     // donc **pas déterministe**. L'identifiant est incidentel : on le neutralise
@@ -246,9 +299,20 @@ async function sonder(nav, base, repertoire) {
   const out = {};
   for (const s of jeu.sondes) {
     /* eslint-disable no-await-in-loop */
-    out[s] = await page.evaluate(
-      `(async () => { try { return String(await (${s})); } catch (e) { return 'ERREUR: ' + e.message.slice(0,80); } })()`,
-    );
+    // ── Une sonde qui ne rend jamais est un échec, non un silence ──
+    //
+    // `page.evaluate` attend indéfiniment : une promesse qui ne se résout pas
+    // bloque l'outil, qui n'imprime alors rien du tout. Mesuré en retirant la
+    // réponse à Échap d'`oasisConfirmer` — la sonde qui l'éprouve attendait une
+    // promesse jamais tenue, l'outil restait muet, et le contre-essai passait
+    // pour « ne mord pas ». C'est exactement le genre de silence qu'on traque
+    // ailleurs ; il n'a pas sa place dans l'instrument de mesure.
+    out[s] = await Promise.race([
+      page.evaluate(
+        `(async () => { try { return String(await (${s})); } catch (e) { return 'ERREUR: ' + e.message.slice(0,80); } })()`,
+      ),
+      new Promise((r) => setTimeout(() => r('SANS RÉPONSE : la sonde n’a jamais rendu (8 s)'), 8000)),
+    ]);
   }
   await page.close();
   return { out, incidents };

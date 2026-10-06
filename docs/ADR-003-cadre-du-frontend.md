@@ -329,9 +329,34 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              l'y déclarer — c'est ce qui protégera les sept écrans en JavaScript le
              jour de la conversion.
 
-       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**7 sur 12** :
+       5.b [~] **Le socle en TypeScript, servant les deux régimes.** *(**8 sur 12** :
            `oasis-theme`, `oasis-cookies`, `oasis-loader` le 3 octobre, `oasis-utils`,
-           `oasis-dates`, `oasis-messages-serveur` et `oasis-kpi` le 5 octobre 2026.)*
+           `oasis-dates`, `oasis-messages-serveur`, `oasis-kpi` le 5 octobre,
+           `oasis-toast` le 6 octobre 2026.)*
+
+           **`oasis-toast` — et une contradiction que le typage a mise au jour.** Le
+           panneau de retour, la confirmation et la saisie : des promesses, du clavier,
+           la restauration du focus. 26 sondes, chacune mesurée non vide.
+
+           La construction a refusé de passer, et elle avait raison :
+           `Window.oasisToast` était déclaré **deux fois, avec deux signatures
+           différentes** — `socle/utils.ts` annonçait deux paramètres rendant
+           `unknown`, le sas en annonçait trois rendant un `HTMLElement`. Deux parties
+           du code n'avaient pas la même idée de la même fonction, et rien ne l'avait
+           jamais dit. La déclaration appartient désormais au module qui porte le
+           comportement, une seule fois ; le sas ne fait que publier.
+
+           Six contre-essais, et **deux d'entre eux ont révélé un défaut de
+           l'instrument**. En retirant la réponse à Échap, la sonde qui l'éprouve
+           attendait une promesse jamais tenue : `page.evaluate` attend
+           indéfiniment, l'outil restait **muet**, et mon rapporteur lisait ce silence
+           comme « ne mord pas ». Une sonde qui ne rend jamais est désormais un échec
+           nommé, pas une absence. C'est exactement le genre de silence qu'on traque
+           ailleurs ; il n'avait pas sa place dans l'instrument de mesure.
+
+           Les quatre autres mordent sur ce qu'ils visent : le geste destructeur déduit
+           du message, le focus rendu, `requis` qui tient le bouton fermé, et le
+           plancher de 1 500 ms sur la durée d'affichage.
 
            **`oasis-kpi` — et la leçon de ce que « verbatim » veut dire.** Sept figures
            en SVG, deux constructeurs de cartes, 28 sondes. Les corps ont été repris du

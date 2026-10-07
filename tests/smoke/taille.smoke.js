@@ -522,6 +522,59 @@ module.exports = async function tailleSmoke() {
         }).join(', '));
   }
 
+  // ── Aucun fichier du portail ne redéclare l'état partagé ──
+  //
+  // Sept noms sont passés de `let` au premier niveau d'`app.js` à des propriétés
+  // de `window` (ADR-003, 5.c.3). C'est ce qui permet de convertir les fichiers du
+  // portail un par un : une globale lexicale est invisible à un module.
+  //
+  // **Un `let ME` réintroduit annulerait tout, et en silence.** La globale lexicale
+  // masquerait la propriété : les fichiers en JavaScript écriraient dedans, un
+  // module lirait `window.ME` resté à `null`, et l'écran afficherait un état vide
+  // pour un état chargé. Ni erreur, ni trace.
+  //
+  // Les noms se **déduisent** du `declare global` de `frontend/portail/etat.ts` :
+  // en ajouter un à l'état le met sous garde sans qu'on y pense.
+  const etatPortail = path.join(RACINE, 'frontend', 'portail', 'etat.ts');
+  if (!fs.existsSync(etatPortail)) {
+    horsPortee('aucun fichier du portail ne redéclare l’état partagé', 'etat.ts absent');
+  } else {
+    const source = fs.readFileSync(etatPortail, 'utf8');
+    const bloc = /interface Window\s*\{([\s\S]*?)\n {2}\}/.exec(source);
+    const noms = bloc
+      ? [...bloc[1].matchAll(/^\s{4}([A-Za-z_][A-Za-z0-9_]*)\??\s*:/gm)].map((m) => m[1])
+      : [];
+    // Une liste vide donnerait un contrôle vert sur rien : on le dit d'abord.
+    verifier('les noms de l’état partagé du portail sont lisibles',
+      noms.length >= 5, `${noms.length} nom(s) : ${noms.join(', ')}`);
+
+    const redeclares = [];
+    const dossierJs = path.join(RACINE, 'public', 'js');
+    if (fs.existsSync(dossierJs)) {
+      fs.readdirSync(dossierJs).filter((f) => f.endsWith('.js')).forEach((f) => {
+        const texte = fs.readFileSync(path.join(dossierJs, f), 'utf8');
+        noms.forEach((nom) => {
+          // Au **premier niveau** seulement : une variable locale du même nom
+          // dans une fonction est licite et ne masque rien au-dehors.
+          if (new RegExp(`^(const|let|var) ${nom}\\b`, 'm').test(texte)) {
+            redeclares.push(`public/js/${f} → ${nom}`);
+          }
+        });
+      });
+    }
+    // ── Et il ne passe pas sur zéro nom ──
+    //
+    // Sans cette condition, une liste illisible rendait ce contrôle **vert** : il
+    // ne trouvait aucune redéclaration parce qu'il ne cherchait rien. C'est la
+    // même vacuité que celle du contrôle des sous-vues, corrigée la veille, et
+    // elle s'est reproduite dans le contrôle écrit juste après — la connaître ne
+    // suffit donc pas, il faut l'écrire chaque fois.
+    verifier('aucun fichier du portail ne redéclare l’état partagé',
+      noms.length >= 5 && redeclares.length === 0,
+      redeclares.length ? `${redeclares.join(' · ')} — une globale lexicale masque la propriété de window`
+        : `${noms.length} nom(s) sous garde`);
+  }
+
   // ── Les anciens chemins du portail ne sont plus nommés ──
   //
   // Symétrique du garde-fou du socle. Le portail converti sert `/app/i18n.js` ;

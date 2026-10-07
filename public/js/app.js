@@ -170,12 +170,18 @@ function tr(fr) {
   return CURRENT_LANG === 'en' ? e[0] : CURRENT_LANG === 'pt' ? e[1] : fr;
 }
 
-let ME = null;
-let CURRENT_VIEW = 'home';
-let REFS = {};
-let CFG_SUB = 'organisation';
-let CFG_COLLAPSED = false;
-let NOTIF_LAST_SEEN = parseInt(localStorage.getItem('oasis_notif_seen') || '0', 10);
+// ── L'état partagé vient de `/app/etat.js`, chargé avant ce fichier ──
+//
+// Ces six noms étaient déclarés ici en `let`, au premier niveau : des globales
+// **lexicales**, invisibles à un module. Tant qu'elles l'étaient, aucun fichier
+// du portail ne pouvait être converti seul — `portail-instances.js` lit `ME` et
+// `CFG_SUB`, `app-demarrage.js` écrit `ME` et `CURRENT_VIEW`.
+//
+// Ils sont désormais posés sur `window` par `frontend/portail/globales/etat.ts`.
+// Les lectures et les affectations de ce fichier n'ont pas changé d'un
+// caractère : un nom non déclaré atteint la propriété de `window`. **Ne pas les
+// redéclarer** — un `let ME` masquerait la propriété, et un module lirait un
+// état figé sans que rien ne le dise. Un garde-fou de forme le refuse.
 
 async function api(path, options) {
   // En-tête d'origine applicative : un formulaire d'un autre site ne peut pas

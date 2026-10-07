@@ -512,7 +512,7 @@
   },
   {
    "fichier": "public/js/app-demarrage.js",
-   "ligne": 100,
+   "ligne": 104,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('sidebarNav'):click",
@@ -522,7 +522,7 @@
   },
   {
    "fichier": "public/js/app-demarrage.js",
-   "ligne": 105,
+   "ligne": 109,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('logoutBtn'):click",
@@ -532,7 +532,7 @@
   },
   {
    "fichier": "public/js/app-demarrage.js",
-   "ligne": 110,
+   "ligne": 114,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('notifBell'):click",
@@ -542,7 +542,7 @@
   },
   {
    "fichier": "public/js/app-demarrage.js",
-   "ligne": 130,
+   "ligne": 134,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('pwdSubmit'):click",
@@ -552,7 +552,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 227,
+   "ligne": 233,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailOuvrirRecherche",
@@ -561,7 +561,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 230,
+   "ligne": 236,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "portailChercher",
@@ -570,7 +570,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 232,
+   "ligne": 238,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -579,7 +579,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 291,
+   "ligne": 297,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "${pdf}",
@@ -588,7 +588,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 293,
+   "ligne": 299,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openImportModal",
@@ -597,7 +597,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 333,
+   "ligne": 339,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -606,7 +606,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 344,
+   "ligne": 350,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -615,7 +615,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 345,
+   "ligne": 351,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "doImport",
@@ -624,7 +624,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 511,
+   "ligne": 517,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -633,7 +633,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 513,
+   "ligne": 519,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -642,7 +642,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 595,
+   "ligne": 601,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setUserTab",
@@ -651,7 +651,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 663,
+   "ligne": 669,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleUserSidebar",
@@ -660,7 +660,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 738,
+   "ligne": 744,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -669,7 +669,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 741,
+   "ligne": 747,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -678,7 +678,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 742,
+   "ligne": 748,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveUserModules",
@@ -687,7 +687,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 767,
+   "ligne": 773,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -696,7 +696,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 778,
+   "ligne": 784,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -705,7 +705,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 808,
+   "ligne": 814,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -714,7 +714,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 831,
+   "ligne": 837,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -723,7 +723,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 832,
+   "ligne": 838,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitEditUser",
@@ -732,7 +732,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1041,
+   "ligne": 1047,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "uploadProfilePhoto",
@@ -741,7 +741,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1043,
+   "ligne": 1049,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "removeProfilePhoto",
@@ -750,7 +750,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1061,
+   "ligne": 1067,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveProfileInfos",
@@ -759,7 +759,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1094,
+   "ligne": 1100,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitProfilePassword",
@@ -768,7 +768,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1111,
+   "ligne": 1117,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveProfileExtra",
@@ -777,7 +777,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 252,
+   "ligne": 258,
    "forme": "propriété",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -787,7 +787,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 527,
+   "ligne": 533,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "cardEl:click",
@@ -797,7 +797,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 686,
+   "ligne": 692,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('newUserBtn'):click",
@@ -807,7 +807,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 688,
+   "ligne": 694,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -817,7 +817,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 708,
+   "ligne": 714,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "sel:change",
@@ -827,7 +827,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 716,
+   "ligne": 722,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -837,7 +837,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 724,
+   "ligne": 730,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -847,7 +847,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 725,
+   "ligne": 731,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -857,7 +857,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 726,
+   "ligne": 732,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -867,7 +867,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 783,
+   "ligne": 789,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('efValider'):click",
@@ -877,7 +877,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 838,
+   "ligne": 844,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "document.getElementById('euEmail'):input",
@@ -887,7 +887,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 912,
+   "ligne": 918,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('closeModal'):click",
@@ -897,7 +897,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 913,
+   "ligne": 919,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('cancelModal'):click",
@@ -907,7 +907,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 914,
+   "ligne": 920,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "document.getElementById('nuRole'):change",
@@ -917,7 +917,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 918,
+   "ligne": 924,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('createUser'):click",
@@ -927,7 +927,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1166,
+   "ligne": 1172,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('verifyBtn'):click",

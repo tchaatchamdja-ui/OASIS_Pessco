@@ -9,7 +9,11 @@
 // ══════════ Navigation ══════════
 // Les vues `mod_<CODE>` sont ajoutées par /js/modules-host.js à partir des
 // manifestes des modules installés.
-const VIEWS = { home: renderHome, profile: renderProfile, users: renderUsers, audit: renderAudit, config: renderConfig };
+// `VIEWS` est posé sur `window` par `/app/etat.js` ; il est **assigné** ici,
+// où les fonctions de rendu d'`app.js` existent. Sans `const` : la propriété
+// de `window` est la source partagée, et `modules-host.js` y ajoute les vues
+// `mod_<CODE>` des modules installés.
+VIEWS = { home: renderHome, profile: renderProfile, users: renderUsers, audit: renderAudit, config: renderConfig };
 
 function navigate(view) {
   CURRENT_VIEW = view;

@@ -1240,6 +1240,100 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                passerait tel quel. Elles ne sont pas interchangeables, et quelqu'un voudra les
                « dédoublonner ».
 
+           5.c.3 [x] **Le couplage avant l'interface : l'état partagé du portail** — fait le
+               7 octobre 2026. *C'est l'étape qui débloque toutes les suivantes, et elle n'était
+               pas au plan.*
+
+               ── La mesure qui a changé le plan ──
+
+               L'étape suivante devait être `app-demarrage.js` (168 l.), le plus petit des
+               fichiers d'interface. **Il n'est pas convertible seul**, et aucun des autres non
+               plus. Mesuré dans un navigateur, et non déduit :
+
+               | | |
+               |---|---|
+               | Noms déclarés au premier niveau d'un fichier et lus par un autre | **13** |
+               | Dont **sur `window`** (déclarés en `function`) | 27 des noms éprouvés — lisibles par un module |
+               | Dont **globales lexicales** (`let`/`const`) | **8** — *invisibles à un module* |
+
+               Une globale lexicale n'est posée **nulle part** sur `window` : un module ne peut
+               ni la lire ni l'écrire. Le blocage, fichier par fichier :
+
+               | Fichier | Ce qui le bloquait |
+               |---|---|
+               | `modules-host.js` (100 l.) | lit `VIEWS` |
+               | `portail-instances.js` (206 l.) | lit `ME`, `CFG_SUB` |
+               | `app-demarrage.js` (168 l.) | **écrit** `VIEWS`, `CURRENT_VIEW`, `ME`, `NOTIF_LAST_SEEN` |
+
+               **C'est le couplage, et non l'interface, qui bloquait la migration.** La même
+               leçon que le socle, qui est passé avant les écrans parce que les neuf écrans en
+               dépendaient — et qu'il a fallu redécouvrir, un étage plus bas.
+
+               Et ma première mesure en voyait **huit** là où il y en a treize : j'avais listé
+               les noms que je soupçonnais au lieu de relever les déclarations. `REFS`,
+               `CFG_COLLAPSED`, `PRIO_COLORS`, `LEVEL_COLORS`, `PORTEE_LABELS`, `porteeDe`,
+               `jeSuisRegional` manquaient. *Une liste de noms devinés mesure ce qu'on soupçonne.*
+
+               ── Ce qui a été fait ──
+
+               Sept noms passent de `let` au premier niveau d'`app.js` à des propriétés de
+               `window`, posées par [`frontend/portail/etat.ts`](../frontend/portail/etat.ts) et
+               son sas, **chargé avant `app.js`**.
+
+               Les fichiers en JavaScript **n'ont pas changé d'un caractère** dans leurs
+               lectures ni leurs affectations : un nom non déclaré atteint la propriété de
+               `window`. Huit lignes de déclaration ont disparu, et c'est tout le diff côté
+               JavaScript.
+
+               La source de vérité reste `window`, et c'est délibéré : un module qui tiendrait
+               sa propre copie divergerait au premier écrit d'un fichier en JavaScript, **en
+               silence**. Le jour où le dernier s'en va, l'état devient un état de React et ce
+               fichier disparaît.
+
+               ── La seule différence de comportement, et elle est dite ──
+
+               `let X` au premier niveau est dans sa zone morte avant sa ligne : un accès
+               **lève**. Une propriété de `window` rend la valeur initiale. Aucun chemin du
+               portail ne lit ces noms avant leur déclaration — et s'il en apparaissait un, il
+               rendrait `null` au lieu de lever.
+
+               C'est un affaiblissement, assumé : la contrepartie est qu'un module peut lire et
+               écrire cet état, ce qu'aucune zone morte ne permet.
+
+               ── Quatre contrôles de navigateur, et ce qu'ils éprouvent vraiment ──
+
+               Pas « les noms existent » — **qu'ils soient la même chose pour les deux
+               régimes**. Les deux sens sont mesurés : une affectation nue atteint `window`, et
+               une écriture sur `window` est vue par une lecture nue.
+
+               **Le contre-essai le plus instructif** : un `let ME` réintroduit dans `app.js`.
+               Il fait tomber le garde-fou de forme *et* le contrôle de navigateur, qui rend
+               « ME rempli: **false** » — l'écran afficherait un état vide pour un état chargé,
+               sans erreur ni trace. Les deux disent la même chose, l'un par la forme, l'autre
+               par l'effet.
+
+               Et sans le sas, le portail s'effondre : « ReferenceError: CURRENT_VIEW is not
+               defined », l'accueil à **0 caractère**.
+
+               ── Un garde-fou, et sa vacuité refermée ──
+
+               Aucun fichier du portail ne redéclare l'un des sept noms, et la liste se
+               **déduit** du `declare global` d'`etat.ts` — en ajouter un à l'état le met sous
+               garde sans qu'on y pense.
+
+               Mais le contrôle **passait sur zéro nom** : liste illisible, aucune
+               redéclaration trouvée, vert. *La même vacuité que celle du contrôle des
+               sous-vues, corrigée la veille, reproduite dans le contrôle écrit juste après.*
+               La connaître ne suffit pas : il faut l'écrire chaque fois.
+
+               ── Ce qui reste du couplage, et pourquoi on le laisse ──
+
+               Six noms partagés ne sont pas dans l'état : `PRIO_COLORS`, `LEVEL_COLORS`,
+               `OASIS_LOGO_IMG`, `PORTEE_LABELS`, `porteeDe`, `jeSuisRegional`. Ce sont des
+               **constantes et des fonctions pures**, non de l'état mutable : le fichier qui les
+               définit les publiera par son sas le jour de sa conversion, comme le socle l'a
+               fait pour les siennes. Elles ne bloquent personne.
+
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.
 

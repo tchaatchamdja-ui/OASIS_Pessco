@@ -366,6 +366,57 @@ module.exports = async function parcoursSmoke(port) {
       && langues.avant.menu.trim() === langues.retour.menu.trim(),
       `« ${langues.avant.menu.trim()} » → « ${langues.apres.menu.trim()} »`);
 
+    // ── L'état partagé est bien partagé, dans les deux sens (ADR-003, 5.c.3) ──
+    //
+    // Sept noms sont passés de `let` au premier niveau d'`app.js` à des propriétés
+    // de `window`, posées par `/app/etat.js`. Toute la migration du portail en
+    // dépend : tant qu'ils étaient lexicaux, aucun de ses fichiers ne pouvait être
+    // converti seul.
+    //
+    // Ce que ce contrôle éprouve n'est pas qu'ils existent — c'est **qu'ils soient
+    // la même chose** pour les deux régimes :
+    //
+    //   · les fichiers en JavaScript les écrivent par affectation nue. Si un `let`
+    //     réapparaissait, l'affectation irait dans la globale lexicale et la
+    //     propriété de `window` resterait à sa valeur initiale. **Sans erreur** ;
+    //   · un module les lit sur `window`. Il lirait alors un état figé.
+    //
+    // On vérifie donc les deux sens : une écriture nue atteint `window`, et une
+    // écriture sur `window` est vue par une lecture nue.
+    etape = 'état partagé du portail';
+    const partage = await page.evaluate(() => {
+      const noms = ['ME', 'CURRENT_VIEW', 'CFG_SUB', 'REFS', 'CFG_COLLAPSED', 'NOTIF_LAST_SEEN', 'VIEWS'];
+      const surWindow = noms.filter((n) => Object.prototype.hasOwnProperty.call(window, n));
+      // Sens 1 : une affectation nue, comme celles d'`app-demarrage.js`.
+      // eslint-disable-next-line no-eval
+      eval('CURRENT_VIEW = "__essai_nu__"');
+      const vuSurWindow = window.CURRENT_VIEW;
+      // Sens 2 : une écriture sur `window`, comme celle d'un module.
+      window.CURRENT_VIEW = '__essai_window__';
+      // eslint-disable-next-line no-eval
+      const vuEnNu = eval('CURRENT_VIEW');
+      window.CURRENT_VIEW = 'home';
+      return {
+        surWindow,
+        chargees: noms.filter((n) => window[n] !== undefined),
+        vuSurWindow,
+        vuEnNu,
+        // `ME` doit porter la session : l'état n'est pas qu'un sac de valeurs
+        // initiales, il est rempli par `loadMe()`.
+        meRempli: !!(window.ME && window.ME.user && window.ME.user.role),
+        vuesPosees: Object.keys(window.VIEWS || {}).length,
+      };
+    });
+    verifier('les sept noms de l’état partagé sont des propriétés de window',
+      partage.surWindow.length === 7, partage.surWindow.join(', '));
+    verifier('une écriture nue du portail atteint l’état sur window',
+      partage.vuSurWindow === '__essai_nu__', String(partage.vuSurWindow));
+    verifier('une écriture sur window est vue par une lecture nue',
+      partage.vuEnNu === '__essai_window__', String(partage.vuEnNu));
+    verifier('l’état partagé porte la session et les vues du portail',
+      partage.meRempli && partage.vuesPosees >= 5,
+      `ME rempli: ${partage.meRempli} · ${partage.vuesPosees} vue(s)`);
+
     // ── Les gestes d'affichage du portail, **pressés** (ADR-003, 5.c.0) ──
     //
     // Le relevé de `scripts/relever-gestes.js` a donné **4 gestes exercés sur 78**.

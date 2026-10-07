@@ -507,6 +507,119 @@ module.exports = async function tailleSmoke() {
         }).join(', '));
   }
 
+  // ── Les anciens chemins du portail ne sont plus nommés ──
+  //
+  // Symétrique du garde-fou du socle. Le portail converti sert `/app/i18n.js` ;
+  // `/js/i18n.js` n'existe plus, et une page qui le demanderait encore rendrait
+  // **un 404 silencieux** — les trois pages du portail chargent ce fichier, et
+  // sans lui aucun libellé ne s'affiche.
+  //
+  // Les noms se déduisent des sas du portail, non d'une liste : le prochain
+  // fichier converti sera couvert sans qu'on y pense.
+  const sasPortail = path.join(RACINE, 'frontend', 'portail', 'globales');
+  if (!fs.existsSync(sasPortail)) {
+    horsPortee('aucun fichier ne nomme un fichier du portail converti par son ancien chemin',
+      'aucun sas de portail');
+  } else {
+    const convertisPortail = fs.readdirSync(sasPortail)
+      .filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''));
+    // Mêmes séparateurs tolérés que pour le socle : le chemin assemblé par
+    // `path.join` ne porte pas la chaîne littérale. C'est la forme qui avait
+    // échappé au premier garde-fou.
+    //
+    // ── Et **sans** regard arrière, parce que le premier en portait un ──
+    //
+    // J'avais écrit `(?<![a-z/])js…`, pour écarter le `shared/js` du socle. Ce
+    // regard arrière rejetait le `/` — donc `src="/js/i18n.js"`, c'est-à-dire
+    // **exactement le cas pour lequel ce garde-fou existe**. Mesuré en remettant
+    // la balise dans la page : le contrôle restait vert.
+    //
+    // Il n'y a rien à écarter : `i18n` et `icons` n'existent que dans le portail,
+    // et le socle n'a aucun fichier de ces noms. Un garde-fou qui se protège d'une
+    // collision qui n'existe pas se protège surtout de mordre.
+    //
+    // ── Il voit aussi les commentaires, et c'est assumé ──
+    //
+    // Sa première passe a dénoncé **deux commentaires** d'une autre suite, qui
+    // écrivaient `public/js/i18n.js` pour expliquer d'où venait `window.t`. Ce
+    // n'était pas une demande du fichier mort, mais une mention.
+    //
+    // Les commentaires ne sont pas filtrés pour autant : un filtre écarterait
+    // aussi une balise mise en commentaire, qui est bien une demande endormie.
+    // Les deux mentions ont donc été reformulées — écrire un chemin mort dans un
+    // commentaire est gratuit, et `docs/` reste hors de portée pour les récits qui
+    // en ont besoin.
+    const nommeEnDurPortail = (texte, nom) => new RegExp(
+      `js['"\\s,/\\\\)(.]{0,12}${nom.replace(/[-.]/g, '\\$&')}\\.js`,
+    ).test(texte);
+    const coupables = [];
+    fichiersSuivis.forEach((rel) => {
+      const chemin = path.join(RACINE, rel);
+      if (!fs.existsSync(chemin)) return;
+      const texte = fs.readFileSync(chemin, 'utf8');
+      convertisPortail.forEach((nom) => {
+        if (nommeEnDurPortail(texte, nom)) coupables.push(`${rel} → ${nom}`);
+      });
+    });
+    verifier('aucun fichier ne nomme un fichier du portail converti par son ancien chemin',
+      coupables.length === 0,
+      coupables.length ? coupables.join(' · ')
+        : `${convertisPortail.length} converti(s) : ${convertisPortail.join(', ')}`);
+  }
+
+  // ── Toute sortie de construction est ignorée des DEUX côtés ──
+  //
+  // `frontend/construire.mjs` écrit dans `public/` ; rien de ce qu'il écrit ne
+  // doit être versionné ni entrer dans l'image. Les deux raisons sont distinctes
+  // et ont chacune coûté :
+  //
+  //   · versionné, un paquet obsolète est servi en production sans que rien ne
+  //     le dise, et un fichier construit dans un diff masque ce qui a changé ;
+  //   · dans l'image, le paquet construit sur le poste du développeur est **passé
+  //     en fraude** par `COPY public`. L'image paraît alors correcte alors que
+  //     rien dans sa chaîne ne l'a construite. C'est arrivé, et seul le contrôle
+  //     qui `curl` chaque paquet dans l'image démarrée l'a dit.
+  //
+  // Les sorties se **déduisent** de la table de `construire.mjs`, non d'une liste
+  // tenue ici : la conversion du portail a ajouté `public/app/`, et une liste
+  // écrite à la main ne l'aurait pas su.
+  const construire = path.join(RACINE, 'frontend', 'construire.mjs');
+  if (!fs.existsSync(construire)) {
+    horsPortee('toute sortie de construction est ignorée de git et de l’image', 'construire.mjs absent');
+  } else {
+    const texte = fs.readFileSync(construire, 'utf8');
+    const bloc = /const SORTIE_SAS = \{([\s\S]*?)\n\};/.exec(texte);
+    const sorties = new Set(['public/modules/*/app/']);
+    if (bloc) {
+      for (const m of bloc[1].matchAll(/:\s*(?:join\(([^)]*)\)|'([^']+)')/g)) {
+        const morceaux = m[1]
+          ? m[1].split(',').map((s) => s.trim().replace(/^'|'$/g, ''))
+          : [m[2]];
+        sorties.add(`public/${morceaux.join('/')}/`);
+      }
+    }
+    // Une table illisible donnerait un contrôle vert sur une seule sortie : on le
+    // dit avant de comparer quoi que ce soit.
+    verifier('les sorties de construction sont lisibles',
+      sorties.size >= 3, `${sorties.size} sortie(s) : ${[...sorties].join(', ')}`);
+
+    const manques = [];
+    ['.gitignore', '.dockerignore'].forEach((nom) => {
+      const chemin = path.join(RACINE, nom);
+      if (!fs.existsSync(chemin)) { manques.push(`${nom} absent`); return; }
+      const lignes = fs.readFileSync(chemin, 'utf8').split('\n')
+        .map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+      sorties.forEach((s) => {
+        if (!lignes.includes(s) && !lignes.includes(s.replace(/\/$/, ''))) {
+          manques.push(`${nom} n’ignore pas ${s}`);
+        }
+      });
+    });
+    verifier('toute sortie de construction est ignorée de git et de l’image',
+      manques.length === 0,
+      manques.length ? manques.join(' · ') : `${sorties.size} sortie(s) ignorée(s) des deux côtés`);
+  }
+
   // ── La légende d'attente est une légende que le socle sait traduire ──
   //
   // `oasis-loader` ne prend pas une clé : il prend **le texte de l'élément**, le

@@ -1046,6 +1046,107 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                C'est ce qui distingue une suite n° 0 d'un vœu : au jour de la réécriture, ce qui
                était un choix et ce qui était un oubli se lisent séparément.
 
+           5.c.1 [~] **Le portail en TypeScript — ses deux fichiers sans interface,
+               faits le 7 octobre 2026.** `i18n.js` (859 l.) et `icons.js` (87 l.) deviennent
+               `frontend/portail/`, servis depuis `public/app/`. **946 lignes sur 4 217.**
+
+               Ils viennent en premier pour une raison mesurée : ils sont chargés par **les
+               trois pages** — l'accueil, la connexion, les témoins — et ils n'ont pas
+               d'interface. Leur équivalence se prouve donc entièrement, ce qui n'est vrai
+               d'aucun des sept autres.
+
+               | | |
+               |---|---|
+               | Comparaisons sans écart | **1 435** |
+               | Contre-essais | 5, tous mordants (un par exception) |
+               | Clés × langues | 268 × 5, dont deux langues inconnues |
+               | Icônes × tailles | 46 × 2, plus une inconnue |
+
+               ── `CURRENT_LANG` est tout le sujet de cette conversion ──
+
+               `let CURRENT_LANG` au premier niveau d'un script classique est une globale
+               **lexicale** : on l'atteint par son nom, et elle n'est posée **nulle part sur
+               `window`**. Mesuré dans un navigateur sur une page vierge, pas supposé.
+               `app.js` et `app-config.js` la lisent ainsi.
+
+               Un module ne peut pas créer de globale lexicale. Sans la poser sur `window`, les
+               deux lectures lèveraient `ReferenceError` **au premier rendu** et le portail ne
+               s'ouvrirait plus. C'est exactement ce qui est arrivé à `window.dtPriv` sur
+               l'écran des droits, et c'est pourquoi la surface se mesure avant de convertir.
+
+               Le sas la pose donc, et la **tient à jour** : `applyLang` la réassignait.
+
+               **La comparaison a mis trois passes à savoir le mesurer**, et c'est sa valeur :
+
+               · première passe — elle ne relevait pas `CURRENT_LANG` du tout. Retirer la ligne
+                 qui le tient à jour laissait « aucun écart » ;
+               · deuxième — elle le relevait après `applyLang` seulement. Retirer la pose **au
+                 chargement** laissait encore « aucun écart », sur un portail qui ne s'ouvrirait
+                 plus. C'est le défaut le plus grave qu'elle pouvait manquer, et elle le
+                 manquait ;
+               · troisième — elle le relève **au chargement et après chaque bascule**, dans les
+                 deux formes de lecture : `window.CURRENT_LANG` et l'identifiant nu. Le
+                 contre-essai rend alors « `"fr"` ≠ `ERREUR: ReferenceError` ».
+
+               ── Une différence **déclarée**, et qui doit se produire ──
+
+               La conversion **ajoute** `window.CURRENT_LANG`. La comparaison ne l'ignore pas :
+               elle exige que l'ancien ne l'ait pas et que le converti l'ait, sur chaque langue.
+               Une différence déclarée qui ne se produit pas est le signe que la mesure regarde
+               ailleurs.
+
+               Ce que l'ajout change, et qui est dit plutôt que découvert : `dates.ts` et
+               `toast.ts` lisaient `window.CURRENT_LANG || localStorage`. Ils trouvaient
+               `undefined` et retombaient sur le stockage ; ils trouveront la valeur. Même
+               langue partout **sauf un cas** — en navigation privée, l'écriture du stockage
+               est avalée, et le socle rendait alors la langue d'**avant** la bascule. Il rendra
+               la bonne. C'est un changement, et il est meilleur.
+
+               ── La règle d'une seule déclaration, appliquée entre ensembles ──
+
+               `t` et `CURRENT_LANG` étaient déclarés par **trois fichiers du socle** —
+               `cookies.ts`, `dates.ts`, `toast.ts` — faute de définisseur : le portail était du
+               JavaScript sans types. Il en a un maintenant, et la règle de 5.b veut que ce soit
+               lui, et lui seul, qui déclare.
+
+               Ils restent **optionnels**, et c'est la vérité : seules trois pages sur neuf
+               chargent ce sas. Le relevé de surface les liste « optionnelle absente, déclarée
+               telle » sur les six pages de module, et `/index.html` a cessé de le faire — la
+               mesure de l'amélioration.
+
+               ── Les tables scindées, parce qu'un garde-fou avait raison ──
+
+               268 clés × 3 langues font **921 lignes**, au-delà des 600 qu'un garde-fou de
+               forme accepte. Un fichier par volet plutôt qu'une exception déclarée : le diff
+               d'une traduction corrigée ne touche qu'un fichier.
+
+               La scission a été faite **après** le retrait de l'ancien, donc sans pouvoir être
+               prouvée. L'ancien a été restauré depuis `git` le temps de rejouer les 1 435
+               comparaisons, puis retiré de nouveau. *Une opération mécanique est exactement
+               celle dont on croit n'avoir pas besoin de preuve.*
+
+               ── Quatre garde-fous, dont trois nouveaux ──
+
+               | Garde-fou | Ce qu'il empêche |
+               |---|---|
+               | Sortie de construction déclarée | Un ensemble converti qui **n'est pas construit** : la table de `construire.mjs` doit couvrir tout dossier `globales/`, sinon la construction s'arrête en le nommant |
+               | Sorties ignorées des deux côtés | Un paquet versionné, ou **passé en fraude dans l'image** par `COPY public`. Les sorties se déduisent de la table, non d'une liste |
+               | Anciens chemins du portail | Un `/js/i18n.js` encore demandé — **un 404 sur les libellés des trois pages** |
+               | Déclarations ambiantes de tous les ensembles | Le contrôle de surface dénonçait `CURRENT_LANG` comme requis et absent sur six pages : son graphe d'imports ne peut pas atteindre une déclaration que le portail porte |
+
+               **Et le garde-fou des anciens chemins ne mordait pas à sa première écriture.**
+               J'y avais mis un regard arrière, `(?<![a-z/])js…`, pour écarter le `shared/js` du
+               socle. Il rejetait le `/` — donc `src="/js/i18n.js"`, **exactement le cas pour
+               lequel il existe**. Mesuré en remettant la balise : le contrôle restait vert.
+               Il n'y avait rien à écarter, `i18n` et `icons` n'existant que dans le portail.
+               *Un garde-fou qui se protège d'une collision qui n'existe pas se protège surtout
+               de mordre.*
+
+               Reste à convertir : `app.js` (1 171 l.), `app-config.js` (1 443 l.),
+               `portail-instances.js` (206), `app-demarrage.js` (168), `login-page.js` (159),
+               `modules-host.js` (100), `cookies-page.js` (24) — **3 271 lignes**, et celles-là
+               portent l'interface. C'est là que React entre.
+
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.
 

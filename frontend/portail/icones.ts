@@ -1,9 +1,27 @@
-// OASIS — bibliothèque d'icônes SVG (style Feather, trait 2px, currentColor)
-function _icon(paths, size) {
-  return `<svg width="${size || 18}" height="${size || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
-}
+// OASIS — Les icônes du portail. Le portail, en TypeScript (ADR-003, 5.c).
+//
+// Quarante-six dessins au trait, du style Feather : trait de 2 pixels,
+// `currentColor`, et la taille en argument. Onze de plus associent un code de
+// module à son icône.
+//
+// ── Un nom de plus, et c'en est un de trop ──
+//
+// `frontend/socle/utils.ts` porte **aussi** un `ICONS`, et ce n'est pas le même :
+// le sien est un répertoire de chaînes, celui-ci de fonctions prenant une taille.
+// Les deux ne se croisent pas aujourd'hui — aucune page ne charge les deux sas —
+// mais c'est une collision qui attend, et elle est écrite ici pour qu'on ne la
+// découvre pas en la provoquant.
+//
+// Ce fichier ne touche pas à `window` : c'est `globales/icons.ts` qui publie.
+//
+// Les deux tables sont reprises **verbatim**, indentation comprise.
 
-const ICONS = {
+type Dessin = (taille?: number) => string;
+
+const _icon = (chemins: string, taille?: number): string =>
+  `<svg width="${taille || 18}" height="${taille || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${chemins}</svg>`;
+
+export const ICONS: Readonly<Record<string, Dessin>> = {
   // ── Navigation & UI ──
   home: (s) => _icon('<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>', s),
   users: (s) => _icon('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', s),
@@ -64,7 +82,7 @@ const ICONS = {
 };
 
 // Icône par code module
-const MODULE_ICONS = {
+export const MODULE_ICONS: Readonly<Record<string, string>> = {
   PLAN: 'calendar',
   SURV: 'search',
   CARE: 'pulse',
@@ -78,10 +96,24 @@ const MODULE_ICONS = {
   PAY: 'creditCard',
 };
 
-function icon(name, size) {
-  return (ICONS[name] || ICONS.grid)(size);
+// Le dessin de secours, nommé. Il était écrit `ICONS.grid` à deux endroits ; un
+// nom le dit une fois, et un contrôle de type s'assure qu'il existe.
+const SECOURS = 'grid';
+
+/**
+ * Le dessin d'une icône, à la taille demandée. Une icône inconnue rend la
+ * grille — un écran sans icône se lit, un écran qui lève ne se lit pas.
+ */
+export function icon(nom: string, taille?: number): string {
+  const dessin = ICONS[nom] ?? ICONS[SECOURS];
+  // `SECOURS` est une clé de la table, mais le type ne le sait pas : avec
+  // `noUncheckedIndexedAccess`, l'index rend `Dessin | undefined`. On rend la
+  // chaîne vide plutôt que d'affirmer, et un contrôle vérifie que la grille
+  // existe — affirmer ce qu'on peut simplement vérifier est ce qui a fait
+  // mentir deux déclarations du socle.
+  return dessin ? dessin(taille) : '';
 }
 
-function moduleIcon(code, size) {
-  return icon(MODULE_ICONS[code] || 'grid', size);
-}
+/** L'icône d'un module, par son code. À défaut, la grille. */
+export const moduleIcon = (code: string, taille?: number): string =>
+  icon(MODULE_ICONS[code] ?? SECOURS, taille);

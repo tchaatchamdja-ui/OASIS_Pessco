@@ -22,8 +22,10 @@ export type Genre = 'succes' | 'error' | 'warning' | 'info';
 
 declare global {
   interface Window {
-    /** Posé par certains écrans ; la préférence du navigateur sinon. */
-    CURRENT_LANG?: string;
+    // `CURRENT_LANG` est déclaré par son définisseur, le sas du portail
+    // (`frontend/portail/globales/i18n.ts`, ADR-003 5.c). Il l'était ici, faute
+    // d'en avoir un. Le repli sur `localStorage` reste : six écrans sur neuf ne
+    // le posent pas.
 
     // ── Les trois globales sont déclarées **ici**, et une seule fois ──
     //

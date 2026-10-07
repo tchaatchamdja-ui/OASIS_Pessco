@@ -33,7 +33,7 @@ const RACINE = path.join(__dirname, '..', '..');
 // Mais il ne faut pas compter là-dessus six fois de suite : `repertoire()`
 // prend le `frontend/` du module quand il existe, son `public/` sinon.
 const TABLES = [
-  { nom: 'portail', global: 'I18N', js: 'public/js' },
+  { nom: 'portail', global: 'I18N', js: 'public/js', ts: 'frontend/portail' },
   { nom: 'SURV', global: 'EXEC_TR', js: 'public/modules/execution/js', ts: 'frontend/execution' },
   { nom: 'PLAN', global: 'PLAN_TR', js: 'public/modules/planification/js', ts: 'frontend/planification' },
   { nom: 'RAMP', global: 'RAMP_TR', js: 'public/modules/ramp/js', ts: 'frontend/ramp' },

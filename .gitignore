@@ -26,3 +26,7 @@ public/modules/*/app/
 # est encore écrit en JavaScript, `shared/app/` ce qui est construit à partir de
 # `frontend/socle/`. Le jour où `shared/js/` est vide, les deux disparaissent.
 public/shared/app/
+# Le portail en cours de conversion (ADR-003, 5.c) : `public/js/` est ce qui est
+# encore écrit en JavaScript, `public/app/` ce qui est construit à partir de
+# `frontend/portail/`. Même règle que le socle, même jour de disparition.
+public/app/

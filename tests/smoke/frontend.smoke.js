@@ -55,7 +55,7 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 //
 // Première écriture : les sources du module **plus tous** les fichiers de
 // `frontend/socle/`. C'était faux, et la deuxième conversion du socle l'a dit
-// aussitôt — `cookies.ts` lit `window.t`, que `public/js/i18n.js` pose sur les
+// aussitôt — `cookies.ts` lit `window.t`, que le sas du portail pose sur les
 // trois pages du portail et nulle part ailleurs. L'écran DROITS, qui n'importe
 // pas `cookies.ts`, se voyait reprocher une globale qu'il n'emploie pas.
 //
@@ -161,12 +161,41 @@ function declarationsDeWindow(fichiers) {
 //
 // Les oublier a coûté deux faux rouges : `APP_STATE` et `PESSCO`, déclarés
 // optionnels là-bas, étaient tenus pour obligatoires faute d'être vus.
+// ── Les déclarations ambiantes du projet ──
+//
+// Un `declare global` vaut pour **tout le programme**, où qu'il soit écrit :
+// TypeScript fusionne les `interface Window` de tous les fichiers compilés. Le
+// graphe des imports, lui, ne les relie pas — un fichier de déclaration n'est
+// importé par personne, et c'est pourquoi les `.d.ts` du socle étaient déjà
+// ajoutés ici à la main.
+//
+// ── Et les sas de **tous** les ensembles, non du seul socle ──
+//
+// La conversion du portail (ADR-003, 5.c) l'a rendu nécessaire, et l'a montré en
+// faisant tomber ce contrôle. `CURRENT_LANG` est **lu par le socle** —
+// `dates.ts`, `toast.ts` — et **défini par le portail** : son sas est le seul
+// endroit qui le pose, et donc, par la règle de 5.b, le seul qui le déclare.
+//
+// Le graphe parti d'`oasis-dates` ne l'atteint pas. Sans cette ligne, le contrôle
+// voyait un nom lu, aucune déclaration, et le dénonçait comme **requis et
+// absent** sur les six pages de module. Il est optionnel, et absent de ces pages
+// à bon droit : le socle y retombe sur le stockage.
 function ambiantes() {
-  const dossier = path.join(FRONTEND, 'socle');
-  if (!fs.existsSync(dossier)) return [];
-  return fs.readdirSync(dossier)
-    .filter((f) => f.endsWith('.d.ts'))
-    .map((f) => path.join(dossier, f));
+  const fichiers = [];
+  const dossierSocle = path.join(FRONTEND, 'socle');
+  if (fs.existsSync(dossierSocle)) {
+    fs.readdirSync(dossierSocle).filter((f) => f.endsWith('.d.ts'))
+      .forEach((f) => fichiers.push(path.join(dossierSocle, f)));
+  }
+  // Les sas de chaque ensemble converti : ils déclarent ce qu'ils posent.
+  fs.readdirSync(FRONTEND, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && fs.existsSync(path.join(FRONTEND, e.name, 'globales')))
+    .forEach((e) => {
+      const g = path.join(FRONTEND, e.name, 'globales');
+      fs.readdirSync(g).filter((f) => f.endsWith('.ts'))
+        .forEach((f) => fichiers.push(path.join(g, f)));
+    });
+  return fichiers;
 }
 
 // Les membres de `interface Window` déclarés **optionnels** (`X?: …`). Le `?` est
@@ -340,7 +369,7 @@ module.exports = async function frontendSmoke(port) {
     //
     // Les contrôles ci-dessus portent sur les écrans en React. Les sas, eux, sont
     // chargés par des pages restées en JavaScript — et ce qu'ils lisent doit y
-    // exister. `cookies.ts` lit `window.t`, que `public/js/i18n.js` pose : rien
+    // exister. `cookies.ts` lit `window.t`, que le sas du portail pose : rien
     // ne le vérifiait, parce que l'écran DROITS ne charge ni l'un ni l'autre.
     //
     // C'est **le** contrôle qui rend les dix conversions restantes sûres : chaque

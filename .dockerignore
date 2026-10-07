@@ -12,6 +12,7 @@ tests/
 # a produit elle-même.
 public/modules/*/app/
 public/shared/app/
+public/app/
 .DS_Store
 *.log
 *.tmp

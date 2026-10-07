@@ -33,7 +33,7 @@
 import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { readdirSync, existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ICI = dirname(fileURLToPath(import.meta.url));
@@ -59,10 +59,38 @@ const ecrans = readdirSync(ICI, { withFileTypes: true })
 // `public/shared/app/oasis-theme.js`, sous le nom que les balises portaient
 // déjà. Aucune table de correspondance à tenir d'accord — c'est ce qui fera que
 // les onze fichiers suivants n'auront pas à toucher à celui-ci.
-const DOSSIER_SAS = join(ICI, 'socle', 'globales');
-const sas = existsSync(DOSSIER_SAS)
-  ? readdirSync(DOSSIER_SAS).filter((f) => f.endsWith('.ts')).map((f) => f.replace(/\.ts$/, ''))
-  : [];
+// ── Et un sas par **ensemble** converti, non pour le seul socle ──
+//
+// Le portail suit le socle (ADR-003, 5.c) : ses fichiers sans interface passent
+// en TypeScript et un sas publie leurs globales pour les fichiers restés en
+// JavaScript. Il lui faut donc sa propre sortie, le portail étant servi à la
+// racine et non sous `/shared/`.
+//
+// Cette table est le seul endroit du dépôt qui l'écrive, et c'est à regret :
+// deux lignes à tenir d'accord est deux de trop. Le garde-fou qui suit est donc
+// ce qui compte — **tout dossier `globales/` doit y figurer**, sinon la
+// construction s'arrête en le nommant. Sans lui, un ensemble converti ne serait
+// simplement pas construit, et les pages serviraient l'ancien fichier en
+// silence : le mode de défaillance le plus coûteux de ce dépôt.
+const SORTIE_SAS = {
+  socle: join('shared', 'app'),
+  portail: 'app',
+};
+
+const ensembles = readdirSync(ICI, { withFileTypes: true })
+  .filter((d) => d.isDirectory() && existsSync(join(ICI, d.name, 'globales')))
+  .map((d) => d.name);
+
+const sansSortie = ensembles.filter((nom) => !(nom in SORTIE_SAS));
+if (sansSortie.length) {
+  console.error(`construction interrompue : ${sansSortie.join(', ')} porte(nt) un dossier `
+    + '« globales » sans sortie déclarée dans SORTIE_SAS (frontend/construire.mjs).');
+  process.exit(1);
+}
+
+const sas = ensembles.flatMap((ensemble) => readdirSync(join(ICI, ensemble, 'globales'))
+  .filter((f) => f.endsWith('.ts'))
+  .map((f) => ({ ensemble, nom: f.replace(/\.ts$/, '') })));
 
 if (!ecrans.length && !sas.length) {
   console.log('construction : rien à construire.');
@@ -105,13 +133,14 @@ const commun = {
   define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') },
 };
 
-await Promise.all(sas.map(async (nom) => {
+await Promise.all(sas.map(async ({ ensemble, nom }) => {
+  const sortie = join(RACINE, 'public', SORTIE_SAS[ensemble], `${nom}.js`);
   await build({
     ...commun,
-    entryPoints: [join(DOSSIER_SAS, `${nom}.ts`)],
-    outfile: join(RACINE, 'public', 'shared', 'app', `${nom}.js`),
+    entryPoints: [join(ICI, ensemble, 'globales', `${nom}.ts`)],
+    outfile: sortie,
   });
-  console.log(`construction : socle ${nom} → public/shared/app/${nom}.js`);
+  console.log(`construction : ${ensemble} ${nom} → ${relative(RACINE, sortie)}`);
 }));
 
 await Promise.all(ecrans.map(async (nom) => {

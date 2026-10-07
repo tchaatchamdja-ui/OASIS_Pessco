@@ -16,20 +16,14 @@
 const CLE = 'oasis_cookies_vu';
 const PAGE = '/cookies.html';
 
-declare global {
-  interface Window {
-    /**
-     * La traduction du portail (`public/js/i18n.js`, `function t(key, …)` —
-     * déclarée en `function`, donc bien sur `window`).
-     *
-     * Optionnelle, et ce n'est pas une précaution de style : le bandeau peut
-     * s'afficher avant que la table soit chargée, et les trois pages qui le
-     * portent la chargent toutes — mais le secours en français existe pour
-     * qu'un bandeau muet ne s'affiche jamais.
-     */
-    t?: (cle: string, ...args: unknown[]) => string;
-  }
-}
+// `window.t` — la traduction du portail — est **déclarée par son définisseur**,
+// `frontend/portail/globales/i18n.ts` (ADR-003, 5.c). Elle l'était ici, faute
+// d'en avoir un : le portail était du JavaScript sans types.
+//
+// Elle reste optionnelle, et ce n'est pas une précaution de style : le bandeau
+// peut s'afficher avant que la table soit chargée, et six écrans sur neuf ne la
+// chargent jamais — le secours en français existe pour qu'un bandeau muet ne
+// s'affiche jamais.
 
 // Le bandeau ne s'affiche pas sur la page qui l'explique : elle dit déjà tout ce
 // qu'il annonce.

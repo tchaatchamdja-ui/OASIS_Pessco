@@ -74,8 +74,8 @@ application d'autorité dont la chaîne d'approvisionnement est lisible par une 
 | Serveur — `src/` (33 fichiers) | 5 682 |
 | Modules métier — `src/modules/` | 14 142 |
 | **Total serveur** | **≈ 19 800** |
-| Frontend — TypeScript (35 fichiers) | **4 932** |
-| Frontend — JavaScript restant | **60 110** |
+| Frontend — TypeScript (42 fichiers) | **6 171** |
+| Frontend — JavaScript restant | **59 164** |
 | Socle Java (15 fichiers) | 2 255 |
 | Suites de contrôle | 8 406 |
 | Scripts d'exploitation | 1 380 |
@@ -200,8 +200,9 @@ meilleure façon de faire ignorer les vraies.
 | | Lignes | État |
 |---|---|---|
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
+| **portail** — libellés et icônes (`frontend/portail/`) | 946 | **TypeScript** — 1 435 comparaisons sans écart |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail (`public/js/`) | 4 217 | JavaScript — **78 gestes, 14 exercés, 56 motivés** |
+| portail — le reste (`public/js/`) | 3 271 | JavaScript — **78 gestes, 14 exercés, 56 motivés** |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -674,7 +675,7 @@ Chaque chiffre ci-dessus se relève. Si l'une de ces commandes ne rend pas ce qu
 # Pile et volumes
 node -e "const p=require('./package.json');console.log(p.engines, Object.keys(p.dependencies).length+' deps')"
 wc -l server.js && find src -name '*.js' -exec cat {} + | wc -l       # serveur : 1 323 + 19 824
-find frontend \( -name '*.ts' -o -name '*.tsx' \) | wc -l             # TypeScript : 35 fichiers
+find frontend \( -name '*.ts' -o -name '*.tsx' \) | wc -l             # TypeScript : 42 fichiers
 find frontend \( -name '*.ts' -o -name '*.tsx' \) -exec cat {} + | wc -l   # 4 932 lignes
 cat public/js/*.js public/modules/*/js/*.js | wc -l                   # JS restant : 60 110
 find backend-java conformite-java -name '*.java' -exec cat {} + | wc -l    # Java : 2 255
@@ -710,7 +711,7 @@ done
 node scripts/relever-gestes.js portail | head -8
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 926, et 0
+npm run smoke; echo "code de sortie : $?"                             # 929, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

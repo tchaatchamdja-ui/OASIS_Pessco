@@ -77,7 +77,7 @@ indépendant avant recette** — non réalisé.
 
 | Couche | Prescrit par la fiche | Réalisé | État |
 |---|---|---|---|
-| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ◐ en cours, mesuré** — **4 932 lignes** de TypeScript en 35 fichiers ; **60 110** encore en JavaScript. Le socle commun est converti en entier (12/12) et DROITS aussi ; restent le portail et cinq écrans. Détail et ordre : [ADR-003](ADR-003-cadre-du-frontend.md) § 5 | ◐ |
+| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ◐ en cours, mesuré** — **6 171 lignes** de TypeScript en 42 fichiers ; **59 164** encore en JavaScript. Le socle commun est converti en entier (12/12), DROITS aussi, et les libellés et icônes du portail ; restent l'interface du portail et cinq écrans. Détail et ordre : [ADR-003](ADR-003-cadre-du-frontend.md) § 5 | ◐ |
 | Backend applicatif | API REST **Java 21 / Spring Boot** | **Node 20 / Express 4**, CommonJS, 386 routes | ✗ |
 | Identité et accès | **Keycloak** (OpenID Connect) | `src/auth.js` écrit à la main ; sessions en mémoire | ✗ |
 | Moteur de workflow | **Flowable ou Camunda** (BPMN 2.0) | moteur de processus écrit à la main (`routes-processus.js`) | ✗ |

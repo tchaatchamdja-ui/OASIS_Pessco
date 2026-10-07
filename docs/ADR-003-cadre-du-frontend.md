@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 4 217 | **78 gestes nommés, 4 exercés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 4 217 | **78 gestes nommés, 14 exercés, 56 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -961,6 +961,90 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
                C'est ce qui manquait le 6 octobre : non pas la mesure, mais **le fait qu'elle
                se rejoue**.
+
+           5.c.0.b [x] **Couvrir les gestes, et motiver ceux qu'on ne couvre pas** — fait le
+               7 octobre 2026. **14 gestes exercés sur 78**, contre 4 au relevé initial, et
+               les **56 autres déclarés avec leur raison**.
+
+               | | Avant | Après |
+               |---|---|---|
+               | Gestes exercés | 4 (5 %) | **14 (18 %)** |
+               | Contrôles de la suite « parcours » | 39 | **46** |
+               | Gestes non exercés **sans motif écrit** | 66 | **0** |
+
+               ── Deux contrôles passaient par un appel direct, et non par le geste ──
+
+               Après `cfgNavigate`, **`applyLang`** : les deux contrôles de bascule de langue
+               faisaient `window.applyLang('en')`. Les trois boutons de la barre pouvaient
+               perdre leur gestionnaire sans qu'aucun contrôle ne bouge — c'est-à-dire sur un
+               portail où personne ne peut changer de langue. Ils pressent désormais le bouton,
+               et un contrôle de plus vérifie que les trois le portent.
+
+               ── Sept contrôles de gestes, et quatre viseurs faux avant d'y arriver ──
+
+               Les palettes, le repli de barre, les deux présentations des modules, la
+               recherche, les onglets des utilisateurs, les fenêtres de référentiel. Chacun
+               **presse** et vérifie un effet observable. Les six contre-essais mordent, chacun
+               sur son contrôle.
+
+               Mais quatre fois le contrôle était rouge **sur le mauvais élément**, et il a
+               fallu regarder dans la page plutôt que supposer :
+
+               | Ce que je visais | Ce qui est vrai |
+               |---|---|
+               | la recherche sur l'accueil | elle est sur la vue « utilisateurs » et quatre sous-vues |
+               | `#mainView > *`, puis `.portal-grid` | la classe bascule sur `#portalModules` |
+               | `[class*="modal"]` | `closeRefModal` vide `#cfgModalRoot` |
+               | les boutons de référentiel dans la sous-vue par défaut | ils sont dans six des onze, et il faut attendre le dessin |
+
+               Aucun de ces quatre n'était un défaut de l'application. **Le dire importe** :
+               un rouge qu'on attribue au code quand il vient du contrôle fait « corriger »
+               ce qui marchait.
+
+               ── Une cécité de l'instrument, trouvée par un contrôle qui échouait ──
+
+               Le bouton de vidage de la recherche reçoit `reset.onclick = portailViderRecherche` —
+               une **propriété**, non un attribut `onclick=`. Ni le relevé statique (qui lit les
+               attributs) ni le mouchard (qui cherche `closest('[onclick]')`) ne la voyaient.
+               Le contrôle rendait « bouton introuvable » sur un bouton bien présent et bien
+               branché.
+
+               Et le nom ne suffisait pas : `window.x = function () {}` **ne nomme pas** la
+               fonction — l'inférence de nom de JavaScript ne s'applique pas à une affectation
+               sur un membre. `fn.name` rend la chaîne vide. La fonction est donc rapprochée
+               **par son identité** parmi les globales, ce qui est exact.
+
+               Deux gestes du portail sont dans ce cas. Peu — mais *une cécité ne se compte pas
+               en nombre de cas manqués* : elle se compte en ce qu'elle laisserait passer.
+
+               ── Un contrôle mince, rendu bilatéral ──
+
+               Le filtre de la recherche était éprouvé par « une ligne qui disparaît ». Le bac
+               d'essai n'en donne **qu'une** à cette vue : un filtre qui cache tout, quoi qu'on
+               tape, aurait passé. Il est désormais éprouvé dans les deux sens — un terme tiré
+               de la ligne elle-même, qui doit la garder ; un terme absurde, qui doit la cacher.
+               Contre-essayé en forçant le filtre à ne jamais correspondre : la version
+               unilatérale passait, la bilatérale tombe.
+
+               ── Et les 56 restants sont **déclarés**, non omis ──
+
+               [`tests/smoke/gestes-non-couverts.json`](../tests/smoke/gestes-non-couverts.json)
+               porte chacun avec son motif, en quatre blocs :
+
+               | Bloc | Nombre | Pourquoi |
+               |---|---|---|
+               | **Ils écrivent** | 24 | Demandent un jeu d'essai, l'assertion du résultat en base, et la vérification du retour en arrière. `supprimerInstance` — retirer l'instance d'un État — est le plus lourd du portail |
+               | **Hors de portée du parcours** | 7 | Quittent la session, ou demandent un régime que la suite n'ouvre pas (MFA, mot de passe imposé, changement d'instance) |
+               | **À couvrir, pas encore fait** | 22 | Non destructeurs : c'est un reste de travail, non une dispense |
+               | **Pas des gestes** | 3 | `event.stopPropagation`, une interpolation de gabarit, un doublon de forme. Déclarés plutôt que filtrés — un filtre silencieux cacherait un jour un vrai geste |
+
+               **Un contrôle rend cette liste obligatoire**, et il mord dans les deux sens :
+               un geste non exercé et non déclaré le fait tomber — c'est l'oubli ; un geste
+               déclaré qui **est** exercé le fait tomber aussi — *une dispense périmée est une
+               dispense qui ment, et c'est elle qu'on finit par croire*. Trois contre-essais.
+
+               C'est ce qui distingue une suite n° 0 d'un vœu : au jour de la réécriture, ce qui
+               était un choix et ce qui était un oubli se lisent séparément.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-06",
+ "releve": "2026-10-07",
  "gestesNommes": 78,
- "occurrences": 121,
- "exerces": 4,
+ "occurrences": 122,
+ "exerces": 14,
  "indecidables": 8,
  "gestes": [
   {
@@ -12,7 +12,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal('${coll}','${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -30,7 +30,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal('${coll}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -183,7 +183,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal('${coll}','${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -201,7 +201,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal('${coll}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -228,7 +228,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -237,7 +237,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -264,7 +264,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal('${coll}','${id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -282,7 +282,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal(\"${coll}\",\"\",${json})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -300,7 +300,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "openRefModal('domaines')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -336,7 +336,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -345,7 +345,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -363,7 +363,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -372,7 +372,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -381,7 +381,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -390,7 +390,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -444,7 +444,7 @@
    "evenement": "click",
    "nom": "openRefModal",
    "source": "event.stopPropagation();openRefModal('organisation','${node.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -557,7 +557,7 @@
    "evenement": "click",
    "nom": "portailOuvrirRecherche",
    "source": "portailOuvrirRecherche()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -566,7 +566,7 @@
    "evenement": "input",
    "nom": "portailChercher",
    "source": "portailChercher(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -602,7 +602,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -611,7 +611,7 @@
    "evenement": "click",
    "nom": "closeRefModal",
    "source": "closeRefModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -629,7 +629,7 @@
    "evenement": "click",
    "nom": "setModulesView",
    "source": "setModulesView('grid')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -638,7 +638,7 @@
    "evenement": "click",
    "nom": "setModulesView",
    "source": "setModulesView('list')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -647,7 +647,7 @@
    "evenement": "click",
    "nom": "setUserTab",
    "source": "setUserTab('${tb.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -774,6 +774,16 @@
    "nom": "saveProfileExtra",
    "source": "saveProfileExtra('${key}')",
    "exerce": false
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 252,
+   "forme": "propriété",
+   "evenement": "click",
+   "nom": "portailViderRecherche",
+   "source": "reset.onclick = portailViderRecherche",
+   "id": null,
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -1069,7 +1079,7 @@
    "evenement": "click",
    "nom": "applyTheme",
    "source": "applyTheme('blue-dark')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/index.html",
@@ -1078,7 +1088,7 @@
    "evenement": "click",
    "nom": "applyTheme",
    "source": "applyTheme('corporate')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/index.html",
@@ -1087,7 +1097,7 @@
    "evenement": "click",
    "nom": "applyTheme",
    "source": "applyTheme('retro-avionics')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/index.html",
@@ -1096,7 +1106,7 @@
    "evenement": "click",
    "nom": "applyLang",
    "source": "applyLang('fr')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/index.html",
@@ -1105,7 +1115,7 @@
    "evenement": "click",
    "nom": "applyLang",
    "source": "applyLang('en')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/index.html",
@@ -1114,7 +1124,7 @@
    "evenement": "click",
    "nom": "applyLang",
    "source": "applyLang('pt')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/index.html",
@@ -1123,7 +1133,7 @@
    "evenement": "click",
    "nom": "toggleSidebar",
    "source": "toggleSidebar()",
-   "exerce": false
+   "exerce": true
   }
  ]
 }

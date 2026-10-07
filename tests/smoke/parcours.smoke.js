@@ -330,19 +330,34 @@ module.exports = async function parcoursSmoke(port) {
     // `lang` du document — celui qui commande la prononciation d'un lecteur
     // d'écran. Les six modules le laissaient figé à « fr » ; le portail, non.
     etape = 'bascule de langue';
+    // On **presse le bouton**, on n'appelle pas `applyLang`. Même raison que pour
+    // les sous-vues : l'appel direct éprouve la fonction et laisserait ces deux
+    // contrôles verts sur une barre dont les trois boutons auraient perdu leur
+    // gestionnaire — c'est-à-dire sur un portail où personne ne peut changer de
+    // langue. Le relevé des gestes l'a dit : `applyLang` n'était **pas** exercé,
+    // bien que deux contrôles passent par lui.
     const langues = await page.evaluate(async () => {
       const lu = () => ({
         lang: document.documentElement.lang,
         menu: (document.querySelector('.portal-nav-btn[data-view="users"]') || {}).textContent || '',
       });
+      const presser = (lg) => {
+        const b = [...document.querySelectorAll('.lang-btn')]
+          .find((e) => (e.getAttribute('onclick') || '').includes(`applyLang('${lg}')`));
+        if (!b) return false;
+        b.click();
+        return true;
+      };
       const avant = lu();
-      window.applyLang('en');
+      const presseEn = presser('en');
       await new Promise((r) => setTimeout(r, 300));
       const apres = lu();
-      window.applyLang('fr');
+      const presseFr = presser('fr');
       await new Promise((r) => setTimeout(r, 300));
-      return { avant, apres, retour: lu() };
+      return { avant, apres, retour: lu(), boutons: presseEn && presseFr };
     });
+    verifier('les trois boutons de langue portent leur gestionnaire',
+      langues.boutons === true, JSON.stringify(langues.boutons));
     verifier('la bascule de langue change l’attribut « lang » du document',
       langues.avant.lang === 'fr' && langues.apres.lang === 'en' && langues.retour.lang === 'fr',
       `${langues.avant.lang} → ${langues.apres.lang} → ${langues.retour.lang}`);
@@ -350,6 +365,225 @@ module.exports = async function parcoursSmoke(port) {
       langues.avant.menu.trim() !== langues.apres.menu.trim()
       && langues.avant.menu.trim() === langues.retour.menu.trim(),
       `« ${langues.avant.menu.trim()} » → « ${langues.apres.menu.trim()} »`);
+
+    // ── Les gestes d'affichage du portail, **pressés** (ADR-003, 5.c.0) ──
+    //
+    // Le relevé de `scripts/relever-gestes.js` a donné **4 gestes exercés sur 78**.
+    // Les contrôles qui suivent en couvrent le bloc non destructeur : les
+    // palettes, les replis de barre, les onglets, la recherche, les fenêtres de
+    // référentiel. Les gestes qui **écrivent** sont déclarés non couverts et
+    // motivés dans `tests/smoke/gestes-non-couverts.json` — ils demandent des
+    // données d'essai et une vérification de retour en arrière, et ce sera leur
+    // propre séance.
+    //
+    // Chacun est **pressé**, jamais appelé : c'est toute la leçon du jour. Un
+    // appel direct éprouve la fonction et laisse le contrôle vert sur un bouton
+    // qui a perdu son gestionnaire.
+    //
+    // Le détecteur est commun à tous : on cherche l'élément par le texte de son
+    // `onclick`, on le presse, et l'on vérifie **un effet observable**. Un bouton
+    // introuvable est un échec nommé, non un contrôle qu'on saute.
+    etape = 'gestes d’affichage du portail';
+    const presser = async (motif, apres = 250) => page.evaluate(async (m, d) => {
+      const e = [...document.querySelectorAll('[onclick]')]
+        .find((x) => (x.getAttribute('onclick') || '').includes(m));
+      if (!e) return false;
+      e.click();
+      await new Promise((r) => setTimeout(r, d));
+      return true;
+    }, motif, apres);
+
+    // Les trois palettes. L'effet est l'attribut du document et la préférence
+    // rangée : une palette qui s'applique sans être retenue se perd au rechargement.
+    await ouvrir('home');
+    const palettes = [];
+    for (const cle of ['corporate', 'retro-avionics', 'blue-dark']) {
+      const presse = await presser(`applyTheme('${cle}')`);
+      const etat = await page.evaluate(() => ({
+        attribut: document.documentElement.getAttribute('data-theme'),
+        retenu: (() => { try { return localStorage.getItem('pr_theme'); } catch { return null; } })(),
+      }));
+      palettes.push({ cle, presse, ...etat });
+    }
+    verifier('les trois pastilles de palette s’appliquent et se retiennent',
+      palettes.every((p) => p.presse && p.attribut === p.cle && p.retenu === p.cle),
+      JSON.stringify(palettes));
+
+    // Les replis de barre. L'effet est une classe sur le corps ou sur la barre :
+    // un repli qui ne replie rien est le genre de geste qu'on croit tenu.
+    const replis = {
+      portail: await page.evaluate(async () => {
+        const b = document.getElementById('sidebarToggle');
+        if (!b) return null;
+        const avant = document.body.className;
+        b.click();
+        await new Promise((r) => setTimeout(r, 250));
+        const pendant = document.body.className;
+        b.click();
+        await new Promise((r) => setTimeout(r, 250));
+        return { change: avant !== pendant, rendu: document.body.className === avant };
+      }),
+    };
+    verifier('le repli de la barre du portail agit et se défait',
+      replis.portail && replis.portail.change && replis.portail.rendu,
+      JSON.stringify(replis.portail));
+
+    // Les deux présentations des modules — grille et liste. L'effet est le
+    // nombre de cartes **et** la classe du conteneur : seule la classe change,
+    // et un contrôle qui ne lirait que le nombre ne verrait rien.
+    const vuesModules = [];
+    for (const mode of ['list', 'grid']) {
+      const presse = await presser(`setModulesView('${mode}')`);
+      // L'effet est la classe `list-view` sur `#portalModules`, **lue dans la
+      // source du geste** et non devinée. Deux viseurs faux avant celui-ci :
+      // `#mainView > *` rendait le bloc de titre, et `.portal-card`.parentElement
+      // le `.portal-grid` — tous deux de classe invariable. Le geste marchait ;
+      // c'est le contrôle qui regardait ailleurs.
+      const etat = await page.evaluate(() => {
+        const z = document.getElementById('portalModules');
+        return {
+          liste: !!z && z.classList.contains('list-view'),
+          retenu: (() => { try { return localStorage.getItem('oasis_modules_view'); } catch { return null; } })(),
+          cartes: document.querySelectorAll('.portal-card').length,
+        };
+      });
+      vuesModules.push({ mode, presse, ...etat });
+    }
+    verifier('les deux présentations des modules se commandent depuis leurs boutons',
+      vuesModules.every((v) => v.presse && v.cartes > 0)
+      && vuesModules[0].liste === true && vuesModules[1].liste === false
+      && vuesModules[0].retenu === 'list' && vuesModules[1].retenu === 'grid',
+      JSON.stringify(vuesModules));
+
+    // La recherche du portail : ouvrir, chercher, vider. Les trois gestes se
+    // tiennent — vider sans avoir cherché ne prouve rien.
+    //
+    // **Elle n'est pas sur l'accueil.** `searchInputHtml()` est posée sur la vue
+    // « utilisateurs » et dans quatre sous-vues de configuration, jamais sur la
+    // grille des modules. Ma première écriture la cherchait là et rendait
+    // « bouton introuvable » : c'était mon viseur, non un geste mort — vérifié
+    // en relevant les `onclick` de la page plutôt qu'en le supposant.
+    await ouvrir('users');
+    const recherche = await (async () => {
+      const ouverte = await presser('portailOuvrirRecherche()');
+      // ── Le filtre est éprouvé **dans les deux sens** ──
+      //
+      // Il travaille sur le DOM en place : on compte les lignes visibles du
+      // tableau, non les cartes du portail — il n'y en a aucune ici.
+      //
+      // Le bac d'essai ne donne **qu'une ligne** à cette vue, mesuré. « Une ligne
+      // qui disparaît » serait donc un contrôle mince : un filtre qui cache tout,
+      // quoi qu'on tape, le passerait. On éprouve donc les deux sens — un terme
+      // **tiré de la ligne elle-même**, qui doit la garder, puis un terme absurde,
+      // qui doit la cacher. Sur une seule ligne, c'est ce qui fait la différence
+      // entre mesurer un filtre et mesurer une disparition.
+      const saisi = await page.evaluate(async () => {
+        const champ = document.querySelector('.cfg-search-input');
+        if (!champ) return null;
+        const lignes = () => [...document.querySelectorAll('#mainView tbody tr')]
+          .filter((r) => r.offsetParent !== null);
+        const taper = async (v) => {
+          champ.value = v;
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await new Promise((r) => setTimeout(r, 400));
+          return lignes().length;
+        };
+        const avant = lignes().length;
+        if (!avant) return { avant: 0 };
+        // Un fragment pris dans la première cellule : il doit retenir la ligne.
+        const mot = (lignes()[0].textContent.trim().split(/\s+/)[0] || '').slice(0, 4);
+        const gardees = await taper(mot);
+        const cachees = await taper('zzzqqq');
+        return { avant, mot, gardees, cachees };
+      });
+      // ── Le bouton de vidage se presse par l'élément, non par son attribut ──
+      //
+      // `portailOuvrirRecherche` le crée en code et lui pose
+      // `reset.onclick = portailViderRecherche` — une **propriété**, non un
+      // attribut `onclick=`. Un sélecteur `[onclick]` ne le voit donc pas, et mon
+      // détecteur commun rendait « bouton introuvable » sur un bouton bien
+      // présent et bien branché.
+      //
+      // La même cécité touche le relevé des gestes : voir
+      // `scripts/relever-gestes.js`, qui lit désormais les deux formes.
+      const videe = await page.evaluate(async () => {
+        const b = document.querySelector('.cfg-search-reset');
+        if (!b) return false;
+        b.click();
+        await new Promise((r) => setTimeout(r, 300));
+        return true;
+      });
+      const apres = await page.evaluate(() => {
+        const champ = document.querySelector('.cfg-search-input');
+        return champ ? champ.value : null;
+      });
+      return { ouverte, saisi, videe, apres };
+    })();
+    verifier('la recherche du portail s’ouvre, filtre et se vide',
+      recherche.ouverte && recherche.videe && !recherche.apres
+      && recherche.saisi && recherche.saisi.avant > 0
+      && recherche.saisi.gardees === recherche.saisi.avant
+      && recherche.saisi.cachees === 0,
+      JSON.stringify(recherche));
+
+    // Les onglets de la vue « utilisateurs », et le repli de sa barre. C'est la
+    // vue qui avait débordé à droite : elle garde deux contrôles de plus.
+    await ouvrir('users');
+    const ongletsUtilisateurs = await page.evaluate(async () => {
+      const boutons = [...document.querySelectorAll('[onclick^="setUserTab"]')];
+      const empreintes = [];
+      for (const b of boutons) {
+        b.click();
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 300));
+        const z = document.querySelector('.cfg-content, #mainView');
+        empreintes.push(z ? z.textContent.trim().length : 0);
+      }
+      return { nombre: boutons.length, empreintes };
+    });
+    verifier('les onglets de la vue « utilisateurs » se commandent et diffèrent',
+      ongletsUtilisateurs.nombre >= 2
+      && new Set(ongletsUtilisateurs.empreintes).size >= ongletsUtilisateurs.nombre - 1,
+      JSON.stringify(ongletsUtilisateurs));
+
+    // Les fenêtres de référentiel : dix-huit occurrences à elles deux, le plus
+    // gros bloc du relevé. On en ouvre une et on la referme — l'effet est la
+    // présence du panneau, non son contenu.
+    // Les boutons de référentiel ne sont pas dans toutes les sous-vues : relevé
+    // dans la page, ils sont dans six des onze — `organisation` en porte onze,
+    // `domaines` quatre-vingt-trois. On navigue donc vers une sous-vue nommée et
+    // l'on attend qu'elle soit là : ma première écriture regardait la sous-vue
+    // par défaut aussitôt après avoir ouvert la configuration, et n'y trouvait
+    // rien parce qu'elle n'était pas encore dessinée.
+    await ouvrir('config');
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .find((e) => (e.getAttribute('onclick') || '').includes("cfgNavigate('organisation')"));
+      if (b) b.click();
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll('[onclick^="openRefModal"]').length > 0,
+      { timeout: 10000 },
+    ).catch(() => { /* le contrôle le dira */ });
+    const fenetreRef = await page.evaluate(async () => {
+      const bouton = [...document.querySelectorAll('[onclick^="openRefModal"]')][0];
+      if (!bouton) return { bouton: false };
+      // L'effet est le contenu de `#cfgModalRoot`, que `closeRefModal` vide.
+      // Mon premier viseur cherchait `[class*="modal"]`, qui attrape des
+      // conteneurs toujours présents : il rendait « pas refermée » sur une
+      // fenêtre bien refermée.
+      const racine = () => (document.getElementById('cfgModalRoot') || {}).innerHTML || '';
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const ouverte = racine().length > 50;
+      const fermeture = [...document.querySelectorAll('[onclick^="closeRefModal"]')][0];
+      if (fermeture) fermeture.click();
+      await new Promise((r) => setTimeout(r, 400));
+      return { bouton: true, ouverte, fermee: racine().length === 0, boutonFermeture: !!fermeture };
+    });
+    verifier('une fenêtre de référentiel s’ouvre et se referme par ses boutons',
+      fenetreRef.bouton && fenetreRef.ouverte && fenetreRef.boutonFermeture && fenetreRef.fermee,
+      JSON.stringify(fenetreRef));
 
     // ── L'écran « Gestion des Droits », avant sa réécriture ──
     //
@@ -669,7 +903,7 @@ module.exports = async function parcoursSmoke(port) {
       // pages de l'origine : il survit à la fermeture de celles que la suite
       // ferme en route. Relevé en mémoire en plus, pour dire combien de pages
       // ont effectivement porté l'instrumentation.
-      const vu = { enLigne: [], ecouteurs: [], poses: 0, pages: 0 };
+      const vu = { enLigne: [], ecouteurs: [], propriete: [], poses: 0, pages: 0 };
       for (const p of await navigateur.pages()) {
         try {
           const j = await p.evaluate(() => {
@@ -680,6 +914,7 @@ module.exports = async function parcoursSmoke(port) {
           if (j.durable && !vu.enLigne.length) {
             vu.enLigne.push(...j.durable.enLigne);
             vu.ecouteurs.push(...j.durable.ecouteurs);
+            vu.propriete.push(...(j.durable.propriete || []));
           }
         } catch { /* page déjà partie : le registre durable l'a gardée */ }
       }

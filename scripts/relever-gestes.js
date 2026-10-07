@@ -99,6 +99,25 @@ function relever(fichiers) {
         source: corps.slice(0, 120),
       });
     }
+    // ── Troisième forme : le gestionnaire posé en **propriété** ──
+    //
+    // `reset.onclick = portailViderRecherche` n'est ni un attribut `onclick=` ni
+    // un `addEventListener` : les deux relevés ci-dessus le manquaient, et le
+    // mouchard aussi — son écouteur de capture cherche `closest('[onclick]')`,
+    // qui ne voit pas une propriété.
+    //
+    // Trouvé en écrivant un contrôle pour le vidage de la recherche : il rendait
+    // « bouton introuvable » sur un bouton bien présent et bien branché. Deux
+    // gestes du portail sont dans ce cas — peu, mais la cécité ne se compte pas
+    // en nombre de cas manqués.
+    for (const m of texte.matchAll(/\b([\w$.[\]'"]+)\.on(click|change|input|submit)\s*=\s*([A-Za-z_$][\w$.]*)/g)) {
+      gestes.push({
+        fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
+        forme: 'propriété', evenement: m[2], nom: m[3],
+        source: m[0].slice(0, 120), id: null,
+      });
+    }
+
     const lignes = texte.split('\n');
     lignes.forEach((l, i) => {
       const m = /(?:([\w$.[\]'"()#-]+)\s*)?\.addEventListener\(\s*['"]([a-z]+)['"]/.exec(l);
@@ -147,13 +166,15 @@ function relever(fichiers) {
 // sens dans lequel on veut se tromper.
 const MOUCHARD = () => {
   const CLE = '__oasis_gestes';
-  const journal = { enLigne: [], ecouteurs: [], poses: 0 };
+  const journal = { enLigne: [], ecouteurs: [], propriete: [], poses: 0 };
   Object.defineProperty(window, '__gestes', { value: journal, enumerable: false });
 
   const garder = (champ, valeur) => {
     journal[champ].push(valeur);
     try {
-      const d = JSON.parse(localStorage.getItem(CLE) || '{"enLigne":[],"ecouteurs":[],"poses":0}');
+      const d = JSON.parse(localStorage.getItem(CLE)
+        || '{"enLigne":[],"ecouteurs":[],"propriete":[],"poses":0}');
+      d.propriete = d.propriete || [];
       d[champ].push(valeur);
       localStorage.setItem(CLE, JSON.stringify(d));
     } catch { /* stockage fermé : le registre en mémoire reste */ }
@@ -163,8 +184,37 @@ const MOUCHARD = () => {
   // tout événement qui descend, y compris ceux qu'il ne déclenche pas lui-même.
   ['click', 'change', 'submit', 'input'].forEach((type) => {
     document.addEventListener(type, (e) => {
-      const cible = e.target instanceof Element ? e.target.closest(`[on${type}]`) : null;
-      if (cible) garder('enLigne', cible.getAttribute(`on${type}`).trim().slice(0, 160));
+      if (!(e.target instanceof Element)) return;
+      const attribut = e.target.closest(`[on${type}]`);
+      if (attribut) garder('enLigne', attribut.getAttribute(`on${type}`).trim().slice(0, 160));
+      // La **propriété**, que `closest('[on…]')` ne voit pas : un
+      // `el.onclick = fn` n'ajoute aucun attribut. On remonte donc la lignée à
+      // la main et l'on garde le nom de la fonction posée.
+      for (let n = e.target; n; n = n.parentElement) {
+        const fn = n[`on${type}`];
+        if (typeof fn !== 'function' || n.hasAttribute(`on${type}`)) continue;
+        // ── Le nom ne suffit pas : la fonction est **anonyme** ──
+        //
+        // `window.portailViderRecherche = function () {…}` ne donne aucun nom à
+        // la fonction : l'inférence de nom de JavaScript s'applique à
+        // `const x = function(){}` et aux propriétés d'un littéral, **pas** à
+        // une affectation sur un membre. `fn.name` rend donc la chaîne vide, et
+        // le geste restait non rapproché — un « non exercé » faux sur un geste
+        // que la suite presse.
+        //
+        // On cherche donc la fonction **par son identité** parmi les globales :
+        // c'est exact, et c'est le seul rapprochement qui le soit.
+        let nom = fn.name;
+        if (!nom) {
+          try {
+            nom = Object.getOwnPropertyNames(window).find((k) => {
+              try { return window[k] === fn; } catch { return false; }
+            }) || '(anonyme)';
+          } catch { nom = '(anonyme)'; }
+        }
+        garder('propriete', nom);
+        break;
+      }
     }, true);
   });
 
@@ -271,8 +321,10 @@ async function principal() {
   };
   const vues = new Set(exerces.enLigne.map(nomAppele).filter(Boolean));
   const ecouteursVus = new Set(exerces.ecouteurs);
+  const proprietesVues = new Set(exerces.propriete || []);
   gestes.forEach((g) => {
     if (g.forme === 'en ligne') { g.exerce = vues.has(g.nom); return; }
+    if (g.forme === 'propriété') { g.exerce = proprietesVues.has(g.nom); return; }
     // Un écouteur est identifié par sa cible et son événement. La cible relevée
     // dans la source est une expression ; celle vue au vol est l'élément. On
     // rapproche par l'identifiant quand la source en porte un, et l'on marque

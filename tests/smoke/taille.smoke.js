@@ -445,6 +445,68 @@ module.exports = async function tailleSmoke() {
         }).join(', '));
   }
 
+  // ── Tout geste non exercé est **déclaré**, avec sa raison ──
+  //
+  // Le relevé dit que 14 des 78 gestes du portail sont exercés. Les 64 autres ne
+  // sont pas une zone d'ombre : chacun est inscrit dans
+  // `tests/smoke/gestes-non-couverts.json` avec le motif qui le dispense — il
+  // écrit des données, il quitte la session, il demande un régime que la suite
+  // n'ouvre pas, ou il reste simplement à faire.
+  //
+  // **Ce contrôle est ce qui rend la décision durable.** Sans lui, « on verra
+  // plus tard » s'écrit une fois et ne se relit jamais ; la liste grossit à
+  // chaque geste ajouté, et le jour de la réécriture personne ne sait plus ce
+  // qui était un choix et ce qui était un oubli.
+  //
+  // Il mord dans **les deux sens**, et le second compte autant que le premier :
+  //
+  //   · un geste non exercé **et non déclaré** le fait tomber — c'est l'oubli ;
+  //   · un geste déclaré qui **est** exercé le fait tomber aussi. Une dispense
+  //     périmée est une dispense qui ment, et c'est elle qu'on finit par croire.
+  const dispenses = path.join(RACINE, 'tests', 'smoke', 'gestes-non-couverts.json');
+  if (!releves.length || !fs.existsSync(dispenses)) {
+    horsPortee('tout geste non exercé est déclaré avec sa raison',
+      releves.length ? 'gestes-non-couverts.json absent' : 'aucun relevé figé');
+  } else {
+    const declare = JSON.parse(fs.readFileSync(dispenses, 'utf8'));
+    const ecarts = [];
+    releves.forEach((f) => {
+      const quoi = f.replace(/^gestes-|\.json$/g, '');
+      const fige = JSON.parse(fs.readFileSync(path.join(RACINE, 'tests', 'smoke', f), 'utf8'));
+      // Les motifs portent une clé par geste ; celles qui commencent par « _ »
+      // sont les intertitres qui expliquent un bloc, non des gestes.
+      const motifs = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_'));
+      const etat = new Map();
+      (fige.gestes || []).forEach((g) => {
+        const e = etat.get(g.nom) || { exerce: false, indecidable: true };
+        if (g.exerce === true) e.exerce = true;
+        if (g.exerce !== null) e.indecidable = false;
+        etat.set(g.nom, e);
+      });
+      const nonExerces = [...etat.entries()]
+        .filter(([, e]) => !e.exerce && !e.indecidable).map(([n]) => n);
+      const sansMotif = nonExerces.filter((n) => !motifs.includes(n));
+      const motifPerime = motifs.filter((n) => {
+        const e = etat.get(n);
+        return !e || e.exerce;
+      });
+      if (sansMotif.length) {
+        ecarts.push(`${quoi} : ${sansMotif.length} geste(s) non exercé(s) sans motif — ${sansMotif.slice(0, 5).join(', ')}`);
+      }
+      if (motifPerime.length) {
+        ecarts.push(`${quoi} : ${motifPerime.length} motif(s) périmé(s) (geste désormais exercé ou disparu) — ${motifPerime.slice(0, 5).join(', ')}`);
+      }
+    });
+    verifier('tout geste non exercé est déclaré avec sa raison',
+      ecarts.length === 0,
+      ecarts.length ? `${ecarts.join(' · ')} — tenir tests/smoke/gestes-non-couverts.json à jour`
+        : releves.map((f) => {
+          const quoi = f.replace(/^gestes-|\.json$/g, '');
+          const n = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_')).length;
+          return `${quoi} : ${n} dispense(s) motivée(s)`;
+        }).join(', '));
+  }
+
   // ── La légende d'attente est une légende que le socle sait traduire ──
   //
   // `oasis-loader` ne prend pas une clé : il prend **le texte de l'élément**, le

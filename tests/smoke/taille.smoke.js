@@ -276,7 +276,22 @@ module.exports = async function tailleSmoke() {
   // qui suivent — celui du socle et celui des répertoires de module. Calculés
   // une fois : deux appels à `git ls-files` auraient divergé le jour où l'un des
   // deux filtres change.
-  const fichiersSuivis = execSync('git ls-files -z', { cwd: RACINE, maxBuffer: 32 * 1024 * 1024 })
+  // ── Les fichiers suivis **et ceux qui ne le sont pas encore** ──
+  //
+  // `git ls-files` seul ne voit pas un fichier nouveau : il est non suivi jusqu'à
+  // son premier ajout. Les deux garde-fous d'anciens chemins passaient donc au
+  // vert sur un fichier qui vient d'être écrit, et ne mordaient qu'**après** le
+  // commit — c'est-à-dire au moment précis où l'on a cessé de regarder.
+  //
+  // Mesuré le 7 octobre 2026 : la conversion de deux pages du portail a été
+  // déclarée verte, puis le contrôle a dénoncé six mentions à la campagne
+  // suivante, les fichiers étant devenus suivis entre-temps.
+  //
+  // `--others --exclude-standard` ajoute les fichiers non suivis que `.gitignore`
+  // n'exclut pas : les paquets construits restent donc dehors, et un fichier en
+  // cours d'écriture est lu comme les autres.
+  const fichiersSuivis = execSync('git ls-files -z --cached --others --exclude-standard',
+    { cwd: RACINE, maxBuffer: 32 * 1024 * 1024 })
     .toString().split('\0').filter(Boolean)
     .filter((f) => /\.(js|mjs|ts|tsx|html|json|md|yml|sh)$/.test(f))
     // Ce fichier nomme les chemins pour les détecter : il ne se dénonce pas.
@@ -552,19 +567,39 @@ module.exports = async function tailleSmoke() {
     const nommeEnDurPortail = (texte, nom) => new RegExp(
       `js['"\\s,/\\\\)(.]{0,12}${nom.replace(/[-.]/g, '\\$&')}\\.js`,
     ).test(texte);
+    // ── Une exemption, et une seule : l'outil de comparaison ──
+    //
+    // `scripts/comparer-*.js` **doit** charger l'ancien fichier : c'est tout son
+    // objet, opposer l'ancien au converti. Il le nomme donc, et à juste titre.
+    //
+    // L'exemption n'est pas accordée au nom du fichier mais à une **propriété
+    // vérifiable** : l'outil doit porter son propre refus — un test d'existence et
+    // une sortie en erreur quand l'ancien a disparu. Sans cela il mesurerait une
+    // page vide et rendrait un diff où tout diffère, c'est-à-dire un rouge
+    // spectaculaire qui ne dit rien ; c'est arrivé une fois en 5.b, et c'est ce
+    // refus qui l'a corrigé.
+    //
+    // Un comparateur qui perdrait ce refus perdrait donc aussi son exemption, et
+    // ce garde-fou le dirait. C'est la différence entre une exception et une
+    // condition.
+    const exempte = (rel, texte) => /^scripts\/comparer-[\w-]+\.js$/.test(rel)
+      && /existsSync/.test(texte) && /exit\(2\)/.test(texte);
     const coupables = [];
+    const exemptes = [];
     fichiersSuivis.forEach((rel) => {
       const chemin = path.join(RACINE, rel);
       if (!fs.existsSync(chemin)) return;
       const texte = fs.readFileSync(chemin, 'utf8');
-      convertisPortail.forEach((nom) => {
-        if (nommeEnDurPortail(texte, nom)) coupables.push(`${rel} → ${nom}`);
-      });
+      const nomme = convertisPortail.filter((nom) => nommeEnDurPortail(texte, nom));
+      if (!nomme.length) return;
+      if (exempte(rel, texte)) { exemptes.push(rel); return; }
+      nomme.forEach((nom) => coupables.push(`${rel} → ${nom}`));
     });
     verifier('aucun fichier ne nomme un fichier du portail converti par son ancien chemin',
       coupables.length === 0,
       coupables.length ? coupables.join(' · ')
-        : `${convertisPortail.length} converti(s) : ${convertisPortail.join(', ')}`);
+        : `${convertisPortail.length} converti(s) : ${convertisPortail.join(', ')}`
+          + (exemptes.length ? ` · exempté(s) car porteur(s) de leur refus : ${exemptes.join(', ')}` : ''));
   }
 
   // ── Toute sortie de construction est ignorée des DEUX côtés ──

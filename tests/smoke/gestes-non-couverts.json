@@ -25,16 +25,13 @@
   "orgEndInterim": "écrit — clôt un intérim",
   "basculerInstance": "écrit — active ou désactive l'instance d'un État",
   "supprimerInstance": "écrit, et c'est le plus lourd du portail — retire l'instance d'un État. À couvrir en premier de la séance n° 5.c.0.b",
-
-  "_hors_portee_du_parcours": "Ces gestes quittent la page, ou demandent un régime que la suite n'ouvre pas. Ils sont couverts ailleurs, ou bien le besoin est nommé.",
+  "_hors_portee_du_parcours": "Ces gestes quittent la page, ou demandent un régime que la suite n'ouvre pas. Ils sont couverts ailleurs, ou bien le besoin est nommé. Le geste d'effacement de la page des témoins y figurait ; il est couvert depuis la conversion de cette page (7 octobre 2026), et le garde-fou a dénoncé la dispense devenue fausse.",
   "document.getElementById('logoutBtn'):click": "quitte la session : le presser interromprait tout ce qui suit. À couvrir en dernier geste de la suite, ou sur une page à part",
   "document.getElementById('mfaForm'):submit": "la MFA est désactivée dans la configuration d'essai. Couverte par la suite « mfa » (11 contrôles), côté serveur",
   "document.getElementById('mfaCancel'):click": "idem — régime MFA",
   "document.getElementById('mfaResend'):click": "idem — régime MFA",
   "document.getElementById('pwdSubmit'):click": "changement de mot de passe imposé au premier accès : le compte d'essai l'a déjà fait. Demande un compte neuf",
-  "document.getElementById('effacer'):click": "sur /cookies.html — efface les préférences du navigateur. À couvrir, et sans effet de bord : c'est le seul geste de cette page",
   "ouvrirInstance": "ouvre l'instance d'un autre État : change de contexte de données pour tout ce qui suit",
-
   "_a_couvrir_mais_pas_encore": "Non destructeurs, et donc couvrables sans jeu d'essai. Ils ne le sont pas, et c'est un reste de travail, non une dispense.",
   "openExigDrawer": "ouvre le panneau d'une exigence",
   "closeExigDrawer": "referme le panneau d'une exigence",
@@ -59,7 +56,6 @@
   "document.getElementById('efValider'):click": "valide le formulaire d'un filtre",
   "document.getElementById('verifyBtn'):click": "vérifie une adresse avant création",
   "document.getElementById('createUser'):click": "écrit — crée un compte. Appartient au bloc des écritures",
-
   "_pas_des_gestes": "Relevés par la forme, ils n'en sont pas. Déclarés plutôt que filtrés : un filtre silencieux cacherait un jour un vrai geste.",
   "event.stopPropagation": "une précaution à l'intérieur d'un geste, non un geste",
   "${pdf}": "une interpolation de gabarit : le nom du geste est calculé à l'exécution. Le relevé ne peut pas le nommer statiquement",

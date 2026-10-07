@@ -187,14 +187,17 @@ function ambiantes() {
     fs.readdirSync(dossierSocle).filter((f) => f.endsWith('.d.ts'))
       .forEach((f) => fichiers.push(path.join(dossierSocle, f)));
   }
-  // Les sas de chaque ensemble converti : ils déclarent ce qu'ils posent.
+  // Les sas et les scripts de page de chaque ensemble converti : les premiers
+  // déclarent ce qu'ils posent, les seconds ce qu'ils définissent. Les deux
+  // dossiers sont lus, parce qu'un `declare global` vaut d'où qu'il vienne.
   fs.readdirSync(FRONTEND, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && fs.existsSync(path.join(FRONTEND, e.name, 'globales')))
-    .forEach((e) => {
-      const g = path.join(FRONTEND, e.name, 'globales');
-      fs.readdirSync(g).filter((f) => f.endsWith('.ts'))
-        .forEach((f) => fichiers.push(path.join(g, f)));
-    });
+    .filter((e) => e.isDirectory())
+    .forEach((e) => ['globales', 'pages'].forEach((sorte) => {
+      const d = path.join(FRONTEND, e.name, sorte);
+      if (!fs.existsSync(d)) return;
+      fs.readdirSync(d).filter((f) => f.endsWith('.ts'))
+        .forEach((f) => fichiers.push(path.join(d, f)));
+    }));
   return fichiers;
 }
 

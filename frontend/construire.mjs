@@ -78,19 +78,34 @@ const SORTIE_SAS = {
 };
 
 const ensembles = readdirSync(ICI, { withFileTypes: true })
-  .filter((d) => d.isDirectory() && existsSync(join(ICI, d.name, 'globales')))
+  .filter((d) => d.isDirectory()
+    && (existsSync(join(ICI, d.name, 'globales')) || existsSync(join(ICI, d.name, 'pages'))))
   .map((d) => d.name);
 
 const sansSortie = ensembles.filter((nom) => !(nom in SORTIE_SAS));
 if (sansSortie.length) {
   console.error(`construction interrompue : ${sansSortie.join(', ')} porte(nt) un dossier `
-    + '« globales » sans sortie déclarée dans SORTIE_SAS (frontend/construire.mjs).');
+    + '« globales » ou « pages » sans sortie déclarée dans SORTIE_SAS (frontend/construire.mjs).');
   process.exit(1);
 }
 
-const sas = ensembles.flatMap((ensemble) => readdirSync(join(ICI, ensemble, 'globales'))
-  .filter((f) => f.endsWith('.ts'))
-  .map((f) => ({ ensemble, nom: f.replace(/\.ts$/, '') })));
+// ── Deux sortes de fichiers par ensemble, construits de la même façon ──
+//
+//   · `globales/` — un **sas** : il publie des globales pour les fichiers restés
+//     en JavaScript, et c'est lui qui les déclare ;
+//   · `pages/`    — un **script de page** : le point d'entrée d'une page qui n'a
+//     pas de React, converti pour ses types et non pour publier quoi que ce soit.
+//
+// La construction est identique ; seule la lecture qu'en font les garde-fous
+// diffère. Les séparer par le dossier plutôt que par une liste évite d'avoir à
+// dire lequel est lequel deux fois.
+const SORTES = ['globales', 'pages'];
+
+const sas = ensembles.flatMap((ensemble) => SORTES
+  .filter((sorte) => existsSync(join(ICI, ensemble, sorte)))
+  .flatMap((sorte) => readdirSync(join(ICI, ensemble, sorte))
+    .filter((f) => f.endsWith('.ts'))
+    .map((f) => ({ ensemble, sorte, nom: f.replace(/\.ts$/, '') }))));
 
 if (!ecrans.length && !sas.length) {
   console.log('construction : rien à construire.');
@@ -133,11 +148,11 @@ const commun = {
   define: { 'process.env.NODE_ENV': JSON.stringify(production ? 'production' : 'development') },
 };
 
-await Promise.all(sas.map(async ({ ensemble, nom }) => {
+await Promise.all(sas.map(async ({ ensemble, sorte, nom }) => {
   const sortie = join(RACINE, 'public', SORTIE_SAS[ensemble], `${nom}.js`);
   await build({
     ...commun,
-    entryPoints: [join(ICI, ensemble, 'globales', `${nom}.ts`)],
+    entryPoints: [join(ICI, ensemble, sorte, `${nom}.ts`)],
     outfile: sortie,
   });
   console.log(`construction : ${ensemble} ${nom} → ${relative(RACINE, sortie)}`);

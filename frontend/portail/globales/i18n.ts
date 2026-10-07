@@ -3,7 +3,7 @@
 // Sas de cohabitation. Sept fichiers du portail sont encore en JavaScript et
 // lisent ces noms comme des globales ; ce sas les leur pose, depuis la source
 // typée voisine. Il se construit vers `public/app/i18n.js`, sous le nom que les
-// trois pages portaient déjà — `/js/i18n.js` devient `/app/i18n.js`, comme
+// trois pages portaient déjà, le répertoire changeant seul — comme
 // `shared/js` est devenu `shared/app`.
 //
 // ── La surface, mesurée et non supposée ──
@@ -37,7 +37,8 @@
 // qui le poserait une fois au chargement rendrait la langue d'avant la bascule,
 // silencieusement.
 import { langueRetenue, poserLangue, t, tSouple } from '../traductions';
-import { themeEnregistre, themeNormalise } from '../../socle/theme';
+import { themeEnregistre } from '../../socle/theme';
+import { appliquerPalette } from '../theme';
 
 declare global {
   interface Window {
@@ -95,15 +96,11 @@ window.applyLang = (lang) => {
 // La liste des palettes et la conversion d'une clé ancienne sont tenues par le
 // socle, qui est désormais du TypeScript : on l'importe au lieu de lire les
 // globales que son sas publie. Deux affirmations de moins, et le même code.
-const CLE_THEME = 'pr_theme';
-
-window.applyTheme = (demande) => {
-  const theme = themeNormalise(demande);
-  document.documentElement.setAttribute('data-theme', theme);
-  document.querySelectorAll<HTMLElement>('.theme-dot')
-    .forEach((d) => d.classList.toggle('active', d.dataset.theme === theme));
-  try { localStorage.setItem(CLE_THEME, theme); } catch { /* stockage fermé */ }
-};
+//
+// Les trois gestes vivent dans `../theme.ts`, que la page de connexion importe
+// aussi : un fichier typé n'a pas à passer par `window` pour en atteindre un
+// autre.
+window.applyTheme = (demande) => { appliquerPalette(demande); };
 
 // L'ordre du fichier d'origine, conservé : la langue est posée avant que
 // quiconque puisse la lire, et la palette appliquée dès le chargement.

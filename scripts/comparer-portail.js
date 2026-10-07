@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // OASIS — Équivalence du portail converti (ADR-003, 5.c).
 //
-// Équivalence de `/js/{i18n,icons}.js` (ancien) et `/app/{i18n,icons}.js` (converti),
-// mesurée dans un navigateur sur toute la surface : chaque clé dans chaque langue,
+// Équivalence des libellés et icônes du portail : l'ancien couple de scripts
+// classiques contre le couple construit, servi depuis `public/app/`.
+//
+// Mesurée dans un navigateur sur toute la surface : chaque clé dans chaque langue,
 // chaque icône à deux tailles, les effets sur le DOM, et les palettes.
 //
 // Un contexte isolé par version : le même `window` chargerait les deux et le

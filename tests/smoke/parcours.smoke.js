@@ -888,6 +888,84 @@ module.exports = async function parcoursSmoke(port) {
       JSON.stringify(apresRetour));
     await ramp.close();
 
+    // ── La page des témoins, et son unique geste (ADR-003, 5.c) ──
+    //
+    // Convertie en TypeScript le 7 octobre 2026. Elle n'a qu'un geste —
+    // « Effacer mes préférences sur cet appareil » — et il était **déclaré non
+    // couvert**. Le convertir est le moment de le couvrir : c'est le seul endroit
+    // de l'application où un agent efface quelque chose sans qu'un serveur soit
+    // en cause, et il n'a pas d'effet de bord sur les autres contrôles — le
+    // navigateur de cette page lui est propre.
+    //
+    // Trois choses sont éprouvées, et la troisième est celle qui compte :
+    //   · la durée de session **vient du serveur**, et non d'un nombre en dur ;
+    //   · le geste efface bien les préférences rangées ;
+    //   · il **ne touche pas** au témoin de session. Effacer ses préférences n'est
+    //     pas se déconnecter, et confondre les deux déconnecterait un agent qui
+    //     voulait seulement remettre son thème à zéro.
+    etape = 'page des témoins';
+    // `ouvrirPage` et non `newPage` : c'est elle qui pose le mouchard des gestes.
+    // Écrit `newPage` la première fois, le geste d'effacement était **couvert et
+    // absent du relevé** — un contrôle qui mord, et un rapport qui l'ignore.
+    const temoins = await ouvrirPage();
+    // ── « Venue du serveur » se mesure à la requête, non au nombre ──
+    //
+    // Première écriture : le contrôle lisait la durée affichée et vérifiait
+    // qu'elle porte un chiffre. Or le secours du code **est** 30, et la
+    // configuration d'essai dit **30** aussi : couper la requête laissait le
+    // contrôle vert sur un nombre écrit en dur. Mesuré en coupant l'appel.
+    //
+    // On observe donc l'appel lui-même. C'est ce que l'affirmation veut dire, et
+    // c'est la seule chose qui distingue les deux cas quand les deux valeurs
+    // coïncident — ce qui est le cas le plus probable, puisque le secours a été
+    // choisi pour ressembler à la configuration.
+    const appels = [];
+    temoins.on('request', (r) => appels.push(r.url()));
+    try {
+      await temoins.goto(`${srv.base}/cookies.html`, { waitUntil: 'networkidle2' });
+      const avant = await temoins.evaluate(() => {
+        // Des préférences à effacer, et un témoin qui ne doit pas l'être.
+        localStorage.setItem('pr_theme', 'corporate');
+        localStorage.setItem('ramp_filtre_essai', '1');
+        localStorage.setItem('garde_essai', 'reste');
+        return {
+          duree: (document.getElementById('dureeSession') || {}).textContent || '',
+          clefs: Object.keys(localStorage).length,
+        };
+      });
+      const demandee = appels.some((u) => u.includes('/api/politique-session'));
+      verifier('la page des témoins demande la durée de session au serveur et l’affiche',
+        demandee && /\d/.test(avant.duree) && !/\{0\}/.test(avant.duree),
+        `demandée: ${demandee} · affichée: ${JSON.stringify(avant.duree)}`);
+
+      // `alert()` arrête une page sans navigateur devant : on l'accepte.
+      temoins.on('dialog', (d) => { void d.accept(); });
+      const apres = await temoins.evaluate(async () => {
+        const b = document.getElementById('effacer');
+        if (!b) return { bouton: false };
+        b.click();
+        await new Promise((r) => setTimeout(r, 400));
+        return {
+          bouton: true,
+          theme: localStorage.getItem('pr_theme'),
+          rampParti: localStorage.getItem('ramp_filtre_essai') === null,
+          gardeReste: localStorage.getItem('garde_essai') === 'reste',
+          lang: document.documentElement.lang,
+        };
+      });
+      verifier('le geste d’effacement retire les préférences et épargne le reste',
+        apres.bouton && apres.theme === null && apres.rampParti && apres.gardeReste,
+        JSON.stringify(apres));
+      const session = await temoins.evaluate(async () => {
+        const r = await fetch('/api/politique-session', { credentials: 'same-origin' });
+        return r.status;
+      });
+      verifier('effacer ses préférences ne déconnecte pas',
+        session === 200, `/api/politique-session → ${session}`);
+    } finally {
+      await temoins.close();
+    }
+
     // ── Le verdict ──
     // Tout ce qui précède peut passer avec une console pleine d'erreurs : ce
     // sont elles que cette suite existe pour voir.

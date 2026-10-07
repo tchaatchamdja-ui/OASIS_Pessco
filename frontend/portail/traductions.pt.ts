@@ -3,7 +3,7 @@
 // Typé par le volet français : `Readonly<Record<Cle, string>>`. Une clé
 // manquante ne compile pas, une clé de trop non plus.
 //
-// Repris **verbatim** de `public/js/i18n.js`, indentation comprise : la leçon de
+// Repris **verbatim** du fichier de libellés d'origine, indentation comprise : la leçon de
 // la conversion du socle, où désindenter avait changé la sortie.
 //
 // Un fichier par volet, et non les trois ensemble : 268 clés × 3 langues font

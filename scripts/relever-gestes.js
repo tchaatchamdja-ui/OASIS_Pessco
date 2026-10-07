@@ -54,11 +54,32 @@ const { demarrer } = require(path.join(RACINE, 'tests', 'smoke', 'harness.js'));
 // qu'une ligne à ajouter.
 const ECRANS = {
   portail: {
-    sources: () => [
-      ...fs.readdirSync(path.join(RACINE, 'public', 'js'))
-        .filter((f) => f.endsWith('.js')).map((f) => path.join('public/js', f)),
-      'public/index.html',
-    ],
+    // ── Les fichiers convertis comptent toujours, et c'est le point ──
+    //
+    // `login-page.js` et `cookies-page.js` ont quitté `public/js/` pour
+    // `frontend/portail/pages/` (ADR-003, 5.c). Leurs huit gestes n'ont pas
+    // disparu — ils ont changé de fichier. Un relevé qui ne lirait que
+    // `public/js/` verrait le dénominateur **baisser à chaque conversion**, et
+    // la couverture monter sans qu'un seul geste soit couvert de plus.
+    //
+    // C'est la même faute que celle du 6 octobre, en plus perfide : là, le
+    // dénominateur était faux ; ici, il serait faux **dans le sens flatteur**, et
+    // le rapport dirait « 30 % » là où rien n'a bougé.
+    sources: () => {
+      const liste = [];
+      const js = path.join(RACINE, 'public', 'js');
+      if (fs.existsSync(js)) {
+        fs.readdirSync(js).filter((f) => f.endsWith('.js'))
+          .forEach((f) => liste.push(path.join('public/js', f)));
+      }
+      const pages = path.join(RACINE, 'frontend', 'portail', 'pages');
+      if (fs.existsSync(pages)) {
+        fs.readdirSync(pages).filter((f) => f.endsWith('.ts'))
+          .forEach((f) => liste.push(path.join('frontend/portail/pages', f)));
+      }
+      liste.push('public/index.html');
+      return liste;
+    },
     page: '/index.html',
   },
 };
@@ -70,7 +91,19 @@ function identifiantDeLaCible(expr, lignes, indice) {
   if (direct) return direct[1] || direct[2];
   const nom = /^[A-Za-z_$][\w$]*$/.test(expr) ? expr : null;
   if (!nom) return null;
-  for (let j = indice; j >= Math.max(0, indice - 12); j -= 1) {
+  // ── On remonte tout le fichier, et non douze lignes ──
+  //
+  // La fenêtre de douze était la distance observée dans les fichiers en
+  // JavaScript. Un fichier converti déclare ses éléments en tête — `const oeil =
+  // document.getElementById('voirMdp')` est à vingt-cinq lignes de son
+  // écouteur — et le geste retombait en « indécidable » : la couverture passait
+  // de 14 à 13 pour une raison de mise en page.
+  //
+  // On prend donc la **dernière** pose avant l'écouteur, où qu'elle soit. Le
+  // risque est nommé : une variable réaffectée entre-temps donnerait un
+  // rapprochement faux. Ces fichiers n'en ont pas — une pose, un `const` —, et le
+  // jour où il en paraîtra une, c'est ce commentaire qui dira où regarder.
+  for (let j = indice; j >= 0; j -= 1) {
     const pose = new RegExp(`\\b${nom}\\s*=[^=][^;]*?(?:getElementById\\(['"]([\\w-]+)['"]\\)|querySelector\\(\\s*['"]#([\\w-]+))`).exec(lignes[j]);
     if (pose) return pose[1] || pose[2];
   }
@@ -120,7 +153,19 @@ function relever(fichiers) {
 
     const lignes = texte.split('\n');
     lignes.forEach((l, i) => {
-      const m = /(?:([\w$.[\]'"()#-]+)\s*)?\.addEventListener\(\s*['"]([a-z]+)['"]/.exec(l);
+      // ── Le chaînage optionnel, que la conversion introduit ──
+      //
+      // Un fichier converti écrit `oeil?.addEventListener(…)` : sous `strict`, la
+      // cible peut être nulle, et le `?.` est la façon honnête de le dire. Le
+      // motif ne le connaissait pas, et il a **fait baisser la couverture** de 14
+      // à 12 au moment de la conversion de deux pages — sans qu'un seul geste
+      // cesse d'être exercé.
+      //
+      // La direction était la bonne (on sous-estime, on ne flatte pas), mais le
+      // chiffre était faux. Trouvé en comparant le relevé d'avant et d'après : un
+      // relevé qui bouge quand rien n'a bougé est un relevé qui mesure sa propre
+      // syntaxe.
+      const m = /(?:([\w$.[\]'"()#-]+)\s*)?\??\.addEventListener\(\s*['"]([a-z]+)['"]/.exec(l);
       if (!m) return;
       const cible = m[1] || '?';
       gestes.push({

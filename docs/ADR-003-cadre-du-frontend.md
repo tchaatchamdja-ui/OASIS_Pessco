@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 4 217 | **78 gestes nommés, 14 exercés, 56 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 3 088 restantes sur 4 217 | **78 gestes nommés, 15 exercés, 55 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1146,6 +1146,99 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                `portail-instances.js` (206), `app-demarrage.js` (168), `login-page.js` (159),
                `modules-host.js` (100), `cookies-page.js` (24) — **3 271 lignes**, et celles-là
                portent l'interface. C'est là que React entre.
+
+           5.c.2 [x] **Les deux pages séparées du portail** — faites le 7 octobre 2026.
+               `cookies-page.js` (24 l.) et `login-page.js` (159 l.) passent en TypeScript.
+               **1 129 lignes du portail converties sur 4 217** ; il reste 3 088.
+
+               Elles viennent avant `app.js` et `app-config.js` pour une raison d'ordre : ce
+               sont des **pages séparées**, et leur échec ne pouvait pas casser l'accueil. On
+               apprend la forme — un dossier `pages/`, une troisième cible de construction —
+               sur les fichiers dont la chute coûte le moins.
+
+               | | |
+               |---|---|
+               | Globales lues en moins | **4** — `applyLang`, `applyTheme`, `t`, `oasisEffacerPreferences` |
+               | Surface posée par les deux fichiers | **vide** : aucun sas |
+               | Clés de libellé désormais typées | 12, toutes présentes — vérifié avant de convertir |
+               | Contrôles de navigateur ajoutés | 3, tous contre-essayés |
+
+               **Les douze clés existaient.** Il faut le dire plutôt que de laisser croire à une
+               trouvaille : la même vérification sur DROITS avait débusqué `dt('chargement')`,
+               ici elle ne trouve rien. Un contrôle qui ne trouve rien a fait son travail.
+
+               ── Le geste d'effacement, couvert parce qu'on y touchait ──
+
+               La page des témoins n'a qu'un geste — « Effacer mes préférences sur cet
+               appareil » — et il était **déclaré non couvert**. Le convertir était le moment de
+               le couvrir. Trois contrôles, dont le troisième est celui qui compte :
+
+               · la durée de session est **demandée au serveur** ;
+               · le geste efface les préférences rangées ;
+               · il **n'efface que celles-là**. Un effacement glouton déconnecterait un agent
+                 qui voulait remettre son thème à zéro, et le contre-essai le montre : rendu
+                 glouton, le contrôle rend `gardeReste: false`.
+
+               **Et le premier de ces trois était vide de sens.** Il lisait la durée affichée et
+               vérifiait qu'elle porte un chiffre. Or le secours du code est **30** et la
+               configuration d'essai dit **30** : couper la requête laissait le contrôle vert
+               sur un nombre écrit en dur. Il observe désormais **l'appel lui-même**, qui est ce
+               que l'affirmation veut dire — et le contre-essai rend
+               « demandée: false ».
+
+               ── `window.onLangChange` s'en va de cette page, et c'est déclaré ──
+
+               L'ancien fichier posait `window.onLangChange = nommerOeil` pour que la bascule de
+               langue réécrive l'attribut accessible de l'œil : un `data-i18n` ne couvre pas un
+               attribut. Le détour par une globale n'avait d'autre raison que la séparation des
+               fichiers. La bascule vit dans la page désormais, et appelle `nommerOeil()`.
+
+               Le nom reste au contrat : `app-demarrage.js` le pose encore pour l'accueil, et le
+               sas continue de l'appeler. C'est cette page seule qui n'en a plus besoin.
+
+               ── Quatre fautes de mesure, et la plus instructive est la dernière ──
+
+               · *le relevé des gestes a fait **baisser** la couverture de 14 à 12* au moment de
+                 la conversion — sans qu'un seul geste cesse d'être exercé. Son extracteur ne
+                 connaissait pas le chaînage optionnel `?.`, que `strict` rend naturel. *Un
+                 relevé qui bouge quand rien n'a bougé mesure sa propre syntaxe* ;
+               · *puis de 14 à 13* : la pose de `const oeil` est à vingt-cinq lignes de son
+                 écouteur, et la fenêtre de rapprochement en faisait douze. Elle lit désormais
+                 tout le fichier, et le risque d'une variable réaffectée est écrit ;
+               · *le geste d'effacement était **couvert et absent du relevé*** : ma nouvelle page
+                 était ouverte par `newPage()` et non par `ouvrirPage()`, qui pose
+                 l'instrumentation. Un contrôle qui mord, et un rapport qui l'ignore ;
+               · et **le garde-fou des anciens chemins ne voyait pas les fichiers non suivis.**
+                 `git ls-files` ne liste pas un fichier nouveau. Les deux garde-fous passaient
+                 donc au vert sur un fichier qui vient d'être écrit, et ne mordaient qu'**après
+                 le commit** — c'est-à-dire au moment précis où l'on a cessé de regarder. Six
+                 mentions ont été dénoncées à la campagne suivante, les fichiers étant devenus
+                 suivis entre-temps. `--others --exclude-standard` les ajoute.
+
+               ── Une exemption, et c'est une condition ──
+
+               `scripts/comparer-portail.js` **doit** nommer l'ancien chemin : son objet est
+               d'opposer l'ancien au converti. L'exemption ne lui est pas accordée pour son nom
+               mais pour une **propriété vérifiable** — il doit porter son propre refus, un test
+               d'existence et une sortie en erreur quand l'ancien a disparu. Contre-essayé : le
+               refus retiré, l'exemption tombe.
+
+               *C'est la différence entre une exception et une condition.* Le comparateur du
+               socle, lui, échappait au garde-fou **par construction** — il assemble son chemin
+               — et donc par chance.
+
+               ── Et la palette extraite, re-prouvée ──
+
+               Les trois gestes de `applyTheme` vivaient dans le sas ; la page de connexion les
+               importe, et un fichier typé n'a pas à passer par `window` pour en atteindre un
+               autre. L'extraction a été faite après le retrait de l'ancien : celui-ci a donc
+               été restauré depuis `git` le temps de rejouer les **1 435 comparaisons**, pour la
+               deuxième fois en deux étapes.
+
+               Ce n'est pas la même fonction que `appliquerTheme` du socle, et c'est écrit dans
+               le fichier : celle du socle **ne normalise pas** la clé. Un thème retiré y
+               passerait tel quel. Elles ne sont pas interchangeables, et quelqu'un voudra les
+               « dédoublonner ».
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

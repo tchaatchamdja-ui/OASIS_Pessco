@@ -2,7 +2,7 @@
  "releve": "2026-10-07",
  "gestesNommes": 78,
  "occurrences": 122,
- "exerces": 14,
+ "exerces": 15,
  "indecidables": 8,
  "gestes": [
   {
@@ -936,86 +936,6 @@
    "exerce": false
   },
   {
-   "fichier": "public/js/cookies-page.js",
-   "ligne": 20,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('effacer'):click",
-   "source": "document.getElementById('effacer').addEventListener('click', () => {",
-   "id": "effacer",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 12,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "d:click",
-   "source": "d.addEventListener('click', () => applyTheme(d.dataset.theme));",
-   "id": null,
-   "exerce": null
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 15,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "b:click",
-   "source": "b.addEventListener('click', () => applyLang(b.dataset.lang));",
-   "id": null,
-   "exerce": null
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 29,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "oeil:click",
-   "source": "oeil.addEventListener('click', () => {",
-   "id": "voirMdp",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 44,
-   "forme": "écouteur",
-   "evenement": "submit",
-   "nom": "document.getElementById('loginForm'):submit",
-   "source": "document.getElementById('loginForm').addEventListener('submit', async (e) => {",
-   "id": "loginForm",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 123,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('mfaCancel'):click",
-   "source": "document.getElementById('mfaCancel').addEventListener('click', resetToLogin);",
-   "id": "mfaCancel",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 125,
-   "forme": "écouteur",
-   "evenement": "submit",
-   "nom": "document.getElementById('mfaForm'):submit",
-   "source": "document.getElementById('mfaForm').addEventListener('submit', async (e) => {",
-   "id": "mfaForm",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/login-page.js",
-   "ligne": 144,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('mfaResend'):click",
-   "source": "document.getElementById('mfaResend').addEventListener('click', async () => {",
-   "id": "mfaResend",
-   "exerce": false
-  },
-  {
    "fichier": "public/js/modules-host.js",
    "ligne": 72,
    "forme": "écouteur",
@@ -1071,6 +991,86 @@
    "source": "sel.addEventListener('change', majAffichage);",
    "id": null,
    "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/pages/cookies-page.ts",
+   "ligne": 44,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('effacer'):click",
+   "source": "document.getElementById('effacer')?.addEventListener('click', () => {",
+   "id": "effacer",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 54,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "d:click",
+   "source": "d.addEventListener('click', () => appliquerPalette(d.dataset.theme ?? null));",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 57,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "b:click",
+   "source": "b.addEventListener('click', () => changerLangue(b.dataset.lang ?? 'fr'));",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 60,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "oeil:click",
+   "source": "oeil?.addEventListener('click', () => {",
+   "id": "voirMdp",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 97,
+   "forme": "écouteur",
+   "evenement": "submit",
+   "nom": "document.getElementById('loginForm'):submit",
+   "source": "document.getElementById('loginForm')?.addEventListener('submit', async (e) => {",
+   "id": "loginForm",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 181,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('mfaCancel'):click",
+   "source": "document.getElementById('mfaCancel')?.addEventListener('click', resetToLogin);",
+   "id": "mfaCancel",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 183,
+   "forme": "écouteur",
+   "evenement": "submit",
+   "nom": "document.getElementById('mfaForm'):submit",
+   "source": "document.getElementById('mfaForm')?.addEventListener('submit', async (e) => {",
+   "id": "mfaForm",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/pages/login-page.ts",
+   "ligne": 199,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('mfaResend'):click",
+   "source": "document.getElementById('mfaResend')?.addEventListener('click', async () => {",
+   "id": "mfaResend",
+   "exerce": false
   },
   {
    "fichier": "public/index.html",

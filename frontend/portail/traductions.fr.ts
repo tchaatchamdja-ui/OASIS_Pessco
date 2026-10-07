@@ -3,7 +3,7 @@
 // **Ce volet définit les clés.** `Cle` en est déduite, et les deux autres
 // volets tiennent de lui leur obligation : une traduction oubliée ne compile pas.
 //
-// Repris **verbatim** de `public/js/i18n.js`, indentation comprise : la leçon de
+// Repris **verbatim** du fichier de libellés d'origine, indentation comprise : la leçon de
 // la conversion du socle, où désindenter avait changé la sortie.
 //
 // Un fichier par volet, et non les trois ensemble : 268 clés × 3 langues font

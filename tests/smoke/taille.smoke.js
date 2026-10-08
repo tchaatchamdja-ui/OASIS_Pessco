@@ -522,6 +522,41 @@ module.exports = async function tailleSmoke() {
         }).join(', '));
   }
 
+  // ── Aucune page ne charge deux définitions du même nom global ──
+  //
+  // `window.api` porte **deux fonctions différentes** : celle du socle
+  // (`oasis-utils`) rend le JSON déjà lu et lève sur un refus ; celle du portail
+  // (`app.js`) rend la réponse brute. Trouvé le 8 octobre 2026 **par le
+  // compilateur**, en déclarant la seconde : aucun contrôle ne l'avait vu, et
+  // aucune relecture non plus.
+  //
+  // La collision est **latente** : `oasis-utils` est chargé par trois écrans de
+  // module, `app.js` par l'accueil seul. Une page qui chargerait les deux
+  // prendrait celle que son dernier `<script>` pose — **sans erreur, sans
+  // trace**, et le code appelant lirait le JSON d'un JSON ou la réponse brute
+  // d'une réponse déjà lue.
+  //
+  // Ce garde-fou la garde latente. Il ne résout pas la collision — c'est la
+  // conversion d'`app.js` qui le fera, en nommant les deux différemment — mais il
+  // interdit qu'elle devienne active par inadvertance.
+  const COLLISIONS = [
+    { nom: 'api', fournisseurs: ['shared/app/oasis-utils.js', 'js/app.js'] },
+  ];
+  const pagesCollisionnees = [];
+  pagesHtml().forEach((fichier) => {
+    const texte = fs.readFileSync(fichier, 'utf8');
+    COLLISIONS.forEach(({ nom, fournisseurs }) => {
+      const presents = fournisseurs.filter((f) => texte.includes(f));
+      if (presents.length > 1) {
+        pagesCollisionnees.push(`${relatif(fichier)} → window.${nom} par ${presents.join(' et ')}`);
+      }
+    });
+  });
+  verifier('aucune page ne charge deux définitions du même nom global',
+    pagesCollisionnees.length === 0,
+    pagesCollisionnees.length ? pagesCollisionnees.join(' · ')
+      : `${COLLISIONS.length} collision(s) connue(s) tenue(s) latente(s) : ${COLLISIONS.map((c) => c.nom).join(', ')}`);
+
   // ── Aucun fichier du portail ne redéclare l'état partagé ──
   //
   // Sept noms sont passés de `let` au premier niveau d'`app.js` à des propriétés

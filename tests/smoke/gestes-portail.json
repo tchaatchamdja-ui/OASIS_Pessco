@@ -1,5 +1,5 @@
 {
- "releve": "2026-10-07",
+ "releve": "2026-10-08",
  "gestesNommes": 78,
  "occurrences": 122,
  "exerces": 15,
@@ -936,16 +936,6 @@
    "exerce": false
   },
   {
-   "fichier": "public/js/modules-host.js",
-   "ligne": 72,
-   "forme": "écouteur",
-   "evenement": "message",
-   "nom": "window:message",
-   "source": "window.addEventListener('message', (ev) => {",
-   "id": null,
-   "exerce": null
-  },
-  {
    "fichier": "public/js/portail-instances.js",
    "ligne": 159,
    "forme": "en ligne",
@@ -989,6 +979,16 @@
    "evenement": "change",
    "nom": "sel:change",
    "source": "sel.addEventListener('change', majAffichage);",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/modules-hote.ts",
+   "ligne": 188,
+   "forme": "écouteur",
+   "evenement": "message",
+   "nom": "window:message",
+   "source": "window.addEventListener('message', (ev: MessageEvent) => {",
    "id": null,
    "exerce": null
   },

@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 3 088 restantes sur 4 217 | **78 gestes nommés, 15 exercés, 55 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 998 restantes sur 4 217 | **78 gestes nommés, 15 exercés, 55 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1333,6 +1333,75 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                **constantes et des fonctions pures**, non de l'état mutable : le fichier qui les
                définit les publiera par son sas le jour de sa conversion, comme le socle l'a
                fait pour les siennes. Elles ne bloquent personne.
+
+           5.c.4 [x] **`modules-host.js` — la première preuve que 5.c.3 a servi** — fait le
+               8 octobre 2026. 100 lignes, et il ne lisait qu'**un** nom bloquant : `VIEWS`.
+               Posé sur `window` la veille, ce fichier est devenu convertible seul.
+               **1 229 lignes du portail sur 4 217** ; il reste 2 998.
+
+               ── Le compilateur a trouvé une collision que rien ne voyait ──
+
+               **`window.api` porte deux fonctions différentes.** Le socle en publie une
+               (`oasis-utils`), `app.js` en définit une autre — et une `function` au premier
+               niveau se pose sur `window`. Déclarer la seconde a fait lever `tsc` : *aucun
+               contrôle ne l'avait vu, et aucune relecture non plus.*
+
+               | | portail (`app.js`) | socle (`utils.ts`) |
+               |---|---|---|
+               | Rend | la **réponse brute** | le JSON déjà lu |
+               | En-têtes | `X-OASIS-Request` seul | plus `Content-Type` et un jeton |
+               | Sur un refus | rend la réponse | **lève** avec un message traduit |
+
+               La collision est **latente**, mesurée page par page : `oasis-utils` est chargé
+               par trois écrans de module, `app.js` par l'accueil seul. **Aucune page ne charge
+               les deux**, et celle qui le ferait prendrait celle que son dernier `<script>`
+               pose — sans erreur. Un garde-fou de forme l'interdit désormais ; il ne résout pas
+               la collision, il la tient latente jusqu'à la conversion d'`app.js`.
+
+               ── Un garde-fou existant a refusé ma première réponse, et il avait raison ──
+
+               J'avais lu l'appel du portail à travers une affirmation de type, « confinée et
+               commentée ». Le contrôle *« le typage du frontend n'est défait nulle part »* l'a
+               refusée. **Une affirmation justifiée reste une affirmation** — c'est ainsi que
+               `window.dtPriv` avait menti.
+
+               La bonne réponse n'était pas de contourner mais de **supprimer la dépendance**.
+               Les deux choses que faisait cet appel sont déjà ailleurs : `X-OASIS-Request` est
+               posé sur tout appel par l'enveloppe du socle, et le retour à la connexion sur 401
+               est `sessionPerdue`, que le socle **exporte**. Un `fetch` nu suffit, et ce fichier
+               ne dépend plus d'`app.js` du tout — une dépendance de moins **avant** sa
+               réécriture, non une de plus.
+
+               ── Le dénominateur a encore baissé, et c'était la deuxième fois ──
+
+               Le relevé des gestes ne lisait que `public/js/` et `frontend/portail/pages/`.
+               `modules-host.js` est parti vers la **racine** de `frontend/portail/`, et le geste
+               `window:message` a disparu du relevé sans cesser d'exister.
+
+               *Hier, la même faute avec `pages/`.* Corriger le chemin une fois de plus serait
+               attendre la troisième : le relevé lit désormais l'ensemble, récursivement. Le
+               dénominateur est stable — **78 gestes, 15 exercés**, inchangés par la conversion.
+
+               ── Deux contre-essais qui ne mordaient pas, et ce qu'ils ont appris ──
+
+               · *retirer l'enregistrement des vues `mod_<CODE>`* laissait la suite verte. Le
+                 contrôle qui monte un module **clique une carte**, et passe donc par l'autre
+                 famille de vues — celle des cartes. **L'accès direct n'était couvert par
+                 personne.** Couvert : chaque module monté doit avoir sa vue, la liste venant du
+                 serveur. Le contre-essai nomme maintenant les deux qui manquent — `PR` et
+                 `DROITS`, les deux modules sans carte ;
+               · *retirer le retour à la connexion sur 401* laisse la suite verte, et **ce reste
+                 vrai**. La suite n'a jamais de session expirée sur le portail. C'est une lacune
+                 antérieure à cette conversion, et elle est déclarée ici plutôt que comblée à la
+                 hâte : l'éprouver demande d'invalider une session en cours de parcours, ce qui
+                 mérite sa propre séance.
+
+               ── Trois noms publiés que personne ne lit ──
+
+               `moduleHostLoadRegistry`, `moduleHostRender`, `moduleHostChrome` étaient sur
+               `window` sans lecteur : une `function` du premier niveau s'y pose, qu'on le veuille
+               ou non. Ils y restent **parce qu'ils y étaient** — retirer un nom de la surface est
+               un changement, qui se fera en le disant. Même conduite que pour `_icon`.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

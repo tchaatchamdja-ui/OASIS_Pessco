@@ -417,6 +417,29 @@ module.exports = async function parcoursSmoke(port) {
       partage.meRempli && partage.vuesPosees >= 5,
       `ME rempli: ${partage.meRempli} · ${partage.vuesPosees} vue(s)`);
 
+    // ── Une vue par module monté, et non seulement par carte ──
+    //
+    // L'hôte des modules enregistre **deux** familles de vues : une par module
+    // installé (`mod_<CODE>`, l'accès direct) et une par carte du portail, qui
+    // ouvre le premier module de la carte.
+    //
+    // Mesuré en contre-essayant : retirer la **première** famille laissait la
+    // suite verte. Le contrôle qui monte un module clique une carte, donc passe
+    // par la seconde ; l'accès direct n'était couvert par personne.
+    //
+    // La liste des modules montés vient du serveur, non d'une table écrite ici :
+    // le huitième module sera couvert sans qu'on y pense.
+    const vuesModulesMontees = await page.evaluate(async () => {
+      const r = await fetch('/api/modules/super-menus');
+      const registre = r.ok ? await r.json() : [];
+      const codes = [...new Set(registre.map((m) => m.code))];
+      const posees = Object.keys(window.VIEWS || {});
+      return { codes, manquantes: codes.filter((c) => !posees.includes(`mod_${c}`)) };
+    });
+    verifier('chaque module monté a sa vue d’accès direct dans le portail',
+      vuesModulesMontees.codes.length >= 5 && vuesModulesMontees.manquantes.length === 0,
+      `${vuesModulesMontees.codes.length} module(s) — manquante(s) : ${vuesModulesMontees.manquantes.join(', ') || 'aucune'}`);
+
     // ── Les gestes d'affichage du portail, **pressés** (ADR-003, 5.c.0) ──
     //
     // Le relevé de `scripts/relever-gestes.js` a donné **4 gestes exercés sur 78**.

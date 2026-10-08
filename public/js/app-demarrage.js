@@ -7,7 +7,7 @@
  */
 
 // ══════════ Navigation ══════════
-// Les vues `mod_<CODE>` sont ajoutées par /js/modules-host.js à partir des
+// Les vues `mod_<CODE>` sont ajoutées par l hôte des modules à partir des
 // manifestes des modules installés.
 // `VIEWS` est posé sur `window` par `/app/etat.js` ; il est **assigné** ici,
 // où les fonctions de rendu d'`app.js` existent. Sans `const` : la propriété

@@ -72,11 +72,27 @@ const ECRANS = {
         fs.readdirSync(js).filter((f) => f.endsWith('.js'))
           .forEach((f) => liste.push(path.join('public/js', f)));
       }
-      const pages = path.join(RACINE, 'frontend', 'portail', 'pages');
-      if (fs.existsSync(pages)) {
-        fs.readdirSync(pages).filter((f) => f.endsWith('.ts'))
-          .forEach((f) => liste.push(path.join('frontend/portail/pages', f)));
-      }
+      // ── Tout `frontend/portail/`, et non le seul `pages/` ──
+      //
+      // Deuxième fois que ce dénominateur baisse à une conversion. Hier
+      // `login-page.js` et `cookies-page.js` sont partis vers `pages/`, et la
+      // liste ne lisait que `public/js/` ; aujourd'hui `modules-host.js` est
+      // parti vers la **racine** de `frontend/portail/`, et la liste ne lisait
+      // que `pages/`. Le geste `window:message` a disparu du relevé sans cesser
+      // d'exister.
+      //
+      // Corriger le chemin une fois de plus serait attendre la troisième. On lit
+      // donc l'ensemble, récursivement : un fichier converti compte, où qu'il
+      // atterrisse.
+      const racinePortail = path.join(RACINE, 'frontend', 'portail');
+      const parcourir = (abs, rel) => {
+        if (!fs.existsSync(abs)) return;
+        fs.readdirSync(abs, { withFileTypes: true }).forEach((e) => {
+          if (e.isDirectory()) { parcourir(path.join(abs, e.name), `${rel}/${e.name}`); return; }
+          if (e.name.endsWith('.ts')) liste.push(`${rel}/${e.name}`);
+        });
+      };
+      parcourir(racinePortail, 'frontend/portail');
       liste.push('public/index.html');
       return liste;
     },

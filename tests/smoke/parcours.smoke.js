@@ -904,6 +904,102 @@ module.exports = async function parcoursSmoke(port) {
       retour.dedans && retour.dehors && retour.accueil > 50 && retour.barreRendue,
       JSON.stringify(retour));
 
+    // ── Les instances du dispositif : ouvrir, basculer, supprimer ──
+    //
+    // `supprimerInstance` **retire l'instance d'un État**, sans retour. C'est le
+    // geste le plus lourd du portail, et il était déclaré non couvert. Sa
+    // conversion (ADR-003, 5.c.6) est le moment de le couvrir — comme l'effacement
+    // des préférences et la pastille des notifications l'ont été.
+    //
+    // La ronde est complète et **par de vrais clics** : on ouvre une instance
+    // d'essai, on la met en sommeil, on la réveille, puis on la supprime. Trois
+    // gestes d'écriture, et chacun est vérifié par l'état de la table après coup.
+    //
+    // Elle ne laisse rien derrière elle : l'instance créée est celle qu'on
+    // supprime. Le bac de données est jetable, mais un contrôle qui laisse un
+    // reste fait échouer le suivant pour une raison qui n'est pas la sienne.
+    etape = 'instances du dispositif';
+    await ouvrir('config');
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .find((e) => (e.getAttribute('onclick') || '').includes("cfgNavigate('instances')"));
+      if (b) b.click();
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll('[onclick^="ouvrirInstance"]').length > 0,
+      { timeout: 10000 },
+    ).catch(() => { /* le contrôle le dira */ });
+
+    const NOM_ESSAI = 'Essai-Parcours';
+    // `ouvrirInstance` demande le nom par `prompt` : une fenêtre du navigateur,
+    // qu'il faut accepter avec la valeur. Posé **avant** le clic.
+    const repondrePrompt = (d) => { void d.accept(NOM_ESSAI); };
+    page.on('dialog', repondrePrompt);
+    const ouverte = await page.evaluate(async () => {
+      const b = [...document.querySelectorAll('[onclick^="ouvrirInstance"]')][0];
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return { bouton: true, lignes: document.querySelectorAll('.shell-table tbody tr').length };
+    });
+    page.off('dialog', repondrePrompt);
+    const presente = await page.evaluate((nom) => {
+      const tr = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(nom));
+      return tr ? { trouvee: true, texte: tr.textContent.replace(/\s+/g, ' ').trim().slice(0, 80) } : { trouvee: false };
+    }, NOM_ESSAI);
+    verifier('une instance s’ouvre depuis la configuration',
+      ouverte.bouton && presente.trouvee, JSON.stringify({ ...ouverte, ...presente }));
+
+    // La mise en sommeil, puis le réveil : l'état de la ligne doit suivre.
+    const bascule = await page.evaluate(async (nom) => {
+      const presser = async () => {
+        const tr = [...document.querySelectorAll('.shell-table tbody tr')]
+          .find((r) => r.textContent.includes(nom));
+        if (!tr) return null;
+        const b = tr.querySelector('[onclick^="basculerInstance"]');
+        if (!b) return null;
+        b.click();
+        await new Promise((r) => setTimeout(r, 1800));
+        const apres = [...document.querySelectorAll('.shell-table tbody tr')]
+          .find((r) => r.textContent.includes(nom));
+        return apres ? apres.className.includes('row-inactive') : null;
+      };
+      const endormie = await presser();
+      const reveillee = await presser();
+      return { endormie, reveillee };
+    }, NOM_ESSAI);
+    verifier('une instance se met en sommeil et se réveille par son bouton',
+      bascule.endormie === true && bascule.reveillee === false, JSON.stringify(bascule));
+
+    // La suppression, avec sa confirmation **pressée**, non contournée : la
+    // fenêtre du socle est un dialogue de la page, non du navigateur.
+    const supprimee = await page.evaluate(async (nom) => {
+      const tr = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(nom));
+      if (!tr) return { ligne: false };
+      const b = tr.querySelector('[onclick^="supprimerInstance"]');
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 400));
+      const oui = document.querySelector('.oasis-confirm-oui');
+      if (!oui) return { confirmation: false };
+      oui.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return {
+        ligne: true,
+        bouton: true,
+        confirmation: true,
+        partie: ![...document.querySelectorAll('.shell-table tbody tr')]
+          .some((r) => r.textContent.includes(nom)),
+      };
+    }, NOM_ESSAI);
+    verifier('une instance se supprime, confirmation pressée',
+      supprimee.ligne && supprimee.bouton && supprimee.confirmation && supprimee.partie,
+      JSON.stringify(supprimee));
+
+
+
     // ── La pastille des notifications, éprouvée sur un état fabriqué ──
     //
     // Deux écritures fausses avant celle-ci, et elles disent la même chose :

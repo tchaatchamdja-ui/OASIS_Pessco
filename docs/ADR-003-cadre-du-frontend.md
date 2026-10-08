@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 828 restantes sur 4 217 | **78 gestes nommés, 15 exercés, 55 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 18 exercés, 52 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1474,6 +1474,71 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                   substitué. Trois contre-essais, trois morsures distinctes.
 
                *Une mesure prise sur l'état que le jeu donne mesure le jeu, non le code.*
+
+           5.c.6 [x] **`portail-instances.js` — et le geste le plus lourd du portail, couvert**
+               — fait le 8 octobre 2026. 206 lignes. **1 595 du portail sur 4 217** ; il reste
+               2 622, dans `app.js` et `app-config.js` seuls.
+
+               ── Le blocage, à l'envers ──
+
+               Les trois fichiers précédents étaient bloqués par ce qu'ils **lisaient**.
+               Celui-ci l'était par ce qu'il **définit** : `PORTEE_LABELS`, `porteeDe` et
+               `jeSuisRegional` sont des `const` — lexicales —, et ce sont `app.js` et
+               `app-config.js`, restés en JavaScript, qui les lisent. Le sas les leur pose, et
+               ils n'ont pas changé d'une ligne.
+
+               Sa surface compte **douze noms**, dont quatre d'une famille qu'on ne trouve pas
+               en cherchant des lecteurs : `basculerInstance`, `supprimerInstance`,
+               `ouvrirInstance`, `changerInstance` sont nommés dans des attributs `onclick` que
+               **ce fichier écrit lui-même**. Aucun fichier ne les lit, et les retirer casserait
+               l'écran.
+
+               ── `supprimerInstance`, couvert par une ronde complète ──
+
+               Il retire l'instance d'un État, **sans retour**. Déclaré non couvert depuis le
+               7 octobre ; le convertir était le moment de le couvrir.
+
+               Trois contrôles, et la ronde ne laisse rien derrière elle — l'instance créée est
+               celle qu'on supprime :
+
+               | Geste | Ce qui est vérifié |
+               |---|---|
+               | ouvrir | la ligne paraît dans la table |
+               | mettre en sommeil, réveiller | la ligne passe à `row-inactive`, puis en revient |
+               | supprimer | la **confirmation est pressée**, et la ligne part |
+
+               Quatre contre-essais, tous mordants, et le premier est le plus parlant : ôter la
+               confirmation rend « `confirmation: false` » — le contrôle remarque que la fenêtre
+               **n'apparaît plus**, et non seulement que la suppression a eu lieu. Un contrôle
+               qui n'aurait regardé que la disparition de la ligne aurait approuvé une
+               suppression sans garde-fou.
+
+               ── Le garde-fou du typage mord pour la deuxième fois en deux jours ──
+
+               J'avais lu `instance_vue` et `instance` sur le compte par **quatre affirmations**
+               `as unknown as`. Le contrôle *« le typage du frontend n'est défait nulle part »*
+               les a refusées.
+
+               La signature d'index de `Moi` les laissait passer en `unknown` — exact, et
+               inutilisable. *Un champ que l'application lit est un champ qui a un type* : six
+               lignes de déclaration, et les quatre affirmations s'en vont.
+
+               Hier, le même garde-fou avait refusé la même facilité sur l'appel d'API. **Deux
+               fois en deux jours, et dans les deux cas la bonne réponse n'était pas de
+               contourner mais de nommer ce qu'on lit.**
+
+               ── Une nuance de type qui dit quelque chose du code ──
+
+               `exactOptionalPropertyTypes` a refusé `instances: d.instances`, le serveur pouvant
+               ne pas rendre la liste. L'original l'affectait telle quelle : une création
+               réussie sans liste aurait mis `undefined`, et le bandeau serait retombé à sa forme
+               sans choix. `?? []` donne **exactement le même effet observable** — le bandeau lit
+               `(instances ?? []).length`, nul dans les deux cas — et le type cesse de prétendre
+               qu'une liste est là.
+
+               **Il ne reste que `app.js` et `app-config.js` dans `public/js/`.** Les deux
+               collisions — `window.api` et `window.showToast` — s'y résoudront, et les
+               cinquante-deux gestes encore découverts sont presque tous les leurs.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

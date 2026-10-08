@@ -2,7 +2,7 @@
  "releve": "2026-10-08",
  "gestesNommes": 78,
  "occurrences": 122,
- "exerces": 15,
+ "exerces": 18,
  "indecidables": 8,
  "gestes": [
   {
@@ -896,55 +896,8 @@
    "exerce": false
   },
   {
-   "fichier": "public/js/portail-instances.js",
-   "ligne": 159,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "basculerInstance",
-   "source": "basculerInstance(${escArg(i.nom)})",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/portail-instances.js",
-   "ligne": 160,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "supprimerInstance",
-   "source": "supprimerInstance(${escArg(i.nom)})",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/portail-instances.js",
-   "ligne": 167,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "ouvrirInstance",
-   "source": "ouvrirInstance()",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/portail-instances.js",
-   "ligne": 55,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "selectRole:change",
-   "source": "selectRole.addEventListener('change', majAffichage);",
-   "id": null,
-   "exerce": null
-  },
-  {
-   "fichier": "public/js/portail-instances.js",
-   "ligne": 56,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "sel:change",
-   "source": "sel.addEventListener('change', majAffichage);",
-   "id": null,
-   "exerce": null
-  },
-  {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 246,
+   "ligne": 247,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('sidebarNav'):click",
@@ -954,7 +907,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 252,
+   "ligne": 253,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('logoutBtn'):click",
@@ -964,7 +917,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 257,
+   "ligne": 258,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('notifBell'):click",
@@ -974,13 +927,60 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 274,
+   "ligne": 275,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('pwdSubmit'):click",
    "source": "document.getElementById('pwdSubmit')?.addEventListener('click', async () => {",
    "id": "pwdSubmit",
    "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/instances.ts",
+   "ligne": 271,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "basculerInstance",
+   "source": "basculerInstance(${argEchappe(i.nom)})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/instances.ts",
+   "ligne": 272,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "supprimerInstance",
+   "source": "supprimerInstance(${argEchappe(i.nom)})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/instances.ts",
+   "ligne": 279,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "ouvrirInstance",
+   "source": "ouvrirInstance()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/instances.ts",
+   "ligne": 155,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "selectRole:change",
+   "source": "selectRole.addEventListener('change', majAffichage);",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/instances.ts",
+   "ligne": 156,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "sel:change",
+   "source": "sel.addEventListener('change', majAffichage);",
+   "id": null,
+   "exerce": null
   },
   {
    "fichier": "frontend/portail/modules-hote.ts",

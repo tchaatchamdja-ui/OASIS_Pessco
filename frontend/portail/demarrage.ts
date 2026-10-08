@@ -40,8 +40,9 @@ declare global {
     renderConfig: () => Promise<void>;
     /** Vide le champ de recherche du portail à chaque changement de vue. */
     portailReinitialiserRecherche: () => void;
-    /** Le bandeau d'instance, défini par `portail-instances.js`. */
-    majBandeauInstance: () => void;
+    // `majBandeauInstance` est déclaré par son **définisseur**,
+    // `frontend/portail/instances.ts` (converti le 8 octobre). Il l'était ici,
+    // faute d'en avoir un ; ce fichier ne fait que l'appeler.
     /** Les règles de mot de passe non tenues, mises en phrase. */
     reglesMotDePasse: (details?: unknown) => string;
     /** L'horodatage court, défini par `app.js`. */

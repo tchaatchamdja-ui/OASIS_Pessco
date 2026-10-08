@@ -44,7 +44,29 @@ export interface Moi {
     portee?: string;
     instance?: string;
   };
-  aac?: { logo?: string; nom?: string; sigle?: string };
+  aac?: { logo?: string; nom?: string; sigle?: string; bigramme?: string };
+  /**
+   * L'instance **installée ici** : l'État sur lequel le déploiement est posé, et
+   * son bigramme.
+   */
+  instance?: { etat?: string; codeEtat?: string };
+  /**
+   * L'instance **regardée**, et la liste de celles qu'on peut prendre. Absente
+   * pour un compte qui n'en change pas.
+   *
+   * ── Déclarée ici plutôt qu'affirmée au point d'usage ──
+   *
+   * `instances.ts` lisait ces deux champs par `as unknown as { … }` : quatre
+   * affirmations, que le garde-fou « le typage du frontend n'est défait nulle
+   * part » a refusées. Il avait raison, et pour la deuxième fois en deux jours —
+   * la première était l'appel d'API de l'hôte des modules.
+   *
+   * Un champ que l'application lit est un champ qui a un type. Le signature
+   * d'index ci-dessous les laissait passer en `unknown`, ce qui est exact et
+   * inutilisable ; les nommer coûte six lignes et supprime les quatre
+   * affirmations.
+   */
+  instance_vue?: { disponible?: boolean; courante?: string; instances?: string[] };
   instances?: unknown[];
   [autre: string]: unknown;
 }

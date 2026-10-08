@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 18 exercés, 52 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 20 exercés, 50 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1539,6 +1539,57 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                **Il ne reste que `app.js` et `app-config.js` dans `public/js/`.** Les deux
                collisions — `window.api` et `window.showToast` — s'y résoudront, et les
                cinquante-deux gestes encore découverts sont presque tous les leurs.
+
+           5.c.7 [x] **Couvrir les écritures avant de réécrire** — fait le 8 octobre 2026.
+               **20 gestes exercés sur 78**, contre 15 le matin ; 63 contrôles de parcours
+               contre 57.
+
+               C'est l'application de mon propre conseil, et il n'allait pas de soi : `app.js`
+               et `app-config.js` restent à réécrire, et la tentation est de s'y mettre. Mais
+               la suite n° 0 a déjà prouvé deux fois sa valeur en quarante-huit heures — la
+               régression des vues le 8, l'omission des champs le 7 —, et **2 622 lignes
+               réécrites sans contrôles se compareraient à peu de chose.**
+
+               ── Un référentiel de bout en bout ──
+
+               Le plus gros bloc de gestes non exercés : `openRefModal` huit fois,
+               `closeRefModal` dix, `saveRef`, `deleteRef` quatre. Et ce sont des
+               **écritures** — ces tables commandent les organigrammes, les domaines, les
+               qualifications.
+
+               `organisation_levels` choisi pour deux raisons **mesurées** : son schéma n'a que
+               deux champs, et rien ne référence un niveau qu'on vient de créer. La ronde ne
+               laisse rien derrière elle, comme celle des instances.
+
+               | Contrôle | Ce qu'il éprouve |
+               |---|---|
+               | créer | la ligne paraît **avec sa valeur**, et la fenêtre n'est plus là |
+               | modifier | la fenêtre d'édition **porte la valeur enregistrée**, et la remplace |
+               | supprimer | la **confirmation est pressée**, et la ligne part |
+
+               Le deuxième est celui qui compte : une fenêtre d'édition qui s'ouvrirait **vide**
+               ferait écraser l'enregistrement par du vide, au premier enregistrement, sans
+               erreur. Le contre-essai le montre — `relu: {"type":"","ordre":""}`.
+
+               ── Et une assertion qui n'éprouve pas ce qu'elle semble dire ──
+
+               « … et la referme » est satisfait par le **redessin**, non par la fermeture :
+               ôter le `closeRefModal()` du chemin de succès ne fait pas tomber le contrôle.
+               `<div id="cfgModalRoot">` fait partie du gabarit de la vue, que `renderConfig()`
+               redessine ; la fenêtre part avec elle.
+
+               L'appel explicite est donc **redondant sur ce chemin**. C'est écrit dans le
+               contrôle : *il faut dire lequel des deux gestes obtient l'effet, sinon on croira
+               l'autre couvert.* La ligne n'est pas retirée — elle est défensive, et
+               `app-config.js` est le prochain fichier réécrit ; ôter du code mort d'un fichier
+               qu'on va refaire est du remue-ménage, non du ménage.
+
+               ── Ce qui reste à couvrir, et par quoi commencer ──
+
+               **50 gestes**, dont **17 écritures**. Les plus lourdes d'abord, au même titre que
+               `supprimerInstance` l'a été : `submitEditUser` et `saveUserModules` — qui donnent
+               ou retirent l'accès d'un compte à un module —, puis `doImport`, qui écrit en
+               masse.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

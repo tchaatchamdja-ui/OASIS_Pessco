@@ -2,7 +2,7 @@
  "releve": "2026-10-08",
  "gestesNommes": 78,
  "occurrences": 122,
- "exerces": 18,
+ "exerces": 20,
  "indecidables": 8,
  "gestes": [
   {
@@ -21,7 +21,7 @@
    "evenement": "click",
    "nom": "deleteRef",
    "source": "deleteRef('${coll}','${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -48,7 +48,7 @@
    "evenement": "click",
    "nom": "deleteRef",
    "source": "deleteRef('exigences','${e.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -192,7 +192,7 @@
    "evenement": "click",
    "nom": "deleteRef",
    "source": "deleteRef('${coll}','${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -246,7 +246,7 @@
    "evenement": "click",
    "nom": "saveRef",
    "source": "saveRef('${coll}','${id || ''}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -273,7 +273,7 @@
    "evenement": "click",
    "nom": "deleteRef",
    "source": "deleteRef('${coll}','${id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",

@@ -998,6 +998,127 @@ module.exports = async function parcoursSmoke(port) {
       supprimee.ligne && supprimee.bouton && supprimee.confirmation && supprimee.partie,
       JSON.stringify(supprimee));
 
+    // ── Un référentiel, de bout en bout : créer, modifier, supprimer ──
+    //
+    // Le plus gros bloc de gestes non exercés du portail — `openRefModal` huit
+    // fois, `closeRefModal` dix, `saveRef`, `deleteRef` quatre — et ce sont des
+    // **écritures** : ces tables commandent les organigrammes, les domaines, les
+    // qualifications. Un référentiel qui n'enregistre pas, ou qui enregistre à
+    // côté, se découvre à l'usage.
+    //
+    // `organisation_levels` est choisi pour deux raisons mesurées : son schéma
+    // n'a que deux champs — un texte et un nombre —, et **rien ne référence un
+    // niveau qu'on vient de créer**. La ronde ne laisse donc rien derrière elle,
+    // et c'est la même discipline que pour les instances.
+    //
+    // Tout est **pressé** : le bouton d'ajout, le bouton d'enregistrement, la
+    // ligne à modifier, et la confirmation de suppression.
+    etape = 'référentiel de bout en bout';
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .find((e) => (e.getAttribute('onclick') || '').includes("cfgNavigate('organisation')"));
+      if (b) b.click();
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll('[onclick="openRefModal(\'organisation_levels\')"]').length > 0,
+      { timeout: 10000 },
+    ).catch(() => { /* le contrôle le dira */ });
+
+    const NIVEAU = 'Essai-Niveau-Parcours';
+    const refCreation = await page.evaluate(async (nom) => {
+      const ajout = document.querySelector('[onclick="openRefModal(\'organisation_levels\')"]');
+      if (!ajout) return { ajout: false };
+      ajout.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const type = document.querySelector('#cfgModalRoot [data-field="type"]');
+      const ordre = document.querySelector('#cfgModalRoot [data-field="ordre"]');
+      if (!type || !ordre) return { ajout: true, champs: false };
+      type.value = nom;
+      ordre.value = '99';
+      const enregistrer = [...document.querySelectorAll('#cfgModalRoot [onclick^="saveRef"]')][0];
+      if (!enregistrer) return { ajout: true, champs: true, enregistrer: false };
+      enregistrer.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      const ligne = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(nom));
+      return {
+        ajout: true,
+        champs: true,
+        enregistrer: true,
+        creee: !!ligne,
+        ordre: ligne ? /99/.test(ligne.textContent) : null,
+        fenetreFermee: ((document.getElementById('cfgModalRoot') || {}).innerHTML || '') === '',
+      };
+    }, NIVEAU);
+    // ── « et la referme » est satisfait par le redessin, non par la fermeture ──
+    //
+    // Mesuré en contre-essayant : ôter le `closeRefModal()` du chemin de succès de
+    // `saveRef` **ne fait pas tomber ce contrôle**. La raison est dans le
+    // gabarit — `<div id="cfgModalRoot">` fait partie de la vue de configuration,
+    // que `renderConfig()` redessine ; la fenêtre part avec elle.
+    //
+    // L'appel explicite est donc **redondant sur ce chemin**, et cette assertion
+    // ne l'éprouve pas. Elle éprouve que la fenêtre n'est plus là après
+    // enregistrement, ce qui est ce qu'un agent constate — mais il faut dire
+    // lequel des deux gestes l'obtient, sinon on croira l'autre couvert.
+    //
+    // La ligne n'est pas retirée : elle est défensive, et `app-config.js` est le
+    // prochain fichier réécrit. Ôter du code mort d'un fichier qu'on va refaire
+    // est du remue-ménage, non du ménage.
+    verifier('un référentiel se crée depuis sa fenêtre et la referme',
+      refCreation.creee && refCreation.ordre === true && refCreation.fenetreFermee,
+      JSON.stringify(refCreation));
+
+    const refEdition = await page.evaluate(async (nom) => {
+      const ligne = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(nom));
+      if (!ligne) return { ligne: false };
+      const editer = ligne.querySelector('[onclick^="openRefModal"]');
+      if (!editer) return { ligne: true, bouton: false };
+      editer.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const ordre = document.querySelector('#cfgModalRoot [data-field="ordre"]');
+      const type = document.querySelector('#cfgModalRoot [data-field="type"]');
+      if (!ordre || !type) return { ligne: true, bouton: true, champs: false };
+      // La fenêtre doit porter la valeur enregistrée : une fenêtre d'édition qui
+      // s'ouvre vide ferait écraser l'enregistrement par du vide.
+      const relu = { type: type.value, ordre: String(ordre.value) };
+      ordre.value = '98';
+      [...document.querySelectorAll('#cfgModalRoot [onclick^="saveRef"]')][0].click();
+      await new Promise((r) => setTimeout(r, 2000));
+      const apres = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(nom));
+      return { ligne: true, bouton: true, champs: true, relu, modifiee: apres ? /98/.test(apres.textContent) : null };
+    }, NIVEAU);
+    verifier('une fenêtre d’édition porte la valeur enregistrée et la remplace',
+      refEdition.relu && refEdition.relu.type === NIVEAU && refEdition.relu.ordre === '99'
+      && refEdition.modifiee === true,
+      JSON.stringify(refEdition));
+
+    const refSuppression = await page.evaluate(async (nom) => {
+      const ligne = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(nom));
+      if (!ligne) return { ligne: false };
+      const b = ligne.querySelector('[onclick^="deleteRef"]');
+      if (!b) return { ligne: true, bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 400));
+      const oui = document.querySelector('.oasis-confirm-oui');
+      if (!oui) return { ligne: true, bouton: true, confirmation: false };
+      oui.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return {
+        ligne: true,
+        bouton: true,
+        confirmation: true,
+        partie: ![...document.querySelectorAll('.shell-table tbody tr')]
+          .some((r) => r.textContent.includes(nom)),
+      };
+    }, NIVEAU);
+    verifier('un référentiel se supprime, confirmation pressée',
+      refSuppression.confirmation && refSuppression.partie, JSON.stringify(refSuppression));
+
+
 
 
     // ── La pastille des notifications, éprouvée sur un état fabriqué ──

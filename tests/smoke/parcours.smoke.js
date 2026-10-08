@@ -361,6 +361,36 @@ module.exports = async function parcoursSmoke(port) {
     verifier('la bascule de langue change l’attribut « lang » du document',
       langues.avant.lang === 'fr' && langues.apres.lang === 'en' && langues.retour.lang === 'fr',
       `${langues.avant.lang} → ${langues.apres.lang} → ${langues.retour.lang}`);
+    // ── Et elle redessine la **vue**, non seulement les menus ──
+    //
+    // `poserLangue` retraduit les éléments marqués `data-i18n` : les boutons de
+    // navigation en portent, donc les deux contrôles ci-dessus passaient même
+    // sans que la vue soit redessinée. Le contenu, lui, est produit en HTML par
+    // les fonctions de rendu, et seul un redessin le retraduit — c'est l'objet de
+    // `onLangChange`.
+    //
+    // Mesuré en contre-essayant la conversion du démarrage : ôter
+    // `window.onLangChange` laissait la suite verte. Un portail dont les menus
+    // suivent la langue et dont le contenu reste en français, sans un mot.
+    const vueTraduite = await page.evaluate(async () => {
+      const lire = () => (document.getElementById('mainView') || {}).textContent || '';
+      const presser = (lg) => {
+        const b = [...document.querySelectorAll('.lang-btn')]
+          .find((e) => (e.getAttribute('onclick') || '').includes(`applyLang('${lg}')`));
+        if (b) b.click();
+      };
+      const avant = lire().trim();
+      presser('en');
+      await new Promise((r) => setTimeout(r, 1200));
+      const apres = lire().trim();
+      presser('fr');
+      await new Promise((r) => setTimeout(r, 1200));
+      return { avant: avant.length, apres: apres.length, change: avant !== apres, rendu: lire().trim() === avant };
+    });
+    verifier('la bascule de langue redessine le contenu de la vue',
+      vueTraduite.avant > 50 && vueTraduite.change && vueTraduite.rendu,
+      JSON.stringify(vueTraduite));
+
     verifier('la bascule de langue traduit les menus du portail',
       langues.avant.menu.trim() !== langues.apres.menu.trim()
       && langues.avant.menu.trim() === langues.retour.menu.trim(),
@@ -847,6 +877,79 @@ module.exports = async function parcoursSmoke(port) {
     } else {
       verifier('une carte de module ouverte est offerte au portail', false, 'aucune carte ouverte');
     }
+
+    // ── Le retour d'un module défait le plein écran ──
+    //
+    // Entrer dans un module pose `module-fullscreen` sur le corps : le module
+    // occupe l'écran et porte son titre. **Sortir doit le défaire**, sinon le
+    // portail reste sans sa barre supérieure — un écran dont on ne peut plus
+    // naviguer, et qui ne lève rien.
+    //
+    // Mesuré en contre-essayant la conversion du démarrage : ôter le geste
+    // laissait la suite verte. Le contrôle qui monte un module n'en sortait
+    // jamais.
+    etape = 'retour d’un module';
+    const retour = await page.evaluate(async () => {
+      const dedans = document.body.classList.contains('module-fullscreen');
+      window.planBackToPortal();
+      await new Promise((r) => setTimeout(r, 1500));
+      return {
+        dedans,
+        dehors: !document.body.classList.contains('module-fullscreen'),
+        accueil: ((document.getElementById('mainView') || {}).textContent || '').trim().length,
+        barreRendue: !document.body.classList.contains('app-sidebar-collapsed'),
+      };
+    });
+    verifier('le retour d’un module défait le plein écran et rouvre l’accueil',
+      retour.dedans && retour.dehors && retour.accueil > 50 && retour.barreRendue,
+      JSON.stringify(retour));
+
+    // ── La pastille des notifications, éprouvée sur un état fabriqué ──
+    //
+    // Deux écritures fausses avant celle-ci, et elles disent la même chose :
+    //
+    //   1. « elle s'affiche et porte un nombre ». Le jeu d'essai porte
+    //      quatre-vingt-quatorze notifications, et j'en avais déduit que le compte
+    //      en verrait. **Mesuré : l'API en rend zéro pour lui** — elles sont
+    //      rangées par instance, et aucune ne lui est destinée. La pastille disait
+    //      vrai, et c'est le contrôle qui avait tort ;
+    //   2. « elle s'accorde au compte rendu par l'API ». Vrai, et **vide de
+    //      sens** : avec zéro notification, la pastille porte « 0 » qu'on l'écrive
+    //      ou non. Ôter la ligne qui l'écrit laissait le contrôle vert.
+    //
+    // On **fabrique** donc l'état que le jeu ne donne pas : trois notifications
+    // rendues par un `fetch` substitué, puis `refreshNotifications()` appelée, et
+    // l'on regarde la pastille. C'est la fonction qu'on éprouve, non le geste —
+    // celui-ci (`notifBell`) est déclaré non couvert ailleurs —, mais son effet est
+    // bien celui qu'un agent voit.
+    etape = 'pastille des notifications';
+    const pastille = await page.evaluate(async () => {
+      const vrai = window.fetch;
+      window.fetch = (entree, options) => {
+        if (String(entree).includes('/api/notifications')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 101, message: 'un', ts: '2026-10-08T10:00:00.000Z' },
+            { id: 102, message: 'deux', ts: '2026-10-08T10:01:00.000Z' },
+            { id: 103, message: 'trois', ts: '2026-10-08T10:02:00.000Z' },
+          ]), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        }
+        return vrai(entree, options);
+      };
+      const lu = window.NOTIF_LAST_SEEN;
+      window.NOTIF_LAST_SEEN = 0;
+      try {
+        await window.refreshNotifications();
+        const p = document.getElementById('notifBadge');
+        return p ? { texte: p.textContent, affichee: p.style.display === 'flex' } : { absente: true };
+      } finally {
+        window.fetch = vrai;
+        window.NOTIF_LAST_SEEN = lu;
+        await window.refreshNotifications();
+      }
+    });
+    verifier('la pastille des notifications porte le nombre non vu',
+      !pastille.absente && pastille.texte === '3' && pastille.affichee,
+      JSON.stringify(pastille));
 
     // ── Le mode dégradé (TDR §F.2 ; fiche technique §2, contrainte n° 3) ──
     //

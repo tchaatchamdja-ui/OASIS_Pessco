@@ -72,6 +72,17 @@ declare global {
     /** Le dernier identifiant de notification vu. Était `let NOTIF_LAST_SEEN`. */
     NOTIF_LAST_SEEN: number;
     /**
+     * La marque, en HTML. Était `const OASIS_LOGO_IMG` dans `app.js` — une
+     * globale **lexicale**, et le dernier nom qui empêchait `app-demarrage.js`
+     * d'être converti : il la lit pour poser la marque dans la barre.
+     *
+     * Ce n'est pas de l'état mutable, et elle n'avait donc pas sa place ici au
+     * premier tri. Elle y est parce que le tri n'était pas le bon critère : ce
+     * qui compte est **ce qu'un fichier converti doit atteindre**, mutable ou
+     * non.
+     */
+    OASIS_LOGO_IMG: string;
+    /**
      * Les vues du portail, par nom. Les vues `mod_<CODE>` y sont ajoutées par
      * `modules-host.js` depuis les manifestes des modules installés.
      *
@@ -84,6 +95,10 @@ declare global {
 }
 
 const CLE_NOTIF = 'oasis_notif_seen';
+
+// La marque du portail. Reprise mot pour mot d'`app.js` : c'est une chaîne de
+// balisage, et la retaper serait la changer.
+const MARQUE_HTML = '<span class="oasis-logo-img" role="img" aria-label="OASIS"></span>';
 
 /**
  * Pose l'état partagé sur `window`, avec les valeurs qu'`app.js` lui donnait.
@@ -112,6 +127,7 @@ export function initialiser(): void {
   try { vu = parseInt(localStorage.getItem(CLE_NOTIF) ?? '0', 10) || 0; } catch { vu = 0; }
   window.NOTIF_LAST_SEEN = vu;
   window.VIEWS = {};
+  window.OASIS_LOGO_IMG = MARQUE_HTML;
 }
 
 // ── Les accesseurs typés, pour les modules à venir ──
@@ -132,6 +148,15 @@ export const poserSousVue = (s: string): void => { window.CFG_SUB = s; };
 export const referentiels = (): Record<string, unknown[]> => window.REFS;
 
 export const vues = (): Record<string, Vue> => window.VIEWS;
+
+export const dernierVu = (): number => window.NOTIF_LAST_SEEN;
+export const poserDernierVu = (n: number): void => {
+  window.NOTIF_LAST_SEEN = n;
+  try { localStorage.setItem(CLE_NOTIF, String(n)); } catch { /* stockage fermé */ }
+};
+
+/** La marque du portail, en HTML. */
+export const marque = (): string => window.OASIS_LOGO_IMG;
 
 /** Le rôle du compte connecté, ou la chaîne vide s'il n'est pas chargé. */
 export const role = (): string => window.ME?.user.role ?? '';

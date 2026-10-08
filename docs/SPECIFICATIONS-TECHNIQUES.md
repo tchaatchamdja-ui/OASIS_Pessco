@@ -74,8 +74,8 @@ application d'autorité dont la chaîne d'approvisionnement est lisible par une 
 | Serveur — `src/` (33 fichiers) | 5 682 |
 | Modules métier — `src/modules/` | 14 142 |
 | **Total serveur** | **≈ 19 800** |
-| Frontend — TypeScript (49 fichiers) | **6 854** |
-| Frontend — JavaScript restant | **58 891** |
+| Frontend — TypeScript (51 fichiers) | **7 265** |
+| Frontend — JavaScript restant | **58 721** |
 | Socle Java (15 fichiers) | 2 255 |
 | Suites de contrôle | 8 406 |
 | Scripts d'exploitation | 1 380 |
@@ -200,9 +200,9 @@ meilleure façon de faire ignorer les vraies.
 | | Lignes | État |
 |---|---|---|
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
-| **portail** — libellés, icônes, deux pages, état partagé, hôte des modules (`frontend/portail/`) | 1 229 | **TypeScript** — 1 435 comparaisons sans écart |
+| **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage (`frontend/portail/`) | 1 389 | **TypeScript** — 1 435 comparaisons sans écart |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail — le reste (`public/js/`) | 2 998 | JavaScript — **78 gestes, 15 exercés, 55 motivés** |
+| portail — le reste (`public/js/`) | 2 828 | JavaScript — **78 gestes, 15 exercés, 55 motivés** |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -213,7 +213,7 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | | Ce qui est éprouvé | Combien |
 |---|---|---|
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
-| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **54 contrôles** pour les neuf écrans réunis |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **57 contrôles** pour les neuf écrans réunis |
 
 Ces cinq écrans portent **1 326 occurrences de geste** — boutons, formulaires, menus, champs.
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 121 pour **78** noms
@@ -675,9 +675,9 @@ Chaque chiffre ci-dessus se relève. Si l'une de ces commandes ne rend pas ce qu
 # Pile et volumes
 node -e "const p=require('./package.json');console.log(p.engines, Object.keys(p.dependencies).length+' deps')"
 wc -l server.js && find src -name '*.js' -exec cat {} + | wc -l       # serveur : 1 323 + 19 824
-find frontend \( -name '*.ts' -o -name '*.tsx' \) | wc -l             # TypeScript : 49 fichiers
-find frontend \( -name '*.ts' -o -name '*.tsx' \) -exec cat {} + | wc -l   # 6 854 lignes
-cat public/js/*.js public/modules/*/js/*.js | wc -l                   # JS restant : 58 891
+find frontend \( -name '*.ts' -o -name '*.tsx' \) | wc -l             # TypeScript : 51 fichiers
+find frontend \( -name '*.ts' -o -name '*.tsx' \) -exec cat {} + | wc -l   # 7 265 lignes
+cat public/js/*.js public/modules/*/js/*.js | wc -l                   # JS restant : 58 721
 find backend-java conformite-java -name '*.java' -exec cat {} + | wc -l    # Java : 2 255
 
 # Routes
@@ -711,7 +711,7 @@ done
 node scripts/relever-gestes.js portail | head -8
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 940, et 0
+npm run smoke; echo "code de sortie : $?"                             # 943, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

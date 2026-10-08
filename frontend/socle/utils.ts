@@ -68,12 +68,30 @@ export function formatDate(d: string | number | Date | null | undefined): string
 
 // Le bandeau d'avis vient de `oasis-toast.js`. Une page qui ne le charge pas ne
 // doit pas s'arrêter pour autant : l'avis part à la console, et c'est dit.
-export function showToast(message: string, type = 'success'): unknown {
+//
+// ── La durée **laissait tomber**, et le compilateur l'a dit ──
+//
+// Cette fonction ne prenait que deux paramètres et appelait `oasisToast(message,
+// type)` : toute durée demandée par l'appelant partait en silence. `app.js`, qui
+// définit un `showToast` du même nom pour le portail, en prend trois et la passe.
+//
+// Trouvé le 8 octobre 2026 en convertissant `app-demarrage.js` : déclarer la
+// signature du portail a fait lever `tsc` sur celle du socle. *Aucun contrôle ne
+// l'avait vu.*
+//
+// **La lacune était latente**, mesuré appel par appel : les douze appels à trois
+// arguments sont tous dans `public/js/`, c'est-à-dire sur le portail, qui emploie
+// la version d'`app.js`. Aucun fichier de module n'en passe. Un avis de huit
+// secondes demandé depuis un écran de module serait resté quatre.
+//
+// `toast()` accepte la durée depuis toujours : il n'y avait rien à ajouter là,
+// seulement à ne plus l'oublier en route.
+export function showToast(message: string, type = 'success', duree = 4000): unknown {
   if (typeof window.oasisToast !== 'function') {
     console.warn('[toast]', type, message);
     return null;
   }
-  return window.oasisToast(message, type);
+  return window.oasisToast(message, type, duree);
 }
 
 // Champs de recherche des barres de filtres : re-rendu différé (300 ms) puis

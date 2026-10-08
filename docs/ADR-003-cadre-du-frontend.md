@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 998 restantes sur 4 217 | **78 gestes nommés, 15 exercés, 55 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 828 restantes sur 4 217 | **78 gestes nommés, 15 exercés, 55 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1402,6 +1402,78 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                `window` sans lecteur : une `function` du premier niveau s'y pose, qu'on le veuille
                ou non. Ils y restent **parce qu'ils y étaient** — retirer un nom de la surface est
                un changement, qui se fera en le disant. Même conduite que pour `_icon`.
+
+           5.c.5 [x] **`app-demarrage.js` — la navigation, les notifications, le démarrage**
+               — fait le 8 octobre 2026. 168 lignes, et **1 389 du portail sur 4 217** ; il
+               reste 2 828.
+
+               Il **écrivait** quatre globales lexicales : c'était le plus bloqué des quatre, et
+               la suite n° 5.c.3 l'a libéré. Un dernier nom manquait — `OASIS_LOGO_IMG`, une
+               constante restée dans `app.js` au premier tri. *Le tri « mutable ou non » n'était
+               pas le bon critère : ce qui compte est **ce qu'un fichier converti doit
+               atteindre**.*
+
+               ── Le compilateur trouve une deuxième collision, et une lacune réelle ──
+
+               `window.showToast` porte **deux fonctions**, comme `window.api`. Celle du socle
+               ne prenait que deux paramètres et appelait `oasisToast(message, type)` : **toute
+               durée demandée partait en silence**. Celle d'`app.js` en prend trois et la passe.
+
+               Mesuré appel par appel : les **douze** appels à trois arguments sont tous dans
+               `public/js/`, donc sur le portail, qui emploie la version d'`app.js`. Aucun
+               fichier de module n'en passe — la lacune était **latente**. Un avis de huit
+               secondes demandé depuis un écran de module serait resté quatre.
+
+               Comblée : une ligne, et `toast()` acceptait la durée depuis toujours. *Il n'y
+               avait rien à ajouter là, seulement à ne plus l'oublier en route.*
+
+               Et mon premier comptage était faux — mon motif attrapait le `1048576` d'un
+               argument de message et annonçait un appel vivant dans `profil_risque`. *Un motif
+               trop large transforme une lacune latente en défaut imaginaire.*
+
+               ── Mon omission, et le contrôle qui l'a dite ──
+
+               La conversion a **perdu l'affectation des cinq vues de base**. `naviguer` ne
+               trouvait aucune vue et repliait tout sur l'accueil.
+
+               Le contrôle a rendu : *« la vue du profil se remplit **et ne porte pas ses
+               champs** »* — mille lignes de contenu, et les mauvaises. **C'est le contrôle de
+               champs posé par la suite n° 0 qui l'a dit** ; « l'écran n'est pas vide » aurait
+               passé. Quarante-huit heures entre poser un contrôle et lui devoir la découverte
+               d'une régression qu'on vient d'écrire.
+
+               Et les vues sont désormais **fusionnées** dans la table, non affectées :
+               l'original faisait `VIEWS = {…}`, qui remplace. Cela marchait parce que l'hôte des
+               modules chargeait après ; inverser les deux balises aurait effacé les vues des
+               modules, sans erreur, et l'on aurait cherché du côté des modules.
+
+               ── Trois comportements que personne n'éprouvait ──
+
+               Les contre-essais les ont nommés, et tous trois sont couverts :
+
+               | Ce qu'on ôtait | Ce que la suite disait | Désormais |
+               |---|---|---|
+               | `onLangChange` | rien | la bascule **redessine le contenu**, non seulement les menus |
+               | le plein écran défait au retour | rien | sortir d'un module rouvre l'accueil et rend la barre |
+               | l'écriture de la pastille | rien | la pastille porte le nombre non vu |
+
+               Le premier mérite d'être dit : `poserLangue` retraduit les éléments marqués
+               `data-i18n`, et les boutons de navigation en portent. Les deux contrôles de langue
+               passaient donc **sans que la vue soit redessinée** — un portail dont les menus
+               suivent la langue et dont le contenu reste en français, sans un mot.
+
+               ── Et la pastille a demandé trois écritures ──
+
+               1. *« elle s'affiche et porte un nombre »* : le jeu porte quatre-vingt-quatorze
+                  notifications, et j'en avais déduit que le compte en verrait. **L'API en rend
+                  zéro pour lui** — elles sont rangées par instance. La pastille disait vrai,
+                  c'est le contrôle qui avait tort ;
+               2. *« elle s'accorde au compte rendu par l'API »* : vrai, et **vide de sens** —
+                  avec zéro notification, la pastille porte « 0 » qu'on l'écrive ou non ;
+               3. l'état est **fabriqué** : trois notifications rendues par un `fetch`
+                  substitué. Trois contre-essais, trois morsures distinctes.
+
+               *Une mesure prise sur l'état que le jeu donne mesure le jeu, non le code.*
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

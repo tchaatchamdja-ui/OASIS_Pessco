@@ -73,8 +73,9 @@ declare global {
      * leurs pages.
      */
     CURRENT_LANG?: string;
-    /** Rappel facultatif, appelé après chaque changement de langue. */
-    onLangChange?: () => void;
+    // `onLangChange` est déclaré par son **définisseur**, le sas du démarrage
+    // (`globales/app-demarrage.ts`). Il l'était ici, faute d'en avoir un : le
+    // portail était du JavaScript sans types. Ce sas ne fait que l'appeler.
   }
 }
 

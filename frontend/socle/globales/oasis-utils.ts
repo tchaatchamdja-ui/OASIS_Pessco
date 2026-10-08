@@ -31,7 +31,7 @@ declare global {
     api: (chemin: string, options?: RequestInit) => Promise<unknown>;
     escapeHtml: (s: unknown) => string;
     formatDate: (d: string | number | Date | null | undefined) => string;
-    showToast: (message: string, type?: string) => unknown;
+    showToast: (message: string, type?: string, duree?: number) => unknown;
     _pesSearchInput: (champ: HTMLInputElement, appliquer: () => void) => void;
   }
 }

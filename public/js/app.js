@@ -1,7 +1,9 @@
 // OASIS — logique du portail (socle Phase 1)
 // Logo de l'application (/img/oasis-logo.svg appliqué en masque : il prend la
 // couleur du contexte, donc reste lisible sur les 5 thèmes).
-const OASIS_LOGO_IMG = '<span class="oasis-logo-img" role="img" aria-label="OASIS"></span>';
+// `OASIS_LOGO_IMG` vient de `/app/etat.js`, chargé avant ce fichier. C'était le
+// dernier nom lexical qui empêchait `app-demarrage.js` d'être converti : il la
+// lit pour poser la marque dans la barre. Ne pas la redéclarer.
 
 // Nom complet : les majuscules formant le sigle OASIS sont légèrement agrandies.
 const OASIS_FULLNAME_HTML =

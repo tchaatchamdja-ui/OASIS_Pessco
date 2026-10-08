@@ -511,48 +511,8 @@
    "exerce": null
   },
   {
-   "fichier": "public/js/app-demarrage.js",
-   "ligne": 104,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('sidebarNav'):click",
-   "source": "document.getElementById('sidebarNav').addEventListener('click', (e) => {",
-   "id": "sidebarNav",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-demarrage.js",
-   "ligne": 109,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('logoutBtn'):click",
-   "source": "document.getElementById('logoutBtn').addEventListener('click', async () => {",
-   "id": "logoutBtn",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app-demarrage.js",
-   "ligne": 114,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('notifBell'):click",
-   "source": "document.getElementById('notifBell').addEventListener('click', async () => {",
-   "id": "notifBell",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app-demarrage.js",
-   "ligne": 134,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document.getElementById('pwdSubmit'):click",
-   "source": "document.getElementById('pwdSubmit').addEventListener('click', async () => {",
-   "id": "pwdSubmit",
-   "exerce": false
-  },
-  {
    "fichier": "public/js/app.js",
-   "ligne": 233,
+   "ligne": 235,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailOuvrirRecherche",
@@ -561,7 +521,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 236,
+   "ligne": 238,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "portailChercher",
@@ -570,7 +530,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 238,
+   "ligne": 240,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -579,7 +539,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 297,
+   "ligne": 299,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "${pdf}",
@@ -588,7 +548,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 299,
+   "ligne": 301,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openImportModal",
@@ -597,7 +557,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 339,
+   "ligne": 341,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -606,7 +566,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 350,
+   "ligne": 352,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -615,7 +575,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 351,
+   "ligne": 353,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "doImport",
@@ -624,7 +584,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 517,
+   "ligne": 519,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -633,7 +593,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 519,
+   "ligne": 521,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -642,7 +602,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 601,
+   "ligne": 603,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setUserTab",
@@ -651,7 +611,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 669,
+   "ligne": 671,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleUserSidebar",
@@ -660,7 +620,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 744,
+   "ligne": 746,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -669,7 +629,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 747,
+   "ligne": 749,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -678,7 +638,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 748,
+   "ligne": 750,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveUserModules",
@@ -687,7 +647,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 773,
+   "ligne": 775,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -696,7 +656,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 784,
+   "ligne": 786,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -705,7 +665,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 814,
+   "ligne": 816,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -714,7 +674,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 837,
+   "ligne": 839,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -723,7 +683,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 838,
+   "ligne": 840,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitEditUser",
@@ -732,7 +692,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1047,
+   "ligne": 1049,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "uploadProfilePhoto",
@@ -741,7 +701,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1049,
+   "ligne": 1051,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "removeProfilePhoto",
@@ -750,7 +710,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1067,
+   "ligne": 1069,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveProfileInfos",
@@ -759,7 +719,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1100,
+   "ligne": 1102,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitProfilePassword",
@@ -768,7 +728,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1117,
+   "ligne": 1119,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveProfileExtra",
@@ -777,7 +737,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 258,
+   "ligne": 260,
    "forme": "propriété",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -787,7 +747,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 533,
+   "ligne": 535,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "cardEl:click",
@@ -797,7 +757,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 692,
+   "ligne": 694,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('newUserBtn'):click",
@@ -807,7 +767,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 694,
+   "ligne": 696,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -817,7 +777,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 714,
+   "ligne": 716,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "sel:change",
@@ -827,7 +787,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 722,
+   "ligne": 724,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -837,7 +797,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 730,
+   "ligne": 732,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -847,7 +807,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 731,
+   "ligne": 733,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -857,7 +817,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 732,
+   "ligne": 734,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -867,7 +827,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 789,
+   "ligne": 791,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('efValider'):click",
@@ -877,7 +837,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 844,
+   "ligne": 846,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "document.getElementById('euEmail'):input",
@@ -887,7 +847,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 918,
+   "ligne": 920,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('closeModal'):click",
@@ -897,7 +857,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 919,
+   "ligne": 921,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('cancelModal'):click",
@@ -907,7 +867,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 920,
+   "ligne": 922,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "document.getElementById('nuRole'):change",
@@ -917,7 +877,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 924,
+   "ligne": 926,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('createUser'):click",
@@ -927,7 +887,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1172,
+   "ligne": 1174,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('verifyBtn'):click",
@@ -981,6 +941,46 @@
    "source": "sel.addEventListener('change', majAffichage);",
    "id": null,
    "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/demarrage.ts",
+   "ligne": 246,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('sidebarNav'):click",
+   "source": "document.getElementById('sidebarNav')?.addEventListener('click', (e) => {",
+   "id": "sidebarNav",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/demarrage.ts",
+   "ligne": 252,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('logoutBtn'):click",
+   "source": "document.getElementById('logoutBtn')?.addEventListener('click', async () => {",
+   "id": "logoutBtn",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/demarrage.ts",
+   "ligne": 257,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('notifBell'):click",
+   "source": "document.getElementById('notifBell')?.addEventListener('click', async () => {",
+   "id": "notifBell",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/demarrage.ts",
+   "ligne": 274,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document.getElementById('pwdSubmit'):click",
+   "source": "document.getElementById('pwdSubmit')?.addEventListener('click', async () => {",
+   "id": "pwdSubmit",
+   "exerce": false
   },
   {
    "fichier": "frontend/portail/modules-hote.ts",

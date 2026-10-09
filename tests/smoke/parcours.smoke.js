@@ -1303,6 +1303,248 @@ module.exports = async function parcoursSmoke(port) {
       JSON.stringify({ defaite, restantes: (apresDefaite || []).length, attendu: (premier.avant || []).length }));
     fs.rmSync(dossierClasseurs, { recursive: true, force: true });
 
+    // ── Les trois écritures de la configuration de l'instance ──
+    //
+    // `saveAAC`, `saveSecurite`, `saveSysteme`. Elles se ressemblent et se
+    // couvrent ensemble, parce que le danger qu'elles portent est **le même**, et
+    // qu'il n'est pas celui qu'on croit.
+    //
+    // Chacune envoie **tout son bloc** à chaque enregistrement : les sept
+    // paramètres de sécurité, les huit champs de l'identité, les deux de la
+    // réplication. Un champ que la fenêtre n'a pas su relire part donc **vide ou
+    // faux** avec les autres, et écrase l'enregistré. C'est exactement le défaut
+    // que `submitEditUser` a montré hier — le prénom effacé par une fenêtre
+    // ouverte vide — et c'est pourquoi l'assertion qui compte ici n'est pas ce qui
+    // change, mais **ce qui ne doit pas changer**.
+    //
+    // Chaque ronde lit donc la configuration entière avant, modifie **un seul**
+    // champ par l'écran, et vérifie les deux choses : le champ visé a bougé, et
+    // aucun autre n'a bougé. Puis elle remet la valeur d'origine.
+    //
+    // Les champs visés sont choisis pour ne rien pouvoir rompre : `maxFailedAttempts`
+    // n'agit qu'au-delà du nombre d'échecs, `centralUrl` ne commande aucun code
+    // (ADR-001 : la réplication n'existe qu'en intention), et `ville` est un
+    // libellé. **Les champs qu'on n'a pas touchés sont ceux qui romperaient la
+    // séance** : `mfaEnabled`, `forceChangeOnFirstLogin`, `sessionTimeoutMinutes`
+    // et `defaultLang` décident de la session même qui exécute ces contrôles.
+    etape = 'configuration de l’instance';
+    const lireConfig = () => page.evaluate(async () => {
+      const r = await fetch('/api/config');
+      return r.ok ? r.json() : null;
+    });
+    const allerSousVue = async (sous) => {
+      await page.evaluate((s) => {
+        const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+          .find((e) => (e.getAttribute('onclick') || '').includes(`cfgNavigate('${s}')`));
+        if (b) b.click();
+      }, sous);
+      await new Promise((r) => setTimeout(r, 600));
+    };
+
+    // ── 1. La réplication : la plus simple, et elle cache une asymétrie ──
+    await allerSousVue('systeme');
+    const cfgAvantSys = await lireConfig();
+    const URL_ESSAI = 'https://essai-parcours.invalid/central';
+    const sysEcrit = await page.evaluate(async (url) => {
+      const champ = document.getElementById('repUrl');
+      const bouton = document.querySelector('[onclick="saveSysteme()"]');
+      if (!champ || !bouton) return { champs: false };
+      const luDAbord = champ.value;
+      champ.value = url;
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 1500));
+      return { champs: true, luDAbord };
+    }, URL_ESSAI);
+    const cfgApresSys = await lireConfig();
+    verifier('l’adresse du serveur central s’enregistre, et le reste de la configuration ne bouge pas',
+      sysEcrit.champs === true
+      && sysEcrit.luDAbord === ((cfgAvantSys || {}).replication || {}).centralUrl
+      && ((cfgApresSys || {}).replication || {}).centralUrl === URL_ESSAI
+      && JSON.stringify((cfgApresSys || {}).security) === JSON.stringify((cfgAvantSys || {}).security)
+      && ((cfgApresSys || {}).replication || {}).enabled === ((cfgAvantSys || {}).replication || {}).enabled,
+      JSON.stringify({ sysEcrit, avant: (cfgAvantSys || {}).replication, apres: (cfgApresSys || {}).replication }));
+
+    // ── L'asymétrie, nommée plutôt que découverte un jour en production ──
+    //
+    // Le serveur n'écrit l'adresse que si elle est **non vide**
+    // (`if (replication.centralUrl)`). Vider le champ et enregistrer rend donc
+    // « enregistré » — et garde l'ancienne adresse. Ce contrôle ne bénit pas ce
+    // comportement : il le **fixe**, pour que sa correction soit un choix et non
+    // une surprise. La case à cocher, elle, accepte bien `false`.
+    const sysVide = await page.evaluate(async () => {
+      const champ = document.getElementById('repUrl');
+      const bouton = document.querySelector('[onclick="saveSysteme()"]');
+      if (!champ || !bouton) return { champs: false };
+      champ.value = '';
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 1500));
+      const bandeau = document.querySelector('.oasis-toast-message');
+      return { champs: true, bandeau: bandeau ? bandeau.textContent.trim() : null };
+    });
+    const cfgApresVide = await lireConfig();
+    verifier('une adresse centrale vidée n’efface pas l’enregistrée, et le bandeau annonce pourtant l’enregistrement',
+      sysVide.champs === true
+      && ((cfgApresVide || {}).replication || {}).centralUrl === URL_ESSAI
+      && !!sysVide.bandeau,
+      JSON.stringify({ sysVide, apres: (cfgApresVide || {}).replication }));
+
+    // Remise en place, par l'écran.
+    const sysRendu = await page.evaluate(async (url) => {
+      const champ = document.getElementById('repUrl');
+      champ.value = url;
+      document.querySelector('[onclick="saveSysteme()"]').click();
+      await new Promise((r) => setTimeout(r, 1500));
+      return true;
+    }, ((cfgAvantSys || {}).replication || {}).centralUrl || 'https://central.uemoa.int');
+    const cfgRenduSys = await lireConfig();
+    verifier('et l’adresse d’origine se remet par le même écran',
+      sysRendu === true
+      && JSON.stringify((cfgRenduSys || {}).replication) === JSON.stringify((cfgAvantSys || {}).replication),
+      JSON.stringify({ avant: (cfgAvantSys || {}).replication, rendu: (cfgRenduSys || {}).replication }));
+
+    // ── 2. La sécurité : sept paramètres partent ensemble ──
+    await allerSousVue('securite');
+    const cfgAvantSec = await lireConfig();
+    const secEcrit = await page.evaluate(async () => {
+      const champ = document.getElementById('secMaxFail');
+      const bouton = document.querySelector('[onclick="saveSecurite()"]');
+      if (!champ || !bouton) return { champs: false };
+      const luDAbord = champ.value;
+      const cases = ['secSingle', 'secForce', 'secMfa']
+        .map((id) => [id, (document.getElementById(id) || {}).checked]);
+      champ.value = String(parseInt(luDAbord, 10) + 3);
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 1500));
+      return { champs: true, luDAbord, cases };
+    });
+    const cfgApresSec = await lireConfig();
+    // ── Ce qui ne doit pas bouger : les **douze** autres paramètres ──
+    //
+    // L'écran en montre sept ; le bloc `security` en porte treize. Les six que
+    // l'écran n'offre pas — les quatre exigences de composition du mot de passe,
+    // le plafond d'écritures par minute, la profondeur de l'historique — ne
+    // doivent pas davantage être dérangés par un enregistrement.
+    //
+    // **Et il faut dire ce que ce contrôle n'attrape pas.** Contre-essayé en
+    // supprimant `mfaEnabled` du corps de la requête : il **reste vert**. Le
+    // serveur n'applique qu'un booléen qu'il reçoit (`typeof === 'boolean'`), si
+    // bien qu'une case que la fenêtre n'aurait pas su relire ne peut pas éteindre
+    // un drapeau par omission. Le défaut de `submitEditUser` — le champ effacé
+    // parce qu'il est parti vide — **n'a pas d'équivalent ici**, et c'est le
+    // serveur qui l'empêche, non l'écran.
+    //
+    // Ce qu'il attrape, c'est la valeur **inversée** : contre-essayé en envoyant
+    // `!checked`, il rend `mfaEnabled: true` et le contrôle de remise en place
+    // dénonce en plus que la ronde ne se défait pas. Au passage, la séance a
+    // survécu à cette MFA allumée — elle n'est vérifiée qu'à la connexion, et la
+    // session était déjà ouverte.
+    const sansLeChamp = (s) => {
+      const c = { ...(s || {}) };
+      delete c.maxFailedAttempts;
+      return JSON.stringify(c);
+    };
+    verifier('les paramètres de sécurité s’enregistrent, et les douze autres traversent intacts',
+      secEcrit.champs === true
+      && secEcrit.luDAbord === String(((cfgAvantSec || {}).security || {}).maxFailedAttempts)
+      && ((cfgApresSec || {}).security || {}).maxFailedAttempts
+         === ((cfgAvantSec || {}).security || {}).maxFailedAttempts + 3
+      && sansLeChamp((cfgApresSec || {}).security) === sansLeChamp((cfgAvantSec || {}).security),
+      JSON.stringify({ secEcrit, avant: (cfgAvantSec || {}).security, apres: (cfgApresSec || {}).security }));
+
+    const secRendu = await page.evaluate(async (valeur) => {
+      const champ = document.getElementById('secMaxFail');
+      if (!champ) return false;
+      champ.value = String(valeur);
+      document.querySelector('[onclick="saveSecurite()"]').click();
+      await new Promise((r) => setTimeout(r, 1500));
+      return true;
+    }, ((cfgAvantSec || {}).security || {}).maxFailedAttempts);
+    const cfgRenduSec = await lireConfig();
+    verifier('et les paramètres de sécurité reviennent à l’identique',
+      secRendu === true
+      && JSON.stringify((cfgRenduSec || {}).security) === JSON.stringify((cfgAvantSec || {}).security),
+      JSON.stringify({ avant: (cfgAvantSec || {}).security, rendu: (cfgRenduSec || {}).security }));
+
+    // ── 3. L'identité de l'Administration : la fenêtre doit porter l'enregistré ──
+    //
+    // `openAacEdit` ouvre une fenêtre de **huit champs** et un sélecteur de langue.
+    // `saveAAC` les renvoie tous, et renvoie en plus `instance.codeEtat` et
+    // `instance.defaultLang` — le bigramme et la langue par défaut du déploiement.
+    // Une fenêtre qui s'ouvrirait sans la langue sélectionnée basculerait donc la
+    // langue de l'instance au premier enregistrement, sans que personne l'ait
+    // demandé. C'est ce que le contrôle regarde.
+    await allerSousVue('organisation');
+    const cfgAvantAac = await lireConfig();
+    const VILLE = 'Essai-Ville-Parcours';
+    const aacEcrit = await page.evaluate(async (ville) => {
+      const ouvrir = document.querySelector('[onclick="openAacEdit()"]');
+      if (!ouvrir) return { ouvrir: false };
+      ouvrir.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const champ = (id) => document.getElementById(id);
+      const ids = ['aacNom', 'aacSigle', 'aacEtat', 'aacBigramme', 'aacVille', 'aacAdresse1', 'aacAdresse2', 'aacEmail'];
+      if (ids.some((i) => !champ(i)) || !champ('aacLang')) return { ouvrir: true, champs: false };
+      const luDAbord = {};
+      ids.forEach((i) => { luDAbord[i] = champ(i).value; });
+      luDAbord.aacLang = champ('aacLang').value;
+      champ('aacVille').value = ville;
+      const enregistrer = document.querySelector('#cfgModalRoot [onclick="saveAAC()"]');
+      if (!enregistrer) return { ouvrir: true, champs: true, bouton: false };
+      enregistrer.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return {
+        ouvrir: true, champs: true, bouton: true, luDAbord,
+        alEcran: [...document.querySelectorAll('.aac-info-val')].some((e) => e.textContent.includes(ville)),
+      };
+    }, VILLE);
+    const cfgApresAac = await lireConfig();
+    const aacAvant = (cfgAvantAac || {}).aac || {};
+    const aacApres = (cfgApresAac || {}).aac || {};
+    const sansVille = (a) => {
+      const c = { ...(a || {}) };
+      delete c.ville;
+      return JSON.stringify(c);
+    };
+    // Le logo est une image en base 64 : il est **comparé** comme le reste, mais
+    // jamais **rapporté** — un échec rendait 1,4 Mo de diagnostic, donc illisible.
+    const lisible = (a) => {
+      const c = { ...(a || {}) };
+      if (c.logo) c.logo = `[image de ${c.logo.length} caractères]`;
+      return c;
+    };
+    verifier('l’identité de l’Administration se modifie, et la fenêtre portait bien l’enregistré',
+      aacEcrit.bouton === true
+      // La fenêtre lue : si elle s'ouvrait vide, ces trois-là seraient vides et
+      // l'enregistrement les effacerait.
+      && (aacEcrit.luDAbord || {}).aacNom === aacAvant.nom
+      && (aacEcrit.luDAbord || {}).aacBigramme === aacAvant.bigramme
+      && (aacEcrit.luDAbord || {}).aacLang === ((cfgAvantAac || {}).instance || {}).defaultLang
+      && aacApres.ville === VILLE
+      && aacEcrit.alEcran === true
+      // Et ce qui ne devait pas bouger n'a pas bougé.
+      && sansVille(aacApres) === sansVille(aacAvant)
+      && ((cfgApresAac || {}).instance || {}).defaultLang === ((cfgAvantAac || {}).instance || {}).defaultLang
+      && ((cfgApresAac || {}).instance || {}).codeEtat === ((cfgAvantAac || {}).instance || {}).codeEtat,
+      JSON.stringify({ aacEcrit, avant: lisible(aacAvant), apres: lisible(aacApres) }));
+
+    const aacRendu = await page.evaluate(async (ville) => {
+      const ouvrir = document.querySelector('[onclick="openAacEdit()"]');
+      if (!ouvrir) return false;
+      ouvrir.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const champ = document.getElementById('aacVille');
+      if (!champ) return false;
+      champ.value = ville;
+      document.querySelector('#cfgModalRoot [onclick="saveAAC()"]').click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return true;
+    }, aacAvant.ville || '');
+    const cfgRenduAac = await lireConfig();
+    verifier('et l’identité revient à l’identique',
+      aacRendu === true
+      && JSON.stringify((cfgRenduAac || {}).aac) === JSON.stringify(aacAvant),
+      JSON.stringify({ avant: lisible(aacAvant), rendu: lisible((cfgRenduAac || {}).aac) }));
+
     // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
     //
     // `saveUserModules` **donne ou retire l'accès d'un compte à un module** ;

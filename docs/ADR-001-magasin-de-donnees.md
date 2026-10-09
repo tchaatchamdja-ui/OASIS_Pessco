@@ -242,6 +242,18 @@ payée** — il ne reste qu'à l'exercer le jour venu.
        **elle existait déjà** : fiche technique du 2 août 2026, §3.3. Réplication
        logique PostgreSQL asynchrone vers le serveur central, tolérante aux
        coupures. Le préalable est levé ; c'est ce qui rouvre cet ADR.
+
+       **Un point à trancher, relevé le 9 octobre 2026** en couvrant l'écran qui
+       règle la réplication (ADR-003, 5.c.10). Le serveur n'écrit `centralUrl` que
+       si elle est **non vide** (`if (replication.centralUrl)`) : vider le champ et
+       enregistrer rend « Configuration enregistrée. » et **garde l'ancienne
+       adresse**. L'opérateur ne peut donc pas effacer la cible par l'écran, et rien
+       ne le lui dit.
+
+       Le comportement est **fixé par un contrôle de parcours**, non corrigé : ce que
+       signifie « effacer l'adresse du central » — désactiver la cible, ou être
+       refusé — appartient à cette spécification. La trancher ici, et le contrôle
+       suivra.
 2. [x] **Écrire la contrainte d'un seul processus par instance** — faite
        (`src/verrou.js`). Le serveur pose un `.verrou` dans le répertoire de
        données et refuse de démarrer si un autre le tient ; un verrou laissé par

@@ -2,7 +2,7 @@
  "releve": "2026-10-09",
  "gestesNommes": 78,
  "occurrences": 122,
- "exerces": 24,
+ "exerces": 28,
  "indecidables": 8,
  "gestes": [
   {
@@ -309,7 +309,7 @@
    "evenement": "click",
    "nom": "openAacEdit",
    "source": "openAacEdit()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -354,7 +354,7 @@
    "evenement": "click",
    "nom": "saveAAC",
    "source": "saveAAC()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -471,7 +471,7 @@
    "evenement": "click",
    "nom": "saveSecurite",
    "source": "saveSecurite()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -480,7 +480,7 @@
    "evenement": "click",
    "nom": "saveSysteme",
    "source": "saveSysteme()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",

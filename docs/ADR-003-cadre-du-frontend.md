@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 24 exercés, 46 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 28 exercés, 42 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1702,6 +1702,93 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                l'organigramme, les photos et logos (`uploadAacLogo`, `uploadProfilePhoto` —
                ils demandent un fichier, comme l'import), et `submitProfilePassword`, qui
                demande un compte dédié puisqu'il change le mot de passe de qui le presse.
+
+
+           5.c.10 [x] **Les trois écritures de la configuration de l'instance** — fait le
+               9 octobre 2026. **28 gestes exercés sur 78**, contre 24 ; 76 contrôles de
+               parcours, 962 pour la campagne.
+
+               `saveAAC`, `saveSecurite`, `saveSysteme`, et `openAacEdit` qui ouvre la
+               première. Elles se couvrent ensemble parce que le danger qu'elles portent est
+               **le même**, et qu'il n'est pas celui qu'on croit.
+
+               Chacune envoie **tout son bloc** à chaque enregistrement : les sept paramètres
+               de sécurité que l'écran montre, les huit champs de l'identité, les deux de la
+               réplication. L'assertion qui compte n'est donc pas ce qui change, mais **ce qui
+               ne doit pas changer** — et les champs visés sont choisis pour ne rien pouvoir
+               rompre, puisque `mfaEnabled`, `forceChangeOnFirstLogin`, `sessionTimeoutMinutes`
+               et `defaultLang` décident de la session même qui exécute les contrôles.
+
+               ── Le contre-essai qui vaut la séance : la fenêtre ouverte vide ──
+
+               `openAacEdit` privé de `cfg.aac` rend ses huit champs à `""`, et
+               l'enregistrement **efface l'identité entière de l'Administration** :
+
+               ```
+               rendu : {"nom":"","sigle":"","etat":"","bigramme":"",
+                        "pays":"Bénin","ville":"Cotonou","emailAdmin":""}
+               ```
+
+               `pays` et `ville` survivent — le premier parce que l'écran ne l'envoie jamais, le
+               second parce que c'est le champ que la ronde avait remis. Tout le reste est parti,
+               sans erreur et sans trace. C'est le défaut de `submitEditUser` à l'échelle de
+               l'instance.
+
+               ── Et ce que ce contrôle n'attrape pas, dit à voix haute ──
+
+               J'ai contre-essayé la sécurité en **supprimant** `mfaEnabled` du corps de la
+               requête. **Le contrôle reste vert.** Le serveur n'applique qu'un booléen qu'il
+               reçoit (`typeof === 'boolean'`), si bien qu'une case que la fenêtre n'aurait pas
+               su relire ne peut pas éteindre un drapeau par omission. *Le défaut du champ
+               effacé n'a pas d'équivalent sur ce bloc, et c'est le serveur qui l'empêche, non
+               l'écran.*
+
+               Ce qu'il attrape est la valeur **inversée** : `!checked` rend `mfaEnabled: true`,
+               le contrôle mord, et celui de la remise en place dénonce en plus que la ronde ne
+               se défait pas. Au passage, la séance a **survécu** à cette MFA allumée — elle
+               n'est vérifiée qu'à la connexion, et la session était déjà ouverte.
+
+               ── Mon libellé disait six là où le contrôle en vérifie douze ──
+
+               Le bloc `security` porte **treize** champs ; l'écran en montre sept. Les six
+               qu'il n'offre pas — les quatre exigences de composition du mot de passe, le
+               plafond d'écritures par minute, la profondeur de l'historique — ne doivent pas
+               davantage être dérangés. Le contre-essai les a fait apparaître dans le
+               diagnostic, et le libellé a été corrigé.
+
+               ── Un diagnostic de 1,4 Mo ──
+
+               Le premier contre-essai de l'identité a craché **1,4 Mo** : le logo de l'AAC est
+               une image en base 64 de 374 498 caractères, et je rapportais le bloc entier. Il
+               est désormais **comparé** comme le reste et **jamais rapporté** —
+               `[image de 374 498 caractères]`. *Un contrôle dont l'échec est illisible n'aide
+               personne.*
+
+               ── Une asymétrie nommée, et pourquoi je ne la corrige pas ──
+
+               Le serveur n'écrit l'adresse centrale que si elle est **non vide**
+               (`if (replication.centralUrl)`). Vider le champ et enregistrer rend donc
+               « Configuration enregistrée. » — et garde l'ancienne adresse. L'opérateur ne peut
+               pas effacer la cible par l'écran, et rien ne le lui dit.
+
+               Un contrôle **fixe** ce comportement plutôt que de le bénir : contre-essayé en
+               corrigeant le serveur (`!== undefined`), il mord — c'est le propre d'un contrôle
+               qui pose un comportement, sa correction devient un choix délibéré.
+
+               Et je ne le corrige pas ici. Ce que signifie « effacer l'adresse du central »
+               appartient à la spécification de la réplication, qui n'existe pas
+               ([ADR-001](ADR-001-magasin-de-donnees.md) n° 1) : décider qu'un champ vide
+               désactive la cible, ou qu'il est refusé, est une décision de cette
+               spécification, non la mienne.
+
+               ── Ce qui reste ──
+
+               **42 gestes**, dont **11 écritures**. Les quatre gestes d'intérim de
+               l'organigramme (`orgStartInterim`, `orgEndInterim`, `orgConfirmInterim`,
+               `orgUnassign`) vont par paires et sont donc réversibles par construction. Puis
+               les dépôts de fichiers — `uploadAacLogo`, `uploadProfilePhoto` et leurs retraits
+               —, dont le chemin est désormais connu par l'import. Et `submitProfilePassword`,
+               qui demande toujours un compte dédié.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

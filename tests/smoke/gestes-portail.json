@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-08",
+ "releve": "2026-10-09",
  "gestesNommes": 78,
  "occurrences": 122,
- "exerces": 20,
+ "exerces": 22,
  "indecidables": 8,
  "gestes": [
   {
@@ -643,7 +643,7 @@
    "evenement": "click",
    "nom": "saveUserModules",
    "source": "saveUserModules('${esc(u.username)}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -688,7 +688,7 @@
    "evenement": "click",
    "nom": "submitEditUser",
    "source": "submitEditUser('${esc(u.username)}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",

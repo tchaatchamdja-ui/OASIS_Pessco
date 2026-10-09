@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 20 exercés, 50 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 22 exercés, 48 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1590,6 +1590,46 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                `supprimerInstance` l'a été : `submitEditUser` et `saveUserModules` — qui donnent
                ou retirent l'accès d'un compte à un module —, puis `doImport`, qui écrit en
                masse.
+
+           5.c.8 [x] **Les deux écritures les plus lourdes du portail** — fait le 9 octobre
+               2026. **22 gestes exercés sur 78**, contre 20 ; 65 contrôles de parcours.
+
+               `saveUserModules` **donne ou retire l'accès d'un compte à un module** ;
+               `submitEditUser` modifie sa fiche. Ce sont les deux gestes dont une régression
+               silencieuse coûterait le plus — un agent qui perd l'accès à son module, ou dont
+               le nom change sans qu'il l'ait demandé.
+
+               Les deux rondes sont **réversibles** : on bascule, on vérifie, on rétablit, on
+               vérifie encore. *Une écriture qui marche dans un sens et pas dans l'autre est à
+               moitié éprouvée.* Et le compte visé est `admin@anac.bj`, **non celui qui est
+               connecté** : se modifier soi-même romprait la session, et tout ce qui suit.
+
+               ── Le contre-essai qui vaut la séance ──
+
+               La fenêtre d'édition ouverte avec un prénom **vide** : le contrôle rend
+               `luDAbord: ""`, et la ligne devient `ADMIN — admin@anac.bj`. C'est le défaut
+               complet, et il est silencieux de bout en bout — la fenêtre s'ouvre, on y change
+               le téléphone, on enregistre, et le prénom est effacé. Aucune erreur, aucune
+               trace.
+
+               Deux autres mordent : les cases cochées non envoyées (`apres: "0/11"` — **tous
+               les accès retirés**), et le prénom absent du corps de la requête.
+
+               ── Et ma propre ronde n'en était pas une ──
+
+               La bascule prenait « le premier module décoché » **à chaque appel**. Le second en
+               trouvait donc un autre : RAMP accordé, puis CARE accordé, et la pastille passait
+               de 2/11 à 3/11 à **4/11**. Le contrôle a rendu « rendu: 4/11 » là où il attendait
+               2/11 : *il a dénoncé la ronde, non le code.*
+
+               Le module visé est désormais nommé au premier passage et redonné au second.
+
+               ── Ce qui reste ──
+
+               **48 gestes**, dont **15 écritures**. La suivante par ordre de poids est
+               `doImport`, qui écrit en masse depuis un classeur — elle demande un fichier
+               d'essai, et c'est le premier geste de la liste qui ne se couvre pas en une
+               ronde.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

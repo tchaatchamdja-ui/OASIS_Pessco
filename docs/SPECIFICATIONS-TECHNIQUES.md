@@ -202,7 +202,7 @@ meilleure façon de faire ignorer les vraies.
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
 | **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances (`frontend/portail/`) | 1 595 | **TypeScript** — 1 435 comparaisons sans écart |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail — le reste (`public/js/`) | 2 622 | JavaScript — **78 gestes, 20 exercés, 50 motivés** |
+| portail — le reste (`public/js/`) | 2 622 | JavaScript — **78 gestes, 22 exercés, 48 motivés** |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -213,7 +213,7 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | | Ce qui est éprouvé | Combien |
 |---|---|---|
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
-| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **63 contrôles** pour les neuf écrans réunis |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis |
 
 Ces cinq écrans portent **1 326 occurrences de geste** — boutons, formulaires, menus, champs.
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 121 pour **78** noms
@@ -707,11 +707,11 @@ for m in planification mesures profil_risque ramp execution; do
     public/modules/$m/js/*.js public/modules/$m/*.html 2>/dev/null | wc -l)"
 done
 
-# Couverture des gestes d'un écran (§ 4.1.1) — portail : 20 sur 78
+# Couverture des gestes d'un écran (§ 4.1.1) — portail : 22 sur 78
 node scripts/relever-gestes.js portail | head -8
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 949, et 0
+npm run smoke; echo "code de sortie : $?"                             # 951, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

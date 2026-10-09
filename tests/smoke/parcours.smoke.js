@@ -1118,6 +1118,111 @@ module.exports = async function parcoursSmoke(port) {
     verifier('un référentiel se supprime, confirmation pressée',
       refSuppression.confirmation && refSuppression.partie, JSON.stringify(refSuppression));
 
+    // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
+    //
+    // `saveUserModules` **donne ou retire l'accès d'un compte à un module** ;
+    // `submitEditUser` modifie sa fiche. Ce sont les deux gestes du portail dont
+    // une régression silencieuse coûterait le plus — un agent qui perd l'accès à
+    // son module, ou dont le nom change sans qu'il l'ait demandé.
+    //
+    // Les deux rondes sont **réversibles** : on bascule, on vérifie, on rétablit,
+    // on vérifie encore. Le second constat est celui qui vaut — une écriture qui
+    // marche dans un sens et pas dans l'autre est à moitié éprouvée.
+    //
+    // Le compte visé est `admin@anac.bj`, **non celui qui est connecté** : se
+    // modifier soi-même romprait la session, et tout ce qui suit.
+    etape = 'droits et fiche d’un compte';
+    await ouvrir('users');
+    await page.evaluate(() => {
+      const o = [...document.querySelectorAll('[onclick^="setUserTab"]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes("'ADMIN'"));
+      if (o) o.click();
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll('[data-modules="admin@anac.bj"]').length > 0,
+      { timeout: 10000 },
+    ).catch(() => { /* le contrôle le dira */ });
+
+    const accesModules = await page.evaluate(async () => {
+      const compte = 'admin@anac.bj';
+      const pastille = () => {
+        const b = document.querySelector(`[data-modules="${compte}"]`);
+        return b ? b.textContent.replace(/\s+/g, '') : null;
+      };
+      // ── On rebascule **le même** module, non « le premier non coché » ──
+      //
+      // Première écriture : la fonction prenait le premier module décoché à
+      // chaque appel. Le second appel en trouvait donc un **autre** — RAMP
+      // accordé, puis CARE accordé — et la pastille passait de 2/11 à 3/11 à
+      // 4/11. Le contrôle a dit « rendu: 4/11 » là où il attendait 2/11 : il a
+      // dénoncé ma ronde, qui n'en était pas une.
+      //
+      // Le module visé est donc nommé au premier passage et redonné au second.
+      const basculerUn = async (voulu) => {
+        document.querySelector(`[data-modules="${compte}"]`).click();
+        await new Promise((r) => setTimeout(r, 600));
+        const cases = [...document.querySelectorAll('#userModalRoot [data-mod]')];
+        if (!cases.length) return { cases: 0 };
+        const cible = voulu
+          ? cases.find((c) => c.dataset.mod === voulu)
+          : (cases.find((c) => !c.checked) || cases[0]);
+        if (!cible) return { cases: cases.length, cible: false };
+        const module = cible.dataset.mod;
+        cible.checked = !cible.checked;
+        const enregistrer = document.querySelector('#userModalRoot [onclick^="saveUserModules"]');
+        if (!enregistrer) return { cases: cases.length, bouton: false };
+        enregistrer.click();
+        await new Promise((r) => setTimeout(r, 2000));
+        return { cases: cases.length, bouton: true, module };
+      };
+      const avant = pastille();
+      const premier = await basculerUn();
+      const apres = pastille();
+      const second = await basculerUn(premier.module);
+      const rendu = pastille();
+      return { avant, apres, rendu, premier, second };
+    });
+    verifier('l’accès d’un compte à un module se donne, et se retire',
+      accesModules.premier && accesModules.premier.bouton
+      && accesModules.avant && accesModules.apres && accesModules.avant !== accesModules.apres
+      && accesModules.rendu === accesModules.avant,
+      JSON.stringify(accesModules));
+
+    const fiche = await page.evaluate(async () => {
+      const compte = 'admin@anac.bj';
+      const ligne = () => {
+        const b = document.querySelector(`[data-edit="${compte}"]`);
+        return b ? b.closest('tr').textContent.replace(/\s+/g, ' ').trim() : null;
+      };
+      const ecrire = async (prenom) => {
+        document.querySelector(`[data-edit="${compte}"]`).click();
+        await new Promise((r) => setTimeout(r, 600));
+        const champ = document.getElementById('euPrenom');
+        if (!champ) return { champ: false };
+        const lu = champ.value;
+        champ.value = prenom;
+        const envoyer = document.querySelector('#userModalRoot [onclick^="submitEditUser"]');
+        if (!envoyer) return { champ: true, bouton: false };
+        envoyer.click();
+        await new Promise((r) => setTimeout(r, 2000));
+        return { champ: true, bouton: true, lu };
+      };
+      const avant = ligne();
+      const premier = await ecrire('Essai-Prenom');
+      const apres = ligne();
+      // On rétablit la valeur que la fenêtre portait, non une valeur devinée.
+      const second = await ecrire(premier.lu);
+      const rendu = ligne();
+      return { avant, apres, rendu, luDAbord: premier.lu, bouton: premier.bouton };
+    });
+    verifier('la fiche d’un compte se modifie, et la modification se défait',
+      fiche.bouton
+      && typeof fiche.luDAbord === 'string'
+      && fiche.apres && fiche.apres.includes('Essai-Prenom')
+      && fiche.rendu === fiche.avant,
+      JSON.stringify(fiche));
+
+
 
 
 

@@ -2,7 +2,7 @@
  "releve": "2026-10-09",
  "gestesNommes": 84,
  "occurrences": 131,
- "exerces": 50,
+ "exerces": 59,
  "indecidables": 8,
  "gestes": [
   {
@@ -706,7 +706,7 @@
    "evenement": "click",
    "nom": "closeUserModal",
    "source": "closeUserModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -715,7 +715,7 @@
    "evenement": "click",
    "nom": "closeUserModal",
    "source": "closeUserModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -733,7 +733,7 @@
    "evenement": "click",
    "nom": "closeUserModal",
    "source": "closeUserModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -742,7 +742,7 @@
    "evenement": "click",
    "nom": "closeUserModal",
    "source": "closeUserModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -751,7 +751,7 @@
    "evenement": "click",
    "nom": "closeUserModal",
    "source": "closeUserModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -760,7 +760,7 @@
    "evenement": "click",
    "nom": "closeUserModal",
    "source": "closeUserModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -844,7 +844,7 @@
    "nom": "document.getElementById('newUserBtn'):click",
    "source": "document.getElementById('newUserBtn').addEventListener('click', showNewUserModal);",
    "id": "newUserBtn",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -914,7 +914,7 @@
    "nom": "document.getElementById('efValider'):click",
    "source": "document.getElementById('efValider').addEventListener('click', () => effacerUtilisateur(u.username));",
    "id": "efValider",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -924,7 +924,7 @@
    "nom": "document.getElementById('euEmail'):input",
    "source": "document.getElementById('euEmail').addEventListener('input', (e) => {",
    "id": "euEmail",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -934,7 +934,7 @@
    "nom": "document.getElementById('closeModal'):click",
    "source": "document.getElementById('closeModal').addEventListener('click', close);",
    "id": "closeModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -944,7 +944,7 @@
    "nom": "document.getElementById('cancelModal'):click",
    "source": "document.getElementById('cancelModal').addEventListener('click', close);",
    "id": "cancelModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -954,7 +954,7 @@
    "nom": "document.getElementById('nuRole'):change",
    "source": "document.getElementById('nuRole').addEventListener('change', (e) => {",
    "id": "nuRole",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -964,7 +964,7 @@
    "nom": "document.getElementById('createUser'):click",
    "source": "document.getElementById('createUser').addEventListener('click', async () => {",
    "id": "createUser",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -974,7 +974,7 @@
    "nom": "document.getElementById('verifyBtn'):click",
    "source": "document.getElementById('verifyBtn').addEventListener('click', async () => {",
    "id": "verifyBtn",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "frontend/portail/demarrage.ts",

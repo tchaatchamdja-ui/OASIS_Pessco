@@ -31,6 +31,21 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 // contenu — c'est le résultat attendu, non un incident.
 const ATTENDU = /status of 401|Content Security Policy directive/;
 
+// ── Et les refus qu'un contrôle provoque lui-même ──
+//
+// Certains contrôles éprouvent un **refus** : effacer un compte sans le mot de
+// passe de l'opérateur rend un 403, et le navigateur le journalise en erreur.
+// C'est le résultat attendu, non un incident.
+//
+// Une exception de plus dans `ATTENDU` aurait rendu la suite **aveugle à tous
+// les 403** — y compris celui d'une écriture qu'un en-tête manquant ferait
+// refuser, qui est précisément ce que ce relevé doit attraper. L'exception est
+// donc liée à **l'étape** qui provoque le refus : partout ailleurs, un 403
+// reste un incident.
+const ATTENDU_PAR_ETAPE = [
+  { etape: /création et effacement d’un compte/, motif: /status of 403/ },
+];
+
 // `ou` change en cours de route : le relevé est donc désigné par une fonction,
 // et les écouteurs ne se posent qu'une fois.
 function surveiller(page, ou, etape) {
@@ -39,6 +54,7 @@ function surveiller(page, ou, etape) {
     if (m.type() !== 'error') return;
     const texte = m.text();
     if (ATTENDU.test(texte)) return;
+    if (ATTENDU_PAR_ETAPE.some((e) => e.etape.test(etape()) && e.motif.test(texte))) return;
     noter(`console : ${texte.slice(0, 160)}`);
   });
   page.on('pageerror', (e) => noter(`exception : ${String(e.message).slice(0, 160)}`));
@@ -2240,6 +2256,254 @@ module.exports = async function parcoursSmoke(port) {
         original: logoAvant.length, rendu: logoRendu.length,
         identique: logoRendu === logoAvant }));
     fs.rmSync(dossierImages, { recursive: true, force: true });
+
+    // ── La création et l'effacement d'un compte ──
+    //
+    // Ce bloc est la **correction d'un plan que j'avais annoncé et qui ne tient
+    // pas**. J'avais écrit que créer un compte par l'écran permettrait de s'y
+    // connecter, et donc de lever d'un coup les trois dispenses qui demandent « un
+    // compte dédié » : `pwdSubmit` (changement imposé au premier accès),
+    // `saveProfileExtra` (bloc réservé à un rôle prestataire) et
+    // `submitProfilePassword`.
+    //
+    // **C'est impossible, et c'est voulu.** Le mot de passe temporaire est tiré au
+    // hasard et part par courriel ; or ce courriel est marqué `secret: true` dans
+    // `src/email.js`, et son corps **n'est pas conservé** — le registre garde
+    // « (corps retiré : ce message portait un secret) ». Aucune route ne rend jamais
+    // un mot de passe : les deux seules générations du serveur passent directement
+    // à `email.accountCreated` et `email.passwordReset`.
+    //
+    // Un essai ne peut donc pas obtenir ce mot de passe autrement qu'en le posant
+    // lui-même dans le bac, ce qui serait un geste du harnais et non de l'écran.
+    // Les trois dispenses restent, avec cette raison-là — qui est meilleure que
+    // celle qu'elles portaient.
+    //
+    // Ce qui **est** couvrable, et l'est ici : la création de bout en bout, les deux
+    // chemins d'abandon qui ne doivent rien écrire, et l'effacement — qui exige de
+    // l'opérateur **son propre mot de passe**.
+    etape = 'création et effacement d’un compte';
+    const lireComptes = () => page.evaluate(async () => {
+      const r = await fetch('/api/users');
+      const d = r.ok ? await r.json() : null;
+      const l = Array.isArray(d) ? d : ((d || {}).users || []);
+      return l.map((u) => ({ username: u.username, role: u.role, nom: u.nom }));
+    });
+
+    await page.evaluate(() => document.querySelector('.portal-nav-btn[data-view="users"]').click());
+    await new Promise((r) => setTimeout(r, 900));
+    await page.evaluate(() => {
+      const b = document.querySelector('[onclick="setUserTab(\'AAC\')"]');
+      if (b) b.click();
+    });
+    await new Promise((r) => setTimeout(r, 900));
+
+    const comptesAvant = await lireComptes();
+    const COURRIEL = 'essai.parcours@anac.bj';
+
+    // ── Les deux chemins d'abandon : ils ne doivent rien écrire ──
+    //
+    // La croix et le bouton « Annuler » referment la même fenêtre par deux
+    // écouteurs distincts. Les deux sont éprouvés **la fenêtre remplie** : une
+    // annulation qui enregistrerait ce qu'on vient de taper est le genre de défaut
+    // qu'on ne découvre qu'après avoir créé un compte par mégarde.
+    const abandons = await page.evaluate(async (courriel) => {
+      const resultat = {};
+      for (const quoi of ['closeModal', 'cancelModal']) {
+        document.getElementById('newUserBtn').click();
+        await new Promise((r) => setTimeout(r, 500));
+        const champ = document.getElementById('nuEmail');
+        if (!champ) { resultat[quoi] = { fenetre: false }; continue; }
+        document.getElementById('nuNom').value = 'ABANDON';
+        champ.value = courriel;
+        const b = document.getElementById(quoi);
+        if (!b) { resultat[quoi] = { fenetre: true, bouton: false }; continue; }
+        b.click();
+        await new Promise((r) => setTimeout(r, 500));
+        resultat[quoi] = {
+          fenetre: true, bouton: true,
+          ferme: (document.getElementById('userModalRoot') || {}).innerHTML === '',
+        };
+      }
+      return resultat;
+    }, COURRIEL);
+    const comptesApresAbandon = await lireComptes();
+    verifier('les deux chemins d’abandon de la création referment la fenêtre sans rien écrire',
+      (abandons.closeModal || {}).ferme === true && (abandons.cancelModal || {}).ferme === true
+      && JSON.stringify(comptesApresAbandon) === JSON.stringify(comptesAvant),
+      JSON.stringify({ abandons, avant: (comptesAvant || []).length, apres: (comptesApresAbandon || []).length }));
+
+    // ── Le rôle commande les champs offerts, dans les deux sens ──
+    const cree = await page.evaluate(async (courriel) => {
+      document.getElementById('newUserBtn').click();
+      await new Promise((r) => setTimeout(r, 500));
+      const role = document.getElementById('nuRole');
+      const enveloppe = document.getElementById('nuPrestaWrap');
+      if (!role || !enveloppe) return { fenetre: false };
+      const cacheDAbord = enveloppe.style.display === 'none';
+      role.value = 'PRESTATAIRE';
+      role.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 300));
+      const montre = enveloppe.style.display !== 'none';
+      role.value = 'AAC';
+      role.dispatchEvent(new Event('change', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 300));
+      const recache = enveloppe.style.display === 'none';
+      document.getElementById('nuNom').value = 'ESSAI';
+      document.getElementById('nuPrenom').value = 'Parcours';
+      document.getElementById('nuEmail').value = courriel;
+      document.getElementById('createUser').click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        fenetre: true, cacheDAbord, montre, recache,
+        ferme: (document.getElementById('userModalRoot') || {}).innerHTML === '',
+        alEcran: [...document.querySelectorAll('.shell-table tbody tr')]
+          .some((r) => r.textContent.includes(courriel)),
+      };
+    }, COURRIEL);
+    const comptesApres = await lireComptes();
+    const nouveauCompte = (comptesApres || []).find((u) => u.username === COURRIEL) || {};
+    verifier('un compte se crée par l’écran, le rôle commandant les champs offerts dans les deux sens',
+      cree.fenetre === true
+      // Le champ du prestataire paraît sur un rôle prestataire **et repart** sur un
+      // autre : sans la seconde moitié, un champ qui ne se cache jamais passerait.
+      && cree.cacheDAbord === true && cree.montre === true && cree.recache === true
+      && nouveauCompte.role === 'AAC' && nouveauCompte.nom === 'ESSAI'
+      && (comptesApres || []).length === (comptesAvant || []).length + 1
+      && cree.ferme === true && cree.alEcran === true,
+      JSON.stringify({ cree, nouveauCompte }));
+
+    // ── L'effacement : il demande à l'opérateur **son** mot de passe ──
+    //
+    // Et le contrôle l'éprouve d'abord avec un **mauvais** : un effacement qui
+    // passerait sans le bon mot de passe ferait de la corbeille un clic. Le refus
+    // doit se voir dans la fenêtre, et le compte rester.
+    const refusEffacement = await page.evaluate(async (courriel) => {
+      const ligne = [...document.querySelectorAll('.shell-table tbody tr')]
+        .find((r) => r.textContent.includes(courriel));
+      if (!ligne) return { ligne: false };
+      const b = ligne.querySelector('[data-effacer]');
+      if (!b) return { ligne: true, bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const champ = document.getElementById('efAdminPwd');
+      if (!champ) return { ligne: true, bouton: true, fenetre: false };
+      champ.value = 'ce-mot-de-passe-est-faux';
+      document.getElementById('efValider').click();
+      await new Promise((r) => setTimeout(r, 1800));
+      const boite = document.getElementById('efErreur');
+      return {
+        ligne: true, bouton: true, fenetre: true,
+        message: boite ? boite.textContent.trim() : null,
+        encoreOuverte: !!document.getElementById('efAdminPwd'),
+      };
+    }, COURRIEL);
+    const comptesApresRefus = await lireComptes();
+    verifier('un effacement sans le mot de passe de l’opérateur est refusé, et le compte reste',
+      refusEffacement.fenetre === true
+      && !!refusEffacement.message && refusEffacement.encoreOuverte === true
+      && JSON.stringify(comptesApresRefus) === JSON.stringify(comptesApres),
+      JSON.stringify({ refusEffacement, restants: (comptesApresRefus || []).length }));
+
+    // Puis avec le bon — celui du harnais, qui est l'opérateur de cette séance.
+    const efface = await page.evaluate(async (courriel, mdp) => {
+      const champ = document.getElementById('efAdminPwd');
+      if (!champ) return { fenetre: false };
+      champ.value = mdp;
+      document.getElementById('efValider').click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        fenetre: true,
+        ferme: (document.getElementById('userModalRoot') || {}).innerHTML === '',
+        partie: ![...document.querySelectorAll('.shell-table tbody tr')]
+          .some((r) => r.textContent.includes(courriel)),
+      };
+    }, COURRIEL, MOT_DE_PASSE);
+    const comptesRendus = await lireComptes();
+    verifier('et avec le bon, le compte s’efface et la liste revient à son état',
+      efface.fenetre === true && efface.ferme === true && efface.partie === true
+      && JSON.stringify(comptesRendus) === JSON.stringify(comptesAvant),
+      JSON.stringify({ efface, avant: (comptesAvant || []).length, rendus: (comptesRendus || []).length }));
+
+    // ── Changer l'identifiant de connexion demande le mot de passe de l'opérateur ──
+    //
+    // J'avais écrit ce contrôle en croyant que ce geste vérifiait la **forme** de
+    // l'adresse. Il fait autre chose, et de plus important : l'adresse **est**
+    // l'identifiant de connexion, et la changer révèle un champ qui exige le mot de
+    // passe du super-administrateur. Le geste est un `input`, non un clic — le
+    // mouchard ne le voyait pas avant que la liste des événements soit élargie
+    // (5.c.11).
+    //
+    // Éprouvé dans les deux sens : le champ paraît quand l'adresse diffère, et
+    // **repart** quand on remet l'originale. Sans la seconde moitié, un champ qui
+    // ne se cacherait jamais passerait — et il demanderait un mot de passe pour une
+    // modification qui n'en a pas besoin.
+    const identifiant = await page.evaluate(async () => {
+      const ligne = [...document.querySelectorAll('.shell-table tbody tr')][0];
+      if (!ligne) return { ligne: false };
+      const editer = ligne.querySelector('[data-edit]');
+      if (!editer) return { ligne: true, bouton: false };
+      editer.click();
+      await new Promise((r) => setTimeout(r, 600));
+      const champ = document.getElementById('euEmail');
+      const enveloppe = document.getElementById('euAdminPwdWrap');
+      if (!champ || !enveloppe) return { ligne: true, bouton: true, fenetre: false };
+      const originale = champ.value;
+      const cacheDAbord = enveloppe.style.display === 'none';
+      const taper = async (valeur) => {
+        champ.value = valeur;
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await new Promise((r) => setTimeout(r, 250));
+        return enveloppe.style.display !== 'none';
+      };
+      const demandeSiChange = await taper('autre.adresse@anac.bj');
+      const repartSiRemise = !(await taper(originale));
+      // Et la fenêtre se referme par son annulation, sans enregistrer.
+      const annuler = [...document.querySelectorAll('#userModalRoot [onclick="closeUserModal()"]')].pop();
+      if (annuler) annuler.click();
+      await new Promise((r) => setTimeout(r, 400));
+      return {
+        ligne: true, bouton: true, fenetre: true, originale,
+        cacheDAbord, demandeSiChange, repartSiRemise,
+        ferme: (document.getElementById('userModalRoot') || {}).innerHTML === '',
+      };
+    });
+    const comptesApresForme = await lireComptes();
+    verifier('changer l’identifiant de connexion réclame le mot de passe de l’opérateur, et le rend quand on renonce',
+      identifiant.fenetre === true
+      && identifiant.cacheDAbord === true
+      && identifiant.demandeSiChange === true && identifiant.repartSiRemise === true
+      && identifiant.ferme === true
+      && JSON.stringify(comptesApresForme) === JSON.stringify(comptesRendus),
+      JSON.stringify(identifiant));
+
+    // ── La chaîne d'audit, vérifiée depuis son écran ──
+    //
+    // Le journal est chaîné en SHA-256 ; l'écran offre un bouton qui le fait dire.
+    // Toutes les écritures des rondes précédentes y sont passées : si la chaîne
+    // était rompue, elle le serait par l'une d'elles.
+    const chaine = await page.evaluate(async () => {
+      document.querySelector('.portal-nav-btn[data-view="audit"]').click();
+      await new Promise((r) => setTimeout(r, 1500));
+      const b = document.getElementById('verifyBtn');
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 1500));
+      const m = document.querySelector('.oasis-toast-message');
+      const fond = document.querySelector('.oasis-toast-fond');
+      return {
+        bouton: true,
+        message: m ? m.textContent.trim() : null,
+        genre: fond ? fond.className : null,
+      };
+    });
+    verifier('la chaîne du journal d’audit se vérifie depuis son écran, après toutes ces écritures',
+      chaine.bouton === true && !!chaine.message
+      // Le genre du bandeau est « succes » — sans double « s » : c'est le mot
+      // français. Mon premier motif cherchait « success » et rendait rouge un
+      // journal intègre.
+      && /succes/.test(chaine.genre || '') && /intègre/.test(chaine.message)
+      && !/#/.test(chaine.message),
+      JSON.stringify(chaine));
 
     // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
     //

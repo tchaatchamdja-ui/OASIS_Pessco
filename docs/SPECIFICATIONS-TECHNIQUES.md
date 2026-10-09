@@ -202,7 +202,7 @@ meilleure façon de faire ignorer les vraies.
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
 | **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances (`frontend/portail/`) | 1 595 | **TypeScript** — 1 435 comparaisons sans écart |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail — le reste (`public/js/`) | 2 622 | JavaScript — **84 gestes, 50 exercés, 26 motivés, 8 indécidables** |
+| portail — le reste (`public/js/`) | 2 622 | JavaScript — **84 gestes, 59 exercés, 17 motivés, 8 indécidables** |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -713,11 +713,11 @@ for m in planification mesures profil_risque ramp execution; do
     public/modules/$m/js/*.js public/modules/$m/*.html 2>/dev/null | wc -l)"
 done
 
-# Couverture des gestes d'un écran (§ 4.1.1) — portail : 50 sur 84
+# Couverture des gestes d'un écran (§ 4.1.1) — portail : 59 sur 84
 node scripts/relever-gestes.js portail | head -8
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 980, et 0
+npm run smoke; echo "code de sortie : $?"                             # 986, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

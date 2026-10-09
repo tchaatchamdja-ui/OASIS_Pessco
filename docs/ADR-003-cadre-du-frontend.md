@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 50 exercés, 26 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 59 exercés, 17 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2044,6 +2044,114 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
                **26 gestes non exercés**, dont **4 écritures**, toutes dans la chaîne ci-dessus.
                Plus huit **indécidables**, limite nommée de l'outil.
+
+
+           5.c.14 [x] **La création et l'effacement d'un compte — et la chaîne que j'avais
+               annoncée n'existe pas** — fait le 9 octobre 2026. **59 gestes exercés sur 84**,
+               contre 50, soit **70 %** ; 100 contrôles de parcours, 986 pour la campagne.
+
+               ── D'abord : le plan annoncé à la fin de 5.c.13 ne tient pas ──
+
+               J'avais écrit que créer un compte par l'écran permettrait de s'y connecter, et
+               donc de lever d'un coup les trois dispenses qui demandent « un compte dédié » :
+               `pwdSubmit`, `saveProfileExtra`, `submitProfilePassword`.
+
+               **C'est impossible, et c'est voulu.** Le mot de passe temporaire est tiré au
+               hasard et part par courriel ; ce courriel est marqué `secret: true` dans
+               `src/email.js`, et **son corps n'est pas conservé** — le registre garde
+               « (corps retiré : ce message portait un secret) ». Aucune route ne rend jamais un
+               mot de passe : les deux seules générations du serveur passent directement à
+               `email.accountCreated` et `email.passwordReset`.
+
+               Les trois dispenses restent donc, **avec cette raison-là**, qui est meilleure que
+               celle qu'elles portaient : ce n'est pas « on n'a pas encore fait le compte », c'est
+               « l'application refuse de rendre ce mot de passe, et elle a raison ».
+
+               ── Ce qui est couvrable, et qui l'est ──
+
+               Neuf gestes : `newUserBtn`, `nuRole`, `closeModal`, `cancelModal`, `createUser`,
+               `efValider`, `euEmail` (saisie), `closeUserModal`, `verifyBtn`.
+
+               Les **deux chemins d'abandon** sont éprouvés la fenêtre remplie : une annulation
+               qui enregistrerait ce qu'on vient de taper est le genre de défaut qu'on ne
+               découvre qu'après avoir créé un compte par mégarde. Le **rôle** commande les
+               champs offerts dans les deux sens — il paraît sur un rôle prestataire et
+               **repart** sur un autre.
+
+               ── Le contre-essai de sécurité ──
+
+               L'effacement d'un compte exige de l'opérateur **son propre mot de passe**. Le
+               contrôle l'éprouve d'abord avec un **mauvais** : le refus doit se voir dans la
+               fenêtre, et le compte rester. Contre-essayé en ôtant la confirmation du serveur :
+
+               ```
+               message : null     fenêtre : fermée     comptes restants : 6
+               ```
+
+               Le mauvais mot de passe **a effacé le compte**, sans un mot. *La corbeille
+               redevient un clic.*
+
+               ── Et `euEmail` ne fait pas ce que je croyais ──
+
+               J'avais écrit ce contrôle en croyant que ce geste vérifiait la **forme** de
+               l'adresse. Il fait autre chose, et de plus important : l'adresse **est**
+               l'identifiant de connexion, et la changer révèle un champ qui exige le mot de
+               passe du super-administrateur. Éprouvé dans les deux sens — le champ paraît quand
+               l'adresse diffère, et repart quand on remet l'originale. Sans la seconde moitié,
+               un champ qui ne se cacherait jamais demanderait un mot de passe pour une
+               modification qui n'en a pas besoin.
+
+               ── Un refus provoqué par un contrôle, et une exception qui reste fine ──
+
+               Le 403 de l'effacement refusé est journalisé par le navigateur, et le relevé de
+               console le prenait pour un incident. Une exception de plus dans `ATTENDU` aurait
+               rendu la suite **aveugle à tous les 403** — y compris celui d'une écriture sans
+               en-tête d'origine, qui est précisément ce que ce relevé doit attraper.
+               L'exception est donc liée à **l'étape** qui provoque le refus.
+
+               Contre-essayé en cassant l'en-tête de l'enveloppe du socle : un 403 à l'étape
+               « instances du dispositif » est bien dénoncé. L'exception ne rend pas aveugle.
+
+               ── Un contre-essai qui m'a appris que de l'autre code était mort ──
+
+               Mon premier essai pour produire ce 403 fut d'ôter `X-OASIS-Request` de l'`api()`
+               d'`app.js`. **Rien n'a bougé** : l'enveloppe du socle (`oasis-requete`) pose cet
+               en-tête sur *tout* appel vers l'application. La ligne d'`api()` est donc
+               **redondante** — ce que `modules-hote.ts` disait déjà, et que le contre-essai a
+               confirmé par l'autre bout. Elle partira avec la réécriture.
+
+               ── Et une méfiance infondée, dite comme telle ──
+
+               En cassant la chaîne d'audit du socle, j'ai vu rester vert un contrôle qui parle
+               d'intégrité : « l'écran des droits montre l'intégrité de la chaîne d'audit ». J'ai
+               cru à un vert creux.
+
+               **Il n'en était pas un.** Les deux contrôles regardent **deux journaux
+               différents** : celui des DROITS vérifie `module_audit.verifyChain(code)` — le
+               journal du module —, le nouveau vérifie `audit.verifyChain` — celui du socle.
+               Prouvé en cassant l'autre : le contrôle des DROITS mord, et le nouveau reste vert.
+               Chacun attrape sa chaîne, aucun n'attrape celle de l'autre, et c'est ce qu'on veut.
+
+               *Un vert qu'on soupçonne se vérifie avant d'être accusé — sinon on « corrige » ce
+               qui marchait.*
+
+               Et une faute de motif de ma main : le genre du bandeau est « succes », sans double
+               « s » — c'est le mot français. Mon premier contrôle cherchait « success » et
+               rendait rouge un journal intègre.
+
+               Sept contre-essais : en-tête d'`api()` (muet, et instructif), en-tête de
+               l'enveloppe, confirmation d'effacement ôtée, « Annuler » inerte, champ du rôle
+               toujours visible, chaîne du socle rompue, chaîne du module rompue.
+
+               ── Ce qui reste ──
+
+               **17 gestes non exercés**, dont **2 écritures**, et toutes deux sont dans le
+               blocage de sécurité ci-dessus. Le reste est de l'affichage : cinq bascules
+               (`toggleAcc`, `togglePers`, `toggleCfgSidebar`, `toggleUserSidebar`,
+               `toggleInspectorFields`), le panneau des notifications, le départ de session, les
+               trois gestes du régime MFA — couverts côté serveur par la suite « mfa » —, et
+               quatre que la forme relève sans qu'ils soient des gestes. Plus huit
+               **indécidables**.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

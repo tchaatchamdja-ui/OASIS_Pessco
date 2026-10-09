@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 39 exercés, 37 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 45 exercés, 31 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1886,6 +1886,85 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                compte (`createUser`, `verifyBtn`), et `submitProfilePassword` qui demande
                toujours un compte dédié. Plus huit **indécidables** — des écouteurs dont la
                cible n'est pas nommable statiquement.
+
+
+           5.c.12 [x] **Les exigences réglementaires — et l'écriture la plus lourde du
+               portail** — fait le 9 octobre 2026. **45 gestes exercés sur 84**, contre 39 ;
+               88 contrôles de parcours, 974 pour la campagne.
+
+               Une exigence est l'objet **réglementaire** du dispositif : c'est elle que la
+               surveillance vient vérifier. Sa référence et son libellé fondent un écart, et un
+               écart fonde une mesure d'application. Une exigence rattachée au mauvais
+               règlement, ou dont le libellé s'est perdu, fait une surveillance mal fondée — et
+               cela ne se voit pas à l'écran.
+
+               ── `saveReglement`, et pourquoi l'ordre de la ronde n'est pas indifférent ──
+
+               Renommer un règlement réécrit **toutes** les exigences du groupe, une requête par
+               exigence, dans une boucle **sans retour en arrière**. Un renommage qui s'arrête au
+               milieu **scinde le règlement en deux groupes**, et chaque moitié a l'air normale.
+
+               Le jeu d'essai n'a qu'**une** exigence par règlement. La ronde en **crée donc une
+               d'abord**, pour que le renommage porte sur deux : *une boucle qui s'arrête au
+               premier tour est juste quand il n'y en a qu'un.* Le contrôle refuse en outre de
+               passer si le groupe n'en compte pas au moins deux — la non-vacuité est dite par
+               le contrôle, non laissée à qui le relit.
+
+               Contre-essayé avec un `break` après le premier tour :
+
+               ```
+               annonce : "Appliqué à 2 exigence(s) de ce règlement."
+               après   : ["RAB-OPS (Exploitation)",
+                          "ESSAI-PARCOURS (Règlement renommé)",   ← la nouvelle
+                          "RAB-145 (Maintenance)"]                ← l'ancienne, restée
+               ```
+
+               **Le formulaire annonce 2 et en fait 1.** Le règlement est scindé, et rien ne le dit.
+
+               ── Le couplage que ni l'écran ni le serveur ne montrent ──
+
+               En édition, `saveExigDrawer` n'envoie **que** la référence, le libellé et le
+               statut : ni le règlement, ni la date d'adoption. L'exigence les garde uniquement
+               parce que le serveur **fusionne** le correctif (`{ ...existant, ...correctif }`).
+               Rien, d'aucun des deux côtés, ne dit que l'un dépend de l'autre — et la réécriture
+               en React peut le défaire sans s'en apercevoir.
+
+               Contre-essayé en passant `updateItem` du remplacement à la fusion
+               (`{ ...champs, id }`) : le contrôle mord, et deux autres rondes avec lui — elles
+               reposaient sur la même propriété sans le dire.
+
+               ── L'exigence orpheline ──
+
+               Contre-essai du préréglage : le « + » du bandeau passe le règlement en paramètre,
+               le panneau l'affiche **en lecture seule**, et l'enregistrement le renvoie. Privé
+               de ce renvoi, le panneau montre bien « RAB-145 (Maintenance) · 02/11/2022 »,
+               l'enregistrement rend `reglement: ""`, et l'exigence **disparaît de la table** du
+               groupe où l'agent vient de la créer. Elle n'est pas perdue : elle est dans « Sans
+               règlement », ce qui est pire — on ne la cherchera pas là.
+
+               ── Et mon propre contrôle a échoué d'abord, pour une raison d'écran ──
+
+               La première écriture de la ronde ne retrouvait plus le groupe après renommage :
+               **renommer un règlement replie son groupe**, l'état d'ouverture (`EXIG_OPEN`)
+               étant indexé par le nom, qui vient de changer.
+
+               C'est un désagrément d'écran, non un défaut de donnée. Il est désormais
+               **constaté par le contrôle** (`renommeReplie`) plutôt que subi : le jour où le
+               groupe restera ouvert, le contrôle le dira, au lieu de laisser la surprise à la
+               ronde suivante.
+
+               Six contre-essais, six rouges : boucle arrêtée, fusion remplacée par un
+               remplacement, panneau ouvert vide, règlement non transmis, annulation qui ne
+               referme pas, bandeau qui ne déplie pas.
+
+               ── Ce qui reste ──
+
+               **31 gestes non exercés**, dont **7 écritures** : le profil
+               (`saveProfileInfos`, `saveProfileExtra`), les quatre dépôts et retraits de
+               fichiers, la création d'un compte (`verifyBtn` puis `createUser`, non réversible
+               par l'écran), et `submitProfilePassword` qui demande un compte dédié. Plus huit
+               **indécidables** — des écouteurs dont la cible n'est pas nommable statiquement,
+               et c'est une limite de l'outil, nommée.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

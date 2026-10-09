@@ -2,7 +2,7 @@
  "releve": "2026-10-09",
  "gestesNommes": 84,
  "occurrences": 131,
- "exerces": 39,
+ "exerces": 45,
  "indecidables": 8,
  "gestes": [
   {
@@ -39,7 +39,7 @@
    "evenement": "click",
    "nom": "openExigDrawer",
    "source": "openExigDrawer('${e.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -57,7 +57,7 @@
    "evenement": "click",
    "nom": "toggleExigGroup",
    "source": "toggleExigGroup(${escArg(key)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -75,7 +75,7 @@
    "evenement": "click",
    "nom": "openReglementForm",
    "source": "openReglementForm(${escArg(key)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -84,7 +84,7 @@
    "evenement": "click",
    "nom": "openExigDrawer",
    "source": "openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -93,7 +93,7 @@
    "evenement": "click",
    "nom": "openExigDrawer",
    "source": "openExigDrawer(null,null,null,true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -102,7 +102,7 @@
    "evenement": "click",
    "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -111,7 +111,7 @@
    "evenement": "click",
    "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -120,7 +120,7 @@
    "evenement": "click",
    "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -129,7 +129,7 @@
    "evenement": "click",
    "nom": "saveExigDrawer",
    "source": "saveExigDrawer(${escArg(id || '')}, ${showRegFields}, ${escArg(reglement || '')}, ${escArg(date || '')})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -138,7 +138,7 @@
    "evenement": "click",
    "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -147,7 +147,7 @@
    "evenement": "click",
    "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -156,7 +156,7 @@
    "evenement": "click",
    "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -165,7 +165,7 @@
    "evenement": "click",
    "nom": "saveReglement",
    "source": "saveReglement(${escArg(reglement)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",

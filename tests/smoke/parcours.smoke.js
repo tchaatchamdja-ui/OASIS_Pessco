@@ -1757,6 +1757,262 @@ module.exports = async function parcoursSmoke(port) {
       && interimLeve.plusDActif === true && interimLeve.signalerOffert === true,
       JSON.stringify({ interimLeve, registre: leveN.registre, ouvertes: ouvertes(leveN) }));
 
+    // ── Les exigences réglementaires : quatre gestes, dont le plus lourd de l'écran ──
+    //
+    // Une exigence est l'objet **réglementaire** du dispositif : c'est elle que la
+    // surveillance vient vérifier. Sa référence et son libellé fondent un écart, et
+    // un écart fonde une mesure d'application. Une exigence rattachée au mauvais
+    // règlement, ou dont le libellé s'est perdu, fait une surveillance mal fondée —
+    // et cela ne se voit pas à l'écran.
+    //
+    // `saveReglement` est **l'écriture la plus lourde du portail** : renommer un
+    // règlement réécrit **toutes** les exigences du groupe, une requête par
+    // exigence, dans une boucle sans retour en arrière. Un renommage qui s'arrête
+    // au milieu **scinde le règlement en deux groupes** — et chaque moitié a l'air
+    // normale.
+    //
+    // D'où l'ordre de cette ronde, qui n'est pas indifférent : on **crée d'abord**
+    // une exigence dans le groupe, pour que le renommage porte sur **deux**. Le jeu
+    // d'essai n'en a qu'une par règlement, et une boucle qui s'arrête au premier
+    // tour est juste quand il n'y en a qu'un. *Un contrôle de masse sur un seul
+    // élément ne mesure pas la masse.*
+    etape = 'exigences et règlements';
+    const lireExigences = () => lireOrg('exigences');
+
+    await allerSousVue('exigences');
+
+    // Les bandeaux sont fermés par défaut : déplier est un préalable, et c'est
+    // aussi l'un des quatre gestes.
+    const deplie = await page.evaluate(async () => {
+      const groupe = document.querySelector('.exig-group');
+      if (!groupe) return { groupe: false };
+      const ferme = groupe.classList.contains('collapsed');
+      groupe.querySelector('.exig-banner').click();
+      await new Promise((r) => setTimeout(r, 800));
+      const apres = document.querySelector('.exig-group');
+      return {
+        groupe: true, fermeDAbord: ferme,
+        ouvert: apres ? !apres.classList.contains('collapsed') : null,
+        reglement: apres ? (apres.querySelector('.exig-banner-title') || {}).textContent.trim() : null,
+      };
+    });
+    verifier('un groupe d’exigences se déplie depuis son bandeau',
+      deplie.groupe === true && deplie.fermeDAbord === true && deplie.ouvert === true,
+      JSON.stringify(deplie));
+
+    // ── 1. Une exigence ajoutée au groupe hérite de son règlement ──
+    //
+    // Le « + » du bandeau passe le règlement et la date **en paramètres** ; le
+    // panneau les montre en lecture seule, et l'enregistrement les renvoie. Une
+    // exigence créée là et qui ressortirait sans règlement serait orpheline —
+    // visible dans « Sans règlement », donc perdue pour l'agent qui la cherche.
+    const exigAvant = await lireExigences();
+    const REFERENCE = 'ESSAI-PARCOURS 1.001';
+    const LIBELLE = 'Exigence posée par la suite « parcours »';
+    const exigCreee = await page.evaluate(async (ref, lib) => {
+      const groupe = document.querySelector('.exig-group');
+      const plus = groupe && groupe.querySelector('.exig-banner-right [onclick^="openExigDrawer"]');
+      if (!plus) return { plus: false };
+      plus.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const tiroir = document.querySelector('.exig-drawer');
+      if (!tiroir || !document.getElementById('exReference')) return { plus: true, tiroir: false };
+      // Le règlement est montré en lecture seule : c'est ce que l'agent voit, et
+      // ce que l'enregistrement doit renvoyer.
+      const enTete = (tiroir.querySelector('.exig-reg-readonly') || {}).textContent || '';
+      document.getElementById('exReference').value = ref;
+      document.getElementById('exLibelle').value = lib;
+      const enregistrer = tiroir.querySelector('[onclick^="saveExigDrawer"]');
+      if (!enregistrer) return { plus: true, tiroir: true, bouton: false };
+      enregistrer.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        plus: true, tiroir: true, bouton: true, enTete: enTete.trim(),
+        tiroirFerme: (document.getElementById('exigDrawerRoot') || {}).innerHTML === '',
+        alEcran: [...document.querySelectorAll('.exig-group:not(.collapsed) tbody tr')]
+          .some((r) => r.textContent.includes(ref)),
+      };
+    }, REFERENCE, LIBELLE);
+    const exigApres = await lireExigences();
+    const nouvelle = (exigApres || []).find((e) => e.reference === REFERENCE) || {};
+    const voisine = (exigAvant || []).find((e) => (e.reglement || '') === (nouvelle.reglement || ''));
+    verifier('une exigence ajoutée au bandeau hérite du règlement et de sa date d’adoption',
+      exigCreee.bouton === true
+      && (exigApres || []).length === (exigAvant || []).length + 1
+      && nouvelle.libelle === LIBELLE
+      && !!nouvelle.reglement && !!voisine
+      && nouvelle.reglement === voisine.reglement
+      && nouvelle.date_adoption === voisine.date_adoption
+      && exigCreee.alEcran === true && exigCreee.tiroirFerme === true,
+      JSON.stringify({ exigCreee, nouvelle, heriteDe: voisine && voisine.reglement }));
+
+    // ── 2. La modification, et le règlement que le panneau n'envoie pas ──
+    //
+    // En édition, `saveExigDrawer` n'envoie que la référence, le libellé et le
+    // statut : **ni le règlement ni la date**. L'exigence les garde uniquement
+    // parce que le serveur **fusionne** le correctif à l'enregistrement
+    // (`{ ...existant, ...correctif }`). C'est un couplage qui ne se voit d'aucun
+    // des deux côtés, et que la réécriture en React peut défaire sans s'en
+    // apercevoir : d'où l'assertion explicite.
+    const LIBELLE_2 = 'Exigence modifiée par la suite « parcours »';
+    const exigModifiee = await page.evaluate(async (ref, lib2) => {
+      const ligne = [...document.querySelectorAll('.exig-group:not(.collapsed) tbody tr')]
+        .find((r) => r.textContent.includes(ref));
+      if (!ligne) return { ligne: false };
+      const editer = ligne.querySelector('[onclick^="openExigDrawer"]');
+      if (!editer) return { ligne: true, bouton: false };
+      editer.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const champRef = document.getElementById('exReference');
+      const champLib = document.getElementById('exLibelle');
+      if (!champRef || !champLib) return { ligne: true, bouton: true, champs: false };
+      // Un panneau d'édition qui s'ouvrirait vide ferait écraser l'enregistré.
+      const luDAbord = { reference: champRef.value, libelle: champLib.value };
+      champLib.value = lib2;
+      document.querySelector('.exig-drawer [onclick^="saveExigDrawer"]').click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return { ligne: true, bouton: true, champs: true, luDAbord };
+    }, REFERENCE, LIBELLE_2);
+    const exigEditee = await lireExigences();
+    const modifiee = (exigEditee || []).find((e) => e.reference === REFERENCE) || {};
+    verifier('le panneau d’une exigence porte l’enregistré, et la modifier ne perd pas son règlement',
+      exigModifiee.champs === true
+      && (exigModifiee.luDAbord || {}).reference === REFERENCE
+      && (exigModifiee.luDAbord || {}).libelle === LIBELLE
+      && modifiee.libelle === LIBELLE_2
+      // Le couplage nommé plus haut : ni l'un ni l'autre n'est envoyé.
+      && modifiee.reglement === nouvelle.reglement
+      && modifiee.date_adoption === nouvelle.date_adoption,
+      JSON.stringify({ exigModifiee, modifiee }));
+
+    // Le panneau se referme par son bouton d'annulation, sans rien écrire.
+    const tiroirAnnule = await page.evaluate(async (ref) => {
+      const ligne = [...document.querySelectorAll('.exig-group:not(.collapsed) tbody tr')]
+        .find((r) => r.textContent.includes(ref));
+      if (!ligne) return { ligne: false };
+      ligne.querySelector('[onclick^="openExigDrawer"]').click();
+      await new Promise((r) => setTimeout(r, 500));
+      const ouvert = !!document.querySelector('.exig-drawer');
+      const champ = document.getElementById('exLibelle');
+      if (champ) champ.value = 'CE TEXTE NE DOIT PAS ÊTRE ENREGISTRÉ';
+      const annuler = [...document.querySelectorAll('.exig-drawer [onclick="closeExigDrawer()"]')].pop();
+      if (!annuler) return { ligne: true, ouvert, annuler: false };
+      annuler.click();
+      await new Promise((r) => setTimeout(r, 500));
+      return { ligne: true, ouvert, annuler: true, ferme: !document.querySelector('.exig-drawer') };
+    }, REFERENCE);
+    const exigAnnulee = await lireExigences();
+    verifier('le panneau se referme par son annulation, et n’écrit rien',
+      tiroirAnnule.ouvert === true && tiroirAnnule.ferme === true
+      && JSON.stringify(exigAnnulee) === JSON.stringify(exigEditee),
+      JSON.stringify(tiroirAnnule));
+
+    // ── Déplier un groupe **par son nom** ──
+    //
+    // Nécessaire, et je l'ai appris en échouant : renommer un règlement **replie
+    // son groupe**. L'état d'ouverture (`EXIG_OPEN`) est indexé par le nom du
+    // règlement, qui vient précisément de changer — le groupe renommé n'est donc
+    // plus dans l'ensemble des ouverts. C'est un désagrément d'écran, non un
+    // défaut de donnée ; il est noté ici plutôt que corrigé dans un fichier qu'on
+    // réécrit.
+    const deplierGroupe = (nom) => page.evaluate(async (n) => {
+      const trouve = () => [...document.querySelectorAll('.exig-group')]
+        .find((g) => (g.querySelector('.exig-banner-title') || {}).textContent.includes(n));
+      const g = trouve();
+      if (!g) return false;
+      if (g.classList.contains('collapsed')) {
+        g.querySelector('.exig-banner').click();
+        await new Promise((r) => setTimeout(r, 900));
+      }
+      const apres = trouve();
+      return !!apres && !apres.classList.contains('collapsed');
+    }, nom);
+
+    // ── 3. Le renommage du règlement : deux exigences, et non une ──
+    const groupeAvant = (exigEditee || []).filter((e) => (e.reglement || '') === nouvelle.reglement);
+    const NOUVEAU_REG = 'ESSAI-PARCOURS (Règlement renommé)';
+    const renomme = await page.evaluate(async (nouveau) => {
+      const bouton = document.querySelector('.exig-group:not(.collapsed) .exig-banner-right [onclick^="openReglementForm"]');
+      if (!bouton) return { bouton: false };
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const nom = document.getElementById('rgNom');
+      const date = document.getElementById('rgDate');
+      if (!nom || !date) return { bouton: true, formulaire: false };
+      const luDAbord = { nom: nom.value, date: date.value };
+      const corps = document.querySelector('#exigDrawerRoot .shell-modal-body');
+      const annonce = corps ? corps.textContent : '';
+      nom.value = nouveau;
+      document.querySelector('#exigDrawerRoot [onclick^="saveReglement"]').click();
+      await new Promise((r) => setTimeout(r, 3500));
+      // Le groupe renommé est replié : l'état d'ouverture est indexé par le nom.
+      // Constaté plutôt que subi — c'est ce qui a fait échouer la première
+      // écriture de la suite de cette ronde.
+      const renommeReplie = [...document.querySelectorAll('.exig-group')]
+        .filter((g) => (g.querySelector('.exig-banner-title') || {}).textContent.includes(nouveau))
+        .every((g) => g.classList.contains('collapsed'));
+      return { bouton: true, formulaire: true, luDAbord, renommeReplie,
+        annonce: annonce.replace(/\s+/g, ' ').trim().slice(-60) };
+    }, NOUVEAU_REG);
+    const exigRenommee = await lireExigences();
+    const groupeApres = (exigRenommee || []).filter((e) => (e.reglement || '') === NOUVEAU_REG);
+    const ailleurs = (liste) => (liste || []).filter((e) => (e.reglement || '') !== nouvelle.reglement
+      && (e.reglement || '') !== NOUVEAU_REG);
+    verifier('renommer un règlement réécrit toutes ses exigences, et seulement les siennes',
+      renomme.formulaire === true
+      // Le contrôle refuse de se contenter d'une : une boucle qui s'arrête au
+      // premier tour est juste quand il n'y en a qu'un, et ne prouve rien.
+      && groupeAvant.length >= 2
+      && (renomme.luDAbord || {}).nom === nouvelle.reglement
+      && !!(renomme.luDAbord || {}).date
+      && groupeApres.length === groupeAvant.length
+      // La date du groupe suit le renommage, puisque le formulaire la porte.
+      && groupeApres.every((e) => e.date_adoption === (renomme.luDAbord || {}).date)
+      // Et les exigences des autres règlements n'ont pas bougé.
+      && JSON.stringify(ailleurs(exigRenommee)) === JSON.stringify(ailleurs(exigEditee))
+      // Le repli du groupe renommé, constaté : si un jour il ne se replie plus,
+      // ce contrôle le dira au lieu de laisser la surprise à la ronde suivante.
+      && renomme.renommeReplie === true,
+      JSON.stringify({ renomme, avant: groupeAvant.length, apres: groupeApres.length,
+        restantes: (exigRenommee || []).map((e) => e.reglement) }));
+
+    // Le renommage se défait par le même formulaire.
+    const regRendu = await page.evaluate(async (ancien, nouveau) => {
+      const groupe = [...document.querySelectorAll('.exig-group')]
+        .find((g) => (g.querySelector('.exig-banner-title') || {}).textContent.includes(nouveau));
+      const bouton = groupe && groupe.querySelector('.exig-banner-right [onclick^="openReglementForm"]');
+      if (!bouton) return false;
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 500));
+      document.getElementById('rgNom').value = ancien;
+      document.querySelector('#exigDrawerRoot [onclick^="saveReglement"]').click();
+      await new Promise((r) => setTimeout(r, 3500));
+      return true;
+    }, nouvelle.reglement || '', NOUVEAU_REG);
+    const reDeplie = await deplierGroupe(nouvelle.reglement || '');
+    // Puis l'exigence d'essai est retirée, et le référentiel doit revenir à l'identique.
+    const exigSupprimee = await page.evaluate(async (ref) => {
+      const ligne = [...document.querySelectorAll('.exig-group tbody tr')]
+        .find((r) => r.textContent.includes(ref));
+      if (!ligne) return { ligne: false };
+      const b = ligne.querySelector('[onclick^="deleteRef"]');
+      if (!b) return { ligne: true, bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 400));
+      const oui = document.querySelector('.oasis-confirm-oui');
+      if (!oui) return { ligne: true, bouton: true, confirmation: false };
+      oui.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return { ligne: true, bouton: true, confirmation: true };
+    }, REFERENCE);
+    const exigRendu = await lireExigences();
+    verifier('le renommage se défait, et le référentiel des exigences revient à l’identique',
+      regRendu === true && reDeplie === true && exigSupprimee.confirmation === true
+      && JSON.stringify(exigRendu) === JSON.stringify(exigAvant),
+      JSON.stringify({ regRendu, reDeplie, exigSupprimee,
+        avant: (exigAvant || []).map((e) => `${e.reference}/${e.reglement}`),
+        rendu: (exigRendu || []).map((e) => `${e.reference}/${e.reglement}`) }));
+
     // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
     //
     // `saveUserModules` **donne ou retire l'accès d'un compte à un module** ;

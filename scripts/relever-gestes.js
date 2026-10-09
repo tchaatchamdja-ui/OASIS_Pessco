@@ -133,7 +133,8 @@ function relever(fichiers) {
     const abs = path.join(RACINE, rel);
     if (!fs.existsSync(abs)) continue;
     const texte = fs.readFileSync(abs, 'utf8');
-    for (const m of texte.matchAll(/\bon(click|change|submit|input)\s*=\s*(["'`])((?:\\.|(?!\2).)*)\2/g)) {
+    const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})\\s*=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
+    for (const m of texte.matchAll(motifEnLigne)) {
       const corps = m[3].trim();
       // Le nom du geste est la fonction appelée. `event.stopPropagation()` en
       // tête n'est pas un geste : c'est une précaution à l'intérieur d'un geste.
@@ -159,7 +160,8 @@ function relever(fichiers) {
     // « bouton introuvable » sur un bouton bien présent et bien branché. Deux
     // gestes du portail sont dans ce cas — peu, mais la cécité ne se compte pas
     // en nombre de cas manqués.
-    for (const m of texte.matchAll(/\b([\w$.[\]'"]+)\.on(click|change|input|submit)\s*=\s*([A-Za-z_$][\w$.]*)/g)) {
+    const motifPropriete = new RegExp(`\\b([\\w$.[\\]'"]+)\\.on(${EVENEMENTS.join('|')})\\s*=\\s*([A-Za-z_$][\\w$.]*)`, 'g');
+    for (const m of texte.matchAll(motifPropriete)) {
       gestes.push({
         fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'propriété', evenement: m[2], nom: m[3],
@@ -225,6 +227,27 @@ function relever(fichiers) {
 // reste exercé. Perdre le **seul** enregistrement d'un geste rendrait un
 // faux « non couvert », donc une alarme en trop et jamais en moins : c'est le
 // sens dans lequel on veut se tromper.
+// ── Les événements qu'un relevé de gestes doit connaître ──
+//
+// Quatre, jusqu'au 9 octobre : `click`, `change`, `submit`, `input`. C'était
+// faux, et faux **dans le sens flatteur** — le dénominateur manquait huit
+// occurrences et cinq noms, si bien que le rapport annonçait 28 sur 78 là où
+// c'est 28 sur 83.
+//
+// Trouvé en allant couvrir l'organigramme : ses quatre gestes de glisser-déposer
+// (`orgDragStart`, `orgAllowDrop`, `orgDragLeave`, `orgDrop`) n'étaient **ni dans
+// le relevé ni dans la liste des dispenses**. Ils n'étaient pas déclarés non
+// couverts : ils n'existaient pas. Un geste qu'un outil ne sait pas voir ne
+// manque jamais à l'appel.
+//
+// `mousedown` y figure bien qu'il ne porte ici que des `preventDefault` : la
+// règle de ce relevé est de **déclarer plutôt que filtrer**, et un filtre
+// silencieux cacherait un jour un vrai geste. `load` n'y figure pas, et c'est
+// dit : les trois `reader.onload` du portail sont des retours de lecture de
+// fichier, non des gestes d'un agent.
+const EVENEMENTS = ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
+  'dragstart', 'dragover', 'dragleave', 'drop'];
+
 const MOUCHARD = () => {
   const CLE = '__oasis_gestes';
   const journal = { enLigne: [], ecouteurs: [], propriete: [], poses: 0 };
@@ -243,7 +266,18 @@ const MOUCHARD = () => {
 
   // Les gestionnaires en ligne : un écouteur en **capture** sur le document voit
   // tout événement qui descend, y compris ceux qu'il ne déclenche pas lui-même.
-  ['click', 'change', 'submit', 'input'].forEach((type) => {
+  //
+  // Le drapeau de capture manquait, et le commentaire au-dessus annonçait depuis
+  // trois jours ce que le code ne faisait pas. Sans effet sur les quatre
+  // événements d'alors — tous remontent —, mais `blur` **ne remonte pas** : la
+  // seule façon de le voir depuis le document est la descente. Un commentaire
+  // juste sur un code qui ne l'est pas est la pire des deux erreurs : il dispense
+  // de regarder.
+  //
+  // La liste est celle du relevé statique, recopiée dans la page : ce code est
+  // sérialisé par Puppeteer et n'a pas accès aux constantes du module.
+  ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
+    'dragstart', 'dragover', 'dragleave', 'drop'].forEach((type) => {
     document.addEventListener(type, (e) => {
       if (!(e.target instanceof Element)) return;
       const attribut = e.target.closest(`[on${type}]`);

@@ -1545,6 +1545,218 @@ module.exports = async function parcoursSmoke(port) {
       && JSON.stringify((cfgRenduAac || {}).aac) === JSON.stringify(aacAvant),
       JSON.stringify({ avant: lisible(aacAvant), rendu: lisible((cfgRenduAac || {}).aac) }));
 
+    // ── L'organigramme : le rattachement par glisser-déposer, et l'intérim ──
+    //
+    // Six gestes, dont quatre que **mon relevé ne voyait pas**. L'extracteur et le
+    // mouchard ne connaissaient que `click`, `change`, `submit` et `input` : les
+    // sept attributs `ondragstart` / `ondragover` / `ondragleave` / `ondrop` de
+    // cet écran n'étaient ni exercés ni déclarés non couverts — **ils n'existaient
+    // pas pour l'outil**. Un geste qu'un outil ne sait pas voir ne manque jamais à
+    // l'appel.
+    //
+    // La liste des événements est élargie (ADR-003, 5.c.11), le dénominateur passe
+    // de 78 à 84, et ces quatre-là se couvrent ici.
+    etape = 'organigramme : rattachement et intérim';
+    const lireOrg = (quoi) => page.evaluate(async (c) => {
+      const r = await fetch(`/api/referentiels/${c}`);
+      return r.ok ? r.json() : null;
+    }, quoi);
+
+    await allerSousVue('organigramme');
+
+    // ── 1. Le rattachement : une ronde parfaite, parce que le retrait existe ──
+    //
+    // Déposer crée un rattachement, la croix de la pastille le retire. C'est le
+    // seul geste d'écriture du portail dont l'inverse est **offert par l'écran au
+    // même endroit** : la ronde ne laisse donc rien, pas même une trace de
+    // registre.
+    //
+    // Le glisser-déposer ne se « presse » pas. On dispatche deux vrais `DragEvent`
+    // portant **le même** `DataTransfer` — c'est ce que fait un navigateur, et
+    // c'est ce qui compte : `orgDragStart` y écrit l'identifiant, `orgDrop` l'y
+    // relit. Deux objets différents donneraient un dépôt vide, et le contrôle
+    // mesurerait son propre montage.
+    const rattAvant = await lireOrg('organisation_assignments');
+    const depot = await page.evaluate(async () => {
+      const personne = document.querySelector('.org-person-item');
+      const cible = document.querySelector('.org-node');
+      if (!personne || !cible) return { elements: false };
+      const nom = (personne.querySelector('span') || {}).textContent || '';
+      const dt = new DataTransfer();
+      const glisser = (type) => cible.dispatchEvent(
+        new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }));
+      personne.dispatchEvent(new DragEvent('dragstart', { dataTransfer: dt, bubbles: true, cancelable: true }));
+      const porte = dt.getData('text/plain');
+      // Le survol se mesure **dans les deux sens** : un retour visuel qui
+      // s'allume sans s'éteindre laisse toutes les entités marquées après un
+      // glisser abandonné. `dragleave` est le geste qui l'éteint.
+      glisser('dragover');
+      const survol = cible.classList.contains('org-drop-hover');
+      glisser('dragleave');
+      const survolEteint = !cible.classList.contains('org-drop-hover');
+      glisser('dragover');
+      glisser('drop');
+      await new Promise((r) => setTimeout(r, 2000));
+      return {
+        elements: true, nom: nom.trim(), porte, survol, survolEteint,
+        pastille: [...document.querySelectorAll('.org-person-chip')]
+          .some((c) => c.textContent.includes(nom.trim())),
+        encoreAuPanneau: [...document.querySelectorAll('.org-person-item')]
+          .some((e) => ((e.querySelector('span') || {}).textContent || '').trim() === nom.trim()),
+      };
+    });
+    const rattApres = await lireOrg('organisation_assignments');
+    verifier('un rattachement se crée en déposant un nom sur une entité, et la pastille paraît',
+      depot.elements === true
+      // `dragstart` a bien écrit dans le transfert : sans cela le dépôt serait
+      // vide et `orgDrop` sortirait sans rien faire — en silence.
+      && !!depot.porte
+      // `dragover` marque la cible, `dragleave` la démarque : le retour visuel
+      // du survol s'allume **et s'éteint**.
+      && depot.survol === true && depot.survolEteint === true
+      && (rattApres || []).length === (rattAvant || []).length + 1
+      && depot.pastille === true
+      // Et le nom quitte le panneau du personnel disponible.
+      && depot.encoreAuPanneau === false,
+      JSON.stringify({ depot, avant: (rattAvant || []).length, apres: (rattApres || []).length }));
+
+    const retrait = await page.evaluate(async (nom) => {
+      const pastille = [...document.querySelectorAll('.org-person-chip')]
+        .find((c) => c.textContent.includes(nom));
+      if (!pastille) return { pastille: false };
+      const croix = pastille.querySelector('.org-chip-x');
+      if (!croix) return { pastille: true, croix: false };
+      croix.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return {
+        pastille: true, croix: true,
+        partie: ![...document.querySelectorAll('.org-person-chip')].some((c) => c.textContent.includes(nom)),
+        rendueAuPanneau: [...document.querySelectorAll('.org-person-item')]
+          .some((e) => ((e.querySelector('span') || {}).textContent || '').trim() === nom),
+      };
+    }, depot.nom || '');
+    const rattRendu = await lireOrg('organisation_assignments');
+    verifier('et la croix de la pastille le retire, le nom revenant au panneau',
+      retrait.croix === true && retrait.partie === true && retrait.rendueAuPanneau === true
+      && JSON.stringify(rattRendu) === JSON.stringify(rattAvant),
+      JSON.stringify({ retrait, avant: (rattAvant || []).length, rendu: (rattRendu || []).length }));
+
+    // Les deux présentations de l'organigramme, pressées depuis leurs boutons.
+    const presentations = await page.evaluate(async () => {
+      const bouton = (v) => [...document.querySelectorAll('[onclick^="setOrgView"]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`'${v}'`));
+      if (!bouton('tree') || !bouton('list')) return { boutons: false };
+      bouton('tree').click();
+      await new Promise((r) => setTimeout(r, 800));
+      const arbre = document.querySelectorAll('.org-tree-node').length;
+      bouton('list').click();
+      await new Promise((r) => setTimeout(r, 800));
+      const liste = document.querySelectorAll('.org-node').length;
+      return { boutons: true, arbre, liste, arbreApres: document.querySelectorAll('.org-tree-node').length };
+    });
+    verifier('les deux présentations de l’organigramme se commandent, et diffèrent',
+      presentations.boutons === true
+      && presentations.arbre > 0 && presentations.liste > 0
+      // Et le retour à la liste défait l'arbre : sans cette moitié, un bouton qui
+      // n'effacerait rien passerait.
+      && presentations.arbreApres === 0,
+      JSON.stringify(presentations));
+
+    // ── 2. L'intérim : ce qu'une ronde ne peut pas défaire, et pourquoi ──
+    //
+    // Signaler un intérim redirige **les demandes de validation** vers
+    // l'intérimaire. C'est l'écriture de cet écran qui porte un effet d'autorité :
+    // qui valide quoi pendant une absence.
+    //
+    // La ronde lève l'intérim, mais **ne se défait pas entièrement**, et c'est
+    // voulu par l'application, non une faiblesse du contrôle :
+    //
+    //   · le **registre** garde une entrée fermée — c'est sa raison d'être, un
+    //     registre qui s'efface ne sert à rien ;
+    //   · une **notification** est émise à l'activation, et rien ne la retire.
+    //
+    // Les deux traces sont donc *attendues*, et le contrôle les **mesure** plutôt
+    // que de les subir : l'entrée doit être fermée, et une seule.
+    const orgAvant = await lireOrg('organisation');
+    const interimPose = await page.evaluate(async () => {
+      const bouton = document.querySelector('[onclick*="orgStartInterim"]');
+      if (!bouton) return { bouton: false };
+      const noeud = bouton.closest('.org-node') || bouton.closest('.org-tree-box');
+      const sigle = noeud ? (noeud.querySelector('strong') || {}).textContent : null;
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 500));
+      const choix = document.getElementById('interimSelect');
+      if (!choix) return { bouton: true, fenetre: false };
+      const option = [...choix.options].find((o) => o.value);
+      if (!option) return { bouton: true, fenetre: true, option: false };
+      choix.value = option.value;
+      const activer = document.querySelector('#cfgModalRoot [onclick^="orgConfirmInterim"]');
+      if (!activer) return { bouton: true, fenetre: true, option: true, activer: false };
+      activer.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        bouton: true, fenetre: true, option: true, activer: true,
+        sigle: sigle ? sigle.trim() : null, interimaire: option.textContent.trim(),
+        // L'écran doit montrer l'intérim actif, et offrir le retour du titulaire.
+        alEcran: !!document.querySelector('.org-interim-on'),
+        retourOffert: !!document.querySelector('[onclick*="orgEndInterim"]'),
+      };
+    });
+    const orgApres = await lireOrg('organisation');
+    const noeudModifie = (liste, sigle) => (liste || []).find((o) => o.sigle === sigle) || {};
+    const avantN = noeudModifie(orgAvant, interimPose.sigle);
+    const apresN = noeudModifie(orgApres, interimPose.sigle);
+    const ouvertes = (n) => (n.registre || []).filter((e) => e.role === 'interim' && !e.end).length;
+    verifier('un intérim se signale depuis le poste, et le registre l’ouvre',
+      interimPose.activer === true
+      && apresN.interim_actif === true && !!apresN.interim_id
+      && (apresN.registre || []).length === (avantN.registre || []).length + 1
+      && ouvertes(apresN) === ouvertes(avantN) + 1
+      && interimPose.alEcran === true && interimPose.retourOffert === true,
+      JSON.stringify({ interimPose, avant: { reg: (avantN.registre || []).length, ouvertes: ouvertes(avantN) },
+        apres: { interim: apresN.interim_id, actif: apresN.interim_actif, reg: (apresN.registre || []).length, ouvertes: ouvertes(apresN) } }));
+
+    // Le registre, lu par son propre bouton — et il doit porter « En cours ».
+    const registreLu = await page.evaluate(async () => {
+      const b = document.querySelector('[onclick*="openPosteRegistre"]');
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 600));
+      const corps = document.querySelector('#cfgModalRoot .shell-modal-body');
+      const texte = corps ? corps.textContent : '';
+      const lignes = corps ? corps.querySelectorAll('tbody tr').length : 0;
+      const fermer = document.querySelector('#cfgModalRoot [onclick="closeRefModal()"]');
+      if (fermer) fermer.click();
+      await new Promise((r) => setTimeout(r, 300));
+      return { bouton: true, lignes, enCours: /En cours/.test(texte), interimaire: /[Ii]ntérimaire/.test(texte) };
+    });
+    verifier('le registre du poste s’ouvre et montre l’intérim en cours',
+      registreLu.bouton === true && registreLu.lignes >= 1
+      && registreLu.enCours === true && registreLu.interimaire === true,
+      JSON.stringify(registreLu));
+
+    const interimLeve = await page.evaluate(async () => {
+      const b = document.querySelector('[onclick*="orgEndInterim"]');
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        bouton: true,
+        plusDActif: !document.querySelector('.org-interim-on'),
+        signalerOffert: !!document.querySelector('[onclick*="orgStartInterim"]'),
+      };
+    });
+    const orgLeve = await lireOrg('organisation');
+    const leveN = noeudModifie(orgLeve, interimPose.sigle);
+    verifier('le titulaire revient, et le registre referme l’entrée sans en perdre la trace',
+      interimLeve.bouton === true
+      && leveN.interim_actif === false && !leveN.interim_id
+      // La trace reste, fermée : c'est ce qu'un registre doit faire.
+      && (leveN.registre || []).length === (apresN.registre || []).length
+      && ouvertes(leveN) === 0
+      && interimLeve.plusDActif === true && interimLeve.signalerOffert === true,
+      JSON.stringify({ interimLeve, registre: leveN.registre, ouvertes: ouvertes(leveN) }));
+
     // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
     //
     // `saveUserModules` **donne ou retire l'accès d'un compte à un module** ;

@@ -1,7 +1,7 @@
 {
  "_": "Les gestes d'un écran que la suite « parcours » n'exerce PAS, et la raison de chacun. Voir ADR-003 n° 5.c.0. Un geste absent de ce fichier ET non exercé fait tomber un contrôle de la suite « taille » : c'est ce qui empêche la liste de se remplir en silence. Un geste déclaré ici qui devient exercé le fait tomber aussi — une dispense périmée est une dispense qui ment.",
  "portail": {
-  "_ecrits": "Ils modifient des données. Les couvrir demande un jeu d'essai, l'assertion du résultat EN BASE, et la vérification du retour en arrière — sinon un contrôle qui « passe » laisse le bac d'essai dans un état que le suivant hérite. C'est la séance n° 5.c.0.b, et elle vient avant la réécriture. Trois d'entre eux sont partis de cette liste le 8 octobre 2026, à la conversion de `portail-instances.js` : ouvrir, mettre en sommeil et supprimer une instance sont désormais exercés par une ronde complète, confirmation pressée. Le garde-fou a dénoncé les trois dispenses devenues fausses. Deux de plus sont partis le 8 octobre : `saveRef` et `deleteRef` sont exercés par une ronde complète sur `organisation_levels` — créer, modifier, supprimer, confirmation pressée. Le référentiel a été choisi pour deux raisons mesurées : deux champs seulement, et rien ne référence un niveau qu'on vient de créer. Et les deux plus lourdes le 9 octobre : `saveUserModules` — qui donne ou retire l'accès d'un compte à un module — et `submitEditUser`. Les deux rondes sont réversibles et visent `admin@anac.bj`, non le compte connecté : se modifier soi-même romprait la session. Et `doImport` le 9 octobre — la seule écriture en masse : le classeur est pris au lien « Télécharger le modèle » de la fenêtre elle-même, rempli d'une ligne, importé deux fois pour éprouver la mise à jour sur le code, puis la ligne est retirée par l'écran. `domaines` est la seule des quatre collections importables depuis l'écran qui porte un code : sur une autre, la propriété qui distingue ce geste ne serait pas éprouvable. `openImportModal` est parti de la liste des gestes à couvrir du même coup — il est pressé, non appelé. Et les trois écritures de la configuration de l'instance le 9 octobre : `saveAAC`, `saveSecurite`, `saveSysteme`, avec `openAacEdit`. Chacune envoie tout son bloc à chaque enregistrement, si bien que l'assertion qui compte n'est pas ce qui change mais ce qui ne doit pas changer : les douze autres paramètres de sécurité, les sept autres champs de l'identité, la langue par défaut et le bigramme du déploiement. Les champs visés — `maxFailedAttempts`, `centralUrl`, `ville` — sont choisis pour ne rien pouvoir rompre ; `mfaEnabled`, `forceChangeOnFirstLogin`, `sessionTimeoutMinutes` et `defaultLang` décident de la session même qui exécute les contrôles.",
+  "_ecrits": "Ils modifient des données. Les couvrir demande un jeu d'essai, l'assertion du résultat EN BASE, et la vérification du retour en arrière — sinon un contrôle qui « passe » laisse le bac d'essai dans un état que le suivant hérite. C'est la séance n° 5.c.0.b, et elle vient avant la réécriture. Trois d'entre eux sont partis de cette liste le 8 octobre 2026, à la conversion de `portail-instances.js` : ouvrir, mettre en sommeil et supprimer une instance sont désormais exercés par une ronde complète, confirmation pressée. Le garde-fou a dénoncé les trois dispenses devenues fausses. Deux de plus sont partis le 8 octobre : `saveRef` et `deleteRef` sont exercés par une ronde complète sur `organisation_levels` — créer, modifier, supprimer, confirmation pressée. Le référentiel a été choisi pour deux raisons mesurées : deux champs seulement, et rien ne référence un niveau qu'on vient de créer. Et les deux plus lourdes le 9 octobre : `saveUserModules` — qui donne ou retire l'accès d'un compte à un module — et `submitEditUser`. Les deux rondes sont réversibles et visent `admin@anac.bj`, non le compte connecté : se modifier soi-même romprait la session. Et `doImport` le 9 octobre — la seule écriture en masse : le classeur est pris au lien « Télécharger le modèle » de la fenêtre elle-même, rempli d'une ligne, importé deux fois pour éprouver la mise à jour sur le code, puis la ligne est retirée par l'écran. `domaines` est la seule des quatre collections importables depuis l'écran qui porte un code : sur une autre, la propriété qui distingue ce geste ne serait pas éprouvable. `openImportModal` est parti de la liste des gestes à couvrir du même coup — il est pressé, non appelé. Et les trois écritures de la configuration de l'instance le 9 octobre : `saveAAC`, `saveSecurite`, `saveSysteme`, avec `openAacEdit`. Chacune envoie tout son bloc à chaque enregistrement, si bien que l'assertion qui compte n'est pas ce qui change mais ce qui ne doit pas changer : les douze autres paramètres de sécurité, les sept autres champs de l'identité, la langue par défaut et le bigramme du déploiement. Les champs visés — `maxFailedAttempts`, `centralUrl`, `ville` — sont choisis pour ne rien pouvoir rompre ; `mfaEnabled`, `forceChangeOnFirstLogin`, `sessionTimeoutMinutes` et `defaultLang` décident de la session même qui exécute les contrôles. Enfin l'organigramme le 9 octobre : le rattachement par glisser-déposer est la seule écriture du portail dont l'inverse est offert par l'écran au même endroit — déposer crée, la croix de la pastille retire, et la ronde ne laisse rien. L'intérim, lui, ne se défait pas entièrement, et c'est voulu par l'application : le registre garde une entrée fermée, et la notification d'activation n'est pas retirée. Le contrôle mesure ces deux traces plutôt que de les subir.",
   "saveReglement": "écrit — enregistre un règlement",
   "saveExigDrawer": "écrit — enregistre une exigence",
   "saveProfileInfos": "écrit — modifie son propre profil",
@@ -11,10 +11,6 @@
   "removeAacLogo": "écrit — retire le logo",
   "uploadProfilePhoto": "écrit — dépose un fichier",
   "removeProfilePhoto": "écrit — retire la photo",
-  "orgConfirmInterim": "écrit — confirme un intérim à un poste",
-  "orgUnassign": "écrit — retire une affectation",
-  "orgStartInterim": "écrit — ouvre un intérim",
-  "orgEndInterim": "écrit — clôt un intérim",
   "_hors_portee_du_parcours": "Ces gestes quittent la page, ou demandent un régime que la suite n'ouvre pas. Ils sont couverts ailleurs, ou bien le besoin est nommé. Le geste d'effacement de la page des témoins y figurait ; il est couvert depuis la conversion de cette page (7 octobre 2026), et le garde-fou a dénoncé la dispense devenue fausse.",
   "document.getElementById('logoutBtn'):click": "quitte la session : le presser interromprait tout ce qui suit. À couvrir en dernier geste de la suite, ou sur une page à part",
   "document.getElementById('mfaForm'):submit": "la MFA est désactivée dans la configuration d'essai. Couverte par la suite « mfa » (11 contrôles), côté serveur",
@@ -25,7 +21,6 @@
   "openExigDrawer": "ouvre le panneau d'une exigence",
   "closeExigDrawer": "referme le panneau d'une exigence",
   "openReglementForm": "ouvre le formulaire d'un règlement",
-  "openPosteRegistre": "ouvre le registre d'un poste",
   "closeUserModal": "referme la fenêtre d'un compte",
   "toggleExigGroup": "déplie un groupe d'exigences",
   "togglePers": "déplie une fiche de personnel",
@@ -33,7 +28,6 @@
   "toggleInspectorFields": "montre les champs propres aux inspecteurs",
   "toggleCfgSidebar": "replie la barre de la configuration",
   "toggleUserSidebar": "replie la barre des utilisateurs",
-  "setOrgView": "bascule entre les deux vues de l'organigramme",
   "document.getElementById('notifBell'):click": "ouvre le panneau des notifications",
   "document.getElementById('newUserBtn'):click": "ouvre la fenêtre de création d'un compte",
   "document.getElementById('closeModal'):click": "referme la fenêtre de création",
@@ -45,6 +39,7 @@
   "document.getElementById('createUser'):click": "écrit — crée un compte. Appartient au bloc des écritures",
   "_pas_des_gestes": "Relevés par la forme, ils n'en sont pas. Déclarés plutôt que filtrés : un filtre silencieux cacherait un jour un vrai geste.",
   "event.stopPropagation": "une précaution à l'intérieur d'un geste, non un geste",
+  "event.preventDefault": "idem — le `onmousedown` du bouton de vidage de la recherche empêche le champ de perdre le focus avant le clic. Relevé depuis le 9 octobre, l'extracteur ayant appris six événements de plus ; déclaré plutôt que filtré, parce qu'un filtre silencieux cacherait un jour un vrai geste",
   "${pdf}": "une interpolation de gabarit : le nom du geste est calculé à l'exécution. Le relevé ne peut pas le nommer statiquement",
   "onchange=\"orgTypeChanged()\"": "doublon de forme du même geste, que l'extracteur n'a pas su réduire — `orgTypeChanged` est le geste"
  }

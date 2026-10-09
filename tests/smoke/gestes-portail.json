@@ -1,8 +1,8 @@
 {
  "releve": "2026-10-09",
- "gestesNommes": 78,
- "occurrences": 122,
- "exerces": 28,
+ "gestesNommes": 84,
+ "occurrences": 131,
+ "exerces": 39,
  "indecidables": 8,
  "gestes": [
   {
@@ -399,7 +399,7 @@
    "evenement": "click",
    "nom": "orgConfirmInterim",
    "source": "orgConfirmInterim('${nodeId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -408,7 +408,16 @@
    "evenement": "click",
    "nom": "orgUnassign",
    "source": "orgUnassign('${a.id}')",
-   "exerce": false
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1139,
+   "forme": "en ligne",
+   "evenement": "dragstart",
+   "nom": "orgDragStart",
+   "source": "orgDragStart(event,'${p.id}')",
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -417,7 +426,7 @@
    "evenement": "click",
    "nom": "orgEndInterim",
    "source": "event.stopPropagation();orgEndInterim('${node.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -426,7 +435,7 @@
    "evenement": "click",
    "nom": "orgStartInterim",
    "source": "event.stopPropagation();orgStartInterim('${node.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -435,7 +444,7 @@
    "evenement": "click",
    "nom": "openPosteRegistre",
    "source": "event.stopPropagation();openPosteRegistre('${node.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -448,12 +457,66 @@
   },
   {
    "fichier": "public/js/app-config.js",
+   "ligne": 1179,
+   "forme": "en ligne",
+   "evenement": "dragover",
+   "nom": "orgAllowDrop",
+   "source": "orgAllowDrop(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1179,
+   "forme": "en ligne",
+   "evenement": "dragleave",
+   "nom": "orgDragLeave",
+   "source": "orgDragLeave(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1179,
+   "forme": "en ligne",
+   "evenement": "drop",
+   "nom": "orgDrop",
+   "source": "orgDrop(event,'${node.id}')",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1198,
+   "forme": "en ligne",
+   "evenement": "dragover",
+   "nom": "orgAllowDrop",
+   "source": "orgAllowDrop(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1198,
+   "forme": "en ligne",
+   "evenement": "dragleave",
+   "nom": "orgDragLeave",
+   "source": "orgDragLeave(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
+   "ligne": 1198,
+   "forme": "en ligne",
+   "evenement": "drop",
+   "nom": "orgDrop",
+   "source": "orgDrop(event,'${node.id}')",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app-config.js",
    "ligne": 1220,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setOrgView",
    "source": "setOrgView('list')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -462,7 +525,7 @@
    "evenement": "click",
    "nom": "setOrgView",
    "source": "setOrgView('tree')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -527,6 +590,24 @@
    "nom": "portailChercher",
    "source": "portailChercher(this)",
    "exerce": true
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 238,
+   "forme": "en ligne",
+   "evenement": "blur",
+   "nom": "portailFermerRechercheSiVide",
+   "source": "portailFermerRechercheSiVide()",
+   "exerce": true
+  },
+  {
+   "fichier": "public/js/app.js",
+   "ligne": 240,
+   "forme": "en ligne",
+   "evenement": "mousedown",
+   "nom": "event.preventDefault",
+   "source": "event.preventDefault()",
+   "exerce": false
   },
   {
    "fichier": "public/js/app.js",

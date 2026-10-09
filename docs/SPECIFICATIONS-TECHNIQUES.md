@@ -202,7 +202,7 @@ meilleure façon de faire ignorer les vraies.
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
 | **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances (`frontend/portail/`) | 1 595 | **TypeScript** — 1 435 comparaisons sans écart |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail — le reste (`public/js/`) | 2 622 | JavaScript — **78 gestes, 28 exercés, 42 motivés** |
+| portail — le reste (`public/js/`) | 2 622 | JavaScript — **84 gestes, 39 exercés, 37 motivés, 8 indécidables** |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -215,8 +215,8 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
 | **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis |
 
-Ces cinq écrans portent **1 326 occurrences de geste** — boutons, formulaires, menus, champs.
-Ce sont des *occurrences* et non des gestes nommés : le portail en compte 121 pour **78** noms
+Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires, menus, champs.
+Ce sont des *occurrences* et non des gestes nommés : le portail en compte 131 pour **84** noms
 distincts, et la couverture se mesure sur les noms. Le relevé nommé de ces cinq écrans n'est pas
 fait — il le sera par `scripts/relever-gestes.js`, une ligne par écran, au moment de leur suite
 n° 0.
@@ -226,9 +226,9 @@ n° 0.
 | PLAN | 5 949 | 135 |
 | CARE | 6 428 | 145 |
 | PR | 7 315 | 186 |
-| RAMP | 12 470 | 357 |
+| RAMP | 12 470 | 365 |
 | SURV | 23 731 | **503** |
-| **Total** | **55 893** | **1 326** |
+| **Total** | **55 893** | **1 334** |
 
 **Aucun n'est exercé dans un navigateur.** La suite « parcours » ouvre **un** écran de module
 dans son cadre et vérifie qu'il n'est pas vide — c'est tout. Elle ne clique sur rien à
@@ -236,11 +236,15 @@ l'intérieur.
 
 **Pourquoi c'est écrit plutôt que passé sous silence.** Le portail était dans le même état, et
 il a été mesuré avant d'être touché. Le relevé : sur **cinq** vues, trois étaient ouvertes ; sur
-**onze** sous-vues de configuration, **une** ; et sur ses **78 gestes nommés**, **aucun**. Un
-écran de 4 217 lignes était couvert par « trois vues se remplissent et ne débordent pas ».
+**onze** sous-vues de configuration, **une** ; et sur les **78 gestes nommés** que le relevé
+voyait alors — il y en a **84**, voir ci-dessous —, **aucun**. Un écran de 4 217 lignes était
+couvert par « trois vues se remplissent et ne débordent pas ».
 
-Ce relevé a lui-même dû être refait : la première version annonçait « quarante gestes », qui
-étaient ceux d'**un fichier sur neuf**. Un dénominateur faux rend une couverture fausse, et
+Ce relevé a lui-même dû être refait **deux fois**. La première version annonçait « quarante
+gestes », qui étaient ceux d'**un fichier sur neuf**. La seconde en nommait 78, et n'en voyait
+toujours que les quatre types d'événement `click`, `change`, `submit`, `input` : les sept
+attributs de glisser-déposer de l'organigramme et un `onblur` lui échappaient, soit **84** en
+réalité. Un dénominateur faux rend une couverture fausse, et
 toujours dans le sens rassurant. La mesure est désormais faite par
 [`scripts/relever-gestes.js`](../scripts/relever-gestes.js), qui instrumente la suite réelle
 dans un navigateur, et son inventaire est **gardé à chaque campagne**.
@@ -701,17 +705,19 @@ T=$(mktemp -d)
 OASIS_VERROU=0 OASIS_DATA_DIR="$T" PORT=4799 node server.js > "$T/boot.log" 2>&1 &
 PID=$!; sleep 5; grep -o '"modules":\[[^]]*\]' "$T/boot.log"; kill "$PID"; rm -rf "$T"
 
-# Gestes des cinq écrans non relevés (§ 4.1.1) — attendu : 1 326
+# Gestes des cinq écrans non relevés (§ 4.1.1) — attendu : 1 334
 for m in planification mesures profil_risque ramp execution; do
-  printf "%-16s %s\n" "$m" "$(grep -rhoE 'onclick=|onchange=|onsubmit=|oninput=|addEventListener\(' \
+  # Dix types d'événement, et non quatre : la première écriture de cette ligne en
+  # connaissait quatre, et manquait tout le glisser-déposer (ADR-003, 5.c.11).
+  printf "%-16s %s\n" "$m" "$(grep -rhoE 'on(click|change|submit|input|blur|mousedown|dragstart|dragover|dragleave|drop)=|addEventListener\(' \
     public/modules/$m/js/*.js public/modules/$m/*.html 2>/dev/null | wc -l)"
 done
 
-# Couverture des gestes d'un écran (§ 4.1.1) — portail : 22 sur 78
+# Couverture des gestes d'un écran (§ 4.1.1) — portail : 39 sur 84
 node scripts/relever-gestes.js portail | head -8
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 962, et 0
+npm run smoke; echo "code de sortie : $?"                             # 968, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

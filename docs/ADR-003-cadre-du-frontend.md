@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 28 exercés, 42 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 39 exercés, 37 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1708,6 +1708,12 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                9 octobre 2026. **28 gestes exercés sur 78**, contre 24 ; 76 contrôles de
                parcours, 962 pour la campagne.
 
+               *Les dénominateurs « sur 78 » de cette entrée et des précédentes sont faux :
+               l'outil n'en voyait que 78 sur **84**, faute de connaître six types
+               d'événement. Corrigé en 5.c.11, qui le mesure et dit comment. Les chiffres
+               sont laissés tels qu'ils ont été relevés — un registre qu'on réécrit ne dit
+               plus quand on a su.*
+
                `saveAAC`, `saveSecurite`, `saveSysteme`, et `openAacEdit` qui ouvre la
                première. Elles se couvrent ensemble parce que le danger qu'elles portent est
                **le même**, et qu'il n'est pas celui qu'on croit.
@@ -1789,6 +1795,97 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                les dépôts de fichiers — `uploadAacLogo`, `uploadProfilePhoto` et leurs retraits
                —, dont le chemin est désormais connu par l'import. Et `submitProfilePassword`,
                qui demande toujours un compte dédié.
+
+
+           5.c.11 [x] **L'organigramme — et mon relevé ne voyait pas quatre gestes** —
+               fait le 9 octobre 2026. **39 gestes exercés sur 84**, contre 29 sur 84 ;
+               82 contrôles de parcours, 968 pour la campagne.
+
+               ── D'abord : le dénominateur était faux, et dans le sens flatteur ──
+
+               En allant couvrir l'organigramme, ses quatre gestes de glisser-déposer
+               — `orgDragStart`, `orgAllowDrop`, `orgDragLeave`, `orgDrop` — n'étaient **ni
+               dans le relevé, ni dans la liste des dispenses**. Ils n'étaient pas déclarés
+               non couverts : *ils n'existaient pas pour l'outil.* L'extracteur et le mouchard
+               ne connaissaient que `click`, `change`, `submit` et `input`.
+
+               **Un geste qu'un outil ne sait pas voir ne manque jamais à l'appel.** Et
+               l'erreur allait dans le sens qui flatte : 78 au dénominateur là où il y en a
+               **84**, donc 36 % annoncés pour 35 % réels.
+
+               La liste est élargie à `blur`, `mousedown`, `dragstart`, `dragover`,
+               `dragleave`, `drop`. Deux conséquences immédiates :
+
+               · `portailFermerRechercheSiVide` — quitter le champ de recherche le referme —
+                 était **déjà exercé** depuis trois jours, sans que rien ne le dise ;
+               · `event.preventDefault` du bouton de vidage apparaît, et il est **déclaré**
+                 comme précaution plutôt que filtré. Un filtre silencieux cacherait un jour un
+                 vrai geste.
+
+               `load` n'y entre pas, et c'est dit : les trois `reader.onload` du portail sont
+               des retours de lecture de fichier, non des gestes d'un agent.
+
+               ── Et le commentaire du mouchard annonçait depuis trois jours ce que le code ne faisait pas ──
+
+               « un écouteur en **capture** sur le document » — sans le drapeau de capture.
+               Sans effet sur les quatre événements d'alors, qui tous remontent. Mais `blur`
+               **ne remonte pas** : c'est pourquoi il était invisible. *Un commentaire juste
+               sur un code qui ne l'est pas est la pire des deux erreurs : il dispense de
+               regarder.*
+
+               ── Le rattachement : la seule ronde parfaite du portail ──
+
+               Déposer un nom sur une entité crée un rattachement ; la croix de la pastille le
+               retire. C'est le seul geste d'écriture du portail dont **l'inverse est offert
+               par l'écran au même endroit** — la ronde ne laisse rien, pas même une trace de
+               registre.
+
+               Le glisser-déposer ne se presse pas : on dispatche de vrais `DragEvent` portant
+               **le même** `DataTransfer`, comme le fait un navigateur. Contre-essayé en ôtant
+               le `setData` de `orgDragStart` : le contrôle rend `porte: ""` et toute la chaîne
+               tombe. Deux objets distincts auraient mesuré mon montage, non le code.
+
+               Et le survol se mesure **dans les deux sens** — il s'allume au `dragover`, il
+               s'éteint au `dragleave`. Première écriture : unilatérale, donc satisfaite par un
+               retour visuel qui ne s'éteint jamais et laisse toutes les entités marquées après
+               un glisser abandonné. Contre-essayé, et corrigé avant d'être commis.
+
+               ── L'intérim : ce qu'une ronde ne peut pas défaire, et pourquoi ──
+
+               Signaler un intérim **redirige les demandes de validation** vers l'intérimaire.
+               C'est l'écriture de cet écran qui porte un effet d'autorité.
+
+               La ronde lève l'intérim mais ne se défait pas entièrement, et c'est **voulu par
+               l'application** : le registre garde une entrée fermée — un registre qui s'efface
+               ne sert à rien —, et la notification d'activation n'est pas retirée. Les deux
+               traces sont donc attendues, et le contrôle les **mesure** plutôt que de les
+               subir : l'entrée doit être fermée, et une seule.
+
+               ── Les deux contre-essais qui valent la séance ──
+
+               `orgEndInterim` privé de la fermeture de l'entrée : l'écran dit que le titulaire
+               est revenu — `plusDActif: true`, `signalerOffert: true` — et le registre dit que
+               l'intérim court toujours (`end: null`). **L'écran et le registre divergent, en
+               silence.**
+
+               `orgConfirmInterim` privé de son inscription : `alEcran: true`,
+               `retourOffert: true`, `interim_actif: true` — tout est en place, et **rien au
+               registre**. Un intérim qui redirige des validations sans laisser de trace est
+               exactement ce qu'un auditeur viendrait chercher.
+
+               Sept contre-essais, sept rouges : transfert vide, survol non allumé, survol non
+               éteint, dépôt non envoyé, retrait non envoyé, registre non inscrit, entrée non
+               fermée. Plus la bascule des deux présentations rendue inopérante.
+
+               ── Ce qui reste ──
+
+               **37 gestes non exercés**, dont **9 écritures** : les exigences et règlements
+               (`openExigDrawer`, `saveExigDrawer`, `openReglementForm`, `saveReglement`), le
+               profil (`saveProfileInfos`, `saveProfileExtra`), les dépôts de fichiers
+               (`uploadAacLogo`, `uploadProfilePhoto` et leurs retraits), la création d'un
+               compte (`createUser`, `verifyBtn`), et `submitProfilePassword` qui demande
+               toujours un compte dédié. Plus huit **indécidables** — des écouteurs dont la
+               cible n'est pas nommable statiquement.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

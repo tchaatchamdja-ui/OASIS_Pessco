@@ -34,14 +34,14 @@ Les commandes de vérification sont données en fin de document.
 
 La fiche décrit une **plateforme assemblée à partir de briques d'infrastructure éprouvées** —
 Keycloak, Camunda, MinIO, PostgreSQL, Prometheus, K3s. Ce qui a été livré est une
-**application autonome qui réimplémente les fonctions de ces briques** en 18 024 lignes de
+**application autonome qui réimplémente les fonctions de ces briques** en 21 147 lignes de
 JavaScript serveur. L'intention fonctionnelle de la fiche est largement honorée ; les moyens
 qu'elle prescrit le sont très peu. Sur les dix couches techniques du §3.2, **une est conforme**.
 Sur les six contraintes structurantes du §2, **deux sont tenues**, deux le sont partiellement,
 deux ne le sont pas.
 
 Ce constat n'est pas un jugement sur la qualité du livré : l'application fonctionne, elle est
-éprouvée par 702 contrôles automatiques, elle ne porte aucune vulnérabilité de dépendance et
+éprouvée par 955 contrôles automatiques, elle ne porte aucune vulnérabilité de dépendance et
 son cloisonnement est posé au serveur. Il dit seulement que **le livré et la fiche décrivent
 deux systèmes différents**, et qu'un auditeur qui compare l'un à l'autre le verra.
 
@@ -200,12 +200,12 @@ grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l      # Keycloak
 grep -rli 'bpmn\|flowable\|camunda' src public | wc -l         # moteur BPMN
 grep -rli 'prometheus\|grafana\|/metrics' src server.js | wc -l # supervision
 find public -name 'manifest*.json' -o -name 'sw.js' | wc -l    # PWA
-find frontend -name '*.ts' -o -name '*.tsx' | wc -l            # TypeScript : 35 fichiers
+find frontend -name '*.ts' -o -name '*.tsx' | wc -l            # TypeScript : 53 fichiers
 # Et le JavaScript qu'il reste à convertir, qui est l'autre moitié de la mesure.
 # Cherchée dans `public/`, la première ligne rendait 0 sur un dépôt qui porte
-# 4 932 lignes de TypeScript : le TypeScript vit dans `frontend/`, et c'est
-# `public/` qui reçoit ce qu'esbuild en construit.
-cat public/js/*.js public/modules/*/js/*.js | wc -l            # JS front : 60 110
+# 4 932 lignes de TypeScript au 6 octobre : le TypeScript vit dans `frontend/`,
+# et c'est `public/` qui reçoit ce qu'esbuild en construit.
+cat public/js/*.js public/modules/*/js/*.js | wc -l            # JS front : 58 515
 grep -rn 'aes-256\|createCipher' src | wc -l                   # chiffrement au repos
 
 # Journalisation : aucun verbe de consultation
@@ -217,5 +217,5 @@ python3 -c "import json;[print(m['tdr'], m['code']) for m in json.load(open('con
 
 # Ce qui est tenu
 grep -c requireAuth server.js src/modules/*/routes-*.js | awk -F: '{s+=$2} END {print s}'
-npm run smoke              # 702 contrôles, onze suites
+npm run smoke              # 955 contrôles, quatorze suites
 ```

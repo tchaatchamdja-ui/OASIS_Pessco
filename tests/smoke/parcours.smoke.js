@@ -15,6 +15,8 @@
 // jetable de `data/` — jamais sur les données de travail.
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
+const XLSX = require('xlsx');
 const puppeteer = require('puppeteer');
 const { demarrer, verifier, bilan } = require('./harness');
 
@@ -1117,6 +1119,189 @@ module.exports = async function parcoursSmoke(port) {
     }, NIVEAU);
     verifier('un référentiel se supprime, confirmation pressée',
       refSuppression.confirmation && refSuppression.partie, JSON.stringify(refSuppression));
+
+    // ── L'import d'un classeur : la seule écriture en masse du portail ──
+    //
+    // `doImport` lit un fichier Excel et écrit **autant de lignes qu'il en
+    // contient**. Les autres écritures du portail touchent une ligne, décidée
+    // par l'agent ; celle-ci en touche un nombre décidé par le fichier. C'est
+    // le geste dont une erreur ne se répare pas à la main.
+    //
+    // Il ne se couvre pas en une ronde comme les précédents : il lui faut un
+    // classeur. Celui-ci n'est pas écrit de toutes pièces — il est **pris à la
+    // fenêtre elle-même** (le lien « Télécharger le modèle »), rempli d'une
+    // ligne, et renvoyé. Un classeur fabriqué dans le test porterait les
+    // en-têtes que je crois justes ; celui-là porte ceux que l'application
+    // sert. Le jour où les deux divergeront, c'est le contrôle du modèle qui le
+    // dira — non l'import qui échouerait sans raison lisible.
+    //
+    // `domaines` est choisi, et non l'une des trois autres collections
+    // importables depuis l'écran : c'est la seule qui porte un **code**.
+    // Prestataires, exigences et personnel ne sont pas clés par code, et un
+    // second import y dupliquerait les lignes. Or la propriété qui distingue ce
+    // geste est précisément la **mise à jour sur le code** — importer deux fois
+    // le même fichier ne doit pas doubler les lignes. Sur une collection sans
+    // code, ce contrôle n'existerait pas, et l'import ne serait éprouvé qu'à
+    // moitié.
+    //
+    // La ronde se défait : la ligne importée est supprimée **par l'écran**,
+    // confirmation pressée, et le référentiel est recompté avant et après.
+    etape = 'import d’un classeur';
+    const CODE_IMPORT = 'ZZ-ESSAI';
+
+    // Le modèle, demandé par la page : c'est elle qui porte le cookie de
+    // session. Le classeur revient en base 64 faute de pouvoir traverser
+    // autrement la frontière du navigateur.
+    const modeleB64 = await page.evaluate(async () => {
+      const r = await fetch('/api/referentiels/activites/template');
+      if (!r.ok) return null;
+      const octets = new Uint8Array(await r.arrayBuffer());
+      let s = '';
+      for (const o of octets) s += String.fromCharCode(o);
+      return btoa(s);
+    });
+    const COLONNES_DOMAINES = ['code', 'nom', 'description', 'statut'];
+    let classeurModele = null;
+    let enTetes = null;
+    if (modeleB64) {
+      classeurModele = XLSX.read(Buffer.from(modeleB64, 'base64'), { type: 'buffer' });
+      const feuille = classeurModele.Sheets.Domaines;
+      enTetes = feuille ? (XLSX.utils.sheet_to_json(feuille, { header: 1 })[0] || []) : null;
+    }
+    verifier('le modèle offert par la fenêtre d’import porte les colonnes du référentiel',
+      !!enTetes && JSON.stringify(enTetes) === JSON.stringify(COLONNES_DOMAINES),
+      JSON.stringify({ feuilles: classeurModele ? classeurModele.SheetNames : null, enTetes }));
+
+    // La ligne est posée **dans l'ordre des en-têtes servis**, non dans celui
+    // que j'ai écrit plus haut : si le modèle change de colonnes, la valeur
+    // suit, et c'est le contrôle d'au-dessus qui dénonce le changement.
+    const dossierClasseurs = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-import-'));
+    const ecrireClasseur = (nom) => {
+      const wb = XLSX.read(Buffer.from(modeleB64, 'base64'), { type: 'buffer' });
+      const valeurs = {
+        code: CODE_IMPORT, nom, description: 'Ligne posée par la suite « parcours »', statut: 'actif',
+      };
+      XLSX.utils.sheet_add_aoa(wb.Sheets.Domaines,
+        [(enTetes || COLONNES_DOMAINES).map((h) => (valeurs[h] === undefined ? '' : valeurs[h]))],
+        { origin: -1 });
+      const chemin = path.join(dossierClasseurs, `domaines-${nom}.xlsx`);
+      fs.writeFileSync(chemin, XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
+      return chemin;
+    };
+
+    const lireDomaines = () => page.evaluate(async () => {
+      const r = await fetch('/api/referentiels/domaines');
+      const d = await r.json().catch(() => null);
+      return Array.isArray(d) ? d.map((x) => ({ id: x.id, code: x.code, nom: x.nom })) : null;
+    });
+
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .find((e) => (e.getAttribute('onclick') || '').includes("cfgNavigate('domaines')"));
+      if (b) b.click();
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll('[onclick^="openImportModal"]').length > 0,
+      { timeout: 10000 },
+    ).catch(() => { /* le contrôle le dira */ });
+
+    // Le geste complet : presser « Importer » de la barre (`openImportModal`),
+    // déposer le fichier, presser « Importer » de la fenêtre (`doImport`).
+    const importer = async (chemin) => {
+      const avant = await lireDomaines();
+      const ouverte = await page.evaluate(() => {
+        const b = document.querySelector('[onclick^="openImportModal"]');
+        if (!b) return false;
+        b.click();
+        return true;
+      });
+      if (!ouverte) return { barre: false };
+      await page.waitForSelector('#importFile', { timeout: 5000 }).catch(() => { /* dit plus bas */ });
+      const champ = await page.$('#importFile');
+      if (!champ) return { barre: true, fenetre: false };
+      await champ.uploadFile(chemin);
+      const presse = await page.evaluate(() => {
+        const b = document.querySelector('#cfgModalRoot [onclick^="doImport"]');
+        if (!b) return false;
+        b.click();
+        return true;
+      });
+      await new Promise((r) => setTimeout(r, 3000));
+      const rendu = await page.evaluate((code) => ({
+        message: (document.querySelector('.oasis-toast-message') || {}).textContent || null,
+        alEcran: [...document.querySelectorAll('.cfg-acc-item')]
+          .some((e) => e.textContent.includes(code)),
+      }), CODE_IMPORT);
+      return {
+        barre: true, fenetre: true, presse, avant, apres: await lireDomaines(),
+        message: rendu.message ? rendu.message.trim() : null,
+        alEcran: rendu.alEcran,
+      };
+    };
+
+    const NOM_1 = 'Essai Import Parcours';
+    const premier = modeleB64 ? await importer(ecrireClasseur(NOM_1)) : { barre: false };
+    const poseeUneFois = (premier.apres || []).filter((d) => d.code === CODE_IMPORT);
+    // `alEcran` n'est pas un ornement : contre-essayé en ôtant la relecture et
+    // le redessin du chemin de succès, les données arrivent bien en base, le
+    // bandeau annonce « 1 ajout » — et **l'écran ne montre rien**. C'est le
+    // défaut qui fait importer deux fois.
+    verifier('un classeur importé depuis la fenêtre entre dans le référentiel, et s’affiche',
+      premier.presse === true
+      && poseeUneFois.length === 1 && poseeUneFois[0].nom === NOM_1
+      && (premier.apres || []).length === (premier.avant || []).length + 1
+      && premier.alEcran === true
+      && /1\s*ajout/.test(premier.message || ''),
+      JSON.stringify({ ...premier, avant: (premier.avant || []).length, apres: (premier.apres || []).length }));
+
+    // ── Le second import : ce qui distingue ce geste des autres écritures ──
+    //
+    // Même code, nom différent. Le compte rendu doit annoncer une **mise à
+    // jour** et aucun ajout, et la ligne porter le nouveau nom.
+    //
+    // J'avais écrit ce contrôle contre la duplication. Les contre-essais ont
+    // montré que ce n'est pas par là que le défaut arrive : désactiver la mise
+    // à jour sur le code ne crée pas de doublon — le référentiel refuse un code
+    // déjà pris — mais rend un compte rendu de **« 0 ajout, 0 mise à jour —
+    // 1 ligne ignorée »**. L'import ne fait rien et le dit à moitié.
+    //
+    // Le vrai danger est l'autre : une mise à jour **annoncée et non
+    // appliquée**. Contre-essayé en ôtant l'écriture du chemin de mise à jour,
+    // le compte rendu annonce « 0 ajout(s), 1 mise(s) à jour » et la ligne
+    // garde son ancien nom. C'est pour celui-là que `reprise[0].nom` est
+    // assertée, et non seulement le message.
+    const NOM_2 = 'Essai Import Repris';
+    const second = modeleB64 ? await importer(ecrireClasseur(NOM_2)) : { barre: false };
+    const reprise = (second.apres || []).filter((d) => d.code === CODE_IMPORT);
+    verifier('un second import du même code met la ligne à jour, et ne la duplique pas',
+      second.presse === true
+      && reprise.length === 1 && reprise[0].nom === NOM_2
+      && (second.apres || []).length === (second.avant || []).length
+      && /0\s*ajout/.test(second.message || '') && /1\s*mise/.test(second.message || ''),
+      JSON.stringify({ ...second, avant: (second.avant || []).length, apres: (second.apres || []).length }));
+
+    // La ronde se défait, par l'écran.
+    const defaite = await page.evaluate(async (code) => {
+      const item = [...document.querySelectorAll('.cfg-acc-item')]
+        .find((e) => e.textContent.includes(code));
+      if (!item) return { item: false };
+      const b = item.querySelector('[onclick^="deleteRef"]');
+      if (!b) return { item: true, bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 400));
+      const oui = document.querySelector('.oasis-confirm-oui');
+      if (!oui) return { item: true, bouton: true, confirmation: false };
+      oui.click();
+      await new Promise((r) => setTimeout(r, 2000));
+      return { item: true, bouton: true, confirmation: true };
+    }, CODE_IMPORT);
+    const apresDefaite = await lireDomaines();
+    verifier('la ligne importée se retire par l’écran, et le référentiel revient à son compte',
+      defaite.confirmation === true
+      && !(apresDefaite || []).some((d) => d.code === CODE_IMPORT)
+      && (apresDefaite || []).length === (premier.avant || []).length,
+      JSON.stringify({ defaite, restantes: (apresDefaite || []).length, attendu: (premier.avant || []).length }));
+    fs.rmSync(dossierClasseurs, { recursive: true, force: true });
 
     // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
     //

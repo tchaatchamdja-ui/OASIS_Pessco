@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 22 exercés, 48 motivés** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **78 gestes nommés, 24 exercés, 46 motivés** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1630,6 +1630,78 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                `doImport`, qui écrit en masse depuis un classeur — elle demande un fichier
                d'essai, et c'est le premier geste de la liste qui ne se couvre pas en une
                ronde.
+
+
+           5.c.9 [x] **L'import d'un classeur, la seule écriture en masse** — fait le
+               9 octobre 2026. **24 gestes exercés sur 78**, contre 22 ; 69 contrôles de
+               parcours, 955 pour la campagne.
+
+               `doImport` lit un fichier Excel et écrit **autant de lignes qu'il en
+               contient**. Les autres écritures du portail touchent une ligne, décidée par
+               l'agent ; celle-ci en touche un nombre décidé par le fichier. C'était le
+               premier geste de la liste qui ne se couvre pas en une ronde — il lui faut un
+               classeur.
+
+               ── Le classeur n'est pas fabriqué, il est pris à la fenêtre ──
+
+               Le test aurait pu écrire un `.xlsx` de toutes pièces. Il porterait alors les
+               en-têtes **que je crois justes**. Le classeur du contrôle est donc demandé au
+               lien « Télécharger le modèle » de la fenêtre elle-même, rempli d'une ligne
+               **dans l'ordre des en-têtes servis**, et renvoyé par le champ de fichier.
+
+               Un contrôle à part compare ces en-têtes à `['code','nom','description','statut']`.
+               Contre-essayé en ôtant `description` de `IMPORT_COLS` : **lui seul tombe**, et
+               les trois autres restent verts — la dérive est nommée une fois, au lieu de faire
+               échouer l'import sans raison lisible.
+
+               ── Pourquoi `domaines`, et non les trois autres collections ──
+
+               L'écran offre l'import sur quatre collections. `domaines` est la seule qui porte
+               un **code**, donc la seule où la mise à jour sur le code — la propriété qui
+               distingue ce geste de toutes les autres écritures — soit éprouvable. Sur
+               prestataires, exigences ou personnel, importer deux fois le même fichier
+               n'aurait rien à prouver.
+
+               ── J'avais écrit le contrôle contre le mauvais défaut ──
+
+               Je l'avais écrit contre la **duplication** : « un import qui créerait une
+               seconde ligne à chaque passage ». Le contre-essai dit autre chose. Désactiver
+               la mise à jour sur le code ne crée aucun doublon — le référentiel refuse un code
+               déjà pris — mais rend **« 0 ajout(s), 0 mise(s) à jour — 1 ligne(s) ignorée(s) »** :
+               l'import ne fait rien, et le dit à moitié.
+
+               Le vrai danger était l'autre, et c'est le contre-essai qui vaut la séance : en
+               ôtant l'écriture du chemin de mise à jour, le compte rendu annonce **« 0 ajout(s),
+               1 mise(s) à jour »** et la ligne garde son ancien nom. *Le bandeau ment, et rien
+               ne le dit.* C'est pour celui-là que le **nom relu** est asserté, et non seulement
+               le message.
+
+               ── Et l'écran, qui peut rester muet quand la base a reçu ──
+
+               Troisième contre-essai : ôter la relecture et le redessin du chemin de succès.
+               Les données entrent bien en base, le bandeau annonce « 1 ajout » — et **l'écran
+               ne montre rien**. C'est le défaut qui fait importer deux fois. Le contrôle
+               regarde donc l'accordéon, et pas seulement l'API.
+
+               ── Cinq contre-essais, cinq rouges ──
+
+               Les quatre contrôles étaient verts **du premier coup** : c'est exactement le cas
+               où il faut réintroduire le défaut. Mise à jour désactivée ; mise à jour annoncée
+               et non appliquée ; colonne retirée du modèle ; redessin ôté ; suppression non
+               envoyée. Chacun mord là où il doit, et le quatrième a dénoncé au passage que la
+               défaite de la ronde **dépend de l'affichage** — elle cherche la ligne à l'écran.
+
+               La ronde se défait par l'écran, confirmation pressée, et le référentiel est
+               recompté avant et après.
+
+               ── Ce qui reste ──
+
+               **46 gestes**, dont **14 écritures**. Les suivantes se tiennent par trois :
+               `saveAAC`, `saveSecurite`, `saveSysteme` — la configuration de l'instance, qui
+               se couvre en une ronde chacune. Puis les quatre gestes d'intérim de
+               l'organigramme, les photos et logos (`uploadAacLogo`, `uploadProfilePhoto` —
+               ils demandent un fichier, comme l'import), et `submitProfilePassword`, qui
+               demande un compte dédié puisqu'il change le mot de passe de qui le presse.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

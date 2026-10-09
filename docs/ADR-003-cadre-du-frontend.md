@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 59 exercés, 17 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2152,6 +2152,95 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                trois gestes du régime MFA — couverts côté serveur par la suite « mfa » —, et
                quatre que la forme relève sans qu'ils soient des gestes. Plus huit
                **indécidables**.
+
+
+           5.c.15 [x] **Les six bascules, le départ de session — et le plafond atteint** —
+               fait le 9 octobre 2026. **66 gestes exercés sur 84**, contre 59 ; 107 contrôles
+               de parcours, 993 pour la campagne.
+
+               **Le plafond atteignable du portail est 66, et il est atteint.** Il ne reste
+               aucun geste qui soit à la fois couvrable et non couvert. C'est la fin de la
+               suite n° 5.c.
+
+               ── Les six bascules, mesurées trois fois chacune ──
+
+               `toggleCfgSidebar`, `toggleUserSidebar`, `toggleAcc`, `togglePers`,
+               `toggleInspectorFields`, et la cloche des notifications. Aucune n'écrit. Ce qui
+               les rend néanmoins dignes d'un contrôle est la leçon de deux séances : **une
+               bascule qui s'allume sans s'éteindre passe un contrôle unilatéral** — le survol
+               du glisser-déposer et la présentation de l'organigramme l'ont montré tous les
+               deux, et dans les deux cas la moitié manquante était celle qui défait.
+
+               Chacune est donc mesurée **trois fois** : état de départ, état après le premier
+               geste, état après le second. Un contrôle qui ne lirait que le deuxième ne
+               distinguerait pas « la bascule agit » de « elle était déjà là ».
+
+               Contre-essayées **toutes les six en une passe**, rendues à sens unique. Six
+               rouges, chacun exactement sur son contrôle : `depart: false, apres: true,
+               rendu: true` — la bascule ne revient jamais.
+
+               ── Le départ de session, et pourquoi il est le dernier ──
+
+               `logoutBtn` ferme la session : pressé ailleurs, il ferait échouer tout ce qui
+               suit. C'est la raison que portait sa dispense depuis trois jours — « à couvrir en
+               dernier geste de la suite ». Il l'est.
+
+               Le contrôle mesure deux choses, et la seconde est celle qui compte : la fenêtre
+               **entière** part vers la page de connexion, **et** la session est réellement
+               close. Contre-essayé en ôtant l'appel à `/api/logout` et en gardant la
+               redirection :
+
+               ```
+               url : /login.html    formulaire : présent    /api/me : 200
+               ```
+
+               L'écran paraît déconnecté, **la session est restée ouverte**. Un cookie valide
+               derrière une page d'apparence close — c'est le défaut qu'un contrôle d'apparence
+               aurait béni.
+
+               Cela ferme aussi l'une des trois lacunes nommées au relevé du 7 octobre : « la
+               redirection vers la connexion dans toute la fenêtre ».
+
+               ── Une précaution d'outillage : pas d'`eval` dans la page ──
+
+               La bascule générique lisait l'état par une expression passée en chaîne, évaluée
+               par `new Function`. La page porte une politique de contenu **sans
+               `unsafe-eval`** — que cette suite éprouve elle-même —, et le contrôle aurait
+               échoué pour une raison étrangère à ce qu'il mesure. Le mode de lecture est donc
+               un **mot** (`classe:collapsed`, `affiche`, `bloc`), non une expression.
+
+               ── Le plafond, nommé pour qu'on ne poursuive pas un 100 % qui n'existe pas ──
+
+               Sur 84 gestes nommés, **18 ne sont pas couverts**, et chacun pour une raison qui
+               n'est pas un reste de travail :
+
+               | Combien | Lesquels | Pourquoi |
+               |---|---|---|
+               | **8** | des écouteurs dont la cible est une variable locale | **indécidables** : le relevé ne peut pas les nommer statiquement. Limite de l'outil, nommée |
+               | **4** | `${pdf}`, `event.preventDefault`, `event.stopPropagation`, `onchange="orgTypeChanged()"` | relevés par la forme, ce ne sont pas des gestes |
+               | **3** | `mfaForm`, `mfaCancel`, `mfaResend` | régime MFA, désactivé dans la configuration d'essai — couverts côté serveur par la suite « mfa » (11 contrôles) |
+               | **3** | `pwdSubmit`, `saveProfileExtra`, `submitProfilePassword` | **propriété de sécurité** : le mot de passe temporaire n'est jamais conservé (5.c.14). Un essai ne peut pas se connecter à un compte qu'il vient de créer |
+
+               Le bloc « à couvrir mais pas encore » de `gestes-non-couverts.json` est désormais
+               **vide**, et son étiquette est gardée pour que le prochain geste couvrable y
+               retombe plutôt que de se glisser ailleurs.
+
+               ── Le bilan de la suite 5.c ──
+
+               | | Au relevé du 6 octobre | Aujourd'hui |
+               |---|---|---|
+               | Gestes nommés | 40 *(un fichier sur neuf)* | **84** |
+               | Exercés | 0 | **66** |
+               | Contrôles de parcours | 8 | **107** |
+               | Contrôles de la campagne | 915 | **993** |
+
+               Le dénominateur a été refait **trois fois**, chaque fois contre moi : quarante
+               gestes d'un fichier sur neuf, puis 78 faute de six types d'événement, puis 84.
+               *Un relevé qui n'a jamais démenti celui qui le tient ne mesure rien.*
+
+               La réécriture d'`app.js` et `app-config.js` peut commencer : elle se mesurera
+               contre **vingt rondes d'écriture** et 107 contrôles d'écran, et non contre
+               « trois vues se remplissent et ne débordent pas ».
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

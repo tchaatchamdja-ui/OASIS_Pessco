@@ -2,7 +2,7 @@
  "releve": "2026-10-09",
  "gestesNommes": 84,
  "occurrences": 131,
- "exerces": 59,
+ "exerces": 66,
  "indecidables": 8,
  "gestes": [
   {
@@ -174,7 +174,7 @@
    "evenement": "click",
    "nom": "togglePers",
    "source": "togglePers('${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -210,7 +210,7 @@
    "evenement": "change",
    "nom": "toggleInspectorFields",
    "source": "toggleInspectorFields()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -291,7 +291,7 @@
    "evenement": "click",
    "nom": "toggleAcc",
    "source": "toggleAcc('${key}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -561,7 +561,7 @@
    "evenement": "click",
    "nom": "toggleCfgSidebar",
    "source": "toggleCfgSidebar()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -697,7 +697,7 @@
    "evenement": "click",
    "nom": "toggleUserSidebar",
    "source": "toggleUserSidebar()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -994,7 +994,7 @@
    "nom": "document.getElementById('logoutBtn'):click",
    "source": "document.getElementById('logoutBtn')?.addEventListener('click', async () => {",
    "id": "logoutBtn",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
@@ -1004,7 +1004,7 @@
    "nom": "document.getElementById('notifBell'):click",
    "source": "document.getElementById('notifBell')?.addEventListener('click', async () => {",
    "id": "notifBell",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "frontend/portail/demarrage.ts",

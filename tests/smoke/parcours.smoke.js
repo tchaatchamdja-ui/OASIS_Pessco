@@ -2660,6 +2660,135 @@ module.exports = async function parcoursSmoke(port) {
       !pastille.absente && pastille.texte === '3' && pastille.affichee,
       JSON.stringify(pastille));
 
+    // ── Les six bascules d'affichage, chacune dans les deux sens ──
+    //
+    // Aucune n'écrit. Ce qui les rend néanmoins dignes d'un contrôle est la leçon
+    // de trois séances : **une bascule qui s'allume sans s'éteindre passe un
+    // contrôle unilatéral**. Le survol du glisser-déposer (5.c.11) et la
+    // présentation de l'organigramme (5.c.11) l'ont montré tous les deux, et dans
+    // les deux cas la moitié manquante était celle qui défait.
+    //
+    // Chacune est donc mesurée **trois fois** : l'état de départ, l'état après le
+    // premier geste, l'état après le second. Un contrôle qui ne lirait que le
+    // deuxième ne distinguerait pas « la bascule agit » de « elle était déjà là ».
+    etape = 'bascules d’affichage';
+
+    // Une bascule générique : un sélecteur de bouton, un sélecteur d'état, et le
+    // **mode** de lecture de cet état. Écrite une fois plutôt que six.
+    //
+    // Le mode est un mot, non une expression : la page porte une politique de
+    // contenu sans `unsafe-eval` — que cette suite éprouve elle-même —, et un
+    // `new Function` y serait refusé. Le contrôle aurait alors échoué pour une
+    // raison qui n'a rien à voir avec ce qu'il mesure.
+    const vaEtVient = (bouton, cible, mode) => page.evaluate(async (b, c, m) => {
+      const lire = () => {
+        const el = document.querySelector(c);
+        if (!el) return null;
+        if (m.startsWith('classe:')) return el.classList.contains(m.slice(7));
+        if (m === 'affiche') return el.style.display !== 'none';
+        if (m === 'bloc') return el.style.display === 'block';
+        return null;
+      };
+      const presser = async () => {
+        const el = document.querySelector(b);
+        if (!el) return false;
+        el.click();
+        await new Promise((r) => setTimeout(r, 900));
+        return true;
+      };
+      const depart = lire();
+      if (depart === null) return { cible: false };
+      if (!await presser()) return { cible: true, bouton: false };
+      const apres = lire();
+      if (!await presser()) return { cible: true, bouton: true, apres, second: false };
+      return { cible: true, bouton: true, depart, apres, rendu: lire(), second: true };
+    }, bouton, cible, mode);
+
+    const basculeVaEtVient = (nom, r) => {
+      verifier(nom,
+        r.cible === true && r.bouton === true && r.second === true
+        // Le geste change l'état…
+        && r.apres !== r.depart
+        // …et le refaire le rend. Sans cette moitié, une bascule qui ne se défait
+        // jamais passerait.
+        && r.rendu === r.depart,
+        JSON.stringify(r));
+    };
+
+    // 1. La barre de la configuration.
+    await allerSousVue('domaines');
+    basculeVaEtVient('la barre de la configuration se replie et se déplie',
+      await vaEtVient('[onclick="toggleCfgSidebar()"]', '.cfg-sidebar',
+        'classe:collapsed'));
+
+    // 2. Un accordéon de la taxinomie — le geste de l'en-tête, non celui du
+    //    bandeau d'exigences : deux fonctions différentes pour un même aspect.
+    basculeVaEtVient('un accordéon de la taxinomie s’ouvre et se referme',
+      await vaEtVient('.cfg-acc-item .cfg-acc-header', '.cfg-acc-item',
+        'classe:open'));
+
+    // 3. Le dépli d'une fiche de personnel : ce n'est pas une classe mais une
+    //    **ligne de table** qui paraît. Le contrôle lit donc son affichage.
+    await allerSousVue('inspecteurs');
+    basculeVaEtVient('le détail d’une fiche de personnel se déplie et se replie',
+      await vaEtVient('.pers-toggle', '.pers-detail-row',
+        'affiche'));
+
+    // 4. Les champs réservés aux inspecteurs, commandés par un **sélecteur**.
+    //
+    //    Celui-ci n'est pas un clic : c'est un `change`. Et il ne se mesure pas
+    //    sur une classe mais sur l'affichage des champs qu'il commande — lesquels
+    //    décident si l'on peut saisir un numéro d'inspecteur et des domaines.
+    const champsInspecteur = await page.evaluate(async () => {
+      const ajouter = document.querySelector('[onclick="openRefModal(\'inspecteurs\')"]');
+      if (!ajouter) return { bouton: false };
+      ajouter.click();
+      await new Promise((r) => setTimeout(r, 700));
+      const sel = document.querySelector('#cfgModalRoot [data-field="est_inspecteur"]');
+      const champs = () => [...document.querySelectorAll('#cfgModalRoot .insp-only')];
+      if (!sel || !champs().length) return { bouton: true, fenetre: false };
+      const visibles = () => champs().filter((el) => el.style.display !== 'none').length;
+      const total = champs().length;
+      const depart = visibles();
+      const poser = async (v) => {
+        sel.value = v;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        await new Promise((r) => setTimeout(r, 300));
+        return visibles();
+      };
+      const avecOui = await poser('oui');
+      const avecNon = await poser('non');
+      const fermer = document.querySelector('#cfgModalRoot [onclick="closeRefModal()"]');
+      if (fermer) fermer.click();
+      await new Promise((r) => setTimeout(r, 400));
+      return { bouton: true, fenetre: true, total, depart, avecOui, avecNon };
+    });
+    verifier('le sélecteur « Inspecteur ? » montre et cache les champs qui lui sont propres',
+      champsInspecteur.fenetre === true
+      && champsInspecteur.total > 0
+      // Une fiche neuve s'ouvre sur « non » : les champs sont donc cachés.
+      && champsInspecteur.depart === 0
+      && champsInspecteur.avecOui === champsInspecteur.total
+      && champsInspecteur.avecNon === 0,
+      JSON.stringify(champsInspecteur));
+
+    // 5. La barre des utilisateurs — même aspect, autre écran, autre fonction.
+    await page.evaluate(() => document.querySelector('.portal-nav-btn[data-view="users"]').click());
+    await new Promise((r) => setTimeout(r, 900));
+    basculeVaEtVient('la barre des utilisateurs se replie et se déplie',
+      await vaEtVient('[onclick="toggleUserSidebar()"]', '.cfg-sidebar',
+        'classe:collapsed'));
+
+    // 6. Le panneau des notifications.
+    //
+    //    Son écouteur est lui-même une bascule — un second clic le referme. Il est
+    //    pressé **ici**, après le contrôle de la pastille : l'ouvrir marque les
+    //    notifications comme vues, et la pastille serait alors mesurée sur un état
+    //    que ce geste vient de changer.
+    basculeVaEtVient('le panneau des notifications s’ouvre et se referme par la cloche',
+      await vaEtVient('#notifBell', '#notifPanel',
+        'bloc'));
+
     // ── Le mode dégradé (TDR §F.2 ; fiche technique §2, contrainte n° 3) ──
     //
     // C'est le seul endroit de la suite où l'on peut couper le réseau pour de
@@ -2851,6 +2980,37 @@ module.exports = async function parcoursSmoke(port) {
     } finally {
       await temoins.close();
     }
+
+    // ── Le départ de session : le dernier geste de la suite, et il faut qu'il le soit ──
+    //
+    // `logoutBtn` ferme la session. Pressé n'importe où ailleurs, il ferait
+    // échouer tout ce qui suit — c'est la raison que portait sa dispense depuis
+    // trois jours : « à couvrir en dernier geste de la suite ». Il l'est.
+    //
+    // Deux choses sont mesurées, et la seconde est celle qui compte : la fenêtre
+    // **entière** part vers la page de connexion — non un panneau, non un cadre —,
+    // et la session est **réellement** close côté serveur. Une redirection sans
+    // fermeture laisserait un cookie valide derrière une page d'apparence
+    // déconnectée.
+    etape = 'départ de session';
+    const departSession = await page.evaluate(() => !!document.getElementById('logoutBtn'));
+    if (departSession) {
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() => null),
+        page.evaluate(() => document.getElementById('logoutBtn').click()),
+      ]);
+    }
+    const apresDepart = await page.evaluate(async () => {
+      const r = await fetch('/api/me', { credentials: 'same-origin' });
+      return { url: window.location.pathname, formulaire: !!document.getElementById('loginForm'), statut: r.status };
+    });
+    verifier('le départ de session renvoie la fenêtre entière à la connexion, et la session est close',
+      departSession === true
+      && apresDepart.url === '/login.html' && apresDepart.formulaire === true
+      // 401 : le cookie ne vaut plus rien. Sans cette moitié, une redirection
+      // cosmétique passerait, et la session resterait ouverte derrière.
+      && apresDepart.statut === 401,
+      JSON.stringify({ departSession, ...apresDepart }));
 
     // ── Le verdict ──
     // Tout ce qui précède peut passer avec une console pleine d'erreurs : ce

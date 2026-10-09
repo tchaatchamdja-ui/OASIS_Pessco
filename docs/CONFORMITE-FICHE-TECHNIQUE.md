@@ -41,7 +41,7 @@ Sur les six contraintes structurantes du §2, **deux sont tenues**, deux le sont
 deux ne le sont pas.
 
 Ce constat n'est pas un jugement sur la qualité du livré : l'application fonctionne, elle est
-éprouvée par 974 contrôles automatiques, elle ne porte aucune vulnérabilité de dépendance et
+éprouvée par 980 contrôles automatiques, elle ne porte aucune vulnérabilité de dépendance et
 son cloisonnement est posé au serveur. Il dit seulement que **le livré et la fiche décrivent
 deux systèmes différents**, et qu'un auditeur qui compare l'un à l'autre le verra.
 
@@ -217,5 +217,5 @@ python3 -c "import json;[print(m['tdr'], m['code']) for m in json.load(open('con
 
 # Ce qui est tenu
 grep -c requireAuth server.js src/modules/*/routes-*.js | awk -F: '{s+=$2} END {print s}'
-npm run smoke              # 974 contrôles, quatorze suites
+npm run smoke              # 980 contrôles, quatorze suites
 ```

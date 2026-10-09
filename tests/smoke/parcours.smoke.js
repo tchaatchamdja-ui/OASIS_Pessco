@@ -1332,13 +1332,24 @@ module.exports = async function parcoursSmoke(port) {
       const r = await fetch('/api/config');
       return r.ok ? r.json() : null;
     });
+    // L'écran de configuration **d'abord** : les éléments de sa barre latérale
+    // n'existent pas ailleurs. Appelée depuis la vue du profil, la première
+    // écriture de cette fonction ne cliquait rien et rendait sans erreur — le
+    // contrôle suivant disait alors « le logo ne s'est pas remplacé » sur un
+    // écran qui ne portait pas de logo. *Un déplacement qui échoue en silence
+    // fait accuser le code de ce que la navigation n'a pas fait.*
     const allerSousVue = async (sous) => {
-      await page.evaluate((s) => {
+      await page.evaluate(async (s) => {
+        const vue = document.querySelector('.portal-nav-btn[data-view="config"]');
+        if (vue && !vue.classList.contains('active')) {
+          vue.click();
+          await new Promise((r) => setTimeout(r, 900));
+        }
         const b = [...document.querySelectorAll('.cfg-sidebar-item')]
           .find((e) => (e.getAttribute('onclick') || '').includes(`cfgNavigate('${s}')`));
         if (b) b.click();
       }, sous);
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 700));
     };
 
     // ── 1. La réplication : la plus simple, et elle cache une asymétrie ──
@@ -2012,6 +2023,223 @@ module.exports = async function parcoursSmoke(port) {
       JSON.stringify({ regRendu, reDeplie, exigSupprimee,
         avant: (exigAvant || []).map((e) => `${e.reference}/${e.reglement}`),
         rendu: (exigRendu || []).map((e) => `${e.reference}/${e.reglement}`) }));
+
+    // ── Le profil, et les quatre dépôts de fichiers ──
+    //
+    // Cinq gestes, dont quatre qui passent par un fichier. Le chemin est celui de
+    // l'import (5.c.9) : un fichier sur le disque, posé dans le champ par le
+    // navigateur. Ce qui change, c'est qu'il faut **rendre l'original** —
+    // et l'original du logo de l'AAC pèse 374 498 caractères en base 64.
+    //
+    // La ronde du logo le décode donc en un fichier et le **redépose**. Si les
+    // deux dépôts rendaient des octets différents, la configuration ne reviendrait
+    // pas à l'identique, et le contrôle le dirait. C'est la seule façon de rendre
+    // un fichier par l'écran qui l'a reçu.
+    etape = 'profil et dépôts de fichiers';
+
+    // Une image d'essai minuscule, mais **valide** : un PNG de 1×1 que le
+    // navigateur accepte de lire et que le serveur accepte de stocker.
+    const PNG_ESSAI = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==',
+      'base64',
+    );
+    const dossierImages = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-images-'));
+    const ecrireImage = (nom, octets) => {
+      const chemin = path.join(dossierImages, nom);
+      fs.writeFileSync(chemin, octets);
+      return chemin;
+    };
+
+    // ── 1. Les informations du profil : quatre champs qui partent ensemble ──
+    //
+    // Même famille que l'identité de l'AAC : `saveProfileInfos` envoie nom,
+    // prénom, téléphone et fonction **à chaque fois**. Un champ que l'écran n'a pas
+    // su relire part vide et écrase l'enregistré — et il s'agit ici du **compte
+    // connecté**, celui dont le nom s'affiche en haut de chaque écran.
+    //
+    // Le champ visé est `fonction`, qui ne commande rien. Nom et prénom sont
+    // **relus et asservis** : ils construisent `fullName` côté serveur.
+    await page.evaluate(() => document.querySelector('.portal-nav-btn[data-view="profile"]').click());
+    await page.waitForSelector('#pfFonction', { timeout: 10000 }).catch(() => { /* dit plus bas */ });
+    const lireMoi = () => page.evaluate(async () => {
+      const r = await fetch('/api/me');
+      const d = r.ok ? await r.json() : null;
+      const u = (d && (d.user || d)) || {};
+      // ── Les champs absents, normalisés — et pourquoi il faut le dire ──
+      //
+      // Le compte d'amorçage n'a **aucune clé** `fonction` ni `telephone` : le
+      // premier enregistrement du profil les matérialise à la chaîne vide. La
+      // ronde ne peut donc pas rendre l'enregistrement **à l'identique** au sens
+      // strict, et comparer sans normaliser faisait échouer la remise en place
+      // sur `undefined ≠ ""`.
+      //
+      // Ce n'est pas un défaut : c'est un écran qui envoie ses quatre champs et un
+      // serveur qui écrit ce qu'il reçoit. Mais c'est une asymétrie, et une
+      // asymétrie qu'on normalise sans la nommer redevient une surprise.
+      return {
+        nom: u.nom ?? '', prenom: u.prenom ?? '', fullName: u.fullName ?? '',
+        fonction: u.fonction ?? '', telephone: u.telephone ?? '',
+        photo: u.photo ? u.photo.length : 0,
+      };
+    });
+    const moiAvant = await lireMoi();
+    const FONCTION = 'Fonction d’essai (parcours)';
+    const profilEcrit = await page.evaluate(async (fonction) => {
+      const champs = ['pfNom', 'pfPrenom', 'pfTel', 'pfFonction'];
+      if (champs.some((i) => !document.getElementById(i))) return { champs: false };
+      const luDAbord = {};
+      champs.forEach((i) => { luDAbord[i] = document.getElementById(i).value; });
+      document.getElementById('pfFonction').value = fonction;
+      const b = document.querySelector('[onclick="saveProfileInfos()"]');
+      if (!b) return { champs: true, bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        champs: true, bouton: true, luDAbord,
+        alEcran: (document.querySelector('#pfFonction') || {}).value === fonction,
+      };
+    }, FONCTION);
+    const moiApres = await lireMoi();
+    verifier('la fonction du profil s’enregistre, et le nom du compte connecté ne bouge pas',
+      profilEcrit.bouton === true
+      // La fenêtre portait l'enregistré : sinon l'enregistrement l'effacerait.
+      && (profilEcrit.luDAbord || {}).pfNom === moiAvant.nom
+      && (profilEcrit.luDAbord || {}).pfPrenom === moiAvant.prenom
+      && moiApres.fonction === FONCTION
+      && moiApres.nom === moiAvant.nom && moiApres.prenom === moiAvant.prenom
+      && moiApres.fullName === moiAvant.fullName
+      && moiApres.telephone === moiAvant.telephone
+      && profilEcrit.alEcran === true,
+      JSON.stringify({ profilEcrit, avant: moiAvant, apres: moiApres }));
+
+    const profilRendu = await page.evaluate(async (fonction) => {
+      const champ = document.getElementById('pfFonction');
+      if (!champ) return false;
+      champ.value = fonction;
+      document.querySelector('[onclick="saveProfileInfos()"]').click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return true;
+    }, moiAvant.fonction || '');
+    const moiRendu = await lireMoi();
+    verifier('et la fonction revient à sa valeur d’origine',
+      profilRendu === true && JSON.stringify(moiRendu) === JSON.stringify(moiAvant),
+      JSON.stringify({ avant: moiAvant, rendu: moiRendu }));
+
+    // ── 2. La photo du profil : une ronde parfaite, le compte n'en ayant pas ──
+    //
+    // Le bouton de retrait **n'existe pas** tant qu'il n'y a pas de photo : il faut
+    // donc en déposer une pour qu'il paraisse. Le contrôle le vérifie dans les deux
+    // sens — c'est ce qui distingue « le dépôt a marché » de « l'écran s'est mis à
+    // jour ».
+    const photoPosee = await page.evaluate(async () => {
+      const avant = !!document.querySelector('[onclick="removeProfilePhoto()"]');
+      return { boutonRetraitAvant: avant, champ: !!document.querySelector('.pf-side input[type="file"]') };
+    });
+    const champPhoto = await page.$('.pf-side input[type="file"]');
+    if (champPhoto) await champPhoto.uploadFile(ecrireImage('photo.png', PNG_ESSAI));
+    await new Promise((r) => setTimeout(r, 2500));
+    const moiPhoto = await lireMoi();
+    const photoRendu = await page.evaluate(() => ({
+      boutonRetrait: !!document.querySelector('[onclick="removeProfilePhoto()"]'),
+      image: !!document.querySelector('.pf-photo-frame img'),
+    }));
+    verifier('une photo de profil se dépose, et le bouton de retrait paraît avec elle',
+      photoPosee.champ === true && photoPosee.boutonRetraitAvant === false
+      && moiAvant.photo === 0 && moiPhoto.photo > 0
+      && photoRendu.boutonRetrait === true && photoRendu.image === true,
+      JSON.stringify({ photoPosee, photoRendu, avant: moiAvant.photo, apres: moiPhoto.photo }));
+
+    const photoRetiree = await page.evaluate(async () => {
+      const b = document.querySelector('[onclick="removeProfilePhoto()"]');
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 400));
+      const oui = document.querySelector('.oasis-confirm-oui');
+      if (!oui) return { bouton: true, confirmation: false };
+      oui.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      return {
+        bouton: true, confirmation: true,
+        boutonRetrait: !!document.querySelector('[onclick="removeProfilePhoto()"]'),
+      };
+    });
+    const moiSansPhoto = await lireMoi();
+    verifier('et elle se retire, confirmation pressée, le bouton partant avec elle',
+      photoRetiree.confirmation === true && moiSansPhoto.photo === 0
+      && photoRetiree.boutonRetrait === false,
+      JSON.stringify({ photoRetiree, apres: moiSansPhoto.photo }));
+
+    // ── 3. Le logo de l'AAC : rendre l'original, et non « un » logo ──
+    //
+    // Celui-ci n'est pas une ronde facile : l'instance **a** un logo, de 374 498
+    // caractères. Le remplacer puis en remettre « un » ne serait pas une remise en
+    // place. On décode donc l'original en un fichier, et on le **redépose par le
+    // même champ** : si les deux dépôts ne rendaient pas les mêmes octets, la
+    // comparaison finale le dirait.
+    await allerSousVue('organisation');
+    const logoAvant = await page.evaluate(async () => {
+      const r = await fetch('/api/config');
+      const d = r.ok ? await r.json() : null;
+      return ((d || {}).aac || {}).logo || '';
+    });
+    const b64Logo = (logoAvant.split(',')[1] || '');
+    const cheminOriginal = b64Logo ? ecrireImage('logo-original.png', Buffer.from(b64Logo, 'base64')) : null;
+    const champLogo = await page.$('.aac-logo-col input[type="file"]');
+    if (champLogo) await champLogo.uploadFile(ecrireImage('logo-essai.png', PNG_ESSAI));
+    await new Promise((r) => setTimeout(r, 2500));
+    const logoEssai = await page.evaluate(async () => {
+      const r = await fetch('/api/config');
+      const d = r.ok ? await r.json() : null;
+      return {
+        logo: ((d || {}).aac || {}).logo || '',
+        alEcran: !!document.querySelector('.aac-logo-preview'),
+        retraitOffert: !!document.querySelector('[onclick="removeAacLogo()"]'),
+      };
+    });
+    verifier('le logo de l’AAC se remplace par l’écran',
+      !!champLogo && !!logoAvant && logoEssai.logo !== logoAvant
+      && logoEssai.logo.startsWith('data:image/png;base64,')
+      && logoEssai.logo.length < logoAvant.length
+      && logoEssai.alEcran === true && logoEssai.retraitOffert === true,
+      JSON.stringify({ avant: logoAvant.length, essai: logoEssai.logo.length,
+        alEcran: logoEssai.alEcran, retraitOffert: logoEssai.retraitOffert }));
+
+    // Le retrait, confirmation pressée — puis le dépôt de l'original.
+    const logoRetire = await page.evaluate(async () => {
+      const b = document.querySelector('[onclick="removeAacLogo()"]');
+      if (!b) return { bouton: false };
+      b.click();
+      await new Promise((r) => setTimeout(r, 400));
+      const oui = document.querySelector('.oasis-confirm-oui');
+      if (!oui) return { bouton: true, confirmation: false };
+      oui.click();
+      await new Promise((r) => setTimeout(r, 2500));
+      const r2 = await fetch('/api/config');
+      const d = r2.ok ? await r2.json() : null;
+      return {
+        bouton: true, confirmation: true,
+        logo: ((d || {}).aac || {}).logo || '',
+        placeVide: !!document.querySelector('.aac-logo-empty'),
+      };
+    });
+    const champLogo2 = await page.$('.aac-logo-col input[type="file"]');
+    if (champLogo2 && cheminOriginal) await champLogo2.uploadFile(cheminOriginal);
+    await new Promise((r) => setTimeout(r, 3000));
+    const logoRendu = await page.evaluate(async () => {
+      const r = await fetch('/api/config');
+      const d = r.ok ? await r.json() : null;
+      return ((d || {}).aac || {}).logo || '';
+    });
+    verifier('le logo se retire, et l’original se redépose octet pour octet',
+      logoRetire.confirmation === true && logoRetire.logo === ''
+      && logoRetire.placeVide === true
+      // L'égalité stricte : un redépôt qui changerait le type MIME ou le codage
+      // rendrait une chaîne différente, et la configuration ne serait pas rendue.
+      && logoRendu === logoAvant,
+      JSON.stringify({ retire: (logoRetire.logo || '').length, placeVide: logoRetire.placeVide,
+        original: logoAvant.length, rendu: logoRendu.length,
+        identique: logoRendu === logoAvant }));
+    fs.rmSync(dossierImages, { recursive: true, force: true });
 
     // ── Les droits d'un compte, et sa fiche : les deux écritures les plus lourdes ──
     //

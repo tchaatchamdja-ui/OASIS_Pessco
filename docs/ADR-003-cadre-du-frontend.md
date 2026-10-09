@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 45 exercés, 31 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 50 exercés, 26 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -1965,6 +1965,85 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                par l'écran), et `submitProfilePassword` qui demande un compte dédié. Plus huit
                **indécidables** — des écouteurs dont la cible n'est pas nommable statiquement,
                et c'est une limite de l'outil, nommée.
+
+
+           5.c.13 [x] **Le profil et les quatre dépôts de fichiers — rendre l'original, et
+               non « un » logo** — fait le 9 octobre 2026. **50 gestes exercés sur 84**,
+               contre 45, soit **60 %** ; 94 contrôles de parcours, 980 pour la campagne.
+
+               Cinq gestes, dont quatre qui passent par un fichier. Le chemin est celui de
+               l'import (5.c.9) : un fichier sur le disque, posé dans le champ par le
+               navigateur. Ce qui change, c'est qu'il faut **rendre l'original**.
+
+               ── La photo : une ronde parfaite, parce que le compte n'en a pas ──
+
+               Le bouton de retrait **n'existe pas** tant qu'il n'y a pas de photo. Le contrôle
+               le vérifie donc dans les deux sens — c'est ce qui distingue « le dépôt a marché »
+               de « l'écran s'est mis à jour ».
+
+               ── Le logo : 374 498 caractères à rendre octet pour octet ──
+
+               L'instance **a** un logo. Le remplacer puis en remettre « un » ne serait pas une
+               remise en place. La ronde décode donc l'original en un fichier et le
+               **redépose par le même champ**, puis compare les deux chaînes **strictement**.
+               C'est la seule façon de rendre un fichier par l'écran qui l'a reçu.
+
+               Contre-essai de cette moitié, et il vaut la séance : la limite de taille du
+               dépôt abaissée à 1 000 octets. Le PNG d'essai de 1×1 passe ; **l'original est
+               refusé** ; le logo reste vide.
+
+               ```
+               original : 374 498    rendu : 0    identique : false
+               ```
+
+               *Une remise en place silencieusement refusée est pire qu'une ronde qu'on n'a pas
+               faite* — on croit avoir rendu ce qu'on a pris.
+
+               ── Le nom du compte connecté ──
+
+               `saveProfileInfos` envoie nom, prénom, téléphone et fonction **à chaque fois**, et
+               il s'agit du compte **connecté** — celui dont le nom s'affiche en haut de chaque
+               écran. Contre-essayé en envoyant le nom vide : la fenêtre portait bien
+               `ADMINISTRATEUR`, et `fullName` passe de « ADMINISTRATEUR Super » à « Super ».
+
+               ── Deux fautes de ma main, dont une qui faisait accuser le code ──
+
+               `allerSousVue` cliquait un élément de la barre latérale de la configuration **sans
+               ouvrir cet écran d'abord**. Appelée depuis la vue du profil, elle ne cliquait rien
+               et rendait sans erreur ; le contrôle suivant disait alors « le logo ne s'est pas
+               remplacé » sur un écran qui ne portait pas de logo. *Un déplacement qui échoue en
+               silence fait accuser le code de ce que la navigation n'a pas fait.*
+
+               Et le compte d'amorçage n'a **aucune clé** `fonction` ni `telephone` : le premier
+               enregistrement les matérialise à la chaîne vide, si bien que la ronde ne peut pas
+               rendre l'enregistrement à l'identique au sens strict. Ce n'est pas un défaut — un
+               écran envoie ses quatre champs, un serveur écrit ce qu'il reçoit. Mais c'est une
+               asymétrie, et **une asymétrie qu'on normalise sans la nommer redevient une
+               surprise** : elle est donc écrite à l'endroit de la normalisation.
+
+               Cinq contre-essais, cinq rouges : nom envoyé vide, photo non transmise, retrait du
+               logo non envoyé, limite de taille abaissée, et le nom vide dénoncé jusque dans la
+               remise en place.
+
+               ── Et une mesure qui change une dispense ──
+
+               `saveProfileExtra` n'est **pas** couvrable depuis ce compte, et je ne le savais pas
+               avant de le mesurer : les deux blocs qu'il enregistre sont **désactivés** pour un
+               SUPERADMIN — le bouton n'est pas rendu. Vérifié ensuite, **hors connexion et par
+               comparaison de hachage**, qu'aucun des neuf comptes du jeu d'essai autre que le
+               super-administrateur ne porte le mot de passe du harnais.
+
+               Sa dispense change donc de raison : non plus « écrit sur son propre profil », mais
+               « demande un compte dont le rôle ouvre ce bloc ». Il rejoint la **chaîne du compte
+               dédié**, qui est la suite : créer un compte par l'écran (`verifyBtn`,
+               `createUser`), s'y connecter — le changement de mot de passe étant imposé au
+               premier accès, cela couvre `pwdSubmit` —, puis `saveProfileExtra` et
+               `submitProfilePassword`. **Quatre dispenses levées par un seul enchaînement.**
+
+               ── Ce qui reste ──
+
+               **26 gestes non exercés**, dont **4 écritures**, toutes dans la chaîne ci-dessus.
+               Plus huit **indécidables**, limite nommée de l'outil.
 
            5.c.0.a [x] *Le relevé du 6 octobre, conservé pour mémoire* — fait le 6 octobre
                2026, et c'est la leçon de la suite n° 0 appliquée au deuxième écran.

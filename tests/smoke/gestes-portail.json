@@ -2,7 +2,7 @@
  "releve": "2026-10-09",
  "gestesNommes": 84,
  "occurrences": 131,
- "exerces": 45,
+ "exerces": 50,
  "indecidables": 8,
  "gestes": [
   {
@@ -318,7 +318,7 @@
    "evenement": "change",
    "nom": "uploadAacLogo",
    "source": "uploadAacLogo(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -327,7 +327,7 @@
    "evenement": "click",
    "nom": "removeAacLogo",
    "source": "removeAacLogo()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app-config.js",
@@ -778,7 +778,7 @@
    "evenement": "change",
    "nom": "uploadProfilePhoto",
    "source": "uploadProfilePhoto(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -787,7 +787,7 @@
    "evenement": "click",
    "nom": "removeProfilePhoto",
    "source": "removeProfilePhoto()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",
@@ -796,7 +796,7 @@
    "evenement": "click",
    "nom": "saveProfileInfos",
    "source": "saveProfileInfos()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/js/app.js",

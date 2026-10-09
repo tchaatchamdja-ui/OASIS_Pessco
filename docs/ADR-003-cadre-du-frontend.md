@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 622 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) |
+           | portail (`public/js`) | 2 451 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas extraits (5.d.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2272,6 +2272,109 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
                Contre-essayé dans les deux sens : une sous-vue rendue muette, et
                `cfgNavigate` qui ne change plus de sous-vue. Les deux mordent.
+       **5.d — La réécriture d'`app-config.js` et d'`app.js`.** 5.c a payé le préalable :
+       66 gestes exercés sur 84, 107 contrôles d'écran. La réécriture se mesure désormais
+       contre du réel.
+
+           5.d.0 [x] **La couche des schémas, extraite et typée** — fait le 9 octobre 2026.
+               `app-config.js` passe de **1 443 à 1 272 lignes** ; 993 contrôles, code de
+               sortie 0.
+
+               ── Pourquoi cette pièce d'abord ──
+
+               Mesuré, non choisi : c'est la **couche que toutes les autres lisent**.
+               `refTable`, `openRefModal`, `fieldValue` et les onze sous-vues en dépendent ;
+               aucune ne peut être réécrite avant elle. Elle est aussi la seule qui soit
+               **pure** — ni DOM, ni appel d'API, ni état propre —, donc la seule qu'on puisse
+               extraire sans rien déplacer d'autre.
+
+               171 lignes partent dans `frontend/portail/schemas.ts` (308 avec son typage et
+               ses commentaires) ; un sas de 63 lignes pose les onze noms sur `window` avant
+               le chargement d'`app.js`.
+
+               ── La preuve, écrite avant l'édition ──
+
+               Une extraction de libellés et de clés est **exactement** l'opération dont on
+               croit n'avoir pas besoin de preuve, et ce dépôt l'a payé deux fois : 84
+               traductions portugaises non vérifiées, puis une extraction de thème faite après
+               la suppression du fichier d'origine, donc sans recours.
+
+               `scripts/comparer-schemas.js` lit donc la version d'origine **dans `git`**, non
+               sur le disque — elle reste rejouable pour toujours. **2 820 comparaisons** sur
+               les données réelles : les onze titres, la forme de chaque champ, chaque liste
+               d'options, `fieldValue` sur chaque champ de chaque enregistrement, `refLabel` et
+               `personnelName` sur chaque identifiant. Trois régimes : régional, national, et
+               collections renversées.
+
+               ── Ce que la preuve a trouvé, et que je n'avais pas vu ──
+
+               **1. 486 écarts à la première exécution.** Tous sur `refLabel` demandé avec un
+               champ qu'une collection ne porte pas — `refLabel('organisation_levels', …,
+               'code')`. L'origine rend `undefined`, que l'interpolation d'un gabarit écrit
+               « undefined » dans la page ; le module rend une case vide.
+
+               Mesuré ensuite : l'application ne demande que **cinq couples**
+               (collection, champ), et chaque enregistrement porte le champ demandé. La
+               divergence est donc **inatteignable** — et la comparaison porte maintenant sur
+               les couples **relevés dans la source**, non choisis par moi. Si un sixième
+               paraît, il entre de lui-même.
+
+               **2. L'origine trie `REFS` sur place.** Deux fournisseurs d'options écrivent
+               `(REFS.organisation_levels || []).sort(…)` sans `slice()`. **Ouvrir une liste
+               déroulante réordonne le référentiel**, et la table qui le parcourt ensuite
+               l'affiche dans le nouvel ordre — sans qu'aucune écriture n'ait eu lieu.
+
+               Trouvé en cherchant pourquoi un contre-essai ne mordait pas, et cela rendait
+               ma preuve **inutilisable** : les deux versions partageaient un objet que
+               l'origine modifiait. Chaque côté reçoit désormais sa propre copie.
+
+               **3. `ME` absent fait lever l'origine.** `ME.instance_vue` est lu sans garde :
+               la page s'interromprait. Le module lit `window.ME?.…` et rend une liste vide.
+
+               Les trois divergences sont **assumées et vérifiées** : le script tombe le jour
+               où l'une cesse d'être vraie. Une divergence tolérée en silence est une
+               divergence qui reviendra.
+
+               ── Et un contre-essai qui n'a pas mordu ──
+
+               Ôter le tri par `ordre` des niveaux hiérarchiques ne changeait **rien** : le jeu
+               d'essai était déjà dans le bon ordre. *Une assertion que les données satisfont
+               par hasard ne vérifie pas le code.* D'où le troisième régime, aux onze
+               collections renversées — et le contre-essai mord.
+
+               Quatre contre-essais au total : un libellé retapé, deux champs permutés,
+               l'ordre des cas de `fieldValue`, un tri ôté. Plus le refus du script quand son
+               terme de comparaison manque (`exit(2)`, éprouvé).
+
+               ── Ce que le typage impose, et qui n'existait pas ──
+
+               Les champs n'avaient aucune forme déclarée : `{ k, l }` ici,
+               `{ k, l, type, options, resolve }` là, `inspectorOnly` sur trois, `only` sur un.
+               `Champ` impose désormais **une** forme, et un écart devient une erreur de
+               compilation plutôt qu'un `undefined` silencieux.
+
+               ── Une alarme du harnais, et ce qu'elle a vraiment attrapé ──
+
+               La campagne a d'abord refusé : « **les données de travail ont été modifiées par
+               les contrôles** ». Le coupable n'était pas la campagne — c'est le **serveur
+               d'aperçu de la session** qui s'est relancé sur mes modifications de
+               `public/index.html`, et `.claude/launch.json` ne lui donne pas de répertoire
+               d'essai : il sert le vrai. Son contrôle d'horloge au démarrage a ajouté trois
+               entrées au journal d'audit de travail.
+
+               La chaîne a été vérifiée avant toute autre chose — **1 652 entrées, valide** —,
+               l'aperçu arrêté, la campagne rejouée au vert. Rien n'a été perdu, et le
+               garde-fou avait raison : un processus servait bien le vrai répertoire. *À
+               retenir : une campagne et un aperçu ne cohabitent pas.*
+
+               ── Ce qui reste de 5.d ──
+
+               `app-config.js` : **1 272 lignes**, dont les onze sous-vues de configuration,
+               les fenêtres de référentiel, l'organigramme et les exigences. `app.js` : 1 179.
+               La pièce suivante par ordre d'utilité est `refTable` + `openRefModal` + `saveRef`
+               + `deleteRef` — le CRUD générique, qui ne dépend plus que de la couche extraite
+               aujourd'hui, et dont la ronde d'écriture est couverte depuis 5.c.7.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

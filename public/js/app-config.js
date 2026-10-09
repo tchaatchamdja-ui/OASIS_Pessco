@@ -25,193 +25,22 @@ const CFG_TABS = [
 ];
 
 
-// ── Schémas des référentiels (CRUD générique) ──
-function domaineOptions() {
-  return (REFS.domaines || []).map((d) => ({ v: d.id, t: `${d.code} — ${d.nom}` }));
-}
-function secteurOptions() {
-  return (REFS.secteurs || []).map((s) => ({ v: s.id, t: `${s.code} — ${s.nom}` }));
-}
-function refLabel(coll, id, field) {
-  const rec = (REFS[coll] || []).find((r) => r.id === id);
-  return rec ? rec[field] : id || '—';
-}
-const STATUT_FIELD = { k: 'statut', l: 'Statut', type: 'select', options: () => [{ v: 'actif', t: 'Actif' }, { v: 'inactif', t: 'Inactif' }] };
-
-// ── Visibilité par instance ──
-// La taxinomie de la surveillance est commune à l'Union, mais tout n'est pas
-// offert partout : un domaine, un secteur, une sous-activité ou un thème peut
-// n'être proposé qu'à certains États. Rien de coché vaut « toutes les
-// instances » — c'est le cas par défaut, et le plus fréquent.
+// ── Schémas des référentiels : partis dans un module typé (ADR-003, 5.d) ──
 //
-// Le champ n'a de sens que pour qui dispose de la liste des instances, c'est-
-// à-dire le super-administrateur de l'Union : ailleurs, il ne s'affiche pas.
-const instanceOptions = () => (((ME.instance_vue || {}).instances) || [])
-  .map((e) => ({ v: e, t: e }));
-
-const VISIBILITE_FIELD = {
-  k: 'visibilite',
-  l: 'Visible par les instances',
-  type: 'multiselect',
-  options: instanceOptions,
-  only: () => instanceOptions().length > 0,
-  resolve: (v) => (Array.isArray(v) && v.length ? v.join(', ') : 'Toutes'),
-};
-
-// Champs d'un schéma que le compte courant doit voir.
-const champsVisibles = (schema) => (schema.fields || []).filter((f) => !f.only || f.only());
-function personnelOptions() {
-  return (REFS.inspecteurs || []).map((p) => ({ v: p.id, t: `${p.nom || ''} ${p.prenom || ''}`.trim() || p.numero_inspecteur || p.id }));
-}
-function personnelName(id) {
-  const p = (REFS.inspecteurs || []).find((x) => x.id === id);
-  return p ? `${p.nom || ''} ${p.prenom || ''}`.trim() : id;
-}
-
-const REF_SCHEMAS = {
-  organisation_levels: {
-    title: 'Niveaux hiérarchiques',
-    fields: [
-      { k: 'type', l: 'Type de niveau' },
-      { k: 'ordre', l: 'Ordre', type: 'number' },
-    ],
-  },
-  organisation: {
-    title: 'Entités organisationnelles',
-    fields: [
-      { k: 'type', l: 'Niveau', type: 'select', options: () => (REFS.organisation_levels || []).sort((a, b) => a.ordre - b.ordre).map((lv) => ({ v: lv.type, t: lv.type })) },
-      { k: 'sigle', l: 'Sigle' },
-      { k: 'libelle', l: 'Libellé' },
-      { k: 'poste', l: 'Poste' },
-      { k: 'titulaire_id', l: 'Titulaire', type: 'select', allowEmpty: true, options: personnelOptions, resolve: (v) => (v ? personnelName(v) : '—') },
-      { k: 'interim_id', l: 'Intérimaire', type: 'select', allowEmpty: true, options: personnelOptions, resolve: (v) => (v ? personnelName(v) : '—') },
-      { k: 'parent_id', l: 'Rattachement', type: 'select', allowEmpty: true, options: () => (REFS.organisation || []).map((o) => ({ v: o.id, t: `${o.sigle} — ${o.libelle}` })), resolve: (v) => (v ? refLabel('organisation', v, 'sigle') : '—') },
-      { k: 'ordre', l: 'Ordre', type: 'number' },
-    ],
-  },
-  domaines: {
-    title: 'Domaines',
-    fields: [{ k: 'code', l: 'Code' }, { k: 'nom', l: 'Nom' }, { k: 'description', l: 'Description' }, STATUT_FIELD, VISIBILITE_FIELD],
-  },
-  secteurs: {
-    title: 'Secteurs',
-    fields: [
-      { k: 'code', l: 'Code' },
-      { k: 'nom', l: 'Nom' },
-      { k: 'domaine_id', l: 'Domaine', type: 'select', options: domaineOptions, resolve: (v) => refLabel('domaines', v, 'code') },
-      { k: 'csn', l: 'Cycle (mois)', type: 'number' },
-      STATUT_FIELD,
-      VISIBILITE_FIELD,
-    ],
-  },
-  sous_activites: {
-    title: 'Sous-activités',
-    fields: [
-      { k: 'code', l: 'Code' },
-      { k: 'nom', l: 'Nom' },
-      { k: 'secteur_id', l: 'Secteur', type: 'select', options: secteurOptions, resolve: (v) => refLabel('secteurs', v, 'code') },
-      VISIBILITE_FIELD,
-    ],
-  },
-  themes_supervision: {
-    title: 'Thèmes de supervision',
-    fields: [
-      { k: 'code', l: 'Code' },
-      { k: 'libelle', l: 'Libellé' },
-      { k: 'domaine_id', l: 'Domaine', type: 'select', allowEmpty: true, options: domaineOptions, resolve: (v) => refLabel('domaines', v, 'code') },
-      { k: 'secteur_id', l: 'Secteur', type: 'select', allowEmpty: true, options: secteurOptions, resolve: (v) => refLabel('secteurs', v, 'code') },
-      { k: 'sous_activite_id', l: 'Sous-activité', type: 'select', allowEmpty: true, options: () => (REFS.sous_activites || []).map((x) => ({ v: x.id, t: `${x.code} — ${x.nom}` })), resolve: (v) => (v ? refLabel('sous_activites', v, 'code') : '—') },
-      { k: 'description', l: 'Description' },
-      STATUT_FIELD,
-      VISIBILITE_FIELD,
-    ],
-  },
-  exigences: {
-    title: 'Liste des exigences',
-    fields: [
-      { k: 'reglement', l: 'Règlement' },
-      { k: 'date_adoption', l: "Date d'adoption", type: 'date' },
-      { k: 'reference', l: 'Référence' },
-      { k: 'libelle', l: 'Libellé' },
-      STATUT_FIELD,
-    ],
-  },
-  prestataires: {
-    title: 'Prestataires de services',
-    fields: [
-      { k: 'nom', l: 'Nom' },
-      { k: 'trigramme', l: 'Trigramme' },
-      { k: 'domaine_id', l: 'Domaine', type: 'select', allowEmpty: true, options: domaineOptions, resolve: (v) => refLabel('domaines', v, 'code') },
-      { k: 'secteur_id', l: 'Secteur', type: 'select', allowEmpty: true, options: secteurOptions, resolve: (v) => refLabel('secteurs', v, 'code') },
-      { k: 'dirigeant', l: 'Dirigeant' },
-      { k: 'point_focal', l: 'Point focal' },
-      { k: 'email_prestataire', l: 'Email' },
-      { k: 'ref_agrement', l: 'Réf. agrément' },
-      STATUT_FIELD,
-    ],
-  },
-  inspecteurs: {
-    title: "Liste du personnel de l'Administration",
-    fields: [
-      { k: 'ref_personnel', l: 'Réf Personnel' },
-      { k: 'nom', l: 'Nom' },
-      { k: 'prenom', l: 'Prénom' },
-      { k: 'email', l: 'Email' },
-      { k: 'est_inspecteur', l: 'Inspecteur ?', type: 'select', options: () => [{ v: 'non', t: 'Non' }, { v: 'oui', t: 'Oui' }] },
-      { k: 'numero_inspecteur', l: 'N° inspecteur', inspectorOnly: true },
-      { k: 'domaines', l: 'Domaines', type: 'multiselect', inspectorOnly: true, options: domaineOptions, itemLabel: (v) => refLabel('domaines', v, 'code') },
-      { k: 'specialites', l: 'Spécialités', type: 'multiselect', inspectorOnly: true, options: () => (REFS.specialites_inspecteur || []).filter((s) => s.statut !== 'inactif').map((s) => ({ v: s.id, t: s.libelle })), itemLabel: (v) => refLabel('specialites_inspecteur', v, 'libelle') },
-      { k: 'niveau_qualification', l: 'Niveau de qualification', inspectorOnly: true, type: 'select', allowEmpty: true, options: () => (REFS.niveaux_qualifications || []).sort((a, b) => a.ordre - b.ordre).map((n) => ({ v: n.libelle, t: n.libelle })) },
-      STATUT_FIELD,
-    ],
-  },
-  specialites_inspecteur: {
-    title: "Spécialités d'inspecteur",
-    fields: [
-      { k: 'libelle', l: 'Spécialité' },
-      { k: 'domaines', l: 'Domaines', type: 'multiselect', options: domaineOptions, itemLabel: (v) => refLabel('domaines', v, 'code') },
-      STATUT_FIELD,
-    ],
-  },
-  types_supervision: {
-    title: 'Types de supervision',
-    fields: [
-      { k: 'type_supervision', l: 'Type' },
-      { k: 'description', l: 'Description' },
-      STATUT_FIELD,
-    ],
-  },
-  modes_supervision: {
-    title: 'Modes de supervision',
-    fields: [{ k: 'mode', l: 'Mode' }, { k: 'description', l: 'Description' }, STATUT_FIELD],
-  },
-  niveaux_qualifications: {
-    title: 'Niveaux de qualification',
-    fields: [{ k: 'libelle', l: 'Libellé' }, { k: 'ordre', l: 'Ordre', type: 'number' }, STATUT_FIELD],
-  },
-};
-
-function fieldValue(field, record) {
-  const raw = record[field.k];
-  if (field.inspectorOnly && record.est_inspecteur !== 'oui') return '<span style="color:var(--text-muted);">—</span>';
-  if (field.type === 'multiselect') {
-    const arr = Array.isArray(raw) ? raw : [];
-    if (!arr.length) return '<span style="color:var(--text-muted);">—</span>';
-    return arr.map((v) => `<span class="shell-badge badge-neutral">${esc(field.itemLabel ? field.itemLabel(v) : v)}</span>`).join(' ');
-  }
-  if (field.resolve) return field.resolve(raw);
-  if (field.k === 'est_inspecteur') {
-    return raw === 'oui'
-      ? '<span class="shell-badge badge-active">Inspecteur</span>'
-      : '<span class="shell-badge badge-neutral">Non</span>';
-  }
-  if (field.k === 'statut') {
-    return raw === 'inactif'
-      ? `<span class="shell-badge badge-inactive">Inactif</span>`
-      : `<span class="shell-badge badge-active">Actif</span>`;
-  }
-  return esc(raw ?? '—');
-}
+// Les onze schémas, les six fournisseurs d'options et `fieldValue` vivent
+// désormais dans `frontend/portail/schemas.ts`, et un sas les pose sur `window`
+// avant le chargement de ce fichier (`public/app/schemas.js`, voir index.html).
+//
+// Ce fichier les appelle toujours en identifiants nus — `REF_SCHEMAS`,
+// `champsVisibles`, `fieldValue`, `refLabel`, `personnelName`… — qui atteignent
+// maintenant les propriétés de `window`. **Il ne doit pas les redéclarer** : un
+// `const REF_SCHEMAS` ici serait une globale lexicale qui masquerait la
+// propriété pour tout ce fichier, et deux versions des schémas coexisteraient
+// sans une erreur.
+//
+// L'extraction est éprouvée par `scripts/comparer-schemas.js` : 2 820
+// comparaisons sur les données réelles, et trois divergences assumées —
+// dont la correction d'un tri qui modifiait `REFS` sur place.
 
 function refTable(coll, premier) {
   const schema = REF_SCHEMAS[coll];

@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 278 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0) et CRUD des référentiels (5.d.1) convertis |
+           | portail (`public/js`) | 2 143 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1) et exigences (5.d.2) convertis |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2464,6 +2464,61 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                La pièce suivante est **les exigences** : six gestes, tous couverts depuis
                5.c.12, et un bloc nettement séparé. L'organigramme vient après — il est plus
                gros, et sa ronde d'intérim (5.c.11) le garde bien.
+
+           5.d.2 [x] **Les exigences réglementaires, converties** — fait le 12 octobre 2026.
+               `app-config.js` passe de **1 099 à 964 lignes** ; 993 contrôles, code de
+               sortie 0.
+
+               Sept gestes, **tous couverts depuis 5.c.12** — dont `saveReglement`, qui
+               réécrit toutes les exigences d'un groupe dans une boucle sans retour en
+               arrière. Une exigence est l'objet réglementaire du dispositif : sa référence et
+               son libellé fondent un écart, et un écart fonde une mesure d'application.
+
+               `EXIG_OPEN` et `fmtDay` partent avec le bloc : il en était le seul lecteur.
+               Deux globales lexicales de moins dans `app-config.js`.
+
+               ── La preuve, et les sept régimes ──
+
+               Trois fonctions sur sept sont pures. **84 comparaisons** de balisage,
+               caractère pour caractère :
+
+               · bandeaux **tous fermés**, **tous dépliés**, et **un seul déplié** — un état
+                 mesuré d'un seul côté n'est pas mesuré, c'est la leçon des bascules (5.c.15),
+                 et la classe `collapsed` est précisément ce que la bascule commande ;
+               · les **trois langues**, puisque `fmtDay` formate selon `CURRENT_LANG` ;
+               · un jeu **bricolé** portant une exigence **orpheline** (sans règlement) et un
+                 règlement **sans date** — deux replis du balisage que le jeu d'essai ne
+                 contient pas, et qui seraient donc restés non éprouvés.
+
+               Les deux côtés atteignent l'état des bandeaux par des **chemins différents** :
+               l'original par son `Set`, que le bac remplit ; le module par son geste
+               `toggleExigGroup`, seule porte d'entrée de son état privé. C'est volontaire —
+               une erreur dans la bascule se voit alors dans le balisage.
+
+               Cinq contre-essais, cinq rouges : une espace dans la table (7 écarts), le repli
+               **inversé** (7), la clé `__none__` ôtée de la bascule (1 — et c'est le groupe
+               sans règlement, le seul concerné), `fmtDay` rendant l'ISO brute (30), le tri des
+               règlements ôté (7).
+
+               Et la couverture du navigateur vérifiée, non supposée : en ôtant le préréglage
+               du règlement, deux contrôles de parcours tombent — dont celui de l'exigence
+               orpheline.
+
+               ── Le coût de la page, suivi ──
+
+               **563 Ko** servis, contre 503 au commit précédent : le huitième paquet en ajoute
+               60. La courbe est celle qu'on attendait, et elle se renversera à la fin de 5.d.
+
+               ── Ce qui reste de 5.d ──
+
+               `app-config.js` : **964 lignes** — l'organigramme (~250), le personnel, la
+               configuration de l'instance, et `renderConfig` qui orchestre les onze
+               sous-vues. `app.js` : 1 179.
+
+               L'organigramme vient ensuite : plus gros, mais gardé par la ronde d'intérim et
+               le glisser-déposer (5.c.11). Il faudra y décider du sort de
+               `normalizeOrgTopLevel`, qui **écrit dans `REFS` au moment du rendu** — la même
+               famille que le tri sur place trouvé en 5.d.0.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

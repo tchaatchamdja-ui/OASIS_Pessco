@@ -66,166 +66,31 @@ const CFG_TABS = [
 
 
 // Exigences groupées par règlement (bandeaux rétractables ; date d'adoption à droite)
-const EXIG_OPEN = new Set(); // vide = tous les bandeaux fermés par défaut
-window.toggleExigGroup = function (key) {
-  const k = key || '__none__';
-  if (EXIG_OPEN.has(k)) EXIG_OPEN.delete(k);
-  else EXIG_OPEN.add(k);
-  renderConfig();
-};
+// ── Les exigences réglementaires : parties dans un module typé (5.d.2) ──
+//
+// `toggleExigGroup`, `cfgSectionExigences`, `openExigDrawer`, `closeExigDrawer`,
+// `saveExigDrawer`, `openReglementForm` et `saveReglement` vivent désormais dans
+// `frontend/portail/exigences.ts` ; un sas les pose sur `window` avant le
+// chargement de ce fichier (`public/app/exigences.js`).
+//
+// `EXIG_OPEN` — l'ensemble des bandeaux dépliés — et `fmtDay` sont partis avec
+// eux : ce bloc en était le seul lecteur. **Ne pas les redéclarer ici** : un
+// `const EXIG_OPEN` serait une globale lexicale, et l'écran lirait un état que
+// la bascule ne touche plus.
+//
+// L'extraction est éprouvée par `scripts/comparer-exigences.js` : 84
+// comparaisons de balisage, caractère pour caractère, en sept régimes — bandeaux
+// fermés, dépliés, un seul déplié, les trois langues, et un jeu bricolé qui porte
+// une exigence orpheline et un règlement sans date. Les quatre gestes qui
+// touchent au document ou à l'API sont couverts par la suite « parcours » (5.c.12).
 
-function cfgSectionExigences() {
-  const list = REFS.exigences || [];
-  const groups = {};
-  list.forEach((e) => {
-    const key = e.reglement || '';
-    (groups[key] = groups[key] || []).push(e);
-  });
-  const keys = Object.keys(groups).sort((a, b) => (a || 'zzz').localeCompare(b || 'zzz'));
-  const blocks = keys
-    .map((key) => {
-      const items = groups[key];
-      const collapsed = !EXIG_OPEN.has(key || '__none__');
-      const dateAdoption = (items.find((x) => x.date_adoption) || {}).date_adoption || '';
-          const rows = items
-        .map(
-          (e) => `
-        <tr>
-          <td><strong>${esc(e.reference || '')}</strong></td>
-          <td style="white-space:normal;">${esc(e.libelle || '')}</td>
-          <td>${e.statut === 'inactif' ? '<span class="shell-badge badge-inactive">Inactif</span>' : '<span class="shell-badge badge-active">Actif</span>'}</td>
-          <td class="actions-cell">
-            <button class="shell-btn-icon" onclick="openExigDrawer('${e.id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
-            <button class="shell-btn-icon" onclick="deleteRef('exigences','${e.id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
-          </td>
-        </tr>`
-        )
-        .join('');
-      return `
-      <div class="exig-group ${collapsed ? 'collapsed' : ''}">
-        <div class="exig-banner" onclick="toggleExigGroup(${escArg(key)})">
-          <span class="exig-banner-title"><span class="exig-chevron">${icon('chevronRight', 15)}</span>${esc(key || tr('Sans règlement'))} <span class="shell-badge" style="background:rgba(255,255,255,.2);color:#fff;">${items.length}</span></span>
-          <span class="exig-banner-right" onclick="event.stopPropagation()">
-            <span class="exig-banner-date">${dateAdoption ? `${tr("Date d'adoption")} : ${esc(fmtDay(dateAdoption))}` : ''}</span>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${escArg(key)})" title="${t('modifier_reglement')}" aria-label="${t('modifier_reglement')}">${icon('edit', 15)}</button>
-            <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})" title="${t('ajouter_exigence')}" aria-label="${t('ajouter_exigence')}">${icon('plus', 15)}</button>
-          </span>
-        </div>
-        <div class="exig-body">
-          <div class="shell-table-container">
-            <table class="shell-table shell-table-compact exig-table">
-              <thead><tr><th>${tr('Référence')}</th><th>${tr('Libellé')}</th><th>${tr('Statut')}</th><th></th></tr></thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
-        </div>
-      </div>`;
-    })
-    .join('');
-  return `
-  <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${esc(tr('Liste des exigences'))}</h3>
-    <div class="portal-page-actions">
-      ${searchInputHtml('Rechercher une exigence / règlement...')}
-      ${exportBar('exigences', tr('Liste des exigences'))}
-      <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openExigDrawer(null,null,null,true)">${icon('plus', 13)} ${esc(t('add'))}</button>
-    </div>
-  </div>
-  ${blocks || `<p style="color:var(--text-muted);">${t('aucune_exigence')}</p>`}
-  <div id="exigDrawerRoot"></div>`;
-}
 
-// Drawer (panneau latéral droit, ~1/3 écran) — champs Référence, Libellé, Statut
-window.openExigDrawer = function (id, presetReglement, presetDate, newGroup) {
-  const e = id ? (REFS.exigences || []).find((x) => x.id === id) : null;
-  const reglement = e ? e.reglement : (presetReglement || '');
-  const date = e ? e.date_adoption : (presetDate || '');
-  const showRegFields = !!newGroup; // création d'un nouveau règlement : champs éditables
-  const regBlock = showRegFields
-    ? `<div class="shell-form-group"><label>${tr('Règlement')}</label><input class="shell-input" id="exReglement" value=""></div>
-       <div class="shell-form-group"><label>${tr("Date d'adoption")}</label><input class="shell-input" type="date" id="exDate" value=""></div>`
-    : `<div class="exig-reg-readonly">${icon('fileText', 14)} <strong>${esc(reglement || tr('Sans règlement'))}</strong>${date ? ` · ${esc(fmtDay(date))}` : ''}</div>`;
-  document.getElementById('exigDrawerRoot').innerHTML = `
-  <div class="exig-drawer-overlay" onclick="closeExigDrawer()"></div>
-  <div class="exig-drawer">
-    <div class="exig-drawer-header"><h3>${id ? tr('Liste des exigences') : (newGroup ? 'Nouveau règlement' : 'Nouvelle exigence')}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-    <div class="exig-drawer-body">
-      ${regBlock}
-      <div class="shell-form-group"><label>${tr('Référence')}</label><input class="shell-input" id="exReference" value="${esc(e ? e.reference : '')}"></div>
-      <div class="shell-form-group"><label>${tr('Libellé')}</label><textarea class="shell-input exig-libelle" id="exLibelle" rows="6">${esc(e ? e.libelle : '')}</textarea></div>
-      <div class="shell-form-group"><label>${tr('Statut')}</label>
-        <select class="shell-input" id="exStatut"><option value="actif" ${!e || e.statut !== 'inactif' ? 'selected' : ''}>Actif</option><option value="inactif" ${e && e.statut === 'inactif' ? 'selected' : ''}>Inactif</option></select>
-      </div>
-    </div>
-    <div class="exig-drawer-footer">
-      <button class="shell-btn shell-btn-outline" onclick="closeExigDrawer()">${esc(t('cancel'))}</button>
-      <button class="shell-btn shell-btn-primary" onclick="saveExigDrawer(${escArg(id || '')}, ${showRegFields}, ${escArg(reglement || '')}, ${escArg(date || '')})">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
-    </div>
-  </div>`;
-};
 
-window.closeExigDrawer = function () { const r = document.getElementById('exigDrawerRoot'); if (r) r.innerHTML = ''; };
 
-window.saveExigDrawer = async function (id, showRegFields, reglement, date) {
-  const body = {
-    reference: document.getElementById('exReference').value.trim(),
-    libelle: document.getElementById('exLibelle').value.trim(),
-    statut: document.getElementById('exStatut').value,
-  };
-  if (showRegFields) {
-    body.reglement = document.getElementById('exReglement').value.trim();
-    body.date_adoption = document.getElementById('exDate').value;
-  } else if (!id) {
-    body.reglement = reglement;
-    body.date_adoption = date;
-  }
-  const res = await api(id ? `/api/referentiels/exigences/${id}` : '/api/referentiels/exigences', {
-    method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-  });
-  if (res.ok) { closeExigDrawer(); await loadRefs(); renderConfig(); showToast('OK', 'success'); }
-  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
 
-// Formulaire séparé : Règlement + Date d'adoption (s'applique à toutes les exigences du groupe)
-window.openReglementForm = function (reglement) {
-  const items = (REFS.exigences || []).filter((e) => (e.reglement || '') === reglement);
-  const date = (items.find((x) => x.date_adoption) || {}).date_adoption || '';
-  document.getElementById('exigDrawerRoot').innerHTML = `
-  <div class="shell-modal-overlay" style="left:0;top:0;" onclick="closeExigDrawer()"></div>
-  <div class="shell-modal-overlay" style="left:0;top:0;background:none;pointer-events:none;">
-    <div class="shell-modal" style="max-width:440px;pointer-events:auto;">
-      <div class="shell-modal-header"><h3>${tr('Règlement')} / ${tr("Date d'adoption")}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-      <div class="shell-modal-body">
-        <div class="shell-form-group" style="margin-bottom:.75rem;"><label>${tr('Règlement')}</label><input class="shell-input" id="rgNom" value="${esc(reglement)}"></div>
-        <div class="shell-form-group"><label>${tr("Date d'adoption")}</label><input class="shell-input" type="date" id="rgDate" value="${esc(date)}"></div>
-        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.5rem;">Appliqué à ${items.length} exigence(s) de ce règlement.</p>
-      </div>
-      <div class="shell-modal-footer">
-        <button class="shell-btn shell-btn-outline" onclick="closeExigDrawer()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="saveReglement(${escArg(reglement)})">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
-      </div>
-    </div>
-  </div>`;
-};
 
-window.saveReglement = async function (oldReglement) {
-  const nom = document.getElementById('rgNom').value.trim();
-  const date = document.getElementById('rgDate').value;
-  const items = (REFS.exigences || []).filter((e) => (e.reglement || '') === oldReglement);
-  for (const e of items) {
-    await api(`/api/referentiels/exigences/${e.id}`, {
-      method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...e, reglement: nom, date_adoption: date }),
-    });
-  }
-  closeExigDrawer(); await loadRefs(); renderConfig(); showToast(t('reglement_maj'), 'success');
-};
 
-function fmtDay(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return isNaN(d) ? iso : d.toLocaleDateString(CURRENT_LANG);
-}
+
 
 // Chaîne de validation d'une personne : de son entité de rattachement jusqu'à la racine
 function orgChainFor(personId) {

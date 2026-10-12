@@ -82,7 +82,10 @@ const COULEURS_MODULE = {
   RAMP: '#ff9500',
   CARE: '#ff0000',
 };
-const LEVEL_COLORS = ['#2563eb', '#0891b2', '#f59e0b', '#10b981', '#8b5cf6'];
+// `LEVEL_COLORS` est parti dans `frontend/portail/organigramme.ts` (5.d.3) : ce
+// fichier ne l'utilisait pas — seul `app-config.js` le lit —, et un `const` du
+// premier niveau est une globale **lexicale** qu'aucun module ne peut atteindre.
+// Le sas le pose sur `window`. **Ne pas le redéclarer ici.**
 // `icon` est facultatif : un thème qui n'en déclare pas voit son titre commencer
 // au premier mot. La surveillance continue s'en passe — son intitulé porte déjà
 // son sigle, et la loupe n'y ajoutait rien.

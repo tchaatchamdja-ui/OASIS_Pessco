@@ -77,7 +77,7 @@ indépendant avant recette** — non réalisé.
 
 | Couche | Prescrit par la fiche | Réalisé | État |
 |---|---|---|---|
-| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ◐ en cours, mesuré** — **8 740 lignes** de TypeScript en 59 fichiers ; **58 036** encore en JavaScript. Le socle commun est converti en entier (12/12), DROITS aussi, les libellés, icônes, état, schémas, le CRUD des référentiels et les exigences du portail ; restent l'interface du portail (2 143 lignes) et cinq écrans. Détail et ordre : [ADR-003](ADR-003-cadre-du-frontend.md) § 5 | ◐ |
+| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ◐ en cours, mesuré** — **9 269 lignes** de TypeScript en 61 fichiers ; **57 747** encore en JavaScript. Le socle commun est converti en entier (12/12), DROITS aussi, et du portail : libellés, icônes, état, schémas, CRUD des référentiels, exigences et organigramme ; restent l'interface du portail (1 854 lignes) et cinq écrans. Détail et ordre : [ADR-003](ADR-003-cadre-du-frontend.md) § 5 | ◐ |
 | Backend applicatif | API REST **Java 21 / Spring Boot** | **Node 20 / Express 4**, CommonJS, 386 routes | ✗ |
 | Identité et accès | **Keycloak** (OpenID Connect) | `src/auth.js` écrit à la main ; sessions en mémoire | ✗ |
 | Moteur de workflow | **Flowable ou Camunda** (BPMN 2.0) | moteur de processus écrit à la main (`routes-processus.js`) | ✗ |
@@ -200,12 +200,12 @@ grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l      # Keycloak
 grep -rli 'bpmn\|flowable\|camunda' src public | wc -l         # moteur BPMN
 grep -rli 'prometheus\|grafana\|/metrics' src server.js | wc -l # supervision
 find public -name 'manifest*.json' -o -name 'sw.js' | wc -l    # PWA
-find frontend -name '*.ts' -o -name '*.tsx' | wc -l            # TypeScript : 59 fichiers
+find frontend -name '*.ts' -o -name '*.tsx' | wc -l            # TypeScript : 61 fichiers
 # Et le JavaScript qu'il reste à convertir, qui est l'autre moitié de la mesure.
 # Cherchée dans `public/`, la première ligne rendait 0 sur un dépôt qui porte
 # 4 932 lignes de TypeScript au 6 octobre : le TypeScript vit dans `frontend/`,
 # et c'est `public/` qui reçoit ce qu'esbuild en construit.
-cat public/js/*.js public/modules/*/js/*.js | wc -l            # JS front : 58 036
+cat public/js/*.js public/modules/*/js/*.js | wc -l            # JS front : 57 747
 grep -rn 'aes-256\|createCipher' src | wc -l                   # chiffrement au repos
 
 # Journalisation : aucun verbe de consultation

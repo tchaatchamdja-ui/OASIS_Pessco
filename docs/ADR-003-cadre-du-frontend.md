@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 143 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1) et exigences (5.d.2) convertis |
+           | portail (`public/js`) | 1 854 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2) et organigramme (5.d.3) convertis |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2519,6 +2519,99 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                le glisser-déposer (5.c.11). Il faudra y décider du sort de
                `normalizeOrgTopLevel`, qui **écrit dans `REFS` au moment du rendu** — la même
                famille que le tri sur place trouvé en 5.d.0.
+
+           5.d.3 [x] **L'organigramme, converti — et deux contre-essais qui n'ont pas mordu**
+               — fait le 12 octobre 2026. `app-config.js` passe de **964 à 672 lignes** ;
+               993 contrôles, code de sortie 0.
+
+               La plus grosse pièce de 5.d : douze gestes, deux présentations, un
+               glisser-déposer et un registre de poste. C'est aussi l'écran qui porte le plus
+               d'**autorité** — la chaîne de validation d'une personne, et qui valide à sa
+               place en son absence. Tout est couvert depuis 5.c.11.
+
+               ── Deux contre-essais qui n'ont pas mordu, et ce qu'ils disaient ──
+
+               Ôter le **garde-fou du cycle** de `orgChainFor`, et changer la **couleur de
+               repli** d'un niveau inconnu : *aucun des deux ne faisait d'écart*. La raison
+               était la même — les données ne produisent pas la situation :
+
+               · aucun `parent_id` ne boucle, et la boucle `while` s'arrête d'elle-même ;
+               · aucune hiérarchie ne descend au-delà du cinquième niveau, si bien que
+                 `levelIndex[type] ?? depth` rend toujours un indice valide de `LEVEL_COLORS`.
+
+               *Un contre-essai qui ne mord pas ne dit pas que le code est bon : il dit que la
+               donnée ne l'éprouve pas.* Deux régimes ont donc été **fabriqués** — un cycle de
+               rattachement, et une hiérarchie de sept niveaux aux types inconnus. Les deux
+               contre-essais mordent alors.
+
+               Le cycle n'est pas une hypothèse d'école : le formulaire l'interdit depuis
+               5.d.1 (une entité est ôtée de ses propres options), mais une donnée venue d'un
+               **import** ne passe pas par le formulaire. Sans le garde-fou, l'écran se
+               figerait.
+
+               ── `normalizeOrgTopLevel` : un rendu qui modifie ce qu'il affiche ──
+
+               Elle recopie le sigle et le nom de l'AAC sur l'entité de niveau 1, **en écrivant
+               dans `REFS`**, à chaque rendu de l'écran. Ce n'est pas un oubli : l'entité de
+               niveau 1 *est* l'AAC, et `saveRef` impose la même règle à l'écriture (5.d.1).
+
+               Mais sur le jeu de travail elle **ne change rien** — l'entité enregistrée est
+               déjà conforme — et son retrait passerait donc inaperçu. La comparaison lui
+               fabrique un écart : l'entité porte « AUTRE / Un autre nom », et la normalisation
+               doit le remplacer. Quatre configurations sont jouées : conforme, sigle seul, rien
+               à reprendre, configuration non lue.
+
+               **Troisième fois dans 5.d** qu'une assertion satisfaite par hasard oblige à
+               fabriquer la donnée qui l'éprouve. C'est devenu une habitude de cette suite, et
+               c'est tant mieux.
+
+               La conversion ne corrige pas cet effet de bord : elle le **nomme**, à l'endroit
+               où il se produit, avec les deux raisons de le savoir — son retrait est
+               indétectable sur les vraies données, et c'est ici qu'il faudra regarder le jour
+               où l'on voudra que l'entité garde son propre nom.
+
+               ── `LEVEL_COLORS` quitte `app.js`, qui ne s'en servait pas ──
+
+               Un `const` du premier niveau, donc une globale **lexicale** invisible à un
+               module — et `app.js` ne la lisait pas : seul `app-config.js` s'en servait, par
+               cet écran et par l'accordéon des domaines. Elle vient donc dans le module, qui la
+               publie en attendant la conversion de l'accordéon (5.d.4).
+
+               ── Une déclaration corrigée plutôt qu'un appel détourné ──
+
+               `window.fmtDate` était déclaré `(iso: string)`. Le registre des postes lui passe
+               des valeurs venues du magasin, de type `unknown`. J'aurais pu convertir à
+               l'appel ; **une conversion que le code d'origine ne fait pas est une divergence,
+               même inoffensive**. `fmtDate` commence par `if (!iso) return '—'` et accepte
+               n'importe quoi : c'est la déclaration qui était fausse, et c'est elle qui a été
+               corrigée.
+
+               ── La preuve ──
+
+               **243 comparaisons**, caractère pour caractère, en **onze régimes** : les deux
+               présentations, deux langues, les collections renversées, un jeu bricolé (intérim
+               actif, poste vacant, entité sans poste, type inconnu, rattachement vers une
+               personne absente), une organisation vide, le cycle, et la hiérarchie profonde.
+               Cinq contre-essais, cinq rouges après l'ajout des deux régimes manquants.
+
+               Et la couverture du navigateur vérifiée : en ôtant la fermeture de l'entrée du
+               registre, le contrôle de parcours tombe.
+
+               ── Ce qui reste de 5.d ──
+
+               `app-config.js` : **672 lignes**. Trois blocs :
+
+               | Bloc | Lignes | Gardé par |
+               |---|---|---|
+               | accordéons, personnel, domaines | ~200 | 5.c.15 (bascules), 5.c.9 (import) |
+               | AAC, sécurité, modules, système | ~290 | 5.c.10, 5.c.13 |
+               | `renderConfig`, `cfgNavigate`, `CFG_TABS` | ~130 | 5.c.0 (les onze sous-vues) |
+
+               `CFG_OPEN` lie les trois premiers — accordéons, personnel et domaines — et devra
+               partir avec eux, d'un seul coup. `renderConfig` part en dernier : c'est lui qui
+               décidera si l'écran devient un composant React.
+
+               La page sert **625 Ko**, contre 563 au commit précédent.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

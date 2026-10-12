@@ -92,39 +92,30 @@ const CFG_TABS = [
 
 
 
-// Chaîne de validation d'une personne : de son entité de rattachement jusqu'à la racine
-function orgChainFor(personId) {
-  const assigns = (REFS.organisation_assignments || []).filter((a) => a.person_id === personId);
-  if (!assigns.length) return null;
-  const byId = Object.fromEntries((REFS.organisation || []).map((o) => [o.id, o]));
-  let node = byId[assigns[0].org_id];
-  const chain = [];
-  const guard = new Set();
-  while (node && !guard.has(node.id)) {
-    guard.add(node.id);
-    chain.push(node);
-    node = node.parent_id ? byId[node.parent_id] : null;
-  }
-  return chain.length ? chain : null;
-}
+// ── L'organigramme : parti dans un module typé (5.d.3) ──
+//
+// Les douze gestes, les deux présentations, le registre d'un poste et la chaîne
+// de validation vivent désormais dans `frontend/portail/organigramme.ts` ; un sas
+// les pose sur `window` avant le chargement de ce fichier.
+//
+// Trois noms ne sont que **prêtés** à ce fichier en attendant sa conversion :
+// `LEVEL_COLORS` — qui était un `const` lexical d'`app.js`, que seul
+// `app-config.js` lisait —, `orgChainFor` et `circuitHtml`, que la fiche d'une
+// personne lit encore. **Ne pas les redéclarer**, ni `ORG_VIEW`, désormais privée
+// au module : une copie lexicale ferait que la bascule des présentations n'agirait
+// plus sur ce que l'écran rend.
+//
+// `normalizeOrgTopLevel` part avec eux, et son effet de bord est nommé là-bas :
+// elle **écrit dans `REFS`** à chaque rendu, pour aligner l'entité de niveau 1 sur
+// l'identité de l'Administration. La conversion ne corrige pas, elle rend visible.
+//
+// Éprouvé par `scripts/comparer-organigramme.js` : 243 comparaisons, caractère
+// pour caractère, en onze régimes — dont un cycle de rattachement et une
+// hiérarchie de sept niveaux, tous deux fabriqués après des contre-essais qui ne
+// mordaient pas. Les dix gestes qui touchent au document ou à l'API sont couverts
+// par la suite « parcours » (5.c.11).
 
-function circuitHtml(chain) {
-  if (!chain) return '<span style="color:var(--text-muted);font-size:.8rem;">' + t('non_rattache_organigramme') + '</span>';
-  return `<div class="pers-circuit">${chain
-    .map((n, i) => {
-      const color = LEVEL_COLORS[Math.min(i, LEVEL_COLORS.length - 1)];
-      const last = i === chain.length - 1;
-      const absent = !!n.interim_actif && !!n.interim_id;
-      const validateur = absent ? personnelName(n.interim_id) : n.titulaire_id ? personnelName(n.titulaire_id) : n.poste ? 'Poste vacant' : '';
-      const sub = (n.poste || validateur)
-        ? `<span class="pers-circuit-sub">${esc([n.poste, validateur].filter(Boolean).join(' · '))}${absent ? ' <span class="pers-circuit-interim">' + t('interim') + '</span>' : ''}</span>`
-        : '';
-      return `<span class="pers-circuit-step" title="${esc(n.libelle)} (${esc(n.type)})${absent ? ' — intérim : ' + esc(personnelName(n.interim_id)) + ', titulaire notifié' : ''}">
-          <span class="pers-circuit-sigle" style="border-bottom:2px solid ${color};color:${color};">${esc(n.sigle)}</span>${sub}
-        </span>${last ? '' : '<span class="pers-circuit-arrow">→</span>'}`;
-    })
-    .join('')}</div>`;
-}
+
 
 window.togglePers = function (id) {
   const k = 'pers-' + id;
@@ -472,286 +463,15 @@ window.saveAAC = async function () {
   } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 };
 
-let ORG_VIEW = 'list'; // 'list' | 'tree'
 
-window.setOrgView = function (v) {
-  ORG_VIEW = v;
-  renderConfig();
-};
 
-window.orgDragStart = function (ev, personId) {
-  ev.dataTransfer.setData('text/plain', personId);
-  ev.dataTransfer.effectAllowed = 'move';
-};
-window.orgAllowDrop = function (ev) {
-  ev.preventDefault();
-  ev.currentTarget.classList.add('org-drop-hover');
-};
-window.orgDragLeave = function (ev) {
-  ev.currentTarget.classList.remove('org-drop-hover');
-};
-window.orgDrop = async function (ev, orgId) {
-  ev.preventDefault();
-  ev.currentTarget.classList.remove('org-drop-hover');
-  const personId = ev.dataTransfer.getData('text/plain');
-  if (!personId) return;
-  const exists = (REFS.organisation_assignments || []).some((a) => a.org_id === orgId && a.person_id === personId);
-  if (exists) return showToast(t('deja_rattache'), 'warning');
-  const res = await api('/api/referentiels/organisation_assignments', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ org_id: orgId, person_id: personId, person_type: 'inspecteur' }),
-  });
-  if (res.ok) {
-    await loadRefs();
-    renderConfig();
-    showToast(t('personnel_rattache'), 'success');
-  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
-window.openPosteRegistre = function (nodeId) {
-  const node = (REFS.organisation || []).find((o) => o.id === nodeId);
-  if (!node) return;
-  const reg = (Array.isArray(node.registre) ? node.registre : []).slice().reverse();
-  const rows = reg
-    .map((e) => {
-      const roleBadge =
-        e.role === 'interim'
-          ? '<span class="shell-badge" style="background:#fef3c7;color:#92400e;">' + t('interimaire') + '</span>'
-          : '<span class="shell-badge badge-active">Titulaire</span>';
-      const fin = e.end ? fmtDate(e.end) : '<span class="shell-badge badge-active">En cours</span>';
-      return `<tr><td>${roleBadge}</td><td>${esc(personnelName(e.person_id))}</td><td>${fmtDate(e.start)}</td><td>${fin}</td></tr>`;
-    })
-    .join('');
-  document.getElementById('cfgModalRoot').innerHTML = `
-  <div class="shell-modal-overlay">
-    <div class="shell-modal" style="max-width:640px;">
-      <div class="shell-modal-header"><h3>Registre — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-      <div class="shell-modal-body">
-        <div class="shell-table-container">
-          <table class="shell-table shell-table-compact">
-            <thead><tr><th>${t('users_col_role')}</th><th>Personne</th><th>${t('debut_jour_heure')}</th><th>Fin (jour / heure)</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="4" style="color:var(--text-muted);">${t('aucun_enregistrement')}</td></tr>`}</tbody>
-          </table>
-        </div>
-      </div>
-      <div class="shell-modal-footer"><button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${t('fermer')}</button></div>
-    </div>
-  </div>`;
-};
 
-window.orgStartInterim = function (nodeId) {
-  const node = (REFS.organisation || []).find((o) => o.id === nodeId);
-  if (!node) return;
-  const titNom = node.titulaire_id ? personnelName(node.titulaire_id) : null;
-  const opts = personnelOptions().filter((o) => o.v !== node.titulaire_id);
-  document.getElementById('cfgModalRoot').innerHTML = `
-  <div class="shell-modal-overlay">
-    <div class="shell-modal" style="max-width:440px;">
-      <div class="shell-modal-header"><h3>Signaler un intérim — ${esc(node.poste || node.sigle)}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-      <div class="shell-modal-body">
-        <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.75rem;">Titulaire : <strong>${esc(titNom || 'Poste vacant')}</strong>${t('selectionner_interimaire')}</p>
-        <div class="shell-form-group">
-          <label>${t('interimaire')}</label>
-          <select class="shell-input" id="interimSelect">
-            <option value="">— Choisir —</option>
-            ${opts.map((o) => `<option value="${esc(o.v)}">${esc(o.t)}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-      <div class="shell-modal-footer">
-        <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="orgConfirmInterim('${nodeId}')">${t('activer_interim')}</button>
-      </div>
-    </div>
-  </div>`;
-};
 
-window.orgConfirmInterim = async function (nodeId) {
-  const node = (REFS.organisation || []).find((o) => o.id === nodeId);
-  const interimId = document.getElementById('interimSelect').value;
-  if (!interimId) return showToast(t('choisir_interimaire'), 'warning');
-  const registre = Array.isArray(node.registre) ? [...node.registre] : [];
-  registre.push({ role: 'interim', person_id: interimId, start: new Date().toISOString(), end: null });
-  const res = await api(`/api/referentiels/organisation/${nodeId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...node, interim_id: interimId, interim_actif: true, registre }),
-  });
-  if (!res.ok) return showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-  const posteLbl = node.poste || node.sigle;
-  const interimNom = personnelName(interimId);
-  const titNom = node.titulaire_id ? personnelName(node.titulaire_id) : null;
-  await api('/api/notifications', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: `Intérim (${posteLbl}) : les demandes de validation sont redirigées vers ${interimNom}.`, type: 'warning' }),
-  });
-  if (titNom) {
-    await api('/api/notifications', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: `${titNom}, vos validations (${posteLbl}) sont assurées par ${interimNom} pendant votre absence.`, type: 'info' }),
-    });
-  }
-  closeRefModal();
-  await loadRefs();
-  renderConfig();
-  refreshNotifications();
-  showToast(t('interim_active', interimNom), 'success', 4000);
-};
 
-window.orgEndInterim = async function (nodeId) {
-  const node = (REFS.organisation || []).find((o) => o.id === nodeId);
-  if (!node) return;
-  const registre = Array.isArray(node.registre) ? node.registre.map((e) => ({ ...e })) : [];
-  const open = [...registre].reverse().find((e) => e.role === 'interim' && !e.end);
-  if (open) open.end = new Date().toISOString();
-  const res = await api(`/api/referentiels/organisation/${nodeId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...node, interim_id: '', interim_actif: false, registre }),
-  });
-  if (!res.ok) return showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-  await loadRefs();
-  renderConfig();
-  showToast(t('interim_retire'), 'success');
-};
 
-window.orgUnassign = async function (id) {
-  const res = await api(`/api/referentiels/organisation_assignments/${id}`, { method: 'DELETE' });
-  if (res.ok) {
-    await loadRefs();
-    renderConfig();
-    showToast(t('rattachement_retire'), 'success');
-  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
 
-function orgPersonName(p) {
-  return `${esc(p.nom || '')} ${esc(p.prenom || '')}`.trim() || esc(p.numero_inspecteur || p.id);
-}
 
-function orgAssignedChips(orgId) {
-  const assigns = (REFS.organisation_assignments || []).filter((a) => a.org_id === orgId);
-  if (!assigns.length) return '';
-  const persons = REFS.inspecteurs || [];
-  return `<div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem;">${assigns
-    .map((a) => {
-      const p = persons.find((x) => x.id === a.person_id);
-      if (!p) return '';
-      return `<span class="org-person-chip">${orgPersonName(p)}<span class="org-chip-x" onclick="orgUnassign('${a.id}')" title="Retirer">${icon('x', 12)}</span></span>`;
-    })
-    .join('')}</div>`;
-}
 
-function cfgSectionOrganigramme() {
-  const levels = (REFS.organisation_levels || []).slice().sort((a, b) => a.ordre - b.ordre);
-  const levelIndex = Object.fromEntries(levels.map((lv, i) => [lv.type, i]));
-  const entites = REFS.organisation || [];
-  const persons = REFS.inspecteurs || [];
-  const children = (pid) => entites.filter((o) => (o.parent_id || '') === pid).sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
-
-  // Panneau personnel (glisser-déposer) — masque les personnes déjà rattachées
-  const assignedIds = new Set((REFS.organisation_assignments || []).map((a) => a.person_id));
-  const available = persons.filter((p) => !assignedIds.has(p.id));
-  const personnelPanel = `
-    <div class="org-personnel">
-      <div class="org-personnel-title">${icon('users', 15)} Personnel AAC</div>
-      <p style="font-size:.72rem;color:var(--text-muted);margin-bottom:.5rem;">${t('glisser_nom')}</p>
-      ${
-        available.length
-          ? available
-              .map(
-                (p) => `<div class="org-person-item" draggable="true" ondragstart="orgDragStart(event,'${p.id}')" title="Réf : ${esc(p.ref_personnel || p.numero_inspecteur || '—')}">${icon('userCheck', 14)} <span>${orgPersonName(p)}</span></div>`
-              )
-              .join('')
-          : `<p style="font-size:.8rem;color:var(--text-muted);">${persons.length ? 'Tout le personnel est rattaché.' : 'Aucun personnel — voir sous-menu « Personnel AAC ».'}</p>`
-      }
-    </div>`;
-
-  const posteLine = (node) => {
-    if (!node.poste && !node.titulaire_id && !node.interim_id) return '';
-    const tit = node.titulaire_id ? personnelName(node.titulaire_id) : 'Poste vacant';
-    const absent = !!node.interim_actif && !!node.interim_id;
-    const titClass = absent ? 'org-titulaire org-titulaire-off' : 'org-titulaire';
-    let interimHtml = '';
-    if (node.interim_id) {
-      interimHtml = `<span class="org-interim ${absent ? 'org-interim-on' : ''}">${icon('userCheck', 12)} Intérim : ${esc(personnelName(node.interim_id))}${absent ? ' <span class="shell-badge badge-active">Actif</span>' : ''}</span>`;
-    }
-    const canInterim = !!node.titulaire_id || !!node.poste;
-    const toggle = absent
-      ? `<button class="shell-btn shell-btn-danger org-poste-btn" onclick="event.stopPropagation();orgEndInterim('${node.id}')">${t('titulaire_retour')}</button>`
-      : canInterim
-      ? `<button class="shell-btn shell-btn-outline org-poste-btn" onclick="event.stopPropagation();orgStartInterim('${node.id}')">${t('signaler_interim')}</button>`
-      : '';
-    const nbReg = Array.isArray(node.registre) ? node.registre.length : 0;
-    const registreBtn = `<button class="shell-btn shell-btn-outline org-poste-btn" onclick="event.stopPropagation();openPosteRegistre('${node.id}')">Registre${nbReg ? ` (${nbReg})` : ''}</button>`;
-    return `<div class="org-poste">
-      ${node.poste ? `<span class="org-poste-nom">${esc(node.poste)}</span>` : ''}
-      <span class="${titClass}">${icon('userCheck', 12)} ${esc(tit)}</span>
-      ${interimHtml}
-      ${toggle}
-      ${registreBtn}
-    </div>`;
-  };
-  const editBtn = (node) =>
-    `<button class="shell-btn-icon org-edit" onclick="event.stopPropagation();openRefModal('organisation','${node.id}')" title="Poste & titulaire" aria-label="Poste & titulaire">${icon('edit', 14)}</button>`;
-
-  // Vue liste (indentée) — présentation actuelle
-  const renderNodeList = (node, depth) => {
-    const color = LEVEL_COLORS[levelIndex[node.type] ?? depth] || '#64748b';
-    return `
-    <div class="org-node" style="margin-left:${depth * 1.5}rem;border-left:3px solid ${color};"
-         ondragover="orgAllowDrop(event)" ondragleave="orgDragLeave(event)" ondrop="orgDrop(event,'${node.id}')">
-      <div style="display:flex;align-items:center;gap:.4rem;">
-        <div style="flex:1;"><strong style="color:${color};">${esc(node.sigle)}</strong> — ${esc(node.libelle)}
-          <span class="shell-badge badge-neutral" style="margin-left:.4rem;">${esc(node.type)}</span></div>
-        ${editBtn(node)}
-      </div>
-      ${posteLine(node)}
-      ${orgAssignedChips(node.id)}
-    </div>
-    ${children(node.id).map((c) => renderNodeList(c, depth + 1)).join('')}`;
-  };
-
-  // Vue hiérarchique verticale (arbre)
-  const renderNodeTree = (node, depth) => {
-    const color = LEVEL_COLORS[levelIndex[node.type] ?? depth] || '#64748b';
-    const kids = children(node.id);
-    return `
-    <div class="org-tree-node">
-      <div class="org-tree-box" style="border-top:3px solid ${color};"
-           ondragover="orgAllowDrop(event)" ondragleave="orgDragLeave(event)" ondrop="orgDrop(event,'${node.id}')">
-        <div style="display:flex;align-items:center;justify-content:center;gap:.3rem;"><strong style="color:${color};">${esc(node.sigle)}</strong>${editBtn(node)}</div>
-        <div style="font-size:.75rem;color:var(--text-muted);">${esc(node.libelle)}</div>
-        ${posteLine(node)}
-        ${orgAssignedChips(node.id)}
-      </div>
-      ${kids.length ? `<div class="org-tree-children">${kids.map((c) => renderNodeTree(c, depth + 1)).join('')}</div>` : ''}
-    </div>`;
-  };
-
-  const roots = children('');
-  const body = !roots.length
-    ? '<p style="color:var(--text-muted);">' + t('aucune_entite') + '</p>'
-    : ORG_VIEW === 'tree'
-    ? `<div class="org-tree">${roots.map((r) => renderNodeTree(r, 0)).join('')}</div>`
-    : roots.map((r) => renderNodeList(r, 0)).join('');
-
-  return `
-  <div class="portal-page-header">
-    <h3>${esc(t('cfg_organigramme'))}</h3>
-    <div class="portal-page-actions">
-      <div class="org-view-toggle">
-        <button class="org-view-btn ${ORG_VIEW === 'list' ? 'active' : ''}" onclick="setOrgView('list')">${icon('list', 14)} Liste</button>
-        <button class="org-view-btn ${ORG_VIEW === 'tree' ? 'active' : ''}" onclick="setOrgView('tree')">${icon('sitemap', 14)} Hiérarchie</button>
-      </div>
-    </div>
-  </div>
-  <div class="org-layout">
-    ${personnelPanel}
-    <div class="org-canvas shell-card">${body}</div>
-  </div>`;
-}
 
 function cfgSectionSecurite(cfg) {
   return `
@@ -887,18 +607,6 @@ window.toggleCfgSidebar = function () {
 };
 
 
-// Le niveau d'ordre 1 (l'Administration) reprend sigle & libellé depuis « Détails sur l'Administration »
-function normalizeOrgTopLevel(cfg) {
-  const topType = orgTopLevelType();
-  const aac = (cfg && cfg.aac) || {};
-  if (!topType) return;
-  (REFS.organisation || []).forEach((o) => {
-    if (o.type === topType) {
-      if (aac.sigle) o.sigle = aac.sigle;
-      if (aac.nom) o.libelle = aac.nom;
-    }
-  });
-}
 
 async function renderConfig() {
   const [cfgRes, modulesRes] = await Promise.all([api('/api/config'), api('/api/modules')]);

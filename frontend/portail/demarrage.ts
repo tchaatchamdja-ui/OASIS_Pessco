@@ -46,7 +46,17 @@ declare global {
     /** Les règles de mot de passe non tenues, mises en phrase. */
     reglesMotDePasse: (details?: unknown) => string;
     /** L'horodatage court, défini par `app.js`. */
-    fmtDate: (iso: string) => string;
+    /**
+     * Une date et une heure, dans la langue de l'écran.
+     *
+     * Le paramètre est `unknown` et non `string`, et c'est une correction du
+     * 12 octobre 2026 : `fmtDate` d'`app.js` commence par `if (!iso) return '—'`
+     * et accepte donc n'importe quoi. Le déclarer `string` obligeait le registre
+     * des postes (5.d.3) à convertir des valeurs venues du magasin — et une
+     * conversion que le code d'origine ne fait pas est une divergence, même
+     * quand elle est inoffensive. On déclare ce que la fonction fait.
+     */
+    fmtDate: (iso: unknown) => string;
     /** La navigation du portail. Lue par `app.js` et par l'hôte des modules. */
     navigate: (vue: string) => void;
     /**

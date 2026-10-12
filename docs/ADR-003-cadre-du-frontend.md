@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 1 660 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2) et organigramme (5.d.3), personnel et taxinomie (5.d.4) convertis |
+           | portail (`public/js`) | 1 444 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) convertis |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2699,6 +2699,187 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                La page sert **694 Ko**, contre 625. C'est le point haut de la courbe : le
                prochain commit en ôte un bloc, et celui d'après fait disparaître
                `app-config.js`.
+
+           5.d.5 [x] **Les paramètres de l'instance — et deux verts que le balisage ne pouvait
+               pas voir** — fait le 13 octobre 2026. `app-config.js` passe de **476 à 259
+               lignes** ; 994 contrôles, code de sortie 0.
+
+               L'identité de l'Administration, les sept réglages de sécurité, l'activation des
+               modules et le bloc système : dix gestes, aucun état partagé hors du bloc.
+
+               ── Le dernier état d'`app-config.js` ──
+
+               `AAC_CFG` retient la configuration que le dernier rendu a lue, pour que la
+               fenêtre d'édition s'ouvre remplie. Aucun autre fichier ne le lisait : il devient
+               une variable **privée** du module, sans passer par `window`.
+
+               C'est la différence avec `CURRENT_CFG` et `CFG_OPEN`, qui ont dû monter sur
+               `window` parce que du JavaScript les atteint. La règle de 5.b décide seule : **la
+               dépendance, non l'interface**. `app-config.js` ne porte désormais plus aucun état.
+
+               ── `PRIO_COLORS`, cinquième fois, et le premier prêt dans l'autre sens ──
+
+               `cfgSectionModules` lit la palette des priorités, `const PRIO_COLORS` au premier
+               niveau d'`app.js` — donc une globale **lexicale**, invisible à un module. Même
+               obstacle que `CURRENT_CFG` (5.d.1) et `LEVEL_COLORS` (5.d.3), cinquième
+               occurrence.
+
+               Elle ne va pas dans le module converti, mais dans `icones.ts`, **parce que deux
+               écrans la lisent** : la rangerait-on dans l'un, l'autre la lirait à travers
+               `window`, ce qui est la dépendance qu'on retire. Conséquence assumée et écrite
+               aux deux endroits : `app.js` la lit maintenant **sur `window`**, et c'est le
+               premier prêt dans ce sens — jusqu'ici les modules empruntaient à `app.js`.
+
+               ── Deux verts que le balisage ne pouvait pas voir ──
+
+               Le premier m'a été dit par un contre-essai. `cfgSectionModules` trie sur une
+               **copie** (`.slice().sort()`). Retirer le `.slice()` ne change **rien** au
+               balisage : chaque côté de la comparaison reçoit déjà sa propre copie, et trier
+               la sienne en place rend les mêmes lignes. Le contre-essai était vert, et la
+               protection n'était prouvée nulle part. La comparaison rend donc aussi **la liste
+               reçue après l'appel** ; le contre-essai mord alors.
+
+               Le second ne l'a pas été, et c'est la forme la plus coûteuse : les deux côtés
+               lisent la palette dans le **même** fichier construit, parce que c'est la règle
+               depuis 5.d.3 — une fausse icône d'un seul côté avait rendu 629 écarts qui
+               mesuraient mon montage. Mais alors **changer une teinte passe sans un écart** :
+               la mesure est juste, et aveugle à ce que la conversion a déplacé. Les cinq
+               teintes sont donc confrontées à la ligne d'`app.js` lue dans `git`.
+
+               ── La fenêtre ouverte sans son écran : une divergence assumée ──
+
+               L'original écrit `const cfg = AAC_CFG || {}` puis lit `cfg.instance.defaultLang`
+               : appelée avant le premier rendu, la fonction lève. Le chemin est inatteignable —
+               le bouton « Modifier » n'existe que dans le balisage que le rendu vient de
+               produire —, mais le compilateur ne laisse pas écrire `{}` là où un `instance` est
+               attendu.
+
+               Le module **lève aussi**, avec un message qui nomme la cause : même choix qu'en
+               5.d.1 pour un référentiel inconnu. La divergence est le texte, et elle est
+               **assertée** — si l'un des deux cessait de lever, le contrôle le dirait.
+
+               ── Un seul nom retiré de la surface, et il est dit ──
+
+               `saveAacLogo` devient privée : ses deux appelants partent avec elle.
+               `cameraIcon`, lui, reste publié bien que personne ne le lise hors du module —
+               une `function` du premier niveau **était** sur `window`, et une conversion n'est
+               pas le moment de décider d'en retirer un nom. C'est la règle que `_icon` tient
+               depuis 5.c.
+
+               ── La preuve ──
+
+               **142 comparaisons** en vingt-trois régimes : les trois langues et une quatrième
+               absente du catalogue, les trois langues par défaut et une hors des trois, une
+               Administration vide, absente, puis hostile aux cinq caractères d'échappement,
+               les quatre combinaisons d'interrupteurs, quatre nombres distincts, les modules
+               renversés, tous actifs, tous inactifs, aucun, une priorité hors de la palette.
+
+               Et le **corps des trois enregistrements** tel qu'il partirait au serveur : un
+               faux document rend les champs, un faux transport capte l'appel, et la
+               comparaison porte sur méthode, chemin et JSON. Les en-têtes ne sont pas
+               comparés, et c'est dit : l'original appelle `api()` d'`app.js`, le module un
+               `fetch` nu, l'en-tête anti-CSRF étant posé par l'enveloppe du socle (5.d.1).
+
+               **Dix contre-essais, dix rouges** : le tri sur place, le nom non échappé (16
+               écarts), deux interrupteurs échangés, la langue par défaut non marquée, la langue
+               de l'écran figée, deux champs échangés à l'enregistrement, la fenêtre qui ne lève
+               plus, une teinte changée, l'URL de réplication non échappée, et un champ absent
+               qui rend une valeur vide.
+
+               ── Le contre-essai du navigateur a mordu ailleurs, et y a trouvé mieux ──
+
+               Pour prouver que c'est bien le module qui s'exécute et non un reste, j'ai renommé
+               l'identifiant du champ « Sigle » de la fenêtre et relancé la suite « parcours ».
+               Le contrôle visé est tombé — `{"ouvrir":true,"champs":false}` : le module est
+               bien celui qui rend la fenêtre.
+
+               Mais le **sigle de l'Administration est parti vide**, et il n'aurait pas dû. Mon
+               lecteur de champ rendait `''` quand l'élément manquait ; l'original écrit
+               `document.getElementById(id).value` et **lève**, donc rien ne part. Avec `''`, la
+               requête part et le serveur écrit le champ vidé.
+
+               C'est la famille du défaut de `submitEditUser` que la suite nomme depuis 5.c —
+               *le champ effacé parce qu'il est parti vide* —, et je venais de l'introduire.
+               Corrigé : le module lève, en nommant le champ, et les trois gestes sont assertés.
+
+               **Et le même défaut était dans `exigences.ts` depuis 5.d.2.** Le panneau d'une
+               exigence lit ses six champs du même lecteur ; le serveur fusionne le correctif à
+               l'enregistrement, donc une référence absente aurait écrit une référence vide.
+               Corrigé par le même remède.
+
+               Dans `organigramme.ts`, le troisième cas est **nommé et non corrigé** : le
+               sélecteur d'intérimaire absent rend `''`, ce que le garde suivant traite par un
+               avertissement. Des deux côtés rien ne part — la divergence est inoffensive, et la
+               dire suffit.
+
+               ── Trois contrôles d'instance tombés sans cause, et je ne les accuse pas ──
+
+               Le même passage a vu rougir trois contrôles du menu « Instances », 570 lignes
+               **avant** celui que je cassais, puis un `Failed to fetch` final. Ils sont verts à
+               la campagne complète d'avant, verts au contre-essai du serveur, verts à celle
+               d'après. Le bac de données est recopié à chaque séance (`harness.js`), donc aucun
+               reste ne les relie.
+
+               Je les porte ici sans explication : *un vert qu'on soupçonne se vérifie avant
+               d'être accusé, et un rouge sans cause se note avant d'être oublié.* Si le cas
+               revient, cette ligne sera le premier indice.
+
+               ── Et un chiffre faux depuis six étapes, trouvé en comptant ──
+
+               En relevant les mesures de cette étape, `comparer-schemas.js` a rendu **2 751
+               comparaisons** quand l'ADR et `app-config.js` en annonçaient **2 820** depuis
+               5.d.0. Le script et le jeu de données n'ont pas changé d'une ligne — vérifié sur
+               les cinq commits.
+
+               La cause est dans le script, et elle vaut pour toute preuve bâtie de cette
+               façon : il **relève** dans le code les couples (collection, champ) que `refLabel`
+               reçoit, au lieu de les choisir — c'était la correction des 486 écarts de 5.d.0.
+               Mais il ne relevait que les deux fichiers restés en JavaScript, et les cinq
+               appels étaient **dans le bloc extrait**. Trois d'entre eux sont partis dans
+               `schemas.ts` avec lui.
+
+               Donc : la mesure a été prise **avant** le retrait du bloc, comme la méthode
+               l'exige, et le retrait l'a invalidée dans le même commit. *Une preuve qui tire
+               ses régimes du code qu'elle remplace s'affaiblit à l'instant où ce code part.*
+
+               Le garde-fou existait et n'a pas mordu : il refuse un relevé **vide**, pas un
+               relevé amputé. Deux corrections :
+
+               · le relevé lit désormais **tout le portail**, modules typés compris — la portée
+                 suit le code au lieu de vieillir avec lui, et le compte revient à **2 820** ;
+               · les cinq couples sont **gelés** dans le script. Qu'un seul cesse d'être relevé
+                 est un refus qui le nomme. Contre-essayé : oui.
+
+               Les quatre autres comparateurs sont indemnes — ils lisent l'original dans `git`,
+               à un commit figé, et fabriquent leurs régimes. `comparer-parametres.js` lit
+               l'`app.js` d'origine de la même façon, et pour la même raison.
+
+               Le commentaire du script annonçait aussi « cinq couples » là où il en relevait
+               deux : vrai à la mesure, faux dès le commit. *Un commentaire juste sur un code
+               qui ne l'est plus est la pire des deux erreurs — il dispense de regarder.*
+
+               ── Une observation qui n'est pas de ce jalon ──
+
+               `PUT /api/config` ne retient un nombre de sécurité que s'il est
+               **strictement positif** (`parseInt`, puis `n > 0`). Saisir `0` ou un texte dans
+               « longueur minimale du mot de passe » laisse donc la valeur d'avant, et l'écran
+               annonce « Configuration enregistrée ». C'est la même forme que le défaut d'import
+               trouvé en 5.c.9 : *une mise à jour annoncée et non appliquée*. Le régime est dans
+               la comparaison (`secMinLen: '0'`, `secMaxFail: 'abc'`) — les deux côtés envoient
+               la même chose —, mais la décision est côté serveur et appartient à la maîtrise
+               d'ouvrage.
+
+               ── Ce qui reste de 5.d ──
+
+               `app-config.js` : **259 lignes**, un seul bloc — `renderConfig`, `cfgNavigate`,
+               `toggleCfgSidebar`, `CFG_TABS`, gardés par 5.c.0 (les onze sous-vues).
+
+               La page sert **742 Ko**, contre 694. J'avais écrit en 5.d.4 que 694 était « le
+               point haut de la courbe » : c'était faux, et d'un paquet entier. Chaque sas est
+               autonome et emporte ce qu'il importe — le douzième a ajouté 48 Ko pour 268 lignes
+               retirées. La courbe monte à chaque conversion, et ne redescendra qu'au prochain
+               commit : `app-config.js` disparaît, les trois prêts de l'organigramme et celui de
+               la palette se rendent, et la page charge **un** paquet au lieu de douze.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

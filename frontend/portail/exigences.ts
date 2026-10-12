@@ -190,8 +190,26 @@ export function closeExigDrawer(): void {
   if (r) r.innerHTML = '';
 }
 
-const valeur = (id: string): string =>
-  (document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null)?.value ?? '';
+// ── Lire un champ du panneau, et pourquoi cela lève (corrigé le 13 octobre 2026) ──
+//
+// Ce lecteur rendait `''` quand le champ était absent. L'original écrit
+// `document.getElementById('exReference').value`, qui **lève** une `TypeError` :
+// la requête ne partait pas. Avec `''`, elle part — et le serveur fusionne le
+// correctif à l'enregistrement (`{ ...existant, ...correctif }`), donc il
+// **écrit la référence vide**. Une divergence silencieuse qui efface une donnée.
+//
+// Trouvée en convertissant les paramètres de l'instance (5.d.5), où le même
+// lecteur avait le même défaut, et où un contre-essai l'a fait voir. Corrigée
+// aux deux endroits par le même remède : on lève, en nommant le champ.
+//
+// C'est la même famille que le défaut de `submitEditUser` nommé par la suite
+// « parcours » — *le champ effacé parce qu'il est parti vide*.
+const champ = (id: string): HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement => {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`champ introuvable dans le panneau : « ${id} »`);
+  return el as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+};
+const valeur = (id: string): string => champ(id).value;
 
 export async function saveExigDrawer(id: string, showRegFields: boolean, reglement: string, date: string): Promise<void> {
   const body: Record<string, unknown> = {

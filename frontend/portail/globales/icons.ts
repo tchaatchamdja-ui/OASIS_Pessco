@@ -19,7 +19,7 @@
 // `ICONS` et `MODULE_ICONS` ne sont **pas** publiés : ils étaient des `const`,
 // donc absents de `window`, et aucun autre fichier ne les lit. Les publier serait
 // *ajouter* à la surface, ce qu'un sas n'a pas à faire.
-import { icon, moduleIcon } from '../icones';
+import { PRIO_COLORS, icon, moduleIcon } from '../icones';
 
 declare global {
   interface Window {
@@ -33,10 +33,21 @@ declare global {
      * pouvait pas l'empêcher d'être globale, un module peut.
      */
     _icon: (chemins: string, taille?: number) => string;
+    /**
+     * La palette des priorités de la feuille de route (5.d.5).
+     *
+     * **Posée sur `window` alors qu'elle ne l'était pas** : `const PRIO_COLORS`
+     * au premier niveau d'`app.js` est une globale lexicale, et l'écran
+     * « Modules », converti en 5.d.5, ne peut pas l'y lire. `app.js` la lit
+     * désormais ici — c'est un prêt dans l'autre sens, qui se rendra quand
+     * `app.js` sera converti à son tour.
+     */
+    PRIO_COLORS: Readonly<Record<number, string>>;
   }
 }
 
 window.icon = icon;
+window.PRIO_COLORS = PRIO_COLORS;
 window.moduleIcon = moduleIcon;
 window._icon = (chemins, taille) => `<svg width="${taille || 18}" height="${taille || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${chemins}</svg>`;
 

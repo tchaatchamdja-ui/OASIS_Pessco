@@ -1492,6 +1492,41 @@ module.exports = async function parcoursSmoke(port) {
       && JSON.stringify((cfgRenduSec || {}).security) === JSON.stringify((cfgAvantSec || {}).security),
       JSON.stringify({ avant: (cfgAvantSec || {}).security, rendu: (cfgRenduSec || {}).security }));
 
+    // ── La même asymétrie, du côté des nombres — et elle n'était pas nommée ──
+    //
+    // L'adresse centrale vidée est gardée, et un contrôle le fixe depuis 5.c.13.
+    // Les quatre nombres de sécurité ont **exactement** la même propriété, et
+    // personne ne l'avait écrite : le serveur ne retient que ce qui est
+    // strictement positif (`parseInt`, puis `n > 0`). Saisir `0` dans « longueur
+    // minimale du mot de passe », ou un texte, laisse donc la valeur d'avant — et
+    // l'écran annonce « Configuration enregistrée ».
+    //
+    // Trouvée en convertissant le bloc (5.d.5), en bâtissant le régime
+    // `secMinLen: '0'` de la comparaison. Celle-ci montre que les deux versions
+    // envoient la même chose ; elle ne pouvait pas dire ce que le serveur en fait.
+    //
+    // Ce contrôle ne bénit pas ce comportement : il le **fixe**. Une longueur
+    // minimale de mot de passe qu'on croit avoir mise à zéro et qui vaut toujours
+    // douze est une surprise sans gravité ; l'inverse n'en serait pas une.
+    const secZero = await page.evaluate(async () => {
+      const champ = document.getElementById('secMinLen');
+      const bouton = document.querySelector('[onclick="saveSecurite()"]');
+      if (!champ || !bouton) return { champs: false };
+      const luDAbord = champ.value;
+      champ.value = '0';
+      bouton.click();
+      await new Promise((r) => setTimeout(r, 1500));
+      const bandeau = document.querySelector('.oasis-toast-message');
+      return { champs: true, luDAbord, bandeau: bandeau ? bandeau.textContent.trim() : null };
+    });
+    const cfgApresZero = await lireConfig();
+    verifier('une longueur minimale mise à zéro ne s’applique pas, et le bandeau annonce pourtant l’enregistrement',
+      secZero.champs === true
+      && secZero.luDAbord === String(((cfgAvantSec || {}).security || {}).passwordMinLength)
+      && JSON.stringify((cfgApresZero || {}).security) === JSON.stringify((cfgAvantSec || {}).security)
+      && !!secZero.bandeau,
+      JSON.stringify({ secZero, avant: (cfgAvantSec || {}).security, apres: (cfgApresZero || {}).security }));
+
     // ── 3. L'identité de l'Administration : la fenêtre doit porter l'enregistré ──
     //
     // `openAacEdit` ouvre une fenêtre de **huit champs** et un sélecteur de langue.

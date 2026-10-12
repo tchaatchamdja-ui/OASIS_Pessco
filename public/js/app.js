@@ -73,7 +73,17 @@ window.setModulesView = function (mode) {
     b.classList.toggle('active', (i === 0) === (MODULES_VIEW === 'grid'));
   });
 };
-const PRIO_COLORS = { 1: '#2563eb', 2: '#0891b2', 3: '#f59e0b', 4: '#10b981', 5: '#8b5cf6' };
+// `PRIO_COLORS` est parti dans `frontend/portail/icones.ts` (5.d.5) : l'écran
+// « Modules » de la configuration le lit aussi, et un `const` du premier niveau
+// est une globale **lexicale** qu'aucun module ne peut atteindre. Le sas des
+// icônes le pose sur `window`, **avant** ce fichier, et la carte du portail
+// ci-dessous le lit donc en propriété. **Ne pas le redéclarer ici** : un `const`
+// masquerait la propriété et deux palettes coexisteraient sans une erreur.
+//
+// C'est un prêt dans l'autre sens — le premier de 5.d : jusqu'ici les modules
+// empruntaient à `app.js`. `scripts/comparer-parametres.js` confronte les cinq
+// teintes à celles de ce fichier, lues dans `git`, parce que les deux côtés de
+// la comparaison lisent désormais la même palette construite.
 // Teinte propre à un module, quand son thème en réunit plusieurs : les quatre
 // cartes de « Surveillance et inspections » ne se ressemblent plus.
 const COULEURS_MODULE = {

@@ -258,6 +258,13 @@ export function orgStartInterim(nodeId: string): void {
  */
 export async function orgConfirmInterim(nodeId: string): Promise<void> {
   const node = liste('organisation').find((o) => o.id === nodeId);
+  // Le sélecteur absent : l'original écrit `document.getElementById(…).value` et
+  // lève. Ici il rend `''`, donc l'avertissement « choisir un intérimaire » et un
+  // retour. La divergence est nommée plutôt que corrigée, parce qu'elle est
+  // **inoffensive** : des deux côtés rien ne part, et le garde ci-dessous dit la
+  // même chose que la levée, en français. Ce n'est pas le cas de ses deux
+  // cousines — voir `exigences.ts` et `parametres.ts`, où `''` faisait partir une
+  // requête qui effaçait un champ.
   const choix = document.getElementById('interimSelect') as HTMLSelectElement | null;
   const interimId = choix?.value ?? '';
   if (!interimId) { showToast(t('choisir_interimaire'), 'warning'); return; }

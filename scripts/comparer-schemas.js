@@ -84,20 +84,57 @@ function blocOrigine(texte) {
 
 /**
  * Les couples (collection, champ) que `refLabel` reçoit réellement, relevés
- * dans les deux fichiers du portail restés en JavaScript.
+ * **dans tout le portail** — le JavaScript qui reste, et les modules typés.
  *
- * Mesuré plutôt que décidé : cinq couples, et chaque enregistrement du jeu
- * d'essai porte le champ demandé. C'est ce qui rend la divergence décrite en
- * fin de fichier **inatteignable** aujourd'hui.
+ * Mesuré plutôt que décidé : si un sixième couple paraît un jour, il entre ici
+ * de lui-même, et le relevé suit le code au lieu de vieillir avec lui.
+ *
+ * ── Deux erreurs corrigées le 13 octobre 2026, et la seconde était la mienne ──
+ *
+ * Ce commentaire annonçait « cinq couples ». Il y en avait **deux** : le motif
+ * n'a jamais relevé que `domaines.code` et `secteurs.code`, à ce commit comme à
+ * tous ceux d'après — vérifié sur les cinq. Le chiffre était faux le jour où je
+ * l'ai écrit.
+ *
+ * Et le relevé ne lisait que les deux fichiers restés en JavaScript. À mesure que
+ * 5.d les vide, les appels de `refLabel` **partent dans les modules typés** : trois
+ * y sont déjà (`organisation.sigle`, `sous_activites.code`,
+ * `specialites_inspecteur.libelle`). Le garde-fou ci-dessous ne mordait pas pour
+ * autant — il ne refuse que si le relevé est **vide** —, et la portée de cette
+ * preuve se serait donc rétrécie à chaque étape sans qu'une ligne le dise. Le jour
+ * où `app.js` partira, elle serait tombée à zéro d'un coup, et le refus aurait
+ * nommé un motif qui n'a rien cessé de faire.
  */
 function pairesDemandees() {
   const motif = /refLabel\('([a-z_]+)', *[^,]+, *'([a-z_]+)'\)/g;
   const vues = new Set();
-  for (const rel of ['public/js/app.js', 'public/js/app-config.js']) {
-    const texte = fs.readFileSync(path.join(RACINE, rel), 'utf8');
-    for (const m of texte.matchAll(motif)) vues.add(`${m[1]}.${m[2]}`);
+  const fichiers = [
+    path.join(RACINE, 'public', 'js', 'app.js'),
+    path.join(RACINE, 'public', 'js', 'app-config.js'),
+    ...fs.readdirSync(path.join(RACINE, 'frontend', 'portail'))
+      .filter((n) => n.endsWith('.ts'))
+      .map((n) => path.join(RACINE, 'frontend', 'portail', n)),
+  ].filter((f) => fs.existsSync(f));
+  for (const f of fichiers) {
+    for (const m of fs.readFileSync(f, 'utf8').matchAll(motif)) vues.add(`${m[1]}.${m[2]}`);
   }
   if (!vues.size) throw new Error('aucun appel de refLabel relevé — le motif a cessé de mordre');
+  // ── Le plancher, écrit pour que la portée ne puisse plus rétrécir en silence ──
+  //
+  // Un relevé vide se refuse déjà ; un relevé **amputé** passait. C'est ce qui est
+  // arrivé : cinq couples au moment de la mesure, deux au commit suivant, et le
+  // chiffre de 2 820 est resté dans deux documents pendant six étapes.
+  //
+  // Les cinq sont donc gelés ici. Un couple qui disparaît du code sans que cette
+  // liste change est un refus — et s'il disparaît pour de bon, c'est cette ligne
+  // qu'il faut modifier, ce qui se lit dans un diff.
+  const PLANCHER = ['domaines.code', 'secteurs.code', 'organisation.sigle',
+    'sous_activites.code', 'specialites_inspecteur.libelle'];
+  const manquants = PLANCHER.filter((c) => !vues.has(c));
+  if (manquants.length) {
+    throw new Error(`refus : ${manquants.length} couple(s) de refLabel ne sont plus relevés — ${manquants.join(', ')}.`
+      + ' La portée de cette preuve rétrécirait sans qu’un écart le dise.');
+  }
   return [...vues].map((s) => s.split('.'));
 }
 

@@ -1,9 +1,19 @@
-/* OASIS — Portail
- * Suite de app.js : la configuration : référentiels, organisation, personnel, domaines, AAC, organigramme, sécurité, modules, système.
+/* OASIS — Portail : ce qu'il reste de l'écran de configuration.
  *
- * Découpé pour que chaque fichier tienne sous les 2000 lignes. Les morceaux
- * se chargent l'un après l'autre (voir index.html) et partagent la même
- * portée : l'ordre d'exécution est celui d'avant le découpage.
+ * Le fichier faisait 1 443 lignes et portait les onze sous-vues. Six étapes
+ * d'ADR-003 suite 5.d les ont converties en modules typés, chacune avec sa
+ * preuve mécanique (`scripts/comparer-*.js`) : il n'en reste que le **cycle de
+ * rendu** — la barre latérale, la navigation entre sous-vues, et l'aiguillage
+ * qui appelle les modules.
+ *
+ * C'est la dernière pièce, et elle décide de la forme de la suite : l'écran
+ * devient un composant React, ou reste un assembleur de chaînes. Le jour où
+ * elle part, ce fichier disparaît et la page cesse de charger onze paquets.
+ *
+ * Il ne porte **plus aucun état** : `AAC_CFG`, `CFG_OPEN`, `EXIG_OPEN` et
+ * `ORG_VIEW` sont partis avec leurs écrans. `CFG_SUB`, `CFG_COLLAPSED`, `REFS`
+ * et `CURRENT_CFG` sont sur `window` (`frontend/portail/etat.ts`), et les
+ * affectations nues ci-dessous les atteignent.
  */
 
 // ══════════ Configuration (layout PESSCO) ══════════
@@ -41,6 +51,13 @@ const CFG_TABS = [
 // L'extraction est éprouvée par `scripts/comparer-schemas.js` : 2 820
 // comparaisons sur les données réelles, et trois divergences assumées —
 // dont la correction d'un tri qui modifiait `REFS` sur place.
+//
+// Ce chiffre a été faux de 5.d.0 à 5.d.5 : le comparateur **relève** dans le code
+// les couples que `refLabel` reçoit, et les cinq appels étaient dans le bloc
+// extrait — trois sont partis avec lui dans `schemas.ts`. Mesuré avant le
+// retrait, invalidé par le retrait, dans le même commit. Le relevé lit désormais
+// aussi les modules typés, et les cinq couples y sont gelés : qu'un seul cesse
+// d'être relevé est un refus.
 
 // ── Le CRUD générique des référentiels : parti dans un module typé (5.d.1) ──
 //
@@ -129,278 +146,42 @@ const CFG_TABS = [
 // thème orphelin, fiche non-inspecteur) et le vide.
 
 
-// ── Accordéons hiérarchiques (Domaines / Secteurs / Sous-activités / Thèmes) ──
-
-
-// ── Sections de configuration ──
-
-let AAC_CFG = null;
-function cfgSectionAAC(cfg) {
-  AAC_CFG = cfg;
-  const aac = cfg.aac || {};
-  const val = (v) => (v ? esc(v) : '<span style="color:var(--text-muted);">—</span>');
-  const langLabel = { fr: 'Français', en: 'English', pt: 'Português' }[cfg.instance.defaultLang] || cfg.instance.defaultLang;
-  const logoBox = aac.logo
-    ? `<img src="${aac.logo}" alt="Logo AAC" class="aac-logo-preview">`
-    : `<div class="aac-logo-empty">${icon('landmark', 30)}<span>${t('aucun_logo')}</span></div>`;
-  const rows = [
-    ['Nom complet', val(aac.nom)],
-    ['Sigle', val(aac.sigle)],
-    ['Bigramme', val(aac.bigramme)],
-    ['État', val(aac.etat)],
-    ['Ville', val(aac.ville)],
-    ['Adresse 1', val(aac.adresse1)],
-    ['Adresse 2', val(aac.adresse2)],
-    ['Email administrateur', val(aac.emailAdmin)],
-    ['Langue par défaut', esc(langLabel)],
-  ]
-    .map((r) => `<tr><td class="aac-info-lbl">${tr(r[0])}</td><td class="aac-info-val">${r[1]}</td></tr>`)
-    .join('');
-
-  return `
-  <div class="portal-page-header"><h3>${tr("Détails sur l'Administration")}</h3>
-    <div class="portal-page-actions"><button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openAacEdit()">${icon('edit', 14)} Modifier</button></div>
-  </div>
-  <div class="aac-presentation aac-presentation-compact">
-    <div class="aac-logo-col">
-      <div class="aac-logo-frame">${logoBox}</div>
-      <div class="aac-logo-btns">
-        <label class="shell-btn shell-btn-outline aac-logo-iconbtn" title="${aac.logo ? 'Changer le logo' : 'Charger un logo'}">${cameraIcon()}
-          <input type="file" accept="image/*" style="display:none;" onchange="uploadAacLogo(this)">
-        </label>
-        ${aac.logo ? `<button class="shell-btn shell-btn-danger aac-logo-iconbtn" onclick="removeAacLogo()" title="${t('supprimer_logo')}">${icon('trash', 15)}</button>` : ''}
-      </div>
-    </div>
-    <div class="aac-detail-col">
-      <h2 class="aac-title">${aac.nom ? esc(aac.nom) : "Administration de l'Aviation Civile"}</h2>
-      <div class="aac-badges">
-        ${aac.sigle ? `<span class="shell-badge badge-neutral aac-badge-sigle">${esc(aac.sigle)}</span>` : ''}
-        ${aac.bigramme ? `<span class="shell-badge badge-neutral">${esc(aac.bigramme)}</span>` : ''}
-      </div>
-      <div class="shell-table-container" style="margin-top:1rem;">
-        <table class="shell-table aac-info-table"><tbody>${rows}</tbody></table>
-      </div>
-    </div>
-  </div>`;
-}
-
-function cameraIcon() {
-  return '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
-}
-
-window.openAacEdit = function () {
-  const cfg = AAC_CFG || {};
-  const aac = (cfg.aac) || {};
-  const input = (id, label, value) => `
-    <div class="shell-form-group"><label>${label}</label><input class="shell-input" id="${id}" value="${esc(value || '')}"></div>`;
-  document.getElementById('cfgModalRoot').innerHTML = `
-  <div class="shell-modal-overlay">
-    <div class="shell-modal" style="max-width:600px;">
-      <div class="shell-modal-header"><h3>${esc(t('cfg_aac'))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-      <div class="shell-modal-body">
-        <div class="shell-form-row">
-          ${input('aacNom', "Nom de l'administration", aac.nom)}
-          ${input('aacSigle', 'Sigle', aac.sigle)}
-        </div>
-        <div class="shell-form-row">
-          ${input('aacEtat', 'État', aac.etat)}
-          ${input('aacBigramme', 'Bigramme', aac.bigramme)}
-        </div>
-        <div class="shell-form-row">
-          ${input('aacVille', 'Ville', aac.ville)}
-          ${input('aacAdresse1', 'Adresse 1', aac.adresse1)}
-        </div>
-        <div class="shell-form-row">
-          ${input('aacAdresse2', 'Adresse 2', aac.adresse2)}
-          ${input('aacEmail', 'Email administrateur', aac.emailAdmin)}
-        </div>
-        <div class="shell-form-group"><label>${t('langue_defaut')}</label>
-          <select class="shell-input" id="aacLang">
-            <option value="fr" ${cfg.instance.defaultLang === 'fr' ? 'selected' : ''}>${t('langue_francais')}</option>
-            <option value="en" ${cfg.instance.defaultLang === 'en' ? 'selected' : ''}>English</option>
-            <option value="pt" ${cfg.instance.defaultLang === 'pt' ? 'selected' : ''}>${t('langue_portugais')}</option>
-          </select>
-        </div>
-      </div>
-      <div class="shell-modal-footer">
-        <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="saveAAC()">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
-      </div>
-    </div>
-  </div>`;
-};
-
-async function saveAacLogo(dataUrl) {
-  const res = await api('/api/config', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ aac: { logo: dataUrl } }),
-  });
-  if (res.ok) {
-    showToast(dataUrl ? t('logo_enregistre') : t('logo_supprime'), 'success');
-    await loadMe();
-    renderConfig();
-  } else showToast(t('erreur_fichier_volumineux'), 'error', 4000);
-}
-
-window.uploadAacLogo = function (inputEl) {
-  const file = inputEl.files && inputEl.files[0];
-  if (!file) return;
-  if (file.size > 2 * 1024 * 1024) return showToast(t('image_trop_lourde'), 'error');
-  const reader = new FileReader();
-  reader.onload = () => saveAacLogo(reader.result);
-  reader.readAsDataURL(file);
-};
-
-window.removeAacLogo = async function () {
-  if (!await oasisConfirmer(t('confirmer_suppr_logo'))) return;
-  saveAacLogo('');
-};
-
-window.saveAAC = async function () {
-  const gv = (id) => document.getElementById(id).value.trim();
-  const res = await api('/api/config', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      aac: {
-        nom: gv('aacNom'), sigle: gv('aacSigle'), etat: gv('aacEtat'), bigramme: gv('aacBigramme'),
-        ville: gv('aacVille'), adresse1: gv('aacAdresse1'), adresse2: gv('aacAdresse2'),
-        emailAdmin: gv('aacEmail'),
-      },
-      instance: { etat: gv('aacEtat'), codeEtat: gv('aacBigramme'), defaultLang: document.getElementById('aacLang').value },
-    }),
-  });
-  if (res.ok) {
-    closeRefModal();
-    showToast(t('cfg_saved'), 'success');
-    await loadMe();
-    renderConfig();
-  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
-
-
-function cfgSectionSecurite(cfg) {
-  return `
-  <div class="shell-card">
-    <div class="portal-page-header"><h3>${esc(t('cfg_security'))} <span class="shell-badge badge-neutral">TDR §F.3</span></h3></div>
-    <div class="shell-form-row">
-      <div class="shell-form-group"><label>${t('longueur_min_mdp')}</label><input class="shell-input" type="number" id="secMinLen" value="${cfg.security.passwordMinLength}"></div>
-      <div class="shell-form-group"><label>${t('validite_mdp')}</label><input class="shell-input" type="number" id="secMaxAge" value="${cfg.security.passwordMaxAgeDays}"></div>
-    </div>
-    <div class="shell-form-row">
-      <div class="shell-form-group"><label>Tentatives avant blocage</label><input class="shell-input" type="number" id="secMaxFail" value="${cfg.security.maxFailedAttempts}"></div>
-      <div class="shell-form-group"><label>${t('deconnexion_inactivite')}</label><input class="shell-input" type="number" id="secTimeout" value="${cfg.security.sessionTimeoutMinutes}"></div>
-    </div>
-    <div class="cfg-module-row">
-      <strong>${t('session_unique')}</strong>
-      <label class="cfg-toggle"><input type="checkbox" id="secSingle" ${cfg.security.singleSession ? 'checked' : ''}><span class="track"></span></label>
-    </div>
-    <div class="cfg-module-row">
-      <strong>${t('mdp_premiere_connexion')}</strong>
-      <label class="cfg-toggle"><input type="checkbox" id="secForce" ${cfg.security.forceChangeOnFirstLogin ? 'checked' : ''}><span class="track"></span></label>
-    </div>
-    <div class="cfg-module-row">
-      <div>
-        <strong>Authentification multifacteur (MFA)</strong>
-        <div style="font-size:.72rem;color:var(--text-muted);">
-          ${t('code_usage_unique')}
-        </div>
-      </div>
-      <label class="cfg-toggle"><input type="checkbox" id="secMfa" ${cfg.security.mfaEnabled ? 'checked' : ''}><span class="track"></span></label>
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
-      <button class="shell-btn shell-btn-primary" onclick="saveSecurite()">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
-    </div>
-  </div>`;
-}
-
-window.saveSecurite = async function () {
-  const res = await api('/api/config', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      security: {
-        passwordMinLength: document.getElementById('secMinLen').value,
-        passwordMaxAgeDays: document.getElementById('secMaxAge').value,
-        maxFailedAttempts: document.getElementById('secMaxFail').value,
-        sessionTimeoutMinutes: document.getElementById('secTimeout').value,
-        singleSession: document.getElementById('secSingle').checked,
-        forceChangeOnFirstLogin: document.getElementById('secForce').checked,
-        mfaEnabled: document.getElementById('secMfa').checked,
-      },
-    }),
-  });
-  if (res.ok) showToast(t('cfg_saved'), 'success');
-  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
-
-function cfgSectionModules(modules) {
-  const rows = modules
-    .slice()
-    .sort((a, b) => a.priority - b.priority)
-    .map(
-      (m) => `
-    <div class="cfg-module-row">
-      <div style="display:flex;align-items:center;gap:.6rem;">
-        <span style="color:${PRIO_COLORS[m.priority]};display:flex;">${moduleIcon(m.code, 18)}</span>
-        <strong>${esc(m.name[CURRENT_LANG] || m.name.fr)}</strong>
-        <span class="shell-badge badge-neutral">${esc(m.tdr)} · P${m.priority}</span>
-      </div>
-      <label class="cfg-toggle">
-        <input type="checkbox" data-module-toggle="${esc(m.code)}" ${m.enabled ? 'checked' : ''}>
-        <span class="track"></span>
-      </label>
-    </div>`
-    )
-    .join('');
-  return `
-  <div class="shell-card">
-    <div class="portal-page-header"><h3>${esc(t('cfg_modules'))}</h3></div>
-    ${rows}
-  </div>`;
-}
-
-function cfgSectionSysteme(cfg) {
-  return `
-  <div class="shell-card" style="margin-bottom:1rem;">
-    <div class="portal-page-header"><h3>${esc(t('cfg_db'))}</h3></div>
-    <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.75rem;">${esc(cfg.database.note)}</p>
-    <div class="shell-form-row">
-      <div class="shell-form-group"><label>Pilote actuel</label><input class="shell-input" value="${esc(cfg.database.driver)}" disabled></div>
-      <div class="shell-form-group"><label>PostgreSQL cible</label><input class="shell-input" value="${esc(cfg.database.postgres.host)}:${cfg.database.postgres.port}/${esc(cfg.database.postgres.database)}" disabled></div>
-    </div>
-  </div>
-  <div class="shell-card">
-    <div class="portal-page-header"><h3>${esc(t('cfg_replication'))}</h3></div>
-    <div class="cfg-module-row">
-      <strong>${t('replication_activee')}</strong>
-      <label class="cfg-toggle"><input type="checkbox" id="repEnabled" ${cfg.replication.enabled ? 'checked' : ''}><span class="track"></span></label>
-    </div>
-    <div class="shell-form-group" style="margin-top:.75rem;">
-      <label>${t('url_serveur_central')}</label>
-      <input class="shell-input" id="repUrl" value="${esc(cfg.replication.centralUrl)}">
-    </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
-      <button class="shell-btn shell-btn-primary" onclick="saveSysteme()">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
-    </div>
-  </div>`;
-}
-
-window.saveSysteme = async function () {
-  const res = await api('/api/config', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      replication: {
-        enabled: document.getElementById('repEnabled').checked,
-        centralUrl: document.getElementById('repUrl').value.trim(),
-      },
-    }),
-  });
-  if (res.ok) showToast(t('cfg_saved'), 'success');
-  else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
+// ── Les paramètres de l'instance : partis dans un module typé (5.d.5) ──
+//
+// `cfgSectionAAC`, `openAacEdit`, les deux gestes du logo, `saveAAC`,
+// `cfgSectionSecurite`, `saveSecurite`, `cfgSectionModules`, `cfgSectionSysteme`
+// et `saveSysteme` vivent désormais dans `frontend/portail/parametres.ts` ; un
+// sas les pose sur `window` avant le chargement de ce fichier
+// (`public/app/parametres.js`, voir index.html).
+//
+// `AAC_CFG` part avec eux, et **ne doit pas être redéclaré ici** : la fenêtre
+// d'édition lit ce que le rendu de l'écran y a posé, et une copie lexicale la
+// ferait ouvrir vide. C'était le dernier état de ce fichier — il ne lui en reste
+// aucun.
+//
+// `PRIO_COLORS` a dû quitter `app.js` pour `frontend/portail/icones.ts` : c'était
+// un `const` du premier niveau, donc une globale lexicale, et l'écran « Modules »
+// la lit. C'est la cinquième fois que cet obstacle décide d'un déplacement — la
+// dépendance, non l'interface, bloque la conversion.
+//
+// `saveAacLogo` est devenue **privée** : c'est le seul nom que ce bloc retire de
+// la surface, ses deux appelants étant partis avec elle. `cameraIcon` reste
+// publié, bien que personne ne le lise hors du module : une `function` du
+// premier niveau était sur `window`, et une conversion n'est pas le moment de
+// décider d'en retirer un nom.
+//
+// Éprouvé par `scripts/comparer-parametres.js` : 142 comparaisons en vingt-trois
+// régimes — les trois langues et une quatrième absente du catalogue, une
+// Administration vide puis hostile aux cinq caractères, les quatre combinaisons
+// d'interrupteurs, les modules renversés, une priorité hors de la palette, et le
+// **corps des trois enregistrements** tel qu'il partirait au serveur. Dont deux
+// gardes que le balisage seul ne pouvait pas porter : la liste des modules rendue
+// après l'appel — sans elle, retirer le `.slice()` du tri serait resté vert — et
+// les cinq teintes de la palette, confrontées à l'`app.js` d'origine.
+//
+// Les deux gestes du logo et la confirmation de son retrait restent couverts par
+// la suite « parcours » (5.c.10), les sept réglages de sécurité et les six
+// interrupteurs par 5.c.13.
 
 window.cfgNavigate = function (sub) {
   CFG_SUB = sub;

@@ -117,3 +117,21 @@ export function icon(nom: string, taille?: number): string {
 /** L'icône d'un module, par son code. À défaut, la grille. */
 export const moduleIcon = (code: string, taille?: number): string =>
   icon(MODULE_ICONS[code] ?? SECOURS, taille);
+
+// ── La palette des priorités (ADR-003, 5.d.5) ──
+//
+// Cinq teintes, une par niveau de priorité de la feuille de route. Elle était
+// `const PRIO_COLORS` au premier niveau d'`app.js` — donc une globale
+// **lexicale**, qu'aucun module ne peut atteindre. C'est le même obstacle que
+// `LEVEL_COLORS` en 5.d.3 et `CURRENT_CFG` en 5.d.1, et la cinquième fois qu'il
+// décide d'un déplacement.
+//
+// Elle n'est pas dans l'un des deux écrans qui la lisent — la liste des modules
+// du portail (`app.js`) et l'écran « Modules » de la configuration
+// (`parametres.ts`) —, et c'est **parce qu'ils sont deux** : une palette rangée
+// dans l'un des deux serait lue par l'autre à travers `window`, ce qui est
+// précisément la dépendance qu'on retire. Elle rejoint donc les icônes, dont
+// elle partage la nature : de la présentation, sans état.
+export const PRIO_COLORS: Readonly<Record<number, string>> = {
+  1: '#2563eb', 2: '#0891b2', 3: '#f59e0b', 4: '#10b981', 5: '#8b5cf6',
+};

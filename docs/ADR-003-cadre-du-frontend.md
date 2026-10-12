@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 2 451 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas extraits (5.d.0) |
+           | portail (`public/js`) | 2 278 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0) et CRUD des référentiels (5.d.1) convertis |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2374,6 +2374,96 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                La pièce suivante par ordre d'utilité est `refTable` + `openRefModal` + `saveRef`
                + `deleteRef` — le CRUD générique, qui ne dépend plus que de la couche extraite
                aujourd'hui, et dont la ronde d'écriture est couverte depuis 5.c.7.
+
+           5.d.1 [x] **Le CRUD générique des référentiels, converti** — fait le 12 octobre
+               2026. `app-config.js` passe de **1 272 à 1 099 lignes** ; 993 contrôles, code
+               de sortie 0.
+
+               Huit fonctions : `refTable`, `openRefModal`, `closeRefModal`, `saveRef`,
+               `deleteRef`, `orgTypeChanged`, `toggleInspectorFields`, `orgTopLevelType`. Ce
+               sont les gestes les mieux gardés du portail — la ronde complète (créer,
+               modifier, supprimer, confirmation pressée) est couverte depuis 5.c.7 —, et ils
+               ne dépendaient plus que de la couche extraite en 5.d.0.
+
+               ── `CURRENT_CFG` a dû monter sur `window`, et c'est la leçon de 5.b qui revient ──
+
+               `openRefModal` y prend le sigle et le nom de l'Administration, pour les
+               reprendre d'office sur l'entité de niveau 1 de l'organigramme. C'était un
+               `let` du premier niveau : une globale **lexicale**, invisible à un module.
+
+               *La dépendance, non l'interface, bloque la conversion.* C'est la même phrase
+               qu'au 7 octobre, et c'est la troisième fois qu'elle décide de l'ordre des
+               travaux.
+
+               ── La preuve, et ce qu'elle ne couvre pas ──
+
+               Deux des huit fonctions sont **pures** : elles rendent une chaîne de balisage.
+               Ce sont aussi les plus volumineuses, et celles où une espace de différence se
+               verrait à l'écran. `scripts/comparer-referentiels.js` les compare donc
+               **caractère pour caractère** : **640 comparaisons**, les onze référentiels, la
+               fenêtre de création, la fenêtre d'édition de chaque enregistrement réel, la
+               fenêtre préréglée et un préréglage illisible — en quatre régimes (régional,
+               national, configuration non lue, collections renversées).
+
+               Les cinq autres touchent au document ou à l'API. Elles sont couvertes par la
+               suite « parcours ». **Dire cette répartition importe** : une preuve qui
+               laisserait croire qu'elle couvre les huit serait pire qu'aucune preuve.
+
+               Et la couverture du navigateur a été vérifiée, non supposée : en ôtant un champ
+               du corps de la requête, la ronde de la suite « parcours » rend
+               `{"creee":true,"ordre":false}`. **Le navigateur exécute bien le module, et non
+               une copie restée en place.**
+
+               ── Deux fois où mon montage mesurait mon montage ──
+
+               **1. Huit fonctions extraites, une seule prise.** La première écriture du
+               comparateur découpait l'original entre deux bornes de texte, de `refTable` au
+               bandeau des exigences. Or les huit fonctions **n'étaient pas contiguës** — les
+               exigences et l'organigramme s'intercalaient. Le script est tombé sur
+               « o.orgTopLevelType is not a function ». *Il valait mieux qu'il tombe là qu'il
+               ne compare une fonction en croyant en comparer huit* ; l'extraction se fait
+               désormais par **nom**, et refuse si un nom manque.
+
+               **2. 629 écarts sur une balise `<svg>`.** Je donnais une icône factice à
+               l'ancien côté et laissais le nouveau prendre celle du module construit. Les
+               deux chargent maintenant `public/app/icons.js` — la même source que celle
+               qu'embarque le converti.
+
+               Quatre contre-essais, quatre rouges : une espace de plus dans la table (104
+               écarts), le garde-fou du cycle de l'organigramme ôté (20), `allowEmpty` oublié
+               (228), l'ordre des cas de la fenêtre changé (32).
+
+               ── Une divergence nommée : un refus qui dit laquelle ──
+
+               `REF_SCHEMAS[coll]` peut être absent, et le compilateur l'a dit. L'original
+               lisait `schema.title` sur `undefined` et rendait « Cannot read properties of
+               undefined » — un message qui ne dit pas **quelle** collection manque, sur un
+               écran resté vide. Le module refuse en la nommant. Inatteignable aujourd'hui
+               (les appels passent des littéraux), mais puisqu'il faut traiter le cas, autant
+               qu'il se lise.
+
+               ── Un coût qui croît, mesuré avant qu'il surprenne ──
+
+               Chaque sas est **autonome** : esbuild y embarque le socle, les 268 libellés en
+               trois langues et les icônes. Le paquet de ce fichier pèse **80 Ko**, comme ses
+               deux aînés (86 et 82 Ko). La page du portail sert désormais **503 Ko** de
+               JavaScript, dont une bonne part en trois ou quatre exemplaires.
+
+               Ce n'est pas un défaut de cette séance, c'est le compromis du montage actuel —
+               et il grossira à chaque conversion. Il se réglera d'un seul coup à la fin de
+               5.d, quand les deux derniers fichiers en JavaScript partiront et que la page
+               pourra charger **un** paquet au lieu de sept. *Mesuré maintenant pour que ce
+               soit une décision, non une surprise.*
+
+               ── Ce qui reste de 5.d ──
+
+               `app-config.js` : **1 099 lignes** — l'organigramme (~250), les exigences
+               (~130), le personnel, la configuration de l'instance, et `renderConfig` qui
+               orchestre les onze sous-vues. `app.js` : 1 179.
+
+               La pièce suivante est **les exigences** : six gestes, tous couverts depuis
+               5.c.12, et un bloc nettement séparé. L'organigramme vient après — il est plus
+               gros, et sa ronde d'intérim (5.c.11) le garde bien.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

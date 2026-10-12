@@ -89,6 +89,21 @@ declare global {
     CFG_SUB: string;
     /** Les référentiels chargés, par collection. Était `let REFS = {}`. */
     REFS: Record<string, unknown[]>;
+    /**
+     * La configuration de l'instance, telle que le dernier rendu de l'écran de
+     * configuration l'a lue. `null` avant ce rendu.
+     *
+     * **Était `let CURRENT_CFG = null` dans `app-config.js`** — donc une globale
+     * lexicale, invisible à un module. Elle est montée ici le 12 octobre 2026
+     * parce que `openRefModal`, converti en 5.d.1, en a besoin : il y prend le
+     * sigle et le nom de l'Administration pour les reprendre d'office sur
+     * l'entité de niveau 1 de l'organigramme.
+     *
+     * C'est le même mouvement qu'en 5.b, et pour la même raison : **la
+     * dépendance, non l'interface, bloque la conversion**. `renderConfig`
+     * continue de l'écrire par une affectation nue.
+     */
+    CURRENT_CFG: { aac?: { sigle?: string; nom?: string }; [autre: string]: unknown } | null;
     /** La barre de configuration est-elle repliée ? Était `let CFG_COLLAPSED`. */
     CFG_COLLAPSED: boolean;
     /** Le dernier identifiant de notification vu. Était `let NOTIF_LAST_SEEN`. */
@@ -144,6 +159,7 @@ export function initialiser(): void {
   window.CURRENT_VIEW = 'home';
   window.CFG_SUB = 'organisation';
   window.REFS = {};
+  window.CURRENT_CFG = null;
   window.CFG_COLLAPSED = false;
   let vu = 0;
   try { vu = parseInt(localStorage.getItem(CLE_NOTIF) ?? '0', 10) || 0; } catch { vu = 0; }

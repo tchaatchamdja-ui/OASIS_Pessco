@@ -42,35 +42,28 @@ const CFG_TABS = [
 // comparaisons sur les données réelles, et trois divergences assumées —
 // dont la correction d'un tri qui modifiait `REFS` sur place.
 
-function refTable(coll, premier) {
-  const schema = REF_SCHEMAS[coll];
-  const rows = (REFS[coll] || [])
-    .map(
-      (r) => `
-    <tr>
-      ${champsVisibles(schema).map((f) => `<td>${fieldValue(f, r)}</td>`).join('')}
-      <td class="actions-cell">
-        <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
-        <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
-      </td>
-    </tr>`
-    )
-    .join('');
-  return `
-  <div class="portal-page-header cfg-entete-empile ${premier ? 'cfg-entete-premier' : 'cfg-entete-suivant'}">
-    <h3>${esc(tr(schema.title))}</h3>
-    <div class="portal-page-actions">
-      ${coll === 'prestataires' ? searchInputHtml('Rechercher un prestataire...') + exportBar('prestataires', tr('Prestataires de services')) : ''}
-      <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('${coll}')">${icon('plus', 13)} ${esc(t('add'))}</button>
-    </div>
-  </div>
-  <div class="shell-table-container">
-    <table class="shell-table shell-table-compact">
-      <thead><tr>${champsVisibles(schema).map((f) => `<th>${esc(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="${champsVisibles(schema).length + 1}" style="color:var(--text-muted);">${t('aucun_element')}</td></tr>`}</tbody>
-    </table>
-  </div>`;
-}
+// ── Le CRUD générique des référentiels : parti dans un module typé (5.d.1) ──
+//
+// `refTable`, `openRefModal`, `closeRefModal`, `saveRef`, `deleteRef`,
+// `orgTypeChanged`, `toggleInspectorFields` et `orgTopLevelType` vivent
+// désormais dans `frontend/portail/referentiels.ts` ; un sas les pose sur
+// `window` avant le chargement de ce fichier (`public/app/referentiels.js`).
+//
+// `CURRENT_CFG` est monté sur `window` avec eux (voir `frontend/portail/etat.ts`) :
+// c'était un `let` du premier niveau, donc une globale lexicale qu'aucun module ne
+// peut atteindre, et `openRefModal` y lit le sigle et le nom de l'Administration.
+// Ce fichier continue de l'écrire par une affectation nue, et **ne doit pas le
+// redéclarer**.
+//
+// Trois dépendances restent dans l'autre sens : le module lit `tr`,
+// `searchInputHtml` et `exportBar` sur `window`, parce que leurs tables et leur
+// état vivent encore dans `app.js`.
+//
+// L'extraction est éprouvée par `scripts/comparer-referentiels.js` : 640
+// comparaisons de balisage, caractère pour caractère, sur les données réelles et
+// en quatre régimes. Les cinq gestes qui touchent au document ou à l'API sont
+// couverts par la ronde complète de la suite « parcours » (5.c.7).
+
 
 // Exigences groupées par règlement (bandeaux rétractables ; date d'adoption à droite)
 const EXIG_OPEN = new Set(); // vide = tous les bandeaux fermés par défaut
@@ -325,172 +318,11 @@ function cfgSectionPersonnel() {
   </div>`;
 }
 
-window.openRefModal = function (coll, id, defaultsJson) {
-  const schema = REF_SCHEMAS[coll];
-  let record = {};
-  if (id) record = (REFS[coll] || []).find((r) => r.id === id) || {};
-  else if (defaultsJson) {
-    try { record = JSON.parse(defaultsJson); } catch { record = {}; }
-  }
-  const root = document.getElementById('cfgModalRoot');
-  const isOrg = coll === 'organisation';
-  const orgTop = isOrg ? orgTopLevelType() : null;
-  const aacRef = (CURRENT_CFG && CURRENT_CFG.aac) || {};
-  const orgIsTop = isOrg && record.type === orgTop;
-  window.__ORG_AUTO = { top: orgTop, sigle: aacRef.sigle || '', nom: aacRef.nom || '' };
-  const inputs = champsVisibles(schema)
-    .map((f) => {
-      const val = record[f.k] ?? '';
-      const wrapCls = f.inspectorOnly ? 'shell-form-group insp-only' : 'shell-form-group';
-      let onchange = f.k === 'est_inspecteur' ? ' onchange="toggleInspectorFields()"' : '';
-      if (isOrg && f.k === 'type') onchange = ' onchange="orgTypeChanged()"';
-      if (isOrg && (f.k === 'sigle' || f.k === 'libelle')) {
-        const autoVal = f.k === 'sigle' ? (aacRef.sigle || '') : (aacRef.nom || '');
-        const useVal = orgIsTop ? autoVal : val;
-        return `
-        <div class="shell-form-group" style="margin-bottom:.75rem;">
-          <label>${esc(tr(f.l))}</label>
-          <input class="shell-input org-${f.k}-input" type="text" data-field="${f.k}" value="${esc(useVal)}" ${orgIsTop ? 'disabled' : ''}>
-          <span class="org-auto-note" style="font-size:.7rem;color:var(--text-muted);${orgIsTop ? '' : 'display:none;'}">${t('repris_administration')}</span>
-        </div>`;
-      }
-      if (f.type === 'multiselect') {
-        const opts = f.options ? f.options() : [];
-        const vals = Array.isArray(record[f.k]) ? record[f.k].map(String) : [];
-        return `
-        <div class="${wrapCls}" style="margin-bottom:.75rem;">
-          <label>${esc(tr(f.l))}</label>
-          <div class="multi-check">
-            ${opts.length
-              ? opts.map((o) => `<label class="multi-check-item"><input type="checkbox" data-multi="${f.k}" value="${esc(o.v)}" ${vals.includes(String(o.v)) ? 'checked' : ''}> ${esc(o.t)}</label>`).join('')
-              : `<span style="color:var(--text-muted);font-size:.8rem;">${t('aucune_option_config')}</span>`}
-          </div>
-        </div>`;
-      }
-      if (f.type === 'select') {
-        const opts = (f.options ? f.options() : []).filter((o) => !(coll === 'organisation' && f.k === 'parent_id' && o.v === id));
-        return `
-        <div class="${wrapCls}" style="margin-bottom:.75rem;">
-          <label>${esc(tr(f.l))}</label>
-          <select class="shell-input" data-field="${f.k}"${onchange}>
-            ${f.allowEmpty ? `<option value="">—</option>` : ''}
-            ${opts.map((o) => `<option value="${esc(o.v)}" ${String(o.v) === String(val) ? 'selected' : ''}>${esc(o.t)}</option>`).join('')}
-          </select>
-        </div>`;
-      }
-      return `
-      <div class="${wrapCls}" style="margin-bottom:.75rem;">
-        <label>${esc(tr(f.l))}</label>
-        <input class="shell-input" type="${f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}" data-field="${f.k}" value="${esc(val)}">
-      </div>`;
-    })
-    .join('');
 
-  root.innerHTML = `
-  <div class="shell-modal-overlay">
-    <div class="shell-modal" style="max-width:560px;">
-      <div class="shell-modal-header"><h3>${esc(tr(schema.title))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-      <div class="shell-modal-body">${inputs}</div>
-      <div class="shell-modal-footer">
-        <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="saveRef('${coll}','${id || ''}')">${icon('save', 14)} ${esc(t('cfg_save'))}</button>
-      </div>
-    </div>
-  </div>`;
-  if (coll === 'inspecteurs') toggleInspectorFields();
-};
 
-window.toggleInspectorFields = function () {
-  const sel = document.querySelector('#cfgModalRoot [data-field="est_inspecteur"]');
-  const show = sel && sel.value === 'oui';
-  document.querySelectorAll('#cfgModalRoot .insp-only').forEach((el) => {
-    el.style.display = show ? '' : 'none';
-  });
-};
 
-window.closeRefModal = function () {
-  document.getElementById('cfgModalRoot').innerHTML = '';
-};
 
-window.orgTypeChanged = function () {
-  const auto = window.__ORG_AUTO || {};
-  const sel = document.querySelector('#cfgModalRoot [data-field="type"]');
-  const sigleIn = document.querySelector('#cfgModalRoot .org-sigle-input');
-  const libelleIn = document.querySelector('#cfgModalRoot .org-libelle-input');
-  const isTop = sel && sel.value === auto.top;
-  [ [sigleIn, auto.sigle], [libelleIn, auto.nom] ].forEach(([inp, v]) => {
-    if (!inp) return;
-    const note = inp.parentElement.querySelector('.org-auto-note');
-    if (isTop) {
-      inp.value = v || '';
-      inp.disabled = true;
-      if (note) note.style.display = '';
-    } else {
-      inp.disabled = false;
-      if (note) note.style.display = 'none';
-    }
-  });
-};
 
-window.saveRef = async function (coll, id) {
-  const body = {};
-  document.querySelectorAll('#cfgModalRoot [data-field]').forEach((input) => {
-    body[input.dataset.field] = input.type === 'number' ? Number(input.value) : input.value;
-  });
-  // Champs multi-valeurs (domaines, spécialités…)
-  document.querySelectorAll('#cfgModalRoot [data-multi]').forEach((input) => {
-    const k = input.dataset.multi;
-    if (!Array.isArray(body[k])) body[k] = [];
-    if (input.checked) body[k].push(input.value);
-  });
-  // Niveau d'ordre 1 : sigle & libellé repris de « Détails sur l'Administration »
-  if (coll === 'organisation') {
-    const auto = window.__ORG_AUTO || {};
-    if (auto.top && body.type === auto.top) {
-      if (auto.sigle) body.sigle = auto.sigle;
-      if (auto.nom) body.libelle = auto.nom;
-    }
-  }
-  // Registre des titulaires : journalise tout changement de titulaire de poste
-  if (coll === 'organisation' && id && body.titulaire_id !== undefined) {
-    const old = (REFS.organisation || []).find((o) => o.id === id);
-    if (old && body.titulaire_id !== (old.titulaire_id || '')) {
-      const registre = Array.isArray(old.registre) ? old.registre.map((e) => ({ ...e })) : [];
-      const openTit = [...registre].reverse().find((e) => e.role === 'titulaire' && !e.end);
-      if (openTit) openTit.end = new Date().toISOString();
-      if (body.titulaire_id) registre.push({ role: 'titulaire', person_id: body.titulaire_id, start: new Date().toISOString(), end: null });
-      body.registre = registre;
-    }
-  }
-  const res = await api(id ? `/api/referentiels/${coll}/${id}` : `/api/referentiels/${coll}`, {
-    method: id ? 'PUT' : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (res.ok) {
-    closeRefModal();
-    await loadRefs();
-    renderConfig();
-    showToast('OK', 'success');
-  } else {
-    const d = await res.json().catch(() => ({}));
-    showToast(
-      d.error === 'duplicate_code' ? t('code_deja_utilise', body.code || '')
-      : oasisMessageErreur(d, res.status),
-      'error', 5000
-    );
-  }
-};
-
-window.deleteRef = async function (coll, id) {
-  if (!await oasisConfirmer(t('confirm_delete'))) return;
-  const res = await api(`/api/referentiels/${coll}/${id}`, { method: 'DELETE' });
-  if (res.ok) {
-    await loadRefs();
-    renderConfig();
-    showToast('OK', 'success');
-  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-};
 
 // ── Accordéons hiérarchiques (Domaines / Secteurs / Sous-activités / Thèmes) ──
 const CFG_OPEN = new Set();
@@ -631,7 +463,6 @@ function cfgSectionDomaines() {
 // ── Sections de configuration ──
 
 let AAC_CFG = null;
-let CURRENT_CFG = null;
 function cfgSectionAAC(cfg) {
   AAC_CFG = cfg;
   const aac = cfg.aac || {};
@@ -1190,10 +1021,6 @@ window.toggleCfgSidebar = function () {
   renderConfig();
 };
 
-function orgTopLevelType() {
-  const levels = (REFS.organisation_levels || []).slice().sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
-  return levels.length ? levels[0].type : null;
-}
 
 // Le niveau d'ordre 1 (l'Administration) reprend sigle & libellé depuis « Détails sur l'Administration »
 function normalizeOrgTopLevel(cfg) {

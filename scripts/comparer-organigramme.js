@@ -259,8 +259,29 @@ function principal() {
   // Une entité d'un type inconnu des niveaux : la couleur de repli.
   org[4] = { ...org[4], type: 'Type inconnu <b>&' };
   // Un rattachement vers une personne absente du répertoire : la pastille muette.
+  //
+  // Et un rattachement vers une personne qui **existe**, sans quoi les pastilles
+  // ne paraîtraient jamais : les deux rattachements du jeu de travail désignent
+  // des `person_id` **absents** du répertoire du personnel, et
+  // `orgAssignedChips` rend donc la chaîne vide sur les vraies données. De même,
+  // `circuitHtml` ne prenait que sa branche `null` — les cinq comparaisons de la
+  // chaîne de validation portaient toutes sur le même cas.
+  //
+  // Trouvé le 12 octobre par une garde de `comparer-taxinomie.js`, qui cherchait
+  // autre chose. Les pastilles et la chaîne sont par ailleurs couvertes par la
+  // ronde du glisser-déposer de la suite « parcours » (5.c.11), qui crée un vrai
+  // rattachement — mais une preuve de balisage qui ne rend jamais la pastille ne
+  // prouve rien d'elle.
+  const quelquun = (refs.inspecteurs || [])[0];
+  const autre = (refs.inspecteurs || [])[1];
+  if (!quelquun) throw new Error('refus : pas de personnel — le régime ne prouverait rien');
+  const feuille = (refs.organisation || []).find((o) => o.parent_id);
   bricole.organisation_assignments = [...bricole.organisation_assignments,
-    { id: 'za', org_id: org[0].id, person_id: 'personne-absente', person_type: 'inspecteur' }];
+    { id: 'za', org_id: org[0].id, person_id: 'personne-absente', person_type: 'inspecteur' },
+    { id: 'zb', org_id: org[0].id, person_id: quelquun.id, person_type: 'inspecteur' },
+    ...(feuille && autre
+      ? [{ id: 'zc', org_id: feuille.id, person_id: autre.id, person_type: 'inspecteur' }]
+      : [])];
   comparerRegime('bricolé, liste', bricole, 'fr', 'list', tab);
   comparerRegime('bricolé, hiérarchie', bricole, 'fr', 'tree', tab);
 

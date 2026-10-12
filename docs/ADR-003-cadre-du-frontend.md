@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 1 854 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2) et organigramme (5.d.3) convertis |
+           | portail (`public/js`) | 1 660 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2) et organigramme (5.d.3), personnel et taxinomie (5.d.4) convertis |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2612,6 +2612,93 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                décidera si l'écran devient un composant React.
 
                La page sert **625 Ko**, contre 563 au commit précédent.
+
+           5.d.4 [x] **Le personnel et la taxinomie — et une garde qui a trouvé mieux que ce
+               que je lui demandais** — fait le 12 octobre 2026. `app-config.js` passe de
+               **672 à 476 lignes** ; 993 contrôles, code de sortie 0.
+
+               ── Les deux écrans partent ensemble, et ce n'est pas un choix ──
+
+               `CFG_OPEN` les lie : l'ensemble des éléments dépliés sert aux fiches du
+               personnel (clés `pers-<id>`) **et** aux accordéons de la taxinomie (`dom-`,
+               `sect-`, `sa-`). Les séparer en deux modules donnerait **deux ensembles**, et
+               déplier un domaine n'agirait plus sur ce que l'écran rend — sans erreur et sans
+               trace.
+
+               C'était le dernier bloc d'`app-config.js` à porter un état partagé.
+
+               ── Une garde posée pour une raison, qui en a trouvé une autre ──
+
+               En rendant les trois prêts de l'organigramme (`LEVEL_COLORS`, `orgChainFor`,
+               `circuitHtml`), j'ai posé dans le comparateur une garde exigeant que le
+               balisage comparé porte **au moins une** chaîne de validation renseignée. Elle a
+               mordu aussitôt, et pas pour la raison prévue :
+
+               **les deux rattachements du jeu de travail désignent des `person_id` qui
+               n'existent pas** dans le répertoire du personnel.
+
+               Conséquences, toutes mesurées :
+
+               · aucune personne n'a de chaîne de validation, et la branche « chaîne
+                 renseignée » de `circuitHtml` — *le balisage qui dit qui valide les actes d'un
+                 agent* — n'était éprouvée **nulle part** ;
+               · la preuve de 5.d.3 la comparait cinq fois, **toutes sur `null`** : cinq
+                 comparaisons du même cas, présentées comme cinq ;
+               · `orgAssignedChips` rend la chaîne vide sur les vraies données : les pastilles
+                 de l'organigramme ne paraissaient jamais dans la preuve.
+
+               Les deux comparateurs ajoutent donc des rattachements vers des personnes qui
+               **existent**, dont un sur une entité profonde et un sous un intérim actif.
+               Contre-essai : casser la règle du validateur (intérim / titulaire / poste
+               vacant) rend désormais **4 écarts**, là où il n'en rendait aucun.
+
+               Les pastilles et la chaîne restaient couvertes par la ronde du glisser-déposer de
+               la suite « parcours » (5.c.11), qui crée un **vrai** rattachement. Mais *une
+               preuve de balisage qui ne rend jamais la pastille ne prouve rien d'elle*, et il
+               fallait les deux.
+
+               ── Et une décision que j'ai prise, puis défaite ──
+
+               J'ai voulu retirer les trois publications du sas de l'organigramme, au motif
+               qu'« un sas qui publie un nom que personne ne lit mentirait sur ce qui dépend de
+               quoi ». Les deux comparateurs se sont cassés.
+
+               **Ils avaient raison, et ma formule était inexacte** : le comparateur les lit.
+               Faire tourner `cfgSectionPersonnel` *tel qu'il était* exige que ces noms soient
+               dans la portée globale, puisque sa version d'origine les y cherchait. Le prêt se
+               rendra avec `app-config.js` lui-même (5.d.6), quand les comparateurs des blocs
+               convertis deviendront des pièces d'archive. La raison est écrite dans le sas.
+
+               ── La preuve ──
+
+               **22 comparaisons** de balisage en dix régimes : tout replié, tout déplié, les
+               deux mélanges, les deux régimes d'instance — le second change le nombre de
+               colonnes et donc le `colspan` —, les collections renversées, un jeu bricolé
+               (domaine sans secteur, thème orphelin, fiche non-inspecteur, rattachements
+               réels) et le vide.
+
+               Les deux côtés atteignent l'état des éléments dépliés par des **chemins
+               différents** : un ensemble rempli d'un côté, les deux gestes de l'autre.
+
+               Cinq contre-essais, cinq rouges : une clé de bascule changée, un champ de détail
+               remonté dans la table, le double `JSON.stringify` réduit à un, le bloc des thèmes
+               orphelins ôté, le `colspan` mal calculé. Et le quatrième a d'abord **ne rien
+               rendu du tout** — mon remplacement ne compilait pas, donc rien n'était mesuré ;
+               *un contre-essai qui ne compile pas n'est pas un contre-essai vert, c'est un
+               contre-essai absent*.
+
+               ── Ce qui reste de 5.d ──
+
+               `app-config.js` : **476 lignes**, deux blocs.
+
+               | Bloc | Lignes | Gardé par |
+               |---|---|---|
+               | AAC, sécurité, modules, système | ~290 | 5.c.10, 5.c.13 |
+               | `renderConfig`, `cfgNavigate`, `CFG_TABS` | ~130 | 5.c.0 (les onze sous-vues) |
+
+               La page sert **694 Ko**, contre 625. C'est le point haut de la courbe : le
+               prochain commit en ôte un bloc, et celui d'après fait disparaître
+               `app-config.js`.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

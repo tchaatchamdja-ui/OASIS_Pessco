@@ -85,25 +85,20 @@ const CFG_TABS = [
 // touchent au document ou à l'API sont couverts par la suite « parcours » (5.c.12).
 
 
-
-
-
-
-
-
-
 // ── L'organigramme : parti dans un module typé (5.d.3) ──
 //
 // Les douze gestes, les deux présentations, le registre d'un poste et la chaîne
 // de validation vivent désormais dans `frontend/portail/organigramme.ts` ; un sas
 // les pose sur `window` avant le chargement de ce fichier.
 //
-// Trois noms ne sont que **prêtés** à ce fichier en attendant sa conversion :
-// `LEVEL_COLORS` — qui était un `const` lexical d'`app.js`, que seul
-// `app-config.js` lisait —, `orgChainFor` et `circuitHtml`, que la fiche d'une
-// personne lit encore. **Ne pas les redéclarer**, ni `ORG_VIEW`, désormais privée
-// au module : une copie lexicale ferait que la bascule des présentations n'agirait
-// plus sur ce que l'écran rend.
+// `LEVEL_COLORS`, `orgChainFor` et `circuitHtml` sont **prêtés** par ce sas. Plus
+// aucun code de ce fichier ne les lit depuis 5.d.4 — mais les comparateurs de
+// 5.d.3 et 5.d.4 en ont besoin pour faire tourner les versions d'origine, qui les
+// lisaient dans la portée globale. Le prêt se rendra avec ce fichier (5.d.6).
+//
+// **Ne pas redéclarer `ORG_VIEW`**, désormais privée au module : une copie
+// lexicale ferait que la bascule des présentations n'agirait plus sur ce que
+// l'écran rend.
 //
 // `normalizeOrgTopLevel` part avec eux, et son effet de bord est nommé là-bas :
 // elle **écrit dans `REFS`** à chaque rendu, pour aligner l'entité de niveau 1 sur
@@ -116,204 +111,25 @@ const CFG_TABS = [
 // par la suite « parcours » (5.c.11).
 
 
-
-window.togglePers = function (id) {
-  const k = 'pers-' + id;
-  if (CFG_OPEN.has(k)) CFG_OPEN.delete(k);
-  else CFG_OPEN.add(k);
-  renderConfig();
-};
-
-function cfgSectionPersonnel() {
-  const coll = 'inspecteurs';
-  const schema = REF_SCHEMAS[coll];
-  const DETAIL_KEYS = ['numero_inspecteur', 'domaines', 'specialites', 'niveau_qualification'];
-  const tableFields = schema.fields.filter((f) => !DETAIL_KEYS.includes(f.k));
-  const detailFields = schema.fields.filter((f) => DETAIL_KEYS.includes(f.k));
-  const colspan = tableFields.length + 2; // chevron + actions
-  const rows = (REFS[coll] || [])
-    .map((r) => {
-      const open = CFG_OPEN.has('pers-' + r.id);
-      const chain = orgChainFor(r.id);
-      const cells = tableFields.map((f) => `<td>${fieldValue(f, r)}</td>`).join('');
-      const detailInfo = detailFields
-        .map((f) => `<div class="pers-info-item"><span class="pers-info-lbl">${esc(tr(f.l))}</span><span class="pers-info-val">${fieldValue(f, r)}</span></div>`)
-        .join('');
-      return `
-      <tr>
-        <td><button class="shell-btn-icon pers-toggle" onclick="togglePers('${r.id}')" title="${t('audit_col_details')}" aria-label="${t('audit_col_details')}" style="transform:rotate(${open ? 90 : 0}deg);">${icon('chevronRight', 14)}</button></td>
-        ${cells}
-        <td class="actions-cell">
-          <button class="shell-btn-icon" onclick="openRefModal('${coll}','${r.id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
-          <button class="shell-btn-icon" onclick="deleteRef('${coll}','${r.id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}" style="color:#dc2626;">${icon('trash', 15)}</button>
-        </td>
-      </tr>
-      <tr class="pers-detail-row" style="${open ? '' : 'display:none;'}">
-        <td colspan="${colspan}" style="background:var(--bg);">
-          <div class="pers-info-grid">${detailInfo}</div>
-          <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:.6rem 0 .4rem;">${t('circuit_validation')}</div>
-          ${circuitHtml(chain)}
-        </td>
-      </tr>`;
-    })
-    .join('');
-  return `
-  <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${esc(tr(schema.title))}</h3>
-    <div class="portal-page-actions">
-      ${searchInputHtml('Rechercher un membre du personnel...')}
-      ${exportBar('inspecteurs', tr("Liste du personnel de l'Administration"))}
-      <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('${coll}')">${icon('plus', 13)} ${esc(t('add'))}</button>
-    </div>
-  </div>
-  <div class="shell-table-container">
-    <table class="shell-table shell-table-compact">
-      <thead><tr><th></th>${tableFields.map((f) => `<th>${esc(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="${colspan}" style="color:var(--text-muted);">${t('aucun_element')}</td></tr>`}</tbody>
-    </table>
-  </div>`;
-}
-
-
-
-
-
+// ── Le personnel et la taxinomie : partis dans un module typé (5.d.4) ──
+//
+// `cfgSectionPersonnel`, `cfgSectionDomaines`, `togglePers`, `toggleAcc` et les
+// quatre fabriques d'accordéon vivent désormais dans
+// `frontend/portail/taxinomie.ts` ; un sas pose les quatre premiers sur `window`.
+//
+// `CFG_OPEN` part avec eux, et c'est **lui** qui imposait de convertir les deux
+// écrans d'un seul coup : l'ensemble des éléments dépliés sert aux fiches du
+// personnel comme aux accordéons de la taxinomie. **Ne pas le redéclarer ici** —
+// une copie lexicale ferait que déplier une fiche n'agirait plus sur ce que
+// l'écran rend.
+//
+// Éprouvé par `scripts/comparer-taxinomie.js` : 20 comparaisons de balisage en
+// dix régimes — tout replié, tout déplié, les deux mélanges, les deux régimes
+// d'instance, les collections renversées, un jeu bricolé (domaine sans secteur,
+// thème orphelin, fiche non-inspecteur) et le vide.
 
 
 // ── Accordéons hiérarchiques (Domaines / Secteurs / Sous-activités / Thèmes) ──
-const CFG_OPEN = new Set();
-
-window.toggleAcc = function (key) {
-  if (CFG_OPEN.has(key)) CFG_OPEN.delete(key);
-  else CFG_OPEN.add(key);
-  renderConfig();
-};
-
-function statutBadge(s) {
-  return s === 'inactif'
-    ? '<span class="shell-badge badge-inactive">Inactif</span>'
-    : '<span class="shell-badge badge-active">Actif</span>';
-}
-
-function accActions(coll, id) {
-  return `<span style="display:flex;gap:.15rem;" onclick="event.stopPropagation()">
-    <button class="shell-btn-icon" onclick="openRefModal('${coll}','${id}')" title="${esc(t('edit'))}" aria-label="${esc(t('edit'))}">${icon('edit', 15)}</button>
-    <button class="shell-btn-icon" style="color:#dc2626;" onclick="deleteRef('${coll}','${id}')" title="${esc(t('delete'))}" aria-label="${esc(t('delete'))}">${icon('trash', 15)}</button>
-  </span>`;
-}
-
-function accAddBtn(coll, defaults, label) {
-  const json = JSON.stringify(JSON.stringify(defaults || {}));
-  return `<button class="shell-btn shell-btn-outline shell-btn-sm" style="margin-top:.6rem;" onclick='openRefModal("${coll}","",${json})'>${icon('plus', 13)} ${esc(label)}</button>`;
-}
-
-function accItem(key, color, headerHtml, actionsHtml, bodyHtml, dense) {
-  const open = CFG_OPEN.has(key);
-  return `
-  <div class="cfg-acc-item ${open ? 'open' : ''}" style="margin-bottom:${dense ? '.1rem' : '.5rem'};">
-    <div class="cfg-acc-header" style="border-left:4px solid ${color};" onclick="toggleAcc('${key}')">
-      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">${headerHtml}</div>
-      <div style="display:flex;align-items:center;gap:.35rem;">${actionsHtml}<span class="cfg-acc-chevron" style="display:flex;">${icon('chevronRight', 15)}</span></div>
-    </div>
-    <div class="cfg-acc-body">${bodyHtml}</div>
-  </div>`;
-}
-
-// Sous-menu « Domaines & Secteurs » : accordéons Domaines → Secteurs → Sous-activités
-function cfgSectionDomaines() {
-  const domaines = REFS.domaines || [];
-  const secteurs = REFS.secteurs || [];
-  const sousActivites = REFS.sous_activites || [];
-  const themes = REFS.themes_supervision || [];
-
-  const themeRow = (th) => `
-    <div class="cfg-module-row" style="border-left:3px solid ${LEVEL_COLORS[3]};padding-left:.75rem;">
-      <div>
-        <strong>${th.code ? `<span class="shell-badge badge-neutral" style="margin-right:.4rem;">${esc(th.code)}</span>` : ''}${esc(th.libelle)}</strong>
-        ${th.description ? `<div style="font-size:.75rem;color:var(--text-muted);">${esc(th.description)}</div>` : ''}
-      </div>
-      <div style="display:flex;align-items:center;gap:.35rem;">${statutBadge(th.statut)}${accActions('themes_supervision', th.id)}</div>
-    </div>`;
-
-  const items = domaines
-    .map((d) => {
-      const dSecteurs = secteurs.filter((s) => s.domaine_id === d.id);
-      const secteurItems = dSecteurs
-        .map((s) => {
-          const sSas = sousActivites.filter((x) => x.secteur_id === s.id);
-          const saItems = sSas
-            .map((x) => {
-              const saThemes = themes.filter((th) => th.sous_activite_id === x.id);
-              return accItem(
-                'sa-' + x.id,
-                LEVEL_COLORS[2],
-                `<span class="shell-badge badge-neutral">${esc(x.code)}</span> <strong style="margin-left:.35rem;">${esc(x.nom)}</strong>
-                 <span class="shell-badge badge-neutral">${saThemes.length} thème(s)</span>`,
-                accActions('sous_activites', x.id),
-                (saThemes.map(themeRow).join('') || '<p style="color:var(--text-muted);font-size:.8rem;">' + t('aucun_theme') + '</p>') +
-                  accAddBtn('themes_supervision', { domaine_id: d.id, secteur_id: s.id, sous_activite_id: x.id, statut: 'actif' }, 'Thème'),
-                true
-              );
-            })
-            .join('');
-          const directThemes = themes.filter((th) => th.secteur_id === s.id && !th.sous_activite_id);
-          const directBlock = `
-            <div style="margin-top:.4rem;">
-              <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:.35rem 0 .25rem;">${t('themes_du_secteur')}</div>
-              ${directThemes.map(themeRow).join('') || '<p style="color:var(--text-muted);font-size:.8rem;">' + t('aucun_theme_secteur') + '</p>'}
-              ${accAddBtn('themes_supervision', { domaine_id: d.id, secteur_id: s.id, statut: 'actif' }, 'Thème')}
-            </div>`;
-          const nbThemes = themes.filter((th) => th.secteur_id === s.id || sSas.some((x) => x.id === th.sous_activite_id)).length;
-          return accItem(
-            'sect-' + s.id,
-            LEVEL_COLORS[1],
-            `<strong style="color:${LEVEL_COLORS[1]};">${esc(s.code)}</strong> — ${esc(s.nom)}
-             <span class="shell-badge badge-neutral">Cycle ${esc(s.csn)} mois</span>
-             <span class="shell-badge badge-neutral">${sSas.length} sous-activité(s)</span>
-             <span class="shell-badge badge-neutral">${nbThemes} thème(s)</span>
-             ${statutBadge(s.statut)}`,
-            accActions('secteurs', s.id),
-            (saItems || '') +
-              accAddBtn('sous_activites', { secteur_id: s.id }, 'Sous-activité') +
-              directBlock,
-            true
-          );
-        })
-        .join('');
-      return accItem(
-        'dom-' + d.id,
-        LEVEL_COLORS[0],
-        `<strong style="color:${LEVEL_COLORS[0]};">${esc(d.code)}</strong> — ${esc(d.nom)}
-         <span class="shell-badge badge-neutral">${dSecteurs.length} secteur(s)</span>
-         ${statutBadge(d.statut)}`,
-        accActions('domaines', d.id),
-        (secteurItems || '<p style="color:var(--text-muted);font-size:.8rem;">' + t('aucun_secteur') + '</p>') +
-          accAddBtn('secteurs', { domaine_id: d.id }, 'Secteur'),
-        true
-      );
-    })
-    .join('');
-
-  const orphans = themes.filter((th) => !th.secteur_id && !th.sous_activite_id);
-  const orphanBlock = orphans.length
-    ? `<div style="margin-top:1rem;">
-        <div class="portal-page-header"><h3>${tr('Thèmes non rattachés')}</h3></div>
-        ${orphans.map(themeRow).join('')}
-      </div>`
-    : '';
-
-  return `
-  <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${tr('Domaines | Secteurs | Sous-activités | Thèmes')}</h3>
-    <div class="portal-page-actions">
-      ${searchInputHtml('Rechercher un domaine / secteur...')}
-      ${exportBar('activites', tr('Domaines | Secteurs | Sous-activités | Thèmes'), 'exportPdfActivites()')}
-      <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('domaines')">${icon('plus', 13)} Domaine</button>
-    </div>
-  </div>
-  <div class="cfg-accordion cfg-acc-dense">${items || '<p style="color:var(--text-muted);">' + t('aucun_domaine_defini') + '</p>'}</div>
-  ${orphanBlock}`;
-}
 
 
 // ── Sections de configuration ──
@@ -464,15 +280,6 @@ window.saveAAC = async function () {
 };
 
 
-
-
-
-
-
-
-
-
-
 function cfgSectionSecurite(cfg) {
   return `
   <div class="shell-card">
@@ -605,7 +412,6 @@ window.toggleCfgSidebar = function () {
   CFG_COLLAPSED = !CFG_COLLAPSED;
   renderConfig();
 };
-
 
 
 async function renderConfig() {

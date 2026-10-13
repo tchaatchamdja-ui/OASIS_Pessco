@@ -44,6 +44,8 @@ import './i18n';
 import './barre';
 // L'écran des comptes (5.e.1).
 import './utilisateurs';
+// L'écran du profil (5.e.2).
+import './profil';
 import './etat';
 import './schemas';
 import './referentiels';

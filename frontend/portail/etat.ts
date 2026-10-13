@@ -35,6 +35,21 @@
 
 /** Le compte connecté et son contexte, tels que `/api/me` les rend. */
 export interface Moi {
+  /**
+   * Le compte connecté, tel que `/api/me` le rend.
+   *
+   * ── Huit champs ajoutés le 13 octobre 2026 (5.e.2) ──
+   *
+   * L'écran du profil les lit tous : l'identifiant de courriel, le nom et le
+   * prénom séparés, le téléphone, la fonction, l'état d'activité, les deux dates,
+   * le rattachement à un prestataire, et le bloc `extra` des sections
+   * facultatives. Ils étaient là depuis toujours — la route les rend — mais ce
+   * type ne les disait pas, parce qu'aucun module converti ne les avait encore lus.
+   *
+   * Les déclarer ici plutôt qu'au point d'usage est la règle du fichier : un champ
+   * que l'application lit est un champ qui a un type, et une forme déclarée deux
+   * fois est une forme qui finit par diverger.
+   */
   user: {
     username: string;
     fullName?: string;
@@ -43,6 +58,17 @@ export interface Moi {
     mustChange?: boolean;
     portee?: string;
     instance?: string;
+    email?: string;
+    nom?: string;
+    prenom?: string;
+    telephone?: string;
+    fonction?: string;
+    active?: boolean;
+    createdAt?: string;
+    passwordChangedAt?: string;
+    prestataire_id?: string;
+    /** Les champs des deux sections facultatives du profil. */
+    extra?: Record<string, string | undefined>;
   };
   aac?: { logo?: string; nom?: string; sigle?: string; bigramme?: string };
   /**

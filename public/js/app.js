@@ -372,180 +372,34 @@ async function renderHome() {
 // fenêtres avec le focus qu'elles posent, et les quatre corps de requête dont
 // celui de l'effacement.
 
-// ══════════ Profil personnel ══════════
-
-const ROLE_LABELS = { SUPERADMIN: 'SuperAdmin', ADMIN: 'Admin AAC', ADMIN_PRESTATAIRE: 'Admin Prestataires', AAC: 'Utilisateur AAC', INSPECTEUR: 'Utilisateur AAC', PRESTATAIRE: 'Utilisateur Prestataire', INDEPENDANT: 'Utilisateur Indépendant' };
-
-window.uploadProfilePhoto = function (inputEl) {
-  const file = inputEl.files && inputEl.files[0];
-  if (!file) return;
-  if (file.size > 2 * 1024 * 1024) return showToast(t('image_trop_lourde'), 'error');
-  const reader = new FileReader();
-  reader.onload = () => saveProfile({ photo: reader.result });
-  reader.readAsDataURL(file);
-};
-
-window.removeProfilePhoto = async function () {
-  if (!await oasisConfirmer(t('confirmer_suppr_photo'))) return;
-  saveProfile({ photo: '' });
-};
-
-async function saveProfile(patch) {
-  const res = await api('/api/me/profile', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(patch),
-  });
-  if (res.ok) {
-    showToast(t('profil_maj'), 'success');
-    await loadMe();
-    renderProfile();
-  } else showToast(oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
-}
-
-window.saveProfileInfos = function () {
-  saveProfile({
-    nom: document.getElementById('pfNom').value.trim(),
-    prenom: document.getElementById('pfPrenom').value.trim(),
-    telephone: phoneFieldValue('pfTel'),
-    fonction: document.getElementById('pfFonction').value.trim(),
-  });
-};
-
-window.submitProfilePassword = async function () {
-  const oldPassword = document.getElementById('pfOld').value;
-  const newPassword = document.getElementById('pfNew').value;
-  const confirmVal = document.getElementById('pfConfirm').value;
-  if (!oldPassword) return showToast(t('confirmer_mdp_actuel'), 'warning');
-  if (newPassword !== confirmVal) return showToast(t('mdp_discordants'), 'error');
-  const res = await api('/api/change-password', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ oldPassword, newPassword }),
-  });
-  if (res.ok) {
-    showToast(t('mdp_modifie'), 'success');
-    ['pfOld', 'pfNew', 'pfConfirm'].forEach((id) => (document.getElementById(id).value = ''));
-    await loadMe();
-    renderProfile();
-  } else {
-    const data = await res.json().catch(() => ({}));
-    const msg =
-      data.error === 'policy' ? t('mdp_politique', reglesMotDePasse(data.details))
-      : oasisMessageErreur(data, res.status);
-    showToast(msg, 'error', 4500);
-  }
-};
-
-async function renderProfile() {
-  const u = ME.user;
-  const ex = u.extra || {};
-  const nm = splitName(u);
-  if (!Object.keys(REFS).length) await loadRefs();
-  const prestaNom = (REFS.prestataires || []).find((p) => p.id === u.prestataire_id)?.nom || '';
-  const initials = `${(nm.nom || u.username)[0] || ''}${(nm.prenom || '')[0] || ''}`.toUpperCase();
-  const photoBox = u.photo
-    ? `<img src="${u.photo}" alt="Photo de profil" class="pf-photo-img">`
-    : `<div class="pf-photo-initials">${esc(initials)}</div>`;
-  const infoRows = [
-    ['Identifiant (email)', esc(u.email || u.username)],
-    ['Rôle', `<span class="shell-badge badge-neutral">${esc(ROLE_LABELS[u.role] || u.role)}</span>`],
-    ['Statut', u.active ? '<span class="shell-badge badge-active">Actif</span>' : '<span class="shell-badge badge-inactive">Inactif</span>'],
-    ['Instance', `${esc(ME.instance.etat)} (${esc(ME.instance.codeEtat)})`],
-    ['Compte créé le', fmtDate(u.createdAt)],
-    ['Mot de passe modifié le', fmtDate(u.passwordChangedAt)],
-  ]
-    .map((r) => `<tr><td class="aac-info-lbl">${tr(r[0])}</td><td class="aac-info-val">${r[1]}</td></tr>`)
-    .join('');
-
-  document.getElementById('mainView').innerHTML = `
-    <div class="portal-page-header"><h2>Mon profil</h2></div>
-    <div class="pf-layout">
-      <div class="pf-side shell-card">
-        <div class="pf-photo-frame">${photoBox}</div>
-        <div class="aac-logo-btns" style="margin-top:.6rem;">
-          <label class="shell-btn shell-btn-outline aac-logo-iconbtn" title="${u.photo ? 'Changer la photo' : 'Ajouter une photo'}">${cameraIcon()}
-            <input type="file" accept="image/*" style="display:none;" onchange="uploadProfilePhoto(this)">
-          </label>
-          ${u.photo ? `<button class="shell-btn shell-btn-danger aac-logo-iconbtn" onclick="removeProfilePhoto()" title="${t('supprimer_photo')}">${icon('trash', 15)}</button>` : ''}
-        </div>
-        <div class="pf-name">${esc(nm.nom)} ${esc(nm.prenom)}</div>
-        <div class="pf-role">${esc(ROLE_LABELS[u.role] || u.role)}</div>
-      </div>
-
-      <div class="pf-main pf-compact">
-        <div class="shell-card">
-          <div class="portal-page-header"><h3>Informations personnelles</h3></div>
-          <div class="shell-form-row">
-            <div class="shell-form-group"><label>${t('col_nom')}</label><input class="shell-input" id="pfNom" value="${esc(nm.nom)}"></div>
-            <div class="shell-form-group"><label>${t('col_prenoms')}</label><input class="shell-input" id="pfPrenom" value="${esc(nm.prenom)}"></div>
-          </div>
-          <div class="shell-form-row">
-            ${phoneFieldHtml('pfTel', u.telephone)}
-            <div class="shell-form-group"><label>Fonction</label><input class="shell-input" id="pfFonction" value="${esc(u.fonction || '')}"></div>
-          </div>
-          <div style="display:flex;justify-content:flex-end;">
-            <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="saveProfileInfos()">${icon('save', 13)} Enregistrer</button>
-          </div>
-        </div>
-
-        <div class="shell-card">
-          <div class="portal-page-header"><h3>${t('details_compte')}</h3></div>
-          <div class="shell-table-container">
-            <table class="shell-table shell-table-compact aac-info-table"><tbody>${infoRows}</tbody></table>
-          </div>
-        </div>
-
-        ${pfExtraSection('presta', 'Prestataires', "(à renseigner par les admin et utilisateurs provenant d'un prestataire)", ['ADMIN_PRESTATAIRE', 'PRESTATAIRE'].includes(u.role), [
-          ['pxStructure', 'Structure / Prestataire', prestaNom, true],
-          ['pxPoste', 'Fonction / Poste', ex.poste],
-          ['pxService', 'Service / Département', ex.service],
-          ['pxAdresse', 'Adresse professionnelle', ex.adressePro],
-        ])}
-
-        ${pfExtraSection('indep', 'Indépendants', '(à renseigner par les utilisateurs indépendant)', u.role === 'INDEPENDANT', [
-          ['ixProfession', 'Profession', ex.profession],
-          ['ixOrganisation', 'Organisation / Cabinet', ex.organisation],
-          ['ixAgrement', "N° d'agrément / licence", ex.agrement],
-          ['ixAdresse', 'Adresse', ex.adresse],
-        ])}
-
-        <div class="shell-card">
-          <div class="portal-page-header"><h3>${icon('lock', 15)} Modifier mon mot de passe</h3></div>
-          <div class="shell-form-row">
-            <div class="shell-form-group"><label>${t('chgpwd_old')}</label><input class="shell-input" type="password" id="pfOld" autocomplete="current-password"></div>
-            <div class="shell-form-group"><label>${t('chgpwd_new')}</label><input class="shell-input" type="password" id="pfNew" autocomplete="new-password"></div>
-          </div>
-          <div class="shell-form-row">
-            <div class="shell-form-group"><label>${t('chgpwd_confirm')}</label><input class="shell-input" type="password" id="pfConfirm" autocomplete="new-password"></div>
-            <div class="shell-form-group" style="align-self:end;"><button class="shell-btn shell-btn-primary shell-btn-sm" onclick="submitProfilePassword()">${icon('key', 13)} Changer le mot de passe</button></div>
-          </div>
-          <p style="font-size:.72rem;color:var(--text-muted);">12 caractères min. (majuscules, minuscules, chiffres, caractères spéciaux), sans réutilisation.</p>
-        </div>
-      </div>
-    </div>`;
-}
-
-function pfExtraSection(key, title, hint, enabled, fields) {
-  const inputs = fields
-    .map(([id, label, val, readonly]) => `<div class="shell-form-group"><label>${esc(label)}${readonly ? ' <span style="font-size:.65rem;color:var(--text-muted);">(auto)</span>' : ''}</label><input class="shell-input" id="${id}" value="${esc(val || '')}" ${(!enabled || readonly) ? 'disabled' : ''}></div>`)
-    .join('');
-  return `
-    <div class="shell-card ${enabled ? '' : 'pf-section-disabled'}">
-      <div class="portal-page-header"><h3>${esc(title)} <span style="font-size:.72rem;font-weight:400;color:var(--text-muted);">${esc(hint)}</span></h3></div>
-      ${enabled ? '' : '<p style="font-size:.75rem;color:var(--text-muted);">' + t('section_reservee') + '</p>'}
-      <div class="shell-form-row">${inputs}</div>
-      ${enabled ? `<div style="display:flex;justify-content:flex-end;"><button class="shell-btn shell-btn-primary shell-btn-sm" onclick="saveProfileExtra('${key}')">${icon('save', 13)} Enregistrer</button></div>` : ''}
-    </div>`;
-}
-
-window.saveProfileExtra = function (key) {
-  const g = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
-  const extra = key === 'presta'
-    ? { poste: g('pxPoste'), service: g('pxService'), adressePro: g('pxAdresse') }
-    : { profession: g('ixProfession'), organisation: g('ixOrganisation'), agrement: g('ixAgrement'), adresse: g('ixAdresse') };
-  saveProfile({ extra });
-};
+// ── L'écran du profil : parti dans un module typé (5.e.2) ──
+//
+// La photo, les quatre informations, les deux sections facultatives et le
+// changement de mot de passe vivent désormais dans `frontend/portail/profil.ts` ;
+// le sas pose les sept noms que le balisage et `app-demarrage` appellent.
+//
+// `ROLE_LABELS` part avec eux — c'était un `const` du premier niveau, donc absent
+// de `window`, et seul cet écran le lisait. `saveProfile` devient **privée** :
+// c'est le seul nom que ce bloc retire de la surface, ses cinq appelants étant
+// partis avec elle.
+//
+// Ce bloc ne portait **aucun état** : tout vient de `ME`, que `loadMe()` rafraîchit
+// après chaque enregistrement. Première pièce de 5.e dans ce cas.
+//
+// Deux divergences assumées, nommées là-bas : `ME.instance` absent fait lever au
+// lieu de rendre `undefined`, et le `onload` du lecteur de fichier ne **rend**
+// plus la promesse de l'enregistrement — le type ne le permet pas, et rien ne lit
+// cette valeur, mais la preuve en dépendait.
+//
+// Huit champs de `ME.user` ont été ajoutés au type de l'état partagé : la route
+// les rendait déjà, aucun module converti ne les avait encore lus.
+//
+// Éprouvé par `scripts/comparer-profil.js` : 60 comparaisons — les huit rôles,
+// avec et sans photo, un nom hostile, un compte inactif, les deux sections dans
+// leurs deux branches, les quatre corps de requête, et les quatre issues du
+// changement de mot de passe dont les trois champs que le succès doit vider.
+// Le retrait de la photo passe par la confirmation du socle, qui bâtit un
+// dialogue : la suite « parcours » le couvre (5.c.14).
 
 // ══════════ Journal d'audit ══════════
 

@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 598 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1) |
+           | portail (`public/js`) | 452 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3129,7 +3129,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        du navigateur. C'est pourquoi la couverture des gestes du portail a été portée à son
        plafond (66 sur 84) **avant** 5.d, et non après : c'est elle qui prend le relais.
 
-   5.e [~] **`app.js` — le dernier JavaScript du portail.** 598 lignes restantes sur
+   5.e [~] **`app.js` — le dernier JavaScript du portail.** 452 lignes restantes sur
        1 192. Il porte la navigation, les cinq vues, les utilisateurs, le profil et le
        journal d'audit.
 
@@ -3336,6 +3336,82 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            pair administrateur, le mot de passe de l'opérateur non envoyé à l'effacement,
            l'identifiant modifié envoyé sans sa confirmation, la portée envoyée à la place
            de l'instance, le focus non posé, les cases lues sans leur filtre `:checked`.
+
+       5.e.2 [x] **L'écran du profil — le premier bloc sans aucun état** — fait le
+           13 octobre 2026. `app.js` passe de **598 à 453 lignes**.
+
+           Le seul écran où un agent change **ses propres** identifiants : sa photo, son
+           nom, sa fonction, son mot de passe.
+
+           ── Aucun état, et c'est la première fois de 5.e ──
+
+           Ce bloc ne portait pas une variable mutable : tout vient de `ME`, que
+           `loadMe()` rafraîchit après chaque enregistrement. Il a donc pu être converti
+           sans décider où mettre quoi que ce soit — et c'est assez rare dans ce jalon
+           pour être noté.
+
+           `ROLE_LABELS` part avec lui (un `const` lexical que seul cet écran lisait), et
+           `saveProfile` devient **privée** : seul nom que ce bloc retire de la surface,
+           ses cinq appelants étant partis avec elle.
+
+           ── Huit champs de `ME.user` qui n'avaient pas de type ──
+
+           `email`, `nom`, `prenom`, `telephone`, `fonction`, `active`, les deux dates,
+           le rattachement prestataire et le bloc `extra`. La route `/api/me` les rendait
+           depuis toujours ; le type ne les disait pas, parce qu'aucun module converti ne
+           les avait encore lus. Ils sont déclarés dans `etat.ts`, chez le propriétaire de
+           l'état — une forme déclarée deux fois est une forme qui finit par diverger.
+
+           ── Les deux sections facultatives, et leurs deux branches ──
+
+           `pfExtraSection` rend une carte **active** ou **grisée** selon le rôle, et la
+           branche change six choses : la classe de la carte, la phrase de réserve,
+           l'attribut `disabled` de chaque champ, et la présence du bouton
+           d'enregistrement. Deux gardes exigent que le balisage comparé porte les deux —
+           sans quoi la moitié de la fonction ne serait éprouvée nulle part, ce qui est
+           arrivé à `circuitHtml` en 5.d.3.
+
+           ── Une divergence invisible dans un navigateur, dont la preuve dépendait ──
+
+           L'original écrit `reader.onload = () => saveProfile({…})`, qui **rend** la
+           promesse de l'enregistrement. Le type de `onload` ne laisse rien rendre : le
+           module l'écarte par `void`. Rien ne lit cette valeur — `FileReader` l'ignore —,
+           donc le produit est intact.
+
+           Mais la preuve, elle, **retenait cette promesse** pour savoir quand la requête
+           était partie. Du côté converti elle n'existait plus, et la lecture arrivait
+           avant la requête : deux écarts, qui disaient ma mesure et non le code. Le
+           comparateur vide désormais la file des micro-tâches des deux côtés. *Une
+           comparaison qui dépend de l'ordre des micro-tâches n'est pas une comparaison* —
+           deuxième fois en deux pièces, et la cause est la même : un geste qui pose un
+           `onload` que personne n'attend.
+
+           ── Ce qui n'est pas comparé, et c'est dit ──
+
+           `removeProfilePhoto` passe par la confirmation du socle, qui bâtit un dialogue
+           dans le document et attend un clic. Un faux document ne le résoudrait pas, et
+           le remplacer d'un seul côté mesurerait le montage. La suite « parcours » le
+           couvre (5.c.14), et le corps qu'il envoie est celui de `saveProfile` — la même
+           fonction que les quatre gestes comparés.
+
+           ── La preuve ──
+
+           **60 comparaisons** : les huit rôles — dont un inconnu, pour le repli du
+           libellé —, avec et sans photo, un nom hostile aux cinq caractères, un compte
+           inactif, un compte sans nom, un nom composé seul, un compte sans dates, les
+           deux sections renseignées puis vides, un rattachement vers un prestataire
+           absent, les référentiels manquants, `pfExtraSection` appelée directement en
+           trois jeux, les **quatre corps de requête**, et les **quatre issues** du
+           changement de mot de passe — ancien vide, confirmation discordante, politique
+           refusée, succès — dont les trois champs que le succès doit vider.
+
+           **Dix-huit contre-essais, dix-huit rouges.** Deux ont d'abord été écrits sur un
+           motif absent ou trouvé deux fois, donc ne mesuraient rien : réécrits, ils
+           mordent. Les plus parlants : la section grisée qui garde son bouton (19 écarts),
+           les champs d'une section grisée restés actifs (19), la photo non remplacée par
+           les initiales (18), les initiales prises à l'envers (15), la session non
+           rechargée après l'enregistrement (12), la section des prestataires ouverte aux
+           indépendants (12).
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

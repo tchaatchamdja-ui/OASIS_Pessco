@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 1 444 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) convertis |
+           | portail (`public/js`) | 1 192 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -2880,6 +2880,234 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                retirées. La courbe monte à chaque conversion, et ne redescendra qu'au prochain
                commit : `app-config.js` disparaît, les trois prêts de l'organigramme et celui de
                la palette se rendent, et la page charge **un** paquet au lieu de douze.
+
+           5.d.6 [x] **`app-config.js` n'existe plus — et la décision que 5.d laissait
+               ouverte est prise** — fait le 13 octobre 2026.
+
+               `renderConfig`, `cfgNavigate`, `toggleCfgSidebar` et `CFG_TABS` passent dans
+               `frontend/portail/configuration.ts`. Le fichier qui portait **1 443 lignes** et
+               les onze sous-vues est supprimé du dépôt ; `public/js/` ne contient plus
+               qu'`app.js`.
+
+               ── Non, pas React — et la raison n'est pas le coût ──
+
+               Cette étape devait trancher si l'écran de configuration devient un composant
+               React. **Il ne le devient pas**, et le motif est la perte de preuve :
+
+               Les onze sous-vues rendent des **chaînes de balisage**, et leurs gestes sont des
+               attributs `onclick` qui appellent des globales. Un composant React les poserait
+               dans un `dangerouslySetInnerHTML` — ce qui n'est pas du React, c'est du balisage
+               dans un emballage —, ou il faudrait réécrire les onze en JSX d'un seul coup. Or
+               c'est exactement ce que six étapes se sont interdit : convertir sans changer, en
+               comparant caractère pour caractère.
+
+               L'écran reste donc un **assembleur de chaînes typé**. Son passage à React devient
+               un chantier à part, qui commencera par les gestes et non par le rendu. Le dire
+               ici évite qu'on le croie fait.
+
+               ── Ce que cette preuve couvre, et qu'aucune autre ne couvrait ──
+
+               `renderConfig` n'est pas une fonction de balisage : c'est un **aiguillage**. Les
+               onze sous-vues étaient déjà éprouvées une à une. Ce qui ne l'était nulle part,
+               c'est la **place** de chacune : une permutation de deux `case` rendrait deux
+               écrans parfaitement corrects au mauvais endroit, et aucun des six comparateurs
+               précédents ne l'aurait vu.
+
+               D'où les six choses comparées à chaque régime : le balisage de `#mainView`, la
+               sous-vue **après** le rendu — `case 'themes'` la réécrit —, `CURRENT_CFG` posé,
+               les deux routes lues **dans l'ordre**, les écouteurs branchés, et le fait de
+               lever ou non.
+
+               **184 comparaisons**, douze sous-vues plus une inconnue pour le `default`, aux
+               deux postes — national et régional —, plus le repli, les deux gestes de
+               navigation, les référentiels absents, la vue principale manquante, et
+               l'interrupteur d'un module : le seul geste de cet écran qui écrive au serveur.
+
+               Le compte des régimes est **gardé** : les sous-vues sont relevées dans le `switch`
+               d'origine, et il doit y avoir autant de régimes que de `case`. Une sous-vue
+               retirée des régimes serait une sous-vue dont la place n'est plus prouvée — la
+               leçon de `comparer-schemas.js`, découverte la veille.
+
+               ── Quatorze contre-essais, et deux qui ont dû être refaits ──
+
+               Deux `case` permutés (16 écarts), `case 'themes'` qui ne réécrit plus la sous-vue
+               (4), le `default` renvoyé ailleurs, le filtre du poste régional inversé (31), le
+               chevron du repli inversé (31), un titre de section rendu en bouton (31),
+               `CURRENT_CFG` non posé (28), les référentiels non chargés, les interrupteurs non
+               branchés (5), l'interrupteur qui envoie l'état inverse, la recherche non
+               réinitialisée, la vue principale traitée en silence.
+
+               Les deux derniers ont d'abord échoué comme contre-essais :
+
+               · **« le repli qui ne bascule plus » était vert.** Remplacer
+                 `!CFG_COLLAPSED` par `= true` ne se voit pas si l'on ne bascule **qu'une
+                 fois** depuis « déplié » : les deux rendent `true`. Le vert disait que le
+                 régime manquait, non que le code était bon. On bascule désormais deux fois,
+                 l'aller et le retour.
+               · **« les deux routes dans l'autre ordre » ne compilait pas.** Donc rien n'était
+                 mesuré. Réécrit en deux attentes successives, il rend 28 écarts. *Un
+                 contre-essai qui ne compile pas n'est pas un contre-essai vert, c'est un
+                 contre-essai absent* — deuxième fois en deux jours.
+
+               ── Et deux écarts qui mesuraient mon montage ──
+
+               Les deux premiers écarts portaient sur les bandeaux de l'interrupteur : l'original
+               appelle le `showToast` d'`app.js`, le module importe celui du socle. **Les deux
+               sont le même code** — `if (typeof window.oasisToast !== 'function')` puis la
+               délégation. Capter `showToast` mesurait donc le chemin et non le message. C'est
+               `oasisToast` qu'il faut capter, et les deux écarts ont disparu sans qu'une ligne
+               de code change. Troisième fois que ce piège se présente (5.d.3, 5.d.4, ici).
+
+               ── Ce que la disparition d'`app-config.js` change aux sas, et qu'il faut dire ──
+
+               Neuf noms — `cfgSectionAAC`, `refTable`, `cfgSectionOrganigramme`… — n'ont plus
+               **aucun lecteur** dans la page : `configuration.ts` les importe de leur source.
+               Les sas continuent pourtant de les publier, et ce n'est plus pour la
+               cohabitation : c'est pour les **six comparateurs**, qui font tourner les versions
+               d'origine, lesquelles les cherchent dans la portée globale.
+
+               La couche des sas n'est donc plus seulement le pont de la cohabitation, elle est
+               aussi le **banc des preuves**. C'est un coût, et il a une échéance : le jour où
+               `app.js` partira, le pont n'aura plus d'usage et il faudra choisir — ou les
+               comparateurs deviennent des pièces d'archive, ou on leur construit un paquet à
+               eux. **La décision n'est pas de cette étape ; sa date, si.**
+
+               J'avais annoncé en 5.d.4 que les trois prêts de l'organigramme se rendraient ici.
+               Ils ne se rendent pas, et la raison est celle-ci : les rendre casserait deux
+               preuves. L'annonce était faite sans avoir vérifié ce qui les lisait.
+
+               ── Ce qui reste : la page, et elle a encore grossi ──
+
+               **835 Ko**, contre 742. Pour la troisième fois j'ai annoncé une baisse qui n'est
+               pas venue, et la cause est toujours la même : **chaque sas est un paquet
+               autonome**, et douze paquets portent douze fois les mêmes modules — `icones`,
+               `traductions`, `schemas`. `configuration.js` pèse 108 Ko à lui seul, parce qu'il
+               importe les onze sous-vues.
+
+               La baisse viendra d'un **seul point d'entrée**, et c'est désormais possible —
+               plus rien n'oblige les douze à être douze fichiers.
+
+               **J'ai voulu en faire une étape séparée, et c'était une erreur de jugement.**
+               Mon raisonnement — « un changement d'empaquetage se mesure et se prouve à part »
+               — était juste en forme et faux en fait : la suite « parcours » a rougi sur ce
+               commit seul, et ce n'était pas un gain d'octets qui manquait, c'était une
+               **correction**. Les douze paquets portaient douze copies de l'état des modules.
+               Voir 5.d.7, qui n'est donc pas une étape d'après mais la moitié de celle-ci :
+               les deux sont **un seul commit**, parce que la première seule laisse
+               l'application fausse.
+
+           5.d.7 [x] **Le portail en un seul paquet — et ce n'était pas une question
+               d'octets** — fait le 13 octobre 2026.
+
+               `index.html` chargeait **douze** paquets du portail. Il en charge **un**.
+               Mais la raison n'est pas celle que j'annonçais depuis trois étapes.
+
+               ── Ce que je croyais être un poids était un défaut de correction ──
+
+               esbuild construit chaque sas comme un paquet **autonome** : douze fichiers qui
+               portent douze fois `traductions`, `icones`, `schemas`. Je l'avais noté comme un
+               coût en octets — 835 Ko servis pour 150 de code — et je me promettais de le
+               réduire « au prochain commit », trois fois de suite.
+
+               Ce n'était pas un coût. **Douze copies d'un module, ce sont douze copies de son
+               état.** `traductions.ts` tient la langue courante dans un `let` de module :
+               chaque paquet avait la sienne. `applyLang('en')` changeait celle du paquet des
+               libellés, et **celle des onze autres restait au français**. Même chose pour
+               `CFG_OPEN`, `CFG_INSTANCES`, `EXIG_OPEN`, `ORG_VIEW`, `AAC_CFG`.
+
+               C'est exactement le mode de défaillance que 5.b avait nommé — *une copie
+               lexicale fait que déplier une fiche n'agit plus sur ce que l'écran rend* — et je
+               l'avais recréé par l'empaquetage, après l'avoir évité dans le code.
+
+               ── Comment il s'est montré ──
+
+               Le défaut était **latent**. Tant que `renderConfig` vivait dans `app-config.js`,
+               il appelait les sous-vues par `window` : toujours la même copie que leurs propres
+               gestes. En le convertissant (5.d.6), il a commencé à les importer de la source —
+               sa copie — et le contrôle **« la bascule de langue redessine le contenu de la
+               vue »** est tombé : `{"avant":972,"apres":972,"change":false}`.
+
+               Ce contrôle avait été écrit pour autre chose : il vient d'un contre-essai de la
+               conversion du démarrage, où ôter `onLangChange` laissait la suite verte. *Un
+               contrôle écrit pour un défaut en a nommé un autre, d'architecture, que personne
+               ne cherchait.*
+
+               Et il était déjà là, avant 5.d.6, visible sur l'écran « Domaines & Secteurs » :
+               changer de langue n'y traduisait rien jusqu'au rechargement de la page. Aucun
+               contrôle ne passait par là.
+
+               ── Ce que coûte la leçon, dite franchement ──
+
+               J'ai annoncé trois fois une baisse de poids, et trois fois elle n'est pas venue —
+               625, 694, 742, 835 Ko. À chaque fois j'ai écrit « le prochain commit la
+               renverse », et à chaque fois j'ai ajouté un paquet. *Une prédiction répétée sans
+               être vérifiée n'est pas une prévision, c'est une habitude.*
+
+               Pire : je lisais la courbe comme un problème de place, et c'était un problème de
+               **correction**. Le symptôme était juste, le diagnostic faux, et le faux
+               diagnostic reportait la correction à un jalon « d'optimisation » qui n'aurait
+               jamais été urgent.
+
+               ── Le résultat ──
+
+               Un fichier, `frontend/portail/globales/portail.ts`, qui n'ajoute **aucun code** :
+               treize imports dans l'ordre où `index.html` les chargeait. Il ne fait rien
+               d'autre, délibérément — un fichier qui décide de l'ordre d'exécution ne doit rien
+               faire d'autre.
+
+               Deux déplacements à noter, tous deux écrits dans la page :
+
+               · le paquet se charge **après `app.js`**, parce qu'`app-demarrage` appelle
+                 `demarrer()`, qui navigue et appelle les fonctions de rendu d'`app.js`. Le
+                 premier niveau d'`app.js` ne contient que des déclarations — vérifié —, donc
+                 rien n'y lit une globale du paquet avant son chargement ;
+               · le bandeau des témoins passe **après** le paquet : il traduit ses libellés par
+                 `window.t`, et il était entre les libellés et l'état dans la liste de douze.
+                 Chargé avant, il retombait sur le français sans un mot.
+
+               Les douze paquets continuent d'être construits, et c'est voulu : `login.html` et
+               `cookies.html` chargent `i18n.js`, et les **sept comparateurs** les lisent pour
+               faire tourner les versions d'origine. Ils ne sont plus servis au portail.
+
+               ── La mesure ──
+
+               La page sert **300 Ko**, contre 835 avant ce commit, et contre **503** au début
+               de 5.d — la première baisse du jalon, et la seule qui compte : le portail en
+               servait 503 quand il était en JavaScript sans types.
+
+               | | Paquets du portail | Page servie |
+               |---|---|---|
+               | début de 5.d (f55e9e5) | 4 | 503 Ko |
+               | après 5.d.5 | 11 | 742 Ko |
+               | après 5.d.6 seul | 12 | 835 Ko |
+               | **après 5.d.7** | **1** | **300 Ko** |
+
+               `public/js/` ne contient plus qu'`app.js` (1 192 lignes). TypeScript :
+               **10 448 lignes** en 68 fichiers ; JavaScript du front : **57 085**.
+
+               ── Et un garde qui regardait la mauvaise chose depuis le début ──
+
+               Le paquet unique fait **3 415 lignes**, et le garde « aucun fichier au-delà de
+               2 000 lignes » l'a nommé. Il avait raison de mordre, et tort de regarder : son
+               exclusion des paquets construits ne nommait que `public/modules/*/app/`.
+               `public/app/` et `public/shared/app/` — les sas du portail et du socle,
+               construits par le même esbuild depuis le même `frontend/` — **passaient pour de
+               la source** depuis 5.b.
+
+               Tous les gardes de ce fichier tournaient donc sur des paquets : longueur
+               lisible, noms globaux, dates, appels au magasin. Personne ne l'a vu parce
+               qu'aucun paquet n'atteignait le seuil. *Un garde qui ne mord qu'au-delà d'un
+               seuil ne dit pas qu'il regarde la mauvaise chose* — il a fallu un paquet de
+               3 415 lignes pour que l'erreur devienne visible.
+
+               Les sorties se **déduisent** désormais de la table de `construire.mjs`, comme le
+               faisait déjà le garde des fichiers ignorés de git et de l'image — une liste
+               tenue à la main est exactement ce qui a produit l'oubli. Et un contrôle nouveau
+               **nomme les exclusions** et exige qu'il y en ait au moins trois : une exclusion
+               qui se vide en silence viderait les autres gardes avec elle. Contre-essayé en
+               rendant la table illisible : trois contrôles tombent.
+
+
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

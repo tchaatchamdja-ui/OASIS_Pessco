@@ -59,7 +59,41 @@ const FONCTIONS_TOLEREES = {};
 // Exclu par le chemin, et non par la taille : un paquet de deux cents lignes
 // resterait un paquet, et un fichier écrit de vingt-cinq mille lignes resterait un
 // défaut.
-const CONSTRUIT = /\/public\/modules\/[^/]+\/app\//;
+//
+// ── Et les deux autres sorties, oubliées jusqu'au 13 octobre 2026 ──
+//
+// Cette expression ne nommait que les paquets des modules. `public/app/` et
+// `public/shared/app/` — les sas du portail et du socle, construits par le même
+// esbuild depuis le même `frontend/` — **passaient pour de la source**. Tous les
+// gardes de ce fichier tournaient donc sur des paquets : longueur lisible, noms
+// globaux, dates, appels au magasin.
+//
+// Personne ne l'a vu parce qu'aucun paquet n'atteignait les 2 000 lignes. Le
+// portail en un seul paquet (ADR-003, 5.d.7) en fait **3 415**, et le garde a
+// nommé un fichier que personne n'écrit. *Un garde qui ne mord qu'au-delà d'un
+// seuil ne dit pas qu'il regarde la mauvaise chose.*
+//
+// Les sorties se **déduisent** désormais de la table de `construire.mjs`, comme le
+// fait déjà le garde des fichiers ignorés plus bas — une liste tenue à la main ici
+// est exactement ce qui a produit l'oubli.
+function sortiesDeConstruction() {
+  const dossiers = ['public/modules/[^/]+/app/'];
+  const construire = path.join(RACINE, 'frontend', 'construire.mjs');
+  if (fs.existsSync(construire)) {
+    const bloc = /const SORTIE_SAS = \{([\s\S]*?)\n\};/.exec(fs.readFileSync(construire, 'utf8'));
+    if (bloc) {
+      for (const m of bloc[1].matchAll(/:\s*(?:join\(([^)]*)\)|'([^']+)')/g)) {
+        const morceaux = m[1]
+          ? m[1].split(',').map((x) => x.trim().replace(/^'|'$/g, ''))
+          : [m[2]];
+        dossiers.push(`public/${morceaux.join('/')}/`);
+      }
+    }
+  }
+  return dossiers;
+}
+const SORTIES_CONSTRUITES = sortiesDeConstruction();
+const CONSTRUIT = new RegExp(`/(${SORTIES_CONSTRUITES.join('|')})`);
 
 function sources() {
   const liste = [];
@@ -128,6 +162,21 @@ module.exports = async function tailleSmoke() {
     if (budget === undefined) trop.push(`${relatif(f)} : ${n} lignes (non déclaré)`);
     else if (n > Math.round(budget * MARGE)) trop.push(`${relatif(f)} : ${n} lignes (toléré ${budget})`);
   });
+  // ── Ce que les gardes de source **ne** regardent pas, dit à voix haute ──
+  //
+  // L'exclusion des paquets construits est ce qui rend les gardes ci-dessus
+  // justes ; c'est aussi ce qui peut les vider sans un mot. Le contrôle nomme donc
+  // les sorties exclues et vérifie qu'elles sont **au moins trois** — les modules,
+  // le socle, le portail. Une table de `construire.mjs` devenue illisible ferait
+  // tomber celui-ci, et non les autres en silence.
+  verifier('les sorties de construction sont exclues des gardes de source, et nommées',
+    SORTIES_CONSTRUITES.length >= 3
+    && CONSTRUIT.test('/public/app/portail.js')
+    && CONSTRUIT.test('/public/shared/app/oasis-commun.js')
+    && CONSTRUIT.test('/public/modules/droits/app/main.js')
+    && !CONSTRUIT.test('/public/js/app.js'),
+    `${SORTIES_CONSTRUITES.length} sortie(s) : ${SORTIES_CONSTRUITES.join(', ')}`);
+
   verifier(`aucun fichier au-delà de ${SEUIL_FICHIER} lignes hors exceptions déclarées`,
     trop.length === 0, trop.join(' · '));
 

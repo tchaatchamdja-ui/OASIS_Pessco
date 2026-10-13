@@ -121,20 +121,15 @@
   <script src="/shared/app/oasis-requete.js"></script>
   <script src="/shared/app/oasis-messages-serveur.js"></script>
   <script src="/shared/app/oasis-commun.js"></script>
-  <script src="/app/icons.js"></script>
-  <script src="/app/i18n.js"></script>
-  <script src="/shared/app/oasis-cookies.js"></script>
-  <script src="/app/etat.js"></script>
-  <script src="/app/schemas.js"></script>
-  <script src="/app/referentiels.js"></script>
-  <script src="/app/exigences.js"></script>
-  <script src="/app/organigramme.js"></script>
-  <script src="/app/taxinomie.js"></script>
-  <script src="/app/parametres.js"></script>
+  <!-- Le portail en un seul paquet (ADR-003, 5.d.7). Douze paquets autonomes
+       portaient douze copies de chaque module — donc douze copies de leur état,
+       et une bascule de langue qui n'en touchait qu'une. Voir
+       frontend/portail/globales/portail.ts. -->
   <script src="/js/app.js"></script>
-  <script src="/js/app-config.js"></script>
-  <script src="/app/app-demarrage.js"></script>
-  <script src="/app/portail-instances.js"></script>
-  <script src="/app/modules-host.js"></script>
+  <script src="/app/portail.js"></script>
+  <!-- Le bandeau des témoins **après** le paquet : il traduit ses libellés par
+       `window.t`, et sans lui il retombe sur le français en silence. Il était
+       entre les libellés et l'état, dans la liste de douze. -->
+  <script src="/shared/app/oasis-cookies.js"></script>
 </body>
 </html>

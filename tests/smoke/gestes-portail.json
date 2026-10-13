@@ -1,581 +1,13 @@
 {
- "releve": "2026-10-09",
+ "releve": "2026-10-13",
  "gestesNommes": 84,
  "occurrences": 131,
  "exerces": 66,
  "indecidables": 8,
  "gestes": [
   {
-   "fichier": "public/js/app-config.js",
-   "ligne": 224,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal('${coll}','${r.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 225,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "deleteRef",
-   "source": "deleteRef('${coll}','${r.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 235,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal('${coll}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 276,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openExigDrawer",
-   "source": "openExigDrawer('${e.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 277,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "deleteRef",
-   "source": "deleteRef('exigences','${e.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 284,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "toggleExigGroup",
-   "source": "toggleExigGroup(${escArg(key)})",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 286,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "event.stopPropagation",
-   "source": "event.stopPropagation()",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 288,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openReglementForm",
-   "source": "openReglementForm(${escArg(key)})",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 289,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openExigDrawer",
-   "source": "openExigDrawer(null,${escArg(key)},${escArg(dateAdoption)})",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 309,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openExigDrawer",
-   "source": "openExigDrawer(null,null,null,true)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 327,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 329,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 339,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 340,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveExigDrawer",
-   "source": "saveExigDrawer(${escArg(id || '')}, ${showRegFields}, ${escArg(reglement || '')}, ${escArg(date || '')})",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 372,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 375,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 382,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 383,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveReglement",
-   "source": "saveReglement(${escArg(reglement)})",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 466,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "togglePers",
-   "source": "togglePers('${r.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 469,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal('${coll}','${r.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 470,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "deleteRef",
-   "source": "deleteRef('${coll}','${r.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 488,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal('${coll}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 516,
-   "forme": "en ligne",
-   "evenement": "change",
-   "nom": "toggleInspectorFields",
-   "source": "toggleInspectorFields()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 517,
-   "forme": "en ligne",
-   "evenement": "change",
-   "nom": "onchange=\"orgTypeChanged()\"",
-   "source": "onchange=\"orgTypeChanged()\"",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 563,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 566,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 567,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveRef",
-   "source": "saveRef('${coll}','${id || ''}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 682,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "event.stopPropagation",
-   "source": "event.stopPropagation()",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 683,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal('${coll}','${id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 684,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "deleteRef",
-   "source": "deleteRef('${coll}','${id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 690,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal(\"${coll}\",\"\",${json})",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 697,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "toggleAcc",
-   "source": "toggleAcc('${key}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 794,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "openRefModal('domaines')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 830,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openAacEdit",
-   "source": "openAacEdit()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 837,
-   "forme": "en ligne",
-   "evenement": "change",
-   "nom": "uploadAacLogo",
-   "source": "uploadAacLogo(this)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 839,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "removeAacLogo",
-   "source": "removeAacLogo()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 867,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 894,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 895,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveAAC",
-   "source": "saveAAC()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1003,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1012,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1025,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1037,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1038,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "orgConfirmInterim",
-   "source": "orgConfirmInterim('${nodeId}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1116,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "orgUnassign",
-   "source": "orgUnassign('${a.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1139,
-   "forme": "en ligne",
-   "evenement": "dragstart",
-   "nom": "orgDragStart",
-   "source": "orgDragStart(event,'${p.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1157,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "orgEndInterim",
-   "source": "event.stopPropagation();orgEndInterim('${node.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1159,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "orgStartInterim",
-   "source": "event.stopPropagation();orgStartInterim('${node.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1162,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openPosteRegistre",
-   "source": "event.stopPropagation();openPosteRegistre('${node.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1172,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "openRefModal",
-   "source": "event.stopPropagation();openRefModal('organisation','${node.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1179,
-   "forme": "en ligne",
-   "evenement": "dragover",
-   "nom": "orgAllowDrop",
-   "source": "orgAllowDrop(event)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1179,
-   "forme": "en ligne",
-   "evenement": "dragleave",
-   "nom": "orgDragLeave",
-   "source": "orgDragLeave(event)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1179,
-   "forme": "en ligne",
-   "evenement": "drop",
-   "nom": "orgDrop",
-   "source": "orgDrop(event,'${node.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1198,
-   "forme": "en ligne",
-   "evenement": "dragover",
-   "nom": "orgAllowDrop",
-   "source": "orgAllowDrop(event)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1198,
-   "forme": "en ligne",
-   "evenement": "dragleave",
-   "nom": "orgDragLeave",
-   "source": "orgDragLeave(event)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1198,
-   "forme": "en ligne",
-   "evenement": "drop",
-   "nom": "orgDrop",
-   "source": "orgDrop(event,'${node.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1220,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "setOrgView",
-   "source": "setOrgView('list')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1221,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "setOrgView",
-   "source": "setOrgView('tree')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1261,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveSecurite",
-   "source": "saveSecurite()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1333,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveSysteme",
-   "source": "saveSysteme()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1411,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "cfgNavigate",
-   "source": "cfgNavigate('${tab.id}')",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1421,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "toggleCfgSidebar",
-   "source": "toggleCfgSidebar()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app-config.js",
-   "ligne": 1429,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "toggle:change",
-   "source": "toggle.addEventListener('change', async () => {",
-   "id": null,
-   "exerce": null
-  },
-  {
    "fichier": "public/js/app.js",
-   "ligne": 235,
+   "ligne": 248,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailOuvrirRecherche",
@@ -584,7 +16,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 238,
+   "ligne": 251,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "portailChercher",
@@ -593,7 +25,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 238,
+   "ligne": 251,
    "forme": "en ligne",
    "evenement": "blur",
    "nom": "portailFermerRechercheSiVide",
@@ -602,7 +34,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 240,
+   "ligne": 253,
    "forme": "en ligne",
    "evenement": "mousedown",
    "nom": "event.preventDefault",
@@ -611,7 +43,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 240,
+   "ligne": 253,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -620,7 +52,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 299,
+   "ligne": 312,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "${pdf}",
@@ -629,7 +61,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 301,
+   "ligne": 314,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openImportModal",
@@ -638,7 +70,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 341,
+   "ligne": 354,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -647,7 +79,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 352,
+   "ligne": 365,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -656,7 +88,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 353,
+   "ligne": 366,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "doImport",
@@ -665,7 +97,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 519,
+   "ligne": 532,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -674,7 +106,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 521,
+   "ligne": 534,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -683,7 +115,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 603,
+   "ligne": 616,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setUserTab",
@@ -692,7 +124,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 671,
+   "ligne": 684,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleUserSidebar",
@@ -701,7 +133,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 746,
+   "ligne": 759,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -710,7 +142,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 749,
+   "ligne": 762,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -719,7 +151,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 750,
+   "ligne": 763,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveUserModules",
@@ -728,7 +160,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 775,
+   "ligne": 788,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -737,7 +169,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 786,
+   "ligne": 799,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -746,7 +178,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 816,
+   "ligne": 829,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -755,7 +187,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 839,
+   "ligne": 852,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -764,7 +196,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 840,
+   "ligne": 853,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitEditUser",
@@ -773,7 +205,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1049,
+   "ligne": 1062,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "uploadProfilePhoto",
@@ -782,7 +214,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1051,
+   "ligne": 1064,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "removeProfilePhoto",
@@ -791,7 +223,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1069,
+   "ligne": 1082,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveProfileInfos",
@@ -800,7 +232,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1102,
+   "ligne": 1115,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitProfilePassword",
@@ -809,7 +241,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1119,
+   "ligne": 1132,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveProfileExtra",
@@ -818,7 +250,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 260,
+   "ligne": 273,
    "forme": "propriété",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -828,7 +260,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 535,
+   "ligne": 548,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "cardEl:click",
@@ -838,7 +270,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 694,
+   "ligne": 707,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('newUserBtn'):click",
@@ -848,7 +280,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 696,
+   "ligne": 709,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -858,7 +290,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 716,
+   "ligne": 729,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "sel:change",
@@ -868,7 +300,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 724,
+   "ligne": 737,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -878,7 +310,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 732,
+   "ligne": 745,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -888,7 +320,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 733,
+   "ligne": 746,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -898,7 +330,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 734,
+   "ligne": 747,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -908,7 +340,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 791,
+   "ligne": 804,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('efValider'):click",
@@ -918,7 +350,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 846,
+   "ligne": 859,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "document.getElementById('euEmail'):input",
@@ -928,7 +360,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 920,
+   "ligne": 933,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('closeModal'):click",
@@ -938,7 +370,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 921,
+   "ligne": 934,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('cancelModal'):click",
@@ -948,7 +380,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 922,
+   "ligne": 935,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "document.getElementById('nuRole'):change",
@@ -958,7 +390,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 926,
+   "ligne": 939,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('createUser'):click",
@@ -968,7 +400,7 @@
   },
   {
    "fichier": "public/js/app.js",
-   "ligne": 1174,
+   "ligne": 1187,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('verifyBtn'):click",
@@ -977,8 +409,36 @@
    "exerce": true
   },
   {
+   "fichier": "frontend/portail/configuration.ts",
+   "ligne": 170,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "cfgNavigate",
+   "source": "cfgNavigate('${tab.id}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/configuration.ts",
+   "ligne": 235,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleCfgSidebar",
+   "source": "toggleCfgSidebar()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/configuration.ts",
+   "ligne": 190,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "toggle:change",
+   "source": "toggle.addEventListener('change', async () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 247,
+   "ligne": 257,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('sidebarNav'):click",
@@ -988,7 +448,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 253,
+   "ligne": 263,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('logoutBtn'):click",
@@ -998,7 +458,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 258,
+   "ligne": 268,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('notifBell'):click",
@@ -1008,13 +468,148 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 275,
+   "ligne": 285,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('pwdSubmit'):click",
    "source": "document.getElementById('pwdSubmit')?.addEventListener('click', async () => {",
    "id": "pwdSubmit",
    "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 113,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openExigDrawer",
+   "source": "openExigDrawer('${texte(e.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 114,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('exigences','${texte(e.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 121,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleExigGroup",
+   "source": "toggleExigGroup(${argEchappe(key)})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 123,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation()",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 125,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openReglementForm",
+   "source": "openReglementForm(${argEchappe(key)})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 126,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openExigDrawer",
+   "source": "openExigDrawer(null,${argEchappe(key)},${argEchappe(dateAdoption)})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 146,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openExigDrawer",
+   "source": "openExigDrawer(null,null,null,true)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 164,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 166,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 176,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 177,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveExigDrawer",
+   "source": "saveExigDrawer(${argEchappe(id || '')}, ${showRegFields}, ${argEchappe(reglement || '')}, ${argEchappe(date || '')})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 254,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 257,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 264,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 265,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveReglement",
+   "source": "saveReglement(${argEchappe(reglement)})",
+   "exerce": true
   },
   {
    "fichier": "frontend/portail/instances.ts",
@@ -1072,6 +667,177 @@
    "source": "window.addEventListener('message', (ev: MessageEvent) => {",
    "id": null,
    "exerce": null
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 195,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 204,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 225,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 237,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 238,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgConfirmInterim",
+   "source": "orgConfirmInterim('${nodeId}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 342,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgUnassign",
+   "source": "orgUnassign('${texte(a.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 367,
+   "forme": "en ligne",
+   "evenement": "dragstart",
+   "nom": "orgDragStart",
+   "source": "orgDragStart(event,'${texte(p.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 385,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgEndInterim",
+   "source": "event.stopPropagation();orgEndInterim('${texte(node.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 387,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "orgStartInterim",
+   "source": "event.stopPropagation();orgStartInterim('${texte(node.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 390,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openPosteRegistre",
+   "source": "event.stopPropagation();openPosteRegistre('${texte(node.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 400,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "event.stopPropagation();openRefModal('organisation','${texte(node.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 407,
+   "forme": "en ligne",
+   "evenement": "dragover",
+   "nom": "orgAllowDrop",
+   "source": "orgAllowDrop(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 407,
+   "forme": "en ligne",
+   "evenement": "dragleave",
+   "nom": "orgDragLeave",
+   "source": "orgDragLeave(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 407,
+   "forme": "en ligne",
+   "evenement": "drop",
+   "nom": "orgDrop",
+   "source": "orgDrop(event,'${texte(node.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 426,
+   "forme": "en ligne",
+   "evenement": "dragover",
+   "nom": "orgAllowDrop",
+   "source": "orgAllowDrop(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 426,
+   "forme": "en ligne",
+   "evenement": "dragleave",
+   "nom": "orgDragLeave",
+   "source": "orgDragLeave(event)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 426,
+   "forme": "en ligne",
+   "evenement": "drop",
+   "nom": "orgDrop",
+   "source": "orgDrop(event,'${texte(node.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 448,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setOrgView",
+   "source": "setOrgView('list')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/organigramme.ts",
+   "ligne": 449,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "setOrgView",
+   "source": "setOrgView('tree')",
+   "exerce": true
   },
   {
    "fichier": "frontend/portail/pages/cookies-page.ts",
@@ -1152,6 +918,240 @@
    "source": "document.getElementById('mfaResend')?.addEventListener('click', async () => {",
    "id": "mfaResend",
    "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 193,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openAacEdit",
+   "source": "openAacEdit()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 200,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "uploadAacLogo",
+   "source": "uploadAacLogo(this)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 202,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "removeAacLogo",
+   "source": "removeAacLogo()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 264,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 291,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 292,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveAAC",
+   "source": "saveAAC()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 387,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveSecurite",
+   "source": "saveSecurite()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/parametres.ts",
+   "ligne": 471,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveSysteme",
+   "source": "saveSysteme()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 118,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}','${texte(r.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 119,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('${coll}','${texte(r.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 129,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 159,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "toggleInspectorFields",
+   "source": "toggleInspectorFields()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 160,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "onchange=\"orgTypeChanged()\"",
+   "source": "onchange=\"orgTypeChanged()\"",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 230,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 233,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 234,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveRef",
+   "source": "saveRef('${coll}','${id || ''}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 92,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "togglePers",
+   "source": "togglePers('${texte(r.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 95,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}','${texte(r.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 96,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('${coll}','${texte(r.id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 114,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 134,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation()",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 135,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('${coll}','${texte(id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 136,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "deleteRef",
+   "source": "deleteRef('${coll}','${texte(id)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 145,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal(\"${coll}\",\"\",${json})",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 152,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "toggleAcc",
+   "source": "toggleAcc('${key}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/taxinomie.ts",
+   "ligne": 251,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "openRefModal",
+   "source": "openRefModal('domaines')",
+   "exerce": true
   },
   {
    "fichier": "public/index.html",

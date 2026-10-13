@@ -668,6 +668,40 @@ module.exports = async function parcoursSmoke(port) {
       && new Set(ongletsUtilisateurs.empreintes).size >= ongletsUtilisateurs.nombre - 1,
       JSON.stringify(ongletsUtilisateurs));
 
+    // ── Changer d'onglet remet la recherche au repos ──
+    //
+    // `setUserTab` appelle `portailReinitialiserRecherche` : le filtre ne porte
+    // que sur ce qu'on regarde. Ce contrôle est ici, et non dans la preuve
+    // mécanique de 5.e.1, pour une raison qui vaut d'être écrite : là-bas le côté
+    // « origine » lit `searchInputHtml` sur `window` et le côté « nouvelle »
+    // l'importe, donc deux copies de l'état — et la comparaison mesurerait
+    // l'empaquetage. **Ici il n'y en a qu'une**, celle que la page sert.
+    //
+    // Contre-essayé en ôtant l'appel : le champ garde sa valeur d'un onglet à
+    // l'autre, et ce contrôle tombe.
+    const rechercheOnglets = await page.evaluate(async () => {
+      const champ = () => document.querySelector('#portailRecherche .cfg-search-input');
+      const loupe = () => document.querySelector('#portailRecherche .cfg-search-loupe');
+      if (!champ() || !loupe()) return { champs: false };
+      loupe().click();
+      const c = champ();
+      c.value = 'ZZZ-introuvable';
+      c.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 400));
+      const avant = champ() ? champ().value : null;
+      const onglets = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .filter((b) => (b.getAttribute('onclick') || '').includes('setUserTab'));
+      if (onglets.length < 2) return { champs: false };
+      onglets[1].click();
+      await new Promise((r) => setTimeout(r, 900));
+      return { champs: true, avant, apres: champ() ? champ().value : null };
+    });
+    verifier('changer d’onglet des comptes remet la recherche au repos',
+      rechercheOnglets.champs === true
+      && rechercheOnglets.avant === 'ZZZ-introuvable'
+      && rechercheOnglets.apres === '',
+      JSON.stringify(rechercheOnglets));
+
     // Les fenêtres de référentiel : dix-huit occurrences à elles deux, le plus
     // gros bloc du relevé. On en ouvre une et on la referme — l'effet est la
     // présence du panneau, non son contenu.

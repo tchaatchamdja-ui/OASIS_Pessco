@@ -42,6 +42,8 @@ import './i18n';
 // La barre d'écran et les libellés littéraux (5.e.0) : lus par les référentiels
 // et leurs voisins, donc placés avant eux.
 import './barre';
+// L'écran des comptes (5.e.1).
+import './utilisateurs';
 import './etat';
 import './schemas';
 import './referentiels';

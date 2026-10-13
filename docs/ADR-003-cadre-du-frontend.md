@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 973 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0) |
+           | portail (`public/js`) | 598 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3129,7 +3129,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        du navigateur. C'est pourquoi la couverture des gestes du portail a été portée à son
        plafond (66 sur 84) **avant** 5.d, et non après : c'est elle qui prend le relais.
 
-   5.e [~] **`app.js` — le dernier JavaScript du portail.** 973 lignes restantes sur
+   5.e [~] **`app.js` — le dernier JavaScript du portail.** 598 lignes restantes sur
        1 192. Il porte la navigation, les cinq vues, les utilisateurs, le profil et le
        journal d'audit.
 
@@ -3218,6 +3218,124 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            régimes manquants : une valeur de recherche posée **sans** ouverture (le cas
            d'un écran redessiné sous un champ rempli), et un import qui rend des lignes
            ignorées. Les deux sont entrés dans la preuve.
+
+       5.e.1 [x] **L'écran des comptes — et les écouteurs, que nul balisage ne dit** —
+           fait le 13 octobre 2026. `app.js` passe de **973 à 599 lignes**.
+
+           La pièce la plus lourde de 5.e : six onglets, cinq fenêtres, et **quatre gestes
+           qui écrivent** — dont l'effacement d'un compte, irréversible et confirmé par le
+           mot de passe de celui qui le prononce.
+
+           ── Trois états, et aucun n'a eu à monter sur `window` ──
+
+           `USER_TAB`, `USER_COLLAPSED` et `ALL_MODULES` étaient des `let` du premier
+           niveau — des globales **lexicales** — et personne d'autre ne les lisait : ils
+           deviennent privés. Troisième fois après `AAC_CFG` (5.d.5) et
+           `PORTAIL_RECHERCHE` (5.e.0), et toujours le même critère.
+
+           ── Ce que cette preuve couvre, et qu'aucune autre ne pouvait ──
+
+           `renderUsers` écrit le balisage **puis branche six familles d'écouteurs** :
+           `[data-action]`, `[data-presta]`, `[data-topersonnel]`, `[data-modules]`,
+           `[data-edit]`, `[data-effacer]`. *Un écouteur manquant laisse un bouton muet,
+           et aucun balisage ne le dirait* — c'est la défaillance la plus silencieuse de
+           cet écran, et elle n'était éprouvée nulle part.
+
+           Le faux document **relit le balisage qui vient d'être écrit** pour en tirer ses
+           éléments : inventer une liste mesurerait mon montage. Et un garde refuse le
+           vide — l'onglet « AAC » doit porter les cinq familles de boutons, celui des
+           prestataires son sélecteur de rattachement.
+
+           **100 comparaisons** : les six onglets aux deux privilèges — le privilège
+           commande cinq boutons et une colonne —, le repli en aller et retour, les quatre
+           fenêtres avec **le focus qu'elles posent**, `userRole` et `splitName` sur treize
+           comptes bricolés (un nom en un mot, en quatre, aucun nom du tout), et les quatre
+           corps de requête.
+
+           ── Ce que la conversion ne corrige pas, et qui est nommé ──
+
+           `submitEditUser` envoie **tous** les champs de la fenêtre, vides compris, et le
+           serveur les écrit : un champ que la fenêtre n'aurait pas su relire effacerait la
+           valeur enregistrée. C'est *le champ effacé parce qu'il est parti vide*, que la
+           suite « parcours » nomme depuis 5.c — et la même famille que le défaut que j'ai
+           **introduit puis corrigé** en 5.d.5.
+
+           Il n'est pas corrigé : le corriger changerait ce que la route reçoit. Mais le
+           typage le rend visible — les champs facultatifs passent par
+           `valeurFacultative`, qui dit en son nom que l'absence et le vide s'y confondent,
+           tandis que les champs attendus passent par `valeur`, qui **lève**.
+
+           ── Une distinction assumée entre ouvrir et refermer ──
+
+           La racine des fenêtres absente fait **lever** les cinq `show*`, comme
+           l'original. `closeUserModal`, lui, reste permissif : *refermer une fenêtre qui
+           n'est pas là n'est pas une erreur, en ouvrir une dans le vide l'est.* C'est le
+           choix fait pour `closeRefModal` en 5.d.1, et il est maintenant écrit.
+
+           ── Un contre-essai vert qui disait autre chose qu'un régime manquant ──
+
+           « La recherche non réinitialisée au changement d'onglet » restait **vert**. J'ai
+           d'abord cru à un régime absent et posé une valeur avant la bascule : la
+           comparaison a alors rendu un écart — sur mon montage.
+
+           La leçon de 5.d.7, revenue dans la mesure : le côté « origine » lit
+           `searchInputHtml` sur `window`, posé par le paquet `barre.js` ; le côté
+           « nouvelle » l'**importe**, et `utilisateurs.js` en porte donc **sa propre
+           copie**. Poser une valeur par la globale touche la copie du sas — celle que
+           l'origine rend, et pas celle du module.
+
+           Sur la page il n'y a **qu'une** copie depuis 5.d.7 : le défaut est de la mesure,
+           non du produit. Le régime a donc été retiré, la limite est **écrite dans
+           l'en-tête du comparateur**, et la preuve est allée là où il n'y a qu'une copie —
+           la suite « parcours » a reçu le contrôle « changer d'onglet des comptes remet la
+           recherche au repos », contre-essayé en ôtant l'appel.
+
+           *Un comparateur qui oppose un module à des globales ne voit pas par-dessus les
+           frontières de paquet. Il faut le savoir avant de lui demander ce qu'il ne peut
+           pas dire.*
+
+           ── Et un garde-fou de taille qui a imposé un découpage — le bon ──
+
+           `utilisateurs.ts` faisait **637 lignes**, et la limite du frontend est 600.
+           Première fois qu'une limite de taille décide d'un découpage dans ce jalon, et
+           le découpage qu'elle impose est juste : `comptes.ts` prend la **forme** d'un
+           compte, les deux tables d'onglets et les deux lectures pures — rien qui touche
+           au document, à `window` ou à l'API ; `utilisateurs.ts` garde l'écran.
+
+           ── Un « meilleur nom » qui a fait perdre six gestes de couverture ──
+
+           Le relevé des gestes a signalé six noms changés. J'avais écrit
+           `const efValider = element('efValider')` — plus lisible, pensais-je, que
+           `document.getElementById('efValider').addEventListener(…)` de l'original.
+
+           `relever-gestes.js` nomme la cible d'un écouteur en **remontant la variable
+           jusqu'à son `getElementById`**. Avec l'accesseur, il ne pouvait plus la suivre :
+           les six gestes sont passés **indécidables**, et la couverture du portail est
+           tombée de **66 à 60** — *sans que rien ne soit moins éprouvé*. J'avais échangé
+           une mesure contre une ignorance.
+
+           Deux réponses possibles : élargir l'outil pour qu'il connaisse l'accesseur, ou
+           garder la source lisible pour lui. La seconde a été retenue — l'outil connaît
+           les primitives du document, et lui apprendre les aides d'un module serait une
+           dépendance de plus dans le sens où il ne faut pas. Les six cibles gardent donc
+           leur `getElementById` à l'assignation, et le refus est **groupé** : une fenêtre
+           à qui manque un champ est une fenêtre cassée, pas un champ à traiter à part.
+
+           *Une mesure qui baisse sans que rien ait changé mesure l'outil, non le produit.*
+
+           ── Seize contre-essais, seize rouges ──
+
+           Dont un qui **ne compilait pas** d'abord — « l'écouteur du rattachement
+           prestataire non branché » —, donc ne mesurait rien. Réécrit par un sélecteur qui
+           ne trouve rien, il rend des écarts. Troisième fois en trois jours.
+
+           Les quinze autres, du plus parlant : le nom et le prénom échangés (15 écarts),
+           le compte par onglet faussé (14), la colonne des accès ouverte à un
+           non-super-administrateur (12), le rôle « inspecteur » non replié sur « AAC » (7),
+           le bouton d'effacement offert sur soi-même, la bascule d'activité offerte sur un
+           pair administrateur, le mot de passe de l'opérateur non envoyé à l'effacement,
+           l'identifiant modifié envoyé sans sa confirmation, la portée envoyée à la place
+           de l'instance, le focus non posé, les cases lues sans leur filtre `:checked`.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

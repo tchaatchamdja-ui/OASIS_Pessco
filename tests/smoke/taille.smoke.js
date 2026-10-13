@@ -462,6 +462,101 @@ module.exports = async function tailleSmoke() {
         : `${convertisModules.length} converti(s) : ${convertisModules.join(', ')}`);
   }
 
+  // ── Aucun module n'adresse au portail un message que rien n'écoute ──
+  //
+  // Un écran de module vit dans un cadre. Il ne partage **rien** avec le
+  // portail : pas de globales, pas de scripts communs — les six pages de module
+  // ne chargent aucun `/app/*.js`. La seule voie est `postMessage`, et un
+  // `postMessage` dont le type ne correspond à aucun écouteur **ne lève pas** :
+  // il part, et il tombe.
+  //
+  // C'est le mode de défaillance le plus coûteux de ce dépôt, sous une forme que
+  // ni le compilateur ni aucune suite ne voyait. Mesuré le 13 octobre 2026
+  // (ADR-003, 5.e.5) : **sept types envoyés sur douze n'avaient aucun écouteur.**
+  //
+  //   · `oasis:back-to-portal`, envoyé par MESURES et RAMP, quand l'hôte écoute
+  //     `oasis:back-portal` — deux caractères d'écart, et un retour au portail
+  //     qui ne part pas ;
+  //   · cinq `<prefixe>:unauthenticated`, vestiges d'avant que l'enveloppe du
+  //     socle ne reprenne le 401 à son compte.
+  //
+  // ── Ce contrôle dit l'un et pas l'autre, et il faut le savoir ──
+  //
+  // Il refuse un message **envoyé sans écouteur**. Il ne dit rien d'un écouteur
+  // sans émetteur : c'est l'erreur bénigne des deux, et l'exiger interdirait
+  // d'écrire l'hôte avant le module.
+  //
+  // Les types écoutés sont **lus dans le code de l'écouteur** — les égalités
+  // `data.type === '…'` et les motifs `data.type.endsWith('…')` —, et non tenus
+  // dans une liste ici : une liste aurait divergé, et c'est précisément la faute
+  // qu'on garde. Si aucun écouteur ne se lit, le contrôle **refuse** au lieu de
+  // passer : un dépôt sans écouteur et un relevé aveugle se ressemblent.
+  {
+    const dossiersEnvoi = [
+      path.join(RACINE, 'public', 'modules'),
+      path.join(RACINE, 'frontend'),
+    ];
+    const lisibles = (racine) => {
+      const sortie = [];
+      if (!fs.existsSync(racine)) return sortie;
+      (function parcourir(rep) {
+        for (const e of fs.readdirSync(rep, { withFileTypes: true })) {
+          const c = path.join(rep, e.name);
+          if (e.isDirectory()) { if (e.name !== 'app') parcourir(c); }
+          else if (/\.(js|ts|tsx|html)$/.test(e.name)) sortie.push(c);
+        }
+      }(racine));
+      return sortie;
+    };
+    const fichiersMessages = dossiersEnvoi.flatMap(lisibles);
+
+    // Les écouteurs d'abord : sans eux, rien à comparer.
+    const exacts = new Set();
+    const motifs = [];
+    let ecouteurs = 0;
+    for (const f of fichiersMessages) {
+      const texte = fs.readFileSync(f, 'utf8');
+      if (!/addEventListener\(\s*['"]message['"]/.test(texte)) continue;
+      ecouteurs += 1;
+      for (const m of texte.matchAll(/\.type\s*===\s*['"]([^'"]+)['"]/g)) exacts.add(m[1]);
+      for (const m of texte.matchAll(/\.type\.endsWith\(\s*['"]([^'"]+)['"]/g)) {
+        motifs.push({ forme: `*${m[1]}`, teste: (t) => t.endsWith(m[1]) });
+      }
+      for (const m of texte.matchAll(/\.type\.startsWith\(\s*['"]([^'"]+)['"]/g)) {
+        motifs.push({ forme: `${m[1]}*`, teste: (t) => t.startsWith(m[1]) });
+      }
+    }
+
+    // Puis les envois : `postMessage({ type: '…' })` adressé à une autre fenêtre.
+    const envois = [];
+    for (const f of fichiersMessages) {
+      const texte = fs.readFileSync(f, 'utf8');
+      for (const m of texte.matchAll(/postMessage\(\s*\{[^}]*type:\s*['"]([^'"]+)['"]/g)) {
+        envois.push({
+          type: m[1],
+          ou: `${path.relative(RACINE, f)}:${texte.slice(0, m.index).split('\n').length}`,
+        });
+      }
+    }
+
+    const ecoute = (t) => exacts.has(t) || motifs.some((p) => p.teste(t));
+    const orphelins = envois.filter((e) => !ecoute(e.type));
+
+    if (!ecouteurs || (!exacts.size && !motifs.length)) {
+      verifier('aucun module n’adresse au portail un message que rien n’écoute',
+        false,
+        'refus : aucun type écouté relevé — le relevé ne lit plus les écouteurs,'
+        + ' et un dépôt sans écouteur lui ressemblerait');
+    } else {
+      const relevees = [...exacts, ...motifs.map((p) => p.forme)].sort();
+      verifier('aucun module n’adresse au portail un message que rien n’écoute',
+        orphelins.length === 0,
+        orphelins.length
+          ? orphelins.map((e) => `${e.type} ← ${e.ou}`).join(' · ')
+          : `${envois.length} envoi(s), ${relevees.length} type(s) écouté(s) : ${relevees.join(', ')}`);
+    }
+  }
+
   // ── L'inventaire des gestes d'un écran ne dérive pas en silence ──
   //
   // ADR-003, suite n° 5.c : chaque écran est mesuré avant d'être réécrit. La

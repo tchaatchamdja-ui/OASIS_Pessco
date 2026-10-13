@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3764,15 +3764,95 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            ── Un défaut trouvé en chemin, et **non corrigé ici** ──
 
            En vérifiant par quel chemin un module revient au portail : **MESURES et RAMP
-           envoient `oasis:back-to-portal`, et l'hôte écoute `oasis:back-portal`.** Leur
-           bouton « Retour au portail » ne fait donc rien quand l'écran est monté dans le
-           portail — `mes-app.js:505` et `ramp-app.js:1228` contre
-           `modules-hote.ts:184`. Ouvert seul, l'écran retombe sur `window.location`, ce
-           qui masque le défaut.
+           envoient `oasis:back-to-portal`, et l'hôte écoute `oasis:back-portal`** —
+           `mes-app.js:505` et `ramp-app.js:1228` contre `modules-hote.ts:184`. Rien
+           n'écoute ce type ; le message part et tombe, car un `postMessage` sans
+           destinataire **ne lève pas**.
 
-           La correction tient en un mot, et elle n'est pas de cette étape : ces deux
-           écrans sont du JavaScript non converti, sans relevé de gestes ni contrôle de
-           parcours. Elle appartient à leur suite n° 0, avec le contrôle qui la prouvera.
+           *J'ai écrit ici que « leur bouton Retour au portail ne fait donc rien », et
+           c'était faux — corrigé en 5.e.6, après mesure dans un navigateur. La
+           conclusion avait été tirée du code sans ouvrir la page.*
+
+           Corrigé en 5.e.6, avec les deux contrôles qui l'auraient dit.
+
+       5.e.6 [x] **Le message qui tombait, et les deux contrôles qui n'existaient pas** —
+           fait le 13 octobre 2026.
+
+           Correction du défaut relevé en 5.e.5, et de ce que j'en avais dit.
+
+           ── Ce que la mesure a démenti ──
+
+           J'avais annoncé « le premier défaut visible par un utilisateur ». Mesuré dans
+           un navigateur, sur les trois modules ouverts au compte : **`.btn-back-portal`
+           est à 0, `.oasis-back-btn` à 1.** Le bouton de MESURES et de RAMP **n'est pas
+           là.** `module-chrome.js` remplace le contenu de `.sidebar-header` par la marque
+           OASIS, et un `MutationObserver` le refait à chaque rendu du module — le shell
+           étant redessiné à chaque navigation, la chance de cliquer sur ce bouton est
+           nulle.
+
+           `mesRetourPortail` et `rampRetourPortail` étaient donc du **code mort portant
+           un nom de message faux**, et non un bouton cassé. La différence n'est pas de
+           détail : l'une se corrige, l'autre s'enlève, et surtout *ce n'était pas visible
+           par un utilisateur*. Le défaut réel est d'une autre nature : deux fonctions et
+           leur balisage que personne ne pouvait atteindre, et que rien ne disait.
+
+           **Troisième fois en deux jours qu'une conclusion tirée du code seul s'est
+           trouvée fausse à l'ouverture de la page** — après les deux écritures du relevé
+           de surface. Le code dit ce qu'il est écrit ; il ne dit pas ce qui survit au
+           rendu.
+
+           ── Ce qui est corrigé ──
+
+           Les deux envois prennent le nom que l'hôte écoute. Le code reste mort tant que
+           la coquille des modules n'est pas reprise — c'est leur suite n° 0 —, mais un
+           code mort qui mentirait au réveil est pire qu'un code mort.
+
+           **Et cinq autres messages tombaient dans le vide**, relevés par le même
+           contrôle : `mes:unauthenticated`, `pl:unauthenticated`, `exec:unauthenticated`,
+           `ramp:unauthenticated`, `pr:unauthenticated`. Vestiges d'avant que l'enveloppe
+           du socle ne reprenne le 401 à son compte — elle ramène la **fenêtre entière** à
+           la connexion, ce qu'une redirection locale dans un cadre ne ferait pas. Les cinq
+           sont retirés, le jet qui arrête le montage conservé.
+
+           **Sept types envoyés sur douze n'avaient aucun écouteur.**
+
+           ── Les deux contrôles, et ce que chacun voit ──
+
+           · **`aucun module n'adresse au portail un message que rien n'écoute`** (suite
+             « taille », statique). Un écran de module ne partage **rien** avec le
+             portail : les six pages de module ne chargent aucun `/app/*.js`, et
+             `postMessage` est la seule voie. Le contrôle relève les types envoyés et les
+             types écoutés — **lus dans le code de l'écouteur**, égalités `data.type === …`
+             et motifs `endsWith(…)`, non tenus dans une liste qui aurait divergé. Si
+             aucun écouteur ne se lit, il **refuse** : un dépôt sans écouteur et un relevé
+             aveugle se ressemblent.
+
+             Il dit l'un et pas l'autre, et il faut le savoir : un **écouteur sans
+             émetteur** n'est pas refusé. C'est l'erreur bénigne des deux, et l'exiger
+             interdirait d'écrire l'hôte avant le module.
+
+             Contre-essayé trois fois : le mauvais nom remis (rouge, avec le fichier et la
+             ligne), un `:unauthenticated` remis (rouge), et l'écouteur réécrit de façon
+             que le relevé ne le lise plus (rouge, par le refus).
+
+           · **`le bouton « Retour au portail » du cadre ramène à l'accueil`** (suite
+             « parcours », dans un navigateur). Il part du **clic**, non du message : le
+             bouton que le socle pose dans la barre du module, `backToPortal()`, le
+             `postMessage`, `brancherMessages()` qui l'écoute, et le plein écran défait.
+
+             Le contrôle voisin — celui de 5.e.5 — part du message et n'éprouve que
+             l'hôte. **Aucun n'éprouvait le côté socle**, et c'est ce trou qui a laissé
+             passer un nom de message pendant des semaines.
+
+             Contre-essayé en changeant d'un caractère le type qu'envoie `chrome.ts` :
+             le contrôle du clic rougit, celui du message reste vert — et **le contrôle
+             statique rougit aussi**, en nommant `frontend/socle/chrome.ts:235`. Les deux
+             neufs mordent donc sur un nom faux, et c'est tant mieux ; mais ils ne mordent
+             pas sur les mêmes défauts. Le statique ne voit que des chaînes : un bouton
+             que le shell n'affiche plus, un observateur qui l'efface, un écouteur jamais
+             atteint le laissent vert. *C'est précisément le défaut qu'il a fallu un
+             navigateur pour établir ici — le bouton de MESURES n'est pas là, et aucune
+             chaîne ne le dit.*
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

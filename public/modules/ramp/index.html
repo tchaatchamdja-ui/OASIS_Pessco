@@ -42,7 +42,13 @@
     // Le module rend sa propre coquille ; le contexte utilisateur vient du socle.
     window.RAMP_BOOT = (async function () {
       const res = await fetch('/api/m/ramp/context', { credentials: 'same-origin' });
-      if (res.status === 401) { parent.postMessage({ type: 'ramp:unauthenticated' }, '*'); throw new Error('unauthenticated'); }
+      // Le 401 est traité par l'enveloppe du socle (`oasis-requete.js`), qui ramène
+      // la **fenêtre entière** à la connexion — un module vit en cadre, et une
+      // redirection locale y ouvrirait la page de connexion dans le cadre. Un
+      // `postMessage` de type « ramp:unauthenticated » partait aussi d'ici : rien
+      // ne l'écoutait, et le socle avait repris ce geste à son compte. Retiré le
+      // 13 octobre 2026 ; le jet, lui, arrête bien le montage.
+      if (res.status === 401) throw new Error('unauthenticated');
       // Module fermé au compte : la page ne se monte pas. Sans ce contrôle
       // elle s'ouvrait sur une coquille vide, où chaque geste échouait sans
       // qu'on sache pourquoi.

@@ -926,6 +926,60 @@ module.exports = async function parcoursSmoke(port) {
       })) : null;
       verifier(`le module « ${ouverture} » se monte dans le portail`,
         dedans && dedans.corps > 200 && !dedans.attente, JSON.stringify(dedans));
+
+      // ── Et le **bouton** du cadre ramène au portail ──
+      //
+      // Le contrôle qui suit part du message ; celui-ci part du clic, et c'est
+      // la chaîne entière : le bouton que le socle pose dans la barre du module,
+      // `backToPortal()`, le `postMessage` vers la fenêtre parente,
+      // `brancherMessages()` qui l'écoute, et le plein écran défait.
+      //
+      // Il manquait, et c'est ce qui a laissé passer un défaut de nom de message
+      // pendant des semaines (ADR-003, 5.e.5) : MESURES et RAMP adressaient
+      // `oasis:back-to-portal` quand l'hôte écoute `oasis:back-portal`.
+      //
+      // ── Ce que la mesure a corrigé dans le récit ──
+      //
+      // J'avais écrit que « leur bouton Retour au portail ne fait rien ». Mesuré
+      // dans le navigateur : **le bouton de ces deux modules n'est pas là.**
+      // `module-chrome.js` remplace le contenu de `.sidebar-header` par la
+      // marque OASIS, et un `MutationObserver` le refait à chaque rendu du
+      // module — `.btn-back-portal` est à 0 dans les trois modules éprouvés,
+      // `.oasis-back-btn` à 1. Les deux fonctions étaient donc du **code mort**
+      // portant un nom de message faux, et non un bouton cassé. La différence
+      // compte : l'une se corrige, l'autre s'enlève.
+      const parLeBouton = contenu ? await (async () => {
+        const trouve = await contenu.evaluate(() => {
+          const btn = document.querySelector('.oasis-back-btn');
+          if (!btn) return null;
+          btn.click();
+          return {
+            propre: document.querySelectorAll('.btn-back-portal').length,
+            socle: document.querySelectorAll('.oasis-back-btn').length,
+          };
+        });
+        if (!trouve) return { trouve: false };
+        await new Promise((r) => setTimeout(r, 1500));
+        return {
+          trouve: true,
+          ...trouve,
+          dehors: await page.evaluate(() => !document.body.classList.contains('module-fullscreen')),
+          accueil: await page.evaluate(() => ((document.getElementById('mainView') || {}).textContent || '').trim().length),
+        };
+      })() : { trouve: false };
+      verifier('le bouton « Retour au portail » du cadre ramène à l’accueil',
+        parLeBouton.trouve && parLeBouton.dehors && parLeBouton.accueil > 50,
+        JSON.stringify(parLeBouton));
+
+      // On y rentre de nouveau : le contrôle suivant éprouve le même retour par
+      // le message, et il lui faut le plein écran.
+      await ouvrir('home');
+      await page.evaluate((c) => {
+        const carte = document.querySelector(`.portal-card[data-module="${c}"][data-enabled="true"]`);
+        if (carte) carte.click();
+      }, ouverture);
+      await page.waitForSelector('#prFrame', { timeout: 10000 }).catch(() => null);
+      await new Promise((r) => setTimeout(r, 2500));
     } else {
       verifier('une carte de module ouverte est offerte au portail', false, 'aucune carte ouverte');
     }

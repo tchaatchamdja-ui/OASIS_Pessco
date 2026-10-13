@@ -730,8 +730,14 @@ node scripts/relever-surface.js | tail -1
 # Les noms publiés sans lecteur, s'il en reparaît un (la liste doit être vide)
 node scripts/relever-surface.js --muets
 
+# Les types de message qu'un module adresse au portail — attendu : 6 envois, et
+# tous écoutés (`oasis:back-portal` et le motif `*:page`). La suite « taille »
+# refuse un type sans écouteur ; voici de quoi le voir à l'œil.
+grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
+  | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
+
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 998, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 001, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

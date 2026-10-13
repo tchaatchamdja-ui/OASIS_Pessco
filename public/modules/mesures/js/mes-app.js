@@ -502,7 +502,12 @@ function mesSetLang(lang) {
 }
 
 function mesRetourPortail() {
-    parent.postMessage({ type: 'oasis:back-to-portal' }, '*');
+    // Le nom du message est celui que l'hôte écoute : `oasis:back-portal`
+    // (`frontend/portail/modules-hote.ts`). Il disait `oasis:back-to-portal`,
+    // que rien n'écoutait — le message partait et tombait. Corrigé le
+    // 13 octobre 2026, et un contrôle statique refuse désormais tout type
+    // adressé au portail dont aucun écouteur du dépôt ne répond.
+    parent.postMessage({ type: 'oasis:back-portal' }, '*');
     if (parent === window) window.location.href = '/';
 }
 

@@ -334,14 +334,17 @@ function mesRenderApp() {
 
     const titrePage = MES_NAV[S.currentPage] ? mesNavLabel(S.currentPage) : '';
     const titre = titrePage ? mt('module_titre_page', titrePage) : mt('module_titre');
+    // `.sidebar-header` est rendu **vide**, et c'est le contrat du socle : il en
+    // remplit le contenu de la marque OASIS (`module-chrome.js`), et son
+    // observateur le refait à chaque rendu de cet écran. Un bouton « Retour au
+    // portail » a vécu là sans qu'on puisse le cliquer une seule fois — retiré le
+    // 14 octobre 2026 (ADR-003, 5.e.8). Le retour, c'est le bouton que le socle
+    // met à la place de « Déconnexion », plus bas.
 
     document.getElementById('app').innerHTML = `
     <div class="app-layout mes-module ${S.sidebarCollapsed ? 'sidebar-collapsed' : ''}">
         <aside class="app-sidebar ${S.sidebarCollapsed ? 'collapsed' : ''}">
             <div class="sidebar-header">
-                <button class="btn-back-portal" onclick="mesRetourPortail()" title="${_mesAttr(mt('retour_portail'))}">
-                    ${MES_ICONS.back} <span class="back-portal-label">${_mesEsc(mt('retour_portail'))}</span>
-                </button>
             </div>
             <nav class="sidebar-nav">${nav}</nav>
             <div class="sidebar-footer">
@@ -501,15 +504,6 @@ function mesSetLang(lang) {
     if (typeof mesDessinerActions === 'function') mesDessinerActions();
 }
 
-function mesRetourPortail() {
-    // Le nom du message est celui que l'hôte écoute : `oasis:back-portal`
-    // (`frontend/portail/modules-hote.ts`). Il disait `oasis:back-to-portal`,
-    // que rien n'écoutait — le message partait et tombait. Corrigé le
-    // 13 octobre 2026, et un contrôle statique refuse désormais tout type
-    // adressé au portail dont aucun écouteur du dépôt ne répond.
-    parent.postMessage({ type: 'oasis:back-portal' }, '*');
-    if (parent === window) window.location.href = '/';
-}
 
 async function mesDeconnexion() {
     try { await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }); } catch (e) { /* déconnexion locale */ }
@@ -1232,7 +1226,7 @@ async function mesSupprimerMesure(id) {
 Object.assign(window, {
     MES_STATE, MES_API, MES_ICONS, MES_NAV, MES_CLES_STATUT, mesLibelleStatut, mesOrigine,
     mesApi, mesLoadData, mesRenderApp, mesRenderPage, mesNavigateTo,
-    mesToggleSidebar, mesSetTheme, mesSetLang, mesRetourPortail, mesDeconnexion,
+    mesToggleSidebar, mesSetTheme, mesSetLang,  mesDeconnexion,
     mesSetFiltre, mesRechercher, mesResetFiltresDashboard,
     mesResetFiltresMesures, mesResetFiltresCritiques,
     mesFermerSlider, mesAfficherSlider, mesFaireLeSuivi,

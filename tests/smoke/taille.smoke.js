@@ -462,6 +462,53 @@ module.exports = async function tailleSmoke() {
         : `${convertisModules.length} converti(s) : ${convertisModules.join(', ')}`);
   }
 
+  // ── Aucun shell de module ne rend un bouton que le socle efface ──
+  //
+  // `module-chrome.js` **vide** `.sidebar-header` pour y poser la marque OASIS, et
+  // son observateur le refait à chaque rendu du module. Tout ce qu'un shell met
+  // dans ce conteneur est donc détruit avant qu'un œil le voie.
+  //
+  // MESURES et RAMP y rendaient chacun un bouton « Retour au portail ». Personne
+  // n'a jamais pu en cliquer un (ADR-003, 5.e.8), et **aucune mesure ne pouvait le
+  // dire** : le contrôle du navigateur, qui compte les boutons dans le DOM, reste
+  // vert — le bouton n'est dans aucun DOM. Contre-essayé, et c'est ce vert qui a
+  // fait écrire ce contrôle-ci.
+  //
+  // D'où un garde de **source** : le nom de classe ne doit pas figurer dans ce que
+  // les écrans rendent. Les deux contrôles sont complémentaires et ni l'un ni
+  // l'autre suffisant — celui du DOM voit un bouton rendu ailleurs et vivant,
+  // celui-ci voit un balisage mort ; aucun des deux ne voit les deux.
+  //
+  // Le socle est hors de portée : c'est lui qui **définit** la classe effacée, et
+  // sa feuille de style la met en forme pour les shells d'avant la reprise.
+  {
+    const MORT = 'btn-back-portal';
+    const sources = [];
+    const ajoute = (racine, saufApp) => {
+      if (!fs.existsSync(racine)) return;
+      (function parcourir(rep) {
+        for (const e of fs.readdirSync(rep, { withFileTypes: true })) {
+          const c = path.join(rep, e.name);
+          if (e.isDirectory()) { if (!(saufApp && e.name === 'app')) parcourir(c); }
+          else if (/\.(js|ts|tsx|html)$/.test(e.name)) sources.push(c);
+        }
+      }(racine));
+    };
+    ajoute(path.join(RACINE, 'public', 'modules'), true);
+    ['droits', 'execution', 'mesures', 'planification', 'profil_risque', 'ramp']
+      .forEach((m) => ajoute(path.join(RACINE, 'frontend', m), false));
+
+    const coupables = sources
+      .filter((f) => new RegExp(MORT).test(fs.readFileSync(f, 'utf8')))
+      .map((f) => path.relative(RACINE, f));
+
+    verifier('aucun shell de module ne rend un bouton que le socle efface',
+      coupables.length === 0,
+      coupables.length
+        ? `${coupables.join(' · ')} → « ${MORT} » vit dans un conteneur que module-chrome.js vide`
+        : `${sources.length} fichier(s) d’écran relevé(s), aucun « ${MORT} »`);
+  }
+
   // ── Aucun module n'adresse au portail un message que rien n'écoute ──
   //
   // Un écran de module vit dans un cadre. Il ne partage **rien** avec le

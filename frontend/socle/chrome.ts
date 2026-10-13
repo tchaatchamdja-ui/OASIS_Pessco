@@ -9,6 +9,37 @@
 // de styles est un gabarit multiligne, et son espace de début de ligne fait
 // partie de la feuille produite.
 //
+// ── Le contrat avec le shell du module, écrit le 14 octobre 2026 ──
+//
+// Il existait depuis le premier jour, **nulle part écrit et par rien vérifié**.
+// Il a coûté deux boutons morts : MESURES et RAMP rendaient chacun un
+// `.btn-back-portal` dans leur barre latérale, et personne n'a jamais pu en
+// cliquer un — `injectChrome` vide `.sidebar-header` pour y poser la marque, et
+// l'observateur le refait à **chaque** rendu du module. Les deux boutons et leurs
+// deux fonctions sont retirés ; le contrat, lui, est ici.
+//
+// Ce que ce fichier **exige** du shell du module :
+//
+// | Ancre | Ce que le socle en fait | Si elle manque |
+// |---|---|---|
+// | `.sidebar-header` | il en remplace le contenu par la marque OASIS | pas de marque |
+// | `.btn-logout` | il le **remplace** par « Retour au portail » | **pas de retour au portail** |
+// | `.header-left` | il y pose les super-menus et la zone d'actions | pas de super-menus |
+//
+// La deuxième ligne est la conséquente : un module qui cesserait de rendre son
+// bouton de déconnexion perdrait **le seul chemin de retour vers le portail**,
+// sans une erreur. C'est pourquoi la déconnexion du module est, à dessein,
+// inatteignable : son bouton n'est pas un geste, c'est une **ancre**.
+//
+// Ce que ce fichier **interdit** au shell du module : rendre quoi que ce soit
+// dans `.sidebar-header`, et nommer un bouton de retour au portail. Le retour
+// appartient au socle, et à lui seul.
+//
+// Un contrôle de la suite « frontend » éprouve les deux dans un navigateur, page
+// de module par page de module : `.oasis-back-btn` présent, `.btn-back-portal`
+// absent. Il mesure le **résultat** et non le mécanisme — c'est ce qui le rend
+// insensible à la façon dont le shell est écrit.
+//
 // ── Les globales venues de la page, et qui les déclare ──
 //
 // La règle du chantier est qu'un module déclare ce qu'il **définit**. Celles-ci

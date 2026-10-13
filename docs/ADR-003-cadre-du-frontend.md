@@ -3933,6 +3933,75 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            un refus de construction la fait échouer entière, ce qui est la place juste pour
            ces deux gardes.
 
+       5.e.8 [x] **Le contrat du socle avec le shell des modules — écrit, et gardé des
+           deux côtés** — fait le 14 octobre 2026.
+
+           Il existait depuis le premier jour, **nulle part écrit et par rien vérifié**.
+           Il a coûté deux boutons morts, et c'est 5.e.6 qui l'a mis au jour.
+
+           ── Ce que le socle exige, et ce qu'il interdit ──
+
+           `module-chrome.js` décore le shell de chaque module. Trois ancres :
+
+           | Ancre | Ce que le socle en fait | Si elle manque |
+           |---|---|---|
+           | `.sidebar-header` | il en **remplace le contenu** par la marque OASIS | pas de marque |
+           | `.btn-logout` | il le **remplace** par « Retour au portail » | **pas de retour au portail** |
+           | `.header-left` | il y pose les super-menus et la zone d'actions | pas de super-menus |
+
+           La deuxième est la conséquente : **un module qui cesserait de rendre son bouton
+           de déconnexion perdrait le seul chemin vers le portail**, sans une erreur. Le
+           bouton de déconnexion d'un module n'est donc pas un geste, c'est une *ancre* —
+           et son `onclick` est, à dessein, inatteignable. Le chrome l'annonçait depuis
+           5.b (« le bouton Retour au portail, à la place de Déconnexion ») ; ce qu'il ne
+           disait pas, c'est que la page doit le rendre pour l'obtenir.
+
+           Et ce que le socle interdit : rendre quoi que ce soit dans `.sidebar-header`,
+           et nommer un bouton de retour au portail. MESURES et RAMP faisaient les deux.
+           Les deux balisages et les deux fonctions (`mesRetourPortail`,
+           `rampRetourPortail`, et leurs publications sur `window`) sont retirés.
+
+           ── Deux contrôles, et le premier ne peut pas voir le défaut qui l'a motivé ──
+
+           · **Dans un navigateur** (suite « frontend »), page de module par page de
+             module — les six, là où la suite « parcours » n'en exerce qu'une :
+             `.oasis-back-btn` présent, `.btn-back-portal` absent. Il mesure le
+             **résultat**, non le mécanisme, et ne sait donc rien de la façon dont le
+             shell est écrit.
+
+             Contre-essayé en renommant `.btn-logout` dans RAMP : rouge, et le relevé dit
+             `{"socle":0,"propre":0,"ancre":0}` — l'ancre manquante et le retour perdu
+             dans la même ligne. *C'est le contrôle qui rend la deuxième ligne du contrat
+             tenable.*
+
+           · **De source** (suite « taille ») : aucun écran de module ne nomme
+             `btn-back-portal`.
+
+             Il existe parce que le premier **ne mord pas** sur le cas qui a tout
+             déclenché. Contre-essai : un `.btn-back-portal` remis **dans**
+             `.sidebar-header` laisse le contrôle du navigateur **vert** — le socle vide
+             ce conteneur avant la mesure, et le bouton n'est dans aucun DOM observable.
+             *Un contrôle du DOM ne peut pas voir un balisage que le DOM n'a jamais
+             porté.* Le même bouton placé hors du conteneur est, lui, dénoncé.
+
+             Le garde de source, contre-essayé sur ce même cas invisible : rouge, en
+             nommant le fichier.
+
+           Ni l'un ni l'autre suffisant, et pour la raison exacte qui en demande deux à la
+           surface du portail (5.e.5) : l'un voit un bouton vivant rendu ailleurs, l'autre
+           un balisage mort. Aucun des deux ne voit les deux.
+
+           ── Un contre-essai que je n'avais pas prévu ──
+
+           Ma première rédaction du commentaire expliquant le vide de `.sidebar-header`
+           était un commentaire **HTML, posé dans un littéral de gabarit**, et il portait
+           des accents graves. Les deux écrans ont cessé de se charger.
+
+           Le contrôle neuf l'a dit dans la seconde, et il l'a dit juste :
+           `{"socle":0,"propre":0,"ancre":0}` sur **exactement** les deux pages que je
+           venais de toucher. Un contrôle qui attrape une faute commise en l'écrivant est
+           la meilleure épreuve qu'il puisse passer.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

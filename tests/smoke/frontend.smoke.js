@@ -595,6 +595,76 @@ module.exports = async function frontendSmoke(port) {
         ecarts.length ? ecarts.join(' | ') : `${total} noms, ${Object.keys(surface).length} fichiers`);
     }
 
+    // ── 4 bis : le contrat du socle avec le shell de chaque module ──
+    //
+    // `module-chrome.js` décore le shell du module : marque OASIS dans
+    // `.sidebar-header`, super-menus dans `.header-left`, et — c'est la ligne qui
+    // compte — **« Retour au portail » à la place de `.btn-logout`**.
+    //
+    // Ce contrat existait depuis le premier jour, nulle part écrit et par rien
+    // vérifié. Il a coûté deux boutons morts : MESURES et RAMP rendaient chacun un
+    // `.btn-back-portal` dans leur barre latérale, et personne n'a jamais pu en
+    // cliquer un — `injectChrome` vide `.sidebar-header`, et son observateur le
+    // refait à chaque rendu du module (ADR-003, 5.e.8).
+    //
+    // Les deux conséquences qu'on mesure ici, **page par page** :
+    //
+    //   · `.oasis-back-btn` est présent — donc le module a bien rendu son
+    //     `.btn-logout`, la seule ancre par laquelle le retour arrive. Un module
+    //     qui cesserait de le rendre perdrait le **seul chemin vers le portail**,
+    //     sans une erreur ni une trace ;
+    //   · `.btn-back-portal` est absent — aucun module ne rend un bouton de retour
+    //     qui lui serait propre, le retour appartenant au socle.
+    //
+    // On mesure le **résultat**, non le mécanisme : ce contrôle ne sait rien de la
+    // façon dont le shell est écrit, et c'est ce qui le rend durable. Les six pages
+    // sont relevées — la suite « parcours » n'en exerce qu'une, dans son cadre.
+    //
+    // ── Et ce qu'il ne peut pas voir, mesuré ──
+    //
+    // Contre-essayé en remettant un `.btn-back-portal` **dans** `.sidebar-header` :
+    // **vert**. Le socle vide ce conteneur avant la mesure, et le bouton n'existe
+    // dans aucun DOM observable. *Un contrôle du DOM ne peut pas voir un balisage
+    // que le DOM n'a jamais porté* — c'est-à-dire exactement le défaut qui a motivé
+    // cette étape.
+    //
+    // Le même bouton placé **hors** de `.sidebar-header` est, lui, dénoncé
+    // (`propre: 1`). L'assertion garde donc son sens, et sa limite est nommée : le
+    // balisage mort dans le conteneur effacé est refusé par un contrôle **de
+    // source**, dans la suite « taille ». Il faut les deux, et pour la même raison
+    // que la surface du portail en demande deux.
+    //
+    // Les pages se **déduisent** : celles qui chargent `module-chrome.js`. Une
+    // page de module qui ne le chargerait pas n'a pas ce contrat.
+    const pagesChrome = pages
+      .map((html) => ({ html, rel: `/${path.relative(path.join(RACINE, 'public'), html).split(path.sep).join('/')}` }))
+      .filter(({ html }) => /module-chrome\.js/.test(fs.readFileSync(html, 'utf8')));
+    if (!pagesChrome.length) {
+      horsPortee('chaque page de module porte le retour au portail du socle, et le sien seul',
+        'aucune page ne charge module-chrome.js');
+    } else {
+      const ecarts = [];
+      for (const { rel } of pagesChrome) {
+        /* eslint-disable no-await-in-loop */
+        await page.goto(`${srv.base}${rel}`, { waitUntil: 'networkidle2' });
+        await page.waitForFunction(() => !!document.querySelector('#app *'), { timeout: 15000 })
+          .catch(() => {});
+        // Le shell se redessine : on laisse l'observateur du socle repasser.
+        await new Promise((r) => setTimeout(r, 600));
+        const vu = await page.evaluate(() => ({
+          socle: document.querySelectorAll('.oasis-back-btn').length,
+          propre: document.querySelectorAll('.btn-back-portal').length,
+          ancre: document.querySelectorAll('.btn-logout').length,
+        }));
+        if (vu.socle !== 1 || vu.propre !== 0) {
+          ecarts.push(`${rel} → ${JSON.stringify(vu)}`);
+        }
+      }
+      verifier('chaque page de module porte le retour au portail du socle, et le sien seul',
+        ecarts.length === 0,
+        ecarts.length ? ecarts.join(' · ') : `${pagesChrome.length} pages, 1 retour chacune`);
+    }
+
     // ── 5 : aucun sas du portail ne publie un nom que la page ne lit pas ──
     //
     // Lecture seule du dépôt, aucun navigateur : le relevé suit les balises

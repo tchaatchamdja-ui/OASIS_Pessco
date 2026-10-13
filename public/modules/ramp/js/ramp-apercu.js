@@ -470,7 +470,7 @@ Object.assign(window, {
     RAMP_STATE, RAMP_API, RAMP_ICONS, RAMP_NAV, RAMP_MOIS, RAMP_MOIS_COURT, RAMP_GROUPES_PAR_LETTRE,
     rampApi, _rEsc, _rAttr, _rNorm,
     rampLoadData, rampRecharger, rampRenderApp, rampRenderPage, rampNavigateTo,
-    rampToggleSidebar, rampSetTheme, rampSetLang, rampRafraichir, rampConserverModale, rampSaisiesEnCours, rampRetourPortail, rampDeconnexion,
+    rampToggleSidebar, rampSetTheme, rampSetLang, rampRafraichir, rampConserverModale, rampSaisiesEnCours, rampDeconnexion,
     rampParseDate, rampDate, rampISO,
     rampFamille, rampPonderations, rampLibelleItem, rampGroupeDeLItem, rampEstClos,
     _rArg, rampBasculerEcart, rampBasculerInspection, rampEcartsDeLInspection, rampMesurerEntete, rampMesurerPied, rampRemonter, rampVueCourante, rampCorpsDeLaPage, rampRole, rampEstAdmin, rampEstRegional, rampPeutContribuer, rampPeutImporter,

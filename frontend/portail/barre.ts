@@ -29,8 +29,6 @@ import { loadRefs } from './outils';
 
 declare global {
   interface Window {
-    /** Le champ de recherche d'un écran, au repos ou ouvert. */
-    searchInputHtml: (ph?: string) => string;
     /** Ouvre le champ : le document est touché en place, sans redessin. */
     portailOuvrirRecherche: () => void;
     /** Prend la saisie et filtre la portée. */
@@ -41,10 +39,6 @@ declare global {
     portailFermerRechercheSiVide: () => void;
     /** Remet la recherche au repos : changer d'écran ne garde pas son filtre. */
     portailReinitialiserRecherche: () => void;
-    /** La barre d'export / import d'un référentiel. */
-    exportBar: (coll: string, title: string, pdfFn?: string) => string;
-    /** La fenêtre d'impression. Publiée parce qu'elle l'était ; lue par personne. */
-    pdfWindow: (title: string, bodyHtml: string) => void;
     /** Imprime les tables de l'écran courant. */
     exportPdf: (title: string) => void;
     /** Imprime les quatre tables de la taxinomie de la surveillance. */
@@ -53,8 +47,10 @@ declare global {
     openImportModal: (coll: string, title: string) => void;
     /** Envoie le classeur choisi au référentiel. */
     doImport: (coll: string) => Promise<void>;
-    /** Filtre la portée du champ : tables, accordéons, ou groupes d'exigences. */
-    filterScope: (champ: HTMLInputElement) => void;
+
+    // `searchInputHtml`, `exportBar`, `pdfWindow` et `filterScope` ne sont plus
+    // publiés depuis la dépose du pont (5.e.5) : les modules qui les appellent les
+    // importent de ce fichier, et les deux derniers n'ont jamais eu de lecteur.
   }
 }
 

@@ -148,7 +148,18 @@ export async function renderHome(): Promise<void> {
     || mesModules.includes(code);
 
   const card = (m: ModuleAccueil) => {
-    const color = COULEURS_MODULE[m.code] || window.PRIO_COLORS[m.priority] || '#64748b';
+    // ── Une dette qui n'en était pas une (5.e.5) ──
+    //
+    // Cette ligne lisait `window.PRIO_COLORS`, tandis que le fichier **importait
+    // déjà** `PRIO_COLORS` d'`./icones` sans s'en servir. Le relevé de surface
+    // comptait donc une dette réelle — retirer la publication aurait cassé cette
+    // ligne — là où il n'y avait qu'un import oublié. Les deux désignent le même
+    // objet : un seul paquet, un seul module, une seule table.
+    //
+    // Le prêt que 5.d.5 avait installé pour qu'`app.js` lise cette palette est
+    // donc rendu, et `globales/icons.ts` n'a plus rien à publier : il est
+    // supprimé.
+    const color = COULEURS_MODULE[m.code] || PRIO_COLORS[m.priority] || '#64748b';
     const name = m.name[window.CURRENT_LANG ?? ''] || m.name.fr;
     const desc = m.desc[window.CURRENT_LANG ?? ''] || m.desc.fr;
     // Un module fermé au compte se voit, éteint : il dit ce que l'application

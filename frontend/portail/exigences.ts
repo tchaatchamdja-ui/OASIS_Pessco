@@ -30,8 +30,6 @@ declare global {
   interface Window {
     /** Déplie ou replie le bandeau d'un règlement. */
     toggleExigGroup: (key: string) => void;
-    /** La sous-vue « Liste des exigences », groupée par règlement. */
-    cfgSectionExigences: () => string;
     /** Ouvre le panneau d'une exigence : édition, ajout au groupe, ou nouveau règlement. */
     openExigDrawer: (id?: string | null, presetReglement?: string | null, presetDate?: string | null, newGroup?: boolean) => void;
     /** Referme le panneau — il sert aussi au formulaire du règlement. */

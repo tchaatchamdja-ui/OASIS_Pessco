@@ -3,24 +3,29 @@
 // Sas, construit vers `public/app/app-demarrage.js`, sous le nom que la page
 // portait déjà.
 //
-// ── La surface, mesurée ──
-//
-// Trois noms étaient lus hors de ce fichier, et un quatrième par la page :
+// ── La surface, mesurée — et ce qui en est retiré le 13 octobre 2026 ──
 //
 // | Nom | Lu par |
 // |---|---|
-// | `navigate` | `app.js`, et l'hôte des modules (retour au portail) |
-// | `toggleSidebar` | l'`onclick` du bouton de la page |
-// | `onLangChange` | le sas des libellés, après chaque bascule |
+// | `navigate` | `accueil.ts` et `modules-hote.ts`, à travers `window` |
+// | `toggleSidebar` | l'`onclick` du bouton de la page (`index.html`) |
+// | `onLangChange` | `applyLang`, dans le sas des libellés — à travers `window` |
+// | `loadMe` | `parametres.ts` et `profil.ts`, à travers `window` |
+// | `refreshNotifications` | `organigramme.ts`, à travers `window` |
 // | `VIEWS` | posé dans l'état partagé, non ici |
 //
-// `initIcons`, `loadMe` et `refreshNotifications` étaient aussi sur `window` —
-// une `function` du premier niveau s'y pose — **sans lecteur**. Ils y restent
-// parce qu'ils y étaient, sous leurs anciens noms : retirer un nom de la surface
-// est un changement, qui se fera en le disant.
+// Les quatre lectures « à travers `window` » sont des **dettes** nommées à
+// l'ADR, non des interfaces : ces fichiers pourraient importer ce qu'ils
+// appellent. Tant qu'ils ne le font pas, la publication est obligatoire — et
+// c'est pourquoi le relevé de surface distingue cette sorte de lecteur au lieu
+// de déclarer ces noms morts (il l'a fait, et dix-sept écrans en seraient
+// restés inertes au clic).
+//
+// `initIcons` est **déposé** : il était sur `window` parce qu'une `function` du
+// premier niveau s'y pose, et il n'a jamais eu de lecteur.
 import {
   basculerBarre, brancherGestes, chargerMoi, demarrer, langueChangee,
-  naviguer, poserIcones, poserVuesDeBase, rafraichirNotifications,
+  naviguer, poserVuesDeBase, rafraichirNotifications,
 } from '../demarrage';
 
 window.navigate = naviguer;
@@ -30,8 +35,7 @@ window.toggleSidebar = basculerBarre;
 // pose : il l'était dans le sas des libellés, qui ne fait que l'appeler.
 window.onLangChange = langueChangee;
 
-// Les trois noms sans lecteur, conservés tels quels.
-window.initIcons = poserIcones;
+// Les deux noms que le portail se relit sur `window`.
 window.loadMe = chargerMoi;
 window.refreshNotifications = rafraichirNotifications;
 

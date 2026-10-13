@@ -94,10 +94,6 @@ export interface ModuleCatalogue {
 
 declare global {
   interface Window {
-    /** La sous-vue « Organisation » : l'identité de l'Administration. */
-    cfgSectionAAC: (cfg: ConfigAac) => string;
-    /** L'appareil photo du bouton de dépôt du logo. Lu par personne hors d'ici. */
-    cameraIcon: () => string;
     /** Ouvre la fenêtre d'édition de l'Administration. */
     openAacEdit: () => void;
     /** Dépose un logo choisi dans le sélecteur de fichier. */
@@ -106,16 +102,13 @@ declare global {
     removeAacLogo: () => Promise<void>;
     /** Enregistre la fenêtre d'édition de l'Administration. */
     saveAAC: () => Promise<void>;
-    /** La sous-vue « Sécurité » : sept réglages. */
-    cfgSectionSecurite: (cfg: ConfigSecurite) => string;
     /** Enregistre les sept réglages de sécurité. */
     saveSecurite: () => Promise<void>;
-    /** La sous-vue « Modules » : une ligne par carte du catalogue. */
-    cfgSectionModules: (modules: ModuleCatalogue[]) => string;
-    /** La sous-vue « Système » : le magasin et la réplication. */
-    cfgSectionSysteme: (cfg: ConfigSysteme) => string;
     /** Enregistre les deux réglages de réplication. */
     saveSysteme: () => Promise<void>;
+
+    // Les quatre sous-vues et `cameraIcon` ne sont plus publiées depuis la dépose
+    // du pont (5.e.5) : `renderConfig` les importe d'ici depuis 5.d.6.
   }
 }
 

@@ -34,6 +34,24 @@
 // 2. Chaque globale **lexicale** déclarée (`declare global { const ICONS: … }`)
 //    existe. Elle n'est pas sur `window` : on l'atteint par son nom, et c'est
 //    tout l'objet de la distinction qui a coûté les deux défauts ci-dessus.
+// 3 bis. La surface du **portail** — ce que `/app/portail.js` ajoute à `window`
+//    — est conforme à son relevé, et **chacun de ces noms a un lecteur**.
+//
+//    C'est le contrôle qui a pris le relais des douze comparateurs le 13 octobre
+//    2026 (ADR-003, 5.e.5). Tant que la cohabitation durait, le sas devait poser
+//    tout ce qu'un fichier resté en JavaScript appelait, et c'était la raison de
+//    chaque nom. `app.js` ayant disparu, cette raison a disparu avec lui : les
+//    sas publiaient **135 noms dont 63 que plus rien ne lisait**, et la surface
+//    ne mesurait plus que l'histoire de la migration.
+//
+//    Deux mesures, et il faut les deux :
+//
+//      · *la conformité au relevé* dit qu'un nom n'a ni disparu ni paru. Un nom
+//        qui disparaît casse un `onclick` **en silence** — c'est le mode de
+//        défaillance le plus coûteux de ce dépôt ;
+//      · *l'absence de nom muet* dit que la surface ne se remet pas à grossir.
+//        Sans elle, le relevé gèlerait aussi bien soixante-trois noms morts.
+//
 // 3. La surface du socle — les 48 noms qu'il pose, fichier par fichier — est
 //    conforme au relevé de référence. Les sept écrans encore en JavaScript s'en
 //    servent par ces noms-là : en retirer un les casse en silence, et aucune
@@ -47,6 +65,8 @@ const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 const RACINE = path.join(__dirname, '..', '..');
 const FRONTEND = path.join(RACINE, 'frontend');
 const REFERENCE = path.join(__dirname, 'surface-socle.json');
+const REFERENCE_PORTAIL = path.join(__dirname, 'surface-portail.json');
+const { relever, muets } = require('../../scripts/relever-surface.js');
 
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
@@ -279,6 +299,55 @@ async function mesurerSurface(page, base) {
     }), neufs)).sort();
     avant = apres;
   }
+  return { surface, incidents };
+}
+
+// ── La surface du portail, mesurée dans un navigateur ──
+//
+// Même méthode que pour le socle, et la même raison : une page vierge servie par
+// l'application, les scripts ajoutés dans l'ordre de `index.html`, et la
+// différence relevée à chaque pas. Partir d'`index.html` donnerait un `window`
+// déjà peuplé.
+//
+// Une seule chose la distingue : **le portail démarre**. `globales/app-demarrage`
+// appelle `demarrer()`, qui lit la session ; sans session, le socle ramène la
+// fenêtre entière à la connexion et la page de mesure s'en va avant d'être lue.
+//
+// On pose donc `__oasisSessionPerdue` **avant** de charger quoi que ce soit :
+// c'est le drapeau par lequel `sessionPerdue()` s'interdit de partir deux fois,
+// et il rend le retour inopérant. La mesure ne dépend ainsi d'aucune session, et
+// n'a pas à se connecter pour relever une surface.
+const SOCLE_INDEX = ['oasis-loader', 'oasis-toast', 'oasis-theme', 'oasis-requete',
+  'oasis-messages-serveur', 'oasis-commun'];
+
+async function mesurerSurfacePortail(page, base) {
+  await page.setRequestInterception(true);
+  page.on('request', (r) => {
+    if (r.url() === `${base}/__page_vierge_portail`) {
+      r.respond({
+        status: 200, contentType: 'text/html',
+        body: '<!doctype html><html><head></head><body><div id="app"></div></body></html>',
+      });
+    } else r.continue();
+  });
+  await page.goto(`${base}/__page_vierge_portail`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(() => { window.__oasisSessionPerdue = true; });
+
+  const incidents = [];
+  for (const f of SOCLE_INDEX) {
+    /* eslint-disable no-await-in-loop */
+    await page.addScriptTag({ url: `/shared/app/${f}.js` })
+      .catch((e) => incidents.push(`${f} : ${String(e.message).slice(0, 80)}`));
+  }
+  const avant = await page.evaluate(() => Object.getOwnPropertyNames(window));
+  await page.addScriptTag({ url: '/app/portail.js' })
+    .catch((e) => incidents.push(`portail : ${String(e.message).slice(0, 120)}`));
+  const apres = await page.evaluate(() => Object.getOwnPropertyNames(window));
+  const neufs = apres.filter((x) => !avant.includes(x));
+  const surface = (await page.evaluate((ns) => ns.map((x) => {
+    let t; try { t = typeof window[x]; } catch (_) { t = '?'; }
+    return `${x}:${t}`;
+  }), neufs)).sort();
   return { surface, incidents };
 }
 
@@ -525,9 +594,67 @@ module.exports = async function frontendSmoke(port) {
       verifier('la surface du socle est conforme au relevé', ecarts.length === 0,
         ecarts.length ? ecarts.join(' | ') : `${total} noms, ${Object.keys(surface).length} fichiers`);
     }
+
+    // ── 5 : aucun sas du portail ne publie un nom que la page ne lit pas ──
+    //
+    // Lecture seule du dépôt, aucun navigateur : le relevé suit les balises
+    // `<script>` de chaque page, résout les paquets par leur graphe d'imports, et
+    // classe chaque nom publié par la **sorte** de son lecteur — un geste du
+    // balisage, un autre paquet du même document, ou le paquet lui-même qui se
+    // relit à travers `window`. Un nom sans aucun des trois est muet.
+    //
+    // Ce contrôle est ce qui empêche la surface de se remettre à grossir, et il a
+    // une histoire : deux écritures du relevé étaient fausses avant celle-ci —
+    // l'une comptait les homonymes des écrans de module, l'autre ignorait les
+    // lectures du portail sur lui-même et déclarait morts dix-sept noms vivants.
+    // L'outil porte ces deux mesures dans son en-tête.
+    try {
+      const releve = relever('portail');
+      const sansLecteur = muets(releve);
+      const publies = [...releve.par_sas.values()].reduce((n, l) => n + l.length, 0);
+      verifier('aucun sas du portail ne publie un nom que la page ne lit pas',
+        sansLecteur.length === 0,
+        sansLecteur.length
+          ? sansLecteur.map((m) => `${m.sas} → ${m.nom}`).join(' · ')
+          : `${publies} noms publiés, ${releve.par_sas.size} sas, tous lus`);
+    } catch (e) {
+      verifier('aucun sas du portail ne publie un nom que la page ne lit pas',
+        false, `le relevé a refusé : ${e.message}`);
+    }
+
+    // ── 6 : la surface du portail, contre le relevé de référence ──
+    //
+    // Un contexte de navigateur à part, pour la même raison que le socle : le
+    // service worker enregistré par les pages ouvertes plus haut ferait échouer
+    // le chargement des scripts de la page de mesure.
+    const bocalPortail = await navigateur.createBrowserContext();
+    const mesurePortail = await bocalPortail.newPage();
+    const portail = await mesurerSurfacePortail(mesurePortail, srv.base);
+    verifier('le portail se charge sans incident',
+      portail.incidents.length === 0, portail.incidents.join(' · '));
+
+    if (!fs.existsSync(REFERENCE_PORTAIL)) {
+      horsPortee('la surface du portail est conforme au relevé',
+        `relevé absent — écrire ${path.relative(RACINE, REFERENCE_PORTAIL)}`);
+    } else {
+      const attendue = JSON.parse(fs.readFileSync(REFERENCE_PORTAIL, 'utf8'));
+      const perdus = attendue.filter((x) => !portail.surface.includes(x));
+      const neufs = portail.surface.filter((x) => !attendue.includes(x));
+      verifier('la surface du portail est conforme au relevé',
+        perdus.length === 0 && neufs.length === 0,
+        perdus.length || neufs.length
+          ? `${perdus.length ? `perdus : ${perdus.join(' ')}` : ''}${perdus.length && neufs.length ? ' — ' : ''}${neufs.length ? `nouveaux : ${neufs.join(' ')}` : ''}`
+          : `${portail.surface.length} noms`);
+    }
   } finally {
     if (navigateur) await navigateur.close();
     await srv.arreter();
   }
   return bilan('frontend');
 };
+
+// Exportée pour que le relevé de référence se **régénère à la main**, et jamais
+// par la suite elle-même : un contrôle qui réécrit son attendu quand il échoue
+// est un contrôle qui ne dit rien. Voir `docs/ADR-003-cadre-du-frontend.md`,
+// 5.e.5, pour la commande.
+module.exports.mesurerSurfacePortail = mesurerSurfacePortail;

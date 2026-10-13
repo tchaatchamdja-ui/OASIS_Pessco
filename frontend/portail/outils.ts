@@ -43,18 +43,10 @@ import { escapeHtml } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { tSouple } from './traductions';
 
-declare global {
-  interface Window {
-    /** L'argument d'un `onclick`, échappé deux fois. Publié parce qu'il l'était. */
-    escArg: (v: unknown) => string;
-    /** Les référentiels rechargés depuis l'API, posés sur `REFS`. */
-    loadRefs: () => Promise<void>;
-    /** Une date et une heure, dans la langue de l'écran. */
-    fmtDate: (iso: unknown) => string;
-    /** Les règles de mot de passe non tenues, mises en phrase. */
-    reglesMotDePasse: (details?: unknown) => string;
-  }
-}
+// Aucun des quatre — `escArg`, `loadRefs`, `fmtDate`, `reglesMotDePasse` — n'est
+// plus publié sur `window` depuis la dépose du pont (5.e.5) : les neuf modules
+// qui les appellent les importent d'ici, et aucun lecteur ne subsistait dans la
+// page. La déclaration part avec la publication.
 
 async function appel(chemin: string, options?: RequestInit): Promise<Response> {
   const res = await fetch(chemin, options);

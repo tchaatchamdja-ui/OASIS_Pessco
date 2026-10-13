@@ -1,16 +1,12 @@
 // OASIS — Le personnel et la taxinomie, posés en globales (ADR-003, 5.d.4).
 //
-// Sas, construit vers `public/app/taxinomie.js`, et **chargé avant `app.js`**.
-// Quatre noms, que `renderConfig` branche sur deux de ses onze sous-vues.
+// Deux gestes : déplier une fiche de personnel, déplier un accordéon. Les deux
+// sont nommés dans des attributs `onclick` que ce module écrit.
 //
-// `app-config.js` **ne doit plus les déclarer**, ni redéclarer `CFG_OPEN` : les
-// deux écrans le partagent, et une copie lexicale ferait que déplier une fiche
-// n'agirait plus sur ce que l'écran rend.
-import {
-  cfgSectionDomaines, cfgSectionPersonnel, toggleAcc, togglePers,
-} from '../taxinomie';
+// `cfgSectionPersonnel` et `cfgSectionDomaines` sont déposées le 13 octobre 2026
+// (5.e.5) : `renderConfig` les **importe** depuis 5.d.6, et seul le comparateur
+// les lisait encore sur `window`.
+import { toggleAcc, togglePers } from '../taxinomie';
 
-window.cfgSectionPersonnel = cfgSectionPersonnel;
-window.cfgSectionDomaines = cfgSectionDomaines;
 window.togglePers = togglePers;
 window.toggleAcc = toggleAcc;

@@ -27,14 +27,6 @@ import { fmtDate, loadRefs } from './outils';
 
 declare global {
   interface Window {
-    /** Les couleurs des niveaux hiérarchiques, du plus haut au plus bas. */
-    LEVEL_COLORS: readonly string[];
-    /** La chaîne de validation d'une personne, de son entité jusqu'à la racine. */
-    orgChainFor: (personId: unknown) => Enregistrement[] | null;
-    /** Cette chaîne, en balisage. Lue aussi par la fiche d'une personne. */
-    circuitHtml: (chain: Enregistrement[] | null) => string;
-    /** La sous-vue « Organigramme ». */
-    cfgSectionOrganigramme: () => string;
     /** Bascule entre la liste indentée et l'arbre. */
     setOrgView: (v: string) => void;
     /** Les quatre gestes du glisser-déposer d'un rattachement. */
@@ -49,8 +41,11 @@ declare global {
     orgConfirmInterim: (nodeId: string) => Promise<void>;
     orgEndInterim: (nodeId: string) => Promise<void>;
     orgUnassign: (id: string) => Promise<void>;
-    /** Aligne l'entité de niveau 1 sur l'identité de l'Administration. */
-    normalizeOrgTopLevel: (cfg: unknown) => void;
+
+    // Les cinq prêts — `LEVEL_COLORS`, `orgChainFor`, `circuitHtml`,
+    // `cfgSectionOrganigramme`, `normalizeOrgTopLevel` — sont rendus depuis la
+    // dépose du pont (5.e.5) : `taxinomie.ts`, `configuration.ts` et
+    // `parametres.ts` les importent d'ici.
   }
 }
 

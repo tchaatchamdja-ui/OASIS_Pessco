@@ -1,46 +1,34 @@
-// OASIS — Les instances du dispositif, publiées en globales (ADR-003, 5.c).
+// OASIS — Les instances du dispositif, publiées en globales (ADR-003, 5.c ;
+// dépose du pont 5.e.5).
 //
-// Sas, construit vers `public/app/portail-instances.js`, sous le nom que la page
-// portait déjà.
+// ── Douze noms publiés, quatre qui restent ──
 //
-// ── La surface, et pourquoi elle est si large ──
+// | Nom | Pourquoi il reste |
+// |---|---|
+// | `basculerInstance`, `supprimerInstance`, `ouvrirInstance` | **gestes** : nommés dans des `onclick` que ce module écrit |
+// | `majBandeauInstance` | appelé par `demarrage.ts` à travers `window` |
 //
-// Douze noms, et ils se partagent en trois familles :
+// Les gestes sont la famille dont la nécessité ne se voit pas en cherchant des
+// lecteurs : aucun fichier ne les appelle, et les retirer casserait l'écran.
 //
-// | Famille | Noms | Lus par |
-// |---|---|---|
-// | Trois **globales lexicales** | `PORTEE_LABELS`, `porteeDe`, `jeSuisRegional` | `app.js`, `app-config.js` |
-// | Cinq fonctions du formulaire et de la configuration | `porteeFieldsHtml`, `brancherPortee`, `majBandeauInstance`, `cfgChargerInstances`, `cfgSectionInstances` | `app.js`, `app-config.js`, le démarrage |
-// | Quatre **gestes** | `basculerInstance`, `supprimerInstance`, `ouvrirInstance`, `changerInstance` | les `onclick` du balisage que ce fichier produit |
+// ── Huit noms déposés le 13 octobre 2026 ──
 //
-// Les trois premières étaient des `const` : **lexicales**, invisibles à un
-// module. C'est l'inverse du blocage habituel — ici ce fichier les *définit*, et
-// ce sont `app.js` et `app-config.js`, restés en JavaScript, qui les lisent. Le
-// sas les leur pose, et ils n'ont rien changé.
-//
-// Les quatre gestes **doivent** être sur `window` : ils sont nommés dans des
-// attributs `onclick` que ce fichier écrit lui-même. Aucun fichier ne les lit, et
-// pourtant les retirer casserait l'écran — c'est la seule famille de la surface
-// dont la nécessité ne se voit pas en cherchant des lecteurs.
+// `PORTEE_LABELS`, `porteeDe` et `jeSuisRegional` étaient des `const` du premier
+// niveau — **lexicaux**, invisibles à un module —, et le sas les posait pour
+// `app.js` et `app-config.js`. Les cinq autres — `porteeFieldsHtml`,
+// `brancherPortee`, `cfgChargerInstances`, `cfgSectionInstances`,
+// `changerInstance` — leur servaient de la même façon. Les deux fichiers sont
+// convertis et supprimés ; `utilisateurs.ts` et `configuration.ts` importent ce
+// qu'ils en lisent, et `changerInstance` est branchée par `.onchange =` dans le
+// code, non par un attribut.
 import {
-  PORTEE_LABELS, basculerInstance, brancherPortee, cfgChargerInstances, cfgSectionInstances,
-  changerInstance, jeSuisRegional, majBandeauInstance, ouvrirInstance, porteeDe,
-  porteeFieldsHtml, supprimerInstance,
+  basculerInstance, majBandeauInstance, ouvrirInstance, supprimerInstance,
 } from '../instances';
 
-window.PORTEE_LABELS = PORTEE_LABELS;
-window.porteeDe = porteeDe;
-window.jeSuisRegional = jeSuisRegional;
-
-window.porteeFieldsHtml = porteeFieldsHtml;
-window.brancherPortee = brancherPortee;
 window.majBandeauInstance = majBandeauInstance;
-window.cfgChargerInstances = cfgChargerInstances;
-window.cfgSectionInstances = cfgSectionInstances;
 
 window.basculerInstance = basculerInstance;
 window.supprimerInstance = supprimerInstance;
 window.ouvrirInstance = ouvrirInstance;
-window.changerInstance = changerInstance;
 
 export { majBandeauInstance };

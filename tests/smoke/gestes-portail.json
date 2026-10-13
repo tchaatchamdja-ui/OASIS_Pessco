@@ -7,7 +7,7 @@
  "gestes": [
   {
    "fichier": "frontend/portail/accueil.ts",
-   "ligne": 234,
+   "ligne": 245,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -16,7 +16,7 @@
   },
   {
    "fichier": "frontend/portail/accueil.ts",
-   "ligne": 236,
+   "ligne": 247,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -25,7 +25,7 @@
   },
   {
    "fichier": "frontend/portail/accueil.ts",
-   "ligne": 250,
+   "ligne": 261,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "cardEl:click",
@@ -35,7 +35,7 @@
   },
   {
    "fichier": "frontend/portail/audit.ts",
-   "ligne": 90,
+   "ligne": 91,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "verifyBtn:click",
@@ -45,7 +45,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 78,
+   "ligne": 75,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailOuvrirRecherche",
@@ -54,7 +54,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 81,
+   "ligne": 78,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "portailChercher",
@@ -63,7 +63,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 81,
+   "ligne": 78,
    "forme": "en ligne",
    "evenement": "blur",
    "nom": "portailFermerRechercheSiVide",
@@ -72,7 +72,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 83,
+   "ligne": 80,
    "forme": "en ligne",
    "evenement": "mousedown",
    "nom": "event.preventDefault",
@@ -81,7 +81,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 83,
+   "ligne": 80,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -90,7 +90,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 142,
+   "ligne": 139,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "${pdf}",
@@ -99,7 +99,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 144,
+   "ligne": 141,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openImportModal",
@@ -108,7 +108,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 206,
+   "ligne": 203,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -117,7 +117,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 217,
+   "ligne": 214,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -126,7 +126,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 218,
+   "ligne": 215,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "doImport",
@@ -135,7 +135,7 @@
   },
   {
    "fichier": "frontend/portail/barre.ts",
-   "ligne": 103,
+   "ligne": 100,
    "forme": "propriété",
    "evenement": "click",
    "nom": "portailViderRecherche",
@@ -145,7 +145,7 @@
   },
   {
    "fichier": "frontend/portail/configuration.ts",
-   "ligne": 170,
+   "ligne": 171,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "cfgNavigate",
@@ -154,7 +154,7 @@
   },
   {
    "fichier": "frontend/portail/configuration.ts",
-   "ligne": 235,
+   "ligne": 236,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleCfgSidebar",
@@ -163,7 +163,7 @@
   },
   {
    "fichier": "frontend/portail/configuration.ts",
-   "ligne": 190,
+   "ligne": 191,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "toggle:change",
@@ -173,7 +173,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 257,
+   "ligne": 242,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('sidebarNav'):click",
@@ -183,7 +183,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 263,
+   "ligne": 248,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('logoutBtn'):click",
@@ -193,7 +193,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 268,
+   "ligne": 253,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('notifBell'):click",
@@ -203,7 +203,7 @@
   },
   {
    "fichier": "frontend/portail/demarrage.ts",
-   "ligne": 285,
+   "ligne": 270,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('pwdSubmit'):click",
@@ -213,7 +213,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 115,
+   "ligne": 114,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openExigDrawer",
@@ -222,7 +222,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 116,
+   "ligne": 115,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "deleteRef",
@@ -231,7 +231,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 123,
+   "ligne": 122,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleExigGroup",
@@ -240,7 +240,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 125,
+   "ligne": 124,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "event.stopPropagation",
@@ -249,7 +249,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 127,
+   "ligne": 126,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openReglementForm",
@@ -258,7 +258,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 128,
+   "ligne": 127,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openExigDrawer",
@@ -267,7 +267,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 148,
+   "ligne": 147,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openExigDrawer",
@@ -276,7 +276,7 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 166,
+   "ligne": 165,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeExigDrawer",
@@ -285,7 +285,16 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 168,
+   "ligne": 167,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 177,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeExigDrawer",
@@ -297,22 +306,13 @@
    "ligne": 178,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "frontend/portail/exigences.ts",
-   "ligne": 179,
-   "forme": "en ligne",
-   "evenement": "click",
    "nom": "saveExigDrawer",
    "source": "saveExigDrawer(${argEchappe(id || '')}, ${showRegFields}, ${argEchappe(reglement || '')}, ${argEchappe(date || '')})",
    "exerce": true
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 256,
+   "ligne": 255,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeExigDrawer",
@@ -321,7 +321,16 @@
   },
   {
    "fichier": "frontend/portail/exigences.ts",
-   "ligne": 259,
+   "ligne": 258,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeExigDrawer",
+   "source": "closeExigDrawer()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/exigences.ts",
+   "ligne": 265,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeExigDrawer",
@@ -333,22 +342,13 @@
    "ligne": 266,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
-   "source": "closeExigDrawer()",
-   "exerce": true
-  },
-  {
-   "fichier": "frontend/portail/exigences.ts",
-   "ligne": 267,
-   "forme": "en ligne",
-   "evenement": "click",
    "nom": "saveReglement",
    "source": "saveReglement(${argEchappe(reglement)})",
    "exerce": true
   },
   {
    "fichier": "frontend/portail/instances.ts",
-   "ligne": 271,
+   "ligne": 261,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "basculerInstance",
@@ -357,7 +357,7 @@
   },
   {
    "fichier": "frontend/portail/instances.ts",
-   "ligne": 272,
+   "ligne": 262,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "supprimerInstance",
@@ -366,7 +366,7 @@
   },
   {
    "fichier": "frontend/portail/instances.ts",
-   "ligne": 279,
+   "ligne": 269,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "ouvrirInstance",
@@ -375,7 +375,7 @@
   },
   {
    "fichier": "frontend/portail/instances.ts",
-   "ligne": 155,
+   "ligne": 145,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "selectRole:change",
@@ -385,7 +385,7 @@
   },
   {
    "fichier": "frontend/portail/instances.ts",
-   "ligne": 156,
+   "ligne": 146,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "sel:change",
@@ -395,7 +395,7 @@
   },
   {
    "fichier": "frontend/portail/modules-hote.ts",
-   "ligne": 188,
+   "ligne": 181,
    "forme": "écouteur",
    "evenement": "message",
    "nom": "window:message",
@@ -405,7 +405,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 195,
+   "ligne": 191,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -414,7 +414,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 204,
+   "ligne": 200,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -423,7 +423,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 225,
+   "ligne": 221,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -432,7 +432,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 237,
+   "ligne": 233,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -441,7 +441,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 238,
+   "ligne": 234,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "orgConfirmInterim",
@@ -450,7 +450,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 342,
+   "ligne": 338,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "orgUnassign",
@@ -459,7 +459,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 367,
+   "ligne": 363,
    "forme": "en ligne",
    "evenement": "dragstart",
    "nom": "orgDragStart",
@@ -468,7 +468,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 385,
+   "ligne": 381,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "orgEndInterim",
@@ -477,7 +477,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 387,
+   "ligne": 383,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "orgStartInterim",
@@ -486,7 +486,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 390,
+   "ligne": 386,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openPosteRegistre",
@@ -495,7 +495,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 400,
+   "ligne": 396,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -504,7 +504,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 407,
+   "ligne": 403,
    "forme": "en ligne",
    "evenement": "dragover",
    "nom": "orgAllowDrop",
@@ -513,7 +513,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 407,
+   "ligne": 403,
    "forme": "en ligne",
    "evenement": "dragleave",
    "nom": "orgDragLeave",
@@ -522,7 +522,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 407,
+   "ligne": 403,
    "forme": "en ligne",
    "evenement": "drop",
    "nom": "orgDrop",
@@ -531,7 +531,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 426,
+   "ligne": 422,
    "forme": "en ligne",
    "evenement": "dragover",
    "nom": "orgAllowDrop",
@@ -540,7 +540,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 426,
+   "ligne": 422,
    "forme": "en ligne",
    "evenement": "dragleave",
    "nom": "orgDragLeave",
@@ -549,7 +549,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 426,
+   "ligne": 422,
    "forme": "en ligne",
    "evenement": "drop",
    "nom": "orgDrop",
@@ -558,7 +558,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 448,
+   "ligne": 444,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setOrgView",
@@ -567,7 +567,7 @@
   },
   {
    "fichier": "frontend/portail/organigramme.ts",
-   "ligne": 449,
+   "ligne": 445,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setOrgView",
@@ -656,7 +656,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 194,
+   "ligne": 187,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openAacEdit",
@@ -665,7 +665,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 201,
+   "ligne": 194,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "uploadAacLogo",
@@ -674,7 +674,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 203,
+   "ligne": 196,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "removeAacLogo",
@@ -683,7 +683,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 265,
+   "ligne": 258,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -692,7 +692,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 292,
+   "ligne": 285,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -701,7 +701,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 293,
+   "ligne": 286,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveAAC",
@@ -710,7 +710,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 388,
+   "ligne": 381,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveSecurite",
@@ -719,7 +719,7 @@
   },
   {
    "fichier": "frontend/portail/parametres.ts",
-   "ligne": 472,
+   "ligne": 465,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveSysteme",
@@ -773,7 +773,7 @@
   },
   {
    "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 125,
+   "ligne": 124,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -782,7 +782,7 @@
   },
   {
    "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 126,
+   "ligne": 125,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "deleteRef",
@@ -791,7 +791,7 @@
   },
   {
    "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 136,
+   "ligne": 135,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -800,7 +800,7 @@
   },
   {
    "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 166,
+   "ligne": 165,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "toggleInspectorFields",
@@ -809,7 +809,7 @@
   },
   {
    "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 167,
+   "ligne": 166,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "onchange=\"orgTypeChanged()\"",
@@ -818,7 +818,16 @@
   },
   {
    "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 237,
+   "ligne": 236,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeRefModal",
+   "source": "closeRefModal()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/referentiels.ts",
+   "ligne": 239,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeRefModal",
@@ -830,22 +839,13 @@
    "ligne": 240,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
-   "source": "closeRefModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "frontend/portail/referentiels.ts",
-   "ligne": 241,
-   "forme": "en ligne",
-   "evenement": "click",
    "nom": "saveRef",
    "source": "saveRef('${coll}','${id || ''}')",
    "exerce": true
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 94,
+   "ligne": 93,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "togglePers",
@@ -854,7 +854,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 97,
+   "ligne": 96,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -863,7 +863,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 98,
+   "ligne": 97,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "deleteRef",
@@ -872,7 +872,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 116,
+   "ligne": 115,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -881,7 +881,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 136,
+   "ligne": 135,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "event.stopPropagation",
@@ -890,7 +890,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 137,
+   "ligne": 136,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -899,7 +899,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 138,
+   "ligne": 137,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "deleteRef",
@@ -908,7 +908,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 147,
+   "ligne": 146,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -917,7 +917,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 154,
+   "ligne": 153,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleAcc",
@@ -926,7 +926,7 @@
   },
   {
    "fichier": "frontend/portail/taxinomie.ts",
-   "ligne": 253,
+   "ligne": 252,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "openRefModal",
@@ -935,7 +935,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 204,
+   "ligne": 193,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setUserTab",
@@ -944,7 +944,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 274,
+   "ligne": 263,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "toggleUserSidebar",
@@ -953,7 +953,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 365,
+   "ligne": 354,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -962,7 +962,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 368,
+   "ligne": 357,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -971,11 +971,20 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 369,
+   "ligne": 358,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveUserModules",
    "source": "saveUserModules('${escapeHtml(u.username)}')",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/utilisateurs.ts",
+   "ligne": 383,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "closeUserModal",
+   "source": "closeUserModal()",
    "exerce": true
   },
   {
@@ -989,7 +998,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 405,
+   "ligne": 434,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -998,7 +1007,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 445,
+   "ligne": 457,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeUserModal",
@@ -1007,16 +1016,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 468,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "closeUserModal",
-   "source": "closeUserModal()",
-   "exerce": true
-  },
-  {
-   "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 469,
+   "ligne": 458,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "submitEditUser",
@@ -1025,7 +1025,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 297,
+   "ligne": 286,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document.getElementById('newUserBtn'):click",
@@ -1035,7 +1035,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 299,
+   "ligne": 288,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -1045,7 +1045,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 323,
+   "ligne": 312,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "sel:change",
@@ -1055,7 +1055,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 331,
+   "ligne": 320,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -1065,7 +1065,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 346,
+   "ligne": 335,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "btn:click",
@@ -1075,7 +1075,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 420,
+   "ligne": 409,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "efValider:click",
@@ -1085,7 +1085,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 477,
+   "ligne": 466,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "euEmail:input",
@@ -1095,7 +1095,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 562,
+   "ligne": 551,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "closeModal:click",
@@ -1105,7 +1105,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 563,
+   "ligne": 552,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "cancelModal:click",
@@ -1115,7 +1115,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 564,
+   "ligne": 553,
    "forme": "écouteur",
    "evenement": "change",
    "nom": "nuRole:change",
@@ -1125,7 +1125,7 @@
   },
   {
    "fichier": "frontend/portail/utilisateurs.ts",
-   "ligne": 569,
+   "ligne": 558,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "createUser:click",

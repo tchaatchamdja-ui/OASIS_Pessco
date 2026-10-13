@@ -28,14 +28,13 @@ import { exportBar, searchInputHtml } from './barre';
 
 declare global {
   interface Window {
-    /** La sous-vue « Personnel AAC » : une table dont chaque fiche se déplie. */
-    cfgSectionPersonnel: () => string;
-    /** La sous-vue « Domaines & Secteurs » : trois niveaux d'accordéons. */
-    cfgSectionDomaines: () => string;
     /** Déplie ou replie le détail d'une fiche de personnel. */
     togglePers: (id: string) => void;
     /** Déplie ou replie un accordéon de la taxinomie. */
     toggleAcc: (key: string) => void;
+
+    // Les deux sous-vues ne sont plus publiées depuis la dépose du pont (5.e.5) :
+    // `renderConfig` les importe d'ici depuis 5.d.6.
   }
 }
 

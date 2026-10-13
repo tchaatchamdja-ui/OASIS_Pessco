@@ -1,6 +1,6 @@
 // OASIS — Le portail en **un seul paquet** (ADR-003, 5.d.7).
 //
-// Ce fichier n'ajoute aucun code : il importe les douze sas dans l'ordre où
+// Ce fichier n'ajoute aucun code : il importe les sas dans l'ordre où
 // `index.html` les chargeait, et c'est tout. Ce qu'il change est l'empaquetage —
 // et cet empaquetage était un **défaut de correction**, non un gaspillage.
 //
@@ -35,11 +35,16 @@
 // l'application** en dernier : il doit rester après les onze autres, et le paquet
 // entier se charge après `app.js`, dont il appelle les fonctions de rendu.
 //
+// ── Deux sas de moins depuis la dépose du pont (5.e.5) ──
+//
+// `globales/schemas.ts`, `globales/outils.ts` et `globales/icons.ts` ne
+// publiaient plus que des noms sans lecteur — onze, sept et quatre. Vidés, ils
+// n'avaient plus d'objet : ils sont supprimés, et les modules qu'ils
+// enveloppaient (`../schemas`, `../outils`, `../telephone`, `../icones`) sont
+// importés par ceux qui s'en servent.
+//
 // Ce qui suit est volontairement sans logique : une ligne par sas, dans l'ordre.
 // Un fichier qui décide de l'ordre d'exécution ne doit rien faire d'autre.
-import './icons';
-// Les quatre aides et le téléphone (5.e.4) : lus par tous les autres.
-import './outils';
 import './i18n';
 // La barre d'écran et les libellés littéraux (5.e.0) : lus par les référentiels
 // et leurs voisins, donc placés avant eux.
@@ -52,7 +57,6 @@ import './profil';
 import './accueil';
 import './audit';
 import './etat';
-import './schemas';
 import './referentiels';
 import './exigences';
 import './organigramme';

@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3111,11 +3111,15 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
 
        ── La décision prise le 13 octobre 2026 : les comparateurs seront des pièces
-          d'archive ──
+          d'archive — **mise en œuvre le même jour, en 5.e.5** ──
 
        Les sas publient des noms que **plus personne ne lit** dans la page — neuf depuis
        5.d.6, et les trois rendus en 5.e.0 s'y ajouteront. Seuls les huit comparateurs les
        lisent, pour faire tourner les versions d'origine dans la portée globale.
+
+       *Le compte « neuf » était une estimation, et elle était basse d'un facteur sept :
+       le relevé écrit pour la mise en œuvre en a trouvé **soixante-trois** sur cent
+       trente-cinq. On ne devine pas une surface — voir 5.e.5.*
 
        La maîtrise d'ouvrage a tranché : **les comparateurs deviendront des pièces
        d'archive**. Le jour où `app.js` disparaîtra, le pont de cohabitation n'aura plus
@@ -3585,10 +3589,190 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
            ── Les douze comparateurs, une dernière fois ensemble ──
 
-           **5 168 comparaisons, aucune différence.** C'est le dernier état où ils tournent
+           **5 169 comparaisons, aucune différence.** C'est le dernier état où ils tournent
            tous : la décision inscrite plus haut les fait pièces d'archive, et sa mise en
            œuvre est la suite immédiate (5.e.5) — un commit à part, pour que celui-ci reste
            vérifiable seul.
+
+           *Le compte écrit ici disait d'abord 5 168. Les douze chiffres de ce document
+           — 2 820, 640, 84, 243, 22, 142, 184, 355, 100, 60, 87, 432 — font 5 169, et
+           les douze passages rejoués sur ce commit le 13 octobre 2026 les confirment un
+           à un. L'erreur était dans l'addition, non dans la mesure ; elle est corrigée
+           par un relevé, non par un calcul refait.*
+
+       5.e.5 [x] **La dépose du pont — les sas cessent de publier ce que rien ne lit, et
+           les comparateurs deviennent des pièces d'archive** — fait le 13 octobre 2026.
+
+           Mise en œuvre de la décision de la maîtrise d'ouvrage inscrite plus haut.
+           Commit à part, pour que 5.e.4 reste vérifiable seul.
+
+           **135 noms publiés deviennent 72. Trois sas sur dix-huit disparaissent.**
+
+           ── Ce que mesure l'outil, et pourquoi il a fallu l'écrire trois fois ──
+
+           `scripts/relever-surface.js` relève ce qu'un sas publie et **qui le lit**. Il
+           classe chaque lecteur par sa sorte, et les sortes ne valent pas la même
+           chose :
+
+           | Sorte | Ce que c'est | Impose la publication ? |
+           |---|---|---|
+           | **geste** | le nom est appelé depuis une chaîne qui devient du balisage (`onclick`) | **oui** — et c'est le seul lecteur qu'aucun compilateur ne voit |
+           | **hors-paquet** | un autre paquet du même document lit `window.<nom>` | **oui** |
+           | **intra** | le paquet qui publie se relit lui-même à travers `window` | **oui**, tant que la dette est là |
+           | **essai** | seul un contrôle ou un comparateur le lit | **non** |
+
+           **Les deux premières écritures de cet outil étaient fausses, et la seconde
+           dangereusement.**
+
+           La première comptait comme lecteur tout fichier « hors du paquet » qui
+           mentionnait le nom : `icon` paraissait lu quarante-deux fois et `t` cent
+           cinquante-huit. C'étaient des **homonymes** — les écrans de module ont leur
+           propre `icon` et leur propre `t`, et aucun ne charge le moindre `/app/*.js`.
+           Un nom global ne se lit que dans le document qui le porte ; le relevé part
+           donc des pages HTML et suit les balises `<script>` jusqu'aux sources.
+
+           La seconde n'avait pas la sorte **intra**, et déclarait muets **dix-sept
+           noms que le portail se relit sur `window`** : `window.renderConfig()` appelé
+           par huit de ses fichiers, `window.onLangChange()` par `applyLang` dans le sas
+           lui-même, les cinq vues que `demarrage.ts` appelle ainsi. Les retirer n'aurait
+           produit **aucune erreur de compilation** et aurait rendu huit écrans inertes
+           au clic.
+
+           ── Et une troisième faute, celle-là trouvée par un filet et non par l'outil ──
+
+           Après la correction, deux noms restaient faussement muets : **`exportPdf` et
+           `exportPdfActivites`**. `exportBar` écrit `onclick="${pdf}"` — le gestionnaire
+           est **assemblé en deux temps**, et son attribut ne porte qu'une interpolation.
+           Le relevé, qui ne lisait que les attributs `on…=`, ne voyait rien. Les
+           retirer aurait rendu inertes les boutons « Exporter PDF » de onze
+           référentiels et de la taxinomie, **sans une ligne de console**.
+
+           Ce qui l'a trouvé n'est pas une relecture : c'est un `grep` grossier de chacun
+           des soixante-trois noms dans tout le dépôt, posé comme filet sous l'outil. Il
+           a rendu cinq signalements — trois faux (`class="group-icon"` n'appelle pas
+           `icon`, `<tr>` n'appelle pas `tr`, `getElementById('userRole')` nomme un
+           élément) et deux vrais. *Un filet grossier sous une mesure fine n'est pas une
+           redondance.*
+
+           Le critère est désormais : **le nom suivi d'une parenthèse dans une chaîne**.
+           Du code écrit en texte ne peut être évalué que dans la portée globale, quel
+           que soit le chemin par lequel il atteint le balisage.
+
+           ── Trois accords indépendants, et c'est ce qui autorise le retrait ──
+
+           1. **L'inventaire des gestes** (`relever-gestes.js`, écrit en 5.c pour une
+              tout autre fin) nomme 84 gestes du portail. Les 84 sont dans l'ensemble
+              « lu » du relevé de surface : zéro écart entre deux mesures écrites
+              séparément, à six jours d'intervalle.
+           2. **Le filet `grep`** ci-dessus, qui a corrigé la mesure.
+           3. **La campagne**, et la suite « parcours » en particulier, qui exerce 66 des
+              84 gestes dans un navigateur.
+
+           ── Une dette qui n'en était pas une ──
+
+           `PRIO_COLORS` comptait parmi les dix-sept lectures **intra** : `accueil.ts`
+           lisait `window.PRIO_COLORS[…]`. Or le même fichier **importait déjà**
+           `PRIO_COLORS` d'`./icones`, sans s'en servir — un import mort que seul
+           `tsc --noUnusedLocals`, lancé pour vérifier que les déclarations retirées ne
+           laissaient rien derrière, a nommé. Les deux désignent le même objet : un
+           paquet, un module, une table. La ligne lit désormais l'import, le prêt de
+           5.d.5 est rendu, et `globales/icons.ts` n'a plus rien à publier.
+
+           Les seize autres dettes sont réelles et restent nommées : ces fichiers
+           **pourraient** importer ce qu'ils appellent, et la publication tombera avec
+           elles.
+
+           ── Ce qui part, et ce qui reste ──
+
+           | Sas | Publiait | Publie | Déposés |
+           |---|---|---|---|
+           | `schemas.ts` | 11 | — | le fichier est supprimé |
+           | `outils.ts` | 7 | — | le fichier est supprimé |
+           | `icons.ts` | 4 | — | le fichier est supprimé |
+           | `portail-instances.ts` | 12 | 4 | les trois `const` lexicaux et cinq fonctions |
+           | `utilisateurs.ts` | 13 | 6 | `userRole`, `splitName`, et les quatre fenêtres |
+           | `barre.ts` | 14 | 9 | les trois prêts de 5.e.0, `pdfWindow`, `filterScope` |
+           | `organigramme.ts` | 15 | 10 | les cinq prêts rendus en 5.d.4 et 5.d.6 |
+           | `parametres.ts` | 11 | 6 | les quatre sous-vues et `cameraIcon` |
+           | `referentiels.ts`, `exigences.ts`, `taxinomie.ts`, `profil.ts`, `app-demarrage.ts` | 8+7+4+7+6 | 7+6+2+6+5 | une sous-vue ou un nom sans lecteur chacun |
+
+           Les déclarations `interface Window` partent avec les publications : *un
+           `interface Window` qui nomme un nom que rien ne pose est une affirmation
+           fausse sur le monde*, et c'est le défaut même que la suite « frontend » existe
+           pour empêcher (`window.dtPriv`, `window.ICONS`). Quatre blocs `declare global`
+           entiers disparaissent — `libelles.ts`, `outils.ts`, `telephone.ts`, et celui
+           du sas des schémas avec son fichier.
+
+           ── Un nom retiré pour une seconde raison ──
+
+           `userRole` entrait en collision avec le balisage : la page porte un
+           `<div id="userRole">`, et **un élément nommé se pose lui aussi sur `window`**.
+           Le sas écrasait cette référence par la fonction. Rien n'en dépendait ; deux
+           choses sous un même nom au même endroit ne se gardent pas.
+
+           ── Un contrôle d'essai qui tenait un nom en vie ──
+
+           La suite « parcours » appelait `window.planBackToPortal()` pour éprouver la
+           sortie d'un module. Elle n'aurait pas dû : **un module ne connaît pas ce
+           nom.** Il vit dans un cadre et sort en adressant `oasis:back-portal` à sa
+           fenêtre parente. Le contrôle prouvait que la fonction marche, non que le
+           chemin que la page emprunte marche. Il part désormais du message —
+           contre-essayé en changeant le type d'un caractère : rouge — et c'est cela qui
+           a permis de retirer le nom.
+
+           **C'est la sixième fois qu'un montage de preuve se mesurait lui-même**, et la
+           première où c'est la *surface de l'application* qu'il maintenait en vie.
+
+           ── Ce qui défaille maintenant si un nom disparaît ──
+
+           Deux contrôles neufs dans `tests/smoke/frontend.smoke.js`, et il faut les
+           deux :
+
+           · **`la surface du portail est conforme au relevé`** — les 81 noms que
+             `/app/portail.js` ajoute à `window`, mesurés dans un navigateur sur une page
+             vierge, figés dans `tests/smoke/surface-portail.json`. 72 viennent des sas,
+             9 sont l'état partagé que `etat.ts` pose depuis le module. Un nom qui
+             disparaît casse un `onclick` **en silence** : c'est ce contrôle qui le dit.
+           · **`aucun sas du portail ne publie un nom que la page ne lit pas`** — le
+             relevé statique, qui empêche la surface de se remettre à grossir.
+
+           Les deux sont **complémentaires et ni l'un ni l'autre suffisant** : le premier
+           gèlerait aussi bien soixante-trois noms morts ; le second ne voit pas un nom
+           qui *part*. Contre-essayés tous les deux — une publication morte ajoutée
+           (les deux rougissent), une publication vivante retirée (seul le relevé figé
+           rougit), et le relevé rendu incapable de lire `SORTIE_SAS` (le contrôle
+           rapporte le refus au lieu de passer).
+
+           La mesure du portail diffère d'une chose de celle du socle : **le portail
+           démarre**. On pose `__oasisSessionPerdue` avant de charger quoi que ce soit —
+           le drapeau par lequel le socle s'interdit de revenir deux fois à la connexion
+           —, et la mesure n'a ainsi aucune session à ouvrir.
+
+           ── Les quatorze pièces d'archive ──
+
+           Chacune porte en tête le commit où elle a tourné vert pour la dernière fois,
+           son nombre de comparaisons, ce qui prend le relais, et la commande pour la
+           rejouer sur ce commit. Les douze refusent de s'exécuter — `exit(2)`, le même
+           refus que la suite « taille » exige d'elles depuis 5.b.
+
+           Deux s'étaient archivées **elles-mêmes**, avant toute décision :
+           `comparer-portail.js` depuis 5.c et `comparer-socle.js` depuis la dernière
+           conversion du socle, leur terme de comparaison ayant disparu avec le fichier
+           qu'il mesurait. C'est la démonstration, faite avant la décision, de ce que la
+           décision généralise.
+
+           ── Un défaut trouvé en chemin, et **non corrigé ici** ──
+
+           En vérifiant par quel chemin un module revient au portail : **MESURES et RAMP
+           envoient `oasis:back-to-portal`, et l'hôte écoute `oasis:back-portal`.** Leur
+           bouton « Retour au portail » ne fait donc rien quand l'écran est monté dans le
+           portail — `mes-app.js:505` et `ramp-app.js:1228` contre
+           `modules-hote.ts:184`. Ouvert seul, l'écran retombe sur `window.location`, ce
+           qui masque le défaut.
+
+           La correction tient en un mot, et elle n'est pas de cette étape : ces deux
+           écrans sont du JavaScript non converti, sans relevé de gestes ni contrôle de
+           parcours. Elle appartient à leur suite n° 0, avec le contrôle qui la prouvera.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

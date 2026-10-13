@@ -38,8 +38,6 @@ import { loadRefs } from './outils';
 
 declare global {
   interface Window {
-    /** La table d'un référentiel, avec son en-tête et ses deux actions par ligne. */
-    refTable: (coll: string, premier?: boolean) => string;
     /** Ouvre la fenêtre d'un enregistrement : création, édition, ou création préréglée. */
     openRefModal: (coll: string, id?: string, defaultsJson?: string) => void;
     /** Referme la fenêtre de référentiel. */

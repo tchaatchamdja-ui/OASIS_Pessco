@@ -9,6 +9,18 @@
 //
 // Un contexte isolé par version : le même `window` chargerait les deux et le
 // second écraserait le premier — on comparerait le nouveau avec lui-même.
+
+// ── Pièce d'archive, et la première (ADR-003, 5.e.5) ──
+//
+// Celle-ci n'a pas eu besoin qu'on la retire du service : elle **refuse d'elle
+// même** depuis que `public/js/i18n.js` et `public/js/icons.js` ont été
+// supprimés (5.c). Le refus est plus bas, et c'est lui qui a servi de modèle aux
+// douze autres — un outil muet est mauvais, un outil qui raconte n'importe quoi
+// est pire.
+//
+// Elle est donc la démonstration, faite avant la décision, de ce que la décision
+// du 13 octobre 2026 généralise : un comparateur dont le terme de comparaison a
+// disparu est une trace, non un contrôle.
 const path = require('path'); const fs = require('fs');
 const R = path.join(__dirname, '..');
 process.chdir(R);

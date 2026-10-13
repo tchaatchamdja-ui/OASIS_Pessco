@@ -23,6 +23,16 @@
 //
 // **Les sondes asynchrones s'attendent.** Sans `await`, on compare deux fois la
 // chaîne « [object Promise] », ce qui est toujours vrai.
+
+// ── Pièce d'archive, par son propre refus (ADR-003, 5.e.5) ──
+//
+// Les douze fichiers du socle sont convertis : `public/shared/js/` n'existe plus,
+// et le refus plus bas s'applique donc à **chaque** jeu de sondes. Comme
+// `comparer-portail.js`, celle-ci s'est archivée elle-même, sans décision — le
+// terme de comparaison a disparu avec le fichier qu'il mesurait.
+//
+// Le jeu de sondes reste ici : c'est le relevé de ce qui a été prouvé, sonde par
+// sonde, et c'est la seule chose qui en subsiste.
 const puppeteer = require('puppeteer');
 const { demarrer } = require('../tests/smoke/harness');
 

@@ -19,16 +19,9 @@ export interface Indicatif {
   l: string;
 }
 
-declare global {
-  interface Window {
-    /** Le champ de téléphone, avec son sélecteur d'indicatif. */
-    phoneFieldHtml: (id: string, value?: string, label?: string) => string;
-    /** La valeur d'un champ de téléphone, indicatif compris. */
-    phoneFieldValue: (id: string) => string;
-    /** Sépare un numéro de son indicatif. Publié parce qu'il l'était. */
-    splitPhone: (value: unknown) => { code: string; number: string };
-  }
-}
+// `phoneFieldHtml`, `phoneFieldValue` et `splitPhone` ne sont plus publiés sur
+// `window` depuis la dépose du pont (5.e.5) : les deux écrans qui s'en servent
+// les importent d'ici.
 
 export const PHONE_CODES: readonly Indicatif[] = [
   { c: '+229', l: 'Bénin' }, { c: '+226', l: 'Burkina Faso' }, { c: '+225', l: "Côte d'Ivoire" },

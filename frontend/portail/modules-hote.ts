@@ -28,21 +28,14 @@ declare global {
   interface Window {
     /** La navigation du portail, définie par `app-demarrage.js`. */
     navigate: (vue: string) => void;
-    /** Le nom historique de `basculerPleinEcran`, lu par `app-demarrage.js`. */
-    planSetModuleChrome: (actif: boolean) => void;
-    /** Le retour au portail, appelé par le message d'un module en cadre. */
-    planBackToPortal: () => void;
     /** Rejoué après la connexion : le registre n'est lisible qu'une session ouverte. */
     moduleHostRegisterViews: (force?: boolean) => Promise<ModuleInstalle[]>;
-    /**
-     * Les trois noms ci-dessous étaient sur `window` **sans que personne ne les
-     * lise** : une `function` au premier niveau d'un script s'y pose, qu'on le
-     * veuille ou non. Ils y restent parce qu'ils y étaient — retirer un nom de
-     * la surface est un changement, qu'on fera en le disant.
-     */
-    moduleHostLoadRegistry: () => Promise<ModuleInstalle[]>;
-    moduleHostRender: (cle: string) => Promise<void>;
-    moduleHostChrome: (actif: boolean) => void;
+
+    // Les cinq autres noms que ce fichier posait — `planSetModuleChrome`,
+    // `planBackToPortal`, `moduleHostLoadRegistry`, `moduleHostRender`,
+    // `moduleHostChrome` — sont déposés (5.e.5). Les deux premiers portaient les
+    // noms qu'`app.js` appelait ; les écrans de module, eux, ne chargent aucun
+    // fichier du portail et lui parlent par `postMessage`.
   }
 }
 

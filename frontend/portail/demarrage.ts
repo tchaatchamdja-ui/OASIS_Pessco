@@ -64,11 +64,13 @@ declare global {
     /** Le repli de la barre latérale. Lu par l'`onclick` de la page. */
     toggleSidebar: () => void;
     /**
-     * Les trois noms ci-dessous étaient sur `window` **sans lecteur** : une
-     * `function` du premier niveau s'y pose, qu'on le veuille ou non. Ils y
-     * restent sous leurs anciens noms, parce qu'ils y étaient.
+     * Les deux noms que le portail se relit sur `window` : `loadMe` par
+     * `parametres.ts` et `profil.ts`, `refreshNotifications` par
+     * `organigramme.ts`. Ce sont des **dettes**, non des interfaces — ces
+     * fichiers pourraient les importer —, et la publication tombera avec elles.
+     *
+     * `initIcons` était là aussi, sans lecteur : il est déposé (5.e.5).
      */
-    initIcons: () => void;
     loadMe: () => Promise<void>;
     refreshNotifications: () => Promise<unknown[]>;
   }

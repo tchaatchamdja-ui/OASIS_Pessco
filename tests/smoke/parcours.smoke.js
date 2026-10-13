@@ -940,10 +940,23 @@ module.exports = async function parcoursSmoke(port) {
     // Mesuré en contre-essayant la conversion du démarrage : ôter le geste
     // laissait la suite verte. Le contrôle qui monte un module n'en sortait
     // jamais.
+    //
+    // ── Par le message, et non par la fonction (5.e.5) ──
+    //
+    // Ce contrôle appelait `window.planBackToPortal()`. Il n'aurait pas dû : **un
+    // module ne connaît pas ce nom.** Il vit dans un cadre, et sort en adressant
+    // `oasis:back-portal` à sa fenêtre parente ; `brancherMessages()` est ce qui
+    // l'écoute. Le contrôle prouvait donc que la fonction marche, et non que le
+    // chemin que la page emprunte marche.
+    //
+    // Il part désormais du message, et c'est ce qui a permis de retirer
+    // `planBackToPortal` de la surface : le relevé le donnait pour n'ayant qu'un
+    // lecteur d'essai, et c'était vrai — l'essai était le seul à passer par là.
+    // Contre-essayé en changeant le type du message d'un caractère : rouge.
     etape = 'retour d’un module';
     const retour = await page.evaluate(async () => {
       const dedans = document.body.classList.contains('module-fullscreen');
-      window.planBackToPortal();
+      window.postMessage({ type: 'oasis:back-portal' }, '*');
       await new Promise((r) => setTimeout(r, 1500));
       return {
         dedans,

@@ -1,28 +1,29 @@
-// OASIS — L'écran des comptes, posé en globales (ADR-003, 5.e.1).
+// OASIS — L'écran des comptes, posé en globales (ADR-003, 5.e.1 ; dépose du pont
+// 5.e.5).
 //
-// Sas, construit vers `public/app/utilisateurs.js`. Cinq noms : les deux gestes
-// de la barre latérale, les deux enregistrements que les `onclick` du balisage
-// appellent, et la fermeture des fenêtres.
+// Cinq gestes — les deux de la barre latérale, les deux enregistrements et la
+// fermeture des fenêtres —, tous nommés dans des attributs `onclick` que ce
+// module écrit ; plus `renderUsers`, une des cinq vues que `demarrage.ts` appelle
+// à travers `window`.
 //
-// `renderUsers` n'y est **pas** : c'est une des cinq vues du portail, et
-// `app-demarrage` les enregistre déjà toutes depuis `window`. Elle y est posée
-// par `app.js` tant qu'il existe ; quand il partira, elle rejoindra cette liste
-// avec les quatre autres vues.
+// ── Sept noms déposés le 13 octobre 2026 ──
+//
+// `userRole` et `splitName` venaient de `comptes.ts` ; `effacerUtilisateur` et
+// les quatre fenêtres (`showModulesModal`, `showEditUserModal`,
+// `showEffacerUserModal`, `showNewUserModal`) n'étaient appelées que par
+// `renderUsers`, qui les importe, ou branchées par un écouteur — c'est tout
+// l'objet de 5.e.1 : *le balisage ne dit pas tous les gestes*.
+//
+// `userRole` partait en outre avec un défaut de voisinage : la page porte un
+// `<div id="userRole">`, et un élément nommé se pose lui aussi sur `window`. Le
+// sas écrasait cette référence par la fonction. Rien n'en dépendait, mais deux
+// noms pour deux choses au même endroit est exactement ce qu'on ne garde pas.
 //
 // `USER_TAB`, `USER_COLLAPSED` et `ALL_MODULES` ne sont pas publiés : c'étaient
-// des `let` du premier niveau, donc absents de `window`, et personne ne les lit.
-// Les publier serait *ajouter* à la surface.
-//
-// `showModulesModal`, `showEditUserModal`, `showEffacerUserModal` et
-// `showNewUserModal` ne le sont pas non plus : elles étaient des `function` du
-// premier niveau — donc sur `window` —, mais seul `renderUsers` les appelle, et
-// il les importe. Elles restent publiées **le temps que les comparateurs les
-// lisent** : voir la décision inscrite à l'ADR.
-import { splitName, userRole } from '../comptes';
+// des `let` du premier niveau, donc absents de `window`.
 import {
-  closeUserModal, effacerUtilisateur, renderUsers, saveUserModules, setUserTab,
-  showEditUserModal, showEffacerUserModal, showModulesModal, showNewUserModal,
-  submitEditUser, toggleUserSidebar,
+  closeUserModal, renderUsers, saveUserModules, setUserTab, submitEditUser,
+  toggleUserSidebar,
 } from '../utilisateurs';
 
 window.setUserTab = setUserTab;
@@ -30,19 +31,4 @@ window.toggleUserSidebar = toggleUserSidebar;
 window.saveUserModules = saveUserModules;
 window.submitEditUser = submitEditUser;
 window.closeUserModal = closeUserModal;
-
-// ── Les cinq noms publiés « parce qu'ils l'étaient » ──
-//
-// Une `function` au premier niveau d'un script classique se pose sur `window`,
-// qu'on le veuille ou non. `renderUsers` est lue par `app-demarrage` (une des
-// cinq vues) ; les quatre fenêtres ne sont lues que par `renderUsers`, qui les
-// importe. Retirer un nom de la surface est un changement qui se décide, non qui
-// se glisse dans une conversion — la règle que `_icon` tient depuis 5.c.
 window.renderUsers = renderUsers;
-window.userRole = userRole;
-window.splitName = splitName;
-window.effacerUtilisateur = effacerUtilisateur;
-window.showModulesModal = showModulesModal;
-window.showEditUserModal = showEditUserModal;
-window.showEffacerUserModal = showEffacerUserModal;
-window.showNewUserModal = showNewUserModal;

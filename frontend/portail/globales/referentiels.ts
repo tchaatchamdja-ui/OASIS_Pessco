@@ -1,19 +1,17 @@
 // OASIS — Le CRUD générique des référentiels, posé en globales (ADR-003, 5.d.1).
 //
-// Sas, construit vers `public/app/referentiels.js`, et **chargé après
-// `schemas.js` et avant `app.js`** : `app-config.js` appelle ces huit noms en
-// identifiants nus, et les trouve posés.
+// Six gestes nommés dans les attributs `onclick` que ce module et trois de ses
+// voisins écrivent — `closeRefModal` est en outre appelée à travers `window` par
+// `barre.ts` et `organigramme.ts`, qui partagent sa racine `cfgModalRoot` —, plus
+// `orgTopLevelType`, que `organigramme.ts` lit de la même façon.
 //
-// `app-config.js` **ne doit plus les déclarer**, ni redéclarer `CURRENT_CFG` —
-// un `let` du premier niveau masquerait la propriété de `window` pour tout ce
-// fichier, et les deux versions coexisteraient sans une erreur. Le garde-fou de
-// la suite « taille » le refuse.
+// `refTable` est déposée le 13 octobre 2026 (5.e.5) : `renderConfig` l'importe
+// depuis 5.d.6, et seul le comparateur la lisait encore sur `window`.
 import {
   closeRefModal, deleteRef, openRefModal, orgTopLevelType, orgTypeChanged,
-  refTable, saveRef, toggleInspectorFields,
+  saveRef, toggleInspectorFields,
 } from '../referentiels';
 
-window.refTable = refTable;
 window.openRefModal = openRefModal;
 window.closeRefModal = closeRefModal;
 window.saveRef = saveRef;

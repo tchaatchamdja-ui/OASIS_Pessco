@@ -54,30 +54,22 @@ interface Instance {
 
 declare global {
   interface Window {
-    /** Les deux libellés de portée. Lus par `app.js`. */
-    PORTEE_LABELS: Readonly<Record<string, string>>;
-    /** La portée d'un compte. Lue par `app.js`. */
-    porteeDe: (u: unknown) => string;
-    /** Le compte connecté est-il régional ? Lu par `app-config.js`. */
-    jeSuisRegional: () => boolean;
-    /** Le bloc « portée », commun aux deux formulaires. Lu par `app.js`. */
-    porteeFieldsHtml: (prefixe: string, u?: unknown) => string;
-    /** Branche le bloc sur le rôle choisi. Lu par `app.js`. */
-    brancherPortee: (prefixe: string, selectRole: HTMLSelectElement) => void;
     /** Le bandeau d'instance. Lu par le démarrage. */
     majBandeauInstance: () => void;
-    /** Charge la liste des instances. Lue par `app-config.js`. */
-    cfgChargerInstances: () => Promise<void>;
-    /** La section « Instances » de la configuration. Lue par `app-config.js`. */
-    cfgSectionInstances: () => string;
     /**
-     * Les quatre gestes, appelés depuis les `onclick` du balisage que ce fichier
+     * Les trois gestes, appelés depuis les `onclick` du balisage que ce fichier
      * **produit** : ils doivent être sur `window`, et aucun fichier ne les lit.
+     * C'est la seule famille de la surface dont la nécessité ne se voit pas en
+     * cherchant des lecteurs.
      */
     basculerInstance: (nom: string) => Promise<void>;
     supprimerInstance: (nom: string) => Promise<void>;
     ouvrirInstance: () => Promise<void>;
-    changerInstance: (valeur: string) => Promise<void>;
+
+    // Les huit noms que le sas posait pour `app.js` et `app-config.js` sont
+    // déposés (5.e.5) : les deux fichiers n'existent plus, et `utilisateurs.ts`
+    // comme `configuration.ts` importent ce qu'ils en lisent. `changerInstance`
+    // est branchée par `.onchange =` dans le code, non par un attribut.
   }
 }
 

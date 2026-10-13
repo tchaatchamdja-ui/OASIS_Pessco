@@ -25,6 +25,41 @@
  * balisage non vérifiée — c'est la leçon des bascules (5.c.15) : un état mesuré
  * d'un seul côté n'est pas mesuré.
  */
+
+/* ── Pièce d'archive (ADR-003, 5.e.5) ─────────────────────────────────────────
+ *
+ * **Ce comparateur ne tourne plus.** Il opposait la version d'origine, lue dans
+ * `git`, au module converti — et la version d'origine cherche ses dépendances
+ * dans la **portée globale**. Le 13 octobre 2026, la maîtrise d'ouvrage a fait
+ * des douze comparateurs des pièces d'archive ; les sas du portail ont cessé de
+ * publier les soixante-trois noms que plus rien d'autre ne lisait, et le banc
+ * sur lequel l'original tournait n'existe plus.
+ *
+ * **Dernier passage vert : commit `8b2452e`, le 13 octobre 2026 —
+ * 84 comparaisons, aucune différence**, avec les onze autres (5169 au total).
+ *
+ * Il reste au dépôt parce que *la trace d'une conversion se lit* : l'en-tête qui
+ * suit nomme chaque régime comparé, chaque contre-essai et chaque divergence
+ * assumée. C'est ce que remplacer un contrôle par un récit coûte, et il faut que
+ * le récit soit là.
+ *
+ * Ce qui prend le relais : la suite « parcours » pour le balisage exercé dans un
+ * navigateur, et les deux contrôles de surface de `tests/smoke/frontend.smoke.js`
+ * — le relevé figé (`surface-portail.json`) et le refus d'un nom publié sans
+ * lecteur.
+ *
+ * Pour le rejouer, se placer sur le commit où il était vert :
+ *
+ *     git worktree add /tmp/oasis-exigences 8b2452e
+ *     cd /tmp/oasis-exigences && ln -s <dépôt>/node_modules . && cp -R <dépôt>/data .
+ *     npm run build && node scripts/comparer-exigences.js
+ */
+if (require.main === module) {
+  console.error('pièce d’archive : ce comparateur ne tourne plus (ADR-003, 5.e.5).');
+  console.error('Dernier passage vert : 8b2452e, le 13 octobre 2026 — 84 comparaisons, aucune différence.');
+  console.error('Pour le rejouer, se placer sur ce commit : voir l’en-tête du fichier.');
+  process.exit(2);
+}
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');

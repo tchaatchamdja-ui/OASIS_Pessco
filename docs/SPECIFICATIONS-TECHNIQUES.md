@@ -199,10 +199,18 @@ meilleure façon de faire ignorer les vraies.
 
 | | Lignes | État |
 |---|---|---|
-| **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
-| **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances, et l'écran de configuration **en entier**, les libellés littéraux, la barre d'écran, l'écran des comptes, le profil, l'accueil, le journal d'audit, le téléphone et les aides (`frontend/portail/`) | 7 695 | **TypeScript, 100 %** — 5 168 comparaisons sans écart |
+| **Socle commun** (`frontend/socle/`) | 3 178 | **TypeScript, 12/12** |
+| **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances, et l'écran de configuration **en entier**, les libellés littéraux, la barre d'écran, l'écran des comptes, le profil, l'accueil, le journal d'audit, le téléphone et les aides (`frontend/portail/`) | 7 427 | **TypeScript, 100 %** — 5 169 comparaisons sans écart, puis **81 noms de surface figés** (5.e.5) |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
 | portail — le reste | **0** | `public/js/` n'existe plus (5.e.4). Les **84 gestes, 66 exercés** sont désormais relevés dans `frontend/portail/` |
+
+**La surface globale du portail est passée de 135 noms à 72** le 13 octobre 2026 (5.e.5) :
+la cohabitation obligeait les sas à poser sur `window` tout ce qu'un fichier resté en
+JavaScript appelait, et ce fichier n'existe plus. Ce qui prouvait le balisage — douze
+comparateurs, 5 169 comparaisons — est devenu **pièce d'archive** par décision de la
+maîtrise d'ouvrage ; le relais est pris par la suite « parcours » (109 contrôles, 66 des
+84 gestes) et par deux contrôles de surface : le relevé figé des 81 noms que la page pose,
+et le refus d'un nom publié sans lecteur (`scripts/relever-surface.js`).
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -716,8 +724,14 @@ done
 # Couverture des gestes d'un écran (§ 4.1.1) — portail : 66 sur 84, et c'est le plafond
 node scripts/relever-gestes.js portail | head -8
 
+# Surface globale du portail (§ 4.1) — attendu : 72 noms publiés, 0 muet
+node scripts/relever-surface.js | tail -1
+
+# Les noms publiés sans lecteur, s'il en reparaît un (la liste doit être vide)
+node scripts/relever-surface.js --muets
+
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                             # 993, et 0
+npm run smoke; echo "code de sortie : $?"                             # 998, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

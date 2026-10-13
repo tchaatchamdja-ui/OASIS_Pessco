@@ -63,23 +63,10 @@ declare global {
     submitEditUser: (username: string) => Promise<void>;
     /** Referme la fenêtre des comptes. */
     closeUserModal: () => void;
-    /** Le rôle d'affichage d'un compte. Publié parce qu'il l'était (`comptes.ts`). */
-    userRole: (u: Compte) => string;
-    /** Le nom et le prénom, séparés. Publié parce qu'il l'était. */
-    splitName: (u: Compte) => { nom: string; prenom: string };
-    /** Efface un compte, mot de passe de l'opérateur à l'appui. */
-    effacerUtilisateur: (username: string) => Promise<void>;
-    /** Les quatre fenêtres, publiées parce qu'elles l'étaient ; lues par personne. */
-    showModulesModal: (u: Compte) => void;
-    showEditUserModal: (u: Compte) => void;
-    showEffacerUserModal: (u: Compte) => void;
-    showNewUserModal: () => void;
 
-    // ── Ce que ce module lit encore d'`app.js` ──
-    /** Le champ de téléphone, avec son indicatif. Part en 5.e.4. */
-    phoneFieldHtml: (id: string, value?: string, label?: string) => string;
-    /** La valeur d'un champ de téléphone, indicatif compris. Part en 5.e.4. */
-    phoneFieldValue: (id: string) => string;
+    // Les sept noms déposés (5.e.5) et les deux du téléphone (importés depuis
+    // 5.e.4) ne sont plus déclarés : seul `renderUsers` les appelait, et il les
+    // importe.
   }
 }
 

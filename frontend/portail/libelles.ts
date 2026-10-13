@@ -24,12 +24,10 @@
 // bougé d'un caractère.
 import { langueRetenue } from './traductions';
 
-declare global {
-  interface Window {
-    /** Traduit un libellé français littéral dans la langue de l'écran. */
-    tr: (fr: string) => string;
-  }
-}
+// `tr` n'est plus publié sur `window` depuis la dépose du pont (5.e.5) : les
+// dix modules qui l'appellent l'importent d'ici. Le prêt de 5.e.0 est rendu, et
+// la déclaration part avec la publication — un `interface Window` qui nomme un
+// nom que rien ne pose est une affirmation fausse sur le monde.
 
 /**
  * Les libellés de l'écran de configuration : sections, tables et colonnes.

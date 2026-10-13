@@ -69,8 +69,6 @@ declare global {
     submitProfilePassword: () => Promise<void>;
     /** Enregistre l'une des deux sections facultatives. */
     saveProfileExtra: (key: string) => void;
-    /** La carte d'une section facultative. Publiée parce qu'elle l'était. */
-    pfExtraSection: (key: string, title: string, hint: string, enabled: boolean, fields: ChampExtra[]) => string;
   }
 }
 

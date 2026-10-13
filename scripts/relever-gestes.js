@@ -127,12 +127,62 @@ function identifiantDeLaCible(expr, lignes, indice) {
 }
 
 // ── Le relevé statique : quels gestes existent ──
+// ── Un commentaire n'est pas un geste, et il a fallu qu'un en soit compté ──
+//
+// Le 13 octobre 2026 (ADR-003, 5.e.5), l'en-tête du sas de la barre d'écran a
+// gagné une phrase expliquant qu'`exportBar` écrit `onclick="${pdf}"` — la
+// forme interpolée qui avait failli coûter deux boutons d'export. Le relevé a
+// aussitôt compté **un geste de plus**, et la suite « taille » l'a dit : 130
+// occurrences contre 129 figées.
+//
+// Le garde-fou a donc mordu sur ce qu'il devait — une dérive de l'inventaire —
+// pour une cause qui n'en était pas une. C'est la même faute que la suite
+// « frontend » avait déjà nommée sur un commentaire JSX : *un commentaire
+// n'affirme rien et n'appelle rien*.
+//
+// Les commentaires sont **blanchis sur place**, et non retirés : l'inventaire
+// retient le numéro de ligne de chaque geste, et des lignes qui glissent
+// feraient paraître modifié tout ce qui suit. Un découpage à la main, non une
+// expression rationnelle : `'https://…'` porte deux barres obliques dans une
+// chaîne, et les blanchir couperait du vrai code.
+function blanchirCommentaires(code) {
+  const sortie = code.split('');
+  const blanc = (debut, fin) => {
+    for (let k = debut; k < fin && k < code.length; k += 1) {
+      if (code[k] !== '\n') sortie[k] = ' ';
+    }
+  };
+  let i = 0;
+  while (i < code.length) {
+    const c = code[i];
+    if (c === '/' && code[i + 1] === '/') {
+      const debut = i;
+      while (i < code.length && code[i] !== '\n') i += 1;
+      blanc(debut, i);
+    } else if (c === '/' && code[i + 1] === '*') {
+      const debut = i;
+      i += 2;
+      while (i < code.length && !(code[i] === '*' && code[i + 1] === '/')) i += 1;
+      i += 2;
+      blanc(debut, i);
+    } else if (c === '"' || c === "'" || c === '`') {
+      const fin = c;
+      i += 1;
+      while (i < code.length && code[i] !== fin) {
+        if (code[i] === '\\') i += 2; else i += 1;
+      }
+      i += 1;
+    } else i += 1;
+  }
+  return sortie.join('');
+}
+
 function relever(fichiers) {
   const gestes = [];
   for (const rel of fichiers) {
     const abs = path.join(RACINE, rel);
     if (!fs.existsSync(abs)) continue;
-    const texte = fs.readFileSync(abs, 'utf8');
+    const texte = blanchirCommentaires(fs.readFileSync(abs, 'utf8'));
     const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})\\s*=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
     for (const m of texte.matchAll(motifEnLigne)) {
       const corps = m[3].trim();

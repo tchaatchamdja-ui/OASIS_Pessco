@@ -6,10 +6,6 @@
 // lit pour poser la marque dans la barre. Ne pas la redéclarer.
 
 // Nom complet : les majuscules formant le sigle OASIS sont légèrement agrandies.
-const OASIS_FULLNAME_HTML =
-  '<span class="sigle-cap">O</span>utils d\'<span class="sigle-cap">A</span>dministration' +
-  ' et de <span class="sigle-cap">S</span>upervision' +
-  ' <span class="sigle-cap">I</span>ntégrée de la <span class="sigle-cap">S</span>écurité';
 
 // ── Téléphone : indicatif pays + numéro ──
 // Indicatifs UEMOA en tête, puis principaux partenaires.
@@ -62,17 +58,6 @@ function phoneFieldValue(id) {
 
 // Cale la base de l'aéroport sur celle de la tour de contrôle (sous-titre).
 
-// Affichage des modules : 'grid' (défaut) ou 'list'
-let MODULES_VIEW = localStorage.getItem('oasis_modules_view') === 'list' ? 'list' : 'grid';
-window.setModulesView = function (mode) {
-  MODULES_VIEW = mode === 'list' ? 'list' : 'grid';
-  localStorage.setItem('oasis_modules_view', MODULES_VIEW);
-  const box = document.getElementById('portalModules');
-  if (box) box.classList.toggle('list-view', MODULES_VIEW === 'list');
-  document.querySelectorAll('.portal-viewmode-btn').forEach((b, i) => {
-    b.classList.toggle('active', (i === 0) === (MODULES_VIEW === 'grid'));
-  });
-};
 // `PRIO_COLORS` est parti dans `frontend/portail/icones.ts` (5.d.5) : l'écran
 // « Modules » de la configuration le lit aussi, et un `const` du premier niveau
 // est une globale **lexicale** qu'aucun module ne peut atteindre. Le sas des
@@ -84,28 +69,10 @@ window.setModulesView = function (mode) {
 // empruntaient à `app.js`. `scripts/comparer-parametres.js` confronte les cinq
 // teintes à celles de ce fichier, lues dans `git`, parce que les deux côtés de
 // la comparaison lisent désormais la même palette construite.
-// Teinte propre à un module, quand son thème en réunit plusieurs : les quatre
-// cartes de « Surveillance et inspections » ne se ressemblent plus.
-const COULEURS_MODULE = {
-  PLAN: '#0059ff',
-  SURV: '#ed580e',
-  RAMP: '#ff9500',
-  CARE: '#ff0000',
-};
 // `LEVEL_COLORS` est parti dans `frontend/portail/organigramme.ts` (5.d.3) : ce
 // fichier ne l'utilisait pas — seul `app-config.js` le lit —, et un `const` du
 // premier niveau est une globale **lexicale** qu'aucun module ne peut atteindre.
 // Le sas le pose sur `window`. **Ne pas le redéclarer ici.**
-// `icon` est facultatif : un thème qui n'en déclare pas voit son titre commencer
-// au premier mot. La surveillance continue s'en passe — son intitulé porte déjà
-// son sigle, et la loupe n'y ajoutait rien.
-const THEMES_ORDER = [
-  { code: 'surveillance' },
-  { code: 'reglementation', icon: 'fileText' },
-  { code: 'cert_risques', icon: 'award' },
-  { code: 'personnel_coop', icon: 'users' },
-  { code: 'services', icon: 'creditCard' },
-];
 
 // ── Les libellés français littéraux : partis dans un module typé (5.e.0) ──
 //
@@ -217,134 +184,43 @@ async function loadRefs() {
   REFS = await res.json();
 }
 
-// ══════════ Accueil ══════════
-
-async function renderHome() {
-  const [statsRes, modulesRes] = await Promise.all([api('/api/stats'), api('/api/modules')]);
-  const stats = await statsRes.json();
-  const modules = await modulesRes.json();
-
-  // Chaque module d'un même thème porte sa propre teinte : les quatre cartes
-  // de « Surveillance et inspections » se distinguent au premier regard.
-  // Modules ouverts au compte, tels que « Accès aux modules » les déclare. Une
-  // liste jamais renseignée les ouvre tous : c'était l'état de l'application
-  // avant que ce champ n'existe, et le super-administrateur y a toujours accès
-  // — c'est lui qui coche les cases.
-  const mesModules = Array.isArray(ME.user.modules) ? ME.user.modules : null;
-  const ouvert = (code) => ME.user.role === 'SUPERADMIN' || !mesModules
-    || mesModules.includes(code);
-
-  const card = (m) => {
-    const color = COULEURS_MODULE[m.code] || PRIO_COLORS[m.priority] || '#64748b';
-    const name = m.name[CURRENT_LANG] || m.name.fr;
-    const desc = m.desc[CURRENT_LANG] || m.desc.fr;
-    // Un module fermé au compte se voit, éteint : il dit ce que l'application
-    // fait, sans laisser croire qu'un clic l'ouvrira.
-    const accessible = ouvert(m.code);
-    // La carte ne porte ni priorité, ni état d'activation, ni point du TdR :
-    // ce sont des informations de feuille de route, pas d'usage.
-    return `
-    <div class="portal-card${accessible ? '' : ' portal-card-ferme'}" style="--module-color:${color};"
-         data-module="${esc(m.code)}" data-enabled="${accessible ? 'true' : 'false'}"
-         ${accessible ? '' : 'title="' + t('module_non_ouvert') + '" aria-disabled="true"'}>
-      <div class="portal-card-icon-wrap">${moduleIcon(m.code, 26)}</div>
-      <div class="portal-card-title">${esc(name)}</div>
-      <div class="portal-card-desc">${esc(desc)}</div>
-    </div>`;
-  };
-
-  // L'ordre des cartes est celui de config/modules.json : la feuille de route
-  // range les modules dans l'ordre où ils s'enchaînent métier. Trier sur le
-  // numéro de TdR le défaisait — D.8 y passait après D.7.2.
-  const rang = new Map(modules.map((m, i) => [m.code, i]));
-  const groups = THEMES_ORDER.map((th) => {
-    const mods = modules
-      // Un module non activé n'a rien à montrer : sa carte ne s'affiche pas.
-      .filter((m) => m.theme === th.code && m.enabled)
-      .sort((a, b) => rang.get(a.code) - rang.get(b.code));
-    if (!mods.length) return '';
-    // Le groupe « surveillance » n'a plus d'en-tête : le bloc PESSCO qui ferme
-    // la page dit déjà son nom, en grand. Les autres gardent le leur — rien ne
-    // les nomme ailleurs.
-    const entete = th.code === 'surveillance' ? '' : `
-      <div class="portal-group-header">
-        ${th.icon ? `<span class="group-icon">${icon(th.icon, 18)}</span>` : ''}
-        ${esc(t('theme_' + th.code))}
-        <span class="group-count">${mods.length}</span>
-      </div>`;
-    return `
-    <div class="portal-group">${entete}
-      <div class="portal-grid">${mods.map(card).join('')}</div>
-    </div>`;
-  }).join('');
-
-  document.getElementById('mainView').innerHTML = `
-    <div class="portal-titleblock">
-      <div class="portal-titleblock-sigle">
-        <span class="tb-word"><span class="tb-o">O</span>ASIS<span class="oasis-pessco">pessco</span>
-        </span>
-        <span class="tb-flight" aria-hidden="true">
-          <span class="tb-trail"></span>
-          <span class="tb-plane">
-            <svg viewBox="-32 -32 64 64" fill="currentColor"><g transform="rotate(90)"><path d="M0 -28 C4.5 -28 7 -19 7 -10 L28 4 V11 L7 2 V15 L13 21 V26 L0 21 L-13 26 V21 L-7 15 V2 L-28 11 V4 L-7 -10 C-7 -19 -4.5 -28 0 -28 Z"/></g></svg>
-          </span>
-        </span>
-      </div>
-      <div class="portal-titleblock-sub">
-        <span class="tb-tower" aria-hidden="true">
-          <svg viewBox="0 0 40 133" fill="currentColor">
-            <path d="M13 133 L27 133 L24.5 62 L15.5 62 Z"/>
-            <rect x="10.5" y="55.5" width="19" height="6.5" rx="2"/>
-            <path d="M5 55.5 L35 55.5 L30.5 34 L9.5 34 Z"/>
-            <path d="M11.5 51 L28.5 51 L26.3 38.5 L13.7 38.5 Z" fill="var(--bg)"/>
-            <rect x="19.4" y="38.5" width="1.2" height="12.5"/>
-            <rect x="1.5" y="26" width="37" height="8" rx="2"/>
-            <rect x="19" y="8" width="2" height="18"/>
-            <circle class="tb-tower-beacon" cx="20" cy="5.5" r="3.2"/>
-          </svg>
-        </span>
-        <span class="tb-fullname">${OASIS_FULLNAME_HTML}</span>
-      </div>
-    </div>
-    <div class="portal-page-header">
-      <div class="portal-viewmode">
-        <button class="portal-viewmode-btn ${MODULES_VIEW === 'grid' ? 'active' : ''}"
-                onclick="setModulesView('grid')" title="${esc(t('view_grid'))}">${icon('grid', 16)}</button>
-        <button class="portal-viewmode-btn ${MODULES_VIEW === 'list' ? 'active' : ''}"
-                onclick="setModulesView('list')" title="${esc(t('view_list'))}">${icon('list', 16)}</button>
-      </div>
-    </div>
-    <div class="portal-modules ${MODULES_VIEW === 'list' ? 'list-view' : ''}" id="portalModules">${groups}</div>
-    <!-- Le nom du dispositif ferme la page, au même corps que le bloc titre qui
-         l'ouvre. Le développé n'est pas traduit : c'est celui qui forme le
-         sigle — P·E·S·S·CO — et il ne le formerait plus dans une autre langue. -->
-    <div class="portal-brandmark">
-      <div class="portal-brandmark-sigle">PESSCO</div>
-      <div class="portal-brandmark-sub">Planification, Exécution et Suivi de la Surveillance Continue</div>
-    </div>`;
-
-
-  document.querySelectorAll('.portal-card[data-module]').forEach((cardEl) => {
-      cardEl.addEventListener('click', async () => {
-      const enabled = cardEl.dataset.enabled === 'true';
-      const code = cardEl.dataset.module;
-      // Carte éteinte : le clic ne mène nulle part, il dit pourquoi.
-      if (!enabled) {
-        showToast(t('module_non_ouvert'), 'error');
-        return;
-      }
-      // Le registre des modules peut ne pas avoir encore été chargé (session
-      // ouverte après le script) : on le redemande avant de renoncer.
-      if (enabled && !VIEWS[`mod_${code}`] && typeof moduleHostRegisterViews === 'function') {
-        await moduleHostRegisterViews(true);
-      }
-      if (enabled && VIEWS[`mod_${code}`]) { navigate(`mod_${code}`); return; }
-      showToast(enabled ? t('mod_toast_enabled') : t('mod_toast_disabled'), enabled ? 'success' : 'warning');
-    });
-  });
-}
-
-// ── L'écran des comptes : parti dans un module typé (5.e.1) ──
+// ── L'accueil : parti dans un module typé (5.e.3) ──
+//
+// `renderHome`, `setModulesView`, `COULEURS_MODULE`, `THEMES_ORDER`,
+// `MODULES_VIEW` et `OASIS_FULLNAME_HTML` vivent désormais dans
+// `frontend/portail/accueil.ts` ; le sas ne pose que **deux** noms — la bascule de
+// présentation et la vue. Les quatre autres étaient des globales **lexicales** que
+// personne ne lisait hors de cet écran : les publier aurait *ajouté* à la surface.
+//
+// `PRIO_COLORS` est désormais **importé** par son unique lecteur restant : ce
+// fichier ne le lit plus. Le sas des icônes continue pourtant de le publier, et
+// ce n'est plus pour la cohabitation — c'est pour les comparateurs, qui font
+// tourner les versions d'origine, lesquelles le cherchent dans la portée globale.
+// Le prêt ouvert en 5.d.5 n'est donc pas refermé : il a changé de raison, et sa
+// raison a une échéance (voir la décision inscrite à l'ADR).
+//
+// ── Une requête pour rien, et elle est fixée ──
+//
+// `renderHome` demandait `/api/stats`, en lisait la réponse, et **ne s'en servait
+// pas** : la route parcourt tous les comptes du serveur à chaque ouverture du
+// portail. La conversion ne la retire pas — ce serait changer ce que la page
+// fait — et la comparaison des routes lues la **fixe** : retirer l'appel rend 15
+// écarts. Même méthode que l'adresse centrale vidée (5.c.13).
+//
+// Mesure de ce que cette requête est morte : retirer la **lecture** de sa réponse
+// ne rend, lui, aucun écart. Seul l'appel compte, et c'est tout ce qu'il y a à
+// garder d'elle.
+//
+// ── Et la moitié de `card` que la suite du navigateur n'atteint pas ──
+//
+// Un module fermé au compte s'affiche éteint. Le jeu d'essai de « parcours »
+// n'ouvre qu'un super-administrateur : cette branche n'était éprouvée **nulle
+// part**. `scripts/comparer-accueil.js` la fabrique en cinq régimes — liste
+// partielle, vide, absente, code inconnu, valeur qui n'est pas un tableau — et une
+// garde exige que le balisage comparé porte les deux sortes de cartes.
+//
+// Éprouvé par ce même script : 87 comparaisons, dont les cinq issues du clic
+// d'une carte et les deux états de la chaîne d'audit.
 //
 // Les six onglets, les cinq fenêtres et les quatre gestes qui écrivent vivent
 // désormais dans `frontend/portail/utilisateurs.ts` ; le sas pose les douze noms
@@ -401,52 +277,9 @@ async function renderHome() {
 // Le retrait de la photo passe par la confirmation du socle, qui bâtit un
 // dialogue : la suite « parcours » le couvre (5.c.14).
 
-// ══════════ Journal d'audit ══════════
-
-async function renderAudit() {
-  const [entriesRes, verifyRes] = await Promise.all([api('/api/audit'), api('/api/audit/verify')]);
-  const entries = await entriesRes.json();
-  const verify = await verifyRes.json();
-
-  const verifyBanner = verify.valid
-    ? `<span class="shell-badge badge-active">${esc(t('audit_ok'))} (${verify.total})</span>`
-    : `<span class="shell-badge badge-inactive">${esc(t('audit_broken'))} #${verify.brokenAt}</span>`;
-
-  const rows = entries
-    .map(
-      (e) => `
-      <tr>
-        <td>${e.id}</td>
-        <td style="white-space:nowrap;">${fmtDate(e.ts)}</td>
-        <td><strong>${esc(e.user)}</strong></td>
-        <td><span class="shell-badge badge-neutral">${esc(e.action)}</span></td>
-        <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;">${esc(JSON.stringify(e.details))}</td>
-        <td style="font-family:monospace;font-size:.68rem;color:var(--text-muted);">${esc(e.hash.slice(0, 12))}…</td>
-      </tr>`
-    )
-    .join('');
-
-  document.getElementById('mainView').innerHTML = `
-    <div class="portal-page-header">
-      <h2>${esc(t('audit_title'))}</h2>
-      <div class="portal-page-actions">
-        ${verifyBanner}
-        <button class="shell-btn shell-btn-outline" id="verifyBtn">${icon('link', 14)} ${esc(t('audit_verify'))}</button>
-      </div>
-    </div>
-    <div class="shell-table-container">
-      <table class="shell-table shell-table-compact">
-        <thead><tr>
-          <th>${esc(t('audit_col_id'))}</th><th>${esc(t('audit_col_ts'))}</th><th>${esc(t('audit_col_user'))}</th>
-          <th>${esc(t('audit_col_action'))}</th><th>${esc(t('audit_col_details'))}</th><th>${esc(t('audit_col_hash'))}</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-
-  document.getElementById('verifyBtn').addEventListener('click', async () => {
-    const res = await api('/api/audit/verify');
-    const v = await res.json();
-    showToast(v.valid ? `${t('audit_ok')} — ${t('entrees_n', v.total)}` : `${t('audit_broken')} #${v.brokenAt}`, v.valid ? 'success' : 'error', 4000);
-  });
-}
+// ── Le journal d'audit : parti dans un module typé (5.e.3) ──
+//
+// `renderAudit` vit désormais dans `frontend/portail/audit.ts` ; le sas pose son
+// seul nom — la vue. Cet écran n'a ni geste nommé (son bouton est branché par un
+// écouteur), ni état, et il **n'écrit rien** : un journal chaîné qu'un écran
+// pourrait modifier ne serait pas un journal.

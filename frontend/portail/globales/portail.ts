@@ -46,6 +46,9 @@ import './barre';
 import './utilisateurs';
 // L'écran du profil (5.e.2).
 import './profil';
+// L'accueil et le journal d'audit (5.e.3).
+import './accueil';
+import './audit';
 import './etat';
 import './schemas';
 import './referentiels';

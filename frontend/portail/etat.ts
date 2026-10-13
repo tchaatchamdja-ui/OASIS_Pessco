@@ -69,6 +69,15 @@ export interface Moi {
     prestataire_id?: string;
     /** Les champs des deux sections facultatives du profil. */
     extra?: Record<string, string | undefined>;
+    /**
+     * Les modules ouverts au compte, tels que « Accès aux modules » les déclare.
+     *
+     * **Absent** ouvre tout : c'était l'état de l'application avant que ce champ
+     * n'existe, et l'accueil le traite ainsi (5.e.3). Un tableau **vide** ferme
+     * tout — la différence compte, et c'est pourquoi le type dit `string[]` et
+     * non `string[] | undefined` dans un sens seulement.
+     */
+    modules?: string[];
   };
   aac?: { logo?: string; nom?: string; sigle?: string; bigramme?: string };
   /**

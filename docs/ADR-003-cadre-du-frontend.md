@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 452 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2) |
+           | portail (`public/js`) | 284 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3129,7 +3129,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        du navigateur. C'est pourquoi la couverture des gestes du portail a été portée à son
        plafond (66 sur 84) **avant** 5.d, et non après : c'est elle qui prend le relais.
 
-   5.e [~] **`app.js` — le dernier JavaScript du portail.** 452 lignes restantes sur
+   5.e [~] **`app.js` — le dernier JavaScript du portail.** 284 lignes restantes sur
        1 192. Il porte la navigation, les cinq vues, les utilisateurs, le profil et le
        journal d'audit.
 
@@ -3412,6 +3412,91 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            les initiales (18), les initiales prises à l'envers (15), la session non
            rechargée après l'enregistrement (12), la section des prestataires ouverte aux
            indépendants (12).
+
+       5.e.3 [x] **L'accueil et le journal d'audit — et la moitié d'une fonction que la
+           suite du navigateur n'atteint pas** — fait le 13 octobre 2026. `app.js` passe
+           de **452 à 278 lignes**.
+
+           Deux écrans en une pièce : l'accueil, que **tout le monde** voit, et le journal
+           d'audit, le plus court du portail.
+
+           ── La carte éteinte, éprouvée nulle part ──
+
+           Un module fermé au compte s'affiche en gris, porte un `aria-disabled`, et son
+           clic dit pourquoi au lieu de mener nulle part. Trois états le commandent : le
+           rôle de super-administrateur ouvre tout ; une liste `modules` **absente** ouvre
+           tout aussi — c'était l'état de l'application avant que ce champ n'existe ; une
+           liste renseignée filtre.
+
+           Le jeu d'essai de « parcours » n'ouvre qu'un compte de super-administrateur :
+           **cette moitié de `card` n'était éprouvée nulle part**. Le comparateur la
+           fabrique en cinq régimes — liste partielle, vide, absente, code inconnu, valeur
+           qui n'est pas un tableau — et une garde exige que le balisage comparé porte les
+           **deux** sortes de cartes. C'est la troisième fois qu'une garde de ce genre
+           trouve une branche sans preuve, après `circuitHtml` (5.d.3) et le cadre de la
+           photo (5.e.2).
+
+           ── Une requête pour rien, et ce que sa mesure a appris ──
+
+           `renderHome` demandait `/api/stats`, en lisait la réponse, et **ne s'en servait
+           pas** : la route parcourt tous les comptes du serveur à chaque ouverture du
+           portail. La conversion ne la retire pas — ce serait changer ce que la page
+           fait —, et la comparaison des routes lues la fixe.
+
+           J'avais écrit cela dans l'en-tête du comparateur **avant** de le vérifier, et le
+           contre-essai m'a corrigé : retirer la **lecture** de la réponse ne rend aucun
+           écart. Il fallait retirer l'**appel**, ce qui en rend quinze. La phrase était
+           juste, le contre-essai visait à côté — et un contre-essai qui vise à côté laisse
+           croire qu'on a prouvé ce qu'on a seulement affirmé.
+
+           C'est aussi la mesure de ce que cette requête est morte : seule sa présence
+           compte, rien de ce qu'elle rapporte.
+
+           ── `PRIO_COLORS` revient chez lui, et le prêt change de raison ──
+
+           Prêté par le sas des icônes depuis 5.d.5 **pour la carte du portail**, il est
+           désormais importé par ce module. `app.js` ne le lit plus. Le sas continue
+           pourtant de le publier — pour les comparateurs, qui font tourner les versions
+           d'origine. Le prêt n'est donc pas refermé : il a changé de raison, et sa raison
+           a l'échéance inscrite plus haut.
+
+           ── Un acte posé puis défait, sur deux noms voisins ──
+
+           Le premier jet du sas publiait `OASIS_FULLNAME_HTML`, et son commentaire disait
+           le rendre « à sa place ». C'était faux dans les deux sens : un `const` du
+           premier niveau n'est **pas** sur `window`, donc le publier *ajoutait* à la
+           surface — ce qu'un sas n'a pas à faire —, et je le confondais avec
+           `OASIS_LOGO_IMG`, qui lui **a dû** monter sur `window` en 5.c parce
+           qu'`app-demarrage` le lit.
+
+           Deux noms voisins, deux situations contraires. Le critère reste celui de 5.b :
+           **ce qu'un autre fichier doit atteindre**. Les quatre globales lexicales de cet
+           écran — `MODULES_VIEW`, `COULEURS_MODULE`, `THEMES_ORDER`,
+           `OASIS_FULLNAME_HTML` — restent donc privées, et le sas ne pose que deux noms.
+
+           ── Une protection ajoutée, et pourquoi elle n'est pas un changement ──
+
+           `lireVueRetenue` entoure l'accès au stockage d'un `try`. L'original ne s'en
+           protégeait pas : dans un script classique, une levée en navigation privée
+           arrêtait `app.js` à cette ligne. Ici elle arrêterait **le paquet entier du
+           portail**, chargé d'un seul fichier depuis 5.d.7. La portée du dégât a changé,
+           donc la protection n'est pas une amélioration gratuite : c'est la même garantie
+           qu'avant, dans un empaquetage différent.
+
+           ── La preuve ──
+
+           **87 comparaisons** : sept régimes de compte × deux présentations, les trois
+           langues plus une absente, huit régimes de catalogue — vide, tout désactivé, un
+           seul thème, sans le thème sans en-tête, un thème inconnu, renversé, un module
+           hostile et sans teinte —, la bascule de présentation quatre fois dont un mode
+           inconnu et une fois sans sa boîte dans le document, les **cinq issues du clic**
+           d'une carte, et six états du journal d'audit avec son bouton de vérification.
+
+           **Vingt et un contre-essais, vingt et un rouges**, après trois qui ne
+           compilaient pas et un qui visait à côté. Les plus parlants : l'ordre du
+           catalogue remplacé par l'ordre alphabétique (42 écarts), l'en-tête rendu au
+           thème de la surveillance (24), la teinte propre au module ignorée (24), la
+           requête retirée (15).
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

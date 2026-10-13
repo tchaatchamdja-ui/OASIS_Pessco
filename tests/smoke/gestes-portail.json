@@ -6,8 +6,8 @@
  "indecidables": 8,
  "gestes": [
   {
-   "fichier": "public/js/app.js",
-   "ligne": 312,
+   "fichier": "frontend/portail/accueil.ts",
+   "ligne": 234,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -15,8 +15,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/js/app.js",
-   "ligne": 314,
+   "fichier": "frontend/portail/accueil.ts",
+   "ligne": 236,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "setModulesView",
@@ -24,53 +24,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/js/app.js",
-   "ligne": 468,
-   "forme": "en ligne",
-   "evenement": "change",
-   "nom": "uploadProfilePhoto",
-   "source": "uploadProfilePhoto(this)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app.js",
-   "ligne": 470,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "removeProfilePhoto",
-   "source": "removeProfilePhoto()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app.js",
-   "ligne": 488,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveProfileInfos",
-   "source": "saveProfileInfos()",
-   "exerce": true
-  },
-  {
-   "fichier": "public/js/app.js",
-   "ligne": 521,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "submitProfilePassword",
-   "source": "submitProfilePassword()",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app.js",
-   "ligne": 538,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "saveProfileExtra",
-   "source": "saveProfileExtra('${key}')",
-   "exerce": false
-  },
-  {
-   "fichier": "public/js/app.js",
-   "ligne": 328,
+   "fichier": "frontend/portail/accueil.ts",
+   "ligne": 250,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "cardEl:click",
@@ -79,12 +34,12 @@
    "exerce": null
   },
   {
-   "fichier": "public/js/app.js",
-   "ligne": 593,
+   "fichier": "frontend/portail/audit.ts",
+   "ligne": 90,
    "forme": "écouteur",
    "evenement": "click",
-   "nom": "document.getElementById('verifyBtn'):click",
-   "source": "document.getElementById('verifyBtn').addEventListener('click', async () => {",
+   "nom": "verifyBtn:click",
+   "source": "verifyBtn.addEventListener('click', async () => {",
    "id": "verifyBtn",
    "exerce": true
   },
@@ -770,6 +725,51 @@
    "nom": "saveSysteme",
    "source": "saveSysteme()",
    "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/profil.ts",
+   "ligne": 222,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "uploadProfilePhoto",
+   "source": "uploadProfilePhoto(this)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/profil.ts",
+   "ligne": 224,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "removeProfilePhoto",
+   "source": "removeProfilePhoto()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/profil.ts",
+   "ligne": 242,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveProfileInfos",
+   "source": "saveProfileInfos()",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/profil.ts",
+   "ligne": 275,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "submitProfilePassword",
+   "source": "submitProfilePassword()",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/portail/profil.ts",
+   "ligne": 292,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "saveProfileExtra",
+   "source": "saveProfileExtra('${key}')",
+   "exerce": false
   },
   {
    "fichier": "frontend/portail/referentiels.ts",

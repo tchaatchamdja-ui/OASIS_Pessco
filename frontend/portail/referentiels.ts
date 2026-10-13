@@ -10,14 +10,15 @@
 //
 // ── Ce qu'il reste à lire du monde, et pourquoi ──
 //
-// Cinq noms, tous posés par `app.js` ou `app-config.js`, encore en JavaScript :
+// **Deux noms**, et c'était cinq jusqu'au 13 octobre 2026. `tr`,
+// `searchInputHtml` et `exportBar` sont partis dans `libelles.ts` et `barre.ts`
+// (5.e.0) et sont désormais **importés** : leurs tables et leur état étaient des
+// globales lexicales d'`app.js`, et c'est cela, non l'interface, qui les retenait.
 //
-//   · `tr` — la traduction d'un libellé français littéral. Sa table (`CFG_I18N`)
-//     est un `const` d'`app.js` : la fonction ne peut pas venir ici sans elle.
-//   · `searchInputHtml`, `exportBar` — ils lisent `PORTAIL_RECHERCHE`, état
-//     d'`app.js`. Même raison.
-//   · `loadRefs`, `renderConfig` — le cycle de rendu, qui est le cœur
-//     d'`app-config.js` et partira en dernier.
+//   · `loadRefs` — le rechargement des référentiels, encore dans `app.js`.
+//   · `renderConfig` — le cycle de rendu, converti en 5.d.6 ; il est lu sur
+//     `window` parce que l'importer ferait un cycle, le rendu appelant ce
+//     module.
 //
 // `CURRENT_CFG`, lui, **a dû monter sur `window`** (voir `etat.ts`) : c'était un
 // `let` du premier niveau, donc une globale lexicale qu'aucun module ne peut
@@ -31,6 +32,8 @@ import { t } from './traductions';
 import {
   REF_SCHEMAS, champsVisibles, fieldValue, type Champ, type Enregistrement, type Schema,
 } from './schemas';
+import { tr } from './libelles';
+import { exportBar, searchInputHtml } from './barre';
 
 declare global {
   interface Window {
@@ -59,13 +62,17 @@ declare global {
      */
     __ORG_AUTO: { top: string | null; sigle: string; nom: string };
 
-    // ── Ce que ce module lit, et que `app.js` / `app-config.js` définissent ──
-    /** Traduit un libellé français littéral. Table `CFG_I18N` d'`app.js`. */
-    tr: (fr: string) => string;
-    /** Le champ de recherche d'un écran. Lit `PORTAIL_RECHERCHE` d'`app.js`. */
-    searchInputHtml: (ph?: string) => string;
-    /** La barre d'export / import d'un référentiel. */
-    exportBar: (coll: string, title: string, pdfFn?: string) => string;
+    // ── Les trois prêts rendus le 13 octobre 2026 (5.e.0) ──
+    //
+    // `tr`, `searchInputHtml` et `exportBar` étaient déclarés ici, et lus sur
+    // `window` : leurs tables et leur état étaient des globales **lexicales**
+    // d'`app.js`, hors d'atteinte d'un module. Ils vivent désormais dans
+    // `libelles.ts` et `barre.ts`, et sont **importés**.
+    //
+    // Les déclarations partent avec les lectures : la règle de 5.b veut que le
+    // module qui **définit** un nom le déclare, et lui seul. Les garder ici
+    // aurait fait deux déclarations du même nom, que le compilateur tolère
+    // tant qu'elles concordent — et qui mentent dès qu'elles divergent.
     /** Recharge les référentiels depuis l'API. */
     loadRefs: () => Promise<void>;
   }
@@ -123,15 +130,15 @@ export function refTable(coll: string, premier?: boolean): string {
     .join('');
   return `
   <div class="portal-page-header cfg-entete-empile ${premier ? 'cfg-entete-premier' : 'cfg-entete-suivant'}">
-    <h3>${escapeHtml(window.tr(schema.title))}</h3>
+    <h3>${escapeHtml(tr(schema.title))}</h3>
     <div class="portal-page-actions">
-      ${coll === 'prestataires' ? window.searchInputHtml('Rechercher un prestataire...') + window.exportBar('prestataires', window.tr('Prestataires de services')) : ''}
+      ${coll === 'prestataires' ? searchInputHtml('Rechercher un prestataire...') + exportBar('prestataires', tr('Prestataires de services')) : ''}
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('${coll}')">${icon('plus', 13)} ${escapeHtml(t('add'))}</button>
     </div>
   </div>
   <div class="shell-table-container">
     <table class="shell-table shell-table-compact">
-      <thead><tr>${champsVisibles(schema).map((f) => `<th>${escapeHtml(window.tr(f.l))}</th>`).join('')}<th></th></tr></thead>
+      <thead><tr>${champsVisibles(schema).map((f) => `<th>${escapeHtml(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="${champsVisibles(schema).length + 1}" style="color:var(--text-muted);">${t('aucun_element')}</td></tr>`}</tbody>
     </table>
   </div>`;
@@ -164,7 +171,7 @@ function champHtml(coll: string, f: Champ, record: Enregistrement, id: string | 
     const useVal = orgIsTop ? autoVal : val;
     return `
         <div class="shell-form-group" style="margin-bottom:.75rem;">
-          <label>${escapeHtml(window.tr(f.l))}</label>
+          <label>${escapeHtml(tr(f.l))}</label>
           <input class="shell-input org-${f.k}-input" type="text" data-field="${f.k}" value="${escapeHtml(useVal)}" ${orgIsTop ? 'disabled' : ''}>
           <span class="org-auto-note" style="font-size:.7rem;color:var(--text-muted);${orgIsTop ? '' : 'display:none;'}">${t('repris_administration')}</span>
         </div>`;
@@ -174,7 +181,7 @@ function champHtml(coll: string, f: Champ, record: Enregistrement, id: string | 
     const vals = Array.isArray(record[f.k]) ? (record[f.k] as unknown[]).map(String) : [];
     return `
         <div class="${wrapCls}" style="margin-bottom:.75rem;">
-          <label>${escapeHtml(window.tr(f.l))}</label>
+          <label>${escapeHtml(tr(f.l))}</label>
           <div class="multi-check">
             ${opts.length
               ? opts.map((o) => `<label class="multi-check-item"><input type="checkbox" data-multi="${f.k}" value="${escapeHtml(o.v)}" ${vals.includes(String(o.v)) ? 'checked' : ''}> ${escapeHtml(o.t)}</label>`).join('')
@@ -189,7 +196,7 @@ function champHtml(coll: string, f: Champ, record: Enregistrement, id: string | 
       .filter((o) => !(coll === 'organisation' && f.k === 'parent_id' && o.v === id));
     return `
         <div class="${wrapCls}" style="margin-bottom:.75rem;">
-          <label>${escapeHtml(window.tr(f.l))}</label>
+          <label>${escapeHtml(tr(f.l))}</label>
           <select class="shell-input" data-field="${f.k}"${onchange}>
             ${f.allowEmpty ? '<option value="">—</option>' : ''}
             ${opts.map((o) => `<option value="${escapeHtml(o.v)}" ${String(o.v) === String(val) ? 'selected' : ''}>${escapeHtml(o.t)}</option>`).join('')}
@@ -198,7 +205,7 @@ function champHtml(coll: string, f: Champ, record: Enregistrement, id: string | 
   }
   return `
       <div class="${wrapCls}" style="margin-bottom:.75rem;">
-        <label>${escapeHtml(window.tr(f.l))}</label>
+        <label>${escapeHtml(tr(f.l))}</label>
         <input class="shell-input" type="${f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}" data-field="${f.k}" value="${escapeHtml(val)}">
       </div>`;
 }
@@ -227,7 +234,7 @@ export function openRefModal(coll: string, id?: string, defaultsJson?: string): 
   root.innerHTML = `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:560px;">
-      <div class="shell-modal-header"><h3>${escapeHtml(window.tr(schema.title))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${escapeHtml(tr(schema.title))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">${champsHtml(coll, record, id)}</div>
       <div class="shell-modal-footer">
         <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${escapeHtml(t('cancel'))}</button>

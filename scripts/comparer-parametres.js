@@ -124,7 +124,25 @@ function duSas(noms) {
   return sortie;
 }
 const { icon, moduleIcon, PRIO_COLORS } = duSas(['icon', 'moduleIcon', 'PRIO_COLORS']);
-const tr = (fr) => fr;
+// ── `tr`, `searchInputHtml` et `exportBar` viennent du module construit (5.e.0) ──
+//
+// Ils étaient **fabriqués ici** : `tr` en identité, les deux autres en marqueurs
+// de commentaire. C'était juste tant qu'ils vivaient dans `app.js` et que les
+// deux côtés les lisaient sur `window`.
+//
+// Depuis 5.e.0 ils vivent dans `libelles.ts` et `barre.ts`, et le module converti
+// les **importe**. Les fabriquer ici ferait donc comparer le vrai balisage d'un
+// côté à un marqueur de l'autre — la mesure de mon montage, non du code (la
+// leçon des 629 écarts de 5.d.3). Les deux bacs chargent le même
+// `public/app/barre.js`.
+function poserBarre(bac) {
+  const chemin = path.join(RACINE, 'public', 'app', 'barre.js');
+  if (!fs.existsSync(chemin)) {
+    console.error('refus : public/app/barre.js est absent — lancer `node frontend/construire.mjs`.');
+    process.exit(2);
+  }
+  vm.runInContext(fs.readFileSync(chemin, 'utf8'), bac, { filename: 'barre.js' });
+}
 
 function libelles() {
   const src = fs.readFileSync(path.join(RACINE, 'frontend', 'portail', 'traductions.fr.ts'), 'utf8');
@@ -159,7 +177,7 @@ function documentMinimal(capture, champs) {
 /** Le bac commun aux deux côtés : même document, même capture, mêmes libellés. */
 function bacCommun(capture, champs, tab, lang) {
   const bac = {
-    console, oasisEsc, esc: oasisEsc, icon, moduleIcon, PRIO_COLORS, tr,
+    console, oasisEsc, esc: oasisEsc, icon, moduleIcon, PRIO_COLORS,
     CURRENT_LANG: lang,
     t: (cle, ...v) => {
       const s = tab[cle];
@@ -199,6 +217,7 @@ function chargerOrigine(champs, tab, lang) {
   bac.api = transport(capture);
   bac.fetch = transport(capture);
   vm.createContext(bac);
+  poserBarre(bac);
   vm.runInContext(fonctionsOrigine(sourceOrigine()), bac, { filename: 'app-config.js (origine)' });
   return facade(bac, capture);
 }
@@ -209,6 +228,7 @@ function chargerNouvelle(champs, tab, lang) {
   bac.api = transport(capture);
   bac.fetch = transport(capture);
   vm.createContext(bac);
+  poserBarre(bac);
   // Le module des référentiels d'abord : `closeRefModal` lui appartient, et
   // c'est lui que la fenêtre de l'Administration referme.
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public', 'app', 'referentiels.js'), 'utf8'), bac, { filename: 'referentiels.js' });

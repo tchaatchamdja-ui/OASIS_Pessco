@@ -32,6 +32,7 @@ import { sessionPerdue } from '../socle/requete';
 import { PRIO_COLORS, icon, moduleIcon } from './icones';
 import { closeRefModal } from './referentiels';
 import { t } from './traductions';
+import { tr } from './libelles';
 
 /** L'identité de l'Administration. Tous les champs peuvent manquer. */
 export interface Aac {
@@ -185,11 +186,11 @@ export function cfgSectionAAC(cfg: ConfigAac): string {
   // tableau rendrait `string | undefined`, et il faudrait traiter un cas qui
   // n'existe pas. Le tuple dit ce que la ligne est — un libellé et une valeur.
   const rows = lignes
-    .map((r) => `<tr><td class="aac-info-lbl">${window.tr(r[0])}</td><td class="aac-info-val">${r[1]}</td></tr>`)
+    .map((r) => `<tr><td class="aac-info-lbl">${tr(r[0])}</td><td class="aac-info-val">${r[1]}</td></tr>`)
     .join('');
 
   return `
-  <div class="portal-page-header"><h3>${window.tr("Détails sur l'Administration")}</h3>
+  <div class="portal-page-header"><h3>${tr("Détails sur l'Administration")}</h3>
     <div class="portal-page-actions"><button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openAacEdit()">${icon('edit', 14)} Modifier</button></div>
   </div>
   <div class="aac-presentation aac-presentation-compact">

@@ -22,6 +22,8 @@ import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
 import type { Enregistrement } from './schemas';
+import { tr } from './libelles';
+import { exportBar, searchInputHtml } from './barre';
 
 declare global {
   interface Window {
@@ -119,9 +121,9 @@ export function cfgSectionExigences(): string {
       return `
       <div class="exig-group ${collapsed ? 'collapsed' : ''}">
         <div class="exig-banner" onclick="toggleExigGroup(${argEchappe(key)})">
-          <span class="exig-banner-title"><span class="exig-chevron">${icon('chevronRight', 15)}</span>${escapeHtml(key || window.tr('Sans règlement'))} <span class="shell-badge" style="background:rgba(255,255,255,.2);color:#fff;">${items.length}</span></span>
+          <span class="exig-banner-title"><span class="exig-chevron">${icon('chevronRight', 15)}</span>${escapeHtml(key || tr('Sans règlement'))} <span class="shell-badge" style="background:rgba(255,255,255,.2);color:#fff;">${items.length}</span></span>
           <span class="exig-banner-right" onclick="event.stopPropagation()">
-            <span class="exig-banner-date">${dateAdoption ? `${window.tr("Date d'adoption")} : ${escapeHtml(fmtDay(dateAdoption))}` : ''}</span>
+            <span class="exig-banner-date">${dateAdoption ? `${tr("Date d'adoption")} : ${escapeHtml(fmtDay(dateAdoption))}` : ''}</span>
             <button class="shell-btn-icon" style="color:#fff;" onclick="openReglementForm(${argEchappe(key)})" title="${t('modifier_reglement')}" aria-label="${t('modifier_reglement')}">${icon('edit', 15)}</button>
             <button class="shell-btn-icon" style="color:#fff;" onclick="openExigDrawer(null,${argEchappe(key)},${argEchappe(dateAdoption)})" title="${t('ajouter_exigence')}" aria-label="${t('ajouter_exigence')}">${icon('plus', 15)}</button>
           </span>
@@ -129,7 +131,7 @@ export function cfgSectionExigences(): string {
         <div class="exig-body">
           <div class="shell-table-container">
             <table class="shell-table shell-table-compact exig-table">
-              <thead><tr><th>${window.tr('Référence')}</th><th>${window.tr('Libellé')}</th><th>${window.tr('Statut')}</th><th></th></tr></thead>
+              <thead><tr><th>${tr('Référence')}</th><th>${tr('Libellé')}</th><th>${tr('Statut')}</th><th></th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
           </div>
@@ -139,10 +141,10 @@ export function cfgSectionExigences(): string {
     .join('');
   return `
   <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${escapeHtml(window.tr('Liste des exigences'))}</h3>
+    <h3>${escapeHtml(tr('Liste des exigences'))}</h3>
     <div class="portal-page-actions">
-      ${window.searchInputHtml('Rechercher une exigence / règlement...')}
-      ${window.exportBar('exigences', window.tr('Liste des exigences'))}
+      ${searchInputHtml('Rechercher une exigence / règlement...')}
+      ${exportBar('exigences', tr('Liste des exigences'))}
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openExigDrawer(null,null,null,true)">${icon('plus', 13)} ${escapeHtml(t('add'))}</button>
     </div>
   </div>
@@ -157,18 +159,18 @@ export function drawerHtml(id?: string | null, presetReglement?: string | null, 
   const date = e ? texte(e.date_adoption) : (presetDate ?? '');
   const showRegFields = !!newGroup; // création d'un nouveau règlement : champs éditables
   const regBlock = showRegFields
-    ? `<div class="shell-form-group"><label>${window.tr('Règlement')}</label><input class="shell-input" id="exReglement" value=""></div>
-       <div class="shell-form-group"><label>${window.tr("Date d'adoption")}</label><input class="shell-input" type="date" id="exDate" value=""></div>`
-    : `<div class="exig-reg-readonly">${icon('fileText', 14)} <strong>${escapeHtml(reglement || window.tr('Sans règlement'))}</strong>${date ? ` · ${escapeHtml(fmtDay(date))}` : ''}</div>`;
+    ? `<div class="shell-form-group"><label>${tr('Règlement')}</label><input class="shell-input" id="exReglement" value=""></div>
+       <div class="shell-form-group"><label>${tr("Date d'adoption")}</label><input class="shell-input" type="date" id="exDate" value=""></div>`
+    : `<div class="exig-reg-readonly">${icon('fileText', 14)} <strong>${escapeHtml(reglement || tr('Sans règlement'))}</strong>${date ? ` · ${escapeHtml(fmtDay(date))}` : ''}</div>`;
   return `
   <div class="exig-drawer-overlay" onclick="closeExigDrawer()"></div>
   <div class="exig-drawer">
-    <div class="exig-drawer-header"><h3>${id ? window.tr('Liste des exigences') : (newGroup ? 'Nouveau règlement' : 'Nouvelle exigence')}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
+    <div class="exig-drawer-header"><h3>${id ? tr('Liste des exigences') : (newGroup ? 'Nouveau règlement' : 'Nouvelle exigence')}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
     <div class="exig-drawer-body">
       ${regBlock}
-      <div class="shell-form-group"><label>${window.tr('Référence')}</label><input class="shell-input" id="exReference" value="${escapeHtml(e ? texte(e.reference) : '')}"></div>
-      <div class="shell-form-group"><label>${window.tr('Libellé')}</label><textarea class="shell-input exig-libelle" id="exLibelle" rows="6">${escapeHtml(e ? texte(e.libelle) : '')}</textarea></div>
-      <div class="shell-form-group"><label>${window.tr('Statut')}</label>
+      <div class="shell-form-group"><label>${tr('Référence')}</label><input class="shell-input" id="exReference" value="${escapeHtml(e ? texte(e.reference) : '')}"></div>
+      <div class="shell-form-group"><label>${tr('Libellé')}</label><textarea class="shell-input exig-libelle" id="exLibelle" rows="6">${escapeHtml(e ? texte(e.libelle) : '')}</textarea></div>
+      <div class="shell-form-group"><label>${tr('Statut')}</label>
         <select class="shell-input" id="exStatut"><option value="actif" ${!e || e.statut !== 'inactif' ? 'selected' : ''}>Actif</option><option value="inactif" ${e && e.statut === 'inactif' ? 'selected' : ''}>Inactif</option></select>
       </div>
     </div>
@@ -254,10 +256,10 @@ export function reglementFormHtml(reglement: string): string {
   <div class="shell-modal-overlay" style="left:0;top:0;" onclick="closeExigDrawer()"></div>
   <div class="shell-modal-overlay" style="left:0;top:0;background:none;pointer-events:none;">
     <div class="shell-modal" style="max-width:440px;pointer-events:auto;">
-      <div class="shell-modal-header"><h3>${window.tr('Règlement')} / ${window.tr("Date d'adoption")}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
+      <div class="shell-modal-header"><h3>${tr('Règlement')} / ${tr("Date d'adoption")}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeExigDrawer()" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
       <div class="shell-modal-body">
-        <div class="shell-form-group" style="margin-bottom:.75rem;"><label>${window.tr('Règlement')}</label><input class="shell-input" id="rgNom" value="${escapeHtml(reglement)}"></div>
-        <div class="shell-form-group"><label>${window.tr("Date d'adoption")}</label><input class="shell-input" type="date" id="rgDate" value="${escapeHtml(date)}"></div>
+        <div class="shell-form-group" style="margin-bottom:.75rem;"><label>${tr('Règlement')}</label><input class="shell-input" id="rgNom" value="${escapeHtml(reglement)}"></div>
+        <div class="shell-form-group"><label>${tr("Date d'adoption")}</label><input class="shell-input" type="date" id="rgDate" value="${escapeHtml(date)}"></div>
         <p style="font-size:.72rem;color:var(--text-muted);margin-top:.5rem;">Appliqué à ${items.length} exigence(s) de ce règlement.</p>
       </div>
       <div class="shell-modal-footer">

@@ -83,9 +83,25 @@ function iconeReelle() {
   return bac.window.icon;
 }
 const icon = iconeReelle();
-const tr = (fr) => fr;
-const searchInputHtml = (ph) => `<!--recherche:${oasisEsc(ph)}-->`;
-const exportBar = (coll, title) => `<!--export:${coll}:${oasisEsc(title)}-->`;
+// ── `tr`, `searchInputHtml` et `exportBar` viennent du module construit (5.e.0) ──
+//
+// Ils étaient **fabriqués ici** : `tr` en identité, les deux autres en marqueurs
+// de commentaire. C'était juste tant qu'ils vivaient dans `app.js` et que les
+// deux côtés les lisaient sur `window`.
+//
+// Depuis 5.e.0 ils vivent dans `libelles.ts` et `barre.ts`, et le module converti
+// les **importe**. Les fabriquer ici ferait donc comparer le vrai balisage d'un
+// côté à un marqueur de l'autre — la mesure de mon montage, non du code (la
+// leçon des 629 écarts de 5.d.3). Les deux bacs chargent le même
+// `public/app/barre.js`.
+function poserBarre(bac) {
+  const chemin = path.join(RACINE, 'public', 'app', 'barre.js');
+  if (!fs.existsSync(chemin)) {
+    console.error('refus : public/app/barre.js est absent — lancer `node frontend/construire.mjs`.');
+    process.exit(2);
+  }
+  vm.runInContext(fs.readFileSync(chemin, 'utf8'), bac, { filename: 'barre.js' });
+}
 
 /** Les libellés du portail, pris dans la table réelle : `t()` doit rendre la même chose. */
 function tablesI18n() {
@@ -148,7 +164,7 @@ function chargerOrigine(refs, cfg, me, libelles) {
   const capture = { html: '' };
   const bac = {
     REFS: refs, ME: me, CURRENT_CFG: cfg, console,
-    esc: oasisEsc, oasisEsc, icon, tr, searchInputHtml, exportBar,
+    esc: oasisEsc, oasisEsc, icon,
     t: (cle, ...v) => {
       const s = libelles[cle];
       if (s === undefined) return cle;
@@ -158,6 +174,7 @@ function chargerOrigine(refs, cfg, me, libelles) {
   };
   bac.window = bac;
   vm.createContext(bac);
+  poserBarre(bac);
 
   // Les schémas viennent du module construit : c'est la version que la page
   // servait au commit d'origine, et 5.d.0 l'a déjà éprouvée ligne à ligne.
@@ -184,11 +201,12 @@ function chargerNouvelle(refs, cfg, me) {
   bac.window = bac;
   Object.assign(bac, {
     REFS: refs, ME: me, CURRENT_CFG: cfg,
-    oasisEsc, tr, searchInputHtml, exportBar,
+    oasisEsc,
     document: documentMinimal(capture),
     localStorage: { getItem: () => null, setItem: () => {} },
   });
   vm.createContext(bac);
+  poserBarre(bac);
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public', 'app', 'referentiels.js'), 'utf8'),
     bac, { filename: 'public/app/referentiels.js' });
   return {

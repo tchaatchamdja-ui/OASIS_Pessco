@@ -39,6 +39,9 @@
 // Un fichier qui décide de l'ordre d'exécution ne doit rien faire d'autre.
 import './icons';
 import './i18n';
+// La barre d'écran et les libellés littéraux (5.e.0) : lus par les référentiels
+// et leurs voisins, donc placés avant eux.
+import './barre';
 import './etat';
 import './schemas';
 import './referentiels';

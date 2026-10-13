@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 1 192 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) |
+           | portail (`public/js`) | 973 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3108,6 +3108,116 @@ Ce que l'ingénierie peut dire, et qui a été dit :
                rendant la table illisible : trois contrôles tombent.
 
 
+
+
+       ── La décision prise le 13 octobre 2026 : les comparateurs seront des pièces
+          d'archive ──
+
+       Les sas publient des noms que **plus personne ne lit** dans la page — neuf depuis
+       5.d.6, et les trois rendus en 5.e.0 s'y ajouteront. Seuls les huit comparateurs les
+       lisent, pour faire tourner les versions d'origine dans la portée globale.
+
+       La maîtrise d'ouvrage a tranché : **les comparateurs deviendront des pièces
+       d'archive**. Le jour où `app.js` disparaîtra, le pont de cohabitation n'aura plus
+       d'usage, les sas cesseront de publier ce que rien n'appelle, et les
+       `scripts/comparer-*.js` resteront au dépôt comme la trace d'une conversion — plus
+       rejouables, mais lisibles.
+
+       Ce que cela coûte, et il faut le dire : **les huit preuves cessent alors d'être des
+       contrôles de non-régression.** Ce qu'elles tenaient — que le balisage de chaque
+       écran n'a pas bougé — passe entièrement à la suite « parcours » et aux 108 contrôles
+       du navigateur. C'est pourquoi la couverture des gestes du portail a été portée à son
+       plafond (66 sur 84) **avant** 5.d, et non après : c'est elle qui prend le relais.
+
+   5.e [~] **`app.js` — le dernier JavaScript du portail.** 973 lignes restantes sur
+       1 192. Il porte la navigation, les cinq vues, les utilisateurs, le profil et le
+       journal d'audit.
+
+       Le découpage n'est pas thématique : il suit **ce que les modules convertis
+       empruntent encore**. Chaque pièce rend des prêts, et c'est ce qui décide de son
+       rang.
+
+       5.e.0 [x] **Les libellés littéraux et la barre d'écran — les trois prêts rendus** —
+           fait le 13 octobre 2026. `app.js` passe de **1 192 à 973 lignes**.
+
+           `tr`, `searchInputHtml` et `exportBar` étaient les trois noms que les cinq
+           modules de 5.d lisaient sur `window`, faute de pouvoir les atteindre : leurs
+           tables et leur état étaient des globales **lexicales** d'`app.js`. Sixième
+           fois que cet obstacle décide d'un déplacement, et la dernière de cette forme —
+           il ne reste plus de `const` du premier niveau qu'un module doive lire.
+
+           Deux modules : `libelles.ts` (la table de 65 libellés français littéraux et
+           `tr`) et `barre.ts` (la recherche, l'export PDF et Excel, l'import de
+           classeur, le filtre client). `PORTAIL_RECHERCHE` devient **privé** — personne
+           d'autre ne le lisait.
+
+           ── Deux mécanismes de traduction, et ils restent deux ──
+
+           `traductions.fr.ts` traduit des **clés** (`cfg_save`) ; `libelles.ts` traduit
+           des **libellés français littéraux** (`"Date d'adoption"`), qui sont à la fois
+           la clé et la valeur française. Les réunir demanderait d'inventer une clé pour
+           chacun des 65 et de réécrire tous leurs appels : une amélioration, donc un
+           changement, donc pas ici. Le rapprochement est un chantier à part.
+
+           ── Une clé en double, trouvée par le compilateur ──
+
+           `'Domaines'` figurait **deux fois** dans la table — une fois en titre de
+           section, une fois en colonne —, avec la **même** valeur. Un littéral d'objet
+           JavaScript garde la dernière et ne dit rien ; TypeScript refuse le doublon.
+
+           Le retrait ne change donc rien, et le comparateur le **prouve** : il relève
+           les clés dans la table d'origine, où le doublon est déjà effondré. Les deux
+           côtés comparent 65 libellés.
+
+           ── Les quatre comparateurs qui fabriquaient ces trois noms ──
+
+           `comparer-referentiels`, `-exigences`, `-taxinomie` et `-parametres` les
+           **fabriquaient** : `tr` en identité, les deux autres en marqueurs de
+           commentaire. C'était juste tant que les deux côtés les lisaient sur `window`.
+
+           Dès que le module converti les importe, la comparaison opposerait le vrai
+           balisage à un marqueur — la mesure de mon montage, non du code, pour la
+           quatrième fois (5.d.3, 5.d.4, 5.d.6, ici). Les deux bacs chargent donc le même
+           `public/app/barre.js`, et ces quatre preuves comparent désormais le **vrai**
+           champ de recherche et la **vraie** barre d'export. Elles en sortent plus
+           fortes qu'avant.
+
+           ── Un cycle évité, et le vrai couplage nommé ──
+
+           `barre.ts` lisait `closeRefModal` de `referentiels.ts`, qui importe désormais
+           `searchInputHtml` d'elle. L'import en retour ferait un cycle que les deux
+           survivraient — les noms n'étant lus qu'à l'appel — mais qui dirait faux sur ce
+           qui dépend de quoi. Le prêt reste donc dans ce sens-ci, et la vraie cause est
+           écrite : la fenêtre d'import et celles des référentiels **partagent la racine
+           `cfgModalRoot`**. Elle se dénouera quand cette racine aura son module.
+
+           ── Une divergence assumée : la fenêtre d'impression bloquée ──
+
+           `window.open` rend `null` quand le navigateur bloque les fenêtres, et
+           l'original écrivait dedans sans le vérifier — `TypeError`, console, rien à
+           l'écran. Le module **lève**, en nommant la cause ; la divergence est le texte,
+           et les deux exports sont assertés.
+
+           ── La preuve, et une comparaison qui tenait à la chance ──
+
+           **355 comparaisons** : les 65 libellés dans les trois langues plus une
+           quatrième absente du catalogue, les clés qui n'en sont pas, le champ de
+           recherche dans ses cinq états — atteints **par les gestes** des deux côtés —,
+           la barre d'export sur un intitulé hostile, le balisage de la fenêtre d'import,
+           les deux **documents PDF entiers**, et le corps de l'import dans ses deux
+           comptes rendus.
+
+           Le second compte rendu a révélé que le premier passait **par hasard** :
+           `doImport` pose un `onload` et ne l'attend pas, et je lisais le résultat juste
+           après l'appel. Les deux chaînes avaient le même nombre de micro-tâches ; dès
+           que l'enveloppe du module en a ajouté une, l'écart est apparu. *Une
+           comparaison qui dépend de l'ordre des micro-tâches n'est pas une comparaison.*
+           La promesse de chaque lecture est désormais retenue et attendue.
+
+           **Seize contre-essais, seize rouges** — après deux verts qui ont nommé deux
+           régimes manquants : une valeur de recherche posée **sans** ouverture (le cas
+           d'un écran redessiné sous un champ rempli), et un import qui rend des lignes
+           ignorées. Les deux sont entrés dans la preuve.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

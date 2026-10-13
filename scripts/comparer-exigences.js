@@ -95,10 +95,27 @@ function iconeReelle() {
   return bac.window.icon;
 }
 const icon = iconeReelle();
-const tr = (fr) => fr;
+// ── `tr`, `searchInputHtml` et `exportBar` viennent du module construit (5.e.0) ──
+//
+// Ils étaient **fabriqués ici** : `tr` en identité, les deux autres en marqueurs
+// de commentaire. C'était juste tant qu'ils vivaient dans `app.js` et que les
+// deux côtés les lisaient sur `window`.
+//
+// Depuis 5.e.0 ils vivent dans `libelles.ts` et `barre.ts`, et le module converti
+// les **importe**. Les fabriquer ici ferait donc comparer le vrai balisage d'un
+// côté à un marqueur de l'autre — la mesure de mon montage, non du code (la
+// leçon des 629 écarts de 5.d.3). Les deux bacs chargent le même
+// `public/app/barre.js`.
+function poserBarre(bac) {
+  const chemin = path.join(RACINE, 'public', 'app', 'barre.js');
+  if (!fs.existsSync(chemin)) {
+    console.error('refus : public/app/barre.js est absent — lancer `node frontend/construire.mjs`.');
+    process.exit(2);
+  }
+  vm.runInContext(fs.readFileSync(chemin, 'utf8'), bac, { filename: 'barre.js' });
+}
 const escArg = (v) => oasisEsc(JSON.stringify(String(v ?? '')));
-const searchInputHtml = (ph) => `<!--recherche:${oasisEsc(ph)}-->`;
-const exportBar = (coll, title) => `<!--export:${coll}:${oasisEsc(title)}-->`;
+
 
 function libelles() {
   const src = fs.readFileSync(path.join(RACINE, 'frontend', 'portail', 'traductions.fr.ts'), 'utf8');
@@ -123,7 +140,7 @@ function chargerOrigine(refs, lang, ouverts, tab) {
   const capture = { html: '' };
   const bac = {
     REFS: refs, CURRENT_LANG: lang, console,
-    esc: oasisEsc, oasisEsc, icon, tr, escArg, searchInputHtml, exportBar,
+    esc: oasisEsc, oasisEsc, icon, escArg,
     t: (cle, ...v) => {
       const s = tab[cle];
       if (s === undefined) return cle;
@@ -135,6 +152,7 @@ function chargerOrigine(refs, lang, ouverts, tab) {
   bac.window = bac;
   bac.__EXIG_OPEN = new Set(ouverts);
   vm.createContext(bac);
+  poserBarre(bac);
   vm.runInContext(fonctionsOrigine(sourceOrigine()), bac, { filename: 'app-config.js (origine)' });
   return {
     section: () => bac.window.cfgSectionExigences(),
@@ -149,12 +167,13 @@ function chargerNouvelle(refs, lang, ouverts) {
   const bac = { console };
   bac.window = bac;
   Object.assign(bac, {
-    REFS: refs, CURRENT_LANG: lang, oasisEsc, tr, searchInputHtml, exportBar,
+    REFS: refs, CURRENT_LANG: lang, oasisEsc,
     document: documentMinimal(capture),
     localStorage: { getItem: () => null, setItem: () => {} },
     renderConfig: () => {},
   });
   vm.createContext(bac);
+  poserBarre(bac);
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public', 'app', 'exigences.js'), 'utf8'),
     bac, { filename: 'public/app/exigences.js' });
   // L'ensemble des bandeaux dépliés est privé au module : on l'amène au même

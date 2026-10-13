@@ -23,6 +23,8 @@ import { icon } from './icones';
 import { t } from './traductions';
 import { REF_SCHEMAS, fieldValue, type Champ, type Enregistrement } from './schemas';
 import { LEVEL_COLORS, circuitHtml, orgChainFor } from './organigramme';
+import { tr } from './libelles';
+import { exportBar, searchInputHtml } from './barre';
 
 declare global {
   interface Window {
@@ -85,7 +87,7 @@ export function cfgSectionPersonnel(): string {
       const chain = orgChainFor(r.id);
       const cells = tableFields.map((f) => `<td>${fieldValue(f, r)}</td>`).join('');
       const detailInfo = detailFields
-        .map((f) => `<div class="pers-info-item"><span class="pers-info-lbl">${escapeHtml(window.tr(f.l))}</span><span class="pers-info-val">${fieldValue(f, r)}</span></div>`)
+        .map((f) => `<div class="pers-info-item"><span class="pers-info-lbl">${escapeHtml(tr(f.l))}</span><span class="pers-info-val">${fieldValue(f, r)}</span></div>`)
         .join('');
       return `
       <tr>
@@ -107,16 +109,16 @@ export function cfgSectionPersonnel(): string {
     .join('');
   return `
   <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${escapeHtml(window.tr(schema.title))}</h3>
+    <h3>${escapeHtml(tr(schema.title))}</h3>
     <div class="portal-page-actions">
-      ${window.searchInputHtml('Rechercher un membre du personnel...')}
-      ${window.exportBar('inspecteurs', window.tr("Liste du personnel de l'Administration"))}
+      ${searchInputHtml('Rechercher un membre du personnel...')}
+      ${exportBar('inspecteurs', tr("Liste du personnel de l'Administration"))}
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('${coll}')">${icon('plus', 13)} ${escapeHtml(t('add'))}</button>
     </div>
   </div>
   <div class="shell-table-container">
     <table class="shell-table shell-table-compact">
-      <thead><tr><th></th>${tableFields.map((f) => `<th>${escapeHtml(window.tr(f.l))}</th>`).join('')}<th></th></tr></thead>
+      <thead><tr><th></th>${tableFields.map((f) => `<th>${escapeHtml(tr(f.l))}</th>`).join('')}<th></th></tr></thead>
       <tbody>${rows || `<tr><td colspan="${colspan}" style="color:var(--text-muted);">${t('aucun_element')}</td></tr>`}</tbody>
     </table>
   </div>`;
@@ -237,17 +239,17 @@ export function cfgSectionDomaines(): string {
   const orphans = themes.filter((th) => !th.secteur_id && !th.sous_activite_id);
   const orphanBlock = orphans.length
     ? `<div style="margin-top:1rem;">
-        <div class="portal-page-header"><h3>${window.tr('Thèmes non rattachés')}</h3></div>
+        <div class="portal-page-header"><h3>${tr('Thèmes non rattachés')}</h3></div>
         ${orphans.map(themeRow).join('')}
       </div>`
     : '';
 
   return `
   <div class="portal-page-header cfg-entete-empile cfg-entete-premier">
-    <h3>${window.tr('Domaines | Secteurs | Sous-activités | Thèmes')}</h3>
+    <h3>${tr('Domaines | Secteurs | Sous-activités | Thèmes')}</h3>
     <div class="portal-page-actions">
-      ${window.searchInputHtml('Rechercher un domaine / secteur...')}
-      ${window.exportBar('activites', window.tr('Domaines | Secteurs | Sous-activités | Thèmes'), 'exportPdfActivites()')}
+      ${searchInputHtml('Rechercher un domaine / secteur...')}
+      ${exportBar('activites', tr('Domaines | Secteurs | Sous-activités | Thèmes'), 'exportPdfActivites()')}
       <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openRefModal('domaines')">${icon('plus', 13)} Domaine</button>
     </div>
   </div>

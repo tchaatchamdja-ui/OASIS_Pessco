@@ -107,83 +107,23 @@ const THEMES_ORDER = [
   { code: 'services', icon: 'creditCard' },
 ];
 
-// Traductions des libellés de Configuration (sections + colonnes). fr → [en, pt]
-const CFG_I18N = {
-  // Titres de sections / tables
-  'Niveaux hiérarchiques': ['Hierarchical levels', 'Níveis hierárquicos'],
-  'Entités organisationnelles': ['Organisational entities', 'Entidades organizacionais'],
-  'Domaines': ['Domains', 'Domínios'],
-  'Secteurs': ['Sectors', 'Setores'],
-  'Sous-activités': ['Sub-activities', 'Subatividades'],
-  'Thèmes de supervision': ['Oversight themes', 'Temas de supervisão'],
-  'Liste des exigences': ['Requirements list', 'Lista de requisitos'],
-  'Prestataires de services': ['Service providers', 'Prestadores de serviços'],
-  "Liste du personnel de l'Administration": ['Administration staff list', 'Lista do pessoal da Administração'],
-  'Types de supervision': ['Oversight types', 'Tipos de supervisão'],
-  'Modes de supervision': ['Oversight modes', 'Modos de supervisão'],
-  'Niveaux de qualification': ['Qualification levels', 'Níveis de qualificação'],
-  "Spécialités d'inspecteur": ['Inspector specialities', 'Especialidades de inspetor'],
-  "Détails sur l'Administration": ['Administration details', 'Detalhes da Administração'],
-  'Organigramme': ['Org chart', 'Organograma'],
-  'Domaines / Secteurs / Sous-activités / Thèmes': ['Domains / Sectors / Sub-activities / Themes', 'Domínios / Setores / Subatividades / Temas'],
-  'Thèmes non rattachés': ['Unlinked themes', 'Temas não associados'],
-  // Colonnes / champs
-  'Type de niveau': ['Level type', 'Tipo de nível'],
-  'Ordre': ['Order', 'Ordem'],
-  'Niveau': ['Level', 'Nível'],
-  'Sigle': ['Acronym', 'Sigla'],
-  'Libellé': ['Label', 'Rótulo'],
-  'Poste': ['Position', 'Cargo'],
-  'Titulaire': ['Holder', 'Titular'],
-  'Intérimaire': ['Deputy', 'Substituto'],
-  'Rattachement': ['Parent', 'Vínculo'],
-  'Code': ['Code', 'Código'],
-  'Nom': ['Name', 'Nome'],
-  'Prénoms': ['First names', 'Nomes próprios'],
-  'Prénom': ['First name', 'Nome próprio'],
-  'Description': ['Description', 'Descrição'],
-  'Statut': ['Status', 'Estado'],
-  'Domaine': ['Domain', 'Domínio'],
-  'Cycle (mois)': ['Cycle (months)', 'Ciclo (meses)'],
-  'Secteur': ['Sector', 'Setor'],
-  'Sous-activité': ['Sub-activity', 'Subatividade'],
-  'Référence': ['Reference', 'Referência'],
-  'Règlement': ['Regulation', 'Regulamento'],
-  "Date d'adoption": ['Adoption date', 'Data de adoção'],
-  'Sans règlement': ['No regulation', 'Sem regulamento'],
-  'Thème': ['Theme', 'Tema'],
-  'Moyen de contrôle': ['Control means', 'Meio de controlo'],
-  'Trigramme': ['Trigram', 'Trigrama'],
-  'Dirigeant': ['Manager', 'Dirigente'],
-  'Point focal': ['Focal point', 'Ponto focal'],
-  'Email': ['Email', 'Email'],
-  'Réf. agrément': ['Approval ref.', 'Ref. aprovação'],
-  'Réf Personnel': ['Staff ref.', 'Ref. pessoal'],
-  'Inspecteur ?': ['Inspector?', 'Inspetor?'],
-  'N° inspecteur': ['Inspector no.', 'N.º inspetor'],
-  'Domaines': ['Domains', 'Domínios'],
-  'Spécialités': ['Specialities', 'Especialidades'],
-  'Niveau de qualification': ['Qualification level', 'Nível de qualificação'],
-  'Type': ['Type', 'Tipo'],
-  'Durée standard (j)': ['Standard duration (d)', 'Duração padrão (d)'],
-  'Mode': ['Mode', 'Modo'],
-  'Spécialité': ['Speciality', 'Especialidade'],
-  // Lignes du tableau « Détails sur l'Administration »
-  'Nom complet': ['Full name', 'Nome completo'],
-  'Bigramme': ['Bigram', 'Bigrama'],
-  'État': ['State', 'Estado'],
-  'Ville': ['City', 'Cidade'],
-  'Adresse 1': ['Address 1', 'Endereço 1'],
-  'Adresse 2': ['Address 2', 'Endereço 2'],
-  'Email administrateur': ['Admin email', 'Email do administrador'],
-  'Langue par défaut': ['Default language', 'Idioma predefinido'],
-  'Accès aux Modules': ['Module access', 'Acesso aos módulos'],
-};
-function tr(fr) {
-  const e = CFG_I18N[fr];
-  if (!e) return fr;
-  return CURRENT_LANG === 'en' ? e[0] : CURRENT_LANG === 'pt' ? e[1] : fr;
-}
+// ── Les libellés français littéraux : partis dans un module typé (5.e.0) ──
+//
+// `CFG_I18N` et `tr` vivent désormais dans `frontend/portail/libelles.ts`, et le
+// sas les pose sur `window` — `tr` seulement : la table était un `const` du
+// premier niveau, donc absente de `window`, et personne ne la lit.
+//
+// C'était le nom le plus **emprunté** du portail : quatre modules convertis en
+// 5.d lisaient `window.tr`. Ils l'importent maintenant de sa source, et leurs
+// déclarations sont parties avec leurs lectures.
+//
+// Le compilateur y a trouvé une clé en double — `'Domaines'`, une fois en titre
+// de section et une fois en colonne, avec la **même** valeur. Un littéral d'objet
+// garde la dernière ; le doublon est retiré, et le comparateur le prouve en
+// relevant les clés de la table d'origine, où il est déjà effondré.
+//
+// Éprouvé par `scripts/comparer-barre.js` : les **65 libellés** dans les trois
+// langues plus une quatrième absente, et les clés qui n'en sont pas.
 
 // ── L'état partagé vient de `/app/etat.js`, chargé avant ce fichier ──
 //
@@ -233,189 +173,29 @@ function escArg(v) {
 function esc(s) { return oasisEsc(s); }
 
 // ── Recherche des écrans du portail ──
-// Le geste est celui du menu « Inspections » de RAMP : au repos une pastille
-// qui dit « Rechercher », et le champ la remplace au clic, en s'étirant sur
-// tout ce que la ligne laisse jusqu'au premier bouton. Il se referme s'il
-// repart vide — le rang retrouve alors sa place.
-const PORTAIL_RECHERCHE = { ouverte: false, valeur: '' };
-
-function searchInputHtml(ph) {
-  const ouverte = PORTAIL_RECHERCHE.ouverte || !!PORTAIL_RECHERCHE.valeur;
-  const libelle = esc(ph || 'Rechercher...');
-  return `
-    <div class="cfg-search-wrap${ouverte ? ' ouverte' : ''}" id="portailRecherche">
-      <button class="cfg-search-loupe" type="button" title="${libelle}" aria-label="${libelle}"
-              onclick="portailOuvrirRecherche()">${icon('search', 14)}<span>Rechercher</span></button>
-      <input class="cfg-search-input" type="search" placeholder="${libelle}" aria-label="${libelle}"
-             value="${esc(PORTAIL_RECHERCHE.valeur)}"
-             oninput="portailChercher(this)" onblur="portailFermerRechercheSiVide()">
-      ${ouverte ? `<button class="shell-btn-icon cfg-search-reset" type="button" title="${t('vider_recherche')}" aria-label="${t('vider_recherche')}"
-              onmousedown="event.preventDefault()" onclick="portailViderRecherche()">${icon('x', 14)}</button>` : ''}
-    </div>`;
-}
-
-// Le champ remplace la pastille sans redessiner l'écran : re-rendre ferait
-// perdre le focus, et le filtrage travaille déjà sur le DOM en place.
-window.portailOuvrirRecherche = function () {
-  PORTAIL_RECHERCHE.ouverte = true;
-  const boite = document.getElementById('portailRecherche');
-  if (!boite) return;
-  boite.classList.add('ouverte');
-  // Le bouton de vidage n'existe qu'ouverte : il est posé ici plutôt que
-  // d'attendre un redessin, qui ferait perdre le focus.
-  if (!boite.querySelector('.cfg-search-reset')) {
-    const reset = document.createElement('button');
-    reset.className = 'shell-btn-icon cfg-search-reset';
-    reset.type = 'button';
-    reset.title = 'Vider la recherche';
-    reset.innerHTML = icon('x', 14);
-    reset.onmousedown = (e) => e.preventDefault();
-    reset.onclick = portailViderRecherche;
-    boite.appendChild(reset);
-  }
-  const champ = boite.querySelector('.cfg-search-input');
-  if (champ) champ.focus();
-};
-
-window.portailChercher = function (inp) {
-  PORTAIL_RECHERCHE.valeur = inp.value;
-  filterScope(inp);
-};
-
-window.portailViderRecherche = function () {
-  PORTAIL_RECHERCHE.valeur = '';
-  PORTAIL_RECHERCHE.ouverte = false;
-  const boite = document.getElementById('portailRecherche');
-  if (!boite) return;
-  const champ = boite.querySelector('.cfg-search-input');
-  if (champ) { champ.value = ''; filterScope(champ); }
-  boite.classList.remove('ouverte');
-  const reset = boite.querySelector('.cfg-search-reset');
-  if (reset) reset.remove();
-};
-
-window.portailFermerRechercheSiVide = function () {
-  if (PORTAIL_RECHERCHE.valeur) return;
-  portailViderRecherche();
-};
-
-// Changer d'écran ou de sous-menu remet la recherche au repos : elle ne porte
-// que sur ce qu'on regarde.
-function portailReinitialiserRecherche() {
-  PORTAIL_RECHERCHE.ouverte = false;
-  PORTAIL_RECHERCHE.valeur = '';
-}
-
-function exportBar(coll, title, pdfFn) {
-  const pdf = pdfFn || `exportPdf('${esc(title)}')`;
-  return `
-    <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="${pdf}" title="Exporter PDF">${icon('fileText', 13)} Exporter PDF</button>
-    <a class="shell-btn shell-btn-primary shell-btn-sm" href="/api/referentiels/${coll}/export" title="Exporter Excel">${icon('download', 13)} Exporter Excel</a>
-    <button class="shell-btn shell-btn-primary shell-btn-sm" onclick="openImportModal('${coll}','${esc(title)}')" title="Importer">${icon('layers', 13)} Importer</button>`;
-}
-
-function pdfWindow(title, bodyHtml) {
-  const w = window.open('', '_blank');
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
-    <style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:18px;color:#111}h2,h3{color:#1a365d}
-    table{width:100%;border-collapse:collapse;margin-bottom:14px}th,td{border:1px solid #ccc;padding:5px 7px;font-size:11px;text-align:left}
-    th{background:#eef2f7}.actions-cell,button,input,.shell-btn-icon{display:none!important}</style></head>
-    <body><h2>${esc(title)}</h2>${bodyHtml}</body></html>`);
-  w.document.close();
-  setTimeout(() => { w.focus(); w.print(); }, 300);
-}
-
-window.exportPdf = function (title) {
-  const scope = document.querySelector('.cfg-content') || document.getElementById('mainView');
-  const tables = [...scope.querySelectorAll('.shell-table-container')].map((c) => c.outerHTML).join('');
-  pdfWindow(title, `<div>${tables}</div>`);
-};
-
-// PDF Activités supervisées : construit 4 tables depuis les référentiels
-window.exportPdfActivites = function () {
-  const table = (heading, cols, rows) => `
-    <h3>${esc(heading)}</h3>
-    <table><thead><tr>${cols.map((c) => `<th>${esc(c[1])}</th>`).join('')}</tr></thead>
-    <tbody>${rows.map((r) => `<tr>${cols.map((c) => `<td>${esc(c[2] ? c[2](r) : (r[c[0]] ?? ''))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-  const domCode = (id) => refLabel('domaines', id, 'code');
-  const secCode = (id) => refLabel('secteurs', id, 'code');
-  const body =
-    table(tr('Domaines'), [['code', tr('Code')], ['nom', tr('Nom')], ['description', tr('Description')], ['statut', tr('Statut')]], REFS.domaines || []) +
-    table(tr('Secteurs'), [['code', tr('Code')], ['nom', tr('Nom')], ['domaine_id', tr('Domaine'), (r) => domCode(r.domaine_id)], ['csn', tr('Cycle (mois)')], ['statut', tr('Statut')]], REFS.secteurs || []) +
-    table(tr('Sous-activités'), [['code', tr('Code')], ['nom', tr('Nom')], ['secteur_id', tr('Secteur'), (r) => secCode(r.secteur_id)]], REFS.sous_activites || []) +
-    table(tr('Thèmes de supervision'), [['code', tr('Code')], ['libelle', tr('Libellé')], ['domaine_id', tr('Domaine'), (r) => domCode(r.domaine_id)], ['secteur_id', tr('Secteur'), (r) => secCode(r.secteur_id)], ['statut', tr('Statut')]], REFS.themes_supervision || []);
-  pdfWindow(tr('Domaines / Secteurs / Sous-activités / Thèmes'), body);
-};
-
-window.openImportModal = function (coll, title) {
-  document.getElementById('cfgModalRoot').innerHTML = `
-  <div class="shell-modal-overlay">
-    <div class="shell-modal" style="max-width:460px;">
-      <div class="shell-modal-header"><h3>Importer Excel — ${esc(title)}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeRefModal()" aria-label="${esc(t("fermer"))}" title="${esc(t("fermer"))}">${icon('x', 18)}</button></div>
-      <div class="shell-modal-body">
-        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:.75rem;">${t('import_marche_a_suivre')}</p>
-        <a class="shell-btn shell-btn-outline" href="/api/referentiels/${coll}/template" style="margin-bottom:1rem;">${icon('download', 14)} Télécharger le modèle (.xlsx)</a>
-        <div class="shell-form-group">
-          <label>${t('fichier_renseigne')}</label>
-          <input class="shell-input" type="file" id="importFile" accept=".xlsx">
-        </div>
-        <div id="importResult" style="font-size:.8rem;margin-top:.6rem;"></div>
-      </div>
-      <div class="shell-modal-footer">
-        <button class="shell-btn shell-btn-outline" onclick="closeRefModal()">${esc(t('cancel'))}</button>
-        <button class="shell-btn shell-btn-primary" onclick="doImport('${coll}')">${icon('layers', 14)} Importer</button>
-      </div>
-    </div>
-  </div>`;
-};
-
-window.doImport = function (coll) {
-  const file = document.getElementById('importFile').files[0];
-  if (!file) return showToast(t('choisir_xlsx'), 'warning');
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const res = await api(`/api/referentiels/${coll}/import`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileB64: reader.result }),
-    });
-    const d = await res.json().catch(() => ({}));
-    if (res.ok) {
-      const errs = d.errors || [];
-      const msg = `${d.added || 0} ajout(s), ${d.updated || 0} mise(s) à jour`
-        + (errs.length ? ` — ${errs.length} ligne(s) ignorée(s)` : '');
-      showToast(msg, errs.length ? 'warning' : 'success', errs.length ? 8000 : 4000);
-      if (errs.length) console.warn('Import — lignes ignorées :\n' + errs.join('\n'));
-      closeRefModal();
-      await loadRefs();
-      renderConfig();
-    } else showToast(oasisMessageErreur(d, res.status, t('erreur_import')), 'error');
-  };
-  reader.readAsDataURL(file);
-};
-
-// Filtre client : tables, accordéons (domaines), groupes (exigences)
-window.filterScope = function (inp) {
-  const q = inp.value.trim().toLowerCase();
-  const scope = inp.closest('.cfg-content') || document.getElementById('mainView');
-  const groups = scope.querySelectorAll('.exig-group');
-  if (groups.length) {
-    groups.forEach((g) => {
-      const m = !q || g.textContent.toLowerCase().includes(q);
-      g.style.display = m ? '' : 'none';
-      if (m && q) g.classList.remove('collapsed');
-    });
-    return;
-  }
-  const accItems = scope.querySelectorAll('.cfg-accordion > .cfg-acc-item');
-  if (accItems.length) {
-    accItems.forEach((it) => { it.style.display = !q || it.textContent.toLowerCase().includes(q) ? '' : 'none'; });
-    return;
-  }
-  scope.querySelectorAll('tbody tr').forEach((tr) => {
-    if (tr.classList.contains('pers-detail-row')) return;
-    tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-};
+// ── La barre d'écran : partie dans un module typé (5.e.0) ──
+//
+// La recherche, l'export PDF et Excel, l'import de classeur et le filtre client
+// vivent désormais dans `frontend/portail/barre.ts` ; le sas pose les douze noms
+// que les attributs `onclick` du balisage appellent.
+//
+// `PORTAIL_RECHERCHE` part avec eux, et **ne doit pas être redéclaré ici** :
+// c'était un `const` du premier niveau, donc une globale lexicale qu'aucun module
+// ne peut atteindre, et personne d'autre ne le lisait — il est devenu privé au
+// module, comme `AAC_CFG` en 5.d.5.
+//
+// `searchInputHtml` et `exportBar` étaient les deux autres prêts des modules de
+// 5.d ; ils les importent maintenant de leur source, et les quatre comparateurs
+// qui les fabriquaient chargent le module construit — un vrai balisage des deux
+// côtés, au lieu d'un marqueur d'un seul.
+//
+// Une divergence assumée : `window.open` peut rendre `null` quand le navigateur
+// bloque les fenêtres, et l'original écrivait dedans sans le vérifier
+// (`TypeError`, console, rien à l'écran). Le module **lève**, en nommant la cause.
+//
+// Éprouvé par `scripts/comparer-barre.js` : les deux **documents PDF entiers**,
+// le corps de l'import, le balisage de la fenêtre d'import, et le champ de
+// recherche dans ses quatre états — atteints par les gestes des deux côtés.
 
 
 // Retour d'action : le panneau du socle, commun au portail et aux modules.

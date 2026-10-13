@@ -18,6 +18,7 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
+import { fmtDate } from './outils';
 
 /** Une entrée du journal, telle que `/api/audit` la rend. */
 export interface EntreeAudit {
@@ -56,7 +57,7 @@ export async function renderAudit(): Promise<void> {
       (e: EntreeAudit) => `
       <tr>
         <td>${e.id}</td>
-        <td style="white-space:nowrap;">${window.fmtDate(e.ts)}</td>
+        <td style="white-space:nowrap;">${fmtDate(e.ts)}</td>
         <td><strong>${escapeHtml(e.user)}</strong></td>
         <td><span class="shell-badge badge-neutral">${escapeHtml(e.action)}</span></td>
         <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(JSON.stringify(e.details))}</td>

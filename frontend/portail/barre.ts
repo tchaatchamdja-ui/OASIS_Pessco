@@ -25,6 +25,7 @@ import { icon } from './icones';
 import { t } from './traductions';
 import { tr } from './libelles';
 import { refLabel, type Enregistrement } from './schemas';
+import { loadRefs } from './outils';
 
 declare global {
   interface Window {
@@ -263,7 +264,7 @@ export async function doImport(coll: string): Promise<void> {
       // dénouera quand cette racine aura son module ; d'ici là, le prêt est dans
       // ce sens-ci.
       window.closeRefModal();
-      await window.loadRefs();
+      await loadRefs();
       void window.renderConfig();
     } else showToast(window.oasisMessageErreur(d, res.status, t('erreur_import')), 'error');
   };

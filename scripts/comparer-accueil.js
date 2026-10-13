@@ -163,7 +163,6 @@ function bacCommun(capture, me, lang, tab) {
       if (s === undefined) return cle;
       return v.length ? s.replace(/\{(\d+)\}/g, (_, i) => String(v[i] ?? '')) : s;
     },
-    fmtDate: (iso) => (iso ? `«${String(iso)}»` : '—'),
     oasisToast: (m, g, d) => capture.bandeaux.push(`${g}:${m}:${d}`),
     showToast: (m, g = 'success', d = 4000) => bac.window.oasisToast(m, g, d),
     oasisMessageErreur: () => 'erreur',
@@ -200,11 +199,32 @@ const neuf = () => ({
 
 const SAS = ['icons.js', 'schemas.js', 'barre.js'];
 
+// ── Les aides du portail viennent du module construit (5.e.4) ──
+//
+// `fmtDate`, `reglesMotDePasse`, `escArg`, `loadRefs` et les deux fonctions du
+// téléphone étaient **fabriqués ici**. C'était juste tant qu'ils vivaient dans
+// `app.js` et que les deux côtés les lisaient sur `window`.
+//
+// Depuis 5.e.4 ils vivent dans `outils.ts` et `telephone.ts`, et les modules
+// convertis les **importent**. Les fabriquer ici opposerait le vrai calcul d'un
+// côté à un faux de l'autre — la mesure de mon montage, pour la cinquième fois
+// (5.d.3, 5.d.4, 5.d.6, 5.e.0, ici). Les deux bacs chargent le même
+// `public/app/outils.js`.
+function poserOutils(bac) {
+  const chemin = path.join(RACINE, 'public', 'app', 'outils.js');
+  if (!fs.existsSync(chemin)) {
+    console.error('refus : public/app/outils.js est absent — lancer `node frontend/construire.mjs`.');
+    process.exit(2);
+  }
+  vm.runInContext(fs.readFileSync(chemin, 'utf8'), bac, { filename: 'outils.js' });
+}
+
 function charger(cote, me, lang, tab, regler) {
   const capture = neuf();
   if (regler) regler(capture);
   const bac = bacCommun(capture, me, lang, tab);
   vm.createContext(bac);
+  poserOutils(bac);
   for (const f of SAS) {
     vm.runInContext(fs.readFileSync(path.join(RACINE, 'public', 'app', f), 'utf8'), bac, { filename: f });
   }

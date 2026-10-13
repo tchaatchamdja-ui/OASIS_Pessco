@@ -48,6 +48,8 @@ import {
   type Compte, type ModuleCompte, type Onglet,
 } from './comptes';
 import type { DonneesErreur } from '../socle/commun';
+import { fmtDate, loadRefs, reglesMotDePasse } from './outils';
+import { phoneFieldHtml, phoneFieldValue } from './telephone';
 
 declare global {
   interface Window {
@@ -194,7 +196,7 @@ export async function renderUsers(): Promise<void> {
   const [res, modRes] = await Promise.all([appel('/api/users'), appel('/api/modules')]);
   const allUsers = await res.json() as Compte[];
   ALL_MODULES = await modRes.json() as ModuleCompte[];
-  if (!Object.keys(window.REFS).length) await window.loadRefs();
+  if (!Object.keys(window.REFS).length) await loadRefs();
   const isPresta = PRESTA_TABS.includes(USER_TAB);
   const prestataires = (window.REFS.prestataires ?? []) as Enregistrement[];
   const prestaName = (id?: string | null) => { const p = prestataires.find((x) => x.id === id); return p ? texte(p.nom) : ''; };
@@ -254,7 +256,7 @@ export async function renderUsers(): Promise<void> {
         ${prestaCell}
         <td>${modCell}</td>
         <td>${badges.join(' ')}</td>
-        <td>${window.fmtDate(u.createdAt)}</td>
+        <td>${fmtDate(u.createdAt)}</td>
         <td class="actions-cell">${actions.join('')}</td>
       </tr>`;
     })
@@ -315,7 +317,7 @@ export async function renderUsers(): Promise<void> {
       } else {
         const data = await res.json().catch(() => ({}));
         const msg = data.error === 'forbidden_target' ? t('admin_pas_sur_admin')
-          : data.details ? window.reglesMotDePasse(data.details) : window.oasisMessageErreur(data, res.status);
+          : data.details ? reglesMotDePasse(data.details) : window.oasisMessageErreur(data, res.status);
         showToast(msg, 'error', 4000);
       }
     });
@@ -330,7 +332,7 @@ export async function renderUsers(): Promise<void> {
   }));
   document.querySelectorAll<HTMLElement>('[data-topersonnel]:not([disabled])').forEach((btn) => btn.addEventListener('click', async () => {
     const res = await appel(`/api/users/${encodeURIComponent(texte(btn.dataset.topersonnel))}/to-personnel`, { method: 'POST' });
-    if (res.ok) { await window.loadRefs(); showToast(t('ajoute_personnel'), 'success'); renderUsers(); }
+    if (res.ok) { await loadRefs(); showToast(t('ajoute_personnel'), 'success'); renderUsers(); }
     else {
       const d = await res.json().catch(() => ({}));
       showToast(d.error === 'exists' ? t('deja_present_personnel') : window.oasisMessageErreur(d, res.status), 'error');
@@ -449,7 +451,7 @@ export function showEditUserModal(u: Compte): void {
           <div class="shell-form-group"><label>${t('col_prenoms')}</label><input class="shell-input" id="euPrenom" value="${escapeHtml(nm.prenom)}"></div>
         </div>
         <div class="shell-form-row">
-          ${window.phoneFieldHtml('euTel', u.telephone)}
+          ${phoneFieldHtml('euTel', u.telephone)}
           <div class="shell-form-group"><label>${t('users_col_role')}</label>
             <select class="shell-input" id="euRole">${USER_TABS.map((tb) => `<option value="${tb.id}" ${userRole(u) === tb.id ? 'selected' : ''}>${escapeHtml(tb.label)}</option>`).join('')}</select>
           </div>
@@ -485,7 +487,7 @@ export async function submitEditUser(username: string): Promise<void> {
     action: 'edit',
     nom: valeur('euNom').trim(),
     prenom: valeur('euPrenom').trim(),
-    telephone: window.phoneFieldValue('euTel'),
+    telephone: phoneFieldValue('euTel'),
     role: valeur('euRole'),
     portee: valeurFacultative('euPortee'),
     instance: valeurFacultative('euInstance'),
@@ -587,7 +589,7 @@ export function showNewUserModal(): void {
       renderUsers();
     } else {
       const data = await res.json().catch(() => ({}));
-      const msg = data.details ? t('mdp_politique', window.reglesMotDePasse(data.details))
+      const msg = data.details ? t('mdp_politique', reglesMotDePasse(data.details))
         : data.error === 'exists' ? t('compte_existe_email')
         : data.error === 'invalid_email' ? t('email_invalide_identifiant')
         : window.oasisMessageErreur(data, res.status);

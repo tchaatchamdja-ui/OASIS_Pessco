@@ -48,6 +48,7 @@ import {
   cfgSectionAAC, cfgSectionModules, cfgSectionSecurite, cfgSectionSysteme,
   type ConfigAac, type ConfigSecurite, type ConfigSysteme, type ModuleCatalogue,
 } from './parametres';
+import { loadRefs } from './outils';
 
 /**
  * La configuration de l'instance, telle que les trois écrans la lisent.
@@ -219,7 +220,7 @@ export async function renderConfig(): Promise<void> {
   const cfg = await cfgRes.json() as ConfigEcran;
   window.CURRENT_CFG = cfg;
   const modules = await modulesRes.json() as ModuleCatalogue[];
-  if (!Object.keys(window.REFS).length) await window.loadRefs();
+  if (!Object.keys(window.REFS).length) await loadRefs();
   if (window.CFG_SUB === 'instances' && jeSuisRegional()) await cfgChargerInstances();
   normalizeOrgTopLevel(cfg);
 

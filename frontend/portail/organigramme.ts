@@ -23,6 +23,7 @@ import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
 import { personnelName, personnelOptions, type Enregistrement } from './schemas';
+import { fmtDate, loadRefs } from './outils';
 
 declare global {
   interface Window {
@@ -151,7 +152,7 @@ export async function orgDrop(ev: DragEvent, orgId: string): Promise<void> {
     body: JSON.stringify({ org_id: orgId, person_id: personId, person_type: 'inspecteur' }),
   });
   if (res.ok) {
-    await window.loadRefs();
+    await loadRefs();
     void window.renderConfig();
     showToast(t('personnel_rattache'), 'success');
     return;
@@ -162,7 +163,7 @@ export async function orgDrop(ev: DragEvent, orgId: string): Promise<void> {
 export async function orgUnassign(id: string): Promise<void> {
   const res = await appel(`/api/referentiels/organisation_assignments/${id}`, { method: 'DELETE' });
   if (res.ok) {
-    await window.loadRefs();
+    await loadRefs();
     void window.renderConfig();
     showToast(t('rattachement_retire'), 'success');
     return;
@@ -185,8 +186,8 @@ export function registreHtml(nodeId: string): string | null {
         e.role === 'interim'
           ? '<span class="shell-badge" style="background:#fef3c7;color:#92400e;">' + t('interimaire') + '</span>'
           : '<span class="shell-badge badge-active">Titulaire</span>';
-      const fin = e.end ? window.fmtDate(e.end) : '<span class="shell-badge badge-active">En cours</span>';
-      return `<tr><td>${roleBadge}</td><td>${escapeHtml(personnelName(e.person_id))}</td><td>${window.fmtDate(e.start)}</td><td>${fin}</td></tr>`;
+      const fin = e.end ? fmtDate(e.end) : '<span class="shell-badge badge-active">En cours</span>';
+      return `<tr><td>${roleBadge}</td><td>${escapeHtml(personnelName(e.person_id))}</td><td>${fmtDate(e.start)}</td><td>${fin}</td></tr>`;
     })
     .join('');
   return `
@@ -293,7 +294,7 @@ export async function orgConfirmInterim(nodeId: string): Promise<void> {
     await prevenir(`${titNom}, vos validations (${posteLbl}) sont assurées par ${interimNom} pendant votre absence.`, 'info');
   }
   window.closeRefModal();
-  await window.loadRefs();
+  await loadRefs();
   void window.renderConfig();
   window.refreshNotifications();
   showToast(t('interim_active', interimNom), 'success', 4000);
@@ -322,7 +323,7 @@ export async function orgEndInterim(nodeId: string): Promise<void> {
     showToast(window.oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
     return;
   }
-  await window.loadRefs();
+  await loadRefs();
   void window.renderConfig();
   showToast(t('interim_retire'), 'success');
 }

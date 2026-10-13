@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | 284 restantes sur 4 217 | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3) |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3129,8 +3129,8 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        du navigateur. C'est pourquoi la couverture des gestes du portail a été portée à son
        plafond (66 sur 84) **avant** 5.d, et non après : c'est elle qui prend le relais.
 
-   5.e [~] **`app.js` — le dernier JavaScript du portail.** 284 lignes restantes sur
-       1 192. Il porte la navigation, les cinq vues, les utilisateurs, le profil et le
+   5.e [x] **`app.js` — le dernier JavaScript du portail. Clos le 13 octobre 2026 :
+       1 192 lignes devenues 0, et `public/js/` n'existe plus.** Il porte la navigation, les cinq vues, les utilisateurs, le profil et le
        journal d'audit.
 
        Le découpage n'est pas thématique : il suit **ce que les modules convertis
@@ -3497,6 +3497,98 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            catalogue remplacé par l'ordre alphabétique (42 écarts), l'en-tête rendu au
            thème de la surveillance (24), la teinte propre au module ignorée (24), la
            requête retirée (15).
+
+       5.e.4 [x] **`public/js/` n'existe plus — le portail est entièrement en
+           TypeScript** — fait le 13 octobre 2026.
+
+           Le téléphone (vingt-cinq indicatifs) et les quatre aides du portail —
+           `escArg`, `fmtDate`, `reglesMotDePasse`, `loadRefs` — passent dans
+           `telephone.ts` et `outils.ts`. `public/js/app.js` est supprimé du dépôt, et
+           avec lui le dernier fichier de `public/js/`.
+
+           **1 192 lignes de JavaScript devenues 0** en cinq pièces, du 13 octobre.
+
+           ── Trois noms qui ne sont pas convertis, mais **retirés** ──
+
+           `app.js` définissait aussi `api`, `esc` et `showToast`, et les trois étaient
+           des **doublons** de ceux du socle :
+
+           · `esc(s)` **était** `oasisEsc(s)` — la fonction du socle, qu'il écrasait sur
+             `window` en se chargeant après lui ;
+           · `showToast` était **le même code**, à la ligne près ;
+           · `api` ajoutait `X-OASIS-Request` et ramenait à la connexion sur 401 — deux
+             gestes déjà ailleurs : l'enveloppe du socle pose cet en-tête sur **tout**
+             appel (contre-essayé en 5.c, où le retirer d'`app.js` ne changeait rien) et
+             le retour est `sessionPerdue`.
+
+           `window.api` et `window.showToast` portaient donc **deux fonctions**, ce que le
+           garde-fou « aucune page ne charge deux définitions du même nom global » nommait
+           depuis le 8 octobre 2026 — trouvé **par le compilateur** en déclarant la
+           seconde, et par aucun contrôle. Les deux noms n'en portent plus qu'une.
+
+           ── Un tri qu'on ne peut pas prouver, et qui le dit maintenant ──
+
+           `splitPhone` trie les indicatifs correspondants par longueur décroissante, pour
+           prendre le plus précis. J'avais écrit que c'était « la règle qu'on éprouve ».
+
+           Deux contre-essais — tri inversé, tri retiré — sont restés **verts** :
+           **aucun des vingt-cinq indicatifs n'est préfixe d'un autre**, donc le filtre
+           n'en rend jamais deux et le tri ne décide de rien. *On ne peut pas prouver un
+           tri que les données rendent sans objet.*
+
+           Il est conservé — le retirer serait changer en convertissant, et la règle
+           redeviendra vraie le jour où un indicatif court paraîtra. Une garde le dira :
+           elle refuse si un indicatif devient préfixe d'un autre, **ou** si la table
+           change de taille, pour qu'on écrive le régime au lieu de croire qu'il existe.
+
+           Cette garde a elle-même échoué deux fois avant de mordre :
+
+           · **elle lisait la table d'origine**, figée dans `git` — une garde qui
+             surveille un fichier immuable ne garde rien. Elle lit la table vivante ;
+           · puis mon contre-essai **ne modifiait rien**, le motif cherché n'existant pas
+             dans le fichier (les indicatifs y vont deux par ligne). Troisième fois en
+             trois jours qu'un contre-essai ne mesure rien, et toujours la même cause :
+             avoir supposé le motif au lieu de le compter.
+
+           ── Les cinq comparateurs qui fabriquaient ces noms ──
+
+           `comparer-configuration`, `-barre`, `-utilisateurs`, `-profil` et `-accueil`
+           **fabriquaient** `fmtDate`, `reglesMotDePasse`, `loadRefs` et les deux
+           fonctions du téléphone. Cinquième fois que ce piège se présente (5.d.3, 5.d.4,
+           5.d.6, 5.e.0, ici) : les deux bacs chargent désormais le même
+           `public/app/outils.js`.
+
+           Et le compteur d'appels de `loadRefs` a cédé la place à la **route lue** : le
+           faux n'existe plus, le vrai fait un appel, et c'est l'appel qui se compare.
+           Plus proche de ce que la page fait, et ne dépendant plus d'un compteur à moi.
+
+           ── Une duplication nommée, et non corrigée ──
+
+           `escArg` n'a **aucun lecteur** : `exigences.ts` et `instances.ts` en portent
+           chacun une copie privée, et leurs commentaires disent d'où elle vient. Trois
+           exemplaires du même calcul. Les réunir est une amélioration, donc un
+           changement, donc pas ici — mais la copie n'a plus d'excuse : l'original était
+           hors d'atteinte, celui-ci s'importe.
+
+           ── La preuve ──
+
+           **432 comparaisons** : les 25 indicatifs × quatre formes de saisie × trois
+           langues, onze saisies qui n'en sont pas (un `+` inconnu, un vide, des espaces,
+           `null`, `0`), cinq fenêtres de téléphone, cinq recompositions, `escArg` sur
+           huit valeurs, `reglesMotDePasse` sur huit formes de détail, `fmtDate` sur huit
+           dates dont deux impossibles, la route des référentiels et `REFS` posé, la levée
+           sur un champ absent assertée des deux côtés, et les deux gardes.
+
+           **Vingt contre-essais, vingt rouges** — après deux verts qui ont nommé le tri
+           inatteignable et un qui ne compilait pas. Le plus parlant : le numéro non
+           détaché de son indicatif, **309 écarts**.
+
+           ── Les douze comparateurs, une dernière fois ensemble ──
+
+           **5 168 comparaisons, aucune différence.** C'est le dernier état où ils tournent
+           tous : la décision inscrite plus haut les fait pièces d'archive, et sa mise en
+           œuvre est la suite immédiate (5.e.5) — un commit à part, pour que celui-ci reste
+           vérifiable seul.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

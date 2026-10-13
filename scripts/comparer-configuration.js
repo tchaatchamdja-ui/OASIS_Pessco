@@ -127,6 +127,7 @@ function duSas(noms) {
   const bac = { console };
   bac.window = bac;
   vm.createContext(bac);
+  poserOutils(bac);
   vm.runInContext(fs.readFileSync(path.join(RACINE, 'public', 'app', 'icons.js'), 'utf8'), bac, { filename: 'icons.js' });
   const sortie = {};
   for (const nom of noms) {
@@ -212,7 +213,6 @@ function bacCommun(capture, refs, me, cfg, modules, tab, sansVue) {
     oasisConfirmer: async () => true,
     localStorage: { getItem: () => null, setItem: () => {} },
     portailReinitialiserRecherche: () => { capture.recherches += 1; },
-    loadRefs: async () => { capture.loadRefs += 1; },
     document: documentMinimal(capture, sansVue),
   };
   bac.window = bac;
@@ -253,10 +253,31 @@ const neuf = () => ({ html: '', modal: '', ecouteurs: [], appels: [], bandeaux: 
 const SAS = ['icons.js', 'etat.js', 'schemas.js', 'referentiels.js', 'exigences.js',
   'organigramme.js', 'taxinomie.js', 'parametres.js', 'portail-instances.js'];
 
+// ── Les aides du portail viennent du module construit (5.e.4) ──
+//
+// `fmtDate`, `reglesMotDePasse`, `escArg`, `loadRefs` et les deux fonctions du
+// téléphone étaient **fabriqués ici**. C'était juste tant qu'ils vivaient dans
+// `app.js` et que les deux côtés les lisaient sur `window`.
+//
+// Depuis 5.e.4 ils vivent dans `outils.ts` et `telephone.ts`, et les modules
+// convertis les **importent**. Les fabriquer ici opposerait le vrai calcul d'un
+// côté à un faux de l'autre — la mesure de mon montage, pour la cinquième fois
+// (5.d.3, 5.d.4, 5.d.6, 5.e.0, ici). Les deux bacs chargent le même
+// `public/app/outils.js`.
+function poserOutils(bac) {
+  const chemin = path.join(RACINE, 'public', 'app', 'outils.js');
+  if (!fs.existsSync(chemin)) {
+    console.error('refus : public/app/outils.js est absent — lancer `node frontend/construire.mjs`.');
+    process.exit(2);
+  }
+  vm.runInContext(fs.readFileSync(chemin, 'utf8'), bac, { filename: 'outils.js' });
+}
+
 function charger(cote, refs, me, cfg, modules, tab, sousVue, replie, sansVue) {
   const capture = neuf();
   const bac = bacCommun(capture, refs, me, cfg, modules, tab, sansVue);
   vm.createContext(bac);
+  poserOutils(bac);
   for (const f of SAS) {
     vm.runInContext(fs.readFileSync(path.join(RACINE, 'public', 'app', f), 'utf8'), bac, { filename: f });
   }
@@ -370,10 +391,17 @@ async function principal() {
   {
     const o = await rendre('origine', { refs: {}, me: regional, cfg, modules, tab }, 'organisation', false);
     const n = await rendre('nouvelle', { refs: {}, me: regional, cfg, modules, tab }, 'organisation', false);
-    pareil('référentiels absents · loadRefs appelé', o.capture.loadRefs, n.capture.loadRefs);
+    // ── Le compteur a cédé la place à la route (5.e.4) ──
+    //
+    // `loadRefs` était un faux dans le bac et comptait ses appels. Il vient
+    // maintenant du module construit, des deux côtés : ce qui se compare est donc
+    // la **route lue**, que le transport relève déjà. C'est plus proche de ce que
+    // la page fait, et cela ne dépend plus d'un compteur à moi.
+    const demandeRefs = (c) => c.appels.filter((a) => a.chemin === '/api/referentiels').length;
+    pareil('référentiels absents · /api/referentiels demandé', demandeRefs(o.capture), demandeRefs(n.capture));
     pareil('référentiels absents · #mainView', o.capture.html, n.capture.html);
-    if (o.capture.loadRefs !== 1) {
-      ecarts.push('garde : l’origine n’appelle plus `loadRefs` quand les référentiels manquent — le régime ne prouve plus rien');
+    if (demandeRefs(o.capture) !== 1) {
+      ecarts.push('garde : l’origine ne demande plus `/api/referentiels` quand ils manquent — le régime ne prouve plus rien');
     }
     comparaisons += 1;
   }

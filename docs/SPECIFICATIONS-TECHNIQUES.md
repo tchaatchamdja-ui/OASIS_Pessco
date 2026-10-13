@@ -200,9 +200,9 @@ meilleure façon de faire ignorer les vraies.
 | | Lignes | État |
 |---|---|---|
 | **Socle commun** (`frontend/socle/`) | 3 162 | **TypeScript, 12/12** |
-| **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances, et l'écran de configuration **en entier**, les libellés littéraux, la barre d'écran, l'écran des comptes, le profil, l'accueil et le journal d'audit (`frontend/portail/`) | 7 467 | **TypeScript** — 4 737 comparaisons sans écart |
+| **portail** — libellés, icônes, deux pages, état partagé, hôte des modules, démarrage, instances, et l'écran de configuration **en entier**, les libellés littéraux, la barre d'écran, l'écran des comptes, le profil, l'accueil, le journal d'audit, le téléphone et les aides (`frontend/portail/`) | 7 695 | **TypeScript, 100 %** — 5 168 comparaisons sans écart |
 | **DROITS** (`frontend/droits/`) | 1 770 | **TypeScript, clos** |
-| portail — le reste (`public/js/app.js`) | 284 | JavaScript — **84 gestes, 66 exercés (plafond atteint), 10 motivés, 8 indécidables** |
+| portail — le reste | **0** | `public/js/` n'existe plus (5.e.4). Les **84 gestes, 66 exercés** sont désormais relevés dans `frontend/portail/` |
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire

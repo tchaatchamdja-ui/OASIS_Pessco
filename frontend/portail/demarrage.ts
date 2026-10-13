@@ -26,6 +26,7 @@ import {
 import { icon } from './icones';
 import { basculerPleinEcran, enregistrerVues } from './modules-hote';
 import { poserLangue, t } from './traductions';
+import { fmtDate, reglesMotDePasse } from './outils';
 
 // `window.showToast` n'est **pas** déclaré ici : le sas du socle le déclare, et
 // la règle de 5.b veut une seule déclaration. Sa signature a d'ailleurs été
@@ -43,20 +44,10 @@ declare global {
     // `majBandeauInstance` est déclaré par son **définisseur**,
     // `frontend/portail/instances.ts` (converti le 8 octobre). Il l'était ici,
     // faute d'en avoir un ; ce fichier ne fait que l'appeler.
-    /** Les règles de mot de passe non tenues, mises en phrase. */
-    reglesMotDePasse: (details?: unknown) => string;
-    /** L'horodatage court, défini par `app.js`. */
-    /**
-     * Une date et une heure, dans la langue de l'écran.
-     *
-     * Le paramètre est `unknown` et non `string`, et c'est une correction du
-     * 12 octobre 2026 : `fmtDate` d'`app.js` commence par `if (!iso) return '—'`
-     * et accepte donc n'importe quoi. Le déclarer `string` obligeait le registre
-     * des postes (5.d.3) à convertir des valeurs venues du magasin — et une
-     * conversion que le code d'origine ne fait pas est une divergence, même
-     * quand elle est inoffensive. On déclare ce que la fonction fait.
-     */
-    fmtDate: (iso: unknown) => string;
+    // `reglesMotDePasse` et `fmtDate` sont déclarés par leur **définisseur**
+    // depuis 5.e.4 : `frontend/portail/outils.ts`. Ils l'étaient ici, faute d'en
+    // avoir un — `app.js` était du JavaScript sans types. Ce fichier les importe.
+
     /** La navigation du portail. Lue par `app.js` et par l'hôte des modules. */
     navigate: (vue: string) => void;
     /**
@@ -272,7 +263,7 @@ export function brancherGestes(): void {
     const notifs = await rafraichirNotifications();
     panneau.innerHTML = `<div style="padding:.7rem 1rem;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border);">${escapeHtml(t('notif_title'))}</div>`
       + (notifs.length
-        ? notifs.map((n) => `<div class="portal-notif-item">${escapeHtml(n.message)}<div class="notif-ts">${window.fmtDate(n.ts)}</div></div>`).join('')
+        ? notifs.map((n) => `<div class="portal-notif-item">${escapeHtml(n.message)}<div class="notif-ts">${fmtDate(n.ts)}</div></div>`).join('')
         : `<div class="portal-notif-item">${escapeHtml(t('notif_empty'))}</div>`);
     panneau.style.display = 'block';
     if (notifs.length) {
@@ -305,7 +296,7 @@ export function brancherGestes(): void {
     }
     const data = (await res.json().catch(() => ({}))) as { error?: string; details?: unknown };
     const message = data.error === 'policy'
-      ? t('mdp_politique', window.reglesMotDePasse(data.details))
+      ? t('mdp_politique', reglesMotDePasse(data.details))
       : messageErreur(data, res.status);
     window.showToast(message, 'error', 4500);
   });

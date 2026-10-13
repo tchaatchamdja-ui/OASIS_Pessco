@@ -24,6 +24,7 @@ import { t } from './traductions';
 import type { Enregistrement } from './schemas';
 import { tr } from './libelles';
 import { exportBar, searchInputHtml } from './barre';
+import { loadRefs } from './outils';
 
 declare global {
   interface Window {
@@ -240,7 +241,7 @@ export async function saveExigDrawer(id: string, showRegFields: boolean, regleme
   });
   if (res.ok) {
     closeExigDrawer();
-    await window.loadRefs();
+    await loadRefs();
     void window.renderConfig();
     showToast('OK', 'success');
     return;
@@ -299,7 +300,7 @@ export async function saveReglement(oldReglement: string): Promise<void> {
     });
   }
   closeExigDrawer();
-  await window.loadRefs();
+  await loadRefs();
   void window.renderConfig();
   showToast(t('reglement_maj'), 'success');
 }

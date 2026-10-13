@@ -38,6 +38,8 @@
 // Ce qui suit est volontairement sans logique : une ligne par sas, dans l'ordre.
 // Un fichier qui décide de l'ordre d'exécution ne doit rien faire d'autre.
 import './icons';
+// Les quatre aides et le téléphone (5.e.4) : lus par tous les autres.
+import './outils';
 import './i18n';
 // La barre d'écran et les libellés littéraux (5.e.0) : lus par les référentiels
 // et leurs voisins, donc placés avant eux.

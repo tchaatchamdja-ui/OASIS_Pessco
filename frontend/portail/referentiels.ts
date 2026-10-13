@@ -34,6 +34,7 @@ import {
 } from './schemas';
 import { tr } from './libelles';
 import { exportBar, searchInputHtml } from './barre';
+import { loadRefs } from './outils';
 
 declare global {
   interface Window {
@@ -73,8 +74,8 @@ declare global {
     // module qui **définit** un nom le déclare, et lui seul. Les garder ici
     // aurait fait deux déclarations du même nom, que le compilateur tolère
     // tant qu'elles concordent — et qui mentent dès qu'elles divergent.
-    /** Recharge les référentiels depuis l'API. */
-    loadRefs: () => Promise<void>;
+    // `loadRefs` est déclaré par son **définisseur** depuis 5.e.4 :
+    // `frontend/portail/outils.ts`. Il l'était ici, faute d'en avoir un.
   }
 }
 
@@ -332,7 +333,7 @@ export async function saveRef(coll: string, id?: string): Promise<void> {
   });
   if (res.ok) {
     closeRefModal();
-    await window.loadRefs();
+    await loadRefs();
     void window.renderConfig();
     showToast('OK', 'success');
     return;
@@ -350,7 +351,7 @@ export async function deleteRef(coll: string, id: string): Promise<void> {
   if (!await confirmer(t('confirm_delete'))) return;
   const res = await appel(`/api/referentiels/${coll}/${id}`, { method: 'DELETE' });
   if (res.ok) {
-    await window.loadRefs();
+    await loadRefs();
     void window.renderConfig();
     showToast('OK', 'success');
     return;

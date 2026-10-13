@@ -34,6 +34,8 @@ import { cameraIcon } from './parametres';
 import type { Moi } from './etat';
 import type { Enregistrement } from './schemas';
 import type { DonneesErreur } from '../socle/commun';
+import { fmtDate, loadRefs, reglesMotDePasse } from './outils';
+import { phoneFieldHtml, phoneFieldValue } from './telephone';
 
 /** Un champ d'une section facultative : l'id, le libellé, la valeur, la lecture seule. */
 export type ChampExtra = [string, string, string | undefined | null, boolean?];
@@ -150,7 +152,7 @@ export function saveProfileInfos(): void {
   void saveProfile({
     nom: valeur('pfNom').trim(),
     prenom: valeur('pfPrenom').trim(),
-    telephone: window.phoneFieldValue('pfTel'),
+    telephone: phoneFieldValue('pfTel'),
     fonction: valeur('pfFonction').trim(),
   });
 }
@@ -179,7 +181,7 @@ export async function submitProfilePassword(): Promise<void> {
   } else {
     const data = await res.json().catch(() => ({})) as DonneesErreur & { details?: unknown };
     const msg =
-      data.error === 'policy' ? t('mdp_politique', window.reglesMotDePasse(data.details))
+      data.error === 'policy' ? t('mdp_politique', reglesMotDePasse(data.details))
       : window.oasisMessageErreur(data, res.status);
     showToast(msg, 'error', 4500);
   }
@@ -189,7 +191,7 @@ export async function renderProfile(): Promise<void> {
   const u = compte().user;
   const ex = u.extra || {};
   const nm = splitName(u);
-  if (!Object.keys(window.REFS).length) await window.loadRefs();
+  if (!Object.keys(window.REFS).length) await loadRefs();
   const prestaNom = texte(((window.REFS.prestataires ?? []) as Enregistrement[]).find((p) => p.id === u.prestataire_id)?.nom);
   const initials = `${(nm.nom || u.username)[0] || ''}${(nm.prenom || '')[0] || ''}`.toUpperCase();
   const photoBox = u.photo
@@ -203,8 +205,8 @@ export async function renderProfile(): Promise<void> {
     ['Rôle', `<span class="shell-badge badge-neutral">${escapeHtml(ROLE_LABELS[u.role] || u.role)}</span>`],
     ['Statut', u.active ? '<span class="shell-badge badge-active">Actif</span>' : '<span class="shell-badge badge-inactive">Inactif</span>'],
     ['Instance', `${escapeHtml(instanceLocale().etat)} (${escapeHtml(instanceLocale().codeEtat)})`],
-    ['Compte créé le', window.fmtDate(u.createdAt)],
-    ['Mot de passe modifié le', window.fmtDate(u.passwordChangedAt)],
+    ['Compte créé le', fmtDate(u.createdAt)],
+    ['Mot de passe modifié le', fmtDate(u.passwordChangedAt)],
   ];
   const infoRows = lignes
     .map((r) => `<tr><td class="aac-info-lbl">${tr(r[0])}</td><td class="aac-info-val">${r[1]}</td></tr>`)
@@ -235,7 +237,7 @@ export async function renderProfile(): Promise<void> {
             <div class="shell-form-group"><label>${t('col_prenoms')}</label><input class="shell-input" id="pfPrenom" value="${escapeHtml(nm.prenom)}"></div>
           </div>
           <div class="shell-form-row">
-            ${window.phoneFieldHtml('pfTel', u.telephone)}
+            ${phoneFieldHtml('pfTel', u.telephone)}
             <div class="shell-form-group"><label>Fonction</label><input class="shell-input" id="pfFonction" value="${escapeHtml(u.fonction || '')}"></div>
           </div>
           <div style="display:flex;justify-content:flex-end;">

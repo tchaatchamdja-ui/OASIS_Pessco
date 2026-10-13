@@ -286,7 +286,23 @@ un `const` au premier niveau d'un script crée une liaison *lexicale* et ne pose
 ```
 frontend/<module>/main.tsx  ──tsc --noEmit──►  esbuild  ──►  public/modules/<module>/app/main.js
 frontend/socle/globales/*.ts ──────────────────────────────►  public/shared/app/oasis-*.js
+frontend/portail/globales/portail.ts ──────────────────────►  public/app/portail.js
 ```
+
+**Un paquet est construit si, et seulement si, une balise `<script>` d'une page le charge.**
+Les quinze sas du portail que `portail.ts` importe voyagent dans son paquet : les construire
+à part en ferait une seconde copie, avec son propre état de module — le défaut que 5.d.7 a
+corrigé. La règle se **déduit** des pages, et deux refus la tiennent dans les deux sens :
+
+| Situation | Ce que fait la construction |
+|---|---|
+| Un sas que charge une balise | il est construit : c'est un point d'entrée |
+| Un sas qu'un point d'entrée importe | **non construit à part**, et nommé dans la sortie |
+| Un sas que rien n'atteint | **refus**, en le nommant : du code mort qui se construisait |
+| Une balise vers un paquet que rien ne produit | **refus** : servi tel quel, ce serait un 404 silencieux |
+
+Avant cette règle (14 octobre 2026), la construction écrivait **4 484 Ko en 38 fichiers**
+dans `public/app/`, dont **3 260 Ko et 30 fichiers que plus aucune page ne chargeait**.
 
 **esbuild n'est pas un vérificateur de types** : il retire les annotations sans les lire. Le
 typage ne vaut donc que par `tsc --noEmit`, que `npm run build` exécute **avant** lui. Sans

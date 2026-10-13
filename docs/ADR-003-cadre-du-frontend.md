@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -3853,6 +3853,85 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              atteint le laissent vert. *C'est précisément le défaut qu'il a fallu un
              navigateur pour établir ici — le bouton de MESURES n'est pas là, et aucune
              chaîne ne le dit.*
+
+       5.e.7 [x] **La construction ne produit plus que ce qu'une page charge** — fait le
+           14 octobre 2026.
+
+           Conséquence directe de 5.e.5, et mesurée parce qu'elle avait été annoncée.
+
+           **4 484 Ko en 38 fichiers deviennent 1 224 Ko en 8.** Trois mégaoctets et trente
+           fichiers écrits à chaque construction, servis par `express.static`, embarqués
+           dans l'image — et chargés par **aucune balise**.
+
+           ── Pourquoi ils étaient là, et pourquoi personne ne l'a vu ──
+
+           La construction écrivait **tout** fichier de `globales/` et de `pages/` comme un
+           paquet autonome. C'était juste tant que la page les chargeait un à un. Depuis que
+           le portail tient en un seul paquet (5.d.7), ses quinze sas n'avaient plus qu'un
+           lecteur : les comparateurs, qui chargeaient `public/app/<nom>.js` pour opposer
+           l'original au converti. La décision qui en a fait des pièces d'archive (5.e.5) a
+           laissé ces quinze paquets sans emploi, et le rapport de 5.e.5 les a comptés.
+
+           Rien ne l'avait dit avant, et c'est le point : *l'écart entre ce qui est construit
+           et ce qui est chargé n'était regardé par aucun garde-fou.* Les deux étaient tenus
+           séparément — la campagne vérifie que chaque balise est servie, et personne ne
+           vérifiait l'inverse.
+
+           ── Trois situations, déduites des pages et non déclarées ──
+
+           | Situation | Ce que fait la construction |
+           |---|---|
+           | une balise `<script>` le charge | **construit** : c'est un point d'entrée |
+           | un point d'entrée l'importe | **non construit à part**, et nommé dans la sortie |
+           | ni l'un ni l'autre | **refus**, en le nommant |
+
+           Le refus est le cœur du garde-fou, et non une précaution. Un sas orphelin est du
+           code que *rien* n'atteint : ni la page, ni un autre paquet. Le sauter en silence,
+           c'est écrire un fichier qui ne sert à rien et ne jamais le savoir — ce qui vient
+           d'arriver, en plus discret.
+
+           Et le construire à part quand un paquet chargé l'importe déjà ne serait pas
+           seulement du poids : **ce serait une seconde copie de son état de module**, le
+           défaut exact que 5.d.7 a corrigé après qu'un contrôle écrit pour autre chose
+           l'eut nommé.
+
+           ── La symétrie, qui couvre l'autre moitié du défaut ──
+
+           Un second refus va de la page vers la source : **une balise qui demande un paquet
+           que rien ne produit.** Un `<script src="/app/schemas.js">` laissé après la
+           suppression du sas rend un **404 silencieux** — la page se charge, le script
+           manque, et la moitié de l'écran ne répond plus sans une ligne d'erreur. La
+           campagne le dit déjà, mais après coup, un serveur démarré ; ici c'est dit avant
+           de construire quoi que ce soit.
+
+           La vérification ne porte que sur les répertoires que cette construction écrit :
+           `public/modules/<module>/js/*.js` est du JavaScript non converti, servi tel quel.
+
+           ── Un écran est nommé, non refusé, et c'est délibéré ──
+
+           Un écran en React dont aucune page ne charge le `main.js` est **construit quand
+           même**, et la sortie le dit. La raison est pratique : un écran en cours de
+           conversion existe légitimement avant que sa page ne pointe sur lui, et un refus
+           gênerait le travail sans rien protéger. Un sas n'a pas cette excuse — il n'existe
+           que pour être chargé ou importé.
+
+           Deux règles pour deux objets, chacune justifiée par ce qui s'est produit : le
+           poids mort venait des sas, et un écran orphelin ne s'est jamais vu.
+
+           ── Contre-essais ──
+
+           Trois, trois fois le comportement attendu :
+
+           · un `globales/orphelin.ts` ajouté : la construction s'arrête en le nommant, avec
+             le chemin qu'il aurait servi ;
+           · une balise `/app/schemas.js` remise dans `index.html` : la construction
+             s'arrête en la nommant ;
+           · la balise de l'écran DROITS retirée de sa page : l'écran est **nommé et
+             construit**, la construction se poursuit — ce qui est la règle écrite.
+
+           **1 001 contrôles, code de sortie 0**, et la campagne construit avant d'éprouver :
+           un refus de construction la fait échouer entière, ce qui est la place juste pour
+           ces deux gardes.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

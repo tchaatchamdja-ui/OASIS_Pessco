@@ -2,7 +2,7 @@
  "releve": "2026-10-14",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 14,
+ "exerces": 18,
  "indecidables": 5,
  "gestes": [
   {
@@ -255,7 +255,7 @@
    "evenement": "click",
    "nom": "execCloseRealisation",
    "source": "execCloseRealisation('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -264,7 +264,7 @@
    "evenement": "click",
    "nom": "execSaveDossier",
    "source": "execSaveDossier('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -273,7 +273,7 @@
    "evenement": "click",
    "nom": "execSubmitDossier",
    "source": "execSubmitDossier('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -543,7 +543,7 @@
    "evenement": "click",
    "nom": "execAddAnnexeBlock",
    "source": "execAddAnnexeBlock()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",

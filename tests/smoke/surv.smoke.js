@@ -492,6 +492,89 @@ module.exports = async function survSmoke(port) {
         && (enregistre.noms || []).includes(volet.inspecteur),
         JSON.stringify({ attendu: volet.inspecteur, ...enregistre }));
 
+      // ══════════════════════════════════════════════════════════════════════
+      //  Le dossier avance : terrain clos, rapport rédigé, dossier soumis
+      // ══════════════════════════════════════════════════════════════════════
+      //
+      // ── Pourquoi cela pouvait ne pas se faire, et pourquoi cela se fait ──
+      //
+      // En 5.f.4, `execCloseRealisation` avait été **laissé de côté** : il fait
+      // avancer le dossier, et *une ronde dont le ménage dépend de l'état qu'elle
+      // vient de changer n'est pas une ronde.* La prudence était juste ; la
+      // mesure la lève.
+      //
+      // Mesuré, dans cet ordre : le terrain clos, le dossier passe à
+      // « redaction » ; soumis, il passe à « validation » et devient `soumis` ;
+      // et **il reste supprimable dans les deux états** (200), sa constatation
+      // aussi. Le ménage de la ronde tient donc sur tout le cycle qu'elle
+      // parcourt — ce n'était pas écrit nulle part, et aucune suite ne l'avait
+      // éprouvé.
+      const avance = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const confirmer = async () => {
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3800);
+          return true;
+        };
+        const r = {};
+
+        // 1. La clôture du terrain, confirmation pressée.
+        document.querySelector('[onclick^="execCloseRealisation"]')?.click();
+        await attendre(700);
+        r.clotureConfirmee = await confirmer();
+        r.etapesApresCloture = document.querySelectorAll('[onclick^="execSwitchDossierStep"]').length;
+
+        // 2. Une annexe, et l'objet de l'activité rédigé.
+        r.annexeAvant = document.querySelectorAll('#execSlider [class*="annexe"]').length;
+        document.querySelector('[onclick^="execAddAnnexeBlock"]')?.click();
+        await attendre(800);
+        r.annexeApres = document.querySelectorAll('#execSlider [class*="annexe"]').length;
+        const objet = document.getElementById('dossier_objet_activite');
+        r.objet = objet ? 'SURV 0.c — objet rédigé par la ronde.' : null;
+        if (objet) objet.value = r.objet;
+        document.querySelector('[onclick^="execSaveDossier"]')?.click();
+        await attendre(2600);
+
+        // 3. La soumission, confirmation pressée.
+        document.querySelector('[onclick^="execSubmitDossier"]')?.click();
+        await attendre(800);
+        r.soumissionConfirmee = await confirmer();
+        r.gestesDeValidation = [...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)\s*\(/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean)
+          .filter((n, i, a) => a.indexOf(n) === i);
+        return r;
+      });
+      verifier('clore le terrain fait passer le dossier à la rédaction, et une annexe s’y ajoute',
+        avance.clotureConfirmee === true && avance.etapesApresCloture >= 3
+        && avance.annexeApres > avance.annexeAvant,
+        JSON.stringify({
+          cloture: avance.clotureConfirmee,
+          etapes: avance.etapesApresCloture,
+          annexes: [avance.annexeAvant, avance.annexeApres],
+        }));
+
+      const avanceEnBase = await page.evaluate(async (ctx) => {
+        const d = await (await fetch(`${ctx.api}/dossiers/${ctx.id}`, { credentials: 'same-origin' })).json();
+        return { statut: d.statut, etape: d.current_step, objet: d.objet_activite || '' };
+      }, { api: M, id: chaine.dossierId });
+      verifier('le dossier soumis porte en base son objet, son statut et son étape',
+        avance.soumissionConfirmee === true
+        && avanceEnBase.statut === 'soumis' && avanceEnBase.etape === 'validation'
+        && avanceEnBase.objet === avance.objet,
+        JSON.stringify({ attendu: avance.objet, ...avanceEnBase }));
+
+      // Les gestes de l'étape « Validation » sont **relevés et non exercés** :
+      // valider ou renvoyer un rapport engage le cycle au-delà de ce que cette
+      // ronde sait défaire. Ils sont nommés ici pour que la suite n° 0.d sache
+      // où reprendre.
+      verifier('l’étape « Validation » offre ses gestes, relevés pour la suite',
+        (avance.gestesDeValidation || []).includes('execValidateRapport')
+        && (avance.gestesDeValidation || []).includes('execReturnDossier'),
+        (avance.gestesDeValidation || []).join(', '));
+
       const refermeture = await page.evaluate(async () => {
         document.querySelector('[onclick^="execCloseSlider"]')?.click();
         await new Promise((r) => setTimeout(r, 1300));

@@ -4582,6 +4582,54 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            et fait avancer le dossier, ce qui peut empêcher sa suppression — une ronde dont
            le ménage dépend de l'état qu'elle vient de changer n'est pas une ronde.
 
+       5.f.5 [x] **SURV — le dossier parcourt son cycle : 14 gestes couverts deviennent
+           18** — fait le 14 octobre 2026.
+
+           Vingt-sept contrôles. La ronde ne s'arrête plus à la réalisation : elle **clôt
+           le terrain**, rédige, et **soumet le dossier**.
+
+           | Geste | Ce que le contrôle vérifie |
+           |---|---|
+           | `execCloseRealisation` | confirmation pressée, le dossier passe à « redaction » — **trois** étapes offertes |
+           | `execAddAnnexeBlock` | un bloc d'annexe paraît |
+           | `execSaveDossier` | l'objet de l'activité rédigé, **relu en base** |
+           | `execSubmitDossier` | confirmation pressée ; en base, statut `soumis` et étape `validation` |
+
+           ── La prudence de 5.f.4 était juste, et la mesure la lève ──
+
+           `execCloseRealisation` avait été **laissé de côté** la veille, et c'était écrit :
+           *une ronde dont le ménage dépend de l'état qu'elle vient de changer n'est pas une
+           ronde.*
+
+           Mesuré avant d'écrire une assertion, et dans cet ordre : terrain clos → étape
+           `redaction` ; soumis → statut `soumis`, étape `validation` ; **et le dossier
+           reste supprimable dans les deux états** (200), sa constatation aussi. Le ménage
+           de la ronde tient donc sur tout le cycle qu'elle parcourt.
+
+           Ce n'était écrit nulle part et aucune suite ne l'avait éprouvé : la suite HTTP
+           mène le même cycle, mais elle clôt et archive — elle ne supprime jamais. *La
+           réversibilité d'un cycle d'autorité est une propriété qu'on vérifie, pas qu'on
+           suppose.*
+
+           ── Ce qui est relevé et **non** exercé, et pourquoi c'est un contrôle ──
+
+           À l'étape « Validation », le volet offre `execValidateRapport`,
+           `execReturnDossier` et `execPreviewRapport`. La ronde ne les presse pas : valider
+           ou renvoyer un rapport engage le cycle au-delà de ce qu'elle sait défaire.
+
+           Mais elle **vérifie qu'ils sont là**, et c'est un contrôle à part entière : le
+           jour où l'un disparaîtra de cette étape, la suite le dira, et la suite n° 0.d
+           saura où reprendre. *Relever ce qu'on ne couvre pas encore vaut mieux que de
+           l'ignorer, et bien mieux que de le couvrir à moitié.*
+
+           ── Une assertion qu'il a fallu ne pas écrire ──
+
+           La suite HTTP affirme qu'un **rapport v1** naît à la soumission. La ronde a donc
+           voulu l'asserter — et la mesure a rendu une liste **vide** pour ce dossier : le
+           geste de l'écran ne passe pas par la même route que la suite HTTP. L'assertion
+           n'a pas été écrite. *Reprendre l'affirmation d'une autre suite sans la mesurer
+           chez soi, c'est hériter d'une vérité qui n'est pas la sienne.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

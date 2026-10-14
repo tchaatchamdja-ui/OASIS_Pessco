@@ -4524,6 +4524,64 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            contre la source (5.e.8), et ici le relevé contre son propre rapprochement.
            **Un instrument en deux moitiés doit avoir une seule règle, écrite une fois.**
 
+       5.f.4 [x] **SURV — le volet du dossier, geste par geste : 6 gestes couverts
+           deviennent 14** — fait le 14 octobre 2026.
+
+           La suite de SURV passe de dix-huit à **vingt-quatre contrôles**. La ronde entre
+           dans le volet et y exerce ce qu'un inspecteur y fait.
+
+           | Geste | Ce que le contrôle vérifie |
+           |---|---|
+           | `execSwitchDossierStep` | passer à « Notification » **redessine** le volet, et le retour le redessine |
+           | `execAddRealisationEquipeMember` | un sélecteur d'inspecteur de plus |
+           | `execAddRealisationProgrammeLine` | le message « aucune ligne » part, une ligne de saisie paraît |
+           | `execOpenChecklistsPicker` + `shellCloseModal` | la fenêtre s'ouvre **et** se referme |
+           | `execSaveRealisation` | l'équipe enregistrée, **relue chez le serveur** |
+           | `execCloseSlider` | le volet part du document |
+           | `execToggleSidebar` | replie **et** déplie |
+           | `EXEC_STATE.filters.trimestre` + `execResetFilters` | la table se restreint, et revient |
+
+           **Quatorze gestes nommés sur 310.** Le reste vit dans les étapes que la ronde
+           n'ouvre pas encore — rapport, transmission, clôture, checklists remplies — et 69
+           sur une page qu'aucun chemin n'ouvre (5.f.2).
+
+           ── Trois sélecteurs qui ne mesuraient rien, et un qui mesurait trop ──
+
+           Rien de cette séquence n'a pu s'écrire par lecture du code. Chaque sélecteur
+           vient d'une mesure, et quatre étaient faux au premier jet :
+
+           · `[class*="slider"]` pour le corps du volet : **zéro**. C'est `#execSlider`.
+             Un contrôle qui aurait passé en ne regardant rien ;
+           · `.real-prog-objet` pour les lignes de programme : **zéro**. La table est
+             `#realisation_programme_table` ;
+           · compter les lignes du programme : **1 avant, 1 après** sur un geste qui
+             marche. La table porte déjà la ligne du message « aucune ligne », et le geste
+             la **remplace**. Ce qu'on mesure est donc le départ du message et l'arrivée
+             des champs de saisie ;
+           · comparer le `className` entier de la barre latérale : **rouge** sur un geste
+             qui marche. La chaîne de départ portait une espace de fin que le redessin ne
+             remet pas. *Une assertion sur une chaîne entière mesure aussi ce qui n'a pas
+             de sens* — on lit la classe qui porte l'état.
+
+           Les deux derniers sont du même genre que les trois instruments divergents des
+           jalons précédents, en plus petit : **l'assertion doit viser la propriété qui
+           compte, jamais sa représentation.**
+
+           ── L'écriture, et pourquoi elle est sûre ──
+
+           `execSaveRealisation` écrit vraiment : l'équipe part dans le dossier. Le
+           contrôle **redemande le dossier au serveur** et y cherche le nom de
+           l'inspecteur choisi — *ce que l'écran montre doit être ce qui est enregistré,
+           non ce qu'il espère.*
+
+           Et elle se défait d'elle-même : la ronde supprime le dossier à la fin, ce qui
+           emporte la notification. Le bac est une copie jetable, mais un contrôle qui
+           laisse un reste fait échouer le suivant pour une raison qui n'est pas la sienne.
+
+           `execCloseRealisation` est **laissé de côté**, et c'est écrit : il clôt l'étape
+           et fait avancer le dossier, ce qui peut empêcher sa suppression — une ronde dont
+           le ménage dépend de l'état qu'elle vient de changer n'est pas une ronde.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

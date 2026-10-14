@@ -395,32 +395,157 @@ module.exports = async function survSmoke(port) {
         && enPreparation.notre && enPreparation.versDossier >= 1 && enPreparation.effacer >= 1,
         JSON.stringify(enPreparation));
 
+      // ── Le volet du dossier, geste par geste ──
+      //
+      // Les sélecteurs viennent d'une mesure, non d'une lecture : la première
+      // écriture de cette séquence cherchait `.real-prog-objet` et le corps du
+      // volet par `[class*="slider"]`, et les deux rendaient **zéro** — un
+      // contrôle qui aurait passé en ne regardant rien. Le programme est un
+      // `#realisation_programme_table`, le volet un `#execSlider`.
       const volet = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const corps = () => (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length;
         const b = document.querySelector('[onclick^="execOpenDossierSlider"]');
         if (!b) return { bouton: false };
         b.click();
-        await new Promise((r) => setTimeout(r, 3000));
-        const etapes = [...document.querySelectorAll('[onclick^="execSwitchDossierStep"]')];
-        const avant = etapes.length;
-        // Une étape se commande, et l'on regarde que le volet ait changé.
-        const empreinteAvant = document.body.innerHTML.length;
-        if (etapes[0]) etapes[0].click();
-        await new Promise((r) => setTimeout(r, 1500));
-        const fermer = document.querySelector('[onclick^="execCloseSlider"]');
-        const ouvert = !!document.querySelector('[onclick^="execCloseSlider"]');
-        if (fermer) fermer.click();
-        await new Promise((r) => setTimeout(r, 1200));
-        return {
-          bouton: true,
-          etapes: avant,
-          ouvert,
-          empreinteAvant,
-          referme: !document.querySelector('[onclick^="execCloseSlider"]'),
-        };
+        await attendre(3000);
+        const r = { bouton: true, ouvert: !!document.getElementById('execSlider') };
+        r.etapes = document.querySelectorAll('[onclick^="execSwitchDossierStep"]').length;
+
+        // 1. L'étape « Notification » redessine le volet, et le retour le redessine.
+        const avant = corps();
+        document.querySelector('[onclick*="execSwitchDossierStep"][onclick*="notification"]')?.click();
+        await attendre(1600);
+        const surNotification = corps();
+        document.querySelector('[onclick*="execSwitchDossierStep"][onclick*="realisation"]')?.click();
+        await attendre(1600);
+        r.pas = { avant, surNotification, revenu: corps() };
+
+        // 2. Un membre d'équipe, une ligne de programme.
+        r.equipeAvant = document.querySelectorAll('.real-equipe-nom').length;
+        document.querySelector('[onclick^="execAddRealisationEquipeMember"]')?.click();
+        await attendre(600);
+        r.equipeApres = document.querySelectorAll('.real-equipe-nom').length;
+        // ── Le programme : une **ligne de saisie**, non une ligne de plus ──
+        //
+        // Mesuré : la table porte déjà une ligne, celle du message « aucune
+        // ligne » (`#real_prog_empty`), et le geste la **remplace**. Compter les
+        // lignes rendait donc 1 avant et 1 après, et l'assertion « une de plus »
+        // était fausse — fausse sur un geste qui marche.
+        //
+        // Ce qu'on mesure est donc ce qui compte : le message part, et la ligne
+        // neuve porte ses champs de saisie.
+        r.progVideAvant = !!document.getElementById('real_prog_empty');
+        r.progSaisieAvant = document.querySelectorAll('#realisation_programme_table tbody [data-field="date"]').length;
+        document.querySelector('[onclick^="execAddRealisationProgrammeLine"]')?.click();
+        await attendre(600);
+        r.progVideApres = !!document.getElementById('real_prog_empty');
+        r.progSaisieApres = document.querySelectorAll('#realisation_programme_table tbody [data-field="date"]').length;
+
+        // 3. Le sélecteur de checklists s'ouvre, et se referme.
+        document.querySelector('[onclick^="execOpenChecklistsPicker"]')?.click();
+        await attendre(2000);
+        r.picker = !!document.querySelector('[onclick^="shellCloseModal"]');
+        document.querySelector('[onclick^="shellCloseModal"]')?.click();
+        await attendre(900);
+        r.pickerReferme = !document.querySelector('[onclick^="shellCloseModal"]');
+
+        // 4. L'inspecteur choisi, puis l'enregistrement de la réalisation.
+        const sel = document.querySelector('.real-equipe-nom');
+        const opt = sel ? [...sel.options].find((o) => o.value) : null;
+        if (sel && opt) { sel.value = opt.value; r.inspecteur = opt.value; }
+        document.querySelector('[onclick^="execSaveRealisation"]')?.click();
+        await attendre(2600);
+        return r;
       });
-      verifier('le bouton du dossier ouvre son volet, ses étapes se commandent, et il se referme',
-        volet.bouton && volet.etapes >= 1 && volet.ouvert && volet.referme,
-        JSON.stringify(volet));
+      verifier('le volet du dossier s’ouvre, et changer d’étape le redessine',
+        volet.bouton && volet.ouvert && volet.etapes >= 2
+        && volet.pas.avant > 0 && volet.pas.surNotification !== volet.pas.avant,
+        JSON.stringify(volet.pas || {}));
+      verifier('un membre d’équipe et une ligne de programme s’ajoutent au volet',
+        volet.equipeApres === volet.equipeAvant + 1
+        && volet.progVideAvant === true && volet.progVideApres === false
+        && volet.progSaisieApres === volet.progSaisieAvant + 1,
+        JSON.stringify({
+          equipe: [volet.equipeAvant, volet.equipeApres],
+          messageVide: [volet.progVideAvant, volet.progVideApres],
+          champsDeSaisie: [volet.progSaisieAvant, volet.progSaisieApres],
+        }));
+      verifier('le sélecteur de checklists s’ouvre et se referme',
+        volet.picker === true && volet.pickerReferme === true,
+        JSON.stringify({ ouvert: volet.picker, referme: volet.pickerReferme }));
+
+      // ── L'écriture de la réalisation, vérifiée **en base** ──
+      //
+      // Ce que l'écran montre doit être ce qui est enregistré, non ce qu'il
+      // espère. On redemande donc le dossier au serveur.
+      const enregistre = await page.evaluate(async (ctx) => {
+        const r = await fetch(`${ctx.api}/dossiers/${ctx.id}`, { credentials: 'same-origin' });
+        const d = r.ok ? await r.json() : null;
+        if (!d) return { dossier: false };
+        let equipe = d.realisation_equipe;
+        if (typeof equipe === 'string') { try { equipe = JSON.parse(equipe); } catch { equipe = null; } }
+        return { dossier: true, equipe, noms: (equipe || []).map((m) => m.nom) };
+      }, { api: M, id: chaine.dossierId });
+      verifier('l’équipe de réalisation s’enregistre, et le serveur la porte',
+        enregistre.dossier && !!volet.inspecteur
+        && (enregistre.noms || []).includes(volet.inspecteur),
+        JSON.stringify({ attendu: volet.inspecteur, ...enregistre }));
+
+      const refermeture = await page.evaluate(async () => {
+        document.querySelector('[onclick^="execCloseSlider"]')?.click();
+        await new Promise((r) => setTimeout(r, 1300));
+        return { referme: !document.getElementById('execSlider') };
+      });
+      verifier('le volet du dossier se referme par son geste',
+        refermeture.referme === true, JSON.stringify(refermeture));
+
+      // ── Deux bascules de la page, chacune dans les deux sens ──
+      //
+      // *Une bascule qui s'allume sans s'éteindre passe un contrôle
+      // unilatéral* — la leçon du portail (5.c.11), payée deux fois là-bas.
+      // ── L'état se lit par la **classe qui le porte**, non par la chaîne entière ──
+      //
+      // Premier jet : comparaison de `className` d'un bout à l'autre. Rouge sur
+      // un geste qui marche — la chaîne de départ portait une espace de fin que
+      // le redessin ne remet pas. *Une assertion sur une chaîne entière mesure
+      // aussi ce qui n'a pas de sens.*
+      const bascules = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const replieEtat = () => !!document.querySelector('.app-layout')?.classList.contains('sidebar-collapsed');
+        const presser = async () => {
+          const b = document.querySelector('[onclick^="execToggleSidebar"]');
+          if (!b) return null;
+          b.click();
+          await attendre(900);
+          return replieEtat();
+        };
+        const depart = replieEtat();
+        const apresUn = await presser();
+        const apresDeux = await presser();
+        return { depart, apresUn, apresDeux };
+      });
+      verifier('la barre latérale de SURV se replie et se déplie',
+        bascules.apresUn === !bascules.depart && bascules.apresDeux === bascules.depart,
+        JSON.stringify(bascules));
+
+      const filtre = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const lignes = () => document.querySelectorAll('#exec-content table tbody tr').length;
+        const depart = lignes();
+        const t = [...document.querySelectorAll('[onclick]')]
+          .find((e) => /filters\.trimestre='1'/.test(e.getAttribute('onclick') || ''));
+        if (!t) return { bouton: false };
+        t.click();
+        await attendre(1500);
+        const filtre1 = lignes();
+        document.querySelector('[onclick^="execResetFilters"]')?.click();
+        await attendre(1500);
+        return { bouton: true, depart, filtre1, remis: lignes() };
+      });
+      verifier('un filtre de trimestre restreint la table, et la remise à zéro la rend',
+        filtre.bouton && filtre.remis === filtre.depart && filtre.filtre1 <= filtre.depart,
+        JSON.stringify(filtre));
 
       // ── L'écriture, et son retour en arrière dans le même geste ──
       //

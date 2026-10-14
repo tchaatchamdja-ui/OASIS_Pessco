@@ -2,7 +2,7 @@
  "releve": "2026-10-14",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 6,
+ "exerces": 14,
  "indecidables": 5,
  "gestes": [
   {
@@ -75,7 +75,7 @@
    "evenement": "click",
    "nom": "execAddRealisationEquipeMember",
    "source": "execAddRealisationEquipeMember()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -93,7 +93,7 @@
    "evenement": "click",
    "nom": "execAddRealisationProgrammeLine",
    "source": "execAddRealisationProgrammeLine()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -120,7 +120,7 @@
    "evenement": "click",
    "nom": "execOpenChecklistsPicker",
    "source": "execOpenChecklistsPicker('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -246,7 +246,7 @@
    "evenement": "click",
    "nom": "execSaveRealisation",
    "source": "execSaveRealisation('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -372,7 +372,7 @@
    "evenement": "click",
    "nom": "execOpenChecklistsPicker",
    "source": "execOpenChecklistsPicker('${dossierId}','checklists')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -669,7 +669,7 @@
    "evenement": "click",
    "nom": "execToggleSidebar",
    "source": "execToggleSidebar()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -804,7 +804,7 @@
    "evenement": "change",
    "nom": "EXEC_STATE.filters.trimestre",
    "source": "EXEC_STATE.filters.trimestre=this.value;${onchangeFunc}",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -867,7 +867,7 @@
    "evenement": "click",
    "nom": "execResetFilters",
    "source": "execResetFilters()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -876,7 +876,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.filters.trimestre",
    "source": "EXEC_STATE.filters.trimestre='';${onchangeFunc}",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -885,7 +885,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.filters.trimestre",
    "source": "EXEC_STATE.filters.trimestre='${q}';${onchangeFunc}",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -913,7 +913,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-boot.js",
@@ -932,7 +932,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -3419,7 +3419,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3464,7 +3464,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3635,7 +3635,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3707,7 +3707,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal();execOpenChecklistEditor('${clId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3734,7 +3734,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3752,7 +3752,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -4511,7 +4511,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4529,7 +4529,7 @@
    "evenement": "click",
    "nom": "shellCloseModal",
    "source": "shellCloseModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",

@@ -2,7 +2,7 @@
  "releve": "2026-10-14",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 19,
+ "exerces": 20,
  "indecidables": 5,
  "gestes": [
   {
@@ -282,7 +282,7 @@
    "evenement": "click",
    "nom": "execValidateRapport",
    "source": "execValidateRapport('${lastRap.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",

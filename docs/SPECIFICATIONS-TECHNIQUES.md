@@ -249,7 +249,7 @@ distincts, et la couverture se mesure sur les noms.
 | CARE | 6 428 | 145 | *non relevé* | — |
 | PR | 7 315 | 186 | *non relevé* | — |
 | RAMP | 12 470 | 365 | *non relevé* | — |
-| SURV | 23 731 | **503** | **310** | **19** |
+| SURV | 23 731 | **503** | **310** | **20** |
 | **Total** | **55 893** | **1 334** | | |
 
 Le relevé nommé de **SURV** est fait — 14 octobre 2026, ADR-003 n° 5.f.0 : 310 noms, dont 269
@@ -259,7 +259,7 @@ chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but d
 d'écrans de `scripts/relever-gestes.js`.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
-`tests/smoke/surv.smoke.js`, **vingt-neuf contrôles** — l'écran se monte, ses sept pages se
+`tests/smoke/surv.smoke.js`, **trente contrôles** — l'écran se monte, ses sept pages se
 parcourent par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la
 console reste muette. Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le
 relevé des gestes lance la suite de l'écran qu'il mesure.
@@ -270,10 +270,15 @@ ouvert, le passage d'une étape à l'autre, un membre d'équipe et une ligne de 
 le sélecteur de checklists ouvert et refermé, la réalisation enregistrée **avec son résultat
 relu chez le serveur**, le terrain clos — le dossier passe à la rédaction —, une annexe
 ajoutée, l'objet rédigé et enregistré, le dossier **soumis** — statut, étape et le **rapport
-« v1 »** qui en naît vérifiés en base —, le dossier **renvoyé** à la rédaction, le volet
-refermé, la barre latérale repliée puis dépliée, un filtre de trimestre posé puis remis à zéro,
-la constatation effacée **par son propre geste**, et le dossier supprimé — ce qui emporte sa
-notification **et son rapport**.
+« v1 »** qui en naît vérifiés en base —, le dossier **renvoyé** à la rédaction, **resoumis**
+— rapport « v2 » —, son **rapport validé**, le volet refermé, et le dossier supprimé : ce qui
+emporte sa notification **et ses rapports**. La barre latérale, le filtre de trimestre et
+l'effacement d'une constatation sont éprouvés **avant** l'ouverture du volet, la validation du
+rapport changeant la table sous eux.
+
+Ne restent hors de portée, et les raisons sont écrites : la **transmission** d'un rapport (la
+route la refuse sans un état que la ronde ne sait pas atteindre) et la **clôture** d'un dossier
+(non mesurée, le jeu d'essai n'offrant pas de troisième activité).
 
 **La ronde ne laisse rien, et c'est éprouvé sur tout le cycle** : mesuré, le dossier reste
 supprimable à l'étape « redaction » comme à « validation ». La suite HTTP mène le même cycle,
@@ -807,7 +812,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 033, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 034, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

@@ -4686,6 +4686,68 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            — un état dont la réversibilité n'est **pas** mesurée. *On n'exerce pas un geste
            dont on ne sait pas défaire l'effet ; on le relève, et on dit pourquoi.*
 
+       5.f.7 [x] **SURV — la validation du rapport, mesurée réversible avant d'être
+           exercée** — fait le 14 octobre 2026.
+
+           Trente contrôles ; **20 gestes couverts sur 310**. La ronde fait désormais le
+           cycle entier : soumise, renvoyée, resoumise, validée.
+
+           ── La mesure qui a levé le verrou ──
+
+           5.f.5 et 5.f.6 avaient écarté `execValidateRapport` faute de savoir si son effet
+           se défaisait. La question a été posée au système, à trois paliers et sur **trois
+           dossiers distincts** — un palier ne se mesure pas sur un dossier qu'on vient de
+           détruire :
+
+           | Palier | Suppression du dossier |
+           |---|---|
+           | rapport **soumis** | 200 |
+           | rapport **validé** | **200** — le verrou tombe |
+           | rapport **transmis** | la transmission elle-même refuse (400) : **non mesuré** |
+           | dossier **clôturé** | **non mesuré** — le jeu d'essai n'a pas de troisième activité |
+
+           Validé, le dossier reste supprimable : la ronde peut valider. Transmettre et
+           clôturer restent hors de portée, et les deux raisons sont écrites — l'une est un
+           refus du serveur qu'on n'a pas élucidé, l'autre un manque du jeu d'essai.
+
+           ── Ce que la validation change dans la page, et ce que cela a coûté ──
+
+           Valider le rapport **fait sortir la constatation de « En Préparation »**. Deux
+           contrôles qui passaient sont alors tombés — le filtre de trimestre, qui comptait
+           une table devenue plus courte, et l'effacement d'une constatation, dont le bouton
+           avait disparu. Les deux rouges portaient sur des gestes qui marchent.
+
+           *Un contrôle dont la précondition est l'état de la page doit passer avant ce qui
+           change cet état.* Les trois contrôles de page sont donc remontés avant
+           l'ouverture du volet. **L'ordre d'une ronde fait partie de la ronde** — même
+           leçon que l'ordre d'un relevé en 5.f.6, et payée deux fois le même jour.
+
+           ── Deux constatations, et trois façons de désigner la bonne ──
+
+           La ronde en crée **deux** : l'une s'efface pour éprouver son geste, l'autre porte
+           la ligne qui ouvre le volet. Une seule ne pouvait plus servir aux deux.
+
+           Désigner celle à effacer a pris trois essais, et chacun a dit quelque chose :
+
+           1. **par son rang** — « la dernière, puisqu'elle a été créée en second ». Faux :
+              la table trie par date **décroissante**. Le contrôle était vert sur « il en
+              reste une » et faux sur *laquelle* ; seule une assertion ajoutée par
+              prudence — *la jetable ne doit plus être là* — l'a dit. Sans elle, la ronde
+              aurait détruit la ligne dont elle avait besoin et personne ne l'aurait su ;
+           2. **par le texte de sa ligne** — la ligne est trouvée, le bouton n'y est pas :
+              chaque constatation occupe **deux** `<tr>`, le résumé qui porte les actions et
+              le détail, masqué, qui porte le texte ;
+           3. **par l'identifiant que son `onclick` porte** — la ronde sait ce qu'elle a
+              créé, et le balisage le nomme. *Désigner par ce qu'on a créé, non par où cela
+              s'affiche.*
+
+           ── Et une assertion de plus que la ronde a gagnée ──
+
+           La seconde soumission fait un rapport **`v2`**, et la validation le marque
+           `valide`. Les deux sont vérifiés **en base**, et c'est la ronde qui les mesure :
+           la suite HTTP l'affirme aussi, mais 5.f.6 a montré ce que vaut une vérité qu'on
+           hérite sans la mesurer chez soi.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

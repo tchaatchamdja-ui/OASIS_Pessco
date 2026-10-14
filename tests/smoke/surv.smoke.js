@@ -341,13 +341,28 @@ module.exports = async function survSmoke(port) {
         date_debut_effective: '2026-09-01', date_fin_effective: '2026-09-03',
       });
       const dossierId = (accord.corps || {}).dossier_id;
+      // ── **Deux** constatations, et c'est la validation du rapport qui l'exige ──
+      //
+      // La ronde n'en créait qu'une. Elle servait deux fins : ouvrir le volet du
+      // dossier, et éprouver sa propre suppression. Les deux ont cessé de tenir
+      // ensemble le jour où la ronde a validé le rapport : **valider fait sortir
+      // la constatation de « En Préparation »**, et le bouton qui l'efface part
+      // avec elle. Mesuré — `{"bouton":false}` — sur un geste qui marche.
+      //
+      // Deux constatations donc : l'une s'efface avant qu'on ouvre le volet,
+      // l'autre porte la ligne qui l'ouvre.
       const fnc = await env(`${api}/constatations`, 'POST', {
         dossier_id: dossierId, domaine_id: 'AIR', criticite: 'majeur',
-        description: 'SURV 0.c — écart de la ronde de couverture.',
+        description: 'SURV 0.c — écart qui ouvre le volet.',
+      });
+      const fncJetable = await env(`${api}/constatations`, 'POST', {
+        dossier_id: dossierId, domaine_id: 'AIR', criticite: 'mineur',
+        description: 'SURV 0.c — écart que la ronde efface.',
       });
       return {
         plan: true, notifId, pas, accord: accord.statut, dossierId,
         fnc: fnc.statut, fncId: (fnc.corps || {}).id, fncStatut: (fnc.corps || {}).statut,
+        fncJetable: (fncJetable.corps || {}).id,
       };
     }, M);
     verifier('la chaîne d’un dossier se construit : notification, accord, constatation',
@@ -390,10 +405,117 @@ module.exports = async function survSmoke(port) {
           effacer: document.querySelectorAll('[onclick^="execDeleteConstatation"]').length,
         };
       });
-      verifier('le sous-onglet « En Préparation » montre la constatation du dossier',
+      verifier('le sous-onglet « En Préparation » montre les constatations du dossier',
         enPreparation.sousOnglet && enPreparation.onglets.length === 3
-        && enPreparation.notre && enPreparation.versDossier >= 1 && enPreparation.effacer >= 1,
+        && enPreparation.notre && enPreparation.versDossier >= 2 && enPreparation.effacer >= 2,
         JSON.stringify(enPreparation));
+
+      // ── Deux bascules de la page, chacune dans les deux sens ──
+      //
+      // *Une bascule qui s'allume sans s'éteindre passe un contrôle
+      // unilatéral* — la leçon du portail (5.c.11), payée deux fois là-bas.
+      // ── L'état se lit par la **classe qui le porte**, non par la chaîne entière ──
+      //
+      // Premier jet : comparaison de `className` d'un bout à l'autre. Rouge sur
+      // un geste qui marche — la chaîne de départ portait une espace de fin que
+      // le redessin ne remet pas. *Une assertion sur une chaîne entière mesure
+      // aussi ce qui n'a pas de sens.*
+      const bascules = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const replieEtat = () => !!document.querySelector('.app-layout')?.classList.contains('sidebar-collapsed');
+        const presser = async () => {
+          const b = document.querySelector('[onclick^="execToggleSidebar"]');
+          if (!b) return null;
+          b.click();
+          await attendre(900);
+          return replieEtat();
+        };
+        const depart = replieEtat();
+        const apresUn = await presser();
+        const apresDeux = await presser();
+        return { depart, apresUn, apresDeux };
+      });
+      verifier('la barre latérale de SURV se replie et se déplie',
+        bascules.apresUn === !bascules.depart && bascules.apresDeux === bascules.depart,
+        JSON.stringify(bascules));
+
+      const filtre = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const lignes = () => document.querySelectorAll('#exec-content table tbody tr').length;
+        const depart = lignes();
+        const t = [...document.querySelectorAll('[onclick]')]
+          .find((e) => /filters\.trimestre='1'/.test(e.getAttribute('onclick') || ''));
+        if (!t) return { bouton: false };
+        t.click();
+        await attendre(1500);
+        const filtre1 = lignes();
+        document.querySelector('[onclick^="execResetFilters"]')?.click();
+        await attendre(1500);
+        return { bouton: true, depart, filtre1, remis: lignes() };
+      });
+      verifier('un filtre de trimestre restreint la table, et la remise à zéro la rend',
+        filtre.bouton && filtre.remis === filtre.depart && filtre.filtre1 <= filtre.depart,
+        JSON.stringify(filtre));
+
+      // ── L'écriture, et son retour en arrière dans le même geste ──
+      //
+      // `execDeleteConstatation` demande confirmation par le widget du socle. On
+      // presse « oui », puis l'on demande au **serveur** si la constatation est
+      // partie : ce que l'écran montre doit être ce qui est enregistré, non ce
+      // qu'il espère.
+      //
+      // ── Et pourquoi ces trois contrôles passent **avant** le volet ──
+      //
+      // Ils étaient après, et deux sont tombés le jour où la ronde a validé le
+      // rapport : la validation fait sortir la constatation de « En Préparation »,
+      // donc la table perd une ligne et le bouton d'effacement disparaît. Les
+      // deux rouges portaient sur des gestes qui marchent.
+      //
+      // *Un contrôle dont la précondition est l'état de la page doit passer avant
+      // ce qui change cet état.* L'ordre d'une ronde fait partie de la ronde —
+      // c'est la même leçon que l'ordre d'un relevé, apprise en 5.f.6 sur le
+      // ménage qui masquait un rapport.
+      const effacement = await page.evaluate(async (ctx) => {
+        // ── Le bouton se désigne par **l'identifiant qu'il porte** ──
+        //
+        // Deux essais avant celui-ci, et les deux disaient quelque chose :
+        //
+        //   · « la dernière ligne, puisque la jetable a été créée en second » —
+        //     faux, la table trie par date **décroissante**, et c'est l'autre qui
+        //     est partie. Vert sur « il en reste une », faux sur *laquelle* ;
+        //     seule l'assertion ajoutée par prudence l'a dit ;
+        //   · « la ligne dont le texte porte la description » — la ligne est
+        //     trouvée, et le bouton n'y est pas : chaque constatation occupe
+        //     **deux** `<tr>`, le résumé qui porte les actions et le détail,
+        //     masqué, qui porte le texte.
+        //
+        // L'identifiant, lui, ne dépend ni d'un tri ni d'une mise en page : la
+        // ronde sait quelle constatation elle a créée, et le balisage le nomme
+        // dans son `onclick`. *Désigner par ce qu'on a créé, non par où cela
+        // s'affiche.*
+        const b = document.querySelector(`[onclick^="execDeleteConstatation('${ctx.jetable}'"]`);
+        if (!b) return { bouton: false, cherche: ctx.jetable };
+        b.click();
+        await new Promise((r) => setTimeout(r, 600));
+        const oui = document.querySelector('.oasis-confirm-oui');
+        if (!oui) return { bouton: true, confirmation: false };
+        oui.click();
+        await new Promise((r) => setTimeout(r, 2200));
+        const r = await fetch(`${ctx.api}/constatations`, { credentials: 'same-origin' });
+        const liste = r.ok ? await r.json() : [];
+        return {
+          bouton: true,
+          confirmation: true,
+          // Il en restait deux : celle qui ouvre le volet doit survivre.
+          restantes: (liste || []).filter((c) => (c.description || '').includes('SURV 0.c')).length,
+          jetableEncore: (liste || []).some((c) => (c.description || '').includes('que la ronde efface')),
+        };
+      }, { api: M, jetable: chaine.fncJetable });
+      verifier('une constatation s’efface par son geste, et le serveur ne la porte plus',
+        effacement.bouton && effacement.confirmation
+        && effacement.restantes === 1 && effacement.jetableEncore === false,
+        JSON.stringify(effacement));
+
 
       // ── Le volet du dossier, geste par geste ──
       //
@@ -625,6 +747,60 @@ module.exports = async function survSmoke(port) {
         renvoi.confirme === true && renvoiEnBase.etape === 'redaction',
         JSON.stringify({ ...renvoi, ...renvoiEnBase }));
 
+      // ── La seconde soumission, puis la validation du rapport ──
+      //
+      // ── Pourquoi la validation s'exerce maintenant, et pas avant ──
+      //
+      // 5.f.5 et 5.f.6 l'avaient écartée faute de savoir si elle se défaisait.
+      // La mesure a été faite, à trois paliers et sur trois dossiers distincts —
+      // un palier ne se mesure pas sur un dossier qu'on vient de détruire :
+      //
+      // | Palier | Suppression du dossier |
+      // |---|---|
+      // | rapport **soumis** | 200 |
+      // | rapport **validé** | **200** |
+      // | rapport **transmis** | la transmission elle-même refuse (400) : non mesuré |
+      // | dossier **clôturé** | non mesuré — le jeu d'essai n'a pas de troisième activité |
+      //
+      // Validé, le dossier reste donc supprimable : la ronde peut valider. Transmettre
+      // et clôturer restent hors de portée, et les deux raisons sont écrites.
+      const secondCycle = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const confirmer = async () => {
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3800);
+          return true;
+        };
+        const r = {};
+        document.querySelector('[onclick^="execSubmitDossier"]')?.click();
+        await attendre(800);
+        r.resoumission = await confirmer();
+        const bouton = document.querySelector('[onclick^="execValidateRapport"]');
+        r.boutonValider = !!bouton;
+        if (bouton) {
+          bouton.click();
+          await attendre(800);
+          r.validationConfirmee = await confirmer();
+        }
+        return r;
+      });
+      const cycleEnBase = await page.evaluate(async (ctx) => {
+        const raps = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
+        const miens = (raps || []).filter((x) => x.dossier_id === ctx.id)
+          .map((x) => ({ version: x.version, statut: x.statut }))
+          .sort((a, b) => a.version - b.version);
+        return { rapports: miens };
+      }, { api: M, id: chaine.dossierId });
+      verifier('une seconde soumission fait un rapport « v2 », et la validation le marque valide',
+        secondCycle.resoumission === true && secondCycle.boutonValider === true
+        && secondCycle.validationConfirmee === true
+        && cycleEnBase.rapports.length === 2
+        && cycleEnBase.rapports[1].version === 2
+        && cycleEnBase.rapports[1].statut === 'valide',
+        JSON.stringify({ ...secondCycle, ...cycleEnBase }));
+
       const refermeture = await page.evaluate(async () => {
         document.querySelector('[onclick^="execCloseSlider"]')?.click();
         await new Promise((r) => setTimeout(r, 1300));
@@ -632,80 +808,6 @@ module.exports = async function survSmoke(port) {
       });
       verifier('le volet du dossier se referme par son geste',
         refermeture.referme === true, JSON.stringify(refermeture));
-
-      // ── Deux bascules de la page, chacune dans les deux sens ──
-      //
-      // *Une bascule qui s'allume sans s'éteindre passe un contrôle
-      // unilatéral* — la leçon du portail (5.c.11), payée deux fois là-bas.
-      // ── L'état se lit par la **classe qui le porte**, non par la chaîne entière ──
-      //
-      // Premier jet : comparaison de `className` d'un bout à l'autre. Rouge sur
-      // un geste qui marche — la chaîne de départ portait une espace de fin que
-      // le redessin ne remet pas. *Une assertion sur une chaîne entière mesure
-      // aussi ce qui n'a pas de sens.*
-      const bascules = await page.evaluate(async () => {
-        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-        const replieEtat = () => !!document.querySelector('.app-layout')?.classList.contains('sidebar-collapsed');
-        const presser = async () => {
-          const b = document.querySelector('[onclick^="execToggleSidebar"]');
-          if (!b) return null;
-          b.click();
-          await attendre(900);
-          return replieEtat();
-        };
-        const depart = replieEtat();
-        const apresUn = await presser();
-        const apresDeux = await presser();
-        return { depart, apresUn, apresDeux };
-      });
-      verifier('la barre latérale de SURV se replie et se déplie',
-        bascules.apresUn === !bascules.depart && bascules.apresDeux === bascules.depart,
-        JSON.stringify(bascules));
-
-      const filtre = await page.evaluate(async () => {
-        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-        const lignes = () => document.querySelectorAll('#exec-content table tbody tr').length;
-        const depart = lignes();
-        const t = [...document.querySelectorAll('[onclick]')]
-          .find((e) => /filters\.trimestre='1'/.test(e.getAttribute('onclick') || ''));
-        if (!t) return { bouton: false };
-        t.click();
-        await attendre(1500);
-        const filtre1 = lignes();
-        document.querySelector('[onclick^="execResetFilters"]')?.click();
-        await attendre(1500);
-        return { bouton: true, depart, filtre1, remis: lignes() };
-      });
-      verifier('un filtre de trimestre restreint la table, et la remise à zéro la rend',
-        filtre.bouton && filtre.remis === filtre.depart && filtre.filtre1 <= filtre.depart,
-        JSON.stringify(filtre));
-
-      // ── L'écriture, et son retour en arrière dans le même geste ──
-      //
-      // `execDeleteConstatation` demande confirmation par le widget du socle. On
-      // presse « oui », puis l'on demande au **serveur** si la constatation est
-      // partie : ce que l'écran montre doit être ce qui est enregistré, non ce
-      // qu'il espère.
-      const effacement = await page.evaluate(async (api) => {
-        const b = document.querySelector('[onclick^="execDeleteConstatation"]');
-        if (!b) return { bouton: false };
-        b.click();
-        await new Promise((r) => setTimeout(r, 600));
-        const oui = document.querySelector('.oasis-confirm-oui');
-        if (!oui) return { bouton: true, confirmation: false };
-        oui.click();
-        await new Promise((r) => setTimeout(r, 2200));
-        const r = await fetch(`${api}/constatations`, { credentials: 'same-origin' });
-        const liste = r.ok ? await r.json() : [];
-        return {
-          bouton: true,
-          confirmation: true,
-          restantes: (liste || []).filter((c) => (c.description || '').includes('SURV 0.c')).length,
-        };
-      }, M);
-      verifier('la constatation s’efface par son geste, et le serveur ne la porte plus',
-        effacement.bouton && effacement.confirmation && effacement.restantes === 0,
-        JSON.stringify(effacement));
 
       // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
       //

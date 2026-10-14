@@ -77,7 +77,7 @@ indépendant avant recette** — non réalisé.
 
 | Couche | Prescrit par la fiche | Réalisé | État |
 |---|---|---|---|
-| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ◐ en cours, mesuré** — **12 375 lignes** de TypeScript en 80 fichiers ; **55 893** encore en JavaScript. Le socle commun est converti en entier (12/12), DROITS aussi, et du portail : libellés, icônes, état, schémas, CRUD des référentiels, exigences, organigramme, personnel, taxinomie, paramètres de l'instance et le cycle de rendu de la configuration — `app-config.js` est supprimé ; **le portail est converti en entier** — `public/js/` n'existe plus, et sa surface globale est passée de 135 noms à 72, le pont de cohabitation déposé (5.e.5) ; restent les cinq écrans de module. Détail et ordre : [ADR-003](ADR-003-cadre-du-frontend.md) § 5 | ◐ |
+| Frontend | PWA **React + TypeScript** | **PWA : ✓** — manifeste, icônes, service worker, mode dégradé éprouvé *(vague 3)*. **React + TypeScript : ◐ en cours, mesuré** — **12 431 lignes** de TypeScript en 79 fichiers ; **55 893** encore en JavaScript. Le socle commun est converti en entier (12/12), DROITS aussi, et du portail : libellés, icônes, état, schémas, CRUD des référentiels, exigences, organigramme, personnel, taxinomie, paramètres de l'instance et le cycle de rendu de la configuration — `app-config.js` est supprimé ; **le portail est converti en entier** — `public/js/` n'existe plus, et sa surface globale est passée de 135 noms à 61, le pont de cohabitation déposé (5.e.5) et les dettes de `window` rendues (5.e.9) ; restent les cinq écrans de module. Détail et ordre : [ADR-003](ADR-003-cadre-du-frontend.md) § 5 | ◐ |
 | Backend applicatif | API REST **Java 21 / Spring Boot** | **Node 20 / Express 4**, CommonJS, 386 routes | ✗ |
 | Identité et accès | **Keycloak** (OpenID Connect) | `src/auth.js` écrit à la main ; sessions en mémoire | ✗ |
 | Moteur de workflow | **Flowable ou Camunda** (BPMN 2.0) | moteur de processus écrit à la main (`routes-processus.js`) | ✗ |
@@ -200,7 +200,7 @@ grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l      # Keycloak
 grep -rli 'bpmn\|flowable\|camunda' src public | wc -l         # moteur BPMN
 grep -rli 'prometheus\|grafana\|/metrics' src server.js | wc -l # supervision
 find public -name 'manifest*.json' -o -name 'sw.js' | wc -l    # PWA
-find frontend -name '*.ts' -o -name '*.tsx' | wc -l            # TypeScript : 80 fichiers
+find frontend -name '*.ts' -o -name '*.tsx' | wc -l            # TypeScript : 79 fichiers
 # Et le JavaScript qu'il reste à convertir, qui est l'autre moitié de la mesure.
 # Cherchée dans `public/`, la première ligne rendait 0 sur un dépôt qui porte
 # 4 932 lignes de TypeScript au 6 octobre : le TypeScript vit dans `frontend/`,

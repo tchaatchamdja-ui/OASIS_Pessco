@@ -31,7 +31,10 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { PRIO_COLORS, icon, moduleIcon } from './icones';
 import { closeRefModal } from './referentiels';
+import { chargerMoi } from './demarrage';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
+import { langueRetenue } from './traductions';
 import { tr } from './libelles';
 
 /** L'identité de l'Administration. Tous les champs peuvent manquer. */
@@ -302,8 +305,8 @@ async function saveAacLogo(dataUrl: string): Promise<void> {
   });
   if (res.ok) {
     showToast(dataUrl ? t('logo_enregistre') : t('logo_supprime'), 'success');
-    await window.loadMe();
-    void window.renderConfig();
+    await chargerMoi();
+    void renderConfig();
   } else showToast(t('erreur_fichier_volumineux'), 'error', 4000);
 }
 
@@ -343,8 +346,8 @@ export async function saveAAC(): Promise<void> {
   if (res.ok) {
     closeRefModal();
     showToast(t('cfg_saved'), 'success');
-    await window.loadMe();
-    void window.renderConfig();
+    await chargerMoi();
+    void renderConfig();
   } else showToast(window.oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 }
 
@@ -424,7 +427,7 @@ export function cfgSectionModules(modules: ModuleCatalogue[]): string {
     <div class="cfg-module-row">
       <div style="display:flex;align-items:center;gap:.6rem;">
         <span style="color:${PRIO_COLORS[m.priority]};display:flex;">${moduleIcon(m.code, 18)}</span>
-        <strong>${escapeHtml(m.name[window.CURRENT_LANG ?? ''] || m.name.fr)}</strong>
+        <strong>${escapeHtml(m.name[langueRetenue()] || m.name.fr)}</strong>
         <span class="shell-badge badge-neutral">${escapeHtml(m.tdr)} · P${m.priority}</span>
       </div>
       <label class="cfg-toggle">

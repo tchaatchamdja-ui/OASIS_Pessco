@@ -3,8 +3,10 @@
 //
 // Cinq gestes — les deux de la barre latérale, les deux enregistrements et la
 // fermeture des fenêtres —, tous nommés dans des attributs `onclick` que ce
-// module écrit ; plus `renderUsers`, une des cinq vues que `demarrage.ts` appelle
-// à travers `window`.
+// module écrit.
+//
+// `renderUsers` y était, une des cinq vues que `demarrage.ts` appelait à travers
+// `window` et qu'il importe depuis le 14 octobre 2026 (5.e.9).
 //
 // ── Sept noms déposés le 13 octobre 2026 ──
 //
@@ -22,8 +24,7 @@
 // `USER_TAB`, `USER_COLLAPSED` et `ALL_MODULES` ne sont pas publiés : c'étaient
 // des `let` du premier niveau, donc absents de `window`.
 import {
-  closeUserModal, renderUsers, saveUserModules, setUserTab, submitEditUser,
-  toggleUserSidebar,
+  closeUserModal, saveUserModules, setUserTab, submitEditUser, toggleUserSidebar,
 } from '../utilisateurs';
 
 window.setUserTab = setUserTab;
@@ -31,4 +32,3 @@ window.toggleUserSidebar = toggleUserSidebar;
 window.saveUserModules = saveUserModules;
 window.submitEditUser = submitEditUser;
 window.closeUserModal = closeUserModal;
-window.renderUsers = renderUsers;

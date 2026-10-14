@@ -12,8 +12,11 @@
 // ── Les neuf qui restent, et pourquoi ──
 //
 // Les six gestes de la recherche et de l'import sont nommés dans des attributs
-// `onclick` que ce module écrit lui-même ; `portailReinitialiserRecherche` est
-// appelée par `configuration.ts` et `demarrage.ts` à travers `window`.
+// `onclick` que ce module écrit lui-même.
+//
+// `portailReinitialiserRecherche` y était : `configuration.ts` et `demarrage.ts`
+// l'appelaient à travers `window`. Ils l'importent depuis le 14 octobre 2026
+// (5.e.9), et la publication part avec la dette.
 //
 // **`exportPdf` et `exportPdfActivites` ont failli partir avec les cinq autres**,
 // et c'est la leçon de cette étape. Le relevé de surface ne regardait que les
@@ -29,15 +32,13 @@
 // du premier niveau, donc absents de `window`, et personne ne les lit.
 import {
   doImport, exportPdf, exportPdfActivites, openImportModal, portailChercher,
-  portailFermerRechercheSiVide, portailOuvrirRecherche,
-  portailReinitialiserRecherche, portailViderRecherche,
+  portailFermerRechercheSiVide, portailOuvrirRecherche, portailViderRecherche,
 } from '../barre';
 
 window.portailOuvrirRecherche = portailOuvrirRecherche;
 window.portailChercher = portailChercher;
 window.portailViderRecherche = portailViderRecherche;
 window.portailFermerRechercheSiVide = portailFermerRechercheSiVide;
-window.portailReinitialiserRecherche = portailReinitialiserRecherche;
 window.exportPdf = exportPdf;
 window.exportPdfActivites = exportPdfActivites;
 window.openImportModal = openImportModal;

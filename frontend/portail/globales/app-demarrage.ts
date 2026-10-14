@@ -7,36 +7,41 @@
 //
 // | Nom | Lu par |
 // |---|---|
-// | `navigate` | `accueil.ts` et `modules-hote.ts`, à travers `window` |
 // | `toggleSidebar` | l'`onclick` du bouton de la page (`index.html`) |
-// | `onLangChange` | `applyLang`, dans le sas des libellés — à travers `window` |
-// | `loadMe` | `parametres.ts` et `profil.ts`, à travers `window` |
-// | `refreshNotifications` | `organigramme.ts`, à travers `window` |
+// | `onLangChange` | `applyLang`, dans le sas des libellés — voir plus bas |
+// | `refreshNotifications` | **une couture d'essai**, déclarée sur sa ligne |
 // | `VIEWS` | posé dans l'état partagé, non ici |
 //
-// Les quatre lectures « à travers `window` » sont des **dettes** nommées à
-// l'ADR, non des interfaces : ces fichiers pourraient importer ce qu'ils
-// appellent. Tant qu'ils ne le font pas, la publication est obligatoire — et
-// c'est pourquoi le relevé de surface distingue cette sorte de lecteur au lieu
-// de déclarer ces noms morts (il l'a fait, et dix-sept écrans en seraient
-// restés inertes au clic).
+// `navigate` et `loadMe` étaient lus à travers `window` par `accueil.ts`,
+// `modules-hote.ts`, `parametres.ts` et `profil.ts` : des **dettes**, non des
+// interfaces. Les quatre fichiers les importent depuis le 14 octobre 2026
+// (5.e.9), et les publications partent avec les dettes.
 //
-// `initIcons` est **déposé** : il était sur `window` parce qu'une `function` du
-// premier niveau s'y pose, et il n'a jamais eu de lecteur.
+// `initIcons` est **déposé** (5.e.5) : il était sur `window` parce qu'une
+// `function` du premier niveau s'y pose, et il n'a jamais eu de lecteur.
 import {
-  basculerBarre, brancherGestes, chargerMoi, demarrer, langueChangee,
-  naviguer, poserVuesDeBase, rafraichirNotifications,
+  basculerBarre, brancherGestes, demarrer, langueChangee, naviguer,
+  poserVuesDeBase, rafraichirNotifications,
 } from '../demarrage';
 
-window.navigate = naviguer;
 window.toggleSidebar = basculerBarre;
 
 // La bascule de langue redessine la vue courante. **Déclaré par ce sas**, qui le
 // pose : il l'était dans le sas des libellés, qui ne fait que l'appeler.
 window.onLangChange = langueChangee;
 
-// Les deux noms que le portail se relit sur `window`.
-window.loadMe = chargerMoi;
+// ── La seule couture d'essai de la surface du portail ──
+//
+// La pastille des notifications ne se mesure pas par son geste : `notifBell`
+// rafraîchit **puis masque** la pastille, si bien que le nombre qu'on veut lire
+// n'est observable à aucun instant par le clic. La suite « parcours » appelle
+// donc la fonction, et il lui faut une globale — un contrôle dans un navigateur
+// n'atteint pas autrement une fonction empaquetée.
+//
+// La déclaration est sur la ligne qui suit, à côté de ce qu'elle justifie : une
+// liste de dispenses à part aurait pourri, comme trois dispenses de gestes non
+// couverts l'avaient fait avant d'être démasquées.
+// couture-essai : la pastille des notifications ne se mesure pas par son geste
 window.refreshNotifications = rafraichirNotifications;
 
 poserVuesDeBase();

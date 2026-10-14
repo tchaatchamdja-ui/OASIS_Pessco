@@ -48,6 +48,7 @@ import {
   cfgSectionAAC, cfgSectionModules, cfgSectionSecurite, cfgSectionSysteme,
   type ConfigAac, type ConfigSecurite, type ConfigSysteme, type ModuleCatalogue,
 } from './parametres';
+import { portailReinitialiserRecherche } from './barre';
 import { loadRefs } from './outils';
 
 /**
@@ -118,7 +119,7 @@ async function appel(chemin: string, options?: RequestInit): Promise<Response> {
 
 export function cfgNavigate(sous: string): void {
   window.CFG_SUB = sous;
-  window.portailReinitialiserRecherche();
+  portailReinitialiserRecherche();
   void renderConfig();
 }
 

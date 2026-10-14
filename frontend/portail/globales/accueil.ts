@@ -1,12 +1,12 @@
 // OASIS — L'accueil, posé en globales (ADR-003, 5.e.3 ; dépose du pont 5.e.5).
 //
-// Sas, construit dans le paquet du portail. **Deux noms**, et les deux sont
-// mesurés lus (`node scripts/relever-surface.js`) :
+// Sas, construit dans le paquet du portail. **Un seul nom** : `setModulesView`,
+// appelé par un `onclick` du balisage de `../accueil.ts`.
 //
-//   · `setModulesView` — appelé par un `onclick` du balisage de `../accueil.ts` ;
-//   · `renderHome` — appelé par `demarrage.ts` **à travers `window`**, comme les
-//     quatre autres vues. C'est une dette nommée à l'ADR, pas une interface ;
-//     tant qu'elle est là, la publication est obligatoire.
+// `renderHome` y était : `demarrage.ts` l'appelait à travers `window`, faute de
+// pouvoir importer un fichier qui n'existait pas quand la navigation a été
+// écrite. Il l'importe depuis le 14 octobre 2026 (5.e.9), et la publication part
+// avec la dette.
 //
 // `MODULES_VIEW`, `COULEURS_MODULE`, `THEMES_ORDER` et `OASIS_FULLNAME_HTML` ne
 // sont **pas** publiés : c'étaient des globales **lexicales** d'`app.js` — un
@@ -18,7 +18,6 @@
 // avec `OASIS_LOGO_IMG`, qui lui **est** monté sur `window` (voir `etat.ts`,
 // 5.c) parce que `demarrage.ts` le lit. Deux noms voisins, deux situations
 // contraires : le critère reste **ce qu'un autre fichier doit atteindre**.
-import { renderHome, setModulesView } from '../accueil';
+import { setModulesView } from '../accueil';
 
 window.setModulesView = setModulesView;
-window.renderHome = renderHome;

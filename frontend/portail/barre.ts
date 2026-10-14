@@ -23,6 +23,7 @@ import { sessionPerdue } from '../socle/requete';
 import type { DonneesErreur } from '../socle/commun';
 import { icon } from './icones';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
 import { tr } from './libelles';
 import { refLabel, type Enregistrement } from './schemas';
 import { loadRefs } from './outils';
@@ -37,8 +38,6 @@ declare global {
     portailViderRecherche: () => void;
     /** Referme le champ s'il repart vide. */
     portailFermerRechercheSiVide: () => void;
-    /** Remet la recherche au repos : changer d'écran ne garde pas son filtre. */
-    portailReinitialiserRecherche: () => void;
     /** Imprime les tables de l'écran courant. */
     exportPdf: (title: string) => void;
     /** Imprime les quatre tables de la taxinomie de la surveillance. */
@@ -261,7 +260,7 @@ export async function doImport(coll: string): Promise<void> {
       // ce sens-ci.
       window.closeRefModal();
       await loadRefs();
-      void window.renderConfig();
+      void renderConfig();
     } else showToast(window.oasisMessageErreur(d, res.status, t('erreur_import')), 'error');
   };
   reader.readAsDataURL(file);

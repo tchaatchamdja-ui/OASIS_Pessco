@@ -55,7 +55,7 @@ import './utilisateurs';
 import './profil';
 // L'accueil et le journal d'audit (5.e.3).
 import './accueil';
-import './audit';
+
 import './etat';
 import './referentiels';
 import './exigences';

@@ -105,8 +105,12 @@ window.applyTheme = (demande) => { appliquerPalette(demande); };
 
 // L'ordre du fichier d'origine, conservé : la langue est posée avant que
 // quiconque puisse la lire, et la palette appliquée dès le chargement.
+//
+// La seconde ligne appelait `window.applyTheme`, c'est-à-dire la publication que
+// ce fichier venait de poser deux lignes plus haut. Elle appelle désormais la
+// source : une publication n'est pas faite pour être relue par son auteur.
 window.CURRENT_LANG = langueRetenue();
-window.applyTheme(themeEnregistre());
+appliquerPalette(themeEnregistre());
 
 // `t` est exporté pour que le garde-fou de surface puisse le citer ; rien ne
 // l'importe. Sans cet export, `verbatimModuleSyntax` ne verrait qu'un fichier

@@ -21,6 +21,7 @@
 import { escapeHtml } from '../socle/utils';
 import { icon } from './icones';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
 import { REF_SCHEMAS, fieldValue, type Champ, type Enregistrement } from './schemas';
 import { LEVEL_COLORS, circuitHtml, orgChainFor } from './organigramme';
 import { tr } from './libelles';
@@ -52,13 +53,13 @@ export function togglePers(id: string): void {
   const k = `pers-${id}`;
   if (CFG_OPEN.has(k)) CFG_OPEN.delete(k);
   else CFG_OPEN.add(k);
-  void window.renderConfig();
+  void renderConfig();
 }
 
 export function toggleAcc(key: string): void {
   if (CFG_OPEN.has(key)) CFG_OPEN.delete(key);
   else CFG_OPEN.add(key);
-  void window.renderConfig();
+  void renderConfig();
 }
 
 // ── Le personnel de l'Administration ──

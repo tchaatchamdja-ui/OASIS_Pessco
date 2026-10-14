@@ -22,7 +22,10 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
 import { personnelName, personnelOptions, type Enregistrement } from './schemas';
+import { rafraichirNotifications } from './demarrage';
+import { orgTopLevelType } from './referentiels';
 import { fmtDate, loadRefs } from './outils';
 
 declare global {
@@ -113,7 +116,7 @@ let ORG_VIEW = 'list'; // 'list' | 'tree'
 
 export function setOrgView(v: string): void {
   ORG_VIEW = v;
-  void window.renderConfig();
+  void renderConfig();
 }
 
 // ── Le glisser-déposer d'un rattachement ──
@@ -148,7 +151,7 @@ export async function orgDrop(ev: DragEvent, orgId: string): Promise<void> {
   });
   if (res.ok) {
     await loadRefs();
-    void window.renderConfig();
+    void renderConfig();
     showToast(t('personnel_rattache'), 'success');
     return;
   }
@@ -159,7 +162,7 @@ export async function orgUnassign(id: string): Promise<void> {
   const res = await appel(`/api/referentiels/organisation_assignments/${id}`, { method: 'DELETE' });
   if (res.ok) {
     await loadRefs();
-    void window.renderConfig();
+    void renderConfig();
     showToast(t('rattachement_retire'), 'success');
     return;
   }
@@ -290,8 +293,8 @@ export async function orgConfirmInterim(nodeId: string): Promise<void> {
   }
   window.closeRefModal();
   await loadRefs();
-  void window.renderConfig();
-  window.refreshNotifications();
+  void renderConfig();
+  void rafraichirNotifications();
   showToast(t('interim_active', interimNom), 'success', 4000);
 }
 
@@ -319,7 +322,7 @@ export async function orgEndInterim(nodeId: string): Promise<void> {
     return;
   }
   await loadRefs();
-  void window.renderConfig();
+  void renderConfig();
   showToast(t('interim_retire'), 'success');
 }
 
@@ -478,7 +481,7 @@ export function cfgSectionOrganigramme(): string {
  * pas, elle rend visible.
  */
 export function normalizeOrgTopLevel(cfg: unknown): void {
-  const topType = window.orgTopLevelType();
+  const topType = orgTopLevelType();
   const aac = ((cfg as { aac?: { sigle?: string; nom?: string } } | null)?.aac) ?? {};
   if (!topType) return;
   liste('organisation').forEach((o) => {

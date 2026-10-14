@@ -682,11 +682,21 @@ module.exports = async function frontendSmoke(port) {
       const releve = relever('portail');
       const sansLecteur = muets(releve);
       const publies = [...releve.par_sas.values()].reduce((n, l) => n + l.length, 0);
+      // Les coutures d'essai sont **imprimées**, jamais tues : une déclaration qui
+      // ne se voit pas est une liste de dispenses, et une liste de dispenses
+      // pourrit. Ce mécanisme accepte par construction une déclaration fausse —
+      // c'est sa limite, et elle est bornée par deux choses : la raison est sur la
+      // ligne au-dessus de la publication, donc elle part avec elle, et le relevé
+      // figé de la surface nomme le nom de toute façon.
+      for (const [nom, raison] of releve.coutures) {
+        console.log(`    ◌ couture d’essai déclarée : ${nom} — ${raison}`);
+      }
       verifier('aucun sas du portail ne publie un nom que la page ne lit pas',
         sansLecteur.length === 0,
         sansLecteur.length
           ? sansLecteur.map((m) => `${m.sas} → ${m.nom}`).join(' · ')
-          : `${publies} noms publiés, ${releve.par_sas.size} sas, tous lus`);
+          : `${publies} noms publiés, ${releve.par_sas.size} sas,`
+            + ` ${publies - releve.coutures.size} lus, ${releve.coutures.size} couture(s) déclarée(s)`);
     } catch (e) {
       verifier('aucun sas du portail ne publie un nom que la page ne lit pas',
         false, `le relevé a refusé : ${e.message}`);

@@ -21,6 +21,8 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
+import { langueRetenue } from './traductions';
 import type { Enregistrement } from './schemas';
 import { tr } from './libelles';
 import { exportBar, searchInputHtml } from './barre';
@@ -66,7 +68,7 @@ const argEchappe = (v: unknown): string => escapeHtml(JSON.stringify(String(v ??
 export function fmtDay(iso: unknown): string {
   if (!iso) return '—';
   const d = new Date(String(iso));
-  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(window.CURRENT_LANG);
+  return Number.isNaN(d.getTime()) ? String(iso) : d.toLocaleDateString(langueRetenue());
 }
 
 // ── Les bandeaux dépliés ──
@@ -81,7 +83,7 @@ export function toggleExigGroup(key: string): void {
   const k = key || '__none__';
   if (EXIG_OPEN.has(k)) EXIG_OPEN.delete(k);
   else EXIG_OPEN.add(k);
-  void window.renderConfig();
+  void renderConfig();
 }
 
 // ── La sous-vue ──
@@ -240,7 +242,7 @@ export async function saveExigDrawer(id: string, showRegFields: boolean, regleme
   if (res.ok) {
     closeExigDrawer();
     await loadRefs();
-    void window.renderConfig();
+    void renderConfig();
     showToast('OK', 'success');
     return;
   }
@@ -299,7 +301,7 @@ export async function saveReglement(oldReglement: string): Promise<void> {
   }
   closeExigDrawer();
   await loadRefs();
-  void window.renderConfig();
+  void renderConfig();
   showToast(t('reglement_maj'), 'success');
 }
 

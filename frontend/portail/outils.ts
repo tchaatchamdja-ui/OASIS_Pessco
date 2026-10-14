@@ -42,6 +42,7 @@
 import { escapeHtml } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { tSouple } from './traductions';
+import { langueRetenue } from './traductions';
 
 // Aucun des quatre — `escArg`, `loadRefs`, `fmtDate`, `reglesMotDePasse` — n'est
 // plus publié sur `window` depuis la dépose du pont (5.e.5) : les neuf modules
@@ -71,7 +72,7 @@ export function reglesMotDePasse(details?: unknown): string {
 export function fmtDate(iso: unknown): string {
   if (!iso) return '—';
   const d = new Date(String(iso));
-  return `${d.toLocaleDateString(window.CURRENT_LANG)} ${d.toLocaleTimeString(window.CURRENT_LANG, { hour: '2-digit', minute: '2-digit' })}`;
+  return `${d.toLocaleDateString(langueRetenue())} ${d.toLocaleTimeString(langueRetenue(), { hour: '2-digit', minute: '2-digit' })}`;
 }
 
 export async function loadRefs(): Promise<void> {

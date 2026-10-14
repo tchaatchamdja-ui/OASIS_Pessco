@@ -36,6 +36,12 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { PRIO_COLORS, icon, moduleIcon } from './icones';
 import { t, tSouple } from './traductions';
+import { langueRetenue } from './traductions';
+// Importés depuis le 14 octobre 2026 : ils étaient lus sur `window`, et le
+// `typeof … === 'function'` qui gardait l'enregistrement des vues n'a plus
+// d'objet — un import est là ou le fichier ne compile pas.
+import { naviguer } from './demarrage';
+import { enregistrerVues } from './modules-hote';
 import type { Moi } from './etat';
 
 /** Un thème de la page d'accueil. L'icône est facultative — voir plus bas. */
@@ -160,8 +166,8 @@ export async function renderHome(): Promise<void> {
     // donc rendu, et `globales/icons.ts` n'a plus rien à publier : il est
     // supprimé.
     const color = COULEURS_MODULE[m.code] || PRIO_COLORS[m.priority] || '#64748b';
-    const name = m.name[window.CURRENT_LANG ?? ''] || m.name.fr;
-    const desc = m.desc[window.CURRENT_LANG ?? ''] || m.desc.fr;
+    const name = m.name[langueRetenue()] || m.name.fr;
+    const desc = m.desc[langueRetenue()] || m.desc.fr;
     // Un module fermé au compte se voit, éteint : il dit ce que l'application
     // fait, sans laisser croire qu'un clic l'ouvrira.
     const accessible = ouvert(m.code);
@@ -268,10 +274,8 @@ export async function renderHome(): Promise<void> {
       }
       // Le registre des modules peut ne pas avoir encore été chargé (session
       // ouverte après le script) : on le redemande avant de renoncer.
-      if (enabled && !window.VIEWS[`mod_${code}`] && typeof window.moduleHostRegisterViews === 'function') {
-        await window.moduleHostRegisterViews(true);
-      }
-      if (enabled && window.VIEWS[`mod_${code}`]) { window.navigate(`mod_${code}`); return; }
+      if (enabled && !window.VIEWS[`mod_${code}`]) await enregistrerVues(true);
+      if (enabled && window.VIEWS[`mod_${code}`]) { naviguer(`mod_${code}`); return; }
       showToast(enabled ? t('mod_toast_enabled') : t('mod_toast_disabled'), enabled ? 'success' : 'warning');
     });
   });

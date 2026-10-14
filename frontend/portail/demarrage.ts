@@ -24,6 +24,20 @@ import {
   dernierVu, marque, moi, poserDernierVu, poserMoi, poserVue, vueCourante, vues, type Moi,
 } from './etat';
 import { icon } from './icones';
+// ── Les cinq vues et deux voisines, **importées** depuis le 14 octobre 2026 ──
+//
+// Elles étaient lues sur `window` : la navigation était écrite avant que ces
+// cinq fichiers n'existent, et le pont de la cohabitation les y posait. Le
+// cycle que ces imports créent — chaque vue redemande la navigation ou le
+// redessin — est réel et sûr : un cycle entre modules ES se résout par des
+// liaisons vivantes, et aucun de ces noms n'est lu à l'initialisation.
+import { renderHome } from './accueil';
+import { renderAudit } from './audit';
+import { renderProfile } from './profil';
+import { renderUsers } from './utilisateurs';
+import { renderConfig } from './configuration';
+import { portailReinitialiserRecherche } from './barre';
+import { majBandeauInstance } from './instances';
 import { basculerPleinEcran, enregistrerVues } from './modules-hote';
 import { poserLangue, t } from './traductions';
 import { fmtDate, reglesMotDePasse } from './outils';
@@ -33,46 +47,34 @@ import { fmtDate, reglesMotDePasse } from './outils';
 // corrigée en l'écrivant — elle oubliait la durée. Voir `socle/utils.ts`.
 declare global {
   interface Window {
-    /** Les cinq vues du portail, définies par `app.js`. */
-    renderHome: () => Promise<void>;
-    renderProfile: () => Promise<void>;
-    renderUsers: () => Promise<void>;
-    renderAudit: () => Promise<void>;
-    renderConfig: () => Promise<void>;
-    /** Vide le champ de recherche du portail à chaque changement de vue. */
-    portailReinitialiserRecherche: () => void;
-    // `majBandeauInstance` est déclaré par son **définisseur**,
-    // `frontend/portail/instances.ts` (converti le 8 octobre). Il l'était ici,
-    // faute d'en avoir un ; ce fichier ne fait que l'appeler.
-    // `reglesMotDePasse` et `fmtDate` sont déclarés par leur **définisseur**
-    // depuis 5.e.4 : `frontend/portail/outils.ts`. Ils l'étaient ici, faute d'en
-    // avoir un — `app.js` était du JavaScript sans types. Ce fichier les importe.
-
-    /** La navigation du portail. Lue par `app.js` et par l'hôte des modules. */
-    navigate: (vue: string) => void;
     /**
      * Appelé après chaque changement de langue.
      *
      * **Déclaré ici, chez son définisseur** : le sas de ce fichier le pose, et la
-     * règle de 5.b veut que ce soit lui qui le déclare. Il l'était dans le sas des
-     * libellés, qui ne fait que l'appeler.
+     * règle de 5.b veut que ce soit lui qui le déclare.
      *
      * Optionnel, et c'est la vérité : la page de connexion ne le pose plus depuis
-     * sa conversion, et le sas des libellés vérifie donc son type avant d'appeler.
+     * sa conversion, et le sas des libellés vérifie donc son type avant
+     * d'appeler. C'est aussi ce qui en fait une **couture** et non une dette :
+     * `/app/i18n.js` est un paquet à part sur la connexion et les témoins, où ce
+     * fichier n'est pas chargé.
      */
     onLangChange?: () => void;
     /** Le repli de la barre latérale. Lu par l'`onclick` de la page. */
     toggleSidebar: () => void;
     /**
-     * Les deux noms que le portail se relit sur `window` : `loadMe` par
-     * `parametres.ts` et `profil.ts`, `refreshNotifications` par
-     * `organigramme.ts`. Ce sont des **dettes**, non des interfaces — ces
-     * fichiers pourraient les importer —, et la publication tombera avec elles.
-     *
-     * `initIcons` était là aussi, sans lecteur : il est déposé (5.e.5).
+     * La seule **couture d'essai** de la surface du portail : la pastille des
+     * notifications ne se mesure pas par son geste, qui la masque après l'avoir
+     * rafraîchie. Voir `globales/app-demarrage.ts`, où la couture est déclarée.
      */
-    loadMe: () => Promise<void>;
     refreshNotifications: () => Promise<unknown[]>;
+
+    // Les huit noms que ce fichier déclarait et que le portail se relisait sur
+    // `window` — les cinq vues, `navigate`, `loadMe`,
+    // `portailReinitialiserRecherche` — sont **importés** depuis le 14 octobre
+    // 2026 (5.e.9). La déclaration part avec la publication : un `interface
+    // Window` qui nomme un nom que rien ne pose est une affirmation fausse sur
+    // le monde.
   }
 }
 
@@ -121,11 +123,11 @@ async function appel(chemin: string, options?: RequestInit): Promise<Response> {
  */
 export function poserVuesDeBase(): void {
   Object.assign(vues(), {
-    home: () => window.renderHome(),
-    profile: () => window.renderProfile(),
-    users: () => window.renderUsers(),
-    audit: () => window.renderAudit(),
-    config: () => window.renderConfig(),
+    home: renderHome,
+    profile: renderProfile,
+    users: renderUsers,
+    audit: renderAudit,
+    config: renderConfig,
   });
 }
 
@@ -136,14 +138,14 @@ export function poserVuesDeBase(): void {
  */
 export function naviguer(vue: string): void {
   poserVue(vue);
-  window.portailReinitialiserRecherche();
+  portailReinitialiserRecherche();
   // Sortie d'un module plein écran : restaure la barre latérale et la marque.
   if (!String(vue).startsWith('mod_')) basculerPleinEcran(false);
   document.querySelectorAll<HTMLElement>('.portal-nav-btn')
     .forEach((b) => b.classList.toggle('active', b.dataset.view === vue));
   const principal = document.getElementById('mainView');
   if (principal) principal.innerHTML = '<div class="loading-spinner"></div>';
-  const rendre = vues()[vue] ?? window.renderHome;
+  const rendre = vues()[vue] ?? renderHome;
   rendre().catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
     if (message === 'unauthenticated') return;
@@ -193,7 +195,7 @@ export async function chargerMoi(): Promise<void> {
         .split(/\s+/).map((mot) => mot[0]).slice(0, 2).join('').toUpperCase();
     }
   }
-  window.majBandeauInstance();
+  majBandeauInstance();
   const logo = document.getElementById('sidebarLogo');
   const image = lu.aac?.logo;
   if (logo) {

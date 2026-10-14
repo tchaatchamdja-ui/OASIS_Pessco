@@ -28,6 +28,7 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
+import { chargerMoi } from './demarrage';
 import { tr } from './libelles';
 import { splitName } from './comptes';
 import { cameraIcon } from './parametres';
@@ -141,7 +142,7 @@ async function saveProfile(patch: Correctif): Promise<void> {
   });
   if (res.ok) {
     showToast(t('profil_maj'), 'success');
-    await window.loadMe();
+    await chargerMoi();
     renderProfile();
   } else showToast(window.oasisMessageErreur(await res.json().catch(() => ({})), res.status), 'error');
 }
@@ -174,7 +175,7 @@ export async function submitProfilePassword(): Promise<void> {
       const el = document.getElementById(id);
       if (el) (el as HTMLInputElement).value = '';
     });
-    await window.loadMe();
+    await chargerMoi();
     renderProfile();
   } else {
     const data = await res.json().catch(() => ({})) as DonneesErreur & { details?: unknown };

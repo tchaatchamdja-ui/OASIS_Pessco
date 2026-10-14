@@ -1,12 +1,18 @@
 // OASIS — L'hôte des modules, publié en globales (ADR-003, 5.c ; dépose du pont
 // 5.e.5).
 //
-// ── Sept noms publiés, un seul qui reste ──
+// ── Sept noms publiés, plus aucun ──
 //
-// `moduleHostRegisterViews` est appelé par `accueil.ts` à travers `window` : une
-// dette nommée à l'ADR, et la publication qu'elle impose.
+// `moduleHostRegisterViews` était le dernier : `accueil.ts` l'appelait à travers
+// `window`, et l'importe depuis le 14 octobre 2026 (5.e.9).
 //
-// Les six autres sont déposés le 13 octobre 2026 :
+// Ce fichier ne publie donc plus rien, et il reste : ses deux **effets** sont ce
+// qui compte — brancher l'écoute des messages des modules, et enregistrer les
+// vues dès le chargement. Un sas n'est pas seulement une publication ; c'est
+// aussi la place où l'on décide *quand* un effet se produit, et celle-là est
+// hors du module exprès (voir `globales/module-chrome.ts` du socle, même règle).
+//
+// Les six autres ont été déposés le 13 octobre 2026 :
 //
 //   · `planSetModuleChrome` et `planBackToPortal` portaient les noms historiques
 //     qu'`app.js` appelait. `app.js` n'existe plus, et les écrans de module ne
@@ -20,8 +26,6 @@
 import {
   brancherMessages, enregistrerVues,
 } from '../modules-hote';
-
-window.moduleHostRegisterViews = enregistrerVues;
 
 brancherMessages();
 

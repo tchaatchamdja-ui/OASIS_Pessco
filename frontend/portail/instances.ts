@@ -23,6 +23,7 @@ import { escapeHtml } from '../socle/utils';
 import { moi, sousVue, type Moi } from './etat';
 import { icon } from './icones';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
 
 // L'appel d'API : un `fetch` nu. L'en-tête anti-CSRF est posé par l'enveloppe du
 // socle, et le retour à la connexion sur 401 est `sessionPerdue`. Voir
@@ -54,8 +55,6 @@ interface Instance {
 
 declare global {
   interface Window {
-    /** Le bandeau d'instance. Lu par le démarrage. */
-    majBandeauInstance: () => void;
     /**
      * Les trois gestes, appelés depuis les `onclick` du balisage que ce fichier
      * **produit** : ils doivent être sur `window`, et aucun fichier ne les lit.
@@ -236,7 +235,7 @@ export async function ouvrirInstance(): Promise<void> {
   }
   majBandeauInstance();
   avis(t('instance_ouverte', nom), 'success');
-  if (sousVue() === 'instances') { await cfgChargerInstances(); void window.renderConfig(); }
+  if (sousVue() === 'instances') { await cfgChargerInstances(); void renderConfig(); }
 }
 
 // ── Instances du dispositif ──
@@ -293,7 +292,7 @@ export async function basculerInstance(nom: string): Promise<void> {
   }
   avis(d.active ? t('instance_reactivee', nom) : t('instance_desactivee', nom), 'success');
   await cfgChargerInstances();
-  void window.renderConfig();
+  void renderConfig();
 }
 
 /**
@@ -324,7 +323,7 @@ export async function supprimerInstance(nom: string): Promise<void> {
   }
   majBandeauInstance();
   await cfgChargerInstances();
-  void window.renderConfig();
+  void renderConfig();
 }
 
 export type { Instance };

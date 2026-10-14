@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -4001,6 +4001,98 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            `{"socle":0,"propre":0,"ancre":0}` sur **exactement** les deux pages que je
            venais de toucher. Un contrôle qui attrape une faute commise en l'écrivant est
            la meilleure épreuve qu'il puisse passer.
+
+       5.e.9 [x] **Les seize dettes de `window` rendues — 72 noms de surface deviennent
+           61** — fait le 14 octobre 2026.
+
+           Le relevé de 5.e.5 avait nommé dix-sept lectures que le portail faisait **sur
+           lui-même** à travers `window` : la navigation, les cinq vues, le redessin de la
+           configuration lu par huit fichiers, la langue courante, la session rechargée.
+           Aucune n'était une interface ; toutes étaient l'empreinte de l'ordre dans lequel
+           les fichiers avaient été écrits. L'une s'est révélée n'être qu'un import oublié
+           (`PRIO_COLORS`, rendue le 13 octobre) ; les seize autres sont rendues ici.
+
+           | Dette | Lecteurs | Ce qui la remplace |
+           |---|---|---|
+           | `renderConfig` | **huit** fichiers de configuration | `import { renderConfig } from './configuration'` |
+           | `CURRENT_LANG` | cinq fichiers | `langueRetenue()`, de son définisseur |
+           | les cinq vues | `demarrage.ts` | cinq imports, et `Object.assign` sans enveloppe |
+           | `navigate` | `accueil.ts`, `modules-hote.ts` | `naviguer` |
+           | `loadMe` | `parametres.ts`, `profil.ts` | `chargerMoi` |
+           | `portailReinitialiserRecherche` | `configuration.ts`, `demarrage.ts` | un import |
+           | `majBandeauInstance`, `moduleHostRegisterViews`, `orgTopLevelType`, `refreshNotifications` | un fichier chacun | un import |
+
+           ── Les cycles sont réels, assumés, et éprouvés ──
+
+           `configuration.ts` importe les sous-vues de sept fichiers, et chacun des sept
+           redemande le redessin. Le cycle est **inévitable** : c'est la forme même d'un
+           écran dont les parties se redessinent l'une l'autre.
+
+           Il est sûr pour une raison précise, et non par chance : *aucun de ces noms n'est
+           lu à l'initialisation d'un module.* Un cycle entre modules ES se résout par des
+           liaisons vivantes ; ce qui casse, c'est un `const` lu avant que l'autre module
+           ne soit initialisé, et il n'y en a aucun ici — tous ces appels partent d'un
+           geste ou d'un gestionnaire.
+
+           Écrit plutôt que supposé : **110 contrôles de la suite « parcours »**, dont les
+           rondes complètes de la configuration (les onze sous-vues, l'instance créée puis
+           supprimée, le référentiel créé, modifié, supprimé), passent sans un écart.
+
+           ── Deux dettes **restent**, et pour deux raisons différentes ──
+
+           · **`closeRefModal`**, lue par `barre.ts` et `organigramme.ts`. La décision est
+             de 5.e.0 et elle tient : l'import en retour ferait un cycle qui *dirait faux
+             sur ce qui dépend de quoi*. La vraie cause est que la fenêtre d'import et
+             celles des référentiels **partagent la racine `cfgModalRoot`** ; elle se
+             dénouera quand cette racine aura son module, et la publication tombera alors
+             d'elle-même. Elle reste publiée de toute façon : quatre `onclick` l'appellent.
+           · **`onLangChange`**, appelée par `applyLang` dans le sas des libellés. Ce n'est
+             **pas** une dette mais une **couture** : `/app/i18n.js` est un paquet à part
+             sur la page de connexion et celle des témoins, où `demarrage.ts` n'est pas
+             chargé. L'import ferait entrer le portail entier dans un paquet que deux pages
+             légères chargent. Le `typeof … === 'function'` qui la garde est donc exact.
+
+           ── Une couture d'essai, déclarée là où elle se paie ──
+
+           Onze publications partent. La douzième, `refreshNotifications`, **reste** — et
+           c'est la première exception à la règle « un lecteur d'essai ne justifie rien ».
+
+           La pastille des notifications ne se mesure pas par son geste : `notifBell`
+           rafraîchit **puis masque** la pastille, si bien que le nombre qu'on veut lire
+           n'est observable à aucun instant par le clic. Le contrôle appelle donc la
+           fonction, et un contrôle dans un navigateur n'atteint pas autrement une fonction
+           empaquetée.
+
+           La forme de la déclaration compte : un commentaire `couture-essai : <raison>`
+           **sur la ligne qui précède la publication**. Une liste de dispenses dans un
+           fichier à part aurait pourri — on l'a vu avec les gestes non couverts, dont
+           trois dispenses étaient devenues fausses sans que personne ne le sache. Ici la
+           raison part avec la publication, et la campagne l'**imprime** à chaque passage.
+
+           Sa limite est nommée : *ce mécanisme accepte par construction une déclaration
+           fausse.* Elle est bornée par deux choses — la raison est à côté de ce qu'elle
+           justifie, et le relevé figé de la surface nomme le nom de toute façon.
+           Contre-essayé en retirant la déclaration : le contrôle rougit en nommant
+           `app-demarrage.ts → refreshNotifications`.
+
+           ── Ce qui part de la surface, et ce qu'il reste ──
+
+           **81 noms mesurés dans un navigateur deviennent 70** : 61 publiés par un sas
+           (dont une couture déclarée) et 9 d'état partagé que `etat.ts` pose depuis le
+           module. Le relevé figé est refait, et il nomme les onze partants.
+
+           Deux sas de plus n'avaient plus rien à publier : `globales/audit.ts` est
+           supprimé ; `globales/modules-host.ts` **reste**, et c'est une distinction qui
+           vaut d'être écrite — *un sas n'est pas seulement une publication.* Celui-ci porte
+           deux **effets** : brancher l'écoute des messages des modules, et enregistrer les
+           vues dès le chargement. La place d'un effet est hors du module qu'il concerne,
+           et c'est la même règle que le socle suit pour `module-chrome`.
+
+           ── Et une publication qui s'appelait elle-même ──
+
+           La dernière ligne du sas des libellés appelait `window.applyTheme(…)`, c'est-à-
+           dire la publication qu'il venait de poser deux lignes plus haut. Elle appelle la
+           source. *Une publication n'est pas faite pour être relue par son auteur.*
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

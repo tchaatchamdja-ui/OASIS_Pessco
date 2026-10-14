@@ -29,6 +29,7 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
+import { renderConfig } from './configuration';
 import {
   REF_SCHEMAS, champsVisibles, fieldValue, type Champ, type Enregistrement, type Schema,
 } from './schemas';
@@ -46,8 +47,6 @@ declare global {
     saveRef: (coll: string, id?: string) => Promise<void>;
     /** Supprime un enregistrement, confirmation demandée. */
     deleteRef: (coll: string, id: string) => Promise<void>;
-    /** Le niveau d'ordre 1 de l'organigramme, ou `null` s'il n'y en a pas. */
-    orgTopLevelType: () => string | null;
     /** Le choix du niveau commande le sigle et le libellé repris de l'Administration. */
     orgTypeChanged: () => void;
     /** Montre ou cache les champs réservés aux inspecteurs. */
@@ -332,7 +331,7 @@ export async function saveRef(coll: string, id?: string): Promise<void> {
   if (res.ok) {
     closeRefModal();
     await loadRefs();
-    void window.renderConfig();
+    void renderConfig();
     showToast('OK', 'success');
     return;
   }
@@ -350,7 +349,7 @@ export async function deleteRef(coll: string, id: string): Promise<void> {
   const res = await appel(`/api/referentiels/${coll}/${id}`, { method: 'DELETE' });
   if (res.ok) {
     await loadRefs();
-    void window.renderConfig();
+    void renderConfig();
     showToast('OK', 'success');
     return;
   }

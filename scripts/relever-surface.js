@@ -37,6 +37,23 @@
 //   · **essai** — le nom n'est lu que par un contrôle ou un comparateur. Cela
 //     **ne justifie rien** : une preuve qui tient la surface en vie mesure son
 //     propre montage, et ce dépôt s'y est pris cinq fois.
+//   · **couture déclarée** — une exception à la règle ci-dessus, et une seule
+//     forme : un commentaire `couture-essai : <raison>` sur la ligne qui précède
+//     la publication.
+//
+// ── Pourquoi la déclaration est **à côté** de la publication ──
+//
+// Un contrôle dans un navigateur ne peut atteindre une fonction empaquetée que
+// par une globale. La pastille des notifications est dans ce cas : son geste
+// (`notifBell`) rafraîchit *puis masque* la pastille, si bien que le nombre
+// qu'on veut lire n'est observable à aucun moment par le clic. La fonction est
+// donc publiée pour la preuve, et c'est assumé.
+//
+// Une liste de dispenses dans un fichier à part aurait pourri : on l'a vu avec
+// les gestes non couverts, dont trois dispenses étaient devenues fausses sans
+// que personne ne le sache. Ici la raison est **sur la ligne d'au-dessus**, elle
+// part avec la publication, et le relevé la compte à part pour qu'elle reste
+// visible.
 //
 // Dans les fichiers du paquet qui publie, une occurrence du nom comme identifiant
 // n'est pas une lecture de la globale : c'est l'import. Seules comptent les
@@ -264,11 +281,17 @@ function relever(ensemble = 'portail') {
   // fichier : `i18n.ts` en pose un depuis l'intérieur d'une fonction, et un
   // relevé qui ne lirait que le premier niveau le manquerait.
   const par_sas = new Map();
+  const coutures = new Map();
   for (const f of fs.readdirSync(dossier).filter((n) => n.endsWith('.ts')).sort()) {
+    const texte = fs.readFileSync(path.join(dossier, f), 'utf8');
     const noms = [];
-    for (const m of fs.readFileSync(path.join(dossier, f), 'utf8')
-      .matchAll(/window\.([A-Za-z_$][\w$]*)\s*=(?!=)/g)) {
+    for (const m of texte.matchAll(/window\.([A-Za-z_$][\w$]*)\s*=(?!=)/g)) {
       if (!noms.includes(m[1])) noms.push(m[1]);
+      // La déclaration de couture : le commentaire qui précède immédiatement.
+      const avant = texte.slice(0, m.index).split('\n');
+      const precedente = avant[avant.length - 2] || '';
+      const decl = /couture-essai\s*:\s*(.+?)\s*$/.exec(precedente);
+      if (decl) coutures.set(m[1], decl[1]);
     }
     if (noms.length) par_sas.set(f, noms);
   }
@@ -358,14 +381,15 @@ function relever(ensemble = 'portail') {
     for (const nom of tous) if (nu(nom).test(texte)) ajoute(nom, 'essai', rel(f));
   }
 
-  return { par_sas, lecteurs };
+  return { par_sas, lecteurs, coutures };
 }
 
-function muets({ par_sas, lecteurs }) {
+function muets({ par_sas, lecteurs, coutures }) {
   const sortie = [];
   for (const [sas, noms] of par_sas) {
     for (const nom of noms) {
       const l = lecteurs.get(nom);
+      if (coutures.has(nom)) continue;
       if (!l.geste.length && !l.horsPaquet.length && !l.intra.length) {
         sortie.push({ sas, nom, essai: l.essai, pages: l.pages });
       }
@@ -396,12 +420,15 @@ if (require.main === module) {
         if (l.geste.length) sortes.push(`geste : ${l.geste.join(', ')}`);
         if (l.horsPaquet.length) sortes.push(`hors-paquet : ${l.horsPaquet.join(', ')}`);
         if (l.intra.length) sortes.push(`intra (${l.intra.length})`);
+        if (releve.coutures.has(nom)) sortes.push(`couture d'essai déclarée : ${releve.coutures.get(nom)}`);
         if (!sortes.length) sortes.push(l.essai.length ? `MUET (essai : ${l.essai.length})` : 'MUET');
         console.log(`   ${nom.padEnd(29)} ${sortes.join(' | ')}`);
       }
     }
     const m = muets(releve);
-    console.log(`\n${publies} nom(s) publié(s), ${publies - m.length} lu(s) par la page, ${m.length} muet(s).`);
+    const c = releve.coutures.size;
+    console.log(`\n${publies} nom(s) publié(s), ${publies - m.length - c} lu(s) par la page,`
+      + ` ${c} couture(s) d'essai déclarée(s), ${m.length} muet(s).`);
   }
 }
 

@@ -14,6 +14,7 @@
 import { sessionPerdue } from '../socle/requete';
 import { escapeHtml } from '../socle/utils';
 import { vues, type Vue } from './etat';
+import { naviguer } from './demarrage';
 
 /** Un module installé, tel que `/api/modules/super-menus` le rend. */
 interface ModuleInstalle {
@@ -24,20 +25,9 @@ interface ModuleInstalle {
   roles?: string[];
 }
 
-declare global {
-  interface Window {
-    /** La navigation du portail, définie par `app-demarrage.js`. */
-    navigate: (vue: string) => void;
-    /** Rejoué après la connexion : le registre n'est lisible qu'une session ouverte. */
-    moduleHostRegisterViews: (force?: boolean) => Promise<ModuleInstalle[]>;
-
-    // Les cinq autres noms que ce fichier posait — `planSetModuleChrome`,
-    // `planBackToPortal`, `moduleHostLoadRegistry`, `moduleHostRender`,
-    // `moduleHostChrome` — sont déposés (5.e.5). Les deux premiers portaient les
-    // noms qu'`app.js` appelait ; les écrans de module, eux, ne chargent aucun
-    // fichier du portail et lui parlent par `postMessage`.
-  }
-}
+// Ce fichier ne déclare plus rien sur `window` : `navigate`, qu'il lisait, et
+// `moduleHostRegisterViews`, que son sas posait, sont **importés** depuis le
+// 14 octobre 2026 (5.e.9). Les cinq autres noms avaient été déposés en 5.e.5.
 
 // ── `window.api` porte DEUX fonctions différentes, et le typage l'a dit ──
 //
@@ -150,7 +140,7 @@ export function retourAuPortail(): void {
   MODULE_HOST.courant = null;
   // Barre latérale étendue au retour.
   document.body.classList.remove('app-sidebar-collapsed');
-  window.navigate('home');
+  naviguer('home');
 }
 
 /**

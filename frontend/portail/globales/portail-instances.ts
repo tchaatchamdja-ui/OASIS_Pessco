@@ -3,13 +3,13 @@
 //
 // ── Douze noms publiés, quatre qui restent ──
 //
-// | Nom | Pourquoi il reste |
-// |---|---|
-// | `basculerInstance`, `supprimerInstance`, `ouvrirInstance` | **gestes** : nommés dans des `onclick` que ce module écrit |
-// | `majBandeauInstance` | appelé par `demarrage.ts` à travers `window` |
+// Trois **gestes** restent : `basculerInstance`, `supprimerInstance` et
+// `ouvrirInstance`, nommés dans des `onclick` que ce module écrit. C'est la
+// famille dont la nécessité ne se voit pas en cherchant des lecteurs : aucun
+// fichier ne les appelle, et les retirer casserait l'écran.
 //
-// Les gestes sont la famille dont la nécessité ne se voit pas en cherchant des
-// lecteurs : aucun fichier ne les appelle, et les retirer casserait l'écran.
+// `majBandeauInstance` y était : `demarrage.ts` l'appelait à travers `window`, et
+// l'importe depuis le 14 octobre 2026 (5.e.9).
 //
 // ── Huit noms déposés le 13 octobre 2026 ──
 //
@@ -24,8 +24,6 @@
 import {
   basculerInstance, majBandeauInstance, ouvrirInstance, supprimerInstance,
 } from '../instances';
-
-window.majBandeauInstance = majBandeauInstance;
 
 window.basculerInstance = basculerInstance;
 window.supprimerInstance = supprimerInstance;

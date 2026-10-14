@@ -120,6 +120,6 @@ export const CFG_I18N: Readonly<Record<string, readonly [string, string]>> = {
 export function tr(fr: string): string {
   const e = CFG_I18N[fr];
   if (!e) return fr;
-  const langue = window.CURRENT_LANG ?? langueRetenue();
+  const langue = langueRetenue();
   return langue === 'en' ? e[0] : langue === 'pt' ? e[1] : fr;
 }

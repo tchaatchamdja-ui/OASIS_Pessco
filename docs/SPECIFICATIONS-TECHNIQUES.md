@@ -226,7 +226,8 @@ traduction. Ils sont sûrs pour une raison précise — *aucun de ces noms n'est
 l'initialisation d'un module* —, et non par chance. Le seul qui n'était pas voulu,
 `barre.ts ↔ referentiels.ts`, a été dissous en donnant un module à la racine de fenêtre
 que cinq fichiers partageaient (`frontend/portail/fenetres.ts`).
-| PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
+| SURV (`public/modules/execution/`) | 23 731 | JavaScript — **gestes relevés le 14 octobre 2026 : 503 occurrences, 310 gestes nommés, 0 exercé par un navigateur** |
+| PLAN, CARE, PR, RAMP | 32 162 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
 
@@ -239,19 +240,23 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis |
 
 Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires, menus, champs.
-Ce sont des *occurrences* et non des gestes nommés : le portail en compte 131 pour **84** noms
-distincts, et la couverture se mesure sur les noms. Le relevé nommé de ces cinq écrans n'est pas
-fait — il le sera par `scripts/relever-gestes.js`, une ligne par écran, au moment de leur suite
-n° 0.
+Ce sont des *occurrences* et non des gestes nommés : le portail en compte 129 pour **84** noms
+distincts, et la couverture se mesure sur les noms.
 
-| Écran | Lignes | Gestes |
-|---|---|---|
-| PLAN | 5 949 | 135 |
-| CARE | 6 428 | 145 |
-| PR | 7 315 | 186 |
-| RAMP | 12 470 | 365 |
-| SURV | 23 731 | **503** |
-| **Total** | **55 893** | **1 334** |
+| Écran | Lignes | Occurrences | Gestes nommés | Exercés |
+|---|---|---|---|---|
+| PLAN | 5 949 | 135 | *non relevé* | — |
+| CARE | 6 428 | 145 | *non relevé* | — |
+| PR | 7 315 | 186 | *non relevé* | — |
+| RAMP | 12 470 | 365 | *non relevé* | — |
+| SURV | 23 731 | **503** | **310** | **0** |
+| **Total** | **55 893** | **1 334** | | |
+
+Le relevé nommé de **SURV** est fait — 14 octobre 2026, ADR-003 n° 5.f.0 : 310 noms, dont 269
+noms de fonction et 41 expressions que le balisage appelle en ligne. Il est figé dans
+`tests/smoke/gestes-execution.json`, gardé contre la dérive, et son « 0 sur 310 » est imprimé à
+chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but de la fabrique
+d'écrans de `scripts/relever-gestes.js`.
 
 **Aucun n'est exercé dans un navigateur.** La suite « parcours » ouvre **un** écran de module
 dans son cadre et vérifie qu'il n'est pas vide — c'est tout. Elle ne clique sur rien à
@@ -752,8 +757,11 @@ for m in planification mesures profil_risque ramp execution; do
     public/modules/$m/js/*.js public/modules/$m/*.html 2>/dev/null | wc -l)"
 done
 
-# Couverture des gestes d'un écran (§ 4.1.1) — portail : 66 sur 84, et c'est le plafond
+# Couverture des gestes d'un écran (§ 4.1.1) — portail : 66 sur 84, et c'est le plafond ;
+# SURV : 0 sur 310, aucun navigateur n'ouvre cet écran. Les deux chiffres sont aussi
+# imprimés par la campagne, à chaque passage.
 node scripts/relever-gestes.js portail | head -8
+node scripts/relever-gestes.js execution | head -8
 
 # Surface globale du portail (§ 4.1) — attendu : 61 publiés, 1 couture, 0 muet
 node scripts/relever-surface.js | tail -1
@@ -768,7 +776,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 003, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 004, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

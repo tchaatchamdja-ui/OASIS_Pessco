@@ -4193,6 +4193,110 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            rouge, et la première où c'est la *charge de la machine* qui le révèle. Un
            contrôle lancé seul n'est pas un contrôle éprouvé.
 
+   5.f [~] **Les cinq écrans de module.** 55 893 lignes de JavaScript, par poids : SURV
+       (23 731), RAMP (12 470), PR (7 315), CARE (6 428), PLAN (5 949). Chacun commence par
+       sa **suite n° 0** : *mesurer avant de réécrire*, la règle qui a tenu tout le portail.
+
+       5.f.0 [x] **SURV — le relevé de ses gestes, et trois défauts de l'instrument qu'un
+           écran de cette taille a révélés** — fait le 14 octobre 2026.
+
+           **503 occurrences, 310 gestes nommés, 0 exercé.** C'est le dénominateur, figé
+           avant qu'une ligne soit réécrite — la leçon du portail, dont le premier relevé
+           annonçait quarante gestes là où il y en avait cent vingt et un.
+
+           | | |
+           |---|---|
+           | Fichiers relevés | 25 (`exec-*.js` + `index.html`) |
+           | Occurrences | **503** — 495 en ligne, 6 écouteurs, 2 en propriété |
+           | Gestes nommés | **310** — 269 noms de fonction (256 préfixés `exec`), 41 expressions |
+           | Exercés par un navigateur | **0** |
+           | Indécidables | 5 écouteurs dont la cible n'est pas nommable |
+           | Les plus chargés | `exec-activites.js` 69, `exec-parametres.js` 61, `exec-constatations.js` 60 |
+
+           ── Pourquoi zéro, et ce que ce zéro dit ──
+
+           **Aucun des cinq écrans de module n'a de suite de navigateur.** Leurs 588
+           contrôles passent par HTTP : ils éprouvent le serveur *derrière* l'écran, non
+           les gestes de l'écran. Seules deux suites ouvrent un navigateur, et toutes deux
+           portent sur le portail et le socle.
+
+           Ce zéro n'est donc pas une négligence de ce jalon : c'est l'état qu'il **mesure
+           pour la première fois**. Jusqu'ici personne ne pouvait dire combien de gestes
+           SURV porte, ni lesquels.
+
+           ── Une dispense d'écran, et pourquoi elle n'est pas un trou ──
+
+           Le garde-fou de 5.c.0 exige qu'un geste non exercé soit **déclaré avec sa
+           raison**. Trois cent cinq dispenses produiraient une liste que personne ne
+           relirait — l'inverse de ce que ce garde-fou cherche.
+
+           Un écran peut donc déclarer `_aucun_parcours` : une phrase, une fois. Elle tient
+           pour deux raisons, et il a fallu corriger la première :
+
+           · **le chiffre est imprimé** à chaque campagne — `gestes de « execution » :
+             0/310 exercés, 503 occurrences, 5 indécidable(s)`. *Cette justification était
+             fausse quand je l'ai écrite* : `verifier` n'imprime son détail qu'en cas
+             d'échec, et une campagne verte ne montrait rien. Trouvé en relisant la sortie
+             pour vérifier ce que je venais d'affirmer. Une couverture qu'on ne voit que
+             lorsqu'elle tombe n'est pas une couverture suivie ;
+           · **la dispense périme d'elle-même** : qu'un seul geste de cet écran devienne
+             exercé, et le garde-fou le dit. Contre-essayé en marquant un geste exercé dans
+             le relevé figé : rouge, en le nommant.
+
+           Contre-essayé aussi en retirant la déclaration : rouge, **305 gestes sans
+           motif**.
+
+           ── Trois défauts de l'instrument, qu'un écran de 1 192 lignes n'avait pas
+              révélés ──
+
+           C'est le vrai produit de cette étape. `relever-gestes.js` a servi six jalons sur
+           le portail ; SURV l'a mis en défaut trois fois.
+
+           1. **Un gestionnaire qui n'est qu'une garde** — `onclick="event.stopPropagation();"`
+              — rendait un nom **vide** : la garde était ôtée, et il ne restait rien. Quatre
+              gestes de SURV étaient sans nom, donc sans existence dans un relevé qui
+              compte par nom.
+           2. **Un gestionnaire qui commence par une affectation** —
+              `onchange="EXEC_STATE.filters.domaine=this.value;execRenderPage()"` — était
+              nommé par ses quarante-huit premiers caractères. Vingt-cinq gestes portaient
+              un fragment de code pour nom, et **deux fragments ne différant que par une
+              interpolation comptaient pour deux gestes** là où il n'y a qu'un réglage. Le
+              nom est désormais la cible de l'affectation, interpolations normalisées : le
+              même réglage ne compte plus deux fois. Dix noms de moins, et quarante et un
+              noms lisibles au lieu de fragments.
+           3. **`on<événement> =` dans du JavaScript n'est pas un attribut.** Le portail en
+              portait déjà la trace, et personne ne l'avait lue : son relevé figé contenait
+              le geste `onchange="orgTypeChanged()"` — **un nom qui n'existe pas**, tiré de
+              `let onchange = f.k === 'est_inspecteur' ? ' onchange="…"' : ''`. Un attribut
+              s'écrit sans espace avant son `=` ; une affectation en porte toujours un.
+
+           Le troisième laisse une dette que le dépôt n'avait pas : l'extracteur **dépend
+           désormais d'une hypothèse de forme**. Un attribut écrit `onclick = "x()"` serait
+           ignoré du relevé, donc absent du dénominateur, donc jamais à couvrir — la
+           défaillance silencieuse dans le sens flatteur. D'où un garde-fou neuf, qui relit
+           tout `public/` et tout `frontend/` : **aucun attribut de gestionnaire n'a
+           d'espace avant son `=`**. Contre-essayé en en écrivant un : rouge.
+
+           ── Ce que les deux instruments ne voient pas pareil ──
+
+           Mesuré pour la première fois : les 57 noms que `relever-surface.js` tient pour
+           des gestes du portail, contre les 84 du relevé des gestes. **Trois diffèrent**,
+           et chacun pour une raison :
+
+           · `exportPdf` et `exportPdfActivites` sont vus par la surface et **pas** par le
+             relevé des gestes. Leur attribut ne porte qu'une interpolation
+             (`onclick="${pdf}"`), et le nom de la fonction est ailleurs — c'est l'angle
+             mort nommé en 5.e.5, qui avait failli coûter deux boutons d'export ;
+           · `orgTypeChanged` différait par son **nom**, celui du relevé étant le faux nom
+             du défaut n° 3 ci-dessus.
+
+           Le premier cas reste. Un critère « toute chaîne qui est un appel » a été
+           prototypé : sur le portail, il rend 64 noms dont **une vingtaine de faux** —
+           `rotate(45deg)` d'une transformation CSS, `var(--x)` d'une feuille de style,
+           `Number(…)` d'un calcul. Un dénominateur gonflé de 30 % de bruit est pire qu'un
+           dénominateur qui manque deux gestes **nommés**, et les deux manquants sont
+           gardés par l'autre instrument. Le choix est donc écrit, non subi.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

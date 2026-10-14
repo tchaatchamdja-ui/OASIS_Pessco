@@ -100,6 +100,45 @@ const ECRANS = {
   },
 };
 
+// ── Les cinq écrans de module, et pourquoi une fabrique et non cinq entrées ──
+//
+// Ils ont tous la même forme : `public/modules/<nom>/js/*.js` pour le JavaScript
+// non converti, `index.html` pour le balisage de la page, et `frontend/<nom>/`
+// pour ce qui aura été converti. Écrire cinq entrées serait écrire cinq fois la
+// même chose, et la cinquième aurait divergé.
+//
+// Les sources **convertibles comptent toujours** — c'est la leçon payée deux
+// fois sur le portail : un relevé qui ne lirait que `public/modules/<nom>/js/`
+// verrait le dénominateur **baisser à chaque conversion**, et la couverture
+// monter sans qu'un seul geste soit couvert de plus.
+const ecranDeModule = (nom) => ({
+  sources: () => {
+    const liste = [];
+    const js = path.join(RACINE, 'public', 'modules', nom, 'js');
+    if (fs.existsSync(js)) {
+      fs.readdirSync(js).filter((f) => f.endsWith('.js'))
+        .forEach((f) => liste.push(`public/modules/${nom}/js/${f}`));
+    }
+    const converti = path.join(RACINE, 'frontend', nom);
+    const parcourir = (abs, rel) => {
+      if (!fs.existsSync(abs)) return;
+      fs.readdirSync(abs, { withFileTypes: true }).forEach((e) => {
+        if (e.isDirectory()) { parcourir(path.join(abs, e.name), `${rel}/${e.name}`); return; }
+        if (/\.tsx?$/.test(e.name)) liste.push(`${rel}/${e.name}`);
+      });
+    };
+    parcourir(converti, `frontend/${nom}`);
+    const page = path.join(RACINE, 'public', 'modules', nom, 'index.html');
+    if (fs.existsSync(page)) liste.push(`public/modules/${nom}/index.html`);
+    return liste;
+  },
+  page: `/modules/${nom}/index.html`,
+});
+
+// SURV, le plus lourd des cinq (ADR-003, suite n° 6.a.0). Les quatre autres
+// suivront, une ligne chacun — c'est tout l'objet de la fabrique.
+ECRANS.execution = ecranDeModule('execution');
+
 // L'identifiant d'une cible d'écouteur, cherché d'abord dans l'expression
 // elle-même, puis dans les douze lignes qui précèdent sa pose.
 function identifiantDeLaCible(expr, lignes, indice) {
@@ -177,25 +216,67 @@ function blanchirCommentaires(code) {
   return sortie.join('');
 }
 
+// ── Le nom d'un gestionnaire en ligne, et les trois formes qu'il prend ──
+//
+// Le relevé du 14 octobre 2026 sur l'écran SURV (23 731 lignes) a mis au jour
+// trois défauts de cette fonction, qu'un écran de 1 192 lignes n'avait pas
+// révélés. Les voici, et ce qu'elles coûtaient :
+//
+// 1. **Un gestionnaire qui n'est qu'une garde** — `onclick="event.stopPropagation();"`
+//    — rendait un nom **vide** : la garde était ôtée, et il ne restait rien.
+//    Quatre gestes de SURV étaient sans nom. La garde est désormais le nom quand
+//    elle est tout ce qu'il y a.
+//
+// 2. **Un gestionnaire qui commence par une affectation** —
+//    `onchange="EXEC_STATE.filters.domaine=this.value;execRenderPage()"` — était
+//    nommé par ses quarante-huit premiers caractères. Vingt-cinq gestes de SURV
+//    portaient un fragment de code pour nom, et deux fragments ne différant que
+//    par une interpolation (`''` contre `'${q}'`) comptaient pour **deux gestes
+//    distincts** là où il n'y a qu'un réglage. Le nom est désormais la **cible
+//    de l'affectation**, et les interpolations sont retirées avant de nommer :
+//    le même réglage ne compte plus deux fois.
+//
+// 3. **`on<événement> =` dans du JavaScript n'est pas un attribut.**
+//    `let onchange = f.k === 'est_inspecteur' ? ' onchange="…"' : '';`
+//    (`referentiels.ts`) était lu comme un attribut, et rendait le nom
+//    `onchange="orgTypeChanged()"` — un nom qui n'existe pas. Un attribut
+//    s'écrit sans espace avant son `=` ; une affectation en porte toujours un.
+//    Relevé : **aucun attribut du dépôt** n'a d'espace avant son `=`, et toutes
+//    les occurrences de `on<événement> =` sont du code.
+//
+// C'est la même leçon que les commentaires blanchis, un cran plus loin : *ce qui
+// ressemble à un attribut n'en est pas un.*
+const nomDuGestionnaire = (corps) => {
+  // Les interpolations d'abord : deux gestionnaires qui ne diffèrent que par une
+  // valeur insérée sont **un** geste, et non deux.
+  const normalise = corps.replace(/\$\{[^}]*\}/g, '${}').trim();
+  const sansGarde = normalise.replace(/^event\.stopPropagation\(\)\s*;\s*/, '');
+  // Rien après la garde : la garde **est** le geste.
+  if (!sansGarde) return 'event.stopPropagation';
+  const appel = /^([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde);
+  if (appel) return appel[1];
+  // Une affectation : la cible la nomme. `EXEC_STATE.filters.domaine=this.value;…`
+  const affectation = /^([A-Za-z_$][\w$.[\]'"]*)\s*=(?!=)/.exec(sansGarde);
+  if (affectation) return affectation[1];
+  return sansGarde.slice(0, 48);
+};
+
 function relever(fichiers) {
   const gestes = [];
   for (const rel of fichiers) {
     const abs = path.join(RACINE, rel);
     if (!fs.existsSync(abs)) continue;
     const texte = blanchirCommentaires(fs.readFileSync(abs, 'utf8'));
-    const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})\\s*=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
+    // Sans espace avant le `=` : voir le point 3 ci-dessus.
+    const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
     for (const m of texte.matchAll(motifEnLigne)) {
       const corps = m[3].trim();
-      // Le nom du geste est la fonction appelée. `event.stopPropagation()` en
-      // tête n'est pas un geste : c'est une précaution à l'intérieur d'un geste.
-      const sansGarde = corps.replace(/^event\.stopPropagation\(\)\s*;\s*/, '');
-      const appel = (/^([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde) || [])[1] || sansGarde.slice(0, 48);
       gestes.push({
         fichier: rel,
         ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'en ligne',
         evenement: m[1],
-        nom: appel,
+        nom: nomDuGestionnaire(corps),
         source: corps.slice(0, 120),
       });
     }

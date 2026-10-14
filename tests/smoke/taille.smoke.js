@@ -604,6 +604,56 @@ module.exports = async function tailleSmoke() {
     }
   }
 
+  // ── Aucun attribut de gestionnaire n'a d'espace avant son « = » ──
+  //
+  // C'est l'**hypothèse** sur laquelle repose le relevé des gestes depuis le
+  // 14 octobre 2026, et une hypothèse qui n'est pas gardée est une hypothèse qui
+  // tombe un jour sans bruit.
+  //
+  // L'extracteur distinguait mal deux choses qui s'écrivent presque pareil :
+  //
+  //     <select onchange="orgTypeChanged()">        ← un attribut de balisage
+  //     let onchange = ' onchange="…"';             ← du JavaScript
+  //
+  // Il lisait la seconde comme la première, et en tirait le nom de geste
+  // `onchange="orgTypeChanged()"` — un nom qui n'existe pas. Relevé sur tout le
+  // dépôt : **aucun attribut n'a d'espace avant son `=`**, et toutes les
+  // occurrences de `on<événement> =` sont des affectations. L'extracteur exige
+  // donc `on<événement>=`, collé.
+  //
+  // Le prix de cette exigence est ce contrôle : un attribut écrit
+  // `onclick = "x()"` serait **ignoré du relevé**, donc absent du dénominateur,
+  // donc jamais à couvrir — la défaillance silencieuse dans le sens flatteur.
+  // Ici, il fait rougir la campagne.
+  {
+    const EVENEMENTS = ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
+      'dragstart', 'dragover', 'dragleave', 'drop'];
+    // Un attribut, et non une affectation : il est **dans une balise**, donc
+    // précédé d'un nom d'élément ou d'un autre attribut sur la même ligne.
+    const motif = new RegExp(`<[a-zA-Z][^>\n]*\\son(${EVENEMENTS.join('|')})\\s+=`);
+    const sources = [];
+    const ajoute = (racine) => {
+      if (!fs.existsSync(racine)) return;
+      (function parcourir(rep) {
+        for (const e of fs.readdirSync(rep, { withFileTypes: true })) {
+          const c = path.join(rep, e.name);
+          if (e.isDirectory()) { if (e.name !== 'app' && e.name !== 'node_modules') parcourir(c); }
+          else if (/\.(js|ts|tsx|html)$/.test(e.name)) sources.push(c);
+        }
+      }(racine));
+    };
+    ajoute(path.join(RACINE, 'public'));
+    ajoute(path.join(RACINE, 'frontend'));
+    const coupables = sources
+      .filter((f) => motif.test(fs.readFileSync(f, 'utf8')))
+      .map((f) => path.relative(RACINE, f));
+    verifier('aucun attribut de gestionnaire n’a d’espace avant son « = »',
+      coupables.length === 0,
+      coupables.length
+        ? `${coupables.join(' · ')} — le relevé des gestes ne le verrait pas, et le geste manquerait au dénominateur`
+        : `${sources.length} fichier(s) relevé(s), ${EVENEMENTS.length} événements`);
+  }
+
   // ── L'inventaire des gestes d'un écran ne dérive pas en silence ──
   //
   // ADR-003, suite n° 5.c : chaque écran est mesuré avant d'être réécrit. La
@@ -642,6 +692,22 @@ module.exports = async function tailleSmoke() {
         derives.push(`${quoi} : ${maintenant.length} occurrences contre ${fige.occurrences} figées`);
       }
     });
+    // ── Le chiffre est **imprimé**, et non gardé pour les mauvais jours ──
+    //
+    // `verifier` n'écrit son détail qu'en cas d'échec. La dispense d'écran de
+    // SURV se justifie précisément par le fait que « 0/310 » reste sous les yeux
+    // à chaque campagne — et cette justification était **fausse** quand elle a
+    // été écrite : le chiffre n'apparaissait nulle part sur une campagne verte.
+    //
+    // Trouvé en relisant la sortie de la campagne pour vérifier ce que je venais
+    // d'affirmer. Une couverture qu'on ne voit que lorsqu'elle tombe n'est pas
+    // une couverture suivie.
+    releves.forEach((f) => {
+      const quoi = f.replace(/^gestes-|\.json$/g, '');
+      const d = JSON.parse(fs.readFileSync(path.join(RACINE, 'tests', 'smoke', f), 'utf8'));
+      console.log(`    ◌ gestes de « ${quoi} » : ${d.exerces}/${d.gestesNommes} exercés,`
+        + ` ${d.occurrences} occurrences, ${d.indecidables} indécidable(s)`);
+    });
     verifier('l’inventaire des gestes de chaque écran est à jour',
       derives.length === 0,
       derives.length ? `${derives.join(' · ')} — refaire : node scripts/relever-gestes.js <écran>`
@@ -669,6 +735,24 @@ module.exports = async function tailleSmoke() {
   //   · un geste non exercé **et non déclaré** le fait tomber — c'est l'oubli ;
   //   · un geste déclaré qui **est** exercé le fait tomber aussi. Une dispense
   //     périmée est une dispense qui ment, et c'est elle qu'on finit par croire.
+  //
+  // ── Une dispense d'écran, pour un écran qu'aucun navigateur n'ouvre ──
+  //
+  // Les cinq écrans de module n'ont **aucune suite de navigateur** : leurs 588
+  // contrôles passent par HTTP et éprouvent le serveur derrière l'écran. Le
+  // relevé de SURV (14 octobre 2026) compte **310 gestes nommés et 0 exercé** —
+  // et exiger 310 dispenses motivées produirait une liste que personne ne
+  // relirait, c'est-à-dire l'inverse de ce que ce contrôle cherche.
+  //
+  // Un écran peut donc déclarer `_aucun_parcours` : une phrase, une fois, qui
+  // dispense tous ses gestes. Ce n'est pas un trou dans le garde-fou, et pour
+  // deux raisons :
+  //
+  //   · **le chiffre reste affiché** à chaque campagne, par le contrôle
+  //     ci-dessus — « execution 0/310 exercés » est écrit noir sur blanc ;
+  //   · **la dispense périme d'elle-même** : qu'un seul geste de cet écran
+  //     devienne exercé, et elle devient fausse — ce contrôle le dit alors, et
+  //     c'est le signal qu'il faut passer aux dispenses geste par geste.
   const dispenses = path.join(RACINE, 'tests', 'smoke', 'gestes-non-couverts.json');
   if (!releves.length || !fs.existsSync(dispenses)) {
     horsPortee('tout geste non exercé est déclaré avec sa raison',
@@ -682,6 +766,7 @@ module.exports = async function tailleSmoke() {
       // Les motifs portent une clé par geste ; celles qui commencent par « _ »
       // sont les intertitres qui expliquent un bloc, non des gestes.
       const motifs = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_'));
+      const dispenseDEcran = (declare[quoi] || {})._aucun_parcours;
       const etat = new Map();
       (fige.gestes || []).forEach((g) => {
         const e = etat.get(g.nom) || { exerce: false, indecidable: true };
@@ -691,6 +776,17 @@ module.exports = async function tailleSmoke() {
       });
       const nonExerces = [...etat.entries()]
         .filter(([, e]) => !e.exerce && !e.indecidable).map(([n]) => n);
+      const exercesIci = [...etat.entries()].filter(([, e]) => e.exerce).map(([n]) => n);
+      if (dispenseDEcran) {
+        // La dispense d'écran tient tant que **rien** n'y est exercé. Le premier
+        // geste couvert la périme, et c'est le signal de passer aux dispenses
+        // geste par geste.
+        if (exercesIci.length) {
+          ecarts.push(`${quoi} : dispense d’écran « _aucun_parcours » périmée —`
+            + ` ${exercesIci.length} geste(s) désormais exercé(s) : ${exercesIci.slice(0, 5).join(', ')}`);
+        }
+        return;
+      }
       const sansMotif = nonExerces.filter((n) => !motifs.includes(n));
       const motifPerime = motifs.filter((n) => {
         const e = etat.get(n);
@@ -708,6 +804,7 @@ module.exports = async function tailleSmoke() {
       ecarts.length ? `${ecarts.join(' · ')} — tenir tests/smoke/gestes-non-couverts.json à jour`
         : releves.map((f) => {
           const quoi = f.replace(/^gestes-|\.json$/g, '');
+          if ((declare[quoi] || {})._aucun_parcours) return `${quoi} : dispense d’écran`;
           const n = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_')).length;
           return `${quoi} : ${n} dispense(s) motivée(s)`;
         }).join(', '));

@@ -97,6 +97,14 @@ const ECRANS = {
       return liste;
     },
     page: '/index.html',
+    // ── La suite qui exerce cet écran, nommée et non supposée ──
+    //
+    // L'outil lançait `parcours` en dur. C'était juste tant qu'un seul écran
+    // avait une suite de navigateur ; SURV a la sienne depuis le 14 octobre 2026
+    // (`surv.smoke.js`, ADR-003 n° 5.f.1), et mesurer sa couverture en lançant
+    // le parcours du portail aurait rendu **zéro** — un zéro de la mesure, non
+    // de l'écran, et impossible à distinguer du vrai.
+    suite: 'parcours',
   },
 };
 
@@ -135,9 +143,9 @@ const ecranDeModule = (nom) => ({
   page: `/modules/${nom}/index.html`,
 });
 
-// SURV, le plus lourd des cinq (ADR-003, suite n° 6.a.0). Les quatre autres
+// SURV, le plus lourd des cinq (ADR-003, suite n° 5.f.0). Les quatre autres
 // suivront, une ligne chacun — c'est tout l'objet de la fabrique.
-ECRANS.execution = ecranDeModule('execution');
+ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
 
 // L'identifiant d'une cible d'écouteur, cherché d'abord dans l'expression
 // elle-même, puis dans les douze lignes qui précèdent sa pose.
@@ -476,8 +484,8 @@ const MOUCHARD = () => {
 //
 // La conséquence est voulue : ce que l'outil mesure **est** ce que la campagne
 // exerce, et il ne peut plus en diverger.
-function lancerLaSuite(journal) {
-  const r = spawnSync('npm', ['run', 'smoke', '--', 'parcours'], {
+function lancerLaSuite(journal, suite) {
+  const r = spawnSync('npm', ['run', 'smoke', '--', suite], {
     cwd: RACINE, env: { ...process.env, OASIS_MOUCHARD: journal }, encoding: 'utf8',
   });
   return { code: r.status, sortie: `${r.stdout || ''}${r.stderr || ''}` };
@@ -498,7 +506,8 @@ async function principal() {
   }
 
   const journal = path.join(require('os').tmpdir(), `oasis-gestes-${process.pid}.json`);
-  const { code, sortie } = lancerLaSuite(journal);
+  const suite = ecran.suite || 'parcours';
+  const { code, sortie } = lancerLaSuite(journal, suite);
   if (!fs.existsSync(journal)) {
     console.error('la suite n’a pas écrit de journal. Sortie :\n'
       + sortie.split('\n').slice(-12).join('\n'));
@@ -517,7 +526,7 @@ async function principal() {
   // Une suite rouge mesure un parcours interrompu : le relevé serait partiel et
   // le dirait « couverture ».
   if (code !== 0) {
-    console.error(`la suite « parcours » est rouge (code ${code}) : le parcours s’est `
+    console.error(`la suite « ${suite} » est rouge (code ${code}) : le parcours s’est `
       + 'arrêté en route, et le relevé serait partiel. Corriger la suite d’abord.');
     process.exit(1);
   }
@@ -579,7 +588,7 @@ async function principal() {
   const nAbsents = distincts.length - nExerces - nIndecidables;
 
   console.log(`\n═══ ${quoi} — ${noms.size} gestes nommés, ${gestes.length} occurrences ═══\n`);
-  console.log(`  exercés par la suite « parcours » : ${nExerces}`
+  console.log(`  exercés par la suite « ${suite} » : ${nExerces}`
     + `  (${Math.round((nExerces / noms.size) * 100)} %)`);
   console.log(`  non exercés                       : ${nAbsents}`);
   console.log(`  indécidables (cible non nommée)   : ${nIndecidables}`);

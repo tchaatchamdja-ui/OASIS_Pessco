@@ -2,7 +2,7 @@
  "releve": "2026-10-14",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 0,
+ "exerces": 1,
  "indecidables": 5,
  "gestes": [
   {
@@ -633,7 +633,7 @@
    "evenement": "click",
    "nom": "execNavigateTo",
    "source": "execNavigateTo('${key}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -642,7 +642,7 @@
    "evenement": "click",
    "nom": "execNavigateTo",
    "source": "execNavigateTo('${key}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",

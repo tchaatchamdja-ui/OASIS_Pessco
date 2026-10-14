@@ -42,6 +42,10 @@ const suites = [
   // Frontend : ce que le TypeScript affirme du socle global, vérifié dans un
   // navigateur. Une déclaration n'est pas une mesure — deux défauts l'ont dit.
   { nom: 'frontend', port: 4790, run: require('./frontend.smoke') },
+  // SURV dans un navigateur : la suite n° 0.b du premier des cinq écrans de
+  // module (ADR-003, 5.f.1). Un écran, une suite — « parcours » porte déjà
+  // 3 200 lignes, et le relevé des gestes lance la suite de l'écran qu'il mesure.
+  { nom: 'surv', port: 4797, run: require('./surv.smoke') },
 ];
 
 (async () => {

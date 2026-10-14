@@ -736,23 +736,34 @@ module.exports = async function tailleSmoke() {
   //   · un geste déclaré qui **est** exercé le fait tomber aussi. Une dispense
   //     périmée est une dispense qui ment, et c'est elle qu'on finit par croire.
   //
-  // ── Une dispense d'écran, pour un écran qu'aucun navigateur n'ouvre ──
+  // ── Une couverture **déclarée**, pour un écran qui n'en est qu'au début ──
   //
-  // Les cinq écrans de module n'ont **aucune suite de navigateur** : leurs 588
-  // contrôles passent par HTTP et éprouvent le serveur derrière l'écran. Le
-  // relevé de SURV (14 octobre 2026) compte **310 gestes nommés et 0 exercé** —
-  // et exiger 310 dispenses motivées produirait une liste que personne ne
-  // relirait, c'est-à-dire l'inverse de ce que ce contrôle cherche.
+  // Le portail déclare ses gestes non exercés **un par un** : dix-huit motifs,
+  // et c'est tenable parce qu'il en a 84 et qu'il en couvre 66.
   //
-  // Un écran peut donc déclarer `_aucun_parcours` : une phrase, une fois, qui
-  // dispense tous ses gestes. Ce n'est pas un trou dans le garde-fou, et pour
-  // deux raisons :
+  // SURV en a **310** et sa suite de navigateur, écrite le 14 octobre 2026, en
+  // couvre **1** — elle monte l'écran et parcourt ses sept pages, ce qui exerce
+  // `execNavigateTo` et rien d'autre. Trois cent neuf motifs produiraient une
+  // liste que personne ne relirait, c'est-à-dire l'inverse de ce que ce contrôle
+  // cherche.
   //
-  //   · **le chiffre reste affiché** à chaque campagne, par le contrôle
-  //     ci-dessus — « execution 0/310 exercés » est écrit noir sur blanc ;
-  //   · **la dispense périme d'elle-même** : qu'un seul geste de cet écran
-  //     devienne exercé, et elle devient fausse — ce contrôle le dit alors, et
-  //     c'est le signal qu'il faut passer aux dispenses geste par geste.
+  // Un écran peut donc déclarer `_couverture_declaree: <n>` au lieu de ses
+  // motifs. Ce n'est pas un trou dans le garde-fou, et pour trois raisons :
+  //
+  //   · **le chiffre est imprimé** à chaque campagne par le contrôle ci-dessus —
+  //     « gestes de « execution » : 1/310 exercés » est écrit noir sur blanc ;
+  //   · **le nombre déclaré doit être le nombre mesuré.** C'est tout l'intérêt
+  //     de la forme : la dispense n'est pas une phrase vague mais **une mesure
+  //     figée**, et elle rougit dans les deux sens — un geste couvert de plus
+  //     comme un geste perdu ;
+  //   · elle est **transitoire par construction** : chaque suite n° 0.c la fera
+  //     monter, et le jour où la couverture approchera son plafond, on passera
+  //     aux motifs geste par geste comme pour le portail.
+  //
+  // La première écriture de ce mécanisme déclarait `_aucun_parcours` — une
+  // phrase, sans chiffre. Elle est devenue fausse **le jour même**, dès que la
+  // suite de SURV a couvert son premier geste, et elle n'aurait rien dit si la
+  // couverture avait *baissé*. Une dispense sans chiffre ne se vérifie pas.
   const dispenses = path.join(RACINE, 'tests', 'smoke', 'gestes-non-couverts.json');
   if (!releves.length || !fs.existsSync(dispenses)) {
     horsPortee('tout geste non exercé est déclaré avec sa raison',
@@ -766,7 +777,7 @@ module.exports = async function tailleSmoke() {
       // Les motifs portent une clé par geste ; celles qui commencent par « _ »
       // sont les intertitres qui expliquent un bloc, non des gestes.
       const motifs = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_'));
-      const dispenseDEcran = (declare[quoi] || {})._aucun_parcours;
+      const couvertureDeclaree = (declare[quoi] || {})._couverture_declaree;
       const etat = new Map();
       (fige.gestes || []).forEach((g) => {
         const e = etat.get(g.nom) || { exerce: false, indecidable: true };
@@ -777,13 +788,13 @@ module.exports = async function tailleSmoke() {
       const nonExerces = [...etat.entries()]
         .filter(([, e]) => !e.exerce && !e.indecidable).map(([n]) => n);
       const exercesIci = [...etat.entries()].filter(([, e]) => e.exerce).map(([n]) => n);
-      if (dispenseDEcran) {
-        // La dispense d'écran tient tant que **rien** n'y est exercé. Le premier
-        // geste couvert la périme, et c'est le signal de passer aux dispenses
-        // geste par geste.
-        if (exercesIci.length) {
-          ecarts.push(`${quoi} : dispense d’écran « _aucun_parcours » périmée —`
-            + ` ${exercesIci.length} geste(s) désormais exercé(s) : ${exercesIci.slice(0, 5).join(', ')}`);
+      if (typeof couvertureDeclaree === 'number') {
+        // La couverture déclarée **est** la dispense : elle doit valoir la
+        // couverture mesurée, ni plus ni moins.
+        if (exercesIci.length !== couvertureDeclaree) {
+          ecarts.push(`${quoi} : couverture déclarée ${couvertureDeclaree},`
+            + ` mesurée ${exercesIci.length}`
+            + `${exercesIci.length ? ` (${exercesIci.slice(0, 6).join(', ')})` : ''}`);
         }
         return;
       }
@@ -804,7 +815,8 @@ module.exports = async function tailleSmoke() {
       ecarts.length ? `${ecarts.join(' · ')} — tenir tests/smoke/gestes-non-couverts.json à jour`
         : releves.map((f) => {
           const quoi = f.replace(/^gestes-|\.json$/g, '');
-          if ((declare[quoi] || {})._aucun_parcours) return `${quoi} : dispense d’écran`;
+          const c = (declare[quoi] || {})._couverture_declaree;
+          if (typeof c === 'number') return `${quoi} : couverture déclarée ${c}`;
           const n = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_')).length;
           return `${quoi} : ${n} dispense(s) motivée(s)`;
         }).join(', '));

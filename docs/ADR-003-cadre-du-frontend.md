@@ -4197,6 +4197,12 @@ Ce que l'ingénierie peut dire, et qui a été dit :
        (23 731), RAMP (12 470), PR (7 315), CARE (6 428), PLAN (5 949). Chacun commence par
        sa **suite n° 0** : *mesurer avant de réécrire*, la règle qui a tenu tout le portail.
 
+       Trois temps par écran, et l'ordre compte : **0.a** relever ses gestes et figer le
+       dénominateur ; **0.b** l'ouvrir dans un navigateur et mesurer ce que cela couvre ;
+       **0.c** couvrir ses écritures, une ronde à la fois. C'est l'ordre qui a porté le
+       portail de 14 gestes couverts à 66, et chacun des trois a trouvé des défauts que le
+       précédent n'avait pas pu voir.
+
        5.f.0 [x] **SURV — le relevé de ses gestes, et trois défauts de l'instrument qu'un
            écran de cette taille a révélés** — fait le 14 octobre 2026.
 
@@ -4296,6 +4302,71 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            `Number(…)` d'un calcul. Un dénominateur gonflé de 30 % de bruit est pire qu'un
            dénominateur qui manque deux gestes **nommés**, et les deux manquants sont
            gardés par l'autre instrument. Le choix est donc écrit, non subi.
+
+       5.f.1 [x] **SURV ouvert dans un navigateur — un écran, une suite** — fait le
+           14 octobre 2026.
+
+           `tests/smoke/surv.smoke.js`, **douze contrôles**. L'écran se monte, ses sept
+           pages se parcourent **par de vrais clics**, chacune se remplit, elles diffèrent,
+           aucune ne déborde, et la console reste muette.
+
+           **La couverture des gestes de SURV passe de 0 à 1 sur 310.** Un, et c'est la
+           vérité : les sept boutons de la barre appellent tous `execNavigateTo`. Les 309
+           autres gestes vivent *dans* les pages — boutons de table, volets, fenêtres — et
+           ce sont les rondes d'écriture de la suite n° 0.c qui les atteindront, une par
+           une, chacune avec l'assertion du résultat **en base** et le retour en arrière.
+
+           ── Une suite à part, et non des contrôles de plus dans « parcours » ──
+
+           `parcours.smoke.js` porte 3 200 lignes et 110 contrôles, tous sur le portail. Y
+           ajouter un second écran ferait un fichier que personne ne lirait.
+           **Un écran, une suite** — et c'est aussi ce qui permet au relevé des gestes de
+           lancer *la suite de l'écran qu'il mesure* : `ECRANS` porte désormais le nom de
+           la suite, là où l'outil lançait `parcours` en dur.
+
+           Sans ce changement, mesurer SURV aurait rendu **zéro** : un zéro de la mesure,
+           non de l'écran, et impossible à distinguer du vrai. C'est la même faute que la
+           première version de l'outil, qui *rejouait* le parcours au lieu de l'instrumenter.
+
+           ── Ce que la mesure a précédé l'écriture ──
+
+           Les sept pages ont été ouvertes à la main **avant** qu'une assertion soit
+           écrite : contenu de 759 à 3 873 caractères, aucun débordement, aucun incident de
+           console. Les seuils de la suite viennent de là.
+
+           ── Le contrôle qui ne se fie pas à une liste ──
+
+           « La barre porte exactement les pages que la source déclare » lit `EXEC_NAV`
+           **dans `exec-app.js`** et la compare au DOM. Une liste tenue dans la suite aurait
+           divergé au premier ajout, et le contrôle aurait alors mesuré sa propre liste.
+           Il **refuse** si la table ne se lit plus : une table illisible et un écran sans
+           pages se ressemblent.
+
+           ── Un contre-essai qui ne mesurait rien, et ce qu'il a fallu pour qu'il morde ──
+
+           Premier essai : retirer `rapports` d'`EXEC_NAV`. **Vert** — la source et le DOM
+           perdaient la page ensemble, donc ils concordaient toujours. Le contrôle compare
+           deux choses ; les changer toutes les deux ne l'éprouve pas.
+
+           Second essai, celui qui vise le défaut réel — *une page que la source déclare et
+           que la barre ne rend pas* : un `continue` dans la boucle de rendu. **Rouge**, en
+           nommant `rapports`. Et le refus de lecture, contre-essayé en renommant la
+           table : rouge, par le refus.
+
+           ── La dispense d'écran devient une **couverture déclarée** ──
+
+           Le mécanisme écrit le matin déclarait `_aucun_parcours` — une phrase, sans
+           chiffre. **Il est devenu faux le jour même**, dès que la suite de SURV a couvert
+           son premier geste ; et il n'aurait rien dit si la couverture avait *baissé*.
+
+           Un écran déclare désormais `_couverture_declaree: <n>`, et le garde-fou exige que
+           le nombre déclaré **soit** le nombre mesuré. Une dispense cesse d'être une phrase
+           vague pour devenir une mesure figée, qui rougit dans les deux sens.
+           Contre-essayé des deux côtés : couverture montée à 3 (rouge, « déclarée 1,
+           mesurée 3 »), couverture ramenée à 0 (rouge, « déclarée 1, mesurée 0 »).
+
+           *Une dispense sans chiffre ne se vérifie pas.* C'est la leçon, et elle vaut pour
+           les quatre écrans qui suivent.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

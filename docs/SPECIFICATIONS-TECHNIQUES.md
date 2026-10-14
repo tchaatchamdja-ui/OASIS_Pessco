@@ -237,7 +237,7 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | | Ce qui est éprouvé | Combien |
 |---|---|---|
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
-| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **12** pour SURV seul |
 
 Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires, menus, champs.
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 129 pour **84** noms
@@ -249,18 +249,25 @@ distincts, et la couverture se mesure sur les noms.
 | CARE | 6 428 | 145 | *non relevé* | — |
 | PR | 7 315 | 186 | *non relevé* | — |
 | RAMP | 12 470 | 365 | *non relevé* | — |
-| SURV | 23 731 | **503** | **310** | **0** |
+| SURV | 23 731 | **503** | **310** | **1** |
 | **Total** | **55 893** | **1 334** | | |
 
 Le relevé nommé de **SURV** est fait — 14 octobre 2026, ADR-003 n° 5.f.0 : 310 noms, dont 269
 noms de fonction et 41 expressions que le balisage appelle en ligne. Il est figé dans
-`tests/smoke/gestes-execution.json`, gardé contre la dérive, et son « 0 sur 310 » est imprimé à
+`tests/smoke/gestes-execution.json`, gardé contre la dérive, et son « 1 sur 310 » est imprimé à
 chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but de la fabrique
 d'écrans de `scripts/relever-gestes.js`.
 
-**Aucun n'est exercé dans un navigateur.** La suite « parcours » ouvre **un** écran de module
-dans son cadre et vérifie qu'il n'est pas vide — c'est tout. Elle ne clique sur rien à
-l'intérieur.
+**SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
+`tests/smoke/surv.smoke.js`, douze contrôles — l'écran se monte, ses sept pages se parcourent
+par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la console reste
+muette. Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le relevé des
+gestes lance la suite de l'écran qu'il mesure.
+
+**Quatre des cinq ne sont pas exercés dans un navigateur.** La suite « parcours » ouvre **un**
+écran de module dans son cadre, vérifie qu'il n'est pas vide et en ressort par le bouton du
+socle — c'est tout ; elle ne clique sur rien d'autre à l'intérieur. SURV, lui, a sa propre
+suite depuis le 14 octobre 2026.
 
 **Pourquoi c'est écrit plutôt que passé sous silence.** Le portail était dans le même état, et
 il a été mesuré avant d'être touché. Le relevé : sur **cinq** vues, trois étaient ouvertes ; sur
@@ -776,7 +783,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 004, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 016, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

@@ -4368,6 +4368,97 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            *Une dispense sans chiffre ne se vérifie pas.* C'est la leçon, et elle vaut pour
            les quatre écrans qui suivent.
 
+       5.f.2 [x] **SURV — quatre pages que rien n'ouvre, trouvées en cherchant par où
+           couvrir la cinquième** — fait le 14 octobre 2026.
+
+           La suite n° 0.c devait couvrir les écritures de SURV, en commençant par
+           `exec-activites.js` — **69 occurrences, le fichier le plus chargé de l'écran**.
+           Elle a buté sur une chose qu'aucune lecture n'avait dite.
+
+           ── Ce que la mesure a trouvé, et dans quel ordre ──
+
+           1. **Le bac n'a aucun dossier.** `/api/m/execution/dossiers` rend une liste
+              vide : le tableau des activités n'affiche que ses deux boutons, et ses 69
+              gestes ne sont pas atteignables faute de données. *Un contre-essai qui ne
+              mord pas dit que les données n'exercent pas le code* — la leçon est du
+              portail, et elle valait encore ici.
+           2. **La chaîne de données a été construite** dans le navigateur, par l'API, sur
+              la recette de la suite HTTP : plan validé → notification → soumission →
+              validation → envoi → accord. Le dossier est créé, l'API le confirme
+              (`dossier_28a5bf42`, statut `ouvert`).
+           3. **Le tableau reste vide**, même après rechargement complet de la page.
+           4. En cherchant pourquoi : *le tableau des activités n'est pas une page du
+              menu.* L'aiguillage de `execRenderPage` porte **treize** cas, les deux tables
+              de navigation en offrent **neuf**, et **quatre pages ne sont atteignables par
+              rien** — ni par un menu, ni par un appel de `execNavigateTo`, ni par une
+              ancre d'URL.
+
+           | Page sans chemin | Ce qu'elle rend |
+           |---|---|
+           | `execution` | le tableau des dossiers d'activité — **69 occurrences de geste** |
+           | `prestataires` | le suivi par prestataire, et trois boutons vers le volet de dossier |
+           | `declenchement` | le déclenchement d'une activité |
+           | `prestataire_home` | l'accueil de l'espace prestataire — `EXEC_NAV_PRESTATAIRE` ouvre `dashboard` à sa place |
+
+           ── Ce que cela ne dit pas ──
+
+           **Le volet de dossier, lui, est atteignable.** `execOpenDossierSlider` est appelé
+           par la page « Constatations » (`exec-constatations.js:133`) et par le tableau de
+           bord (`exec-dashboard.js:1416`), toutes deux au menu. C'est la **table** qui est
+           sans chemin, non le volet qu'elle ouvrait — et la suite n° 0.c passera donc par
+           les constatations.
+
+           Il a fallu le vérifier avant de l'écrire : conclure « 69 gestes morts » de la
+           seule mort de la page aurait été faux, et dans le sens qui arrange.
+
+           ── Pourquoi ce n'est pas à la conversion d'en décider ──
+
+           Une page que l'aiguillage sait rendre et qu'aucun chemin n'ouvre est soit **un
+           écran oublié d'un menu**, soit **du code mort**. Les deux se corrigent, et pas de
+           la même façon : l'un est une ligne à ajouter dans `EXEC_NAV`, l'autre quelques
+           centaines de lignes à retirer. *C'est une question de maîtrise d'ouvrage, et une
+           conversion qui tranche à sa place se trompe une fois sur deux.*
+
+           Les quatre sont donc **déclarées** dans la suite, avec ce que la mesure dit de
+           chacune, et un contrôle neuf les tient : **« toute page de SURV est atteignable,
+           ou déclarée sans chemin »**. L'aiguillage et les deux tables de navigation sont
+           lus **dans la source** — une liste tenue dans la suite aurait divergé au premier
+           ajout.
+
+           Contre-essayé des deux côtés, comme toute déclaration de ce dépôt :
+
+           · un `case 'orpheline'` ajouté à l'aiguillage : rouge, « sans chemin et non
+             déclarée : orpheline » ;
+           · `declenchement` ajouté à `EXEC_NAV` : rouge, « déclaration périmée ». Une page
+             qui retrouve un chemin doit faire rougir autant qu'une page qui en perd un.
+
+           Et le refus de lecture, pour que le contrôle ne passe pas en aveugle : si
+           l'aiguillage ou les tables ne se lisent plus, il refuse au lieu de rendre vert.
+
+           ── Et un rouge de la campagne qui ne venait pas de la campagne ──
+
+           Le premier passage complet a rendu **1 017 contrôles verts et un code 1** :
+           *« LES DONNÉES DE TRAVAIL ONT ÉTÉ MODIFIÉES PAR LES CONTRÔLES »*. Cinq fichiers
+           de `data/`, dont une ligne de plus dans `audit.jsonl`.
+
+           Ce n'était pas la campagne. Un serveur tournait sur le **vrai** répertoire de
+           données, démarré à `18:23:00.164Z` ; l'entrée ajoutée au journal est son propre
+           relevé de démarrage, `HORLOGE_NON_VERIFIEE`, horodaté **17 millisecondes plus
+           tard**. Le `.verrou` du répertoire le nomme : PID 16692, cette machine, même
+           seconde.
+
+           Vérifié avant de conclure quoi que ce soit : **la chaîne du journal est
+           intacte** — le `prevHash` de l'entrée nouvelle est exactement le `hash` de la
+           précédente. Et la suite SURV lancée seule, empreinte de `data/` prise avant et
+           après : **aucune modification**. Le second passage complet est vert, code 0.
+
+           Le garde-fou a donc dit vrai sur le monde et faux sur la campagne, et les deux
+           moitiés comptent : *il a vu une écriture dans les données de travail, ce pour
+           quoi il existe*, et il ne pouvait pas savoir qu'elle venait d'ailleurs. Son
+           message dirige vers `tests/smoke/bac.js` — la cause connue — là où la cause
+           était un serveur voisin. C'est une **suite** à écrire : nommer le tenant du
+           `.verrou` dans ce message, puisque le fichier le dit.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

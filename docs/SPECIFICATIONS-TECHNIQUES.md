@@ -259,10 +259,18 @@ chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but d
 d'écrans de `scripts/relever-gestes.js`.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
-`tests/smoke/surv.smoke.js`, douze contrôles — l'écran se monte, ses sept pages se parcourent
-par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la console reste
-muette. Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le relevé des
-gestes lance la suite de l'écran qu'il mesure.
+`tests/smoke/surv.smoke.js`, **treize contrôles** — l'écran se monte, ses sept pages se
+parcourent par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la
+console reste muette. Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le
+relevé des gestes lance la suite de l'écran qu'il mesure.
+
+Et **quatre des treize pages que SURV sait rendre ne sont atteignables par rien** (n° 5.f.2) :
+`execution` — le tableau des dossiers, 69 occurrences de geste —, `prestataires`,
+`declenchement` et `prestataire_home`. Ni menu, ni appel, ni ancre d'URL. Les quatre sont
+déclarées dans la suite avec ce que la mesure dit de chacune, et un contrôle refuse une
+cinquième non déclarée comme une déclaration devenue fausse. **C'est une question de maîtrise
+d'ouvrage** : un écran oublié d'un menu se corrige par une ligne, du code mort par quelques
+centaines.
 
 **Quatre des cinq ne sont pas exercés dans un navigateur.** La suite « parcours » ouvre **un**
 écran de module dans son cadre, vérifie qu'il n'est pas vide et en ressort par le bouton du
@@ -783,7 +791,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 016, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 017, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

@@ -40,6 +40,35 @@ const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'execution', 'js', 'ex
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 
+// ── Les pages que l'aiguillage sait rendre, et celles qu'un menu offre ──
+//
+// Mesuré le 14 octobre 2026, en cherchant par où atteindre l'écran des activités
+// (`exec-activites.js`, 69 occurrences, le fichier le plus chargé de SURV) :
+// l'aiguillage de `execRenderPage` porte **treize** cas, les deux tables de
+// navigation en offrent **neuf**, et **quatre pages ne sont atteignables par
+// rien** — ni par un menu, ni par un appel de `execNavigateTo`, ni par une
+// ancre d'URL.
+//
+// Ce n'est pas un détail de dénominateur : c'est une question de maîtrise
+// d'ouvrage. Une page que l'aiguillage sait rendre et qu'aucun chemin n'ouvre est
+// soit un écran oublié d'un menu, soit du code mort. Les deux se corrigent, mais
+// pas de la même façon, et ce n'est pas à la conversion d'en décider.
+//
+// Le contrôle refuse donc une page **non déclarée**. La déclaration est dans
+// `PAGES_SANS_CHEMIN` ci-dessous, avec ce que la mesure dit de chacune.
+const PAGES_SANS_CHEMIN = {
+  execution: 'l’écran « Exécution des activités » — le tableau des dossiers, 69 occurrences'
+    + ' de geste. Son volet de dossier, lui, **est** atteignable : la page « Constatations »'
+    + ' et le tableau de bord ouvrent `execOpenDossierSlider`. C’est donc la table qui est'
+    + ' sans chemin, non le volet qu’elle ouvrait.',
+  declenchement: 'le déclenchement d’une activité. Aucun menu, aucun appel.',
+  prestataires: 'le suivi par prestataire. Aucun menu, aucun appel — et il porte trois'
+    + ' boutons qui ouvrent le volet de dossier, donc trois chemins de plus vers un volet'
+    + ' qui en a d’autres.',
+  prestataire_home: 'l’accueil de l’espace prestataire. La table `EXEC_NAV_PRESTATAIRE`'
+    + ' ouvre `dashboard` et non celui-ci.',
+};
+
 // ── Les pages attendues se **lisent dans la source**, non dans une liste ──
 //
 // `EXEC_NAV` déclare les sept pages de l'écran. Une liste tenue ici aurait
@@ -56,6 +85,25 @@ function pagesDeclarees() {
       + ' le contrôle ne sait plus quelles pages l’écran déclare.');
   }
   return [...bloc[1].matchAll(/^\s{4}(\w+):\s*\{/gm)].map((m) => m[1]);
+}
+
+// Les cas de l'aiguillage, et les clés des deux tables de navigation. Lus dans la
+// source : une liste tenue ici aurait divergé, et le contrôle aurait mesuré sa
+// propre liste.
+function aiguillageEtMenus() {
+  const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
+  const rendues = [...texte.matchAll(/^\s*case '(\w+)': content = exec\w+\(\);/gm)].map((m) => m[1]);
+  const menus = new Set();
+  for (const nom of ['EXEC_NAV', 'EXEC_NAV_PRESTATAIRE']) {
+    const bloc = new RegExp(`const ${nom} = \\{([\\s\\S]*?)\\n\\};`).exec(texte);
+    if (!bloc) continue;
+    for (const m of bloc[1].matchAll(/^\s{4}(\w+):\s*\{/gm)) menus.add(m[1]);
+  }
+  if (!rendues.length || !menus.size) {
+    throw new Error('refus : l’aiguillage de execRenderPage ou les tables de navigation ne se'
+      + ' lisent plus dans exec-app.js — le contrôle ne sait plus quelles pages existent.');
+  }
+  return { rendues, menus: [...menus] };
 }
 
 module.exports = async function survSmoke(port) {
@@ -133,6 +181,32 @@ module.exports = async function survSmoke(port) {
       !refus && declarees.length > 0 && !manquantes.length && !inattendues.length,
       refus || `déclarées : ${declarees.length}${manquantes.length ? ` — absentes : ${manquantes.join(', ')}` : ''}`
         + `${inattendues.length ? ` — inattendues : ${inattendues.join(', ')}` : ''}`);
+
+    // ── Toute page que l'aiguillage sait rendre est atteignable, ou déclarée ──
+    let aiguillage = null;
+    let refusAiguillage = null;
+    try { aiguillage = aiguillageEtMenus(); } catch (e) { refusAiguillage = e.message; }
+    if (refusAiguillage) {
+      verifier('toute page de SURV est atteignable, ou déclarée sans chemin', false, refusAiguillage);
+    } else {
+      const sansChemin = aiguillage.rendues.filter((p) => !aiguillage.menus.includes(p));
+      const nonDeclarees = sansChemin.filter((p) => !PAGES_SANS_CHEMIN[p]);
+      // Une déclaration périmée est une déclaration qui ment : une page déclarée
+      // sans chemin qui en retrouve un doit faire rougir, comme une dispense de
+      // geste devenue fausse (5.c.0).
+      const declarationsPerimees = Object.keys(PAGES_SANS_CHEMIN)
+        .filter((p) => !sansChemin.includes(p));
+      sansChemin.filter((p) => PAGES_SANS_CHEMIN[p])
+        .forEach((p) => console.log(`    ◌ page sans chemin, déclarée : ${p}`));
+      verifier('toute page de SURV est atteignable, ou déclarée sans chemin',
+        !nonDeclarees.length && !declarationsPerimees.length,
+        [
+          nonDeclarees.length ? `sans chemin et non déclarée(s) : ${nonDeclarees.join(', ')}` : '',
+          declarationsPerimees.length ? `déclaration(s) périmée(s) : ${declarationsPerimees.join(', ')}` : '',
+        ].filter(Boolean).join(' · ')
+          || `${aiguillage.rendues.length} pages rendues, ${aiguillage.menus.length} offertes par un menu,`
+            + ` ${sansChemin.length} déclarée(s) sans chemin`);
+    }
 
     // ── Chaque page, par un vrai clic ──
     //

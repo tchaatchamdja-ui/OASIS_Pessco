@@ -249,7 +249,7 @@ distincts, et la couverture se mesure sur les noms.
 | CARE | 6 428 | 145 | *non relevé* | — |
 | PR | 7 315 | 186 | *non relevé* | — |
 | RAMP | 12 470 | 365 | *non relevé* | — |
-| SURV | 23 731 | **503** | **310** | **1** |
+| SURV | 23 731 | **503** | **310** | **6** |
 | **Total** | **55 893** | **1 334** | | |
 
 Le relevé nommé de **SURV** est fait — 14 octobre 2026, ADR-003 n° 5.f.0 : 310 noms, dont 269
@@ -259,10 +259,16 @@ chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but d
 d'écrans de `scripts/relever-gestes.js`.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
-`tests/smoke/surv.smoke.js`, **treize contrôles** — l'écran se monte, ses sept pages se
+`tests/smoke/surv.smoke.js`, **dix-huit contrôles** — l'écran se monte, ses sept pages se
 parcourent par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la
 console reste muette. Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le
 relevé des gestes lance la suite de l'écran qu'il mesure.
+
+Elle mène aussi une **ronde complète de dossier** (n° 5.f.3) : la chaîne construite par l'API,
+la constatation créée, le sous-onglet « En Préparation » ouvert, le volet du dossier ouvert, une
+étape commandée, le volet refermé, la constatation effacée **par son propre geste** avec son
+résultat vérifié auprès du serveur, et le dossier supprimé — ce qui emporte sa notification. La
+ronde ne laisse rien derrière elle, et c'est éprouvé.
 
 Et **quatre des treize pages que SURV sait rendre ne sont atteignables par rien** (n° 5.f.2) :
 `execution` — le tableau des dossiers, 69 occurrences de geste —, `prestataires`,
@@ -791,7 +797,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 017, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 022, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

@@ -4459,6 +4459,71 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            était un serveur voisin. C'est une **suite** à écrire : nommer le tenant du
            `.verrou` dans ce message, puisque le fichier le dit.
 
+       5.f.3 [x] **SURV — la ronde du dossier, et une mesure qui se trompait en sa
+           défaveur** — fait le 14 octobre 2026.
+
+           La suite de SURV passe de treize à **dix-huit contrôles**, et sa couverture de
+           gestes de **1 à 6 sur 310**.
+
+           ── La ronde, et les trois obstacles qu'il a fallu mesurer pour l'écrire ──
+
+           Elle construit son régime, l'exerce, et ne laisse rien :
+
+           1. la chaîne par l'API — plan validé, notification, soumission, validation,
+              envoi, accord — puis une constatation sur le dossier ouvert ;
+           2. l'écran rechargé, la page « Constatations », le sous-onglet
+              « En Préparation » ;
+           3. le bouton du dossier, son volet, une étape commandée, le volet refermé ;
+           4. la constatation effacée **par son propre geste**, confirmation pressée, et
+              son absence vérifiée **auprès du serveur** ;
+           5. le dossier supprimé — ce qui emporte sa notification.
+
+           Chaque obstacle a coûté une mesure, et aucun ne se lisait dans le code :
+
+           · **le bac n'a aucun dossier** — la ronde fabrique donc son régime (5.f.2) ;
+           · **le tableau des dossiers n'est atteignable par rien** — elle passe par les
+             constatations, où le volet s'ouvre (5.f.2) ;
+           · **la page des constatations a trois sous-onglets**, et son défaut est
+             « Suivi » ; une constatation en brouillon est dans « En Préparation ». La
+             première écriture de la ronde mesurait une table vide avec une constatation
+             bien créée.
+
+           ── Le nettoyage mesuré plutôt qu'écrit ──
+
+           Le premier jet supprimait le dossier **puis** la notification, et le second
+           appel rendait 404. La console disait « Failed to load resource » **sans
+           l'adresse** : il a fallu instrumenter les réponses pour savoir lequel. La suite
+           relève désormais code et adresse de toute réponse ≥ 400, ce qui rend un incident
+           actionnable au lieu d'énigmatique.
+
+           La cause : *la suppression d'un dossier emporte sa notification et ses
+           échanges* — « l'activité redevient à notifier », écrit dans la route elle-même.
+           Le contrôle **vérifie la cascade** au lieu de la refaire. *Un nettoyage écrit
+           sans être mesuré ajoute du bruit, et le bruit cache les vrais incidents.*
+
+           ── Et une mesure qui se trompait en sa défaveur ──
+
+           Après la ronde, la couverture annonçait **5** et non 6. Le sous-onglet des
+           constatations, cliqué, comptait pour non exercé.
+
+           La cause est de ma main, et de la veille : les trois règles de nommage ajoutées
+           en 5.f.0 — la garde seule, la cible d'une affectation, les interpolations
+           normalisées — n'avaient été appliquées **que d'un côté**. L'extracteur relevait
+           le geste sous le nom `EXEC_STATE.currentConstSub` ; le rapprochement avec le
+           journal du mouchard le nommait `execRenderPage`, par l'ancienne règle. Les deux
+           ne pouvaient plus se rencontrer.
+
+           *Une mesure qui se trompe en sa défaveur ne se fait pas remarquer* — c'est
+           pourquoi celle-ci pouvait durer : elle sous-estimait la couverture, et une
+           couverture basse n'alerte personne. Les deux côtés appellent désormais la même
+           fonction. Vérifié sur le portail : **66/84 inchangé** — l'écart ne touchait que
+           les gestionnaires en affectation, que le portail n'a pas.
+
+           C'est la troisième fois en deux jours que deux moitiés d'un même instrument
+           divergent : le relevé de surface contre le relevé des gestes (5.f.0), le DOM
+           contre la source (5.e.8), et ici le relevé contre son propre rapprochement.
+           **Un instrument en deux moitiés doit avoir une seule règle, écrite une fois.**
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

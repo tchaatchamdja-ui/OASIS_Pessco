@@ -550,11 +550,25 @@ async function principal() {
   // La couverture est donc comptée en **gestes nommés distincts**, et le
   // nombre d'occurrences est donné à côté : annoncer 8/121 sur un seul clic
   // serait une couverture surévaluée d'un facteur huit.
-  const nomAppele = (source) => {
-    const sansGarde = source.replace(/^event\.stopPropagation\(\)\s*;\s*/, '').trim();
-    return (/^([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde) || [])[1] || null;
-  };
-  const vues = new Set(exerces.enLigne.map(nomAppele).filter(Boolean));
+  // ── Les deux côtés nomment **avec la même fonction**, et il a fallu un écran
+  //    de 23 731 lignes pour que l'écart se voie ──
+  //
+  // Ce rapprochement avait sa propre règle de nommage : le premier appel du
+  // gestionnaire, et rien d'autre. L'extracteur, lui, a gagné trois règles le
+  // 14 octobre 2026 (5.f.0) — la garde seule, la cible d'une affectation, les
+  // interpolations normalisées.
+  //
+  // **Les trois n'avaient été appliquées que d'un côté.** Un sous-onglet des
+  // constatations, dont le gestionnaire est
+  // `EXEC_STATE.currentConstSub='list';execRenderPage();`, était relevé sous le
+  // nom `EXEC_STATE.currentConstSub` et reconnu au vol sous le nom
+  // `execRenderPage` : cliqué, il comptait pour non exercé.
+  //
+  // L'erreur allait dans le sens pessimiste — une couverture sous-estimée — et
+  // c'est précisément pourquoi elle pouvait durer : *une mesure qui se trompe en
+  // sa défaveur ne se fait pas remarquer.* Les deux côtés appellent désormais
+  // `nomDuGestionnaire`.
+  const vues = new Set(exerces.enLigne.map(nomDuGestionnaire).filter(Boolean));
   const ecouteursVus = new Set(exerces.ecouteurs);
   const proprietesVues = new Set(exerces.propriete || []);
   gestes.forEach((g) => {

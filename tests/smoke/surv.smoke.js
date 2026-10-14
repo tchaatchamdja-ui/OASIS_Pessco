@@ -130,14 +130,26 @@ module.exports = async function survSmoke(port) {
     // connexion sont écartés : une erreur de la page de connexion passerait
     // sinon pour une erreur de SURV.
     let surv = false;
+    let etape = 'montage';
     page.on('console', (m) => {
-      if (surv && m.type() === 'error') incidents.push(`console : ${m.text().slice(0, 160)}`);
+      if (surv && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
-      if (surv) incidents.push(`exception : ${String(e.message).slice(0, 160)}`);
+      if (surv) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
     });
     page.on('requestfailed', (r) => {
-      if (surv) incidents.push(`requête : ${r.url().slice(0, 120)}`);
+      if (surv) incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
+    });
+    // ── La réponse, et non le seul message de console ──
+    //
+    // Un 404 se présente en console comme « Failed to load resource », **sans
+    // l'adresse**. Le premier passage de la ronde du dossier en a signalé un, et
+    // il a fallu réinstrumenter pour savoir lequel. On relève donc la réponse :
+    // son code et son adresse, ce qui rend l'incident actionnable au lieu
+    // d'énigmatique.
+    page.on('response', (r) => {
+      if (!surv || r.status() < 400) return;
+      incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
     });
 
     // ── La session, puis l'écran ──
@@ -262,6 +274,211 @@ module.exports = async function survSmoke(port) {
       debordent.length === 0,
       debordent.length ? debordent.map(([k, v]) => `${k} : ${v.debord}px`).join(', ')
         : `${rendus.size} pages mesurées à 1280 de large`);
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  La ronde du dossier, par les constatations (ADR-003, 5.f.3)
+    // ══════════════════════════════════════════════════════════════════════════
+    //
+    // ── Pourquoi cette ronde existe, et par où elle passe ──
+    //
+    // Les 309 gestes que la suite n° 0.b ne couvrait pas vivent **dans** les
+    // pages, et la plupart dans le volet d'un dossier d'activité. Deux obstacles
+    // ont été mesurés avant d'écrire une assertion :
+    //
+    //   1. **le bac n'a aucun dossier** — le tableau n'affiche alors que ses deux
+    //      boutons. *Un contre-essai qui ne mord pas dit que les données
+    //      n'exercent pas le code* : la ronde fabrique donc son régime ;
+    //   2. **la page du tableau des dossiers n'est atteignable par rien** (5.f.2).
+    //      Le volet, lui, l'est : la page « Constatations » porte un bouton qui
+    //      l'ouvre. La ronde passe donc par là, et c'est pourquoi elle crée une
+    //      constatation en plus du dossier.
+    //
+    // ── Et un troisième obstacle, trouvé à la mesure ──
+    //
+    // La page « Constatations » a **trois sous-onglets**, et son défaut est
+    // « Suivi ». Une constatation en brouillon est dans « En Préparation » : la
+    // ronde a d'abord mesuré une table vide avec une constatation bien créée.
+    // Le sous-onglet est un geste de plus, et la suite n° 0.b ne le touchait pas.
+    //
+    // ── Ce que la ronde laisse derrière elle ──
+    //
+    // Rien. La constatation part **par son propre geste** — c'est la seule
+    // écriture de cette ronde, et son nettoyage *est* sa preuve. Le dossier et sa
+    // notification partent par l'API, faute de geste atteignable : le seul bouton
+    // qui efface un dossier est sur la page sans chemin. C'est écrit ici parce que
+    // c'est une conséquence de 5.f.2, et non une commodité.
+    etape = 'ronde du dossier';
+    const M = '/api/m/execution';
+    const chaine = await page.evaluate(async (api) => {
+      const env = async (url, methode, corps) => {
+        const r = await fetch(url, {
+          method: methode,
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await r.json(); } catch { /* corps vide */ }
+        return { statut: r.status, corps: b };
+      };
+      const plans = await (await fetch(`${api}/plans-valides`, { credentials: 'same-origin' })).json();
+      const plan = (plans || []).find((p) => (p.activites || []).length);
+      if (!plan) return { plan: false };
+      const a = plan.activites[0];
+      const n = await env(`${api}/notifications`, 'POST', {
+        activite_id: a.id, plan_id: plan.id, prestataire_id: a.prestataire_id,
+        objet: 'SURV 0.c — ronde de couverture', type_supervision: 'Audit',
+        date_debut_prevue: '2026-09-01', date_fin_prevue: '2026-09-03',
+        lieu: 'Siège', perimetre: 'Ensemble des processus',
+      });
+      if (n.statut !== 201) return { plan: true, notif: n.statut };
+      const notifId = n.corps.id;
+      const pas = {};
+      for (const etapeNotif of ['submit', 'validate', 'send']) {
+        /* eslint-disable no-await-in-loop */
+        pas[etapeNotif] = (await env(`${api}/notifications/${notifId}/${etapeNotif}`, 'PUT')).statut;
+      }
+      const accord = await env(`${api}/notifications/${notifId}/validate-accord`, 'PUT', {
+        date_debut_effective: '2026-09-01', date_fin_effective: '2026-09-03',
+      });
+      const dossierId = (accord.corps || {}).dossier_id;
+      const fnc = await env(`${api}/constatations`, 'POST', {
+        dossier_id: dossierId, domaine_id: 'AIR', criticite: 'majeur',
+        description: 'SURV 0.c — écart de la ronde de couverture.',
+      });
+      return {
+        plan: true, notifId, pas, accord: accord.statut, dossierId,
+        fnc: fnc.statut, fncId: (fnc.corps || {}).id, fncStatut: (fnc.corps || {}).statut,
+      };
+    }, M);
+    verifier('la chaîne d’un dossier se construit : notification, accord, constatation',
+      chaine.plan && chaine.pas && Object.values(chaine.pas).every((c) => c === 200)
+      && chaine.accord === 200 && !!chaine.dossierId
+      && chaine.fnc === 201 && chaine.fncStatut === 'brouillon',
+      JSON.stringify(chaine));
+
+    if (chaine.fncId) {
+      // Le module garde ses données en mémoire : un changement de page ne les
+      // relit pas. On recharge l'écran — mesuré, et non supposé : la première
+      // écriture de cette ronde changeait de page et mesurait une table vide.
+      await page.reload({ waitUntil: 'networkidle2' });
+      await page.waitForSelector('.nav-btn[data-page]', { timeout: 20000 }).catch(() => {});
+      await page.waitForFunction(
+        () => {
+          const el = document.getElementById('exec-content');
+          return el && el.textContent.trim().length > 200;
+        },
+        { timeout: 20000 },
+      ).catch(() => {});
+
+      const enPreparation = await page.evaluate(async () => {
+        document.querySelector('.nav-btn[data-page="constatations"]').click();
+        await new Promise((r) => setTimeout(r, 2000));
+        const onglets = [...document.querySelectorAll('.exec-tab')]
+          .map((b) => (b.getAttribute('onclick') || '').match(/currentConstSub='(\w+)'/))
+          .filter(Boolean).map((m) => m[1]);
+        const bouton = [...document.querySelectorAll('.exec-tab')]
+          .find((x) => /currentConstSub='list'/.test(x.getAttribute('onclick') || ''));
+        if (!bouton) return { onglets, sousOnglet: false };
+        bouton.click();
+        await new Promise((r) => setTimeout(r, 1800));
+        const contenu = document.getElementById('exec-content');
+        return {
+          onglets,
+          sousOnglet: true,
+          notre: contenu.textContent.includes('SURV 0.c'),
+          versDossier: document.querySelectorAll('[onclick^="execOpenDossierSlider"]').length,
+          effacer: document.querySelectorAll('[onclick^="execDeleteConstatation"]').length,
+        };
+      });
+      verifier('le sous-onglet « En Préparation » montre la constatation du dossier',
+        enPreparation.sousOnglet && enPreparation.onglets.length === 3
+        && enPreparation.notre && enPreparation.versDossier >= 1 && enPreparation.effacer >= 1,
+        JSON.stringify(enPreparation));
+
+      const volet = await page.evaluate(async () => {
+        const b = document.querySelector('[onclick^="execOpenDossierSlider"]');
+        if (!b) return { bouton: false };
+        b.click();
+        await new Promise((r) => setTimeout(r, 3000));
+        const etapes = [...document.querySelectorAll('[onclick^="execSwitchDossierStep"]')];
+        const avant = etapes.length;
+        // Une étape se commande, et l'on regarde que le volet ait changé.
+        const empreinteAvant = document.body.innerHTML.length;
+        if (etapes[0]) etapes[0].click();
+        await new Promise((r) => setTimeout(r, 1500));
+        const fermer = document.querySelector('[onclick^="execCloseSlider"]');
+        const ouvert = !!document.querySelector('[onclick^="execCloseSlider"]');
+        if (fermer) fermer.click();
+        await new Promise((r) => setTimeout(r, 1200));
+        return {
+          bouton: true,
+          etapes: avant,
+          ouvert,
+          empreinteAvant,
+          referme: !document.querySelector('[onclick^="execCloseSlider"]'),
+        };
+      });
+      verifier('le bouton du dossier ouvre son volet, ses étapes se commandent, et il se referme',
+        volet.bouton && volet.etapes >= 1 && volet.ouvert && volet.referme,
+        JSON.stringify(volet));
+
+      // ── L'écriture, et son retour en arrière dans le même geste ──
+      //
+      // `execDeleteConstatation` demande confirmation par le widget du socle. On
+      // presse « oui », puis l'on demande au **serveur** si la constatation est
+      // partie : ce que l'écran montre doit être ce qui est enregistré, non ce
+      // qu'il espère.
+      const effacement = await page.evaluate(async (api) => {
+        const b = document.querySelector('[onclick^="execDeleteConstatation"]');
+        if (!b) return { bouton: false };
+        b.click();
+        await new Promise((r) => setTimeout(r, 600));
+        const oui = document.querySelector('.oasis-confirm-oui');
+        if (!oui) return { bouton: true, confirmation: false };
+        oui.click();
+        await new Promise((r) => setTimeout(r, 2200));
+        const r = await fetch(`${api}/constatations`, { credentials: 'same-origin' });
+        const liste = r.ok ? await r.json() : [];
+        return {
+          bouton: true,
+          confirmation: true,
+          restantes: (liste || []).filter((c) => (c.description || '').includes('SURV 0.c')).length,
+        };
+      }, M);
+      verifier('la constatation s’efface par son geste, et le serveur ne la porte plus',
+        effacement.bouton && effacement.confirmation && effacement.restantes === 0,
+        JSON.stringify(effacement));
+
+      // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
+      //
+      // Le premier jet supprimait le dossier **puis** la notification, et le
+      // second appel rendait 404. L'instrumentation des réponses, posée pour
+      // nommer ce 404, a dit lequel : la suppression d'un dossier **emporte sa
+      // notification et ses échanges** — « l'activité redevient à notifier »,
+      // écrit dans la route elle-même.
+      //
+      // Le contrôle vérifie donc la cascade au lieu de la refaire. C'est un cas
+      // de plus du même enseignement : *un nettoyage qu'on écrit sans mesurer
+      // ajoute du bruit, et le bruit cache les vrais incidents.*
+      const menage = await page.evaluate(async (ctx) => {
+        const r = await fetch(`${ctx.api}/dossiers/${ctx.dossierId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin',
+          headers: { 'X-OASIS-Request': '1' },
+        });
+        const dossier = r.status;
+        const restes = await (await fetch(`${ctx.api}/dossiers`, { credentials: 'same-origin' })).json();
+        const notifs = await (await fetch(`${ctx.api}/notifications`, { credentials: 'same-origin' })).json();
+        return {
+          dossier,
+          dossierEncore: (restes || []).some((d) => d.id === ctx.dossierId),
+          notifEncore: (notifs || []).some((n) => n.id === ctx.notifId),
+        };
+      }, { api: M, dossierId: chaine.dossierId, notifId: chaine.notifId });
+      verifier('effacer le dossier emporte sa notification : la ronde ne laisse rien',
+        menage.dossier === 200 && !menage.dossierEncore && !menage.notifEncore,
+        JSON.stringify(menage));
+    }
 
     verifier('aucune erreur de console ni requête échouée sur SURV',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));

@@ -2,7 +2,7 @@
  "releve": "2026-10-14",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 1,
+ "exerces": 6,
  "indecidables": 5,
  "gestes": [
   {
@@ -21,7 +21,7 @@
    "evenement": "click",
    "nom": "execOpenDossierSlider",
    "source": "execOpenDossierSlider('${d.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -39,7 +39,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -48,7 +48,7 @@
    "evenement": "click",
    "nom": "execSwitchDossierStep",
    "source": "execSwitchDossierStep('${dossierId}','${s.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -462,7 +462,7 @@
    "evenement": "click",
    "nom": "execDeleteConstatation",
    "source": "execDeleteConstatation('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -750,7 +750,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -759,7 +759,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -1077,7 +1077,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.currentConstSub",
    "source": "EXEC_STATE.currentConstSub='suivi';execRenderPage();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1086,7 +1086,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.currentConstSub",
    "source": "EXEC_STATE.currentConstSub='terrain';execRenderPage();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1095,7 +1095,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.currentConstSub",
    "source": "EXEC_STATE.currentConstSub='list';execRenderPage();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1176,7 +1176,7 @@
    "evenement": "click",
    "nom": "execOpenDossierSlider",
    "source": "execOpenDossierSlider('${c.dossier_id}','constatations')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1185,7 +1185,7 @@
    "evenement": "click",
    "nom": "execDeleteConstatation",
    "source": "execDeleteConstatation('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1473,7 +1473,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1536,7 +1536,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1554,7 +1554,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider();execOpenConstatationDirecteForm(${JSON.stringify(fnc).replace(/",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1807,7 +1807,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -2015,7 +2015,7 @@
    "evenement": "click",
    "nom": "execOpenDossierSlider",
    "source": "execOpenDossierSlider('${dossierId}','constatations')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -2213,7 +2213,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2357,7 +2357,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -2591,7 +2591,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2654,7 +2654,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2699,7 +2699,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -3266,7 +3266,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3878,7 +3878,7 @@
    "evenement": "click",
    "nom": "execOpenDossierSlider",
    "source": "execOpenDossierSlider('${d.id}','realisation')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-prestataires.js",
@@ -3896,7 +3896,7 @@
    "evenement": "click",
    "nom": "execOpenDossierSlider",
    "source": "execOpenDossierSlider('${d.id}','notification')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-prestataires.js",
@@ -3923,7 +3923,7 @@
    "evenement": "click",
    "nom": "execOpenDossierSlider",
    "source": "execOpenDossierSlider('${d.id}','notification')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4004,7 +4004,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4031,7 +4031,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4067,7 +4067,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4256,7 +4256,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4274,7 +4274,7 @@
    "evenement": "click",
    "nom": "execCloseSlider",
    "source": "execCloseSlider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",

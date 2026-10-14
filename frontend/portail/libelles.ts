@@ -1,10 +1,13 @@
 // OASIS — Les libellés français littéraux (ADR-003, 5.e.0).
 //
 // Première pièce d'`app.js`, et le nom le plus **emprunté** du portail : cinq
-// modules convertis en 5.d lisent `window.tr` faute de pouvoir l'atteindre
+// modules convertis en 5.d lisaient `window.tr` faute de pouvoir l'atteindre
 // autrement. Sa table était un `const` du premier niveau — une globale
 // lexicale —, et c'est elle, non l'interface, qui bloquait la conversion. Pour
 // la sixième fois.
+//
+// Les cinq l'**importent** depuis 5.e.0, et `tr` a quitté la surface à la dépose
+// du pont (5.e.5) : plus un fichier ne le lit sur `window`.
 //
 // ── Deux mécanismes de traduction, et pourquoi ils restent deux ──
 //

@@ -35,14 +35,13 @@ import {
 } from './schemas';
 import { tr } from './libelles';
 import { exportBar, searchInputHtml } from './barre';
+import { closeRefModal, dans, ouvrir, tousDans } from './fenetres';
 import { loadRefs } from './outils';
 
 declare global {
   interface Window {
     /** Ouvre la fenêtre d'un enregistrement : création, édition, ou création préréglée. */
     openRefModal: (coll: string, id?: string, defaultsJson?: string) => void;
-    /** Referme la fenêtre de référentiel. */
-    closeRefModal: () => void;
     /** Enregistre la fenêtre ouverte : crée si `id` est vide, modifie sinon. */
     saveRef: (coll: string, id?: string) => Promise<void>;
     /** Supprime un enregistrement, confirmation demandée. */
@@ -221,15 +220,13 @@ export function openRefModal(coll: string, id?: string, defaultsJson?: string): 
   else if (defaultsJson) {
     try { record = JSON.parse(defaultsJson) as Enregistrement; } catch { record = {}; }
   }
-  const root = document.getElementById('cfgModalRoot');
-  if (!root) return;
   const aacRef = window.CURRENT_CFG?.aac ?? {};
   window.__ORG_AUTO = {
     top: coll === 'organisation' ? orgTopLevelType() : null,
     sigle: aacRef.sigle ?? '',
     nom: aacRef.nom ?? '',
   };
-  root.innerHTML = `
+  ouvrir('cfgModalRoot', `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:560px;">
       <div class="shell-modal-header"><h3>${escapeHtml(tr(schema.title))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
@@ -239,28 +236,23 @@ export function openRefModal(coll: string, id?: string, defaultsJson?: string): 
         <button class="shell-btn shell-btn-primary" onclick="saveRef('${coll}','${id || ''}')">${icon('save', 14)} ${escapeHtml(t('cfg_save'))}</button>
       </div>
     </div>
-  </div>`;
+  </div>`);
   if (coll === 'inspecteurs') toggleInspectorFields();
 }
 
-export function closeRefModal(): void {
-  const r = document.getElementById('cfgModalRoot');
-  if (r) r.innerHTML = '';
-}
-
 export function toggleInspectorFields(): void {
-  const sel = document.querySelector<HTMLSelectElement>('#cfgModalRoot [data-field="est_inspecteur"]');
+  const sel = dans<HTMLSelectElement>('cfgModalRoot', '[data-field="est_inspecteur"]');
   const montre = !!sel && sel.value === 'oui';
-  document.querySelectorAll<HTMLElement>('#cfgModalRoot .insp-only').forEach((el) => {
+  tousDans<HTMLElement>('cfgModalRoot', '.insp-only').forEach((el) => {
     el.style.display = montre ? '' : 'none';
   });
 }
 
 export function orgTypeChanged(): void {
   const auto = window.__ORG_AUTO;
-  const sel = document.querySelector<HTMLSelectElement>('#cfgModalRoot [data-field="type"]');
-  const sigleIn = document.querySelector<HTMLInputElement>('#cfgModalRoot .org-sigle-input');
-  const libelleIn = document.querySelector<HTMLInputElement>('#cfgModalRoot .org-libelle-input');
+  const sel = dans<HTMLSelectElement>('cfgModalRoot', '[data-field="type"]');
+  const sigleIn = dans<HTMLInputElement>('cfgModalRoot', '.org-sigle-input');
+  const libelleIn = dans<HTMLInputElement>('cfgModalRoot', '.org-libelle-input');
   const isTop = !!sel && sel.value === auto.top;
   ([[sigleIn, auto.sigle], [libelleIn, auto.nom]] as const).forEach(([inp, v]) => {
     if (!inp) return;
@@ -279,13 +271,13 @@ export function orgTypeChanged(): void {
 /** Le corps de la requête, lu dans la fenêtre ouverte. Isolé pour la comparaison. */
 export function corpsDeLaFenetre(coll: string, id?: string): Record<string, unknown> {
   const body: Record<string, unknown> = {};
-  document.querySelectorAll<HTMLInputElement>('#cfgModalRoot [data-field]').forEach((input) => {
+  tousDans<HTMLInputElement>('cfgModalRoot', '[data-field]').forEach((input) => {
     const cle = input.dataset.field;
     if (!cle) return;
     body[cle] = input.type === 'number' ? Number(input.value) : input.value;
   });
   // Champs multi-valeurs (domaines, spécialités…)
-  document.querySelectorAll<HTMLInputElement>('#cfgModalRoot [data-multi]').forEach((input) => {
+  tousDans<HTMLInputElement>('cfgModalRoot', '[data-multi]').forEach((input) => {
     const k = input.dataset.multi;
     if (!k) return;
     if (!Array.isArray(body[k])) body[k] = [];

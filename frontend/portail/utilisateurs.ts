@@ -35,6 +35,7 @@ import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { icon } from './icones';
 import { t } from './traductions';
+import { fermer, racineExigee, tousDans } from './fenetres';
 import { searchInputHtml, portailReinitialiserRecherche } from './barre';
 import {
   PORTEE_LABELS, brancherPortee, porteeDe, porteeFieldsHtml,
@@ -125,12 +126,12 @@ const texte = (v: unknown): string => (v == null ? '' : String(v));
  * `closeUserModal`, lui, reste permissif, et la distinction est voulue :
  * **refermer une fenêtre qui n'est pas là n'est pas une erreur, en ouvrir une
  * dans le vide l'est.** C'est le choix fait pour `closeRefModal` en 5.d.1.
+ *
+ * Les deux conduites et les deux racines vivent dans `./fenetres` depuis le
+ * 14 octobre 2026 (5.e.10) : le portail n'en a que deux, et l'identifiant y vient
+ * du **type** — une racine qui n'existe pas ne compile plus.
  */
-function racine(): HTMLElement {
-  const r = document.getElementById('userModalRoot');
-  if (!r) throw new Error("la racine des fenêtres est absente : « userModalRoot » n'est pas dans le document");
-  return r;
-}
+const racine = (): HTMLElement => racineExigee('userModalRoot');
 
 /** Un élément **attendu** de la fenêtre ouverte. L'original lève aussi. */
 function element(id: string): HTMLElement {
@@ -362,7 +363,7 @@ export function showModulesModal(u: Compte): void {
 }
 
 export async function saveUserModules(username: string): Promise<void> {
-  const modules = [...document.querySelectorAll<HTMLInputElement>('#userModalRoot [data-mod]:checked')].map((c) => texte(c.dataset.mod));
+  const modules = tousDans<HTMLInputElement>('userModalRoot', '[data-mod]:checked').map((c) => texte(c.dataset.mod));
   const res = await appel(`/api/users/${encodeURIComponent(username)}`, {
     method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'set-modules', modules }),
@@ -496,8 +497,7 @@ export async function submitEditUser(username: string): Promise<void> {
 }
 
 export function closeUserModal(): void {
-  const r = document.getElementById('userModalRoot');
-  if (r) r.innerHTML = '';
+  fermer('userModalRoot');
 }
 
 
@@ -567,7 +567,7 @@ export function showNewUserModal(): void {
         portee: valeurFacultative('nuPortee'),
         instance: valeurFacultative('nuInstance'),
         prestataire_id: valeur('nuPresta'),
-        modules: [...document.querySelectorAll<HTMLInputElement>('#userModalRoot [data-newmod]:checked')].map((c) => texte(c.dataset.newmod)),
+        modules: tousDans<HTMLInputElement>('userModalRoot', '[data-newmod]:checked').map((c) => texte(c.dataset.newmod)),
       }),
     });
     if (res.ok) {

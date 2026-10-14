@@ -219,6 +219,13 @@ relevé figé des **70 noms** que la page pose, et le refus d'un nom publié san
 Une seule exception, et elle est déclarée **sur la ligne qui précède sa publication** :
 `refreshNotifications` reste posée pour la preuve de la pastille des notifications, dont
 le geste masque ce qu'on veut lire. La campagne imprime cette couture à chaque passage.
+
+Le portail porte **douze cycles d'imports de deux fichiers**, et c'est délibéré : dix
+viennent de ce que les parties d'un écran se redessinent l'une l'autre, deux des tables de
+traduction. Ils sont sûrs pour une raison précise — *aucun de ces noms n'est lu à
+l'initialisation d'un module* —, et non par chance. Le seul qui n'était pas voulu,
+`barre.ts ↔ referentiels.ts`, a été dissous en donnant un module à la racine de fenêtre
+que cinq fichiers partageaient (`frontend/portail/fenetres.ts`).
 | PLAN, CARE, PR, RAMP, SURV | 55 893 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire

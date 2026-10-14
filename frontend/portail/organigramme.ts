@@ -26,6 +26,11 @@ import { renderConfig } from './configuration';
 import { personnelName, personnelOptions, type Enregistrement } from './schemas';
 import { rafraichirNotifications } from './demarrage';
 import { orgTopLevelType } from './referentiels';
+// La racine des fenêtres de configuration appartient à `./fenetres` depuis le
+// 14 octobre 2026 (5.e.10) : ce fichier y écrit deux fenêtres et referme
+// celle des référentiels, et il n'a plus à passer par `window` pour l'un ni
+// pour l'autre.
+import { closeRefModal, ouvrir } from './fenetres';
 import { fmtDate, loadRefs } from './outils';
 
 declare global {
@@ -208,8 +213,7 @@ export function registreHtml(nodeId: string): string | null {
 export function openPosteRegistre(nodeId: string): void {
   const html = registreHtml(nodeId);
   if (html === null) return;
-  const root = document.getElementById('cfgModalRoot');
-  if (root) root.innerHTML = html;
+  ouvrir('cfgModalRoot', html);
 }
 
 /** Le balisage de la fenêtre d'intérim, isolé pour la comparaison. */
@@ -243,8 +247,7 @@ export function interimHtml(nodeId: string): string | null {
 export function orgStartInterim(nodeId: string): void {
   const html = interimHtml(nodeId);
   if (html === null) return;
-  const root = document.getElementById('cfgModalRoot');
-  if (root) root.innerHTML = html;
+  ouvrir('cfgModalRoot', html);
 }
 
 /**
@@ -291,7 +294,7 @@ export async function orgConfirmInterim(nodeId: string): Promise<void> {
   if (titNom) {
     await prevenir(`${titNom}, vos validations (${posteLbl}) sont assurées par ${interimNom} pendant votre absence.`, 'info');
   }
-  window.closeRefModal();
+  closeRefModal();
   await loadRefs();
   void renderConfig();
   void rafraichirNotifications();

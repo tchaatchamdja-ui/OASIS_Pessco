@@ -21,16 +21,16 @@
 // et `oasisMessageErreur`. Les trois premiers partiront avec `app.js` ;
 // `oasisMessageErreur` appartient au socle et y reste.
 //
-// `closeRefModal` n'est **pas** lu sur `window` : il appartient au module des
-// référentiels (5.d.1), et c'est de là qu'il est importé. La fenêtre de
-// l'Administration partage la racine `cfgModalRoot` avec celles des
-// référentiels, et c'est donc la même fermeture — un couplage que l'original
-// n'écrivait nulle part, et que cet import rend visible.
+// `closeRefModal` n'est **pas** lu sur `window`. Il appartenait au module des
+// référentiels (5.d.1) ; depuis le 14 octobre 2026 il appartient à celui de la
+// racine partagée (`./fenetres`, 5.e.10), et c'est de là qu'il est importé — avec
+// `ouvrir`, qui écrit la fenêtre de l'Administration dans cette même racine. Le
+// couplage que l'original n'écrivait nulle part est maintenant **un module**.
 import { confirmer } from '../socle/toast';
 import { escapeHtml, showToast } from '../socle/utils';
 import { sessionPerdue } from '../socle/requete';
 import { PRIO_COLORS, icon, moduleIcon } from './icones';
-import { closeRefModal } from './referentiels';
+import { closeRefModal, ouvrir } from './fenetres';
 import { chargerMoi } from './demarrage';
 import { t } from './traductions';
 import { renderConfig } from './configuration';
@@ -253,9 +253,7 @@ export function openAacEdit(): void {
   const aac = cfg.aac || {};
   const input = (id: string, label: string, value?: string) => `
     <div class="shell-form-group"><label>${label}</label><input class="shell-input" id="${id}" value="${escapeHtml(value || '')}"></div>`;
-  const racine = document.getElementById('cfgModalRoot');
-  if (!racine) return;
-  racine.innerHTML = `
+  ouvrir('cfgModalRoot', `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:600px;">
       <div class="shell-modal-header"><h3>${escapeHtml(t('cfg_aac'))}</h3><button class="shell-btn-icon" onclick="closeRefModal()" style="color:#fff;" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
@@ -289,7 +287,7 @@ export function openAacEdit(): void {
         <button class="shell-btn shell-btn-primary" onclick="saveAAC()">${icon('save', 14)} ${escapeHtml(t('cfg_save'))}</button>
       </div>
     </div>
-  </div>`;
+  </div>`);
 }
 
 /**

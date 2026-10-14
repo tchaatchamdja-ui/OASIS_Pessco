@@ -46,6 +46,9 @@
 // Ce qui suit est volontairement sans logique : une ligne par sas, dans l'ordre.
 // Un fichier qui décide de l'ordre d'exécution ne doit rien faire d'autre.
 import './i18n';
+// La racine partagée des fenêtres modales (5.e.10) : employée par les quatre
+// écrans de configuration et par la barre.
+import './fenetres';
 // La barre d'écran et les libellés littéraux (5.e.0) : lus par les référentiels
 // et leurs voisins, donc placés avant eux.
 import './barre';

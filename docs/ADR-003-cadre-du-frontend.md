@@ -864,7 +864,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 949 | non mesuré |
            | CARE (`mesures`) | 6 428 | non mesuré |
            | PR (`profil_risque`) | 7 315 | non mesuré |
@@ -4093,6 +4093,105 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            La dernière ligne du sas des libellés appelait `window.applyTheme(…)`, c'est-à-
            dire la publication qu'il venait de poser deux lignes plus haut. Elle appelle la
            source. *Une publication n'est pas faite pour être relue par son auteur.*
+
+       5.e.10 [x] **La racine partagée des fenêtres a son module — la dernière dette
+           structurelle du portail** — fait le 14 octobre 2026.
+
+           Le portail n'ouvre pas ses fenêtres modales dans un conteneur par écran : il en
+           a **deux**, et deux seulement. `cfgModalRoot`, rendue par l'écran de
+           configuration, reçoit le balisage que **quatre** fichiers y écrivent à tour de
+           rôle — les référentiels, l'organigramme, les paramètres, la barre d'écran ;
+           `userModalRoot` est celle des comptes.
+
+           ── Une dette nommée cinq jours avant d'être payée ──
+
+           La fermeture vivait dans `referentiels.ts`. `barre.ts` et `organigramme.ts` la
+           lisaient donc sur `window`, parce que l'importer aurait fait un cycle :
+           `referentiels.ts` importe déjà `searchInputHtml` et `exportBar` de `barre.ts`.
+
+           La décision de 5.e.0 fut de laisser le prêt dans ce sens-là **et d'écrire la
+           vraie cause** : *la fenêtre d'import et celles des référentiels partagent une
+           racine que personne ne possède.* Elle est restée écrite cinq jours, et 5.e.9 l'a
+           laissée debout en la nommant pour la seconde fois.
+
+           **Le cycle ne disparaît pas par ruse** : il disparaît parce que la racine n'avait
+           jamais appartenu au CRUD des référentiels. Elle appartient à l'écran, et les cinq
+           fichiers en sont des usagers. C'est la leçon qu'il faut retenir du détour : *un
+           cycle d'imports n'est presque jamais un problème d'imports.* Il dit qu'une chose
+           partagée n'a pas de propriétaire, et la nommer prend une minute là où la
+           contourner prend une heure.
+
+           ── Ce que le module apporte, et que l'ancien code ne pouvait pas avoir ──
+
+           Dix requêtes s'écrivaient `document.querySelector('#cfgModalRoot …')` ou
+           `('#userModalRoot …')`, l'identifiant répété dans autant de chaînes. **Une faute
+           de frappe y rendait `null` sans un mot** — et le champ lu revenait vide, ce qui
+           est le défaut que ce dépôt redoute le plus.
+
+           Les deux racines sont désormais un **type** : `type Racine = 'cfgModalRoot' |
+           'userModalRoot'`. Contre-essayé deux fois, et le compilateur refuse les deux :
+           `ouvrir('cfgModalRoott', …)` et `dans('userModalRootX', …)` ne compilent plus.
+
+           *Un contre-essai qui ne compile pas est d'ordinaire un contre-essai absent* —
+           c'est la règle de 5.e.4. Ici le refus de compiler **est** le contrôle : ce que
+           la garde affirme est précisément qu'une racine inventée n'atteint plus le
+           navigateur. La distinction tient à ce qui est affirmé, non à l'outil.
+
+           ── Deux conduites devant une racine absente, et elles restent deux ──
+
+           | Geste | Racine absente | Décision |
+           |---|---|---|
+           | **ouvrir** une fenêtre de configuration | on renonce en silence | 5.d.1 |
+           | **ouvrir** une fenêtre de comptes | on **lève**, en nommant la cause | 5.e.1 |
+           | **refermer** l'une ou l'autre | on renonce en silence | *refermer une fenêtre qui n'est pas là n'est pas une erreur* |
+
+           Les unifier serait un **changement de comportement**, et un changement ne se
+           décide pas au passage d'un déplacement de code. Les deux conduites vivent donc
+           côte à côte dans le module, chacune avec sa fonction et sa raison.
+
+           **Et la divergence n'est pas couverte, il faut le dire** : rien n'éprouve que
+           l'ouverture d'une fenêtre de comptes lève quand sa racine manque. Le geste n'est
+           plus atteignable depuis un navigateur — `showNewUserModal` a quitté la surface
+           en 5.e.5 —, et fabriquer un contrôle qui ne mesurerait que son propre montage
+           serait pire que l'absence. Elle est nommée ici, et c'est tout ce qu'on peut en
+           dire honnêtement aujourd'hui.
+
+           ── La surface est **inchangée**, et c'est la preuve ──
+
+           `closeRefModal` reste publié, sous le même nom, par un sas neuf — *le sas qui
+           publie un nom est celui de son définisseur*, règle de 5.b. Les 70 noms du relevé
+           figé sont les mêmes, aux types près : le contrôle de surface est passé **sans
+           que le relevé soit refait**. Un refactoring qui changerait la surface ne serait
+           pas un refactoring.
+
+           ── Les cycles du portail, mesurés ──
+
+           **Douze cycles de deux fichiers.** Dix sont ceux de 5.e.9, assumés et éprouvés —
+           `configuration.ts` avec chacun de ses sept écrans, `demarrage.ts` avec trois de
+           ses vues. Deux sont les tables de traduction, qui se lisent l'une l'autre depuis
+           5.c. **`barre.ts ↔ referentiels.ts` n'y est plus** : c'est le seul qui n'était
+           pas voulu, et c'est celui que cette étape dissout.
+
+           ── Et un contrôle à moi qui ne tombait que sous charge ──
+
+           La campagne entière est tombée **deux fois** sur le contrôle du bouton de retour
+           écrit en 5.e.8 : « Attempted to use detached Frame », puis « Target closed ».
+           Lancé seul, le même contrôle passait — quatre fois.
+
+           La cause n'était pas dans le code mesuré, elle était dans la mesure :
+           l'hôte des modules **remplace** l'élément `#prFrame` quand il redessine, et le
+           contrôle gardait le cadre obtenu quelques secondes plus tôt. Sous charge, la
+           fenêtre entre les deux s'ouvrait ; seul, la machine était trop rapide pour
+           qu'elle s'ouvre.
+
+           *Un contrôle qui ne tombe que sous charge tombera un jour en intégration
+           continue, pour une raison qu'on n'aura plus sous la main.* Le cadre se reprend
+           désormais à l'instant de s'en servir, aux **deux** endroits qui l'emploient — le
+           premier n'était pas tombé, et il avait exactement la même fragilité.
+
+           C'est la quatrième fois en trois jours qu'un montage de preuve est la cause d'un
+           rouge, et la première où c'est la *charge de la machine* qui le révèle. Un
+           contrôle lancé seul n'est pas un contrôle éprouvé.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

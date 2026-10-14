@@ -26,6 +26,7 @@ import { t } from './traductions';
 import { renderConfig } from './configuration';
 import { tr } from './libelles';
 import { refLabel, type Enregistrement } from './schemas';
+import { closeRefModal, ouvrir } from './fenetres';
 import { loadRefs } from './outils';
 
 declare global {
@@ -194,9 +195,7 @@ export function exportPdfActivites(): void {
 }
 
 export function openImportModal(coll: string, title: string): void {
-  const racine = document.getElementById('cfgModalRoot');
-  if (!racine) return;
-  racine.innerHTML = `
+  ouvrir('cfgModalRoot', `
   <div class="shell-modal-overlay">
     <div class="shell-modal" style="max-width:460px;">
       <div class="shell-modal-header"><h3>Importer Excel — ${escapeHtml(title)}</h3><button class="shell-btn-icon" style="color:#fff;" onclick="closeRefModal()" aria-label="${escapeHtml(t('fermer'))}" title="${escapeHtml(t('fermer'))}">${icon('x', 18)}</button></div>
@@ -214,7 +213,7 @@ export function openImportModal(coll: string, title: string): void {
         <button class="shell-btn shell-btn-primary" onclick="doImport('${coll}')">${icon('layers', 14)} Importer</button>
       </div>
     </div>
-  </div>`;
+  </div>`);
 }
 
 /**
@@ -246,19 +245,15 @@ export async function doImport(coll: string): Promise<void> {
         + (errs.length ? ` — ${errs.length} ligne(s) ignorée(s)` : '');
       showToast(msg, errs.length ? 'warning' : 'success', errs.length ? 8000 : 4000);
       if (errs.length) console.warn('Import — lignes ignorées :\n' + errs.join('\n'));
-      // ── `closeRefModal` est lu sur `window`, et c'est pour éviter un cycle ──
+      // ── La racine partagée des fenêtres a son module (5.e.10) ──
       //
-      // Il appartient à `referentiels.ts` (5.d.1), qui importe désormais
-      // `searchInputHtml` et `exportBar` d'ici. L'importer en retour ferait un
-      // cycle entre la barre et le CRUD — que les deux survivraient, les deux
-      // noms n'étant lus qu'à l'appel, mais qui dirait faux sur ce qui dépend de
-      // quoi.
-      //
-      // Le vrai couplage est ailleurs, et il est réel : la fenêtre d'import et
-      // celles des référentiels partagent la racine `cfgModalRoot`. Il se
-      // dénouera quand cette racine aura son module ; d'ici là, le prêt est dans
-      // ce sens-ci.
-      window.closeRefModal();
+      // Il appartenait à `referentiels.ts` (5.d.1), qui importe `searchInputHtml`
+      // et `exportBar` d'ici : l'importer en retour aurait fait un cycle. La
+      // vraie cause était écrite depuis 5.e.0 — *la fenêtre d'import et celles
+      // des référentiels partagent une racine que personne ne possède* —, et
+      // elle est dénouée depuis le 14 octobre 2026 : la racine a son module
+      // (`./fenetres`), et les cinq fichiers qui l'emploient en sont des usagers.
+      closeRefModal();
       await loadRefs();
       void renderConfig();
     } else showToast(window.oasisMessageErreur(d, res.status, t('erreur_import')), 'error');

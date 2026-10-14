@@ -916,9 +916,24 @@ module.exports = async function parcoursSmoke(port) {
       return code;
     });
     if (ouverture) {
-      const frame = await page.waitForSelector('#prFrame', { timeout: 10000 });
-      const contenu = await frame.contentFrame();
+      // ── Le cadre se **reprend** à chaque fois qu'on s'en sert ──
+      //
+      // L'hôte des modules remplace l'élément `#prFrame` quand il redessine : un
+      // cadre obtenu quelques secondes plus tôt est alors **détaché**, et
+      // Puppeteer lève « Attempted to use detached Frame » ou « Target closed ».
+      //
+      // Mesuré le 14 octobre 2026 : le contrôle du bouton de retour (5.e.8)
+      // gardait son handle et tombait **deux fois dans la campagne entière**,
+      // jamais lancé seul — la machine, moins chargée, ne laissait pas la fenêtre
+      // s'ouvrir. *Un contrôle qui ne tombe que sous charge tombera un jour en
+      // intégration continue, pour une raison qu'on n'aura plus sous la main.*
+      const cadreVivant = async () => {
+        const el = await page.$('#prFrame');
+        return el ? el.contentFrame() : null;
+      };
+      await page.waitForSelector('#prFrame', { timeout: 10000 });
       await new Promise((r) => setTimeout(r, 2500));   // le module charge ses données
+      const contenu = await cadreVivant();
       const dedans = contenu ? await contenu.evaluate(() => ({
         titre: document.title,
         corps: document.body.textContent.trim().length,
@@ -948,8 +963,9 @@ module.exports = async function parcoursSmoke(port) {
       // `.oasis-back-btn` à 1. Les deux fonctions étaient donc du **code mort**
       // portant un nom de message faux, et non un bouton cassé. La différence
       // compte : l'une se corrige, l'autre s'enlève.
-      const parLeBouton = contenu ? await (async () => {
-        const trouve = await contenu.evaluate(() => {
+      const dansLeCadre = await cadreVivant();
+      const parLeBouton = dansLeCadre ? await (async () => {
+        const trouve = await dansLeCadre.evaluate(() => {
           const btn = document.querySelector('.oasis-back-btn');
           if (!btn) return null;
           btn.click();

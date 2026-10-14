@@ -4622,13 +4622,69 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            saura où reprendre. *Relever ce qu'on ne couvre pas encore vaut mieux que de
            l'ignorer, et bien mieux que de le couvrir à moitié.*
 
-           ── Une assertion qu'il a fallu ne pas écrire ──
+           ── Une assertion qu'il a fallu ne pas écrire — et qui était écrite à tort ──
 
            La suite HTTP affirme qu'un **rapport v1** naît à la soumission. La ronde a donc
-           voulu l'asserter — et la mesure a rendu une liste **vide** pour ce dossier : le
-           geste de l'écran ne passe pas par la même route que la suite HTTP. L'assertion
-           n'a pas été écrite. *Reprendre l'affirmation d'une autre suite sans la mesurer
-           chez soi, c'est hériter d'une vérité qui n'est pas la sienne.*
+           voulu l'asserter, et la mesure a rendu une liste **vide** pour ce dossier. J'en
+           ai conclu que « le geste de l'écran ne passe pas par la même route que la suite
+           HTTP », et renoncé à l'assertion.
+
+           **Cette conclusion était fausse** — corrigée en 5.f.6 le même jour. Le geste
+           appelle bien `PUT /dossiers/:id/submit`, le rapport naît, et il est visible. La
+           liste était vide pour une raison de mon fait : *mon relevé interrogeait
+           `/rapports` **après** avoir supprimé le dossier*, et supprimer un dossier
+           emporte ses rapports.
+
+           La maxime écrite ici — « reprendre l'affirmation d'une autre suite sans la
+           mesurer chez soi, c'est hériter d'une vérité qui n'est pas la sienne » — est
+           juste, mais elle ne s'appliquait pas : ce n'était pas une vérité héritée, c'était
+           **ma mesure qui regardait après le ménage**. Le bon enseignement est ailleurs, et
+           il est plus simple : *l'ordre d'un relevé fait partie du relevé.*
+
+       5.f.6 [x] **SURV — le rapport, le renvoi, et une conclusion de la veille à
+           corriger** — fait le 14 octobre 2026.
+
+           Vingt-neuf contrôles ; **19 gestes couverts sur 310**.
+
+           ── La correction, d'abord ──
+
+           5.f.5 affirmait que le geste de soumission « ne passe pas par la même route que
+           la suite HTTP », au motif que la liste des rapports était revenue vide.
+           **C'était faux.** Le geste appelle bien `PUT /dossiers/:id/submit`, et le
+           rapport naît : `RAP-2026-001-v1`, statut `soumis`, version 1.
+
+           La liste était vide pour une raison de mon fait : *le relevé interrogeait
+           `/rapports` **après** avoir supprimé le dossier*, et la suppression d'un dossier
+           emporte ses rapports — la cascade que 5.f.3 avait justement mesurée pour les
+           notifications. J'avais écrit une conclusion sur le code à partir d'un relevé mal
+           ordonné.
+
+           *L'ordre d'un relevé fait partie du relevé.* La maxime inscrite en 5.f.5 — ne
+           pas hériter de la vérité d'une autre suite — reste juste, mais elle ne
+           s'appliquait pas ici, et une leçon tirée d'un diagnostic faux est une leçon qui
+           trompera la prochaine fois.
+
+           ── Les deux contrôles que la correction permet ──
+
+           | Contrôle | Ce qu'il vérifie |
+           |---|---|
+           | `la soumission fait naître un rapport « v1 » soumis` | un rapport, un seul, pour ce dossier : version 1, statut `soumis`, référence en `-v1` |
+           | `effacer le dossier emporte sa notification **et son rapport**` | la cascade complète, cette fois interrogée dans le bon ordre |
+
+           La seconde est l'assertion même dont l'absence avait masqué l'erreur : elle fait
+           désormais du ménage une **propriété vérifiée**, et non une opération de confort.
+
+           ── Le renvoi, exercé ; la validation, non ──
+
+           Des trois gestes de l'étape « Validation », la ronde exerce `execReturnDossier` :
+           il ramène le dossier à la rédaction, d'où la soumission l'avait tiré, et la
+           soumission est déjà éprouvée. Le contrôle vérifie **en base** que l'étape est
+           revenue à `redaction`.
+
+           `execValidateRapport` reste relevé et non exercé, et c'est écrit : valider
+           avance le rapport vers la transmission et les suites de « Mesures d'Application »
+           — un état dont la réversibilité n'est **pas** mesurée. *On n'exerce pas un geste
+           dont on ne sait pas défaire l'effet ; on le relève, et on dit pourquoi.*
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

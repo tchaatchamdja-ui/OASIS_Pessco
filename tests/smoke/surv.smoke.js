@@ -566,14 +566,64 @@ module.exports = async function survSmoke(port) {
         && avanceEnBase.objet === avance.objet,
         JSON.stringify({ attendu: avance.objet, ...avanceEnBase }));
 
-      // Les gestes de l'étape « Validation » sont **relevés et non exercés** :
-      // valider ou renvoyer un rapport engage le cycle au-delà de ce que cette
-      // ronde sait défaire. Ils sont nommés ici pour que la suite n° 0.d sache
-      // où reprendre.
-      verifier('l’étape « Validation » offre ses gestes, relevés pour la suite',
+      verifier('l’étape « Validation » offre ses gestes',
         (avance.gestesDeValidation || []).includes('execValidateRapport')
         && (avance.gestesDeValidation || []).includes('execReturnDossier'),
         (avance.gestesDeValidation || []).join(', '));
+
+      // ── Le rapport que la soumission fait naître ──
+      //
+      // **Correction d'une affirmation de 5.f.5.** Il y était écrit que « le geste
+      // de l'écran ne passe pas par la même route que la suite HTTP », parce que
+      // la liste des rapports était revenue vide. Elle l'était pour une raison
+      // bien plus simple, et de mon fait : *le relevé interrogeait `/rapports`
+      // **après** avoir supprimé le dossier*, et supprimer un dossier emporte ses
+      // rapports.
+      //
+      // Mesuré proprement : le geste appelle bien `PUT /dossiers/:id/submit`, le
+      // même que la suite HTTP, et il en naît un rapport **`…-v1`, statut
+      // `soumis`**. L'assertion que 5.f.5 avait renoncé à écrire est donc écrite
+      // ici — et la leçon de 5.f.5 tenait pour la mauvaise raison : ce n'était
+      // pas une vérité héritée d'une autre suite, c'était ma mesure qui regardait
+      // après le ménage.
+      const rapport = await page.evaluate(async (ctx) => {
+        const liste = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
+        const miens = (liste || []).filter((r) => r.dossier_id === ctx.id);
+        return { tous: (liste || []).length, miens: miens.length, premier: miens[0] || null };
+      }, { api: M, id: chaine.dossierId });
+      verifier('la soumission fait naître un rapport « v1 » soumis, porté par le dossier',
+        rapport.miens === 1 && rapport.premier
+        && rapport.premier.version === 1 && rapport.premier.statut === 'soumis'
+        && /-v1$/.test(rapport.premier.reference || ''),
+        JSON.stringify(rapport.premier
+          ? { reference: rapport.premier.reference, version: rapport.premier.version, statut: rapport.premier.statut }
+          : rapport));
+
+      // ── Le renvoi, et pourquoi c'est celui-là qu'on exerce ──
+      //
+      // Des trois gestes de l'étape « Validation », le renvoi est le seul que la
+      // ronde sait **défaire d'elle-même** : il ramène le dossier à la rédaction,
+      // d'où la soumission l'a tiré, et l'on sait déjà que la soumission
+      // fonctionne. Valider un rapport, lui, l'avance vers la transmission et les
+      // suites de « Mesures d'Application » — un état dont la réversibilité n'est
+      // pas mesurée, et qu'on n'exerce donc pas.
+      const renvoi = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        document.querySelector('[onclick^="execReturnDossier"]')?.click();
+        await attendre(700);
+        const oui = document.querySelector('.oasis-confirm-oui');
+        const confirme = !!oui;
+        if (oui) oui.click();
+        await attendre(3800);
+        return { confirme };
+      });
+      const renvoiEnBase = await page.evaluate(async (ctx) => {
+        const d = await (await fetch(`${ctx.api}/dossiers/${ctx.id}`, { credentials: 'same-origin' })).json();
+        return { statut: d.statut, etape: d.current_step };
+      }, { api: M, id: chaine.dossierId });
+      verifier('le renvoi ramène le dossier à la rédaction, et le serveur le porte',
+        renvoi.confirme === true && renvoiEnBase.etape === 'redaction',
+        JSON.stringify({ ...renvoi, ...renvoiEnBase }));
 
       const refermeture = await page.evaluate(async () => {
         document.querySelector('[onclick^="execCloseSlider"]')?.click();
@@ -677,14 +727,20 @@ module.exports = async function survSmoke(port) {
         const dossier = r.status;
         const restes = await (await fetch(`${ctx.api}/dossiers`, { credentials: 'same-origin' })).json();
         const notifs = await (await fetch(`${ctx.api}/notifications`, { credentials: 'same-origin' })).json();
+        const rapports = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
         return {
           dossier,
           dossierEncore: (restes || []).some((d) => d.id === ctx.dossierId),
           notifEncore: (notifs || []).some((n) => n.id === ctx.notifId),
+          // La cascade porte aussi les rapports : c'est **cette** interrogation,
+          // faite après la suppression, qui avait fait écrire une fausse
+          // conclusion en 5.f.5.
+          rapportsEncore: (rapports || []).filter((r) => r.dossier_id === ctx.dossierId).length,
         };
       }, { api: M, dossierId: chaine.dossierId, notifId: chaine.notifId });
-      verifier('effacer le dossier emporte sa notification : la ronde ne laisse rien',
-        menage.dossier === 200 && !menage.dossierEncore && !menage.notifEncore,
+      verifier('effacer le dossier emporte sa notification et son rapport : la ronde ne laisse rien',
+        menage.dossier === 200 && !menage.dossierEncore && !menage.notifEncore
+        && menage.rapportsEncore === 0,
         JSON.stringify(menage));
     }
 

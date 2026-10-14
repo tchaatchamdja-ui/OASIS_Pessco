@@ -2,7 +2,7 @@
  "releve": "2026-10-14",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 18,
+ "exerces": 19,
  "indecidables": 5,
  "gestes": [
   {
@@ -192,7 +192,7 @@
    "evenement": "click",
    "nom": "execReturnDossier",
    "source": "execReturnDossier('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",

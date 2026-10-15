@@ -2,7 +2,7 @@
  "releve": "2026-10-15",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 22,
+ "exerces": 25,
  "indecidables": 5,
  "gestes": [
   {
@@ -111,7 +111,7 @@
    "evenement": "click",
    "nom": "execRemoveDossierChecklist",
    "source": "execRemoveDossierChecklist('${dossierId}','${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -327,7 +327,7 @@
    "evenement": "click",
    "nom": "execSetDossierChecklistValidee",
    "source": "execSetDossierChecklistValidee('${dossierId}','${cid}',false)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -336,7 +336,7 @@
    "evenement": "click",
    "nom": "execSetDossierChecklistValidee",
    "source": "execSetDossierChecklistValidee('${dossierId}','${cid}',true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -941,7 +941,7 @@
    "evenement": "click",
    "nom": "execSaveChecklistsPicker",
    "source": "execSaveChecklistsPicker('${dossierId}','${returnTab || ''}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",

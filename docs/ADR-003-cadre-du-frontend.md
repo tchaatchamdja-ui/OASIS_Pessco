@@ -4804,6 +4804,49 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            validation, la constatation quitte « En Préparation » et cette ligne disparaît.
            Le contrôle éprouve les deux sens : le volet se referme, et il se réouvre.
 
+       5.f.9 [x] **SURV — les checklists du dossier, et deux ordres qui ne tenaient pas** —
+           fait le 15 octobre 2026.
+
+           Trente-sept contrôles ; **25 gestes couverts sur 310**.
+
+           ── Ce que la ronde fait désormais des checklists ──
+
+           Le jeu d'essai porte **deux** modèles de checklist, et le sélecteur n'en propose
+           qu'un — *« filtrées par le secteur de l'activité (1 disponible) »*, le secteur
+           venant du prestataire du dossier. Le contrôle ne suppose donc **aucun nombre** :
+           il exige qu'il y en ait au moins un, et coche le premier.
+
+           | Geste | Vérifié |
+           |---|---|
+           | `execOpenChecklistsPicker` puis `shellCloseModal` | le sélecteur s'ouvre **et** se referme sans rien retenir |
+           | `execSaveChecklistsPicker` | `realisation_checklists` porte l'identifiant coché, **relu chez le serveur** |
+           | `execRemoveDossierChecklist` | confirmation pressée, la liste est **vide** en base |
+           | `execSetDossierChecklistValidee` | à la rédaction : `checklists_validees` porte l'identifiant |
+
+           La ronde retient une checklist, la retire, puis en retient une de nouveau : sans
+           cela, la rédaction n'aurait rien à valider. *Un geste qui défait doit être suivi
+           de ce qui rétablit, sinon la ronde se coupe les pieds.*
+
+           ── Deux ordres qui ne tenaient pas, et ce qu'ils enseignent ──
+
+           **Le premier.** Le bloc de l'équipe était avant le sélecteur. Valider le
+           sélecteur **redessine le volet**, et la ligne d'équipe ajoutée plus tôt partait
+           avec : l'enregistrement de la réalisation a rendu une équipe **vide**, et le
+           contrôle de l'équipe est tombé — sur un geste qui marche.
+
+           *Un geste qui redessine efface ce que les précédents ont saisi.* Dans une ronde,
+           ce qui se **saisit** vient donc après ce qui **redessine**.
+
+           **Le second.** Le retrait de la checklist était placé à la rédaction, avec sa
+           validation. Son bouton n'existe **qu'à l'étape Réalisation** — relevé à la
+           rédaction, il n'y est pas. Le contrôle rendait « bouton absent » sur un geste
+           qui marche, trois étapes plus loin que là où il vit.
+
+           C'est la troisième fois en deux jours que l'ordre d'une ronde ou d'un relevé est
+           la cause d'un rouge — après le ménage qui masquait un rapport (5.f.6) et les
+           contrôles de page que la validation déplaçait (5.f.7). **L'ordre fait partie de
+           la mesure**, et il se mesure comme le reste.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

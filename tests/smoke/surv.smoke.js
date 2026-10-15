@@ -524,7 +524,7 @@ module.exports = async function survSmoke(port) {
       // volet par `[class*="slider"]`, et les deux rendaient **zéro** — un
       // contrôle qui aurait passé en ne regardant rien. Le programme est un
       // `#realisation_programme_table`, le volet un `#execSlider`.
-      const volet = await page.evaluate(async () => {
+      const volet = await page.evaluate(async (dossierId) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const corps = () => (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length;
         const b = document.querySelector('[onclick^="execOpenDossierSlider"]');
@@ -561,7 +561,80 @@ module.exports = async function survSmoke(port) {
         await attendre(3000);
         r.reouvert = !!document.getElementById('execSlider');
 
+        // 1 ter. Le sélecteur de checklists : ouvert, annulé, puis ouvert et **validé**
+        //
+        // Le jeu d'essai porte deux modèles de checklist ; le sélecteur n'en
+        // propose qu'un, et le dit : *« filtrées par le secteur de l'activité
+        // (1 disponible) »*. Le filtre vient du secteur du prestataire du
+        // dossier, et le contrôle ne suppose donc **aucun nombre** : il exige
+        // qu'il y en ait au moins un, et coche le premier.
+        document.querySelector('[onclick^="execOpenChecklistsPicker"]')?.click();
+        await attendre(2000);
+        r.picker = !!document.querySelector('[onclick^="shellCloseModal"]');
+        r.casesProposees = document.querySelectorAll('.picker-chk-cb').length;
+        document.querySelector('[onclick^="shellCloseModal"]')?.click();
+        await attendre(900);
+        r.pickerReferme = !document.querySelector('[onclick^="shellCloseModal"]');
+
+        // Annulé, rien ne doit avoir été retenu — c'est l'autre moitié du geste,
+        // et celle qu'un contrôle unilatéral oublie.
+        document.querySelector('[onclick^="execOpenChecklistsPicker"]')?.click();
+        await attendre(2000);
+        const cases = [...document.querySelectorAll('.picker-chk-cb')];
+        if (cases[0]) {
+          cases[0].checked = true;
+          r.checklistCochee = cases[0].value;
+          document.querySelector('[onclick^="execSaveChecklistsPicker"]')?.click();
+          await attendre(3000);
+        }
+        r.gestesDeChecklist = [...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)\s*\(/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean).filter((n, i, a) => a.indexOf(n) === i);
+        const retenues = async () => {
+          const d = await (await fetch(`/api/m/execution/dossiers/${dossierId}`, { credentials: 'same-origin' })).json();
+          try { return JSON.parse(d.realisation_checklists || '[]'); } catch { return null; }
+        };
+        r.retenuesApresChoix = await retenues();
+
+        // ── Le retrait, ici et pas à la rédaction ──
+        //
+        // Son bouton n'existe **qu'à l'étape Réalisation** : relevé à la
+        // rédaction, il n'y est pas. Le premier jet l'y cherchait et rendait
+        // « bouton absent » sur un geste qui marche, trois étapes plus loin.
+        const retirer = document.querySelector('[onclick^="execRemoveDossierChecklist"]');
+        r.boutonRetirer = !!retirer;
+        if (retirer) {
+          retirer.click();
+          await attendre(700);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          r.retraitConfirme = !!oui;
+          if (oui) { oui.click(); await attendre(3000); }
+        }
+        r.retenuesApresRetrait = await retenues();
+
+        // Et l'on en retient une de nouveau : la rédaction a besoin d'une
+        // checklist pour que son geste de validation existe.
+        document.querySelector('[onclick^="execOpenChecklistsPicker"]')?.click();
+        await attendre(2000);
+        const encore = [...document.querySelectorAll('.picker-chk-cb')];
+        if (encore[0]) {
+          encore[0].checked = true;
+          document.querySelector('[onclick^="execSaveChecklistsPicker"]')?.click();
+          await attendre(3000);
+        }
+
+
         // 2. Un membre d'équipe, une ligne de programme.
+        //
+        // ── Après les checklists, et c'est mesuré ──
+        //
+        // Ce bloc était **avant** le sélecteur de checklists. Son enregistrement
+        // a aussitôt rendu une équipe **vide** : valider le sélecteur redessine
+        // le volet, et la ligne d'équipe ajoutée plus tôt partait avec. Le
+        // contrôle de l'équipe est tombé — sur un geste qui marche.
+        //
+        // *Un geste qui redessine efface ce que les précédents ont saisi.* Dans
+        // une ronde, ce qui se saisit vient donc **après** ce qui redessine.
         r.equipeAvant = document.querySelectorAll('.real-equipe-nom').length;
         document.querySelector('[onclick^="execAddRealisationEquipeMember"]')?.click();
         await attendre(600);
@@ -582,14 +655,6 @@ module.exports = async function survSmoke(port) {
         r.progVideApres = !!document.getElementById('real_prog_empty');
         r.progSaisieApres = document.querySelectorAll('#realisation_programme_table tbody [data-field="date"]').length;
 
-        // 3. Le sélecteur de checklists s'ouvre, et se referme.
-        document.querySelector('[onclick^="execOpenChecklistsPicker"]')?.click();
-        await attendre(2000);
-        r.picker = !!document.querySelector('[onclick^="shellCloseModal"]');
-        document.querySelector('[onclick^="shellCloseModal"]')?.click();
-        await attendre(900);
-        r.pickerReferme = !document.querySelector('[onclick^="shellCloseModal"]');
-
         // 4. L'inspecteur choisi, puis l'enregistrement de la réalisation.
         const sel = document.querySelector('.real-equipe-nom');
         const opt = sel ? [...sel.options].find((o) => o.value) : null;
@@ -597,7 +662,7 @@ module.exports = async function survSmoke(port) {
         document.querySelector('[onclick^="execSaveRealisation"]')?.click();
         await attendre(2600);
         return r;
-      });
+      }, chaine.dossierId);
       verifier('le volet du dossier s’ouvre, et changer d’étape le redessine',
         volet.bouton && volet.ouvert && volet.etapes >= 2
         && volet.pas.avant > 0 && volet.pas.surNotification !== volet.pas.avant,
@@ -614,9 +679,24 @@ module.exports = async function survSmoke(port) {
           messageVide: [volet.progVideAvant, volet.progVideApres],
           champsDeSaisie: [volet.progSaisieAvant, volet.progSaisieApres],
         }));
-      verifier('le sélecteur de checklists s’ouvre et se referme',
-        volet.picker === true && volet.pickerReferme === true,
-        JSON.stringify({ ouvert: volet.picker, referme: volet.pickerReferme }));
+      verifier('le sélecteur de checklists s’ouvre, propose les modèles du secteur, et se referme',
+        volet.picker === true && volet.pickerReferme === true && volet.casesProposees >= 1,
+        JSON.stringify({ ouvert: volet.picker, referme: volet.pickerReferme, cases: volet.casesProposees }));
+
+      verifier('la checklist retenue dans le sélecteur est enregistrée sur le dossier',
+        !!volet.checklistCochee
+        && Array.isArray(volet.retenuesApresChoix)
+        && volet.retenuesApresChoix.includes(volet.checklistCochee),
+        JSON.stringify({ cochee: volet.checklistCochee, retenues: volet.retenuesApresChoix }));
+      verifier('la checklist retenue ouvre ses deux gestes dans le volet',
+        (volet.gestesDeChecklist || []).includes('execOpenChecklistFiller')
+        && (volet.gestesDeChecklist || []).includes('execRemoveDossierChecklist'),
+        (volet.gestesDeChecklist || []).join(', '));
+      verifier('la checklist se retire du dossier par son geste, et le serveur ne la porte plus',
+        volet.boutonRetirer === true && volet.retraitConfirme === true
+        && Array.isArray(volet.retenuesApresRetrait) && volet.retenuesApresRetrait.length === 0,
+        JSON.stringify({ bouton: volet.boutonRetirer, confirme: volet.retraitConfirme,
+          apres: volet.retenuesApresRetrait }));
 
       // ── L'écriture de la réalisation, vérifiée **en base** ──
       //
@@ -669,6 +749,16 @@ module.exports = async function survSmoke(port) {
         r.clotureConfirmee = await confirmer();
         r.etapesApresCloture = document.querySelectorAll('[onclick^="execSwitchDossierStep"]').length;
 
+        // 1 bis. La checklist du dossier, validée puis retirée — à la rédaction,
+        //        où l'onglet « Checklist et autres doc. » les porte.
+        const valider = document.querySelector('[onclick^="execSetDossierChecklistValidee"]');
+        r.boutonValiderChecklist = !!valider;
+        if (valider) {
+          valider.click();
+          await attendre(700);
+          r.checklistValideeConfirmee = await confirmer();
+        }
+
         // 2. Une annexe, et l'objet de l'activité rédigé.
         r.annexeAvant = document.querySelectorAll('#execSlider [class*="annexe"]').length;
         document.querySelector('[onclick^="execAddAnnexeBlock"]')?.click();
@@ -701,8 +791,19 @@ module.exports = async function survSmoke(port) {
 
       const avanceEnBase = await page.evaluate(async (ctx) => {
         const d = await (await fetch(`${ctx.api}/dossiers/${ctx.id}`, { credentials: 'same-origin' })).json();
-        return { statut: d.statut, etape: d.current_step, objet: d.objet_activite || '' };
+        const liste = (v) => {
+          if (typeof v !== 'string') return Array.isArray(v) ? v : null;
+          try { return JSON.parse(v); } catch { return null; }
+        };
+        return {
+          statut: d.statut, etape: d.current_step, objet: d.objet_activite || '',
+          validees: liste(d.checklists_validees), retenues: liste(d.realisation_checklists),
+        };
       }, { api: M, id: chaine.dossierId });
+      verifier('la checklist du dossier se valide à la rédaction, et le serveur la porte',
+        avance.boutonValiderChecklist === true && avance.checklistValideeConfirmee === true
+        && (avanceEnBase.validees || []).includes(volet.checklistCochee),
+        JSON.stringify({ valider: avance.boutonValiderChecklist, validees: avanceEnBase.validees }));
       verifier('le dossier soumis porte en base son objet, son statut et son étape',
         avance.soumissionConfirmee === true
         && avanceEnBase.statut === 'soumis' && avanceEnBase.etape === 'validation'

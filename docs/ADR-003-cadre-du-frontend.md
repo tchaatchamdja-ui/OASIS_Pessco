@@ -5475,6 +5475,55 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            refuse une ligne sans domaine, pose une erreur et **sort sans sauver**.
            La portée s'exerce dans la fenêtre qui ne sauvegarde pas.
 
+       5.f.17 [x] **PLAN — et la bonne assertion était écrite dans le geste
+           lui-même** — fait le 15 octobre 2026.
+
+           **Treize contrôles ; 20 gestes sur 92 (22 %).**
+
+           Le quatrième écran à recevoir sa suite, et le patron ne change plus :
+           la barre conforme à la source, l'atteignabilité de toute page de
+           l'aiguillage, le tour des pages par de vrais clics, puis la ronde des
+           gestes **des** pages — volets et fenêtres ouverts puis refermés,
+           bascules dans les deux sens, export capturé par relais.
+
+           Deux points propres à cet écran :
+
+           - **Sa septième page n'a aucune entrée de menu, et reste
+             atteignable.** « plan-detail » s'ouvre depuis la table des plans en
+             posant `currentPage`, et non par un appel nommé. Le contrôle lit
+             donc **les deux chemins** — `planNavigateTo('…')` et
+             `currentPage = '…'`. Un contrôle qui n'aurait lu que le premier
+             aurait dénoncé une page orpheline qui ne l'est pas.
+           - **Le volet du calendrier a trois gestes qui le redessinent.**
+             Changer d'année, défiler, revenir à aujourd'hui : le contrôle vérifie
+             qu'il reste **garni** après chacun — un geste qui viderait le volet
+             passerait sinon, puisque le volet serait toujours là.
+
+           ── La quatrième fois que l'assertion visait la grandeur la plus
+              visible ──
+
+           Le contrôle de l'accordéon a rougi sur un geste qui marche : il
+           comptait les lignes de la table, **34 avant, 34 pendant, 34 après**.
+           `planAccBasculer` bascule une classe `expanded` sur son conteneur et
+           pose `aria-expanded` sur son en-tête ; le dépliage est affaire de
+           rendu, non de document.
+
+           C'est la quatrième du genre, après `.ramp-slider` qui survit à la
+           fermeture du volet, le haut d'une page pris pour son panneau, et les
+           lignes d'un regroupement replié. Le motif est toujours le même : je
+           vais vers la grandeur **la plus facile à compter** au lieu de celle
+           que le code change.
+
+           Et ici, le remède était sous les yeux : le geste **nomme** la
+           propriété qu'il modifie. *La bonne assertion est souvent écrite dans
+           le geste lui-même.* Elle est de surcroît la meilleure : `aria-expanded`
+           est ce qu'un lecteur d'écran lit, de sorte que le contrôle éprouve
+           maintenant l'accessibilité en même temps que la bascule.
+
+           Le geste a d'ailleurs une **variante clavier**, `planAccClavier`, et
+           elle est exercée : *un en-tête qui se clique mais ne répond pas à
+           Entrée n'est pas un bouton.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

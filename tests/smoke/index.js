@@ -56,6 +56,10 @@ const suites = [
   // entièrement converti. C'est lui qui a montré que le mouchard était aveugle
   // aux gestionnaires de React (ADR-003, 5.f.16).
   { nom: 'droits-navigateur', port: 4797, run: require('./droits.navigateur.smoke') },
+  // PLAN dans un navigateur : le quatrième écran à recevoir sa suite
+  // (ADR-003, 5.f.17). Son nom porte « navigateur » pour que le filtre de
+  // l'argument la distingue de `planification`, la suite HTTP du même module.
+  { nom: 'planification-navigateur', port: 4797, run: require('./planification.navigateur.smoke') },
 ];
 
 (async () => {

@@ -165,7 +165,7 @@ ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
 // `suite` est désormais refusé plutôt que mesuré de travers.
 ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
 ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: null };
-ECRANS.planification = { ...ecranDeModule('planification'), suite: null };
+ECRANS.planification = { ...ecranDeModule('planification'), suite: 'planification-navigateur' };
 ECRANS.mesures = { ...ecranDeModule('mesures'), suite: null };
 ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 

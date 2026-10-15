@@ -243,20 +243,31 @@ Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 129 pour **84** noms
 distincts, et la couverture se mesure sur les noms.
 
+**Les six écrans sont relevés** depuis le 15 octobre 2026 (ADR-003 n° 5.f.13). Les chiffres
+ci-dessous sont ceux de l'instrument, et non d'un `grep` : les trois premières lignes ont
+corrigé l'estimation qui les précédait — RAMP était annoncé à 365 occurrences, il en porte 362.
+
 | Écran | Lignes | Occurrences | Gestes nommés | Exercés |
 |---|---|---|---|---|
-| PLAN | 5 949 | 135 | *non relevé* | — |
-| CARE | 6 428 | 145 | *non relevé* | — |
-| PR | 7 315 | 186 | *non relevé* | — |
-| RAMP | 12 470 | 365 | *non relevé* | — |
+| DROITS | *convertie* | **30** | **15** | *non mesurée* |
+| PLAN | 5 949 | **133** | **92** | *non mesurée* |
+| CARE | 6 428 | **143** | **89** | *non mesurée* |
+| PR | 7 315 | **185** | **94** | *non mesurée* |
+| RAMP | 12 470 | **362** | **207** | *non mesurée* |
 | SURV | 23 731 | **500** | **310** | **38** |
-| **Total** | **55 893** | **1 334** | | |
+| **Total** | | **1 353** | **807** | **38** |
 
-Le relevé nommé de **SURV** est fait — 14 octobre 2026, ADR-003 n° 5.f.0 : 310 noms, dont 269
-noms de fonction et 41 expressions que le balisage appelle en ligne. Il est figé dans
-`tests/smoke/gestes-execution.json`, gardé contre la dérive, et son « 1 sur 310 » est imprimé à
-chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but de la fabrique
-d'écrans de `scripts/relever-gestes.js`.
+« Non mesurée » n'est pas « 0 % », et la distinction est tenue par l'outil : cinq écrans n'ont
+pas encore de suite de navigateur, et le relevé **refuse** de leur attribuer un chiffre —
+`suite: null` fige l'inventaire sans prétendre à une couverture. Le défaut implicite qui aurait
+fait tourner le parcours du portail sur un écran de module, et rendu « 0 exercé » indiscernable
+du vrai, est supprimé.
+
+**DROITS a demandé une quatrième forme de geste.** Son relevé rendait d'abord *zéro* : seul
+écran entièrement converti, ses gestionnaires sont des propriétés JSX — `onClick={fermer}` —
+que ni l'attribut de balisage, ni `addEventListener`, ni la propriété d'un élément du DOM ne
+font voir. C'est le dénominateur qui disparaît avec la conversion, poussé à son terme : **le
+plus converti des six écrans était le seul qu'on ne mesurait plus**.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
 `tests/smoke/surv.smoke.js`, **cinquante-et-un contrôles** — l'écran se monte, ses sept pages se

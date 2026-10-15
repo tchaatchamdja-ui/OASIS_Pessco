@@ -5134,6 +5134,104 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            ce contrôle existe. *La cascade se mesure sur tout ce que la ronde a
            créé, non sur ce dont on se souvient qu'elle a créé.*
 
+       5.f.13 [x] **Les cinq écrans restants sont inventoriés — et le plus
+           converti des six était le seul qu'on ne mesurait plus** — fait le
+           15 octobre 2026.
+
+           ── Les six inventaires, et ce qu'ils disent ──
+
+           | Écran | Noms | Occurrences | Couverture |
+           |---|---|---|---|
+           | SURV (`execution`) | 310 | 500 | **38 exercés** |
+           | RAMP (`ramp`) | 207 | 362 | *non mesurée* |
+           | PR (`profil_risque`) | 94 | 185 | *non mesurée* |
+           | PLAN (`planification`) | 92 | 133 | *non mesurée* |
+           | CARE (`mesures`) | 89 | 143 | *non mesurée* |
+           | DROITS (`droits`) | 15 | 30 | *non mesurée* |
+
+           Les chiffres annoncés jusqu'ici venaient d'un `grep` grossier et
+           étaient faux : RAMP comptait « 365 occurrences », il en porte **362**
+           pour 207 noms ; PR « 186 » contre 185 ; CARE « 145 » contre 143.
+           L'écart est petit, mais un dénominateur approché n'est pas un
+           dénominateur.
+
+           ── « Non mesuré » n'est pas « 0 % », et la différence tenait à un
+              `||` ──
+
+           Le lanceur écrivait `ecran.suite || 'parcours'`. Un écran de module
+           ajouté sans suite aurait donc fait tourner **le parcours du portail**,
+           qui ne clique rien dans un module : le relevé aurait annoncé
+           **0 geste exercé sur 207**.
+
+           Ce zéro-là est le pire des résultats, parce qu'il est **indiscernable
+           du vrai**. « 0 sur 207 » se lit « cet écran n'est pas couvert » quand
+           il faudrait lire « cet écran n'est pas mesuré ». C'est précisément la
+           faute que l'entrée du portail dénonce douze lignes plus haut dans le
+           même fichier, et elle serait rentrée par la porte de la valeur par
+           défaut.
+
+           `suite: null` déclare donc l'absence : l'outil fige l'inventaire et
+           **ne prétend à aucune couverture**. Le défaut implicite est supprimé —
+           un écran sans `suite` est refusé plutôt que mesuré de travers. Et deux
+           garde-fous tiennent la distinction : la ligne imprimée à chaque
+           campagne dit « couverture non mesurée, pas de suite de navigateur », et
+           la déclaration exige `_couverture_non_mesuree: true` en **refusant**
+           un chiffre. *Un zéro déclaré se lit comme une mesure ; celui-là n'en
+           est pas une.*
+
+           ── DROITS rendait zéro, et ce n'était pas une panne ──
+
+           Le relevé de DROITS a d'abord rendu **aucun geste**, et l'outil a
+           traité ce zéro comme un chemin faux. Il ne l'était pas : DROITS est le
+           seul écran **entièrement converti**, il n'a plus aucun fichier
+           JavaScript qui lui soit propre, et ses gestionnaires sont des
+           propriétés JSX — `onClick={fermer}`, `onClick={() => ouvrir(x)}`.
+
+           Ni attribut de balisage, ni `addEventListener`, ni propriété d'un
+           élément du DOM : **les trois formes que l'extracteur savait lire ne le
+           voyaient pas**. L'écran en porte trente.
+
+           C'est la faute du portail poussée à son terme — *un dénominateur qui
+           baisse à chaque conversion*. Ici il ne baissait pas, il
+           **disparaissait** : la conversion achevée d'un écran se serait
+           accompagnée de l'arrêt silencieux de sa mesure, et **le plus converti
+           des six écrans était le seul qu'on ne mesurait plus**. Le succès de la
+           migration effaçait l'instrument qui la juge.
+
+           Une **quatrième forme** est ajoutée, « propriété JSX », avec son
+           compteur d'accolades — aucune expression régulière n'équilibre
+           `onClick={() => f({a: 1})}`. Elle compte les **trente** que `grep`
+           compte, en 15 noms.
+
+           Et son nommeur a demandé deux règles, les mêmes que les autres :
+
+           - **une flèche est une forme, non un nom.** `onClick={() => ouvrir(x)}`
+             est le geste « ouvrir » ; le nommer par sa flèche ferait deux gestes
+             de deux flèches qui appellent la même fonction ;
+           - **une garde n'est pas un geste.** `(e) => { if (e.target ===
+             e.currentTarget) surFermer(); }` se nommait **« if »** — le premier
+             mot d'un bloc n'est pas toujours un nom. Même règle que la garde
+             `event.stopPropagation` de 5.f.0, sous une autre forme : le geste est
+             ce que la garde **protège**.
+
+           ── Deux garde-fous qui ont buté sur la prose, en deux pas ──
+
+           Celui du style a rougi sur la note expliquant la suppression (n° 5.f.12),
+           et celui du `js` d'un module converti sur la phrase décrivant la
+           disparition de ce répertoire. La réponse n'est pas la même des deux
+           côtés, et c'est le point :
+
+           - le premier portait sur un fichier de style, où le commentaire est
+             **prose par construction** : on le retire avant de mesurer ;
+           - le second porte sur n'importe quel fichier suivi, où un chemin en
+             JSON peut très bien être une **donnée qu'un code lit**. Le garde
+             reste strict, et c'est la phrase qui a été réécrite.
+
+           *Un garde-fou qui interdit une chaîne finira par rencontrer le texte
+           qui explique pourquoi elle a disparu. La question n'est pas s'il faut
+           l'assouplir, mais si le fichier qu'il lit distingue le code de ce qui
+           le commente.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

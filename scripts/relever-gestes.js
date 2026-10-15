@@ -143,9 +143,66 @@ const ecranDeModule = (nom) => ({
   page: `/modules/${nom}/index.html`,
 });
 
-// SURV, le plus lourd des cinq (ADR-003, suite n° 5.f.0). Les quatre autres
-// suivront, une ligne chacun — c'est tout l'objet de la fabrique.
+// SURV, le plus lourd des six (ADR-003, suite n° 5.f.0), et le seul à porter
+// aujourd'hui une suite de navigateur.
 ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
+
+// ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──
+//
+// `suite` valait jusqu'ici `ecran.suite || 'parcours'`. Un écran de module
+// ajouté sans suite aurait donc fait lancer **le parcours du portail**, qui ne
+// clique rien dans un module : le relevé aurait annoncé **0 geste exercé**.
+//
+// Ce zéro-là est le pire des résultats, parce qu'il est **indiscernable du
+// vrai** : « 0 sur 365 » se lit « cet écran n'est pas couvert » alors qu'il
+// faudrait lire « cet écran n'est pas mesuré ». C'est la faute que l'entrée du
+// portail dénonce douze lignes plus haut, et elle serait revenue par la porte
+// de la valeur par défaut.
+//
+// `suite: null` déclare donc l'absence, et l'outil la respecte : il fige
+// l'inventaire — les noms, les occurrences, les formes — et **ne prétend à
+// aucune couverture**. Le défaut implicite, lui, est supprimé : un écran sans
+// `suite` est désormais refusé plutôt que mesuré de travers.
+ECRANS.ramp = { ...ecranDeModule('ramp'), suite: null };
+ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: null };
+ECRANS.planification = { ...ecranDeModule('planification'), suite: null };
+ECRANS.mesures = { ...ecranDeModule('mesures'), suite: null };
+ECRANS.droits = { ...ecranDeModule('droits'), suite: null };
+
+// ── Nommer un gestionnaire JSX ──
+//
+// Une flèche est une **forme**, non un nom : `onClick={() => ouvrir(x)}` est le
+// geste « ouvrir », et le nommer « () => ouvrir(x) » rendrait deux gestes pour
+// deux flèches qui appellent la même fonction. On retire donc l'en-tête de la
+// flèche, puis l'on nomme comme partout ailleurs — même fonction des deux côtés,
+// c'est la leçon de 5.f.3.
+const nomDuGestionnaireJsx = (corps) => {
+  let c = String(corps || '').trim();
+  const flecheParenthesee = /^(?:async\s*)?\(([^)]*)\)\s*=>\s*/.exec(c);
+  const flecheNue = /^(?:async\s*)?([A-Za-z_$][\w$]*)\s*=>\s*/.exec(c);
+  const tete = flecheParenthesee || flecheNue;
+  if (tete) c = c.slice(tete[0].length).trim();
+  // Un corps en bloc : `() => { f(); g(); }` — on nomme par le premier geste.
+  if (c.startsWith('{')) c = c.slice(1, -1).trim();
+  // Une référence nue est son propre nom : `onClick={fermer}`.
+  const nue = /^([A-Za-z_$][\w$.]*)$/.exec(c);
+  if (nue) return nue[1];
+  // ── Une garde n'est pas un geste ──
+  //
+  // `(e) => { if (e.target === e.currentTarget) surFermer(); }` se nommait
+  // « if » : le premier mot du bloc n'est pas toujours un nom. C'est la même
+  // règle que la garde `event.stopPropagation` de 5.f.0, sous une autre forme —
+  // le geste est ce que la garde **protège**, non la garde.
+  const MOTS_CLES = new Set(['if', 'for', 'while', 'switch', 'try', 'catch',
+    'return', 'const', 'let', 'var', 'do', 'else', 'typeof', 'await', 'new']);
+  const nomme = nomDuGestionnaire(c);
+  if (!MOTS_CLES.has(nomme)) return nomme;
+  for (const appel of c.matchAll(/(^|[^.\w$])([A-Za-z_$][\w$.]*)\s*\(/g)) {
+    const n = appel[2];
+    if (!MOTS_CLES.has(n.split('.')[0])) return n;
+  }
+  return nomme;
+};
 
 // L'identifiant d'une cible d'écouteur, cherché d'abord dans l'expression
 // elle-même, puis dans les douze lignes qui précèdent sa pose.
@@ -299,6 +356,49 @@ function relever(fichiers) {
     // « bouton introuvable » sur un bouton bien présent et bien branché. Deux
     // gestes du portail sont dans ce cas — peu, mais la cécité ne se compte pas
     // en nombre de cas manqués.
+    // ── Quatrième forme : le gestionnaire **en propriété JSX** ──
+    //
+    // Un écran converti en React ne porte plus un seul `onclick="…"` : ses
+    // gestionnaires sont des propriétés, `onClick={fermer}` ou
+    // `onClick={() => ouvrir(x)}`. Aucun des trois relevés ci-dessus ne les
+    // voit — ni attribut de balisage, ni `addEventListener`, ni propriété d'un
+    // élément du DOM.
+    //
+    // Conséquence, mesurée le 15 octobre 2026 : **DROITS rendait zéro geste**,
+    // et l'outil traitait ce zéro comme une panne de chemin. L'écran en porte
+    // trente.
+    //
+    // C'est, poussée à son terme, la faute que l'entrée du portail dénonce deux
+    // fois : *un dénominateur qui baisse à chaque conversion*. Ici il ne baisse
+    // pas, il **disparaît** — et la conversion achevée d'un écran se serait
+    // accompagnée de l'arrêt silencieux de sa mesure. Le plus converti des six
+    // écrans était le seul qu'on ne mesurait plus.
+    if (/\.(tsx|jsx)$/.test(rel)) {
+      const motifJsx = /\bon([A-Z][A-Za-z]+)=\{/g;
+      for (const m of texte.matchAll(motifJsx)) {
+        // Les accolades s'imbriquent — `onClick={() => f({a: 1})}` —, et aucune
+        // expression régulière ne les équilibre : on compte.
+        let i = m.index + m[0].length;
+        let profondeur = 1;
+        while (i < texte.length && profondeur > 0) {
+          if (texte[i] === '{') profondeur += 1;
+          else if (texte[i] === '}') profondeur -= 1;
+          i += 1;
+        }
+        if (profondeur !== 0) continue;
+        const corps = texte.slice(m.index + m[0].length, i - 1).trim();
+        gestes.push({
+          fichier: rel,
+          ligne: texte.slice(0, m.index).split('\n').length,
+          forme: 'propriété JSX',
+          evenement: m[1].toLowerCase(),
+          nom: nomDuGestionnaireJsx(corps),
+          source: corps.slice(0, 120),
+          id: null,
+        });
+      }
+    }
+
     const motifPropriete = new RegExp(`\\b([\\w$.[\\]'"]+)\\.on(${EVENEMENTS.join('|')})\\s*=\\s*([A-Za-z_$][\\w$.]*)`, 'g');
     for (const m of texte.matchAll(motifPropriete)) {
       gestes.push({
@@ -505,8 +605,44 @@ async function principal() {
     process.exit(2);
   }
 
+  // ── Un écran sans suite de navigateur : l'inventaire, et rien de plus ──
+  if (ecran.suite === null) {
+    const noms = new Set(gestes.map((g) => g.nom));
+    console.log(`\n═══ ${quoi} — ${noms.size} gestes nommés, ${gestes.length} occurrences ═══\n`);
+    console.log('  aucune suite de navigateur : la couverture n’est pas mesurée.');
+    console.log('  Ce n’est pas « 0 % » — c’est « non mesuré », et les deux ne se disent pas');
+    console.log('  du même ton. La suite n° 0.b de cet écran le changera.\n');
+    const parFichier = {};
+    gestes.forEach((g) => { (parFichier[g.fichier] ||= []).push(g); });
+    Object.entries(parFichier)
+      .sort((x, y) => y[1].length - x[1].length)
+      .forEach(([f, liste]) => {
+        console.log(`── ${f} — ${new Set(liste.map((g) => g.nom)).size} noms, ${liste.length} occurrences ──`);
+      });
+    const cibleSeule = path.join(RACINE, 'tests', 'smoke', `gestes-${quoi}.json`);
+    fs.writeFileSync(cibleSeule, `${JSON.stringify({
+      releve: new Date().toISOString().slice(0, 10),
+      gestesNommes: noms.size,
+      occurrences: gestes.length,
+      // `null` et non `0` : le relevé dit ce qu'il sait, et dit qu'il ne sait
+      // pas le reste. Les garde-fous s'appuient sur cette distinction.
+      sansSuite: true,
+      exerces: null,
+      indecidables: null,
+      gestes,
+    }, null, 1)}\n`);
+    console.log(`Relevé figé dans tests/smoke/gestes-${quoi}.json — inventaire seul.`);
+    return;
+  }
+  if (!ecran.suite) {
+    console.error(`l’écran « ${quoi} » ne déclare pas de suite. Poser le nom de sa suite`
+      + ' de navigateur, ou `suite: null` si elle n’existe pas encore — mesurer un écran'
+      + ' de module avec le parcours du portail rendrait « 0 exercé », indiscernable du vrai.');
+    process.exit(2);
+  }
+
   const journal = path.join(require('os').tmpdir(), `oasis-gestes-${process.pid}.json`);
-  const suite = ecran.suite || 'parcours';
+  const suite = ecran.suite;
   const { code, sortie } = lancerLaSuite(journal, suite);
   if (!fs.existsSync(journal)) {
     console.error('la suite n’a pas écrit de journal. Sortie :\n'

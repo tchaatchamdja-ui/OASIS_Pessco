@@ -1,0 +1,280 @@
+{
+ "releve": "2026-10-15",
+ "gestesNommes": 15,
+ "occurrences": 30,
+ "sansSuite": true,
+ "exerces": null,
+ "indecidables": null,
+ "gestes": [
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 56,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surFiltre",
+   "source": "() => surFiltre('user', '')",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 68,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surFiltre",
+   "source": "(e) => surFiltre('q', e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 73,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surFiltre",
+   "source": "(e) => surFiltre('user', e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 81,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surFiltre",
+   "source": "(e) => surFiltre('action', e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 92,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surFiltre",
+   "source": "(e) => surFiltre('from', e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 99,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surFiltre",
+   "source": "(e) => surFiltre('to', e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Audit.tsx",
+   "ligne": 102,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surReinitialiser",
+   "source": "surReinitialiser",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Coquille.tsx",
+   "ligne": 51,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surPage",
+   "source": "() => surPage('privileges')",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Coquille.tsx",
+   "ligne": 59,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surPage",
+   "source": "() => surPage('audit')",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Coquille.tsx",
+   "ligne": 72,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surTheme",
+   "source": "() => surTheme(th)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Coquille.tsx",
+   "ligne": 83,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surLangue",
+   "source": "() => surLangue(l.toLowerCase())",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Coquille.tsx",
+   "ligne": 93,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surReplier",
+   "source": "surReplier",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 93,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surFermer",
+   "source": "(e) => { if (e.target === e.currentTarget) surFermer(); }",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 101,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surFermer",
+   "source": "surFermer",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 125,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "changerPrivilege",
+   "source": "() => changerPrivilege(p)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 167,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "modifier",
+   "source": "(e) => modifier(i, { _secteur: e.target.value, prestataire_id: '' })",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 179,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "modifier",
+   "source": "(e) => modifier(i, { prestataire_id: e.target.value })",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 191,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "retirer",
+   "source": "() => retirer(i)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 202,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "setPortees",
+   "source": "() => setPortees((av) => [...av, { prestataire_id: '', _secteur: '' }])",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 223,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "modifier",
+   "source": "(e) => modifier(i, { domaine_id: e.target.value, secteur_id: '' })",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 232,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "modifier",
+   "source": "(e) => modifier(i, { secteur_id: e.target.value })",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 242,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "modifier",
+   "source": "(e) => modifier(i, { privilege: e.target.value as Privilege })",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 253,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "retirer",
+   "source": "() => retirer(i)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 263,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "setPortees",
+   "source": "() => setPortees((av) => [\n                  ...av, { domaine_id: '', secteur_id: '', privilege: privilegeParDefaut },\n ",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 276,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surFermer",
+   "source": "surFermer",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Fenetre.tsx",
+   "ligne": 277,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "enregistrer",
+   "source": "enregistrer",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Privileges.tsx",
+   "ligne": 100,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surRecherche",
+   "source": "(e) => surRecherche(e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Privileges.tsx",
+   "ligne": 106,
+   "forme": "propriété JSX",
+   "evenement": "change",
+   "nom": "surFiltre",
+   "source": "(e) => surFiltre(e.target.value)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Privileges.tsx",
+   "ligne": 163,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surModifier",
+   "source": "() => surModifier(u.username)",
+   "id": null
+  },
+  {
+   "fichier": "frontend/droits/Privileges.tsx",
+   "ligne": 169,
+   "forme": "propriété JSX",
+   "evenement": "click",
+   "nom": "surJournal",
+   "source": "() => surJournal(u.username)",
+   "id": null
+  }
+ ]
+}

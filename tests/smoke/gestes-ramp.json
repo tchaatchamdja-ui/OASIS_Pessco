@@ -1,0 +1,2907 @@
+{
+ "releve": "2026-10-15",
+ "gestesNommes": 207,
+ "occurrences": 362,
+ "sansSuite": true,
+ "exerces": null,
+ "indecidables": null,
+ "gestes": [
+  {
+   "fichier": "public/modules/ramp/js/ramp-apercu.js",
+   "ligne": 205,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerApercu",
+   "source": "rampFermerApercu()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-apercu.js",
+   "ligne": 208,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampImprimerRapport",
+   "source": "rampImprimerRapport()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-apercu.js",
+   "ligne": 428,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-apercu.js",
+   "ligne": 446,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 602,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerPaysUemoa",
+   "source": "rampBasculerPaysUemoa(${_rArg(nom)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 610,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampViderPaysUemoa",
+   "source": "rampViderPaysUemoa()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 634,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirRecherche",
+   "source": "rampOuvrirRecherche()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 641,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampChercher",
+   "source": "rampChercher(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 641,
+   "forme": "en ligne",
+   "evenement": "blur",
+   "nom": "rampFermerRechercheSiVide",
+   "source": "rampFermerRechercheSiVide()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 644,
+   "forme": "en ligne",
+   "evenement": "mousedown",
+   "nom": "event.preventDefault",
+   "source": "event.preventDefault()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 645,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampViderRecherche",
+   "source": "rampViderRecherche()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 724,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerTrimestres",
+   "source": "rampBasculerTrimestres()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 731,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampBasculerTrimestre",
+   "source": "rampBasculerTrimestre(${_rArg(String(t))})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 736,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampViderTrimestres",
+   "source": "rampViderTrimestres()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 764,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampSetFiltre",
+   "source": "rampSetFiltre('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 781,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampSetFiltre",
+   "source": "rampSetFiltre('categorie', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 804,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampSetFiltre",
+   "source": "rampSetFiltre('action', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 824,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampChercher",
+   "source": "rampChercher(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 826,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampResetFiltres",
+   "source": "rampResetFiltres()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 841,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampResetFiltres",
+   "source": "rampResetFiltres()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 879,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampTrier",
+   "source": "rampTrier('${ecran}','${cle}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 904,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampNavigateTo",
+   "source": "rampNavigateTo('${cle}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 928,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSetTheme",
+   "source": "rampSetTheme('${th}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 933,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSetLang",
+   "source": "rampSetLang('${l.toLowerCase()}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 936,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampToggleSidebar",
+   "source": "rampToggleSidebar()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 942,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampToggleSidebar",
+   "source": "rampToggleSidebar()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 946,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampToggleSidebar",
+   "source": "rampToggleSidebar()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 958,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampDeconnexion",
+   "source": "rampDeconnexion()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 964,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1371,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerCategorie",
+   "source": "rampBasculerCategorie(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1381,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirStatistiques",
+   "source": "rampOuvrirStatistiques()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1621,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerInspection",
+   "source": "rampBasculerInspection(${_rArg(i.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1625,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerInspection",
+   "source": "event.stopPropagation();rampBasculerInspection(${_rArg(i.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1643,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirApercu",
+   "source": "event.stopPropagation();rampOuvrirApercu('${i.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1647,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerInspection",
+   "source": "event.stopPropagation();rampSupprimerInspection('${i.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1697,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirImportation",
+   "source": "rampOuvrirImportation()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1700,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAjouterInspection",
+   "source": "rampAjouterInspection()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1702,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampNavigateTo",
+   "source": "rampNavigateTo('inspection')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1727,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampExporterInspections",
+   "source": "rampExporterInspections()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1797,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerEcart",
+   "source": "rampBasculerEcart(${_rArg(a.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1801,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerEcart",
+   "source": "event.stopPropagation();rampBasculerEcart(${_rArg(a.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1816,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirApercu",
+   "source": "event.stopPropagation();rampOuvrirApercu('${i.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1819,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPac",
+   "source": "event.stopPropagation();rampOuvrirPac(${_rArg(a.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1828,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPreuves",
+   "source": "event.stopPropagation();rampOuvrirPreuves(${_rArg(a.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1871,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampExporterEcarts",
+   "source": "rampExporterEcarts()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-app.js",
+   "ligne": 1116,
+   "forme": "écouteur",
+   "evenement": "resize",
+   "nom": "window:resize",
+   "source": "window.addEventListener('resize', () => requestAnimationFrame(() => {",
+   "id": null
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 165,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComOnglet",
+   "source": "rampComOnglet(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 190,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComNouvelle",
+   "source": "rampComNouvelle()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 195,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComFiltre",
+   "source": "rampComFiltre('statut', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 200,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComFiltre",
+   "source": "rampComFiltre('etat', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 206,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampComFiltre",
+   "source": "rampComFiltre('recherche', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 207,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComReset",
+   "source": "rampComReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 250,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComOuvrir",
+   "source": "rampComOuvrir(${_rArg(r.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 321,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComRegFiltre",
+   "source": "rampComRegFiltre('etat', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 325,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComRegFiltre",
+   "source": "rampComRegFiltre('exploitant', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 329,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComRegFiltre",
+   "source": "rampComRegFiltre('categorie', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 338,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampComRegFiltre",
+   "source": "rampComRegFiltre('recherche', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 340,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComRegReset",
+   "source": "rampComRegReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 388,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirApercu",
+   "source": "rampOuvrirApercu(${_rArg(i.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 392,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComPreuvesEcart",
+   "source": "rampComPreuvesEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 397,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComRequeteEcart",
+   "source": "rampComRequeteEcart(${_rArg(i.id)}, ${_rArg(a.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 420,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 503,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComOuvrirPartage",
+   "source": "rampComOuvrirPartage(${_rArg(pa.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 526,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 581,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComBasculerLettre",
+   "source": "rampComBasculerLettre(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 724,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComBasculerEcart",
+   "source": "rampComBasculerEcart(${_rArg(e.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 802,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 834,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComRetirerDesignation",
+   "source": "rampComRetirerDesignation()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 849,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComCible",
+   "source": "rampComCible('annee', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 854,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComCible",
+   "source": "rampComCible('etat', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 859,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComCible",
+   "source": "rampComCible('exploitant', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 864,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComCible",
+   "source": "rampComCible('immatriculation', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 870,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampComCible",
+   "source": "rampComCible('recherche', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 897,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComChoisirInspection",
+   "source": "rampComChoisirInspection(${_rArg(i.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 916,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComBasculerEtat",
+   "source": "rampComBasculerEtat(${_rArg(e)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 923,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampComSaisie",
+   "source": "rampComSaisie('objet', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 928,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampComSaisie",
+   "source": "rampComSaisie('message', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 937,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 938,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComEnvoyer",
+   "source": "rampComEnvoyer()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 950,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComRetirerPiece",
+   "source": "rampComRetirerPiece(${n})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 953,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "this.nextElementSibling.click",
+   "source": "this.nextElementSibling.click()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 955,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampComJoindre",
+   "source": "rampComJoindre(this)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 976,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerSlider",
+   "source": "rampFermerSlider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 1078,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComRouvrir",
+   "source": "rampComRouvrir()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 1080,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComCloturer",
+   "source": "rampComCloturer()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-communication.js",
+   "ligne": 1082,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampComRepondre",
+   "source": "rampComRepondre()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 41,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerPac",
+   "source": "rampFermerPac()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 93,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerPreuve",
+   "source": "rampSupprimerPreuve(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 101,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirDepotPreuve",
+   "source": "rampOuvrirDepotPreuve(${_rArg(action)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 141,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerPac",
+   "source": "rampEnregistrerPac(true)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 145,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacModalRenvoi",
+   "source": "rampPacModalRenvoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 146,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacModalCloture",
+   "source": "rampPacModalCloture()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 172,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 173,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 176,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 191,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 193,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacRenvoyer",
+   "source": "rampPacRenvoyer()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 203,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 204,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 207,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 227,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 228,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacCloturer",
+   "source": "rampPacCloturer()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 338,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerPac",
+   "source": "rampEnregistrerPac(false)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 391,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacBasculerEvaluation",
+   "source": "rampPacBasculerEvaluation()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 400,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacBasculerEvaluation",
+   "source": "rampPacBasculerEvaluation()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 416,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacEnregistrerSuivi",
+   "source": "rampPacEnregistrerSuivi(${_rArg(x.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 418,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacEditerSuivi",
+   "source": "rampPacEditerSuivi('')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 423,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacEditerSuivi",
+   "source": "rampPacEditerSuivi(${_rArg(x.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 425,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacSupprimerSuivi",
+   "source": "rampPacSupprimerSuivi(${_rArg(x.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 436,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacAjouterSuivi",
+   "source": "rampPacAjouterSuivi('rampPacSuiviTexte')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 475,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacAjouterSuivi",
+   "source": "rampPacAjouterSuivi('rampPacSuiviResultats')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 488,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPacEvaluer",
+   "source": "rampPacEvaluer({ date_solde: this.value })"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 493,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPacEvaluer",
+   "source": "rampPacEvaluer({ solde_par: this.value })"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 597,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerPac",
+   "source": "rampFermerPac()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 622,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPacModalCloture",
+   "source": "rampPacModalCloture()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 650,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerBrouillonPreuves",
+   "source": "rampEnregistrerBrouillonPreuves()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 679,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerPreuve",
+   "source": "rampSupprimerPreuve(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 687,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirDepotPreuve",
+   "source": "rampOuvrirDepotPreuve('')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 697,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 698,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 702,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 729,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-pac.js",
+   "ligne": 730,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnvoyerPreuve",
+   "source": "rampEnvoyerPreuve()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 82,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirDepot",
+   "source": "rampOuvrirDepot('${d.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 85,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerDepot",
+   "source": "rampSupprimerDepot('${d.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 107,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampSetFiltre",
+   "source": "rampSetFiltre('depotAnnee', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 111,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampSetFiltre",
+   "source": "rampSetFiltre('depotMois', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 115,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampSetFiltre",
+   "source": "rampSetFiltre('depotAuteur', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 122,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampChercherDepot",
+   "source": "rampChercherDepot(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 124,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampResetFiltresDepot",
+   "source": "rampResetFiltresDepot()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 130,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirDepot",
+   "source": "rampOuvrirDepot()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 175,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 176,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 179,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 185,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "document.getElementById",
+   "source": "document.getElementById('rampFichierDepot').click()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 191,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "document.getElementById",
+   "source": "document.getElementById('rampNomFichier').textContent = this.files[0] ? this.files[0].name : 'Choisir un fichier';"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 217,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 218,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerDepot",
+   "source": "rampEnregistrerDepot()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 334,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirContact",
+   "source": "rampOuvrirContact('${c.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 336,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerContact",
+   "source": "rampBasculerContact('${c.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 339,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerContact",
+   "source": "rampSupprimerContact('${c.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 357,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampExporterContacts",
+   "source": "rampExporterContacts()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 360,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirContact",
+   "source": "rampOuvrirContact()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 374,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 375,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 378,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 405,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 406,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerContact",
+   "source": "rampEnregistrerContact()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 545,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampParamOnglet",
+   "source": "rampParamOnglet('${x.cle}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 560,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "${}('${}')",
+   "source": "event.stopPropagation();${ouvrir || 'rampOuvrirParam'}('${p.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 562,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerParam",
+   "source": "event.stopPropagation();rampBasculerParam('${p.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 565,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerParam",
+   "source": "event.stopPropagation();rampSupprimerParam('${p.id}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 610,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerGroupeItems",
+   "source": "rampBasculerGroupeItems(${_rArg(id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 620,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerGroupeItems",
+   "source": "event.stopPropagation();rampBasculerGroupeItems(${_rArg(id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 660,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirGroupe",
+   "source": "rampOuvrirGroupe()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 662,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirParam",
+   "source": "rampOuvrirParam('', '${cle}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 667,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampExporterParametres",
+   "source": "rampExporterParametres('${cle}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 696,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerBarreParam",
+   "source": "rampBasculerBarreParam()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 735,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 736,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 739,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 786,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 787,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerParam",
+   "source": "rampEnregistrerParam()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 807,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 808,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 811,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 840,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 841,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerGroupe",
+   "source": "rampEnregistrerGroupe()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1020,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPaysUemoa",
+   "source": "rampPaysUemoa(${_rArg(p.id)}, this.checked)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1025,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPays",
+   "source": "rampOuvrirPays(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1028,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerPays",
+   "source": "rampBasculerPays(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1030,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerPays",
+   "source": "rampSupprimerPays(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1046,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPays",
+   "source": "rampOuvrirPays()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1073,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPaysSetFiltre",
+   "source": "rampPaysSetFiltre('uemoa', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1078,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPaysSetFiltre",
+   "source": "rampPaysSetFiltre('aac', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1085,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPaysChercher",
+   "source": "rampPaysChercher(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1087,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPaysReset",
+   "source": "rampPaysReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1097,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1098,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1101,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1145,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1146,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerPays",
+   "source": "rampEnregistrerPays()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1293,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampAptSetFiltre",
+   "source": "rampAptSetFiltre('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1319,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirAeroport",
+   "source": "rampOuvrirAeroport('${_rAttr(a.id)}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1322,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerAeroport",
+   "source": "rampBasculerAeroport('${_rAttr(a.id)}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1324,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerAeroport",
+   "source": "rampSupprimerAeroport('${_rAttr(a.id)}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1334,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAptBasculer",
+   "source": "rampAptBasculer(${_rArg(pays)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1340,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAptBasculer",
+   "source": "event.stopPropagation();rampAptBasculer(${_rArg(pays)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1352,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirAeroport",
+   "source": "event.stopPropagation();rampOuvrirAeroport('', ${_rArg(pays)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1381,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAptToutDeplier",
+   "source": "rampAptToutDeplier(true)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1382,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAptToutDeplier",
+   "source": "rampAptToutDeplier(false)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1383,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirAeroport",
+   "source": "rampOuvrirAeroport()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1408,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampAptChercher",
+   "source": "rampAptChercher(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1410,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAptReset",
+   "source": "rampAptReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1429,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1430,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1433,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1468,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1469,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerAeroport",
+   "source": "rampEnregistrerAeroport()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1625,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirAeronef",
+   "source": "rampOuvrirAeronef('${_rAttr(a.id)}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1628,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerAeronef",
+   "source": "rampBasculerAeronef('${_rAttr(a.id)}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1630,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerAeronef",
+   "source": "rampSupprimerAeronef('${_rAttr(a.id)}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1642,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerBasculer",
+   "source": "rampAerBasculer(${_rArg(designation)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1648,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerBasculer",
+   "source": "event.stopPropagation();rampAerBasculer(${_rArg(designation)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1659,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirAeronef",
+   "source": "event.stopPropagation();rampOuvrirAeronef('', ${_rArg(designation)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1682,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerPage",
+   "source": "rampAerPage(${r.page - 1})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1685,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerPage",
+   "source": "rampAerPage(${r.page + 1})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1697,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerToutDeplier",
+   "source": "rampAerToutDeplier(true)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1698,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerToutDeplier",
+   "source": "rampAerToutDeplier(false)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1699,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirAeronef",
+   "source": "rampOuvrirAeronef()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1725,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampAerSetFiltre",
+   "source": "rampAerSetFiltre('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1742,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampAerChercher",
+   "source": "rampAerChercher(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1744,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAerReset",
+   "source": "rampAerReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1755,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1756,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1759,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1789,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-parametres.js",
+   "ligne": 1790,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerAeronef",
+   "source": "rampEnregistrerAeronef()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 64,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampChoisirAeronef",
+   "source": "rampChoisirAeronef(${_rArg(a.designation)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 70,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampChoisirAeronef",
+   "source": "event.stopPropagation();rampChoisirAeronef(${_rArg(a.designation)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 80,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 81,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 84,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 90,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampChercherAeronefPoi",
+   "source": "rampChercherAeronefPoi(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 141,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPiece",
+   "source": "rampOuvrirPiece(${_rArg(pj.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 143,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerPiece",
+   "source": "rampSupprimerPiece(${_rArg(pj.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 155,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPiece",
+   "source": "rampOuvrirPiece()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 181,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 182,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 185,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 212,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 213,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerPiece",
+   "source": "rampEnregistrerPiece()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 321,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 322,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 325,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 343,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 344,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampConfirmerRenvoi",
+   "source": "rampConfirmerRenvoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 388,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiRetirerInspecteur",
+   "source": "rampPoiRetirerInspecteur(${_rArg(m.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 469,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 470,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 473,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 493,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
+   "ligne": 494,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampConfirmerValidation",
+   "source": "rampConfirmerValidation()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
+   "ligne": 49,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
+   "ligne": 50,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
+   "ligne": 53,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
+   "ligne": 79,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
+   "ligne": 80,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiPartager",
+   "source": "rampPoiPartager()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
+   "ligne": 102,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiRappelerPartage",
+   "source": "rampPoiRappelerPartage(${_rArg(pa.id)}, ${_rArg(etat)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 126,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPoi",
+   "source": "rampOuvrirPoi(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 142,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirPoi",
+   "source": "event.stopPropagation();rampOuvrirPoi(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 146,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSupprimerPoi",
+   "source": "event.stopPropagation();rampSupprimerPoi(${_rArg(p.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 163,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampNouveauPoi",
+   "source": "rampNouveauPoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 236,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampNavigateTo",
+   "source": "rampNavigateTo('etats')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 241,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiSetFiltre",
+   "source": "rampPoiSetFiltre('statut', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 248,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiSetFiltre",
+   "source": "rampPoiSetFiltre('etat', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 256,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiChercher",
+   "source": "rampPoiChercher(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 258,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiReset",
+   "source": "rampPoiReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 279,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerPoi",
+   "source": "rampFermerPoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 496,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiControle",
+   "source": "rampPoiControle(${_rArg(item.code)}, this.checked)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 503,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiRemarque",
+   "source": "rampPoiRemarque(${_rArg(item.code)}, this.value);rampPoiAjuster(this)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 509,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiBasculerEcart",
+   "source": "rampPoiBasculerEcart(${_rArg(item.code)}, this.checked)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 517,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiEcart",
+   "source": "rampPoiEcart(${_rArg(item.code)}, 'categorie', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 522,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiEcart",
+   "source": "rampPoiEcart(${_rArg(item.code)}, 'standard', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 527,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiEcart",
+   "source": "rampPoiEcart(${_rArg(item.code)}, 'action', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 535,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiEcart",
+   "source": "rampPoiEcart(${_rArg(item.code)}, 'suivi', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 541,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiEcart",
+   "source": "rampPoiEcart(${_rArg(item.code)}, 'description', this.value);rampPoiAjuster(this)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 556,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerGroupe",
+   "source": "rampPoiBasculerGroupe(${_rArg(groupe.code)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 561,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerGroupe",
+   "source": "event.stopPropagation();rampPoiBasculerGroupe(${_rArg(groupe.code)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 616,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiChamp",
+   "source": "rampPoiChamp('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 622,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiChamp",
+   "source": "rampPoiChamp('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 638,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiChampOuvert",
+   "source": "rampPoiChampOuvert('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 647,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiChamp",
+   "source": "rampPoiChamp('${cle}', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 705,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiChamp",
+   "source": "rampPoiChamp('aeronef', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 712,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirSelecteurAeronef",
+   "source": "rampOuvrirSelecteurAeronef()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 764,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiVoirEtape",
+   "source": "rampPoiVoirEtape(${_rArg(e.cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 803,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSoumettrePoi",
+   "source": "rampSoumettrePoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 806,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampRenvoyerPoi",
+   "source": "rampRenvoyerPoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 808,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampValiderPoi",
+   "source": "rampValiderPoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 823,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiOuvrirPartage",
+   "source": "rampPoiOuvrirPartage()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 827,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampVoirInspectionDuPoi",
+   "source": "rampVoirInspectionDuPoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1066,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerVersion",
+   "source": "rampPoiBasculerVersion('r${v.version}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1136,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerCommentaires",
+   "source": "rampPoiBasculerCommentaires()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1151,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerCommentaires",
+   "source": "rampPoiBasculerCommentaires()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1162,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiCommentaireChamp",
+   "source": "rampPoiCommentaireChamp(${i}, 'cible', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1169,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiRetirerCommentaire",
+   "source": "rampPoiRetirerCommentaire(${i})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1172,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiCommentaireChamp",
+   "source": "rampPoiCommentaireChamp(${i}, 'texte', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1180,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerVersion",
+   "source": "rampPoiBasculerVersion(${v.version})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1207,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiAjouterCommentaire",
+   "source": "rampPoiAjouterCommentaire()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1209,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerCommentaires",
+   "source": "rampEnregistrerCommentaires()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1410,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiBasculerVolet",
+   "source": "rampPoiBasculerVolet(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1477,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiReinitialiserLettre",
+   "source": "rampPoiReinitialiserLettre(${_rArg(cible)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1481,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnvoyerCommunication",
+   "source": "rampEnvoyerCommunication(${_rArg(cible)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1585,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerPoi",
+   "source": "rampEnregistrerPoi()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1609,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiToutDeplier",
+   "source": "rampPoiToutDeplier(true)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1610,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPoiToutDeplier",
+   "source": "rampPoiToutDeplier(false)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1621,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiMeta",
+   "source": "rampPoiMeta('classe_action', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1629,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiMeta",
+   "source": "rampPoiMeta('statut_suivi', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1642,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampPoiAjouterInspecteur",
+   "source": "rampPoiAjouterInspecteur(this.value); this.value='';"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1654,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiMeta",
+   "source": "rampPoiMeta('commentaires_pic', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-poi.js",
+   "ligne": 1659,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampPoiMeta",
+   "source": "rampPoiMeta('informations', this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 128,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerPartAnneau",
+   "source": "rampBasculerPartAnneau(${_rArg(cle)}, ${_rArg(lbl)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 216,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerEtatGraphe",
+   "source": "rampBasculerEtatGraphe(${_rArg(n)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 300,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampChoisirAnneeTemps",
+   "source": "rampChoisirAnneeTemps(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 322,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSerieTemps",
+   "source": "rampSerieTemps(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 337,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampPasTemps",
+   "source": "rampPasTemps(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 341,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampMenuTemps",
+   "source": "rampMenuTemps(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 346,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampBasculerPeriode",
+   "source": "rampBasculerPeriode(${_rArg(cle)}, ${_rArg(k)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 351,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampViderPeriodes",
+   "source": "rampViderPeriodes(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 365,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampMenuTemps",
+   "source": "rampMenuTemps(${_rArg('annee')})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 369,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampMenuTemps",
+   "source": "rampMenuTemps(${_rArg('annee')})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 374,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampBasculerPeriode",
+   "source": "rampBasculerPeriode(${_rArg('annee')}, ${_rArg(k)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 379,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampViderPeriodes",
+   "source": "rampViderPeriodes(${_rArg('annee')})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 487,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampSerieEtats",
+   "source": "rampSerieEtats(${_rArg(cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 577,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampGenFiltre",
+   "source": "rampGenFiltre(${_rArg(cle)}, this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 600,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenFiltresReset",
+   "source": "rampGenFiltresReset()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 626,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampGenTotal",
+   "source": "rampGenTotal(${_rArg(cle)}, this.checked)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 689,
+   "forme": "en ligne",
+   "evenement": "dragstart",
+   "nom": "rampGenDragStart",
+   "source": "rampGenDragStart(event, ${_rArg(c.cle)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 703,
+   "forme": "en ligne",
+   "evenement": "dragstart",
+   "nom": "rampGenOrdreDebut",
+   "source": "rampGenOrdreDebut(event, ${i})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 704,
+   "forme": "en ligne",
+   "evenement": "dragover",
+   "nom": "event.preventDefault",
+   "source": "event.preventDefault();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 705,
+   "forme": "en ligne",
+   "evenement": "drop",
+   "nom": "rampGenOrdreDepose",
+   "source": "rampGenOrdreDepose(event, ${i})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 716,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenRole",
+   "source": "rampGenRole(${i}, 'regroupement')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 719,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenRole",
+   "source": "rampGenRole(${i}, 'croisement')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 722,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenRole",
+   "source": "rampGenRole(${i}, 'donnee')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 726,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenMode",
+   "source": "rampGenMode(${i}, 'valeurs')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 728,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenMode",
+   "source": "rampGenMode(${i}, 'somme')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 733,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenRetirer",
+   "source": "rampGenRetirer(${i})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 738,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 739,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 744,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 754,
+   "forme": "en ligne",
+   "evenement": "dragover",
+   "nom": "event.preventDefault",
+   "source": "event.preventDefault();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 755,
+   "forme": "en ligne",
+   "evenement": "drop",
+   "nom": "rampGenDrop",
+   "source": "rampGenDrop(event)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 774,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenVider",
+   "source": "rampGenVider()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 777,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampGenExporter",
+   "source": "rampGenExporter()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 934,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerBloc",
+   "source": "rampBasculerBloc('${cle}')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 965,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerLigne",
+   "source": "rampBasculerLigne(${_rArg(r.exploitant)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 997,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirGenerateur",
+   "source": "rampOuvrirGenerateur()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1061,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampExporterSituation",
+   "source": "event.stopPropagation();rampExporterSituation()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1084,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampStatsAeronefMode",
+   "source": "rampStatsAeronefMode('modele')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1086,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampStatsAeronefMode",
+   "source": "rampStatsAeronefMode('designation')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1276,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "document.getElementById",
+   "source": "document.getElementById('rampFichierImport').click()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1282,
+   "forme": "en ligne",
+   "evenement": "change",
+   "nom": "rampAnalyserClasseur",
+   "source": "rampAnalyserClasseur(this.files[0]); this.value='';"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1284,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampTelechargerModele",
+   "source": "rampTelechargerModele()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1312,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampAnnulerImport",
+   "source": "rampAnnulerImport()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1314,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampConfirmerImport",
+   "source": "rampConfirmerImport()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 1347,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampRetirerLigneImport",
+   "source": "rampRetirerLigneImport(${n})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 64,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampRevelerMotDePasse",
+   "source": "rampRevelerMotDePasse(${_rArg(u.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 75,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirUtilisateur",
+   "source": "rampOuvrirUtilisateur(${_rArg(u.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 77,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampReinitialiserMotDePasse",
+   "source": "rampReinitialiserMotDePasse(${_rArg(u.id)})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 80,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampBasculerCompte",
+   "source": "rampBasculerCompte(${_rArg(u.id)}, ${actif ? 'false' : 'true'})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 100,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampOuvrirUtilisateur",
+   "source": "rampOuvrirUtilisateur('')"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 105,
+   "forme": "en ligne",
+   "evenement": "input",
+   "nom": "rampChercherUtilisateur",
+   "source": "rampChercherUtilisateur(this.value)"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 137,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 138,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 141,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 189,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 190,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampEnregistrerUtilisateur",
+   "source": "rampEnregistrerUtilisateur(${_rArg(id || '')})"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 253,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 254,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "event.stopPropagation",
+   "source": "event.stopPropagation();"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 257,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 267,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampFermerModal",
+   "source": "rampFermerModal()"
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
+   "ligne": 268,
+   "forme": "en ligne",
+   "evenement": "click",
+   "nom": "rampVoirMotDePasse",
+   "source": "rampVoirMotDePasse(${_rArg(id)})"
+  }
+ ]
+}

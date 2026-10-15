@@ -723,6 +723,17 @@ module.exports = async function tailleSmoke() {
     releves.forEach((f) => {
       const quoi = f.replace(/^gestes-|\.json$/g, '');
       const d = JSON.parse(fs.readFileSync(path.join(RACINE, 'tests', 'smoke', f), 'utf8'));
+      // ── « Non mesuré » ne se dit pas comme « 0 % » ──
+      //
+      // Cinq écrans n'ont pas encore de suite de navigateur. Imprimer
+      // « 0/207 exercés » pour eux serait écrire un chiffre juste et une phrase
+      // fausse : le zéro serait celui de la mesure, non de l'écran, et rien ne
+      // permettrait de les distinguer à la lecture.
+      if (d.sansSuite) {
+        console.log(`    ◌ gestes de « ${quoi} » : ${d.gestesNommes} noms,`
+          + ` ${d.occurrences} occurrences — couverture non mesurée, pas de suite de navigateur`);
+        return;
+      }
       console.log(`    ◌ gestes de « ${quoi} » : ${d.exerces}/${d.gestesNommes} exercés,`
         + ` ${d.occurrences} occurrences, ${d.indecidables} indécidable(s)`);
     });
@@ -731,7 +742,9 @@ module.exports = async function tailleSmoke() {
       derives.length ? `${derives.join(' · ')} — refaire : node scripts/relever-gestes.js <écran>`
         : releves.map((f) => {
           const d = JSON.parse(fs.readFileSync(path.join(RACINE, 'tests', 'smoke', f), 'utf8'));
-          return `${f.replace(/^gestes-|\.json$/g, '')} ${d.exerces}/${d.gestesNommes} exercés`;
+          const n = f.replace(/^gestes-|\.json$/g, '');
+          return d.sansSuite ? `${n} ${d.gestesNommes} noms, non mesuré`
+            : `${n} ${d.exerces}/${d.gestesNommes} exercés`;
         }).join(', '));
   }
 
@@ -796,6 +809,24 @@ module.exports = async function tailleSmoke() {
       // sont les intertitres qui expliquent un bloc, non des gestes.
       const motifs = Object.keys(declare[quoi] || {}).filter((k) => !k.startsWith('_'));
       const couvertureDeclaree = (declare[quoi] || {})._couverture_declaree;
+      // ── Un écran sans suite déclare qu'il n'est pas mesuré, et rien d'autre ──
+      //
+      // La tentation serait de lui faire déclarer `_couverture_declaree: 0` : le
+      // garde-fou passerait, et le dépôt porterait l'écrit « couverture 0 » là
+      // où la vérité est « couverture inconnue ». Un zéro déclaré se lit comme
+      // une mesure, et celui-là n'en est pas une. On exige donc la forme qui dit
+      // ce qui est — et l'on **refuse** un chiffre, qui dirait ce qui n'est pas.
+      if (fige.sansSuite) {
+        const dit = (declare[quoi] || {})._couverture_non_mesuree;
+        if (dit !== true) {
+          ecarts.push(`${quoi} : relevé sans suite de navigateur — déclarer`
+            + ' `_couverture_non_mesuree: true`, et non un chiffre');
+        } else if (typeof couvertureDeclaree === 'number') {
+          ecarts.push(`${quoi} : sans suite de navigateur, mais déclare une couverture`
+            + ` de ${couvertureDeclaree} — un zéro déclaré se lit comme une mesure`);
+        }
+        return;
+      }
       const etat = new Map();
       (fige.gestes || []).forEach((g) => {
         const e = etat.get(g.nom) || { exerce: false, indecidable: true };

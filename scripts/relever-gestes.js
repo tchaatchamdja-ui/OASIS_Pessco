@@ -167,7 +167,7 @@ ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
 ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: null };
 ECRANS.planification = { ...ecranDeModule('planification'), suite: null };
 ECRANS.mesures = { ...ecranDeModule('mesures'), suite: null };
-ECRANS.droits = { ...ecranDeModule('droits'), suite: null };
+ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 
 // ── Nommer un gestionnaire JSX ──
 //
@@ -489,15 +489,16 @@ const EVENEMENTS = ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
 
 const MOUCHARD = () => {
   const CLE = '__oasis_gestes';
-  const journal = { enLigne: [], ecouteurs: [], propriete: [], poses: 0 };
+  const journal = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], poses: 0 };
   Object.defineProperty(window, '__gestes', { value: journal, enumerable: false });
 
   const garder = (champ, valeur) => {
     journal[champ].push(valeur);
     try {
       const d = JSON.parse(localStorage.getItem(CLE)
-        || '{"enLigne":[],"ecouteurs":[],"propriete":[],"poses":0}');
+        || '{"enLigne":[],"ecouteurs":[],"propriete":[],"jsx":[],"poses":0}');
       d.propriete = d.propriete || [];
+      d.jsx = d.jsx || [];
       d[champ].push(valeur);
       localStorage.setItem(CLE, JSON.stringify(d));
     } catch { /* stockage fermé : le registre en mémoire reste */ }
@@ -521,6 +522,47 @@ const MOUCHARD = () => {
       if (!(e.target instanceof Element)) return;
       const attribut = e.target.closest(`[on${type}]`);
       if (attribut) garder('enLigne', attribut.getAttribute(`on${type}`).trim().slice(0, 160));
+      // ── Quatrième forme : le gestionnaire **en propriété JSX** ──
+      //
+      // Un écran converti en React ne pose ni attribut ni propriété d'élément :
+      // il attache **un** écouteur par type à la racine, et distribue lui-même.
+      // Les trois lectures ci-dessus ne voyaient donc **rien** de DROITS —
+      // mesuré le 15 octobre 2026 : après un vrai clic sur un de ses boutons,
+      // `enLigne` restait vide.
+      //
+      // Et c'était la panne la plus sournoise qui soit : l'écran **le plus
+      // converti** devenait le seul non mesuré, et chacune des quatre
+      // conversions à venir aurait mis sa couverture à zéro sans qu'on le sache.
+      //
+      // React laisse ses props sur le nœud, sous une clé `__reactProps$<alea>`.
+      // On remonte la lignée, on y cherche `on<Type>`, et l'on garde **la source
+      // de la fonction** — non son nom tiré ici. Le nommage appartient au côté
+      // Node, qui applique `nomDuGestionnaireJsx`, la même fonction que
+      // l'extracteur statique. *Deux côtés qui nomment séparément finissent par
+      // nommer différemment* — c'est la leçon payée en 5.f.3, et elle n'est pas
+      // à repayer.
+      // ── `onChange` de React **est** l'événement natif `input` ──
+      //
+      // React ne branche pas `onChange` sur le `change` du DOM : il l'appelle à
+      // chaque frappe, c'est-à-dire sur `input`. Chercher le seul `onInput`
+      // laissait donc `surRecherche` non reconnu — alors que son contrôle était
+      // **vert** : la table se restreignait bien, et se rendait bien.
+      //
+      // Le cas est instructif : *un contrôle vert ne prouve pas que la mesure a
+      // vu le geste.* Les deux instruments sont indépendants, et c'est
+      // précisément pourquoi ils se contredisent utilement.
+      const majuscule = `on${type.charAt(0).toUpperCase()}${type.slice(1)}`;
+      const candidats = type === 'input' ? [majuscule, 'onChange'] : [majuscule];
+      for (let n = e.target; n; n = n.parentElement) {
+        const cle = Object.keys(n).find((k) => k.indexOf('__reactProps') === 0);
+        if (!cle) continue;
+        const props = n[cle] || {};
+        const nomProp = candidats.find((c) => typeof props[c] === 'function');
+        if (!nomProp) continue;
+        const h = props[nomProp];
+        garder('jsx', { nom: h.name || '', source: String(h).slice(0, 220) });
+        break;
+      }
       // La **propriété**, que `closest('[on…]')` ne voit pas : un
       // `el.onclick = fn` n'ajoute aucun attribut. On remonte donc la lignée à
       // la main et l'on garde le nom de la fonction posée.
@@ -707,9 +749,27 @@ async function principal() {
   const vues = new Set(exerces.enLigne.map(nomDuGestionnaire).filter(Boolean));
   const ecouteursVus = new Set(exerces.ecouteurs);
   const proprietesVues = new Set(exerces.propriete || []);
+  // ── Nommer un gestionnaire JSX **vu au vol**, comme on nomme celui qui est
+  //    écrit dans la source ──
+  //
+  // Le mouchard garde deux choses : le `name` de la fonction et sa source. Le
+  // `name` vaut quand il en est un — `onClick={surFermer}` donne bien
+  // « surFermer ». Mais une flèche anonyme reçoit de JavaScript le nom de la
+  // **propriété** qui la porte : `onClick`, `onChange`. Ce n'est pas un nom de
+  // geste, c'est le nom de la place.
+  //
+  // Dans ce cas, on nomme par la source — et par `nomDuGestionnaireJsx`, la
+  // fonction que l'extracteur statique applique au même texte. Un seul nommage
+  // des deux côtés, par construction.
+  const jsxVus = new Set((exerces.jsx || []).map((v) => {
+    const nom = String((v && v.nom) || '');
+    if (nom && !/^on[A-Z]/.test(nom)) return nom;
+    return nomDuGestionnaireJsx(String((v && v.source) || ''));
+  }).filter(Boolean));
   gestes.forEach((g) => {
     if (g.forme === 'en ligne') { g.exerce = vues.has(g.nom); return; }
     if (g.forme === 'propriété') { g.exerce = proprietesVues.has(g.nom); return; }
+    if (g.forme === 'propriété JSX') { g.exerce = jsxVus.has(g.nom); return; }
     // Un écouteur est identifié par sa cible et son événement. La cible relevée
     // dans la source est une expression ; celle vue au vol est l'élément. On
     // rapproche par l'identifiant quand la source en porte un, et l'on marque

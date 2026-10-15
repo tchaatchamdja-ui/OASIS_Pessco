@@ -249,15 +249,15 @@ corrigé l'estimation qui les précédait — RAMP était annoncé à 365 occurr
 
 | Écran | Lignes | Occurrences | Gestes nommés | Exercés |
 |---|---|---|---|---|
-| DROITS | *convertie* | **30** | **15** | *non mesurée* |
+| DROITS | *convertie* | **30** | **15** | **15 — le plafond** |
 | PLAN | 5 949 | **133** | **92** | *non mesurée* |
 | CARE | 6 428 | **143** | **89** | *non mesurée* |
 | PR | 7 315 | **185** | **94** | *non mesurée* |
 | RAMP | 12 470 | **362** | **207** | **38** |
 | SURV | 23 731 | **500** | **310** | **38** |
-| **Total** | | **1 353** | **807** | **76** |
+| **Total** | | **1 353** | **807** | **91** |
 
-« Non mesurée » n'est pas « 0 % », et la distinction est tenue par l'outil : quatre écrans n'ont
+« Non mesurée » n'est pas « 0 % », et la distinction est tenue par l'outil : trois écrans n'ont
 pas encore de suite de navigateur, et le relevé **refuse** de leur attribuer un chiffre —
 `suite: null` fige l'inventaire sans prétendre à une couverture. Le défaut implicite qui aurait
 fait tourner le parcours du portail sur un écran de module, et rendu « 0 exercé » indiscernable
@@ -268,6 +268,12 @@ du vrai, est supprimé.
 que ni l'attribut de balisage, ni `addEventListener`, ni la propriété d'un élément du DOM ne
 font voir. C'est le dénominateur qui disparaît avec la conversion, poussé à son terme : **le
 plus converti des six écrans était le seul qu'on ne mesurait plus**.
+
+**Et une quatrième lecture au mouchard.** Voir ces gestes dans la source ne suffisait pas : à
+l'exécution, React n'attache **aucun** gestionnaire aux éléments — un seul écouteur par type à
+la racine, et il distribue lui-même. Le mouchard lit désormais les props que React laisse sur
+le nœud. DROITS est **le premier écran couvert à 100 %** (15 sur 15), et sans ce travail
+chacune des conversions à venir aurait éteint sa mesure en silence.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
 `tests/smoke/surv.smoke.js`, **cinquante-et-un contrôles** — l'écran se monte, ses sept pages se
@@ -830,7 +836,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 091, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 103, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

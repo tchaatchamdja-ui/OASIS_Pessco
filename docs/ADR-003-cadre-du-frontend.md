@@ -5374,6 +5374,107 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            l'écrit, et son premier refus l'a dit mot pour mot — *un 400 n'est pas
            une énigme.*
 
+       5.f.16 [x] **DROITS, premier écran couvert à 100 % — et le succès de la
+           migration effaçait l'instrument qui la juge** — fait le 15 octobre 2026.
+
+           **Douze contrôles ; 15 gestes sur 15.**
+
+           ── La question qui valait plus que quinze gestes ──
+
+           DROITS est le plus petit des six écrans. Il a été pris avant PLAN,
+           CARE et PR pour une autre raison : il est le seul **entièrement
+           converti**, et il répondait à une question qu'aucun autre ne posait.
+           *Le mouchard voit-il les gestionnaires d'un écran en React ?*
+
+           Mesuré avant d'écrire une seule assertion : **non**. Après un vrai
+           clic sur un bouton de cet écran, le journal du mouchard restait vide.
+           React ne pose ni attribut `onclick` ni propriété sur l'élément : il
+           attache **un** écouteur par type à la racine et distribue lui-même.
+           Les trois lectures du mouchard passaient à côté de tout.
+
+           C'était la panne la plus sournoise du chantier. L'écran **le plus
+           avancé** dans la migration était le seul dont la couverture serait
+           restée à zéro, et chacune des quatre conversions à venir aurait éteint
+           sa mesure en silence. **Le succès de la migration effaçait
+           l'instrument qui la juge.**
+
+           ── Une quatrième lecture, et un seul nommage ──
+
+           React laisse ses props sur le nœud, sous une clé `__reactProps$<aléa>`.
+           Le mouchard remonte la lignée, y cherche le gestionnaire, et garde **la
+           source de la fonction** — non son nom tiré sur place. Le nommage
+           appartient au côté Node, qui applique `nomDuGestionnaireJsx`, **la
+           même fonction que l'extracteur statique**. *Deux côtés qui nomment
+           séparément finissent par nommer différemment* : c'est la leçon payée
+           en 5.f.3, et elle n'était pas à repayer.
+
+           Deux conditions ont rendu la chose possible, et elles ont été
+           mesurées : esbuild ne minifie pas en développement, donc
+           `fn.toString()` rend `() => surPage("audit")` et non du code mangé ; et
+           une flèche anonyme reçoit de JavaScript le nom de la **propriété** qui
+           la porte — `onClick` —, qui n'est pas un nom de geste mais le nom de
+           la place. On nomme alors par la source.
+
+           ── Un contrôle vert qui ne prouvait pas la mesure ──
+
+           À 14 sur 15, le seul geste non reconnu était `surRecherche` — **dont le
+           contrôle passait** : la table se restreignait, et se rendait. Le geste
+           partait, le mouchard ne le voyait pas.
+
+           La cause : **`onChange` de React n'est pas le `change` du DOM**. React
+           l'appelle à chaque frappe, c'est-à-dire sur `input`. Le mouchard ne
+           cherchait qu'`onInput`.
+
+           *Un contrôle vert ne prouve pas que la mesure a vu le geste.* Les deux
+           instruments sont indépendants, et c'est précisément pourquoi ils se
+           contredisent utilement.
+
+           ── Trois gestes simulés qui ne portaient pas, et un qui portait trop ──
+
+           | Ce qui a été essayé | Ce qui s'est passé |
+           |---|---|
+           | `input.value = …` puis `input` | **rien** — le suivi de valeur de React ignore une écriture impérative. Il faut de **vraies frappes** |
+           | `radio.checked = true` puis `change` | **rien** — même cause. Un vrai `click()` porte |
+           | `select.value = …` puis `change` | **porte** — et c'est ce qui rendait l'écart difficile à voir |
+           | `case.click()` (SURV, 5.f.15) | **perdait son propre clic**, le gestionnaire redessinant la table |
+
+           *Le même geste simulé ne vaut pas pour tous les champs, et la seule
+           façon de le savoir est de regarder le résultat.*
+
+           ── Et deux fautes de méthode, dont une déjà payée ──
+
+           **Un contrôle qui ne rétablit pas ce qu'il a changé fait mentir ceux
+           qui le suivent.** Le vidage de la recherche par triple clic a échoué
+           sans bruit ; la table est restée filtrée sur une ligne, et **quatre
+           contrôles ont rougi en cascade** — la fenêtre d'un compte, le
+           privilège, l'enregistrement, le journal. Aucun de ces gestes n'était
+           en cause. Un seul correctif les a rendus tous les quatre.
+
+           **Une ligne ne se désigne pas par son texte.** Le contrôle de
+           l'écriture cherchait `tr.textContent.includes('admin@anac.bj')` — or
+           « superadmin@anac.bj » **contient** « admin@anac.bj ». Il a ouvert la
+           fenêtre du compte de sa propre session, lui a changé son privilège,
+           puis a « rétabli » un compte que rien n'avait touché : le contrôle du
+           retour en arrière était **vert sans rien prouver**, et celui de
+           l'écriture rouge sur un geste qui marche.
+
+           C'est la faute de 5.f.7 par une autre porte — là, une ligne était
+           désignée par son **rang** ; ici, par une **sous-chaîne** de son texte.
+           La désignation se fait sur une cellule **égale** au nom.
+
+           ── Ce que la ronde écrit, et ce qu'elle rend ──
+
+           Le privilège d'un compte est le seul geste de cet écran qui écrit. Il
+           est éprouvé comme les autres : relevé chez le serveur, changé, relu,
+           **puis rétabli et relu encore**. Sans le dernier pas, la campagne
+           suivante hériterait d'un compte dont cet essai aurait changé les
+           droits — et l'écran règle l'espace **PLAN**, dont d'autres suites
+           dépendent.
+
+           Une portée n'y est pas ajoutée, et c'est délibéré : `enregistrer`
+           refuse une ligne sans domaine, pose une erreur et **sort sans sauver**.
+           La portée s'exerce dans la fenêtre qui ne sauvegarde pas.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

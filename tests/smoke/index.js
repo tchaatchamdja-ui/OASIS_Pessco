@@ -52,6 +52,10 @@ const suites = [
   // des gestes lance la suite par son nom, et deux noms dont l'un contient
   // l'autre lui en feraient lancer deux.
   { nom: 'ramp-navigateur', port: 4797, run: require('./ramp.navigateur.smoke') },
+  // DROITS dans un navigateur : le plus petit des six écrans, et le seul
+  // entièrement converti. C'est lui qui a montré que le mouchard était aveugle
+  // aux gestionnaires de React (ADR-003, 5.f.16).
+  { nom: 'droits-navigateur', port: 4797, run: require('./droits.navigateur.smoke') },
 ];
 
 (async () => {

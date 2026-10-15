@@ -1361,7 +1361,7 @@ module.exports = async function survSmoke(port) {
     // présentée comme une couverture nulle.
     if (process.env.OASIS_MOUCHARD && navigateur) {
       const vu = {
-        enLigne: [], ecouteurs: [], propriete: [], poses: 0, pages: 0,
+        enLigne: [], ecouteurs: [], propriete: [], jsx: [], poses: 0, pages: 0,
       };
       for (const p of await navigateur.pages()) {
         try {
@@ -1375,6 +1375,7 @@ module.exports = async function survSmoke(port) {
             vu.enLigne.push(...j.durable.enLigne);
             vu.ecouteurs.push(...j.durable.ecouteurs);
             vu.propriete.push(...(j.durable.propriete || []));
+            vu.jsx.push(...(j.durable.jsx || []));
           }
         } catch { /* page déjà partie : le registre durable l'a gardée */ }
       }

@@ -416,6 +416,61 @@ module.exports = async function executionSmoke(port) {
       (await PUT(`${M}/vue`, { vue: 'prestataire' })).statut === 403);
     await srv.connexion();
 
+    // ── Remise d'un document bureautique composé par le front ──
+    //
+    // Les fiches de constat et de suivi sont **composées dans le navigateur**,
+    // non par le serveur : il n'y a pas de route qui les fabrique. En Word, le
+    // front dépose le document composé puis le réclame par une requête GET —
+    // le détour existe parce qu'une URL `blob:` téléchargée depuis une iframe
+    // est ignorée sans message par certains navigateurs.
+    //
+    // Ce dépôt a un contrat qui mérite d'être tenu : éphémère, **nominatif** et
+    // à **usage unique**. C'est cela qu'on éprouve ici, et non le document —
+    // dont le contenu, lui, ne quitte jamais le client.
+    const DOC = `${M}/documents/word`;
+    verifier('un document vide est refusé au dépôt',
+      (await P(DOC, { nom: 'x.doc', contenu: '' })).statut === 400);
+
+    const depot = await P(DOC, { nom: 'Fiche_Constat_ESSAI.doc', contenu: '<html><body>Essai</body></html>' });
+    verifier('le dépôt rend un jeton',
+      depot.statut === 200 && /^[0-9a-f]{32}$/.test((depot.corps || {}).jeton || ''),
+      `${depot.statut} — ${JSON.stringify(depot.corps).slice(0, 60)}`);
+
+    const remise = await srv.appel(`${DOC}/${(depot.corps || {}).jeton}`);
+    verifier('le document part en pièce jointe, typé Word et interdit au reniflage',
+      remise.statut === 200
+      && /application\/msword/.test(remise.entetes['content-type'] || '')
+      && remise.entetes['x-content-type-options'] === 'nosniff'
+      && /^attachment;/.test(remise.entetes['content-disposition'] || '')
+      && /Fiche_Constat_ESSAI\.doc/.test(remise.entetes['content-disposition'] || ''),
+      JSON.stringify({
+        statut: remise.statut, type: remise.entetes['content-type'],
+        nosniff: remise.entetes['x-content-type-options'],
+        disposition: remise.entetes['content-disposition'],
+      }));
+    // Le contenu est rendu tel qu'il a été déposé. La route le préfixe d'une
+    // BOM pour Word ; elle n'est pas contrôlée ici, le décodeur de `fetch`
+    // retirant une BOM de tête avant que le texte nous parvienne — l'affirmer
+    // d'ici serait affirmer une propriété du décodeur, non de la route.
+    verifier('le contenu déposé est rendu intact',
+      String(remise.corps) === '<html><body>Essai</body></html>',
+      JSON.stringify(String(remise.corps).slice(0, 50)));
+
+    verifier('le jeton ne sert qu’une fois',
+      (await srv.appel(`${DOC}/${(depot.corps || {}).jeton}`)).statut === 404);
+    verifier('un jeton inventé ne rend rien',
+      (await srv.appel(`${DOC}/0123456789abcdef0123456789abcdef`)).statut === 404);
+
+    // Nominatif : le dépôt appartient au compte qui l'a fait. Un autre compte
+    // authentifié, porteur d'un jeton valide et non consommé, n'obtient rien.
+    const aMoi = await P(DOC, { nom: 'Fiche_Suivi_ESSAI.doc', contenu: '<html>y</html>' });
+    await srv.connexion('m.ahoyo@anac.bj');
+    verifier('le document déposé est refusé à un autre compte',
+      (await srv.appel(`${DOC}/${(aMoi.corps || {}).jeton}`)).statut === 404);
+    await srv.connexion();
+    verifier('et reste disponible pour celui qui l’a déposé',
+      (await srv.appel(`${DOC}/${(aMoi.corps || {}).jeton}`)).statut === 200);
+
     // ── Privilège « Prestataire » attribué dans Gestion des Droits ──
     // Contrairement à la bascule, il n'est pas réversible depuis le module :
     // le compte travaille en permanence dans le périmètre de son prestataire.

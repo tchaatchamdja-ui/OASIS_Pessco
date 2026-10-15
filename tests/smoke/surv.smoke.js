@@ -1003,6 +1003,52 @@ module.exports = async function survSmoke(port) {
         document.querySelector('[onclick^="execSubmitDossier"]')?.click();
         await attendre(800);
         r.resoumission = await confirmer();
+
+        // ── L'aperçu du rapport, avant la décision ──
+        //
+        // `execPreviewRapport` est le geste par lequel un valideur lit ce qu'il
+        // va valider. Il appelle `execDownloadRapport` pour obtenir le document
+        // composé par le serveur, le met dans une iframe, et ouvre à côté un
+        // pavé d'observations — ouvert à l'écriture **seulement** si le compte
+        // peut valider et si le rapport est au statut « soumis ». C'est le cas
+        // ici, et c'est cette branche de permission qu'on éprouve.
+        //
+        // Deux définitions de ce nom existaient, dans deux fichiers chargés l'un
+        // après l'autre ; la seconde l'emportait en silence. La première a été
+        // retirée (n° 5.f.11), et un garde-fou refuse qu'un doublon revienne.
+        const apercu = document.querySelector('[onclick^="execPreviewRapport"]');
+        r.boutonApercu = !!apercu;
+        if (apercu) {
+          apercu.click();
+          await attendre(3500);
+          const zone = document.getElementById('apercu_commentaires');
+          r.apercu = {
+            rendu: !!document.querySelector('.exec-apercu-rapport'),
+            // L'iframe n'est là que si le document a été obtenu : sa présence
+            // prouve que `execDownloadRapport` a rendu quelque chose.
+            document: !!document.querySelector('iframe.exec-apercu-cadre'),
+            zone: !!zone,
+            ouverte: !!zone && !zone.readOnly,
+            retour: !!document.querySelector('[onclick^="execBackToValidation"]'),
+          };
+
+          // Une observation écrite, enregistrée, puis relue chez le serveur.
+          if (zone && !zone.readOnly) {
+            r.observation = `Observation de la ronde ${Date.now()}`;
+            zone.value = r.observation;
+            zone.dispatchEvent(new Event('input', { bubbles: true }));
+            document.querySelector('[onclick^="execSaveApercuComments"]')?.click();
+            await attendre(2500);
+          }
+
+          // Et le retour : le volet revient à l'étape Validation, qui offre de
+          // nouveau sa décision. Le bouton est donc **repris après** le retour,
+          // et non gardé d'avant — l'aperçu a remplacé le contenu du volet.
+          document.querySelector('[onclick^="execBackToValidation"]')?.click();
+          await attendre(2500);
+          r.revenuAValidation = !!document.querySelector('[onclick^="execValidateRapport"]');
+        }
+
         const bouton = document.querySelector('[onclick^="execValidateRapport"]');
         r.boutonValider = !!bouton;
         if (bouton) {
@@ -1015,10 +1061,25 @@ module.exports = async function survSmoke(port) {
       const cycleEnBase = await page.evaluate(async (ctx) => {
         const raps = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
         const miens = (raps || []).filter((x) => x.dossier_id === ctx.id)
-          .map((x) => ({ version: x.version, statut: x.statut }))
+          .map((x) => ({ version: x.version, statut: x.statut, apercu: x.commentaires_apercu || '' }))
           .sort((a, b) => a.version - b.version);
         return { rapports: miens };
       }, { api: M, id: chaine.dossierId });
+
+      verifier('l’aperçu du rapport se rend, document compris, et son pavé d’observations est ouvert au valideur',
+        secondCycle.boutonApercu === true && secondCycle.apercu
+        && secondCycle.apercu.rendu === true && secondCycle.apercu.document === true
+        && secondCycle.apercu.zone === true && secondCycle.apercu.ouverte === true
+        && secondCycle.apercu.retour === true,
+        JSON.stringify(secondCycle.apercu || { bouton: secondCycle.boutonApercu }));
+      verifier('une observation saisie dans l’aperçu est enregistrée, et le serveur la porte',
+        !!secondCycle.observation
+        && (cycleEnBase.rapports || []).some((x) => x.apercu === secondCycle.observation),
+        JSON.stringify({ attendue: secondCycle.observation,
+          enBase: (cycleEnBase.rapports || []).map((x) => x.apercu) }));
+      verifier('le retour de l’aperçu ramène le volet à l’étape Validation',
+        secondCycle.revenuAValidation === true,
+        JSON.stringify({ revenu: secondCycle.revenuAValidation }));
       verifier('une seconde soumission fait un rapport « v2 », et la validation le marque valide',
         secondCycle.resoumission === true && secondCycle.boutonValider === true
         && secondCycle.validationConfirmee === true

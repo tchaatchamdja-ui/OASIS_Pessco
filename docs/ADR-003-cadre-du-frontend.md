@@ -4904,6 +4904,139 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            compte des indécidables reste donc à 5, inchangé, pendant que la couverture
            monte. *Une mesure qu'on croit comprendre se vérifie comme les autres.*
 
+       5.f.11 [x] **SURV — les exports : une méthode annoncée qui n'avait pas
+           d'objet, et 74 lignes qui en ombrageaient 60** — fait le 15 octobre 2026.
+
+           **Quarante-cinq contrôles pour SURV ; 33 gestes sur 310. Et huit
+           contrôles de plus dans la suite HTTP : 111.**
+
+           ── La méthode que j'avais annoncée était fausse ──
+
+           En clôturant 5.f.10, j'ai écrit que les exports seraient « éprouvés
+           par la **réponse HTTP** — code, type, taille — et non par une fenêtre
+           qu'un navigateur sans tête rend mal ». Lecture faite, **la plupart ne
+           parlent pas au serveur** : `execExportConstatations` en classeur
+           fabrique un `Blob` et le télécharge par une ancre ; les fiches en PDF,
+           comme `execDownloadRapport`, composent le document et l'ouvrent par
+           `window.open` + `document.write`. Il n'y a pas de réponse HTTP à
+           mesurer, parce qu'il n'y a pas de requête.
+
+           *Une méthode s'arrête sur ce que le code fait, jamais sur ce que son
+           nom laisse croire qu'il fait.* « Exporter » ne dit pas qui fabrique.
+
+           ── Ce qui passe bien par le serveur, et son contrat ──
+
+           Un chemin fait exception : les fiches **en Word**. Et le détour est
+           motivé — une URL `blob:` téléchargée depuis une iframe est ignorée
+           sans message par certains navigateurs, ce que la route écrit en
+           commentaire. Le front dépose donc le document composé, puis le
+           réclame par un GET.
+
+           Ce dépôt a un contrat qui méritait d'être tenu, et il l'est :
+
+           | Propriété | Éprouvée |
+           |---|---|
+           | un document vide est refusé | **400** |
+           | le dépôt rend un jeton | 32 caractères hexadécimaux |
+           | la remise | **200**, `application/msword`, `nosniff`, `attachment` au bon nom |
+           | le contenu | rendu **intact** |
+           | **usage unique** | la seconde réclamation : **404** |
+           | un jeton inventé | **404** |
+           | **nominatif** | un autre compte authentifié, jeton valide et non consommé : **404** — et le déposant l'obtient toujours |
+
+           Huit contrôles dans `execution.smoke.js`, et non dans la suite de
+           navigateur : ce sont des propriétés de route. Ils sont placés **avant**
+           le bloc du privilège Prestataire, qui change l'identité du compte
+           d'essai pour de bon — l'ordre, encore.
+
+           Une chose n'y est **pas** contrôlée, et c'est écrit sur place : la
+           route préfixe le document d'une BOM pour Word, mais le décodeur de
+           `fetch` retire une BOM de tête avant que le texte nous parvienne.
+           L'affirmer d'ici serait affirmer une propriété du décodeur, non de la
+           route.
+
+           ── L'aperçu du rapport, et ce qu'il prouve de plus ──
+
+           `execPreviewRapport` est le geste par lequel un valideur lit ce qu'il
+           va valider. Trois contrôles, à l'étape Validation :
+
+           - le cadre est rendu, **et l'iframe du document est là** — sa seule
+             présence prouve que `execDownloadRapport` a rendu un document ;
+           - le pavé d'observations est **ouvert à l'écriture**, parce que le
+             compte peut valider et que le rapport est « soumis » : c'est une
+             branche de permission, et c'est elle qu'on éprouve ;
+           - une observation saisie est enregistrée et **relue chez le serveur**,
+             puis le retour ramène le volet à sa décision — le bouton de
+             validation est repris **après** le retour, l'aperçu ayant remplacé
+             le contenu du volet.
+
+           Trois gestes de plus : `execPreviewRapport`, `execSaveApercuComments`,
+           `execBackToValidation`. J'en annonçais **quatre** :
+           `execDownloadRapport` ne compte pas, et l'instrument a raison — un
+           geste est un gestionnaire atteignable **depuis le balisage**, non une
+           fonction appelée par une autre. L'aperçu l'appelle en interne ; son
+           bouton « Exporter PDF », lui, n'a pas été cliqué.
+
+           ── 74 lignes mortes qui ombrageaient 60 vivantes ──
+
+           `execPreviewRapport` était déclaré **deux fois** : dans
+           `exec-rapports.js`, puis dans `exec-fiche.js`. Deux `function` du même
+           nom au premier niveau de scripts classiques ne font pas une erreur —
+           **la dernière l'emporte, en silence**. `index.html` charge
+           `exec-rapports.js` en 105 et `exec-fiche.js` en 108.
+
+           Je ne l'ai pas déduit de l'ordre des balises : mesuré dans le
+           navigateur, `execPreviewRapport.toString()` portait bien le corps
+           d'`exec-fiche.js`, qui le publie d'ailleurs explicitement sur
+           `window`. Les 74 lignes d'`exec-rapports.js` sont supprimées, une note
+           à leur place. Les deux auxiliaires qu'elles appelaient —
+           `execBackToValidation`, `execSaveApercuComments` — sont appelés par la
+           version vivante : ils restent.
+
+           Effet secondaire mesuré, et instructif : l'inventaire est passé de
+           **503 à 500 occurrences** pour **310 noms inchangés**. Les trois
+           occurrences retirées étaient des **copies** de noms qui vivent
+           ailleurs. Le garde-fou de dérive a signalé l'écart de lui-même.
+
+           ── Le même défaut ailleurs, et pourquoi je n'y touche pas ──
+
+           Un garde-fou refuse désormais qu'un nom soit déclaré deux fois sur une
+           page de module. Sur les six pages, il trouvait **deux** cas. Le second
+           est dans PR, et il est plus grave :
+
+           `renderParamIndices` est déclaré **deux fois dans le même fichier**
+           (`pr-parametres.js`, lignes 99 et 691), et les deux versions ne font
+           pas la même chose. La **vivante est la seconde**, et c'est
+           l'**ancienne** : elle n'oppose aucun contrôle de rôle. La **morte est
+           la plus récente**, reprise de PESSCO : elle **désactive les champs**
+           pour un compte qui n'est pas M1 Administrateur et masque le bouton
+           d'enregistrement.
+
+           L'autorité, elle, est tenue par le serveur : `PUT /api/indices` exige
+           le rôle Gestionnaire, et son refus est éprouvé depuis longtemps
+           (profil-risque, « barème des indices non réinscriptible », **403**).
+           **L'ombrage ne fabrique donc pas une faille, mais une interface qui
+           ment** : un non-gestionnaire voit un formulaire ouvert et un bouton
+           qui sera refusé.
+
+           Je ne le répare pas. Ici, contrairement à SURV, **la version morte est
+           celle qu'on voudrait garder** : supprimer la plus récente pour
+           « corriger le doublon » serait décider à la place de la maîtrise
+           d'ouvrage. Le cas est donc **déclaré** dans le garde-fou, avec tout ce
+           que la mesure en sait — sur le modèle de `PAGES_SANS_CHEMIN`. *Une
+           déclaration n'excuse pas ; elle empêche d'oublier.*
+
+           ── Ce que ce pas ne couvre pas, et comment il le couvrira ──
+
+           Le point était « les exports et les fiches » : il est fait **à
+           moitié**, et le reste est nommé. Les exports à fenêtre et à `Blob`
+           vivent dans l'onglet « Constatations » du volet, qu'un sous-onglet de
+           la rédaction ouvre. Leur méthode est arrêtée — capturer le **produit**
+           du geste en interceptant `window.open` et `URL.createObjectURL`, ce
+           qui prouve le document composé et **non** son rendu ni son
+           téléchargement, limite à écrire —, mais ils demandent leur propre
+           ronde de navigation. Je préfère le dire que l'écrire à l'aveugle.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

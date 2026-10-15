@@ -1,8 +1,8 @@
 {
  "releve": "2026-10-15",
  "gestesNommes": 310,
- "occurrences": 503,
- "exerces": 30,
+ "occurrences": 500,
+ "exerces": 33,
  "indecidables": 5,
  "gestes": [
   {
@@ -183,7 +183,7 @@
    "evenement": "click",
    "nom": "execPreviewRapport",
    "source": "execPreviewRapport('${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -552,7 +552,7 @@
    "evenement": "click",
    "nom": "execPreviewRapport",
    "source": "execPreviewRapport('${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -2150,7 +2150,7 @@
    "evenement": "click",
    "nom": "execPreviewRapport",
    "source": "execPreviewRapport('${rapport.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2384,7 +2384,7 @@
    "evenement": "click",
    "nom": "execSaveApercuComments",
    "source": "execSaveApercuComments('${rapportId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -2393,7 +2393,7 @@
    "evenement": "click",
    "nom": "execBackToValidation",
    "source": "execBackToValidation('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -4411,33 +4411,6 @@
    "evenement": "click",
    "nom": "this.parentElement.style.display",
    "source": "this.parentElement.style.display='none'",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-rapports.js",
-   "ligne": 870,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "execSaveApercuComments",
-   "source": "execSaveApercuComments('${rapportId}')",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-rapports.js",
-   "ligne": 879,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "execBackToValidation",
-   "source": "execBackToValidation('${dossierId}')",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-rapports.js",
-   "ligne": 880,
-   "forme": "en ligne",
-   "evenement": "click",
-   "nom": "window.print",
-   "source": "window.print()",
    "exerce": false
   },
   {

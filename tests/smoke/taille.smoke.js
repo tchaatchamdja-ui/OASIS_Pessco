@@ -1806,5 +1806,65 @@ module.exports = async function tailleSmoke() {
         && !/DATABASE_URL/.test(verifieSansBase[1]));
   }
 
+  // ── Un nom de fonction déclaré deux fois sur une même page de module ──
+  //
+  // Deux `function` du même nom au premier niveau de scripts classiques ne font
+  // pas une erreur : la **dernière déclaration l'emporte**, en silence. La
+  // précédente devient du code mort que rien ne signale — et si les deux
+  // versions diffèrent, c'est le comportement de l'une qui s'applique quand on
+  // lit l'autre.
+  //
+  // Relevé le 15 octobre 2026 en couvrant les exports de SURV : deux cas sur
+  // les six pages de module.
+  //
+  //   · `execPreviewRapport` — déclaré dans `exec-rapports.js` puis dans
+  //     `exec-fiche.js`. 74 lignes mortes, supprimées (ADR-003 n° 5.f.11).
+  //   · `renderParamIndices` — déclaré **deux fois dans le même fichier** de
+  //     PR, et les deux versions ne font pas la même chose. Déclaré ci-dessous,
+  //     car le réparer est un choix de maîtrise d'ouvrage, non de conversion.
+  //
+  // Le garde-fou refuse tout doublon **non déclaré**. La déclaration dit ce que
+  // la mesure sait de lui ; elle n'excuse pas, elle empêche d'oublier.
+  const DOUBLONS_DECLARES = {
+    renderParamIndices: 'PR, pr-parametres.js, lignes 99 et 691 — la déclaration '
+      + 'vivante est la **seconde**, et c’est l’ancienne : elle lit `APP_STATE.data.indices` '
+      + 'et n’oppose **aucun contrôle de rôle**. La morte est la plus récente, reprise de '
+      + 'PESSCO : elle lit `window.PESSCO.sharedData`, **désactive les champs** pour un '
+      + 'compte qui n’est pas M1 Administrateur, et masque le bouton d’enregistrement. '
+      + 'L’autorité, elle, est tenue par le serveur : `PUT /api/indices` exige le rôle '
+      + 'Gestionnaire, et son refus est éprouvé (profil-risque, « barème des indices non '
+      + 'réinscriptible », 403). L’ombrage ne fabrique donc pas une faille, mais une '
+      + 'interface qui ment : un non-gestionnaire voit un formulaire ouvert et un bouton '
+      + 'qui sera refusé. Laquelle des deux versions garder est une question posée à la '
+      + 'maîtrise d’ouvrage — supprimer la plus récente pour « corriger le doublon » '
+      + 'serait décider à sa place.',
+  };
+
+  const pagesDeModule = fs.readdirSync(path.join(RACINE, 'public', 'modules'))
+    .filter((d) => fs.existsSync(path.join(RACINE, 'public', 'modules', d, 'index.html')));
+  const nomsEnDouble = [];
+  for (const m of pagesDeModule) {
+    const html = fs.readFileSync(path.join(RACINE, 'public', 'modules', m, 'index.html'), 'utf8');
+    const scripts = [...html.matchAll(/<script src="([^"]+)"/g)].map((x) => x[1])
+      .filter((u) => u.startsWith('/modules/'));
+    const declares = new Map();
+    for (const u of scripts) {
+      const f = path.join(RACINE, 'public', u.replace(/^\//, ''));
+      if (!fs.existsSync(f)) continue;
+      // Les lignes de commentaire sont écartées — le filtre est par ligne, et il
+      // suffit ici : une déclaration de fonction commentée l'est en tête de ligne.
+      const code = sansCommentaires(fs.readFileSync(f, 'utf8'), '//');
+      for (const d of code.matchAll(/^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/gm)) {
+        if (!declares.has(d[1])) declares.set(d[1], []);
+        declares.get(d[1]).push(path.basename(f));
+      }
+    }
+    for (const [nom, ou] of declares) {
+      if (ou.length > 1 && !DOUBLONS_DECLARES[nom]) nomsEnDouble.push(`${m} : ${nom} (${ou.join(', ')})`);
+    }
+  }
+  verifier('aucun nom de fonction n’est déclaré deux fois sur une page de module, hors déclaration',
+    nomsEnDouble.length === 0, nomsEnDouble.join(' | ') || `${pagesDeModule.length} pages examinées`);
+
   return bilan('taille');
 };

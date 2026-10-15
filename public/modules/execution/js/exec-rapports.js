@@ -808,80 +808,16 @@ async function _execDownloadAsWord(html, filename) {
     }
 }
 
-async function execPreviewRapport(rapportId) {
-    let rapport;
-    try {
-        rapport = await api(`${EXEC_MODULE_API}/rapports/${rapportId}`);
-    } catch (e) {
-        console.error('Load rapport error:', e);
-        return;
-    }
-    if (!rapport) return;
-    EXEC_STATE.selectedRapport = rapport;
-
-    const aac = EXEC_STATE.data.aac || {};
-    const dossier = EXEC_STATE.selectedDossier || {};
-    const dossierId = dossier.id || '';
-    const canComment = _execCanValidate() && rapport.statut === 'soumis';
-    const existingComments = rapport.commentaires_apercu || '';
-
-    const previewHtml = `
-    <div class="official-doc-form">
-        <div class="official-doc-page">
-            <div class="doc-header">
-                <div class="doc-header-left">
-                    ${_esc(aac.pays || 'REPUBLIQUE')}<br>
-                    ${_esc(aac.designation || 'Autorite Aeronautique Civile')}
-                </div>
-                <div class="doc-header-right">${_esc(rapport.reference || '')}</div>
-            </div>
-            <div class="doc-title">${_esc(_execIntituleRapport(dossier, 'RAPPORT DE SURVEILLANCE'))}</div>
-            <div class="doc-ref">${_esc(rapport.notification_ref || '')}</div>
-
-            <div class="doc-section-title">1. INTRODUCTION</div>
-            <p><strong>Objet :</strong> ${_esc(dossier.objet_activite || '-')}</p>
-            <p><strong>Date d'exécution :</strong> ${_esc(dossier.dates_activite || '-')}</p>
-            <p><strong>Équipe :</strong> ${_esc(dossier.equipe_inspection || '-')}</p>
-            <p><strong>Aspects couverts :</strong> ${_esc(dossier.aspects_couverts || '-')}</p>
-            <p><strong>Référentiel :</strong> ${_esc(dossier.referentiel || '-')}</p>
-
-            <div class="doc-section-title">2. SYNTHÈSE ET RECOMMANDATIONS</div>
-            <p><strong>Points forts :</strong> ${_esc(dossier.synthese_points_forts || '-')}</p>
-            <p><strong>Points faibles :</strong> ${_esc(dossier.synthese_points_faibles || '-')}</p>
-            <p><strong>Opportunités d'amélioration :</strong> ${_esc(dossier.opportunites_amelioration || '-')}</p>
-            <p><strong>Résumé global :</strong> ${_esc(dossier.resume_global_constatations || '-')}</p>
-
-            <div class="doc-section-title">3. CONSTATATIONS</div>
-            ${(dossier.constatations || []).length === 0 ? '<p>-</p>' : (dossier.constatations || []).map(c => `
-                <p><strong>${_esc(c.reference || '')}</strong> (${_esc(c.criticite || '')}) - ${_esc(c.description || '')}</p>
-            `).join('')}
-
-            <div class="doc-section-title">4. CONCLUSION</div>
-            <p>${_esc(dossier.conclusion || '-')}</p>
-        </div>
-    </div>`;
-
-    const bodyHtml = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">
-        <div style="position:sticky;top:0;">
-            <h4 style="margin-bottom:0.5rem;">${te('commentaires_rapport')}</h4>
-            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">Rapport : <strong>${_esc(rapport.reference || '')}</strong> (v${rapport.version || 1}) — ${_execStatusBadge(rapport.statut)}</p>
-            <textarea id="apercu_commentaires" class="form-input" rows="18" style="resize:vertical;width:100%;${!canComment ? 'background:var(--bg);' : ''}" placeholder="${canComment ? 'Saisir vos observations...' : ''}" ${canComment ? '' : 'readonly'}>${_esc(existingComments)}</textarea>
-            ${canComment ? `<button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="execSaveApercuComments('${rapportId}')">${EXEC_ICONS.clipboard} Enregistrer les observations</button>` : ''}
-        </div>
-        <div style="border-left:1px solid var(--border);padding-left:1rem;max-height:80vh;overflow-y:auto;">
-            <h4 style="margin-bottom:0.5rem;">${te('previsualisation')}</h4>
-            ${previewHtml}
-        </div>
-    </div>`;
-
-    const footerHtml = `
-        <button class="btn btn-outline" onclick="execBackToValidation('${dossierId}')">${EXEC_ICONS.back} Retour</button>
-        <button class="btn btn-primary btn-sm" onclick="window.print()" title="Exporter PDF">${EXEC_ICONS.pdf} Exporter PDF</button>
-    `;
-
-    execShowSlider(`${EXEC_ICONS.rapports} ${te('apercu')}`, bodyHtml, footerHtml, 'max');
-}
+// `execPreviewRapport` vivait ici aussi — 74 lignes qui composaient l'aperçu
+// du rapport à la main. Elles étaient **mortes** : `exec-fiche.js` se charge
+// après ce fichier (index.html, lignes 105 puis 108) et déclare le même nom au
+// premier niveau d'un script classique, où la dernière déclaration l'emporte.
+// Mesuré dans le navigateur avant la suppression, et non déduit de l'ordre des
+// balises : `execPreviewRapport.toString()` portait bien le corps d'exec-fiche.
+// La version vivante délègue le document à `execDownloadRapport`, et appelle
+// `execBackToValidation` et `execSaveApercuComments`, restés ici.
+// Un garde-fou refuse désormais qu'un nom soit déclaré deux fois sur une même
+// page de module (tests/smoke/taille.smoke.js). ADR-003, n° 5.f.11.
 
 function execBackToValidation(dossierId) {
     if (dossierId) {

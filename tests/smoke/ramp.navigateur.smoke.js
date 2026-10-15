@@ -522,6 +522,281 @@ module.exports = async function rampNavigateurSmoke(port) {
       params.fenetrePays > 200 && params.fenetrePaysFermee === 0,
       JSON.stringify({ ouverte: params.fenetrePays, fermee: params.fenetrePaysFermee }));
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La ronde d'une fiche d'inspection, de la saisie à la suppression
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Le cycle du POI est jumeau de celui du dossier de SURV : brouillon →
+    // soumis → validée, avec un renvoi qui ramène en saisie. Chaque palier est
+    // relu **chez le serveur**, et la ronde ne laisse rien.
+    //
+    // ── Ce que la soumission exige, lu dans la route et non devinée ──
+    //
+    // `POST /poi/:id/soumettre` refuse par un **400 qui dit ce qui manque** :
+    // date, État d'inspection, exploitant, type d'aéronef, immatriculation, au
+    // moins un item contrôlé, et un inspecteur. Le premier essai de cette ronde
+    // a reçu ce refus ; la route l'écrit, il n'y avait rien à élucider.
+    //
+    // ── Comment les champs se visent, sans un seul identifiant ──
+    //
+    // Aucun champ du formulaire ne porte d'`id` ni de `name` : ils sont liés par
+    // leur gestionnaire, `oninput="rampPoiChamp('immatriculation', …)"`. On les
+    // vise donc **par la liaison que l'application déclare elle-même** — ce qui
+    // est plus sûr qu'une position dans la grille, et se lit.
+    //
+    // ── Et une case à cocher qui perdait son propre clic ──
+    //
+    // `element.click()` sur la case d'un item **ne portait pas** : son
+    // gestionnaire redessine la table des items. Poser `checked` puis dépêcher
+    // `change` porte. Mesuré dans les deux sens avant d'écrire.
+    etape = 'ronde';
+    await ouvrir('etats');
+    await attendre(2400);
+    const ronde = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((x) => setTimeout(x, ms));
+      const o = {};
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const pois = async () => ((await jget('/poi')).poi || []);
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(4000);
+        return true;
+      };
+      const z = () => document.querySelector('.ramp-slider-body');
+      const champ = (c) => z().querySelector(`[oninput*="rampPoiChamp('${c}'"],`
+        + ` [onchange*="rampPoiChamp('${c}'"], [onchange*="rampPoiChampOuvert('${c}'"]`);
+      const lignes = () => (document.getElementById('rampPoiItems')
+        || { querySelectorAll: () => [] }).querySelectorAll('tr').length;
+
+      o.avant = (await pois()).length;
+      document.querySelector('[onclick^="rampAjouterInspection"]')?.click();
+      await a(3500);
+
+      // La date et le type d'inspection sont posés d'office : le formulaire
+      // s'ouvre sur aujourd'hui, en SAFA.
+      o.defauts = {
+        date: (champ('date') || {}).value || '',
+        type: (champ('type_inspection') || {}).value || '',
+      };
+
+      // Trois listes et un texte : l'exploitant, l'aéronef, le lieu, et
+      // l'immatriculation.
+      for (const c of ['exploitant', 'aeronef', 'place']) {
+        const e = champ(c);
+        if (e && e.options && e.options.length > 1) {
+          e.selectedIndex = 1;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          /* eslint-disable no-await-in-loop */
+          await a(900);
+        }
+      }
+      const im = champ('immatriculation');
+      if (im) {
+        im.value = 'TT-RONDE';
+        im.dispatchEvent(new Event('input', { bubbles: true }));
+        await a(800);
+      }
+
+      // Les items : tout déplier, tout replier, et un regroupement seul.
+      document.querySelector('[onclick^="rampPoiToutDeplier(true)"]')?.click();
+      await a(1800);
+      o.lignesDepliees = lignes();
+      document.querySelector('[onclick^="rampPoiToutDeplier(false)"]')?.click();
+      await a(1800);
+      o.lignesRepliees = lignes();
+      document.querySelector('[onclick^="rampPoiToutDeplier(true)"]')?.click();
+      await a(1800);
+      const groupe = document.querySelector('#rampPoiItems [onclick^="rampPoiBasculerGroupe"]');
+      if (groupe) {
+        const avant = lignes();
+        groupe.click();
+        await a(1600);
+        o.groupeReplie = [avant, lignes()];
+      }
+
+      // Un item contrôlé — par sa propriété, non par un clic simulé.
+      const caseItem = document.getElementById('rampPoiItems')?.querySelector('input[type="checkbox"]');
+      o.caseTrouvee = !!caseItem;
+      if (caseItem) {
+        caseItem.checked = true;
+        caseItem.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(1800);
+      }
+
+      // Un inspecteur, pris dans la liste de l'équipe.
+      const liste = [...z().querySelectorAll('select')]
+        .find((x) => /rampPoiAjouterInspecteur/.test(x.getAttribute('onchange') || ''));
+      o.listeInspecteurs = liste ? liste.options.length : 0;
+      if (liste && liste.options.length > 1) {
+        liste.value = liste.options[1].value;
+        liste.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(2000);
+      }
+
+      // Le sélecteur d'aéronef, ouvert et refermé.
+      const racine = () => (document.getElementById('rampModalRoot') || { innerHTML: '' }).innerHTML.length;
+      document.querySelector('[onclick^="rampOuvrirSelecteurAeronef"]')?.click();
+      await a(2400);
+      o.selecteur = racine();
+      document.querySelector('[onclick^="rampFermerModal"]')?.click();
+      await a(1200);
+      o.selecteurFerme = racine();
+
+      // ── Enregistrement ──
+      document.querySelector('[onclick^="rampEnregistrerPoi"]')?.click();
+      await a(3500);
+      let l = await pois();
+      o.apres = l.length;
+      const fiche = l[0] || {};
+      o.id = fiche.id;
+      o.enregistre = {
+        statut: fiche.statut,
+        reference: fiche.reference || '',
+        exploitant: (fiche.entete || {}).exploitant || '',
+        immatriculation: (fiche.entete || {}).immatriculation || '',
+        etat: (fiche.entete || {}).etat_inspection || '',
+        equipe: (fiche.equipe || []).length,
+      };
+
+      // ── Soumission ──
+      document.querySelector('[onclick^="rampSoumettrePoi"]')?.click();
+      o.soumissionConfirmee = await oui();
+      await a(1500);
+      // ── Une liste n'est pas l'enregistrement ──
+      //
+      // `GET /poi` rend `liste.map(resume)` : un **résumé**, qui porte le
+      // statut, l'en-tête et l'équipe, mais **pas les items**. La première
+      // version de ce contrôle y lisait les items contrôlés et rendait **0** —
+      // alors que la route de soumission *refuse* sans item contrôlé, et
+      // qu'elle avait accepté. La contradiction était dans ma lecture, non dans
+      // l'écran : je mesurais la projection au lieu du fait.
+      //
+      // L'enregistrement complet se lit par `GET /poi/:id`.
+      const soumiseResume = (await pois())[0] || {};
+      const soumise = o.id ? await jget(`/poi/${o.id}`) : {};
+      o.soumise = {
+        statut: soumiseResume.statut,
+        itemsControles: Object.values(soumise.items || {}).filter((i) => i.controle).length,
+      };
+      o.gestesApresSoumission = [...new Set([...z().querySelectorAll('[onclick]')]
+        .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+        .filter(Boolean))];
+
+      // ── Un commentaire de validation, puis le renvoi qu'il motive ──
+      document.querySelector('[onclick^="rampPoiBasculerCommentaires"]')?.click();
+      await a(1400);
+      document.querySelector('[onclick^="rampPoiAjouterCommentaire"]')?.click();
+      await a(1600);
+      const zoneCom = [...z().querySelectorAll('textarea')].pop();
+      if (zoneCom) {
+        zoneCom.value = 'Observation de la ronde RAMP.';
+        zoneCom.dispatchEvent(new Event('input', { bubbles: true }));
+        await a(900);
+      }
+      document.querySelector('[onclick^="rampEnregistrerCommentaires"]')?.click();
+      await a(3000);
+      o.renvoiOffert = !!document.querySelector('[onclick^="rampRenvoyerPoi"]');
+      document.querySelector('[onclick^="rampRenvoyerPoi"]')?.click();
+      await a(2400);
+      o.fenetreRenvoi = racine();
+      document.querySelector('[onclick^="rampConfirmerRenvoi"]')?.click();
+      await a(4000);
+      o.apresRenvoi = ((await pois())[0] || {}).statut;
+
+      // ── Resoumission, puis validation ──
+      document.querySelector('[onclick^="rampSoumettrePoi"]')?.click();
+      o.resoumise = await oui();
+      await a(1500);
+      o.statutResoumis = ((await pois())[0] || {}).statut;
+      const avantValidation = await jget('/inspections');
+      o.inspectionsAvant = Array.isArray(avantValidation) ? avantValidation.length : -1;
+      document.querySelector('[onclick^="rampValiderPoi"]')?.click();
+      await a(2500);
+      o.fenetreValidation = racine();
+      document.querySelector('[onclick^="rampConfirmerValidation"]')?.click();
+      await a(4500);
+      o.statutValide = ((await pois())[0] || {}).statut;
+      const apresValidation = await jget('/inspections');
+      o.inspectionsApres = Array.isArray(apresValidation) ? apresValidation.length : -1;
+      o.inspectionCreee = (apresValidation || [])[0] || null;
+
+      // ── Le ménage, et ce qu'il a fallu mesurer pour l'écrire ──
+      //
+      // Supprimer la fiche validée rend **200** — elle reste donc réversible
+      // jusqu'au bout, comme le dossier de SURV. Mais **l'inspection qu'elle a
+      // produite lui survit** : c'est l'acte officiel, et il ne disparaît pas
+      // avec son brouillon. La ronde doit donc effacer les deux, sans quoi elle
+      // laisserait une inspection dans le bac — et le contrôle suivant
+      // hériterait d'un état qu'il n'a pas créé.
+      const dFiche = await fetch(`${api}/poi/${o.id}`, {
+        method: 'DELETE', credentials: 'same-origin', headers: { 'X-OASIS-Request': '1' },
+      });
+      o.suppressionFiche = dFiche.status;
+      o.ficheRestante = (await pois()).some((p) => p.id === o.id);
+      const survivante = ((await jget('/inspections')) || [])[0];
+      o.inspectionSurvit = !!survivante;
+      if (survivante) {
+        const dInsp = await fetch(`${api}/inspections/${survivante.id}`, {
+          method: 'DELETE', credentials: 'same-origin', headers: { 'X-OASIS-Request': '1' },
+        });
+        o.suppressionInspection = dInsp.status;
+      }
+      o.inspectionsFin = ((await jget('/inspections')) || []).length;
+      o.poiFin = (await pois()).length;
+      return o;
+    }, '/api/m/ramp');
+
+    verifier('le formulaire d’inspection s’ouvre sur aujourd’hui, en SAFA',
+      /^\d{4}-\d{2}-\d{2}$/.test(ronde.defauts.date) && ronde.defauts.type === 'SAFA',
+      JSON.stringify(ronde.defauts));
+    verifier('les items de la fiche se déplient et se replient tous',
+      ronde.lignesDepliees > ronde.lignesRepliees && ronde.lignesRepliees > 0
+      && !!ronde.groupeReplie && ronde.groupeReplie[1] < ronde.groupeReplie[0],
+      JSON.stringify({ depliees: ronde.lignesDepliees, repliees: ronde.lignesRepliees,
+        groupe: ronde.groupeReplie }));
+    verifier('le sélecteur d’aéronef s’ouvre et se referme',
+      ronde.selecteur > 1000 && ronde.selecteurFerme === 0,
+      JSON.stringify({ ouvert: ronde.selecteur, ferme: ronde.selecteurFerme }));
+    verifier('la fiche s’enregistre en brouillon, et le serveur porte sa saisie',
+      ronde.apres === ronde.avant + 1 && ronde.enregistre.statut === 'brouillon'
+      && /^POI-/.test(ronde.enregistre.reference)
+      && ronde.enregistre.immatriculation === 'TT-RONDE'
+      && !!ronde.enregistre.exploitant && !!ronde.enregistre.etat
+      && ronde.enregistre.equipe === 1,
+      JSON.stringify(ronde.enregistre));
+    verifier('la fiche se soumet, et sa soumission prouve l’item contrôlé qu’elle exige',
+      ronde.soumissionConfirmee === true && ronde.soumise.statut === 'soumis'
+      && ronde.soumise.itemsControles >= 1,
+      JSON.stringify(ronde.soumise));
+    verifier('la soumission ouvre les gestes du valideur',
+      (ronde.gestesApresSoumission || []).includes('rampValiderPoi')
+      && (ronde.gestesApresSoumission || []).includes('rampRenvoyerPoi'),
+      (ronde.gestesApresSoumission || []).join(', '));
+    verifier('le renvoi, motivé par un commentaire, ramène la fiche en saisie',
+      ronde.renvoiOffert === true && ronde.fenetreRenvoi > 200
+      && ronde.apresRenvoi === 'brouillon',
+      JSON.stringify({ offert: ronde.renvoiOffert, fenetre: ronde.fenetreRenvoi,
+        apres: ronde.apresRenvoi }));
+    verifier('la fiche resoumise se valide, et son inspection est inscrite aux états',
+      ronde.resoumise === true && ronde.statutResoumis === 'soumis'
+      && ronde.fenetreValidation > 200 && ronde.statutValide === 'validee'
+      && ronde.inspectionsApres === ronde.inspectionsAvant + 1,
+      JSON.stringify({ resoumis: ronde.statutResoumis, valide: ronde.statutValide,
+        inspections: [ronde.inspectionsAvant, ronde.inspectionsApres] }));
+    verifier('la fiche validée reste supprimable, mais son inspection lui survit',
+      ronde.suppressionFiche === 200 && ronde.ficheRestante === false
+      && ronde.inspectionSurvit === true,
+      JSON.stringify({ suppression: ronde.suppressionFiche, restante: ronde.ficheRestante,
+        inspectionSurvit: ronde.inspectionSurvit }));
+    verifier('la ronde de RAMP ne laisse rien : ni fiche, ni inspection',
+      ronde.poiFin === 0 && ronde.inspectionsFin === 0
+      && ronde.suppressionInspection === 200,
+      JSON.stringify({ poi: ronde.poiFin, inspections: ronde.inspectionsFin,
+        suppressionInspection: ronde.suppressionInspection }));
+
     const produits = await oterLeRelais();
     // Trois exports ont été cliqués — inspections, écarts, contacts. Le bac n'a
     // ni inspection ni écart : ceux-là peuvent n'avoir rien à produire et le

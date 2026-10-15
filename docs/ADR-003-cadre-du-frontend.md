@@ -5307,6 +5307,73 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            son nom. Deux noms dont l'un contient l'autre lui en feraient lancer
            deux, et la mesure porterait sur une campagne qui n'est pas la sienne.
 
+       5.f.15 [x] **La ronde d'une fiche d'inspection — et une liste qui n'est
+           pas l'enregistrement** — fait le 15 octobre 2026.
+
+           **Vingt-six contrôles ; 38 gestes sur 207 (18 %).**
+
+           ── Le cycle, jumeau de celui du dossier de SURV ──
+
+           | Palier | Vérifié chez le serveur |
+           |---|---|
+           | formulaire ouvert | la date est **aujourd'hui**, le type **SAFA** |
+           | items | dépliés puis repliés tous, et un regroupement seul |
+           | saisie | trois listes, une immatriculation, un item contrôlé, un inspecteur |
+           | `rampEnregistrerPoi` | `brouillon`, référence `POI-…`, en-tête et équipe portés |
+           | `rampSoumettrePoi` | `soumis`, **et l'item contrôlé que la route exige** |
+           | la soumission | ouvre `rampValiderPoi` et `rampRenvoyerPoi` |
+           | `rampConfirmerRenvoi` | motivé par un commentaire, ramène à `brouillon` |
+           | `rampConfirmerValidation` | `validee`, **et une inspection inscrite aux états** |
+           | suppression de la fiche validée | **200** — réversible jusqu'au bout |
+
+           ── Ce que la validation laisse derrière elle ──
+
+           Supprimer la fiche validée rend 200, mais **l'inspection qu'elle a
+           produite lui survit**. C'est juste — l'inspection est l'acte officiel,
+           elle ne part pas avec son brouillon — et c'est une **contrainte sur la
+           ronde** : sans ce constat, elle aurait laissé une inspection dans le
+           bac, et le contrôle suivant aurait hérité d'un état qu'il n'a pas
+           créé. La ronde efface donc les deux, et un contrôle l'affirme.
+
+           *Ce qu'un geste crée ne se devine pas de son nom : il se relève.*
+
+           ── Une liste n'est pas l'enregistrement ──
+
+           Le contrôle de la soumission a rougi sur `itemsControles: 0`, alors
+           que la route de soumission **refuse** sans item contrôlé et qu'elle
+           avait accepté. La contradiction n'était pas dans l'écran.
+
+           `GET /poi` rend `liste.map(resume)` : un résumé qui porte le statut,
+           l'en-tête et l'équipe, mais **pas les items**. Je mesurais la
+           **projection** au lieu du fait. L'enregistrement complet se lit par
+           `GET /poi/:id`.
+
+           C'est une variante nouvelle d'une faute connue : après l'assertion qui
+           visait une représentation (`className` au lieu de la classe,
+           `.ramp-slider` au lieu de son corps, le haut d'une page au lieu de son
+           panneau), celle-ci visait une **autre source** de la même donnée. *Un
+           point de lecture choisi pour sa commodité n'est pas forcément celui
+           qui porte la vérité.*
+
+           ── Et une case à cocher qui perdait son propre clic ──
+
+           `element.click()` sur la case d'un item ne portait pas : son
+           gestionnaire redessine la table des items. Poser `checked` puis
+           dépêcher `change` porte. Mesuré dans les deux sens avant d'être écrit,
+           et c'est la seule raison pour laquelle la ronde a tenu — un item non
+           contrôlé fait refuser la soumission, et le refus serait venu dix
+           contrôles plus loin.
+
+           ── Comment les champs se visent, sans un seul identifiant ──
+
+           Aucun champ du formulaire ne porte d'`id` ni de `name` : ils sont liés
+           par leur gestionnaire, `oninput="rampPoiChamp('immatriculation', …)"`.
+           Le contrôle les vise donc **par la liaison que l'application déclare
+           elle-même**, ce qui est plus sûr qu'une position dans la grille et se
+           lit. Et ce qu'exige la soumission n'a pas été devinée : la route
+           l'écrit, et son premier refus l'a dit mot pour mot — *un 400 n'est pas
+           une énigme.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

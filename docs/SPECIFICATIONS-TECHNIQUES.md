@@ -226,7 +226,7 @@ traduction. Ils sont sûrs pour une raison précise — *aucun de ces noms n'est
 l'initialisation d'un module* —, et non par chance. Le seul qui n'était pas voulu,
 `barre.ts ↔ referentiels.ts`, a été dissous en donnant un module à la racine de fenêtre
 que cinq fichiers partageaient (`frontend/portail/fenetres.ts`).
-| SURV (`public/modules/execution/`) | 23 731 | JavaScript — **gestes relevés le 14 octobre 2026 : 503 occurrences, 310 gestes nommés, 0 exercé par un navigateur** |
+| SURV (`public/modules/execution/`) | 23 731 | JavaScript — **gestes relevés le 14 octobre 2026 : 503 occurrences, 310 gestes nommés, 30 exercés par un navigateur** (15 octobre) |
 | PLAN, CARE, PR, RAMP | 32 162 | JavaScript — **gestes non relevés** (voir ci-dessous) |
 
 ### 4.1.1 « Gestes non relevés » — ce que cela veut dire, et ce que cela ne veut pas dire
@@ -237,7 +237,7 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | | Ce qui est éprouvé | Combien |
 |---|---|---|
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
-| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **12** pour SURV seul |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **42** pour SURV seul |
 
 Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires, menus, champs.
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 129 pour **84** noms
@@ -249,7 +249,7 @@ distincts, et la couverture se mesure sur les noms.
 | CARE | 6 428 | 145 | *non relevé* | — |
 | PR | 7 315 | 186 | *non relevé* | — |
 | RAMP | 12 470 | 365 | *non relevé* | — |
-| SURV | 23 731 | **503** | **310** | **25** |
+| SURV | 23 731 | **503** | **310** | **30** |
 | **Total** | **55 893** | **1 334** | | |
 
 Le relevé nommé de **SURV** est fait — 14 octobre 2026, ADR-003 n° 5.f.0 : 310 noms, dont 269
@@ -259,9 +259,11 @@ chaque campagne. Les quatre autres suivront, une ligne chacun — c'est le but d
 d'écrans de `scripts/relever-gestes.js`.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
-`tests/smoke/surv.smoke.js`, **trente-sept contrôles** — l'écran se monte, ses sept pages se
+`tests/smoke/surv.smoke.js`, **quarante-deux contrôles** — l'écran se monte, ses sept pages se
 parcourent par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la
-console reste muette. Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le
+console reste muette. Puis une **ronde de dossier sur tout son cycle**, de l'ouverture à la
+clôture, et le **remplisseur de checklist** : 141 items, le pliage dans les deux sens, la
+recherche, un statut enregistré (n° 5.f.3 à 5.f.10). Un écran, une suite : `parcours.smoke.js` porte déjà 3 200 lignes, et le
 relevé des gestes lance la suite de l'écran qu'il mesure.
 
 Elle mène aussi une **ronde complète de dossier** (n° 5.f.3 et 5.f.4) : la chaîne construite par
@@ -797,7 +799,7 @@ for m in planification mesures profil_risque ramp execution; do
 done
 
 # Couverture des gestes d'un écran (§ 4.1.1) — portail : 66 sur 84, et c'est le plafond ;
-# SURV : 0 sur 310, aucun navigateur n'ouvre cet écran. Les deux chiffres sont aussi
+# SURV : 30 sur 310, dont la ronde complète d'un dossier. Les deux chiffres sont aussi
 # imprimés par la campagne, à chaque passage.
 node scripts/relever-gestes.js portail | head -8
 node scripts/relever-gestes.js execution | head -8
@@ -815,7 +817,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 041, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 046, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

@@ -4847,6 +4847,63 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            contrôles de page que la validation déplaçait (5.f.7). **L'ordre fait partie de
            la mesure**, et il se mesure comme le reste.
 
+       5.f.10 [x] **SURV — le remplisseur de checklist, et un indécidable qui se compte
+           quand même** — fait le 15 octobre 2026.
+
+           **Quarante-deux contrôles ; 30 gestes couverts sur 310.**
+
+           ── Le dernier gros bloc du volet ──
+
+           `execOpenChecklistFiller` ouvre un éditeur **plein écran** : il se superpose à
+           tout, replie la barre du portail, et mémorise son état pour le restaurer en
+           partant. Le jeu d'essai y met **141 items en 31 regroupements**, avec quatre
+           statuts — Satisfaisant, Non Satisfaisant, Non Applicable, Non Évalué.
+
+           | Geste | Vérifié |
+           |---|---|
+           | `execOpenChecklistFiller` | `#execChkFillerWrap` est là, avec des items **et** des regroupements |
+           | `execChkFillExpandAll` | **les deux sens** : tous ouverts, puis aucun |
+           | `execChkFillApplyFilter` | un terme introuvable réduit à **zéro** ligne visible, la remise à zéro les rend **toutes** |
+           | `groupsEl:change` | un statut choisi, et la réponse **relue chez le serveur** |
+           | `execCloseChecklistFiller` | le remplisseur n'est plus là |
+
+           **Aucun de ces contrôles n'écrit 141 ni 31.** Ils exigent qu'il y ait des items
+           et des regroupements, et comparent les états **entre eux** : « autant d'ouverts
+           que de regroupements », « autant de lignes rendues qu'avant la recherche ». Un
+           modèle de checklist changé ne doit pas faire rougir une mesure de pliage.
+
+           ── Compter les regroupements, non les lignes ──
+
+           La première mesure du dépliage comptait les **lignes** : 141 déplié, 141 plié.
+           Le contrôle aurait été vert dans un sens et rouge dans l'autre sans que le geste
+           soit en cause — `details.exec-chk-grp` ferme ses enfants par le rendu, non en
+           les retirant du document. La propriété qui compte est `[open]` sur le
+           regroupement. *L'assertion doit viser la propriété qui change, et non celle qui
+           se laisse compter.*
+
+           ── Une limite nommée plutôt qu'une assertion vide ──
+
+           Le remplisseur replie la barre du portail et la restaure en partant. **Ce
+           contrôle n'est pas écrit** : `.portal-wrapper` vit dans le cadre du portail,
+           hors de la page du module que la suite pilote. Un `querySelector` y rendrait
+           `null` avant comme après, et une assertion sur deux `null` égaux serait verte
+           sans rien éprouver. Elle est déclarée manquante — c'est tout ce qu'on peut en
+           dire honnêtement d'ici.
+
+           ── Un indécidable qui se compte quand même ──
+
+           J'avais annoncé que couvrir `groupsEl:change` **ne lèverait pas** le compte, ce
+           geste étant l'un des cinq **indécidables** de SURV : un écouteur délégué posé
+           sur une variable locale, que l'extracteur ne sait rattacher à aucune cible
+           nommée. La mesure dit 25 → **30**, et non 29 : il est compté.
+
+           Les deux chiffres ne parlent pas de la même chose. « Indécidable » est une
+           propriété **statique** — l'extracteur ne sait pas nommer la cible ; « exercé »
+           est une propriété **dynamique**, relevée par le mouchard à l'exécution. Un geste
+           qu'on ne sait pas rapprocher de son origine se laisse très bien éprouver. Le
+           compte des indécidables reste donc à 5, inchangé, pendant que la couverture
+           monte. *Une mesure qu'on croit comprendre se vérifie comme les autres.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

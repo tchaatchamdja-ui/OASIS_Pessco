@@ -623,6 +623,81 @@ module.exports = async function survSmoke(port) {
           await attendre(3000);
         }
 
+        // ── Le remplisseur de checklist : 141 items, 31 regroupements ──
+        //
+        // C'est le plus gros morceau du volet, et un éditeur **plein écran** :
+        // il se superpose à tout, replie la barre du portail et mémorise son
+        // état pour le restaurer en partant.
+        //
+        // Les chiffres ci-dessous ne sont pas écrits en dur : le contrôle exige
+        // qu'il y ait des items et des regroupements, et compare les états
+        // **entre eux**. Le jeu d'essai en porte 141 et 31 aujourd'hui ; un
+        // modèle de checklist changé ne doit pas faire rougir une mesure de
+        // pliage.
+        const ouvrirRemplisseur = document.querySelector('[onclick^="execOpenChecklistFiller"]');
+        r.boutonRemplisseur = !!ouvrirRemplisseur;
+        if (ouvrirRemplisseur) {
+          ouvrirRemplisseur.click();
+          await attendre(4500);
+          const groupes = (sel) => document.querySelectorAll(`#execChkFillerGroups details.exec-chk-grp${sel || ''}`).length;
+          const lignesVisibles = () => [...document.querySelectorAll('#execChkFillerGroups tr[data-item-id]')]
+            .filter((tr) => tr.style.display !== 'none').length;
+          r.remplisseur = {
+            wrap: !!document.getElementById('execChkFillerWrap'),
+            items: document.querySelectorAll('#execChkFillerGroups tr[data-item-id]').length,
+            groupes: groupes(),
+          };
+
+          // Tout déplier, tout plier : les deux sens, comme toute bascule.
+          document.querySelector('[onclick^="execChkFillExpandAll(true)"]')?.click();
+          await attendre(1200);
+          r.remplisseur.ouvertsApresDepliage = groupes('[open]');
+          document.querySelector('[onclick^="execChkFillExpandAll(false)"]')?.click();
+          await attendre(1200);
+          r.remplisseur.ouvertsApresPliage = groupes('[open]');
+          document.querySelector('[onclick^="execChkFillExpandAll(true)"]')?.click();
+          await attendre(1200);
+
+          // La recherche : un terme qui ne peut rien trouver, puis le retour.
+          const champ = document.getElementById('execChkFillSearch');
+          if (champ) {
+            r.remplisseur.avantRecherche = lignesVisibles();
+            champ.value = 'zzzz-aucun-item-ne-porte-ceci';
+            champ.dispatchEvent(new Event('input', { bubbles: true }));
+            await attendre(1200);
+            r.remplisseur.apresRecherche = lignesVisibles();
+            champ.value = '';
+            champ.dispatchEvent(new Event('input', { bubbles: true }));
+            await attendre(1200);
+            r.remplisseur.apresRemise = lignesVisibles();
+          }
+
+          // Un statut renseigné. Le geste est un **écouteur délégué** sur le
+          // conteneur des regroupements : le relevé des gestes le nomme
+          // `groupsEl:change` et le tient pour **indécidable**, sa cible étant
+          // une variable locale sans identifiant. Exercé ici malgré tout — un
+          // geste qu'on ne sait pas rapprocher n'est pas un geste qu'on renonce
+          // à éprouver.
+          const statut = document.querySelector('#execChkFillerGroups .exec-chk-fill-statut');
+          if (statut) {
+            const choix = [...statut.options]
+              .find((o) => /satisfaisant/i.test(o.textContent) && !/non/i.test(o.textContent))
+              || statut.options[0];
+            statut.value = choix.value;
+            r.reponse = { item: statut.dataset.item, statut: choix.value };
+            statut.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(2800);
+          }
+          const reponses = await (await fetch('/api/m/execution/exec-checklist-responses', { credentials: 'same-origin' })).json();
+          r.reponsesEnBase = (reponses || [])
+            .filter((x) => x.dossier_id === dossierId)
+            .map((x) => ({ item: x.item_id, statut: x.statut_id }));
+
+          document.querySelector('[onclick^="execCloseChecklistFiller"]')?.click();
+          await attendre(2000);
+          r.remplisseurReferme = !document.getElementById('execChkFillerWrap');
+        }
+
 
         // 2. Un membre d'équipe, une ligne de programme.
         //
@@ -692,6 +767,35 @@ module.exports = async function survSmoke(port) {
         (volet.gestesDeChecklist || []).includes('execOpenChecklistFiller')
         && (volet.gestesDeChecklist || []).includes('execRemoveDossierChecklist'),
         (volet.gestesDeChecklist || []).join(', '));
+      verifier('le remplisseur de checklist s’ouvre, avec ses items et ses regroupements',
+        volet.boutonRemplisseur === true && volet.remplisseur
+        && volet.remplisseur.wrap === true
+        && volet.remplisseur.items > 0 && volet.remplisseur.groupes > 0,
+        JSON.stringify(volet.remplisseur || { bouton: volet.boutonRemplisseur }));
+      verifier('« tout déplier » et « tout plier » agissent sur tous les regroupements',
+        !!volet.remplisseur
+        && volet.remplisseur.ouvertsApresDepliage === volet.remplisseur.groupes
+        && volet.remplisseur.ouvertsApresPliage === 0,
+        JSON.stringify(volet.remplisseur
+          ? { groupes: volet.remplisseur.groupes, deplies: volet.remplisseur.ouvertsApresDepliage,
+            plies: volet.remplisseur.ouvertsApresPliage } : {}));
+      verifier('la recherche du remplisseur restreint les items, et sa remise à zéro les rend',
+        !!volet.remplisseur
+        && volet.remplisseur.avantRecherche > 0
+        && volet.remplisseur.apresRecherche === 0
+        && volet.remplisseur.apresRemise === volet.remplisseur.avantRecherche,
+        JSON.stringify(volet.remplisseur
+          ? { avant: volet.remplisseur.avantRecherche, pendant: volet.remplisseur.apresRecherche,
+            apres: volet.remplisseur.apresRemise } : {}));
+      verifier('un statut renseigné dans le remplisseur est enregistré, et le serveur le porte',
+        !!volet.reponse
+        && (volet.reponsesEnBase || []).some((x) => x.item === volet.reponse.item
+          && x.statut === volet.reponse.statut),
+        JSON.stringify({ attendu: volet.reponse, enBase: volet.reponsesEnBase }));
+      verifier('le remplisseur se referme par son geste',
+        volet.remplisseurReferme === true,
+        JSON.stringify({ referme: volet.remplisseurReferme }));
+
       verifier('la checklist se retire du dossier par son geste, et le serveur ne la porte plus',
         volet.boutonRetirer === true && volet.retraitConfirme === true
         && Array.isArray(volet.retenuesApresRetrait) && volet.retenuesApresRetrait.length === 0,

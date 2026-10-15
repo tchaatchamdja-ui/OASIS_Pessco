@@ -2,7 +2,7 @@
  "releve": "2026-10-15",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 25,
+ "exerces": 30,
  "indecidables": 5,
  "gestes": [
   {
@@ -102,7 +102,7 @@
    "evenement": "click",
    "nom": "execOpenChecklistFiller",
    "source": "execOpenChecklistFiller('${dossierId}','${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -318,7 +318,7 @@
    "evenement": "click",
    "nom": "execOpenChecklistFiller",
    "source": "execOpenChecklistFiller('${dossierId}','${cid}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -968,7 +968,7 @@
    "evenement": "click",
    "nom": "execCloseChecklistFiller",
    "source": "execCloseChecklistFiller('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1013,7 +1013,7 @@
    "evenement": "click",
    "nom": "execCloseChecklistFiller",
    "source": "execCloseChecklistFiller('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1022,7 +1022,7 @@
    "evenement": "click",
    "nom": "execChkFillExpandAll",
    "source": "execChkFillExpandAll(true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1031,7 +1031,7 @@
    "evenement": "click",
    "nom": "execChkFillExpandAll",
    "source": "execChkFillExpandAll(false)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1040,7 +1040,7 @@
    "evenement": "input",
    "nom": "execChkFillApplyFilter",
    "source": "execChkFillApplyFilter()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1049,7 +1049,7 @@
    "evenement": "change",
    "nom": "execChkFillApplyFilter",
    "source": "execChkFillApplyFilter()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1068,7 +1068,7 @@
    "nom": "groupsEl:change",
    "source": "groupsEl?.addEventListener('change', ev => {",
    "id": "execChkFillerGroups",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",

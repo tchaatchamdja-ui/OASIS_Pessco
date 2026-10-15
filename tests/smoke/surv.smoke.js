@@ -543,6 +543,24 @@ module.exports = async function survSmoke(port) {
         await attendre(1600);
         r.pas = { avant, surNotification, revenu: corps() };
 
+        // ── Le geste de fermeture s'éprouve **ici**, et pas à la fin ──
+        //
+        // Il l'était à la fin, jusqu'à ce que la ronde aille jusqu'à la clôture :
+        // `execCloseDossier` referme le volet lui-même, et le geste n'était plus
+        // pressé par personne — la couverture a perdu un nom sans qu'aucun
+        // contrôle ne tombe.
+        //
+        // *Un geste couvert par effet de bord n'est pas un geste couvert.* On le
+        // presse donc tant que la ligne qui réouvre le volet est là : après la
+        // validation du rapport, la constatation quitte « En Préparation » et
+        // cette ligne disparaît.
+        document.querySelector('[onclick^="execCloseSlider"]')?.click();
+        await attendre(1300);
+        r.fermeParSonGeste = !document.getElementById('execSlider');
+        document.querySelector('[onclick^="execOpenDossierSlider"]')?.click();
+        await attendre(3000);
+        r.reouvert = !!document.getElementById('execSlider');
+
         // 2. Un membre d'équipe, une ligne de programme.
         r.equipeAvant = document.querySelectorAll('.real-equipe-nom').length;
         document.querySelector('[onclick^="execAddRealisationEquipeMember"]')?.click();
@@ -584,6 +602,9 @@ module.exports = async function survSmoke(port) {
         volet.bouton && volet.ouvert && volet.etapes >= 2
         && volet.pas.avant > 0 && volet.pas.surNotification !== volet.pas.avant,
         JSON.stringify(volet.pas || {}));
+      verifier('le volet se referme par son geste, et la ligne le réouvre',
+        volet.fermeParSonGeste === true && volet.reouvert === true,
+        JSON.stringify({ ferme: volet.fermeParSonGeste, reouvert: volet.reouvert }));
       verifier('un membre d’équipe et une ligne de programme s’ajoutent au volet',
         volet.equipeApres === volet.equipeAvant + 1
         && volet.progVideAvant === true && volet.progVideApres === false
@@ -801,13 +822,81 @@ module.exports = async function survSmoke(port) {
         && cycleEnBase.rapports[1].statut === 'valide',
         JSON.stringify({ ...secondCycle, ...cycleEnBase }));
 
-      const refermeture = await page.evaluate(async () => {
-        document.querySelector('[onclick^="execCloseSlider"]')?.click();
-        await new Promise((r) => setTimeout(r, 1300));
-        return { referme: !document.getElementById('execSlider') };
+      // ── L'envoi à l'organisme, puis la clôture : le cycle jusqu'au bout ──
+      //
+      // ── Le refus 400 de 5.f.7, élucidé ──
+      //
+      // La transmission y était notée « hors de portée : la route refuse (400),
+      // non élucidé ». Le refus **est explicite dans la route**, et il est
+      // légitime : `PUT /rapports/:id/transmit` exige que le rapport soit
+      // *signé par l'inspecteur **et** par le directeur*.
+      //
+      // Et ce n'est pas la route que l'écran emprunte ici. Le bouton « Envoyer »
+      // qui paraît dès que le rapport est validé appelle `/rapports/:id/send` —
+      // la « transmission simple », qui n'exige que le statut `valide`. Les deux
+      // coexistent et ne font pas la même chose : `/transmit` ouvre en outre les
+      // constatations restées en brouillon, `/send` non.
+      //
+      // *Un 400 n'est pas une énigme : c'est une phrase que la route écrit.* La
+      // lire a coûté deux minutes là où « non élucidé » coûtait un jalon.
+      //
+      // Mesuré ensuite, sur deux dossiers distincts : après `/send` le dossier
+      // reste supprimable (200), et après `/close` aussi (200), clôturé. Les deux
+      // derniers paliers du cycle sont donc couverts, et la ronde ne laisse
+      // toujours rien.
+      const finDuCycle = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const confirmer = async () => {
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3800);
+          return true;
+        };
+        const r = {};
+        const envoi = document.querySelector('[onclick^="execSendRapportValidated"]');
+        r.boutonEnvoi = !!envoi;
+        if (envoi) {
+          envoi.click();
+          await attendre(800);
+          r.envoiConfirme = await confirmer();
+        }
+        // La clôture n'est offerte qu'une fois le rapport transmis : c'est écrit
+        // dans le balisage, et le contrôle le vérifie en la trouvant.
+        const cloture = document.querySelector('[onclick^="execCloseDossier"]');
+        r.boutonCloture = !!cloture;
+        if (cloture) {
+          cloture.click();
+          await attendre(800);
+          r.clotureConfirmee = await confirmer();
+        }
+        // `execCloseDossier` referme le volet lui-même.
+        r.voletReferme = !document.getElementById('execSlider');
+        return r;
       });
-      verifier('le volet du dossier se referme par son geste',
-        refermeture.referme === true, JSON.stringify(refermeture));
+      const finEnBase = await page.evaluate(async (ctx) => {
+        const d = await (await fetch(`${ctx.api}/dossiers/${ctx.id}`, { credentials: 'same-origin' })).json();
+        const raps = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
+        const dernier = (raps || []).filter((x) => x.dossier_id === ctx.id)
+          .sort((a, b) => b.version - a.version)[0] || null;
+        return { statut: d.statut, etape: d.current_step, rapport: dernier ? dernier.statut : null };
+      }, { api: M, id: chaine.dossierId });
+      verifier('le rapport validé s’envoie à l’organisme, et le serveur le dit transmis',
+        finDuCycle.boutonEnvoi === true && finDuCycle.envoiConfirme === true
+        && finEnBase.rapport === 'transmis',
+        JSON.stringify({ bouton: finDuCycle.boutonEnvoi, confirme: finDuCycle.envoiConfirme, rapport: finEnBase.rapport }));
+      verifier('la clôture, offerte seulement après la transmission, clôt le dossier en base',
+        finDuCycle.boutonCloture === true && finDuCycle.clotureConfirmee === true
+        && finEnBase.statut === 'cloture' && finDuCycle.voletReferme === true,
+        JSON.stringify({ bouton: finDuCycle.boutonCloture, confirme: finDuCycle.clotureConfirmee,
+          statut: finEnBase.statut, voletReferme: finDuCycle.voletReferme }));
+
+      // Le volet a déjà été refermé par la clôture — `execCloseDossier` appelle
+      // `execCloseSlider` lui-même. Le contrôle du geste de fermeture est donc
+      // mené **avant** la fin du cycle, sur le volet encore ouvert : voir plus
+      // haut, « changer d'étape le redessine ». Ici on ne vérifie que l'absence.
+      verifier('le volet est refermé à la fin de la ronde',
+        finDuCycle.voletReferme === true, JSON.stringify({ referme: finDuCycle.voletReferme }));
 
       // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
       //

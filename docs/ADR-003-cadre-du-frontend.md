@@ -4703,12 +4703,13 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|
            | rapport **soumis** | 200 |
            | rapport **validé** | **200** — le verrou tombe |
-           | rapport **transmis** | la transmission elle-même refuse (400) : **non mesuré** |
-           | dossier **clôturé** | **non mesuré** — le jeu d'essai n'a pas de troisième activité |
+           | rapport **transmis** | la transmission elle-même refuse (400) : non mesuré *(élucidé et mesuré en 5.f.8 : 200)* |
+           | dossier **clôturé** | non mesuré — le jeu d'essai n'a pas de troisième activité *(mesuré en 5.f.8 : 200)* |
 
            Validé, le dossier reste supprimable : la ronde peut valider. Transmettre et
-           clôturer restent hors de portée, et les deux raisons sont écrites — l'une est un
-           refus du serveur qu'on n'a pas élucidé, l'autre un manque du jeu d'essai.
+           clôturer **paraissaient** hors de portée, pour un refus qu'on n'avait pas élucidé
+           et un manque du jeu d'essai. **Les deux raisons étaient mauvaises** : voir
+           5.f.8.
 
            ── Ce que la validation change dans la page, et ce que cela a coûté ──
 
@@ -4747,6 +4748,61 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            `valide`. Les deux sont vérifiés **en base**, et c'est la ronde qui les mesure :
            la suite HTTP l'affirme aussi, mais 5.f.6 a montré ce que vaut une vérité qu'on
            hérite sans la mesurer chez soi.
+
+       5.f.8 [x] **SURV — le cycle jusqu'à la clôture, et un « 400 non élucidé » qui était
+           une phrase écrite dans la route** — fait le 15 octobre 2026.
+
+           Trente-trois contrôles ; **22 gestes couverts sur 310**. La ronde mène le dossier
+           de son ouverture à sa **clôture**.
+
+           ── Le refus que j'avais laissé en énigme ──
+
+           5.f.7 notait la transmission « hors de portée : la route refuse (400), non
+           élucidé ». Le refus **est une phrase que la route écrit** :
+           *« Le rapport doit être signé par l'inspecteur et le directeur avant
+           transmission »*. Légitime, explicite, et lisible en deux minutes.
+
+           Et ce n'est pas la route que l'écran emprunte. Le bouton « Envoyer », qui paraît
+           dès que le rapport est validé, appelle `/rapports/:id/send` — la *transmission
+           simple*, qui n'exige que le statut `valide`. Les deux coexistent et ne font pas
+           la même chose : `/transmit` ouvre en outre les constatations restées en
+           brouillon ; `/send` non.
+
+           *Un 400 n'est pas une énigme : c'est une phrase que la route écrit.* Écrire « non
+           élucidé » a coûté un jalon là où la lecture coûtait deux minutes — et c'est la
+           deuxième fois en deux jours qu'une conclusion hâtive se paie, après le rapport
+           prétendu absent de 5.f.6.
+
+           ── Le second « hors de portée » était faux aussi ──
+
+           La clôture était dite non mesurable faute d'une troisième activité dans le jeu
+           d'essai. C'était vrai de **mon montage** — qui voulait un dossier neuf par
+           palier — et faux du système : la clôture s'offre **sur le même dossier**, une
+           fois son rapport transmis. Le balisage le dit (« la clôture n'est offerte qu'une
+           fois le rapport transmis »), et le contrôle le vérifie en trouvant son bouton.
+
+           ── La ronde, désormais complète ──
+
+           | Palier | Geste | Vérifié en base |
+           |---|---|---|
+           | validation | `execValidateRapport` | rapport `valide` |
+           | transmission | `execSendRapportValidated` | rapport **`transmis`** |
+           | clôture | `execCloseDossier` | dossier **`cloture`** |
+
+           Et la réversibilité, mesurée à **chaque** palier sur des dossiers distincts :
+           soumis 200, validé 200, **transmis 200**, **clôturé 200**. Le dossier reste
+           supprimable partout ; la ronde ne laisse rien, d'un bout à l'autre du cycle.
+
+           ── Un geste perdu par effet de bord, et rattrapé ──
+
+           `execCloseDossier` referme le volet lui-même. Le geste `execCloseSlider`, qui
+           était pressé en fin de ronde, **n'était plus pressé par personne** — et la
+           couverture a perdu un nom *sans qu'aucun contrôle ne tombe*.
+
+           *Un geste couvert par effet de bord n'est pas un geste couvert.* Il est désormais
+           pressé plus tôt, tant que la ligne qui réouvre le volet existe — après la
+           validation, la constatation quitte « En Préparation » et cette ligne disparaît.
+           Le contrôle éprouve les deux sens : le volet se referme, et il se réouvre.
 
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.

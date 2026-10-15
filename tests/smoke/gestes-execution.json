@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-14",
+ "releve": "2026-10-15",
  "gestesNommes": 310,
  "occurrences": 503,
- "exerces": 20,
+ "exerces": 22,
  "indecidables": 5,
  "gestes": [
   {
@@ -300,7 +300,7 @@
    "evenement": "click",
    "nom": "execSendRapportValidated",
    "source": "execSendRapportValidated('${lastRap.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -309,7 +309,7 @@
    "evenement": "click",
    "nom": "execCloseDossier",
    "source": "execCloseDossier('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",

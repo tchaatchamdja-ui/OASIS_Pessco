@@ -46,6 +46,12 @@ const suites = [
   // module (ADR-003, 5.f.1). Un écran, une suite — « parcours » porte déjà
   // 3 200 lignes, et le relevé des gestes lance la suite de l'écran qu'il mesure.
   { nom: 'surv', port: 4797, run: require('./surv.smoke') },
+  // RAMP dans un navigateur : la suite n° 0.b du deuxième écran de module
+  // (ADR-003, 5.f.14). Son nom porte « navigateur » pour que le filtre de
+  // l'argument la distingue de `ramp`, la suite HTTP du même module — le relevé
+  // des gestes lance la suite par son nom, et deux noms dont l'un contient
+  // l'autre lui en feraient lancer deux.
+  { nom: 'ramp-navigateur', port: 4797, run: require('./ramp.navigateur.smoke') },
 ];
 
 (async () => {

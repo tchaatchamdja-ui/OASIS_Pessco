@@ -5232,6 +5232,81 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            l'assouplir, mais si le fichier qu'il lit distingue le code de ce qui
            le commente.*
 
+       5.f.14 [x] **RAMP a sa suite de navigateur — et le tour des pages ne
+           couvrait qu'un seul geste** — fait le 15 octobre 2026.
+
+           **Seize contrôles ; 24 gestes sur 207.**
+
+           ── Un tour de pages ne couvre presque rien, et il faut le dire ──
+
+           La première version de cette suite montait l'écran, tenait ses
+           contrats et cliquait les sept pages. Sept clics, et la mesure a rendu
+           **1 geste exercé sur 207** — parce que les sept boutons de la barre
+           appellent tous `rampNavigateTo`, un seul nom.
+
+           Le chiffre est juste, et il enseigne où est la valeur d'un tour de
+           pages : **dans les contrats qu'il tient**, non dans sa couverture. La
+           barre porte ce que la source déclare, toute page de l'aiguillage est
+           atteignable, aucune ne déborde, la console reste muette — quatre
+           propriétés qui ne se mesurent qu'ainsi, et qui valaient à SURV sa
+           découverte de quatre pages orphelines. Mais couvrir, c'est exercer les
+           gestes **des** pages, pas celui qui mène à elles.
+
+           D'où la ronde qui suit, qui n'écrit **rien en base** : volets ouverts
+           et refermés, recherche dépliée, saisie et vidée, sous-onglets
+           parcourus, fenêtres ouvertes et refermées, trois exports capturés par
+           relais. **1 → 24**, soit le même rapport que SURV (38/310).
+
+           ── RAMP s'en sort mieux que SURV sur l'atteignabilité ──
+
+           Le contrôle écrit pour SURV, où **quatre** pages sur treize n'étaient
+           atteignables par rien (n° 5.f.2), a été repris ici — et il passe.
+           `RAMP_NAV` déclare huit pages, la barre en montre **sept**, et la
+           huitième (« Mes Utilisateurs ») est soumise à un droit confié. Le seul
+           cas de l'aiguillage sans entrée de menu, `inspection`, s'ouvre par le
+           bouton « Traiter » de la table des inspections, dont il est la suite.
+
+           Le contrôle lit donc les **gardes** de `RAMP_NAV` — `aac`,
+           `prestataire`, `reserve` — et n'exige dans la barre que les pages qui
+           n'en portent aucune. *Un contrôle qui exigerait les huit mesurerait sa
+           propre ignorance des droits.*
+
+           ── La même faute, une troisième fois, et pourquoi elle revient ──
+
+           Le contrôle des six sous-onglets des paramètres a rougi sur des
+           onglets qui marchent : il comparait les **160 premiers caractères** de
+           la page, identiques pour les six — le haut de la page est la barre
+           d'onglets elle-même. Mesuré : les six panneaux portent 49 210, 2 276,
+           29 125, 11 929, 13 724 et 4 729 caractères, et six en-têtes de table
+           distincts.
+
+           C'est la troisième fois en deux jours qu'une assertion vise une
+           représentation plutôt que la propriété qui change — après
+           `.ramp-slider`, qui **survit** à la fermeture du volet quand c'est
+           `.ramp-slider-body` qui disparaît, et après les lignes d'un
+           regroupement replié, qui ne bougent pas (n° 5.f.10).
+
+           Le contrôle vise désormais **ce qu'un référentiel tabule** — les
+           intitulés de ses colonnes le nomment —, et vérifie en plus que
+           l'onglet actif suit le clic. Celui des partages régionaux, qui passait
+           sur un préfixe de 120 caractères, a été corrigé par la même occasion :
+           il y passait **par chance**, et une chance n'est pas une mesure.
+
+           ── Un contrôle qui n'exige pas trois produits ──
+
+           Trois exports sont cliqués ; le contrôle exige **au moins un**
+           document remis à son mécanisme, et non trois. Le bac n'a ni inspection
+           ni écart : ces deux exports peuvent légitimement n'avoir rien à
+           produire et le dire par un message. *Exiger trois serait affirmer une
+           propriété du jeu d'essai, non des gestes.*
+
+           ── Et un nom de suite choisi pour l'outil ──
+
+           La suite s'appelle `ramp-navigateur` et non `ramp` : le lanceur filtre
+           par `nom.includes(filtre)`, et le relevé des gestes lance la suite par
+           son nom. Deux noms dont l'un contient l'autre lui en feraient lancer
+           deux, et la mesure porterait sur une campagne qui n'est pas la sienne.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

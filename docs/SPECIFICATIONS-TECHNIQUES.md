@@ -253,11 +253,11 @@ corrigé l'estimation qui les précédait — RAMP était annoncé à 365 occurr
 | PLAN | 5 949 | **133** | **92** | *non mesurée* |
 | CARE | 6 428 | **143** | **89** | *non mesurée* |
 | PR | 7 315 | **185** | **94** | *non mesurée* |
-| RAMP | 12 470 | **362** | **207** | *non mesurée* |
+| RAMP | 12 470 | **362** | **207** | **24** |
 | SURV | 23 731 | **500** | **310** | **38** |
-| **Total** | | **1 353** | **807** | **38** |
+| **Total** | | **1 353** | **807** | **62** |
 
-« Non mesurée » n'est pas « 0 % », et la distinction est tenue par l'outil : cinq écrans n'ont
+« Non mesurée » n'est pas « 0 % », et la distinction est tenue par l'outil : quatre écrans n'ont
 pas encore de suite de navigateur, et le relevé **refuse** de leur attribuer un chiffre —
 `suite: null` fige l'inventaire sans prétendre à une couverture. Le défaut implicite qui aurait
 fait tourner le parcours du portail sur un écran de module, et rendu « 0 exercé » indiscernable
@@ -830,7 +830,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 065, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 081, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

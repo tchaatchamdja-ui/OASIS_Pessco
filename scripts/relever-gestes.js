@@ -163,7 +163,7 @@ ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
 // l'inventaire — les noms, les occurrences, les formes — et **ne prétend à
 // aucune couverture**. Le défaut implicite, lui, est supprimé : un écran sans
 // `suite` est désormais refusé plutôt que mesuré de travers.
-ECRANS.ramp = { ...ecranDeModule('ramp'), suite: null };
+ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
 ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: null };
 ECRANS.planification = { ...ecranDeModule('planification'), suite: null };
 ECRANS.mesures = { ...ecranDeModule('mesures'), suite: null };

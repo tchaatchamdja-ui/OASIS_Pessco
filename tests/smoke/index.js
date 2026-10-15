@@ -60,6 +60,11 @@ const suites = [
   // (ADR-003, 5.f.17). Son nom porte « navigateur » pour que le filtre de
   // l'argument la distingue de `planification`, la suite HTTP du même module.
   { nom: 'planification-navigateur', port: 4797, run: require('./planification.navigateur.smoke') },
+  // CARE et PR dans un navigateur : les deux derniers des six écrans
+  // (ADR-003, 5.f.18). Les six sont désormais mesurés, et plus un seul n'est
+  // dispensé pour absence d'instrument.
+  { nom: 'mesures-navigateur', port: 4797, run: require('./mesures.navigateur.smoke') },
+  { nom: 'profil-risque-navigateur', port: 4797, run: require('./profil-risque.navigateur.smoke') },
 ];
 
 (async () => {

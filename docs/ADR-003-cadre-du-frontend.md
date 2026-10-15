@@ -5524,6 +5524,85 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            elle est exercée : *un en-tête qui se clique mais ne répond pas à
            Entrée n'est pas un bouton.*
 
+       5.f.18 [x] **CARE et PR — les six écrans sont mesurés, et PR porte une
+           page orpheline de plus** — fait le 16 octobre 2026.
+
+           **Dix contrôles pour CARE, douze pour PR. 11 gestes sur 89, 9 sur 94.**
+
+           Le jalon de la suite 5.f : **les six écrans de module ont désormais
+           leur suite de navigateur**, et plus un seul n'est dispensé pour
+           absence d'instrument. La ligne imprimée à chaque campagne porte six
+           couvertures mesurées, aucune « non mesurée ».
+
+           | Écran | Noms | Exercés |
+           |---|---|---|
+           | DROITS | 15 | **15 — le plafond** |
+           | SURV | 310 | 38 |
+           | RAMP | 207 | 38 |
+           | PLAN | 92 | 20 |
+           | CARE | 89 | 11 |
+           | PR | 94 | 9 |
+
+           Les deux derniers chiffres sont modestes, et la raison est dans les
+           écrans : CARE et PR ont **peu de gestes de lecture**. L'essentiel de
+           leur surface écrit — qualifier une carence, instruire une mesure dans
+           son circuit à cinq statuts, créer et valider une évaluation, verser un
+           document. Les rondes d'écriture les feront monter ; le tour des pages
+           n'y pouvait pas grand-chose.
+
+           ── PR porte une page que rien n'ouvre ──
+
+           Le contrôle écrit pour SURV, où quatre pages sur treize étaient dans
+           ce cas (n° 5.f.2), en a trouvé **une** ici, et elle est réelle :
+           `'plans'` n'apparaît **que** dans le `case` de l'aiguillage. Pas
+           d'entrée dans `NAV_CONFIG`, aucun `navigateTo('plans')`, aucune
+           affectation de `currentPage` — vérifié par un relevé de tout le
+           module, et non supposé.
+
+           `renderPlans()` vit dans `pr-plans.js` : **121 lignes, 8 gestes
+           nommés, 12 occurrences**. Le module « Planification de la
+           Surveillance » a depuis son propre écran, et cette vue en est
+           probablement l'ancêtre — mais *« probablement » n'est pas une
+           décision*. Elle est **déclarée** dans la suite, avec ce que la mesure
+           en sait, et le contrôle refuse toute page sans chemin qui ne le serait
+           pas.
+
+           Le total du projet passe donc à **cinq** pages rendues et
+           inatteignables : les quatre de SURV, et celle-ci. Ce sont les deux
+           seules questions de code mort que les instruments ont trouvées et
+           qu'ils ne peuvent pas trancher.
+
+           ── Un élément SVG n'a pas de `click()` ──
+
+           Le graphe des taux de PR porte son geste sur un `<rect>`.
+           `SVGElement` n'hérite pas de `HTMLElement.click()` : l'appel lève
+           « click is not a function », et **la suite entière s'est arrêtée** au
+           premier passage — six contrôles perdus pour un geste. Un vrai
+           `MouseEvent` dépêché vaut pour les deux familles d'éléments, et c'est
+           désormais ce que fait l'auxiliaire de clic de cette suite.
+
+           ── Trois sélecteurs visés à côté, et ce qu'ils ont en commun ──
+
+           | Ce qui était mesuré | Ce qui l'est |
+           |---|---|
+           | `#mesModal` | **`#mesModalRoot`** — le premier n'existe pas, et rendait 0 sur une fenêtre bien ouverte |
+           | `.accordion-item.expanded` | **`.accordion-body.expanded`** — lu dans `toggleAccordion`, qui nomme ce qu'il bascule |
+           | deux clics sur « tout déplier » | **deux boutons distincts** — `expandCollapseAll(id, expand)` prend son sens en argument, et cliquer deux fois le même ne revient pas en arrière |
+
+           Les trois ont la même origine : j'ai écrit le sélecteur **avant** de
+           lire le geste. Les trois se sont corrigés en le lisant — et le
+           troisième est le plus instructif, parce qu'il ne s'agissait pas d'un
+           sélecteur mais d'une **hypothèse sur la forme du geste** : j'ai supposé
+           une bascule là où l'écran offre deux commandes.
+
+           ── Et l'ordre, une fois de plus ──
+
+           Le contrôle des fenêtres de CARE cherchait la fenêtre d'une catégorie
+           **après** avoir changé de sous-menu. Les catégories vivent dans le
+           premier sous-menu : changer de panneau avait emporté le bouton, et le
+           contrôle rendait « null » sur un geste qui marche. *Ce qui s'ouvre se
+           prend là où il vit, et avant ce qui déplace.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

@@ -164,9 +164,9 @@ ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
 // aucune couverture**. Le défaut implicite, lui, est supprimé : un écran sans
 // `suite` est désormais refusé plutôt que mesuré de travers.
 ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
-ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: null };
+ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: 'profil-risque-navigateur' };
 ECRANS.planification = { ...ecranDeModule('planification'), suite: 'planification-navigateur' };
-ECRANS.mesures = { ...ecranDeModule('mesures'), suite: null };
+ECRANS.mesures = { ...ecranDeModule('mesures'), suite: 'mesures-navigateur' };
 ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 
 // ── Nommer un gestionnaire JSX ──

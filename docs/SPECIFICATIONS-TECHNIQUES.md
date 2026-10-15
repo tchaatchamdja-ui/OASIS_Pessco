@@ -251,17 +251,24 @@ corrigé l'estimation qui les précédait — RAMP était annoncé à 365 occurr
 |---|---|---|---|---|
 | DROITS | *convertie* | **30** | **15** | **15 — le plafond** |
 | PLAN | 5 949 | **133** | **92** | **20** |
-| CARE | 6 428 | **143** | **89** | *non mesurée* |
-| PR | 7 315 | **185** | **94** | *non mesurée* |
+| CARE | 6 428 | **143** | **89** | **11** |
+| PR | 7 315 | **185** | **94** | **9** |
 | RAMP | 12 470 | **362** | **207** | **38** |
 | SURV | 23 731 | **500** | **310** | **38** |
-| **Total** | | **1 353** | **807** | **111** |
+| **Total** | | **1 353** | **807** | **131** |
 
-« Non mesurée » n'est pas « 0 % », et la distinction est tenue par l'outil : deux écrans n'ont
-pas encore de suite de navigateur, et le relevé **refuse** de leur attribuer un chiffre —
-`suite: null` fige l'inventaire sans prétendre à une couverture. Le défaut implicite qui aurait
-fait tourner le parcours du portail sur un écran de module, et rendu « 0 exercé » indiscernable
-du vrai, est supprimé.
+**Les six écrans sont mesurés** depuis le 16 octobre 2026 (ADR-003 n° 5.f.18) : plus un seul
+n'est dispensé pour absence d'instrument, et la ligne imprimée à chaque campagne porte six
+couvertures. Le mécanisme qui distinguait « non mesuré » de « 0 % » reste en place pour le
+prochain écran : `suite: null` fige un inventaire sans prétendre à une couverture, et la
+déclaration **refuse** un chiffre. Le défaut implicite qui aurait fait tourner le parcours du
+portail sur un écran de module, et rendu « 0 exercé » indiscernable du vrai, est supprimé.
+
+**Cinq pages du projet sont rendues par un aiguillage et ouvertes par rien** : les quatre de
+SURV (n° 5.f.2) et la vue « Plans » de PR (n° 5.f.18, 121 lignes). Écrans oubliés d'un menu ou
+code mort : les deux se corrigent, pas de la même façon, et la question est posée à la maîtrise
+d'ouvrage. Chacune est **déclarée** dans la suite de son écran, et le contrôle refuse toute
+page sans chemin qui ne le serait pas.
 
 **DROITS a demandé une quatrième forme de geste.** Son relevé rendait d'abord *zéro* : seul
 écran entièrement converti, ses gestionnaires sont des propriétés JSX — `onClick={fermer}` —
@@ -836,7 +843,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 116, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 138, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

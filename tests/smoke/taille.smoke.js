@@ -502,6 +502,24 @@ module.exports = async function tailleSmoke() {
       .filter((f) => new RegExp(MORT).test(fs.readFileSync(f, 'utf8')))
       .map((f) => path.relative(RACINE, f));
 
+    // La feuille de style du socle non plus ne doit plus l'habiller. Elle a
+    // longtemps été hors de portée de ce garde, au motif qu'elle servait « les
+    // shells d'avant la reprise » ; tous sont repris, et les règles sont
+    // retirées (n° 5.f.12). Une mise en forme sans porteur est du code mort qui
+    // se lit comme une intention.
+    //
+    // Les commentaires sont retirés avant la mesure, et ce n'est pas un détail :
+    // la première version de ce contrôle a **rougi sur la note qui expliquait la
+    // suppression**. Un garde qui interdit un nom jusque dans la prose qui en
+    // raconte l'histoire empêche d'écrire cette histoire. Il porte sur les
+    // **déclarations**, pas sur ce qui les commente — même leçon que le
+    // blanchiment des commentaires du relevé des gestes.
+    const feuilleModule = fs.readFileSync(
+      path.join(RACINE, 'public', 'shared', 'css', 'oasis-module.css'), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '');
+    verifier('la feuille de style des modules n’habille plus le bouton effacé',
+      !/btn-back-portal/.test(feuilleModule));
+
     verifier('aucun shell de module ne rend un bouton que le socle efface',
       coupables.length === 0,
       coupables.length

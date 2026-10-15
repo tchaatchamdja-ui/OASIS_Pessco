@@ -693,6 +693,43 @@ module.exports = async function survSmoke(port) {
             .filter((x) => x.dossier_id === dossierId)
             .map((x) => ({ item: x.item_id, statut: x.statut_id }));
 
+          // ── Un item « non satisfaisant » engendre une constatation ──
+          //
+          // Le bouton de génération est rendu pour **chaque** item, mais masqué
+          // tant que le statut n'est pas non satisfaisant. On ne devine pas
+          // lequel l'est : l'écran garde sa propre notion dans
+          // `_execChkFillerCtx.nonSatIds`, et c'est elle qu'on lit. Deviner
+          // d'après un libellé reviendrait à éprouver ma lecture du français,
+          // non la règle de l'écran.
+          const ctxFiller = window._execChkFillerCtx || {};
+          const nonSat = (ctxFiller.nonSatIds || [])[0];
+          r.nonSatConnu = !!nonSat;
+          const second = [...document.querySelectorAll('#execChkFillerGroups .exec-chk-fill-statut')]
+            .find((sel) => sel.dataset.item !== (r.reponse || {}).item);
+          if (nonSat && second) {
+            const item2 = second.dataset.item;
+            const bouton = () => document.querySelector(
+              `#execChkFillerGroups .exec-chk-gen-btn[data-item="${item2}"]`);
+            r.genAvant = !!bouton() && bouton().style.display === 'none';
+            second.value = nonSat;
+            second.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(2500);
+            r.genVisible = !!bouton() && bouton().style.display !== 'none';
+
+            // Le geste demande confirmation : elle est pressée, comme partout
+            // ailleurs dans cette ronde.
+            bouton()?.click();
+            await attendre(800);
+            document.querySelector('.oasis-confirm-oui')?.click();
+            await attendre(3500);
+            r.itemEngendre = item2;
+            r.genDesactive = !!bouton() && bouton().disabled === true;
+            const consts = await (await fetch('/api/m/execution/constatations', { credentials: 'same-origin' })).json();
+            r.constatationEngendree = (consts || [])
+              .filter((c) => c.checklist_item_id === item2)
+              .map((c) => ({ cas: c.cas_type || '', liee: c.checklist_item_id, dossier: c.dossier_id }));
+          }
+
           document.querySelector('[onclick^="execCloseChecklistFiller"]')?.click();
           await attendre(2000);
           r.remplisseurReferme = !document.getElementById('execChkFillerWrap');
@@ -792,6 +829,20 @@ module.exports = async function survSmoke(port) {
         && (volet.reponsesEnBase || []).some((x) => x.item === volet.reponse.item
           && x.statut === volet.reponse.statut),
         JSON.stringify({ attendu: volet.reponse, enBase: volet.reponsesEnBase }));
+      verifier('un statut non satisfaisant fait paraître le geste qui engendre une constatation',
+        volet.nonSatConnu === true && volet.genAvant === true && volet.genVisible === true,
+        JSON.stringify({ nonSatConnu: volet.nonSatConnu, masqueAvant: volet.genAvant,
+          visibleApres: volet.genVisible }));
+      verifier('la constatation engendrée depuis un item est portée par le serveur, et liée à cet item',
+        !!volet.itemEngendre
+        && (volet.constatationEngendree || []).length === 1
+        && /^Checklist —/.test(volet.constatationEngendree[0].cas)
+        && volet.constatationEngendree[0].liee === volet.itemEngendre,
+        JSON.stringify({ item: volet.itemEngendre, enBase: volet.constatationEngendree }));
+      verifier('le geste se referme sur lui-même : l’item pourvu ne peut plus en engendrer',
+        volet.genDesactive === true,
+        JSON.stringify({ desactive: volet.genDesactive }));
+
       verifier('le remplisseur se referme par son geste',
         volet.remplisseurReferme === true,
         JSON.stringify({ referme: volet.remplisseurReferme }));
@@ -874,6 +925,85 @@ module.exports = async function survSmoke(port) {
         document.querySelector('[onclick^="execSaveDossier"]')?.click();
         await attendre(2600);
 
+        // ── 2 bis. Les exports : ce qu'ils fabriquent, et non ce qu'ils rendent ──
+        //
+        // Ces gestes ne parlent pas au serveur : ils composent le document dans
+        // le navigateur, puis l'ouvrent par `window.open` ou le téléchargent par
+        // une ancre sur un `Blob`. Il n'y a donc **pas de réponse HTTP** à
+        // mesurer — c'était la méthode que j'avais annoncée à tort en 5.f.10.
+        //
+        // On capture donc le **produit** : `window.open` et
+        // `URL.createObjectURL` sont relayés le temps des clics, et l'on
+        // éprouve le document composé.
+        //
+        // ── Ce que cela ne prouve pas, et qui doit être dit ──
+        //
+        // Ni que le navigateur ouvre la fenêtre, ni qu'il enregistre le
+        // fichier : seulement que le geste a fabriqué le bon document et l'a
+        // remis au bon mécanisme. Le rendu et le téléchargement appartiennent au
+        // navigateur, et un navigateur sans tête ne les fait pas comme un autre.
+        // *Un relais mesure le geste jusqu'à la porte, jamais au-delà.*
+        //
+        // Les variantes **Word** de ces mêmes fiches ne sont pas cliquées ici :
+        // elles posent `window.location.href` sur la pièce jointe, ce qui
+        // emporterait la page et la ronde avec. Leur chemin passe par le
+        // serveur, et il est éprouvé pour lui-même — huit contrôles sur le
+        // dépôt éphémère, dans la suite HTTP.
+        const relais = { fenetres: [], blobs: [] };
+        const vraiOpen = window.open;
+        const vraiURL = URL.createObjectURL;
+        window.open = () => {
+          const recu = { html: '' };
+          relais.fenetres.push(recu);
+          return {
+            document: {
+              write: (h) => { recu.html += String(h || ''); },
+              close: () => {},
+            },
+            focus: () => {},
+            print: () => {},
+            close: () => {},
+          };
+        };
+        URL.createObjectURL = (blob) => { relais.blobs.push(blob); return vraiURL.call(URL, blob); };
+
+        const clic = async (prefixe) => {
+          const b = document.querySelector(`#execSlider [onclick^="${prefixe}"]`);
+          if (!b) return false;
+          b.click();
+          await attendre(1200);
+          return true;
+        };
+        r.exports = {
+          classeur: await clic('execExportConstatations'),
+          fichesDuDossier: await clic('execFichesConstatDossier'),
+          ficheConstat: await clic('execExportFicheConstat'),
+          ficheSuivi: await clic('execExportFicheSuivi'),
+        };
+        // Les documents ouverts, dans l'ordre des clics.
+        r.documentsOuverts = relais.fenetres.map((f) => ({
+          longueur: f.html.length,
+          html: /<html/i.test(f.html),
+          tableau: /<table|<section|rubrique/i.test(f.html),
+        }));
+        // Et le classeur, lu dans son Blob — un `revokeObjectURL` ne détruit pas
+        // l'objet, seulement son adresse.
+        r.classeurs = [];
+        for (const b of relais.blobs) {
+          const texte = await b.text();
+          r.classeurs.push({
+            type: b.type, longueur: texte.length,
+            lignes: texte.trim().split('\n').length,
+            tabulations: (texte.match(/\t/g) || []).length,
+            // Un classeur bien formé a autant de colonnes à chaque ligne que
+            // dans son en-tête. C'est une propriété de la table, et non de son
+            // contenu — elle ne se dément pas si le jeu d'essai change.
+            colonnes: texte.trim().split('\n').map((l) => l.split('\t').length),
+          });
+        }
+        window.open = vraiOpen;
+        URL.createObjectURL = vraiURL;
+
         // 3. La soumission, confirmation pressée.
         document.querySelector('[onclick^="execSubmitDossier"]')?.click();
         await attendre(800);
@@ -904,6 +1034,23 @@ module.exports = async function survSmoke(port) {
           validees: liste(d.checklists_validees), retenues: liste(d.realisation_checklists),
         };
       }, { api: M, id: chaine.dossierId });
+      verifier('les quatre exports de la rédaction fabriquent chacun leur document',
+        !!avance.exports && avance.exports.classeur === true
+        && avance.exports.fichesDuDossier === true
+        && avance.exports.ficheConstat === true && avance.exports.ficheSuivi === true,
+        JSON.stringify(avance.exports));
+      verifier('les documents ouverts en fenêtre sont des pages complètes et garnies',
+        (avance.documentsOuverts || []).length === 3
+        && (avance.documentsOuverts || []).every((d) => d.html && d.tableau && d.longueur > 500),
+        JSON.stringify(avance.documentsOuverts));
+      verifier('le classeur des constatations porte un en-tête et ses lignes, toutes de même largeur',
+        (avance.classeurs || []).length === 1
+        && avance.classeurs[0].lignes >= 2
+        && avance.classeurs[0].colonnes.length >= 2
+        && new Set(avance.classeurs[0].colonnes).size === 1
+        && /excel|spreadsheet/i.test(avance.classeurs[0].type),
+        JSON.stringify(avance.classeurs));
+
       verifier('la checklist du dossier se valide à la rédaction, et le serveur la porte',
         avance.boutonValiderChecklist === true && avance.checklistValideeConfirmee === true
         && (avanceEnBase.validees || []).includes(volet.checklistCochee),
@@ -1185,6 +1332,7 @@ module.exports = async function survSmoke(port) {
         const restes = await (await fetch(`${ctx.api}/dossiers`, { credentials: 'same-origin' })).json();
         const notifs = await (await fetch(`${ctx.api}/notifications`, { credentials: 'same-origin' })).json();
         const rapports = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
+        const consts = await (await fetch(`${ctx.api}/constatations`, { credentials: 'same-origin' })).json();
         return {
           dossier,
           dossierEncore: (restes || []).some((d) => d.id === ctx.dossierId),
@@ -1193,11 +1341,15 @@ module.exports = async function survSmoke(port) {
           // faite après la suppression, qui avait fait écrire une fausse
           // conclusion en 5.f.5.
           rapportsEncore: (rapports || []).filter((r) => r.dossier_id === ctx.dossierId).length,
+          // Et les constatations — dont celle qu'un item de checklist a
+          // engendrée. La cascade se mesure sur tout ce que la ronde a créé,
+          // non sur ce dont on se souvient qu'elle a créé.
+          constatationsEncore: (consts || []).filter((c) => c.dossier_id === ctx.dossierId).length,
         };
       }, { api: M, dossierId: chaine.dossierId, notifId: chaine.notifId });
-      verifier('effacer le dossier emporte sa notification et son rapport : la ronde ne laisse rien',
+      verifier('effacer le dossier emporte sa notification, ses rapports et ses constatations : la ronde ne laisse rien',
         menage.dossier === 200 && !menage.dossierEncore && !menage.notifEncore
-        && menage.rapportsEncore === 0,
+        && menage.rapportsEncore === 0 && menage.constatationsEncore === 0,
         JSON.stringify(menage));
     }
 

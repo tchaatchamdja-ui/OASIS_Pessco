@@ -5037,6 +5037,103 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            téléchargement, limite à écrire —, mais ils demandent leur propre
            ronde de navigation. Je préfère le dire que l'écrire à l'aveugle.
 
+       5.f.12 [x] **SURV — les exports par leur produit, la constatation
+           engendrée, et un nettoyage qui n'a presque rien trouvé** — fait le
+           15 octobre 2026.
+
+           **Cinquante-et-un contrôles pour SURV ; 38 gestes sur 310.**
+
+           ── Mesurer le code mort avant d'écrire : l'ordre, encore ──
+
+           Le nettoyage est venu **en premier**, et non en dernier : couvrir un
+           geste qu'on s'apprête à supprimer est du travail perdu. Trois
+           instruments, et deux résultats contre-intuitifs :
+
+           | Ce qui a été cherché | Trouvé |
+           |---|---|
+           | fonctions déclarées et jamais atteintes, par page de module | **0** sur les six pages — les 544 de SURV sont toutes utilisées |
+           | fichiers `.js`/`.css` qu'aucune page ne charge et qu'aucun code ne nomme | **0** |
+           | règles de style sans porteur | **4**, celles de `.btn-back-portal` |
+
+           Le dépôt est plus propre que je ne le supposais, et le dire vaut mieux
+           que de produire un nettoyage pour justifier la demande. Le premier
+           instrument a d'ailleurs failli mentir : son critère rendait **0** dès
+           la première passe, et il a fallu le contre-essayer — 544 fonctions
+           vues, minimum **1** mention hors déclaration, et les dix plus rares
+           vérifiées une à une. Toutes vivantes. *Un instrument qui rend zéro se
+           vérifie exactement comme un qui rend beaucoup.*
+
+           Les quatre règles de `.btn-back-portal` sont retirées de
+           `oasis-module.css`. Elles avaient été **explicitement** gardées hors
+           de portée du garde-fou de 5.e.8, au motif qu'elles servaient « les
+           shells d'avant la reprise ». Tous sont repris, et deux contrôles le
+           vérifient — l'un sur la source, l'autre sur le DOM. La justification
+           avait expiré sans que personne la relise. Un garde-fou étroit la
+           remplace. *Une mise en forme sans porteur est du code mort qui se lit
+           comme une intention.*
+
+           Ce garde-fou a d'ailleurs **rougi sur ma propre note** : sa première
+           version interdisait le nom partout dans la feuille, et la note qui
+           expliquait la suppression le contenait. Un garde qui interdit un nom
+           jusque dans la prose qui en raconte l'histoire empêche d'écrire cette
+           histoire. Les commentaires sont donc retirés avant la mesure — même
+           leçon que le blanchiment du relevé des gestes. *Un contrôle porte sur
+           ce que le code fait, jamais sur ce qui l'explique.*
+
+           ── Les exports, par leur produit ──
+
+           Les quatre exports de la rédaction sont cliqués, et leur produit
+           capturé : `window.open` et `URL.createObjectURL` sont relayés le temps
+           des clics.
+
+           | Geste | Vérifié |
+           |---|---|
+           | `execExportConstatations` | un `Blob` typé tableur, **toutes ses lignes de la largeur de son en-tête** |
+           | `execFichesConstatDossier` | une page complète et garnie |
+           | `execExportFicheConstat` | idem |
+           | `execExportFicheSuivi` | idem |
+
+           Le classeur n'est pas éprouvé sur son contenu mais sur sa **forme** :
+           autant de colonnes à chaque ligne que dans l'en-tête. C'est une
+           propriété de la table, qui ne se dément pas si le jeu d'essai change.
+
+           **Ce que cela ne prouve pas est écrit dans le fichier** : ni que le
+           navigateur ouvre la fenêtre, ni qu'il enregistre le fichier —
+           seulement que le geste a fabriqué le bon document et l'a remis au bon
+           mécanisme. *Un relais mesure le geste jusqu'à la porte, jamais
+           au-delà.*
+
+           Les variantes **Word** ne sont pas cliquées ici, et pour une raison
+           nommée : elles posent `window.location.href` sur la pièce jointe, ce
+           qui emporterait la page et la ronde avec. Leur chemin passe par le
+           serveur, et il est éprouvé pour lui-même en 5.f.11.
+
+           ── La constatation engendrée depuis un item ──
+
+           `execChkFillGenConstatation` transforme un item non satisfaisant en
+           constatation. Trois contrôles :
+
+           - le bouton est rendu pour **chaque** item mais masqué tant que le
+             statut n'est pas non satisfaisant : masqué avant, **visible après**.
+             Lequel l'est ne se devine pas d'un libellé — l'écran garde sa propre
+             notion dans `_execChkFillerCtx.nonSatIds`, et c'est elle qu'on lit.
+             *Deviner d'après un libellé éprouverait ma lecture du français, non
+             la règle de l'écran* ;
+           - la constatation est **relue chez le serveur**, son `cas_type`
+             commence par « Checklist — », et elle porte l'identifiant de l'item ;
+           - **le geste se referme sur lui-même** : l'item pourvu voit son bouton
+             désactivé, et ne peut plus en engendrer.
+
+           ── Et la cascade, qu'il a fallu étendre ──
+
+           Cette constatation est créée par un geste, non par la chaîne d'API du
+           début : la suppression finale du dossier devait donc l'emporter aussi.
+           L'assertion de cascade ne regardait que la notification et les
+           rapports ; elle compte désormais les constatations, et son libellé le
+           dit. Vert du premier coup — mais il ne l'était par **rien** avant que
+           ce contrôle existe. *La cascade se mesure sur tout ce que la ronde a
+           créé, non sur ce dont on se souvient qu'elle a créé.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

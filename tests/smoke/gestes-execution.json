@@ -2,7 +2,7 @@
  "releve": "2026-10-15",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 33,
+ "exerces": 38,
  "indecidables": 5,
  "gestes": [
   {
@@ -417,7 +417,7 @@
    "evenement": "click",
    "nom": "execExportConstatations",
    "source": "execExportConstatations('${dossierId}','xlsx')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -426,7 +426,7 @@
    "evenement": "click",
    "nom": "execFichesConstatDossier",
    "source": "execFichesConstatDossier('${dossierId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -471,7 +471,7 @@
    "evenement": "click",
    "nom": "execExportFicheConstat",
    "source": "execExportFicheConstat('${c.id}','pdf')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -480,7 +480,7 @@
    "evenement": "click",
    "nom": "execExportFicheConstat",
    "source": "execExportFicheConstat('${c.id}','word')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -489,7 +489,7 @@
    "evenement": "click",
    "nom": "execExportFicheSuivi",
    "source": "execExportFicheSuivi('${c.id}','pdf')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -498,7 +498,7 @@
    "evenement": "click",
    "nom": "execExportFicheSuivi",
    "source": "execExportFicheSuivi('${c.id}','word')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -950,7 +950,7 @@
    "evenement": "click",
    "nom": "execChkFillGenConstatation",
    "source": "execChkFillGenConstatation('${dossierId}','${it.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",

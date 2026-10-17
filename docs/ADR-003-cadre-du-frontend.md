@@ -5603,6 +5603,75 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            contrôle rendait « null » sur un geste qui marche. *Ce qui s'ouvre se
            prend là où il vit, et avant ce qui déplace.*
 
+       5.f.19 [x] **SURV — le plan d'actions correctives, et un état qui ne
+           s'atteint que par le cycle entier** — fait le 17 octobre 2026.
+
+           **Cinquante-cinq contrôles ; 44 gestes sur 310.**
+
+           La première ronde d'écriture prise par ordre de gisement :
+           `exec-pac.js` portait **35 gestes nommés et zéro couvert**, le plus
+           gros bloc intact de SURV.
+
+           ── Un état qu'on ne pose pas, et qui coûte huit gestes ──
+
+           Le PAC ne s'ouvre que pour une constatation **en vigueur**. Le premier
+           essai a voulu poser son statut par l'API : **refusé, 400**. Le statut
+           d'une constatation suit son cycle, il ne se décrète pas — et c'est une
+           bonne propriété.
+
+           Relevé palier par palier pour savoir **lequel** l'ouvre :
+
+           | Palier | Statut de la constatation |
+           |---|---|
+           | création | `brouillon` |
+           | dossier soumis | `brouillon` |
+           | rapport validé | `brouillon` |
+           | **rapport envoyé** | **`ouvert`** |
+           | dossier clôturé | `ouvert` |
+
+           C'est donc la **transmission du rapport** qui l'ouvre — et la ronde du
+           dossier venait d'y passer. Le bloc est inséré là, et non dans une
+           ronde à lui : *un état qui coûte huit gestes à atteindre ne s'atteint
+           pas deux fois.*
+
+           ── Une table vide sur une donnée bien créée ──
+
+           Le premier relevé rendait « Suivi 0 » et aucun bouton de PAC, sur une
+           constatation `ouvert` **en base**. Le client tenait ses données du
+           montage : la chaîne d'API les avait créées derrière son dos.
+           `execRefreshDynamic()` les relit, et la table porte alors « Suivi 1 ».
+
+           C'est un geste de **montage**, non une assertion, et il est écrit dans
+           la suite parce qu'il était la cause d'un rouge. *Une donnée créée hors
+           de l'écran n'existe pour lui que lorsqu'il la relit.*
+
+           ── Et le plan se lit où il s'écrit ──
+
+           L'assertion lisait `constatation.pac.cause_primaire` et rendait `null`
+           sur un enregistrement qui avait porté. `execSaveDraftPAC` enregistre un
+           **tableau** `actions_correctives` au premier niveau de la
+           constatation — lu dans `_collectPACData`, qui dit exactement ce qu'il
+           assemble.
+
+           Deuxième fois en deux jours qu'une assertion vise la mauvaise
+           **source** plutôt que la mauvaise propriété, après la liste de POI qui
+           n'était qu'un résumé (5.f.15). *Quand une écriture a réussi et qu'on
+           lit `null`, c'est l'endroit où l'on lit qu'il faut vérifier d'abord.*
+
+           ── Ce que ce bloc ne couvre pas, et pourquoi ce n'est pas sa faute ──
+
+           `exec-pac.js` porte 35 gestes ; le côté AAC en offre **sept**, tous
+           couverts. Les autres — soumettre le plan, l'accepter ou le renvoyer,
+           déclarer la mise en œuvre, accepter ou refuser les preuves, solder la
+           fiche — appartiennent à la **vue Prestataire**, ou à des états que
+           seule cette vue fait naître : *c'est l'organisme inspecté qui propose
+           son plan, et l'AAC qui l'arbitre.*
+
+           Les couvrir demande de basculer de vue. C'est la prochaine ronde, et
+           elle vaut double : elle couvrira le reste du PAC **et** la vue
+           Prestataire, éprouvée côté serveur depuis longtemps et jamais à
+           l'écran.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

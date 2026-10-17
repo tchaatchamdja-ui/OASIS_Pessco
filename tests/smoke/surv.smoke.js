@@ -1304,6 +1304,156 @@ module.exports = async function survSmoke(port) {
         JSON.stringify({ bouton: finDuCycle.boutonCloture, confirme: finDuCycle.clotureConfirmee,
           statut: finEnBase.statut, voletReferme: finDuCycle.voletReferme }));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  Le plan d'actions correctives, côté AAC
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Pourquoi ici, et nulle part ailleurs ──
+      //
+      // Le PAC ne s'ouvre que pour une constatation **en vigueur**, et une
+      // constatation n'y entre pas quand on veut : poser son statut par l'API
+      // est **refusé (400)**, mesuré. C'est la **transmission du rapport** qui
+      // l'ouvre — relevé palier par palier : création « brouillon », soumission
+      // du dossier « brouillon », validation du rapport « brouillon », envoi
+      // → **« ouvert »**.
+      //
+      // La ronde vient donc de passer par le seul état qui donne accès au PAC, et
+      // c'est la seule raison pour laquelle ce bloc est ici et non dans une ronde
+      // à lui. *Un état qui coûte huit gestes à atteindre ne s'atteint pas deux
+      // fois.*
+      //
+      // ── Et une table vide sur une donnée bien créée ──
+      //
+      // Le premier relevé rendait « Suivi 0 » et aucun bouton de PAC, sur une
+      // constatation `ouvert` en base. Le client tenait ses données **du
+      // montage** : la chaîne d'API les avait créées derrière son dos.
+      // `execRefreshDynamic()` les relit, et la table porte alors « Suivi 1 ».
+      // C'est un geste de montage, non une assertion — et il est écrit ici parce
+      // qu'il était la cause d'un rouge, non une commodité.
+      //
+      // ── Ce que ce bloc ne couvre pas, et qui n'est pas de sa faute ──
+      //
+      // `exec-pac.js` porte 35 gestes nommés ; le côté AAC en offre **sept**. Les
+      // autres — soumettre le plan, l'accepter ou le renvoyer, déclarer la mise
+      // en œuvre, accepter ou refuser les preuves, solder la fiche — appartiennent
+      // à la **vue Prestataire**, ou à des états que seule cette vue fait
+      // naître : c'est l'organisme inspecté qui propose son plan, et l'AAC qui
+      // l'arbitre. Les couvrir demande de basculer de vue, et c'est une ronde à
+      // part.
+      etape = 'plan d’actions correctives';
+      const pac = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        if (typeof window.execRefreshDynamic === 'function') {
+          await window.execRefreshDynamic();
+          await attendre(2500);
+        }
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await attendre(3000);
+        const suivi = [...document.querySelectorAll('.exec-tab')]
+          .find((b) => /suivi/i.test(b.textContent || '') && !/terrain/i.test(b.textContent || ''));
+        if (suivi) { suivi.click(); await attendre(2600); }
+        // Le bouton est désigné par l'identifiant que son `onclick` porte, et non
+        // par un rang dans la table : la leçon de 5.f.7.
+        const bouton = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(ctx.fncId));
+        r.bouton = !!bouton;
+        if (!bouton) return r;
+        bouton.click();
+        await attendre(4000);
+        const volet = () => (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length;
+        r.ouvert = volet();
+        r.gestes = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))];
+
+        // Les deux volets repliables du PAC, chacun dans les deux sens. La
+        // propriété qui change est la classe de leur conteneur, non le nombre de
+        // champs — la leçon de 5.f.17.
+        const ouverts = () => document.querySelectorAll('#execSlider details[open],'
+          + ' #execSlider .exec-pac-bloc.ouvert, #execSlider [aria-expanded="true"]').length;
+        r.pliAvant = ouverts();
+        document.querySelector('#execSlider [onclick^="execPacVoletToggle"]')?.click();
+        await attendre(1600);
+        r.pliApres = ouverts();
+        document.querySelector('#execSlider [onclick^="execAjustVoletToggle"]')?.click();
+        await attendre(1600);
+        r.pliAjust = ouverts();
+
+        // Le plan saisi, puis enregistré en brouillon.
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        r.saisie = {
+          cause: poser('pac_cause_primaire', 'SURV 0.c — cause primaire de la ronde.'),
+          actions: poser('pac_actions_correctives', 'SURV 0.c — actions correctives de la ronde.'),
+          date: poser('pac_corrective_date_prevue', '2026-12-31'),
+        };
+        await attendre(1200);
+        document.querySelector('[onclick^="execSaveDraftPAC"]')?.click();
+        await attendre(4000);
+        // ── Le plan se lit au premier niveau de la constatation ──
+        //
+        // `execSaveDraftPAC` enregistre un **tableau** `actions_correctives`, et
+        // non un objet `pac` : le premier relevé lisait `pac.cause_primaire` et
+        // rendait `null` sur un enregistrement qui avait porté. Lu dans
+        // `_collectPACData`, qui dit exactement ce qu'il assemble.
+        const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+          { credentials: 'same-origin' })).json();
+        const plan = ((fnc || {}).actions_correctives || [])[0] || {};
+        r.enBase = {
+          cause: plan.cause_primaire || '',
+          actions: plan.actions_correctives || '',
+          date: plan.corrective_date_prevue || '',
+        };
+
+        // La fiche de la constatation, exportée : son produit est capturé par
+        // relais, comme les autres documents composés dans le navigateur.
+        const recu = { fenetres: [] };
+        const vraiOpen = window.open;
+        window.open = () => {
+          const f = { html: '' };
+          recu.fenetres.push(f);
+          return {
+            document: { write: (h) => { f.html += String(h || ''); }, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {},
+          };
+        };
+        document.querySelector('[onclick^="execExporterFncPdf"]')?.click();
+        await attendre(2500);
+        window.open = vraiOpen;
+        r.documents = recu.fenetres.map((f) => f.html.length);
+
+        // Et le retour, qui referme le volet du PAC.
+        document.querySelector('[onclick^="execRetourVolet"], [onclick^="execAnnulerSaisiePAC"]')?.click();
+        await attendre(2200);
+        r.referme = volet();
+        return r;
+      }, { api: M, fncId: chaine.fncId });
+
+      verifier('le plan d’actions correctives s’ouvre pour une constatation en vigueur',
+        pac.bouton === true && pac.ouvert > 5000
+        && (pac.gestes || []).includes('execSaveDraftPAC'),
+        JSON.stringify({ bouton: pac.bouton, ouvert: pac.ouvert,
+          gestes: (pac.gestes || []).length }));
+      verifier('les volets repliables du plan d’actions se replient',
+        pac.pliApres !== pac.pliAvant || pac.pliAjust !== pac.pliApres,
+        JSON.stringify({ avant: pac.pliAvant, apres: pac.pliApres, ajust: pac.pliAjust }));
+      verifier('le plan d’actions saisi s’enregistre en brouillon, et le serveur le porte',
+        pac.saisie && pac.saisie.cause === true && pac.saisie.actions === true
+        && !!pac.enBase && /cause primaire de la ronde/.test(pac.enBase.cause)
+        && /actions correctives de la ronde/.test(pac.enBase.actions)
+        && pac.enBase.date === '2026-12-31',
+        JSON.stringify({ saisie: pac.saisie, enBase: pac.enBase }));
+      verifier('la fiche de la constatation s’exporte, et le volet du plan se referme',
+        (pac.documents || []).some((n) => n > 500) && pac.referme === 0,
+        JSON.stringify({ documents: pac.documents, referme: pac.referme }));
+
       // Le volet a déjà été refermé par la clôture — `execCloseDossier` appelle
       // `execCloseSlider` lui-même. Le contrôle du geste de fermeture est donc
       // mené **avant** la fin du cycle, sur le volet encore ouvert : voir plus

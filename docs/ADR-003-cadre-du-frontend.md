@@ -5843,6 +5843,64 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            qui n'affichait pas ce qu'il venait d'écrire**, et le défaut aurait
            survécu à sa propre couverture.
 
+       5.f.23 [x] **SURV — les sept familles de référentiels, et quatre erreurs
+           de ma part** — fait le 19 octobre 2026.
+
+           **Soixante-douze contrôles ; 78 gestes sur 310. `exec-parametres.js`
+           passe de 2 à 28 sur 42.**
+
+           Les sept familles de l'écran des paramètres sont parcourues, chacune
+           sur le même patron réversible : criticité, type de cas, rôle d'équipe,
+           checklist et son éditeur, sous-thème, statut de checklist, délais du
+           processus. **+17 gestes en un pas**, le plus grand bond de la suite.
+
+           Deux particularités de l'écran, relevées avant d'écrire :
+
+           - les gestionnaires de statuts et de sous-thèmes rendent dans la
+             fenêtre du **socle** (`#shellModal`), non dans le volet du module ;
+           - celui des sous-thèmes s'ouvre **depuis l'éditeur de checklist**, et
+             non depuis la page. Un contrôle qui l'aurait cherché sur la page
+             aurait rendu « gestionnaire introuvable » sur un geste qui marche.
+
+           ── Quatre erreurs, et ce qu'elles ont coûté ──
+
+           | Ce que j'ai fait | Ce que cela a coûté |
+           |---|---|
+           | un `fetch` sur `/api/exec-checklists` | **cinq contrôles rouges** — `execRoute()` préfixe `/api/exec-*` pour le client, pas pour moi |
+           | lu la réponse des délais sous la clé `delais` | un contrôle rouge — la route répond `{ valeurs, defauts, modifiable }` |
+           | attendu une confirmation du geste des défauts | un contrôle rouge — il **remplit le formulaire** et n'écrit rien |
+           | mis mon relevé de diagnostic hors de l'objet imprimé | un passage perdu à ne rien voir |
+
+           ── Le préfixe, pour la deuxième fois ──
+
+           En 5.f.9, j'avais pris `api('/api/exec-checklist-responses')` pour une
+           adresse fausse chez le client — alors que la mienne l'était. Même
+           piège, même sens, et cette fois il a coûté cinq contrôles d'un coup.
+           *Une adresse qui marche dans l'écran et pas dans l'essai ne dit rien
+           de l'écran : elle dit que l'essai n'emprunte pas le même chemin.*
+
+           ── Un message d'échec qui fait trouver ──
+
+           Le contrôle des délais rendait `{"cles":0}` : impossible d'en rien
+           tirer. Instrumenté pour dire le **code** et la **forme** de la réponse,
+           il a rendu `forme: "valeurs,defauts,modifiable"` — et la cause était
+           lue, non devinée.
+
+           *Un message d'échec qui ne dit que « 0 » fait deviner ; celui qui dit
+           la forme de ce qu'il a lu fait trouver.* C'est la même leçon que
+           l'instrumentation des réponses de 5.f.6, appliquée au corps et non
+           plus au code.
+
+           ── Un geste qui prépare n'est pas un geste qui écrit ──
+
+           `execEtatsDelaisDefaut` pose les valeurs d'origine **dans les champs**,
+           et rien de plus : pas de confirmation, parce que pas d'écriture. Le
+           rétablissement demande donc **deux** gestes — et le contrôle y gagne :
+           il vérifie que le champ porte la valeur d'origine **quand le serveur
+           porte encore la valeur modifiée**, puis que l'enregistrement les
+           réconcilie. *Un contrôle qui confondrait les deux passerait à côté des
+           deux.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

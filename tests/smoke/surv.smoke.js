@@ -1978,6 +1978,256 @@ module.exports = async function survSmoke(port) {
         && referentiels.tc.fin === referentiels.tc.avant
         && referentiels.tc.lignesFin === referentiels.tc.lignesAvant,
         JSON.stringify(referentiels.tc));
+      // ── Les trois familles restantes : checklist, statut, délais ──
+      //
+      // Le patron ne change pas, et deux particularités ont été relevées avant
+      // d'écrire : les gestionnaires de statuts et de sous-thèmes rendent dans
+      // la fenêtre du **socle** (`#shellModal`), non dans le volet du module ;
+      // et celui des sous-thèmes s'ouvre **depuis l'éditeur de checklist**, non
+      // depuis le sous-menu. Un contrôle qui l'aurait cherché sur la page aurait
+      // rendu « gestionnaire introuvable » sur un geste qui marche.
+      etape = 'checklists et délais';
+      const suite2 = await page.evaluate(async (api) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        // ── Le préfixe du module, et la faute que j'ai refaite ──
+        //
+        // Le client appelle `api('exec-checklists')`, et `execRoute()` de
+        // `exec-boot.js` traduit tout `/api/exec-*` en
+        // `/api/m/execution/exec-*`. Un `fetch` brut, lui, ne traduit rien : le
+        // premier jet de cette ronde a reçu **404 sur `/api/exec-checklists`**,
+        // et cinq contrôles ont rougi pour cette seule raison.
+        //
+        // C'est la deuxième fois : en 5.f.9 j'avais pris la même adresse pour
+        // fausse chez le client, alors que la mienne l'était. *Une adresse qui
+        // marche dans l'écran et pas dans l'essai ne dit rien de l'écran : elle
+        // dit que l'essai n'emprunte pas le même chemin.*
+        const lire = async (c) => {
+          try { return await (await fetch(`${api}/${c}`,
+            { credentials: 'same-origin' })).json(); } catch { return []; }
+        };
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const confirmer = async () => {
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3200);
+          return true;
+        };
+        const shell = () => (document.getElementById('shellModal') || { innerHTML: '' }).innerHTML.length;
+
+        const sousMenu = (nom) => [...document.querySelectorAll('[onclick*="_execParamSub"]')]
+          .find((x) => new RegExp(nom).test(x.getAttribute('onclick') || ''));
+        sousMenu('checklists')?.click();
+        await attendre(2500);
+
+        // ── Famille 4 : la checklist, et son éditeur ──
+        r.chk = { avant: (await lire('exec-checklists')).length };
+        document.querySelector('[onclick^="execOpenChecklistModal"]')?.click();
+        await attendre(2400);
+        poser('clRef', 'RONDE-0.c');
+        poser('clNom', 'SURV 0.c — checklist de la ronde');
+        poser('clDesc', 'Posée par la ronde, retirée par elle.');
+        // La portée : une case au moins, sans quoi la checklist ne s'applique
+        // à rien. Le geste est `_clCocherPortee`.
+        const portee = document.querySelector('#shellModal input[type="checkbox"], .modal input[type="checkbox"]');
+        if (portee && !portee.checked) { portee.click(); await attendre(900); }
+        await attendre(800);
+        document.querySelector('[onclick^="execSaveChecklist"]')?.click();
+        await attendre(3500);
+        const chks = await lire('exec-checklists');
+        r.chk.apres = chks.length;
+        const chkNouvelle = chks.find((c) => /checklist de la ronde/.test(c.nom || ''));
+        r.chk.enBase = !!chkNouvelle;
+        r.chk.lignes = document.querySelectorAll('[onclick^="execDeleteChecklist"]').length;
+
+        // L'éditeur de la checklist créée : une ligne d'item ajoutée, puis le
+        // gestionnaire des sous-thèmes qu'il porte.
+        if (chkNouvelle) {
+          const ouvrir = [...document.querySelectorAll('[onclick^="execOpenChecklistEditor"]')]
+            .find((b) => (b.getAttribute('onclick') || '').includes(chkNouvelle.id));
+          r.chk.boutonEditeur = !!ouvrir;
+          if (ouvrir) {
+            ouvrir.click();
+            await attendre(3500);
+            r.editeur = { ouvert: !!document.getElementById('execCliEditorWrap') };
+            const items = async () => (await lire('exec-checklist-items'))
+              .filter((i) => i.checklist_id === chkNouvelle.id).length;
+            r.editeur.itemsAvant = await items();
+            document.querySelector('#execCliEditorWrap [onclick^="execAddChecklistRow"]')?.click();
+            await attendre(3200);
+            r.editeur.itemsApres = await items();
+            r.editeur.lignes = document.querySelectorAll('#execCliEditorWrap tbody tr').length;
+
+            // ── Famille 5 : le sous-thème, depuis l'éditeur ──
+            document.querySelector('#execCliEditorWrap [onclick^="execOpenSousThemesManager"]')?.click();
+            await attendre(2600);
+            r.st = { manager: shell(), avant: (await lire('exec-checklist-sous-themes')).length };
+            document.querySelector('#shellModal [onclick^="execOpenSousThemeModal"]')?.click();
+            await attendre(2400);
+            // Les champs du sous-thème ne portent pas tous un identifiant connu
+            // d'avance : on renseigne ce que la fenêtre offre — le thème par sa
+            // liste, les textes par un marqueur.
+            const liste = document.querySelector('#shellModal select');
+            if (liste && liste.options.length > 1) {
+              liste.selectedIndex = 1;
+              liste.dispatchEvent(new Event('change', { bubbles: true }));
+              await attendre(800);
+            }
+            [...document.querySelectorAll('#shellModal input[type="text"], #shellModal input:not([type])')]
+              .forEach((e, i) => {
+                e.value = i === 0 ? 'SURV 0.c — sous-thème de la ronde' : `RND${i}`;
+                e.dispatchEvent(new Event('input', { bubbles: true }));
+              });
+            await attendre(800);
+            document.querySelector('#shellModal [onclick^="execSaveSousTheme"]')?.click();
+            await attendre(3500);
+            const sts = await lire('exec-checklist-sous-themes');
+            r.st.apres = sts.length;
+            const stNouveau = sts.find((x) => /sous-thème de la ronde/.test(x.libelle || x.item || ''));
+            r.st.enBase = !!stNouveau;
+            if (stNouveau) {
+              const b = [...document.querySelectorAll('[onclick^="execDeleteSousTheme"]')]
+                .find((x) => (x.getAttribute('onclick') || '').includes(stNouveau.id));
+              r.st.boutonRetrait = !!b;
+              if (b) { b.click(); r.st.confirme = await confirmer(); }
+              r.st.fin = (await lire('exec-checklist-sous-themes')).length;
+            }
+            document.querySelector('[onclick^="shellCloseModal"]')?.click();
+            await attendre(1500);
+            document.querySelector('[onclick^="execCloseChecklistEditor"]')?.click();
+            await attendre(2000);
+            r.editeur.ferme = !document.getElementById('execCliEditorWrap');
+          }
+          // Et la checklist retirée : ses items partent avec elle.
+          const b = [...document.querySelectorAll('[onclick^="execDeleteChecklist"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(chkNouvelle.id));
+          r.chk.boutonRetrait = !!b;
+          if (b) { b.click(); r.chk.confirme = await confirmer(); }
+          r.chk.fin = (await lire('exec-checklists')).length;
+          r.chk.itemsFin = (await lire('exec-checklist-items'))
+            .filter((i) => i.checklist_id === chkNouvelle.id).length;
+        }
+
+        // ── Famille 6 : le statut de checklist, dans la fenêtre du socle ──
+        document.querySelector('[onclick^="execOpenStatutsManager"]')?.click();
+        await attendre(2600);
+        r.statut = { manager: shell(), avant: (await lire('exec-checklist-statuts')).length };
+        document.querySelector('#shellModal [onclick^="execOpenStatutModal"]')?.click();
+        await attendre(2400);
+        poser('stLib', 'SURV 0.c — statut de la ronde');
+        poser('stAlias', 'RND');
+        poser('stCol', '#123456');
+        poser('stOrd', '9');
+        await attendre(800);
+        document.querySelector('[onclick^="execSaveStatut"]')?.click();
+        await attendre(3500);
+        const statuts = await lire('exec-checklist-statuts');
+        r.statut.apres = statuts.length;
+        const statutNouveau = statuts.find((x) => /statut de la ronde/.test(x.libelle || ''));
+        r.statut.enBase = !!statutNouveau;
+        if (statutNouveau) {
+          const b = [...document.querySelectorAll('[onclick^="execDeleteStatut"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(statutNouveau.id));
+          r.statut.boutonRetrait = !!b;
+          if (b) { b.click(); r.statut.confirme = await confirmer(); }
+          r.statut.fin = (await lire('exec-checklist-statuts')).length;
+        }
+        document.querySelector('[onclick^="shellCloseModal"]')?.click();
+        await attendre(1500);
+
+        // ── Famille 7 : les délais du processus, et leur propre réversibilité ──
+        //
+        // `execEtatsDelaisDefaut` rétablit les valeurs d'origine : le geste de
+        // retour en arrière **est** un geste de l'écran, et c'est le seul
+        // référentiel de cette ronde qui n'a pas besoin qu'on le lui invente.
+        sousMenu('delais')?.click();
+        await attendre(2600);
+        // ── La route nomme ses valeurs « valeurs », et non « delais » ──
+        //
+        // Premier jet : `(corps || {}).delais`, qui rendait un objet vide. La
+        // route répond `{ valeurs, defauts, modifiable }` — et c'est le message
+        // d'échec, instrumenté pour nommer la **forme** de la réponse, qui l'a
+        // dit : « forme: valeurs,defauts,modifiable ».
+        //
+        // *Un message d'échec qui ne dit que « 0 » fait deviner ; celui qui dit
+        // la forme de ce qu'il a lu fait trouver.*
+        const delais = async () => {
+          const rep = await fetch(`${api}/parametres/delais`, { credentials: 'same-origin' });
+          r.delaisStatut = rep.status;
+          const corps = await rep.json().catch(() => null);
+          r.delaisForme = corps ? Object.keys(corps).join(',') : 'illisible';
+          return (corps || {}).valeurs || {};
+        };
+        const avantDelais = await delais();
+        const cle = Object.keys(avantDelais)[0];
+        r.delais = { cle, avant: avantDelais[cle], cles: Object.keys(avantDelais).length };
+        poser(`delai_${cle}`, String((avantDelais[cle] || 0) + 11));
+        await attendre(800);
+        document.querySelector('[onclick^="execEtatsEnregistrerDelais"]')?.click();
+        await attendre(3200);
+        r.delais.apres = (await delais())[cle];
+        // ── « Valeurs par défaut » remplit le formulaire, il n'enregistre pas ──
+        //
+        // Premier jet : on cliquait le geste et l'on attendait une confirmation,
+        // puis le serveur rétabli. Ni l'une ni l'autre : `execEtatsDelaisDefaut`
+        // **pose les valeurs d'origine dans les champs**, et rien de plus — il
+        // n'y a pas de confirmation parce qu'il n'y a pas d'écriture.
+        //
+        // Le rétablissement demande donc **deux** gestes, et le contrôle y gagne :
+        // il distingue ce que porte le **formulaire** de ce que porte
+        // l'**enregistrement**. *Un geste qui prépare n'est pas un geste qui
+        // écrit, et un contrôle qui les confond passe à côté des deux.*
+        document.querySelector('[onclick^="execEtatsDelaisDefaut"]')?.click();
+        await attendre(1200);
+        r.delais.champRendu = Number((document.getElementById(`delai_${cle}`) || {}).value);
+        r.delais.avantSecondEnregistrement = (await delais())[cle];
+        document.querySelector('[onclick^="execEtatsEnregistrerDelais"]')?.click();
+        await attendre(3200);
+        r.delais.rendu = (await delais())[cle];
+        return r;
+      }, M);
+
+      verifier('une checklist créée paraît dans la table, est portée par le serveur, et se retire avec ses items',
+        suite2.chk.apres === suite2.chk.avant + 1 && suite2.chk.enBase === true
+        && suite2.chk.boutonRetrait === true && suite2.chk.confirme === true
+        && suite2.chk.fin === suite2.chk.avant && suite2.chk.itemsFin === 0,
+        JSON.stringify(suite2.chk));
+      verifier('l’éditeur de checklist s’ouvre, une ligne d’item s’y ajoute, et il se referme',
+        !!suite2.editeur && suite2.editeur.ouvert === true
+        && suite2.editeur.itemsApres === suite2.editeur.itemsAvant + 1
+        && suite2.editeur.ferme === true,
+        JSON.stringify(suite2.editeur));
+      verifier('un sous-thème créé depuis l’éditeur est porté par le serveur, et se retire',
+        !!suite2.st && suite2.st.manager > 500
+        && suite2.st.apres === suite2.st.avant + 1 && suite2.st.enBase === true
+        && suite2.st.fin === suite2.st.avant,
+        JSON.stringify(suite2.st));
+      verifier('un statut de checklist créé est porté par le serveur, et se retire',
+        !!suite2.statut && suite2.statut.manager > 500
+        && suite2.statut.apres === suite2.statut.avant + 1 && suite2.statut.enBase === true
+        && suite2.statut.boutonRetrait === true && suite2.statut.confirme === true
+        && suite2.statut.fin === suite2.statut.avant,
+        JSON.stringify(suite2.statut));
+      verifier('un délai du processus s’enregistre, et les valeurs par défaut le rétablissent en deux gestes',
+        !!suite2.delais && !!suite2.delais.cle
+        && suite2.delais.apres === suite2.delais.avant + 11
+        // Le geste des défauts n'a touché que le champ : le serveur porte encore
+        // la valeur modifiée à cet instant.
+        && suite2.delais.champRendu === suite2.delais.avant
+        && suite2.delais.avantSecondEnregistrement === suite2.delais.apres
+        && suite2.delais.rendu === suite2.delais.avant,
+        JSON.stringify({ ...suite2.delais, statut: suite2.delaisStatut,
+          forme: suite2.delaisForme }));
+
       verifier('un rôle d’équipe créé est porté par le serveur, et se retire',
         referentiels.role.apres === referentiels.role.avant + 1
         && referentiels.role.enBase === true

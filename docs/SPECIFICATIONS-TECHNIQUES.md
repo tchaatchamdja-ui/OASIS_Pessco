@@ -237,7 +237,7 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | | Ce qui est éprouvé | Combien |
 |---|---|---|
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
-| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **67** pour SURV seul |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **72** pour SURV seul |
 
 Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires, menus, champs.
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 129 pour **84** noms
@@ -254,8 +254,8 @@ corrigé l'estimation qui les précédait — RAMP était annoncé à 365 occurr
 | CARE | 6 428 | **143** | **89** | **11** |
 | PR | 7 315 | **185** | **94** | **9** |
 | RAMP | 12 470 | **362** | **207** | **38** |
-| SURV | 23 731 | **500** | **310** | **61** |
-| **Total** | | **1 353** | **807** | **154** |
+| SURV | 23 731 | **500** | **310** | **78** |
+| **Total** | | **1 353** | **807** | **171** |
 
 **Les six écrans sont mesurés** depuis le 16 octobre 2026 (ADR-003 n° 5.f.18) : plus un seul
 n'est dispensé pour absence d'instrument, et la ligne imprimée à chaque campagne porte six
@@ -283,7 +283,7 @@ le nœud. DROITS est **le premier écran couvert à 100 %** (15 sur 15), et sans
 chacune des conversions à venir aurait éteint sa mesure en silence.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
-`tests/smoke/surv.smoke.js`, **soixante-sept contrôles** — l'écran se monte, ses sept pages se
+`tests/smoke/surv.smoke.js`, **soixante-douze contrôles** — l'écran se monte, ses sept pages se
 parcourent par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la
 console reste muette. Puis une **ronde de dossier sur tout son cycle**, de l'ouverture à la
 clôture, et le **remplisseur de checklist** : 141 items, le pliage dans les deux sens, la
@@ -843,7 +843,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 154, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 159, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

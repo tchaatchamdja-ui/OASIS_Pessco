@@ -2,7 +2,7 @@
  "releve": "2026-10-19",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 50,
+ "exerces": 61,
  "indecidables": 5,
  "gestes": [
   {
@@ -3221,7 +3221,7 @@
    "evenement": "click",
    "nom": "execBasculerBarreParam",
    "source": "execBasculerBarreParam()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3230,7 +3230,7 @@
    "evenement": "click",
    "nom": "window._execParamSub",
    "source": "window._execParamSub='${o.id}';execRenderPage();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3239,7 +3239,7 @@
    "evenement": "click",
    "nom": "execOpenRoleEquipeModal",
    "source": "execOpenRoleEquipeModal('${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3248,7 +3248,7 @@
    "evenement": "click",
    "nom": "execDeleteRoleEquipe",
    "source": "execDeleteRoleEquipe('${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3257,7 +3257,7 @@
    "evenement": "click",
    "nom": "execOpenRoleEquipeModal",
    "source": "execOpenRoleEquipeModal()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3275,7 +3275,7 @@
    "evenement": "click",
    "nom": "execSaveRoleEquipe",
    "source": "execSaveRoleEquipe('${id || ''}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3293,7 +3293,7 @@
    "evenement": "click",
    "nom": "execOpenCriticiteModal",
    "source": "execOpenCriticiteModal('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3302,7 +3302,7 @@
    "evenement": "click",
    "nom": "execDeleteCriticite",
    "source": "execDeleteCriticite('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3311,7 +3311,7 @@
    "evenement": "click",
    "nom": "execOpenTypeCasModal",
    "source": "execOpenTypeCasModal('${t.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3320,7 +3320,7 @@
    "evenement": "click",
    "nom": "execDeleteTypeCas",
    "source": "execDeleteTypeCas('${t.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3729,7 +3729,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1248,
+   "ligne": 1276,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "shellCloseModal",
@@ -3738,16 +3738,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1249,
+   "ligne": 1277,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveCriticite",
    "source": "execSaveCriticite('${critId || ''}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1308,
+   "ligne": 1338,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "shellCloseModal",
@@ -3756,12 +3756,12 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1309,
+   "ligne": 1339,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveTypeCas",
    "source": "execSaveTypeCas('${tcId || ''}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",

@@ -1779,6 +1779,211 @@ module.exports = async function survSmoke(port) {
       verifier('le volet est refermé à la fin de la ronde',
         finDuCycle.voletReferme === true, JSON.stringify({ referme: finDuCycle.voletReferme }));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  Les référentiels de l'écran : créés, vus, relus, retirés
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // L'écran des paramètres porte cinq familles de référentiels et le plus
+      // gros gisement de gestes non couverts de SURV. Le patron est le même pour
+      // chacune, et il est **réversible par construction** : ouvrir la fenêtre,
+      // saisir, enregistrer, relire chez le serveur, supprimer, relire encore.
+      //
+      // ── Le défaut que cette ronde a trouvé ──
+      //
+      // Une criticité enregistrée partait bien chez le serveur et **ne
+      // paraissait pas dans la table** : `execRefreshDynamic()` ne recharge que
+      // ce qui bouge en cours de travail, et les référentiels sont chargés une
+      // fois par session derrière le verrou `_staticLoaded` d'`execLoadData()`.
+      // L'opérateur ne voyait son ajout qu'après un rechargement de page.
+      //
+      // Deux familles sur cinq étaient dans ce cas — les statuts de checklist et
+      // les rôles d'équipe avaient déjà leur rechargement dédié. Corrigé par
+      // `execRefreshReferentielsConstatation` (n° 5.f.22).
+      //
+      // Le contrôle ci-dessous **l'aurait pris**, et c'est pour cela qu'il
+      // vérifie les deux : la table **et** le serveur. *Une écriture qui ne se
+      // voit pas est une écriture dont l'opérateur doute.*
+      etape = 'référentiels';
+      const referentiels = await page.evaluate(async (api) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const lire = async (c) => {
+          try { return await (await fetch(`${api}/${c}`, { credentials: 'same-origin' })).json(); }
+          catch { return []; }
+        };
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const confirmer = async () => {
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3200);
+          return true;
+        };
+        // Les boutons de la table, comptés par famille : c'est **là** que se
+        // voit ce qui a été écrit.
+        const lignes = (geste) => document.querySelectorAll(`[onclick^="${geste}"]`).length;
+
+        document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+        await attendre(3000);
+
+        // La barre des paramètres, dans les deux sens.
+        const sousMenus = () => document.querySelectorAll('[onclick*="_execParamSub"]').length;
+        r.sousMenus = sousMenus();
+        document.querySelector('[onclick^="execBasculerBarreParam"]')?.click();
+        await attendre(1600);
+        r.barreRepliee = sousMenus();
+        document.querySelector('[onclick^="execBasculerBarreParam"]')?.click();
+        await attendre(1600);
+        r.barreDepliee = sousMenus();
+
+        // Les quatre sous-menus, chacun rendant son contenu.
+        const empreintes = [];
+        for (const b of [...document.querySelectorAll('[onclick*="_execParamSub"]')]) {
+          const h = b.getAttribute('onclick');
+          [...document.querySelectorAll('[onclick*="_execParamSub"]')]
+            .find((x) => x.getAttribute('onclick') === h)?.click();
+          /* eslint-disable no-await-in-loop */
+          await attendre(2000);
+          const z = document.getElementById('exec-content');
+          empreintes.push(`${z.textContent.trim().length}:${z.querySelectorAll('[onclick]').length}`);
+        }
+        r.sousMenusParcourus = empreintes.length;
+        r.sousMenusDistincts = new Set(empreintes).size;
+
+        // ── Famille 1 : la criticité ──
+        const premier = [...document.querySelectorAll('[onclick*="_execParamSub"]')]
+          .find((b) => /constatations/.test(b.getAttribute('onclick') || ''));
+        if (premier) { premier.click(); await attendre(2400); }
+        r.crit = { avant: (await lire('criticites')).length, lignesAvant: lignes('execDeleteCriticite') };
+        document.querySelector('[onclick^="execOpenCriticiteModal"]')?.click();
+        await attendre(2200);
+        poser('critItem', 'SURV 0.c — criticité de la ronde');
+        poser('critAlias', 'RND');
+        poser('critNiveau', '9');
+        await attendre(900);
+        document.querySelector('[onclick^="execSaveCriticite"]')?.click();
+        await attendre(3500);
+        const crits = await lire('criticites');
+        r.crit.apres = crits.length;
+        r.crit.lignesApres = lignes('execDeleteCriticite');
+        const critNouvelle = crits.find((c) => /criticité de la ronde/.test(c.item || ''));
+        r.crit.enBase = !!critNouvelle;
+        // Et le retrait, par le bouton que porte **sa** ligne.
+        if (critNouvelle) {
+          const b = [...document.querySelectorAll('[onclick^="execDeleteCriticite"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(critNouvelle.id));
+          r.crit.boutonRetrait = !!b;
+          if (b) { b.click(); r.crit.confirme = await confirmer(); }
+          r.crit.fin = (await lire('criticites')).length;
+          r.crit.lignesFin = lignes('execDeleteCriticite');
+        }
+
+        // ── Famille 2 : le type de cas ──
+        r.tc = { avant: (await lire('types-cas')).length, lignesAvant: lignes('execDeleteTypeCas') };
+        document.querySelector('[onclick^="execOpenTypeCasModal"]')?.click();
+        await attendre(2200);
+        poser('tcItem', 'SURV 0.c — type de cas de la ronde');
+        poser('tcDesc', 'Posé par la ronde, retiré par elle.');
+        poser('tcOrdre', '9');
+        await attendre(900);
+        document.querySelector('[onclick^="execSaveTypeCas"]')?.click();
+        await attendre(3500);
+        const tcs = await lire('types-cas');
+        r.tc.apres = tcs.length;
+        r.tc.lignesApres = lignes('execDeleteTypeCas');
+        const tcNouveau = tcs.find((c) => /type de cas de la ronde/.test(c.item || ''));
+        r.tc.enBase = !!tcNouveau;
+        if (tcNouveau) {
+          const b = [...document.querySelectorAll('[onclick^="execDeleteTypeCas"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(tcNouveau.id));
+          r.tc.boutonRetrait = !!b;
+          if (b) { b.click(); r.tc.confirme = await confirmer(); }
+          r.tc.fin = (await lire('types-cas')).length;
+          r.tc.lignesFin = lignes('execDeleteTypeCas');
+        }
+
+        // ── Famille 3 : le rôle d'équipe, qui a son propre rechargement ──
+        const autres = [...document.querySelectorAll('[onclick*="_execParamSub"]')]
+          .find((b) => /autres/.test(b.getAttribute('onclick') || ''));
+        if (autres) { autres.click(); await attendre(2500); }
+        r.role = { avant: (await lire('exec-roles-equipe')).length };
+        document.querySelector('[onclick^="execOpenRoleEquipeModal"]')?.click();
+        await attendre(2400);
+        poser('req_item', 'SURV 0.c — rôle de la ronde');
+        poser('req_ordre', '9');
+        poser('req_description', 'Posé par la ronde, retiré par elle.');
+        await attendre(900);
+        document.querySelector('[onclick^="execSaveRoleEquipe"]')?.click();
+        await attendre(3500);
+        const roles = await lire('exec-roles-equipe');
+        r.role.apres = roles.length;
+        r.role.lignesApres = lignes('execDeleteRoleEquipe');
+        const roleNouveau = roles.find((x) => /rôle de la ronde/.test(x.item || ''));
+        r.role.enBase = !!roleNouveau;
+        if (roleNouveau) {
+          const b = [...document.querySelectorAll('[onclick^="execDeleteRoleEquipe"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(roleNouveau.id));
+          r.role.boutonRetrait = !!b;
+          if (b) {
+            b.click();
+            await attendre(1200);
+            // Ce retrait-là passe par la confirmation du module, non par celle
+            // du socle : deux fenêtres de confirmation coexistent dans SURV.
+            const oui = document.querySelector('.oasis-confirm-oui, .exec-proc-confirm-oui,'
+              + ' [onclick*="execProcConfirmerOui"]')
+              || [...document.querySelectorAll('button')]
+                .find((x) => /^(Supprimer|Confirmer|Oui)$/i.test((x.textContent || '').trim()));
+            r.role.confirme = !!oui;
+            if (oui) { oui.click(); await attendre(3200); }
+          }
+          r.role.fin = (await lire('exec-roles-equipe')).length;
+        }
+        return r;
+      }, M);
+
+      verifier('la barre des paramètres se replie et se déplie, et ses quatre sous-menus rendent chacun leur contenu',
+        referentiels.sousMenus > 0 && referentiels.barreDepliee === referentiels.sousMenus
+        && referentiels.sousMenusParcourus >= 4
+        && referentiels.sousMenusDistincts === referentiels.sousMenusParcourus,
+        JSON.stringify({ sousMenus: referentiels.sousMenus, repliee: referentiels.barreRepliee,
+          depliee: referentiels.barreDepliee, parcourus: referentiels.sousMenusParcourus,
+          distincts: referentiels.sousMenusDistincts }));
+
+      // ── Le contrôle qui a trouvé le défaut : la table **et** le serveur ──
+      //
+      // `lignesApres > lignesAvant` est la moitié qui manquait. Sans elle, le
+      // contrôle aurait été vert sur un écran qui n'affichait pas ce qu'il
+      // venait d'écrire.
+      verifier('une criticité créée paraît dans la table, est portée par le serveur, et se retire',
+        referentiels.crit.apres === referentiels.crit.avant + 1
+        && referentiels.crit.enBase === true
+        && referentiels.crit.lignesApres > referentiels.crit.lignesAvant
+        && referentiels.crit.boutonRetrait === true && referentiels.crit.confirme === true
+        && referentiels.crit.fin === referentiels.crit.avant
+        && referentiels.crit.lignesFin === referentiels.crit.lignesAvant,
+        JSON.stringify(referentiels.crit));
+      verifier('un type de cas créé paraît dans la table, est porté par le serveur, et se retire',
+        referentiels.tc.apres === referentiels.tc.avant + 1
+        && referentiels.tc.enBase === true
+        && referentiels.tc.lignesApres > referentiels.tc.lignesAvant
+        && referentiels.tc.boutonRetrait === true && referentiels.tc.confirme === true
+        && referentiels.tc.fin === referentiels.tc.avant
+        && referentiels.tc.lignesFin === referentiels.tc.lignesAvant,
+        JSON.stringify(referentiels.tc));
+      verifier('un rôle d’équipe créé est porté par le serveur, et se retire',
+        referentiels.role.apres === referentiels.role.avant + 1
+        && referentiels.role.enBase === true
+        && referentiels.role.fin === referentiels.role.avant,
+        JSON.stringify(referentiels.role));
+
       // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
       //
       // Le premier jet supprimait le dossier **puis** la notification, et le

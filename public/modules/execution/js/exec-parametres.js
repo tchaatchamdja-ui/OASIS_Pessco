@@ -1202,6 +1202,34 @@ async function execDeleteSousTheme(stId, clId) {
 }
 
 // ── Chargement / refresh checklists ──
+// ── Les référentiels de la constatation, rechargés après une écriture ──
+//
+// `execRefreshDynamic()` ne recharge que ce qui bouge en cours de travail —
+// tableau de bord, notifications, dossiers, constatations, rapports, délais.
+// Les référentiels, eux, sont chargés **une fois par session** par
+// `execLoadData()`, derrière son verrou `_staticLoaded`.
+//
+// Conséquence, mesurée le 19 octobre 2026 : une criticité enregistrée partait
+// bien chez le serveur, et **ne paraissait pas dans la table**. La page se
+// redessinait sur l'état du client, resté à trois criticités quand le serveur
+// en portait quatre. L'opérateur ne voyait son ajout qu'après un rechargement
+// de la page.
+//
+// Les autres familles de cet écran avaient déjà leur rechargement dédié — les
+// statuts de checklist par `execRefreshChecklists`, les rôles d'équipe par
+// `execChargerRolesEquipe`. Deux sur cinq ne l'avaient pas ; elles l'ont.
+// *Un écran qui redessine après une écriture doit relire ce qu'il a écrit.*
+async function execRefreshReferentielsConstatation() {
+    try {
+        const [criticites, typesCas] = await Promise.all([
+            api(`${EXEC_MODULE_API}/criticites`).catch(() => EXEC_STATE.data.criticites || []),
+            api(`${EXEC_MODULE_API}/types-cas`).catch(() => EXEC_STATE.data.typesCas || []),
+        ]);
+        EXEC_STATE.data.criticites = criticites || [];
+        EXEC_STATE.data.typesCas = typesCas || [];
+    } catch (e) { console.warn('Référentiels de constatation : rechargement impossible', e); }
+}
+
 async function execRefreshChecklists() {
     try {
         const [checklists, items, statuts, sousThemes] = await Promise.all([
@@ -1270,6 +1298,7 @@ async function execSaveCriticite(critId) {
         }
         shellCloseModal();
         await execRefreshDynamic();
+        await execRefreshReferentielsConstatation();
         execRenderPage();
     } catch (e) {
         shellShowToast(e.message || te('erreur_generique'), 'error');
@@ -1281,6 +1310,7 @@ async function execDeleteCriticite(critId) {
     try {
         await api(`${EXEC_MODULE_API}/criticites/${critId}`, { method: 'DELETE' });
         await execRefreshDynamic();
+        await execRefreshReferentielsConstatation();
         execRenderPage();
     } catch (e) {
         shellShowToast(e.message || te('erreur_generique'), 'error');
@@ -1328,6 +1358,7 @@ async function execSaveTypeCas(tcId) {
         }
         shellCloseModal();
         await execRefreshDynamic();
+        await execRefreshReferentielsConstatation();
         execRenderPage();
     } catch (e) {
         shellShowToast(e.message || te('erreur_generique'), 'error');
@@ -1339,6 +1370,7 @@ async function execDeleteTypeCas(tcId) {
     try {
         await api(`${EXEC_MODULE_API}/types-cas/${tcId}`, { method: 'DELETE' });
         await execRefreshDynamic();
+        await execRefreshReferentielsConstatation();
         execRenderPage();
     } catch (e) {
         shellShowToast(e.message || te('erreur_generique'), 'error');

@@ -5777,6 +5777,72 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            `execReturnPACtoPostulant` et `execPreuvesNonAcceptables` sont **vus
            paraître** et non exercés, et c'est écrit dans la dispense.
 
+       5.f.22 [x] **SURV — les référentiels, et une écriture qui ne se voyait
+           pas** — fait le 19 octobre 2026.
+
+           **Soixante-sept contrôles ; 61 gestes sur 310 — le plus grand bond
+           d'un seul pas (+11).**
+
+           Le plus gros gisement de SURV, `exec-parametres.js`, passe de **2 à 13
+           gestes sur 42**. Le patron est le même pour chaque famille de
+           référentiel, et il est **réversible par construction** : ouvrir la
+           fenêtre, saisir, enregistrer, **voir paraître dans la table**, relire
+           chez le serveur, retirer, relire encore.
+
+           ── Le défaut que la ronde a trouvé ──
+
+           Une criticité enregistrée partait bien chez le serveur et **ne
+           paraissait pas dans la table**. La cause tient à deux mécanismes qui
+           ne se recouvrent pas :
+
+           - `execRefreshDynamic()` recharge ce qui bouge en cours de travail —
+             tableau de bord, notifications, dossiers, constatations, rapports,
+             délais ;
+           - les **référentiels** sont chargés **une fois par session** par
+             `execLoadData()`, derrière son verrou `_staticLoaded`.
+
+           Entre les deux, rien ne relisait les criticités. La page se
+           redessinait sur un état resté à trois quand le serveur en portait
+           quatre.
+
+           Et le défaut avait une **seconde conséquence**, que le contre-essai a
+           révélée et que je n'avais pas prévue : faute de ligne dans la table,
+           **le bouton de suppression de la criticité n'existait pas**. Une
+           criticité créée par erreur était irrécupérable sans recharger la page.
+           *Un écran qui n'affiche pas ce qu'il vient d'écrire ne se contente pas
+           de douter : il enferme.*
+
+           ── Deux familles sur cinq, et les trois autres savaient déjà ──
+
+           | Famille | Ce qu'elle rechargeait |
+           |---|---|
+           | statuts de checklist | `execRefreshChecklists()` ✓ |
+           | rôles d'équipe | `execChargerRolesEquipe()` ✓ |
+           | **criticités** | `execRefreshDynamic()` seul ✗ |
+           | **types de cas** | `execRefreshDynamic()` seul ✗ |
+
+           Le correctif ne fait qu'étendre le patron qui existait :
+           `execRefreshReferentielsConstatation()`, appelée aux quatre sites
+           (enregistrement et suppression des deux familles). *Un écran qui
+           redessine après une écriture doit relire ce qu'il a écrit.*
+
+           ── Le contre-essai, parce qu'un correctif sans rouge est une
+              affirmation ──
+
+           Le correctif retiré des quatre sites, les deux contrôles rougissent, et
+           avec les chiffres du défaut :
+
+           ```
+           {"avant":3,"apres":4,"lignesAvant":3,"lignesApres":3,
+            "enBase":true,"boutonRetrait":false,"fin":4}
+           ```
+
+           Serveur 4, table 3, pas de bouton de retrait, et la donnée reste.
+           C'est la moitié du contrôle qui l'a pris — `lignesApres >
+           lignesAvant`. Sans elle, le contrôle aurait été **vert sur un écran
+           qui n'affichait pas ce qu'il venait d'écrire**, et le défaut aurait
+           survécu à sa propre couverture.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

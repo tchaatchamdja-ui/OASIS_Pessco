@@ -2,7 +2,7 @@
  "releve": "2026-10-19",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 46,
+ "exerces": 50,
  "indecidables": 5,
  "gestes": [
   {
@@ -2960,7 +2960,7 @@
    "evenement": "click",
    "nom": "execPacModeEdition",
    "source": "execPacModeEdition('${fncId}', '${mode}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -2969,7 +2969,7 @@
    "evenement": "click",
    "nom": "execSoumettreMiseEnOeuvre",
    "source": "execSoumettreMiseEnOeuvre('${fncId}', '${modeSoumission}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -2996,7 +2996,7 @@
    "evenement": "click",
    "nom": "execAccepterPreuves",
    "source": "execAccepterPreuves('${fncId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3014,7 +3014,7 @@
    "evenement": "click",
    "nom": "execCloseFNC",
    "source": "execCloseFNC('${fncId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",

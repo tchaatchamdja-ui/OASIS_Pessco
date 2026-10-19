@@ -5726,6 +5726,57 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            l'acceptation. C'est écrit dans la dispense — *une branche qu'on
            choisit n'est pas une branche qu'on ignore.*
 
+       5.f.21 [x] **SURV — le circuit d'une constatation, de bout en bout** —
+           fait le 19 octobre 2026.
+
+           **Soixante-trois contrôles ; 50 gestes sur 310, et 11 sur les 43 du
+           PAC.**
+
+           Le terme du circuit qu'ouvre une inspection, et il se joue à deux
+           jusqu'au dernier geste :
+
+           | Qui | Geste | Ce que le serveur dit |
+           |---|---|---|
+           | organisme | choisit son mode, déclare la mise en œuvre | **horodate** le versement, sans changer le statut |
+           | Autorité | accepte les preuves | — |
+           | Autorité | **solde la fiche** | **`soldee`**, avec sa date |
+
+           ── Un bouton désactivé, et le code qui dit pourquoi ──
+
+           Le premier essai cliquait le bouton de soumission et rendait « pas
+           d'horodatage » sur un geste qui marche. Le bouton est **désactivé**
+           tant qu'aucun mode n'est choisi, et la source l'écrit : *« la
+           soumission n'a de sens qu'un mode au moins choisi »*.
+           `execPacModeEdition` arrête si l'organisme verse des **preuves** ou
+           **amende** son plan — un geste de plus, et une condition qu'il fallait
+           lire plutôt que deviner.
+
+           C'est la troisième fois que la réponse était dans le code du geste,
+           après `aria-expanded` que l'accordéon nomme (5.f.17) et le tableau
+           `actions_correctives` que `_collectPACData` assemble (5.f.19). *Le code
+           d'un geste dit ce qu'il attend ; il reste à le lire avant de le
+           cliquer.*
+
+           ── Une preuve qui n'est pas une transition ──
+
+           `submit-preuves` exige `pac_valide` et **ne change pas le statut** : il
+           horodate `date_preuves_mise_oeuvre`. L'assertion porte donc sur
+           l'**horodatage**, et vérifie en même temps que le statut est resté le
+           même — un contrôle qui aurait attendu une transition aurait rougi sur
+           un geste correct, et un contrôle qui n'aurait regardé que le statut
+           aurait été vert sans rien éprouver.
+
+           ── Ce qui reste, et ce n'est plus le cycle ──
+
+           La famille du PAC compte **11 gestes exercés sur 43**. Ce qui reste
+           n'est pas le circuit, qui est entier : ce sont ses **branches de refus
+           et d'amendement** — renvoyer le plan au postulant, refuser les
+           preuves, rouvrir un plan accepté avec un motif par champ divergent —
+           et les ajustements d'échéance. Chacune referait le tour du circuit.
+
+           `execReturnPACtoPostulant` et `execPreuvesNonAcceptables` sont **vus
+           paraître** et non exercés, et c'est écrit dans la dispense.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

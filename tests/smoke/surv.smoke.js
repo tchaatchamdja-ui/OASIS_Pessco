@@ -1644,6 +1644,134 @@ module.exports = async function survSmoke(port) {
         && !!arbitrage.enBase && arbitrage.enBase.statut === 'pac_valide',
         JSON.stringify(arbitrage.enBase));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  La fin du cycle : mise en œuvre, preuves, fiche soldée
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // Le plan accepté, il reste à l'exécuter et à le prouver. La chaîne est à
+      // deux de nouveau, et chaque geste n'existe que dans l'état que le
+      // précédent crée :
+      //
+      //   · l'organisme déclare la **mise en œuvre** et verse ses preuves
+      //     (`submit-preuves`, qui exige `pac_valide` et **ne change pas le
+      //     statut** — il horodate `date_preuves_mise_oeuvre`) ;
+      //   · l'Autorité les **accepte** ou les refuse, puis **solde la fiche**
+      //     (`close` → `soldee`).
+      //
+      // C'est le dernier palier du suivi d'une constatation, et le terme du
+      // circuit qu'ouvre une inspection.
+      etape = 'mise en œuvre du plan';
+      await basculer('Vue Prestataire');
+      const miseEnOeuvre = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await attendre(3000);
+        const bouton = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(ctx.fncId));
+        r.bouton = !!bouton;
+        if (!bouton) return r;
+        bouton.click();
+        await attendre(4000);
+        r.gestes = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))];
+        // ── Le bouton de soumission est **désactivé** tant qu'aucun mode n'est
+        //    choisi, et le code le dit ──
+        //
+        // « La soumission n'a de sens qu'un mode au moins choisi » :
+        // `execPacModeEdition` arrête si l'organisme verse des **preuves** ou
+        // **amende** son plan, et le bouton n'apparaît qu'ensuite. Le premier
+        // essai cliquait un bouton désactivé et rendait « pas d'horodatage » sur
+        // un geste qui marche.
+        //
+        // On prend la branche des preuves : l'amendement exige un motif par
+        // champ divergent, et refuse sans — ce serait une autre ronde.
+        const mode = [...document.querySelectorAll('#execSlider [onclick^="execPacModeEdition"]')]
+          .find((b) => /'preuves'/.test(b.getAttribute('onclick') || ''));
+        r.boutonMode = !!mode;
+        if (mode) { mode.click(); await attendre(2200); }
+        const soumettre = [...document.querySelectorAll('#execSlider [onclick^="execSoumettreMiseEnOeuvre"]')]
+          .find((b) => !b.disabled && !/amendement/.test(b.getAttribute('onclick') || ''));
+        r.boutonMiseEnOeuvre = !!soumettre;
+        if (soumettre) {
+          soumettre.click();
+          await attendre(1000);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          r.confirme = !!oui;
+          if (oui) { oui.click(); await attendre(4500); }
+        }
+        const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+          { credentials: 'same-origin' })).json();
+        r.enBase = {
+          statut: fnc.statut,
+          // La route horodate le versement sans changer le statut : c'est **cet
+          // horodatage** qui prouve que le geste a porté, et non une transition.
+          preuves: !!fnc.date_preuves_mise_oeuvre,
+        };
+        return r;
+      }, { api: M, fncId: chaine.fncId });
+
+      verifier('l’organisme choisit son mode, déclare la mise en œuvre, et le serveur horodate son versement',
+        miseEnOeuvre.bouton === true && miseEnOeuvre.boutonMode === true
+        && miseEnOeuvre.boutonMiseEnOeuvre === true
+        && miseEnOeuvre.confirme === true
+        && !!miseEnOeuvre.enBase && miseEnOeuvre.enBase.preuves === true
+        && miseEnOeuvre.enBase.statut === 'pac_valide',
+        JSON.stringify({ mode: miseEnOeuvre.boutonMode,
+          soumission: miseEnOeuvre.boutonMiseEnOeuvre, enBase: miseEnOeuvre.enBase }));
+
+      etape = 'solde de la fiche';
+      await basculer('Vue AAC');
+      const solde = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await attendre(3000);
+        const suivi = [...document.querySelectorAll('.exec-tab')]
+          .find((b) => /suivi/i.test(b.textContent || '') && !/terrain/i.test(b.textContent || ''));
+        if (suivi) { suivi.click(); await attendre(2600); }
+        const bouton = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(ctx.fncId));
+        r.bouton = !!bouton;
+        if (!bouton) return r;
+        bouton.click();
+        await attendre(4000);
+        r.gestes = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))];
+        const accepter = document.querySelector('[onclick^="execAccepterPreuves"]');
+        r.boutonPreuves = !!accepter;
+        if (accepter) {
+          accepter.click();
+          await attendre(1000);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (oui) { oui.click(); await attendre(4500); }
+        }
+        // Le geste qui solde : il referme le circuit d'une constatation.
+        const solder = document.querySelector('[onclick^="execCloseFNC"]');
+        r.boutonSolde = !!solder;
+        if (solder) {
+          solder.click();
+          await attendre(1000);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          r.confirme = !!oui;
+          if (oui) { oui.click(); await attendre(4500); }
+        }
+        const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+          { credentials: 'same-origin' })).json();
+        r.enBase = { statut: fnc.statut, dateSolde: !!fnc.date_solde };
+        return r;
+      }, { api: M, fncId: chaine.fncId });
+
+      verifier('l’Autorité accepte les preuves, puis solde la fiche : le serveur la dit « soldee »',
+        solde.bouton === true && solde.boutonPreuves === true
+        && solde.boutonSolde === true && solde.confirme === true
+        && !!solde.enBase && solde.enBase.statut === 'soldee'
+        && solde.enBase.dateSolde === true,
+        JSON.stringify({ preuves: solde.boutonPreuves, solde: solde.boutonSolde,
+          enBase: solde.enBase }));
+
       // Le volet a déjà été refermé par la clôture — `execCloseDossier` appelle
       // `execCloseSlider` lui-même. Le contrôle du geste de fermeture est donc
       // mené **avant** la fin du cycle, sur le volet encore ouvert : voir plus

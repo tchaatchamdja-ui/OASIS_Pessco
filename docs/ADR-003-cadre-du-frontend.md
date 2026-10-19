@@ -5901,6 +5901,103 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            réconcilie. *Un contrôle qui confondrait les deux passerait à côté des
            deux.*
 
+       5.f.24 [x] **SURV — la constatation directe, et un export qui n'avait
+           jamais pu marcher** — fait le 19 octobre 2026.
+
+           **Soixante-dix-huit contrôles au navigateur, cent-quatorze en HTTP ;
+           87 gestes sur 310.** `exec-constatations.js` passe de 4 à 15 sur 39.
+
+           Une constatation n'est pas toujours la suite d'une inspection :
+           l'écran permet d'en ouvrir une **directement**. La ronde la crée — la
+           criticité choisie calculant le délai puis la date due —, la commente,
+           la valide, et **l'efface elle-même** : elle n'a pas de dossier, et la
+           suppression du dossier ne l'emporterait pas.
+
+           ── Un défaut de routage, et l'export ne marchait pour personne ──
+
+           L'export en classeur se prouve en HTTP, le geste emportant la page
+           (ci-dessous). C'est là que le GET a rendu **404** —
+           `{ error: 'introuvable', objet: 'constatation' }`.
+
+           Express décide par l'ordre de déclaration :
+           `/constatations/:id` était déclaré **avant**
+           `/constatations/export-xlsx`, et capturait l'adresse littérale en
+           traitant « export-xlsx » comme un identifiant.
+
+           Et c'est le chemin **normal** de l'écran : il pose
+           `window.location.href` sur ce GET dès que la liste d'identifiants
+           tient en moins de 6 000 caractères — c'est-à-dire presque toujours. Le
+           recours par POST, prévu pour les listes trop longues, était **le seul
+           qui fonctionnait**. L'export des constatations ne marchait donc que
+           pour des sélections invraisemblables.
+
+           Corrigé en déclarant la route littérale avant la paramétrée. Le
+           contre-essai est au dossier : le contrôle était rouge avec
+           `statut: 404` avant, vert après.
+
+           ── Et `node --check` n'est pas un démarrage ──
+
+           Le premier correctif a cassé le serveur : la route déclarée avant le
+           `const exporterConstatations` tombait dans sa **zone morte** —
+           `ReferenceError: Cannot access 'exporterConstatations' before
+           initialization`. La vérification syntaxique passait ; la suite rendait
+           `fetch failed`, sans un mot de plus.
+
+           Un relais résout désormais le gestionnaire **à l'appel**, ce qui garde
+           l'ordre des routes et la place de la définition. *Une vérification de
+           syntaxe dit qu'un fichier se lit, non qu'un serveur démarre.*
+
+           ── Deux gestes qui ne se cliquent pas, et pourquoi ──
+
+           | Geste | Ce qu'il fait | Où il s'éprouve |
+           |---|---|---|
+           | `execExporterConstatationsXlsx` | pose `location.href` : **la page part**, et l'évaluation meurt avec elle | HTTP, deux voies |
+           | `execTransmettreConstatation` | **envoie un courriel** : 502 sans serveur de messagerie | HTTP, pour son refus sans destinataire |
+
+           Le second mérite une précision. Le refus du serveur de messagerie
+           n'est **pas** éprouvé : l'atteindre demanderait de franchir quatre
+           gardes — statut, destinataire, objet, et une pièce dont le contenu
+           serait fabriqué. *Un contrôle qui doit fabriquer ses quatre conditions
+           n'éprouve plus qu'une chose : qu'on sait les fabriquer.* Le refus a été
+           mesuré une fois, il est propre — « rien n'a été transmis » —, et c'est
+           écrit.
+
+           ── Trois erreurs de méthode, dont une nouvelle ──
+
+           **Identifier par un champ supposé.** Je cherchais la constatation créée
+           par `c.titre || c.description` comparé au texte saisi : introuvable, 2
+           avant et 3 après. *Ce qu'une ronde vient de créer se reconnaît à ce qui
+           n'était pas là* — un ensemble d'identifiants relevé avant, et la
+           différence après. Plus aucun champ à supposer.
+
+           **Écrire une assertion par analogie.** J'exigeais une confirmation de
+           `execValidateConstatationDirecte`, parce que tous les autres gestes
+           décisifs de cet écran en demandent une. Celui-ci non : le statut
+           passait de `direct_soumis` à `direct_valide` sans qu'aucune fenêtre
+           n'apparaisse, et le relevé disait « non confirmée » sur une validation
+           qui avait porté. *Un contrôle écrit par analogie éprouve l'analogie,
+           non le geste.* Que ce geste seul ne demande rien est relevé et non
+           tranché.
+
+           **Cliquer les exports avant qu'il y ait matière.** Les trois tables
+           étaient vides : les exports disaient « aucune donnée » par un message,
+           non par un document. Déplacés après la création. *L'ordre fait partie
+           de la mesure*, pour la cinquième fois de cette suite.
+
+           ── Une alarme sur les données de travail, et ce qu'elle disait ──
+
+           La campagne a crié « LES DONNÉES DE TRAVAIL ONT ÉTÉ MODIFIÉES ».
+           Vérifié : `data/.verrou` portait **PID 32819**, `node server.js`,
+           démarré à 22:22:15 ; la dernière entrée du journal est la **sienne**,
+           14 ms plus tard — `HORLOGE_NON_VERIFIEE`, par `système`. La chaîne
+           d'audit est **intacte** : 1 660 entrées, `valid: true`.
+
+           Ce n'est donc pas la campagne : elle tourne sur un bac temporaire, et
+           `bac.js` refuse de continuer si le magasin a déjà été chargé sur le
+           vrai répertoire. Même situation qu'en 5.f.2, et même décision : ce
+           serveur n'est pas le mien et tient le verrou des données, je ne
+           l'arrête pas.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

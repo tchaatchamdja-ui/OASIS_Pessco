@@ -1,7 +1,7 @@
 // Fumée — module « Exécution de la Surveillance » : paramétrage repris de
 // PESSCO, consommation des plans validés via le bus, et circuit complet d'un
 // acte de surveillance (notification → accord → dossier → rapport → clôture).
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, bilan, horsPortee } = require('./harness');
 
 const M = '/api/m/execution';
 
@@ -460,6 +460,74 @@ module.exports = async function executionSmoke(port) {
       (await srv.appel(`${DOC}/${(depot.corps || {}).jeton}`)).statut === 404);
     verifier('un jeton inventé ne rend rien',
       (await srv.appel(`${DOC}/0123456789abcdef0123456789abcdef`)).statut === 404);
+
+    // ── L'export des constatations en classeur ──
+    //
+    // L'écran l'obtient en posant `window.location.href` sur cette route : le
+    // navigateur télécharge la réponse, guidé par `Content-Disposition`, et la
+    // page ne manipule aucun blob. La conséquence pour une suite de navigateur
+    // est qu'elle **ne peut pas** cliquer ce geste — la page part, et
+    // l'évaluation meurt avec elle (ADR-003 n° 5.f.24).
+    //
+    // C'est donc ici qu'il s'éprouve, par ce que la route rend.
+    const XLSX = `${M}/constatations/export-xlsx`;
+    const toutesFnc = (await srv.appel(`${M}/constatations`)).corps || [];
+    const idsFnc = toutesFnc.slice(0, 3).map((c) => c.id);
+    if (!idsFnc.length) {
+      horsPortee('l’export des constatations rend un classeur', 'aucune constatation dans le bac');
+    } else {
+      const parUrl = await srv.appel(`${XLSX}?ids=${idsFnc.join(',')}&titre=Essai&filtres=aucun`);
+      verifier('l’export des constatations rend un classeur en pièce jointe',
+        parUrl.statut === 200
+        && /spreadsheet|excel|octet-stream/i.test(parUrl.entetes['content-type'] || '')
+        && /^attachment;/.test(parUrl.entetes['content-disposition'] || '')
+        && String(parUrl.corps).length > 200,
+        JSON.stringify({ statut: parUrl.statut, type: parUrl.entetes['content-type'],
+          disposition: (parUrl.entetes['content-disposition'] || '').slice(0, 60),
+          taille: String(parUrl.corps).length }));
+      // La seconde voie, celle des listes trop longues pour une adresse : le
+      // même classeur, demandé par le corps de la requête.
+      const parCorps = await P(XLSX, { ids: idsFnc, titre: 'Essai', filtres: 'aucun' });
+      verifier('le même export s’obtient par le corps de la requête, pour une liste trop longue',
+        parCorps.statut === 200
+        && /spreadsheet|excel|octet-stream/i.test(parCorps.entetes['content-type'] || '')
+        && String(parCorps.corps).length > 200,
+        JSON.stringify({ statut: parCorps.statut, type: parCorps.entetes['content-type'],
+          taille: String(parCorps.corps).length }));
+    }
+
+    // ── Transmettre une constatation sans serveur de messagerie ──
+    //
+    // La transmission **envoie un courriel**. Sans serveur de messagerie, elle
+    // doit refuser — et refuser **proprement** : dire que rien n'a été transmis,
+    // plutôt que de laisser croire à un envoi. C'est cette propriété qu'on
+    // éprouve ici, le geste n'étant pas cliquable dans une suite de navigateur
+    // sans salir son relevé d'incidents (ADR-003 n° 5.f.24).
+    // Elle a **deux** refus, et chacun dit sa raison. Le premier est une
+    // exigence de la route ; le second est l'état du monde.
+    if (idsFnc.length) {
+      const sansDestinataire = await P(`${M}/constatations/${idsFnc[0]}/transmettre`, {});
+      verifier('la transmission d’une constatation refuse sans destinataire',
+        sansDestinataire.statut === 400
+        && /destinataire/i.test(JSON.stringify(sansDestinataire.corps || '')),
+        `${sansDestinataire.statut} — ${JSON.stringify(sansDestinataire.corps).slice(0, 120)}`);
+
+      // ── Le refus du serveur de messagerie n'est pas éprouvé ici, et pourquoi ──
+      //
+      // Pour l'atteindre il faudrait franchir quatre gardes : le statut
+      // `direct_valide`, un destinataire valide, un objet, et une pièce dont le
+      // contenu serait fabriqué pour l'occasion. On éprouverait alors un refus
+      // d'**environnement** — l'absence de serveur SMTP — au prix d'un document
+      // inventé, ce qui n'éprouve plus l'écran.
+      //
+      // Le refus a été **mesuré une fois**, dans le navigateur, et il est
+      // propre : `502`, « Le serveur de messagerie (localhost:1025) ne répond
+      // pas : rien n'a été transmis. » La route ne laisse pas croire à un envoi,
+      // et c'est la seule chose qui importait de savoir.
+      //
+      // *Un contrôle qui doit fabriquer ses quatre conditions n'éprouve plus
+      // qu'une chose : qu'on sait les fabriquer.*
+    }
 
     // Nominatif : le dépôt appartient au compte qui l'a fait. Un autre compte
     // authentifié, porteur d'un jeton valide et non consommé, n'obtient rien.

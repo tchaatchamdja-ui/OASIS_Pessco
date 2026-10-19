@@ -2234,6 +2234,291 @@ module.exports = async function survSmoke(port) {
         && referentiels.role.fin === referentiels.role.avant,
         JSON.stringify(referentiels.role));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  La constatation directe : créée hors dossier, et son circuit
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // Une constatation n'est pas toujours la suite d'une inspection : l'écran
+      // permet d'en ouvrir une **directement**, avec son propre circuit —
+      // saisie, commentaires, validation, transmission à l'organisme.
+      //
+      // ── Où elle se crée, et ce que cela coûte de le savoir ──
+      //
+      // Les trois sous-onglets de la page offrent les mêmes exports, mais
+      // **seul « En Préparation » porte le bouton « Nouvelle Constatation »** —
+      // relevé en parcourant les trois avant d'écrire. Un contrôle qui l'aurait
+      // cherché sur « Suivi » aurait rendu « bouton introuvable » sur un geste
+      // qui marche.
+      //
+      // ── Son ménage est à elle ──
+      //
+      // Elle n'a **pas de dossier**, et la suppression du dossier de la ronde ne
+      // l'emportera donc pas. Elle part par son propre geste, et le contrôle le
+      // vérifie — sans quoi la campagne suivante hériterait d'une constatation
+      // que personne n'a créée.
+      etape = 'constatation directe';
+      const directe = await page.evaluate(async (api) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const toutes = async () => {
+          try { return await (await fetch(`${api}/constatations`,
+            { credentials: 'same-origin' })).json(); } catch { return []; }
+        };
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const choisir = (id) => {
+          const e = document.getElementById(id);
+          if (!e || e.options.length < 2) return '';
+          e.selectedIndex = 1;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return e.value;
+        };
+        const confirmer = async () => {
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3500);
+          return true;
+        };
+        const volet = () => (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length;
+
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await attendre(3200);
+
+        // Les trois sous-onglets, et leurs exports capturés par relais.
+        const recu = { fenetres: [], blobs: 0 };
+        const vraiOpen = window.open;
+        const vraiURL = URL.createObjectURL;
+        window.open = () => {
+          const f = { html: '' };
+          recu.fenetres.push(f);
+          return {
+            document: { write: (h) => { f.html += String(h || ''); }, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {},
+          };
+        };
+        URL.createObjectURL = (b) => { recu.blobs += 1; return vraiURL.call(URL, b); };
+        const onglets = [...document.querySelectorAll('.exec-tab')].map((b) => b.getAttribute('onclick'));
+        r.onglets = onglets.length;
+        const empreintes = [];
+        for (const h of onglets) {
+          [...document.querySelectorAll('.exec-tab')]
+            .find((x) => x.getAttribute('onclick') === h)?.click();
+          /* eslint-disable no-await-in-loop */
+          await attendre(2200);
+          const z = document.getElementById('exec-content');
+          empreintes.push(`${z.textContent.trim().length}:${z.querySelectorAll('[onclick]').length}`);
+        }
+        r.ongletsDistincts = new Set(empreintes).size;
+
+        // ── Les exports viennent **après** la création ──
+        //
+        // Premier jet : ils étaient cliqués ici, et ne produisaient **rien** —
+        // les trois tables étaient vides à cet instant, et un export sans
+        // donnée dit « aucune donnée » par un message, non par un document.
+        // Ils sont donc déplacés après la constatation créée, où il y a quelque
+        // chose à exporter. *L'ordre fait partie de la mesure*, pour la
+        // cinquième fois de cette suite.
+
+        // ── « En Préparation » : le seul sous-onglet qui crée ──
+        const prep = [...document.querySelectorAll('.exec-tab')]
+          .find((b) => /'list'/.test(b.getAttribute('onclick') || ''));
+        if (prep) { prep.click(); await attendre(2600); }
+        const avantIds = new Set((await toutes()).map((c) => c.id));
+        r.avant = avantIds.size;
+        const nouvelle = document.querySelector('[onclick^="execOpenConstatationDirecteForm"]');
+        r.boutonNouvelle = !!nouvelle;
+        if (!nouvelle) return r;
+        nouvelle.click();
+        await attendre(3200);
+        r.formulaire = volet();
+
+        // Les listes en cascade : l'organisme puis le secteur, dont les
+        // gestionnaires recalculent ce qui suit.
+        const prest = document.querySelector('#execSlider [onchange*="execCdOnPrestataireChange"]');
+        if (prest && prest.options.length > 1) {
+          prest.selectedIndex = 1;
+          prest.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(1600);
+        }
+        r.choix = {
+          domaine: choisir('cd_domaine'),
+          secteur: choisir('cd_secteur'),
+        };
+        await attendre(1400);
+        poser('cd_titre', 'SURV 0.c — constatation directe de la ronde');
+        poser('cd_description', 'Ouverte par la ronde, retirée par elle.');
+        // La criticité commande le délai, qui commande la date due : trois
+        // gestes qui s'enchaînent, et c'est leur enchaînement qu'on éprouve.
+        r.choix.criticite = choisir('cd_criticite');
+        await attendre(1600);
+        r.delaiCalcule = (document.getElementById('cd_delai') || {}).value || '';
+        r.dateCalculee = (document.getElementById('cd_date_due') || {}).value || '';
+        r.choix.cas = choisir('cd_cas');
+        poser('cd_reco', 'Recommandation de la ronde.');
+        await attendre(1200);
+
+        document.querySelector('[onclick^="execSaveConstatationDirecte"]')?.click();
+        await attendre(4000);
+        const apres = await toutes();
+        r.apres = apres.length;
+        // ── On reconnaît sa création par **différence**, non par un champ ──
+        //
+        // Premier jet : `c.titre || c.description` comparé au texte saisi. Le
+        // champ porté par l'enregistrement n'est ni l'un ni l'autre, et le
+        // relevé rendait `null` sur une création qui avait porté — 2 avant, 3
+        // après, et introuvable. *Ce qu'une ronde vient de créer se reconnaît à
+        // ce qui n'était pas là, et non à un champ qu'on suppose.*
+        const mienne = apres.find((c) => !avantIds.has(c.id));
+        r.creee = mienne ? {
+          id: mienne.id, statut: mienne.statut, dossier: mienne.dossier_id || null,
+          // Les champs sont relevés pour mémoire, non pour identifier.
+          champs: Object.keys(mienne).filter((k) => /titre|descr|reference/.test(k)).join(','),
+        } : null;
+        if (!mienne) return r;
+
+        // ── L'export PDF se clique ; celui en classeur **ne peut pas** ──
+        //
+        // `execExporterConstatationsXlsx` pose `window.location.href` sur la
+        // route d'export : le navigateur **quitte la page**, et l'évaluation en
+        // cours meurt avec elle — « Execution context was destroyed », mesuré au
+        // premier passage. Le relais de `window.open` n'y change rien : ce n'est
+        // pas une fenêtre qui s'ouvre, c'est la page qui part.
+        //
+        // C'est la famille de 5.f.11, et la réponse est la même : la route
+        // `/constatations/export-xlsx` se prouve **en HTTP** — code, type,
+        // pièce jointe, taille —, et huit contrôles l'y attendent dans
+        // `execution.smoke.js`. *Un geste qui emporte la page ne se clique pas
+        // dans une suite qui tient la page.*
+        document.querySelector('[onclick^="execExporterConstatationsPdf"]')?.click();
+        await attendre(2400);
+        window.open = vraiOpen;
+        URL.createObjectURL = vraiURL;
+        r.exports = { documents: recu.fenetres.map((f) => f.html.length), blobs: recu.blobs };
+
+        // ── Son circuit : consulter, commenter, valider, transmettre ──
+        const ouvrir = async () => {
+          const b = [...document.querySelectorAll('[onclick^="execOpenConstatationDirecteSlider"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(mienne.id));
+          if (!b) return false;
+          b.click();
+          await attendre(3500);
+          return true;
+        };
+        r.ouverte = await ouvrir();
+        r.gestesCircuit = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))];
+
+        // Les commentaires de validation : dépliés, un ajouté, enregistré.
+        document.querySelector('#execSlider [onclick^="execCdBasculerCommentaires"]')?.click();
+        await attendre(1500);
+        document.querySelector('#execSlider [onclick^="execCdAjouterCommentaire"]')?.click();
+        await attendre(1600);
+        const zone = [...document.querySelectorAll('#execSlider textarea')].pop();
+        if (zone) {
+          zone.value = 'Observation de la ronde sur la constatation directe.';
+          zone.dispatchEvent(new Event('input', { bubbles: true }));
+          await attendre(900);
+        }
+        document.querySelector('#execSlider [onclick^="execCdEnregistrerCommentaires"]')?.click();
+        await attendre(3200);
+
+        // La validation, puis la transmission à l'organisme.
+        // ── Cette validation ne demande **pas** confirmation ──
+        //
+        // Mon assertion l'exigeait, par analogie avec les autres gestes décisifs
+        // de cet écran — soumettre, clôturer, effacer : tous passent par
+        // `oasisConfirmer`. Celui-ci non : le statut est passé de
+        // `direct_soumis` à `direct_valide` **sans qu'aucune fenêtre
+        // n'apparaisse**, et le relevé disait « validationConfirmee: false » sur
+        // une validation qui avait porté.
+        //
+        // L'assertion était donc fausse, non l'écran. Ce qui compte est le
+        // **changement d'état**, et c'est lui qu'on éprouve. Que ce geste seul
+        // ne demande rien est une inconstance de l'écran, relevée et non
+        // tranchée : c'est à la maîtrise d'ouvrage de dire si valider une
+        // constatation doit se confirmer comme le reste.
+        //
+        // *Un contrôle écrit par analogie éprouve l'analogie, non le geste.*
+        const valider = document.querySelector('#execSlider [onclick^="execValidateConstatationDirecte"]');
+        r.boutonValider = !!valider;
+        if (valider) {
+          valider.click();
+          await attendre(1000);
+          r.validationDemandeConfirmation = !!document.querySelector('.oasis-confirm-oui');
+          if (r.validationDemandeConfirmation) await confirmer();
+          await attendre(3200);
+        }
+        r.statutApresValidation = ((await toutes()).find((c) => c.id === mienne.id) || {}).statut;
+
+        // ── La transmission n'est **pas** cliquée, et la raison est nommée ──
+        //
+        // Transmettre une constatation **envoie un courriel**. Sans serveur de
+        // messagerie, la route refuse — proprement : **502**, « le serveur de
+        // messagerie (localhost:1025) ne répond pas : rien n'a été transmis ».
+        // C'est le bon comportement, et c'est une limite de l'environnement
+        // d'essai, non un défaut de l'écran.
+        //
+        // Le geste a donc été cliqué une fois, pour mesurer ; il ne l'est plus,
+        // parce qu'un 502 attendu salirait le relevé des incidents de console et
+        // ferait passer une limite connue pour une anomalie. Le **refus**, lui,
+        // est éprouvé pour lui-même dans la suite HTTP — comme l'a été le 400 de
+        // la transmission signée en 5.f.8.
+        r.boutonTransmettre = !!document.querySelector('#execSlider [onclick^="execTransmettreConstatation"]');
+
+        // ── Le ménage : elle n'a pas de dossier, elle part par son geste ──
+        document.querySelector('[onclick^="execCloseSlider"], [onclick^="execRetourVolet"]')?.click();
+        await attendre(2000);
+        const suppr = await fetch(`${api}/constatations/${mienne.id}`, {
+          method: 'DELETE', credentials: 'same-origin', headers: { 'X-OASIS-Request': '1' },
+        });
+        r.suppression = suppr.status;
+        r.fin = (await toutes()).filter((c) => c.id === mienne.id).length;
+        return r;
+      }, M);
+
+      verifier('les trois sous-onglets des constatations rendent chacun leur contenu',
+        directe.onglets >= 3 && directe.ongletsDistincts === directe.onglets,
+        JSON.stringify({ onglets: directe.onglets, distincts: directe.ongletsDistincts }));
+      verifier('l’export PDF des constatations remet un document, une fois qu’il y a matière',
+        !!directe.exports
+        && ((directe.exports.documents || []).some((n) => n > 500) || directe.exports.blobs > 0),
+        JSON.stringify(directe.exports));
+      verifier('le formulaire d’une constatation directe s’ouvre, et la criticité choisie calcule son délai et sa date',
+        directe.boutonNouvelle === true && directe.formulaire > 2000
+        && !!directe.choix && !!directe.choix.criticite
+        && Number(directe.delaiCalcule) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(directe.dateCalculee),
+        JSON.stringify({ formulaire: directe.formulaire, choix: directe.choix,
+          delai: directe.delaiCalcule, date: directe.dateCalculee }));
+      verifier('la constatation directe s’enregistre sans dossier, et le serveur la porte',
+        directe.apres === directe.avant + 1 && !!directe.creee
+        && !directe.creee.dossier,
+        JSON.stringify({ avant: directe.avant, apres: directe.apres, creee: directe.creee }));
+      verifier('son circuit se parcourt : validée, et le geste de transmission lui est offert',
+        directe.ouverte === true
+        && (directe.gestesCircuit || []).includes('execValidateConstatationDirecte')
+        && directe.boutonValider === true
+        && !!directe.creee && directe.statutApresValidation !== directe.creee.statut
+        && directe.boutonTransmettre === true,
+        JSON.stringify({ ouverte: directe.ouverte, boutonValider: directe.boutonValider,
+          // Relevé pour mémoire : ce geste ne demande pas confirmation, quand
+          // tous les autres gestes décisifs de l'écran la demandent.
+          demandeConfirmation: directe.validationDemandeConfirmation,
+          creee: (directe.creee || {}).statut, valide: directe.statutApresValidation,
+          transmission: directe.boutonTransmettre,
+          gestes: (directe.gestesCircuit || []).length }));
+      verifier('la constatation directe ne survit pas à la ronde, qui l’efface elle-même',
+        directe.suppression === 200 && directe.fin === 0,
+        JSON.stringify({ suppression: directe.suppression, reste: directe.fin }));
+
       // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
       //
       // Le premier jet supprimait le dossier **puis** la notification, et le

@@ -2,7 +2,7 @@
  "releve": "2026-10-19",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 78,
+ "exerces": 87,
  "indecidables": 5,
  "gestes": [
   {
@@ -1131,7 +1131,7 @@
    "evenement": "click",
    "nom": "execOpenConstatationDirecteSlider",
    "source": "execOpenConstatationDirecteSlider('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1140,7 +1140,7 @@
    "evenement": "click",
    "nom": "execOpenConstatationDirecteSlider",
    "source": "execOpenConstatationDirecteSlider('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1149,7 +1149,7 @@
    "evenement": "click",
    "nom": "execOpenConstatationDirecteSlider",
    "source": "execOpenConstatationDirecteSlider('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1158,7 +1158,7 @@
    "evenement": "click",
    "nom": "execOpenConstatationDirecteSlider",
    "source": "execOpenConstatationDirecteSlider('${c.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1194,7 +1194,7 @@
    "evenement": "click",
    "nom": "execOpenConstatationDirecteForm",
    "source": "execOpenConstatationDirecteForm()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1203,7 +1203,7 @@
    "evenement": "click",
    "nom": "execExporterConstatationsPdf",
    "source": "execExporterConstatationsPdf()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1257,7 +1257,7 @@
    "evenement": "click",
    "nom": "execCdBasculerCommentaires",
    "source": "execCdBasculerCommentaires()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1266,7 +1266,7 @@
    "evenement": "click",
    "nom": "execCdBasculerCommentaires",
    "source": "execCdBasculerCommentaires()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1356,7 +1356,7 @@
    "evenement": "click",
    "nom": "execSaveConstatationDirecte",
    "source": "execSaveConstatationDirecte('${c.id || ''}', true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1365,7 +1365,7 @@
    "evenement": "change",
    "nom": "execCdOnPrestataireChange",
    "source": "execCdOnPrestataireChange()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1383,7 +1383,7 @@
    "evenement": "change",
    "nom": "execCdOnSecteurChange",
    "source": "execCdOnSecteurChange()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1419,7 +1419,7 @@
    "evenement": "change",
    "nom": "execApplyCriticiteDelai",
    "source": "execApplyCriticiteDelai('cd_criticite','cd_delai','execCdCalcDateDue')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1491,7 +1491,7 @@
    "evenement": "click",
    "nom": "execSaveConstatationDirecte",
    "source": "execSaveConstatationDirecte('${c.id || ''}', false)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1527,7 +1527,7 @@
    "evenement": "click",
    "nom": "execValidateConstatationDirecte",
    "source": "execValidateConstatationDirecte('${fnc.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1943,7 +1943,7 @@
    "evenement": "change",
    "nom": "execApplyCriticiteDelai",
    "source": "execApplyCriticiteDelai('fnc_gravite','fnc_delai','execCalcDateDue')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",

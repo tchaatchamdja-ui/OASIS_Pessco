@@ -371,6 +371,31 @@ module.exports = function register(app, deps, M) {
   // Avant la route paramétrée : sans quoi « export-xlsx » serait lu comme un
   // identifiant de constatation.
 
+  // ── L'export en classeur **avant** `/:id`, et ce n'est pas un détail ──
+  //
+  // Express décide par l'ordre de déclaration : `/constatations/:id` déclaré
+  // avant `/constatations/export-xlsx` capture l'adresse littérale et traite
+  // « export-xlsx » comme un identifiant de constatation. La route rendait donc
+  // **404 `{ error: 'introuvable', objet: 'constatation' }`** sur une adresse
+  // qui existe.
+  //
+  // Et c'est le chemin **normal** de l'écran : il pose `window.location.href`
+  // sur ce GET dès que la liste d'identifiants tient en moins de 6 000
+  // caractères, c'est-à-dire presque toujours. Le recours par POST, réservé aux
+  // listes trop longues, était le seul qui fonctionnait — de sorte que l'export
+  // ne marchait que pour les sélections invraisemblables.
+  //
+  // Mesuré le 19 octobre 2026 en éprouvant la route par HTTP, le geste n'étant
+  // pas cliquable dans un navigateur (il emporte la page). ADR-003, n° 5.f.24.
+  // Le gestionnaire est défini plus bas, dans un `const` : le nommer ici
+  // directement lèverait « Cannot access 'exporterConstatations' before
+  // initialization » — la zone morte d'un `const`, que `node --check` ne voit
+  // pas, et qui ne se manifeste qu'au démarrage du serveur. Un relais le résout
+  // **à l'appel**, ce qui garde l'ordre des routes et la place de la définition.
+  const exportConstatations = (req, res, next) => exporterConstatations(req, res, next);
+  app.get(`${M}/constatations/export-xlsx`, requireAuth, exportConstatations);
+  app.post(`${M}/constatations/export-xlsx`, requireAuth, exportConstatations);
+
   app.get(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
     const c = await db.get('constatations', req.params.id);
     if (!c) return introuvable(res, 'constatation');
@@ -490,8 +515,6 @@ module.exports = function register(app, deps, M) {
   // flèche à deux arguments le lui retirait — un rejet aurait appelé `undefined` ;
   // et un `const` ne vit qu'à partir de sa déclaration, de sorte que monter la
   // route plus haut arrêtait le démarrage du serveur.
-  app.get(`${M}/constatations/export-xlsx`, requireAuth, exporterConstatations);
-  app.post(`${M}/constatations/export-xlsx`, requireAuth, exporterConstatations);
 
   // ══════════════════════════════════════
   //  Échanges attachés à une constatation

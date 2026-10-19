@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-17",
+ "releve": "2026-10-19",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 44,
+ "exerces": 46,
  "indecidables": 5,
  "gestes": [
   {
@@ -2951,7 +2951,7 @@
    "evenement": "click",
    "nom": "execSubmitPAC",
    "source": "execSubmitPAC('${fncId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3023,7 +3023,7 @@
    "evenement": "click",
    "nom": "execAccepterPAC",
    "source": "execAccepterPAC('${fncId}', false)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3032,7 +3032,7 @@
    "evenement": "click",
    "nom": "execAccepterPAC",
    "source": "execAccepterPAC('${fncId}', true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",

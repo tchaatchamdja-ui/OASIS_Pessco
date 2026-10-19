@@ -1454,6 +1454,196 @@ module.exports = async function survSmoke(port) {
         (pac.documents || []).some((n) => n > 500) && pac.referme === 0,
         JSON.stringify({ documents: pac.documents, referme: pac.referme }));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  La vue Prestataire, et le plan d'actions arbitré
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Pourquoi cette ronde vaut double ──
+      //
+      // Le PAC se joue à deux : **l'organisme inspecté propose son plan, et
+      // l'Autorité l'arbitre**. Le côté AAC, couvert plus haut, n'offre que sept
+      // des 35 gestes de `exec-pac.js` ; les autres n'existent que dans la vue
+      // Prestataire, ou dans les états qu'elle fait naître.
+      //
+      // Cette ronde couvre donc les deux à la fois : la **vue Prestataire**,
+      // éprouvée côté serveur depuis longtemps et jamais à l'écran, et la
+      // soumission du plan qui ouvre l'arbitrage.
+      //
+      // ── La bascule recharge la page, et elle **persiste** ──
+      //
+      // `execAppliquerVue` écrit la vue chez le serveur puis appelle
+      // `window.location.reload()` : « le rôle conditionne la navigation, les
+      // menus et le périmètre des données », dit le commentaire — on recharge
+      // plutôt que de rafraîchir écran par écran.
+      //
+      // La conséquence pour une suite est double. Il faut **réattendre le
+      // montage** après la bascule, et il faut **revenir en vue AAC** avant de
+      // finir : la vue est persistée chez le serveur, et une campagne qui la
+      // laisserait sur « Prestataire » livrerait à la suivante un compte qui ne
+      // voit plus que cinq pages. La suite HTTP du module s'en protège déjà par
+      // un `PUT /vue` en tête ; celle-ci se protège en rétablissant.
+      etape = 'vue prestataire';
+      const basculer = async (libelle) => {
+        await page.evaluate((mot) => {
+          const b = [...document.querySelectorAll('.oasis-module-actions button')]
+            .find((x) => new RegExp(mot, 'i').test(x.textContent || ''));
+          if (b) b.click();
+        }, libelle);
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 })
+          .catch(() => { /* le contrôle qui suit le dira */ });
+        await page.waitForSelector('.nav-btn[data-page]', { timeout: 20000 }).catch(() => {});
+        await page.waitForFunction(
+          () => {
+            const el = document.getElementById('exec-content');
+            return el && el.textContent.trim().length > 100;
+          }, { timeout: 20000 },
+        ).catch(() => {});
+        await new Promise((r) => setTimeout(r, 1500));
+      };
+
+      const barreAvant = await page.evaluate(() => [...document.querySelectorAll('.oasis-module-actions button')]
+        .map((b) => (b.textContent || '').trim()));
+      await basculer('Vue Prestataire');
+
+      const enPrestataire = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        r.pages = [...document.querySelectorAll('.nav-btn[data-page]')].map((b) => b.dataset.page);
+        // Les cinq pages de la vue, parcourues par de vrais clics.
+        const vues = {};
+        for (const cle of r.pages) {
+          document.querySelector(`.nav-btn[data-page="${cle}"]`)?.click();
+          /* eslint-disable no-await-in-loop */
+          await attendre(2400);
+          const z = document.getElementById('exec-content');
+          vues[cle] = z ? z.textContent.trim().length : 0;
+        }
+        r.vues = vues;
+
+        // Le plan d'actions, du côté de celui qui le propose.
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await attendre(3000);
+        const bouton = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(ctx.fncId));
+        r.bouton = !!bouton;
+        if (!bouton) return r;
+        bouton.click();
+        await attendre(4000);
+        r.gestes = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))];
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        poser('pac_cause_primaire', 'SURV 0.c — cause vue par l’organisme.');
+        poser('pac_actions_correctives', 'SURV 0.c — plan proposé par l’organisme.');
+        poser('pac_corrective_date_prevue', '2027-01-31');
+        await attendre(1200);
+        document.querySelector('[onclick^="execSubmitPAC"]')?.click();
+        await attendre(1000);
+        const oui = document.querySelector('.oasis-confirm-oui');
+        r.confirme = !!oui;
+        if (oui) { oui.click(); await attendre(4500); }
+        const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+          { credentials: 'same-origin' })).json();
+        const plan = ((fnc || {}).actions_correctives || [])[0] || {};
+        r.enBase = { statut: fnc.statut, actions: plan.actions_correctives || '' };
+        return r;
+      }, { api: M, fncId: chaine.fncId });
+
+      // ── La barre de la vue Prestataire, contre la source ──
+      let prestDeclarees = [];
+      let refusPrest = null;
+      try {
+        const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
+        const bloc = /const EXEC_NAV_PRESTATAIRE = \{([\s\S]*?)\n\};/.exec(texte);
+        if (!bloc) throw new Error('EXEC_NAV_PRESTATAIRE introuvable dans exec-app.js');
+        prestDeclarees = [...bloc[1].matchAll(/^\s{4}(\w+):\s*\{/gm)].map((m) => m[1]);
+      } catch (e) { refusPrest = e.message; }
+      const prestManquantes = prestDeclarees.filter((p) => !(enPrestataire.pages || []).includes(p));
+      const prestInattendues = (enPrestataire.pages || []).filter((p) => !prestDeclarees.includes(p));
+      verifier('la bascule en vue Prestataire rend exactement les pages que la source déclare',
+        !refusPrest && prestDeclarees.length > 0
+        && !prestManquantes.length && !prestInattendues.length,
+        refusPrest || `${prestDeclarees.length} déclarées, barre : ${(enPrestataire.pages || []).join(', ')}`
+          + `${prestManquantes.length ? ` — absentes : ${prestManquantes.join(', ')}` : ''}`
+          + `${prestInattendues.length ? ` — inattendues : ${prestInattendues.join(', ')}` : ''}`);
+      verifier('chaque page de la vue Prestataire se remplit',
+        Object.values(enPrestataire.vues || {}).length > 0
+        && Object.values(enPrestataire.vues || {}).every((n) => n > 100),
+        JSON.stringify(enPrestataire.vues));
+      verifier('le plan d’actions proposé par l’organisme est soumis, et le serveur le dit « pac_soumis »',
+        enPrestataire.bouton === true
+        && (enPrestataire.gestes || []).includes('execSubmitPAC')
+        && !!enPrestataire.enBase && enPrestataire.enBase.statut === 'pac_soumis'
+        && /plan proposé par l’organisme/.test(enPrestataire.enBase.actions),
+        JSON.stringify({ bouton: enPrestataire.bouton, confirme: enPrestataire.confirme,
+          enBase: enPrestataire.enBase }));
+
+      // ── Retour en vue AAC, et l'arbitrage ──
+      //
+      // Le retour n'est pas une politesse : la vue est **persistée chez le
+      // serveur**, et la laisser sur « Prestataire » livrerait à la campagne
+      // suivante un compte qui ne voit plus que cinq pages.
+      etape = 'arbitrage du plan';
+      await basculer('Vue AAC');
+      const arbitrage = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        r.pages = [...document.querySelectorAll('.nav-btn[data-page]')].map((b) => b.dataset.page);
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await attendre(3000);
+        const suivi = [...document.querySelectorAll('.exec-tab')]
+          .find((b) => /suivi/i.test(b.textContent || '') && !/terrain/i.test(b.textContent || ''));
+        if (suivi) { suivi.click(); await attendre(2600); }
+        const bouton = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(ctx.fncId));
+        r.bouton = !!bouton;
+        if (!bouton) return r;
+        bouton.click();
+        await attendre(4000);
+        // Le plan soumis fait paraître les gestes de l'arbitre : accepter, ou
+        // renvoyer au postulant. Ils n'existaient pas à l'état « ouvert ».
+        r.gestes = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))];
+        const accepter = document.querySelector('[onclick^="execAccepterPAC"]');
+        r.boutonAccepter = !!accepter;
+        if (accepter) {
+          accepter.click();
+          await attendre(1000);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          r.confirme = !!oui;
+          if (oui) { oui.click(); await attendre(4500); }
+        }
+        const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+          { credentials: 'same-origin' })).json();
+        r.enBase = { statut: fnc.statut };
+        return r;
+      }, { api: M, fncId: chaine.fncId });
+
+      verifier('le retour en vue AAC rend les pages de l’Autorité',
+        (arbitrage.pages || []).includes('plan_surveillance')
+        && (arbitrage.pages || []).includes('processus')
+        && (arbitrage.pages || []).length > (enPrestataire.pages || []).length,
+        JSON.stringify({ aac: (arbitrage.pages || []).length,
+          prestataire: (enPrestataire.pages || []).length }));
+      verifier('le plan soumis fait paraître les gestes de l’arbitre, absents à l’état « ouvert »',
+        (arbitrage.gestes || []).includes('execAccepterPAC')
+        && (arbitrage.gestes || []).includes('execReturnPACtoPostulant')
+        && !(pac.gestes || []).includes('execAccepterPAC'),
+        JSON.stringify({ apresSoumission: (arbitrage.gestes || []).filter((g) => /PAC|FNC/.test(g)),
+          aEtatOuvert: (pac.gestes || []).filter((g) => /PAC|FNC/.test(g)) }));
+      verifier('le plan accepté par l’Autorité est marqué « pac_valide » en base',
+        arbitrage.boutonAccepter === true && arbitrage.confirme === true
+        && !!arbitrage.enBase && arbitrage.enBase.statut === 'pac_valide',
+        JSON.stringify(arbitrage.enBase));
+
       // Le volet a déjà été refermé par la clôture — `execCloseDossier` appelle
       // `execCloseSlider` lui-même. Le contrôle du geste de fermeture est donc
       // mené **avant** la fin du cycle, sur le volet encore ouvert : voir plus

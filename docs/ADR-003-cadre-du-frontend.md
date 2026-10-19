@@ -5672,6 +5672,60 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Prestataire, éprouvée côté serveur depuis longtemps et jamais à
            l'écran.
 
+       5.f.20 [x] **SURV — la vue Prestataire, et le plan d'actions arbitré à
+           deux** — fait le 19 octobre 2026.
+
+           **Soixante-et-un contrôles ; 46 gestes sur 310.**
+
+           ── Deux gestes de plus, et une dimension entière ──
+
+           Le compte ne monte que de 44 à **46** : les cinq pages de la vue
+           Prestataire appellent le même `execNavigateTo` que celles de l'AAC, et
+           seuls `execSubmitPAC` et `execAccepterPAC` sont des noms nouveaux.
+
+           Le chiffre dit mal ce que la ronde apporte, et il faut le dire
+           franchement : ce qui est couvert ici n'est pas une poignée de gestes,
+           c'est **un régime de l'écran** — la bascule de vue, les cinq pages
+           qu'elle substitue aux sept, le périmètre de données qu'elle restreint,
+           et l'arbitrage du plan d'actions **à deux acteurs**. Rien de cela
+           n'était éprouvé à l'écran. *Une couverture se compte en gestes, mais
+           ce qu'une suite éprouve ne s'y réduit pas.*
+
+           ── Le PAC se joue à deux, et c'est la clé ──
+
+           | Vue | Ce qu'elle offre sur le plan |
+           |---|---|
+           | AAC, FNC `ouvert` | saisir, enregistrer un brouillon, exporter — **sept** gestes |
+           | Prestataire | **soumettre** le plan, verser des preuves |
+           | AAC, FNC `pac_soumis` | **accepter**, ou **renvoyer au postulant** |
+
+           Les gestes de l'arbitre **n'existaient pas** à l'état « ouvert » : le
+           contrôle l'affirme dans les deux sens — présents après la soumission,
+           absents avant. C'est l'organisme inspecté qui propose son plan, et
+           l'Autorité qui l'arbitre, et l'écran le tient.
+
+           ── Une bascule qui recharge la page, et qui persiste ──
+
+           `execAppliquerVue` écrit la vue chez le serveur puis appelle
+           `window.location.reload()` — « le rôle conditionne la navigation, les
+           menus et le périmètre des données », dit son commentaire.
+
+           Deux conséquences pour une suite. Il faut **réattendre le montage**
+           après la bascule, et surtout il faut **revenir en vue AAC avant de
+           finir** : la vue est persistée chez le serveur, et une campagne qui la
+           laisserait sur « Prestataire » livrerait à la suivante un compte qui ne
+           voit plus que cinq pages. La suite HTTP du module s'en protège déjà par
+           un `PUT /vue` en tête, défensivement ; celle-ci se protège en
+           **rétablissant**, ce qui est la même discipline que le reste de la
+           ronde.
+
+           ── Et une branche choisie, non oubliée ──
+
+           `execReturnPACtoPostulant` est **vu paraître** et n'est pas exercé :
+           l'exercer referait le tour du cycle, et la ronde a pris la branche de
+           l'acceptation. C'est écrit dans la dispense — *une branche qu'on
+           choisit n'est pas une branche qu'on ignore.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

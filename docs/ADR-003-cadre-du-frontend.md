@@ -6279,6 +6279,101 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            états que la ronde ne construit pas encore. C'est le prochain pas de
            SURV, et il écrit au lieu de lire.
 
+       5.f.28 [x] **SURV — les deux zéros, et une unité que je ne nommais pas**
+           — fait le 20 octobre 2026.
+
+           **Cent-trente contrôles ; 139 gestes sur 310.** Campagne : 1 220. Les deux fichiers que
+           le relevé donnait à **zéro**, visités avant d'être expliqués — et un
+           zéro, cette fois, cachait deux choses de nature différente.
+
+           ── La faute de mesure, d'abord, parce qu'elle touche ce qui précède ──
+
+           La ligne par fichier du relevé ne disait que `n/total`, **sans dire de
+           quoi**. Ce sont des **occurrences** : un même nom posé à trois
+           endroits y compte trois fois, quand le bilan du haut compte des
+           **noms**. J'ai écrit « gestes » pour les deux, pendant plusieurs
+           entrées de cette suite, et rien ne m'a contredit — parce que la mesure
+           elle-même ne nommait pas ce qu'elle comptait.
+
+           Ce qui l'a trahie : `exec-rapports.js — 2/6` avec **une seule ligne
+           verte**, celle d'un nom posé deux fois. Deux noms exercés ne
+           s'écrivent pas sur une ligne.
+
+           La ligne porte désormais les deux, chacun nommé. Et les annonces des
+           entrées précédentes se corrigent ici, au lieu d'être réécrites :
+
+           | Ce que j'ai écrit | En occurrences | En noms |
+           |---|---|---|
+           | 5.f.27 — `exec-dashboard.js` « 1 à 27 sur 29 » | 27/29 | **19/21** |
+           | 5.f.27 — `exec-etats.js` « 4 à 14 sur 34 » | 14/34 | **12/26** |
+           | 5.f.26 — `exec-processus.js` « 1 à 12 sur 32 » | 12/32 | **7/25** |
+           | 5.f.25 — `exec-processus-config.js` « 1 à 9 sur 13 » | 13/17 | **9/13** |
+
+           Les chiffres cités n'étaient pas inventés : ce sont ceux que l'outil
+           imprimait. Mais je les nommais mal, et le total de la suite — 139 sur
+           310 — n'a jamais compté la même chose qu'eux. *Une mesure qui ne nomme
+           pas son unité laisse celui qui la lit en choisir une.*
+
+           ── `exec-pac-suivi.js` : de 0 à 8 noms sur 9 ──
+
+           Le panneau de suivi d'une fiche, dont la suite ne savait rien. Il
+           n'est atteignable qu'à un seul moment — « un suivi reste amendable
+           tant que la constatation n'est pas clôturée » —, et c'est pourquoi ces
+           onze contrôles s'insèrent dans la ronde du solde au lieu de vivre à
+           part.
+
+           L'ordre n'y est pas libre : `execEnvoyerEchangePac` **recharge le
+           volet** quand il a envoyé. Les discussions passent donc d'abord ; tout
+           ce qu'on aurait posé avant serait emporté sans trace.
+
+           Ce que ces contrôles tiennent, et qui ne se devine pas :
+
+           - la zone de réponse du tiroir **grandit sur sa propre hauteur de
+             contenu** — quatre lignes doivent la faire croître, sinon le geste
+             n'a pas porté ;
+           - le composeur de commentaires reste **fermé** tant qu'aucun item
+             n'est désigné, et « Autres » **refuse** sans sa précision : rien ne
+             s'ajoute, et c'est la seule preuve d'un refus ;
+           - décocher un item retire sa ligne — **sauf si l'Autorité y a écrit** :
+             « ses mots priment sur la case », et cela s'éprouve dans les deux
+             sens ;
+           - « Modifier » n'édite pas : il **reprend** le brouillon dans le
+             composeur et retire le bloc. Deux effets, un seul geste ;
+           - et c'est l'acceptation des preuves — le geste du métier, non un
+             appel que l'écran ne fait pas — qui emporte suivis et commentaires
+             chez le serveur, **publie** les brouillons, et leur retire alors
+             leurs boutons.
+
+           ── `exec-rapports.js` : de 0 à 1 nom sur 5, et quatre qui n'en sont pas ──
+
+           Le relevé nommait six occurrences. **Quatre ne sont pas des gestes de
+           l'écran** : `window.print`, `window.close`,
+           `this.parentElement.style.display` et l'écouteur `load` vivent dans la
+           **chaîne de caractères du document que l'application fabrique**. Ils
+           s'exécutent dans la fenêtre ouverte, pas dans une page de
+           l'application. Le mouchard instrumente les pages de l'application ; il
+           ne les verra jamais, et il a raison.
+
+           Ils n'en sont pas moins réels, et trois contrôles les éprouvent
+           autrement : non en les déclenchant, mais en constatant que **le
+           document produit les porte** — son bandeau d'impression, son bouton de
+           fermeture, son avertissement refermable. C'est le prolongement de
+           5.f.10 : un relais mesure le geste jusqu'à la porte ; ici on mesure ce
+           qui franchit la porte.
+
+           Et le seul vrai geste d'écran du fichier, `execDownloadRapport`, porte
+           une distinction à deux faces : son second argument `autoPrint` ajoute
+           — ou n'ajoute pas — l'écouteur qui ouvre la boîte d'impression. Les
+           deux documents sont capturés, et comparés.
+
+           ── Ce qui reste de ces deux fichiers ──
+
+           Un seul nom : `this.parentElement.remove`, la pastille d'une pièce
+           jointe. Elle exige un **dépôt réel de fichier** — donc un découpage de
+           la ronde du solde, puisque `uploadFile` ne s'appelle pas depuis
+           l'intérieur d'une évaluation de page. C'est un pas à faire, non une
+           dispense à écrire.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

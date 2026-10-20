@@ -808,7 +808,6 @@ async function principal() {
   gestes.forEach((g) => { (parFichier[g.fichier] ||= []).push(g); });
   for (const [f, liste] of Object.entries(parFichier)) {
     const n = liste.filter((g) => g.exerce === true).length;
-    console.log(`── ${f} — ${n}/${liste.length} ──`);
     const noms = new Map();
     liste.forEach((g) => {
       const e = noms.get(g.nom) || { total: 0, exerce: 0, indecidable: 0 };
@@ -817,6 +816,20 @@ async function principal() {
       if (g.exerce === null) e.indecidable += 1;
       noms.set(g.nom, e);
     });
+    // ── La ligne nomme son unité, et porte les deux ──
+    //
+    // Elle ne disait que `n/total`, sans dire de quoi. Ce sont des
+    // **occurrences** : un même nom posé à trois endroits y compte trois fois,
+    // quand le bilan du haut compte des **noms**. J'ai écrit « gestes » pour les
+    // deux pendant plusieurs entrées d'ADR, et rien ne m'a contredit — parce que
+    // la mesure elle-même ne nommait pas ce qu'elle comptait.
+    //
+    // Ce qui l'a trahie : `exec-rapports.js — 2/6` avec **une seule ligne
+    // verte**, celle d'un nom posé deux fois. Deux noms exercés ne s'écrivent
+    // pas sur une ligne. *Une mesure qui ne nomme pas son unité laisse celui qui
+    // la lit en choisir une.*
+    const nomsExerces = [...noms.values()].filter((e) => e.exerce > 0).length;
+    console.log(`── ${f} — ${n}/${liste.length} occurrences, ${nomsExerces}/${noms.size} noms ──`);
     [...noms.entries()]
       .sort((a, b) => (a[1].exerce ? 1 : 0) - (b[1].exerce ? 1 : 0) || b[1].total - a[1].total)
       .forEach(([nom, e]) => {

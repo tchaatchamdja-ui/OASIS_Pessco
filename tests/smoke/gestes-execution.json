@@ -2,7 +2,7 @@
  "releve": "2026-10-20",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 127,
+ "exerces": 139,
  "indecidables": 5,
  "gestes": [
   {
@@ -2402,7 +2402,7 @@
    "evenement": "click",
    "nom": "execDownloadRapport",
    "source": "execDownloadRapport('${rapportId}', true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2681,7 +2681,7 @@
    "evenement": "input",
    "nom": "this.style.height",
    "source": "this.style.height='auto';this.style.height=this.scrollHeight+'px';",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2708,7 +2708,7 @@
    "evenement": "input",
    "nom": "this.style.height",
    "source": "this.style.height='auto';this.style.height=this.scrollHeight+'px';",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2717,7 +2717,7 @@
    "evenement": "click",
    "nom": "execEnvoyerEchangePac",
    "source": "execEnvoyerEchangePac('${fncId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2726,7 +2726,7 @@
    "evenement": "click",
    "nom": "execPacDiscussionsFermer",
    "source": "execPacDiscussionsFermer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2735,7 +2735,7 @@
    "evenement": "click",
    "nom": "execSuiviCommToggle",
    "source": "execSuiviCommToggle(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2744,7 +2744,7 @@
    "evenement": "click",
    "nom": "execModifierCommentaireSuivi",
    "source": "event.stopPropagation();execModifierCommentaireSuivi(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2753,7 +2753,7 @@
    "evenement": "click",
    "nom": "execSupprimerCommentaireSuivi",
    "source": "event.stopPropagation();execSupprimerCommentaireSuivi(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2780,7 +2780,7 @@
    "evenement": "click",
    "nom": "execModifierSuivi",
    "source": "execModifierSuivi(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
@@ -2789,7 +2789,7 @@
    "evenement": "click",
    "nom": "execSupprimerSuivi",
    "source": "execSupprimerSuivi(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -2825,7 +2825,7 @@
    "evenement": "click",
    "nom": "execSuiviCommToggle",
    "source": "execSuiviCommToggle(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3077,7 +3077,7 @@
    "evenement": "change",
    "nom": "execSuiviItemsChange",
    "source": "execSuiviItemsChange(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3086,7 +3086,7 @@
    "evenement": "change",
    "nom": "execSuiviItemsChange",
    "source": "execSuiviItemsChange(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3095,7 +3095,7 @@
    "evenement": "click",
    "nom": "execAjouterCommentaireSuivi",
    "source": "execAjouterCommentaireSuivi()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3140,7 +3140,7 @@
    "evenement": "click",
    "nom": "execAjouterSuivi",
    "source": "execAjouterSuivi()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -4375,7 +4375,7 @@
    "evenement": "click",
    "nom": "execDownloadRapport",
    "source": "execDownloadRapport('${r.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-rapports.js",
@@ -4384,7 +4384,7 @@
    "evenement": "click",
    "nom": "execDownloadRapport",
    "source": "execDownloadRapport('${r.id}', true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-rapports.js",

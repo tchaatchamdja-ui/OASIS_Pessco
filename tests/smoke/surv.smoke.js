@@ -1807,6 +1807,221 @@ module.exports = async function survSmoke(port) {
         r.gestes = [...new Set([...document.querySelectorAll('#execSlider [onclick]')]
           .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
           .filter(Boolean))];
+
+        // ══════════════════════════════════════════════════════════════
+        //  Le suivi de la fiche : discussions, commentaires, suivis
+        // ══════════════════════════════════════════════════════════════
+        //
+        // `exec-pac-suivi.js` était à **0 geste sur 10** : la suite ne savait
+        // rien de ce panneau. Il n'est pourtant atteignable qu'ici — « un suivi
+        // reste amendable tant que la constatation n'est pas clôturée » —, et
+        // c'est pourquoi cette section s'insère dans la ronde du solde plutôt
+        // que de vivre à part.
+        //
+        // L'ordre n'est pas libre : `execEnvoyerEchangePac` **recharge le
+        // volet** quand il a envoyé. Les discussions passent donc d'abord ;
+        // tout ce qu'on poserait avant serait emporté sans trace.
+        //
+        // Chaque phase est gardée : une faute dans l'une ne doit pas emporter
+        // les contrôles des autres, ni ceux du solde qui suivent.
+        const essai = async (nom, f) => {
+          try { r[nom] = await f(); } catch (e) { r[nom] = { erreur: String(e && e.message || e) }; }
+        };
+
+        // ── 1. Le tiroir des discussions, et la zone qui grandit ──
+        await essai('disc', async () => {
+          const d = {};
+          const bouton = document.querySelector('.exec-pac-discussions');
+          d.bouton = !!bouton;
+          if (!bouton) return d;
+          bouton.click();
+          await attendre(1200);
+          const tiroir = () => document.getElementById('execPacTiroir');
+          d.ouvert = !!tiroir() && tiroir().classList.contains('ouvert');
+          // La zone de réponse se dilate sur sa propre hauteur de contenu :
+          // `oninput="this.style.height=this.scrollHeight+'px'"`. Quatre lignes
+          // doivent la faire grandir — sinon le geste n'a pas porté.
+          const zone = document.getElementById('exec_pac_echange_msg');
+          d.zone = !!zone;
+          if (zone) {
+            d.hauteurAvant = Math.round(zone.getBoundingClientRect().height);
+            zone.value = 'un\ndeux\ntrois\nquatre';
+            zone.dispatchEvent(new Event('input', { bubbles: true }));
+            await attendre(500);
+            d.hauteurApres = Math.round(zone.getBoundingClientRect().height);
+            // Le message, puis l'envoi : le serveur doit le porter.
+            zone.value = 'SURV 0.d — message de la ronde au prestataire.';
+            zone.dispatchEvent(new Event('input', { bubbles: true }));
+            const envoyer = tiroir().querySelector('[onclick^="execEnvoyerEchangePac"]');
+            d.boutonEnvoyer = !!envoyer;
+            if (envoyer) { envoyer.click(); await attendre(4500); }
+            const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+              { credentials: 'same-origin' })).json();
+            d.echangesEnBase = (fnc.echanges || []).length;
+            const ech = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}/echanges`,
+              { credentials: 'same-origin' })).json();
+            d.echangesParLaRoute = Array.isArray(ech) ? ech.length : -1;
+            d.contenuPorte = (Array.isArray(ech) ? ech : [])
+              .some((x) => /SURV 0\.d/.test(x.contenu || ''));
+            // Le tiroir est resté ouvert — le code le rouvre lui-même.
+            d.resteOuvert = !!tiroir() && tiroir().classList.contains('ouvert');
+          }
+          document.querySelector('[onclick^="execPacDiscussionsFermer"]')?.click();
+          await attendre(900);
+          d.referme = !!tiroir() && !tiroir().classList.contains('ouvert');
+          return d;
+        });
+
+        // ── 2. Le composeur de commentaires, et ses deux gardes ──
+        await essai('comm', async () => {
+          const c = {};
+          const composeur = () => document.querySelector('.exec-suivi-composeur');
+          const texte = () => document.getElementById('pac_suivi_texte');
+          const ajouter = () => document.getElementById('pac_suivi_ajouter');
+          const precision = () => document.getElementById('pac_suivi_precision');
+          const liste = () => document.getElementById('pac_suivi_liste');
+          const blocs = () => [...liste().querySelectorAll('.exec-suivi-comm')];
+          c.composeur = !!composeur();
+          if (!composeur()) return c;
+          // La garde : « le commentaire ne s'ouvre qu'une fois l'item désigné ».
+          c.texteFermeAuDepart = texte().disabled === true;
+          c.boutonFermeAuDepart = ajouter().disabled === true;
+          c.precisionCacheeAuDepart = precision().hidden === true;
+
+          const cases = () => [...composeur().querySelectorAll('.exec-suivi-items input')];
+          const premiere = cases().find((x) => x.value !== 'autres');
+          premiere.click();
+          await attendre(700);
+          c.texteOuvert = texte().disabled === false;
+          c.boutonOuvert = ajouter().disabled === false;
+          // L'item choisi s'inscrit, numéroté sans trou.
+          c.ligneInscrite = /^1\. /.test(texte().value);
+
+          // « Autres » réclame sa précision, et la rend visible.
+          const autres = document.getElementById('pac_suivi_autres');
+          autres.click();
+          await attendre(700);
+          c.precisionVisible = precision().hidden === false;
+          c.deuxLignes = texte().value.split('\n').filter((l) => /^\d\. /.test(l)).length;
+
+          // Décocher retire la ligne de l'item — **sauf si l'AAC y a écrit**.
+          // C'est la règle du code : « ses mots priment sur la case ». On
+          // l'éprouve dans les deux sens, sur deux items.
+          autres.click();
+          await attendre(700);
+          c.ligneAutresPartie = !/Autres|autres/i.test(texte().value);
+          c.precisionRecachee = precision().hidden === true;
+          texte().value = `${texte().value.replace(/\s+$/, '')} des mots de l’Autorité`;
+          premiere.click();
+          await attendre(700);
+          c.ligneEcriteRestee = /des mots de l’Autorité/.test(texte().value);
+
+          // Le refus : « Autres » coché sans précision n'ajoute rien.
+          premiere.click();
+          autres.click();
+          await attendre(700);
+          texte().value = '1. essai — sans précision';
+          const avantRefus = blocs().length;
+          ajouter().click();
+          await attendre(900);
+          c.refuseSansPrecision = blocs().length === avantRefus;
+
+          // La précision donnée, le commentaire s'ajoute — en brouillon.
+          precision().value = 'ronde SURV 0.d';
+          texte().value = '1. essai — commentaire de la ronde';
+          ajouter().click();
+          await attendre(1200);
+          c.ajoute = blocs().length === avantRefus + 1;
+          const dernier = () => blocs()[blocs().length - 1];
+          c.brouillon = !!dernier().querySelector('.exec-suivi-brouillon');
+          c.modifiable = !!dernier().querySelector('[onclick*="execModifierCommentaireSuivi"]');
+          // Le composeur repart à zéro.
+          c.composeurVide = texte().value === '' && precision().value === ''
+            && composeur().querySelectorAll('.exec-suivi-items input:checked').length === 0;
+
+          // Il se replie et se déplie d'un clic sur son en-tête.
+          const tete = dernier().querySelector('.exec-suivi-comm-tete')
+            || dernier().firstElementChild;
+          tete.click();
+          await attendre(600);
+          c.replie = dernier().classList.contains('replie');
+          tete.click();
+          await attendre(600);
+          c.deplie = !dernier().classList.contains('replie');
+
+          // « Modifier » n'édite pas : il **reprend** le brouillon dans le
+          // composeur et retire le bloc. Deux effets, un seul geste.
+          const avantReprise = blocs().length;
+          dernier().querySelector('[onclick*="execModifierCommentaireSuivi"]').click();
+          await attendre(900);
+          c.reprisRetire = blocs().length === avantReprise - 1;
+          c.reprisDansLeComposeur = /commentaire de la ronde/.test(texte().value)
+            && precision().value === 'ronde SURV 0.d';
+          // Reposé tel quel, pour la suite.
+          ajouter().click();
+          await attendre(1200);
+          c.repose = blocs().length === avantReprise;
+
+          // Et il s'efface, sur confirmation du socle.
+          dernier().querySelector('[onclick*="execSupprimerCommentaireSuivi"]').click();
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          c.confirmeEffacement = !!oui;
+          if (oui) { oui.click(); await attendre(1200); }
+          c.apresEffacement = blocs().length;
+          // Reposé une dernière fois : c'est lui que l'acceptation publiera.
+          precision().value = 'ronde SURV 0.d';
+          const uneCase = cases().find((x) => x.value !== 'autres');
+          if (!uneCase.checked) { uneCase.click(); await attendre(700); }
+          texte().value = '1. essai — commentaire que l’acceptation publiera';
+          ajouter().click();
+          await attendre(1200);
+          c.finalPose = blocs().length;
+          return c;
+        });
+
+        // ── 3. Les suivis : ajoutés, repris, effacés ──
+        await essai('suivis', async () => {
+          const s = {};
+          const zone = () => document.getElementById('anac_suivi_saisie');
+          const liste = () => document.getElementById('anac_suivis_list');
+          const lignes = () => [...liste().querySelectorAll('.exec-suivi')];
+          s.zone = !!zone();
+          if (!zone()) return s;
+          s.avant = lignes().length;
+          s.videAnnonce = !!liste().querySelector('.exec-suivi-vide');
+          const ajouter = document.querySelector('[onclick^="execAjouterSuivi"]');
+          s.boutonAjouter = !!ajouter;
+          zone().value = 'SURV 0.d — premier suivi de la ronde';
+          ajouter?.click();
+          await attendre(900);
+          s.apresAjout = lignes().length;
+          s.videRetire = !liste().querySelector('.exec-suivi-vide');
+          s.zoneVidee = zone().value === '';
+
+          // « Modifier » reprend le texte dans la zone et retire la ligne.
+          lignes()[lignes().length - 1].querySelector('[onclick^="execModifierSuivi"]').click();
+          await attendre(900);
+          s.reprisRetire = lignes().length === s.apresAjout - 1;
+          s.reprisDansLaZone = /premier suivi de la ronde/.test(zone().value);
+          ajouter?.click();
+          await attendre(900);
+          s.repose = lignes().length === s.apresAjout;
+
+          // Un second, puis effacé sur confirmation.
+          zone().value = 'SURV 0.d — second suivi, celui qu’on efface';
+          ajouter?.click();
+          await attendre(900);
+          s.deux = lignes().length === s.apresAjout + 1;
+          lignes()[lignes().length - 1].querySelector('[onclick^="execSupprimerSuivi"]').click();
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          s.confirme = !!oui;
+          if (oui) { oui.click(); await attendre(1200); }
+          s.apresEffacement = lignes().length;
+          return s;
+        });
+
         const accepter = document.querySelector('[onclick^="execAccepterPreuves"]');
         r.boutonPreuves = !!accepter;
         if (accepter) {
@@ -1815,6 +2030,42 @@ module.exports = async function survSmoke(port) {
           const oui = document.querySelector('.oasis-confirm-oui');
           if (oui) { oui.click(); await attendre(4500); }
         }
+
+        // ── 4. Ce que l'acceptation emporte, et ce qu'elle ferme ──
+        //
+        // Suivis et commentaires ne vivent que dans la page jusqu'ici :
+        // `_collectFullEvalData()` les relève au moment de l'enregistrement.
+        // C'est donc le geste du métier — accepter les preuves — qui les porte
+        // au serveur, et c'est par lui qu'on prouve la persistance, non par un
+        // appel que l'écran ne fait pas.
+        //
+        // Et il fait une seconde chose, que le code annonce : « les
+        // commentaires en attente deviennent visibles du prestataire dès que
+        // l'AAC rend une décision : ils ne sont alors plus modifiables ».
+        // Le brouillon devient donc publié, et perd ses boutons.
+        await essai('porte', async () => {
+          const p = {};
+          const fnc = await (await fetch(`${ctx.api}/constatations/${ctx.fncId}`,
+            { credentials: 'same-origin' })).json();
+          let ev = fnc.commentaire_evaluation;
+          if (typeof ev === 'string') { try { ev = JSON.parse(ev); } catch { ev = {}; } }
+          ev = ev || {};
+          const suivis = ((ev.evaluation_anac || {}).verification || {}).suivis || [];
+          const comms = ev.suivi_commentaires || [];
+          p.suivisEnBase = suivis.length;
+          p.suiviPorte = suivis.some((x) => /premier suivi de la ronde/.test(x.texte || ''));
+          p.suiviEffacePasRevenu = !suivis.some((x) => /celui qu’on efface/.test(x.texte || ''));
+          p.commsEnBase = comms.length;
+          p.commPorte = comms.some((x) => /l’acceptation publiera/.test(x.texte || ''));
+          p.tousPublies = comms.length > 0 && comms.every((x) => x.publie === true);
+          // Dans le volet rouvert, un commentaire publié n'offre plus ses gestes.
+          const liste = document.getElementById('pac_suivi_liste');
+          p.blocsRendus = liste ? liste.querySelectorAll('.exec-suivi-comm').length : -1;
+          p.plusModifiable = liste
+            ? liste.querySelectorAll('[onclick*="execModifierCommentaireSuivi"]').length === 0 : null;
+          return p;
+        });
+
         // Le geste qui solde : il referme le circuit d'une constatation.
         const solder = document.querySelector('[onclick^="execCloseFNC"]');
         r.boutonSolde = !!solder;
@@ -1839,12 +2090,177 @@ module.exports = async function survSmoke(port) {
         JSON.stringify({ preuves: solde.boutonPreuves, solde: solde.boutonSolde,
           enBase: solde.enBase }));
 
+      // ── Les contrôles du panneau de suivi (n° 5.f.28) ──
+      const D = solde.disc || {};
+      const C = solde.comm || {};
+      const S = solde.suivis || {};
+      const P = solde.porte || {};
+      verifier('le tiroir des discussions s’ouvre, sa zone de réponse grandit avec son contenu, et se referme par son geste',
+        D.bouton === true && D.ouvert === true && D.zone === true
+        && D.hauteurApres > D.hauteurAvant && D.referme === true,
+        JSON.stringify({ ouvert: D.ouvert, avant: D.hauteurAvant, apres: D.hauteurApres,
+          referme: D.referme, erreur: D.erreur }));
+      verifier('un message part chez le serveur, se relit par la route des échanges, et le tiroir reste ouvert',
+        D.boutonEnvoyer === true && D.contenuPorte === true
+        && D.echangesParLaRoute >= 1 && D.resteOuvert === true,
+        JSON.stringify({ envoye: D.contenuPorte, parLaRoute: D.echangesParLaRoute,
+          surLaFiche: D.echangesEnBase, reste: D.resteOuvert, erreur: D.erreur }));
+      verifier('le composeur de commentaires reste fermé tant qu’aucun item n’est désigné, et s’ouvre dès qu’il l’est',
+        C.composeur === true && C.texteFermeAuDepart === true
+        && C.boutonFermeAuDepart === true && C.precisionCacheeAuDepart === true
+        && C.texteOuvert === true && C.boutonOuvert === true && C.ligneInscrite === true,
+        JSON.stringify(C).slice(0, 300));
+      verifier('« Autres » réclame sa précision, et la refuse absente : rien ne s’ajoute',
+        C.precisionVisible === true && C.deuxLignes === 2
+        && C.precisionRecachee === true && C.refuseSansPrecision === true,
+        JSON.stringify({ visible: C.precisionVisible, lignes: C.deuxLignes,
+          recachee: C.precisionRecachee, refuse: C.refuseSansPrecision, erreur: C.erreur }));
+      verifier('décocher un item retire sa ligne — sauf si l’Autorité y a écrit : ses mots priment sur la case',
+        C.ligneAutresPartie === true && C.ligneEcriteRestee === true,
+        JSON.stringify({ partie: C.ligneAutresPartie, restee: C.ligneEcriteRestee,
+          erreur: C.erreur }));
+      verifier('le commentaire s’ajoute en brouillon, modifiable, et le composeur repart à zéro',
+        C.ajoute === true && C.brouillon === true && C.modifiable === true
+        && C.composeurVide === true,
+        JSON.stringify({ ajoute: C.ajoute, brouillon: C.brouillon,
+          modifiable: C.modifiable, composeurVide: C.composeurVide, erreur: C.erreur }));
+      verifier('il se replie et se déplie d’un clic sur son en-tête',
+        C.replie === true && C.deplie === true,
+        JSON.stringify({ replie: C.replie, deplie: C.deplie, erreur: C.erreur }));
+      verifier('« Modifier » n’édite pas : il reprend le brouillon dans le composeur et retire le bloc',
+        C.reprisRetire === true && C.reprisDansLeComposeur === true && C.repose === true,
+        JSON.stringify({ retire: C.reprisRetire, repris: C.reprisDansLeComposeur,
+          repose: C.repose, erreur: C.erreur }));
+      verifier('un brouillon s’efface sur confirmation du socle',
+        C.confirmeEffacement === true && C.apresEffacement === 0 && C.finalPose === 1,
+        JSON.stringify({ confirme: C.confirmeEffacement, apres: C.apresEffacement,
+          final: C.finalPose, erreur: C.erreur }));
+      verifier('un suivi s’ajoute et chasse la mention « aucun suivi », se reprend par son geste, et s’efface sur confirmation',
+        S.zone === true && S.videAnnonce === true && S.apresAjout === 1
+        && S.videRetire === true && S.zoneVidee === true
+        && S.reprisRetire === true && S.reprisDansLaZone === true && S.repose === true
+        && S.deux === true && S.confirme === true && S.apresEffacement === 1,
+        JSON.stringify(S).slice(0, 300));
+      verifier('l’acceptation des preuves emporte suivis et commentaires chez le serveur, et publie les brouillons — qui perdent alors leurs gestes',
+        P.suiviPorte === true && P.suiviEffacePasRevenu === true
+        && P.commPorte === true && P.tousPublies === true
+        && P.blocsRendus === 1 && P.plusModifiable === true,
+        JSON.stringify(P));
+
       // Le volet a déjà été refermé par la clôture — `execCloseDossier` appelle
       // `execCloseSlider` lui-même. Le contrôle du geste de fermeture est donc
       // mené **avant** la fin du cycle, sur le volet encore ouvert : voir plus
       // haut, « changer d'étape le redessine ». Ici on ne vérifie que l'absence.
       verifier('le volet est refermé à la fin de la ronde',
         finDuCycle.voletReferme === true, JSON.stringify({ referme: finDuCycle.voletReferme }));
+
+
+      // ══════════════════════════════════════════════════════════════════
+      //  L'aperçu du rapport, et quatre gestes qui ne sont pas de l'écran
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // `exec-rapports.js` était à **0 geste sur 6**. Le relevé en nommait six ;
+      // quatre n'en sont pas — et c'est la lecture du code qui le dit, non le
+      // compte.
+      //
+      // `window.print`, `window.close`, `this.parentElement.style.display` et
+      // l'écouteur `load` vivent **dans la chaîne de caractères du document que
+      // l'application fabrique** : ils s'exécutent dans la fenêtre ouverte, pas
+      // dans une page de l'application. Le mouchard instrumente les pages de
+      // l'application ; il ne les verra jamais, et il a raison.
+      //
+      // Ils n'en sont pas moins réels, et ce bloc les éprouve autrement : non en
+      // les déclenchant, mais en constatant que **le document produit les
+      // porte**. C'est la même distinction qu'en 5.f.10 — un relais mesure le
+      // geste jusqu'à la porte, jamais au-delà ; ici on mesure ce qui franchit
+      // la porte.
+      //
+      // Et le seul vrai geste d'écran du fichier, `execDownloadRapport`, porte
+      // une distinction qui se mesure à deux faces : son second argument
+      // `autoPrint` ajoute — ou n'ajoute pas — l'écouteur qui ouvre la boîte
+      // d'impression.
+      etape = 'aperçu du rapport';
+      const apercuRapport = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        document.querySelector('.nav-btn[data-page="rapports"]')?.click();
+        await attendre(3000);
+        const lignes = [...document.querySelectorAll('[onclick^="execDownloadRapport"]')];
+        r.gestes = lignes.length;
+        if (!lignes.length) return r;
+
+        // Relais : le document est écrit dans la fenêtre ouverte, et c'est lui
+        // qu'on veut lire.
+        const recus = [];
+        const vraiOpen = window.open;
+        window.open = () => {
+          const doc = { html: '' };
+          recus.push(doc);
+          return {
+            document: { write: (h) => { doc.html += String(h || ''); }, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {},
+          };
+        };
+        try {
+          const sansImpression = lignes
+            .find((e) => /execDownloadRapport\('[^']+'\)/.test(e.getAttribute('onclick') || ''));
+          const avecImpression = lignes
+            .find((e) => /execDownloadRapport\('[^']+',\s*true\)/.test(e.getAttribute('onclick') || ''));
+          r.deuxGestesDistincts = !!sansImpression && !!avecImpression;
+          sansImpression?.click();
+          await attendre(3000);
+          avecImpression?.click();
+          await attendre(3000);
+        } finally {
+          window.open = vraiOpen;
+        }
+        r.documents = recus.length;
+        const [sans, avec] = recus;
+        const porte = (h, motif) => new RegExp(motif).test(h || '');
+        if (sans) {
+          r.sans = {
+            docComplet: porte(sans.html, '<!DOCTYPE html>') && porte(sans.html, '</html>'),
+            titre: (/<title>([^<]*)<\/title>/.exec(sans.html) || [])[1] || '',
+            contenu: porte(sans.html, 'id="report-content"'),
+            // Les deux boutons du bandeau du document, et son bandeau refermable.
+            imprimer: porte(sans.html, 'onclick="window\\.print\\(\\)"'),
+            fermer: porte(sans.html, 'onclick="window\\.close\\(\\)"'),
+            bandeauRefermable: porte(sans.html, "this\\.parentElement\\.style\\.display='none'"),
+            // Et **pas** d'écouteur d'impression : c'est la face sans `autoPrint`.
+            ecouteurImpression: porte(sans.html, "addEventListener\\('load'"),
+            taille: (sans.html || '').length,
+          };
+        }
+        if (avec) {
+          r.avec = {
+            ecouteurImpression: porte(avec.html, "addEventListener\\('load'"),
+            appelleImprimer: porte(avec.html, 'window\\.print\\(\\)'),
+            taille: (avec.html || '').length,
+          };
+        }
+        return r;
+      });
+
+      verifier('la page des rapports offre les deux gestes d’aperçu, et chacun fabrique son document',
+        apercuRapport.gestes >= 2 && apercuRapport.deuxGestesDistincts === true
+        && apercuRapport.documents === 2
+        && !!apercuRapport.sans && apercuRapport.sans.docComplet === true
+        && apercuRapport.sans.contenu === true
+        && apercuRapport.sans.titre.length > 0,
+        JSON.stringify({ gestes: apercuRapport.gestes, documents: apercuRapport.documents,
+          sans: apercuRapport.sans }));
+      verifier('le document produit porte lui-même ses gestes — imprimer, fermer, et son bandeau refermable',
+        !!apercuRapport.sans && apercuRapport.sans.imprimer === true
+        && apercuRapport.sans.fermer === true
+        && apercuRapport.sans.bandeauRefermable === true,
+        JSON.stringify(apercuRapport.sans));
+      verifier('et « autoPrint » se mesure à deux faces : l’écouteur d’impression n’est là que sur la seconde demande',
+        !!apercuRapport.sans && !!apercuRapport.avec
+        && apercuRapport.sans.ecouteurImpression === false
+        && apercuRapport.avec.ecouteurImpression === true
+        && apercuRapport.avec.appelleImprimer === true,
+        JSON.stringify({ sans: apercuRapport.sans && apercuRapport.sans.ecouteurImpression,
+          avec: apercuRapport.avec && apercuRapport.avec.ecouteurImpression }));
 
       // ══════════════════════════════════════════════════════════════════
       //  Les référentiels de l'écran : créés, vus, relus, retirés

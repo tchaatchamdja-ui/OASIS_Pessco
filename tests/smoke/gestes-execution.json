@@ -2,7 +2,7 @@
  "releve": "2026-10-20",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 101,
+ "exerces": 127,
  "indecidables": 5,
  "gestes": [
   {
@@ -1618,7 +1618,7 @@
    "evenement": "click",
    "nom": "execStatsIndicateur",
    "source": "execStatsIndicateur('${s.cle}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1627,7 +1627,7 @@
    "evenement": "change",
    "nom": "execGanttFiltrer",
    "source": "execGanttFiltrer('${groupe}', ${JSON.stringify(valeur).replace(/",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1636,7 +1636,7 @@
    "evenement": "click",
    "nom": "execGanttBord",
    "source": "execGanttBord(-1)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1645,7 +1645,7 @@
    "evenement": "click",
    "nom": "execGanttDefiler",
    "source": "execGanttDefiler(-1)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1654,7 +1654,7 @@
    "evenement": "click",
    "nom": "execGanttAujourdhui",
    "source": "execGanttAujourdhui()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1663,7 +1663,7 @@
    "evenement": "click",
    "nom": "execGanttDefiler",
    "source": "execGanttDefiler(1)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1672,7 +1672,7 @@
    "evenement": "click",
    "nom": "execGanttBord",
    "source": "execGanttBord(1)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1681,7 +1681,7 @@
    "evenement": "click",
    "nom": "execShowStatistiquesAdvanced",
    "source": "execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1690,7 +1690,7 @@
    "evenement": "change",
    "nom": "execChronoDates",
    "source": "execChronoDates()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1699,7 +1699,7 @@
    "evenement": "change",
    "nom": "execChronoDates",
    "source": "execChronoDates()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1708,7 +1708,7 @@
    "evenement": "click",
    "nom": "execStatsPeriodeDerniers",
    "source": "execStatsPeriodeDerniers(${n})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1717,7 +1717,7 @@
    "evenement": "click",
    "nom": "execStatsPeriode",
    "source": "execStatsPeriode('','')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1726,7 +1726,7 @@
    "evenement": "input",
    "nom": "execChronoGlisser",
    "source": "execChronoGlisser()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1735,7 +1735,7 @@
    "evenement": "change",
    "nom": "execChronoAppliquer",
    "source": "execChronoAppliquer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1744,7 +1744,7 @@
    "evenement": "input",
    "nom": "execChronoGlisser",
    "source": "execChronoGlisser()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1753,7 +1753,7 @@
    "evenement": "change",
    "nom": "execChronoAppliquer",
    "source": "execChronoAppliquer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1762,7 +1762,7 @@
    "evenement": "click",
    "nom": "execStatsIndicateur",
    "source": "execStatsIndicateur('')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1780,7 +1780,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.statsOnglet",
    "source": "EXEC_STATE.statsOnglet='${cle}';execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1789,7 +1789,7 @@
    "evenement": "click",
    "nom": "execExportSituationGenerale",
    "source": "execExportSituationGenerale('xlsx')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1798,7 +1798,7 @@
    "evenement": "click",
    "nom": "execExportSituationGenerale",
    "source": "execExportSituationGenerale('pdf')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1816,7 +1816,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.statsFilters.annee",
    "source": "EXEC_STATE.statsFilters.annee='';execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1825,7 +1825,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.statsFilters.annee",
    "source": "EXEC_STATE.statsFilters.annee='${y}';execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1834,7 +1834,7 @@
    "evenement": "change",
    "nom": "EXEC_STATE.statsFilters.domaine",
    "source": "EXEC_STATE.statsFilters.domaine=this.value;EXEC_STATE.statsFilters.secteur='';execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1843,7 +1843,7 @@
    "evenement": "change",
    "nom": "EXEC_STATE.statsFilters.secteur",
    "source": "EXEC_STATE.statsFilters.secteur=this.value;execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1852,7 +1852,7 @@
    "evenement": "change",
    "nom": "EXEC_STATE.statsFilters.prestataire",
    "source": "EXEC_STATE.statsFilters.prestataire=this.value;execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1861,7 +1861,7 @@
    "evenement": "click",
    "nom": "EXEC_STATE.statsFilters",
    "source": "EXEC_STATE.statsFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:''};execShowStatistiquesAdvanced()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -2249,7 +2249,7 @@
    "evenement": "change",
    "nom": "execRefsMajSegment",
    "source": "execRefsMajSegment('${objet}',${index},'type',this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2258,7 +2258,7 @@
    "evenement": "input",
    "nom": "execRefsSaisir",
    "source": "execRefsSaisir('${objet}',${index},'valeur',this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2267,7 +2267,7 @@
    "evenement": "input",
    "nom": "execRefsSaisir",
    "source": "execRefsSaisir('${objet}',${index},'longueur',this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2276,7 +2276,7 @@
    "evenement": "click",
    "nom": "execRefsDeplacer",
    "source": "execRefsDeplacer('${objet}',${index},-1)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2285,7 +2285,7 @@
    "evenement": "click",
    "nom": "execRefsDeplacer",
    "source": "execRefsDeplacer('${objet}',${index},1)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2294,7 +2294,7 @@
    "evenement": "click",
    "nom": "execRefsRetirer",
    "source": "execRefsRetirer('${objet}',${index})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2303,7 +2303,7 @@
    "evenement": "click",
    "nom": "execRefsAjouter",
    "source": "execRefsAjouter('${o.cle}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2312,7 +2312,7 @@
    "evenement": "input",
    "nom": "execRefsMajSeparateur",
    "source": "execRefsMajSeparateur('${o.cle}',this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2321,7 +2321,7 @@
    "evenement": "click",
    "nom": "execRefsEnregistrer",
    "source": "execRefsEnregistrer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2330,7 +2330,7 @@
    "evenement": "click",
    "nom": "execRefsDefaut",
    "source": "execRefsDefaut()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",

@@ -3038,6 +3038,674 @@ module.exports = async function survSmoke(port) {
         JSON.stringify(menage));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La composition des références — Paramètres → Autres paramètres
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Dix gestes nommés, et le meilleur terrain de mesure de l'écran : chaque
+    // geste a un effet **visible et dénombrable**. Les segments d'une référence
+    // s'ordonnent (préfixe, État, domaine, année, numéro d'ordre), et un aperçu
+    // montre aussitôt ce que donnera la prochaine référence produite.
+    //
+    // La propriété que ce bloc tient, et qu'aucun compte de lignes ne dirait :
+    // deux de ces gestes **ne reconstruisent pas la page** — c'est écrit dans
+    // leur commentaire, « reconstruire la page retirerait le curseur du champ à
+    // chaque lettre ». On le mesure par `document.activeElement`, seul témoin
+    // qui distingue un rafraîchissement local d'un rendu complet.
+    //
+    // La ronde ajoute **un** segment, l'exerce de bout en bout, puis le retire ;
+    // elle rend enfin le serveur à ses modèles par défaut par le geste prévu
+    // pour cela.
+    etape = 'composition des références';
+    const refsA = await page.evaluate(async (api) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const lire = async () => {
+        try {
+          return await (await fetch(`${api}/parametres/references`,
+            { credentials: 'same-origin' })).json();
+        } catch { return null; }
+      };
+      const depart = await lire();
+      r.modifiable = !!(depart && depart.modifiable);
+      r.avant = JSON.stringify((depart || {}).modeles || {});
+
+      document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+      await attendre(2500);
+      const sousMenu = (nom) => [...document.querySelectorAll('[onclick*="_execParamSub"]')]
+        .find((x) => new RegExp(nom).test(x.getAttribute('onclick') || ''));
+      sousMenu('autres')?.click();
+      await attendre(2500);
+
+      const blocs = () => [...document.querySelectorAll('.exec-ref-objet')];
+      const bloc = () => blocs()[0];
+      const segs = () => [...bloc().querySelectorAll('.exec-ref-segment')];
+      const apercu = () => (bloc().querySelector('.exec-ref-apercu') || {}).textContent || '';
+      const total = () => (bloc().querySelector('.exec-ref-total') || {}).textContent || '';
+
+      // ── Les six objets du circuit, et leur aperçu lisible fermé ──
+      r.objets = blocs().length;
+      r.apercusGarnis = blocs()
+        .map((b) => (b.querySelector('.exec-ref-apercu') || {}).textContent || '')
+        .filter((t) => t.trim().length > 0).length;
+      r.fermes = blocs().filter((b) => !b.open).length;
+
+      // ── La section se déplie par son résumé, et l'aperçu ne bouge pas ──
+      const apercuFerme = apercu();
+      bloc().querySelector('summary').click();
+      await attendre(900);
+      r.ouvertApresClic = bloc().open;
+      r.apercuInchangeParOuverture = apercu() === apercuFerme;
+      r.segDepart = segs().length;
+      r.totalDepart = total();
+
+      // ── Un segment s'ajoute ──
+      bloc().querySelector('[onclick^="execRefsAjouter"]')?.click();
+      await attendre(1400);
+      r.segApresAjout = segs().length;
+      r.totalApresAjout = total();
+      // Le nouveau segment est un « texte libre » vide : l'aperçu l'écarte,
+      // puisqu'il filtre les parties vides. Le compte, lui, l'a vu.
+      r.apercuApresAjout = apercu();
+      r.apercuIgnoreLeVide = apercu() === apercuFerme;
+
+      // ── Sa valeur se saisit, et le rendu suit la frappe sans rendu complet ──
+      const derniere = () => segs()[segs().length - 1];
+      const champ = derniere().querySelector('[oninput*="execRefsSaisir"][oninput*="valeur"]');
+      r.champTrouve = !!champ;
+      if (champ) {
+        champ.focus();
+        champ.value = 'RONDE';
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await attendre(700);
+        r.renduDeLaLigne = (derniere().querySelector('.exec-ref-rendu') || {}).textContent || '';
+        // Le témoin qui distingue un rafraîchissement local d'un rendu complet :
+        // un rendu complet remplacerait le champ, et le curseur serait perdu.
+        r.curseurGarde = document.activeElement === champ;
+        r.apercuPorteLaSaisie = /RONDE/.test(apercu());
+      }
+
+      // ── Le séparateur change, et seul l'aperçu est refait ──
+      const sep = bloc().querySelector('[oninput*="execRefsMajSeparateur"]');
+      r.sepTrouve = !!sep;
+      if (sep) {
+        r.sepAvant = sep.value;
+        sep.focus();
+        sep.value = '.';
+        sep.dispatchEvent(new Event('input', { bubbles: true }));
+        await attendre(700);
+        r.apercuAvecPoint = apercu();
+        r.sepCurseurGarde = document.activeElement === sep;
+        r.sepPasDeTiret = !apercu().includes('-') && apercu().includes('.');
+      }
+      return r;
+    }, M);
+
+    verifier('l’onglet « Autres paramètres » porte la composition des six objets du circuit, aperçu lisible section fermée',
+      refsA.objets === 6 && refsA.apercusGarnis === 6 && refsA.fermes === 6,
+      JSON.stringify({ objets: refsA.objets, garnis: refsA.apercusGarnis, fermes: refsA.fermes }));
+    verifier('une section se déplie par son résumé, et son aperçu ne devait rien à l’ouverture',
+      refsA.ouvertApresClic === true && refsA.apercuInchangeParOuverture === true,
+      JSON.stringify({ ouvert: refsA.ouvertApresClic, inchange: refsA.apercuInchangeParOuverture }));
+    verifier('un segment s’ajoute : le compte le voit, l’aperçu l’écarte tant qu’il est vide',
+      refsA.segApresAjout === refsA.segDepart + 1
+      && refsA.totalApresAjout !== refsA.totalDepart
+      && refsA.apercuIgnoreLeVide === true,
+      JSON.stringify({ avant: refsA.segDepart, apres: refsA.segApresAjout,
+        total: refsA.totalApresAjout, apercu: refsA.apercuApresAjout }));
+    verifier('la valeur d’un segment se saisit : le rendu de la ligne et l’aperçu suivent, et le curseur reste dans le champ',
+      refsA.renduDeLaLigne === 'RONDE' && refsA.apercuPorteLaSaisie === true
+      && refsA.curseurGarde === true,
+      JSON.stringify({ rendu: refsA.renduDeLaLigne, apercu: refsA.apercuPorteLaSaisie,
+        curseur: refsA.curseurGarde }));
+    verifier('le séparateur change, l’aperçu se recompose, et le curseur reste là aussi',
+      refsA.sepAvant === '-' && refsA.sepPasDeTiret === true && refsA.sepCurseurGarde === true,
+      JSON.stringify({ avant: refsA.sepAvant, apercu: refsA.apercuAvecPoint,
+        curseur: refsA.sepCurseurGarde }));
+
+    const refsB = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const bloc = () => [...document.querySelectorAll('.exec-ref-objet')][0];
+      const segs = () => [...bloc().querySelectorAll('.exec-ref-segment')];
+      const apercu = () => (bloc().querySelector('.exec-ref-apercu') || {}).textContent || '';
+      const derniere = () => segs()[segs().length - 1];
+      const rendu = (d) => (d.querySelector('.exec-ref-rendu') || {}).textContent || '';
+
+      // ── Le type du segment change, et le numéro d'ordre prend sa longueur ──
+      const choix = derniere().querySelector('select');
+      choix.value = 'numero';
+      choix.focus();
+      choix.dispatchEvent(new Event('change', { bubbles: true }));
+      await attendre(1600);
+      // ── Le contre-essai du témoin ──
+      //
+      // `document.activeElement` ne prouve rien tant qu'on n'a pas montré qu'il
+      // **distingue**. `execRefsMajSegment`, lui, appelle `execRenderPage()` :
+      // le nœud du menu doit donc avoir quitté le document. Si ce relevé était
+      // vert aussi, les trois contrôles de curseur ne mesureraient que le fait
+      // qu'un champ garde le focus quand on ne touche à rien.
+      r.choixDetache = !document.contains(choix);
+      r.renduNumero = rendu(derniere());
+      const longueur = derniere().querySelector('[oninput*="execRefsSaisir"][oninput*="longueur"]');
+      r.longueurTrouvee = !!longueur;
+      r.longueurDefaut = longueur ? Number(longueur.value) : null;
+
+      // ── La longueur se saisit, et le rendu se rallonge ──
+      if (longueur) {
+        longueur.value = '5';
+        longueur.dispatchEvent(new Event('input', { bubbles: true }));
+        await attendre(700);
+        r.renduRallonge = rendu(derniere());
+      }
+
+      // ── Le segment monte d'un rang : l'ordre change, le contenu non ──
+      const sep = (bloc().querySelector('[oninput*="execRefsMajSeparateur"]') || {}).value || '.';
+      const avant = apercu();
+      r.ordreAvant = avant;
+      // La garde du premier rang est **dans le balisage**, non dans la fonction :
+      // le bouton « Monter » du rang 1 est `disabled`. On la constate là où elle
+      // est, au lieu de cliquer un bouton mort et d'appeler cela une preuve.
+      r.monterDuPremierDesarme = !!segs()[0].querySelector('[onclick*="execRefsDeplacer"][onclick*="-1"]').disabled;
+      derniere().querySelector('[onclick*="execRefsDeplacer"][onclick*="-1"]').click();
+      await attendre(1600);
+      r.ordreApres = apercu();
+      const parts = (t) => t.split(sep).filter(Boolean).sort().join('|');
+      r.memesParties = parts(avant) === parts(r.ordreApres);
+      r.ordreADifferé = avant !== r.ordreApres;
+
+      // ── Et il se retire : le compte revient à son départ ──
+      r.segAvantRetrait = segs().length;
+      const cible = [...segs()].find((s) => (s.querySelector('select') || {}).value === 'numero'
+        && Number((s.querySelector('[oninput*="longueur"]') || {}).value) === 5);
+      r.cibleTrouvee = !!cible;
+      cible?.querySelector('[onclick*="execRefsRetirer"]').click();
+      await attendre(1600);
+      r.segApresRetrait = segs().length;
+      r.apercuFinal = apercu();
+      return r;
+    });
+
+    verifier('le type d’un segment se change, et le numéro d’ordre arrive avec ses trois chiffres',
+      refsB.renduNumero === '001' && refsB.longueurTrouvee === true && refsB.longueurDefaut === 3,
+      JSON.stringify(refsB));
+    // Le contre-essai des trois contrôles de curseur ci-dessus : ce geste-ci
+    // reconstruit la page, et son nœud doit avoir quitté le document.
+    verifier('et ce geste-là reconstruit bien la page : son propre menu quitte le document — le témoin du curseur distingue',
+      refsB.choixDetache === true,
+      JSON.stringify({ detache: refsB.choixDetache }));
+    verifier('la longueur du numéro se saisit, et son rendu se rallonge d’autant',
+      refsB.renduRallonge === '00001',
+      JSON.stringify({ rendu: refsB.renduRallonge }));
+    verifier('un segment monte d’un rang : l’aperçu change d’ordre sans changer de contenu, et le rang 1 ne peut pas monter',
+      refsB.ordreADifferé === true && refsB.memesParties === true
+      && refsB.monterDuPremierDesarme === true,
+      JSON.stringify({ avant: refsB.ordreAvant, apres: refsB.ordreApres,
+        memes: refsB.memesParties, premierDesarme: refsB.monterDuPremierDesarme }));
+    verifier('le segment ajouté se retire, et le compte revient à son départ',
+      refsB.cibleTrouvee === true && refsB.segApresRetrait === refsB.segAvantRetrait - 1
+      && refsB.segApresRetrait === refsA.segDepart,
+      JSON.stringify({ depart: refsA.segDepart, avant: refsB.segAvantRetrait,
+        apres: refsB.segApresRetrait }));
+
+    const refsC = await page.evaluate(async ({ api, avant }) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const lire = async () => {
+        try {
+          return await (await fetch(`${api}/parametres/references`,
+            { credentials: 'same-origin' })).json();
+        } catch { return null; }
+      };
+      const bloc = () => [...document.querySelectorAll('.exec-ref-objet')][0];
+      const segs = () => [...bloc().querySelectorAll('.exec-ref-segment')];
+      const enregistrer = async () => {
+        document.querySelector('[onclick^="execRefsEnregistrer"]')?.click();
+        await attendre(2200);
+      };
+
+      // ── L'enregistrement est relu chez le serveur ──
+      await enregistrer();
+      const apres = await lire();
+      r.sepChezLeServeur = ((apres || {}).modeles || {}).activite
+        ? apres.modeles.activite.separateur : null;
+
+      // ── Le serveur impose un numéro d'ordre ──
+      //
+      // « Une référence sans numéro d'ordre ne distinguerait plus deux
+      // objets » : le serveur en pose un si la composition reçue n'en porte
+      // aucun. On retire donc tous les numéros par le geste de l'écran, on
+      // enregistre, et l'on relit ce que le serveur a gardé.
+      let garde = 0;
+      for (;;) {
+        const n = [...segs()].find((s) => (s.querySelector('select') || {}).value === 'numero');
+        if (!n || garde > 6) break;
+        n.querySelector('[onclick*="execRefsRetirer"]').click();
+        garde += 1;
+        /* eslint-disable no-await-in-loop */
+        await attendre(1500);
+      }
+      r.numerosRetires = garde;
+      r.plusAucunNumeroAuClient = ![...segs()]
+        .some((s) => (s.querySelector('select') || {}).value === 'numero');
+      await enregistrer();
+      const impose = await lire();
+      const segServeur = (((impose || {}).modeles || {}).activite || {}).segments || [];
+      r.numeroImpose = segServeur.filter((s) => s.type === 'numero').length;
+      r.longueurImposee = (segServeur.find((s) => s.type === 'numero') || {}).longueur;
+
+      // ── Le geste « compositions par défaut », et le serveur rendu tel quel ──
+      document.querySelector('[onclick^="execRefsDefaut"]')?.click();
+      await attendre(1600);
+      await enregistrer();
+      const fin = await lire();
+      r.rendu = JSON.stringify((fin || {}).modeles || {});
+      r.identiqueAuDepart = r.rendu === avant;
+      return r;
+    }, { api: M, avant: refsA.avant });
+
+    verifier('l’enregistrement de la composition est relu chez le serveur, séparateur compris',
+      refsA.modifiable === true && refsC.sepChezLeServeur === '.',
+      JSON.stringify({ modifiable: refsA.modifiable, separateur: refsC.sepChezLeServeur }));
+    verifier('le serveur impose un numéro d’ordre : une composition qui n’en porte plus en reçoit un',
+      refsC.numerosRetires > 0 && refsC.plusAucunNumeroAuClient === true
+      && refsC.numeroImpose === 1 && refsC.longueurImposee === 3,
+      JSON.stringify(refsC));
+    verifier('le geste « compositions par défaut » rend le serveur à l’état où la ronde l’a trouvé',
+      refsC.identiqueAuDepart === true,
+      `rendu ${String(refsC.rendu).slice(0, 90)} · départ ${String(refsA.avant).slice(0, 90)}`);
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le tableau de bord : la piste des activités, et ses commandes
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // La propriété de ce Gantt n'est pas qu'il défile : c'est que **ses
+    // commandes se ferment quand la piste tient tout entière dans son cadre**.
+    // Le code le dit : « sur un large écran, une piste qui tient tout entière
+    // ne bougeait pas d'un clic, et les boutons passaient pour cassés ».
+    //
+    // D'où la seule forme honnête de ce contrôle : à deux faces. Cliquer un
+    // bouton désarmé et constater que rien ne bouge serait un faux vert — on
+    // aurait mesuré un bouton mort et appelé cela une preuve. On resserre donc
+    // la fenêtre pour faire déborder la piste, et l'on vérifie les deux états.
+    // La fenêtre est rendue à sa taille d'origine ensuite : une ronde qui ne
+    // rend pas ce qu'elle a changé fait rougir celles qui la suivent.
+    etape = 'piste des activités';
+    await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('.nav-btn[data-page="dashboard"]')?.click();
+      await attendre(3200);
+    });
+
+    const ganttLarge = await page.evaluate(() => {
+      const cadre = document.querySelector('#execSuiviActivitesRoot .exec-gantt-cadre');
+      const boutons = [...document.querySelectorAll('#execSuiviActivitesRoot .exec-suivi-nav .btn')];
+      return {
+        cadre: !!cadre,
+        deborde: cadre ? cadre.scrollWidth > cadre.clientWidth + 1 : null,
+        boutons: boutons.length,
+        desarmes: boutons.filter((b) => b.disabled).length,
+        raisons: boutons.filter((b) => b.disabled && (b.title || '').length > 0).length,
+      };
+    });
+
+    await page.setViewport({ width: 620, height: 900 });
+    await page.evaluate(() => new Promise((r) => setTimeout(r, 2200)));
+    const ganttSerre = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const cadre = () => document.querySelector('#execSuiviActivitesRoot .exec-gantt-cadre');
+      const boutons = () => [...document.querySelectorAll('#execSuiviActivitesRoot .exec-suivi-nav .btn')];
+      const commande = (motif) => boutons().find((b) => new RegExp(motif)
+        .test(b.getAttribute('onclick') || ''));
+      r.deborde = cadre() ? cadre().scrollWidth > cadre().clientWidth + 1 : null;
+      r.desarmes = boutons().filter((b) => b.disabled).length;
+
+      // ── Les commandes font défiler la piste ──
+      // `scrollBy`/`scrollTo` sont en `behavior: 'smooth'` : on laisse le temps
+      // à l'animation, sans quoi on relèverait la position de départ.
+      cadre().scrollLeft = 0;
+      await attendre(400);
+      commande('execGanttDefiler\\(1\\)')?.click();
+      await attendre(1500);
+      r.apresAvancer = Math.round(cadre().scrollLeft);
+      commande('execGanttBord\\(1\\)')?.click();
+      await attendre(1500);
+      r.apresFin = Math.round(cadre().scrollLeft);
+      r.maxPossible = Math.round(cadre().scrollWidth - cadre().clientWidth);
+      commande('execGanttBord\\(-1\\)')?.click();
+      await attendre(1500);
+      r.apresDebut = Math.round(cadre().scrollLeft);
+      commande('execGanttAujourdhui')?.click();
+      await attendre(1500);
+      r.apresAujourdhui = Math.round(cadre().scrollLeft);
+      r.traitDuJour = !!cadre().querySelector('.g-aujourdhui');
+
+      // ── Un filtre du panneau : la carte est refaite, et le décocher rétablit ──
+      const carte = () => document.getElementById('execSuiviActivitesRoot');
+      const lignes = () => [...carte().querySelectorAll('.g-nom')]
+        .map((e) => e.textContent.trim()).join('|');
+      const cases = () => [...carte().querySelectorAll('[onchange*="execGanttFiltrer"]')];
+      r.cases = cases().length;
+      const noeudAvant = carte();
+      const avant = lignes();
+      const uneCase = cases().find((c) => /avancements/.test(c.getAttribute('onchange') || ''));
+      r.caseTrouvee = !!uneCase;
+      if (uneCase) {
+        uneCase.click();
+        await attendre(1200);
+        r.carteRemplacee = carte() !== noeudAvant;
+        r.apresFiltre = lignes();
+        // Le même filtre, décoché : la carte ayant été remplacée, il faut le
+        // retrouver par son `onchange`, non par le nœud d'avant.
+        const meme = cases().find((c) => c.getAttribute('onchange') === uneCase.getAttribute('onchange'));
+        r.memeCaseRetrouvee = !!meme;
+        r.cochee = meme ? meme.checked : null;
+        meme?.click();
+        await attendre(1200);
+        r.retabli = lignes();
+        r.identiqueApresRetour = r.retabli === avant;
+        r.filtreARestreint = r.apresFiltre !== avant;
+      }
+      return r;
+    });
+    await page.setViewport({ width: 1280, height: 900 });
+    await page.evaluate(() => new Promise((r) => setTimeout(r, 1500)));
+
+    verifier('la piste des activités tient dans son cadre à 1280 px, et ses commandes se ferment en disant pourquoi',
+      ganttLarge.cadre === true && ganttLarge.deborde === false
+      && ganttLarge.boutons === 5 && ganttLarge.desarmes === 5
+      && ganttLarge.raisons === 5,
+      JSON.stringify(ganttLarge));
+    verifier('la fenêtre resserrée, la piste déborde et les commandes s’arment — le témoin distingue les deux états',
+      ganttSerre.deborde === true && ganttSerre.desarmes === 0,
+      JSON.stringify({ deborde: ganttSerre.deborde, desarmes: ganttSerre.desarmes }));
+    verifier('les commandes mènent la piste : avancer, le bout, le début, et le trait du jour',
+      ganttSerre.apresAvancer > 0
+      && ganttSerre.apresFin === ganttSerre.maxPossible
+      && ganttSerre.apresDebut === 0
+      && ganttSerre.traitDuJour === true && ganttSerre.apresAujourdhui >= 0,
+      JSON.stringify({ avancer: ganttSerre.apresAvancer, fin: ganttSerre.apresFin,
+        max: ganttSerre.maxPossible, debut: ganttSerre.apresDebut,
+        aujourdhui: ganttSerre.apresAujourdhui, trait: ganttSerre.traitDuJour }));
+    verifier('un filtre du panneau refait la carte, restreint la piste, et se décoche sans rien laisser',
+      ganttSerre.cases > 0 && ganttSerre.caseTrouvee === true
+      && ganttSerre.carteRemplacee === true && ganttSerre.filtreARestreint === true
+      && ganttSerre.identiqueApresRetour === true,
+      JSON.stringify({ cases: ganttSerre.cases, remplacee: ganttSerre.carteRemplacee,
+        restreint: ganttSerre.filtreARestreint, retabli: ganttSerre.identiqueApresRetour,
+        avantApres: `${ganttSerre.apresFiltre} ≠ ${ganttSerre.retabli}` }));
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le formulaire de statistiques — indicateurs, situation, période
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Il occupe le volet, se rejoue à chaque geste, et garde son état dans
+    // `EXEC_STATE` : onglet, indicateur, filtres et période. On l'exerce donc
+    // par ses gestes, et l'on relève à chaque fois ce que l'écran rend — non ce
+    // que l'état porte, qui ne prouverait que l'affectation.
+    etape = 'formulaire de statistiques';
+    const stats = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const volet = () => document.getElementById('execSlider');
+      const dans = (sel) => (volet() || document).querySelectorAll(sel);
+      const un = (sel) => (volet() || document).querySelector(sel);
+
+      // ── Le formulaire s'ouvre dans le volet, avec ses deux sous-menus ──
+      document.querySelector('[onclick^="execShowStatistiquesAdvanced"]')?.click();
+      await attendre(2600);
+      r.voletOuvert = !!volet() && volet().classList.contains('open');
+      r.onglets = [...dans('.exec-stats-onglet')].map((b) => b.textContent.trim());
+      r.cartes = dans('[onclick^="execStatsIndicateur"]').length;
+      // Sans prestataire retenu, les constatations de la ronde datent toutes du
+      // même jour : la piste n'a pas d'étendue, et la chronologie ne paraît pas.
+      r.chronoAvantPrest = !!document.getElementById('execChrono');
+
+      // ── Une carte d'indicateur s'ouvre, et un second clic la referme ──
+      const carte = () => [...dans('[onclick^="execStatsIndicateur"]')]
+        .find((b) => /execStatsIndicateur\('[a-z_]+'\)/.test(b.getAttribute('onclick') || ''));
+      const detail = () => dans('.exec-stats-detail, [class*="stats-detail"]').length;
+      r.detailAvant = detail();
+      const premiere = carte();
+      r.cleIndicateur = premiere ? (premiere.getAttribute('onclick') || '') : '';
+      premiere?.click();
+      await attendre(2000);
+      r.detailApres = detail();
+      r.actifs = dans('.cliquable.actif, .actif').length;
+      // Le même geste, retrouvé par sa clé : le formulaire s'est rejoué.
+      [...dans('[onclick^="execStatsIndicateur"]')]
+        .find((b) => b.getAttribute('onclick') === r.cleIndicateur)?.click();
+      await attendre(2000);
+      r.detailReferme = detail();
+
+      // ── La chronologie n'existe que si les données s'étendent dans le temps ──
+      //
+      // Premier jet : j'ai exercé la chronologie d'emblée, et trois contrôles
+      // ont rougi — `raccourcis: 0`. Elle ne se rend pas : `_execStatsPeriode`
+      // la borne sur les dates des constatations, et tout ce que la ronde crée
+      // date du même jour. Le relevé disait « 0 raccourci » ; j'avais écrit
+      // « les poignées » avant de regarder s'il y avait une piste.
+      //
+      // L'écran y mène pourtant, par son propre geste : « un prestataire retenu
+      // impose son cycle de surveillance », et un cycle, lui, s'étend. On
+      // choisit donc un prestataire — et cette règle devient un contrôle, au
+      // lieu d'un détour pour atteindre le suivant.
+      const selPrest = [...dans('select')]
+        .find((x) => /statsFilters\.prestataire/.test(x.getAttribute('onchange') || ''));
+      r.selPrestTrouve = !!selPrest;
+      if (selPrest) {
+        const i = [...selPrest.options].findIndex((o) => o.value);
+        r.prestOffert = i >= 0;
+        if (i >= 0) {
+          selPrest.selectedIndex = i;
+          selPrest.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(2600);
+        }
+        r.periodeDuCycle = JSON.stringify((window.EXEC_STATE || {}).statsPeriode || null);
+        r.chronoApresPrest = !!document.getElementById('execChrono');
+        r.bandeauCycle = dans('.exec-chrono-cycle').length;
+      }
+
+      // ── Les raccourcis de période, et les bornes au clavier ──
+      const raccourci = (n) => [...dans('.exec-chrono-btn')]
+        .find((b) => new RegExp(`execStatsPeriodeDerniers\\(${n}\\)`).test(b.getAttribute('onclick') || ''));
+      r.raccourcis = dans('.exec-chrono-btn').length;
+      raccourci(3)?.click();
+      await attendre(2200);
+      r.periode3 = JSON.stringify((window.EXEC_STATE || {}).statsPeriode || null);
+      r.dateDebutRendue = (document.getElementById('execChronoDateDebut') || {}).value || '';
+
+      const dDebut = document.getElementById('execChronoDateDebut');
+      const dFin = document.getElementById('execChronoDateFin');
+      r.champsDates = !!dDebut && !!dFin;
+      if (dDebut && dFin) {
+        // Les bornes se saisissent à l'envers : le geste les remet dans l'ordre.
+        dDebut.value = '2026-09-30';
+        dFin.value = '2026-09-01';
+        dFin.dispatchEvent(new Event('change', { bubbles: true }));
+        await attendre(2200);
+        r.periodeRemiseEnOrdre = JSON.stringify((window.EXEC_STATE || {}).statsPeriode || null);
+      }
+
+      // ── Les poignées ne se croisent pas : celle qu'on pousse repousse l'autre ──
+      const a = document.getElementById('execChronoDebut');
+      const b = document.getElementById('execChronoFin');
+      r.poignees = !!a && !!b;
+      if (a && b) {
+        a.value = String(Number(a.max));
+        b.value = '0';
+        a.focus();
+        a.dispatchEvent(new Event('input', { bubbles: true }));
+        await attendre(600);
+        r.poigneeFinRepoussee = Number(document.getElementById('execChronoFin').value);
+        r.poigneeMax = Number(a.max);
+        // Le relâchement arrête la période, et le formulaire se rejoue.
+        document.getElementById('execChronoDebut')
+          .dispatchEvent(new Event('change', { bubbles: true }));
+        await attendre(2200);
+        r.periodeApresRelachement = JSON.stringify((window.EXEC_STATE || {}).statsPeriode || null);
+      }
+      // La période est rendue à « tout », pour ne pas fausser la suite.
+      [...dans('.exec-chrono-btn')]
+        .find((x) => /execStatsPeriode\('',''\)/.test(x.getAttribute('onclick') || ''))?.click();
+      await attendre(2200);
+      r.periodeRendue = JSON.stringify((window.EXEC_STATE || {}).statsPeriode || null);
+      return r;
+    });
+
+    verifier('le formulaire de statistiques s’ouvre dans le volet, avec ses deux sous-menus et ses cartes d’indicateurs',
+      stats.voletOuvert === true && stats.onglets.length === 2 && stats.cartes >= 5,
+      JSON.stringify({ volet: stats.voletOuvert, onglets: stats.onglets,
+        cartes: stats.cartes, chrono: stats.chronoAvantPrest }));
+    verifier('une carte d’indicateur s’ouvre sur son détail, et le second clic la referme',
+      stats.detailAvant === 0 && stats.detailApres > 0 && stats.detailReferme === 0,
+      JSON.stringify({ avant: stats.detailAvant, apres: stats.detailApres,
+        referme: stats.detailReferme, cle: stats.cleIndicateur }));
+    verifier('un prestataire retenu impose son cycle de surveillance comme période, et la chronologie paraît alors',
+      stats.selPrestTrouve === true && stats.prestOffert === true
+      && /"debut":"\d{4}-\d{2}-\d{2}","fin":"\d{4}-\d{2}-\d{2}"/.test(stats.periodeDuCycle || '')
+      && stats.chronoApresPrest === true && stats.bandeauCycle === 1,
+      JSON.stringify({ periode: stats.periodeDuCycle, chrono: stats.chronoApresPrest,
+        bandeau: stats.bandeauCycle }));
+    verifier('le raccourci des trois derniers mois arrête la période, et la borne saisie se lit dans le champ',
+      stats.raccourcis >= 4 && /debut/.test(stats.periode3) && stats.dateDebutRendue.length === 10,
+      JSON.stringify({ raccourcis: stats.raccourcis, periode: stats.periode3,
+        champ: stats.dateDebutRendue }));
+    verifier('deux bornes saisies à l’envers sont remises dans l’ordre par le geste lui-même',
+      stats.champsDates === true
+      && /"debut":"2026-09-01","fin":"2026-09-30"/.test(stats.periodeRemiseEnOrdre || ''),
+      String(stats.periodeRemiseEnOrdre));
+    verifier('les poignées de la chronologie ne se croisent pas : celle qu’on pousse repousse l’autre',
+      stats.poignees === true && stats.poigneeFinRepoussee === stats.poigneeMax
+      && /debut/.test(stats.periodeApresRelachement || ''),
+      JSON.stringify({ fin: stats.poigneeFinRepoussee, max: stats.poigneeMax,
+        apres: stats.periodeApresRelachement, rendue: stats.periodeRendue }));
+
+    const stats2 = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const volet = () => document.getElementById('execSlider');
+      const dans = (sel) => (volet() || document).querySelectorAll(sel);
+      const un = (sel) => (volet() || document).querySelector(sel);
+      const F = () => (window.EXEC_STATE || {}).statsFilters || {};
+
+      // ── Les filtres du formulaire ──
+      // Le domaine remet le secteur à vide : un secteur d'un autre domaine
+      // filtrerait sur rien, et l'écran ne le dirait pas.
+      const selDomaine = [...dans('select')]
+        .find((s) => /statsFilters\.domaine/.test(s.getAttribute('onchange') || ''));
+      r.selects = dans('select').length;
+      r.domaineTrouve = !!selDomaine;
+      if (selDomaine) {
+        const i = [...selDomaine.options].findIndex((o) => o.value);
+        if (i >= 0) {
+          selDomaine.selectedIndex = i;
+          selDomaine.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(2200);
+        }
+        r.domainePose = F().domaine;
+        r.secteurRemisAVide = F().secteur === '';
+        // Le secteur, ensuite : sa liste ne porte que ceux du domaine retenu.
+        //
+        // Le motif dit `secteur=this.value`, et non `statsFilters.secteur` :
+        // le gestionnaire du **domaine** porte lui aussi `statsFilters.secteur`
+        // — c'est lui qui le remet à vide. Mon premier motif l'a donc choisi, et
+        // j'ai re-sélectionné le domaine en croyant prendre le secteur. *Un
+        // sélecteur qui apparie un fragment commun à deux gestionnaires n'en
+        // désigne aucun.*
+        const selSecteur = [...dans('select')]
+          .find((x) => /statsFilters\.secteur=this\.value/.test(x.getAttribute('onchange') || ''));
+        const j = selSecteur ? [...selSecteur.options].findIndex((o) => o.value) : -1;
+        r.secteurOffert = j >= 0;
+        if (j >= 0) {
+          selSecteur.selectedIndex = j;
+          r.valeurChoisie = selSecteur.value;
+          selSecteur.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(2200);
+          r.secteurPose = F().secteur;
+          r.domaineTenu = F().domaine === r.domainePose;
+        }
+      }
+      const annee = [...dans('[onclick*="statsFilters.annee"]')]
+        .find((b) => /annee='\d{4}'/.test(b.getAttribute('onclick') || ''));
+      r.anneeTrouvee = !!annee;
+      annee?.click();
+      await attendre(2200);
+      r.anneePosee = F().annee;
+      // La remise à zéro reconstruit l'objet entier des filtres.
+      un('[onclick*="statsFilters={domaine"]')?.click();
+      await attendre(2200);
+      r.apresReset = JSON.stringify(F());
+      r.toutVide = Object.values(F()).every((v) => v === '');
+
+      // ── Le sous-menu « Situation générale », et ses deux exports ──
+      [...dans('.exec-stats-onglet')]
+        .find((b) => /statsOnglet='situation'/.test(b.getAttribute('onclick') || ''))?.click();
+      await attendre(2600);
+      r.carteSituation = !!document.getElementById('execSituationGeneraleCard');
+      r.tableSg = !!un('table.sg-prest-table');
+      r.lignesSg = dans('tbody tr.sg-ligne-prest').length;
+      r.boutonsExport = dans('.sg-export-btn').length;
+
+      // Les exports composent le document dans le navigateur : on capture le
+      // produit par relais, comme en 5.f.10 — il n'y a pas de réponse HTTP.
+      const relais = { fenetres: 0, blobs: 0 };
+      const vraiOpen = window.open;
+      const vraiURL = URL.createObjectURL;
+      window.open = () => {
+        relais.fenetres += 1;
+        return { document: { write: () => {}, close: () => {} },
+          focus: () => {}, print: () => {}, close: () => {} };
+      };
+      URL.createObjectURL = (b) => { relais.blobs += 1; return vraiURL.call(URL, b); };
+      try {
+        un('[onclick^="execExportSituationGenerale(\'xlsx\'"]')?.click();
+        await attendre(1800);
+        un('[onclick^="execExportSituationGenerale(\'pdf\'"]')?.click();
+        await attendre(1800);
+      } finally {
+        window.open = vraiOpen;
+        URL.createObjectURL = vraiURL;
+      }
+      r.exports = relais;
+
+      // ── Retour aux indicateurs, et le volet se referme par son geste ──
+      [...dans('.exec-stats-onglet')]
+        .find((b) => /statsOnglet='indicateurs'/.test(b.getAttribute('onclick') || ''))?.click();
+      await attendre(2400);
+      r.revenuAuxIndicateurs = dans('[onclick^="execStatsIndicateur"]').length > 0;
+      un('[onclick^="execCloseSlider"]')?.click();
+      await attendre(1600);
+      r.voletFerme = !document.getElementById('execSlider')
+        || !document.getElementById('execSlider').classList.contains('open');
+      return r;
+    });
+
+    verifier('le domaine choisi remet le secteur à vide, puis un secteur du domaine se pose sans le chasser',
+      stats2.domaineTrouve === true && !!stats2.domainePose
+      && stats2.secteurRemisAVide === true
+      && stats2.secteurOffert === true && !!stats2.secteurPose
+      && stats2.domaineTenu === true,
+      JSON.stringify({ domaine: stats2.domainePose, vide: stats2.secteurRemisAVide,
+        offert: stats2.secteurOffert, choisie: stats2.valeurChoisie,
+        secteur: stats2.secteurPose, domaineTenu: stats2.domaineTenu }));
+    verifier('l’année se pose, et la remise à zéro vide tous les filtres d’un seul geste',
+      stats2.anneeTrouvee === true && /^\d{4}$/.test(String(stats2.anneePosee))
+      && stats2.toutVide === true,
+      JSON.stringify({ annee: stats2.anneePosee, apresReset: stats2.apresReset }));
+    verifier('le sous-menu « Situation générale » rend sa table et ses deux exports',
+      stats2.carteSituation === true && stats2.tableSg === true
+      && stats2.lignesSg > 0 && stats2.boutonsExport === 2,
+      JSON.stringify({ carte: stats2.carteSituation, table: stats2.tableSg,
+        lignes: stats2.lignesSg, boutons: stats2.boutonsExport }));
+    verifier('les deux exports de la situation générale fabriquent chacun leur document',
+      !!stats2.exports && stats2.exports.blobs >= 1 && stats2.exports.fenetres >= 1,
+      JSON.stringify(stats2.exports));
+    verifier('le retour aux indicateurs retrouve ses cartes, et le volet se referme par son geste',
+      stats2.revenuAuxIndicateurs === true && stats2.voletFerme === true,
+      JSON.stringify({ revenu: stats2.revenuAuxIndicateurs, ferme: stats2.voletFerme }));
+
     verifier('aucune erreur de console ni requête échouée sur SURV',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

@@ -6172,6 +6172,113 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            déclarée 95, mesurée 101, et les six noms —, ce qui est exactement ce
            qu'on demande à une dispense : rougir dans les deux sens.
 
+       5.f.27 [x] **SURV — deux gisements de lecture, et un sélecteur qui
+           désignait le voisin** — fait le 20 octobre 2026.
+
+           **Cent-seize contrôles ; 127 gestes sur 310.** Campagne : 1 206. `exec-dashboard.js`
+           passe de **1 à 27 sur 29**, `exec-etats.js` de **4 à 14 sur 34**.
+
+           Deux écrans de lecture, choisis pour cela : pas de circuit à
+           construire, pas de donnée à restaurer, et le meilleur rapport entre
+           gestes gagnés et risque pris. Le gain est de **26 gestes en un pas**,
+           le plus grand de la suite 5.f.
+
+           ── La composition des références ──
+
+           Paramètres → Autres paramètres. Chaque objet du circuit porte une
+           référence, dont on ordonne les segments — préfixe, code État,
+           domaine, année, numéro d'ordre — et dont un aperçu montre aussitôt le
+           rendu. Dix gestes `execRefs*`, et quinze contrôles.
+
+           La propriété que ce bloc tient, et qu'aucun compte de lignes ne
+           dirait : **deux de ces gestes ne reconstruisent pas la page.** C'est
+           écrit dans leur commentaire — « reconstruire la page retirerait le
+           curseur du champ à chaque lettre » —, et cela se mesure par
+           `document.activeElement`, seul témoin qui distingue un
+           rafraîchissement local d'un rendu complet.
+
+           Encore faut-il montrer que le témoin **distingue**. Un contrôle de
+           plus le fait : `execRefsMajSegment`, lui, appelle `execRenderPage()`,
+           et son propre menu doit avoir quitté le document. Si ce relevé était
+           vert aussi, les deux contrôles de curseur ne mesureraient que le fait
+           qu'un champ garde le focus quand on ne touche à rien.
+
+           Deux règles du serveur sont éprouvées au passage. La première est
+           écrite dans son code : « une référence sans numéro d'ordre ne
+           distinguerait plus deux objets » — on retire donc tous les numéros
+           par le geste de l'écran, on enregistre, et le serveur en repose un,
+           de trois chiffres. La seconde est la garde du premier rang : le
+           bouton « Monter » du rang 1 est `disabled` **dans le balisage**. On
+           la constate là où elle est, au lieu de cliquer un bouton mort et
+           d'appeler cela une preuve.
+
+           ── La piste des activités, et la seule forme honnête de son contrôle ──
+
+           Le Gantt du tableau de bord ne se mesure pas en cliquant ses
+           commandes : elles **se ferment quand la piste tient tout entière dans
+           son cadre**. Le code le dit — « sur un large écran, une piste qui
+           tient tout entière ne bougeait pas d'un clic, et les boutons passaient
+           pour cassés ». Cliquer un bouton désarmé et constater que rien ne
+           bouge aurait été un faux vert de plus.
+
+           Le contrôle est donc à deux faces : à 1 280 px la piste tient, les
+           cinq commandes sont désarmées et **disent pourquoi** ; la fenêtre
+           resserrée à 620 px, la piste déborde, les cinq s'arment, et elles
+           mènent alors la piste — avancer, le bout, le début, le trait du jour.
+           La fenêtre est rendue à sa taille ensuite.
+
+           ── Le formulaire de statistiques, et la chronologie introuvable ──
+
+           Premier jet : trois contrôles rouges, `raccourcis: 0`. La chronologie
+           **ne se rend pas** — `_execStatsPeriode` la borne sur les dates des
+           constatations, et tout ce que la ronde crée date du même jour. J'avais
+           écrit « les poignées ne se croisent pas » avant de regarder s'il y
+           avait une piste.
+
+           L'écran y mène pourtant, par sa propre règle : « un prestataire retenu
+           impose son cycle de surveillance », et un cycle, lui, s'étend dans le
+           temps. Choisir un prestataire fait paraître la chronologie — et cette
+           règle est devenue un contrôle, au lieu d'un détour pour atteindre le
+           suivant. *Un obstacle qui s'explique par une règle du code n'est pas
+           un obstacle : c'est un contrôle qui manquait.*
+
+           Alors seulement les poignées se mesurent, et elles portent une
+           propriété que rien ne laisse devenir : **celle qu'on pousse repousse
+           l'autre**, et c'est `document.activeElement` qui décide laquelle. On
+           pousse donc la poignée de début au-delà de celle de fin, et l'on
+           relève que la seconde a suivi.
+
+           ── Et la faute de ce tour : un sélecteur qui désignait le voisin ──
+
+           Pour choisir un secteur, j'ai cherché le menu dont le gestionnaire
+           porte `statsFilters.secteur`. Il y en a deux : celui du secteur, et
+           **celui du domaine** — qui remet justement le secteur à vide. Mon
+           motif a pris le premier venu, j'ai re-sélectionné le domaine en
+           croyant prendre le secteur, et le contrôle a rougi en disant
+           `secteur: ""`.
+
+           C'est la cinquième fois de cette suite que je vise ce qui s'apparie le
+           plus facilement au lieu de la chose même — après `.ramp-slider`, un
+           préfixe de page, des lignes repliées et `aria-expanded`. *Un sélecteur
+           qui apparie un fragment commun à deux gestionnaires n'en désigne
+           aucun.* Le motif dit désormais `secteur=this.value`.
+
+           ── Ce qui reste, et pourquoi ──
+
+           Trois gestes non exercés sur les vingt-neuf du tableau de bord, et
+           chacun pour une raison mesurée. `execOuvrirConstatation` ouvre une
+           constatation prise dans le **cache du client** : à cet instant de la
+           ronde le serveur ne la porte plus, et le volet rougirait sur une
+           adresse morte. `EXEC_STATE.statsFilters.secteur` est désormais
+           couvert. `window:resize` est déclenché par la ronde — elle resserre la
+           fenêtre — mais l'extracteur ne sait pas le nommer : il reste
+           indécidable, et les deux chiffres ne parlent pas de la même chose.
+
+           Les dix gestes d'action des états — rappel, archiver, arrêter,
+           reprendre, désarchiver, supprimer — exigent des activités dans des
+           états que la ronde ne construit pas encore. C'est le prochain pas de
+           SURV, et il écrit au lieu de lire.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

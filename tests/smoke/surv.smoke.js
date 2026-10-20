@@ -131,8 +131,20 @@ module.exports = async function survSmoke(port) {
     // sinon pour une erreur de SURV.
     let surv = false;
     let etape = 'montage';
+    // Les refus déclarés (voir `REFUS_ATTENDUS` plus bas) laissent aussi une
+    // trace en console : « Failed to load resource: … 409 », **sans l'adresse**
+    // — c'est la cécité du message que 5.f.6 avait déjà relevée. On tient donc
+    // le compte des refus déclarés rencontrés, et l'on dispense le message de
+    // console qui porte **le même code**. Rien de plus large : un 409 non
+    // déclaré garde son message, et un message dont le code n'a pas été déclaré
+    // reste un incident.
+    const codesAttendus = new Set();
     page.on('console', (m) => {
-      if (surv && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      if (!surv || m.type() !== 'error') return;
+      const texte = m.text();
+      const code = (/status of (\d{3})/.exec(texte) || [])[1];
+      if (code && codesAttendus.has(Number(code))) return;
+      incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
       if (surv) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -147,9 +159,31 @@ module.exports = async function survSmoke(port) {
     // il a fallu réinstrumenter pour savoir lequel. On relève donc la réponse :
     // son code et son adresse, ce qui rend l'incident actionnable au lieu
     // d'énigmatique.
+    // ── Les refus que la ronde **provoque exprès** ──
+    //
+    // Certains contrôles éprouvent un refus : une notification envoyée qui
+    // refuse d'être effacée (409), par exemple. Ce refus est la propriété
+    // mesurée — le relever comme un incident ferait rougir le contrôle de la
+    // console sur un comportement correct, et le premier passage l'a fait.
+    //
+    // Ils sont donc **déclarés**, un par un, avec leur code, leur adresse et
+    // leur raison. Pas de filtre large : un 409 ailleurs reste un incident, et
+    // une déclaration qui cesserait de correspondre cesserait de dispenser.
+    const REFUS_ATTENDUS = [
+      {
+        code: 409, methode: 'DELETE', chemin: /\/notifications\/[\w-]+$/,
+        pourquoi: 'une notification envoyée refuse d’être effacée : elle s’annule.'
+          + ' Éprouvé par « une notification envoyée refuse d’être effacée, s’annule,'
+          + ' et se retire alors » (n° 5.f.26).',
+      },
+    ];
     page.on('response', (r) => {
       if (!surv || r.status() < 400) return;
-      incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
+      const chemin = r.url().replace(srv.base, '');
+      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
+        && x.methode === r.request().method() && x.chemin.test(chemin));
+      if (attendu) { codesAttendus.add(r.status()); return; }
+      incidents.push(`[${etape}] ${r.status()} ${chemin.slice(0, 120)}`);
     });
 
     // ── La session, puis l'écran ──
@@ -179,6 +213,32 @@ module.exports = async function survSmoke(port) {
       attente: !!document.querySelector('[data-oasis-loader]'),
       retour: document.querySelectorAll('.oasis-back-btn').length,
     }));
+    // ── Instrumentation de la chasse au second dossier (n° 5.f.26) ──
+    //
+    // ── La ronde part-elle d'un magasin vide ? ──
+    //
+    // Question d'apparence oiseuse, et qui a coûté un tour entier. La suite
+    // rendait 80/87 sur un code qui avait rendu 87/87 la veille, et le commit
+    // d'alors rougissait aussi : un second dossier apparaissait pendant la
+    // ronde, d'identifiant **stable d'un passage à l'autre** quand celui de la
+    // chaîne varie. Il n'était nulle part sur disque, et un bac neuf en portait
+    // zéro. C'était un serveur orphelin de 7 h 51, resté d'un passage
+    // interrompu sur le port de cette suite, que le harnais réutilisait en
+    // silence — avec ses données. Le harnais le refuse désormais.
+    //
+    // Reste ce contrôle, qui vaut mieux que le relevé qui l'a trouvé : il dit
+    // en une ligne que la ronde juge **ses** écritures, et non celles d'un
+    // autre. S'il rougit, ce n'est pas la ronde qu'il faut lire.
+    const auMontage = await page.evaluate(async (api) => {
+      try {
+        return (await (await fetch(`${api}/dossiers`, { credentials: 'same-origin' })).json())
+          .map((d) => d.id);
+      } catch { return ['(illisible)']; }
+    }, '/api/m/execution');
+    verifier('la ronde part d’un magasin vide — aucun dossier d’un autre passage',
+      Array.isArray(auMontage) && auMontage.length === 0,
+      `${auMontage.length} dossier(s) au montage : ${JSON.stringify(auMontage).slice(0, 160)}`);
+
     verifier('l’écran SURV se monte, avec sa barre et son contenu',
       monte.pages.length > 0 && monte.contenu > 200 && !monte.attente,
       JSON.stringify(monte));
@@ -728,6 +788,12 @@ module.exports = async function survSmoke(port) {
             r.constatationEngendree = (consts || [])
               .filter((c) => c.checklist_item_id === item2)
               .map((c) => ({ cas: c.cas_type || '', liee: c.checklist_item_id, dossier: c.dossier_id }));
+            // Diagnostic : combien de dossiers le bac porte-t-il à cet instant,
+            // et lesquels ? Le contrôle a rougi en annonçant deux dossiers là où
+            // la ronde n'en construit qu'un.
+            const dos = await (await fetch('/api/m/execution/dossiers', { credentials: 'same-origin' })).json();
+            r.dossiersAuFiller = (dos || []).map((d) => d.id);
+            r.constatationsAuFiller = (consts || []).length;
           }
 
           document.querySelector('[onclick^="execCloseChecklistFiller"]')?.click();
@@ -838,7 +904,8 @@ module.exports = async function survSmoke(port) {
         && (volet.constatationEngendree || []).length === 1
         && /^Checklist —/.test(volet.constatationEngendree[0].cas)
         && volet.constatationEngendree[0].liee === volet.itemEngendre,
-        JSON.stringify({ item: volet.itemEngendre, enBase: volet.constatationEngendree }));
+        JSON.stringify({ item: volet.itemEngendre, enBase: volet.constatationEngendree,
+          dossiers: volet.dossiersAuFiller, constatations: volet.constatationsAuFiller }));
       verifier('le geste se referme sur lui-même : l’item pourvu ne peut plus en engendrer',
         volet.genDesactive === true,
         JSON.stringify({ desactive: volet.genDesactive }));
@@ -2692,6 +2759,242 @@ module.exports = async function survSmoke(port) {
         && processus.aEffacer >= 2 && processus.fin === 0,
         JSON.stringify({ duplique: processus.apresDuplication, aEffacer: processus.aEffacer,
           fin: processus.fin }));
+
+      // ══════════════════════════════════════════════════════════════════
+      //  Le circuit guidé d'une activité, et la notification par ses gestes
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Comment on y entre, après trois fausses pistes ──
+      //
+      // Le circuit guidé (`EXEC_PROC`) porte les gestes de la notification —
+      // déclencher, soumettre, valider, transmettre. Trois lectures ont été
+      // nécessaires pour trouver sa porte :
+      //
+      //   · la page `declenchement` les rend, mais **aucun chemin ne l'ouvre** ;
+      //   · la page `processus` ne liste que les **processus configurés**, avec
+      //     leurs gestes d'édition — pas de déclenchement ;
+      //   · la porte est sur la page des **plans** : « Déclencher hors plan »,
+      //     `execProcNouvelleActivite()`, qui ouvre un formulaire d'activité.
+      //
+      // *Un circuit ne se trouve pas là où il s'affiche, mais là où il
+      // commence.*
+      //
+      // La ronde crée donc une activité hors plan, et parcourt le circuit par
+      // ses gestes — là où la ronde du dossier, plus haut, le fait par l'API
+      // faute d'avoir su par où passer.
+      etape = 'circuit guidé';
+      const circuit = await page.evaluate(async (api) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const notifs = async () => {
+          try { return await (await fetch(`${api}/notifications`, { credentials: 'same-origin' })).json(); }
+          catch { return []; }
+        };
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const choisir = (id) => {
+          const e = document.getElementById(id);
+          if (!e) return '';
+          // La première option réelle : l'option vide est un intitulé, non un choix.
+          const i = [...e.options].findIndex((o) => o.value);
+          if (i < 0) return '';
+          e.selectedIndex = i;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return e.value;
+        };
+        // Les deux fenêtres de confirmation de SURV — celle du socle et celle du
+        // module (n° 5.f.25).
+        const confirmer = async () => {
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui')
+            || document.querySelector('.exec-proc-dialogue [data-rep="oui"]')
+            || document.querySelector('[data-rep="oui"]');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3500);
+          return true;
+        };
+
+        const avant = await notifs();
+        const avantIds = new Set((avant || []).map((n) => n.id));
+        r.avant = avantIds.size;
+
+        document.querySelector('.nav-btn[data-page="plan_surveillance"]')?.click();
+        await attendre(3200);
+        const porte = document.querySelector('[onclick^="execProcNouvelleActivite"]');
+        r.porte = !!porte;
+        if (!porte) return r;
+        porte.click();
+        await attendre(3500);
+        r.formulaire = (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length;
+
+        // ── Les listes en cascade : le domaine commande le secteur, qui
+        //    commande l'organisme ──
+        //
+        // Mesuré avant d'écrire : à l'ouverture, `hp_secteur` et
+        // `hp_prestataire` ne portent **qu'une** option — leur intitulé. Elles
+        // se remplissent quand le domaine est choisi. Un contrôle qui les aurait
+        // renseignées d'emblée aurait choisi dans le vide.
+        poser('hp_annee', String(new Date().getFullYear()));
+        // ── La cascade dépend des **données**, et la ronde doit la chercher ──
+        //
+        // Premier jet : le premier domaine, puis le premier secteur, puis le
+        // premier organisme. Le secteur retenu n'en portait **aucun** —
+        // `prestataire: ""` —, et la création s'arrêtait sans un mot : le geste
+        // valide côté client, et ne part pas.
+        //
+        // On parcourt donc les couples (domaine, secteur) jusqu'à en trouver un
+        // que le jeu d'essai peuple. *Un formulaire en cascade ne se remplit pas
+        // par le premier choix de chaque liste : il se remplit par le chemin que
+        // les données autorisent.*
+        const options = (id) => [...(document.getElementById(id) || { options: [] }).options]
+          .filter((o) => o.value).map((o) => o.value);
+        const poserListe = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        r.cascade = { essais: 0 };
+        for (const dom of options('hp_domaine')) {
+          poserListe('hp_domaine', dom);
+          /* eslint-disable no-await-in-loop */
+          await attendre(1600);
+          for (const sec of options('hp_secteur')) {
+            poserListe('hp_secteur', sec);
+            await attendre(1400);
+            r.cascade.essais += 1;
+            const prest = options('hp_prestataire');
+            if (prest.length) {
+              poserListe('hp_prestataire', prest[0]);
+              await attendre(1200);
+              r.cascade.domaine = dom;
+              r.cascade.secteur = sec;
+              r.cascade.prestataire = prest[0];
+              break;
+            }
+          }
+          if (r.cascade.prestataire) break;
+        }
+        r.cascade.type = choisir('hp_type');
+        r.cascade.mode = choisir('hp_mode');
+        r.cascade.responsable = choisir('hp_responsable');
+        r.cascade.type = choisir('hp_type');
+        r.cascade.mode = choisir('hp_mode');
+        r.cascade.responsable = choisir('hp_responsable');
+        poser('hp_debut', '2026-11-02');
+        poser('hp_fin', '2026-11-04');
+        poser('hp_nb_inspecteurs', '2');
+        poser('hp_lieu', 'Siège de l’organisme');
+        poser('hp_objet', 'SURV 0.c — activité hors plan de la ronde');
+        await attendre(1200);
+
+        document.querySelector('[onclick^="execProcCreerHorsPlan"]')?.click();
+        await attendre(1000);
+        r.creationConfirmee = await confirmer();
+        await attendre(2000);
+        const apres = await notifs();
+        r.apres = (apres || []).length;
+        const mienne = (apres || []).find((n) => !avantIds.has(n.id));
+        r.creee = mienne ? { id: mienne.id, statut: mienne.statut, objet: mienne.objet || '' } : null;
+        if (!mienne) return r;
+
+        // ── Le circuit, par ses gestes ──
+        // `EXEC_PROC` n'est pas encore peuplé à cet instant — il l'est quand le
+        // circuit s'ouvre sur une étape. Le relevé le note sans en faire une
+        // condition : ce qui compte est que les gestes du circuit répondent, et
+        // ils sont relevés juste après.
+        r.etat = window.EXEC_PROC
+          ? { etape: window.EXEC_PROC.etape, notif: !!window.EXEC_PROC.notif } : null;
+        r.gestesCircuit = [...new Set([...document.querySelectorAll('[onclick]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean))].filter((n) => /^execProc|^execStart|^execEdit/.test(n));
+
+        const statut = async () => ((await notifs()).find((n) => n.id === mienne.id) || {}).statut;
+        const agir = async (geste) => {
+          const b = [...document.querySelectorAll('[onclick^="execProcAction"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(`'${geste}'`));
+          if (!b) return false;
+          b.click();
+          await attendre(1000);
+          await confirmer();
+          await attendre(2500);
+          return true;
+        };
+        r.soumise = await agir('submit');
+        r.statutSoumise = await statut();
+        r.validee = await agir('validate');
+        r.statutValidee = await statut();
+        r.transmise = await agir('send');
+        r.statutTransmise = await statut();
+
+        // ── Le ménage, et la propriété qu'il a révélée ──
+        //
+        // Une notification **envoyée ne s'efface pas** : la suppression rend
+        // **409**, mesuré. C'est juste — elle est partie chez l'organisme, et un
+        // acte transmis ne se retire pas d'un trait.
+        //
+        // Elle **s'annule** : `cancel` la ramène à `brouillon`, et c'est de là
+        // qu'elle peut être retirée. Le ménage de cette ronde est donc lui-même
+        // un contrôle de la règle — *ce qui ne s'efface pas doit pouvoir se
+        // défaire, et la différence se mesure.*
+        const refus = await fetch(`${api}/notifications/${mienne.id}`, {
+          method: 'DELETE', credentials: 'same-origin', headers: { 'X-OASIS-Request': '1' },
+        });
+        r.suppressionEnvoyee = refus.status;
+        const annulation = await fetch(`${api}/notifications/${mienne.id}/cancel`, {
+          method: 'PUT',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+          body: JSON.stringify({ motif: 'Annulation par la ronde.' }),
+        });
+        r.annulation = annulation.status;
+        r.statutAnnulee = await statut();
+        const suppr = await fetch(`${api}/notifications/${mienne.id}`, {
+          method: 'DELETE', credentials: 'same-origin', headers: { 'X-OASIS-Request': '1' },
+        });
+        r.suppression = suppr.status;
+        r.fin = (await notifs()).filter((n) => n.id === mienne.id).length;
+        return r;
+      }, M);
+
+      verifier('la porte du circuit guidé est sur la page des plans, et son formulaire s’ouvre garni',
+        circuit.porte === true && circuit.formulaire > 3000,
+        JSON.stringify({ porte: circuit.porte, formulaire: circuit.formulaire }));
+      verifier('les listes du formulaire se remplissent en cascade, et la ronde trouve un couple que les données peuplent',
+        !!circuit.cascade && !!circuit.cascade.domaine
+        && !!circuit.cascade.secteur && !!circuit.cascade.prestataire
+        && circuit.cascade.essais > 0,
+        JSON.stringify(circuit.cascade));
+      verifier('l’activité hors plan crée sa notification en brouillon, et le serveur la porte',
+        circuit.apres === circuit.avant + 1 && !!circuit.creee
+        && circuit.creee.statut === 'brouillon'
+        && /activité hors plan de la ronde/.test(circuit.creee.objet),
+        JSON.stringify({ avant: circuit.avant, apres: circuit.apres, creee: circuit.creee,
+          etat: circuit.etat }));
+      verifier('la notification parcourt son circuit par ses gestes : soumise, validée, transmise',
+        circuit.soumise === true && circuit.statutSoumise === 'soumis'
+        && circuit.validee === true && circuit.statutValidee === 'valide'
+        // Le dernier statut est **`envoye`**, et non « transmis » : je l'avais
+        // supposé par analogie avec le rapport, qui dit « transmis ». Mesuré.
+        && circuit.transmise === true && circuit.statutTransmise === 'envoye',
+        JSON.stringify({ soumise: [circuit.soumise, circuit.statutSoumise],
+          validee: [circuit.validee, circuit.statutValidee],
+          transmise: [circuit.transmise, circuit.statutTransmise] }));
+      verifier('une notification envoyée refuse d’être effacée, s’annule, et se retire alors',
+        circuit.suppressionEnvoyee === 409
+        && circuit.annulation === 200 && circuit.statutAnnulee === 'brouillon'
+        && circuit.suppression === 200 && circuit.fin === 0,
+        JSON.stringify({ refusEnvoyee: circuit.suppressionEnvoyee, annulation: circuit.annulation,
+          apresAnnulation: circuit.statutAnnulee, suppression: circuit.suppression,
+          reste: circuit.fin }));
 
       // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
       //

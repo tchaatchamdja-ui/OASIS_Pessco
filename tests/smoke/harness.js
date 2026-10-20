@@ -135,9 +135,50 @@ async function effacerSchema(schema) {
   await p.end();
 }
 
+// ── Le port doit être libre, sinon la campagne parle à un inconnu ──
+//
+// Le harnais lance son serveur, puis **attend qu'une adresse réponde**. Si un
+// serveur étranger tient déjà le port, les deux gestes se contredisent sans que
+// rien ne le dise : le `spawn` échoue à prendre le port — l'erreur part dans la
+// sortie capturée, que personne ne lit tant que l'attente réussit — et
+// l'attente, elle, réussit **immédiatement**, puisque l'étranger répond. La
+// suite s'adresse alors à lui, avec ses données.
+//
+// Ce qu'il a coûté, le 20 octobre 2026 : un serveur orphelin de 7 h 51, resté
+// d'un passage interrompu, sur le port 4797 de la suite SURV. Il portait un
+// dossier et une constatation d'un passage précédent, et **sept contrôles
+// rougissaient** sur un code que la veille avait vu vert. Un tour entier à
+// chercher dans le code ce qui était dans l'environnement.
+//
+// Et le pire n'est pas le faux rouge : un serveur resté d'un passage **vert**
+// aurait rendu un **faux vert**, et rien ne l'aurait dit.
+//
+// Le harnais refuse donc de démarrer sur un port qui répond déjà, et son message
+// dit quoi faire. `OASIS_SMOKE_BASE` reste le chemin déclaré pour s'adresser à
+// un serveur qu'on a choisi.
+async function portOccupe(port) {
+  try {
+    const r = await fetch(`http://localhost:${port}/login.html`, {
+      signal: AbortSignal.timeout(1500),
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
 async function demarrer({ port = 4788, env: envSup = {} } = {}) {
   // Une adresse est donnée : on ne démarre rien, on s'y adresse.
   const externe = String(process.env.OASIS_SMOKE_BASE || '').replace(/\/$/, '');
+  if (!externe && await portOccupe(port)) {
+    throw new Error(
+      `le port ${port} répond déjà : un autre serveur le tient.\n`
+      + '  Le harnais ne peut pas démarrer le sien, et il parlerait à cet inconnu —'
+      + ' avec les données de **son** passage, non celles des fixtures.\n'
+      + `  Remède : le retrouver par \`lsof -nP -iTCP:${port} -sTCP:LISTEN\`, et`
+      + ' l\'arrêter s\'il est resté d\'un passage interrompu.\n'
+      + '  Pour s\'adresser délibérément à un serveur déjà lancé :'
+      + ' OASIS_SMOKE_BASE=http://localhost:' + port,
+    );
+  }
   const tmp = externe ? null : copierDonnees();
   const schema = externe ? null : await schemaIsole(port, path.join(tmp, 'data'));
   const proc = externe ? null : spawn(process.execPath, [path.join(RACINE, 'server.js')], {

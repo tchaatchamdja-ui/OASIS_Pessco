@@ -2,7 +2,7 @@
  "releve": "2026-10-20",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 95,
+ "exerces": 101,
  "indecidables": 5,
  "gestes": [
   {
@@ -3770,7 +3770,7 @@
    "evenement": "click",
    "nom": "execProcNouvelleActivite",
    "source": "execProcNouvelleActivite()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
@@ -4157,7 +4157,7 @@
    "evenement": "click",
    "nom": "execProcAction",
    "source": "execProcAction('submit','proc_msg_notif_soumise')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4166,7 +4166,7 @@
    "evenement": "click",
    "nom": "execProcAction",
    "source": "execProcAction('validate','proc_msg_notif_validee')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4184,7 +4184,7 @@
    "evenement": "click",
    "nom": "execProcAction",
    "source": "execProcAction('send','proc_msg_notif_transmise')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4211,7 +4211,7 @@
    "evenement": "input",
    "nom": "execProcHpBornerDates",
    "source": "execProcHpBornerDates()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4220,7 +4220,7 @@
    "evenement": "change",
    "nom": "execProcHpSecteurs",
    "source": "execProcHpSecteurs()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4229,7 +4229,7 @@
    "evenement": "change",
    "nom": "execProcHpPrestataires",
    "source": "execProcHpPrestataires()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4238,7 +4238,7 @@
    "evenement": "change",
    "nom": "execProcHpBornerDates",
    "source": "execProcHpBornerDates()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4247,7 +4247,7 @@
    "evenement": "change",
    "nom": "execProcHpBornerDates",
    "source": "execProcHpBornerDates()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4265,7 +4265,7 @@
    "evenement": "click",
    "nom": "execProcCreerHorsPlan",
    "source": "execProcCreerHorsPlan(${n ? `'${n.id}'` : ''})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4301,7 +4301,7 @@
    "evenement": "click",
    "nom": "execProcNouvelleActivite",
    "source": "execProcNouvelleActivite('${n.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",

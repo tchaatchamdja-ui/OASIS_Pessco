@@ -6068,6 +6068,110 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            ses lignes. Les deux premières comptaient des contenants ; la
            troisième compte ce qui s'y ajoute.
 
+       5.f.26 [x] **SURV — le circuit d'une notification, et le serveur qui
+           décidait de mes verdicts** — fait le 20 octobre 2026.
+
+           **Quatre-vingt-huit contrôles ; 101 gestes sur 310.**
+           `exec-processus.js` passe de 1 à 12 sur 32, `exec-processus-config.js`
+           de 9 à 13, `exec-notifications.js` de 1 à 3.
+
+           Le circuit guidé des notifications —
+           la porte « hors plan », la cascade, le brouillon, les quatre états,
+           le refus d'effacer ce qui est parti — et, surtout, la correction du
+           défaut qui m'a fait chercher dans le code ce qui était dans
+           l'environnement.
+
+           ── Sept contrôles rouges sur un code qui n'avait pas changé ──
+
+           La suite rendait **80/87** là où elle avait rendu 87/87 quelques
+           heures plus tôt. J'ai fait ce qu'il faut faire : bissecter. Mon code
+           nouveau était innocent — le commit précédent, vert le matin,
+           rougissait lui aussi. Un code immobile qui change de verdict ne parle
+           plus de lui-même.
+
+           Le relevé a tranché en un passage. En instrumentant la ronde pour
+           lister les dossiers après chaque bloc, un `dossier_2fd4bc25`
+           apparaissait **dès le montage** — avant le premier geste —, et son
+           identifiant était *stable* d'un passage à l'autre quand celui que la
+           ronde crée varie. Rien ne crée un identifiant stable deux fois : il
+           était déjà là.
+
+           Il était dans un **serveur orphelin** — PID 40571, parent 1, sept
+           heures cinquante-et-une d'ancienneté — resté d'un de mes passages
+           interrompus, à écouter le port 4797, celui de cette suite. Je l'ai
+           arrêté, lui seul ; la suite est revenue à 87/87, zéro dossier au
+           montage.
+
+           ── Le défaut qui l'a permis, et qui est le vrai sujet ──
+
+           Le harnais lance son serveur, puis **attend qu'une adresse
+           réponde**. Les deux gestes se contredisaient sans que rien ne le
+           dise : le `spawn` n'obtenait pas le port — l'erreur partait dans la
+           sortie capturée, que personne ne lit tant que l'attente réussit — et
+           l'attente réussissait **immédiatement**, puisque l'étranger
+           répondait. La suite s'adressait alors à lui, avec ses données.
+
+           Et le faux rouge n'est pas le pire. Un serveur resté d'un passage
+           **vert** aurait rendu un **faux vert**, et rien ne l'aurait dit. Un
+           harnais qui peut taire cela ne mesure rien ; il témoigne.
+
+           `tests/smoke/harness.js` refuse désormais de démarrer sur un port qui
+           répond déjà, et son message donne le `lsof` qui retrouve le tenant.
+           `OASIS_SMOKE_BASE` reste le chemin **déclaré** pour s'adresser à un
+           serveur qu'on a choisi — la différence entre les deux est tout le
+           sujet. Contre-essai : deux appels sur le même port, le second refusé,
+           le premier debout.
+
+           ── Et le relevé qui l'a trouvé devient un contrôle ──
+
+           Je l'aurais effacé : il avait répondu à sa question. Mais ce qu'il
+           disait mérite d'être tenu — *la ronde part d'un magasin vide*. C'est
+           exactement ce que l'orphelin démentait, et c'est une ligne. Le
+           `console.log` est donc devenu le premier contrôle de la ronde : si la
+           ronde juge les écritures d'un autre, elle le dit elle-même, au lieu
+           de rougir sept fois plus loin sur des symptômes.
+
+           Un diagnostic qui a servi se garde en contrôle, ou il se jette. Le
+           garder en relevé, c'est garder le bruit sans la garde.
+
+           ── Le circuit de la notification ──
+
+           Cinq contrôles, sur le gisement que 5.f.25 avait mal lu. La porte est
+           le bouton « hors plan » du sous-onglet des notifications ; la cascade
+           des exploitants se cherche **dans les données**, non dans l'ordre des
+           options ; la notification naît en `brouillon` ; et ses quatre états
+           — `brouillon → soumis → valide → envoye` — se franchissent par leurs
+           propres gestes, non par l'API.
+
+           Le dernier contrôle est celui qui apprend quelque chose : **une
+           notification envoyée refuse d'être effacée**. Le `DELETE` rend 409 ;
+           il faut l'annuler, et l'annulation seule permet le retrait. C'est une
+           règle métier — ce qui est parti chez l'exploitant ne disparaît pas des
+           registres —, et une suite qui l'ignorerait rapporterait un incident à
+           chaque passage.
+
+           D'où un mécanisme nouveau : `REFUS_ATTENDUS` déclare les refus que la
+           ronde **provoque exprès**, par code, méthode et chemin. Le crochet de
+           console ne les compte plus comme incidents, et tout autre 4xx reste
+           un incident. Déclarer un refus attendu n'est pas l'excuser : c'est
+           l'inverse d'un filtre, puisque la déclaration nomme ce qu'on attend
+           et laisse rougir le reste.
+
+           ── Et une dernière fois, le gisement annoncé n'est pas celui récolté ──
+
+           Le relevé nomme les six gestes que ce bloc a fait passer d'« non
+           exercé » à « exercé » : `execOpenDossierSlider`, `execCloseSlider`,
+           `execSwitchDossierStep`, `execAddRealisationEquipeMember`,
+           `execAddRealisationProgrammeLine`, `execOpenChecklistFiller`. Aucun
+           n'est un geste de notification : c'est le **volet du dossier** et le
+           **remplisseur de checklist**, que le circuit traverse pour atteindre
+           sa porte. `exec-notifications.js` ne gagne que deux gestes.
+
+           J'avais annoncé le gisement des notifications ; j'ai récolté celui du
+           volet. La garde de la suite « taille » l'a dit elle-même — couverture
+           déclarée 95, mesurée 101, et les six noms —, ce qui est exactement ce
+           qu'on demande à une dispense : rougir dans les deux sens.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

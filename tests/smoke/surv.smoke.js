@@ -2519,6 +2519,180 @@ module.exports = async function survSmoke(port) {
         directe.suppression === 200 && directe.fin === 0,
         JSON.stringify({ suppression: directe.suppression, reste: directe.fin }));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  Le processus : sa configuration, qui commande tout le reste
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Ce que la mesure a appris avant qu'une ligne soit écrite ──
+      //
+      // Le relevé disait `exec-notifications.js` : **1 geste exercé sur 25**. Le
+      // circuit d'une notification — soumettre, valider, envoyer, accorder —
+      // était donc presque entièrement non couvert, et la ronde du dossier le
+      // parcourt par l'API faute de mieux.
+      //
+      // J'ai cru d'abord que ces gestes étaient échoués sur la page
+      // `declenchement`, l'une des quatre qu'aucun chemin n'ouvre (n° 5.f.2).
+      // **Mesuré, c'est faux** : forcée dans le navigateur, cette page ne rend
+      // que deux gestes, et `execStartNotification` est aussi appelé depuis la
+      // page **`processus`**, qui est au menu. Le circuit est donc atteignable.
+      //
+      // Mais il est atteignable **derrière une porte** : la page `processus` ne
+      // liste pas des activités, elle liste des **processus configurés**, et le
+      // jeu d'essai n'en porte aucun — « Aucune donnée », quel que soit le
+      // filtre. Pour déclencher une activité, il faut d'abord qu'un processus
+      // existe.
+      //
+      // Cette ronde ouvre donc cette porte. Le circuit de la notification la
+      // suivra, et il sait maintenant par où passer.
+      //
+      // *Un gisement qu'on croit inaccessible l'est parfois seulement derrière
+      // une étape qu'on n'avait pas cherchée.*
+      etape = 'configuration du processus';
+      const processus = await page.evaluate(async (api) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const lire = async () => {
+          try { return await (await fetch(`${api}/processus`, { credentials: 'same-origin' })).json(); }
+          catch { return []; }
+        };
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const choisir = (id) => {
+          const e = document.getElementById(id);
+          if (!e || e.options.length < 2) return '';
+          e.selectedIndex = 1;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return e.value;
+        };
+        // ── SURV a **deux** fenêtres de confirmation, et une ronde doit les
+        //    connaître toutes deux ──
+        //
+        // Celle du socle (`oasisConfirmer`) pose un bouton `.oasis-confirm-oui` ;
+        // celle du module (`execProcConfirmer`) pose un
+        // `[data-rep="oui"]` dans un `.exec-proc-dialogue`. Les suppressions de
+        // processus passent par la seconde, et le premier jet de cette ronde ne
+        // cherchait que la première : les deux processus posés **restaient**,
+        // « fin: 2 » au lieu de 0.
+        //
+        // *Un geste qui demande confirmation ne dit pas laquelle : il faut
+        // l'avoir lu, ou les essayer toutes.*
+        const confirmer = async () => {
+          await attendre(900);
+          const oui = document.querySelector('.oasis-confirm-oui')
+            || document.querySelector('.exec-proc-dialogue [data-rep="oui"]')
+            || document.querySelector('[data-rep="oui"]');
+          if (!oui) return false;
+          oui.click();
+          await attendre(3200);
+          return true;
+        };
+
+        document.querySelector('.nav-btn[data-page="processus"]')?.click();
+        await attendre(3200);
+        const z = () => document.getElementById('exec-content');
+        r.listeVide = z().textContent.includes('Aucune donnée');
+        const avant = await lire();
+        r.avant = (avant || []).length;
+        const avantIds = new Set((avant || []).map((x) => x.id));
+
+        // Le formulaire de configuration.
+        document.querySelector('[onclick^="execProcCfgEditer"]')?.click();
+        await attendre(3500);
+        r.formulaire = (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length;
+        poser('pcfg_libelle', 'SURV 0.c — processus de la ronde');
+        r.choix = { type: choisir('pcfg_type'), domaine: choisir('pcfg_domaine'), secteur: choisir('pcfg_secteur') };
+        poser('pcfg_description', 'Posé par la ronde, retiré par elle.');
+        await attendre(1200);
+
+        // ── Un acteur ajouté, et les acteurs ne sont pas dans un tableau ──
+        //
+        // Premier jet : les lignes d'un `tbody` — **0 avant, 0 après**. Second
+        // jet : les enfants de `.pcfg-acteurs` — **9 avant, 9 après**, car il y
+        // a un bloc par étape du circuit et chacun porte soit ses acteurs, soit
+        // un « aucun acteur » qu'une ligne ajoutée **remplace**.
+        //
+        // Ce qui change, ce sont les **lignes d'acteur**, et elles se
+        // reconnaissent à leurs listes de choix. Troisième lecture du même
+        // geste, et la troisième est celle que le code décrit : un bloc par
+        // étape, dont le contenu bascule entre le vide et les lignes.
+        const acteurs = () => document.querySelectorAll('#execSlider .pcfg-acteurs select').length;
+        const blocsVides = () => document.querySelectorAll('#execSlider .pcfg-vide').length;
+        const acteursAvant = acteurs();
+        const videsAvant = blocsVides();
+        document.querySelector('[onclick^="execProcCfgAjouterActeur"]')?.click();
+        await attendre(1800);
+        r.acteurs = [acteursAvant, acteurs()];
+        r.blocsVides = videsAvant > blocsVides();
+        // Les listes de la ligne d'acteur sont renseignées, sinon l'enregistrement
+        // peut refuser une ligne vide.
+        [...document.querySelectorAll('#execSlider .pcfg-acteurs select')].forEach((sel) => {
+          if (sel.options.length > 1) {
+            sel.selectedIndex = 1;
+            sel.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+        await attendre(1200);
+
+        document.querySelector('[onclick^="execProcCfgEnregistrer"]')?.click();
+        await attendre(4000);
+        const apres = await lire();
+        r.apres = (apres || []).length;
+        const mien = (apres || []).find((x) => !avantIds.has(x.id));
+        r.cree = mien ? { id: mien.id, libelle: mien.libelle || '', type: mien.type || '' } : null;
+        r.listeApres = !z().textContent.includes('Aucune donnée');
+        if (!mien) return r;
+
+        // Dupliqué, puis les deux retirés : la ronde ne laisse rien.
+        const dupliquer = [...document.querySelectorAll('[onclick^="execProcCfgDupliquer"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(mien.id));
+        r.boutonDupliquer = !!dupliquer;
+        if (dupliquer) {
+          dupliquer.click();
+          await attendre(2400);
+          const valider = document.querySelector('[onclick^="execProcCfgDupliquerValider"]');
+          r.boutonDupliquerValider = !!valider;
+          if (valider) { valider.click(); await attendre(3500); }
+          r.apresDuplication = ((await lire()) || []).length;
+        }
+        // Tous ceux que la ronde a créés partent, le copié comme l'original.
+        const aEffacer = ((await lire()) || []).filter((x) => !avantIds.has(x.id)).map((x) => x.id);
+        r.aEffacer = aEffacer.length;
+        for (const id of aEffacer) {
+          const b = [...document.querySelectorAll('[onclick^="execProcCfgSupprimer"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(id));
+          if (b) { b.click(); /* eslint-disable no-await-in-loop */ await confirmer(); }
+        }
+        r.fin = ((await lire()) || []).filter((x) => !avantIds.has(x.id)).length;
+        return r;
+      }, M);
+
+      verifier('la page du processus part d’une liste vide, et sa configuration s’ouvre garnie',
+        processus.listeVide === true && processus.formulaire > 3000
+        && !!processus.choix && !!processus.choix.domaine,
+        JSON.stringify({ vide: processus.listeVide, formulaire: processus.formulaire,
+          choix: processus.choix }));
+      verifier('un acteur s’ajoute à l’étape du circuit, dont le bloc cesse d’être vide',
+        !!processus.acteurs && processus.acteurs[1] > processus.acteurs[0]
+        && processus.blocsVides === true,
+        JSON.stringify({ acteurs: processus.acteurs, unBlocDeMoinsVide: processus.blocsVides }));
+      verifier('le processus configuré est porté par le serveur, et la liste cesse d’être vide',
+        processus.apres === processus.avant + 1 && !!processus.cree
+        && /processus de la ronde/.test(processus.cree.libelle)
+        && processus.listeApres === true,
+        JSON.stringify({ avant: processus.avant, apres: processus.apres,
+          cree: processus.cree, listeApres: processus.listeApres }));
+      verifier('il se duplique, et la ronde retire tout ce qu’elle a posé',
+        processus.boutonDupliquer === true && processus.apresDuplication > processus.apres
+        && processus.aEffacer >= 2 && processus.fin === 0,
+        JSON.stringify({ duplique: processus.apresDuplication, aEffacer: processus.aEffacer,
+          fin: processus.fin }));
+
       // ── Et la ronde ne laisse rien — en **un** geste, et c'est mesuré ──
       //
       // Le premier jet supprimait le dossier **puis** la notification, et le

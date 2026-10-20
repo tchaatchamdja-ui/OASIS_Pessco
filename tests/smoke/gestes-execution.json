@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-19",
+ "releve": "2026-10-20",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 87,
+ "exerces": 95,
  "indecidables": 5,
  "gestes": [
   {
@@ -3941,7 +3941,7 @@
    "evenement": "click",
    "nom": "execProcCfgEditer",
    "source": "execProcCfgEditer('${p.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -3950,7 +3950,7 @@
    "evenement": "click",
    "nom": "execProcCfgDupliquer",
    "source": "execProcCfgDupliquer('${p.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -3959,7 +3959,7 @@
    "evenement": "click",
    "nom": "execProcCfgSupprimer",
    "source": "execProcCfgSupprimer('${p.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -3968,7 +3968,7 @@
    "evenement": "click",
    "nom": "execProcCfgEditer",
    "source": "execProcCfgEditer('')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -3995,7 +3995,7 @@
    "evenement": "change",
    "nom": "execProcCfgTypeChange",
    "source": "execProcCfgTypeChange()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4013,7 +4013,7 @@
    "evenement": "click",
    "nom": "execProcCfgDupliquer",
    "source": "execProcCfgDupliquer('${courant.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4022,7 +4022,7 @@
    "evenement": "click",
    "nom": "execProcCfgEnregistrer",
    "source": "execProcCfgEnregistrer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4040,7 +4040,7 @@
    "evenement": "click",
    "nom": "execProcCfgAjouterActeur",
    "source": "execProcCfgAjouterActeur('${_escAttr(cle)}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4049,7 +4049,7 @@
    "evenement": "change",
    "nom": "execProcCfgRoleChange",
    "source": "execProcCfgRoleChange(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4076,7 +4076,7 @@
    "evenement": "click",
    "nom": "execProcCfgDupliquerValider",
    "source": "execProcCfgDupliquerValider('${id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",

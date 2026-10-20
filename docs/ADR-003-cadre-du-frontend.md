@@ -5998,6 +5998,76 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            serveur n'est pas le mien et tient le verrou des données, je ne
            l'arrête pas.
 
+       5.f.25 [x] **SURV — la configuration du processus, et une correction que
+           je dois à mes propres rapports** — fait le 20 octobre 2026.
+
+           **Quatre-vingt-deux contrôles ; 95 gestes sur 310.**
+           `exec-processus-config.js` passe de 1 à 9 sur 13.
+
+           ── Ce que je m'apprêtais à conclure, et que la mesure a démenti ──
+
+           Le relevé disait `exec-notifications.js` : **1 geste sur 25**. J'ai cru
+           — et j'allais l'écrire — que ces gestes étaient échoués sur la page
+           `declenchement`, l'une des quatre qu'aucun chemin n'ouvre, et que le
+           point était donc **bloqué** par une question en attente depuis 5.f.2.
+
+           Deux mesures l'ont démenti :
+
+           1. `execStartNotification` est **aussi** appelé depuis la page
+              `processus`, qui est au menu. Le circuit est donc atteignable.
+           2. Forcées dans le navigateur — `EXEC_STATE.currentPage` posé, puis
+              `execRenderPage()` —, les quatre pages sans chemin rendent
+              **731, 681, 425 et 148 caractères**, et **deux** gestes non exercés
+              entre elles toutes.
+
+           Le vrai obstacle était ailleurs, et il n'avait rien à voir : la page
+           `processus` ne liste pas des activités, elle liste des **processus
+           configurés**, et le jeu d'essai n'en portait aucun — « Aucune
+           donnée », quel que soit le filtre.
+
+           *Un gisement qu'on croit inaccessible l'est parfois seulement derrière
+           une étape qu'on n'avait pas cherchée.*
+
+           ── La correction que je dois à mes rapports ──
+
+           J'ai écrit, à chaque pas depuis 5.f.2, que les quatre pages sans
+           chemin retenaient **« 69 gestes »**. Ce chiffre était une
+           **attribution, non une mesure** : il venait des 69 occurrences du
+           fichier `exec-activites.js`, attribuées en bloc à la page `execution`.
+           Or ce fichier sert **aussi** le volet du dossier, qui est atteignable
+           et largement couvert depuis.
+
+           La mesure par rendu forcé dit autre chose : ces quatre pages ne
+           retiennent, en propre et dans l'état du bac, que **deux** gestes non
+           exercés. La question qu'elles posent reste entière — une page rendue
+           et ouverte par rien est à corriger —, mais **son coût en couverture
+           est faible**, et je l'ai surestimé pendant dix pas.
+
+           *Un chiffre répété n'en devient pas vrai. Celui-là attendait d'être
+           mesuré, et il l'est.*
+
+           ── SURV a deux fenêtres de confirmation ──
+
+           Celle du socle (`oasisConfirmer`) pose un `.oasis-confirm-oui` ; celle
+           du module (`execProcConfirmer`) pose un `[data-rep="oui"]` dans un
+           `.exec-proc-dialogue`. Les suppressions de processus passent par la
+           seconde, et la ronde ne cherchait que la première : les deux processus
+           posés **restaient**. *Un geste qui demande confirmation ne dit pas
+           laquelle : il faut l'avoir lu, ou les essayer toutes.*
+
+           ── Trois lectures du même geste avant de trouver ce qui change ──
+
+           | Ce que je comptais | Résultat |
+           |---|---|
+           | les lignes d'un `tbody` | **0 avant, 0 après** |
+           | les enfants de `.pcfg-acteurs` | **9 avant, 9 après** |
+           | les **listes** des lignes d'acteur | 0 → 1, et un bloc vide de moins |
+
+           La troisième est celle que le code décrit : un bloc par étape du
+           circuit — neuf —, dont le contenu bascule entre « aucun acteur » et
+           ses lignes. Les deux premières comptaient des contenants ; la
+           troisième compte ce qui s'y ajoute.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

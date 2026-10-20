@@ -237,7 +237,7 @@ Il ne signifie **pas** « non testés ». Il faut séparer deux choses que le mo
 | | Ce qui est éprouvé | Combien |
 |---|---|---|
 | **Le serveur derrière l'écran** — routes, règles métier, permissions, données | par HTTP, **sans navigateur** | **588 contrôles** pour ces cinq écrans |
-| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **78** pour SURV seul |
+| **L'écran lui-même** — ce qui se passe quand on clique | dans un **vrai navigateur** | **65 contrôles** pour les neuf écrans réunis, plus **82** pour SURV seul |
 
 Ces cinq écrans portent **1 334 occurrences de geste** — boutons, formulaires, menus, champs.
 Ce sont des *occurrences* et non des gestes nommés : le portail en compte 129 pour **84** noms
@@ -254,8 +254,8 @@ corrigé l'estimation qui les précédait — RAMP était annoncé à 365 occurr
 | CARE | 6 428 | **143** | **89** | **11** |
 | PR | 7 315 | **185** | **94** | **9** |
 | RAMP | 12 470 | **362** | **207** | **38** |
-| SURV | 23 731 | **500** | **310** | **87** |
-| **Total** | | **1 353** | **807** | **180** |
+| SURV | 23 731 | **500** | **310** | **95** |
+| **Total** | | **1 353** | **807** | **188** |
 
 **Les six écrans sont mesurés** depuis le 16 octobre 2026 (ADR-003 n° 5.f.18) : plus un seul
 n'est dispensé pour absence d'instrument, et la ligne imprimée à chaque campagne porte six
@@ -265,7 +265,11 @@ déclaration **refuse** un chiffre. Le défaut implicite qui aurait fait tourner
 portail sur un écran de module, et rendu « 0 exercé » indiscernable du vrai, est supprimé.
 
 **Cinq pages du projet sont rendues par un aiguillage et ouvertes par rien** : les quatre de
-SURV (n° 5.f.2) et la vue « Plans » de PR (n° 5.f.18, 121 lignes). Écrans oubliés d'un menu ou
+SURV (n° 5.f.2) et la vue « Plans » de PR (n° 5.f.18, 121 lignes). Leur **coût en couverture a
+été mesuré** le 20 octobre 2026, par rendu forcé dans un navigateur : les quatre pages de SURV
+ne retiennent en propre que **deux** gestes non exercés, et non les « 69 » que les rapports
+précédents annonçaient — ce chiffre était une attribution de fichier, non une mesure
+(n° 5.f.25). La question qu'elles posent reste entière ; son prix est faible. Écrans oubliés d'un menu ou
 code mort : les deux se corrigent, pas de la même façon, et la question est posée à la maîtrise
 d'ouvrage. Chacune est **déclarée** dans la suite de son écran, et le contrôle refuse toute
 page sans chemin qui ne le serait pas.
@@ -283,7 +287,7 @@ le nœud. DROITS est **le premier écran couvert à 100 %** (15 sur 15), et sans
 chacune des conversions à venir aurait éteint sa mesure en silence.
 
 **SURV a aussi sa suite de navigateur** depuis le même jour (n° 5.f.1) :
-`tests/smoke/surv.smoke.js`, **soixante-dix-huit contrôles** — l'écran se monte, ses sept pages se
+`tests/smoke/surv.smoke.js`, **quatre-vingt-deux contrôles** — l'écran se monte, ses sept pages se
 parcourent par de vrais clics, chacune se remplit, elles diffèrent, aucune ne déborde, la
 console reste muette. Puis une **ronde de dossier sur tout son cycle**, de l'ouverture à la
 clôture, et le **remplisseur de checklist** : 141 items, le pliage dans les deux sens, la
@@ -843,7 +847,7 @@ grep -rhoE "postMessage\(\{[^}]*type: *'[^']+'" public/modules frontend \
   | grep -v '/app/' | sed -E "s/.*type: *'([^']+)'.*/\1/" | sort | uniq -c
 
 # Contrôles
-npm run smoke; echo "code de sortie : $?"                            # 1 168, et 0
+npm run smoke; echo "code de sortie : $?"                            # 1 172, et 0
 
 # Composants prescrits et absents : chaque ligne doit rendre 0
 grep -rli 'keycloak\|openid\|oidc' src server.js | wc -l

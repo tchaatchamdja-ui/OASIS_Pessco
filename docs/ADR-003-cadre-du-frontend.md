@@ -6505,6 +6505,157 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            *Un contre-essai qui confirme ce qu'on attend n'a rien coûté ; celui
            qui dément a payé tout le reste.*
 
+       5.f.30 [x] **SURV — les états d'une activité, et deux repères qui
+           nommaient autre chose** — fait le 20 octobre 2026.
+
+           **Cent-quarante-six contrôles ; 153 gestes sur 310.** Campagne : 1 237.
+           `exec-etats.js` passe de 12 à **24 noms sur 26**.
+
+           Le dernier gros gisement de SURV, et
+           le seul qui **écrit sur l'état du circuit** plutôt que sur son
+           contenu : arrêter, reprendre, archiver, désarchiver, supprimer, et le
+           rappel.
+
+           ── Ce qu'il fallait construire pour y arriver ──
+
+           Chacun de ces gestes exige une activité dans un état que la ronde ne
+           construisait pas. Elle s'en construit donc un : le plan du bac porte
+           **deux** activités, la chaîne du montage n'en déclenche qu'une. La
+           seconde sert ici — déclenchée par l'API jusqu'à « envoyé », sans
+           dossier, elle paraît dans « en cours » et dans « en vie », là où
+           vivent les boutons. Le dernier geste du bloc, la suppression
+           définitive, l'emporte : rien ne reste pour les blocs suivants.
+
+           ── Ce que ces contrôles tiennent ──
+
+           - **les boutons de la ligne s'excluent** : tant que le circuit court,
+             il n'y a que « Arrêter » ; arrêté, « Reprendre » et « Archiver »
+             paraissent et « Arrêter » disparaît. Trois états, mesurés dans les
+             trois sens ;
+           - l'arrêt demande un **motif**, que le serveur garde — et c'est le
+             motif relu en base qui le prouve, non la fermeture de la boîte ;
+           - l'activité archivée **quitte** « en vie » pour les archives, et y
+             revient par son geste ;
+           - un **lot d'archives** se replie d'un clic sur son titre, et se
+             redéplie ;
+           - un **dossier clôturé** s'archive et revient, le serveur portant les
+             deux états ;
+           - un **plan archivé** forme son lot, et le geste de l'écran le rend
+             aux plans validés ;
+           - le **rappel** s'ouvre sur un destinataire désigné, **refuse** sans
+             destinataire — et le compte des rappels du serveur le prouve : rien
+             n'est parti —, puis part et se relit en base ;
+           - la **suppression définitive** porte une double garde : une référence
+             qui ne correspond pas refuse et n'emporte rien ; la bonne emporte
+             tout, et le serveur ne connaît plus l'activité.
+
+           ── Trois erreurs de ma part, et chacune dit la même chose ──
+
+           **1. « Deux activités », quand la route n'en rend qu'une.** Je
+           cherchais un plan portant deux activités, parce que le plan du bac en
+           porte deux. Dix contrôles ont rougi d'un coup sur
+           `planADeuxActivites: false`. `GET /plans-valides` **écarte les
+           activités déjà déclenchées** — la chaîne en avait consommé une au
+           montage. La « seconde activité » est la **première** que cette route
+           rende encore. Le relevé des plans, posé dans le détail du contrôle,
+           a tranché en une ligne : `"Plan de Surveillance 202:1"`.
+
+           **2. Un repère qui ne vaut que pour une table.** Je cherchais la ligne
+           par l'identifiant de la notification. Il tient dans « en vie », dont
+           les boutons portent `execEtatsArreter('<notifId>')`. Dans les
+           archives, **aucun bouton ne porte la notification** : l'historique et
+           le désarchivage portent celui de l'**activité**. Trois contrôles ont
+           rougi en cascade sur ce seul écart. *Un repère pris dans une table ne
+           se transporte pas dans une autre : ce ne sont pas les mêmes noms.*
+
+           **3. Une assertion à deux branches, dont une suffisait.** J'avais
+           écrit `Number(apresArret.arretee) === 1 || !!apresArret.motif_arret`.
+           Le serveur écrit **`arret`**, non `arretee` : le contrôle passait par
+           son second terme, et le premier ne mesurait rien. Il est vert, et il
+           aurait été vert si le champ n'avait jamais été écrit. *Un « ou » dans
+           une assertion mesure la branche la plus facile.* Les deux champs sont
+           désormais nommés juste, et exigés.
+
+           ── Une suspicion levée, et il faut le dire aussi ──
+
+           `execEtatsArchiverActivite` appelle
+           `/activites-en-cours/<notifId>/archiver`, quand
+           `execEtatsDesarchiverActivite` appelle la même famille de routes avec
+           `<activiteId>`. J'ai cru à un défaut — un identifiant d'activité là
+           où une notification est attendue. La lecture du serveur l'a démenti :
+           `notifDeLActivite` résout **les deux**, par construction. Mesuré avant
+           d'être annoncé, cette fois.
+
+           ── Et le garde-fou de 5.f.26 s'est exercé en vrai ──
+
+           Entre deux passages, j'en ai lancé un second avant que le premier
+           n'ait rendu son port. Le harnais a **refusé de démarrer** et nommé le
+           port 4797, au lieu de parler au serveur de l'autre passage. C'est
+           exactement ce qu'il a été écrit pour faire — et c'est la première fois
+           qu'il le fait sans que je l'y pousse.
+
+           ── Un refus déclaré de plus ──
+
+           Le dernier contrôle relève l'**absence** de l'activité supprimée : le
+           `GET` rend 404, et c'est la preuve. `REFUS_ATTENDUS` le déclare, par
+           code, méthode et chemin, avec le contrôle qui l'exige. Le crochet
+           d'incidents ne le compte plus, et tout autre 404 reste un incident.
+
+           ── Ce qui reste de `exec-etats.js` ──
+
+           `execEtatsDesarchiverPlan` est couvert, mais seulement parce que la
+           ronde **archive le plan elle-même** par la route de la Planification.
+           Dans le bac, `plansArchivesPlanif` est vide par construction : les
+           quatre plans archivés du jeu sont des versions remplacées, que la
+           règle écarte — « on range aux archives un plan arrivé à son terme, et
+           confondre les deux sorts faisait passer chaque amendement pour une fin
+           de plan ».
+
+           ── Et une correction de l'instrument, trouvée en finissant ce fichier ──
+
+           Il restait deux noms « non exercés » dans `exec-etats.js` :
+           `${}` — l'angle mort connu — et **`if`, quatre fois**. Ce n'est pas
+           un geste : c'est le nom que l'extracteur donnait à
+           `onclick="if(!event.target.closest('button'))execEtatsOuvrir(…)"`,
+           la garde qui empêche un clic de bouton d'ouvrir la ligne.
+
+           La règle « une garde n'est pas un geste » existait depuis 5.f.0 pour
+           les flèches JSX, et **pas pour les attributs en ligne**. Quatre
+           occurrences portaient donc un nom éternellement non exercé, quand le
+           geste réel l'était sous son vrai nom.
+
+           Premier jet de la correction : « le premier appel qui n'est pas un mot
+           du langage ». Il rendait **`event.target.closest`** — l'appel *de la
+           garde*, non ce qu'elle protège. Plus trompeur que « if », qui au moins
+           s'avouait. La condition se retire désormais **en entier, par comptage
+           de parenthèses** : aucune expression régulière n'équilibre
+           `if (!a.closest('(x)'))`.
+
+           Contre-essayé sur cinq formes, dont les deux qui échouaient : la garde
+           en ligne, l'appel nu, l'affectation, la garde seule, et la flèche JSX
+           gardée. **5/5.**
+
+           La règle vit maintenant en un seul endroit, commune aux deux formes.
+           C'est la troisième fois que cet extracteur se corrige, et toujours
+           dans le même sens : *il nommait ce qui se lit le plus facilement, non
+           ce que le code fait.*
+
+           ── Un aléa, et pourquoi il valait d'être traité ──
+
+           La campagne a rougi une fois sur `planification-navigateur` :
+           « Runtime.callFunctionOn timed out », au terme de huit suites de
+           navigateur. La même suite, rejouée seule, a passé. Ce n'était pas un
+           défaut d'écran mais le **délai de protocole par défaut** de
+           Puppeteer, atteint sous la charge — sur une suite que ce pas n'avait
+           pas touchée.
+
+           Un aléa qui fait rougir une campagne coûte autant qu'un vrai défaut :
+           il faut le lire, le rejouer, l'écarter. Les huit suites portent
+           désormais un délai de cinq minutes — bien au-delà de ce que ces rondes
+           demandent, bien en dessous d'un blocage réel, qui doit toujours finir
+           par rendre. *Un essai qui rougit au hasard apprend à ne plus croire
+           ceux qui rougissent.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

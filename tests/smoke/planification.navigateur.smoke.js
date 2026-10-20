@@ -70,9 +70,12 @@ module.exports = async function planificationNavigateurSmoke(port) {
   let navigateur = null;
   const incidents = [];
   try {
+    // Délai de protocole : voir la raison dans `surv.smoke.js` (n° 5.f.30) —
+    // une campagne de huit suites de navigateur a dépassé le défaut.
     navigateur = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      protocolTimeout: 300000,
     });
     const mouchard = process.env.OASIS_MOUCHARD
       ? require(path.join(RACINE, 'scripts', 'relever-gestes.js')).MOUCHARD : null;

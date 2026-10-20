@@ -193,15 +193,10 @@ const nomDuGestionnaireJsx = (corps) => {
   // « if » : le premier mot du bloc n'est pas toujours un nom. C'est la même
   // règle que la garde `event.stopPropagation` de 5.f.0, sous une autre forme —
   // le geste est ce que la garde **protège**, non la garde.
-  const MOTS_CLES = new Set(['if', 'for', 'while', 'switch', 'try', 'catch',
-    'return', 'const', 'let', 'var', 'do', 'else', 'typeof', 'await', 'new']);
-  const nomme = nomDuGestionnaire(c);
-  if (!MOTS_CLES.has(nomme)) return nomme;
-  for (const appel of c.matchAll(/(^|[^.\w$])([A-Za-z_$][\w$.]*)\s*\(/g)) {
-    const n = appel[2];
-    if (!MOTS_CLES.has(n.split('.')[0])) return n;
-  }
-  return nomme;
+  // La règle vit désormais dans `nomDuGestionnaire`, commune aux deux formes
+  // (n° 5.f.30) : un `onclick="if(…)execEtatsOuvrir(…)"` se nommait « if » tout
+  // comme une flèche JSX gardée.
+  return nomDuGeste(c);
 };
 
 // L'identifiant d'une cible d'écouteur, cherché d'abord dans l'expression
@@ -311,6 +306,16 @@ function blanchirCommentaires(code) {
 //
 // C'est la même leçon que les commentaires blanchis, un cran plus loin : *ce qui
 // ressemble à un attribut n'en est pas un.*
+// ── Une garde n'est pas un geste, quelle que soit la forme ──
+//
+// `if (…) execEtatsOuvrir(…)` se nommait « if » : le premier mot n'est pas
+// toujours un nom. La règle existait pour les flèches JSX, et **pas pour les
+// attributs en ligne** — quatre occurrences de SURV comptaient un geste nommé
+// « if », éternellement « non exercé », quand le geste réel était exercé sous
+// son vrai nom ailleurs. Le geste est ce que la garde **protège**.
+const MOTS_CLES = new Set(['if', 'for', 'while', 'switch', 'try', 'catch',
+  'return', 'const', 'let', 'var', 'do', 'else', 'typeof', 'await', 'new']);
+
 const nomDuGestionnaire = (corps) => {
   // Les interpolations d'abord : deux gestionnaires qui ne diffèrent que par une
   // valeur insérée sont **un** geste, et non deux.
@@ -324,6 +329,50 @@ const nomDuGestionnaire = (corps) => {
   const affectation = /^([A-Za-z_$][\w$.[\]'"]*)\s*=(?!=)/.exec(sansGarde);
   if (affectation) return affectation[1];
   return sansGarde.slice(0, 48);
+};
+
+// ── Retirer une condition, et non le premier appel qu'on y trouve ──
+//
+// Premier jet de cette correction : « le premier appel qui n'est pas un mot du
+// langage ». Sur `onclick="if(!event.target.closest('button'))execEtatsOuvrir(…)"`
+// il rendait **`event.target.closest`** — l'appel *de la garde*, non ce qu'elle
+// protège. C'était plus trompeur que « if », qui au moins s'avouait.
+//
+// La condition se retire donc en entier, par comptage de parenthèses : aucune
+// expression régulière n'équilibre `if (!a.closest('(x)'))`. Puis l'on nomme ce
+// qui reste — le geste.
+const sansCondition = (corps) => {
+  const t = String(corps).trim();
+  const m = /^(if|while|for|switch)\s*\(/.exec(t);
+  if (!m) return null;
+  let profondeur = 0;
+  for (let i = m[0].length - 1; i < t.length; i += 1) {
+    if (t[i] === '(') profondeur += 1;
+    else if (t[i] === ')') {
+      profondeur -= 1;
+      if (profondeur === 0) return t.slice(i + 1).replace(/^\s*\{?\s*/, '');
+    }
+  }
+  return null;
+};
+
+// Le nom, puis la règle des mots-clés : si le nom trouvé est un mot du langage,
+// c'est une garde — on retire sa condition et l'on nomme ce qu'elle protège.
+const nomDuGeste = (corps) => {
+  const nomme = nomDuGestionnaire(corps);
+  if (!MOTS_CLES.has(nomme)) return nomme;
+  const protege = sansCondition(corps);
+  if (protege) {
+    const n = nomDuGestionnaire(protege);
+    if (n && !MOTS_CLES.has(n)) return n;
+  }
+  // Un `try`, un `const`, une boucle sans condition parenthésée : on retombe sur
+  // le premier appel qui n'est pas un mot du langage.
+  for (const appel of String(corps).matchAll(/(^|[^.\w$])([A-Za-z_$][\w$.]*)\s*\(/g)) {
+    const n = appel[2];
+    if (!MOTS_CLES.has(n.split('.')[0])) return n;
+  }
+  return nomme;
 };
 
 function relever(fichiers) {
@@ -341,7 +390,7 @@ function relever(fichiers) {
         ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'en ligne',
         evenement: m[1],
-        nom: nomDuGestionnaire(corps),
+        nom: nomDuGeste(corps),
         source: corps.slice(0, 120),
       });
     }

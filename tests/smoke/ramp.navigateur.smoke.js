@@ -100,9 +100,12 @@ module.exports = async function rampNavigateurSmoke(port) {
   let navigateur = null;
   const incidents = [];
   try {
+    // Délai de protocole : voir la raison dans `surv.smoke.js` (n° 5.f.30) —
+    // une campagne de huit suites de navigateur a dépassé le défaut.
     navigateur = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      protocolTimeout: 300000,
     });
     // Le mouchard des gestes, posé seulement si `OASIS_MOUCHARD` l'est — même
     // règle que les deux autres suites de navigateur : l'outil instrumente la

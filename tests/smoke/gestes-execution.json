@@ -2,7 +2,7 @@
  "releve": "2026-10-20",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 141,
+ "exerces": 153,
  "indecidables": 5,
  "gestes": [
   {
@@ -2031,7 +2031,7 @@
    "ligne": 448,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "${}",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
    "exerce": false
   },
@@ -2042,14 +2042,14 @@
    "evenement": "click",
    "nom": "execEtatsRappel",
    "source": "execEtatsRappel('${l.planId}','${l.activiteId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
    "ligne": 497,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "${}",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
    "exerce": false
   },
@@ -2060,14 +2060,14 @@
    "evenement": "click",
    "nom": "execEtatsRappel",
    "source": "execEtatsRappel('${l.planId}','${l.activiteId}','${_escAttr(te(s.titre))}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
    "ligne": 544,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "${}",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
    "exerce": false
   },
@@ -2087,7 +2087,7 @@
    "evenement": "click",
    "nom": "execProcHistorique",
    "source": "execProcHistorique('${l.planId}','${l.activiteId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2096,7 +2096,7 @@
    "evenement": "click",
    "nom": "execEtatsReprendre",
    "source": "execEtatsReprendre('${n.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2105,7 +2105,7 @@
    "evenement": "click",
    "nom": "execEtatsArchiverActivite",
    "source": "execEtatsArchiverActivite('${n.id}',true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2114,7 +2114,7 @@
    "evenement": "click",
    "nom": "execEtatsArreter",
    "source": "execEtatsArreter('${n.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2123,14 +2123,14 @@
    "evenement": "click",
    "nom": "execEtatsSupprimer",
    "source": "execEtatsSupprimer('${n.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
    "ligne": 600,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "${}",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
    "exerce": false
   },
@@ -2159,7 +2159,7 @@
    "evenement": "click",
    "nom": "execProcHistorique",
    "source": "execProcHistorique('${l.planId}','${l.activiteId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2168,7 +2168,7 @@
    "evenement": "click",
    "nom": "execEtatsArchiver",
    "source": "execEtatsArchiver('${d.id}',${archivees ? 'false' : 'true'})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2177,7 +2177,7 @@
    "evenement": "click",
    "nom": "execEtatsDesarchiverActivite",
    "source": "execEtatsDesarchiverActivite('${l.activiteId}',${l.planArchive ? 'true' : 'false'})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2186,7 +2186,7 @@
    "evenement": "click",
    "nom": "execEtatsGroupeToggle",
    "source": "execEtatsGroupeToggle(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2195,7 +2195,7 @@
    "evenement": "click",
    "nom": "execEtatsDesarchiverPlan",
    "source": "event.stopPropagation();execEtatsDesarchiverPlan('${cle}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2204,7 +2204,7 @@
    "evenement": "click",
    "nom": "EXEC_ETATS.sub",
    "source": "EXEC_ETATS.sub='${o.cle}';execRenderPage();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2222,7 +2222,7 @@
    "evenement": "click",
    "nom": "execEtatsEnvoyerRappel",
    "source": "execEtatsEnvoyerRappel('${planId}','${activiteId}','${_escAttr(motif || '')}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -3831,7 +3831,7 @@
    "ligne": 375,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "execOpenActiviteProcessus",
    "source": "if(!event.target.closest('button'))execOpenActiviteProcessus('${plan.id}','${a.id}')",
    "exerce": false
   },
@@ -3930,9 +3930,9 @@
    "ligne": 137,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "execProcCfgEditer",
    "source": "if(!event.target.closest('button'))execProcCfgEditer('${p.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4308,7 +4308,7 @@
    "ligne": 1828,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "execOpenActiviteProcessus",
    "source": "if(!event.target.closest('button'))execOpenActiviteProcessus('hors-plan','${n.id}')",
    "exerce": false
   },
@@ -4319,7 +4319,7 @@
    "evenement": "click",
    "nom": "execProcHistorique",
    "source": "execProcHistorique('hors-plan','${n.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",

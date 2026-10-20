@@ -1,5 +1,5 @@
 {
- "releve": "2026-10-15",
+ "releve": "2026-10-20",
  "gestesNommes": 207,
  "occurrences": 362,
  "exerces": 38,
@@ -268,7 +268,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1371,
+   "ligne": 1378,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampBasculerCategorie",
@@ -277,7 +277,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1381,
+   "ligne": 1388,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampOuvrirStatistiques",
@@ -286,7 +286,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1621,
+   "ligne": 1628,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampBasculerInspection",
@@ -295,7 +295,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1625,
+   "ligne": 1632,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampBasculerInspection",
@@ -304,7 +304,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1643,
+   "ligne": 1650,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampOuvrirApercu",
@@ -313,7 +313,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1647,
+   "ligne": 1654,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampSupprimerInspection",
@@ -322,7 +322,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1697,
+   "ligne": 1704,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampOuvrirImportation",
@@ -331,7 +331,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1700,
+   "ligne": 1707,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampAjouterInspection",
@@ -340,7 +340,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1702,
+   "ligne": 1709,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampNavigateTo",
@@ -349,7 +349,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1727,
+   "ligne": 1734,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampExporterInspections",
@@ -358,7 +358,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1797,
+   "ligne": 1804,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampBasculerEcart",
@@ -367,7 +367,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1801,
+   "ligne": 1808,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampBasculerEcart",
@@ -376,7 +376,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1816,
+   "ligne": 1823,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampOuvrirApercu",
@@ -385,7 +385,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1819,
+   "ligne": 1826,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampOuvrirPac",
@@ -394,7 +394,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1828,
+   "ligne": 1835,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampOuvrirPreuves",
@@ -403,7 +403,7 @@
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
-   "ligne": 1871,
+   "ligne": 1878,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "rampExporterEcarts",

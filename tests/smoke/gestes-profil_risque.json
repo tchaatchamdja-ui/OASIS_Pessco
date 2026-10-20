@@ -1,5 +1,5 @@
 {
- "releve": "2026-10-15",
+ "releve": "2026-10-20",
  "gestesNommes": 94,
  "occurrences": 185,
  "exerces": 9,
@@ -998,7 +998,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 518,
+   "ligne": 517,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentNode.remove",
@@ -1007,7 +1007,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 616,
+   "ligne": 615,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "closeModal",
@@ -1016,7 +1016,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 617,
+   "ligne": 616,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "deleteEntity",
@@ -1025,7 +1025,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 618,
+   "ligne": 617,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveEntity",
@@ -1034,7 +1034,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 711,
+   "ligne": 710,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "saveIndices",
@@ -1043,7 +1043,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 809,
+   "ligne": 808,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "document.getElementById",
@@ -1052,7 +1052,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 841,
+   "ligne": 840,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document:click",

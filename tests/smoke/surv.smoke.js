@@ -113,9 +113,22 @@ module.exports = async function survSmoke(port) {
   let navigateur = null;
   const incidents = [];
   try {
+    // ── Le délai de protocole, et une campagne rougie par la charge ──
+    //
+    // Le 20 octobre 2026, `planification-navigateur` a rendu
+    // « Runtime.callFunctionOn timed out » au terme d'une campagne de huit
+    // suites de navigateur — et la même suite, rejouée seule, a passé. Ce
+    // n'était pas un défaut de l'écran : c'était le **délai de protocole par
+    // défaut** de Puppeteer, atteint sous la charge.
+    //
+    // Un aléa qui fait rougir une campagne coûte autant qu'un vrai défaut :
+    // il faut le lire, le rejouer, l'écarter. Le délai est donc posé — cinq
+    // minutes, bien au-delà de toute évaluation que ces rondes demandent, et
+    // bien en dessous d'un blocage réel, qui doit toujours finir par rendre.
     navigateur = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      protocolTimeout: 300000,
     });
     // Le mouchard des gestes, posé seulement si `OASIS_MOUCHARD` l'est — même
     // règle que la suite « parcours », et pour la même raison : l'outil
@@ -175,6 +188,13 @@ module.exports = async function survSmoke(port) {
         pourquoi: 'une notification envoyée refuse d’être effacée : elle s’annule.'
           + ' Éprouvé par « une notification envoyée refuse d’être effacée, s’annule,'
           + ' et se retire alors » (n° 5.f.26).',
+      },
+      {
+        code: 404, methode: 'GET', chemin: /\/notifications\/[\w-]+$/,
+        pourquoi: 'la ronde relève l’**absence** d’une activité qu’elle vient de'
+          + ' supprimer définitivement : le 404 est la preuve, non l’incident.'
+          + ' Éprouvé par « la bonne référence l’emporte : le serveur ne connaît'
+          + ' plus l’activité » (n° 5.f.30).',
       },
     ];
     page.on('response', (r) => {
@@ -3276,6 +3296,427 @@ module.exports = async function survSmoke(port) {
       // La ronde crée donc une activité hors plan, et parcourt le circuit par
       // ses gestes — là où la ronde du dossier, plus haut, le fait par l'API
       // faute d'avoir su par où passer.
+
+      // ══════════════════════════════════════════════════════════════════
+      //  Les états des activités : arrêter, reprendre, archiver, supprimer
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // Le dernier gros gisement de SURV, et le seul qui **écrit sur l'état du
+      // circuit** plutôt que sur son contenu. Dix gestes d'action, et chacun
+      // exige une activité dans un état que la ronde ne construisait pas.
+      //
+      // La ronde s'en construit donc un : le plan porte **deux** activités, la
+      // chaîne n'en déclenche qu'une. La seconde sert ici — déclenchée par
+      // l'API jusqu'à « envoyé », sans dossier, elle paraît dans « en cours »
+      // et dans « en vie », là où vivent les boutons.
+      //
+      // Chaque geste est rendu à son état par son inverse, et le dernier —
+      // la suppression définitive — emporte ce que ce bloc a créé. Rien ne
+      // reste pour les blocs qui suivent.
+      etape = 'états des activités';
+      const etats = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const essai = async (nom, f) => {
+          try { r[nom] = await f(); }
+          catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+        };
+        const env = async (url, methode, corps) => {
+          const rep = await fetch(url, {
+            method: methode, credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+            ...(corps ? { body: JSON.stringify(corps) } : {}),
+          });
+          let b = null; try { b = await rep.json(); } catch { /* corps vide */ }
+          return { statut: rep.status, corps: b };
+        };
+        // La boîte du module, avec ou sans saisie (n° 5.f.25).
+        const repondre = async (valeur) => {
+          await attendre(800);
+          const boite = document.querySelector('.exec-proc-dialogue');
+          if (!boite) return false;
+          if (valeur !== undefined && valeur !== null) {
+            const champ = boite.querySelector('.exec-proc-dialogue-saisie');
+            if (champ) { champ.value = valeur; champ.dispatchEvent(new Event('input', { bubbles: true })); }
+          }
+          boite.querySelector('[data-rep="oui"]').click();
+          await attendre(3200);
+          return true;
+        };
+        const sousOnglet = (cle) => [...document.querySelectorAll('[onclick*="EXEC_ETATS.sub="]')]
+          .find((b) => new RegExp(`sub='${cle}'`).test(b.getAttribute('onclick') || ''));
+        const aller = async (cle) => { sousOnglet(cle)?.click(); await attendre(2200); };
+
+        document.querySelector('.nav-btn[data-page="etats"]')?.click();
+        await attendre(3200);
+
+        // ── 1. Les cinq sous-onglets rendent chacun leur contenu ──
+        await essai('onglets', async () => {
+          const o = { cles: [], rendus: [] };
+          for (const cle of ['a_declencher', 'en_vie', 'en_cours', 'cloturees', 'archivees']) {
+            const b = sousOnglet(cle);
+            o.cles.push(!!b);
+            /* eslint-disable no-await-in-loop */
+            await aller(cle);
+            const page = document.querySelector('.page-content.exec-etats');
+            o.rendus.push({
+              cle,
+              actif: !!(sousOnglet(cle) || {}).classList?.contains('active'),
+              contenu: page ? page.innerHTML.length : 0,
+            });
+          }
+          return o;
+        });
+
+        // ── 2. Une seconde activité déclenchée, et le rappel ──
+        await essai('rappel', async () => {
+          const d = {};
+          const plans = await (await fetch(`${ctx.api}/plans-valides`,
+            { credentials: 'same-origin' })).json();
+          // ── Ce que la route exclut, et ma garde qui l'ignorait ──
+          //
+          // Premier jet : je cherchais un plan portant **deux** activités, parce
+          // que le plan du bac en porte deux. Dix contrôles ont rougi sur
+          // `planADeuxActivites: false`.
+          //
+          // `GET /plans-valides` **écarte les activités déjà déclenchées** : la
+          // chaîne en a consommé une au montage, il n'en reste donc qu'une. La
+          // « seconde activité » du plan est la **première** que cette route
+          // rende encore. Le relevé des plans reste, il tranche en une ligne.
+          d.plans = (plans || []).map((p) => `${(p.reference || p.titre || '?').slice(0, 24)}:${(p.activites || []).length}`);
+          const plan = (plans || []).find((p) => (p.activites || []).length >= 1);
+          d.planADeuxActivites = !!plan;
+          if (!plan) return d;
+          const a = plan.activites[0];
+          d.planId = plan.id;
+          const n = await env(`${ctx.api}/notifications`, 'POST', {
+            activite_id: a.id, plan_id: plan.id, prestataire_id: a.prestataire_id,
+            objet: 'SURV 0.e — activité des états', type_supervision: 'Audit',
+            date_debut_prevue: '2026-11-02', date_fin_prevue: '2026-11-04',
+            lieu: 'Siège', perimetre: 'Ensemble des processus',
+          });
+          d.creee = n.statut;
+          if (n.statut !== 201) return d;
+          d.notifId = n.corps.id;
+          d.reference = n.corps.reference || '';
+          d.activiteId = a.id;
+          for (const pas of ['submit', 'validate', 'send']) {
+            /* eslint-disable no-await-in-loop */
+            d[pas] = (await env(`${ctx.api}/notifications/${d.notifId}/${pas}`, 'PUT')).statut;
+          }
+          await window.execRefreshDynamic();
+          await aller('en_cours');
+
+          const bouton = [...document.querySelectorAll('[onclick^="execEtatsRappel"]')]
+            .find((b) => (b.getAttribute('onclick') || '').includes(plan.id));
+          d.boutonRappel = !!bouton;
+          if (!bouton) return d;
+          bouton.click();
+          await attendre(3000);
+          const dest = document.getElementById('rappel_dest');
+          d.volet = !!dest;
+          if (!dest) return d;
+          d.destinataires = dest.options.length;
+          d.note = (document.querySelector('.exec-proc-note') || {}).textContent?.trim().slice(0, 80) || '';
+          // ── Le refus : sans destinataire, rien ne part ──
+          const avant = ((await (await fetch(`${ctx.api}/rappels`,
+            { credentials: 'same-origin' })).json()) || []).length;
+          const choisi = dest.value;
+          dest.value = '';
+          document.querySelector('[onclick^="execEtatsEnvoyerRappel"]').click();
+          await attendre(1400);
+          d.refus = (document.getElementById('rappel_erreur') || {}).textContent || '';
+          d.rappelsApresRefus = ((await (await fetch(`${ctx.api}/rappels`,
+            { credentials: 'same-origin' })).json()) || []).length;
+          d.rienNEstParti = d.rappelsApresRefus === avant;
+          // Puis le destinataire rendu, et l'envoi.
+          dest.value = choisi;
+          const msg = document.getElementById('rappel_msg');
+          if (msg) msg.value = 'SURV 0.e — rappel de la ronde.';
+          document.querySelector('[onclick^="execEtatsEnvoyerRappel"]').click();
+          await attendre(3500);
+          const apres = (await (await fetch(`${ctx.api}/rappels`,
+            { credentials: 'same-origin' })).json()) || [];
+          d.rappelsApres = apres.length;
+          d.enBase = apres.some((x) => /rappel de la ronde/.test(x.message || ''));
+          d.voletReferme = !document.getElementById('rappel_dest');
+          return d;
+        });
+
+        const notifId = (r.rappel || {}).notifId;
+        const reference = (r.rappel || {}).reference;
+        const activiteId = (r.rappel || {}).activiteId;
+        const planId = (r.rappel || {}).planId;
+
+        // ── 3. Arrêter, reprendre, archiver, désarchiver l'activité ──
+        await essai('circuit', async () => {
+          const d = {};
+          if (!notifId) return { erreur: 'pas de notification' };
+          await aller('en_vie');
+          const ligne = () => [...document.querySelectorAll('.exec-act-row')]
+            .find((tr) => (tr.innerHTML || '').includes(notifId));
+          const geste = (prefixe) => {
+            const l = ligne();
+            return l ? l.querySelector(`[onclick^="${prefixe}"]`) : null;
+          };
+          d.ligneTrouvee = !!ligne();
+          if (!ligne()) return d;
+          // Les boutons s'excluent : tant que le circuit court, il n'y a que
+          // « Arrêter » ; arrêté, « Reprendre » et « Archiver » paraissent.
+          d.avant = {
+            arreter: !!geste('execEtatsArreter'),
+            reprendre: !!geste('execEtatsReprendre'),
+            archiver: !!geste('execEtatsArchiverActivite'),
+            supprimer: !!geste('execEtatsSupprimer'),
+            historique: !!geste('execProcHistorique'),
+          };
+          // ── L'historique : il ne raconte que ce que la ronde a posé ──
+          //
+          // Trois jalons au moins — créée, soumise, validée — puisque la ronde
+          // a franchi ces trois pas par l'API. Un historique qui en rendrait
+          // moins ne lirait pas la notification qu'on lui désigne.
+          geste('execProcHistorique').click();
+          await attendre(3000);
+          d.histoEtapes = document.querySelectorAll('.exec-histo-etape').length;
+          d.histoJalons = document.querySelectorAll('.exec-histo-jalon').length;
+          d.histoCourante = document.querySelectorAll('.exec-histo-etape.courante').length;
+          d.histoFaites = document.querySelectorAll('.exec-histo-etape.faite').length;
+          document.querySelector('#execSlider [onclick^="execCloseSlider"]')?.click();
+          await attendre(1600);
+          await aller('en_vie');
+
+          geste('execEtatsArreter').click();
+          d.boiteMotif = await repondre('SURV 0.e — arrêt par la ronde.');
+          const apresArret = await (await fetch(`${ctx.api}/notifications/${notifId}`,
+            { credentials: 'same-origin' })).json();
+          // Le serveur écrit **`arret`** (routes-etats.js), non `arretee`. Mon
+          // premier jet acceptait l'un **ou** le motif, et passait par le second
+          // terme : une assertion à deux branches dont une suffit ne mesure que
+          // la plus facile. Les deux sont exigées, et nommées juste.
+          d.arreteEnBase = Number(apresArret.arret) === 1;
+          d.motifEnBase = apresArret.motif_arret || '';
+          await aller('en_vie');
+          d.apresArret = {
+            arreter: !!geste('execEtatsArreter'),
+            reprendre: !!geste('execEtatsReprendre'),
+            archiver: !!geste('execEtatsArchiverActivite'),
+            marquee: !!(ligne() || {}).classList?.contains('exec-etats-arretee'),
+          };
+          // Reprendre, et le circuit repart.
+          geste('execEtatsReprendre').click();
+          await repondre();
+          const apresReprise = await (await fetch(`${ctx.api}/notifications/${notifId}`,
+            { credentials: 'same-origin' })).json();
+          d.repriseEnBase = Number(apresReprise.arret) === 0;
+          await aller('en_vie');
+          d.apresReprise = { arreter: !!geste('execEtatsArreter'),
+            reprendre: !!geste('execEtatsReprendre') };
+
+          // Arrêtée de nouveau, puis archivée.
+          geste('execEtatsArreter').click();
+          await repondre('SURV 0.e — arrêt avant archivage.');
+          await aller('en_vie');
+          geste('execEtatsArchiverActivite').click();
+          await repondre();
+          const apresArchive = await (await fetch(`${ctx.api}/notifications/${notifId}`,
+            { credentials: 'same-origin' })).json();
+          d.archiveeEnBase = Number(apresArchive.archive) === 1;
+          await aller('en_vie');
+          d.partieDesEnVie = !ligne();
+          await aller('archivees');
+          // ── Deux repères, parce que les deux tables ne nomment pas la même chose ──
+          //
+          // Premier jet : le même repère partout — une ligne qui contient
+          // l'identifiant de la notification. Il tient dans « en vie », dont les
+          // boutons portent `execEtatsArreter('<notifId>')`. Dans les archives,
+          // **aucun bouton ne porte la notification** : l'historique et le
+          // désarchivage portent l'identifiant de l'**activité**. Trois contrôles
+          // ont rougi en cascade sur ce seul écart.
+          const ligneArchivee = () => [...document.querySelectorAll('.exec-act-row')]
+            .find((tr) => (tr.innerHTML || '').includes(activiteId));
+          d.dansLesArchives = !!ligneArchivee();
+          // Le lot d'archives se replie d'un clic sur son titre.
+          const titre = document.querySelector('.exec-etats-groupe-titre');
+          d.groupeTrouve = !!titre;
+          if (titre) {
+            const groupe = titre.closest('.exec-etats-groupe');
+            d.groupeOuvertAvant = groupe.classList.contains('ouvert');
+            titre.click();
+            await attendre(700);
+            d.groupeApresClic = groupe.classList.contains('ouvert');
+            titre.click();
+            await attendre(700);
+            d.groupeRendu = groupe.classList.contains('ouvert') === d.groupeOuvertAvant;
+          }
+          // Et elle sort des archives par son geste.
+          const sortir = (ligneArchivee() || {}).querySelector?.('[onclick^="execEtatsDesarchiverActivite"]');
+          d.boutonSortir = !!sortir;
+          if (sortir) { sortir.click(); await repondre(); }
+          const apresSortie = await (await fetch(`${ctx.api}/notifications/${notifId}`,
+            { credentials: 'same-origin' })).json();
+          d.sortieEnBase = !Number(apresSortie.archive);
+          return d;
+        });
+
+        // ── 4. Le dossier clôturé s'archive, et revient ──
+        await essai('dossier', async () => {
+          const d = {};
+          await aller('cloturees');
+          const bouton = [...document.querySelectorAll('[onclick^="execEtatsArchiver("]')][0];
+          d.bouton = !!bouton;
+          if (!bouton) return d;
+          const idDossier = (/execEtatsArchiver\('([^']+)'/.exec(bouton.getAttribute('onclick')) || [])[1];
+          d.dossierId = idDossier;
+          bouton.click();
+          await repondre();
+          const apres = await (await fetch(`${ctx.api}/dossiers/${idDossier}`,
+            { credentials: 'same-origin' })).json();
+          d.archiveEnBase = Number(apres.archive) === 1 || apres.statut === 'archive';
+          await aller('archivees');
+          const retour = [...document.querySelectorAll('[onclick^="execEtatsArchiver("]')]
+            .find((b) => (b.getAttribute('onclick') || '').includes(idDossier));
+          d.boutonRetour = !!retour;
+          if (retour) { retour.click(); await repondre(); }
+          const rendu = await (await fetch(`${ctx.api}/dossiers/${idDossier}`,
+            { credentials: 'same-origin' })).json();
+          d.renduEnBase = !Number(rendu.archive) && rendu.statut !== 'archive';
+          return d;
+        });
+
+        // ── 5. Le plan archivé, et sa sortie par le geste de l'écran ──
+        //
+        // `plansArchivesPlanif` est vide dans le bac, et c'est **par
+        // construction** : les quatre plans archivés du jeu sont des versions
+        // remplacées, que la règle écarte — « on range aux archives un plan
+        // arrivé à son terme, et confondre les deux sorts faisait passer chaque
+        // amendement pour une fin de plan ». La ronde archive donc le plan
+        // elle-même, par la route de la Planification, et le geste de l'écran
+        // le lui rend.
+        await essai('plan', async () => {
+          const d = {};
+          if (!planId) return { erreur: 'pas de plan' };
+          d.archive = (await env(`/api/m/planification/plans/${planId}/archiver`, 'POST', {})).statut;
+          await window.execLoadData();
+          await aller('archivees');
+          const bouton = [...document.querySelectorAll('[onclick*="execEtatsDesarchiverPlan"]')]
+            .find((b) => (b.getAttribute('onclick') || '').includes(planId));
+          d.boutonDesarchiver = !!bouton;
+          d.groupes = document.querySelectorAll('.exec-etats-groupe').length;
+          if (!bouton) return d;
+          bouton.click();
+          await repondre();
+          const plan = await (await fetch(`/api/m/planification/plans/${planId}`,
+            { credentials: 'same-origin' })).json();
+          d.statutRendu = plan.statut;
+          return d;
+        });
+
+        // ── 6. La suppression définitive, et sa double garde ──
+        await essai('suppression', async () => {
+          const d = {};
+          if (!notifId) return { erreur: 'pas de notification' };
+          await aller('en_vie');
+          const ligne = () => [...document.querySelectorAll('.exec-act-row')]
+            .find((tr) => (tr.innerHTML || '').includes(notifId));
+          const bouton = () => (ligne() || {}).querySelector?.('[onclick^="execEtatsSupprimer"]');
+          d.ligne = !!ligne();
+          d.bouton = !!bouton();
+          if (!bouton()) return d;
+          d.reference = reference;
+          // Première garde : une référence qui ne correspond pas refuse.
+          bouton().click();
+          await repondre('référence inventée');
+          const encore = await (await fetch(`${ctx.api}/notifications/${notifId}`,
+            { credentials: 'same-origin' })).json();
+          d.surviteAuMauvaisCode = !!encore && encore.id === notifId;
+          // Seconde : la bonne référence emporte tout.
+          await aller('en_vie');
+          bouton().click();
+          await repondre(reference);
+          const rep = await fetch(`${ctx.api}/notifications/${notifId}`,
+            { credentials: 'same-origin' });
+          d.statutApres = rep.status;
+          const notifs = await (await fetch(`${ctx.api}/notifications`,
+            { credentials: 'same-origin' })).json();
+          d.encoreListee = (notifs || []).some((x) => x.id === notifId);
+          return d;
+        });
+        return r;
+      }, { api: M });
+
+      {
+        const O = etats.onglets || {};
+        const R2 = etats.rappel || {};
+        const C = etats.circuit || {};
+        const D2 = etats.dossier || {};
+        const P2 = etats.plan || {};
+        const S2 = etats.suppression || {};
+        verifier('les cinq sous-onglets des états existent, s’activent, et rendent chacun leur contenu',
+          Array.isArray(O.cles) && O.cles.length === 5 && O.cles.every(Boolean)
+          && (O.rendus || []).length === 5
+          && (O.rendus || []).every((x) => x.actif === true && x.contenu > 400),
+          JSON.stringify(O).slice(0, 320));
+        verifier('l’activité que le plan n’a pas encore déclenchée se déclenche, et son rappel s’ouvre sur un destinataire désigné',
+          R2.planADeuxActivites === true && R2.creee === 201
+          && R2.submit === 200 && R2.validate === 200 && R2.send === 200
+          && R2.boutonRappel === true && R2.volet === true && R2.destinataires >= 1
+          && (R2.note || '').length > 0,
+          JSON.stringify(R2).slice(0, 420));
+        verifier('sans destinataire le rappel refuse et rien ne part ; le destinataire rendu, le serveur le porte',
+          (R2.refus || '').length > 0 && R2.rienNEstParti === true
+          && R2.enBase === true && R2.voletReferme === true,
+          JSON.stringify({ refus: R2.refus, rien: R2.rienNEstParti,
+            avant: R2.rappelsApresRefus, apres: R2.rappelsApres, enBase: R2.enBase }));
+        verifier('les boutons de la ligne s’excluent : le circuit qui court n’offre qu’« Arrêter »',
+          !!C.avant && C.avant.arreter === true && C.avant.reprendre === false
+          && C.avant.archiver === false && C.avant.supprimer === true
+          && C.avant.historique === true,
+          JSON.stringify({ avant: C.avant, erreur: C.erreur }));
+        verifier('l’historique de l’activité rend ses étapes, et ses jalons sont ceux que la ronde a posés',
+          C.histoEtapes >= 4 && C.histoJalons >= 3 && C.histoCourante === 1
+          && C.histoFaites >= 1,
+          JSON.stringify({ etapes: C.histoEtapes, jalons: C.histoJalons,
+            courante: C.histoCourante, faites: C.histoFaites }));
+        verifier('le processus s’arrête sur un motif que le serveur garde, et la ligne offre alors « Reprendre » et « Archiver »',
+          C.boiteMotif === true && C.arreteEnBase === true
+          && /arrêt par la ronde/.test(C.motifEnBase || '')
+          && !!C.apresArret && C.apresArret.arreter === false
+          && C.apresArret.reprendre === true && C.apresArret.archiver === true
+          && C.apresArret.marquee === true,
+          JSON.stringify({ motif: C.motifEnBase, apres: C.apresArret, erreur: C.erreur }));
+        verifier('il se reprend, et la ligne redevient ce qu’elle était',
+          C.repriseEnBase === true && !!C.apresReprise
+          && C.apresReprise.arreter === true && C.apresReprise.reprendre === false,
+          JSON.stringify({ reprise: C.repriseEnBase, apres: C.apresReprise }));
+        verifier('arrêtée puis archivée, l’activité quitte « en vie » pour les archives, et y revient par son geste',
+          C.archiveeEnBase === true && C.partieDesEnVie === true
+          && C.dansLesArchives === true && C.boutonSortir === true
+          && C.sortieEnBase === true,
+          JSON.stringify({ archivee: C.archiveeEnBase, partie: C.partieDesEnVie,
+            archives: C.dansLesArchives, sortie: C.sortieEnBase }));
+        verifier('un lot d’archives se replie d’un clic sur son titre, et se redéplie',
+          C.groupeTrouve === true && C.groupeApresClic !== C.groupeOuvertAvant
+          && C.groupeRendu === true,
+          JSON.stringify({ avant: C.groupeOuvertAvant, apres: C.groupeApresClic,
+            rendu: C.groupeRendu }));
+        verifier('un dossier clôturé s’archive, le serveur le porte, et il revient par son geste',
+          D2.bouton === true && D2.archiveEnBase === true
+          && D2.boutonRetour === true && D2.renduEnBase === true,
+          JSON.stringify(D2));
+        verifier('un plan archivé forme son lot, et le geste de l’écran le rend aux plans validés',
+          P2.archive === 200 && P2.boutonDesarchiver === true && P2.groupes >= 1
+          && P2.statutRendu === 'valide',
+          JSON.stringify(P2));
+        verifier('la suppression définitive refuse une référence qui ne correspond pas, et n’emporte rien',
+          S2.bouton === true && S2.surviteAuMauvaisCode === true,
+          JSON.stringify({ bouton: S2.bouton, reference: S2.reference,
+            survit: S2.surviteAuMauvaisCode, erreur: S2.erreur }));
+        verifier('la bonne référence l’emporte : le serveur ne connaît plus l’activité',
+          (S2.statutApres === 404 || S2.statutApres === 400)
+          && S2.encoreListee === false,
+          JSON.stringify({ statut: S2.statutApres, listee: S2.encoreListee }));
+      }
+
       etape = 'circuit guidé';
       const circuit = await page.evaluate(async (api) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));

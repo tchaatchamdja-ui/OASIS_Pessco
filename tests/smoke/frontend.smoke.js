@@ -366,9 +366,12 @@ module.exports = async function frontendSmoke(port) {
   const srv = await demarrer({ port });
   let navigateur = null;
   try {
+    // Délai de protocole : voir la raison dans `surv.smoke.js` (n° 5.f.30) —
+    // une campagne de huit suites de navigateur a dépassé le défaut.
     navigateur = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      protocolTimeout: 300000,
     });
 
     // ── 1 et 2 : les affirmations, écran par écran ──

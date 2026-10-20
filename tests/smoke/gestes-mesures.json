@@ -1,6 +1,6 @@
 {
- "releve": "2026-10-15",
- "gestesNommes": 89,
+ "releve": "2026-10-20",
+ "gestesNommes": 88,
  "occurrences": 143,
  "exerces": 11,
  "indecidables": 1,
@@ -79,7 +79,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 693,
+   "ligne": 712,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -88,7 +88,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 697,
+   "ligne": 716,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -97,7 +97,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 701,
+   "ligne": 720,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -106,7 +106,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 705,
+   "ligne": 724,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -115,7 +115,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 709,
+   "ligne": 728,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -124,7 +124,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 715,
+   "ligne": 734,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesResetFiltresDashboard",
@@ -133,7 +133,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 753,
+   "ligne": 772,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesSetFiltre",
@@ -142,7 +142,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 815,
+   "ligne": 834,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesFaireLeSuivi",
@@ -151,7 +151,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 820,
+   "ligne": 839,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesSupprimerMesure",
@@ -160,7 +160,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 871,
+   "ligne": 890,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -169,7 +169,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 875,
+   "ligne": 894,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -178,7 +178,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 879,
+   "ligne": 898,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -187,7 +187,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 884,
+   "ligne": 903,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "mesRechercher",
@@ -196,7 +196,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 886,
+   "ligne": 905,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesResetFiltresMesures",
@@ -205,7 +205,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 940,
+   "ligne": 959,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesMesureDepuisConstatation",
@@ -214,7 +214,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 997,
+   "ligne": 1016,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesHistorique",
@@ -223,7 +223,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1000,
+   "ligne": 1019,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesMesuresDeCarence",
@@ -232,7 +232,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1003,
+   "ligne": 1022,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesOuvrirConstat",
@@ -241,7 +241,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1007,
+   "ligne": 1026,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesSupprimerConstat",
@@ -250,7 +250,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1024,
+   "ligne": 1043,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesOuvrirConstat",
@@ -259,7 +259,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1031,
+   "ligne": 1050,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -268,7 +268,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1036,
+   "ligne": 1055,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -277,7 +277,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1041,
+   "ligne": 1060,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "mesSetFiltre",
@@ -286,7 +286,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1047,
+   "ligne": 1066,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "mesRechercher",
@@ -295,7 +295,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1048,
+   "ligne": 1067,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesResetFiltresCritiques",
@@ -304,7 +304,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1167,
+   "ligne": 1186,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesFermerSlider",
@@ -313,7 +313,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1289,
+   "ligne": 1308,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesFermerVolet",
@@ -322,7 +322,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1293,
+   "ligne": 1312,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesFermerVolet",
@@ -331,7 +331,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1315,
+   "ligne": 1334,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "mesConstatDelai",
@@ -340,7 +340,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1317,
+   "ligne": 1336,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "mesConstatDelai",
@@ -349,7 +349,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1319,
+   "ligne": 1338,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "mesConstatDelai",
@@ -358,7 +358,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1324,
+   "ligne": 1343,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesFermerVolet",
@@ -367,7 +367,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1325,
+   "ligne": 1344,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "mesEnregistrerConstat",
@@ -376,7 +376,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1443,
+   "ligne": 1462,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "${}('${}')",
@@ -385,7 +385,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1127,
+   "ligne": 1146,
    "forme": "écouteur",
    "evenement": "resize",
    "nom": "window:resize",
@@ -479,7 +479,7 @@
    "ligne": 110,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "if",
+   "nom": "mesMesureDepuisConstatation",
    "source": "if(!event.target.closest('button'))mesMesureDepuisConstatation('${c.id}')",
    "exerce": false
   },

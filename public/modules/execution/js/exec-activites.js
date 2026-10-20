@@ -659,7 +659,6 @@ async function execUploadRealisationPj(files) {
         try {
             const res = await fetch(`${EXEC_MODULE_API}/upload`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('pr_token') || ''}` },
                 body: fd
             });
             const data = await res.json();
@@ -1034,7 +1033,6 @@ async function execCourrielAjouterFichiers(input) {
         try {
             const res = await fetch(`${EXEC_MODULE_API}/upload`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${localStorage.getItem('pr_token') || ''}` },
                 body: formData,
             });
             const data = await res.json();
@@ -1504,7 +1502,6 @@ async function execUploadDossierFile(files, type) {
         try {
             const res = await fetch(`${EXEC_MODULE_API}/upload`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('pr_token') || ''}` },
                 body: formData
             });
             const data = await res.json();
@@ -1557,7 +1554,6 @@ async function execUploadAnnexeFile(input) {
         try {
             const res = await fetch(`${EXEC_MODULE_API}/upload`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('pr_token') || ''}` },
                 body: formData
             });
             const data = await res.json();

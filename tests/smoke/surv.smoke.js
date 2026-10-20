@@ -1926,6 +1926,50 @@ module.exports = async function survSmoke(port) {
           await attendre(900);
           c.refuseSansPrecision = blocs().length === avantRefus;
 
+          // ── Une pièce jointe, versée pour de vrai ──
+          //
+          // `uploadFile` de Puppeteer ne s'appelle que depuis Node, et cette
+          // ronde vit dans une évaluation de page. Un `DataTransfer` suffit : on
+          // fabrique un vrai `File`, on le pose sur l'entrée, et le `change`
+          // déclenche `execSuiviJoindreFichiers`, qui le **POST au serveur**.
+          //
+          // Ce que cela ne prouve pas, et qui doit être dit : ni que le
+          // sélecteur de fichiers du système s'ouvre, ni que l'utilisateur y
+          // choisit quelque chose. Aucune suite ne peut l'éprouver. Ce qui est
+          // mesuré commence au fichier reçu par l'entrée.
+          //
+          // C'est ce chemin qui rendait `403 origine_non_reconnue` jusqu'à ce
+          // tour : dix-huit versements du projet appelaient `fetch` sans
+          // l'en-tête d'origine. Ce contrôle est la preuve que celui-ci aboutit.
+          const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e,
+            0x34, 0x0a, 0x25, 0xc7, 0xec, 0x8f, 0xa2, 0x0a]);
+          const pieces = () => [...document.querySelectorAll('#pac_suivi_pj_liste .exec-suivi-pj-item')];
+          const entree = composeur().querySelector('[onchange*="execSuiviJoindreFichiers"]');
+          c.entreeFichier = !!entree;
+          const verser = async (nom) => {
+            const dt = new DataTransfer();
+            dt.items.add(new File([pdf], nom, { type: 'application/pdf' }));
+            entree.files = dt.files;
+            entree.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(2600);
+          };
+          if (entree) {
+            await verser('preuve-ronde-1.pdf');
+            c.pjUne = pieces().length;
+            c.pjNom = pieces()[0] ? (pieces()[0].dataset.filename || '') : '';
+            c.pjChemin = pieces()[0] ? (pieces()[0].dataset.path || '') : '';
+            await verser('preuve-ronde-2.pdf');
+            c.pjDeux = pieces().length;
+            // La pastille se retire d'elle-même : son bouton porte
+            // `onclick="this.parentElement.remove()"`, et rien d'autre.
+            pieces()[1].querySelector('button').click();
+            await attendre(700);
+            c.pjApresRetrait = pieces().length;
+            // Et l'entrée s'est vidée : `input.value = ''` à la fin du geste,
+            // sans quoi le même fichier ne pourrait pas être redéposé.
+            c.entreeVidee = entree.value === '';
+          }
+
           // La précision donnée, le commentaire s'ajoute — en brouillon.
           precision().value = 'ronde SURV 0.d';
           texte().value = '1. essai — commentaire de la ronde';
@@ -1935,6 +1979,13 @@ module.exports = async function survSmoke(port) {
           const dernier = () => blocs()[blocs().length - 1];
           c.brouillon = !!dernier().querySelector('.exec-suivi-brouillon');
           c.modifiable = !!dernier().querySelector('[onclick*="execModifierCommentaireSuivi"]');
+          // Le brouillon emporte la pièce déposée, et l'affiche.
+          c.commFichiers = (() => {
+            try { return JSON.parse(dernier().dataset.fichiers || '[]').length; }
+            catch { return -1; }
+          })();
+          c.commLienPiece = !!dernier().querySelector('.exec-suivi-comm-pj a');
+          c.composeurSansPiece = pieces().length === 0;
           // Le composeur repart à zéro.
           c.composeurVide = texte().value === '' && precision().value === ''
             && composeur().querySelectorAll('.exec-suivi-items input:checked').length === 0;
@@ -1957,6 +2008,11 @@ module.exports = async function survSmoke(port) {
           c.reprisRetire = blocs().length === avantReprise - 1;
           c.reprisDansLeComposeur = /commentaire de la ronde/.test(texte().value)
             && precision().value === 'ronde SURV 0.d';
+          // « Les pièces du brouillon repartent avec lui dans le composeur » :
+          // la pastille est reconstruite — seconde pose du même geste, et la
+          // seule qui prouve que la reprise n'oublie pas les fichiers.
+          c.pieceRevenue = pieces().length;
+          c.pieceRevenueRetirable = !!(pieces()[0] && pieces()[0].querySelector('button'));
           // Reposé tel quel, pour la suite.
           ajouter().click();
           await attendre(1200);
@@ -1973,6 +2029,7 @@ module.exports = async function survSmoke(port) {
           precision().value = 'ronde SURV 0.d';
           const uneCase = cases().find((x) => x.value !== 'autres');
           if (!uneCase.checked) { uneCase.click(); await attendre(700); }
+          if (entree) await verser('preuve-publiee.pdf');
           texte().value = '1. essai — commentaire que l’acceptation publiera';
           ajouter().click();
           await attendre(1200);
@@ -2057,6 +2114,10 @@ module.exports = async function survSmoke(port) {
           p.suiviEffacePasRevenu = !suivis.some((x) => /celui qu’on efface/.test(x.texte || ''));
           p.commsEnBase = comms.length;
           p.commPorte = comms.some((x) => /l’acceptation publiera/.test(x.texte || ''));
+          const publie = comms.find((x) => /l’acceptation publiera/.test(x.texte || '')) || {};
+          p.piecePortee = (publie.fichiers || []).length;
+          p.pieceNommee = ((publie.fichiers || [])[0] || {}).filename || '';
+          p.pieceCheminServeur = ((publie.fichiers || [])[0] || {}).path || '';
           p.tousPublies = comms.length > 0 && comms.every((x) => x.publie === true);
           // Dans le volet rouvert, un commentaire publié n'offre plus ses gestes.
           const liste = document.getElementById('pac_suivi_liste');
@@ -2131,6 +2192,21 @@ module.exports = async function survSmoke(port) {
         C.reprisRetire === true && C.reprisDansLeComposeur === true && C.repose === true,
         JSON.stringify({ retire: C.reprisRetire, repris: C.reprisDansLeComposeur,
           repose: C.repose, erreur: C.erreur }));
+      verifier('une pièce jointe se verse pour de vrai, se nomme, et sa pastille se retire d’elle-même',
+        C.entreeFichier === true && C.pjUne === 1 && /preuve-ronde-1/.test(C.pjNom || '')
+        && /^\/api\/m\/execution\/uploads\//.test(C.pjChemin || '')
+        && C.pjDeux === 2 && C.pjApresRetrait === 1 && C.entreeVidee === true,
+        JSON.stringify({ entree: C.entreeFichier, une: C.pjUne, nom: C.pjNom,
+          chemin: C.pjChemin, deux: C.pjDeux, apres: C.pjApresRetrait,
+          videe: C.entreeVidee, erreur: C.erreur }));
+      verifier('le brouillon emporte la pièce déposée, l’affiche, et vide le composeur de la sienne',
+        C.commFichiers === 1 && C.commLienPiece === true && C.composeurSansPiece === true,
+        JSON.stringify({ fichiers: C.commFichiers, lien: C.commLienPiece,
+          composeur: C.composeurSansPiece, erreur: C.erreur }));
+      verifier('et sa reprise ne l’oublie pas : la pastille est reconstruite, retirable',
+        C.pieceRevenue === 1 && C.pieceRevenueRetirable === true,
+        JSON.stringify({ revenue: C.pieceRevenue, retirable: C.pieceRevenueRetirable,
+          erreur: C.erreur }));
       verifier('un brouillon s’efface sur confirmation du socle',
         C.confirmeEffacement === true && C.apresEffacement === 0 && C.finalPose === 1,
         JSON.stringify({ confirme: C.confirmeEffacement, apres: C.apresEffacement,
@@ -2144,7 +2220,9 @@ module.exports = async function survSmoke(port) {
       verifier('l’acceptation des preuves emporte suivis et commentaires chez le serveur, et publie les brouillons — qui perdent alors leurs gestes',
         P.suiviPorte === true && P.suiviEffacePasRevenu === true
         && P.commPorte === true && P.tousPublies === true
-        && P.blocsRendus === 1 && P.plusModifiable === true,
+        && P.blocsRendus === 1 && P.plusModifiable === true
+        && P.piecePortee === 1 && /preuve-publiee/.test(P.pieceNommee || '')
+        && /^\/api\/m\/execution\/uploads\//.test(P.pieceCheminServeur || ''),
         JSON.stringify(P));
 
       // Le volet a déjà été refermé par la clôture — `execCloseDossier` appelle

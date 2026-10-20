@@ -817,11 +817,10 @@ function _execChkFillerUpdateSummary() {
 
 // ── Export / Import de la checklist renseignée ──
 async function execChkFillExportXlsx(dossierId, checklistId) {
-    const token = localStorage.getItem('pr_token');
+    // `pr_token` n'existe pas : rien ne l'écrit, et le serveur ne lit aucun
+    // Bearer — la session est en cookie. L'en-tête mort est retiré (n° 5.f.29).
     try {
-        const res = await fetch(`/api/m/execution/checklist-fill/${dossierId}/${checklistId}/export-xlsx`, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
+        const res = await fetch(`/api/m/execution/checklist-fill/${dossierId}/${checklistId}/export-xlsx`);
         if (!res.ok) {
             const j = await res.json().catch(() => ({}));
             throw new Error(oasisMessageErreur(j, res.status));
@@ -840,12 +839,11 @@ async function execChkFillExportXlsx(dossierId, checklistId) {
 async function execChkFillImportXlsx(dossierId, checklistId, ev) {
     const file = ev?.target?.files?.[0];
     if (!file) return;
-    const token = localStorage.getItem('pr_token');
     const fd = new FormData();
     fd.append('file', file);
     try {
         const res = await fetch(`/api/m/execution/checklist-fill/${dossierId}/${checklistId}/import-xlsx`, {
-            method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd
+            method: 'POST', body: fd
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));

@@ -1780,11 +1780,16 @@ async function deleteEval(evalId) {
 // ── Evaluation Export/Import ──
 async function exportEvalExcel(evalId) {
     try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`${MODULE_API}/evaluations/${evalId}/export-excel`, { credentials: 'same-origin', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        // Jeton mort retiré (rien n'écrit `pr_token`), et l'ancre attachée
+        // avant d'être cliquée : détachée, après un `await`, elle ne télécharge
+        // rien et ne dit rien. Même correction qu'à la bibliothèque.
+        const res = await fetch(`${MODULE_API}/evaluations/${evalId}/export-excel`, { credentials: 'same-origin' });
         if (!res.ok) throw new Error('Export failed');
         const blob = await res.blob();
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `evaluation_${evalId}.xlsx`; a.click();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `evaluation_${evalId}.xlsx`;
+        document.body.appendChild(a); a.click(); a.remove();
     } catch (e) { showToast(e.message, 'error'); }
 }
 
@@ -1798,11 +1803,10 @@ async function importEvalExcel(event, evalId, type) {
     if (!file) return;
     try {
         const fileB64 = await fileToBase64(file);
-        const token = localStorage.getItem('pr_token');
         const res = await fetch(`${MODULE_API}/evaluations/${evalId}/import-excel`, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileB64, type })
         });
         if (!res.ok) {

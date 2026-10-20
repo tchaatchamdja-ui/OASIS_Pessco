@@ -115,10 +115,21 @@ async function deleteDoc(id) {
 async function downloadDoc(id) {
     const nom = ((APP_STATE.data.documents || []).find((d) => d.id === id) || {}).nom;
     try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`/api/documents/${id}/download`, { credentials: 'same-origin', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        // Deux retraits, et aucun n'était un défaut de fonctionnement :
+        //
+        // 1. `Authorization: Bearer ${token}` reposait sur `pr_token`, que
+        //    **rien n'écrit** — résidu du portage PESSCO. Le ternaire rendait
+        //    toujours `{}` ; c'est la session en cookie qui authentifie.
+        // 2. L'ancre, elle, était un vrai défaut : **détachée du document** et
+        //    cliquée après un `await`, elle ne télécharge rien et ne dit rien.
+        //    Le patron du projet est partout le même — attacher, cliquer,
+        //    retirer — et ces trois exports de PR ne l'appliquaient pas.
+        const res = await fetch(`/api/documents/${id}/download`, { credentials: 'same-origin' });
         if (!res.ok) throw new Error('Download failed');
         const blob = await res.blob();
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom || 'document'; a.click();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = nom || 'document';
+        document.body.appendChild(a); a.click(); a.remove();
     } catch (e) { showToast(e.message, 'error'); }
 }

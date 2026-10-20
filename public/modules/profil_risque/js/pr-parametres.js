@@ -422,14 +422,14 @@ function _prIndComplexiteHtml(D, f, secteurs, sousActivites, searchLower, isAdmi
 
 async function exportIndicateursExcel() {
     try {
-        const token = localStorage.getItem('pr_token');
-        const res = await fetch(`${MODULE_API}/indicateurs/export`, { credentials: 'same-origin', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        // Jeton mort retiré ; l'ancre est attachée plus bas avant son clic.
+        const res = await fetch(`${MODULE_API}/indicateurs/export`, { credentials: 'same-origin' });
         if (!res.ok) throw new Error('Export failed');
         const blob = await res.blob();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'indicateurs.xlsx';
-        a.click();
+        document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(a.href);
     } catch (e) { showToast(e.message, 'error'); }
 }
@@ -449,11 +449,10 @@ async function importIndicateursExcel(event) {
     if (!file) return;
     try {
         const fileB64 = await fileToBase64(file);
-        const token = localStorage.getItem('pr_token');
         const res = await fetch(`${MODULE_API}/indicateurs/import`, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fileB64 })
         });
         if (!res.ok) {

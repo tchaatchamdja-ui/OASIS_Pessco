@@ -2,7 +2,7 @@
  "releve": "2026-10-20",
  "gestesNommes": 310,
  "occurrences": 500,
- "exerces": 139,
+ "exerces": 141,
  "indecidables": 5,
  "gestes": [
   {
@@ -66,7 +66,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -169,7 +169,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 763,
+   "ligne": 762,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execTypeRapportChange",
@@ -178,7 +178,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 881,
+   "ligne": 880,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execPreviewRapport",
@@ -187,7 +187,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 885,
+   "ligne": 884,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execReturnDossier",
@@ -196,7 +196,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 992,
+   "ligne": 991,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.nextElementSibling.click",
@@ -205,7 +205,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 995,
+   "ligne": 994,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execCourrielAjouterFichiers",
@@ -214,7 +214,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1000,
+   "ligne": 999,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execTransmettreRapport",
@@ -223,7 +223,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1019,
+   "ligne": 1018,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "event.preventDefault",
@@ -232,7 +232,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1054,
+   "ligne": 1052,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.closest",
@@ -241,7 +241,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1137,
+   "ligne": 1135,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveRealisation",
@@ -250,7 +250,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1138,
+   "ligne": 1136,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execCloseRealisation",
@@ -259,7 +259,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1142,
+   "ligne": 1140,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveDossier",
@@ -268,7 +268,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1143,
+   "ligne": 1141,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSubmitDossier",
@@ -277,7 +277,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1147,
+   "ligne": 1145,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execValidateRapport",
@@ -286,7 +286,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1153,
+   "ligne": 1151,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execAmendRapport",
@@ -295,7 +295,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1158,
+   "ligne": 1156,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSendRapportValidated",
@@ -304,7 +304,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1162,
+   "ligne": 1160,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execCloseDossier",
@@ -313,7 +313,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1267,
+   "ligne": 1265,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenChecklistFiller",
@@ -322,7 +322,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1269,
+   "ligne": 1267,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSetDossierChecklistValidee",
@@ -331,7 +331,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1270,
+   "ligne": 1268,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSetDossierChecklistValidee",
@@ -340,7 +340,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1287,
+   "ligne": 1285,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "document.getElementById",
@@ -349,7 +349,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1288,
+   "ligne": 1286,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveRedactionPj",
@@ -358,7 +358,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1289,
+   "ligne": 1287,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execUploadRealisationPj",
@@ -367,7 +367,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1297,
+   "ligne": 1295,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenChecklistsPicker",
@@ -376,16 +376,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1308,
+   "ligne": 1306,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1312,
+   "ligne": 1310,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "document.getElementById",
@@ -394,7 +394,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1314,
+   "ligne": 1312,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execUploadDossierFile",
@@ -403,7 +403,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1352,
+   "ligne": 1350,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenFNCForm",
@@ -412,7 +412,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1356,
+   "ligne": 1354,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execExportConstatations",
@@ -421,7 +421,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1359,
+   "ligne": 1357,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execFichesConstatDossier",
@@ -430,7 +430,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1389,
+   "ligne": 1387,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execViewFNC",
@@ -439,7 +439,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1391,
+   "ligne": 1389,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execEditFNC",
@@ -448,7 +448,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1407,
+   "ligne": 1405,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "_execToggleFiches",
@@ -457,7 +457,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1410,
+   "ligne": 1408,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execDeleteConstatation",
@@ -466,7 +466,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1417,
+   "ligne": 1415,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execExportFicheConstat",
@@ -475,7 +475,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1420,
+   "ligne": 1418,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execExportFicheConstat",
@@ -484,7 +484,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1423,
+   "ligne": 1421,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execExportFicheSuivi",
@@ -493,7 +493,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1426,
+   "ligne": 1424,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execExportFicheSuivi",
@@ -502,7 +502,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1447,
+   "ligne": 1445,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.closest",
@@ -511,16 +511,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1451,
+   "ligne": 1449,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1454,
+   "ligne": 1452,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.nextElementSibling.click",
@@ -529,7 +529,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1455,
+   "ligne": 1453,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execUploadAnnexeFile",
@@ -538,7 +538,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1461,
+   "ligne": 1459,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execAddAnnexeBlock",
@@ -547,7 +547,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1486,
+   "ligne": 1484,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execPreviewRapport",
@@ -556,7 +556,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1490,
+   "ligne": 1488,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSendRapport",
@@ -565,16 +565,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1518,
+   "ligne": 1515,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1538,
+   "ligne": 1535,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.closest",
@@ -583,7 +583,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1543,
+   "ligne": 1540,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.nextElementSibling.click",
@@ -592,7 +592,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1544,
+   "ligne": 1541,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execUploadAnnexeFile",
@@ -601,25 +601,25 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1569,
+   "ligne": 1565,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1642,
+   "ligne": 1638,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1658,
+   "ligne": 1654,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.closest",
@@ -1239,7 +1239,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1401,7 +1401,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1446,7 +1446,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1500,7 +1500,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1880,7 +1880,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1925,7 +1925,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1970,7 +1970,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -2019,12 +2019,12 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 603,
+   "ligne": 602,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2555,7 +2555,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2618,7 +2618,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2636,7 +2636,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2672,7 +2672,7 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2762,20 +2762,20 @@
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
-   "ligne": 671,
+   "ligne": 670,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "this.parentElement.remove",
    "source": "this.parentElement.remove()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
-   "ligne": 704,
+   "ligne": 703,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execModifierSuivi",
@@ -2784,7 +2784,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
-   "ligne": 706,
+   "ligne": 705,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSupprimerSuivi",
@@ -3113,7 +3113,7 @@
    "evenement": "change",
    "nom": "execSuiviJoindreFichiers",
    "source": "execSuiviJoindreFichiers(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3612,7 +3612,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 937,
+   "ligne": 935,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenRefReglementPicker",
@@ -3621,7 +3621,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 962,
+   "ligne": 960,
    "forme": "en ligne",
    "evenement": "input",
    "nom": "_execCliRefRegFilter",
@@ -3630,7 +3630,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 973,
+   "ligne": 971,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "shellCloseModal",
@@ -3639,7 +3639,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 974,
+   "ligne": 972,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "_execCliRefRegSave",
@@ -3648,7 +3648,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1084,
+   "ligne": 1082,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenSousThemeModal",
@@ -3657,7 +3657,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1085,
+   "ligne": 1083,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execDeleteSousTheme",
@@ -3666,7 +3666,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1091,
+   "ligne": 1089,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSousThemesExportXlsx",
@@ -3675,7 +3675,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1092,
+   "ligne": 1090,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "document.getElementById",
@@ -3684,7 +3684,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1093,
+   "ligne": 1091,
    "forme": "en ligne",
    "evenement": "change",
    "nom": "execSousThemesImportXlsx",
@@ -3693,7 +3693,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1094,
+   "ligne": 1092,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenSousThemeModal",
@@ -3702,7 +3702,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1100,
+   "ligne": 1098,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "shellCloseModal",
@@ -3711,7 +3711,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1174,
+   "ligne": 1168,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execOpenSousThemesManager",
@@ -3720,7 +3720,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1175,
+   "ligne": 1169,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveSousTheme",
@@ -3729,7 +3729,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1276,
+   "ligne": 1270,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "shellCloseModal",
@@ -3738,7 +3738,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1277,
+   "ligne": 1271,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveCriticite",
@@ -3747,7 +3747,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1338,
+   "ligne": 1332,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "shellCloseModal",
@@ -3756,7 +3756,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1339,
+   "ligne": 1333,
    "forme": "en ligne",
    "evenement": "click",
    "nom": "execSaveTypeCas",

@@ -1229,8 +1229,15 @@ function rampSetLang(lang) {
 
 
 async function rampDeconnexion() {
-    try { await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }); }
-    catch (e) { /* déconnexion locale */ }
+    // Même correction qu'au module « Mesures d'application » : `fetch` ne lève
+    // pas sur une réponse d'erreur, et le refus passait inaperçu.
+    try {
+        const r = await fetch('/api/logout', {
+            method: 'POST', credentials: 'same-origin',
+        });
+        if (!r.ok) console.error(`Déconnexion refusée par le serveur (${r.status}) :`
+            + ' la session peut rester ouverte.');
+    } catch (e) { console.error('Déconnexion : le serveur n’a pas répondu.', e); }
     window.top.location.href = '/login.html';
 }
 

@@ -1915,5 +1915,55 @@ module.exports = async function tailleSmoke() {
   verifier('aucun nom de fonction n’est déclaré deux fois sur une page de module, hors déclaration',
     nomsEnDouble.length === 0, nomsEnDouble.join(' | ') || `${pagesDeModule.length} pages examinées`);
 
+  // ══════════════════════════════════════════════════════════════════
+  //  L'enveloppe qui marque les requêtes est chargée, et chargée d'abord
+  // ══════════════════════════════════════════════════════════════════
+  //
+  // `src/protections.js` refuse toute écriture sous `/api/` qui ne porte pas
+  // `X-OASIS-Request: 1` (SEC-06) : « une écriture forgée est refusée avant
+  // qu'une route la voie ». Ce que le client y oppose n'est pas une discipline
+  // d'appel : c'est **une enveloppe de `window.fetch`**, posée par
+  // `frontend/socle/requete.ts` et publiée en globale par
+  // `oasis-requete.js`. Elle marque toute requête de même origine — un `fetch`
+  // brut de module est donc marqué comme un appel d'`api()`.
+  //
+  // ── Pourquoi cette garde existe, et ce qu'elle ne garde pas ──
+  //
+  // Une protection qui tient à un `window.fetch` réécrit tient à deux choses
+  // que rien ne vérifiait : que la page **charge** ce fichier, et qu'elle le
+  // charge **avant** ses propres scripts. Une page qui l'oublierait, ou qui le
+  // placerait après, verrait toutes ses écritures refusées — et rien, dans la
+  // campagne, ne l'aurait dit.
+  //
+  // Elle ne garde pas l'inverse : chercher un en-tête explicite dans chaque
+  // appel n'aurait aucun sens, puisque l'enveloppe le pose pour tous. J'ai écrit
+  // cette garde-là d'abord, sur un diagnostic faux — voir ADR-003 n° 5.f.29.
+  const pagesClient = [];
+  const chercherPages = (d) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) { if (!/node_modules/.test(p)) chercherPages(p); }
+      else if (e.name.endsWith('.html')) pagesClient.push(p);
+    }
+  };
+  chercherPages(path.join(RACINE, 'public'));
+  const sansEnveloppe = [];
+  for (const p of pagesClient) {
+    const html = fs.readFileSync(p, 'utf8');
+    const scripts = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)].map((x) => x[1]);
+    // Une page sans script propre n'a rien à marquer.
+    const propres = scripts.filter((u) => /^\/(modules|app)\//.test(u));
+    if (!propres.length) continue;
+    const rang = scripts.findIndex((u) => /oasis-requete\.js$/.test(u));
+    const nom = path.relative(RACINE, p);
+    if (rang < 0) { sansEnveloppe.push(`${nom} : ne charge pas oasis-requete.js`); continue; }
+    const premierPropre = scripts.findIndex((u) => /^\/(modules|app)\//.test(u));
+    if (rang > premierPropre) {
+      sansEnveloppe.push(`${nom} : oasis-requete.js après ${scripts[premierPropre]}`);
+    }
+  }
+  verifier('toute page portant du code client charge l’enveloppe qui marque les requêtes, avant ses propres scripts',
+    sansEnveloppe.length === 0,
+    sansEnveloppe.join(' | ') || `${pagesClient.length} pages examinées`);
   return bilan('taille');
 };

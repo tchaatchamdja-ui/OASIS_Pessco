@@ -1212,7 +1212,6 @@ async function execHandlePACProofUpload(files, containerId) {
         try {
             const res = await fetch(`${EXEC_MODULE_API}/upload`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('pr_token') || ''}` },
                 body: formData
             });
             const data = await res.json();

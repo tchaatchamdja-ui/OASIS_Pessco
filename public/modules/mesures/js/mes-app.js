@@ -505,8 +505,27 @@ function mesSetLang(lang) {
 }
 
 
+// ── La déconnexion, et un échec que rien ne lisait ──
+//
+// Le fait qui reste : **`fetch` ne lève pas sur une réponse d'erreur**. Il ne
+// rejette que sur une panne de réseau. Le `try`/`catch` qui entourait cet appel
+// ne gardait donc rien d'un refus du serveur — un 4xx ou un 5xx passait, et la
+// ligne suivante renvoyait à l'écran de connexion comme si la session avait été
+// fermée.
+//
+// Rien ne le refusait en pratique : le socle marque toute requête de même
+// origine (`frontend/socle/requete.ts`), et la route répondait. Mais un `try`
+// autour d'un `fetch` ne garde rien tant qu'on ne lit pas la réponse — et
+// « l'opérateur se croit déconnecté quand il ne l'est pas » est trop coûteux
+// pour reposer sur une enveloppe globale. On lit donc la réponse.
 async function mesDeconnexion() {
-    try { await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' }); } catch (e) { /* déconnexion locale */ }
+    try {
+        const r = await fetch('/api/logout', {
+            method: 'POST', credentials: 'same-origin',
+        });
+        if (!r.ok) console.error(`Déconnexion refusée par le serveur (${r.status}) :`
+            + ' la session peut rester ouverte.');
+    } catch (e) { console.error('Déconnexion : le serveur n’a pas répondu.', e); }
     window.top.location.href = '/login.html';
 }
 

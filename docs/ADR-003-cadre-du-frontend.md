@@ -6374,6 +6374,137 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            l'intérieur d'une évaluation de page. C'est un pas à faire, non une
            dispense à écrire.
 
+       5.f.29 [x] **Une fausse alarme, et le contre-essai qui l'a prise** —
+           fait le 20 octobre 2026.
+
+           Ce pas devait couvrir un geste : la pastille d'une pièce jointe. Il a
+           surtout produit **une erreur de diagnostic de ma part, complète, et
+           la mesure qui l'a arrêtée avant qu'elle n'entre dans le dépôt.** Je la
+           rapporte en entier, parce que c'est elle qui enseigne.
+
+           ── Ce que j'ai cru, et comment ──
+
+           `src/protections.js` refuse toute écriture sous `/api/` qui ne porte
+           pas `X-OASIS-Request: 1` (SEC-06). J'ai relevé **dix-huit** appels
+           `fetch` bruts du client dépourvus de cet en-tête — six versements de
+           SURV, trois imports XLSX, des imports de PR, cinq versements de RAMP,
+           et **les deux déconnexions** des modules Mesures et RAMP. Tous
+           portaient pour seul en-tête un `Authorization: Bearer
+           ${localStorage.pr_token}` que rien ne renseigne.
+
+           J'ai sondé la route en HTTP, depuis Node :
+
+           | | |
+           |---|---|
+           | `POST /api/m/execution/upload` sans l'en-tête | `403 origine_non_reconnue` |
+           | `POST /api/logout` sans l'en-tête | `403 origine_non_reconnue` |
+           | avec l'en-tête | la route répond |
+
+           Le refus était réel. J'en ai conclu que dix-huit chemins d'écriture
+           ne pouvaient pas aboutir, et que la déconnexion de deux modules
+           laissait la session ouverte — avec, pour aggraver le tout,
+           l'observation juste que **`fetch` ne lève pas sur un 403** : le
+           `catch` qui entourait l'appel n'était jamais atteint, et la page
+           renvoyait à l'écran de connexion comme si tout s'était bien passé.
+
+           J'ai corrigé les dix-huit sites, écrit une garde, et rédigé une
+           entrée d'ADR qui annonçait un défaut de sécurité.
+
+           ── Ce que le contre-essai a dit ──
+
+           J'ai remis le défaut en un point et relancé la ronde, pour voir si
+           mes nouveaux contrôles l'auraient pris. **Ils sont restés verts :
+           133/133.** Le versement aboutissait, défaut remis.
+
+           La cause tient en une ligne : `frontend/socle/requete.ts` **enveloppe
+           `window.fetch`** et pose `X-OASIS-Request: '1'` sur toute requête de
+           même origine. Un `fetch` brut de module est donc marqué comme un
+           appel d'`api()`. Vérifié ensuite : `oasis-requete.js` est chargé en
+           cinquième position sur les six pages de module, **avant** tout script
+           propre.
+
+           Ma sonde HTTP mesurait un chemin que le navigateur n'emprunte pas.
+           *Une sonde qui n'emprunte pas le chemin de l'écran ne mesure pas
+           l'écran — elle mesure la sonde.* C'est la faute de 5.f.22 et de
+           5.f.28 dans une troisième variante : là je prenais une adresse pour
+           fausse, ici je prends un refus pour un fait.
+
+           ── Ce que j'ai défait ──
+
+           Les dix-huit en-têtes explicites sont retirés, et les corrections de
+           RAMP rendues à leur état. Ils n'étaient pas nuisibles, mais ils
+           étaient **justifiés par une histoire fausse**, et du code redondant
+           adossé à un commentaire faux coûte plus qu'il ne rapporte. L'entrée
+           d'ADR qui annonçait le défaut de sécurité n'a jamais été publiée :
+           c'est celle-ci qui la remplace.
+
+           ── Ce qui reste, et qui est vrai ──
+
+           **Le jeton mort du portage.** `pr_token` était lu en quinze endroits
+           et **écrit nulle part** ; le serveur ne lit aucun Bearer. Les
+           en-têtes morts sont retirés — six versements, trois exports, trois
+           variables orphelines. Ce n'était pas un défaut, seulement du poids
+           qui masquait ce qui compte.
+
+           **Trois téléchargements de PR, et un vrai défaut.** En lisant ces
+           sites, le motif enregistré du projet est apparu : **une ancre détachée
+           du document, cliquée après un `await`**, ne télécharge rien et ne dit
+           rien. Le patron est partout le même — attacher, cliquer, retirer — et
+           les trois exports de PR (bibliothèque, évaluation, indicateurs) ne
+           l'appliquaient pas. Corrigé.
+
+           **Les deux déconnexions.** Le fait reste entier : `fetch` ne lève pas
+           sur une réponse d'erreur, et le `try`/`catch` qui entourait l'appel ne
+           gardait rien d'un refus. Rien ne le refusait en pratique, mais
+           « l'opérateur se croit déconnecté quand il ne l'est pas » est trop
+           coûteux pour reposer sur une enveloppe globale. La réponse est lue.
+
+           **Et une garde — l'autre, celle qui protège le mécanisme.** La
+           protection du client ne tient pas à une discipline d'appel : elle
+           tient à un `window.fetch` réécrit. Donc à deux choses que rien ne
+           vérifiait — que la page **charge** `oasis-requete.js`, et qu'elle le
+           charge **avant** ses propres scripts. Une page qui l'oublierait
+           verrait toutes ses écritures refusées, et rien dans la campagne ne
+           l'aurait dit. La garde le tient ; contre-essai : l'enveloppe retirée
+           d'une page, elle rougit et nomme la page.
+
+           Ma première garde cherchait un en-tête explicite dans chaque appel —
+           elle gardait une redondance. *Une garde ne vaut que ce que vaut le
+           diagnostic qui l'a fait écrire.*
+
+           ── Le versement, éprouvé de bout en bout ──
+
+           **Cent-trente-trois contrôles ; 141 gestes sur 310.** Campagne : 1 224.
+           `exec-pac-suivi.js` est **complet — 9 noms sur 9**.
+
+           `uploadFile` de Puppeteer ne
+           s'appelle que depuis Node, et la ronde vit dans une évaluation de
+           page : un `DataTransfer` suffit — on fabrique un vrai `File`, on le
+           pose sur l'entrée, et le `change` déclenche le versement, qui POST au
+           serveur.
+
+           Quatre contrôles : la pièce se verse et se nomme, sa pastille se
+           retire d'elle-même, l'entrée se vide pour qu'un même fichier puisse
+           être redéposé, le brouillon emporte la pièce et l'affiche, **sa
+           reprise ne l'oublie pas** — la pastille est reconstruite —, et
+           l'acceptation des preuves la porte chez le serveur, sous un chemin
+           `/api/m/execution/uploads/…` relu en base.
+
+           Ce que cela ne prouve pas : ni que le sélecteur de fichiers du système
+           s'ouvre, ni que l'utilisateur y choisit quelque chose. Aucune suite ne
+           peut l'éprouver. La mesure commence au fichier reçu par l'entrée.
+
+           ── La leçon, et elle n'est pas sur le code ──
+
+           Le contre-essai n'était pas une formalité. Je l'ai lancé en pensant
+           confirmer que mes contrôles prenaient le défaut ; il m'a appris qu'il
+           n'y avait pas de défaut. Sans lui, ce dépôt porterait aujourd'hui une
+           entrée d'ADR annonçant une faille de sécurité qui n'existe pas, dix-
+           huit modifications inutiles, et une garde qui garde une redondance.
+
+           *Un contre-essai qui confirme ce qu'on attend n'a rien coûté ; celui
+           qui dément a payé tout le reste.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

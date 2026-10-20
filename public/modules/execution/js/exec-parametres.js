@@ -838,11 +838,10 @@ function _execCliRenderRows(clId) {
 
 // ── Export / Import xlsx d'une checklist ──
 async function execChecklistExportXlsx(clId) {
-    const token = localStorage.getItem('pr_token');
+    // `pr_token` n'existe pas : rien ne l'écrit, et le serveur ne lit aucun
+    // Bearer — la session est en cookie. L'en-tête mort est retiré (n° 5.f.29).
     try {
-        const res = await fetch(`/api/m/execution/checklists/${clId}/export-xlsx`, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
+        const res = await fetch(`/api/m/execution/checklists/${clId}/export-xlsx`);
         if (!res.ok) {
             const j = await res.json().catch(() => ({}));
             throw new Error(oasisMessageErreur(j, res.status));
@@ -863,13 +862,12 @@ async function execChecklistImportXlsx(clId, ev) {
     if (!file) return;
     const replace = await oasisConfirmer(te('confirmer_import_remplacer'), { titre: te('import_items_titre'), libelle: 'Remplacer', libelleAnnuler: 'Ajouter', danger: true });
     const mode = replace ? 'replace' : 'append';
-    const token = localStorage.getItem('pr_token');
     const fd = new FormData();
     fd.append('file', file);
     fd.append('mode', mode);
     try {
         const res = await fetch(`/api/m/execution/checklists/${clId}/import-xlsx`, {
-            method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd
+            method: 'POST', body: fd
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));
@@ -1102,11 +1100,8 @@ function execOpenSousThemesManager(clId) {
 
 // ── Export / Import xlsx des sous-thèmes d'une checklist ──
 async function execSousThemesExportXlsx(clId) {
-    const token = localStorage.getItem('pr_token');
     try {
-        const res = await fetch(`${EXEC_MODULE_API}/checklists/${clId}/sous-themes/export-xlsx`, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
+        const res = await fetch(`${EXEC_MODULE_API}/checklists/${clId}/sous-themes/export-xlsx`);
         if (!res.ok) {
             const j = await res.json().catch(() => ({}));
             throw new Error(oasisMessageErreur(j, res.status));
@@ -1125,12 +1120,11 @@ async function execSousThemesExportXlsx(clId) {
 async function execSousThemesImportXlsx(clId, ev) {
     const file = ev?.target?.files?.[0];
     if (!file) return;
-    const token = localStorage.getItem('pr_token');
     const fd = new FormData();
     fd.append('file', file);
     try {
         const res = await fetch(`${EXEC_MODULE_API}/checklists/${clId}/sous-themes/import-xlsx`, {
-            method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd
+            method: 'POST', body: fd
         });
         const j = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(oasisMessageErreur(j, res.status));

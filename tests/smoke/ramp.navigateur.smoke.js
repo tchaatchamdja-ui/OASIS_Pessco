@@ -1204,6 +1204,899 @@ module.exports = async function rampNavigateurSmoke(port) {
     }
 
     // ══════════════════════════════════════════════════════════════════
+    //  Le référentiel des aéroports : groupé par pays, déplié par défaut
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Troisième famille du même patron, et une différence qui se mesure : l'état
+    // de pliage est **inversé** de celui des aéronefs. `replies` note ce qui est
+    // **replié**, si bien que tout est ouvert au départ — et c'est pourquoi
+    // l'enregistrement se contente d'**effacer** l'entrée du pays touché pour
+    // que « l'agent voie ce qu'il vient d'écrire ».
+    etape = 'référentiel des aéroports';
+    const refApt = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const liste = async () => {
+        const c = await (await fetch(`${api}/aeroports`, { credentials: 'same-origin' })).json();
+        return Array.isArray(c) ? c : (c.aeroports || c.liste || []);
+      };
+      const miennes = async () => (await liste()).filter((x) => /RONDEX/.test(x.nom || ''));
+      const q = (sel) => document.querySelector(sel);
+      const poser = (id, v) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      };
+      const erreur = () => (document.getElementById('rampAptErreur') || {}).textContent || '';
+      const enregistrer = async () => { q('[onclick^="rampEnregistrerAeroport"]').click(); await a(2800); };
+      const compte = (motif) => {
+        const b = [...document.querySelectorAll('.ramp-badge.compte')]
+          .map((x) => new RegExp(`(\\d+)\\s*${motif}`).exec((x.textContent || '').trim()))
+          .find(Boolean);
+        return b ? Number(b[1]) : -1;
+      };
+      const groupes = () => document.querySelectorAll('tr.ramp-groupe-ligne').length;
+      const plateformes = () => document.querySelectorAll('tbody tr:not(.ramp-groupe-ligne)').length;
+      const groupeDe = (pays) => [...document.querySelectorAll('tr.ramp-groupe-ligne')]
+        .find((tr) => ((tr.querySelector('strong') || {}).textContent || '').trim() === pays);
+      const chercher = async (texte) => {
+        const champ = q('[oninput^="rampAptChercher"]');
+        if (!champ) return false;
+        champ.value = texte;
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await a(2200);
+        return true;
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+
+      [...document.querySelectorAll('[onclick^="rampParamOnglet"]')]
+        .find((b) => /'aeroports'/.test(b.getAttribute('onclick')))?.click();
+      await a(2600);
+      q('[onclick^="rampAptReset"]')?.click();
+      await a(2200);
+      r.depart = (await liste()).length;
+      r.paysAuDepart = compte('pays');
+      r.aeroportsAffiches = compte('aéroport');
+      // Tout est ouvert au départ : `replies` est vide, et c'est l'inverse des
+      // aéronefs. On le constate avant de toucher à quoi que ce soit.
+      r.ouvertsAuDepart = plateformes() === r.depart;
+      r.deja = (await miennes()).length;
+
+      // ── 1. Les deux refus : le pays d'abord, l'intitulé ensuite ──
+      await essai('refus', async () => {
+        const d = {};
+        q('[onclick="rampOuvrirAeroport()"]').click();
+        await a(2200);
+        d.formulaire = !!document.getElementById('rampAptPays');
+        if (!d.formulaire) return d;
+        await enregistrer();
+        d.sansPays = erreur();
+        const select = document.getElementById('rampAptPays');
+        const i = [...select.options].findIndex((o) => o.value);
+        d.paysOffert = i >= 0;
+        select.selectedIndex = i;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        d.paysChoisi = select.value;
+        await enregistrer();
+        d.sansNom = erreur();
+        d.rienCree = (await miennes()).length === r.deja;
+        return d;
+      });
+
+      const pays = (r.refus || {}).paysChoisi;
+
+      // ── 2. La création, et le pays touché qui reste déplié ──
+      await essai('creation', async () => {
+        const d = {};
+        if (!pays) return { erreur: 'pas de pays offert' };
+        poser('rampAptNom', 'RONDEX — plateforme de la ronde');
+        poser('rampAptCode', 'RXXX');
+        poser('rampAptStatut', 'International');
+        await enregistrer();
+        d.fenetreFermee = !document.getElementById('rampAptPays');
+        const mien = await miennes();
+        d.aMoi = mien.length;
+        const cree = mien[0];
+        d.enBase = !!cree;
+        if (!cree) return d;
+        d.id = cree.id;
+        d.pays = cree.pays;
+        d.code = cree.code;
+        d.statut = cree.statut;
+        d.actif = cree.actif !== false;
+        d.totalApres = (await liste()).length;
+        // Le pays touché n'est pas replié : son chevron est ouvert, et la
+        // plateforme créée se voit.
+        d.groupeOuvert = !!(groupeDe(pays) || {}).querySelector?.('.ramp-extension.ouvert');
+        d.ligneVisible = !![...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(cree.id));
+        return d;
+      });
+
+      const id = (r.creation || {}).id;
+
+      // ── 3. Le bouton du lot porte son pays, et le pliage joue à l'envers ──
+      await essai('lot', async () => {
+        const d = {};
+        if (!pays) return { erreur: 'pas de pays' };
+        const bouton = (groupeDe(pays) || {}).querySelector?.('[onclick*="rampOuvrirAeroport("]');
+        d.bouton = !!bouton;
+        if (bouton) {
+          bouton.click();
+          await a(2200);
+          d.paysPreChoisi = (document.getElementById('rampAptPays') || {}).value || '';
+          q('[onclick^="rampFermerModal"]').click();
+          await a(1400);
+        }
+        // « Tout replier » ferme tout — l'inverse des aéronefs, où « tout
+        // déplier » ouvrait.
+        q('[onclick^="rampAptToutDeplier(false)"]').click();
+        await a(2000);
+        d.toutesRepliees = plateformes();
+        q('[onclick^="rampAptToutDeplier(true)"]').click();
+        await a(2000);
+        d.toutesOuvertes = plateformes();
+        const chevron = (groupeDe(pays) || {}).querySelector?.('.ramp-extension');
+        d.chevron = !!chevron;
+        if (chevron) {
+          chevron.click();
+          await a(1800);
+          d.unLotReplie = plateformes();
+          chevron.click();
+          await a(1800);
+          d.unLotRendu = plateformes();
+        }
+        return d;
+      });
+
+      // ── 4. Modification, bascule d'activité ──
+      await essai('modifier', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas d’aéroport créé' };
+        await chercher('RONDEX');
+        const ligne = () => [...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(id));
+        d.ligne = !!ligne();
+        if (!ligne()) return d;
+        ligne().querySelector('[onclick^="rampOuvrirAeroport"]').click();
+        await a(2200);
+        d.nomRelu = (document.getElementById('rampAptNom') || {}).value || '';
+        d.codeRelu = (document.getElementById('rampAptCode') || {}).value || '';
+        poser('rampAptStatut', 'Domestique');
+        await enregistrer();
+        d.statutEnBase = ((await miennes())[0] || {}).statut;
+        await chercher('RONDEX');
+        const bascule = () => (ligne() || {}).querySelector?.('[onclick^="rampBasculerAeroport"]');
+        d.bascule = !!bascule();
+        if (!bascule()) return d;
+        bascule().click();
+        await a(2800);
+        d.inactif = ((await miennes())[0] || {}).actif === false;
+        await chercher('RONDEX');
+        bascule().click();
+        await a(2800);
+        d.rendu = ((await miennes())[0] || {}).actif !== false;
+        return d;
+      });
+
+      // ── 5. Recherche, facette, remise à zéro, et la suppression ──
+      await essai('fin', async () => {
+        const d = {};
+        q('[onclick^="rampAptReset"]').click();
+        await a(2200);
+        d.toutes = compte('pays');
+        d.cherchees = (await chercher('RONDEX')) ? compte('pays') : -1;
+        const filtre = q('[onchange^="rampAptSetFiltre"]');
+        d.filtre = !!filtre;
+        if (filtre) {
+          const i = [...filtre.options].findIndex((o) => o.value);
+          if (i >= 0) {
+            filtre.selectedIndex = i;
+            filtre.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(2200);
+            d.filtrees = compte('pays');
+          }
+        }
+        q('[onclick^="rampAptReset"]').click();
+        await a(2200);
+        d.rendues = compte('pays');
+        // Et la suppression, restreinte aux lignes dont la ronde a l'identifiant.
+        if (!id) return d;
+        await chercher('RONDEX');
+        const ligne = [...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(id));
+        const bouton = ligne && ligne.querySelector('[onclick^="rampSupprimerAeroport"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        d.confirme = await oui();
+        d.restantes = (await miennes()).length;
+        d.total = (await liste()).length;
+        d.rendueAuDepart = d.total === r.depart;
+        q('[onclick^="rampAptReset"]')?.click();
+        await a(2000);
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const A = refApt;
+      const F = A.refus || {};
+      const C = A.creation || {};
+      const L = A.lot || {};
+      const M3 = A.modifier || {};
+      const Z = A.fin || {};
+      verifier('les aéroports partent groupés par pays et tous dépliés — l’inverse des aéronefs',
+        A.depart > 10 && A.paysAuDepart > 1 && A.aeroportsAffiches === A.depart
+        && A.ouvertsAuDepart === true && A.deja === 0,
+        JSON.stringify({ depart: A.depart, pays: A.paysAuDepart,
+          affiches: A.aeroportsAffiches, ouverts: A.ouvertsAuDepart }));
+      verifier('le formulaire d’un aéroport exige un pays, puis un intitulé, et rien n’est créé',
+        F.formulaire === true && (F.sansPays || '').length > 0
+        && F.paysOffert === true && (F.sansNom || '').length > 0
+        && F.sansPays !== F.sansNom && F.rienCree === true,
+        JSON.stringify(F).slice(0, 320));
+      verifier('un aéroport se crée, le serveur le porte, et son pays reste déplié — la plateforme se voit aussitôt',
+        C.fenetreFermee === true && C.enBase === true && C.aMoi === 1
+        && C.code === 'RXXX' && C.statut === 'International' && C.actif === true
+        && C.totalApres === A.depart + 1
+        && C.groupeOuvert === true && C.ligneVisible === true,
+        JSON.stringify(C));
+      verifier('le bouton du lot porte son pays, et le pliage joue à l’envers : « tout replier » ferme',
+        L.bouton === true && L.paysPreChoisi === (A.refus || {}).paysChoisi
+        && L.toutesRepliees === 0 && L.toutesOuvertes === A.depart + 1
+        && L.chevron === true && L.unLotReplie < L.toutesOuvertes
+        && L.unLotRendu === L.toutesOuvertes,
+        JSON.stringify(L));
+      verifier('l’aéroport se modifie, le serveur le porte, et sa bascule d’activité joue dans les deux sens',
+        M3.ligne === true && /plateforme de la ronde/.test(M3.nomRelu || '')
+        && M3.codeRelu === 'RXXX' && M3.statutEnBase === 'Domestique'
+        && M3.bascule === true && M3.inactif === true && M3.rendu === true,
+        JSON.stringify(M3));
+      verifier('la recherche et la facette restreignent, la remise à zéro rend, et la suppression ramène le compte exact',
+        // L'aéroport de la ronde rejoint un pays **existant** : le compte des
+        // pays ne bouge pas. J'avais écrit « +1 » par analogie avec les
+        // aéronefs, où la désignation était neuve.
+        Z.toutes === A.paysAuDepart && Z.cherchees === 1
+        && Z.filtre === true && Z.rendues === Z.toutes
+        && Z.bouton === true && Z.confirme === true && Z.restantes === 0
+        && Z.rendueAuDepart === true,
+        JSON.stringify(Z));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les items SAFA et leurs groupes : un code qui ne suit pas l'intitulé
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Quatrième famille, et la seule qui porte **deux familles sur un écran** :
+    // les items, et les groupes qui les rangent. Le patron est le même, mais la
+    // règle qui compte est ailleurs — elle est écrite deux fois, dans le client
+    // et dans la route :
+    //
+    //   « Un groupe d'items porte un code technique **dérivé de son intitulé**.
+    //     Les items le retiennent, si bien qu'un groupe renommé garde les
+    //     siens. »
+    //
+    // C'est donc ce que ce bloc éprouve : on crée un groupe, on y range un
+    // item, **on renomme le groupe**, et l'item doit y rester. Un référentiel
+    // qui détacherait ses items à chaque correction d'orthographe perdrait le
+    // rangement de tout un programme d'inspection.
+    etape = 'items et groupes SAFA';
+    const refItems = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const familles = async () => ((await (await fetch(`${api}/parametres`,
+        { credentials: 'same-origin' })).json()).familles || {});
+      const q = (sel) => document.querySelector(sel);
+      const poser = (id, v) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      };
+      const compte = () => {
+        const b = [...document.querySelectorAll('.ramp-badge.compte')]
+          .map((x) => /(\d+)\s*élément/.exec((x.textContent || '').trim()))
+          .find(Boolean);
+        return b ? Number(b[1]) : -1;
+      };
+      const bandeauDe = (titre) => [...document.querySelectorAll('tr.ramp-groupe-ligne')]
+        .find((tr) => ((tr.querySelector('strong') || {}).textContent || '').trim() === titre);
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+
+      [...document.querySelectorAll('[onclick^="rampParamOnglet"]')]
+        .find((b) => /'items'/.test(b.getAttribute('onclick')))?.click();
+      await a(2600);
+      const f0 = await familles();
+      r.itemsAuDepart = (f0.items || []).length;
+      r.groupesAuDepart = (f0.groupes || []).length;
+      r.elementsAffiches = compte();
+
+      // ── 1. Le groupe refuse un intitulé vide, puis se crée ──
+      await essai('groupe', async () => {
+        const d = {};
+        q('[onclick^="rampOuvrirGroupe"]').click();
+        await a(2200);
+        d.formulaire = !!document.getElementById('rampGroupeLabel');
+        if (!d.formulaire) return d;
+        q('[onclick^="rampEnregistrerGroupe"]').click();
+        await a(1800);
+        d.sansIntitule = (document.getElementById('rampGroupeErreur') || {}).textContent || '';
+        d.rienCree = ((await familles()).groupes || []).length === r.groupesAuDepart;
+        poser('rampGroupeLabel', 'Groupe RONDEX');
+        poser('rampGroupeDesc', 'Groupe posé par la ronde.');
+        q('[onclick^="rampEnregistrerGroupe"]').click();
+        await a(3000);
+        d.fenetreFermee = !document.getElementById('rampGroupeLabel');
+        const g = ((await familles()).groupes || []).find((x) => x.label === 'Groupe RONDEX');
+        d.enBase = !!g;
+        if (!g) return d;
+        d.id = g.id;
+        // Le code est **dérivé** de l'intitulé par le serveur : le formulaire ne
+        // le demande pas, et c'est lui que les items retiendront.
+        d.code = g.code;
+        d.codeDerive = !!g.code && g.code !== g.label;
+        d.bandeau = !!bandeauDe('Groupe RONDEX');
+        return d;
+      });
+
+      const codeGroupe = (r.groupe || {}).code;
+      const idGroupe = (r.groupe || {}).id;
+
+      // ── 2. Un item, rangé dans ce groupe ──
+      await essai('item', async () => {
+        const d = {};
+        if (!codeGroupe) return { erreur: 'pas de groupe' };
+        q('[onclick^="rampOuvrirParam("]').click();
+        await a(2200);
+        d.formulaire = !!document.getElementById('rampParamLabel');
+        if (!d.formulaire) return d;
+        q('[onclick^="rampEnregistrerParam"]').click();
+        await a(1800);
+        d.sansLibelle = (document.getElementById('rampParamErreur') || {}).textContent || '';
+        poser('rampParamCode', 'RX01');
+        poser('rampParamLabel', 'Item RONDEX');
+        poser('rampParamDesc', 'Item posé par la ronde.');
+        const cat = document.getElementById('rampParamCat');
+        d.groupeOffert = !!cat && [...cat.options].some((o) => o.value === codeGroupe);
+        if (cat) { cat.value = codeGroupe; cat.dispatchEvent(new Event('change', { bubbles: true })); }
+        q('[onclick^="rampEnregistrerParam"]').click();
+        await a(3000);
+        const it = ((await familles()).items || []).find((x) => x.label === 'Item RONDEX');
+        d.enBase = !!it;
+        if (!it) return d;
+        d.id = it.id;
+        d.cat = it.cat;
+        d.rangeDansLeGroupe = it.cat === codeGroupe;
+        d.code = it.code;
+        // Et il se voit sous le bandeau de son groupe.
+        d.sousSonBandeau = !![...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(it.id));
+        return d;
+      });
+
+      const idItem = (r.item || {}).id;
+
+      // ── 3. Le groupe renommé **garde ses items** ──
+      await essai('renommage', async () => {
+        const d = {};
+        if (!idGroupe || !idItem) return { erreur: 'pas de groupe ou d’item' };
+        // Relevé avant la garde : quels bandeaux la table porte-t-elle ?
+        d.bandeaux = [...document.querySelectorAll('tr.ramp-groupe-ligne')]
+          .map((tr) => ((tr.querySelector('strong') || {}).textContent || '').trim());
+        d.ongletActif = (document.querySelector('[onclick^="rampParamOnglet"].active') || {})
+          .getAttribute?.('onclick') || '';
+        // ── `*=` et non `^=` : la cellule d'actions est **commune** ──
+        //
+        // Le même `actions()` sert aux lignes d'item et aux bandeaux de groupe,
+        // et ses boutons commencent tous par `event.stopPropagation();`. Mon
+        // `^="rampOuvrirGroupe"` ne mordait donc sur rien — et le relevé des
+        // bandeaux, lui, montrait « Groupe RONDEX » bien présent. *Quand le
+        // repère échoue sur une chose qu'on voit, c'est le repère qu'il faut
+        // lire.*
+        const bandeau = bandeauDe('Groupe RONDEX');
+        const bouton = bandeau && bandeau.querySelector('[onclick*="rampOuvrirGroupe"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        await a(2200);
+        d.intituleRelu = (document.getElementById('rampGroupeLabel') || {}).value || '';
+        poser('rampGroupeLabel', 'Groupe RONDEX renommé');
+        q('[onclick^="rampEnregistrerGroupe"]').click();
+        await a(3000);
+        const fam = await familles();
+        const g = (fam.groupes || []).find((x) => x.id === idGroupe) || {};
+        const it = (fam.items || []).find((x) => x.id === idItem) || {};
+        d.intituleEnBase = g.label;
+        d.codeInchange = g.code === codeGroupe;
+        d.itemTientSonGroupe = it.cat === codeGroupe;
+        d.bandeauRenomme = !!bandeauDe('Groupe RONDEX renommé');
+        d.itemToujoursVu = !![...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(idItem));
+        return d;
+      });
+
+      // ── 4. Le bandeau se replie, l'item se désactive, et l'export compose ──
+      await essai('gestes', async () => {
+        const d = {};
+        if (!idItem) return { erreur: 'pas d’item' };
+        const bandeau = () => bandeauDe('Groupe RONDEX renommé');
+        const chevron = (bandeau() || {}).querySelector?.('.ramp-extension');
+        d.chevron = !!chevron;
+        const vu = () => !![...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(idItem));
+        if (chevron) {
+          d.ouvertAuDepart = vu();
+          chevron.click();
+          await a(1800);
+          d.replie = !vu();
+          (bandeau() || {}).querySelector?.('.ramp-extension').click();
+          await a(1800);
+          d.rendu = vu();
+        }
+        const ligne = () => [...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(idItem));
+        const bascule = (ligne() || {}).querySelector?.('[onclick*="rampBasculerParam"]');
+        d.bascule = !!bascule;
+        if (bascule) {
+          bascule.click();
+          await a(3000);
+          d.inactif = ((await familles()).items || [])
+            .find((x) => x.id === idItem).actif === false;
+          const r2 = [...document.querySelectorAll('tbody tr')]
+            .find((tr) => (tr.innerHTML || '').includes(idItem));
+          r2?.querySelector('[onclick*="rampBasculerParam"]')?.click();
+          await a(3000);
+          d.renduActif = ((await familles()).items || [])
+            .find((x) => x.id === idItem).actif !== false;
+        }
+        // L'export compose son document dans le navigateur : on capture le
+        // produit par relais, comme en 5.f.10.
+        const relais = { fenetres: 0, blobs: 0 };
+        const vraiOpen = window.open;
+        const vraiURL = URL.createObjectURL;
+        window.open = () => { relais.fenetres += 1;
+          return { document: { write: () => {}, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {} }; };
+        URL.createObjectURL = (b) => { relais.blobs += 1; return vraiURL.call(URL, b); };
+        try {
+          q('[onclick^="rampExporterParametres"]').click();
+          await a(3000);
+        } finally { window.open = vraiOpen; URL.createObjectURL = vraiURL; }
+        d.export = relais;
+        return d;
+      });
+
+      // ── 5. La ronde retire l'item, puis son groupe ──
+      await essai('menage', async () => {
+        const d = { effaces: 0 };
+        for (const cible of [idItem, idGroupe]) {
+          if (!cible) continue;
+          /* eslint-disable no-await-in-loop */
+          const ligne = [...document.querySelectorAll('tbody tr')]
+            .find((tr) => (tr.innerHTML || '').includes(cible));
+          const bouton = ligne && ligne.querySelector('[onclick*="rampSupprimerParam"]');
+          if (!bouton) continue;
+          bouton.click();
+          if (await oui()) d.effaces += 1;
+        }
+        const fam = await familles();
+        d.items = (fam.items || []).length;
+        d.groupes = (fam.groupes || []).length;
+        d.rendueAuDepart = d.items === r.itemsAuDepart && d.groupes === r.groupesAuDepart;
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const I = refItems;
+      const G = I.groupe || {};
+      const T = I.item || {};
+      const R2 = I.renommage || {};
+      const Ge = I.gestes || {};
+      const M4 = I.menage || {};
+      verifier('un groupe d’items refuse un intitulé vide, puis se crée avec un code que le serveur dérive',
+        G.formulaire === true && (G.sansIntitule || '').length > 0 && G.rienCree === true
+        && G.fenetreFermee === true && G.enBase === true
+        && G.codeDerive === true && G.bandeau === true,
+        JSON.stringify(G));
+      verifier('un item refuse un libellé vide, puis se range dans ce groupe et paraît sous son bandeau',
+        T.formulaire === true && (T.sansLibelle || '').length > 0
+        && T.groupeOffert === true && T.enBase === true
+        && T.rangeDansLeGroupe === true && T.code === 'RX01'
+        && T.sousSonBandeau === true,
+        JSON.stringify(T));
+      verifier('le groupe renommé garde son code — et garde donc ses items, qui le retiennent',
+        R2.bouton === true && R2.intituleRelu === 'Groupe RONDEX'
+        && R2.intituleEnBase === 'Groupe RONDEX renommé'
+        && R2.codeInchange === true && R2.itemTientSonGroupe === true
+        && R2.bandeauRenomme === true && R2.itemToujoursVu === true,
+        JSON.stringify(R2).slice(0, 400));
+      verifier('le bandeau du groupe se replie et se rend, l’item se désactive et se réactive, et l’export compose son document',
+        Ge.chevron === true && Ge.ouvertAuDepart === true
+        && Ge.replie === true && Ge.rendu === true
+        && Ge.bascule === true && Ge.inactif === true && Ge.renduActif === true
+        && !!Ge.export && (Ge.export.blobs + Ge.export.fenetres) >= 1,
+        JSON.stringify(Ge));
+      verifier('la ronde retire son item puis son groupe, et les deux familles reviennent à leur compte',
+        M4.effaces === 2 && M4.rendueAuDepart === true,
+        JSON.stringify(M4));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les dépôts de preuve : un vrai fichier, et deux refus
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Cinquième famille, et la seule qui **verse un fichier**. `uploadFile` de
+    // Puppeteer ne s'appelle que depuis Node, et cette ronde vit dans une
+    // évaluation de page : un `DataTransfer` suffit — on fabrique un vrai
+    // `File`, on le pose sur l'entrée, et l'enregistrement le POST en multipart
+    // (même méthode qu'en 5.f.29).
+    //
+    // Ce que cela ne prouve pas, et qui doit être dit : ni que le sélecteur de
+    // fichiers du système s'ouvre, ni que l'agent y choisit quelque chose. La
+    // mesure commence au fichier reçu par l'entrée.
+    etape = 'dépôts de preuve';
+    await ouvrir('depot');
+    await attendre(2600);
+    const refDep = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const liste = async () => await (await fetch(`${api}/depots`,
+        { credentials: 'same-origin' })).json();
+      const q = (sel) => document.querySelector(sel);
+      const poser = (id, v) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      };
+      const erreur = () => (document.getElementById('rampDepotErreur') || {}).textContent || '';
+      const enregistrer = async () => { q('[onclick^="rampEnregistrerDepot"]').click(); await a(3000); };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+      // La ligne « aucun dépôt » est elle aussi un `tr` : la compter rendait
+      // `1` sur une table **vide**, et mon « une seule ligne cherchée » passait
+      // sans rien trouver. On écarte la ligne d'état.
+      const lignes = () => [...document.querySelectorAll('tbody tr')]
+        .filter((tr) => !tr.querySelector('.ramp-table-vide')).length;
+
+      q('[onclick^="rampResetFiltresDepot"]')?.click();
+      await a(1800);
+      r.depart = (await liste()).length;
+
+      // ── 1. Les deux refus : l'intitulé d'abord, le fichier ensuite ──
+      await essai('refus', async () => {
+        const d = {};
+        q('[onclick^="rampOuvrirDepot"]').click();
+        await a(2400);
+        d.formulaire = !!document.getElementById('rampDepotNom');
+        d.entreeFichier = !!document.getElementById('rampFichierDepot');
+        if (!d.formulaire) return d;
+        await enregistrer();
+        d.sansNom = erreur();
+        poser('rampDepotNom', 'RONDEX — dépôt de la ronde');
+        await enregistrer();
+        d.sansFichier = erreur();
+        d.rienCree = (await liste()).length === r.depart;
+        return d;
+      });
+
+      // ── 2. Le fichier versé, et le dépôt relu chez le serveur ──
+      await essai('creation', async () => {
+        const d = {};
+        const entree = document.getElementById('rampFichierDepot');
+        if (!entree) return { erreur: 'pas d’entrée de fichier' };
+        const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e,
+          0x34, 0x0a, 0x25, 0xc7, 0xec, 0x8f, 0xa2, 0x0a]);
+        const dt = new DataTransfer();
+        dt.items.add(new File([pdf], 'rondex.pdf', { type: 'application/pdf' }));
+        entree.files = dt.files;
+        entree.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(900);
+        // Le nom du fichier choisi s'affiche : c'est le geste en ligne de
+        // l'entrée qui le pose.
+        d.nomAffiche = (document.getElementById('rampNomFichier') || {}).textContent || '';
+        await enregistrer();
+        d.fenetreFermee = !document.getElementById('rampDepotNom');
+        const apres = await liste();
+        d.apres = apres.length;
+        const cree = apres.find((x) => /RONDEX/.test(x.nom || ''));
+        d.enBase = !!cree;
+        if (!cree) return d;
+        d.id = cree.id;
+        d.nomOrigine = cree.nom_origine;
+        d.taille = cree.taille;
+        d.deposePar = !!cree.depose_par;
+        d.annee = cree.annee;
+        d.mois = cree.mois;
+        d.dansLaTable = !![...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(cree.id));
+        return d;
+      });
+
+      const id = (r.creation || {}).id;
+
+      // ── 3. La recherche, le filtre d'année, et la suppression ──
+      await essai('fin', async () => {
+        const d = {};
+        d.toutes = lignes();
+        const champ = q('[oninput^="rampChercherDepot"]');
+        d.champ = !!champ;
+        if (champ) {
+          champ.value = 'RONDEX';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(2000);
+          d.cherchees = lignes();
+        }
+        // ── Le filtre d'année, et une assertion qui ne mesurait que sa présence ──
+        //
+        // Premier jet : `d.filtre = !!filtre`, et le contrôle s'en contentait.
+        // Il était vert, et `rampSetFiltre` restait **non exercé** — le geste
+        // n'avait pas porté. On relève donc les options offertes et l'état du
+        // filtre après le choix : c'est l'effet qui prouve, jamais la présence.
+        const filtre = q('[onchange*="rampSetFiltre(\'depotAnnee\'"]');
+        d.filtre = !!filtre;
+        if (filtre) {
+          d.optionsAnnee = [...filtre.options].map((o) => o.value);
+          d.anneesEnBase = (await liste()).map((x) => x.annee);
+          d.anneesEnCache = ((window.RAMP_STATE || {}).data || {}).depots
+            ? window.RAMP_STATE.data.depots.map((x) => x.annee) : null;
+          const i = [...filtre.options].findIndex((o) => o.value);
+          d.optionRetenue = i >= 0 ? filtre.options[i].value : '';
+          if (i >= 0) {
+            filtre.selectedIndex = i;
+            filtre.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(2400);
+            d.filtrees = lignes();
+            d.etatDuFiltre = ((window.RAMP_STATE || {}).filtres || {}).depotAnnee || '';
+          }
+        }
+        q('[onclick^="rampResetFiltresDepot"]').click();
+        await a(2000);
+        d.rendues = lignes();
+        if (!id) return d;
+        const ligne = [...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(id));
+        const bouton = ligne && ligne.querySelector('[onclick^="rampSupprimerDepot"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        d.confirme = await oui();
+        const apres = await liste();
+        d.apres = apres.length;
+        d.rendueAuDepart = apres.length === r.depart;
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const D = refDep;
+      const F = D.refus || {};
+      const C = D.creation || {};
+      const Z = D.fin || {};
+      verifier('le dépôt refuse un intitulé vide, puis réclame un fichier, et rien n’est déposé',
+        F.formulaire === true && F.entreeFichier === true
+        && (F.sansNom || '').length > 0 && /fichier/i.test(F.sansFichier || '')
+        && F.sansNom !== F.sansFichier && F.rienCree === true,
+        JSON.stringify(F).slice(0, 320));
+      verifier('un fichier se verse pour de vrai : son nom s’affiche, et le serveur porte le dépôt avec sa taille et son déposant',
+        /rondex\.pdf/.test(C.nomAffiche || '') && C.fenetreFermee === true
+        && C.enBase === true && C.apres === D.depart + 1
+        && C.nomOrigine === 'rondex.pdf' && C.taille === 15
+        && C.deposePar === true && !!C.annee && !!C.mois
+        && C.dansLaTable === true,
+        JSON.stringify(C));
+      verifier('la recherche et le filtre d’année restreignent la table, la remise à zéro la rend, et le dépôt se supprime',
+        Z.champ === true && Z.cherchees === 1 && Z.filtre === true
+        && (Z.optionRetenue || '').length > 0
+        && Z.etatDuFiltre === Z.optionRetenue && Z.filtrees >= 1
+        && Z.rendues === Z.toutes && Z.bouton === true && Z.confirme === true
+        && Z.rendueAuDepart === true,
+        JSON.stringify(Z));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le carnet des contacts : groupé par État
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Sixième et dernière famille de `ramp-parametres.js`. Deux refus, et un
+    // détail qui compte : l'État n'est offert que parmi **ceux que le compte
+    // peut gérer** — `etats.filter(rampPeutGererEtat)`.
+    etape = 'carnet des contacts';
+    await ouvrir('contacts');
+    await attendre(2600);
+    const refCon = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const liste = async () => await (await fetch(`${api}/contacts`,
+        { credentials: 'same-origin' })).json();
+      const q = (sel) => document.querySelector(sel);
+      const poser = (id, v) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      };
+      const erreur = () => (document.getElementById('rampContactErreur') || {}).textContent || '';
+      const enregistrer = async () => { q('[onclick^="rampEnregistrerContact"]').click(); await a(3000); };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+      r.depart = (await liste()).length;
+
+      // ── 1. Les deux refus : l'État, puis le nom et les prénoms ──
+      await essai('refus', async () => {
+        const d = {};
+        q('[onclick^="rampOuvrirContact"]').click();
+        await a(2400);
+        d.formulaire = !!document.getElementById('rampContactEtat');
+        if (!d.formulaire) return d;
+        await enregistrer();
+        d.sansEtat = erreur();
+        const select = document.getElementById('rampContactEtat');
+        const i = [...select.options].findIndex((o) => o.value);
+        d.etatOffert = i >= 0;
+        if (i >= 0) {
+          select.selectedIndex = i;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          d.etat = select.value;
+        }
+        await enregistrer();
+        d.sansNom = erreur();
+        // Le nom seul ne suffit pas : les prénoms sont exigés avec lui.
+        poser('rampContactNom', 'RONDEX');
+        await enregistrer();
+        d.sansPrenom = erreur();
+        d.rienCree = (await liste()).length === r.depart;
+        return d;
+      });
+
+      // ── 2. La création, relue chez le serveur ──
+      await essai('creation', async () => {
+        const d = {};
+        poser('rampContactPrenom', 'Ronde');
+        poser('rampContactFonction', 'Inspecteur de la ronde');
+        poser('rampContactEmail', 'rondex@example.org');
+        poser('rampContactTel', '+228 00 00 00 00');
+        poser('rampContactAutres', 'Contact posé par la ronde.');
+        await enregistrer();
+        d.fenetreFermee = !document.getElementById('rampContactEtat');
+        const apres = await liste();
+        d.apres = apres.length;
+        const cree = apres.find((x) => x.nom === 'RONDEX');
+        d.enBase = !!cree;
+        if (!cree) return d;
+        d.id = cree.id;
+        d.etat = cree.etat;
+        d.prenom = cree.prenom;
+        d.email = cree.email;
+        d.actif = cree.actif !== false;
+        d.dansLaTable = !![...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(cree.id));
+        return d;
+      });
+
+      const id = (r.creation || {}).id;
+
+      // ── 3. Modification, bascule d'activité, suppression ──
+      await essai('fin', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas de contact créé' };
+        const ligne = () => [...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(id));
+        d.ligne = !!ligne();
+        if (!ligne()) return d;
+        ligne().querySelector('[onclick*="rampOuvrirContact"]').click();
+        await a(2400);
+        d.nomRelu = (document.getElementById('rampContactNom') || {}).value || '';
+        d.emailRelu = (document.getElementById('rampContactEmail') || {}).value || '';
+        poser('rampContactFonction', 'Inspecteur principal');
+        await enregistrer();
+        d.fonctionEnBase = ((await liste()).find((x) => x.id === id) || {}).fonction;
+        const bascule = () => (ligne() || {}).querySelector?.('[onclick*="rampBasculerContact"]');
+        d.bascule = !!bascule();
+        if (bascule()) {
+          bascule().click();
+          await a(3000);
+          d.inactif = ((await liste()).find((x) => x.id === id) || {}).actif === false;
+          bascule().click();
+          await a(3000);
+          d.rendu = ((await liste()).find((x) => x.id === id) || {}).actif !== false;
+        }
+        const bouton = (ligne() || {}).querySelector?.('[onclick*="rampSupprimerContact"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        d.confirme = await oui();
+        const apres = await liste();
+        d.apres = apres.length;
+        d.rendueAuDepart = apres.length === r.depart;
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const K = refCon;
+      const F = K.refus || {};
+      const C = K.creation || {};
+      const Z = K.fin || {};
+      verifier('le contact exige un État que le compte peut gérer, puis un nom **et** des prénoms — trois refus distincts',
+        F.formulaire === true && F.etatOffert === true
+        && (F.sansEtat || '').length > 0 && (F.sansNom || '').length > 0
+        && (F.sansPrenom || '').length > 0 && F.sansEtat !== F.sansNom
+        && F.rienCree === true,
+        JSON.stringify(F).slice(0, 320));
+      verifier('un contact se crée, et le serveur le porte avec son État, ses prénoms et son courriel',
+        C.fenetreFermee === true && C.enBase === true && C.apres === K.depart + 1
+        && C.etat === (K.refus || {}).etat && C.prenom === 'Ronde'
+        && C.email === 'rondex@example.org' && C.actif === true
+        && C.dansLaTable === true,
+        JSON.stringify(C));
+      verifier('le contact se modifie, sa bascule d’activité joue dans les deux sens, et il se supprime sans rien laisser',
+        Z.ligne === true && Z.nomRelu === 'RONDEX'
+        && Z.emailRelu === 'rondex@example.org'
+        && Z.fonctionEnBase === 'Inspecteur principal'
+        && Z.bascule === true && Z.inactif === true && Z.rendu === true
+        && Z.bouton === true && Z.confirme === true && Z.rendueAuDepart === true,
+        JSON.stringify(Z));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     //  La ronde d'une fiche d'inspection, de la saisie à la suppression
     // ══════════════════════════════════════════════════════════════════
     //

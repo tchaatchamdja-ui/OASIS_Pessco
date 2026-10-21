@@ -36,6 +36,11 @@ async function rampChargerDepots() {
         RAMP_STATE.data.depots = await rampApi('/depots');
         const corps = document.querySelector('[data-corps="depots"]');
         if (corps) corps.innerHTML = rampLignesDepots();
+        // Les facettes dépendent des dépôts : elles se refont avec eux. Un
+        // rendu complet boucherait — `rampChargerDepots` est appelée **depuis**
+        // `rampRenderPage`.
+        const filtres = document.querySelector('[data-filtres="depots"]');
+        if (filtres) filtres.innerHTML = rampFiltresDepots();
     } catch (e) { rampToast(e.message || rt('m_depots_indisponibles'), 'error'); }
 }
 
@@ -88,7 +93,23 @@ function rampLignesDepots() {
     </tr>`).join('');
 }
 
-function rampRenderDepot() {
+// ── Les facettes des dépôts, et une écriture qui ne se voyait qu'à moitié ──
+//
+// `rampChargerDepots()` ne rafraîchissait que le **corps du tableau**. La barre
+// de filtres, elle, gardait les options calculées au premier rendu — c'est-à-dire
+// **avant** que les dépôts ne soient chargés. Conséquences, mesurées par la
+// ronde de RAMP (ADR-003 n° 5.f.32) :
+//
+//   — à l'arrivée sur l'écran, les trois listes d'année, de mois et de
+//     déposant restaient **vides**, alors que la table affichait les dépôts ;
+//   — après un dépôt, son année n'apparaissait pas dans le filtre, et l'agent
+//     ne pouvait pas filtrer sur ce qu'il venait de déposer.
+//
+// La barre est donc extraite et porte son propre point d'ancrage, pour être
+// rafraîchie par le même mécanisme partiel que le corps. Elle n'est **pas**
+// refaite par la recherche : son champ y vit, et son curseur serait perdu à
+// chaque frappe — c'est la raison d'être du redessin partiel.
+function rampFiltresDepots() {
     const F = RAMP_STATE.filtres;
     const auteurs = rampDepotFacette('depotAuteur', (d) => d.depose_par)
         .sort((a, b) => a.localeCompare(b, 'fr'));
@@ -96,14 +117,9 @@ function rampRenderDepot() {
     const mois = rampDepotFacette('depotMois', (d) => d.mois)
         .sort((a, b) => RAMP_MOIS.indexOf(a) - RAMP_MOIS.indexOf(b));
     const opt = (v, l, cur) => `<option value="${_rAttr(v)}" ${cur === v ? 'selected' : ''}>${_rEsc(l)}</option>`;
+    // Même disposition que les autres filtres du module : les listes de largeur
+    // égale, puis la recherche qui prend ce qui reste du rang.
     return `
-    <div class="ramp-page-header">
-        <h2>${rt('p_depot_titre')}</h2>
-        <span class="ramp-sous-titre">${rt('p_depot_sous')}</span>
-    </div>
-    <!-- Même disposition que les autres filtres du module : les listes de
-         largeur égale, puis la recherche qui prend ce qui reste du rang. -->
-    <div class="ramp-filtres">
         <select class="ramp-select" onchange="rampSetFiltre('depotAnnee', this.value)">
             <option value="">${rt('f_annees')}</option>
             ${annees.map((a) => opt(a, a, F.depotAnnee)).join('')}
@@ -122,8 +138,16 @@ function rampRenderDepot() {
                    oninput="rampChercherDepot(this.value)">
         </div>
         <button class="btn btn-outline btn-sm ramp-btn-icone" onclick="rampResetFiltresDepot()"
-                title="${rt('reinitialiser_filtres')}" aria-label="${rt('reinitialiser_filtres')}">${RAMP_ICONS.reset}</button>
+                title="${rt('reinitialiser_filtres')}" aria-label="${rt('reinitialiser_filtres')}">${RAMP_ICONS.reset}</button>`;
+}
+
+function rampRenderDepot() {
+    return `
+    <div class="ramp-page-header">
+        <h2>${rt('p_depot_titre')}</h2>
+        <span class="ramp-sous-titre">${rt('p_depot_sous')}</span>
     </div>
+    <div class="ramp-filtres" data-filtres="depots">${rampFiltresDepots()}</div>
     <div class="ramp-actions-bar">
         <span style="flex:1;"></span>
         ${rampPeutContribuer()

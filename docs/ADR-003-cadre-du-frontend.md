@@ -6743,6 +6743,105 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            couvrira, sans rien inventer. Puis PR (85 non exercés), CARE (78) et
            PLAN (72), où le motif est le même.
 
+       5.f.32 [x] **RAMP — les quatre familles restantes, et une barre de filtres
+           qui ne se refaisait pas** — fait le 21 octobre 2026.
+
+           **Soixante contrôles sur RAMP ; 80 gestes sur 207.**
+           Campagne : 1 271.
+           `ramp-parametres.js` passe de **26 à 51 noms sur 52** : le seul nom
+           non exercé y est désormais `${}('${}')`, l'angle mort de l'extracteur
+           sur un gestionnaire assemblé en deux temps — le même cas qu'en 5.e.5.
+
+           Six familles sur six. Le patron n'a rien demandé de neuf ; ce que
+           chaque famille a apporté, en revanche, ne se devinait pas.
+
+           ── Les aéroports : le pliage à l'envers ──
+
+           Groupés par pays et **dépliés par défaut** — l'inverse des aéronefs.
+           `replies` note ce qui est **replié**, et c'est pourquoi
+           l'enregistrement se contente d'**effacer** l'entrée du pays touché
+           pour que « l'agent voie ce qu'il vient d'écrire ». Deux référentiels
+           voisins, deux conventions opposées : un contrôle écrit par analogie
+           aurait rougi, et pour une mauvaise raison.
+
+           ── Les items SAFA : un code que l'intitulé ne commande pas ──
+
+           Seule famille à porter **deux familles sur un écran** : les items, et
+           les groupes qui les rangent. La règle est écrite deux fois, dans le
+           client et dans la route :
+
+           > « Un groupe d'items porte un code technique **dérivé de son
+           > intitulé**. Les items le retiennent, si bien qu'un groupe renommé
+           > garde les siens. »
+
+           Le bloc la tient : on crée un groupe, on y range un item, **on renomme
+           le groupe**, et l'item y reste — le code n'a pas bougé, et le serveur
+           refuse d'ailleurs de le changer. Un référentiel qui détacherait ses
+           items à chaque correction d'orthographe perdrait le rangement de tout
+           un programme d'inspection.
+
+           ── Les dépôts : un fichier versé, et deux refus ──
+
+           Seule famille qui verse un fichier. `uploadFile` de Puppeteer ne
+           s'appelle que depuis Node, et la ronde vit dans une évaluation de
+           page : un `DataTransfer` suffit — même méthode qu'en 5.f.29. La taille
+           et le déposant sont relus en base, et le nom du fichier choisi
+           s'affiche avant l'enregistrement.
+
+           ── Les contacts : trois refus, et une liste bornée aux droits ──
+
+           L'État d'abord, puis le nom, puis les prénoms — trois messages
+           distincts, et le compte du carnet relevé après chacun. L'État n'est
+           offert que parmi **ceux que le compte peut gérer**
+           (`etats.filter(rampPeutGererEtat)`).
+
+           ── Le défaut que ce pas a trouvé ──
+
+           `rampChargerDepots()` ne rafraîchissait que le **corps du tableau**.
+           La barre de filtres gardait les options calculées au premier rendu —
+           c'est-à-dire **avant** que les dépôts ne soient chargés. Deux
+           conséquences pour l'agent :
+
+           - à l'arrivée sur l'écran, les listes d'année, de mois et de déposant
+             étaient **vides**, alors que la table affichait les dépôts ;
+           - après un dépôt, son année n'apparaissait pas dans le filtre : on ne
+             pouvait pas filtrer sur ce qu'on venait de déposer.
+
+           Un rendu complet était exclu — `rampChargerDepots` est appelée
+           **depuis** `rampRenderPage`, et s'y rappeler bouclerait. La barre est
+           donc extraite, porte son propre point d'ancrage, et se refait par le
+           même mécanisme partiel que le corps. Elle n'est pas refaite par la
+           recherche : son champ y vit, et son curseur serait perdu à chaque
+           frappe — c'est la raison d'être du redessin partiel.
+
+           Contre-essai : le défaut réintroduit, le contrôle rougit en nommant
+           `optionsAnnee: [""]`.
+
+           ── Et l'assertion qui l'avait d'abord laissé passer ──
+
+           Mon premier contrôle de ce filtre se contentait de
+           `d.filtre = !!filtre` : **le menu existe**. Il était vert, et
+           `rampSetFiltre` restait non exercé — le geste n'avait pas porté, faute
+           d'option à choisir. Deux relevés l'ont tranché : les options offertes,
+           et l'état du filtre après le choix.
+
+           C'est la même faute qu'en 5.f.30, sous une autre forme. Là j'écrivais
+           un « ou » dont une branche suffisait ; ici je mesurais une présence au
+           lieu d'un effet. *Un geste se prouve par ce qu'il change, jamais par
+           le fait d'être là.*
+
+           Et un compte trop large, dans la même phase : `tbody tr` englobe la
+           ligne « aucun dépôt ». « Une seule ligne cherchée » passait donc sur
+           une table **vide**. La ligne d'état est écartée du compte.
+
+           ── Ce qui reste de RAMP ──
+
+           `ramp-stats.js` (3/35 noms), `ramp-communication.js` (2/26),
+           `ramp-pac.js` (2/18), `ramp-poi.js` (14/35),
+           `ramp-utilisateurs.js` (2/9). Les statistiques sont le plus gros, et
+           leurs gestes sont des exports et des tables : le patron des relais de
+           5.f.10 s'y applique.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

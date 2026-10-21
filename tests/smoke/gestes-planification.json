@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-20",
- "gestesNommes": 92,
- "occurrences": 133,
- "exerces": 20,
+ "releve": "2026-10-21",
+ "gestesNommes": 93,
+ "occurrences": 136,
+ "exerces": 21,
  "indecidables": 6,
  "gestes": [
   {
@@ -619,6 +619,15 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
+   "ligne": 55,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "nom": "planAccClavier",
+   "source": "planAccClavier(event, this)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-plans.js",
    "ligne": 163,
    "forme": "en ligne",
    "evenement": "click",
@@ -1161,6 +1170,15 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
+   "ligne": 320,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "nom": "planAccClavier",
+   "source": "planAccClavier(event, this)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-validation.js",
    "ligne": 322,
    "forme": "en ligne",
    "evenement": "click",
@@ -1211,6 +1229,15 @@
    "evenement": "click",
    "nom": "planAccBasculer",
    "source": "planAccBasculer(this)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-validation.js",
+   "ligne": 457,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "nom": "planAccClavier",
+   "source": "planAccClavier(event, this)",
    "exerce": true
   }
  ]

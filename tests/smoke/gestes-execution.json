@@ -1,7 +1,7 @@
 {
- "releve": "2026-10-20",
+ "releve": "2026-10-21",
  "gestesNommes": 310,
- "occurrences": 500,
+ "occurrences": 502,
  "exerces": 153,
  "indecidables": 5,
  "gestes": [
@@ -1414,6 +1414,15 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
+   "ligne": 1196,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "nom": "event.preventDefault",
+   "source": "if(event.key==='Enter'){event.preventDefault();execCdAddRef(this.value);this.value='';}",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-constatations.js",
    "ligne": 1219,
    "forme": "en ligne",
    "evenement": "change",
@@ -1934,6 +1943,15 @@
    "evenement": "change",
    "nom": "execFncAddRef",
    "source": "execFncAddRef(this.value);this.value='';",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-dossier-actions.js",
+   "ligne": 389,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "nom": "event.preventDefault",
+   "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
    "exerce": false
   },
   {

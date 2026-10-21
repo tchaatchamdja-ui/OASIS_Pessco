@@ -533,10 +533,38 @@ function relever(fichiers) {
 // silencieux cacherait un jour un vrai geste. `load` n'y figure pas, et c'est
 // dit : les trois `reader.onload` du portail sont des retours de lecture de
 // fichier, non des gestes d'un agent.
+//
+// ── Et la même faute, retrouvée par le même chemin ──
+//
+// En allant couvrir le générateur de tables de RAMP (n° 5.f.34), son double-clic
+// manquait à l'inventaire : `ondblclick="rampGenAjouter(…)"` n'était ni relevé,
+// ni déclaré non couvert. Comme l'organigramme avant lui. La phrase ci-dessus
+// était déjà écrite — **l'avoir écrite n'a pas suffi à relire la liste**.
+//
+// Le balayage du dépôt a rendu six gestionnaires invisibles : un `ondblclick`
+// et cinq `onkeydown`. Les seconds portent l'accessibilité au clavier de
+// l'accordéon de PLAN (`planAccClavier`) et deux saisies validées par Entrée
+// dans SURV. Les dénominateurs **montent** de ce fait, et c'est le bon sens :
+// un inventaire qui s'allonge ne flatte personne.
 const EVENEMENTS = ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
+  'dblclick', 'keydown',
   'dragstart', 'dragover', 'dragleave', 'drop'];
 
-const MOUCHARD = () => {
+// ── Une seule liste, et non deux ──
+//
+// Ce corps est sérialisé puis évalué dans la page : il n'a pas accès aux
+// constantes du module. La liste y était donc **recopiée**, avec un commentaire
+// qui le disait. Les deux copies ont divergé au premier ajout : `dblclick` et
+// `keydown` posés dans `EVENEMENTS` (n° 5.f.34) entraient à l'inventaire sans
+// que rien ne les observe — le dénominateur montait, le numérateur ne pouvait
+// plus suivre. `rampGenAjouter` est resté « non exercé » alors que la ronde le
+// double-clique, et que son contrôle était vert.
+//
+// *Deux listes qu'un commentaire oblige à rester égales ne le restent pas.* La
+// liste est désormais **passée en argument** : `MOUCHARD` est exporté comme la
+// source d'un appel immédiat qui la porte. Les huit suites continuent de le
+// remettre tel quel à `evaluateOnNewDocument`, sans rien savoir de tout ceci.
+const MOUCHARD_FN = (EVTS) => {
   const CLE = '__oasis_gestes';
   const journal = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], poses: 0 };
   Object.defineProperty(window, '__gestes', { value: journal, enumerable: false });
@@ -563,10 +591,8 @@ const MOUCHARD = () => {
   // juste sur un code qui ne l'est pas est la pire des deux erreurs : il dispense
   // de regarder.
   //
-  // La liste est celle du relevé statique, recopiée dans la page : ce code est
-  // sérialisé par Puppeteer et n'a pas accès aux constantes du module.
-  ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
-    'dragstart', 'dragover', 'dragleave', 'drop'].forEach((type) => {
+  // La liste vient du relevé statique, en argument : voir l'en-tête.
+  EVTS.forEach((type) => {
     document.addEventListener(type, (e) => {
       if (!(e.target instanceof Element)) return;
       const attribut = e.target.closest(`[on${type}]`);
@@ -909,4 +935,8 @@ if (require.main === module) {
   principal().catch((e) => { console.error(e); process.exit(1); });
 }
 
-module.exports = { MOUCHARD, relever, ECRANS };
+// Exporté comme **source** et non comme fonction : `evaluateOnNewDocument`
+// accepte l'un comme l'autre, et seule la source peut emporter la liste.
+const MOUCHARD = `(${MOUCHARD_FN.toString()})(${JSON.stringify(EVENEMENTS)})`;
+
+module.exports = { MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS };

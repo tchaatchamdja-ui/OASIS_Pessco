@@ -6931,6 +6931,132 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            tout autre diagnostic — et il commencerait par une mesure de mémoire,
            non par un répit.
 
+       5.f.34 [x] **RAMP — le générateur de tables, et un inventaire qui ne
+           voyait pas six gestes** — fait le 21 octobre 2026.
+
+           **Soixante-dix-huit contrôles sur RAMP ; 108 gestes sur 208.**
+           `ramp-stats.js` passe de **16 à 31 noms sur 36**. Campagne : 1 289.
+
+           Deux choses dans ce tour : le générateur de tables, qui était le
+           dernier gros ensemble du fichier ; et une faute de l'instrument,
+           trouvée en allant le couvrir.
+
+           ── Le seul glisser-déposer du dépôt ──
+
+           Un glissé ne se joue pas à la souris. Chrome n'émet de `DragEvent`
+           que pour un glissé venu du système, et `page.mouse` ne porte aucun
+           `dataTransfer` — or le porte-données **est** ce que les deux gestes se
+           passent. On le construit donc soi-même, `new DataTransfer()`, et on
+           le donne aux trois évènements dans l'ordre du navigateur :
+           `dragstart` sur la source, `dragover` puis `drop` sur la cible. **Le
+           même objet circule** : ce que `rampGenDragStart` y écrit est ce que
+           `rampGenDrop` y relit. *C'est la liaison qu'on mesure, et non deux
+           appels côte à côte.*
+
+           Le réordonnancement est un second glissé, et il ne porte pas le même
+           format — `application/x-ramp-ordre`, non `text/plain`. Les deux
+           dépôts vivent sur la même cible : un champ lâché sur une colonne déjà
+           posée remonte à `rampGenDrop`, qui ne lit rien et ne fait rien. *Le
+           format est la discrimination*, et elle est éprouvée dans les deux
+           sens.
+
+           ── Neuf contrôles, et ce qu'ils tiennent ──
+
+           Le catalogue de 25 champs en trois familles ; un champ glissé, un
+           second posé au double-clic, et le même champ reglissé qui ne se pose
+           pas deux fois ; les trois rôles d'une colonne, avec le mode qui
+           **naît et repart** avec le rôle « donnée » ; les trois cases de
+           totalisation ; le conflit de familles qui marque les trois colonnes,
+           compte au bandeau et **désarme l'export** — seul bouton d'export du
+           dépôt qui se ferme tout seul —, puis se dénoue par un retrait ; les
+           huit filtres, garnis par les inspections semées ; la permutation de
+           deux colonnes, et son inertie sur soi-même ; l'export, qui rend un
+           lien de secours vers le classeur préparé ; le vidage, qui retire son
+           propre bouton.
+
+           ── Un abandon n'est pas un refus, et il se déclare aussi ──
+
+           Premier tir : **76/77**, et le rouge était la garde globale — « une
+           requête a échoué ». L'export mène la fenêtre à l'adresse du classeur,
+           servie en pièce jointe : le navigateur enregistre le fichier et
+           **abandonne la navigation**. C'est ainsi qu'un téléchargement se
+           présente à un moniteur de requêtes, et non une panne.
+
+           Le mécanisme des refus attendus (n° 5.f.26) déclare par **code**, et
+           un abandon n'en a pas. Un `ABANDONS_ATTENDUS` le déclare donc par
+           motif et chemin — et, parce que *déclarer n'est pas taire*, un
+           contrôle à part exige que l'abandon ait bien eu lieu, **une fois, sur
+           ce chemin**. Contre-essai : la navigation retirée, ce contrôle rougit
+           seul ; le lien de secours, posé avant elle, reste vert. Sans ce
+           contrôle, la déclaration serait devenue un filtre muet le jour où
+           l'export cesserait de naviguer.
+
+           ── Et la faute de l'instrument, trouvée par le même chemin ──
+
+           `rampGenAjouter` se pose au **double-clic**. Il n'était ni relevé, ni
+           déclaré non couvert : `dblclick` manquait à la liste des évènements
+           du relevé. *Un geste qu'un outil ne sait pas voir ne manque jamais à
+           l'appel* — la phrase était **déjà écrite** dans ce fichier, payée sur
+           les quatre gestes de l'organigramme. L'avoir écrite n'a pas suffi à
+           relire la liste.
+
+           Le balayage du dépôt rend **six gestionnaires invisibles** : un
+           `ondblclick` et cinq `onkeydown`. Les seconds portent
+           l'accessibilité au clavier de l'accordéon de PLAN et deux saisies
+           validées par Entrée dans SURV.
+
+           Et la correction a buté sur une seconde faute, trois lignes plus bas.
+           La liste était **écrite deux fois** : une fois dans le relevé
+           statique, une fois dans le mouchard — ce corps étant sérialisé puis
+           évalué dans la page, il n'a pas accès aux constantes du module. Le
+           commentaire disait la recopie. Posés dans la seule première, les deux
+           évènements entraient à l'inventaire **sans que rien ne les
+           observe** : le dénominateur montait, le numérateur ne pouvait plus
+           suivre. `rampGenAjouter` est resté « non exercé » alors que la ronde
+           le double-clique, et que son contrôle était vert. *Deux listes qu'un
+           commentaire oblige à rester égales ne le restent pas.* Elle est
+           désormais **passée en argument**, et les huit suites n'en savent
+           rien.
+
+           Les trois écrans touchés ont été remesurés, et les trois résultats ne
+           vont pas dans le même sens — c'est ce qui les rend croyables :
+
+           | Écran | Avant | Après | Ce que cela dit |
+           |---|---|---|---|
+           | RAMP | 93/207 | **108/208** | les 14 noms du générateur, plus `rampGenAjouter` |
+           | PLAN | 20/92 | **21/93** | `planAccClavier` : la suite l'exerçait déjà — elle dépose un Entrée sur l'en-tête d'accordéon et l'assertait — **sans en recevoir le crédit** |
+           | SURV | 153/308 | **153/310** | `execCdAddRef` et `execFncAddRef` entrent au dénominateur seul : la couverture **baisse** de 50 % à 49 % |
+
+           *Un inventaire qui s'allonge ne flatte personne.* C'est le seul sens
+           dans lequel un dénominateur peut bouger sans mentir.
+
+           ── Trois contre-essais, trois attributions nettes ──
+
+           Famille toujours compatible et dépose d'ordre neutralisée : **deux**
+           contrôles rouges, les soixante-seize autres verts. Porte-données vidé
+           au `dragstart` : **sept** rouges en cascade — dont le double-clic,
+           qui rend alors `["itemsInspectes"]` seul, preuve que les deux chemins
+           d'ajout sont bien indépendants. Navigation retirée : **un** seul
+           rouge, celui de l'abandon.
+
+           ── Et la campagne, du premier coup ──
+
+           Les vingt suites vertes, **1 289 contrôles, code 0, au premier tir**,
+           machine au repos. Les deux suites qui avaient rougi sous charge en
+           5.f.33 — `ramp-navigateur` sur « Target closed », `planification-
+           navigateur` sur un délai de protocole — passent sans rien de neuf
+           pour les y aider : *je n'avais posé aucune mitigation*, et ce tir ne
+           prouve pas davantage qu'il n'en faut, il confirme seulement la règle
+           d'exploitation déjà écrite — une campagne de huit navigateurs veut la
+           machine à elle.
+
+           ── Hors de ce tour ──
+
+           Le serveur de développement de la machine, sur le port 4750, s'est
+           arrêté à 11 h 11 — « stopped by the app », huit heures avant ce tour,
+           et non de ma main. Les suites montent leur propre serveur sur un port
+           d'essai ; rien ici n'en dépend. À relancer par `preview_start`.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

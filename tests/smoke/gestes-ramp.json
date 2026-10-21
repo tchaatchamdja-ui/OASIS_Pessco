@@ -1,8 +1,8 @@
 {
  "releve": "2026-10-21",
- "gestesNommes": 207,
- "occurrences": 362,
- "exerces": 93,
+ "gestesNommes": 208,
+ "occurrences": 363,
+ "exerces": 108,
  "indecidables": 1,
  "gestes": [
   {
@@ -93,7 +93,7 @@
    "evenement": "mousedown",
    "nom": "event.preventDefault",
    "source": "event.preventDefault()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -2839,7 +2839,7 @@
    "evenement": "change",
    "nom": "rampGenFiltre",
    "source": "rampGenFiltre(${_rArg(cle)}, this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2848,7 +2848,7 @@
    "evenement": "click",
    "nom": "rampGenFiltresReset",
    "source": "rampGenFiltresReset()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2857,7 +2857,7 @@
    "evenement": "change",
    "nom": "rampGenTotal",
    "source": "rampGenTotal(${_rArg(cle)}, this.checked)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2866,7 +2866,16 @@
    "evenement": "dragstart",
    "nom": "rampGenDragStart",
    "source": "rampGenDragStart(event, ${_rArg(c.cle)})",
-   "exerce": false
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-stats.js",
+   "ligne": 690,
+   "forme": "en ligne",
+   "evenement": "dblclick",
+   "nom": "rampGenAjouter",
+   "source": "rampGenAjouter(${_rArg(c.cle)})",
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2875,7 +2884,7 @@
    "evenement": "dragstart",
    "nom": "rampGenOrdreDebut",
    "source": "rampGenOrdreDebut(event, ${i})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2884,7 +2893,7 @@
    "evenement": "dragover",
    "nom": "event.preventDefault",
    "source": "event.preventDefault();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2893,7 +2902,7 @@
    "evenement": "drop",
    "nom": "rampGenOrdreDepose",
    "source": "rampGenOrdreDepose(event, ${i})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2902,7 +2911,7 @@
    "evenement": "click",
    "nom": "rampGenRole",
    "source": "rampGenRole(${i}, 'regroupement')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2911,7 +2920,7 @@
    "evenement": "click",
    "nom": "rampGenRole",
    "source": "rampGenRole(${i}, 'croisement')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2920,7 +2929,7 @@
    "evenement": "click",
    "nom": "rampGenRole",
    "source": "rampGenRole(${i}, 'donnee')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2929,7 +2938,7 @@
    "evenement": "click",
    "nom": "rampGenMode",
    "source": "rampGenMode(${i}, 'valeurs')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2938,7 +2947,7 @@
    "evenement": "click",
    "nom": "rampGenMode",
    "source": "rampGenMode(${i}, 'somme')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2947,7 +2956,7 @@
    "evenement": "click",
    "nom": "rampGenRetirer",
    "source": "rampGenRetirer(${i})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2983,7 +2992,7 @@
    "evenement": "dragover",
    "nom": "event.preventDefault",
    "source": "event.preventDefault();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -2992,7 +3001,7 @@
    "evenement": "drop",
    "nom": "rampGenDrop",
    "source": "rampGenDrop(event)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3001,7 +3010,7 @@
    "evenement": "click",
    "nom": "rampGenVider",
    "source": "rampGenVider()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3010,7 +3019,7 @@
    "evenement": "click",
    "nom": "rampGenExporter",
    "source": "rampGenExporter()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3037,7 +3046,7 @@
    "evenement": "click",
    "nom": "rampOuvrirGenerateur",
    "source": "rampOuvrirGenerateur()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",

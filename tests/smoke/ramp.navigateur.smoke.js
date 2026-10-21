@@ -136,6 +136,28 @@ module.exports = async function rampNavigateurSmoke(port) {
           + ' déjà pris » (n° 5.f.31).',
       },
     ];
+    // ── L'abandon que la ronde provoque exprès ──
+    //
+    // Un refus se déclare par son code ; un **abandon** n'en a pas. Le
+    // générateur de tables fait préparer le classeur au serveur, puis mène la
+    // fenêtre à son adresse — servie en pièce jointe. Le navigateur enregistre
+    // le fichier et **abandonne la navigation** : c'est ainsi qu'un
+    // téléchargement se présente à un moniteur de requêtes, et non une panne.
+    //
+    // Déclarer n'est pas taire : l'abandon déclaré est relevé, et un contrôle
+    // à part exige qu'il ait bien eu lieu, une fois, sur ce chemin. Si le
+    // navigateur cessait d'abandonner, la déclaration deviendrait un filtre
+    // muet — ce contrôle l'en empêche.
+    const ABANDONS_ATTENDUS = [
+      {
+        motif: /ERR_ABORTED/, chemin: /\/tables\/fichier\//,
+        pourquoi: 'l’export du générateur mène la fenêtre à une adresse servie'
+          + ' en pièce jointe : le fichier s’enregistre, la navigation est'
+          + ' abandonnée. Contrôle « l’export du générateur rend un lien de'
+          + ' secours vers le classeur préparé, sans quitter la page » (n° 5.f.34).',
+      },
+    ];
+    const abandonsVus = [];
     const codesAttendus = new Set();
     page.on('console', (m) => {
       if (!ramp || m.type() !== 'error') return;
@@ -148,7 +170,14 @@ module.exports = async function rampNavigateurSmoke(port) {
       if (ramp) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
     });
     page.on('requestfailed', (r) => {
-      if (ramp) incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
+      if (!ramp) return;
+      const chemin = r.url().replace(srv.base, '');
+      const motif = String(((r.failure() || {}).errorText) || '');
+      if (ABANDONS_ATTENDUS.some((x) => x.motif.test(motif) && x.chemin.test(chemin))) {
+        abandonsVus.push(`${motif} ${chemin}`);
+        return;
+      }
+      incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
     // La **réponse**, et non le seul message de console : un 404 s'y présente
     // comme « Failed to load resource », sans l'adresse. On relève son code et
@@ -2365,7 +2394,317 @@ module.exports = async function rampNavigateurSmoke(port) {
         return d;
       });
 
-      // ── 7. La ronde retire ce qu'elle a semé ──
+      // ── 7. Le générateur de tables : le seul glisser-déposer du dépôt ──
+      //
+      // Un glissé ne se joue pas à la souris. Chrome n'émet de `DragEvent` que
+      // pour un glissé venu du système, et `page.mouse` ne porte aucun
+      // `dataTransfer` — or le porte-données **est** ce que les deux gestes se
+      // passent. On le construit donc soi-même, `new DataTransfer()`, et on le
+      // donne aux trois évènements dans l'ordre du navigateur : `dragstart` sur
+      // la source, `dragover` puis `drop` sur la cible. Le même objet circule :
+      // ce que `rampGenDragStart` y écrit est ce que `rampGenDrop` y relit.
+      // *C'est la liaison qu'on mesure, et non deux appels côte à côte.*
+      //
+      // Le bouton vit dans le volet des statistiques ; la modale, elle, est
+      // posée dans `#rampModalRoot`, **hors du volet**. Les deux portées ne se
+      // confondent pas : `un`/`dans` pour le volet, `mq`/`mqa` pour la modale.
+      await essai('generateur', async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const mq = (sel) => (M() || document).querySelector(sel);
+        const mqa = (sel) => [...(M() || document).querySelectorAll(sel)];
+        const colonnes = () => (window.RAMP_STATE || {}).tableColonnes || [];
+        const cles = () => colonnes().map((c) => c.cle);
+        const glisser = (source, cible) => {
+          const dt = new DataTransfer();
+          const ev = (nom) => new DragEvent(nom, {
+            dataTransfer: dt, bubbles: true, cancelable: true,
+          });
+          source.dispatchEvent(ev('dragstart'));
+          cible.dispatchEvent(ev('dragover'));
+          cible.dispatchEvent(ev('drop'));
+        };
+        const champ = (cle) => mq(`.ramp-gen-champ[data-cle="${cle}"]`);
+
+        un('[onclick*="rampOuvrirGenerateur"]')?.click();
+        await a(2600);
+        d.modaleOuverte = !!mq('.ramp-gen');
+        d.disponibles = mqa('.ramp-gen-champ').length;
+        d.familles = mqa('.ramp-gen-famille').length;
+        d.videAuDepart = !!mq('.ramp-gen-vide');
+        d.auDepart = colonnes().length;
+
+        // ── a. Un champ glissé de la gauche vers la table ──
+        const source = champ('exploitant');
+        const cible = mq('.ramp-gen-cible');
+        d.source = !!source;
+        d.cible = !!cible;
+        if (source && cible) glisser(source, cible);
+        await a(1400);
+        d.apresGlisse = colonnes().length;
+        d.cleGlissee = (colonnes()[0] || {}).cle;
+        // Un champ de texte arrive en regroupement : c'est la règle du code,
+        // relue chez lui et non supposée.
+        d.roleArrive = (colonnes()[0] || {}).role;
+
+        // Contre-essai : le même champ reglissé ne se pose pas deux fois.
+        const encore = champ('exploitant');
+        if (encore && mq('.ramp-gen-cible')) glisser(encore, mq('.ramp-gen-cible'));
+        await a(1400);
+        d.apresDoublon = colonnes().length;
+
+        // ── b. Un second champ, par double-clic ──
+        const mesure = champ('itemsInspectes');
+        d.mesure = !!mesure;
+        mesure?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+        await a(1400);
+        d.apresDblClic = colonnes().length;
+        d.roleMesure = (colonnes()[1] || {}).role;
+        d.modeMesure = (colonnes()[1] || {}).mode;
+        d.cles = cles();
+        return d;
+      });
+
+      // ── 8. Le rôle d'une colonne, son mode, et ce que la table totalise ──
+      //
+      // Trois rôles — regrouper en lignes, croiser en colonnes, être la donnée
+      // observée — et le mode (valeurs telles quelles, ou somme) qui
+      // **n'apparaît que** pour une donnée. Le bas de la modale dit laquelle
+      // des deux tables sortira ; on le lit aussi, car c'est l'effet visible du
+      // rôle.
+      await essai('generateurRoles', async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const mq = (sel) => (M() || document).querySelector(sel);
+        const mqa = (sel) => [...(M() || document).querySelectorAll(sel)];
+        const col = (i) => (((window.RAMP_STATE || {}).tableColonnes || [])[i] || {});
+        const pose = (i) => mqa('.ramp-gen-pose')[i];
+        const bouton = (i, sel, k) => [...(pose(i) || document).querySelectorAll(sel)][k];
+        const pied = () => (mq('.ramp-gen-bas') || {}).textContent || '';
+
+        d.poses = mqa('.ramp-gen-pose').length;
+        d.roleAvant = col(0).role;
+        d.piedAvant = /crois/i.test(pied());
+
+        // Les trois boutons de rôle, dans l'ordre du rendu.
+        d.boutonsRole = [...(pose(0) || document)
+          .querySelectorAll('[onclick*="rampGenRole("]')].length;
+        bouton(0, '[onclick*="rampGenRole("]', 1)?.click();   // croisement
+        await a(1200);
+        d.roleCroisement = col(0).role;
+
+        bouton(0, '[onclick*="rampGenRole("]', 2)?.click();   // donnée
+        await a(1200);
+        d.roleDonnee = col(0).role;
+        // Le mode n'existe que pour une donnée : la bascule apparaît avec elle.
+        d.boutonsMode = [...(pose(0) || document)
+          .querySelectorAll('[onclick*="rampGenMode("]')].length;
+
+        bouton(0, '[onclick*="rampGenMode("]', 1)?.click();   // somme
+        await a(1200);
+        d.modeSomme = col(0).mode;
+        bouton(0, '[onclick*="rampGenMode("]', 0)?.click();   // valeurs
+        await a(1200);
+        d.modeValeurs = col(0).mode;
+
+        bouton(0, '[onclick*="rampGenRole("]', 0)?.click();   // regroupement, rendu
+        await a(1200);
+        d.roleRendu = col(0).role;
+        d.modeDisparu = [...(pose(0) || document)
+          .querySelectorAll('[onclick*="rampGenMode("]')].length;
+
+        // ── Les totaux ──
+        const cases = mqa('[onchange*="rampGenTotal("]');
+        d.cases = cases.length;
+        const general = cases.find((c) => (c.getAttribute('onchange') || '').includes('general'));
+        d.caseGenerale = !!general;
+        if (general) {
+          general.checked = false;
+          general.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        await a(1200);
+        d.totalGeneral = ((window.RAMP_STATE || {}).tableTotaux || {}).general;
+        const rendu = mqa('[onchange*="rampGenTotal("]')
+          .find((c) => (c.getAttribute('onchange') || '').includes('general'));
+        d.caseDecochee = rendu ? rendu.checked === false : null;
+        if (rendu) {
+          rendu.checked = true;
+          rendu.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        await a(1200);
+        d.totalRendu = ((window.RAMP_STATE || {}).tableTotaux || {}).general;
+        return d;
+      });
+
+      // ── 9. Un champ sans relation : la table le signale et refuse de partir ──
+      //
+      // Le catalogue dit quelles familles se joignent — inspection ↔ écart, et
+      // les contacts avec eux seuls. Un contact posé à côté d'une inspection ne
+      // produirait rien de sensé : la modale le marque en rouge, le compte au
+      // bandeau, et **désarme l'export**. C'est le seul endroit où un bouton
+      // d'export se ferme tout seul.
+      await essai('generateurConflit', async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const mq = (sel) => (M() || document).querySelector(sel);
+        const mqa = (sel) => [...(M() || document).querySelectorAll(sel)];
+        const colonnes = () => (window.RAMP_STATE || {}).tableColonnes || [];
+        const glisser = (source, cible) => {
+          const dt = new DataTransfer();
+          const ev = (nom) => new DragEvent(nom, {
+            dataTransfer: dt, bubbles: true, cancelable: true,
+          });
+          source.dispatchEvent(ev('dragstart'));
+          cible.dispatchEvent(ev('dragover'));
+          cible.dispatchEvent(ev('drop'));
+        };
+        const exporter = () => mq('[onclick*="rampGenExporter"]');
+
+        d.exportArmeAvant = exporter() ? !exporter().disabled : null;
+        const contact = mq('.ramp-gen-champ[data-cle="c_nom"]');
+        d.contact = !!contact;
+        if (contact && mq('.ramp-gen-cible')) glisser(contact, mq('.ramp-gen-cible'));
+        await a(1400);
+        d.apres = colonnes().length;
+        d.marques = mqa('.ramp-gen-pose.conflit').length;
+        d.bandeau = /relation/i.test((mq('.ramp-gen-cible') || {}).textContent || '');
+        d.exportDesarme = exporter() ? exporter().disabled === true : null;
+
+        // On retire le dernier posé : le conflit tombe, l'export se réarme.
+        const retraits = mqa('[onclick*="rampGenRetirer("]');
+        d.retraits = retraits.length;
+        retraits[retraits.length - 1]?.click();
+        await a(1400);
+        d.apresRetrait = colonnes().length;
+        d.marquesApres = mqa('.ramp-gen-pose.conflit').length;
+        d.exportRearme = exporter() ? !exporter().disabled : null;
+        return d;
+      });
+
+      // ── 10. Les filtres de l'export ──
+      //
+      // Ils ne touchent pas aux écrans : ils bornent seulement ce que le
+      // classeur emportera. Leurs listes sont garnies par les inspections —
+      // donc par celles que la ronde a semées, et c'est encore la raison de
+      // semer avant de mesurer.
+      await essai('generateurFiltres', async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const mq = (sel) => (M() || document).querySelector(sel);
+        const mqa = (sel) => [...(M() || document).querySelectorAll(sel)];
+        const F = () => (window.RAMP_STATE || {}).tableFiltres || {};
+
+        const listes = mqa('[onchange*="rampGenFiltre("]');
+        d.listes = listes.length;
+        const exploitant = listes
+          .find((s) => (s.getAttribute('onchange') || '').includes('exploitant'));
+        d.liste = !!exploitant;
+        d.options = exploitant
+          ? [...exploitant.options].map((o) => o.value).filter(Boolean) : [];
+        const choix = d.options.find((v) => /RONDEX/.test(v));
+        d.choix = choix || null;
+        if (exploitant && choix) {
+          exploitant.value = choix;
+          exploitant.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        await a(1400);
+        d.retenu = F().exploitant;
+        // La remise à zéro compte ce qu'elle effacera : son intitulé le dit.
+        const reset = mq('[onclick*="rampGenFiltresReset"]');
+        d.reset = !!reset;
+        d.compte = reset ? (reset.getAttribute('title') || '') : '';
+        reset?.click();
+        await a(1400);
+        d.apresReset = Object.values(F()).filter(Boolean).length;
+        return d;
+      });
+
+      // ── 11. L'ordre des colonnes, par un second glissé ──
+      //
+      // Celui-ci ne porte pas le même format que le premier :
+      // `application/x-ramp-ordre`, et non `text/plain`. Les deux dépôts vivent
+      // sur la même cible — un champ lâché sur une colonne déjà posée remonte à
+      // `rampGenDrop`, qui ne lit rien et ne fait rien. Le format **est** la
+      // discrimination ; on l'éprouve donc dans les deux sens.
+      await essai('generateurOrdre', async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const mqa = (sel) => [...(M() || document).querySelectorAll(sel)];
+        const cles = () => ((window.RAMP_STATE || {}).tableColonnes || []).map((c) => c.cle);
+        const pose = (i) => mqa('.ramp-gen-pose')[i];
+        const glisser = (source, cible) => {
+          const dt = new DataTransfer();
+          const ev = (nom) => new DragEvent(nom, {
+            dataTransfer: dt, bubbles: true, cancelable: true,
+          });
+          source.dispatchEvent(ev('dragstart'));
+          cible.dispatchEvent(ev('dragover'));
+          cible.dispatchEvent(ev('drop'));
+        };
+
+        d.avant = cles();
+        d.poignees = mqa('.ramp-gen-poignee').length;
+        if (pose(1) && pose(0)) glisser(pose(1), pose(0));
+        await a(1400);
+        d.apres = cles();
+        d.permute = d.avant.length === 2 && d.apres.length === 2
+          && d.apres[0] === d.avant[1] && d.apres[1] === d.avant[0];
+
+        // Contre-essai : déposée sur elle-même, une colonne ne bouge pas.
+        if (pose(0)) glisser(pose(0), pose(0));
+        await a(1400);
+        d.surSoi = cles();
+        d.inerte = JSON.stringify(d.surSoi) === JSON.stringify(d.apres);
+        return d;
+      });
+
+      // ── 12. L'export du classeur, puis le vidage ──
+      //
+      // Le serveur prépare le classeur et rend une adresse ; le navigateur
+      // l'enregistre. Rien n'est composé dans la page — donc rien à relayer,
+      // contrairement aux autres exports du module. Ce qui se mesure est le
+      // **lien de secours** que la modale reçoit, posé avant la navigation, et
+      // le fait que la page n'a pas bougé : une adresse en pièce jointe
+      // n'emmène nulle part.
+      await essai('generateurExport', async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const mq = (sel) => (M() || document).querySelector(sel);
+        const colonnes = () => (window.RAMP_STATE || {}).tableColonnes || [];
+
+        d.cheminAvant = location.pathname;
+        const exp = mq('[onclick*="rampGenExporter"]');
+        d.bouton = !!exp;
+        d.arme = exp ? !exp.disabled : null;
+        d.colonnesExportees = colonnes().length;
+        exp?.click();
+        await a(5000);
+        const lien = mq('#rampGenLien a');
+        d.lien = !!lien;
+        d.href = lien ? String(lien.getAttribute('href') || '') : '';
+        d.fichier = lien ? String(lien.getAttribute('download') || '') : '';
+        d.cheminApres = location.pathname;
+        d.modaleDebout = !!mq('.ramp-gen');
+
+        // ── Le vidage ──
+        const vider = mq('[onclick*="rampGenVider"]');
+        d.boutonVider = !!vider;
+        vider?.click();
+        await a(1400);
+        d.apresVidage = colonnes().length;
+        d.videRendu = !!mq('.ramp-gen-vide');
+        const apres = mq('[onclick*="rampGenExporter"]');
+        d.exportDesarme = apres ? apres.disabled === true : null;
+        // Le vidage retire son propre bouton : il n'a plus rien à vider.
+        d.viderParti = !mq('[onclick*="rampGenVider"]');
+
+        mq('[onclick*="rampFermerModal"]')?.click();
+        await a(1400);
+        d.modaleFermee = !mq('.ramp-gen');
+        return d;
+      });
+
+      // ── 13. La ronde retire ce qu'elle a semé ──
       await essai('menage', async () => {
         const d = { effacees: 0 };
         const miennes = (await inspections()).filter((x) => /RONDEX/.test(x.exploitant || ''));
@@ -2391,6 +2730,12 @@ module.exports = async function rampNavigateurSmoke(port) {
       const Ca = S2.anneau || {};
       const Si = S2.situation || {};
       const Me = S2.menage || {};
+      const G1 = S2.generateur || {};
+      const G2 = S2.generateurRoles || {};
+      const G3 = S2.generateurConflit || {};
+      const G4 = S2.generateurFiltres || {};
+      const G5 = S2.generateurOrdre || {};
+      const G6 = S2.generateurExport || {};
       verifier('la ronde sème quatre inspections par la route d’importation, et le volet des statistiques s’ouvre sur ses blocs',
         S2.semis === 201 && S2.creees === 4 && S2.apresSemis === S2.deja + 4
         && S2.voletOuvert === true && S2.nbBlocs >= 3,
@@ -2429,6 +2774,66 @@ module.exports = async function rampNavigateurSmoke(port) {
         && Si.boutonExport === true
         && !!Si.export && (Si.export.blobs + Si.export.fenetres) >= 1,
         JSON.stringify(Si));
+      verifier('le générateur de tables s’ouvre sur son catalogue, un champ s’y glisse de la gauche vers la table, et ne s’y pose pas deux fois',
+        G1.modaleOuverte === true && G1.disponibles >= 20 && G1.familles === 3
+        && G1.videAuDepart === true && G1.auDepart === 0
+        && G1.source === true && G1.cible === true
+        && G1.apresGlisse === 1 && G1.cleGlissee === 'exploitant'
+        // Un champ de texte arrive en regroupement : la règle est dans
+        // `rampGenAjouter`, relue chez elle.
+        && G1.roleArrive === 'regroupement'
+        && G1.apresDoublon === 1,
+        JSON.stringify(G1).slice(0, 380));
+      verifier('un champ se pose aussi au double-clic, et un nombre y arrive en donnée sommée',
+        G1.mesure === true && G1.apresDblClic === 2
+        && G1.roleMesure === 'donnee' && G1.modeMesure === 'somme'
+        && JSON.stringify(G1.cles || []) === JSON.stringify(['exploitant', 'itemsInspectes']),
+        JSON.stringify({ mesure: G1.mesure, apres: G1.apresDblClic,
+          role: G1.roleMesure, mode: G1.modeMesure, cles: G1.cles }));
+      verifier('les trois rôles d’une colonne se choisissent, et le mode n’apparaît que pour une donnée',
+        G2.poses === 2 && G2.boutonsRole === 3 && G2.roleAvant === 'regroupement'
+        && G2.roleCroisement === 'croisement' && G2.roleDonnee === 'donnee'
+        // La bascule du mode naît avec le rôle « donnée » et repart avec lui :
+        // c'est l'effet qu'on mesure, non la présence du bouton.
+        && G2.boutonsMode === 2 && G2.modeSomme === 'somme' && G2.modeValeurs === 'valeurs'
+        && G2.roleRendu === 'regroupement' && G2.modeDisparu === 0,
+        JSON.stringify(G2).slice(0, 380));
+      verifier('une case de totalisation se décoche et se recoche, et la table l’enregistre',
+        G2.cases === 3 && G2.caseGenerale === true
+        && G2.totalGeneral === false && G2.caseDecochee === true
+        && G2.totalRendu === true,
+        JSON.stringify({ cases: G2.cases, general: G2.totalGeneral,
+          decochee: G2.caseDecochee, rendu: G2.totalRendu }));
+      verifier('un champ sans relation avec les autres se marque en rouge, désarme l’export, et son retrait réarme tout',
+        G3.exportArmeAvant === true && G3.contact === true && G3.apres === 3
+        && G3.marques === 3 && G3.bandeau === true && G3.exportDesarme === true
+        && G3.retraits === 3 && G3.apresRetrait === 2 && G3.marquesApres === 0
+        && G3.exportRearme === true,
+        JSON.stringify(G3).slice(0, 380));
+      verifier('un filtre de l’export se choisit dans une liste garnie par les inspections semées, et la remise à zéro l’efface',
+        G4.listes === 8 && G4.liste === true && (G4.options || []).length >= 2
+        && /RONDEX/.test(String(G4.choix || '')) && G4.retenu === G4.choix
+        && G4.reset === true && /\(1\)/.test(String(G4.compte || ''))
+        && G4.apresReset === 0,
+        JSON.stringify(G4).slice(0, 380));
+      verifier('l’ordre des colonnes se change en glissant une colonne sur une autre, et une colonne lâchée sur elle-même ne bouge pas',
+        (G5.avant || []).length === 2 && G5.poignees === 2
+        && G5.permute === true && G5.inerte === true,
+        JSON.stringify(G5));
+      verifier('l’export du générateur rend un lien de secours vers le classeur préparé, sans quitter la page, puis le vidage rend la table à blanc',
+        G6.bouton === true && G6.arme === true && G6.colonnesExportees === 2
+        && G6.lien === true && /\/tables\/fichier\//.test(String(G6.href || ''))
+        && /\.xlsx$/.test(String(G6.fichier || ''))
+        // Une adresse servie en pièce jointe n'emmène nulle part : la page est
+        // restée, et la modale avec elle.
+        && G6.cheminApres === G6.cheminAvant && G6.modaleDebout === true
+        && G6.boutonVider === true && G6.apresVidage === 0 && G6.videRendu === true
+        && G6.exportDesarme === true && G6.viderParti === true
+        && G6.modaleFermee === true,
+        JSON.stringify(G6).slice(0, 420));
+      verifier('la navigation vers le classeur préparé est abandonnée une fois, sur son chemin, et la ronde le déclare au lieu de le taire',
+        abandonsVus.length === 1 && /\/tables\/fichier\//.test(String(abandonsVus[0] || '')),
+        JSON.stringify(abandonsVus));
       verifier('la ronde retire ses quatre inspections, et le module revient à son compte',
         Me.aEffacer === 4 && Me.effacees === 4 && Me.rendueAuDepart === true,
         JSON.stringify(Me));

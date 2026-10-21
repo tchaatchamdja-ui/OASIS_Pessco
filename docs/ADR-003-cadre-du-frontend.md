@@ -6842,6 +6842,95 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            leurs gestes sont des exports et des tables : le patron des relais de
            5.f.10 s'y applique.
 
+       5.f.33 [x] **RAMP — le volet des statistiques, et semer avant de
+           mesurer** — fait le 21 octobre 2026.
+
+           **Soixante-neuf contrôles sur RAMP ; 93 gestes sur 207.**
+           Campagne : 1 280.
+           `ramp-stats.js` passe de **3 à 16 noms sur 35** — et les trois qui y
+           étaient verts étaient génériques (`rampFermerModal`,
+           `event.stopPropagation`, `document.getElementById`) : **aucun geste
+           propre des statistiques n'était exercé**, dans le plus gros fichier du
+           module.
+
+           ── Pourquoi il fallait semer ──
+
+           Les boutons de série et de pas existent sans données. Les **périodes**,
+           les **années** et les **États**, non : `rampAnneeTempsBoutons` rend la
+           chaîne vide quand aucune inspection ne porte de date, et le panneau
+           d'un pas rend « aucune période ». Un relevé fait sur un écran désert
+           n'aurait mesuré que des boutons morts — et serait resté vert.
+
+           La ronde sème donc quatre inspections par la route d'importation, qui
+           reçoit du **JSON** et non un classeur : deux États, deux années, deux
+           exploitants, chacune avec son écart. Puis elle les retire, et le
+           module revient à son compte.
+
+           ── Ce que les contrôles tiennent ──
+
+           Les trois blocs qui se replient par leur en-tête ; la série et le pas
+           de temps ; le chevron qui ouvre la liste des périodes d'un pas ; une
+           période cochée — et c'est là une propriété écrite dans le code :
+           « toucher une case **fige la sélection** : elle part de ce qui est
+           affiché » — puis le vidage, **qui n'apparaît qu'une fois quelque chose
+           retenu** ; l'année observée ; la série des États et l'exclusion d'un
+           État ; une part d'anneau masquée puis rendue ; le mode du graphe des
+           aéronefs ; et une ligne d'exploitant dépliée sur son détail item par
+           item, avec l'export de la situation capturé par relais.
+
+           ── Trois fautes, et l'une est une récidive ──
+
+           **1. Le télescopage de noms, refait deux fois.** Mes phases
+           s'appelaient « blocs » et « etats », et leurs relevés ont **écrasé**
+           les champs `r.blocs` et `r.etats` où j'avais mis le nombre de blocs et
+           la liste des États. C'est exactement la faute de 5.f.30, où je
+           l'avais déjà écrite — *un registre partagé entre les phases et leurs
+           noms n'admet pas deux fois le même nom.* L'avoir écrite une fois n'a
+           pas suffi à ne plus la refaire ; les champs s'appellent désormais
+           `nbBlocs` et `listeEtats`.
+
+           **2. Quatre pas de temps, quand il y en a trois.**
+           `RAMP_GRANULARITES()` rend mois, trimestre et semestre — j'avais écrit
+           quatre par symétrie supposée avec les chevrons, dont il y a cinq sur
+           le volet et qui ne sont pas tous les leurs.
+
+           **3. `^=` au lieu de `*=`, encore.** Le bouton d'export de la
+           situation porte `event.stopPropagation();` avant son appel, comme les
+           bandeaux de groupe des paramètres en 5.f.32. Le relevé disait
+           `boutonExport: false` sur un bouton qui existe.
+
+           ── Ce qui reste du fichier ──
+
+           Deux ensembles : le **générateur de tables** — 14 noms, avec son
+           glisser-déposer, ses champs en conflit et son export — et l'**import
+           d'un classeur** — 5 noms, qui exige un vrai fichier XLSX, alors que la
+           route d'importation, elle, accepte du JSON. Le second est un cas à
+           part : c'est le seul endroit du dépôt où l'écran fabrique le format
+           que le serveur ne demande pas.
+
+           ── Et la campagne, qui veut la machine à elle ──
+
+           Deux suites de navigateur ont rougi dans une campagne : RAMP sur
+           « **Target closed** » — le navigateur tué en cours d'évaluation — et
+           PLAN sur un délai de protocole. Les mêmes, rejouées seules, passent ;
+           les **cinq** suites de navigateur enchaînées passent aussi ; et la
+           campagne entière, relancée sans rien d'autre sur la machine, rend
+           **1 280 contrôles et le code 0**.
+
+           Le délai de protocole posé en 5.f.30 ne couvre pas ce cas : « Target
+           closed » n'est pas une lenteur, c'est un processus de rendu tué. Huit
+           navigateurs se succèdent dans une campagne, et le plus lourd — SURV,
+           146 contrôles — passe avant les cinq derniers.
+
+           Je n'ajoute pas de mitigation pour autant. Je n'ai **aucune mesure**
+           montrant qu'un répit entre les suites empêcherait ce tir, et poser du
+           code au nom d'une hypothèse est précisément ce que 5.f.29 a coûté. Le
+           fait est consigné, et la règle qui en découle est d'exploitation, non
+           de code : *une campagne de huit navigateurs veut la machine à elle.*
+           Si cela devait se reproduire sur une machine au repos, ce serait un
+           tout autre diagnostic — et il commencerait par une mesure de mémoire,
+           non par un répit.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

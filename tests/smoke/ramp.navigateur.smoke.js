@@ -2097,6 +2097,344 @@ module.exports = async function rampNavigateurSmoke(port) {
     }
 
     // ══════════════════════════════════════════════════════════════════
+    //  Le volet des statistiques : séries, pas de temps, anneaux, situation
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `ramp-stats.js` était à **3 noms sur 35**, et les trois étaient
+    // génériques — `rampFermerModal`, `event.stopPropagation`,
+    // `document.getElementById`. Aucun geste propre des statistiques n'était
+    // exercé : le plus gros gisement du module.
+    //
+    // ── Pourquoi la ronde doit semer avant de mesurer ──
+    //
+    // Les boutons de série et de pas existent sans données ; les **périodes**,
+    // les **années** et les **États** n'existent pas. `rampAnneeTempsBoutons`
+    // rend la chaîne vide quand aucune inspection ne porte de date, et le
+    // panneau d'un pas rend « aucune période ». Un relevé fait sur un écran
+    // désert ne mesurerait que des boutons morts.
+    //
+    // La ronde sème donc **quatre inspections** par la route d'importation —
+    // qui reçoit du JSON, et non un classeur —, deux États et deux années, deux
+    // exploitants, avec leurs écarts. Puis elle les retire.
+    etape = 'statistiques de RAMP';
+    await ouvrir('dashboard');
+    await attendre(2400);
+    const stats = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const inspections = async () => {
+        const c = await (await fetch(`${api}/inspections`, { credentials: 'same-origin' })).json();
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      const q = (sel) => document.querySelector(sel);
+      const volet = () => document.querySelector('.ramp-slider-body');
+      const dans = (sel) => (volet() || document).querySelectorAll(sel);
+      const un = (sel) => (volet() || document).querySelector(sel);
+
+      // ── Deux États du périmètre, pris sur les aéroports du bac ──
+      const apts = await (await fetch(`${api}/aeroports`, { credentials: 'same-origin' })).json();
+      const listeApt = Array.isArray(apts) ? apts : (apts.aeroports || apts.liste || []);
+      const etats = [...new Set(listeApt.map((x) => x.pays).filter(Boolean))].slice(0, 2);
+      // `listeEtats` et `nbBlocs`, et non `etats` et `blocs` : les phases
+      // s'appellent « etats » et « blocs », et leurs relevés **écrasaient ces
+      // deux champs**. C'est le télescopage de 5.f.30, refait deux fois dans le
+      // même registre. *Un registre partagé entre les phases et leurs noms
+      // n'admet pas deux fois le même nom* — et l'écrire une fois ne suffit
+      // visiblement pas à ne plus le refaire.
+      r.listeEtats = etats;
+      r.deja = (await inspections()).length;
+
+      const ligne = (etat, annee, exploitant, immat, statut, cat) => ({
+        date: `${annee}-06-15`, pays: etat, exploitant, aeronef: 'RX320',
+        immatriculation: immat, vol: `RX${immat.slice(-3)}`,
+        status: statut, itemsInspectes: 12,
+        anomalies: [{
+          itemCode: 'A05', stdRef: 'RONDEX-1',
+          description: 'Écart semé par la ronde.', categorie: cat,
+          action: cat === 'Catégorie 3' ? 'Classe 3' : 'Classe 1', suivi: 'Ouvert',
+        }],
+      });
+      const semees = [
+        ligne(etats[0], '2026', 'RONDEX Air', 'TT-RX01', 'Clos', 'Catégorie 1'),
+        ligne(etats[0], '2025', 'RONDEX Air', 'TT-RX02', 'En cours', 'Catégorie 3'),
+        ligne(etats[1] || etats[0], '2026', 'RONDEX Cargo', 'TT-RX03', 'Clos', 'Catégorie 2'),
+        ligne(etats[1] || etats[0], '2025', 'RONDEX Cargo', 'TT-RX04', 'En cours', 'Catégorie 3'),
+      ];
+      const sem = await env('/inspections/import', 'POST', { data: semees });
+      r.semis = sem.statut;
+      r.creees = (sem.corps || {}).creees;
+      await window.rampRecharger();
+      await a(2200);
+      r.apresSemis = (await inspections()).length;
+
+      // Le volet des statistiques s'ouvre depuis le tableau de bord.
+      q('[onclick^="rampOuvrirStatistiques"]')?.click();
+      await a(3200);
+      r.voletOuvert = !!volet();
+      r.nbBlocs = dans('[onclick^="rampBasculerBloc"]').length;
+
+      // ── 1. Les trois blocs se replient et se déplient ──
+      await essai('blocs', async () => {
+        const d = {};
+        const tetes = [...dans('[onclick^="rampBasculerBloc"]')];
+        d.tetes = tetes.length;
+        if (!tetes.length) return d;
+        const corpsVisibles = () => dans('.ramp-bloc-corps, [style*="padding:0 1rem 1rem"]').length;
+        d.avant = corpsVisibles();
+        const cle = tetes[0].getAttribute('onclick');
+        tetes[0].click();
+        await a(2000);
+        d.apres = dans('.ramp-bloc-corps, [style*="padding:0 1rem 1rem"]').length;
+        [...dans('[onclick^="rampBasculerBloc"]')]
+          .find((b) => b.getAttribute('onclick') === cle)?.click();
+        await a(2000);
+        d.rendu = dans('.ramp-bloc-corps, [style*="padding:0 1rem 1rem"]').length;
+        return d;
+      });
+
+      // ── 2. La série, le pas, le menu d'un pas, une période, et le vidage ──
+      await essai('temps', async () => {
+        const d = {};
+        const serie = [...dans('[onclick^="rampSerieTemps"]')];
+        d.series = serie.length;
+        if (serie.length > 1) {
+          serie[1].click();
+          await a(2200);
+          d.serieActive = [...dans('[onclick^="rampSerieTemps"]')]
+            .filter((b) => b.classList.contains('actif')).length;
+          d.serieRetenue = (window.RAMP_STATE || {}).tempsSerie || '';
+        }
+        const pasBoutons = [...dans('[onclick^="rampPasTemps"]')];
+        d.pas = pasBoutons.length;
+        if (pasBoutons.length) {
+          const cible = pasBoutons[pasBoutons.length - 1].getAttribute('onclick');
+          pasBoutons[pasBoutons.length - 1].click();
+          await a(2200);
+          d.pasRetenu = (window.RAMP_STATE || {}).tempsPas || '';
+          d.pasCible = cible;
+        }
+        // Le chevron d'un pas ouvre la liste de ses périodes.
+        const fleche = [...dans('[onclick^="rampMenuTemps"]')];
+        d.fleches = fleche.length;
+        if (fleche.length) {
+          fleche[0].click();
+          await a(2200);
+          d.menuOuvert = (window.RAMP_STATE || {}).tempsMenu || '';
+          d.panneaux = dans('.ramp-multi-panneau').length;
+          d.cases = dans('[onchange^="rampBasculerPeriode"]').length;
+          // Une période cochée : la sélection se fige sur ce qui est affiché.
+          const caseP = un('[onchange^="rampBasculerPeriode"]');
+          if (caseP) {
+            caseP.checked = true;
+            caseP.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(2200);
+            const sel = ((window.RAMP_STATE || {}).tempsSelection || {})[d.menuOuvert] || [];
+            d.retenues = sel.length;
+            // Et le vidage, qui n'apparaît qu'une fois quelque chose retenu.
+            const vider = un('[onclick^="rampViderPeriodes"]');
+            d.boutonVider = !!vider;
+            if (vider) {
+              vider.click();
+              await a(2200);
+              d.apresVidage = (((window.RAMP_STATE || {}).tempsSelection || {})[d.menuOuvert] || []).length;
+            }
+          }
+        }
+        return d;
+      });
+
+      // ── 3. L'année observée, choisie dans sa liste ──
+      await essai('annee', async () => {
+        const d = {};
+        const select = un('[onchange^="rampChoisirAnneeTemps"]');
+        d.select = !!select;
+        if (!select) return d;
+        d.options = [...select.options].map((o) => o.value);
+        const autre = [...select.options].find((o) => o.value && o.value !== select.value);
+        d.autre = autre ? autre.value : '';
+        if (!autre) return d;
+        select.value = autre.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(2400);
+        d.retenue = (window.RAMP_STATE || {}).tempsAnnee || '';
+        return d;
+      });
+
+      // ── 4. Les États du graphe : la série, et l'exclusion d'un État ──
+      await essai('etats', async () => {
+        const d = {};
+        const serie = [...dans('[onclick^="rampSerieEtats"]')];
+        d.series = serie.length;
+        if (serie.length > 1) {
+          serie[1].click();
+          await a(2200);
+          d.retenue = (window.RAMP_STATE || {}).etatsSerie || '';
+        }
+        const exclure = [...dans('[onclick^="rampBasculerEtatGraphe"]')];
+        d.exclusions = exclure.length;
+        if (exclure.length) {
+          const cle = exclure[0].getAttribute('onclick');
+          exclure[0].click();
+          await a(2200);
+          d.exclus = Object.values((window.RAMP_STATE || {}).etatsExclus || {})
+            .filter(Boolean).length;
+          [...dans('[onclick^="rampBasculerEtatGraphe"]')]
+            .find((b) => b.getAttribute('onclick') === cle)?.click();
+          await a(2200);
+          d.rendus = Object.values((window.RAMP_STATE || {}).etatsExclus || {})
+            .filter(Boolean).length;
+        }
+        return d;
+      });
+
+      // ── 5. L'anneau : une part se masque, et le mode des aéronefs ──
+      await essai('anneau', async () => {
+        const d = {};
+        const parts = [...dans('[onclick^="rampBasculerPartAnneau"]')];
+        d.parts = parts.length;
+        if (parts.length) {
+          const cle = parts[0].getAttribute('onclick');
+          parts[0].click();
+          await a(2200);
+          d.masques = Object.values((window.RAMP_STATE || {}).anneauxMasques || {})
+            .flatMap((m) => Object.values(m)).filter(Boolean).length;
+          [...dans('[onclick^="rampBasculerPartAnneau"]')]
+            .find((b) => b.getAttribute('onclick') === cle)?.click();
+          await a(2200);
+          d.rendues = Object.values((window.RAMP_STATE || {}).anneauxMasques || {})
+            .flatMap((m) => Object.values(m)).filter(Boolean).length;
+        }
+        const modes = [...dans('[onclick^="rampStatsAeronefMode"]')];
+        d.modes = modes.length;
+        if (modes.length > 1) {
+          modes[1].click();
+          await a(2200);
+          d.mode = (window.RAMP_STATE || {}).statsAeronefMode || '';
+        }
+        return d;
+      });
+
+      // ── 6. La situation : une ligne d'exploitant se déplie, et l'export compose ──
+      await essai('situation', async () => {
+        const d = {};
+        const lignes = [...dans('[onclick^="rampBasculerLigne"]')];
+        d.lignes = lignes.length;
+        if (lignes.length) {
+          const cle = lignes[0].getAttribute('onclick');
+          const avant = dans('tbody tr').length;
+          lignes[0].click();
+          await a(2400);
+          d.apresDepliage = dans('tbody tr').length;
+          d.aOuvert = d.apresDepliage > avant;
+          d.depliees = Object.values((window.RAMP_STATE || {}).lignesDepliees || {})
+            .filter(Boolean).length;
+          [...dans('[onclick^="rampBasculerLigne"]')]
+            .find((b) => b.getAttribute('onclick') === cle)?.click();
+          await a(2400);
+          d.rendu = dans('tbody tr').length === avant;
+        }
+        // L'export compose son document dans le navigateur : relais.
+        const relais = { fenetres: 0, blobs: 0 };
+        const vraiOpen = window.open;
+        const vraiURL = URL.createObjectURL;
+        window.open = () => { relais.fenetres += 1;
+          return { document: { write: () => {}, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {} }; };
+        URL.createObjectURL = (b) => { relais.blobs += 1; return vraiURL.call(URL, b); };
+        try {
+          // `*=` : ce bouton porte `event.stopPropagation();` avant son appel,
+          // comme les bandeaux de groupe des paramètres (n° 5.f.32).
+          const exp = un('[onclick*="rampExporterSituation"]');
+          d.boutonExport = !!exp;
+          if (exp) { exp.click(); await a(3200); }
+        } finally { window.open = vraiOpen; URL.createObjectURL = vraiURL; }
+        d.export = relais;
+        return d;
+      });
+
+      // ── 7. La ronde retire ce qu'elle a semé ──
+      await essai('menage', async () => {
+        const d = { effacees: 0 };
+        const miennes = (await inspections()).filter((x) => /RONDEX/.test(x.exploitant || ''));
+        d.aEffacer = miennes.length;
+        for (const i of miennes) {
+          /* eslint-disable no-await-in-loop */
+          const rep = await env(`/inspections/${i.id}`, 'DELETE');
+          if (rep.statut === 200) d.effacees += 1;
+        }
+        d.apres = (await inspections()).length;
+        d.rendueAuDepart = d.apres === r.deja;
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const S2 = stats;
+      const B = S2.blocs || {};
+      const T = S2.temps || {};
+      const An = S2.annee || {};
+      const E = S2.etats || {};
+      const Ca = S2.anneau || {};
+      const Si = S2.situation || {};
+      const Me = S2.menage || {};
+      verifier('la ronde sème quatre inspections par la route d’importation, et le volet des statistiques s’ouvre sur ses blocs',
+        S2.semis === 201 && S2.creees === 4 && S2.apresSemis === S2.deja + 4
+        && S2.voletOuvert === true && S2.nbBlocs >= 3,
+        JSON.stringify({ semis: S2.semis, creees: S2.creees, etats: S2.listeEtats,
+          volet: S2.voletOuvert, blocs: S2.nbBlocs }));
+      verifier('les blocs des statistiques se replient et se déplient par leur en-tête',
+        B.tetes >= 3 && B.apres < B.avant && B.rendu === B.avant,
+        JSON.stringify(B));
+      verifier('la série et le pas de temps se choisissent, et le chevron d’un pas ouvre la liste de ses périodes',
+        T.series === 3 && T.serieActive === 1 && (T.serieRetenue || '').length > 0
+        // `RAMP_GRANULARITES()` rend **trois** pas — mois, trimestre, semestre —
+        // et les chevrons de `rampMenuTemps` ne sont pas tous les leurs : il y
+        // en a cinq sur le volet. J'avais écrit quatre, par symétrie supposée.
+        && T.pas === 3 && (T.pasRetenu || '').length > 0
+        && T.fleches >= T.pas && (T.menuOuvert || '').length > 0 && T.panneaux === 1,
+        JSON.stringify(T).slice(0, 380));
+      verifier('une période se coche — la sélection se fige sur ce qui est affiché — et le vidage, qui n’apparaît qu’alors, la retire',
+        T.cases >= 1 && T.retenues >= 1 && T.boutonVider === true
+        && T.apresVidage === 0,
+        JSON.stringify({ cases: T.cases, retenues: T.retenues,
+          vider: T.boutonVider, apres: T.apresVidage }));
+      verifier('l’année observée se choisit dans sa liste, garnie par les dates des inspections semées',
+        An.select === true && (An.options || []).filter(Boolean).length >= 2
+        && An.retenue === An.autre,
+        JSON.stringify(An));
+      verifier('le graphe des États change de série, et un État s’exclut puis revient',
+        E.series >= 2 && (E.retenue || '').length > 0
+        && E.exclusions >= 1 && E.exclus === 1 && E.rendus === 0,
+        JSON.stringify(E));
+      verifier('une part d’anneau se masque puis revient, et le mode du graphe des aéronefs se change',
+        Ca.parts >= 1 && Ca.masques === 1 && Ca.rendues === 0
+        && Ca.modes >= 2 && (Ca.mode || '').length > 0,
+        JSON.stringify(Ca));
+      verifier('une ligne d’exploitant se déplie sur son détail par item, se replie, et la situation s’exporte',
+        Si.lignes >= 2 && Si.aOuvert === true && Si.depliees === 1 && Si.rendu === true
+        && Si.boutonExport === true
+        && !!Si.export && (Si.export.blobs + Si.export.fenetres) >= 1,
+        JSON.stringify(Si));
+      verifier('la ronde retire ses quatre inspections, et le module revient à son compte',
+        Me.aEffacer === 4 && Me.effacees === 4 && Me.rendueAuDepart === true,
+        JSON.stringify(Me));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
     //  La ronde d'une fiche d'inspection, de la saisie à la suppression
     // ══════════════════════════════════════════════════════════════════
     //

@@ -121,8 +121,28 @@ module.exports = async function rampNavigateurSmoke(port) {
     // sinon pour une erreur de RAMP.
     let ramp = false;
     let etape = 'montage';
+    // ── Les refus que la ronde provoque exprès ──
+    //
+    // Même mécanisme que SURV (n° 5.f.26) : un refus **déclaré** par code,
+    // méthode et chemin n'est pas un incident — c'est une preuve. Tout autre
+    // 4xx en reste un. Déclarer n'est pas filtrer : la déclaration nomme ce
+    // qu'on attend, et laisse rougir le reste.
+    const REFUS_ATTENDUS = [
+      {
+        code: 409, methode: 'POST', chemin: /\/pays$/,
+        pourquoi: 'le bigramme d’un pays est unique : la ronde réessaie un'
+          + ' bigramme déjà pris pour l’éprouver. Contrôle « le formulaire refuse'
+          + ' un nom vide, un bigramme qui n’est pas deux lettres, et un bigramme'
+          + ' déjà pris » (n° 5.f.31).',
+      },
+    ];
+    const codesAttendus = new Set();
     page.on('console', (m) => {
-      if (ramp && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      if (!ramp || m.type() !== 'error') return;
+      const texte = m.text();
+      const code = (/status of (\d{3})/.exec(texte) || [])[1];
+      if (code && codesAttendus.has(Number(code))) return;
+      incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
       if (ramp) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -135,7 +155,11 @@ module.exports = async function rampNavigateurSmoke(port) {
     // son chemin, ce qui rend l'incident actionnable au lieu d'énigmatique.
     page.on('response', (r) => {
       if (!ramp || r.status() < 400) return;
-      incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
+      const chemin = r.url().replace(srv.base, '');
+      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
+        && x.methode === r.request().method() && x.chemin.test(chemin));
+      if (attendu) { codesAttendus.add(r.status()); return; }
+      incidents.push(`[${etape}] ${r.status()} ${chemin.slice(0, 120)}`);
     });
 
     // ── La session, puis l'écran ──
@@ -524,6 +548,660 @@ module.exports = async function rampNavigateurSmoke(port) {
     verifier('la fenêtre d’un pays du référentiel s’ouvre et se referme',
       params.fenetrePays > 200 && params.fenetrePaysFermee === 0,
       JSON.stringify({ ouverte: params.fenetrePays, fermee: params.fenetrePaysFermee }));
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le référentiel des pays : créé, relu, basculé, filtré, retiré
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Le patron des référentiels de SURV (ADR-003 n° 5.f.22–23), porté à RAMP :
+    // **ouvrir, saisir, enregistrer, relire chez le serveur, modifier, retirer,
+    // et rendre l'écran à son état**. `ramp-parametres.js` était à **9 noms sur
+    // 52** — le plus gros gisement d'un seul fichier du dépôt —, et la suite
+    // n'ouvrait que les fenêtres sans jamais écrire.
+    //
+    // Ce que ce bloc tient en plus du cycle : **trois refus**, deux du
+    // formulaire et un du serveur, chacun lu dans le code et non deviné —
+    // un nom vide, un bigramme qui n'est pas deux lettres, et un bigramme déjà
+    // pris (409). Un référentiel qui accepte tout n'est pas un référentiel.
+    etape = 'référentiel des pays';
+    const refPays = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const liste = async () => ((await (await fetch(`${api}/pays`,
+        { credentials: 'same-origin' })).json()).pays || []);
+      const poser = (id, v) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      };
+      const q = (sel) => document.querySelector(sel);
+      const erreur = () => (document.getElementById('rampPaysErreur') || {}).textContent || '';
+      const enregistrer = async () => { q('[onclick^="rampEnregistrerPays"]').click(); await a(2400); };
+      const compte = () => {
+        const b = [...document.querySelectorAll('.ramp-badge.compte')]
+          .map((x) => /(\d+)\s*pays/.exec(x.textContent || ''))
+          .find(Boolean);
+        return b ? Number(b[1]) : -1;
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+      const ligneDe = (id) => [...document.querySelectorAll('tbody tr')]
+        .find((tr) => (tr.innerHTML || '').includes(id));
+
+      // Le sous-onglet des pays, et son état de départ.
+      [...document.querySelectorAll('[onclick^="rampParamOnglet"]')]
+        .find((b) => /'pays'/.test(b.getAttribute('onclick')))?.click();
+      await a(2000);
+      q('[onclick^="rampPaysReset"]')?.click();
+      await a(1500);
+      const depart = await liste();
+      r.depart = depart.length;
+      r.compteAffiche = compte();
+      // Un bigramme libre, calculé sur la liste : deux lettres que personne ne
+      // porte. Et un bigramme **pris**, pour éprouver le refus du serveur.
+      const pris = new Set(depart.map((p) => String(p.iso2 || '').toUpperCase()));
+      const L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let libre = '';
+      for (const x of L) { for (const y of L) { if (!pris.has(x + y)) { libre = x + y; break; } } if (libre) break; }
+      r.bigrammeLibre = libre;
+      r.bigrammeTenu = (depart.find((p) => /^[A-Z]{2}$/.test(String(p.iso2 || '').toUpperCase())) || {}).iso2 || '';
+
+      // ── 1. Les trois refus ──
+      await essai('refus', async () => {
+        const d = {};
+        q('[onclick="rampOuvrirPays()"]').click();
+        await a(2000);
+        d.formulaire = !!document.getElementById('rampPaysNom');
+        if (!d.formulaire) return d;
+        // Nom vide.
+        await enregistrer();
+        d.sansNom = erreur();
+        d.apresSansNom = (await liste()).length;
+        // Nom donné, bigramme non conforme.
+        poser('rampPaysNom', 'RAMP 0.a — pays de la ronde');
+        poser('rampPaysIso', 'Z');
+        await enregistrer();
+        d.bigrammeCourt = erreur();
+        d.apresBigrammeCourt = (await liste()).length;
+        // Bigramme déjà pris : le refus vient du serveur, et le formulaire le dit.
+        poser('rampPaysIso', r.bigrammeTenu);
+        await enregistrer();
+        d.bigrammePris = erreur();
+        d.apresBigrammePris = (await liste()).length;
+        d.formulaireTientBon = !!document.getElementById('rampPaysNom');
+        return d;
+      });
+
+      // ── 2. La création, relue chez le serveur et vue dans la table ──
+      await essai('creation', async () => {
+        const d = {};
+        poser('rampPaysIso', libre);
+        poser('rampPaysAac', 'Autorité de la ronde');
+        poser('rampPaysAdresse', 'Siège de la ronde');
+        poser('rampPaysSite', 'https://ronde.example.org');
+        poser('rampPaysEmails', 'ronde@example.org, second@example.org');
+        const uemoa = document.getElementById('rampPaysUemoa');
+        if (uemoa && !uemoa.checked) { uemoa.click(); }
+        await enregistrer();
+        d.fenetreFermee = !document.getElementById('rampPaysNom');
+        const apres = await liste();
+        d.apres = apres.length;
+        const cree = apres.find((p) => String(p.iso2).toUpperCase() === libre);
+        d.enBase = !!cree;
+        if (!cree) return d;
+        d.id = cree.id;
+        d.nom = cree.nom;
+        d.uemoa = cree.uemoa === true;
+        // Les adresses saisies en une ligne deviennent une liste : la route le
+        // dit — « on accepte aussi bien un tableau qu'une saisie séparée ».
+        d.emails = (cree.emails || []).length;
+        d.actif = cree.actif !== false;
+        d.compteSuit = compte() === apres.length;
+        // ── Le sélecteur, et le rendu qu'il ignorait ──
+        //
+        // `[onclick^="rampOuvrirPays('<id>'"]` ne correspondait à rien :
+        // `_rArg` passe par `JSON.stringify`, et l'attribut porte donc des
+        // **guillemets doubles**. On vise la ligne par son identifiant — qui s'y
+        // trouve de toute façon —, puis le geste **dans** la ligne. C'est le
+        // repère des phases qui marchaient déjà.
+        d.dansLaTable = !!(ligneDe(cree.id) || {}).querySelector?.('[onclick^="rampOuvrirPays"]');
+        return d;
+      });
+
+      const id = (r.creation || {}).id;
+
+      // ── 3. La modification : le formulaire porte ce qui a été enregistré ──
+      await essai('modification', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas de pays créé' };
+        (ligneDe(id) || {}).querySelector?.('[onclick^="rampOuvrirPays"]').click();
+        await a(2000);
+        d.nomRelu = (document.getElementById('rampPaysNom') || {}).value || '';
+        d.isoRelu = (document.getElementById('rampPaysIso') || {}).value || '';
+        d.uemoaRelu = !!(document.getElementById('rampPaysUemoa') || {}).checked;
+        d.emailsRelus = ((document.getElementById('rampPaysEmails') || {}).value || '')
+          .split(',').filter((x) => x.trim()).length;
+        poser('rampPaysNom', 'RAMP 0.a — pays modifié');
+        await enregistrer();
+        const p = (await liste()).find((x) => x.id === id) || {};
+        d.nomEnBase = p.nom || '';
+        return d;
+      });
+
+      // ── 4. La case UEMOA écrit seule, sans rouvrir de formulaire ──
+      //
+      // Le code le dit : « l'appartenance à l'UEMOA se change d'un clic, sans
+      // passer par le formulaire ». C'est donc l'absence de formulaire qui fait
+      // la moitié de ce contrôle.
+      await essai('uemoa', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas de pays créé' };
+        q('[onclick^="rampPaysReset"]')?.click();
+        await a(1500);
+        const champ = q('[oninput^="rampPaysChercher"]');
+        if (champ) { champ.value = 'RAMP 0.a'; champ.dispatchEvent(new Event('input', { bubbles: true })); await a(1500); }
+        const ligne = () => ligneDe(id);
+        d.ligneTrouvee = !!ligne();
+        const caseUemoa = (ligne() || {}).querySelector?.('[onchange^="rampPaysUemoa"]');
+        d.caseTrouvee = !!caseUemoa;
+        if (!caseUemoa) return d;
+        d.cocheeAvant = caseUemoa.checked;
+        caseUemoa.checked = false;
+        caseUemoa.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(2400);
+        d.sansFormulaire = !document.getElementById('rampPaysNom');
+        d.uemoaEnBase = ((await liste()).find((x) => x.id === id) || {}).uemoa;
+        return d;
+      });
+
+      // ── 5. La bascule d'activité, dans les deux sens ──
+      await essai('bascule', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas de pays créé' };
+        const ligne = () => ligneDe(id);
+        const bouton = () => (ligne() || {}).querySelector?.('[onclick^="rampBasculerPays"]');
+        d.bouton = !!bouton();
+        if (!bouton()) return d;
+        bouton().click();
+        await a(2600);
+        d.inactifEnBase = ((await liste()).find((x) => x.id === id) || {}).actif === false;
+        d.ligneTerne = /opacity/.test(((ligne() || {}).getAttribute?.('style')) || '');
+        bouton().click();
+        await a(2600);
+        d.rendu = ((await liste()).find((x) => x.id === id) || {}).actif !== false;
+        return d;
+      });
+
+      // ── 6. La recherche et les filtres : la table se restreint, et revient ──
+      await essai('filtres', async () => {
+        const d = {};
+        q('[onclick^="rampPaysReset"]')?.click();
+        await a(1600);
+        d.toutes = compte();
+        const champ = q('[oninput^="rampPaysChercher"]');
+        d.champ = !!champ;
+        if (champ) {
+          champ.value = 'RAMP 0.a';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(1600);
+          d.cherchees = compte();
+        }
+        const filtre = q('[onchange*="rampPaysSetFiltre(\'uemoa\'"]');
+        d.filtre = !!filtre;
+        if (filtre) {
+          const i = [...filtre.options].findIndex((o) => o.value);
+          if (i >= 0) {
+            filtre.selectedIndex = i;
+            filtre.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(1600);
+            d.filtrees = compte();
+          }
+        }
+        q('[onclick^="rampPaysReset"]').click();
+        await a(1600);
+        d.rendues = compte();
+        return d;
+      });
+
+      // ── 7. La suppression, et la ronde ne laisse rien ──
+      await essai('suppression', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas de pays créé' };
+        const champ = q('[oninput^="rampPaysChercher"]');
+        if (champ) { champ.value = 'RAMP 0.a'; champ.dispatchEvent(new Event('input', { bubbles: true })); await a(1600); }
+        const ligne = () => ligneDe(id);
+        const bouton = (ligne() || {}).querySelector?.('[onclick^="rampSupprimerPays"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        d.confirme = await oui();
+        const apres = await liste();
+        d.apres = apres.length;
+        d.partie = !apres.some((x) => x.id === id);
+        d.rendueAuDepart = apres.length === r.depart;
+        q('[onclick^="rampPaysReset"]')?.click();
+        await a(1500);
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const P = refPays;
+      const F = P.refus || {};
+      const C = P.creation || {};
+      const M2 = P.modification || {};
+      const U = P.uemoa || {};
+      const B = P.bascule || {};
+      const T = P.filtres || {};
+      const S = P.suppression || {};
+      verifier('le référentiel des pays part garni, et son compte affiché suit le serveur',
+        P.depart > 100 && P.compteAffiche === P.depart
+        && /^[A-Z]{2}$/.test(P.bigrammeLibre || '') && /^[A-Z]{2}$/.test(P.bigrammeTenu || ''),
+        JSON.stringify({ depart: P.depart, affiche: P.compteAffiche,
+          libre: P.bigrammeLibre, tenu: P.bigrammeTenu }));
+      verifier('le formulaire refuse un nom vide, un bigramme qui n’est pas deux lettres, et un bigramme déjà pris — et rien n’est créé',
+        F.formulaire === true
+        && (F.sansNom || '').length > 0 && F.apresSansNom === P.depart
+        && /deux lettres/.test(F.bigrammeCourt || '') && F.apresBigrammeCourt === P.depart
+        && /désigne déjà/.test(F.bigrammePris || '') && F.apresBigrammePris === P.depart
+        && F.formulaireTientBon === true,
+        JSON.stringify(F).slice(0, 360));
+      verifier('un pays se crée, le serveur le porte avec ses adresses en liste, et la table le montre',
+        C.fenetreFermee === true && C.enBase === true
+        && C.apres === P.depart + 1 && C.uemoa === true && C.emails === 2
+        && C.actif === true && C.compteSuit === true && C.dansLaTable === true,
+        JSON.stringify(C));
+      verifier('son formulaire rouvert porte ce qui a été enregistré, et sa modification part en base',
+        M2.nomRelu === 'RAMP 0.a — pays de la ronde'
+        && M2.isoRelu === P.bigrammeLibre && M2.uemoaRelu === true && M2.emailsRelus === 2
+        && M2.nomEnBase === 'RAMP 0.a — pays modifié',
+        JSON.stringify(M2));
+      verifier('la case UEMOA écrit seule : le serveur suit, et aucun formulaire ne s’ouvre',
+        U.ligneTrouvee === true && U.caseTrouvee === true && U.cocheeAvant === true
+        && U.sansFormulaire === true && U.uemoaEnBase === false,
+        JSON.stringify(U));
+      verifier('la bascule d’activité ternit la ligne, le serveur la dit inactive, et le second clic la rend',
+        B.bouton === true && B.inactifEnBase === true && B.ligneTerne === true
+        && B.rendu === true,
+        JSON.stringify(B));
+      verifier('la recherche et le filtre restreignent la table, et la remise à zéro la rend entière',
+        T.champ === true && T.toutes === P.depart + 1
+        && T.cherchees === 1 && T.filtre === true && T.filtrees >= 0
+        && T.rendues === T.toutes,
+        JSON.stringify(T));
+      verifier('le pays se supprime sur confirmation, et la ronde rend le référentiel à son compte de départ',
+        S.bouton === true && S.confirme === true && S.partie === true
+        && S.rendueAuDepart === true,
+        JSON.stringify(S));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le référentiel des aéronefs : la nomenclature, groupée et paginée
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Même patron que les pays, et trois propriétés de plus, écrites dans le
+    // code : la table est **groupée par désignation**, elle est **paginée sur
+    // les désignations** — « une page ne doit pas couper un groupe en deux » —,
+    // et l'enregistrement **ouvre la désignation touchée**, « l'agent voit ce
+    // qu'il vient d'écrire ». Aucune des trois ne se devine.
+    //
+    // ── Deux fautes du premier jet, et la seconde était grave ──
+    //
+    // 1. J'ai cru ce référentiel **vide** : ma sonde lisait `corps.aeronefs`
+    //    quand la route rend `{ lignes, total, total_designations, pages }`.
+    //    `lignes` n'est qu'**une page**. C'est la nomenclature figée d'ADR-001 —
+    //    1,9 Mo, 1 028 désignations. Sept contrôles ont rougi sur une table que
+    //    je croyais déserte.
+    //
+    // 2. Ma boucle de nettoyage prenait **le premier bouton de suppression de
+    //    la page** : elle a effacé six lignes de la nomenclature qui ne
+    //    m'appartenaient pas. Le bac est jetable, et rien de réel n'a été
+    //    touché — mais le motif est inacceptable. *Une boucle qui efface « le
+    //    premier » efface ce que le hasard a mis premier.* Elle ne retire plus
+    //    que des lignes dont elle connaît l'identifiant, et le compte total doit
+    //    revenir **exactement** à son départ.
+    etape = 'référentiel des aéronefs';
+    const refAer = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      // La route pagine : on l'interroge avec la recherche, pour trouver les
+      // lignes de la ronde où qu'elles soient.
+      const etat = async (recherche) => await (await fetch(
+        `${api}/aeronefs${recherche ? `?q=${encodeURIComponent(recherche)}` : ''}`,
+        { credentials: 'same-origin' })).json();
+      const miennes = async () => ((await etat('RONDEX')).lignes || []);
+      const q = (sel) => document.querySelector(sel);
+      const poser = (id, v) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      };
+      const erreur = () => (document.getElementById('rampAerErreur') || {}).textContent || '';
+      const enregistrer = async () => { q('[onclick^="rampEnregistrerAeronef"]').click(); await a(2800); };
+      const compte = (motif) => {
+        const b = [...document.querySelectorAll('.ramp-badge.compte')]
+          .map((x) => new RegExp(`(\\d+)\\s*${motif}`).exec((x.textContent || '').trim()))
+          .find(Boolean);
+        return b ? Number(b[1]) : -1;
+      };
+      const groupes = () => document.querySelectorAll('tr.ramp-groupe-ligne').length;
+      const variantes = () => document.querySelectorAll('tbody tr:not(.ramp-groupe-ligne)').length;
+      const groupeDe = (designation) => [...document.querySelectorAll('tr.ramp-groupe-ligne')]
+        .find((tr) => (tr.textContent || '').includes(designation));
+      const chercher = async (texte) => {
+        const champ = q('[oninput^="rampAerChercher"]');
+        if (!champ) return false;
+        champ.value = texte;
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await a(2400);
+        return true;
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+
+      [...document.querySelectorAll('[onclick^="rampParamOnglet"]')]
+        .find((b) => /'aeronefs'/.test(b.getAttribute('onclick')))?.click();
+      await a(2600);
+      q('[onclick^="rampAerReset"]')?.click();
+      await a(2200);
+      const d0 = await etat('');
+      r.total = d0.total;
+      r.designations = d0.total_designations;
+      // `nbPages`, et non `pages` : la phase qui éprouve la pagination s'appelle
+      // « pages », et son relevé **écrasait ce champ**. Le contrôle lisait alors
+      // `{…} > 1` — faux — sur une pagination qui marche. Un registre partagé
+      // entre les phases et leurs noms n'admet pas deux fois le même nom.
+      r.nbPages = d0.pages;
+      r.taillePage = d0.taille_page;
+      r.groupesSurLaPage = groupes();
+      r.deja = (await miennes()).length;
+
+      // ── 1. La pagination compte les désignations, non les lignes ──
+      await essai('pages', async () => {
+        const d = { page1: compte('désignation') };
+        const suivant = [...document.querySelectorAll('[onclick^="rampAerPage"]')]
+          .find((b) => !b.disabled && /rampAerPage\((\d+)\)/.test(b.getAttribute('onclick'))
+            && Number(/rampAerPage\((\d+)\)/.exec(b.getAttribute('onclick'))[1]) > 1);
+        d.boutonSuivant = !!suivant;
+        if (!suivant) return d;
+        const avant = groupeDe('') ? [...document.querySelectorAll('tr.ramp-groupe-ligne')]
+          .map((tr) => (tr.querySelector('strong') || {}).textContent).join('|') : '';
+        suivant.click();
+        await a(2600);
+        d.groupesPage2 = groupes();
+        d.autresGroupes = [...document.querySelectorAll('tr.ramp-groupe-ligne')]
+          .map((tr) => (tr.querySelector('strong') || {}).textContent).join('|') !== avant;
+        // Et la page ne coupe pas un groupe : chaque bandeau porte ses variantes.
+        const precedent = [...document.querySelectorAll('[onclick^="rampAerPage"]')]
+          .find((b) => !b.disabled);
+        if (precedent) { precedent.click(); await a(2600); }
+        d.retourPage1 = groupes() === d.page1 || groupes() > 0;
+        return d;
+      });
+
+      // ── 2. Les deux refus du formulaire ──
+      await essai('refus', async () => {
+        const d = {};
+        q('[onclick="rampOuvrirAeronef()"]').click();
+        await a(2200);
+        d.formulaire = !!document.getElementById('rampAerDesignation');
+        if (!d.formulaire) return d;
+        await enregistrer();
+        d.sansDesignation = erreur();
+        poser('rampAerDesignation', 'RX320');
+        await enregistrer();
+        d.sansModele = erreur();
+        d.rienCree = (await miennes()).length === r.deja;
+        return d;
+      });
+
+      // ── 3. La création, et la désignation qui s'ouvre d'elle-même ──
+      await essai('creation', async () => {
+        const d = {};
+        poser('rampAerModele', 'RONDEX RX-320-100');
+        poser('rampAerConstructeur', 'RONDEX');
+        poser('rampAerEtat', 'UEMOA');
+        await enregistrer();
+        d.fenetreFermee = !document.getElementById('rampAerDesignation');
+        const mien = await miennes();
+        d.aMoi = mien.length;
+        const cree = mien.find((x) => x.designation === 'RX320');
+        d.enBase = !!cree;
+        if (!cree) return d;
+        d.id = cree.id;
+        d.modele = cree.modele;
+        d.actif = cree.actif !== false;
+        // « La désignation touchée s'ouvre » : on la cherche pour l'avoir sous
+        // les yeux, et son chevron doit déjà être ouvert.
+        await chercher('RONDEX');
+        d.groupeOuvert = !!(groupeDe('RX320') || {}).querySelector?.('.ramp-extension.ouvert');
+        d.varianteVisible = variantes() === 1;
+        d.totalApres = (await etat('')).total;
+        return d;
+      });
+
+      // ── 4. Une variante ajoutée **dans** le groupe : la désignation y est
+      //      déjà portée, et c'est tout ce que ce troisième appel apporte ──
+      await essai('variante', async () => {
+        const d = {};
+        const bouton = (groupeDe('RX320') || {}).querySelector?.('[onclick*="rampOuvrirAeronef("]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        await a(2200);
+        d.designationPreRemplie = (document.getElementById('rampAerDesignation') || {}).value || '';
+        poser('rampAerModele', 'RONDEX RX-320-200');
+        poser('rampAerConstructeur', 'RONDEX');
+        await enregistrer();
+        await chercher('RONDEX');
+        d.deuxVariantes = (await miennes()).filter((x) => x.designation === 'RX320').length;
+        d.compteDuGroupe = String(((groupeDe('RX320') || {})
+          .querySelector?.('.ramp-gi-compte') || {}).textContent || '').trim();
+        // Une seconde désignation, pour que le pliage ait deux lots.
+        q('[onclick="rampOuvrirAeronef()"]').click();
+        await a(2200);
+        poser('rampAerDesignation', 'RX737');
+        poser('rampAerModele', 'RONDEX RX-737-800');
+        poser('rampAerConstructeur', 'RONDEX');
+        await enregistrer();
+        await chercher('RONDEX');
+        d.aMoi = (await miennes()).length;
+        d.designationsVues = compte('désignation');
+        return d;
+      });
+
+      // ── 5. Un lot se replie, et tout se replie — sur la page affichée ──
+      await essai('pliage', async () => {
+        const d = {};
+        await chercher('RONDEX');
+        q('[onclick^="rampAerToutDeplier(true)"]').click();
+        await a(2000);
+        d.groupes = groupes();
+        d.toutesOuvertes = variantes();
+        q('[onclick^="rampAerToutDeplier(false)"]').click();
+        await a(2000);
+        d.toutesRepliees = variantes();
+        const chevron = (groupeDe('RX320') || {}).querySelector?.('.ramp-extension');
+        d.chevron = !!chevron;
+        if (chevron) {
+          chevron.click();
+          await a(1800);
+          d.unLotOuvert = variantes();
+          chevron.click();
+          await a(1800);
+          d.unLotReplie = variantes();
+        }
+        return d;
+      });
+
+      const id = (r.creation || {}).id;
+
+      // ── 6. Modification, puis bascule d'activité dans les deux sens ──
+      await essai('modifier', async () => {
+        const d = {};
+        if (!id) return { erreur: 'pas d’aéronef créé' };
+        const ligne = () => [...document.querySelectorAll('tbody tr')]
+          .find((tr) => (tr.innerHTML || '').includes(id));
+        const deplier = async () => {
+          await chercher('RONDEX');
+          q('[onclick^="rampAerToutDeplier(true)"]').click();
+          await a(2000);
+        };
+        await deplier();
+        d.ligne = !!ligne();
+        if (!ligne()) return d;
+        ligne().querySelector('[onclick^="rampOuvrirAeronef"]').click();
+        await a(2200);
+        d.designationRelue = (document.getElementById('rampAerDesignation') || {}).value || '';
+        d.modeleRelu = (document.getElementById('rampAerModele') || {}).value || '';
+        poser('rampAerConstructeur', 'RONDEX MODIFIE');
+        await enregistrer();
+        d.enBase = ((await miennes()).find((x) => x.id === id) || {}).constructeur;
+        await deplier();
+        const bascule = () => (ligne() || {}).querySelector?.('[onclick^="rampBasculerAeronef"]');
+        d.bascule = !!bascule();
+        if (!bascule()) return d;
+        bascule().click();
+        await a(2800);
+        d.inactif = ((await miennes()).find((x) => x.id === id) || {}).actif === false;
+        await deplier();
+        bascule().click();
+        await a(2800);
+        d.rendu = ((await miennes()).find((x) => x.id === id) || {}).actif !== false;
+        return d;
+      });
+
+      // ── 7. Recherche, filtre de facette, remise à zéro ──
+      await essai('filtres', async () => {
+        const d = {};
+        q('[onclick^="rampAerReset"]').click();
+        await a(2200);
+        d.toutes = compte('désignation');
+        d.cherchees = (await chercher('RONDEX')) ? compte('désignation') : -1;
+        const filtre = q('[onchange^="rampAerSetFiltre"]');
+        d.filtre = !!filtre;
+        if (filtre) {
+          const i = [...filtre.options].findIndex((o) => o.value);
+          if (i >= 0) {
+            filtre.selectedIndex = i;
+            filtre.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(2400);
+            d.filtrees = compte('désignation');
+          }
+        }
+        q('[onclick^="rampAerReset"]').click();
+        await a(2200);
+        d.rendues = compte('désignation');
+        return d;
+      });
+
+      // ── 8. La ronde ne retire que **ses** lignes ──
+      await essai('suppression', async () => {
+        const d = { effaces: 0 };
+        const miens = new Set((await miennes()).map((x) => x.id));
+        d.aEffacer = miens.size;
+        for (let garde = 0; garde < 8; garde += 1) {
+          /* eslint-disable no-await-in-loop */
+          await chercher('RONDEX');
+          q('[onclick^="rampAerToutDeplier(true)"]')?.click();
+          await a(1800);
+          // Seule une ligne dont on connaît l'identifiant se supprime.
+          const ligne = [...document.querySelectorAll('tbody tr')]
+            .find((tr) => [...miens].some((x) => (tr.innerHTML || '').includes(x)));
+          const bouton = ligne && ligne.querySelector('[onclick^="rampSupprimerAeronef"]');
+          if (!bouton) break;
+          bouton.click();
+          if (!await oui()) break;
+          d.effaces += 1;
+        }
+        d.restantes = (await miennes()).length;
+        d.total = (await etat('')).total;
+        d.rendueAuDepart = d.total === r.total;
+        q('[onclick^="rampAerReset"]')?.click();
+        await a(2000);
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp');
+
+    {
+      const A = refAer;
+      const G = A.pages || {};
+      const F = A.refus || {};
+      const C = A.creation || {};
+      const V = A.variante || {};
+      const P2 = A.pliage || {};
+      const M3 = A.modifier || {};
+      const T2 = A.filtres || {};
+      const S2 = A.suppression || {};
+      verifier('la nomenclature des aéronefs est paginée sur ses désignations, et une page n’en montre qu’une tranche',
+        A.total > 1000 && A.designations > 100 && A.nbPages > 1
+        && A.groupesSurLaPage === A.taillePage && A.deja === 0,
+        JSON.stringify({ total: A.total, designations: A.designations, pages: A.nbPages,
+          taille: A.taillePage, groupes: A.groupesSurLaPage }));
+      verifier('la page suivante montre d’autres désignations, et le retour ramène à la première',
+        G.boutonSuivant === true && G.groupesPage2 > 0 && G.autresGroupes === true
+        && G.retourPage1 === true,
+        JSON.stringify(G));
+      verifier('le formulaire d’un aéronef exige une désignation, puis un modèle, et rien n’est créé',
+        F.formulaire === true && (F.sansDesignation || '').length > 0
+        && (F.sansModele || '').length > 0 && F.sansDesignation !== F.sansModele
+        && F.rienCree === true,
+        JSON.stringify(F).slice(0, 320));
+      verifier('un aéronef se crée, le serveur le porte, et sa désignation s’ouvre d’elle-même — l’agent voit ce qu’il vient d’écrire',
+        C.fenetreFermee === true && C.enBase === true && C.aMoi === 1
+        && C.actif === true && C.groupeOuvert === true && C.varianteVisible === true
+        && C.totalApres === A.total + 1,
+        JSON.stringify(C));
+      verifier('une variante s’ajoute depuis son lot, désignation déjà portée, et le lot en compte deux',
+        V.bouton === true && V.designationPreRemplie === 'RX320'
+        && V.deuxVariantes === 2 && V.compteDuGroupe === '2'
+        && V.aMoi === 3 && V.designationsVues === 2,
+        JSON.stringify(V));
+      verifier('tout se déplie et tout se replie, puis un seul lot par son chevron',
+        P2.groupes === 2 && P2.toutesOuvertes === 3 && P2.toutesRepliees === 0
+        && P2.chevron === true && P2.unLotOuvert === 2 && P2.unLotReplie === 0,
+        JSON.stringify(P2));
+      verifier('une variante se modifie, le serveur la porte, et sa bascule d’activité joue dans les deux sens',
+        M3.ligne === true && M3.designationRelue === 'RX320'
+        && /RX-320-100/.test(M3.modeleRelu || '')
+        && M3.enBase === 'RONDEX MODIFIE'
+        && M3.bascule === true && M3.inactif === true && M3.rendu === true,
+        JSON.stringify(M3));
+      verifier('la recherche réduit la nomenclature aux lignes de la ronde, le filtre de facette joue, et la remise à zéro la rend entière',
+        T2.toutes === A.designations + 2 && T2.cherchees === 2
+        && T2.filtre === true && T2.filtrees >= 1 && T2.rendues === T2.toutes,
+        JSON.stringify(T2));
+      verifier('la ronde ne retire que ses propres lignes, et la nomenclature revient à son compte exact',
+        S2.aEffacer === 3 && S2.effaces === 3 && S2.restantes === 0
+        && S2.rendueAuDepart === true,
+        JSON.stringify(S2));
+    }
 
     // ══════════════════════════════════════════════════════════════════
     //  La ronde d'une fiche d'inspection, de la saisie à la suppression

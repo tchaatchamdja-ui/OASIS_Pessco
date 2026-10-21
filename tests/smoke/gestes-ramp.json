@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-20",
+ "releve": "2026-10-21",
  "gestesNommes": 207,
  "occurrences": 362,
- "exerces": 38,
+ "exerces": 55,
  "indecidables": 1,
  "gestes": [
   {
@@ -850,7 +850,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -895,7 +895,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1084,7 +1084,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1201,7 +1201,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1309,7 +1309,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1444,7 +1444,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1489,7 +1489,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1525,7 +1525,7 @@
    "evenement": "change",
    "nom": "rampPaysUemoa",
    "source": "rampPaysUemoa(${_rArg(p.id)}, this.checked)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1543,7 +1543,7 @@
    "evenement": "click",
    "nom": "rampBasculerPays",
    "source": "rampBasculerPays(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1552,7 +1552,7 @@
    "evenement": "click",
    "nom": "rampSupprimerPays",
    "source": "rampSupprimerPays(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1570,7 +1570,7 @@
    "evenement": "change",
    "nom": "rampPaysSetFiltre",
    "source": "rampPaysSetFiltre('uemoa', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1579,7 +1579,7 @@
    "evenement": "change",
    "nom": "rampPaysSetFiltre",
    "source": "rampPaysSetFiltre('aac', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1588,7 +1588,7 @@
    "evenement": "input",
    "nom": "rampPaysChercher",
    "source": "rampPaysChercher(this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1615,7 +1615,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1642,7 +1642,7 @@
    "evenement": "click",
    "nom": "rampEnregistrerPays",
    "source": "rampEnregistrerPays()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1768,7 +1768,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1804,7 +1804,7 @@
    "evenement": "click",
    "nom": "rampOuvrirAeronef",
    "source": "rampOuvrirAeronef('${_rAttr(a.id)}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1813,7 +1813,7 @@
    "evenement": "click",
    "nom": "rampBasculerAeronef",
    "source": "rampBasculerAeronef('${_rAttr(a.id)}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1822,7 +1822,7 @@
    "evenement": "click",
    "nom": "rampSupprimerAeronef",
    "source": "rampSupprimerAeronef('${_rAttr(a.id)}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1831,7 +1831,7 @@
    "evenement": "click",
    "nom": "rampAerBasculer",
    "source": "rampAerBasculer(${_rArg(designation)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1840,7 +1840,7 @@
    "evenement": "click",
    "nom": "rampAerBasculer",
    "source": "event.stopPropagation();rampAerBasculer(${_rArg(designation)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1849,7 +1849,7 @@
    "evenement": "click",
    "nom": "rampOuvrirAeronef",
    "source": "event.stopPropagation();rampOuvrirAeronef('', ${_rArg(designation)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1858,7 +1858,7 @@
    "evenement": "click",
    "nom": "rampAerPage",
    "source": "rampAerPage(${r.page - 1})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1867,7 +1867,7 @@
    "evenement": "click",
    "nom": "rampAerPage",
    "source": "rampAerPage(${r.page + 1})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1876,7 +1876,7 @@
    "evenement": "click",
    "nom": "rampAerToutDeplier",
    "source": "rampAerToutDeplier(true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1885,7 +1885,7 @@
    "evenement": "click",
    "nom": "rampAerToutDeplier",
    "source": "rampAerToutDeplier(false)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1894,7 +1894,7 @@
    "evenement": "click",
    "nom": "rampOuvrirAeronef",
    "source": "rampOuvrirAeronef()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1903,7 +1903,7 @@
    "evenement": "change",
    "nom": "rampAerSetFiltre",
    "source": "rampAerSetFiltre('${cle}', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1912,7 +1912,7 @@
    "evenement": "input",
    "nom": "rampAerChercher",
    "source": "rampAerChercher(this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1921,7 +1921,7 @@
    "evenement": "click",
    "nom": "rampAerReset",
    "source": "rampAerReset()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1939,7 +1939,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",
@@ -1966,7 +1966,7 @@
    "evenement": "click",
    "nom": "rampEnregistrerAeronef",
    "source": "rampEnregistrerAeronef()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2002,7 +2002,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2065,7 +2065,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2110,7 +2110,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2164,7 +2164,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2209,7 +2209,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-partage.js",
@@ -2965,7 +2965,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3190,7 +3190,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",
@@ -3235,7 +3235,7 @@
    "evenement": "click",
    "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",

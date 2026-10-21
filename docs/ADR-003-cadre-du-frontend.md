@@ -6656,6 +6656,93 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            par rendre. *Un essai qui rougit au hasard apprend à ne plus croire
            ceux qui rougissent.*
 
+       5.f.31 [x] **RAMP — le patron des référentiels, porté hors de SURV** —
+           fait le 20 octobre 2026.
+
+           **Quarante-trois contrôles sur RAMP ; 55 gestes sur 207.**
+           Campagne : 1 254.
+           `ramp-parametres.js` passe de **9 à 26 noms sur 52** — c'était le plus
+           gros gisement d'un seul fichier du dépôt.
+
+           Le patron écrit pour SURV en 5.f.22–23 se transpose tel quel :
+           **ouvrir, saisir, enregistrer, relire chez le serveur, modifier,
+           retirer, et rendre l'écran à son état.** La suite de RAMP ouvrait les
+           fenêtres de ces référentiels depuis le 14 octobre ; elle n'y écrivait
+           jamais. Deux familles sur six sont faites.
+
+           ── Les pays, et trois refus plutôt qu'un cycle ──
+
+           Ce qu'un cycle de création ne dit pas, et que ce bloc dit : un
+           référentiel **refuse**. Trois refus, chacun lu dans le code :
+
+           | Saisie | Refus | D'où il vient |
+           |---|---|---|
+           | nom vide | « Nom requis » | le formulaire |
+           | bigramme `Z` | « deux lettres attendues » | le formulaire |
+           | bigramme déjà pris | « désigne déjà un pays » | **le serveur, en 409** |
+
+           Le troisième est le plus intéressant : le refus naît du serveur, et le
+           formulaire le relaie dans son propre bandeau d'erreur. Et après chaque
+           refus, **le compte du référentiel est relevé** : un refus qui créerait
+           quand même ne serait pas un refus.
+
+           Deux propriétés de plus, écrites dans le code et mesurées : les
+           adresses saisies en une ligne deviennent une **liste** — « on accepte
+           aussi bien un tableau qu'une saisie séparée » —, et la case UEMOA
+           **écrit seule, sans rouvrir de formulaire** : « on ne rouvre pas un
+           formulaire pour un booléen ». C'est l'**absence** de formulaire qui
+           fait la moitié de ce contrôle.
+
+           ── Les aéronefs, et deux fautes du premier jet ──
+
+           **1. J'ai cru ce référentiel vide.** Ma sonde lisait
+           `corps.aeronefs` ; la route rend
+           `{ lignes, total, total_designations, pages }`, et `lignes` n'est
+           qu'**une page**. C'est la nomenclature figée d'ADR-001 — 1,9 Mo,
+           **9 550 lignes, 1 027 désignations**. Sept contrôles ont rougi sur une
+           table que je croyais déserte. *Une sonde qui lit la mauvaise clé rend
+           zéro, et zéro ressemble à une réponse.*
+
+           **2. Et celle-là était grave.** Ma boucle de nettoyage prenait **le
+           premier bouton de suppression de la page** : elle a effacé six lignes
+           de la nomenclature qui ne m'appartenaient pas. Le bac est jetable et
+           rien de réel n'a été touché — mais le motif est inacceptable. *Une
+           boucle qui efface « le premier » efface ce que le hasard a mis
+           premier.* Elle ne retire plus que des lignes dont elle connaît
+           l'identifiant, et le compte total doit revenir **exactement** à son
+           départ.
+
+           Ce que les contrôles tiennent, une fois la table lue pour ce qu'elle
+           est : la pagination compte les **désignations**, non les lignes — « une
+           page ne doit pas couper un groupe en deux » —, l'enregistrement
+           **ouvre la désignation touchée** pour que « l'agent voie ce qu'il vient
+           d'écrire », et le bouton d'ajout d'un lot ouvre le formulaire avec
+           **sa désignation déjà portée**. Trois propriétés qu'aucun compte de
+           lignes ne montrerait.
+
+           ── Et un télescopage de noms, dans mon propre registre ──
+
+           Ma phase d'épreuve s'appelait « pages », et son relevé **écrasait le
+           champ `r.pages`** où j'avais mis le nombre de pages. Le contrôle
+           lisait alors `{…} > 1` — faux — sur une pagination qui marche. *Un
+           registre partagé entre les phases et leurs noms n'admet pas deux fois
+           le même nom.* Le champ s'appelle `nbPages`.
+
+           ── Un refus déclaré, et le mécanisme porté lui aussi ──
+
+           Le 409 du bigramme est un refus que la ronde **provoque exprès**. RAMP
+           reçoit donc le `REFUS_ATTENDUS` de SURV (n° 5.f.26) : déclaré par
+           code, méthode et chemin, avec le contrôle qui l'exige. Déclarer n'est
+           pas filtrer — la déclaration nomme ce qu'on attend et laisse rougir
+           tout le reste.
+
+           ── Ce qui reste, et ce que cela vaut ──
+
+           Quatre familles du même fichier : aéroports, paramètres et leurs
+           groupes, dépôts, contacts — **vingt-quatre noms** que ce même patron
+           couvrira, sans rien inventer. Puis PR (85 non exercés), CARE (78) et
+           PLAN (72), où le motif est le même.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

@@ -7248,6 +7248,100 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            prochaine. *Un instrument posé avant la panne vaut dix hypothèses
            posées après.*
 
+       5.f.37 [x] **RAMP — la pièce jointe, la lettre, la table des fiches, et
+           trois noms hors de portée du harnais** — fait le 22 octobre 2026.
+
+           **Cent un contrôles sur RAMP ; 139 gestes sur 208 (67 %).**
+           `ramp-poi-actions.js` est **couvert en entier — 10 noms sur 10** ;
+           `ramp-poi.js` est à **34 sur 35**. Campagne : 1 312.
+
+           ── Trois familles, et l'ordre que le code impose ──
+
+           Les **pièces jointes** passent avant tout : elles ne se modifient
+           plus dès que la fiche est transmise, et la transmission s'acquiert
+           dès que les deux communications sont parties. L'ordre n'est donc pas
+           choisi, il est lu dans le code.
+
+           Un vrai fichier, remis par un porte-données. Deux refus se mesurent
+           **sans quitter la page** — sans fichier, puis format non accepté :
+           l'écran redit ce que le serveur accepte, et c'est cette garde qu'on
+           éprouve, non le serveur. Puis la pièce est reprise **sans nouveau
+           fichier** — le serveur garde celui qu'il a — et retirée.
+
+           La **lettre de l'exploitant** est réécrite puis **rétablie au
+           modèle** : l'effet se mesure en comparant le texte rendu à celui
+           relevé avant d'y toucher. Son envoi se **consigne** : le harnais n'a
+           pas de serveur de messagerie, `email.queue` rend « queued », et la
+           route inscrit `envoye: false`. *C'est ce que le contrôle exige* — la
+           communication écrite est une obligation du programme, et la fiche en
+           garde trace même quand le courriel ne part pas. Une seule des deux
+           lettres part : les deux marqueraient la fiche transmise.
+
+           La **table des fiches** n'a pas d'entrée de menu — elle s'ouvre par
+           le bouton « Traiter » de la table des inspections, où le geste
+           précédent venait de déposer la ronde. Et la ronde finit par
+           **supprimer sa fiche avec le bouton de la ligne** : le ménage passe
+           par le chemin de l'agent, et le `fetch` brut a disparu.
+
+           ── Ce qui reste, et pourquoi il reste ──
+
+           **Trois noms sont hors de portée du harnais**, et c'est dit :
+           `rampPoiOuvrirPartage`, `rampPoiPartager`, `rampPoiRappelerPartage`.
+           Le partage n'est offert que si une notification est **réellement
+           partie** — « une lettre consignée après un échec d'envoi n'est encore
+           chez personne », écrit le module —, et le bouton reste désarmé sans
+           SMTP. Les exercer demande un collecteur de courriel local dans le
+           harnais : *un contrôle qui forcerait `envoye: true` en base
+           mesurerait un état que l'écran ne sait pas produire.* **Question pour
+           la maîtrise d'ouvrage**, portée au rapport.
+
+           ── Cinq fautes, et toutes de la même famille ──
+
+           Celle-ci n'est pas une bonne journée, et il vaut mieux l'écrire.
+
+           1. **Un sélecteur qui désignait deux boutons.**
+              `[onclick*="rampOuvrirPiece("]` vise la modification *et*
+              l'ajout — `rampOuvrirPiece()` contient la même chaîne —, et
+              l'ajout vient premier dans le document. Je rouvrais un formulaire
+              vide. *Un sélecteur qui désigne deux boutons en désigne un au
+              hasard.*
+           2. **Le marqueur de vide compté comme une ligne.** La table pose un
+              rang « aucune fiche » quand elle est vide : « rien trouvé »
+              rendait **1**. C'est exactement la faute des dépôts de 5.f.32,
+              refaite — et je l'avais consignée.
+           3. **Une facette éprouvée avec une seule valeur.** Les listes de
+              filtres n'offrent que les valeurs présentes ; avec une seule fiche
+              validée, « brouillon » n'est pas une option, et `select.value`
+              rend alors la chaîne vide — donc *aucun filtre*, donc la même
+              ligne. Je lisais cela comme « le filtre ne restreint pas ». La
+              ronde sème désormais **une seconde fiche** et relève les
+              **identifiants**, non le compte : *deux lignes de chaque côté se
+              dirait aussi d'un filtre qui ne filtre rien.*
+           4. **La liste de l'écran ne se recharge pas d'elle-même.** Un drapeau
+              dispense `rampRenderPage` de redemander les fiches. La semée
+              existait en base et pas dans la table.
+           5. **« La première ligne » était la voisine**, deux fois — pour
+              rouvrir la fiche et pour la supprimer. La leçon de la nomenclature
+              de 5.f.31, qui avait coûté six lignes effacées, s'applique aussi
+              quand on ne casse rien : on vise par l'identifiant qu'on connaît.
+
+           Et une sixième, d'une autre sorte : **un geste conditionnel n'est
+           exercé que si sa condition se présente.** Le tour précédent ne
+           cliquait la bascule des commentaires *que si* le volet était replié ;
+           il ne l'était pas, et `rampPoiBasculerCommentaires` est **sorti** de
+           la couverture qu'il avait. Le relevé l'a dit. Elle se joue maintenant
+           dans les deux sens, toujours — ce que la règle du module demandait de
+           toute façon.
+
+           ── Deux contre-essais ──
+
+           Quatre défauts en un tir — intitulé de pièce non transmis, modèle de
+           lettre non rétabli, recherche sans effet, filtre sans effet :
+           **quatre contrôles rouges**, chacun le sien. Puis les deux
+           suppressions neutralisées — pièce et fiche : **quatre rouges**, dont
+           celui du ménage, qui a dit « une fiche reste ». Attribution nette
+           dans les deux cas.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

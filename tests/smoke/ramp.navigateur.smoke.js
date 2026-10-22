@@ -3240,6 +3240,15 @@ module.exports = async function rampNavigateurSmoke(port) {
       const a = (ms) => new Promise((x) => setTimeout(x, ms));
       const o = {};
       const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
       const pois = async () => ((await jget('/poi')).poi || []);
       const oui = async () => {
         await a(900);
@@ -3520,6 +3529,112 @@ module.exports = async function rampNavigateurSmoke(port) {
         equipe: (fiche.equipe || []).length,
       };
 
+      // ── Les pièces jointes : les preuves recueillies sur l'aire ──
+      //
+      // Un vrai fichier, remis par un porte-données — l'entrée `#rampPieceFichier`
+      // n'est pas cachée, mais `uploadFile` de Puppeteer veut un chemin sur le
+      // disque, et le fichier n'a pas besoin d'y être.
+      //
+      // Deux refus se mesurent **sans quitter la page** : l'écran redit ce que
+      // le serveur accepte, pour prévenir avant l'envoi. Les éprouver ici ne
+      // mesure donc pas le serveur, mais la garde de l'écran — et c'est elle
+      // qui épargne un aller-retour.
+      //
+      // Ordre imposé par le code, non choisi : les pièces ne se modifient plus
+      // dès que la fiche est transmise, et la transmission s'acquiert quand les
+      // deux communications sont parties. Elles passent donc **avant**.
+      o.pieces = await (async () => {
+        const d = {};
+        const M = () => document.getElementById('rampModalRoot');
+        const err = () => (document.getElementById('rampPieceErreur') || {}).textContent || '';
+        const champ = (id, v) => {
+          const e = document.getElementById(id);
+          if (e) e.value = v;
+        };
+        const fichier = (nom, type) => {
+          const dt = new DataTransfer();
+          dt.items.add(new File(['Preuve recueillie par la ronde.'], nom, { type }));
+          const e = document.getElementById('rampPieceFichier');
+          if (!e) return false;
+          e.files = dt.files;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const enBase = async () => (((await jget(`/poi/${o.id}/pieces`)) || {}).pieces || []);
+
+        d.ajouter = !!document.querySelector('[onclick^="rampOuvrirPiece()"]');
+        document.querySelector('[onclick^="rampOuvrirPiece()"]')?.click();
+        await a(2200);
+        d.modale = M() ? M().innerHTML.length > 500 : false;
+
+        // 1. Sans fichier : l'écran refuse, et rien ne part.
+        champ('rampPieceIntitule', 'Photo du train avant');
+        document.querySelector('[onclick^="rampEnregistrerPiece"]')?.click();
+        await a(1800);
+        d.refusSansFichier = err();
+        d.apresRefus = (await enBase()).length;
+
+        // 2. Un format que l'écran n'accepte pas.
+        d.poseExe = fichier('preuve.exe', 'application/octet-stream');
+        document.querySelector('[onclick^="rampEnregistrerPiece"]')?.click();
+        await a(1800);
+        d.refusFormat = err();
+        d.apresFormat = (await enBase()).length;
+
+        // 3. Un fichier accepté : la pièce part, et le serveur la porte.
+        fichier('preuve.txt', 'text/plain');
+        champ('rampPieceCommentaire', 'Prise au point de stationnement.');
+        document.querySelector('[onclick^="rampEnregistrerPiece"]')?.click();
+        await a(4000);
+        d.modaleFermee = M() ? M().innerHTML.length === 0 : null;
+        const apres = await enBase();
+        d.deposees = apres.length;
+        const pj = apres[0] || {};
+        d.intitule = pj.intitule;
+        d.commentaire = pj.commentaire;
+        d.nomOrigine = pj.nom_origine;
+        d.taille = pj.taille;
+        // Les vraies lignes, non le rang « aucune pièce » : la table en pose un
+        // quand elle est vide, et `tbody tr` le compterait (n° 5.f.32).
+        const rangsPieces = () => document
+          .querySelectorAll('#rampPoiPieces tbody tr [onclick*="rampSupprimerPiece("]').length;
+        d.rangs = rangsPieces();
+
+        // 4. La même pièce rouverte pour modification : l'intitulé change,
+        //    **sans** nouveau fichier — le serveur garde celui qu'il a.
+        //
+        // `[onclick*="rampOuvrirPiece("]` désigne **deux** boutons : « Ajouter
+        // une pièce » porte `rampOuvrirPiece()` et la contient. Le premier dans
+        // l'ordre du document est l'ajout, qui vit dans la barre d'actions
+        // au-dessus de la table : mon premier essai rouvrait donc un formulaire
+        // vide. On vise celui qui porte un **identifiant**, c'est-à-dire une
+        // parenthèse suivie d'un guillemet. *Un sélecteur qui désigne deux
+        // boutons en désigne un au hasard.*
+        const editer = [...document.querySelectorAll('[onclick*="rampOuvrirPiece("]')]
+          .find((e) => /rampOuvrirPiece\(\s*"/.test(e.getAttribute('onclick') || ''));
+        d.boutonEditer = !!editer;
+        editer?.click();
+        await a(2200);
+        d.intituleRepris = (document.getElementById('rampPieceIntitule') || {}).value || '';
+        champ('rampPieceIntitule', 'Photo du train avant — reprise');
+        document.querySelector('[onclick^="rampEnregistrerPiece"]')?.click();
+        await a(4000);
+        const apresMaj = await enBase();
+        d.apresMaj = apresMaj.length;
+        d.intituleMaj = (apresMaj[0] || {}).intitule;
+        d.fichierGarde = (apresMaj[0] || {}).nom_origine;
+
+        // 5. Et elle se retire, sur confirmation du socle.
+        const suppr = document.querySelector('[onclick*="rampSupprimerPiece("]');
+        d.boutonSupprimer = !!suppr;
+        suppr?.click();
+        d.suppressionConfirmee = await oui();
+        await a(1500);
+        d.restantes = (await enBase()).length;
+        d.rangsApres = rangsPieces();
+        return d;
+      })();
+
       // ── Soumission ──
       document.querySelector('[onclick^="rampSoumettrePoi"]')?.click();
       o.soumissionConfirmee = await oui();
@@ -3569,12 +3684,27 @@ module.exports = async function rampNavigateurSmoke(port) {
         zones: 0, enregistrer: null, entrees: 0 };
       const cEtat = () => ((window.RAMP_STATE || {}).poiEnCours || {});
       o.commentaires.modifiables = !!cEtat().commentaires_modifiables;
-      o.commentaires.bascule = !!document.querySelector('[onclick^="rampPoiBasculerCommentaires"]');
-      if ((window.RAMP_STATE || {}).poiCommentairesReplies) {
-        document.querySelector('[onclick^="rampPoiBasculerCommentaires"]')?.click();
-        await a(1800);
-      }
-      o.commentaires.replie = !!(window.RAMP_STATE || {}).poiCommentairesReplies;
+      // ── La bascule du volet, dans les deux sens, puis dépliée ──
+      //
+      // Le tour précédent ne la cliquait **que si** le volet était replié. Il
+      // ne l'était pas, le clic ne partait jamais, et le relevé a dit le reste :
+      // `rampPoiBasculerCommentaires` est **sorti** de la couverture qu'il
+      // avait. *Un geste conditionnel n'est exercé que si sa condition se
+      // présente, et rien ne garantit qu'elle se présente.* On la joue donc
+      // toujours, dans les deux sens — ce que la règle du module demandait de
+      // toute façon —, et l'on s'assure de finir déplié pour la suite.
+      const basculeCom = () => document.querySelector('[onclick^="rampPoiBasculerCommentaires"]');
+      const replie = () => !!(window.RAMP_STATE || {}).poiCommentairesReplies;
+      o.commentaires.bascule = !!basculeCom();
+      o.commentaires.replieAvant = replie();
+      basculeCom()?.click();
+      await a(1800);
+      o.commentaires.replieApres = replie();
+      basculeCom()?.click();
+      await a(1800);
+      o.commentaires.replieRendu = replie();
+      if (replie()) { basculeCom()?.click(); await a(1800); }
+      o.commentaires.replie = replie();
       const btnAjouter = () => document.querySelector('[onclick^="rampPoiAjouterCommentaire"]');
       o.commentaires.ajouter = !!btnAjouter();
       btnAjouter()?.click();
@@ -3712,6 +3842,54 @@ module.exports = async function rampNavigateurSmoke(port) {
         await a(2000);
         d.ouvertRendu = volet() ? volet().getAttribute('aria-expanded') : null;
 
+        // ── La lettre de communication ──
+        //
+        // L'étape de transmission porte deux lettres, à l'exploitant et à
+        // l'autorité qui le surveille, préremplies d'un modèle. La ronde en
+        // modifie une, puis **rétablit le modèle** — c'est l'effet de
+        // `rampPoiReinitialiserLettre`, et il se mesure en comparant le texte
+        // rendu à celui qu'on avait relevé avant d'y toucher.
+        //
+        // Puis elle l'envoie. **Le harnais n'a pas de serveur de messagerie** :
+        // `email.queue` rend alors « queued », et la route inscrit la
+        // communication avec `envoye: false` — *consignée, non envoyée*. C'est
+        // ce que le contrôle exige, et non l'inverse : la communication écrite
+        // est une obligation du programme, et la fiche en garde trace même
+        // quand le courriel ne part pas. Une seule des deux lettres part : les
+        // deux marqueraient la fiche transmise, et une fiche transmise ne se
+        // modifie plus.
+        const objet = () => document.getElementById('rampEnvoi_exploitant_objet');
+        const message = () => document.getElementById('rampEnvoi_exploitant_msg');
+        d.lettre = !!objet() && !!message();
+        d.objetModele = objet() ? objet().value : '';
+        d.messageLong = message() ? message().value.length : 0;
+        if (objet()) objet().value = 'Objet réécrit par la ronde';
+        if (message()) message().value = 'Texte réécrit par la ronde.';
+        await a(800);
+        const retablir = document.querySelector('[onclick*="rampPoiReinitialiserLettre("]');
+        d.boutonRetablir = !!retablir;
+        retablir?.click();
+        await a(1500);
+        d.objetRetabli = objet() ? objet().value : '';
+        d.modeleRendu = d.objetRetabli === d.objetModele && d.objetModele.length > 0;
+        const dest = document.getElementById('rampEnvoi_exploitant_dest');
+        d.champDestinataire = !!dest;
+        if (dest) dest.value = 'ronde.ramp@example.test';
+        const envoyer = document.querySelector('[onclick*="rampEnvoyerCommunication("]');
+        d.boutonEnvoyer = !!envoyer;
+        envoyer?.click();
+        await a(5000);
+        const apresEnvoi = o.id ? await jget(`/poi/${o.id}`) : {};
+        const coms = apresEnvoi.communications || [];
+        d.communications = coms.length;
+        d.cible = (coms[0] || {}).cible;
+        d.destinataire = (coms[0] || {}).destinataire;
+        d.objetEnBase = (coms[0] || {}).objet;
+        // Consignée et non envoyée : le harnais n'a pas de SMTP.
+        d.envoye = (coms[0] || {}).envoye;
+        // Une seule des deux cibles : la fiche n'est donc pas transmise.
+        d.transmise = !!apresEnvoi.transmis_le;
+
         // ── Et le dernier geste de la fiche : voir l'inspection qu'elle a produite ──
         //
         // Il ferme le volet, **oublie la fiche** et porte la recherche des
@@ -3728,6 +3906,159 @@ module.exports = async function rampNavigateurSmoke(port) {
         return d;
       })();
 
+      // ── La table des fiches, et la suppression par le geste de l'écran ──
+      //
+      // Cette page n'a **pas d'entrée de menu** : elle s'ouvre par le bouton
+      // « Traiter » de la table des inspections, où le geste précédent vient
+      // justement de nous déposer. Six gestes y vivent : deux listes de
+      // filtres, la recherche, la remise à zéro, l'ouverture d'une fiche, et sa
+      // suppression.
+      //
+      // La ronde finit par **supprimer sa fiche avec le bouton de la table**,
+      // et non par un `fetch` brut comme auparavant : le ménage passe ainsi par
+      // le chemin que l'agent emprunte, et un geste de plus est prouvé.
+      o.table = await (async () => {
+        const d = {};
+        const F = () => ((window.RAMP_STATE || {}).poi || {}).filtres || {};
+        // ── Les vraies lignes, et elles seules ──
+        //
+        // La table pose un rang « aucune fiche » quand elle est vide :
+        // `tbody tr` le comptait, et « rien trouvé » rendait **1**. C'est la
+        // faute des dépôts de 5.f.32, refaite ici — *un marqueur de vide est
+        // une ligne, et il passe un contrôle de comptage sans rien contenir.*
+        // On ne compte donc que les rangs dépliants, et l'on relève **quelles**
+        // fiches sont là : un compte égal ne dit pas que ce sont les mêmes.
+        const rangsPoi = () => [...document.querySelectorAll('#rampPoiZone tr.ramp-depliant')];
+        const rangs = () => rangsPoi().length;
+        const ids = () => rangsPoi()
+          .map((tr) => (/rampOuvrirPoi\(\s*"([^"]+)"/.exec(tr.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean);
+        const listes = () => [...document.querySelectorAll('[onchange*="rampPoiSetFiltre("]')];
+        const parCle = (nom) => listes()
+          .find((e) => (e.getAttribute('onchange') || '').includes(`'${nom}'`));
+        const choisir = async (el, v) => {
+          if (!el) return;
+          el.value = v;
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(1800);
+        };
+
+        // ── Une seconde fiche, pour que le filtre puisse exclure ──
+        //
+        // Les listes de filtres sont des **facettes** : elles n'offrent que les
+        // valeurs présentes. Avec une seule fiche validée, « brouillon » n'est
+        // pas une option — et `select.value = 'brouillon'` sur une liste qui ne
+        // la porte pas rend la chaîne vide, donc *aucun filtre*, donc la même
+        // ligne. Mon premier essai lisait cela comme « le filtre ne restreint
+        // pas ». *Une facette ne s'éprouve qu'avec deux valeurs à départager.*
+        const semee = await env('/poi', 'POST', {
+          entete: { etat_inspection: o.enregistre.etat, exploitant: 'TABLE Air',
+            immatriculation: 'TT-TABLE', aeronef: 'B737-800' },
+        });
+        d.semis = semee.statut;
+        d.autreId = (semee.corps || {}).id;
+        // ── La liste de l'écran ne se recharge pas d'elle-même ──
+        //
+        // `rampRenderPage` ne demande les fiches qu'**une fois** : un drapeau
+        // `poi.demande` l'en dispense ensuite. La fiche semée existait donc en
+        // base et **pas dans la table** — « une seule ligne », et les deux
+        // filtres rendaient la même. On redemande la liste explicitement.
+        await window.rampChargerPoi();
+        await a(2000);
+        d.listeEnMemoire = (((window.RAMP_STATE || {}).poi || {}).liste || []).length;
+
+        document.querySelector('[onclick*="rampNavigateTo(\'inspection\')"]')?.click();
+        await a(3500);
+        d.page = (window.RAMP_STATE || {}).currentPage;
+        d.filtres = listes().length;
+        d.tous = rangs();
+
+        // Le statut départage les deux : la validée est la nôtre, le brouillon
+        // est la semée. Ce sont les **identifiants** qu'on relève, non le compte.
+        await choisir(parCle('statut'), 'validee');
+        d.statutRetenu = F().statut;
+        d.surValidee = ids();
+        await choisir(parCle('statut'), 'brouillon');
+        d.surBrouillon = ids();
+        await choisir(parCle('statut'), '');
+
+        // L'État d'inspection : les deux fiches le portent, aucune n'est écartée.
+        const etat = o.enregistre.etat;
+        await choisir(parCle('etat'), etat);
+        d.etatRetenu = F().etat;
+        d.surEtat = rangs();
+
+        // La recherche, sur la référence que le serveur a donnée.
+        const champ = document.querySelector('#rampPoiFiltres .ramp-recherche-boite input');
+        d.champ = !!champ;
+        if (champ) {
+          champ.value = o.enregistre.reference;
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(1800);
+        }
+        d.rechercheRetenue = F().recherche;
+        d.surRecherche = rangs();
+        if (champ) {
+          champ.value = 'zzz-aucune-fiche';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(1800);
+        }
+        d.surRien = rangs();
+
+        // La remise à zéro rend les trois critères, et le champ avec eux.
+        document.querySelector('[onclick^="rampPoiReset"]')?.click();
+        await a(1800);
+        d.apresReset = Object.values(F()).filter(Boolean).length;
+        const champRendu = document.querySelector('#rampPoiFiltres .ramp-recherche-boite input');
+        d.champVide = champRendu ? champRendu.value === '' : null;
+        d.rangsRendus = rangs();
+
+        // La fiche se rouvre depuis sa ligne, puis se referme.
+        // Notre ligne, désignée par l'identifiant qu'elle porte : la table en
+        // compte deux, et « la première » était la semée — troisième fois dans
+        // cette ronde qu'un sélecteur générique désigne le voisin.
+        const ligne = rangsPoi()
+          .find((tr) => (tr.getAttribute('onclick') || '').includes(o.id));
+        d.ligne = !!ligne;
+        ligne?.click();
+        await a(3500);
+        d.ouverte = ((window.RAMP_STATE || {}).poiEnCours || {}).id === o.id;
+        document.querySelector('[onclick^="rampFermerPoi"]')?.click();
+        await a(2000);
+        d.refermee = !document.querySelector('.ramp-slider-body');
+
+        // Une fiche neuve s'ouvre sans identifiant, et se referme sans rien laisser.
+        document.querySelector('[onclick^="rampNouveauPoi"]')?.click();
+        await a(3000);
+        const neuve = (window.RAMP_STATE || {}).poiEnCours || {};
+        d.neuveOuverte = !!document.querySelector('.ramp-slider-body');
+        d.neuveSansId = neuve.id === '';
+        document.querySelector('[onclick^="rampFermerPoi"]')?.click();
+        await a(2000);
+        d.apresNeuve = (await pois()).length;
+
+        // Et la suppression, par le bouton de la ligne — `*=`, il porte
+        // `event.stopPropagation();` pour ne pas ouvrir la fiche en passant.
+        // Le bouton de **notre** ligne, désigné par l'identifiant qu'il porte :
+        // il y en a deux à l'écran, et « le premier venu » aurait effacé la
+        // semée — la leçon de la nomenclature de 5.f.31.
+        const suppr = [...document.querySelectorAll('[onclick*="rampSupprimerPoi("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.id));
+        d.boutonSupprimer = !!suppr;
+        suppr?.click();
+        d.suppressionConfirmee = await oui();
+        await a(2000);
+        d.restantes = (await pois()).length;
+        d.ficheRestante = (await pois()).some((p) => p.id === o.id);
+        // La semée s'en va par la route : elle n'est là que pour la facette.
+        if (d.autreId) {
+          const rep = await env(`/poi/${d.autreId}`, 'DELETE');
+          d.semeeEffacee = rep.statut;
+        }
+        d.restantesFin = (await pois()).length;
+        return d;
+      })();
+
       // ── Le ménage, et ce qu'il a fallu mesurer pour l'écrire ──
       //
       // Supprimer la fiche validée rend **200** — elle reste donc réversible
@@ -3736,11 +4067,10 @@ module.exports = async function rampNavigateurSmoke(port) {
       // avec son brouillon. La ronde doit donc effacer les deux, sans quoi elle
       // laisserait une inspection dans le bac — et le contrôle suivant
       // hériterait d'un état qu'il n'a pas créé.
-      const dFiche = await fetch(`${api}/poi/${o.id}`, {
-        method: 'DELETE', credentials: 'same-origin', headers: { 'X-OASIS-Request': '1' },
-      });
-      o.suppressionFiche = dFiche.status;
-      o.ficheRestante = (await pois()).some((p) => p.id === o.id);
+      // La fiche est déjà partie : **le bouton de la table l'a supprimée**
+      // (ronde de la table, ci-dessus). Il n'y a plus de `fetch` brut ici, et
+      // c'est un geste de plus qui est prouvé au lieu d'être contourné.
+      o.ficheRestante = o.table.ficheRestante;
       const survivante = ((await jget('/inspections')) || [])[0];
       o.inspectionSurvit = !!survivante;
       if (survivante) {
@@ -3782,7 +4112,11 @@ module.exports = async function rampNavigateurSmoke(port) {
       (ronde.gestesApresSoumission || []).join(', '));
     verifier('un commentaire de validation s’ajoute, se cible, se retire, et le serveur le porte',
       !!ronde.commentaires && ronde.commentaires.modifiables === true
-      && ronde.commentaires.bascule === true && ronde.commentaires.replie === false
+      && ronde.commentaires.bascule === true
+      // La bascule joue dans les deux sens, et rend son état de départ.
+      && ronde.commentaires.replieApres !== ronde.commentaires.replieAvant
+      && ronde.commentaires.replieRendu === ronde.commentaires.replieAvant
+      && ronde.commentaires.replie === false
       && ronde.commentaires.ajouter === true && ronde.commentaires.cible === true
       && ronde.commentaires.zones >= 1 && ronde.commentaires.saisie === 1
       // Ajouté puis retiré : la saisie revient à un seul commentaire.
@@ -3805,10 +4139,10 @@ module.exports = async function rampNavigateurSmoke(port) {
       JSON.stringify({ resoumis: ronde.statutResoumis, valide: ronde.statutValide,
         inspections: [ronde.inspectionsAvant, ronde.inspectionsApres] }));
     verifier('la fiche validée reste supprimable, mais son inspection lui survit',
-      ronde.suppressionFiche === 200 && ronde.ficheRestante === false
+      ronde.table.suppressionConfirmee === true && ronde.ficheRestante === false
       && ronde.inspectionSurvit === true,
-      JSON.stringify({ suppression: ronde.suppressionFiche, restante: ronde.ficheRestante,
-        inspectionSurvit: ronde.inspectionSurvit }));
+      JSON.stringify({ confirmee: ronde.table.suppressionConfirmee,
+        restante: ronde.ficheRestante, inspectionSurvit: ronde.inspectionSurvit }));
     verifier('un constat s’ouvre sur l’item contrôlé, se retire, se rouvre, et porte ses cinq champs',
       !!ronde.constat && !!ronde.constat.code && ronde.constat.bascule === true
       && ronde.constat.ouvert === true && ronde.constat.rangConstat === 1
@@ -3885,6 +4219,86 @@ module.exports = async function rampNavigateurSmoke(port) {
       JSON.stringify({ lien: ronde.circuit.lien, ferme: ronde.circuit.voletFerme,
         oubliee: ronde.circuit.ficheOubliee, recherche: ronde.circuit.recherche,
         rangs: ronde.circuit.rangsVus }));
+    verifier('l’écran refuse une pièce sans fichier, puis un format qu’il n’accepte pas — et rien ne part chez le serveur',
+      !!ronde.pieces && ronde.pieces.ajouter === true && ronde.pieces.modale === true
+      && /fichier/i.test(String(ronde.pieces.refusSansFichier || ''))
+      && ronde.pieces.apresRefus === 0
+      && ronde.pieces.poseExe === true
+      && /format/i.test(String(ronde.pieces.refusFormat || ''))
+      && ronde.pieces.apresFormat === 0,
+      JSON.stringify({ refus1: ronde.pieces.refusSansFichier, apres1: ronde.pieces.apresRefus,
+        refus2: ronde.pieces.refusFormat, apres2: ronde.pieces.apresFormat }));
+    verifier('une pièce jointe se verse pour de vrai, le serveur la porte avec son nom d’origine et sa taille, se reprend sans nouveau fichier, et se retire',
+      ronde.pieces.modaleFermee === true && ronde.pieces.deposees === 1
+      && ronde.pieces.intitule === 'Photo du train avant'
+      && /stationnement/.test(String(ronde.pieces.commentaire || ''))
+      && ronde.pieces.nomOrigine === 'preuve.txt' && ronde.pieces.taille > 0
+      && ronde.pieces.rangs === 1
+      // Rouverte, la fenêtre porte ce qui a été enregistré ; l'intitulé change
+      // et **le fichier reste celui du serveur**.
+      && ronde.pieces.boutonEditer === true
+      && ronde.pieces.intituleRepris === 'Photo du train avant'
+      && ronde.pieces.apresMaj === 1
+      && ronde.pieces.intituleMaj === 'Photo du train avant — reprise'
+      && ronde.pieces.fichierGarde === 'preuve.txt'
+      && ronde.pieces.boutonSupprimer === true
+      && ronde.pieces.suppressionConfirmee === true
+      && ronde.pieces.restantes === 0 && ronde.pieces.rangsApres === 0,
+      JSON.stringify(ronde.pieces).slice(0, 640));
+    verifier('la lettre de l’exploitant se réécrit puis se rétablit au modèle, et son envoi se consigne — sans serveur de messagerie, la trace reste',
+      !!ronde.circuit && ronde.circuit.lettre === true
+      && ronde.circuit.messageLong > 100 && ronde.circuit.boutonRetablir === true
+      // Le modèle rendu à l'identique : c'est l'effet du rétablissement.
+      && ronde.circuit.modeleRendu === true
+      && ronde.circuit.champDestinataire === true && ronde.circuit.boutonEnvoyer === true
+      && ronde.circuit.communications === 1
+      && ronde.circuit.cible === 'exploitant'
+      && ronde.circuit.destinataire === 'ronde.ramp@example.test'
+      && ronde.circuit.objetEnBase === ronde.circuit.objetModele
+      // Consignée, non envoyée : le harnais n'a pas de SMTP, et la route le dit.
+      && ronde.circuit.envoye === false
+      // Une seule des deux cibles : la fiche n'est donc pas encore transmise.
+      && ronde.circuit.transmise === false,
+      JSON.stringify({ lettre: ronde.circuit.lettre, modele: ronde.circuit.modeleRendu,
+        objet: ronde.circuit.objetModele, coms: ronde.circuit.communications,
+        cible: ronde.circuit.cible, envoye: ronde.circuit.envoye,
+        transmise: ronde.circuit.transmise }).slice(0, 400));
+    verifier('la table des fiches, qui n’a pas d’entrée de menu, s’ouvre par « Traiter » et ses deux filtres restreignent dans les deux sens',
+      !!ronde.table && ronde.table.page === 'inspection'
+      && ronde.table.filtres === 2 && ronde.table.tous >= 1
+      && ronde.table.semis === 201 && !!ronde.table.autreId
+      && ronde.table.listeEnMemoire === 2 && ronde.table.tous === 2
+      && ronde.table.statutRetenu === 'validee'
+      // Les identifiants, non le compte : « deux lignes de chaque côté » se
+      // dirait aussi d'un filtre qui ne filtre rien.
+      && JSON.stringify(ronde.table.surValidee || []) === JSON.stringify([ronde.id])
+      && JSON.stringify(ronde.table.surBrouillon || []) === JSON.stringify([ronde.table.autreId])
+      && ronde.table.etatRetenu === ronde.enregistre.etat && ronde.table.surEtat === 2,
+      JSON.stringify({ semis: ronde.table.semis, autre: ronde.table.autreId,
+        memoire: ronde.table.listeEnMemoire, page: ronde.table.page,
+        filtres: ronde.table.filtres, tous: ronde.table.tous,
+        validee: ronde.table.surValidee, brouillon: ronde.table.surBrouillon,
+        etat: ronde.table.surEtat }));
+    verifier('la recherche de la table trouve la fiche par sa référence, ne trouve rien sur un terme absent, et la remise à zéro rend les trois critères et le champ',
+      ronde.table.champ === true
+      && ronde.table.rechercheRetenue === ronde.enregistre.reference
+      && ronde.table.surRecherche === 1 && ronde.table.surRien === 0
+      && ronde.table.apresReset === 0 && ronde.table.champVide === true
+      && ronde.table.rangsRendus === ronde.table.tous,
+      JSON.stringify({ retenue: ronde.table.rechercheRetenue, trouve: ronde.table.surRecherche,
+        rien: ronde.table.surRien, reset: ronde.table.apresReset,
+        champVide: ronde.table.champVide, rendus: ronde.table.rangsRendus }));
+    verifier('une fiche se rouvre depuis sa ligne et se referme, une fiche neuve s’ouvre sans identifiant et ne laisse rien, et le bouton de la ligne supprime sur confirmation',
+      ronde.table.ligne === true && ronde.table.ouverte === true
+      && ronde.table.refermee === true
+      && ronde.table.neuveOuverte === true && ronde.table.neuveSansId === true
+      // Une fiche neuve refermée sans enregistrement ne crée rien : les deux
+      // fiches de la ronde, et pas une de plus.
+      && ronde.table.apresNeuve === 2
+      && ronde.table.boutonSupprimer === true
+      && ronde.table.restantes === 1 && ronde.table.semeeEffacee === 200
+      && ronde.table.restantesFin === 0,
+      JSON.stringify(ronde.table).slice(0, 420));
     verifier('la ronde de RAMP ne laisse rien : ni fiche, ni inspection',
       ronde.poiFin === 0 && ronde.inspectionsFin === 0
       && ronde.suppressionInspection === 200,

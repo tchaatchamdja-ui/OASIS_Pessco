@@ -2,7 +2,7 @@
  "releve": "2026-10-22",
  "gestesNommes": 208,
  "occurrences": 363,
- "exerces": 127,
+ "exerces": 139,
  "indecidables": 1,
  "gestes": [
   {
@@ -2029,7 +2029,7 @@
    "evenement": "click",
    "nom": "rampOuvrirPiece",
    "source": "rampOuvrirPiece(${_rArg(pj.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2038,7 +2038,7 @@
    "evenement": "click",
    "nom": "rampSupprimerPiece",
    "source": "rampSupprimerPiece(${_rArg(pj.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2047,7 +2047,7 @@
    "evenement": "click",
    "nom": "rampOuvrirPiece",
    "source": "rampOuvrirPiece()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2092,7 +2092,7 @@
    "evenement": "click",
    "nom": "rampEnregistrerPiece",
    "source": "rampEnregistrerPiece()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi-actions.js",
@@ -2254,7 +2254,7 @@
    "evenement": "click",
    "nom": "rampOuvrirPoi",
    "source": "rampOuvrirPoi(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2263,7 +2263,7 @@
    "evenement": "click",
    "nom": "rampOuvrirPoi",
    "source": "event.stopPropagation();rampOuvrirPoi(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2272,7 +2272,7 @@
    "evenement": "click",
    "nom": "rampSupprimerPoi",
    "source": "event.stopPropagation();rampSupprimerPoi(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2281,7 +2281,7 @@
    "evenement": "click",
    "nom": "rampNouveauPoi",
    "source": "rampNouveauPoi()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2299,7 +2299,7 @@
    "evenement": "change",
    "nom": "rampPoiSetFiltre",
    "source": "rampPoiSetFiltre('statut', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2308,7 +2308,7 @@
    "evenement": "change",
    "nom": "rampPoiSetFiltre",
    "source": "rampPoiSetFiltre('etat', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2317,7 +2317,7 @@
    "evenement": "input",
    "nom": "rampPoiChercher",
    "source": "rampPoiChercher(this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2326,7 +2326,7 @@
    "evenement": "click",
    "nom": "rampPoiReset",
    "source": "rampPoiReset()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2551,7 +2551,7 @@
    "evenement": "click",
    "nom": "rampPoiBasculerCommentaires",
    "source": "rampPoiBasculerCommentaires()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2560,7 +2560,7 @@
    "evenement": "click",
    "nom": "rampPoiBasculerCommentaires",
    "source": "rampPoiBasculerCommentaires()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2632,7 +2632,7 @@
    "evenement": "click",
    "nom": "rampPoiReinitialiserLettre",
    "source": "rampPoiReinitialiserLettre(${_rArg(cible)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",
@@ -2641,7 +2641,7 @@
    "evenement": "click",
    "nom": "rampEnvoyerCommunication",
    "source": "rampEnvoyerCommunication(${_rArg(cible)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-poi.js",

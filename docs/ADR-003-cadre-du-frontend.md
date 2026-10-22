@@ -7148,6 +7148,106 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            globale nomme le refus — `400 /api/m/ramp/import/analyser`. *Le
            fichier voyage vraiment ; sans lui, la route le dit.*
 
+       5.f.36 [x] **RAMP — le constat d'une fiche, et un contrôle qui promettait
+           plus qu'il ne mesurait** — fait le 22 octobre 2026.
+
+           **Quatre-vingt-quinze contrôles sur RAMP ; 127 gestes sur 208 (61 %).**
+           `ramp-poi.js` passe de **14 à 25 noms sur 35**, `ramp-poi-actions.js`
+           de **4 à 7 sur 10**. Campagne : 1 306.
+
+           La ronde d'une fiche d'inspection existait depuis 5.f.15 : elle la
+           créait, la soumettait, la renvoyait, la validait, la supprimait. Elle
+           ne touchait pas à ce qu'une fiche **porte**. Ce tour s'y est mis.
+
+           ── Le constat, qui est l'acte de l'inspection ──
+
+           Cocher un item ne dit que « vérifié ». Le **constat** dit ce qui a été
+           trouvé : catégorie, référentiel, action, suivi, description — cinq
+           champs pour un seul nom de geste, `rampPoiEcart`. La ronde l'ouvre,
+           **le retire**, le rouvre, puis le garnit ; et la classe d'action de la
+           fiche, qui se déduit de l'action du constat, est relue avant et après
+           qu'on la choisisse à la main : *la choisir fige le calcul*, et c'est
+           cet effet qu'on mesure, non la présence de la liste.
+
+           Un piège d'écriture, évité par construction : poser la catégorie
+           **redessine les items**. Chaque champ est donc retrouvé par le code de
+           l'item — lu dans le gestionnaire que l'écran a écrit lui-même — avant
+           d'être touché. *Une référence gardée d'un rendu à l'autre vise un nœud
+           détaché, qui accepte tout sans rien changer.*
+
+           ── Et un contrôle qui promettait plus qu'il ne mesurait ──
+
+           **C'est le relevé des gestes qui l'a dit, avant toute assertion.**
+           `rampPoiAjouterCommentaire`, `rampPoiCommentaireChamp` et
+           `rampEnregistrerCommentaires` figuraient « non exercés » — alors que
+           la ronde les cliquait depuis 5.f.15. Le volet des commentaires était
+           **replié**, les boutons n'existaient pas, et `?.click()` sur un
+           élément absent est muet. Le contrôle, lui, s'appelait « le renvoi,
+           **motivé par un commentaire**, ramène la fiche en saisie » et
+           n'assertait que le retour en brouillon.
+
+           *Un titre qui promet plus que son assertion est un contrôle vert sur
+           une phrase.* Le bloc fait maintenant ce qu'il dit — cible choisie,
+           texte saisi, second commentaire ajouté puis **retiré**, enregistrement
+           relu chez le serveur — et il est scindé en deux contrôles, celui du
+           commentaire et celui du renvoi, chacun nommé par ce qu'il mesure.
+
+           ── Trois fois la même faute, dans le même tour ──
+
+           Les deux premières sont consignées en 5.f.35 ; voici la troisième et
+           la quatrième, de la même famille — **poser un geste sur un état
+           supposé.**
+
+           Le volet des commentaires garde son état d'un rendu à l'autre : le
+           recliquer le refermait. J'ai donc relevé l'état au lieu de le
+           supposer — `poiCommentairesReplies`, dont le sens est **inversé**. Et
+           cela n'a pas suffi : le volet appartient à **`rampPoiVueValidation`**,
+           pas à la transmission, et la fiche validée est à l'étape
+           transmission. *Relever l'état d'un élément absent rend « fermé », et
+           ressemble à une mesure.* La ronde passe donc par l'étape de
+           validation, que le circuit a atteinte.
+
+           ── Un commentaire qui annonçait trois volets là où il en reste un ──
+
+           `rampPoiVoletOuvert` était précédé de « Les trois volets de la
+           Transmission s'ouvrent un à un ». Il n'en reste **un** : les deux
+           autres sont devenus des encarts d'envoi, sans bandeau repliable, et le
+           commentaire restait seul à les annoncer. Corrigé — c'est la même règle
+           qu'en 5.f.14, dans l'autre sens.
+
+           ── Trois contre-essais ──
+
+           Cinq défauts en un tir — classe qui ne fige plus, inspecteur qui ne se
+           retire plus, type d'aéronef qui ne se porte plus, recherche qui ne se
+           pose plus, version qui ne s'ouvre plus : **cinq contrôles rouges**,
+           chacun le sien, plus celui du brouillon, dont l'équipe comptait deux
+           membres au lieu d'un. Puis le constat qui n'enregistre plus ses champs
+           et l'étape qui ne change plus : **quatre rouges**, exactement les
+           quatre attendus. Puis le texte d'un commentaire non stocké : **un
+           seul**, avec `entrees: 0` chez le serveur.
+
+           ── Un fait nouveau sur « Target closed » ──
+
+           La suite est tombée **une fois sur un tir solitaire** —
+           `Protocol error (Runtime.callFunctionOn): Target closed`, à la section
+           des contacts, loin de tout ce qui est neuf. Cela **contredit** la
+           lecture de 5.f.33, qui l'attribuait à la charge d'une campagne de huit
+           navigateurs. J'ai mesuré la mémoire au moment du tir : 45 % libre à
+           l'échelle du système — *ce n'est pas une famine*. Rejouée, la suite
+           passe. Je n'ai donc **aucun mécanisme établi**, et je n'ajoute
+           toujours rien : poser une mitigation sur une hypothèse est ce que
+           5.f.29 a coûté. Le fait est consigné, et il corrige le précédent.
+
+           Ce que j'ai posé, en revanche, est une **mesure** : un écouteur sur
+           l'évènement `error` de la page, qui porte la raison du plantage.
+           Sans lui, Puppeteer ne rend que « Target closed » — la conséquence,
+           non la cause. L'étape en cours est relevée avec elle, et la ligne part
+           aussi sur la sortie standard, car l'exception qui suit emporte le
+           bilan. La campagne suivante est passée sans chute : l'écouteur n'a
+           donc **rien** à dire encore, et c'est très bien ainsi — il attend la
+           prochaine. *Un instrument posé avant la panne vaut dix hypothèses
+           posées après.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

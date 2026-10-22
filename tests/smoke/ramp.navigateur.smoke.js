@@ -179,6 +179,25 @@ module.exports = async function rampNavigateurSmoke(port) {
     page.on('pageerror', (e) => {
       if (ramp) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
     });
+    // ── Une mesure, non une mitigation ──
+    //
+    // Cette suite est tombée trois fois sur `Protocol error : Target closed` —
+    // le processus de rendu tué —, à trois endroits différents, en campagne et
+    // **une fois sur un tir solitaire** : la lecture de 5.f.33, qui l'imputait à
+    // la charge, ne tient plus. Je n'ai aucun mécanisme établi, et je ne pose
+    // donc aucun correctif.
+    //
+    // Ce que je peux faire sans rien supposer, c'est **écouter ce que le
+    // navigateur en dit**. L'évènement `error` d'une page porte la raison du
+    // plantage ; sans écouteur, Puppeteer ne rend que « Target closed », qui
+    // nomme la conséquence et non la cause. L'étape en cours est relevée avec
+    // elle : la prochaine chute dira *où* et *pourquoi*.
+    page.on('error', (e) => {
+      incidents.push(`[${etape}] le rendu s’est arrêté : ${String((e && e.message) || e).slice(0, 200)}`);
+      // Sur la sortie standard aussi : l'exception qui suit emporte le bilan,
+      // et cette ligne doit survivre à l'absence de bilan.
+      console.error(`\n  !! rendu arrêté pendant « ${etape} » : ${String((e && e.message) || e)}\n`);
+    });
     page.on('requestfailed', (r) => {
       if (!ramp) return;
       const chemin = r.url().replace(srv.base, '');
@@ -3291,6 +3310,120 @@ module.exports = async function rampNavigateurSmoke(port) {
         await a(1800);
       }
 
+      // ── Le constat porté sur l'item contrôlé ──
+      //
+      // C'est le cœur d'une inspection sur aire de trafic. L'item coché ne dit
+      // que « vérifié » ; le **constat** dit ce qui a été trouvé — sous quelle
+      // catégorie, contre quel référentiel, avec quelle action et quel suivi.
+      // Cinq champs pour un seul nom de geste, `rampPoiEcart`, et **la classe
+      // d'action de la fiche s'en déduit**.
+      //
+      // Le code de l'item n'est pas deviné : il est lu dans le gestionnaire que
+      // l'écran a écrit lui-même — `rampPoiControle("A05", this.checked)`. Et
+      // comme poser une catégorie **redessine les items**, chaque champ est
+      // retrouvé par ce code avant d'être touché : une référence gardée d'un
+      // rendu à l'autre viserait un nœud détaché, qui accepte tout sans rien
+      // changer.
+      const codeItem = caseItem
+        ? (/rampPoiControle\(\s*"([^"]+)"/.exec(caseItem.getAttribute('onchange') || '') || [])[1]
+        : null;
+      const parCode = (sel) => [...document.querySelectorAll(`#rampPoiItems ${sel}`)]
+        .find((e) => (e.getAttribute('onchange') || e.getAttribute('oninput') || '')
+          .includes(`"${codeItem}"`));
+      const etatItem = () => ((((window.RAMP_STATE || {}).poiEnCours || {}).items || {})[codeItem] || {});
+      const poser = async (el, valeur, evenement) => {
+        if (!el) return;
+        el.value = valeur;
+        el.dispatchEvent(new Event(evenement, { bubbles: true }));
+        await a(1200);
+      };
+      o.constat = await (async () => {
+        const d = { code: codeItem || null };
+        if (!codeItem) return d;
+
+        // La remarque : l'item est contrôlé, et l'inspecteur note.
+        await poser(parCode('[oninput*="rampPoiRemarque("]'),
+          'Relevé de la ronde sur l’aire de trafic.', 'input');
+        d.remarque = etatItem().remarque;
+
+        // La bascule du constat, **dans les deux sens** avant de le garnir.
+        const bascule = () => parCode('[onchange*="rampPoiBasculerEcart("]');
+        d.bascule = !!bascule();
+        if (bascule()) { bascule().checked = true; bascule().dispatchEvent(new Event('change', { bubbles: true })); }
+        await a(1800);
+        d.ouvert = !!etatItem().ecart;
+        d.rangConstat = document.querySelectorAll('#rampPoiItems .ramp-poi-constat').length;
+        if (bascule()) { bascule().checked = false; bascule().dispatchEvent(new Event('change', { bubbles: true })); }
+        await a(1800);
+        d.referme = etatItem().ecart;
+        d.rangRetire = document.querySelectorAll('#rampPoiItems .ramp-poi-constat').length;
+        if (bascule()) { bascule().checked = true; bascule().dispatchEvent(new Event('change', { bubbles: true })); }
+        await a(1800);
+        d.rouvert = !!etatItem().ecart;
+
+        // Les cinq champs. La catégorie d'abord : elle redessine.
+        const listes = () => {
+          const b = parCode('[onchange*="rampPoiBasculerEcart("]');
+          const rang = b && b.closest('tr') ? b.closest('tr').nextElementSibling : null;
+          return rang ? [...rang.querySelectorAll('[onchange*="rampPoiEcart("]')] : [];
+        };
+        const options = listes().map((x) => (x.options ? x.options.length : 0));
+        d.options = options;
+        const premiere = (i) => {
+          const l = listes()[i];
+          return l && l.options && l.options.length > 1 ? l.options[1].value : '';
+        };
+        const vCat = premiere(0);
+        await poser(listes()[0], vCat, 'change');
+        d.categorie = (etatItem().ecart || {}).categorie;
+        const vStd = premiere(1);
+        await poser(listes()[1], vStd, 'change');
+        const vAct = premiere(2);
+        await poser(listes()[2], vAct, 'change');
+        const vSuivi = premiere(3);
+        await poser(listes()[3], vSuivi, 'change');
+        const bas = parCode('[onchange*="rampPoiBasculerEcart("]');
+        const rang = bas && bas.closest('tr') ? bas.closest('tr').nextElementSibling : null;
+        await poser(rang ? rang.querySelector('[oninput*="rampPoiEcart("]') : null,
+          'Écart relevé par la ronde, décrit pour le dossier.', 'input');
+        d.ecart = etatItem().ecart || {};
+        d.cinq = ['categorie', 'standard', 'action', 'suivi', 'description']
+          .filter((k) => String(d.ecart[k] || '').length > 0).length;
+
+        // ── La classe d'action : calculée, puis reprise à la main ──
+        //
+        // Elle se déduit de l'action du constat ; la choisir soi-même **fige**
+        // ce calcul. C'est l'effet qu'on mesure, non la présence de la liste.
+        d.classeCalculee = ((window.RAMP_STATE || {}).poiEnCours || {}).classe_action;
+        d.figeeAvant = !!(window.RAMP_STATE || {}).poiClasseManuelle;
+        const classe = z().querySelector('[onchange*="rampPoiMeta("]');
+        d.listeClasse = !!classe;
+        if (classe && classe.options && classe.options.length > 1) {
+          const autre = [...classe.options].slice(1)
+            .find((op) => op.value && op.value !== d.classeCalculee) || classe.options[1];
+          await poser(classe, autre.value, 'change');
+          d.classeChoisie = ((window.RAMP_STATE || {}).poiEnCours || {}).classe_action;
+          d.figeeApres = !!(window.RAMP_STATE || {}).poiClasseManuelle;
+        }
+
+        // Les trois autres méta : le statut de suivi, et les deux textes.
+        const metas = [...z().querySelectorAll('[onchange*="rampPoiMeta("], [oninput*="rampPoiMeta("]')];
+        d.metas = metas.length;
+        const meta = (nom) => metas
+          .find((e) => ((e.getAttribute('onchange') || e.getAttribute('oninput') || '')).includes(`'${nom}'`));
+        const suiviListe = meta('statut_suivi');
+        if (suiviListe && suiviListe.options && suiviListe.options.length > 1) {
+          await poser(suiviListe, suiviListe.options[1].value, 'change');
+        }
+        await poser(meta('commentaires_pic'), 'Commandant informé sur place.', 'input');
+        await poser(meta('informations'), 'Informations complémentaires de la ronde.', 'input');
+        const p = (window.RAMP_STATE || {}).poiEnCours || {};
+        d.statutSuivi = p.statut_suivi;
+        d.pic = p.commentaires_pic;
+        d.infos = p.informations;
+        return d;
+      })();
+
       // Un inspecteur, pris dans la liste de l'équipe.
       const liste = [...z().querySelectorAll('select')]
         .find((x) => /rampPoiAjouterInspecteur/.test(x.getAttribute('onchange') || ''));
@@ -3301,6 +3434,31 @@ module.exports = async function rampNavigateurSmoke(port) {
         await a(2000);
       }
 
+      // ── L'équipe se défait aussi ──
+      //
+      // Un membre ajouté doit pouvoir être retiré : la ronde le retire, relève
+      // que l'équipe est vide, **et le remet** — l'enregistrement qui suit
+      // compte sur un inspecteur, et c'est un autre contrôle qui le dit.
+      o.equipe = await (async () => {
+        const d = {};
+        const equipe = () => (((window.RAMP_STATE || {}).poiEnCours || {}).equipe || []).length;
+        d.apresAjout = equipe();
+        const retrait = z().querySelector('[onclick*="rampPoiRetirerInspecteur("]');
+        d.bouton = !!retrait;
+        retrait?.click();
+        await a(2000);
+        d.apresRetrait = equipe();
+        const l2 = [...z().querySelectorAll('select')]
+          .find((x) => /rampPoiAjouterInspecteur/.test(x.getAttribute('onchange') || ''));
+        if (l2 && l2.options.length > 1) {
+          l2.value = l2.options[1].value;
+          l2.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(2000);
+        }
+        d.remis = equipe();
+        return d;
+      })();
+
       // Le sélecteur d'aéronef, ouvert et refermé.
       const racine = () => (document.getElementById('rampModalRoot') || { innerHTML: '' }).innerHTML.length;
       document.querySelector('[onclick^="rampOuvrirSelecteurAeronef"]')?.click();
@@ -3309,6 +3467,42 @@ module.exports = async function rampNavigateurSmoke(port) {
       document.querySelector('[onclick^="rampFermerModal"]')?.click();
       await a(1200);
       o.selecteurFerme = racine();
+
+      // ── Et rouvert, pour chercher puis retenir un type ──
+      //
+      // Le sélecteur lit la **nomenclature figée d'ADR-001** — 1 027
+      // désignations. La recherche y est *débattue* : `rampChercherAeronefPoi`
+      // diffère son appel d'un minuteur, donc on attend l'appel et non le
+      // clavier. Retenir une ligne ferme la fenêtre d'elle-même : c'est
+      // pourquoi ce second passage est **à part** du premier, dont le contrôle
+      // mesure une fermeture par le geste de fermeture.
+      o.aeronef = await (async () => {
+        const d = {};
+        const entete = () => (((window.RAMP_STATE || {}).poiEnCours || {}).entete || {});
+        d.avant = entete().aeronef || '';
+        document.querySelector('[onclick^="rampOuvrirSelecteurAeronef"]')?.click();
+        await a(3000);
+        const M = () => document.getElementById('rampModalRoot');
+        const champRech = M()?.querySelector('[oninput*="rampChercherAeronefPoi"]');
+        d.champ = !!champRech;
+        d.toutes = M() ? M().querySelectorAll('[onclick*="rampChoisirAeronef("]').length : 0;
+        if (champRech) {
+          champRech.value = 'B737';
+          champRech.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(4000);
+        }
+        d.recherche = ((window.RAMP_STATE || {}).selecteurAeronef || {}).recherche;
+        const lignes = M() ? [...M().querySelectorAll('tr[onclick*="rampChoisirAeronef("]')] : [];
+        d.filtrees = lignes.length;
+        d.designation = lignes.length
+          ? (/rampChoisirAeronef\(\s*"([^"]+)"/.exec(lignes[0].getAttribute('onclick') || '') || [])[1]
+          : null;
+        lignes[0]?.click();
+        await a(2500);
+        d.retenu = entete().aeronef || '';
+        d.fermeParLeChoix = M() ? M().innerHTML.length === 0 : null;
+        return d;
+      })();
 
       // ── Enregistrement ──
       document.querySelector('[onclick^="rampEnregistrerPoi"]')?.click();
@@ -3346,23 +3540,82 @@ module.exports = async function rampNavigateurSmoke(port) {
         statut: soumiseResume.statut,
         itemsControles: Object.values(soumise.items || {}).filter((i) => i.controle).length,
       };
+      // Le constat, relu dans l'enregistrement complet : c'est là qu'il vit,
+      // et non dans le résumé que rend la liste.
+      o.constatEnBase = (((soumise.items || {})[o.constat.code] || {}).ecart) || null;
+      o.remarqueEnBase = (((soumise.items || {})[o.constat.code] || {}).remarque) || '';
+      o.metaEnBase = {
+        classe: soumise.classe_action, suivi: soumise.statut_suivi,
+        pic: soumise.commentaires_pic, infos: soumise.informations,
+        aeronef: (soumise.entete || {}).aeronef,
+      };
       o.gestesApresSoumission = [...new Set([...z().querySelectorAll('[onclick]')]
         .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
         .filter(Boolean))];
 
       // ── Un commentaire de validation, puis le renvoi qu'il motive ──
-      document.querySelector('[onclick^="rampPoiBasculerCommentaires"]')?.click();
-      await a(1400);
-      document.querySelector('[onclick^="rampPoiAjouterCommentaire"]')?.click();
-      await a(1600);
-      const zoneCom = [...z().querySelectorAll('textarea')].pop();
+      //
+      // **Ce bloc ne faisait rien, et un contrôle s'en disait motivé.** Le
+      // relevé des gestes l'a dit avant toute assertion : `rampPoiAjouterCommentaire`,
+      // `rampPoiCommentaireChamp` et `rampEnregistrerCommentaires` figuraient
+      // « non exercés » alors que la ronde les cliquait — `?.click()` sur un
+      // élément absent est **muet**. Le contrôle, lui, s'appelait « le renvoi,
+      // motivé par un commentaire » et n'assertait que le retour en brouillon :
+      // *un titre qui promet plus que son assertion est un contrôle vert sur
+      // une phrase.*
+      //
+      // La ronde relève donc ce qu'elle trouve, et le contrôle l'exige.
+      o.commentaires = { modifiables: null, bascule: null, ajouter: null,
+        zones: 0, enregistrer: null, entrees: 0 };
+      const cEtat = () => ((window.RAMP_STATE || {}).poiEnCours || {});
+      o.commentaires.modifiables = !!cEtat().commentaires_modifiables;
+      o.commentaires.bascule = !!document.querySelector('[onclick^="rampPoiBasculerCommentaires"]');
+      if ((window.RAMP_STATE || {}).poiCommentairesReplies) {
+        document.querySelector('[onclick^="rampPoiBasculerCommentaires"]')?.click();
+        await a(1800);
+      }
+      o.commentaires.replie = !!(window.RAMP_STATE || {}).poiCommentairesReplies;
+      const btnAjouter = () => document.querySelector('[onclick^="rampPoiAjouterCommentaire"]');
+      o.commentaires.ajouter = !!btnAjouter();
+      btnAjouter()?.click();
+      await a(1800);
+      // La cible du commentaire, puis son texte : deux gestes, deux noms.
+      const cible = document.querySelector('[onchange*="rampPoiCommentaireChamp("]');
+      o.commentaires.cible = !!cible;
+      if (cible && cible.options && cible.options.length > 1) {
+        cible.value = cible.options[1].value;
+        cible.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(1200);
+      }
+      const zonesCom = [...document.querySelectorAll('[oninput*="rampPoiCommentaireChamp("]')];
+      o.commentaires.zones = zonesCom.length;
+      const zoneCom = zonesCom[zonesCom.length - 1];
       if (zoneCom) {
         zoneCom.value = 'Observation de la ronde RAMP.';
         zoneCom.dispatchEvent(new Event('input', { bubbles: true }));
-        await a(900);
+        await a(1200);
       }
-      document.querySelector('[onclick^="rampEnregistrerCommentaires"]')?.click();
-      await a(3000);
+      o.commentaires.saisie = ((window.RAMP_STATE || {}).poiCommentairesSaisie || []).length;
+      // Un second commentaire, aussitôt retiré : la saisie se défait aussi.
+      btnAjouter()?.click();
+      await a(1600);
+      o.commentaires.saisieDeux = ((window.RAMP_STATE || {}).poiCommentairesSaisie || []).length;
+      const retrait = document.querySelector('[onclick*="rampPoiRetirerCommentaire("]');
+      o.commentaires.retrait = !!retrait;
+      [...document.querySelectorAll('[onclick*="rampPoiRetirerCommentaire("]')].pop()?.click();
+      await a(1600);
+      o.commentaires.saisieRendue = ((window.RAMP_STATE || {}).poiCommentairesSaisie || []).length;
+      const btnEnr = document.querySelector('[onclick^="rampEnregistrerCommentaires"]');
+      o.commentaires.enregistrer = !!btnEnr;
+      btnEnr?.click();
+      await a(3500);
+      // Relu chez le serveur : la version courante porte l'observation.
+      const relu = o.id ? await jget(`/poi/${o.id}`) : {};
+      const vCourante = (relu.commentaires || []).find((v) => !v.close_le)
+        || (relu.commentaires || [])[(relu.commentaires || []).length - 1] || {};
+      o.commentaires.entrees = (vCourante.entrees || []).length;
+      o.commentaires.texte = ((vCourante.entrees || [])[0] || {}).texte || '';
+      o.commentaires.cibleEnBase = ((vCourante.entrees || [])[0] || {}).cible || '';
       o.renvoiOffert = !!document.querySelector('[onclick^="rampRenvoyerPoi"]');
       document.querySelector('[onclick^="rampRenvoyerPoi"]')?.click();
       await a(2400);
@@ -3387,6 +3640,93 @@ module.exports = async function rampNavigateurSmoke(port) {
       const apresValidation = await jget('/inspections');
       o.inspectionsApres = Array.isArray(apresValidation) ? apresValidation.length : -1;
       o.inspectionCreee = (apresValidation || [])[0] || null;
+
+      // ── Le circuit relu : les étapes, les versions, la transmission ──
+      //
+      // Validée, la fiche est à l'étape « Transmission », et les étapes
+      // précédentes deviennent **consultables** — `rampPoiVoirEtape` n'ouvre
+      // que celles que le circuit a atteintes, les autres sont désarmées.
+      // Le renvoi de tout à l'heure a par ailleurs **clos une version** : son
+      // chevron la déplie dans le volet des commentaires.
+      o.circuit = await (async () => {
+        const d = {};
+        const vue = () => (window.RAMP_STATE || {}).poiVue;
+        const etapes = () => [...document.querySelectorAll('[onclick*="rampPoiVoirEtape("]')];
+        d.etapes = etapes().length;
+        d.desarmees = etapes().filter((e) => e.disabled).length;
+        d.vueAuDepart = vue();
+        const cle = (e) => (/rampPoiVoirEtape\(\s*"([^"]+)"/.exec(e.getAttribute('onclick') || '') || [])[1];
+        const soumission = etapes().find((e) => cle(e) === 'soumission');
+        d.soumissionConsultable = soumission ? !soumission.disabled : null;
+        soumission?.click();
+        await a(2500);
+        d.vueRevenue = vue();
+
+        // ── Les versions closes, à l'étape qui les porte ──
+        //
+        // Le volet des commentaires appartient à **`rampPoiVueValidation`**, et
+        // non à la transmission : à l'étape où la fiche se trouve maintenant, il
+        // n'existe pas. Mon premier essai le cherchait là, et la correction qui
+        // a suivi — relever l'état au lieu de le supposer — ne pouvait pas
+        // réussir davantage : il n'y avait **aucun volet** à relever. *Relever
+        // l'état d'un élément absent rend « fermé », et ressemble à une mesure.*
+        // La ronde passe donc par l'étape de validation, que le circuit a
+        // atteinte, puis revient à la transmission.
+        const validation = etapes().find((e) => cle(e) === 'validation');
+        d.validationConsultable = validation ? !validation.disabled : null;
+        validation?.click();
+        await a(2500);
+        d.vueValidation = vue();
+        d.voletCommentaires = !!document.querySelector('[onclick^="rampPoiBasculerCommentaires"]');
+        d.repliesAvant = !!(window.RAMP_STATE || {}).poiCommentairesReplies;
+        if (d.repliesAvant) {
+          document.querySelector('[onclick^="rampPoiBasculerCommentaires"]')?.click();
+          await a(2200);
+        }
+        d.repliesApres = !!(window.RAMP_STATE || {}).poiCommentairesReplies;
+        const versions = () => [...document.querySelectorAll('[onclick*="rampPoiBasculerVersion("]')];
+        d.versions = versions().length;
+        d.versionAvant = versions()[0] ? versions()[0].getAttribute('aria-expanded') : null;
+        versions()[0]?.click();
+        await a(2000);
+        d.versionApres = versions()[0] ? versions()[0].getAttribute('aria-expanded') : null;
+        d.corps = document.querySelectorAll('.ramp-poi-version-corps').length;
+        versions()[0]?.click();
+        await a(2000);
+        d.versionRendue = versions()[0] ? versions()[0].getAttribute('aria-expanded') : null;
+
+        // Retour à l'étape où le circuit se trouve, pour la transmission.
+        const transmission = etapes().find((e) => cle(e) === 'transmission');
+        transmission?.click();
+        await a(2500);
+        d.vueRendue = vue();
+
+        // Le volet de la transmission : replié par défaut, il se déplie.
+        const volet = () => document.querySelector('[onclick*="rampPoiBasculerVolet("]');
+        d.volet = !!volet();
+        d.ouvertAvant = volet() ? volet().getAttribute('aria-expanded') : null;
+        volet()?.click();
+        await a(2000);
+        d.ouvertApres = volet() ? volet().getAttribute('aria-expanded') : null;
+        volet()?.click();
+        await a(2000);
+        d.ouvertRendu = volet() ? volet().getAttribute('aria-expanded') : null;
+
+        // ── Et le dernier geste de la fiche : voir l'inspection qu'elle a produite ──
+        //
+        // Il ferme le volet, **oublie la fiche** et porte la recherche des
+        // inspections sur l'immatriculation. C'est pourquoi il vient en
+        // dernier : après lui, il n'y a plus de fiche ouverte.
+        const lien = document.querySelector('[onclick^="rampVoirInspectionDuPoi"]');
+        d.lien = !!lien;
+        lien?.click();
+        await a(3500);
+        d.voletFerme = !document.querySelector('.ramp-slider-body');
+        d.ficheOubliee = ((window.RAMP_STATE || {}).poiEnCours) === null;
+        d.recherche = ((window.RAMP_STATE || {}).filtres || {}).recherche;
+        d.rangsVus = document.querySelectorAll('#ramp-content tbody tr').length;
+        return d;
+      })();
 
       // ── Le ménage, et ce qu'il a fallu mesurer pour l'écrire ──
       //
@@ -3440,7 +3780,20 @@ module.exports = async function rampNavigateurSmoke(port) {
       (ronde.gestesApresSoumission || []).includes('rampValiderPoi')
       && (ronde.gestesApresSoumission || []).includes('rampRenvoyerPoi'),
       (ronde.gestesApresSoumission || []).join(', '));
-    verifier('le renvoi, motivé par un commentaire, ramène la fiche en saisie',
+    verifier('un commentaire de validation s’ajoute, se cible, se retire, et le serveur le porte',
+      !!ronde.commentaires && ronde.commentaires.modifiables === true
+      && ronde.commentaires.bascule === true && ronde.commentaires.replie === false
+      && ronde.commentaires.ajouter === true && ronde.commentaires.cible === true
+      && ronde.commentaires.zones >= 1 && ronde.commentaires.saisie === 1
+      // Ajouté puis retiré : la saisie revient à un seul commentaire.
+      && ronde.commentaires.saisieDeux === 2 && ronde.commentaires.retrait === true
+      && ronde.commentaires.saisieRendue === 1
+      && ronde.commentaires.enregistrer === true
+      && ronde.commentaires.entrees === 1
+      && /ronde RAMP/.test(String(ronde.commentaires.texte || ''))
+      && String(ronde.commentaires.cibleEnBase || '').length > 0,
+      JSON.stringify(ronde.commentaires));
+    verifier('le renvoi, que ce commentaire motive, ramène la fiche en saisie',
       ronde.renvoiOffert === true && ronde.fenetreRenvoi > 200
       && ronde.apresRenvoi === 'brouillon',
       JSON.stringify({ offert: ronde.renvoiOffert, fenetre: ronde.fenetreRenvoi,
@@ -3456,6 +3809,82 @@ module.exports = async function rampNavigateurSmoke(port) {
       && ronde.inspectionSurvit === true,
       JSON.stringify({ suppression: ronde.suppressionFiche, restante: ronde.ficheRestante,
         inspectionSurvit: ronde.inspectionSurvit }));
+    verifier('un constat s’ouvre sur l’item contrôlé, se retire, se rouvre, et porte ses cinq champs',
+      !!ronde.constat && !!ronde.constat.code && ronde.constat.bascule === true
+      && ronde.constat.ouvert === true && ronde.constat.rangConstat === 1
+      // Retiré, le constat disparaît de l'état **et** de la table : une
+      // bascule qui ne s'éteint pas passe un contrôle sans rien dire.
+      && ronde.constat.referme === null && ronde.constat.rangRetire === 0
+      && ronde.constat.rouvert === true
+      && ronde.constat.cinq === 5
+      && /ronde/i.test(String(ronde.constat.remarque || '')),
+      JSON.stringify({ code: ronde.constat.code, ouvert: ronde.constat.ouvert,
+        rangs: [ronde.constat.rangConstat, ronde.constat.rangRetire],
+        referme: ronde.constat.referme, cinq: ronde.constat.cinq,
+        ecart: ronde.constat.ecart }).slice(0, 420));
+    verifier('la classe d’action se déduit du constat, et la choisir à la main fige ce calcul',
+      ronde.constat.listeClasse === true
+      && ronde.constat.figeeAvant === false && ronde.constat.figeeApres === true
+      && String(ronde.constat.classeChoisie || '').length > 0
+      && ronde.constat.classeChoisie !== ronde.constat.classeCalculee,
+      JSON.stringify({ calculee: ronde.constat.classeCalculee,
+        choisie: ronde.constat.classeChoisie,
+        figee: [ronde.constat.figeeAvant, ronde.constat.figeeApres] }));
+    verifier('le constat, la remarque et les quatre méta de la fiche sont portés par le serveur',
+      !!ronde.constatEnBase
+      && ['categorie', 'standard', 'action', 'suivi', 'description']
+        .every((k) => String(ronde.constatEnBase[k] || '').length > 0)
+      && /ronde/i.test(String(ronde.remarqueEnBase || ''))
+      && !!ronde.metaEnBase && ronde.metaEnBase.classe === ronde.constat.classeChoisie
+      && String(ronde.metaEnBase.suivi || '').length > 0
+      && /place/i.test(String(ronde.metaEnBase.pic || ''))
+      && /ronde/i.test(String(ronde.metaEnBase.infos || '')),
+      JSON.stringify({ ecart: ronde.constatEnBase, remarque: ronde.remarqueEnBase,
+        meta: ronde.metaEnBase }).slice(0, 420));
+    verifier('un inspecteur se retire de l’équipe, et s’y remet',
+      !!ronde.equipe && ronde.equipe.apresAjout === 1 && ronde.equipe.bouton === true
+      && ronde.equipe.apresRetrait === 0 && ronde.equipe.remis === 1,
+      JSON.stringify(ronde.equipe));
+    verifier('le sélecteur d’aéronef cherche dans la nomenclature figée, et retenir un type ferme la fenêtre et porte le code dans la fiche',
+      !!ronde.aeronef && ronde.aeronef.champ === true
+      && ronde.aeronef.recherche === 'B737'
+      // La recherche restreint : moins de lignes qu'à l'ouverture, et au
+      // moins une. Un filtre qui rend tout, ou rien, ne filtre pas.
+      && ronde.aeronef.filtrees >= 1 && ronde.aeronef.filtrees < ronde.aeronef.toutes
+      && String(ronde.aeronef.designation || '').length > 0
+      && ronde.aeronef.retenu === ronde.aeronef.designation
+      && ronde.aeronef.fermeParLeChoix === true
+      && ronde.metaEnBase.aeronef === ronde.aeronef.designation,
+      JSON.stringify(ronde.aeronef));
+    verifier('la fiche validée se relit par étape — seules celles qu’elle a atteintes s’ouvrent —, et le volet de la transmission se déplie',
+      !!ronde.circuit && ronde.circuit.etapes >= 3
+      && ronde.circuit.soumissionConsultable === true
+      && ronde.circuit.vueRevenue === 'soumission' && ronde.circuit.vueRendue === 'transmission'
+      && ronde.circuit.volet === true
+      && ronde.circuit.ouvertAvant === 'false' && ronde.circuit.ouvertApres === 'true'
+      && ronde.circuit.ouvertRendu === 'false',
+      JSON.stringify({ etapes: ronde.circuit.etapes, desarmees: ronde.circuit.desarmees,
+        vues: [ronde.circuit.vueAuDepart, ronde.circuit.vueRevenue, ronde.circuit.vueRendue],
+        volet: [ronde.circuit.ouvertAvant, ronde.circuit.ouvertApres, ronde.circuit.ouvertRendu] }));
+    verifier('le renvoi a clos une version, et son chevron la déplie puis la replie',
+      ronde.circuit.validationConsultable === true
+      && ronde.circuit.vueValidation === 'validation'
+      && ronde.circuit.voletCommentaires === true
+      && ronde.circuit.repliesApres === false && ronde.circuit.versions >= 1
+      && ronde.circuit.versionAvant === 'false' && ronde.circuit.versionApres === 'true'
+      && ronde.circuit.corps >= 1 && ronde.circuit.versionRendue === 'false',
+      JSON.stringify({ replies: [ronde.circuit.repliesAvant, ronde.circuit.repliesApres],
+        versions: ronde.circuit.versions, corps: ronde.circuit.corps,
+        etats: [ronde.circuit.versionAvant, ronde.circuit.versionApres,
+          ronde.circuit.versionRendue] }));
+    verifier('« voir l’inspection » ferme la fiche, l’oublie, et porte la recherche des inspections sur son immatriculation',
+      ronde.circuit.lien === true && ronde.circuit.voletFerme === true
+      && ronde.circuit.ficheOubliee === true
+      && ronde.circuit.recherche === 'TT-RONDE'
+      && ronde.circuit.rangsVus >= 1,
+      JSON.stringify({ lien: ronde.circuit.lien, ferme: ronde.circuit.voletFerme,
+        oubliee: ronde.circuit.ficheOubliee, recherche: ronde.circuit.recherche,
+        rangs: ronde.circuit.rangsVus }));
     verifier('la ronde de RAMP ne laisse rien : ni fiche, ni inspection',
       ronde.poiFin === 0 && ronde.inspectionsFin === 0
       && ronde.suppressionInspection === 200,

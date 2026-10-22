@@ -1388,8 +1388,10 @@ function rampPoiObjet(cible) {
         + `${cible === 'autorite' ? ' — communication à l’autorité de surveillance' : ''}`;
 }
 
-// Les trois volets de la Transmission s'ouvrent un à un : fermés par défaut,
-// l'étape tient à l'écran et l'on déplie ce qu'on vient traiter.
+// Le volet de la Transmission s'ouvre à la demande : fermé par défaut, l'étape
+// tient à l'écran et l'on déplie ce qu'on vient traiter. Le commentaire disait
+// « les trois volets » — les deux autres sont devenus des encarts d'envoi, sans
+// bandeau repliable, et il restait seul à les annoncer (n° 5.f.36).
 const rampPoiVoletOuvert = (cle) => !!RAMP_STATE.poiVoletsTransmission[cle];
 
 function rampPoiBasculerVolet(cle) {

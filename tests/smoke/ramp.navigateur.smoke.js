@@ -35,6 +35,10 @@
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
+// Le même paquet que `src/modules/ramp/routes-echanges.js` emploie pour **lire**
+// un classeur : la ronde en **écrit** un avec, et le serveur le relit.
+// Deux paquets qui se répondent finiraient par ne plus se répondre.
+const XLSX = require('xlsx');
 const { demarrer, verifier, bilan } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
@@ -155,6 +159,12 @@ module.exports = async function rampNavigateurSmoke(port) {
           + ' en pièce jointe : le fichier s’enregistre, la navigation est'
           + ' abandonnée. Contrôle « l’export du générateur rend un lien de'
           + ' secours vers le classeur préparé, sans quitter la page » (n° 5.f.34).',
+      },
+      {
+        motif: /ERR_ABORTED/, chemin: /\/import\/modele/,
+        pourquoi: 'le modèle de classeur est servi par une adresse, en pièce'
+          + ' jointe : même geste, même abandon. Contrôle « le modèle de'
+          + ' classeur se demande, et le navigateur l’enregistre » (n° 5.f.35).',
       },
     ];
     const abandonsVus = [];
@@ -2832,13 +2842,351 @@ module.exports = async function rampNavigateurSmoke(port) {
         && G6.modaleFermee === true,
         JSON.stringify(G6).slice(0, 420));
       verifier('la navigation vers le classeur préparé est abandonnée une fois, sur son chemin, et la ronde le déclare au lieu de le taire',
-        abandonsVus.length === 1 && /\/tables\/fichier\//.test(String(abandonsVus[0] || '')),
+        abandonsVus.filter((x) => /\/tables\/fichier\//.test(String(x))).length === 1,
         JSON.stringify(abandonsVus));
       verifier('la ronde retire ses quatre inspections, et le module revient à son compte',
         Me.aEffacer === 4 && Me.effacees === 4 && Me.rendueAuDepart === true,
         JSON.stringify(Me));
     }
 
+
+    // ══════════════════════════════════════════════════════════════════
+    //  La ronde d'un classeur, du dépôt à l'écriture
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Les cinq derniers gestes de `ramp-stats.js`, et le seul endroit du dépôt
+    // où l'écran exige un **vrai fichier** quand la route d'importation, elle,
+    // accepte du JSON. Rien ne se simule : le classeur est **écrit** avec le
+    // paquet `xlsx` que le serveur emploie pour le relire, remis à l'entrée de
+    // fichier par un `DataTransfer` — `uploadFile` de Puppeteer veut un chemin
+    // sur le disque, et l'entrée est cachée derrière une zone de dépôt —, et
+    // c'est l'analyse du serveur qui garnit l'aperçu.
+    //
+    // ── Le classeur est écrit pour que les trois sorts paraissent ──
+    //
+    // L'analyse marque chaque inspection « nouvelle », « mise à jour » ou
+    // « doublon », et le sort se décide **par confrontation à la base**. Un
+    // classeur quelconque n'aurait donc rendu que des « nouvelle », et trois
+    // badges sur quatre seraient restés sans preuve.
+    //
+    // La ronde sème donc deux inspections d'avance, puis dépose un classeur qui
+    // porte : **deux lignes partageant les six clés** — une seule inspection,
+    // deux écarts, ce qui éprouve le regroupement —, une seconde inspection
+    // neuve, une ligne qui reprend l'une des semées à l'identique (**doublon**),
+    // et une qui reprend l'autre avec un autre statut (**mise à jour**). Une
+    // colonne inconnue s'y ajoute, pour la note des colonnes non reprises. Et
+    // un **rang de titre** avant les intitulés, comme en porte le modèle servi
+    // par le module : c'est le serveur qui cherche la ligne d'intitulés.
+    //
+    // ── Ce que la ronde n'éprouve pas, et pourquoi ──
+    //
+    // Le quatrième sort, « hors périmètre », n'est pas atteignable ici :
+    // `R.couvreEtat` rend vrai sans condition pour un administrateur, et la
+    // ronde se connecte en superadmin. L'éprouver demanderait un compte de
+    // coordonnateur national à États limités, donc une autre session — *et un
+    // contrôle qui prétendrait le mesurer en superadmin serait vert sans rien
+    // mesurer.*
+    etape = 'importation d’un classeur';
+    const CLASSEUR_B64 = (() => {
+      const entetes = ['POI', 'Date', 'Pays', 'Exploitant', 'Aéronef', 'Immatriculation',
+        'N° Vol', 'Statut', 'Items Inspectés', 'Item', 'Std Ref.', 'Description',
+        'Catégorie', 'Action', 'Suivi', 'Colonne que le module ne connaît pas'];
+      const l = (vol, statut, items, item, cat, extra) => ['POI-CL-2026-001',
+        '2026-04-10', 'Togo', 'CLASSEUR Air', 'B737-800', `TT-CL${vol.slice(-1)}0`,
+        vol, statut, items, item, 'CAT.OP.MPA.175', 'Écart porté par le classeur',
+        cat, cat, '', extra];
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['Classeur de la ronde — rien de réel'],
+        entetes,
+        // Deux lignes, six clés identiques : une inspection, deux écarts.
+        l('CL101', 'Ouvert', 20, 'A05', '2', 'ignorée'),
+        l('CL101', 'Ouvert', 20, 'C04', '3', 'ignorée'),
+        // Une seconde inspection neuve.
+        l('CL102', 'Ouvert', 14, 'B02', '1', 'ignorée'),
+        // Reprise à l'identique d'une semée : doublon.
+        l('CL901', 'Clos', 10, 'A05', '2', 'ignorée'),
+        // Reprise d'une semée avec un autre statut : mise à jour.
+        l('CL902', 'En cours', 10, 'A05', '2', 'ignorée'),
+      ]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Inspections');
+      return XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+    })();
+
+    // `etats`, et non `inspections` : c'est la clé que `RAMP_NAV` donne à la
+    // page des inspections. J'avais écrit le mot de l'écran au lieu de la clé
+    // de l'aiguillage, et `ouvrir()` **ne dit rien** quand sa cible n'existe
+    // pas — la page n'a pas changé, le bouton d'importation n'était pas là, et
+    // huit contrôles ont rougi pour une raison qui n'était pas la leur. La
+    // ronde relève donc d'abord si le déclencheur est sous la main.
+    await ouvrir('etats');
+    await attendre(2200);
+    const classeur = await page.evaluate(async (api, b64) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const r = {};
+      const essai = async (nom, f) => {
+        try { r[nom] = await f(); }
+        catch (e) { r[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const inspections = async () => {
+        const c = await (await fetch(`${api}/inspections`, { credentials: 'same-origin' })).json();
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      const volet = () => document.querySelector('.ramp-slider-body');
+      const un = (sel) => (volet() || document).querySelector(sel);
+      const dans = (sel) => [...(volet() || document).querySelectorAll(sel)];
+      const previsu = () => (window.RAMP_STATE || {}).importPrevisu || [];
+      const totaux = () => ((window.RAMP_STATE || {}).importAnalyse || {}).totaux || {};
+      // Le classeur, remis à l'entrée cachée par un porte-données : c'est la
+      // seule façon de poser un vrai `File` depuis la page.
+      const deposer = async () => {
+        const brut = atob(b64);
+        const octets = new Uint8Array(brut.length);
+        for (let i = 0; i < brut.length; i += 1) octets[i] = brut.charCodeAt(i);
+        const f = new File([octets], 'ronde_ramp.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const dt = new DataTransfer();
+        dt.items.add(f);
+        const entree = document.getElementById('rampFichierImport');
+        if (!entree) return false;
+        entree.files = dt.files;
+        entree.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(4000);
+        return true;
+      };
+
+      // ── 1. Deux inspections semées, que le classeur viendra reprendre ──
+      const semer = (vol, statut) => ({
+        date: '2026-04-10', pays: 'Togo', exploitant: 'CLASSEUR Air',
+        aeronef: 'B737-800', immatriculation: `TT-CL${vol.slice(-1)}0`, vol,
+        status: statut, itemsInspectes: 10,
+        anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175',
+          description: 'Semé avant le classeur.', categorie: '2', action: '2', suivi: '' }],
+      });
+      r.deja = (await inspections()).length;
+      const sem = await env('/inspections/import', 'POST', {
+        data: [semer('CL901', 'Clos'), semer('CL902', 'Clos')],
+      });
+      r.semis = sem.statut;
+      r.creees = (sem.corps || {}).creees;
+      await window.rampRecharger();
+      await a(2200);
+
+      // ── 2. Le volet d'importation, et le modèle que le module sert ──
+      //
+      // **Le volet des statistiques était resté ouvert.** La ronde précédente
+      // ne le referme pas — son dernier geste ferme la modale du générateur, et
+      // non le volet qui la portait. `un()` cherchant *dans* le volet, le
+      // bouton d'importation n'y était pas, rien n'a été cliqué, et
+      // `d.volet` était vrai : **le volet de l'autre ronde**. Huit contrôles
+      // rouges d'un coup, sur un état hérité.
+      //
+      // La ronde referme donc ce qu'elle trouve ouvert, et le dit ; et le
+      // déclencheur se vise **au document**, puisqu'il vit sur la page et non
+      // dans un volet. *Un sélecteur dont la portée dépend de l'état hérité
+      // mesure l'état hérité.*
+      await essai('ouverture', async () => {
+        const d = {};
+        d.voletHerite = !!volet();
+        if (volet()) {
+          document.querySelector('[onclick^="rampFermerSlider"]')?.click();
+          await a(2000);
+        }
+        d.heriteFerme = !volet();
+        d.declencheur = !!document.querySelector('[onclick^="rampOuvrirImportation"]');
+        document.querySelector('[onclick^="rampOuvrirImportation"]')?.click();
+        await a(3000);
+        d.volet = !!volet();
+        d.zone = !!un('#rampZoneImport');
+        d.entree = !!document.getElementById('rampFichierImport');
+        const modele = un('[onclick*="rampTelechargerModele"]');
+        d.boutonModele = !!modele;
+        d.cheminAvant = location.pathname;
+        modele?.click();
+        await a(4000);
+        d.cheminApres = location.pathname;
+        d.voletDebout = !!volet();
+        return d;
+      });
+
+      // ── 3. Le classeur déposé : l'aperçu, les sorts, les colonnes ignorées ──
+      await essai('analyse', async () => {
+        const d = {};
+        d.depose = await deposer();
+        await a(2000);
+        d.lignes = previsu().length;
+        d.totaux = totaux();
+        d.sorts = previsu().map((x) => x.sort);
+        d.ecarts = previsu().map((x) => (x.anomalies || []).length);
+        d.rangs = dans('tbody tr').length;
+        d.fichier = ((window.RAMP_STATE || {}).importAnalyse || {}).fichier;
+        d.ignorees = ((window.RAMP_STATE || {}).importAnalyse || {}).colonnes_ignorees || [];
+        // La note des colonnes non reprises, et le bouton qui compte ce qui part.
+        d.note = dans('.ramp-note').some((p) => /non reprises/.test(p.textContent || ''));
+        const conf = un('[onclick*="rampConfirmerImport"]');
+        d.libelleImport = conf ? (conf.textContent || '').replace(/\s+/g, ' ').trim() : '';
+        d.importArme = conf ? !conf.disabled : null;
+        return d;
+      });
+
+      // ── 4. Retirer une ligne : les totaux suivent la liste ──
+      await essai('retraits', async () => {
+        const d = {};
+        const indexDe = (sort) => previsu().findIndex((x) => x.sort === sort);
+        const retirer = async (i) => {
+          dans('[onclick*="rampRetirerLigneImport("]')[i]?.click();
+          await a(2000);
+        };
+        // Un bouton par rang, et le compte est relevé **avant chaque retrait** :
+        // une seule variable écrasée n'aurait gardé que le dernier.
+        d.boutonsAvant = dans('[onclick*="rampRetirerLigneImport("]').length;
+        const iDoublon = indexDe('doublon');
+        d.iDoublon = iDoublon;
+        await retirer(iDoublon);
+        d.apresDoublon = previsu().length;
+        d.doublonsApres = totaux().doublons;
+        // Retirer un doublon ne change pas ce qui part : il n'en faisait pas partie.
+        const conf1 = un('[onclick*="rampConfirmerImport"]');
+        d.libelleApresDoublon = conf1 ? (conf1.textContent || '').replace(/\s+/g, ' ').trim() : '';
+
+        d.boutonsMilieu = dans('[onclick*="rampRetirerLigneImport("]').length;
+        const iNouvelle = indexDe('nouvelle');
+        d.iNouvelle = iNouvelle;
+        await retirer(iNouvelle);
+        d.apresNouvelle = previsu().length;
+        d.nouvellesApres = totaux().nouvelles;
+        const conf2 = un('[onclick*="rampConfirmerImport"]');
+        d.libelleApresNouvelle = conf2 ? (conf2.textContent || '').replace(/\s+/g, ' ').trim() : '';
+        d.boutonsFin = dans('[onclick*="rampRetirerLigneImport("]').length;
+        return d;
+      });
+
+      // ── 5. Annuler : l'aperçu s'efface, la zone de dépôt revient ──
+      await essai('annulation', async () => {
+        const d = {};
+        un('[onclick*="rampAnnulerImport"]')?.click();
+        await a(2500);
+        d.previsu = previsu().length;
+        d.analyse = ((window.RAMP_STATE || {}).importAnalyse);
+        d.zoneRendue = !!un('#rampZoneImport');
+        d.plusDApercu = !un('[onclick*="rampConfirmerImport"]');
+        return d;
+      });
+
+      // ── 6. Redéposé, puis confirmé : l'écriture, relue chez le serveur ──
+      await essai('confirmation', async () => {
+        const d = {};
+        d.redepose = await deposer();
+        await a(2000);
+        d.lignes = previsu().length;
+        d.avant = (await inspections()).length;
+        un('[onclick*="rampConfirmerImport"]')?.click();
+        await a(5000);
+        d.voletFerme = !document.querySelector('.ramp-slider-body');
+        d.previsuVidee = previsu().length;
+        const toutes = await inspections();
+        d.apres = toutes.length;
+        d.gagnees = d.apres - d.avant;
+        const miennes = toutes.filter((x) => /CLASSEUR Air/.test(x.exploitant || ''));
+        d.miennes = miennes.length;
+        const parVol = (v) => miennes.find((x) => x.vol === v);
+        d.cl101 = !!parVol('CL101');
+        d.ecartsCl101 = ((parVol('CL101') || {}).anomalies || []).length;
+        d.cl102 = !!parVol('CL102');
+        // La mise à jour : le statut de la semée a changé chez le serveur.
+        d.statutCl902 = (parVol('CL902') || {}).status;
+        // Le doublon n'a rien écrit : la semée garde le sien.
+        d.statutCl901 = (parVol('CL901') || {}).status;
+        return d;
+      });
+
+      // ── 7. La ronde retire tout ce qu'elle a mis ──
+      await essai('menage', async () => {
+        const d = { effacees: 0 };
+        const miennes = (await inspections()).filter((x) => /CLASSEUR Air/.test(x.exploitant || ''));
+        d.aEffacer = miennes.length;
+        for (const i of miennes) {
+          /* eslint-disable no-await-in-loop */
+          const rep = await env(`/inspections/${i.id}`, 'DELETE');
+          if (rep.statut === 200) d.effacees += 1;
+        }
+        d.apres = (await inspections()).length;
+        d.rendueAuDepart = d.apres === r.deja;
+        return d;
+      });
+      return r;
+    }, '/api/m/ramp', CLASSEUR_B64);
+
+    {
+      const C = classeur;
+      const Ou = C.ouverture || {};
+      const An = C.analyse || {};
+      const Re = C.retraits || {};
+      const Annu = C.annulation || {};
+      const Co = C.confirmation || {};
+      const Men = C.menage || {};
+      verifier('la ronde sème deux inspections que le classeur viendra reprendre, et le volet d’importation s’ouvre sur sa zone de dépôt',
+        C.semis === 201 && C.creees === 2
+        && Ou.heriteFerme === true && Ou.declencheur === true
+        && Ou.volet === true && Ou.zone === true && Ou.entree === true,
+        JSON.stringify({ semis: C.semis, creees: C.creees, ouverture: Ou }));
+      verifier('le modèle de classeur se demande, et le navigateur l’enregistre sans quitter la page',
+        Ou.boutonModele === true && Ou.cheminApres === Ou.cheminAvant
+        && Ou.voletDebout === true
+        // L'abandon est la trace du téléchargement : déclaré, et exigé.
+        && abandonsVus.filter((x) => /\/import\/modele/.test(String(x))).length === 1,
+        JSON.stringify({ ouverture: Ou, abandons: abandonsVus }));
+      verifier('un vrai classeur se dépose, et l’analyse du serveur rend quatre inspections de cinq lignes — deux écarts sur celle qui en portait deux',
+        An.depose === true && An.lignes === 4 && An.rangs === 4
+        && An.fichier === 'ronde_ramp.xlsx'
+        && JSON.stringify(An.ecarts || []) === JSON.stringify([2, 1, 1, 1]),
+        JSON.stringify({ depose: An.depose, lignes: An.lignes, rangs: An.rangs,
+          fichier: An.fichier, ecarts: An.ecarts }));
+      verifier('les trois sorts paraissent — deux nouvelles, une mise à jour, un doublon —, la colonne inconnue est signalée, et le bouton compte ce qui partira',
+        !!An.totaux && An.totaux.nouvelles === 2 && An.totaux.majs === 1
+        && An.totaux.doublons === 1 && An.totaux.hors_perimetre === 0
+        && (An.sorts || []).filter((x) => x === 'nouvelle').length === 2
+        && (An.ignorees || []).length === 1
+        && /ne connaît pas/.test(String((An.ignorees || [])[0] || ''))
+        && An.note === true
+        && An.importArme === true && /3 inspection/.test(String(An.libelleImport || '')),
+        JSON.stringify({ totaux: An.totaux, sorts: An.sorts, ignorees: An.ignorees,
+          note: An.note, libelle: An.libelleImport }).slice(0, 400));
+      verifier('retirer une ligne de l’aperçu refait les totaux de l’en-tête, et seul le retrait d’une ligne importable change ce qui partira',
+        Re.boutonsAvant === 4 && Re.boutonsMilieu === 3 && Re.boutonsFin === 2
+        && Re.iDoublon >= 0 && Re.apresDoublon === 3
+        && Re.doublonsApres === 0
+        // Un doublon ne partait pas : son retrait ne retire rien du compte.
+        && /3 inspection/.test(String(Re.libelleApresDoublon || ''))
+        && Re.iNouvelle >= 0 && Re.apresNouvelle === 2 && Re.nouvellesApres === 1
+        && /2 inspection/.test(String(Re.libelleApresNouvelle || '')),
+        JSON.stringify(Re).slice(0, 400));
+      verifier('annuler efface l’aperçu et son analyse, et rend la zone de dépôt',
+        Annu.previsu === 0 && Annu.analyse === null
+        && Annu.zoneRendue === true && Annu.plusDApercu === true,
+        JSON.stringify(Annu));
+      verifier('le classeur redéposé et confirmé écrit chez le serveur : deux inspections créées, la mise à jour portée, le doublon sans effet',
+        Co.redepose === true && Co.lignes === 4
+        && Co.voletFerme === true && Co.previsuVidee === 0
+        && Co.gagnees === 2 && Co.miennes === 4
+        && Co.cl101 === true && Co.ecartsCl101 === 2 && Co.cl102 === true
+        // La mise à jour a changé le statut de la semée ; le doublon, non.
+        && Co.statutCl902 === 'En cours' && Co.statutCl901 === 'Clos',
+        JSON.stringify(Co).slice(0, 420));
+      verifier('la ronde du classeur retire ses quatre inspections, et le module revient à son compte',
+        Men.aEffacer === 4 && Men.effacees === 4 && Men.rendueAuDepart === true,
+        JSON.stringify(Men));
+    }
     // ══════════════════════════════════════════════════════════════════
     //  La ronde d'une fiche d'inspection, de la saisie à la suppression
     // ══════════════════════════════════════════════════════════════════

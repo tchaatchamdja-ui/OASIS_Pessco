@@ -7057,6 +7057,97 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            et non de ma main. Les suites montent leur propre serveur sur un port
            d'essai ; rien ici n'en dépend. À relancer par `preview_start`.
 
+       5.f.35 [x] **RAMP — un vrai classeur, du dépôt à l'écriture** — fait le
+           22 octobre 2026.
+
+           **Quatre-vingt-six contrôles sur RAMP ; 113 gestes sur 208.**
+           `ramp-stats.js` est **couvert en entier : 36 noms sur 36, 46
+           occurrences sur 46** — le plus gros fichier du module, qui était à
+           3 noms il y a deux tours. Campagne : 1 297.
+
+           ── Le seul endroit où l'écran exige un fichier que la route n'exige pas ──
+
+           `POST /inspections/import` accepte du JSON — la ronde des
+           statistiques s'en sert pour semer. Mais l'écran, lui, passe par
+           `POST /import/analyser`, qui veut un **classeur**. Rien ne se simule
+           donc ici : la ronde **écrit** un `.xlsx` avec le paquet `xlsx` que le
+           serveur emploie pour le relire — *deux paquets qui se répondent
+           finiraient par ne plus se répondre* —, et le remet à l'entrée de
+           fichier par un `DataTransfer`. `uploadFile` de Puppeteer veut un
+           chemin sur le disque, et l'entrée est cachée derrière une zone de
+           dépôt ; le porte-données est la seule voie qui pose un vrai `File`
+           depuis la page.
+
+           ── Le classeur est écrit pour que les sorts paraissent ──
+
+           L'analyse marque chaque inspection « nouvelle », « mise à jour » ou
+           « doublon », et **le sort se décide par confrontation à la base**. Un
+           classeur quelconque n'aurait rendu que des « nouvelle », et trois
+           badges sur quatre seraient restés sans preuve.
+
+           La ronde sème donc deux inspections d'avance, puis dépose un classeur
+           de **cinq lignes pour quatre inspections** : deux lignes partageant
+           les six clés — une inspection, deux écarts, ce qui éprouve le
+           regroupement —, une seconde inspection neuve, une reprise à
+           l'identique d'une semée (**doublon**), une reprise avec un autre
+           statut (**mise à jour**). Une colonne inconnue, pour la note des
+           colonnes non reprises. Et un **rang de titre** avant les intitulés,
+           comme en porte le modèle servi par le module : c'est au serveur de
+           trouver la ligne d'intitulés.
+
+           Huit contrôles. Le plus instructif porte sur une phrase du code —
+           « les totaux suivent la liste » : retirer le **doublon** fait tomber
+           son total à zéro **sans changer** ce que le bouton annonce, puisqu'un
+           doublon ne partait pas ; retirer une **nouvelle** fait les deux.
+           Puis l'écriture, relue chez le serveur : deux inspections créées,
+           dont celle qui porte bien ses **deux** écarts, le statut de la mise à
+           jour changé, et celui du doublon **intact**.
+
+           ── Le modèle de classeur, et la deuxième déclaration d'abandon ──
+
+           `rampTelechargerModele` mène la fenêtre à une adresse servie en pièce
+           jointe : même geste, même abandon qu'au tour précédent. La
+           déclaration posée en 5.f.34 accueille donc un second motif, et le
+           contrôle de l'abandon du générateur a été réécrit pour **filtrer sur
+           son chemin au lieu de compter** : deux contrôles qui se départagent
+           par un total dépendent de l'ordre des rondes, et *l'ordre des rondes
+           ne doit pas décider d'un verdict.*
+
+           ── Deux fautes, et la même racine ──
+
+           **Un état hérité, pris pour le mien.** Premier tir : huit contrôles
+           rouges d'un coup. Le volet des statistiques était resté **ouvert** —
+           la ronde précédente ferme la modale du générateur, non le volet qui
+           la portait. Mon `un()` cherchant *dans* le volet, le bouton
+           d'importation n'y était pas, rien n'a été cliqué, et mon
+           `d.volet` était vrai : **le volet de l'autre ronde**. *Un sélecteur
+           dont la portée dépend de l'état hérité mesure l'état hérité.* La
+           ronde referme désormais ce qu'elle trouve ouvert, et le dit.
+
+           **Le mot de l'écran au lieu de la clé de l'aiguillage.** Deuxième
+           tir, huit rouges encore : j'avais écrit `ouvrir('inspections')`, et
+           `RAMP_NAV` nomme cette page `etats`. `ouvrir()` **ne dit rien** quand
+           sa cible n'existe pas — la page n'a pas changé, et les contrôles ont
+           rougi pour une raison qui n'était pas la leur. La ronde relève
+           maintenant si le déclencheur est sous la main, pour qu'une prochaine
+           erreur de ce genre se nomme elle-même.
+
+           Les deux fautes ont la même racine : **avoir supposé l'état de
+           l'écran au lieu de le relever.** C'est, en plus petit, la faute de
+           5.f.29.
+
+           ── Deux contre-essais ──
+
+           Quatre défauts en un tir — totaux figés, annulation qui garde son
+           analyse, confirmation qui n'emporte que la première ligne, modèle qui
+           ne navigue plus : **quatre contrôles rouges**, chacun le sien, plus
+           celui du ménage, qui comptait une inspection de moins parce qu'une de
+           moins avait été créée. Cascade vraie, et attribuable.
+
+           Puis le classeur retiré de la requête : **sept rouges**, et la garde
+           globale nomme le refus — `400 /api/m/ramp/import/analyser`. *Le
+           fichier voyage vraiment ; sans lui, la route le dit.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

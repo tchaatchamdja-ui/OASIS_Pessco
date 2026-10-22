@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-21",
+ "releve": "2026-10-22",
  "gestesNommes": 208,
  "occurrences": 363,
- "exerces": 108,
+ "exerces": 113,
  "indecidables": 1,
  "gestes": [
   {
@@ -3091,7 +3091,7 @@
    "evenement": "change",
    "nom": "rampAnalyserClasseur",
    "source": "rampAnalyserClasseur(this.files[0]); this.value='';",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3100,7 +3100,7 @@
    "evenement": "click",
    "nom": "rampTelechargerModele",
    "source": "rampTelechargerModele()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3109,7 +3109,7 @@
    "evenement": "click",
    "nom": "rampAnnulerImport",
    "source": "rampAnnulerImport()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3118,7 +3118,7 @@
    "evenement": "click",
    "nom": "rampConfirmerImport",
    "source": "rampConfirmerImport()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-stats.js",
@@ -3127,7 +3127,7 @@
    "evenement": "click",
    "nom": "rampRetirerLigneImport",
    "source": "rampRetirerLigneImport(${n})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-utilisateurs.js",

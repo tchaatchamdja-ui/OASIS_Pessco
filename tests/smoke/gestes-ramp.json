@@ -2,7 +2,7 @@
  "releve": "2026-10-22",
  "gestesNommes": 208,
  "occurrences": 363,
- "exerces": 139,
+ "exerces": 157,
  "indecidables": 1,
  "gestes": [
   {
@@ -390,7 +390,7 @@
    "evenement": "click",
    "nom": "rampOuvrirPac",
    "source": "event.stopPropagation();rampOuvrirPac(${_rArg(a.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -399,7 +399,7 @@
    "evenement": "click",
    "nom": "rampOuvrirPreuves",
    "source": "event.stopPropagation();rampOuvrirPreuves(${_rArg(a.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -787,7 +787,7 @@
    "evenement": "click",
    "nom": "rampFermerPac",
    "source": "rampFermerPac()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -796,7 +796,7 @@
    "evenement": "click",
    "nom": "rampSupprimerPreuve",
    "source": "rampSupprimerPreuve(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -805,7 +805,7 @@
    "evenement": "click",
    "nom": "rampOuvrirDepotPreuve",
    "source": "rampOuvrirDepotPreuve(${_rArg(action)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -814,7 +814,7 @@
    "evenement": "click",
    "nom": "rampEnregistrerPac",
    "source": "rampEnregistrerPac(true)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -823,7 +823,7 @@
    "evenement": "click",
    "nom": "rampPacModalRenvoi",
    "source": "rampPacModalRenvoi()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -832,7 +832,7 @@
    "evenement": "click",
    "nom": "rampPacModalCloture",
    "source": "rampPacModalCloture()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -877,7 +877,7 @@
    "evenement": "click",
    "nom": "rampPacRenvoyer",
    "source": "rampPacRenvoyer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -922,7 +922,7 @@
    "evenement": "click",
    "nom": "rampPacCloturer",
    "source": "rampPacCloturer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -931,7 +931,7 @@
    "evenement": "click",
    "nom": "rampEnregistrerPac",
    "source": "rampEnregistrerPac(false)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -940,7 +940,7 @@
    "evenement": "click",
    "nom": "rampPacBasculerEvaluation",
    "source": "rampPacBasculerEvaluation()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -949,7 +949,7 @@
    "evenement": "click",
    "nom": "rampPacBasculerEvaluation",
    "source": "rampPacBasculerEvaluation()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -958,7 +958,7 @@
    "evenement": "click",
    "nom": "rampPacEnregistrerSuivi",
    "source": "rampPacEnregistrerSuivi(${_rArg(x.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -967,7 +967,7 @@
    "evenement": "click",
    "nom": "rampPacEditerSuivi",
    "source": "rampPacEditerSuivi('')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -976,7 +976,7 @@
    "evenement": "click",
    "nom": "rampPacEditerSuivi",
    "source": "rampPacEditerSuivi(${_rArg(x.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -985,7 +985,7 @@
    "evenement": "click",
    "nom": "rampPacSupprimerSuivi",
    "source": "rampPacSupprimerSuivi(${_rArg(x.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -994,7 +994,7 @@
    "evenement": "click",
    "nom": "rampPacAjouterSuivi",
    "source": "rampPacAjouterSuivi('rampPacSuiviTexte')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1003,7 +1003,7 @@
    "evenement": "click",
    "nom": "rampPacAjouterSuivi",
    "source": "rampPacAjouterSuivi('rampPacSuiviResultats')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1012,7 +1012,7 @@
    "evenement": "change",
    "nom": "rampPacEvaluer",
    "source": "rampPacEvaluer({ date_solde: this.value })",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1021,7 +1021,7 @@
    "evenement": "change",
    "nom": "rampPacEvaluer",
    "source": "rampPacEvaluer({ solde_par: this.value })",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1030,7 +1030,7 @@
    "evenement": "click",
    "nom": "rampFermerPac",
    "source": "rampFermerPac()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1039,7 +1039,7 @@
    "evenement": "click",
    "nom": "rampPacModalCloture",
    "source": "rampPacModalCloture()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1048,7 +1048,7 @@
    "evenement": "click",
    "nom": "rampEnregistrerBrouillonPreuves",
    "source": "rampEnregistrerBrouillonPreuves()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1057,7 +1057,7 @@
    "evenement": "click",
    "nom": "rampSupprimerPreuve",
    "source": "rampSupprimerPreuve(${_rArg(p.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1066,7 +1066,7 @@
    "evenement": "click",
    "nom": "rampOuvrirDepotPreuve",
    "source": "rampOuvrirDepotPreuve('')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",
@@ -1111,7 +1111,7 @@
    "evenement": "click",
    "nom": "rampEnvoyerPreuve",
    "source": "rampEnvoyerPreuve()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-parametres.js",

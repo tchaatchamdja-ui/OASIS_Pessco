@@ -7342,6 +7342,97 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            celui du ménage, qui a dit « une fiche reste ». Attribution nette
            dans les deux cas.
 
+       5.f.38 [x] **RAMP — le plan d'actions correctives, du constat au solde**
+           — fait le 22 octobre 2026.
+
+           **Cent onze contrôles sur RAMP ; 157 gestes sur 208 (75 %).**
+           `ramp-pac.js` est **couvert en entier — 18 noms sur 18, 37
+           occurrences sur 37**. Campagne : 1 322.
+
+           Le fichier était à 2 noms, et les deux étaient génériques. Le circuit
+           entier du suivi d'un écart n'était pas exercé : la cause du constat,
+           la correction apportée sur-le-champ, la mesure qui empêche la
+           répétition, les preuves de l'une et de l'autre, les commentaires de
+           suivi de l'autorité, le renvoi du plan, et le solde de l'écart.
+
+           ── L'ordre n'est pas choisi, il est lu dans le code ──
+
+           `amendable = peut && !rampPacSoumis(e)` : un commentaire de suivi ne
+           se modifie ni ne se retire **plus** dès que le plan est soumis. Et
+           les deux boutons de l'autorité — renvoyer, clôturer — n'existent
+           **qu'après** la soumission. La ronde suit donc cet ordre, et un
+           contrôle le dit dans les deux sens : avant la soumission, l'autorité
+           n'a rien à décider ; après, les boutons d'amendement s'en vont.
+
+           ── Dix contrôles, et ce qu'ils séparent ──
+
+           Le plus utile sépare deux choses que l'écran distingue et qu'on
+           pourrait confondre : **renseigner le solde n'est pas le prononcer.**
+           Les deux champs de la carte des résultats s'enregistrent d'eux-mêmes
+           par `rampPacEvaluer`, et l'écart n'est pas soldé pour autant ; il
+           faut la décision, et c'est elle qui fait passer le suivi à
+           « Clôturé ». De même, **enregistrer n'est pas soumettre** : le fil ne
+           bouge pas.
+
+           ── Un geste décisif qui n'emploie pas le confirm du socle ──
+
+           `rampPacSupprimerSuivi` appelle `window.confirm` quand tout autre
+           geste décisif du module passe par `oasisConfirmer`. La ronde le
+           relaie et compte l'appel — un seul —, mais **c'est une incohérence
+           d'interface**, et elle est portée au rapport : la fenêtre du
+           navigateur ne porte ni la langue de l'agent, ni le thème, ni le
+           libellé de l'objet retiré. *Question pour la maîtrise d'ouvrage.*
+
+           ── Deux fautes, et toutes deux le même état hérité ──
+
+           Neuf contrôles rouges, **deux fois de suite**, pour la même raison en
+           deux habits.
+
+           D'abord `rampLoadData` au lieu de `rampRecharger` : la première
+           charge les données et **ne redessine pas**. L'écart semé existait en
+           base, et la table des écarts restait celle d'avant. C'est la faute de
+           la table des fiches de 5.f.37, refaite avec l'autre chargeur.
+
+           Puis, le tir suivant, toujours zéro bouton : la ronde précédente
+           finit par « voir l'inspection », **qui porte la recherche du module
+           sur `TT-RONDE`**. La table des écarts filtre là-dessus, et mon écart
+           — `TT-PAC1` — n'y paraissait pas. La ronde relève donc ce qu'elle
+           hérite, page et recherche, et rend la table entière **par le geste de
+           l'écran** avant de mesurer quoi que ce soit.
+
+           *Cinquième et sixième fois en quatre tours qu'un geste est posé sur
+           un état supposé.* La règle est maintenant écrite dans la ronde
+           elle-même : **une ronde qui suit une autre commence par relever ce
+           qu'elle hérite.**
+
+           ── Deux contre-essais ──
+
+           Cinq défauts en un tir — un champ du plan non transmis, l'amendement
+           d'un suivi parti avec un autre texte, une preuve rattachée à la
+           mauvaise action, la clôture qui ne solde plus, le brouillon qui ne se
+           garde plus : **cinq contrôles rouges**, chacun le sien. Puis la
+           bascule du volet et le renvoi neutralisés : **deux rouges**, et le
+           contrôle de la clôture est **resté vert** — sans renvoi le plan reste
+           soumis, donc la suite tient. C'est la bonne réponse : *un contrôle
+           qui rougirait là mesurerait le voisin.*
+
+           ── Et deux contrôles d'hier qui mesuraient l'horloge ──
+
+           La campagne a rougi sur **deux contrôles du tour précédent**, verts en
+           tir solitaire : l'envoi de la lettre rendait « zéro communication »,
+           et la facette d'État « un rang au lieu de deux ». Aucun défaut
+           d'application : cinq secondes et 1 800 ms suffisaient à la machine au
+           repos, pas à la machine chargée par vingt suites.
+
+           *Un délai fixe mesure la vitesse de la machine autant que l'écran.*
+           Les deux attentes portent maintenant sur **ce qu'elles mesurent** :
+           l'une interroge le serveur jusqu'à ce que la communication paraisse —
+           et relève le nombre d'essais —, l'autre attend que le nombre de rangs
+           **cesse de bouger**. Ce n'est pas une mitigation posée sur une
+           hypothèse : la cause était identifiée, et attendre la condition est
+           strictement plus juste qu'attendre l'horloge. Campagne reprise :
+           **1 322 contrôles, code 0**, vingt suites vertes.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

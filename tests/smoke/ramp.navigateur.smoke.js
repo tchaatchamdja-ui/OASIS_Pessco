@@ -3878,8 +3878,21 @@ module.exports = async function rampNavigateurSmoke(port) {
         const envoyer = document.querySelector('[onclick*="rampEnvoyerCommunication("]');
         d.boutonEnvoyer = !!envoyer;
         envoyer?.click();
-        await a(5000);
-        const apresEnvoi = o.id ? await jget(`/poi/${o.id}`) : {};
+        // ── Attendre ce qu'on mesure, non une horloge ──
+        //
+        // Ce contrôle a rougi **en campagne** et passé seul : cinq secondes
+        // suffisaient à la machine au repos, pas à la machine chargée. On
+        // interroge donc le serveur jusqu'à ce que la communication paraisse,
+        // et l'on relève le nombre d'essais : *un délai fixe mesure la vitesse
+        // de la machine autant que l'écran.*
+        d.essais = 0;
+        let apresEnvoi = {};
+        for (let k = 0; k < 20; k += 1) {
+          await a(1200);
+          d.essais = k + 1;
+          apresEnvoi = o.id ? await jget(`/poi/${o.id}`) : {};
+          if ((apresEnvoi.communications || []).length) break;
+        }
         const coms = apresEnvoi.communications || [];
         d.communications = coms.length;
         d.cible = (coms[0] || {}).cible;
@@ -3936,11 +3949,25 @@ module.exports = async function rampNavigateurSmoke(port) {
         const listes = () => [...document.querySelectorAll('[onchange*="rampPoiSetFiltre("]')];
         const parCle = (nom) => listes()
           .find((e) => (e.getAttribute('onchange') || '').includes(`'${nom}'`));
+        // Choisir dans une facette redessine la page entière : on attend que le
+        // nombre de rangs **cesse de bouger**, et non un délai. Ce contrôle a
+        // rougi en campagne — « un rang au lieu de deux » — là où il passait
+        // seul : la machine chargée rendait plus lentement que l'horloge.
+        const stabilise = async () => {
+          let avant = -1;
+          for (let k = 0; k < 15; k += 1) {
+            await a(700);
+            const n = rangs();
+            if (n === avant) return k + 1;
+            avant = n;
+          }
+          return -1;
+        };
         const choisir = async (el, v) => {
           if (!el) return;
           el.value = v;
           el.dispatchEvent(new Event('change', { bubbles: true }));
-          await a(1800);
+          await stabilise();
         };
 
         // ── Une seconde fiche, pour que le filtre puisse exclure ──
@@ -3994,20 +4021,20 @@ module.exports = async function rampNavigateurSmoke(port) {
         if (champ) {
           champ.value = o.enregistre.reference;
           champ.dispatchEvent(new Event('input', { bubbles: true }));
-          await a(1800);
+          await stabilise();
         }
         d.rechercheRetenue = F().recherche;
         d.surRecherche = rangs();
         if (champ) {
           champ.value = 'zzz-aucune-fiche';
           champ.dispatchEvent(new Event('input', { bubbles: true }));
-          await a(1800);
+          await stabilise();
         }
         d.surRien = rangs();
 
         // La remise à zéro rend les trois critères, et le champ avec eux.
         document.querySelector('[onclick^="rampPoiReset"]')?.click();
-        await a(1800);
+        await stabilise();
         d.apresReset = Object.values(F()).filter(Boolean).length;
         const champRendu = document.querySelector('#rampPoiFiltres .ramp-recherche-boite input');
         d.champVide = champRendu ? champRendu.value === '' : null;
@@ -4304,6 +4331,500 @@ module.exports = async function rampNavigateurSmoke(port) {
       && ronde.suppressionInspection === 200,
       JSON.stringify({ poi: ronde.poiFin, inspections: ronde.inspectionsFin,
         suppressionInspection: ronde.suppressionInspection }));
+
+    // ══════════════════════════════════════════════════════════════════
+    //  La ronde d'un plan d'actions correctives, du constat au solde
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `ramp-pac.js` était à **2 noms sur 18**, et les deux étaient génériques —
+    // `rampFermerModal` et `event.stopPropagation`. Le circuit entier du suivi
+    // d'un écart n'était pas exercé : la cause du constat, la correction
+    // apportée sur-le-champ, la mesure qui empêche la répétition, les preuves de
+    // l'une et de l'autre, les commentaires de suivi de l'autorité, le renvoi du
+    // plan, et le solde de l'écart.
+    //
+    // ── L'ordre n'est pas choisi, il est lu dans le code ──
+    //
+    // `amendable = peut && !rampPacSoumis(e)` : un commentaire de suivi ne se
+    // modifie ni ne se retire **plus** dès que le plan est soumis. Et les deux
+    // boutons de l'autorité — renvoyer, clôturer — n'existent **qu'après** la
+    // soumission. La ronde suit donc cet ordre, et non celui qui lui plairait.
+    //
+    // ── Un écart semé, parce qu'il n'y en a aucun ──
+    //
+    // Le plan se tient sur un écart, et un écart vient d'une inspection. La
+    // ronde en sème une par la route d'importation, qui reçoit du JSON, puis la
+    // retire. L'identifiant de l'écart est **celui que le serveur a donné** :
+    // `db.uid('eca')` à l'import, relu dans la table, jamais deviné.
+    etape = 'plan d’actions correctives';
+    await ouvrir('ecarts');
+    await attendre(2200);
+    const pac = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const inspections = async () => {
+        const c = await jget('/inspections');
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3500);
+        return true;
+      };
+      const z = () => document.querySelector('.ramp-slider-body');
+      const q = (sel) => (z() || document).querySelector(sel);
+      const tous = (sel) => [...(z() || document).querySelectorAll(sel)];
+      const poser = async (id, v, ev) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event(ev || 'input', { bubbles: true }));
+        await a(600);
+        return true;
+      };
+
+      // ── 1. Un écart semé, et le plan ouvert depuis sa ligne ──
+      //
+      // **L'état hérité, une fois de plus.** La ronde précédente finit par
+      // « voir l'inspection », qui porte la recherche du module sur
+      // `TT-RONDE` ; la table des écarts filtre là-dessus, et l'écart semé —
+      // `TT-PAC1` — n'y paraissait pas. Neuf contrôles rouges, deux fois, pour
+      // un filtre qui n'était pas le mien. On relève donc ce qu'on hérite, et
+      // l'on rend la table entière **par le geste de l'écran**.
+      o.herite = {
+        page: (window.RAMP_STATE || {}).currentPage,
+        recherche: ((window.RAMP_STATE || {}).filtres || {}).recherche || '',
+      };
+      document.querySelector('[onclick^="rampResetFiltres"]')?.click();
+      await a(2500);
+      o.herite.apresReset = ((window.RAMP_STATE || {}).filtres || {}).recherche || '';
+      o.deja = (await inspections()).length;
+      const semis = await env('/inspections/import', 'POST', {
+        data: [{
+          date: '2026-05-20', pays: 'Togo', exploitant: 'PACTEST Air',
+          aeronef: 'B737-800', immatriculation: 'TT-PAC1', vol: 'PC001',
+          status: 'En cours', itemsInspectes: 18,
+          anomalies: [{
+            itemCode: 'A05', stdRef: 'CAT.OP.MPA.175',
+            description: 'Écart semé pour la ronde du plan.',
+            categorie: '2', action: '2', suivi: 'Ouvert',
+          }],
+        }],
+      });
+      o.semis = semis.statut;
+      // `rampRecharger`, et non `rampLoadData` : la seconde charge les données
+      // et **ne redessine pas**. L'écart semé existait donc en base, et la
+      // table des écarts restait celle d'avant — aucun bouton de plan à
+      // cliquer, et neuf contrôles rouges d'un coup. *C'est la faute de la
+      // table des fiches de 5.f.37, refaite avec l'autre chargeur.*
+      await window.rampRecharger();
+      await a(3000);
+      o.rangsEcarts = document.querySelectorAll('[onclick*="rampOuvrirPac("]').length;
+      const mienne = (await inspections()).find((i) => /PACTEST/.test(i.exploitant || ''));
+      o.inspectionId = (mienne || {}).id;
+      o.ecartId = (((mienne || {}).anomalies || [])[0] || {}).id;
+      const ecart = async () => {
+        const i = (await inspections()).find((x) => x.id === o.inspectionId) || {};
+        return ((i.anomalies || []).find((x) => x.id === o.ecartId)) || {};
+      };
+
+      await essai('ouverture', async () => {
+        const d = {};
+        // `*=` : le bouton porte `event.stopPropagation();` pour ne pas déplier
+        // la ligne en passant.
+        const bouton = [...document.querySelectorAll('[onclick*="rampOuvrirPac("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.ecartId));
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(3000);
+        d.volet = !!z();
+        // Le fil porte **deux** temps — le plan se rédige puis se soumet,
+        // l'autorité renvoie ou solde. `RAMP_PAC_ETAPES` en déclare deux ; le
+        // troisième état, « clôturée », n'a pas de repère propre.
+        d.etapes = tous('.ramp-proc-step').length;
+        d.etape = window.rampPacEtape();
+        d.boutonSoumettre = !!q('[onclick^="rampEnregistrerPac(true)"]');
+        d.boutonEnregistrer = !!q('[onclick^="rampEnregistrerPac(false)"]');
+        // Avant soumission, l'autorité n'a rien à décider.
+        d.renvoiAbsent = !q('[onclick^="rampPacModalRenvoi"]');
+        d.clotureAbsente = !q('[onclick^="rampPacModalCloture"]');
+        return d;
+      });
+
+      // ── 2. Le plan rédigé, enregistré, et relu chez le serveur ──
+      await essai('plan', async () => {
+        const d = {};
+        d.champs = 0;
+        const saisies = [
+          ['rampPac_cause_primaire', 'Procédure de contrôle non à jour à bord.'],
+          ['rampPac_action_curative', 'Exemplaire à jour remis à l’équipage.'],
+          ['rampPac_curative_date_prevue', '2026-05-22'],
+          ['rampPac_actions_correctives', 'Révision du circuit de diffusion documentaire.'],
+          ['rampPac_corrective_date_prevue', '2026-07-31'],
+        ];
+        /* eslint-disable no-await-in-loop */
+        for (const [id, v] of saisies) {
+          if (await poser(id, v, id.includes('date') ? 'change' : 'input')) d.champs += 1;
+        }
+        q('[onclick^="rampEnregistrerPac(false)"]')?.click();
+        await a(4500);
+        const e = await ecart();
+        d.pac = e.pac || {};
+        d.soumisAvant = !!(e.pac || {}).soumis_le;
+        d.etapeApres = window.rampPacEtape();
+        return d;
+      });
+
+      // ── 3. L'évaluation : le volet, un suivi ajouté, amendé, retiré ──
+      //
+      // Le volet garde son état d'un rendu à l'autre : on le joue **dans les
+      // deux sens** plutôt que sous condition — un geste conditionnel n'est
+      // exercé que si sa condition se présente (n° 5.f.37).
+      await essai('suivis', async () => {
+        const d = {};
+        const replie = () => !!(window.RAMP_STATE || {}).pacEvaluationRepliee;
+        const bascule = () => document.querySelector('[onclick^="rampPacBasculerEvaluation"]');
+        d.bascule = !!bascule();
+        d.replieAvant = replie();
+        bascule()?.click();
+        await a(1800);
+        d.replieApres = replie();
+        bascule()?.click();
+        await a(1800);
+        d.replieRendu = replie();
+        if (replie()) { bascule()?.click(); await a(1800); }
+
+        const suivis = async () => (((await ecart()).evaluation || {}).verification || {}).suivis || [];
+        const ajouter = () => [...document.querySelectorAll('[onclick*="rampPacAjouterSuivi("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes('rampPacSuiviTexte'));
+        d.boutonAjouter = !!ajouter();
+
+        // Un suivi vide est refusé : rien ne s'inscrit.
+        ajouter()?.click();
+        await a(2500);
+        d.apresVide = (await suivis()).length;
+
+        await poser('rampPacSuiviTexte', 'Plan reçu, pièces attendues.');
+        ajouter()?.click();
+        await a(4500);
+        const l1 = await suivis();
+        d.apresAjout = l1.length;
+        d.texte = (l1[0] || {}).texte;
+        d.suiviId = (l1[0] || {}).id;
+
+        // Amendable tant que le plan n'est pas soumis.
+        const editer = () => [...document.querySelectorAll('[onclick*="rampPacEditerSuivi("]')]
+          .find((b) => /rampPacEditerSuivi\(\s*"/.test(b.getAttribute('onclick') || ''));
+        d.boutonEditer = !!editer();
+        editer()?.click();
+        await a(2000);
+        d.zoneEdition = !!document.getElementById('rampPacSuiviEdition');
+        await poser('rampPacSuiviEdition', 'Plan reçu ; preuves de la mesure immédiate attendues.');
+        document.querySelector('[onclick*="rampPacEnregistrerSuivi("]')?.click();
+        await a(4500);
+        const l2 = await suivis();
+        d.apresEdition = l2.length;
+        d.texteEdite = (l2[0] || {}).texte;
+        d.modifieLe = !!(l2[0] || {}).modifie_le;
+
+        // Le retrait passe par le `confirm` **du navigateur**, et non par celui
+        // du socle : c'est le seul geste décisif du module qui le fasse. On le
+        // relaie, et le fait est signalé au rapport.
+        const vraiConfirm = window.confirm;
+        let demande = 0;
+        window.confirm = () => { demande += 1; return true; };
+        try {
+          const retirer = document.querySelector('[onclick*="rampPacSupprimerSuivi("]');
+          d.boutonRetirer = !!retirer;
+          retirer?.click();
+          await a(4500);
+        } finally { window.confirm = vraiConfirm; }
+        d.confirmDemande = demande;
+        d.apresRetrait = (await suivis()).length;
+
+        // Un second suivi, qui restera : le renvoi s'appuie sur lui.
+        await poser('rampPacSuiviTexte', 'Reprise demandée : préciser l’échéance.');
+        ajouter()?.click();
+        await a(4500);
+        d.pourLeRenvoi = (await suivis()).length;
+        return d;
+      });
+
+      // ── 4. Les preuves : un refus, un dépôt réel, un retrait ──
+      await essai('preuves', async () => {
+        const d = {};
+        const preuves = async () => ((await ecart()).preuves || []);
+        const err = () => (document.getElementById('rampPreuveErreur') || {}).textContent || '';
+        const depot = () => [...document.querySelectorAll('[onclick*="rampOuvrirDepotPreuve("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes('curative'));
+        d.boutonDepot = !!depot();
+        depot()?.click();
+        await a(2200);
+        d.modale = !!document.getElementById('rampPreuveFichier');
+
+        // Sans fichier, l'écran refuse d'ici : pas d'aller-retour.
+        await poser('rampPreuveIntitule', 'Fiche de remise à l’équipage');
+        document.querySelector('[onclick^="rampEnvoyerPreuve"]')?.click();
+        await a(2000);
+        d.refus = err();
+        d.apresRefus = (await preuves()).length;
+
+        const dt = new DataTransfer();
+        dt.items.add(new File(['Preuve de la mesure immédiate.'], 'preuve-pac.txt',
+          { type: 'text/plain' }));
+        const entree = document.getElementById('rampPreuveFichier');
+        if (entree) {
+          entree.files = dt.files;
+          entree.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        await poser('rampPreuveCommentaire', 'Signée par le commandant de bord.');
+        document.querySelector('[onclick^="rampEnvoyerPreuve"]')?.click();
+        await a(5000);
+        const l = await preuves();
+        d.deposees = l.length;
+        const p = l[0] || {};
+        d.action = p.action;
+        d.intitule = p.intitule;
+        d.nomOrigine = p.nom_origine;
+        d.taille = p.taille;
+        d.lignes = tous('.ramp-pac-preuve').length;
+
+        const retirer = document.querySelector('[onclick*="rampSupprimerPreuve("]');
+        d.boutonRetirer = !!retirer;
+        retirer?.click();
+        d.retraitConfirme = await oui();
+        await a(1500);
+        d.restantes = (await preuves()).length;
+        return d;
+      });
+
+      // ── 5. La soumission ouvre les gestes de l'autorité ──
+      await essai('soumission', async () => {
+        const d = {};
+        q('[onclick^="rampEnregistrerPac(true)"]')?.click();
+        await a(5000);
+        const e = await ecart();
+        d.soumisLe = !!(e.pac || {}).soumis_le;
+        d.soumisPar = (e.pac || {}).soumis_par;
+        d.etape = window.rampPacEtape();
+        d.renvoi = !!q('[onclick^="rampPacModalRenvoi"]');
+        d.cloture = !!q('[onclick^="rampPacModalCloture"]');
+        // Soumis, un suivi ne s'amende plus : les deux boutons s'en vont.
+        d.editerParti = !document.querySelector('[onclick*="rampPacEditerSuivi("]');
+        d.retirerParti = !document.querySelector('[onclick*="rampPacSupprimerSuivi("]');
+        return d;
+      });
+
+      // ── 6. Le renvoi ramène le plan en rédaction ──
+      await essai('renvoi', async () => {
+        const d = {};
+        q('[onclick^="rampPacModalRenvoi"]')?.click();
+        await a(2500);
+        const racine = document.getElementById('rampModalRoot');
+        d.modale = racine ? racine.innerHTML.length > 400 : false;
+        // La fenêtre rappelle les suivis qui motivent le renvoi.
+        d.suivisRappeles = racine
+          ? racine.querySelectorAll('.ramp-poi-commentaire-lu').length : 0;
+        document.querySelector('[onclick^="rampPacRenvoyer"]')?.click();
+        await a(5000);
+        const e = await ecart();
+        d.soumisEffacé = !(e.pac || {}).soumis_le;
+        d.renvoyeLe = !!(e.pac || {}).renvoye_le;
+        d.etape = window.rampPacEtape();
+        // Et les gestes de l'autorité repartent avec la soumission.
+        d.clotureAbsente = !q('[onclick^="rampPacModalCloture"]');
+        return d;
+      });
+
+      // ── 7. Resoumis, évalué, puis soldé ──
+      await essai('cloture', async () => {
+        const d = {};
+        q('[onclick^="rampEnregistrerPac(true)"]')?.click();
+        await a(5000);
+        d.resoumis = !!((await ecart()).pac || {}).soumis_le;
+
+        // Les deux champs du solde, dans la carte des résultats : chacun
+        // enregistre de lui-même, par `rampPacEvaluer`.
+        const champs = tous('[onchange*="rampPacEvaluer("]');
+        d.champsEvaluation = champs.length;
+        if (champs[0]) {
+          champs[0].value = '2026-08-15';
+          champs[0].dispatchEvent(new Event('change', { bubbles: true }));
+          await a(5000);
+        }
+        const ev1 = ((await ecart()).evaluation || {}).cloture || {};
+        d.dateSolde = ev1.date_solde;
+        const champs2 = tous('[onchange*="rampPacEvaluer("]');
+        if (champs2[1]) {
+          champs2[1].value = 'URSAC — contrôle régional';
+          champs2[1].dispatchEvent(new Event('change', { bubbles: true }));
+          await a(5000);
+        }
+        const ev2 = ((await ecart()).evaluation || {}).cloture || {};
+        d.soldePar = ev2.solde_par;
+        // L'évaluation n'a pas soldé à elle seule : il faut la décision.
+        d.pasEncoreSoldé = ev2.effective !== 'OUI';
+
+        q('[onclick^="rampPacModalCloture"]')?.click();
+        await a(2500);
+        d.modale = !!document.getElementById('rampPacClotureDate');
+        // La fenêtre reprend ce que l'évaluation portait.
+        d.dateReprise = (document.getElementById('rampPacClotureDate') || {}).value;
+        d.quiRepris = (document.getElementById('rampPacClotureQui') || {}).value;
+        document.querySelector('[onclick^="rampPacCloturer"]')?.click();
+        await a(5000);
+        const e = await ecart();
+        const cl = (e.evaluation || {}).cloture || {};
+        d.effective = cl.effective;
+        d.etape = window.rampPacEtape();
+        d.suiviEcart = e.suivi;
+        return d;
+      });
+
+      // ── 8. Le volet des preuves seul, et le retour ──
+      await essai('voletPreuves', async () => {
+        const d = {};
+        document.querySelector('[onclick^="rampFermerPac"]')?.click();
+        await a(3000);
+        d.voletFerme = !z();
+        d.pacOublie = ((window.RAMP_STATE || {}).pacEnCours) === null;
+
+        const bouton = [...document.querySelectorAll('[onclick*="rampOuvrirPreuves("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.ecartId));
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(3000);
+        d.volet = !!z();
+        d.champBrouillon = !!document.getElementById('rampPreuveSuivi');
+        await poser('rampPreuveSuivi', 'Preuves relues ; écart soldé le 15 août.');
+        document.querySelector('[onclick^="rampEnregistrerBrouillonPreuves"]')?.click();
+        await a(5000);
+        d.brouillonEnBase = ((await ecart()).pac || {}).commentaire_preuves;
+        document.querySelector('[onclick^="rampFermerPac"]')?.click();
+        await a(2500);
+        d.referme = !z();
+        return d;
+      });
+
+      // ── 9. La ronde retire ce qu'elle a semé ──
+      await essai('menage', async () => {
+        const d = {};
+        const rep = await env(`/inspections/${o.inspectionId}`, 'DELETE');
+        d.suppression = rep.statut;
+        d.restantes = (await inspections()).length;
+        d.rendueAuDepart = d.restantes === o.deja;
+        return d;
+      });
+      return o;
+    }, '/api/m/ramp');
+
+    {
+      const P = pac;
+      const Ou = P.ouverture || {};
+      const Pl = P.plan || {};
+      const Su = P.suivis || {};
+      const Pr = P.preuves || {};
+      const So = P.soumission || {};
+      const Re = P.renvoi || {};
+      const Cl = P.cloture || {};
+      const Vo = P.voletPreuves || {};
+      const Me = P.menage || {};
+      verifier('un écart semé ouvre son plan d’actions depuis la table, sur le premier des deux temps du fil — l’autorité n’y a encore rien à décider',
+        P.semis === 201 && !!P.inspectionId && !!P.ecartId
+        && !!P.herite && P.herite.page === 'ecarts' && P.herite.apresReset === ''
+        && P.rangsEcarts >= 1
+        && Ou.bouton === true && Ou.volet === true
+        && Ou.etapes === 2 && Ou.etape === 'soumission'
+        && Ou.boutonSoumettre === true && Ou.boutonEnregistrer === true
+        && Ou.renvoiAbsent === true && Ou.clotureAbsente === true,
+        JSON.stringify({ herite: P.herite, semis: P.semis, ecart: P.ecartId,
+          rangs: P.rangsEcarts, ouverture: Ou }).slice(0, 460));
+      verifier('les cinq champs du plan s’enregistrent sans le soumettre, et le serveur les porte',
+        Pl.champs === 5
+        && /non à jour/.test(String((Pl.pac || {}).cause_primaire || ''))
+        && /équipage/.test(String((Pl.pac || {}).action_curative || ''))
+        && (Pl.pac || {}).curative_date_prevue === '2026-05-22'
+        && /diffusion/.test(String((Pl.pac || {}).actions_correctives || ''))
+        && (Pl.pac || {}).corrective_date_prevue === '2026-07-31'
+        // Enregistrer n'est pas soumettre : le fil n'a pas bougé.
+        && Pl.soumisAvant === false && Pl.etapeApres === 'soumission',
+        JSON.stringify(Pl).slice(0, 420));
+      verifier('le volet d’évaluation se replie et se déplie, un suivi vide est refusé, et un suivi s’inscrit chez le serveur',
+        Su.bascule === true
+        && Su.replieApres !== Su.replieAvant && Su.replieRendu === Su.replieAvant
+        && Su.boutonAjouter === true
+        && Su.apresVide === 0
+        && Su.apresAjout === 1 && /pièces attendues/.test(String(Su.texte || ''))
+        && !!Su.suiviId,
+        JSON.stringify(Su).slice(0, 420));
+      verifier('un suivi s’amende tant que le plan n’est pas soumis, et se retire — par le « confirm » du navigateur, seul geste décisif du module à le faire',
+        Su.boutonEditer === true && Su.zoneEdition === true
+        && Su.apresEdition === 1 && /mesure immédiate/.test(String(Su.texteEdite || ''))
+        && Su.modifieLe === true
+        && Su.boutonRetirer === true && Su.confirmDemande === 1
+        && Su.apresRetrait === 0
+        && Su.pourLeRenvoi === 1,
+        JSON.stringify({ editer: Su.boutonEditer, zone: Su.zoneEdition,
+          texte: Su.texteEdite, modifie: Su.modifieLe, confirm: Su.confirmDemande,
+          apresRetrait: Su.apresRetrait, pourLeRenvoi: Su.pourLeRenvoi }));
+      verifier('une preuve sans fichier est refusée sur place, puis une preuve réelle se dépose rattachée à son action, et se retire',
+        Pr.boutonDepot === true && Pr.modale === true
+        && /fichier/i.test(String(Pr.refus || '')) && Pr.apresRefus === 0
+        && Pr.deposees === 1 && Pr.action === 'curative'
+        && /équipage/.test(String(Pr.intitule || ''))
+        && Pr.nomOrigine === 'preuve-pac.txt' && Pr.taille > 0
+        && Pr.lignes >= 1
+        && Pr.boutonRetirer === true && Pr.retraitConfirme === true
+        && Pr.restantes === 0,
+        JSON.stringify(Pr).slice(0, 420));
+      verifier('la soumission du plan ouvre les deux gestes de l’autorité et ferme l’amendement des suivis',
+        So.soumisLe === true && String(So.soumisPar || '').length > 0
+        && So.etape === 'cloture'
+        && So.renvoi === true && So.cloture === true
+        && So.editerParti === true && So.retirerParti === true,
+        JSON.stringify(So));
+      verifier('le renvoi, qui rappelle les suivis qui le motivent, efface la soumission et ramène le plan en rédaction',
+        Re.modale === true && Re.suivisRappeles === 1
+        && Re.soumisEffacé === true && Re.renvoyeLe === true
+        && Re.etape === 'soumission' && Re.clotureAbsente === true,
+        JSON.stringify(Re));
+      verifier('les deux champs du solde s’enregistrent d’eux-mêmes sans solder, puis la clôture solde l’écart et son suivi passe à « Clôturé »',
+        Cl.resoumis === true && Cl.champsEvaluation === 2
+        && Cl.dateSolde === '2026-08-15' && /URSAC/.test(String(Cl.soldePar || ''))
+        // Renseigner le solde n'est pas le prononcer.
+        && Cl.pasEncoreSoldé === true
+        && Cl.modale === true && Cl.dateReprise === '2026-08-15'
+        && /URSAC/.test(String(Cl.quiRepris || ''))
+        && Cl.effective === 'OUI' && Cl.etape === 'cloturee'
+        && Cl.suiviEcart === 'Clôturé',
+        JSON.stringify(Cl).slice(0, 420));
+      verifier('le volet des preuves s’ouvre seul depuis la table, son commentaire se garde en brouillon, et le retour referme',
+        Vo.voletFerme === true && Vo.pacOublie === true
+        && Vo.bouton === true && Vo.volet === true && Vo.champBrouillon === true
+        && /15 août/.test(String(Vo.brouillonEnBase || ''))
+        && Vo.referme === true,
+        JSON.stringify(Vo));
+      verifier('la ronde du plan retire son inspection, et le module revient à son compte',
+        Me.suppression === 200 && Me.rendueAuDepart === true,
+        JSON.stringify(Me));
+    }
 
     const produits = await oterLeRelais();
     // Trois exports ont été cliqués — inspections, écarts, contacts. Le bac n'a

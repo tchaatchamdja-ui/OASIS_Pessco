@@ -4826,6 +4826,533 @@ module.exports = async function rampNavigateurSmoke(port) {
         JSON.stringify(Me));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La ronde d'une requête entre États, de l'écart régional au solde
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `ramp-communication.js` est le plus gros fichier du module après les
+    // paramètres, et il était à **2 noms sur 26**. Ce qu'il porte n'est pas un
+    // écran de plus : c'est la **correspondance officielle entre autorités** —
+    // un État écrit à un autre au sujet d'un écart que celui-ci a relevé, le
+    // destinataire répond, et la requête se clôt.
+    //
+    // ── Ce que la ronde éprouve, et dans l'ordre que l'écran impose ──
+    //
+    // Elle part de l'**écart régional** — c'est là que l'écran s'ouvre, et
+    // c'est de là que part une requête : `rampComRequeteEcart` remplit le
+    // formulaire de ce que l'écart dit de lui-même. Puis elle **retire la
+    // désignation**, pour retrouver le choix ordinaire — filtres et table
+    // d'inspections —, et redésigne à la main. Suivent les destinataires, le
+    // texte, une pièce jointe mise en attente puis retirée, l'envoi, les
+    // filtres de la table, le fil ouvert, une réponse, la clôture et la
+    // réouverture.
+    etape = 'requêtes entre États';
+    await ouvrir('partages');
+    await attendre(3500);
+    const com = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3500);
+        return true;
+      };
+      const C = () => window.RAMP_COM || {};
+      const B = () => C().brouillon || {};
+      const z = () => document.querySelector('.ramp-slider-body');
+      const q = (sel) => (z() || document).querySelector(sel);
+      const tous = (sel) => [...(z() || document).querySelectorAll(sel)];
+      // Attendre ce qu'on mesure (n° 5.f.38) : chaque geste redessine le volet.
+      const stable = async (compte) => {
+        let avant = -1;
+        for (let k = 0; k < 15; k += 1) {
+          await a(600);
+          const n = compte();
+          if (n === avant) return k + 1;
+          avant = n;
+        }
+        return -1;
+      };
+      const poser = async (sel, v, ev) => {
+        const e = q(sel);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event(ev || 'input', { bubbles: true }));
+        await a(1200);
+        return true;
+      };
+
+      // ── 1. Un écart régional semé, et l'onglet qui l'accueille ──
+      o.deja = ((await jget('/requetes')).requetes || []).length;
+      const semis = await env('/inspections/import', 'POST', {
+        data: [{
+          date: '2026-06-18', pays: 'Togo', exploitant: 'COMTEST Air',
+          aeronef: 'A320', immatriculation: 'TT-COM1', vol: 'CM001',
+          status: 'En cours', itemsInspectes: 22,
+          anomalies: [{
+            itemCode: 'B02', stdRef: 'CAT.IDE.A.100',
+            description: 'Écart semé pour la ronde des requêtes.',
+            categorie: '2', action: '2', suivi: 'Ouvert',
+          }],
+        }],
+      });
+      o.semis = semis.statut;
+      // La liste régionale est tenue par l'écran, non par `RAMP_STATE` : on la
+      // redemande, puis on redessine la page qui s'en sert.
+      await window.rampChargerEcartsRegionaux();
+      await a(2500);
+      o.regionales = (C().regionales || []).length;
+      o.mesEtats = C().mesEtats || [];
+      o.etats = (C().etats || []).length;
+      const insp = (C().regionales || []).find((i) => /COMTEST/.test(i.exploitant || ''));
+      o.inspectionId = (insp || {}).id;
+      o.ecartId = (((insp || {}).anomalies || [])[0] || {}).id;
+
+      // ── 2. La requête ouverte depuis l'écart : le formulaire est prérempli ──
+      await essai('depuisEcart', async () => {
+        const d = {};
+        // ── L'onglet hérité, encore ──
+        //
+        // `RAMP_COM.onglet` survit à tout : la ronde des pages, bien plus haut,
+        // clique les trois sous-onglets et laisse celui des **partages**. Mon
+        // premier tir a donc cherché les écarts régionaux sur l'onglet d'à
+        // côté, et huit contrôles ont rougi. *Septième fois dans cette série.*
+        // La ronde relève ce qu'elle hérite, puis pose l'onglet qu'il lui faut
+        // **par le geste de l'écran**.
+        d.ongletHerite = C().onglet;
+        // Le sélecteur ne peut pas porter les guillemets de l'attribut — CSS
+        // les refuse à l'intérieur d'une valeur déjà entre guillemets. On
+        // filtre donc en JavaScript sur ce que l'attribut contient.
+        [...document.querySelectorAll('[onclick*="rampComOnglet("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes('regional'))?.click();
+        await a(3000);
+        d.onglet = C().onglet;
+        const bouton = [...document.querySelectorAll('[onclick*="rampComRequeteEcart("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.ecartId));
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(3000);
+        d.volet = !!z();
+        const b = B();
+        d.objet = b.objet;
+        d.message = b.message;
+        // L'État qui a conduit l'inspection est coché d'office : c'est lui qui
+        // sait ce qu'il en est advenu, et l'on n'écrit pas au sien.
+        d.destinataires = b.etats_destinataires;
+        d.inspectionDesignee = b.inspection_id === o.inspectionId;
+        d.ecartDesigne = (b.ecart_ids || []).includes(o.ecartId);
+        d.emetteur = b.etat_emetteur;
+        // La désignation est portée par le brouillon : la table de choix
+        // n'apparaît donc pas.
+        d.designation = !!b.designation;
+        d.tableChoixAbsente = !q('[onclick*="rampComChoisirInspection("]');
+        return d;
+      });
+
+      // ── 3. La désignation retirée : le choix ordinaire revient ──
+      await essai('retrait', async () => {
+        const d = {};
+        const retirer = q('[onclick^="rampComRetirerDesignation"]');
+        d.bouton = !!retirer;
+        retirer?.click();
+        await a(2500);
+        d.designation = B().designation;
+        d.inspectionId = B().inspection_id;
+        d.ecarts = (B().ecart_ids || []).length;
+        // La table d'inspections et ses cinq filtres paraissent.
+        d.filtres = tous('[onchange*="rampComCible("]').length;
+        d.recherche = !!q('[oninput*="rampComCible("]');
+        d.rangs = tous('[onclick*="rampComChoisirInspection("]').length;
+        return d;
+      });
+
+      // ── 4. Désigner à la main : les filtres, puis l'inspection et son écart ──
+      await essai('designer', async () => {
+        const d = {};
+        const rangs = () => tous('[onclick*="rampComChoisirInspection("]').length;
+        const parCle = (nom) => tous('[onchange*="rampComCible("]')
+          .find((e) => (e.getAttribute('onchange') || '').includes(`'${nom}'`));
+        const choisir = async (nom, v) => {
+          const e = parCle(nom);
+          if (!e) return;
+          e.value = v;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          await stable(rangs);
+        };
+        d.tous = rangs();
+        await choisir('exploitant', 'COMTEST Air');
+        d.cibleExploitant = (B().cible || {}).exploitant;
+        d.surExploitant = rangs();
+        // Un terme absent ne laisse aucun rang : on ne compte que les boutons
+        // de choix, jamais le marqueur de table vide (n° 5.f.37).
+        await poser('[oninput*="rampComCible("]', 'zzz-aucune-inspection');
+        await stable(rangs);
+        d.surRien = rangs();
+        await poser('[oninput*="rampComCible("]', '');
+        await stable(rangs);
+        d.rendu = rangs();
+
+        const choix = tous('[onclick*="rampComChoisirInspection("]')
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.inspectionId));
+        d.boutonChoix = !!choix;
+        choix?.click();
+        await a(2500);
+        d.inspectionRetenue = B().inspection_id === o.inspectionId;
+        // Choisir l'inspection remet les écarts à zéro : on les coche ensuite.
+        d.ecartsVides = (B().ecart_ids || []).length === 0;
+        const caseEcart = () => tous('[onchange*="rampComBasculerEcart("]')
+          .find((e) => (e.getAttribute('onchange') || '').includes(o.ecartId));
+        d.caseEcart = !!caseEcart();
+        caseEcart()?.click();
+        await a(2200);
+        d.coche = (B().ecart_ids || []).includes(o.ecartId);
+        caseEcart()?.click();
+        await a(2200);
+        d.decoche = (B().ecart_ids || []).length === 0;
+        caseEcart()?.click();
+        await a(2200);
+        d.recoche = (B().ecart_ids || []).includes(o.ecartId);
+        return d;
+      });
+
+      // ── 5. Destinataires, texte, et une pièce mise en attente puis retirée ──
+      await essai('composer', async () => {
+        const d = {};
+        const cases = () => tous('[onchange*="rampComBasculerEtat("]');
+        d.etatsOfferts = cases().length;
+        const cible = cases()
+          .find((e) => (e.getAttribute('onchange') || '').includes('Togo'));
+        d.caseTogo = !!cible;
+        // Décoché puis recoché : la bascule joue dans les deux sens.
+        cible?.click();
+        await a(2200);
+        d.apresDecoche = (B().etats_destinataires || []).length;
+        const cible2 = cases()
+          .find((e) => (e.getAttribute('onchange') || '').includes('Togo'));
+        cible2?.click();
+        await a(2200);
+        d.apresRecoche = (B().etats_destinataires || []).includes('Togo');
+
+        await poser('#rampComObjet', 'Suite donnée au constat B02 — TT-COM1');
+        await poser('#rampComMessage', 'Quelle suite a été donnée au constat relevé le 18 juin ?');
+        d.objet = B().objet;
+        d.message = B().message;
+
+        // Le bouton « Joindre » ne porte pas d'entrée : il clique **son
+        // voisin**, l'entrée cachée. C'est le seul geste du dépôt nommé par ce
+        // qu'il fait au DOM plutôt que par une fonction du module.
+        const joindre = q('[onclick*="nextElementSibling"]');
+        d.boutonJoindre = !!joindre;
+        const entree = joindre ? joindre.nextElementSibling : null;
+        d.entreeVoisine = !!entree && entree.type === 'file';
+        // Le bouton est **cliqué**, et ce que cela prouve est dit : son seul
+        // effet est d'ouvrir le sélecteur de fichiers du navigateur, qu'une
+        // ronde ne voit pas. Ce qui se mesure est donc le **câblage** — le
+        // voisin est bien l'entrée de fichier — et le fait que la page n'en
+        // soit pas dérangée. *Un geste sans effet observable se dit tel, il ne
+        // se maquille pas en assertion.*
+        joindre?.click();
+        await a(1200);
+        d.pageIntacte = !!q('[onclick*="nextElementSibling"]');
+        if (entree) {
+          const dt = new DataTransfer();
+          dt.items.add(new File(['Pièce de la requête.'], 'piece-requete.txt',
+            { type: 'text/plain' }));
+          entree.files = dt.files;
+          entree.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(2500);
+        }
+        d.enAttente = (C().enAttente || []).length;
+        d.nomEnAttente = ((C().enAttente || [])[0] || {}).name;
+        // Retirée avant l'envoi : elle n'a encore rien à quoi se rattacher.
+        const retirer = q('[onclick*="rampComRetirerPiece("]');
+        d.boutonRetirer = !!retirer;
+        retirer?.click();
+        await a(2200);
+        d.apresRetrait = (C().enAttente || []).length;
+        // Et remise, pour qu'elle monte avec la requête.
+        const joindre2 = q('[onclick*="nextElementSibling"]');
+        const entree2 = joindre2 ? joindre2.nextElementSibling : null;
+        if (entree2) {
+          const dt2 = new DataTransfer();
+          dt2.items.add(new File(['Pièce de la requête.'], 'piece-requete.txt',
+            { type: 'text/plain' }));
+          entree2.files = dt2.files;
+          entree2.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(2500);
+        }
+        d.remise = (C().enAttente || []).length;
+        return d;
+      });
+
+      // ── 6. L'envoi, relu chez le serveur ──
+      await essai('envoi', async () => {
+        const d = {};
+        d.emetteur = B().etat_emetteur;
+        q('[onclick^="rampComEnvoyer"]')?.click();
+        d.essais = 0;
+        let liste = [];
+        for (let k = 0; k < 20; k += 1) {
+          await a(1200);
+          d.essais = k + 1;
+          liste = (await jget('/requetes')).requetes || [];
+          if (liste.length > o.deja) break;
+        }
+        d.erreur = (document.getElementById('rampComErreur') || {}).textContent || '';
+        d.requetes = liste.length;
+        const r = liste.find((x) => /B02/.test(x.objet || '')) || {};
+        o.requeteId = r.id;
+        d.objet = r.objet;
+        d.statut = r.statut;
+        d.emetteurEnBase = r.etat_emetteur;
+        d.destinataires = r.etats_destinataires;
+        d.voletFerme = !z();
+        d.brouillonVide = C().brouillon === null;
+        // La pièce est montée **après** la requête : elle n'existe au serveur
+        // qu'une fois qu'il y a quelque chose à quoi la rattacher.
+        const fil = o.requeteId ? await jget(`/requetes/${o.requeteId}`) : {};
+        d.pieces = (fil.pieces || []).length;
+        d.nomPiece = ((fil.pieces || [])[0] || {}).nom_origine;
+        d.ecartsVises = (fil.ecarts_vises || fil.ecart_ids || []).length;
+        return d;
+      });
+
+      // ── 7. Les trois filtres de la table, et la remise à zéro ──
+      await essai('filtres', async () => {
+        const d = {};
+        // La table des requêtes vit sur **son** onglet : l'envoi est parti de
+        // celui des écarts régionaux, et la ronde y était restée.
+        [...document.querySelectorAll('[onclick*="rampComOnglet("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes('requetes'))?.click();
+        await a(3000);
+        d.onglet = (window.RAMP_COM || {}).onglet;
+        const rangs = () => tous('[onclick*="rampComOuvrir("]').length;
+        const F = () => C().filtres || {};
+        const parCle = (nom) => tous('[onchange*="rampComFiltre("]')
+          .find((e) => (e.getAttribute('onchange') || '').includes(`'${nom}'`));
+        d.tous = rangs();
+        const statut = parCle('statut');
+        d.listeStatut = !!statut;
+        if (statut) {
+          statut.value = 'close';
+          statut.dispatchEvent(new Event('change', { bubbles: true }));
+          await stable(rangs);
+        }
+        // Ouverte, la requête n'est pas close : le filtre doit tout retrancher.
+        d.surClose = rangs();
+        if (statut) {
+          const s2 = parCle('statut');
+          s2.value = 'ouverte';
+          s2.dispatchEvent(new Event('change', { bubbles: true }));
+          await stable(rangs);
+        }
+        d.surOuverte = rangs();
+        const etat = parCle('etat');
+        d.listeEtat = !!etat;
+        if (etat) {
+          etat.value = 'Togo';
+          etat.dispatchEvent(new Event('change', { bubbles: true }));
+          await stable(rangs);
+        }
+        d.surTogo = rangs();
+        await poser('[oninput*="rampComFiltre("]', 'zzz-aucune-requete');
+        await stable(rangs);
+        d.surRien = rangs();
+        d.retenus = Object.values(F()).filter(Boolean).length;
+        document.querySelector('[onclick^="rampComReset"]')?.click();
+        await stable(rangs);
+        d.apresReset = Object.values(F()).filter(Boolean).length;
+        d.rendus = rangs();
+
+        // ── Et le bouton « Nouvelle requête », qui ouvre un brouillon vierge ──
+        //
+        // La ronde est partie d'un écart régional, qui préremplit tout : ce
+        // bouton-ci part de rien, et c'est l'autre moitié du formulaire. Le
+        // relevé l'a dit — je l'avais compté couvert sans l'avoir cliqué.
+        const neuve = document.querySelector('[onclick^="rampComNouvelle"]');
+        d.boutonNeuve = !!neuve;
+        neuve?.click();
+        await a(3000);
+        const b2 = (window.RAMP_COM || {}).brouillon || {};
+        d.brouillonVierge = b2.objet === '' && b2.message === ''
+          && (b2.etats_destinataires || []).length === 0
+          && b2.inspection_id === '' && !b2.designation;
+        d.emetteurPose = b2.etat_emetteur;
+        d.voletNeuf = !!z();
+        document.querySelector('[onclick^="rampFermerSlider"]')?.click();
+        await a(2000);
+        d.voletAnnule = !z();
+        d.requetesApres = ((await jget('/requetes')).requetes || []).length;
+        return d;
+      });
+
+      // ── 8. Le fil : ouvert, répondu, clos, rouvert ──
+      await essai('fil', async () => {
+        const d = {};
+        const ouvrirFil = tous('[onclick*="rampComOuvrir("]')
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.requeteId));
+        d.bouton = !!ouvrirFil;
+        ouvrirFil?.click();
+        await a(3500);
+        d.ouverte = (C().ouverte || {}).id === o.requeteId;
+        d.volet = !!z();
+        d.champReponse = !!document.getElementById('rampComReponse');
+
+        // Une réponse vide est refusée sur place.
+        q('[onclick^="rampComRepondre"]')?.click();
+        await a(2000);
+        d.refusVide = (document.getElementById('rampComErreur') || {}).textContent || '';
+        d.echangesApresRefus = ((C().ouverte || {}).echanges || []).length;
+
+        await poser('#rampComReponse', 'Le constat a été soldé le 30 juin ; pièces jointes.');
+        q('[onclick^="rampComRepondre"]')?.click();
+        d.essais = 0;
+        for (let k = 0; k < 20; k += 1) {
+          await a(1200);
+          d.essais = k + 1;
+          if (((C().ouverte || {}).echanges || []).length) break;
+        }
+        const fil = await jget(`/requetes/${o.requeteId}`);
+        d.echanges = (fil.echanges || []).length;
+        d.message = ((fil.echanges || [])[0] || {}).message;
+
+        // La clôture, sur confirmation du socle.
+        q('[onclick^="rampComCloturer"]')?.click();
+        d.clotureConfirmee = await oui();
+        await a(2500);
+        d.statutClos = (await jget(`/requetes/${o.requeteId}`)).statut;
+        // Close, la requête ne reçoit plus : le champ de réponse s'en va.
+        d.champParti = !document.getElementById('rampComReponse');
+        d.boutonRouvrir = !!q('[onclick^="rampComRouvrir"]');
+
+        q('[onclick^="rampComRouvrir"]')?.click();
+        await a(4500);
+        d.statutRouvert = (await jget(`/requetes/${o.requeteId}`)).statut;
+        d.champRendu = !!document.getElementById('rampComReponse');
+        return d;
+      });
+
+      // ── 9. La ronde retire la requête et l'inspection semées ──
+      await essai('menage', async () => {
+        const d = {};
+        const r1 = await env(`/requetes/${o.requeteId}`, 'DELETE');
+        d.suppressionRequete = r1.statut;
+        const insps = await jget('/inspections');
+        const liste = Array.isArray(insps) ? insps : (insps.inspections || []);
+        const mienne = liste.find((i) => /COMTEST/.test(i.exploitant || ''));
+        if (mienne) {
+          const r2 = await env(`/inspections/${mienne.id}`, 'DELETE');
+          d.suppressionInspection = r2.statut;
+        }
+        d.requetesFin = ((await jget('/requetes')).requetes || []).length;
+        d.rendueAuDepart = d.requetesFin === o.deja;
+        return d;
+      });
+      return o;
+    }, '/api/m/ramp');
+
+    {
+      const K = com;
+      const De = K.depuisEcart || {};
+      const Rt = K.retrait || {};
+      const Dg = K.designer || {};
+      const Cp = K.composer || {};
+      const En = K.envoi || {};
+      const Fi = K.filtres || {};
+      const Fl = K.fil || {};
+      const Me = K.menage || {};
+      verifier('une requête s’ouvre depuis un écart régional, et le formulaire reprend ce que l’écart dit de lui-même',
+        K.semis === 201 && K.regionales >= 1 && !!K.inspectionId && !!K.ecartId
+        && typeof De.ongletHerite === 'string'
+        && De.onglet === 'regional' && De.bouton === true && De.volet === true
+        && /B02/.test(String(De.objet || '')) && /TT-COM1/.test(String(De.objet || ''))
+        && /18/.test(String(De.message || ''))
+        // L'État qui a conduit l'inspection est coché d'office.
+        && JSON.stringify(De.destinataires || []) === JSON.stringify(['Togo'])
+        && De.inspectionDesignee === true && De.ecartDesigne === true
+        && De.designation === true && De.tableChoixAbsente === true,
+        JSON.stringify({ semis: K.semis, regionales: K.regionales, mesEtats: K.mesEtats,
+          depuisEcart: De }).slice(0, 460));
+      verifier('retirer la désignation rend le choix ordinaire : la table d’inspections et ses cinq filtres',
+        Rt.bouton === true && Rt.designation === null
+        && Rt.inspectionId === '' && Rt.ecarts === 0
+        && Rt.filtres === 4 && Rt.recherche === true && Rt.rangs >= 1,
+        JSON.stringify(Rt));
+      verifier('les filtres de désignation restreignent dans les deux sens, et l’inspection puis son écart se désignent à la main',
+        Dg.tous >= 1 && Dg.cibleExploitant === 'COMTEST Air' && Dg.surExploitant >= 1
+        && Dg.surRien === 0 && Dg.rendu === Dg.tous
+        && Dg.boutonChoix === true && Dg.inspectionRetenue === true
+        // Choisir l'inspection remet les écarts à zéro, puis la case joue dans
+        // les deux sens — et une troisième fois, pour que la requête en vise un.
+        && Dg.ecartsVides === true && Dg.caseEcart === true
+        && Dg.coche === true && Dg.decoche === true && Dg.recoche === true,
+        JSON.stringify(Dg).slice(0, 420));
+      verifier('un destinataire se décoche et se recoche, l’objet et le message s’écrivent, et une pièce se met en attente puis se retire',
+        Cp.etatsOfferts >= 2 && Cp.caseTogo === true
+        && Cp.apresDecoche === 0 && Cp.apresRecoche === true
+        && /B02/.test(String(Cp.objet || '')) && /suite/i.test(String(Cp.message || ''))
+        // Le bouton « Joindre » clique son voisin : l'entrée cachée.
+        && Cp.boutonJoindre === true && Cp.entreeVoisine === true
+        && Cp.pageIntacte === true
+        && Cp.enAttente === 1 && Cp.nomEnAttente === 'piece-requete.txt'
+        && Cp.boutonRetirer === true && Cp.apresRetrait === 0
+        && Cp.remise === 1,
+        JSON.stringify(Cp).slice(0, 420));
+      verifier('la requête part, le serveur la porte ouverte avec son émetteur et son destinataire, et la pièce monte derrière elle',
+        En.erreur === '' && En.requetes === K.deja + 1 && !!K.requeteId
+        && /B02/.test(String(En.objet || '')) && En.statut === 'ouverte'
+        && String(En.emetteurEnBase || '').length > 0
+        && JSON.stringify(En.destinataires || []) === JSON.stringify(['Togo'])
+        && En.voletFerme === true && En.brouillonVide === true
+        && En.pieces === 1 && En.nomPiece === 'piece-requete.txt',
+        JSON.stringify(En).slice(0, 460));
+      verifier('les trois filtres de la table des requêtes restreignent dans les deux sens, et la remise à zéro les rend',
+        Fi.onglet === 'requetes' && Fi.tous === 1 && Fi.listeStatut === true
+        // Ouverte, la requête n'est pas close : le filtre retranche tout.
+        && Fi.surClose === 0 && Fi.surOuverte === 1
+        && Fi.listeEtat === true && Fi.surTogo === 1
+        && Fi.surRien === 0 && Fi.retenus === 3
+        && Fi.apresReset === 0 && Fi.rendus === Fi.tous
+        // Une requête neuve s'ouvre vierge, l'émetteur posé d'office, et son
+        // abandon ne laisse rien.
+        && Fi.boutonNeuve === true && Fi.brouillonVierge === true
+        && String(Fi.emetteurPose || '').length > 0
+        && Fi.voletNeuf === true && Fi.voletAnnule === true
+        && Fi.requetesApres === Fi.tous,
+        JSON.stringify(Fi).slice(0, 460));
+      verifier('le fil s’ouvre, refuse une réponse vide, porte la réponse chez le serveur, se clôt sur confirmation et se rouvre',
+        Fl.bouton === true && Fl.ouverte === true && Fl.volet === true
+        && Fl.champReponse === true
+        && /message/i.test(String(Fl.refusVide || '')) && Fl.echangesApresRefus === 0
+        && Fl.echanges === 1 && /soldé/.test(String(Fl.message || ''))
+        && Fl.clotureConfirmee === true && Fl.statutClos === 'close'
+        // Close, la requête ne reçoit plus : le champ de réponse s'en va.
+        && Fl.champParti === true && Fl.boutonRouvrir === true
+        && Fl.statutRouvert === 'ouverte' && Fl.champRendu === true,
+        JSON.stringify(Fl).slice(0, 460));
+      verifier('la ronde des requêtes retire la requête et l’inspection semées',
+        Me.suppressionRequete === 200 && Me.suppressionInspection === 200
+        && Me.rendueAuDepart === true,
+        JSON.stringify(Me));
+    }
+
     const produits = await oterLeRelais();
     // Trois exports ont été cliqués — inspections, écarts, contacts. Le bac n'a
     // ni inspection ni écart : ceux-là peuvent n'avoir rien à produire et le

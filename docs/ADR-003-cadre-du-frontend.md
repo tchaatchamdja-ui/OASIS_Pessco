@@ -7433,6 +7433,96 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            strictement plus juste qu'attendre l'horloge. Campagne reprise :
            **1 322 contrôles, code 0**, vingt suites vertes.
 
+       5.f.39 [x] **RAMP — la correspondance entre autorités** — fait le
+           23 octobre 2026.
+
+           **Cent dix-neuf contrôles sur RAMP ; 175 gestes sur 208 (84 %).**
+           `ramp-communication.js` passe de **2 à 20 noms sur 26**.
+           Campagne : 1 330.
+
+           Ce fichier n'est pas un écran de plus. Il porte la **correspondance
+           officielle entre autorités** : un État écrit à un autre au sujet d'un
+           écart que celui-ci a relevé, le destinataire répond, et la requête se
+           clôt. Il était à 2 noms, tous deux génériques.
+
+           ── Huit contrôles, du constat régional au solde ──
+
+           La ronde part de l'**écart régional**, parce que c'est de là que part
+           une requête : `rampComRequeteEcart` remplit le formulaire de ce que
+           l'écart dit de lui-même — l'objet et le message le reprennent, et
+           **l'État qui a conduit l'inspection est coché d'office**, car c'est
+           lui qui sait ce qu'il en est advenu. Puis elle **retire la
+           désignation** pour retrouver le choix ordinaire, redésigne à la main
+           par les filtres et la table, coche et décoche un destinataire, écrit,
+           met une pièce en attente puis la retire, et envoie.
+
+           La pièce monte **derrière** la requête : avant elle, elle n'a rien à
+           quoi se rattacher. C'est ce que le code dit, et le contrôle le relit
+           chez le serveur.
+
+           Suivent les trois filtres de la table — dont le statut, qui doit
+           **tout retrancher** sur « close » quand la seule requête est ouverte
+           —, le fil ouvert, une réponse vide refusée, la réponse portée, la
+           clôture sur confirmation du socle, et la réouverture. Close, la
+           requête ne reçoit plus : le champ de réponse s'en va, et revient
+           avec elle.
+
+           ── Trois fautes, dont deux fois le même état hérité ──
+
+           **L'onglet.** `RAMP_COM.onglet` survit à tout, et la ronde des pages
+           — bien plus haut dans la suite — laisse celui des **partages**. Mon
+           premier tir a cherché les écarts régionaux sur l'onglet d'à côté :
+           huit contrôles rouges. *Septième fois dans cette série.* Puis, le tir
+           suivant, la table des requêtes introuvable — elle vit sur **son**
+           onglet, et l'envoi était parti de celui des écarts régionaux.
+
+           **Et un sélecteur que CSS refuse.** `_rArg` met des guillemets dans
+           l'attribut ; `[onclick*="rampComOnglet("regional")"]` n'est pas un
+           sélecteur valide. On filtre donc en JavaScript sur ce que l'attribut
+           contient — comme ailleurs dans cette suite, mais je l'avais écrit
+           à l'envers une fois de plus.
+
+           ── Deux gestes que j'avais comptés sans les faire ──
+
+           Le relevé l'a dit, et c'est exactement à cela qu'il sert.
+           `rampComNouvelle` et `this.nextElementSibling.click` figuraient « non
+           exercés » : la ronde ouvrait le formulaire depuis l'écart régional
+           sans jamais toucher au bouton « Nouvelle requête », et posait les
+           fichiers sur l'entrée cachée **sans cliquer le bouton qui l'ouvre**.
+           *Un geste qu'on croit couvert parce qu'on a écrit son voisin ne l'est
+           pas.*
+
+           Les deux sont maintenant joués. Le second n'a **aucun effet
+           observable** — il ouvre le sélecteur de fichiers du navigateur, qu'une
+           ronde ne voit pas. Ce qui se mesure est donc le **câblage** : son
+           voisin est bien l'entrée de fichier, et la page n'en est pas
+           dérangée. C'est dit dans le contrôle plutôt que maquillé en
+           assertion.
+
+           ── Deux contre-essais ──
+
+           Cinq défauts en un tir — objet non prérempli, filtres de désignation
+           sans effet, bascule d'un destinataire figée, filtre de la table sans
+           effet, fil qui ne s'ouvre plus : **cinq contrôles rouges**, chacun le
+           sien. Puis la désignation qui ne se retire plus et l'objet altéré à
+           l'envoi : **deux rouges voulus**, et quatre de cascade — sans objet
+           reconnaissable la ronde ne retrouve plus sa requête, donc le fil et
+           le ménage tombent, et la garde globale nomme le `404` sur
+           `/requetes/undefined`. Cascade vraie, et lisible.
+
+           ── Deux incidents d'outillage, et ce qu'ils ont appris ──
+
+           Un relevé est mort sur `Tab target session is not defined` — un
+           troisième visage des chutes de navigateur, après « Target closed » et
+           le délai de protocole. L'écouteur posé en 5.f.36 n'a rien dit : ce
+           n'est donc pas un processus de rendu tué, mais une session CDP
+           perdue. Et la suite morte en route a **laissé son serveur**, orphelin,
+           sur le port d'essai — le relevé suivant a buté dessus, et **le
+           garde-fou de 5.f.30 l'a nommé avec le `lsof` qui le retrouve**.
+           C'est précisément ce pour quoi il avait été écrit : *un harnais qui
+           parle à un serveur inconnu rend un verdict sur les données de
+           quelqu'un d'autre.* Processus arrêté, relevé repris, 175 gestes.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

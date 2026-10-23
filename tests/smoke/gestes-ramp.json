@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-22",
+ "releve": "2026-10-23",
  "gestesNommes": 208,
  "occurrences": 363,
- "exerces": 157,
+ "exerces": 175,
  "indecidables": 1,
  "gestes": [
   {
@@ -436,7 +436,7 @@
    "evenement": "click",
    "nom": "rampComNouvelle",
    "source": "rampComNouvelle()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -445,7 +445,7 @@
    "evenement": "change",
    "nom": "rampComFiltre",
    "source": "rampComFiltre('statut', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -454,7 +454,7 @@
    "evenement": "change",
    "nom": "rampComFiltre",
    "source": "rampComFiltre('etat', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -463,7 +463,7 @@
    "evenement": "input",
    "nom": "rampComFiltre",
    "source": "rampComFiltre('recherche', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -472,7 +472,7 @@
    "evenement": "click",
    "nom": "rampComReset",
    "source": "rampComReset()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -481,7 +481,7 @@
    "evenement": "click",
    "nom": "rampComOuvrir",
    "source": "rampComOuvrir(${_rArg(r.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -553,7 +553,7 @@
    "evenement": "click",
    "nom": "rampComRequeteEcart",
    "source": "rampComRequeteEcart(${_rArg(i.id)}, ${_rArg(a.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -598,7 +598,7 @@
    "evenement": "change",
    "nom": "rampComBasculerEcart",
    "source": "rampComBasculerEcart(${_rArg(e.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -616,7 +616,7 @@
    "evenement": "click",
    "nom": "rampComRetirerDesignation",
    "source": "rampComRetirerDesignation()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -625,7 +625,7 @@
    "evenement": "change",
    "nom": "rampComCible",
    "source": "rampComCible('annee', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -634,7 +634,7 @@
    "evenement": "change",
    "nom": "rampComCible",
    "source": "rampComCible('etat', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -643,7 +643,7 @@
    "evenement": "change",
    "nom": "rampComCible",
    "source": "rampComCible('exploitant', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -652,7 +652,7 @@
    "evenement": "change",
    "nom": "rampComCible",
    "source": "rampComCible('immatriculation', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -661,7 +661,7 @@
    "evenement": "input",
    "nom": "rampComCible",
    "source": "rampComCible('recherche', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -670,7 +670,7 @@
    "evenement": "click",
    "nom": "rampComChoisirInspection",
    "source": "rampComChoisirInspection(${_rArg(i.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -679,7 +679,7 @@
    "evenement": "change",
    "nom": "rampComBasculerEtat",
    "source": "rampComBasculerEtat(${_rArg(e)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -688,7 +688,7 @@
    "evenement": "input",
    "nom": "rampComSaisie",
    "source": "rampComSaisie('objet', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -697,7 +697,7 @@
    "evenement": "input",
    "nom": "rampComSaisie",
    "source": "rampComSaisie('message', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -715,7 +715,7 @@
    "evenement": "click",
    "nom": "rampComEnvoyer",
    "source": "rampComEnvoyer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -724,7 +724,7 @@
    "evenement": "click",
    "nom": "rampComRetirerPiece",
    "source": "rampComRetirerPiece(${n})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -733,7 +733,7 @@
    "evenement": "click",
    "nom": "this.nextElementSibling.click",
    "source": "this.nextElementSibling.click()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -742,7 +742,7 @@
    "evenement": "change",
    "nom": "rampComJoindre",
    "source": "rampComJoindre(this)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -760,7 +760,7 @@
    "evenement": "click",
    "nom": "rampComRouvrir",
    "source": "rampComRouvrir()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -769,7 +769,7 @@
    "evenement": "click",
    "nom": "rampComCloturer",
    "source": "rampComCloturer()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -778,7 +778,7 @@
    "evenement": "click",
    "nom": "rampComRepondre",
    "source": "rampComRepondre()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-pac.js",

@@ -5353,6 +5353,338 @@ module.exports = async function rampNavigateurSmoke(port) {
         JSON.stringify(Me));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  Le rapport d'inspection, et les écarts du dispositif régional
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Deux ensembles qui restaient, et qui closent deux fichiers :
+    // `ramp-apercu.js` — l'aperçu du rapport (POI), son impression et sa
+    // fermeture — et la table des **écarts régionaux** de
+    // `ramp-communication.js`, avec ses trois facettes, sa recherche et les
+    // preuves d'un constat relevé par un autre État.
+    //
+    // ── Ce que l'impression laisse voir, et c'est tout ce qu'on peut mesurer ──
+    //
+    // `rampImprimerRapport` ne lance pas la boîte d'impression du navigateur
+    // dans ce harnais — un navigateur sans imprimante n'en a pas. Mais il fait
+    // quelque chose d'observable **avant** : il écrit la fiche dans un cadre à
+    // lui, `#rampCadreImpression`, et le retire une seconde plus tard. Le
+    // module s'en explique : « le rapport part dans un document à lui, qui ne
+    // porte que la fiche et la feuille du module ». C'est ce cadre, son
+    // contenu, et sa disparition que la ronde relève.
+    etape = 'rapport et écarts régionaux';
+    await ouvrir('ecarts');
+    await attendre(2500);
+    const apercu = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const inspections = async () => {
+        const c = await jget('/inspections');
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      const stable = async (compte) => {
+        let avant = -1;
+        for (let k = 0; k < 15; k += 1) {
+          await a(600);
+          const n = compte();
+          if (n === avant) return k + 1;
+          avant = n;
+        }
+        return -1;
+      };
+
+      // ── 1. Une inspection semée, deux constats de catégories différentes ──
+      //
+      // Deux, parce qu'une facette ne s'éprouve qu'avec deux valeurs à
+      // départager (n° 5.f.37) : la catégorie doit pouvoir **retrancher**.
+      o.deja = (await inspections()).length;
+      o.herite = ((window.RAMP_STATE || {}).filtres || {}).recherche || '';
+      document.querySelector('[onclick^="rampResetFiltres"]')?.click();
+      await a(2500);
+      const semis = await env('/inspections/import', 'POST', {
+        data: [{
+          date: '2026-07-09', pays: 'Togo', exploitant: 'APERCU Air',
+          aeronef: 'B787-9', immatriculation: 'TT-AP01', vol: 'AP001',
+          status: 'En cours', itemsInspectes: 30,
+          anomalies: [
+            { itemCode: 'A05', stdRef: 'CAT.OP.MPA.175',
+              description: 'Premier constat de la ronde du rapport.',
+              categorie: '2', action: '2', suivi: 'Ouvert' },
+            { itemCode: 'C04', stdRef: 'CAT.IDE.A.100',
+              description: 'Second constat, de catégorie 3.',
+              categorie: '3', action: '3b', suivi: 'Ouvert' },
+          ],
+        }],
+      });
+      o.semis = semis.statut;
+      await window.rampRecharger();
+      await a(3000);
+      const mienne = (await inspections()).find((i) => /APERCU/.test(i.exploitant || ''));
+      o.inspectionId = (mienne || {}).id;
+      const ecarts = ((mienne || {}).anomalies || []);
+      o.ecartCat2 = (ecarts.find((x) => String(x.categorie) === '2') || {}).id;
+      o.ecartCat3 = (ecarts.find((x) => String(x.categorie) === '3') || {}).id;
+
+      // Une preuve déposée par la route, pour que le volet régional en montre
+      // une : la ronde du plan l'a déjà éprouvée par l'écran (n° 5.f.38), ici
+      // ce n'est qu'un décor dont le contenu se relit.
+      const fd = new FormData();
+      fd.append('file', new File(['Preuve régionale.'], 'preuve-reg.txt', { type: 'text/plain' }));
+      fd.append('action', 'curative');
+      fd.append('intitule', 'Compte rendu de la correction');
+      const dep = await fetch(`${api}/ecarts/${o.ecartCat2}/preuves`, {
+        method: 'POST', credentials: 'same-origin', body: fd,
+      });
+      o.depot = dep.status;
+
+      // ── 2. L'aperçu du rapport, ouvert depuis la table des écarts ──
+      await essai('rapport', async () => {
+        const d = {};
+        const bouton = [...document.querySelectorAll('[onclick*="rampOuvrirApercu("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.inspectionId));
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(4500);
+        d.apercuPose = ((window.RAMP_STATE || {}).apercu || {}).id === o.inspectionId;
+        const fiche = document.querySelector('.poi-rapport');
+        d.fiche = !!fiche;
+        const texte = fiche ? (fiche.textContent || '') : '';
+        d.porteExploitant = /APERCU Air/.test(texte);
+        d.porteImmat = /TT-AP01/.test(texte);
+        // Les deux constats paraissent sur la fiche, avec leurs items.
+        d.porteA05 = /A05/.test(texte);
+        d.porteC04 = /C04/.test(texte);
+        d.boutonFermer = !!document.querySelector('[onclick^="rampFermerApercu"]');
+        d.boutonImprimer = !!document.querySelector('[onclick^="rampImprimerRapport"]');
+        return d;
+      });
+
+      // ── 3. L'impression : le cadre écrit, puis retiré ──
+      await essai('impression', async () => {
+        const d = {};
+        const cadre = () => document.getElementById('rampCadreImpression');
+        d.avant = !!cadre();
+        document.querySelector('[onclick^="rampImprimerRapport"]')?.click();
+        await a(500);
+        d.pose = !!cadre();
+        const doc = cadre() ? cadre().contentDocument : null;
+        d.ficheDansLeCadre = !!(doc && doc.querySelector('.poi-rapport'));
+        d.feuilles = doc ? doc.querySelectorAll('link[rel="stylesheet"]').length : 0;
+        d.titre = doc ? doc.title : '';
+        // Il se retire de lui-même une seconde après le lancement.
+        await a(3500);
+        d.retire = !cadre();
+        return d;
+      });
+
+      // ── 4. La fermeture rend la table ──
+      await essai('fermeture', async () => {
+        const d = {};
+        // Ce qu'il y avait **avant** de fermer : sans cela, le contrôle serait
+        // vert sur un aperçu qui ne s'était jamais ouvert — « plus de fiche »
+        // ne prouve rien quand il n'y en avait pas.
+        d.ficheAvant = !!document.querySelector('.poi-rapport');
+        document.querySelector('[onclick^="rampFermerApercu"]')?.click();
+        await a(3000);
+        d.apercuOublie = ((window.RAMP_STATE || {}).apercu) === null;
+        d.fichePartie = !document.querySelector('.poi-rapport');
+        d.tableRendue = document.querySelectorAll('[onclick*="rampOuvrirApercu("]').length >= 1;
+        return d;
+      });
+
+      // ── 5. Les écarts du dispositif : trois facettes et une recherche ──
+      await essai('regional', async () => {
+        const d = {};
+        // L'onglet se pose par le geste de l'écran : il survit d'une ronde à
+        // l'autre, et la précédente a laissé celui des requêtes (n° 5.f.39).
+        document.querySelector('.nav-btn[data-page="partages"]')?.click();
+        await a(3500);
+        [...document.querySelectorAll('[onclick*="rampComOnglet("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes('regional'))?.click();
+        await a(3000);
+        d.onglet = (window.RAMP_COM || {}).onglet;
+        await window.rampChargerEcartsRegionaux();
+        await a(2500);
+
+        const F = () => (window.RAMP_COM || {}).filtresRegional || {};
+        const rangs = () => document.querySelectorAll('[onclick*="rampComPreuvesEcart("]').length;
+        const listes = () => [...document.querySelectorAll('[onchange*="rampComRegFiltre("]')];
+        const parCle = (nom) => listes()
+          .find((e) => (e.getAttribute('onchange') || '').includes(`'${nom}'`));
+        const choisir = async (nom, v) => {
+          const e = parCle(nom);
+          if (!e) return;
+          e.value = v;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          await stable(rangs);
+        };
+        d.listes = listes().length;
+        d.tous = rangs();
+
+        // L'exploitant : la ronde n'a que le sien, mais la facette doit retenir.
+        await choisir('exploitant', 'APERCU Air');
+        d.cibleExploitant = F().exploitant;
+        d.surExploitant = rangs();
+        // La catégorie départage les deux constats semés.
+        await choisir('categorie', '2');
+        d.cibleCategorie = F().categorie;
+        d.surCat2 = rangs();
+        await choisir('categorie', '3');
+        d.surCat3 = rangs();
+        await choisir('categorie', '');
+        d.surToutesCat = rangs();
+        // L'État, et la recherche.
+        await choisir('etat', 'Togo');
+        d.cibleEtat = F().etat;
+        d.surTogo = rangs();
+        const champ = document.querySelector('[oninput*="rampComRegFiltre("]');
+        d.champ = !!champ;
+        if (champ) {
+          champ.value = 'zzz-aucun-ecart';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await stable(rangs);
+        }
+        d.surRien = rangs();
+        d.retenus = Object.values(F()).filter(Boolean).length;
+        document.querySelector('[onclick^="rampComRegReset"]')?.click();
+        await stable(rangs);
+        d.apresReset = Object.values(F()).filter(Boolean).length;
+        d.rendus = rangs();
+        return d;
+      });
+
+      // ── 6. Les preuves d'un constat relevé par un autre État ──
+      await essai('preuves', async () => {
+        const d = {};
+        const bouton = [...document.querySelectorAll('[onclick*="rampComPreuvesEcart("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.ecartCat2));
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(3000);
+        const volet = document.querySelector('.ramp-slider-body');
+        d.volet = !!volet;
+        const ouvert = (window.RAMP_COM || {}).preuvesOuvertes || {};
+        d.ecartOuvert = (ouvert.ecart || {}).id === o.ecartCat2;
+        const texte = volet ? (volet.textContent || '') : '';
+        // Le volet rappelle ce qui est désigné, et liste les pièces.
+        d.porteExploitant = /APERCU Air/.test(texte);
+        d.porteItem = /A05/.test(texte);
+        d.lignes = volet ? volet.querySelectorAll('.ramp-preuve-ligne').length : 0;
+        d.portePiece = /Compte rendu de la correction/.test(texte);
+        // Rien ne s'y modifie : pas un bouton de dépôt ni de retrait.
+        d.lectureSeule = volet
+          ? !volet.querySelector('[onclick*="rampOuvrirDepotPreuve("]')
+            && !volet.querySelector('[onclick*="rampSupprimerPreuve("]')
+          : null;
+        document.querySelector('[onclick^="rampFermerSlider"]')?.click();
+        await a(2500);
+        d.referme = !document.querySelector('.ramp-slider-body');
+        return d;
+      });
+
+      // ── 7. L'aperçu, ouvert cette fois depuis la table régionale ──
+      //
+      // Le même geste, par un autre chemin : ici l'inspection n'appartient pas
+      // aux données de l'instance, et `rampOuvrirApercu` la prend dans la liste
+      // régionale que cet écran tient. C'est ce que son commentaire annonce, et
+      // ce second passage le vérifie.
+      await essai('rapportRegional', async () => {
+        const d = {};
+        const bouton = [...document.querySelectorAll('[onclick*="rampOuvrirApercu("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.inspectionId));
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(4500);
+        d.apercuPose = ((window.RAMP_STATE || {}).apercu || {}).id === o.inspectionId;
+        const fiche = document.querySelector('.poi-rapport');
+        d.fiche = !!fiche;
+        d.porteImmat = /TT-AP01/.test(fiche ? (fiche.textContent || '') : '');
+        document.querySelector('[onclick^="rampFermerApercu"]')?.click();
+        await a(2500);
+        d.referme = !document.querySelector('.poi-rapport');
+        return d;
+      });
+
+      // ── 8. La ronde retire ce qu'elle a semé ──
+      await essai('menage', async () => {
+        const d = {};
+        const rep = await env(`/inspections/${o.inspectionId}`, 'DELETE');
+        d.suppression = rep.statut;
+        d.restantes = (await inspections()).length;
+        d.rendueAuDepart = d.restantes === o.deja;
+        return d;
+      });
+      return o;
+    }, '/api/m/ramp');
+
+    {
+      const A = apercu;
+      const Ra = A.rapport || {};
+      const Im = A.impression || {};
+      const Fe = A.fermeture || {};
+      const Rg = A.regional || {};
+      const Pv = A.preuves || {};
+      const Rr = A.rapportRegional || {};
+      const Me = A.menage || {};
+      verifier('l’aperçu du rapport s’ouvre depuis la table des écarts, et la fiche porte l’inspection et ses deux constats',
+        A.semis === 201 && !!A.inspectionId && !!A.ecartCat2 && !!A.ecartCat3
+        && A.depot === 201
+        && Ra.bouton === true && Ra.apercuPose === true && Ra.fiche === true
+        && Ra.porteExploitant === true && Ra.porteImmat === true
+        && Ra.porteA05 === true && Ra.porteC04 === true
+        && Ra.boutonFermer === true && Ra.boutonImprimer === true,
+        JSON.stringify({ semis: A.semis, depot: A.depot, rapport: Ra }).slice(0, 420));
+      verifier('l’impression écrit la fiche dans un cadre à elle, avec les deux feuilles du module, et le retire d’elle-même',
+        Im.avant === false && Im.pose === true
+        && Im.ficheDansLeCadre === true && Im.feuilles === 2
+        && Im.titre === 'Proof of Inspection'
+        // Il ne reste rien dans la page une seconde après le lancement.
+        && Im.retire === true,
+        JSON.stringify(Im));
+      verifier('la fermeture oublie l’aperçu et rend la table des écarts',
+        Fe.ficheAvant === true
+        && Fe.apercuOublie === true && Fe.fichePartie === true && Fe.tableRendue === true,
+        JSON.stringify(Fe));
+      verifier('les trois facettes des écarts régionaux restreignent dans les deux sens — la catégorie départage les deux constats —, et la remise à zéro les rend',
+        Rg.onglet === 'regional' && Rg.listes === 3 && Rg.tous === 2
+        && Rg.cibleExploitant === 'APERCU Air' && Rg.surExploitant === 2
+        // Deux constats, deux catégories : chacune n'en garde qu'un.
+        && Rg.cibleCategorie === '2' && Rg.surCat2 === 1 && Rg.surCat3 === 1
+        && Rg.surToutesCat === 2
+        && Rg.cibleEtat === 'Togo' && Rg.surTogo === 2
+        && Rg.champ === true && Rg.surRien === 0 && Rg.retenus === 3
+        && Rg.apresReset === 0 && Rg.rendus === Rg.tous,
+        JSON.stringify(Rg).slice(0, 420));
+      verifier('les preuves d’un constat relevé par un autre État s’ouvrent en lecture seule, et portent la pièce déposée',
+        Pv.bouton === true && Pv.volet === true && Pv.ecartOuvert === true
+        && Pv.porteExploitant === true && Pv.porteItem === true
+        && Pv.lignes === 1 && Pv.portePiece === true
+        // Rien ne s'y modifie : ni dépôt, ni retrait.
+        && Pv.lectureSeule === true && Pv.referme === true,
+        JSON.stringify(Pv));
+      verifier('le même aperçu s’ouvre depuis la table régionale, où l’inspection n’appartient pas à l’instance',
+        Rr.bouton === true && Rr.apercuPose === true && Rr.fiche === true
+        && Rr.porteImmat === true && Rr.referme === true,
+        JSON.stringify(Rr));
+      verifier('la ronde du rapport retire son inspection, et le module revient à son compte',
+        Me.suppression === 200 && Me.rendueAuDepart === true,
+        JSON.stringify(Me));
+    }
+
     const produits = await oterLeRelais();
     // Trois exports ont été cliqués — inspections, écarts, contacts. Le bac n'a
     // ni inspection ni écart : ceux-là peuvent n'avoir rien à produire et le

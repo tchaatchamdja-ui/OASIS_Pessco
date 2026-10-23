@@ -2,7 +2,7 @@
  "releve": "2026-10-23",
  "gestesNommes": 208,
  "occurrences": 363,
- "exerces": 175,
+ "exerces": 181,
  "indecidables": 1,
  "gestes": [
   {
@@ -12,7 +12,7 @@
    "evenement": "click",
    "nom": "rampFermerApercu",
    "source": "rampFermerApercu()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-apercu.js",
@@ -21,7 +21,7 @@
    "evenement": "click",
    "nom": "rampImprimerRapport",
    "source": "rampImprimerRapport()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-apercu.js",
@@ -309,7 +309,7 @@
    "evenement": "click",
    "nom": "rampOuvrirApercu",
    "source": "event.stopPropagation();rampOuvrirApercu('${i.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -381,7 +381,7 @@
    "evenement": "click",
    "nom": "rampOuvrirApercu",
    "source": "event.stopPropagation();rampOuvrirApercu('${i.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -490,7 +490,7 @@
    "evenement": "change",
    "nom": "rampComRegFiltre",
    "source": "rampComRegFiltre('etat', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -499,7 +499,7 @@
    "evenement": "change",
    "nom": "rampComRegFiltre",
    "source": "rampComRegFiltre('exploitant', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -508,7 +508,7 @@
    "evenement": "change",
    "nom": "rampComRegFiltre",
    "source": "rampComRegFiltre('categorie', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -517,7 +517,7 @@
    "evenement": "input",
    "nom": "rampComRegFiltre",
    "source": "rampComRegFiltre('recherche', this.value)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -526,7 +526,7 @@
    "evenement": "click",
    "nom": "rampComRegReset",
    "source": "rampComRegReset()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -535,7 +535,7 @@
    "evenement": "click",
    "nom": "rampOuvrirApercu",
    "source": "rampOuvrirApercu(${_rArg(i.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -544,7 +544,7 @@
    "evenement": "click",
    "nom": "rampComPreuvesEcart",
    "source": "rampComPreuvesEcart(${_rArg(i.id)}, ${_rArg(a.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",

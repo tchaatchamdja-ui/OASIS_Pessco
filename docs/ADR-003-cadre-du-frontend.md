@@ -7523,6 +7523,88 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            parle à un serveur inconnu rend un verdict sur les données de
            quelqu'un d'autre.* Processus arrêté, relevé repris, 175 gestes.
 
+       5.f.40 [x] **RAMP — le rapport d'inspection, et les écarts du
+           dispositif** — fait le 23 octobre 2026.
+
+           **Cent vingt-six contrôles sur RAMP ; 181 gestes sur 208 (87 %).**
+           `ramp-apercu.js` est **complet (3/3)**, `ramp-communication.js`
+           atteint **24 sur 26**. Campagne : 1 337.
+
+           **Quatre fichiers du module sont désormais couverts en entier** :
+           `ramp-apercu.js`, `ramp-pac.js`, `ramp-poi-actions.js`,
+           `ramp-stats.js`.
+
+           ── Un même geste, deux chemins ──
+
+           `rampOuvrirApercu` s'ouvre depuis la table des écarts **et** depuis
+           la table régionale, et ce n'est pas une redondance : dans un cas
+           l'inspection vient des données de l'instance, dans l'autre de la
+           liste que cet écran tient — « elle appartient à un autre État »,
+           écrit le module. La ronde emprunte les deux, parce que c'est le même
+           nom pour deux provenances.
+
+           ── Ce que l'impression laisse voir, et c'est tout ──
+
+           `rampImprimerRapport` ne lance aucune boîte de dialogue dans ce
+           harnais : un navigateur sans imprimante n'en a pas. Mais il fait
+           quelque chose d'observable avant : il **écrit la fiche dans un cadre
+           à lui**, avec les deux feuilles du module — le module s'en explique,
+           « le rapport part dans un document à lui » —, et le retire une
+           seconde plus tard. Le contrôle relève le cadre, son titre, les deux
+           feuilles, la fiche à l'intérieur, **et sa disparition**. *Un geste
+           dont l'effet visible est bref se mesure dans sa fenêtre, non par ce
+           qu'on aurait aimé voir.*
+
+           ── La lecture seule, exigée et non supposée ──
+
+           Les preuves d'un constat relevé par un autre État s'ouvrent pour être
+           lues et téléchargées. Le contrôle n'affirme pas seulement qu'elles
+           paraissent : il exige qu'**aucun bouton de dépôt ni de retrait** n'y
+           soit. Une copie figée qui laisserait un bouton d'écriture serait un
+           défaut, et rien ne l'aurait dit.
+
+           ── Un contrôle qui serait passé pour rien, resserré avant d'être cru ──
+
+           Mon contrôle de fermeture disait : « plus de fiche, et la table est
+           rendue ». Il serait resté **vert sur un aperçu qui ne s'était jamais
+           ouvert** — « plus de fiche » ne prouve rien quand il n'y en avait
+           pas. J'ai ajouté le relevé de ce qu'il y avait **avant**, et le
+           contre-essai l'a confirmé dans le tour même : aperçu neutralisé, ce
+           contrôle rougit, avec `ficheAvant: false` en toutes lettres. *Un
+           contrôle qui ne relève pas l'état de départ mesure l'arrivée de
+           n'importe où.*
+
+           ── Deux contre-essais ──
+
+           Trois défauts en un tir — l'impression qui n'écrit plus la fiche dans
+           son cadre, la facette régionale sans effet, les preuves qui ne
+           s'ouvrent plus : **trois contrôles rouges**, chacun le sien. Puis
+           l'aperçu qui ne se pose plus et la remise à zéro régionale sans
+           effet : **six rouges**, dont la fermeture pour la raison dite plus
+           haut, et les preuves en cascade — la recherche restée posée vidait la
+           table, donc plus de bouton à cliquer. Cascade vraie, et lisible.
+
+           ── Ce qui reste, et ce qui le bloque ──
+
+           Vingt-six noms, en trois paquets dont deux ne tiennent pas à moi :
+
+           - la **coquille du module** (`ramp-app.js`, 14 noms) : facettes de
+             pays et de trimestres, thème, langue, barre latérale, déconnexion,
+             dépliage d'une ligne, suppression d'une inspection, `window:resize`.
+             Atteignable, et c'est la suite naturelle.
+           - les **cinq noms de partage** (POI et communication), dispensés :
+             il n'y a de partage qu'après une notification **réellement
+             partie**, et le harnais n'a pas de serveur de messagerie.
+           - l'écran **Mes Utilisateurs** (`ramp-utilisateurs.js`, 7 noms), qui
+             vit dans la **vue Prestataire** : `rampPeutGererComptes` exige
+             `rampVuePrestataire()`, et la ronde se connecte en superadmin.
+             *Et c'est plus large que ces sept noms* — **aucun contrôle du
+             dépôt n'exerce la vue Prestataire**, alors qu'elle restreint des
+             écrans entiers. Les fixtures portent `admin.prestataire@test.int`
+             et le harnais sait ouvrir une session pour n'importe lequel de ses
+             comptes : la voie existe, et la décision appartient à la maîtrise
+             d'ouvrage. *Question portée au rapport.*
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

@@ -5685,6 +5685,420 @@ module.exports = async function rampNavigateurSmoke(port) {
         JSON.stringify(Me));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La coquille du module : barre, thème, langue, facettes, lignes
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `ramp-app.js` tient la coquille — ce qui entoure les écrans et ne leur
+    // appartient à aucun. Quatorze noms y restaient, et ils ne se ressemblent
+    // pas : des réglages qui survivent au rechargement (barre latérale, thème,
+    // langue), des facettes qui filtrent (pays membres, trimestres, catégorie),
+    // des lignes qui se déplient, une suppression, et la mesure des hauteurs au
+    // redimensionnement.
+    //
+    // ── Ce que la ronde doit rendre ──
+    //
+    // Thème, langue et barre latérale sont **persistants** : ils s'écrivent dans
+    // le stockage local et vaudraient pour les rondes suivantes. Chacun est donc
+    // joué puis **rendu à son état de départ**, relevé avant d'y toucher.
+    etape = 'coquille du module';
+    await ouvrir('dashboard');
+    await attendre(2500);
+    const coquille = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const inspections = async () => {
+        const c = await jget('/inspections');
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3500);
+        return true;
+      };
+      const S = () => window.RAMP_STATE || {};
+      const F = () => S().filtres || {};
+      const stable = async (compte) => {
+        let avant = -1;
+        for (let k = 0; k < 15; k += 1) {
+          await a(600);
+          const n = compte();
+          if (n === avant) return k + 1;
+          avant = n;
+        }
+        return -1;
+      };
+
+      // ── 1. La barre latérale, le thème, la langue — joués et rendus ──
+      await essai('reglages', async () => {
+        const d = {};
+        const bouton = (sel) => document.querySelector(sel);
+
+        // La barre latérale : son état va aussi dans le stockage local.
+        d.barreAvant = !!S().sidebarCollapsed;
+        bouton('[onclick^="rampToggleSidebar"]')?.click();
+        await a(2500);
+        d.barreApres = !!S().sidebarCollapsed;
+        d.barreEnMemoire = localStorage.getItem('ramp_sidebar');
+        bouton('[onclick^="rampToggleSidebar"]')?.click();
+        await a(2500);
+        d.barreRendue = !!S().sidebarCollapsed;
+
+        // Le thème : une pastille par thème, et l'attribut de la page suit.
+        const pastilles = () => [...document.querySelectorAll('[onclick^="rampSetTheme("]')];
+        d.pastilles = pastilles().length;
+        d.themeAvant = document.documentElement.getAttribute('data-theme');
+        const autre = pastilles().find((p) => {
+          const m = /rampSetTheme\('([^']+)'/.exec(p.getAttribute('onclick') || '');
+          return m && m[1] !== d.themeAvant;
+        });
+        d.autrePastille = !!autre;
+        d.themeDemande = autre
+          ? (/rampSetTheme\('([^']+)'/.exec(autre.getAttribute('onclick') || '') || [])[1] : null;
+        autre?.click();
+        await a(2000);
+        d.themeApres = document.documentElement.getAttribute('data-theme');
+        d.themeEnMemoire = localStorage.getItem('pr_theme');
+        // Rendu : on le repose tel qu'il était.
+        pastilles().find((p) => (p.getAttribute('onclick') || '').includes(`'${d.themeAvant}'`))?.click();
+        await a(2000);
+        d.themeRendu = document.documentElement.getAttribute('data-theme');
+
+        // La langue : l'attribut `lang` de la page la porte, pour les lecteurs
+        // d'écran — le module s'en explique.
+        const langues = () => [...document.querySelectorAll('[onclick^="rampSetLang("]')];
+        d.langues = langues().length;
+        d.langueAvant = document.documentElement.lang;
+        const autreL = langues().find((b) => {
+          const m = /rampSetLang\('([^']+)'/.exec(b.getAttribute('onclick') || '');
+          return m && m[1] !== d.langueAvant;
+        });
+        d.autreLangue = !!autreL;
+        autreL?.click();
+        await a(3000);
+        d.langueApres = document.documentElement.lang;
+        d.langueEnMemoire = localStorage.getItem('pr_lang');
+        langues().find((b) => (b.getAttribute('onclick') || '').includes(`'${d.langueAvant}'`))?.click();
+        await a(3000);
+        d.langueRendue = document.documentElement.lang;
+        return d;
+      });
+
+      // ── 2. Les hauteurs remesurées au redimensionnement ──
+      //
+      // L'écouteur recalcule deux variables CSS — le décalage de l'entête et la
+      // hauteur du pied. On les **efface**, on redimensionne, et l'on regarde si
+      // elles reviennent : c'est le seul effet observable de cet écouteur.
+      await essai('redimension', async () => {
+        const d = {};
+        const lire = (nom) => document.documentElement.style.getPropertyValue(nom);
+        d.avant = [lire('--ramp-entete-h'), lire('--ramp-pied-h')].filter(Boolean).length;
+        document.documentElement.style.removeProperty('--ramp-entete-h');
+        document.documentElement.style.removeProperty('--ramp-pied-h');
+        d.effacees = [lire('--ramp-entete-h'), lire('--ramp-pied-h')].filter(Boolean).length;
+        window.dispatchEvent(new Event('resize'));
+        await a(2000);
+        d.reposees = [lire('--ramp-entete-h'), lire('--ramp-pied-h')].filter(Boolean).length;
+        return d;
+      });
+
+      // ── 3. Deux inspections semées, dans deux trimestres ──
+      //
+      // Une facette ne s'éprouve qu'avec deux valeurs à départager : les
+      // trimestres doivent pouvoir **retrancher**.
+      o.deja = (await inspections()).length;
+      document.querySelector('[onclick^="rampResetFiltres"]')?.click();
+      await a(2000);
+      const ligne = (date, immat, vol, cat) => ({
+        date, pays: 'Togo', exploitant: 'COQUILLE Air', aeronef: 'A330',
+        immatriculation: immat, vol, status: 'En cours', itemsInspectes: 25,
+        anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175',
+          description: `Constat de la ronde de coquille (${vol}).`,
+          categorie: cat, action: cat, suivi: 'Ouvert' }],
+      });
+      const semis = await env('/inspections/import', 'POST', {
+        data: [ligne('2026-02-11', 'TT-CQ01', 'CQ001', '2'),
+          ligne('2026-08-20', 'TT-CQ02', 'CQ002', '3')],
+      });
+      o.semis = semis.statut;
+      await window.rampRecharger();
+      await a(3000);
+      const miennes = (await inspections()).filter((i) => /COQUILLE/.test(i.exploitant || ''));
+      o.ids = miennes.map((i) => i.id);
+      o.premierTrimestre = (miennes.find((i) => /^2026-02/.test(i.date || '')) || {}).id;
+
+      // ── 4. La facette des trimestres ──
+      await essai('trimestres', async () => {
+        const d = {};
+        // ── Où vit cette facette, lu dans la source et non supposé ──
+        //
+        // `rampBarreFiltres` n'affiche les trimestres que là où l'écran les
+        // demande, et **un seul** le fait : le volet des statistiques. Les
+        // trois autres barres passent `trimestre: false`. Mon premier essai la
+        // cherchait sur la table des inspections, où elle n'a jamais été.
+        //
+        // Et ce qui se mesure n'est pas un nombre de rangs mais **ce que le
+        // module retient** : `rampFiltrer()` est sa propre fonction de filtre,
+        // et c'est elle que la facette commande.
+        document.querySelector('[onclick^="rampOuvrirStatistiques"]')?.click();
+        await a(3500);
+        const retenues = () => ((window.rampFiltrer() || {}).inspections || []).length;
+        const rangs = retenues;
+        d.volet = !!document.querySelector('.ramp-slider-body');
+        d.tous = retenues();
+        const multi = () => document.querySelector('[onclick^="rampBasculerTrimestres"]');
+        d.bouton = !!multi();
+        d.ouvertAvant = multi() ? multi().getAttribute('aria-expanded') : null;
+        multi()?.click();
+        await a(2200);
+        d.ouvertApres = multi() ? multi().getAttribute('aria-expanded') : null;
+        const cases = () => [...document.querySelectorAll('[onchange*="rampBasculerTrimestre("]')];
+        d.cases = cases().length;
+        // Le premier trimestre : une des deux inspections semées y tombe.
+        const t1 = cases().find((c) => (c.getAttribute('onchange') || '').includes('"1"'));
+        d.caseT1 = !!t1;
+        if (t1) { t1.checked = true; t1.dispatchEvent(new Event('change', { bubbles: true })); }
+        await stable(rangs);
+        d.retenus = (F().trimestre || []).length;
+        d.surT1 = rangs();
+        const vider = document.querySelector('[onclick^="rampViderTrimestres"]');
+        d.boutonVider = !!vider;
+        vider?.click();
+        await stable(rangs);
+        d.apresVidage = (F().trimestre || []).length;
+        d.rendus = rangs();
+        // Le panneau se referme par le même geste, puis le volet avec le sien.
+        multi()?.click();
+        await a(2200);
+        d.ouvertRendu = multi() ? multi().getAttribute('aria-expanded') : null;
+        document.querySelector('[onclick^="rampFermerSlider"]')?.click();
+        await a(2500);
+        d.voletFerme = !document.querySelector('.ramp-slider-body');
+        return d;
+      });
+
+      // ── 5. Les pays membres : relevé avant d'être exigé ──
+      //
+      // `rampBarrePays` ne rend quelque chose qu'en **vue régionale** —
+      // `inst.disponible && !inst.courante`. La ronde relève donc l'état des
+      // instances au lieu de supposer que la barre est là : si elle n'y est
+      // pas, ces deux gestes sont hors de portée de cette session, et le
+      // contrôle le dit plutôt que de rougir sans raison.
+      await essai('pays', async () => {
+        const d = {};
+        d.instance = S().instance || null;
+        d.vueRegionale = typeof window.rampVueRegionale === 'function'
+          ? window.rampVueRegionale() : null;
+        const boutons = () => [...document.querySelectorAll('[onclick^="rampBasculerPaysUemoa("]')];
+        d.barre = boutons().length;
+        if (!boutons().length) return d;
+        const rangs = () => document.querySelectorAll('[onclick*="rampBasculerInspection("]').length;
+        d.tous = rangs();
+        const togo = boutons().find((b) => (b.getAttribute('onclick') || '').includes('Togo'));
+        d.boutonTogo = !!togo;
+        togo?.click();
+        await stable(rangs);
+        d.retenus = (F().paysUemoa || []).length;
+        d.surTogo = rangs();
+        const vider = document.querySelector('[onclick^="rampViderPaysUemoa"]');
+        d.boutonVider = !!vider;
+        vider?.click();
+        await stable(rangs);
+        d.apresVidage = (F().paysUemoa || []).length;
+        return d;
+      });
+
+      // ── 6. Une ligne d'inspection se déplie, et une inspection se supprime ──
+      await essai('lignes', async () => {
+        const d = {};
+        // La table des inspections : la phase précédente a ouvert puis refermé
+        // le volet des statistiques, et la page est restée celle d'où elle
+        // venait. *Une phase qui change de page la laisse changée.*
+        document.querySelector('.nav-btn[data-page="etats"]')?.click();
+        await a(3000);
+        d.page = (window.RAMP_STATE || {}).currentPage;
+        // ── Des lignes, non des gestionnaires ──
+        //
+        // Chaque rang porte `rampBasculerInspection` **deux fois** — sur la
+        // ligne et sur son chevron. Compter les sélecteurs donnait donc le
+        // double, et « une de moins » devenait faux. On compte les rangs.
+        const rangs = () => document.querySelectorAll('#ramp-content tr.ramp-depliant').length;
+        // Le rang de détail porte la même classe sur les deux tables : c'est
+        // le gabarit du module, relu dans la source plutôt que deviné.
+        const detail = () => document.querySelectorAll('tr.ramp-ecart-detail').length;
+        const ligneDe = (id) => [...document.querySelectorAll('[onclick*="rampBasculerInspection("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(id));
+        d.rangs = rangs();
+        d.detailAvant = detail();
+        ligneDe(o.premierTrimestre)?.click();
+        await a(2500);
+        d.depliee = !!(S().inspectionsDepliees || {})[o.premierTrimestre];
+        d.detailApres = detail();
+        ligneDe(o.premierTrimestre)?.click();
+        await a(2500);
+        d.replieeRendue = !(S().inspectionsDepliees || {})[o.premierTrimestre];
+        d.detailRendu = detail();
+
+        // La suppression, sur confirmation du socle : une des deux semées.
+        const suppr = [...document.querySelectorAll('[onclick*="rampSupprimerInspection("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.premierTrimestre));
+        d.boutonSupprimer = !!suppr;
+        suppr?.click();
+        d.suppressionConfirmee = await oui();
+        await a(2000);
+        const restantes = await inspections();
+        d.enBase = restantes.some((i) => i.id === o.premierTrimestre);
+        d.rangsApres = rangs();
+        return d;
+      });
+
+      // ── 7. Une ligne d'écart se déplie, et une catégorie se retire du graphe ──
+      await essai('ecartsEtCategorie', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="ecarts"]')?.click();
+        await a(3000);
+        const lignes = () => [...document.querySelectorAll('[onclick*="rampBasculerEcart("]')];
+        d.lignes = lignes().length;
+        const cle = lignes()[0]
+          ? (/rampBasculerEcart\(\s*"([^"]+)"/.exec(lignes()[0].getAttribute('onclick') || '') || [])[1]
+          : null;
+        d.cle = cle;
+        const detail = () => document.querySelectorAll('tr.ramp-ecart-detail').length;
+        d.detailAvant = detail();
+        lignes()[0]?.click();
+        await a(2500);
+        d.depliee = !!(S().ecartsDeplies || {})[cle];
+        d.detailApres = detail();
+        lignes().find((b) => (b.getAttribute('onclick') || '').includes(cle))?.click();
+        await a(2500);
+        d.detailRendu = detail();
+
+        // La catégorie : une pastille du tableau de bord qui retire sa part.
+        document.querySelector('.nav-btn[data-page="dashboard"]')?.click();
+        await a(3000);
+        const pastilles = () => [...document.querySelectorAll('[onclick*="rampBasculerCategorie("]')];
+        d.pastilles = pastilles().length;
+        const p1 = pastilles()[0];
+        d.presseeAvant = p1 ? p1.getAttribute('aria-pressed') : null;
+        p1?.click();
+        await a(2500);
+        const p2 = pastilles()[0];
+        d.presseeApres = p2 ? p2.getAttribute('aria-pressed') : null;
+        p2?.click();
+        await a(2500);
+        const p3 = pastilles()[0];
+        d.presseeRendue = p3 ? p3.getAttribute('aria-pressed') : null;
+        return d;
+      });
+
+      // ── 8. La ronde retire ce qui lui reste ──
+      await essai('menage', async () => {
+        const d = { effacees: 0 };
+        const miennes2 = (await inspections()).filter((i) => /COQUILLE/.test(i.exploitant || ''));
+        d.aEffacer = miennes2.length;
+        for (const i of miennes2) {
+          /* eslint-disable no-await-in-loop */
+          const rep = await env(`/inspections/${i.id}`, 'DELETE');
+          if (rep.statut === 200) d.effacees += 1;
+        }
+        d.restantes = (await inspections()).length;
+        d.rendueAuDepart = d.restantes === o.deja;
+        return d;
+      });
+      return o;
+    }, '/api/m/ramp');
+
+    {
+      const Q = coquille;
+      const Rg = Q.reglages || {};
+      const Rd = Q.redimension || {};
+      const Tr = Q.trimestres || {};
+      const Pa = Q.pays || {};
+      const Li = Q.lignes || {};
+      const Ec = Q.ecartsEtCategorie || {};
+      const Me = Q.menage || {};
+      verifier('la barre latérale se plie et se déplie, et son état va dans le stockage local',
+        Rg.barreApres !== Rg.barreAvant
+        && Rg.barreEnMemoire === String(Rg.barreApres)
+        && Rg.barreRendue === Rg.barreAvant,
+        JSON.stringify({ avant: Rg.barreAvant, apres: Rg.barreApres,
+          memoire: Rg.barreEnMemoire, rendue: Rg.barreRendue }));
+      verifier('le thème se change par sa pastille — l’attribut de la page et le stockage suivent — et se rend',
+        Rg.pastilles >= 2 && Rg.autrePastille === true
+        && !!Rg.themeDemande && Rg.themeApres === Rg.themeDemande
+        && Rg.themeEnMemoire === Rg.themeDemande
+        && Rg.themeRendu === Rg.themeAvant,
+        JSON.stringify({ pastilles: Rg.pastilles, avant: Rg.themeAvant,
+          demande: Rg.themeDemande, apres: Rg.themeApres,
+          memoire: Rg.themeEnMemoire, rendu: Rg.themeRendu }));
+      verifier('la langue se change, l’attribut « lang » de la page la porte — pour les lecteurs d’écran —, et elle se rend',
+        Rg.langues >= 2 && Rg.autreLangue === true
+        && String(Rg.langueAvant || '').length > 0
+        && Rg.langueApres !== Rg.langueAvant
+        && Rg.langueEnMemoire === Rg.langueApres
+        && Rg.langueRendue === Rg.langueAvant,
+        JSON.stringify({ langues: Rg.langues, avant: Rg.langueAvant,
+          apres: Rg.langueApres, memoire: Rg.langueEnMemoire, rendue: Rg.langueRendue }));
+      verifier('le redimensionnement remesure les deux hauteurs de la coquille, effacées exprès avant',
+        Rd.avant === 2 && Rd.effacees === 0 && Rd.reposees === 2,
+        JSON.stringify(Rd));
+      verifier('la facette des trimestres s’ouvre, retranche — une seule des deux inspections semées —, se vide et se referme',
+        Q.semis === 201 && (Q.ids || []).length === 2 && !!Q.premierTrimestre
+        && Tr.volet === true && Tr.bouton === true
+        && Tr.ouvertAvant === 'false' && Tr.ouvertApres === 'true'
+        // Deux trimestres proposés, et non quatre : la facette n'offre que ce
+        // que les données portent — février et août.
+        && Tr.cases === 2 && Tr.caseT1 === true
+        && Tr.retenus === 1 && Tr.tous === 2 && Tr.surT1 === 1
+        && Tr.boutonVider === true && Tr.apresVidage === 0 && Tr.rendus === Tr.tous
+        && Tr.ouvertRendu === 'false' && Tr.voletFerme === true,
+        JSON.stringify(Tr).slice(0, 420));
+      verifier('la barre des États membres n’existe qu’en vue régionale, et la ronde relève laquelle elle a',
+        // Elle est relevée, non supposée : si l'instance n'est pas disponible,
+        // la vue n'est pas régionale et la barre n'a pas lieu d'être. Les deux
+        // cas sont admis — mais ils doivent **se répondre**.
+        Pa.vueRegionale === (Pa.barre > 0)
+        && (Pa.barre === 0
+          || (Pa.boutonTogo === true && Pa.retenus === 1 && Pa.surTogo >= 1
+            && Pa.boutonVider === true && Pa.apresVidage === 0)),
+        JSON.stringify(Pa).slice(0, 380));
+      verifier('une ligne d’inspection se déplie sur son détail, se replie, et l’inspection se supprime sur confirmation',
+        Li.page === 'etats' && Li.rangs === 2 && Li.detailAvant === 0
+        && Li.depliee === true && Li.detailApres === 1
+        && Li.replieeRendue === true && Li.detailRendu === 0
+        && Li.boutonSupprimer === true && Li.suppressionConfirmee === true
+        && Li.enBase === false && Li.rangsApres === Li.rangs - 1,
+        JSON.stringify(Li));
+      verifier('une ligne d’écart se déplie et se replie, et une catégorie se retire du graphe puis y revient',
+        Ec.lignes >= 1 && !!Ec.cle
+        && Ec.detailAvant === 0 && Ec.depliee === true && Ec.detailApres === 1
+        && Ec.detailRendu === 0
+        && Ec.pastilles === 4
+        && Ec.presseeAvant === 'true' && Ec.presseeApres === 'false'
+        && Ec.presseeRendue === 'true',
+        JSON.stringify(Ec));
+      verifier('la ronde de la coquille retire ce qui lui reste, et le module revient à son compte',
+        Me.aEffacer === 1 && Me.effacees === 1 && Me.rendueAuDepart === true,
+        JSON.stringify(Me));
+    }
+
     const produits = await oterLeRelais();
     // Trois exports ont été cliqués — inspections, écarts, contacts. Le bac n'a
     // ni inspection ni écart : ceux-là peuvent n'avoir rien à produire et le
@@ -5697,6 +6111,26 @@ module.exports = async function rampNavigateurSmoke(port) {
 
     verifier('aucune erreur de console ni requête échouée sur RAMP',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
+
+    // ── La déconnexion du module est inatteignable, et c'est voulu ──
+    //
+    // J'avais écrit un contrôle pour elle. Il rougissait : aucun
+    // `[onclick^="rampDeconnexion"]` dans la page, aucun `.btn-logout`. Le
+    // module en rend bien un — et **le socle le remplace**. Son contrat le dit
+    // en propres termes (`frontend/socle/chrome.ts`) :
+    //
+    //   | `.btn-logout` | il le **remplace** par « Retour au portail » |
+    //
+    //   « un module qui cesserait de rendre son bouton de déconnexion perdrait
+    //   le seul chemin de retour vers le portail, sans une erreur. C'est
+    //   pourquoi la déconnexion du module est, à dessein, inatteignable : son
+    //   bouton n'est pas un geste, c'est une **ancre**. »
+    //
+    // Le contrôle est donc retiré, et `rampDeconnexion` déclaré non couvert
+    // avec cette raison. *Un contrôle qui mesure l'impossible n'est pas un
+    // contrôle sévère, c'est un contrôle faux.* La question de savoir si cette
+    // fonction doit survivre à son bouton est portée au rapport — le « Retour
+    // au portail » du module, lui, a été retiré en 5.e.8 pour la même raison.
   } finally {
     // Le journal du mouchard, relevé **avant** de fermer : une page fermée n'a
     // plus de `window`, et le relevé rendrait zéro geste — la mesure de rien,

@@ -7605,6 +7605,93 @@ Ce que l'ingénierie peut dire, et qui a été dit :
              comptes : la voie existe, et la décision appartient à la maîtrise
              d'ouvrage. *Question portée au rapport.*
 
+       5.f.41 [x] **RAMP — la coquille, et un contrôle qui mesurait
+           l'impossible** — fait le 24 octobre 2026.
+
+           **Cent trente-cinq contrôles sur RAMP ; 191 gestes sur 208 (92 %).**
+           `ramp-app.js` passe de **18 à 28 noms sur 32**. Campagne : 1 346.
+
+           ── Ce qui se joue et se rend ──
+
+           Barre latérale, thème et langue s'écrivent dans le **stockage local**
+           et vaudraient pour les rondes suivantes. Chacun est donc relevé avant
+           d'y toucher, joué, puis **rendu** — et le contrôle exige les trois
+           temps. La langue se vérifie à l'attribut `lang` de la page, que le
+           module pose « pour qu'un lecteur d'écran prononce l'écran dans la
+           langue où il est écrit » : c'est sa raison, et c'est elle qu'on
+           mesure.
+
+           Le redimensionnement n'a qu'un effet observable : **remesurer les
+           deux hauteurs** de la coquille. La ronde les **efface exprès**,
+           redimensionne, et regarde si elles reviennent.
+
+           ── Trois fautes, et une leçon de lecture ──
+
+           **La facette des trimestres n'était pas où je la cherchais.**
+           `rampBarreFiltres` ne l'affiche que là où l'écran la demande, et un
+           seul le fait : le volet des statistiques. Les trois autres barres
+           passent `trimestre: false`. Je la cherchais sur la table des
+           inspections, où elle n'a jamais été. *La source dit où vit un geste ;
+           la deviner coûte un tir.*
+
+           **Des gestionnaires comptés pour des lignes.** Chaque rang porte
+           `rampBasculerInspection` **deux fois** — sur la ligne et sur son
+           chevron. Compter les sélecteurs donnait le double, et « une de
+           moins » devenait faux.
+
+           **Et une phase qui laissait la page changée.** La facette des
+           trimestres ouvre puis referme le volet des statistiques ; la phase
+           suivante a trouvé le tableau de bord là où elle attendait la table.
+           *Neuvième fois dans cette série qu'un geste est posé sur un état
+           supposé* — la règle est désormais écrite dans chaque ronde.
+
+           ── Un contrôle qui mesurait l'impossible, et qui est parti ──
+
+           J'avais écrit un contrôle pour `rampDeconnexion` : clic, retour à la
+           page de connexion, et le serveur qui refuse ensuite. Il rougissait —
+           **aucun `.btn-logout` dans la page**. Le module en rend bien un, et
+           le socle le **remplace**. Son contrat l'écrit en propres termes :
+
+             « un module qui cesserait de rendre son bouton de déconnexion
+             perdrait le seul chemin de retour vers le portail, sans une
+             erreur. C'est pourquoi la déconnexion du module est, à dessein,
+             inatteignable : son bouton n'est pas un geste, c'est une
+             **ancre**. »
+
+           Le contrôle est retiré et la raison consignée. *Un contrôle qui
+           mesure l'impossible n'est pas un contrôle sévère, c'est un contrôle
+           faux.* Reste une question qui n'est pas la mienne : cette fonction
+           doit-elle survivre à son bouton ? Le « Retour au portail » du module
+           a été retiré en 5.e.8 pour exactement cette raison. *Portée au
+           rapport.*
+
+           ── Une limite de l'instrument, nommée ──
+
+           `window:resize` **est** exercé — les deux hauteurs reviennent — et
+           l'outil le classe pourtant **indécidable**. Il a raison de ne pas
+           prétendre mieux : le mouchard enregistre la cible d'un écouteur par
+           `String(this)`, soit `[object Window]`, que rien ne rapproche du
+           `window:resize` relevé dans la source, et le rapprochement se fait
+           par identifiant — qu'un écouteur de `window` n'a pas.
+
+           *Aucun écouteur posé sur `window` ne peut donc être crédité
+           aujourd'hui.* C'est une limite de l'instrument, non du dépôt, et elle
+           vaut aussi pour le `window:message` du portail. Le remède est court —
+           nommer `window` et `document` au lieu de les stringifier, et
+           rapprocher par le nom à défaut d'identifiant —, mais il déplacerait
+           les dénominateurs des sept écrans et demande donc son propre tour,
+           avec les sept relevés qui vont avec. **Je ne le mêle pas à celui-ci.**
+
+           ── Deux contre-essais ──
+
+           Cinq défauts en un tir — barre latérale figée, thème qui ne se pose
+           plus sur la page, hauteur du pied non remesurée, trimestre non
+           retenu, ligne qui ne se déplie plus : **cinq contrôles rouges**,
+           chacun le sien. Puis la langue, la suppression et la bascule d'un
+           écart : **trois rouges voulus**, plus le ménage, qui a compté deux
+           inspections à effacer au lieu d'une — conséquence exacte de la
+           suppression neutralisée.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

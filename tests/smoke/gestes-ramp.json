@@ -1,8 +1,8 @@
 {
- "releve": "2026-10-23",
+ "releve": "2026-10-24",
  "gestesNommes": 208,
  "occurrences": 363,
- "exerces": 181,
+ "exerces": 191,
  "indecidables": 1,
  "gestes": [
   {
@@ -111,7 +111,7 @@
    "evenement": "click",
    "nom": "rampBasculerTrimestres",
    "source": "rampBasculerTrimestres()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -120,7 +120,7 @@
    "evenement": "change",
    "nom": "rampBasculerTrimestre",
    "source": "rampBasculerTrimestre(${_rArg(String(t))})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -129,7 +129,7 @@
    "evenement": "click",
    "nom": "rampViderTrimestres",
    "source": "rampViderTrimestres()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -210,7 +210,7 @@
    "evenement": "click",
    "nom": "rampSetTheme",
    "source": "rampSetTheme('${th}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -219,7 +219,7 @@
    "evenement": "click",
    "nom": "rampSetLang",
    "source": "rampSetLang('${l.toLowerCase()}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -228,7 +228,7 @@
    "evenement": "click",
    "nom": "rampToggleSidebar",
    "source": "rampToggleSidebar()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -237,7 +237,7 @@
    "evenement": "click",
    "nom": "rampToggleSidebar",
    "source": "rampToggleSidebar()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -246,7 +246,7 @@
    "evenement": "click",
    "nom": "rampToggleSidebar",
    "source": "rampToggleSidebar()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -273,7 +273,7 @@
    "evenement": "click",
    "nom": "rampBasculerCategorie",
    "source": "rampBasculerCategorie(${_rArg(cle)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -291,7 +291,7 @@
    "evenement": "click",
    "nom": "rampBasculerInspection",
    "source": "rampBasculerInspection(${_rArg(i.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -300,7 +300,7 @@
    "evenement": "click",
    "nom": "rampBasculerInspection",
    "source": "event.stopPropagation();rampBasculerInspection(${_rArg(i.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -318,7 +318,7 @@
    "evenement": "click",
    "nom": "rampSupprimerInspection",
    "source": "event.stopPropagation();rampSupprimerInspection('${i.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -363,7 +363,7 @@
    "evenement": "click",
    "nom": "rampBasculerEcart",
    "source": "rampBasculerEcart(${_rArg(a.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",
@@ -372,7 +372,7 @@
    "evenement": "click",
    "nom": "rampBasculerEcart",
    "source": "event.stopPropagation();rampBasculerEcart(${_rArg(a.id)})",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-app.js",

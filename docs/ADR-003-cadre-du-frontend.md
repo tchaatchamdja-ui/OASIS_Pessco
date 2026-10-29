@@ -7692,6 +7692,90 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            inspections à effacer au lieu d'une — conséquence exacte de la
            suppression neutralisée.
 
+       5.f.42 [x] **RAMP — la vue Prestataire, et un cloisonnement qu'on
+           n'éprouvait pas** — fait le 29 octobre 2026.
+
+           **Cent quarante-quatre contrôles sur RAMP.** Campagne : 1 355.
+           Les gestes restent à **191 sur 208**, et c'est la bonne lecture :
+           ces neuf contrôles mesurent ce que cette vue **retire**, et *un
+           retrait n'est pas un geste.* Une étape qui n'ajoute pas un point de
+           couverture et ajoute neuf garanties.
+
+           ── Pourquoi celle-ci comptait plus que les autres ──
+
+           Aucun contrôle du dépôt n'exerçait cette vue, alors qu'elle restreint
+           des écrans entiers. C'est une surface de **droits** : l'endroit où
+           une régression ne se voit pas, parce qu'elle n'**ajoute** rien à
+           l'écran — elle y **laisse** quelque chose qui devait en partir.
+
+           ── Pas de seconde session : la bascule est un geste de la barre ──
+
+           Je comptais écrire une suite à part, avec une seconde identité. C'est
+           inutile : `ramp-vues.js` pose deux boutons dans la barre du socle, et
+           la bascule appartient à l'Autorité. Le serveur présente alors le
+           compte aux routes **comme un compte du prestataire retenu** — « la
+           vue n'est pas un habillage », écrit le module, et c'est exactement ce
+           qu'il fallait éprouver.
+
+           La bascule **recharge la page** : ce bloc vient donc après le retrait
+           du relais, qui ne survivrait pas au rechargement.
+
+           ── Le contrôle qui compte ──
+
+           Les boutons retirés sont une commodité ; **ce que le compte peut
+           lire** est la garantie. La ronde sème donc **deux** inspections —
+           une pour l'exploitant du prestataire, une pour un autre — et exige
+           que le compte ne lise que la sienne. *Sans la seconde, « il ne voit
+           que la sienne » serait vrai d'un écran qui ne cloisonne rien.*
+
+           Le contre-essai l'a dit en toutes lettres : périmètre du serveur
+           neutralisé, le contrôle rougit avec
+           `exploitants: ["Air Bénin Express", "AUTRE Air"]`. C'est le serveur
+           qu'il mesure, non l'écran.
+
+           ── Ce que la vue retire, et ce qu'elle doit garder ──
+
+           Chaque contrôle d'absence dit aussi ce qui **reste** : la table des
+           inspections perd ses trois commandes et la suppression mais garde le
+           dépliage et l'aperçu ; la table des écarts perd le bouton des preuves
+           mais garde celui du plan d'actions ; le volet des statistiques perd
+           le générateur mais garde la situation par exploitant. *Une table vide
+           prouverait l'absence de tout, et non le retrait de ce qui devait
+           partir.*
+
+           Et les quatre menus fermés ne se rouvrent pas par l'aiguillage : un
+           détour par `rampNavigateTo('parametres')` ramène au tableau de bord.
+           Le contre-essai a montré la fuite exacte quand on élargit la liste —
+           `parametres` dans les menus ouverts, et le routeur qui l'accepte.
+
+           ── Ce qui reste hors de portée, et pourquoi ──
+
+           `ramp-utilisateurs.js` **reste à 2 noms sur 9**, et la ronde dit
+           pourquoi : `rampPeutGererComptes` exige que l'organisme ait confié la
+           gestion des comptes, et **un super-administrateur qui simule la vue
+           n'est pas l'administrateur de l'organisme**. Le contrôle l'exige dans
+           les deux sens — le menu est là si et seulement si la vue l'accorde —
+           plutôt que de supposer l'un ou l'autre. Les exercer demande une
+           session sur `admin.prestataire@test.int`, que les fixtures portent.
+
+           ── Deux contre-essais ──
+
+           Trois défauts en un tir — périmètre du serveur retiré, commandes des
+           inspections rendues, générateur rendu : **trois contrôles rouges**,
+           plus celui des écarts, dont le compte de rangs passait à deux parce
+           que le cloisonnement ne tenait plus. Puis la liste des menus élargie,
+           la carte des cinq exploitants rendue, le bouton des preuves rendu :
+           **trois rouges**, chacun le sien.
+
+           ── Un troisième angle mort de l'instrument, nommé ──
+
+           `ramp-vues.js` — la bascule elle-même — **ne figure pas du tout dans
+           l'inventaire des gestes**. Ses gestionnaires sont des `onClick` posés
+           sur des objets remis au socle, que ni l'extracteur statique ni le
+           mouchard ne voient. Ce n'est pas une omission du relevé : c'est une
+           forme qu'il ne connaît pas, comme les écouteurs de `window`. À
+           traiter avec eux, dans le tour qui leur sera consacré.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

@@ -6109,6 +6109,325 @@ module.exports = async function rampNavigateurSmoke(port) {
       (produits.documents || []).some((n) => n > 500) || produits.blobs > 0,
       JSON.stringify(produits));
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La vue Prestataire : ce que le module retire, et à qui il le retire
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // **Aucun contrôle du dépôt n'exerçait cette vue**, alors qu'elle restreint
+    // des écrans entiers. C'est une surface de **droits** : l'endroit où une
+    // régression ne se voit pas, parce qu'elle n'ajoute rien à l'écran — elle
+    // en laisse quelque chose qui devrait en être retiré.
+    //
+    // ── Pas de seconde session : la bascule est un geste de la barre ──
+    //
+    // Le module sert l'autorité et l'exploitant inspecté, et le passage de
+    // l'une à l'autre appartient à l'Autorité : `ramp-vues.js` pose deux
+    // boutons dans la barre du socle. Le serveur présente alors le compte aux
+    // routes **comme un compte du prestataire retenu** — « la vue n'est pas un
+    // habillage », écrit le module, et c'est cela qu'il faut éprouver.
+    //
+    // La bascule **recharge la page** : ce bloc vient donc après le retrait du
+    // relais, qui ne survivrait pas au rechargement.
+    //
+    // ── Ce qui se sème, et pourquoi deux exploitants ──
+    //
+    // Le prestataire des fixtures est « Air Bénin Express ». La ronde sème une
+    // inspection pour lui **et une pour un autre exploitant** : sans la
+    // seconde, « le prestataire ne voit que la sienne » serait vrai d'un écran
+    // qui ne cloisonne rien. *Un cloisonnement ne se prouve qu'avec quelque
+    // chose à cloisonner.*
+    etape = 'vue Prestataire';
+    const attendreLeModule = async () => {
+      await page.waitForSelector('.nav-btn[data-page]', { timeout: 25000 }).catch(() => {});
+      await page.waitForFunction(
+        () => {
+          const el = document.getElementById('ramp-content');
+          return el && el.textContent.trim().length > 200;
+        },
+        { timeout: 25000 },
+      ).catch(() => {});
+      await attendre(2500);
+    };
+
+    const semisPrest = await page.evaluate(async (api) => {
+      const d = {};
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const ligne = (exploitant, immat, vol) => ({
+        date: '2026-09-15', pays: 'Bénin', exploitant, aeronef: 'B737-700',
+        immatriculation: immat, vol, status: 'En cours', itemsInspectes: 16,
+        anomalies: [{ itemCode: 'A05', stdRef: 'CAT.OP.MPA.175',
+          description: `Constat de la ronde Prestataire (${vol}).`,
+          categorie: '2', action: '2', suivi: 'Ouvert' }],
+      });
+      const inspections = async () => {
+        const c = await (await fetch(`${api}/inspections`, { credentials: 'same-origin' })).json();
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      d.deja = (await inspections()).length;
+      const r = await env('/inspections/import', 'POST', {
+        data: [ligne('Air Bénin Express', 'TT-ABE1', 'AB001'),
+          ligne('AUTRE Air', 'TT-AU01', 'AU001')],
+      });
+      d.semis = r.statut;
+      d.creees = (r.corps || {}).creees;
+      // L'état de la bascule, relevé **avant** de la toucher.
+      d.vueAvant = ((window.RAMP_STATE || {}).vue || {}).vue;
+      d.disponible = !!((window.RAMP_STATE || {}).vue || {}).disponible;
+      d.titres = [...document.querySelectorAll('.oasis-module-actions button')]
+        .map((b) => b.title);
+      return d;
+    }, '/api/m/ramp');
+
+    // ── La bascule, par le bouton de la barre, et le rechargement qu'elle impose ──
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 })
+        .catch(() => { /* le rechargement a pu être déjà fait */ }),
+      page.evaluate(() => {
+        [...document.querySelectorAll('.oasis-module-actions button')]
+          .find((b) => /prestataire/i.test(b.title || ''))?.click();
+      }),
+    ]);
+    await attendreLeModule();
+
+    const prest = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const S = () => window.RAMP_STATE || {};
+      const page_ = () => S().currentPage;
+      const menus = () => [...document.querySelectorAll('.nav-btn[data-page]')]
+        .map((b) => b.getAttribute('data-page'));
+      const aller = async (cle) => {
+        document.querySelector(`.nav-btn[data-page="${cle}"]`)?.click();
+        await a(3000);
+      };
+
+      o.vue = (S().vue || {}).vue;
+      o.prestataireNom = (S().vue || {}).prestataire_nom
+        || ((S().vue || {}).exploitants || []).join(', ');
+
+      // ── 1. Le cloisonnement des données : le serveur, pas l'écran ──
+      //
+      // C'est le contrôle qui compte. Les boutons retirés sont une
+      // commodité ; **ce que le compte peut lire** est la garantie.
+      await essai('cloisonnement', async () => {
+        const d = {};
+        const liste = await jget('/inspections');
+        const insp = Array.isArray(liste) ? liste : (liste.inspections || []);
+        d.vues = insp.length;
+        d.exploitants = [...new Set(insp.map((i) => i.exploitant))];
+        d.sienne = insp.some((i) => /Air Bénin Express/.test(i.exploitant || ''));
+        d.autre = insp.some((i) => /AUTRE Air/.test(i.exploitant || ''));
+        // Et ce que l'écran en montre suit le serveur.
+        d.dansLEcran = (S().data.inspections || []).length;
+        return d;
+      });
+
+      // ── 2. Les menus : quatre, et les quatre autres partis ──
+      await essai('menus', async () => {
+        const d = {};
+        d.ouverts = menus();
+        d.attendus = ['dashboard', 'etats', 'ecarts'];
+        d.fermes = ['partages', 'depot', 'contacts', 'parametres']
+          .filter((c) => !menus().includes(c));
+        // Un écran fermé ne s'ouvre pas non plus par l'aiguillage : le module
+        // le ramène au tableau de bord.
+        if (typeof window.rampNavigateTo === 'function') window.rampNavigateTo('parametres');
+        await a(3000);
+        d.apresDetour = page_();
+        return d;
+      });
+
+      // ── 3. Le tableau de bord : la carte des cinq exploitants retirée ──
+      await essai('dashboard', async () => {
+        const d = {};
+        await aller('dashboard');
+        d.page = page_();
+        const contenu = document.getElementById('ramp-content');
+        const texte = contenu ? (contenu.textContent || '') : '';
+        d.longueur = texte.length;
+        // La carte nommée « Cinq exploitants les plus exposés » n'y est plus.
+        d.cinqExploitants = /exploitants les plus/i.test(texte);
+        // Le reste du tableau de bord est bien là : les cartes de tête.
+        d.cartes = document.querySelectorAll('#ramp-content .oasis-kpi-carte, #ramp-content .ramp-cat-ligne').length;
+        return d;
+      });
+
+      // ── 4. Les inspections : ni importer, ni ajouter, ni traiter, ni supprimer ──
+      await essai('inspections', async () => {
+        const d = {};
+        await aller('etats');
+        d.page = page_();
+        d.rangs = document.querySelectorAll('#ramp-content tr.ramp-depliant').length;
+        d.actions = document.querySelectorAll('#ramp-content .ramp-page-actions').length;
+        d.importer = document.querySelectorAll('[onclick^="rampOuvrirImportation"]').length;
+        d.ajouter = document.querySelectorAll('[onclick^="rampAjouterInspection"]').length;
+        d.traiter = document.querySelectorAll('[onclick*="rampNavigateTo(\'inspection\')"]').length;
+        d.supprimer = document.querySelectorAll('[onclick*="rampSupprimerInspection("]').length;
+        // Ce qui reste : la ligne se déplie, et l'aperçu du rapport s'ouvre.
+        d.deplier = document.querySelectorAll('[onclick*="rampBasculerInspection("]').length;
+        d.apercu = document.querySelectorAll('[onclick*="rampOuvrirApercu("]').length;
+        return d;
+      });
+
+      // ── 5. Les écarts : pas de preuves, mais le plan reste ──
+      await essai('ecarts', async () => {
+        const d = {};
+        await aller('ecarts');
+        d.page = page_();
+        d.rangs = document.querySelectorAll('#ramp-content tr.ramp-depliant').length;
+        d.preuves = document.querySelectorAll('[onclick*="rampOuvrirPreuves("]').length;
+        d.plan = document.querySelectorAll('[onclick*="rampOuvrirPac("]').length;
+        return d;
+      });
+
+      // ── 6. Les statistiques : pas de générateur de tables ──
+      await essai('statistiques', async () => {
+        const d = {};
+        await aller('dashboard');
+        document.querySelector('[onclick^="rampOuvrirStatistiques"]')?.click();
+        await a(3500);
+        d.volet = !!document.querySelector('.ramp-slider-body');
+        d.generateur = document.querySelectorAll('[onclick*="rampOuvrirGenerateur"]').length;
+        // La situation par exploitant, elle, est bien là.
+        d.situation = document.querySelectorAll('[onclick^="rampBasculerLigne"]').length;
+        document.querySelector('[onclick^="rampFermerSlider"]')?.click();
+        await a(2000);
+        d.referme = !document.querySelector('.ramp-slider-body');
+        return d;
+      });
+
+      // ── 7. « Mes Utilisateurs » : ce que la vue en dit, relevé ──
+      //
+      // L'écran n'existe que dans cette vue, et seulement si l'organisme a
+      // confié la gestion des comptes — `rampPeutGererComptes` l'exige. Un
+      // super-administrateur qui **simule** la vue n'est pas l'administrateur
+      // de l'organisme : la ronde relève donc ce que la vue lui accorde, au
+      // lieu de supposer que le menu est là.
+      await essai('utilisateurs', async () => {
+        const d = {};
+        d.adminPrestataire = !!S().adminPrestataire;
+        d.droits = S().droitsPrestataire || null;
+        d.peutGerer = typeof window.rampPeutGererComptes === 'function'
+          ? window.rampPeutGererComptes() : null;
+        d.menu = menus().includes('utilisateurs');
+        return d;
+      });
+      return o;
+    }, '/api/m/ramp');
+
+    // ── Le retour en vue AAC, et le ménage ──
+    await Promise.all([
+      page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 })
+        .catch(() => { /* déjà fait */ }),
+      page.evaluate(() => {
+        [...document.querySelectorAll('.oasis-module-actions button')]
+          .find((b) => /\bAAC\b|autorit/i.test(b.title || ''))?.click();
+      }),
+    ]);
+    await attendreLeModule();
+
+    const retour = await page.evaluate(async (api) => {
+      const d = {};
+      const env = async (url, methode) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        return rep.status;
+      };
+      const inspections = async () => {
+        const c = await (await fetch(`${api}/inspections`, { credentials: 'same-origin' })).json();
+        return Array.isArray(c) ? c : (c.inspections || []);
+      };
+      d.vue = ((window.RAMP_STATE || {}).vue || {}).vue;
+      // L'Autorité revoit tout : c'est l'autre face du cloisonnement.
+      const toutes = await inspections();
+      d.revoitTout = toutes.length;
+      d.effacees = 0;
+      for (const i of toutes.filter((x) => /Air Bénin Express|AUTRE Air/.test(x.exploitant || ''))) {
+        /* eslint-disable no-await-in-loop */
+        if (await env(`/inspections/${i.id}`, 'DELETE') === 200) d.effacees += 1;
+      }
+      d.restantes = (await inspections()).length;
+      return d;
+    }, '/api/m/ramp');
+
+    {
+      const Se = semisPrest;
+      const Cl = prest.cloisonnement || {};
+      const Mn = prest.menus || {};
+      const Db = prest.dashboard || {};
+      const In = prest.inspections || {};
+      const Ec = prest.ecarts || {};
+      const St = prest.statistiques || {};
+      const Us = prest.utilisateurs || {};
+      verifier('la bascule de vue est offerte par la barre du socle, et elle met le module en vue Prestataire sur le compte de l’exploitant',
+        Se.semis === 201 && Se.creees === 2
+        && Se.disponible === true && Se.vueAvant === 'aac'
+        && (Se.titres || []).some((t) => /prestataire/i.test(String(t || '')))
+        && prest.vue === 'prestataire'
+        && /Air Bénin Express/.test(String(prest.prestataireNom || '')),
+        JSON.stringify({ semis: Se.semis, creees: Se.creees, titres: Se.titres,
+          vueAvant: Se.vueAvant, vue: prest.vue, nom: prest.prestataireNom }).slice(0, 420));
+      verifier('le cloisonnement est tenu par le serveur et non par l’écran : le compte ne lit que les inspections de son exploitant',
+        Cl.vues === 1 && Cl.sienne === true
+        // L'autre exploitant existe en base — la ronde l'a semé — et reste
+        // invisible : c'est cela qui prouve le cloisonnement.
+        && Cl.autre === false
+        && JSON.stringify(Cl.exploitants || []) === JSON.stringify(['Air Bénin Express'])
+        && Cl.dansLEcran === 1,
+        JSON.stringify(Cl));
+      verifier('la vue Prestataire ferme quatre menus, et l’aiguillage ramène au tableau de bord ce qu’elle a fermé',
+        Array.isArray(Mn.ouverts)
+        && Mn.attendus.every((c) => Mn.ouverts.includes(c))
+        && (Mn.fermes || []).length === 4
+        && Mn.apresDetour === 'dashboard',
+        JSON.stringify(Mn));
+      verifier('le tableau de bord perd la carte des cinq exploitants, et garde le reste',
+        Db.page === 'dashboard' && Db.longueur > 500
+        && Db.cinqExploitants === false && Db.cartes >= 1,
+        JSON.stringify(Db));
+      verifier('la table des inspections perd ses trois commandes et la suppression, et garde le dépliage et l’aperçu',
+        In.page === 'etats' && In.rangs === 1
+        && In.actions === 0 && In.importer === 0 && In.ajouter === 0
+        && In.traiter === 0 && In.supprimer === 0
+        // Ce qui reste doit rester : une ligne vide prouverait l'absence de
+        // tout, et non le retrait de ce qui devait partir.
+        && In.deplier >= 1 && In.apercu >= 1,
+        JSON.stringify(In));
+      verifier('la table des écarts perd le bouton des preuves, et garde celui du plan d’actions',
+        Ec.page === 'ecarts' && Ec.rangs === 1
+        && Ec.preuves === 0 && Ec.plan >= 1,
+        JSON.stringify(Ec));
+      verifier('le volet des statistiques perd le générateur de tables, et garde la situation par exploitant',
+        St.volet === true && St.generateur === 0 && St.situation >= 1
+        && St.referme === true,
+        JSON.stringify(St));
+      verifier('« Mes Utilisateurs » suit la gestion des comptes confiée par l’organisme, et la ronde relève ce que la vue lui accorde',
+        // Relevé, non supposé : le menu est là si et seulement si la vue
+        // accorde la gestion des comptes. Les deux cas sont admis, mais ils
+        // doivent se répondre.
+        Us.peutGerer === Us.menu,
+        JSON.stringify(Us));
+      verifier('le retour en vue AAC rend l’ensemble du dispositif, et la ronde retire ses deux inspections',
+        retour.vue === 'aac' && retour.revoitTout === Se.deja + 2
+        && retour.effacees === 2 && retour.restantes === Se.deja,
+        JSON.stringify(retour));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur RAMP',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
 

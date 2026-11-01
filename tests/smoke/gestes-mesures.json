@@ -1,9 +1,9 @@
 {
- "releve": "2026-10-20",
- "gestesNommes": 88,
- "occurrences": 143,
+ "releve": "2026-11-01",
+ "gestesNommes": 90,
+ "occurrences": 145,
  "exerces": 11,
- "indecidables": 1,
+ "indecidables": 0,
  "gestes": [
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -391,7 +391,7 @@
    "nom": "window:resize",
    "source": "window.addEventListener('resize', () => { if (MES_STATE.sliderOpen) mesMesurerPied(); });",
    "id": null,
-   "exerce": null
+   "exerce": false
   },
   {
    "fichier": "public/modules/mesures/js/mes-etats.js",
@@ -454,6 +454,24 @@
    "evenement": "click",
    "nom": "mesOuvrirTableMesures",
    "source": "mesOuvrirTableMesures('${c.id}')",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/mesures/js/mes-instances.js",
+   "ligne": 52,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "mesAppliquerInstance",
+   "source": "(v) => mesAppliquerInstance(v)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/mesures/js/mes-instances.js",
+   "ligne": 58,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "{ window.location.href = '/modules/droits/index.",
+   "source": "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }",
    "exerce": false
   },
   {

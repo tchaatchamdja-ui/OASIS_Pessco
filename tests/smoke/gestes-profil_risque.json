@@ -1,9 +1,9 @@
 {
- "releve": "2026-10-20",
- "gestesNommes": 94,
- "occurrences": 185,
+ "releve": "2026-11-01",
+ "gestesNommes": 95,
+ "occurrences": 186,
  "exerces": 9,
- "indecidables": 4,
+ "indecidables": 3,
  "gestes": [
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
@@ -754,6 +754,15 @@
    "exerce": false
   },
   {
+   "fichier": "public/modules/profil_risque/js/pr-instances.js",
+   "ligne": 41,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "prAppliquerInstance",
+   "source": "(v) => prAppliquerInstance(v)",
+   "exerce": false
+  },
+  {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
    "ligne": 25,
    "forme": "en ligne",
@@ -1058,7 +1067,7 @@
    "nom": "document:click",
    "source": "document.addEventListener('click', handler);",
    "id": null,
-   "exerce": null
+   "exerce": false
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-plans.js",

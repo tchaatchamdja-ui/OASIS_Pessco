@@ -1,9 +1,9 @@
 {
- "releve": "2026-10-29",
- "gestesNommes": 208,
- "occurrences": 363,
- "exerces": 191,
- "indecidables": 1,
+ "releve": "2026-11-01",
+ "gestesNommes": 211,
+ "occurrences": 367,
+ "exerces": 193,
+ "indecidables": 0,
  "gestes": [
   {
    "fichier": "public/modules/ramp/js/ramp-apercu.js",
@@ -418,7 +418,7 @@
    "nom": "window:resize",
    "source": "window.addEventListener('resize', () => requestAnimationFrame(() => {",
    "id": null,
-   "exerce": null
+   "exerce": true
   },
   {
    "fichier": "public/modules/ramp/js/ramp-communication.js",
@@ -3271,6 +3271,42 @@
    "evenement": "click",
    "nom": "rampVoirMotDePasse",
    "source": "rampVoirMotDePasse(${_rArg(id)})",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-vues.js",
+   "ligne": 84,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "rampAppliquerVue",
+   "source": "(k) => rampAppliquerVue(k)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-vues.js",
+   "ligne": 95,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "rampAppliquerVue",
+   "source": "(id) => rampAppliquerVue('prestataire', id)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-vues.js",
+   "ligne": 108,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "rampAppliquerInstance",
+   "source": "(v) => rampAppliquerInstance(v)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/ramp/js/ramp-vues.js",
+   "ligne": 114,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "{ window.location.href = '/modules/droits/index.",
+   "source": "() => { window.location.href = '/modules/droits/index.html?module=RAMP'; }",
    "exerce": false
   }
  ]

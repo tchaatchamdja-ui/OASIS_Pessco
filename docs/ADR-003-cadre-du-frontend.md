@@ -7776,6 +7776,88 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            forme qu'il ne connaît pas, comme les écouteurs de `window`. À
            traiter avec eux, dans le tour qui leur sera consacré.
 
+       5.f.43 [x] **Trois angles morts du relevé, et onze gestes que le dépôt
+           ne savait pas qu'il avait** — fait le 1er novembre 2026.
+
+           Pas un contrôle de plus : **un instrument corrigé**, et les sept
+           écrans remesurés. Campagne : 1 355, inchangée.
+
+           ── Les trois cécités, et leur mécanisme ──
+
+           **(1) Un écouteur de `window` ne pouvait pas être crédité.** Le
+           mouchard enregistrait la cible par `String(this)`, soit
+           `[object Window]`, et le rapprochement se faisait par identifiant —
+           qu'une cible nommée n'a pas. `window:resize` de RAMP et
+           `window:message` du portail sortaient donc « indécidables ». Ils se
+           nomment désormais, et se rapprochent par leur nom à défaut
+           d'identifiant. *« Indécidable » reste pour ce qu'on ne sait pas
+           rapprocher — une variable locale —, non pour ce qu'on avait renoncé
+           à nommer.*
+
+           **(2) Les actions remises au socle n'apparaissaient nulle part.** Un
+           module ne dessine pas sa barre supérieure : il remet au socle une
+           liste — `oasisModuleActions([{ key, label, onClick }, …])` — et le
+           socle en fait des boutons dont **il** pose le `onclick`. Le
+           gestionnaire que le mouchard voyait était donc le sien,
+           `() => a.onClick?.(a.key)`, et jamais celui du module.
+
+           Conséquence mesurée au tour précédent : `ramp-vues.js` — la bascule
+           Vue AAC / Vue Prestataire — **ne figurait pas du tout** dans
+           l'inventaire. Un fichier entier invisible, et onze autres actions
+           avec lui dans les cinq modules qui en posent (CARE, PLAN, PR, SURV,
+           RAMP).
+
+           Le mouchard enveloppe maintenant **l'API elle-même** : la propriété
+           `window.oasisModuleActions` est piégée au `set`, avant que le socle
+           ne la pose, et chaque action voit ses deux gestionnaires enveloppés.
+           Ce qui est gardé est la **source** de la fonction du module, comme
+           pour les props JSX — le nommage appartient au côté Node, qui applique
+           `nomDuGeste`, la même fonction que les trois autres formes. *Deux
+           côtés qui nomment séparément finissent par nommer différemment*,
+           et cette leçon-là est payée depuis 5.f.3.
+
+           **(3) Le rapprochement par nom complète celui par identifiant.**
+
+           ── Ce que cela a changé, écran par écran ──
+
+           | Écran | Avant | Après |
+           |---|---|---|
+           | portail | 66/84 | **67**/84 |
+           | SURV | 153/310 | **156**/**313** |
+           | PLAN | 21/93 | 21/**94** |
+           | PR | 9/94 | 9/**95** |
+           | CARE | 11/88 | 11/**90** |
+           | DROITS | 15/15 | 15/**16** |
+           | RAMP | 191/208 | **193**/**211** |
+
+           **+11 au dénominateur** — des gestes qui existaient et que rien ne
+           comptait — et **+6 au numérateur** — des gestes déjà exercés et non
+           crédités. Les pourcentages de PLAN, PR, CARE et DROITS **baissent**
+           de ce fait, et DROITS quitte les 100 % qu'il ne tenait que par un
+           geste invisible. *Un inventaire qui s'allonge ne flatte personne*, et
+           c'est le seul sens dans lequel un dénominateur peut bouger sans
+           mentir.
+
+           ── Le contre-essai est dans le résultat ──
+
+           Comment contre-essaie-t-on un instrument ? En regardant s'il
+           **départage**. `ramp-vues.js` sort à **1 nom sur 3** :
+           `rampAppliquerVue` est vert — la ronde de la vue Prestataire le
+           clique, au tour précédent — et `rampAppliquerInstance` ainsi que le
+           lien vers la Gestion des Droits restent rouges, faute d'être
+           cliqués. *Un canal qui créditait à l'aveugle aurait marqué les
+           trois.* Et les indécidables de RAMP passent de 1 à **0**.
+
+           ── Une imperfection, dite plutôt que corrigée ──
+
+           Le lien vers la Gestion des Droits se nomme par ses quarante-huit
+           premiers caractères — `{ window.location.href = '/modules/droits…`.
+           Ce n'est pas un défaut du relevé : ce gestionnaire est une
+           **affectation sans appel**, et il n'y a pas de fonction à nommer. La
+           règle des quarante-huit caractères est celle que le relevé applique
+           depuis 5.f.0 à ce qu'il ne sait pas nommer. Le nom est laid, stable
+           et unique — je ne l'embellis pas pour le plaisir d'un rapport.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

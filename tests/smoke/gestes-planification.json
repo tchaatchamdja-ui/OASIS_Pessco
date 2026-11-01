@@ -1,9 +1,9 @@
 {
- "releve": "2026-10-21",
- "gestesNommes": 93,
- "occurrences": 136,
+ "releve": "2026-11-01",
+ "gestesNommes": 94,
+ "occurrences": 137,
  "exerces": 21,
- "indecidables": 6,
+ "indecidables": 4,
  "gestes": [
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -94,7 +94,7 @@
    "nom": "document:click",
    "source": "document.addEventListener('click', handler);",
    "id": null,
-   "exerce": null
+   "exerce": false
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
@@ -167,7 +167,7 @@
    "nom": "window:resize",
    "source": "window.addEventListener('resize', () => window.planCalNavEtat());",
    "id": null,
-   "exerce": null
+   "exerce": false
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -517,6 +517,15 @@
    "nom": "planOpenDetail",
    "source": "planOpenDetail('${a.plan_id}');return false;",
    "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-instances.js",
+   "ligne": 44,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "planAppliquerInstance",
+   "source": "(v) => planAppliquerInstance(v)",
+   "exerce": false
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",

@@ -3182,7 +3182,7 @@ module.exports = async function parcoursSmoke(port) {
       // pages de l'origine : il survit à la fermeture de celles que la suite
       // ferme en route. Relevé en mémoire en plus, pour dire combien de pages
       // ont effectivement porté l'instrumentation.
-      const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], poses: 0, pages: 0 };
+      const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0 };
       for (const p of await navigateur.pages()) {
         try {
           const j = await p.evaluate(() => {
@@ -3195,6 +3195,9 @@ module.exports = async function parcoursSmoke(port) {
             vu.ecouteurs.push(...j.durable.ecouteurs);
             vu.propriete.push(...(j.durable.propriete || []));
             vu.jsx.push(...(j.durable.jsx || []));
+            // Les actions remises au socle : quatrième canal du
+            // mouchard (ADR-003, 5.f.43).
+            vu.barre.push(...(j.durable.barre || []));
           }
         } catch { /* page déjà partie : le registre durable l'a gardée */ }
       }

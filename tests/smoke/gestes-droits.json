@@ -1,7 +1,7 @@
 {
- "releve": "2026-10-20",
- "gestesNommes": 15,
- "occurrences": 30,
+ "releve": "2026-11-01",
+ "gestesNommes": 16,
+ "occurrences": 31,
  "exerces": 15,
  "indecidables": 0,
  "gestes": [
@@ -304,6 +304,15 @@
    "source": "() => surJournal(u.username)",
    "id": null,
    "exerce": true
+  },
+  {
+   "fichier": "public/modules/droits/index.html",
+   "ligne": 158,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "{",
+   "source": "() => {",
+   "exerce": false
   }
  ]
 }

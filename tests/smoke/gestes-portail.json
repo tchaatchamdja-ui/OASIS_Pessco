@@ -1,9 +1,9 @@
 {
- "releve": "2026-10-21",
+ "releve": "2026-11-01",
  "gestesNommes": 84,
  "occurrences": 129,
- "exerces": 66,
- "indecidables": 8,
+ "exerces": 67,
+ "indecidables": 7,
  "gestes": [
   {
    "fichier": "frontend/portail/accueil.ts",
@@ -401,7 +401,7 @@
    "nom": "window:message",
    "source": "window.addEventListener('message', (ev: MessageEvent) => {",
    "id": null,
-   "exerce": null
+   "exerce": true
   },
   {
    "fichier": "frontend/portail/organigramme.ts",

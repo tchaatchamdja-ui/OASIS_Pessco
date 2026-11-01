@@ -457,6 +457,30 @@ function relever(fichiers) {
       });
     }
 
+    // ── Quatrième forme : l'action remise au socle ──
+    //
+    // `{ key: 'droits', label: …, onClick: () => … }` dans une liste donnée à
+    // `oasisModuleActions`. On ne cherche cette forme que dans les fichiers qui
+    // appellent cette API : ailleurs, un `onClick:` serait du JSX ou autre
+    // chose, et le relevé compterait ce qu'il n'a pas compris.
+    if (texte.includes('oasisModuleActions')) {
+      const motifBarre = /\bon(Click|Change)\s*:\s*((?:async\s*)?(?:\([^)]*\)|[\w$]+)\s*=>\s*[^\n]+)/g;
+      for (const m of texte.matchAll(motifBarre)) {
+        const corps = m[2].trim().replace(/[,;]\s*$/, '');
+        // Le corps d'une flèche : on nomme ce qu'elle appelle, par la même
+        // fonction que les trois autres formes.
+        const apresFleche = corps.slice(corps.indexOf('=>') + 2).trim();
+        gestes.push({
+          fichier: rel,
+          ligne: texte.slice(0, m.index).split('\n').length,
+          forme: 'action de barre',
+          evenement: m[1].toLowerCase(),
+          nom: nomDuGeste(apresFleche),
+          source: corps.slice(0, 120),
+        });
+      }
+    }
+
     const lignes = texte.split('\n');
     lignes.forEach((l, i) => {
       // ── Le chaînage optionnel, que la conversion introduit ──
@@ -566,16 +590,17 @@ const EVENEMENTS = ['click', 'change', 'submit', 'input', 'blur', 'mousedown',
 // remettre tel quel à `evaluateOnNewDocument`, sans rien savoir de tout ceci.
 const MOUCHARD_FN = (EVTS) => {
   const CLE = '__oasis_gestes';
-  const journal = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], poses: 0 };
+  const journal = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0 };
   Object.defineProperty(window, '__gestes', { value: journal, enumerable: false });
 
   const garder = (champ, valeur) => {
     journal[champ].push(valeur);
     try {
       const d = JSON.parse(localStorage.getItem(CLE)
-        || '{"enLigne":[],"ecouteurs":[],"propriete":[],"jsx":[],"poses":0}');
+        || '{"enLigne":[],"ecouteurs":[],"propriete":[],"jsx":[],"barre":[],"poses":0}');
       d.propriete = d.propriete || [];
       d.jsx = d.jsx || [];
+      d.barre = d.barre || [];
       d[champ].push(valeur);
       localStorage.setItem(CLE, JSON.stringify(d));
     } catch { /* stockage fermé : le registre en mémoire reste */ }
@@ -669,13 +694,66 @@ const MOUCHARD_FN = (EVTS) => {
     }, true);
   });
 
+  // ── Les actions remises au socle : une quatrième forme, invisible ──
+  //
+  // Les modules ne dessinent pas leur barre supérieure : ils remettent au socle
+  // une liste d'actions — `oasisModuleActions([{ key, label, onClick }, …])` —
+  // et le socle en fait des boutons dont il pose lui-même le `onclick`. Le
+  // gestionnaire que le mouchard voit alors est **celui du socle**,
+  // `() => a.onClick?.(a.key)`, et non celui du module.
+  //
+  // Résultat : `ramp-vues.js` — la bascule Vue AAC / Vue Prestataire —
+  // **ne figurait pas du tout** dans l'inventaire, non plus que les onze autres
+  // actions des cinq modules qui en posent. Un fichier entier invisible
+  // (n° 5.f.42).
+  //
+  // On enveloppe donc l'API elle-même, avant que le socle ne la pose : la
+  // propriété est piégée au `set`, et chaque action voit ses deux
+  // gestionnaires enveloppés. Ce qui est gardé est la **source** de la fonction
+  // du module, comme pour les props JSX : le nommage appartient au côté Node,
+  // qui applique `nomDuGeste` — *deux côtés qui nomment séparément finissent par
+  // nommer différemment.*
+  let vraiesActions = null;
+  const envelopperActions = (liste) => (Array.isArray(liste) ? liste : []).map((a) => {
+    const copie = { ...a };
+    ['onClick', 'onChange'].forEach((cle) => {
+      const fn = a[cle];
+      if (typeof fn !== 'function') return;
+      copie[cle] = function (...args) {
+        garder('barre', String(fn).slice(0, 220));
+        return fn.apply(this, args);
+      };
+    });
+    return copie;
+  });
+  try {
+    Object.defineProperty(window, 'oasisModuleActions', {
+      configurable: true,
+      set(fn) { vraiesActions = fn; },
+      get() {
+        if (typeof vraiesActions !== 'function') return undefined;
+        return (liste) => vraiesActions(envelopperActions(liste));
+      },
+    });
+  } catch { /* la propriété existe déjà : le socle a été chargé avant */ }
+
   // Les écouteurs posés en code : on enveloppe la pose pour voir l'invocation.
   const pose = EventTarget.prototype.addEventListener;
   EventTarget.prototype.addEventListener = function (type, fn, ...reste) {
     if (typeof fn !== 'function' || fn.__trace) return pose.call(this, type, fn, ...reste);
     journal.poses += 1;
-    const cible = this instanceof Element
-      ? `${this.tagName.toLowerCase()}${this.id ? `#${this.id}` : ''}` : String(this);
+    // ── `window` et `document` se nomment, ils ne se stringifient pas ──
+    //
+    // `String(window)` rend `[object Window]`, que rien ne rapproche du
+    // `window:resize` relevé dans la source — et le rapprochement se fait par
+    // identifiant, qu'un écouteur de `window` n'a pas. *Aucun écouteur posé sur
+    // `window` ne pouvait donc être crédité* : ni le `window:resize` de RAMP,
+    // ni le `window:message` du portail. Ils sortaient en « indécidables », ce
+    // qui était honnête mais inutilement aveugle (n° 5.f.41).
+    const cible = this === window ? 'window'
+      : (this === document ? 'document'
+        : (this instanceof Element
+          ? `${this.tagName.toLowerCase()}${this.id ? `#${this.id}` : ''}` : String(this)));
     const enveloppe = function (...args) {
       garder('ecouteurs', `${cible}:${type}`);
       return fn.apply(this, args);
@@ -823,6 +901,13 @@ async function principal() {
   // `nomDuGestionnaire`.
   const vues = new Set(exerces.enLigne.map(nomDuGestionnaire).filter(Boolean));
   const ecouteursVus = new Set(exerces.ecouteurs);
+  // Les actions de barre sont rendues par leur **source** : on les nomme ici,
+  // avec la même fonction que l'extracteur statique.
+  const barreVue = new Set((exerces.barre || []).map((src) => {
+    const t = String(src);
+    const i = t.indexOf('=>');
+    return nomDuGeste(i >= 0 ? t.slice(i + 2).trim() : t);
+  }));
   const proprietesVues = new Set(exerces.propriete || []);
   // ── Nommer un gestionnaire JSX **vu au vol**, comme on nomme celui qui est
   //    écrit dans la source ──
@@ -845,13 +930,29 @@ async function principal() {
     if (g.forme === 'en ligne') { g.exerce = vues.has(g.nom); return; }
     if (g.forme === 'propriété') { g.exerce = proprietesVues.has(g.nom); return; }
     if (g.forme === 'propriété JSX') { g.exerce = jsxVus.has(g.nom); return; }
+    if (g.forme === 'action de barre') { g.exerce = barreVue.has(g.nom); return; }
     // Un écouteur est identifié par sa cible et son événement. La cible relevée
     // dans la source est une expression ; celle vue au vol est l'élément. On
     // rapproche par l'identifiant quand la source en porte un, et l'on marque
     // « indécidable » plutôt que « non exercé » dans le cas contraire : dire
     // « non couvert » de ce qu'on ne sait pas rapprocher serait une fausse
     // alarme, et une fausse alarme répétée se fait ignorer.
-    if (!g.id) { g.exerce = null; return; }
+    // ── À défaut d'identifiant, le nom ──
+    //
+    // `window:resize` et `document:click` n'ont pas d'identifiant et n'en
+    // auront jamais : ce sont des cibles nommées, non des éléments. Depuis que
+    // le mouchard les nomme au lieu de les stringifier, le rapprochement se
+    // fait sur le nom relevé dans la source. *« Indécidable » reste pour ce
+    // qu'on ne sait **pas** rapprocher — une variable locale —, non pour ce
+    // qu'on avait simplement renoncé à nommer.*
+    if (!g.id) {
+      if (/^(window|document):/.test(g.nom || '')) {
+        g.exerce = ecouteursVus.has(g.nom);
+        return;
+      }
+      g.exerce = null;
+      return;
+    }
     g.exerce = ecouteursVus.has(`${g.id}`) || [...ecouteursVus]
       .some((v) => v.endsWith(`#${g.id}:${g.evenement}`));
   });

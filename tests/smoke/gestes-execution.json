@@ -1,9 +1,9 @@
 {
- "releve": "2026-10-21",
- "gestesNommes": 310,
- "occurrences": 502,
- "exerces": 153,
- "indecidables": 5,
+ "releve": "2026-11-01",
+ "gestesNommes": 313,
+ "occurrences": 506,
+ "exerces": 156,
+ "indecidables": 2,
  "gestes": [
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -627,6 +627,42 @@
    "exerce": false
   },
   {
+   "fichier": "public/modules/execution/js/exec-adapters.js",
+   "ligne": 115,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "execAppliquerVue",
+   "source": "(k) => execAppliquerVue(k)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-adapters.js",
+   "ligne": 127,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "execAppliquerVue",
+   "source": "(id) => execAppliquerVue('prestataire', id)",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-adapters.js",
+   "ligne": 138,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "execAppliquerInstance",
+   "source": "(v) => execAppliquerInstance(v)",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-adapters.js",
+   "ligne": 144,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "{ window.location.href = '/modules/droits/index.",
+   "source": "() => { window.location.href = '/modules/droits/index.html?module=SURV'; }",
+   "exerce": false
+  },
+  {
    "fichier": "public/modules/execution/js/exec-app.js",
    "ligne": 801,
    "forme": "en ligne",
@@ -904,7 +940,7 @@
    "nom": "document:click",
    "source": "document.addEventListener('click', handler);",
    "id": null,
-   "exerce": null
+   "exerce": false
   },
   {
    "fichier": "public/modules/execution/js/exec-boot.js",
@@ -1880,7 +1916,7 @@
    "nom": "window:resize",
    "source": "window.addEventListener('resize', () => execGanttNavEtat());",
    "id": null,
-   "exerce": null
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -4439,7 +4475,7 @@
    "nom": "window:load",
    "source": "window.addEventListener('load', () => { setTimeout(() => { try { window.focus(); window.print(); } catch (e) {} }, 600);",
    "id": null,
-   "exerce": null
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",

@@ -6455,7 +6455,7 @@ module.exports = async function rampNavigateurSmoke(port) {
     // plus de `window`, et le relevé rendrait zéro geste — la mesure de rien,
     // présentée comme une couverture nulle.
     if (process.env.OASIS_MOUCHARD && navigateur) {
-      const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], poses: 0, pages: 0 };
+      const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0 };
       for (const p of await navigateur.pages()) {
         try {
           /* eslint-disable no-await-in-loop */
@@ -6469,6 +6469,9 @@ module.exports = async function rampNavigateurSmoke(port) {
             vu.ecouteurs.push(...j.durable.ecouteurs);
             vu.propriete.push(...(j.durable.propriete || []));
             vu.jsx.push(...(j.durable.jsx || []));
+            // Les actions remises au socle : quatrième canal du
+            // mouchard (ADR-003, 5.f.43).
+            vu.barre.push(...(j.durable.barre || []));
           }
         } catch { /* page déjà partie : le registre durable l'a gardée */ }
       }

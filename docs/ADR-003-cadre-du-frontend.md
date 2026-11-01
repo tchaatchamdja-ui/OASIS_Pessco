@@ -7951,3 +7951,93 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
        Les cinq écrans restants mettront cette ligne à jour chacun à son tour. Le jalon reste
        ouvert jusqu'au dernier.
+
+       5.f.45 [x] **PLAN — la saisie d'une activité, et deux instruments qui
+           accusaient à tort** — fait le 1er novembre 2026.
+
+           **Vingt-cinq contrôles sur PLAN ; 36 gestes sur 94.** Quatre
+           contre-essais, tous mordants.
+
+           Le formulaire d'activité est le cœur de la saisie : c'est là qu'un
+           plan cesse d'être un intitulé pour devenir un programme. La ronde du
+           pas précédent le contournait — elle semait son activité **par la
+           route**, faute de pouvoir soumettre un plan vide. Celle-ci passe par
+           le formulaire, et mène le plan jusqu'à sa fin : archivé, puis
+           supprimé.
+
+           ── La cascade a deux chemins, non un ──
+
+           Le premier énoncé disait « une sous-activité cochée coche d'office
+           ses thèmes ». Vrai en observation, faux en mécanisme : cocher la case
+           fait `det.open = saBox.checked`, ce qui **déclenche** l'événement
+           `toggle` du `<details>`, et c'est ce gestionnaire-là qui coche les
+           thèmes. Deux chemins redondants, chacun suffisant.
+
+           Le contre-essai l'a dit avant moi : désarmer le gestionnaire de la
+           case n'a **rien** fait rougir. Le contrôle exerce désormais les deux
+           sens — la case ouvre le volet, le chevron le referme et décoche tout,
+           un second clic rétablit — et il vérifie le compteur `n/n` du volet.
+           Chacun des deux chemins désarmé fait maintenant rougir.
+
+           ── L'archivage ne retire pas des boutons : il retire la ligne ──
+
+           Mon deuxième énoncé disait que l'archivage « retire la suppression ».
+           Les boutons sont pourtant rendus **sans condition de statut** : s'ils
+           disparaissent, c'est que `planRenderPlans` écarte les statuts
+           `archive` et `remplace` (`pl-plans.js:16`). Le plan subsiste en base,
+           mais cette page ne le montre plus, et aucun de ses gestes n'y est
+           plus atteignable. D'où le plan frère que la ronde doit semer pour
+           éprouver la suppression par l'écran — un archivé ne part que par la
+           route.
+
+           ── Le garde-fou des données accusait les contrôles ──
+
+           Le harnais a crié que les données de travail avaient été modifiées
+           par les contrôles, et conseillé une restauration. C'était faux : le
+           serveur de développement avait démarré pendant la suite, et comme
+           `.claude/launch.json` ne lui donne pas de répertoire de test, il sert
+           le **vrai** `data/`. Les tailles le disaient — seul `audit.jsonl`
+           avait grossi, de deux entrées d'horloge ; tous les autres fichiers
+           gardaient leur taille au mtime près, la signature d'un démarrage. La
+           chaîne SHA-256 était intacte, 1 677 entrées vérifiées, et le conseil
+           de restaurer aurait réécrit un journal qu'il est interdit de toucher.
+
+           Le dispositif savait déjà qui écrivait : **le verrou d'ADR-001 n° 2
+           porte le numéro du processus qui tient le répertoire.** Le garde-fou
+           le lit avant d'accuser, et distingue deux messages — « un autre
+           processus sert le répertoire de travail », avec le `ps -p` qui le
+           retrouve et le remède (un `OASIS_DATA_DIR` dans
+           `.claude/launch.json`), ou l'ancien, quand personne ne le tient. Un
+           verrou périmé n'accuse personne : le processus doit vivre.
+
+           Éprouvé dans les deux sens : quatre cas pour la lecture du verrou
+           (aucun verrou, verrou périmé, notre propre verrou, tiers vivant), et
+           en situation, avec un fichier témoin posé pendant la suite puis
+           retiré, qui a fait paraître le message juste.
+
+           ── Un quatrième angle mort de l'extracteur, constaté et non levé ──
+
+           Un attribut dont la valeur est une interpolation — ici le bouton
+           d'enregistrement, qui appelle `planUpdateActivity` ou
+           `planCreateActivity` selon un ternaire (`pl-crud.js:493`) — reçoit un
+           nom illisible, et les vrais noms n'entrent pas au relevé. Ces deux
+           fonctions sont donc **absentes** du relevé alors que la ronde les
+           exerce, et douze occurrences fantômes de PLAN comptent comme « non
+           exercées ».
+
+           La couverture déclarée mesure donc juste ce que l'instrument voit, et
+           **sous-estime** ce que la suite exerce. Le lever demande d'extraire
+           tous les appels `nom(` d'une valeur interpolée, d'en rendre un geste
+           par nom, et de marquer indécidable — non « non exercé » — une valeur
+           dont aucun nom ne se tire. Cela déplacera les dénominateurs des sept
+           écrans : c'est un pas à lui seul, et il est écrit dans
+           `gestes-non-couverts.json`.
+
+           ── Ce que la machine a coûté ──
+
+           Trois exceptions de navigateur en chemin, à 108 Mo de mémoire libre
+           et 1,22 Go de swap sur 2, chacune plus tôt que la précédente — dans
+           des blocs inchangés et éprouvés, donc pas du fait du dépôt. Une
+           attente conditionnelle de trois minutes, jusqu'à ce que la charge
+           retombe sous 3,2, a suffi à les faire cesser. Aucun orphelin laissé :
+           le garde-fou de 5.f.30 tient.

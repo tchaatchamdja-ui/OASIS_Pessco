@@ -187,13 +187,50 @@ const suites = [
     console.error('   Une suite a écrit hors de son schéma : voir le relevé dans ce fichier.');
   }
 
+  // Le répertoire de travail a bougé — reste à savoir par la faute de qui.
+  //
+  // Le garde-fou concluait qu'un module du socle avait servi le vrai
+  // répertoire, et conseillait une restauration. Ce n'est qu'une des deux
+  // causes : **un autre processus** peut servir ce répertoire pendant la suite
+  // — le serveur de développement, que `.claude/launch.json` fait pointer sur
+  // `data/` faute d'un répertoire de test. Son seul démarrage touche les
+  // fichiers et ajoute son entrée au journal. Accuser les contrôles est alors
+  // faux, et conseiller une restauration est pire : elle réécrirait un journal
+  // chaîné qu'il ne faut pas toucher.
+  //
+  // Le verrou d'ADR-001 porte le numéro du processus qui tient le répertoire.
+  // On le lit avant d'accuser.
+  const tenant = (() => {
+    try {
+      // `fs` n'est en portée que dans `empreinte` : on le reprend ici.
+      const fs = require('fs');
+      const path = require('path');
+      const v = JSON.parse(fs.readFileSync(path.join(bac.DONNEES_DE_TRAVAIL, '.verrou'), 'utf8'));
+      if (!v || typeof v.pid !== 'number' || v.pid === process.pid) return null;
+      // Un verrou périmé n'accuse personne : le processus doit vivre.
+      try { process.kill(v.pid, 0); } catch { return null; }
+      return v;
+    } catch { return null; }
+  })();
+
   const apres = empreinte();
   const touches = Object.keys({ ...avant, ...apres }).filter((f) => avant[f] !== apres[f]);
-  if (touches.length) {
+  if (touches.length && tenant) {
+    console.error('\n✗✗ UN AUTRE PROCESSUS SERT LE RÉPERTOIRE DE TRAVAIL ✗✗');
+    console.error(`   ${bac.DONNEES_DE_TRAVAIL}`);
+    touches.forEach((f) => console.error(`   · ${f} — ${avant[f] || '(absent)'} → ${apres[f] || '(effacé)'}`));
+    console.error(`   Tenu par le processus ${tenant.pid}${tenant.machine ? ` sur ${tenant.machine}` : ''} :`);
+    console.error(`     ps -p ${tenant.pid} -o pid,command`);
+    console.error('   Ce ne sont donc pas les contrôles qui ont écrit, et il n’y a rien');
+    console.error('   à restaurer : une restauration réécrirait le journal chaîné.');
+    console.error('   Faire servir un répertoire de test à ce processus — pour le serveur');
+    console.error('   de développement, un OASIS_DATA_DIR dans .claude/launch.json.');
+  } else if (touches.length) {
     console.error('\n✗✗ LES DONNÉES DE TRAVAIL ONT ÉTÉ MODIFIÉES PAR LES CONTRÔLES ✗✗');
     console.error(`   ${bac.DONNEES_DE_TRAVAIL}`);
     touches.forEach((f) => console.error(`   · ${f} — ${avant[f] || '(absent)'} → ${apres[f] || '(effacé)'}`));
-    console.error('   Un module du socle a servi le vrai répertoire : voir tests/smoke/bac.js.');
+    console.error('   Aucun autre processus ne tient ce répertoire : un module du socle');
+    console.error('   l’a servi lui-même — voir tests/smoke/bac.js.');
     console.error('   Restaurer depuis sauvegardes/ avant toute autre chose.');
   }
   bac.effacer();

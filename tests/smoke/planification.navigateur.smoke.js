@@ -732,6 +732,359 @@ module.exports = async function planificationNavigateurSmoke(port) {
         JSON.stringify(Me));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La saisie d'une activité, et la fin de vie d'un plan
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Le tour précédent a semé son activité **par la route**, faute de pouvoir
+    // soumettre un plan vide. Celui-ci la saisit **par le formulaire** — c'est
+    // le cœur de la saisie du module, et la seule cascade de l'écran : choisir
+    // un secteur fait paraître la table des sous-activités et de leurs thèmes,
+    // et rien ne se coche avant.
+    //
+    // Puis la fin de vie du plan : archivé, et supprimé — par les boutons de
+    // l'écran, non par la route.
+    etape = 'activité d’un plan';
+    await ouvrir('plans');
+    await attendre(2500);
+    const rondeAct = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const plans = async () => {
+        const r = await jget('/plans');
+        return Array.isArray(r) ? r : (r.plans || []);
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3500);
+        return true;
+      };
+      const S = () => window.PLAN_STATE || {};
+      const act = () => ((S().selectedPlan || {}).activites || []);
+      const poser = async (id, v, ev) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event(ev || 'input', { bubbles: true }));
+        await a(600);
+        return true;
+      };
+
+      // ── 1. Un plan semé par la route : il n'est pas le sujet ──
+      o.deja = (await plans()).length;
+      const cree = await env('/plans', 'POST', {
+        titre: 'Plan de la ronde des activités', annee: 2029,
+        type: 'periodique', domaine_id: '', secteur_id: '',
+      });
+      o.semis = cree.statut;
+      if (typeof window.planLoadData === 'function') await window.planLoadData();
+      await a(2500);
+      const mien = (await plans()).find((p) => /ronde des activités/.test(p.titre || ''));
+      o.planId = (mien || {}).id;
+
+      // ── 2. Le formulaire d'activité, et sa cascade ──
+      await essai('formulaire', async () => {
+        const d = {};
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.planId);
+        await a(3500);
+        d.detail = (S().selectedPlan || {}).id === o.planId;
+        d.avant = act().length;
+        const ajouter = [...document.querySelectorAll('[onclick*="planShowActivityModal("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.bouton = !!ajouter;
+        ajouter?.click();
+        await a(3000);
+        d.champObjet = !!document.getElementById('actObjet');
+
+        // ── La cascade : rien à cocher avant d'avoir choisi un secteur ──
+        d.casesAvant = document.querySelectorAll('.actSACheck').length;
+        d.indiceAvant = !!document.getElementById('actSAHint');
+        const secteur = document.getElementById('actSecteur');
+        d.listeSecteur = !!secteur;
+        d.secteurs = secteur ? secteur.options.length : 0;
+        if (secteur && secteur.options.length > 1) {
+          secteur.value = secteur.options[1].value;
+          secteur.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(2500);
+        }
+        d.casesApres = document.querySelectorAll('.actSACheck').length;
+        d.themesAvantSA = document.querySelectorAll('.actThemeCheck').length;
+        d.cochesAvantSA = document.querySelectorAll('.actThemeCheck:checked').length;
+        // La case d'une sous-activité et le volet qui la déplie sont **le même
+        // geste** : cocher la case ouvre le volet, ouvrir le volet coche la case,
+        // et dans les deux cas tous les thèmes de la sous-activité suivent. Le
+        // contrôle exerce les deux chemins, faute de quoi il ne départage rien —
+        // le premier contre-essai, qui n'avait désarmé que l'un des deux, est
+        // resté vert.
+        const volet = document.querySelector('details.sa-item');
+        d.volet = !!volet;
+        d.voletFermeAvant = volet ? !volet.open : null;
+        const sa = volet && volet.querySelector('.actSACheck');
+        if (sa) {
+          sa.checked = true;
+          sa.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(2000);
+        }
+        // Chemin 1 : par la case — le volet s'ouvre, les thèmes se cochent.
+        d.voletOuvertParCase = volet ? volet.open : null;
+        d.saCochee = document.querySelectorAll('.actSACheck:checked').length;
+        d.themes = document.querySelectorAll('.actThemeCheck').length;
+        d.cochesParSA = volet
+          ? volet.querySelectorAll('.actThemeCheck:checked').length : 0;
+        d.compteur = (volet && (volet.querySelector('.sa-count') || {}).textContent || '').trim();
+        // Chemin 2 : par le volet — le chevron le referme, la case et les thèmes
+        // se décochent ; un second clic rétablit tout.
+        const chevron = volet && volet.querySelector('.sa-chevron');
+        d.chevron = !!chevron;
+        chevron?.click();
+        await a(1500);
+        d.voletFerme = volet ? !volet.open : null;
+        d.caseApresFermeture = sa ? sa.checked : null;
+        d.cochesApresFermeture = volet
+          ? volet.querySelectorAll('.actThemeCheck:checked').length : -1;
+        chevron?.click();
+        await a(1500);
+        d.voletRouvert = volet ? volet.open : null;
+        d.cochesApresReouverture = volet
+          ? volet.querySelectorAll('.actThemeCheck:checked').length : -1;
+        // Le geste à la main : un thème se décoche sans entraîner les autres.
+        const th = document.querySelector('.actThemeCheck:checked');
+        d.themeAtteignable = !!th;
+        if (th) {
+          th.checked = false;
+          th.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(1200);
+          d.apresDecoche = volet
+            ? volet.querySelectorAll('.actThemeCheck:checked').length : -1;
+          th.checked = true;
+          th.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(1200);
+        }
+        d.themesCoches = document.querySelectorAll('.actThemeCheck:checked').length;
+
+        // Le reste de la fiche.
+        await poser('actObjet', 'Audit documentaire de la ronde');
+        await poser('actDescription', 'Activité saisie par la ronde automatique.');
+        await poser('actLieu', 'Cotonou');
+        await poser('actDebut', '2029-04-02', 'change');
+        await poser('actFin', '2029-04-06', 'change');
+        await poser('actNbInspecteurs', '2', 'change');
+        const prest = document.getElementById('actPrestataire');
+        d.prestataires = prest ? prest.options.length : 0;
+        if (prest && prest.options.length > 1) {
+          prest.value = prest.options[1].value;
+          prest.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(1200);
+        }
+        ['actModeSupervision', 'actTypeSupervision', 'actResponsable'].forEach(() => {});
+        for (const id of ['actModeSupervision', 'actTypeSupervision', 'actResponsable']) {
+          const e = document.getElementById(id);
+          if (e && e.options && e.options.length > 1) {
+            e.value = e.options[1].value;
+            e.dispatchEvent(new Event('change', { bubbles: true }));
+            /* eslint-disable no-await-in-loop */
+            await a(600);
+          }
+        }
+
+        const enregistrer = [...document.querySelectorAll('[onclick*="planCreateActivity("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.boutonEnregistrer = !!enregistrer;
+        enregistrer?.click();
+        await a(5000);
+        d.apres = act().length;
+        const nouvelle = act()[0] || {};
+        o.actId = nouvelle.id;
+        d.objet = nouvelle.objet;
+        d.lieu = nouvelle.lieu_activite;
+        d.debut = nouvelle.date_debut;
+        d.fin = nouvelle.date_fin;
+        d.inspecteurs = nouvelle.nombre_inspecteurs;
+        d.sousActivites = (nouvelle.sous_activite_ids || []).length;
+        d.themesEnBase = (nouvelle.themes_couverts || []).length;
+        return d;
+      });
+
+      // ── 3. La même activité modifiée, puis retirée ──
+      await essai('reprise', async () => {
+        const d = {};
+        const editer = [...document.querySelectorAll('[onclick*="planShowActivityModal("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.actId));
+        d.bouton = !!editer;
+        editer?.click();
+        await a(3000);
+        d.objetRepris = (document.getElementById('actObjet') || {}).value;
+        await poser('actObjet', 'Audit documentaire — repris');
+        const enregistrer = [...document.querySelectorAll('[onclick*="planUpdateActivity("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.actId));
+        d.boutonEnregistrer = !!enregistrer;
+        enregistrer?.click();
+        await a(5000);
+        d.objet = (act()[0] || {}).objet;
+        d.compte = act().length;
+
+        const retirer = [...document.querySelectorAll('[onclick*="planDeleteActivity("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.actId));
+        d.boutonRetirer = !!retirer;
+        retirer?.click();
+        d.retraitConfirme = await oui();
+        await a(2000);
+        d.apresRetrait = act().length;
+        return d;
+      });
+
+      // ── 4. L'archivage, puis la suppression — par les boutons de l'écran ──
+      //
+      // L'archivage **retire le plan de la page** : `planRenderPlans` écarte les
+      // statuts `archive` et `remplace`. Ce n'est pas un bouton qui disparaît,
+      // c'est la ligne entière — le plan subsiste en base, mais cette page ne le
+      // montre plus, et aucun de ses gestes n'y est plus atteignable. D'où le
+      // frère que la ronde doit semer pour éprouver la suppression par l'écran.
+      await essai('finDeVie', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="plans"]')?.click();
+        await a(3500);
+        const parBouton = (fn, id) => [...document.querySelectorAll(`[onclick*="${fn}("]`)]
+          .find((b) => (b.getAttribute('onclick') || '').includes(id));
+        const ligne = (id) => [...document.querySelectorAll('[onclick*="planOpenDetail("]')]
+          .some((b) => (b.getAttribute('onclick') || '').includes(id));
+        d.ligneAvant = ligne(o.planId);
+        d.boutonSupprimerAvant = !!parBouton('planDeletePlan', o.planId);
+        const archiver = parBouton('planArchivePlan', o.planId);
+        d.bouton = !!archiver;
+        archiver?.click();
+        d.archivageConfirme = await oui();
+        await a(2000);
+        d.statut = ((await plans()).find((p) => p.id === o.planId) || {}).statut;
+        // La ligne a quitté la table, et ses gestes avec elle.
+        d.ligneApres = ligne(o.planId);
+        d.boutonSupprimerApres = !!parBouton('planDeletePlan', o.planId);
+        d.boutonArchiverApres = !!parBouton('planArchivePlan', o.planId);
+
+        // Un frère en brouillon, pour la suppression par l'écran.
+        const frere = await env('/plans', 'POST', {
+          titre: 'Plan frère de la ronde', annee: 2029,
+          type: 'periodique', domaine_id: '', secteur_id: '',
+        });
+        d.semisFrere = frere.statut;
+        const idFrere = ((await plans()).find((p) => /frère de la ronde/.test(p.titre || '')) || {}).id;
+        d.frere = !!idFrere;
+        // Deux gestes, non un : `planLoadData` recharge sans redessiner, et le
+        // redessin seul rejoue l'état d'avant. Il faut recharger **puis**
+        // redessiner — et attendre la ligne plutôt qu'un délai.
+        let supprimer = null;
+        let tours = 0;
+        for (; tours < 10 && !supprimer; tours += 1) {
+          /* eslint-disable no-await-in-loop */
+          if (typeof window.planLoadData === 'function') await window.planLoadData();
+          if (typeof window.planNavigateTo === 'function') window.planNavigateTo('plans');
+          await a(1200);
+          supprimer = parBouton('planDeletePlan', idFrere);
+        }
+        d.tours = tours;
+        d.boutonSupprimer = !!supprimer;
+        supprimer?.click();
+        d.suppressionConfirmee = await oui();
+        await a(2500);
+        d.frereParti = !(await plans()).some((p) => p.id === idFrere);
+
+        // Ménage : l'archivé ne part que par la route.
+        d.menage = (await env(`/plans/${o.planId}`, 'DELETE')).statut;
+        d.restants = (await plans()).length;
+        d.rendueAuDepart = d.restants === o.deja;
+        return d;
+      });
+      return o;
+    }, '/api/m/planification');
+
+    {
+      const A = rondeAct;
+      const Fo = A.formulaire || {};
+      const Re = A.reprise || {};
+      const Fv = A.finDeVie || {};
+      verifier('le formulaire d’activité n’offre rien à cocher avant qu’un secteur soit choisi, et sa table paraît avec lui',
+        A.semis === 200 && !!A.planId
+        && Fo.detail === true && Fo.bouton === true && Fo.champObjet === true
+        // La cascade : aucune case avant le secteur, un indice à la place.
+        && Fo.casesAvant === 0 && Fo.indiceAvant === true
+        && Fo.listeSecteur === true && Fo.secteurs >= 2
+        && Fo.casesApres >= 1,
+        JSON.stringify(Fo).slice(0, 440));
+      verifier('la case d’une sous-activité et son volet sont le même geste : l’un entraîne l’autre, et tous ses thèmes suivent',
+        // Les thèmes paraissent avec le secteur, mais aucun n'est coché d'avance.
+        Fo.volet === true && Fo.voletFermeAvant === true
+        && Fo.themesAvantSA >= 1 && Fo.cochesAvantSA === 0
+        // Chemin 1 : la case ouvre le volet et coche ses thèmes.
+        && Fo.voletOuvertParCase === true && Fo.saCochee === 1
+        && Fo.cochesParSA >= 1 && Fo.cochesParSA <= Fo.themes
+        && Fo.compteur.startsWith(`${Fo.cochesParSA}/${Fo.cochesParSA}`)
+        // Chemin 2 : le chevron referme, et décoche la case comme les thèmes.
+        && Fo.chevron === true && Fo.voletFerme === true
+        && Fo.caseApresFermeture === false && Fo.cochesApresFermeture === 0
+        // Rouvert, tout est rétabli.
+        && Fo.voletRouvert === true && Fo.cochesApresReouverture === Fo.cochesParSA
+        // Un thème se décoche seul, sans entraîner les autres.
+        && Fo.themeAtteignable === true
+        && Fo.apresDecoche === Fo.cochesParSA - 1
+        && Fo.themesCoches === Fo.cochesParSA,
+        JSON.stringify({ voletAvant: Fo.voletFermeAvant, total: Fo.themes,
+          cochesAvant: Fo.cochesAvantSA, ouvertParCase: Fo.voletOuvertParCase,
+          parSA: Fo.cochesParSA, compteur: Fo.compteur, ferme: Fo.voletFerme,
+          caseFermee: Fo.caseApresFermeture, cochesFerme: Fo.cochesApresFermeture,
+          rouvert: Fo.voletRouvert, cochesRouvert: Fo.cochesApresReouverture,
+          decoche: Fo.apresDecoche, fin: Fo.themesCoches }));
+      verifier('l’activité saisie part chez le serveur avec son objet, son lieu, ses dates, ses inspecteurs, sa sous-activité et ses thèmes',
+        Fo.boutonEnregistrer === true && Fo.apres === Fo.avant + 1 && !!A.actId
+        && Fo.objet === 'Audit documentaire de la ronde'
+        && Fo.lieu === 'Cotonou'
+        && Fo.debut === '2029-04-02' && Fo.fin === '2029-04-06'
+        && Number(Fo.inspecteurs) === 2
+        && Fo.sousActivites === 1 && Fo.themesEnBase === Fo.cochesParSA,
+        JSON.stringify({ objet: Fo.objet, lieu: Fo.lieu, debut: Fo.debut, fin: Fo.fin,
+          inspecteurs: Fo.inspecteurs, sa: Fo.sousActivites,
+          themes: Fo.themesEnBase, attendus: Fo.cochesParSA }));
+      verifier('la fiche rouverte porte ce qui a été saisi, la modification part en base, et l’activité se retire sur confirmation',
+        Re.bouton === true && Re.objetRepris === 'Audit documentaire de la ronde'
+        && Re.boutonEnregistrer === true
+        && Re.objet === 'Audit documentaire — repris' && Re.compte === 1
+        && Re.boutonRetirer === true && Re.retraitConfirme === true
+        && Re.apresRetrait === 0,
+        JSON.stringify(Re));
+      verifier('un plan s’archive sur confirmation, et l’archivage retire sa ligne de la page tout en le gardant en base',
+        Fv.ligneAvant === true && Fv.boutonSupprimerAvant === true
+        && Fv.bouton === true && Fv.archivageConfirme === true
+        // Le plan subsiste, avec son nouveau statut…
+        && Fv.statut === 'archive'
+        // …mais la page des plans ne le montre plus, et aucun de ses gestes
+        // n'y est plus atteignable.
+        && Fv.ligneApres === false
+        && Fv.boutonSupprimerApres === false && Fv.boutonArchiverApres === false,
+        JSON.stringify(Fv).slice(0, 400));
+      verifier('un plan en brouillon se supprime par le bouton de sa ligne, et le module revient à son compte',
+        Fv.semisFrere === 200 && Fv.frere === true
+        && Fv.boutonSupprimer === true && Fv.suppressionConfirmee === true
+        && Fv.frereParti === true
+        && Fv.menage === 200 && Fv.rendueAuDepart === true,
+        JSON.stringify(Fv).slice(0, 400));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PLAN',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

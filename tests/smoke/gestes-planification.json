@@ -2,7 +2,7 @@
  "releve": "2026-11-01",
  "gestesNommes": 94,
  "occurrences": 137,
- "exerces": 29,
+ "exerces": 36,
  "indecidables": 4,
  "gestes": [
   {
@@ -429,7 +429,7 @@
    "nom": "debut:change",
    "source": "debut.addEventListener('change', () => {",
    "id": "actDebut",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -439,7 +439,7 @@
    "nom": "fin:change",
    "source": "fin.addEventListener('change', depuisDates);",
    "id": "actFin",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -489,7 +489,7 @@
    "nom": "secteurSelect:change",
    "source": "secteurSelect.addEventListener('change', _renderSAThemesTable);",
    "id": "actSecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-dashboard.js",
@@ -642,7 +642,7 @@
    "evenement": "click",
    "nom": "planDeletePlan",
    "source": "planDeletePlan('${p.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -696,7 +696,7 @@
    "evenement": "click",
    "nom": "planArchivePlan",
    "source": "planArchivePlan('${p.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -732,7 +732,7 @@
    "evenement": "click",
    "nom": "planShowActivityModal",
    "source": "planShowActivityModal('${plan.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -795,7 +795,7 @@
    "evenement": "click",
    "nom": "planShowActivityModal",
    "source": "planShowActivityModal('${a.plan_id}','${a.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -804,7 +804,7 @@
    "evenement": "click",
    "nom": "planDeleteActivity",
    "source": "planDeleteActivity('${a.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-prestataires.js",

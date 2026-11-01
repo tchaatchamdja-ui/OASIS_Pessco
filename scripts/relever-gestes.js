@@ -314,12 +314,61 @@ function blanchirCommentaires(code) {
 // « if », éternellement « non exercé », quand le geste réel était exercé sous
 // son vrai nom ailleurs. Le geste est ce que la garde **protège**.
 const MOTS_CLES = new Set(['if', 'for', 'while', 'switch', 'try', 'catch',
-  'return', 'const', 'let', 'var', 'do', 'else', 'typeof', 'await', 'new']);
+  'return', 'const', 'let', 'var', 'do', 'else', 'typeof', 'await', 'new',
+  // `void(0)` n'est pas un geste : c'est la branche qui n'en fait aucun.
+  'void']);
+
+// ── Une interpolation se compte par ses accolades, non par une expression ──
+//
+// `corps.replace(/\$\{[^}]*\}/g, '${}')` s'arrête au **premier** `}`. Sur une
+// interpolation qui en contient une autre — et c'est le cas dès qu'un ternaire
+// choisit entre deux appels paramétrés —, elle coupe au milieu :
+//
+//   onclick="${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}"
+//
+// y recevait le nom `${}')` : `planCreateActivity('${}')`}`. Un nom qui n'existe
+// pas, éternellement « non exercé », et les **deux vrais noms perdus**. Les
+// accolades se comptent donc.
+const normaliseInterpolations = (t) => {
+  let r = '';
+  let i = 0;
+  while (i < t.length) {
+    if (t[i] === '$' && t[i + 1] === '{') {
+      let profondeur = 0;
+      let j = i + 1;
+      for (; j < t.length; j += 1) {
+        if (t[j] === '{') profondeur += 1;
+        else if (t[j] === '}') {
+          profondeur -= 1;
+          if (profondeur === 0) break;
+        }
+      }
+      r += '${}';
+      i = j < t.length ? j + 1 : t.length;
+    } else {
+      r += t[i];
+      i += 1;
+    }
+  }
+  return r;
+};
+
+// Les noms d'appel que porte un gestionnaire, dans l'ordre et sans doublon. Sert
+// à l'attribut dont le nom se dérobe : celui que le code choisit à l'exécution.
+const appelsDuGestionnaire = (corps) => {
+  const noms = [];
+  for (const m of String(corps).matchAll(/(^|[^.\w$])([A-Za-z_$][\w$.]*)\s*\(/g)) {
+    const n = m[2];
+    if (MOTS_CLES.has(n.split('.')[0])) continue;
+    if (!noms.includes(n)) noms.push(n);
+  }
+  return noms;
+};
 
 const nomDuGestionnaire = (corps) => {
   // Les interpolations d'abord : deux gestionnaires qui ne diffèrent que par une
   // valeur insérée sont **un** geste, et non deux.
-  const normalise = corps.replace(/\$\{[^}]*\}/g, '${}').trim();
+  const normalise = normaliseInterpolations(corps).trim();
   const sansGarde = normalise.replace(/^event\.stopPropagation\(\)\s*;\s*/, '');
   // Rien après la garde : la garde **est** le geste.
   if (!sansGarde) return 'event.stopPropagation';
@@ -328,6 +377,11 @@ const nomDuGestionnaire = (corps) => {
   // Une affectation : la cible la nomme. `EXEC_STATE.filters.domaine=this.value;…`
   const affectation = /^([A-Za-z_$][\w$.[\]'"]*)\s*=(?!=)/.exec(sansGarde);
   if (affectation) return affectation[1];
+  // Un incrément en est une : `PLAN_STATE.calendarYear--;planRenderPage()` était
+  // nommé par ses quarante-huit premiers caractères, et les deux flèches d'année
+  // du calendrier comptaient pour deux fragments de code.
+  const increment = /^([A-Za-z_$][\w$.[\]'"]*)\s*(\+\+|--)/.exec(sansGarde);
+  if (increment) return increment[1];
   return sansGarde.slice(0, 48);
 };
 
@@ -385,14 +439,37 @@ function relever(fichiers) {
     const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
     for (const m of texte.matchAll(motifEnLigne)) {
       const corps = m[3].trim();
-      gestes.push({
+      const commun = {
         fichier: rel,
         ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'en ligne',
         evenement: m[1],
-        nom: nomDuGeste(corps),
         source: corps.slice(0, 120),
-      });
+      };
+      const nom = nomDuGeste(corps);
+      // ── Un attribut dont le nom se dérobe ──
+      //
+      // Quand la valeur est une interpolation, il n'y a pas **un** nom : le code
+      // choisit à l'exécution. `onclick="${actId ? `planUpdateActivity(…)` :
+      // `planCreateActivity(…)`}"` peut appeler l'une ou l'autre, et les deux
+      // sont des gestes de l'écran. On en pousse donc **un par nom** : c'est
+      // l'attribut qui est unique, non le geste qu'il porte.
+      //
+      // Et quand aucun nom ne s'en tire — `onclick="${}"`, dont le gestionnaire
+      // entier vient d'ailleurs —, l'occurrence est **indécidable**. La compter
+      // « non exercée » serait affirmer qu'un geste qu'on ne sait pas nommer
+      // n'est pas couvert : *une mesure ne doit pas conclure de ce qu'elle ne
+      // voit pas.*
+      if (nom.includes('${}')) {
+        const noms = appelsDuGestionnaire(corps);
+        if (noms.length) {
+          noms.forEach((n) => gestes.push({ ...commun, nom: n, interpole: true }));
+        } else {
+          gestes.push({ ...commun, nom, indecidable: true });
+        }
+      } else {
+        gestes.push({ ...commun, nom });
+      }
     }
     // ── Troisième forme : le gestionnaire posé en **propriété** ──
     //
@@ -927,6 +1004,9 @@ async function principal() {
     return nomDuGestionnaireJsx(String((v && v.source) || ''));
   }).filter(Boolean));
   gestes.forEach((g) => {
+    // Un attribut dont aucun nom ne se tire ne se rapproche de rien : il sort
+    // indécidable, comme un écouteur sans identifiant.
+    if (g.indecidable) { g.exerce = null; return; }
     if (g.forme === 'en ligne') { g.exerce = vues.has(g.nom); return; }
     if (g.forme === 'propriété') { g.exerce = proprietesVues.has(g.nom); return; }
     if (g.forme === 'propriété JSX') { g.exerce = jsxVus.has(g.nom); return; }

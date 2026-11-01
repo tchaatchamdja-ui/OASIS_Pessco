@@ -8041,3 +8041,71 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            attente conditionnelle de trois minutes, jusqu'à ce que la charge
            retombe sous 3,2, a suffi à les faire cesser. Aucun orphelin laissé :
            le garde-fou de 5.f.30 tient.
+
+       5.f.46 [x] **Un attribut interpolé ne porte pas un nom, et ce que vaut
+           chacune des quatre pièces** — fait le 1er novembre 2026.
+
+           **Les sept écrans remesurés : 487/887 → 489/884.** Aucun nom perdu.
+
+           `onclick="${actId ? \`planUpdateActivity(…)\` : \`planCreateActivity(…)\`}"`
+           (`pl-crud.js:493`) recevait pour nom un fragment illisible, et les
+           **deux vrais noms** n'entraient pas au relevé. Dix-huit attributs du
+           dépôt sont dans ce cas, sur cinq écrans.
+
+           La correction tient en une phrase : *un attribut dont la valeur est
+           une interpolation ne porte pas **un** nom — le code choisit à
+           l'exécution.* On pousse donc un geste par nom appelé : c'est
+           l'attribut qui est unique, non le geste qu'il porte.
+
+           ── Quatre pièces, et ce que chacune vaut ──
+
+           Le premier contre-essai n'a **rien** fait rougir, et c'est lui qui a
+           appris la leçon du pas : *une correction en plusieurs pièces demande
+           un contre-essai par pièce, sinon on crédite la mauvaise.* J'avais
+           visé l'équilibrage des accolades ; la pièce qui travaille est
+           ailleurs.
+
+           **1. Les appels d'une valeur interpolée donnent chacun leur geste.**
+           +2 noms sur PLAN — `planCreateActivity` et `planUpdateActivity`,
+           exercés par la ronde du pas précédent sans être crédités.
+           Contre-essai : branche désarmée, les deux noms disparaissent et le
+           garde rougit — « couverture déclarée 38, mesurée 36 ».
+
+           **2. Une valeur dont aucun nom ne se tire sort « indécidable »**, et
+           non « non exercée » : *une mesure ne conclut pas de ce qu'elle ne
+           voit pas.* Dénominateurs : portail 77 → 76, ramp 211 → 210, mesures
+           90 → 87. Le contre-essai n'a d'abord rien fait rougir — le portail
+           portait **déjà** une dispense pour ce geste, écrite avant que
+           l'angle mort soit nommé, et qui disait exactement la même chose :
+           « le relevé des gestes ne peut pas le nommer là où il est posé ».
+           Cette dispense ne protégeait plus rien. Le garde des dispenses
+           périmées ne le voyait pas : il ne connaissait que deux péremptions,
+           le geste exercé et le geste disparu. Il en connaît trois, et il a
+           dénoncé la dispense de lui-même. Elle est partie, son contenu
+           conservé en note — et le contre-essai mord : « portail : 1 geste non
+           exercé sans motif ».
+
+           **3. Un incrément est nommé par sa cible.**
+           `PLAN_STATE.calendarYear--;planRenderPage()` était nommé par ses
+           quarante-huit premiers caractères : les deux flèches d'année du
+           calendrier comptaient pour **deux** gestes là où il n'y a qu'un
+           réglage. 2 noms → 1. Effet mesuré, mais qu'aucun garde ne contraint :
+           il porte sur le dénominateur, que rien ne déclare.
+
+           **4. Les accolades d'une interpolation se comptent** au lieu de
+           s'arrêter au premier `}` — `/\$\{[^}]*\}/` coupe au milieu dès qu'une
+           interpolation en contient une autre. Correction juste, et **aucune
+           mesure ne la crédite** : le seul cas imbriqué du dépôt est
+           entièrement absorbé par la pièce 1, et les trois noms indécidables se
+           distinguent déjà sans elle. Elle est gardée parce qu'elle est vraie,
+           non parce qu'elle a servi.
+
+           ── Une rectification ──
+
+           La note du pas précédent parlait de « douze occurrences fantômes »
+           sur PLAN. Mesure faite, PLAN porte **six** attributs interpolés, dont
+           un seul imbriqué ; les autres occurrences que j'avais rangées là —
+           `PLAN_STATE.calFilters.prestataire` et ses pareilles — sont de
+           **vrais** gestes, correctement nommés, simplement non exercés. Le
+           chiffre était faux dans le sens qui flatte la correction : il faisait
+           paraître l'angle mort deux fois plus grand qu'il n'est.

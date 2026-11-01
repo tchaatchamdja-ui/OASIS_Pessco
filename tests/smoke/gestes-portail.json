@@ -3,15 +3,15 @@
  "gestesNommes": 84,
  "occurrences": 129,
  "exerces": 67,
- "indecidables": 7,
+ "indecidables": 8,
  "gestes": [
   {
    "fichier": "frontend/portail/accueil.ts",
    "ligne": 251,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "setModulesView",
    "source": "setModulesView('grid')",
+   "nom": "setModulesView",
    "exerce": true
   },
   {
@@ -19,8 +19,8 @@
    "ligne": 253,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "setModulesView",
    "source": "setModulesView('list')",
+   "nom": "setModulesView",
    "exerce": true
   },
   {
@@ -48,8 +48,8 @@
    "ligne": 75,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "portailOuvrirRecherche",
    "source": "portailOuvrirRecherche()",
+   "nom": "portailOuvrirRecherche",
    "exerce": true
   },
   {
@@ -57,8 +57,8 @@
    "ligne": 78,
    "forme": "en ligne",
    "evenement": "input",
-   "nom": "portailChercher",
    "source": "portailChercher(this)",
+   "nom": "portailChercher",
    "exerce": true
   },
   {
@@ -66,8 +66,8 @@
    "ligne": 78,
    "forme": "en ligne",
    "evenement": "blur",
-   "nom": "portailFermerRechercheSiVide",
    "source": "portailFermerRechercheSiVide()",
+   "nom": "portailFermerRechercheSiVide",
    "exerce": true
   },
   {
@@ -75,8 +75,8 @@
    "ligne": 80,
    "forme": "en ligne",
    "evenement": "mousedown",
-   "nom": "event.preventDefault",
    "source": "event.preventDefault()",
+   "nom": "event.preventDefault",
    "exerce": false
   },
   {
@@ -84,8 +84,8 @@
    "ligne": 80,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "portailViderRecherche",
    "source": "portailViderRecherche()",
+   "nom": "portailViderRecherche",
    "exerce": false
   },
   {
@@ -93,17 +93,18 @@
    "ligne": 139,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "${}",
    "source": "${pdf}",
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "exerce": null
   },
   {
    "fichier": "frontend/portail/barre.ts",
    "ligne": 141,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openImportModal",
    "source": "openImportModal('${coll}','${escapeHtml(title)}')",
+   "nom": "openImportModal",
    "exerce": true
   },
   {
@@ -111,8 +112,8 @@
    "ligne": 201,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -120,8 +121,8 @@
    "ligne": 212,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -129,8 +130,8 @@
    "ligne": 213,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "doImport",
    "source": "doImport('${coll}')",
+   "nom": "doImport",
    "exerce": true
   },
   {
@@ -148,8 +149,8 @@
    "ligne": 172,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "cfgNavigate",
    "source": "cfgNavigate('${tab.id}')",
+   "nom": "cfgNavigate",
    "exerce": true
   },
   {
@@ -157,8 +158,8 @@
    "ligne": 237,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "toggleCfgSidebar",
    "source": "toggleCfgSidebar()",
+   "nom": "toggleCfgSidebar",
    "exerce": true
   },
   {
@@ -216,8 +217,8 @@
    "ligne": 116,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openExigDrawer",
    "source": "openExigDrawer('${texte(e.id)}')",
+   "nom": "openExigDrawer",
    "exerce": true
   },
   {
@@ -225,8 +226,8 @@
    "ligne": 117,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "deleteRef",
    "source": "deleteRef('exigences','${texte(e.id)}')",
+   "nom": "deleteRef",
    "exerce": true
   },
   {
@@ -234,8 +235,8 @@
    "ligne": 124,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "toggleExigGroup",
    "source": "toggleExigGroup(${argEchappe(key)})",
+   "nom": "toggleExigGroup",
    "exerce": true
   },
   {
@@ -243,8 +244,8 @@
    "ligne": 126,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "event.stopPropagation",
    "source": "event.stopPropagation()",
+   "nom": "event.stopPropagation",
    "exerce": false
   },
   {
@@ -252,8 +253,8 @@
    "ligne": 128,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openReglementForm",
    "source": "openReglementForm(${argEchappe(key)})",
+   "nom": "openReglementForm",
    "exerce": true
   },
   {
@@ -261,8 +262,8 @@
    "ligne": 129,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openExigDrawer",
    "source": "openExigDrawer(null,${argEchappe(key)},${argEchappe(dateAdoption)})",
+   "nom": "openExigDrawer",
    "exerce": true
   },
   {
@@ -270,8 +271,8 @@
    "ligne": 149,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openExigDrawer",
    "source": "openExigDrawer(null,null,null,true)",
+   "nom": "openExigDrawer",
    "exerce": true
   },
   {
@@ -279,8 +280,8 @@
    "ligne": 167,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
+   "nom": "closeExigDrawer",
    "exerce": true
   },
   {
@@ -288,8 +289,8 @@
    "ligne": 169,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
+   "nom": "closeExigDrawer",
    "exerce": true
   },
   {
@@ -297,8 +298,8 @@
    "ligne": 179,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
+   "nom": "closeExigDrawer",
    "exerce": true
   },
   {
@@ -306,8 +307,8 @@
    "ligne": 180,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveExigDrawer",
    "source": "saveExigDrawer(${argEchappe(id || '')}, ${showRegFields}, ${argEchappe(reglement || '')}, ${argEchappe(date || '')})",
+   "nom": "saveExigDrawer",
    "exerce": true
   },
   {
@@ -315,8 +316,8 @@
    "ligne": 257,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
+   "nom": "closeExigDrawer",
    "exerce": true
   },
   {
@@ -324,8 +325,8 @@
    "ligne": 260,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
+   "nom": "closeExigDrawer",
    "exerce": true
   },
   {
@@ -333,8 +334,8 @@
    "ligne": 267,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeExigDrawer",
    "source": "closeExigDrawer()",
+   "nom": "closeExigDrawer",
    "exerce": true
   },
   {
@@ -342,8 +343,8 @@
    "ligne": 268,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveReglement",
    "source": "saveReglement(${argEchappe(reglement)})",
+   "nom": "saveReglement",
    "exerce": true
   },
   {
@@ -351,8 +352,8 @@
    "ligne": 262,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "basculerInstance",
    "source": "basculerInstance(${argEchappe(i.nom)})",
+   "nom": "basculerInstance",
    "exerce": true
   },
   {
@@ -360,8 +361,8 @@
    "ligne": 263,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "supprimerInstance",
    "source": "supprimerInstance(${argEchappe(i.nom)})",
+   "nom": "supprimerInstance",
    "exerce": true
   },
   {
@@ -369,8 +370,8 @@
    "ligne": 270,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "ouvrirInstance",
    "source": "ouvrirInstance()",
+   "nom": "ouvrirInstance",
    "exerce": true
   },
   {
@@ -408,8 +409,8 @@
    "ligne": 199,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -417,8 +418,8 @@
    "ligne": 208,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -426,8 +427,8 @@
    "ligne": 228,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -435,8 +436,8 @@
    "ligne": 240,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -444,8 +445,8 @@
    "ligne": 241,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "orgConfirmInterim",
    "source": "orgConfirmInterim('${nodeId}')",
+   "nom": "orgConfirmInterim",
    "exerce": true
   },
   {
@@ -453,8 +454,8 @@
    "ligne": 344,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "orgUnassign",
    "source": "orgUnassign('${texte(a.id)}')",
+   "nom": "orgUnassign",
    "exerce": true
   },
   {
@@ -462,8 +463,8 @@
    "ligne": 369,
    "forme": "en ligne",
    "evenement": "dragstart",
-   "nom": "orgDragStart",
    "source": "orgDragStart(event,'${texte(p.id)}')",
+   "nom": "orgDragStart",
    "exerce": true
   },
   {
@@ -471,8 +472,8 @@
    "ligne": 387,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "orgEndInterim",
    "source": "event.stopPropagation();orgEndInterim('${texte(node.id)}')",
+   "nom": "orgEndInterim",
    "exerce": true
   },
   {
@@ -480,8 +481,8 @@
    "ligne": 389,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "orgStartInterim",
    "source": "event.stopPropagation();orgStartInterim('${texte(node.id)}')",
+   "nom": "orgStartInterim",
    "exerce": true
   },
   {
@@ -489,8 +490,8 @@
    "ligne": 392,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openPosteRegistre",
    "source": "event.stopPropagation();openPosteRegistre('${texte(node.id)}')",
+   "nom": "openPosteRegistre",
    "exerce": true
   },
   {
@@ -498,8 +499,8 @@
    "ligne": 402,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "event.stopPropagation();openRefModal('organisation','${texte(node.id)}')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -507,8 +508,8 @@
    "ligne": 409,
    "forme": "en ligne",
    "evenement": "dragover",
-   "nom": "orgAllowDrop",
    "source": "orgAllowDrop(event)",
+   "nom": "orgAllowDrop",
    "exerce": true
   },
   {
@@ -516,8 +517,8 @@
    "ligne": 409,
    "forme": "en ligne",
    "evenement": "dragleave",
-   "nom": "orgDragLeave",
    "source": "orgDragLeave(event)",
+   "nom": "orgDragLeave",
    "exerce": true
   },
   {
@@ -525,8 +526,8 @@
    "ligne": 409,
    "forme": "en ligne",
    "evenement": "drop",
-   "nom": "orgDrop",
    "source": "orgDrop(event,'${texte(node.id)}')",
+   "nom": "orgDrop",
    "exerce": true
   },
   {
@@ -534,8 +535,8 @@
    "ligne": 428,
    "forme": "en ligne",
    "evenement": "dragover",
-   "nom": "orgAllowDrop",
    "source": "orgAllowDrop(event)",
+   "nom": "orgAllowDrop",
    "exerce": true
   },
   {
@@ -543,8 +544,8 @@
    "ligne": 428,
    "forme": "en ligne",
    "evenement": "dragleave",
-   "nom": "orgDragLeave",
    "source": "orgDragLeave(event)",
+   "nom": "orgDragLeave",
    "exerce": true
   },
   {
@@ -552,8 +553,8 @@
    "ligne": 428,
    "forme": "en ligne",
    "evenement": "drop",
-   "nom": "orgDrop",
    "source": "orgDrop(event,'${texte(node.id)}')",
+   "nom": "orgDrop",
    "exerce": true
   },
   {
@@ -561,8 +562,8 @@
    "ligne": 450,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "setOrgView",
    "source": "setOrgView('list')",
+   "nom": "setOrgView",
    "exerce": true
   },
   {
@@ -570,8 +571,8 @@
    "ligne": 451,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "setOrgView",
    "source": "setOrgView('tree')",
+   "nom": "setOrgView",
    "exerce": true
   },
   {
@@ -659,8 +660,8 @@
    "ligne": 190,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openAacEdit",
    "source": "openAacEdit()",
+   "nom": "openAacEdit",
    "exerce": true
   },
   {
@@ -668,8 +669,8 @@
    "ligne": 197,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "uploadAacLogo",
    "source": "uploadAacLogo(this)",
+   "nom": "uploadAacLogo",
    "exerce": true
   },
   {
@@ -677,8 +678,8 @@
    "ligne": 199,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "removeAacLogo",
    "source": "removeAacLogo()",
+   "nom": "removeAacLogo",
    "exerce": true
   },
   {
@@ -686,8 +687,8 @@
    "ligne": 259,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -695,8 +696,8 @@
    "ligne": 286,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -704,8 +705,8 @@
    "ligne": 287,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveAAC",
    "source": "saveAAC()",
+   "nom": "saveAAC",
    "exerce": true
   },
   {
@@ -713,8 +714,8 @@
    "ligne": 382,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveSecurite",
    "source": "saveSecurite()",
+   "nom": "saveSecurite",
    "exerce": true
   },
   {
@@ -722,8 +723,8 @@
    "ligne": 466,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveSysteme",
    "source": "saveSysteme()",
+   "nom": "saveSysteme",
    "exerce": true
   },
   {
@@ -731,8 +732,8 @@
    "ligne": 223,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "uploadProfilePhoto",
    "source": "uploadProfilePhoto(this)",
+   "nom": "uploadProfilePhoto",
    "exerce": true
   },
   {
@@ -740,8 +741,8 @@
    "ligne": 225,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "removeProfilePhoto",
    "source": "removeProfilePhoto()",
+   "nom": "removeProfilePhoto",
    "exerce": true
   },
   {
@@ -749,8 +750,8 @@
    "ligne": 243,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveProfileInfos",
    "source": "saveProfileInfos()",
+   "nom": "saveProfileInfos",
    "exerce": true
   },
   {
@@ -758,8 +759,8 @@
    "ligne": 276,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "submitProfilePassword",
    "source": "submitProfilePassword()",
+   "nom": "submitProfilePassword",
    "exerce": false
   },
   {
@@ -767,8 +768,8 @@
    "ligne": 293,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveProfileExtra",
    "source": "saveProfileExtra('${key}')",
+   "nom": "saveProfileExtra",
    "exerce": false
   },
   {
@@ -776,8 +777,8 @@
    "ligne": 122,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal('${coll}','${texte(r.id)}')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -785,8 +786,8 @@
    "ligne": 123,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "deleteRef",
    "source": "deleteRef('${coll}','${texte(r.id)}')",
+   "nom": "deleteRef",
    "exerce": true
   },
   {
@@ -794,8 +795,8 @@
    "ligne": 133,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal('${coll}')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -803,8 +804,8 @@
    "ligne": 163,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "toggleInspectorFields",
    "source": "toggleInspectorFields()",
+   "nom": "toggleInspectorFields",
    "exerce": true
   },
   {
@@ -812,8 +813,8 @@
    "ligne": 164,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "orgTypeChanged",
    "source": "orgTypeChanged()",
+   "nom": "orgTypeChanged",
    "exerce": false
   },
   {
@@ -821,8 +822,8 @@
    "ligne": 232,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -830,8 +831,8 @@
    "ligne": 235,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeRefModal",
    "source": "closeRefModal()",
+   "nom": "closeRefModal",
    "exerce": true
   },
   {
@@ -839,8 +840,8 @@
    "ligne": 236,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveRef",
    "source": "saveRef('${coll}','${id || ''}')",
+   "nom": "saveRef",
    "exerce": true
   },
   {
@@ -848,8 +849,8 @@
    "ligne": 94,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "togglePers",
    "source": "togglePers('${texte(r.id)}')",
+   "nom": "togglePers",
    "exerce": true
   },
   {
@@ -857,8 +858,8 @@
    "ligne": 97,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal('${coll}','${texte(r.id)}')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -866,8 +867,8 @@
    "ligne": 98,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "deleteRef",
    "source": "deleteRef('${coll}','${texte(r.id)}')",
+   "nom": "deleteRef",
    "exerce": true
   },
   {
@@ -875,8 +876,8 @@
    "ligne": 116,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal('${coll}')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -884,8 +885,8 @@
    "ligne": 136,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "event.stopPropagation",
    "source": "event.stopPropagation()",
+   "nom": "event.stopPropagation",
    "exerce": false
   },
   {
@@ -893,8 +894,8 @@
    "ligne": 137,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal('${coll}','${texte(id)}')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -902,8 +903,8 @@
    "ligne": 138,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "deleteRef",
    "source": "deleteRef('${coll}','${texte(id)}')",
+   "nom": "deleteRef",
    "exerce": true
   },
   {
@@ -911,8 +912,8 @@
    "ligne": 147,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal(\"${coll}\",\"\",${json})",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -920,8 +921,8 @@
    "ligne": 154,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "toggleAcc",
    "source": "toggleAcc('${key}')",
+   "nom": "toggleAcc",
    "exerce": true
   },
   {
@@ -929,8 +930,8 @@
    "ligne": 253,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "openRefModal",
    "source": "openRefModal('domaines')",
+   "nom": "openRefModal",
    "exerce": true
   },
   {
@@ -938,8 +939,8 @@
    "ligne": 194,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "setUserTab",
    "source": "setUserTab('${tb.id}')",
+   "nom": "setUserTab",
    "exerce": true
   },
   {
@@ -947,8 +948,8 @@
    "ligne": 264,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "toggleUserSidebar",
    "source": "toggleUserSidebar()",
+   "nom": "toggleUserSidebar",
    "exerce": true
   },
   {
@@ -956,8 +957,8 @@
    "ligne": 355,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeUserModal",
    "source": "closeUserModal()",
+   "nom": "closeUserModal",
    "exerce": true
   },
   {
@@ -965,8 +966,8 @@
    "ligne": 358,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeUserModal",
    "source": "closeUserModal()",
+   "nom": "closeUserModal",
    "exerce": true
   },
   {
@@ -974,8 +975,8 @@
    "ligne": 359,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "saveUserModules",
    "source": "saveUserModules('${escapeHtml(u.username)}')",
+   "nom": "saveUserModules",
    "exerce": true
   },
   {
@@ -983,8 +984,8 @@
    "ligne": 384,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeUserModal",
    "source": "closeUserModal()",
+   "nom": "closeUserModal",
    "exerce": true
   },
   {
@@ -992,8 +993,8 @@
    "ligne": 395,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeUserModal",
    "source": "closeUserModal()",
+   "nom": "closeUserModal",
    "exerce": true
   },
   {
@@ -1001,8 +1002,8 @@
    "ligne": 435,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeUserModal",
    "source": "closeUserModal()",
+   "nom": "closeUserModal",
    "exerce": true
   },
   {
@@ -1010,8 +1011,8 @@
    "ligne": 458,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "closeUserModal",
    "source": "closeUserModal()",
+   "nom": "closeUserModal",
    "exerce": true
   },
   {
@@ -1019,8 +1020,8 @@
    "ligne": 459,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "submitEditUser",
    "source": "submitEditUser('${escapeHtml(u.username)}')",
+   "nom": "submitEditUser",
    "exerce": true
   },
   {
@@ -1138,8 +1139,8 @@
    "ligne": 52,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "applyTheme",
    "source": "applyTheme('blue-dark')",
+   "nom": "applyTheme",
    "exerce": true
   },
   {
@@ -1147,8 +1148,8 @@
    "ligne": 53,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "applyTheme",
    "source": "applyTheme('corporate')",
+   "nom": "applyTheme",
    "exerce": true
   },
   {
@@ -1156,8 +1157,8 @@
    "ligne": 54,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "applyTheme",
    "source": "applyTheme('retro-avionics')",
+   "nom": "applyTheme",
    "exerce": true
   },
   {
@@ -1165,8 +1166,8 @@
    "ligne": 57,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "applyLang",
    "source": "applyLang('fr')",
+   "nom": "applyLang",
    "exerce": true
   },
   {
@@ -1174,8 +1175,8 @@
    "ligne": 58,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "applyLang",
    "source": "applyLang('en')",
+   "nom": "applyLang",
    "exerce": true
   },
   {
@@ -1183,8 +1184,8 @@
    "ligne": 59,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "applyLang",
    "source": "applyLang('pt')",
+   "nom": "applyLang",
    "exerce": true
   },
   {
@@ -1192,8 +1193,8 @@
    "ligne": 62,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "toggleSidebar",
    "source": "toggleSidebar()",
+   "nom": "toggleSidebar",
    "exerce": true
   }
  ]

@@ -1,8 +1,8 @@
 {
  "releve": "2026-11-01",
- "gestesNommes": 94,
- "occurrences": 137,
- "exerces": 36,
+ "gestesNommes": 95,
+ "occurrences": 139,
+ "exerces": 38,
  "indecidables": 4,
  "gestes": [
   {
@@ -10,8 +10,8 @@
    "ligne": 23,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -19,8 +19,8 @@
    "ligne": 24,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planConfirmSubmit",
    "source": "planConfirmSubmit('${planId}')",
+   "nom": "planConfirmSubmit",
    "exerce": true
   },
   {
@@ -28,8 +28,8 @@
    "ligne": 100,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -37,8 +37,8 @@
    "ligne": 101,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planApplyDecision",
    "source": "planApplyDecision()",
+   "nom": "planApplyDecision",
    "exerce": true
   },
   {
@@ -46,8 +46,8 @@
    "ligne": 212,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -55,8 +55,8 @@
    "ligne": 375,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planDeleteComment",
    "source": "planDeleteComment('${it.id}','${planId}')",
+   "nom": "planDeleteComment",
    "exerce": true
   },
   {
@@ -64,8 +64,8 @@
    "ligne": 393,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -73,8 +73,8 @@
    "ligne": 394,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCreateComment",
    "source": "planCreateComment('${planId}')",
+   "nom": "planCreateComment",
    "exerce": true
   },
   {
@@ -82,8 +82,8 @@
    "ligne": 637,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "document.getElementById",
    "source": "document.getElementById('planNotifPanel')?.remove()",
+   "nom": "document.getElementById",
    "exerce": false
   },
   {
@@ -101,8 +101,9 @@
    "ligne": 195,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "${}",
    "source": "${_escAttr(o.clic(l))}",
+   "nom": "_escAttr",
+   "interpole": true,
    "exerce": false
   },
   {
@@ -110,8 +111,8 @@
    "ligne": 256,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOuvrirCalendrier",
    "source": "planOuvrirCalendrier()",
+   "nom": "planOuvrirCalendrier",
    "exerce": true
   },
   {
@@ -119,8 +120,8 @@
    "ligne": 257,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCalAnnee",
    "source": "planCalAnnee(-1)",
+   "nom": "planCalAnnee",
    "exerce": true
   },
   {
@@ -128,8 +129,8 @@
    "ligne": 258,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCalDefiler",
    "source": "planCalDefiler(-1, this)",
+   "nom": "planCalDefiler",
    "exerce": false
   },
   {
@@ -137,8 +138,8 @@
    "ligne": 259,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCalAujourdhui",
    "source": "planCalAujourdhui(this)",
+   "nom": "planCalAujourdhui",
    "exerce": true
   },
   {
@@ -146,8 +147,8 @@
    "ligne": 260,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCalDefiler",
    "source": "planCalDefiler(1, this)",
+   "nom": "planCalDefiler",
    "exerce": false
   },
   {
@@ -155,8 +156,8 @@
    "ligne": 261,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCalAnnee",
    "source": "planCalAnnee(1)",
+   "nom": "planCalAnnee",
    "exerce": true
   },
   {
@@ -174,8 +175,8 @@
    "ligne": 49,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarYear--;planRenderPage();",
    "source": "PLAN_STATE.calendarYear--;planRenderPage();",
+   "nom": "PLAN_STATE.calendarYear",
    "exerce": false
   },
   {
@@ -183,8 +184,8 @@
    "ligne": 51,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarYear++;planRenderPage();",
    "source": "PLAN_STATE.calendarYear++;planRenderPage();",
+   "nom": "PLAN_STATE.calendarYear",
    "exerce": false
   },
   {
@@ -192,8 +193,8 @@
    "ligne": 57,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarView",
    "source": "PLAN_STATE.calendarView='month';planRenderPage();",
+   "nom": "PLAN_STATE.calendarView",
    "exerce": false
   },
   {
@@ -201,8 +202,8 @@
    "ligne": 58,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarView",
    "source": "PLAN_STATE.calendarView='week';planRenderPage();",
+   "nom": "PLAN_STATE.calendarView",
    "exerce": false
   },
   {
@@ -210,8 +211,8 @@
    "ligne": 161,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.calFilters.domaine",
    "source": "PLAN_STATE.calFilters.domaine=this.value;PLAN_STATE.calFilters.secteur='';PLAN_STATE.calFilters.prestataire='';planRende",
+   "nom": "PLAN_STATE.calFilters.domaine",
    "exerce": false
   },
   {
@@ -219,8 +220,8 @@
    "ligne": 165,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.calFilters.secteur",
    "source": "PLAN_STATE.calFilters.secteur=this.value;PLAN_STATE.calFilters.prestataire='';planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.secteur",
    "exerce": false
   },
   {
@@ -228,8 +229,8 @@
    "ligne": 169,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.calFilters.prestataire",
    "source": "PLAN_STATE.calFilters.prestataire=this.value;planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.prestataire",
    "exerce": false
   },
   {
@@ -237,8 +238,8 @@
    "ligne": 173,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.calFilters.trimestre",
    "source": "PLAN_STATE.calFilters.trimestre=this.value;planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.trimestre",
    "exerce": false
   },
   {
@@ -246,8 +247,8 @@
    "ligne": 180,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.calFilters.responsable",
    "source": "PLAN_STATE.calFilters.responsable=this.value;planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.responsable",
    "exerce": false
   },
   {
@@ -255,8 +256,8 @@
    "ligne": 184,
    "forme": "en ligne",
    "evenement": "input",
-   "nom": "_pesSearchInput",
    "source": "_pesSearchInput(this, () => { PLAN_STATE.calFilters.search=document.getElementById('plan-cal-search').value; planRenderP",
+   "nom": "_pesSearchInput",
    "exerce": false
   },
   {
@@ -264,8 +265,8 @@
    "ligne": 185,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calFilters",
    "source": "PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPa",
+   "nom": "PLAN_STATE.calFilters",
    "exerce": false
   },
   {
@@ -273,8 +274,8 @@
    "ligne": 262,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarMonth",
    "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
    "exerce": false
   },
   {
@@ -282,8 +283,8 @@
    "ligne": 264,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarMonth",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
    "exerce": false
   },
   {
@@ -291,8 +292,8 @@
    "ligne": 357,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarMonth",
    "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
    "exerce": false
   },
   {
@@ -300,8 +301,8 @@
    "ligne": 359,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.calendarMonth",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
    "exerce": false
   },
   {
@@ -309,8 +310,8 @@
    "ligne": 62,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -318,8 +319,8 @@
    "ligne": 63,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCreatePlan",
    "source": "planCreatePlan()",
+   "nom": "planCreatePlan",
    "exerce": true
   },
   {
@@ -327,8 +328,8 @@
    "ligne": 122,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planSortThemeTable",
    "source": "planSortThemeTable(this,${col})",
+   "nom": "planSortThemeTable",
    "exerce": false
   },
   {
@@ -336,8 +337,8 @@
    "ligne": 133,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "event.preventDefault",
    "source": "event.stopPropagation();event.preventDefault();planOpenDetailForPrestataire('${plan.id}','${p.id}')",
+   "nom": "event.preventDefault",
    "exerce": false
   },
   {
@@ -345,8 +346,8 @@
    "ligne": 258,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -354,8 +355,8 @@
    "ligne": 259,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planUpdatePlan",
    "source": "planUpdatePlan('${planId}')",
+   "nom": "planUpdatePlan",
    "exerce": true
   },
   {
@@ -363,8 +364,8 @@
    "ligne": 490,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -372,8 +373,8 @@
    "ligne": 492,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -381,17 +382,28 @@
    "ligne": 493,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "${}')` : `planCreateActivity('${}')`}",
    "source": "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}",
-   "exerce": false
+   "nom": "planUpdateActivity",
+   "interpole": true,
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-crud.js",
+   "ligne": 493,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}",
+   "nom": "planCreateActivity",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
    "ligne": 538,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
    "exerce": false
   },
   {
@@ -399,8 +411,8 @@
    "ligne": 755,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "document.querySelectorAll",
    "source": "document.querySelectorAll('.sync-check:not([disabled])').forEach(cb=>cb.checked=this.checked);",
+   "nom": "document.querySelectorAll",
    "exerce": false
   },
   {
@@ -408,8 +420,8 @@
    "ligne": 768,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planApplySyncSelection",
    "source": "planApplySyncSelection('${planId}')",
+   "nom": "planApplySyncSelection",
    "exerce": false
   },
   {
@@ -417,8 +429,8 @@
    "ligne": 769,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -496,8 +508,8 @@
    "ligne": 193,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "planOpenDetail('${p.id}');return false;",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -505,8 +517,8 @@
    "ligne": 198,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "planOpenDetail('${p.id}')",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -514,8 +526,8 @@
    "ligne": 217,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "planOpenDetail('${a.plan_id}');return false;",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -532,8 +544,8 @@
    "ligne": 110,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planMaOuvrir",
    "source": "planMaOuvrir('${a.id}')",
+   "nom": "planMaOuvrir",
    "exerce": true
   },
   {
@@ -541,8 +553,8 @@
    "ligne": 128,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOuvrirCalendrier",
    "source": "planOuvrirCalendrier()",
+   "nom": "planOuvrirCalendrier",
    "exerce": true
   },
   {
@@ -550,8 +562,8 @@
    "ligne": 135,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planMaSetFiltre",
    "source": "planMaSetFiltre('responsable', this.value)",
+   "nom": "planMaSetFiltre",
    "exerce": false
   },
   {
@@ -559,8 +571,8 @@
    "ligne": 139,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planMaSetFiltre",
    "source": "planMaSetFiltre('secteur', this.value)",
+   "nom": "planMaSetFiltre",
    "exerce": false
   },
   {
@@ -568,8 +580,8 @@
    "ligne": 143,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planMaSetFiltre",
    "source": "planMaSetFiltre('prestataire', this.value)",
+   "nom": "planMaSetFiltre",
    "exerce": false
   },
   {
@@ -577,8 +589,8 @@
    "ligne": 147,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planMaSetFiltre",
    "source": "planMaSetFiltre('mode', this.value)",
+   "nom": "planMaSetFiltre",
    "exerce": false
   },
   {
@@ -586,8 +598,8 @@
    "ligne": 153,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planMaSetFiltre",
    "source": "planMaSetFiltre('du', this.value)",
+   "nom": "planMaSetFiltre",
    "exerce": false
   },
   {
@@ -595,8 +607,8 @@
    "ligne": 157,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planMaSetFiltre",
    "source": "planMaSetFiltre('au', this.value)",
+   "nom": "planMaSetFiltre",
    "exerce": false
   },
   {
@@ -604,8 +616,8 @@
    "ligne": 159,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planMaReinit",
    "source": "planMaReinit()",
+   "nom": "planMaReinit",
    "exerce": true
   },
   {
@@ -613,8 +625,8 @@
    "ligne": 25,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowCreateModal",
    "source": "planShowCreateModal('planifiees')",
+   "nom": "planShowCreateModal",
    "exerce": true
   },
   {
@@ -622,8 +634,8 @@
    "ligne": 55,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planAccBasculer",
    "source": "planAccBasculer(this)",
+   "nom": "planAccBasculer",
    "exerce": true
   },
   {
@@ -631,8 +643,8 @@
    "ligne": 55,
    "forme": "en ligne",
    "evenement": "keydown",
-   "nom": "planAccClavier",
    "source": "planAccClavier(event, this)",
+   "nom": "planAccClavier",
    "exerce": true
   },
   {
@@ -640,8 +652,8 @@
    "ligne": 163,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planDeletePlan",
    "source": "planDeletePlan('${p.id}')",
+   "nom": "planDeletePlan",
    "exerce": true
   },
   {
@@ -649,8 +661,8 @@
    "ligne": 184,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "_planSortBy",
    "source": "_planSortBy('${col}')",
+   "nom": "_planSortBy",
    "exerce": true
   },
   {
@@ -658,8 +670,8 @@
    "ligne": 207,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planTogglePrestRow",
    "source": "planTogglePrestRow('${p.id}',this)",
+   "nom": "planTogglePrestRow",
    "exerce": true
   },
   {
@@ -667,8 +679,8 @@
    "ligne": 207,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "planOpenDetail('${p.id}');return false;",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -676,8 +688,8 @@
    "ligne": 214,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "planOpenDetail('${p.id}')",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -685,8 +697,8 @@
    "ligne": 215,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowEditModal",
    "source": "planShowEditModal('${p.id}')",
+   "nom": "planShowEditModal",
    "exerce": true
   },
   {
@@ -694,8 +706,8 @@
    "ligne": 216,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planArchivePlan",
    "source": "planArchivePlan('${p.id}')",
+   "nom": "planArchivePlan",
    "exerce": true
   },
   {
@@ -703,8 +715,8 @@
    "ligne": 359,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planNavigateTo",
    "source": "planNavigateTo('plans')",
+   "nom": "planNavigateTo",
    "exerce": true
   },
   {
@@ -712,8 +724,9 @@
    "ligne": 373,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "${}')` : 'void(0)'}",
    "source": "${canSync ? `planSyncRisksSelective('${plan.id}')` : 'void(0)'}",
+   "nom": "planSyncRisksSelective",
+   "interpole": true,
    "exerce": false
   },
   {
@@ -721,8 +734,8 @@
    "ligne": 377,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planExportPDF",
    "source": "planExportPDF('${plan.id}')",
+   "nom": "planExportPDF",
    "exerce": true
   },
   {
@@ -730,8 +743,8 @@
    "ligne": 386,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowActivityModal",
    "source": "planShowActivityModal('${plan.id}')",
+   "nom": "planShowActivityModal",
    "exerce": true
   },
   {
@@ -739,8 +752,8 @@
    "ligne": 389,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planSubmit",
    "source": "planSubmit('${plan.id}')",
+   "nom": "planSubmit",
    "exerce": true
   },
   {
@@ -748,8 +761,8 @@
    "ligne": 390,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planAmend",
    "source": "planAmend('${plan.id}')",
+   "nom": "planAmend",
    "exerce": false
   },
   {
@@ -757,8 +770,8 @@
    "ligne": 391,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCancelAmendment",
    "source": "planCancelAmendment('${plan.id}')",
+   "nom": "planCancelAmendment",
    "exerce": false
   },
   {
@@ -766,8 +779,8 @@
    "ligne": 403,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowCommentModal",
    "source": "planShowCommentModal('${plan.id}')",
+   "nom": "planShowCommentModal",
    "exerce": true
   },
   {
@@ -775,8 +788,8 @@
    "ligne": 627,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "this.closest",
    "source": "this.closest('tr').nextElementSibling.classList.toggle('hidden')",
+   "nom": "this.closest",
    "exerce": false
   },
   {
@@ -784,8 +797,8 @@
    "ligne": 633,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowValidationComment",
    "source": "planShowValidationComment('${a.id}')",
+   "nom": "planShowValidationComment",
    "exerce": true
   },
   {
@@ -793,8 +806,8 @@
    "ligne": 637,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowActivityModal",
    "source": "planShowActivityModal('${a.plan_id}','${a.id}')",
+   "nom": "planShowActivityModal",
    "exerce": true
   },
   {
@@ -802,8 +815,8 @@
    "ligne": 638,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planDeleteActivity",
    "source": "planDeleteActivity('${a.id}')",
+   "nom": "planDeleteActivity",
    "exerce": true
   },
   {
@@ -811,8 +824,8 @@
    "ligne": 39,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planSyncPrestatairesRisques",
    "source": "planSyncPrestatairesRisques()",
+   "nom": "planSyncPrestatairesRisques",
    "exerce": false
   },
   {
@@ -820,8 +833,8 @@
    "ligne": 40,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowAddRiskProfileModal",
    "source": "planShowAddRiskProfileModal()",
+   "nom": "planShowAddRiskProfileModal",
    "exerce": true
   },
   {
@@ -829,8 +842,8 @@
    "ligne": 73,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planUpdateCycleDate",
    "source": "planUpdateCycleDate('${p.id}','debut_cycle',this.value,this)",
+   "nom": "planUpdateCycleDate",
    "exerce": false
   },
   {
@@ -838,8 +851,8 @@
    "ligne": 76,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planUpdateCycleDate",
    "source": "planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)",
+   "nom": "planUpdateCycleDate",
    "exerce": false
   },
   {
@@ -847,8 +860,8 @@
    "ligne": 79,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planPrestBasculer",
    "source": "planPrestBasculer(this)",
+   "nom": "planPrestBasculer",
    "exerce": true
   },
   {
@@ -856,8 +869,8 @@
    "ligne": 205,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planRPFillDefaults",
    "source": "planRPFillDefaults()",
+   "nom": "planRPFillDefaults",
    "exerce": false
   },
   {
@@ -865,8 +878,8 @@
    "ligne": 215,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "planRPRenderSARows",
    "source": "planRPRenderSARows()",
+   "nom": "planRPRenderSARows",
    "exerce": false
   },
   {
@@ -874,8 +887,8 @@
    "ligne": 253,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -883,8 +896,8 @@
    "ligne": 254,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planSaveRiskProfile",
    "source": "planSaveRiskProfile()",
+   "nom": "planSaveRiskProfile",
    "exerce": false
   },
   {
@@ -892,8 +905,8 @@
    "ligne": 293,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planNavigateTo",
    "source": "planNavigateTo('${key}')",
+   "nom": "planNavigateTo",
    "exerce": true
   },
   {
@@ -901,8 +914,8 @@
    "ligne": 312,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planSetTheme",
    "source": "planSetTheme('${th}')",
+   "nom": "planSetTheme",
    "exerce": false
   },
   {
@@ -910,8 +923,8 @@
    "ligne": 317,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planSetLang",
    "source": "planSetLang('${l.toLowerCase()}')",
+   "nom": "planSetLang",
    "exerce": false
   },
   {
@@ -919,8 +932,8 @@
    "ligne": 321,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planToggleSidebar",
    "source": "planToggleSidebar()",
+   "nom": "planToggleSidebar",
    "exerce": false
   },
   {
@@ -928,8 +941,8 @@
    "ligne": 325,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planToggleMobileSidebar",
    "source": "planToggleMobileSidebar()",
+   "nom": "planToggleMobileSidebar",
    "exerce": false
   },
   {
@@ -937,8 +950,8 @@
    "ligne": 329,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planToggleMobileSidebar",
    "source": "planToggleMobileSidebar()",
+   "nom": "planToggleMobileSidebar",
    "exerce": false
   },
   {
@@ -946,8 +959,8 @@
    "ligne": 339,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planToggleNotifPanel",
    "source": "planToggleNotifPanel()",
+   "nom": "planToggleNotifPanel",
    "exerce": false
   },
   {
@@ -955,8 +968,8 @@
    "ligne": 348,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planLogout",
    "source": "planLogout()",
+   "nom": "planLogout",
    "exerce": false
   },
   {
@@ -964,8 +977,8 @@
    "ligne": 369,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "PLAN_STATE.currentSub",
    "source": "PLAN_STATE.currentSub='${s.id}';planRenderPage();",
+   "nom": "PLAN_STATE.currentSub",
    "exerce": false
   },
   {
@@ -973,8 +986,8 @@
    "ligne": 448,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planFermerCalendrier",
    "source": "planFermerCalendrier()",
+   "nom": "planFermerCalendrier",
    "exerce": true
   },
   {
@@ -982,8 +995,8 @@
    "ligne": 451,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planFermerCalendrier",
    "source": "planFermerCalendrier()",
+   "nom": "planFermerCalendrier",
    "exerce": true
   },
   {
@@ -991,8 +1004,8 @@
    "ligne": 470,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planCloseModal",
    "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {
@@ -1000,8 +1013,8 @@
    "ligne": 520,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.filters.domaine",
    "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.domaine",
    "exerce": false
   },
   {
@@ -1009,8 +1022,8 @@
    "ligne": 523,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.filters.secteur",
    "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.secteur",
    "exerce": false
   },
   {
@@ -1018,8 +1031,8 @@
    "ligne": 528,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.filters.prestataire",
    "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.prestataire",
    "exerce": false
   },
   {
@@ -1027,8 +1040,8 @@
    "ligne": 533,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.filters.sousActivite",
    "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.sousActivite",
    "exerce": false
   },
   {
@@ -1036,8 +1049,8 @@
    "ligne": 536,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.filters.theme",
    "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.theme",
    "exerce": false
   },
   {
@@ -1045,8 +1058,8 @@
    "ligne": 542,
    "forme": "en ligne",
    "evenement": "change",
-   "nom": "PLAN_STATE.filters.statut",
    "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.statut",
    "exerce": false
   },
   {
@@ -1054,8 +1067,8 @@
    "ligne": 553,
    "forme": "en ligne",
    "evenement": "input",
-   "nom": "_pesSearchInput",
    "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
+   "nom": "_pesSearchInput",
    "exerce": false
   },
   {
@@ -1063,8 +1076,8 @@
    "ligne": 554,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planResetFilters",
    "source": "planResetFilters()",
+   "nom": "planResetFilters",
    "exerce": true
   },
   {
@@ -1072,8 +1085,9 @@
    "ligne": 584,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "${}",
    "source": "${geste('')}",
+   "nom": "geste",
+   "interpole": true,
    "exerce": false
   },
   {
@@ -1081,8 +1095,9 @@
    "ligne": 585,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "${}",
    "source": "${geste(a)}",
+   "nom": "geste",
+   "interpole": true,
    "exerce": false
   },
   {
@@ -1110,8 +1125,8 @@
    "ligne": 187,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
    "exerce": false
   },
   {
@@ -1119,8 +1134,8 @@
    "ligne": 261,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "event.stopPropagation",
    "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
    "exerce": false
   },
   {
@@ -1128,8 +1143,8 @@
    "ligne": 285,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planValidate",
    "source": "event.stopPropagation();planValidate('${plan.id}')",
+   "nom": "planValidate",
    "exerce": true
   },
   {
@@ -1137,8 +1152,8 @@
    "ligne": 286,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planReject",
    "source": "event.stopPropagation();planReject('${plan.id}')",
+   "nom": "planReject",
    "exerce": false
   },
   {
@@ -1146,8 +1161,8 @@
    "ligne": 287,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planRejectClose",
    "source": "event.stopPropagation();planRejectClose('${plan.id}')",
+   "nom": "planRejectClose",
    "exerce": false
   },
   {
@@ -1155,8 +1170,8 @@
    "ligne": 292,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planApprouverDG",
    "source": "event.stopPropagation();planApprouverDG('${plan.id}')",
+   "nom": "planApprouverDG",
    "exerce": false
   },
   {
@@ -1164,8 +1179,8 @@
    "ligne": 295,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planTransmettre",
    "source": "event.stopPropagation();planTransmettre('${plan.id}')",
+   "nom": "planTransmettre",
    "exerce": false
   },
   {
@@ -1173,8 +1188,8 @@
    "ligne": 320,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planAccBasculer",
    "source": "planAccBasculer(this)",
+   "nom": "planAccBasculer",
    "exerce": true
   },
   {
@@ -1182,8 +1197,8 @@
    "ligne": 320,
    "forme": "en ligne",
    "evenement": "keydown",
-   "nom": "planAccClavier",
    "source": "planAccClavier(event, this)",
+   "nom": "planAccClavier",
    "exerce": true
   },
   {
@@ -1191,8 +1206,8 @@
    "ligne": 322,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "event.stopPropagation();planOpenDetail('${plan.id}');return false;",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -1200,8 +1215,19 @@
    "ligne": 432,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "const r=document.getElementById('${}');r.style.d",
    "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
+   "nom": "document.getElementById",
+   "interpole": true,
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-validation.js",
+   "ligne": 432,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
+   "nom": "this.classList.toggle",
+   "interpole": true,
    "exerce": false
   },
   {
@@ -1209,8 +1235,8 @@
    "ligne": 439,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planExportPDF",
    "source": "planExportPDF('${v.id}')",
+   "nom": "planExportPDF",
    "exerce": true
   },
   {
@@ -1218,8 +1244,8 @@
    "ligne": 442,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planShowWorkflowHistory",
    "source": "planShowWorkflowHistory('${v.id}')",
+   "nom": "planShowWorkflowHistory",
    "exerce": false
   },
   {
@@ -1227,8 +1253,8 @@
    "ligne": 443,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planOpenDetail",
    "source": "planOpenDetail('${v.id}')",
+   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -1236,8 +1262,8 @@
    "ligne": 457,
    "forme": "en ligne",
    "evenement": "click",
-   "nom": "planAccBasculer",
    "source": "planAccBasculer(this)",
+   "nom": "planAccBasculer",
    "exerce": true
   },
   {
@@ -1245,8 +1271,8 @@
    "ligne": 457,
    "forme": "en ligne",
    "evenement": "keydown",
-   "nom": "planAccClavier",
    "source": "planAccClavier(event, this)",
+   "nom": "planAccClavier",
    "exerce": true
   }
  ]

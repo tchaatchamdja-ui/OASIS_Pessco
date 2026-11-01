@@ -848,15 +848,20 @@ module.exports = async function tailleSmoke() {
         return;
       }
       const sansMotif = nonExerces.filter((n) => !motifs.includes(n));
+      // Une dispense périme de trois façons : le geste est exercé, le geste a
+      // disparu — et, depuis que le relevé sait dire « indécidable », le geste
+      // n'est plus rapprochable. Dispenser un geste indécidable, c'est affirmer
+      // « non couvert » de ce qu'on ne sait pas : la dispense ne protège plus
+      // rien, et elle laisse croire qu'une lacune est connue.
       const motifPerime = motifs.filter((n) => {
         const e = etat.get(n);
-        return !e || e.exerce;
+        return !e || e.exerce || e.indecidable;
       });
       if (sansMotif.length) {
         ecarts.push(`${quoi} : ${sansMotif.length} geste(s) non exercé(s) sans motif — ${sansMotif.slice(0, 5).join(', ')}`);
       }
       if (motifPerime.length) {
-        ecarts.push(`${quoi} : ${motifPerime.length} motif(s) périmé(s) (geste désormais exercé ou disparu) — ${motifPerime.slice(0, 5).join(', ')}`);
+        ecarts.push(`${quoi} : ${motifPerime.length} motif(s) périmé(s) (geste désormais exercé, disparu ou indécidable) — ${motifPerime.slice(0, 5).join(', ')}`);
       }
     });
     verifier('tout geste non exercé est déclaré avec sa raison',

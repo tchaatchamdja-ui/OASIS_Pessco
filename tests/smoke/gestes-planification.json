@@ -2,7 +2,7 @@
  "releve": "2026-11-01",
  "gestesNommes": 94,
  "occurrences": 137,
- "exerces": 21,
+ "exerces": 29,
  "indecidables": 4,
  "gestes": [
   {
@@ -21,7 +21,7 @@
    "evenement": "click",
    "nom": "planConfirmSubmit",
    "source": "planConfirmSubmit('${planId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -39,7 +39,7 @@
    "evenement": "click",
    "nom": "planApplyDecision",
    "source": "planApplyDecision()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -57,7 +57,7 @@
    "evenement": "click",
    "nom": "planDeleteComment",
    "source": "planDeleteComment('${it.id}','${planId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -75,7 +75,7 @@
    "evenement": "click",
    "nom": "planCreateComment",
    "source": "planCreateComment('${planId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -320,7 +320,7 @@
    "evenement": "click",
    "nom": "planCreatePlan",
    "source": "planCreatePlan()",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -356,7 +356,7 @@
    "evenement": "click",
    "nom": "planUpdatePlan",
    "source": "planUpdatePlan('${planId}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -741,7 +741,7 @@
    "evenement": "click",
    "nom": "planSubmit",
    "source": "planSubmit('${plan.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -1130,7 +1130,7 @@
    "evenement": "click",
    "nom": "planValidate",
    "source": "event.stopPropagation();planValidate('${plan.id}')",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",

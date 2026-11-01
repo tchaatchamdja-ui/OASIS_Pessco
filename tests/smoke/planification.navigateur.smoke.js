@@ -418,6 +418,320 @@ module.exports = async function planificationNavigateurSmoke(port) {
       (produit.documents || []).some((n) => n > 500) || produit.blobs > 0,
       JSON.stringify(produit));
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La ronde d'un plan, de la création à la décision
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // PLAN était à **21 gestes sur 94**, et *tout ce qui écrit* y était non
+    // exercé. C'est l'écran le plus exposé du dépôt : un plan de surveillance
+    // est l'acte par lequel une AAC engage son programme de l'année, et son
+    // circuit — rédiger, soumettre, commenter, décider — n'avait aucune preuve.
+    //
+    // ── Le patron, repris de la ronde du POI de RAMP ──
+    //
+    // Chaque palier est **relu chez le serveur**, et la ronde ne laisse rien.
+    // Elle commence par relever ce qu'elle hérite : neuf fois cette semaine un
+    // geste a été posé sur un état supposé, et la règle est maintenant écrite
+    // dans chaque ronde.
+    etape = 'ronde d’un plan';
+    await ouvrir('plans');
+    await attendre(2500);
+    const rondePlan = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        return rep.status;
+      };
+      const plans = async () => {
+        const r = await jget('/plans');
+        return Array.isArray(r) ? r : (r.plans || []);
+      };
+      const oui = async () => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(3000);
+        return true;
+      };
+      const S = () => window.PLAN_STATE || {};
+      const poser = async (id, v, ev) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event(ev || 'input', { bubbles: true }));
+        await a(500);
+        return true;
+      };
+      const modale = () => document.querySelector('.modal-overlay, .plan-modal-overlay, .oasis-modal');
+
+      o.herite = { page: S().currentPage };
+      o.deja = (await plans()).length;
+
+      // ── 1. La création : le formulaire, et ce que le serveur en garde ──
+      await essai('creation', async () => {
+        const d = {};
+        const bouton = document.querySelector('[onclick^="planShowCreateModal"]');
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(2500);
+        d.champs = 0;
+        if (await poser('planTitre', 'Plan de la ronde automatique')) d.champs += 1;
+        if (await poser('planAnnee', '2027', 'change')) d.champs += 1;
+        const type = document.getElementById('planType');
+        d.listeType = !!type;
+        if (type) {
+          type.value = 'periodique';
+          type.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(500);
+          d.champs += 1;
+        }
+        // Le domaine et le secteur viennent des référentiels : on prend les
+        // premiers que la liste propose, et l'on relève lesquels.
+        const dom = document.getElementById('planDomaine');
+        const sec = document.getElementById('planSecteur');
+        d.domaines = dom ? dom.options.length : 0;
+        d.secteurs = sec ? sec.options.length : 0;
+        if (dom && dom.options.length > 1) {
+          dom.value = dom.options[1].value;
+          dom.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(800);
+        }
+        const sec2 = document.getElementById('planSecteur');
+        if (sec2 && sec2.options.length > 1) {
+          sec2.value = sec2.options[1].value;
+          sec2.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(800);
+        }
+        document.querySelector('[onclick^="planCreatePlan"]')?.click();
+        await a(4500);
+        const liste = await plans();
+        d.apres = liste.length;
+        const mien = liste.find((p) => /ronde automatique/.test(p.titre || ''));
+        o.planId = (mien || {}).id;
+        d.titre = (mien || {}).titre;
+        d.annee = (mien || {}).annee;
+        d.type = (mien || {}).type;
+        d.statut = (mien || {}).statut;
+        d.version = (mien || {}).version;
+        return d;
+      });
+
+      // ── 2. La modification : le même plan, un autre intitulé ──
+      await essai('modification', async () => {
+        const d = {};
+        const editer = [...document.querySelectorAll('[onclick^="planShowEditModal"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.bouton = !!editer;
+        editer?.click();
+        await a(2500);
+        d.titreRepris = (document.getElementById('editPlanTitre') || {}).value;
+        await poser('editPlanTitre', 'Plan de la ronde automatique — amendé');
+        await poser('editPlanAnnee', '2028', 'change');
+        const enregistrer = [...document.querySelectorAll('[onclick^="planUpdatePlan"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.boutonEnregistrer = !!enregistrer;
+        enregistrer?.click();
+        await a(4500);
+        const mien = (await plans()).find((p) => p.id === o.planId) || {};
+        d.titre = mien.titre;
+        d.annee = mien.annee;
+        // Modifier n'est pas soumettre : le statut n'a pas bougé.
+        d.statut = mien.statut;
+        return d;
+      });
+
+      // ── 3. La soumission : une confirmation qui récapitule, puis l'acte ──
+      //
+      // ── La règle du module, lue et non combattue ──
+      //
+      // `canSubmit = canEdit && activites.length > 0` : **un plan sans activité
+      // ne se soumet pas.** Mon premier tir cherchait le bouton sur un plan
+      // vide, et il n'y en avait pas — trois contrôles rouges pour une règle
+      // que la source écrit noir sur blanc.
+      //
+      // La ronde sème donc une activité **par la route**. Le formulaire
+      // d'activité — ses cascades de secteur et de thèmes — fera son propre
+      // tour : ici il n'est pas le sujet, et semer par la route ce qu'on ne
+      // mesure pas est la pratique du dépôt depuis la ronde des statistiques.
+      await essai('soumission', async () => {
+        const d = {};
+        d.semisActivite = await env(`/plans/${o.planId}/activites`, 'POST', {
+          objet: 'Activité semée par la ronde', date_debut: '2028-03-02',
+          date_fin: '2028-03-06', priorite: 'normale', statut: 'planifiee',
+        });
+        if (typeof window.planLoadData === 'function') await window.planLoadData();
+        await a(2500);
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.planId);
+        await a(3500);
+        d.detail = (S().selectedPlan || {}).id === o.planId;
+        d.activites = ((S().selectedPlan || {}).activites || []).length;
+        const soumettre = [...document.querySelectorAll('[onclick^="planSubmit"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.bouton = !!soumettre;
+        soumettre?.click();
+        await a(2500);
+        d.modale = !!modale();
+        // La fenêtre récapitule le plan et son nombre d'activités.
+        const texte = modale() ? (modale().textContent || '') : '';
+        d.recapitule = /ronde automatique/.test(texte);
+        const confirmer = [...document.querySelectorAll('[onclick^="planConfirmSubmit"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.boutonConfirmer = !!confirmer;
+        confirmer?.click();
+        await a(5000);
+        const mien = (await plans()).find((p) => p.id === o.planId) || {};
+        d.statut = mien.statut;
+        d.soumisLe = !!mien.soumis_le;
+        return d;
+      });
+
+      // ── 4. Un commentaire de validation, ajouté puis retiré ──
+      await essai('commentaire', async () => {
+        const d = {};
+        const commentaires = async () => {
+          const r = await jget(`/plans/${o.planId}/commentaires`).catch(() => null);
+          if (Array.isArray(r)) return r;
+          return (r && (r.commentaires || r.liste)) || [];
+        };
+        d.avant = (await commentaires()).length;
+        const ajouter = [...document.querySelectorAll('[onclick^="planShowCommentModal"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.bouton = !!ajouter;
+        ajouter?.click();
+        await a(2500);
+        d.champ = !!document.getElementById('commentContenu');
+        // Un commentaire vide ne s'enregistre pas : la fonction s'arrête avant
+        // l'appel. On l'éprouve, puis on écrit.
+        document.querySelector('[onclick^="planCreateComment"]')?.click();
+        await a(2000);
+        d.apresVide = (await commentaires()).length;
+        await poser('commentContenu', 'Observation de la ronde : échéances à préciser.');
+        document.querySelector('[onclick^="planCreateComment"]')?.click();
+        await a(4500);
+        const l = await commentaires();
+        d.apres = l.length;
+        d.contenu = (l[0] || {}).contenu;
+        o.commentId = (l[0] || {}).id;
+
+        // Le retrait, sur confirmation du socle.
+        const retirer = [...document.querySelectorAll('[onclick^="planDeleteComment"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.commentId || 'zzz'));
+        d.boutonRetirer = !!retirer;
+        retirer?.click();
+        d.retraitConfirme = await oui();
+        await a(1500);
+        d.apresRetrait = (await commentaires()).length;
+        return d;
+      });
+
+      // ── 5. La décision : valider, par la confirmation qui la reprend ──
+      await essai('decision', async () => {
+        const d = {};
+        // ── La décision vit sur la page « workflow », non sur le détail ──
+        //
+        // `planValidate` est rendu par `pl-validation.js`, qui tient la page du
+        // circuit : c'est là que le valideur voit ce qui l'attend. Je le
+        // cherchais sur le détail du plan, où il n'a jamais été.
+        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
+        await a(3500);
+        d.page = S().currentPage;
+        const valider = [...document.querySelectorAll('[onclick*="planValidate("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.bouton = !!valider;
+        valider?.click();
+        await a(2500);
+        d.modale = !!modale();
+        d.brouillon = !!window._planDecisionDraft;
+        const appliquer = document.querySelector('[onclick^="planApplyDecision"]');
+        d.boutonAppliquer = !!appliquer;
+        appliquer?.click();
+        await a(5000);
+        const mien = (await plans()).find((p) => p.id === o.planId) || {};
+        d.statut = mien.statut;
+        d.valideLe = !!(mien.valide_le || mien.validation_le);
+        // Le brouillon de décision est rendu : il ne traîne pas d'un plan à
+        // l'autre.
+        d.brouillonRendu = !window._planDecisionDraft;
+        return d;
+      });
+
+      // ── 6. La ronde retire son plan ──
+      await essai('menage', async () => {
+        const d = {};
+        d.suppression = await env(`/plans/${o.planId}`, 'DELETE');
+        d.restants = (await plans()).length;
+        d.rendueAuDepart = d.restants === o.deja;
+        return d;
+      });
+      return o;
+    }, '/api/m/planification');
+
+    {
+      const R = rondePlan;
+      const Cr = R.creation || {};
+      const Mo = R.modification || {};
+      const So = R.soumission || {};
+      const Co = R.commentaire || {};
+      const De = R.decision || {};
+      const Me = R.menage || {};
+      verifier('un plan se crée par son formulaire, et le serveur le porte en brouillon avec son intitulé, son année et son type',
+        Cr.bouton === true && Cr.champs === 3
+        && Cr.listeType === true && Cr.domaines >= 2 && Cr.secteurs >= 2
+        && Cr.apres === R.deja + 1 && !!R.planId
+        && Cr.titre === 'Plan de la ronde automatique'
+        && String(Cr.annee) === '2027' && Cr.type === 'periodique'
+        // La version n'est pas rendue par la liste des plans : ne pas
+        // l'exiger d'une source qui ne la porte pas.
+        && Cr.statut === 'brouillon',
+        JSON.stringify(Cr).slice(0, 420));
+      verifier('le formulaire rouvert porte ce qui a été enregistré, la modification part en base, et modifier n’est pas soumettre',
+        Mo.bouton === true && Mo.titreRepris === 'Plan de la ronde automatique'
+        && Mo.boutonEnregistrer === true
+        && Mo.titre === 'Plan de la ronde automatique — amendé'
+        && String(Mo.annee) === '2028'
+        // Le statut n'a pas bougé : c'est l'autre moitié du contrôle.
+        && Mo.statut === 'brouillon',
+        JSON.stringify(Mo));
+      verifier('la soumission passe par une confirmation qui récapitule le plan, et le serveur l’inscrit soumis',
+        So.semisActivite === 200 && So.detail === true && So.activites === 1
+        && So.bouton === true
+        && So.modale === true && So.recapitule === true
+        && So.boutonConfirmer === true
+        // Le statut **est** le fait. La liste des plans ne rend pas
+        // d'horodatage de soumission : ne pas l'exiger d'une source qui ne le
+        // porte pas (même leçon que la version, trois phases plus haut).
+        && So.statut === 'soumis',
+        JSON.stringify(So));
+      verifier('un commentaire vide ne s’enregistre pas, puis un commentaire s’ajoute chez le serveur et se retire sur confirmation',
+        Co.bouton === true && Co.champ === true
+        && Co.apresVide === Co.avant
+        && Co.apres === Co.avant + 1
+        && /échéances/.test(String(Co.contenu || ''))
+        && Co.boutonRetirer === true && Co.retraitConfirme === true
+        && Co.apresRetrait === Co.avant,
+        JSON.stringify(Co).slice(0, 400));
+      verifier('la validation passe par une confirmation qui reprend la décision, le serveur valide le plan, et le brouillon de décision est rendu',
+        De.page === 'workflow'
+        && De.bouton === true && De.modale === true && De.brouillon === true
+        && De.boutonAppliquer === true
+        && De.statut === 'valide' && De.brouillonRendu === true,
+        JSON.stringify(De));
+      verifier('la ronde du plan retire ce qu’elle a créé, et le module revient à son compte',
+        Me.suppression === 200 && Me.rendueAuDepart === true,
+        JSON.stringify(Me));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PLAN',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

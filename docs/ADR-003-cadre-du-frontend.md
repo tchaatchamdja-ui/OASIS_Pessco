@@ -7858,6 +7858,73 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            depuis 5.f.0 à ce qu'il ne sait pas nommer. Le nom est laid, stable
            et unique — je ne l'embellis pas pour le plaisir d'un rapport.
 
+       5.f.44 [x] **PLAN — la ronde d'un plan, de la création à la décision** —
+           fait le 1er novembre 2026.
+
+           **Dix-neuf contrôles sur PLAN ; 29 gestes sur 94.** Campagne : 1 361.
+
+           PLAN était à 21 gestes sur 94, et *tout ce qui écrit* y était non
+           exercé. Un plan de surveillance est l'acte par lequel une AAC engage
+           son programme de l'année ; son circuit n'avait aucune preuve.
+
+           ── Deux règles du module, lues plutôt que combattues ──
+
+           **Un plan sans activité ne se soumet pas** —
+           `canSubmit = canEdit && activites.length > 0`. Mon premier tir
+           cherchait le bouton sur un plan vide : trois contrôles rouges pour
+           une règle que la source écrit noir sur blanc. La ronde sème donc une
+           activité **par la route** : le formulaire d'activité et ses cascades
+           feront leur propre tour, et *semer par la route ce qu'on ne mesure
+           pas* est la pratique du dépôt depuis la ronde des statistiques.
+
+           **La décision vit sur la page du circuit**, non sur le détail du
+           plan : `planValidate` est rendu par `pl-validation.js`, là où le
+           valideur voit ce qui l'attend. Je le cherchais sur le détail.
+
+           ── Deux champs que je demandais à une source qui ne les porte pas ──
+
+           La liste des plans ne rend ni la `version` ni l'horodatage de
+           soumission. J'exigeais les deux ; les contrôles rougissaient sur du
+           `undefined`. Le **statut est le fait** — `brouillon`, `soumis`,
+           `valide` — et c'est lui qu'on exige. *Ne rien demander à une source
+           qui ne le porte pas : elle n'a pas tort de ne pas l'avoir.*
+
+           ── Ce que les contrôles séparent ──
+
+           **Modifier n'est pas soumettre** : l'intitulé et l'année changent en
+           base, et le statut ne bouge pas — les deux moitiés sont exigées.
+           **Un commentaire vide ne s'enregistre pas** : la fonction s'arrête
+           avant l'appel, et la ronde l'éprouve avant d'écrire. **Le brouillon
+           de décision est rendu** après l'acte : il ne traîne pas d'un plan à
+           l'autre.
+
+           ── Trois contre-essais, et une leçon sur le contre-essai lui-même ──
+
+           Mon premier était **trop brutal** : `annee: 1999` fait **refuser la
+           création par le serveur** — une borne que j'ignorais —, et sept
+           contrôles sont tombés d'un coup. Le second, plus fin, altérait
+           l'intitulé : la ronde se reconnaît par l'intitulé qu'elle a écrit,
+           elle est devenue aveugle à son propre plan, et tout est tombé encore.
+           *Un contre-essai qui casse l'amorce ne départage rien.*
+
+           Le troisième a laissé la création intacte et neutralisé les trois
+           gestes du circuit — soumission, retrait d'un commentaire, décision :
+           **trois contrôles rouges**, chacun le sien. C'est celui-là qui vaut.
+
+           Et un gain de connaissance au passage, par le détour : **le serveur
+           borne l'année d'un plan**, et il le dit par un 400 que la garde
+           globale a nommé.
+
+           ── Et une faute d'écriture qui aurait pu passer ──
+
+           Ma mise à jour de la couverture déclarée **n'a pas pris** : dans le
+           même script, une assertion sur une phrase de prose a échoué et a
+           emporté l'écriture du fichier avec elle. Le chiffre est resté à 21
+           quand la mesure disait 29 — et **le garde-fou des dispenses l'a dit**,
+           en nommant les six gestes de l'écart. C'est exactement ce pour quoi
+           il a été écrit : *une couverture déclarée qui ne suit pas la mesure
+           est un mensonge qui dort.* Corrigé, campagne reprise à 1 361.
+
 6. [~] Mettre à jour [CONFORMITE-FICHE-TECHNIQUE.md](CONFORMITE-FICHE-TECHNIQUE.md)
        module par module, et non d'un seul trait à la fin.
 

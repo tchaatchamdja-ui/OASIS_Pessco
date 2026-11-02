@@ -278,7 +278,19 @@ function _renderPlanDiffBody(diff, planId) {
 function _renderPlanDiffAccordion(plan) {
     const isAmendment = !!plan.parent_plan_id;
     const diff = isAmendment ? _computePlanDiff(plan) : null;
-    const isAdminRole = (window.PESSCO?.user?.role === 'Administrateur');
+    // `'Administrateur'` n'est pas un rôle du dispositif : c'est une valeur
+    // **traduite**, que `src/modules/profil_risque/roles.js` calcule à partir
+    // de SUPERADMIN et ADMIN. Comparée telle quelle au rôle stocké, la
+    // condition était fausse pour tout le monde — et les deux actes qu'elle
+    // garde, l'approbation du directeur et la transmission au prestataire
+    // (Chap. 4 §4.2.3.e-f), n'étaient offerts à aucun compte.
+    //
+    // Le module porte déjà sa règle, dans `pl-shell.js` : `_isAdmin()`
+    // reconnaît SUPERADMIN, ADMIN, le libellé traduit, et le privilège
+    // M2_Administrateur. On s'y tient — *deux définitions du même mot dans un
+    // même module finissent par diverger, et c'est la plus étroite qui gagne
+    // en silence.*
+    const isAdminRole = _isAdmin();
     let actionsHtml = '';
     if (_canValidate(plan.secteur_id)) {
         actionsHtml += `

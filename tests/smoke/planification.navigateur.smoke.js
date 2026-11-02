@@ -1085,6 +1085,409 @@ module.exports = async function planificationNavigateurSmoke(port) {
         JSON.stringify(Fv).slice(0, 400));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  Le circuit de décision, et l'amendement d'un plan validé
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Jusqu'ici la ronde menait un plan jusqu'à la validation. Le circuit en
+    // offre quatre autres sorties, et chacune est un acte d'autorité : rejeter,
+    // rejeter définitivement, approuver au nom du directeur, transmettre au
+    // prestataire. Et pour un plan déjà validé, l'**amendement** — qui en fait
+    // une copie en brouillon, laissant l'original intact.
+    //
+    // Deux mécanismes que ce dépôt n'avait jamais exercés :
+    //   · `oasisSaisir`, l'invite textuelle du socle (`.oasis-saisie-champ`) ;
+    //   · deux invites **enchaînées** — `planApprouverDG` en demande deux.
+    etape = 'circuit de décision';
+    await ouvrir('plans');
+    await attendre(2500);
+    const rondeCircuit = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const plans = async () => {
+        const r = await (await fetch(`${api}/plans`, { credentials: 'same-origin' })).json();
+        return Array.isArray(r) ? r : (r.plans || []);
+      };
+      const statutDe = async (id) => ((await plans()).find((p) => p.id === id) || {}).statut;
+      // La confirmation du socle.
+      const oui = async (attente) => {
+        await a(900);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(attente || 2500);
+        return true;
+      };
+      // L'invite textuelle : on la remplit, puis on valide.
+      const saisir = async (texte, attente) => {
+        await a(900);
+        const champ = document.querySelector('.oasis-saisie-champ');
+        if (!champ) return null;
+        const avant = { requis: !!document.querySelector('.oasis-confirm-oui')?.disabled };
+        champ.value = texte;
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await a(400);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return null;
+        avant.actifApres = !b.disabled;
+        b.click();
+        await a(attente || 3000);
+        return avant;
+      };
+      const parBouton = (fn, id) => [...document.querySelectorAll(`[onclick*="${fn}("]`)]
+        .find((b) => (b.getAttribute('onclick') || '').includes(id));
+      const S = () => window.PLAN_STATE || {};
+
+      // ── 1. Quatre plans semés par la route : ils ne sont pas le sujet ──
+      //
+      // Le formulaire, la soumission et la validation par l'écran ont leur
+      // propre tour. Ici c'est la **suite** du circuit qu'on mesure, et un plan
+      // ne l'atteint qu'en étant déjà validé ou soumis.
+      o.deja = (await plans()).length;
+      o.role = (window.PESSCO && window.PESSCO.user && window.PESSCO.user.role) || null;
+      const semer = async (titre, jusqua) => {
+        const c = await env('/plans', 'POST', {
+          titre, annee: 2030, type: 'periodique', domaine_id: '', secteur_id: '',
+        });
+        const id = (c.corps || {}).id;
+        if (!id) return null;
+        await env(`/plans/${id}/activites`, 'POST', {
+          objet: `Activité du plan « ${titre} »`, date_debut: '2030-05-04',
+          date_fin: '2030-05-08', nombre_inspecteurs: 1, lieu_activite: 'Lomé',
+        });
+        if (jusqua === 'soumis' || jusqua === 'valide') {
+          await env(`/plans/${id}/soumettre`, 'POST', {});
+        }
+        if (jusqua === 'valide') {
+          await env(`/plans/${id}/valider`, 'POST', { commentaire: 'Semé validé.' });
+        }
+        return id;
+      };
+      o.idAmend = await semer('Circuit — à amender', 'valide');
+      o.idRejet = await semer('Circuit — à rejeter', 'soumis');
+      o.idClos = await semer('Circuit — à clore', 'soumis');
+      o.idDG = await semer('Circuit — pour le DG', 'valide');
+      o.semis = [o.idAmend, o.idRejet, o.idClos, o.idDG].filter(Boolean).length;
+      o.statutsSemes = {
+        amend: await statutDe(o.idAmend), rejet: await statutDe(o.idRejet),
+        clos: await statutDe(o.idClos), dg: await statutDe(o.idDG),
+      };
+      if (typeof window.planLoadData === 'function') await window.planLoadData();
+      await a(2000);
+
+      // ── 2. L'amendement : une copie en brouillon, l'original intact ──
+      await essai('amendement', async () => {
+        const d = {};
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.idAmend);
+        await a(3500);
+        const bouton = parBouton('planAmend', o.idAmend);
+        d.bouton = !!bouton;
+        bouton?.click();
+        // Confirmation, puis l'invite du motif.
+        d.confirme = await oui(1200);
+        const inv = await saisir('Amendement de la ronde : deux activités à ajouter.', 4000);
+        d.inviteVue = !!inv;
+        d.inviteActive = inv ? inv.actifApres : null;
+        await a(2500);
+        // Le module ouvre la **copie** : c'est elle qui est à l'écran.
+        const vu = (S().selectedPlan || {});
+        d.enfantOuvert = vu.id && vu.id !== o.idAmend;
+        o.idEnfant = d.enfantOuvert ? vu.id : null;
+        d.statutEnfant = vu.statut;
+        d.parentDeLEnfant = vu.parent_plan_id === o.idAmend;
+        d.motifPorte = typeof vu.motif_amendement === 'string'
+          ? vu.motif_amendement.includes('deux activités') : null;
+        // Le serveur numérote la copie : la version du parent, plus un.
+        d.versionEnfant = vu.version;
+        d.versionParent = ((await plans()).find((p) => p.id === o.idAmend) || {}).version;
+        // L'original n'a pas bougé…
+        d.statutParent = await statutDe(o.idAmend);
+        // …et il n'offre plus l'amendement : un plan n'a qu'un enfant à la fois.
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.idAmend);
+        await a(3000);
+        d.amenderEncore = !!parBouton('planAmend', o.idAmend);
+        return d;
+      });
+
+      // ── 3. L'amendement annulé : le parent reste validé ──
+      await essai('annulation', async () => {
+        const d = {};
+        if (!o.idEnfant) return { saute: 'pas d’enfant' };
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.idEnfant);
+        await a(3500);
+        const bouton = parBouton('planCancelAmendment', o.idEnfant);
+        d.bouton = !!bouton;
+        bouton?.click();
+        d.confirme = await oui(1200);
+        const inv = await saisir('Annulation par la ronde : amendement sans objet.', 4000);
+        d.inviteVue = !!inv;
+        await a(2500);
+        // Le module ramène au parent.
+        d.retourAuParent = (S().selectedPlan || {}).id === o.idAmend;
+        d.statutParent = await statutDe(o.idAmend);
+        d.enfantParti = !(await plans()).some((p) => p.id === o.idEnfant);
+        // Le parent peut de nouveau être amendé.
+        d.amendableANouveau = !!parBouton('planAmend', o.idAmend);
+        return d;
+      });
+
+      // ── 4. Le rejet : la fenêtre récapitule, et avertit quand rien n'est dit ──
+      await essai('rejet', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
+        await a(3500);
+        d.pageCircuit = (S().currentPage === 'workflow');
+        // `planAccBasculer(this)` reçoit l'élément, non un identifiant : on ne
+        // peut pas viser le volet d'un plan par son attribut. Et on n'en a pas
+        // besoin — le constat qui compte est que **les gestes de décision sont
+        // dans le DOM sans dépliage**, l'accordéon ne faisant que les montrer.
+        d.gestesSansDepliage = !!parBouton('planReject', o.idRejet);
+        document.querySelector('[onclick*="planAccBasculer"]')?.click();
+        await a(2000);
+        const bouton = parBouton('planReject', o.idRejet);
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(2500);
+        // Sans commentaire, la fenêtre le signale — et ne l'interdit pas.
+        d.fenetre = !!document.querySelector('.modal-overlay');
+        // L'avertissement « rejet sans commentaire » porte sa couleur en style
+        // intégré : c'est ce qui le distingue des autres paragraphes, dont le
+        // libellé du champ, qui parle aussi de commentaire.
+        d.avertieSansCommentaire = !!document.querySelector('.modal-overlay [style*="b45309"]');
+        d.appliquerOffert = !!document.querySelector('[onclick*="planApplyDecision"]');
+        // On referme, on dit quelque chose, et l'on rouvre.
+        document.querySelector('[onclick*="planCloseModal"]')?.click();
+        await a(1500);
+        d.fenetreFermee = !document.querySelector('.modal-overlay');
+        const champ = document.getElementById(`validComment_${o.idRejet}`);
+        d.champCommentaire = !!champ;
+        if (champ) {
+          champ.value = 'Rejeté par la ronde : périmètre incomplet.';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(600);
+        }
+        parBouton('planReject', o.idRejet)?.click();
+        await a(2500);
+        d.recapPorteLeCommentaire = (document.querySelector('.valid-comment-recap')?.textContent || '')
+          .includes('périmètre incomplet');
+        document.querySelector('[onclick*="planApplyDecision"]')?.click();
+        await a(4000);
+        d.statut = await statutDe(o.idRejet);
+        d.fenetreRefermee = !document.querySelector('.modal-overlay');
+        return d;
+      });
+
+      // ── 5. Le rejet définitif, et ce qui le distingue ──
+      await essai('rejetClos', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
+        await a(3000);
+        const entete = [...document.querySelectorAll('[onclick*="planAccBasculer"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.idClos));
+        entete?.click();
+        await a(2000);
+        const champ = document.getElementById(`validComment_${o.idClos}`);
+        if (champ) {
+          champ.value = 'Clos par la ronde : plan sans objet.';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(600);
+        }
+        const bouton = parBouton('planRejectClose', o.idClos);
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(2500);
+        d.fenetre = !!document.querySelector('.modal-overlay');
+        d.titreDistinct = (document.querySelector('.modal-overlay .modal-title, .modal-overlay h3')?.textContent || '').trim();
+        document.querySelector('[onclick*="planApplyDecision"]')?.click();
+        await a(4000);
+        d.statut = await statutDe(o.idClos);
+        return d;
+      });
+
+      // ── 6. Deux actes du circuit que l'écran n'offre nulle part ──
+      //
+      // `planApprouverDG` et `planTransmettre` — l'approbation du directeur
+      // général et la transmission au prestataire, Chap. 4 §4.2.3.e-f — sont
+      // rendus par `_renderPlanDiffAccordion`, sous condition de statut
+      // `valide` / `approuve_dg`. Or ce rendu n'est appelé qu'**une fois** dans
+      // tout le module, sur `pending = plans.filter(p => p.statut === 'soumis')`.
+      //
+      // Les deux conditions s'excluent : un plan soumis n'est ni validé ni
+      // approuvé. **Les deux boutons ne peuvent donc jamais paraître.** Ce
+      // contrôle le constate, et montre que le manque est dans l'écran seul :
+      // les transitions du serveur, elles, fonctionnent.
+      await essai('directeur', async () => {
+        const d = {};
+        // Les deux plans soumis ont été rejetés par les phases précédentes : la
+        // page du circuit est vide, et une page vide ne départage rien. Cette
+        // phase sème donc son propre témoin — *une ronde qui suit une autre
+        // commence par relever ce qu'elle hérite.*
+        o.idTemoin = await semer('Circuit — témoin soumis', 'soumis');
+        d.temoin = !!o.idTemoin;
+        if (typeof window.planLoadData === 'function') await window.planLoadData();
+        await a(1500);
+        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
+        await a(3500);
+        // La page ne montre que les plans soumis…
+        const titres = (document.querySelector('.page-content, main') || document.body).textContent || '';
+        d.montreLeSoumis = titres.includes('Circuit — témoin soumis');
+        d.montreLeValide = titres.includes('Circuit — pour le DG');
+        // …et aucun des deux gestes n'est dans le DOM, pour aucun plan.
+        d.approuverNullePart = document.querySelectorAll('[onclick*="planApprouverDG"]').length;
+        d.transmettreNullePart = document.querySelectorAll('[onclick*="planTransmettre"]').length;
+        // Le serveur, lui, sait faire les deux transitions.
+        d.statutAvant = await statutDe(o.idDG);
+        d.routeDG = (await env(`/plans/${o.idDG}/approuver-dg`, 'POST',
+          { commentaire: 'Par la route, faute d’écran.' })).statut;
+        d.statutApresDG = await statutDe(o.idDG);
+        d.routeTransmettre = (await env(`/plans/${o.idDG}/transmettre`, 'POST', {})).statut;
+        d.statutApresTransmission = await statutDe(o.idDG);
+
+        // ── Où est le manque, exactement ──
+        //
+        // La fonction de rendu, appelée à la main sur un plan validé, **porte**
+        // le bouton : la condition de rôle passe (`_isAdmin()` reconnaît le
+        // SUPERADMIN, ce que la comparaison à `'Administrateur'` ne faisait
+        // pas), et la condition de statut est satisfaite. Ce qui manque est le
+        // seul **appel** : la page ne lui donne jamais de plan validé.
+        d.role = o.role;
+        const rendu = (statut) => {
+          if (typeof window._renderPlanDiffAccordion !== 'function') return null;
+          try {
+            return window._renderPlanDiffAccordion({
+              id: 'essai-rendu', titre: 'Essai de rendu', version: 1,
+              statut, secteur_id: '', parent_plan_id: null,
+            });
+          } catch { return null; }
+        };
+        const htmlValide = rendu('valide');
+        const htmlApprouve = rendu('approuve_dg');
+        const htmlSoumis = rendu('soumis');
+        d.renduJoignable = typeof htmlValide === 'string';
+        d.renduValidePorteDG = !!htmlValide && htmlValide.includes('planApprouverDG');
+        d.renduApprouvePorteTransmettre = !!htmlApprouve && htmlApprouve.includes('planTransmettre');
+        // Et le soumis — le seul que la page lui donne — ne porte ni l'un ni l'autre.
+        d.renduSoumisPorteNiLUnNiLAutre = !!htmlSoumis
+          && !htmlSoumis.includes('planApprouverDG')
+          && !htmlSoumis.includes('planTransmettre');
+        return d;
+      });
+
+      // ── 7. L'historique du circuit d'une version ──
+      await essai('historique', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="historique"]')?.click();
+        await a(3500);
+        const bouton = document.querySelector('[onclick*="planShowWorkflowHistory"]');
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(3000);
+        const f = document.querySelector('.modal-overlay');
+        d.fenetre = !!f;
+        d.garnie = f ? (f.textContent || '').trim().length > 40 : false;
+        document.querySelector('[onclick*="planCloseModal"]')?.click();
+        await a(1500);
+        d.fermee = !document.querySelector('.modal-overlay');
+        return d;
+      });
+
+      // ── 8. Ménage ──
+      // L'annulation d'amendement a déjà retiré l'enfant : le re-supprimer
+      // vaudrait un 404, et le contrôle des requêtes échouées le verrait.
+      const encore = (await plans()).map((p) => p.id);
+      for (const id of [o.idAmend, o.idRejet, o.idClos, o.idDG, o.idEnfant, o.idTemoin]) {
+        if (id && encore.includes(id)) await env(`/plans/${id}`, 'DELETE');
+      }
+      o.restants = (await plans()).length;
+      o.rendueAuDepart = o.restants === o.deja;
+      return o;
+    }, '/api/m/planification');
+
+    {
+      const C = rondeCircuit;
+      const Am = C.amendement || {};
+      const An = C.annulation || {};
+      const Re = C.rejet || {};
+      const Cl = C.rejetClos || {};
+      const Dg = C.directeur || {};
+      const Hi = C.historique || {};
+      verifier('l’amendement d’un plan validé en fait une copie en brouillon, laisse l’original validé, et ne se répète pas',
+        C.semis === 4
+        && C.statutsSemes.amend === 'valide' && C.statutsSemes.rejet === 'soumis'
+        && Am.bouton === true && Am.confirme === true
+        // L'invite textuelle du socle, que ce dépôt n'avait jamais exercée.
+        && Am.inviteVue === true && Am.inviteActive === true
+        && Am.enfantOuvert === true && Am.statutEnfant === 'brouillon'
+        && Am.parentDeLEnfant === true
+        // Le motif saisi dans l'invite parvient au serveur, et la copie est
+        // numérotée à la suite du parent.
+        && Am.motifPorte === true
+        && Am.versionEnfant === (Am.versionParent || 1) + 1
+        && Am.statutParent === 'valide'
+        // Un plan n'a qu'un amendement à la fois.
+        && Am.amenderEncore === false,
+        JSON.stringify({ semis: C.statutsSemes, ...Am }).slice(0, 420));
+      verifier('l’amendement annulé rend le parent amendable, et la copie ne subsiste pas',
+        An.bouton === true && An.confirme === true && An.inviteVue === true
+        && An.retourAuParent === true
+        && An.statutParent === 'valide'
+        && An.enfantParti === true
+        && An.amendableANouveau === true,
+        JSON.stringify(An));
+      verifier('le rejet passe par une fenêtre qui récapitule le commentaire du valideur, et le serveur inscrit le plan rejeté',
+        Re.pageCircuit === true && Re.gestesSansDepliage === true && Re.bouton === true
+        && Re.fenetre === true && Re.appliquerOffert === true
+        && Re.fenetreFermee === true && Re.champCommentaire === true
+        && Re.recapPorteLeCommentaire === true
+        && Re.statut === 'rejete' && Re.fenetreRefermee === true,
+        JSON.stringify(Re));
+      verifier('le rejet définitif est un autre geste, avec sa propre fenêtre, et son propre statut',
+        Cl.bouton === true && Cl.fenetre === true
+        && Cl.titreDistinct.length > 0
+        && typeof Cl.statut === 'string' && Cl.statut !== 'soumis'
+        && Cl.statut !== Re.statut,
+        JSON.stringify(Cl));
+      verifier('l’approbation du directeur et la transmission au prestataire ne sont offertes par aucun écran, alors que le serveur les exécute',
+        // La page du circuit ne liste que les plans soumis : un plan validé
+        // n'y paraît pas, et c'est là que les deux boutons seraient rendus.
+        Dg.temoin === true
+        && Dg.montreLeSoumis === true && Dg.montreLeValide === false
+        // Les deux gestes sont absents du document, pour tout plan.
+        && Dg.approuverNullePart === 0 && Dg.transmettreNullePart === 0
+        // Le dispositif sait pourtant faire les deux transitions : le manque
+        // est dans l'écran, non dans le serveur.
+        && Dg.statutAvant === 'valide'
+        && Dg.routeDG === 200 && Dg.statutApresDG === 'approuve_dg'
+        && Dg.routeTransmettre === 200 && Dg.statutApresTransmission === 'transmis'
+        // Le manque est le seul **appel** : la fonction de rendu, appelée à la
+        // main sur un plan validé, porte bien le bouton — la condition de rôle
+        // passe depuis qu'elle suit `_isAdmin()` comme le reste du module.
+        && Dg.renduJoignable === true
+        && Dg.renduValidePorteDG === true
+        && Dg.renduApprouvePorteTransmettre === true
+        && Dg.renduSoumisPorteNiLUnNiLAutre === true,
+        JSON.stringify(Dg).slice(0, 460));
+      verifier('l’historique du circuit d’une version s’ouvre garni et se referme',
+        Hi.bouton === true && Hi.fenetre === true && Hi.garnie === true
+        && Hi.fermee === true,
+        JSON.stringify(Hi));
+      verifier('la ronde du circuit rend le module à son compte',
+        C.rendueAuDepart === true, JSON.stringify({ deja: C.deja, restants: C.restants }));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PLAN',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

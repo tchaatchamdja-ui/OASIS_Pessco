@@ -8109,3 +8109,86 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            **vrais** gestes, correctement nommés, simplement non exercés. Le
            chiffre était faux dans le sens qui flatte la correction : il faisait
            paraître l'angle mort deux fois plus grand qu'il n'est.
+
+       5.f.47 [x] **PLAN — le circuit de décision, et deux actes que l'écran
+           n'offre à personne** — fait le 2 novembre 2026.
+
+           **Trente-deux contrôles sur PLAN ; 43 gestes sur 91.** Quatre
+           contre-essais, tous mordants.
+
+           La ronde menait un plan jusqu'à la validation. Le circuit en offre
+           quatre autres sorties, et chacune est un acte d'autorité : rejeter,
+           rejeter définitivement, approuver au nom du directeur général,
+           transmettre au prestataire. Et pour un plan déjà validé,
+           l'**amendement** — qui en fait une copie en brouillon, l'original
+           restant en vigueur.
+
+           Deux mécanismes que le dépôt n'avait jamais exercés : `oasisSaisir`,
+           l'invite textuelle du socle, et **deux invites enchaînées**.
+
+           ── Deux actes écrits, et rendus nulle part ──
+
+           `planApprouverDG` et `planTransmettre` (Chap. 4 §4.2.3.e-f) sont
+           rendus par `_renderPlanDiffAccordion`, sous condition de statut
+           `valide` ou `approuve_dg`. Or ce rendu n'est appelé qu'**une fois**
+           dans tout le module, sur `pending = plans.filter(p => p.statut ===
+           'soumis')`.
+
+           **Les deux conditions s'excluent.** Un plan soumis n'est ni validé ni
+           approuvé : les deux boutons ne peuvent jamais paraître. Mesuré — zéro
+           occurrence dans le document, pour tout plan — et le manque est dans
+           l'écran seul : les deux transitions du serveur répondent 200 et
+           portent le plan à `approuve_dg` puis `transmis`.
+
+           Où placer ces plans — une seconde liste sur la page du circuit, le
+           détail du plan ? — est une décision de conception, et elle n'est pas
+           mienne. Le contrôle constate le défaut au lieu de le contourner, et
+           la question est portée au rapport.
+
+           ── Une seconde définition du même mot, et la plus étroite gagnait ──
+
+           En cherchant pourquoi le bouton manquait, un autre défaut est apparu,
+           derrière le premier : `pl-validation.js` testait
+           `user.role === 'Administrateur'`. Ce n'est pas un rôle du dispositif,
+           qui n'en porte que cinq — SUPERADMIN, ADMIN, AAC, PRESTATAIRE,
+           ADMIN_PRESTATAIRE : c'est une valeur **traduite**, que
+           `src/modules/profil_risque/roles.js` calcule à partir des deux
+           premières. La condition était donc fausse pour tout le monde.
+
+           Le module portait déjà sa règle, dans `pl-shell.js` : `_isAdmin()`
+           reconnaît SUPERADMIN, ADMIN, le libellé traduit et le privilège
+           M2_Administrateur. Le circuit s'y tient désormais. *Deux définitions
+           du même mot dans un même module finissent par diverger, et c'est la
+           plus étroite qui gagne en silence.*
+
+           Cette correction aurait pu rester non créditée — le premier défaut la
+           masque, puisque l'écran n'appelle jamais le rendu avec un plan
+           validé. Le contrôle appelle donc la **fonction de rendu** à la main :
+           sur un plan validé elle porte le bouton d'approbation, sur un plan
+           approuvé celui de transmission, et sur un plan soumis ni l'un ni
+           l'autre. Le contre-essai qui remet l'ancienne comparaison rougit. *Un
+           défaut qui en cache un autre n'exempte pas le second de preuve.*
+
+           ── Ce que les contre-essais ont redressé ──
+
+           Le premier jet du contre-essai groupé n'a donné que trois rouges sur
+           quatre : le motif de l'amendement, vidé à l'envoi, ne faisait rien
+           tomber. La mesure existait — `motifPorte` — et l'**assertion**
+           manquait. C'est la même leçon qu'au pas précédent, prise par l'autre
+           bout : *mesurer n'est pas vérifier.* Le motif est désormais asserté,
+           avec la version de la copie, que le serveur numérote à la suite du
+           parent ; le contre-essai mord.
+
+           Trois autres faits, chacun tenu : l'amendement **ne se répète pas**
+           (un plan n'a qu'un enfant à la fois, et le serveur refuse le second
+           par 409) ; l'annulation rend le parent amendable et ne laisse pas la
+           copie ; le rejet passe par une fenêtre qui **récapitule** le
+           commentaire du valideur, averti quand il manque — averti, non
+           empêché.
+
+           ── Et une règle que j'avais écrite, puis oubliée ──
+
+           La phase du directeur mesurait une page vide : les deux plans soumis
+           avaient été rejetés par les phases précédentes. *Une ronde qui suit
+           une autre commence par relever ce qu'elle hérite* — elle sème
+           désormais son propre témoin soumis.

@@ -824,6 +824,295 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         JSON.stringify(En).slice(0, 460));
     }
 
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les mesures arrêtées : la portée, la durée et le terme
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Le second volet de l'étape, celui où la sanction se rédige. Il prolonge la
+    // ronde précédente : l'infraction y est constituée et enregistrée, ce qui
+    // est la condition pour que la section s'ouvre — sans infraction, elle dit
+    // qu'elle n'a pas d'objet, et c'est ce que le contrôle précédent a éprouvé.
+    //
+    // ── Les quatre règles éprouvées ──
+    //
+    //  1. **Le suivi est attendu par défaut.** `mesQualAjouterMesure` pose
+    //     `suivi_requis: true` : c'est en le **décochant** que l'instance
+    //     déclare qu'une mesure n'appelle pas de suivi de mise en œuvre, non en
+    //     omettant de le cocher.
+    //  2. **Changer de catégorie vide le type.** Les types sont propres à leur
+    //     catégorie : garder l'ancien laisserait une sanction pénale de type
+    //     « lettre de correction ».
+    //  3. **Durée et terme se déduisent l'un de l'autre**, la date de sanction
+    //     servant d'ancre — en jours comme en mois, et sans déborder sur le mois
+    //     suivant. Un terme antérieur à la sanction laisse la durée vide et
+    //     marque les deux champs : une sanction ne se lève pas avant d'être
+    //     prononcée (règle commune du socle, `oasisDatesValider`).
+    //  4. **La case « suivi requis » commande le bouton « Clôturer ».** Une
+    //     seule mesure qui demande le suivi, et le dossier doit passer par
+    //     l'étape de suivi : la clôture directe reste éteinte. C'est l'effet
+    //     visible de la bascule, et c'est par lui qu'on la mesure.
+    etape = 'mesures arrêtées';
+    const mesuresArretees = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const Q = () => (S().traitement || {}).qualification || {};
+      const volet = (cle) => [...document.querySelectorAll('[onclick*="mesQualVoirVolet("]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+      // ── Tout se requête à nouveau après chaque geste ──
+      //
+      // `mesQualModifier` redessine le volet entier : la portée cochée, la
+      // catégorie changée, le retrait d'une mesure. Une référence gardée d'avant
+      // désigne un élément détaché du document — elle se lit encore, et ne dit
+      // plus rien de l'écran. On ne garde donc aucune poignée.
+      const bloc = (i) => document.querySelectorAll('#mesQualMesures .mes-bloc')[i || 0];
+      const champ = (nom, i) => (bloc(i) || document).querySelector(`[data-champ="${nom}"]`);
+      const lire = (nom, i) => (champ(nom, i) || {}).value;
+      const coche = (nom, i) => !!(champ(nom, i) || {}).checked;
+      const poser = async (nom, valeur, evenement, attente) => {
+        const e = champ(nom);
+        if (!e) return false;
+        e.value = valeur;
+        e.dispatchEvent(new Event(evenement || 'change', { bubbles: true }));
+        await a(attente || 1500);
+        return true;
+      };
+      const portee = async (cle) => {
+        const e = champ(cle);
+        if (!e) return false;
+        e.click();
+        await a(2200);
+        return true;
+      };
+      const cloturer = () => [...document.querySelectorAll('[onclick*="mesQualCloturer"]')][0];
+
+      // ── 1. Une mesure s'ajoute, et changer sa catégorie vide son type ──
+      await essai('ajout', async () => {
+        const d = {};
+        volet('mesures')?.click();
+        await a(2600);
+        d.sectionOuverte = !!document.querySelector('[onclick*="mesQualAjouterMesure"]');
+        d.avant = document.querySelectorAll('#mesQualMesures .mes-bloc').length;
+        document.querySelector('[onclick*="mesQualAjouterMesure"]')?.click();
+        await a(2600);
+        d.apres = document.querySelectorAll('#mesQualMesures .mes-bloc').length;
+        // Les valeurs d'origine : une catégorie posée, le suivi attendu.
+        d.categorieDefaut = lire('categorie');
+        d.suiviDefaut = coche('suivi_requis');
+        d.porteeDefaut = (Q().mesures || [])[0] ? (Q().mesures || [])[0].portee : null;
+        // Un type de la catégorie posée.
+        const types = champ('type_mesure');
+        const premier = types ? [...types.options].find((op) => op.value) : null;
+        d.typeOffert = !!premier;
+        if (premier) { types.value = premier.value; }
+        d.typePose = lire('type_mesure');
+        // Une autre catégorie : le type doit tomber, et la liste changer.
+        const cats = champ('categorie');
+        const autre = cats ? [...cats.options]
+          .find((op) => op.value && op.value !== d.categorieDefaut) : null;
+        d.autreCategorie = autre ? autre.value : '';
+        d.typesAvant = types ? types.options.length : 0;
+        if (autre) await poser('categorie', autre.value, 'change', 2400);
+        d.categorieApres = lire('categorie');
+        d.typeApres = lire('type_mesure');
+        d.typesApres = (champ('type_mesure') || { options: [] }).options.length;
+        // ── Ce que le document ne peut pas prouver, l'état le prouve ──
+        //
+        // Le `<select>` du type est reconstruit avec les types de la nouvelle
+        // catégorie : l'ancienne valeur n'y figurant pas, il retombe sur
+        // l'option vide **tout seul**. Mon premier contre-essai, qui retirait
+        // `type_mesure = ''` de `mesQualCategorieMesure`, n'a donc rien fait
+        // tomber — la règle est tenue deux fois, et le document n'en montre
+        // qu'une. C'est dans **l'état** que la seconde se lit : la relève a
+        // recueilli l'ancien type avant le redessin, et seule la remise à vide
+        // l'en ôte.
+        d.typeDansEtat = ((Q().mesures || [])[0] || {}).type_mesure;
+        // On repose un type de la nouvelle catégorie, pour la suite.
+        const t2 = champ('type_mesure');
+        const p2 = t2 ? [...t2.options].find((op) => op.value) : null;
+        if (p2) { t2.value = p2.value; }
+        d.typeRepose = lire('type_mesure');
+        return d;
+      });
+
+      // ── 2. Les trois portées s'excluent ; « limitée dans le temps » ouvre la
+      //      durée et le terme ──
+      await essai('portee', async () => {
+        const d = {};
+        d.cases = ['temporelle', 'illimitee', 'sans_objet']
+          .filter((c) => !!champ(c)).length;
+        d.dureeAvant = !!champ('duree_valeur');
+        await portee('temporelle');
+        d.apresTemporelle = ((Q().mesures || [])[0] || {}).portee;
+        d.dureeParue = !!champ('duree_valeur');
+        d.termeParu = !!champ('date_fin');
+        await portee('illimitee');
+        d.apresIllimitee = ((Q().mesures || [])[0] || {}).portee;
+        d.dureePartie = !champ('duree_valeur');
+        d.temporelleDecochee = !coche('temporelle');
+        // Décocher celle qui l'était laisse la portée indéterminée.
+        await portee('illimitee');
+        d.apresDecoche = ((Q().mesures || [])[0] || {}).portee;
+        await portee('temporelle');
+        d.rendu = ((Q().mesures || [])[0] || {}).portee;
+        return d;
+      });
+
+      // ── 3. La durée et le terme, chacun déduit de l'autre ──
+      await essai('duree', async () => {
+        const d = {};
+        d.ancre = await poser('date_sanction', '2026-10-01', 'change', 1800);
+        // Trente jours depuis le 1er octobre : le 31.
+        await poser('duree_valeur', '30', 'input', 1600);
+        d.termeJours = lire('date_fin');
+        // Trois mois depuis le 1er octobre : le 1er janvier. Le changement
+        // d'unité rappelle le même calcul.
+        await poser('duree_unite', 'mois', 'change', 1600);
+        await poser('duree_valeur', '3', 'input', 1600);
+        d.termeMois = lire('date_fin');
+        // Le terme posé à la main : la durée s'en déduit, dans l'unité retenue.
+        await poser('date_fin', '2026-12-01', 'change', 1600);
+        d.dureeEnMois = lire('duree_valeur');
+        await poser('duree_unite', 'jours', 'change', 1600);
+        await poser('date_fin', '2026-12-01', 'change', 1600);
+        d.dureeEnJours = lire('duree_valeur');
+        // ── Une sanction ne se lève pas avant d'être prononcée ──
+        await poser('date_fin', '2026-09-01', 'change', 1800);
+        d.dureeVidee = lire('duree_valeur');
+        d.champsMarques = ['date_sanction', 'date_fin']
+          .filter((c) => (champ(c) || { classList: { contains: () => false } })
+            .classList.contains('oasis-champ-invalide')).length;
+        // On repose un terme recevable pour la suite.
+        await poser('date_fin', '2026-12-01', 'change', 1800);
+        d.termeRendu = lire('date_fin');
+        d.dureeRendue = lire('duree_valeur');
+        return d;
+      });
+
+      // ── 4. La case « suivi requis », le bouton « Clôturer », et le serveur ──
+      await essai('suivi', async () => {
+        const d = {};
+        const bouton = cloturer();
+        d.bouton = !!bouton;
+        d.suiviCoche = coche('suivi_requis');
+        d.cloturerEteint = bouton ? !!bouton.disabled : null;
+        // On décoche : plus aucune mesure n'appelle le suivi, la clôture directe
+        // s'offre.
+        champ('suivi_requis')?.click();
+        await a(2600);
+        d.suiviApres = coche('suivi_requis');
+        d.etatApres = ((Q().mesures || [])[0] || {}).suivi_requis;
+        d.cloturerArme = cloturer() ? !cloturer().disabled : null;
+        // Enregistré, puis relu sur le serveur.
+        const enregistrer = document.querySelector('[onclick*="mesEnregistrerQualification"]');
+        d.enregistrer = !!enregistrer;
+        enregistrer?.click();
+        await a(3000);
+        const relu = await window.mesApi(`/constatations/${encodeURIComponent((S().carenceEnCours || {}).id)}/traitement`);
+        const m = (((relu || {}).qualification || {}).mesures || [])[0] || {};
+        d.auServeur = {
+          nombre: (((relu || {}).qualification || {}).mesures || []).length,
+          categorie: m.categorie, type: m.type_mesure, portee: m.portee,
+          sanction: m.date_sanction, fin: m.date_fin,
+          duree: m.duree_valeur, unite: m.duree_unite, suivi: m.suivi_requis,
+        };
+        // Et le retrait, qui ôte le bloc.
+        document.querySelector('[onclick*="mesQualRetirerMesure"]')?.click();
+        await a(2600);
+        d.blocsApresRetrait = document.querySelectorAll('#mesQualMesures .mes-bloc').length;
+        d.etatApresRetrait = (Q().mesures || []).length;
+        // ── La symétrie des ajouts : ce qui s'ajoute se retire ──
+        //
+        // Le membre et la réunion vivent au volet « Qualification de
+        // l'infraction » : leurs boutons de retrait n'existent pas ici. On y
+        // revient plutôt que de les chercher là où ils ne sont pas.
+        volet('infraction')?.click();
+        await a(2600);
+        document.querySelector('[onclick*="mesQualRetirerMembre"]')?.click();
+        await a(2400);
+        d.membresApresRetrait = document.querySelectorAll('#mesQualMembres tbody tr[data-rang]').length;
+        document.querySelector('[onclick*="mesQualRetirerReunion"]')?.click();
+        await a(2400);
+        d.reunionsApresRetrait = document.querySelectorAll('#mesQualReunions .mes-bloc').length;
+        d.etatMembres = (Q().membres || []).length;
+        d.etatReunions = (Q().reunions || []).length;
+        return d;
+      });
+      return o;
+    });
+
+    {
+      const Aj = mesuresArretees.ajout || {};
+      const Po = mesuresArretees.portee || {};
+      const Du = mesuresArretees.duree || {};
+      const Su = mesuresArretees.suivi || {};
+      verifier('une mesure s’ajoute avec le suivi attendu, et changer sa catégorie vide son type',
+        Aj.sectionOuverte === true && Aj.apres === Aj.avant + 1
+        && !!Aj.categorieDefaut
+        // Le suivi est attendu par défaut : c'est en le décochant qu'on le lève.
+        && Aj.suiviDefaut === true
+        // La portée, elle, part indéterminée : rien n'est supposé de la sanction.
+        && Aj.porteeDefaut === ''
+        && Aj.typeOffert === true && !!Aj.typePose
+        // La catégorie change, le type tombe, et la liste n'est plus la même.
+        && !!Aj.autreCategorie && Aj.categorieApres === Aj.autreCategorie
+        && Aj.typeApres === '' && Aj.typesApres !== Aj.typesAvant
+        && Aj.typeDansEtat === ''
+        && !!Aj.typeRepose,
+        JSON.stringify(Aj).slice(0, 420));
+      verifier('les trois portées d’une mesure s’excluent, et « limitée dans le temps » seule ouvre la durée et le terme',
+        Po.cases === 3
+        // Avant tout choix, ni durée ni terme.
+        && Po.dureeAvant === false
+        && Po.apresTemporelle === 'temporelle'
+        && Po.dureeParue === true && Po.termeParu === true
+        // Une autre portée décoche la première, et referme les deux champs.
+        && Po.apresIllimitee === 'illimitee'
+        && Po.dureePartie === true && Po.temporelleDecochee === true
+        // Décocher celle qui l'était laisse la portée indéterminée.
+        && Po.apresDecoche === ''
+        && Po.rendu === 'temporelle',
+        JSON.stringify(Po));
+      verifier('durée et terme se déduisent l’un de l’autre, en jours comme en mois, et un terme antérieur à la sanction laisse la durée vide',
+        Du.ancre === true
+        // Trente jours depuis le 1er octobre.
+        && Du.termeJours === '2026-10-31'
+        // Trois mois : le 1er janvier, sans déborder sur le mois suivant.
+        && Du.termeMois === '2027-01-01'
+        // Le terme posé à la main rend la durée, dans l'unité retenue.
+        && Du.dureeEnMois === '2' && Du.dureeEnJours === '61'
+        // Un terme antérieur à la sanction : la durée reste vide, et les deux
+        // champs sont marqués par la règle commune du socle.
+        && Du.dureeVidee === '' && Du.champsMarques === 2
+        && Du.termeRendu === '2026-12-01' && Du.dureeRendue === '61',
+        JSON.stringify(Du));
+      verifier('la case « suivi requis » commande le bouton « Clôturer », et l’enregistrement rend la mesure au serveur',
+        Su.bouton === true
+        // Tant qu'une mesure appelle le suivi, la clôture directe reste éteinte.
+        && Su.suiviCoche === true && Su.cloturerEteint === true
+        && Su.suiviApres === false && Su.etatApres === false
+        && Su.cloturerArme === true
+        // Ce que le serveur a gardé.
+        && Su.enregistrer === true && Su.auServeur.nombre === 1
+        && !!Su.auServeur.categorie && !!Su.auServeur.type
+        && Su.auServeur.portee === 'temporelle'
+        && Su.auServeur.sanction === '2026-10-01' && Su.auServeur.fin === '2026-12-01'
+        && Su.auServeur.duree === 61 && Su.auServeur.unite === 'jours'
+        && Su.auServeur.suivi === false
+        // Et le retrait ôte le bloc, dans le document comme dans l'état.
+        && Su.blocsApresRetrait === 0 && Su.etatApresRetrait === 0
+        // Ce qui s’ajoute se retire : le membre et la réunion de la ronde
+        // précédente partent par leur propre geste.
+        && Su.membresApresRetrait === 0 && Su.reunionsApresRetrait === 0
+        && Su.etatMembres === 0 && Su.etatReunions === 0,
+        JSON.stringify(Su).slice(0, 460));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur CARE',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

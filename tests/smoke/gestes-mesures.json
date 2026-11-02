@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 90,
  "occurrences": 145,
- "exerces": 24,
+ "exerces": 34,
  "indecidables": 3,
  "gestes": [
   {
@@ -807,7 +807,7 @@
    "evenement": "click",
    "source": "mesQualRetirerMembre(${i})",
    "nom": "mesQualRetirerMembre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -825,7 +825,7 @@
    "evenement": "click",
    "source": "mesQualRetirerReunion(${i})",
    "nom": "mesQualRetirerReunion",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -879,7 +879,7 @@
    "evenement": "click",
    "source": "mesQualRetirerMesure(${i})",
    "nom": "mesQualRetirerMesure",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -888,7 +888,7 @@
    "evenement": "change",
    "source": "mesQualCategorieMesure(${i}, this.value)",
    "nom": "mesQualCategorieMesure",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -897,7 +897,7 @@
    "evenement": "change",
    "source": "oasisDatesBorner(mesDatesSanction(${i}))",
    "nom": "oasisDatesBorner",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -906,7 +906,7 @@
    "evenement": "change",
    "source": "mesQualPorteeMesure(${i}, 'temporelle', this.checked)",
    "nom": "mesQualPorteeMesure",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -915,7 +915,7 @@
    "evenement": "change",
    "source": "mesQualPorteeMesure(${i}, 'illimitee', this.checked)",
    "nom": "mesQualPorteeMesure",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -924,7 +924,7 @@
    "evenement": "change",
    "source": "mesQualPorteeMesure(${i}, 'sans_objet', this.checked)",
    "nom": "mesQualPorteeMesure",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -933,7 +933,7 @@
    "evenement": "input",
    "source": "mesQualDureeVersTerme(${i})",
    "nom": "mesQualDureeVersTerme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -942,7 +942,7 @@
    "evenement": "change",
    "source": "mesQualDureeVersTerme(${i})",
    "nom": "mesQualDureeVersTerme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -951,7 +951,7 @@
    "evenement": "change",
    "source": "mesQualTermeVersDuree(${i})",
    "nom": "mesQualTermeVersDuree",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -960,7 +960,7 @@
    "evenement": "change",
    "source": "mesQualSuiviRequis(${i}, this.checked)",
    "nom": "mesQualSuiviRequis",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -978,7 +978,7 @@
    "evenement": "click",
    "source": "mesQualAjouterMesure()",
    "nom": "mesQualAjouterMesure",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",

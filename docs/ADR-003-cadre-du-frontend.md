@@ -8620,3 +8620,67 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            est bien la qualification : elle est fausse dès que le rang atteint
            diffère. *Un contrôle qui relève le défaut de son propre garde-fou ne
            relève rien.*
+
+       5.f.56 [x] **CARE — les mesures arrêtées, et une seconde règle tenue
+           deux fois** — fait le 2 novembre 2026.
+
+           **Vingt-trois contrôles sur CARE ; 24 → 34 gestes sur 90.**
+
+           Le second volet de l'étape, celui où la sanction se rédige. Il
+           prolonge la ronde précédente : l'infraction y est constituée et
+           enregistrée, ce qui est la condition pour que la section s'ouvre —
+           sans infraction, elle dit qu'elle n'a pas d'objet, et c'est ce que le
+           contrôle de 5.f.55 a éprouvé.
+
+           ── Les quatre règles éprouvées ──
+
+           **Le suivi est attendu par défaut.** `mesQualAjouterMesure` pose
+           `suivi_requis: true` : c'est en le **décochant** que l'instance
+           déclare qu'une mesure n'appelle pas de suivi de mise en œuvre, non en
+           omettant de le cocher. La portée, elle, part indéterminée — rien n'est
+           supposé de la sanction.
+
+           **Les trois portées s'excluent**, et « limitée dans le temps » seule
+           ouvre la durée et le terme ; décocher celle qui l'était laisse la
+           portée indéterminée.
+
+           **Durée et terme se déduisent l'un de l'autre**, la date de sanction
+           servant d'ancre : trente jours depuis le 1er octobre donnent le 31,
+           trois mois donnent le 1er janvier **sans déborder sur le mois
+           suivant**, et le terme posé à la main rend la durée dans l'unité
+           retenue — deux mois, ou soixante et un jours. Un terme antérieur à la
+           sanction laisse la durée vide et **marque les deux champs** : une
+           sanction ne se lève pas avant d'être prononcée, et c'est la règle
+           commune du socle (`oasisDatesValider`) qui le dit.
+
+           **La case « suivi requis » commande le bouton « Clôturer ».** Une
+           seule mesure qui demande le suivi, et le dossier doit passer par
+           l'étape de suivi : la clôture directe reste éteinte. C'est l'effet
+           visible de la bascule, et c'est par lui qu'on la mesure — non par
+           l'état seul, qu'un bouton mal câblé démentirait sans rien dire.
+
+           ── Une seconde règle tenue deux fois, et ce que l'état seul prouve ──
+
+           Mon contre-essai sur `mesQualCategorieMesure` — retirer la remise à
+           vide du type — n'a **rien** fait tomber : le `<select>` du type est
+           reconstruit avec les types de la nouvelle catégorie, l'ancienne valeur
+           n'y figure pas, et il retombe **seul** sur l'option vide. Les deux
+           jeux de types étant disjoints, le document ne peut pas distinguer les
+           deux chemins.
+
+           C'est dans **l'état** que la seconde se lit : la relève a recueilli
+           l'ancien type avant le redessin, et seule la remise à vide l'en ôte.
+           Le contrôle lit donc les deux — le champ du document *et*
+           `MES_STATE.traitement.qualification.mesures[0].type_mesure` —, et le
+           contre-essai mord. *Quand un document ne peut pas distinguer deux
+           chemins, c'est l'état qui le fait.*
+
+           ── Ce qui s'ajoute se retire ──
+
+           Le membre et la réunion de la ronde précédente partent par leur propre
+           geste, au volet où ils vivent — leurs boutons de retrait n'existent
+           pas au volet des mesures, et le contrôle y revient plutôt que de les
+           chercher là où ils ne sont pas.
+
+           Six contre-essais, six fois rouge, après l'amendement des deux
+           assertions que les deux premiers ont prises en défaut.

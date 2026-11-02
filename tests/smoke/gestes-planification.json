@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 95,
  "occurrences": 139,
- "exerces": 71,
+ "exerces": 77,
  "indecidables": 4,
  "gestes": [
   {
@@ -330,7 +330,7 @@
    "evenement": "click",
    "source": "planSortThemeTable(this,${col})",
    "nom": "planSortThemeTable",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -422,7 +422,7 @@
    "evenement": "click",
    "source": "planApplySyncSelection('${planId}')",
    "nom": "planApplySyncSelection",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -461,7 +461,7 @@
    "nom": "duree:input",
    "source": "duree.addEventListener('input', () => {",
    "id": "actDuree",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -727,7 +727,7 @@
    "source": "${canSync ? `planSyncRisksSelective('${plan.id}')` : 'void(0)'}",
    "nom": "planSyncRisksSelective",
    "interpole": true,
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -790,7 +790,7 @@
    "evenement": "click",
    "source": "this.closest('tr').nextElementSibling.classList.toggle('hidden')",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
@@ -1108,7 +1108,7 @@
    "nom": "fond:click",
    "source": "fond.addEventListener('click', planFermerCalendrier);",
    "id": "planVoletFond",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",

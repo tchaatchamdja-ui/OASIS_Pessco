@@ -8353,3 +8353,52 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            peut nommer ce qu'une fonction va produire. L'angle mort de 5.f.46
            avait un fond que l'on ne pouvait pas atteindre ; celui-ci en est le
            dernier pouce.
+
+       5.f.51 [x] **PLAN — les derniers gestes, et deux contrôles qui se
+           croyaient vrais** — fait le 2 novembre 2026.
+
+           **Cinquante et un contrôles sur PLAN ; 77 gestes sur 91 — 77 sur les
+           85 qui sont atteignables.**
+
+           Ce qui restait n'avait pas de famille : un champ qui calcule une
+           date, un en-tête qui trie, deux dépliants qui ne passent par aucune
+           fonction nommée, le fond d'un volet qui le referme, et la
+           synchronisation des risques d'un plan. Des gestes que personne ne
+           remarque, et dont aucun n'était exercé.
+
+           La durée d'une activité reconstitue sa date de fin : cinq jours
+           depuis le 6 juin donnent le 10. La synchronisation interroge le
+           serveur avant d'ouvrir quoi que ce soit — s'il n'y a rien à reporter,
+           elle le dit et n'ouvre pas de fenêtre ; le contrôle mesure le cas
+           rencontré au lieu d'en supposer un.
+
+           ── Deux contrôles qui se croyaient vrais ──
+
+           Le premier relevait l'ordre de tri sur « la première ligne », et
+           prenait la première **sous-activité** — qui ne bouge jamais. Il
+           comparait trois fois la même chaîne et concluait. Le tri se mesure
+           désormais sur les lignes de **la table dont l'en-tête cliqué fait
+           partie**, et l'ordre doit changer puis s'inverser.
+
+           Le second cherchait son dépliant sur la liste des plans ; il vit dans
+           `_renderActivitiesTable`, c'est-à-dire sur la **page de détail** d'un
+           plan — et un plan sans activité n'en a pas. La ronde sème donc une
+           activité avant de chercher.
+
+           ── Ce qui reste, et pourquoi ──
+
+           Quatorze noms ne sont pas exercés, et six ne peuvent pas l'être :
+           `planLogout` (le socle remplace son bouton), `PLAN_STATE.currentSub`
+           (aucune page ne déclare de sous-onglets), `planApprouverDG` et
+           `planTransmettre` (conditions qui s'excluent), `planAppliquerInstance`
+           (Docker à l'arrêt, et les instances avec lui), et `geste` — un
+           artefact du relevé. Les six sont écrits avec leur raison.
+
+           Les huit autres sont des écouteurs et des expressions de bord :
+           `window:resize`, `_escAttr` et `planCalDefiler` du calendrier du
+           tableau de bord — dont le nom relevé ne coïncide pas avec ce que le
+           mouchard voit —, `this.classList.toggle` d'une ligne de différence du
+           circuit, et quatre gardes (`event.stopPropagation`,
+           `event.preventDefault`, `document.getElementById`,
+           `document.querySelectorAll`) que leurs gestes portants exercent déjà
+           sous un autre nom.

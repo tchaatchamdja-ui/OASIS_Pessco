@@ -2361,6 +2361,268 @@ module.exports = async function planificationNavigateurSmoke(port) {
         JSON.stringify(La));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  Les derniers gestes de PLAN : durée, tri, dépliants, fond du volet
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Ce qui reste n'a pas de famille : un champ qui calcule une date, un
+    // en-tête qui trie, deux dépliants qui ne passent par aucune fonction
+    // nommée, et le fond d'un volet qui le referme. Des gestes que personne ne
+    // remarque, et dont aucun n'était exercé.
+    etape = 'derniers gestes de PLAN';
+    await ouvrir('plans');
+    await attendre(2500);
+    const rondeEpars = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const plans = async () => {
+        const r = await (await fetch(`${api}/plans`, { credentials: 'same-origin' })).json();
+        return Array.isArray(r) ? r : (r.plans || []);
+      };
+      const S = () => window.PLAN_STATE || {};
+
+      // ── 1. La durée, qui calcule la fin, et le tri des thèmes ──
+      await essai('fiche', async () => {
+        const d = {};
+        o.deja = (await plans()).length;
+        const cree = await env('/plans', 'POST', {
+          titre: 'Plan des derniers gestes', annee: 2033,
+          type: 'periodique', domaine_id: '', secteur_id: '',
+        });
+        o.planId = (cree.corps || {}).id;
+        d.semis = !!o.planId;
+        // Une activité : le dépliant de la phase 3 vit dans la table des
+        // activités d'un plan, et un plan vide n'en a pas.
+        if (o.planId) {
+          await env(`/plans/${o.planId}/activites`, 'POST', {
+            objet: 'Activité des derniers gestes', date_debut: '2033-07-04',
+            date_fin: '2033-07-08', nombre_inspecteurs: 1, lieu_activite: 'Niamey',
+          });
+        }
+        if (typeof window.planLoadData === 'function') await window.planLoadData();
+        await a(1500);
+        if (typeof window.planShowActivityModal === 'function') {
+          window.planShowActivityModal(o.planId);
+        }
+        await a(3000);
+        d.fenetre = !!document.getElementById('actDuree');
+
+        // Les trois champs sont liés : la durée calcule la fin depuis le début.
+        const debut = document.getElementById('actDebut');
+        const fin = document.getElementById('actFin');
+        const duree = document.getElementById('actDuree');
+        d.troisChamps = !!(debut && fin && duree);
+        if (d.troisChamps) {
+          debut.value = '2033-06-06';
+          debut.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(800);
+          fin.value = '';
+          d.finVidee = fin.value === '';
+          duree.value = '5';
+          duree.dispatchEvent(new Event('input', { bubbles: true }));
+          await a(900);
+          d.finCalculee = fin.value;
+          // Cinq jours à partir du 6 juin : le module compte les jours ouvrés
+          // ou les jours francs — on relève ce qu'il rend, sans le supposer.
+          d.finNonVide = !!fin.value;
+        }
+
+        // Le tri de la table des thèmes : un en-tête, et l'indicateur qui suit.
+        const secteur = document.getElementById('actSecteur');
+        if (secteur && secteur.options.length > 1) {
+          secteur.value = secteur.options[1].value;
+          secteur.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(2200);
+        }
+        const entetes = [...document.querySelectorAll('[onclick*="planSortThemeTable"]')];
+        d.entetes = entetes.length;
+        if (entetes.length) {
+          // La table est celle dont l'en-tête cliqué fait partie — mon premier
+          // jet relevait la première sous-activité, qui ne bouge jamais : le
+          // contrôle comparait trois fois la même chaîne et se croyait vrai.
+          const table = entetes[0].closest('table');
+          d.table = !!table;
+          const ordre = () => (table
+            ? [...table.querySelectorAll('tbody tr')]
+              .map((l) => (l.textContent || '').trim().slice(0, 24)).join('|')
+            : '');
+          d.lignes = table ? table.querySelectorAll('tbody tr').length : 0;
+          d.avantTri = ordre();
+          entetes[0].click();
+          await a(1500);
+          d.indicateur = !!document.querySelector('.sort-ind');
+          d.apresTri = ordre();
+          // Trier deux fois rend l'ordre inverse : le geste est pris dans les
+          // deux sens, comme toute bascule.
+          entetes[0].click();
+          await a(1500);
+          d.apresSecondTri = ordre();
+        }
+        document.querySelector('[onclick*="planCloseModal"]')?.click();
+        await a(1200);
+        d.fermee = !document.getElementById('actDuree');
+        return d;
+      });
+
+      // ── 2. La synchronisation des risques d'un plan ──
+      await essai('synchroRisques', async () => {
+        const d = {};
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.planId);
+        await a(3000);
+        const bouton = [...document.querySelectorAll('[onclick*="planSyncRisksSelective"]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.planId));
+        d.bouton = !!bouton;
+        // Ce que le serveur a à dire avant qu'on presse : s'il n'y a rien à
+        // reporter, le module le dit et n'ouvre pas de fenêtre. On relève le
+        // cas rencontré plutôt que d'en supposer un.
+        const avis = await env(`/plans/${o.planId}/sync-risques`, 'GET');
+        d.codeAvis = avis.statut;
+        d.aDesChangements = !!(avis.corps || {}).has_changes;
+        bouton?.click();
+        await a(3000);
+        d.fenetre = !!document.querySelector('[onclick*="planApplySyncSelection"]');
+        if (d.fenetre) {
+          const cases = [...document.querySelectorAll('.sync-check:not([disabled])')];
+          d.cases = cases.length;
+          cases.forEach((c) => { c.checked = true; c.dispatchEvent(new Event('change', { bubbles: true })); });
+          await a(800);
+          d.cochees = document.querySelectorAll('.sync-check:checked:not([disabled])').length;
+          document.querySelector('[onclick*="planApplySyncSelection"]')?.click();
+          await a(3500);
+          d.fenetreFermee = !document.querySelector('[onclick*="planApplySyncSelection"]');
+        }
+        return d;
+      });
+
+      // ── 3. Deux dépliants sans fonction nommée ──
+      await essai('depliants', async () => {
+        const d = {};
+        // Le dépliant vit dans `_renderActivitiesTable` — la table des
+        // activités de la **page de détail** d'un plan, non la liste des plans.
+        if (typeof window.planOpenDetail === 'function') await window.planOpenDetail(o.planId);
+        await a(3200);
+        d.detail = (S().selectedPlan || {}).id === o.planId;
+        d.activites = ((S().selectedPlan || {}).activites || []).length;
+        // Son gestionnaire est une expression —
+        // `this.closest('tr').nextElementSibling.classList.toggle` —, sans nom
+        // de fonction : rien ne l'avait jamais pris.
+        const bascule = document.querySelector('[onclick*="this.closest"]');
+        d.bouton = !!bascule;
+        if (bascule) {
+          const ligne = bascule.closest('tr');
+          const panneau = ligne ? ligne.nextElementSibling : null;
+          d.panneau = !!panneau;
+          d.cacheAvant = panneau ? panneau.hidden || panneau.classList.contains('hidden') : null;
+          bascule.click();
+          await a(1200);
+          d.cacheApres = panneau ? panneau.hidden || panneau.classList.contains('hidden') : null;
+          bascule.click();
+          await a(1200);
+          d.cacheRendu = panneau
+            ? (panneau.hidden || panneau.classList.contains('hidden')) === d.cacheAvant : null;
+        }
+        return d;
+      });
+
+      // ── 4. Le volet du calendrier, fermé par son fond ──
+      await essai('fondDuVolet', async () => {
+        const d = {};
+        if (typeof window.planNavigateTo === 'function') window.planNavigateTo('dashboard');
+        await a(2500);
+        document.querySelector('[onclick^="planChoisirCarte"]')?.click();
+        await a(1400);
+        document.querySelector('[onclick^="planOuvrirCalendrier"]')?.click();
+        await a(3000);
+        const volet = () => (document.getElementById('planVolet') || { innerHTML: '' }).innerHTML.length;
+        d.ouvert = volet() > 500;
+        // Le défilement du calendrier du tableau de bord, qui redessine.
+        const defiler = document.querySelector('#planVolet [onclick^="planCalDefiler"]')
+          || document.querySelector('[onclick^="planCalDefiler"]');
+        d.defiler = !!defiler;
+        defiler?.click();
+        await a(1600);
+        d.apresDefilement = volet() > 500;
+        // Le fond : un écouteur posé à la main, que seul un clic hors du
+        // contenu atteint. `fond` est le conteneur même du volet.
+        const fond = document.getElementById('planVoletFond')
+          || document.querySelector('.plan-volet-fond, .pr-slicer-overlay');
+        d.fond = !!fond;
+        if (fond) {
+          fond.click();
+          await a(1800);
+          d.fermeParLeFond = volet() === 0 || !document.querySelector('[onclick*="planFermerCalendrier"]');
+        }
+        if (!d.fermeParLeFond) {
+          document.querySelector('[onclick^="planFermerCalendrier"]')?.click();
+          await a(1200);
+        }
+        return d;
+      });
+
+      // ── 5. Ménage ──
+      const encore = (await plans()).map((p) => p.id);
+      if (o.planId && encore.includes(o.planId)) await env(`/plans/${o.planId}`, 'DELETE');
+      o.restants = (await plans()).length;
+      o.rendueAuDepart = o.restants === o.deja;
+      return o;
+    }, '/api/m/planification');
+
+    {
+      const E = rondeEpars;
+      const Fi = E.fiche || {};
+      const Sr = E.synchroRisques || {};
+      const De = E.depliants || {};
+      const Fd = E.fondDuVolet || {};
+      verifier('dans la fiche d’activité, la durée calcule la fin, et l’en-tête des thèmes trie dans les deux sens',
+        Fi.semis === true && Fi.fenetre === true && Fi.troisChamps === true
+        // La fin vidée, la durée la reconstitue.
+        && Fi.finVidee === true && Fi.finNonVide === true
+        && Fi.finCalculee > '2033-06-06'
+        // Le tri : un en-tête, son indicateur, et l'ordre des lignes de **sa**
+        // table, qui change puis s'inverse.
+        && Fi.entetes >= 1 && Fi.table === true && Fi.lignes >= 2
+        && Fi.indicateur === true
+        && Fi.apresTri !== Fi.avantTri
+        && Fi.apresSecondTri !== Fi.apresTri
+        && Fi.fermee === true,
+        JSON.stringify(Fi).slice(0, 440));
+      verifier('la synchronisation des risques d’un plan interroge le serveur, et n’ouvre sa fenêtre que s’il y a quelque chose à reporter',
+        Sr.bouton === true && Sr.codeAvis === 200
+        // Le dispositif ne montre la fenêtre que s'il y a des écarts : on
+        // mesure le cas rencontré, et la cohérence des deux.
+        && (Sr.aDesChangements
+          ? (Sr.fenetre === true && Sr.cases >= 1 && Sr.cochees === Sr.cases
+            && Sr.fenetreFermee === true)
+          : Sr.fenetre === false),
+        JSON.stringify(Sr));
+      verifier('le détail d’une activité se déplie et se replie, sans passer par aucune fonction nommée',
+        De.detail === true && De.activites >= 1
+        && De.bouton === true && De.panneau === true
+        && De.cacheApres !== De.cacheAvant
+        && De.cacheRendu === true,
+        JSON.stringify(De));
+      verifier('le volet du calendrier défile, et son fond le referme',
+        Fd.ouvert === true && Fd.defiler === true && Fd.apresDefilement === true
+        && Fd.fond === true && Fd.fermeParLeFond === true,
+        JSON.stringify(Fd));
+      verifier('la ronde des derniers gestes rend le module à son compte',
+        E.rendueAuDepart === true,
+        JSON.stringify({ deja: E.deja, restants: E.restants }));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PLAN',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

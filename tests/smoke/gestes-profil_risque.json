@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 95,
  "occurrences": 186,
- "exerces": 31,
+ "exerces": 36,
  "indecidables": 3,
  "gestes": [
   {
@@ -111,7 +111,7 @@
    "evenement": "click",
    "source": "_inlineCommentReveal('${commentRowId}','${cSlot}','${noteKey}')",
    "nom": "_inlineCommentReveal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -291,7 +291,7 @@
    "evenement": "click",
    "source": "soumettreDirecteur('${evalId}')",
    "nom": "soumettreDirecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -300,7 +300,7 @@
    "evenement": "click",
    "source": "decisionDirecteur('${evalId}','accepter')",
    "nom": "decisionDirecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -309,7 +309,7 @@
    "evenement": "click",
    "source": "decisionDirecteur('${evalId}','renvoyer')",
    "nom": "decisionDirecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -318,7 +318,7 @@
    "evenement": "click",
    "source": "decisionDirecteur('${evalId}','rejeter')",
    "nom": "decisionDirecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -327,7 +327,7 @@
    "evenement": "click",
    "source": "decisionDirecteur('${evalId}','valider')",
    "nom": "decisionDirecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -336,7 +336,7 @@
    "evenement": "click",
    "source": "reevaluerEval('${evalId}')",
    "nom": "reevaluerEval",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -390,7 +390,7 @@
    "evenement": "click",
    "source": "reunionPrestSaveFromTab('${evalId}','${prestId}')",
    "nom": "reunionPrestSaveFromTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -408,7 +408,7 @@
    "evenement": "click",
    "source": "decisionDirecteur('${evalId}','cloturer')",
    "nom": "decisionDirecteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -696,7 +696,7 @@
    "evenement": "click",
    "source": "reevaluerEval('${ev.id}')",
    "nom": "reevaluerEval",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",

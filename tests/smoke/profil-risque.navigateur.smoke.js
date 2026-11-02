@@ -1002,6 +1002,420 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         && En.voletOuvert === true,
         JSON.stringify(En).slice(0, 460));
     }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le circuit d'une évaluation : soumettre, renvoyer, accepter,
+    //  clôturer, valider, réévaluer
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Six statuts, cinq transitions, et chacune gardée par une invite du socle.
+    // Rien ne l'exerçait : `soumettreDirecteur`, `decisionDirecteur` et
+    // `reevaluerEval` n'étaient atteints par aucun contrôle de navigateur, et le
+    // pied de la fiche change entièrement d'un statut à l'autre.
+    //
+    // La ronde part de la fiche que la précédente a laissée : un brouillon dont
+    // les trois familles portent une note, enregistré. C'est la condition du
+    // bouton « Soumettre à la Validation » (n° 5.f.54).
+    //
+    // ── Le chemin parcouru ──
+    //
+    //   brouillon → soumis_directeur → (renvoyée) → soumis_directeur
+    //             → acceptée → clôturée → validée → réévaluée
+    //
+    // Le renvoi est pris **en premier**, et pour une raison : c'est la seule
+    // transition qui recule, et celle dont le motif est obligatoire. Une fois
+    // l'évaluation validée, plus rien ne se rejoue.
+    //
+    // ── Les trois règles éprouvées ──
+    //
+    //  1. **Un renvoi sans motif ne part pas.** `decisionDirecteur` demande une
+    //     confirmation, puis une saisie **requise** ; l'invite annulée, rien
+    //     n'est envoyé et le statut ne bouge pas. Le contrôle éprouve d'abord ce
+    //     refus, puis la même décision avec son motif.
+    //  2. **Le commentaire par indicateur n'est saisissable qu'à la
+    //     soumission.** `commentEditable` vaut `ev.statut === 'soumis_directeur'`
+    //     — avant, rien ; après l'acceptation, il se lit sans se modifier.
+    //     C'est le seul état où `_inlineCommentReveal` existe, et
+    //     `_persistPendingComments` le porte au serveur avec la décision.
+    //  3. **« Réunion prestataire » naît de l'acceptation.** L'onglet
+    //     n'apparaît qu'aux statuts `acceptee`, `cloturee`, `valide` — et c'est
+    //     lui, non le pied, qui porte le bouton de clôture.
+    etape = 'circuit de l’évaluation';
+    const MOTIF_RENVOI = 'Motif du renvoi — observations à compléter ' + Date.now();
+    const COMMENTAIRE = 'Commentaire d’indicateur posé à la soumission';
+    const circuit = await page.evaluate(async (motif, commentaire) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const corps = () => document.querySelector('.pr-slicer-body');
+      const pied = () => [...document.querySelectorAll('.pr-slicer-footer button')]
+        .map((b) => ({ geste: b.getAttribute('onclick') || '', eteint: !!b.disabled }));
+      const geste = (motifRegex) => [...document.querySelectorAll('.pr-slicer-footer button')]
+        .find((b) => motifRegex.test(b.getAttribute('onclick') || ''));
+      const onglet = (id) => [...document.querySelectorAll('.eval-tab-btn')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`,'${id}')`));
+      const onglets = () => [...document.querySelectorAll('.eval-tab-btn')]
+        .map((b) => (/,'([\w]+)'\)/.exec(b.getAttribute('onclick') || '') || [])[1])
+        .filter(Boolean);
+      // L'invite de confirmation du socle.
+      const oui = async (attente) => {
+        await a(1100);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return false;
+        b.click();
+        await a(attente || 3000);
+        return true;
+      };
+      // L'invite textuelle : on la remplit, puis on valide. `requis` dit si le
+      // bouton était éteint tant que le champ était vide.
+      const saisir = async (texte, attente) => {
+        await a(1100);
+        const champ = document.querySelector('.oasis-saisie-champ');
+        if (!champ) return null;
+        const requis = !!(document.querySelector('.oasis-confirm-oui') || {}).disabled;
+        champ.value = texte;
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await a(500);
+        const b = document.querySelector('.oasis-confirm-oui');
+        if (!b) return null;
+        const actifApres = !b.disabled;
+        b.click();
+        await a(attente || 3500);
+        return { requis, actifApres };
+      };
+      const annuler = async (attente) => {
+        await a(1100);
+        const b = document.querySelector('.oasis-confirm-non');
+        if (!b) return false;
+        b.click();
+        await a(attente || 2200);
+        return true;
+      };
+      const ev = () => (window.APP_STATE.data.evaluations || [])
+        .find((e) => e.id === o.identifiant);
+      const statut = () => (ev() || {}).statut;
+      // Rouvrir la fiche : plusieurs transitions rechargent la page sans
+      // reconstruire le volet, qui montre alors un pied périmé.
+      const boutonFiche = () => [...document.querySelectorAll('[onclick*="openEvalDetail("]')]
+        .find((x) => (x.getAttribute('onclick') || '').includes(o.identifiant));
+      const rouvrir = async () => {
+        const b = boutonFiche();
+        if (!b) return false;
+        b.click();
+        await a(3200);
+        return true;
+      };
+      // ── Une évaluation validée quitte la sous-vue des évaluations en cours ──
+      //
+      // La liste par défaut ne porte que ce qui reste à décider : validée,
+      // l'évaluation passe dans une autre sous-vue. Mon premier jet la cherchait
+      // là où elle venait de n'être plus, et rendait « pied vide » sur un écran
+      // qui marche. On parcourt donc les pages et leurs sous-vues — la leçon de
+      // 5.f.52 — jusqu'à retrouver sa fiche.
+      const retrouver = async () => {
+        if (boutonFiche()) return { deja: true };
+        const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.getAttribute('data-page'));
+        for (const p of pages) {
+          document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+          /* eslint-disable no-await-in-loop */
+          await a(2600);
+          if (boutonFiche()) return { page: p };
+          for (const b of [...document.querySelectorAll('.sub-nav-btn')]) {
+            b.click();
+            await a(2400);
+            if (boutonFiche()) {
+              return { page: p, sousVue: (b.textContent || '').trim().slice(0, 24) };
+            }
+          }
+        }
+        return { introuvable: true, pages: pages.length };
+      };
+
+      // ── 0. L'évaluation que la ronde précédente a notée et enregistrée ──
+      await essai('depart', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="evaluations"]')?.click();
+        await a(2800);
+        const brouillon = (window.APP_STATE.data.evaluations || [])
+          .find((e) => e.statut === 'brouillon'
+            && Object.keys(e.notes_conf || {}).length > 0);
+        d.trouvee = !!brouillon;
+        if (!brouillon) return d;
+        o.identifiant = brouillon.id;
+        d.statut = brouillon.statut;
+        d.notes = {
+          conf: Object.keys(brouillon.notes_conf || {}).length,
+          perf: Object.keys(brouillon.notes_perf || {}).length,
+          comp: Object.keys(brouillon.notes_comp || {}).length,
+        };
+        d.ouverte = await rouvrir();
+        d.piedDepart = pied().map((b) => b.geste.replace(/'[^']*'/, ''));
+        return d;
+      });
+
+      // ── 1. La soumission, et le commentaire par indicateur qu'elle ouvre ──
+      await essai('soumission', async () => {
+        const d = {};
+        const bouton = geste(/soumettreDirecteur/);
+        d.bouton = !!bouton;
+        d.arme = bouton ? !bouton.disabled : null;
+        if (!bouton || bouton.disabled) return d;
+        // Avant la soumission, aucun commentaire ne se saisit.
+        onglet('conformite')?.click();
+        await a(2600);
+        d.reveleAvant = document.querySelectorAll('[onclick^="_inlineCommentReveal"]').length;
+        onglet('generalites')?.click();
+        await a(2400);
+        geste(/soumettreDirecteur/)?.click();
+        d.confirme = await oui(4000);
+        d.statut = statut();
+        // Le volet n'est pas reconstruit par la soumission : on le rouvre.
+        d.rouverte = await rouvrir();
+        d.piedApres = pied().map((b) => b.geste.replace(/'[^']*'/, ''));
+        // Et maintenant les commentaires existent.
+        onglet('conformite')?.click();
+        await a(2800);
+        const reveler = document.querySelector('[onclick^="_inlineCommentReveal"]');
+        d.revele = document.querySelectorAll('[onclick^="_inlineCommentReveal"]').length;
+        d.boutonRevele = !!reveler;
+        if (reveler) {
+          reveler.click();
+          await a(1600);
+          const ta = document.querySelector('textarea.eval-indicator-comment');
+          d.zoneParue = !!ta;
+          if (ta) {
+            d.slot = ta.dataset.slot;
+            d.cle = !!ta.dataset.key;
+            ta.value = commentaire;
+          }
+        }
+        return d;
+      });
+
+      // ── 2. Un renvoi sans motif ne part pas ; avec son motif, il recule ──
+      await essai('renvoi', async () => {
+        const d = {};
+        const bouton = geste(/decisionDirecteur\([^)]*'renvoyer'\)/);
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        // Premier essai : on confirme, puis on **annule** la saisie du motif.
+        bouton.click();
+        d.confirme = await oui(1200);
+        d.annule = await annuler(2600);
+        d.statutApresAnnulation = statut();
+        // Second essai : le motif est donné.
+        geste(/decisionDirecteur\([^)]*'renvoyer'\)/)?.click();
+        await oui(1200);
+        d.saisie = await saisir(motif, 4000);
+        d.statut = statut();
+        d.motifAuServeur = (ev() || {}).motif_decision;
+        // Le commentaire d'indicateur a voyagé avec la décision.
+        d.commentaire = (((ev() || {}).commentaires_indicateurs || {}).conf
+          || {});
+        d.commentairePorte = Object.values(d.commentaire).includes(commentaire);
+        d.rouverte = await rouvrir();
+        d.piedRenvoyee = pied().map((b) => b.geste.replace(/'[^']*'/, ''));
+        return d;
+      });
+
+      // ── 3. Soumise à nouveau, puis acceptée : l'onglet de la réunion naît ──
+      await essai('acceptation', async () => {
+        const d = {};
+        d.ongletsAvant = onglets();
+        geste(/soumettreDirecteur/)?.click();
+        d.resoumise = await oui(4000);
+        await rouvrir();
+        d.statutSoumise = statut();
+        // ── « Accepter » ne demande **rien** ──
+        //
+        // Mon premier jet attendait une invite de confirmation, comme pour le
+        // renvoi et le rejet : il n'en vient aucune. `decisionDirecteur` ne
+        // confirme que `rejeter`, `renvoyer` et `cloturer`, et ne demande de
+        // commentaire pour toute décision **sauf** `accepter`. L'acceptation
+        // part donc d'un seul clic, sans rien à relire — le contrôle le relève
+        // plutôt que de le supposer, et la question est posée à la maîtrise
+        // d'ouvrage : c'est une décision d'autorité.
+        geste(/decisionDirecteur\([^)]*'accepter'\)/)?.click();
+        await a(1400);
+        d.aucuneInvite = !document.querySelector('.oasis-confirm-oui')
+          && !document.querySelector('.oasis-saisie-champ');
+        await a(3600);
+        d.statut = statut();
+        d.rouverte = await rouvrir();
+        d.ongletsApres = onglets();
+        d.reunionParue = d.ongletsApres.includes('reunion_prestataire');
+        return d;
+      });
+
+      // ── 4. La réunion prestataire, et la clôture qu'elle porte ──
+      await essai('reunion', async () => {
+        const d = {};
+        onglet('reunion_prestataire')?.click();
+        await a(4000);
+        d.zone = !!document.getElementById('reunionPrestContent');
+        d.champs = ['rpDate', 'rpAac', 'rpPrest', 'rpResume', 'rpReco']
+          .filter((id) => !!document.getElementById(id)).length;
+        const poser = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+        poser('rpAac', 'Chef de service surveillance');
+        poser('rpPrest', 'Responsable qualité');
+        poser('rpResume', 'Les écarts ont été passés en revue.');
+        poser('rpReco', 'Reprendre la formation des mécaniciens.');
+        const enregistrer = document.querySelector('[onclick^="reunionPrestSaveFromTab"]');
+        d.boutonEnregistrer = !!enregistrer;
+        enregistrer?.click();
+        await a(4000);
+        // Relu sur le serveur : c'est lui qui dit ce qui est gardé.
+        const rows = await window.api(`${MODULE_API}/eval-reunions-prest?eval_id=${o.identifiant}`);
+        const r = (rows && rows[0]) || {};
+        d.auServeur = {
+          existe: !!r.id,
+          aac: (r.participants_aac || []).join(' '),
+          resume: r.resume_echanges,
+          reco: r.recommandations,
+        };
+        // Le bouton de clôture vit **ici**, non au pied de la fiche.
+        const clore = document.querySelector('[onclick*="decisionDirecteur"][onclick*="cloturer"]');
+        d.boutonCloture = !!clore;
+        d.clotureAuPied = !pied().some((b) => /cloturer/.test(b.geste));
+        if (!clore) return d;
+        clore.click();
+        await oui(1200);
+        d.saisie = await saisir('Réunion prestataire clôturée par la ronde', 4000);
+        d.statut = statut();
+        d.rouverte = await rouvrir();
+        d.piedCloturee = pied().map((b) => b.geste.replace(/'[^']*'/, ''));
+        return d;
+      });
+
+      // ── 5. La validation, qui ferme le volet, puis la réévaluation ──
+      await essai('validation', async () => {
+        const d = {};
+        const valider = geste(/decisionDirecteur\([^)]*'valider'\)/);
+        d.bouton = !!valider;
+        if (!valider) return d;
+        valider.click();
+        // « Valider » ne confirme pas : il demande seulement un commentaire,
+        // facultatif.
+        d.saisie = await saisir('Validation prononcée par la ronde', 4500);
+        d.statut = statut();
+        d.dateValidation = !!(ev() || {}).date_validation;
+        // Une décision terminale referme le volet : c'est écrit dans
+        // `decisionDirecteur`, et c'est ce qu'on relève.
+        d.voletFerme = !corps();
+        // La réévaluation : elle ouvre un cycle, sans toucher à celle qui vaut.
+        d.ou = await retrouver();
+        d.rouverte = await rouvrir();
+        d.piedValidee = pied().map((b) => b.geste.replace(/'[^']*'/, ''));
+        const reevaluer = geste(/reevaluerEval/);
+        d.boutonReevaluer = !!reevaluer;
+        if (!reevaluer) return d;
+        d.cyclesAvant = (window.APP_STATE.data.evaluations || []).length;
+        reevaluer.click();
+        // `reevaluerEval` ne confirme pas : il demande un **motif**, prérempli
+        // par « fin de cycle ». On le remplace, pour que la trace dise d'où
+        // vient ce cycle.
+        d.motifPose = await saisir('Réévaluation ouverte par la ronde', 5000);
+        d.cyclesApres = (window.APP_STATE.data.evaluations || []).length;
+        const parent = ev() || {};
+        d.parentMarque = !!parent.reevalue_le && !!parent.enfant_id;
+        d.parentReste = parent.statut === 'valide';
+        const enfant = (window.APP_STATE.data.evaluations || [])
+          .find((e) => e.id === parent.enfant_id);
+        d.enfant = enfant ? {
+          statut: enfant.statut, cycle: enfant.cycle,
+          parent: enfant.parent_id === o.identifiant,
+          circuitVierge: !enfant.soumis_le && !enfant.decide_le
+            && !enfant.date_validation,
+          notesReprises: Object.keys(enfant.notes_conf || {}).length,
+        } : null;
+        return d;
+      });
+      return o;
+    }, MOTIF_RENVOI, COMMENTAIRE);
+
+    {
+      const De = circuit.depart || {};
+      const So = circuit.soumission || {};
+      const Re = circuit.renvoi || {};
+      const Ac = circuit.acceptation || {};
+      const Ru = circuit.reunion || {};
+      const Va = circuit.validation || {};
+      verifier('la soumission à la validation change le statut, et ouvre le commentaire par indicateur qu’aucun autre statut n’offre',
+        De.trouvee === true && De.statut === 'brouillon'
+        && De.notes.conf >= 1 && De.notes.perf >= 1 && De.notes.comp >= 1
+        && De.ouverte === true
+        && So.bouton === true && So.arme === true
+        // Avant la soumission : aucun bouton de commentaire.
+        && So.reveleAvant === 0
+        && So.confirme === true && So.statut === 'soumis_directeur'
+        && So.rouverte === true
+        // Le pied a changé de main : trois décisions remplacent la soumission.
+        && So.piedApres.some((g) => /'accepter'/.test(g))
+        && So.piedApres.some((g) => /'renvoyer'/.test(g))
+        && So.piedApres.some((g) => /'rejeter'/.test(g))
+        && !So.piedApres.some((g) => /soumettreDirecteur/.test(g))
+        // Et maintenant le commentaire se saisit.
+        && So.revele >= 1 && So.boutonRevele === true
+        && So.zoneParue === true && So.slot === 'conf' && So.cle === true,
+        JSON.stringify(So).slice(0, 460));
+      verifier('un renvoi dont la saisie du motif est annulée ne part pas, et le même renvoi motivé fait reculer le circuit',
+        Re.bouton === true && Re.confirme === true && Re.annule === true
+        // L'annulation n'a rien envoyé.
+        && Re.statutApresAnnulation === 'soumis_directeur'
+        // Le motif est requis : le bouton était éteint tant que le champ
+        // était vide.
+        && Re.saisie && Re.saisie.requis === true && Re.saisie.actifApres === true
+        && Re.statut === 'renvoyee' && Re.motifAuServeur === MOTIF_RENVOI
+        // Le commentaire d'indicateur a voyagé avec la décision.
+        && Re.commentairePorte === true
+        // Et le pied rend la soumission.
+        && Re.rouverte === true
+        && Re.piedRenvoyee.some((g) => /soumettreDirecteur/.test(g)),
+        JSON.stringify({ ...Re, commentaire: undefined }).slice(0, 460));
+      verifier('l’acceptation fait naître l’onglet « Réunion prestataire », que les statuts précédents n’offraient pas',
+        Ac.resoumise === true && Ac.statutSoumise === 'soumis_directeur'
+        && Ac.ongletsAvant.includes('reunion_prestataire') === false
+        // L'acceptation ne demande ni confirmation ni commentaire.
+        && Ac.aucuneInvite === true && Ac.statut === 'acceptee'
+        && Ac.rouverte === true && Ac.reunionParue === true
+        && Ac.ongletsApres.length === Ac.ongletsAvant.length + 1,
+        JSON.stringify(Ac).slice(0, 400));
+      verifier('le compte-rendu de la réunion prestataire s’enregistre au serveur, et c’est lui qui porte la clôture',
+        Ru.zone === true && Ru.champs === 5
+        && Ru.boutonEnregistrer === true
+        && Ru.auServeur.existe === true
+        && /Chef de service/.test(Ru.auServeur.aac || '')
+        && /écarts/.test(Ru.auServeur.resume || '')
+        && /formation/.test(Ru.auServeur.reco || '')
+        // Le bouton de clôture vit dans l'onglet, non au pied.
+        && Ru.boutonCloture === true && Ru.clotureAuPied === true
+        && Ru.saisie && Ru.statut === 'cloturee'
+        && Ru.rouverte === true
+        && Ru.piedCloturee.some((g) => /'valider'/.test(g)),
+        JSON.stringify(Ru).slice(0, 460));
+      verifier('la validation ferme le volet et date l’évaluation, et la réévaluation ouvre un cycle sans toucher à celle qui vaut',
+        Va.bouton === true && Va.saisie
+        && Va.statut === 'valide' && Va.dateValidation === true
+        // Une décision terminale referme le volet.
+        && Va.voletFerme === true
+        && Va.rouverte === true
+        && Va.piedValidee.some((g) => /reevaluerEval/.test(g))
+        && Va.boutonReevaluer === true && Va.motifPose
+        // Un cycle de plus, et le parent reste le profil en vigueur.
+        && Va.cyclesApres === Va.cyclesAvant + 1
+        && Va.parentMarque === true && Va.parentReste === true
+        && Va.enfant && Va.enfant.statut === 'brouillon'
+        && Va.enfant.cycle >= 2 && Va.enfant.parent === true
+        && Va.enfant.circuitVierge === true
+        // Les notes sont reprises : le nouveau cycle repart de l'ancien.
+        && Va.enfant.notesReprises >= 1,
+        JSON.stringify(Va).slice(0, 460));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PR',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

@@ -8684,3 +8684,75 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
            Six contre-essais, six fois rouge, après l'amendement des deux
            assertions que les deux premiers ont prises en défaut.
+
+       5.f.57 [x] **PR — le circuit d'une évaluation, et « Accepter » qui ne
+           demande rien** — fait le 2 novembre 2026.
+
+           **Vingt-sept contrôles sur PR ; 31 → 36 gestes sur 95.**
+
+           Six statuts, cinq transitions, et chacune gardée — ou non — par une
+           invite du socle. Rien ne l'exerçait : `soumettreDirecteur`,
+           `decisionDirecteur` et `reevaluerEval` n'étaient atteints par aucun
+           contrôle de navigateur, et le pied de la fiche change entièrement d'un
+           statut à l'autre.
+
+           Le chemin parcouru, d'un bout à l'autre :
+
+               brouillon → soumis_directeur → renvoyée → soumis_directeur
+                         → acceptée → clôturée → validée → réévaluée
+
+           Le renvoi est pris **en premier**, et pour une raison : c'est la seule
+           transition qui recule, et celle dont le motif est obligatoire. Une
+           fois l'évaluation validée, plus rien ne se rejoue.
+
+           ── Les trois règles éprouvées ──
+
+           **Un renvoi dont la saisie du motif est annulée ne part pas.** Le
+           contrôle éprouve d'abord ce refus — on confirme, puis on annule
+           l'invite, et le statut ne bouge pas —, puis la même décision avec son
+           motif. Le motif est requis : le bouton de l'invite reste éteint tant
+           que le champ est vide, et le contrôle relève les deux états.
+
+           **Le commentaire par indicateur n'est saisissable qu'au statut
+           « soumis au directeur ».** Avant, aucun bouton `_inlineCommentReveal`
+           n'existe — vingt indicateurs, zéro bouton ; après l'acceptation, le
+           commentaire se lit sans se modifier. Et `_persistPendingComments` le
+           porte au serveur **avec la décision**, non par un enregistrement
+           séparé : le contrôle le retrouve après le renvoi.
+
+           **L'onglet « Réunion prestataire » naît de l'acceptation**, et c'est
+           lui — non le pied de la fiche — qui porte le bouton de clôture. Le
+           compte-rendu s'enregistre au serveur, relu par sa propre route.
+
+           ── Deux faits mesurés plutôt que supposés ──
+
+           **« Accepter » ne demande rien.** Mon premier jet attendait une
+           confirmation, comme pour le renvoi et le rejet : il n'en vient aucune.
+           `decisionDirecteur` ne confirme que `rejeter`, `renvoyer` et
+           `cloturer`, et ne demande de commentaire pour toute décision **sauf**
+           `accepter`. L'acceptation part donc d'un seul clic, sans rien à
+           relire. Le contrôle le relève — *une invite qu'on attend et qui ne
+           vient pas est une mesure, pas une panne* — et la question est posée à
+           la maîtrise d'ouvrage : c'est une décision d'autorité, et elle est la
+           seule que rien ne retient.
+
+           **Une évaluation validée quitte la sous-vue des évaluations en
+           cours.** La liste par défaut ne porte que ce qui reste à décider :
+           validée, l'évaluation passe dans « Évaluations validées ». Mon premier
+           jet la cherchait là où elle venait de n'être plus, et rendait « pied
+           vide » sur un écran qui marche. La ronde parcourt désormais les pages
+           et leurs sous-vues jusqu'à retrouver sa fiche — la leçon de 5.f.52,
+           une quatrième fois.
+
+           ── Ce que la réévaluation fait, et ne fait pas ──
+
+           Elle ouvre un cycle 2 au circuit vierge, reprend les notes du cycle
+           précédent, et **laisse le parent validé** : il demeure le profil de
+           risque en vigueur tant que le nouveau n'est pas validé. Le parent
+           porte `reevalue_le` et `enfant_id` ; l'enfant porte `parent_id`.
+
+           Cinq contre-essais, cinq fois rouge : le commentaire rendu
+           saisissable à tout statut ; la garde du motif vide retirée ; l'onglet
+           de la réunion offert dès la soumission ; les recommandations retirées
+           du corps enregistré ; et le nouveau cycle héritant du circuit de son
+           parent (celui-là côté serveur, dans `routes-workflow.js`).

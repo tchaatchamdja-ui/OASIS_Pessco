@@ -743,6 +743,265 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         JSON.stringify(Ba));
     }
 
+
+    // ══════════════════════════════════════════════════════════════════
+    //  La fiche d'évaluation : ses onglets, ses notes, son enregistrement
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Le cœur du module. `pr-evaluation-fiche.js` fait **1 825 lignes et
+    // vingt-quatre gestes nommés**, le plus gros fichier de PR — et quatre gestes
+    // seulement étaient exercés, tous par la simple ouverture du volet.
+    //
+    // La fiche s'ouvre en volet latéral, porte cinq onglets pour un validateur
+    // (un sixième, « Réunion prestataire », n'apparaît qu'une fois l'évaluation
+    // acceptée), et se ferme sur un pied qui change avec le statut.
+    //
+    // ── Ce que le jeu de référence offre, et ce qu'il n'offre pas ──
+    //
+    // Cinq évaluations : trois **validées**, une **rejetée**, une **brouillon**
+    // sans aucune note. C'est celle-là qui porte la saisie : les quatre autres
+    // sont en lecture seule (`isReadonly` sur `valide`, `cloturee`, `rejetee`).
+    // On la cherche donc par son statut, et non par son rang dans la liste.
+    //
+    // ── Les trois règles éprouvées ici ──
+    //
+    //  1. **Changer d'onglet ne perd pas une saisie non enregistrée.**
+    //     `switchEvalTab` relit les sept champs libres, les cases d'évaluateur
+    //     désigné et le nombre minimal **avant** de rendre à nouveau la fiche.
+    //     Sans cela, le rendu les écraserait par ce que porte le magasin.
+    //  2. **Une note recliquée s'efface.** `setScore` compare la valeur posée à
+    //     celle demandée : égales, elle retire la clé. C'est une bascule, non une
+    //     affectation — et la somme vivante suit dans les deux sens.
+    //  3. **Le bouton de soumission ne s'arme qu'au rendu suivant.** `setScore`
+    //     n'appelle que `refreshEvalTotals`, qui met à jour les bandeaux ; le pied
+    //     n'est reconstruit que par `openEvalDetail`. Noter les trois familles ne
+    //     suffit donc pas à voir le bouton actif : il faut un changement
+    //     d'onglet. Mesuré, et non supposé — le contrôle relève les deux états.
+    etape = 'fiche d’évaluation';
+    await ouvrir('evaluations');
+    await attendre(2800);
+    const TEMOIN = 'témoin de saisie non enregistrée — ' + Date.now();
+    const fiche = await page.evaluate(async (temoin) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const corps = () => document.querySelector('.pr-slicer-body');
+      const pied = () => [...document.querySelectorAll('.pr-slicer-footer button')]
+        .map((b) => ({ geste: b.getAttribute('onclick') || '', eteint: !!b.disabled }));
+      const onglet = (id) => [...document.querySelectorAll('.eval-tab-btn')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`,'${id}')`));
+      const ev = () => (window.APP_STATE.data.evaluations || [])
+        .find((e) => e.id === o.identifiant);
+
+      // ── 1. Ouvrir la fiche du brouillon, et parcourir ses onglets ──
+      await essai('onglets', async () => {
+        const d = {};
+        const brouillon = (window.APP_STATE.data.evaluations || [])
+          .find((e) => e.statut === 'brouillon');
+        d.brouillonTrouve = !!brouillon;
+        if (!brouillon) return d;
+        o.identifiant = brouillon.id;
+        const bouton = [...document.querySelectorAll('[onclick*="openEvalDetail("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(brouillon.id));
+        d.boutonTrouve = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        await a(3000);
+        d.volet = !!corps();
+        const onglets = [...document.querySelectorAll('.eval-tab-btn')]
+          .map((b) => (/,'([\w]+)'\)/.exec(b.getAttribute('onclick') || '') || [])[1])
+          .filter(Boolean);
+        d.onglets = onglets;
+        // « Réunion prestataire » n'existe qu'à partir de l'acceptation : son
+        // absence sur un brouillon est la règle, non un manque.
+        d.reunionPrestAbsente = !onglets.includes('reunion_prestataire');
+        const empreintes = [];
+        for (const id of onglets) {
+          /* eslint-disable no-await-in-loop */
+          onglet(id)?.click();
+          await a(2600);
+          const z = corps();
+          empreintes.push(z ? `${z.textContent.trim().length}:${z.querySelectorAll('[onclick]').length}` : 'absent');
+        }
+        d.empreintes = empreintes;
+        d.distinctes = new Set(empreintes).size;
+        return d;
+      });
+
+      // ── 2. Une saisie non enregistrée survit au changement d'onglet ──
+      await essai('saisie', async () => {
+        const d = {};
+        onglet('generalites')?.click();
+        await a(2600);
+        const champ = document.getElementById('genIntroduction');
+        d.champ = !!champ;
+        if (!champ) return d;
+        // Le code lit `ta.value` : on le pose, et l'on dit qu'on le pose.
+        champ.value = temoin;
+        // Les deux autres pièces que `switchEvalTab` recueille.
+        const nbMin = document.getElementById('evalNbMin');
+        d.nbMin = !!nbMin;
+        if (nbMin) nbMin.value = '7';
+        const caseDesigne = document.querySelector('input.eval-designe-cb');
+        d.caseDesigne = !!caseDesigne;
+        d.designeAvant = caseDesigne ? caseDesigne.checked : null;
+        if (caseDesigne) caseDesigne.checked = !caseDesigne.checked;
+        // L'aller — et le retour.
+        onglet('conformite')?.click();
+        await a(2600);
+        d.partiPourConformite = !document.getElementById('genIntroduction');
+        onglet('generalites')?.click();
+        await a(2600);
+        const revenu = document.getElementById('genIntroduction');
+        d.rendu = revenu ? revenu.value : null;
+        d.tenue = d.rendu === temoin;
+        const nbRevenu = document.getElementById('evalNbMin');
+        d.nbTenu = nbRevenu ? nbRevenu.value === '7' : null;
+        const caseRevenue = document.querySelector('input.eval-designe-cb');
+        d.designeTenu = caseRevenue ? caseRevenue.checked === !d.designeAvant : null;
+        // Et dans l'état du module, non seulement à l'écran.
+        d.enMemoire = (ev().generalites || {}).introduction === temoin;
+        d.nbEnMemoire = ev().nb_evaluateurs_min;
+        return d;
+      });
+
+      // ── 3. Une note se pose, se compte, et se retire d'un second clic ──
+      await essai('notes', async () => {
+        const d = {};
+        onglet('conformite')?.click();
+        await a(2800);
+        const lire = (id) => (document.getElementById(id) || {}).textContent;
+        const bouton = document.querySelector('.score-btn:not([disabled])');
+        d.boutonTrouve = !!bouton;
+        if (!bouton) return d;
+        const appel = bouton.getAttribute('onclick') || '';
+        const m = /setScore\('[^']*','([^']*)','([^']*)',(\d)/.exec(appel);
+        d.appelLu = !!m;
+        if (!m) return d;
+        const [, champ, cle, valeur] = m;
+        d.champ = champ; d.valeur = Number(valeur);
+        d.avant = { note: (ev()[champ] || {})[cle], somme: lire('evalSumConf'), compte: lire('evalCntConf'), taux: lire('evalTauxConf') };
+        bouton.click();
+        await a(1600);
+        d.apres = { note: (ev()[champ] || {})[cle], somme: lire('evalSumConf'), compte: lire('evalCntConf'), taux: lire('evalTauxConf') };
+        d.classeActive = /active-/.test(bouton.className);
+        // Le second clic sur la **même** valeur : la bascule.
+        bouton.click();
+        await a(1600);
+        d.rendu = { note: (ev()[champ] || {})[cle], somme: lire('evalSumConf'), compte: lire('evalCntConf') };
+        d.cleRetiree = !Object.prototype.hasOwnProperty.call(ev()[champ] || {}, cle);
+        // On repose la note pour la suite, puis on en pose une de performance et
+        // une de complexité : les trois familles notées arment la soumission.
+        bouton.click();
+        await a(1400);
+        d.reposee = (ev()[champ] || {})[cle] === Number(valeur);
+        d.piedAvantRendu = pied();
+        for (const tab of ['performance', 'complexite']) {
+          onglet(tab)?.click();
+          await a(2800);
+          const b = document.querySelector('.score-btn:not([disabled])');
+          if (b) { b.click(); await a(1500); }
+          d[tab] = !!b;
+        }
+        d.trois = {
+          conf: Object.keys(ev().notes_conf || {}).length,
+          perf: Object.keys(ev().notes_perf || {}).length,
+          comp: Object.keys(ev().notes_comp || {}).length,
+        };
+        // Le pied n'a pas été reconstruit depuis : il est encore éteint.
+        d.piedAvant = pied();
+        onglet('generalites')?.click();
+        await a(2800);
+        d.piedApres = pied();
+        const nom = (p) => (p.find((b) => /soumettreDirecteur/.test(b.geste)) || {});
+        d.soumissionAvant = nom(d.piedAvant).eteint;
+        d.soumissionApres = nom(d.piedApres).eteint;
+        return d;
+      });
+
+      // ── 4. L'enregistrement : ce que le serveur rend ensuite ──
+      //
+      // `saveEvalScores` recharge tout depuis le serveur et rouvre la fiche. Lire
+      // l'état du module **après** le geste, c'est donc lire ce que le serveur a
+      // gardé — et non ce que la page croyait tenir.
+      await essai('enregistrement', async () => {
+        const d = {};
+        const bouton = [...document.querySelectorAll('.pr-slicer-footer button')]
+          .find((b) => /saveEvalScores/.test(b.getAttribute('onclick') || ''));
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        const avant = {
+          conf: Object.keys(ev().notes_conf || {}).length,
+          intro: (ev().generalites || {}).introduction || '',
+        };
+        d.avant = avant;
+        bouton.click();
+        await a(5000);
+        const apres = ev();
+        d.rechargee = !!apres;
+        d.conf = Object.keys(apres.notes_conf || {}).length;
+        d.perf = Object.keys(apres.notes_perf || {}).length;
+        d.comp = Object.keys(apres.notes_comp || {}).length;
+        d.intro = (apres.generalites || {}).introduction || '';
+        d.introTenue = d.intro === temoin;
+        d.nbMin = apres.nb_evaluateurs_min;
+        // Les résultats calculés : l'enregistrement les écrit aussi.
+        d.resultats = {
+          global: !!(apres.resultats && apres.resultats.global),
+          idc: ((apres.resultats || {}).global || {}).idc_g,
+          csrbo: ((apres.resultats || {}).global || {}).csrbo,
+          sousActivites: Object.keys(((apres.resultats || {}).sousActivites) || {}).length,
+        };
+        d.voletOuvert = !!corps();
+        return d;
+      });
+      return o;
+    }, TEMOIN);
+
+    {
+      const On = fiche.onglets || {};
+      const Sa = fiche.saisie || {};
+      const No = fiche.notes || {};
+      const En = fiche.enregistrement || {};
+      verifier('la fiche du brouillon s’ouvre et ses cinq onglets rendent chacun son contenu',
+        On.brouillonTrouve === true && On.boutonTrouve === true && On.volet === true
+        && On.onglets.length === 5 && On.reunionPrestAbsente === true
+        && On.distinctes === On.onglets.length,
+        JSON.stringify(On).slice(0, 400));
+      verifier('changer d’onglet ne perd ni la saisie, ni les cases d’évaluateur, ni le nombre minimal',
+        Sa.champ === true && Sa.nbMin === true && Sa.caseDesigne === true
+        // L'onglet a bien été quitté : sans cela on relirait le même DOM.
+        && Sa.partiPourConformite === true
+        && Sa.tenue === true && Sa.nbTenu === true && Sa.designeTenu === true
+        && Sa.enMemoire === true && Sa.nbEnMemoire === 7,
+        JSON.stringify({ ...Sa, rendu: String(Sa.rendu).slice(0, 40) }));
+      verifier('une note se pose avec sa somme, se retire d’un second clic, et les trois familles notées arment la soumission au rendu suivant',
+        No.boutonTrouve === true && No.appelLu === true
+        // Posée : la note, la somme, le compte et le taux suivent.
+        && No.apres.note === No.valeur && No.apres.somme === String(No.valeur)
+        && No.apres.compte === '1' && No.apres.taux !== No.avant.taux
+        && No.classeActive === true
+        // Retirée : la clé n'est pas mise à zéro, elle disparaît.
+        && No.cleRetiree === true && No.rendu.note === undefined
+        && No.rendu.somme === '0' && No.rendu.compte === '0'
+        && No.reposee === true
+        // Les trois familles portent chacune une note.
+        && No.trois.conf >= 1 && No.trois.perf >= 1 && No.trois.comp >= 1
+        // Et le bouton ne s'arme qu'une fois le pied reconstruit.
+        && No.soumissionAvant === true && No.soumissionApres === false,
+        JSON.stringify(No).slice(0, 520));
+      verifier('l’enregistrement rend au serveur les notes, les champs libres et les résultats calculés',
+        En.bouton === true && En.rechargee === true
+        && En.conf >= 1 && En.perf >= 1 && En.comp >= 1
+        && En.introTenue === true && En.nbMin === 7
+        && En.resultats.global === true && !!En.resultats.idc
+        && En.resultats.csrbo > 0 && En.resultats.sousActivites >= 1
+        && En.voletOuvert === true,
+        JSON.stringify(En).slice(0, 460));
+    }
     verifier('aucune erreur de console ni requête échouée sur PR',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

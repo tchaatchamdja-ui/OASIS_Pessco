@@ -8488,3 +8488,65 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            `input[oninput*="mesRechercher('…'"]`. *Un champ sans identifiant
            n'est pas un champ introuvable : c'est un champ qu'on vise
            autrement.*
+
+       5.f.54 [x] **PR — la fiche d'évaluation : les onglets, les notes,
+           l'enregistrement** — fait le 2 novembre 2026.
+
+           **Vingt-deux contrôles sur PR ; 28 → 31 gestes sur 95.**
+
+           `pr-evaluation-fiche.js` est le plus gros fichier du module — **1 825
+           lignes, 24 gestes nommés** — et **quatre** seulement étaient exercés,
+           tous par la simple ouverture du volet. C'est le cœur du dispositif :
+           la notation d'un prestataire, dont sort son profil de risque.
+
+           ── Chercher la pièce que le jeu de référence offre ──
+
+           Cinq évaluations dans les fixtures : trois **validées**, une
+           **rejetée**, une **brouillon** sans aucune note. Les quatre premières
+           sont en lecture seule (`isReadonly` sur `valide`, `cloturee`,
+           `rejetee`) : aucune saisie ne s'y éprouve. La ronde cherche donc la
+           fiche **par son statut**, et non par son rang dans la liste — un
+           contrôle qui prend la première ligne venue ne mesure que le hasard de
+           l'ordre.
+
+           ── Les trois règles éprouvées ──
+
+           **Changer d'onglet ne perd pas une saisie non enregistrée.**
+           `switchEvalTab` relit les sept champs libres, les cases d'évaluateur
+           désigné et le nombre minimal **avant** de rendre à nouveau la fiche ;
+           sans cela le rendu les écraserait par ce que porte le magasin. Le
+           contrôle pose un témoin dans le champ, part sur « Conformité »,
+           **vérifie qu'il en est bien parti**, revient, et relit le témoin — à
+           l'écran et dans l'état du module.
+
+           **Une note recliquée s'efface.** `setScore` compare la valeur posée à
+           celle demandée : égales, il **retire la clé** — il ne la met pas à
+           zéro. Somme, compte et taux suivent dans les deux sens.
+
+           **Le bouton de soumission ne s'arme qu'au rendu suivant.** `setScore`
+           n'appelle que `refreshEvalTotals`, qui met à jour les bandeaux ; le
+           pied n'est reconstruit que par `openEvalDetail`. Noter les trois
+           familles ne suffit donc pas à voir le bouton actif : il faut un
+           changement d'onglet. Le contrôle **relève les deux états** plutôt que
+           d'en supposer un — c'est un fait du dispositif, non un défaut, et le
+           dire des deux côtés est ce qui empêchera un jour de le « corriger »
+           par mégarde.
+
+           ── Ce que l'enregistrement rend ──
+
+           `saveEvalScores` recharge tout depuis le serveur et rouvre la fiche.
+           Lire l'état du module **après** le geste, c'est donc lire ce que le
+           serveur a gardé, et non ce que la page croyait tenir : les notes des
+           trois familles, les champs libres, le nombre minimal, et les
+           **résultats calculés** — indice de conformité, cycle de surveillance
+           CSRBO, une entrée par sous-activité.
+
+           ── Cinq contre-essais, cinq fois rouge ──
+
+           Chacun des quatre contrôles a été éprouvé en réintroduisant le défaut
+           qu'il garde : la relecture des champs retirée de `switchEvalTab` ; la
+           bascule de `setScore` remplacée par une affectation ; `canValidate`
+           armé d'emblée ; `generalites` retiré du corps du PUT ; et l'onglet
+           demandé ignoré. Les quatre contrôles sont passés **du premier coup**,
+           et les cinq contre-essais mordent — dont deux en cascade, ce que le
+           relevé dit plutôt que de le taire.

@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 95,
  "occurrences": 186,
- "exerces": 28,
+ "exerces": 31,
  "indecidables": 3,
  "gestes": [
   {
@@ -120,7 +120,7 @@
    "evenement": "click",
    "source": "setScore('${evalId}','${noteField}','${noteKey}',${n},'${writeMode}')",
    "nom": "setScore",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -183,7 +183,7 @@
    "evenement": "click",
    "source": "switchEvalTab('${evalId}','generalites')",
    "nom": "switchEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -192,7 +192,7 @@
    "evenement": "click",
    "source": "switchEvalTab('${evalId}','conformite')",
    "nom": "switchEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -201,7 +201,7 @@
    "evenement": "click",
    "source": "switchEvalTab('${evalId}','performance')",
    "nom": "switchEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -210,7 +210,7 @@
    "evenement": "click",
    "source": "switchEvalTab('${evalId}','complexite')",
    "nom": "switchEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -219,7 +219,7 @@
    "evenement": "click",
    "source": "switchEvalTab('${evalId}','reunion_evaluateurs')",
    "nom": "switchEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -228,7 +228,7 @@
    "evenement": "click",
    "source": "switchEvalTab('${evalId}','reunion_prestataire')",
    "nom": "switchEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -273,7 +273,7 @@
    "evenement": "click",
    "source": "saveEvalScores('${evalId}')",
    "nom": "saveEvalScores",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",

@@ -8458,3 +8458,33 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            mise plus longtemps à être revue : *une règle tenue deux fois ne se
            contre-essaie pas une fois.* Les deux chemins désarmés ensemble, le
            contrôle rougit — et lui seul.
+
+       5.f.53 [x] **CARE — la coquille, et un champ sans identifiant** — fait le
+           2 novembre 2026.
+
+           **Quinze contrôles sur CARE ; 11 → 16 gestes sur 87.**
+
+           CARE était l'écran le plus pauvre après PR. Sa coquille n'avait jamais
+           été touchée : le repli de la barre, les pastilles de thème, les
+           boutons de langue, les facettes du tableau de bord et la recherche.
+
+           Quatre contrôles sur cinq sont passés du premier coup, parce que les
+           trois leçons des pas précédents y étaient déjà appliquées : *chercher
+           le geste là où il est* — la ronde parcourt les pages et leurs
+           sous-vues plutôt que de supposer (n° 5.f.52) ; *rendre ce qu'on a
+           changé* — thème, langue et facettes reviennent à leur valeur de
+           départ, les filtres de CARE étant globaux comme ceux de PLAN
+           (n° 5.f.48) ; et *frapper pour de vrai* une recherche différée.
+
+           ── Un champ sans identifiant ──
+
+           Le cinquième contrôle a buté sur un détail que la source dit, et que
+           je n'avais pas lu : `mesRechercher` passe au socle une **clé**, non
+           l'élément — `oasisSaisieDifferee('mes_xxx', …)`. Le champ n'a donc
+           besoin d'aucun identifiant, et il n'en a pas. `page.type('#...')`
+           n'avait rien à viser.
+
+           Il se vise désormais par son attribut,
+           `input[oninput*="mesRechercher('…'"]`. *Un champ sans identifiant
+           n'est pas un champ introuvable : c'est un champ qu'on vise
+           autrement.*

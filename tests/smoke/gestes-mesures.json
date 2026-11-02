@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-01",
+ "releve": "2026-11-02",
  "gestesNommes": 90,
  "occurrences": 145,
- "exerces": 11,
+ "exerces": 16,
  "indecidables": 3,
  "gestes": [
   {
@@ -21,7 +21,7 @@
    "evenement": "click",
    "source": "mesSetTheme('${th}')",
    "nom": "mesSetTheme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -30,7 +30,7 @@
    "evenement": "click",
    "source": "mesSetLang('${l.toLowerCase()}')",
    "nom": "mesSetLang",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -39,7 +39,7 @@
    "evenement": "click",
    "source": "mesToggleSidebar()",
    "nom": "mesToggleSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -48,7 +48,7 @@
    "evenement": "click",
    "source": "mesToggleSidebar()",
    "nom": "mesToggleSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -57,7 +57,7 @@
    "evenement": "click",
    "source": "mesToggleSidebar()",
    "nom": "mesToggleSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -84,7 +84,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('db_prest',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -93,7 +93,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('db_cat',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -102,7 +102,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('db_type',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -111,7 +111,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('db_statut',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -120,7 +120,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('db_echeance',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -138,7 +138,7 @@
    "evenement": "click",
    "source": "mesSetFiltre('mes_carence','')",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -165,7 +165,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('mes_categorie',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -174,7 +174,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('mes_statut',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -183,7 +183,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('mes_prest',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -192,7 +192,7 @@
    "evenement": "input",
    "source": "mesRechercher('mes_recherche', this.value)",
    "nom": "mesRechercher",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -264,7 +264,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('crit_origine',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -273,7 +273,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('crit_statut',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -282,7 +282,7 @@
    "evenement": "change",
    "source": "mesSetFiltre('crit_prest',this.value)",
    "nom": "mesSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -291,7 +291,7 @@
    "evenement": "input",
    "source": "mesRechercher('crit_recherche', this.value)",
    "nom": "mesRechercher",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",

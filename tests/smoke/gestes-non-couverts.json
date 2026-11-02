@@ -40,7 +40,7 @@
  },
  "mesures": {
   "_ecran": "CARE — « Mesures d’application »",
-  "_couverture_declaree": 11,
+  "_couverture_declaree": 16,
   "_pourquoi": "CARE a sa suite de navigateur depuis le 16 octobre 2026 (`tests/smoke/mesures.navigateur.smoke.js`, ADR-003 n° 5.f.18) : dix contrôles. Elle monte l’écran, vérifie que la barre porte exactement ce que `MES_NAV` déclare et que toute page de l’aiguillage est atteignable — son tableau de bord n’a pas de `case` : il est le **défaut** de l’aiguillage, et le contrôle le sait —, puis parcourt les cinq pages par de vrais clics. Suit la ronde des gestes **de** chaque page, sans aucune écriture : le graphe par catégorie et la remise des filtres du tableau de bord, la fenêtre d’un constat de carence ouverte puis refermée, les remises de filtres des carences et des mesures, la lecture d’un état, la barre des paramètres repliée et dépliée, un sous-menu parcouru, et la fenêtre d’une catégorie. **Onze** gestes nommés sont exercés sur 89 — cet écran a moins de gestes de lecture que les autres : l’essentiel de sa surface écrit. Restent non exercés : qualifier une carence, ouvrir et instruire une mesure dans son circuit à cinq statuts, le suivi et ses échéances, les comités, et l’enregistrement des référentiels. Ces rondes suivront, chacune avec l’assertion du résultat en base et le retour en arrière."
  },
  "droits": {

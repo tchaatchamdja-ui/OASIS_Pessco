@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 95,
  "occurrences": 139,
- "exerces": 60,
+ "exerces": 65,
  "indecidables": 4,
  "gestes": [
   {
@@ -826,7 +826,7 @@
    "evenement": "click",
    "source": "planSyncPrestatairesRisques()",
    "nom": "planSyncPrestatairesRisques",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-prestataires.js",
@@ -844,7 +844,7 @@
    "evenement": "change",
    "source": "planUpdateCycleDate('${p.id}','debut_cycle',this.value,this)",
    "nom": "planUpdateCycleDate",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-prestataires.js",
@@ -853,7 +853,7 @@
    "evenement": "change",
    "source": "planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)",
    "nom": "planUpdateCycleDate",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-prestataires.js",
@@ -871,7 +871,7 @@
    "evenement": "change",
    "source": "planRPFillDefaults()",
    "nom": "planRPFillDefaults",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-prestataires.js",
@@ -880,7 +880,7 @@
    "evenement": "change",
    "source": "planRPRenderSARows()",
    "nom": "planRPRenderSARows",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-prestataires.js",
@@ -898,7 +898,7 @@
    "evenement": "click",
    "source": "planSaveRiskProfile()",
    "nom": "planSaveRiskProfile",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",

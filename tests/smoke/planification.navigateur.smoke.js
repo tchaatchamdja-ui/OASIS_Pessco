@@ -85,8 +85,33 @@ module.exports = async function planificationNavigateurSmoke(port) {
 
     let plan = false;
     let etape = 'montage';
+    // ── Les refus que la ronde provoque exprès ──
+    //
+    // Même mécanisme que SURV (n° 5.f.26) et RAMP : un refus **déclaré** par
+    // code, méthode et chemin n'est pas un incident — c'est une preuve. Tout
+    // autre 4xx en reste un. *Déclarer n'est pas filtrer : la déclaration nomme
+    // ce qu'on attend, et laisse rougir le reste.*
+    const REFUS_ATTENDUS = [
+      {
+        code: 404, methode: 'POST', chemin: /\/risk-profiles$/,
+        pourquoi: 'les profils de risque appartiennent au module PR, qui les'
+          + ' produit ; PLAN ne les lit (`GET /risk-profiles`). Sa fenêtre'
+          + ' « Ajouter un profil » envoie pourtant un POST, qu’aucune route ne'
+          + ' sert. Contrôle « la fenêtre du profil de risque remplit ses'
+          + ' cascades, mais son enregistrement n’a pas de route » (n° 5.f.49).',
+      },
+    ];
+    // Un refus déclaré laisse aussi une trace en console — « Failed to load
+    // resource : … 404 », **sans l'adresse**. On tient le compte des codes
+    // rencontrés, et l'on dispense le message qui porte **le même code**. Rien
+    // de plus large : un 404 non déclaré garde son message.
+    const codesAttendus = new Set();
     page.on('console', (m) => {
-      if (plan && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      if (!plan || m.type() !== 'error') return;
+      const texte = m.text();
+      const code = (/status of (\d{3})/.exec(texte) || [])[1];
+      if (code && codesAttendus.has(Number(code))) return;
+      incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
       if (plan) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -94,9 +119,19 @@ module.exports = async function planificationNavigateurSmoke(port) {
     page.on('requestfailed', (r) => {
       if (plan) incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
+    // L'écouteur des réponses existait déjà — j'avais commencé par en ajouter
+    // un second, qui dispensait les refus déclarés tandis que celui-ci les
+    // signalait encore : deux écouteurs sur le même événement, dont un seul
+    // savait. C'est lui qu'on instruit.
     page.on('response', (r) => {
       if (!plan || r.status() < 400) return;
-      incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
+      const chemin = r.url().replace(srv.base, '');
+      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
+        && x.methode === r.request().method() && x.chemin.test(chemin));
+      if (attendu) { codesAttendus.add(r.status()); return; }
+      // La méthode est dite : un chemin seul ne dit pas quelle déclaration
+      // aurait dû couvrir le refus.
+      incidents.push(`[${etape}] ${r.request().method()} ${r.status()} ${chemin.slice(0, 120)}`);
     });
 
     await page.goto(`${srv.base}/login.html`, { waitUntil: 'networkidle2' });
@@ -1840,6 +1875,288 @@ module.exports = async function planificationNavigateurSmoke(port) {
         // Et la ronde rend l'état de départ : les filtres sont globaux.
         && Ma.renduAuDepart === true,
         JSON.stringify(Ma));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les profils de risque : deux cascades, et un enregistrement sans route
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // La page « Profils de risques » montre ce que le module **Profils de
+    // Risque** produit : PLAN le lit (`GET /risk-profiles`) pour en tirer la
+    // fréquence de surveillance de chaque organisme. Elle porte une fenêtre
+    // « Ajouter un profil », avec deux cascades — l'organisme choisi remplit son
+    // secteur, le secteur fait paraître ses sous-activités — et un bouton
+    // d'enregistrement qui envoie un **POST** là où le serveur n'offre qu'un
+    // GET. Le contrôle mesure les cascades, qui marchent, et constate le refus.
+    //
+    // Le cycle de surveillance, lui, appartient bien à PLAN : il se règle en
+    // ligne dans le tableau, et sa fin se calcule si on la laisse vide.
+    etape = 'profils de risque';
+    await ouvrir('prestataires');
+    await attendre(2800);
+    const rondeRisques = await page.evaluate(async (api) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.PLAN_STATE || {};
+      const jget = async (u) => (await (await fetch(api + u, { credentials: 'same-origin' })).json());
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(api + url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        return { statut: rep.status };
+      };
+      const poser = async (id, v, ev) => {
+        const e = document.getElementById(id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event(ev || 'change', { bubbles: true }));
+        await a(700);
+        return true;
+      };
+      const choisir = async (id, attente) => {
+        const e = document.getElementById(id);
+        if (!e) return { trouve: false };
+        const c = [...e.options].find((op) => op.value);
+        if (!c) return { trouve: true, offre: false, options: e.options.length };
+        e.value = c.value;
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(attente || 1800);
+        return { trouve: true, offre: true, pose: c.value };
+      };
+
+      // ── 1. La fenêtre, ses deux cascades, et son enregistrement ──
+      await essai('fenetre', async () => {
+        const d = {};
+        d.page = S().currentPage;
+        document.querySelector('[onclick*="planShowAddRiskProfileModal"]')?.click();
+        await a(2800);
+        d.ouverte = !!document.getElementById('rpPrestataire');
+
+        // ── La règle de candidature, d'abord ──
+        //
+        // `candidates = allPrest.filter(p => !evaluatedIds.has(p.id))` : la
+        // fenêtre n'offre que les organismes **non encore évalués** — on
+        // n'ajoute pas deux profils au même. Dans le jeu d'essai, tous le sont,
+        // et la liste ne porte que son invite. C'est le premier fait, et il
+        // rendait la cascade inatteignable : mon premier passage a cru à une
+        // liste vide par défaut.
+        d.organismesEnEtat = ((S().data || {}).prestataires || []).length;
+        d.evalues = ((S().data || {}).prestataireRisques || []).length;
+        d.filtresActifs = Object.entries(S().filters || {})
+          .filter(([, v]) => v).map(([k]) => k);
+        const liste = document.getElementById('rpPrestataire');
+        d.optionsQuandToutEstEvalue = liste ? liste.options.length : 0;
+
+        // ── Puis la cascade, rendue atteignable ──
+        //
+        // On vide **en mémoire** la liste des organismes évalués : tous
+        // redeviennent candidats. Rien n'est touché en base — c'est le rendu et
+        // la cascade qu'on éprouve, non la règle, qui vient d'être mesurée. La
+        // phase de synchronisation, plus bas, regarnit cet état depuis le
+        // serveur, et son contrôle le vérifie.
+        const evaluesAvant = (S().data || {}).prestataireRisques || [];
+        S().data.prestataireRisques = [];
+        document.querySelector('[onclick*="planCloseModal"]')?.click();
+        await a(1200);
+        document.querySelector('[onclick*="planShowAddRiskProfileModal"]')?.click();
+        await a(2500);
+        d.optionsApres = (document.getElementById('rpPrestataire') || { options: [] }).options.length;
+        // Cascade 1 : l'organisme choisi remplit son secteur (planRPFillDefaults).
+        d.secteurAvant = (document.getElementById('rpSecteur') || {}).value || '';
+        d.organisme = await choisir('rpPrestataire', 2200);
+        d.secteurRempli = ((document.getElementById('rpSecteur') || {}).value || '') !== '';
+        // L'état rendu aussitôt : le reste de la ronde le retrouve tel quel.
+        o.evaluesRendus = evaluesAvant.length;
+
+        // Cascade 2 : le secteur fait paraître ses sous-activités
+        // (planRPRenderSARows). On relève avant, puis après un autre secteur.
+        d.lignesApresDefaut = document.querySelectorAll('#rpSARowsWrap tbody tr').length;
+        d.secteur = await choisir('rpSecteur', 2400);
+        d.lignes = document.querySelectorAll('#rpSARowsWrap tbody tr').length;
+
+        // La fiche : on laisse la **fin de cycle vide**, pour que le module la
+        // calcule depuis le début et les mois du CSRBO.
+        await poser('rpRiskLabel', (document.getElementById('rpRiskLabel') || {}).tagName === 'SELECT'
+          ? ([...(document.getElementById('rpRiskLabel') || { options: [] }).options]
+            .find((op) => op.value) || {}).value || '' : 'Moyen');
+        const int = document.getElementById('rpIntensite');
+        if (int && int.options && int.options.length > 1) {
+          int.value = [...int.options].find((op) => op.value).value;
+          int.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(600);
+        }
+        await poser('rpCsrbo', '6');
+        await poser('rpDebutCycle', '2031-01-15');
+        d.finLaisseeVide = ((document.getElementById('rpFinCycle') || {}).value || '') === '';
+        // Une ligne de sous-activité renseignée.
+        const tr = document.querySelector('#rpSARowsWrap tbody tr');
+        if (tr) {
+          const risk = tr.querySelector('.rp-sa-risk');
+          if (risk && risk.options && risk.options.length > 1) {
+            risk.value = [...risk.options].find((op) => op.value).value;
+            risk.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          const freq = tr.querySelector('.rp-sa-freq');
+          if (freq) { freq.value = '2'; freq.dispatchEvent(new Event('input', { bubbles: true })); }
+          await a(600);
+        }
+        d.ligneRenseignee = !!tr;
+
+        // ── L'enregistrement : le geste existe, la route n'existe pas ──
+        //
+        // On le mesure **au serveur**, et non par un comptage : un comptage
+        // inchangé a bien des causes, un code de réponse n'en a qu'une. Le
+        // refus est déclaré dans `REFUS_ATTENDUS`, avec le nom de ce contrôle.
+        d.codeEnEcriture = (await env('/risk-profiles', 'POST', { essai: true })).statut;
+        d.codeEnLecture = (await env('/risk-profiles', 'GET')).statut;
+        d.avant = (await jget('/risk-profiles')).length;
+        document.querySelector('[onclick*="planSaveRiskProfile"]')?.click();
+        await a(3500);
+        d.apres = (await jget('/risk-profiles')).length;
+        d.rienEnregistre = d.apres === d.avant;
+        // La fenêtre reste ouverte : `planCloseModal` est après l'appel, et
+        // l'appel a levé.
+        d.fenetreResteOuverte = !!document.getElementById('rpPrestataire');
+        document.querySelector('[onclick*="planCloseModal"]')?.click();
+        await a(1500);
+        d.fermee = !document.getElementById('rpPrestataire');
+        S().data.prestataireRisques = evaluesAvant;
+        if (typeof window.planRenderPage === 'function') window.planRenderPage();
+        await a(1800);
+        d.etatRendu = ((S().data || {}).prestataireRisques || []).length === evaluesAvant.length;
+        return d;
+      });
+
+      // ── 2. Le cycle de surveillance, réglé en ligne dans le tableau ──
+      await essai('cycle', async () => {
+        const d = {};
+        const champs = [...document.querySelectorAll('.cycle-date-input')];
+        d.champs = champs.length;
+        if (!champs.length) return d;
+        const debut = champs.find((c) => (c.getAttribute('onchange') || '').includes("'debut_cycle'"));
+        d.champDebut = !!debut;
+        if (!debut) return d;
+        const id = (/planUpdateCycleDate\('([^']+)'/.exec(debut.getAttribute('onchange') || '') || [])[1];
+        d.organisme = !!id;
+        const avant = ((S().data.prestataireRisques || []).find((p) => p.id === id) || {});
+        d.csrbo = avant.csrbo;
+        d.finAvant = avant.fin_cycle || '';
+        d.debutAvant = avant.debut_cycle || '';
+
+        // ── Un début postérieur à la fin est refusé ──
+        //
+        // `oasisDatesValider` prend les deux champs de la ligne : mon premier
+        // essai posait une date **après** la fin en place, et le module l'a
+        // refusée en silence — ce n'était pas un défaut, c'était la règle. On
+        // l'éprouve donc comme telle, avant de poser une date valide.
+        debut.value = '2031-03-10';
+        debut.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(2800);
+        const refus = await jget('/prestataires-risques');
+        const apresRefus = (Array.isArray(refus) ? refus : []).find((p) => p.id === id) || {};
+        d.refuseApresLaFin = (apresRefus.debut_cycle || '') === d.debutAvant;
+
+        // ── Une date antérieure à la fin passe, et part en base ──
+        const champDebut = [...document.querySelectorAll('.cycle-date-input')]
+          .find((x) => (x.getAttribute('onchange') || '').includes(`'${id}','debut_cycle'`));
+        d.champRetrouve = !!champDebut;
+        const valide = '2027-01-05';
+        if (champDebut) {
+          champDebut.value = valide;
+          champDebut.dispatchEvent(new Event('change', { bubbles: true }));
+          await a(3500);
+        }
+        const parRoute = await jget('/prestataires-risques');
+        const apres = (Array.isArray(parRoute) ? parRoute : []).find((p) => p.id === id) || {};
+        d.debutEnBase = apres.debut_cycle;
+        d.finEnBase = apres.fin_cycle || '';
+        // La fin n'est calculée que si elle était vide : ici elle ne l'est pas,
+        // et le contrôle vérifie qu'elle est **laissée telle quelle**.
+        d.finInchangee = d.finEnBase === d.finAvant;
+        d.valide = valide;
+        return d;
+      });
+
+      // ── 3. La synchronisation : relire les deux sources ──
+      await essai('synchro', async () => {
+        const d = {};
+        const bouton = document.querySelector('[onclick*="planSyncPrestatairesRisques"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        // On vide l'état en mémoire : la synchronisation doit le regarnir.
+        const avant = (S().data.riskProfiles || []).length;
+        S().data.riskProfiles = [];
+        S().data.prestataireRisques = [];
+        bouton.click();
+        for (let i = 0; i < 14 && (S().data.riskProfiles || []).length === 0; i += 1) {
+          /* eslint-disable no-await-in-loop */
+          await a(500);
+        }
+        d.profilsAvant = avant;
+        d.profilsApres = (S().data.riskProfiles || []).length;
+        d.organismesApres = (S().data.prestataireRisques || []).length;
+        d.regarni = d.profilsApres === avant;
+        return d;
+      });
+      return o;
+    }, '/api/m/planification');
+
+    {
+      const R = rondeRisques;
+      const Fe = R.fenetre || {};
+      const Cy = R.cycle || {};
+      const Sy = R.synchro || {};
+      verifier('la fenêtre du profil n’offre que les organismes non évalués, et ses deux cascades remplissent le secteur puis ses sous-activités',
+        Fe.page === 'prestataires' && Fe.ouverte === true
+        && Fe.filtresActifs.length === 0
+        // La règle : tous évalués, la liste ne porte que son invite.
+        && Fe.organismesEnEtat >= 1 && Fe.evalues === Fe.organismesEnEtat
+        && Fe.optionsQuandToutEstEvalue === 1
+        // L'état vidé en mémoire, ils redeviennent candidats.
+        && Fe.optionsApres === Fe.organismesEnEtat + 1
+        // Cascade 1 : rien avant le choix, le secteur rempli après.
+        && Fe.secteurAvant === '' && Fe.organisme.offre === true
+        && Fe.secteurRempli === true
+        // Cascade 2 : les lignes de sous-activité paraissent avec le secteur.
+        && Fe.secteur.offre === true && Fe.lignes >= 1
+        && Fe.ligneRenseignee === true
+        // Et la ronde rend l'état qu'elle a vidé.
+        && Fe.etatRendu === true,
+        JSON.stringify(Fe).slice(0, 460));
+      verifier('l’enregistrement du profil n’a pas de route : les profils appartiennent au module qui les produit, non à celui qui les lit',
+        // Le geste existe, la fiche est complète, la fin de cycle est laissée
+        // au calcul — et rien n'est enregistré, le serveur n'offrant qu'un GET.
+        Fe.finLaisseeVide === true
+        // Le serveur lit les profils, et refuse de les écrire.
+        && Fe.codeEnLecture === 200 && Fe.codeEnEcriture === 404
+        && typeof Fe.avant === 'number' && Fe.rienEnregistre === true
+        // La fenêtre ne se referme pas : l'appel lève avant `planCloseModal`.
+        && Fe.fenetreResteOuverte === true
+        // Elle se ferme par son propre geste.
+        && Fe.fermee === true,
+        JSON.stringify({ lecture: Fe.codeEnLecture, ecriture: Fe.codeEnEcriture,
+          avant: Fe.avant, apres: Fe.apres,
+          ouverte: Fe.fenetreResteOuverte, fermee: Fe.fermee }));
+      verifier('le cycle se règle en ligne, un début postérieur à la fin est refusé, et un début valide part en base sans toucher à la fin',
+        Cy.champs >= 1 && Cy.champDebut === true && Cy.organisme === true
+        && Cy.finAvant !== ''
+        // Une date après la fin ne passe pas : rien n'a changé en base.
+        && Cy.refuseApresLaFin === true
+        // Une date avant la fin passe, et la fin reste celle qu'elle était.
+        && Cy.champRetrouve === true && Cy.debutEnBase === Cy.valide
+        && Cy.finInchangee === true,
+        JSON.stringify(Cy));
+      verifier('la synchronisation relit les deux sources et regarnit l’état que la ronde avait vidé',
+        Sy.bouton === true
+        && Sy.profilsApres === Sy.profilsAvant && Sy.regarni === true
+        && Sy.organismesApres >= 1,
+        JSON.stringify(Sy));
     }
 
     verifier('aucune erreur de console ni requête échouée sur PLAN',

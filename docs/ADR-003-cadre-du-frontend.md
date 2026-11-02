@@ -8254,3 +8254,61 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            réglées. Elle est la dernière, et rien ne tombait — mais *ce qui est
            vrai pour les autres l'est pour elle* : elle rend l'état de départ, et
            le contrôle le vérifie.
+
+       5.f.49 [x] **PLAN — les profils de risque, et un enregistrement qui n'a
+           pas de route** — fait le 2 novembre 2026.
+
+           **Quarante et un contrôles sur PLAN ; 65 gestes sur 91.**
+
+           La page « Profils de risques » montre ce que le module **Profils de
+           Risque** produit : PLAN le lit pour en tirer la fréquence de
+           surveillance de chaque organisme. Elle porte une fenêtre « Ajouter un
+           profil », avec deux cascades, et un bouton d'enregistrement qui envoie
+           un **POST** là où le serveur n'offre qu'un GET.
+
+           ── Un troisième geste sans contrepartie serveur ──
+
+           `planSaveRiskProfile` poste vers `/risk-profiles`, et cette route est
+           **en lecture seule** — délibérément : les profils appartiennent au
+           module qui les produit, non à celui qui les consomme. Mesuré au
+           serveur plutôt qu'au comptage : 200 en lecture, **404 en écriture**.
+           *Un comptage inchangé a bien des causes ; un code de réponse n'en a
+           qu'une.* Le refus est déclaré, avec le nom du contrôle qui l'exige.
+
+           Avec les deux actes du circuit (n° 5.f.47), cela fait **trois** gestes
+           d'écran que le serveur ne sert pas. Les trois sont écrits, visibles,
+           et sans effet. Qu'il faille retirer le geste ou ajouter la route est
+           une décision de conception ; elle n'est pas mienne, et elle est portée
+           au rapport.
+
+           ── Deux règles prises pour des défauts ──
+
+           La liste des organismes n'offrait qu'une option, et j'ai d'abord cru
+           à une liste vide. `candidates = allPrest.filter(p =>
+           !evaluatedIds.has(p.id))` : la fenêtre n'offre que les organismes
+           **non encore évalués** — on n'ajoute pas deux profils au même. Dans le
+           jeu d'essai, tous le sont. C'est le premier fait du contrôle ; la
+           cascade est ensuite rendue atteignable en vidant **en mémoire** la
+           liste des évalués, et la ronde la rend aussitôt.
+
+           Le cycle de surveillance refusait ma date. `oasisDatesValider` prend
+           les deux champs de la ligne, et je posais un début **après** la fin en
+           place : ce n'était pas un défaut, c'était la règle. Elle est devenue
+           un fait — une date postérieure est refusée, rien ne part en base ; une
+           date antérieure passe, et la fin reste celle qu'elle était.
+
+           ── Deux écouteurs sur le même événement, dont un seul savait ──
+
+           Croyant que PLAN ne relevait que la console, j'ai ajouté un
+           `page.on('response')` avec les refus déclarés. Il en existait déjà un,
+           quelques lignes plus bas, qui signalait tout 4xx sans rien savoir des
+           déclarations : le refus était dispensé par l'un et dénoncé par
+           l'autre. Un seul écouteur subsiste, instruit — et son message dit
+           désormais la **méthode**, car un chemin seul ne dit pas quelle
+           déclaration aurait dû couvrir le refus.
+
+           Trois contre-essais sur quatre ont mordu d'emblée. Le quatrième visait
+           un contrôle qui **constate une absence** : viser une autre route ne
+           reproduit rien. C'est ce qui a conduit à mesurer le code de réponse —
+           un constat d'absence ne se tient que si l'on interroge ce qui est
+           absent.

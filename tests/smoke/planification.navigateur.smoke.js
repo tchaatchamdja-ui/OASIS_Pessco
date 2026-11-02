@@ -2159,6 +2159,208 @@ module.exports = async function planificationNavigateurSmoke(port) {
         JSON.stringify(Sy));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La coquille de PLAN : barre, notifications, thème, langue
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Les gestes de la coquille sont les derniers de PLAN à n'avoir jamais été
+    // exercés. Trois bascules, deux réglages qui touchent toute la page, les
+    // sous-onglets, et l'écouteur qui ferme le panneau quand on clique ailleurs.
+    //
+    // La langue est le geste le plus intrusif de l'écran : elle change tous les
+    // libellés, et un contrôle qui la laisserait changée ferait tomber les
+    // suivants. La ronde la rend, et le vérifie.
+    etape = 'coquille de PLAN';
+    await ouvrir('dashboard');
+    await attendre(2500);
+    const rondeCoquille = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.PLAN_STATE || {};
+
+      // ── 1. Les deux replis de la barre latérale ──
+      await essai('barreLaterale', async () => {
+        const d = {};
+        d.repliAvant = !!S().sidebarCollapsed;
+        d.classeAvant = document.body.classList.contains('app-sidebar-collapsed');
+        const bouton = document.querySelector('[onclick*="planToggleSidebar"]');
+        d.bouton = !!bouton;
+        bouton?.click();
+        await a(1500);
+        d.repliApres = !!S().sidebarCollapsed;
+        d.classeApres = document.body.classList.contains('app-sidebar-collapsed');
+        // Et dans l'autre sens : une bascule qui ne se relève pas passerait un
+        // contrôle unilatéral (la leçon des six bascules du portail).
+        document.querySelector('[onclick*="planToggleSidebar"]')?.click();
+        await a(1500);
+        d.repliRendu = !!S().sidebarCollapsed === d.repliAvant;
+        d.classeRendue = document.body.classList.contains('app-sidebar-collapsed') === d.classeAvant;
+
+        // Le repli mobile a son propre geste, posé sur le fond de la barre.
+        const fond = document.querySelector('[onclick*="planToggleMobileSidebar"]');
+        d.fondMobile = !!fond;
+        document.querySelector('.app-sidebar')?.classList.add('mobile-open');
+        await a(600);
+        d.ouvertMobileAvant = !!document.querySelector('.app-sidebar.mobile-open');
+        fond?.click();
+        await a(1200);
+        d.ouvertMobileApres = !!document.querySelector('.app-sidebar.mobile-open');
+        return d;
+      });
+
+      // ── 2. Le panneau de notifications, et le clic qui le referme ──
+      await essai('notifications', async () => {
+        const d = {};
+        const cloche = document.querySelector('[onclick*="planToggleNotifPanel"]');
+        d.cloche = !!cloche;
+        d.panneauAvant = !!document.getElementById('planNotifPanel');
+        cloche?.click();
+        await a(1800);
+        d.panneauOuvert = !!document.getElementById('planNotifPanel');
+        // L'écouteur posé sur le document : un clic ailleurs le referme. C'est
+        // le geste que la souris fait sans y penser, et il n'avait jamais été
+        // exercé — ni l'écouteur, ni le `getElementById` qui retire le panneau.
+        document.body.click();
+        await a(1500);
+        d.panneauFermeParLeDehors = !document.getElementById('planNotifPanel');
+        // Et par la cloche elle-même, dans les deux sens.
+        document.querySelector('[onclick*="planToggleNotifPanel"]')?.click();
+        await a(1500);
+        d.rouvertParLaCloche = !!document.getElementById('planNotifPanel');
+        document.querySelector('[onclick*="planToggleNotifPanel"]')?.click();
+        await a(1500);
+        d.refermeParLaCloche = !document.getElementById('planNotifPanel');
+        return d;
+      });
+
+      // ── 3. Les sous-onglets, que la configuration ne déclare nulle part ──
+      //
+      // `planRenderApp` sait rendre une barre de sous-onglets — `if
+      // (config?.subs?.length)` — et aucune des six entrées de `PLAN_NAV` ne
+      // porte de `subs`. La barre n'est donc jamais rendue, et le geste qui
+      // changerait le sous-état est inatteignable. On le constate sur **toutes**
+      // les pages, plutôt que de le supposer d'après une seule.
+      await essai('sousOnglets', async () => {
+        const d = { pages: {} };
+        const pages = ['dashboard', 'prestataires', 'plans', 'workflow',
+          'mes-activites', 'historique'];
+        for (const p of pages) {
+          /* eslint-disable no-await-in-loop */
+          if (typeof window.planNavigateTo === 'function') window.planNavigateTo(p);
+          await a(1800);
+          d.pages[p] = {
+            barre: document.querySelectorAll('.sub-nav').length,
+            onglets: document.querySelectorAll('.sub-nav-btn').length,
+            montee: S().currentPage === p,
+          };
+        }
+        d.visitees = Object.values(d.pages).filter((x) => x.montee).length;
+        d.aucuneBarre = Object.values(d.pages).every((x) => x.barre === 0);
+        d.aucunOnglet = Object.values(d.pages).every((x) => x.onglets === 0);
+        d.sousEtat = S().currentSub;
+        return d;
+      });
+
+      // ── 4. Le thème et la langue, qui touchent toute la page ──
+      await essai('theme', async () => {
+        const d = {};
+        if (typeof window.planNavigateTo === 'function') window.planNavigateTo('dashboard');
+        await a(2000);
+        d.themeAvant = S().theme;
+        d.attributAvant = document.documentElement.getAttribute('data-theme');
+        const points = [...document.querySelectorAll('.theme-dot')];
+        d.points = points.length;
+        const autre = points.find((p) => p.getAttribute('data-theme') !== d.themeAvant);
+        d.autreOffert = !!autre;
+        const vise = autre ? autre.getAttribute('data-theme') : null;
+        autre?.click();
+        await a(1800);
+        d.themeApres = S().theme;
+        d.attributApres = document.documentElement.getAttribute('data-theme');
+        d.visePose = d.themeApres === vise;
+        // On rend le thème de départ.
+        [...document.querySelectorAll('.theme-dot')]
+          .find((p) => p.getAttribute('data-theme') === d.themeAvant)?.click();
+        await a(1800);
+        d.themeRendu = S().theme === d.themeAvant;
+        return d;
+      });
+
+      await essai('langue', async () => {
+        const d = {};
+        d.langueAvant = S().lang;
+        const boutons = [...document.querySelectorAll('.lang-btn')];
+        d.boutons = boutons.length;
+        // Un libellé témoin, pour voir la page changer de langue.
+        const temoin = () => (document.querySelector('.nav-btn span') || {}).textContent || '';
+        d.temoinAvant = temoin();
+        const autre = boutons.find((b) => !b.classList.contains('active'));
+        d.autreOffert = !!autre;
+        autre?.click();
+        await a(2500);
+        d.langueApres = S().lang;
+        d.temoinApres = temoin();
+        d.libelleChange = d.temoinApres !== d.temoinAvant && d.temoinApres !== '';
+        // Et l'on rend la langue de départ : sans quoi tout ce qui suit lirait
+        // des libellés d'une autre langue.
+        [...document.querySelectorAll('.lang-btn')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(`'${d.langueAvant}'`))?.click();
+        await a(2500);
+        d.langueRendue = S().lang === d.langueAvant;
+        d.temoinRendu = temoin() === d.temoinAvant;
+        return d;
+      });
+      return o;
+    });
+
+    {
+      const Q = rondeCoquille;
+      const Ba = Q.barreLaterale || {};
+      const No = Q.notifications || {};
+      const So = Q.sousOnglets || {};
+      const Th = Q.theme || {};
+      const La = Q.langue || {};
+      verifier('la barre latérale se replie et se relève, et son fond mobile la referme',
+        Ba.bouton === true
+        && Ba.repliApres !== Ba.repliAvant
+        && Ba.classeApres !== Ba.classeAvant
+        // Prise dans les deux sens : une bascule qui ne se relève pas passerait.
+        && Ba.repliRendu === true && Ba.classeRendue === true
+        && Ba.fondMobile === true
+        && Ba.ouvertMobileAvant === true && Ba.ouvertMobileApres === false,
+        JSON.stringify(Ba));
+      verifier('le panneau de notifications s’ouvre par sa cloche, se referme par un clic ailleurs, et par sa cloche dans les deux sens',
+        No.cloche === true && No.panneauAvant === false
+        && No.panneauOuvert === true
+        // L'écouteur du document : le clic qui ferme sans viser le panneau.
+        && No.panneauFermeParLeDehors === true
+        && No.rouvertParLaCloche === true && No.refermeParLaCloche === true,
+        JSON.stringify(No));
+      verifier('aucune page de PLAN ne déclare de sous-onglets, et le geste qui changerait le sous-état est donc inatteignable',
+        // Les six pages sont montées, et aucune ne rend la barre que le code
+        // sait pourtant produire.
+        So.visitees === 6 && So.aucuneBarre === true && So.aucunOnglet === true,
+        JSON.stringify(So).slice(0, 420));
+      verifier('le thème se change par ses pastilles, suit sur la racine du document, et se rend',
+        Th.points >= 2 && Th.autreOffert === true
+        && Th.visePose === true
+        && Th.attributApres === Th.themeApres
+        && Th.attributApres !== Th.attributAvant
+        && Th.themeRendu === true,
+        JSON.stringify(Th));
+      verifier('la langue se change, les libellés de la barre suivent, et la ronde la rend',
+        La.boutons >= 2 && La.autreOffert === true
+        && La.langueApres !== La.langueAvant
+        && La.libelleChange === true
+        // Rendue : sans quoi tout ce qui suit lirait une autre langue.
+        && La.langueRendue === true && La.temoinRendu === true,
+        JSON.stringify(La));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PLAN',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

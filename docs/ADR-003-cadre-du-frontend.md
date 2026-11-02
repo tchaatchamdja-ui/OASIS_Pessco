@@ -8312,3 +8312,44 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            reproduit rien. C'est ce qui a conduit à mesurer le code de réponse —
            un constat d'absence ne se tient que si l'on interroge ce qui est
            absent.
+
+       5.f.50 [x] **PLAN — la coquille, et quatre gestes qu'aucun écran
+           n'offre** — fait le 2 novembre 2026.
+
+           **Quarante-six contrôles sur PLAN ; 71 gestes sur 91.**
+
+           Les gestes de la coquille étaient les derniers de PLAN à n'avoir
+           jamais été exercés : les deux replis de la barre, le panneau de
+           notifications, le thème, la langue. Quatre contrôles sur cinq sont
+           passés du premier coup — y compris la **langue**, le geste le plus
+           intrusif de l'écran, que la ronde rend aussitôt : un contrôle qui la
+           laisserait changée ferait lire à tous les suivants des libellés d'une
+           autre langue.
+
+           Chaque bascule est prise **dans les deux sens**, et le panneau de
+           notifications de trois façons : par sa cloche, par un clic ailleurs
+           — l'écouteur posé sur le document, que rien n'avait exercé — et par
+           sa cloche de nouveau.
+
+           ── Le quatrième geste qu'aucun écran n'offre ──
+
+           Le cinquième contrôle cherchait des sous-onglets, et n'en a trouvé
+           sur aucune page. `planRenderApp` sait en rendre une barre — `if
+           (config?.subs?.length)` — et **aucune** des six entrées de `PLAN_NAV`
+           ne déclare de `subs`. Le contrôle constate donc l'inverse de ce qu'il
+           cherchait, sur les six pages montées.
+
+           PLAN compte ainsi quatre gestes inatteignables, tous mesurés :
+           `planLogout`, parce que le socle **remplace** `.btn-logout` par
+           « Retour au portail » — *son bouton n'est pas un geste, c'est une
+           ancre* — ; `PLAN_STATE.currentSub`, faute de configuration ; et
+           `planApprouverDG` avec `planTransmettre`, dont les conditions
+           s'excluent (n° 5.f.47). Les quatre sont écrits dans
+           `gestes-non-couverts.json`, avec leur raison.
+
+           Un cinquième nom, `geste`, n'est pas un geste du tout : c'est un
+           artefact du relevé. L'attribut porte le **résultat** d'une fonction du
+           gabarit — `onclick="${geste(a)}"` —, et aucun extracteur statique ne
+           peut nommer ce qu'une fonction va produire. L'angle mort de 5.f.46
+           avait un fond que l'on ne pouvait pas atteindre ; celui-ci en est le
+           dernier pouce.

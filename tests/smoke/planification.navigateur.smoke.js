@@ -1488,6 +1488,360 @@ module.exports = async function planificationNavigateurSmoke(port) {
         C.rendueAuDepart === true, JSON.stringify({ deja: C.deja, restants: C.restants }));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  Les filtres de PLAN, et les deux barres qui n'en partagent rien
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Treize facettes, et aucune n'était exercée. Deux barres distinctes, qui
+    // ne partagent ni leur état ni leur code : `_renderFilterBar`, que cinq
+    // pages se donnent avec des options différentes, écrit dans
+    // `PLAN_STATE.filters` ; le calendrier a la sienne, dans
+    // `PLAN_STATE.calFilters`.
+    //
+    // La leçon de 5.f.37 commande la forme de ce contrôle : *une facette
+    // éprouvée avec une valeur qu'elle n'offre pas ne filtre rien et passe pour
+    // bonne.* On prend donc chaque valeur dans les `<option>` de la facette
+    // elle-même, et l'on vérifie l'état retenu, non un simple comptage.
+    etape = 'filtres de PLAN';
+    await ouvrir('dashboard');
+    await attendre(2500);
+    const rondeFiltres = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.PLAN_STATE || {};
+      // Une facette se vise par ce qu'elle écrit : elle n'a pas d'identifiant.
+      const facette = (cle) => [...document.querySelectorAll('select')]
+        .find((s) => (s.getAttribute('onchange') || '').includes(`${cle}=this.value`));
+      // On la règle sur une valeur qu'elle offre, et l'on rend ce qu'on a posé.
+      const regler = async (cle, attente) => {
+        const s = facette(cle);
+        if (!s) return { trouvee: false };
+        const choix = [...s.options].find((op) => op.value);
+        if (!choix) return { trouvee: true, offre: false, options: s.options.length };
+        s.value = choix.value;
+        s.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(attente || 1600);
+        return { trouvee: true, offre: true, pose: choix.value, libelle: (choix.textContent || '').trim() };
+      };
+      const lu = (chemin) => chemin.split('.').reduce((x, k) => (x || {})[k], S());
+
+      // ── 1. La barre partagée, sur le tableau de bord qui porte tout ──
+      await essai('barre', async () => {
+        const d = {};
+        d.page = S().currentPage;
+        // Les six facettes sont-elles là ? Le tableau de bord les demande toutes.
+        d.presentes = ['filters.domaine', 'filters.secteur', 'filters.sousActivite',
+          'filters.theme', 'filters.prestataire', 'filters.statut']
+          .filter((c) => !!facette(`PLAN_STATE.${c}`)).length;
+
+        // ── Les facettes dépendantes d'abord, elles aussi ──
+        //
+        // Le thème et le prestataire sont restreints par le domaine et le
+        // secteur (`dansLePerimetre`). Réglés après eux, ils n'offraient plus
+        // rien, et deux noms restaient non exercés faute d'avoir été pris dans
+        // le bon ordre. C'est le même constat que sur la barre du calendrier.
+        d.themeTot = await regler('PLAN_STATE.filters.theme', 1800);
+        d.themeRetenuTot = d.themeTot.offre === true
+          ? lu('filters.theme') === d.themeTot.pose : null;
+        d.prestataireTot = await regler('PLAN_STATE.filters.prestataire', 1800);
+        d.prestataireRetenuTot = d.prestataireTot.offre === true
+          ? lu('filters.prestataire') === d.prestataireTot.pose : null;
+
+        // ── La cascade ne se mesure que sur un état non vide ──
+        //
+        // Mon premier jet réglait le domaine d'emblée et vérifiait que le
+        // secteur était vide. Il l'était **déjà** : le contrôle passait sur
+        // rien, et le contre-essai qui retirait l'effacement ne faisait rien
+        // tomber. *Un contrôle qui ne relève pas son état de départ ne prouve
+        // pas qu'un geste l'a changé.*
+        //
+        // On pose donc un secteur et une sous-activité d'abord, et c'est leur
+        // disparition que l'on mesure.
+        const semis = await regler('PLAN_STATE.filters.secteur', 2000);
+        d.secteurSeme = semis.offre === true && lu('filters.secteur') === semis.pose;
+        const semisSA = await regler('PLAN_STATE.filters.sousActivite', 2000);
+        d.sousActiviteSemee = semisSA.offre === true
+          ? lu('filters.sousActivite') === semisSA.pose : null;
+        d.avantDomaine = {
+          secteur: lu('filters.secteur') || '',
+          sousActivite: lu('filters.sousActivite') || '',
+        };
+
+        // Le domaine, maintenant : il **remet à vide** ce qui dépend de lui.
+        d.domaine = await regler('PLAN_STATE.filters.domaine', 2200);
+        d.domaineRetenu = lu('filters.domaine') === d.domaine.pose;
+        d.secteurVide = (lu('filters.secteur') || '') === '';
+        d.sousActiviteVide = (lu('filters.sousActivite') || '') === '';
+
+        // Le secteur, de nouveau : restreint au domaine retenu — la cascade.
+        d.secteur = await regler('PLAN_STATE.filters.secteur', 2200);
+        d.secteurRetenu = lu('filters.secteur') === d.secteur.pose;
+        d.sousActiviteVideEncore = (lu('filters.sousActivite') || '') === '';
+
+        d.sousActivite = await regler('PLAN_STATE.filters.sousActivite', 2000);
+        d.sousActiviteRetenue = d.sousActivite.offre
+          ? lu('filters.sousActivite') === d.sousActivite.pose : null;
+        d.theme = await regler('PLAN_STATE.filters.theme', 1800);
+        d.themeRetenu = d.theme.offre ? lu('filters.theme') === d.theme.pose : null;
+        d.prestataire = await regler('PLAN_STATE.filters.prestataire', 1800);
+        d.prestataireRetenu = d.prestataire.offre
+          ? lu('filters.prestataire') === d.prestataire.pose : null;
+        d.statut = await regler('PLAN_STATE.filters.statut', 1800);
+        d.statutRetenu = d.statut.offre ? lu('filters.statut') === d.statut.pose : null;
+
+        // La réinitialisation remplace l'objet entier — l'année comprise, que
+        // mon premier énoncé prétendait épargnée. On pose donc une année avant,
+        // pour que son effacement se mesure au lieu de se supposer.
+        const annee = await regler('PLAN_STATE.filters.annee', 1800);
+        d.anneeSemee = annee.offre === true ? lu('filters.annee') === annee.pose : null;
+        d.avantReset = Object.fromEntries(
+          ['domaine', 'secteur', 'theme', 'prestataire', 'statut', 'annee']
+            .map((k) => [k, lu(`filters.${k}`) || '']),
+        );
+        d.posesAvantReset = Object.values(d.avantReset).filter(Boolean).length;
+        document.querySelector('[onclick*="planResetFilters"]')?.click();
+        await a(2200);
+        const apres = S().filters || {};
+        d.toutRemisAZero = ['domaine', 'secteur', 'sousActivite', 'theme',
+          'prestataire', 'statut', 'search', 'annee']
+          .every((k) => (apres[k] || '') === '');
+        return d;
+      });
+
+      // ── 2. La barre du calendrier, qui ne partage rien avec la première ──
+      await essai('calendrier', async () => {
+        const d = {};
+        // Le volet n'est offert que par le tableau de bord — et par « Mes
+        // activités ». Depuis la page des plans, le bouton n'existe pas : mon
+        // premier jet y cherchait un geste qui n'y est jamais.
+        if (typeof window.planNavigateTo === 'function') window.planNavigateTo('dashboard');
+        await a(2500);
+        document.querySelector('[onclick^="planChoisirCarte"]')?.click();
+        await a(1400);
+        document.querySelector('[onclick^="planOuvrirCalendrier"]')?.click();
+        await a(3200);
+        d.volet = (document.getElementById('planVolet') || { innerHTML: '' }).innerHTML.length > 500;
+        d.presentes = ['calFilters.domaine', 'calFilters.secteur', 'calFilters.prestataire',
+          'calFilters.trimestre', 'calFilters.responsable']
+          .filter((c) => !!facette(`PLAN_STATE.${c}`)).length;
+        // ── L'ordre des facettes n'est pas indifférent ──
+        //
+        // Le domaine et le secteur **restreignent** les organismes offerts
+        // (`_planCalRestreindre`). Réglés d'abord, ils laissaient la facette des
+        // prestataires avec sa seule option « tous » — et une facette sans choix
+        // ne se mesure pas. On règle donc les dépendantes d'abord.
+        d.cinq = {};
+        for (const cle of ['prestataire', 'responsable', 'trimestre', 'domaine', 'secteur']) {
+          /* eslint-disable no-await-in-loop */
+          const r = await regler(`PLAN_STATE.calFilters.${cle}`, 1700);
+          d.cinq[cle] = r.offre ? (lu(`calFilters.${cle}`) === r.pose) : r;
+        }
+        d.champRecherche = !!document.getElementById('plan-cal-search');
+        return d;
+      });
+
+      // ── La recherche du calendrier, frappée pour de vrai ──
+      //
+      // `_pesSearchInput` diffère de 300 ms, puis **relit le champ par son
+      // identifiant** — et chaque réglage de facette redessine le volet, donc
+      // recrée ce champ. Une valeur posée par la main du contrôle sur un
+      // élément détaché ne serait jamais lue. C'est le geste réel qu'il faut :
+      // la frappe vient de `page.type`, hors de cette fonction.
+      o.avantFrappe = ((S().calFilters || {}).search || '');
+      return o;
+    });
+
+    await page.type('#plan-cal-search', 'ronde', { delay: 40 });
+    // Le différé du socle : 300 ms après la dernière frappe, plus le redessin.
+    await attendre(2000);
+
+    const rondeFiltres2 = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const S = () => window.PLAN_STATE || {};
+      const d = {};
+      d.rechercheRetenue = ((S().calFilters || {}).search || '') === 'ronde';
+      d.champPorteLaValeur = (document.getElementById('plan-cal-search') || {}).value === 'ronde';
+      // Et la réinitialisation du calendrier, qui remplace l'objet entier.
+      const reset = [...document.querySelectorAll('[onclick*="calFilters={"]')][0];
+      d.boutonReset = !!reset;
+      reset?.click();
+      await a(2200);
+      const c = S().calFilters || {};
+      d.toutRemisAZero = ['domaine', 'secteur', 'prestataire', 'trimestre', 'responsable', 'search']
+        .every((k) => (c[k] || '') === '');
+      return d;
+    });
+
+    const rondeFiltres3 = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.PLAN_STATE || {};
+      const lu = (chemin) => chemin.split('.').reduce((x, k) => (x || {})[k], S());
+
+      // ── Les vues du calendrier : le mois, l'année, la bascule ──
+      await essai('vues', async () => {
+        const d = {};
+        d.vueDepart = lu('calendarView');
+        d.moisDepart = lu('calendarMonth');
+        d.anneeDepart = lu('calendarYear');
+        // Reculer d'un mois, puis d'une année.
+        document.querySelector('[onclick*="calendarMonth=Math.max"]')?.click();
+        await a(1800);
+        d.moisRecule = lu('calendarMonth');
+        document.querySelector('[onclick*="calendarYear--"]')?.click();
+        await a(1800);
+        d.anneeRecule = lu('calendarYear');
+        document.querySelector('[onclick*="calendarYear++"]')?.click();
+        await a(1800);
+        d.anneeRendue = lu('calendarYear');
+        // La bascule de vue : deux boutons, `month` et `week`. Partir de
+        // `month` pour y revenir ne prouverait rien — on va à l'autre, puis
+        // l'on revient.
+        const versSemaine = document.querySelector('[onclick*="calendarView=\'week\'"]');
+        d.boutonSemaine = !!versSemaine;
+        versSemaine?.click();
+        await a(2000);
+        d.vueSemaine = lu('calendarView');
+        const versMois = document.querySelector('[onclick*="calendarView=\'month\'"]');
+        d.boutonVue = !!versMois;
+        versMois?.click();
+        await a(2000);
+        d.vueApres = lu('calendarView');
+        document.querySelector('[onclick*="planFermerCalendrier"]')?.click();
+        await a(1500);
+        d.voletFerme = !document.querySelector('[onclick*="planFermerCalendrier"]');
+        return d;
+      });
+
+      // ── « Mes activités » et ses filtres propres ──
+      await essai('mesActivites', async () => {
+        const d = {};
+        if (typeof window.planNavigateTo === 'function') window.planNavigateTo('mes-activites');
+        await a(3000);
+        d.page = S().currentPage;
+        // `planMaSetFiltre` écrit dans `PLAN_MA_FILTRES`, une variable du
+        // fichier — hors de `PLAN_STATE`, et hors de notre portée. On mesure
+        // donc par l'effet : la page est redessinée **depuis** cet état, si
+        // bien que la valeur retenue reparaît sélectionnée. Un filtre qui
+        // n'aurait rien enregistré rendrait une facette revenue à vide.
+        const trouver = (champ) => [...document.querySelectorAll('select')]
+          .find((x) => (x.getAttribute('onchange') || '').includes(`planMaSetFiltre('${champ}'`));
+        const resp = trouver('responsable');
+        d.facette = !!resp;
+        if (resp) {
+          const choix = [...resp.options].find((op) => op.value);
+          d.offre = !!choix;
+          if (choix) {
+            d.pose = choix.value;
+            resp.value = choix.value;
+            resp.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(2500);
+            d.retenu = (trouver('responsable') || {}).value === choix.value;
+          }
+        }
+        // Et sa cascade : changer de secteur écarte un prestataire qui n'y est
+        // plus — le dispositif s'en explique dans le code, on le constate.
+        const sect = trouver('secteur');
+        d.facetteSecteur = !!sect;
+        if (sect) {
+          const choix = [...sect.options].find((op) => op.value);
+          if (choix) {
+            sect.value = choix.value;
+            sect.dispatchEvent(new Event('change', { bubbles: true }));
+            await a(2500);
+            d.secteurRetenu = (trouver('secteur') || {}).value === choix.value;
+            // Le responsable, lui, n'est pas lié au secteur : il doit tenir.
+            d.responsableTientEncore = (trouver('responsable') || {}).value === d.pose;
+          }
+        }
+        // ── Rendre ce qu'on a changé ──
+        //
+        // Les filtres de PLAN sont un **état global** : le contre-essai l'a
+        // montré sans détour — un seul filtre laissé actif a fait tomber neuf
+        // contrôles d'autres rondes, qui ne voyaient plus leurs plans dans des
+        // listes restreintes. Cette ronde est la dernière, mais *ce qui est
+        // vrai pour les autres l'est pour elle* : elle rend l'état de départ.
+        for (const champ of ['secteur', 'responsable']) {
+          const f = trouver(champ);
+          if (f) {
+            f.value = '';
+            f.dispatchEvent(new Event('change', { bubbles: true }));
+            /* eslint-disable no-await-in-loop */
+            await a(1800);
+          }
+        }
+        d.renduAuDepart = ['secteur', 'responsable']
+          .every((champ) => ((trouver(champ) || {}).value || '') === '');
+        return d;
+      });
+      return o;
+    });
+
+    {
+      const F = rondeFiltres;
+      const Ba = F.barre || {};
+      const Ca = { ...(F.calendrier || {}), ...rondeFiltres2 };
+      const Vu = rondeFiltres3.vues || {};
+      const Ma = rondeFiltres3.mesActivites || {};
+      verifier('les six facettes de la barre partagée retiennent ce qu’on leur donne, et le domaine remet à vide ce qui dépend de lui',
+        Ba.page === 'dashboard' && Ba.presentes === 6
+        // Un secteur et une sous-activité sont posés d'abord : sans eux, la
+        // cascade se mesurerait sur du vide.
+        && Ba.secteurSeme === true && Ba.sousActiviteSemee !== false
+        && Ba.avantDomaine.secteur !== ''
+        && Ba.domaine.offre === true && Ba.domaineRetenu === true
+        // La cascade : choisir un domaine efface le secteur et la sous-activité.
+        && Ba.secteurVide === true && Ba.sousActiviteVide === true
+        && Ba.secteur.offre === true && Ba.secteurRetenu === true
+        && Ba.sousActiviteVideEncore === true
+        // Le thème et le prestataire, pris avant que le domaine ne les
+        // restreigne : ils offrent alors une valeur, et la retiennent.
+        && Ba.themeTot.offre === true && Ba.themeRetenuTot === true
+        && Ba.prestataireTot.offre === true && Ba.prestataireRetenuTot === true
+        && Ba.sousActiviteRetenue !== false && Ba.statutRetenu !== false,
+        JSON.stringify(Ba).slice(0, 460));
+      verifier('la réinitialisation remplace l’état entier, l’année comprise, et seulement après qu’il a été garni',
+        // Elle ne prouve quelque chose que si quelque chose était posé.
+        Ba.posesAvantReset >= 3 && Ba.anneeSemee !== false
+        && Ba.toutRemisAZero === true,
+        JSON.stringify({ avant: Ba.avantReset, poses: Ba.posesAvantReset,
+          remis: Ba.toutRemisAZero }));
+      verifier('le calendrier a ses cinq facettes à lui, sa recherche différée, et sa propre réinitialisation',
+        Ca.volet === true && Ca.presentes === 5
+        && Object.values(Ca.cinq || {}).every((v) => v === true)
+        && Ca.champRecherche === true
+        // La frappe réelle traverse le différé du socle et parvient à l'état.
+        && Ca.rechercheRetenue === true && Ca.champPorteLaValeur === true
+        && Ca.boutonReset === true && Ca.toutRemisAZero === true,
+        JSON.stringify(Ca).slice(0, 420));
+      verifier('les vues du calendrier reculent d’un mois et d’une année, et l’année revient par son autre flèche',
+        Vu.moisRecule !== Vu.moisDepart
+        && Vu.anneeRecule === Vu.anneeDepart - 1
+        // Les deux flèches sont le même réglage, pris dans les deux sens.
+        && Vu.anneeRendue === Vu.anneeDepart
+        && Vu.boutonSemaine === true && Vu.vueSemaine === 'week'
+        && Vu.boutonVue === true && Vu.vueApres === 'month'
+        && Vu.voletFerme === true,
+        JSON.stringify(Vu));
+      verifier('« Mes activités » porte ses propres filtres, hors de l’état partagé, et les retient',
+        Ma.page === 'mes-activites' && Ma.facette === true
+        && Ma.offre === true && Ma.retenu === true
+        && Ma.facetteSecteur === true && Ma.secteurRetenu === true
+        // Le responsable ne dépend pas du secteur : il survit à son choix.
+        && Ma.responsableTientEncore === true
+        // Et la ronde rend l'état de départ : les filtres sont globaux.
+        && Ma.renduAuDepart === true,
+        JSON.stringify(Ma));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PLAN',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

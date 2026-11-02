@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 95,
  "occurrences": 139,
- "exerces": 43,
+ "exerces": 60,
  "indecidables": 4,
  "gestes": [
   {
@@ -177,7 +177,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarYear--;planRenderPage();",
    "nom": "PLAN_STATE.calendarYear",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -186,7 +186,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarYear++;planRenderPage();",
    "nom": "PLAN_STATE.calendarYear",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -195,7 +195,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarView='month';planRenderPage();",
    "nom": "PLAN_STATE.calendarView",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -204,7 +204,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarView='week';planRenderPage();",
    "nom": "PLAN_STATE.calendarView",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -213,7 +213,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.domaine=this.value;PLAN_STATE.calFilters.secteur='';PLAN_STATE.calFilters.prestataire='';planRende",
    "nom": "PLAN_STATE.calFilters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -222,7 +222,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.secteur=this.value;PLAN_STATE.calFilters.prestataire='';planRenderPage();",
    "nom": "PLAN_STATE.calFilters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -231,7 +231,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.prestataire=this.value;planRenderPage();",
    "nom": "PLAN_STATE.calFilters.prestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -240,7 +240,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.trimestre=this.value;planRenderPage();",
    "nom": "PLAN_STATE.calFilters.trimestre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -249,7 +249,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.responsable=this.value;planRenderPage();",
    "nom": "PLAN_STATE.calFilters.responsable",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -258,7 +258,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { PLAN_STATE.calFilters.search=document.getElementById('plan-cal-search').value; planRenderP",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -267,7 +267,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPa",
    "nom": "PLAN_STATE.calFilters",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -276,7 +276,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -285,7 +285,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -294,7 +294,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -303,7 +303,7 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -564,7 +564,7 @@
    "evenement": "change",
    "source": "planMaSetFiltre('responsable', this.value)",
    "nom": "planMaSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -573,7 +573,7 @@
    "evenement": "change",
    "source": "planMaSetFiltre('secteur', this.value)",
    "nom": "planMaSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -582,7 +582,7 @@
    "evenement": "change",
    "source": "planMaSetFiltre('prestataire', this.value)",
    "nom": "planMaSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -591,7 +591,7 @@
    "evenement": "change",
    "source": "planMaSetFiltre('mode', this.value)",
    "nom": "planMaSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -600,7 +600,7 @@
    "evenement": "change",
    "source": "planMaSetFiltre('du', this.value)",
    "nom": "planMaSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -609,7 +609,7 @@
    "evenement": "change",
    "source": "planMaSetFiltre('au', this.value)",
    "nom": "planMaSetFiltre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -1015,7 +1015,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
    "nom": "PLAN_STATE.filters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1024,7 +1024,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
    "nom": "PLAN_STATE.filters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1033,7 +1033,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
    "nom": "PLAN_STATE.filters.prestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1042,7 +1042,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
    "nom": "PLAN_STATE.filters.sousActivite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1051,7 +1051,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
    "nom": "PLAN_STATE.filters.theme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1060,7 +1060,7 @@
    "evenement": "change",
    "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
    "nom": "PLAN_STATE.filters.statut",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1069,7 +1069,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",

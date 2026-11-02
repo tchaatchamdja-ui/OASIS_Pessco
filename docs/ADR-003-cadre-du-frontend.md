@@ -8192,3 +8192,65 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            avaient été rejetés par les phases précédentes. *Une ronde qui suit
            une autre commence par relever ce qu'elle hérite* — elle sème
            désormais son propre témoin soumis.
+
+       5.f.48 [x] **PLAN — treize facettes, et l'ordre dans lequel on les
+           interroge** — fait le 2 novembre 2026.
+
+           **Trente-sept contrôles sur PLAN ; 60 gestes sur 91.** Quatre
+           contre-essais.
+
+           Treize facettes, et aucune n'était exercée. Deux barres distinctes,
+           qui ne partagent ni leur état ni leur code : `_renderFilterBar`, que
+           cinq pages se donnent avec des options différentes, écrit dans
+           `PLAN_STATE.filters` ; le calendrier a la sienne, dans
+           `PLAN_STATE.calFilters` ; et « Mes activités » une troisième, dans
+           `PLAN_MA_FILTRES`, hors de l'état partagé.
+
+           ── L'ordre d'interrogation décide de ce qu'on mesure ──
+
+           La leçon de 5.f.37 disait qu'une facette éprouvée avec une valeur
+           qu'elle n'offre pas ne filtre rien. Celle-ci en est le revers :
+           **une facette dépendante, interrogée après celle qui la restreint,
+           n'a plus rien à offrir.** Réglés après le domaine, le thème et le
+           prestataire ne proposaient que leur option « tous » ; la facette des
+           prestataires du calendrier était dans le même cas. Trois noms
+           restaient non exercés faute d'avoir été pris dans le bon ordre. Les
+           dépendantes passent désormais en premier.
+
+           ── La cascade ne se mesure pas sur du vide ──
+
+           Mon premier jet réglait le domaine d'emblée et vérifiait que le
+           secteur était vide. Il l'était **déjà** : le contrôle passait sur
+           rien, et le contre-essai qui retirait l'effacement ne faisait rien
+           tomber. C'est la faute de 5.f.40, reprise à l'identique. La ronde pose
+           maintenant un secteur et une sous-activité, et c'est leur
+           **disparition** qu'elle mesure.
+
+           Même correction pour la réinitialisation : j'avais écrit qu'elle
+           « vide les six facettes sans toucher à l'année ». Elle remplace
+           l'objet entier, l'année comprise — l'énoncé était faux, et il passait
+           parce que l'année était vide. La ronde la pose d'abord, et compte ce
+           qui était garni avant d'affirmer que tout a été rendu.
+
+           ── Une frappe simulée ne traverse pas le différé du socle ──
+
+           `_pesSearchInput` délègue à `oasisSaisieDifferee` : 300 ms après la
+           dernière frappe, le rappel **relit le champ par son identifiant**. Or
+           chaque réglage de facette redessine le volet, donc recrée ce champ :
+           une valeur posée à la main sur l'élément d'avant n'était jamais lue.
+           La recherche est désormais **frappée pour de vrai**, par `page.type`
+           hors du relevé, et le contrôle vérifie les deux côtés — l'état porte
+           le mot, et le champ reconstruit le porte aussi.
+
+           ── Les filtres sont un état global, et le contre-essai l'a dit ──
+
+           Le contre-essai qui retirait l'effacement du secteur n'a pas fait
+           tomber deux contrôles, mais **onze** : un seul filtre laissé actif, et
+           neuf rondes d'autres familles ne voyaient plus leurs plans dans des
+           listes restreintes. C'est la preuve la plus nette qu'on pouvait
+           obtenir de ce que *les filtres de PLAN traversent toutes les rondes*.
+
+           Cette ronde laissait elle-même les deux facettes de « Mes activités »
+           réglées. Elle est la dernière, et rien ne tombait — mais *ce qui est
+           vrai pour les autres l'est pour elle* : elle rend l'état de départ, et
+           le contrôle le vérifie.

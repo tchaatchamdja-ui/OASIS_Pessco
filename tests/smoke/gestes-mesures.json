@@ -2,7 +2,7 @@
  "releve": "2026-11-02",
  "gestesNommes": 90,
  "occurrences": 145,
- "exerces": 16,
+ "exerces": 24,
  "indecidables": 3,
  "gestes": [
   {
@@ -210,7 +210,7 @@
    "evenement": "click",
    "source": "mesMesureDepuisConstatation('${c.id}')",
    "nom": "mesMesureDepuisConstatation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
@@ -482,7 +482,7 @@
    "evenement": "click",
    "source": "mesMesureDepuisConstatation('${id}')",
    "nom": "mesMesureDepuisConstatation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-page-etats.js",
@@ -500,7 +500,7 @@
    "evenement": "click",
    "source": "if(!event.target.closest('button'))mesMesureDepuisConstatation('${c.id}')",
    "nom": "mesMesureDepuisConstatation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-page-etats.js",
@@ -798,7 +798,7 @@
    "evenement": "click",
    "source": "mesQualVoirVolet('${_mesAttr(v.cle)}')",
    "nom": "mesQualVoirVolet",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -816,7 +816,7 @@
    "evenement": "click",
    "source": "mesQualAjouterMembre()",
    "nom": "mesQualAjouterMembre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -834,7 +834,7 @@
    "evenement": "click",
    "source": "mesQualAjouterReunion()",
    "nom": "mesQualAjouterReunion",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -843,7 +843,7 @@
    "evenement": "click",
    "source": "mesEnregistrerQualification()",
    "nom": "mesEnregistrerQualification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -852,7 +852,7 @@
    "evenement": "change",
    "source": "mesQualBasculerInfraction(this.checked)",
    "nom": "mesQualBasculerInfraction",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -861,7 +861,7 @@
    "evenement": "change",
    "source": "mesQualBasculerNonInfraction(this.checked)",
    "nom": "mesQualBasculerNonInfraction",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -870,7 +870,7 @@
    "evenement": "change",
    "source": "mesQualBasculerRenvoi(this.checked)",
    "nom": "mesQualBasculerRenvoi",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",

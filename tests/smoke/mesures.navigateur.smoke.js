@@ -497,6 +497,333 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         JSON.stringify(recherche));
     }
 
+
+    // ══════════════════════════════════════════════════════════════════
+    //  La fiche de qualification : l'instance, et les trois faces d'une
+    //  même décision
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `mes-qualification.js` — **993 lignes, 26 gestes nommés, aucun exercé.**
+    // C'est l'étape où l'instance décisionnelle siège sur une carence : elle lit
+    // l'investigation, consigne ses réunions, dit si l'infraction est constituée,
+    // et arrête le cas échéant les mesures d'application.
+    //
+    // ── Pourquoi aucun geste n'était atteignable ──
+    //
+    // L'étape n'existe que sur une carence **parvenue au rang
+    // « qualification »** du fil d'avancement : `mesVoirEtape` refuse tout rang
+    // supérieur à celui atteint, et `mesQualModifiable` ferme la saisie dès que
+    // l'étape est franchie. Or le jeu de référence n'a **aucune constatation** —
+    // les collections de CARE sont vides au départ, et les carences des autres
+    // modules arrivent par le bus de services, qui n'en sert aucune ici.
+    //
+    // La ronde construit donc son dossier : elle ouvre une carence, l'instruit,
+    // décide d'investiguer, consigne l'investigation et la soumet. Cinq appels
+    // d'API — ceux-là même que `mesures.smoke.js` éprouve un à un — qui amènent
+    // le fil au bon rang. **Ce n'est pas contourner l'écran : c'est lui donner
+    // la pièce qu'il attend.** Tout ce qui suit passe par les gestes de l'écran.
+    //
+    // ── Les trois règles éprouvées ──
+    //
+    //  1. **Changer de volet ne perd pas la saisie.** `mesQualVoirVolet` relève
+    //     la saisie en cours (`mesMajQualification`) avant de redessiner. Le
+    //     volet qui n'est pas affiché n'a aucun champ dans le document : ce
+    //     qu'il porte est repris de l'état, non remis à zéro.
+    //  2. **Les trois cases disent une même décision par ses trois faces.**
+    //     Cocher « constituée » décoche « non constituée » et « renvoi » ; et
+    //     chacune commande ce que la fiche montre — le motif de renvoi, les
+    //     trois champs de qualification, la section des mesures.
+    //  3. **Un ajout relève avant de redessiner.** `mesQualModifier` passe par
+    //     `mesMajQualification` : ajouter un membre ne perd pas la réunion qu'on
+    //     venait de saisir.
+    etape = 'fiche de qualification';
+    const DOSSIER = 'Manquement au programme de maintenance (contrôle ' + Date.now() + ')';
+    const TEMOIN_ENR = 'relevé au seul enregistrement — ' + Date.now();
+    const qual = await page.evaluate(async (titre, TEMOIN_ENREGISTREMENT) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const Q = () => (S().traitement || {}).qualification || {};
+      const vu = (sel) => !!document.querySelector(sel);
+      const volet = (cle) => [...document.querySelectorAll('[onclick*="mesQualVoirVolet("]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+
+      // ── 0. Le dossier que l'écran attend : une carence au rang « qualification »
+      await essai('dossier', async () => {
+        const d = {};
+        // Un comité, pour que la liste de l'instance offre autre chose que « — ».
+        await window.mesApi('/parametres/comites', {
+          method: 'POST', body: JSON.stringify({ libelle: 'Comité de discipline (contrôle)' }),
+        }).catch(() => null);
+        const cree = await window.mesApi('/constatations', {
+          method: 'POST',
+          body: JSON.stringify({
+            titre, description: 'Vérification omise sur deux aéronefs',
+            origine_libelle: 'Contrôle inopiné', date_ouverture: '2026-09-15',
+          }),
+        });
+        d.cree = !!(cree && cree.id);
+        if (!d.cree) return d;
+        o.carence = cree.id;
+        d.reference = cree.reference;
+        const p = (chemin, methode, corps) => window.mesApi(chemin, {
+          method: methode, ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        const racine = `/constatations/${encodeURIComponent(cree.id)}`;
+        await p(`${racine}/traitement`, 'PUT', { informations: 'Pièces reçues du prestataire' });
+        await p(`${racine}/decision`, 'POST', { decision: 'investiguer' });
+        await p(`${racine}/investigation`, 'PUT', {
+          equipe: [], travaux: [], rapport: 'Faits établis : deux visites omises.',
+        });
+        const soumise = await p(`${racine}/investigation/soumettre`, 'POST');
+        d.etape = (soumise || {}).etape;
+        // L'écran relit ses données, et non l'inverse.
+        await window.mesLoadData();
+        window.mesRenderPage();
+        await a(2200);
+        return d;
+      });
+
+      // ── 1. Ouvrir le dossier par le bouton de la ligne, non par l'état ──
+      await essai('ouverture', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="critiques"]')?.click();
+        await a(2600);
+        const bouton = [...document.querySelectorAll('[onclick*="mesMesureDepuisConstatation("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.carence));
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        d.libelle = (bouton.textContent || '').trim().slice(0, 32);
+        bouton.click();
+        await a(3200);
+        d.etapeAtteinte = (S().traitement || {}).etape;
+        // `mesEtapeCourante` n'est **pas** exportée (lu dans la liste de
+        // `Object.assign(window, …)` de mes-traitement.js) : mon premier jet
+        // l'appelait et relevait une chaîne vide, qu'il prenait pour l'état de
+        // l'écran. On relève donc ce que l'écran porte vraiment — l'étape
+        // **regardée** reste vide, le fil s'ouvrant sur l'étape atteinte — et
+        // c'est `mesQualModifiable()`, elle exportée, qui atteste que l'étape
+        // courante est bien la qualification : elle est fausse dès que le rang
+        // atteint diffère.
+        d.etapeVue = (S().etapeVue || '');
+        d.modifiable = window.mesQualModifiable ? window.mesQualModifiable() : null;
+        // Les sections de l'étape : la carence, le rapport, l'instance, la
+        // qualification.
+        d.instance = vu('#mesQualComite');
+        d.membres = vu('#mesQualMembres');
+        d.reunions = vu('#mesQualReunions');
+        d.cases = ['mesQualConstituee', 'mesQualNonConstituee', 'mesQualRenvoi']
+          .filter((id) => !!document.getElementById(id)).length;
+        // Le volet « recours » ne s'offre pas : aucune mesure n'est contestée.
+        d.volets = document.querySelectorAll('[onclick*="mesQualVoirVolet("]').length;
+        d.recoursAbsent = !volet('recours');
+        return d;
+      });
+
+      // ── 2. Les trois faces d'une même décision ──
+      await essai('faces', async () => {
+        const d = {};
+        const etat = () => ({
+          constituee: !!Q().infraction_constituee,
+          non: !!Q().infraction_non_constituee,
+          renvoi: !!Q().renvoi_demande,
+        });
+        d.depart = etat();
+        // « Non constituée » : les mesures n'ont plus d'objet.
+        document.getElementById('mesQualNonConstituee')?.click();
+        await a(2200);
+        d.apresNon = etat();
+        // « Renvoi » : le motif paraît, et les deux autres tombent.
+        document.getElementById('mesQualRenvoi')?.click();
+        await a(2200);
+        d.apresRenvoi = etat();
+        d.motifParu = vu('#mesQualRenvoiMotif');
+        // « Constituée » : les trois champs de qualification paraissent.
+        document.getElementById('mesQualConstituee')?.click();
+        await a(2200);
+        d.apresConstituee = etat();
+        d.motifParti = !vu('#mesQualRenvoiMotif');
+        d.champsParus = ['mesQualNature', 'mesQualCaracterisation', 'mesQualCirconstances']
+          .filter((id) => !!document.getElementById(id)).length;
+        // Et la section des mesures s'ouvre — elle disait n'avoir pas d'objet.
+        volet('mesures')?.click();
+        await a(2400);
+        d.mesuresOuvertes = vu('[onclick*="mesQualAjouterMesure"]');
+        volet('infraction')?.click();
+        await a(2400);
+        d.revenu = vu('#mesQualComite');
+        return d;
+      });
+
+      // ── 3. Membres, réunions, et ce qu'un changement de volet ne perd pas ──
+      await essai('saisie', async () => {
+        const d = {};
+        const lignes = () => document.querySelectorAll('#mesQualMembres tbody tr[data-rang]').length;
+        const blocs = () => document.querySelectorAll('#mesQualReunions .mes-bloc').length;
+        d.membresAvant = lignes();
+        document.querySelector('[onclick*="mesQualAjouterMembre"]')?.click();
+        await a(2200);
+        d.membresApres = lignes();
+        const ligne = document.querySelector('#mesQualMembres tbody tr[data-rang]');
+        const champ = (racine, nom) => racine?.querySelector(`[data-champ="${nom}"]`);
+        if (ligne) {
+          champ(ligne, 'nom').value = 'DIALLO';
+          champ(ligne, 'prenom').value = 'Aïssata';
+          champ(ligne, 'email').value = 'a.diallo@anac.bj';
+        }
+        // Une réunion, saisie **après** le membre : l'ajout doit relever ce qui
+        // précède, sans quoi le nom du membre serait perdu.
+        d.reunionsAvant = blocs();
+        document.querySelector('[onclick*="mesQualAjouterReunion"]')?.click();
+        await a(2200);
+        d.reunionsApres = blocs();
+        d.membreTenu = (champ(document.querySelector('#mesQualMembres tbody tr[data-rang]'), 'nom') || {}).value;
+        const bloc = document.querySelector('#mesQualReunions .mes-bloc');
+        if (bloc) {
+          champ(bloc, 'date').value = '2026-10-12';
+          champ(bloc, 'objet').value = 'Première séance';
+          champ(bloc, 'resultat').value = 'Infraction retenue à l’unanimité.';
+        }
+        // Les trois champs de la qualification.
+        const poser = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+        poser('mesQualNature', 'Manquement grave au programme de maintenance');
+        poser('mesQualCaracterisation', 'Récidive sur deux aéronefs');
+        poser('mesQualCirconstances', 'Absence de personnel qualifié');
+        // Le comité : la liste en offre un depuis la préparation.
+        const comite = document.getElementById('mesQualComite');
+        const choix = comite ? [...comite.options].find((op) => op.value) : null;
+        d.comiteOffert = !!choix;
+        if (choix) { comite.value = choix.value; }
+        // Le passage au volet des mesures, et le retour : rien ne se perd.
+        volet('mesures')?.click();
+        await a(2400);
+        d.partiPourMesures = !vu('#mesQualComite');
+        volet('infraction')?.click();
+        await a(2400);
+        const l2 = document.querySelector('#mesQualMembres tbody tr[data-rang]');
+        const b2 = document.querySelector('#mesQualReunions .mes-bloc');
+        d.rendu = {
+          membre: (champ(l2, 'nom') || {}).value,
+          courriel: (champ(l2, 'email') || {}).value,
+          reunion: (champ(b2, 'objet') || {}).value,
+          nature: (document.getElementById('mesQualNature') || {}).value,
+          comite: (document.getElementById('mesQualComite') || {}).value,
+        };
+        return d;
+      });
+
+      // ── 4. L'enregistrement, relu sur le serveur ──
+      //
+      // `mesEnregistrerQualification` ne recharge **rien** : il remet la
+      // qualification et rend la main. Pour savoir ce que le serveur a gardé, on
+      // le lui redemande — lire l'état du module ne dirait que ce que la page
+      // croit tenir.
+      await essai('enregistrement', async () => {
+        const d = {};
+        const bouton = document.querySelector('[onclick*="mesEnregistrerQualification"]');
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        // ── Une règle tenue deux fois ne se contre-essaie pas une fois ──
+        //
+        // `mesEnregistrerQualification` relève la saisie avant d'envoyer — et
+        // `mesQualVoirVolet` l'a déjà relevée au retour du volet précédent. Mon
+        // premier contre-essai, qui retirait la relève de l'enregistrement, n'a
+        // donc **rien** fait tomber : le second chemin suffisait. La leçon de
+        // PR (n° 5.f.52), à nouveau.
+        //
+        // Le contrôle pose donc un témoin **après** le dernier changement de
+        // volet : seule la relève de l'enregistrement peut le porter au serveur.
+        const circonstances = document.getElementById('mesQualCirconstances');
+        d.champTemoin = !!circonstances;
+        if (circonstances) circonstances.value = TEMOIN_ENREGISTREMENT;
+        bouton.click();
+        await a(3000);
+        const relu = await window.mesApi(`/constatations/${encodeURIComponent(o.carence)}/traitement`);
+        const q = (relu || {}).qualification || {};
+        d.etape = (relu || {}).etape;
+        d.constituee = !!q.infraction_constituee;
+        d.non = !!q.infraction_non_constituee;
+        d.renvoi = !!q.renvoi_demande;
+        d.membres = (q.membres || []).length;
+        d.premierMembre = ((q.membres || [])[0] || {}).nom;
+        d.courriel = ((q.membres || [])[0] || {}).email;
+        d.reunions = (q.reunions || []).length;
+        d.premiereReunion = ((q.reunions || [])[0] || {}).objet;
+        d.resultatReunion = !!((q.reunions || [])[0] || {}).resultat;
+        d.nature = q.nature;
+        d.caracterisation = !!q.caracterisation;
+        d.circonstances = q.circonstances === TEMOIN_ENREGISTREMENT;
+        d.comite = q.comite_code;
+        return d;
+      });
+      return o;
+    }, DOSSIER, TEMOIN_ENR);
+
+    {
+      const Do = qual.dossier || {};
+      const Ou = qual.ouverture || {};
+      const Fa = qual.faces || {};
+      const Sa = qual.saisie || {};
+      const En = qual.enregistrement || {};
+      verifier('une carence ouverte par l’API parvient au rang « qualification », et son bouton de ligne ouvre l’étape',
+        Do.cree === true && /^CST-\d+$/.test(Do.reference || '')
+        && Do.etape === 'qualification'
+        && Ou.bouton === true && Ou.etapeAtteinte === 'qualification'
+        && Ou.etapeVue === '' && Ou.modifiable === true
+        && Ou.instance === true && Ou.membres === true && Ou.reunions === true
+        && Ou.cases === 3
+        // Deux volets, et non trois : « Recours » ne s'offre qu'avec une mesure
+        // contestée — un onglet vide inviterait à un travail qui n'existe pas.
+        && Ou.volets === 2 && Ou.recoursAbsent === true,
+        JSON.stringify({ ...Do, ...Ou }).slice(0, 420));
+      verifier('les trois cases de la qualification s’excluent, et chacune commande ce que la fiche montre',
+        // Au départ, aucune n'est cochée : la qualification n'est pas arrêtée.
+        Fa.depart.constituee === false && Fa.depart.non === false && Fa.depart.renvoi === false
+        // « Non constituée » seule.
+        && Fa.apresNon.non === true && Fa.apresNon.constituee === false
+        // « Renvoi » décoche la précédente, et fait paraître son motif.
+        && Fa.apresRenvoi.renvoi === true && Fa.apresRenvoi.non === false
+        && Fa.motifParu === true
+        // « Constituée » décoche les deux autres, retire le motif, ouvre les
+        // trois champs et la section des mesures.
+        && Fa.apresConstituee.constituee === true
+        && Fa.apresConstituee.non === false && Fa.apresConstituee.renvoi === false
+        && Fa.motifParti === true && Fa.champsParus === 3
+        && Fa.mesuresOuvertes === true && Fa.revenu === true,
+        JSON.stringify(Fa).slice(0, 460));
+      verifier('un membre et une réunion s’ajoutent sans perdre ce qui précède, et le volet des mesures ne perd rien au retour',
+        Sa.membresApres === Sa.membresAvant + 1
+        && Sa.reunionsApres === Sa.reunionsAvant + 1
+        // L'ajout de la réunion a relevé le membre déjà saisi.
+        && Sa.membreTenu === 'DIALLO'
+        && Sa.comiteOffert === true
+        // Le volet a bien été quitté : sans cela on relirait le même DOM.
+        && Sa.partiPourMesures === true
+        && Sa.rendu.membre === 'DIALLO' && Sa.rendu.courriel === 'a.diallo@anac.bj'
+        && Sa.rendu.reunion === 'Première séance'
+        && /^Manquement grave/.test(Sa.rendu.nature || '')
+        && !!Sa.rendu.comite,
+        JSON.stringify(Sa).slice(0, 460));
+      verifier('l’enregistrement rend au serveur l’instance, les réunions et la qualification de l’infraction',
+        En.bouton === true && En.etape === 'qualification'
+        && En.constituee === true && En.non === false && En.renvoi === false
+        && En.membres === 1 && En.premierMembre === 'DIALLO'
+        && En.courriel === 'a.diallo@anac.bj'
+        && En.reunions === 1 && En.premiereReunion === 'Première séance'
+        && En.resultatReunion === true
+        && /^Manquement grave/.test(En.nature || '')
+        && En.caracterisation === true
+        // Le témoin posé après le dernier changement de volet : seule la relève
+        // de l’enregistrement peut l’avoir porté au serveur.
+        && En.champTemoin === true && En.circonstances === true
+        && !!En.comite,
+        JSON.stringify(En).slice(0, 460));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur CARE',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

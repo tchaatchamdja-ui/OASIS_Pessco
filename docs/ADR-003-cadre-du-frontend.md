@@ -8550,3 +8550,73 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            demandé ignoré. Les quatre contrôles sont passés **du premier coup**,
            et les cinq contre-essais mordent — dont deux en cascade, ce que le
            relevé dit plutôt que de le taire.
+
+       5.f.55 [x] **CARE — la fiche de qualification, et une règle tenue deux
+           fois (à nouveau)** — fait le 2 novembre 2026.
+
+           **Dix-neuf contrôles sur CARE ; 16 → 24 gestes sur 90.**
+
+           `mes-qualification.js` — **993 lignes, 26 gestes nommés, aucun
+           exercé.** C'est l'étape où l'instance décisionnelle siège sur une
+           carence : elle lit l'investigation, consigne ses réunions, dit si
+           l'infraction est constituée, et arrête le cas échéant les mesures
+           d'application.
+
+           ── Pourquoi aucun geste n'était atteignable ──
+
+           L'étape n'existe que sur une carence **parvenue au rang
+           « qualification »** du fil d'avancement : `mesVoirEtape` refuse tout
+           rang supérieur à celui atteint, et `mesQualModifiable` ferme la saisie
+           dès que l'étape est franchie. Or le jeu de référence n'a **aucune
+           constatation** — les collections de CARE partent vides, et les
+           carences des autres modules arrivent par le bus de services, qui n'en
+           sert aucune ici.
+
+           La ronde construit donc son dossier : cinq appels d'API — ceux-là même
+           que `mesures.smoke.js` éprouve un à un — ouvrent la carence,
+           l'instruisent, décident d'investiguer, consignent l'investigation et
+           la soumettent. **Ce n'est pas contourner l'écran : c'est lui donner la
+           pièce qu'il attend.** Tout ce qui suit passe par les gestes de
+           l'écran, à commencer par le bouton de la ligne.
+
+           ── Les trois règles éprouvées ──
+
+           **Deux volets, et non trois.** « Recours » ne s'offre qu'avec une
+           mesure contestée : un onglet vide inviterait à un travail qui n'existe
+           pas.
+
+           **Les trois cases disent une même décision par ses trois faces.**
+           Cocher « constituée » décoche « non constituée » et « renvoi », et
+           chacune commande ce que la fiche montre — le motif de renvoi paraît et
+           s'en va, les trois champs de qualification s'ouvrent, la section des
+           mesures cesse de dire qu'elle n'a pas d'objet.
+
+           **Un ajout relève avant de redessiner.** `mesQualModifier` passe par
+           `mesMajQualification` : ajouter une réunion ne perd pas le membre
+           qu'on venait de saisir, et le passage au volet des mesures ne perd ni
+           le comité, ni la nature, ni le résultat de la séance.
+
+           ── Une règle tenue deux fois, et un contre-essai qui n'a rien fait
+              tomber ──
+
+           Mon quatrième contre-essai retirait la relève de la saisie de
+           `mesEnregistrerQualification` : **les dix-neuf contrôles sont restés
+           verts.** `mesQualVoirVolet` l'avait déjà relevée au retour du volet
+           précédent — le second chemin suffisait. C'est la leçon de PR
+           (n° 5.f.52) une troisième fois : *une règle tenue deux fois ne se
+           contre-essaie pas une fois.*
+
+           Le contrôle pose désormais un témoin dans « Circonstances »
+           **après** le dernier changement de volet : seule la relève de
+           l'enregistrement peut le porter au serveur. Le contre-essai mord.
+
+           ── Et une assertion qui visait une fonction inatteignable ──
+
+           Mon premier jet appelait `mesEtapeCourante()` pour relever l'étape
+           regardée. Elle n'est **pas exportée** — la liste de
+           `Object.assign(window, …)` de mes-traitement.js le dit —, et l'appel
+           rendait une chaîne vide que le contrôle prenait pour un état. C'est
+           `mesQualModifiable()`, elle exportée, qui atteste que l'étape courante
+           est bien la qualification : elle est fausse dès que le rang atteint
+           diffère. *Un contrôle qui relève le défaut de son propre garde-fou ne
+           relève rien.*

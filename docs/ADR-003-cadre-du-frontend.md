@@ -8402,3 +8402,59 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            `event.preventDefault`, `document.getElementById`,
            `document.querySelectorAll`) que leurs gestes portants exercent déjà
            sous un autre nom.
+
+       5.f.52 [x] **PR — l'aperçu des profils, et une règle tenue deux fois** —
+           fait le 2 novembre 2026.
+
+           **Dix-huit contrôles sur PR ; 9 → 28 gestes sur 92.** Dix-neuf noms
+           gagnés, aucun perdu.
+
+           PR était l'écran le plus pauvre du dépôt, à 10 %. Sa page « Profils »
+           porte tout ce que le module donne à voir d'un coup d'œil : trois vues
+           emboîtées — par domaine, par secteur, par prestataire —, une barre de
+           filtres, un diagramme en barres, une courbe de tendance avec ses deux
+           bornes de date, et des cartes d'indicateur qui ouvrent un volet.
+
+           ── Trois fois la même méthode, trois fois le même profit ──
+
+           Les gestes n'étaient pas là où je les cherchais, et trois corrections
+           successives l'ont établi : la page a **trois sous-vues**, et chaque
+           geste n'existe que dans l'une ; les deux graphiques vivent sur le
+           **tableau de bord**, leur nom le disait (`_dashBarChart`,
+           `_dashTrend`) ; et le profil individuel exige un **prestataire
+           retenu** — « Required selection: prestataire », dit la source.
+
+           La ronde cherche désormais chaque geste au lieu de supposer où il
+           est : elle parcourt les sous-vues de la page courante, puis les pages
+           de la barre et leurs sous-vues. Ce qui aurait pris trois lectures de
+           source se fait en un essai.
+
+           ── Un élément SVG ne se clique pas comme un bouton ──
+
+           `SVGElement` n'hérite pas de `HTMLElement.click()` : l'appel lève
+           « click is not a function ». Les barres d'un graphique sont des
+           `<rect>` et des `<text>` — elles reçoivent un vrai `MouseEvent`, ce
+           qui est d'ailleurs plus près du geste.
+
+           Et le second graphique n'existe qu'avec une barre du premier :
+           `if (window._dashBarChart && window._dashBarChart.selected)`. Ma
+           phase précédente l'avait effacée en réinitialisant le diagramme, puis
+           cherchait un graphique qu'elle venait de faire disparaître.
+           Sélectionner un secteur fait paraître ses sous-activités : une
+           **chaîne** de deux gestes, mesurée comme telle.
+
+           ── Une règle tenue deux fois ne se contre-essaie pas une fois ──
+
+           La règle de la page — *un filtre que la vue courante désactive est
+           vidé* — est appliquée par **deux chemins redondants** : `setVueApercu`
+           vide au changement de vue, et la barre de filtres vide à chaque rendu
+           selon la vue courante. Chacun suffit.
+
+           J'ai désarmé le premier : rien n'est tombé. J'ai désarmé le second :
+           rien n'est tombé non plus. J'ai conclu deux fois à un contrôle inerte,
+           et corrigé son énoncé deux fois — avant de forcer l'affichage des
+           valeurs mesurées et de constater qu'elles étaient **exactement**
+           celles attendues. C'est la leçon de 5.f.47, reprise à l'identique et
+           mise plus longtemps à être revue : *une règle tenue deux fois ne se
+           contre-essaie pas une fois.* Les deux chemins désarmés ensemble, le
+           contrôle rougit — et lui seul.

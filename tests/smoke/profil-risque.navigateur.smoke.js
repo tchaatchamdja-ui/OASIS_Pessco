@@ -376,6 +376,373 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
       JSON.stringify({ lateraux: gestes.lateraux, replie: gestes.lateralReplie,
         deplie: gestes.lateralDeplie, indices: gestes.indices }));
 
+    // ══════════════════════════════════════════════════════════════════
+    //  L'aperçu des profils : trois vues, leurs filtres, deux graphiques
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // La page « Profils » porte tout ce que PR donne à voir d'un coup d'œil :
+    // trois vues emboîtées — par domaine, par secteur, par prestataire —, une
+    // barre de filtres, un diagramme en barres et une courbe de tendance, et des
+    // cartes d'indicateur qui ouvrent le détail. Dix-huit gestes, et aucun
+    // n'était exercé.
+    //
+    // La règle qui tient la page : *un filtre que la vue courante désactive est
+    // vidé.* La vue par domaine désactive le secteur et le prestataire, celle par
+    // secteur le prestataire.
+    //
+    // Et le dispositif l'applique par **deux chemins redondants**, comme la
+    // cascade des sous-activités de PLAN (n° 5.f.47) : `setVueApercu` vide au
+    // changement de vue, et la barre de filtres vide **à chaque rendu** selon la
+    // vue courante (`if (secOff && f.secteur) f.secteur = '';`).
+    //
+    // Chacun suffit, et c'est pourquoi ni l'un ni l'autre désarmé seul ne fait
+    // rien tomber : il faut les retirer **tous les deux** pour que le
+    // contre-essai morde. J'ai cru deux fois à un contrôle inerte avant de
+    // revoir cette leçon — *une règle tenue deux fois ne se contre-essaie pas
+    // une fois.*
+    //
+    // On la mesure sur un état **garni** — la leçon des filtres de PLAN.
+    etape = 'aperçu des profils';
+    await ouvrir('profils');
+    await attendre(2800);
+    const rondeProfils = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const F = () => window._profilFilters || {};
+      // Une facette se vise par ce qu'elle écrit : elle n'a pas d'identifiant.
+      const facette = (cle) => [...document.querySelectorAll('select')]
+        .find((s) => (s.getAttribute('onchange') || '').includes(`${cle}=this.value`));
+      const regler = async (cle, attente) => {
+        const s = facette(cle);
+        if (!s) return { trouvee: false };
+        const c = [...s.options].find((op) => op.value);
+        if (!c) return { trouvee: true, offre: false, options: s.options.length };
+        s.value = c.value;
+        s.dispatchEvent(new Event('change', { bubbles: true }));
+        await a(attente || 1800);
+        return { trouvee: true, offre: true, pose: c.value };
+      };
+      const vue = (id) => document.querySelector(`[onclick*="setVueApercu('${id}')"]`);
+      // ── Chercher la sous-vue qui porte le geste, plutôt que la supposer ──
+      //
+      // La page « Profils » a trois sous-vues — actifs, individuel, archives —
+      // et chaque geste n'existe que dans l'une. Mon premier jet les cherchait
+      // tous sur celle qui s'ouvre par défaut : quatre contrôles rouges pour une
+      // structure que la source déclare.
+      // Et la recherche ne s'arrête pas à la page courante : `_dashBarChart` et
+      // `_dashTrend` portent leur lieu dans leur nom — le tableau de bord —, et
+      // mon premier jet les cherchait sur les profils. On parcourt donc les
+      // pages de la barre, puis les sous-vues de chacune.
+      const allerOu = async (selecteur) => {
+        if (document.querySelector(selecteur)) return { deja: true };
+        const essayerLesSousVues = async (page) => {
+          const onglets = [...document.querySelectorAll('.sub-nav-btn')];
+          for (const b of onglets) {
+            /* eslint-disable no-await-in-loop */
+            b.click();
+            await a(2200);
+            if (document.querySelector(selecteur)) {
+              return { page, sousVue: (b.textContent || '').trim().slice(0, 24) };
+            }
+          }
+          return null;
+        };
+        const ici = await essayerLesSousVues('(courante)');
+        if (ici) return ici;
+        const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.getAttribute('data-page'));
+        for (const p of pages) {
+          document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+          await a(2500);
+          if (document.querySelector(selecteur)) return { page: p };
+          const dansUneSousVue = await essayerLesSousVues(p);
+          if (dansUneSousVue) return dansUneSousVue;
+        }
+        return { introuvable: true, pages: pages.length };
+      };
+
+      // ── 1. Les filtres de l'aperçu, et la cascade des vues ──
+      await essai('vues', async () => {
+        const d = {};
+        d.ou = await allerOu('.apercu-tab');
+        d.onglets = document.querySelectorAll('.apercu-tab').length;
+        d.vueDepart = window._profilVue;
+        // On garnit : la vue par prestataire offre les trois facettes.
+        vue('prestataire')?.click();
+        await a(2200);
+        d.vuePrestataire = window._profilVue === 'prestataire';
+        d.domaine = await regler('window._profilFilters.domaine', 2000);
+        d.secteur = await regler('window._profilFilters.secteur', 2000);
+        d.prestataire = await regler('window._profilFilters.prestataire', 2000);
+        d.garni = {
+          domaine: F().domaine || '', secteur: F().secteur || '',
+          prestataire: F().prestataire || '',
+        };
+        d.troisPoses = Object.values(d.garni).filter(Boolean).length;
+
+        // La vue par secteur désactive le prestataire : elle le vide.
+        vue('secteur')?.click();
+        await a(2200);
+        d.apresSecteur = {
+          vue: window._profilVue, domaine: F().domaine || '',
+          secteur: F().secteur || '', prestataire: F().prestataire || '',
+        };
+        // La vue par domaine désactive les deux autres.
+        vue('domaine')?.click();
+        await a(2200);
+        d.apresDomaine = {
+          vue: window._profilVue, domaine: F().domaine || '',
+          secteur: F().secteur || '', prestataire: F().prestataire || '',
+        };
+        // Et la réinitialisation, qui remplace l'objet entier.
+        const reset = document.querySelector('[onclick*="window._profilFilters={"]');
+        d.boutonReset = !!reset;
+        if (!reset) {
+          await regler('window._profilFilters.domaine', 1800);
+        }
+        d.avantReset = F().domaine || '';
+        reset?.click();
+        await a(2000);
+        d.toutVide = ['domaine', 'secteur', 'prestataire']
+          .every((k) => (F()[k] || '') === '');
+        return d;
+      });
+
+      // ── 2. Le profil d'un prestataire, et le retour ──
+      await essai('profilDetaille', async () => {
+        const d = {};
+        d.ou = await allerOu('.apercu-tab');
+        vue('prestataire')?.click();
+        await a(2500);
+        d.ouLigne = await allerOu('[onclick*="ouvrirProfilPrestataire("]');
+        const ligne = document.querySelector('[onclick*="ouvrirProfilPrestataire("]');
+        d.ligne = !!ligne;
+        if (!ligne) return d;
+        const id = (/ouvrirProfilPrestataire\('([^']+)'/.exec(ligne.getAttribute('onclick') || '') || [])[1];
+        d.identifiant = !!id;
+        ligne.click();
+        await a(2800);
+        d.filtrePose = (F().prestataire || '') === id;
+        const retour = document.querySelector('[onclick*="retourVuePrestataires"]');
+        d.boutonRetour = !!retour;
+        retour?.click();
+        await a(2500);
+        d.filtreLeve = (F().prestataire || '') === '';
+        d.vueRendue = window._profilVue === 'prestataire';
+        return d;
+      });
+
+      // ── 3. Le diagramme en barres et la courbe de tendance ──
+      await essai('graphiques', async () => {
+        const d = {};
+        d.ou = await allerOu('[onchange*="window._dashBarChart.mode"]');
+        await a(1200);
+        // Le diagramme : son mode et sa mesure.
+        d.barAvant = { ...(window._dashBarChart || {}) };
+        d.barMode = await regler('window._dashBarChart.mode', 1800);
+        d.barModePose = d.barMode.offre
+          ? (window._dashBarChart || {}).mode === d.barMode.pose : null;
+        d.barMetric = await regler('window._dashBarChart.metric', 1800);
+        d.barMetricPose = d.barMetric.offre
+          ? (window._dashBarChart || {}).metric === d.barMetric.pose : null;
+        const barReset = document.querySelector('[onclick*="window._dashBarChart={"]');
+        d.barReset = !!barReset;
+        barReset?.click();
+        await a(1800);
+        d.barRendu = (window._dashBarChart || {}).mode === 'secteur'
+          && (window._dashBarChart || {}).metric === 'conf';
+
+        // La courbe : son mode, sa mesure, et ses deux bornes de date.
+        d.trendMode = await regler('window._dashTrend.mode', 1800);
+        d.trendModePose = d.trendMode.offre
+          ? (window._dashTrend || {}).mode === d.trendMode.pose : null;
+        d.trendMetric = await regler('window._dashTrend.metric', 1800);
+        d.trendMetricPose = d.trendMetric.offre
+          ? (window._dashTrend || {}).metric === d.trendMetric.pose : null;
+        const borne = (cle, valeur) => {
+          const e = [...document.querySelectorAll('input')]
+            .find((x) => (x.getAttribute('onchange') || '').includes(`window._dashTrend.${cle}=this.value`));
+          if (!e) return false;
+          e.value = valeur;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        d.borneDebut = borne('start', '2026-01-01');
+        await a(1800);
+        d.borneFin = borne('end', '2026-12-31');
+        await a(1800);
+        d.bornes = {
+          start: (window._dashTrend || {}).start, end: (window._dashTrend || {}).end,
+        };
+        const trendReset = document.querySelector('[onclick*="window._dashTrend={"]');
+        d.trendReset = !!trendReset;
+        trendReset?.click();
+        await a(1800);
+        d.trendRendu = (window._dashTrend || {}).mode === 'prestataire'
+          && (window._dashTrend || {}).start === '';
+        return d;
+      });
+
+      // ── 4. Les cartes d'indicateur, et la barre des sous-activités ──
+      await essai('cartes', async () => {
+        const d = {};
+        // ── Le profil individuel exige un prestataire retenu ──
+        //
+        // « Required selection: prestataire », dit la source : les cartes
+        // n'existent que dans la vue « par prestataire », et seulement quand
+        // l'un est choisi. La phase précédente a navigué ailleurs et levé le
+        // filtre — *une ronde qui suit une autre commence par relever ce qu'elle
+        // hérite.* On le repose donc avant de chercher.
+        document.querySelector('.nav-btn[data-page="profils"]')?.click();
+        await a(2800);
+        d.ouLigne = await allerOu('[onclick*="ouvrirProfilPrestataire("]');
+        vue('prestataire')?.click();
+        await a(2200);
+        const ligne = document.querySelector('[onclick*="ouvrirProfilPrestataire("]');
+        d.prestataireChoisi = !!ligne;
+        ligne?.click();
+        await a(3000);
+        d.filtre = (window._profilFilters || {}).prestataire || '';
+        d.ou = await allerOu('[onclick*="openIndividualIndicator("]');
+        const carte = document.querySelector('[onclick*="openIndividualIndicator("]');
+        d.carte = !!carte;
+        if (carte) {
+          const avant = document.querySelectorAll('.pr-slicer, .modal-overlay').length;
+          carte.click();
+          await a(2800);
+          d.volet = document.querySelectorAll('.pr-slicer, .modal-overlay').length > avant;
+          document.querySelector('[onclick*="closeSlicer"]')?.click();
+          await a(1500);
+        }
+        const groupe = document.querySelector('[onclick*="openIndividualGroup("]');
+        d.groupe = !!groupe;
+        if (groupe) {
+          groupe.click();
+          await a(2800);
+          d.voletGroupe = document.querySelectorAll('.pr-slicer, .modal-overlay').length > 0;
+          document.querySelector('[onclick*="closeSlicer"]')?.click();
+          await a(1500);
+        }
+        return d;
+      });
+
+      // ── 5. La barre des sous-activités, qui vit sur le tableau de bord ──
+      //
+      // `setSABarSelection` est rendu par `_prStatsSousActivites`, que
+      // `renderStatistiques` porte — et c'est le **tableau de bord** qui appelle
+      // cette dernière, non les profils. Un graphique SVG, dont chaque barre est
+      // cliquable.
+      await essai('barreSA', async () => {
+        const d = {};
+        // ── Le second graphique ne paraît qu'avec une barre du premier ──
+        //
+        // `if (window._dashBarChart && window._dashBarChart.selected)` : le
+        // graphique des sous-activités n'existe que lorsqu'une barre du
+        // diagramme des taux est retenue. Ma phase précédente l'avait effacée en
+        // réinitialisant le diagramme — et cherchait ensuite un graphique
+        // qu'elle venait de faire disparaître. Sélectionner un secteur fait
+        // paraître ses sous-activités : c'est une **chaîne** de deux gestes.
+        d.ouTaux = await allerOu('[onclick*="setTauxBarSelection("]');
+        const taux = [...document.querySelectorAll('[onclick*="setTauxBarSelection("]')];
+        d.barresTaux = taux.length;
+        d.saAvant = document.querySelectorAll('[onclick*="setSABarSelection("]').length;
+        // ── Un élément SVG ne se clique pas comme un bouton ──
+        //
+        // `SVGElement` n'hérite pas de `HTMLElement.click()` : l'appel lève
+        // « click is not a function ». Les barres d'un graphique sont des
+        // `<rect>` et des `<text>` — on leur dispatche un vrai événement de
+        // souris, ce qui est d'ailleurs plus près du geste.
+        const cliquer = (el) => el.dispatchEvent(
+          new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
+        );
+        if (taux.length) {
+          cliquer(taux[0]);
+          await a(2500);
+        }
+        d.selectionTaux = (window._dashBarChart || {}).selected || '';
+        const barres = [...document.querySelectorAll('[onclick*="setSABarSelection("]')];
+        d.barres = barres.length;
+        if (!barres.length) return d;
+        const avant = (window._dashBarChart || {}).selectedSA || '';
+        // Une barre qui n'est pas déjà retenue : la retenir ne prouve rien si
+        // elle l'était.
+        const cible = barres.find((b) => {
+          const id = (/setSABarSelection\('([^']*)'/.exec(b.getAttribute('onclick') || '') || [])[1];
+          return id && id !== avant;
+        }) || barres[0];
+        const id = (/setSABarSelection\('([^']*)'/.exec(cible.getAttribute('onclick') || '') || [])[1];
+        d.cible = !!id;
+        d.avant = avant;
+        cliquer(cible);
+        await a(2200);
+        d.retenue = (window._dashBarChart || {}).selectedSA;
+        d.posee = d.retenue === id;
+        return d;
+      });
+      return o;
+    });
+
+    {
+      const P = rondeProfils;
+      const Vu = P.vues || {};
+      const Pd = P.profilDetaille || {};
+      const Gr = P.graphiques || {};
+      const Ca = P.cartes || {};
+      const Ba = P.barreSA || {};
+      verifier('un filtre que la vue courante désactive est vidé, par le changement de vue comme par chaque rendu de la barre',
+        Vu.onglets === 3 && Vu.vuePrestataire === true
+        // L'état est garni d'abord : sans cela la cascade se mesurerait sur rien.
+        && Vu.troisPoses >= 2
+        // La vue par secteur vide le prestataire, et garde le reste.
+        && Vu.apresSecteur.vue === 'secteur'
+        && Vu.apresSecteur.prestataire === ''
+        && Vu.apresSecteur.secteur === Vu.garni.secteur
+        // La vue par domaine vide le secteur et le prestataire.
+        && Vu.apresDomaine.vue === 'domaine'
+        && Vu.apresDomaine.secteur === '' && Vu.apresDomaine.prestataire === ''
+        && Vu.apresDomaine.domaine === Vu.garni.domaine,
+        JSON.stringify(Vu).slice(0, 460));
+      verifier('la réinitialisation de l’aperçu vide ses trois facettes',
+        Vu.boutonReset === true && Vu.toutVide === true,
+        JSON.stringify({ bouton: Vu.boutonReset, avant: Vu.avantReset, vide: Vu.toutVide }));
+      verifier('une ligne de l’aperçu ouvre le profil d’un prestataire, et le bouton de retour le quitte',
+        Pd.ligne === true && Pd.identifiant === true
+        && Pd.filtrePose === true
+        && Pd.boutonRetour === true && Pd.filtreLeve === true
+        && Pd.vueRendue === true,
+        JSON.stringify(Pd));
+      verifier('le diagramme et la courbe retiennent leur mode, leur mesure et leurs bornes, et chacun se rend par son geste',
+        // Le diagramme en barres.
+        Gr.barMode.offre === true && Gr.barModePose === true
+        && Gr.barMetric.offre === true && Gr.barMetricPose === true
+        && Gr.barReset === true && Gr.barRendu === true
+        // La courbe de tendance, et ses deux bornes de date.
+        && Gr.trendMode.offre === true && Gr.trendModePose === true
+        && Gr.trendMetric.offre === true && Gr.trendMetricPose === true
+        && Gr.borneDebut === true && Gr.borneFin === true
+        && Gr.bornes.start === '2026-01-01' && Gr.bornes.end === '2026-12-31'
+        && Gr.trendReset === true && Gr.trendRendu === true,
+        JSON.stringify(Gr).slice(0, 460));
+      verifier('les cartes d’indicateur et de groupe ouvrent leur volet, et la barre des sous-activités retient son choix',
+        // Le profil individuel n'existe qu'avec un prestataire retenu.
+        Ca.prestataireChoisi === true && Ca.filtre !== ''
+        && Ca.carte === true && Ca.volet === true
+        && Ca.groupe === true && Ca.voletGroupe === true,
+        JSON.stringify(Ca));
+      verifier('une barre du diagramme des taux fait paraître celui des sous-activités, dont chaque barre retient la sienne',
+        // Le premier geste : une barre des taux, et le second graphique naît.
+        Ba.barresTaux >= 1 && Ba.saAvant === 0
+        && Ba.selectionTaux !== ''
+        // Le second : une barre des sous-activités, et elle est retenue.
+        && Ba.barres >= 1 && Ba.cible === true
+        && Ba.posee === true && Ba.retenue !== Ba.avant,
+        JSON.stringify(Ba));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PR',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
   } finally {

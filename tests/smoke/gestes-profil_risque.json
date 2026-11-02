@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-01",
+ "releve": "2026-11-02",
  "gestesNommes": 95,
  "occurrences": 186,
- "exerces": 9,
+ "exerces": 28,
  "indecidables": 3,
  "gestes": [
   {
@@ -264,7 +264,7 @@
    "evenement": "click",
    "source": "closeSlicer()",
    "nom": "closeSlicer",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -1184,7 +1184,7 @@
    "evenement": "change",
    "source": "window._profilFilters.domaine=this.value;renderPage();",
    "nom": "window._profilFilters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1193,7 +1193,7 @@
    "evenement": "change",
    "source": "window._profilFilters.secteur=this.value;renderPage();",
    "nom": "window._profilFilters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1202,7 +1202,7 @@
    "evenement": "change",
    "source": "window._profilFilters.prestataire=this.value;renderPage();",
    "nom": "window._profilFilters.prestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1220,7 +1220,7 @@
    "evenement": "click",
    "source": "window._profilFilters={domaine:'',secteur:'',prestataire:'',search:''};renderPage();",
    "nom": "window._profilFilters",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1328,7 +1328,7 @@
    "evenement": "click",
    "source": "ouvrirProfilPrestataire('${en.id}')",
    "nom": "ouvrirProfilPrestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1337,7 +1337,7 @@
    "evenement": "click",
    "source": "ouvrirProfilPrestataire('${en.id}')",
    "nom": "ouvrirProfilPrestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1346,7 +1346,7 @@
    "evenement": "click",
    "source": "setVueApercu('${v.id}')",
    "nom": "setVueApercu",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1355,7 +1355,7 @@
    "evenement": "click",
    "source": "retourVuePrestataires()",
    "nom": "retourVuePrestataires",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1373,7 +1373,7 @@
    "evenement": "click",
    "source": "openIndividualIndicator('${ev.id}','${type}','${ind.id}'${_saAttr})",
    "nom": "openIndividualIndicator",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1391,7 +1391,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();openIndividualGroup('${ev.id}','${type}','${sa.id}')",
    "nom": "openIndividualGroup",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1409,7 +1409,7 @@
    "evenement": "click",
    "source": "openIndividualGroup('${ev.id}','perf','')",
    "nom": "openIndividualGroup",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1436,7 +1436,7 @@
    "evenement": "click",
    "source": "window._dashTrend={mode:'prestataire',metric:'conf',start:'',end:''};renderPage();",
    "nom": "window._dashTrend",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1445,7 +1445,7 @@
    "evenement": "change",
    "source": "window._dashTrend.mode=this.value;renderPage();",
    "nom": "window._dashTrend.mode",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1454,7 +1454,7 @@
    "evenement": "change",
    "source": "window._dashTrend.metric=this.value;renderPage();",
    "nom": "window._dashTrend.metric",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1463,7 +1463,7 @@
    "evenement": "change",
    "source": "window._dashTrend.start=this.value;renderPage();",
    "nom": "window._dashTrend.start",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1472,7 +1472,7 @@
    "evenement": "change",
    "source": "window._dashTrend.end=this.value;renderPage();",
    "nom": "window._dashTrend.end",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1481,7 +1481,7 @@
    "evenement": "click",
    "source": "setSABarSelection('${safeSaId}')",
    "nom": "setSABarSelection",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1490,7 +1490,7 @@
    "evenement": "click",
    "source": "setSABarSelection('${safeSaId}')",
    "nom": "setSABarSelection",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1517,7 +1517,7 @@
    "evenement": "click",
    "source": "window._dashBarChart={mode:'secteur',metric:'conf',secteur:'',prestataire:'',selected:''};renderPage();",
    "nom": "window._dashBarChart",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1526,7 +1526,7 @@
    "evenement": "change",
    "source": "window._dashBarChart.mode=this.value;window._dashBarChart.selected='';renderPage();",
    "nom": "window._dashBarChart.mode",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1535,7 +1535,7 @@
    "evenement": "change",
    "source": "window._dashBarChart.metric=this.value;renderPage();",
    "nom": "window._dashBarChart.metric",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1634,7 +1634,7 @@
    "evenement": "click",
    "source": "closeSlicer()",
    "nom": "closeSlicer",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1643,7 +1643,7 @@
    "evenement": "click",
    "source": "closeSlicer()",
    "nom": "closeSlicer",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",

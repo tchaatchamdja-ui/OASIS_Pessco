@@ -88,6 +88,52 @@ function aiguillageEtChemins() {
   return { rendues, ouvrables: [...ouvrables] };
 }
 
+// ── Trois gestes que rien n'ouvre : la mesure, et non l'affirmation ──
+//
+// `openReunionEvaluateursList`, `openReunionEvaluateursForm` et
+// `saveReunionEval` composent un cycle de fenêtres. Le contrôle retire du
+// fichier le corps de ces trois fonctions, puis cherche leurs appels dans ce
+// qui reste **et dans tous les autres fichiers de l'écran**. Zéro appel dehors,
+// c'est un cycle fermé : du code que l'écran n'ouvre plus.
+function gestesOrphelinsDeLaReunion() {
+  const js = path.join(RACINE, 'public', 'modules', 'profil_risque', 'js');
+  const fiche = path.join(js, 'pr-evaluation-fiche.js');
+  const texte = fs.readFileSync(fiche, 'utf8');
+  const noms = ['openReunionEvaluateursList', 'openReunionEvaluateursForm', 'saveReunionEval'];
+
+  // Le corps d'une fonction, de sa signature à l'accolade qui la referme.
+  const corpsDe = (nom) => {
+    const i = texte.indexOf(`async function ${nom}(`);
+    if (i < 0) throw new Error(`refus : ${nom} n’est plus déclarée dans pr-evaluation-fiche.js.`);
+    let solde = 0;
+    let ouverte = false;
+    for (let k = i; k < texte.length; k += 1) {
+      if (texte[k] === '{') { solde += 1; ouverte = true; } else if (texte[k] === '}') solde -= 1;
+      if (ouverte && solde === 0) return texte.slice(i, k + 1);
+    }
+    throw new Error(`refus : le corps de ${nom} ne se lit plus.`);
+  };
+
+  const corps = noms.map(corpsDe);
+  let dedans = 0;
+  corps.forEach((c) => {
+    noms.forEach((n) => { dedans += (c.match(new RegExp(`${n}\\(`, 'g')) || []).length - (c.indexOf(`function ${n}(`) >= 0 ? 1 : 0); });
+  });
+
+  // Ce qui reste du fichier, plus les autres fichiers de l'écran.
+  let dehorsTexte = texte;
+  corps.forEach((c) => { dehorsTexte = dehorsTexte.replace(c, ''); });
+  fs.readdirSync(js).filter((f) => f.endsWith('.js') && f !== 'pr-evaluation-fiche.js')
+    .forEach((f) => { dehorsTexte += fs.readFileSync(path.join(js, f), 'utf8'); });
+  const dehors = noms.filter((n) => new RegExp(`${n}\\(`).test(dehorsTexte));
+
+  return {
+    dehors,
+    dedans,
+    enLigne: (dehorsTexte.match(/reunionEvalEditInline\(/g) || []).length,
+  };
+}
+
 module.exports = async function profilRisqueNavigateurSmoke(port) {
   console.log('\n── PR : l’écran « Profil de Risque » dans un navigateur ──');
   const srv = await demarrer({ port });
@@ -1414,6 +1460,471 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         // Les notes sont reprises : le nouveau cycle repart de l'ancien.
         && Va.enfant.notesReprises >= 1,
         JSON.stringify(Va).slice(0, 460));
+    }
+
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les réunions des évaluateurs, et la consolidation qui cumule
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `pr-evaluation-fiche.js`, onglet « Réunion évaluateurs » : la consolidation
+    // du chapitre 4 §4.2.2.e. Un tour de consolidation s'ouvre, rouvre les notes,
+    // relève ce qui change, et se clôt par un compte-rendu auquel il s'attache.
+    //
+    // ── Ce que la ronde précédente laisse, et qui sert ici ──
+    //
+    // Le circuit (5.f.57) a validé une évaluation puis ouvert un **cycle 2** par
+    // réévaluation : un brouillon, donc modifiable, et c'est lui qui porte la
+    // consolidation. La validée, elle, sert à l'inverse — à mesurer ce qu'un
+    // dossier verrouillé n'offre plus —, et c'est elle qui porte le compte-rendu
+    // de réunion prestataire que la ronde y a enregistré.
+    //
+    // ── Les quatre règles éprouvées ──
+    //
+    //  1. **Un tour de consolidation prend l'empreinte des notes**, les rouvre à
+    //     la modification quel que soit le statut, et ce qui change depuis
+    //     l'empreinte se lit ligne par ligne, ancienne note contre nouvelle.
+    //  2. **Clore le tour reverrouille les notes.** `isReadonly` porte
+    //     `(_consolLocked && !_consolActive)` : une fois le compte-rendu
+    //     enregistré, un brouillon **n'est plus modifiable** — il faut ouvrir un
+    //     nouveau tour. C'est une règle que rien dans l'écran n'annonce.
+    //  3. **Les tours se cumulent sans s'écraser.** `reunionEvalSaveFromTab` lit
+    //     les comptes-rendus existants **avant** d'enregistrer, et refuse
+    //     d'enregistrer s'il n'a pas su les lire : chaque tour s'ajoute au
+    //     précédent, numéroté.
+    //  4. **Un dossier validé n'offre plus rien à écrire** : ni tour de
+    //     consolidation, ni nouvelle réunion, ni modification — les seuls gestes
+    //     qui restent sont les exports.
+    //
+    // ── Trois gestes orphelins, mesurés et non couverts ──
+    //
+    // `openReunionEvaluateursList`, `openReunionEvaluateursForm` et
+    // `saveReunionEval` forment un cycle de fenêtres **fermé sur lui-même** : la
+    // liste n'est appelée que par le formulaire, le formulaire que par la liste.
+    // Aucun balisage de l'écran ne les ouvre — ils ont été remplacés par le
+    // chemin en ligne de l'onglet (`reunionEvalEditInline`,
+    // `reunionEvalSaveFromTab`). Le contrôle l'atteste plutôt que de l'affirmer :
+    // il compte les appels depuis la source.
+    etape = 'réunions des évaluateurs';
+    const orphelinsReunion = gestesOrphelinsDeLaReunion();
+
+    // Le document composé par un export passe par `window.open` puis
+    // `window.print`. En mode sans affichage, rien n'attend l'impression : on la
+    // neutralise dès l'ouverture, on lit le document, et on referme.
+    const ouvrirDocument = async (geste, ...args) => {
+      const attente = new Promise((resoudre, refuser) => {
+        const minuteur = setTimeout(() => refuser(new Error('aucune fenêtre ouverte')), 20000);
+        page.once('popup', (p) => { clearTimeout(minuteur); resoudre(p); });
+      });
+      const [popup] = await Promise.all([attente, page.evaluate(geste, ...args)]);
+      try { await popup.evaluate(() => { window.print = () => {}; }); }
+      catch { /* document déjà écrit */ }
+      await new Promise((r) => setTimeout(r, 1500));
+      const lu = await popup.evaluate(() => ({
+        texte: (document.body ? document.body.innerText : '').replace(/\s+/g, ' '),
+        lignes: document.querySelectorAll('table.rep-tbl tbody tr').length,
+        titre: document.title,
+      }));
+      await popup.close();
+      return { ...lu, texte: lu.texte.slice(0, 1400) };
+    };
+
+    const reunions = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const D = () => window.APP_STATE.data;
+      const evals = () => (D().evaluations || []);
+      const onglet = (id) => [...document.querySelectorAll('.eval-tab-btn')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`,'${id}')`));
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const zone = () => document.getElementById('reunionEvalContent');
+      const notesModifiables = () => document.querySelectorAll(
+        '[onclick*="setScore("]:not([disabled])').length;
+      // La fiche d'une évaluation s'ouvre depuis sa liste. Selon son statut, elle
+      // n'est pas dans la même sous-vue : on parcourt jusqu'à trouver son bouton.
+      const ouvrirFiche = async (id) => {
+        const cible = () => [...document.querySelectorAll('[onclick*="openEvalDetail("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(id));
+        const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.getAttribute('data-page'));
+        for (const p of pages) {
+          document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+          await a(2600);
+          if (cible()) { cible().click(); await a(3400); return { page: p }; }
+          for (const s of [...document.querySelectorAll('.sub-nav-btn')]) {
+            s.click(); await a(2400);
+            if (cible()) { cible().click(); await a(3400); return { page: p, sousVue: true }; }
+          }
+        }
+        return { introuvable: true };
+      };
+      const ouvrirOnglet = async () => {
+        onglet('reunion_evaluateurs')?.click();
+        // Le chargement de l'onglet est différé par `openEvalDetail` : il faut
+        // laisser le `setTimeout` puis la requête aboutir.
+        await a(4200);
+      };
+
+      // ── 1. Le cycle rouvert, son onglet, et ses notes encore modifiables ──
+      await essai('ouverture', async () => {
+        const d = {};
+        const enfant = evals().find((e) => e.parent_id && e.statut === 'brouillon');
+        d.enfantTrouve = !!enfant;
+        if (!enfant) return d;
+        o.cible = enfant.id;
+        o.parent = enfant.parent_id;
+        d.cycle = enfant.cycle;
+        d.ou = await ouvrirFiche(enfant.id);
+        d.volet = !!document.querySelector('.pr-slicer-body');
+        d.ongletOffert = !!onglet('reunion_evaluateurs');
+        if (!d.ongletOffert) return d;
+        // Un brouillon sans tour clos : ses notes s'écrivent.
+        onglet('conformite')?.click();
+        await a(2600);
+        d.notesAvant = notesModifiables();
+        await ouvrirOnglet();
+        d.zone = !!zone();
+        d.sections = zone() ? zone().querySelectorAll(':scope > details').length : 0;
+        d.liste = !!document.getElementById('reunionEvalListInner');
+        d.comptesRendus = document.querySelectorAll('.cr-item').length;
+        d.boutonTour = !!bouton(/startConsolidation/);
+        d.boutonNouvelle = !!bouton(/reunionEvalEditInline\('[^']*',''\)/);
+        d.lectureSeule = /lecture seule/.test(zone() ? zone().textContent : '');
+        return d;
+      });
+
+      // ── 2. Le tour de consolidation : l'empreinte, et ce qui change ──
+      await essai('tour', async () => {
+        const d = {};
+        bouton(/startConsolidation/)?.click();
+        await a(1200);
+        // `startConsolidation` confirme : c'est une ouverture de tour.
+        d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(4200);
+        const brut = localStorage.getItem(`pr_consol_${o.cible}`);
+        d.empreinte = !!brut;
+        if (brut) {
+          const snap = JSON.parse(brut);
+          d.familles = ['notes_conf', 'notes_perf', 'notes_comp']
+            .filter((k) => snap[k] && typeof snap[k] === 'object').length;
+          d.datee = !!snap.started_at;
+          d.notesDansEmpreinte = Object.keys(snap.notes_conf || {}).length;
+        }
+        d.verrouLeve = !localStorage.getItem(`pr_consol_locked_${o.cible}`);
+        // Le tour ouvert, l'onglet porte son bandeau — et plus son bouton.
+        d.badge = !!(zone() && zone().querySelector('.badge-warning'));
+        d.boutonTourParti = !bouton(/startConsolidation/);
+        // Une note change, par un vrai clic sur son indicateur.
+        onglet('conformite')?.click();
+        await a(3000);
+        const notes = [...document.querySelectorAll('[onclick*="setScore("]')]
+          .filter((b) => !b.disabled);
+        d.notesOuvertes = notes.length;
+        if (!notes.length) return d;
+        // **Un objet comparé à lui-même ne dit rien** : `notes_conf` est la
+        // référence vive que le clic va muter. On en prend une copie.
+        const avant = { ...(evals().find((e) => e.id === o.cible).notes_conf || {}) };
+        o.cleAvant = Object.keys(avant).length;
+        // Un indicateur dont la note n'est pas déjà celle du bouton : sinon le
+        // second clic la retirerait au lieu de la changer.
+        const choisi = notes.find((b) => {
+          const m = /setScore\('([^']*)','([^']*)','?(\d)/.exec(b.getAttribute('onclick') || '');
+          return m && String(avant[m[2]] || 0) !== m[3];
+        }) || notes[0];
+        o.geste = choisi.getAttribute('onclick') || '';
+        choisi.click();
+        await a(2600);
+        const apres = evals().find((e) => e.id === o.cible).notes_conf || {};
+        d.changement = JSON.stringify(avant) !== JSON.stringify(apres);
+        await ouvrirOnglet();
+        // Le tour actif montre ce qui a changé depuis l'empreinte. Le tableau
+        // n'a pas de classe : ses lignes de données portent cinq cellules, les
+        // lignes de regroupement une seule, à cheval sur cinq.
+        d.lignes = zone() ? [...zone().querySelectorAll('tbody tr')]
+          .filter((tr) => tr.querySelectorAll('td:not([colspan])').length === 5).length : 0;
+        d.enCours = /R1 en cours/.test(zone() ? zone().textContent : '');
+        d.texteTour = (zone() ? zone().textContent : '').replace(/\s+/g, ' ')
+          .slice(-220);
+        return d;
+      });
+
+      // ── 3. Clore le tour : le compte-rendu, le cumul, et le reverrouillage ──
+      await essai('cloture', async () => {
+        const d = {};
+        bouton(/reunionEvalEditInline\('[^']*',''\)/)?.click();
+        await a(2600);
+        d.formulaire = ['reId', 'reDate', 'reParts', 'reCr']
+          .filter((id) => !!document.getElementById(id)).length;
+        d.identifiantVide = (document.getElementById('reId') || {}).value === '';
+        d.datePreremplie = !!(document.getElementById('reDate') || {}).value;
+        if (d.formulaire < 4) return d;
+        document.getElementById('reParts').value = 'Chef de division\nInspecteur navigabilité';
+        document.getElementById('reCr').value = 'Premier tour de consolidation.';
+        bouton(/reunionEvalSaveFromTab/)?.click();
+        await a(5000);
+        // Relu sur le serveur : c'est lui qui dit ce qui est gardé.
+        const rows = await window.api(`${MODULE_API}/eval-reunions?eval_id=${o.cible}`);
+        d.comptesRendus = (rows || []).length;
+        const r = (rows || [])[0] || {};
+        o.premier = r.id;
+        d.participants = (r.participants || []).length;
+        d.compteRendu = (r.compte_rendu || '').slice(0, 32);
+        const c = r.consolidation_data || {};
+        d.tours = c.rounds_count;
+        d.changements = (c.cumulative_changes || []).length;
+        d.premierTour = ((c.cumulative_changes || [])[0] || {}).round;
+        d.dateeFin = !!c.last_finished_at;
+        // L'empreinte est levée, le verrou posé.
+        d.empreinteLevee = !localStorage.getItem(`pr_consol_${o.cible}`);
+        d.verrouPose = localStorage.getItem(`pr_consol_locked_${o.cible}`) === '1';
+        // **Et le brouillon n'est plus modifiable** : la règle que rien n'annonce.
+        onglet('conformite')?.click();
+        await a(3000);
+        d.notesApres = notesModifiables();
+        d.notesTotal = document.querySelectorAll('[onclick*="setScore("]').length;
+        await ouvrirOnglet();
+        d.carte = document.querySelectorAll('.cr-item').length;
+        d.carteTexte = (document.querySelector('.cr-summary') || {}).textContent
+          ? document.querySelector('.cr-summary').textContent.replace(/\s+/g, ' ').trim() : '';
+        return d;
+      });
+
+      // ── 4. Un second tour, et « Annuler » qui rend la liste ──
+      await essai('second', async () => {
+        const d = {};
+        bouton(/startConsolidation/)?.click();
+        await a(1200);
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(4200);
+        d.verrouLeve = !localStorage.getItem(`pr_consol_locked_${o.cible}`);
+        onglet('conformite')?.click();
+        await a(3000);
+        d.notesRouvertes = notesModifiables();
+        const notes = [...document.querySelectorAll('[onclick*="setScore("]')]
+          .filter((b) => !b.disabled && (b.getAttribute('onclick') || '') !== o.geste);
+        const avant = evals().find((e) => e.id === o.cible).notes_conf || {};
+        const choisi = notes.find((b) => {
+          const m = /setScore\('([^']*)','([^']*)','?(\d)/.exec(b.getAttribute('onclick') || '');
+          return m && String(avant[m[2]] || 0) !== m[3];
+        });
+        d.autreNote = !!choisi;
+        choisi?.click();
+        await a(2600);
+        await ouvrirOnglet();
+        // Le formulaire s'ouvre, puis « Annuler » recharge l'onglet.
+        bouton(/reunionEvalEditInline\('[^']*',''\)/)?.click();
+        await a(2600);
+        d.formulaireOuvert = !!document.getElementById('reCr');
+        bouton(/_loadReunionEvalTab/)?.click();
+        await a(3600);
+        d.formulaireFerme = !document.getElementById('reCr');
+        d.listeRendue = document.querySelectorAll('.cr-item').length;
+        // Puis le second compte-rendu, pour de bon.
+        bouton(/reunionEvalEditInline\('[^']*',''\)/)?.click();
+        await a(2600);
+        document.getElementById('reParts').value = 'Directeur technique';
+        document.getElementById('reCr').value = 'Second tour de consolidation.';
+        bouton(/reunionEvalSaveFromTab/)?.click();
+        await a(5000);
+        const rows = await window.api(`${MODULE_API}/eval-reunions?eval_id=${o.cible}`);
+        d.comptesRendus = (rows || []).length;
+        const tours = (rows || []).map((r) => ({
+          id: r.id,
+          tours: (r.consolidation_data || {}).rounds_count || 0,
+          changements: ((r.consolidation_data || {}).cumulative_changes || []).length,
+        }));
+        d.tours = tours;
+        const second = tours.find((x) => x.tours === 2) || {};
+        d.secondTour = second.tours;
+        // **Le cumul** : le second tour porte le changement du premier et le sien.
+        d.secondCumul = second.changements;
+        const premier = tours.find((x) => x.id === o.premier) || {};
+        d.premierIntact = premier.changements;
+        d.premierTours = premier.tours;
+        return d;
+      });
+
+      return o;
+    });
+
+    // ── Le compte-rendu de consolidation en document, pris sur la fiche qui le
+    //    porte : la validée, où l'on va ensuite, n'a aucune réunion. ──
+    const documents = {};
+    try {
+      // Le bouton de la carte, non la fonction : son gestionnaire commence par
+      // `event.preventDefault()`, et c'est ce chemin-là qu'on veut.
+      documents.consolidation = await ouvrirDocument((rid) => {
+        const b = [...document.querySelectorAll('.cr-actions button')]
+          .find((x) => {
+            const g = x.getAttribute('onclick') || '';
+            return /exportReunionPdf/.test(g) && g.includes(rid);
+          });
+        if (!b) throw new Error('bouton d’export du premier compte-rendu introuvable');
+        b.click();
+      }, reunions.premier);
+    } catch (e) { documents.consolidation = { erreur: String((e && e.message) || e) }; }
+
+    // ── 5. Ce qu'un dossier validé n'offre plus ──
+    const verrouille = await page.evaluate(async (parent) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = { parent };
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const evals = () => (window.APP_STATE.data.evaluations || []);
+      const onglet = (id) => [...document.querySelectorAll('.eval-tab-btn')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`,'${id}')`));
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const zone = () => document.getElementById('reunionEvalContent');
+      const ouvrirFiche = async (id) => {
+        const cible = () => [...document.querySelectorAll('[onclick*="openEvalDetail("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(id));
+        const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.getAttribute('data-page'));
+        for (const p of pages) {
+          document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+          await a(2600);
+          if (cible()) { cible().click(); await a(3400); return { page: p }; }
+          for (const s of [...document.querySelectorAll('.sub-nav-btn')]) {
+            s.click(); await a(2400);
+            if (cible()) { cible().click(); await a(3400); return { page: p, sousVue: true }; }
+          }
+        }
+        return { introuvable: true };
+      };
+      const ouvrirOnglet = async () => {
+        onglet('reunion_evaluateurs')?.click();
+        await a(4200);
+      };
+
+      await essai('verrouille', async () => {
+        const d = {};
+        d.ou = await ouvrirFiche(o.parent);
+        d.statut = (evals().find((e) => e.id === o.parent) || {}).statut;
+        await ouvrirOnglet();
+        d.zone = !!zone();
+        d.lectureSeule = /lecture seule/.test(zone() ? zone().textContent : '');
+        d.boutonTour = !!bouton(/startConsolidation/);
+        d.boutonNouvelle = !!bouton(/reunionEvalEditInline/);
+        onglet('conformite')?.click();
+        await a(3000);
+        d.notes = document.querySelectorAll('[onclick*="setScore("]:not([disabled])').length;
+        // L'onglet « Réunion prestataire » est celui que l'acceptation a ouvert :
+        // la ronde du circuit y a enregistré un compte-rendu.
+        onglet('reunion_prestataire')?.click();
+        await a(4200);
+        d.prest = !!document.getElementById('reunionPrestContent');
+        d.prestLectureSeule = /lecture seule/.test(
+          (document.getElementById('reunionPrestContent') || {}).textContent || '');
+        d.prestEnregistrer = !!bouton(/reunionPrestSaveFromTab/);
+        d.prestExport = !!bouton(/exportReunionPrestPdf/);
+        return d;
+      });
+      return o;
+    }, reunions.parent);
+
+    try {
+      documents.prestataire = await ouvrirDocument(() => {
+        const b = [...document.querySelectorAll('button')]
+          .find((x) => /exportReunionPrestPdf/.test(x.getAttribute('onclick') || ''));
+        if (!b) throw new Error('bouton d’export de la réunion prestataire introuvable');
+        b.click();
+      });
+    } catch (e) { documents.prestataire = { erreur: String((e && e.message) || e) }; }
+
+    {
+      const Ou = reunions.ouverture || {};
+      const To = reunions.tour || {};
+      const Cl = reunions.cloture || {};
+      const Se = reunions.second || {};
+      const Ve = verrouille.verrouille || {};
+      const Dc = documents.consolidation || {};
+      const Dp = documents.prestataire || {};
+      verifier('le cycle rouvert par la réévaluation offre l’onglet des réunions, vide, et ses notes s’écrivent encore',
+        Ou.enfantTrouve === true && Ou.cycle === 2
+        && !Ou.ou.introuvable && Ou.volet === true && Ou.ongletOffert === true
+        // Un brouillon sans tour clos : les notes sont ouvertes.
+        && Ou.notesAvant > 0
+        && Ou.zone === true && Ou.sections === 2 && Ou.liste === true
+        // Aucun compte-rendu, et les deux gestes d'écriture offerts.
+        && Ou.comptesRendus === 0
+        && Ou.boutonTour === true && Ou.boutonNouvelle === true
+        && Ou.lectureSeule === false,
+        JSON.stringify(Ou).slice(0, 420));
+      verifier('un tour de consolidation prend l’empreinte des trois familles de notes, et ce qui change depuis se lit ligne par ligne',
+        To.confirmation === true
+        && To.empreinte === true && To.familles === 3 && To.datee === true
+        && To.notesDansEmpreinte > 0 && To.verrouLeve === true
+        // Le tour ouvert, le bandeau remplace le bouton.
+        && To.badge === true && To.boutonTourParti === true
+        && To.notesOuvertes > 0 && To.changement === true
+        // Une note changée, une ligne au tableau du tour, marquée « en cours ».
+        && To.lignes === 1 && To.enCours === true,
+        JSON.stringify(To).slice(0, 420));
+      verifier('clore le tour attache la consolidation au compte-rendu et reverrouille les notes d’un brouillon',
+        Cl.formulaire === 4 && Cl.identifiantVide === true
+        && Cl.datePreremplie === true
+        && Cl.comptesRendus === 1 && Cl.participants === 2
+        && /Premier tour/.test(Cl.compteRendu || '')
+        // Le tour est numéroté, et son changement porte son numéro.
+        && Cl.tours === 1 && Cl.changements === 1 && Cl.premierTour === 1
+        && Cl.dateeFin === true
+        && Cl.empreinteLevee === true && Cl.verrouPose === true
+        // **Et les notes se referment** : un brouillon, pourtant.
+        && Cl.notesTotal > 0 && Cl.notesApres === 0
+        && Cl.carte === 1 && /1 changement/.test(Cl.carteTexte || ''),
+        JSON.stringify(Cl).slice(0, 460));
+      verifier('un second tour rouvre les notes, « Annuler » rend la liste, et le cumul garde le tour précédent',
+        Se.verrouLeve === true && Se.notesRouvertes > 0
+        && Se.autreNote === true
+        // Le formulaire s'ouvre et se referme par son propre geste.
+        && Se.formulaireOuvert === true && Se.formulaireFerme === true
+        && Se.listeRendue === 1
+        && Se.comptesRendus === 2
+        // Le second tour porte son numéro, et **les deux changements**.
+        && Se.secondTour === 2 && Se.secondCumul === 2
+        // Le premier compte-rendu n'a pas bougé.
+        && Se.premierTours === 1 && Se.premierIntact === 1,
+        JSON.stringify(Se).slice(0, 460));
+      verifier('un dossier validé n’offre plus rien à écrire dans ses deux onglets de réunion, et les deux comptes-rendus se composent en document',
+        Ve.statut === 'valide' && Ve.zone === true
+        && Ve.lectureSeule === true
+        // Ni tour, ni nouvelle réunion, ni note.
+        && Ve.boutonTour === false && Ve.boutonNouvelle === false
+        && Ve.notes === 0
+        && Ve.prest === true && Ve.prestLectureSeule === true
+        && Ve.prestEnregistrer === false && Ve.prestExport === true
+        // Le compte-rendu de consolidation : son titre, le prestataire, la date,
+        // les participants, et les lignes de la consolidation attachée.
+        && /consolidation/i.test(Dc.titre || '')
+        && /Chef de division/.test(Dc.texte || '')
+        && /Premier tour/.test(Dc.texte || '')
+        && Dc.lignes === 1
+        // Le compte-rendu prestataire : ses **propres** champs, et non ceux
+        // d'une réunion de consolidation — deux listes de participants, le
+        // résumé des échanges, les recommandations, les deux signatures.
+        && /prestataire/i.test(Dp.titre || '')
+        && /AAC : Chef de service surveillance/.test(Dp.texte || '')
+        && /Organisme : Responsable qualité/.test(Dp.texte || '')
+        && /écarts ont été passés en revue/.test(Dp.texte || '')
+        && /mécaniciens/.test(Dp.texte || '')
+        // Et pas de consolidation : elle n'a aucun sens sur cette réunion.
+        && !/consolidation/i.test(Dp.texte || '') && Dp.lignes === 0,
+        JSON.stringify({ Ve, Dc, Dp }).slice(0, 560));
+      verifier('les trois gestes de l’ancien chemin par fenêtre ne sont ouverts par rien de l’écran, et le chemin en ligne l’est',
+        orphelinsReunion.dehors.length === 0
+        // Ils existent bien, et ne s'appellent qu'entre eux.
+        && orphelinsReunion.dedans === 4
+        && orphelinsReunion.enLigne >= 2,
+        JSON.stringify(orphelinsReunion));
     }
 
     verifier('aucune erreur de console ni requête échouée sur PR',

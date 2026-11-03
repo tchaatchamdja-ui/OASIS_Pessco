@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-02",
+ "releve": "2026-11-03",
  "gestesNommes": 95,
  "occurrences": 186,
- "exerces": 36,
+ "exerces": 40,
  "indecidables": 3,
  "gestes": [
   {
@@ -345,7 +345,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();startConsolidation('${evalId}')",
    "nom": "event.preventDefault",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -354,7 +354,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','${m.id}')",
    "nom": "event.preventDefault",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -363,7 +363,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();exportReunionPdf('${m.id}','${evalId}')",
    "nom": "event.preventDefault",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -372,7 +372,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','')",
    "nom": "event.preventDefault",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -381,7 +381,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();soumettreDirecteur('${evalId}')",
    "nom": "event.preventDefault",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -399,7 +399,7 @@
    "evenement": "click",
    "source": "exportReunionPrestPdf('${cur.id}','${evalId}')",
    "nom": "exportReunionPrestPdf",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -457,21 +457,21 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1468,
+   "ligne": 1481,
    "forme": "en ligne",
    "evenement": "click",
    "source": "_loadReunionEvalTab('${evalId}')",
    "nom": "_loadReunionEvalTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1469,
+   "ligne": 1482,
    "forme": "en ligne",
    "evenement": "click",
    "source": "reunionEvalSaveFromTab('${evalId}')",
    "nom": "reunionEvalSaveFromTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",

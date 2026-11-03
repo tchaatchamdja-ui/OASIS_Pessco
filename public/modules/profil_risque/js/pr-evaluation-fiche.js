@@ -1378,7 +1378,22 @@ function _printCompteRendu(m, evalId, titre) {
     const esc = oasisEsc;
     const txt = s => (String(s == null ? '' : s).trim() ? esc(s).replace(/\n/g, '<br>') : '-');
 
-    const parts = Array.isArray(m.participants) ? m.participants : [];
+    // Deux sortes de comptes-rendus passent ici, et elles ne portent pas les
+    // mêmes champs : la réunion de consolidation a `participants`,
+    // `ordre_du_jour` et `compte_rendu` ; la réunion prestataire a deux listes
+    // de participants, un résumé des échanges et des recommandations. Composer
+    // les uns avec les noms des autres rendait un document vide de sa substance
+    // — en-tête, prestataire, secteur et date, et plus rien.
+    const estPrestataire = !Array.isArray(m.participants)
+        && (Array.isArray(m.participants_aac) || Array.isArray(m.participants_prestataire));
+    const parts = estPrestataire
+        ? [...(m.participants_aac || []).map(p => `AAC : ${p}`),
+           ...(m.participants_prestataire || []).map(p => `Organisme : ${p}`)]
+        : (Array.isArray(m.participants) ? m.participants : []);
+    const sections = estPrestataire
+        ? [[t('exchanges_summary'), m.resume_echanges], ['Recommandations', m.recommandations],
+           [t('signature_caa'), m.signature_aac], [t('signature_provider'), m.signature_prestataire]]
+        : [[t('agenda'), m.ordre_du_jour], ['Compte rendu', m.compte_rendu]];
     const changes = (m.consolidation_data && Array.isArray(m.consolidation_data.cumulative_changes))
         ? m.consolidation_data.cumulative_changes : [];
     const changesHtml = changes.length ? `
@@ -1419,12 +1434,10 @@ function _printCompteRendu(m, evalId, titre) {
   </table>
   <h2>Participants</h2>
   <div class="rep-list">${parts.length ? parts.map(p => '- ' + esc(p)).join('<br>') : '-'}</div>
-  <h2>${t('agenda')}</h2>
-  <div class="rep-field">${txt(m.ordre_du_jour)}</div>
-  <h2>Compte rendu</h2>
-  <div class="rep-field">${txt(m.compte_rendu)}</div>
-  <h2>${t('linked_consolidation')}</h2>
-  ${changesHtml}
+  ${sections.map(([titreSection, valeur]) => `<h2>${esc(titreSection)}</h2>
+  <div class="rep-field">${txt(valeur)}</div>`).join('')}
+  ${estPrestataire ? '' : `<h2>${t('linked_consolidation')}</h2>
+  ${changesHtml}`}
 </body></html>`;
 
     const w = window.open('', '_blank');

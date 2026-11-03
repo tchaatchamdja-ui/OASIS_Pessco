@@ -8832,3 +8832,94 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            contre-essai groupé prouve qu'un garde existe ; seul un contre-essai
            isolé dit lequel.*
 
+       5.f.59 [x] **PR — les réunions d'évaluateurs, un document vide de sa substance, et trois gestes que rien n'ouvre** — fait le 3 novembre 2026.
+
+           L'onglet « Réunion évaluateurs » de `pr-evaluation-fiche.js` : la
+           consolidation du chapitre 4 §4.2.2.e. **Six contrôles** de plus,
+           27 → **33**, et PR passe de 36 à **40 sur 95** — le fichier de la
+           fiche, de 12 à 16 sur 24.
+
+           ── Le dossier, et d'où il vient ──
+
+           Le circuit (5.f.57) laisse deux pièces exactement complémentaires :
+           une évaluation **validée**, verrouillée, porteuse du compte-rendu de
+           réunion prestataire que la ronde y a enregistré ; et le **cycle 2**
+           que la réévaluation a ouvert, un brouillon, donc modifiable. La
+           consolidation se mène sur le second, et c'est le premier qui dit ce
+           qu'un dossier clos n'offre plus.
+
+           ── Les quatre règles éprouvées ──
+
+           Un tour de consolidation **prend l'empreinte des trois familles de
+           notes** et les rouvre à la modification quel que soit le statut ; ce
+           qui change depuis l'empreinte se lit ligne par ligne, ancienne note
+           contre nouvelle, marqué « en cours ». **Clore le tour reverrouille
+           les notes** : `isReadonly` porte `(_consolLocked && !_consolActive)`,
+           de sorte qu'un brouillon cesse d'être modifiable une fois le
+           compte-rendu enregistré — il faut ouvrir un nouveau tour. Rien dans
+           l'écran ne l'annonce ; seule la mesure le dit. Les tours **se
+           cumulent** : `reunionEvalSaveFromTab` lit les comptes-rendus
+           existants avant d'enregistrer, et refuse d'enregistrer s'il n'a pas
+           su les lire — le second tour porte deux changements, le premier
+           compte-rendu garde le sien. Et un dossier validé n'offre plus que ses
+           exports : ni tour, ni réunion nouvelle, ni note.
+
+           ── Un défaut, et sa correction ──
+
+           `exportReunionPrestPdf` passait par `_printCompteRendu`, qui lit
+           `participants`, `ordre_du_jour` et `compte_rendu` — les champs d'une
+           réunion de **consolidation**. Une réunion prestataire n'en a aucun :
+           elle porte deux listes de participants, un résumé des échanges, des
+           recommandations et deux signatures. Le document sortait donc avec son
+           en-tête, le prestataire, le secteur, la date — et **plus rien**.
+           Personne ne l'avait vu parce que personne n'avait lu le document
+           produit. `_printCompteRendu` distingue désormais les deux sortes et
+           compose chacune avec ses propres champs ; le contrôle lit le document
+           dans la fenêtre qui le porte, et non le fait qu'une fenêtre s'ouvre.
+
+           ── Trois gestes que rien n'ouvre ──
+
+           `openReunionEvaluateursList`, `openReunionEvaluateursForm` et
+           `saveReunionEval` forment un cycle de fenêtres **fermé sur lui-même** :
+           la liste n'est appelée que par le formulaire, le formulaire que par la
+           liste. Le chemin en ligne de l'onglet (`reunionEvalEditInline`,
+           `reunionEvalSaveFromTab`) les a remplacés sans qu'on les retire.
+           `gestesOrphelinsDeLaReunion()` ne l'affirme pas : il retire du fichier
+           le corps des trois fonctions, puis cherche leurs appels dans ce qui
+           reste **et dans tous les autres fichiers de l'écran**. Zéro. Un appel
+           planté dans `pr-plans.js` fait tomber le garde — contre-essayé. Leur
+           sort est une question : supprimer les soixante-cinq lignes, ou leur
+           rendre une porte d'entrée.
+
+           ── Une limite de l'instrument, nommée ──
+
+           `scripts/relever-gestes.js` ne retient que le **premier** appel d'un
+           gestionnaire. Cinq gestionnaires de cet écran commencent par
+           `event.preventDefault()` et masquent donc ce qui suit :
+           `startConsolidation`, `reunionEvalEditInline` et `exportReunionPdf`
+           sont **absents du relevé** alors qu'ils existent, et sont désormais
+           exercés. Le relevé compte donc un `event.preventDefault` là où il y a
+           trois gestes nommés. Corriger l'extracteur déplacera les dénominateurs
+           des six écrans et demandera de refiger les six relevés : c'est un pas
+           à part, et c'est le premier des suivants.
+
+           ── Deux de mes propres relevés pris en défaut ──
+
+           **Un objet comparé à lui-même ne dit rien.** `notes_conf` rendu par
+           `APP_STATE` est la référence vive que le clic va muter : mon premier
+           jet gardait cette référence comme « avant », puis la comparait à
+           « après ». Les deux étaient le même objet, et le contrôle affirmait
+           qu'aucune note n'avait changé sur un écran où elle venait de changer.
+           Corrigé par une copie.
+
+           **Un export se prend sur la fiche qui le porte.** Je lisais le
+           compte-rendu de consolidation après avoir ouvert la fiche validée, qui
+           n'a aucune réunion : « bouton introuvable », sur un écran qui marche.
+           La leçon de 5.f.52, une cinquième fois — et le geste est désormais
+           pris sur le compte-rendu **nommé**, non sur celui que la liste met
+           devant.
+
+           Six contre-essais, six fois rouge : le reverrouillage des notes
+           retiré ; le cumul des tours vidé ; le verrou d'un dossier validé levé ;
+           un appel orphelin planté hors du cycle ; l'empreinte du tour non
+           écrite ; et le composeur rendu à son état d'avant la correction.

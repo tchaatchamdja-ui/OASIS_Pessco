@@ -74,7 +74,25 @@ section `database`) : c'est un chantier de remplacement de `src/store.js`.
 
 ### 3.1 Dépôt
 
-Le code est sur GitHub : `tchaatchamdja-ui/OASIS`.
+Le code est sur GitHub : `tchaatchamdja-ui/OASIS_Pessco`, dépôt **privé**.
+
+### Et pourquoi cette ligne a compté
+
+Elle nommait `tchaatchamdja-ui/OASIS` — le dépôt d'origine, conservé sous le
+nom de distant `ancien`. Le Blueprint de Render avait donc été créé **sur ce
+dépôt-là**, et `autoDeploy: true` y attendait des poussées qui n'arrivaient
+plus : au 3 novembre 2026, le dépôt servi était **165 commits en arrière**, et
+chaque commit depuis le changement de dépôt déclenchait un redéploiement de
+rien.
+
+Un déploiement automatique ne dit pas qu'il surveille le mauvais dépôt : il se
+tait, exactement comme s'il n'y avait rien à déployer. *Le nom du dépôt servi
+est une donnée de déploiement, pas une mention de courtoisie* — c'est pourquoi
+il est écrit ici, et pourquoi le changer sans le corriger ici était un défaut.
+
+Au recablage : *New → Blueprint → `OASIS_Pessco` → branche `main`*, puis
+supprimer l'ancien service, qui servirait sinon une version figée sous une URL
+qui a l'air vivante.
 
 La branche déployée est **`main`** — c'est elle que `render.yaml` désigne. Le dépôt
 n'a plus qu'une branche : les travaux de la Phase 2, longtemps portés par
@@ -91,7 +109,7 @@ Chaque poussée sur la branche déployée déclenche un redéploiement (`autoDep
 Le fichier `render.yaml` décrit le service ; Render le lit comme un *Blueprint*.
 
 1. [render.com](https://render.com) → se connecter avec GitHub.
-2. **New → Blueprint**, choisir le dépôt OASIS, branche `main`.
+2. **New → Blueprint**, choisir le dépôt `OASIS_Pessco`, branche `main`.
 3. Render lit `render.yaml` et propose le service `oasis` (runtime Node, plan free,
    région Frankfurt).
 4. Renseigner la seule variable laissée vide : **`OASIS_SEED_PASSWORD`** — le mot de passe
@@ -99,7 +117,7 @@ Le fichier `render.yaml` décrit le service ; Render le lit comme un *Blueprint*
    la politique : 12 caractères au moins, majuscule, minuscule, chiffre et caractère spécial.
 5. **Apply**. Le premier déploiement prend deux à trois minutes.
 
-Sans Blueprint (création manuelle) : *New → Web Service*, dépôt OASIS, runtime Node,
+Sans Blueprint (création manuelle) : *New → Web Service*, dépôt `OASIS_Pessco`, runtime Node,
 build **`npm ci --include=dev && npm run build`**, start `npm start`, health check
 `/api/health`, puis les variables du § 4. Le `--include=dev` et le `build` ne sont pas
 optionnels : sans eux le service démarre et sert des écrans blancs (§ 1.1).

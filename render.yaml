@@ -1,5 +1,5 @@
 # OASIS — description du service pour Render (Infrastructure as Code).
-# Render lit ce fichier via un « Blueprint » : New → Blueprint → dépôt OASIS.
+# Render lit ce fichier via un « Blueprint » : New → Blueprint → dépôt OASIS_Pessco.
 #
 # ⚠ Plan gratuit : le disque du service est éphémère. Les données (comptes,
 # journal d'audit, dossiers) sont perdues à chaque redéploiement et à chaque

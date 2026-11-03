@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-02",
+ "releve": "2026-11-03",
  "gestesNommes": 90,
  "occurrences": 145,
- "exerces": 34,
+ "exerces": 51,
  "indecidables": 3,
  "gestes": [
   {
@@ -410,7 +410,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-etats.js",
@@ -437,7 +437,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-etats.js",
@@ -627,7 +627,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -672,7 +672,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -717,7 +717,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -762,7 +762,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -996,7 +996,7 @@
    "evenement": "click",
    "source": "document.getElementById('mesQualFichier').click()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -1023,7 +1023,7 @@
    "evenement": "click",
    "source": "document.getElementById('mesRecoursFichier_${i}_${genre}').click()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -1105,7 +1105,7 @@
    "evenement": "click",
    "source": "document.getElementById('mesSuiviFichier_${i}').click()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-suivi.js",
@@ -1124,7 +1124,7 @@
    "evenement": "click",
    "source": "mesVoirEtape('${_mesAttr(e.cle)}')",
    "nom": "mesVoirEtape",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1133,7 +1133,7 @@
    "evenement": "click",
    "source": "mesPrendreDecision('${d.cle}')",
    "nom": "mesPrendreDecision",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1142,7 +1142,7 @@
    "evenement": "click",
    "source": "this.parentElement.classList.toggle('ouverte')",
    "nom": "this.parentElement.classList.toggle",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1151,7 +1151,7 @@
    "evenement": "click",
    "source": "mesRetirerPieceTraitement(${i})",
    "nom": "mesRetirerPieceTraitement",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1160,7 +1160,7 @@
    "evenement": "change",
    "source": "mesTeleverserPieceTraitement(this.files)",
    "nom": "mesTeleverserPieceTraitement",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1169,7 +1169,7 @@
    "evenement": "click",
    "source": "document.getElementById('mesTrtFichier').click()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1188,7 +1188,7 @@
    "evenement": "click",
    "source": "mesInvRetirerPiece('${cle}',${i})",
    "nom": "mesInvRetirerPiece",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1197,7 +1197,7 @@
    "evenement": "change",
    "source": "mesInvTeleverser('${cle}', this.files)",
    "nom": "mesInvTeleverser",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1206,7 +1206,7 @@
    "evenement": "click",
    "source": "document.getElementById('mesInvFichier_${cle}').click()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1215,7 +1215,7 @@
    "evenement": "click",
    "source": "mesInvRetirerEnqueteur(${i})",
    "nom": "mesInvRetirerEnqueteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1224,7 +1224,7 @@
    "evenement": "click",
    "source": "mesInvAjouterEnqueteur()",
    "nom": "mesInvAjouterEnqueteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1233,7 +1233,7 @@
    "evenement": "click",
    "source": "mesInvRetirerTravail(${i})",
    "nom": "mesInvRetirerTravail",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1242,7 +1242,7 @@
    "evenement": "change",
    "source": "mesInvMajTitre(${i}, this.value)",
    "nom": "mesInvMajTitre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1251,7 +1251,7 @@
    "evenement": "click",
    "source": "mesInvAjouterTravail()",
    "nom": "mesInvAjouterTravail",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1260,7 +1260,7 @@
    "evenement": "click",
    "source": "mesSoumettreInvestigation()",
    "nom": "mesSoumettreInvestigation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1269,7 +1269,7 @@
    "evenement": "click",
    "source": "mesConfirmationRepondre(false)",
    "nom": "mesConfirmationRepondre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1278,7 +1278,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1287,7 +1287,7 @@
    "evenement": "click",
    "source": "mesConfirmationRepondre(false)",
    "nom": "mesConfirmationRepondre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1296,7 +1296,7 @@
    "evenement": "change",
    "source": "mesConfirmationCocher(this.checked)",
    "nom": "mesConfirmationCocher",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1305,7 +1305,7 @@
    "evenement": "click",
    "source": "mesConfirmationRepondre(false)",
    "nom": "mesConfirmationRepondre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-traitement.js",
@@ -1314,7 +1314,7 @@
    "evenement": "click",
    "source": "mesConfirmationRepondre(true)",
    "nom": "mesConfirmationRepondre",
-   "exerce": false
+   "exerce": true
   }
  ]
 }

@@ -12,6 +12,7 @@
 // à **3 001** (« Tableau de bord »), aucun débordement, **aucun incident de
 // console**. Les seuils ci-dessous viennent de là.
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const { demarrer, verifier, bilan } = require('./harness');
@@ -1111,6 +1112,682 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         && Su.membresApresRetrait === 0 && Su.reunionsApresRetrait === 0
         && Su.etatMembres === 0 && Su.etatReunions === 0,
         JSON.stringify(Su).slice(0, 460));
+    }
+
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le circuit du traitement : le fil, l'aveu, et l'enquête qui se ferme
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `mes-traitement.js` — **836 lignes, 18 gestes nommés, aucun exercé.** La
+    // plus grosse poche de l'écran. C'est le fil d'avancement d'une carence :
+    // la suite à donner, puis l'investigation qui établit les faits.
+    //
+    // ── Pourquoi aucun geste n'était atteignable ──
+    //
+    // Même raison qu'à la qualification : le jeu de référence n'a **aucune
+    // constatation**, et sans carence ouverte le volet du traitement n'existe
+    // pas. Mais là où la qualification demandait un dossier déjà parvenu à son
+    // rang, le traitement demande l'inverse — une carence **neuve**, dont rien
+    // n'est encore décidé. La ronde en ouvre donc une par l'API, et ne touche
+    // plus à l'API ensuite : tout ce qui suit passe par les gestes de l'écran,
+    // y compris le dépôt d'une pièce, qui passe par le vrai sélecteur de
+    // fichiers du navigateur.
+    //
+    // ── Les cinq règles éprouvées ──
+    //
+    //  1. **Une étape non atteinte ne s'ouvre pas.** `mesVoirEtape` refuse tout
+    //     rang supérieur à celui atteint ; les trois chevrons à venir sont
+    //     `disabled`, et l'appel direct ne change pas l'étape regardée.
+    //  2. **Un passage d'étape se veut, il ne se clique pas.** La fenêtre de
+    //     confirmation n'arme son bouton qu'une fois l'aveu coché
+    //     (`mesConfirmationCocher`), le décochage l'éteint à nouveau, un clic
+    //     dans la fenêtre ne la referme pas (`event.stopPropagation`), et son
+    //     refus ne décide rien.
+    //  3. **Ce qui est saisi part avec la décision.** `mesPrendreDecision`
+    //     enregistre le traitement avant de décider : le motif et les pièces se
+    //     relisent sur le serveur.
+    //  4. **Le titre d'un bloc d'investigation suit son type sans redessiner le
+    //     volet.** `mesInvMajTitre` écrit dans le titre et s'arrête là — un
+    //     témoin posé sur le nœud voisin y survit, ce qu'un redessin perdrait.
+    //  5. **Une investigation soumise se fige.** Le pied disparaît, les champs
+    //     se ferment, le badge paraît, et le fil atteint la qualification.
+    etape = 'circuit du traitement';
+    const DOSSIER_NEUF = 'Défaut de formation périodique (contrôle ' + Date.now() + ')';
+    // Le module n'accepte que huit extensions (`EXTENSIONS`, routes-mesures.js) :
+    // un `.txt` est refusé par un 400, mesuré au premier passage de ce bloc. Le
+    // témoin en porte donc une qui est admise.
+    const PIECE_NOM = 'piece-traitement-' + Date.now() + '.csv';
+    const cheminPiece = path.join(os.tmpdir(), PIECE_NOM);
+    fs.writeFileSync(cheminPiece, 'objet;date\nConvocation;2026-10-12\n');
+
+    // ── 1. Une carence neuve, et le fil à son premier cran ──
+    const ouvert = await page.evaluate(async (titre) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const T = () => S().traitement || {};
+      const chevrons = () => [...document.querySelectorAll('.mes-proc-step')];
+      const chevron = (cle) => chevrons().find(
+        (b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+
+      await essai('dossier', async () => {
+        const d = {};
+        // Le volet précédent est refermé : la ronde des mesures arrêtées l'a
+        // laissé ouvert sur un autre dossier.
+        window.mesFermerSlider();
+        const cree = await window.mesApi('/constatations', {
+          method: 'POST',
+          body: JSON.stringify({
+            titre, description: 'Deux agents sans recyclage à jour',
+            origine_libelle: 'Audit annuel', date_ouverture: '2026-10-05',
+          }),
+        });
+        d.cree = !!(cree && cree.id);
+        if (!d.cree) return d;
+        o.carence = cree.id;
+        d.reference = cree.reference;
+        await window.mesLoadData();
+        window.mesRenderPage();
+        await a(2200);
+        return d;
+      });
+
+      // ── Ouvrir par le bouton de la ligne, non par l'état ──
+      await essai('fil', async () => {
+        const d = {};
+        document.querySelector('.nav-btn[data-page="critiques"]')?.click();
+        await a(2600);
+        const bouton = [...document.querySelectorAll('[onclick*="mesMesureDepuisConstatation("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.carence));
+        d.bouton = !!bouton;
+        if (!bouton) return d;
+        bouton.click();
+        await a(3000);
+        d.etapeAtteinte = T().etape || '';
+        d.etapeVue = S().etapeVue || '';
+        d.chevrons = chevrons().length;
+        d.verrouilles = chevrons().filter((b) => b.disabled).length;
+        d.rangCourant = chevrons().findIndex((b) => b.classList.contains('current'));
+        // Les quatre sections de la première étape : la carence, le plan
+        // d'actions, les informations recueillies, la décision.
+        d.sections = document.querySelectorAll('.mes-section').length;
+        d.lettres = [...document.querySelectorAll('.mes-section-lettre')]
+          .map((e) => (e.textContent || '').trim()).join('');
+        // L'état de l'étape est un vrai lien, et il nomme l'étape regardée.
+        const lien = document.querySelector('.mes-proc-actions a.mes-btn-export');
+        d.pdf = lien ? (lien.getAttribute('href') || '') : '';
+        d.pdfTelecharge = !!(lien && lien.hasAttribute('download'));
+        // Les trois suites possibles sont offertes, et le pied porte
+        // l'enregistrement.
+        d.decisions = document.querySelectorAll('[onclick*="mesPrendreDecision("]').length;
+        d.pied = !!document.querySelector('.mes-slider-footer button');
+        return d;
+      });
+
+      // ── Le repli d'une section, et le refus d'une étape non atteinte ──
+      await essai('repli', async () => {
+        const d = {};
+        const entete = document.querySelector('.mes-section-entete');
+        d.entete = !!entete;
+        if (!entete) return d;
+        d.ouverteAvant = entete.parentElement.classList.contains('ouverte');
+        entete.click();
+        await a(400);
+        d.replieeApres = !entete.parentElement.classList.contains('ouverte');
+        entete.click();
+        await a(400);
+        d.redeployee = entete.parentElement.classList.contains('ouverte');
+        // L'étape à venir est verrouillée dans le document ; le garde se lit
+        // aussi sur l'appel, que le balisage fait tel quel.
+        d.qualificationEteinte = !!(chevron('qualification') || {}).disabled;
+        window.mesVoirEtape('qualification');
+        await a(900);
+        d.vueApresRefus = S().etapeVue || '';
+        // Celle où l'on est s'ouvre, elle.
+        chevron('suite')?.click();
+        await a(1400);
+        d.vueApresSuite = S().etapeVue || '';
+        return d;
+      });
+
+      // ── 2. La fenêtre de confirmation : l'aveu arme, le refus ne décide rien ──
+      await essai('aveu', async () => {
+        const d = {};
+        const decision = (cle) => [...document.querySelectorAll('[onclick*="mesPrendreDecision("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+        const valider = () => document.getElementById('mesConfirmValider');
+        const ouverte = () => !!document.querySelector('.mes-confirm-fond');
+        d.boutonSuite = !!decision('investiguer');
+        if (!d.boutonSuite) return d;
+        decision('investiguer').click();
+        await a(1200);
+        d.ouverte = ouverte();
+        d.fil = [...document.querySelectorAll('.mes-confirm-etape')]
+          .map((e) => (e.textContent || '').trim());
+        d.points = document.querySelectorAll('.mes-confirm-points li').length;
+        d.case = !!document.getElementById('mesConfirmCase');
+        d.validerEteint = !!(valider() || {}).disabled;
+        // Un clic dans la fenêtre ne la referme pas.
+        document.querySelector('.mes-confirm-fond .mes-modal')?.click();
+        await a(700);
+        d.resteOuverte = ouverte();
+        // L'aveu arme, et le décochage éteint à nouveau.
+        document.getElementById('mesConfirmCase')?.click();
+        await a(700);
+        d.armeApresAveu = !(valider() || {}).disabled;
+        document.getElementById('mesConfirmCase')?.click();
+        await a(700);
+        d.eteintApresDecoche = !!(valider() || {}).disabled;
+        // Le refus par le bouton « Annuler ».
+        [...document.querySelectorAll('.mes-modal-footer button')]
+          .find((b) => b.classList.contains('btn-outline'))?.click();
+        await a(900);
+        d.fermeeParAnnuler = !ouverte();
+        d.aucuneDecision = !T().decision;
+        // Et le refus par le fond, qui vaut annulation lui aussi.
+        decision('classer')?.click();
+        await a(1200);
+        d.rouverte = ouverte();
+        document.querySelector('.mes-confirm-fond')?.click();
+        await a(900);
+        d.fermeeParFond = !ouverte();
+        d.toujoursAucuneDecision = !T().decision;
+        // Le volet n'a pas bougé : les trois suites sont encore offertes.
+        d.decisionsApres = document.querySelectorAll('[onclick*="mesPrendreDecision("]').length;
+        return d;
+      });
+      return o;
+    }, DOSSIER_NEUF);
+
+    // ── 3. Une pièce déposée par le vrai sélecteur de fichiers ──
+    //
+    // Le bouton « Ajouter une pièce » ne fait qu'un geste : il clique l'`input`
+    // de type `file` caché derrière lui. Un `uploadFile` posé directement sur
+    // cet `input` sauterait ce geste ; on passe donc par le sélecteur que le
+    // navigateur ouvre, et c'est le chemin de l'agent, entier.
+    const piecesTrt = {};
+    try {
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 15000 }),
+        page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => (x.getAttribute('onclick') || '').includes("mesTrtFichier'"));
+          if (!b) throw new Error('bouton « Ajouter une pièce » introuvable');
+          b.click();
+        }),
+      ]);
+      piecesTrt.selecteur = true;
+      piecesTrt.multiple = selecteur.isMultiple();
+      await selecteur.accept([cheminPiece]);
+      await new Promise((r) => setTimeout(r, 4000));
+      Object.assign(piecesTrt, await page.evaluate((nomAttendu, infos) => {
+        const d = {};
+        const lignes = [...document.querySelectorAll('#mesTrtPieces .mes-preuve')];
+        d.lignes = lignes.length;
+        d.nom = lignes.length ? ((lignes[0].querySelector('input') || {}).value || '') : '';
+        d.nomAttendu = d.nom === nomAttendu;
+        d.lien = lignes.length ? !!lignes[0].querySelector('a[href*="/uploads/"]') : false;
+        d.chemin = lignes.length ? (lignes[0].dataset.chemin || '') : '';
+        const champ = document.getElementById('mesTrtInfos');
+        d.champ = !!champ;
+        if (champ) champ.value = infos;
+        return d;
+      }, PIECE_NOM, 'Convocation adressée au responsable formation.'));
+    } catch (e) { piecesTrt.erreur = String((e && e.message) || e); }
+
+    const enregistre = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const carence = (S().carenceEnCours || {}).id;
+      const relu = () => window.mesApi(`/constatations/${encodeURIComponent(carence)}/traitement`);
+
+      await essai('serveur', async () => {
+        const d = {};
+        const pied = document.querySelector('.mes-slider-footer button');
+        d.pied = !!pied;
+        d.geste = pied ? (pied.getAttribute('onclick') || '') : '';
+        if (!pied) return d;
+        pied.click();
+        await a(2600);
+        const t = await relu();
+        d.informations = (t.informations || '').slice(0, 48);
+        d.pieces = (t.pieces || []).length;
+        d.nomServeur = ((t.pieces || [])[0] || {}).nom || '';
+        d.cheminServeur = /^\/api\/m\/mesures\/uploads\//.test(((t.pieces || [])[0] || {}).path || '');
+        return d;
+      });
+
+      // ── Ce qui s'ajoute se retire, et le retrait aussi se rend ──
+      await essai('retrait', async () => {
+        const d = {};
+        document.querySelector('[onclick*="mesRetirerPieceTraitement"]')?.click();
+        await a(2600);
+        d.lignes = document.querySelectorAll('#mesTrtPieces .mes-preuve').length;
+        d.etat = ((S().traitement || {}).pieces || []).length;
+        document.querySelector('.mes-slider-footer button')?.click();
+        await a(2600);
+        const t = await relu();
+        d.auServeur = (t.pieces || []).length;
+        // Les informations, elles, sont restées.
+        d.informations = (t.informations || '').slice(0, 48);
+        return d;
+      });
+      return o;
+    });
+
+    // ── 4. La décision, qui pousse le fil d'un cran ──
+    const MOTIF = 'Faits à établir : relevés de formation à vérifier.';
+    const decide = await page.evaluate(async (motif) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const T = () => S().traitement || {};
+      const chevrons = () => [...document.querySelectorAll('.mes-proc-step')];
+      const chevron = (cle) => chevrons().find(
+        (b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+
+      await essai('investiguer', async () => {
+        const d = {};
+        const champ = document.getElementById('mesTrtMotif');
+        d.champMotif = !!champ;
+        if (champ) champ.value = motif;
+        [...document.querySelectorAll('[onclick*="mesPrendreDecision("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes("'investiguer'"))?.click();
+        await a(1300);
+        d.fenetre = !!document.querySelector('.mes-confirm-fond');
+        document.getElementById('mesConfirmCase')?.click();
+        await a(600);
+        document.getElementById('mesConfirmValider')?.click();
+        await a(3600);
+        d.fermee = !document.querySelector('.mes-confirm-fond');
+        d.decision = T().decision || '';
+        d.etapeAtteinte = T().etape || '';
+        d.vueRendue = S().etapeVue || '';
+        // Le fil a avancé : un verrou en moins, et le volet s'ouvre sur
+        // l'étape que la décision vient de faire atteindre.
+        d.verrouilles = chevrons().filter((b) => b.disabled).length;
+        d.rangCourant = chevrons().findIndex((b) => b.classList.contains('current'));
+        // Le motif et les informations se relisent sur le serveur.
+        const t = await window.mesApi(
+          `/constatations/${encodeURIComponent((S().carenceEnCours || {}).id)}/traitement`);
+        d.motifServeur = (t.decision_motif || '') === motif;
+        d.decisionServeur = t.decision || '';
+        d.decideLe = !!t.decide_le;
+        return d;
+      });
+
+      // ── L'étape quittée ne porte plus que son verdict ──
+      await essai('quittee', async () => {
+        const d = {};
+        chevron('suite')?.click();
+        await a(2400);
+        d.vue = S().etapeVue || '';
+        d.sections = document.querySelectorAll('.mes-section').length;
+        // Plus de suites offertes, plus de motif à saisir : un badge.
+        d.decisions = document.querySelectorAll('[onclick*="mesPrendreDecision("]').length;
+        d.champMotif = !!document.getElementById('mesTrtMotif');
+        d.badge = !!document.querySelector('.mes-proc-actions .mes-badge');
+        d.libelleBadge = (document.querySelector('.mes-proc-actions .mes-badge')
+          || {}).textContent || '';
+        return d;
+      });
+      return o;
+    }, MOTIF);
+
+    // ── 5. L'investigation : l'équipe, les travaux, et le titre qui suit ──
+    const TEMOIN_ENQUETEUR = 'DIALLO';
+    const enquete = await page.evaluate(async (nomEnqueteur) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const INV = () => (S().traitement || {}).investigation || {};
+      const chevron = (cle) => [...document.querySelectorAll('.mes-proc-step')].find(
+        (b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+      const lignesEquipe = () => [...document.querySelectorAll('#mesInvEquipe tbody tr[data-rang]')];
+      const blocs = () => [...document.querySelectorAll('#mesInvTravaux .mes-bloc')];
+
+      await essai('sections', async () => {
+        const d = {};
+        chevron('investigations')?.click();
+        await a(2600);
+        d.vue = S().etapeVue || '';
+        d.sections = document.querySelectorAll('.mes-section').length;
+        d.lettres = [...document.querySelectorAll('.mes-section-lettre')]
+          .map((e) => (e.textContent || '').trim()).join('');
+        d.equipe = !!document.getElementById('mesInvEquipe');
+        d.travaux = !!document.getElementById('mesInvTravaux');
+        d.autres = !!document.getElementById('mesInvAutres');
+        d.rapport = !!document.getElementById('mesInvRapport');
+        d.soumettre = !!document.querySelector('[onclick*="mesSoumettreInvestigation"]');
+        d.types = (window.mesTypesInvestigation() || []).length;
+        return d;
+      });
+
+      // ── Un ajout relève avant de redessiner : rien de saisi ne se perd ──
+      await essai('equipe', async () => {
+        const d = {};
+        d.avant = lignesEquipe().length;
+        document.querySelector('[onclick*="mesInvAjouterEnqueteur"]')?.click();
+        await a(2400);
+        d.apres = lignesEquipe().length;
+        if (!d.apres) return d;
+        const nom = lignesEquipe()[0].querySelector('[data-champ="nom"]');
+        nom.value = nomEnqueteur;
+        lignesEquipe()[0].querySelector('[data-champ="email"]').value = 'inspecteur@anac.bj';
+        // Un second enquêteur : le premier garde ce qu'on vient d'y taper.
+        document.querySelector('[onclick*="mesInvAjouterEnqueteur"]')?.click();
+        await a(2400);
+        d.deux = lignesEquipe().length;
+        d.nomConserve = (lignesEquipe()[0].querySelector('[data-champ="nom"]') || {}).value || '';
+        d.courrielConserve = (lignesEquipe()[0].querySelector('[data-champ="email"]') || {}).value || '';
+        d.etat = (INV().equipe || []).length;
+        // Et le retrait ôte le second, non le premier.
+        [...document.querySelectorAll('[onclick*="mesInvRetirerEnqueteur"]')][1]?.click();
+        await a(2400);
+        d.apresRetrait = lignesEquipe().length;
+        d.premierIntact = (lignesEquipe()[0]
+          && (lignesEquipe()[0].querySelector('[data-champ="nom"]') || {}).value) || '';
+        return d;
+      });
+
+      // ── Le titre d'un bloc suit son type, sans redessiner le volet ──
+      await essai('travaux', async () => {
+        const d = {};
+        document.querySelector('[onclick*="mesInvAjouterTravail"]')?.click();
+        await a(2400);
+        d.blocs = blocs().length;
+        if (!d.blocs) return d;
+        const bloc = blocs()[0];
+        const choix = bloc.querySelector('[data-champ="type"]');
+        d.typeDefaut = choix ? choix.value : '';
+        d.titreDefaut = (bloc.querySelector('.mes-bloc-titre') || {}).textContent || '';
+        bloc.querySelector('[data-champ="resultats"]').value = 'Relevés de formation examinés.';
+        // Le témoin n'est pas dans le patron du bloc : un redessin le perdrait.
+        bloc.querySelector('[data-champ="resultats"]').dataset.temoin = 'intact';
+        const autre = [...choix.options].map((x) => x.value)
+          .find((v) => v && v !== d.typeDefaut);
+        d.autreType = autre || '';
+        if (!autre) return d;
+        choix.value = autre;
+        choix.dispatchEvent(new Event('change'));
+        await a(1200);
+        const bloc2 = blocs()[0];
+        d.typeApres = (bloc2.querySelector('[data-champ="type"]') || {}).value || '';
+        d.titreApres = (bloc2.querySelector('.mes-bloc-titre') || {}).textContent || '';
+        d.titreChange = d.titreApres !== d.titreDefaut && !!d.titreApres;
+        // **La preuve du non-redessin** : le témoin posé sur le nœud voisin.
+        d.temoinSurvit = (bloc2.querySelector('[data-champ="resultats"]') || {})
+          .dataset.temoin === 'intact';
+        d.resultatsIntacts = (bloc2.querySelector('[data-champ="resultats"]') || {}).value || '';
+        // Un second bloc, puis le retrait du premier : ce qui s'ajoute se retire.
+        document.querySelector('[onclick*="mesInvAjouterTravail"]')?.click();
+        await a(2400);
+        d.deuxBlocs = blocs().length;
+        // Le second, non le premier : c'est le premier qui porte la saisie dont
+        // on veut prouver qu'elle survit au redessin de l'ajout.
+        [...document.querySelectorAll('[onclick*="mesInvRetirerTravail"]')][1]?.click();
+        await a(2400);
+        d.apresRetrait = blocs().length;
+        d.etat = (INV().travaux || []).length;
+        d.premierIntact = blocs().length
+          ? ((blocs()[0].querySelector('[data-champ="resultats"]') || {}).value || '') : '';
+        return d;
+      });
+      return o;
+    }, TEMOIN_ENQUETEUR);
+
+    // ── Une pièce d'investigation, par le même sélecteur ──
+    const piecesInv = {};
+    try {
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 15000 }),
+        page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => (x.getAttribute('onclick') || '').includes("mesInvFichier_autres'"));
+          if (!b) throw new Error('bouton « Ajouter une pièce » des autres éléments introuvable');
+          b.click();
+        }),
+      ]);
+      piecesInv.selecteur = true;
+      await selecteur.accept([cheminPiece]);
+      await new Promise((r) => setTimeout(r, 4000));
+      Object.assign(piecesInv, await page.evaluate((nomAttendu) => {
+        const d = {};
+        const lignes = [...document.querySelectorAll('#mesInvPieces_autres .mes-preuve')];
+        d.lignes = lignes.length;
+        d.nom = lignes.length ? ((lignes[0].querySelector('input') || {}).value || '') : '';
+        d.nomAttendu = d.nom === nomAttendu;
+        d.lien = lignes.length ? !!lignes[0].querySelector('a[href*="/uploads/"]') : false;
+        return d;
+      }, PIECE_NOM));
+      // Et le retrait, par le geste propre aux pièces d'investigation.
+      await page.evaluate(() => {
+        document.querySelector('[onclick*="mesInvRetirerPiece"]')?.click();
+      });
+      await new Promise((r) => setTimeout(r, 3000));
+      piecesInv.apresRetrait = await page.evaluate(
+        () => document.querySelectorAll('#mesInvPieces_autres .mes-preuve').length);
+      // La pièce est redéposée : la soumission doit figer une enquête garnie.
+      const [second] = await Promise.all([
+        page.waitForFileChooser({ timeout: 15000 }),
+        page.evaluate(() => [...document.querySelectorAll('button')]
+          .find((x) => (x.getAttribute('onclick') || '').includes("mesInvFichier_autres'"))?.click()),
+      ]);
+      await second.accept([cheminPiece]);
+      await new Promise((r) => setTimeout(r, 4000));
+      piecesInv.redeposee = await page.evaluate(
+        () => document.querySelectorAll('#mesInvPieces_autres .mes-preuve').length);
+    } catch (e) { piecesInv.erreur = String((e && e.message) || e); }
+
+    // ── 6. L'enregistrement, puis la soumission qui fige l'enquête ──
+    const RAPPORT = 'Analyse : deux agents sans recyclage depuis dix-huit mois.';
+    const soumission = await page.evaluate(async (rapport, nomEnqueteur) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const T = () => S().traitement || {};
+      const chevron = (cle) => [...document.querySelectorAll('.mes-proc-step')].find(
+        (b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+      const relu = () => window.mesApi(
+        `/constatations/${encodeURIComponent((S().carenceEnCours || {}).id)}/traitement`);
+
+      await essai('serveur', async () => {
+        const d = {};
+        document.getElementById('mesInvRapport').value = rapport;
+        document.getElementById('mesInvAutres').value = 'Procès-verbal de l’entretien du 12 octobre.';
+        const pied = document.querySelector('.mes-slider-footer button');
+        d.pied = !!pied;
+        d.geste = pied ? (pied.getAttribute('onclick') || '') : '';
+        if (!pied) return d;
+        pied.click();
+        await a(2800);
+        const inv = ((await relu()) || {}).investigation || {};
+        d.rapport = (inv.rapport || '') === rapport;
+        d.equipe = (inv.equipe || []).length;
+        d.nom = ((inv.equipe || [])[0] || {}).nom || '';
+        d.travaux = (inv.travaux || []).length;
+        d.resultats = (((inv.travaux || [])[0] || {}).resultats || '').slice(0, 40);
+        d.pieces = (inv.autres_pieces || []).length;
+        d.autres = (inv.autres_texte || '').slice(0, 24);
+        d.nonSoumise = !inv.soumise_le;
+        return d;
+      });
+
+      await essai('soumise', async () => {
+        const d = {};
+        document.querySelector('[onclick*="mesSoumettreInvestigation"]')?.click();
+        await a(1400);
+        d.fenetre = !!document.querySelector('.mes-confirm-fond');
+        d.fil = [...document.querySelectorAll('.mes-confirm-etape')]
+          .map((e) => (e.textContent || '').trim());
+        d.validerEteint = !!(document.getElementById('mesConfirmValider') || {}).disabled;
+        document.getElementById('mesConfirmCase')?.click();
+        await a(600);
+        document.getElementById('mesConfirmValider')?.click();
+        await a(4200);
+        d.fermee = !document.querySelector('.mes-confirm-fond');
+        d.etapeAtteinte = T().etape || '';
+        d.soumiseLe = !!((T().investigation || {}).soumise_le);
+        d.verrouilles = [...document.querySelectorAll('.mes-proc-step')]
+          .filter((b) => b.disabled).length;
+        // L'étape figée : plus de pied, les champs fermés, un badge.
+        chevron('investigations')?.click();
+        await a(2600);
+        d.pied = !!document.querySelector('.mes-slider-footer button');
+        d.badge = !!document.querySelector('.mes-proc-actions .mes-badge');
+        d.ajouts = document.querySelectorAll('[onclick*="mesInvAjouter"]').length;
+        const champs = [...document.querySelectorAll('#mesInvEquipe input'),
+          document.getElementById('mesInvRapport'), document.getElementById('mesInvAutres')]
+          .filter(Boolean);
+        d.champs = champs.length;
+        d.tousFermes = champs.every((c) => c.disabled);
+        d.nomTenu = ((document.querySelector('#mesInvEquipe [data-champ="nom"]') || {}).value || '');
+        return d;
+      });
+      return o;
+    }, RAPPORT, TEMOIN_ENQUETEUR);
+
+    try { fs.unlinkSync(cheminPiece); } catch { /* le témoin a déjà disparu */ }
+
+    {
+      const Do = ouvert.dossier || {};
+      const Fi = ouvert.fil || {};
+      const Re = ouvert.repli || {};
+      const Av = ouvert.aveu || {};
+      const Se = enregistre.serveur || {};
+      const Rt = enregistre.retrait || {};
+      const In = decide.investiguer || {};
+      const Qu = decide.quittee || {};
+      const Ss = enquete.sections || {};
+      const Eq = enquete.equipe || {};
+      const Tv = enquete.travaux || {};
+      const Sv = soumission.serveur || {};
+      const Sm = soumission.soumise || {};
+      verifier('une carence neuve s’ouvre sur le premier cran du fil, et les trois étapes à venir restent verrouillées',
+        Do.cree === true && !!Do.reference
+        && Fi.bouton === true
+        // Rien n'est décidé : l'étape atteinte est la première, et la vue suit.
+        && (Fi.etapeAtteinte === 'suite' || Fi.etapeAtteinte === '')
+        && Fi.etapeVue === ''
+        && Fi.chevrons === 4 && Fi.verrouilles === 3 && Fi.rangCourant === 0
+        // Les quatre sections de l'étape, dans l'ordre de leurs lettres.
+        && Fi.sections === 4 && Fi.lettres === 'ABCD'
+        // L'état de l'étape est un lien de téléchargement, et il nomme l'étape.
+        && /\/etapes\/suite\.pdf$/.test(Fi.pdf) && Fi.pdfTelecharge === true
+        && Fi.decisions === 3 && Fi.pied === true
+        // Une section se replie et se redéploie par son en-tête.
+        && Re.ouverteAvant === true && Re.replieeApres === true && Re.redeployee === true
+        // Et l'étape non atteinte refuse de s'ouvrir, cliquée ou appelée.
+        && Re.qualificationEteinte === true && Re.vueApresRefus === ''
+        && Re.vueApresSuite === 'suite',
+        JSON.stringify({ Do, Fi, Re }).slice(0, 460));
+      verifier('la fenêtre de confirmation n’arme son bouton qu’une fois l’aveu coché, et son refus ne décide rien',
+        Av.boutonSuite === true && Av.ouverte === true
+        // Elle nomme l'étape quittée et celle atteinte.
+        && Av.fil.length === 2 && !!Av.fil[0] && !!Av.fil[1] && Av.fil[0] !== Av.fil[1]
+        && Av.points === 1 && Av.case === true
+        // Éteint à l'ouverture, armé par l'aveu, éteint à nouveau s'il se retire.
+        && Av.validerEteint === true
+        && Av.armeApresAveu === true && Av.eteintApresDecoche === true
+        // Un clic dans la fenêtre ne la referme pas.
+        && Av.resteOuverte === true
+        // Les deux refus — le bouton et le fond — et aucune décision prise.
+        && Av.fermeeParAnnuler === true && Av.aucuneDecision === true
+        && Av.rouverte === true && Av.fermeeParFond === true
+        && Av.toujoursAucuneDecision === true && Av.decisionsApres === 3,
+        JSON.stringify(Av).slice(0, 460));
+      verifier('une pièce déposée par le sélecteur de fichiers parvient au serveur, et son retrait l’en ôte',
+        piecesTrt.selecteur === true && piecesTrt.multiple === true
+        && piecesTrt.lignes === 1 && piecesTrt.nomAttendu === true
+        && piecesTrt.lien === true
+        && /^\/api\/m\/mesures\/uploads\//.test(piecesTrt.chemin || '')
+        && piecesTrt.champ === true
+        // Le pied enregistre l'étape, et le serveur garde les deux.
+        && Se.pied === true && /mesEnregistrerTraitement/.test(Se.geste || '')
+        && Se.pieces === 1 && Se.nomServeur === PIECE_NOM
+        && Se.cheminServeur === true
+        && /Convocation/.test(Se.informations || '')
+        // Le retrait ôte la ligne, dans le document, dans l'état, puis au serveur.
+        && Rt.lignes === 0 && Rt.etat === 0 && Rt.auServeur === 0
+        && /Convocation/.test(Rt.informations || ''),
+        JSON.stringify({ piecesTrt, Se, Rt }).slice(0, 460));
+      verifier('la décision pousse le fil d’un cran, et l’étape quittée ne porte plus que son verdict',
+        In.champMotif === true && In.fenetre === true && In.fermee === true
+        && In.decision === 'investiguer' && In.etapeAtteinte === 'investigations'
+        // La vue est rendue : le volet s'ouvre sur l'étape atteinte.
+        && In.vueRendue === ''
+        && In.verrouilles === 2 && In.rangCourant === 1
+        // Ce qui était saisi est parti avec la décision.
+        && In.motifServeur === true && In.decisionServeur === 'investiguer'
+        && In.decideLe === true
+        // L'étape quittée : quatre sections encore, mais plus rien à décider.
+        && Qu.vue === 'suite' && Qu.sections === 4
+        && Qu.decisions === 0 && Qu.champMotif === false
+        && Qu.badge === true && !!Qu.libelleBadge.trim(),
+        JSON.stringify({ In, Qu }).slice(0, 460));
+      verifier('l’équipe et les travaux d’investigation s’ajoutent sans perdre ce qui précède, et le titre d’un bloc suit son type sans redessiner le volet',
+        Ss.vue === 'investigations' && Ss.sections === 4 && Ss.lettres === 'ABCD'
+        && Ss.equipe === true && Ss.travaux === true
+        && Ss.autres === true && Ss.rapport === true
+        && Ss.soumettre === true && Ss.types >= 2
+        // L'équipe : un ajout relève avant de redessiner.
+        && Eq.avant === 0 && Eq.apres === 1 && Eq.deux === 2
+        && Eq.nomConserve === 'DIALLO' && Eq.courrielConserve === 'inspecteur@anac.bj'
+        && Eq.etat === 2
+        && Eq.apresRetrait === 1 && Eq.premierIntact === 'DIALLO'
+        // Les travaux : le type par défaut est le premier de la liste.
+        && Tv.blocs === 1 && !!Tv.typeDefaut && !!Tv.titreDefaut
+        && !!Tv.autreType && Tv.typeApres === Tv.autreType
+        && Tv.titreChange === true
+        // **Le volet n'a pas été redessiné** : le témoin posé y a survécu.
+        && Tv.temoinSurvit === true
+        && /Relevés/.test(Tv.resultatsIntacts || '')
+        && Tv.deuxBlocs === 2 && Tv.apresRetrait === 1 && Tv.etat === 1
+        && /Relevés/.test(Tv.premierIntact || ''),
+        JSON.stringify({ Ss, Eq, Tv }).slice(0, 460));
+      verifier('l’investigation s’enregistre entière, puis sa soumission la fige et fait atteindre la qualification',
+        piecesInv.selecteur === true && piecesInv.lignes === 1
+        && piecesInv.nomAttendu === true && piecesInv.lien === true
+        // Ce qui s'ajoute se retire, ici aussi, puis se redépose.
+        && piecesInv.apresRetrait === 0 && piecesInv.redeposee === 1
+        // Le pied de l'étape enregistre l'investigation, non le traitement.
+        && Sv.pied === true && /mesEnregistrerInvestigation/.test(Sv.geste || '')
+        && Sv.rapport === true && Sv.equipe === 1 && Sv.nom === 'DIALLO'
+        && Sv.travaux === 1 && /Relevés/.test(Sv.resultats || '')
+        && Sv.pieces === 1 && !!Sv.autres
+        // Enregistrer n'est pas soumettre.
+        && Sv.nonSoumise === true
+        // La soumission demande le même aveu, et pousse le fil d'un cran.
+        && Sm.fenetre === true && Sm.fil.length === 2 && Sm.fil[0] !== Sm.fil[1]
+        && Sm.validerEteint === true && Sm.fermee === true
+        && Sm.soumiseLe === true && Sm.etapeAtteinte === 'qualification'
+        && Sm.verrouilles === 1
+        // L'étape figée : plus de pied, plus d'ajout, les champs fermés.
+        && Sm.pied === false && Sm.badge === true && Sm.ajouts === 0
+        && Sm.champs >= 6 && Sm.tousFermes === true && Sm.nomTenu === 'DIALLO',
+        JSON.stringify({ piecesInv, Sv, Sm }).slice(0, 480));
     }
 
     verifier('aucune erreur de console ni requête échouée sur CARE',

@@ -8756,3 +8756,79 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            de la réunion offert dès la soumission ; les recommandations retirées
            du corps enregistré ; et le nouveau cycle héritant du circuit de son
            parent (celui-là côté serveur, dans `routes-workflow.js`).
+
+       5.f.58 [x] **CARE — le circuit du traitement, et trois contrôles tombés par ricochet** — fait le 3 novembre 2026.
+
+           `mes-traitement.js` — **836 lignes, 18 gestes nommés, aucun exercé** :
+           la plus grosse poche restante de l'écran. Le fil d'avancement d'une
+           carence, de la suite à donner à l'investigation soumise. **Six
+           contrôles** de plus, 23 → **29**, et dix-sept noms de plus pour
+           CARE : 34 → **51 sur 90**.
+
+           ── Pourquoi aucun geste n'était atteignable ──
+
+           Même raison qu'à la qualification (5.f.56), prise à l'envers : là où
+           la qualification demandait un dossier **déjà parvenu** à son rang, le
+           traitement demande une carence **neuve**, dont rien n'est décidé. La
+           ronde en ouvre une par l'API — un seul appel — puis n'y revient plus :
+           tout ce qui suit passe par les gestes de l'écran.
+
+           ── Les cinq règles éprouvées ──
+
+           Une étape non atteinte ne s'ouvre pas : trois chevrons `disabled`, et
+           `mesVoirEtape('qualification')` appelé directement laisse l'étape
+           regardée vide. Un passage d'étape **se veut** : la fenêtre de
+           confirmation nomme l'étape quittée et celle atteinte, n'arme son
+           bouton qu'une fois l'aveu coché (`mesConfirmationCocher`), l'éteint à
+           nouveau s'il se retire, ne se referme pas sur un clic en son sein, et
+           ses **deux** refus — le bouton « Annuler » et le fond — ne décident
+           rien. Ce qui est saisi part avec la décision, qui pousse le fil d'un
+           cran et laisse l'étape quittée sur son seul verdict : plus de suites
+           offertes, plus de motif à saisir, un badge. Le titre d'un bloc
+           d'investigation suit son type **sans redessiner le volet**. Et une
+           investigation soumise se fige : pied disparu, ajouts disparus, champs
+           fermés, badge paru, fil à la qualification.
+
+           ── Prouver un non-redessin ──
+
+           `mesInvMajTitre` écrit dans le titre du bloc et s'arrête là, pour ne
+           pas interrompre la saisie du bloc voisin. Mais la saisie survivrait
+           **aussi** à un redessin, puisque tout redessin relève d'abord
+           (`mesMajInvestigation`) : la mesurer ne distingue pas les deux
+           chemins. Le contrôle pose donc sur le nœud voisin un témoin qui n'est
+           pas dans le patron du bloc — un `dataset` écrit sur le nœud vivant.
+           Un redessin reconstruit le balisage et le perd ; l'écriture du seul
+           titre le laisse. *Quand ni le document ni l'état ne distinguent deux
+           chemins, c'est l'identité du nœud qui le fait.*
+
+           ── Les pièces jointes, par le vrai sélecteur ──
+
+           Le bouton « Ajouter une pièce » ne fait qu'un geste : il clique
+           l'`input type="file"` caché derrière lui. Un `uploadFile` posé
+           directement sur cet `input` sauterait ce geste. La ronde passe donc
+           par `waitForFileChooser` : le bouton est cliqué, le navigateur ouvre
+           son sélecteur, et la ronde y dépose le fichier. C'est le chemin de
+           l'agent, entier — et il a rendu une règle que personne n'avait
+           nommée : **le module n'accepte que huit extensions** (`EXTENSIONS`,
+           `routes-mesures.js`), et un `.txt` est refusé par un 400. Mesuré au
+           premier passage, le témoin porte désormais une extension admise.
+
+           ── Dix contre-essais, dix fois rouge, et une attribution fausse ──
+
+           Le garde de rang de `mesVoirEtape` ; `mesConfirmationCocher` rendue
+           inoffensive ; `event.stopPropagation` retiré ; la confirmation
+           sautée dans `mesPrendreDecision` ; `mesInvMajTitre` remplacée par un
+           redessin ; la relève retirée de `mesInvAjouterEnqueteur` ; le pied
+           laissé sur une investigation soumise ; la pièce non reportée dans
+           l'état ; le motif non envoyé avec la décision.
+
+           **Un défaut peut en faire tomber trois, et l'attribution est alors
+           fausse.** Posé en même temps que deux autres, le retrait de
+           `event.stopPropagation` a fait tomber trois contrôles : le clic sur
+           l'aveu remonte au fond, qui annule — et tout ce qui suivait s'est
+           effondré avec. J'ai d'abord compté le motif non envoyé parmi les
+           défauts prouvés ; il ne l'était pas. Repris seul, il fait tomber un
+           contrôle et un seul, sur la seule assertion qui le vise. *Un
+           contre-essai groupé prouve qu'un garde existe ; seul un contre-essai
+           isolé dit lequel.*
+

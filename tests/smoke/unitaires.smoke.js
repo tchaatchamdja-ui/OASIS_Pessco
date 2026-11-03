@@ -891,6 +891,69 @@ async function courrielsSansSecret() {
 // elle fournit l'assurance exacte qu'on n'a pas. Les cinq verdicts sont donc
 // distincts, et chacun est éprouvé ici — dont « tronquée », l'archive fraîche
 // qui ne vaut rien parce qu'un `tar` s'est interrompu sur un disque plein.
+// ── Le nommeur de gestes, éprouvé seul ──
+//
+// `scripts/relever-gestes.js` décide ce qu'un geste **est** : c'est lui qui
+// donne son nom à chaque gestionnaire, du côté statique comme du côté du
+// mouchard. Quatre de ses règles sont nées d'un relevé faux, et une cinquième
+// le 3 novembre 2026 : il ne connaissait qu'une garde en tête,
+// `event.stopPropagation()`. Un gestionnaire ouvert par les **deux** gardes se
+// nommait donc `event.preventDefault`, et le geste qui suivait restait
+// invisible au relevé — trois gestes de PR existaient, étaient exercés, et
+// n'apparaissaient nulle part.
+//
+// Les contrôles ci-dessous sont le garde de ces règles. Un nommeur qui se
+// trompe ne fait pas tomber une suite d'écran : il **déplace un dénominateur**,
+// en silence, et c'est le pire des défauts d'un instrument de mesure.
+function nommeurDeGestes() {
+  // eslint-disable-next-line global-require
+  // `nomDuGeste` est l'entrée : c'est elle que les deux côtés appellent, et
+  // c'est donc elle qu'il faut éprouver. L'avoir cru porté par
+  // `nomDuGestionnaire` seul est ce qui a laissé une asymétrie survivre entre
+  // la source et le mouchard.
+  const { nomDuGeste: nom } = require('../../scripts/relever-gestes');
+  const cas = (titre, entree, attendu) => verifier(`nommeur : ${titre}`,
+    nom(entree) === attendu, `${JSON.stringify(entree).slice(0, 70)} → ${nom(entree)}`);
+
+  cas('un appel simple se nomme par lui-même', "mesVoirEtape('suite')", 'mesVoirEtape');
+  // Les deux gardes, et l'ordre n'y fait rien.
+  cas('les deux gardes en tête se retirent, dans un ordre',
+    "event.stopPropagation();event.preventDefault();startConsolidation('x')", 'startConsolidation');
+  cas('les deux gardes en tête se retirent, dans l’autre',
+    'event.preventDefault();event.stopPropagation();execChkToggleGroup(this)', 'execChkToggleGroup');
+  // Quand rien ne suit, la garde **est** le geste : un `dragover` qui ne fait
+  // qu'empêcher le défaut n'appelle rien d'autre.
+  cas('une garde seule est le geste', 'event.preventDefault();', 'event.preventDefault');
+  cas('une garde seule, sans point-virgule, aussi', 'event.preventDefault()', 'event.preventDefault');
+  cas('l’autre garde seule de même', 'event.stopPropagation();', 'event.stopPropagation');
+  // Une affectation est nommée par sa cible, non par les quarante-huit premiers
+  // caractères de son code (n° 5.f.30).
+  cas('une affectation se nomme par sa cible',
+    'EXEC_STATE.filters.domaine=this.value;execRenderPage()', 'EXEC_STATE.filters.domaine');
+  // Une condition n'est pas un geste : le geste est ce qu'elle protège.
+  cas('une condition se retire, et l’on nomme ce qu’elle protège',
+    "if(!event.target.closest('button'))execEtatsOuvrir('x')", 'execEtatsOuvrir');
+  // Deux gestionnaires qui ne diffèrent que par une valeur insérée sont **un**
+  // geste : les interpolations se normalisent avant de nommer.
+  cas('une interpolation ne multiplie pas les gestes',
+    "planUpdateActivity('${actId}')", 'planUpdateActivity');
+
+  // ── La symétrie elle-même, gardée par la forme ──
+  //
+  // Les cas ci-dessus éprouvent le nommeur ; ils ne diraient rien si l'un des
+  // deux côtés cessait de l'appeler. C'est exactement ce qui s'était produit :
+  // la source nommait par `nomDuGeste`, le mouchard par `nomDuGestionnaire`, et
+  // tout geste qui n'existe que derrière une garde conditionnelle comptait pour
+  // non exercé. Un relevé de ce qu'un parcours exerce ne peut pas nommer
+  // autrement que le relevé de ce qui existe.
+  const source = fs.readFileSync(
+    path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'), 'utf8');
+  verifier('nommeur : les deux côtés nomment par la même fonction',
+    !/\.map\(nomDuGestionnaire\)/.test(source)
+    && /exerces\.enLigne\.map\(nomDuGeste\)/.test(source),
+    'le côté du mouchard doit appeler nomDuGeste, comme le côté de la source');
+}
+
 function sondeDesSauvegardes() {
   // eslint-disable-next-line global-require
   const sauvegardes = require('../../src/sauvegardes');
@@ -1238,6 +1301,7 @@ module.exports = async function unitairesSmoke() {
     await magasins();
     await facadeDuMagasin();
     sondeDesSauvegardes();
+    nommeurDeGestes();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

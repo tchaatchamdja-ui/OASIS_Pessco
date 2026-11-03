@@ -1,7 +1,7 @@
 {
- "releve": "2026-11-01",
- "gestesNommes": 315,
- "occurrences": 510,
+ "releve": "2026-11-03",
+ "gestesNommes": 317,
+ "occurrences": 511,
  "exerces": 156,
  "indecidables": 3,
  "gestes": [
@@ -228,6 +228,17 @@
    "evenement": "click",
    "source": "event.preventDefault();${_escAttr(repli)}",
    "nom": "event.preventDefault",
+   "interpole": true,
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-activites.js",
+   "ligne": 1018,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.preventDefault();${_escAttr(repli)}",
+   "nom": "_escAttr",
+   "interpole": true,
    "exerce": false
   },
   {
@@ -994,7 +1005,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.preventDefault();event.stopPropagation();execChkToggleGroup(this);",
-   "nom": "event.preventDefault",
+   "nom": "execChkToggleGroup",
    "exerce": false
   },
   {
@@ -1455,7 +1466,7 @@
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execCdAddRef(this.value);this.value='';}",
-   "nom": "event.preventDefault",
+   "nom": "execCdAddRef",
    "exerce": false
   },
   {
@@ -1988,7 +1999,7 @@
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
-   "nom": "event.preventDefault",
+   "nom": "execFncAddRef",
    "exerce": false
   },
   {

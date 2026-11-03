@@ -1,8 +1,8 @@
 {
  "releve": "2026-11-03",
- "gestesNommes": 95,
+ "gestesNommes": 97,
  "occurrences": 186,
- "exerces": 40,
+ "exerces": 46,
  "indecidables": 3,
  "gestes": [
   {
@@ -129,7 +129,7 @@
    "evenement": "click",
    "source": "exportEvalExcel('${evalId}')",
    "nom": "exportEvalExcel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -138,7 +138,7 @@
    "evenement": "click",
    "source": "exportEvalPDF('${evalId}')",
    "nom": "exportEvalPDF",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -147,7 +147,7 @@
    "evenement": "click",
    "source": "document.getElementById('evalImportFile').click();",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -156,7 +156,7 @@
    "evenement": "change",
    "source": "importEvalExcel(event,'${evalId}','conformite')",
    "nom": "importEvalExcel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -344,7 +344,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();startConsolidation('${evalId}')",
-   "nom": "event.preventDefault",
+   "nom": "startConsolidation",
    "exerce": true
   },
   {
@@ -353,7 +353,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','${m.id}')",
-   "nom": "event.preventDefault",
+   "nom": "reunionEvalEditInline",
    "exerce": true
   },
   {
@@ -362,7 +362,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();exportReunionPdf('${m.id}','${evalId}')",
-   "nom": "event.preventDefault",
+   "nom": "exportReunionPdf",
    "exerce": true
   },
   {
@@ -371,7 +371,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();reunionEvalEditInline('${evalId}','')",
-   "nom": "event.preventDefault",
+   "nom": "reunionEvalEditInline",
    "exerce": true
   },
   {
@@ -380,7 +380,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();soumettreDirecteur('${evalId}')",
-   "nom": "event.preventDefault",
+   "nom": "soumettreDirecteur",
    "exerce": true
   },
   {
@@ -814,7 +814,7 @@
    "evenement": "click",
    "source": "document.getElementById('indImportFile').click();",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -1057,7 +1057,7 @@
    "evenement": "click",
    "source": "document.getElementById('prNotifPanel')?.remove()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",

@@ -26,6 +26,7 @@
 // seuil choisi) à **52 464** (« Paramètres »). Aucun débordement, **aucun
 // incident de console**.
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const { demarrer, verifier, bilan } = require('./harness');
@@ -154,8 +155,44 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
 
     let pr = false;
     let etape = 'montage';
+
+    // ── Un refus que la ronde attend, déclaré et vérifié ──
+    //
+    // Le collecteur ci-dessous prend tout 4xx pour un défaut, et il le faut : un
+    // 403 passé inaperçu est une règle qu'on croit tenue. Mais une règle qui
+    // **refuse** ne se mesure qu'en la provoquant, et la provoquer fait rougir
+    // le collecteur. La ronde déclare donc, autour du seul geste qui le
+    // provoque, le refus qu'elle attend — son code et un fragment de son
+    // adresse. Le refus déclaré n'entre pas aux incidents ; il est **marqué
+    // rencontré**, et un contrôle exige qu'il l'ait été. Une déclaration qui
+    // cesse de correspondre fait donc rougir elle aussi, au lieu de masquer.
+    const attendus = [];
+    // La fenêtre est ouverte par la déclaration et refermée par la ronde juste
+    // après le geste : hors d'elle, un 4xx reste un défaut, et le message que le
+    // navigateur écrit à la console reste un incident.
+    let fenetreRefus = false;
+    const declarerRefus = (statut, url) => {
+      const a = { statut, url, rencontre: false };
+      attendus.push(a);
+      fenetreRefus = true;
+      return a;
+    };
+    const cloreRefus = () => { fenetreRefus = false; };
+    const estAttendu = (statut, url) => {
+      if (!fenetreRefus) return false;
+      const a = attendus.find((x) => x.statut === statut && url.includes(x.url) && !x.rencontre);
+      if (!a) return false;
+      a.rencontre = true;
+      return true;
+    };
+    // Le navigateur dit le même fait deux fois : la réponse, et une ligne de
+    // console pour la ressource. Dans la fenêtre, la seconde ne compte pas.
+    const bruitDeRefus = (texte) => fenetreRefus && /Failed to load resource/.test(texte);
+
     page.on('console', (m) => {
-      if (pr && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      if (pr && m.type() === 'error' && !bruitDeRefus(m.text())) {
+        incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      }
     });
     page.on('pageerror', (e) => {
       if (pr) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -165,6 +202,7 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     });
     page.on('response', (r) => {
       if (!pr || r.status() < 400) return;
+      if (estAttendu(r.status(), r.url())) return;
       incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
     });
 
@@ -1927,8 +1965,280 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         JSON.stringify(orphelinsReunion));
     }
 
+
+    // ══════════════════════════════════════════════════════════════════
+    //  L'aller-retour du classeur : ce que l'export écrit, l'import le relit
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Trois gestes de la barre d'outils de la fiche : exporter en Excel,
+    // exporter en PDF, importer. Le premier et le troisième forment une
+    // propriété que l'on peut éprouver sans rien supposer du format : **relire
+    // ce qu'on vient d'écrire ne doit rien changer**. C'est plus fort que
+    // « le fichier existe et pèse quelque chose » — un classeur aux mauvaises
+    // clés pèserait autant.
+    //
+    // ── Ce que la ronde fait, et ce qu'elle mesure ──
+    //
+    //  1. Le classeur est **téléchargé pour de vrai** : le navigateur reçoit
+    //     l'ordre de déposer ses téléchargements dans un répertoire, et l'ancre
+    //     que `exportEvalExcel` fabrique est cliquée. Le fichier est ensuite lu
+    //     avec la même bibliothèque que le serveur emploie pour l'écrire.
+    //  2. Le rapport PDF est composé dans une fenêtre, et son **document** est
+    //     lu — non le fait qu'une fenêtre s'ouvre.
+    //  3. Le même classeur est **réimporté par le sélecteur de fichiers**, par
+    //     le bouton « Importer », qui ne fait qu'un geste : cliquer l'`input`
+    //     caché. Le serveur dit combien de notes il a prises ; la ronde vérifie
+    //     que ce sont exactement celles de la fiche, et que rien n'a bougé.
+    //  4. Et le même classeur posé sur une **évaluation validée** est refusé :
+    //     `VERROUILLEE` porte `valide` et `soumis_directeur`, et le verrou est
+    //     relu *dans la transformation* — sans quoi des notes parties au moment
+    //     de la validation se poseraient après elle.
+    etape = 'aller-retour du classeur';
+    const dossierTelechargements = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-pr-xlsx-'));
+    const cdp = await page.createCDPSession();
+    await cdp.send('Browser.setDownloadBehavior',
+      { behavior: 'allow', downloadPath: dossierTelechargements });
+
+    // Ce que le serveur répond à un import : on le lit au vol, c'est lui qui
+    // dit combien de notes il a prises.
+    const reponsesImport = [];
+    page.on('response', (r) => {
+      if (!/\/import-excel$/.test(r.url())) return;
+      r.json().then((corps) => reponsesImport.push({ statut: r.status(), corps }))
+        .catch(() => reponsesImport.push({ statut: r.status(), corps: null }));
+    });
+
+    const attendreFichier = async (motif, delai = 20000) => {
+      const debut = Date.now();
+      while (Date.now() - debut < delai) {
+        const f = fs.readdirSync(dossierTelechargements)
+          .filter((n) => motif.test(n) && !n.endsWith('.crdownload'));
+        if (f.length) {
+          const chemin = path.join(dossierTelechargements, f[0]);
+          // Un fichier qui vient de paraître peut n'être pas encore clos.
+          const taille = fs.statSync(chemin).size;
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 400));
+          if (fs.statSync(chemin).size === taille && taille > 0) return { nom: f[0], chemin, taille };
+        }
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      return null;
+    };
+
+    // ── 1. Ouvrir la fiche du cycle rouvert, et relever ses notes ──
+    const avantAllerRetour = await page.evaluate(async (cible) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const cherche = () => [...document.querySelectorAll('[onclick*="openEvalDetail("]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(cible));
+      const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+        .map((b) => b.getAttribute('data-page'));
+      for (const p of pages) {
+        document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+        await a(2600);
+        if (cherche()) break;
+        let trouve = false;
+        for (const s of [...document.querySelectorAll('.sub-nav-btn')]) {
+          s.click(); await a(2400);
+          if (cherche()) { trouve = true; break; }
+        }
+        if (trouve) break;
+      }
+      d.bouton = !!cherche();
+      if (!d.bouton) return d;
+      cherche().click();
+      await a(3400);
+      d.volet = !!document.querySelector('.pr-slicer-body');
+      // La barre d'outils de la fiche : les trois gestes, et l'`input` caché.
+      d.excel = !!bouton(/exportEvalExcel/);
+      d.pdf = !!bouton(/exportEvalPDF/);
+      d.importer = !!bouton(/evalImportFile/);
+      d.champ = !!document.getElementById('evalImportFile');
+      // Les notes, relues sur le serveur : c'est la référence de l'aller-retour.
+      const ev = await window.api(`${MODULE_API}/evaluations/${cible}`);
+      const compte = (o) => Object.keys(o || {}).filter((k) => Number(o[k]) > 0).length;
+      d.statut = ev.statut;
+      d.notes = {
+        conf: ev.notes_conf || {}, perf: ev.notes_perf || {}, comp: ev.notes_comp || {},
+      };
+      d.notees = compte(ev.notes_conf) + compte(ev.notes_perf) + compte(ev.notes_comp);
+      return d;
+    }, reunions.cible);
+
+    // ── 2. Le classeur, téléchargé puis lu avec la bibliothèque du serveur ──
+    const classeur = {};
+    try {
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')]
+          .find((x) => /exportEvalExcel/.test(x.getAttribute('onclick') || ''));
+        if (!b) throw new Error('bouton « Exporter Excel » introuvable');
+        b.click();
+      });
+      const fichier = await attendreFichier(/\.xlsx$/);
+      classeur.fichier = !!fichier;
+      if (fichier) {
+        classeur.nom = fichier.nom;
+        classeur.taille = fichier.taille;
+        // eslint-disable-next-line global-require
+        const XLSX = require('xlsx');
+        const wb = XLSX.readFile(fichier.chemin);
+        classeur.feuilles = wb.SheetNames;
+        const lignes = {};
+        const notees = {};
+        wb.SheetNames.forEach((n) => {
+          const rs = XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: '' });
+          lignes[n] = rs.length;
+          notees[n] = rs.filter((r) => Number(r.note) > 0).length;
+          // Les clés du classeur sont celles de l'état : c'est ce qui fait que
+          // l'import retombe sur les mêmes notes.
+          if (n === 'Conformite') {
+            classeur.clesJustes = rs.filter((r) => Number(r.note) > 0)
+              .every((r) => Number((avantAllerRetour.notes.conf || {})[r.cle]) === Number(r.note));
+            classeur.enTetes = Object.keys(rs[0] || {}).join(',');
+          }
+        });
+        classeur.lignes = lignes;
+        classeur.notees = Object.values(notees).reduce((s, v) => s + v, 0);
+        classeur.chemin = fichier.chemin;
+      }
+    } catch (e) { classeur.erreur = String((e && e.message) || e); }
+
+    // ── 3. Le rapport, composé dans sa fenêtre ──
+    let rapport = {};
+    try {
+      rapport = await ouvrirDocument(() => {
+        const b = [...document.querySelectorAll('button')]
+          .find((x) => /exportEvalPDF/.test(x.getAttribute('onclick') || ''));
+        if (!b) throw new Error('bouton « Exporter PDF » introuvable');
+        b.click();
+      });
+    } catch (e) { rapport = { erreur: String((e && e.message) || e) }; }
+
+    // ── 4. Le retour : le même classeur, par le sélecteur de fichiers ──
+    const retour = {};
+    try {
+      // L'export PDF a ouvert puis refermé une fenêtre ; la fiche est encore là.
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 20000 }),
+        page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => /evalImportFile/.test(x.getAttribute('onclick') || ''));
+          if (!b) throw new Error('bouton « Importer » introuvable');
+          b.click();
+        }),
+      ]);
+      retour.selecteur = true;
+      await selecteur.accept([classeur.chemin]);
+      await new Promise((r) => setTimeout(r, 6000));
+      retour.reponse = reponsesImport[reponsesImport.length - 1] || null;
+      Object.assign(retour, await page.evaluate(async (cible, avant) => {
+        const d = {};
+        const ev = await window.api(`${MODULE_API}/evaluations/${cible}`);
+        const egal = (x, y) => JSON.stringify(x || {}) === JSON.stringify(y || {});
+        // **Relire ce qu'on vient d'écrire ne change rien.**
+        d.confIdentiques = egal(ev.notes_conf, avant.conf);
+        d.perfIdentiques = egal(ev.notes_perf, avant.perf);
+        d.compIdentiques = egal(ev.notes_comp, avant.comp);
+        d.statut = ev.statut;
+        return d;
+      }, reunions.cible, avantAllerRetour.notes));
+    } catch (e) { retour.erreur = String((e && e.message) || e); }
+
+    // ── 5. Le même classeur sur une évaluation validée : refusé ──
+    const refusImport = {};
+    try {
+      refusImport.ou = await page.evaluate(async (parent) => {
+        const a = (ms) => new Promise((r) => setTimeout(r, ms));
+        const cherche = () => [...document.querySelectorAll('[onclick*="openEvalDetail("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(parent));
+        const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.getAttribute('data-page'));
+        for (const p of pages) {
+          document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+          await a(2600);
+          if (cherche()) { cherche().click(); await a(3400); return { page: p }; }
+          for (const s of [...document.querySelectorAll('.sub-nav-btn')]) {
+            s.click(); await a(2400);
+            if (cherche()) { cherche().click(); await a(3400); return { page: p, sousVue: true }; }
+          }
+        }
+        return { introuvable: true };
+      }, reunions.parent);
+      // Le refus est déclaré **avant** le geste, et refermé juste après.
+      declarerRefus(409, '/import-excel');
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 20000 }),
+        page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => /evalImportFile/.test(x.getAttribute('onclick') || ''));
+          if (!b) throw new Error('bouton « Importer » introuvable sur la validée');
+          b.click();
+        }),
+      ]);
+      refusImport.selecteur = true;
+      await selecteur.accept([classeur.chemin]);
+      await new Promise((r) => setTimeout(r, 6000));
+      cloreRefus();
+      refusImport.reponse = reponsesImport[reponsesImport.length - 1] || null;
+      refusImport.declare = attendus.map((x) => ({ ...x }));
+    } catch (e) { refusImport.erreur = String((e && e.message) || e); }
+    finally { cloreRefus(); }
+
+    try { fs.rmSync(dossierTelechargements, { recursive: true, force: true }); }
+    catch { /* le répertoire a déjà disparu */ }
+
+    {
+      const Av = avantAllerRetour || {};
+      verifier('la barre de la fiche porte ses trois gestes, et l’export rend un classeur dont les clés sont celles de l’état',
+        Av.bouton === true && Av.volet === true
+        && Av.excel === true && Av.pdf === true
+        && Av.importer === true && Av.champ === true
+        && Av.statut === 'brouillon' && Av.notees > 0
+        // Le classeur est bien arrivé, nommé d'après l'évaluation.
+        && classeur.fichier === true && /^evaluation_.*\.xlsx$/.test(classeur.nom || '')
+        && classeur.taille > 2000
+        // Trois feuilles, une par famille de notes.
+        && (classeur.feuilles || []).join(',') === 'Conformite,Performance,Complexite'
+        && classeur.enTetes === 'cle,sous_activite,code,indicateur,note'
+        && (classeur.lignes || {}).Conformite > 0
+        // Et les notes du classeur sont exactement celles de la fiche.
+        && classeur.notees === Av.notees && classeur.clesJustes === true,
+        JSON.stringify({ Av: { ...Av, notes: undefined }, classeur: { ...classeur, chemin: undefined } }).slice(0, 520));
+      verifier('l’export PDF compose le rapport de l’évaluation dans sa fenêtre',
+        !rapport.erreur
+        && /Air Bénin Express/.test(rapport.texte || '')
+        // Les trois familles de notes y figurent, nommées.
+        && /Conformité/i.test(rapport.texte || '')
+        && /Performance/i.test(rapport.texte || '')
+        && /Complexité/i.test(rapport.texte || ''),
+        JSON.stringify({ titre: rapport.titre, erreur: rapport.erreur, texte: (rapport.texte || '').slice(0, 320) }));
+      verifier('réimporter le classeur rend exactement les mêmes notes, et le même classeur sur une évaluation validée est refusé',
+        retour.selecteur === true
+        && (retour.reponse || {}).statut === 200
+        // Le serveur dit combien de notes il a prises : celles du classeur.
+        && ((retour.reponse || {}).corps || {}).updated === Av.notees
+        // **Et rien n'a bougé.**
+        && retour.confIdentiques === true && retour.perfIdentiques === true
+        && retour.compIdentiques === true && retour.statut === 'brouillon'
+        // La validée, elle, refuse — et le refus était déclaré.
+        && !refusImport.ou.introuvable && refusImport.selecteur === true
+        && (refusImport.reponse || {}).statut === 409
+        && ((refusImport.reponse || {}).corps || {}).error === 'evaluation_verrouillee'
+        && (refusImport.declare || []).every((x) => x.rencontre === true),
+        JSON.stringify({ retour, refusImport }).slice(0, 560));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PR',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
+    // Un refusImport déclaré et jamais venu est une règle qui ne tient plus — ou une
+    // déclaration devenue fausse. Les deux doivent rougir.
+    verifier('chaque refusImport que la ronde a déclaré attendre est bien venu',
+      attendus.length > 0 && attendus.every((a) => a.rencontre),
+      JSON.stringify(attendus));
   } finally {
     if (process.env.OASIS_MOUCHARD && navigateur) {
       const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0 };

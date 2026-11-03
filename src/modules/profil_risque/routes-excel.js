@@ -244,6 +244,20 @@ module.exports = function register(app, deps, M) {
         ev[t.key] = { ...(ev[t.key] || {}) };
         XLSX.utils.sheet_to_json(wb.Sheets[wsName], { defval: '' }).forEach((raw) => {
           const cle = String(raw.cle || '').trim();
+          // ── Une cellule vide n'est pas une note ──
+          //
+          // L'export écrit une ligne par indicateur, notée ou non, et laisse la
+          // cellule vide quand il n'y a pas de note (`notes[cle] || ''`). Or
+          // `Number('')` vaut **0** : fini, et dans les bornes. Réimporter le
+          // classeur qu'on venait d'exporter posait donc un 0 explicite sur
+          // chaque indicateur non noté — soixante-deux écritures pour trois
+          // notes sur le jeu d'essai, autant au journal d'audit, et une
+          // évaluation dont la représentation ne disait plus ce qui avait été
+          // évalué. Le compte rendu à l'agent annonçait « 62 notes importées ».
+          //
+          // Le vide est donc ce qu'il est : rien de dit. Il laisse la note en
+          // place, et ne la crée pas.
+          if (raw.note === '' || raw.note === null || raw.note === undefined) return;
           const note = Number(raw.note);
           if (!cle || !Number.isFinite(note) || note < 0 || note > 3) return;
           ev[t.key][cle] = note;

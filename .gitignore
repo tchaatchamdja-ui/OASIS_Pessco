@@ -4,6 +4,10 @@ node_modules/
 # Données d'exploitation : comptes, hachages, journal d'audit, dossiers.
 # Un jeu de référence versionné est fourni dans tests/fixtures/.
 data/
+# Le magasin du serveur de développement : une copie de data/, qu'il sert à
+# la place du vrai. Sans lui, « npm run dev » écrit le journal d'audit chaîné
+# de l'instance — et le garde-fou de la campagne refuse alors de rendre 0.
+data-dev/
 sauvegardes/
 
 # Variables d'environnement (le modèle .env.example est versionné)

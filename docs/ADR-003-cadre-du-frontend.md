@@ -8923,3 +8923,117 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            retiré ; le cumul des tours vidé ; le verrou d'un dossier validé levé ;
            un appel orphelin planté hors du cycle ; l'empreinte du tour non
            écrite ; et le composeur rendu à son état d'avant la correction.
+
+       5.f.60 [x] **L'instrument de mesure, repris deux fois — et l'aller-retour d'un classeur** — fait le 3 novembre 2026.
+
+           Deux corrections au relevé des gestes, et quatre contrôles de plus à
+           PR (33 → **37**). PR passe de 40 à **46 sur 97** : *le dénominateur a
+           bougé*, et c'est le fait principal de ce pas.
+
+           ── Une garde de plus, et le geste qu'elle cachait ──
+
+           La règle « une garde n'est pas un geste » (n° 5.f.30) ne connaissait
+           que `event.stopPropagation()`. Or `event.preventDefault()` en est une
+           autre, et les deux se posent ensemble, dans l'ordre que l'auteur
+           choisit. Un gestionnaire ouvert par les deux se nommait donc
+           `event.preventDefault`, et le geste qui suivait restait **invisible au
+           relevé** : `startConsolidation`, `reunionEvalEditInline` et
+           `exportReunionPdf` existaient, étaient exercés depuis 5.f.59, et
+           n'apparaissaient nulle part. Les gardes en tête se retirent désormais
+           toutes ; quand rien ne reste, la garde **est** le geste — un
+           `dragover="event.preventDefault();"` ne fait rien d'autre.
+
+           ── Et une asymétrie, trouvée en écrivant le garde du nommeur ──
+
+           J'ai voulu garder la nouvelle règle par des contrôles unitaires, et
+           j'ai écrit un cas pour chacune des règles existantes. **Celui de la
+           garde conditionnelle est tombé rouge.** Non pas parce que la règle
+           n'existe plus, mais parce qu'elle vit dans `nomDuGeste` et non dans
+           `nomDuGestionnaire` — et que **le côté du mouchard appelait le
+           second**. Un `onclick="if(!event.target.closest('button'))
+           execEtatsOuvrir(…)"` était relevé sous le nom `execEtatsOuvrir` et
+           reconnu au vol sous le nom `if` : cliqué, il comptait pour non exercé.
+
+           Le commentaire en place disait « les deux côtés appellent désormais
+           `nomDuGestionnaire` », et c'était vrai de la ligne qu'il surplombait.
+           La correction de 5.f.30 avait ensuite déplacé la règle dans une
+           enveloppe, et ce côté-ci n'avait pas suivi. *Un commentaire qui
+           affirme une symétrie ne la tient pas ; un contrôle la tient.*
+
+           Le défaut ne se voyait pas parce qu'il est **masqué par
+           l'agrégation** : la couverture se compte par nom, et un geste qui
+           existe aussi sans garde ailleurs — `mesMesureDepuisConstatation`, sur
+           sa ligne **et** sur son bouton — compte exercé par l'autre occurrence.
+           Seuls ceux qui n'existent que gardés restaient à zéro.
+
+           Les deux côtés appellent maintenant `nomDuGeste`. **Dix contrôles
+           unitaires** éprouvent le nommeur sur ses neuf formes, et un garde de
+           forme exige la symétrie : il refuse un `.map(nomDuGestionnaire)` dans
+           le fichier. Les six relevés ont été refigés, et **seul PR a bougé** —
+           la correction retire un piège futur plus qu'elle ne change un compte.
+           *Un instrument qui se trompe ne fait pas tomber une suite : il déplace
+           un dénominateur, en silence.*
+
+           ── L'aller-retour du classeur ──
+
+           Trois gestes de la barre de la fiche. Le premier et le troisième
+           forment une propriété qu'on éprouve sans rien supposer du format :
+           **relire ce qu'on vient d'écrire ne doit rien changer** — plus fort
+           que « le fichier existe et pèse quelque chose », car un classeur aux
+           mauvaises clés pèserait autant. Le classeur est donc téléchargé pour
+           de vrai (`Browser.setDownloadBehavior`, et l'ancre que le module
+           fabrique est cliquée), relu avec la **même bibliothèque** que le
+           serveur emploie pour l'écrire, puis réimporté par le vrai sélecteur de
+           fichiers. Le rapport PDF, lui, est lu **dans la fenêtre qui le
+           porte**.
+
+           ── Le défaut que la propriété a dénoncé ──
+
+           L'export écrit une ligne par indicateur, notée ou non, et laisse la
+           cellule vide quand il n'y a pas de note (`notes[cle] || ''`). Or
+           `Number('')` vaut **0** : fini, et dans les bornes `0..3`. Réimporter
+           le classeur qu'on venait d'exporter posait donc un **0 explicite sur
+           chaque indicateur non noté** — soixante-deux écritures pour trois
+           notes sur le jeu d'essai, autant au journal d'audit d'une autorité, et
+           un compte rendu annonçant « 62 notes importées » à qui n'en avait
+           changé aucune. Le vide est désormais ce qu'il est : rien de dit.
+
+           Question laissée à la maîtrise d'ouvrage : une cellule portant **0**
+           doit-elle effacer la note, comme `setScore` le fait d'un second clic,
+           ou poser un zéro ? L'écran rend 0 et « absent » de la même façon ;
+           seule la représentation diffère.
+
+           ── Un refus déclaré : ce que le collecteur d'incidents interdisait ──
+
+           Le collecteur prend tout 4xx pour un défaut, et il le faut : un 403
+           passé inaperçu est une règle qu'on croit tenue. Mais une règle qui
+           **refuse** ne se mesure qu'en la provoquant, et la provoquer faisait
+           rougir le collecteur — de sorte qu'aucune règle de refus n'était
+           éprouvable. La ronde déclare donc, dans une fenêtre qu'elle ouvre
+           avant le geste et referme après, le refus qu'elle attend : son code et
+           un fragment d'adresse. Le refus déclaré n'entre pas aux incidents ; il
+           est marqué **rencontré**, et un contrôle exige qu'il l'ait été. Une
+           déclaration qui cesse de correspondre rougit elle aussi, au lieu de
+           masquer — contre-essayé en levant le verrou de `VERROUILLEE` : le 409
+           ne vient plus, et le contrôle qui l'attendait tombe.
+
+           Premier usage : le même classeur posé sur une évaluation **validée**
+           est refusé, et le verrou est relu *dans la transformation* — sans quoi
+           des notes parties au moment de la validation se poseraient après elle.
+
+           ── Le serveur de développement, et le journal qu'il écrivait ──
+
+           Deux campagnes ont rendu 1 sans qu'aucun contrôle ne tombe : le
+           serveur de développement du port 4750 servait le **vrai** répertoire
+           `data/` et ajoutait son entrée au journal chaîné. Le garde-fou du
+           lanceur le dénonçait correctement, en nommant le processus et le
+           remède. `npm run dev` pose désormais `OASIS_DATA_DIR=./data-dev` — une
+           copie du magasin, ignorée par git — et `npm start` sert seul le vrai
+           répertoire. Une archive a été prise avant la copie, et un sondage de
+           six secondes sur un port à part a vérifié que le verrou se pose dans
+           `data-dev/` et que le journal réel reste intact.
+
+           Quatre contre-essais sur les contrôles de l'écran, quatre fois rouge :
+           l'en-tête du classeur amputé ; le verrou de la validée levé des deux
+           côtés ; la cellule vide rendue à son état d'avant la correction ; et le
+           rapport ne nommant plus le prestataire.

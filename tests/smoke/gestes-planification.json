@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-02",
+ "releve": "2026-11-03",
  "gestesNommes": 95,
  "occurrences": 139,
  "exerces": 77,
@@ -338,7 +338,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();planOpenDetailForPrestataire('${plan.id}','${p.id}')",
-   "nom": "event.preventDefault",
+   "nom": "planOpenDetailForPrestataire",
    "exerce": false
   },
   {

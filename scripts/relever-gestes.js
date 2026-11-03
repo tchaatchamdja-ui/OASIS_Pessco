@@ -365,13 +365,32 @@ const appelsDuGestionnaire = (corps) => {
   return noms;
 };
 
+// ── Deux gardes, et non une seule ──
+//
+// La règle « une garde n'est pas un geste » ne connaissait que
+// `event.stopPropagation()`. Or `event.preventDefault()` en est une autre, et
+// les deux se posent ensemble, dans l'ordre que l'auteur a choisi. Un
+// gestionnaire ouvert par `event.stopPropagation();event.preventDefault();X(…)`
+// se nommait donc **`event.preventDefault`**, et `X` restait invisible au
+// relevé : trois gestes de PR — `startConsolidation`, `reunionEvalEditInline`,
+// `exportReunionPdf` — existaient, étaient exercés, et n'apparaissaient nulle
+// part. Les gardes en tête se retirent donc toutes, dans n'importe quel ordre,
+// et l'on nomme ce qui reste. Quand rien ne reste, la garde **est** le geste —
+// un `dragover="event.preventDefault();"` ne fait rien d'autre.
+const GARDE_EN_TETE = /^event\.(stopPropagation|preventDefault)\s*\(\s*\)\s*;?\s*/;
+
 const nomDuGestionnaire = (corps) => {
   // Les interpolations d'abord : deux gestionnaires qui ne diffèrent que par une
   // valeur insérée sont **un** geste, et non deux.
   const normalise = normaliseInterpolations(corps).trim();
-  const sansGarde = normalise.replace(/^event\.stopPropagation\(\)\s*;\s*/, '');
+  let sansGarde = normalise;
+  let premiereGarde = null;
+  for (let m = GARDE_EN_TETE.exec(sansGarde); m; m = GARDE_EN_TETE.exec(sansGarde)) {
+    if (!premiereGarde) premiereGarde = `event.${m[1]}`;
+    sansGarde = sansGarde.slice(m[0].length);
+  }
   // Rien après la garde : la garde **est** le geste.
-  if (!sansGarde) return 'event.stopPropagation';
+  if (!sansGarde) return premiereGarde || 'event.stopPropagation';
   const appel = /^([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde);
   if (appel) return appel[1];
   // Une affectation : la cible la nomme. `EXEC_STATE.filters.domaine=this.value;…`
@@ -974,9 +993,26 @@ async function principal() {
   //
   // L'erreur allait dans le sens pessimiste — une couverture sous-estimée — et
   // c'est précisément pourquoi elle pouvait durer : *une mesure qui se trompe en
-  // sa défaveur ne se fait pas remarquer.* Les deux côtés appellent désormais
-  // `nomDuGestionnaire`.
-  const vues = new Set(exerces.enLigne.map(nomDuGestionnaire).filter(Boolean));
+  // sa défaveur ne se fait pas remarquer.*
+  //
+  // ── Et elle avait survécu, d'un cran ──
+  //
+  // Le commentaire ci-dessus disait « les deux côtés appellent désormais
+  // `nomDuGestionnaire` », et c'était vrai de cette ligne seule. Le côté
+  // statique, lui, appelle `nomDuGeste` — qui enveloppe le premier et **ajoute**
+  // la règle des mots-clés : une garde conditionnelle est retirée, et l'on nomme
+  // ce qu'elle protège. Un `onclick="if(!event.target.closest('button'))
+  // execEtatsOuvrir(…)"` était donc relevé sous le nom `execEtatsOuvrir` et
+  // reconnu au vol sous le nom `if` : cliqué, il comptait pour non exercé. La
+  // correction de n° 5.f.30 avait déplacé la règle sans déplacer ce côté-ci.
+  //
+  // Le défaut ne se voyait pas parce qu'il est **masqué par l'agrégation** : un
+  // geste qui existe aussi sans garde ailleurs — `mesMesureDepuisConstatation`,
+  // sur sa ligne **et** sur son bouton — compte exercé par l'autre occurrence.
+  // Seuls ceux qui n'existent que gardés restaient à zéro. Les deux côtés
+  // appellent maintenant la **même** fonction, et c'est un contrôle unitaire qui
+  // la garde.
+  const vues = new Set(exerces.enLigne.map(nomDuGeste).filter(Boolean));
   const ecouteursVus = new Set(exerces.ecouteurs);
   // Les actions de barre sont rendues par leur **source** : on les nomme ici,
   // avec la même fonction que l'extracteur statique.
@@ -1120,4 +1156,11 @@ if (require.main === module) {
 // accepte l'un comme l'autre, et seule la source peut emporter la liste.
 const MOUCHARD = `(${MOUCHARD_FN.toString()})(${JSON.stringify(EVENEMENTS)})`;
 
-module.exports = { MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS };
+module.exports = {
+  MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS,
+  // Le nommeur est exporté pour être éprouvé seul : c’est lui qui décide ce
+  // qu’un geste **est**, et plusieurs de ses règles sont nées d’un relevé faux.
+  // `nomDuGeste` est l’entrée : les deux côtés — la source et le mouchard — ne
+  // nomment que par elle.
+  nomDuGeste, nomDuGestionnaire,
+};

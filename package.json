@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node server.js",
     "smoke": "npm run build && node tests/smoke/index.js",
-    "dev": "node server.js",
+    "dev": "OASIS_DATA_DIR=./data-dev node server.js",
     "types": "tsc --noEmit -p frontend/tsconfig.json",
     "build": "node frontend/construire.mjs"
   },

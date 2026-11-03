@@ -9037,3 +9037,67 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            l'en-tête du classeur amputé ; le verrou de la validée levé des deux
            côtés ; la cellule vide rendue à son état d'avant la correction ; et le
            rapport ne nommant plus le prestataire.
+
+       5.f.61 [x] **Cinq gestes de déconnexion, morts par construction — retirés** — fait le 3 novembre 2026.
+
+           Chacun des cinq écrans de module portait un bouton de déconnexion, et
+           les cinq relevés les comptaient « non exercés ». Ils n'étaient pas
+           *non couverts* : ils étaient **inexerçables**. Le socle remplace le
+           nœud `.btn-logout` par « Retour au portail » —
+           `logout.replaceWith(btn)`, `frontend/socle/chrome.ts` —, et remplacer
+           un nœud détruit son gestionnaire en ligne. Aucune ronde ne pouvait les
+           atteindre, et aucune ne le pourra.
+
+           | écran | geste | ligne |
+           |---|---|---|
+           | SURV | `execLogout` | 862 |
+           | PLAN | `planLogout` | 348 |
+           | RAMP | `rampDeconnexion` | 958 |
+           | CARE | `mesDeconnexion` | 380 |
+           | PR | `handleLogout` | 296 |
+
+           Je les croyais trois — `rampDeconnexion` traînait depuis des semaines
+           dans mes questions ouvertes comme un cas isolé. La mesure en a trouvé
+           cinq, et un cas général.
+
+           ── Ce qu'un geste mort devient quand rien ne le mesure ──
+
+           **Trois des cinq ne déconnectaient pas.** PR, SURV et PLAN effaçaient
+           `pr_token` et `pr_user` du stockage local puis allaient à `/login`,
+           *sans appeler `/api/logout`* : la session restait ouverte côté
+           serveur. Les deux autres le faisaient correctement, et avaient même
+           reçu une correction soignée — « `fetch` ne lève pas sur une réponse
+           d'erreur, et le refus passait inaperçu ». On a donc réparé avec soin
+           un bouton que personne ne pouvait cliquer, et laissé trois faux
+           boutons de déconnexion ailleurs. *Un geste mort n'est mesuré par rien,
+           et c'est pourquoi il peut être à la fois soigné et faux.*
+
+           La leçon de ces commentaires survit au code qu'ils expliquaient, parce
+           qu'elle vaut partout : **un `try` autour d'un `fetch` ne garde rien
+           tant qu'on ne lit pas la réponse.** `fetch` ne rejette que sur une
+           panne de réseau ; un 4xx ou un 5xx traverse le `catch` sans un mot.
+
+           ── La lettre de la consigne, et ce qu'elle aurait cassé ──
+
+           La décision était « retirer les cinq fonctions et leur balisage ».
+           Retirer le **nœud** aurait ôté « Retour au portail » des cinq écrans :
+           c'est l'ancre que le socle cherche, et sans elle il ne crée rien
+           (`if (logout && !document.querySelector('.oasis-back-btn'))`). Les
+           suites l'exigent déjà — `retour === 1 && mort === 0` — et m'auraient
+           arrêté ; mais un garde qui arrête n'est pas une raison de ne pas
+           réfléchir. Les cinq fonctions et leurs cinq `onclick` sont donc
+           partis ; **le nœud reste, sans gestionnaire**, et c'est écrit.
+
+           ── Le garde, qui tient les deux côtés ──
+
+           Un garde qui n'exigerait que l'absence du gestionnaire laisserait
+           supprimer l'ancre ; un garde qui n'exigerait que l'ancre laisserait
+           revenir le gestionnaire. Il exige donc les deux, et qu'aucun écran de
+           module ne redéclare une fonction dont le nom porte « logout » ou
+           « deconnexion ». Trois contre-essais, trois fois rouge, chacun nommant
+           sa cause : un `onclick` remis sur l'ancre de PR ; l'ancre de CARE
+           renommée ; une `planLogout` redéclarée dans PLAN.
+
+           Les cinq relevés ont été refigés : cinq dénominateurs baissent d'un,
+           et cinq lignes « non exercé » qui ne pouvaient pas changer
+           disparaissent de l'inventaire.

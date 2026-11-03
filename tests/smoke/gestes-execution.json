@@ -1,7 +1,7 @@
 {
  "releve": "2026-11-03",
- "gestesNommes": 317,
- "occurrences": 511,
+ "gestesNommes": 316,
+ "occurrences": 510,
  "exerces": 156,
  "indecidables": 3,
  "gestes": [
@@ -675,7 +675,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 801,
+   "ligne": 795,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execNavigateTo('${key}')",
@@ -684,7 +684,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 808,
+   "ligne": 802,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execNavigateTo('${key}')",
@@ -693,7 +693,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 827,
+   "ligne": 821,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSetTheme('${th}')",
@@ -702,7 +702,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 832,
+   "ligne": 826,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSetLang('${l.toLowerCase()}')",
@@ -711,7 +711,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 836,
+   "ligne": 830,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleSidebar()",
@@ -720,7 +720,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 840,
+   "ligne": 834,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleMobileSidebar()",
@@ -729,7 +729,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 844,
+   "ligne": 838,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleMobileSidebar()",
@@ -738,7 +738,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 853,
+   "ligne": 847,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleNotifPanel()",
@@ -747,16 +747,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 862,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "execLogout()",
-   "nom": "execLogout",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 982,
+   "ligne": 976,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenExchangeSlider('${n.id}')",
@@ -765,7 +756,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 987,
+   "ligne": 981,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAccuserReception('${n.id}')",
@@ -774,7 +765,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 993,
+   "ligne": 987,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execPreviewNotification('${n.id}')",
@@ -783,7 +774,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1152,
+   "ligne": 1146,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('execNotifPanel')?.remove()",
@@ -792,7 +783,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1249,
+   "ligne": 1243,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -801,7 +792,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1323,
+   "ligne": 1317,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -810,7 +801,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1450,
+   "ligne": 1444,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.domaine=this.value;EXEC_STATE.filters.secteur='';${onchangeFunc}",
@@ -819,7 +810,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1453,
+   "ligne": 1447,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.secteur=this.value;${onchangeFunc}",
@@ -828,7 +819,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1456,
+   "ligne": 1450,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.prestataire=this.value;${onchangeFunc}",
@@ -837,7 +828,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1478,
+   "ligne": 1472,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.annee=this.value;${onchangeFunc}",
@@ -846,7 +837,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1483,
+   "ligne": 1477,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.trimestre=this.value;${onchangeFunc}",
@@ -855,7 +846,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1499,
+   "ligne": 1493,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.criticite=this.value;${onchangeFunc}",
@@ -864,7 +855,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1507,
+   "ligne": 1501,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.type_supervision=this.value;${onchangeFunc}",
@@ -873,7 +864,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1515,
+   "ligne": 1509,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.mode_supervision=this.value;${onchangeFunc}",
@@ -882,7 +873,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1524,
+   "ligne": 1518,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.avancement=this.value;${onchangeFunc}",
@@ -891,7 +882,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1532,
+   "ligne": 1526,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.statut=this.value;${onchangeFunc}",
@@ -900,7 +891,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1536,
+   "ligne": 1530,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { EXEC_STATE.filters.search=document.getElementById('exec-filter-search').value; ${onchangeF",
@@ -909,7 +900,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1541,
+   "ligne": 1535,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execResetFilters()",
@@ -918,7 +909,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1550,
+   "ligne": 1544,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_STATE.filters.trimestre='';${onchangeFunc}",
@@ -927,7 +918,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1552,
+   "ligne": 1546,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_STATE.filters.trimestre='${q}';${onchangeFunc}",
@@ -936,7 +927,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1568,
+   "ligne": 1562,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.classList.toggle('expanded')",
@@ -945,7 +936,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1191,
+   "ligne": 1185,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document:click",

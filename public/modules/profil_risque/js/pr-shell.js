@@ -206,12 +206,6 @@ function setLang(lang) {
     navigateTo(APP_STATE.currentPage, APP_STATE.currentSub);
 }
 
-function handleLogout() {
-    localStorage.removeItem('pr_token');
-    localStorage.removeItem('pr_user');
-    window.location.href = '/login';
-}
-
 // ── Sidebar Toggle ──
 function toggleSidebar() {
     APP_STATE.sidebarCollapsed = !APP_STATE.sidebarCollapsed;
@@ -293,7 +287,7 @@ function renderApp() {
                         <span>${((S.user?.prenom || '') + ' ' + (S.user?.nom || '')).trim()}</span>
                         <span class="role-badge">${prPrivilegeLabel() || S.user?.role || ''}</span>
                     </div>
-                    <button class="btn-logout" onclick="handleLogout()">${ICONS.logout} ${t('logout')}</button>
+                    <button class="btn-logout">${ICONS.logout} ${t('logout')}</button>
                 </div>
             </header>
             <main class="main-content" id="pageContent"></main>

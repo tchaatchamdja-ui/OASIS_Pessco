@@ -269,12 +269,6 @@ function planToggleMobileSidebar() {
     document.querySelector('.sidebar-backdrop')?.classList.toggle('show');
 }
 
-function planLogout() {
-    localStorage.removeItem('pr_token');
-    localStorage.removeItem('pr_user');
-    window.location.href = '/login';
-}
-
 function planResetFilters() {
     PLAN_STATE.filters = { domaine: '', secteur: '', prestataire: '', sousActivite: '', theme: '', statut: '', search: '', annee: '' };
     planRenderPage();
@@ -345,7 +339,7 @@ function planRenderApp() {
                         <span>${((S.user?.prenom || '') + ' ' + (S.user?.nom || '')).trim()}</span>
                         <span class="role-badge">${_userM2Role()}</span>
                     </div>
-                    <button class="btn-logout" onclick="planLogout()">${PLAN_ICONS.logout} ${tp('logout')}</button>
+                    <button class="btn-logout">${PLAN_ICONS.logout} ${tp('logout')}</button>
                 </div>
             </header>
             <main class="main-content" id="planPageContent"></main>

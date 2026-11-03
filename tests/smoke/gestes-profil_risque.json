@@ -1,7 +1,7 @@
 {
  "releve": "2026-11-03",
- "gestesNommes": 97,
- "occurrences": 186,
+ "gestesNommes": 96,
+ "occurrences": 185,
  "exerces": 46,
  "indecidables": 3,
  "gestes": [
@@ -1539,7 +1539,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 247,
+   "ligne": 241,
    "forme": "en ligne",
    "evenement": "click",
    "source": "navigateTo('${key}')",
@@ -1548,7 +1548,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 263,
+   "ligne": 257,
    "forme": "en ligne",
    "evenement": "click",
    "source": "setTheme('${th}')",
@@ -1557,7 +1557,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 268,
+   "ligne": 262,
    "forme": "en ligne",
    "evenement": "click",
    "source": "setLang('${l.toLowerCase()}')",
@@ -1566,7 +1566,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 272,
+   "ligne": 266,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleSidebar()",
@@ -1575,7 +1575,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 276,
+   "ligne": 270,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleMobileSidebar()",
@@ -1584,7 +1584,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 280,
+   "ligne": 274,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleMobileSidebar()",
@@ -1593,7 +1593,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 287,
+   "ligne": 281,
    "forme": "en ligne",
    "evenement": "click",
    "source": "prToggleNotifPanel()",
@@ -1602,16 +1602,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 296,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "handleLogout()",
-   "nom": "handleLogout",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 320,
+   "ligne": 314,
    "forme": "en ligne",
    "evenement": "click",
    "source": "APP_STATE.currentSub='${s.id}';renderPage();",
@@ -1620,7 +1611,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 379,
+   "ligne": 373,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeModal()",
@@ -1629,7 +1620,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 449,
+   "ligne": 443,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeSlicer()",
@@ -1638,7 +1629,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 454,
+   "ligne": 448,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeSlicer()",
@@ -1647,7 +1638,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 384,
+   "ligne": 378,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "div:click",
@@ -1657,7 +1648,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 389,
+   "ligne": 383,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "ta:input",
@@ -1667,7 +1658,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 440,
+   "ligne": 434,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "overlay:click",
@@ -1677,7 +1668,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 478,
+   "ligne": 472,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "ta:input",

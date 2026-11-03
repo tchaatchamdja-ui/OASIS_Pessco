@@ -749,12 +749,6 @@ function execToggleMobileSidebar() {
     document.querySelector('.sidebar-backdrop')?.classList.toggle('show');
 }
 
-function execLogout() {
-    localStorage.removeItem('pr_token');
-    localStorage.removeItem('pr_user');
-    window.location.href = '/login';
-}
-
 // ── Champ de recherche des barres de filtres ──
 // Le re-rendu est différé de 300 ms, puis le focus et la position du curseur
 // sont rendus au champ, que le rendu a recréé. La fonction vient du socle
@@ -859,7 +853,7 @@ function execRenderApp() {
                         <span>${((S.user?.prenom || '') + ' ' + (S.user?.nom || '')).trim()}</span>
                         <span class="role-badge">${_userM3Role()}</span>
                     </div>
-                    <button class="btn-logout" onclick="execLogout()">${EXEC_ICONS.logout} ${te('logout')}</button>
+                    <button class="btn-logout">${EXEC_ICONS.logout} ${te('logout')}</button>
                 </div>
             </header>
             <main class="main-content" id="exec-content"></main>

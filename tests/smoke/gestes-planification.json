@@ -1,7 +1,7 @@
 {
  "releve": "2026-11-03",
- "gestesNommes": 95,
- "occurrences": 139,
+ "gestesNommes": 94,
+ "occurrences": 138,
  "exerces": 77,
  "indecidables": 4,
  "gestes": [
@@ -902,7 +902,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 293,
+   "ligne": 287,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planNavigateTo('${key}')",
@@ -911,7 +911,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 312,
+   "ligne": 306,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planSetTheme('${th}')",
@@ -920,7 +920,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 317,
+   "ligne": 311,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planSetLang('${l.toLowerCase()}')",
@@ -929,7 +929,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 321,
+   "ligne": 315,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planToggleSidebar()",
@@ -938,7 +938,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 325,
+   "ligne": 319,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planToggleMobileSidebar()",
@@ -947,7 +947,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 329,
+   "ligne": 323,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planToggleMobileSidebar()",
@@ -956,7 +956,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 339,
+   "ligne": 333,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planToggleNotifPanel()",
@@ -965,16 +965,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 348,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planLogout()",
-   "nom": "planLogout",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 369,
+   "ligne": 363,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.currentSub='${s.id}';planRenderPage();",
@@ -983,7 +974,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 448,
+   "ligne": 442,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planFermerCalendrier()",
@@ -992,7 +983,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 451,
+   "ligne": 445,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planFermerCalendrier()",
@@ -1001,7 +992,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 470,
+   "ligne": 464,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCloseModal()",
@@ -1010,7 +1001,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 520,
+   "ligne": 514,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
@@ -1019,7 +1010,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 523,
+   "ligne": 517,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
@@ -1028,7 +1019,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 528,
+   "ligne": 522,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
@@ -1037,7 +1028,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 533,
+   "ligne": 527,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
@@ -1046,7 +1037,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 536,
+   "ligne": 530,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
@@ -1055,7 +1046,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 542,
+   "ligne": 536,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
@@ -1064,7 +1055,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 553,
+   "ligne": 547,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
@@ -1073,7 +1064,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 554,
+   "ligne": 548,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planResetFilters()",
@@ -1082,7 +1073,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 584,
+   "ligne": 578,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${geste('')}",
@@ -1092,7 +1083,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 585,
+   "ligne": 579,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${geste(a)}",
@@ -1102,7 +1093,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 440,
+   "ligne": 434,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "fond:click",
@@ -1112,7 +1103,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 475,
+   "ligne": 469,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "div:click",

@@ -955,7 +955,7 @@ function rampRenderApp() {
                         <span>${_rEsc(`${u.prenom || ''} ${u.nom || ''}`.trim())}</span>
                         <span class="role-badge">${_rEsc(rampRole())}</span>
                     </div>
-                    <button class="btn-logout" onclick="rampDeconnexion()">${RAMP_ICONS.logout} Déconnexion</button>
+                    <button class="btn-logout">${RAMP_ICONS.logout} Déconnexion</button>
                 </div>
             </header>
             <main class="main-content" id="ramp-content"></main>
@@ -1227,19 +1227,6 @@ function rampSetLang(lang) {
     rampRafraichir();
 }
 
-
-async function rampDeconnexion() {
-    // Même correction qu'au module « Mesures d'application » : `fetch` ne lève
-    // pas sur une réponse d'erreur, et le refus passait inaperçu.
-    try {
-        const r = await fetch('/api/logout', {
-            method: 'POST', credentials: 'same-origin',
-        });
-        if (!r.ok) console.error(`Déconnexion refusée par le serveur (${r.status}) :`
-            + ' la session peut rester ouverte.');
-    } catch (e) { console.error('Déconnexion : le serveur n’a pas répondu.', e); }
-    window.top.location.href = '/login.html';
-}
 
 // ══════════════════════════════════════
 //  Écran 1 — Tableau de Bord

@@ -192,6 +192,56 @@ module.exports = async function tailleSmoke() {
   verifier(`aucune fonction au-delà de ${SEUIL_FONCTION} lignes hors exceptions déclarées`,
     longues.length === 0, longues.join(' · '));
 
+  // ── Un écran de module ne se déconnecte pas lui-même ──
+  //
+  // Les cinq écrans portaient chacun un bouton de déconnexion, et chacun était
+  // **mort par construction** : le socle **remplace** le nœud `.btn-logout` par
+  // « Retour au portail » (`frontend/socle/chrome.ts`), et remplacer un nœud
+  // détruit son gestionnaire en ligne. Les cinq fonctions ont donc été retirées
+  // le 3 novembre 2026 — dont trois qui, de surcroît, ne déconnectaient pas :
+  // elles effaçaient le stockage local et allaient à `/login` sans appeler
+  // `/api/logout`, laissant la session **ouverte côté serveur**. On avait même
+  // corrigé avec soin, sur les deux autres, un refus de serveur que personne ne
+  // lisait — sur un bouton que personne ne pouvait cliquer. *Un geste mort n'est
+  // mesuré par rien, et c'est pourquoi il peut être à la fois soigné et faux.*
+  //
+  // Ce garde tient les **deux** côtés, et il le faut :
+  //
+  //   · le nœud doit **rester** — c'est l'ancre du socle. Le retirer ôterait
+  //     « Retour au portail » des cinq écrans, et c'est exactement ce que la
+  //     lettre de la consigne aurait fait faire ;
+  //   · le nœud ne doit porter **aucun gestionnaire**, et aucun écran de module
+  //     ne doit redéclarer une fonction de déconnexion.
+  {
+    const ecrans = ['execution', 'planification', 'profil_risque', 'ramp', 'mesures'];
+    const sansAncre = [];
+    const avecGestionnaire = [];
+    const avecFonction = [];
+    ecrans.forEach((e) => {
+      const js = path.join(RACINE, 'public', 'modules', e, 'js');
+      if (!fs.existsSync(js)) { sansAncre.push(`${e} (pas de source)`); return; }
+      let ancres = 0;
+      fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
+        const t = fs.readFileSync(path.join(js, f), 'utf8');
+        // L'ancre : un nœud de classe `btn-logout`, et rien d'autre dessus.
+        for (const m of t.matchAll(/<button[^>]*class="btn-logout"[^>]*>/g)) {
+          ancres += 1;
+          if (/\bon[a-z]+=/.test(m[0])) avecGestionnaire.push(`${e}/${f} : ${m[0].slice(0, 90)}`);
+        }
+        // Et la fonction : aucun écran de module n'en déclare plus.
+        for (const m of t.matchAll(/^(?:async\s+)?function\s+(\w*(?:[Ll]ogout|[Dd]econnexion)\w*)\s*\(/gm)) {
+          avecFonction.push(`${e}/${f} : ${m[1]}`);
+        }
+      });
+      if (!ancres) sansAncre.push(e);
+    });
+    verifier('les cinq écrans gardent l’ancre que le socle remplace, et aucun ne se déconnecte lui-même',
+      sansAncre.length === 0 && avecGestionnaire.length === 0 && avecFonction.length === 0,
+      `ancre absente : ${sansAncre.join(', ') || 'aucune'}`
+      + ` · gestionnaire : ${avecGestionnaire.join(' ; ') || 'aucun'}`
+      + ` · fonction : ${avecFonction.join(' ; ') || 'aucune'}`);
+  }
+
   // Un sélecteur défini deux fois dans la même feuille, c'est une règle qui en
   // annule une autre — la source de plusieurs corrections déjà passées ici.
   const doublons = [];

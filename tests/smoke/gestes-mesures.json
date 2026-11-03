@@ -1,7 +1,7 @@
 {
  "releve": "2026-11-03",
- "gestesNommes": 90,
- "occurrences": 145,
+ "gestesNommes": 89,
+ "occurrences": 144,
  "exerces": 51,
  "indecidables": 3,
  "gestes": [
@@ -61,15 +61,6 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 380,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesDeconnexion()",
-   "nom": "mesDeconnexion",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
    "ligne": 386,
    "forme": "en ligne",
    "evenement": "click",
@@ -79,7 +70,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 712,
+   "ligne": 688,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('db_prest',this.value)",
@@ -88,7 +79,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 716,
+   "ligne": 692,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('db_cat',this.value)",
@@ -97,7 +88,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 720,
+   "ligne": 696,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('db_type',this.value)",
@@ -106,7 +97,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 724,
+   "ligne": 700,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('db_statut',this.value)",
@@ -115,7 +106,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 728,
+   "ligne": 704,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('db_echeance',this.value)",
@@ -124,7 +115,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 734,
+   "ligne": 710,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesResetFiltresDashboard()",
@@ -133,7 +124,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 772,
+   "ligne": 748,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesSetFiltre('mes_carence','')",
@@ -142,7 +133,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 834,
+   "ligne": 810,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFaireLeSuivi('${m.id}')",
@@ -151,7 +142,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 839,
+   "ligne": 815,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesSupprimerMesure('${m.id}')",
@@ -160,7 +151,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 890,
+   "ligne": 866,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('mes_categorie',this.value)",
@@ -169,7 +160,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 894,
+   "ligne": 870,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('mes_statut',this.value)",
@@ -178,7 +169,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 898,
+   "ligne": 874,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('mes_prest',this.value)",
@@ -187,7 +178,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 903,
+   "ligne": 879,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesRechercher('mes_recherche', this.value)",
@@ -196,7 +187,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 905,
+   "ligne": 881,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesResetFiltresMesures()",
@@ -205,7 +196,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 959,
+   "ligne": 935,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesMesureDepuisConstatation('${c.id}')",
@@ -214,7 +205,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1016,
+   "ligne": 992,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesHistorique('${c.id}')",
@@ -223,7 +214,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1019,
+   "ligne": 995,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesMesuresDeCarence('${c.id}')",
@@ -232,7 +223,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1022,
+   "ligne": 998,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesOuvrirConstat('${c.id}')",
@@ -241,7 +232,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1026,
+   "ligne": 1002,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesSupprimerConstat('${c.id}')",
@@ -250,7 +241,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1043,
+   "ligne": 1019,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesOuvrirConstat()",
@@ -259,7 +250,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1050,
+   "ligne": 1026,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('crit_origine',this.value)",
@@ -268,7 +259,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1055,
+   "ligne": 1031,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('crit_statut',this.value)",
@@ -277,7 +268,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1060,
+   "ligne": 1036,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSetFiltre('crit_prest',this.value)",
@@ -286,7 +277,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1066,
+   "ligne": 1042,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesRechercher('crit_recherche', this.value)",
@@ -295,7 +286,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1067,
+   "ligne": 1043,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesResetFiltresCritiques()",
@@ -304,7 +295,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1186,
+   "ligne": 1162,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerSlider()",
@@ -313,7 +304,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1308,
+   "ligne": 1284,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -322,7 +313,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1312,
+   "ligne": 1288,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -331,7 +322,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1334,
+   "ligne": 1310,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'ouverture\\')",
@@ -340,7 +331,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1336,
+   "ligne": 1312,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai('delai')",
@@ -349,7 +340,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1338,
+   "ligne": 1314,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'echeance\\')",
@@ -358,7 +349,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1343,
+   "ligne": 1319,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -367,7 +358,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1344,
+   "ligne": 1320,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesEnregistrerConstat()",
@@ -376,7 +367,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1462,
+   "ligne": 1438,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${action}('${s.cle}')",
@@ -386,7 +377,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1146,
+   "ligne": 1122,
    "forme": "écouteur",
    "evenement": "resize",
    "nom": "window:resize",

@@ -95,47 +95,24 @@ function renderParamArchives() {
     <tbody>${rows || `<tr><td colspan="5" class="text-center">${t('no_validated_eval')}</td></tr>`}</tbody></table>`;
 }
 
-// ── Indices & Seuils ──
-function renderParamIndices() {
-    const indices = window.PESSCO?.sharedData?.indices || {};
-    const isAdmin = isM1Admin();
-    return `
-    <div class="page-header"><h2>${t('indices_seuils')}</h2></div>
-    <div class="card" style="max-width:600px;">
-        <h4 style="color:var(--primary);margin-bottom:1rem;">${t('conformity')}</h4>
-        <div class="form-row">
-            <div class="form-group"><label>Seuil Haut</label><input id="idxConf1" class="input" type="number" step="0.01" min="0" max="1" value="${indices.conf1||0.8}" ${!isAdmin?'disabled':''}></div>
-            <div class="form-group"><label>Seuil Bas</label><input id="idxConf2" class="input" type="number" step="0.01" min="0" max="1" value="${indices.conf2||0.5}" ${!isAdmin?'disabled':''}></div>
-        </div>
-        <h4 style="color:var(--primary);margin-bottom:1rem;">${t('performance')}</h4>
-        <div class="form-row">
-            <div class="form-group"><label>Seuil Haut</label><input id="idxPerf1" class="input" type="number" step="0.01" min="0" max="1" value="${indices.perf1||0.8}" ${!isAdmin?'disabled':''}></div>
-            <div class="form-group"><label>Seuil Bas</label><input id="idxPerf2" class="input" type="number" step="0.01" min="0" max="1" value="${indices.perf2||0.5}" ${!isAdmin?'disabled':''}></div>
-        </div>
-        <h4 style="color:var(--primary);margin-bottom:1rem;">${t('complexity')}</h4>
-        <div class="form-row">
-            <div class="form-group"><label>Seuil Haut</label><input id="idxExpo1" class="input" type="number" step="0.01" min="0" max="1" value="${indices.expo1||0.8}" ${!isAdmin?'disabled':''}></div>
-            <div class="form-group"><label>Seuil Bas</label><input id="idxExpo2" class="input" type="number" step="0.01" min="0" max="1" value="${indices.expo2||0.5}" ${!isAdmin?'disabled':''}></div>
-        </div>
-        ${isAdmin ? `<button class="btn btn-primary" onclick="saveModuleIndices()">${ICONS.check || '✓'} ${t('save')}</button>` : ''}
-    </div>`;
-}
-
-async function saveModuleIndices() {
-    const data = {
-        conf1: parseFloat(document.getElementById('idxConf1').value),
-        conf2: parseFloat(document.getElementById('idxConf2').value),
-        perf1: parseFloat(document.getElementById('idxPerf1').value),
-        perf2: parseFloat(document.getElementById('idxPerf2').value),
-        expo1: parseFloat(document.getElementById('idxExpo1').value),
-        expo2: parseFloat(document.getElementById('idxExpo2').value)
-    };
-    try {
-        await api('/api/indices', { method: 'PUT', body: JSON.stringify(data) });
-        window.PESSCO.sharedData.indices = data;
-        showToast(t('save') + ' OK');
-    } catch (e) { showToast(e.message, 'error'); }
-}
+// ── Indices & Seuils : une paire ombrée, retirée ──
+//
+// Ce fichier portait **deux** `renderParamIndices` et **deux** fonctions
+// d'enregistrement des indices. En script classique, la seconde déclaration
+// d'un nom écrase la première : la version vivante était celle du bas, et celle
+// d'ici — avec le `saveModuleIndices` qu'elle seule appelait — était
+// **inatteignable**. Qui l'aurait modifiée n'aurait rien vu changer.
+//
+// Les deux n'écrivaient d'ailleurs pas au même endroit : la morte rangeait le
+// résultat dans `window.PESSCO.sharedData.indices`, **écrit une fois et lu
+// nulle part** ; la vivante le range dans `APP_STATE.data.indices`, que trois
+// endroits relisent. Le retrait n'a donc aucune conséquence, et c'est la mesure
+// qui le dit, non l'intuition.
+//
+// Un garde-fou de forme refuse désormais qu'une fonction soit déclarée deux fois
+// dans un même fichier (`tests/smoke/taille.smoke.js`) : c'était le seul cas du
+// dépôt, et *une déclaration qui en ombre une autre est toujours un défaut,
+// jamais un choix.*
 
 // ── Domaines (Change 3: accordion + filters) ──
 window._domFilters = { domaine: '', secteur: '', sa: '', search: '' };

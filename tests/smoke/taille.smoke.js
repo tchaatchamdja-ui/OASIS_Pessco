@@ -242,6 +242,37 @@ module.exports = async function tailleSmoke() {
       + ` · fonction : ${avecFonction.join(' ; ') || 'aucune'}`);
   }
 
+  // ── Une déclaration qui en ombre une autre est toujours un défaut ──
+  //
+  // En script classique, deux `function X()` dans le même fichier ne sont pas
+  // une erreur : la seconde **écrase** la première, en silence. Le code de la
+  // première devient inatteignable, et qui le modifie ne voit rien changer.
+  //
+  // `pr-parametres.js` en portait un cas : deux `renderParamIndices`, dont la
+  // morte appelait un `saveModuleIndices` qui rangeait son résultat dans
+  // `window.PESSCO.sharedData.indices` — écrit une fois, lu nulle part. La
+  // vivante le range dans `APP_STATE.data.indices`, que trois endroits
+  // relisent. Quarante-et-une lignes retirées le 4 novembre 2026 (n° 5.f.67).
+  //
+  // C'était le **seul** cas du dépôt : ce garde part donc sans exception à
+  // tolérer, et il refuse qu'il s'en ajoute. Un doublon de fonction n'est jamais
+  // un choix — contrairement à un sélecteur CSS écrit deux fois, dont ce fichier
+  // tolère vingt-cinq hérités.
+  {
+    const doublees = [];
+    fichiers.filter((f) => f.endsWith('.js')).forEach((f) => {
+      const compte = new Map();
+      fs.readFileSync(f, 'utf8').split('\n').forEach((l) => {
+        const m = /^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/.exec(l);
+        if (m) compte.set(m[1], (compte.get(m[1]) || 0) + 1);
+      });
+      [...compte].filter(([, n]) => n > 1)
+        .forEach(([nom, n]) => doublees.push(`${relatif(f)} : ${nom} ×${n}`));
+    });
+    verifier('aucune fonction n’est déclarée deux fois dans un même fichier',
+      doublees.length === 0, doublees.join(' · '));
+  }
+
   // Un sélecteur défini deux fois dans la même feuille, c'est une règle qui en
   // annule une autre — la source de plusieurs corrections déjà passées ici.
   const doublons = [];

@@ -1,7 +1,7 @@
 {
  "releve": "2026-11-04",
- "gestesNommes": 89,
- "occurrences": 168,
+ "gestesNommes": 88,
+ "occurrences": 167,
  "exerces": 65,
  "indecidables": 3,
  "gestes": [
@@ -737,16 +737,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 120,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "saveModuleIndices()",
-   "nom": "saveModuleIndices",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 165,
+   "ligne": 142,
    "forme": "en ligne",
    "evenement": "click",
    "source": "printPage('printStart_indicateurs')",
@@ -755,7 +746,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 166,
+   "ligne": 143,
    "forme": "en ligne",
    "evenement": "click",
    "source": "exportIndicateursExcel()",
@@ -764,7 +755,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 167,
+   "ligne": 144,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('indImportFile').click();",
@@ -773,7 +764,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 168,
+   "ligne": 145,
    "forme": "en ligne",
    "evenement": "change",
    "source": "importIndicateursExcel(event)",
@@ -782,7 +773,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 170,
+   "ligne": 147,
    "forme": "en ligne",
    "evenement": "click",
    "source": "openEntityModal('indicateurs_conf')",
@@ -791,7 +782,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 171,
+   "ligne": 148,
    "forme": "en ligne",
    "evenement": "click",
    "source": "openEntityModal('indicateurs_perf')",
@@ -800,7 +791,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 172,
+   "ligne": 149,
    "forme": "en ligne",
    "evenement": "click",
    "source": "openEntityModal('indicateurs_complex')",
@@ -809,7 +800,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 174,
+   "ligne": 151,
    "forme": "en ligne",
    "evenement": "click",
    "source": "expandCollapseAll('indAccordion',true)",
@@ -818,7 +809,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 175,
+   "ligne": 152,
    "forme": "en ligne",
    "evenement": "click",
    "source": "expandCollapseAll('indAccordion',false)",
@@ -827,7 +818,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 191,
+   "ligne": 168,
    "forme": "en ligne",
    "evenement": "change",
    "source": "window._indFilters.type=this.value;renderPage();",
@@ -836,7 +827,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 200,
+   "ligne": 177,
    "forme": "en ligne",
    "evenement": "change",
    "source": "window._indFilters.domaine=this.value;renderPage();",
@@ -845,7 +836,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 207,
+   "ligne": 184,
    "forme": "en ligne",
    "evenement": "change",
    "source": "window._indFilters.secteur=this.value;renderPage();",
@@ -854,7 +845,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 214,
+   "ligne": 191,
    "forme": "en ligne",
    "evenement": "change",
    "source": "window._indFilters.sa=this.value;renderPage();",
@@ -863,7 +854,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 221,
+   "ligne": 198,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { window._indFilters.search=document.getElementById('pr-ind-search').value; renderPage(); })",
@@ -872,7 +863,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 224,
+   "ligne": 201,
    "forme": "en ligne",
    "evenement": "click",
    "source": "window._indFilters={type:'',domaine:'',secteur:'',sa:'',search:''};renderPage();",
@@ -881,7 +872,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 256,
+   "ligne": 233,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleAccordion('${secAccId}')",
@@ -890,7 +881,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 267,
+   "ligne": 244,
    "forme": "en ligne",
    "evenement": "click",
    "source": "openEntityModal('indicateurs_conf','${i.id}')",
@@ -899,7 +890,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 282,
+   "ligne": 259,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleAccordion('${confId}')",
@@ -908,7 +899,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 303,
+   "ligne": 280,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleAccordion('${perfId}')",
@@ -917,7 +908,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 314,
+   "ligne": 291,
    "forme": "en ligne",
    "evenement": "click",
    "source": "openEntityModal('indicateurs_perf','${i.id}')",
@@ -926,7 +917,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 375,
+   "ligne": 352,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleAccordion('${saAccId}')",
@@ -935,7 +926,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 386,
+   "ligne": 363,
    "forme": "en ligne",
    "evenement": "click",
    "source": "openEntityModal('indicateurs_complex','${i.id}')",
@@ -944,7 +935,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 400,
+   "ligne": 377,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleAccordion('${secAccId}')",
@@ -953,7 +944,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 412,
+   "ligne": 389,
    "forme": "en ligne",
    "evenement": "click",
    "source": "toggleAccordion('${compId}')",
@@ -962,7 +953,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 517,
+   "ligne": 494,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentNode.remove()",
@@ -971,7 +962,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 615,
+   "ligne": 592,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeModal()",
@@ -980,7 +971,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 616,
+   "ligne": 593,
    "forme": "en ligne",
    "evenement": "click",
    "source": "deleteEntity('${collection}','${itemId}')",
@@ -989,7 +980,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 617,
+   "ligne": 594,
    "forme": "en ligne",
    "evenement": "click",
    "source": "saveEntity('${collection}','${itemId||''}')",
@@ -998,7 +989,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 710,
+   "ligne": 687,
    "forme": "en ligne",
    "evenement": "click",
    "source": "saveIndices()",
@@ -1007,7 +998,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 808,
+   "ligne": 785,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('prNotifPanel')?.remove()",
@@ -1016,7 +1007,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 840,
+   "ligne": 817,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document:click",

@@ -9547,3 +9547,44 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            sans la réaffectation. *Un contre-essai qui ne mord pas dit soit que le
            contrôle est creux, soit que le défaut n'en est pas un ; il faut savoir
            lequel avant de conclure.* Le vrai défaut détache la copie.
+
+       5.f.67 [x] **Une fonction déclarée deux fois — et le garde-fou qui l'interdit** — fait le 4 novembre 2026.
+
+           `pr-parametres.js` portait **deux `renderParamIndices`** (lignes 99 et
+           690) et deux fonctions d'enregistrement des indices. En script
+           classique, deux `function X()` dans le même fichier ne sont pas une
+           erreur : la seconde **écrase** la première, en silence.
+
+           La version vivante était donc celle du bas, dont le bouton appelle
+           `saveIndices`. Celle du haut — et le `saveModuleIndices` qu'elle seule
+           appelait — étaient **inatteignables**. *Qui les aurait modifiées
+           n'aurait rien vu changer*, et c'est la pire forme de code mort : elle
+           a l'air vivante, et elle se laisse éditer.
+
+           ── La mesure, et non l'intuition ──
+
+           Les deux jumelles ne rangeaient pas leur résultat au même endroit : la
+           morte écrivait dans `window.PESSCO.sharedData.indices`, **écrit une
+           fois et lu nulle part** ; la vivante écrit dans
+           `APP_STATE.data.indices`, que trois endroits relisent
+           (`pr-profils.js` deux fois, `pr-parametres.js` une). Le retrait n'a
+           donc aucune conséquence — et c'est ce relevé qui le dit, non une
+           intuition sur « la bonne jumelle ». Quarante-et-une lignes parties.
+
+           Cela clôt par la mesure une question que je portais ouverte depuis des
+           semaines sous le nom « le doublon `renderParamIndices` » : je savais
+           qu'il y en avait deux, je ne savais pas laquelle vivait, ni que la
+           morte écrivait dans un cul-de-sac.
+
+           ── Le garde-fou ──
+
+           Aucune fonction ne peut plus être déclarée deux fois dans un même
+           fichier. C'était **le seul cas du dépôt** — mesuré sur les cinq écrans
+           avant d'écrire le garde —, qui part donc sans aucune exception à
+           tolérer. Contre-essayé en plantant un doublon ailleurs : il le dénonce
+           en nommant le fichier et la fonction.
+
+           La différence avec le garde voisin des sélecteurs CSS, qui tolère
+           vingt-cinq doublons hérités, mérite d'être dite : *une règle CSS
+           écrite deux fois peut être une maladresse de style ; une fonction
+           déclarée deux fois est toujours un défaut, jamais un choix.*

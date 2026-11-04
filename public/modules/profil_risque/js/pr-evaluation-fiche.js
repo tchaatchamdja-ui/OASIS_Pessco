@@ -1621,8 +1621,23 @@ async function decisionDirecteur(evalId, decision) {
     if (requiresMotif && decision === 'rejeter' && !await oasisConfirmer(t('confirmer_rejet_evaluation'))) return;
     if (requiresMotif && decision === 'renvoyer' && !await oasisConfirmer(t('confirmer_renvoi_observations'))) return;
     if (decision === 'cloturer' && !await oasisConfirmer(t('confirmer_cloture_reunion'))) return;
-    const commentaire = (requiresMotif || decision !== 'accepter')
-        ? ((await oasisSaisir(promptByDecision[decision], { requis: requiresMotif })) || '') : '';
+    // ── « Accepter » ne demandait rien ──
+    //
+    // Le renvoi, le rejet et la clôture demandaient chacun une confirmation
+    // **et** un texte ; l'acceptation partait d'un seul clic, sans rien à
+    // relire. C'est pourtant une décision d'autorité : elle ouvre l'onglet de
+    // la réunion prestataire, et le circuit ne revient pas en arrière de
+    // lui-même. Relevé par la ronde du 3 novembre 2026 — *une invite qu'on
+    // attend et qui ne vient pas est une mesure, pas une panne* — et corrigé
+    // sur décision de la maîtrise d'ouvrage le 4 novembre.
+    //
+    // Elle est alignée sur la clôture, son plus proche voisin : une
+    // confirmation qui dit ce que l'acte entraîne, et un commentaire
+    // facultatif. Le motif reste obligatoire pour les deux seules décisions qui
+    // arrêtent ou reculent le circuit.
+    if (decision === 'accepter' && !await oasisConfirmer(t('confirmer_acceptation_evaluation'))) return;
+    const commentaire = (await oasisSaisir(promptByDecision[decision],
+        { requis: requiresMotif })) || '';
     if (requiresMotif && !commentaire.trim()) {
         showToast(t('reason_required_for', decision), 'error'); return;
     }

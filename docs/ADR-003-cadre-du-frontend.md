@@ -9301,3 +9301,64 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            cellule **vide** est sautée, parce que `Number('')` vaut 0 et que le
            vide n'est pas une note. La question posée là est donc close, et la
            réponse est celle que le code tenait déjà.
+
+       5.f.64 [x] **« Accepter » demandait rien — elle demande désormais les deux** — fait le 4 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Le renvoi, le rejet et la clôture demandaient chacun une confirmation
+           **et** un texte. L'acceptation partait d'un seul clic, sans rien à
+           relire — alors qu'elle ouvre l'onglet de la réunion prestataire et que
+           le circuit ne revient pas en arrière de lui-même. Relevé par la ronde
+           du 3 novembre (5.f.57) — *une invite qu'on attend et qui ne vient pas
+           est une mesure, pas une panne* —, la question est partie à la maîtrise
+           d'ouvrage, qui a tranché : corriger.
+
+           Elle est alignée sur la clôture, son plus proche voisin : une
+           confirmation qui **dit ce que l'acte entraîne** plutôt que « êtes-vous
+           sûr ? », puis un commentaire facultatif. Le motif reste obligatoire
+           pour les deux seules décisions qui arrêtent ou reculent le circuit.
+           Le libellé est écrit dans les trois langues.
+
+           ── Une inexactitude de mon compte rendu, corrigée ──
+
+           J'avais écrit « la seule décision d'autorité que rien ne confirme ».
+           C'est faux : **`valider` ne confirme pas non plus** — il demande
+           seulement un commentaire, facultatif. `accepter` était la seule à ne
+           demander *rien du tout*. Et `valider` est terminale : elle ferme le
+           volet, date l'évaluation et fonde le profil de risque que la
+           Planification consomme. La question reste donc ouverte pour elle, et
+           elle est posée.
+
+           ── Un défaut de mon propre contrôle, trouvé avant de le contre-essayer ──
+
+           `oasisConfirmer` et `oasisSaisir` **partagent leurs boutons**
+           (`.oasis-confirm-oui`, `.oasis-confirm-non`). Relever le bouton ne dit
+           donc pas lequel des deux dialogues est là : le contrôle aurait passé
+           avec la seule invite de commentaire, c'est-à-dire **sans la
+           confirmation qu'il prétend exiger**. Ce qui les sépare est le champ —
+           `oasisConfirmer` n'en a pas. *Deux dialogues qui partagent leurs
+           sélecteurs ne se distinguent que par ce que l'un porte et l'autre
+           pas.*
+
+           ── Et une assertion qui a mordu pour une autre raison que la sienne ──
+
+           `inviteFermee` était écrite pour dire « l'invite s'est bien
+           refermée ». Le contre-essai qui pose la confirmation mais **ignore son
+           refus** l'a fait tomber par elle, et non par le statut : refusé, le
+           geste enchaînait sur l'invite de commentaire, et une seconde invite
+           paraissait là où plus rien ne doit être demandé. C'est la meilleure
+           lecture des deux — *après un refus, l'écran ne demande plus rien* — et
+           je la dois au contre-essai, non à mon intention.
+
+           ── Ce que le contre-essai a montré d'autre, et qui reste ouvert ──
+
+           **Annuler l'invite de commentaire accepte quand même**, avec un
+           commentaire vide : `(await oasisSaisir(…)) || ''` ne distingue pas
+           « rien à dire » de « je renonce ». C'est vrai de `valider`, de
+           `cloturer` et désormais d'`accepter`. Le module PLAN a résolu le même
+           problème en **nommant le bouton** : « sans commentaire » plutôt qu'un
+           « Annuler » qui approuvait quand même (`planApprouverDG`). Question
+           posée, non corrigée de ma propre initiative.
+
+           Quatre contre-essais, quatre fois rouge : la confirmation retirée ;
+           son refus ignoré ; le commentaire rendu obligatoire ; et le
+           commentaire non envoyé au serveur.

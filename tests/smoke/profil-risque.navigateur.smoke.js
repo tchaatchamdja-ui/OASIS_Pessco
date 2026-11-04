@@ -1107,7 +1107,8 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     etape = 'circuit de l’évaluation';
     const MOTIF_RENVOI = 'Motif du renvoi — observations à compléter ' + Date.now();
     const COMMENTAIRE = 'Commentaire d’indicateur posé à la soumission';
-    const circuit = await page.evaluate(async (motif, commentaire) => {
+    const COMMENTAIRE_ACCEPTATION = 'Acceptée par la ronde, réunion à convoquer';
+    const circuit = await page.evaluate(async (motif, commentaire, commentaireAcceptation) => {
       const a = (ms) => new Promise((r) => setTimeout(r, ms));
       const o = {};
       const essai = async (nom, f) => {
@@ -1294,21 +1295,68 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         d.resoumise = await oui(4000);
         await rouvrir();
         d.statutSoumise = statut();
-        // ── « Accepter » ne demande **rien** ──
+        // ── « Accepter » demandait **rien**, et demande désormais les deux ──
         //
         // Mon premier jet attendait une invite de confirmation, comme pour le
-        // renvoi et le rejet : il n'en vient aucune. `decisionDirecteur` ne
-        // confirme que `rejeter`, `renvoyer` et `cloturer`, et ne demande de
-        // commentaire pour toute décision **sauf** `accepter`. L'acceptation
-        // part donc d'un seul clic, sans rien à relire — le contrôle le relève
-        // plutôt que de le supposer, et la question est posée à la maîtrise
-        // d'ouvrage : c'est une décision d'autorité.
+        // renvoi et le rejet : il n'en venait aucune. L'acceptation partait d'un
+        // seul clic, sans rien à relire — alors qu'elle ouvre l'onglet de la
+        // réunion prestataire et que le circuit ne revient pas en arrière de
+        // lui-même. *Une invite qu'on attend et qui ne vient pas est une mesure,
+        // pas une panne* : le contrôle l'a relevée, la question est partie à la
+        // maîtrise d'ouvrage, et elle a tranché le 4 novembre 2026 — corriger.
+        //
+        // Le contrôle se retourne donc, et il exige les **deux** invites dans
+        // l'ordre : la confirmation d'abord, le commentaire ensuite. Un contrôle
+        // qui n'exigerait que la première laisserait retirer la seconde.
         geste(/decisionDirecteur\([^)]*'accepter'\)/)?.click();
         await a(1400);
-        d.aucuneInvite = !document.querySelector('.oasis-confirm-oui')
+        // ── Ce qui distingue une confirmation d'une invite de saisie ──
+        //
+        // Les deux dialogues du socle partagent leurs boutons
+        // (`.oasis-confirm-oui`, `.oasis-confirm-non`) : relever le bouton ne
+        // dirait pas **lequel** des deux est là, et le contrôle serait passé
+        // avec la seule invite de commentaire — c'est-à-dire sans la
+        // confirmation qu'il prétend exiger. Ce qui les sépare est le champ :
+        // `oasisConfirmer` n'en a pas, `oasisSaisir` en a un.
+        d.confirmation = !!document.querySelector('.oasis-confirm-oui')
           && !document.querySelector('.oasis-saisie-champ');
+        // Et le refus de la confirmation ne décide rien : on l'éprouve avant de
+        // l'accepter, sans quoi « elle confirme » ne dirait pas « elle retient ».
+        document.querySelector('.oasis-confirm-non')?.click();
+        await a(1600);
+        d.statutApresRefus = statut();
+        // ── L'assertion qui a mordu n'est pas celle que j'avais écrite pour ça ──
+        //
+        // Je l'avais posée pour dire « l'invite s'est bien refermée ». Le
+        // contre-essai qui pose la confirmation mais **ignore son refus** l'a
+        // fait tomber par elle, et non par le statut : refusé, le geste
+        // enchaînait sur l'invite de commentaire, et une seconde invite paraissait
+        // là où plus rien ne doit être demandé. C'est la meilleure lecture des
+        // deux — *après un refus, l'écran ne demande plus rien* — et je la dois
+        // au contre-essai, non à mon intention.
+        d.inviteFermee = !document.querySelector('.oasis-confirm-oui');
+        // Puis pour de bon.
+        geste(/decisionDirecteur\([^)]*'accepter'\)/)?.click();
+        await a(1400);
+        d.confirmationRouverte = !!document.querySelector('.oasis-confirm-oui')
+          && !document.querySelector('.oasis-saisie-champ');
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(1400);
+        // Le commentaire vient après la confirmation, et il est facultatif : le
+        // bouton n'est pas éteint sur un champ vide.
+        d.commentaire = !!document.querySelector('.oasis-saisie-champ');
+        d.commentaireFacultatif = !(document.querySelector('.oasis-confirm-oui') || {}).disabled;
+        const champAcceptation = document.querySelector('.oasis-saisie-champ');
+        if (champAcceptation) champAcceptation.value = commentaireAcceptation;
+        document.querySelector('.oasis-confirm-oui')?.click();
         await a(3600);
         d.statut = statut();
+        // Le serveur range le commentaire d'une décision sous deux noms
+        // (`motif_decision` et `commentaire_directeur`) : on exige les deux, car
+        // ce sont eux que la fiche et les rapports relisent.
+        const apres = ev() || {};
+        d.commentaireAuServeur = apres.motif_decision === commentaireAcceptation
+          && apres.commentaire_directeur === commentaireAcceptation;
         d.rouverte = await rouvrir();
         d.ongletsApres = onglets();
         d.reunionParue = d.ongletsApres.includes('reunion_prestataire');
@@ -1399,7 +1447,7 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         return d;
       });
       return o;
-    }, MOTIF_RENVOI, COMMENTAIRE);
+    }, MOTIF_RENVOI, COMMENTAIRE, COMMENTAIRE_ACCEPTATION);
 
     {
       const De = circuit.depart || {};
@@ -1440,14 +1488,21 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         && Re.rouverte === true
         && Re.piedRenvoyee.some((g) => /soumettreDirecteur/.test(g)),
         JSON.stringify({ ...Re, commentaire: undefined }).slice(0, 460));
-      verifier('l’acceptation fait naître l’onglet « Réunion prestataire », que les statuts précédents n’offraient pas',
+      verifier('l’acceptation demande une confirmation puis un commentaire, son refus ne décide rien, et elle fait naître l’onglet « Réunion prestataire »',
         Ac.resoumise === true && Ac.statutSoumise === 'soumis_directeur'
         && Ac.ongletsAvant.includes('reunion_prestataire') === false
-        // L'acceptation ne demande ni confirmation ni commentaire.
-        && Ac.aucuneInvite === true && Ac.statut === 'acceptee'
+        // La confirmation vient, et son refus laisse le circuit où il était.
+        && Ac.confirmation === true
+        && Ac.statutApresRefus === 'soumis_directeur' && Ac.inviteFermee === true
+        && Ac.confirmationRouverte === true
+        // Puis le commentaire, facultatif.
+        && Ac.commentaire === true && Ac.commentaireFacultatif === true
+        && Ac.statut === 'acceptee'
+        // Et le commentaire est parvenu au serveur.
+        && Ac.commentaireAuServeur === true
         && Ac.rouverte === true && Ac.reunionParue === true
         && Ac.ongletsApres.length === Ac.ongletsAvant.length + 1,
-        JSON.stringify(Ac).slice(0, 400));
+        JSON.stringify(Ac).slice(0, 460));
       verifier('le compte-rendu de la réunion prestataire s’enregistre au serveur, et c’est lui qui porte la clôture',
         Ru.zone === true && Ru.champs === 5
         && Ru.boutonEnregistrer === true

@@ -350,6 +350,60 @@ function bilan(titre) {
   return ok;
 }
 
+// ── Un refus que la ronde attend, déclaré et vérifié ──
+//
+// Toute suite de navigateur collecte les réponses 4xx et 5xx comme des défauts,
+// et il le faut : un 403 passé inaperçu est une règle qu'on croit tenue. Mais
+// une règle qui **refuse** ne se mesure qu'en la provoquant, et la provoquer
+// fait rougir le collecteur — de sorte qu'aucune règle de refus n'était
+// éprouvable, dans aucune suite.
+//
+// Une ronde déclare donc, dans une fenêtre qu'elle ouvre avant le geste et
+// referme après, le refus qu'elle attend : son code et un fragment de son
+// adresse. Le refus déclaré n'entre pas aux incidents ; il est marqué
+// **rencontré**, et `verifierRefus()` exige qu'il l'ait été. Une déclaration qui
+// cesse de correspondre fait donc rougir elle aussi, au lieu de masquer — c'est
+// cette symétrie qui distingue un mécanisme d'une échappatoire.
+//
+// Le navigateur dit le même fait deux fois : la réponse, et une ligne de console
+// pour la ressource. Dans la fenêtre, la seconde ne compte pas.
+//
+// Écrit pour la suite PR (ADR-003, 5.f.60), il vit ici parce qu'il sert à
+// plusieurs : une copie par suite aurait divergé, et ce dépôt a déjà payé cette
+// leçon deux fois.
+function refusAttendus() {
+  const liste = [];
+  let fenetre = false;
+  return {
+    // À poser avant le geste qui provoque le refus.
+    declarer(statut, url) {
+      const a = { statut, url, rencontre: false };
+      liste.push(a);
+      fenetre = true;
+      return a;
+    },
+    // Et à refermer juste après : hors de la fenêtre, un 4xx reste un défaut.
+    clore() { fenetre = false; },
+    // Vrai si cette réponse est celle qu'on attendait — et elle est alors
+    // marquée, pour qu'un second passage ne la consomme pas deux fois.
+    attendu(statut, url) {
+      if (!fenetre) return false;
+      const a = liste.find((x) => x.statut === statut && url.includes(x.url) && !x.rencontre);
+      if (!a) return false;
+      a.rencontre = true;
+      return true;
+    },
+    // La ligne que le navigateur écrit pour la même requête.
+    bruit(texte) { return fenetre && /Failed to load resource/.test(texte); },
+    // Le contrôle : chaque refus déclaré doit être venu.
+    verifier(ecran) {
+      verifier(`chaque refus que la ronde de ${ecran} a déclaré attendre est bien venu`,
+        liste.length > 0 && liste.every((a) => a.rencontre), JSON.stringify(liste));
+    },
+    liste,
+  };
+}
+
 // ── Où vit un fichier du socle, pendant la conversion ──
 //
 // Le socle passe en TypeScript un fichier à la fois (ADR-003, 5.b). Chaque
@@ -392,4 +446,5 @@ const urlSocle = (nom) => `/shared/${fs.existsSync(path.join(RACINE, 'frontend',
 
 module.exports = {
   demarrer, verifier, horsPortee, bilan, etat, cheminSocle, sourceSocle, urlSocle,
+  refusAttendus,
 };

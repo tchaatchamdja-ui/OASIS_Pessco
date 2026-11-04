@@ -2,7 +2,7 @@
  "releve": "2026-11-03",
  "gestesNommes": 96,
  "occurrences": 185,
- "exerces": 46,
+ "exerces": 65,
  "indecidables": 3,
  "gestes": [
   {
@@ -66,7 +66,7 @@
    "evenement": "change",
    "source": "window._dashFilters.domaine=this.value;renderPage();",
    "nom": "window._dashFilters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
@@ -75,7 +75,7 @@
    "evenement": "change",
    "source": "window._dashFilters.secteur=this.value;renderPage();",
    "nom": "window._dashFilters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
@@ -84,7 +84,7 @@
    "evenement": "change",
    "source": "window._dashFilters.prestataire=this.value;renderPage();",
    "nom": "window._dashFilters.prestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
@@ -93,7 +93,7 @@
    "evenement": "click",
    "source": "window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();",
    "nom": "window._dashFilters",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
@@ -498,7 +498,7 @@
    "evenement": "change",
    "source": "window._evalFilters.domaine=this.value;renderPage();",
    "nom": "window._evalFilters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -507,7 +507,7 @@
    "evenement": "change",
    "source": "window._evalFilters.secteur=this.value;renderPage();",
    "nom": "window._evalFilters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -516,7 +516,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); ",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -525,7 +525,7 @@
    "evenement": "click",
    "source": "window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();",
    "nom": "window._evalFilters",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -597,7 +597,7 @@
    "evenement": "change",
    "source": "window._evalFilters.domaine=this.value;renderPage();",
    "nom": "window._evalFilters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -606,7 +606,7 @@
    "evenement": "change",
    "source": "window._evalFilters.secteur=this.value;renderPage();",
    "nom": "window._evalFilters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -615,7 +615,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); ",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -624,7 +624,7 @@
    "evenement": "click",
    "source": "window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();",
    "nom": "window._evalFilters",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -877,7 +877,7 @@
    "evenement": "change",
    "source": "window._indFilters.type=this.value;renderPage();",
    "nom": "window._indFilters.type",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -886,7 +886,7 @@
    "evenement": "change",
    "source": "window._indFilters.domaine=this.value;renderPage();",
    "nom": "window._indFilters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -895,7 +895,7 @@
    "evenement": "change",
    "source": "window._indFilters.secteur=this.value;renderPage();",
    "nom": "window._indFilters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -904,7 +904,7 @@
    "evenement": "change",
    "source": "window._indFilters.sa=this.value;renderPage();",
    "nom": "window._indFilters.sa",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -913,7 +913,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { window._indFilters.search=document.getElementById('pr-ind-search').value; renderPage(); })",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -922,7 +922,7 @@
    "evenement": "click",
    "source": "window._indFilters={type:'',domaine:'',secteur:'',sa:'',search:''};renderPage();",
    "nom": "window._indFilters",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -1067,7 +1067,7 @@
    "nom": "document:click",
    "source": "document.addEventListener('click', handler);",
    "id": null,
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-plans.js",
@@ -1103,7 +1103,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { window._planFilters.search=document.getElementById('pr-plan-search').value; renderPage(); ",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-plans.js",
@@ -1211,7 +1211,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { window._profilFilters.search=document.getElementById('pr-profil-search').value; renderPage",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1553,7 +1553,7 @@
    "evenement": "click",
    "source": "setTheme('${th}')",
    "nom": "setTheme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1562,7 +1562,7 @@
    "evenement": "click",
    "source": "setLang('${l.toLowerCase()}')",
    "nom": "setLang",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1571,7 +1571,7 @@
    "evenement": "click",
    "source": "toggleSidebar()",
    "nom": "toggleSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1580,7 +1580,7 @@
    "evenement": "click",
    "source": "toggleMobileSidebar()",
    "nom": "toggleMobileSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1589,7 +1589,7 @@
    "evenement": "click",
    "source": "toggleMobileSidebar()",
    "nom": "toggleMobileSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
@@ -1598,7 +1598,7 @@
    "evenement": "click",
    "source": "prToggleNotifPanel()",
    "nom": "prToggleNotifPanel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",

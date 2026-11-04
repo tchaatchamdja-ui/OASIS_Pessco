@@ -15,7 +15,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, bilan, refusAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'mesures', 'js', 'mes-app.js');
@@ -73,8 +73,15 @@ module.exports = async function mesuresNavigateurSmoke(port) {
 
     let care = false;
     let etape = 'montage';
+
+    // Le mécanisme des refus déclarés vit dans le harnais (n° 5.f.60) : une
+    // règle qui **refuse** ne se mesure qu'en la provoquant, et la provoquer
+    // ferait rougir le collecteur ci-dessous si rien ne l'avait déclarée.
+    const refusDeclares = refusAttendus();
     page.on('console', (m) => {
-      if (care && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      if (care && m.type() === 'error' && !refusDeclares.bruit(m.text())) {
+        incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      }
     });
     page.on('pageerror', (e) => {
       if (care) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -84,6 +91,7 @@ module.exports = async function mesuresNavigateurSmoke(port) {
     });
     page.on('response', (r) => {
       if (!care || r.status() < 400) return;
+      if (refusDeclares.attendu(r.status(), r.url())) return;
       incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
     });
 
@@ -1788,6 +1796,311 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         && Sm.pied === false && Sm.badge === true && Sm.ajouts === 0
         && Sm.champs >= 6 && Sm.tousFermes === true && Sm.nomTenu === 'DIALLO',
         JSON.stringify({ piecesInv, Sv, Sm }).slice(0, 480));
+    }
+
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les quatre référentiels des Paramètres, et deux refus
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `mes-parametres.js` — 17 gestes nommés, cinq exercés. Les quatre listes de
+    // référence du module : catégories de mesure, types de mesure, types
+    // d'investigation, comités. Chacune a la même forme — « Ajouter » ouvre une
+    // fenêtre, « Enregistrer » la rend au serveur, le crayon rouvre un rang,
+    // la corbeille le retire après confirmation.
+    //
+    // ── Les deux règles que l'écran ne dit pas ──
+    //
+    //  1. **Un référentiel en usage ne se supprime pas.** Un comité qui a siégé,
+    //     un type qu'une mesure porte : le retrait les orphelinerait. Le refus
+    //     est rendu **dans la transformation** qui allait écrire, et non avant —
+    //     un emploi survenu entre la vérification et le retrait passerait
+    //     inaperçu (`supprimer()`, routes-parametres.js).
+    //  2. **Deux libellés qui donnent le même code ne font pas deux rangs.** Le
+    //     `code` est ce que les mesures retiennent, précisément pour qu'un
+    //     renommage ne les orpheline pas ; deux rangs sous un même code
+    //     rendraient la mesure ambiguë. Même endroit, même raison.
+    //
+    // Ces deux règles **refusent**, et un refus ne se mesure qu'en le
+    // provoquant : la ronde le déclare autour du geste, et un contrôle exige
+    // qu'il soit venu (mécanisme du harnais, n° 5.f.60).
+    etape = 'référentiels des paramètres';
+    const REFERENTIELS = [
+      { cle: 'Comite', champ: 'mesCoLib', route: 'comites' },
+      { cle: 'TypeInvestigation', champ: 'mesTiLib', route: 'types-investigation' },
+      { cle: 'Categorie', champ: 'mesCatLib', route: 'categories' },
+    ];
+    const MARQUE = String(Date.now()).slice(-6);
+
+    // Le chemin d'entrée des quatre listes, écrit **une fois** et remis aux
+    // trois relevés qui en ont besoin. Les deux derniers ne l'avaient pas et
+    // cherchaient leur bouton sur la liste où la ronde venait de s'arrêter.
+    const ALLER_A_LA_LISTE = `async (geste) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const trouve = () => [...document.querySelectorAll('button')]
+        .find((b) => new RegExp(geste).test(b.getAttribute('onclick') || ''));
+      if (trouve()) return { deja: true };
+      window.mesFermerSlider();
+      document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+      await a(3000);
+      if (trouve()) return { page: 'parametres' };
+      const sousMenus = [...document.querySelectorAll('[onclick^="mesParamSousMenu"]')];
+      for (const s of sousMenus) {
+        s.click();
+        await a(2400);
+        if (trouve()) return { sousMenu: (s.textContent || '').trim().slice(0, 28) };
+      }
+      return { introuvable: true, sousMenus: sousMenus.length };
+    }`;
+
+    const referentiels = await page.evaluate(async (listes, marque) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const modal = () => document.querySelector('.mes-modal-fond');
+      // ── Où vivent les quatre listes, et comment on y entre ──
+      //
+      // Les sous-menus des Paramètres de CARE ne sont **pas** des `.sub-nav-btn`
+      // comme ailleurs : ils prennent la bande latérale du portail, et leurs
+      // boutons portent `mesParamSousMenu`. Mon premier jet cherchait les
+      // sous-vues des autres pages et rendait « introuvable » sur un écran qui
+      // marche — la leçon de 5.f.52, encore : *ce qui s'ouvre se prend là où il
+      // vit.* Et le volet du traitement, laissé ouvert par la ronde précédente,
+      // couvre la page : on le referme d'abord.
+      const ouvrirListe = async (cle) => {
+        const geste = new RegExp(`mesOuvrir${cle}\\(\\)`);
+        if (bouton(geste)) return { deja: true };
+        window.mesFermerSlider();
+        document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+        await a(3000);
+        if (bouton(geste)) return { page: 'parametres' };
+        const sousMenus = [...document.querySelectorAll('[onclick^="mesParamSousMenu"]')];
+        for (const s of sousMenus) {
+          s.click();
+          await a(2400);
+          if (bouton(geste)) {
+            return { page: 'parametres', sousMenu: (s.textContent || '').trim().slice(0, 28) };
+          }
+        }
+        return { introuvable: true, sousMenus: sousMenus.length };
+      };
+
+      for (const r of listes) {
+        // eslint-disable-next-line no-await-in-loop
+        await essai(r.cle, async () => {
+          const d = {};
+          const libelle = `Essai ${r.cle} ${marque}`;
+          d.ou = await ouvrirListe(r.cle);
+          if (d.ou.introuvable) return d;
+          const avant = (await window.mesApi('/parametres'))[
+            r.route.replace(/-/g, '_')] || [];
+          d.avant = avant.length;
+          // ── Ajouter : la fenêtre, le champ, l'enregistrement ──
+          bouton(new RegExp(`mesOuvrir${r.cle}\\(\\)`))?.click();
+          await a(1600);
+          d.fenetre = !!modal();
+          const champ = document.getElementById(r.champ);
+          d.champ = !!champ;
+          if (!champ) return d;
+          // Un libellé vide est refusé **sans partir** : l'erreur est posée dans
+          // la fenêtre, et rien ne va au serveur.
+          champ.value = '';
+          bouton(new RegExp(`mesEnregistrer${r.cle}\\(\\)`))?.click();
+          await a(1200);
+          d.videRefuse = !!modal() && !!(document.querySelector('.mes-erreur')
+            && document.querySelector('.mes-erreur').textContent.trim());
+          champ.value = libelle;
+          bouton(new RegExp(`mesEnregistrer${r.cle}\\(\\)`))?.click();
+          await a(3000);
+          d.fermee = !modal();
+          const apres = (await window.mesApi('/parametres'))[
+            r.route.replace(/-/g, '_')] || [];
+          d.apres = apres.length;
+          const cree = apres.find((x) => x.libelle === libelle);
+          d.cree = !!cree;
+          if (!cree) return d;
+          o[`${r.cle}_id`] = cree.id;
+          d.code = cree.code;
+          // ── Rouvrir le rang : la fenêtre revient garnie ──
+          [...document.querySelectorAll('button')]
+            .find((b) => (b.getAttribute('onclick') || '')
+              .includes(`mesOuvrir${r.cle}('${cree.id}')`))?.click();
+          await a(1600);
+          d.rouverte = !!modal();
+          d.champRempli = (document.getElementById(r.champ) || {}).value === libelle;
+          // Et le renommage ne touche pas le code : une décision rendue le porte.
+          const champ2 = document.getElementById(r.champ);
+          if (champ2) champ2.value = `${libelle} (révisé)`;
+          bouton(new RegExp(`mesEnregistrer${r.cle}\\(\\)`))?.click();
+          await a(3000);
+          const relu = ((await window.mesApi('/parametres'))[r.route.replace(/-/g, '_')] || [])
+            .find((x) => x.id === cree.id) || {};
+          d.renomme = relu.libelle === `${libelle} (révisé)`;
+          d.codeInchange = relu.code === d.code;
+          return d;
+        });
+      }
+      return o;
+    }, REFERENTIELS, MARQUE);
+
+    // ── Un libellé déjà pris : refusé, et l'erreur reste dans la fenêtre ──
+    //
+    // Le refus est un 409 `existant`, rendu **dans la transformation** qui allait
+    // écrire : deux créations du même libellé parties ensemble la passeraient
+    // toutes deux et poseraient deux rangs sous le même `code` — or c'est `code`
+    // que les mesures retiennent, pour qu'un renommage ne les orpheline pas.
+    refusDeclares.declarer(409, '/parametres/comites');
+    const doublon = await page.evaluate(async (marque, source) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      // eslint-disable-next-line no-eval
+      d.ou = await eval(source)('mesOuvrirComite\\(\\)');
+      // ── Ce qui fait le doublon est le **code**, non le libellé ──
+      //
+      // Mon premier jet reprenait le libellé renommé — « … (révisé) ». Il est
+      // passé : son code, dérivé de *ce* libellé, était libre. Or le rang
+      // renommé garde le code qu'il avait à sa création (« le code ne suit pas
+      // le libellé : une décision déjà rendue le porte »), de sorte que le
+      // libellé **d'origine** collisionne alors qu'aucun rang ne le porte plus.
+      // C'est cela qu'on éprouve : renommer ne libère pas le code.
+      const libelle = `Essai Comite ${marque}`;
+      const avant = ((await window.mesApi('/parametres')).comites || []).length;
+      bouton(/mesOuvrirComite\(\)/)?.click();
+      await a(1600);
+      const champ = document.getElementById('mesCoLib');
+      d.fenetre = !!champ;
+      if (!champ) return d;
+      champ.value = libelle;
+      bouton(/mesEnregistrerComite\(\)/)?.click();
+      await a(3000);
+      // La fenêtre reste ouverte, et porte la raison.
+      d.fenetreOuverte = !!document.querySelector('.mes-modal-fond');
+      const err = document.getElementById('mesCoErreur');
+      d.message = err ? (err.textContent || '').trim().slice(0, 60) : '';
+      d.apres = ((await window.mesApi('/parametres')).comites || []).length;
+      d.rienCree = d.apres === avant;
+      document.querySelector('[onclick*="mesFermerModal"]')?.click();
+      await a(1200);
+      d.fermee = !document.querySelector('.mes-modal-fond');
+      return d;
+    }, MARQUE, ALLER_A_LA_LISTE);
+    refusDeclares.clore();
+
+    // ── Un référentiel en usage ne se supprime pas ──
+    //
+    // La ronde des mesures arrêtées a enregistré une mesure portant un type :
+    // retirer ce type l'orphelinerait, et le refus est relu **sur l'état qu'on
+    // va écrire** — un emploi survenu entre la vérification et le retrait
+    // passerait inaperçu. Celui que la ronde vient de créer, lui, n'est employé
+    // par rien : il part.
+    const employe = await page.evaluate(async () => {
+      const d = {};
+      // ── L'emploi se lit là où les mesures vivent ──
+      //
+      // Mon premier jet interrogeait `/mesures`, la collection historique : elle
+      // est vide, car **aucune route ne l'alimente plus**. La mesure se décide à
+      // l'étape « Qualification et Mesures » et vit dans le traitement de sa
+      // carence. C'est ce défaut de lecture qui a fait voir que trois des quatre
+      // gardes d'emploi du serveur regardaient au même mauvais endroit.
+      const constats = await window.mesApi('/constatations');
+      const codes = [];
+      for (const c of (constats || [])) {
+        const t = await window.mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`)
+          .catch(() => null);
+        ((t || {}).qualification || {}).mesures?.forEach((m) => {
+          if (m.type_mesure) codes.push(m.type_mesure);
+        });
+      }
+      d.codesEmployes = [...new Set(codes)];
+      const types = (await window.mesApi('/parametres')).types || [];
+      const cible = types.find((t) => d.codesEmployes.includes(t.code));
+      d.cible = cible ? { id: cible.id, code: cible.code } : null;
+      return d;
+    });
+    if (employe.cible) refusDeclares.declarer(409, `/parametres/types/${employe.cible.id}`);
+    const suppression = await page.evaluate(async (cible, comiteId, source) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      // eslint-disable-next-line no-eval
+      const allerA = eval(source);
+      const oui = async (ms) => {
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(ms);
+      };
+      // 1. Celui qu'une mesure porte : refusé, et il reste.
+      if (cible) {
+        d.ouTypes = await allerA('mesSupprimerType');
+        const geste = [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '')
+            .includes(`mesSupprimerType('${cible.id}')`));
+        d.boutonEmploye = !!geste;
+        if (geste) {
+          geste.click();
+          await a(1200);
+          d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+          await oui(3200);
+          const types = (await window.mesApi('/parametres')).types || [];
+          d.typeReste = types.some((t) => t.id === cible.id);
+        }
+      }
+      // 2. Celui que la ronde a créé, qui n'est employé par rien : il part.
+      d.ouComites = await allerA('mesSupprimerComite');
+      const geste = [...document.querySelectorAll('button')]
+        .find((b) => (b.getAttribute('onclick') || '')
+          .includes(`mesSupprimerComite('${comiteId}')`));
+      d.boutonLibre = !!geste;
+      if (!geste) return d;
+      geste.click();
+      await a(1200);
+      d.confirmationLibre = !!document.querySelector('.oasis-confirm-oui');
+      await oui(3200);
+      const comites = (await window.mesApi('/parametres')).comites || [];
+      d.comiteParti = !comites.some((c) => c.id === comiteId);
+      d.lignePartie = ![...document.querySelectorAll('button')]
+        .some((b) => (b.getAttribute('onclick') || '').includes(`mesSupprimerComite('${comiteId}')`));
+      return d;
+    }, employe.cible, referentiels.Comite_id, ALLER_A_LA_LISTE);
+    refusDeclares.clore();
+
+    {
+      const trois = REFERENTIELS.map((r) => ({ cle: r.cle, d: referentiels[r.cle] || {} }));
+      verifier('les trois référentiels de CARE s’ajoutent, se rouvrent garnis et se renomment sans que leur code bouge',
+        trois.length === 3 && trois.every(({ d }) => !d.erreur
+          && !(d.ou || {}).introuvable
+          && d.fenetre === true && d.champ === true
+          // Un libellé vide est refusé **sans partir** : l'erreur reste dans la
+          // fenêtre, et rien ne va au serveur.
+          && d.videRefuse === true
+          && d.fermee === true && d.apres === d.avant + 1 && d.cree === true
+          && !!d.code
+          // Rouvrir rend la fenêtre garnie du rang qu'on vient de créer.
+          && d.rouverte === true && d.champRempli === true
+          // Et le renommage ne touche pas le code : une décision rendue le porte.
+          && d.renomme === true && d.codeInchange === true),
+        JSON.stringify(trois).slice(0, 560));
+      verifier('un libellé dont le code est déjà pris est refusé — renommer ne libère pas le code —, la fenêtre garde la raison, et rien n’est créé',
+        doublon.fenetre === true && doublon.fenetreOuverte === true
+        && !!doublon.message && doublon.rienCree === true && doublon.fermee === true,
+        JSON.stringify(doublon));
+      verifier('un référentiel qu’une mesure porte ne se supprime pas, et celui que rien n’emploie part',
+        // L'emploi est mesuré, non supposé : la ronde lit les mesures du serveur.
+        employe.codesEmployes.length > 0 && !!employe.cible
+        && suppression.boutonEmploye === true && suppression.confirmation === true
+        // Refusé : il reste.
+        && suppression.typeReste === true
+        // Et le comité que la ronde a créé, employé par rien, part — du serveur
+        // comme de la table.
+        && suppression.boutonLibre === true && suppression.confirmationLibre === true
+        && suppression.comiteParti === true && suppression.lignePartie === true,
+        JSON.stringify({ employe, suppression }));
+      refusDeclares.verifier('CARE');
     }
 
     verifier('aucune erreur de console ni requête échouée sur CARE',

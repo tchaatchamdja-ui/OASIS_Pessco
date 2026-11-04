@@ -102,6 +102,47 @@ module.exports = function register(app, deps, M) {
 
   const ordonner = (l) => l.slice().sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
 
+// ── Où vivent les mesures arrêtées, et où les gardes les cherchaient ──
+//
+// Quatre gardes d'emploi interdisent de retirer un référentiel qu'un dossier
+// porte : le retrait l'orphelinerait, et leurs commentaires le disent tous les
+// quatre. **Trois d'entre eux ne regardaient que la collection `mesures`.**
+//
+// Une mesure y entre, mais **tard** : `creerLesMesures` l'inscrit au registre
+// quand la qualification conclut — à l'ouverture du suivi, ou à la clôture
+// directe du dossier. Entre l'arrêt des mesures par l'instance et cette
+// conclusion, la mesure ne vit que dans `traitements[].qualification.mesures`,
+// et les gardes ne la voyaient pas. **C'est une fenêtre aveugle, et c'est
+// précisément celle où l'on ajuste les référentiels** : l'instance délibère,
+// quelqu'un renomme ou retire un type, et la sanction arrêtée perd le sien.
+//
+// Le cas du comité est plus net encore : `comite_code` vit sur la
+// **qualification**, et `creerLesMesures` ne le recopie pas sur la mesure. Le
+// garde cherchait donc un champ qu'**aucune mesure ne porte jamais** : il ne
+// pouvait pas refuser, à aucun moment du dossier. Un comité qui avait siégé se
+// retirait sans un mot, et le commentaire au-dessus de lui affirmait le
+// contraire.
+//
+// Le quatrième garde, celui des types d'investigation, regarde bien
+// `traitements` : écrit plus tard, il connaissait le bon endroit. *Une leçon
+// apprise sur un garde ne se propage pas d'elle-même aux trois autres.*
+//
+// Les deux emplacements sont lus, et non l'un à la place de l'autre : le
+// registre porte les mesures conclues, la qualification celles qui sont encore
+// en délibéré, et un garde qui ne lirait que l'un des deux laisserait un
+// trou.
+const mesuresDuDossier = (d) => [
+  ...(d.mesures || []),
+  ...(d.traitements || []).flatMap((x) => ((x.qualification || {}).mesures || [])),
+];
+
+// Le comité, lui, n'est pas porté par la mesure mais par la qualification
+// entière : c'est l'instance qui a siégé sur le dossier.
+const comitesEnUsage = (d, code) => (d.mesures || []).filter((m) => m.comite_code === code).length
+  + (d.traitements || []).filter((x) => (x.qualification || {}).comite_code === code).length;
+
+
+
   // ── Créer et supprimer un paramètre, en une seule transformation ──
   //
   // Six créations et quatre suppressions suivaient la même forme : vérifier,
@@ -196,7 +237,7 @@ module.exports = function register(app, deps, M) {
     // Un comité qui a siégé ne se retire pas : la mesure perdrait l'instance
     // qui l'a décidée.
     const etat = await supprimer('comites', req.params.id,
-      (d, c) => (d.mesures || []).filter((m) => m.comite_code === c.code).length);
+      (d, c) => comitesEnUsage(d, c.code));
     if (etat.absent) return introuvable(res, 'comite');
     if (etat.employe) return res.status(400).json({ error: 'Ce comité a déjà siégé sur une mesure' });
     return res.json({ status: 'ok' });
@@ -270,7 +311,7 @@ module.exports = function register(app, deps, M) {
     // écriture par type, plus une : entre elles, des types rattachés à une
     // catégorie disparue, que plus aucun écran n'atteint.
     const etat = await supprimer('categories', req.params.id,
-      (d, c) => (d.mesures || []).filter((m) => m.categorie === c.code).length,
+      (d, c) => mesuresDuDossier(d).filter((m) => m.categorie === c.code).length,
       (d, c) => { d.types = (d.types || []).filter((t) => t.categorie_code !== c.code); });
     if (etat.absent) return introuvable(res, 'categorie');
     if (etat.employe) return enUsage(res, 'categorie', etat.employe);
@@ -317,7 +358,7 @@ module.exports = function register(app, deps, M) {
   app.delete(`${M}/parametres/types/:id`, requireAuth, asynchrone(async (req, res) => {
     if (!admin(req)) return reserve(res, 'gestionnaire');
     const etat = await supprimer('types', req.params.id,
-      (d, t) => (d.mesures || []).filter((m) => m.type_mesure === t.code).length);
+      (d, t) => mesuresDuDossier(d).filter((m) => m.type_mesure === t.code).length);
     if (etat.absent) return introuvable(res, 'type');
     if (etat.employe) return enUsage(res, 'type', etat.employe);
     return res.json({ status: 'ok' });

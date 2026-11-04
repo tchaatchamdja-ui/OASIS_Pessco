@@ -9101,3 +9101,134 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Les cinq relevés ont été refigés : cinq dénominateurs baissent d'un,
            et cinq lignes « non exercé » qui ne pouvaient pas changer
            disparaissent de l'inventaire.
+
+       5.f.62 [x] **Les facettes et la coquille de PR, les référentiels de CARE — et trois gardes qui regardaient où les données n'étaient plus** — fait le 3 novembre 2026.
+
+           Huit contrôles de plus : PR 37 → **41**, CARE 29 → **33**. Et, au
+           milieu, un défaut du serveur que seule la ronde pouvait trouver.
+
+           ── Le mécanisme des refus, remonté dans le harnais ──
+
+           Écrit pour PR au pas précédent, il sert maintenant à deux suites et en
+           servira six. `refusAttendus()` vit dans `tests/smoke/harness.js`, et
+           les deux rondes l'appellent. Une copie par suite aurait divergé : ce
+           dépôt a payé cette leçon deux fois — la liste d'événements du
+           mouchard, recopiée dans la page et divergente au premier ajout, et le
+           nommeur de gestes appelé par deux côtés qui ont fini par nommer
+           différemment (n° 5.f.60).
+
+           ── PR : les facettes, et la quatrième barre qu'on ne peut pas atteindre ──
+
+           Trois barres de filtres éprouvées sur un même contrat : chaque facette
+           parvient à l'état, la remise à zéro vide l'objet entier, et la
+           recherche traverse le différé du socle. Un choix est nommé dans le
+           code : **qu'une facette restreigne la liste n'est pas éprouvable** sans
+           supposer le jeu d'essai — selon les données, un domaine peut ne rien
+           retirer. Le nombre de lignes avant et après est donc relevé au détail
+           sans être exigé.
+
+           Trois, et non quatre. `pr-plans.js` en porte une quatrième,
+           inatteignable : la page « Plans » est rendue par l'aiguillage et
+           **ouverte par rien**, et elle est déclarée à ce titre dans
+           `PAGES_SANS_CHEMIN` depuis la première suite de PR. Mon premier jet la
+           cherchait et rendait « introuvable » sur un écran qui marche. Le
+           contrôle **lie désormais les deux faits** : il exige que la
+           déclaration existe. Si l'on rendait son entrée de menu à la page, les
+           deux contrôles réclameraient attention ensemble — celui de
+           l'atteignabilité, et celui-ci, qui devrait alors grandir d'une barre.
+           Contre-essayé en retirant la déclaration : les deux rougissent.
+
+           La coquille, enfin : les pastilles de thème (et le thème qui suit sur
+           la racine du document), les trois langues (et les libellés de la barre
+           qui suivent — sans quoi la langue n'est qu'un drapeau), le repli de la
+           barre latérale, le menu mobile refermé **par son fond**, et la cloche
+           des notifications.
+
+           ── CARE : les référentiels, et ce que « renommer » ne libère pas ──
+
+           Les quatre listes de référence du module, ajoutées, rouvertes,
+           renommées, supprimées par leurs propres gestes. Deux règles s'y
+           mesurent, et toutes deux **refusent** :
+
+           **Le code ne suit pas le libellé**, et c'est le code qui fait le
+           doublon. Mon premier jet reprenait le libellé renommé pour provoquer
+           le refus : il est passé, car son code était libre. Le rang renommé
+           garde le code qu'il avait à sa création — « une décision déjà rendue le
+           porte » —, de sorte que le libellé **d'origine** collisionne alors
+           qu'aucun rang ne le porte plus. *Renommer ne libère pas le code*, et
+           c'est cela que le contrôle éprouve.
+
+           **Un référentiel qu'un dossier porte ne se supprime pas.** C'est ici
+           que la ronde a trouvé le défaut.
+
+           ── Trois gardes qui regardaient où les données n'étaient plus ──
+
+           Quatre gardes d'emploi interdisent de retirer un référentiel qu'un
+           dossier porte, et leurs commentaires le disent tous les quatre : « Un
+           comité qui a siégé ne se retire pas : la mesure perdrait l'instance
+           qui l'a décidée. » **Trois d'entre eux ne regardaient que la
+           collection `mesures`.**
+
+           ── Et j'ai d'abord écrit ce constat trop grand ──
+
+           Mon premier jet affirmait qu'aucune route n'alimente plus cette
+           collection et que les trois gardes ne pouvaient *jamais* refuser.
+           C'était faux : mon grep avait manqué `creerLesMesures`. Le constat
+           exact est plus étroit, et plus intéressant.
+
+           Une mesure entre au registre, mais **tard** : à la conclusion de la
+           qualification — ouverture du suivi, ou clôture directe du dossier.
+           Entre l'arrêt des mesures par l'instance et cette conclusion, la
+           mesure ne vit que dans `traitements[].qualification.mesures`, et les
+           deux gardes de la catégorie et du type ne la voyaient pas. **C'est une
+           fenêtre aveugle, et c'est précisément celle où l'on ajuste les
+           référentiels** : l'instance délibère, quelqu'un renomme ou retire un
+           type, et la sanction arrêtée perd le sien.
+
+           Le cas du comité, lui, est plus net que ce que j'avais écrit :
+           `comite_code` vit sur la **qualification**, et `creerLesMesures` ne le
+           recopie pas sur la mesure. Le garde cherchait donc un champ
+           qu'**aucune mesure ne porte jamais** — il ne pouvait pas refuser, à
+           aucun moment du dossier. *Un garde qui interroge un champ qui n'existe
+           nulle part est muet, et son commentaire parle pour lui.*
+
+           Le quatrième — celui des types d'investigation, écrit plus tard —
+           regarde bien `traitements`. *Une leçon apprise sur un garde ne se
+           propage pas d'elle-même aux trois autres.*
+
+           Les deux emplacements sont désormais lus, et non l'un à la place de
+           l'autre : le registre porte les mesures conclues, la qualification
+           celles qui sont encore en délibéré, et un garde qui ne lirait que l'un
+           des deux laisserait un trou.
+
+           Le contre-essai est décisif : le garde rendu à son mauvais endroit, le
+           type porté par la sanction que la ronde vient d'arrêter — et dont la
+           qualification n'a pas encore conclu — **est supprimé**, et le 409
+           déclaré ne vient pas.
+
+           ── Et c'est un relevé faux de ma part qui l'a montré ──
+
+           Mon premier jet lisait l'emploi sur `/mesures`, la collection
+           historique : vide, donc aucune cible, donc le contrôle rouge. J'ai
+           d'abord cru mon contrôle mal écrit — il l'était —, et c'est en
+           cherchant où vivent vraiment les mesures que le défaut du serveur est
+           apparu. *Un contrôle qui cherche au mauvais endroit et un garde qui
+           garde au mauvais endroit se trompent de la même façon ; l'un des deux
+           finit par dénoncer l'autre.*
+
+           ── Et la leçon de 5.f.52, une sixième fois ──
+
+           Les sous-menus des Paramètres de CARE ne sont pas des `.sub-nav-btn`
+           comme ailleurs : ils prennent la bande latérale du portail, et leurs
+           boutons portent `mesParamSousMenu`. Mon premier jet cherchait les
+           sous-vues des autres pages. *Ce qui s'ouvre se prend là où il vit.*
+           Le chemin d'entrée est désormais écrit **une fois** et remis aux trois
+           relevés qui en ont besoin — mes deux derniers le cherchaient là où ils
+           se trouvaient, c'est-à-dire ailleurs.
+
+           Neuf contre-essais, neuf fois rouge : une facette qui n'écrit plus
+           dans l'état ; la recherche qui n'y parvient plus ; le thème qui ne suit
+           plus sur la racine ; le repli dont la classe ne suit plus ; la
+           déclaration « sans chemin » retirée ; la réouverture d'un comité vidée ;
+           le code qui suit le libellé au renommage ; le garde du doublon retiré ;
+           et le garde d'emploi rendu à son mauvais endroit.

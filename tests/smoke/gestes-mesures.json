@@ -2,7 +2,7 @@
  "releve": "2026-11-03",
  "gestesNommes": 89,
  "occurrences": 144,
- "exerces": 51,
+ "exerces": 58,
  "indecidables": 3,
  "gestes": [
   {
@@ -536,7 +536,7 @@
    "evenement": "click",
    "source": "mesSupprimerType('${t.id}')",
    "nom": "mesSupprimerType",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -545,7 +545,7 @@
    "evenement": "click",
    "source": "mesOuvrirTypeInvestigation('${t.id}')",
    "nom": "mesOuvrirTypeInvestigation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -563,7 +563,7 @@
    "evenement": "click",
    "source": "mesOuvrirComite('${c.id}')",
    "nom": "mesOuvrirComite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -572,7 +572,7 @@
    "evenement": "click",
    "source": "mesSupprimerComite('${c.id}')",
    "nom": "mesSupprimerComite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -645,7 +645,7 @@
    "evenement": "click",
    "source": "mesEnregistrerComite()",
    "nom": "mesEnregistrerComite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -690,7 +690,7 @@
    "evenement": "click",
    "source": "mesEnregistrerTypeInvestigation()",
    "nom": "mesEnregistrerTypeInvestigation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",
@@ -735,7 +735,7 @@
    "evenement": "click",
    "source": "mesEnregistrerCategorie()",
    "nom": "mesEnregistrerCategorie",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-parametres.js",

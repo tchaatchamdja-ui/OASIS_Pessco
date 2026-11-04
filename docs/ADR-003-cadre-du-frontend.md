@@ -9232,3 +9232,72 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            déclaration « sans chemin » retirée ; la réouverture d'un comité vidée ;
            le code qui suit le libellé au renommage ; le garde du doublon retiré ;
            et le garde d'emploi rendu à son mauvais endroit.
+
+       5.f.63 [x] **187 lignes de code mort retirées — et deux gardes qui se retournent au lieu de disparaître** — fait le 4 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Deux poches de code mort, mesurées avant d'être retirées. Le
+           dénominateur de PR tombe de 96 à **89** ; le compte des exercés ne
+           bouge pas — **65** —, puisque aucun des sept noms partis ne l'était.
+           *Retirer du code mort nettoie un dénominateur ; il ne couvre rien.*
+
+           | ce qui part | |
+           |---|---|
+           | les trois gestes de l'ancien chemin par fenêtre | 66 lignes |
+           | la page « Plans » | 121 lignes, un cas d'aiguillage, une balise de script, et la barre de facettes qui n'existait que là |
+
+           Ni l'un ni l'autre n'a été supprimé sur une impression. Les trois
+           gestes avaient été mesurés par un garde qui retirait du fichier le
+           corps des trois fonctions puis cherchait leurs appels dans ce qui
+           restait et dans tous les autres fichiers de l'écran — zéro (5.f.59).
+           La page était déclarée dans `PAGES_SANS_CHEMIN` depuis la première
+           suite de PR : rendue par l'aiguillage, ouverte par rien.
+
+           ── Le point du pas : un garde qui atteste du code mort ──
+
+           Ces deux gardes affirmaient que le code mort **existait** et qu'il
+           était orphelin. Le jour où l'on le supprime, un tel garde devient
+           faux : il tombe, et l'on est tenté de le retirer **avec** le code —
+           perdant du même coup la seule garantie qu'il ne revienne pas. *Un
+           garde qui accompagne une suppression doit changer de sens, non
+           disparaître avec son objet.*
+
+           Celui des trois gestes exige désormais que leurs noms n'apparaissent
+           **nulle part** dans l'écran, et que le chemin en ligne qui les a
+           remplacés y soit toujours — sans quoi l'écran n'aurait plus aucun
+           chemin vers ses comptes-rendus, et ce garde le dirait.
+
+           Celui de la page atteste sa disparition **de ses quatre côtés** : le
+           fichier, le cas de l'aiguillage, la balise de script, la facette. En
+           laisser un seul derrière soi, c'est laisser la page revenir sans que
+           rien ne le dise — et le contre-essai l'a montré : le seul cas
+           d'aiguillage remis fait tomber **deux** contrôles, celui-ci et celui
+           de l'atteignabilité.
+
+           Et `PAGES_SANS_CHEMIN` reste, **vide et déclarée**. C'est elle qui a
+           dénoncé cette page ; le mécanisme doit survivre à son premier
+           occupant, sans quoi la prochaine page orpheline ne serait dénoncée par
+           rien.
+
+           ── Six contre-essais, six fois rouge ──
+
+           Les deux gardes sont statiques : ils lisent le dépôt. Les cinq défauts
+           se posent donc dans l'arbre et se mesurent en quelques secondes, sans
+           navigateur — un des trois noms remis, le chemin en ligne renommé, le
+           fichier de la page recréé, son cas d'aiguillage remis, sa balise de
+           script remise. Chacun est détecté sur **son propre champ**, sans
+           contamination.
+
+           Mais une logique qui mord ne prouve pas qu'un contrôle la lise : le
+           sixième contre-essai repose donc le cas d'aiguillage et fait tourner
+           la ronde entière. Les deux contrôles tombent, chacun sur sa cause.
+           *Éprouver un garde statique demande les deux : sa logique, et son
+           câblage.*
+
+           ── Une décision rendue, et une question close ──
+
+           La cellule portant `0` à l'import d'un classeur d'évaluation : la
+           maîtrise d'ouvrage a tranché le 4 novembre 2026 — **elle pose un
+           zéro**. C'est le comportement en place depuis 5.f.60 : seule la
+           cellule **vide** est sautée, parce que `Number('')` vaut 0 et que le
+           vide n'est pas une note. La question posée là est donc close, et la
+           réponse est celle que le code tenait déjà.

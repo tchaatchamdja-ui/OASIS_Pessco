@@ -320,7 +320,6 @@ function renderPage() {
         case 'dashboard': content = renderDashboard(); break;
         case 'profils': content = renderProfils(); break;
         case 'evaluations': content = renderEvaluations(); break;
-        case 'plans': content = renderPlans(); break;
         case 'bibliotheque': content = renderBibliotheque(); break;
         case 'parametres': content = renderParametres(); break;
         default: content = `<div class="text-center">${t('no_data')}</div>`;

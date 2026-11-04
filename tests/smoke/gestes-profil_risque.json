@@ -1,7 +1,7 @@
 {
- "releve": "2026-11-03",
- "gestesNommes": 96,
- "occurrences": 185,
+ "releve": "2026-11-04",
+ "gestesNommes": 89,
+ "occurrences": 168,
  "exerces": 65,
  "indecidables": 3,
  "gestes": [
@@ -412,52 +412,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1297,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openReunionEvaluateursForm('${evalId}','${r.id}')",
-   "nom": "openReunionEvaluateursForm",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1304,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openReunionEvaluateursForm('${evalId}','')",
-   "nom": "openReunionEvaluateursForm",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1305,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "closeModal()",
-   "nom": "closeModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1332,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openReunionEvaluateursList('${evalId}')",
-   "nom": "openReunionEvaluateursList",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1333,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "saveReunionEval('${evalId}','${rid || ''}')",
-   "nom": "saveReunionEval",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1481,
+   "ligne": 1413,
    "forme": "en ligne",
    "evenement": "click",
    "source": "_loadReunionEvalTab('${evalId}')",
@@ -466,7 +421,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
-   "ligne": 1482,
+   "ligne": 1414,
    "forme": "en ligne",
    "evenement": "click",
    "source": "reunionEvalSaveFromTab('${evalId}')",
@@ -1070,114 +1025,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 42,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._planFilters.domaine=this.value;renderPage();",
-   "nom": "window._planFilters.domaine",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 47,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._planFilters.secteur=this.value;renderPage();",
-   "nom": "window._planFilters.secteur",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 52,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._planFilters.prestataire=this.value;renderPage();",
-   "nom": "window._planFilters.prestataire",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 57,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { window._planFilters.search=document.getElementById('pr-plan-search').value; renderPage(); ",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 59,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._planFilters={domaine:'',secteur:'',prestataire:'',search:''};renderPage();",
-   "nom": "window._planFilters",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 69,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('plansContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 70,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('plansContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 71,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_plans')",
-   "nom": "printPage",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 105,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${accId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 113,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('plansContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 114,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('plansContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-plans.js",
-   "ligne": 115,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_plans')",
-   "nom": "printPage",
-   "exerce": false
-  },
-  {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
    "ligne": 32,
    "forme": "en ligne",
@@ -1611,7 +1458,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 373,
+   "ligne": 372,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeModal()",
@@ -1620,7 +1467,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 443,
+   "ligne": 442,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeSlicer()",
@@ -1629,7 +1476,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 448,
+   "ligne": 447,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeSlicer()",
@@ -1638,7 +1485,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 378,
+   "ligne": 377,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "div:click",
@@ -1648,7 +1495,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 383,
+   "ligne": 382,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "ta:input",
@@ -1658,7 +1505,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 434,
+   "ligne": 433,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "overlay:click",
@@ -1668,7 +1515,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
-   "ligne": 472,
+   "ligne": 471,
    "forme": "écouteur",
    "evenement": "input",
    "nom": "ta:input",

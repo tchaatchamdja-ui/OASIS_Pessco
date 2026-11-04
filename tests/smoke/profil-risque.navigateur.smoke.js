@@ -52,11 +52,12 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';
 //
 // La page est donc **déclarée** ici, avec ce que la mesure en sait, et le
 // contrôle refuse toute page sans chemin qui ne le serait pas.
-const PAGES_SANS_CHEMIN = {
-  plans: 'la vue « Plans » de PR — `renderPlans()` dans pr-plans.js, 121 lignes,'
-    + ' 8 gestes nommés. Rendue par l’aiguillage, ouverte par rien. Le module PLAN'
-    + ' a son propre écran depuis ; question posée à la maîtrise d’ouvrage.',
-};
+// La table reste **vide, et déclarée** : c'est elle qui a dénoncé la page
+// « Plans » — rendue par l'aiguillage de PR et ouverte par rien —, et la
+// maîtrise d'ouvrage a décidé le 4 novembre 2026 de retirer la page plutôt que
+// de lui rendre une entrée de menu. Le mécanisme doit survivre à son premier
+// occupant : sans lui, la prochaine page orpheline ne serait dénoncée par rien.
+const PAGES_SANS_CHEMIN = {};
 
 // Les pages **et leurs sous-vues**, lues dans la source.
 function navDeclaree() {
@@ -89,49 +90,57 @@ function aiguillageEtChemins() {
   return { rendues, ouvrables: [...ouvrables] };
 }
 
-// ── Trois gestes que rien n'ouvre : la mesure, et non l'affirmation ──
+// ── Trois gestes retirés, et le garde qui l'atteste ──
 //
 // `openReunionEvaluateursList`, `openReunionEvaluateursForm` et
-// `saveReunionEval` composent un cycle de fenêtres. Le contrôle retire du
-// fichier le corps de ces trois fonctions, puis cherche leurs appels dans ce
-// qui reste **et dans tous les autres fichiers de l'écran**. Zéro appel dehors,
-// c'est un cycle fermé : du code que l'écran n'ouvre plus.
-function gestesOrphelinsDeLaReunion() {
+// `saveReunionEval` composaient un cycle de fenêtres fermé sur lui-même : la
+// liste n'était appelée que par le formulaire, le formulaire que par la liste.
+// Le chemin en ligne de l'onglet les avait remplacés sans qu'on les retire, et
+// un garde a mesuré l'orphelinage avant qu'on en décide — il retirait du
+// fichier le corps des trois fonctions, puis cherchait leurs appels dans ce qui
+// restait et dans tous les autres fichiers de l'écran. Zéro.
+//
+// La maîtrise d'ouvrage a tranché le 4 novembre 2026 : **supprimer**. Le garde
+// se retourne donc, et c'est le point qui compte — *un garde qui exige qu'un
+// orphelin existe devient faux le jour où on le supprime, et l'on est tenté de
+// le retirer avec le code, perdant la garantie qu'il ne revient pas.* Il exige
+// maintenant l'inverse : que les trois noms n'apparaissent **nulle part** dans
+// l'écran, et que le chemin qui les a remplacés y soit toujours.
+function cheminParFenetreRetire() {
   const js = path.join(RACINE, 'public', 'modules', 'profil_risque', 'js');
-  const fiche = path.join(js, 'pr-evaluation-fiche.js');
-  const texte = fs.readFileSync(fiche, 'utf8');
   const noms = ['openReunionEvaluateursList', 'openReunionEvaluateursForm', 'saveReunionEval'];
-
-  // Le corps d'une fonction, de sa signature à l'accolade qui la referme.
-  const corpsDe = (nom) => {
-    const i = texte.indexOf(`async function ${nom}(`);
-    if (i < 0) throw new Error(`refus : ${nom} n’est plus déclarée dans pr-evaluation-fiche.js.`);
-    let solde = 0;
-    let ouverte = false;
-    for (let k = i; k < texte.length; k += 1) {
-      if (texte[k] === '{') { solde += 1; ouverte = true; } else if (texte[k] === '}') solde -= 1;
-      if (ouverte && solde === 0) return texte.slice(i, k + 1);
-    }
-    throw new Error(`refus : le corps de ${nom} ne se lit plus.`);
-  };
-
-  const corps = noms.map(corpsDe);
-  let dedans = 0;
-  corps.forEach((c) => {
-    noms.forEach((n) => { dedans += (c.match(new RegExp(`${n}\\(`, 'g')) || []).length - (c.indexOf(`function ${n}(`) >= 0 ? 1 : 0); });
-  });
-
-  // Ce qui reste du fichier, plus les autres fichiers de l'écran.
-  let dehorsTexte = texte;
-  corps.forEach((c) => { dehorsTexte = dehorsTexte.replace(c, ''); });
-  fs.readdirSync(js).filter((f) => f.endsWith('.js') && f !== 'pr-evaluation-fiche.js')
-    .forEach((f) => { dehorsTexte += fs.readFileSync(path.join(js, f), 'utf8'); });
-  const dehors = noms.filter((n) => new RegExp(`${n}\\(`).test(dehorsTexte));
-
+  let texte = '';
+  fs.readdirSync(js).filter((f) => f.endsWith('.js'))
+    .forEach((f) => { texte += fs.readFileSync(path.join(js, f), 'utf8'); });
+  const page = path.join(RACINE, 'public', 'modules', 'profil_risque', 'index.html');
+  if (fs.existsSync(page)) texte += fs.readFileSync(page, 'utf8');
   return {
-    dehors,
-    dedans,
-    enLigne: (dehorsTexte.match(/reunionEvalEditInline\(/g) || []).length,
+    restants: noms.filter((n) => texte.includes(n)),
+    // Le chemin en ligne, qui les a remplacés : deux boutons de l'onglet, plus
+    // sa déclaration. S'il disparaissait, l'écran n'aurait plus de chemin du
+    // tout vers ses comptes-rendus, et ce garde le dirait.
+    enLigne: (texte.match(/reunionEvalEditInline\(/g) || []).length,
+  };
+}
+
+// ── La page « Plans », retirée ──
+//
+// Rendue par l'aiguillage, ouverte par rien, et déclarée sans chemin depuis la
+// première suite de PR. Retirée le 4 novembre 2026 sur décision. Le garde
+// atteste sa disparition **de ses trois côtés** — le fichier, le cas de
+// l'aiguillage, la balise de script — parce qu'en laisser un seul derrière
+// soi, c'est laisser revenir la page sans que rien ne le dise.
+function pagePlansRetiree() {
+  const racine = path.join(RACINE, 'public', 'modules', 'profil_risque');
+  const shell = fs.readFileSync(path.join(racine, 'js', 'pr-shell.js'), 'utf8');
+  const page = fs.readFileSync(path.join(racine, 'index.html'), 'utf8');
+  const js = fs.readdirSync(path.join(racine, 'js')).filter((f) => f.endsWith('.js'));
+  return {
+    fichier: js.includes('pr-plans.js'),
+    cas: /case 'plans'/.test(shell),
+    script: /pr-plans\.js/.test(page),
+    facette: js.some((f) => fs.readFileSync(path.join(racine, 'js', f), 'utf8')
+      .includes('_planFilters')),
   };
 }
 
@@ -1515,7 +1524,7 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     // `reunionEvalSaveFromTab`). Le contrôle l'atteste plutôt que de l'affirmer :
     // il compte les appels depuis la source.
     etape = 'réunions des évaluateurs';
-    const orphelinsReunion = gestesOrphelinsDeLaReunion();
+    const cheminRetire = cheminParFenetreRetire();
 
     // Le document composé par un export passe par `window.open` puis
     // `window.print`. En mode sans affichage, rien n'attend l'impression : on la
@@ -1928,12 +1937,10 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         // Et pas de consolidation : elle n'a aucun sens sur cette réunion.
         && !/consolidation/i.test(Dp.texte || '') && Dp.lignes === 0,
         JSON.stringify({ Ve, Dc, Dp }).slice(0, 560));
-      verifier('les trois gestes de l’ancien chemin par fenêtre ne sont ouverts par rien de l’écran, et le chemin en ligne l’est',
-        orphelinsReunion.dehors.length === 0
-        // Ils existent bien, et ne s'appellent qu'entre eux.
-        && orphelinsReunion.dedans === 4
-        && orphelinsReunion.enLigne >= 2,
-        JSON.stringify(orphelinsReunion));
+      verifier('les trois gestes de l’ancien chemin par fenêtre ont disparu de l’écran, et le chemin qui les a remplacés y est',
+        cheminRetire.restants.length === 0
+        && cheminRetire.enLigne >= 2,
+        JSON.stringify(cheminRetire));
     }
 
 
@@ -2431,14 +2438,16 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         };
       };
       const barres = LISTES.map((l) => ({ objet: l.objet, ...verdict(l.objet) }));
-      // Le lien avec la quatrième : elle n'est pas oubliée, elle est sur la page
-      // que ce fichier déclare sans chemin.
-      const planSansChemin = !!PAGES_SANS_CHEMIN.plans
-        && /_planFilters/.test(fs.readFileSync(path.join(RACINE, 'public', 'modules',
-          'profil_risque', 'js', 'pr-plans.js'), 'utf8'));
-      verifier('les trois barres de facettes atteignables de PR parviennent à l’état, chaque remise à zéro vide la sienne, et la quatrième est sur la page déclarée sans chemin',
-        barres.length === 3 && barres.every((x) => x.ok) && planSansChemin === true,
-        JSON.stringify({ planSansChemin, echecs: barres.filter((x) => !x.ok).map((x) => ({ objet: x.objet, b: x.b })) }).slice(0, 560));
+      // Il y en avait une quatrième, sur la page « Plans ». Elle est partie avec
+      // elle, et le lien change de sens : le contrôle atteste désormais que la
+      // page n'est plus là, de ses quatre côtés. Si quelqu'un la rendait, il
+      // rougirait — et la barre devrait rejoindre cette liste.
+      const plans = pagePlansRetiree();
+      verifier('les trois barres de facettes de PR parviennent à l’état, chaque remise à zéro vide la sienne, et la quatrième est partie avec la page « Plans »',
+        barres.length === 3 && barres.every((x) => x.ok)
+        && plans.fichier === false && plans.cas === false
+        && plans.script === false && plans.facette === false,
+        JSON.stringify({ plans, echecs: barres.filter((x) => !x.ok).map((x) => ({ objet: x.objet, b: x.b })) }).slice(0, 560));
       // Les trois barres qui portent une recherche la font traverser le différé
       // du socle : trois sur quatre, le tableau de bord n'en a pas.
       const avecRecherche = LISTES.filter((l) => (facettes[l.objet] || {}).recherche);

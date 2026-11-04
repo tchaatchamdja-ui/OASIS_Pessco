@@ -93,12 +93,16 @@ module.exports = async function planificationNavigateurSmoke(port) {
     // ce qu'on attend, et laisse rougir le reste.*
     const REFUS_ATTENDUS = [
       {
-        code: 404, methode: 'POST', chemin: /\/risk-profiles$/,
-        pourquoi: 'les profils de risque appartiennent au module PR, qui les'
-          + ' produit ; PLAN ne les lit (`GET /risk-profiles`). Sa fenêtre'
-          + ' « Ajouter un profil » envoie pourtant un POST, qu’aucune route ne'
-          + ' sert. Contrôle « la fenêtre du profil de risque remplit ses'
-          + ' cascades, mais son enregistrement n’a pas de route » (n° 5.f.49).',
+        code: 400, methode: 'POST', chemin: /\/risk-profiles$/,
+        pourquoi: 'la route existe depuis le 4 novembre 2026 (décision de la'
+          + ' maîtrise d’ouvrage, n° 5.f.65) : ce 400 est celui que la ronde'
+          + ' **provoque** en postant un corps vide, pour montrer que le schéma'
+          + ' refuse ce qui n’a ni organisme, ni secteur, ni niveau. La'
+          + ' déclaration portait auparavant un 404 et disait qu’aucune route ne'
+          + ' servait : elle est devenue fausse le jour où l’on a écrit la'
+          + ' route, et c’est ce garde-ci qui l’a dit. Contrôle « le geste'
+          + ' d’enregistrement du profil atteint sa route, et un corps vide y'
+          + ' est refusé ».',
       },
     ];
     // Un refus déclaré laisse aussi une trace en console — « Failed to load
@@ -1985,12 +1989,20 @@ module.exports = async function planificationNavigateurSmoke(port) {
         await poser('rpRiskLabel', (document.getElementById('rpRiskLabel') || {}).tagName === 'SELECT'
           ? ([...(document.getElementById('rpRiskLabel') || { options: [] }).options]
             .find((op) => op.value) || {}).value || '' : 'Moyen');
-        const int = document.getElementById('rpIntensite');
-        if (int && int.options && int.options.length > 1) {
-          int.value = [...int.options].find((op) => op.value).value;
-          int.dispatchEvent(new Event('change', { bubbles: true }));
-          await a(600);
-        }
+        // ── « Intensité » est un champ de **texte**, non une liste ──
+        //
+        // Ma ronde le traitait comme un `<select>` : `int.options` étant
+        // `undefined` sur un `<input>`, la branche était sautée et le champ
+        // restait vide. Le garde du client (`if (!pid || !secteurId ||
+        // !riskLabel || !intensite)`) refusait alors **avant tout envoi**, et le
+        // geste n'atteignait jamais le réseau. Personne ne l'a su pendant des
+        // semaines parce que le contrôle mesurait une **sonde** — un POST
+        // fabriqué à côté — et non le geste : il voyait le 404 de la sonde et
+        // concluait « la fiche est complète ». *Un contrôle qui mesure une sonde
+        // au lieu du geste ne dit rien du geste.*
+        await poser('rpIntensite', (document.getElementById('rpIntensite') || {}).tagName === 'SELECT'
+          ? ([...(document.getElementById('rpIntensite') || { options: [] }).options]
+            .find((op) => op.value) || {}).value || '' : 'Normale');
         await poser('rpCsrbo', '6');
         await poser('rpDebutCycle', '2031-01-15');
         d.finLaisseeVide = ((document.getElementById('rpFinCycle') || {}).value || '') === '';
@@ -2008,20 +2020,48 @@ module.exports = async function planificationNavigateurSmoke(port) {
         }
         d.ligneRenseignee = !!tr;
 
-        // ── L'enregistrement : le geste existe, la route n'existe pas ──
+        // ── L'enregistrement : la route existe désormais ──
         //
-        // On le mesure **au serveur**, et non par un comptage : un comptage
-        // inchangé a bien des causes, un code de réponse n'en a qu'une. Le
-        // refus est déclaré dans `REFUS_ATTENDUS`, avec le nom de ce contrôle.
+        // Elle a été écrite le 4 novembre 2026 sur décision de la maîtrise
+        // d'ouvrage (n° 5.f.65). Deux choses se mesurent ici, et la seconde a
+        // demandé de changer d'instrument.
+        //
+        // D'abord le refus d'un corps vide, **provoqué** : un schéma qui
+        // n'exigerait rien ne se verrait pas. Le refus est déclaré dans
+        // `REFUS_ATTENDUS`, avec le nom de ce contrôle.
         d.codeEnEcriture = (await env('/risk-profiles', 'POST', { essai: true })).statut;
         d.codeEnLecture = (await env('/risk-profiles', 'GET')).statut;
+        // Ensuite l'enregistrement par le geste de l'écran. **Un comptage sur
+        // `/risk-profiles` ne le verrait pas** : la ronde a vidé l'état pour que
+        // l'organisme redevienne candidat, mais PR le couvre toujours côté
+        // serveur — et la règle de l'union veut que l'évaluation l'emporte. Le
+        // profil est donc écrit *et masqué*. Ce qui le prouve est le **cycle**,
+        // que la même transformation pose sur le prestataire.
         d.avant = (await jget('/risk-profiles')).length;
+        // L'organisme retenu se lit dans la liste **avant** l'enregistrement :
+        // la fenêtre se referme après, et son `<select>` part avec elle.
+        const organisme = (document.getElementById('rpPrestataire') || {}).value || '';
+        // `d.organisme` porte déjà le relevé de la cascade, trente lignes plus
+        // haut : écrire dessus faisait tomber le contrôle voisin, sur une
+        // assertion qui n'avait rien à voir. *Un relevé se nomme par ce qu'il
+        // mesure, et deux mesures ne partagent pas un nom.*
+        d.organismeRetenu = !!organisme;
+        const cycleAvant = (await jget('/prestataires-risques'))
+          .find((p) => p.id === organisme) || {};
+        d.cycleAvant = cycleAvant.debut_cycle || '';
         document.querySelector('[onclick*="planSaveRiskProfile"]')?.click();
         await a(3500);
         d.apres = (await jget('/risk-profiles')).length;
-        d.rienEnregistre = d.apres === d.avant;
-        // La fenêtre reste ouverte : `planCloseModal` est après l'appel, et
-        // l'appel a levé.
+        // Masqué par la règle de l'union, et c'est attendu.
+        d.masqueParLUnion = d.apres === d.avant;
+        const cycleApres = (await jget('/prestataires-risques'))
+          .find((p) => p.id === organisme) || {};
+        d.cycleApres = cycleApres.debut_cycle || '';
+        d.cyclePose = d.cycleApres === '2031-01-15' && d.cycleApres !== d.cycleAvant;
+        // La fin se déduit du début et du CSRBO, **côté serveur** : six mois.
+        d.finDeduite = (cycleApres.fin_cycle || '') === '2031-07-15';
+        // Et la fenêtre se referme d'elle-même : `planCloseModal` suit l'appel,
+        // qui ne lève plus. Elle restait ouverte tant que la route manquait.
         d.fenetreResteOuverte = !!document.getElementById('rpPrestataire');
         document.querySelector('[onclick*="planCloseModal"]')?.click();
         await a(1500);
@@ -2051,16 +2091,35 @@ module.exports = async function planificationNavigateurSmoke(port) {
 
         // ── Un début postérieur à la fin est refusé ──
         //
-        // `oasisDatesValider` prend les deux champs de la ligne : mon premier
-        // essai posait une date **après** la fin en place, et le module l'a
-        // refusée en silence — ce n'était pas un défaut, c'était la règle. On
-        // l'éprouve donc comme telle, avant de poser une date valide.
-        debut.value = '2031-03-10';
+        // `oasisDatesValider` prend les deux champs **de la ligne** : mon premier
+        // essai posait une date après la fin en place, et le module l'a refusée
+        // en silence — ce n'était pas un défaut, c'était la règle. On l'éprouve
+        // donc comme telle, avant de poser une date valide.
+        //
+        // ── Et la date à poser se lit dans le document, non dans l'état ──
+        //
+        // Elle était écrite en dur (« 2031-03-10 »), choisie d'après la fin que
+        // l'état portait. Le jour où le bloc précédent a su enregistrer un
+        // profil, il a changé le cycle de cet organisme **en base** et la page
+        // s'est redessinée avec ; la ronde avait par ailleurs restauré l'état
+        // d'avant. La date en dur n'était plus après la fin affichée, et le
+        // contrôle a dénoncé une règle qui tenait. *Ce qu'on pose au document se
+        // décide d'après le document ; l'état peut en diverger, et il l'a fait.*
+        const ligne = debut.closest('tr');
+        const champFin = ligne ? [...ligne.querySelectorAll('.cycle-date-input')]
+          .find((x) => (x.getAttribute('onchange') || '').includes("'fin_cycle'")) : null;
+        d.finAffichee = champFin ? (champFin.value || '') : '';
+        const apresLaFin = d.finAffichee
+          ? `${Number(d.finAffichee.slice(0, 4)) + 1}${d.finAffichee.slice(4)}` : '2099-12-31';
+        d.posee = apresLaFin;
+        debut.value = apresLaFin;
         debut.dispatchEvent(new Event('change', { bubbles: true }));
         await a(2800);
         const refus = await jget('/prestataires-risques');
         const apresRefus = (Array.isArray(refus) ? refus : []).find((p) => p.id === id) || {};
-        d.refuseApresLaFin = (apresRefus.debut_cycle || '') === d.debutAvant;
+        // Le serveur n'a pas bougé : on le lit **chez lui**, et non dans l'état.
+        d.debutEnBaseAvant = apresRefus.debut_cycle || '';
+        d.refuseApresLaFin = (apresRefus.debut_cycle || '') !== apresLaFin;
 
         // ── Une date antérieure à la fin passe, et part en base ──
         const champDebut = [...document.querySelectorAll('.cycle-date-input')]
@@ -2129,23 +2188,27 @@ module.exports = async function planificationNavigateurSmoke(port) {
         // Et la ronde rend l'état qu'elle a vidé.
         && Fe.etatRendu === true,
         JSON.stringify(Fe).slice(0, 460));
-      verifier('l’enregistrement du profil n’a pas de route : les profils appartiennent au module qui les produit, non à celui qui les lit',
-        // Le geste existe, la fiche est complète, la fin de cycle est laissée
-        // au calcul — et rien n'est enregistré, le serveur n'offrant qu'un GET.
+      verifier('le geste d’enregistrement du profil atteint sa route, un corps vide y est refusé, et le cycle prouve l’écriture que l’union masque',
+        // La fiche est complète et la fin de cycle laissée au calcul.
         Fe.finLaisseeVide === true
-        // Le serveur lit les profils, et refuse de les écrire.
-        && Fe.codeEnLecture === 200 && Fe.codeEnEcriture === 404
-        && typeof Fe.avant === 'number' && Fe.rienEnregistre === true
-        // La fenêtre ne se referme pas : l'appel lève avant `planCloseModal`.
-        && Fe.fenetreResteOuverte === true
-        // Elle se ferme par son propre geste.
+        // Le serveur lit les profils, et refuse un corps qui n'a rien.
+        && Fe.codeEnLecture === 200 && Fe.codeEnEcriture === 400
+        // Le profil est écrit, et **masqué** : PR couvre ce couple, et
+        // l'évaluation l'emporte sur la saisie directe.
+        && typeof Fe.avant === 'number' && Fe.masqueParLUnion === true
+        // Ce qui prouve l'écriture, c'est le cycle que la même transformation
+        // pose — avec sa fin déduite côté serveur.
+        && Fe.organismeRetenu === true && Fe.cyclePose === true && Fe.finDeduite === true
+        // Et la fenêtre se referme d'elle-même : l'appel ne lève plus.
+        && Fe.fenetreResteOuverte === false
         && Fe.fermee === true,
         JSON.stringify({ lecture: Fe.codeEnLecture, ecriture: Fe.codeEnEcriture,
-          avant: Fe.avant, apres: Fe.apres,
+          profils: [Fe.avant, Fe.apres], cycle: [Fe.cycleAvant, Fe.cycleApres],
+          finDeduite: Fe.finDeduite,
           ouverte: Fe.fenetreResteOuverte, fermee: Fe.fermee }));
       verifier('le cycle se règle en ligne, un début postérieur à la fin est refusé, et un début valide part en base sans toucher à la fin',
         Cy.champs >= 1 && Cy.champDebut === true && Cy.organisme === true
-        && Cy.finAvant !== ''
+        && Cy.finAffichee !== '' && !!Cy.posee
         // Une date après la fin ne passe pas : rien n'a changé en base.
         && Cy.refuseApresLaFin === true
         // Une date avant la fin passe, et la fin reste celle qu'elle était.

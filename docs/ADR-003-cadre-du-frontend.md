@@ -9362,3 +9362,111 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Quatre contre-essais, quatre fois rouge : la confirmation retirée ;
            son refus ignoré ; le commentaire rendu obligatoire ; et le
            commentaire non envoyé au serveur.
+
+       5.f.65 [x] **La route qui manquait au profil de risque — et ce que « exercé » ne dit pas** — fait le 4 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           `planSaveRiskProfile` postait vers `POST /risk-profiles`, qu'**aucune
+           route ne servait**. Un geste mort depuis l'origine. Six contrôles de
+           plus à la suite HTTP de PLAN (65 → **71**), et sept contre-essais.
+
+           ── Trois faits que l'instruction a corrigés avant d'écrire ──
+
+           **Je portais « trois gestes de PLAN sans route serveur » depuis des
+           semaines ; deux l'avaient.** `planApprouverDG` et `planTransmettre`
+           sont produits par la table `TRANSITIONS` de `routes-workflow.js`, qui
+           compose `app.post(\`${M}/plans/:id/${route}\`)`. Mon grep cherchait un
+           littéral. *Un grep littéral ne mesure pas un dépôt qui compose ses
+           noms — il faut lire la table qui les engendre.* Troisième fois que
+           cette méthode m'a trompé en deux jours, avec le nommeur de gestes et
+           `creerLesMesures`.
+
+           **La cible n'existait pas.** `PR.riskProfiles` n'est pas une
+           collection : c'est une **projection** calculée sur les évaluations de
+           statut `valide`, et le bus de services est à sens unique. Écrire la
+           route demandait donc une collection — `profils_directs`, septième de
+           PLAN. Le magasin PostgreSQL d'ADR-002 étant documentaire (une table
+           `collections` indexée par nom), aucun schéma à ajouter.
+
+           **Le champ à remplir n'était pas celui qu'on croit.** Le formulaire
+           dit « niveau de risque », et c'est `niveau` que `D.ecartsRisques` lit
+           pour en faire le `risk_label` d'une activité — non `matrice`.
+           Contre-essayé en rangeant l'un dans l'autre.
+
+           ── Ce que la route tient ──
+
+           Le privilège de **validation** sur le domaine et le secteur du
+           prestataire : un profil engage la planification de la surveillance
+           d'un organisme. La traçabilité : `origine: 'plan'`, l'auteur, la date,
+           et une entrée au journal d'audit — *un profil sans évaluation derrière
+           lui doit rester reconnaissable.* La fin du cycle **déduite côté
+           serveur**, la même règle pour tous les appelants. Et **une seule
+           transformation** pour le profil et le cycle : le formulaire les saisit
+           d'un geste, et un profil posé sans son cycle laisserait la page des
+           prestataires incohérente.
+
+           ── La primauté, et son hypothèse écrite ──
+
+           L'union rend les dérivés **plus** les directs ; sur un même couple
+           prestataire + secteur, l'évaluation l'emporte. *Un profil écrit à la
+           main comble un vide, il ne recouvre pas une évaluation validée.*
+           L'hypothèse est écrite dans le code, et elle se renverse d'une ligne.
+
+           Mon premier contrôle n'en éprouvait qu'un côté — et il est tombé : le
+           prestataire qu'il avait pris était déjà couvert, et son profil direct
+           a été masqué, exactement comme la règle que j'avais écrite une page
+           plus haut. Mon deuxième jet cherchait un **organisme** que PR ne
+           couvre pas, n'en trouvait aucun, et déclarait le contrôle hors de
+           portée — abandonnant une moitié de la règle. Or la clé de l'union est
+           le **couple**, non l'organisme : le même organisme sur un autre
+           secteur est un couple libre, et le jeu d'essai en porte autant qu'il a
+           de secteurs. *Quand on ne trouve pas le cas qu'on cherche, il faut
+           d'abord vérifier qu'on cherche la bonne clé.*
+
+           ── Et le fait le plus instructif : ce que « exercé » ne dit pas ──
+
+           La couverture de PLAN ne bouge pas. **`planSaveRiskProfile` était
+           déjà compté « exercé ».** Le mouchard enregistre qu'un gestionnaire a
+           été *appelé*, non qu'il a *abouti* : le garde du client
+           (`if (!pid || !secteurId || !riskLabel || !intensite)`) l'arrêtait
+           avant le réseau, et le geste restait coché. *Un geste « exercé » dit
+           que son gestionnaire a été atteint, non qu'il a fait ce qu'il promet —
+           c'est précisément pourquoi l'étape 0.c existe, et pourquoi elle porte
+           sur les écritures.*
+
+           Le contrôle de la ronde, lui, affirmait « le geste existe, la fiche
+           est complète ». Il mesurait une **sonde** fabriquée à côté du geste,
+           dont le 404 le satisfaisait quoi que fît l'écran. *Un contrôle qui
+           mesure une sonde au lieu du geste ne dit rien du geste.* Et ma ronde
+           traitait « Intensité » comme une liste alors que c'est un champ de
+           texte : il restait vide, et le garde du client refusait avant tout
+           envoi.
+
+           ── Deux contrôles voisins retournés par cette correction ──
+
+           La déclaration de refus de la suite PLAN portait un **404** sur
+           `POST /risk-profiles` avec la raison « aucune route ne sert ». Elle est
+           devenue fausse le jour où la route a été écrite, et c'est ce garde-là
+           qui l'a dit. Elle porte désormais le **400** que la ronde *provoque*
+           en postant un corps vide.
+
+           Et le contrôle du cycle est tombé pour une raison qui mérite d'être
+           écrite : il posait une date **en dur**, choisie d'après la fin que
+           l'état portait. Du jour où le bloc précédent a su enregistrer un
+           profil, il a changé ce cycle en base et la page s'est redessinée avec,
+           tandis que la ronde avait restauré l'état d'avant. La date en dur
+           n'était plus après la fin affichée, et le contrôle a dénoncé une règle
+           qui tenait. *Ce qu'on pose au document se décide d'après le document ;
+           l'état peut en diverger, et il l'a fait.*
+
+           Sept contre-essais, sept fois rouge : la marque d'origine retirée ;
+           l'ordre des deux dates non vérifié ; le privilège non opposé ; l'union
+           rendue aux seuls dérivés ; la primauté inversée ; le niveau rangé dans
+           `matrice` ; et le cycle non posé avec le profil.
+
+           ── Ce qui reste, et qui n'est pas de mon ressort ──
+
+           Deux mécanismes de refus déclaré coexistent désormais : celui de la
+           suite PLAN (`REFUS_ATTENDUS` — déclaratif, pour toute la ronde, et il
+           **nomme la raison**) et celui du harnais (`refusAttendus()` — une
+           fenêtre autour du geste qui le provoque). Ils servent deux besoins
+           distincts, et le second est né sans voir le premier. À rapprocher.

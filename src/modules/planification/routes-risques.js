@@ -89,6 +89,118 @@ module.exports = function register(app, deps, M) {
   app.post(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE, { effacer: true }), majCycle);
   app.put(`${M}/prestataires/:id/cycle`, requireAuth, valider(SCHEMA_CYCLE, { effacer: true }), majCycle);
 
+  // ── Un profil de risque écrit depuis cet écran ──
+  //
+  // Le producteur normal d'un profil est le module PR : `PR.riskProfiles` est
+  // une **projection** sur les évaluations validées, et le bus de services est à
+  // sens unique. L'écran portait pourtant un formulaire qui en fabriquait un, et
+  // son enregistrement postait ici — vers une route qui n'existait pas. Le geste
+  // était mort depuis l'origine ; la maîtrise d'ouvrage a décidé le 4 novembre
+  // 2026 de l'ouvrir plutôt que de retirer le formulaire.
+  //
+  // Trois choses que cette route doit tenir, et qui ne sont pas optionnelles :
+  //
+  //   · **la portée.** Un profil engage la planification de la surveillance d'un
+  //     organisme : il relève du validateur, sur le domaine et le secteur du
+  //     prestataire, comme le cycle juste au-dessus ;
+  //   · **la traçabilité.** `origine: 'plan'`, l'auteur et la date. Un profil
+  //     sans évaluation derrière lui doit rester reconnaissable — c'est ce qui
+  //     permettra, le jour venu, de dire lesquels le sont ;
+  //   · **une seule transformation.** Le profil et les dates du cycle partent
+  //     ensemble : le formulaire les saisit d'un geste, et un profil posé sans
+  //     son cycle laisserait la page des prestataires incohérente.
+  // Les types sont ceux de `src/valider.js` — `texte`, `entier`, `date`,
+  // `objet` — et non ceux de JavaScript. Mon premier jet écrivait `string` et
+  // `number` : le validateur les ignore, et le schéma n'aurait rien gardé.
+  const SCHEMA_PROFIL = {
+    prestataire_id: { type: 'texte', requis: true, max: 64 },
+    secteur_id: { type: 'texte', requis: true, max: 64 },
+    risk_label: { type: 'texte', requis: true, max: 120 },
+    intensite: { type: 'texte', requis: true, max: 120 },
+    // Le CSRBO est un nombre de mois : les bornes sont ici, non dans le corps
+    // du gestionnaire — c'est le rôle du schéma.
+    csrbo: { type: 'entier', requis: true, min: 1, max: 120 },
+    debut_cycle: { type: 'date' },
+    fin_cycle: { type: 'date' },
+    evaluation_date: { type: 'date' },
+    // Objet libre : la carte des sous-activités, bornée en taille par le socle.
+    sous_activites: { type: 'objet' },
+  };
+  app.post(`${M}/risk-profiles`, requireAuth, valider(SCHEMA_PROFIL),
+    asynchrone(async (req, res) => {
+      const d = req.valide;
+      const refs = referentiels.getAll();
+      const prest = (refs.prestataires || []).find((p) => p.id === d.prestataire_id);
+      if (!prest) return res.status(400).json({ error: 'inconnu', objet: 'prestataire' });
+      const secteur = (refs.secteurs || []).find((s) => s.id === d.secteur_id);
+      if (!secteur) return res.status(400).json({ error: 'inconnu', objet: 'secteur' });
+      if (!D.peut(req, 'VALIDATEUR', { domaine_id: secteur.domaine_id, secteur_id: secteur.id })) {
+        return D.refus(res);
+      }
+      const csrbo = d.csrbo;
+      // La fin du cycle se déduit du début et du CSRBO quand elle n'est pas
+      // donnée — et elle se déduit **ici**, non chez le client : c'est la même
+      // règle pour tous les appelants.
+      const debut = d.debut_cycle || '';
+      let fin = d.fin_cycle || '';
+      if (debut && !fin) {
+        const f = new Date(debut);
+        f.setMonth(f.getMonth() + csrbo);
+        fin = f.toISOString().slice(0, 10);
+      }
+      if (debut && fin && fin < debut) {
+        return res.status(400).json({ error: 'inconnu', objet: 'fin_cycle' });
+      }
+      const maintenant = new Date().toISOString();
+      // Tirés hors de la transformation : rejouée, elle doit reposer les mêmes.
+      const idProfil = db.uid();
+      const idCycle = db.uid();
+      let rang = null;
+      await db.transformer((etat) => {
+        const profils = etat.profils_directs || [];
+        rang = {
+          id: idProfil,
+          instance: instances.courante(req.user, loadConfig) || '',
+          prestataire_id: d.prestataire_id,
+          secteur_id: d.secteur_id,
+          domaine_id: secteur.domaine_id || '',
+          // `niveau` et non `matrice` : c'est `niveau` que la comparaison des
+          // écarts lit pour en faire le `risk_label` d'une activité
+          // (`D.ecartsRisques`). Le formulaire nomme ce champ « niveau de
+          // risque », et c'est là qu'il va.
+          niveau: d.risk_label,
+          matrice: '',
+          intensite: d.intensite,
+          score: '',
+          csn: Number(secteur.csn) || 24,
+          csrbo,
+          frequence: null,
+          resultats: {},
+          sous_activites: d.sous_activites || {},
+          date_validation: d.evaluation_date || maintenant.slice(0, 10),
+          cycle: 1,
+          // Ce qui le distingue d'un profil fondé par une évaluation.
+          origine: 'plan',
+          cree_le: maintenant,
+          cree_par: req.user.username,
+        };
+        profils.push(rang);
+        etat.profils_directs = profils;
+        // Le cycle, du même geste : le formulaire saisit les deux ensemble.
+        const cycles = etat.cycles || [];
+        const i = cycles.findIndex((c) => c.prestataire_id === d.prestataire_id);
+        const cyc = { prestataire_id: d.prestataire_id, debut_cycle: debut, fin_cycle: fin, updatedAt: maintenant };
+        if (i >= 0) cycles[i] = { ...cycles[i], ...cyc }; else cycles.push({ id: idCycle, ...cyc });
+        etat.cycles = cycles;
+        return etat;
+      });
+      await audit.log(req.user.username, 'PLAN_PROFIL_DIRECT', {
+        id: rang.id, prestataire_id: rang.prestataire_id, secteur_id: rang.secteur_id,
+        niveau: rang.niveau, csrbo: rang.csrbo,
+      });
+      return res.status(201).json(rang);
+    }));
+
   // ── Synchronisation des risques → plan ──
   app.get(`${M}/plans/:id/sync-risques`, requireAuth, asynchrone(async (req, res) => {
     const plan = await db.get('plans', req.params.id);

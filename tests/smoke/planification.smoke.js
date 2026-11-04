@@ -5,7 +5,12 @@ const { demarrer, verifier, horsPortee, bilan } = require('./harness');
 
 // Ouvre une session sur un compte au privilège LECTEUR pour le secteur visé
 // et tente les écritures : le serveur doit les refuser.
-async function controlerLecteur(srv) {
+// `supplement` : une épreuve de plus à mener **sous ce compte-là**, rendue à
+// l'appelant. Elle est passée plutôt que recopiée, parce qu'ouvrir une seconde
+// session de lecteur ailleurs ferait deux chemins à tenir d'accord — et la
+// fonction rend ensuite la main au compte d'administration, ce qu'un contrôle
+// écrit à part oublierait un jour.
+async function controlerLecteur(srv, supplement) {
   const identite = await srv.connexion('m.ahoyo@anac.bj');
   const moi = (await srv.appel('/api/me')).corps;
   const acces = (await srv.appel('/api/m/droits/PLAN/my-access')).corps;
@@ -25,6 +30,7 @@ async function controlerLecteur(srv) {
     method: 'POST', body: JSON.stringify({ commentaire: '' }),
   })).statut;
   const lecture = (await srv.appel('/api/m/planification/plans')).statut;
+  const resultatSupplement = supplement ? await supplement(srv) : undefined;
 
   await srv.connexion();   // retour au compte d'administration
   return {
@@ -32,6 +38,7 @@ async function controlerLecteur(srv) {
     privilegeBase: acces.privilege,
     secteurTeste: sec ? sec.code : null,
     creation, validation, lecture,
+    supplement: resultatSupplement,
   };
 }
 
@@ -275,6 +282,149 @@ module.exports = async function planificationSmoke(port) {
       (vigueur.corps || []).every((p) => Array.isArray(p.activites) && p.nb_activites === p.activites.length));
     const filtre = await srv.appel('/api/shared/surveillance-plans?annee=1900');
     verifier('filtres du contrat appliqués', filtre.statut === 200 && filtre.corps.length === 0);
+
+    // ── Un profil de risque écrit depuis l'écran de PLAN ──
+    //
+    // Le producteur normal d'un profil est PR : `PR.riskProfiles` est une
+    // **projection** sur les évaluations validées, et le bus est à sens unique.
+    // L'écran de PLAN portait pourtant un formulaire qui en fabriquait un, dont
+    // l'enregistrement postait vers une route **qui n'existait pas** — un geste
+    // mort depuis l'origine, que la ronde a trouvé en cherchant pourquoi
+    // `planSaveRiskProfile` n'était pas exercé. La maîtrise d'ouvrage a décidé
+    // le 4 novembre 2026 d'ouvrir la route plutôt que de retirer le formulaire.
+    //
+    // Cinq règles s'y éprouvent, et quatre sont des refus.
+    {
+      const refs = (await srv.appel('/api/referentiels')).corps || {};
+      const prest = (refs.prestataires || [])[0] || {};
+      const secteur = (refs.secteurs || []).find((s) => s.id === prest.secteur_id)
+        || (refs.secteurs || [])[0] || {};
+      const corps = {
+        prestataire_id: prest.id,
+        secteur_id: secteur.id,
+        risk_label: 'Élevé',
+        intensite: 'Renforcée',
+        csrbo: 9,
+        debut_cycle: '2026-01-15',
+        evaluation_date: '2026-01-10',
+        sous_activites: { sa1: { risk: 'Modéré', freq: 2, intensite: 'Normale' } },
+      };
+      const pose = await srv.appel('/api/m/planification/risk-profiles',
+        { method: 'POST', body: JSON.stringify(corps) });
+      verifier('un profil de risque s’écrit depuis PLAN, et porte la marque de son origine',
+        pose.statut === 201
+        && pose.corps.origine === 'plan'
+        && !!pose.corps.cree_par && !!pose.corps.cree_le
+        // `niveau` et non `matrice` : c'est `niveau` que la comparaison des
+        // écarts lit pour en faire le `risk_label` d'une activité.
+        && pose.corps.niveau === 'Élevé'
+        && pose.corps.intensite === 'Renforcée' && pose.corps.csrbo === 9
+        && pose.corps.secteur_id === secteur.id
+        && pose.corps.domaine_id === (secteur.domaine_id || '')
+        && pose.corps.date_validation === '2026-01-10'
+        && pose.corps.sous_activites.sa1.freq === 2,
+        `statut ${pose.statut} · ${JSON.stringify(pose.corps).slice(0, 200)}`);
+
+      // La fin du cycle se déduit du début et du CSRBO, **côté serveur** : la
+      // même règle pour tous les appelants, et non celle que le client calcule.
+      verifier('la fin du cycle se déduit du début et du CSRBO, et le cycle du prestataire suit',
+        pose.statut === 201
+        && (await srv.appel('/api/m/planification/prestataires-risques')).corps
+          .some((p) => p.id === prest.id && p.debut_cycle === '2026-01-15'
+            && p.fin_cycle === '2026-10-15'),
+        JSON.stringify(((await srv.appel('/api/m/planification/prestataires-risques')).corps || [])
+          .find((p) => p.id === prest.id) || {}).slice(0, 200));
+
+      // ── La primauté de l'évaluation, éprouvée dans les deux sens ──
+      //
+      // L'union rend les profils dérivés par PR **plus** les directs, et sur un
+      // même couple prestataire + secteur c'est le dérivé qui l'emporte : un
+      // profil écrit à la main comble un vide, il ne recouvre pas une
+      // évaluation validée. Une règle qui n'est éprouvée que du côté où elle
+      // laisse passer n'est pas éprouvée.
+      //
+      // Mon premier contrôle n'en voyait qu'un côté, et il est tombé : le
+      // prestataire qu'il avait pris **était déjà couvert**, et son profil
+      // direct a donc été masqué — exactement comme prévu, par la règle que
+      // j'avais écrite une page plus haut.
+      const derives = (await srv.appel('/api/shared/risk-profiles')).corps || [];
+      const couverts = new Set(derives.map((p) => `${p.prestataire_id}|${p.secteur_id}`));
+      const estCouvert = couverts.has(`${prest.id}|${secteur.id}`);
+      const servis = await srv.appel('/api/m/planification/risk-profiles');
+      const paraitDansLUnion = (servis.corps || []).some((p) => p.id === pose.corps.id);
+      verifier('sur un couple que PR couvre, le profil direct est masqué ; sur un couple qu’il ne couvre pas, il paraît',
+        pose.statut === 201 && servis.statut === 200
+        // Le cas du jeu d'essai, mesuré et non supposé.
+        && estCouvert === !paraitDansLUnion,
+        `couple ${estCouvert ? 'couvert' : 'non couvert'} par PR → ${
+          paraitDansLUnion ? 'il paraît' : 'il est masqué'} · ${derives.length} dérivé(s)`);
+
+      // ── L'autre côté de la règle ──
+      //
+      // Mon premier jet cherchait un **organisme** que PR ne couvre pas, n'en
+      // trouvait aucun — tous ont une évaluation validée dans le jeu d'essai —
+      // et déclarait le contrôle hors de portée. C'était abandonner une moitié
+      // de la règle, et une règle dont une moitié n'est pas éprouvée n'est pas
+      // éprouvée.
+      //
+      // Or la clé de l'union est le **couple** prestataire + secteur, non
+      // l'organisme : le même organisme sur un autre secteur est un couple que
+      // PR ne couvre pas. Le jeu d'essai en porte donc autant qu'il a de
+      // secteurs. *Quand on ne trouve pas le cas qu'on cherche, il faut
+      // d'abord vérifier qu'on cherche la bonne clé.*
+      const autreSecteur = (refs.secteurs || [])
+        .find((s) => s.id !== secteur.id && !couverts.has(`${prest.id}|${s.id}`));
+      const direct = autreSecteur ? await srv.appel('/api/m/planification/risk-profiles', {
+        method: 'POST',
+        body: JSON.stringify({ ...corps, secteur_id: autreSecteur.id }),
+      }) : null;
+      const apres = (await srv.appel('/api/m/planification/risk-profiles')).corps || [];
+      verifier('un profil direct sur un couple que PR ne couvre pas rejoint ceux que le module sert, et porte son origine',
+        !!autreSecteur && direct.statut === 201
+        && apres.some((p) => p.id === direct.corps.id && p.origine === 'plan'
+          && p.secteur_id === autreSecteur.id),
+        `${autreSecteur ? `secteur ${autreSecteur.code}` : 'aucun secteur libre'} · statut ${
+          direct && direct.statut} · ${apres.length} profil(s) servi(s)`);
+
+      // ── Les quatre refus ──
+      const sans = async (cle) => {
+        const c = { ...corps };
+        delete c[cle];
+        return (await srv.appel('/api/m/planification/risk-profiles',
+          { method: 'POST', body: JSON.stringify(c) })).statut;
+      };
+      const avec = async (cle, valeur) => (await srv.appel('/api/m/planification/risk-profiles',
+        { method: 'POST', body: JSON.stringify({ ...corps, [cle]: valeur }) })).statut;
+      const refus = {
+        sansPrestataire: await sans('prestataire_id'),
+        sansSecteur: await sans('secteur_id'),
+        sansNiveau: await sans('risk_label'),
+        sansIntensite: await sans('intensite'),
+        sansCsrbo: await sans('csrbo'),
+        csrboNul: await avec('csrbo', 0),
+        prestataireInconnu: await avec('prestataire_id', 'pr_inexistant'),
+        secteurInconnu: await avec('secteur_id', 'sec_inexistant'),
+        finAvantDebut: await avec('fin_cycle', '2025-12-01'),
+      };
+      verifier('un profil incomplet, borné hors limites ou pointant sur un inconnu est refusé',
+        // Les cinq champs requis, et la borne du CSRBO : tenus par le schéma.
+        refus.sansPrestataire === 400 && refus.sansSecteur === 400
+        && refus.sansNiveau === 400 && refus.sansIntensite === 400
+        && refus.sansCsrbo === 400 && refus.csrboNul === 400
+        // Et les trois que le schéma ne peut pas tenir : l'existence des
+        // référentiels visés, et l'ordre des deux dates.
+        && refus.prestataireInconnu === 400 && refus.secteurInconnu === 400
+        && refus.finAvantDebut === 400,
+        JSON.stringify(refus));
+
+      // Le privilège : un profil engage la planification de la surveillance
+      // d'un organisme. Il relève du validateur, comme le cycle.
+      const lecteurProfil = await controlerLecteur(srv, async (s) => (await s.appel(
+        '/api/m/planification/risk-profiles',
+        { method: 'POST', body: JSON.stringify(corps) })).statut);
+      verifier('l’écriture d’un profil est refusée hors privilège de validation',
+        lecteurProfil.supplement === 403, `statut ${lecteurProfil.supplement}`);
+    }
 
     // ── Droits du module opposables côté serveur ──
     const lecteur = await controlerLecteur(srv);

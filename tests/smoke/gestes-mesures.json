@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-03",
+ "releve": "2026-11-04",
  "gestesNommes": 89,
  "occurrences": 144,
- "exerces": 58,
+ "exerces": 63,
  "indecidables": 3,
  "gestes": [
   {
@@ -1023,7 +1023,7 @@
    "evenement": "click",
    "source": "mesRecoursRetirerMembre(${i}, ${k})",
    "nom": "mesRecoursRetirerMembre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -1032,7 +1032,7 @@
    "evenement": "click",
    "source": "mesRecoursAjouterMembre(${i})",
    "nom": "mesRecoursAjouterMembre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -1041,7 +1041,7 @@
    "evenement": "change",
    "source": "mesRecoursDecision(${i}, this.value)",
    "nom": "mesRecoursDecision",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
@@ -1069,7 +1069,7 @@
    "evenement": "change",
    "source": "mesSuiviRecours(${i}, this.checked)",
    "nom": "mesSuiviRecours",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-suivi.js",
@@ -1078,7 +1078,7 @@
    "evenement": "change",
    "source": "mesSuiviStatut(${i}, this.value)",
    "nom": "mesSuiviStatut",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/mesures/js/mes-suivi.js",

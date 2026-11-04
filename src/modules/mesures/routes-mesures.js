@@ -524,6 +524,17 @@ module.exports = function register(app, deps, M) {
       // aucune n'appelle de suivi. Le dossier est clos, l'écran le lit ici.
       cloture_le: (t && t.cloture_le) || '',
       cloture_par: (t && t.cloture_par) || '',
+      // ── Le recul du fil se date, comme chacun de ses pas ──
+      //
+      // `POST /suivi/recours` écrit `recours_ouvert_le` et `recours_ouvert_par`
+      // sur le traitement — c'est la trace du **seul** mouvement de ce fil qui
+      // revient en arrière. Cette réponse exposait toutes les autres paires
+      // (classement, qualification, clôture) et oubliait celle-là : la date
+      // existait au serveur et n'atteignait jamais l'écran, qui ne pouvait donc
+      // pas dire d'où le dossier revenait. Relevé par la ronde du recours
+      // (n° 5.f.66), en cherchant à l'éprouver.
+      recours_ouvert_le: (t && t.recours_ouvert_le) || '',
+      recours_ouvert_par: (t && t.recours_ouvert_par) || '',
       investigation: (t && t.investigation)
         || { equipe: [], travaux: [], autres_texte: '', autres_pieces: [], rapport: '' },
       qualification: (t && t.qualification) || {

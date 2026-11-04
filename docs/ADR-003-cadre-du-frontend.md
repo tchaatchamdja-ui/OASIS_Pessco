@@ -9470,3 +9470,80 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            **nomme la raison**) et celui du harnais (`refusAttendus()` — une
            fenêtre autour du geste qui le provoque). Ils servent deux besoins
            distincts, et le second est né sans voir le premier. À rapprocher.
+
+       5.f.66 [x] **Le circuit du recours — la seule étape qui recule** — fait le 4 novembre 2026.
+
+           `mes-suivi.js` (329 lignes, 6 gestes, un exercé) et les cinq gestes de
+           recours de `mes-qualification.js`. **Sept contrôles** de plus, 33 →
+           **40**, et CARE passe de 58 à **63 sur 89**.
+
+           ── Ce n'était pas deux poches, mais un seul circuit ──
+
+           Le volet « Recours » ne s'offre que s'il y a un recours à examiner ; un
+           recours naît au **suivi** d'une mesure ; et le suivi n'existe que sur
+           un dossier dont la qualification a **conclu** — c'est la conclusion
+           qui inscrit les mesures arrêtées au registre, avec leur référence, et
+           c'est ce registre que le suivi lit. Il fallait donc parcourir le
+           circuit dans cet ordre, et non attaquer les deux fichiers séparément.
+
+           ── Les six règles ──
+
+           La conclusion remplit le registre (`MES-0001`, `issue_de:
+           'qualification'`). Le suivi y écrit **sans copie** : le menu
+           « Mesures » lit la même mesure, et on le relève par l'autre porte. Une
+           contestation **suspend le suivi** : le statut passe à « recours » et
+           cesse de se choisir ; décocher rend la main. Les deux issues de
+           l'étape s'excluent — la contestation arme l'une et éteint l'autre —, et
+           **le serveur repose la règle** par un 409 qu'un appel direct ne
+           contourne pas. Le fil **recule** à la qualification, et la fenêtre
+           d'aveu nomme le retour. Enfin la conclusion applique la décision de
+           l'instance : annulée, la mesure sort du suivi.
+
+           ── Un défaut trouvé en cherchant à éprouver la trace du recul ──
+
+           `POST /suivi/recours` écrit `recours_ouvert_le` et
+           `recours_ouvert_par` — la trace du seul mouvement de ce fil qui revient
+           en arrière. Le GET du traitement expose **toutes** les autres paires
+           `*_le / *_par` — classement, qualification, clôture — et oubliait
+           celle-là : la date existait au serveur et n'atteignait jamais l'écran,
+           qui ne pouvait donc pas dire d'où le dossier revenait. Corrigé.
+
+           ── Trois fautes de ronde, et ce qu'elles enseignent ──
+
+           **J'ai inventé un nom de geste.** `mesQualTypeMesure` n'existe pas :
+           le `<select>` du type n'a **aucun gestionnaire**, c'est un champ
+           `data-champ` relevé à l'enregistrement. Sa valeur ne parvient à l'état
+           qu'à la sauvegarde, et la lire juste après l'avoir posée rendait vide.
+           *On relève une valeur là où elle arrive, non là où on la pose.* Trouvé
+           en vérifiant les sept noms que j'avais écrits — pour une fois, avant
+           de les exécuter.
+
+           **J'ai relevé dans le document un vide que seul l'état porte.**
+           `mesSuiviRecours` remet le statut à chaîne vide ; le `<select>`
+           reconstruit retombe sur sa première option, faute d'en avoir une qui
+           porte le vide. La leçon de 5.f.56, ici pour la seconde fois — et les
+           deux sont désormais relevés, le second comme un fait, non comme la
+           règle.
+
+           **Et ma sonde a clôturé le dossier.** J'ai provoqué le refus de
+           clôture **avant** que la contestation n'atteigne le serveur : il a
+           donc légitimement clos la carence, et tout ce qui suivait est tombé
+           avec — le fil ne pouvant plus reculer depuis un suivi clos. *Une sonde
+           qui mesure un refus doit d'abord mettre le serveur dans l'état où il
+           refuse ; sinon elle ne mesure pas un refus, elle fait ce qu'elle
+           voulait interdire.*
+
+           ── Sept contre-essais, et un faux défaut instructif ──
+
+           L'inscription au registre retirée ; la suspension du statut ôtée ; le
+           refus de clôture levé ; la marque non portée sur la mesure arrêtée ; le
+           suivi écrivant sur une copie détachée ; la décision de l'instance non
+           appliquée ; la trace du recul non exposée. Sept fois rouge, chacun sur
+           son contrôle.
+
+           Et un **faux défaut** : mon premier essai pour « le suivi écrit sur une
+           copie » retirait la réaffectation `etat.mesures = mesures`. Il n'a rien
+           fait tomber — `mesures` **est** `etat.mesures`, et la mutation tient
+           sans la réaffectation. *Un contre-essai qui ne mord pas dit soit que le
+           contrôle est creux, soit que le défaut n'en est pas un ; il faut savoir
+           lequel avant de conclure.* Le vrai défaut détache la copie.

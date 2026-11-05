@@ -3877,7 +3877,29 @@ module.exports = async function rampNavigateurSmoke(port) {
         if (dest) dest.value = 'ronde.ramp@example.test';
         const envoyer = document.querySelector('[onclick*="rampEnvoyerCommunication("]');
         d.boutonEnvoyer = !!envoyer;
+        // ── Ce que le bouton **est**, et non seulement qu'il existe ──
+        //
+        // Toute la lettre est `disabled` quand la fiche n'est pas validée, quand
+        // le compte ne peut pas saisir, ou quand une notification est déjà
+        // partie. `querySelector` trouve un bouton désactivé comme un autre, et
+        // `.click()` n'y déclenche rien : *ni requête, ni erreur, ni trace.*
+        // C'est l'une des deux explications possibles du `coms: 0` rencontré le
+        // 5 novembre 2026 — l'autre étant que le gestionnaire ait échoué avant
+        // sa requête. On relève donc les deux : l'état du bouton, et ce que
+        // l'écran a dit après le clic.
+        d.boutonActif = !!envoyer && !envoyer.disabled;
+        // `window.RAMP_STATE ||` et non `window.RAMP_STATE.` : le reste de la
+        // ronde l'écrit ainsi, et une sonde qui lèverait ferait tomber tout le
+        // bloc — une trace ne doit jamais pouvoir casser ce qu'elle observe.
+        const etat = (window.RAMP_STATE || {}).poiEnCours || {};
+        d.statutFiche = etat.statut || '';
+        d.ficheEnCours = !!etat.id;
+        document.querySelectorAll('.oasis-toast-fond').forEach((n) => n.remove());
         envoyer?.click();
+        await a(2500);
+        const dit = document.querySelector('.oasis-toast-fond');
+        d.toastEnvoi = dit ? (dit.className || '') : '(aucun)';
+        d.toastTexte = dit ? (dit.innerText || '').trim().slice(0, 120) : '';
         // ── Attendre ce qu'on mesure, non une horloge ──
         //
         // Ce contrôle a rougi **en campagne** et passé seul : cinq secondes
@@ -4278,6 +4300,10 @@ module.exports = async function rampNavigateurSmoke(port) {
       // Le modèle rendu à l'identique : c'est l'effet du rétablissement.
       && ronde.circuit.modeleRendu === true
       && ronde.circuit.champDestinataire === true && ronde.circuit.boutonEnvoyer === true
+      // Trouvé n'est pas actif : toute la lettre est `disabled` hors de l'état
+      // « validée », et un clic sur un bouton désactivé ne fait rien du tout.
+      // Exigé à part, pour que ce cas se nomme au lieu de se lire dans `coms: 0`.
+      && ronde.circuit.boutonActif === true
       && ronde.circuit.communications === 1
       && ronde.circuit.cible === 'exploitant'
       && ronde.circuit.destinataire === 'ronde.ramp@example.test'
@@ -4286,10 +4312,26 @@ module.exports = async function rampNavigateurSmoke(port) {
       && ronde.circuit.envoye === false
       // Une seule des deux cibles : la fiche n'est donc pas encore transmise.
       && ronde.circuit.transmise === false,
+      // ── Une trace qui dit quel maillon a cédé ──
+      //
+      // Ce contrôle a rougi en campagne le 5 novembre 2026 sur `coms: 0`, et la
+      // trace ne disait pas pourquoi : ni si le bouton d'envoi avait été trouvé,
+      // ni combien d'essais la boucle avait faits, ni si le rétablissement avait
+      // bien eu lieu. *Un relevé qui ne nomme pas le maillon rompu oblige à
+      // rejouer la campagne pour apprendre ce qu'il aurait pu dire.* Il porte
+      // donc désormais tout le chemin.
       JSON.stringify({ lettre: ronde.circuit.lettre, modele: ronde.circuit.modeleRendu,
-        objet: ronde.circuit.objetModele, coms: ronde.circuit.communications,
-        cible: ronde.circuit.cible, envoye: ronde.circuit.envoye,
-        transmise: ronde.circuit.transmise }).slice(0, 400));
+        objet: ronde.circuit.objetModele, retabli: ronde.circuit.objetRetabli,
+        boutonRetablir: ronde.circuit.boutonRetablir,
+        champDest: ronde.circuit.champDestinataire,
+        boutonEnvoyer: ronde.circuit.boutonEnvoyer,
+        boutonActif: ronde.circuit.boutonActif,
+        statutFiche: ronde.circuit.statutFiche, ficheEnCours: ronde.circuit.ficheEnCours,
+        toast: ronde.circuit.toastEnvoi, dit: ronde.circuit.toastTexte,
+        essais: ronde.circuit.essais, coms: ronde.circuit.communications,
+        cible: ronde.circuit.cible, destinataire: ronde.circuit.destinataire,
+        envoye: ronde.circuit.envoye,
+        transmise: ronde.circuit.transmise }).slice(0, 600));
     verifier('la table des fiches, qui n’a pas d’entrée de menu, s’ouvre par « Traiter » et ses deux filtres restreignent dans les deux sens',
       !!ronde.table && ronde.table.page === 'inspection'
       && ronde.table.filtres === 2 && ronde.table.tous >= 1

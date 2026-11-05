@@ -43,7 +43,23 @@ const sharedPrestataires = () => (referentiels.getAll().prestataires || []).map(
 }));
 
 // Asynchrone depuis que `profil_risque` vit en base (ADR-002, jalon n° 13).
-const sharedIndices = () => db.list('indices');
+// Les six seuils du barème, et non la collection brute : `list` rendait un
+// tableau que l'écran lisait comme un objet, de sorte que chacune des six
+// lectures du calcul retombait sur ses valeurs par défaut (n° 5.f.69). Les
+// défauts sont **complétés ici** : un magasin dont il manquerait un seuil rend
+// un barème entier, et jamais un `undefined` au milieu d'un calcul de risque.
+const sharedIndices = async () => {
+  // `load`, et non `list` : `list` filtre les retraits et appelle donc
+  // `.filter` sur la collection. Le barème n'est pas une liste — `list` y
+  // lèverait un TypeError, et la page de réglage tomberait sur un 500.
+  const brut = (await db.load()).indices;
+  const pose = (brut && !Array.isArray(brut)) ? brut : {};
+  const seuils = { ...db.SEUILS_DEFAUT };
+  db.SEUILS.forEach((c) => {
+    if (typeof pose[c] === 'number' && Number.isFinite(pose[c])) seuils[c] = pose[c];
+  });
+  return seuils;
+};
 
 // Service publié : profils de risque en vigueur, consommés par les autres
 // modules (Planification…). Même source que la page « Synthèses Profils » : la

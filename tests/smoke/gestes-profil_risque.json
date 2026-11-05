@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-04",
+ "releve": "2026-11-05",
  "gestesNommes": 88,
  "occurrences": 167,
- "exerces": 65,
+ "exerces": 73,
  "indecidables": 3,
  "gestes": [
   {
@@ -102,7 +102,7 @@
    "evenement": "click",
    "source": "printPage('dashPrintStart')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -516,7 +516,7 @@
    "evenement": "click",
    "source": "printPage('printStart_eval')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -660,7 +660,7 @@
    "evenement": "click",
    "source": "printPage('printStart_results')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -742,7 +742,7 @@
    "evenement": "click",
    "source": "printPage('printStart_indicateurs')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -751,7 +751,7 @@
    "evenement": "click",
    "source": "exportIndicateursExcel()",
    "nom": "exportIndicateursExcel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -769,7 +769,7 @@
    "evenement": "change",
    "source": "importIndicateursExcel(event)",
    "nom": "importIndicateursExcel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -778,7 +778,7 @@
    "evenement": "click",
    "source": "openEntityModal('indicateurs_conf')",
    "nom": "openEntityModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -787,7 +787,7 @@
    "evenement": "click",
    "source": "openEntityModal('indicateurs_perf')",
    "nom": "openEntityModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -796,7 +796,7 @@
    "evenement": "click",
    "source": "openEntityModal('indicateurs_complex')",
    "nom": "openEntityModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -886,7 +886,7 @@
    "evenement": "click",
    "source": "openEntityModal('indicateurs_conf','${i.id}')",
    "nom": "openEntityModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -913,7 +913,7 @@
    "evenement": "click",
    "source": "openEntityModal('indicateurs_perf','${i.id}')",
    "nom": "openEntityModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -931,7 +931,7 @@
    "evenement": "click",
    "source": "openEntityModal('indicateurs_complex','${i.id}')",
    "nom": "openEntityModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -958,7 +958,7 @@
    "evenement": "click",
    "source": "this.parentNode.remove()",
    "nom": "this.parentNode.remove",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -976,7 +976,7 @@
    "evenement": "click",
    "source": "deleteEntity('${collection}','${itemId}')",
    "nom": "deleteEntity",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -985,7 +985,7 @@
    "evenement": "click",
    "source": "saveEntity('${collection}','${itemId||''}')",
    "nom": "saveEntity",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -994,7 +994,7 @@
    "evenement": "click",
    "source": "saveIndices()",
    "nom": "saveIndices",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -1094,7 +1094,7 @@
    "evenement": "click",
    "source": "printPage('printStart_profils')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1139,7 +1139,7 @@
    "evenement": "click",
    "source": "printPage('printStart_archives')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1202,7 +1202,7 @@
    "evenement": "click",
    "source": "printPage('printStart_indiv')",
    "nom": "printPage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",

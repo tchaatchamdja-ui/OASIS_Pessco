@@ -1273,6 +1273,68 @@ function barreDeRamp() {
       { disponible: false, courante: 'Togo', locale: 'Bénin' }) === 'Togo');
 }
 
+// ── Le barème de risque : la conversion d'une instance déjà installée ──
+//
+// `indices` portait un tableau de six paires `{cle, valeur}` que personne ne
+// lisait, quand les six lectures du calcul interrogent un objet
+// `{conf1…expo2}`. Adopter le modèle de l'écran (n° 5.f.69) laisse donc, sur
+// toute instance installée avant ce jour, une clé au mauvais format.
+//
+// `seedSeuils` la convertit au démarrage. Deux règles y tiennent, et aucune des
+// deux ne se voit par HTTP : elle convertit ce qui doit l'être, et elle ne
+// touche **pas** un barème déjà réglé — un semis qui écraserait les seuils de
+// l'AAC à chaque redémarrage refondrait le barème de la surveillance en
+// silence, ce qui est exactement le défaut qu'on vient de corriger.
+//
+// La suite écrit dans la vraie collection `profil_risque` du bac, que les
+// suites de PR lisent : elle rend donc son état d'avant, quoi qu'il advienne.
+async function baremeDeRisque() {
+  const db = require('../../src/modules/profil_risque/store');
+  const avant = await db.load();
+  try {
+    // 1. L'ancien modèle : le tableau de paires, converti.
+    await db.save({ ...avant, indices: [{ cle: 'poids_conformite', valeur: 0.4 }] });
+    await db.seedSeuils();
+    const converti = (await db.load()).indices;
+    verifier('barème : le tableau de paires de l’ancien modèle devient l’objet à six seuils',
+      !!converti && !Array.isArray(converti)
+      && db.SEUILS.every((c) => converti[c] === db.SEUILS_DEFAUT[c]),
+      JSON.stringify(converti));
+
+    // 2. Un barème réglé par l'AAC : intouché. C'est la règle qui compte.
+    const regle = { ...db.SEUILS_DEFAUT, conf1: 0.9, conf2: 0.35 };
+    await db.save({ ...(await db.load()), indices: regle });
+    await db.seedSeuils();
+    const apres = (await db.load()).indices;
+    verifier('barème : un barème déjà réglé n’est pas réécrit par le semis',
+      apres.conf1 === 0.9 && apres.conf2 === 0.35,
+      JSON.stringify(apres));
+
+    // 3. Un barème incomplet — un seuil manquant — est refait en entier : mieux
+    // vaut un barème entier aux défauts qu'un `undefined` au milieu d'un calcul
+    // de niveau de risque.
+    const ampute = { ...db.SEUILS_DEFAUT };
+    delete ampute.expo2;
+    await db.save({ ...(await db.load()), indices: ampute });
+    await db.seedSeuils();
+    const refait = (await db.load()).indices;
+    verifier('barème : un barème incomplet est refait, jamais laissé troué',
+      db.SEUILS.every((c) => typeof refait[c] === 'number'),
+      JSON.stringify(refait));
+
+    // 4. Et le domaine complète ce que le magasin ne dit pas : la lecture rend
+    // six nombres même si la clé est absente.
+    await db.save({ ...(await db.load()), indices: undefined });
+    const D = require('../../src/modules/profil_risque/domaine');
+    const lu = await D.sharedIndices();
+    verifier('barème : la lecture du domaine rend six nombres même sans clé en magasin',
+      db.SEUILS.every((c) => lu[c] === db.SEUILS_DEFAUT[c]),
+      JSON.stringify(lu));
+  } finally {
+    await db.save(avant);
+  }
+}
+
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
@@ -1302,6 +1364,7 @@ module.exports = async function unitairesSmoke() {
     await facadeDuMagasin();
     sondeDesSauvegardes();
     nommeurDeGestes();
+    await baremeDeRisque();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

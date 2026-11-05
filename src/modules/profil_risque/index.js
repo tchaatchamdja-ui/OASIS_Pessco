@@ -31,7 +31,14 @@ function register(app, deps) {
 module.exports = {
   register,
   // Asynchrone depuis que `profil_risque` vit en base (ADR-002, jalon n° 13).
-  seed: db.seed,
+  async seed() {
+    await db.seed();
+    // Instance déjà installée : `indices` y portait un tableau de paires que
+    // personne ne lisait, quand le calcul lit un objet de six seuils. On le
+    // convertit au démarrage, plutôt que d'ouvrir une page de réglages sur six
+    // champs vides (n° 5.f.69).
+    await db.seedSeuils();
+  },
   COLLECTIONS: db.COLLECTIONS,
   getColl: db.getColl,
   insert: db.insert,

@@ -224,6 +224,7 @@ export const OBJETS: Readonly<Record<string, readonly [MotGenre, MotGenre, MotGe
   rapport: [['Rapport', 'm'], ['Report'], ['Relatório', 'm']],
   reception: [['Réception', 'f'], ['Receipt'], ['Receção', 'f']],
   requete: [['Requête', 'f'], ['Request'], ['Pedido', 'm']],
+  seuil: [['Seuil', 'm'], ['Threshold'], ['Limiar', 'm']],
   suivi: [['Suivi', 'm'], ['Follow-up'], ['Acompanhamento', 'm']],
   traitement: [['Traitement', 'm'], ['Processing'], ['Tratamento', 'm']],
   type: [['Type', 'm'], ['Type'], ['Tipo', 'm']],

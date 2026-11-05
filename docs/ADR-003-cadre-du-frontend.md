@@ -864,18 +864,28 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 949 | non mesuré |
-           | CARE (`mesures`) | 6 428 | non mesuré |
-           | PR (`profil_risque`) | 7 315 | non mesuré |
-           | RAMP | 12 470 | non mesuré |
-           | SURV (`execution`) | 23 731 | non mesuré |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 67 exercés — le plafond atteignable —, 9 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
+           | PLAN (`planification`) | 5 955 | **94 gestes nommés, 77 exercés**, 4 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026 |
+           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
+           | PR (`profil_risque`) | 7 141 | **88 gestes nommés, 73 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69) |
+           | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 156 exercés**, 3 indécidables — idem, 3 novembre 2026 ; le plus gros écran, et le moins couvert |
 
-           « Non mesuré » est à prendre au mot : on ne sait pas, pour ces cinq écrans, quelles
-           vues sont ouvertes par la suite « parcours » ni quels gestes y sont exercés. Le
-           portail a été mesuré avant d'être touché, et la mesure a dit qu'un écran de 4 217
-           lignes était couvert par « trois vues se remplissent ». Il n'y a aucune raison
-           d'espérer mieux des cinq autres, et chacun aura donc sa suite n° 0.
+           ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
+
+           Il portait « non mesuré » pour les cinq écrans de module, daté du 6 octobre
+           2026, alors que chacun a reçu sa suite de navigateur entre le 13 octobre et le
+           3 novembre. *Un tableau d'état qui ne suit pas l'état devient un piège : on le
+           lit, on le croit, et l'on refait ce qui est fait.* Remis d'accord le 5 novembre
+           2026, à partir des relevés figés eux-mêmes (`tests/smoke/gestes-<écran>.json`)
+           et non de la mémoire du chantier.
+
+           Ce que la mesure a dit, et qui justifie rétrospectivement de l'avoir faite
+           avant de toucher aux écrans : le portail, 4 217 lignes, était couvert par
+           « trois vues se remplissent ». Aucun des cinq autres ne valait mieux au départ.
+           Les six suites de navigateur qui garnissent aujourd'hui ce tableau sont nées de
+           ce constat, et chacune des entrées 5.f ci-dessous nomme ce qu'elle y a trouvé —
+           des défauts qu'aucune relecture n'avait vus, dans du code qui passait pour sain.
 
            5.c.0 [x] **Éprouver le portail avant de le réécrire — reprise du 7 octobre 2026,
                et mon relevé de la veille était faux d'un facteur trois.**
@@ -9588,3 +9598,149 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            vingt-cinq doublons hérités, mérite d'être dite : *une règle CSS
            écrite deux fois peut être une maladresse de style ; une fonction
            déclarée deux fois est toujours un défaut, jamais un choix.*
+
+       5.f.68 [x] **Les référentiels d'indicateurs — le cycle entier d'une entité, et l'aller-retour de son classeur** — fait le 5 novembre 2026.
+
+           `pr-parametres.js` portait 13 gestes exercés sur 21. Les huit qui
+           restaient tiennent en un seul parcours : ouvrir la fenêtre d'un
+           indicateur, l'enregistrer, la rouvrir, le renommer, le supprimer ;
+           puis imprimer la page, exporter le classeur des indicateurs et le
+           réimporter. Cinq contrôles (41 → **46**).
+
+           ── L'ordre du parcours n'est pas libre ──
+
+           Le classeur doit être exporté **après** le cycle de l'entité.
+           Exporté avant, il porterait l'indicateur d'essai, et le réimporter
+           le recréerait après sa suppression : l'aller-retour ne dirait plus
+           « relire ce qu'on vient d'écrire ne change rien », mais *« réimporter
+           ressuscite ce qu'on a retiré »* — une tout autre propriété, et moins
+           forte. Et le bandeau d'import ne paraît qu'après un import : son
+           bouton de fermeture n'existe pas avant.
+
+           ── Trois règles éprouvées plutôt que supposées ──
+
+           · **Le serveur ne reprend pas l'identifiant proposé.** La ronde en
+             pose un dans le corps de la création ; l'enregistrement rendu en
+             porte un autre. C'est la garantie du magasin, tenue deux fois —
+             par `enregistrement()` et par `insert` —, et c'est pourquoi un
+             contre-essai sur une seule des deux couches ne la fait pas tomber.
+
+           · **Un renommage ne touche pas le code.** Le code est ce que les
+             évaluations retiennent : s'il bougeait, les notes perdraient leur
+             indicateur.
+
+           · **Le retrait demande confirmation, et son refus ne retire rien.**
+             Les deux moitiés sont exigées : un garde qui ne vérifie que
+             l'acceptation laisse passer une confirmation décorative.
+
+           Le document d'impression est **lu**, non seulement ouvert : l'en-tête
+           de l'autorité et au moins un indicateur y figurent. *Une fenêtre qui
+           s'ouvre sur une page blanche s'ouvre quand même.*
+
+           Et l'auto-grandissement des zones de texte, qui est un geste de la
+           coquille : ma première rédaction comparait la hauteur avant et après
+           la saisie — elles étaient égales, la fenêtre étant assez large pour
+           que le libellé tienne sur une ligne. Le contrôle exige donc la
+           **règle** — la hauteur posée suit celle du contenu — et non un écart
+           de pixels qui mesure la largeur de la fenêtre autant que l'écouteur.
+
+       5.f.69 [x] **Le barème de risque se réglait depuis une page qui ne réglait rien** — fait le 5 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           `saveIndices` était le dernier geste non exercé de
+           `pr-parametres.js`. L'exercer a montré pourquoi personne ne l'avait
+           remarqué : **il réussissait**. La page affichait « OK », et rien
+           n'était enregistré.
+
+           ── Trois vocabulaires pour une même chose ──
+
+           | Qui | Ce qu'il porte | Qui le lit |
+           |---|---|---|
+           | Le magasin | `indices: [{cle, valeur}, …]` — trois poids, trois paliers | **personne** |
+           | L'écran | `{conf1, conf2, perf1, perf2, expo1, expo2}` | **six endroits du calcul** |
+           | `PUT /api/indices` | n'acceptait qu'un tableau | — |
+
+           Le corps envoyé par l'écran n'étant ni un tableau ni
+           `{indices: […]}`, la route retombait sur `d.indices` —
+           *c'est-à-dire ne changeait rien* — et répondait `{ok: true}`.
+
+           Les six endroits qui lisent le modèle de l'écran : `prSeuils` de
+           `pr-profils.js`, et quatre lectures de la fiche d'évaluation. Tous
+           écrivent `indices.conf1 || 0.8`. **Tous les niveaux de risque de
+           l'application se calculaient donc sur les 0,80 et 0,50 repliés dans
+           le code**, et le privilège de Gestionnaire qui gardait la page ne
+           gardait rien.
+
+           ── La décision, et pourquoi elle est celle-là ──
+
+           Deux modèles possibles, et un seul qui ne demande pas de réécrire le
+           calcul : *le modèle de l'écran fait loi, puisque c'est lui que le
+           calcul lit.* Le semis en tableau — écrit par lui seul, lu par
+           personne — est remplacé.
+
+           Rien ne change dans aucun calcul tant que personne ne règle les
+           seuils : les défauts du magasin sont les valeurs qui étaient
+           repliées dans le code. Mais la page devient véritablement réglable.
+
+           ── Ce que la route oppose désormais, et qui n'existait nulle part ──
+
+           Deux bornes, posées côté serveur et non côté écran : le `min`/`max`
+           d'un `<input type="number">` ne retient rien d'une valeur posée par
+           du code.
+
+           · un seuil hors de `[0,1]` n'a pas de sens ;
+           · **un seuil haut sous le seuil bas renverserait le barème** sans
+             qu'une ligne du calcul ne s'en plaigne.
+
+           Et `seedSeuils()` au démarrage, sur le modèle de CARE : une instance
+           déjà installée porte le tableau, on le convertit plutôt que d'ouvrir
+           une page de réglages sur six champs vides. Il **ne touche pas** un
+           barème déjà réglé — un semis qui écraserait les seuils de l'AAC à
+           chaque redémarrage refondrait le barème de la surveillance en
+           silence, ce qui est exactement le défaut qu'on vient de corriger.
+
+           ── Un défaut latent trouvé en chemin, que supposer n'aurait pas vu ──
+
+           `sharedIndices` lisait par `db.list('indices')`. Or `list` filtre les
+           enregistrements retirés, et appelle donc `.filter` sur la
+           collection. Le barème devenant un objet, **`list` y lève un
+           TypeError**. Le contre-essai l'a dit sans ménagement : *la moitié de
+           l'écran tombe*, parce que `loadAllData` échoue et que plus rien ne se
+           rend. La lecture passe par `load`, et un commentaire dit pourquoi.
+
+           C'est la grammaire du magasin lue, et non devinée, qui l'a trouvé —
+           `COLLECTIONS` nomme les clés du magasin, non des listes, et porte
+           désormais cette note.
+
+           ── Ce que le contrôle éprouve, et ce qu'il refuse d'éprouver ──
+
+           Le contrôle d'écran ne se contente pas du `GET` : il **recharge la
+           page** et relit `APP_STATE.data.indices`, l'état que les six lectures
+           du calcul consultent. Un seuil enregistré mais absent de cet état ne
+           changerait aucun calcul.
+
+           `loadAllData` compose cet état de deux sources : l'amorce du portail
+           quand le module est monté dans la coquille, la route sinon. La ronde
+           monte l'écran seul ; le contrôle vérifie donc **l'état**, non la
+           source, et relève laquelle a servi. *Ma première rédaction exigeait
+           l'amorce : elle rougissait pour une raison qui n'était pas un
+           défaut.*
+
+           ── Sept contre-essais, chacun attribué ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | La route redevient permissive | **trois** contrôles, dont le garde des refus déclarés |
+           | `list` au lieu de `load` | l'écran entier — huit contrôles par cascade |
+           | Les bornes `[0,1]` retirées | le contrôle des deux refus |
+           | Le garde du renversement retiré | le même, sur l'autre moitié |
+           | Le semis écrase un barème réglé | « un barème déjà réglé n'est pas réécrit » |
+           | Le semis ne convertit plus | la conversion, et le barème troué |
+           | Le domaine ne complète plus les défauts | « six nombres même sans clé en magasin » |
+
+           Trois contrôles d'écran de plus (46 → **49**) et quatre unitaires
+           (120 → **124**). `pr-parametres.js` est **complet : 21 sur 21**, et
+           PR passe à **73 gestes exercés sur 88**.
+
+           Un objet de plus dans la table des erreurs normalisées — `seuil`, en
+           trois langues —, puisque le refus nomme ce qu'il concerne et que
+           l'écran compose la phrase : « Échec de l'opération — Seuil inconnu ».

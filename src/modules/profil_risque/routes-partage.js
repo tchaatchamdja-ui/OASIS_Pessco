@@ -64,14 +64,47 @@ module.exports = function register(app, deps, M) {
   // Les indices commandent le calcul de tous les profils de risque : les
   // réécrire, c'est refaire le barème de la surveillance. Réservé au
   // Gestionnaire — la route n'opposait jusqu'ici aucun refus.
+  // ── Elle attendait un tableau, l'écran envoyait un objet ──
+  //
+  // Le corps n'étant ni un tableau ni `{ indices: [...] }`, la route retombait
+  // sur `d.indices` — c'est-à-dire **ne changeait rien** — et répondait
+  // `{ ok: true }`. L'écran affichait « OK » sur une saisie perdue, et le barème
+  // de la surveillance restait aux valeurs repliées dans le code. Corrigé le
+  // 5 novembre 2026 sur décision de la maîtrise d'ouvrage : le modèle de
+  // l'écran fait loi, puisque c'est lui que le calcul lit (n° 5.f.69).
+  //
+  // Les bornes sont ici et non dans l'écran : un seuil hors de [0,1] n'a pas de
+  // sens, et un seuil haut sous le seuil bas renverserait le barème sans qu'une
+  // ligne du calcul ne s'en plaigne.
   app.put('/api/indices', requireAuth, gerer, asynchrone(async (req, res) => {
-    const apres = await db.transformer((d) => {
-      d.indices = Array.isArray(req.body) ? req.body : (req.body && req.body.indices) || d.indices;
+    const corps = req.body || {};
+    const seuils = {};
+    for (const cle of db.SEUILS) {
+      if (corps[cle] === '' || corps[cle] === null || corps[cle] === undefined) {
+        return requis(res, 'seuil');
+      }
+      const v = Number(corps[cle]);
+      if (!Number.isFinite(v) || v < 0 || v > 1) {
+        return inconnu(res, 'seuil', { champ: cle, attendu: ['0', '1'] });
+      }
+      seuils[cle] = v;
+    }
+    const paires = [['conf1', 'conf2'], ['perf1', 'perf2'], ['expo1', 'expo2']];
+    const renverse = paires.find(([haut, bas]) => seuils[haut] <= seuils[bas]);
+    if (renverse) {
+      return inconnu(res, 'seuil', { champ: renverse[0], attendu: [String(seuils[renverse[1]])] });
+    }
+    let avant = null;
+    await db.transformer((d) => {
+      avant = d.indices;
+      d.indices = seuils;
       return d;
     });
-    const indices = apres.indices || [];
-    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: indices.length });
-    res.json({ ok: true, indices });
+    // Le journal porte l'avant **et** l'après : refaire le barème de la
+    // surveillance est un acte d'autorité, et « modifié » sans dire de quoi vers
+    // quoi ne se relit pas. L'ancienne trace ne disait que `{ nb: 6 }`.
+    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { avant, apres: seuils });
+    res.json({ ok: true, indices: seuils });
   }));
 
   app.get('/api/aac', requireAuth, (req, res) => {

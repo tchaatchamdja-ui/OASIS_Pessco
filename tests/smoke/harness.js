@@ -404,6 +404,49 @@ function refusAttendus() {
   };
 }
 
+// ── Les abandons de navigation qu'une ronde provoque exprès ──
+//
+// Un refus se déclare par son code ; un **abandon** n'en a pas. Un
+// téléchargement servi en pièce jointe se présente à un moniteur de requêtes
+// comme un `net::ERR_ABORTED` : le navigateur mène la fenêtre à l'adresse,
+// reçoit `Content-Disposition: attachment`, enregistre le fichier et
+// **abandonne la navigation**. Ce n'est pas une panne, c'est la signature du
+// geste réussi.
+//
+// Et c'est la signature du **bon** patron : depuis que les téléchargements
+// passent par une navigation plutôt que par une ancre fabriquée
+// (n° 5.f.71), toute ronde qui en exerce un voit cet abandon. RAMP l'avait
+// rencontré le premier, pour son générateur de tables ; PR le rencontre pour
+// ses trois exports. Le mécanisme vit donc ici, et non deux fois.
+//
+// Déclarer n'est pas taire : l'abandon déclaré est relevé, et un contrôle à part
+// exige qu'il ait bien eu lieu. Si le navigateur cessait d'abandonner — parce
+// qu'une route aurait perdu son `attachment`, et afficherait le fichier au lieu
+// de l'enregistrer —, la déclaration deviendrait un filtre muet. Ce contrôle
+// l'en empêche.
+function abandonsAttendus(declarations) {
+  const vus = [];
+  return {
+    // Vrai si cet abandon est l'un de ceux déclarés ; il est alors relevé.
+    attendu(motif, chemin) {
+      if (!declarations.some((x) => x.motif.test(motif) && x.chemin.test(chemin))) return false;
+      vus.push(`${motif} ${chemin}`);
+      return true;
+    },
+    // Combien de fois un chemin déclaré a été abandonné.
+    compte(chemin) { return vus.filter((x) => chemin.test(x)).length; },
+    // Le contrôle : chaque abandon déclaré doit être venu au moins une fois.
+    verifier(ecran) {
+      const manquants = declarations.filter((x) => !vus.some((v) => x.chemin.test(v)));
+      verifier(`chaque abandon de navigation que la ronde de ${ecran} a déclaré attendre est bien venu`,
+        declarations.length > 0 && manquants.length === 0,
+        `attendus ${declarations.length}, manquants ${manquants.length} : `
+        + `${manquants.map((x) => String(x.chemin)).join(', ') || 'aucun'} · vus ${JSON.stringify(vus)}`);
+    },
+    vus,
+  };
+}
+
 // ── Où vit un fichier du socle, pendant la conversion ──
 //
 // Le socle passe en TypeScript un fichier à la fois (ADR-003, 5.b). Chaque
@@ -447,4 +490,5 @@ const urlSocle = (nom) => `/shared/${fs.existsSync(path.join(RACINE, 'frontend',
 module.exports = {
   demarrer, verifier, horsPortee, bilan, etat, cheminSocle, sourceSocle, urlSocle,
   refusAttendus,
+  abandonsAttendus,
 };

@@ -2,6 +2,7 @@
 // Format du classeur (modèle AAC) : une feuille par type, colonnes en clair et
 // portée désignée par le CODE du secteur / de la sous-activité, pas par un id.
 const XLSX = require('xlsx');
+const telechargement = require('../../telechargement');
 const { asynchrone } = require('../../route');
 const referentiels = require('../../referentiels');
 const db = require('./store');
@@ -40,11 +41,15 @@ const refId = (name, code) => {
   return r ? r.id : '';
 };
 
+// Le nom passe par le socle, qui le rend dans les deux formes de la RFC 6266 :
+// un repli ASCII, et la forme pour-cent-encodée qui porte le nom réel
+// (`src/telechargement.js`).
 function sendWorkbook(res, wb, filename) {
   const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.send(buf);
+  telechargement.piece(res, {
+    nom: filename,
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  }, buf);
 }
 
 function readUpload(req) {
@@ -144,11 +149,13 @@ module.exports = function register(app, deps, M) {
   const gerer = (req, res, next) => (D.peut(req, 'GESTIONNAIRE') ? next() : D.refus(res));
   const portee = (ev) => ({ domaine_id: (ev && ev.domaine_id) || '', secteur_id: (ev && ev.secteur_id) || '' });
 
-  app.get(`${M}/indicateurs/export`, requireAuth, lecture, asynchrone(async (req, res) => {
+  app.get(`${M}/indicateurs/export`, requireAuth, telechargement.pageDeRefus, lecture,
+    asynchrone(async (req, res) => {
     sendWorkbook(res, await indicateursWorkbook(true), 'indicateurs.xlsx');
   }));
 
-  app.get(`${M}/indicateurs/template`, requireAuth, lecture, asynchrone(async (req, res) => {
+  app.get(`${M}/indicateurs/template`, requireAuth, telechargement.pageDeRefus, lecture,
+    asynchrone(async (req, res) => {
     sendWorkbook(res, await indicateursWorkbook(false), 'modele_indicateurs.xlsx');
   }));
 
@@ -184,7 +191,8 @@ module.exports = function register(app, deps, M) {
   }));
 
   // Évaluation — export des notes et import
-  app.get(`${M}/evaluations/:id/export-excel`, requireAuth, asynchrone(async (req, res) => {
+  app.get(`${M}/evaluations/:id/export-excel`, requireAuth, telechargement.pageDeRefus,
+    asynchrone(async (req, res) => {
     const ev = await db.get('evaluations', req.params.id);
     if (!ev) return res.status(404).json({ error: 'not_found' });
     if (!D.peutLire(req, portee(ev))) return D.refus(res);

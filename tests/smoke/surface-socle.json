@@ -56,6 +56,7 @@
   "api:function",
   "escapeHtml:function",
   "formatDate:function",
+  "oasisTelecharger:function",
   "showToast:function"
  ],
  "oasis-kpi": [

@@ -2,6 +2,7 @@
 // constatations FNC/PAC (reprise intégrale des routes PESSCO).
 const XLSX = require('xlsx');
 const { asynchrone } = require('../../route');
+const telechargement = require('../../telechargement');
 const referentiels = require('../../referentiels');
 const db = require('./store');
 const refModele = require('./references');
@@ -393,7 +394,8 @@ module.exports = function register(app, deps, M) {
   // pas, et qui ne se manifeste qu'au démarrage du serveur. Un relais le résout
   // **à l'appel**, ce qui garde l'ordre des routes et la place de la définition.
   const exportConstatations = (req, res, next) => exporterConstatations(req, res, next);
-  app.get(`${M}/constatations/export-xlsx`, requireAuth, exportConstatations);
+  app.get(`${M}/constatations/export-xlsx`, requireAuth,
+    telechargement.pageDeRefus, exportConstatations);
   app.post(`${M}/constatations/export-xlsx`, requireAuth, exportConstatations);
 
   app.get(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
@@ -505,10 +507,38 @@ module.exports = function register(app, deps, M) {
     XLSX.utils.book_append_sheet(wb, ws, 'Constatations');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
     const nom = `constatations-${new Date().toISOString().slice(0, 10)}.xlsx`;
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
-    return res.send(buffer);
+    const type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    // ── Le POST ne sert pas le fichier : il le prépare ──
+    //
+    // Une sélection de plusieurs centaines d'identifiants ne tient pas dans une
+    // adresse, et l'écran repasse alors par un POST. Or **un POST ne peut pas
+    // être une navigation** : le garde d'origine (SEC-06) refuse toute écriture
+    // sans `X-OASIS-Request`, en-tête qu'un formulaire de navigation ne peut pas
+    // poser — et c'est bien ce qui arrête un POST forgé depuis un autre site.
+    //
+    // L'écran devait donc fabriquer son téléchargement, ce qui échoue sans bruit
+    // quand la préparation prend quelques secondes. Le POST dépose désormais la
+    // pièce sous un jeton, à usage unique, lié au compte et périssable, et rend
+    // l'adresse d'un GET que le navigateur suit. C'est le détour que RAMP avait
+    // trouvé pour son générateur de tables ; il vit maintenant une seule fois,
+    // dans `src/telechargement.js`.
+    if (req.method === 'POST') {
+      const jeton = telechargement.deposer({
+        contenu: buffer, nom, type, utilisateur: req.user.username,
+      });
+      return res.json({ jeton, url: `${M}/constatations/fichier/${jeton}`, lignes: rows.length });
+    }
+    return telechargement.piece(res, { nom, type }, buffer);
   });
+
+  // La pièce préparée, que le navigateur vient chercher. Le refus est une page
+  // lisible et non un objet JSON : c'est le navigateur qui l'affiche.
+  app.get(`${M}/constatations/fichier/:jeton`, requireAuth, telechargement.pageDeRefus,
+    (req, res) => {
+      if (telechargement.servir(res, req.params.jeton, req.user.username)) return undefined;
+      return res.status(404).json({ error: 'piece_expiree' });
+    });
 
   // Montés **après** la déclaration, et non réenveloppés dans une flèche. Deux
   // raisons, l'une après l'autre : l'enveloppe reçoit `next` d'Express, et une

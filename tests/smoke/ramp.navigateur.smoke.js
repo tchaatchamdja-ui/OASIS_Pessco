@@ -39,7 +39,7 @@ const puppeteer = require('puppeteer');
 // un classeur : la ronde en **écrit** un avec, et le serveur le relit.
 // Deux paquets qui se répondent finiraient par ne plus se répondre.
 const XLSX = require('xlsx');
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, bilan, abandonsAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'ramp', 'js', 'ramp-app.js');
@@ -167,7 +167,9 @@ module.exports = async function rampNavigateurSmoke(port) {
           + ' classeur se demande, et le navigateur l’enregistre » (n° 5.f.35).',
       },
     ];
-    const abandonsVus = [];
+    // Le mécanisme vit dans le harnais depuis que PR en a besoin aussi
+    // (n° 5.f.71) : les déclarations restent ici, la mécanique est commune.
+    const abandons = abandonsAttendus(ABANDONS_ATTENDUS);
     const codesAttendus = new Set();
     page.on('console', (m) => {
       if (!ramp || m.type() !== 'error') return;
@@ -202,10 +204,7 @@ module.exports = async function rampNavigateurSmoke(port) {
       if (!ramp) return;
       const chemin = r.url().replace(srv.base, '');
       const motif = String(((r.failure() || {}).errorText) || '');
-      if (ABANDONS_ATTENDUS.some((x) => x.motif.test(motif) && x.chemin.test(chemin))) {
-        abandonsVus.push(`${motif} ${chemin}`);
-        return;
-      }
+      if (abandons.attendu(motif, chemin)) return;
       incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
     // La **réponse**, et non le seul message de console : un 404 s'y présente
@@ -2861,8 +2860,8 @@ module.exports = async function rampNavigateurSmoke(port) {
         && G6.modaleFermee === true,
         JSON.stringify(G6).slice(0, 420));
       verifier('la navigation vers le classeur préparé est abandonnée une fois, sur son chemin, et la ronde le déclare au lieu de le taire',
-        abandonsVus.filter((x) => /\/tables\/fichier\//.test(String(x))).length === 1,
-        JSON.stringify(abandonsVus));
+        abandons.compte(/\/tables\/fichier\//) === 1,
+        JSON.stringify(abandons.vus));
       verifier('la ronde retire ses quatre inspections, et le module revient à son compte',
         Me.aEffacer === 4 && Me.effacees === 4 && Me.rendueAuDepart === true,
         JSON.stringify(Me));
@@ -3163,8 +3162,8 @@ module.exports = async function rampNavigateurSmoke(port) {
         Ou.boutonModele === true && Ou.cheminApres === Ou.cheminAvant
         && Ou.voletDebout === true
         // L'abandon est la trace du téléchargement : déclaré, et exigé.
-        && abandonsVus.filter((x) => /\/import\/modele/.test(String(x))).length === 1,
-        JSON.stringify({ ouverture: Ou, abandons: abandonsVus }));
+        && abandons.compte(/\/import\/modele/) === 1,
+        JSON.stringify({ ouverture: Ou, abandons: abandons.vus }));
       verifier('un vrai classeur se dépose, et l’analyse du serveur rend quatre inspections de cinq lignes — deux écarts sur celle qui en portait deux',
         An.depose === true && An.lignes === 4 && An.rangs === 4
         && An.fichier === 'ronde_ramp.xlsx'

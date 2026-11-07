@@ -867,7 +867,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 67 exercés — le plafond atteignable —, 9 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **94 gestes nommés, 77 exercés**, 4 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026 |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
-           | PR (`profil_risque`) | 7 141 | **88 gestes nommés, 73 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69) |
+           | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 23 678 | **316 gestes nommés, 156 exercés**, 3 indécidables — idem, 3 novembre 2026 ; le plus gros écran, et le moins couvert |
 
@@ -9744,3 +9744,314 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Un objet de plus dans la table des erreurs normalisées — `seuil`, en
            trois langues —, puisque le refus nomme ce qu'il concerne et que
            l'écran compose la phrase : « Échec de l'opération — Seuil inconnu ».
+
+       5.f.70 [x] **La bibliothèque documentaire — et deux autorités qui ne se parlaient pas** — fait le 5 novembre 2026.
+
+           `pr-bibliotheque.js` portait **1 geste exercé sur 6**, et le seul
+           exercé — `triggerFileUpload` — ne faisait qu'ouvrir le sélecteur de
+           fichiers. Les cinq autres forment un cycle : choisir un fichier, le
+           nommer, le déposer, le télécharger, le retirer. Cinq contrôles
+           (49 → **54**).
+
+           ── Ce que le cycle éprouve, et qui n'est pas « le bouton répond » ──
+
+           La propriété forte est l'**identité de l'aller-retour** : les octets
+           téléchargés sont, octet pour octet, ceux déposés. Le fichier traverse
+           trois conversions — base64 à l'aller dans du JSON, rangement tel quel
+           dans l'enregistrement, `Buffer.from(contenu, 'base64')` au retour — et
+           une seule mesure les dit toutes.
+
+           Et la règle que la liste doit tenir : **le contenu n'y voyage
+           jamais**. `publicDoc` l'ôte de chaque enregistrement rendu, et seule
+           la route de téléchargement le restitue. Une liste qui porterait les
+           base64 ferait de chaque ouverture de page le transfert de toute la
+           bibliothèque.
+
+           ── Le défaut : deux autorités, et l'écart dans les deux sens ──
+
+           La page gardait ses deux gestes sur `APP_STATE.user.role ===
+           'Administrateur'` — le rôle M1, dérivé du rôle portail. Les routes,
+           elles, opposent le **privilège du module** dans l'espace « PLAN » :
+           `CONTRIBUTEUR` pour déposer, `GESTIONNAIRE` pour retirer. Et
+           `pr-shell.js` l'écrit en propres termes depuis sa conversion : *« le
+           rôle portail (M1) ne sert plus qu'aux écrans d'administration de
+           l'AAC »*. Cette page était restée sur l'ancienne lecture.
+
+           L'écart joue dans les deux sens, et le premier est **le cas
+           courant** :
+
+           | Compte | Ce que la page offrait | Ce que la route oppose |
+           |---|---|---|
+           | Administrateur sans privilège accordé (défaut `LECTEUR`) | les deux boutons | **403 sur les deux** |
+           | AAC ou inspecteur à qui l'on a accordé `GESTIONNAIRE` | aucun bouton de retrait | **le retrait est permis** |
+
+           Le privilège par défaut étant `LECTEUR`, un administrateur à qui l'on
+           n'a rien accordé dans « Gestion des Droits » voyait un bouton qui
+           répondait 403 ; et un droit accordé à un inspecteur restait
+           **injoignable**. *Un bouton qui mène à un refus et un droit sans
+           bouton sont le même défaut, vu des deux côtés.*
+
+           La correction lit le privilège **de base** (`prPrivilegeOn('')`), et
+           non le meilleur privilège tous secteurs confondus : c'est le premier
+           que `effectivePrivilege` rend quand la route n'a ni domaine ni secteur
+           à opposer. Lire le second rouvrirait l'écart dans un sens —
+           gestionnaire d'un seul secteur, le bouton paraîtrait, la route
+           refuserait.
+
+           ── Deux défauts de plus, trouvés en écrivant les contrôles ──
+
+           · **Le nom du fichier n'était pas échappé.** `handleDocFileSelected`
+             posait `value="${baseName}"` en clair : un guillemet dans le nom du
+             fichier refermait l'attribut, et le champ ne portait plus que la
+             moitié du nom. C'est le même défaut que celui corrigé dans
+             `downloadDoc` — dont le commentaire est resté dans ce fichier —, à
+             ceci près qu'il porte sur une valeur que l'agent **ne compose pas**
+             : il la reçoit avec le fichier. Le fichier d'épreuve de la ronde
+             porte donc un guillemet et une apostrophe, et le contrôle exige le
+             nom **entier**.
+
+           · **La taille stockée était celle de l'encodage.**
+             `Math.round((contenu.length * 3) / 4)` rend la longueur du base64
+             **bourrée** — un base64 a toujours une longueur multiple de quatre,
+             et les `=` y comptent. Mesuré : 122 octets déposés, **123
+             annoncés**. Deux octets ne font pas un défaut d'exploitation, mais
+             une colonne qui s'appelle « Taille » doit dire la taille, et c'est
+             le même nombre que la borne des 3,5 Mo compare. Le bourrage est
+             désormais défalqué.
+
+           ── Ce que la ronde ne peut pas prouver, et qui est dit plutôt que tenu pour acquis ──
+
+           Le compte de la ronde est super-administrateur **et** gestionnaire :
+           les deux autorités y concordent, et aucun 403 ne s'y observe. C'est
+           donc la **règle de rendu** qui est mesurée, en posant tour à tour
+           chacun des cinq états du privilège dans ce que la page lit — ce qui
+           est exactement ce que la correction change, et rien de plus. Le 403
+           que recevrait un administrateur sans privilège est établi par lecture
+           des gardes, non par mesure : *il faudrait un second compte, et la
+           ronde n'en a qu'un.*
+
+           ── Sept contre-essais, six qui mordent, et un qui instruit ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | Le rôle du portail en place du privilège | la règle des deux boutons |
+           | Le nom du fichier non échappé | le dépôt (le nom n'est plus entier) |
+           | La taille redevient celle du base64 bourré | le dépôt (122 ≠ 123) |
+           | `publicDoc` garde le contenu | le dépôt (le base64 voyage) |
+           | La borne de taille du client retirée | le refus sans requête |
+           | Le retrait ne demande plus confirmation | le retrait refusé puis consenti |
+           | **L'ancre de téléchargement détachée** | **rien — 54/54** |
+
+           ── Le contre-essai qui n'a pas mordu, et ce qu'il apprend ──
+
+           Le commentaire de `downloadDoc` affirmait : « détachée du document
+           **et** cliquée après un `await`, elle ne télécharge rien et ne dit
+           rien ». Détachée de nouveau, **le fichier arrive quand même**. Les
+           deux conditions avaient été jointes à tort ; seule la seconde porte,
+           et elle porte sur la **durée** : l'attente du serveur épuise
+           l'activation utilisateur qui autorise l'enregistrement, et c'est le
+           rendu d'un PDF de quelques secondes qui l'a montré sur CARE. Cent
+           vingt-deux octets n'épuisent rien.
+
+           *Un contre-essai qui ne mord pas dit quelque chose du contrôle, non
+           du code.* Celui-ci dit que la ronde ne peut pas observer ce
+           défaut-là : elle éprouve l'aller-retour des octets, non la fenêtre
+           d'activation. Le commentaire est corrigé, la limite est écrite dans
+           le contrôle, et le fait est mesuré plutôt que laissé à l'intuition.
+
+           Et il ouvre un chantier dont la taille est mesurée, non estimée :
+           **six** des neuf chemins de téléchargement du dépôt portent encore ce
+           motif — `await fetch`, puis clic fabriqué.
+
+           | Fichier | Ce qu'il télécharge |
+           |---|---|
+           | `exec-constatations.js` | le classeur des constatations |
+           | `exec-checklists-saisie.js` | le classeur d'une checklist remplie |
+           | `exec-parametres.js` (deux fois) | les checklists et leurs sous-thèmes |
+           | `pr-evaluation-fiche.js` | le classeur d'une évaluation |
+           | `pr-parametres.js` | le classeur des indicateurs |
+           | `pr-bibliotheque.js` | une pièce de la bibliothèque |
+
+           Les trois autres (`exec-rapports.js`, `pr-evaluations.js`,
+           `ramp-stats.js`) composent leur blob **dans le navigateur**, sans
+           attente : ils ne sont pas concernés. La conversion des six en vraie
+           ancre suivie par le navigateur n'est pas un détail de forme : elle
+           déplace le nom du fichier vers l'en-tête `Content-Disposition` — dont
+           la forme actuelle, `filename="${encodeURIComponent(nom)}"`, rendrait
+           un nom pour-cent-encodé — et elle fait **afficher** par le navigateur
+           toute erreur du serveur, ce qui demande une page lisible plutôt qu'un
+           objet JSON. C'est un pas à part, et il porte une question de maîtrise
+           d'ouvrage.
+
+           ── Une affirmation de ma part, corrigée ──
+
+           J'avais annoncé ces pièces jointes comme « communes à quatre écrans »
+           — le suivi, le recours et la qualification de CARE. **C'est faux**, et
+           la lecture le dit : CARE dépose en `multipart/form-data` vers
+           `POST /m/mesures/upload`, écrit le fichier sur le disque sous un nom
+           tiré au hasard, et ne garde dans l'enregistrement qu'un
+           `{nom, path, size}` — avec un garde-fou sur la forme du chemin rendu.
+           La bibliothèque de PR, elle, range le base64 **dans
+           l'enregistrement**. Deux mécanismes sans un octet de code commun, et
+           les couvrir ensemble n'aurait rien économisé.
+
+       5.f.71 [x] **Sept chemins de téléchargement qui échouaient sans bruit — et le garde-fou qui en trouve un huitième** — fait le 5 novembre 2026.
+
+           Un téléchargement fabriqué en JavaScript — `fetch`, puis `blob`, puis
+           une ancre qu'on clique — **échoue sans bruit**. Entre le clic de
+           l'agent et celui du script, l'attente du serveur épuise l'activation
+           utilisateur qui autorise l'enregistrement. Rien n'échoue dans le code :
+           le blob se crée, `click()` ne lève pas, aucune erreur de console,
+           aucune violation de CSP. Seul le fichier n'arrive jamais, et l'écran
+           annonce « opération réussie ».
+
+           Constaté le 4 septembre 2026 sur les exports de CARE, où le rendu
+           d'un PDF prend quelques secondes — assez pour que l'activation
+           expire. Un export instantané, lui, passe : *c'est pourquoi aucune
+           ronde ne l'avait vu.*
+
+           ── Ce que le contre-essai de la veille avait mis au jour ──
+
+           Le contrôle du téléchargement d'une pièce de la bibliothèque
+           (n° 5.f.70) ne mordait pas quand on détachait l'ancre du document :
+           cent vingt-deux octets n'épuisent rien. *Un contre-essai qui ne mord
+           pas dit quelque chose du contrôle.* Celui-ci disait que le défaut ne
+           se voit qu'à la lenteur, et qu'il fallait donc le chercher par la
+           forme.
+
+           ── Le compte, et pourquoi il était faux ──
+
+           J'avais annoncé **six** chemins, mesurés par `grep createObjectURL`.
+           Le garde-fou de forme, lui, en a trouvé un **septième** :
+           `execGenerateNotificationPdf`, qui pose un `download` sur une ancre
+           **détachée**, cliquée après le rendu d'un PDF — le cas exact qui a
+           fait écrire la règle, et que mon motif de recherche ne couvrait pas.
+           *Un garde de forme voit ce qu'un grep manque, parce qu'il décrit la
+           règle au lieu d'en deviner la trace.*
+
+           | Fichier | Ce qu'il télécharge |
+           |---|---|
+           | `exec-constatations.js` | le classeur des constatations (voie de recours) |
+           | `exec-checklists-saisie.js` | le classeur d'une checklist remplie |
+           | `exec-parametres.js` (deux fois) | les checklists et leurs sous-thèmes |
+           | `exec-dossier-actions.js` | le PDF d'une notification — **trouvé par le garde** |
+           | `pr-evaluation-fiche.js` | le classeur d'une évaluation |
+           | `pr-parametres.js` | le classeur des indicateurs |
+           | `pr-bibliotheque.js` | une pièce de la bibliothèque |
+
+           Les trois autres emplois de `createObjectURL` du dépôt
+           (`exec-rapports.js`, `pr-evaluations.js`, `ramp-stats.js`) composent
+           leur blob **dans le navigateur**, sans attente : ils ne sont pas
+           concernés, et ce sont eux qui disent que le garde n'est pas vide de
+           sens.
+
+           ── Ma première correction reproduisait le défaut qu'elle fermait ──
+
+           J'ai d'abord écrit un `oasisTelecharger` qui **fabriquait** l'ancre et
+           la cliquait, en se contentant de supprimer le blob. Or c'est l'attribut
+           `download` posé sur une ancre **cliquée par du code** qui dépend de
+           l'activation : la fonction portait donc le même défaut, en plus
+           discret, et aucune mesure ne l'aurait dit.
+
+           Une **navigation** de premier niveau, elle, n'en dépend pas : le
+           navigateur la suit toujours, et la réponse étant servie avec
+           `Content-Disposition: attachment`, il l'enregistre sans quitter la
+           page. `oasisTelecharger(url)` est donc un `window.location.href`, et
+           rien d'autre. C'est la voie que `exec-constatations.js` et le
+           générateur de RAMP avaient déjà prise, chacun de son côté ; elle vit
+           désormais une seule fois.
+
+           ── Ce que cela exige du serveur, et qui n'était pas tenu ──
+
+           Le nom du fichier vient de l'en-tête, non de la page. Trois
+           conséquences, portées par `src/telechargement.js` :
+
+           · **Le nom, dans les deux formes de la RFC 6266.** Un nom hors de
+             l'ASCII ne tient pas dans un `filename="…"`. Le dépôt portait une
+             **troisième** forme, hybride et fausse —
+             `filename="${encodeURIComponent(nom)}"` —, qui faisait enregistrer
+             « Rapport%20d%27audit » au lieu de « Rapport d'audit ». Et
+             l'apostrophe, que `encodeURIComponent` laisse passer, est le
+             séparateur du champ `filename*` lui-même.
+
+           · **Un refus devient une page.** Le navigateur **affiche** ce qu'il
+             reçoit : un `{"error":"privilege_insuffisant"}` dans un onglet nu
+             n'est pas une réponse à un agent qui attendait un fichier. Le
+             discriminant est `X-OASIS-Request`, que l'appel d'API du socle pose
+             toujours et qu'une navigation ne porte jamais — les appels de
+             l'application gardent donc leur JSON, que l'écran traduit déjà.
+
+             La page ne traduit pas le code du refus, et c'est délibéré : les
+             codes normalisés ont leurs phrases dans les trois langues **du côté
+             du socle**, et une suite vérifie que chaque objet cité y est nommé.
+             Recopier cette table ici en ferait une seconde, qui divergerait. La
+             page se tient donc à ce que le **statut** dit — cinq cas, qui ne
+             référencent pas le vocabulaire des erreurs.
+
+           · **Un POST ne peut pas être une navigation.** Le garde d'origine
+             (SEC-06) refuse toute écriture sans `X-OASIS-Request`, en-tête qu'un
+             formulaire de navigation ne peut pas poser — et c'est bien ce qui
+             arrête un POST forgé depuis un autre site. Une sélection trop longue
+             pour une adresse passe donc par un détour en deux temps : le POST
+             **dépose** la pièce sous un jeton, et la page **navigue** vers le
+             GET qui la sert. RAMP l'avait trouvé pour son générateur de tables ;
+             le dépôt vit maintenant une seule fois, avec ses quatre propriétés —
+             il expire, il est lié au compte, il est à usage unique, et chaque
+             dépôt balaie ce qui a expiré.
+
+           ── Un défaut de plus, trouvé en chemin ──
+
+           Le bouton « Exporter PDF » d'une activité de SURV appelle
+           `GET …/notifications/:id/pdf`, **route qui n'existe pas** : aucune
+           n'est montée sous ce chemin, aucune route générique ne l'attrape, et
+           le relevé dit qu'aucune ronde ne l'a jamais exercé. Le geste passe
+           donc **toujours** par son `catch` — l'aperçu, et « imprimez avec
+           Ctrl-P ». La branche du haut était du code mort, et c'est elle qui
+           portait le patron interdit.
+
+           Elle est corrigée sans être supprimée : le jour où la route est
+           écrite, le geste marchera. Écrire cette route est une question de
+           maîtrise d'ouvrage — le moteur de rendu existe (`src/pdf.js`,
+           puppeteer, déjà employé par CARE), il manque le gabarit.
+
+           ── Ce qui est mesuré, et ce qui ne peut pas l'être ──
+
+           Le garde-fou est un garde de **forme**, et c'est assumé : aucune ronde
+           ne peut voir ce défaut, puisqu'il ne se manifeste qu'à la lenteur.
+           Des contrôles l'entourent néanmoins :
+
+           | Où | Ce qui est éprouvé |
+           |---|---|
+           | Unitaires (douze) | les deux formes du nom et leur réversibilité, l'apostrophe et les caractères que la RFC 5987 interdit, un guillemet et un saut de ligne qui ne sortent pas de l'en-tête, la page de refus et sa phrase par statut, le JSON préservé pour l'application, et les quatre propriétés du dépôt |
+           | PR (HTTP) | les trois classeurs en pièce jointe nommée des deux formes ; une pièce au nom accentué, réversible, avec son repli sans accent ; le refus en page pour le navigateur et en JSON pour l'application |
+           | SURV (HTTP) | le POST qui dépose et ne sert plus, le jeton à usage unique, un jeton inventé, le refus en page, et les deux classeurs de paramétrage |
+           | PR (navigateur) | les trois téléchargements aboutissent, et **les trois abandons de navigation sont venus** |
+
+           Et une limite, nommée plutôt que tue : **les cinq exports de SURV ne
+           sont exercés par aucune ronde** — le relevé le dit. Leur moitié écran
+           est couverte par le seul garde de forme, leur moitié serveur par les
+           contrôles HTTP. Cela appartient au chantier SURV.
+
+           ── Le mécanisme des abandons, hissé dans le harnais ──
+
+           Un téléchargement servi en pièce jointe se présente au moniteur de
+           requêtes comme un `net::ERR_ABORTED` : le navigateur enregistre le
+           fichier et abandonne la navigation. *C'est la signature du geste
+           réussi* — et c'est ce qui a fait rougir le collecteur d'incidents de
+           PR au premier passage après la conversion.
+
+           RAMP déclarait déjà ses deux abandons ; PR en a trois. Le mécanisme
+           vit donc dans le harnais, et un contrôle exige que chaque abandon
+           déclaré soit **venu** : si une route perdait son `attachment`, le
+           navigateur afficherait le fichier au lieu de l'enregistrer, l'abandon
+           n'arriverait plus, et la déclaration deviendrait un filtre muet.
+
+           ── Cinq contre-essais, chacun attribué ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | L'en-tête perd sa forme encodée | le nom accentué, **et** le guillemet qui ressort du repli |
+           | La page de refus retirée de la pièce préparée | le refus lisible, devenu `[object Object]` |
+           | Le POST sert le classeur au lieu de le déposer | la préparation par jeton |
+           | La pièce préparée n'est plus liée au compte | **deux** contrôles du dépôt |
+           | Un export refabrique son téléchargement | le garde de forme, qui le nomme |

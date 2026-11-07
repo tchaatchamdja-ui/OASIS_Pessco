@@ -58,13 +58,25 @@ async function execGenerateNotificationPdf(dossierId) {
         _execToast(te('aucune_notification_dossier'), 'error');
         return;
     }
+    // ── Ce geste n'a jamais téléchargé de PDF, et c'est mesuré ──
+    //
+    // La route `GET …/notifications/:id/pdf` **n'existe pas** : aucune n'est
+    // montée sous ce chemin, et il n'y a pas de route générique qui l'attrape.
+    // L'appel rend donc toujours un 404, et ce geste passe **toujours** par son
+    // `catch` — l'aperçu, et « imprimez avec Ctrl-P ». Le relevé dit par
+    // ailleurs qu'aucune ronde ne l'a jamais exercé (n° 5.f.71).
+    //
+    // La branche du haut était donc du code mort, et elle portait le patron
+    // interdit : une ancre **détachée**, avec un `download`, cliquée après
+    // l'attente du rendu d'un PDF — le cas exact qui a fait écrire la règle.
+    // Elle est conservée mais **corrigée** : une navigation, que le navigateur
+    // suit sans dépendre de l'activation utilisateur. Le jour où la route est
+    // écrite, le geste marche ; d'ici là il ne mène nulle part, mais il ne
+    // mentait déjà pas davantage.
     try {
         const res = await api(`${EXEC_MODULE_API}/notifications/${dossier.notification_id}/pdf`);
         if (res && res.path) {
-            const a = document.createElement('a');
-            a.href = res.path;
-            a.download = `notification_${dossier.notification_ref || dossier.notification_id}.pdf`;
-            a.click();
+            oasisTelecharger(res.path);
         } else {
             _execToast(te('pdf_indisponible'), 'info');
         }

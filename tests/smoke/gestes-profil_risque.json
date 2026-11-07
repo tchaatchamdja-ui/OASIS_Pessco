@@ -2,48 +2,48 @@
  "releve": "2026-11-05",
  "gestesNommes": 88,
  "occurrences": 167,
- "exerces": 73,
+ "exerces": 78,
  "indecidables": 3,
  "gestes": [
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 19,
+   "ligne": 46,
    "forme": "en ligne",
    "evenement": "click",
    "source": "triggerFileUpload()",
    "nom": "triggerFileUpload",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 20,
+   "ligne": 47,
    "forme": "en ligne",
    "evenement": "change",
    "source": "handleDocFileSelected(event)",
    "nom": "handleDocFileSelected",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 30,
+   "ligne": 57,
    "forme": "en ligne",
    "evenement": "click",
    "source": "downloadDoc('${d.id}')",
    "nom": "downloadDoc",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 31,
+   "ligne": 58,
    "forme": "en ligne",
    "evenement": "click",
    "source": "deleteDoc('${d.id}')",
    "nom": "deleteDoc",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 60,
+   "ligne": 93,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeModal()",
@@ -52,12 +52,12 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 61,
+   "ligne": 94,
    "forme": "en ligne",
    "evenement": "click",
    "source": "uploadDocWithFile()",
    "nom": "uploadDocWithFile",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-dashboard.js",

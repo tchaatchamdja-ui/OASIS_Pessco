@@ -485,15 +485,125 @@ module.exports = async function executionSmoke(port) {
         JSON.stringify({ statut: parUrl.statut, type: parUrl.entetes['content-type'],
           disposition: (parUrl.entetes['content-disposition'] || '').slice(0, 60),
           taille: String(parUrl.corps).length }));
-      // La seconde voie, celle des listes trop longues pour une adresse : le
-      // même classeur, demandé par le corps de la requête.
-      const parCorps = await P(XLSX, { ids: idsFnc, titre: 'Essai', filtres: 'aucun' });
-      verifier('le même export s’obtient par le corps de la requête, pour une liste trop longue',
-        parCorps.statut === 200
-        && /spreadsheet|excel|octet-stream/i.test(parCorps.entetes['content-type'] || '')
-        && String(parCorps.corps).length > 200,
-        JSON.stringify({ statut: parCorps.statut, type: parCorps.entetes['content-type'],
-          taille: String(parCorps.corps).length }));
+      // ── La seconde voie : un POST qui **prépare**, et non qui sert ──
+      //
+      // Une liste trop longue pour une adresse passe par un POST. Or un POST ne
+      // peut pas être une navigation : le garde d'origine (SEC-06) refuse une
+      // écriture sans `X-OASIS-Request`, en-tête qu'un formulaire de navigation
+      // ne peut pas poser. L'écran devait donc fabriquer son téléchargement —
+      // le patron qui échoue sans bruit quand la préparation prend quelques
+      // secondes, ce qui est le cas d'une liste assez longue pour arriver ici.
+      //
+      // Le POST dépose désormais la pièce sous un jeton et rend l'adresse d'un
+      // GET que le navigateur suit (n° 5.f.71).
+      const prepare = await P(XLSX, { ids: idsFnc, titre: 'Essai', filtres: 'aucun' });
+      const jetonFnc = (prepare.corps || {}).jeton || '';
+      const servi = jetonFnc
+        ? await srv.appel(`${M}/constatations/fichier/${jetonFnc}`) : { statut: 0 };
+      const rejoue = jetonFnc
+        ? await srv.appel(`${M}/constatations/fichier/${jetonFnc}`) : { statut: 0 };
+      verifier('une liste trop longue se prépare par un POST et se retire par une navigation, une seule fois',
+        prepare.statut === 200
+        && /^[0-9a-f]{32}$/.test(jetonFnc)
+        && (prepare.corps || {}).url === `${M}/constatations/fichier/${jetonFnc}`
+        && (prepare.corps || {}).lignes === idsFnc.length
+        // Le POST ne sert plus le classeur : il ne rend que de quoi le chercher.
+        && !/spreadsheet/i.test(prepare.entetes['content-type'] || '')
+        // Et le GET le sert, en pièce jointe.
+        && servi.statut === 200
+        && /spreadsheet|excel|octet-stream/i.test(servi.entetes['content-type'] || '')
+        && /^attachment;/.test(servi.entetes['content-disposition'] || '')
+        && String(servi.corps).length > 200
+        // À usage unique : un jeton rejoué ne rend plus rien.
+        && rejoue.statut === 404,
+        JSON.stringify({ prepare: { statut: prepare.statut, corps: prepare.corps },
+          servi: servi.statut, rejoue: rejoue.statut }));
+
+      verifier('un jeton de pièce préparée inventé ne rend rien',
+        (await srv.appel(`${M}/constatations/fichier/0123456789abcdef0123456789abcdef`))
+          .statut === 404);
+
+      // ── Le nom de la pièce, dans les deux formes de la RFC 6266 ──
+      //
+      // Une navigation nomme le fichier par l'en-tête, non par la page : c'est
+      // le serveur qui décide, et un nom hors de l'ASCII ne tient pas dans un
+      // `filename="…"`.
+      verifier('la pièce se nomme dans les deux formes que la RFC 6266 prévoit',
+        /filename="[\x20-\x7e]+"/.test(parUrl.entetes['content-disposition'] || '')
+        && /filename\*=UTF-8''/.test(parUrl.entetes['content-disposition'] || ''),
+        parUrl.entetes['content-disposition']);
+
+      // ── Un refus devient une page, puisque le navigateur l'affiche ──
+      //
+      // Une navigation ne porte pas `X-OASIS-Request` : c'est à cela que le
+      // serveur la reconnaît. Un `{"error":"…"}` dans un onglet nu n'est pas une
+      // réponse à un agent qui attendait un fichier.
+      const refusEnPage = await srv.appel(
+        `${M}/constatations/fichier/0123456789abcdef0123456789abcdef`,
+        { headers: { 'X-OASIS-Request': '' } },
+      );
+      verifier('le refus d’un téléchargement suivi par le navigateur est une page lisible, non un objet JSON',
+        refusEnPage.statut === 404
+        && /text\/html/.test(refusEnPage.entetes['content-type'] || '')
+        && /<!doctype html>/i.test(String(refusEnPage.corps))
+        && /n’existe plus/.test(String(refusEnPage.corps))
+        && /404 piece_expiree/.test(String(refusEnPage.corps)),
+        JSON.stringify({ statut: refusEnPage.statut,
+          type: refusEnPage.entetes['content-type'],
+          extrait: String(refusEnPage.corps).slice(0, 90) }));
+    }
+
+    // ── Les trois classeurs de paramétrage, servis en pièce jointe ──
+    //
+    // Ces trois exports passaient par `await fetch` puis une ancre fabriquée ;
+    // ils passent désormais par une navigation (n° 5.f.71). La ronde de
+    // navigateur de SURV **ne les exerce pas** — aucun des cinq exports de ce
+    // module n'est à son relevé —, de sorte que c'est ici, et seulement ici,
+    // que la moitié serveur de la conversion se mesure : le type, la pièce
+    // jointe, et le nom dans les deux formes.
+    {
+      // `exec-checklists`, et non `checklists` : ma première rédaction s'est
+      // trompée de route, et le corps du 404 **est une chaîne** — dont
+      // `.length` valait quinze, de sorte que le garde « aucune checklist dans
+      // le bac » ne s'est pas déclenché et que l'identifiant exercé était un
+      // caractère. *Un garde qui lit `.length` ne distingue pas une liste d'une
+      // phrase ; `Array.isArray` le fait.*
+      const liste = (await srv.appel(`${M}/exec-checklists`)).corps;
+      const checklists = Array.isArray(liste) ? liste : [];
+      if (!checklists.length) {
+        horsPortee('les classeurs de paramétrage se servent en pièce jointe',
+          'aucune checklist dans le bac');
+      } else {
+        const cl = checklists[0];
+        const brutsDossiers = (await srv.appel(`${M}/dossiers`)).corps;
+        const dossiers = Array.isArray(brutsDossiers) ? brutsDossiers : [];
+        const chemins = [
+          [`${M}/checklists/${cl.id}/export-xlsx`, 'items d’une checklist'],
+          [`${M}/checklists/${cl.id}/sous-themes/export-xlsx`, 'sous-thèmes'],
+          ...(dossiers.length
+            ? [[`${M}/checklist-fill/${dossiers[0].id}/${cl.id}/export-xlsx`, 'checklist renseignée']]
+            : []),
+        ];
+        const servis = [];
+        for (const [chemin, quoi] of chemins) {
+          // eslint-disable-next-line no-await-in-loop
+          const r = await srv.appel(chemin);
+          servis.push({
+            quoi,
+            statut: r.statut,
+            piece: /^attachment;/.test(r.entetes['content-disposition'] || ''),
+            deuxFormes: /filename="[\x20-\x7e]+"/.test(r.entetes['content-disposition'] || '')
+              && /filename\*=UTF-8''/.test(r.entetes['content-disposition'] || ''),
+            classeur: /spreadsheet|excel|octet-stream/i.test(r.entetes['content-type'] || ''),
+            taille: String(r.corps).length,
+          });
+        }
+        verifier(`les ${servis.length} classeurs de paramétrage se servent en pièce jointe, nommée dans les deux formes`,
+          servis.length >= 2
+          && servis.every((x) => x.statut === 200 && x.piece && x.deuxFormes
+            && x.classeur && x.taille > 200),
+          JSON.stringify(servis));
+      }
     }
 
     // ── Transmettre une constatation sans serveur de messagerie ──

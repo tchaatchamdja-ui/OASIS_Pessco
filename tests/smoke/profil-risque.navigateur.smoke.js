@@ -29,7 +29,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan, refusAttendus } = require('./harness');
+const { demarrer, verifier, bilan, refusAttendus, abandonsAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'profil_risque', 'js', 'pr-shell.js');
@@ -169,6 +169,40 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     // à plusieurs suites, et une copie par suite aurait divergé.
     const refusDeclares = refusAttendus();
 
+    // ── Les trois téléchargements de PR, et l'abandon qui les signe ──
+    //
+    // Depuis que les téléchargements passent par une **navigation** plutôt que
+    // par une ancre fabriquée (n° 5.f.71), chacun se présente au moniteur de
+    // requêtes comme un `net::ERR_ABORTED` : le navigateur mène la fenêtre à
+    // l'adresse, reçoit `Content-Disposition: attachment`, enregistre le fichier
+    // et abandonne la navigation. *C'est la signature du geste réussi, non d'une
+    // panne* — et c'est la raison pour laquelle le contrôle des incidents a
+    // rougi au premier passage après la conversion.
+    //
+    // Les trois sont donc déclarés, et un contrôle exige que les trois soient
+    // venus : si une route perdait son `attachment`, le navigateur
+    // **afficherait** le fichier au lieu de l'enregistrer, l'abandon
+    // n'arriverait plus, et la déclaration deviendrait un filtre muet.
+    const abandons = abandonsAttendus([
+      {
+        motif: /ERR_ABORTED/, chemin: /\/indicateurs\/export/,
+        pourquoi: 'le classeur des indicateurs est servi en pièce jointe par'
+          + ' une navigation. Contrôle « le classeur des indicateurs s’exporte'
+          + ' sans l’entité retirée » (n° 5.f.68).',
+      },
+      {
+        motif: /ERR_ABORTED/, chemin: /\/evaluations\/[^/]+\/export-excel/,
+        pourquoi: 'le classeur d’une évaluation, même geste. Contrôle'
+          + ' « l’aller-retour du classeur des notes » (n° 5.f.52).',
+      },
+      {
+        motif: /ERR_ABORTED/, chemin: /\/api\/documents\/[^/]+\/download/,
+        pourquoi: 'une pièce de la bibliothèque, même geste. Contrôle « le'
+          + ' document téléchargé rend exactement les octets déposés »'
+          + ' (n° 5.f.70).',
+      },
+    ]);
+
     page.on('console', (m) => {
       if (pr && m.type() === 'error' && !refusDeclares.bruit(m.text())) {
         incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
@@ -178,7 +212,11 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
       if (pr) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
     });
     page.on('requestfailed', (r) => {
-      if (pr) incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
+      if (!pr) return;
+      const chemin = r.url().replace(srv.base, '');
+      const motif = String(((r.failure() || {}).errorText) || '');
+      if (abandons.attendu(motif, chemin)) return;
+      incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
     page.on('response', (r) => {
       if (!pr || r.status() < 400) return;
@@ -3051,11 +3089,317 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         JSON.stringify([Sr, Sz]).slice(0, 560));
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    //  La bibliothèque documentaire — le dépôt, le retrait, et deux
+    //  autorités qui ne se parlaient pas
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `pr-bibliotheque.js` — 1 geste exercé sur 6, et le seul exercé
+    // (`triggerFileUpload`) ne faisait qu'ouvrir le sélecteur de fichiers. Les
+    // cinq autres forment un cycle : choisir un fichier, le nommer, le déposer,
+    // le télécharger, le retirer.
+    //
+    // ── Ce que le cycle éprouve, et qui n'est pas « le bouton répond » ──
+    //
+    // La propriété forte est l'**identité de l'aller-retour** : les octets
+    // téléchargés sont ceux qui ont été déposés. Le fichier voyage en base64
+    // dans du JSON, est rangé tel quel dans l'enregistrement, et ressort en
+    // `Buffer.from(contenu, 'base64')`. Trois conversions ; une seule mesure
+    // les dit toutes.
+    //
+    // Et la règle que la liste doit tenir : **le contenu n'y voyage jamais**.
+    // `publicDoc` l'ôte de chaque enregistrement rendu, et seule la route de
+    // téléchargement le restitue. Une liste qui porterait les base64 ferait de
+    // chaque ouverture de page le transfert de toute la bibliothèque.
+    etape = 'bibliothèque documentaire';
+    const dossierBiblio = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-pr-doc-'));
+    const cdpBiblio = await page.createCDPSession();
+    await cdpBiblio.send('Browser.setDownloadBehavior',
+      { behavior: 'allow', downloadPath: dossierBiblio });
+
+    // ── Le fichier d'épreuve, et son nom ──
+    //
+    // Le nom porte un guillemet et une apostrophe à dessein. `handleDocFileSelected`
+    // posait le nom du fichier **en clair** dans l'attribut `value` du champ :
+    // un guillemet le refermait, et ce qui suivait devenait du balisage. Le
+    // champ ne portait plus que la moitié du nom. C'est le même défaut que
+    // celui déjà corrigé dans `downloadDoc`, à ceci près qu'il porte sur une
+    // valeur que l'agent ne compose pas — il la reçoit avec le fichier.
+    const NOM_FICHIER = 'preuve "d’audit’s".txt';
+    const OCTETS_PREUVE = Buffer.from(
+      `Pièce d'épreuve de la ronde PR — ${Date.now()}\n`
+      + 'Deux lignes, des accents, et un octet nul évité pour rester lisible.\n',
+      'utf8',
+    );
+    const cheminPreuve = path.join(dossierBiblio, NOM_FICHIER);
+    fs.writeFileSync(cheminPreuve, OCTETS_PREUVE);
+    // Au-dessus de la borne du client (3 500 000 octets) comme de celle du
+    // serveur : le refus doit venir du client, sans requête.
+    const cheminTropGros = path.join(dossierBiblio, 'trop-gros.txt');
+    fs.writeFileSync(cheminTropGros, Buffer.alloc(3_700_000, 0x41));
+    const NOM_DOCUMENT = `Dossier de la ronde ${String(Date.now()).slice(-6)}`;
+
+    const allerALaBibliotheque = () => page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('.nav-btn[data-page="bibliotheque"]')?.click();
+      await a(2600);
+      return {
+        page: !!document.querySelector('[onclick*="triggerFileUpload"]'),
+        champ: !!document.getElementById('docFileInput'),
+        lignes: document.querySelectorAll('.data-table tbody tr').length,
+      };
+    });
+
+    const choisirFichier = async (chemin) => {
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 20000 }),
+        page.evaluate(() => {
+          const b = document.querySelector('[onclick*="triggerFileUpload"]');
+          if (!b) throw new Error('bouton « Téléverser » introuvable');
+          b.click();
+        }),
+      ]);
+      await selecteur.accept([chemin]);
+      await new Promise((r) => setTimeout(r, 2200));
+    };
+
+    const pageBiblio = await allerALaBibliotheque();
+    let Bg = {}; let Bd = {}; let Bt = {}; let Br = {}; let Bp = {};
+    if (pageBiblio.page) {
+      // ── 1. La borne de taille, opposée par le client ──
+      await choisirFichier(cheminTropGros);
+      Bg = await page.evaluate(async () => {
+        const toast = document.querySelector('.oasis-toast-fond');
+        return {
+          // Le refus vient du client : aucune fenêtre ne s'ouvre.
+          fenetre: !!document.getElementById('docName'),
+          toast: toast ? (toast.className || '') : '(aucun)',
+          dit: toast ? (toast.innerText || '').trim().slice(0, 120) : '',
+          // Et le champ est rendu vide, sans quoi le même fichier ne pourrait
+          // plus être rechoisi — ni un autre, le navigateur ne rejouant pas
+          // `change` pour une valeur identique.
+          champRendu: (document.getElementById('docFileInput') || {}).value === '',
+          documents: (await window.api('/api/documents')).length,
+        };
+      });
+
+      // ── 2. Le dépôt d'un vrai fichier, nommé dans la fenêtre ──
+      await choisirFichier(cheminPreuve);
+      Bd = await page.evaluate(async (nomFichier, nomDocument) => {
+        const a = (ms) => new Promise((r) => setTimeout(r, ms));
+        const d = {};
+        const base = nomFichier.replace(/\.[^.]+$/, '');
+        d.fenetre = !!document.getElementById('docName');
+        if (!d.fenetre) return d;
+        // Le nom du fichier, entier, dans le champ : c'est la mesure de
+        // l'échappement. Non échappé, le guillemet refermait l'attribut et le
+        // champ ne portait que « preuve ».
+        d.nomPropose = (document.getElementById('docName') || {}).value || '';
+        d.nomEntier = d.nomPropose === base;
+        d.typePropose = (document.getElementById('docType') || {}).value || '';
+        d.avant = (await window.api('/api/documents')).length;
+        document.getElementById('docName').value = nomDocument;
+        [...document.querySelectorAll('.modal-footer .btn-primary, .modal-footer button')]
+          .find((b) => /uploadDocWithFile/.test(b.getAttribute('onclick') || ''))?.click();
+        await a(4000);
+        d.fenetreFermee = !document.getElementById('docName');
+        const liste = await window.api('/api/documents');
+        d.apres = liste.length;
+        const pose = liste.find((x) => x.nom === nomDocument) || null;
+        d.cree = !!pose;
+        if (pose) {
+          d.identifiant = pose.id;
+          d.type = pose.type;
+          d.taille = pose.taille;
+          d.mime = pose.mime;
+          d.auteur = pose.uploade_par;
+          // ── La règle que la liste doit tenir ──
+          // Le base64 ne voyage pas : `publicDoc` l'ôte, et seul /download le rend.
+          d.sansContenu = !('contenu' in pose);
+        }
+        // Et la ligne paraît dans la table, avec sa taille en kilooctets.
+        const lignes = [...document.querySelectorAll('.data-table tbody tr')]
+          .map((r) => (r.innerText || '').replace(/\s+/g, ' '));
+        d.ligne = lignes.find((x) => x.includes(nomDocument)) || '';
+        return d;
+      }, NOM_FICHIER, NOM_DOCUMENT);
+
+      // ── 3. L'aller-retour : les octets rendus sont ceux déposés ──
+      if (Bd.identifiant) {
+        try {
+          await page.evaluate((id) => {
+            const b = [...document.querySelectorAll('button')]
+              .find((x) => (x.getAttribute('onclick') || '').includes(`downloadDoc('${id}')`));
+            if (!b) throw new Error('bouton de téléchargement introuvable');
+            b.click();
+          }, Bd.identifiant);
+          const debut = Date.now();
+          let recu = null;
+          while (Date.now() - debut < 20000 && !recu) {
+            const f = fs.readdirSync(dossierBiblio)
+              .filter((n) => n.startsWith('Dossier de la ronde') && !n.endsWith('.crdownload'));
+            if (f.length) {
+              const chemin = path.join(dossierBiblio, f[0]);
+              const taille = fs.statSync(chemin).size;
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise((r) => setTimeout(r, 400));
+              if (fs.statSync(chemin).size === taille && taille > 0) recu = { nom: f[0], chemin };
+            }
+            // eslint-disable-next-line no-await-in-loop
+            if (!recu) await new Promise((r) => setTimeout(r, 400));
+          }
+          Bt.fichier = !!recu;
+          if (recu) {
+            Bt.nom = recu.nom;
+            const octets = fs.readFileSync(recu.chemin);
+            // L'ancre porte `download = nom` : le fichier reçu prend le nom du
+            // **document**, non celui du fichier d'origine.
+            Bt.nomDuDocument = recu.nom.startsWith(NOM_DOCUMENT);
+            Bt.identiques = octets.equals(OCTETS_PREUVE);
+            Bt.octets = octets.length;
+          }
+        } catch (e) { Bt.erreur = String((e && e.message) || e); }
+      }
+
+      // ── 4. Le retrait : refusé, puis consenti ──
+      if (Bd.identifiant) {
+        Br = await page.evaluate(async (id) => {
+          const a = (ms) => new Promise((r) => setTimeout(r, ms));
+          const d = {};
+          const bouton = () => [...document.querySelectorAll('button')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(`deleteDoc('${id}')`));
+          d.bouton = !!bouton();
+          if (!d.bouton) return d;
+          bouton().click();
+          await a(1400);
+          d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+          document.querySelector('.oasis-confirm-non')?.click();
+          await a(2200);
+          d.resteApresRefus = (await window.api('/api/documents')).some((x) => x.id === id);
+          bouton()?.click();
+          await a(1400);
+          document.querySelector('.oasis-confirm-oui')?.click();
+          await a(3600);
+          d.parti = !(await window.api('/api/documents')).some((x) => x.id === id);
+          d.lignePartie = ![...document.querySelectorAll('button')]
+            .some((x) => (x.getAttribute('onclick') || '').includes(`deleteDoc('${id}')`));
+          return d;
+        }, Bd.identifiant);
+      }
+
+      // ── 5. Les deux boutons suivent le privilège du module ──
+      //
+      // Le compte de la ronde est super-administrateur **et** gestionnaire : les
+      // deux autorités y concordent, et aucun écart ne s'y observerait. C'est
+      // la **règle de rendu** qu'on mesure donc, en posant tour à tour chacun
+      // des privilèges dans l'état que la page lit — ce qui est exactement ce
+      // que la correction change, et rien de plus. Le privilège réel est
+      // ensuite relu du serveur, pour ne pas laisser la page dans un état faux.
+      Bp = await page.evaluate(async () => {
+        const a = (ms) => new Promise((r) => setTimeout(r, ms));
+        const vu = async (privilege) => {
+          window.APP_STATE.access = { hasAccess: true, privilege, secteurs: {} };
+          window.renderPage();
+          await a(900);
+          return {
+            deposer: !!document.querySelector('[onclick*="triggerFileUpload"]'),
+            retirer: !!document.querySelector('[onclick*="deleteDoc("]'),
+          };
+        };
+        const d = {};
+        d.lecteur = await vu('LECTEUR');
+        d.contributeur = await vu('CONTRIBUTEUR');
+        d.validateur = await vu('VALIDATEUR');
+        d.gestionnaire = await vu('GESTIONNAIRE');
+        d.sansAcces = await (async () => {
+          window.APP_STATE.access = { hasAccess: false, privilege: '', secteurs: {} };
+          window.renderPage();
+          await a(900);
+          return {
+            deposer: !!document.querySelector('[onclick*="triggerFileUpload"]'),
+            retirer: !!document.querySelector('[onclick*="deleteDoc("]'),
+          };
+        })();
+        window.APP_STATE.access = await window.api('/api/m/droits/PLAN/my-access');
+        window.renderPage();
+        await a(900);
+        d.rendu = (window.APP_STATE.access || {}).privilege || '';
+        return d;
+      });
+
+      try { fs.rmSync(dossierBiblio, { recursive: true, force: true }); }
+      catch { /* le répertoire a déjà disparu */ }
+
+      verifier('la page de la bibliothèque porte son dépôt, et un fichier au-delà de la borne est refusé par le client sans qu’aucune requête ne parte',
+        pageBiblio.page === true && pageBiblio.champ === true
+        // Aucune fenêtre : le refus précède le dépôt.
+        && Bg.fenetre === false
+        && /erreur|error/.test(Bg.toast) && /3[.,]5/.test(Bg.dit || '')
+        // Le champ rendu vide, sans quoi aucun autre fichier ne serait relu.
+        && Bg.champRendu === true,
+        JSON.stringify([pageBiblio, Bg]).slice(0, 460));
+
+      verifier('un fichier choisi propose son nom entier — guillemet compris — et son dépôt écrit un document que la liste rend sans son contenu',
+        Bd.fenetre === true
+        // La mesure de l'échappement : le nom entier, non sa moitié.
+        && Bd.nomEntier === true && /d’audit/.test(Bd.nomPropose || '')
+        && Bd.typePropose === 'TXT'
+        && Bd.fenetreFermee === true && Bd.apres === Bd.avant + 1 && Bd.cree === true
+        && Bd.type === 'TXT' && Bd.mime === 'text/plain'
+        && Bd.taille === OCTETS_PREUVE.length
+        && Bd.auteur === IDENTIFIANT
+        // Le base64 ne voyage pas dans la liste.
+        && Bd.sansContenu === true
+        && Bd.ligne.includes(NOM_DOCUMENT) && /Ko/.test(Bd.ligne),
+        JSON.stringify(Bd).slice(0, 520));
+
+      // ── Ce que ce contrôle prouve, et ce qu'il ne peut pas prouver ──
+      //
+      // Il prouve l'aller-retour des octets. Il **ne prouve pas** que le
+      // téléchargement survive à une réponse lente : contre-essayé en
+      // détachant l'ancre du document, le fichier arrive quand même. La règle
+      // du dépôt — « un clic fabriqué après un `await` échoue sans bruit » —
+      // porte sur l'épuisement de l'activation utilisateur pendant l'attente
+      // du serveur, et 122 octets n'épuisent rien. *Un contre-essai qui ne
+      // mord pas dit quelque chose du contrôle, non du code.*
+      verifier('le document téléchargé porte le nom du document et rend exactement les octets déposés',
+        !Bt.erreur && Bt.fichier === true
+        && Bt.nomDuDocument === true
+        // Trois conversions — base64 à l’aller, rangement, décodage au retour —
+        // et une seule mesure les dit toutes.
+        && Bt.identiques === true && Bt.octets === OCTETS_PREUVE.length,
+        JSON.stringify({ ...Bt, attendu: OCTETS_PREUVE.length }).slice(0, 400));
+
+      verifier('le retrait d’un document demande confirmation, son refus ne retire rien, et accepté il l’ôte du serveur comme de la table',
+        Br.bouton === true && Br.confirmation === true
+        && Br.resteApresRefus === true
+        && Br.parti === true && Br.lignePartie === true,
+        JSON.stringify(Br).slice(0, 400));
+
+      verifier('les deux gestes de la bibliothèque suivent le privilège du module, et non le rôle du portail : lecteur ne dépose pas, contributeur ne retire pas',
+        // Lecteur : ni l'un ni l'autre. C'est le privilège **par défaut**, donc
+        // celui d'un administrateur à qui l'on n'a rien accordé.
+        (Bp.lecteur || {}).deposer === false && (Bp.lecteur || {}).retirer === false
+        // Contributeur et validateur déposent, et ne retirent pas : la route du
+        // retrait exige `GESTIONNAIRE`, que `can` n'accorde à nul autre.
+        && (Bp.contributeur || {}).deposer === true && (Bp.contributeur || {}).retirer === false
+        && (Bp.validateur || {}).deposer === true && (Bp.validateur || {}).retirer === false
+        && (Bp.gestionnaire || {}).deposer === true && (Bp.gestionnaire || {}).retirer === true
+        // Sans accès au module, rien.
+        && (Bp.sansAcces || {}).deposer === false && (Bp.sansAcces || {}).retirer === false
+        // Et le privilège réel est rendu à la page.
+        && Bp.rendu === 'GESTIONNAIRE',
+        JSON.stringify(Bp).slice(0, 460));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PR',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
     // Un refus déclaré et jamais venu est une règle qui ne tient plus — ou une
     // déclaration devenue fausse. Les deux doivent rougir.
     refusDeclares.verifier('PR');
+    // Et chaque abandon déclaré : un téléchargement qui cesserait d'abandonner
+    // afficherait son fichier au lieu de l'enregistrer.
+    abandons.verifier('PR');
   } finally {
     if (process.env.OASIS_MOUCHARD && navigateur) {
       const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0 };

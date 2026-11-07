@@ -1738,19 +1738,21 @@ async function deleteEval(evalId) {
 
 
 // ── Evaluation Export/Import ──
-async function exportEvalExcel(evalId) {
-    try {
-        // Jeton mort retiré (rien n'écrit `pr_token`), et l'ancre attachée
-        // avant d'être cliquée : détachée, après un `await`, elle ne télécharge
-        // rien et ne dit rien. Même correction qu'à la bibliothèque.
-        const res = await fetch(`${MODULE_API}/evaluations/${evalId}/export-excel`, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `evaluation_${evalId}.xlsx`;
-        document.body.appendChild(a); a.click(); a.remove();
-    } catch (e) { showToast(e.message, 'error'); }
+// ── Un téléchargement passe par une navigation, jamais par un clic fabriqué ──
+//
+// `oasisTelecharger` mène la fenêtre à l'adresse ; le navigateur reçoit
+// `Content-Disposition: attachment` et enregistre le fichier sans quitter la
+// page. Le patron qu'elle remplace — `await fetch`, `await blob`, puis une ancre
+// fabriquée qu'on clique — **échoue sans bruit**, l'attente du serveur épuisant
+// l'activation utilisateur qui autorise l'enregistrement (socle,
+// `frontend/socle/utils.ts`).
+//
+// Il n'y a donc **rien à attendre ici, et rien à lire** : pas de `async`, pas de
+// `try`, pas de toast de réussite sur un fichier qu'on n'a pas vu arriver. Le
+// nom de la pièce vient de l'en-tête, et un refus est affiché par le navigateur
+// en page lisible (`src/telechargement.js`).
+function exportEvalExcel(evalId) {
+    oasisTelecharger(`${MODULE_API}/evaluations/${evalId}/export-excel`);
 }
 
 // Même rapport que « Exporter PDF » de la liste : fenêtre d'impression

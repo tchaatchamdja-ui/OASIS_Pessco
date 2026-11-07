@@ -22,7 +22,7 @@
 // `_pesSearchInput` garde son tiret bas, `ICONS` son orthographe anglaise. Les
 // renommer en passant serait une migration déguisée en conversion.
 import {
-  ICONES, api, escapeHtml, formatDate, pesSearchInput, showToast,
+  ICONES, api, escapeHtml, formatDate, pesSearchInput, showToast, telecharger,
 } from '../utils';
 
 declare global {
@@ -33,11 +33,15 @@ declare global {
     formatDate: (d: string | number | Date | null | undefined) => string;
     showToast: (message: string, type?: string, duree?: number) => unknown;
     _pesSearchInput: (champ: HTMLInputElement, appliquer: () => void) => void;
+    // Une navigation, non un clic fabriqué : voir `telecharger` dans `../utils`.
+    // Le nom du fichier vient de `Content-Disposition`, posé par le serveur.
+    oasisTelecharger: (url: string) => void;
   }
 }
 
 window.ICONS = ICONES;
 window.api = api;
+window.oasisTelecharger = telecharger;
 window.escapeHtml = escapeHtml;
 window.formatDate = formatDate;
 window.showToast = showToast;

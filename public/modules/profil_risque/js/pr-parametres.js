@@ -397,18 +397,21 @@ function _prIndComplexiteHtml(D, f, secteurs, sousActivites, searchLower, isAdmi
     return '';
 }
 
-async function exportIndicateursExcel() {
-    try {
-        // Jeton mort retiré ; l'ancre est attachée plus bas avant son clic.
-        const res = await fetch(`${MODULE_API}/indicateurs/export`, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'indicateurs.xlsx';
-        document.body.appendChild(a); a.click(); a.remove();
-        URL.revokeObjectURL(a.href);
-    } catch (e) { showToast(e.message, 'error'); }
+// ── Un téléchargement passe par une navigation, jamais par un clic fabriqué ──
+//
+// `oasisTelecharger` mène la fenêtre à l'adresse ; le navigateur reçoit
+// `Content-Disposition: attachment` et enregistre le fichier sans quitter la
+// page. Le patron qu'elle remplace — `await fetch`, `await blob`, puis une ancre
+// fabriquée qu'on clique — **échoue sans bruit**, l'attente du serveur épuisant
+// l'activation utilisateur qui autorise l'enregistrement (socle,
+// `frontend/socle/utils.ts`).
+//
+// Il n'y a donc **rien à attendre ici, et rien à lire** : pas de `async`, pas de
+// `try`, pas de toast de réussite sur un fichier qu'on n'a pas vu arriver. Le
+// nom de la pièce vient de l'en-tête, et un refus est affiché par le navigateur
+// en page lisible (`src/telechargement.js`).
+function exportIndicateursExcel() {
+    oasisTelecharger(`${MODULE_API}/indicateurs/export`);
 }
 
 // Lecture d'un fichier en base64 (le serveur reçoit du JSON : pas de multipart).

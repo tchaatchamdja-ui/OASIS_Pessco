@@ -1335,6 +1335,137 @@ async function baremeDeRisque() {
   }
 }
 
+// ── Les téléchargements que le navigateur suit lui-même ──
+//
+// Trois règles vivent dans `src/telechargement.js`, et aucune des trois ne se
+// voit depuis une ronde de navigateur : le nom d'une pièce dans l'en-tête, la
+// page qu'un refus affiche, et le dépôt des pièces préparées. La première parce
+// qu'un navigateur normalise ce qu'il enregistre ; la deuxième parce qu'il
+// faudrait un compte sans privilège ; la troisième parce qu'elle vit en mémoire
+// du serveur.
+function telechargements() {
+  const T = require('../../src/telechargement');
+
+  // ── 1. Le nom, dans les deux formes de la RFC 6266 ──
+  //
+  // Un nom hors de l'ASCII ne tient pas dans un `filename="…"`. Le dépôt
+  // portait une **troisième** forme, hybride et fausse —
+  // `filename="${encodeURIComponent(nom)}"` —, qui faisait enregistrer
+  // « Rapport%20d%27audit » au lieu de « Rapport d'audit ».
+  const accentue = T.dispositionDe('Rapport d’audit — été 2026.pdf');
+  const encode = accentue.split("UTF-8''")[1];
+  verifier('pièce : le nom accentué se rend dans les deux formes, et la forme encodée est réversible',
+    /^attachment; filename="[\x20-\x7e]+"; filename\*=UTF-8''/.test(accentue)
+    && decodeURIComponent(encode) === 'Rapport d’audit — été 2026.pdf'
+    // Aucun caractère hors ASCII dans le repli : c'est tout son objet.
+    && !/[^\x20-\x7e]/.test(accentue.split('"')[1]),
+    accentue);
+
+  // L'apostrophe sépare les champs de `filename*` (`UTF-8''valeur`) : laissée
+  // telle quelle par `encodeURIComponent`, elle y est pourtant interdite — et un
+  // nom de fichier français en porte souvent une.
+  verifier('pièce : l’apostrophe et les caractères que la RFC 5987 interdit sont encodés',
+    !/UTF-8''[^;]*['()*!~]/.test(T.dispositionDe("Rapport d'audit (2026)~!.pdf")),
+    T.dispositionDe("Rapport d'audit (2026)~!.pdf"));
+
+  // Un guillemet refermerait le repli ; un saut de ligne ouvrirait un second
+  // en-tête. Les deux sortent.
+  const hostile = T.dispositionDe('a"b\r\nSet-Cookie: x=1');
+  verifier('pièce : un guillemet et un saut de ligne ne sortent pas de l’en-tête',
+    !/["\r\n]/.test(hostile.split('filename="')[1].split('";')[0])
+    && !/[\r\n]/.test(hostile),
+    hostile);
+
+  verifier('pièce : un nom vide retombe sur « document », et `inline` se dit',
+    /^attachment; filename="document"/.test(T.dispositionDe(''))
+    && /^inline; /.test(T.dispositionDe('a.pdf', { inline: true })),
+    `${T.dispositionDe('')} | ${T.dispositionDe('a.pdf', { inline: true })}`);
+
+  // ── 2. La page qu'un refus affiche ──
+  //
+  // Quand le navigateur suit l'ancre, il **affiche** la réponse : un
+  // `{"error":"privilege_insuffisant"}` dans un onglet nu n'est pas une réponse
+  // à un agent qui attendait un fichier. Le discriminant est l'en-tête du socle,
+  // qu'un appel d'API pose toujours et qu'une navigation ne porte jamais.
+  const fausseReq = (entetes) => ({ entetes, get(k) { return this.entetes[k]; } });
+  const fausseRes = (statut) => ({
+    statusCode: statut, entetes: {}, corps: null,
+    setHeader(k, v) { this.entetes[k] = v; },
+    send(b) { this.corps = b; return this; },
+    json(b) { this.corps = b; return this; },
+  });
+  const refus = (statut, corps, entetes = {}) => {
+    const req = fausseReq(entetes);
+    const res = fausseRes(statut);
+    T.pageDeRefus(req, res, () => {});
+    res.json(corps);
+    return res;
+  };
+
+  const vueNavigation = refus(403, { error: 'privilege_insuffisant' });
+  verifier('refus : une navigation reçoit une page lisible, qui dit le cas et garde le code brut',
+    /text\/html/.test(vueNavigation.entetes['Content-Type'] || '')
+    && /<!doctype html>/i.test(vueNavigation.corps)
+    && /droit de télécharger/.test(vueNavigation.corps)
+    && /403 privilege_insuffisant/.test(vueNavigation.corps),
+    String(vueNavigation.corps).slice(0, 160));
+
+  const vueApi = refus(403, { error: 'privilege_insuffisant' }, { 'X-OASIS-Request': '1' });
+  verifier('refus : un appel de l’application garde son JSON, que l’écran traduit déjà',
+    typeof vueApi.corps === 'object' && vueApi.corps.error === 'privilege_insuffisant'
+    && !vueApi.entetes['Content-Type'],
+    JSON.stringify(vueApi.corps));
+
+  // Une réponse de succès ne doit pas être touchée : le middleware est posé sur
+  // des routes qui servent **aussi** du JSON de succès.
+  const succes = refus(200, { ok: true });
+  verifier('refus : une réponse de succès n’est pas mise en page',
+    typeof succes.corps === 'object' && succes.corps.ok === true,
+    JSON.stringify(succes.corps));
+
+  // Les cinq phrases tiennent au **statut**, non au code du refus : les codes
+  // normalisés ont leurs phrases dans les trois langues du côté du socle, et
+  // recopier cette table ici en ferait une seconde, qui divergerait.
+  const phrases = [401, 403, 404, 413, 500, 418]
+    .map((s) => String(refus(s, { error: 'x' }).corps).match(/<p>([^<]*)<\/p>/)[1]);
+  verifier('refus : chaque statut a sa phrase, le serveur a la sienne, et un statut inattendu ne reste pas muet',
+    new Set(phrases.slice(0, 5)).size === 5 && phrases.every((p) => p.length > 20)
+    && /session a expiré/.test(phrases[0]) && /serveur n’a pas pu/.test(phrases[4]),
+    phrases.join(' | ').slice(0, 220));
+
+  // ── 3. Le dépôt des pièces préparées ──
+  //
+  // Un POST ne peut pas être une navigation : le garde d'origine (SEC-06)
+  // refuse une écriture sans `X-OASIS-Request`, en-tête qu'un formulaire de
+  // navigation ne peut pas poser. Le POST dépose donc, et la page navigue.
+  const jeton = T.deposer({
+    contenu: Buffer.from('classeur'), nom: 'a.xlsx', type: 'app/x', utilisateur: 'moi@anac.bj',
+  });
+  const autre = fausseRes(200);
+  verifier('pièce préparée : un jeton ne sert pas à un autre compte',
+    T.servir(autre, jeton, 'toi@anac.bj') === false && autre.corps === null);
+
+  const mienne = fausseRes(200);
+  verifier('pièce préparée : elle se sert au compte qui l’a déposée, avec son nom',
+    T.servir(mienne, jeton, 'moi@anac.bj') === true
+    && String(mienne.corps) === 'classeur'
+    && /filename="a\.xlsx"/.test(mienne.entetes['Content-Disposition'] || ''),
+    JSON.stringify(mienne.entetes));
+
+  verifier('pièce préparée : elle ne se sert qu’une fois, et un jeton inconnu ne sert rien',
+    T.servir(fausseRes(200), jeton, 'moi@anac.bj') === false
+    && T.servir(fausseRes(200), 'jeton-qui-n-existe-pas', 'moi@anac.bj') === false);
+
+  // Un jeton de seize octets, tiré au hasard : deux dépôts ne se rencontrent pas.
+  const jetons = new Set();
+  for (let i = 0; i < 50; i += 1) {
+    jetons.add(T.deposer({ contenu: Buffer.alloc(1), nom: 'x', type: 'x', utilisateur: 'u' }));
+  }
+  verifier('pièce préparée : les jetons ne se répètent pas et ne se devinent pas',
+    jetons.size === 50 && [...jetons].every((j) => /^[0-9a-f]{32}$/.test(j)),
+    `${jetons.size} jetons distincts`);
+}
+
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
@@ -1365,6 +1496,7 @@ module.exports = async function unitairesSmoke() {
     sondeDesSauvegardes();
     nommeurDeGestes();
     await baremeDeRisque();
+    telechargements();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

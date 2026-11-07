@@ -273,6 +273,54 @@ module.exports = async function tailleSmoke() {
       doublees.length === 0, doublees.join(' · '));
   }
 
+  // ── Un téléchargement fabriqué après une attente échoue sans bruit ──
+  //
+  // `fetch`, puis `blob`, puis une ancre qu'on clique : entre le clic de l'agent
+  // et celui du script, l'attente du serveur épuise l'activation utilisateur qui
+  // autorise l'enregistrement. Rien ne lève, rien ne s'écrit à la console, et
+  // l'écran annonce « opération réussie ». Constaté le 4 septembre 2026 sur les
+  // exports de CARE, où le rendu d'un PDF prend quelques secondes.
+  //
+  // ── Pourquoi ce garde est un garde de **forme**, et non un contrôle d'écran ──
+  //
+  // Parce qu'aucune ronde ne peut le voir. Contre-essayé le 5 novembre 2026 : un
+  // document de 122 octets se télécharge parfaitement par le patron interdit,
+  // l'activation n'ayant pas eu le temps d'expirer. *Le défaut ne se manifeste
+  // qu'à la lenteur, et une suite éprouve des jeux d'essai rapides.* Il ne
+  // reste donc que la forme à surveiller, et c'est ce que fait ce garde.
+  //
+  // La règle : une fonction qui fabrique un téléchargement — `createObjectURL`,
+  // ou une ancre dont elle pose le `download` — ne doit porter **aucune
+  // attente**. Six chemins la violaient le 5 novembre 2026 (n° 5.f.71) ; les
+  // trois qui restent composent leur blob sur place, sans rien attendre, et ce
+  // sont eux qui disent que le garde n'est pas vide de sens.
+  {
+    const fabriques = [];
+    // Découpage en fonctions de premier niveau : le fichier est un script
+    // classique, et chaque `function X()` en colonne 1 ouvre la suivante.
+    const OUVRE = /^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/;
+    fichiers.filter((f) => /public\/modules\/.*\.js$/.test(f.replace(/\\/g, '/')))
+      .forEach((f) => {
+        const lignes = fs.readFileSync(f, 'utf8').split('\n');
+        let nom = '';
+        let corps = [];
+        const juger = () => {
+          if (!nom) return;
+          const texte = corps.join('\n');
+          const fabrique = /URL\.createObjectURL|\.download\s*=/.test(texte);
+          if (fabrique && /\bawait\b/.test(texte)) fabriques.push(`${relatif(f)} : ${nom}`);
+        };
+        lignes.forEach((l) => {
+          const m = OUVRE.exec(l);
+          if (m) { juger(); nom = m[1]; corps = []; }
+          corps.push(l);
+        });
+        juger();
+      });
+    verifier('aucun geste ne fabrique un téléchargement après une attente',
+      fabriques.length === 0, fabriques.join(' · '));
+  }
+
   // Un sélecteur défini deux fois dans la même feuille, c'est une règle qui en
   // annule une autre — la source de plusieurs corrections déjà passées ici.
   const doublons = [];

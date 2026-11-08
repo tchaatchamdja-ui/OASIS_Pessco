@@ -61,7 +61,12 @@ const PAGES_SANS_CHEMIN = {
     + ' de geste. Son volet de dossier, lui, **est** atteignable : la page « Constatations »'
     + ' et le tableau de bord ouvrent `execOpenDossierSlider`. C’est donc la table qui est'
     + ' sans chemin, non le volet qu’elle ouvrait.',
-  declenchement: 'le déclenchement d’une activité. Aucun menu, aucun appel.',
+  // `declenchement` était ici, et n'y est plus : la page est rendue à la barre
+  // depuis le 7 novembre 2026 (n° 5.f.72). *C'est le mécanisme qui a fonctionné
+  // comme il devait* — il a nommé la page, la question est allée à la maîtrise
+  // d'ouvrage, et la réponse l'a rendue au menu. La déclaration périmée a fait
+  // rougir le contrôle au passage suivant, ce qui est l'autre moitié de son
+  // office : une dispense qui ne correspond plus doit se faire remarquer.
   prestataires: 'le suivi par prestataire. Aucun menu, aucun appel — et il porte trois'
     + ' boutons qui ouvrent le volet de dossier, donc trois chemins de plus vers un volet'
     + ' qui en a d’autres.',
@@ -387,6 +392,902 @@ module.exports = async function survSmoke(port) {
     // notification partent par l'API, faute de geste atteignable : le seul bouton
     // qui efface un dossier est sur la page sans chemin. C'est écrit ici parce que
     // c'est une conséquence de 5.f.2, et non une commodité.
+    // ══════════════════════════════════════════════════════════════════
+    //  Le circuit de la notification d'activité, par les onglets du
+    //  Déclenchement — et le sélecteur de validateur qui ne listait rien
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `exec-notifications.js` portait **3 gestes exercés sur 26**, et c'est le
+    // fichier le moins couvert de SURV. C'est pourtant la **première étape du
+    // circuit de surveillance** : l'AAC annonce à l'organisme l'activité qu'un
+    // plan validé a programmée, et rien ne s'exécute avant cela.
+    //
+    // ── Deux chemins mènent aux mêmes transitions ──
+    //
+    // La ronde du dossier (n° 5.f.26) parcourt déjà ce circuit, mais par la
+    // **vue du circuit** (`execProcAction`), qui appelle les routes
+    // directement. Les onglets du Déclenchement forment l'autre chemin, avec
+    // leurs propres gestes — et c'est dans celui-là que vivait le défaut.
+    //
+    // ── Ce que le jeu d'essai offre, mesuré avant d'écrire ──
+    //
+    // Un plan validé, deux activités dans la fenêtre des 31 jours, aucune
+    // notification. Le circuit se parcourt donc de bout en bout sur l'une, en
+    // laissant l'autre intacte.
+    etape = 'circuit de la notification';
+    // Le préfixe passe **en argument** de chaque évaluation, comme le reste de
+    // cette suite le fait. `EXEC_MODULE_API` est un `const` de premier niveau :
+    // une liaison du périmètre lexical, **absente de `window`** — à la
+    // différence de `EXEC_STATE`, que `exec-adapters.js` publie. Ma première
+    // rédaction lisait `window.EXEC_MODULE_API`, qui valait `undefined` :
+    // l'adresse composée « undefined/notifications » rendait un 404, et
+    // l'exception a emporté la suite.
+    const API_SURV = '/api/m/execution';
+
+    await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('.nav-btn[data-page="declenchement"]')?.click();
+      await attendre(3000);
+    });
+
+    const notifOuverture = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const onglets = [...document.querySelectorAll('.exec-workflow-tabs .exec-tab')];
+      d.onglets = onglets.length;
+      d.libelles = onglets.map((b) => (b.textContent || '').replace(/\s+/g, ' ').trim());
+      // Les quatre onglets se rendent chacun, et leur badge dit un compte.
+      d.badges = onglets.map((b) => (b.querySelector('.exec-tab-badge') || {}).textContent || '');
+      d.parOnglet = {};
+      for (const b of onglets) {
+        b.click();
+        /* eslint-disable no-await-in-loop */
+        await attendre(1500);
+        const cle = window.EXEC_STATE.triggerTab;
+        d.parOnglet[cle] = {
+          lignes: document.querySelectorAll('.exec-data-table tbody tr').length,
+          actif: (document.querySelector('.exec-tab.active') || {}).textContent
+            ? (document.querySelector('.exec-tab.active').textContent || '').replace(/\s+/g, ' ').trim() : '',
+        };
+      }
+      // Retour sur « à notifier », d'où part le circuit.
+      //
+      // `onglets[0]?.click()` et non `onglets[0].click()` : au premier passage,
+      // la page ne s'ouvrait pas — sa clé manquait à la barre (n° 5.f.72) —, la
+      // liste était vide, et la sonde a **levé**. L'exception a emporté la suite
+      // entière : aucun des douze contrôles n'a pu rendre son verdict, et le
+      // relevé n'a rien appris de ce qui n'allait pas. *Une sonde ne doit jamais
+      // pouvoir casser ce qu'elle observe* — tout accès indexé est donc gardé.
+      onglets[0]?.click();
+      await attendre(1600);
+      d.declencher = [...document.querySelectorAll('[onclick^="execStartNotification"]')].length;
+      const boutonContacts = document.querySelector('[onclick^="execShowContacts"]');
+      d.contacts = [...document.querySelectorAll('[onclick^="execShowContacts"]')].length;
+      // L'organisme de la première ligne : le volet des contacts écrit dans son
+      // enregistrement, et la ronde doit savoir lequel pour le rendre ensuite.
+      d.prestataireDeLaLigne = boutonContacts
+        ? (/execShowContacts\('([^']*)'\)/.exec(boutonContacts.getAttribute('onclick') || '') || [])[1] || ''
+        : '';
+      return d;
+    });
+
+    // ── 1. Les contacts de l'organisme, avant de l'avertir ──
+    //
+    // `execShowContacts` ouvre la liste des interlocuteurs ; une ligne s'ajoute,
+    // et l'enregistrement part au serveur. C'est la seule page du module qui
+    // écrive dans le référentiel des organismes.
+    const notifContacts = await page.evaluate(async (prestataireId) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      document.querySelector('[onclick^="execShowContacts"]')?.click();
+      await attendre(2400);
+      d.volet = !!document.getElementById('contact_dirigeant');
+      if (!d.volet) return d;
+      d.champsFixes = ['contact_dirigeant', 'contact_fonction_resp', 'contact_email_prest',
+        'contact_point_focal', 'contact_fonction_pf', 'contact_email_pf', 'contact_numero_pf']
+        .filter((x) => !!document.getElementById(x)).length;
+      const compter = () => document.querySelectorAll('#contacts_additional_container .contact-row').length;
+      d.avant = compter();
+      document.querySelector('[onclick^="execAddContactRow"]')?.click();
+      await attendre(900);
+      d.apres = compter();
+      d.ajoutee = d.apres === d.avant + 1;
+      // La ligne neuve se remplit, puis on la retire : la ronde n'écrit pas
+      // dans le référentiel des organismes, qu'elle ne saurait pas rendre.
+      const lignes = [...document.querySelectorAll('#contacts_additional_container .contact-row')];
+      const neuve = lignes[lignes.length - 1];
+      d.champsDeLaLigne = neuve ? neuve.querySelectorAll('input').length : 0;
+      // Le retrait est posé en ligne sur le bouton : `this.parentElement.remove()`.
+      neuve?.querySelector('[onclick*="parentElement.remove"]')?.click();
+      await attendre(700);
+      d.retiree = compter() === d.avant;
+      d.boutonEnregistrer = !!document.querySelector('[onclick^="execSaveContactChanges"]');
+
+      // ── L'enregistrement, et sa restitution ──
+      //
+      // C'est la seule écriture de ce volet, et elle porte sur le **référentiel
+      // des organismes**, que le portail partage avec tous les modules. La ronde
+      // relève donc la valeur d'avant, écrit la sienne, vérifie que le serveur
+      // la porte, puis **rend l'ancienne**. Sans cette restitution, le contrôle
+      // couvrirait un geste au prix d'un référentiel modifié pour les suites
+      // qui viennent après.
+      const champFonction = document.getElementById('contact_fonction_pf');
+      d.valeurAvant = champFonction ? champFonction.value : null;
+      if (champFonction) {
+        champFonction.value = 'Responsable qualité — ronde SURV';
+        document.querySelector('[onclick^="execSaveContactChanges"]')?.click();
+        await attendre(3600);
+        const relu = async () => {
+          const l = (await window.api('/api/prestataires')) || [];
+          return (l.find((p) => p.id === prestataireId) || {}).fonction_point_focal || '';
+        };
+        d.ecriteAuServeur = (await relu()).includes('ronde SURV');
+        // ── Le volet rouvert doit porter ce qu'on vient d'enregistrer ──
+        //
+        // Il portait l'ancienne valeur : `execSaveContactChanges` appelait un
+        // `loadSharedData` **qui n'existe nulle part**, et retombait sur son
+        // propre cache. Treize fichiers du module lisent ce cache, dont le
+        // formulaire de notification pour l'interlocuteur. Corrigé le
+        // 7 novembre 2026 (n° 5.f.72) : le référentiel se relit au serveur.
+        document.querySelector('[onclick^="execShowContacts"]')?.click();
+        await attendre(2400);
+        const reouvert = document.getElementById('contact_fonction_pf');
+        if (reouvert) {
+          d.voletRouvertGarni = reouvert.value.includes('ronde SURV');
+          reouvert.value = d.valeurAvant;
+          document.querySelector('[onclick^="execSaveContactChanges"]')?.click();
+          await attendre(3600);
+          d.valeurRendue = (await relu()) === d.valeurAvant;
+        }
+      }
+
+      document.querySelector('[onclick^="execCloseSlider"]')?.click();
+      await attendre(1200);
+      d.ferme = !document.querySelector('[onclick^="execAddContactRow"]');
+      return d;
+    }, notifOuverture.prestataireDeLaLigne || '');
+
+    // ── 2. Le formulaire, pré-garni par l'activité du plan ──
+    //
+    // `execStartNotification` compose le **périmètre** à partir des
+    // sous-activités de l'activité et des thèmes qu'elle couvre : une ligne par
+    // sous-activité, ses thèmes entre parenthèses. C'est la propriété forte du
+    // geste — le reste est de la recopie.
+    const notifFormulaire = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const val = (id) => (document.getElementById(id) || {}).value || '';
+      document.querySelector('[onclick^="execStartNotification"]')?.click();
+      await attendre(3200);
+      d.formulaire = !!document.getElementById('notif_objet');
+      if (!d.formulaire) return d;
+      d.champs = ['notif_prestataire_id', 'notif_objet', 'notif_perimetre', 'notif_date_debut',
+        'notif_date_fin', 'notif_lieu', 'notif_type_supervision']
+        .filter((x) => !!document.getElementById(x)).length;
+      d.objet = val('notif_objet');
+      d.perimetre = val('notif_perimetre');
+      // Une ligne par sous-activité, et des thèmes entre parenthèses.
+      d.lignesPerimetre = d.perimetre.split('\n').filter((l) => l.trim().startsWith('-')).length;
+      d.perimetreAvecThemes = /\(.+\)/.test(d.perimetre);
+      d.prestataire = val('notif_prestataire_id');
+      d.dates = [val('notif_date_debut'), val('notif_date_fin')];
+
+      // `execUpdatePrestataireFields` : changer d'organisme regarnit les champs
+      // qui en dépendent. On relève l'avant et l'après du même champ.
+      const sel = document.getElementById('notif_prestataire_id');
+      const autres = [...(sel ? sel.options : [])].map((o) => o.value)
+        .filter((v) => v && v !== d.prestataire);
+      d.autresOrganismes = autres.length;
+      if (autres.length) {
+        d.interlocuteurAvant = val('notif_interlocuteur');
+        sel.value = autres[0];
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        await attendre(1400);
+        d.interlocuteurApres = val('notif_interlocuteur');
+        // Rendu à l'organisme de l'activité : la notification doit partir au bon.
+        sel.value = d.prestataire;
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        await attendre(1400);
+        d.organismeRendu = val('notif_prestataire_id') === d.prestataire;
+      }
+
+      // `execAddEquipeMember` : une ligne d'équipe, deux listes et un retrait.
+      const equipe = () => document.querySelectorAll('#notif_equipe_container > div').length;
+      d.equipeAvant = equipe();
+      document.querySelector('[onclick^="execAddEquipeMember"]')?.click();
+      await attendre(900);
+      d.equipeApres = equipe();
+      const ligneEquipe = [...document.querySelectorAll('#notif_equipe_container > div')].pop();
+      const listesEquipe = ligneEquipe ? [...ligneEquipe.querySelectorAll('select')] : [];
+      d.listesEquipe = listesEquipe.length;
+      d.inspecteursOfferts = listesEquipe[0]
+        ? [...listesEquipe[0].options].filter((o) => o.value).length : 0;
+      d.rolesOfferts = listesEquipe[1]
+        ? [...listesEquipe[1].options].filter((o) => o.value).length : 0;
+      const premierDe = (sel) => (sel ? [...sel.options].filter((o) => o.value)[0] : null);
+      const insp = premierDe(listesEquipe[0]);
+      if (insp) { listesEquipe[0].value = insp.value; d.inspecteurRetenu = insp.value; }
+      const role = premierDe(listesEquipe[1]);
+      if (role) { listesEquipe[1].value = role.value; d.roleRetenu = role.value; }
+
+      // `execAddProgrammeLine` : une ligne de programme, quatre champs.
+      const prog = () => document.querySelectorAll('#notif_programme_table tbody tr:not(#notif_prog_empty)').length;
+      d.progAvant = prog();
+      document.querySelector('[onclick^="execAddProgrammeLine"]')?.click();
+      await attendre(900);
+      d.progApres = prog();
+      const ligneProg = [...document.querySelectorAll('#notif_programme_table tbody tr')].pop();
+      const champsProg = ligneProg ? [...ligneProg.querySelectorAll('input[data-field]')] : [];
+      d.champsProgramme = champsProg.map((i) => i.dataset.field).join(',');
+      champsProg.forEach((i) => {
+        if (i.dataset.field === 'date') i.value = '2026-11-23';
+        if (i.dataset.field === 'horaire') i.value = '09:00-12:00';
+        if (i.dataset.field === 'actions') i.value = 'Ouverture et revue documentaire';
+        if (i.dataset.field === 'correspondant') i.value = 'Direction technique';
+      });
+      // Une ligne vide ne doit pas partir : `_collectNotificationForm` ne
+      // retient que celles qui portent une date ou une action.
+      document.querySelector('[onclick^="execAddProgrammeLine"]')?.click();
+      await attendre(700);
+      d.progAvecVide = prog();
+      // Et elle se retire par son geste — `this.closest('tr').remove()`, posé en
+      // ligne sur le bouton. Les deux lignes de programme du formulaire le
+      // portent, et c'est la seule façon de défaire une ligne de trop.
+      const vide = [...document.querySelectorAll('#notif_programme_table tbody tr')].pop();
+      vide?.querySelector('[onclick*="closest"]')?.click();
+      await attendre(700);
+      d.progApresRetrait = prog();
+      d.ligneVideRetiree = d.progApresRetrait === d.progApres;
+      return d;
+    });
+
+    // ── 3. L'aperçu, puis le brouillon ──
+    //
+    // L'aperçu du formulaire compose la **fiche officielle** — en-tête de
+    // l'autorité, organisme, équipe, programme — et offre deux issues : revenir
+    // au formulaire, ou soumettre. On revient, pour que l'enregistrement du
+    // brouillon passe par son propre geste.
+    const notifApercu = await page.evaluate(async () => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      document.querySelector('[onclick^="execPreviewNotificationFromForm"]')?.click();
+      await attendre(2600);
+      const fiche = document.querySelector('.fiche-notification');
+      d.fiche = !!fiche;
+      if (fiche) {
+        const texte = (fiche.innerText || '').replace(/\s+/g, ' ');
+        d.texte = texte.slice(0, 220);
+        // Le document porte la substance de la saisie, et non un gabarit vide.
+        d.porteLeProgramme = /Ouverture et revue documentaire/.test(texte);
+        d.porteLAutorite = /Aviation Civile/i.test(texte);
+        d.sections = fiche.querySelectorAll('section, header').length;
+      }
+      d.retourFormulaire = !!document.querySelector('[onclick^="execOpenNotificationForm"]');
+      d.soumettreDepuisApercu = !!document.querySelector('[onclick^="execSubmitNotificationForValidation"]');
+      document.querySelector('[onclick^="execOpenNotificationForm"]')?.click();
+      await attendre(2600);
+      // Le retour rend le formulaire garni de ce qui avait été saisi.
+      d.revenu = !!document.getElementById('notif_objet');
+      d.programmeRendu = document.querySelectorAll('#notif_programme_table tbody tr:not(#notif_prog_empty)').length;
+      return d;
+    });
+
+    const notifBrouillon = await page.evaluate(async (API) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const notifs = async () => (await window.api(`${API}/notifications`)) || [];
+      d.avant = (await notifs()).length;
+      const lieu = document.getElementById('notif_lieu');
+      if (!lieu) { d.formulaireAbsent = true; return d; }
+      lieu.value = 'Siège de l’organisme — ronde SURV';
+      document.querySelector('[onclick^="execSaveNotificationDraft"]')?.click();
+      await attendre(4000);
+      d.voletFerme = !document.getElementById('notif_objet');
+      const apres = await notifs();
+      d.apres = apres.length;
+      // ── Quatre noms qui changent en chemin ──
+      //
+      // Le formulaire envoie `lieu`, `perimetre`, `equipe` et `objet` ; le
+      // magasin range `lieu_activite`, `perimetre_activite`, `equipe_membres` et
+      // `objet_activite`. La route fait la correspondance dans les deux sens,
+      // de sorte que rien n'est perdu — mais un contrôle qui cherche le nom de
+      // l'écran dans l'enregistrement ne trouve rien, et c'est ce qui est
+      // arrivé à ma première rédaction. *Deux vocabulaires pour une même chose
+      // sont ce qui a coûté le plus cher à ce dépôt* (n° 5.f.69).
+      const mienne = apres.find((n) => (n.lieu_activite || n.lieu || '').includes('ronde SURV'));
+      d.creee = !!mienne;
+      if (!mienne) {
+        d.nomsRendus = Object.keys(apres[apres.length - 1] || {}).join(',').slice(0, 200);
+        return d;
+      }
+      d.id = mienne.id;
+      d.statut = mienne.statut;
+      d.reference = mienne.reference || '';
+      // Le serveur force le brouillon à la création, quoi que l'écran envoie.
+      d.enBrouillon = mienne.statut === 'brouillon';
+      // Et il porte ce que le formulaire a composé : équipe, programme, périmètre.
+      d.equipeEnBase = (mienne.equipe_membres || mienne.equipe || []).length;
+      d.programmeEnBase = (mienne.programme || []).length;
+      d.perimetreEnBase = String(mienne.perimetre || mienne.perimetre_activite || '').length > 10;
+      d.activiteLiee = mienne.activite_id || '';
+      return d;
+    }, API_SURV);
+
+    // ── 4. La reprise du brouillon, et l'aperçu depuis l'enregistrement ──
+    const notifReprise = await page.evaluate(async (id, API) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      window.EXEC_STATE.triggerTab = 'brouillons';
+      window.execRenderPage();
+      await attendre(2000);
+      d.ongletBrouillons = document.querySelectorAll('.exec-data-table tbody tr').length;
+      d.boutonModifier = !!document.querySelector(`[onclick="execEditNotification('${id}')"]`);
+      document.querySelector(`[onclick="execEditNotification('${id}')"]`)?.click();
+      await attendre(3400);
+      d.formulaireRouvert = !!document.getElementById('notif_objet');
+      if (d.formulaireRouvert) {
+        d.lieuRendu = (document.getElementById('notif_lieu') || {}).value || '';
+        d.programmeRendu = document.querySelectorAll('#notif_programme_table tbody tr:not(#notif_prog_empty)').length;
+        d.equipeRendue = document.querySelectorAll('#notif_equipe_container > div').length;
+        document.querySelector('[onclick^="execCloseSlider"]')?.click();
+        await attendre(1600);
+      }
+      return d;
+    }, notifBrouillon.id || '', API_SURV);
+
+    // ── 5. La soumission, et le sélecteur de validateur ──
+    //
+    // C'est ici que vivait le défaut, et c'est la **première transition du
+    // circuit de surveillance** : sans elle, rien ne va au-delà du brouillon.
+    //
+    // Le sélecteur interrogeait `/api/users` et y filtrait sur `role_m3`. Ce
+    // champ n'y existe pas : il est **dérivé** du privilège SURV, et seule la
+    // route du module le compose. La liste était donc toujours vide et le
+    // bouton refusait toujours. Mesuré avant la correction : zéro validateur
+    // par `/api/users`, un par `…/utilisateurs`.
+    //
+    // Le contrôle exige donc les deux moitiés : que la liste porte au moins un
+    // validateur, **et** que le refus vienne quand on ne choisit personne.
+    const notifSoumission = await page.evaluate(async (id, API) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const statut = async () => {
+        const l = (await window.api(`${API}/notifications`)) || [];
+        return (l.find((n) => n.id === id) || {}).statut;
+      };
+      window.EXEC_STATE.triggerTab = 'brouillons';
+      window.execRenderPage();
+      await attendre(1800);
+      document.querySelector(`[onclick="execSubmitBrouillon('${id}')"]`)?.click();
+      await attendre(2600);
+      const liste = document.getElementById('validator_picker_select');
+      d.selecteur = !!liste;
+      if (!liste) return d;
+      d.validateursOfferts = [...liste.options].filter((o) => o.value).length;
+      d.premier = d.validateursOfferts ? [...liste.options].filter((o) => o.value)[0].textContent.trim() : '';
+      // Sans choix, le bouton refuse — et rien ne part.
+      document.getElementById('validator_picker_confirm')?.click();
+      await attendre(1600);
+      d.refusSansChoix = !!document.getElementById('validator_picker_select');
+      d.statutApresRefus = await statut();
+      // Puis le renoncement : le sélecteur se ferme et rien n'a changé.
+      document.getElementById('validator_picker_cancel')?.click();
+      await attendre(1200);
+      d.ferme = !document.getElementById('validator_picker_select');
+      d.statutApresRenoncement = await statut();
+      // Et pour de bon.
+      document.querySelector(`[onclick="execSubmitBrouillon('${id}')"]`)?.click();
+      await attendre(2600);
+      const liste2 = document.getElementById('validator_picker_select');
+      if (liste2) {
+        const premiere = [...liste2.options].filter((o) => o.value)[0];
+        if (!premiere) return d;
+        liste2.value = premiere.value;
+        d.validateurRetenu = liste2.value;
+        document.getElementById('validator_picker_confirm')?.click();
+        await attendre(4000);
+      }
+      d.statut = await statut();
+      d.ongletCourant = window.EXEC_STATE.triggerTab;
+      // Le validateur désigné est porté par l'enregistrement : c'est le nom que
+      // l'écran a choisi, et non une chaîne vide.
+      const l = (await window.api(`${API}/notifications`)) || [];
+      const n = l.find((x) => x.id === id) || {};
+      d.validateurEnBase = n.validateur_id || '';
+      d.dateSoumission = !!n.date_soumission;
+      return d;
+    }, notifBrouillon.id || '', API_SURV);
+
+    // ── 6. Le renvoi, puis la validation et la transmission ──
+    //
+    // Le renvoi fait **reculer** le circuit : la notification redevient un
+    // brouillon, avec son motif. C'est la seule étape qui recule, et elle doit
+    // laisser l'enregistrement reprenable.
+    const notifCircuit = await page.evaluate(async (id, API) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const lire = async () => {
+        const l = (await window.api(`${API}/notifications`)) || [];
+        return l.find((n) => n.id === id) || {};
+      };
+      const saisir = async (texte) => {
+        const champ = document.querySelector('.oasis-saisie-champ');
+        if (!champ) return false;
+        champ.value = texte;
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await attendre(500);
+        document.querySelector('.oasis-confirm-oui')?.click();
+        return true;
+      };
+
+      window.EXEC_STATE.triggerTab = 'soumis';
+      window.execRenderPage();
+      await attendre(2000);
+      d.ongletSoumis = document.querySelectorAll('.exec-data-table tbody tr').length;
+      d.gestesOfferts = ['execPreviewNotification', 'execValidateNotification',
+        'execRejectNotification', 'execCancelNotification']
+        .filter((g) => !!document.querySelector(`[onclick^="${g}('${id}'"]`)
+          || !!document.querySelector(`[onclick*="${g}('${id}'"]`)).join(',');
+
+      // L'aperçu depuis l'enregistrement, qui relit le serveur.
+      document.querySelector(`[onclick="execPreviewNotification('${id}')"]`)?.click();
+      await attendre(2800);
+      const fiche = document.querySelector('.fiche-notification');
+      d.apercu = !!fiche;
+      d.apercuPorteLaReference = fiche ? /ronde SURV/.test(fiche.innerText || '') : null;
+      // Soumise, la fiche offre les deux décisions du validateur.
+      d.apercuOffreValider = !!document.querySelector(`[onclick="execValidateNotification('${id}')"]`);
+      document.querySelector('[onclick^="execCloseSlider"]')?.click();
+      await attendre(1600);
+
+      // ── Le renvoi ──
+      document.querySelector(`[onclick="execRejectNotification('${id}')"]`)?.click();
+      await attendre(1800);
+      d.renvoiDemandeUnMotif = !!document.querySelector('.oasis-saisie-champ');
+      if (d.renvoiDemandeUnMotif) {
+        await saisir('Périmètre à préciser — motif de la ronde');
+        await attendre(4000);
+      }
+      const apresRenvoi = await lire();
+      d.statutApresRenvoi = apresRenvoi.statut;
+      d.motifPorte = apresRenvoi.motif_rejet || '';
+
+      // Resoumise, puis validée.
+      window.EXEC_STATE.triggerTab = 'brouillons';
+      window.execRenderPage();
+      await attendre(1800);
+      document.querySelector(`[onclick="execSubmitBrouillon('${id}')"]`)?.click();
+      await attendre(2600);
+      const liste = document.getElementById('validator_picker_select');
+      if (liste) {
+        const premiere = [...liste.options].filter((o) => o.value)[0];
+        if (premiere) {
+          liste.value = premiere.value;
+          document.getElementById('validator_picker_confirm')?.click();
+          await attendre(4000);
+        }
+      }
+      d.statutResoumis = (await lire()).statut;
+
+      window.EXEC_STATE.triggerTab = 'soumis';
+      window.execRenderPage();
+      await attendre(1800);
+      document.querySelector(`[onclick="execValidateNotification('${id}')"]`)?.click();
+      await attendre(4000);
+      const validee = await lire();
+      d.statutValide = validee.statut;
+      d.validateurDeLActe = validee.validateur_id || '';
+      d.dateValidation = !!validee.date_validation;
+
+      // La transmission.
+      window.EXEC_STATE.triggerTab = 'soumis';
+      window.execRenderPage();
+      await attendre(1800);
+      d.boutonTransmettre = !!document.querySelector(`[onclick="execSendNotification('${id}')"]`);
+      document.querySelector(`[onclick="execSendNotification('${id}')"]`)?.click();
+      await attendre(4000);
+      const envoyee = await lire();
+      d.statutEnvoye = envoyee.statut;
+      d.dateEnvoi = !!envoyee.date_envoi;
+      d.envoyePar = envoyee.envoye_par || '';
+      return d;
+    }, notifBrouillon.id || '', API_SURV);
+
+    // ── 7. L'onglet des envoyés : l'accord, le fil, et le retour en arrière ──
+    //
+    // Une notification transmise attend l'accord de l'organisme sur les dates et
+    // le périmètre. Le volet de la ligne les porte, et `execValidateAccordRow`
+    // les arrête. Le fil d'échange, lui, est le canal de la négociation.
+    //
+    // **Et le retour en arrière** : `execCancelNotification` est offert depuis
+    // cet onglet, c'est-à-dire sur une notification **déjà transmise**. La route
+    // n'y oppose aucun garde de statut, à la différence des quatre autres
+    // transitions. Le contrôle relève le fait plutôt que de le supposer voulu.
+    const notifEnvoyes = await page.evaluate(async (id, API) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const lire = async () => {
+        const l = (await window.api(`${API}/notifications`)) || [];
+        return l.find((n) => n.id === id) || {};
+      };
+      window.EXEC_STATE.triggerTab = 'envoyes';
+      window.execRenderPage();
+      await attendre(2200);
+      d.ligne = !!document.querySelector(`[onclick^="execToggleEnvoiPanel('${id}'"]`);
+      if (!d.ligne) return d;
+
+      // Le volet de la ligne : replié, il se déplie et porte ses trois champs.
+      const volet = () => document.getElementById(`exec_envoi_panel_${id}`);
+      d.repliéAvant = volet() ? volet().style.display === 'none' : null;
+      document.querySelector(`[onclick^="execToggleEnvoiPanel('${id}'"]`)?.click();
+      await attendre(1200);
+      d.deplie = volet() ? volet().style.display !== 'none' : null;
+      d.champsAccord = ['exec_row_debut_', 'exec_row_fin_', 'exec_row_perimetre_']
+        .filter((p) => !!document.getElementById(p + id)).length;
+
+      const poser = (p, v) => {
+        const e = document.getElementById(p + id);
+        if (!e) return false;
+        e.value = v;
+        e.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      };
+
+      // ── L'ordre n'est pas libre, et c'est la mesure qui l'a dit ──
+      //
+      // Valider l'accord porte le statut à `acte`, et l'onglet « envoyés »
+      // **écarte délibérément** les `acte` (`envoyeItems.filter(n => n.statut
+      // !== 'acte')`). La ligne disparaît donc, et avec elle le fil d'échange et
+      // l'annulation. Ma première rédaction validait l'accord d'abord : les deux
+      // gestes suivants ne trouvaient plus de ligne, et deux contrôles
+      // rougissaient sur une cause qui n'était pas la leur.
+      //
+      // Le fil et l'annulation passent donc **avant** l'accord, qui ferme
+      // l'étape — et c'est cette fermeture que le contrôle exige en relevant que
+      // la ligne quitte l'onglet.
+
+      // Le fil d'échange : il s'ouvre, refuse un message vide, puis le porte.
+      await attendre(400);
+      document.querySelector(`[onclick="execOpenExchangeSlider('${id}')"]`)?.click();
+      await attendre(3000);
+      d.filOuvert = !!document.getElementById('exec_exchange_msg');
+      if (d.filOuvert) {
+        const echanges = async () => (await window.api(`${API}/notifications/${id}/echanges`)) || [];
+        d.avantMessage = (await echanges()).length;
+        // Vide, rien ne part.
+        document.querySelector(`[onclick="execSendExchangeMessage('${id}')"]`)?.click();
+        await attendre(2000);
+        d.apresVide = (await echanges()).length;
+        const champ = document.getElementById('exec_exchange_msg');
+        if (champ) {
+          champ.value = 'Les dates proposées conviennent — message de la ronde.';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        document.querySelector(`[onclick="execSendExchangeMessage('${id}')"]`)?.click();
+        await attendre(4000);
+        const apres = await echanges();
+        d.apresMessage = apres.length;
+        // `contenu`, et non `message` : c'est le nom que `db.insert('echanges')`
+        // range. Ma première rédaction cherchait celui de l'écran, et relevait
+        // une chaîne vide sur un message pourtant bien parti.
+        d.dernier = (apres[apres.length - 1] || {}).contenu || '';
+      }
+      document.querySelector('[onclick^="execCloseSlider"]')?.click();
+      await attendre(1600);
+
+      // ── Le retour en arrière d'une notification transmise ──
+      //
+      // La route de l'annulation n'oppose **aucun garde de statut**, à la
+      // différence des quatre autres transitions : elle ramène au brouillon ce
+      // qu'on lui donne. L'écran, lui, n'offre le geste que sur cet onglet.
+      window.EXEC_STATE.triggerTab = 'envoyes';
+      window.execRenderPage();
+      await attendre(1800);
+      d.annulationOfferteSurEnvoyee = !!document.querySelector(`[onclick="execCancelNotification('${id}', 'envoyes')"]`);
+      document.querySelector(`[onclick="execCancelNotification('${id}', 'envoyes')"]`)?.click();
+      await attendre(1800);
+      d.annulationDemandeUnMotif = !!document.querySelector('.oasis-saisie-champ');
+      // Renoncer à l'invite n'annule rien : `motif === null` arrête le geste.
+      document.querySelector('.oasis-confirm-non')?.click();
+      await attendre(2600);
+      d.statutApresRenoncement = (await lire()).statut;
+      // Puis pour de bon.
+      document.querySelector(`[onclick="execCancelNotification('${id}', 'envoyes')"]`)?.click();
+      await attendre(1800);
+      const champ = document.querySelector('.oasis-saisie-champ');
+      if (champ) {
+        champ.value = 'Report demandé par l’organisme — ronde SURV';
+        champ.dispatchEvent(new Event('input', { bubbles: true }));
+        await attendre(500);
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await attendre(4000);
+      }
+      const annulee = await lire();
+      d.statutApresAnnulation = annulee.statut;
+      d.motifAnnulation = annulee.motif_rejet || '';
+
+      // ── L'accord, qui ferme l'étape ──
+      //
+      // Il faut donc refaire le circuit : annulée, la notification est de
+      // nouveau un brouillon. Les trois gestes de l'accord — celui de la ligne
+      // comme les deux de la vue du circuit — n'étaient exercés **par rien**, et
+      // c'est pourtant l'acte qui arrête les dates et le périmètre convenus
+      // avec l'organisme.
+      const refaireLeCircuit = async () => {
+        window.EXEC_STATE.triggerTab = 'brouillons';
+        window.execRenderPage();
+        await attendre(1800);
+        document.querySelector(`[onclick="execSubmitBrouillon('${id}')"]`)?.click();
+        await attendre(2600);
+        const liste = document.getElementById('validator_picker_select');
+        const premiere = liste ? [...liste.options].filter((o) => o.value)[0] : null;
+        if (premiere) {
+          liste.value = premiere.value;
+          document.getElementById('validator_picker_confirm')?.click();
+          await attendre(4000);
+        }
+        window.EXEC_STATE.triggerTab = 'soumis';
+        window.execRenderPage();
+        await attendre(1800);
+        document.querySelector(`[onclick="execValidateNotification('${id}')"]`)?.click();
+        await attendre(4000);
+        window.EXEC_STATE.triggerTab = 'soumis';
+        window.execRenderPage();
+        await attendre(1800);
+        document.querySelector(`[onclick="execSendNotification('${id}')"]`)?.click();
+        await attendre(4000);
+        return (await lire()).statut;
+      };
+      d.statutRefait = await refaireLeCircuit();
+
+      window.EXEC_STATE.triggerTab = 'envoyes';
+      window.execRenderPage();
+      await attendre(1800);
+      document.querySelector(`[onclick^="execToggleEnvoiPanel('${id}'"]`)?.click();
+      await attendre(1200);
+      poser('exec_row_debut_', '2026-11-24');
+      poser('exec_row_fin_', '2026-11-26');
+      poser('exec_row_perimetre_', 'Périmètre arrêté avec l’organisme — ronde SURV');
+      await attendre(800);
+      d.boutonAccord = !!document.querySelector(`[onclick="execValidateAccordRow('${id}')"]`);
+      document.querySelector(`[onclick="execValidateAccordRow('${id}')"]`)?.click();
+      await attendre(4000);
+      const accord = await lire();
+      d.accordDebut = accord.date_debut_effective || '';
+      d.accordFin = accord.date_fin_effective || '';
+      d.accordPerimetre = (accord.perimetre_valide || '').includes('ronde SURV');
+      d.statutApresAccord = accord.statut;
+      // L'accord **ferme l'étape** : la ligne quitte l'onglet des envoyés.
+      window.EXEC_STATE.triggerTab = 'envoyes';
+      window.execRenderPage();
+      await attendre(1800);
+      d.ligneQuitteLOnglet = !document.querySelector(`[onclick^="execToggleEnvoiPanel('${id}'"]`);
+      return d;
+    }, notifBrouillon.id || '', API_SURV);
+
+    // ── 8. La ronde ne laisse rien ──
+    //
+    // Le brouillon s'efface par son geste, qui demande confirmation. Et
+    // l'activité du plan redevient « à notifier » : c'est `plans-valides` qui
+    // l'exclut tant qu'une notification la porte, de sorte que l'effacement la
+    // rend au premier onglet. *Une ronde qui ne rend pas ce qu'elle a pris fait
+    // rougir celles qui la suivent.*
+    const notifMenage = await page.evaluate(async (id, API) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const notifs = async () => (await window.api(`${API}/notifications`)) || [];
+      const aNotifier = async () => {
+        const plans = (await window.api(`${API}/plans-valides`)) || [];
+        return plans.reduce((n, p) => n + (p.activites || []).length, 0);
+      };
+      d.avantMenage = await aNotifier();
+      // ── Une transition sans bouton, et pourquoi elle passe par la route ──
+      //
+      // L'accord a porté la notification à `acte`, et aucun onglet n'offre alors
+      // de geste : « envoyés » écarte les `acte`, et « brouillons » ne les voit
+      // pas. Le seul geste qui efface une activité actée est la suppression
+      // définitive de la page « Processus », déjà exercée par sa propre ronde.
+      //
+      // La ronde ramène donc la notification au brouillon **par la route** —
+      // celle de l'annulation, qui n'oppose aucun garde de statut —, puis
+      // l'efface **par son geste**. C'est la même règle que la ronde du dossier
+      // s'est donnée : par l'API seulement là où aucun geste atteignable ne fait
+      // l'affaire, et dit plutôt que tu.
+      await window.api(`${API}/notifications/${id}/cancel`, {
+        method: 'PUT', body: JSON.stringify({ motif: 'Ménage de la ronde SURV' }),
+      });
+      // ── Redessiner ne relit pas : il faut rafraîchir d'abord ──
+      //
+      // `execRenderPage` dessine depuis `EXEC_STATE.data`, que la route n'a pas
+      // touché. Les gestes de l'écran appellent tous `execRefreshDynamic()`
+      // avant de redessiner ; une écriture faite par la route doit en faire
+      // autant, sans quoi l'onglet rend l'état d'avant et le bouton cherché
+      // n'existe pas. *Mon oubli relevait « pas de bouton » sur une
+      // notification pourtant revenue au brouillon.*
+      await window.execRefreshDynamic();
+      window.EXEC_STATE.triggerTab = 'brouillons';
+      window.execRenderPage();
+      await attendre(2200);
+      d.bouton = !!document.querySelector(`[onclick="execDeleteBrouillon('${id}')"]`);
+      if (!d.bouton) return d;
+      document.querySelector(`[onclick="execDeleteBrouillon('${id}')"]`)?.click();
+      await attendre(1600);
+      d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+      document.querySelector('.oasis-confirm-non')?.click();
+      await attendre(2600);
+      d.resteApresRefus = (await notifs()).some((n) => n.id === id);
+      document.querySelector(`[onclick="execDeleteBrouillon('${id}')"]`)?.click();
+      await attendre(1600);
+      document.querySelector('.oasis-confirm-oui')?.click();
+      await attendre(4000);
+      d.partie = !(await notifs()).some((n) => n.id === id);
+      d.apresMenage = await aNotifier();
+      // L'activité est rendue au premier onglet.
+      d.activiteRendue = d.apresMenage === d.avantMenage + 1;
+      return d;
+    }, notifBrouillon.id || '', API_SURV);
+
+    {
+      const O = notifOuverture || {};
+      const C = notifContacts || {};
+      const F = notifFormulaire || {};
+      const A = notifApercu || {};
+      const B = notifBrouillon || {};
+      const R = notifReprise || {};
+      const S = notifSoumission || {};
+      const X = notifCircuit || {};
+      const E = notifEnvoyes || {};
+      const M = notifMenage || {};
+
+      verifier('la page du Déclenchement porte ses quatre onglets, chacun se rend, et « à notifier » offre ses deux gestes par ligne',
+        O.onglets === 4
+        && Object.keys(O.parOnglet || {}).length === 4
+        // Le premier onglet porte les activités d'un plan validé non encore
+        // notifiées : le jeu d'essai en offre deux.
+        && (O.parOnglet || {}).a_notifier && O.parOnglet.a_notifier.lignes >= 1
+        && O.declencher >= 1 && O.contacts >= 1,
+        JSON.stringify(O).slice(0, 460));
+
+      verifier('les contacts d’un organisme s’ouvrent avec leurs sept champs, une ligne s’ajoute et se retire, et le volet se referme',
+        C.volet === true && C.champsFixes === 7
+        && C.ajoutee === true && C.champsDeLaLigne === 3
+        && C.retiree === true && C.boutonEnregistrer === true && C.ferme === true
+        // L'écriture part au serveur, le volet rouvert la porte, et la ronde
+        // rend la valeur d'avant : le référentiel des organismes est partagé.
+        && C.ecriteAuServeur === true && C.voletRouvertGarni === true
+        && C.valeurRendue === true,
+        JSON.stringify(C).slice(0, 400));
+
+      verifier('le formulaire s’ouvre pré-garni par l’activité du plan, son périmètre composé des sous-activités et de leurs thèmes',
+        F.formulaire === true && F.champs === 7
+        // La propriété forte du geste : le périmètre est **composé**, une ligne
+        // par sous-activité, ses thèmes entre parenthèses.
+        && F.lignesPerimetre >= 1 && F.perimetreAvecThemes === true
+        && !!F.prestataire && !!F.dates[0]
+        // Changer d'organisme regarnit les champs qui en dépendent, et
+        // l'organisme de l'activité est rendu.
+        && (F.autresOrganismes === 0 || F.organismeRendu === true),
+        JSON.stringify({ ...F, perimetre: String(F.perimetre || '').slice(0, 120) }).slice(0, 520));
+
+      verifier('l’équipe et le programme s’ajoutent ligne par ligne, avec leurs listes et leurs quatre champs, et une ligne vide ne compte pas',
+        F.equipeApres === F.equipeAvant + 1
+        && F.listesEquipe === 2 && F.inspecteursOfferts >= 1 && F.rolesOfferts >= 1
+        && F.progApres === F.progAvant + 1
+        && F.champsProgramme === 'date,horaire,actions,correspondant'
+        // La ligne de trop se retire par son geste, et le programme retrouve son
+        // compte : rien d'autre ne défait une ligne ajoutée.
+        && F.ligneVideRetiree === true,
+        JSON.stringify({ equipe: [F.equipeAvant, F.equipeApres], listes: F.listesEquipe,
+          inspecteurs: F.inspecteursOfferts, roles: F.rolesOfferts,
+          prog: [F.progAvant, F.progApres, F.progAvecVide], champs: F.champsProgramme }));
+
+      verifier('l’aperçu compose la fiche officielle avec la substance saisie, et le retour rend le formulaire garni',
+        A.fiche === true && A.porteLeProgramme === true && A.porteLAutorite === true
+        && A.retourFormulaire === true && A.soumettreDepuisApercu === true
+        && A.revenu === true && A.programmeRendu >= 1,
+        JSON.stringify(A).slice(0, 460));
+
+      verifier('le brouillon s’enregistre, le serveur le porte en brouillon avec son équipe, son programme et son périmètre, et le lie à l’activité',
+        B.voletFerme === true && B.apres === B.avant + 1 && B.creee === true
+        // Le serveur force le brouillon à la création, quoi que l'écran envoie.
+        && B.enBrouillon === true
+        && B.equipeEnBase >= 1 && B.programmeEnBase >= 1 && B.perimetreEnBase === true
+        && !!B.activiteLiee && !!B.reference,
+        JSON.stringify(B).slice(0, 460));
+
+      verifier('le brouillon se rouvre garni de ce qui a été enregistré — son lieu, son programme et son équipe',
+        R.boutonModifier === true && R.formulaireRouvert === true
+        && String(R.lieuRendu).includes('ronde SURV')
+        && R.programmeRendu >= 1 && R.equipeRendue >= 1,
+        JSON.stringify(R).slice(0, 400));
+
+      // ── Le contrôle du défaut ──
+      verifier('le sélecteur de validateur liste les validateurs du module, refuse sans choix, et la soumission désigne celui qui a été retenu',
+        S.selecteur === true
+        // Le défaut : la liste était **toujours vide**, le champ `role_m3`
+        // n'existant pas sur la route interrogée.
+        && S.validateursOfferts >= 1
+        // Sans choix, le sélecteur reste et rien ne part.
+        && S.refusSansChoix === true && S.statutApresRefus === 'brouillon'
+        // Renoncer ne décide rien.
+        && S.ferme === true && S.statutApresRenoncement === 'brouillon'
+        // Et avec un choix, la notification est soumise au nom de ce validateur.
+        && S.statut === 'soumis' && !!S.validateurRetenu
+        && S.validateurEnBase === S.validateurRetenu && S.dateSoumission === true,
+        JSON.stringify(S).slice(0, 520));
+
+      verifier('le renvoi fait reculer le circuit avec son motif, et la notification resoumise se valide puis se transmet',
+        X.ongletSoumis >= 1
+        && X.apercu === true && X.apercuPorteLaReference === true
+        && X.apercuOffreValider === true
+        // La seule étape qui recule, et elle exige un motif.
+        && X.renvoiDemandeUnMotif === true
+        && X.statutApresRenvoi === 'brouillon'
+        && String(X.motifPorte).includes('motif de la ronde')
+        && X.statutResoumis === 'soumis'
+        && X.statutValide === 'valide' && !!X.validateurDeLActe && X.dateValidation === true
+        && X.boutonTransmettre === true
+        && X.statutEnvoye === 'envoye' && X.dateEnvoi === true && !!X.envoyePar,
+        JSON.stringify(X).slice(0, 560));
+
+      verifier('le volet d’une ligne transmise se déplie sur ses trois champs, et le fil d’échange refuse un message vide avant de porter le vrai',
+        E.ligne === true && E.repliéAvant === true && E.deplie === true
+        && E.champsAccord === 3
+        && E.filOuvert === true
+        // Vide, rien ne part ; écrit, il part.
+        && E.apresVide === E.avantMessage
+        && E.apresMessage === E.avantMessage + 1
+        && String(E.dernier).includes('message de la ronde'),
+        JSON.stringify(E).slice(0, 560));
+
+      verifier('l’accord arrête les dates et le périmètre convenus, et ferme l’étape : la ligne quitte l’onglet des envoyés',
+        // Le circuit refait, puisque l'annulation l'avait ramené au brouillon.
+        E.statutRefait === 'envoye'
+        && E.boutonAccord === true
+        && E.accordDebut === '2026-11-24' && E.accordFin === '2026-11-26'
+        && E.accordPerimetre === true
+        // `validate-accord` porte le statut à `acte`…
+        && E.statutApresAccord === 'acte'
+        // …et l'onglet écarte délibérément les `acte` : l'étape est close.
+        && E.ligneQuitteLOnglet === true,
+        JSON.stringify({ refait: E.statutRefait, bouton: E.boutonAccord,
+          debut: E.accordDebut, fin: E.accordFin, perimetre: E.accordPerimetre,
+          statut: E.statutApresAccord, quitte: E.ligneQuitteLOnglet }));
+
+      verifier('une notification transmise s’annule et redevient brouillon — renoncer à l’invite ne décide rien, le motif est porté',
+        E.annulationOfferteSurEnvoyee === true
+        && E.annulationDemandeUnMotif === true
+        // Renoncer n'annule rien : la notification reste transmise.
+        && E.statutApresRenoncement === 'envoye'
+        && E.statutApresAnnulation === 'brouillon'
+        && String(E.motifAnnulation).includes('Report demandé'),
+        JSON.stringify({ offerte: E.annulationOfferteSurEnvoyee, invite: E.annulationDemandeUnMotif,
+          apresRenoncement: E.statutApresRenoncement, apres: E.statutApresAnnulation,
+          motif: E.motifAnnulation }));
+
+      verifier('ramenée au brouillon, la notification s’efface sur confirmation — son refus ne l’efface pas —, et l’activité du plan redevient « à notifier »',
+        M.bouton === true && M.confirmation === true
+        && M.resteApresRefus === true
+        && M.partie === true
+        // L'activité redevient notifiable : c'est `plans-valides` qui l'exclut
+        // tant qu'une notification la porte.
+        && M.activiteRendue === true,
+        JSON.stringify(M));
+    }
+
+    // ── Pourquoi ce bloc vient **avant** la ronde du dossier ──
+    //
+    // L'onglet « à notifier » liste les activités d'un plan validé que nulle
+    // notification ne porte encore. Placé après les autres rondes, ce bloc le
+    // trouvait **vide** : elles avaient consommé les deux activités du jeu
+    // d'essai, et chacun de ses douze contrôles rougissait sur une cause qui
+    // n'était pas la sienne.
+    //
+    // Il part donc du magasin vierge — ce que le premier contrôle de cette suite
+    // atteste —, et il **rend ce qu'il prend** : son dernier contrôle exige que
+    // l'activité redevienne notifiable. *Une ronde qui ne rend pas ce qu'elle a
+    // pris fait rougir celles qui la suivent, et c'est la leçon que son
+    // emplacement a coûtée.*
     etape = 'ronde du dossier';
     const M = '/api/m/execution';
     const chaine = await page.evaluate(async (api) => {
@@ -3113,6 +4014,8 @@ module.exports = async function survSmoke(port) {
       //
       // J'ai cru d'abord que ces gestes étaient échoués sur la page
       // `declenchement`, l'une des quatre qu'aucun chemin n'ouvre (n° 5.f.2).
+      // *Depuis le 7 novembre 2026, cette page est au menu (n° 5.f.72) ; ce qui
+      // suit décrit l'état où elle ne l'était pas.*
       // **Mesuré, c'est faux** : forcée dans le navigateur, cette page ne rend
       // que deux gestes, et `execStartNotification` est aussi appelé depuis la
       // page **`processus`**, qui est au menu. Le circuit est donc atteignable.
@@ -3284,7 +4187,8 @@ module.exports = async function survSmoke(port) {
       // déclencher, soumettre, valider, transmettre. Trois lectures ont été
       // nécessaires pour trouver sa porte :
       //
-      //   · la page `declenchement` les rend, mais **aucun chemin ne l'ouvre** ;
+      //   · la page `declenchement` les rend, mais **aucun chemin ne l'ouvrait**
+      //     alors — elle est au menu depuis le 7 novembre 2026 (n° 5.f.72) ;
       //   · la page `processus` ne liste que les **processus configurés**, avec
       //     leurs gestes d'édition — pas de déclenchement ;
       //   · la porte est sur la page des **plans** : « Déclencher hors plan »,

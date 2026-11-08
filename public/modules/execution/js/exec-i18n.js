@@ -86,7 +86,7 @@ const EXEC_TR = {
         dashboard: 'Tableau de Bord',
         plan_surveillance: 'Activites de Supervision',
         etats: 'Etats',
-        declenchement: 'Declenchement',
+        declenchement: 'Déclenchement',
         execution: 'Execution',
         prestataires: 'Dossiers',
         tab_plan_surveillance: 'Plan de Surveillance',

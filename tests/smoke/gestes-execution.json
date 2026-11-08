@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-03",
+ "releve": "2026-11-07",
  "gestesNommes": 316,
  "occurrences": 510,
- "exerces": 156,
+ "exerces": 180,
  "indecidables": 3,
  "gestes": [
   {
@@ -12,7 +12,7 @@
    "evenement": "click",
    "source": "execOpenExchangeSlider('${d.notification_id}')",
    "nom": "execOpenExchangeSlider",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -84,7 +84,7 @@
    "evenement": "click",
    "source": "this.closest('tr').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -165,7 +165,7 @@
    "evenement": "click",
    "source": "this.closest('.realisation-pj-item').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -248,7 +248,7 @@
    "evenement": "click",
    "source": "this.closest('.exec-piece').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -518,7 +518,7 @@
    "evenement": "click",
    "source": "this.closest('.dossier-annexe-item').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -590,7 +590,7 @@
    "evenement": "click",
    "source": "this.closest('.dossier-annexe-item').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -635,7 +635,7 @@
    "evenement": "click",
    "source": "this.closest('tr').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-adapters.js",
@@ -675,7 +675,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 795,
+   "ligne": 815,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execNavigateTo('${key}')",
@@ -684,7 +684,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 802,
+   "ligne": 826,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execNavigateTo('${key}')",
@@ -693,7 +693,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 821,
+   "ligne": 845,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSetTheme('${th}')",
@@ -702,7 +702,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 826,
+   "ligne": 850,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSetLang('${l.toLowerCase()}')",
@@ -711,7 +711,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 830,
+   "ligne": 854,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleSidebar()",
@@ -720,7 +720,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 834,
+   "ligne": 858,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleMobileSidebar()",
@@ -729,7 +729,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 838,
+   "ligne": 862,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleMobileSidebar()",
@@ -738,7 +738,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 847,
+   "ligne": 871,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execToggleNotifPanel()",
@@ -747,16 +747,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 976,
+   "ligne": 1000,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenExchangeSlider('${n.id}')",
    "nom": "execOpenExchangeSlider",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 981,
+   "ligne": 1005,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAccuserReception('${n.id}')",
@@ -765,16 +765,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 987,
+   "ligne": 1011,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execPreviewNotification('${n.id}')",
    "nom": "execPreviewNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1146,
+   "ligne": 1170,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('execNotifPanel')?.remove()",
@@ -783,7 +783,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1243,
+   "ligne": 1267,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -792,7 +792,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1317,
+   "ligne": 1341,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -801,7 +801,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1444,
+   "ligne": 1468,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.domaine=this.value;EXEC_STATE.filters.secteur='';${onchangeFunc}",
@@ -810,7 +810,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1447,
+   "ligne": 1471,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.secteur=this.value;${onchangeFunc}",
@@ -819,7 +819,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1450,
+   "ligne": 1474,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.prestataire=this.value;${onchangeFunc}",
@@ -828,7 +828,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1472,
+   "ligne": 1496,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.annee=this.value;${onchangeFunc}",
@@ -837,7 +837,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1477,
+   "ligne": 1501,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.trimestre=this.value;${onchangeFunc}",
@@ -846,7 +846,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1493,
+   "ligne": 1517,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.criticite=this.value;${onchangeFunc}",
@@ -855,7 +855,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1501,
+   "ligne": 1525,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.type_supervision=this.value;${onchangeFunc}",
@@ -864,7 +864,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1509,
+   "ligne": 1533,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.mode_supervision=this.value;${onchangeFunc}",
@@ -873,7 +873,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1518,
+   "ligne": 1542,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.avancement=this.value;${onchangeFunc}",
@@ -882,7 +882,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1526,
+   "ligne": 1550,
    "forme": "en ligne",
    "evenement": "change",
    "source": "EXEC_STATE.filters.statut=this.value;${onchangeFunc}",
@@ -891,7 +891,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1530,
+   "ligne": 1554,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { EXEC_STATE.filters.search=document.getElementById('exec-filter-search').value; ${onchangeF",
@@ -900,7 +900,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1535,
+   "ligne": 1559,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execResetFilters()",
@@ -909,7 +909,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1544,
+   "ligne": 1568,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_STATE.filters.trimestre='';${onchangeFunc}",
@@ -918,7 +918,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1546,
+   "ligne": 1570,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_STATE.filters.trimestre='${q}';${onchangeFunc}",
@@ -927,7 +927,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1562,
+   "ligne": 1586,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.classList.toggle('expanded')",
@@ -936,7 +936,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
-   "ligne": 1185,
+   "ligne": 1209,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document:click",
@@ -1255,7 +1255,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 491,
+   "ligne": 489,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execTerrainBasculer(${i})",
@@ -1264,7 +1264,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 499,
+   "ligne": 497,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();execOpenPACSlider('${c.id}')",
@@ -1273,7 +1273,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 649,
+   "ligne": 647,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1282,7 +1282,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 763,
+   "ligne": 761,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.classList.toggle('expanded')",
@@ -1291,7 +1291,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 843,
+   "ligne": 841,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdBasculerCommentaires()",
@@ -1300,7 +1300,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 848,
+   "ligne": 846,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdBasculerCommentaires()",
@@ -1309,7 +1309,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 857,
+   "ligne": 855,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdCommentaireChamp(${i}, 'cible', this.value)",
@@ -1318,7 +1318,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 864,
+   "ligne": 862,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdRetirerCommentaire(${i})",
@@ -1327,7 +1327,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 867,
+   "ligne": 865,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execCdCommentaireChamp(${i}, 'texte', this.value)",
@@ -1336,7 +1336,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 881,
+   "ligne": 879,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdBasculerVersion(${v.version})",
@@ -1345,7 +1345,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 905,
+   "ligne": 903,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdAjouterCommentaire()",
@@ -1354,7 +1354,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 907,
+   "ligne": 905,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdEnregistrerCommentaires()",
@@ -1363,7 +1363,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1022,
+   "ligne": 1020,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdBasculerVersion('r${v.version}')",
@@ -1372,7 +1372,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1068,
+   "ligne": 1066,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCdConsulter('${e.id}')",
@@ -1381,7 +1381,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1081,
+   "ligne": 1079,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRetourVolet()",
@@ -1390,7 +1390,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1121,
+   "ligne": 1119,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveConstatationDirecte('${c.id || ''}', true)",
@@ -1399,7 +1399,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1137,
+   "ligne": 1135,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdOnPrestataireChange()",
@@ -1408,7 +1408,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1152,
+   "ligne": 1150,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdCalcDateDue()",
@@ -1417,7 +1417,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1175,
+   "ligne": 1173,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdOnSecteurChange()",
@@ -1426,7 +1426,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1187,
+   "ligne": 1185,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('cd_ref_input').focus()",
@@ -1435,7 +1435,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1190,
+   "ligne": 1188,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1444,7 +1444,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1195,
+   "ligne": 1193,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdAddRef(this.value);this.value='';",
@@ -1453,7 +1453,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1196,
+   "ligne": 1194,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execCdAddRef(this.value);this.value='';}",
@@ -1462,7 +1462,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1219,
+   "ligne": 1217,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execApplyCriticiteDelai('cd_criticite','cd_delai','execCdCalcDateDue')",
@@ -1471,7 +1471,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1231,
+   "ligne": 1229,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execCdCalcDateDue()",
@@ -1480,7 +1480,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1231,
+   "ligne": 1229,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdCalcDateDue()",
@@ -1489,7 +1489,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1254,
+   "ligne": 1252,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1498,7 +1498,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1257,
+   "ligne": 1255,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('cd_proof_input').click()",
@@ -1507,7 +1507,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1259,
+   "ligne": 1257,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCdUploadProof(this.files)",
@@ -1516,7 +1516,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1267,
+   "ligne": 1265,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -1525,7 +1525,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1268,
+   "ligne": 1266,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFicheConstatPdf('${c.id}')",
@@ -1534,7 +1534,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1269,
+   "ligne": 1267,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveConstatationDirecte('${c.id || ''}', false)",
@@ -1543,7 +1543,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1306,
+   "ligne": 1304,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1552,7 +1552,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1426,
+   "ligne": 1424,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRenvoyerConstatationModal('${fnc.id}')",
@@ -1561,7 +1561,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1427,
+   "ligne": 1425,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRejeterConstatationModal('${fnc.id}')",
@@ -1570,7 +1570,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1428,
+   "ligne": 1426,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execValidateConstatationDirecte('${fnc.id}')",
@@ -1579,7 +1579,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1515,
+   "ligne": 1513,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -1588,7 +1588,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1516,
+   "ligne": 1514,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFicheConstatPdf('${fnc.id}')",
@@ -1597,7 +1597,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1518,
+   "ligne": 1516,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider();execOpenConstatationDirecteForm(${JSON.stringify(fnc).replace(/",
@@ -1606,7 +1606,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1598,
+   "ligne": 1596,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.nextElementSibling.click()",
@@ -1615,7 +1615,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1601,
+   "ligne": 1599,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCourrielAjouterFichiers(this)",
@@ -1624,7 +1624,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1606,
+   "ligne": 1604,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execTransmettreConstatation('${fnc.id}')",
@@ -1633,7 +1633,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1676,
+   "ligne": 1674,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('exec_comment_modal').remove()",
@@ -1642,7 +1642,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1720,
+   "ligne": 1718,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('${id}').remove()",
@@ -1651,7 +1651,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1667,
+   "ligne": 1665,
    "forme": "propriété",
    "evenement": "click",
    "nom": "e",
@@ -1923,7 +1923,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 236,
+   "ligne": 248,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1932,7 +1932,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 252,
+   "ligne": 264,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -1941,7 +1941,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 345,
+   "ligne": 357,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execValidateDateOuverture()",
@@ -1950,7 +1950,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 368,
+   "ligne": 380,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncOnSecteurChange()",
@@ -1959,7 +1959,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 380,
+   "ligne": 392,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_ref_input').focus()",
@@ -1968,7 +1968,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 383,
+   "ligne": 395,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1977,7 +1977,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 388,
+   "ligne": 400,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncAddRef(this.value);this.value='';",
@@ -1986,7 +1986,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 389,
+   "ligne": 401,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
@@ -1995,7 +1995,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 406,
+   "ligne": 418,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execApplyCriticiteDelai('fnc_gravite','fnc_delai','execCalcDateDue')",
@@ -2004,7 +2004,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 418,
+   "ligne": 430,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCalcDateDue()",
@@ -2013,7 +2013,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 418,
+   "ligne": 430,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execCalcDateDue()",
@@ -2022,7 +2022,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 441,
+   "ligne": 453,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2031,7 +2031,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 444,
+   "ligne": 456,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_proof_input').click()",
@@ -2040,7 +2040,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 446,
+   "ligne": 458,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadFNCProof(this.files)",
@@ -2049,7 +2049,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 453,
+   "ligne": 465,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -2058,7 +2058,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 454,
+   "ligne": 466,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveFNC('${dossierId}', '${fnc.id || ''}')",
@@ -2067,7 +2067,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 555,
+   "ligne": 567,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenDossierSlider('${dossierId}','constatations')",
@@ -2076,7 +2076,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 602,
+   "ligne": 614,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2442,7 +2442,7 @@
    "evenement": "click",
    "source": "execOpenNotificationForm(EXEC_STATE.selectedNotification)",
    "nom": "execOpenNotificationForm",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -2469,7 +2469,7 @@
    "evenement": "click",
    "source": "execValidateNotification('${data.id}')",
    "nom": "execValidateNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -2478,7 +2478,7 @@
    "evenement": "click",
    "source": "execRejectNotification('${data.id}')",
    "nom": "execRejectNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -2514,7 +2514,7 @@
    "evenement": "click",
    "source": "EXEC_STATE.triggerTab='${t}';execRenderPage();",
    "nom": "EXEC_STATE.triggerTab",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2523,7 +2523,7 @@
    "evenement": "click",
    "source": "execShowContacts('${a.prestataire_id || ''}')",
    "nom": "execShowContacts",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2532,7 +2532,7 @@
    "evenement": "click",
    "source": "execStartNotification('${a.plan_id}', '${a.id}')",
    "nom": "execStartNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2541,7 +2541,7 @@
    "evenement": "click",
    "source": "execEditNotification('${n.id}')",
    "nom": "execEditNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2550,7 +2550,7 @@
    "evenement": "click",
    "source": "execSubmitBrouillon('${n.id}')",
    "nom": "execSubmitBrouillon",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2559,7 +2559,7 @@
    "evenement": "click",
    "source": "execDeleteBrouillon('${n.id}')",
    "nom": "execDeleteBrouillon",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2568,7 +2568,7 @@
    "evenement": "click",
    "source": "execPreviewNotification('${n.id}')",
    "nom": "execPreviewNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2577,7 +2577,7 @@
    "evenement": "click",
    "source": "execValidateNotification('${n.id}')",
    "nom": "execValidateNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2586,7 +2586,7 @@
    "evenement": "click",
    "source": "execRejectNotification('${n.id}')",
    "nom": "execRejectNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2595,7 +2595,7 @@
    "evenement": "click",
    "source": "execSendNotification('${n.id}')",
    "nom": "execSendNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2604,7 +2604,7 @@
    "evenement": "click",
    "source": "execCancelNotification('${n.id}', 'soumis')",
    "nom": "execCancelNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2613,7 +2613,7 @@
    "evenement": "click",
    "source": "execToggleEnvoiPanel('${n.id}', this)",
    "nom": "execToggleEnvoiPanel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2622,7 +2622,7 @@
    "evenement": "click",
    "source": "execOpenExchangeSlider('${n.id}')",
    "nom": "execOpenExchangeSlider",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2631,7 +2631,7 @@
    "evenement": "click",
    "source": "execValidateAccordRow('${n.id}')",
    "nom": "execValidateAccordRow",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2640,7 +2640,7 @@
    "evenement": "click",
    "source": "execCancelNotification('${n.id}', 'envoyes')",
    "nom": "execCancelNotification",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2649,7 +2649,7 @@
    "evenement": "change",
    "source": "execUpdatePrestataireFields()",
    "nom": "execUpdatePrestataireFields",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2667,7 +2667,7 @@
    "evenement": "click",
    "source": "execAddEquipeMember()",
    "nom": "execAddEquipeMember",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2676,7 +2676,7 @@
    "evenement": "click",
    "source": "this.closest('tr').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2685,7 +2685,7 @@
    "evenement": "click",
    "source": "execAddProgrammeLine()",
    "nom": "execAddProgrammeLine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2703,7 +2703,7 @@
    "evenement": "click",
    "source": "execSaveNotificationDraft()",
    "nom": "execSaveNotificationDraft",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2712,7 +2712,7 @@
    "evenement": "click",
    "source": "execPreviewNotificationFromForm()",
    "nom": "execPreviewNotificationFromForm",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
@@ -2730,11 +2730,11 @@
    "evenement": "click",
    "source": "this.closest('tr').remove()",
    "nom": "this.closest",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 879,
+   "ligne": 902,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2743,16 +2743,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 883,
+   "ligne": 906,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAddContactRow()",
    "nom": "execAddContactRow",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 888,
+   "ligne": 911,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -2761,16 +2761,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 889,
+   "ligne": 912,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveContactChanges('${prestataireId}')",
    "nom": "execSaveContactChanges",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 905,
+   "ligne": 928,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2779,7 +2779,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 1027,
+   "ligne": 1068,
    "forme": "en ligne",
    "evenement": "input",
    "source": "this.style.height='auto';this.style.height=this.scrollHeight+'px';",
@@ -2788,16 +2788,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 1028,
+   "ligne": 1069,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSendExchangeMessage('${notifId}')",
    "nom": "execSendExchangeMessage",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-notifications.js",
-   "ligne": 1053,
+   "ligne": 1094,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -3716,7 +3716,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 935,
+   "ligne": 932,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenRefReglementPicker('${it.id}','${clId}')",
@@ -3725,7 +3725,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 960,
+   "ligne": 957,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_execCliRefRegFilter()",
@@ -3734,7 +3734,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 971,
+   "ligne": 968,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -3743,7 +3743,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 972,
+   "ligne": 969,
    "forme": "en ligne",
    "evenement": "click",
    "source": "_execCliRefRegSave('${itId}','${clId}')",
@@ -3752,7 +3752,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1082,
+   "ligne": 1079,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenSousThemeModal('${clId}','${s.id}')",
@@ -3761,7 +3761,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1083,
+   "ligne": 1080,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execDeleteSousTheme('${s.id}','${clId}')",
@@ -3770,7 +3770,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1089,
+   "ligne": 1086,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSousThemesExportXlsx('${clId}')",
@@ -3779,7 +3779,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1090,
+   "ligne": 1087,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('execSousThemesImportFile').click()",
@@ -3788,7 +3788,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1091,
+   "ligne": 1088,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execSousThemesImportXlsx('${clId}',event)",
@@ -3797,7 +3797,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1092,
+   "ligne": 1089,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenSousThemeModal('${clId}')",
@@ -3806,7 +3806,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1098,
+   "ligne": 1095,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal();execOpenChecklistEditor('${clId}')",
@@ -3815,7 +3815,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1168,
+   "ligne": 1151,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenSousThemesManager('${clId}')",
@@ -3824,7 +3824,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1169,
+   "ligne": 1152,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveSousTheme('${clId}','${stId || ''}')",
@@ -3833,7 +3833,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1270,
+   "ligne": 1253,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -3842,7 +3842,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1271,
+   "ligne": 1254,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveCriticite('${critId || ''}')",
@@ -3851,7 +3851,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1332,
+   "ligne": 1315,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -3860,7 +3860,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1333,
+   "ligne": 1316,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveTypeCas('${tcId || ''}')",

@@ -766,8 +766,24 @@ async function execSubmitBrouillon(notifId) {
     });
 }
 
+// ── Le rôle M3, et une route qui n'est pas celle qu'on croit ──
+//
+// Ce sélecteur filtre sur `role_m3`, champ **dérivé** du privilège SURV
+// (`roles.js` : GESTIONNAIRE → `M3_Administrateur`, VALIDATEUR →
+// `M3_Validateur`) et composé par la seule route du module. `/api/users`, la
+// route du portail, ne le porte pas.
+//
+// J'ai cru y voir un défaut, et j'avais tort : `exec-boot.js` tient une table
+// d'alias — `'/api/users': '/api/m/execution/utilisateurs'` — qui traduit les
+// chemins transverses de PESSCO vers ceux d'OASIS. L'appel ci-dessous atteint
+// donc **déjà** la route du module, et la liste n'a jamais été vide.
+//
+// Ma mesure avait été prise **hors du client du module**, par HTTP direct, où
+// l'alias ne s'applique pas : j'y ai lu « zéro validateur » et généralisé. Le
+// contre-essai l'a dit — réintroduire le prétendu défaut ne faisait rougir
+// aucun contrôle. *Une mesure prise ailleurs que là où le code tourne ne mesure
+// pas ce code.* (n° 5.f.72)
 function _showValidatorPicker(onConfirm) {
-    // Fetch users to get validators
     api('/api/users').then(users => {
         const validators = (users || []).filter(u =>
             u.role_m3 === 'M3_Validateur' || u.role_m3 === 'M3_Administrateur'
@@ -936,9 +952,27 @@ async function execSaveContactChanges(prestataireId) {
     data.contacts_additionnels = JSON.stringify(additionalContacts);
     try {
         await api(`/api/prestataires/${prestataireId}`, { method: 'PUT', body: JSON.stringify(data) });
-        // Refresh shared data
-        if (typeof loadSharedData === 'function') await loadSharedData();
-        EXEC_STATE.data.prestataires = window.PESSCO?.sharedData?.prestataires || EXEC_STATE.data.prestataires;
+        // ── Un rafraîchissement qui n'avait jamais lieu ──
+        //
+        // `loadSharedData` **n'existe nulle part** : ni dans ce module, ni dans
+        // le socle, ni dans les paquets construits. Appelée sous un garde
+        // `typeof … === 'function'`, elle ne levait pas — elle ne faisait rien.
+        // Et le repli lisait `window.PESSCO.sharedData.prestataires`, chargé au
+        // montage et que rien ne rafraîchissait non plus, avant de retomber sur
+        // le cache lui-même.
+        //
+        // Conséquence, mesurée le 7 novembre 2026 : après avoir enregistré les
+        // contacts d'un organisme, **le volet rouvert portait les anciennes
+        // valeurs**. Et ce n'est pas un défaut d'affichage :
+        // `EXEC_STATE.data.prestataires` est lu dans **treize fichiers** du
+        // module — le formulaire de notification y prend l'interlocuteur et son
+        // courriel, la fiche officielle son dirigeant, le tableau de bord ses
+        // libellés. Une notification rédigée juste après la correction aurait
+        // porté l'ancien interlocuteur ; et rouvrir le volet pour corriger
+        // autre chose aurait **réécrit l'ancienne valeur** par-dessus la neuve.
+        //
+        // Le référentiel se relit donc au serveur, qui est le seul à savoir.
+        EXEC_STATE.data.prestataires = await api('/api/prestataires').catch(() => EXEC_STATE.data.prestataires);
         execCloseSlider();
         if (typeof showNotification === 'function') showNotification('Contacts mis à jour', 'success');
     } catch (e) {

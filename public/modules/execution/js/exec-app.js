@@ -110,6 +110,26 @@ const EXEC_ICONS = {
 const EXEC_NAV = {
     dashboard: { labelKey: 'dashboard', icon: 'dashboard' },
     plan_surveillance: { labelKey: 'plan_surveillance', icon: 'plans' },
+    // ── Une page rendue par l'aiguillage, et ouverte par rien ──
+    //
+    // `declenchement` manquait à cette table. La page existait — 1 125 lignes,
+    // vingt-six gestes, quatre onglets —, l'aiguillage la rendait
+    // (`case 'declenchement'`), le sas la déclarait, et **aucun bouton ne la
+    // montrait** : ni entrée de barre, ni appel de `execNavigateTo`. C'est ce
+    // qui explique que `exec-notifications.js` fût le fichier le moins couvert
+    // du module, à trois gestes exercés sur vingt-six.
+    //
+    // Le menu « Processus » couvre le même circuit par une autre vue, ce qui a
+    // masqué l'absence. Mais le volet des contacts de l'organisme — dirigeant,
+    // point focal, contacts additionnels — n'a **pas d'autre porte**, et il
+    // édite cinq champs que le référentiel du portail n'édite pas. Rendue à la
+    // barre le 7 novembre 2026 sur décision de la maîtrise d'ouvrage
+    // (n° 5.f.72).
+    //
+    // Réservée à qui contribue : les routes de la page exigent `CONTRIBUTEUR`
+    // pour créer, soumettre et transmettre. Une entrée offerte à un lecteur ne
+    // mènerait qu'à des 403.
+    declenchement: { labelKey: 'declenchement', icon: 'trigger', reserve: 'contribue' },
     etats: { labelKey: 'etats', icon: 'folder' },
     constatations: { labelKey: 'constatations', icon: 'constatations' },
     rapports: { labelKey: 'rapports', icon: 'rapports' },
@@ -799,6 +819,10 @@ function execRenderApp() {
     } else {
         for (const [key, config] of Object.entries(EXEC_NAV)) {
             if (config.reserve === 'admin' && !_execPeutProcessus()) continue;
+            // Deuxième réserve : les pages dont tous les gestes exigent
+            // `CONTRIBUTEUR` côté serveur. Une entrée qu'un lecteur voit et qui
+            // ne lui rend que des refus est un bouton qui ment.
+            if (config.reserve === 'contribue' && !_execCanContribute()) continue;
             navHtml += `<button class="nav-btn ${S.currentPage === key ? 'active' : ''}" data-page="${key}" onclick="execNavigateTo('${key}')" title="${te(config.labelKey)}">
                 ${EXEC_ICONS[config.icon] || ''} <span>${te(config.labelKey)}</span>
             </button>`;

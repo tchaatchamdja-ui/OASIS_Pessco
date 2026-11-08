@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 156 exercés**, 3 indécidables — idem, 3 novembre 2026 ; le plus gros écran, et le moins couvert |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 180 exercés**, 3 indécidables — idem, 7 novembre 2026 (n° 5.f.72) ; le plus gros écran, et le moins couvert |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -10055,3 +10055,150 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Le POST sert le classeur au lieu de le déposer | la préparation par jeton |
            | La pièce préparée n'est plus liée au compte | **deux** contrôles du dépôt |
            | Un export refabrique son téléchargement | le garde de forme, qui le nomme |
+
+       5.f.72 [x] **Une page de SURV que rien n'ouvrait — et un défaut que j'ai cru y voir** — fait le 7 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           `exec-notifications.js` portait **3 gestes exercés sur 26**, le fichier
+           le moins couvert du module. La mesure a dit pourquoi, et ce n'était pas
+           un trou de ronde : **la page « Déclenchement » n'était dans aucune
+           barre**.
+
+           La clé manquait à `EXEC_NAV`. L'aiguillage la rendait
+           (`case 'declenchement'`), le sas la déclarait, et aucun bouton ne la
+           montrait — ni entrée de menu, ni appel de `execNavigateTo`, ni ancre
+           d'URL. *Mille cent vingt-cinq lignes, vingt-six gestes, quatre
+           onglets : injoignables.*
+
+           ── Le garde-fou avait fait son office, et l'a fait deux fois ──
+
+           Le contrôle « toute page de SURV est atteignable, ou déclarée sans
+           chemin » (n° 5.f.2) l'avait **nommée** le 14 octobre 2026, avec les
+           trois autres pages sans chemin. Son en-tête disait déjà la règle :
+           *« une page que l'aiguillage sait rendre et qu'aucun chemin n'ouvre est
+           soit un écran oublié d'un menu, soit du code mort. Les deux se
+           corrigent, mais pas de la même façon, et ce n'est pas à la conversion
+           d'en décider. »*
+
+           La question est donc allée à la maîtrise d'ouvrage, qui a tranché :
+           rendre la page au menu. Et la déclaration devenue périmée a **rougi au
+           passage suivant** — l'autre moitié de l'office de ce garde, qui refuse
+           une dispense qui ne correspond plus.
+
+           ── Pourquoi la page, et non le code mort ──
+
+           Le menu « Processus » couvre le même circuit par une autre vue —
+           formulaire, transitions, accord, fil d'échange —, ce qui a masqué
+           l'absence pendant tout ce temps. Mais le **volet des contacts de
+           l'organisme** n'a pas d'autre porte, et il édite cinq champs que le
+           référentiel du portail n'édite pas : fonction du responsable, fonction,
+           courriel et numéro du point focal, contacts additionnels. Les quatre
+           premiers sont lus par le formulaire de notification.
+
+           La page est réservée à qui **contribue**, puisque c'est ce que ses
+           routes exigent (`CONTRIBUTEUR` pour créer, soumettre et transmettre).
+           Une entrée offerte à un lecteur ne mènerait qu'à des 403 — le défaut
+           corrigé deux jours plus tôt dans la bibliothèque de PR (n° 5.f.70). Le
+           mécanisme de réserve ne connaissait qu'`admin` ; il connaît désormais
+           `contribue`, dans le seul endroit qui le lit.
+
+           ── Un défaut que j'ai rapporté et qui n'existait pas ──
+
+           J'ai annoncé ici un second défaut : le sélecteur de validateur
+           interrogeant `/api/users`, route du portail qui ne porte pas
+           `role_m3` — champ **dérivé** du privilège SURV et composé par la seule
+           route du module. J'en concluais que la liste était toujours vide, que
+           la soumission d'une notification était **impossible**, et qu'un compte
+           AAC recevait un 403 avant de soumettre sans validateur nommé.
+
+           **Rien de cela n'est vrai.** `exec-boot.js` tient une table d'alias
+           qui traduit les chemins transverses de PESSCO vers ceux d'OASIS :
+
+           ```
+           '/api/users': '/api/m/execution/utilisateurs'
+           ```
+
+           L'appel du sélecteur atteignait donc **déjà** la route du module.
+           Mesuré dans le navigateur : la liste porte bien un validateur, et il
+           n'y a jamais eu ni refus ni repli.
+
+           *Mon erreur est d'avoir mesuré ailleurs que là où le code tourne.* La
+           sonde était un appel HTTP direct, passé par le harnais, où l'alias ne
+           s'applique pas : j'y ai lu « zéro validateur » et généralisé à ce que
+           fait l'écran.
+
+           **Et c'est le contre-essai qui l'a dit.** Réintroduire le prétendu
+           défaut n'a fait rougir aucun contrôle — 160/160. J'ai d'abord cherché
+           pourquoi mon contrôle ne mordait pas ; c'était le contrôle qui avait
+           raison. *Un contre-essai qui refuse de mordre est la seule chose qui
+           distingue un défaut d'une histoire qu'on se raconte.*
+
+           L'appel est rendu à la convention du module — le chemin PESSCO, que
+           `execRoute` traduit —, et le contrôle garde ce qui est vrai : le
+           sélecteur liste au moins un validateur, refuse sans choix, et la
+           soumission désigne celui qui a été retenu.
+
+           ── Le second défaut, celui-là réel : un rafraîchissement qui n'avait jamais lieu ──
+
+           Trouvé non par une relecture mais par un **contrôle de restitution** :
+           la ronde enregistre les contacts d'un organisme, puis rend la valeur
+           d'avant, et pour cela rouvre le volet. Il portait l'ancienne valeur.
+
+           `execSaveContactChanges` appelait `loadSharedData()` — **fonction qui
+           n'existe nulle part**, ni dans le module, ni dans le socle, ni dans les
+           paquets construits. Sous son garde `typeof … === 'function'`, elle ne
+           levait pas : *elle ne faisait rien.* Et le repli lisait
+           `window.PESSCO.sharedData.prestataires`, chargé au montage et que rien
+           ne rafraîchissait non plus, avant de retomber sur le cache lui-même.
+
+           Ce n'est pas un défaut d'affichage. `EXEC_STATE.data.prestataires` est
+           lu dans **treize fichiers** du module : le formulaire de notification y
+           prend l'interlocuteur et son courriel, la fiche officielle son
+           dirigeant, le tableau de bord ses libellés. Deux conséquences :
+
+           · une notification rédigée juste après la correction aurait porté
+             **l'ancien** interlocuteur ;
+           · rouvrir le volet pour corriger autre chose aurait **réécrit
+             l'ancienne valeur par-dessus la neuve** — le volet se garnit du cache
+             périmé, et l'enregistrement renvoie tout le formulaire.
+
+           Un chemin de perte de données, dans l'unique écran qui édite ces
+           champs, et que l'on venait de rendre joignable. Le référentiel se relit
+           désormais au serveur, qui est le seul à le savoir.
+
+           ── Ce que la mesure a établi du métier, et qui a contraint le parcours ──
+
+           **L'accord ferme l'étape.** `validate-accord` porte le statut à `acte`,
+           et l'onglet des envoyés écarte délibérément les `acte`
+           (`envoyeItems.filter(n => n.statut !== 'acte')`). La ligne disparaît
+           donc, et avec elle le fil d'échange et l'annulation.
+
+           Ma première rédaction validait l'accord d'abord : les deux gestes
+           suivants ne trouvaient plus de ligne, et deux contrôles rougissaient
+           sur une cause qui n'était pas la leur. Le fil et l'annulation passent
+           donc avant, et le parcours **refait le circuit** après l'annulation
+           pour atteindre l'accord — dont aucun des trois gestes du module
+           n'était exercé par quoi que ce soit.
+
+           Et l'annulation se mesure sur une notification **transmise** : la route
+           n'oppose aucun garde de statut, à la différence des quatre autres
+           transitions. Le contrôle relève le fait plutôt que de le supposer voulu.
+
+           ── Six erreurs de ma part sur ce seul bloc ──
+
+           Elles forment un motif, et c'est à ce titre qu'elles sont écrites.
+
+           | Erreur | Ce qu'elle a coûté, et la règle |
+           |---|---|
+           | `onglets[0].click()` sur une liste vide | l'exception a emporté **la suite entière** : aucun des douze contrôles n'a rendu son verdict. *Une sonde ne doit jamais pouvoir casser ce qu'elle observe* — tout accès indexé est gardé |
+           | `window.EXEC_MODULE_API` | un `const` de premier niveau est une liaison **lexicale**, absente de `window` — à la différence de `EXEC_STATE`, que `exec-adapters.js` publie. L'adresse devenait « undefined/notifications » |
+           | Bloc placé après les autres rondes | j'avais mesuré le jeu d'essai **vierge**, puis placé le bloc là où il ne l'est plus : l'onglet « à notifier » était vide, et douze contrôles rougissaient sur une cause étrangère |
+           | Accord validé avant le fil et l'annulation | *l'ordre d'un parcours n'est pas libre* : une étape qui ferme en ferme d'autres |
+           | `lieu`, `equipe`, `message` cherchés dans le magasin | la couche de transport **renomme** : `lieu_activite`, `equipe_membres`, `contenu`. Trois fois le même piège, et c'est un trait de ce module |
+           | Un défaut rapporté sur une mesure prise hors du client | *la pire des six* : seule la table d'alias d'`exec-boot.js` distingue les deux routes, et elle ne vit que dans le navigateur. Le contre-essai muet l'a dit |
+
+           Et une conséquence qu'il faut dire : faute d'avoir trouvé sa
+           notification, le bloc ne l'effaçait pas, l'activité restait consommée,
+           et **onze contrôles de la suite existante tombaient en aval**. *Les
+           blocs de cette suite ne sont pas indépendants : chacun suppose un
+           magasin que le précédent lui a rendu*, et le dernier contrôle du mien
+           exige précisément cette restitution.

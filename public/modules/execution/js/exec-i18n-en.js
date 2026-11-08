@@ -640,8 +640,6 @@ EXEC_TR.en = {
         download_pdf: 'Download PDF',
         telecharger: 'Download',
         rapports_closed_intro: 'Closed reports available for download.',
-        prestataire_home_title: 'Provider workspace',
-        prestataire_home_intro: 'Check your notifications to handle your corrective action plans.',
         mes_activites: 'My Activities',
         mes_utilisateurs: 'My Users',
         notification_activite: 'Activity notification',
@@ -926,6 +924,13 @@ EXEC_TR.en = {
         processus_arrete: 'Process stopped',
         processus_repris: 'Process resumed',
         reference_non_conforme: 'Reference does not match: deletion cancelled',
+        supprimer_dossier_titre: 'Delete the file',
+        supprimer_dossier_message: 'The file, the activity notification and every exchange '
+            + 'it carries will be permanently deleted. The activity returns to '
+            + '“to be notified”.',
+        saisir_reference_pour_confirmer: 'Type “{ref}” to confirm.',
+        supprimer_definitivement: 'Delete permanently',
+        reference_du_dossier: 'File reference',
         activite_supprimee: 'Activity deleted',
         plan_desarchive: 'Plan unarchived',
         activite_desarchivee: 'Activity unarchived',

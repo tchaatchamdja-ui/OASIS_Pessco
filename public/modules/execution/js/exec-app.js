@@ -130,6 +130,26 @@ const EXEC_NAV = {
     // pour créer, soumettre et transmettre. Une entrée offerte à un lecteur ne
     // mènerait qu'à des 403.
     declenchement: { labelKey: 'declenchement', icon: 'trigger', reserve: 'contribue' },
+    // ── Deux écrans rendus à la barre le 8 novembre 2026 (n° 5.f.73) ──
+    //
+    // `execution` est le tableau des dossiers, avec ses quatre filtres ;
+    // `prestataires` suit les mêmes dossiers groupés par organisme et par
+    // domaine, en trois onglets — en cours, clôturés, archivés — avec tri par
+    // colonne. Ni l'un ni l'autre n'avait d'entrée de menu, ni le moindre appel
+    // de `execNavigateTo` : l'aiguillage les rendait, et rien ne les montrait.
+    //
+    // Chacun porte un geste qu'aucun autre écran n'offre, et c'est ce qui a
+    // décidé de les rendre plutôt que de les effacer : la **suppression** d'un
+    // dossier pour le premier, l'**archivage** d'un dossier clos pour le
+    // second. Les deux ont été corrigés avant que la porte ne s'ouvre — la
+    // suppression demande désormais la référence saisie, comme celle des
+    // États, et l'archivage écrit `archive` au lieu d'écraser le statut.
+    //
+    // Les deux pages lisent, et leurs gestes destructeurs sont déjà réservés
+    // aux administrateurs par `_execIsAdmin()` à l'intérieur : aucune réserve
+    // ici, qui en fermerait la consultation à ceux qui ont le droit de lire.
+    execution: { labelKey: 'execution', icon: 'execution' },
+    prestataires: { labelKey: 'prestataires', icon: 'prestataires' },
     etats: { labelKey: 'etats', icon: 'folder' },
     constatations: { labelKey: 'constatations', icon: 'constatations' },
     rapports: { labelKey: 'rapports', icon: 'rapports' },
@@ -905,7 +925,6 @@ function execRenderPage() {
         case 'etats': content = execRenderEtats(); break;
         case 'processus': content = execRenderProcessus(); break;
         case 'parametres': content = execRenderParametres(); break;
-        case 'prestataire_home': content = execRenderPrestataireHome(); break;
         case 'prestataire_notifications': content = execRenderPrestataireNotifications(); break;
         case 'mes_utilisateurs': content = execRenderMesUtilisateurs(); break;
         default: content = `<div class="text-center">${te('no_data')}</div>`;
@@ -916,23 +935,17 @@ function execRenderPage() {
     if (EXEC_STATE.currentPage === 'dashboard') execGanttAujourdhui();
 }
 
-function execRenderPrestataireHome() {
-    const user = EXEC_STATE.user || {};
-    const prests = EXEC_STATE.data.prestataires || [];
-    const myPrest = prests.find(p => p.id === user.prestataire_id);
-    const myName = myPrest ? (myPrest.nom || myPrest.trigramme) : '';
-    return `
-    <div class="page-content">
-        <div class="page-header">
-            <h2>${te('prestataire_home_title')}</h2>
-            ${myName ? `<p style="color:var(--text-muted);">${_esc(myName)}</p>` : ''}
-        </div>
-        <div class="card" style="text-align:center;padding:2rem;">
-            <div style="font-size:3rem;color:var(--text-muted);">${EXEC_ICONS.bell || ''}</div>
-            <p style="color:var(--text-muted);margin-top:1rem;">${te('prestataire_home_intro')}</p>
-        </div>
-    </div>`;
-}
+// ── « Espace Prestataire » : la page supprimée le 8 novembre 2026 ──
+//
+// `execRenderPrestataireHome` rendait 148 caractères et **aucun geste** : un
+// titre, le nom de l'organisme, une icône de cloche et une phrase d'accueil.
+// `EXEC_NAV_PRESTATAIRE` ouvre `dashboard` à sa place, et depuis toujours.
+//
+// Les deux autres pages qu'aucun chemin n'ouvrait portaient chacune une
+// capacité qu'on aurait perdue à les effacer. Celle-ci n'en portait aucune :
+// la rendre à la barre aurait demandé de la garnir d'abord. Décision de la
+// maîtrise d'ouvrage, n° 5.f.73 — avec son cas d'aiguillage et ses deux
+// traductions, `prestataire_home_title` et `prestataire_home_intro`.
 
 // ── "Notification d'activité" page (Mes Activités > prestataire_notifications) ─────
 // Shows only sent notifications addressed to the connected prestataire.

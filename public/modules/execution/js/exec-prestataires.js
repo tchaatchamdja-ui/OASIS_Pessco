@@ -30,9 +30,22 @@ function execRenderPrestataires() {
     // Décompte par onglet : nombre de DOSSIERS (des prestataires filtrés).
     const filteredPrestIds = new Set(filtered.map(p => p.id));
     const scopedDoss = dossiers.filter(d => filteredPrestIds.has(d.prestataire_id));
-    const enCoursCount = scopedDoss.filter(d => d.statut !== 'cloture' && d.statut !== 'archive').length;
-    const cloturesCount = scopedDoss.filter(d => d.statut === 'cloture').length;
-    const archivesCount = scopedDoss.filter(d => d.statut === 'archive').length;
+    // ── Archivé se lit sur `archive`, jamais sur `statut` ──
+    //
+    // Les trois décomptes cherchaient `statut === 'archive'` — une convention
+    // que **cette page était seule à connaître**, et que son propre bouton
+    // d'archivage était seul à produire. Le module entier marque l'archivage
+    // par le champ `archive` (`routes-etats.js`, l'onglet des archives des
+    // États, le tableau de bord). Mesuré le 8 novembre 2026 : un dossier
+    // clôturé puis archivé par la vraie route s'affichait ici dans
+    // « Dossiers clôturés », et l'onglet « Dossiers Archivés » annonçait zéro.
+    //
+    // Un dossier archivé sort donc des deux premiers onglets, quel qu'ait été
+    // son statut : c'est ce que « archivé » veut dire.
+    const _archive = (d) => Number(d.archive) === 1;
+    const enCoursCount = scopedDoss.filter(d => d.statut !== 'cloture' && !_archive(d)).length;
+    const cloturesCount = scopedDoss.filter(d => d.statut === 'cloture' && !_archive(d)).length;
+    const archivesCount = scopedDoss.filter(d => _archive(d)).length;
 
     const subTabs = [
         { id: 'en_cours', label: `Dossiers en cours (${enCoursCount})` },
@@ -82,7 +95,7 @@ function _renderDossiersEnCours(prestataires, dossiers, notifications, domaines)
     const prestById = {};
     prestataires.forEach(p => { prestById[p.id] = p; });
     // Dossiers en cours des prestataires filtrés
-    const enCours = dossiers.filter(d => d.statut !== 'cloture' && d.statut !== 'archive' && prestById[d.prestataire_id]);
+    const enCours = dossiers.filter(d => d.statut !== 'cloture' && Number(d.archive) !== 1 && prestById[d.prestataire_id]);
     if (enCours.length === 0) return `<div class="card"><p style="color:var(--text-muted);">${te('no_data')}</p></div>`;
     // Regroupement par domaine (domaine de rattachement du prestataire)
     const groups = {};
@@ -155,7 +168,7 @@ function _renderDossiersClotures(prestataires, dossiers, notifications, domaines
     const sort = EXEC_STATE.dossierCloturesSort || (EXEC_STATE.dossierCloturesSort = { col: 'date', dir: 'asc' });
     const prestById = {};
     prestataires.forEach(p => { prestById[p.id] = p; });
-    const list = dossiers.filter(d => d.statut === 'cloture' && prestById[d.prestataire_id]);
+    const list = dossiers.filter(d => d.statut === 'cloture' && Number(d.archive) !== 1 && prestById[d.prestataire_id]);
     if (list.length === 0) return `<div class="card"><p style="color:var(--text-muted);">${te('no_data')}</p></div>`;
     const groups = {};
     list.forEach(d => {
@@ -220,7 +233,7 @@ function _renderDossiersArchives(prestataires, dossiers, domaines) {
     const sort = EXEC_STATE.dossierArchivesSort || (EXEC_STATE.dossierArchivesSort = { col: 'date', dir: 'asc' });
     const prestById = {};
     prestataires.forEach(p => { prestById[p.id] = p; });
-    const list = dossiers.filter(d => d.statut === 'archive' && prestById[d.prestataire_id]);
+    const list = dossiers.filter(d => Number(d.archive) === 1 && prestById[d.prestataire_id]);
     if (list.length === 0) return `<div class="card"><p style="color:var(--text-muted);">${te('no_data')}</p></div>`;
     const groups = {};
     list.forEach(d => {
@@ -271,10 +284,34 @@ function _renderDossiersArchives(prestataires, dossiers, domaines) {
     }).join('');
 }
 
+// ── Archiver un dossier : la route qui garde, et non le PUT qui écrase ──
+//
+// Ce geste écrivait `PUT /dossiers/:id` avec `{ statut: 'archive' }` — le PUT
+// générique, qui recopie dans l'enregistrement **tout** ce qu'on lui donne sans
+// rien vérifier. Mesuré le 8 novembre 2026 sur un dossier clôturé :
+//
+//   · `statut` passait de `cloture` à `archive` — **le statut réel était
+//     détruit**, et plus rien ne disait si le dossier avait été clos ou laissé
+//     ouvert ;
+//   · `archive` restait absent, alors que c'est le champ que tout le module
+//     lit — l'onglet des archives des États le lit (`Number(d.archive) === 1`)
+//     et n'a jamais lu `statut === 'archive'` ;
+//   · `date_archivage` et `archive_par` restaient vides : archivé par personne,
+//     à aucune date ;
+//   · et les deux gardes de la vraie route tombaient — la réserve au
+//     super-administrateur, et l'exigence qu'un dossier soit clôturé avant
+//     d'être archivé.
+//
+// `PUT /dossiers/:id/archiver` (`src/modules/execution/routes-etats.js`) fait
+// les quatre choses correctement. La même mesure l'a vérifié : statut conservé,
+// `archive: 1`, date et auteur posés.
+//
+// *Un statut n'est pas un drapeau. Les confondre perd celui des deux qui porte
+// le sens.*
 async function execArchiveDossier(dossierId) {
     if (!await oasisConfirmer(te('confirmer_archiver_dossier'))) return;
     try {
-        await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'PUT', body: JSON.stringify({ statut: 'archive' }) });
+        await api(`${EXEC_MODULE_API}/dossiers/${dossierId}/archiver`, { method: 'PUT', body: '{}' });
         await execRefreshDynamic();
         _execToast(te('dossier_archive_ok'), 'success');
         execRenderPage();

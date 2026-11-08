@@ -176,14 +176,82 @@ module.exports = function register(app, deps, M) {
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference });
   }));
 
+  // ── Les champs que cette route n'écrit pas, et pourquoi ──
+  //
+  // Elle sert l'enregistrement du **contenu** d'un dossier : la réalisation, la
+  // rédaction, les annexes, les checklists retenues. Elle recopiait dans
+  // l'enregistrement tout ce qu'on lui donnait, à deux clés près — et le cycle
+  // de vie du dossier en faisait partie.
+  //
+  // Mesuré le 8 novembre 2026, sur un dossier ouvert, le même compte pour les
+  // deux appels :
+  //
+  // | Appel | Réponse |
+  // |---|---|
+  // | `PUT /dossiers/:id/close` | **400** — « Un rapport transmis est requis pour clôturer » |
+  // | `PUT /dossiers/:id` avec `{ statut: 'cloture' }` | **200**, et le dossier est clos |
+  //
+  // *Toutes les gardes de transition étaient donc facultatives.* Et celle-là
+  // n'est pas une formalité : clôturer rend les constatations **opposables** à
+  // l'organisme — `/close` fait les deux d'un seul geste, pour qu'un échec au
+  // milieu ne laisse pas un dossier clos dont les constatations ne le sont pas.
+  // Clôturer par ici sautait la seconde moitié, et laissait des constatations
+  // inopposables pour toujours.
+  //
+  // La même mesure a montré trois autres passages : `archive: 1` avec un auteur
+  // forgé et une date de 1970 — ce que la route d'archivage réserve au
+  // super-administrateur et refuse sur un dossier non clos ; un statut qui
+  // n'existe nulle part (`nimporte_quoi`), accepté et conservé ; et un champ
+  // inventé par le client, persisté tel quel.
+  //
+  // La route refuse donc ces clés, au lieu de les écarter en silence : un
+  // appelant qui croit avoir écrit est pire qu'un appelant refusé. Les **deux**
+  // seuls appelants de cette route n'en envoient aucune — mesuré
+  // (`exec-dossier-actions.js`, `exec-activites.js`) : ils n'écrivent que du
+  // contenu. Les transitions ont leurs routes, qui portent leurs gardes.
+  //
+  // Ce n'est pas une liste blanche des champs de contenu : il en existe une
+  // trentaine, et en oublier un ferait échouer un enregistrement sans que
+  // personne le voie. C'est une liste des clés qui **ne s'écrivent pas ici**,
+  // et elle se lit comme telle. (ADR-003, n° 5.f.73)
+  //
+  // ── Pourquoi celle-ci refuse, là où sa voisine écarte en silence ──
+  //
+  // Le PUT des constatations, quelques centaines de lignes plus bas, tient trois
+  // listes du même genre et se contente d'en **ignorer** les clés. Ce n'est pas
+  // une incohérence : ses appelants renvoient le **formulaire entier**, champs
+  // réservés compris — un organisme surveillé poste `prestataire_id` parce qu'il
+  // est dans le formulaire, non parce qu'il prétend le changer. Refuser y
+  // casserait l'enregistrement ordinaire ; écarter est le seul choix tenable.
+  //
+  // Les deux appelants de cette route-ci n'en envoient **aucune**, mesuré. Le
+  // refus y est donc gratuit, et il est préférable : un appelant qui croit avoir
+  // écrit le statut et ne l'a pas écrit est exactement le genre de défaut que ce
+  // dépôt passe son temps à chercher.
+  const CLES_RESERVEES = [
+    // Identité et provenance : ni le client ni cette route ne les refont.
+    'id', 'notification_id', 'reference', 'instance', 'created_by', 'date_creation',
+    // Cycle de vie : `/submit`, `/return`, `/close`, `/close-realisation`.
+    'statut', 'current_step', 'statut_avant_arret',
+    // Archivage : `/archiver` et `/desarchiver`, réservés et horodatés.
+    'archive', 'date_archivage', 'archive_par',
+  ];
+
   app.put(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
     const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
-    const patch = {};
-    Object.entries(req.body || {}).forEach(([k, v]) => {
-      if (k !== 'id' && k !== 'notification_id') patch[k] = v;
-    });
+    const corps = req.body || {};
+    const reservees = CLES_RESERVEES.filter((k) => Object.prototype.hasOwnProperty.call(corps, k));
+    if (reservees.length) {
+      return res.status(400).json({
+        error: 'champs_reserves',
+        champs: reservees,
+        message: 'Ces champs ne s’écrivent pas par cette route : le cycle de vie du'
+          + ' dossier et son identité ont leurs propres routes, qui portent leurs gardes.',
+      });
+    }
+    const patch = { ...corps };
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
     patch.date_maj = db.now();
     await db.update('dossiers', d.id, patch);

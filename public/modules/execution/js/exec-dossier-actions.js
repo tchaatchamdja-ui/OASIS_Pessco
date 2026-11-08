@@ -699,8 +699,50 @@ async function execDeleteConstatation(fncId) {
 }
 
 
+// ── Supprimer un dossier : la référence saisie, comme aux États ──
+//
+// Ce geste emporte plus que son nom ne dit : `DELETE /dossiers/:id` supprime le
+// dossier, **puis la notification et tous ses échanges** — l'activité redevient
+// « à notifier », et ce qui s'est dit entre l'AAC et l'organisme disparaît.
+//
+// Il ne demandait qu'un oui/non. Le même effet, offert par le menu « États »
+// (`execEtatsSupprimer`), exige de **saisir la référence** de l'activité : une
+// confirmation qu'on ne peut pas donner par réflexe. Mesuré le 8 novembre
+// 2026, les deux chemins ne se gardaient pas de la même façon, et celui-ci est
+// le moins gardé des deux.
+//
+// La page qui le porte — le tableau des dossiers — n'était dans aucune barre
+// jusqu'au 8 novembre 2026 (n° 5.f.73) : l'asymétrie n'avait donc jamais été
+// offerte à personne. Elle est fermée **avant** que la page ne s'ouvre.
+//
+// *La force d'une confirmation se mesure à ce que le geste détruit, non à
+// l'écran d'où on le lance.*
+//
+// Reste une asymétrie que le code ne décide pas : le serveur réserve ce chemin
+// aux **administrateurs** (`R.isAdmin`), là où la suppression des États est
+// réservée au **super-administrateur**. Deux autorités pour un même effet, et
+// c'est à la maîtrise d'ouvrage de dire laquelle vaut.
 async function execDeleteDossier(dossierId) {
-    if (!await oasisConfirmer(te('confirm_delete_activite'))) return;
+    const d = (EXEC_STATE.data.dossiers || []).find((x) => x.id === dossierId) || {};
+    const reference = String(d.reference || d.notification_ref || '').trim();
+    // Sans référence, rien à faire saisir : on refuse plutôt que de retomber
+    // sur le oui/non, qui est précisément ce qu'on vient de fermer.
+    if (!reference) {
+        oasisToast(te('suppression_impossible') || te('err_suppression'), 'error');
+        return;
+    }
+    const saisi = await execProcConfirmer({
+        titre: te('supprimer_dossier_titre'),
+        message: `${te('supprimer_dossier_message')} ${te('saisir_reference_pour_confirmer')
+            .replace('{ref}', reference)}`,
+        libelle: te('supprimer_definitivement'),
+        saisie: { label: te('reference_du_dossier'), placeholder: reference },
+    });
+    if (saisi === false) return;
+    if (String(saisi).trim() !== reference) {
+        oasisToast(te('reference_non_conforme'), 'error');
+        return;
+    }
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'DELETE' });
         await execRefreshDynamic();

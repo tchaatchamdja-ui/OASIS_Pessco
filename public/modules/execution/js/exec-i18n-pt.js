@@ -640,8 +640,6 @@ EXEC_TR.pt = {
         download_pdf: 'Baixar PDF',
         telecharger: 'Descarregar',
         rapports_closed_intro: 'Relatórios encerrados disponíveis para descarregar.',
-        prestataire_home_title: 'Área do Prestador',
-        prestataire_home_intro: 'Consulte as suas notificações para tratar os seus planos de ações corretivas.',
         mes_activites: 'Minhas Atividades',
         mes_utilisateurs: 'Meus Utilizadores',
         notification_activite: 'Notificação de atividade',
@@ -926,6 +924,13 @@ EXEC_TR.pt = {
         processus_arrete: 'Processo parado',
         processus_repris: 'Processo retomado',
         reference_non_conforme: 'Referência não conforme: eliminação abandonada',
+        supprimer_dossier_titre: 'Eliminar o processo',
+        supprimer_dossier_message: 'O processo, a notificação da atividade e todas as trocas '
+            + 'que ela contém serão definitivamente eliminados. A atividade volta a '
+            + '«a notificar».',
+        saisir_reference_pour_confirmer: 'Escreva «{ref}» para confirmar.',
+        supprimer_definitivement: 'Eliminar definitivamente',
+        reference_du_dossier: 'Referência do processo',
         activite_supprimee: 'Atividade eliminada',
         plan_desarchive: 'Plano desarquivado',
         activite_desarchivee: 'Atividade desarquivada',

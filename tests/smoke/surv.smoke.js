@@ -56,22 +56,42 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 //
 // Le contrôle refuse donc une page **non déclarée**. La déclaration est dans
 // `PAGES_SANS_CHEMIN` ci-dessous, avec ce que la mesure dit de chacune.
+//
+// *Les quatre ont été tranchées.* Trois ont été rendues à la barre, la
+// quatrième effacée, et la table est vide depuis le 8 novembre 2026 — l'état
+// que le garde décrit juste en dessous. Le paragraphe ci-dessus est conservé
+// parce qu'il dit ce que le garde fait, non où en est le dépôt.
+// ── Mesuré le 8 novembre 2026 : plus aucune page de SURV n'est sans chemin ──
+//
+// La table est **vide**, et c'est une mesure, non un vœu : le contrôle refuse
+// une page sans chemin qui ne serait pas déclarée ici, et refuse aussi une
+// déclaration qui ne correspondrait plus. Vide, elle dit donc que les treize
+// cas de l'aiguillage sont tous ouverts par un menu ou par un appel.
+//
+// Elle a porté quatre pages, et les quatre ont été tranchées par la maîtrise
+// d'ouvrage une fois la mesure faite — c'est l'office de ce garde, qui nomme
+// sans décider :
+//
+//   · `declenchement` — 1 125 lignes, 26 gestes, le circuit de la notification
+//     d'activité. **Rendue à la barre** le 7 novembre 2026 (n° 5.f.72),
+//     réservée à qui contribue.
+//   · `execution` — le tableau des dossiers et ses quatre filtres, dont le seul
+//     geste propre est la **suppression** d'un dossier. **Rendue à la barre**
+//     le 8 novembre 2026 (n° 5.f.73), après que cette suppression a reçu la
+//     garde de la référence saisie, qu'elle n'avait pas et que son équivalente
+//     du menu « États » avait déjà.
+//   · `prestataires` — le suivi des dossiers par organisme et par domaine, dont
+//     le geste propre est l'**archivage** d'un dossier clos. **Rendue à la
+//     barre** le 8 novembre 2026, après correction de cet archivage : il
+//     écrasait le statut réel du dossier au lieu de poser le drapeau `archive`,
+//     et n'écrivait ni date ni auteur.
+//   · `prestataire_home` — 148 caractères et **zéro geste**. **Supprimée** le
+//     8 novembre 2026 : seule des quatre à ne porter aucune capacité.
+//
+// *Deux des trois pages rendues portaient un défaut que leur inaccessibilité
+// seule empêchait de nuire.* Ouvrir une porte, c'est répondre de ce qu'il y a
+// derrière.
 const PAGES_SANS_CHEMIN = {
-  execution: 'l’écran « Exécution des activités » — le tableau des dossiers, 69 occurrences'
-    + ' de geste. Son volet de dossier, lui, **est** atteignable : la page « Constatations »'
-    + ' et le tableau de bord ouvrent `execOpenDossierSlider`. C’est donc la table qui est'
-    + ' sans chemin, non le volet qu’elle ouvrait.',
-  // `declenchement` était ici, et n'y est plus : la page est rendue à la barre
-  // depuis le 7 novembre 2026 (n° 5.f.72). *C'est le mécanisme qui a fonctionné
-  // comme il devait* — il a nommé la page, la question est allée à la maîtrise
-  // d'ouvrage, et la réponse l'a rendue au menu. La déclaration périmée a fait
-  // rougir le contrôle au passage suivant, ce qui est l'autre moitié de son
-  // office : une dispense qui ne correspond plus doit se faire remarquer.
-  prestataires: 'le suivi par prestataire. Aucun menu, aucun appel — et il porte trois'
-    + ' boutons qui ouvrent le volet de dossier, donc trois chemins de plus vers un volet'
-    + ' qui en a d’autres.',
-  prestataire_home: 'l’accueil de l’espace prestataire. La table `EXEC_NAV_PRESTATAIRE`'
-    + ' ouvre `dashboard` et non celui-ci.',
 };
 
 // ── Les pages attendues se **lisent dans la source**, non dans une liste ──
@@ -373,10 +393,13 @@ module.exports = async function survSmoke(port) {
     //   1. **le bac n'a aucun dossier** — le tableau n'affiche alors que ses deux
     //      boutons. *Un contre-essai qui ne mord pas dit que les données
     //      n'exercent pas le code* : la ronde fabrique donc son régime ;
-    //   2. **la page du tableau des dossiers n'est atteignable par rien** (5.f.2).
-    //      Le volet, lui, l'est : la page « Constatations » porte un bouton qui
+    //   2. **la page du tableau des dossiers n'était atteignable par rien**
+    //      (5.f.2) — elle l'est depuis le 8 novembre 2026 (n° 5.f.73). Le volet,
+    //      lui, l'a toujours été : la page « Constatations » porte un bouton qui
     //      l'ouvre. La ronde passe donc par là, et c'est pourquoi elle crée une
-    //      constatation en plus du dossier.
+    //      constatation en plus du dossier. *Le chemin de contournement est
+    //      resté* : il éprouve la porte que les constatations offrent, qui est
+    //      celle qu'un inspecteur emprunte réellement.
     //
     // ── Et un troisième obstacle, trouvé à la mesure ──
     //
@@ -2280,7 +2303,13 @@ module.exports = async function survSmoke(port) {
         const raps = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
         const dernier = (raps || []).filter((x) => x.dossier_id === ctx.id)
           .sort((a, b) => b.version - a.version)[0] || null;
-        return { statut: d.statut, etape: d.current_step, rapport: dernier ? dernier.statut : null };
+        // La référence est relevée ici parce que deux blocs en ont besoin — l'écran
+        // « Dossiers » pour retrouver sa ligne, et la suppression pour la saisir.
+        return {
+          statut: d.statut, etape: d.current_step,
+          rapport: dernier ? dernier.statut : null,
+          reference: String(d.reference || d.notification_ref || ''),
+        };
       }, { api: M, id: chaine.dossierId });
       verifier('le rapport validé s’envoie à l’organisme, et le serveur le dit transmis',
         finDuCycle.boutonEnvoi === true && finDuCycle.envoiConfirme === true
@@ -2291,6 +2320,229 @@ module.exports = async function survSmoke(port) {
         && finEnBase.statut === 'cloture' && finDuCycle.voletReferme === true,
         JSON.stringify({ bouton: finDuCycle.boutonCloture, confirme: finDuCycle.clotureConfirmee,
           statut: finEnBase.statut, voletReferme: finDuCycle.voletReferme }));
+
+      // ══════════════════════════════════════════════════════════════════
+      //  L'écran « Dossiers » — le suivi par organisme (ADR-003, 5.f.73)
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Pourquoi ce bloc est ici, et pas dans une ronde à lui ──
+      //
+      // Ses trois onglets séparent les dossiers **en cours**, **clôturés** et
+      // **archivés**, et son seul geste propre archive un dossier clos. La
+      // clôture coûte huit gestes à atteindre ; la ronde vient de la franchir,
+      // et le dossier est clôturé à cet instant précis. *Un état qui coûte huit
+      // gestes ne s'atteint pas deux fois.*
+      //
+      // ── Et pourquoi cet écran n'était mesurable par rien jusqu'ici ──
+      //
+      // Il n'était dans aucune barre : l'aiguillage le rendait, et rien ne le
+      // montrait (n° 5.f.2). La maîtrise d'ouvrage l'a rendu au menu le
+      // 8 novembre 2026, et c'est ce qui rend ce bloc possible.
+      //
+      // ── Ce que la mesure avait trouvé derrière cette porte fermée ──
+      //
+      // Deux conventions d'archivage, dont une seule était lue. Le module marque
+      // l'archivage par le champ `archive` ; cet écran écrivait `statut:
+      // 'archive'` par le PUT générique, et le relisait en six endroits. Un
+      // dossier « archivé » par son bouton perdait donc son statut réel, sans
+      // date ni auteur, et restait invisible des archives ; à l'inverse, un
+      // dossier archivé par la vraie route s'affichait ici parmi les clôturés.
+      // Corrigé avant l'ouverture de la porte, et **tenu par un garde de forme**
+      // dans `taille.smoke.js` — aucune ronde ne peut cliquer un bouton que
+      // rien n'affiche, et c'est ce garde qui empêche le retour en arrière.
+      //
+      // ── Et il rend ce qu'il prend ──
+      //
+      // Le dossier est désarchivé en partant : les blocs qui suivent le
+      // trouvent clôturé, comme ils l'ont toujours trouvé.
+      etape = 'écran Dossiers';
+      const suivi = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const env = async (url, methode, corps) => {
+          const rep = await fetch(url, {
+            method: methode,
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+            ...(corps ? { body: JSON.stringify(corps) } : {}),
+          });
+          let b = null; try { b = await rep.json(); } catch { /* corps vide */ }
+          return { statut: rep.status, corps: b };
+        };
+        const enBase = async () => {
+          const rep = await fetch(`${ctx.api}/dossiers/${ctx.id}`, { credentials: 'same-origin' });
+          const b = await rep.json().catch(() => ({}));
+          return b.dossier || b;
+        };
+        // Les onglets de cet écran portent leur clé dans leur `onclick` :
+        // `EXEC_STATE.dossierPageTab='…'`.
+        const onglet = (cle) => [...document.querySelectorAll('.exec-tab')]
+          .find((b) => new RegExp(`dossierPageTab='${cle}'`).test(b.getAttribute('onclick') || ''));
+        const aller = async (cle) => { onglet(cle)?.click(); await attendre(1800); };
+        const lignes = () => [...document.querySelectorAll('#dossier_page_content tbody tr')];
+        const porteLeDossier = () => lignes()
+          .some((tr) => (tr.textContent || '').includes(ctx.reference));
+
+        // Le client tient ses données du montage : la clôture vient d'être
+        // écrite par un geste du volet, mais les autres pages lisent le cache.
+        if (typeof window.execRefreshDynamic === 'function') {
+          await window.execRefreshDynamic();
+          await attendre(1500);
+        }
+        // Même précaution que pour les filtres : l'onglet choisi vit dans
+        // `EXEC_STATE`, et ce bloc en change trois fois.
+        r.ongletAuDepart = String(window.EXEC_STATE.dossierPageTab || '');
+        document.querySelector('.nav-btn[data-page="prestataires"]')?.click();
+        await attendre(2500);
+        r.page = ((document.getElementById('exec-content') || {}).textContent || '').trim().length;
+
+        // ── 1. Les trois onglets, et chacun rend son contenu ──
+        const vus = [];
+        for (const cle of ['en_cours', 'clotures', 'archives']) {
+          /* eslint-disable no-await-in-loop */
+          const b = onglet(cle);
+          if (!b) { vus.push({ cle, bouton: false }); continue; }
+          await aller(cle);
+          const zone = document.getElementById('dossier_page_content');
+          vus.push({
+            cle,
+            bouton: true,
+            actif: !!onglet(cle)?.classList.contains('active'),
+            contenu: zone ? (zone.textContent || '').trim().length : 0,
+            empreinte: zone ? zone.innerHTML.length : 0,
+          });
+        }
+        r.onglets = vus;
+        r.ongletsDistincts = new Set(vus.map((v) => v.empreinte).filter((e) => e > 0)).size;
+
+        // ── 2. Le dossier clôturé est dans « clôturés », et pas ailleurs ──
+        await aller('en_cours');
+        r.avantDansEnCours = porteLeDossier();
+        await aller('clotures');
+        r.avantDansClotures = porteLeDossier();
+        await aller('archives');
+        r.avantDansArchives = porteLeDossier();
+
+        // ── 3. Le tri d'une colonne inverse l'ordre, et le dit par sa flèche ──
+        await aller('clotures');
+        const entete = [...document.querySelectorAll('#dossier_page_content th')]
+          .find((th) => /execSortDossiersClotures/.test(th.getAttribute('onclick') || ''));
+        r.triOffert = !!entete;
+        if (entete) {
+          const avant = lignes().map((tr) => (tr.textContent || '').trim()).join('|');
+          const flecheAvant = (entete.textContent || '').trim();
+          entete.click();
+          await attendre(1500);
+          const apres = lignes().map((tr) => (tr.textContent || '').trim()).join('|');
+          const entete2 = [...document.querySelectorAll('#dossier_page_content th')]
+            .find((th) => /execSortDossiersClotures/.test(th.getAttribute('onclick') || ''));
+          r.flecheChange = !!entete2 && (entete2.textContent || '').trim() !== flecheAvant;
+          // Une seule ligne ne peut pas changer d'ordre : la flèche est alors le
+          // seul témoin, et c'est écrit plutôt que supposé.
+          r.ordreChange = apres !== avant;
+          r.lignesAuTri = lignes().length;
+        }
+
+        // ── 4. L'archivage : son geste, et ce que le serveur en retient ──
+        await aller('clotures');
+        const bouton = lignes()
+          .map((tr) => tr.querySelector('[onclick^="execArchiveDossier"]'))
+          .find(Boolean);
+        r.boutonArchiver = !!bouton;
+        if (bouton) {
+          const avant = await enBase();
+          r.statutAvant = avant.statut;
+          r.archiveAvant = Number(avant.archive) || 0;
+          // La confirmation du socle, le temps du geste.
+          const orig = window.oasisConfirmer;
+          window.oasisConfirmer = async () => true;
+          try { bouton.click(); await attendre(3000); } finally { window.oasisConfirmer = orig; }
+          const apres = await enBase();
+          r.statutApres = apres.statut;
+          r.archiveApres = Number(apres.archive) || 0;
+          r.dateArchivage = String(apres.date_archivage || '');
+          r.archivePar = String(apres.archive_par || '');
+
+          // ── 5. La ligne a changé d'onglet, et les deux décomptes suivent ──
+          if (typeof window.execRefreshDynamic === 'function') {
+            await window.execRefreshDynamic();
+            await attendre(1500);
+          }
+          document.querySelector('.nav-btn[data-page="prestataires"]')?.click();
+          await attendre(2000);
+          await aller('clotures');
+          r.apresDansClotures = porteLeDossier();
+          await aller('archives');
+          r.apresDansArchives = porteLeDossier();
+          r.libelles = [...document.querySelectorAll('.exec-tab')]
+            .map((b) => (b.textContent || '').trim().replace(/\s+/g, ' '));
+
+          // ── 6. Rendu à l'état trouvé : le désarchivage est aux « États » ──
+          r.desarchive = (await env(`${ctx.api}/dossiers/${ctx.id}/desarchiver`, 'PUT', {})).statut;
+          const rendu = await enBase();
+          r.statutRendu = rendu.statut;
+          r.archiveRendu = Number(rendu.archive) || 0;
+        }
+        // L'onglet rendu à ce qu'il était, et le dossier relu une dernière fois
+        // par le client : les blocs suivants lisent le cache, non le magasin.
+        window.EXEC_STATE.dossierPageTab = r.ongletAuDepart || 'en_cours';
+        if (typeof window.execRefreshDynamic === 'function') {
+          await window.execRefreshDynamic();
+          await attendre(1200);
+        }
+        r.ongletRendu = String(window.EXEC_STATE.dossierPageTab || '') === (r.ongletAuDepart || 'en_cours');
+        return r;
+      }, { api: M, id: chaine.dossierId, reference: finEnBase.reference });
+
+      // ── Pourquoi « deux empreintes » et non trois ──
+      //
+      // Les trois onglets rendent **le même balisage quand ils sont vides** —
+      // une carte portant « Aucune donnée ». À cet instant la ronde n'a qu'un
+      // dossier, et il est clôturé : « en cours » et « archivés » sont donc
+      // légitimement identiques, et exiger trois empreintes ferait rougir ce
+      // contrôle sur un non-défaut. *La leçon de 5.c portait sur des vues
+      // **garnies** qui rendaient la même chose ; un même vide n'est pas un
+      // doublon.* Ce que le contrôle tient, c'est que l'onglet qui porte le
+      // dossier se distingue des deux autres, et que le dossier n'est que là.
+      verifier('l’écran « Dossiers » rend ses trois onglets, et le dossier clôturé n’est que dans « clôturés »',
+        suivi.page > 200
+        && (suivi.onglets || []).length === 3
+        && (suivi.onglets || []).every((o) => o.bouton === true && o.actif === true && o.contenu > 0)
+        && suivi.ongletsDistincts >= 2
+        && suivi.avantDansClotures === true
+        && suivi.avantDansEnCours === false && suivi.avantDansArchives === false,
+        JSON.stringify({ page: suivi.page, onglets: suivi.onglets,
+          distincts: suivi.ongletsDistincts, enCours: suivi.avantDansEnCours,
+          clotures: suivi.avantDansClotures, archives: suivi.avantDansArchives }));
+
+      verifier('le tri d’une colonne des dossiers clôturés se renverse, et sa flèche le dit',
+        suivi.triOffert === true && suivi.flecheChange === true
+        // Une seule ligne ne peut pas changer d'ordre : la flèche tient alors
+        // seule, et le contrôle ne réclame l'inversion que s'il y a de quoi.
+        && (suivi.lignesAuTri <= 1 || suivi.ordreChange === true),
+        JSON.stringify({ offert: suivi.triOffert, fleche: suivi.flecheChange,
+          ordre: suivi.ordreChange, lignes: suivi.lignesAuTri }));
+
+      verifier('archiver un dossier clos pose le drapeau « archive », conserve son statut, et horodate son auteur',
+        suivi.boutonArchiver === true
+        && suivi.statutAvant === 'cloture' && suivi.archiveAvant === 0
+        && suivi.archiveApres === 1
+        // *Le statut réel survit* : c'est la propriété que le défaut détruisait.
+        && suivi.statutApres === 'cloture'
+        && (suivi.dateArchivage || '').length > 0
+        && (suivi.archivePar || '').length > 0,
+        JSON.stringify({ bouton: suivi.boutonArchiver, avant: suivi.statutAvant,
+          archiveAvant: suivi.archiveAvant, apres: suivi.statutApres,
+          archive: suivi.archiveApres, date: suivi.dateArchivage, par: suivi.archivePar }));
+
+      verifier('archivé, le dossier quitte « clôturés » pour « archivés » — et le geste des « États » le rend',
+        suivi.apresDansClotures === false && suivi.apresDansArchives === true
+        && suivi.desarchive === 200
+        && suivi.statutRendu === 'cloture' && suivi.archiveRendu === 0
+        && suivi.ongletRendu === true,
+        JSON.stringify({ clotures: suivi.apresDansClotures, archives: suivi.apresDansArchives,
+          libelles: suivi.libelles, desarchive: suivi.desarchive,
+          statutRendu: suivi.statutRendu, archiveRendu: suivi.archiveRendu }));
 
       // ══════════════════════════════════════════════════════════════════
       //  Le plan d'actions correctives, côté AAC
@@ -4846,18 +5098,141 @@ module.exports = async function survSmoke(port) {
       // Le contrôle vérifie donc la cascade au lieu de la refaire. C'est un cas
       // de plus du même enseignement : *un nettoyage qu'on écrit sans mesurer
       // ajoute du bruit, et le bruit cache les vrais incidents.*
+      // ── Et le ménage se fait désormais **par le geste de l'écran** ──
+      //
+      // Il se faisait par l'API : la page qui porte ce bouton n'était dans
+      // aucune barre (n° 5.f.2), et il n'y avait pas d'autre moyen. Elle y est
+      // depuis le 8 novembre 2026 (n° 5.f.73), et *un contrôle qui appelle la
+      // route prouve que la route marche, non que le bouton l'atteint.*
+      //
+      // Le geste a reçu au même moment la garde qu'il n'avait pas. Il emporte le
+      // dossier, **sa notification et tous ses échanges** — l'activité redevient
+      // « à notifier » —, et il ne demandait qu'un oui/non, là où le même effet
+      // offert par le menu « États » exige de **saisir la référence**. La ronde
+      // éprouve donc les deux moitiés de cette garde : une référence qui ne
+      // correspond pas n'emporte rien, et la bonne emporte tout.
+      //
+      // Deux détours que la mesure a imposés, et qui sont écrits plutôt que
+      // supposés :
+      //
+      //   · le tableau **masque les dossiers clôturés** par défaut, et celui de
+      //     la ronde l'est. Il faut poser le filtre de statut sur « clôturé »
+      //     pour que la ligne paraisse — ce qui exerce le filtre au passage ;
+      //   · si le geste laissait le dossier, le repli par l'API le retire tout
+      //     de même, pour que les blocs suivants trouvent le magasin rendu. Le
+      //     contrôle, lui, exige que ce soit **le geste** qui l'ait fait : le
+      //     repli sauve la suite, il ne sauve pas le verdict.
       const menage = await page.evaluate(async (ctx) => {
-        const r = await fetch(`${ctx.api}/dossiers/${ctx.dossierId}`, {
-          method: 'DELETE',
-          credentials: 'same-origin',
-          headers: { 'X-OASIS-Request': '1' },
-        });
-        const dossier = r.status;
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const sortie = {};
+        const liste = async () => await (await fetch(`${ctx.api}/dossiers`,
+          { credentials: 'same-origin' })).json().catch(() => []);
+        const existe = async () => ((await liste()) || []).some((d) => d.id === ctx.dossierId);
+
+        // La boîte du module, avec sa saisie.
+        const repondre = async (valeur) => {
+          await attendre(900);
+          const boite = document.querySelector('.exec-proc-dialogue');
+          if (!boite) return false;
+          const champ = boite.querySelector('.exec-proc-dialogue-saisie');
+          if (champ) {
+            champ.value = valeur;
+            champ.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          sortie.boiteDemandeSaisie = !!champ;
+          boite.querySelector('[data-rep="oui"]').click();
+          await attendre(3000);
+          return true;
+        };
+
+        if (typeof window.execRefreshDynamic === 'function') {
+          await window.execRefreshDynamic();
+          await attendre(1500);
+        }
+        // ── Les filtres sont pris en note **avant** d'y toucher ──
+        //
+        // Ce bloc pose le filtre de statut sur « clôturé » pour faire paraître
+        // la ligne. `EXEC_STATE.filters` est partagé par tout l'écran : laissé
+        // en place, il a fait rougir **deux contrôles du tableau de bord**, qui
+        // court après celui-ci — la piste y était déjà restreinte, et un filtre
+        // de plus ne la restreignait plus. *La leçon était déjà écrite dans
+        // cette suite pour le jeu d'essai ; elle vaut aussi pour l'état du
+        // client.*
+        sortie.filtresAuDepart = JSON.stringify(window.EXEC_STATE.filters || {});
+        document.querySelector('.nav-btn[data-page="execution"]')?.click();
+        await attendre(2500);
+        sortie.page = ((document.getElementById('exec-content') || {}).textContent || '').trim().length;
+
+        // ── Le filtre de statut : sans lui, la ligne clôturée n'est pas là ──
+        const lignes = () => [...document.querySelectorAll('#exec-content tbody tr')];
+        sortie.lignesAvantFiltre = lignes()
+          .filter((tr) => (tr.textContent || '').includes(ctx.reference)).length;
+        const choix = [...document.querySelectorAll('#exec-content select')]
+          .find((sel) => /filters\.statut/.test(sel.getAttribute('onchange') || ''));
+        sortie.filtreStatut = !!choix;
+        if (choix) {
+          choix.value = 'cloture';
+          choix.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(2000);
+        }
+        sortie.lignesApresFiltre = lignes()
+          .filter((tr) => (tr.textContent || '').includes(ctx.reference)).length;
+
+        // ── La mauvaise référence n'emporte rien ──
+        const bouton = () => lignes()
+          .filter((tr) => (tr.textContent || '').includes(ctx.reference))
+          .map((tr) => tr.querySelector('[onclick^="execDeleteDossier"]'))
+          .find(Boolean);
+        sortie.bouton = !!bouton();
+        if (sortie.bouton) {
+          bouton()?.click();
+          sortie.boiteAuMauvaisCode = await repondre('CE-N-EST-PAS-LA-REFERENCE');
+          sortie.survitAuMauvaisCode = await existe();
+
+          // ── La bonne l'emporte, et avec elle toute sa chaîne ──
+          if (typeof window.execRefreshDynamic === 'function') {
+            await window.execRefreshDynamic();
+            await attendre(1200);
+          }
+          const choix2 = [...document.querySelectorAll('#exec-content select')]
+            .find((sel) => /filters\.statut/.test(sel.getAttribute('onchange') || ''));
+          if (choix2 && choix2.value !== 'cloture') {
+            choix2.value = 'cloture';
+            choix2.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(2000);
+          }
+          bouton()?.click();
+          sortie.boiteALaBonne = await repondre(ctx.reference);
+          sortie.partiParLeGeste = !(await existe());
+        }
+
+        // ── Et les filtres sont rendus tels qu'ils étaient ──
+        window.EXEC_STATE.filters = JSON.parse(sortie.filtresAuDepart);
+        if (typeof window.execRenderPage === 'function') {
+          window.execRenderPage();
+          await attendre(1200);
+        }
+        sortie.filtresRendus = JSON.stringify(window.EXEC_STATE.filters || {}) === sortie.filtresAuDepart;
+
+        // ── Le repli : il sauve la suite, non le verdict ──
+        sortie.repli = 0;
+        if (await existe()) {
+          const rep = await fetch(`${ctx.api}/dossiers/${ctx.dossierId}`, {
+            method: 'DELETE',
+            credentials: 'same-origin',
+            headers: { 'X-OASIS-Request': '1' },
+          });
+          sortie.repli = rep.status;
+        }
+        // Ce que `dossier` dit maintenant : « il est parti », quel qu'ait été le
+        // chemin. Le contrôle, lui, distingue les deux chemins.
+        const dossier = (sortie.partiParLeGeste || sortie.repli === 200) ? 200 : 0;
         const restes = await (await fetch(`${ctx.api}/dossiers`, { credentials: 'same-origin' })).json();
         const notifs = await (await fetch(`${ctx.api}/notifications`, { credentials: 'same-origin' })).json();
         const rapports = await (await fetch(`${ctx.api}/rapports`, { credentials: 'same-origin' })).json();
         const consts = await (await fetch(`${ctx.api}/constatations`, { credentials: 'same-origin' })).json();
         return {
+          ...sortie,
           dossier,
           dossierEncore: (restes || []).some((d) => d.id === ctx.dossierId),
           notifEncore: (notifs || []).some((n) => n.id === ctx.notifId),
@@ -4870,9 +5245,34 @@ module.exports = async function survSmoke(port) {
           // non sur ce dont on se souvient qu'elle a créé.
           constatationsEncore: (consts || []).filter((c) => c.dossier_id === ctx.dossierId).length,
         };
-      }, { api: M, dossierId: chaine.dossierId, notifId: chaine.notifId });
-      verifier('effacer le dossier emporte sa notification, ses rapports et ses constatations : la ronde ne laisse rien',
-        menage.dossier === 200 && !menage.dossierEncore && !menage.notifEncore
+      }, {
+        api: M,
+        dossierId: chaine.dossierId,
+        notifId: chaine.notifId,
+        reference: finEnBase.reference || finEnBase.notification_ref || '',
+      });
+      verifier('le tableau des dossiers masque les clôturés, et son filtre de statut les rend',
+        menage.page > 200 && menage.filtreStatut === true
+        && menage.lignesAvantFiltre === 0 && menage.lignesApresFiltre === 1,
+        JSON.stringify({ page: menage.page, filtre: menage.filtreStatut,
+          avant: menage.lignesAvantFiltre, apres: menage.lignesApresFiltre }));
+
+      verifier('supprimer un dossier demande sa référence saisie, et une référence fausse n’emporte rien',
+        menage.bouton === true && menage.boiteAuMauvaisCode === true
+        && menage.boiteDemandeSaisie === true
+        && menage.survitAuMauvaisCode === true,
+        JSON.stringify({ bouton: menage.bouton, boite: menage.boiteAuMauvaisCode,
+          saisie: menage.boiteDemandeSaisie, survit: menage.survitAuMauvaisCode }));
+
+      verifier('effacer le dossier par le geste de l’écran emporte sa notification, ses rapports et ses constatations : la ronde ne laisse rien, et rend les filtres',
+        menage.boiteALaBonne === true && menage.partiParLeGeste === true
+        // Les filtres de l'écran sont partagés : les laisser posés fait rougir
+        // les blocs suivants, et c'est arrivé.
+        && menage.filtresRendus === true
+        // Le repli n'a pas eu à servir : s'il avait servi, le geste n'aurait
+        // pas fait son office, et c'est cela que le contrôle refuse.
+        && menage.repli === 0
+        && menage.dossier === 200 && !menage.dossierEncore && !menage.notifEncore
         && menage.rapportsEncore === 0 && menage.constatationsEncore === 0,
         JSON.stringify(menage));
     }
@@ -5169,6 +5569,88 @@ module.exports = async function survSmoke(port) {
     // la fenêtre pour faire déborder la piste, et l'on vérifie les deux états.
     // La fenêtre est rendue à sa taille d'origine ensuite : une ronde qui ne
     // rend pas ce qu'elle a changé fait rougir celles qui la suivent.
+    // ══════════════════════════════════════════════════════════════════
+    //  Le régime du tableau de bord — fabriqué, et non hérité d'un cache
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // ── Deux contrôles qui passaient sur un cache périmé ──
+    //
+    // Le 8 novembre 2026, deux contrôles de ce qui suit ont rougi après une
+    // correction qui ne les concernait pas : le ménage de la ronde du dossier,
+    // jusque-là fait par l'API, se fait désormais par le geste de l'écran
+    // (n° 5.f.73). Le geste appelle `execRefreshDynamic()`, l'appel d'API non.
+    //
+    // *Le cache du client gardait donc une notification et des constatations
+    // que le serveur n'avait plus*, et ces deux contrôles vivaient de cette
+    // péremption :
+    //
+    //   · le filtre « non initiée » de la piste ne restreignait que parce
+    //     qu'une activité paraissait encore engagée — `execAvancement` rend
+    //     `non_initiee` dès qu'il n'y a pas de notification, et sans cache
+    //     périmé les **deux** activités du jeu le sont ;
+    //   · les boutons d'année du formulaire de statistiques se composent des
+    //     années des **constatations** — sans aucune, la rangée n'existe pas,
+    //     et il n'y avait plus rien à cliquer.
+    //
+    // Ils ne mesuraient donc pas ce qu'ils annonçaient. *Un contrôle qui dépend
+    // de données que la ronde a déjà détruites mesure la péremption du cache,
+    // non l'écran.* Le régime est désormais **fabriqué** — une notification en
+    // brouillon pour qu'une activité se distingue de l'autre, une constatation
+    // directe pour qu'une année existe — et rendu à la fin.
+    etape = 'régime du tableau de bord';
+    const regime = await page.evaluate(async (api) => {
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const env = async (url, methode, corps) => {
+        const rep = await fetch(url, {
+          method: methode,
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+          ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        let b = null; try { b = await rep.json(); } catch { /* corps vide */ }
+        return { statut: rep.status, corps: b };
+      };
+      const r = {};
+      const plans = await (await fetch(`${api}/plans-valides`, { credentials: 'same-origin' })).json();
+      const plan = (plans || []).find((x) => (x.activites || []).length);
+      r.plan = !!plan;
+      if (plan) {
+        const a = plan.activites[0];
+        const n = await env(`${api}/notifications`, 'POST', {
+          activite_id: a.id, plan_id: plan.id, prestataire_id: a.prestataire_id,
+          objet: 'SURV — régime du tableau de bord', type_supervision: 'Audit',
+          date_debut_prevue: '2026-09-01', date_fin_prevue: '2026-09-03',
+          lieu: 'Siège', perimetre: 'Ensemble des processus',
+        });
+        r.notif = n.statut;
+        r.notifId = (n.corps || {}).id;
+        r.prestataireId = a.prestataire_id;
+      }
+      // Une constatation **directe** : elle n'a pas de dossier, donc rien à
+      // construire autour d'elle, et elle porte une date — ce qui suffit à la
+      // rangée des années.
+      const c = await env(`${api}/constatations`, 'POST', {
+        direct: true, prestataire_id: r.prestataireId || '', domaine_id: 'AIR',
+        criticite: 'mineur', description: 'SURV — écart qui donne son année au formulaire.',
+      });
+      r.fnc = c.statut;
+      r.fncId = (c.corps || {}).id;
+      if (typeof window.execRefreshDynamic === 'function') {
+        await window.execRefreshDynamic();
+        await attendre(1800);
+      }
+      // Ce que le client voit après relecture : c'est cela que les deux blocs
+      // qui suivent vont mesurer.
+      r.notifsEnCache = (window.EXEC_STATE.data.notifications || []).length;
+      r.fncsEnCache = (window.EXEC_STATE.data.constatations || []).length;
+      return r;
+    }, M);
+    verifier('le régime du tableau de bord est fabriqué : une activité engagée, et une année',
+      regime.plan === true && regime.notif === 201 && !!regime.notifId
+      && regime.fnc === 201 && !!regime.fncId
+      && regime.notifsEnCache >= 1 && regime.fncsEnCache >= 1,
+      JSON.stringify(regime));
+
     etape = 'piste des activités';
     await page.evaluate(async () => {
       const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -5544,6 +6026,39 @@ module.exports = async function survSmoke(port) {
     verifier('le retour aux indicateurs retrouve ses cartes, et le volet se referme par son geste',
       stats2.revenuAuxIndicateurs === true && stats2.voletFerme === true,
       JSON.stringify({ revenu: stats2.revenuAuxIndicateurs, ferme: stats2.voletFerme }));
+
+    // ── Le régime du tableau de bord est rendu ──
+    //
+    // Dernier geste de la ronde, et il porte son propre contrôle : la suite n'a
+    // qu'un jeu d'essai, et ce qu'on y laisse, la campagne suivante le trouve.
+    etape = 'restitution du régime';
+    const rendu = await page.evaluate(async (ctx) => {
+      const env = async (url, methode) => {
+        const rep = await fetch(url, {
+          method: methode, credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+        });
+        return rep.status;
+      };
+      const r = {};
+      if (ctx.fncId) r.fnc = await env(`${ctx.api}/constatations/${ctx.fncId}`, 'DELETE');
+      if (ctx.notifId) r.notif = await env(`${ctx.api}/notifications/${ctx.notifId}`, 'DELETE');
+      const notifs = await (await fetch(`${ctx.api}/notifications`, { credentials: 'same-origin' })).json();
+      const fncs = await (await fetch(`${ctx.api}/constatations`, { credentials: 'same-origin' })).json();
+      r.notifRestante = (notifs || []).some((n) => n.id === ctx.notifId);
+      r.fncRestante = (fncs || []).some((c) => c.id === ctx.fncId);
+      // Et l'activité redevient notifiable, comme la ronde du dossier l'exige
+      // d'elle-même : c'est `plans-valides` qui l'écarte tant qu'une
+      // notification la porte.
+      const plans = await (await fetch(`${ctx.api}/plans-valides`, { credentials: 'same-origin' })).json();
+      r.activitesRendues = (plans || []).reduce((n, p) => n + (p.activites || []).length, 0);
+      return r;
+    }, { api: M, notifId: regime.notifId, fncId: regime.fncId });
+    verifier('le régime fabriqué pour le tableau de bord est rendu : la ronde ne laisse rien',
+      rendu.fnc === 200 && rendu.notif === 200
+      && rendu.notifRestante === false && rendu.fncRestante === false
+      && rendu.activitesRendues >= 2,
+      JSON.stringify(rendu));
 
     verifier('aucune erreur de console ni requête échouée sur SURV',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));

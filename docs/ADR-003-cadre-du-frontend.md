@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 180 exercés**, 3 indécidables — idem, 7 novembre 2026 (n° 5.f.72) ; le plus gros écran, et le moins couvert |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 185 exercés**, 3 indécidables — idem, 8 novembre 2026 (n° 5.f.73) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -10202,3 +10202,219 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            blocs de cette suite ne sont pas indépendants : chacun suppose un
            magasin que le précédent lui a rendu*, et le dernier contrôle du mien
            exige précisément cette restitution.
+
+       5.f.73 [x] **Les trois dernières pages sans chemin — et les trois défauts qu'ouvrir leur porte a obligé à corriger** — fait le 8 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           La table `PAGES_SANS_CHEMIN` est **vide**. Les quatre pages que le
+           garde d'atteignabilité avait nommées le 14 octobre 2026 (n° 5.f.2)
+           sont tranchées : trois rendues à la barre, une effacée.
+
+           ── Ce que la mesure a dit de chacune ──
+
+           Prise le 8 novembre 2026, sur un jeu portant trois dossiers — un
+           ouvert, un clos, un archivé par la route du module —, chaque page
+           forcée dans le navigateur :
+
+           | Page | Texte rendu | Gestes rendus | Propre à elle seule |
+           |---|---|---|---|
+           | `execution` | 1 166 car. | 9 | `execDeleteDossier` — les deux autres boutons ouvrent le volet, atteignable par les constatations |
+           | `prestataires` | 900 car. | 14 | trois tris, trois onglets, `execArchiveDossier` |
+           | `prestataire_home` | 148 car. | **0** | rien : un titre, le nom de l'organisme, une icône, une phrase |
+
+           *Trois pages, trois questions différentes.* Les présenter comme une
+           seule aurait obtenu une seule réponse, et deux d'entre elles
+           auraient été mauvaises.
+
+           ── Le premier défaut : deux conventions d'archivage, une seule lue ──
+
+           Le module marque l'archivage d'un dossier par un **champ**,
+           `archive`, posé par `PUT /dossiers/:id/archiver`
+           (`src/modules/execution/routes-etats.js`) avec sa date et son auteur,
+           réservé au super-administrateur et refusé sur un dossier non clos.
+           C'est ce champ que les États lisent, et le tableau de bord, et le
+           serveur.
+
+           L'écran « Dossiers » avait la sienne : il écrivait **`statut:
+           'archive'`** par le PUT générique — celui qui recopie dans
+           l'enregistrement tout ce qu'on lui donne sans rien vérifier — et
+           relisait `statut === 'archive'` en **six** endroits. Mesuré sur un
+           dossier clôturé, les deux chemins côte à côte :
+
+           | | le geste de l'écran | la route du module |
+           |---|---|---|
+           | `statut` | `cloture` → **`archive`** | `cloture`, conservé |
+           | `archive` | **absent** | `1` |
+           | `date_archivage` | vide | horodatée |
+           | `archive_par` | vide | le compte |
+           | réserve au super-administrateur | **tombée** | tenue |
+           | exigence d'un dossier clos | **tombée** | tenue |
+
+           Quatre conséquences, et la quatrième est la plus traître : le statut
+           réel du dossier était **détruit** — plus rien ne disait s'il avait
+           été clos ou laissé ouvert ; le dossier n'apparaissait pas dans les
+           archives, qui lisent l'autre champ ; aucune trace de qui ni quand ;
+           et, dans l'autre sens, un dossier archivé par la vraie route
+           s'affichait ici parmi les **clôturés**, l'onglet des archives
+           annonçant zéro. Les deux sens ont été mesurés avant et après.
+
+           *Un statut n'est pas un drapeau. Les confondre perd celui des deux
+           qui porte le sens.*
+
+           ── Le second : deux suppressions pour un même effet, deux gardes ──
+
+           `DELETE /dossiers/:id` emporte le dossier, **sa notification et tous
+           ses échanges** — l'activité redevient « à notifier », et ce qui s'est
+           dit entre l'Autorité et l'organisme disparaît. Le geste de l'écran ne
+           demandait qu'un **oui/non**. Le même effet, offert par le menu
+           « États », exige de **saisir la référence** de l'activité.
+
+           La garde la plus forte des deux a été posée sur celle qui ne l'avait
+           pas, **avant** que la page ne s'ouvre. Reste une asymétrie que le code
+           ne décide pas, et qui est écrite sur place : le serveur réserve ce
+           chemin aux administrateurs, là où celui des États est réservé au
+           super-administrateur. Deux autorités pour un même effet.
+
+           ── Le troisième, auquel le premier a mené ──
+
+           Si l'écran posait le statut d'un dossier par le PUT générique, c'est
+           que ce PUT le laissait faire. Mesuré, les deux appels à la suite sur
+           le **même** dossier ouvert :
+
+           | Appel | Réponse |
+           |---|---|
+           | `PUT /dossiers/:id/close` | **400** — « Un rapport transmis est requis pour clôturer » |
+           | `PUT /dossiers/:id` avec `{ statut: 'cloture' }` | **200**, et le dossier est clos |
+
+           *Toutes les gardes de transition d'un dossier étaient donc
+           facultatives.* Et celle-là n'est pas une formalité : `/close` rend du
+           même geste les constatations **opposables** à l'organisme — la route
+           porte elle-même le commentaire expliquant qu'elle fait les deux
+           ensemble, pour qu'un échec au milieu ne laisse pas un dossier clos
+           dont les constatations ne le sont pas. Clôturer par le PUT générique
+           sautait cette seconde moitié.
+
+           La même mesure a montré trois autres passages : `archive: 1` avec un
+           auteur forgé et une date de 1970 ; un statut qui n'existe nulle part,
+           accepté et conservé ; et un champ inventé par le client, persisté.
+
+           Les **deux** seuls appelants de cette route n'envoient que du contenu
+           — mesuré, pas supposé. Elle refuse donc les clés du cycle de vie et de
+           l'identité, avec un 400 nommé plutôt qu'un rejet silencieux. Trois
+           contrôles dans la suite HTTP, et ils se tiennent ensemble :
+
+           | Contre-essai | Verdict |
+           |---|---|
+           | liste réservée vidée, `{ statut: 'cloture' }` | **rouge** — 200, et `cloture` en base |
+           | liste réservée vidée, `{ archive: 1 }` | **rouge** — 200, `archive: 1`, auteur « personne » |
+           | le contenu (`conclusion`) passe toujours | **vert** dans les deux cas |
+
+           Le troisième est celui qui compte : sans lui, on aurait pu fermer la
+           route entière et croire l'avoir gardée. `execution` passe de 118 à
+           **121 contrôles**.
+
+           Une inexactitude relevée au passage : pendant ce contre-essai, un
+           contrôle nommé « le PUT générique ne pose pas le statut » est resté
+           vert. Il porte sur les **constatations**, non sur les dossiers — il ne
+           pouvait pas mordre. Sa route, elle, **écarte** les champs réservés en
+           silence au lieu de refuser, et c'est justifié chez elle : ses
+           appelants renvoient le formulaire entier, champs réservés compris.
+           Refuser y casserait l'enregistrement ordinaire. Les deux conventions
+           voisines sont désormais expliquées sur place.
+
+           ── Pourquoi un garde de forme, et non un contrôle d'écran ──
+
+           Les deux défauts vivaient derrière une porte fermée : **aucune ronde
+           ne peut cliquer un bouton que rien n'affiche**. Le garde est donc dans
+           `taille.smoke.js` — aucun code de SURV ne prend « archivé » pour un
+           statut de dossier, ni en écriture ni en lecture —, et il tient la
+           correction indépendamment de ce que la maîtrise d'ouvrage décide de la
+           page. Contre-essayé dans les deux moitiés : l'écriture remise, il
+           rougit ; une lecture remise, il rougit. Et il **ne rougit pas** sur
+           `p.statut === 'archive'` de la liste des plans archivés, qui porte
+           légitimement cette convention — un garde qui mord sur le juste ne
+           garde rien.
+
+           `taille` passe de 69 à **70 contrôles**.
+
+           ── Les trois décisions, et ce qu'elles ont coûté ──
+
+           | Page | Décision | Ce qui a été fait avant d'ouvrir |
+           |---|---|---|
+           | `execution` | **rendue à la barre** | la suppression demande la référence saisie — cinq clés de traduction en trois langues |
+           | `prestataires` | **rendue à la barre** | l'archivage écrit `archive`, les six lectures suivent |
+           | `prestataire_home` | **supprimée** | son cas d'aiguillage, sa fonction de rendu, son entrée du sas et ses deux traductions dans les trois langues |
+
+           *Ouvrir une porte, c'est répondre de ce qu'il y a derrière.* Deux des
+           trois pages rendues portaient un défaut que leur inaccessibilité seule
+           empêchait de nuire ; la question n'était donc pas « faut-il l'ouvrir »
+           mais « qu'est-ce qu'on ouvre ».
+
+           ── Ce que la ronde éprouve maintenant, et ce qu'elle a cessé de faire ──
+
+           Le ménage de la ronde du dossier se faisait **par l'API**, faute de
+           page. Il se fait désormais par le geste de l'écran : le tableau masque
+           les dossiers clôturés, son filtre de statut les rend, une référence
+           fausse n'emporte rien, et la bonne emporte la chaîne entière. *Un
+           contrôle qui appelle la route prouve que la route marche, non que le
+           bouton l'atteint* — et c'était la seule raison pour laquelle il
+           appelait la route.
+
+           L'écran « Dossiers » est éprouvé là où la ronde vient de clôturer :
+           ses trois onglets, le tri d'une colonne, l'archivage et ce que le
+           serveur en retient, le passage de la ligne d'un onglet à l'autre, et
+           la restitution — le dossier est désarchivé en partant, pour que les
+           blocs suivants le trouvent comme ils l'ont toujours trouvé.
+
+           ── Ce que la couverture y gagne, et le compte des contrôles ──
+
+           SURV passe de **180 à 185 gestes exercés sur 316**. Les cinq sont
+           ceux des deux pages rendues : `execDeleteDossier`,
+           `execArchiveDossier`, `execSortDossiersClotures`,
+           `EXEC_STATE.dossierPageTab` et `EXEC_STATE.filters.statut`. Rien
+           n'est perdu, et **le dénominateur ne bouge pas de 316** — ce qui est
+           la preuve, et non l'argument, que la page effacée ne portait rien.
+
+           | Suite | Avant | Après |
+           |---|---|---|
+           | `taille` | 69 | **70** |
+           | `execution` (HTTP) | 118 | **121** |
+           | `surv` (navigateur) | 160 | **170** |
+
+           Le garde de couverture a été contre-essayé lui aussi : la dispense
+           réglée à 184 rougit en nommant l'écart, et à 185 elle passe. *Un
+           chiffre déclaré qui ne vaut pas la mesure n'est pas une dispense,
+           c'est une fiction.*
+
+           ── Un contrôle vert qui vivait d'un cache périmé ──
+
+           Remplacer le ménage par le geste a fait rougir **deux contrôles du
+           tableau de bord**, qui n'avaient rien à voir avec lui. Le geste
+           appelle `execRefreshDynamic()`, l'appel d'API non : le cache du
+           client gardait donc une notification et des constatations que le
+           serveur n'avait plus, et ces deux contrôles vivaient de cette
+           péremption.
+
+           | Contrôle | Ce dont il vivait |
+           |---|---|
+           | le filtre « non initiée » de la piste | `execAvancement` rend `non_initiee` dès qu'il n'y a pas de notification. Sans cache périmé, les **deux** activités du jeu le sont, et cocher le filtre ne restreint plus rien |
+           | les boutons d'année du formulaire de statistiques | la rangée se compose des années des **constatations**. Sans aucune, la rangée n'existe pas, et il n'y a plus rien à cliquer |
+
+           Rétablir le ménage par l'API les aurait rendus verts, et aurait
+           conservé deux contrôles qui passent sur une fiction. Le régime est
+           donc **fabriqué** — une notification en brouillon pour qu'une
+           activité se distingue de l'autre, une constatation directe pour
+           qu'une année existe —, et rendu à la fin, avec un contrôle pour
+           chacun des deux gestes. C'est le patron que cette suite applique
+           partout ailleurs ; ces deux contrôles-là en étaient dispensés par
+           accident.
+
+           *Un contrôle qui dépend de données que la ronde a déjà détruites
+           mesure la péremption du cache, non l'écran.*
+
+           ── Trois erreurs de ma part sur ce bloc ──
+
+           | Erreur | Ce qu'elle a coûté, et la règle |
+           |---|---|
+           | Une sonde lancée avant de garnir le jeu d'essai | les trois pages rendaient leurs barres de filtres et rien d'autre : **la fixture des tests n'a ni dossier ni notification**, et je l'avais confondue avec `data/`. La première mesure donnait 6 gestes là où il y en a 9 |
+           | Un diagnostic annoncé avant d'être éprouvé | j'ai attribué les deux rouges du tableau de bord à des filtres que mon bloc laissait posés, corrigé cela, annoncé le remède — et la ronde a rendu **le même rouge**. La vraie cause était l'inverse : non ce que je laissais, mais ce que je ne laissais plus. *Un remède qu'on annonce avant de l'avoir mesuré n'est qu'une hypothèse qui s'habille* |
+           | Un rouge prédit qui n'est pas venu | j'ai annoncé qu'un de mes contrôles rougirait, les trois onglets rendant le même balisage à vide. **Il n'a pas rougi** — les trois rendent trois empreintes distinctes. Mon relâchement à « au moins deux » reste un choix de robustesse, et je ne le présente pas comme la correction d'un rouge |

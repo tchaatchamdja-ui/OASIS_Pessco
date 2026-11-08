@@ -116,6 +116,50 @@ module.exports = async function executionSmoke(port) {
       verifier('clôture refusée avant transmission du rapport',
         (await PUT(`${M}/dossiers/${dossierId}/close`)).statut === 400);
 
+      // ── Et la garde ci-dessus ne se contourne pas par le PUT générique ──
+      //
+      // `PUT /dossiers/:id` sert l'enregistrement du contenu — réalisation,
+      // rédaction, annexes. Il recopiait tout ce qu'on lui donnait, cycle de vie
+      // compris : mesuré le 8 novembre 2026, `{ statut: 'cloture' }` rendait 200
+      // sur le dossier que `/close` venait de refuser à la ligne précédente.
+      // *Toutes les gardes de transition étaient facultatives.*
+      //
+      // Et clôturer n'est pas une formalité : `/close` rend du même geste les
+      // constatations **opposables** à l'organisme. Clôturer par le PUT
+      // générique sautait cette moitié, et laissait des constatations
+      // inopposables pour toujours.
+      //
+      // Les trois contrôles se tiennent ensemble : le refus, le magasin qui n'a
+      // pas bougé, et le contenu qui passe encore. Sans le troisième, on aurait
+      // pu fermer la route entière et croire l'avoir gardée.
+      {
+        const refus = await PUT(`${M}/dossiers/${dossierId}`, { statut: 'cloture', current_step: 'cloture' });
+        const apres = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        verifier('le cycle de vie d’un dossier ne s’écrit pas par le PUT générique',
+          refus.statut === 400 && (refus.corps || {}).error === 'champs_reserves'
+          && (((refus.corps || {}).champs) || []).includes('statut')
+          && apres.statut !== 'cloture',
+          JSON.stringify({ statut: refus.statut, corps: refus.corps, enBase: apres.statut }));
+
+        const refusArchive = await PUT(`${M}/dossiers/${dossierId}`, {
+          archive: 1, archive_par: 'personne', date_archivage: '1970-01-01',
+        });
+        const apresArchive = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        verifier('ni le drapeau d’archivage, ni son auteur, ni sa date',
+          refusArchive.statut === 400
+          && Number(apresArchive.archive || 0) !== 1
+          && !apresArchive.archive_par,
+          JSON.stringify({ statut: refusArchive.statut,
+            champs: (refusArchive.corps || {}).champs,
+            archive: apresArchive.archive, par: apresArchive.archive_par }));
+
+        const contenu = await PUT(`${M}/dossiers/${dossierId}`, { conclusion: 'Conclusion de la ronde.' });
+        const apresContenu = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        verifier('et le contenu du dossier s’écrit toujours par cette route',
+          contenu.statut === 200 && apresContenu.conclusion === 'Conclusion de la ronde.',
+          JSON.stringify({ statut: contenu.statut, conclusion: apresContenu.conclusion }));
+      }
+
       const renvoi = await PUT(`${M}/dossiers/${dossierId}/return`, { observations: 'Préciser la synthèse.' });
       verifier('renvoi pour correction', renvoi.statut === 200);
       const v2 = await PUT(`${M}/dossiers/${dossierId}/submit`);

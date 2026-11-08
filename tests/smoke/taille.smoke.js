@@ -321,6 +321,55 @@ module.exports = async function tailleSmoke() {
       fabriques.length === 0, fabriques.join(' · '));
   }
 
+  // ── Un dossier archivé se marque sur `archive`, et jamais sur `statut` ──
+  //
+  // Deux conventions d'archivage coexistaient dans SURV, et une seule était
+  // lue. `PUT /dossiers/:id/archiver` (`routes-etats.js`) pose `archive: 1`,
+  // `date_archivage` et `archive_par`, en réservant le geste au
+  // super-administrateur et en exigeant un dossier clôturé ; c'est ce champ
+  // `archive` que les États, le tableau de bord et le serveur lisent.
+  //
+  // L'écran « Dossiers » avait la sienne : il écrivait `statut: 'archive'` par
+  // le PUT générique — qui recopie tout ce qu'on lui donne sans rien vérifier —
+  // et relisait `statut === 'archive'` en six endroits. Mesuré le 8 novembre
+  // 2026 sur un dossier clôturé : le statut réel était **écrasé**, `archive`
+  // restait absent, la date et l'auteur restaient vides, et les deux gardes du
+  // serveur tombaient. Dans l'autre sens, un dossier archivé par la vraie route
+  // s'affichait dans « Dossiers clôturés », et l'onglet des archives annonçait
+  // zéro (n° 5.f.73).
+  //
+  // Le défaut était hors d'atteinte — la page n'était dans aucune barre. C'est
+  // précisément pourquoi il faut un garde de **forme** : aucune ronde ne peut
+  // cliquer un bouton que rien n'affiche, et l'écran sera rendu au menu le jour
+  // où la maîtrise d'ouvrage le décidera. Le garde tient la correction d'ici là.
+  //
+  // Les plans de planification, eux, portent légitimement `statut === 'archive'`
+  // (`exec-app.js`, la liste des plans archivés) : le garde ne regarde donc que
+  // les porteurs dont le nom désigne un dossier.
+  {
+    const fautes = [];
+    // Commentaires retirés : ce bloc-ci cite les deux formes qu'il interdit, et
+    // un garde qui se prend lui-même pour un défaut ne garde rien.
+    const sansCommentaires = (t) => t
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const ECRIT = /statut\s*:\s*'archive'/g;
+    const LIT = /\b(d|doss|dossier|dos)\.statut\s*[!=]==\s*'archive'/g;
+    fichiers.filter((f) => /(public\/modules\/execution|src\/modules\/execution)\/.*\.js$/
+      .test(f.replace(/\\/g, '/')))
+      .forEach((f) => {
+        const texte = sansCommentaires(fs.readFileSync(f, 'utf8'));
+        for (const m of texte.matchAll(ECRIT)) {
+          fautes.push(`${relatif(f)} : écrit ${m[0]}`);
+        }
+        for (const m of texte.matchAll(LIT)) {
+          fautes.push(`${relatif(f)} : lit ${m[0]}`);
+        }
+      });
+    verifier('aucun code de SURV ne prend « archivé » pour un statut de dossier',
+      fautes.length === 0, fautes.join(' · '));
+  }
+
   // Un sélecteur défini deux fois dans la même feuille, c'est une règle qui en
   // annule une autre — la source de plusieurs corrections déjà passées ici.
   const doublons = [];

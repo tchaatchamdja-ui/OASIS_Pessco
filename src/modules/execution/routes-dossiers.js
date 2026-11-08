@@ -33,6 +33,26 @@ module.exports = function register(app, deps, M) {
     return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '', prestataire_id: prestataireId || '' };
   };
 
+  // ── La portée d'un objet du dossier ──
+  //
+  // Son **secteur**, et le domaine de ce secteur. Le secteur d'un dossier vient
+  // de la notification qui l'a ouvert ; à défaut — un objet qui n'en porte pas —
+  // on retombe sur celui de l'organisme surveillé, qui est la portée dans
+  // laquelle il a été inscrit.
+  //
+  // C'est la même notion que `perimetreActivite` des « États », et c'est voulu :
+  // les cinq routes destructrices du module doivent se garder sur la même
+  // portée, sans quoi l'une refuse ce que l'autre accepte (n° 5.f.75).
+  const perimetreDe = (objet) => {
+    const sid = (objet && objet.secteur_id) || '';
+    if (!sid) return perimetrePrestataire(objet && objet.prestataire_id);
+    const s = parId('secteurs', sid) || {};
+    return {
+      domaine_id: (objet && objet.domaine_id) || s.domaine_id || '',
+      secteur_id: sid,
+    };
+  };
+
   // Restriction par processus sur le circuit de la constatation.
   const refusProcessus = async (req, res, c, cle) => {
     const perim = perimetrePrestataire(c.prestataire_id);
@@ -374,9 +394,17 @@ module.exports = function register(app, deps, M) {
   }));
 
   app.delete(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
+    // Le dossier d'abord : sa **portée** décide, et on ne la connaît pas avant
+    // de l'avoir lu. L'ordre est celui des « États », pour la même raison.
     const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
+    if (!R.peutDetruire(req.user, perimetreDe(d), referentiels)) {
+      // `gestionnaire_portee` et non `administrateurs` : le refus doit dire la
+      // **portée**, sinon un gestionnaire qui en détient une se croit sans
+      // privilège. Le socle traduit déjà ce code — « au gestionnaire du module,
+      // sur sa portée » —, et `reinitialiser` des « États » l'employait seul.
+      return reserve(res, 'gestionnaire_portee');
+    }
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : le dossier qui la porte ne se supprime plus.
     const fncs = (await db.list('constatations')).filter((c) => c.dossier_id === d.id).map((c) => c.id);
@@ -1095,8 +1123,23 @@ module.exports = function register(app, deps, M) {
   }));
 
   app.delete(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
-    if (!await db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
+    const c = await db.get('constatations', req.params.id);
+    if (!c) return introuvable(res, 'constatation');
+    // Une constatation porte son domaine ; son secteur vient du dossier qui la
+    // porte, ou de l'organisme quand elle a été relevée directement.
+    const dc = c.dossier_id ? await db.get('dossiers', c.dossier_id) : null;
+    const cible = perimetreDe({
+      domaine_id: c.domaine_id || '',
+      secteur_id: (dc || {}).secteur_id || c.secteur_id || '',
+      prestataire_id: c.prestataire_id || '',
+    });
+    if (!R.peutDetruire(req.user, cible, referentiels)) {
+      // `gestionnaire_portee` et non `administrateurs` : le refus doit dire la
+      // **portée**, sinon un gestionnaire qui en détient une se croit sans
+      // privilège. Le socle traduit déjà ce code — « au gestionnaire du module,
+      // sur sa portée » —, et `reinitialiser` des « États » l'employait seul.
+      return reserve(res, 'gestionnaire_portee');
+    }
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
     // Retirée, non détruite : une mesure d'application a pu être prononcée dessus
     // entre la vérification ci-dessus et cette ligne, et elle garde son fondement

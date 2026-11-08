@@ -10510,3 +10510,130 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            n'instrumente rien.
 
            `surv` passe de 170 à **173 contrôles**.
+
+       5.f.75 [x] **Cinq routes qui détruisent, trois façons de s'en garder** — fait le 8 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Le module porte cinq routes destructrices. Elles se gardaient de
+           trois façons différentes, et aucune ne ressemblait aux autres.
+
+           | Route | Garde mesurée |
+           |---|---|
+           | `DELETE /dossiers/:id` | gestionnaire du module, **toutes portées confondues** |
+           | `DELETE /constatations/:id` | idem |
+           | `DELETE /rapports/:id` | idem, **et aucune garde de statut** |
+           | `DELETE /activites/:id` | idem |
+           | `DELETE /activites-en-cours/:id` | rôle portail **SUPERADMIN** du compte réel, **aucune portée** |
+           | `PUT /activites-en-cours/:id/reinitialiser` | gestionnaire **et** validateur de la portée |
+
+           `R.isAdmin` répond « ce compte est gestionnaire quelque part » :
+           `meilleurPrivilege` le dit de lui-même — « toutes portées
+           confondues ». C'est juste pour ce qu'il garde par ailleurs, qui n'a
+           pas de portée : les délais du processus, les référentiels, les
+           paramètres du module. Mais quatre routes **destructrices** s'y
+           adossaient, sur des objets qui en ont une.
+
+           Conséquence, mesurée : **un gestionnaire dont la portée est un
+           secteur pouvait détruire dans tous les autres.** Le contre-essai l'a
+           reproduit — le dossier d'un autre secteur effacé, `200`, et six
+           contrôles tombés en aval avec lui.
+
+           ── Ce que la maîtrise d'ouvrage a tranché, et en deux fois ──
+
+           La portée est exigée partout, et **le privilège du module suffit** :
+           le rôle portail n'entre pas en ligne de compte. Une seule règle pour
+           les six — `peutDetruire`, gestionnaire **de la portée de l'objet**.
+
+           La décision a été prise deux fois, et il faut dire pourquoi. **Ma
+           première question décrivait faussement la cinquième route** : je
+           l'avais annoncée comme exigeant « SUPERADMIN ou ADMIN et le privilège
+           du module », ayant lu `peutAdministrer`, qui garde l'archivage et
+           l'arrêt — non la suppression, qui exige le seul rôle portail
+           SUPERADMIN. La question a été reposée sur la mesure corrigée, et la
+           réponse n'a pas changé.
+
+           C'est donc un **élargissement assumé** de cette route-ci : la
+           destruction définitive d'une activité passe du super-administrateur du
+           portail à tout gestionnaire dans sa portée. Il est cohérent — supprimer
+           le dossier de l'activité emporte déjà la même cascade, et cette
+           suppression-là était ouverte au gestionnaire. Les deux gardes qui
+           restent ne sont pas de niveau : une constatation reprise par « Mesures
+           d'Application » rend l'activité indestructible, et l'écran exige la
+           référence saisie.
+
+           *Une mesure fausse ne se rattrape pas en gardant la décision qu'elle a
+           obtenue : elle se reprend, question comprise.*
+
+           ── Le troisième patron existait déjà, et c'était le bon ──
+
+           `reinitialiser` tenait « gestionnaire et validateur de la portée », et
+           refusait sous le code `gestionnaire_portee` — « au gestionnaire du
+           module, sur sa portée », que le socle traduisait depuis toujours pour
+           cette seule route. La règle était donc dans le module, en un seul
+           endroit, et c'est elle qui a été généralisée. `peutDetruire` demande
+           « gestionnaire **de** la portée », ce qui est plus strict sur l'axe du
+           privilège : nul n'y gagne un droit.
+
+           Les cinq refus portent désormais ce code, et non `administrateurs`.
+           *Un gestionnaire qui détient une portée ne doit pas lire qu'il n'a pas
+           le privilège.*
+
+           ── Un rapport transmis ne se supprime pas ──
+
+           `DELETE /rapports/:id` n'avait **aucune garde de statut** : un rapport
+           `transmis` — l'acte envoyé à l'organisme surveillé — s'effaçait comme
+           un brouillon, et par `db.remove`, qui ne retient pas son auteur.
+
+           Il est refusé (409 `rapport_transmis`). Les versions antérieures et
+           les brouillons restent supprimables, et l'effacement **marque** au
+           lieu de détruire, par le geste que le magasin porte depuis le
+           3 octobre 2026 : `retire_le`, `retire_par`, et l'enregistrement
+           disparaît de toutes les listes. La politique de conservation le dit du
+           magasin entier — « actes de surveillance […] l'effacement reste une
+           décision de l'autorité » : une décision, donc, mais qui laisse sa
+           trace.
+
+           **Une inconséquence reste, et elle est volontaire** : `removeDossier`
+           détruit les rapports d'un dossier qu'on efface, et son commentaire en
+           donne la raison — on efface alors le dossier entier, et plus rien n'y
+           renvoie. Ici on retire **un** rapport d'un dossier qui vit. Ce n'est
+           pas le même geste, et l'aligner demanderait un mandat qui n'a pas été
+           donné.
+
+           ── La garde d'écran reste grossière, et c'est le partage du module ──
+
+           Le client ne connaît que le meilleur privilège, jamais les portées —
+           le module l'écrit déjà : « le serveur revérifie ». Un gestionnaire
+           verra donc le geste sur un objet hors de sa portée, et recevra un
+           refus qui nomme la portée.
+
+           Ce n'est pas le cas de la page « Déclenchement » (n° 5.f.72), où
+           **tous** les gestes étaient refusés à un lecteur et la page entière
+           inutile. Ici le geste marche dans la portée et refuse dehors, et le
+           module fonctionne déjà ainsi pour l'archivage et l'arrêt.
+
+           La garde de la suppression définitive a suivi la route :
+           `execEtatsEstSuperadmin()` est partie — devenue sans emploi, et
+           retirée — pour `_execIsAdmin()`, sans quoi la maîtrise d'ouvrage aurait
+           confié un droit que rien n'offre.
+
+           ── Sept contrôles, et trois contre-essais ──
+
+           Le bloc éprouve la règle sur un **compte réel dont la portée se
+           déplace** : posée sur un autre secteur, le geste est refusé et le
+           dossier est toujours là ; posée sur le secteur du dossier, la version
+           dépassée d'un rapport part et le transmis refuse. Le compte est rendu
+           à sa portée d'origine, et un contrôle l'exige.
+
+           | Contre-essai | Ce qui rougit |
+           |---|---|
+           | la règle oublie la portée | le contrôle de portée : `200`, et le dossier d'un autre secteur **détruit** — six contrôles tombent en aval |
+           | le rapport transmis redevient supprimable | **un seul** des deux contrôles de rapport ; celui de la version dépassée reste vert |
+
+           `execution` passe de 121 à **128 contrôles**.
+
+           ── Ce qui reste ouvert, et qui est hors de ce tour ──
+
+           `routes-notifications.js` laisse un gestionnaire **toutes portées
+           confondues** modifier la notification d'un autre. C'est une écriture,
+           non une destruction, et elle sort du mandat donné ici — mais c'est le
+           même `isAdmin` scope-aveugle sur un objet qui a une portée.

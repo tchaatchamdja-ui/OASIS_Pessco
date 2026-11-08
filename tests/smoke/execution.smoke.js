@@ -218,6 +218,99 @@ module.exports = async function executionSmoke(port) {
       const revenu = (await srv.appel(`${M}/dossiers`)).corps.find((d) => d.id === dossierId) || {};
       verifier('dossier revenu parmi les clôturés', !Number(revenu.archive));
 
+      // ── L'autorité des gestes destructeurs : une seule règle, et sa portée ──
+      //
+      // Cinq routes du module détruisent. Elles se gardaient de **trois** façons
+      // différentes, mesuré le 8 novembre 2026 :
+      //
+      // | Route | Garde |
+      // |---|---|
+      // | `/dossiers/:id`, `/constatations/:id`, `/rapports/:id`, `/activites/:id` | gestionnaire du module, **toutes portées confondues** |
+      // | `/activites-en-cours/:id` | rôle portail **SUPERADMIN**, **aucune portée** |
+      // | `/activites-en-cours/:id/reinitialiser` | gestionnaire **et** validateur de la portée |
+      //
+      // Conséquence du premier patron : un gestionnaire dont la portée est un
+      // secteur pouvait détruire dans tous les autres. La maîtrise d'ouvrage a
+      // tranché — **gestionnaire du module, dans la portée de l'objet**, le rôle
+      // portail hors jeu — et les cinq routes tiennent désormais cette règle
+      // (ADR-003, n° 5.f.75).
+      //
+      // Ce bloc l'éprouve sur un compte réel, dont la portée se déplace : hors
+      // de la portée le geste est refusé, dans la portée il passe, et le refus
+      // **nomme la portée** plutôt que le privilège.
+      {
+        const COMPTE = 'm.ahoyo@anac.bj';
+        const DROITS = `/api/m/droits/SURV/users/${encodeURIComponent(COMPTE)}`;
+        const refs = (await srv.appel('/api/m/droits/refs')).corps || {};
+        const secteurs = refs.secteurs || [];
+        const d = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        const sienSecteur = d.secteur_id || '';
+        const autre = secteurs.find((x) => x.id && x.id !== sienSecteur) || {};
+        const sien = secteurs.find((x) => x.id === sienSecteur) || {};
+        verifier('le jeu d’essai offre deux secteurs distincts, et le dossier en porte un',
+          !!sienSecteur && !!autre.id && autre.id !== sienSecteur,
+          JSON.stringify({ dossier: sienSecteur, autre: autre.id, secteurs: secteurs.length }));
+
+        const poser = async (secteur) => (await srv.appel(DROITS, {
+          method: 'PUT',
+          body: JSON.stringify({
+            // Privilège de base **lecteur** : sans cela le compte serait
+            // gestionnaire partout, et la portée ne déciderait de rien.
+            privilege: 'LECTEUR',
+            scopes: secteur
+              ? [{ domaine_id: secteur.domaine_id || '', secteur_id: secteur.id, privilege: 'GESTIONNAIRE' }]
+              : [],
+          }),
+        })).statut;
+
+        // ── 1. Hors de sa portée : refusé, et le refus nomme la portée ──
+        verifier('le privilège se pose sur un seul secteur', await poser(autre) === 200);
+        await srv.connexion(COMPTE);
+        const refuse = await srv.appel(`${M}/dossiers/${dossierId}`, {
+          method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+        });
+        await srv.connexion();
+        const toujoursLa = ((await srv.appel(`${M}/dossiers`)).corps || [])
+          .some((x) => x.id === dossierId);
+        verifier('un gestionnaire hors de sa portée ne détruit pas un dossier, et le refus nomme la portée',
+          refuse.statut === 403
+          // `reserve()` rend `{ error: 'reserve', role: <code> }` : c'est `role`
+          // qui porte le vocabulaire, et le socle le traduit.
+          && (refuse.corps || {}).role === 'gestionnaire_portee'
+          && toujoursLa === true,
+          JSON.stringify({ statut: refuse.statut, corps: refuse.corps, present: toujoursLa }));
+
+        // ── 2. Un rapport transmis ne se supprime pas, même dans la portée ──
+        verifier('le privilège se déplace sur le secteur du dossier', await poser(sien) === 200);
+        await srv.connexion(COMPTE);
+        const transmis = await srv.appel(`${M}/rapports/${rapportV3}`, {
+          method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+        });
+        // ── 3. Et dans la portée, une version dépassée part — avec son auteur ──
+        const ancienne = await srv.appel(`${M}/rapports/${rapportId}`, {
+          method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+        });
+        await srv.connexion();
+        const restants = (await srv.appel(`${M}/rapports`)).corps || [];
+        const trace = ((await srv.appel(`${M}/rapports/${rapportId}`)).corps) || {};
+        verifier('un rapport transmis refuse d’être supprimé, et il est toujours là',
+          transmis.statut === 409
+          && (transmis.corps || {}).error === 'rapport_transmis'
+          && restants.some((r) => r.id === rapportV3),
+          JSON.stringify({ statut: transmis.statut, corps: transmis.corps,
+            present: restants.some((r) => r.id === rapportV3) }));
+        verifier('une version dépassée se retire dans la portée, disparaît des listes, et retient son auteur',
+          ancienne.statut === 200
+          && !restants.some((r) => r.id === rapportId),
+          JSON.stringify({ statut: ancienne.statut,
+            encoreListe: restants.some((r) => r.id === rapportId),
+            relecture: trace.error || trace.statut || 'absent' }));
+
+        // Le compte est rendu à ce qu'il était : une portée laissée posée
+        // changerait ce que les blocs suivants mesurent.
+        verifier('le compte d’essai est rendu à sa portée d’origine', await poser(null) === 200);
+      }
+
       // ── Constatation hors activités : commentaires de validation ──
       // Le valideur annote champ par champ ; la décision fige la version,
       // et le motif du renvoi en découle.

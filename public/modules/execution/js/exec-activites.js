@@ -313,7 +313,6 @@ function _buildStepNotification(dossier, dossierId) {
         }
     } catch(e) {}
 
-    const pdfPath = dossier.notification_pdf_path || '';
 
     return `
     ${_execFormSection('A', 'section_a_prestataire', `
@@ -416,8 +415,11 @@ function _buildStepNotification(dossier, dossierId) {
     <div style="margin-top:1rem;">
         <label style="font-weight:600;">${te('fiche_notification')}</label>
         <div style="margin-top:0.35rem;">
-            ${pdfPath ? `<a href="${_escAttr(_execDl(pdfPath))}" download class="btn btn-primary btn-sm" style="text-decoration:none;">${EXEC_ICONS.pdf} Exporter PDF</a>` :
-            `<button class="btn btn-primary btn-sm" onclick="execGenerateNotificationPdf('${dossierId}')">${EXEC_ICONS.pdf} Exporter PDF</button>`}
+            <!-- Une branche a été retirée ici : elle servait une ancre vers
+                 le champ notification_pdf_path, que rien n'écrit nulle part
+                 dans le dépôt — elle ne s'est donc jamais rendue.
+                 ADR-003, n° 5.f.74. -->
+            <button class="btn btn-primary btn-sm" onclick="execGenerateNotificationPdf('${dossierId}')">${EXEC_ICONS.pdf} Exporter PDF</button>
         </div>
     </div>`;
 }

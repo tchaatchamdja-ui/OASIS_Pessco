@@ -1805,6 +1805,121 @@ module.exports = async function survSmoke(port) {
         volet.picker === true && volet.pickerReferme === true && volet.casesProposees >= 1,
         JSON.stringify({ ouvert: volet.picker, referme: volet.pickerReferme, cases: volet.casesProposees }));
 
+      // ══════════════════════════════════════════════════════════════════
+      //  « Exporter PDF » de la fiche de notification (ADR-003, 5.f.74)
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Le geste qui n'a jamais rien exporté ──
+      //
+      // `execGenerateNotificationPdf` appelait `GET …/notifications/:id/pdf` —
+      // **route qui n'existe pas** : aucune n'est montée sous ce chemin, et il
+      // n'y a pas de route générique qui l'attrape. L'appel rendait donc
+      // toujours un 404, le geste tombait toujours dans son repli — l'aperçu, et
+      // « imprimez avec Ctrl-P » —, et son libellé promettait ce qu'il ne
+      // faisait pas. Sa seconde branche attendait un `notification_pdf_path` que
+      // rien n'écrit nulle part dans le dépôt.
+      //
+      // Le relevé disait qu'aucune ronde ne l'avait jamais exercé (n° 5.f.71).
+      // *C'est l'unique raison pour laquelle le 404 n'avait jamais été vu* : le
+      // contrôle de la console de cette suite l'aurait relevé au premier clic.
+      //
+      // Le module n'a jamais produit de PDF au serveur : sa convention est de
+      // composer un document dans le client et de l'ouvrir en fenêtre, avec son
+      // impression. Le geste la suit désormais, et ce bloc mesure **le produit**
+      // — comme celui du rapport, et pour la même raison : un relais mesure le
+      // geste jusqu'à la porte, jamais au-delà.
+      etape = 'document de la fiche';
+      const ficheDoc = await page.evaluate(async () => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        // Le volet est ouvert à l'étape « Réalisation » : le bouton est à
+        // l'étape « Notification ».
+        document.querySelector('[onclick*="execSwitchDossierStep"][onclick*="notification"]')?.click();
+        await attendre(2000);
+        const bouton = document.querySelector('[onclick^="execGenerateNotificationPdf"]');
+        r.bouton = !!bouton;
+        // *Et l'ancre de l'ancienne branche morte n'est plus là* : elle visait un
+        // champ que rien n'écrit, et elle portait un `download` — le patron que
+        // le garde de forme interdit.
+        r.ancreMorte = !!document.querySelector('#execSlider a[download][href*="notification"]');
+        if (!bouton) return r;
+
+        const recus = [];
+        const vraiOpen = window.open;
+        window.open = () => {
+          const doc = { html: '' };
+          recus.push(doc);
+          return {
+            document: { write: (h) => { doc.html += String(h || ''); }, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {},
+          };
+        };
+        try {
+          bouton.click();
+          await attendre(3000);
+        } finally {
+          window.open = vraiOpen;
+        }
+        r.documents = recus.length;
+        const doc = recus[0];
+        if (doc) {
+          const porte = (motif) => new RegExp(motif).test(doc.html || '');
+          r.doc = {
+            complet: porte('<!DOCTYPE html>') && porte('</html>'),
+            titre: (/<title>([^<]*)<\/title>/.exec(doc.html) || [])[1] || '',
+            contenu: porte('id="fiche-content"'),
+            // Le corps de la fiche lui-même, et non une page vide : le bloc
+            // `official-doc-page` et le titre du document officiel.
+            fiche: porte('official-doc-page') && porte('fiche-notification'),
+            titreOfficiel: porte('Fiche de notification d.activité de surveillance'),
+            // Les feuilles du module, par lien et non recopiées : une seconde
+            // copie en JavaScript divergerait au premier ajustement.
+            feuilles: (doc.html.match(/<link rel="stylesheet"/g) || []).length,
+            feuilleFiche: porte('exec-processus\\.css'),
+            feuilleImpression: porte('exec-impression\\.css'),
+            // Les deux gestes que le document porte lui-même.
+            imprimer: porte('onclick="window\\.print\\(\\)"'),
+            fermer: porte('onclick="window\\.close\\(\\)"'),
+            // Le bouton passe `autoPrint` : l'écouteur est donc là.
+            ecouteurImpression: porte("addEventListener\\('load'"),
+            taille: (doc.html || '').length,
+          };
+        }
+        // Le volet est rendu à l'étape où la ronde l'avait laissé.
+        document.querySelector('[onclick*="execSwitchDossierStep"][onclick*="realisation"]')?.click();
+        await attendre(1600);
+        r.revenuARealisation = !!document.querySelector('#realisation_programme_table');
+        return r;
+      });
+
+      verifier('le geste « Exporter PDF » de la fiche compose un document, et l’ancre morte a disparu du volet',
+        ficheDoc.bouton === true && ficheDoc.ancreMorte === false
+        && ficheDoc.documents === 1
+        && !!ficheDoc.doc && ficheDoc.doc.complet === true
+        && ficheDoc.doc.contenu === true && ficheDoc.doc.taille > 2000,
+        JSON.stringify({ bouton: ficheDoc.bouton, ancre: ficheDoc.ancreMorte,
+          documents: ficheDoc.documents, doc: ficheDoc.doc }));
+
+      verifier('le document porte la fiche elle-même, son titre officiel, et les feuilles du module par lien',
+        !!ficheDoc.doc && ficheDoc.doc.fiche === true
+        && ficheDoc.doc.titreOfficiel === true
+        && ficheDoc.doc.titre.length > 0
+        && ficheDoc.doc.feuilles >= 4
+        && ficheDoc.doc.feuilleFiche === true && ficheDoc.doc.feuilleImpression === true,
+        JSON.stringify({ fiche: ficheDoc.doc && ficheDoc.doc.fiche,
+          titre: ficheDoc.doc && ficheDoc.doc.titre,
+          officiel: ficheDoc.doc && ficheDoc.doc.titreOfficiel,
+          feuilles: ficheDoc.doc && ficheDoc.doc.feuilles }));
+
+      verifier('et il porte ses propres gestes — imprimer, fermer, et l’écouteur que « autoPrint » ajoute',
+        !!ficheDoc.doc && ficheDoc.doc.imprimer === true && ficheDoc.doc.fermer === true
+        && ficheDoc.doc.ecouteurImpression === true
+        && ficheDoc.revenuARealisation === true,
+        JSON.stringify({ imprimer: ficheDoc.doc && ficheDoc.doc.imprimer,
+          fermer: ficheDoc.doc && ficheDoc.doc.fermer,
+          ecouteur: ficheDoc.doc && ficheDoc.doc.ecouteurImpression,
+          revenu: ficheDoc.revenuARealisation }));
+
       verifier('la checklist retenue dans le sélecteur est enregistrée sur le dossier',
         !!volet.checklistCochee
         && Array.isArray(volet.retenuesApresChoix)

@@ -29,7 +29,22 @@ const _fSection = (numero, titre, contenu) => `
     ${contenu}
   </section>`;
 
-function _showNotificationPreview(data, fromForm) {
+// ── Pourquoi cette fonction rend son corps sur demande ──
+//
+// Le même balisage sert deux fins : l'aperçu dans le volet, et le **document
+// autonome** que « Exporter PDF » ouvre en fenêtre. Il n'en servait qu'une : le
+// corps était composé ici et remis directement au volet, d'où rien ne pouvait
+// l'en tirer.
+//
+// *Le document n'existait donc pas faute que son corps fût récupérable, et non
+// faute d'être écrit.* Le bouton appelait à la place une route serveur
+// (`GET …/notifications/:id/pdf`) **qui n'existe pas**, et tombait toujours
+// dans son repli.
+//
+// Le troisième paramètre est celui qu'`execDownloadRapport` porte déjà, pour
+// exactement la même raison — « le même document sert à l'aperçu intégré : on
+// le renvoie sur demande ». (ADR-003, n° 5.f.74)
+function _showNotificationPreview(data, fromForm, retournerCorps) {
   const prest = (EXEC_STATE.data.prestataires || []).find((p) => p.id === data.prestataire_id) || {};
   const aac = EXEC_STATE.data.aac || {};
   const programme = data.programme || [];
@@ -181,10 +196,106 @@ function _showNotificationPreview(data, fromForm) {
          <button class="btn btn-success" onclick="execValidateNotification('${data.id}')">${te('valider')}</button>
          <button class="btn btn-danger" onclick="execRejectNotification('${data.id}')">${te('rejeter')}</button>` : ''}`;
 
+  if (retournerCorps) return bodyHtml;
   execSwitchSlider(`${EXEC_ICONS.eye} ${te('apercu_fiche')}`, bodyHtml, footerHtml, 'xl');
+  return bodyHtml;
 }
 
 window._showNotificationPreview = _showNotificationPreview;
+
+/* ── « Exporter PDF » de la fiche : un document, comme pour le rapport ────────
+
+   Ce module n'a **jamais** produit de PDF au serveur, et n'en produit nulle
+   part : sa convention est de composer un document HTML dans le client,
+   de l'ouvrir en fenêtre, et que ce document porte lui-même son impression —
+   c'est ce que fait `execDownloadRapport` pour le rapport d'activité, et ce que
+   la ronde de SURV éprouve déjà sur le produit de ce geste.
+
+   Le bouton de la fiche était le seul à ne pas suivre cette convention. Il
+   appelait `GET …/notifications/:id/pdf`, route qui n'existe pas — aucune n'est
+   montée sous ce chemin —, de sorte qu'il rendait toujours 404 et tombait
+   toujours dans son repli : l'aperçu, et « imprimez avec Ctrl-P ». Son libellé
+   promettait donc ce qu'il ne faisait pas.
+
+   ── Les feuilles de style vont par `<link>`, et non recopiées ici ──
+
+   Les classes du document vivent dans les feuilles du module — `.official-doc-*`
+   dans `exec-documents.css`, les `.fiche-*` dans `exec-processus.css`, et les
+   règles d'impression dans `exec-impression.css`. Les recopier dans une chaîne
+   JavaScript en ferait une **seconde** source, qui divergerait au premier
+   ajustement de la fiche : le défaut que ce dépôt a rencontré le plus souvent.
+   La fenêtre ouverte hérite de l'origine de celle qui l'ouvre, et une adresse
+   absolue y suffit.
+
+   Un PDF au serveur aurait par ailleurs exigé Chromium, que `DEPLOYMENT.md`
+   déclare hors de portée du plan gratuit — « le rendu PDF exige le plan
+   Starter ». Le document du client ne coûte rien de cela.
+   ─────────────────────────────────────────────────────────────────────── */
+const _FICHE_FEUILLES = [
+  '/shared/css/oasis-module.css',
+  '/modules/execution/css/exec-base.css',
+  '/modules/execution/css/exec-documents.css',
+  '/modules/execution/css/exec-processus.css',
+  '/modules/execution/css/exec-impression.css',
+];
+
+// La barre du document : elle ne s'imprime pas, et elle porte l'impression.
+// Même forme que celle du rapport, et les mêmes clés de traduction — aucune
+// nouvelle n'a été nécessaire.
+function _execFicheBarre(ref) {
+  return `<div class="no-print preview-toolbar">
+    <span class="preview-toolbar-title">${te('apercu_puce')}</span>
+    <span class="preview-toolbar-ref">${_esc(ref || 'Fiche de notification')}</span>
+    <button class="preview-btn preview-btn-success" onclick="window.print()" title="${te('astuce_enregistrer_pdf')}">
+      ${te('telecharger_pdf')}
+    </button>
+    <button class="preview-btn preview-btn-ghost" onclick="window.close()">${te('fermer_croix')}</button>
+  </div>
+  <div class="no-print page-offset"></div>`;
+}
+
+window.execExportFicheNotification = async function (notifId, autoPrint, retournerHtml) {
+  // La notification peut déjà être celle que le volet porte ; sinon on la lit
+  // au serveur, pour que le geste vaille aussi depuis la table des dossiers.
+  let data = EXEC_STATE.selectedNotification;
+  if (!data || data.id !== notifId) {
+    try {
+      data = await api(`${EXEC_MODULE_API}/notifications/${notifId}`);
+    } catch (e) {
+      _execToast((e && e.message) || te('err_chargement'), 'error');
+      return null;
+    }
+  }
+  if (!data) {
+    _execToast(te('err_chargement'), 'error');
+    return null;
+  }
+  const corps = _showNotificationPreview(data, false, true);
+  const ref = data.reference || '';
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${_esc(ref || 'Fiche de notification')}</title>
+${_FICHE_FEUILLES.map((f) => `<link rel="stylesheet" href="${f}">`).join('\n')}
+</head><body class="exec-document-autonome">
+${_execFicheBarre(ref)}
+<div id="fiche-content">
+${corps}
+</div><!-- /#fiche-content -->
+<script>
+// Le titre de l'onglet se vide : l'en-tête d'impression du navigateur le
+// reprend, et un document officiel n'a pas à porter le nom d'un onglet.
+try { document.title = ' '; } catch (e) {}
+${autoPrint ? `window.addEventListener('load', () => { setTimeout(() => { try { window.focus(); window.print(); } catch (e) {} }, 600); });` : ''}
+<\/script>
+</body></html>`;
+  // Le même document sert à un aperçu intégré : on le renvoie sur demande,
+  // comme celui du rapport.
+  if (retournerHtml) return html;
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+  _execToast(te('telecharger'), 'success');
+  return html;
+};
 
 /* ── Aperçu d'un rapport ──────────────────────────────────────────────────
    L'aperçu reprend le document final lui-même (celui produit à l'impression :

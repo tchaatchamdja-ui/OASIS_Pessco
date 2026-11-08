@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 185 exercés**, 3 indécidables — idem, 8 novembre 2026 (n° 5.f.73) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 186 exercés**, 3 indécidables — idem, 8 novembre 2026 (n° 5.f.74) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -10418,3 +10418,95 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Une sonde lancée avant de garnir le jeu d'essai | les trois pages rendaient leurs barres de filtres et rien d'autre : **la fixture des tests n'a ni dossier ni notification**, et je l'avais confondue avec `data/`. La première mesure donnait 6 gestes là où il y en a 9 |
            | Un diagnostic annoncé avant d'être éprouvé | j'ai attribué les deux rouges du tableau de bord à des filtres que mon bloc laissait posés, corrigé cela, annoncé le remède — et la ronde a rendu **le même rouge**. La vraie cause était l'inverse : non ce que je laissais, mais ce que je ne laissais plus. *Un remède qu'on annonce avant de l'avoir mesuré n'est qu'une hypothèse qui s'habille* |
            | Un rouge prédit qui n'est pas venu | j'ai annoncé qu'un de mes contrôles rougirait, les trois onglets rendant le même balisage à vide. **Il n'a pas rougi** — les trois rendent trois empreintes distinctes. Mon relâchement à « au moins deux » reste un choix de robustesse, et je ne le présente pas comme la correction d'un rouge |
+
+       5.f.74 [x] **Un bouton « Exporter PDF » qui n'exportait rien, et le document qui était déjà écrit** — fait le 8 novembre 2026.
+
+           `execGenerateNotificationPdf` appelait `GET …/notifications/:id/pdf`.
+           **Cette route n'existe pas** : aucune n'est montée sous ce chemin, et
+           il n'y a pas de route générique qui l'attrape. L'appel rendait donc
+           toujours un 404, le geste tombait toujours dans son repli — l'aperçu
+           dans le volet, et « imprimez avec Ctrl-P » —, et son libellé
+           promettait ce qu'il ne faisait pas.
+
+           Sa seconde branche était morte aussi : une ancre vers
+           `dossier.notification_pdf_path`, champ que **rien n'écrit nulle part**
+           dans le dépôt, serveur compris — et qui portait un `download`, le
+           patron que le garde de forme interdit depuis le 5 novembre (n° 5.f.71).
+
+           ── Pourquoi personne ne l'avait vu ──
+
+           Parce qu'aucune ronde n'avait jamais cliqué ce bouton : le relevé le
+           disait déjà, et c'est tout. Le contrôle de la console de cette suite
+           relève la **réponse** et non le seul message, et le contre-essai l'a
+           nommé dès le premier clic, avec son adresse :
+
+           > `404 /api/m/execution/notifications/notif_72227c34/pdf`
+
+           *Un geste que rien n'exerce ne ment à personne, et c'est pourquoi il
+           peut mentir longtemps.*
+
+           ── Ce que j'avais annoncé, et ce que la mesure a corrigé ──
+
+           J'avais présenté ce point comme une décision de maîtrise d'ouvrage :
+           écrire la route, le moteur de rendu existant (`src/pdf.js`, puppeteer)
+           mais pas le gabarit. **C'était un mauvais cadrage.**
+
+           Ce module n'a jamais produit de PDF au serveur, et n'en produit
+           nulle part. Sa convention est de composer un document HTML dans le
+           client, de l'ouvrir en fenêtre, et que ce document porte lui-même son
+           impression — `execDownloadRapport` le fait pour le rapport
+           d'activité, et la ronde de SURV éprouve déjà le produit de ce geste.
+           Ce bouton était le seul à ne pas la suivre.
+
+           Et le corps de la fiche était **déjà écrit** : `exec-fiche.js` compose
+           un `official-doc-page` complet, son en-tête disant « présentation de
+           document officiel, prête à imprimer sur papier ». Il était seulement
+           **irrécupérable** — composé au milieu de `_showNotificationPreview` et
+           remis directement au volet, d'où rien ne pouvait l'en tirer.
+
+           *Le document n'existait pas faute que son corps fût accessible, et non
+           faute d'être écrit.* Le troisième paramètre qu'`execDownloadRapport`
+           porte déjà pour exactement la même raison — « le même document sert à
+           l'aperçu intégré : on le renvoie sur demande » — a suffi.
+
+           ── Les feuilles de style vont par lien ──
+
+           Les classes du document vivent dans les feuilles du module :
+           `.official-doc-*` dans `exec-documents.css`, les `.fiche-*` dans
+           `exec-processus.css`, les règles d'impression dans
+           `exec-impression.css`. Les recopier dans une chaîne JavaScript en
+           ferait une **seconde** source, qui divergerait au premier ajustement
+           de la fiche — le défaut que ce dépôt a rencontré le plus souvent. La
+           fenêtre ouverte hérite de l'origine de celle qui l'ouvre, et une
+           adresse absolue y suffit.
+
+           Un PDF au serveur aurait par ailleurs exigé Chromium, que
+           `DEPLOYMENT.md` déclare hors de portée du plan gratuit — « le rendu
+           PDF exige le plan Starter ». Le document du client ne coûte rien de
+           cela.
+
+           ── Trois contrôles, et deux contre-essais qui ne disent pas la même chose ──
+
+           | Contre-essai | Ce qui rougit | Ce qu'il établit |
+           |---|---|---|
+           | le geste rendu à la route absente | les **trois** contrôles de la fiche, **et** celui de la console qui nomme le 404 avec son adresse | que le document n'est pas composé, et que la route n'existe pas |
+           | les feuilles retirées du document | **un seul**, celui des feuilles — les deux autres restent verts, et son détail le dit : `{"fiche":true,"titre":"NOTIF-2026-001","officiel":true,"feuilles":0}` | que ce contrôle mord sur sa propre propriété |
+
+           Le second était nécessaire précisément parce que le premier emportait
+           les trois d'un coup. *Un contre-essai qui fait tout rougir ne dit pas
+           lequel des contrôles tient quoi.*
+
+           ── Couverture ──
+
+           SURV passe de 185 à **186 gestes exercés sur 316** :
+           `execGenerateNotificationPdf`, qui n'avait jamais été pressé.
+           `exec-fiche.js` passe de 7 à **8 noms sur 11**.
+
+           L'inventaire gagne **trois occurrences et aucun nom** :
+           `window.print`, `window.close` et `window:load` du document produit
+           portent des noms qu'`exec-rapports.js` déclarait déjà, et les deux
+           premiers restent non exercés pour la même raison que leurs pareils —
+           ils vivent dans la fenêtre que le geste ouvre, où le mouchard
+           n'instrumente rien.
+
+           `surv` passe de 170 à **173 contrôles**.

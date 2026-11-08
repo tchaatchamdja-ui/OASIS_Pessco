@@ -1,8 +1,8 @@
 {
  "releve": "2026-11-08",
  "gestesNommes": 316,
- "occurrences": 510,
- "exerces": 185,
+ "occurrences": 513,
+ "exerces": 186,
  "indecidables": 3,
  "gestes": [
   {
@@ -52,16 +52,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 420,
+   "ligne": 422,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execGenerateNotificationPdf('${dossierId}')",
    "nom": "execGenerateNotificationPdf",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 474,
+   "ligne": 476,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -70,7 +70,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 478,
+   "ligne": 480,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAddRealisationEquipeMember()",
@@ -79,7 +79,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 507,
+   "ligne": 509,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('tr').remove()",
@@ -88,7 +88,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 511,
+   "ligne": 513,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAddRealisationProgrammeLine()",
@@ -97,7 +97,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 537,
+   "ligne": 539,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenChecklistFiller('${dossierId}','${c.id}')",
@@ -106,7 +106,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 538,
+   "ligne": 540,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRemoveDossierChecklist('${dossierId}','${c.id}')",
@@ -115,7 +115,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 544,
+   "ligne": 546,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenChecklistsPicker('${dossierId}')",
@@ -124,7 +124,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 568,
+   "ligne": 570,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('realisation_pj_input').click()",
@@ -133,7 +133,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 571,
+   "ligne": 573,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadRealisationPj(this.files)",
@@ -142,7 +142,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 596,
+   "ligne": 598,
    "forme": "en ligne",
    "evenement": "change",
    "source": "oasisDatesBorner({ debut: 'realisation_date_debut', fin: 'realisation_date_fin' })",
@@ -151,7 +151,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 601,
+   "ligne": 603,
    "forme": "en ligne",
    "evenement": "change",
    "source": "oasisDatesBorner({ debut: 'realisation_date_debut', fin: 'realisation_date_fin' })",
@@ -160,7 +160,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 642,
+   "ligne": 644,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('.realisation-pj-item').remove()",
@@ -169,7 +169,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 762,
+   "ligne": 764,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execTypeRapportChange()",
@@ -178,7 +178,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 880,
+   "ligne": 882,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execPreviewRapport('${r.id}')",
@@ -187,7 +187,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 884,
+   "ligne": 886,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execReturnDossier('${dossierId}')",
@@ -196,7 +196,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 991,
+   "ligne": 993,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.nextElementSibling.click()",
@@ -205,7 +205,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 994,
+   "ligne": 996,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCourrielAjouterFichiers(this)",
@@ -214,7 +214,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 999,
+   "ligne": 1001,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execTransmettreRapport('${rapport.id}')",
@@ -223,7 +223,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1018,
+   "ligne": 1020,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.preventDefault();${_escAttr(repli)}",
@@ -233,7 +233,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1018,
+   "ligne": 1020,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.preventDefault();${_escAttr(repli)}",
@@ -243,7 +243,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1052,
+   "ligne": 1054,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('.exec-piece').remove()",
@@ -252,7 +252,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1135,
+   "ligne": 1137,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveRealisation('${dossierId}')",
@@ -261,7 +261,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1136,
+   "ligne": 1138,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseRealisation('${dossierId}')",
@@ -270,7 +270,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1140,
+   "ligne": 1142,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveDossier('${dossierId}')",
@@ -279,7 +279,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1141,
+   "ligne": 1143,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSubmitDossier('${dossierId}')",
@@ -288,7 +288,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1145,
+   "ligne": 1147,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execValidateRapport('${lastRap.id}')",
@@ -297,7 +297,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1151,
+   "ligne": 1153,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAmendRapport('${lastRap.id}')",
@@ -306,7 +306,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1156,
+   "ligne": 1158,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSendRapportValidated('${lastRap.id}')",
@@ -315,7 +315,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1160,
+   "ligne": 1162,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseDossier('${dossierId}')",
@@ -324,7 +324,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1265,
+   "ligne": 1267,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenChecklistFiller('${dossierId}','${cid}')",
@@ -333,7 +333,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1267,
+   "ligne": 1269,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSetDossierChecklistValidee('${dossierId}','${cid}',false)",
@@ -342,7 +342,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1268,
+   "ligne": 1270,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSetDossierChecklistValidee('${dossierId}','${cid}',true)",
@@ -351,7 +351,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1285,
+   "ligne": 1287,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('realisation_pj_input').click()",
@@ -360,7 +360,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1286,
+   "ligne": 1288,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveRedactionPj('${dossierId}')",
@@ -369,7 +369,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1287,
+   "ligne": 1289,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadRealisationPj(this.files)",
@@ -378,7 +378,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1295,
+   "ligne": 1297,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenChecklistsPicker('${dossierId}','checklists')",
@@ -387,7 +387,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1306,
+   "ligne": 1308,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -396,7 +396,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1310,
+   "ligne": 1312,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('dossier_checklist_input').click()",
@@ -405,7 +405,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1312,
+   "ligne": 1314,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadDossierFile(this.files, 'checklist')",
@@ -414,7 +414,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1350,
+   "ligne": 1352,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenFNCForm('${dossierId}')",
@@ -423,7 +423,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1354,
+   "ligne": 1356,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execExportConstatations('${dossierId}','xlsx')",
@@ -432,7 +432,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1357,
+   "ligne": 1359,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFichesConstatDossier('${dossierId}')",
@@ -441,7 +441,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1387,
+   "ligne": 1389,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execViewFNC('${dossierId}','${c.id}')",
@@ -450,7 +450,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1389,
+   "ligne": 1391,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEditFNC('${dossierId}','${c.id}')",
@@ -459,7 +459,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1405,
+   "ligne": 1407,
    "forme": "en ligne",
    "evenement": "click",
    "source": "_execToggleFiches('${c.id}')",
@@ -468,7 +468,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1408,
+   "ligne": 1410,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execDeleteConstatation('${c.id}')",
@@ -477,7 +477,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1415,
+   "ligne": 1417,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execExportFicheConstat('${c.id}','pdf')",
@@ -486,7 +486,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1418,
+   "ligne": 1420,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execExportFicheConstat('${c.id}','word')",
@@ -495,7 +495,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1421,
+   "ligne": 1423,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execExportFicheSuivi('${c.id}','pdf')",
@@ -504,7 +504,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1424,
+   "ligne": 1426,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execExportFicheSuivi('${c.id}','word')",
@@ -513,7 +513,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1445,
+   "ligne": 1447,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('.dossier-annexe-item').remove()",
@@ -522,7 +522,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1449,
+   "ligne": 1451,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -531,7 +531,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1452,
+   "ligne": 1454,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.nextElementSibling.click();",
@@ -540,7 +540,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1453,
+   "ligne": 1455,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadAnnexeFile(this)",
@@ -549,7 +549,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1459,
+   "ligne": 1461,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execAddAnnexeBlock()",
@@ -558,7 +558,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1484,
+   "ligne": 1486,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execPreviewRapport('${r.id}')",
@@ -567,7 +567,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1488,
+   "ligne": 1490,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSendRapport('${r.id}')",
@@ -576,7 +576,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1515,
+   "ligne": 1517,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -585,7 +585,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1535,
+   "ligne": 1537,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('.dossier-annexe-item').remove()",
@@ -594,7 +594,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1540,
+   "ligne": 1542,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.nextElementSibling.click();",
@@ -603,7 +603,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1541,
+   "ligne": 1543,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadAnnexeFile(this)",
@@ -612,7 +612,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1565,
+   "ligne": 1567,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -621,7 +621,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1638,
+   "ligne": 1640,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -630,7 +630,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1654,
+   "ligne": 1656,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('tr').remove()",
@@ -1923,7 +1923,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 248,
+   "ligne": 243,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1932,7 +1932,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 264,
+   "ligne": 259,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -1941,7 +1941,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 357,
+   "ligne": 352,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execValidateDateOuverture()",
@@ -1950,7 +1950,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 380,
+   "ligne": 375,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncOnSecteurChange()",
@@ -1959,7 +1959,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 392,
+   "ligne": 387,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_ref_input').focus()",
@@ -1968,7 +1968,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 395,
+   "ligne": 390,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1977,7 +1977,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 400,
+   "ligne": 395,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncAddRef(this.value);this.value='';",
@@ -1986,7 +1986,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 401,
+   "ligne": 396,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
@@ -1995,7 +1995,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 418,
+   "ligne": 413,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execApplyCriticiteDelai('fnc_gravite','fnc_delai','execCalcDateDue')",
@@ -2004,7 +2004,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 430,
+   "ligne": 425,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCalcDateDue()",
@@ -2013,7 +2013,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 430,
+   "ligne": 425,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execCalcDateDue()",
@@ -2022,7 +2022,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 453,
+   "ligne": 448,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2031,7 +2031,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 456,
+   "ligne": 451,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_proof_input').click()",
@@ -2040,7 +2040,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 458,
+   "ligne": 453,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadFNCProof(this.files)",
@@ -2049,7 +2049,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 465,
+   "ligne": 460,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -2058,7 +2058,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 466,
+   "ligne": 461,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveFNC('${dossierId}', '${fnc.id || ''}')",
@@ -2067,7 +2067,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 567,
+   "ligne": 562,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenDossierSlider('${dossierId}','constatations')",
@@ -2076,7 +2076,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 614,
+   "ligne": 609,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2437,7 +2437,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 173,
+   "ligne": 188,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenNotificationForm(EXEC_STATE.selectedNotification)",
@@ -2446,7 +2446,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 176,
+   "ligne": 191,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSubmitNotificationForValidation()",
@@ -2455,7 +2455,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 179,
+   "ligne": 194,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -2464,7 +2464,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 181,
+   "ligne": 196,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execValidateNotification('${data.id}')",
@@ -2473,7 +2473,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 182,
+   "ligne": 197,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRejectNotification('${data.id}')",
@@ -2482,7 +2482,25 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 234,
+   "ligne": 249,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window.print()",
+   "nom": "window.print",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-fiche.js",
+   "ligne": 252,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window.close()",
+   "nom": "window.close",
+   "exerce": false
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-fiche.js",
+   "ligne": 345,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveApercuComments('${rapportId}')",
@@ -2491,7 +2509,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 247,
+   "ligne": 358,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execBackToValidation('${dossierId}')",
@@ -2500,11 +2518,21 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
-   "ligne": 248,
+   "ligne": 359,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execDownloadRapport('${rapportId}', true)",
    "nom": "execDownloadRapport",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-fiche.js",
+   "ligne": 288,
+   "forme": "écouteur",
+   "evenement": "load",
+   "nom": "window:load",
+   "source": "${autoPrint ? `window.addEventListener('load', () => { setTimeout(() => { try { window.focus(); window.print(); } catch ",
+   "id": null,
    "exerce": true
   },
   {

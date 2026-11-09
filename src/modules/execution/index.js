@@ -81,7 +81,11 @@ module.exports = {
           // rangent sous la même, plutôt que de la donner à la leur.
           instance: c.instance || '',
           reference: c.reference || '',
-          titre: c.cas_type || c.titre || '',
+          // Le titre d'abord, le type de cas ensuite : les constatations
+          // créées avant le 9 novembre 2026 portent leur titre dans
+          // `cas_type`, faute que la route de création gardât `titre`. Le
+          // repli les sert encore ; les nouvelles portent le leur.
+          titre: c.titre || c.cas_type || '',
           description: c.description || '',
           prestataire_id: c.prestataire_id || '',
           domaine_id: c.domaine_id || '',

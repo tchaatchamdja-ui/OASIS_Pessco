@@ -717,7 +717,24 @@ module.exports = function register(app, deps, M) {
       date_ouverture: d.date_ouverture || maintenant.slice(0, 10),
       source: d.source || (direct ? 'direct' : 'audit'),
       criticite: d.criticite || d.gravite || 'mineur',
-      cas_type: d.cas_type || d.titre || '',
+      // ── Le titre et le type de cas sont deux champs, et non un ──
+      //
+      // Jusqu'ici cette route ne portait **pas** `titre` : le formulaire de la
+      // constatation hors activités l'écrit, la route de modification
+      // l'accepte, le volet le rend en section B — et la création le jetait.
+      // Mesuré le 9 novembre 2026 : créée avec « UN TITRE QUE LA RONDE
+      // SAISIT », la constatation relue ne porte **aucune clé** `titre`, et son
+      // champ « Titre » rend « — » à qui la rouvre. Le titre ne revenait qu'au
+      // premier enregistrement suivant, par le PUT.
+      //
+      // Le repli `cas_type: … || d.titre` compensait cette absence : faute de
+      // garder le titre, on le logeait dans le type de cas — un `<select>` de
+      // types dont aucune option ne vaut une phrase libre, de sorte que le
+      // titre disparaissait de l'un sans paraître dans l'autre. Les deux
+      // champs sont distincts partout ailleurs — section B « Constat » pour le
+      // titre, section C « Traitement » pour le cas —, ils le sont ici aussi.
+      titre: d.titre || '',
+      cas_type: d.cas_type || '',
       description: d.description || '',
       ref_reglementaires: d.ref_reglementaires || d.exigence_ref || '',
       delai_solde: d.delai_solde || d.delai_correction || '30',

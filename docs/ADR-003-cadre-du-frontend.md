@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 193 exercés** (61 %), 3 indécidables — idem, 9 novembre 2026 (n° 5.f.76) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin, et l'écran des comptes de l'organisme est exercé en entier — 10 occurrences sur 10 |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 212 exercés** (67 %), 3 indécidables — idem, 9 novembre 2026 (n° 5.f.77) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme est exercé en entier — 10 occurrences sur 10 —, et celui des constatations à 57 occurrences sur 61, les trois qui restent déclarées |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -10737,3 +10737,118 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            mortes du même modèle, et le garde-fou des clés ne les voit pas : il ne
            regarde que les tables des modules. Elles tombent avec le prochain passage
            sur ces deux écrans.
+       5.f.77 [x] **La décision qu'aucune assertion ne gardait** — fait le 9 novembre 2026.
+           `exec-constatations.js`, 61 occurrences, **32 non exercées** : le plus gros
+           gisement de SURV après l'avoir ouvert. C'est l'écran des écarts constatés —
+           le cœur métier du module — et son circuit de prononcé n'était éprouvé que
+           par son issue : « validée, et la transmission lui est offerte ».
+
+           ── Trois clics qui ne touchaient rien, et que rien ne disait ──
+
+           La ronde de la constatation directe cliquait **la poignée** du panneau de
+           commentaires, puis « Ajouter », puis « Enregistrer ». Mesuré : à
+           l'ouverture le panneau est **déjà déplié** — `EXEC_CD_COM.replie` vaut
+           `false`. Le premier clic le **repliait** donc, et un panneau replié se
+           réduit à sa poignée : les deux boutons suivants **n'existaient plus**.
+           `saisie` valait 0 après les trois clics, et aucun commentaire n'était parti
+           au serveur. La zone de texte visée par `[...textarea].pop()` n'existait pas
+           non plus — ce volet n'en porte aucune hors du panneau.
+
+           Le relevé des gestes le disait depuis le premier jour :
+           `execCdAjouterCommentaire` et `execCdEnregistrerCommentaires` non exercés,
+           quand `execCdBasculerCommentaires` l'était. Personne ne l'avait lu. Et rien
+           n'avait rougi, pour une raison simple : **aucune assertion ne portait sur
+           ces trois clics**. Ils étaient là pour couvrir des gestes, non pour
+           éprouver un résultat.
+
+           C'est le pendant du défaut nommé la veille (n° 5.f.76), et il est pire. Un
+           contrôle qui passe pour une autre raison que celle qu'il annonce garde au
+           moins quelque chose. *Un clic sans assertion ne garde rien, et ne se trahit
+           même pas : il passe pour du travail fait.* Les trois sont retirés, et le
+           panneau est éprouvé dans l'ordre que l'écran impose — on ajoute d'abord, on
+           replie ensuite.
+
+           ── Un titre que la création jetait ──
+
+           Le formulaire porte un champ « Titre » en section B « Constat ». Il l'écrit,
+           la route de modification l'accepte, le volet le rend. **La route de création
+           ne le portait pas** : mesuré, une constatation créée avec « UN TITRE QUE LA
+           RONDE SAISIT » relue ne porte **aucune clé** `titre`, et son champ rend
+           « — ». Le titre ne revenait qu'au premier enregistrement suivant, par le
+           PUT — de sorte que le champ *semblait* fonctionner à qui modifiait, et
+           jamais à qui créait.
+
+           Le repli `cas_type: … || d.titre` compensait cette absence en logeant le
+           titre dans le **type de cas** — un `<select>` dont aucune option ne vaut une
+           phrase libre : le titre disparaissait de l'un sans paraître dans l'autre.
+           Et le service publié aux Mesures d'Application lisait `cas_type || titre`,
+           c'est-à-dire la compensation plutôt que le champ. Les deux champs sont
+           distincts partout ailleurs — section B pour le titre, section C
+           « Traitement » pour le cas, deux entrées du PUT, deux `roField` du volet :
+           ils le sont désormais à la création. Le service publié lit `titre ||
+           cas_type` : les constatations antérieures gardent leur titre là où il était
+           logé, les nouvelles portent le leur.
+
+           ── Ce que l'écran fait, une fois exercé ──
+
+           Le panneau de commentaires est le seul endroit du module où une décision se
+           **motive champ par champ**. Le valideur annote — « Description : ne nomme
+           pas l'exigence manquée » —, ces annotations vivent par **versions**, et le
+           renvoi les transmet **comme motif** : pas de double saisie, et le rédacteur
+           relit en tête de son formulaire exactement ce qui lui est demandé. La
+           version se fige au prononcé ; le tour suivant en ouvre une autre, et
+           l'historique des tours se relit, replié.
+
+           Vingt-deux contrôles en navigateur parcourent le circuit entier, chaque
+           palier relu **chez le serveur** : la ligne qui déplie son détail et la
+           colonne d'actions qui arrête le clic ; un commentaire ajouté, visé sur un
+           champ, rédigé — la cible redessine, la frappe non, sans quoi elle se
+           perdrait ; un second retiré **par son rang**, le premier gardant son texte ;
+           l'enregistrement qui ouvre une version chez le serveur ; la poignée qui
+           replie et rend ; une étape du fil consultée ; la fenêtre du renvoi qui
+           rappelle le commentaire dont elle fera le motif ; le renvoi prononcé, qui
+           fige la version et journalise la décision ; la constatation rouverte par le
+           geste de sa ligne, garnie ; une référence réglementaire posée par Entrée, et
+           la même qui ne se dédouble pas ; le délai changé qui recalcule l'échéance ;
+           une preuve versée ; la fiche imprimée ; « Soumettre » qui enregistre et
+           resoumet d'un geste, les trois corrections relues en base ; l'historique du
+           tour précédent et sa version figée qui s'ouvre ; la fenêtre du rejet
+           **refusée** sans que rien bouge, puis prononcée ; la remise à l'organisme,
+           dont le courriel est composé d'avance et dont le geste d'annexe délègue à un
+           sélecteur caché ; et le sous-onglet « Terrain », que le jeu d'essai laissait
+           vide et que la ronde garnit pour déplier son détail. Deux contrôles HTTP
+           gardent le contrat de création.
+
+           ── Ce qui reste hors de portée, et pourquoi ──
+
+           `execExporterConstatationsXlsx` pose `window.location.href` : le navigateur
+           **quitte la page**, et l'évaluation meurt avec elle. Il se prouve en HTTP,
+           où huit contrôles l'attendent. `execTransmettreConstatation` envoie un
+           courriel : sans serveur de messagerie la route refuse proprement — 502 —, et
+           ce refus est éprouvé pour lui-même dans la suite HTTP ; le bouton est donc
+           relevé présent, non cliqué.
+
+           ── Une dette nommée ──
+
+           `surv.smoke.js` porte maintenant près de sept mille lignes, et le garde-fou
+           de taille **ne regarde que `public/`, `src/` et `server.js`**. Les suites
+           n'ont donc aucun plafond, quand c'est précisément l'argument qui a justifié
+           de leur donner un fichier par écran. Ce n'est pas un défaut de ce tour,
+           c'est un angle mort du garde ; il se traite avec la dette du harnais — les
+           compteurs à isoler, et les six suites de navigateur à sortir du port 4797.
+
+           ── Mesuré ──
+
+           `exec-constatations.js` : **29 occurrences exercées sur 61 avant, 57
+           après** ; 16 noms sur 39 avant, 35 après. SURV dans son ensemble :
+           **193 gestes exercés sur 316 avant, 212 après** — 61 % à 67 %. Il reste
+           trois occurrences non exercées, les trois déclarées ci-dessus, et une
+           indécidable : la ligne de la table, dont le gestionnaire entier est
+           interpolé — l'instrument n'en lit aucun nom, et aucun clic ne peut donc
+           la créditer, quoique le contrôle prouve qu'elle déplie et replie.
+
+           Suites : SURV 181 → **203** contrôles, `execution` 135 → **137**.
+           Contre-épreuves : les quatre défauts remis ensemble font rougir **six**
+           contrôles — les quatre visés, et deux cascades prévues (le titre vide dans
+           le formulaire rouvert, la version enregistrée sans entrée quand le retrait
+           prend le mauvais rang). Rendues, tout reverdit.

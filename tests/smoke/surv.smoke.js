@@ -4530,19 +4530,14 @@ module.exports = async function survSmoke(port) {
           .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(e.getAttribute('onclick') || '') || [])[1])
           .filter(Boolean))];
 
-        // Les commentaires de validation : dépliés, un ajouté, enregistré.
-        document.querySelector('#execSlider [onclick^="execCdBasculerCommentaires"]')?.click();
-        await attendre(1500);
-        document.querySelector('#execSlider [onclick^="execCdAjouterCommentaire"]')?.click();
-        await attendre(1600);
-        const zone = [...document.querySelectorAll('#execSlider textarea')].pop();
-        if (zone) {
-          zone.value = 'Observation de la ronde sur la constatation directe.';
-          zone.dispatchEvent(new Event('input', { bubbles: true }));
-          await attendre(900);
-        }
-        document.querySelector('#execSlider [onclick^="execCdEnregistrerCommentaires"]')?.click();
-        await attendre(3200);
+        // ── Les trois clics du panneau de commentaires sont partis d'ici ──
+        //
+        // Ils y étaient — la poignée, « Ajouter », « Enregistrer » — et ils ne
+        // touchaient **rien** : à l'arrivée le panneau est déjà déplié, de
+        // sorte que le premier clic le repliait et que les deux suivants
+        // n'avaient plus de cible. Aucune assertion ne portait sur eux, et
+        // rien ne l'a dit. Le panneau est éprouvé dans la ronde du prononcé,
+        // plus bas, dans l'ordre que l'écran impose (n° 5.f.77).
 
         // La validation, puis la transmission à l'organisme.
         // ── Cette validation ne demande **pas** confirmation ──
@@ -4631,6 +4626,510 @@ module.exports = async function survSmoke(port) {
       verifier('la constatation directe ne survit pas à la ronde, qui l’efface elle-même',
         directe.suppression === 200 && directe.fin === 0,
         JSON.stringify({ suppression: directe.suppression, reste: directe.fin }));
+
+      // ══════════════════════════════════════════════════════════════════
+      //  Le prononcé d'une constatation : commenter, renvoyer, corriger,
+      //  rejeter — et la remise à l'organisme
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Trois clics qui ne touchaient rien, et que rien ne disait ──
+      //
+      // La ronde ci-dessus ouvrait le volet d'une constatation soumise, puis
+      // cliquait **la poignée** du panneau de commentaires, « Ajouter », et
+      // « Enregistrer ». Mesuré le 9 novembre 2026 : à l'ouverture le panneau
+      // est **déjà déplié** — `EXEC_CD_COM.replie` vaut `false`. Le premier
+      // clic le **replie** donc, et le panneau replié se réduit à sa poignée :
+      // les deux boutons suivants **n'existent plus**. `saisie` valait 0 après
+      // les trois clics, et aucun commentaire n'était parti au serveur.
+      //
+      // Le relevé des gestes le disait depuis le début —
+      // `execCdAjouterCommentaire` et `execCdEnregistrerCommentaires` non
+      // exercés, quand `execCdBasculerCommentaires` l'était — et personne ne
+      // l'avait lu. Rien n'avait rougi : **aucune assertion ne portait sur ces
+      // trois clics**. Ils étaient là pour couvrir des gestes, non pour
+      // éprouver un résultat.
+      //
+      // *Un clic sans assertion ne garde rien, et ne se trahit même pas : il
+      // passe pour du travail fait.* Les trois sont retirés de la ronde
+      // ci-dessus, et le panneau est éprouvé ici, dans l'ordre que l'écran
+      // impose — on ajoute d'abord, on replie ensuite.
+      //
+      // ── Ce que le panneau est, et pourquoi il vaut une ronde ──
+      //
+      // C'est le seul endroit du module où une décision se **motive champ par
+      // champ**. Le valideur annote la constatation — « Description : ne nomme
+      // pas l'exigence manquée » —, ces annotations vivent par **versions**, et
+      // le renvoi les transmet **comme motif** : pas de double saisie, et le
+      // rédacteur relit en tête de son formulaire exactement ce qui lui est
+      // demandé. La version se **fige** au prononcé, et le tour suivant en
+      // ouvre une autre : l'historique des tours est donc lisible.
+      //
+      // La ronde parcourt le circuit entier, chaque palier relu **chez le
+      // serveur** : commenter, renvoyer, corriger, resoumettre, rejeter. Puis
+      // la remise à l'organisme sur une seconde constatation, validée.
+      etape = 'prononcé d’une constatation';
+      const prononce = await page.evaluate(async (api) => {
+        const at = (ms) => new Promise((r) => setTimeout(r, ms));
+        const J = async (u, m, b) => {
+          const r = await fetch(u, {
+            method: m || 'GET', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: b ? JSON.stringify(b) : undefined,
+          });
+          let c = null; try { c = await r.json(); } catch { c = null; }
+          return { statut: r.status, corps: c };
+        };
+        const r = {};
+        const q = (s) => document.querySelector(`#execSlider ${s}`);
+        const tous = (s) => document.querySelectorAll(`#execSlider ${s}`).length;
+        const lire = async (id) => (await J(`${api}/constatations/${id}`)).corps || {};
+        const prestataires = EXEC_STATE.data.prestataires || [];
+        const domaines = EXEC_STATE.data.domaines || [];
+        // Le jeu d'essai fournit la matière ; la ronde ne la suppose pas.
+        r.matiere = { prestataires: prestataires.length, domaines: domaines.length };
+        if (!prestataires.length || !domaines.length) return r;
+
+        // Le gabarit : créée puis soumise par l'API, parce que ce qui est
+        // éprouvé ici commence **à la validation**. La ronde ci-dessus a déjà
+        // éprouvé la création par le formulaire.
+        const neuve = async (titre) => {
+          const c = await J(`${api}/constatations`, 'POST', {
+            prestataire_id: prestataires[0].id, domaine_id: domaines[0].id,
+            titre, description: 'Portée par la ronde du prononcé.',
+            criticite: 'majeure', delai_solde: '30', direct: true,
+          });
+          const id = (c.corps || {}).id;
+          if (id) await J(`${api}/constatations/${id}/direct-soumettre`, 'PUT');
+          return id;
+        };
+        const liste = async () => {
+          await execRefreshDynamic();
+          document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+          await at(2800);
+          [...document.querySelectorAll('.exec-tab')]
+            .find((b) => /'list'/.test(b.getAttribute('onclick') || ''))?.click();
+          await at(2200);
+        };
+        const geste = (id, nom) => [...document.querySelectorAll(`[onclick^="${nom}"]`)]
+          .find((x) => (x.getAttribute('onclick') || '').includes(id));
+
+        // ── Le titre, qui ne tenait pas à la création ──
+        //
+        // `POST /constatations` ne portait pas `titre` : le formulaire
+        // l'écrivait, le volet le rendait « — », et il ne revenait qu'au
+        // premier enregistrement suivant. Corrigé le 9 novembre 2026 ; ce
+        // contrôle est ce qui le garde.
+        const TITRE = 'SURV 0.c — le titre que la création doit garder';
+        const idA = await neuve(TITRE);
+        r.cree = idA ? (await lire(idA)) : {};
+        r.titreTenu = (r.cree.titre || '') === TITRE;
+        r.casLibre = r.cree.cas_type || '';
+        if (!idA) return r;
+
+        // ── La ligne de la table : son détail, et la colonne qui l'arrête ──
+        await liste();
+        const ligne = [...document.querySelectorAll('tr[onclick]')]
+          .find((t) => (t.getAttribute('onclick') || '').includes(idA));
+        const detail = () => {
+          const d = document.getElementById(`fnc_accordion_${idA}`);
+          return d ? d.style.display : 'absent';
+        };
+        r.ligne = { presente: !!ligne, avant: detail() };
+        if (ligne) { ligne.click(); await at(900); r.ligne.depliee = detail(); ligne.click(); await at(700); r.ligne.repliee = detail(); }
+        // La colonne des actions arrête le clic : sans quoi presser un bouton
+        // déplierait aussi la ligne qui le porte.
+        const cellule = ligne ? ligne.querySelector('.exec-etats-actions') : null;
+        r.ligne.cellule = !!cellule;
+        if (cellule) { cellule.click(); await at(700); r.ligne.apresCellule = detail(); }
+
+        // ══ 1 — Le panneau de commentaires, dans l'ordre que l'écran impose ══
+        const ouvrir = async () => {
+          await liste();
+          const b = geste(idA, 'execOpenConstatationDirecteSlider');
+          if (!b) return false;
+          b.click(); await at(3400);
+          return true;
+        };
+        r.ouvert = await ouvrir();
+        r.arrivee = {
+          etape: typeof EXEC_CD !== 'undefined' ? EXEC_CD.etape : '',
+          replie: typeof EXEC_CD_COM !== 'undefined' ? EXEC_CD_COM.replie : null,
+          ajouter: tous('[onclick^="execCdAjouterCommentaire"]'),
+          enregistrer: tous('[onclick^="execCdEnregistrerCommentaires"]'),
+          poignee: tous('[onclick^="execCdBasculerCommentaires"]'),
+        };
+
+        // Un commentaire : ajouté, visé sur un champ, rédigé.
+        q('[onclick^="execCdAjouterCommentaire"]')?.click();
+        await at(1500);
+        r.ajout = {
+          saisie: (EXEC_CD_COM.saisie || []).length,
+          texte: tous('.exec-cd-com-texte'),
+          cible: tous('[onchange^="execCdCommentaireChamp"]'),
+          retirer: tous('[onclick^="execCdRetirerCommentaire"]'),
+        };
+        const sel = q('[onchange^="execCdCommentaireChamp"]');
+        if (sel) { sel.value = 'description'; sel.dispatchEvent(new Event('change', { bubbles: true })); await at(1300); }
+        r.cibleChoisie = (EXEC_CD_COM.saisie[0] || {}).cible;
+        const OBS = 'La description ne nomme pas l’exigence manquée.';
+        const ta = q('.exec-cd-com-texte');
+        if (ta) { ta.value = OBS; ta.dispatchEvent(new Event('input', { bubbles: true })); await at(900); }
+        r.texteSaisi = (EXEC_CD_COM.saisie[0] || {}).texte === OBS;
+
+        // Un second, aussitôt retiré : ce qui est retiré est **celui-là**, et
+        // le premier garde son texte.
+        q('[onclick^="execCdAjouterCommentaire"]')?.click();
+        await at(1300);
+        r.deux = (EXEC_CD_COM.saisie || []).length;
+        const retirs = [...document.querySelectorAll('#execSlider [onclick^="execCdRetirerCommentaire"]')];
+        retirs[retirs.length - 1]?.click();
+        await at(1300);
+        r.apresRetrait = { nombre: (EXEC_CD_COM.saisie || []).length,
+          premierIntact: (EXEC_CD_COM.saisie[0] || {}).texte === OBS };
+
+        // Enregistré, et relu chez le serveur : une version **ouverte**.
+        q('[onclick^="execCdEnregistrerCommentaires"]')?.click();
+        await at(3200);
+        const avecVersion = await lire(idA);
+        r.versionOuverte = (avecVersion.commentaires_validation || []).map((v) => ({
+          version: v.version, close: !!v.close_le, issue: v.issue || '',
+          entrees: (v.entrees || []).map((e) => `${e.cible}|${e.texte}`),
+        }));
+
+        // La poignée : maintenant qu'il y a quelque chose, elle replie et rend.
+        q('[onclick^="execCdBasculerCommentaires"]')?.click();
+        await at(1300);
+        r.replie = { etat: EXEC_CD_COM.replie, ajouter: tous('[onclick^="execCdAjouterCommentaire"]') };
+        q('[onclick^="execCdBasculerCommentaires"]')?.click();
+        await at(1300);
+        r.deplie = { etat: EXEC_CD_COM.replie, ajouter: tous('[onclick^="execCdAjouterCommentaire"]') };
+
+        // Le fil d'avancement : une étape ouverte se consulte.
+        const fil = [...document.querySelectorAll('#execSlider [onclick^="execCdConsulter"]')];
+        r.fil = fil.map((b) => (/'([^']+)'/.exec(b.getAttribute('onclick')) || [])[1]);
+        const ailleurs = fil.find((b) => !/validation/.test(b.getAttribute('onclick') || ''));
+        if (ailleurs) { ailleurs.click(); await at(2800); }
+        r.consulte = EXEC_CD.etape;
+
+        // ══ 2 — Le renvoi, dont le motif **est** le commentaire ══
+        r.rouvert = await ouvrir();
+        q('[onclick^="execCdAjouterCommentaire"]')?.click();
+        await at(1400);
+        const ta2 = q('.exec-cd-com-texte');
+        if (ta2) { ta2.value = OBS; ta2.dispatchEvent(new Event('input', { bubbles: true })); await at(900); }
+        q('[onclick^="execRenvoyerConstatationModal"]')?.click();
+        await at(1600);
+        const fenetre = document.getElementById('exec_confirm_modal');
+        r.modaleRenvoi = { presente: !!fenetre,
+          rappelle: !!fenetre && (fenetre.textContent || '').includes('l’exigence manquée') };
+        document.getElementById('exec_confirm_ok')?.click();
+        await at(3600);
+        const renvoyee = await lire(idA);
+        r.renvoi = {
+          statut: renvoyee.statut,
+          motifDuCommentaire: (renvoyee.motif_renvoi || '').includes(OBS),
+          journal: (renvoyee.decisions_validation || []).map((d) => d.type),
+          versions: (renvoyee.commentaires_validation || []).map((v) => `${v.version}/${v.issue}/${v.close_le ? 'figee' : 'ouverte'}`),
+        };
+
+        // ══ 3 — La correction, par le formulaire que la ligne rouvre ══
+        await liste();
+        const bModif = geste(idA, 'execOpenConstatationDirecteFormById');
+        r.boutonModifier = !!bModif;
+        if (bModif) { bModif.click(); await at(3400); }
+        r.formulaire = {
+          longueur: (document.getElementById('execSlider') || { innerHTML: '' }).innerHTML.length,
+          titre: (document.getElementById('cd_titre') || {}).value || '',
+          dateDue: (document.getElementById('cd_date_due') || {}).value || '',
+        };
+        // La zone des références donne le focus à sa saisie.
+        document.getElementById('cd_ref_tags')?.click();
+        await at(500);
+        r.focusRef = document.activeElement
+          && document.activeElement.id === 'cd_ref_input';
+        // Une référence, posée par la touche Entrée ; la même, qui ne se
+        // dédouble pas.
+        const exigences = EXEC_STATE.data.exigences || [];
+        const REF = (exigences[0] || {}).reference || 'RAB-OPS 1.037';
+        const saisieRef = document.getElementById('cd_ref_input');
+        const poserRef = async () => {
+          if (!saisieRef) return;
+          saisieRef.value = REF;
+          saisieRef.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+          await at(900);
+        };
+        await poserRef();
+        r.refs = { une: document.querySelectorAll('#cd_ref_tags .cd-ref-tag').length,
+          valeur: [...document.querySelectorAll('#cd_ref_tags .cd-ref-tag')].map((t) => t.dataset.ref).join(',') };
+        await poserRef();
+        r.refs.apresDoublon = document.querySelectorAll('#cd_ref_tags .cd-ref-tag').length;
+        // Le délai commande la date due, et le changer la recalcule.
+        const champDelai = document.getElementById('cd_delai');
+        if (champDelai) { champDelai.value = '45'; champDelai.dispatchEvent(new Event('input', { bubbles: true })); await at(900); }
+        r.dateRecalculee = (document.getElementById('cd_date_due') || {}).value || '';
+        // Une preuve versée : la zone de dépôt délègue à son entrée cachée,
+        // puis le fichier part au serveur et paraît dans la liste.
+        document.querySelector('#execSlider [onclick^="document.getElementById(\'cd_proof_input\')"]')?.click();
+        await at(500);
+        const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
+        const entreePreuve = document.getElementById('cd_proof_input');
+        r.entreePreuve = !!entreePreuve;
+        if (entreePreuve) {
+          const dt = new DataTransfer();
+          dt.items.add(new File([pdf], 'preuve-du-prononce.pdf', { type: 'application/pdf' }));
+          entreePreuve.files = dt.files;
+          entreePreuve.dispatchEvent(new Event('change', { bubbles: true }));
+          await at(3000);
+        }
+        r.preuve = [...document.querySelectorAll('#cd_preuves_list > div')]
+          .map((e) => ({ chemin: e.dataset.path || '', nom: (e.querySelector('span') || {}).textContent }));
+        // La fiche de constat, imprimée depuis le formulaire : son produit est
+        // capturé par relais, comme les autres documents de cette suite.
+        const recu = [];
+        const vraiOpen = window.open;
+        window.open = () => {
+          const f = { html: '' };
+          recu.push(f);
+          return { document: { write: (h) => { f.html += String(h || ''); }, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {} };
+        };
+        q('[onclick^="execFicheConstatPdf"]')?.click();
+        await at(2400);
+        window.open = vraiOpen;
+        r.fiche = recu.map((f) => f.html.length);
+        // « Soumettre » siège sur la ligne du fil : il enregistre **et**
+        // resoumet, d'un seul geste.
+        document.querySelector('#execSlider .exec-proc-actions-etape [onclick^="execSaveConstatationDirecte"]')?.click();
+        await at(4200);
+        const corrigee = await lire(idA);
+        r.corrigee = { statut: corrigee.statut, refs: corrigee.ref_reglementaires,
+          delai: String(corrigee.delai_solde || ''), date: corrigee.date_due_cloture,
+          preuves: (corrigee.preuves_constatation || []).length, titre: corrigee.titre };
+
+        // ══ 4 — L'historique du tour précédent, et le rejet ══
+        r.rouvert2 = await ouvrir();
+        r.historique = {
+          bandeau: tous('.exec-cd-journal'),
+          decisions: tous('.exec-cd-decision'),
+          versionsCloses: tous('[onclick^="execCdBasculerVersion"]'),
+        };
+        const vers = q('[onclick^="execCdBasculerVersion"]');
+        if (vers) { vers.click(); await at(1600); }
+        r.versionRelue = (q('.exec-cd-com-version') || { textContent: '' })
+          .textContent.replace(/\s+/g, ' ').trim();
+        // Le bandeau de l'historique se replie par son entête.
+        q('.exec-cd-journal .exec-form-section-header')?.click();
+        await at(900);
+        r.historique.replie = !!q('.exec-cd-journal:not(.expanded)');
+
+        // La fenêtre du rejet, d'abord **refusée** : rien ne doit bouger.
+        q('[onclick^="execRejeterConstatationModal"]')?.click();
+        await at(1400);
+        r.modaleRejet = !!document.getElementById('exec_confirm_modal');
+        document.querySelector('#exec_confirm_modal [onclick^="document.getElementById"]')?.click();
+        await at(900);
+        r.rejetRenonce = { fenetre: !!document.getElementById('exec_confirm_modal'),
+          statut: (await lire(idA)).statut };
+        // Puis prononcé.
+        q('[onclick^="execRejeterConstatationModal"]')?.click();
+        await at(1400);
+        document.getElementById('exec_confirm_ok')?.click();
+        await at(3600);
+        const rejetee = await lire(idA);
+        r.rejet = { statut: rejetee.statut,
+          journal: (rejetee.decisions_validation || []).map((d) => d.type),
+          versions: (rejetee.commentaires_validation || []).map((v) => `${v.version}/${v.issue}`) };
+
+        // ══ 5 — La remise à l'organisme ══
+        const idB = await neuve('SURV 0.c — la constatation remise');
+        r.validee = (await J(`${api}/constatations/${idB}/direct-valider`, 'PUT')).statut;
+        await liste();
+        const bB = geste(idB, 'execOpenConstatationDirecteSlider');
+        r.ouvertB = !!bB;
+        if (bB) { bB.click(); await at(3400); }
+        r.remise = {
+          etape: EXEC_CD.etape,
+          courriel: !!document.getElementById('exec_courriel_transmission'),
+          destinataire: (document.getElementById('courriel_destinataire') || {}).value || '',
+          objetPorteLaReference: ((document.getElementById('courriel_objet') || {}).value || '')
+            .includes(((await lire(idB)).reference) || '\u0000'),
+          relais: tous('[onclick^="this.nextElementSibling.click"]'),
+          // ── La transmission n'est **pas** cliquée, et la raison est nommée ──
+          // Transmettre envoie un courriel ; sans serveur de messagerie la
+          // route refuse proprement — 502, « rien n'a été transmis ». C'est
+          // une limite de l'environnement d'essai, et le refus est éprouvé
+          // pour lui-même dans la suite HTTP.
+          envoyer: tous('[onclick^="execTransmettreConstatation"]'),
+        };
+        // Le bouton délègue au sélecteur caché ; le fichier choisi part au
+        // serveur et paraît comme pièce du courriel.
+        q('[onclick^="this.nextElementSibling.click"]')?.click();
+        await at(600);
+        const entreeB = q('[onchange^="execCourrielAjouterFichiers"]');
+        r.remise.entree = !!entreeB;
+        if (entreeB) {
+          const dt = new DataTransfer();
+          dt.items.add(new File([pdf], 'annexe-de-la-remise.pdf', { type: 'application/pdf' }));
+          entreeB.files = dt.files;
+          entreeB.dispatchEvent(new Event('change', { bubbles: true }));
+          await at(3200);
+        }
+        r.remise.pieces = [...document.querySelectorAll('#courriel_pieces .exec-piece[data-path]')]
+          .map((l) => l.dataset.filename);
+
+        // ══ 6 — Le sous-onglet « Terrain », que rien n'exerçait ══
+        //
+        // Il ne montre que les constatations dont la vérification sur place est
+        // prononcée **et** les preuves acceptées : le jeu d'essai n'en porte
+        // aucune, et la table y rend « Aucune donnée ». La ronde pose donc
+        // l'évaluation qui fait entrer la sienne, puis déplie son détail.
+        await J(`${api}/constatations/${idB}`, 'PUT', {
+          commentaire_evaluation: {
+            evaluation_anac: {
+              verification: { verification_terrain: true, preuves_acceptees: 'OUI' },
+              acceptation: { accepte: 'OUI' },
+            },
+          },
+        });
+        await execRefreshDynamic();
+        document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+        await at(2600);
+        [...document.querySelectorAll('.exec-tab')]
+          .find((b) => /'terrain'/.test(b.getAttribute('onclick') || ''))?.click();
+        await at(2400);
+        const ligneT = [...document.querySelectorAll('.exec-terrain-ligne')];
+        r.terrain = { lignes: ligneT.length,
+          avant: (document.querySelector('.exec-terrain-detail') || {}).hidden };
+        ligneT[0]?.click();
+        await at(1200);
+        r.terrain.apres = (document.querySelector('.exec-terrain-detail') || {}).hidden;
+        r.terrain.detail = (document.querySelector('.exec-terrain-detail') || { textContent: '' })
+          .textContent.trim().length;
+
+        // ══ Le ménage : les deux constatations partent, et rien ne reste ══
+        for (const id of [idA, idB]) {
+          /* eslint-disable no-await-in-loop */
+          await J(`${api}/constatations/${id}`, 'DELETE');
+        }
+        const reste = ((await J(`${api}/constatations`)).corps || [])
+          .filter((c) => [idA, idB].includes(c.id)).length;
+        r.menage = reste;
+        return r;
+      }, M);
+
+      verifier('le titre d’une constatation survit à sa création, et ne se loge pas dans le type de cas',
+        prononce.titreTenu === true && prononce.casLibre === '',
+        JSON.stringify({ titre: (prononce.cree || {}).titre, cas: prononce.casLibre }));
+      verifier('la ligne de la table déplie son détail et le replie, et la colonne des actions arrête le clic',
+        prononce.ligne && prononce.ligne.presente === true
+        && prononce.ligne.depliee === 'table-row' && prononce.ligne.repliee === 'none'
+        && prononce.ligne.cellule === true && prononce.ligne.apresCellule === 'none',
+        JSON.stringify(prononce.ligne));
+      verifier('le panneau de commentaires est déplié à l’arrivée, et ses deux gestes y sont offerts',
+        prononce.ouvert === true && prononce.arrivee
+        && prononce.arrivee.etape === 'validation' && prononce.arrivee.replie === false
+        && prononce.arrivee.ajouter === 1 && prononce.arrivee.enregistrer === 1
+        && prononce.arrivee.poignee === 1,
+        JSON.stringify(prononce.arrivee));
+      verifier('un commentaire s’ajoute avec sa cible, son retrait et sa zone de texte',
+        prononce.ajout && prononce.ajout.saisie === 1 && prononce.ajout.texte === 1
+        && prononce.ajout.cible === 1 && prononce.ajout.retirer === 1,
+        JSON.stringify(prononce.ajout));
+      verifier('la cible se choisit et le texte se saisit, sans que la frappe redessine le panneau',
+        prononce.cibleChoisie === 'description' && prononce.texteSaisi === true,
+        JSON.stringify({ cible: prononce.cibleChoisie, texte: prononce.texteSaisi }));
+      verifier('un second commentaire se retire par son rang, et le premier garde son texte',
+        prononce.deux === 2 && prononce.apresRetrait
+        && prononce.apresRetrait.nombre === 1 && prononce.apresRetrait.premierIntact === true,
+        JSON.stringify({ deux: prononce.deux, apres: prononce.apresRetrait }));
+      verifier('les commentaires enregistrés ouvrent une version chez le serveur, qui porte la cible et le texte',
+        (prononce.versionOuverte || []).length === 1
+        && prononce.versionOuverte[0].version === 1
+        && prononce.versionOuverte[0].close === false
+        && prononce.versionOuverte[0].entrees.length === 1
+        && /^description\|/.test(prononce.versionOuverte[0].entrees[0]),
+        JSON.stringify(prononce.versionOuverte));
+      verifier('la poignée replie le panneau — ses gestes partent avec lui — et le rend',
+        prononce.replie && prononce.replie.etat === true && prononce.replie.ajouter === 0
+        && prononce.deplie && prononce.deplie.etat === false && prononce.deplie.ajouter === 1,
+        JSON.stringify({ replie: prononce.replie, deplie: prononce.deplie }));
+      verifier('le fil d’avancement ouvre les étapes atteintes, et en consulter une change l’étape rendue',
+        (prononce.fil || []).length >= 2 && prononce.fil.includes('validation')
+        && prononce.consulte && prononce.consulte !== 'validation',
+        JSON.stringify({ fil: prononce.fil, consulte: prononce.consulte }));
+      verifier('la fenêtre du renvoi rappelle le commentaire qui lui servira de motif',
+        prononce.rouvert === true && prononce.modaleRenvoi
+        && prononce.modaleRenvoi.presente === true && prononce.modaleRenvoi.rappelle === true,
+        JSON.stringify(prononce.modaleRenvoi));
+      verifier('le renvoi prononcé fige la version, journalise la décision, et son motif est le commentaire',
+        prononce.renvoi && prononce.renvoi.statut === 'direct_renvoye'
+        && prononce.renvoi.motifDuCommentaire === true
+        && JSON.stringify(prononce.renvoi.journal) === JSON.stringify(['renvoi'])
+        && JSON.stringify(prononce.renvoi.versions) === JSON.stringify(['1/renvoi/figee']),
+        JSON.stringify(prononce.renvoi));
+      verifier('une constatation renvoyée se rouvre par le geste de sa ligne, garnie et modifiable',
+        prononce.boutonModifier === true && prononce.formulaire
+        && prononce.formulaire.longueur > 8000
+        && prononce.formulaire.titre.length > 10
+        && /^\d{4}-\d{2}-\d{2}$/.test(prononce.formulaire.dateDue),
+        JSON.stringify(prononce.formulaire));
+      verifier('la zone des références donne le focus à sa saisie, et une référence posée ne se dédouble pas',
+        prononce.focusRef === true && prononce.refs
+        && prononce.refs.une === 1 && prononce.refs.apresDoublon === 1
+        && prononce.refs.valeur.length > 3,
+        JSON.stringify({ focus: prononce.focusRef, refs: prononce.refs }));
+      verifier('le délai changé recalcule la date d’échéance, et une preuve versée paraît avec son chemin',
+        /^\d{4}-\d{2}-\d{2}$/.test(prononce.dateRecalculee || '')
+        && prononce.dateRecalculee !== (prononce.formulaire || {}).dateDue
+        && prononce.entreePreuve === true && (prononce.preuve || []).length === 1
+        && /uploads\//.test(prononce.preuve[0].chemin)
+        && /preuve-du-prononce\.pdf/.test(prononce.preuve[0].nom || ''),
+        JSON.stringify({ date: prononce.dateRecalculee, preuve: prononce.preuve }));
+      verifier('la fiche de constat s’imprime depuis le formulaire, et compose un document',
+        (prononce.fiche || []).some((n) => n > 2000),
+        JSON.stringify(prononce.fiche));
+      verifier('« Soumettre » enregistre et resoumet d’un geste, et le serveur porte les trois corrections',
+        prononce.corrigee && prononce.corrigee.statut === 'direct_soumis'
+        && (prononce.corrigee.refs || '').length > 3
+        && prononce.corrigee.delai === '45'
+        && prononce.corrigee.date === prononce.dateRecalculee
+        && prononce.corrigee.preuves === 1,
+        JSON.stringify(prononce.corrigee));
+      verifier('le tour suivant relit le précédent : l’historique de la décision, et la version figée qui s’ouvre',
+        prononce.rouvert2 === true && prononce.historique
+        && prononce.historique.bandeau === 1 && prononce.historique.decisions === 1
+        && prononce.historique.versionsCloses === 1
+        && /Version 1/.test(prononce.versionRelue || '')
+        && /exigence manquée/.test(prononce.versionRelue || '')
+        && prononce.historique.replie === true,
+        JSON.stringify({ historique: prononce.historique, relue: (prononce.versionRelue || '').slice(0, 110) }));
+      verifier('la fenêtre du rejet se refuse sans rien changer, puis prononcée elle arrête la constatation',
+        prononce.modaleRejet === true && prononce.rejetRenonce
+        && prononce.rejetRenonce.fenetre === false
+        && prononce.rejetRenonce.statut === 'direct_soumis'
+        && prononce.rejet && prononce.rejet.statut === 'direct_rejete'
+        && JSON.stringify(prononce.rejet.journal) === JSON.stringify(['renvoi', 'rejet'])
+        && (prononce.rejet.versions || []).join(' ') === '1/renvoi 2/rejet',
+        JSON.stringify({ renonce: prononce.rejetRenonce, rejet: prononce.rejet }));
+      verifier('une constatation validée s’ouvre sur sa remise, dont le courriel est composé d’avance',
+        prononce.validee === 200 && prononce.ouvertB === true && prononce.remise
+        && prononce.remise.etape === 'transmission' && prononce.remise.courriel === true
+        && /@/.test(prononce.remise.destinataire)
+        && prononce.remise.objetPorteLaReference === true
+        && prononce.remise.relais === 1 && prononce.remise.envoyer === 1,
+        JSON.stringify(prononce.remise));
+      verifier('le geste d’annexe délègue au sélecteur caché, et le fichier choisi devient pièce du courriel',
+        prononce.remise && prononce.remise.entree === true
+        && (prononce.remise.pieces || []).length === 1
+        && /annexe-de-la-remise\.pdf/.test(prononce.remise.pieces[0] || ''),
+        JSON.stringify({ entree: (prononce.remise || {}).entree, pieces: (prononce.remise || {}).pieces }));
+      verifier('le sous-onglet « Terrain » retient la constatation vérifiée sur place, et déplie son détail',
+        prononce.terrain && prononce.terrain.lignes >= 1
+        && prononce.terrain.avant === true && prononce.terrain.apres === false
+        && prononce.terrain.detail > 100,
+        JSON.stringify(prononce.terrain));
+      verifier('les deux constatations du prononcé ne survivent pas à la ronde',
+        prononce.menage === 0, JSON.stringify({ reste: prononce.menage }));
 
       // ══════════════════════════════════════════════════════════════════
       //  Le processus : sa configuration, qui commande tout le reste

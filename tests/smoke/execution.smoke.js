@@ -323,6 +323,35 @@ module.exports = async function executionSmoke(port) {
       verifier('constatation hors activité créée',
         directe.statut === 201 && directe.corps.statut === 'direct_brouillon',
         JSON.stringify(directe.corps).slice(0, 120));
+      // ── Le titre et le type de cas sont deux champs, et la création garde
+      //    les deux ──
+      //
+      // Elle n'en gardait aucun des deux comme tel : `titre` n'était pas porté
+      // par l'enregistrement — le formulaire l'écrivait, le PUT l'acceptait, la
+      // création le jetait —, et le repli `cas_type: … || d.titre` le logeait
+      // dans un `<select>` de types de cas dont aucune option ne vaut une
+      // phrase libre. Mesuré le 9 novembre 2026 : créée avec un titre, la
+      // constatation relue ne portait **aucune clé** `titre`, et son champ
+      // « Titre » rendait « — » (n° 5.f.77).
+      const relueTitre = await srv.appel(`${M}/constatations/${directe.corps.id}`);
+      verifier('la création garde le titre, et ne le loge pas dans le type de cas',
+        (relueTitre.corps || {}).titre === 'Écart hors activité'
+        && ((relueTitre.corps || {}).cas_type || '') === '',
+        JSON.stringify({ titre: (relueTitre.corps || {}).titre,
+          cas_type: (relueTitre.corps || {}).cas_type }));
+      // Le type de cas donné reste le type de cas, et n'emporte pas le titre.
+      const avecCas = await P(`${M}/constatations`, {
+        direct: true, prestataire_id: directe.corps.prestataire_id || undefined,
+        domaine_id: 'AIR', criticite: 'majeur',
+        titre: 'Le titre', cas_type: 'isole', description: 'Les deux à la fois.',
+      });
+      const relueCas = await srv.appel(`${M}/constatations/${avecCas.corps.id}`);
+      verifier('titre et type de cas donnés ensemble restent distincts',
+        (relueCas.corps || {}).titre === 'Le titre'
+        && (relueCas.corps || {}).cas_type === 'isole',
+        JSON.stringify({ titre: (relueCas.corps || {}).titre,
+          cas_type: (relueCas.corps || {}).cas_type }));
+      await srv.appel(`${M}/constatations/${avecCas.corps.id}`, { method: 'DELETE' });
       verifier('commentaires refusés avant soumission',
         (await PUT(`${M}/constatations/${directe.corps.id}/commentaires-validation`, {
           entrees: [{ cible: 'titre', texte: 'Préciser' }],

@@ -1397,9 +1397,33 @@ module.exports = async function rampSmoke(port) {
         method: 'POST', body: JSON.stringify({ admin_password: 'faux' }),
       })).statut === 403);
     verifier('compte hors périmètre introuvable',
-      (await srv.appel(`${M}/mes-utilisateurs/inconnu%40ailleurs.bj`, { method: 'DELETE' })).statut === 404);
-    verifier('compte supprimé',
-      (await srv.appel(`${M}/mes-utilisateurs/agent%40abe.bj`, { method: 'DELETE' })).statut === 200);
+      (await srv.appel(`${M}/mes-utilisateurs/inconnu%40ailleurs.bj`, {
+        method: 'PUT', body: JSON.stringify({ nom: 'Ailleurs' }),
+      })).statut === 404);
+
+    // ── Un compte se désactive ; aucune route du module ne le détruit ──
+    //
+    // Ces deux lignes éprouvaient une route de destruction, dont l'une exigeait
+    // qu'elle rende 200 — « compte supprimé ». Or **aucun des deux écrans qui
+    // servent ces routes ne l'appelait** : les deux n'ont qu'un bouton
+    // « Désactiver », avec la même raison écrite à côté. Et elle n'avait rien de
+    // la cérémonie que le portail exige pour le même geste : mot de passe du
+    // demandeur, fiche du répertoire du personnel, sessions fermées, entrée au
+    // journal d'audit. Retirée le 9 novembre 2026 (ADR-003 n° 5.f.76).
+    //
+    // Le contrôle porte désormais sur ce que les écrans font réellement, et sur
+    // la propriété qui remplace la route : le compte survit à la tentative.
+    const desactive = await srv.appel(`${M}/mes-utilisateurs/agent%40abe.bj`, {
+      method: 'PUT', body: JSON.stringify({ actif: false }),
+    });
+    const tenter = await srv.appel(`${M}/mes-utilisateurs/agent%40abe.bj`, { method: 'DELETE' });
+    const survit = (await srv.appel(`${M}/mes-utilisateurs`)).corps.utilisateurs
+      .find((u) => u.id === 'agent@abe.bj') || null;
+    verifier('un compte se désactive, et aucune route du module ne le détruit',
+      desactive.statut === 200 && tenter.statut !== 200
+      && !!survit && survit.actif === false,
+      JSON.stringify({ desactive: desactive.statut, destruction: tenter.statut,
+        survit: survit && { actif: survit.actif } }));
 
     const retour = await srv.appel(`${M}/vue`, { method: 'PUT', body: JSON.stringify({ vue: 'aac' }) });
     verifier('retour en vue AAC', retour.statut === 200 && retour.corps.vue === 'aac');

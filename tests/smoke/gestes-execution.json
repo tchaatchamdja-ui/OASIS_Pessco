@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-08",
+ "releve": "2026-11-09",
  "gestesNommes": 316,
  "occurrences": 513,
- "exerces": 186,
+ "exerces": 193,
  "indecidables": 3,
  "gestes": [
   {
@@ -896,7 +896,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { EXEC_STATE.filters.search=document.getElementById('exec-filter-search').value; ${onchangeF",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -2085,7 +2085,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 448,
+   "ligne": 447,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2095,7 +2095,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 448,
+   "ligne": 447,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2105,7 +2105,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 456,
+   "ligne": 455,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsRappel('${l.planId}','${l.activiteId}')",
@@ -2114,7 +2114,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 497,
+   "ligne": 496,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2124,7 +2124,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 497,
+   "ligne": 496,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2134,7 +2134,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 504,
+   "ligne": 503,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsRappel('${l.planId}','${l.activiteId}','${_escAttr(te(s.titre))}')",
@@ -2143,7 +2143,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 544,
+   "ligne": 554,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2153,7 +2153,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 544,
+   "ligne": 554,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2163,7 +2163,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 553,
+   "ligne": 563,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${execEtatsOuvrir(l)}",
@@ -2173,7 +2173,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 555,
+   "ligne": 565,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execProcHistorique('${l.planId}','${l.activiteId}')",
@@ -2182,7 +2182,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 558,
+   "ligne": 568,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsReprendre('${n.id}')",
@@ -2191,7 +2191,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 560,
+   "ligne": 570,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsArchiverActivite('${n.id}',true)",
@@ -2200,7 +2200,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 562,
+   "ligne": 572,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsArreter('${n.id}')",
@@ -2209,7 +2209,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 564,
+   "ligne": 574,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsSupprimer('${n.id}')",
@@ -2218,7 +2218,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 600,
+   "ligne": 610,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2228,7 +2228,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 600,
+   "ligne": 610,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
@@ -2238,7 +2238,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 610,
+   "ligne": 620,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${execEtatsOuvrir(l)}",
@@ -2248,7 +2248,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 612,
+   "ligne": 622,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execPreviewRapport('${rapport.id}')",
@@ -2257,7 +2257,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 614,
+   "ligne": 624,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execProcHistorique('${l.planId}','${l.activiteId}')",
@@ -2266,7 +2266,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 617,
+   "ligne": 627,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsArchiver('${d.id}',${archivees ? 'false' : 'true'})",
@@ -2275,7 +2275,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 621,
+   "ligne": 631,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsDesarchiverActivite('${l.activiteId}',${l.planArchive ? 'true' : 'false'})",
@@ -2284,7 +2284,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 673,
+   "ligne": 683,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsGroupeToggle(this)",
@@ -2293,7 +2293,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 680,
+   "ligne": 690,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();execEtatsDesarchiverPlan('${cle}')",
@@ -2302,7 +2302,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 729,
+   "ligne": 739,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_ETATS.sub='${o.cle}';execRenderPage();",
@@ -2311,7 +2311,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 836,
+   "ligne": 846,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -2320,7 +2320,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 837,
+   "ligne": 847,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsEnvoyerRappel('${planId}','${activiteId}','${_escAttr(motif || '')}')",
@@ -2329,7 +2329,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1085,
+   "ligne": 1095,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsEnregistrerDelais()",
@@ -2338,7 +2338,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1088,
+   "ligne": 1098,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execEtatsDelaisDefaut()",
@@ -2347,7 +2347,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1201,
+   "ligne": 1211,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execRefsMajSegment('${objet}',${index},'type',this.value)",
@@ -2356,7 +2356,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1205,
+   "ligne": 1215,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execRefsSaisir('${objet}',${index},'valeur',this)",
@@ -2365,7 +2365,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1208,
+   "ligne": 1218,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execRefsSaisir('${objet}',${index},'longueur',this)",
@@ -2374,7 +2374,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1214,
+   "ligne": 1224,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRefsDeplacer('${objet}',${index},-1)",
@@ -2383,7 +2383,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1216,
+   "ligne": 1226,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRefsDeplacer('${objet}',${index},1)",
@@ -2392,7 +2392,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1218,
+   "ligne": 1228,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRefsRetirer('${objet}',${index})",
@@ -2401,7 +2401,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1252,
+   "ligne": 1262,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRefsAjouter('${o.cle}')",
@@ -2410,7 +2410,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1257,
+   "ligne": 1267,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execRefsMajSeparateur('${o.cle}',this.value)",
@@ -2419,7 +2419,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1276,
+   "ligne": 1286,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRefsEnregistrer()",
@@ -2428,7 +2428,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 1279,
+   "ligne": 1289,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execRefsDefaut()",
@@ -4563,7 +4563,7 @@
    "evenement": "input",
    "source": "_pesSearchInput(this, execRenderMesUsersTable)",
    "nom": "_pesSearchInput",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4572,7 +4572,7 @@
    "evenement": "click",
    "source": "execOpenMesUserModal()",
    "nom": "execOpenMesUserModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4581,7 +4581,7 @@
    "evenement": "click",
    "source": "execRevealMesUserPassword('${u.id}')",
    "nom": "execRevealMesUserPassword",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4590,7 +4590,7 @@
    "evenement": "click",
    "source": "execOpenMesUserModal('${u.id}')",
    "nom": "execOpenMesUserModal",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4599,7 +4599,7 @@
    "evenement": "click",
    "source": "execResetMesUserPw('${u.id}')",
    "nom": "execResetMesUserPw",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4608,7 +4608,7 @@
    "evenement": "click",
    "source": "execToggleMesUser('${u.id}', ${actif ? 'false' : 'true'})",
    "nom": "execToggleMesUser",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
@@ -4626,11 +4626,11 @@
    "evenement": "click",
    "source": "execSaveMesUser('${userId || ''}')",
    "nom": "execSaveMesUser",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
-   "ligne": 282,
+   "ligne": 294,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -4639,12 +4639,12 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-utilisateurs.js",
-   "ligne": 283,
+   "ligne": 295,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execDoRevealMesUserPassword('${userId}')",
    "nom": "execDoRevealMesUserPassword",
-   "exerce": false
+   "exerce": true
   }
  ]
 }

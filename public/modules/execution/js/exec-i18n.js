@@ -912,6 +912,21 @@ const EXEC_TR = {
         droits_tous: 'Tous',
         droits_n_sur: '{0} sur {1}',
         droits_aucun: 'Aucun',
+        // Vocabulaire des comptes de l'organisme. Il vivait en clés de la
+        // table du **portail** (`pt`), qui ne les porte pas : l'écran
+        // affichait « password_gen » et « confirm_admin_password » en clair
+        // (n° 5.f.76). Les replis français écrits à côté de chaque appel ne
+        // pouvaient pas servir — `pt` existe toujours, c'est la clé qui
+        // manquait.
+        champs_requis: 'Champs obligatoires manquants',
+        mot_de_passe: 'Mot de passe',
+        mot_de_passe_genere: 'Mot de passe généré',
+        // « réinitialis » fait teinter la confirmation en rouge : le socle
+        // déduit le caractère destructeur du message lui-même.
+        confirmer_reinit_mdp: 'Réinitialiser le mot de passe de ce compte ?',
+        confirmer_votre_mdp: 'Confirmer votre mot de passe',
+        confirmer_tout_court: 'Confirmer',
+        annuler_court: 'Annuler',
         pj_enregistrees: 'Pièces jointes enregistrées',
         err_enregistrement: 'Erreur lors de l\'enregistrement',
         indiquez_destinataire: 'Indiquez au moins un destinataire',

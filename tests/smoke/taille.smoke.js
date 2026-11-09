@@ -2148,5 +2148,131 @@ module.exports = async function tailleSmoke() {
   verifier('toute page portant du code client charge l’enveloppe qui marque les requêtes, avant ses propres scripts',
     sansEnveloppe.length === 0,
     sansEnveloppe.join(' | ') || `${pagesClient.length} pages examinées`);
+
+  // ── Une clé demandée à une table qui ne la porte pas ──
+  //
+  // La fonction de traduction d'un module retombe sur la clé elle-même quand
+  // elle ne la connaît pas. C'est une bonne propriété — un libellé oublié
+  // n'empêche pas l'écran de se rendre —, mais c'est aussi un **silence** : le
+  // dépôt n'avait aucun moyen de savoir qu'une clé demandée n'existait pas.
+  //
+  // La suite « traductions » garde que les trois volets d'une table portent les
+  // mêmes clés. Elle ne regardait pas le sens inverse : les clés que le code
+  // **demande**. Mesuré le 9 novembre 2026 : `exec-utilisateurs.js` demandait
+  // sept libellés à `pt`, la table de quinze que le portage PESSCO avait laissée
+  // à côté de celle du module — six n'y étaient pas, reprises de PR. L'écran
+  // affichait donc « password », « confirm_admin_password », et un mot de passe
+  // annoncé par « password_gen ». Rien n'exerçait cet écran, et rien ne le
+  // disait (ADR-003 n° 5.f.76).
+  //
+  // Le garde part **sans aucune dispense**, et c'est la mesure qui le permet :
+  // cinq écrans, 2 401 clés demandées, zéro absente. Deux conditions l'ont
+  // rendu exact :
+  //
+  //   · les **commentaires** sont effacés d'abord. Deux fichiers portent
+  //     « rt('cle') » et « mt('cle') » dans leur exemple d'usage, et un garde
+  //     qui rougit sur la prose qui l'explique empêche d'écrire cette prose —
+  //     même leçon que le garde du bouton effacé, et que le relevé des gestes ;
+  //   · une clé **composée** — `te('avancement_' + x)` — n'est pas une clé : le
+  //     littéral n'en est qu'un morceau. Le garde les écarte par le `+` qui
+  //     suit, et non par une liste d'exceptions qui aurait vieilli.
+  {
+    const nu = (texte) => texte
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    // Clés de premier niveau de l'objet littéral ouvert à `debut`.
+    const clesDuBloc = (texte, debut) => {
+      const cles = [];
+      let i = debut + 1;
+      let profondeur = 0;
+      let chaine = null;
+      while (i < texte.length) {
+        const c = texte[i];
+        if (chaine) {
+          if (c === '\\') { i += 2; continue; }
+          if (c === chaine) chaine = null;
+          i += 1;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') { chaine = c; i += 1; continue; }
+        if (c === '{' || c === '[' || c === '(') { profondeur += 1; i += 1; continue; }
+        if (c === '}' || c === ']' || c === ')') {
+          if (c === '}' && profondeur === 0) break;
+          profondeur -= 1;
+          i += 1;
+          continue;
+        }
+        if (profondeur === 0 && /[\s,{]/.test(texte[i - 1] || '')) {
+          const m = /^([A-Za-z_$][A-Za-z0-9_$]*|'[^']+'|"[^"]+")\s*:/.exec(texte.slice(i));
+          if (m) { cles.push(m[1].replace(/^['"]|['"]$/g, '')); i += m[0].length; continue; }
+        }
+        i += 1;
+      }
+      return cles;
+    };
+    // Un écran : sa table, son répertoire, et les noms de sa fonction.
+    const ECRANS = [
+      { nom: 'SURV', table: 'EXEC_TR', dir: 'public/modules/execution/js', fn: ['te'] },
+      { nom: 'PLAN', table: 'PLAN_TR', dir: 'public/modules/planification/js', fn: ['pt', 'tp'] },
+      { nom: 'RAMP', table: 'RAMP_TR', dir: 'public/modules/ramp/js', fn: ['tr', 'rt'] },
+      { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', fn: ['tm', 'mt'] },
+      { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', fn: ['pt', 't'] },
+    ];
+    const orphelines = [];
+    let demandees = 0;
+    let examines = 0;
+    ECRANS.forEach((e) => {
+      const d = path.join(RACINE, e.dir);
+      // Un écran converti en React n'a plus de `public/modules/<nom>/js` : son
+      // absence n'est pas un défaut, c'est l'avancement de la reprise.
+      if (!fs.existsSync(d)) return;
+      examines += 1;
+      const fichiers = fs.readdirSync(d).filter((x) => x.endsWith('.js'))
+        .map((x) => path.join(d, x));
+      const cles = new Set();
+      fichiers.forEach((x) => {
+        // Les commentaires sont effacés **avant la lecture de la table**, et
+        // c'est la correction d'un faux positif de ce garde même : une
+        // apostrophe française dans un commentaire de la table ouvrait une
+        // chaîne fantôme qui avalait le reste du bloc, et le garde annonçait
+        // cinq clés absentes de CARE qui y étaient. La suite « traductions »
+        // le savait et traversait les commentaires ; cette lecture-ci les
+        // retire, ce qui revient au même et se lit mieux.
+        const texte = nu(fs.readFileSync(x, 'utf8'));
+        // La table elle-même : ses clés de premier niveau sont ses volets.
+        for (const m of texte.matchAll(new RegExp(`${e.table}\\s*=\\s*\\{`, 'g'))) {
+          const o = texte.indexOf('{', m.index + m[0].length - 1);
+          clesDuBloc(texte, o).forEach((volet) => {
+            const p = texte.indexOf('{', texte.indexOf(`${volet}:`, o));
+            if (p > 0) clesDuBloc(texte, p).forEach((k) => cles.add(k));
+          });
+        }
+        // Un volet posé depuis un autre fichier, ou complété.
+        for (const m of texte.matchAll(new RegExp(`${e.table}\\.(fr|en|pt)\\s*=\\s*\\{`, 'g'))) {
+          clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
+        }
+        for (const m of texte.matchAll(new RegExp(`Object\\.assign\\(${e.table}\\.(fr|en|pt)\\s*,\\s*\\{`, 'g'))) {
+          clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
+        }
+      });
+      fichiers.forEach((x) => {
+        const texte = nu(fs.readFileSync(x, 'utf8'));
+        e.fn.forEach((nom) => {
+          for (const m of texte.matchAll(new RegExp(`\\b${nom}\\('([^']+)'\\s*(\\+)?`, 'g'))) {
+            if (m[2]) continue;      // clé composée : le littéral n'en est qu'un morceau
+            demandees += 1;
+            if (!cles.has(m[1])) {
+              orphelines.push(`${e.nom} · ${path.basename(x)} : ${nom}('${m[1]}') — absente de ${e.table}`);
+            }
+          }
+        });
+      });
+    });
+    verifier('aucun écran ne demande à sa table une clé qu’elle ne porte pas',
+      examines > 0 && orphelines.length === 0,
+      orphelines.length ? orphelines.slice(0, 6).join(' · ')
+        : `${examines} écran(s), ${demandees} clé(s) demandée(s), aucune orpheline`);
+  }
+
   return bilan('taille');
 };

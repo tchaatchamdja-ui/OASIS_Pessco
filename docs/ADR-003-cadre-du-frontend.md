@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 186 exercés**, 3 indécidables — idem, 8 novembre 2026 (n° 5.f.74) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 193 exercés** (61 %), 3 indécidables — idem, 9 novembre 2026 (n° 5.f.76) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin, et l'écran des comptes de l'organisme est exercé en entier — 10 occurrences sur 10 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -10637,3 +10637,103 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            confondues** modifier la notification d'un autre. C'est une écriture,
            non une destruction, et elle sort du mandat donné ici — mais c'est le
            même `isAdmin` scope-aveugle sur un objet qui a une portée.
+
+       5.f.76 [x] **Un écran de comptes que rien n'exerçait, et ce qu'il cachait** — fait le 9 novembre 2026.
+
+           `exec-utilisateurs.js` portait **2 gestes exercés sur 10**. L'écran se
+           rendait — la ronde des cinq pages de la vue Prestataire l'ouvrait, et le
+           contrôle « chaque page se remplit » passait. Aucun de ses boutons n'était
+           cliqué. C'est le pire des états : la page est verte, et ce qu'elle *fait*
+           n'est mesuré par rien.
+
+           C'est l'écran par lequel un organisme tient ses propres comptes : créer,
+           confier des droits, réinitialiser un mot de passe, le **révéler en clair**.
+           L'exercer a montré trois choses que personne ne cherchait.
+
+           **Six libellés sur sept s'affichaient en clé brute.** Le fichier demandait
+           ses libellés à `pt`, une table de quinze libellés français que le portage
+           PESSCO avait laissée à côté de celle du module — avec des clés reprises de
+           PR, dont la table les porte. `pt` rendant la clé quand elle manque, le mot
+           de passe généré s'annonçait par « password_gen », la fenêtre de l'œil
+           s'intitulait « confirm_admin_password », et son champ se nommait
+           « password ». Chaque appel portait un repli français écrit à côté —
+           `typeof pt === 'function' ? pt('password_gen') : 'Mot de passe'` — et
+           **aucun ne pouvait servir** : il gardait de l'absence de la *fonction*,
+           quand c'est la *clé* qui manquait. *Un repli placé sur la mauvaise
+           défaillance est une précaution qui rassure et ne protège pas.*
+
+           Les sept appels passent par `te`, la table du module — trois volets, gardée
+           par la suite « traductions ». La seconde table et sa fonction sont
+           retirées : elles n'avaient plus d'appelant, et c'est leur **silence sur
+           leurs manques**, non un oubli, qui a produit le défaut.
+
+           **Le périmètre des routes était plus large que celui de la liste.** La
+           liste écarte les comptes sans accès à ce module ; `cible()` ne regardait
+           que le rattachement. Mesuré sur un compte créé depuis SURV puis rattaché au
+           seul module RAMP : absent de la liste de SURV, et pourtant, depuis SURV,
+           réinitialiser son mot de passe rendait **200**, le révéler en clair
+           **200**, modifier ses droits **200**, le détruire **200**. Le droit
+           « utilisateurs » étant propre à chaque module, un agent à qui l'on confie
+           les comptes dans un module seul pouvait saisir le mot de passe d'un collègue
+           qui n'a jamais eu accès qu'à l'autre. `cible()` applique désormais le même
+           filtre que la liste : 404, pour toutes les routes.
+
+           **Une route détruisait un compte du portail, qu'aucun écran n'offrait.**
+           Sept comptes puis six, mesuré. Les deux écrans qui servent ces routes n'ont
+           qu'un bouton « Désactiver », avec la raison écrite à côté : « plutôt que le
+           supprimer : l'historique reste lisible ». Rien ne l'appelait. Et elle n'avait
+           rien de la cérémonie que le portail exige pour le même geste
+           (`DELETE /api/users/:username`) : celui-là réserve l'effacement au
+           super-administrateur, redemande son mot de passe, emporte la fiche du
+           répertoire du personnel, ferme les sessions ouvertes, et **écrit au journal
+           d'audit**. Celle-ci ne faisait aucun des cinq, et l'ouvrait à
+           l'administrateur d'un organisme. Retirée ; le droit à l'effacement reste
+           servi par la route du portail et sa cérémonie.
+
+           **Deux contrôles de la campagne rougissent désormais sur ces défauts, et un
+           garde-fou ferme la classe entière.** Sept contrôles de navigateur exercent
+           les sept gestes — la recherche, la création avec un seul droit confié, l'œil
+           qui refuse un mauvais mot de passe puis rend le temporaire, la fenêtre qui
+           se rouvre garnie, la désactivation qui n'efface pas, la réinitialisation et
+           le courriel qu'elle compose. Sept contrôles HTTP déplacent l'accès au module
+           **entre deux requêtes** pour voir les trois routes passer de 200 à 404. Et
+           « taille » refuse qu'un écran demande à sa table une clé qu'elle ne porte
+           pas : cinq écrans, 2 400 clés demandées, **aucune dispense** — ce que la
+           suite « traductions » ne regardait pas, ne gardant que l'accord des trois
+           volets entre eux.
+
+           **Trois de mes propres fautes, que les contre-épreuves ont dites.**
+
+           La première est la plus instructive. Mon contrôle « aucune route du module
+           ne détruit un compte » passait **route remise** : le compte venait d'être
+           sorti du module par le contrôle précédent, et le périmètre masquait la
+           route. Deux gardes en série, dont le second n'était pas éprouvé. L'accès est
+           rendu avant la tentative ; alors seulement il ne reste, entre la requête et
+           un compte détruit, que l'absence de la route. *Un contrôle qui passe pour
+           une autre raison que celle qu'il annonce ne garde rien — et seule la
+           contre-épreuve le dit.*
+
+           La deuxième : le garde-fou des clés a rougi sur **mon propre analyseur**, et
+           non sur CARE. Il ne traversait pas les commentaires, et une apostrophe
+           française y ouvrait une chaîne fantôme qui avalait le reste de la table —
+           cinq clés annoncées absentes qui y étaient. La suite « traductions » le
+           savait et le disait dans son commentaire ; je l'ai réappris.
+
+           La troisième est dans le harnais. `abandonsAttendus` rangeait l'abandon vu
+           comme une seule chaîne, « <motif> <chemin> », puis éprouvait les
+           déclarations contre cette chaîne : un champ nommé `chemin` confronté au
+           motif collé devant. Une déclaration ancrée au début du chemin — `/^mailto:/`
+           — ne pouvait **jamais** correspondre, et le contrôle déclarait manquant un
+           abandon qui figurait en clair dans son propre relevé. Les deux rondes qui
+           s'en servaient n'avaient pas rencontré le défaut, leurs chemins commençant
+           par un `/` au milieu de la chaîne : leur motif n'était pas ancré par
+           dessein, mais par chance. Les deux faces se relèvent désormais séparées.
+           *Un garde qui rend impossible la forme la plus naturelle de sa propre
+           déclaration mentait sur ce qu'il mesurait.*
+
+           **Laissé ouvert, et nommé.** `et()`, dans `exec-i18n.js`, lit la table du
+           portail avec le même repli « ou la clé » et n'a plus aucun appelant — comme
+           `pt` avant ce jour. Son homologue de PLAN non plus. Ce sont deux fonctions
+           mortes du même modèle, et le garde-fou des clés ne les voit pas : il ne
+           regarde que les tables des modules. Elles tombent avec le prochain passage
+           sur ces deux écrans.

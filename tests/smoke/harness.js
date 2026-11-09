@@ -424,24 +424,41 @@ function refusAttendus() {
 // qu'une route aurait perdu son `attachment`, et afficherait le fichier au lieu
 // de l'enregistrer —, la déclaration deviendrait un filtre muet. Ce contrôle
 // l'en empêche.
+// ── Le motif et le chemin se relèvent séparés, et c'est une correction ──
+//
+// La première version rangeait l'abandon vu comme une seule chaîne,
+// « <motif> <chemin> », puis éprouvait les déclarations **contre cette
+// chaîne**. Un champ nommé `chemin` était donc confronté au motif collé
+// devant : une déclaration ancrée au début du chemin — `/^mailto:/` — ne
+// pouvait jamais correspondre, alors que l'abandon avait bien eu lieu.
+//
+// Mesuré le 9 novembre 2026 : l'abandon figurait en clair dans `vus`, et le
+// contrôle le déclarait manquant. Les deux rondes qui s'en servaient déjà ne
+// l'avaient pas rencontré, leurs chemins commençant par un `/` au milieu de la
+// chaîne — leur motif n'était pas ancré, par chance et non par dessein.
+//
+// Les deux faces se relèvent désormais séparées, et chaque éprouve porte sur
+// celle qu'elle nomme. *Un garde qui rend impossible la forme la plus naturelle
+// de sa propre déclaration est un garde qui ment sur ce qu'il mesure.*
 function abandonsAttendus(declarations) {
   const vus = [];
   return {
     // Vrai si cet abandon est l'un de ceux déclarés ; il est alors relevé.
     attendu(motif, chemin) {
       if (!declarations.some((x) => x.motif.test(motif) && x.chemin.test(chemin))) return false;
-      vus.push(`${motif} ${chemin}`);
+      vus.push({ motif: String(motif), chemin });
       return true;
     },
     // Combien de fois un chemin déclaré a été abandonné.
-    compte(chemin) { return vus.filter((x) => chemin.test(x)).length; },
+    compte(chemin) { return vus.filter((x) => chemin.test(x.chemin)).length; },
     // Le contrôle : chaque abandon déclaré doit être venu au moins une fois.
     verifier(ecran) {
-      const manquants = declarations.filter((x) => !vus.some((v) => x.chemin.test(v)));
+      const manquants = declarations.filter((x) => !vus.some((v) => x.chemin.test(v.chemin)));
       verifier(`chaque abandon de navigation que la ronde de ${ecran} a déclaré attendre est bien venu`,
         declarations.length > 0 && manquants.length === 0,
         `attendus ${declarations.length}, manquants ${manquants.length} : `
-        + `${manquants.map((x) => String(x.chemin)).join(', ') || 'aucun'} · vus ${JSON.stringify(vus)}`);
+        + `${manquants.map((x) => String(x.chemin)).join(', ') || 'aucun'}`
+        + ` · vus ${JSON.stringify(vus.map((v) => `${v.motif} ${v.chemin}`.slice(0, 90)))}`);
     },
     vus,
   };

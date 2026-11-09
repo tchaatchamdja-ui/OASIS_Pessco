@@ -32,7 +32,7 @@
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, bilan, abandonsAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'execution', 'js', 'exec-app.js');
@@ -187,8 +187,30 @@ module.exports = async function survSmoke(port) {
     page.on('pageerror', (e) => {
       if (surv) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
     });
+    // ── L'abandon que la réinitialisation d'un mot de passe provoque ──
+    //
+    // `execResetMesUserPw` pose `window.location.href = 'mailto:…'` pour que
+    // l'administrateur transmette le nouveau mot de passe. Le navigateur mène
+    // la fenêtre à l'adresse, n'a pas de protocole pour la servir, et
+    // **abandonne la navigation** — `net::ERR_ABORTED`, sans code de réponse.
+    //
+    // Déclarer n'est pas taire : le contrôle d'`abandons` exige que l'abandon
+    // soit venu. S'il cessait de venir — parce que le geste aurait cessé de
+    // composer le courriel —, la déclaration deviendrait un filtre muet.
+    const abandons = abandonsAttendus([
+      {
+        motif: /ERR_ABORTED/, chemin: /^mailto:/,
+        pourquoi: 'la réinitialisation d’un mot de passe compose le courriel qui'
+          + ' le transmet. Contrôle « le mot de passe réinitialisé est annoncé'
+          + ' dans la langue du module, et le courriel composé » (n° 5.f.76).',
+      },
+    ]);
     page.on('requestfailed', (r) => {
-      if (surv) incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
+      if (!surv) return;
+      const chemin = r.url().replace(srv.base, '');
+      const motif = String(((r.failure() || {}).errorText) || '');
+      if (abandons.attendu(motif, chemin)) return;
+      incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
     // ── La réponse, et non le seul message de console ──
     //
@@ -220,6 +242,13 @@ module.exports = async function survSmoke(port) {
           + ' supprimer définitivement : le 404 est la preuve, non l’incident.'
           + ' Éprouvé par « la bonne référence l’emporte : le serveur ne connaît'
           + ' plus l’activité » (n° 5.f.30).',
+      },
+      {
+        code: 403, methode: 'POST', chemin: /\/mes-utilisateurs\/[^/]+\/reveal-password$/,
+        pourquoi: 'lire un mot de passe temporaire exige que le demandeur prouve'
+          + ' son identité : la ronde présente d’abord un mauvais mot de passe,'
+          + ' et le refus est la propriété mesurée. Éprouvé par « l’œil refuse'
+          + ' un mauvais mot de passe » (n° 5.f.76).',
       },
     ];
     page.on('response', (r) => {
@@ -2939,6 +2968,241 @@ module.exports = async function survSmoke(port) {
         && /plan proposé par l’organisme/.test(enPrestataire.enBase.actions),
         JSON.stringify({ bouton: enPrestataire.bouton, confirme: enPrestataire.confirme,
           enBase: enPrestataire.enBase }));
+
+      // ══ Les comptes de l'organisme, tenus par l'organisme ══
+      //
+      // `exec-utilisateurs.js` portait **2 gestes exercés sur 10** : l'écran se
+      // rendait — la ronde des cinq pages l'ouvrait —, mais aucun de ses boutons
+      // n'était cliqué. C'est le pire des états : la page passe le contrôle « se
+      // remplit », et ce qu'elle fait n'est mesuré par rien.
+      //
+      // Ce que l'avoir exercé a montré, et que rien ne regardait :
+      //
+      //   · **six libellés sur sept s'affichaient en clé brute.** Le fichier
+      //     demandait ses libellés à `pt`, la table de quinze que le portail
+      //     prête à la coquille, avec des clés reprises de PR — que cette table
+      //     ne porte pas. `pt` rendant la clé quand elle manque, le mot de passe
+      //     généré s'annonçait par « password_gen », et la fenêtre de l'œil
+      //     s'intitulait « confirm_admin_password ». Chaque appel portait un
+      //     repli français à côté, et **aucun ne pouvait servir** : il gardait de
+      //     l'absence de la *fonction*, quand c'est la *clé* qui manquait ;
+      //   · **le périmètre des routes était plus large que celui de la liste**
+      //     (voir la suite HTTP, n° 5.f.76) ;
+      //   · **une route détruisait le compte du portail**, qu'aucun des deux
+      //     écrans n'offrait et qui n'avait rien de la cérémonie du portail.
+      //
+      // La ronde ci-dessous exerce les sept gestes, et asserte en base.
+      etape = 'comptes de l’organisme';
+      const COMPTE = 'ronde.surv@test.int';
+      const comptes = await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        };
+        const ligneDe = (ref) => [...document.querySelectorAll('#mesUsersTable tbody tr')]
+          .find((l) => l.textContent.includes(ref)) || null;
+        const r = {};
+        document.querySelector('.nav-btn[data-page="mes_utilisateurs"]')?.click();
+        await attendre(2600);
+        r.gestes = [...new Set([...document.querySelectorAll('#exec-content [onclick],#exec-content [oninput]')]
+          .map((e) => (/^\s*([A-Za-z_$][\w$.]*)/.exec(
+            e.getAttribute('onclick') || e.getAttribute('oninput') || '') || [])[1])
+          .filter(Boolean))];
+        r.lignesAvant = document.querySelectorAll('#mesUsersTable tbody tr').length;
+
+        // ── 1. la recherche : elle filtre, et elle rend ──
+        const champ = document.getElementById('mesUsersSearch');
+        if (champ) {
+          champ.value = 'aucun-compte-ne-porte-ceci';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await attendre(900);
+        }
+        r.filtreVide = document.querySelectorAll('#mesUsersTable tbody tr').length;
+        r.filtreDit = (document.getElementById('mesUsersTable') || {}).textContent.trim().slice(0, 40);
+        if (champ) {
+          champ.value = '';
+          champ.dispatchEvent(new Event('input', { bubbles: true }));
+          await attendre(900);
+        }
+        r.filtreRendu = document.querySelectorAll('#mesUsersTable tbody tr').length;
+
+        // ── 2. un compte ouvert par la fenêtre, un seul droit confié ──
+        //
+        // Par un **clic**, et non par un appel de la fonction : le relevé des
+        // gestes crédite le gestionnaire posé sur l'élément, non la fonction
+        // qu'il nomme. Le premier passage de cette ronde appelait
+        // `execOpenMesUserModal()` directement — les deux boutons qui le portent
+        // restaient non exercés, et le relevé l'a dit.
+        document.querySelector('.portal-page-actions [onclick^="execOpenMesUserModal"]')?.click();
+        await attendre(900);
+        r.fenetreNeuve = ['muEmail', 'muNom', 'muPrenom', 'muActif', 'muRole']
+          .every((i) => !!document.getElementById(i));
+        r.droitsOfferts = document.querySelectorAll('.mu-droit').length;
+        poser('muEmail', ctx.compte);
+        poser('muNom', 'Ronde');
+        poser('muPrenom', 'SURV');
+        poser('muRole', 'PRESTATAIRE');
+        [...document.querySelectorAll('.mu-droit')].forEach((c) => { c.checked = c.value === 'rapports'; });
+        document.querySelector('[onclick^="execSaveMesUser"]')?.click();
+        await attendre(3200);
+        r.fenetreFermee = !document.getElementById('shellModal');
+        r.lignesApres = document.querySelectorAll('#mesUsersTable tbody tr').length;
+        const ligne = ligneDe(ctx.compte);
+        r.ligne = ligne ? ligne.textContent.replace(/\s+/g, ' ').trim() : null;
+        if (!ligne) return r;
+        r.boutons = [...ligne.querySelectorAll('[onclick]')]
+          .map((b) => (/^\s*([A-Za-z_$][\w$]*)/.exec(b.getAttribute('onclick')) || [])[1]);
+
+        // ── 3. l'œil : un mauvais mot de passe, puis le bon ──
+        const oeil = ligne.querySelector('[onclick^="execRevealMesUserPassword"]');
+        r.oeil = !!oeil;
+        if (oeil) {
+          oeil.click();
+          await attendre(900);
+          // Les libellés de la fenêtre : la clé brute s'y lisait.
+          const fen = document.getElementById('shellModal');
+          r.libelles = fen ? {
+            titre: (fen.querySelector('.shell-modal-header h3') || {}).textContent || '',
+            champ: (fen.querySelector('.shell-form-group label') || {}).textContent || '',
+            boutons: [...fen.querySelectorAll('.shell-modal-footer button')]
+              .map((b) => (b.textContent || '').trim()),
+          } : null;
+          poser('mesAdminPwConfirm', 'ce-n-est-pas-le-bon');
+          document.querySelector('[onclick^="execDoRevealMesUserPassword"]')?.click();
+          await attendre(1800);
+          r.refusGardeLaFenetre = !!document.getElementById('mesAdminPwConfirm');
+          poser('mesAdminPwConfirm', ctx.motDePasse);
+          document.querySelector('[onclick^="execDoRevealMesUserPassword"]')?.click();
+          await attendre(2200);
+          const clair = document.getElementById(`mes-pw-clear-${ctx.compte}`);
+          const masque = document.getElementById(`mes-pw-mask-${ctx.compte}`);
+          r.revele = clair && masque
+            ? { affiche: clair.style.display, masque: masque.style.display,
+              longueur: (clair.textContent || '').length }
+            : null;
+        }
+
+        // ── 4. la fenêtre se rouvre garnie, et l'édition part ──
+        (ligneDe(ctx.compte) || { querySelector: () => null })
+          .querySelector('[onclick^="execOpenMesUserModal"]')?.click();
+        await attendre(1000);
+        r.rouvertGarnie = (document.getElementById('muEmail') || {}).value === ctx.compte
+          && (document.getElementById('muNom') || {}).value === 'Ronde';
+        r.droitsCoches = [...document.querySelectorAll('.mu-droit:checked')].map((c) => c.value);
+        poser('muPrenom', 'Renommee');
+        [...document.querySelectorAll('.mu-droit')].forEach((c) => {
+          c.checked = ['rapports', 'constatations'].includes(c.value);
+        });
+        document.querySelector('[onclick^="execSaveMesUser"]')?.click();
+        await attendre(3200);
+        r.apresEdition = (ligneDe(ctx.compte) || {}).textContent?.replace(/\s+/g, ' ').trim() || null;
+
+        // ── 5. la bascule : on désactive, on ne supprime pas ──
+        const bascule = (ligneDe(ctx.compte) || { querySelector: () => null })
+          .querySelector('[onclick^="execToggleMesUser"]');
+        r.bascule = bascule ? bascule.getAttribute('onclick') : null;
+        if (bascule) { bascule.click(); await attendre(3200); }
+        const apres = ligneDe(ctx.compte);
+        r.inactive = apres ? apres.className : null;
+        r.lignesApresBascule = document.querySelectorAll('#mesUsersTable tbody tr').length;
+
+        // ── 6. la réinitialisation, et le courriel qu'elle compose ──
+        const reinit = apres && apres.querySelector('[onclick^="execResetMesUserPw"]');
+        r.reinit = !!reinit;
+        if (reinit) {
+          reinit.click();
+          await attendre(1000);
+          const question = document.querySelector('.oasis-confirm-fond');
+          r.question = question ? {
+            message: (question.querySelector('.oasis-confirm-message') || {}).textContent || '',
+            rouge: /danger/.test(question.className),
+          } : null;
+          const oui = document.querySelector('.oasis-confirm-oui');
+          // Le bandeau se retire de lui-même au bout de quatre secondes : le
+          // lire après coûte le contrôle. Premier passage attendu 4 500 ms,
+          // annonce relevée vide — le geste était juste, la mesure trop tard.
+          if (oui) { oui.click(); await attendre(2200); }
+          r.annonce = (document.querySelector('.oasis-toast-message') || {}).textContent || '';
+          await attendre(2500);     // le rechargement de la table finit
+        }
+        return r;
+      }, { compte: COMPTE, motDePasse: MOT_DE_PASSE });
+
+      const enBaseCompte = await page.evaluate(async (ctx) => {
+        const l = await (await fetch(`${ctx.api}/mes-utilisateurs`, { credentials: 'same-origin' })).json();
+        return ((l || {}).utilisateurs || []).find((u) => (u.id || u.username) === ctx.compte) || null;
+      }, { api: M, compte: COMPTE });
+
+      verifier('l’écran des comptes de l’organisme porte ses cinq gestes, et la recherche filtre puis rend',
+        (comptes.gestes || []).includes('execOpenMesUserModal')
+        && (comptes.gestes || []).includes('_pesSearchInput')
+        && comptes.filtreVide === 0 && /Aucun utilisateur/.test(comptes.filtreDit || '')
+        && comptes.filtreRendu === comptes.lignesAvant && comptes.lignesAvant >= 2,
+        JSON.stringify({ gestes: comptes.gestes, avant: comptes.lignesAvant,
+          filtre: comptes.filtreVide, dit: comptes.filtreDit, rendu: comptes.filtreRendu }));
+
+      verifier('un compte s’ouvre par la fenêtre avec un seul droit confié, et sa ligne porte les quatre gestes',
+        comptes.fenetreNeuve === true && comptes.droitsOfferts === 6
+        && comptes.fenetreFermee === true
+        && comptes.lignesApres === comptes.lignesAvant + 1
+        && /SURV Ronde/.test(comptes.ligne || '') && /1 sur 6/.test(comptes.ligne || '')
+        && ['execRevealMesUserPassword', 'execOpenMesUserModal', 'execResetMesUserPw',
+          'execToggleMesUser'].every((g) => (comptes.boutons || []).includes(g)),
+        JSON.stringify({ fenetre: comptes.fenetreNeuve, droits: comptes.droitsOfferts,
+          lignes: [comptes.lignesAvant, comptes.lignesApres], ligne: comptes.ligne,
+          boutons: comptes.boutons }));
+
+      // ── Les libellés de la fenêtre, et non leurs clés ──
+      //
+      // Ce contrôle est le garde du défaut mesuré : il refuse qu'un libellé de
+      // cette fenêtre soit une clé. Rendre `te` à `pt` le ferait rougir.
+      verifier('la fenêtre de l’œil est intitulée dans la langue du module, et non par ses clés',
+        !!comptes.libelles
+        && /Confirmer votre mot de passe/.test(comptes.libelles.titre)
+        && /Mot de passe/.test(comptes.libelles.champ)
+        && (comptes.libelles.boutons || []).join(' ') === 'Annuler Confirmer'
+        && !/[a-z]+_[a-z_]+/.test(`${comptes.libelles.titre} ${comptes.libelles.champ} `
+          + `${(comptes.libelles.boutons || []).join(' ')}`),
+        JSON.stringify(comptes.libelles));
+
+      verifier('l’œil refuse un mauvais mot de passe, et rend le mot de passe temporaire avec le bon',
+        comptes.oeil === true && comptes.refusGardeLaFenetre === true
+        && !!comptes.revele && comptes.revele.affiche === 'inline'
+        && comptes.revele.masque === 'none' && comptes.revele.longueur >= 8,
+        JSON.stringify({ oeil: comptes.oeil, refus: comptes.refusGardeLaFenetre,
+          revele: comptes.revele }));
+
+      verifier('la fenêtre se rouvre garnie, l’édition part au serveur, et les droits suivent',
+        comptes.rouvertGarnie === true
+        && JSON.stringify(comptes.droitsCoches) === JSON.stringify(['rapports'])
+        && /Renommee Ronde/.test(comptes.apresEdition || '') && /2 sur 6/.test(comptes.apresEdition || '')
+        && !!enBaseCompte && enBaseCompte.prenom === 'Renommee'
+        && JSON.stringify((enBaseCompte.droits || []).sort()) === JSON.stringify(['constatations', 'rapports']),
+        JSON.stringify({ garnie: comptes.rouvertGarnie, coches: comptes.droitsCoches,
+          apres: comptes.apresEdition, enBase: enBaseCompte && { prenom: enBaseCompte.prenom,
+            droits: enBaseCompte.droits, actif: enBaseCompte.actif } }));
+
+      verifier('le compte se désactive au lieu de disparaître : la ligne reste, et le serveur le dit inactif',
+        /false/.test(comptes.bascule || '') && comptes.inactive === 'row-inactive'
+        && comptes.lignesApresBascule === comptes.lignesApres
+        && !!enBaseCompte && enBaseCompte.actif === false,
+        JSON.stringify({ bascule: comptes.bascule, classe: comptes.inactive,
+          lignes: comptes.lignesApresBascule, enBase: enBaseCompte && enBaseCompte.actif }));
+
+      verifier('le mot de passe réinitialisé est annoncé dans la langue du module, et le courriel composé',
+        comptes.reinit === true && !!comptes.question
+        && /Réinitialiser le mot de passe/.test(comptes.question.message)
+        && comptes.question.rouge === true
+        && /^Mot de passe généré : /.test(comptes.annonce || '')
+        && (comptes.annonce || '').length > 22
+        && abandons.compte(/^mailto:/) >= 1,
+        JSON.stringify({ question: comptes.question,
+          annonce: (comptes.annonce || '').slice(0, 24), mailto: abandons.compte(/^mailto:/) }));
 
       // ── Retour en vue AAC, et l'arbitrage ──
       //
@@ -6177,6 +6441,7 @@ module.exports = async function survSmoke(port) {
 
     verifier('aucune erreur de console ni requête échouée sur SURV',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
+    abandons.verifier('SURV');
   } finally {
     // Le journal du mouchard, relevé avant de fermer : une page fermée n'a plus
     // de `window`, et le relevé rendrait zéro geste — la mesure de rien,

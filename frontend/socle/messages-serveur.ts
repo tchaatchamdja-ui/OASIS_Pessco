@@ -117,7 +117,6 @@ export const MESSAGES: Readonly<Record<string, readonly [string, string]>> = {
   'Formulaire validé — suppression réservée au gestionnaire': ['Form validated — deletion restricted to the manager', 'Formulário validado — eliminação reservada ao gestor'],
   'Import refusé pour : {0} — hors de votre périmètre': ['Import refused for: {0} — outside your scope', 'Importação recusada para: {0} — fora do seu âmbito'],
   'Impossible de créer une FNC sur un dossier clôturé': ['A finding cannot be created on a closed file', 'Não é possível criar uma constatação num processo encerrado'],
-  'Impossible de supprimer votre propre compte': ['You cannot delete your own account', 'Não pode eliminar a sua própria conta'],
   'Infraction non classée': ['Breach not dismissed', 'Infração não arquivada'],
   'Intitulé inexploitable': ['Unusable title', 'Título inutilizável'],
   'L’infraction n’a pas été déclarée non constituée': ['The breach has not been declared unestablished', 'A infração não foi declarada não constituída'],

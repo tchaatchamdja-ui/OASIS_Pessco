@@ -101,12 +101,20 @@ function shellShowToast(message, type = 'success') {
     return window.oasisToast(message, type);
 }
 
-// ── Libellés fournis par le portail PESSCO ──
-const EXEC_PORTAL_LABELS = {
-    back_portal: 'Retour au portail', parameters: 'Paramètres', add: 'Ajouter',
-    save: 'Enregistrer', cancel: 'Annuler', delete: 'Supprimer', edit: 'Modifier',
-    close: 'Fermer', confirm: 'Confirmer', search: 'Rechercher', loading: 'Chargement…',
-    no_data: 'Aucune donnée', actions: 'Actions', role_m3: 'Rôle M3',
-    not_authorized: 'Accès non autorisé',
-};
-function pt(k) { return EXEC_PORTAL_LABELS[k] || k; }
+// ── Une seconde table de libellés, et pourquoi il n'y en a plus ──
+//
+// Le portage PESSCO a laissé ici une table de quinze libellés, français
+// seulement, et la fonction `pt` qui la lisait — **en rendant la clé** pour
+// tout ce qu'elle ne connaissait pas. Un seul écran s'en servait, et il lui
+// demandait sept clés dont six n'y étaient pas : reprises de PR, dont la table
+// les porte. L'écran affichait donc « password », « confirm_admin_password »,
+// et un mot de passe annoncé par « password_gen ». Personne ne l'avait vu
+// parce que rien n'exerçait cet écran.
+//
+// La table du module (`EXEC_TR`, trois volets, gardée par la suite
+// « traductions ») porte désormais ces libellés, et les sept appels passent
+// par `te`. La seconde table et sa fonction sont retirées : deux vocabulaires
+// pour un écran, dont l'un est muet sur ses manques, ne se tiennent pas
+// d'accord — et c'est **ce silence**, non l'oubli, qui a produit le défaut
+// (ADR-003 n° 5.f.76). Un garde-fou de « taille » refuse qu'une telle table
+// revienne.

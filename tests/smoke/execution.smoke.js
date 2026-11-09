@@ -539,6 +539,107 @@ module.exports = async function executionSmoke(port) {
       });
     }
 
+    // ══ Le périmètre des routes est celui de la liste ══
+    //
+    // Le contrôle ci-dessus — « comptes restreints au prestataire et au
+    // module » — porte sur la **liste**. Les routes, elles, ne regardaient que
+    // le rattachement : `cible()` omettait le filtre d'accès au module que la
+    // liste applique. Les deux périmètres divergeaient donc, au rebours de
+    // l'invariant écrit en tête de `src/comptes_prestataire.js`.
+    //
+    // Mesuré le 9 novembre 2026 sur un compte créé depuis SURV puis rattaché au
+    // seul module RAMP : absent de la liste de SURV, et pourtant, depuis SURV,
+    // réinitialiser son mot de passe rendait **200**, le révéler en clair
+    // **200**, modifier ses droits **200**, le détruire **200**.
+    //
+    // Ce que cela ouvrait : le droit « utilisateurs » est propre à chaque module
+    // (`droits_surv` ici, un autre champ pour RAMP). Un agent à qui l'on confie
+    // les comptes dans un module seul pouvait saisir le mot de passe d'un
+    // collègue qui n'a jamais eu accès qu'à l'autre.
+    //
+    // La ronde déplace l'accès au module **entre deux requêtes**, et exige que
+    // les trois routes passent de 200 à 404 — un compte hors du périmètre
+    // n'existe pas (ADR-003 n° 5.f.76).
+    const HORS = 'hors.module@test.int';
+    const ne = await srv.appel(`${M}/mes-utilisateurs`, {
+      method: 'POST',
+      body: JSON.stringify({ email: HORS, nom: 'Hors', prenom: 'Module', role: 'PRESTATAIRE' }),
+    });
+    const dansLaListe = async () => ((await srv.appel(`${M}/mes-utilisateurs`)).corps.utilisateurs || [])
+      .some((u) => u.id === HORS);
+    verifier('un compte créé depuis SURV naît avec l’accès à SURV, et paraît dans la liste',
+      ne.statut === 201 && !!ne.corps.temp_password && await dansLaListe(),
+      JSON.stringify({ statut: ne.statut, dansLaListe: await dansLaListe() }));
+
+    // Les trois routes, tant que le compte a l'accès au module.
+    const troisRoutes = async () => ({
+      reset: (await srv.appel(`${M}/mes-utilisateurs/${HORS}/reset-password`, { method: 'POST' })).statut,
+      reveal: (await srv.appel(`${M}/mes-utilisateurs/${HORS}/reveal-password`, {
+        method: 'POST', body: JSON.stringify({ admin_password: 'Aerosup@2026!Uemoa' }),
+      })).statut,
+      maj: (await PUT(`${M}/mes-utilisateurs/${HORS}`, { nom: 'Touche' })).statut,
+    });
+    const avecAcces = await troisRoutes();
+    verifier('tant qu’il a l’accès au module, les trois routes agissent sur lui',
+      avecAcces.reset === 200 && avecAcces.reveal === 200 && avecAcces.maj === 200,
+      JSON.stringify(avecAcces));
+
+    // On lui retire l'accès à SURV par la gestion des comptes du portail.
+    const horsSurv = await PUT(`/api/users/${HORS}`, { action: 'set-modules', modules: ['RAMP'] });
+    verifier('l’accès à SURV retiré, le compte quitte la liste de SURV',
+      horsSurv.statut === 200 && (await dansLaListe()) === false,
+      JSON.stringify({ statut: horsSurv.statut, dansLaListe: await dansLaListe() }));
+
+    const sansAcces = await troisRoutes();
+    verifier('hors du module, les trois routes ne le trouvent plus — 404, et non 403',
+      sansAcces.reset === 404 && sansAcces.reveal === 404 && sansAcces.maj === 404,
+      JSON.stringify(sansAcces));
+
+    // ── Et la route qui détruisait un compte n'existe plus ──
+    //
+    // Elle détruisait réellement le compte du portail (mesuré : sept comptes
+    // puis six), alors qu'aucun des deux écrans ne l'offrait — les deux n'ont
+    // qu'un bouton « Désactiver ». Et elle n'avait rien de la cérémonie que le
+    // portail exige pour le même geste : mot de passe du demandeur, fiche du
+    // répertoire du personnel, sessions fermées, entrée au journal d'audit.
+    //
+    // Le contrôle porte sur la **propriété**, non sur le code de réponse : le
+    // compte survit à la tentative.
+    //
+    // ── Et il faut lui rendre l'accès au module d'abord ──
+    //
+    // La première version de ce contrôle passait **pour une mauvaise raison**,
+    // et la contre-épreuve l'a dit : route remise, il restait vert. Le compte
+    // venait d'être sorti de SURV par le contrôle précédent ; la route, remise,
+    // ne le trouvait donc pas — le périmètre la masquait. Deux gardes en série,
+    // dont le second n'était pas éprouvé.
+    //
+    // L'accès est rendu avant la tentative : il ne reste alors, entre la requête
+    // et un compte détruit, que l'absence de la route.
+    //
+    // *Un contrôle qui passe pour une autre raison que celle qu'il annonce ne
+    // garde rien — et seule la contre-épreuve le dit.*
+    const rendu = await PUT(`/api/users/${HORS}`, { action: 'set-modules', modules: ['SURV'] });
+    verifier('l’accès à SURV rendu, le compte reparaît dans la liste',
+      rendu.statut === 200 && await dansLaListe(),
+      JSON.stringify({ statut: rendu.statut, dansLaListe: await dansLaListe() }));
+    const comptesAvant = ((await srv.appel('/api/users')).corps || []).length;
+    const detruire = await srv.appel(`${M}/mes-utilisateurs/${HORS}`, { method: 'DELETE' });
+    const comptesApres = ((await srv.appel('/api/users')).corps || []).length;
+    verifier('aucune route du module ne détruit un compte du portail',
+      detruire.statut !== 200 && comptesApres === comptesAvant && comptesAvant > 0,
+      JSON.stringify({ statut: detruire.statut, comptes: [comptesAvant, comptesApres] }));
+
+    // Le bac rendu : l'effacement passe par le portail et sa cérémonie — c'est
+    // précisément ce que la route retirée ne faisait pas.
+    const efface = await srv.appel(`/api/users/${HORS}`, {
+      method: 'DELETE', body: JSON.stringify({ adminPassword: 'Aerosup@2026!Uemoa' }),
+    });
+    verifier('le portail, lui, efface — sur mot de passe du demandeur, et en le tracant',
+      efface.statut === 200 && efface.corps.efface === HORS
+      && ((await srv.appel('/api/users')).corps || []).length === comptesAvant - 1,
+      JSON.stringify({ statut: efface.statut, corps: efface.corps }));
+
     const retour = await PUT(`${M}/vue`, { vue: 'aac' });
     verifier('retour en vue AAC', retour.statut === 200 && retour.corps.vue === 'aac');
     verifier('rôle AAC rétabli',

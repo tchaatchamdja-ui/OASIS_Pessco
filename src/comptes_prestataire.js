@@ -61,14 +61,33 @@ function register(app, deps, M, o) {
     return miens;
   };
 
+  // Comptes enregistrés au portail dont les accès aux modules comprennent
+  // celui-ci : les autres relèvent d'un autre espace. Un compte sans liste
+  // enregistrée les a tous — c'était l'état de l'application avant que les
+  // accès par module n'existent.
+  const aAccesAuModule = (u) => !Array.isArray(u.modules) || u.modules.includes(o.module);
+
+  // ── Le périmètre des routes est celui de la liste, et non plus plus large ──
+  //
+  // La liste écartait les comptes sans accès à ce module ; `cible` ne regardait
+  // que le rattachement. Les deux périmètres divergeaient donc, au rebours de
+  // l'invariant écrit en tête de ce fichier.
+  //
+  // Mesuré le 9 novembre 2026 : un compte créé depuis SURV puis rattaché au
+  // seul module RAMP **disparaît de la liste de SURV** — et depuis SURV,
+  // réinitialiser son mot de passe rendait 200, le **révéler en clair** 200,
+  // modifier ses droits 200, le détruire 200. Le droit « utilisateurs » étant
+  // propre à chaque module (`droits_surv` ici, un autre champ là), un agent à
+  // qui l'on confie les comptes dans un module seul pouvait saisir le mot de
+  // passe d'un collègue qui n'a jamais eu accès qu'à l'autre.
+  //
+  // Un compte hors du périmètre n'existe pas : 404, pour toutes les routes
+  // comme pour la liste (ADR-003 n° 5.f.76).
   const cible = (username, miens) => {
     const u = auth.findUser(username);
-    return u && miens.includes(u.prestataire_id || '') ? u : null;
+    if (!u || !miens.includes(u.prestataire_id || '')) return null;
+    return aAccesAuModule(u) ? u : null;
   };
-
-  // Comptes enregistrés au portail dont les accès aux modules comprennent
-  // celui-ci : les autres relèvent d'un autre espace.
-  const aAccesAuModule = (u) => !Array.isArray(u.modules) || u.modules.includes(o.module);
 
   app.get(`${M}/mes-utilisateurs`, requireAuth, (req, res) => {
     const miens = garde(req, res);
@@ -158,16 +177,24 @@ function register(app, deps, M, o) {
     return res.json({ status: 'ok', role: u.role, droits: R.droitsDe(u) });
   }));
 
-  app.delete(`${M}/mes-utilisateurs/:id`, requireAuth, asynchrone(async (req, res) => {
-    const miens = garde(req, res);
-    if (!miens) return undefined;
-    if (req.params.id === (req.userReel || req.user).username) {
-      return res.status(400).json({ error: 'Impossible de supprimer votre propre compte' });
-    }
-    if (!cible(req.params.id, miens)) return introuvable(res, 'utilisateur');
-    await auth.modifierUsers((comptes) => comptes.filter((u) => u.username !== req.params.id));
-    return res.json({ status: 'ok' });
-  }));
+  // ── Pas de route qui détruise un compte : aucun écran ne l'offrait ──
+  //
+  // Il y en avait une, et elle détruisait réellement le compte du portail —
+  // mesuré le 9 novembre 2026, sept comptes puis six. Or les deux écrans qui
+  // servent ces routes n'ont qu'un bouton « Désactiver », avec la raison écrite
+  // à côté : « plutôt que le supprimer : l'historique reste lisible ». Rien,
+  // dans aucun des deux, ne l'appelait.
+  //
+  // Et elle n'avait rien de la cérémonie que le portail exige pour le même
+  // geste (`DELETE /api/users/:username`) : celui-là réserve l'effacement au
+  // super-administrateur, redemande son mot de passe, emporte la fiche du
+  // répertoire du personnel, ferme les sessions ouvertes, et **écrit au journal
+  // d'audit**. Celle-ci ne faisait aucun des cinq, et l'ouvrait à
+  // l'administrateur d'un organisme.
+  //
+  // Un chemin destructeur sans mot de passe ni trace, qu'aucun écran n'ouvre,
+  // n'est pas une réserve : c'est une surface. Le droit à l'effacement reste
+  // servi, par la route du portail et sa cérémonie (ADR-003 n° 5.f.76).
 
   app.post(`${M}/mes-utilisateurs/:id/reset-password`, requireAuth, asynchrone(async (req, res) => {
     const miens = garde(req, res);

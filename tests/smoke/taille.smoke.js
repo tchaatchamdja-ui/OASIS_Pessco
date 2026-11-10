@@ -2274,5 +2274,68 @@ module.exports = async function tailleSmoke() {
         : `${examines} écran(s), ${demandees} clé(s) demandée(s), aucune orpheline`);
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  //  Les suites elles-mêmes, que ce garde-fou ne regardait pas
+  // ══════════════════════════════════════════════════════════════════════════
+  //
+  // Tout ce qui précède porte sur `public/`, `src/` et `server.js` : les suites
+  // n'avaient **aucun plafond**. Or c'est l'argument de taille qui a justifié de
+  // leur donner un fichier par écran — « `parcours` porte 3 200 lignes, y ajouter
+  // un second écran ferait un fichier que personne ne lirait, et le garde-fou de
+  // taille le refuserait à bon droit ». Il ne l'aurait pas refusé : il ne les
+  // voit pas.
+  //
+  // Mesuré le 10 novembre 2026 : `surv.smoke.js` porte **7 828 lignes**,
+  // `ramp.navigateur.smoke.js` 6 525 — trois et quatre fois le seuil des
+  // sources, sans que rien le dise.
+  //
+  // ── Ce que ce garde fait, et ce qu'il ne fait pas ──
+  //
+  // Il ne découpe rien aujourd'hui : un découpage de suite est un travail à
+  // part, et le faire au passage serait pire que la dette. Il **arrête la
+  // croissance silencieuse** : chaque suite déclare la taille qu'elle a, et la
+  // dépasser demande de relever le chiffre — c'est-à-dire de le voir.
+  //
+  // `MARGE` donne la même tolérance de 5 % qu'aux sources : une ronde de plus
+  // ne fait pas rougir une campagne, deux le font.
+  //
+  // *Un seuil qu'on ne regarde pas n'est pas un seuil.*
+  const SUITES_TOLEREES = {
+    'surv.smoke.js': 7829,
+    'ramp.navigateur.smoke.js': 6526,
+    'profil-risque.navigateur.smoke.js': 3432,
+    'parcours.smoke.js': 3211,
+    'planification.navigateur.smoke.js': 2720,
+    'mesures.navigateur.smoke.js': 2652,
+    'taille.smoke.js': 2342,
+    'unitaires.smoke.js': 1615,
+    'ramp.smoke.js': 1447,
+  };
+  const SEUIL_SUITE = 1000;
+  const DOSSIER_SUITES = path.join(RACINE, 'tests', 'smoke');
+  const horsBudget = [];
+  const budgetsMorts = [];
+  const suitesLues = fs.readdirSync(DOSSIER_SUITES).filter((f) => /\.js$/.test(f));
+  suitesLues.forEach((f) => {
+    const n = fs.readFileSync(path.join(DOSSIER_SUITES, f), 'utf8').split('\n').length;
+    const budget = SUITES_TOLEREES[f];
+    if (budget === undefined) {
+      if (n > SEUIL_SUITE) horsBudget.push(`${f} : ${n} lignes (non déclaré)`);
+      return;
+    }
+    if (n > Math.round(budget * MARGE)) horsBudget.push(`${f} : ${n} lignes (toléré ${budget})`);
+    // Une suite découpée doit faire tomber son budget, sinon la déclaration
+    // survit à ce qu'elle décrivait et ne garde plus rien.
+    if (n < Math.round(budget * 0.75)) budgetsMorts.push(`${f} : ${n} lignes, toléré ${budget} — budget à revoir`);
+  });
+  verifier(`aucune suite au-delà de ${SEUIL_SUITE} lignes hors budget déclaré`,
+    horsBudget.length === 0, horsBudget.join(' · '));
+  verifier('aucun budget de suite ne survit largement à ce qu’il décrivait',
+    budgetsMorts.length === 0, budgetsMorts.join(' · '));
+  // Un budget déclaré pour un fichier qui n'existe plus se tairait pour toujours.
+  const budgetsSansFichier = Object.keys(SUITES_TOLEREES).filter((f) => !suitesLues.includes(f));
+  verifier('aucun budget de suite ne nomme un fichier absent',
+    budgetsSansFichier.length === 0, budgetsSansFichier.join(', '));
+
   return bilan('taille');
 };

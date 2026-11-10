@@ -1343,6 +1343,106 @@ async function baremeDeRisque() {
 // qu'un navigateur normalise ce qu'il enregistre ; la deuxième parce qu'il
 // faudrait un compte sans privilège ; la troisième parce qu'elle vit en mémoire
 // du serveur.
+// ══════════════════════════════════════════════════════════════════════════
+//  La table des suites : un port par suite, et pas deux
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Sept suites tenaient le port 4797 — `ramp` en HTTP et les six suites de
+// navigateur. La campagne les joue l'une après l'autre, de sorte que cela
+// marchait ; mais **deux ne pouvaient pas tourner ensemble**, et rien ne le
+// disait. On ne pouvait donc ni rejouer une suite seule pendant une campagne,
+// ni lancer une contre-épreuve sans attendre la fin de l'essai précédent.
+//
+// Chacune a désormais son port. Ce contrôle est ce qui l'empêche de régresser :
+// *un partage de port est une dépendance invisible entre deux suites, et une
+// suite est indépendante ou elle ne l'est pas.*
+//
+// Il lit `suites.js`, qui ne porte que des chaînes — nom, port, fichier. La
+// table était dans le lanceur, construite avec des `require` : la lire chargeait
+// les vingt suites, puppeteer compris, et aucun contrôle ne pouvait l'éprouver.
+function tableDesSuites() {
+  const { SUITES } = require('./suites');
+
+  verifier('suites : la table en porte vingt, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 20
+    && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
+      && Number.isInteger(s.port) && typeof s.fichier === 'string'),
+    `${SUITES.length} suites`);
+
+  // ── Aucun port partagé ──
+  const avecPort = SUITES.filter((s) => s.port !== 0);
+  const parPort = new Map();
+  avecPort.forEach((s) => {
+    if (!parPort.has(s.port)) parPort.set(s.port, []);
+    parPort.get(s.port).push(s.nom);
+  });
+  const partages = [...parPort.entries()].filter(([, noms]) => noms.length > 1)
+    .map(([port, noms]) => `${port} : ${noms.join(', ')}`);
+  verifier('suites : aucune suite ne partage son port avec une autre',
+    partages.length === 0, partages.join(' · '));
+
+  // ── Les noms sont uniques, et ceux que le relevé lance sont sans équivoque ──
+  //
+  // Le filtre de `npm run smoke -- <mot>` retient les suites dont le nom
+  // **contient** le mot. Qu'un nom en contienne un autre est donc voulu :
+  // `-- ramp` joue les deux suites du module, HTTP et navigateur, et c'est
+  // commode.
+  //
+  // ── Ce que j'ai cru garder, et ce qu'il faut garder ──
+  //
+  // Premier jet : « aucun nom n'est contenu dans un autre ». Il a rougi sur
+  // cinq paires **voulues** — `ramp` dans `ramp-navigateur`, et quatre comme
+  // elle. L'assertion était écrite par analogie avec le commentaire du lanceur,
+  // non depuis la règle.
+  //
+  // La règle est plus étroite : `scripts/relever-gestes.js` lance la suite d'un
+  // écran **par son nom**, et attend d'en jouer une seule. Ce sont donc les six
+  // noms qu'il nomme qui doivent être sans équivoque — chacun ne doit
+  // sélectionner que lui-même. *Un contrôle écrit par analogie éprouve
+  // l'analogie, non la règle.*
+  const noms = SUITES.map((s) => s.nom);
+  verifier('suites : les noms sont uniques',
+    new Set(noms).size === noms.length, noms.join(','));
+  // Les noms que le relevé emploie, lus dans l'outil plutôt que recopiés : une
+  // liste recopiée se tairait le jour où l'outil en nommerait un autre.
+  const outil = fs.readFileSync(
+    path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'), 'utf-8');
+  const lances = [...outil.matchAll(/suite:\s*'([^']+)'/g)].map((m) => m[1]);
+  verifier('suites : les six noms que le relevé lance sont tous dans la table',
+    lances.length >= 6 && lances.every((n) => noms.includes(n)),
+    `${lances.length} : ${lances.join(', ')}`);
+  const equivoques = lances.filter((n) => noms.filter((x) => x.includes(n)).length !== 1);
+  verifier('suites : chaque nom que le relevé lance ne sélectionne que sa propre suite',
+    equivoques.length === 0,
+    equivoques.map((n) => `${n} → ${noms.filter((x) => x.includes(n)).join('+')}`).join(' · '));
+
+  // ── Les ports restent hors de ce qui est déjà pris ──
+  //
+  // 4750 est le serveur de développement, 4850 et au-delà la passerelle de
+  // `scripts/passerelle.js` — y empiéter ferait rougir une suite pour une
+  // raison qui n'est pas la sienne.
+  const horsPlage = avecPort.filter((s) => s.port < 4790 || s.port > 4849);
+  verifier('suites : les ports tiennent dans 4790–4849 — ni le serveur de développement, ni la passerelle',
+    horsPlage.length === 0, horsPlage.map((s) => `${s.nom}:${s.port}`).join(', '));
+
+  // ── Chaque fichier déclaré existe ──
+  const absents = SUITES.filter((s) => !fs.existsSync(
+    path.join(__dirname, `${s.fichier.replace(/^\.\//, '')}.js`)));
+  verifier('suites : chaque fichier déclaré existe',
+    absents.length === 0, absents.map((s) => s.fichier).join(', '));
+
+  // ── Et aucun fichier de suite n'est absent de la table ──
+  //
+  // Une suite écrite et jamais inscrite ne tourne nulle part. Le relevé des
+  // gestes a connu l'inverse — un écran ajouté sans suite —, et c'est la même
+  // faute dans l'autre sens.
+  const declares = new Set(SUITES.map((s) => `${s.fichier.replace(/^\.\//, '')}.js`));
+  const surLeDisque = fs.readdirSync(__dirname).filter((f) => f.endsWith('.smoke.js'));
+  const orphelins = surLeDisque.filter((f) => !declares.has(f));
+  verifier('suites : aucun fichier de suite n’est absent de la table',
+    orphelins.length === 0, orphelins.join(', '));
+}
+
 function telechargements() {
   const T = require('../../src/telechargement');
 
@@ -1497,6 +1597,7 @@ module.exports = async function unitairesSmoke() {
     nommeurDeGestes();
     await baremeDeRisque();
     telechargements();
+    tableDesSuites();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

@@ -17,55 +17,15 @@
 // `data/users.json` a été détruit. `bac.js` refuse de se charger trop tard.
 const bac = require('./bac');
 
-const suites = [
-  { nom: 'socle', port: 4791, run: require('./socle.smoke') },
-  { nom: 'profil-risque', port: 4792, run: require('./profil-risque.smoke') },
-  { nom: 'planification', port: 4793, run: require('./planification.smoke') },
-  { nom: 'droits', port: 4794, run: require('./droits.smoke') },
-  { nom: 'execution', port: 4795, run: require('./execution.smoke') },
-  { nom: 'mesures', port: 4796, run: require('./mesures.smoke') },
-  { nom: 'ramp', port: 4797, run: require('./ramp.smoke') },
-  // Garde-fou de taille : ne démarre aucun serveur, lit les sources.
-  { nom: 'taille', port: 0, run: require('./taille.smoke') },
-  // Garde-fou des traductions : même chose, sur les tables de libellés.
-  { nom: 'traductions', port: 0, run: require('./traductions.smoke') },
-  // Unitaires : les règles prises à part, sans passer par HTTP.
-  { nom: 'unitaires', port: 0, run: require('./unitaires.smoke') },
-  // Magasin PostgreSQL : ce qu'une base de papier ne peut pas dire. Cinq
-  // contrôles lisent le schéma ; les douze autres demandent OASIS_PG_ESSAI.
-  { nom: 'magasin-pg', port: 0, run: require('./magasin-pg.smoke') },
-  // Authentification à deux facteurs : son propre serveur, avec OASIS_MFA=1.
-  // Aucune autre suite ne la traverse — elle est éteinte partout ailleurs.
-  { nom: 'mfa', port: 4799, run: require('./mfa.smoke') },
-  // Parcours : les écrans dans un vrai navigateur, console comprise.
-  { nom: 'parcours', port: 4798, run: require('./parcours.smoke') },
-  // Frontend : ce que le TypeScript affirme du socle global, vérifié dans un
-  // navigateur. Une déclaration n'est pas une mesure — deux défauts l'ont dit.
-  { nom: 'frontend', port: 4790, run: require('./frontend.smoke') },
-  // SURV dans un navigateur : la suite n° 0.b du premier des cinq écrans de
-  // module (ADR-003, 5.f.1). Un écran, une suite — « parcours » porte déjà
-  // 3 200 lignes, et le relevé des gestes lance la suite de l'écran qu'il mesure.
-  { nom: 'surv', port: 4797, run: require('./surv.smoke') },
-  // RAMP dans un navigateur : la suite n° 0.b du deuxième écran de module
-  // (ADR-003, 5.f.14). Son nom porte « navigateur » pour que le filtre de
-  // l'argument la distingue de `ramp`, la suite HTTP du même module — le relevé
-  // des gestes lance la suite par son nom, et deux noms dont l'un contient
-  // l'autre lui en feraient lancer deux.
-  { nom: 'ramp-navigateur', port: 4797, run: require('./ramp.navigateur.smoke') },
-  // DROITS dans un navigateur : le plus petit des six écrans, et le seul
-  // entièrement converti. C'est lui qui a montré que le mouchard était aveugle
-  // aux gestionnaires de React (ADR-003, 5.f.16).
-  { nom: 'droits-navigateur', port: 4797, run: require('./droits.navigateur.smoke') },
-  // PLAN dans un navigateur : le quatrième écran à recevoir sa suite
-  // (ADR-003, 5.f.17). Son nom porte « navigateur » pour que le filtre de
-  // l'argument la distingue de `planification`, la suite HTTP du même module.
-  { nom: 'planification-navigateur', port: 4797, run: require('./planification.navigateur.smoke') },
-  // CARE et PR dans un navigateur : les deux derniers des six écrans
-  // (ADR-003, 5.f.18). Les six sont désormais mesurés, et plus un seul n'est
-  // dispensé pour absence d'instrument.
-  { nom: 'mesures-navigateur', port: 4797, run: require('./mesures.navigateur.smoke') },
-  { nom: 'profil-risque-navigateur', port: 4797, run: require('./profil-risque.navigateur.smoke') },
-];
+// ── La table vit à côté, et c'est ce qui permet de l'éprouver ──
+//
+// Elle était ici, construite avec des `require` : la lire chargeait les vingt
+// suites. `suites.js` ne porte que des chaînes — nom, port, fichier — et c'est
+// le lanceur qui en tire les modules. Un contrôle peut donc vérifier qu'aucun
+// port n'est partagé sans monter un navigateur (`unitaires`).
+const { SUITES } = require('./suites');
+// eslint-disable-next-line global-require, import/no-dynamic-require
+const suites = SUITES.map((s) => ({ ...s, run: require(s.fichier) }));
 
 (async () => {
   const filtre = process.argv[2];

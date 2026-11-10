@@ -1,0 +1,80 @@
+// OASIS — La table des suites de fumée : leur nom, leur port, leur fichier.
+//
+// ── Pourquoi une table à part, et pas dans le lanceur ──
+//
+// Elle y était, construite avec des `require` : lire la table **chargeait les
+// vingt suites**, puppeteer compris. Rien ne pouvait donc l'éprouver — un
+// contrôle qui veut vérifier que deux suites ne partagent pas un port n'a pas à
+// monter un navigateur pour le savoir.
+//
+// Ici, une suite est trois chaînes. Le lanceur en tire ses modules ; le contrôle
+// des ports la lit sans rien charger (`unitaires`, « la table des suites »).
+//
+// ── Un port par suite, et ce que le partage coûtait ──
+//
+// Sept suites tenaient le port **4797** : `ramp` en HTTP et les six suites de
+// navigateur. La campagne les joue l'une après l'autre, de sorte que cela
+// marchait — mais **deux ne pouvaient pas tourner ensemble**. Conséquence
+// mesurée le 10 novembre 2026 : impossible de rejouer une suite seule pendant
+// qu'une campagne tourne, ni de lancer une contre-épreuve sans attendre la fin
+// de l'essai précédent. Quatre lancements ont été perdus dans la journée pour
+// n'avoir pas attendu — l'erreur était la mienne, mais c'est le partage qui la
+// rendait possible.
+//
+// *Une suite est indépendante, ou elle ne l'est pas.* Chacune a donc son port,
+// et un contrôle refuse qu'il s'en partage à nouveau.
+//
+// Les dix premiers gardent celui qu'ils avaient — les documents et les notes qui
+// les nomment restent vrais. Les six suites de navigateur reçoivent 4800 à 4805.
+//
+// `port: 0` : la suite ne démarre aucun serveur. Elle lit des sources, ou
+// éprouve des règles en processus.
+//
+// 4850 et au-delà appartiennent à `scripts/passerelle.js` : ne pas y empiéter.
+const SUITES = [
+  // ── Les suites HTTP : une par module, plus le socle ──
+  { nom: 'socle', port: 4791, fichier: './socle.smoke' },
+  { nom: 'profil-risque', port: 4792, fichier: './profil-risque.smoke' },
+  { nom: 'planification', port: 4793, fichier: './planification.smoke' },
+  { nom: 'droits', port: 4794, fichier: './droits.smoke' },
+  { nom: 'execution', port: 4795, fichier: './execution.smoke' },
+  { nom: 'mesures', port: 4796, fichier: './mesures.smoke' },
+  { nom: 'ramp', port: 4797, fichier: './ramp.smoke' },
+
+  // ── Les garde-fous : aucun serveur, ils lisent les sources ──
+  // Taille des fichiers et des fonctions, noms globaux, appels au magasin.
+  { nom: 'taille', port: 0, fichier: './taille.smoke' },
+  // Les tables de libellés : une clé demandée doit exister, dans les trois langues.
+  { nom: 'traductions', port: 0, fichier: './traductions.smoke' },
+  // Les règles prises à part, sans passer par HTTP.
+  { nom: 'unitaires', port: 0, fichier: './unitaires.smoke' },
+  // Le magasin PostgreSQL : cinq contrôles lisent le schéma ; les douze autres
+  // demandent OASIS_PG_ESSAI.
+  { nom: 'magasin-pg', port: 0, fichier: './magasin-pg.smoke' },
+
+  // ── Authentification à deux facteurs : son propre serveur, avec OASIS_MFA=1.
+  // Aucune autre suite ne la traverse — elle est éteinte partout ailleurs.
+  { nom: 'mfa', port: 4799, fichier: './mfa.smoke' },
+
+  // ── Les suites de navigateur ──
+  // Le portail et les deux pages qui l'entourent, console comprise.
+  { nom: 'parcours', port: 4798, fichier: './parcours.smoke' },
+  // Ce que le TypeScript affirme du socle global, vérifié dans un navigateur.
+  // Une déclaration n'est pas une mesure — deux défauts l'ont dit.
+  { nom: 'frontend', port: 4790, fichier: './frontend.smoke' },
+  // Les six écrans de module, un par suite (ADR-003, 5.f.1). « Un écran, une
+  // suite » : `parcours` porte déjà trois mille lignes, et le relevé des gestes
+  // lance la suite de l'écran qu'il mesure.
+  //
+  // Leur nom porte « navigateur » pour que le filtre de l'argument les
+  // distingue des suites HTTP du même module — le relevé lance la suite par son
+  // nom, et deux noms dont l'un contient l'autre lui en feraient lancer deux.
+  { nom: 'surv', port: 4800, fichier: './surv.smoke' },
+  { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
+  { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
+  { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },
+  { nom: 'mesures-navigateur', port: 4804, fichier: './mesures.navigateur.smoke' },
+  { nom: 'profil-risque-navigateur', port: 4805, fichier: './profil-risque.navigateur.smoke' },
+];
+
+module.exports = { SUITES };

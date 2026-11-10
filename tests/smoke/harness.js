@@ -156,6 +156,19 @@ async function effacerSchema(schema) {
 // Le harnais refuse donc de démarrer sur un port qui répond déjà, et son message
 // dit quoi faire. `OASIS_SMOKE_BASE` reste le chemin déclaré pour s'adresser à
 // un serveur qu'on a choisi.
+//
+// ── Ce refus a longtemps mordu pour une autre raison : le port partagé ──
+//
+// Sept suites tenaient 4797 — `ramp` en HTTP et les six de navigateur. Jouées
+// l'une après l'autre, elles s'en arrangeaient ; mais **deux ne pouvaient pas
+// tourner ensemble**, et le refus ci-dessus s'énonçait alors comme un serveur
+// « resté d'un passage interrompu » quand ce n'était que le passage en cours.
+// Le 10 novembre 2026, quatre lancements ont été perdus ainsi.
+//
+// Depuis, chaque suite a son port (`suites.js`), et un contrôle refuse qu'il
+// s'en partage à nouveau (`unitaires`, « la table des suites »). Mesuré le même
+// jour : `arreter()` **relâche** le port — immédiatement, et sans qu'il reste
+// personne à le tenir. Le reproche qu'on lui faisait n'était pas le sien.
 async function portOccupe(port) {
   try {
     const r = await fetch(`http://localhost:${port}/login.html`, {

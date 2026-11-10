@@ -10975,3 +10975,108 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            à côté. La fenêtre est désormais exercée — c'est par elle que passent
            deux des trois refus —, mais par son bouton, non par son fond. Elle
            tombera avec le prochain passage, d'un clic de plus.
+       5.f.79 [x] **Sept suites sur un port, et un garde-fou qui ne se regardait
+           pas** — fait le 10 novembre 2026.
+           Une dette d'outillage, nommée depuis quatre tours et payée par celui-ci.
+           Elle n'a rien corrigé dans l'application : elle a rendu les contrôles
+           indépendants, et mis sous garde ce qui les tenait.
+
+           ── Le port partagé ──
+
+           Sept suites tenaient le port **4797** : `ramp` en HTTP et les six suites
+           de navigateur. La campagne les joue l'une après l'autre, de sorte que
+           cela marchait — et c'est ce qui rendait la dette invisible. Mais **deux
+           ne pouvaient pas tourner ensemble** : impossible de rejouer une suite
+           seule pendant qu'une campagne tourne, impossible de lancer une
+           contre-épreuve sans attendre la fin de l'essai précédent.
+
+           Le 10 novembre, cela a coûté **quatre lancements** sur une seule
+           journée — chacun refusé par le harnais, qui annonçait un serveur
+           « resté d'un passage interrompu » quand ce n'était que le passage en
+           cours. La faute était la mienne, pour avoir relancé sans attendre ; mais
+           c'est le partage qui la rendait possible, et le message qui la rendait
+           illisible.
+
+           Chaque suite a désormais son port. Les dix premières gardent celui
+           qu'elles avaient — les notes et les documents qui les nomment restent
+           vrais —, et les six suites de navigateur reçoivent 4800 à 4805.
+           **Mesuré** : `droits-navigateur` et `mesures-navigateur`, qui
+           partageaient 4797, tournent maintenant **ensemble**, 12 et 40 contrôles,
+           vertes toutes deux.
+
+           ── Le reproche qui n'était pas le sien ──
+
+           J'avais annoncé, dans les étapes suivantes du tour précédent, « un
+           `arreter()` qui tienne en cas d'échec » : le harnais laisserait son
+           serveur derrière lui quand la suite rougit. **Mesuré, c'est faux.** Une
+           sonde démarre un serveur, appelle `arreter()`, puis interroge le port à
+           sept reprises sur cinq secondes : il ne répond plus **dès le premier
+           relevé**, et `lsof` ne trouve personne à le tenir.
+
+           Les « orphelins » que j'avais trouvés étaient mes propres lancements qui
+           se chevauchaient — j'avais lu l'avancement dans le journal au lieu
+           d'attendre la fin, et relancé sur un port encore pris. *Un diagnostic
+           tiré d'un symptôme, et non d'une mesure, accuse le premier coupable
+           plausible.* Le commentaire du harnais le dit désormais, pour que
+           personne n'aille corriger ce qui n'est pas cassé.
+
+           ── La table des suites, qu'aucun contrôle ne pouvait lire ──
+
+           Elle vivait dans le lanceur, construite avec des `require` : la lire
+           **chargeait les vingt suites**, puppeteer compris. Rien ne pouvait donc
+           l'éprouver — un contrôle qui veut savoir si deux suites partagent un port
+           n'a pas à monter un navigateur pour le dire.
+
+           Elle est sortie dans `tests/smoke/suites.js`, où une suite est trois
+           chaînes : son nom, son port, son fichier. Le lanceur en tire ses modules ;
+           huit contrôles la lisent sans rien charger — la table en porte vingt,
+           aucun port n'est partagé, les noms sont uniques, les six noms que le
+           relevé des gestes lance ne sélectionnent chacun que leur propre suite,
+           les ports tiennent hors du serveur de développement et de la passerelle,
+           chaque fichier déclaré existe, et **aucun fichier de suite n'est absent
+           de la table** — une suite écrite et jamais inscrite ne tournerait nulle
+           part.
+
+           Le quatrième de ces contrôles a d'abord été écrit faux : « aucun nom
+           n'est contenu dans un autre ». Il a rougi sur cinq paires **voulues** —
+           `ramp` dans `ramp-navigateur`, et quatre comme elle —, parce que
+           `npm run smoke -- ramp` doit justement jouer les deux suites du module.
+           La règle est plus étroite : ce sont les six noms que *le relevé* emploie
+           qui doivent être sans équivoque. *Un contrôle écrit par analogie éprouve
+           l'analogie, non la règle* — pour la troisième fois en trois tours.
+
+           ── Et le garde-fou de taille, qui ne voyait pas les suites ──
+
+           Tout ce qu'il garde porte sur `public/`, `src/` et `server.js`. Les
+           suites n'avaient **aucun plafond** — alors que c'est l'argument de taille
+           qui a justifié de leur donner un fichier par écran : « `parcours` porte
+           3 200 lignes, y ajouter un second écran ferait un fichier que personne ne
+           lirait, et le garde-fou de taille le refuserait à bon droit ». Il ne
+           l'aurait pas refusé. Mesuré : `surv.smoke.js` **7 829 lignes**,
+           `ramp.navigateur.smoke.js` 6 526 — trois et quatre fois le seuil des
+           sources, sans que rien le dise.
+
+           Il ne découpe rien aujourd'hui : un découpage de suite est un travail à
+           part, et le faire au passage serait pire que la dette. Il **arrête la
+           croissance silencieuse** — chaque suite au-delà de mille lignes déclare
+           la taille qu'elle a, et la dépasser demande de relever le chiffre, c'est
+           à dire de le voir. Deux contrôles l'encadrent de l'autre côté : un budget
+           ne survit pas largement à ce qu'il décrivait — une suite découpée doit
+           faire tomber le sien —, et aucun ne nomme un fichier absent.
+
+           *Un seuil qu'on ne regarde pas n'est pas un seuil.*
+
+           ── Mesuré ──
+
+           Suites : `unitaires` 136 → **144** contrôles, `taille` 71 → **74**.
+           Campagne : 1 612 → **1 623**. Aucun geste d'écran n'est concerné : la
+           couverture de SURV reste à 228 sur 316.
+
+           Contre-épreuves, sept pour sept contrôles : surv remis sur 4797
+           (`4797 : ramp, surv`), une suite retirée de la table (`19 suites`, puis
+           `mfa.smoke.js` absente), le relevé pointé sur un nom équivoque
+           (`ramp → ramp+ramp-navigateur`), un budget rabaissé
+           (`surv.smoke.js : 7829 lignes (toléré 1200)`), un budget pour un fichier
+           qui n'existe pas, et un budget laissé loin au-dessus de sa suite
+           (`ramp.smoke.js : 1447 lignes, toléré 4000`). Chacun rougit en nommant sa
+           cause ; rendus, tout reverdit.

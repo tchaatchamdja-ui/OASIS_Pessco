@@ -187,6 +187,30 @@ module.exports = async function executionSmoke(port) {
       verifier('nouvelle version après amendement', v3.statut === 200 && !!rapportV3);
       verifier('rapport revalidé', (await PUT(`${M}/rapports/${rapportV3}/validate`)).statut === 200);
 
+      // ── `/send` ouvre les constatations restées en brouillon, comme ses sœurs ──
+      //
+      // Son commentaire l'affirmait ; le code ne le faisait pas. La validation
+      // ouvre celles qui existent alors, de sorte que la fenêtre est étroite —
+      // mais une constatation relevée **entre** la validation et l'envoi restait
+      // `brouillon`, donc inopposable, le rapport étant parti chez l'organisme.
+      // C'est précisément ce que la route sœur `/transmit` écrit vouloir éviter
+      // (n° 5.f.78).
+      const tardive = await P(`${M}/constatations`, {
+        dossier_id: dossierId, domaine_id: 'AIR', criticite: 'mineur',
+        titre: 'Écart relevé après la validation',
+        description: 'Posée entre la validation du rapport et son envoi.',
+      });
+      verifier('une constatation relevée après la validation du rapport naît en brouillon',
+        tardive.statut === 201 && tardive.corps.statut === 'brouillon');
+      const envoiSimple = await PUT(`${M}/rapports/${rapportV3}/send`);
+      const tardiveApres = await srv.appel(`${M}/constatations/${tardive.corps.id}`);
+      verifier('l’envoi simple du rapport la rend opposable, et ne laisse rien en brouillon',
+        envoiSimple.statut === 200
+        && (tardiveApres.corps || {}).statut === 'ouvert',
+        JSON.stringify({ envoi: envoiSimple.statut,
+          statut: (tardiveApres.corps || {}).statut }));
+      await srv.appel(`${M}/constatations/${tardive.corps.id}`, { method: 'DELETE' });
+
       verifier('transmission refusée sans les deux signatures',
         (await PUT(`${M}/rapports/${rapportV3}/transmit`)).statut === 400);
       verifier('signature inspecteur', (await PUT(`${M}/rapports/${rapportV3}/sign-inspector`)).statut === 200);

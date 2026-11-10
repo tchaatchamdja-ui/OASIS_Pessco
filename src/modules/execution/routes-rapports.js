@@ -315,6 +315,22 @@ module.exports = function register(app, deps, M) {
   // Transmission simple : le rapport validé passe à « transmis » et ouvre les
   // constatations restées en brouillon. La remise par courriel, avec ses liens
   // de téléchargement, se fait par POST /transmettre.
+  //
+  // ── Ce que ce commentaire affirmait sans que le code le fasse ──
+  //
+  // Il annonçait l'ouverture des constatations ; la route ne touchait que le
+  // rapport et la date du dossier. Ses trois sœurs — `/transmit`,
+  // `/transmettre`, et la clôture du dossier — le font d'un seul geste, pour la
+  // raison que l'une d'elles écrit : « un rapport transmis dont les
+  // constatations ne le sont pas encore laisse le prestataire sans objet à
+  // traiter ». Celle-ci est la seule que l'écran appelle
+  // (`execSendRapportValidated`), et c'était la seule à ne pas le faire.
+  //
+  // La fenêtre était étroite — la validation du rapport ouvre déjà celles qui
+  // existent alors — mais réelle : mesuré le 10 novembre 2026, une constatation
+  // relevée **entre** la validation et l'envoi restait `brouillon` au travers
+  // de `/send`, donc inopposable, le rapport étant parti. Le geste est désormais
+  // unique, comme chez les trois autres (n° 5.f.78).
   app.put(`${M}/rapports/:id/send`, requireAuth, asynchrone(async (req, res) => {
     const r = await db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
@@ -322,8 +338,24 @@ module.exports = function register(app, deps, M) {
     if (r.statut !== 'valide') return statutRequis(res, 'rapport', 'valide');
     if (await refusProcessus(req, res, r, 'transmission')) return undefined;
     const maintenant = db.now();
-    await db.update('rapports', r.id, { statut: 'transmis', date_transmission: maintenant, transmis_par: req.user.username });
-    if (r.dossier_id) await db.update('dossiers', r.dossier_id, { date_maj: maintenant });
+    await db.transformer((etat) => {
+      const rapports = etat.rapports || [];
+      const i = rapports.findIndex((x) => x.id === r.id);
+      if (i >= 0) {
+        rapports[i] = {
+          ...rapports[i], statut: 'transmis', date_transmission: maintenant,
+          transmis_par: req.user.username,
+        };
+      }
+      if (r.dossier_id) {
+        const dossiers = etat.dossiers || [];
+        const j = dossiers.findIndex((x) => x.id === r.dossier_id);
+        if (j >= 0) dossiers[j] = { ...dossiers[j], date_maj: maintenant };
+      }
+      etat.constatations = (etat.constatations || []).map((c) => (c.dossier_id === r.dossier_id && c.statut === 'brouillon'
+        ? { ...c, statut: 'ouvert' } : c));
+      return etat;
+    });
     res.json({ status: 'ok', statut: 'transmis' });
   }));
 

@@ -244,6 +244,13 @@ module.exports = async function survSmoke(port) {
           + ' plus l’activité » (n° 5.f.30).',
       },
       {
+        code: 403, methode: 'PUT', chemin: /\/constatations\/[\w-]+\/ajuster$/,
+        pourquoi: 'revenir sur un engagement déjà notifié exige le mot de passe du'
+          + ' demandeur : la ronde en présente d’abord un faux, et le refus est la'
+          + ' propriété mesurée. Éprouvé par « l’ajustement se refuse sans motif,'
+          + ' sans mot de passe, et sur un mot de passe faux » (n° 5.f.78).',
+      },
+      {
         code: 403, methode: 'POST', chemin: /\/mes-utilisateurs\/[^/]+\/reveal-password$/,
         pourquoi: 'lire un mot de passe temporaire exige que le demandeur prouve'
           + ' son identité : la ronde présente d’abord un mauvais mot de passe,'
@@ -3783,6 +3790,850 @@ module.exports = async function survSmoke(port) {
       // haut, « changer d'étape le redessine ». Ici on ne vérifie que l'absence.
       verifier('le volet est refermé à la fin de la ronde',
         finDuCycle.voletReferme === true, JSON.stringify({ referme: finDuCycle.voletReferme }));
+
+      // ══════════════════════════════════════════════════════════════════
+      //  Le plan d'actions : les trois refus, et l'ajustement d'un
+      //  engagement déjà notifié
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Ce que la ronde du cycle avait laissé, et qu'elle avait nommé ──
+      //
+      // Le cycle ci-dessus parcourt le plan d'actions **par son chemin
+      // heureux** : soumis, accepté, mis en œuvre, preuves acceptées, fiche
+      // soldée. Il le dit lui-même : « on prend la branche des preuves :
+      // l'amendement exige un motif par champ divergent, et refuse sans — ce
+      // serait une autre ronde ». C'est celle-ci.
+      //
+      // Le relevé chiffrait ce qui manquait : `exec-pac.js`, **22 occurrences
+      // non exercées sur 47**. Et ce ne sont pas des gestes de décor. Trois
+      // d'entre eux sont les **refus** de l'Autorité :
+      //
+      //   · `execReturnPACtoPostulant` — le plan renvoyé à l'organisme ;
+      //   · `execPreuvesNonAcceptables` — les preuves de mise en œuvre
+      //     refusées ;
+      //   · `execRenvoyerMiseEnOeuvre` — la clôture refusée, le dossier
+      //     renvoyé à la mise en œuvre.
+      //
+      // Leurs trois pendants — accepter le plan, accepter les preuves, clôturer
+      // — étaient exercés. *Un circuit dont on n'éprouve que les acceptations
+      // n'est pas éprouvé : c'est le refus qui porte la décision.*
+      //
+      // ── Et l'ajustement, qui est une cérémonie ──
+      //
+      // Revenir sur un délai, une criticité ou l'énoncé d'une constatation
+      // **déjà notifiée** engage l'administration : réservé aux comptes
+      // SUPERADMIN et ADMIN sur leur portée, **confirmé par le mot de passe du
+      // demandeur**, et tracé champ par champ dans un journal. Rien de tout
+      // cela n'était exercé. Les deux refus de la cérémonie — sans motif, et
+      // avec un mauvais mot de passe — sont ce qui lui donne des dents, et ce
+      // sont eux qu'on éprouve d'abord.
+      //
+      // ── La matière : une seconde chaîne, par les routes qui la font ──
+      //
+      // La constatation du cycle est **soldée** : son circuit est clos, rien ne
+      // s'y rejoue. La ronde bâtit donc sa propre chaîne — notification,
+      // accord, dossier, constatation, rapport validé — et c'est la
+      // **validation du rapport** qui rend la constatation opposable, non son
+      // envoi. Mesuré : une constatation posée après la validation reste
+      // `brouillon` au travers de `/send`, dont le commentaire prétendait le
+      // contraire (corrigé, n° 5.f.78).
+      etape = 'plan d’actions : la matière';
+      const planFix = await page.evaluate(async (api, fncDuCycle) => {
+        const J = async (u, m, b) => {
+          const r = await fetch(u, {
+            method: m || 'GET', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: b ? JSON.stringify(b) : undefined,
+          });
+          let c = null; try { c = await r.json(); } catch { c = null; }
+          return { statut: r.status, corps: c };
+        };
+        const r = {};
+        // ── L'activité se choisit par son organisme, non par son rang ──
+        //
+        // Premier jet : `plan.activites[0]`, comme la chaîne du cycle. Mesuré,
+        // c'est faux **à cet instant de la suite** : l'ordre des activités n'est
+        // pas celui du début, et la constatation est née sur un autre organisme
+        // — invisible en vue Prestataire, qui ne sert que le sien. Le relevé le
+        // disait sans ambiguïté : `403` sur sa lecture, et deux autres
+        // constatations dans la liste.
+        //
+        // La ronde prend donc l'activité de **l'organisme que la vue Prestataire
+        // sert**, reconnu par la constatation du cycle, qui lui appartient.
+        // *Un rang n'est pas une identité.*
+        const duCycle = (await J(`${api}/constatations/${fncDuCycle}`)).corps || {};
+        r.organisme = duCycle.prestataire_id || '';
+        // ── Et l'activité se cherche là où elles sont **toutes** ──
+        //
+        // Second jet : `plans-valides` ne donne que les activités **non encore
+        // déclenchées** — celle de cet organisme a été notifiée par la chaîne du
+        // cycle, elle en est donc écartée, et la liste n'offrait plus qu'un
+        // autre organisme. Mesuré : `{"offerts":["2c8f39b6add9"]}` quand la vue
+        // Prestataire sert `d82c838cb1a2`.
+        //
+        // `plans-valides/:planId/activites` les rend toutes, avec leur
+        // organisme. Et une activité déjà notifiée **peut l'être à nouveau** —
+        // 201, mesuré : une seconde surveillance du même objet est un acte
+        // ordinaire. *Ce qu'une liste écarte pour l'usage courant existe
+        // toujours.*
+        const plans = (await J(`${api}/plans-valides`)).corps || [];
+        let plan = null;
+        let a = null;
+        for (const p of (plans || [])) {
+          /* eslint-disable no-await-in-loop */
+          const toutes = (await J(`${api}/plans-valides/${p.id}/activites`)).corps || [];
+          const trouvee = toutes.find((x) => x.prestataire_id === r.organisme);
+          if (trouvee) { plan = p; a = trouvee; break; }
+        }
+        if (!plan || !a) {
+          const offerts = [];
+          for (const p of (plans || [])) {
+            const toutes = (await J(`${api}/plans-valides/${p.id}/activites`)).corps || [];
+            offerts.push(...toutes.map((x) => x.prestataire_id));
+          }
+          return { plan: false, organisme: r.organisme, offerts };
+        }
+        r.activite = `${a.id}/${a.prestataire_id}`;
+        const n = await J(`${api}/notifications`, 'POST', {
+          activite_id: a.id, plan_id: plan.id, prestataire_id: a.prestataire_id,
+          objet: 'SURV 0.c — ronde du plan d’actions', type_supervision: 'Audit',
+          date_debut_prevue: '2026-09-01', date_fin_prevue: '2026-09-03',
+          lieu: 'Siège', perimetre: 'Ensemble des processus',
+        });
+        r.notif = n.statut;
+        r.notifId = (n.corps || {}).id;
+        if (!r.notifId) return r;
+        for (const e of ['submit', 'validate', 'send']) {
+          /* eslint-disable no-await-in-loop */
+          await J(`${api}/notifications/${r.notifId}/${e}`, 'PUT');
+        }
+        const accord = await J(`${api}/notifications/${r.notifId}/validate-accord`, 'PUT',
+          { date_debut_effective: '2026-09-01', date_fin_effective: '2026-09-03' });
+        r.dossierId = (accord.corps || {}).dossier_id;
+        const c = await J(`${api}/constatations`, 'POST', {
+          dossier_id: r.dossierId, domaine_id: 'AIR', criticite: 'majeur',
+          titre: 'SURV 0.c — écart du plan d’actions',
+          description: 'Écart porté par la ronde du plan d’actions.',
+          delai_solde: '30', date_due_cloture: '2026-12-10',
+        });
+        r.fncId = (c.corps || {}).id;
+        r.brouillon = (c.corps || {}).statut;
+        await J(`${api}/dossiers/${r.dossierId}/close-realisation`, 'PUT', {});
+        const sou = await J(`${api}/dossiers/${r.dossierId}/submit`, 'PUT',
+          { introduction: 'Rapport de la ronde du plan d’actions.' });
+        r.rapportId = (sou.corps || {}).rapport_id;
+        // ── La constatation posée **après** la validation, et `/send` ──
+        //
+        // Le commentaire de `PUT /rapports/:id/send` affirmait qu'il « ouvre
+        // les constatations restées en brouillon ». Il ne le faisait pas : ses
+        // trois routes sœurs — `transmit`, `transmettre`, et la clôture du
+        // dossier — le font d'un seul geste, et `send`, la seule que l'écran
+        // appelle, ne le faisait pas. Corrigé ; ce relevé est ce qui le garde.
+        await J(`${api}/rapports/${r.rapportId}/validate`, 'PUT', {});
+        r.apresValidation = ((await J(`${api}/constatations/${r.fncId}`)).corps || {}).statut;
+        const tardive = await J(`${api}/constatations`, 'POST', {
+          dossier_id: r.dossierId, domaine_id: 'AIR', criticite: 'mineur',
+          titre: 'SURV 0.c — écart relevé après la validation',
+          description: 'Posée entre la validation du rapport et son envoi.',
+        });
+        r.tardiveId = (tardive.corps || {}).id;
+        r.tardiveAvant = (tardive.corps || {}).statut;
+        r.send = (await J(`${api}/rapports/${r.rapportId}/send`, 'PUT', {})).statut;
+        r.tardiveApres = ((await J(`${api}/constatations/${r.tardiveId}`)).corps || {}).statut;
+        // Elle a servi : elle part, le circuit porte sur l'autre.
+        await J(`${api}/constatations/${r.tardiveId}`, 'DELETE');
+        // Le plan déposé par l'organisme, pour que l'Autorité ait à statuer.
+        const pac = await J(`${api}/constatations/${r.fncId}/submit-pac`, 'PUT', {
+          actions_correctives: [{
+            cause_primaire: 'Procédure de contrôle non appliquée.',
+            action_curative: 'Reprise immédiate du contrôle manqué.',
+            curative_date_prevue: '2026-10-01',
+            actions_correctives: 'Formation des équipes et audit interne trimestriel.',
+            corrective_date_prevue: '2026-11-01',
+          }],
+        });
+        r.pac = pac.statut;
+        r.statutPac = ((await J(`${api}/constatations/${r.fncId}`)).corps || {}).statut;
+        return r;
+      }, M, chaine.fncId);
+
+      verifier('la chaîne du plan d’actions se bâtit, et c’est la validation du rapport qui rend la constatation opposable',
+        planFix.notif === 201 && !!planFix.dossierId && !!planFix.fncId
+        && planFix.brouillon === 'brouillon' && planFix.apresValidation === 'ouvert'
+        && planFix.pac === 200 && planFix.statutPac === 'pac_soumis'
+        && !!planFix.organisme
+        && (planFix.activite || '').endsWith(planFix.organisme),
+        JSON.stringify(planFix));
+      verifier('une constatation relevée après la validation est ouverte par l’envoi du rapport, et non laissée inopposable',
+        planFix.tardiveAvant === 'brouillon' && planFix.send === 200
+        && planFix.tardiveApres === 'ouvert',
+        JSON.stringify({ avant: planFix.tardiveAvant, send: planFix.send,
+          apres: planFix.tardiveApres }));
+
+      // ── Vue AAC : l'ajustement, puis les trois refus ──
+      etape = 'plan d’actions : l’ajustement et les refus';
+      const refusPac = await page.evaluate(async (ctx) => {
+        const { api, fncId, mdp } = ctx;
+        const at = (ms) => new Promise((r) => setTimeout(r, ms));
+        const J = async (u, m, b) => {
+          const r = await fetch(u, {
+            method: m || 'GET', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: b ? JSON.stringify(b) : undefined,
+          });
+          let c = null; try { c = await r.json(); } catch { c = null; }
+          return { statut: r.status, corps: c };
+        };
+        const q = (s) => document.querySelector(`#execSlider ${s}`);
+        const tous = (s) => document.querySelectorAll(`#execSlider ${s}`).length;
+        const lire = async () => (await J(`${api}/constatations/${fncId}`)).corps || {};
+        const evaluation = (c) => {
+          const x = (c || {}).commentaire_evaluation;
+          if (!x) return {};
+          if (typeof x === 'object') return x;
+          try { return JSON.parse(x); } catch { return {}; }
+        };
+        const confirmer = async () => {
+          await at(900);
+          const oui = document.querySelector('.oasis-confirm-oui');
+          if (!oui) return false;
+          oui.click(); await at(4200); return true;
+        };
+        const ouvrir = async () => {
+          await execRefreshDynamic();
+          document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+          await at(2800);
+          const t = [...document.querySelectorAll('.exec-tab')]
+            .find((x) => /suivi/i.test(x.textContent || '') && !/terrain/i.test(x.textContent || ''));
+          if (t) { t.click(); await at(2200); }
+          const b = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(fncId));
+          if (!b) return false;
+          b.click(); await at(4000);
+          return true;
+        };
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          return true;
+        };
+        const r = {};
+        r.ouvert = await ouvrir();
+        if (!r.ouvert) return r;
+        r.volet = {
+          ajust: tous('[onclick*="execAjustOuvrir"]'),
+          portees: [...document.querySelectorAll('#execSlider [onclick*="execAjustOuvrir"]')]
+            .map((x) => (/execAjustOuvrir\('[^']+','([^']+)'\)/.exec(x.getAttribute('onclick')) || [])[1]),
+          journal: tous('[onclick^="execAjustVoletToggle"]'),
+          renvoyerPlan: tous('[onclick^="execReturnPACtoPostulant"]'),
+          teintes: tous('[onchange^="execPacTeinteResultats"]'),
+          annuler: tous('[onclick^="execAnnulerSaisiePAC"]'),
+        };
+
+        // ══ 1 — La cérémonie de l'ajustement, et ses deux refus ══
+        const prorogation = [...document.querySelectorAll('#execSlider [onclick*="execAjustOuvrir"]')]
+          .find((x) => /prorogation/.test(x.getAttribute('onclick') || ''));
+        r.boutonProrogation = !!prorogation;
+        if (prorogation) { prorogation.click(); await at(2600); }
+        r.formulaire = {
+          champs: [...document.querySelectorAll('#execSlider [id^="ajust_"]')].map((e) => e.id),
+          delai: (document.getElementById('ajust_delai_solde') || {}).value || '',
+          echeance: (document.getElementById('ajust_apercu_echeance') || {}).value || '',
+        };
+        // L'aperçu de l'échéance suit le délai saisi.
+        poser('ajust_delai_solde', '60');
+        await at(800);
+        r.formulaire.echeanceApres = (document.getElementById('ajust_apercu_echeance') || {}).value || '';
+        // Refus : sans motif.
+        q('[onclick^="execAjustAppliquer"]')?.click();
+        await at(1300);
+        r.sansMotif = (document.getElementById('ajust_erreur') || {}).textContent || '';
+        // Refus : motif posé, mot de passe absent.
+        poser('ajust_motif', 'Délai prorogé à la demande motivée de l’organisme.');
+        q('[onclick^="execAjustAppliquer"]')?.click();
+        await at(1300);
+        r.sansMotDePasse = (document.getElementById('ajust_erreur') || {}).textContent || '';
+        // Refus : mauvais mot de passe — le serveur tranche, pas l'écran.
+        poser('ajust_mdp', 'Ceci-N-Est-Pas-Le-Mot-De-Passe');
+        q('[onclick^="execAjustAppliquer"]')?.click();
+        await at(2600);
+        r.mauvaisMotDePasse = (document.getElementById('ajust_erreur') || {}).textContent || '';
+        r.riensAppliques = { delai: (await lire()).delai_solde,
+          traces: ((await lire()).ajustements || []).length };
+        // Le retour ramène au formulaire de suivi, sans rien appliquer.
+        q('[onclick^="execAjustRetour"]')?.click();
+        await at(3200);
+        r.retour = { pacRevenu: tous('[onclick^="execAjustVoletToggle"]') > 0,
+          delai: (await lire()).delai_solde };
+        // Puis la cérémonie aboutit.
+        [...document.querySelectorAll('#execSlider [onclick*="execAjustOuvrir"]')]
+          .find((x) => /prorogation/.test(x.getAttribute('onclick') || ''))?.click();
+        await at(2600);
+        poser('ajust_delai_solde', '60');
+        poser('ajust_motif', 'Délai prorogé à la demande motivée de l’organisme.');
+        poser('ajust_mdp', mdp);
+        q('[onclick^="execAjustAppliquer"]')?.click();
+        await at(4500);
+        const ajustee = await lire();
+        r.applique = {
+          delai: ajustee.delai_solde, echeance: ajustee.date_due_cloture,
+          traces: (ajustee.ajustements || []).length,
+          portee: ((ajustee.ajustements || [])[0] || {}).portee,
+          motif: ((ajustee.ajustements || [])[0] || {}).motif,
+          auteur: !!((ajustee.ajustements || [])[0] || {}).auteur,
+          changements: (((ajustee.ajustements || [])[0] || {}).changements || [])
+            .map((x) => `${x.champ}:${x.avant}→${x.apres}`),
+        };
+        // Le journal de traçabilité : replié, déplié, sa carte, son repli.
+        r.journal = { avant: (document.getElementById('execAjustVolet') || {}).className || '' };
+        q('[onclick^="execAjustVoletToggle"]')?.click();
+        await at(1500);
+        r.journal.apres = (document.getElementById('execAjustVolet') || {}).className || '';
+        r.journal.cartes = tous('.exec-ajust-carte');
+        r.journal.lignes = [...document.querySelectorAll('#execSlider .exec-ajust-ligne')]
+          .map((e) => e.textContent.replace(/\s+/g, ' ').trim());
+        q('.exec-ajust-carte .exec-suivi-comm-tete')?.click();
+        await at(900);
+        r.journal.carteRepliee = !!q('.exec-ajust-carte.replie');
+
+        // ══ 2 — Les teintes des « Résultats du Suivi » ══
+        const teinte = () => ((document.getElementById('exec_resultats_suivi') || {}).className || '')
+          .split(' ').find((x) => x.startsWith('teinte-')) || '';
+        const cocher = async (id) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.checked = !e.checked;
+          e.dispatchEvent(new Event('change', { bubbles: true }));
+          await at(500);
+          return true;
+        };
+        r.teintes = { depart: teinte() };
+        r.teintes.posee = await cocher('anac_pac_accepte');
+        r.teintes.accepte = teinte();
+        await cocher('anac_verif_terrain');
+        r.teintes.terrain = teinte();
+        await cocher('anac_mise_effective');
+        r.teintes.clos = teinte();
+        // Les cases sont rendues à leur état : un enregistrement les emporterait.
+        await cocher('anac_mise_effective');
+        await cocher('anac_verif_terrain');
+        await cocher('anac_pac_accepte');
+        r.teintes.rendu = teinte();
+
+        // ══ 3 — « Annuler » abandonne les saisies sans refermer le volet ══
+        poser('anac_date_acceptation', '2026-12-01');
+        q('[onclick^="execAnnulerSaisiePAC"]')?.click();
+        r.annuler = { confirme: await confirmer(),
+          voletReste: !!document.getElementById('execSlider'),
+          dateAbandonnee: ((document.getElementById('anac_date_acceptation') || {}).value || '') !== '2026-12-01' };
+        if (!document.getElementById('execSlider')) r.ouvert = await ouvrir();
+
+        // ══ 4 — Le plan renvoyé à l'organisme ══
+        q('[onclick^="execReturnPACtoPostulant"]')?.click();
+        r.renvoiPlanConfirme = await confirmer();
+        const renvoye = await lire();
+        r.renvoiPlan = { statut: renvoye.statut,
+          trace: !!evaluation(renvoye).rejet_info,
+          auteur: (evaluation(renvoye).rejet_info || {}).auteur || '' };
+
+        // ══ 5 — Resoumis puis accepté : l'étape « Mise en œuvre » s'ouvre ══
+        await J(`${api}/constatations/${fncId}/submit-pac`, 'PUT', {
+          actions_correctives: [{
+            cause_primaire: 'Procédure de contrôle non appliquée.',
+            action_curative: 'Reprise immédiate du contrôle manqué.',
+            curative_date_prevue: '2026-10-01',
+            actions_correctives: 'Formation des équipes et audit interne trimestriel.',
+            corrective_date_prevue: '2026-11-01',
+          }],
+        });
+        await J(`${api}/constatations/${fncId}/validate-pac`, 'PUT', {});
+        await J(`${api}/constatations/${fncId}/submit-preuves`, 'PUT', {});
+        r.rouvert = await ouvrir();
+        r.miseEnOeuvre = {
+          nonAcceptables: tous('[onclick^="execPreuvesNonAcceptables"]'),
+          accepter: tous('[onclick^="execAccepterPreuves"]'),
+          renvoyerCloture: tous('[onclick^="execRenvoyerMiseEnOeuvre"]'),
+        };
+
+        // ══ 6 — Les preuves refusées : la fenêtre exige son motif ══
+        q('[onclick^="execPreuvesNonAcceptables"]')?.click();
+        await at(1600);
+        r.fenetrePreuves = { presente: !!document.getElementById('exec_comment_modal'),
+          zone: !!document.getElementById('exec_comment_text') };
+        document.getElementById('exec_comment_confirm')?.click();
+        await at(1600);
+        r.fenetrePreuves.refuseVide = !!document.getElementById('exec_comment_modal');
+        const MOTIF_PREUVES = 'Les preuves ne couvrent pas l’action corrective.';
+        poser('exec_comment_text', MOTIF_PREUVES);
+        document.getElementById('exec_comment_confirm')?.click();
+        await at(4500);
+        const refusees = await lire();
+        r.preuvesRefusees = {
+          verdict: ((evaluation(refusees).evaluation_anac || {}).verification || {}).preuves_acceptees,
+          motif: (evaluation(refusees).preuves_refus || {}).motif || '',
+        };
+
+        // ══ 7 — Les preuves acceptées, puis la clôture refusée ══
+        r.rouvert2 = await ouvrir();
+        q('[onclick^="execAccepterPreuves"]')?.click();
+        r.preuvesAcceptees = await confirmer();
+        await at(1600);
+        r.etapeCloture = { renvoyer: tous('[onclick^="execRenvoyerMiseEnOeuvre"]'),
+          cloturer: tous('[onclick^="execCloseFNC"]') };
+        q('[onclick^="execRenvoyerMiseEnOeuvre"]')?.click();
+        await at(1600);
+        const MOTIF_RETOUR = 'La mise en œuvre n’est pas effective sur le terrain.';
+        poser('exec_comment_text', MOTIF_RETOUR);
+        document.getElementById('exec_comment_confirm')?.click();
+        await at(4500);
+        const rendue = await lire();
+        r.clotureRefusee = {
+          motif: (evaluation(rendue).retour_mise_oeuvre || {}).motif || '',
+          preuvesEffacees: (((evaluation(rendue).evaluation_anac || {}).verification || {})
+            .preuves_acceptees || '') === '',
+          statut: rendue.statut,
+        };
+        // Le volet se referme avant la bascule : ouvert, son voile couvre la
+        // barre du portail, et le bouton de changement de vue n'est pas
+        // cliquable.
+        document.querySelector('#execSlider [onclick^="execRetourVolet"]')?.click();
+        await at(1800);
+        if (document.getElementById('execSlider')) { execCloseSlider(); await at(1500); }
+        r.voletReferme = !document.getElementById('execSlider');
+        return r;
+      }, { api: M, fncId: planFix.fncId, mdp: MOT_DE_PASSE });
+
+      verifier('le volet du plan porte les trois portées d’ajustement, son journal, et le geste qui renvoie le plan',
+        refusPac.ouvert === true && refusPac.volet
+        && refusPac.volet.ajust === 3
+        && JSON.stringify(refusPac.volet.portees) === JSON.stringify(['prorogation', 'criticite', 'complet'])
+        && refusPac.volet.journal >= 1 && refusPac.volet.renvoyerPlan === 1
+        && refusPac.volet.teintes === 3 && refusPac.volet.annuler === 1,
+        JSON.stringify(refusPac.volet));
+      verifier('le formulaire d’ajustement montre l’échéance que le délai saisi commande',
+        refusPac.boutonProrogation === true && refusPac.formulaire
+        && refusPac.formulaire.champs.includes('ajust_delai_solde')
+        && refusPac.formulaire.champs.includes('ajust_motif')
+        && refusPac.formulaire.champs.includes('ajust_mdp')
+        && /^\d{2}\/\d{2}\/\d{4}$/.test(refusPac.formulaire.echeance || '')
+        && refusPac.formulaire.echeanceApres !== refusPac.formulaire.echeance,
+        JSON.stringify(refusPac.formulaire));
+      verifier('l’ajustement se refuse sans motif, sans mot de passe, et sur un mot de passe faux — et rien n’est appliqué',
+        /motif/i.test(refusPac.sansMotif || '')
+        && /mot de passe/i.test(refusPac.sansMotDePasse || '')
+        && /incorrect/i.test(refusPac.mauvaisMotDePasse || '')
+        && refusPac.riensAppliques && String(refusPac.riensAppliques.delai) === '30'
+        && refusPac.riensAppliques.traces === 0,
+        JSON.stringify({ sansMotif: refusPac.sansMotif, sansMdp: refusPac.sansMotDePasse,
+          faux: refusPac.mauvaisMotDePasse, base: refusPac.riensAppliques }));
+      verifier('renoncer à l’ajustement ramène au formulaire de suivi, et laisse l’engagement intact',
+        refusPac.retour && refusPac.retour.pacRevenu === true
+        && String(refusPac.retour.delai) === '30',
+        JSON.stringify(refusPac.retour));
+      verifier('l’ajustement prononcé proroge le délai, refait l’échéance, et laisse sa trace champ par champ',
+        refusPac.applique && String(refusPac.applique.delai) === '60'
+        && refusPac.applique.echeance === '2027-01-09'
+        && refusPac.applique.traces === 1
+        && refusPac.applique.portee === 'prorogation'
+        && /organisme/.test(refusPac.applique.motif || '')
+        && refusPac.applique.auteur === true
+        && (refusPac.applique.changements || []).includes('delai_solde:30→60')
+        && (refusPac.applique.changements || []).includes('date_due_cloture:2026-12-10→2027-01-09'),
+        JSON.stringify(refusPac.applique));
+      verifier('le journal des ajustements se déplie, porte sa carte et ses changements lisibles, et se replie',
+        refusPac.journal && !/ouvert/.test(refusPac.journal.avant || '')
+        && /ouvert/.test(refusPac.journal.apres || '')
+        && refusPac.journal.cartes === 1
+        && (refusPac.journal.lignes || []).length === 2
+        && (refusPac.journal.lignes || []).some((l) => /30.*60/.test(l))
+        && refusPac.journal.carteRepliee === true,
+        JSON.stringify(refusPac.journal));
+      verifier('les trois cases des « Résultats du Suivi » teintent la section, et la rendent décochées',
+        refusPac.teintes && refusPac.teintes.posee === true
+        && refusPac.teintes.depart === 'teinte-refuse'
+        && refusPac.teintes.accepte === 'teinte-accepte'
+        && refusPac.teintes.terrain === 'teinte-terrain'
+        && refusPac.teintes.clos === 'teinte-clos'
+        && refusPac.teintes.rendu === 'teinte-refuse',
+        JSON.stringify(refusPac.teintes));
+      verifier('« Annuler » abandonne les saisies sur confirmation, et ne referme pas le formulaire',
+        refusPac.annuler && refusPac.annuler.confirme === true
+        && refusPac.annuler.voletReste === true
+        && refusPac.annuler.dateAbandonnee === true,
+        JSON.stringify(refusPac.annuler));
+      verifier('le plan renvoyé à l’organisme repasse « pac_rejetee », et le renvoi est signé',
+        refusPac.renvoiPlanConfirme === true && refusPac.renvoiPlan
+        && refusPac.renvoiPlan.statut === 'pac_rejetee'
+        && refusPac.renvoiPlan.trace === true
+        && (refusPac.renvoiPlan.auteur || '').length > 2,
+        JSON.stringify(refusPac.renvoiPlan));
+      verifier('l’étape « Mise en œuvre » offre de refuser les preuves ou de les accepter, et non de clôturer',
+        refusPac.rouvert === true && refusPac.miseEnOeuvre
+        && refusPac.miseEnOeuvre.nonAcceptables === 1
+        && refusPac.miseEnOeuvre.accepter === 1
+        && refusPac.miseEnOeuvre.renvoyerCloture === 0,
+        JSON.stringify(refusPac.miseEnOeuvre));
+      verifier('refuser les preuves exige un motif — vide, la fenêtre reste — et le verdict « NON » part au serveur avec lui',
+        refusPac.fenetrePreuves && refusPac.fenetrePreuves.presente === true
+        && refusPac.fenetrePreuves.zone === true
+        && refusPac.fenetrePreuves.refuseVide === true
+        && refusPac.preuvesRefusees && refusPac.preuvesRefusees.verdict === 'NON'
+        && /action corrective/.test(refusPac.preuvesRefusees.motif || ''),
+        JSON.stringify({ fenetre: refusPac.fenetrePreuves, base: refusPac.preuvesRefusees }));
+      verifier('les preuves acceptées ouvrent la clôture, que l’Autorité peut refuser : le verdict tombe et le motif est consigné',
+        refusPac.rouvert2 === true && refusPac.preuvesAcceptees === true
+        && refusPac.etapeCloture && refusPac.etapeCloture.renvoyer === 1
+        && refusPac.etapeCloture.cloturer === 1
+        && refusPac.clotureRefusee
+        && /terrain/.test(refusPac.clotureRefusee.motif || '')
+        && refusPac.clotureRefusee.preuvesEffacees === true
+        && refusPac.clotureRefusee.statut === 'pac_valide',
+        JSON.stringify({ etape: refusPac.etapeCloture, base: refusPac.clotureRefusee }));
+
+      // ── Vue Prestataire : l'amendement du plan, et ses motifs ──
+      //
+      // L'amendement est le seul geste du module où **chaque champ modifié doit
+      // dire pourquoi**. Comparé à la dernière version acceptée du plan, tout
+      // écart lève un drapeau, réclame son motif, et la soumission ne part pas
+      // sans. C'est ce que la ronde du cycle avait nommé et laissé.
+      etape = 'plan d’actions : l’amendement';
+      await basculer('Vue Prestataire');
+      const amendement = await page.evaluate(async (ctx) => {
+        const { api, fncId } = ctx;
+        const at = (ms) => new Promise((r) => setTimeout(r, ms));
+        const J = async (u, m, b) => {
+          const r = await fetch(u, {
+            method: m || 'GET', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: b ? JSON.stringify(b) : undefined,
+          });
+          let c = null; try { c = await r.json(); } catch { c = null; }
+          return { statut: r.status, corps: c };
+        };
+        const q = (s) => document.querySelector(`#execSlider ${s}`);
+        const tous = (s) => document.querySelectorAll(`#execSlider ${s}`).length;
+        const lire = async () => (await J(`${api}/constatations/${fncId}`)).corps || {};
+        const poser = (id, v) => {
+          const e = document.getElementById(id);
+          if (!e) return false;
+          e.value = v;
+          e.dispatchEvent(new Event('input', { bubbles: true }));
+          return true;
+        };
+        const ouvrir = async () => {
+          await execRefreshDynamic();
+          document.querySelector('.nav-btn[data-page="constatations"]')?.click();
+          await at(2800);
+          const t = [...document.querySelectorAll('.exec-tab')]
+            .find((x) => /suivi/i.test(x.textContent || '') && !/terrain/i.test(x.textContent || ''));
+          if (t) { t.click(); await at(2200); }
+          const b = [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(fncId));
+          if (!b) return false;
+          b.click(); await at(4000);
+          return true;
+        };
+        const soumettre = () => [...document.querySelectorAll('#execSlider [onclick^="execSoumettreMiseEnOeuvre"]')]
+          .find((x) => !x.disabled);
+        const r = {};
+        r.ouvert = await ouvrir();
+        if (!r.ouvert) {
+          // Le diagnostic plutôt que le silence : ce que la page offrait.
+          const mienne = (await J(`${api}/constatations/${fncId}`));
+          r.diag = {
+            cherchee: fncId,
+            laMienne: `${mienne.statut}/${(mienne.corps || {}).statut}/${(mienne.corps || {}).prestataire_id}`,
+            onclicks: [...document.querySelectorAll('[onclick^="execOpenPACSlider"]')]
+              .map((x) => x.getAttribute('onclick')).join(' '),
+            vue: [...document.querySelectorAll('.oasis-module-actions button')]
+              .map((b) => (b.textContent || '').trim()).join('|'),
+            pages: [...document.querySelectorAll('.nav-btn[data-page]')].map((b) => b.dataset.page).join(','),
+            onglets: [...document.querySelectorAll('.exec-tab')].map((b) => (b.textContent || '').trim()).join('|'),
+            boutonsPac: document.querySelectorAll('[onclick^="execOpenPACSlider"]').length,
+            constatations: (await J(`${api}/constatations`)).corps,
+            volet: !!document.getElementById('execSlider'),
+          };
+          if (Array.isArray(r.diag.constatations)) {
+            r.diag.constatations = r.diag.constatations
+              .map((c) => `${c.id}/${c.statut}/${c.prestataire_id}`).join(' ');
+          }
+          return r;
+        }
+        // L'organisme ne voit pas les gestes de l'Autorité.
+        r.cloison = {
+          ajust: tous('[onclick*="execAjustOuvrir"]'),
+          renvoyer: tous('[onclick^="execReturnPACtoPostulant"]'),
+          nonAcceptables: tous('[onclick^="execPreuvesNonAcceptables"]'),
+        };
+        r.modes = [...document.querySelectorAll('#execSlider [onclick^="execPacModeEdition"]')]
+          .map((x) => (/'(\w+)'\)/.exec(x.getAttribute('onclick')) || [])[1]);
+        // Avant de choisir un mode, le plan est en lecture seule.
+        r.avantMode = {
+          causeFigee: !!document.getElementById('pac_cause_primaire')?.hasAttribute('readonly'),
+          soumissionArmee: !!soumettre(),
+        };
+        const amend = [...document.querySelectorAll('#execSlider [onclick^="execPacModeEdition"]')]
+          .find((x) => /amendement/.test(x.getAttribute('onclick') || ''));
+        r.boutonAmendement = !!amend;
+        if (amend) { amend.click(); await at(2800); }
+        r.apresMode = {
+          causeEditable: !document.getElementById('pac_cause_primaire')?.hasAttribute('readonly'),
+          champsSurveilles: tous('[oninput^="execPacSurveillerChamp"]'),
+          blocsMotif: tous('.exec-pac-motif'),
+          motifsVisibles: tous('.exec-pac-motif.visible'),
+          zonesPreuves: tous('[onclick^="execUploadPACProof"]'),
+          soumissionArmee: !!soumettre(),
+        };
+
+        // ── Un champ touché lève son drapeau ; rendu à sa valeur, il le baisse ──
+        const CAUSE = 'Cause revue après la visite de terrain : la procédure manquait.';
+        const initiale = (document.getElementById('pac_cause_primaire') || {}).value || '';
+        poser('pac_cause_primaire', CAUSE);
+        await at(900);
+        r.touche = {
+          visibles: tous('.exec-pac-motif.visible'),
+          marque: !!q('#pac_cause_primaire.exec-pac-champ-amende'),
+          select: !!document.getElementById('motif_sel_cause_primaire'),
+        };
+        poser('pac_cause_primaire', initiale);
+        await at(900);
+        r.rendu = { visibles: tous('.exec-pac-motif.visible'),
+          marque: !!q('#pac_cause_primaire.exec-pac-champ-amende') };
+        poser('pac_cause_primaire', CAUSE);
+        await at(900);
+
+        // ── La soumission refuse tant qu'un champ amendé n'a pas son motif ──
+        soumettre()?.click();
+        await at(2200);
+        r.refusSansMotif = { signales: tous('.exec-pac-manquant'),
+          statut: (await lire()).statut };
+
+        // ── Le motif « Autres » réclame sa précision ──
+        const sel = document.getElementById('motif_sel_cause_primaire');
+        if (sel) { sel.value = 'motif_autres'; sel.dispatchEvent(new Event('change', { bubbles: true })); await at(900); }
+        r.autres = { precisionVisible: !document.getElementById('motif_txt_cause_primaire')?.hidden };
+        // Choisie « Autres » et laissée vide, la soumission refuse encore.
+        soumettre()?.click();
+        await at(2000);
+        r.autresSansPrecision = { signales: tous('.exec-pac-manquant'),
+          statut: (await lire()).statut };
+        poser('motif_txt_cause_primaire', 'Visite de terrain du 10 novembre 2026.');
+        await at(700);
+
+        // ── Une preuve déposée : l'intitulé est demandé avant l'envoi ──
+        const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
+        q('[onclick^="execUploadPACProof"]')?.click();
+        await at(600);
+        const entree = document.getElementById('pac_curative_preuves_input');
+        r.entreePreuve = !!entree;
+        if (entree) {
+          const dt = new DataTransfer();
+          dt.items.add(new File([pdf], 'preuve-de-la-correction.pdf', { type: 'application/pdf' }));
+          entree.files = dt.files;
+          entree.dispatchEvent(new Event('change', { bubbles: true }));
+          await at(1600);
+        }
+        r.fenetrePreuve = { presente: !!document.getElementById('exec_preuve_modal'),
+          intitulePropose: (document.getElementById('exec_preuve_intitule') || {}).value || '' };
+        // Vide, elle refuse.
+        poser('exec_preuve_intitule', '');
+        document.getElementById('exec_preuve_ok')?.click();
+        await at(1200);
+        r.fenetrePreuve.refuseSansIntitule = !!document.getElementById('exec_preuve_modal');
+        poser('exec_preuve_intitule', 'Procès-verbal de reprise du contrôle');
+        poser('exec_preuve_commentaire', 'Signé par le responsable qualité.');
+        document.getElementById('exec_preuve_ok')?.click();
+        await at(3200);
+        r.preuve = [...document.querySelectorAll('#pac_curative_preuves_list .exec-preuve')]
+          .map((e) => ({ intitule: e.dataset.intitule, chemin: e.dataset.path,
+            commentaire: e.dataset.commentaire, numero: (e.querySelector('.exec-preuve-num') || {}).textContent }));
+        // L'intitulé se reprend par son geste.
+        q('#pac_curative_preuves_list [onclick^="execPreuveModifier"]')?.click();
+        await at(1500);
+        r.reprise = { fenetre: !!document.getElementById('exec_preuve_modal'),
+          intituleRepris: (document.getElementById('exec_preuve_intitule') || {}).value || '',
+          commentaireRepris: (document.getElementById('exec_preuve_commentaire') || {}).value || '' };
+        poser('exec_preuve_intitule', 'Procès-verbal de reprise — version signée');
+        document.getElementById('exec_preuve_ok')?.click();
+        await at(1600);
+        r.reprise.intituleRendu = (q('#pac_curative_preuves_list .exec-preuve') || { dataset: {} })
+          .dataset.intitule || '';
+
+        // ── Une seconde pièce, retirée : la numérotation se refait ──
+        q('[onclick^="execUploadPACProof"]')?.click();
+        await at(500);
+        const entree2 = document.getElementById('pac_curative_preuves_input');
+        if (entree2) {
+          const dt2 = new DataTransfer();
+          dt2.items.add(new File([pdf], 'piece-de-trop.pdf', { type: 'application/pdf' }));
+          entree2.files = dt2.files;
+          entree2.dispatchEvent(new Event('change', { bubbles: true }));
+          await at(1600);
+          poser('exec_preuve_intitule', 'Pièce versée par erreur');
+          document.getElementById('exec_preuve_ok')?.click();
+          await at(3000);
+        }
+        const pieces = () => [...document.querySelectorAll('#pac_curative_preuves_list .exec-preuve')];
+        r.retrait = { deux: pieces().length,
+          numeros: pieces().map((e) => (e.querySelector('.exec-preuve-num') || {}).textContent) };
+        const aRetirer = pieces().find((e) => /erreur/.test(e.dataset.intitule || ''));
+        aRetirer?.querySelector('[onclick^="execPreuveSupprimer"]')?.click();
+        await at(900);
+        r.retrait.apres = pieces().length;
+        r.retrait.numerosApres = pieces().map((e) => (e.querySelector('.exec-preuve-num') || {}).textContent);
+        r.retrait.resteLaBonne = pieces().every((e) => !/erreur/.test(e.dataset.intitule || ''));
+
+        // ── Le plan amendé part, avec ses motifs ──
+        soumettre()?.click();
+        await at(1200);
+        const oui = document.querySelector('.oasis-confirm-oui');
+        r.soumissionConfirmee = !!oui;
+        if (oui) { oui.click(); await at(5200); }
+        const amende = await lire();
+        const plan = (amende.actions_correctives || [])[0] || {};
+        r.amende = {
+          statut: amende.statut,
+          cause: plan.cause_primaire,
+          motif: (plan.motifs_amendement || {}).cause_primaire,
+          preuves: (plan.curative_preuves || []).map((p) => p.intitule),
+          versions: (amende.versions_pac || []).length,
+        };
+
+        // ── Le volet rouvert : les versions du plan, dont celle qui vient d'être archivée ──
+        r.rouvert = await ouvrir();
+        r.versions = { bandeaux: tous('[onclick^="execPacBlocToggle"]') };
+        const bandeau = q('[onclick^="execPacBlocToggle"]');
+        if (bandeau) { bandeau.click(); await at(1200); }
+        r.versions.ouvert = !!q('.exec-pac-versions.ouvert');
+        r.versions.aria = bandeau ? bandeau.getAttribute('aria-expanded') : '';
+        r.versions.contenu = (q('.exec-pac-versions-corps') || { textContent: '' })
+          .textContent.replace(/\s+/g, ' ').trim().slice(0, 160);
+        return r;
+      }, { api: M, fncId: planFix.fncId });
+
+      verifier('l’organisme ne voit ni l’ajustement ni les décisions de l’Autorité, et son plan est figé avant qu’il choisisse un mode',
+        amendement.ouvert === true && amendement.cloison
+        && amendement.cloison.ajust === 0 && amendement.cloison.renvoyer === 0
+        && amendement.cloison.nonAcceptables === 0
+        && JSON.stringify(amendement.modes) === JSON.stringify(['preuves', 'amendement'])
+        && amendement.avantMode && amendement.avantMode.causeFigee === true
+        && amendement.avantMode.soumissionArmee === false,
+        JSON.stringify({ ouvert: amendement.ouvert, diag: amendement.diag,
+          cloison: amendement.cloison, modes: amendement.modes,
+          avant: amendement.avantMode }));
+      verifier('le mode « amender » rouvre le plan, pose un bloc de motif par champ suivi, et aucun n’est visible d’emblée',
+        amendement.boutonAmendement === true && amendement.apresMode
+        && amendement.apresMode.causeEditable === true
+        && amendement.apresMode.champsSurveilles === 5
+        && amendement.apresMode.blocsMotif === 5
+        && amendement.apresMode.motifsVisibles === 0
+        && amendement.apresMode.zonesPreuves >= 2
+        && amendement.apresMode.soumissionArmee === true,
+        JSON.stringify(amendement.apresMode));
+      verifier('un champ amendé lève son drapeau et se marque ; rendu à sa valeur, il les baisse',
+        amendement.touche && amendement.touche.visibles === 1
+        && amendement.touche.marque === true && amendement.touche.select === true
+        && amendement.rendu && amendement.rendu.visibles === 0
+        && amendement.rendu.marque === false,
+        JSON.stringify({ touche: amendement.touche, rendu: amendement.rendu }));
+      verifier('la soumission de l’amendement refuse tant qu’un champ amendé n’a pas son motif, et le signale',
+        amendement.refusSansMotif && amendement.refusSansMotif.signales === 1
+        && amendement.refusSansMotif.statut === 'pac_valide',
+        JSON.stringify(amendement.refusSansMotif));
+      verifier('« Autres » réclame sa précision, et la refuse absente : la soumission ne part pas davantage',
+        amendement.autres && amendement.autres.precisionVisible === true
+        && amendement.autresSansPrecision
+        && amendement.autresSansPrecision.signales === 1
+        && amendement.autresSansPrecision.statut === 'pac_valide',
+        JSON.stringify({ autres: amendement.autres, refus: amendement.autresSansPrecision }));
+      verifier('une preuve déposée demande son intitulé, le refuse vide, et paraît sous l’intitulé donné — non sous le nom du fichier',
+        amendement.entreePreuve === true && amendement.fenetrePreuve
+        && amendement.fenetrePreuve.presente === true
+        && amendement.fenetrePreuve.intitulePropose === 'preuve-de-la-correction'
+        && amendement.fenetrePreuve.refuseSansIntitule === true
+        && (amendement.preuve || []).length === 1
+        && amendement.preuve[0].intitule === 'Procès-verbal de reprise du contrôle'
+        && /^\/api\/m\/execution\/uploads\//.test(amendement.preuve[0].chemin || '')
+        && /responsable qualité/.test(amendement.preuve[0].commentaire || ''),
+        JSON.stringify({ fenetre: amendement.fenetrePreuve, piece: amendement.preuve }));
+      verifier('l’intitulé d’une pièce se reprend par son geste, garni, et le changement se lit sur sa ligne',
+        amendement.reprise && amendement.reprise.fenetre === true
+        && amendement.reprise.intituleRepris === 'Procès-verbal de reprise du contrôle'
+        && /responsable qualité/.test(amendement.reprise.commentaireRepris || '')
+        && /version signée/.test(amendement.reprise.intituleRendu || ''),
+        JSON.stringify(amendement.reprise));
+      verifier('une pièce de trop se retire par son geste, et la numérotation des autres se refait',
+        amendement.retrait && amendement.retrait.deux === 2
+        && JSON.stringify(amendement.retrait.numeros) === JSON.stringify(['1', '2'])
+        && amendement.retrait.apres === 1
+        && JSON.stringify(amendement.retrait.numerosApres) === JSON.stringify(['1'])
+        && amendement.retrait.resteLaBonne === true,
+        JSON.stringify(amendement.retrait));
+      verifier('le plan amendé part avec son motif et sa pièce, et le serveur archive la version acceptée',
+        amendement.soumissionConfirmee === true && amendement.amende
+        && amendement.amende.statut === 'pac_soumis'
+        && /visite de terrain/i.test(amendement.amende.cause || '')
+        && !!amendement.amende.motif
+        && amendement.amende.motif.motif === 'motif_autres'
+        && /10 novembre/.test(amendement.amende.motif.precision || '')
+        && (amendement.amende.preuves || []).length === 1
+        && /version signée/.test((amendement.amende.preuves || [])[0] || '')
+        && amendement.amende.versions === 1,
+        JSON.stringify(amendement.amende));
+      verifier('le volet rouvert porte le bandeau des versions du plan, qui s’ouvre sur celle qui vient d’être archivée',
+        amendement.rouvert === true && amendement.versions
+        && amendement.versions.bandeaux >= 1
+        && amendement.versions.ouvert === true
+        && amendement.versions.aria === 'true'
+        && /Version 1/.test(amendement.versions.contenu || ''),
+        JSON.stringify(amendement.versions));
+
+      // ── Le ménage : la seconde chaîne ne survit pas à la ronde ──
+      etape = 'plan d’actions : le ménage';
+      await basculer('Vue AAC');
+      const menagePac = await page.evaluate(async (ctx) => {
+        const { api, fncId, dossierId, notifId } = ctx;
+        const J = async (u, m) => {
+          const r = await fetch(u, { method: m || 'GET', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' } });
+          let c = null; try { c = await r.json(); } catch { c = null; }
+          return { statut: r.status, corps: c };
+        };
+        const r = {};
+        r.constatation = (await J(`${api}/constatations/${fncId}`, 'DELETE')).statut;
+        r.dossier = (await J(`${api}/dossiers/${dossierId}`, 'DELETE')).statut;
+        const notifs = (await J(`${api}/notifications`)).corps || [];
+        r.notifResteSeule = notifs.filter((n) => n.id === notifId).length;
+        if (r.notifResteSeule) {
+          await J(`${api}/notifications/${notifId}/cancel`, 'PUT');
+          r.notif = (await J(`${api}/notifications/${notifId}`, 'DELETE')).statut;
+        }
+        const restes = (await J(`${api}/constatations`)).corps || [];
+        r.resteConstatation = restes.filter((c) => c.id === fncId).length;
+        const dossiers = (await J(`${api}/dossiers`)).corps || [];
+        r.resteDossier = dossiers.filter((d) => d.id === dossierId).length;
+        // ── L'état du client suit le serveur, sinon la ronde suivante bute ──
+        //
+        // Le ménage efface par `fetch`, non par un geste de l'écran : rien ne
+        // prévient le client. Mesuré : la page des rapports continuait de
+        // lister les deux rapports de cette chaîne — quatre gestes — et les
+        // cliquer rendait 404, de sorte que la ronde de l'aperçu, juste après,
+        // ne recevait **aucun document**. *Un ménage par l'API doit rendre au
+        // client l'état qu'il a changé.*
+        await execRefreshDynamic();
+        r.rapportsRendus = (EXEC_STATE.data.rapports || [])
+          .filter((x) => x.dossier_id === dossierId).length;
+        return r;
+      }, { api: M, fncId: planFix.fncId, dossierId: planFix.dossierId,
+        notifId: planFix.notifId });
+
+      verifier('la seconde chaîne ne survit pas à la ronde : constatation, dossier, rapports et notification partent',
+        menagePac.constatation === 200 && menagePac.dossier === 200
+        && menagePac.resteConstatation === 0 && menagePac.resteDossier === 0
+        && menagePac.rapportsRendus === 0,
+        JSON.stringify(menagePac));
 
 
       // ══════════════════════════════════════════════════════════════════

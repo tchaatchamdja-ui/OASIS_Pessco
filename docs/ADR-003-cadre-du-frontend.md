@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 212 exercés** (67 %), 3 indécidables — idem, 9 novembre 2026 (n° 5.f.77) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme est exercé en entier — 10 occurrences sur 10 —, et celui des constatations à 57 occurrences sur 61, les trois qui restent déclarées |
+           | SURV (`execution`) | 23 678 | **316 gestes nommés, 228 exercés** (72 %), 3 indécidables — idem, 10 novembre 2026 (n° 5.f.78) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, et celui des constatations à 57 occurrences sur 61, les trois qui restent déclarées |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -10852,3 +10852,126 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            contrôles — les quatre visés, et deux cascades prévues (le titre vide dans
            le formulaire rouvert, la version enregistrée sans entrée quand le retrait
            prend le mauvais rang). Rendues, tout reverdit.
+       5.f.78 [x] **Un circuit dont on n'éprouvait que les acceptations** — fait le
+           10 novembre 2026.
+           `exec-pac.js`, 47 occurrences, **22 non exercées** : le premier gisement
+           de SURV après l'écran des constatations. C'est le plan d'actions
+           correctives — ce par quoi un organisme répond à un écart et l'Autorité
+           en juge — et la ronde du cycle le parcourait **par son chemin heureux**
+           seulement. Elle le disait elle-même : « on prend la branche des preuves :
+           l'amendement exige un motif par champ divergent, et refuse sans — ce
+           serait une autre ronde ». C'est celle-ci.
+
+           ── Trois refus que rien n'exerçait ──
+
+           Les trois décisions négatives de l'Autorité étaient toutes non
+           couvertes, quand leurs trois pendants positifs l'étaient :
+
+           | Geste | Ce qu'il fait | État |
+           |---|---|---|
+           | `execAccepterPAC` | le plan est accepté | exercé |
+           | `execReturnPACtoPostulant` | le plan est **renvoyé** | **non exercé** |
+           | `execAccepterPreuves` | les preuves sont acceptées | exercé |
+           | `execPreuvesNonAcceptables` | les preuves sont **refusées** | **non exercé** |
+           | `execCloseFNC` | la fiche est clôturée | exercé |
+           | `execRenvoyerMiseEnOeuvre` | la clôture est **refusée** | **non exercé** |
+
+           *Un circuit dont on n'éprouve que les acceptations n'est pas éprouvé :
+           c'est le refus qui porte la décision.* Les trois sont désormais
+           parcourus, chacun relu chez le serveur — le statut `pac_rejetee` et son
+           renvoi signé, le verdict « NON » et son motif, l'acceptation des preuves
+           retirée et la mise en œuvre rendue.
+
+           ── Une cérémonie entière, jamais jouée ──
+
+           Revenir sur un délai, une criticité ou l'énoncé d'une constatation
+           **déjà notifiée** engage l'administration. L'écran en fait une
+           cérémonie : réservée aux comptes SUPERADMIN et ADMIN sur leur portée,
+           **confirmée par le mot de passe du demandeur**, bornée par trois portées
+           (proroger, requalifier, reprendre l'énoncé), et tracée champ par champ
+           dans un journal rabattable. Rien n'en était exercé — ni la cérémonie, ni
+           ses refus.
+
+           Ce sont ses refus qui lui donnent des dents, et ce sont eux qu'on éprouve
+           d'abord : sans motif, « Le motif est obligatoire » ; sans mot de passe,
+           « Le mot de passe est obligatoire » ; avec un mauvais, le serveur tranche
+           — 403, « Mot de passe incorrect » — et **rien n'est appliqué**, mesuré en
+           base. Puis la cérémonie aboutit : délai 30 → 60, échéance refaite au
+           9 janvier 2027 par le serveur, et une trace qui nomme son auteur, sa
+           portée, son motif et ses deux changements — « Délai de solde 30 → 60 »,
+           « Date d'échéance 2026-12-10 → 2027-01-09 » — lisibles dans le journal.
+
+           ── L'amendement, et le seul endroit du module où un champ doit se justifier ──
+
+           Côté organisme, amender un plan **accepté** remet l'acceptation en jeu.
+           Chaque champ qui diverge de la version acceptée lève un drapeau, réclame
+           son motif, et la soumission ne part pas sans. Éprouvé : le champ touché
+           se marque et son bloc paraît ; **rendu à sa valeur, les deux
+           disparaissent** ; la soumission refuse en signalant le motif manquant ;
+           « Autres » réclame sa précision et la refuse absente ; et le plan parti
+           porte en base son motif, sa précision, sa pièce, et **une version
+           archivée** — celle qui avait été acceptée.
+
+           Les pièces, aussi, qui n'étaient pas exercées : l'intitulé est demandé
+           **avant** l'envoi et refusé vide — le serveur enregistre la pièce sous
+           cet intitulé, non sous le nom du fichier du poste —, il se reprend par
+           son geste, et une pièce de trop se retire en renumérotant les autres.
+
+           ── Un commentaire qui affirmait ce que son code ne faisait pas ──
+
+           `PUT /rapports/:id/send` annonçait : « le rapport validé passe à
+           "transmis" **et ouvre les constatations restées en brouillon** ». Il ne
+           les ouvrait pas. Ses trois routes sœurs — `/transmit`, `/transmettre`, et
+           la clôture du dossier — le font d'un seul geste, pour la raison que l'une
+           d'elles écrit : « un rapport transmis dont les constatations ne le sont
+           pas encore laisse le prestataire sans objet à traiter ». Celle-ci est la
+           **seule que l'écran appelle**, et c'était la seule à ne pas le faire.
+
+           La fenêtre est étroite — la validation du rapport ouvre déjà celles qui
+           existent alors — mais réelle, et mesurée : une constatation relevée
+           **entre** la validation et l'envoi restait `brouillon`, donc inopposable,
+           le rapport étant parti chez l'organisme. Corrigée.
+
+           ── Trois erreurs de ma main, que la mesure a dites ──
+
+           La ronde a rougi trois fois avant de passer, et chaque fois le relevé
+           nommait la cause mieux que mon raisonnement :
+
+           · **Le volet ouvert couvre la barre du portail.** `basculer` clique un
+             bouton de la barre ; le voile du volet le reçoit à sa place. La bascule
+             ne se faisait pas. Le volet se referme désormais avant.
+           · **Un rang n'est pas une identité.** La chaîne prenait
+             `plan.activites[0]`, comme celle du cycle. À cet instant de la suite,
+             l'ordre n'est plus le même : la constatation naissait sur un **autre
+             organisme**, invisible en vue Prestataire — `403` sur sa lecture, dit
+             par le diagnostic. Elle prend maintenant l'activité de l'organisme que
+             cette vue sert, reconnu par la constatation du cycle.
+           · **`plans-valides` n'offre pas ce qui est déjà déclenché.** L'activité
+             de cet organisme avait été notifiée par la chaîne du cycle : la liste
+             l'écartait. `plans-valides/:planId/activites` les rend toutes, et une
+             activité déjà notifiée peut l'être à nouveau — 201, mesuré.
+           · **Un ménage par l'API doit rendre au client l'état qu'il a changé.** La
+             ronde effaçait sa chaîne par `fetch` sans rafraîchir : la page des
+             rapports listait encore deux rapports morts, les cliquer rendait 404,
+             et la ronde de l'aperçu — la suivante — ne recevait **aucun document**.
+
+           ── Mesuré ──
+
+           `exec-pac.js` : **25 occurrences exercées sur 47 avant, 47 après — le
+           fichier entier**, 35 noms sur 35. SURV dans son ensemble : **212 gestes
+           exercés sur 316 avant, 228 après** — 67 % à 72 %. Suites : SURV
+           203 → **228** contrôles, `execution` 137 → **139**.
+
+           Contre-épreuves : les quatre défauts remis ensemble font rougir **dix**
+           contrôles — les quatre visés, chacun avec le détail qui nomme sa cause
+           (`{"faux":"","base":{"delai":"60","traces":1}}` dit que l'ajustement est
+           passé sur un mauvais mot de passe), et six cascades, toutes dues au
+           contournement de la cérémonie, qui désynchronise la suite du parcours.
+
+           ── Ce qui reste ouvert, et nommé ──
+
+           Une occurrence de `exec-constatations.js` échappe encore : le **fond** de
+           la fenêtre à motif (`_execCommentModal`), qui la referme quand on clique
+           à côté. La fenêtre est désormais exercée — c'est par elle que passent
+           deux des trois refus —, mais par son bouton, non par son fond. Elle
+           tombera avec le prochain passage, d'un clic de plus.

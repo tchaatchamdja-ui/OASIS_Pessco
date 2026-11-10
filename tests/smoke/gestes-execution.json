@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-09",
+ "releve": "2026-11-10",
  "gestesNommes": 316,
  "occurrences": 513,
- "exerces": 212,
+ "exerces": 228,
  "indecidables": 3,
  "gestes": [
   {
@@ -2929,7 +2929,7 @@
    "evenement": "change",
    "source": "execPacMotifChange('${champ.cle}')",
    "nom": "execPacMotifChange",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -2938,7 +2938,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();execAjustOuvrir('${fnc.id}','${portee}')",
    "nom": "execAjustOuvrir",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -2983,7 +2983,7 @@
    "evenement": "input",
    "source": "execAjustEcheance()",
    "nom": "execAjustEcheance",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -2992,7 +2992,7 @@
    "evenement": "change",
    "source": "execAjustEcheance()",
    "nom": "execAjustEcheance",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3001,7 +3001,7 @@
    "evenement": "click",
    "source": "execAjustRetour('${fncId}')",
    "nom": "execAjustRetour",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3010,7 +3010,7 @@
    "evenement": "click",
    "source": "execAjustAppliquer('${fncId}','${portee}')",
    "nom": "execAjustAppliquer",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3019,7 +3019,7 @@
    "evenement": "click",
    "source": "execAjustRetour('${fncId}')",
    "nom": "execAjustRetour",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3028,7 +3028,7 @@
    "evenement": "input",
    "source": "execPacSurveillerChamp('${cle}')",
    "nom": "execPacSurveillerChamp",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3037,7 +3037,7 @@
    "evenement": "change",
    "source": "execPacSurveillerChamp('${cle}')",
    "nom": "execPacSurveillerChamp",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3046,7 +3046,7 @@
    "evenement": "click",
    "source": "execUploadPACProof('${prefix}')",
    "nom": "execUploadPACProof",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3055,7 +3055,7 @@
    "evenement": "change",
    "source": "execHandlePACProofUpload(this.files, '${listId}')",
    "nom": "execHandlePACProofUpload",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3064,7 +3064,7 @@
    "evenement": "click",
    "source": "execPacBlocToggle(this)",
    "nom": "execPacBlocToggle",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3073,7 +3073,7 @@
    "evenement": "click",
    "source": "execPacBlocToggle(this)",
    "nom": "execPacBlocToggle",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3109,7 +3109,7 @@
    "evenement": "click",
    "source": "execReturnPACtoPostulant('${fncId}')",
    "nom": "execReturnPACtoPostulant",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3118,7 +3118,7 @@
    "evenement": "click",
    "source": "execPreuvesNonAcceptables('${fncId}')",
    "nom": "execPreuvesNonAcceptables",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3136,7 +3136,7 @@
    "evenement": "click",
    "source": "execRenvoyerMiseEnOeuvre('${fncId}')",
    "nom": "execRenvoyerMiseEnOeuvre",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3262,7 +3262,7 @@
    "evenement": "change",
    "source": "execPacTeinteResultats()",
    "nom": "execPacTeinteResultats",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3280,7 +3280,7 @@
    "evenement": "change",
    "source": "execPacTeinteResultats()",
    "nom": "execPacTeinteResultats",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3289,7 +3289,7 @@
    "evenement": "change",
    "source": "execPacTeinteResultats()",
    "nom": "execPacTeinteResultats",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3298,7 +3298,7 @@
    "evenement": "click",
    "source": "execAnnulerSaisiePAC('${fncId}')",
    "nom": "execAnnulerSaisiePAC",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3334,7 +3334,7 @@
    "evenement": "click",
    "source": "execPreuveModifier(this)",
    "nom": "execPreuveModifier",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-pac.js",
@@ -3343,7 +3343,7 @@
    "evenement": "click",
    "source": "execPreuveSupprimer(this)",
    "nom": "execPreuveSupprimer",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",

@@ -1344,6 +1344,73 @@ async function baremeDeRisque() {
 // faudrait un compte sans privilège ; la troisième parce qu'elle vit en mémoire
 // du serveur.
 // ══════════════════════════════════════════════════════════════════════════
+//  Le verrou d'une campagne : elle ne double pas une autre
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Chaque suite a son port depuis le 10 novembre 2026, de sorte que deux suites
+// différentes tournent ensemble. Deux **campagnes** ne peuvent pas : elles
+// jouent les mêmes seize ports, dans le même ordre. Lancée par-dessus une
+// campagne en cours, la seconde rougissait sur « le port 48xx répond déjà : un
+// autre serveur le tient » — un message qui décrit un **orphelin d'un passage
+// interrompu** là où il n'y a que le passage en cours. Fait deux jours de
+// suite, et cherché dans le code avant d'être trouvé dans mon impatience.
+//
+// Le verrou reprend la leçon de `src/verrou.js` : *un verrou qui bloque après un
+// arrêt brutal est pire que pas de verrou du tout.* Il demande au système si le
+// tenant vit encore, et reprend la place s'il est mort.
+//
+// Il s'éprouve sur un chemin à lui : celui de la campagne est tenu par la
+// campagne qui joue ce contrôle.
+function verrouDeCampagne() {
+  const V = require('./verrou-campagne');
+  const chemin = path.join(BAC, 'essai-verrou-campagne.json');
+  const sans = { chemin, poserLesSignaux: false };
+  fs.rmSync(chemin, { force: true });
+
+  // ── 1. La place libre se prend, et rien n'est « repris » ──
+  const premier = V.prendre(sans);
+  verifier('campagne : le verrou se prend quand la place est libre, et ne reprend rien',
+    !premier.refus && premier.repris === '' && fs.existsSync(chemin),
+    JSON.stringify({ refus: premier.refus || null, repris: premier.repris }));
+
+  // ── 2. Un tenant vivant la refuse, et le refus nomme le remède ──
+  const refuse = V.prendre({ ...sans, pid: 999999 });
+  verifier('campagne : un tenant vivant refuse la seconde, en nommant son numéro et le remède',
+    !!refuse.refus
+    && refuse.refus.includes(String(process.pid))
+    && /npm run smoke -- /.test(refuse.refus)
+    && /OASIS_SMOKE_VERROU=0/.test(refuse.refus),
+    (refuse.refus || '').slice(0, 120));
+
+  // ── 3. Un tenant mort ne bloque pas, et la reprise se dit ──
+  //
+  // C'est le cas qui compte : un verrou qui survit à un Ctrl-C rendrait la
+  // campagne inlançable, et l'on prendrait l'habitude de l'effacer à la main —
+  // après quoi il ne garderait plus rien.
+  fs.writeFileSync(chemin, JSON.stringify({ pid: 999999, machine: os.hostname(), depuis: 'hier' }));
+  const repris = V.prendre(sans);
+  verifier('campagne : un verrou laissé par une campagne morte est repris, et la reprise est annoncée',
+    !repris.refus && /ne vit plus/.test(repris.repris || ''),
+    JSON.stringify({ refus: repris.refus || null, repris: repris.repris }));
+
+  // ── 4. On ne relâche que le sien ──
+  fs.writeFileSync(chemin, JSON.stringify({ pid: 424242, machine: os.hostname(), depuis: 'hier' }));
+  repris.relacher();
+  verifier('campagne : une campagne qui s’arrête n’emporte pas le verrou d’une autre, repris entre-temps',
+    fs.existsSync(chemin) === true);
+
+  // ── 5. Et il se lève en connaissance de cause ──
+  const avant = process.env.OASIS_SMOKE_VERROU;
+  process.env.OASIS_SMOKE_VERROU = '0';
+  const leve = V.prendre(sans);
+  if (avant === undefined) delete process.env.OASIS_SMOKE_VERROU;
+  else process.env.OASIS_SMOKE_VERROU = avant;
+  verifier('campagne : OASIS_SMOKE_VERROU=0 le lève, et ne touche pas au fichier en place',
+    !leve.refus && leve.leve === true, JSON.stringify({ leve: leve.leve }));
+  fs.rmSync(chemin, { force: true });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 //  La table des suites : un port par suite, et pas deux
 // ══════════════════════════════════════════════════════════════════════════
 //
@@ -1598,6 +1665,7 @@ module.exports = async function unitairesSmoke() {
     await baremeDeRisque();
     telechargements();
     tableDesSuites();
+    verrouDeCampagne();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

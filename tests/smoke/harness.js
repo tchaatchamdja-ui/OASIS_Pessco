@@ -260,6 +260,29 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
     return r.corps;
   };
 
+  // ── Tenir deux sessions au lieu de se reconnecter ──
+  //
+  // `connexion()` réauthentifie, et le serveur **compte les tentatives** :
+  // vingt par quart d'heure et par adresse (SEC, plafond d'authentification).
+  // Une ronde qui éprouve une portée alterne nécessairement entre le compte qui
+  // la pose et celui qui l'éprouve — mesuré le 11 novembre 2026, douze bascules
+  // ont fait rendre **429** à la suite `execution`, sur un code sans défaut.
+  //
+  // Baisser le plafond du serveur pour les essais aurait été affaiblir une
+  // protection pour la commodité d'un test. Or il n'y a rien à affaiblir : une
+  // session déjà ouverte n'a pas à être rouverte. `session()` rend le témoin
+  // courant, `session(valeur)` le repose — deux connexions suffisent alors pour
+  // toute une ronde, quel que soit le nombre de bascules.
+  //
+  // La configuration du bac désactive `singleSession` (voir `copierDonnees`) :
+  // les deux sessions coexistent, ce qui n'est pas le cas en production.
+  //
+  // *Un essai qui bute sur une protection n'est pas une raison de la desserrer.*
+  const session = (valeur) => {
+    if (valeur !== undefined) cookie = valeur;
+    return cookie;
+  };
+
   const arreter = () => {
     // Rien à arrêter ni à effacer quand le serveur n'est pas de nous.
     if (!proc) return;
@@ -318,6 +341,7 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
     local: !externe,
     appel,
     connexion,
+    session,
     arreter,
     donnees,
     fichierExiste,

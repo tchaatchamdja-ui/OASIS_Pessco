@@ -24,6 +24,8 @@ const bac = require('./bac');
 // le lanceur qui en tire les modules. Un contrôle peut donc vérifier qu'aucun
 // port n'est partagé sans monter un navigateur (`unitaires`).
 const { SUITES } = require('./suites');
+// Le verrou de la campagne : il refuse d'en jouer deux à la fois (voir plus bas).
+const verrouCampagne = require('./verrou-campagne');
 // eslint-disable-next-line global-require, import/no-dynamic-require
 const suites = SUITES.map((s) => ({ ...s, run: require(s.fichier) }));
 
@@ -34,6 +36,23 @@ const suites = SUITES.map((s) => ({ ...s, run: require(s.fichier) }));
     console.error(`Aucune suite ne correspond à « ${filtre} ». Disponibles : ${suites.map((s) => s.nom).join(', ')}`);
     process.exit(2);
   }
+
+  // ── Une campagne ne double pas une autre ──
+  //
+  // Les seize ports sont à elle le temps qu'elle dure. Lancée par-dessus une
+  // campagne en cours, la seconde rougit sur « le port 48xx répond déjà », un
+  // message qui décrit un serveur orphelin d'un passage interrompu là où il n'y
+  // a que le passage en cours. Fait deux jours de suite, et cherché dans le
+  // code avant de le trouver dans ma propre impatience (n° 5.f.80).
+  //
+  // Une **suite seule** n'est pas concernée : chacune a son port depuis le
+  // 10 novembre 2026, et deux suites différentes tournent ensemble.
+  const verrou = filtre ? null : verrouCampagne.prendre();
+  if (verrou && verrou.refus) {
+    console.error(`\n✗ ${verrou.refus}\n`);
+    process.exit(2);
+  }
+  if (verrou && verrou.repris) console.log(`  ◌ ${verrou.repris}`);
 
   // ── Les données de travail, relevées avant et après ──
   //

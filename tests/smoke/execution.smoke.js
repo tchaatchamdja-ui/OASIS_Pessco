@@ -265,6 +265,21 @@ module.exports = async function executionSmoke(port) {
       {
         const COMPTE = 'm.ahoyo@anac.bj';
         const DROITS = `/api/m/droits/SURV/users/${encodeURIComponent(COMPTE)}`;
+        // ── Deux sessions tenues, et non vingt reconnexions ──
+        //
+        // Ce bloc alterne nécessairement entre le compte qui **pose** la portée
+        // — le super-administrateur — et celui qui l'**éprouve**. Chaque
+        // `connexion()` est une tentative d'authentification, et le serveur en
+        // compte vingt par quart d'heure : mesuré le 11 novembre 2026, les
+        // bascules de ce bloc ont fait rendre **429** à la suite entière, sur un
+        // code sans défaut. Les deux témoins sont donc ouverts une fois, puis
+        // reposés à volonté (`srv.session`, n° 5.f.80).
+        const jetonAac = srv.session();
+        await srv.connexion(COMPTE);
+        const jetonCompte = srv.session();
+        srv.session(jetonAac);
+        const enAac = () => srv.session(jetonAac);
+        const enCompte = () => srv.session(jetonCompte);
         const refs = (await srv.appel('/api/m/droits/refs')).corps || {};
         const secteurs = refs.secteurs || [];
         const d = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
@@ -289,11 +304,11 @@ module.exports = async function executionSmoke(port) {
 
         // ── 1. Hors de sa portée : refusé, et le refus nomme la portée ──
         verifier('le privilège se pose sur un seul secteur', await poser(autre) === 200);
-        await srv.connexion(COMPTE);
+        enCompte();
         const refuse = await srv.appel(`${M}/dossiers/${dossierId}`, {
           method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
         });
-        await srv.connexion();
+        enAac();
         const toujoursLa = ((await srv.appel(`${M}/dossiers`)).corps || [])
           .some((x) => x.id === dossierId);
         verifier('un gestionnaire hors de sa portée ne détruit pas un dossier, et le refus nomme la portée',
@@ -306,7 +321,7 @@ module.exports = async function executionSmoke(port) {
 
         // ── 2. Un rapport transmis ne se supprime pas, même dans la portée ──
         verifier('le privilège se déplace sur le secteur du dossier', await poser(sien) === 200);
-        await srv.connexion(COMPTE);
+        enCompte();
         const transmis = await srv.appel(`${M}/rapports/${rapportV3}`, {
           method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
         });
@@ -314,7 +329,7 @@ module.exports = async function executionSmoke(port) {
         const ancienne = await srv.appel(`${M}/rapports/${rapportId}`, {
           method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
         });
-        await srv.connexion();
+        enAac();
         const restants = (await srv.appel(`${M}/rapports`)).corps || [];
         const trace = ((await srv.appel(`${M}/rapports/${rapportId}`)).corps) || {};
         verifier('un rapport transmis refuse d’être supprimé, et il est toujours là',
@@ -329,6 +344,169 @@ module.exports = async function executionSmoke(port) {
           JSON.stringify({ statut: ancienne.statut,
             encoreListe: restants.some((r) => r.id === rapportId),
             relecture: trace.error || trace.statut || 'absent' }));
+
+        // ── 4. La cinquième route destructrice, restée ouverte cinq tours ──
+        //
+        // `DELETE /notifications/:id` s'adossait à `R.isAdmin` — gestionnaire
+        // **quelque part**, toutes portées confondues. C'était le dernier
+        // survivant du patron que les quatre routes ci-dessus ont quitté le
+        // 8 novembre 2026 (n° 5.f.75), et l'ADR le nommait comme « ce qui reste
+        // ouvert ». Mesuré le 11 novembre : un gestionnaire du secteur CAMO
+        // **détruisait** le brouillon d'une activité du secteur AMO — 200, et la
+        // notification n'était plus là. Son voisin `PUT /notifications/:id`
+        // refusait exactement cela. *Une route qui modifie gardait ce qu'une
+        // route qui détruit laissait passer* (n° 5.f.80).
+        const plansPortee = (await srv.appel(`${M}/plans-valides`)).corps || [];
+        const planPortee = (plansPortee || []).find((x) => (x.activites || []).length);
+        const actPortee = planPortee ? planPortee.activites[0] : null;
+        const notifDe = async (corps) => (await P(`${M}/notifications`, {
+          objet: 'Portée — brouillon de la ronde', type_supervision: 'Audit',
+          date_debut_prevue: '2026-09-01', date_fin_prevue: '2026-09-03',
+          lieu: 'Siège', perimetre: 'Ensemble des processus', ...corps,
+        }));
+        const existeNotif = async (id) => ((await srv.appel(`${M}/notifications`)).corps || [])
+          .some((x) => x.id === id);
+        if (actPortee) {
+          // Le secteur de l'activité, et celui qui ne l'est pas.
+          const sectActivite = (((await srv.appel('/api/referentiels/prestataires')).corps || [])
+            .find((x) => x.id === actPortee.prestataire_id) || {}).secteur_id || '';
+          const sienAct = secteurs.find((x) => x.id === sectActivite) || {};
+          const autreAct = secteurs.find((x) => x.id && x.id !== sectActivite) || {};
+          verifier('le jeu d’essai offre un secteur pour l’activité, et un autre qui ne l’est pas',
+            !!sienAct.id && !!autreAct.id && sienAct.id !== autreAct.id,
+            JSON.stringify({ activite: sienAct.id, autre: autreAct.id }));
+
+          const brouillon = await notifDe({
+            activite_id: actPortee.id, plan_id: planPortee.id,
+            prestataire_id: actPortee.prestataire_id,
+          });
+          verifier('un brouillon de notification est ouvert par le super-administrateur',
+            brouillon.statut === 201 && !!brouillon.corps.id);
+          const nid = brouillon.corps.id;
+
+          // Hors de sa portée : refusé, et le refus nomme les deux qualités.
+          verifier('le privilège se pose sur un secteur qui n’est pas celui de l’activité',
+            await poser(autreAct) === 200);
+          enCompte();
+          const refusNotif = await srv.appel(`${M}/notifications/${nid}`, {
+            method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+          });
+          enAac();
+          const encoreLa = await existeNotif(nid);
+          verifier('un gestionnaire hors de sa portée ne détruit pas le brouillon d’un autre, et le refus nomme la portée',
+            refusNotif.statut === 403
+            && (refusNotif.corps || {}).error === 'reserve'
+            && (refusNotif.corps || {}).role === 'initiateur_ou_gestionnaire_portee'
+            && encoreLa === true,
+            JSON.stringify({ statut: refusNotif.statut, corps: refusNotif.corps,
+              present: encoreLa }));
+
+          // Dans sa portée : le geste passe, et la notification n'est plus là.
+          verifier('le privilège se déplace sur le secteur de l’activité',
+            await poser(sienAct) === 200);
+          enCompte();
+          const prisNotif = await srv.appel(`${M}/notifications/${nid}`, {
+            method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+          });
+          enAac();
+          verifier('dans sa portée, le gestionnaire détruit le brouillon, et le serveur ne le porte plus',
+            prisNotif.statut === 200 && (await existeNotif(nid)) === false,
+            JSON.stringify({ statut: prisNotif.statut, corps: prisNotif.corps }));
+
+          // ── 5. L'initiateur garde son brouillon, même si sa portée s'en va ──
+          //
+          // Il l'a ouvert, il peut le refermer : la portée ne lui est pas
+          // opposée. *Premier jet : le compte était laissé **sans portée du
+          // tout** pour isoler la clause de l'initiateur. Il a rougi sur la
+          // création — `403` : ouvrir une notification exige d'être
+          // contributeur de la portée, de sorte qu'un lecteur sans portée n'a
+          // pas de brouillon à retirer. Le montage éprouvait une situation qui
+          // n'existe pas.*
+          //
+          // La clause s'isole autrement, et mieux : le compte ouvre son
+          // brouillon **dans** sa portée, puis sa portée **se déplace
+          // ailleurs**. Il n'est plus gestionnaire de rien qui le concerne, et
+          // il le retire tout de même — parce qu'il en est l'initiateur, et
+          // pour cette raison seule.
+          verifier('le privilège se pose sur le secteur de l’activité, le temps d’ouvrir un brouillon',
+            await poser(sienAct) === 200);
+          enCompte();
+          const sien = await notifDe({
+            activite_id: actPortee.id, plan_id: planPortee.id,
+            prestataire_id: actPortee.prestataire_id,
+            objet: 'Portée — brouillon de son initiateur',
+          });
+          const sienId = (sien.corps || {}).id;
+          enAac();
+          verifier('le compte d’essai ouvre son propre brouillon dans sa portée',
+            sien.statut === 201 && !!sienId, JSON.stringify({ creation: sien.statut }));
+          verifier('puis sa portée s’en va ailleurs', await poser(autreAct) === 200);
+          enCompte();
+          const retireSien = sienId ? await srv.appel(`${M}/notifications/${sienId}`, {
+            method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+          }) : { statut: 0 };
+          enAac();
+          verifier('l’initiateur retire son brouillon alors que sa portée a quitté l’activité',
+            retireSien.statut === 200 && (await existeNotif(sienId)) === false,
+            JSON.stringify({ retrait: retireSien.statut, corps: retireSien.corps }));
+
+          // ── 6. Une activité hors plan est rattachée au secteur qu'elle nomme ──
+          //
+          // Elle porte elle-même son année, son domaine et son secteur, faute
+          // d'activité planifiée pour les lui donner. Les gardes de portée ne
+          // regardaient que l'organisme surveillé : mesuré, une notification
+          // hors plan déclarant CAMO sur un organisme rattaché à AMO s'écrivait
+          // sous la portée **AMO**. La restriction par processus, elle, prenait
+          // déjà le secteur déclaré — le module se contredisait d'une garde à
+          // l'autre sur le même objet. Tranché le 11 novembre 2026 : le secteur
+          // déclaré fait autorité, l'organisme ne sert qu'à défaut.
+          const horsPlan = await notifDe({
+            hors_plan: true, prestataire_id: actPortee.prestataire_id, annee: '2026',
+            domaine_id: autreAct.domaine_id || '', secteur_id: autreAct.id,
+            objet: 'Portée — activité hors plan de la ronde',
+          });
+          const hid = (horsPlan.corps || {}).id;
+          const horsPlanRelu = hid
+            ? ((await srv.appel(`${M}/notifications/${hid}`)).corps || {}) : {};
+          verifier('une notification hors plan porte en base le secteur et le domaine qu’elle déclare',
+            horsPlan.statut === 201
+            && horsPlanRelu.secteur_id === autreAct.id
+            && horsPlanRelu.secteur_id !== sectActivite,
+            JSON.stringify({ statut: horsPlan.statut, declare: horsPlanRelu.secteur_id,
+              organisme: sectActivite }));
+
+          // Gestionnaire du secteur de l'organisme : il n'est pas celui du secteur déclaré.
+          verifier('le privilège se pose sur le secteur de l’organisme, non sur celui déclaré',
+            await poser(sienAct) === 200);
+          enCompte();
+          const modifHP = await srv.appel(`${M}/notifications/${hid}`, {
+            method: 'PUT', headers: { 'X-OASIS-Request': '1' },
+            body: JSON.stringify({ lieu: 'Déplacé par un autre secteur' }),
+          });
+          enAac();
+          const lieuHP = ((await srv.appel(`${M}/notifications/${hid}`)).corps || {}).lieu_activite;
+          verifier('la portée d’une activité hors plan est celle qu’elle déclare : le gestionnaire de l’organisme est refusé',
+            modifHP.statut === 403 && lieuHP === 'Siège',
+            JSON.stringify({ statut: modifHP.statut, lieu: lieuHP }));
+
+          // Gestionnaire du secteur déclaré : le geste passe.
+          verifier('le privilège se déplace sur le secteur que la notification déclare',
+            await poser(autreAct) === 200);
+          enCompte();
+          const admisHP = await srv.appel(`${M}/notifications/${hid}`, {
+            method: 'PUT', headers: { 'X-OASIS-Request': '1' },
+            body: JSON.stringify({ lieu: 'Déplacé par le secteur déclaré' }),
+          });
+          enAac();
+          const lieuHP2 = ((await srv.appel(`${M}/notifications/${hid}`)).corps || {}).lieu_activite;
+          verifier('le gestionnaire du secteur déclaré écrit sur l’activité hors plan, et le serveur le porte',
+            admisHP.statut === 200 && lieuHP2 === 'Déplacé par le secteur déclaré',
+            JSON.stringify({ statut: admisHP.statut, lieu: lieuHP2 }));
+          // La ronde ne laisse rien.
+          await srv.appel(`${M}/notifications/${hid}`, { method: 'DELETE' });
+          verifier('la ronde de portée ne laisse aucune notification derrière elle',
+            (await existeNotif(hid)) === false);
+        }
 
         // Le compte est rendu à ce qu'il était : une portée laissée posée
         // changerait ce que les blocs suivants mesurent.

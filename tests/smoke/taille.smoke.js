@@ -2301,15 +2301,19 @@ module.exports = async function tailleSmoke() {
   //
   // *Un seuil qu'on ne regarde pas n'est pas un seuil.*
   const SUITES_TOLEREES = {
-    'surv.smoke.js': 7829,
+    'surv.smoke.js': 7846,
     'ramp.navigateur.smoke.js': 6526,
     'profil-risque.navigateur.smoke.js': 3432,
     'parcours.smoke.js': 3211,
     'planification.navigateur.smoke.js': 2720,
     'mesures.navigateur.smoke.js': 2652,
-    'taille.smoke.js': 2342,
-    'unitaires.smoke.js': 1615,
+    'taille.smoke.js': 2346,
+    'unitaires.smoke.js': 1683,
     'ramp.smoke.js': 1447,
+    // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
+    // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le
+    // contrôle l'a dit — « non déclaré ». C'est exactement son office.
+    'execution.smoke.js': 1174,
   };
   const SEUIL_SUITE = 1000;
   const DOSSIER_SUITES = path.join(RACINE, 'tests', 'smoke');

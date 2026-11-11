@@ -4077,8 +4077,23 @@ module.exports = async function survSmoke(port) {
         q('[onclick^="execAjustAppliquer"]')?.click();
         await at(4500);
         const ajustee = await lire();
+        // ── L'échéance attendue se calcule, elle ne se grave pas ──
+        //
+        // Premier jet : `echeance === '2027-01-09'`. La date d'ouverture d'une
+        // constatation est **celle du jour** où la ronde la crée ; l'échéance
+        // est donc mobile, et le contrôle aurait rougi dès le lendemain — il l'a
+        // fait, au premier passage du jour suivant (`2027-01-10`). *Une
+        // assertion qui grave une date éprouve le calendrier, non le calcul.*
+        const attendue = (() => {
+          const ouv = String(ajustee.date_ouverture || '').slice(0, 10);
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(ouv)) return '';
+          const d = new Date(`${ouv}T00:00:00Z`);
+          d.setUTCDate(d.getUTCDate() + 60);
+          return d.toISOString().slice(0, 10);
+        })();
         r.applique = {
           delai: ajustee.delai_solde, echeance: ajustee.date_due_cloture,
+          echeanceAttendue: attendue, ouverture: String(ajustee.date_ouverture || '').slice(0, 10),
           traces: (ajustee.ajustements || []).length,
           portee: ((ajustee.ajustements || [])[0] || {}).portee,
           motif: ((ajustee.ajustements || [])[0] || {}).motif,
@@ -4234,13 +4249,15 @@ module.exports = async function survSmoke(port) {
         JSON.stringify(refusPac.retour));
       verifier('l’ajustement prononcé proroge le délai, refait l’échéance, et laisse sa trace champ par champ',
         refusPac.applique && String(refusPac.applique.delai) === '60'
-        && refusPac.applique.echeance === '2027-01-09'
+        && !!refusPac.applique.echeanceAttendue
+        && refusPac.applique.echeance === refusPac.applique.echeanceAttendue
         && refusPac.applique.traces === 1
         && refusPac.applique.portee === 'prorogation'
         && /organisme/.test(refusPac.applique.motif || '')
         && refusPac.applique.auteur === true
         && (refusPac.applique.changements || []).includes('delai_solde:30→60')
-        && (refusPac.applique.changements || []).includes('date_due_cloture:2026-12-10→2027-01-09'),
+        && (refusPac.applique.changements || [])
+          .includes(`date_due_cloture:2026-12-10→${refusPac.applique.echeanceAttendue}`),
         JSON.stringify(refusPac.applique));
       verifier('le journal des ajustements se déplie, porte sa carte et ses changements lisibles, et se replie',
         refusPac.journal && !/ouvert/.test(refusPac.journal.avant || '')

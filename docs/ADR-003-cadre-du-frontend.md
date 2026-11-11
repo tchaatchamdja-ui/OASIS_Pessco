@@ -11080,3 +11080,159 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            qui n'existe pas, et un budget laissé loin au-dessus de sa suite
            (`ramp.smoke.js : 1447 lignes, toléré 4000`). Chacun rougit en nommant sa
            cause ; rendus, tout reverdit.
+       5.f.80 [x] **La cinquième route destructrice, et deux portées sur un même
+           objet** — fait le 11 novembre 2026.
+           Le dernier défaut nommé que rien ne gardait. L'entrée n° 5.f.75 le
+           consignait elle-même, sous « ce qui reste ouvert » : « `routes-
+           notifications.js` laisse un gestionnaire **toutes portées confondues**
+           modifier la notification d'un autre ». Il a attendu cinq tours.
+
+           ── Ce que la mesure a corrigé dans l'énoncé ──
+
+           La note disait « modifier ». **Mesuré, c'est faux** :
+           `PUT /notifications/:id` refuse — 403 — un gestionnaire hors de sa
+           portée. C'est `DELETE /notifications/:id` qui passait : 200, et le
+           brouillon d'une activité du secteur AMO **détruit** par le
+           gestionnaire du secteur CAMO. *Une route qui modifie gardait ce qu'une
+           route qui détruit laissait passer.*
+
+           C'était la **cinquième** route du patron `R.isAdmin` — « ce compte est
+           gestionnaire quelque part », toutes portées confondues. Les quatre
+           autres ont quitté ce patron le 8 novembre (n° 5.f.75) ; celle-ci est
+           restée. La règle est désormais la leur — gestionnaire du module, dans
+           la portée de l'objet — à quoi s'ajoute l'initiateur, qui garde son
+           brouillon quel que soit son privilège : il l'a ouvert, il peut le
+           refermer.
+
+           Le refus nomme les deux qualités :
+           `{ error: 'reserve', role: 'initiateur_ou_gestionnaire_portee' }`, et le
+           socle le traduit dans les trois langues. La phrase qu'il remplace —
+           « Seul l'initiateur peut supprimer ce brouillon » — est retirée de la
+           table : le serveur ne l'émet plus, et une traduction qui survit à sa
+           phrase ne garde rien (même geste qu'au n° 5.f.76).
+
+           ── Et un second fait, de la même famille, qu'il a fallu arbitrer ──
+
+           Une activité **hors plan** porte elle-même son année, son domaine et
+           son secteur, faute d'activité planifiée pour les lui donner. Les gardes
+           de portée ne regardaient que l'**organisme surveillé** : mesuré, une
+           notification hors plan déclarant le secteur CAMO, posée sur un organisme
+           rattaché au secteur AMO, s'écrivait sous la portée **AMO**. Le
+           gestionnaire de CAMO, dont l'activité relève, ne pouvait rien ; celui
+           d'AMO, qu'elle ne concerne pas, pouvait tout.
+
+           La restriction par processus, elle, prenait **déjà** le secteur déclaré
+           (`contexteActivite`, inchangé depuis l'origine) : le module se
+           contredisait d'une garde à l'autre sur le même objet. Ce n'était pas un
+           oubli d'un côté, c'était deux lectures qui coexistaient.
+
+           **Arbitré par la maîtrise d'ouvrage le 11 novembre 2026 : le secteur et
+           le domaine que la notification déclare font autorité**, l'organisme ne
+           servant qu'à défaut. Une activité hors plan est rattachée au secteur
+           qu'elle nomme. Les douze gardes de ce fichier lisent désormais la même
+           portée, par une seule fonction — `porteeDe`.
+
+           ── Les deux voisins qui ne sont pas du même défaut, et pourquoi ──
+
+           `R.isAdmin` sert encore à deux endroits du module, et c'est juste :
+
+           · `routes-etats.js` et `routes-parametres.js` le posent sur les délais
+             du processus, les référentiels et les paramètres du module — **qui
+             n'ont pas de portée**. C'est ce que le commentaire de `peutDetruire`
+             dit déjà de lui.
+           · `acteurs.js` l'emploie comme porte de sortie : le gestionnaire passe
+             outre la désignation des intervenants d'un processus, « sans quoi un
+             processus incomplet arrêterait le circuit sans recours applicatif ».
+             Elle ne contourne pas la portée : dans chaque route, la garde de
+             portée s'exécute **avant** `refusProcessus`. Ce qu'elle lève est la
+             liste des acteurs, non le périmètre.
+
+           ── Une protection sur laquelle un essai a buté, et qu'on n'a pas desserrée ──
+
+           La ronde alterne nécessairement entre le compte qui **pose** la portée
+           et celui qui l'**éprouve**. Chaque reconnexion est une tentative
+           d'authentification, et le serveur en compte vingt par quart d'heure :
+           douze bascules ont fait rendre **429** à la suite entière, sur un code
+           sans défaut.
+
+           Baisser le plafond pour les essais aurait été affaiblir une protection
+           pour la commodité d'un test. Or il n'y avait rien à affaiblir : une
+           session déjà ouverte n'a pas à être rouverte. Le harnais rend et repose
+           son témoin (`srv.session`), deux connexions suffisent à toute une ronde,
+           et le plafond du serveur n'a pas bougé d'un cran.
+
+           *Un essai qui bute sur une protection n'est pas une raison de la
+           desserrer.*
+
+           ── Mesuré ──
+
+           Suite `execution` : 139 → **155** contrôles, `unitaires` 144 → **149**.
+           Campagne : 1 623 → **1 644**. Aucun geste d'écran n'est concerné ; la
+           couverture de SURV reste à 228 sur 316.
+
+           Contre-épreuves : le `DELETE` rendu scope-aveugle fait rougir deux
+           contrôles — `{"statut":200,"present":false}`, le brouillon d'un autre
+           secteur détruit, et la cascade en 404 sur le suivant ; la portée
+           ramenée à celle du seul organisme en fait rougir deux, **exactement
+           inversés** — le gestionnaire de l'organisme écrit (200), celui du
+           secteur déclaré est refusé (403) ; et la clause de l'initiateur retirée
+           en fait rougir un, qui nomme le refus reçu.
+
+           Un de mes contrôles a d'abord été écrit sur une situation qui n'existe
+           pas : il laissait le compte **sans portée du tout** pour isoler la
+           clause de l'initiateur, et a rougi sur la *création* — `403`, puisque
+           ouvrir une notification exige d'être contributeur de la portée. La
+           clause s'isole autrement, et mieux : le compte ouvre son brouillon dans
+           sa portée, puis sa portée **s'en va ailleurs**, et il le retire tout de
+           même.
+
+           ── Et le garde-fou posé la veille a mordu sur ce tour même ──
+
+           La campagne a rougi une fois, sur le contrôle de taille des suites
+           inscrit au n° 5.f.79 : « `execution.smoke.js` : 1 174 lignes (non
+           déclaré) ». La ronde de portée l'avait menée de 995 à 1 174 lignes, et
+           le garde l'a dit **au tour suivant sa pose**. C'est exactement son
+           office : la croissance est déclarée, donc vue. Le budget est inscrit.
+
+           ── Et une campagne qui refuse de doubler une autre ──
+
+           Deux fois en deux jours, j'ai lancé une campagne par-dessus une
+           campagne en cours — en lisant l'avancement dans le journal au lieu
+           d'attendre la fin. La seconde rougit alors sur « le port 48xx répond
+           déjà : un autre serveur le tient », message qui décrit un **orphelin
+           d'un passage interrompu** là où il n'y a que le passage en cours. La
+           première fois, j'ai cherché le défaut dans le code ; la seconde, dans
+           trois suites de navigateur. Le port par suite (n° 5.f.79) protège deux
+           suites l'une de l'autre, pas deux campagnes : elles jouent les mêmes
+           seize ports, dans le même ordre.
+
+           `tests/smoke/verrou-campagne.js` le dit en un mot. Il reprend la leçon
+           de `src/verrou.js` — *un verrou qui bloque après un arrêt brutal est
+           pire que pas de verrou du tout* : il demande au système si le tenant
+           vit encore, et **reprend la place s'il est mort**, en le signalant. Le
+           refus nomme le numéro du tenant et **trois** remèdes : attendre, le
+           retrouver par `ps -p`, ou jouer une suite seule — qui a son propre port
+           et n'est pas concernée.
+
+           Cinq contrôles l'éprouvent (`unitaires`), sur un chemin à lui : la
+           place libre se prend sans rien reprendre, un tenant vivant refuse la
+           seconde en nommant son numéro et le remède, un tenant mort est repris
+           et la reprise s'annonce, une campagne qui s'arrête n'emporte pas le
+           verrou d'une autre repris entre-temps, et `OASIS_SMOKE_VERROU=0` le
+           lève. Éprouvé en vrai aussi : une seconde campagne lancée trente
+           secondes après la première a été refusée, et `npm run smoke -- taille`
+           a passé pendant ce temps.
+
+           La fonction prend `chemin` et `pid` en paramètres pour cela : le verrou
+           de la campagne est tenu par la campagne qui joue le contrôle. *Une
+           fonction qu'on ne peut pas appeler hors de son usage ne s'éprouve pas.*
+
+           ── Une assertion qui gravait une date ──
+
+           La campagne a rougi une fois de plus, le lendemain : « l'ajustement
+           prononcé proroge le délai, refait l'échéance » attendait
+           `2027-01-09`, et a reçu `2027-01-10`. La date d'ouverture d'une
+           constatation est **celle du jour** où la ronde la crée ; l'échéance en
+           découle, et se déplace donc chaque jour. Le contrôle calcule désormais
+           ce qu'il attend, au lieu de le graver. *Une assertion qui grave une
+           date éprouve le calendrier, non le calcul.*

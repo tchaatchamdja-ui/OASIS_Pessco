@@ -1423,6 +1423,38 @@ module.exports = async function tailleSmoke() {
   verifier('aucun acte d’autorité n’est différable hors ligne',
     actes.length === 0, actes.join(' · '));
 
+  // ── Les sections du rapport : une branche, une section déclarée ──
+  //
+  // Le volet d'un dossier rend le rapport en sections, et `REDACTION_SUBTABS`
+  // les déclare. `_buildDossierTabContent` les aiguille par une suite de
+  // `if (tab === '…')`.
+  //
+  // Une de ces branches désignait un onglet **« rapports » que la table ne
+  // déclare pas** : elle n'était atteinte par aucun appel du dépôt, et la table
+  // des rapports qu'elle rendait — avec un « Envoyer au prestataire » sans
+  // confirmation ni message — était invisible et le resta. *Du code mort ne
+  // vieillit pas : il attend qu'on le rebranche.*
+  //
+  // Les deux listes se lisent dans la source, et doivent coïncider. Le contrôle
+  // refuse si l'une des deux ne se lit plus : une liste vide et un écran sans
+  // sections se ressemblent.
+  {
+    const src = fs.readFileSync(path.join(RACINE, 'public', 'modules', 'execution',
+      'js', 'exec-activites.js'), 'utf8');
+    const bloc = /const REDACTION_SUBTABS = \[([\s\S]*?)\n\];/.exec(src);
+    const declarees = bloc ? [...bloc[1].matchAll(/id: '(\w+)'/g)].map((m) => m[1]) : [];
+    const corps = /function _buildDossierTabContent\(([\s\S]*?)\n\}/.exec(src);
+    const aiguillees = corps ? [...corps[1].matchAll(/tab === '(\w+)'/g)].map((m) => m[1]) : [];
+    const orphelines = aiguillees.filter((t) => !declarees.includes(t));
+    const sansBranche = declarees.filter((t) => !aiguillees.includes(t));
+    verifier('SURV : chaque branche d’onglet du volet désigne une section déclarée, et chacune a la sienne',
+      declarees.length >= 5 && aiguillees.length >= 5
+      && orphelines.length === 0 && sansBranche.length === 0,
+      `déclarées ${declarees.length} · aiguillées ${aiguillees.length}`
+      + `${orphelines.length ? ` · sans section : ${orphelines.join(', ')}` : ''}`
+      + `${sansBranche.length ? ` · sans branche : ${sansBranche.join(', ')}` : ''}`);
+  }
+
   // ── Un nom global, une définition ──
   // Les scripts d'un écran partagent une seule portée : deux fichiers qui
   // déclarent la même fonction ne se contredisent pas, le dernier chargé
@@ -2301,19 +2333,31 @@ module.exports = async function tailleSmoke() {
   //
   // *Un seuil qu'on ne regarde pas n'est pas un seuil.*
   const SUITES_TOLEREES = {
-    'surv.smoke.js': 7846,
+    // ── 7 846 → 8 726, et ce que ce relèvement engage ──
+    //
+    // La ronde des pièces et de la transmission (n° 5.f.81) a ajouté 880 lignes
+    // à la plus grosse suite du dépôt. Relever le chiffre est ce que ce garde
+    // demande — le voir plutôt que le subir —, mais ce n'est pas une
+    // autorisation : **le découpage devient la prochaine étape**, et son
+    // obstacle est nommé dans l'ADR (`relever-gestes.js` associe un écran à une
+    // seule suite, et un écran découpé ne serait plus mesuré qu'à moitié).
+    //
+    // *Un budget qu'on relève deux fois de suite n'est plus un budget.*
+    'surv.smoke.js': 8726,
     'ramp.navigateur.smoke.js': 6526,
     'profil-risque.navigateur.smoke.js': 3432,
     'parcours.smoke.js': 3211,
     'planification.navigateur.smoke.js': 2720,
     'mesures.navigateur.smoke.js': 2652,
-    'taille.smoke.js': 2346,
-    'unitaires.smoke.js': 1683,
+    'taille.smoke.js': 2377,
+    'unitaires.smoke.js': 1773,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
     // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le
-    // contrôle l'a dit — « non déclaré ». C'est exactement son office.
-    'execution.smoke.js': 1174,
+    // contrôle l'a dit — « non déclaré ». C'est exactement son office. Le dépôt
+    // d'une pièce et les champs écartés d'une constatation opposable l'ont porté
+    // à 1 297.
+    'execution.smoke.js': 1297,
   };
   const SEUIL_SUITE = 1000;
   const DOSSIER_SUITES = path.join(RACINE, 'tests', 'smoke');

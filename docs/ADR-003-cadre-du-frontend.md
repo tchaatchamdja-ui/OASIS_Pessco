@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 23 678 | **316 gestes nommés, 228 exercés** (72 %), 3 indécidables — idem, 10 novembre 2026 (n° 5.f.78) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, et celui des constatations à 57 occurrences sur 61, les trois qui restent déclarées |
+           | SURV (`execution`) | 24 162 | **315 gestes nommés, 241 exercés** (77 %), 3 indécidables — idem, 11 novembre 2026 (n° 5.f.81) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, celui des constatations à 57 occurrences sur 61, et celui des activités à 65 sur 68 : des trois qui restent, deux sont l'angle mort du relevé — un gestionnaire composé au rendu se nomme ailleurs qu'où il est posé — et le troisième n'est offert qu'à un compte qui ne gouverne pas le module |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11236,3 +11236,179 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            découle, et se déplace donc chaque jour. Le contrôle calcule désormais
            ce qu'il attend, au lieu de le graver. *Une assertion qui grave une
            date éprouve le calendrier, non le calcul.*
+
+       5.f.81 [x] **Huit dépôts de pièces pour une route, et le courriel qui
+           annonçait des liens vers « localhost »** — fait le 11 novembre 2026.
+           `exec-activites.js` portait **52 gestes exercés sur 70**, et les
+           dix-huit restants couvraient les quatre dépôts de pièces du volet, les
+           bornes de dates de la réalisation, l'intitulé du rapport, les gestes
+           de la table des constatations, l'amendement et la transmission par
+           courriel. Quatre défauts et une limite d'environnement ont été trouvés
+           en les exerçant.
+
+           ── 1. Toute pièce versée s'appelait « piece-jointe » ──
+
+           `POST …/upload` nomme ce qu'elle reçoit d'après le champ `nom` du
+           formulaire : c'est écrit dans la route — « le nom d'origine ne ressort
+           pas : c'est l'intitulé qui nomme la pièce ». **Quatre des huit dépôts
+           du module ne l'envoyaient pas.** La route repliait alors sur
+           `piece-jointe`, et trois PDF versés dans les annexes d'un rapport
+           donnaient trois `piece-jointe.pdf` — indiscernables dans le document
+           produit, et dans le courriel qui les annonce à l'organisme.
+
+           ── 2. Un type de fichier refusé ne disait rien ──
+
+           Hors de ses huit extensions la route répond 400, « Type de fichier non
+           autorisé ». La phrase est traduite dans le socle depuis des semaines :
+           **elle n'arrivait nulle part.** Cinq des huit dépôts lisaient
+           `data.status === 'ok'` et se taisaient sinon ; leur `catch` ne s'en
+           mêlait pas, `fetch` ne levant pas sur un 400. Rien ne paraissait dans
+           la liste, et rien n'était dit.
+
+           Deux dépôts sur huit étaient justes sur les deux points. C'est d'eux
+           qu'est tirée la fonction unique qui les remplace tous —
+           `execDeposerPiece`, dans `exec-boot.js`, à côté d'`api()` qui relève
+           le refus et le traduit. *Huit copies d'un même appel ne restent pas
+           huit copies : elles divergent, et c'est de la divergence qu'on
+           s'aperçoit, jamais de la copie.*
+
+           Le contre-essai a dit plus que ce qu'on lui demandait. Les deux
+           défauts reposés ensemble, **huit** contrôles rougissent au lieu des
+           deux attendus : les six autres appartiennent à des rondes
+           antérieures — la preuve d'un plan d'actions, l'acceptation des
+           preuves, l'échéance recalculée, la pièce du courriel —, qui
+           **asseyaient déjà** le nom réel de leur fichier et passaient parce que
+           leurs appels étaient, eux, des copies correctes. Elles gardent
+           maintenant la fonction commune. *Rassembler huit copies ne ferme pas
+           seulement un défaut : cela met huit contrôles d'accord sur un seul
+           point de passage.* Le second défaut, lui, se mesure à ce que la ronde
+           entend : le refus avalé, la dernière annonce reçue reste celle du
+           contrôle précédent.
+
+           ── 3. Un onglet que rien ne pouvait afficher, et un envoi sans
+              cérémonie ──
+
+           `_buildDossierTabContent` portait une branche `tab === 'rapports'`
+           **que `REDACTION_SUBTABS` ne déclare pas** : aucun appel du dépôt ne
+           l'atteignait, et aucun écran n'ouvrait le volet sur cet onglet. La
+           table morte qu'elle rendait portait un bouton « Envoyer au
+           prestataire » appelant `execSendRapport` — **jumeau sans cérémonie**
+           de `execSendRapportValidated` : même route, même méthode, ni
+           confirmation ni message de résultat.
+
+           C'est la raison de la retirer plutôt que de lui ouvrir un chemin.
+           Remettre un rapport à l'organisme surveillé est un acte de
+           surveillance ; l'offrir d'un clic sec n'est pas un manque de confort.
+           La branche, la table et la fonction jumelle sont parties ; un garde de
+           forme (`taille`) refuse qu'une branche d'onglet désigne une section
+           que la table ne déclare pas. Éprouvé : la branche remise fait rougir
+           le garde. *Du code mort ne vieillit pas — il attend qu'on le
+           rebranche.*
+
+           ── 4. « Constatation modifiée », et rien n'avait changé ──
+
+           Huit champs engagent l'organisme dès la notification d'une
+           constatation et ne se changent plus que par l'ajustement — motivé,
+           confirmé par mot de passe, tracé. `PUT /constatations/:id` les
+           **écarte**, à bon droit ; elle le faisait **sans un mot**, et
+           répondait « ok ».
+
+           L'écran, lui, offre le geste : la table du dossier remplace
+           « Modifier » par « Consulter » dès qu'un rapport est validé — *sauf
+           pour le compte qui gouverne le module*, seul à garder le crayon.
+           Mesuré : cet administrateur change la description et la criticité,
+           lit « Constatation modifiée », et rien n'a bougé. Les champs non
+           opposables du formulaire suffisaient à éviter le 400 « aucun champ à
+           mettre à jour », seul signe qui aurait pu alerter.
+
+           La route rend désormais `non_ecrits`, et l'écran le dit. Elle
+           **n'échoue pas** : le formulaire réémet tous ses champs, et refuser un
+           envoi qui ne fait que renvoyer des valeurs inchangées empêcherait
+           d'enregistrer ce qui a vraiment changé à côté. Seuls les champs dont
+           la valeur **diverge** sont nommés, et un second contrôle — le plus
+           important des deux — tient que l'avertissement ne se déclenche pas
+           quand rien ne change. *Un écran qui dit « enregistré » pour ce qui n'a
+           pas été écrit est pire qu'un refus : le refus, on le lit.*
+
+           ── 5. Et les liens que l'organisme n'aurait pas pu suivre ──
+
+           La transmission d'un rapport n'était mesurable que par son refus : le
+           jeu d'essai pointe la messagerie sur le Mailpit d'un poste de
+           développement, et rien n'y écoute. Un sas SMTP de cent cinquante
+           lignes (`tests/smoke/messagerie-essai.js`) lève la limite — port donné
+           par le système, `OASIS_SMTP_HOST`/`OASIS_SMTP_PORT` pour y diriger le
+           serveur, le chemin déclaré pour désigner une messagerie.
+
+           Ce qu'il a trouvé du premier coup. `src/email.js` compose le lien de
+           connexion en lisant `APP_URL`, puis l'adresse que l'hébergeur pose
+           (`RENDER_EXTERNAL_URL`), et son commentaire dit pourquoi : « sans quoi
+           les destinataires recevraient un lien vers *localhost* ».
+           `transmission.js` composait la **même adresse de son côté**, et sa
+           règle ignorait l'hébergeur. Mesuré contre un serveur portant
+           `RENDER_EXTERNAL_URL` et aucun `APP_URL` — l'état exact d'un service
+           Render sans domaine propre : le courriel d'ouverture de compte portait
+           la bonne adresse, et **le rapport transmis annonçait ses documents sur
+           `http://localhost:4750`**. Dans l'acte même qui engage l'Autorité, et
+           avec l'avis de notification qui renvoyait au même endroit.
+
+           `.env.example` affirmait pourtant qu'« en hébergement Render,
+           RENDER_EXTERNAL_URL suffit » : la documentation décrivait la règle de
+           l'un des deux fichiers, appliquée aux deux. Une seule fonction
+           désormais, `racinePublique()`, et `transmission.js` l'appelle. Six
+           contrôles unitaires la tiennent, dont deux de forme : la transmission
+           n'écrit pas de seconde règle, et **un seul fichier du socle** lit ces
+           variables. Éprouvé : les deux rougissent quand la seconde règle
+           revient.
+
+           Et ce que le sas rend mesurable, qu'aucun contrôle ne tenait : le
+           message **ne porte aucune pièce jointe** — `text/plain`, pas de
+           `multipart`, pas de `Content-Disposition: attachment` — et annonce ses
+           liens, ce que l'écran promet en toutes lettres. La copie cachée, elle,
+           ne figure dans aucun en-tête et pourtant elle est servie : on la lit
+           dans les `RCPT TO` du dialogue, nulle part ailleurs.
+
+           ── Deux notes qui sont devenues fausses, et qu'il fallait reprendre ──
+
+           Deux rondes portaient l'explication de leur propre limite : « la
+           transmission n'est pas cliquée, sans serveur de messagerie la route
+           refuse ». La raison n'existe plus. Celle du rapport est désormais
+           cliquée de bout en bout ; celle de la constatation ne l'est pas
+           encore, et sa note dit maintenant la vraie raison — cette ronde efface
+           sa constatation en partant, et une constatation transmise ne s'efface
+           plus du même geste. *Une justification qu'on ne relit pas devient un
+           alibi.*
+
+           ── Les deux derniers noms, et ce qu'ils disent de l'instrument ──
+
+           `exec-activites.js` passe de **52 occurrences sur 70 à 65 sur 68**.
+           Trois restent, et aucune n'est un geste oublié.
+
+           Deux sont du **second angle mort du relevé**, et la mesure l'a établi
+           plutôt que de le supposer. Le lien d'aperçu du courriel porte
+           `onclick="event.preventDefault();${_escAttr(repli)}"`, et son contrôle
+           est **vert** : le document est composé, la page n'est pas quittée. Mais
+           le nom que le mouchard tire de l'attribut **tel qu'il existe à
+           l'exécution** est `execDownloadRapport` — mesuré —, que
+           `exec-rapports.js` déclare ; les deux noms que la source donne,
+           `event.preventDefault` qui est une garde et `_escAttr` qui est une
+           fonction de rendu, ne peuvent correspondre à aucun geste. C'est
+           l'angle mort déjà nommé pour « exportPdf » (5.e.5), sous une troisième
+           forme : *un gestionnaire composé au rendu se nomme ailleurs qu'où il
+           est posé.* Il touche aussi `exec-etats.js`, dont `execEtatsOuvrir`
+           compose `execOpenActiviteProcessus` — c'est donc une correction de
+           l'instrument, et non de cet écran.
+
+           Le troisième, `execViewFNC`, est hors de portée pour une raison nette :
+           la table ne l'offre qu'au compte qui **ne gouverne pas** le module, et
+           la suite se connecte en SUPERADMIN, qui garde le crayon. L'exercer
+           demande une seconde session dans un autre contexte de navigateur.
+
+           ── Ce que cette entrée laisse ouvert ──
+
+           `surv.smoke.js` passe de 7 846 à 8 726 lignes, et le garde-fou posé le
+           10 novembre l'a dit. Le découpage, nommé depuis deux tours, devient la
+           **prochaine** étape et non une étape ultérieure : son obstacle est
+           identifié — `scripts/relever-gestes.js` associe un écran à **une**
+           suite, et un écran découpé en deux suites ne serait plus mesuré qu'à
+           moitié. C'est cette table qui doit changer d'abord, et la même passe
+           peut corriger le nommage d'un gestionnaire composé au rendu.

@@ -772,11 +772,48 @@ module.exports = function register(app, deps, M) {
       'transmis_le', 'transmis_par', 'transmis_a'];
     const estPrest = R.estPrestataire(req.user);
     const opposable = STATUTS_OPPOSABLES.includes(c.statut);
+    // ── Un champ écarté doit être dit, et non retiré en silence ──
+    //
+    // Les champs opposables sont retirés du patch, à bon droit : une fois la
+    // constatation notifiée, ils ne se réécrivent que par l'ajustement, motivé
+    // et confirmé par mot de passe. Mais ils l'étaient **sans un mot**, et la
+    // route répondait « ok ».
+    //
+    // L'écran, lui, offre le geste : la table des constatations du dossier
+    // remplace « Modifier » par « Consulter » dès qu'un rapport est validé —
+    // *sauf pour un compte d'administration*, qui garde le crayon
+    // (`_execIsAdmin` dans `_dossierOngletConstatations`). Mesuré le 11 novembre
+    // 2026 : cet administrateur rouvre la fiche, change la description et la
+    // criticité, enregistre, lit « Constatation modifiée » — et **rien n'a
+    // changé**. Les sept champs non opposables du formulaire suffisaient à
+    // éviter le 400 « aucun champ à mettre à jour », seul signe qui aurait
+    // pu alerter.
+    //
+    // *Un écran qui dit « enregistré » pour ce qui n'a pas été écrit est pire
+    // qu'un refus : le refus, on le lit.*
+    //
+    // La route rend donc la liste de ce qu'elle a écarté, et l'écran la dit.
+    // Elle **n'échoue pas** : le formulaire réémet tous ses champs, et refuser
+    // un envoi qui ne fait que renvoyer des valeurs inchangées empêcherait
+    // d'enregistrer ce qui a vraiment changé à côté. Seuls les champs dont la
+    // valeur **diverge** sont nommés — à la normalisation près, car se tromper
+    // ici ne coûte qu'un avertissement de trop, jamais un enregistrement perdu.
+    const memeValeur = (champ, propose, enPlace) => {
+      const n = (x) => String(x === undefined || x === null ? '' : x).trim();
+      if (champ === 'date_ouverture' || champ === 'date_due_cloture') {
+        return n(propose).slice(0, 10) === n(enPlace).slice(0, 10);
+      }
+      return n(propose) === n(enPlace);
+    };
+    const nonEcrits = [];
     const patch = {};
     Object.entries(req.body || {}).forEach(([k, v]) => {
       if (CHAMPS_INTERDITS.includes(k)) return;
       if (estPrest && CHAMPS_AAC.includes(k)) return;
-      if (opposable && CHAMPS_OPPOSABLES.includes(k)) return;
+      if (opposable && CHAMPS_OPPOSABLES.includes(k)) {
+        if (!memeValeur(k, v, c[k])) nonEcrits.push(k);
+        return;
+      }
       patch[k] = v;
     });
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
@@ -787,7 +824,7 @@ module.exports = function register(app, deps, M) {
       patch.commentaire_evaluation = fusionEvaluationPostulant(c, patch.commentaire_evaluation, false);
     }
     await db.update('constatations', c.id, patch);
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', ...(nonEcrits.length ? { non_ecrits: nonEcrits } : {}) });
   }));
 
   // ── Ajustement d'une constatation déjà opposable ────────────────────

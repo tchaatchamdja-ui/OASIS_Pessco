@@ -651,16 +651,8 @@ async function execSuiviJoindreFichiers(input) {
     const liste = document.getElementById('pac_suivi_pj_liste');
     if (!liste || !input.files || !input.files.length) return;
     for (const fichier of [...input.files]) {
-        const formData = new FormData();
-        formData.append('file', fichier);
-        formData.append('nom', fichier.name);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await res.json();
-            if (data.status !== 'ok') throw new Error(oasisMessageErreur(data, res.status, te('televersement_refuse')));
+            const data = await execDeposerPiece(fichier);
             const ligne = document.createElement('span');
             ligne.className = 'exec-suivi-pj-item';
             ligne.dataset.path = data.path;

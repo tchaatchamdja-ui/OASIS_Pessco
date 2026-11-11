@@ -1292,18 +1292,19 @@ async function execCdUploadProof(files) {
     const list = document.getElementById('cd_preuves_list');
     for (const f of files) {
         try {
-            const fd = new FormData();
-            fd.append('file', f);
-            const res = await api(`${EXEC_MODULE_API}/upload`, { method: 'POST', body: fd, isFormData: true });
-            const path = (res && (res.path || res.filepath || res.url)) || '';
-            const filename = f.name;
+            const res = await execDeposerPiece(f);
+            const path = (res && res.path) || '';
+            const filename = (res && res.filename) || f.name;
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
             row.dataset.path = path;
             row.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(filename)}</span>
                 <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
             list.appendChild(row);
-        } catch (e) { console.error('Upload proof error:', e); }
+        } catch (e) {
+            console.error('Upload proof error:', e);
+            _execToast(`${f.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
+        }
     }
 }
 

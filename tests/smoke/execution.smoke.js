@@ -177,6 +177,63 @@ module.exports = async function executionSmoke(port) {
       // ramène au brouillon, le rapport qui la portait n'étant plus validé.
       verifier('constatation opposable après validation',
         (await srv.appel(`${M}/constatations/${fnc.corps.id}`)).corps.statut === 'ouvert');
+
+      // ── Un champ écarté doit être dit, et non retiré en silence ──
+      //
+      // Huit champs engagent l'organisme dès la notification de la constatation
+      // et ne se changent plus que par l'ajustement — motivé, confirmé par mot
+      // de passe, tracé. Cette route les **écarte**, à bon droit ; elle le
+      // faisait **sans un mot**, et répondait « ok ».
+      //
+      // L'écran, lui, offre le geste : la table du dossier remplace « Modifier »
+      // par « Consulter » dès qu'un rapport est validé — *sauf pour le compte
+      // qui gouverne le module*, seul à garder le crayon. Mesuré le 11 novembre
+      // 2026 : cet administrateur changeait la description et la criticité,
+      // lisait « Constatation modifiée », et rien n'avait bougé. Les champs non
+      // opposables du formulaire suffisaient à éviter le 400 « aucun champ à
+      // mettre à jour », seul signe qui aurait pu alerter.
+      //
+      // La route rend donc `non_ecrits`. Elle **n'échoue pas** : le formulaire
+      // réémet tous ses champs, et refuser un envoi qui ne fait que renvoyer des
+      // valeurs inchangées empêcherait d'enregistrer ce qui a vraiment changé à
+      // côté. D'où le second contrôle, qui est le plus important des deux :
+      // *l'avertissement ne doit pas se déclencher quand rien ne change.*
+      {
+        const avant = (await srv.appel(`${M}/constatations/${fnc.corps.id}`)).corps || {};
+        const tentative = await PUT(`${M}/constatations/${fnc.corps.id}`, {
+          description: 'Description réécrite après la validation du rapport.',
+          criticite: avant.criticite === 'majeur' ? 'mineur' : 'majeur',
+          date_due_cloture: '2027-01-01',
+          recommandation: 'Recommandation écrite après la validation.',
+        });
+        const apres = (await srv.appel(`${M}/constatations/${fnc.corps.id}`)).corps || {};
+        verifier('modifier une constatation opposable nomme les champs écartés, et ne les écrit pas',
+          tentative.statut === 200
+          && Array.isArray(tentative.corps.non_ecrits)
+          && ['description', 'criticite', 'date_due_cloture']
+            .every((c) => tentative.corps.non_ecrits.includes(c))
+          && apres.description === avant.description
+          && apres.criticite === avant.criticite
+          && apres.date_due_cloture === avant.date_due_cloture
+          // Ce qui n'engage pas l'organisme, lui, est bien écrit.
+          && apres.recommandation === 'Recommandation écrite après la validation.',
+          JSON.stringify({ ecartes: tentative.corps.non_ecrits,
+            description: [avant.description, apres.description],
+            criticite: [avant.criticite, apres.criticite],
+            recommandation: apres.recommandation }));
+
+        const inchangee = await PUT(`${M}/constatations/${fnc.corps.id}`, {
+          description: apres.description,
+          criticite: apres.criticite,
+          date_due_cloture: apres.date_due_cloture,
+          delai_solde: apres.delai_solde,
+          domaine_id: apres.domaine_id,
+          recommandation: 'Seconde recommandation.',
+        });
+        verifier('renvoyer ces mêmes champs inchangés n’avertit de rien : seul ce qui diverge est nommé',
+          inchangee.statut === 200 && inchangee.corps.non_ecrits === undefined,
+          JSON.stringify(inchangee.corps));
+      }
       verifier('amendement du rapport validé',
         (await PUT(`${M}/rapports/${rapportV2}/amend`, { observations: 'Reprise du chapitre 3' })).statut === 200);
       verifier('constatation remise en brouillon par l’amendement',
@@ -1117,6 +1174,73 @@ module.exports = async function executionSmoke(port) {
     await srv.connexion();
     verifier('et reste disponible pour celui qui l’a déposé',
       (await srv.appel(`${DOC}/${(aMoi.corps || {}).jeton}`)).statut === 200);
+
+    // ── Le dépôt d'une pièce jointe : ce que la route nomme, et ce qu'elle refuse ──
+    //
+    // `POST …/upload` est la porte par laquelle **huit écrans** du module versent
+    // leurs fichiers, et aucun contrôle ne la regardait. Sa convention est
+    // écrite dans la route : « le nom d'origine ne ressort pas : c'est
+    // l'intitulé qui nomme la pièce ». Autrement dit **le champ `nom` du
+    // formulaire décide**, et sans lui la pièce s'appelle `piece-jointe`.
+    //
+    // Quatre des huit écrans ne l'envoyaient pas. Mesuré le 11 novembre 2026 :
+    // trois PDF versés dans les annexes d'un rapport donnaient trois
+    // `piece-jointe.pdf` — indiscernables dans le document produit comme dans le
+    // courriel qui les annonce à l'organisme. Les huit l'envoient désormais, par
+    // une seule fonction (`execDeposerPiece`) ; ces contrôles tiennent le
+    // contrat sur lequel elle s'appuie.
+    {
+      // Le dépôt est multipart : il ne passe pas par `srv.appel`, qui pose
+      // `content-type: application/json`.
+      const deposer = async (nomFichier, type, intitule) => {
+        const fd = new FormData();
+        fd.append('file', new Blob([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a])],
+          { type }), nomFichier);
+        if (intitule !== undefined) fd.append('nom', intitule);
+        const r = await fetch(`${srv.base}${M}/upload`, {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-OASIS-Request': '1', cookie: srv.session() },
+        });
+        let corps = null;
+        try { corps = JSON.parse(await r.text()); } catch { corps = null; }
+        return { statut: r.status, corps: corps || {} };
+      };
+
+      const nomme = await deposer('rapport-de-visite.pdf', 'application/pdf', 'rapport-de-visite.pdf');
+      verifier('la pièce déposée porte l’intitulé transmis, et son chemin est servi par le module',
+        nomme.statut === 201 && nomme.corps.status === 'ok'
+        && nomme.corps.filename === 'rapport-de-visite.pdf'
+        && /^\/api\/m\/execution\/uploads\/[0-9a-f]+\.pdf$/.test(nomme.corps.path || '')
+        && nomme.corps.size === 9,
+        JSON.stringify(nomme));
+
+      // Sans intitulé, la route replie sur un nom générique : c'est **le piège**
+      // dans lequel quatre écrans tombaient, et ce contrôle le nomme pour que
+      // personne ne le prenne pour un hasard.
+      const anonyme = await deposer('rapport-de-visite.pdf', 'application/pdf', undefined);
+      verifier('sans intitulé, la pièce s’appelle « piece-jointe » : le nom du fichier ne sort pas de lui-même',
+        anonyme.statut === 201 && anonyme.corps.filename === 'piece-jointe.pdf',
+        JSON.stringify(anonyme.corps));
+
+      // L'intitulé ne désigne pas un chemin, et il ne choisit pas l'extension :
+      // celle du fichier réel est réappliquée.
+      const malicieux = await deposer('rapport.pdf', 'application/pdf', '../../etc/passwd.exe');
+      verifier('un intitulé qui ressemble à un chemin est désarmé, et l’extension réelle est réappliquée',
+        malicieux.statut === 201
+        && !/[\\/]/.test(malicieux.corps.filename || '')
+        && /\.pdf$/.test(malicieux.corps.filename || ''),
+        JSON.stringify(malicieux.corps));
+
+      // Et le refus, que cinq écrans avalaient en silence. Sa phrase est
+      // traduite dans le socle : elle était prête, elle n'arrivait nulle part.
+      const refuse = await deposer('notes-de-terrain.txt', 'text/plain', 'notes-de-terrain.txt');
+      const sansExtension = await deposer('notes', 'text/plain', 'notes');
+      verifier('un type de fichier hors de la liste est refusé, et sans extension aussi',
+        refuse.statut === 400 && /non autoris/i.test(refuse.corps.error || '')
+        && sansExtension.statut === 400,
+        JSON.stringify([refuse.corps, sansExtension.corps]));
+    }
 
     // ── Privilège « Prestataire » attribué dans Gestion des Droits ──
     // Contrairement à la bascule, il n'est pas réversible depuis le module :

@@ -71,6 +71,41 @@ async function api(path, options = {}) {
     return res;
 }
 
+// ── Le dépôt d'une pièce jointe : une seule fonction, et pourquoi ──
+//
+// Huit écrans du module versent des fichiers par `POST …/upload`, et chacun
+// portait sa copie de l'appel. Les copies avaient divergé sur deux points, et
+// les deux ont été mesurés le 11 novembre 2026 :
+//
+//   1. **le nom de la pièce.** La route nomme ce qu'elle reçoit d'après le champ
+//      `nom` du formulaire — « le nom d'origine ne ressort pas : c'est
+//      l'intitulé qui nomme la pièce ». Quatre copies ne l'envoyaient pas : la
+//      route repliait alors sur `piece-jointe`, et **tout fichier versé depuis
+//      la réalisation, la zone « autres documents », les annexes et les preuves
+//      d'une constatation s'appelait `piece-jointe.pdf`**. Trois pièces versées,
+//      trois fois le même nom — indiscernables dans le rapport, et dans le
+//      courriel qui les annonce au prestataire ;
+//   2. **le refus.** Hors de ses huit extensions la route répond 400 « Type de
+//      fichier non autorisé » — une phrase que le socle traduit déjà en deux
+//      langues. Cinq copies lisaient `data.status === 'ok'` sans rien dire
+//      sinon : rien ne paraissait dans la liste, et rien n'était dit. Leur
+//      `catch` ne s'en mêlait pas, `fetch` ne levant pas sur un 400.
+//      *Un refus que l'écran avale est un geste qui ne marche pas sans le dire.*
+//
+// Deux copies sur huit étaient justes sur les deux points. C'est d'elles que
+// celle-ci est tirée.
+//
+// Elle passe par `api()`, qui relève le refus et le traduit : l'appelant n'a
+// plus qu'à le dire, et il doit le dire.
+async function execDeposerPiece(fichier, intitule) {
+    const fd = new FormData();
+    fd.append('file', fichier);
+    // L'intitulé nomme la pièce quand l'écran en demande un ; à défaut, le nom
+    // du fichier choisi sur le poste.
+    fd.append('nom', String(intitule || (fichier && fichier.name) || ''));
+    return api(`${EXEC_MODULE_API}/upload`, { method: 'POST', body: fd });
+}
+
 // ── Modale et toasts de la coquille ──
 const SHELL_ICONS = {
     close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',

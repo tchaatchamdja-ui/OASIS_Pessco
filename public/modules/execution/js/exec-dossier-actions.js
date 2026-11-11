@@ -592,29 +592,46 @@ let _fncProofPendingName = '';
 async function execUploadFNCProof(files) {
     if (!files || files.length === 0) return;
     for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                const container = document.getElementById('fnc_preuves_list');
-                if (container) {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
-                    div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
-                        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
-                    div.dataset.path = data.path;
-                    container.appendChild(div);
-                }
+            const data = await execDeposerPiece(file);
+            const container = document.getElementById('fnc_preuves_list');
+            if (container) {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
+                div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
+                div.dataset.path = data.path;
+                container.appendChild(div);
             }
         } catch (e) {
             console.error('Upload proof error:', e);
+            _execToast(`${file.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
         }
     }
+}
+
+// ── Ce qu'une constatation notifiée ne laisse plus réécrire ──
+//
+// Une fois la constatation opposable, huit champs engagent l'organisme et ne se
+// changent que par l'ajustement — motivé, confirmé par mot de passe, tracé. La
+// route les écarte, et **rend leur liste** (`non_ecrits`).
+//
+// Elle ne la rendait pas, et l'écran disait « Constatation modifiée ». Le cas se
+// présente au seul compte d'administration, puisque c'est le seul à qui la table
+// laisse le crayon sur une constatation déjà opposable : il changeait la
+// description, lisait le succès, et rien n'avait bougé. Les libellés sont ceux
+// du formulaire lui-même ; un champ sans libellé se nomme par sa clé plutôt que
+// de disparaître du message.
+const EXEC_LIBELLE_CHAMP_OPPOSABLE = {
+    delai_solde: 'delai_solde', criticite: 'criticite', date_ouverture: 'date_ouverture',
+    description: 'description_constatation', ref_reglementaires: 'ref_reglementaires',
+    domaine_id: 'domaine', date_due_cloture: 'date_due', titre: 'titre_rapport',
+};
+
+function _execNommerChampsOpposables(noms) {
+    return (noms || [])
+        .map((n) => (EXEC_LIBELLE_CHAMP_OPPOSABLE[n] ? te(EXEC_LIBELLE_CHAMP_OPPOSABLE[n]) : n))
+        .join(', ');
 }
 
 async function execSaveFNC(dossierId, fncId) {
@@ -649,8 +666,15 @@ async function execSaveFNC(dossierId, fncId) {
 
     try {
         if (fncId) {
-            await api(`${EXEC_MODULE_API}/constatations/${fncId}`, { method: 'PUT', body: JSON.stringify(data) });
-            _execToast(te('constat_modifie_ok'), 'success');
+            const rep = await api(`${EXEC_MODULE_API}/constatations/${fncId}`,
+                { method: 'PUT', body: JSON.stringify(data) });
+            const ecartes = (rep && rep.non_ecrits) || [];
+            if (ecartes.length) {
+                _execToast(`${te('constat_champs_non_ecrits')} : ${_execNommerChampsOpposables(ecartes)}`,
+                    'warning');
+            } else {
+                _execToast(te('constat_modifie_ok'), 'success');
+            }
         } else {
             await api(`${EXEC_MODULE_API}/constatations`, { method: 'POST', body: JSON.stringify(data) });
             _execToast(te('constat_cree_ok'), 'success');
@@ -748,13 +772,7 @@ async function execDeleteDossier(dossierId) {
     }
 }
 
-async function execSendRapport(rapportId) {
-    try {
-        await api(`${EXEC_MODULE_API}/rapports/${rapportId}/send`, { method: 'PUT' });
-        await execRefreshDynamic();
-        execRenderPage();
-    } catch (e) {
-        console.error('Send rapport error:', e);
-        oasisToast(te('err_envoi'), 'error');
-    }
-}
+// `execSendRapport` a été retiré avec l'onglet mort qui seul l'appelait : même
+// route et même méthode que `execSendRapportValidated`, sans confirmation ni
+// message. Voir `exec-activites.js`, « L'onglet « Rapports » du volet a été
+// retiré ».

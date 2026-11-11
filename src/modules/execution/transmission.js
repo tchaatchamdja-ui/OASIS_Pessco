@@ -51,8 +51,13 @@ const nomDePresentation = (propose, ext) => {
 const adresses = (v) => String(v || '').split(/[;,\s]+/).map((x) => x.trim()).filter(Boolean);
 
 // Racine publique de l'application, telle que le prestataire y accède.
-const racineApp = () => String(process.env.APP_URL || 'http://localhost:4750')
-  .replace(/\/login\.html\/?$/i, '').replace(/\/+$/, '');
+//
+// **Elle n'est pas calculée ici.** Elle l'était, et sa règle ignorait l'adresse
+// que l'hébergeur pose (`RENDER_EXTERNAL_URL`) : les liens de téléchargement des
+// documents remis partaient alors vers `http://localhost:4750`. La règle vit
+// désormais en un seul endroit, avec celle du lien de connexion
+// (`src/email.js`, « La racine publique du service »).
+const racineApp = courriel.racinePublique;
 
 const lienDe = (piece) => {
   const nom = path.basename(String(piece.path || ''));
@@ -129,7 +134,7 @@ async function transmettre(corps, options) {
 
 ————————————————————————————————
 Documents mis à votre disposition dans OASIS
-Accès à l'application : ${racineApp()}/login.html
+Accès à l'application : ${courriel.lienDeConnexion()}
 
 ${liens}
 
@@ -182,7 +187,7 @@ function avertirPrestataire(prestataireId, { objet, message, origine, reference,
     body: `${message}
 
 ————————————————————————————————
-Accès à l'application : ${racineApp()}/login.html`,
+Accès à l'application : ${courriel.lienDeConnexion()}`,
     origine,
     reference,
     ...(journal || {}),

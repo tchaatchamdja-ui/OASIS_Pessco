@@ -878,6 +878,96 @@ async function courrielsSansSecret() {
   fs.rmSync(bacConfig, { recursive: true, force: true });
 }
 
+// ── 6 ter. L'adresse par laquelle un destinataire revient ──
+//
+// Un courriel d'OASIS ne porte jamais de pièce jointe : il annonce des liens, et
+// le destinataire les suit depuis son compte. **Ces liens sont donc le courriel
+// tout entier**, et une racine fausse ne se voit pas à l'envoi — elle se voit
+// chez le prestataire, qui clique sur `http://localhost:4750`.
+//
+// La règle était écrite **deux fois**, et les deux différaient : `src/email.js`
+// lisait `RENDER_EXTERNAL_URL`, `transmission.js` non. Mesuré le 11 novembre
+// 2026 sur un serveur portant cette seule variable — l'état exact d'un service
+// Render sans domaine propre : le courriel d'ouverture de compte portait la
+// bonne adresse, et le rapport transmis annonçait ses documents sur
+// `localhost`. Dans l'acte même qui engage l'Autorité.
+//
+// Ces contrôles tiennent les deux choses que la correction a établies : la règle
+// elle-même, et le fait qu'il n'y en ait **qu'une**.
+function racinePubliqueDesCourriels() {
+  const email = require('../../src/email');
+  const avant = { app: process.env.APP_URL, render: process.env.RENDER_EXTERNAL_URL };
+  const poser = (app, render) => {
+    if (app === undefined) delete process.env.APP_URL; else process.env.APP_URL = app;
+    if (render === undefined) delete process.env.RENDER_EXTERNAL_URL;
+    else process.env.RENDER_EXTERNAL_URL = render;
+  };
+  try {
+    // 1. Rien de posé : le poste de développement.
+    poser(undefined, undefined);
+    verifier('racine : sans variable, l’adresse est celle du poste de développement',
+      email.racinePublique() === 'http://localhost:4750'
+      && email.lienDeConnexion() === 'http://localhost:4750/login.html',
+      `${email.racinePublique()} · ${email.lienDeConnexion()}`);
+
+    // 2. Le cas qui a produit le défaut : l'hébergeur pose son adresse, et
+    //    personne ne renseigne APP_URL — ce que `.env.example` déclare suffisant.
+    poser(undefined, 'https://oasis-bj.onrender.com');
+    verifier('racine : l’adresse posée par l’hébergeur est lue, et « localhost » ne subsiste pas',
+      email.racinePublique() === 'https://oasis-bj.onrender.com'
+      && !/localhost/.test(email.lienDeConnexion()),
+      `${email.racinePublique()} · ${email.lienDeConnexion()}`);
+
+    // 3. APP_URL passe devant, et son suffixe `/login.html` — c'est ainsi que
+    //    `.env.example` l'écrit — ne se retrouve pas dans un lien de document.
+    poser('https://oasis.exemple.org/login.html', 'https://oasis-bj.onrender.com');
+    verifier('racine : APP_URL passe devant, et son « /login.html » n’entre pas dans la racine',
+      email.racinePublique() === 'https://oasis.exemple.org'
+      && email.lienDeConnexion() === 'https://oasis.exemple.org/login.html',
+      `${email.racinePublique()} · ${email.lienDeConnexion()}`);
+
+    // 4. Une barre oblique finale ne doit pas doubler celle du chemin.
+    poser('https://oasis.exemple.org/', undefined);
+    verifier('racine : une barre oblique finale ne double pas celle du chemin',
+      email.racinePublique() === 'https://oasis.exemple.org',
+      email.racinePublique());
+
+    // 5. **Une seule règle.** Le garde-fou de la source : `transmission.js` ne
+    //    recompose pas l'adresse, il appelle celle-ci. Un contrôle qui ne
+    //    regarderait que les valeurs rendues ici laisserait le second calcul
+    //    revenir sans rien dire — c'est exactement ce qui s'était produit.
+    const source = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'modules',
+      'execution', 'transmission.js'), 'utf8');
+    verifier('racine : la transmission appelle la règle commune, et n’en écrit pas une seconde',
+      /const racineApp = courriel\.racinePublique;/.test(source)
+      && !/process\.env\.(APP_URL|RENDER_EXTERNAL_URL)/.test(source),
+      source.match(/process\.env\.\w+/g)?.join(' · ') || 'aucune lecture d’environnement');
+
+    // 6. Et nul autre fichier du dépôt ne compose cette adresse de son côté.
+    //    Le relevé lit les sources : une troisième règle naîtrait silencieuse.
+    const racine = path.join(__dirname, '..', '..');
+    const parcourir = (dossier, trouves = []) => {
+      for (const e of fs.readdirSync(dossier, { withFileTypes: true })) {
+        const chemin = path.join(dossier, e.name);
+        if (e.isDirectory()) parcourir(chemin, trouves);
+        else if (e.name.endsWith('.js')) {
+          const t = fs.readFileSync(chemin, 'utf8');
+          if (/process\.env\.(APP_URL|RENDER_EXTERNAL_URL)/.test(t)) {
+            trouves.push(path.relative(racine, chemin));
+          }
+        }
+      }
+      return trouves;
+    };
+    const lecteurs = parcourir(path.join(racine, 'src'));
+    verifier('racine : un seul fichier du socle lit APP_URL ou l’adresse de l’hébergeur',
+      lecteurs.length === 1 && lecteurs[0] === path.join('src', 'email.js'),
+      lecteurs.join(' · ') || 'aucun');
+  } finally {
+    poser(avant.app, avant.render);
+  }
+}
+
 // ── 6 bis. La sonde des sauvegardes ──
 //
 // ADR-001 a différé la bascule vers PostgreSQL en écrivant ce que cela coûte :
@@ -1650,6 +1740,7 @@ module.exports = async function unitairesSmoke() {
     bornes();
     traces();
     await courrielsSansSecret();
+    racinePubliqueDesCourriels();
     verrouDuRepertoire();
     await vecteursDeMigration();
     conservation();

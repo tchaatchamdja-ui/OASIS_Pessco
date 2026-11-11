@@ -10,15 +10,42 @@ let nodemailer = null;
 try { nodemailer = require('nodemailer'); } catch { /* fallback fichier seul */ }
 
 const APP = 'OASIS';
-// Lien de connexion porté par les courriels. En hébergement, l'adresse
-// publique du service fait foi : Render la pose dans RENDER_EXTERNAL_URL, ce
-// qui évite d'avoir à la recopier à la main — sans quoi les destinataires
-// recevraient un lien vers « localhost ». APP_URL reste prioritaire, pour un
-// domaine propre ou un proxy devant le service.
-const RACINE_PUBLIQUE = process.env.RENDER_EXTERNAL_URL
-  ? `${String(process.env.RENDER_EXTERNAL_URL).replace(/\/+$/, '')}/login.html`
-  : 'http://localhost:4750/login.html';
-const LOGIN_URL = process.env.APP_URL || RACINE_PUBLIQUE;
+
+// ── La racine publique du service, et pourquoi elle est ici seule ──
+//
+// L'adresse par laquelle un destinataire atteint OASIS. `APP_URL` d'abord — un
+// domaine propre, ou un proxy devant le service —, puis celle que l'hébergeur
+// pose lui-même (Render : `RENDER_EXTERNAL_URL`), et le poste de développement
+// à défaut.
+//
+// Elle était calculée **deux fois**, et les deux règles différaient : ici pour
+// le lien de connexion des courriels de compte, et dans
+// `src/modules/execution/transmission.js` (`racineApp`) pour les liens de
+// téléchargement des documents remis à l'organisme surveillé. Seule celle-ci
+// lisait `RENDER_EXTERNAL_URL`.
+//
+// Mesuré le 11 novembre 2026, contre un serveur portant
+// `RENDER_EXTERNAL_URL` et aucun `APP_URL` : le courriel d'ouverture de compte
+// portait la bonne adresse, et **le rapport transmis annonçait ses documents
+// sur `http://localhost:4750`** — des liens inutilisables, dans l'acte même qui
+// engage l'Autorité, et un avis de notification qui renvoyait au même endroit.
+// `.env.example` affirmait pourtant qu'« en hébergement Render,
+// RENDER_EXTERNAL_URL suffit » : la documentation décrivait la règle de ce
+// fichier-ci, appliquée à un seul des deux.
+//
+// Une seule fonction désormais, et `transmission.js` l'appelle : deux règles sur
+// une même adresse ne peuvent plus diverger.
+//
+// `APP_URL` est documenté comme le *lien de connexion*
+// (`https://…/login.html`) : le suffixe est retiré pour obtenir la racine, et
+// rendu par `lienDeConnexion()`. L'environnement est lu **à l'appel** et non à
+// l'import — un module chargé avant que la variable soit posée figeait sinon
+// l'adresse du poste de développement.
+function racinePublique() {
+  const brut = process.env.APP_URL || process.env.RENDER_EXTERNAL_URL || 'http://localhost:4750';
+  return String(brut).replace(/\/login\.html\/?$/i, '').replace(/\/+$/, '');
+}
+const lienDeConnexion = () => `${racinePublique()}/login.html`;
 const SUPPORT = 'support@anac.bj';
 
 // L'environnement passe devant le paramétrage, comme pour OASIS_MFA. Sans
@@ -149,7 +176,7 @@ function accountCreated({ to, name, username, password }) {
     body: `Bonjour ${name},
 Votre compte a été créé avec succès. Vous pouvez désormais vous connecter à notre application en utilisant les identifiants temporaires ci-dessous :
 
-* Lien d'accès : ${LOGIN_URL}
+* Lien d'accès : ${lienDeConnexion()}
 * Nom d'utilisateur : ${username}
 * Mot de passe temporaire : ${password}
 
@@ -224,4 +251,8 @@ function etatSmtp() {
 }
 
 module.exports = {
-  messagerieCredible, queue, accountCreated, passwordReset, mfaCode, verify, list, etatSmtp };
+  messagerieCredible, queue, accountCreated, passwordReset, mfaCode, verify, list, etatSmtp,
+  // La racine publique et le lien de connexion : exportés parce que les
+  // courriels du module « Exécution de la Surveillance » les composent aussi,
+  // et qu'ils doivent les composer **d'ici** (voir le commentaire plus haut).
+  racinePublique, lienDeConnexion };
